@@ -1,4 +1,4 @@
-# libos
+# libopenstorage
 libopenstorage is an implementation of the Lib Open Storage specification
 
 ### Building:
