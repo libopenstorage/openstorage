@@ -1,5 +1,5 @@
 # libos
-libos is an implementation of the Lib Open Storage specification
+libopenstorage is an implementation of the Lib Open Storage specification
 
 ### Building:
 
@@ -21,7 +21,7 @@ Description=Lib Open Storage
 [Service]
 CPUQuota=200%
 MemoryLimit=1536M
-ExecStart=/usr/local/bin/libos
+ExecStart=/usr/local/bin/libopenstorage
 Restart=on-failure
 
 [Install]
