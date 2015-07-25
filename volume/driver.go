@@ -12,7 +12,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
-	"github.com/libopenstorage/api"
+	"github.com/openstorage/api"
 )
 
 const (

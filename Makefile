@@ -4,18 +4,18 @@ else
 BUILD_OPTIONS= 
 endif
 .PHONY: clean all
-TARGETS := libopenstorage
+TARGETS := openstorage
 
 all: $(TARGETS) tags
 
 tags:
 	@ctags -R 
 
-libopenstorage:
-	@echo "Building libopenstorage..."
-	@go build $(BUILD_OPTIONS)  -o libopenstorage
+openstorage:
+	@echo "Building openstorage..."
+	@go build $(BUILD_OPTIONS)  -o ost
 
 clean:
-	@echo "Cleaning libopenstorage..."
+	@echo "Cleaning openstorage..."
 	@rm -f tags
-	@rm -f libopenstorage
+	@rm -f ost

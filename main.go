@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/codegangsta/cli"
-	"github.com/libopenstorage/drivers/ec2driver"
-	"github.com/libopenstorage/volume"
+	"github.com/openstorage/drivers/ec2driver"
+	"github.com/openstorage/volume"
 	"os"
 )
 

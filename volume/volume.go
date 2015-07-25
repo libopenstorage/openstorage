@@ -2,7 +2,7 @@ package volume
 
 import (
 	"errors"
-	api "github.com/libopenstorage/api"
+	api "github.com/openstorage/api"
 )
 
 var (

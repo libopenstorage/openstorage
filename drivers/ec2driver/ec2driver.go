@@ -5,8 +5,8 @@ import (
 	"math/rand"
 	"os"
 
-	api "github.com/libopenstorage/api"
-	"github.com/libopenstorage/volume"
+	api "github.com/openstorage/api"
+	"github.com/openstorage/volume"
 )
 
 const (
