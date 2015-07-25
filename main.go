@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/libopenstorage/ec2driver"
 	"github.com/libopenstorage/volume"
 	"os"
 )

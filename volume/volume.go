@@ -78,6 +78,10 @@ type VolumeDriver interface {
 }
 
 func Default() VolumeDriver {
+	if defaultDriver == nil {
+		panic("No default volume driver.")
+	}
+
 	return defaultDriver
 }
 
