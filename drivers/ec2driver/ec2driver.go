@@ -21,11 +21,13 @@ var (
 type EC2Driver struct {
 }
 
-func Init() {
+func Init() error {
 	fmt.Printf("EC2 init\n")
 	volume.SetDefaultDriver(&EC2Driver{})
 	r = rand.New(rand.NewSource(99))
 	devMinor = 1
+
+	return nil
 }
 
 func (d *EC2Driver) String() string {
