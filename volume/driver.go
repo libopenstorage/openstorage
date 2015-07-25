@@ -100,7 +100,7 @@ func volumeFromName(name string) *api.Volume {
 	if err != nil {
 		return nil
 	}
-	v := ProtoDriver()
+	v := Default()
 	vols, err := v.Inspect([]api.VolumeID{api.VolumeID(id)})
 	if err != nil || len(vols) == 0 {
 		return nil
@@ -121,12 +121,12 @@ func (driver *driver) handshake(w http.ResponseWriter, r *http.Request) {
 }
 
 func (driver *driver) status(w http.ResponseWriter, r *http.Request) {
-	io.WriteString(w, fmt.Sprintln("pwx plugin", driver.version))
+	io.WriteString(w, fmt.Sprintln("libOpenStorage plugin", driver.version))
 }
 
 func (driver *driver) create(w http.ResponseWriter, r *http.Request) {
 	var request volumeRequest
-	var dcReq api.VolumeCreateRequest
+	var vcReq api.VolumeCreateRequest
 
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
@@ -140,10 +140,13 @@ func (driver *driver) create(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(&volumeResponse{Err: nil})
 		return
 	}
-	dcReq.Locator.Name = request.Name
-	dcReq.Spec = &api.VolumeSpec{Size: 10 * 1000 * 1000, Format: api.FsExt4, HALevel: 1}
-	v := ProtoDriver()
-	ID, err := v.Create(dcReq.Locator, dcReq.Options, dcReq.Spec)
+
+	// XXX Volume Spec needs to be passed in via the request.  Currently, it is hardcoded
+	// to 10Gb and ext4.
+	vcReq.Locator.Name = request.Name
+	vcReq.Spec = &api.VolumeSpec{Size: 10 * 1000 * 1000, Format: api.FsExt4, HALevel: 1}
+	v := Default()
+	ID, err := v.Create(vcReq.Locator, vcReq.Options, vcReq.Spec)
 	if err == nil {
 		err = v.Format(ID)
 	}
@@ -181,7 +184,7 @@ func (driver *driver) mount(w http.ResponseWriter, r *http.Request) {
 	response.Mountpoint = fmt.Sprintf("/mnt/%s", request.Name)
 	os.MkdirAll(response.Mountpoint, 0755)
 
-	v := ProtoDriver()
+	v := Default()
 	path, err := v.Attach(vol.ID, response.Mountpoint)
 	if err != nil {
 		response.Err = err
@@ -226,7 +229,7 @@ func (driver *driver) unmount(w http.ResponseWriter, r *http.Request) {
 		sendError(w, "locate volume error", http.StatusInternalServerError)
 		return
 	}
-	v := ProtoDriver()
+	v := Default()
 	err = v.Detach(vol.ID)
 	if err != nil {
 		sendError(w, "Unable to unmount: "+err.Error(), http.StatusBadRequest)

@@ -22,6 +22,8 @@ const (
 	Degraded   = Status("Degraded")
 )
 
+// VolumeState is one of the below enumerations and reflects the state
+// of a volume.
 type VolumeState int
 
 const (
@@ -44,6 +46,8 @@ const VolumeStateAny = VolumePending | VolumeAvailable | VolumeAttached | Volume
 
 type Labels map[string]string
 
+// VolumeLocator is a structure that is attached to a volume and is used to
+// carry opaque metadata.
 type VolumeLocator struct {
 	Name         string
 	VolumeLabels Labels
@@ -71,15 +75,17 @@ const (
 	VolumeActionDelete
 )
 
+// VolumeInfo carrys the runtime information on a created volume.
 type VolumeInfo struct {
 	// RequestID to synchronize on outstanding requests
 	RequestID int64
 	// Action
 	Action VolumeAction
-	// Current State of Disk
+	// Current State of the volume
 	DeviceInfo Volume
 }
 
+// VolumeSpec has the properties needed to create a volume.
 type VolumeSpec struct {
 	// Ephemeral storage
 	Ephemeral bool
@@ -104,6 +110,7 @@ type VolumeSpec struct {
 	ConfigLabels Labels
 }
 
+// Volume represents a live, created volume.
 type Volume struct {
 	// Self referential VolumeID
 	ID VolumeID
@@ -139,6 +146,7 @@ type Volume struct {
 	ErrorString string
 }
 
+// VolumeSnap identifies a volume snapshot.
 type VolumeSnap struct {
 	// System generated snap label
 	SnapID SnapID
@@ -153,7 +161,9 @@ type VolumeSnap struct {
 }
 
 type VolumeStats struct {
+	// TODO
 }
 
 type VolumeAlerts struct {
+	// TODO
 }

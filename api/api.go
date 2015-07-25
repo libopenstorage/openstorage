@@ -8,7 +8,7 @@ const (
 
 const (
 	StatusSuccess = "OK"
-	StatusFail    = "NG"
+	StatusFail    = "FAIL"
 )
 
 var ResponseSuccess ResponseStatus = ResponseStatus{
