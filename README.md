@@ -6,7 +6,7 @@ libopenstorage is an implementation of the Lib Open Storage specification
 ```bash
 # create a 'github.com/libopenstorage' in your GOPATH/src
 cd github.com/libopenstorage
-git clone https://github.com/libopenstorage/libos
+git clone https://github.com/libopenstorage/libopenstorage
 cd libos
 make
 sudo make install
