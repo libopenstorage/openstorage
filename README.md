@@ -12,7 +12,7 @@ make
 sudo make install
 ```
 
-#### Using libos with systemd
+#### Using libopenstorage with systemd
 
 ```service
 [Unit]
