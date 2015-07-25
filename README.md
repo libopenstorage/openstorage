@@ -1,18 +1,17 @@
-# libopenstorage
-libopenstorage is an implementation of the Lib Open Storage specification
+# openstorage
+openstorage is an implementation of the Open Storage specification
 
 ### Building:
 
 ```bash
-# create a 'github.com/libopenstorage' in your GOPATH/src
-cd github.com/libopenstorage
-git clone https://github.com/libopenstorage/libopenstorage
-cd libopenstorage
+# create a 'github.com/openstorage' in your GOPATH/src
+git clone https://github.com/libopenstorage/openstorage
+cd openstorage
 make
 sudo make install
 ```
 
-#### Using libopenstorage with systemd
+#### Using openstorage with systemd
 
 ```service
 [Unit]
@@ -21,7 +20,7 @@ Description=Lib Open Storage
 [Service]
 CPUQuota=200%
 MemoryLimit=1536M
-ExecStart=/usr/local/bin/libopenstorage
+ExecStart=/usr/local/bin/ost
 Restart=on-failure
 
 [Install]
