@@ -15,7 +15,7 @@ sudo make install
 
 ```service
 [Unit]
-Description=Lib Open Storage
+Description=Open Storage
 
 [Service]
 CPUQuota=200%
