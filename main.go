@@ -7,6 +7,7 @@ import (
 )
 
 func main() {
+	ec2driver.Init()
 	v := volume.NewVolumePlugin()
 	v.Listen(os.Args[1])
 }
