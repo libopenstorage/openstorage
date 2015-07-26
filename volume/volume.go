@@ -127,3 +127,7 @@ func Register(name string, initFunc InitFunc) error {
 	drivers[name] = initFunc
 	return nil
 }
+
+func init() {
+	drivers = make(map[string]InitFunc)
+}

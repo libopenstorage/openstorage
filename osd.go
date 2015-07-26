@@ -22,7 +22,6 @@ func start(c *cli.Context) {
 }
 
 func main() {
-
 	app := cli.NewApp()
 	app.Name = "osd"
 	app.Usage = "Open Storage CLI"
