@@ -2,15 +2,23 @@ package volume
 
 import (
 	"errors"
-	api "github.com/openstorage/api"
+	"sync"
+
+	"github.com/libopenstorage/openstorage/api"
 )
 
 var (
-	defaultDriver   VolumeDriver
+	instances       map[string]VolumeDriver
+	drivers         map[string]InitFunc
+	mutex           sync.Mutex
 	ErrNotSupported = errors.New("Driver implementation not supported")
-	ErrEexist       = errors.New("Default Driver is already set")
-	ErrEnomem       = errors.New("Out of memory")
+	ErrExist        = errors.New("Driver already exists")
+	ErrNotFound     = errors.New("Driver implementation not found")
 )
+
+type DriverParams map[string]string
+
+type InitFunc func(params DriverParams) (VolumeDriver, error)
 
 type VolumeDriver interface {
 	// String description of this driver.
@@ -77,23 +85,45 @@ type VolumeDriver interface {
 	Shutdown()
 }
 
-func Default() VolumeDriver {
-	if defaultDriver == nil {
-		panic("No default volume driver.")
-	}
-
-	return defaultDriver
-}
-
-func SetDefaultDriver(driver VolumeDriver) {
-	defaultDriver = driver
-}
-
 func Shutdown() {
-	if defaultDriver != nil {
-		defaultDriver.Shutdown()
+	mutex.Lock()
+	defer mutex.Unlock()
+	for _, v := range instances {
+		v.Shutdown()
 	}
 }
 
-func init() {
+func Get(name string) (VolumeDriver, error) {
+	if v, ok := instances[name]; ok {
+		return v, nil
+	}
+	return nil, ErrNotFound
+}
+
+func New(name string, params DriverParams) (VolumeDriver, error) {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	if _, ok := instances[name]; ok {
+		return nil, ErrExist
+	}
+	if initFunc, exists := drivers[name]; exists {
+		driver, err := initFunc(params)
+		if err != nil {
+			return nil, err
+		}
+		instances[name] = driver
+		return driver, err
+	}
+	return nil, ErrNotSupported
+}
+
+func Register(name string, initFunc InitFunc) error {
+	mutex.Lock()
+	defer mutex.Unlock()
+	if _, exists := drivers[name]; exists {
+		return ErrExist
+	}
+	drivers[name] = initFunc
+	return nil
 }
