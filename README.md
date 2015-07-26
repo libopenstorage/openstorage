@@ -4,7 +4,8 @@ openstorage is an implementation of the Open Storage specification
 ### Building:
 
 ```bash
-# create a 'github.com/openstorage' in your GOPATH/src
+# create a 'github.com/libopenstorage/openstorage' in your GOPATH/src
+cd libopenstorage
 git clone https://github.com/libopenstorage/openstorage
 cd openstorage
 make
