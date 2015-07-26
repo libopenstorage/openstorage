@@ -4,8 +4,8 @@ import (
 	"time"
 )
 
-type VolumeID uint64
-type SnapID uint64
+type VolumeID string
+type SnapID string
 type VolumeCos int
 
 const (
@@ -89,7 +89,7 @@ type VolumeInfo struct {
 type VolumeSpec struct {
 	// Ephemeral storage
 	Ephemeral bool
-	// Thin provisioned disk_size
+	// Thin provisioned volume size in bytes
 	Size uint64
 	// Format disk with this FileSystem
 	Format Filesystem
@@ -102,7 +102,7 @@ type VolumeSpec struct {
 	HALevel int
 	// This disk's CoS
 	Cos VolumeCos
-	// Perform dedupe on this disk.
+	// Perform dedupe on this disk
 	Dedupe bool
 	// SnapShotInterval in minutes, set to 0 to disable Snapshots
 	SnapShotInterval int

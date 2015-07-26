@@ -5,7 +5,7 @@ import (
 	"os"
 
 	osd "github.com/libopenstorage/openstorage/cli"
-	"github.com/libopenstorage/openstorage/drivers/ebs"
+	"github.com/libopenstorage/openstorage/drivers/aws"
 )
 
 const (
