@@ -21,7 +21,7 @@ Description=Open Storage
 [Service]
 CPUQuota=200%
 MemoryLimit=1536M
-ExecStart=/usr/local/bin/ost
+ExecStart=/usr/local/bin/osd
 Restart=on-failure
 
 [Install]
