@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/codegangsta/cli"
+	"os"
 
 	osd "github.com/libopenstorage/openstorage/cli"
 	"github.com/libopenstorage/openstorage/drivers/ebs"
@@ -55,6 +56,7 @@ func main() {
 			Subcommands: osd.ProviderCommands(),
 		},
 	}
+	app.Run(os.Args)
 }
 
 func init() {
