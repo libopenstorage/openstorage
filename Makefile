@@ -13,9 +13,9 @@ tags:
 
 openstorage:
 	@echo "Building openstorage..."
-	@go build $(BUILD_OPTIONS)  -o ost
+	@go build $(BUILD_OPTIONS)  -o osd
 
 clean:
 	@echo "Cleaning openstorage..."
 	@rm -f tags
-	@rm -f ost
+	@rm -f osd
