@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/codegangsta/cli"
 	"os"
+
+	"github.com/codegangsta/cli"
 
 	osd "github.com/libopenstorage/openstorage/cli"
 	"github.com/libopenstorage/openstorage/drivers/ebs"
