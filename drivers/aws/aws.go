@@ -2,7 +2,6 @@ package ebs
 
 import (
 	"fmt"
-	"math/rand"
 	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -17,7 +16,6 @@ const (
 )
 
 var (
-	r        *rand.Rand
 	devMinor int32
 )
 
@@ -28,12 +26,7 @@ type awsProvider struct {
 
 func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 	// Initialize the EC2 interface.
-	creds := credentials.NewChainCredentials(
-		[]credentials.Provider{
-			&credentials.EnvProvider{},
-			&credentials.EC2RoleProvider{},
-		})
-
+	creds := credentials.NewEnvCredentials()
 	inst := &awsProvider{ec2: ec2.New(&aws.Config{
 		Region:      "us-west-1",
 		Credentials: creds,
@@ -77,6 +70,12 @@ func (self *awsProvider) AttachInfo(volInfo *api.VolumeInfo) (int32, string, err
 }
 
 func (self *awsProvider) Attach(volInfo api.VolumeID, path string) (string, error) {
+	volumeID := string(api.VolumeID)
+	req := ec2.AttachVolumeInput{
+		Device:     &device,
+		InstanceID: &instanceID,
+		VolumeID:   &volumeID,
+	}
 	devMinor++
 	s := fmt.Sprintf("/tmp/gdd_%v", int(devMinor))
 	os.Create(s)
