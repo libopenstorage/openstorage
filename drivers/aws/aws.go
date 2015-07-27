@@ -64,7 +64,7 @@ func (self *awsProvider) Create(l api.VolumeLocator, opt *api.CreateOptions, spe
 	return api.VolumeID(*v.VolumeID), err
 }
 
-func (self *awsProvider) Attach(volInfo api.VolumeID, path string) (string, error) {
+func (self *awsProvider) Attach(volInfo api.VolumeID) (string, error) {
 	devMinor++
 	device := fmt.Sprintf("/dev/ec2%v", int(devMinor))
 	volumeID := string(api.VolumeID)
@@ -77,7 +77,15 @@ func (self *awsProvider) Attach(volInfo api.VolumeID, path string) (string, erro
 	return device, err
 }
 
+func (self *awsProvider) Mount(volumeID api.VolumeID, mountpath string) error {
+	return nil
+}
+
 func (self *awsProvider) Detach(volID api.VolumeID) error {
+	return nil
+}
+
+func (self *awsProvider) Unmount(volumeID api.VolumeID, mountpath string) error {
 	return nil
 }
 
