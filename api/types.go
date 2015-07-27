@@ -13,13 +13,13 @@ const (
 	VolumeCosMax  = VolumeCos(9)
 )
 
-type Status string
+type VolumeStatus string
 
 const (
-	NotPresent = Status("NotPresent")
-	Up         = Status("Up")
-	Down       = Status("Down")
-	Degraded   = Status("Degraded")
+	NotPresent = VolumeStatus("NotPresent")
+	Up         = VolumeStatus("Up")
+	Down       = VolumeStatus("Down")
+	Degraded   = VolumeStatus("Degraded")
 )
 
 // VolumeState is one of the below enumerations and reflects the state
@@ -67,24 +67,6 @@ const (
 	FsNone = Filesystem("none")
 )
 
-type VolumeAction int
-
-const (
-	VolumeActionCreate = 1 << iota
-	VolumeActionUpdate
-	VolumeActionDelete
-)
-
-// VolumeInfo carrys the runtime information on a created volume.
-type VolumeInfo struct {
-	// RequestID to synchronize on outstanding requests
-	RequestID int64
-	// Action
-	Action VolumeAction
-	// Current State of the volume
-	DeviceInfo Volume
-}
-
 // VolumeSpec has the properties needed to create a volume.
 type VolumeSpec struct {
 	// Ephemeral storage
@@ -114,8 +96,6 @@ type VolumeSpec struct {
 type Volume struct {
 	// Self referential VolumeID
 	ID VolumeID
-	// Device Minor
-	Minor int32
 	// User specified locator
 	Locator VolumeLocator
 	// Volume creation time
@@ -129,7 +109,7 @@ type Volume struct {
 	// Filesystem type if any
 	Format Filesystem
 	// Volume Status
-	VolumeStatus Status
+	Status VolumeStatus
 	// VolumeState
 	State VolumeState
 	// Attached On - for clustered storage arrays
@@ -156,7 +136,7 @@ type VolumeSnap struct {
 	Ctime time.Time
 	// User specfied label
 	UserLabel string
-	// usage
+	// Usage
 	Usage uint64
 }
 

@@ -1,4 +1,4 @@
-package server
+package apiserver
 
 import (
 	"encoding/json"
@@ -11,9 +11,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gorilla/mux"
-
 	log "github.com/Sirupsen/logrus"
+	"github.com/gorilla/mux"
 
 	types "github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
@@ -72,14 +71,11 @@ func (d *driver) Listen(socketPath string) error {
 	)
 	router := mux.NewRouter()
 	router.NotFoundHandler = http.HandlerFunc(notFound)
-
 	router.Methods("GET").Path("/status").HandlerFunc(d.status)
 	router.Methods("POST").Path("/Plugin.Activate").HandlerFunc(d.handshake)
-
 	handleMethod := func(method string, h http.HandlerFunc) {
 		router.Methods("POST").Path(fmt.Sprintf("/%s.%s", VolumeDriver, method)).HandlerFunc(h)
 	}
-
 	handleMethod("Create", d.create)
 	handleMethod("Remove", d.remove)
 	handleMethod("Mount", d.mount)
@@ -87,16 +83,14 @@ func (d *driver) Listen(socketPath string) error {
 	handleMethod("Unmount", d.unmount)
 
 	socket := path.Join(socketPath, d.name)
-
 	os.Remove(socket)
 	os.MkdirAll(path.Dir(socket), 0755)
 
-	log.Printf("Plugin listening on %+v", socket)
+	log.Printf("Docker volume plugin listening on %+v", socket)
 	listener, err = net.Listen("unix", socket)
 	if err != nil {
 		return err
 	}
-
 	return http.Serve(listener, router)
 }
 
