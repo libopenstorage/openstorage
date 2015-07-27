@@ -8,12 +8,16 @@ import (
 )
 
 var (
-	instances       map[string]VolumeDriver
-	drivers         map[string]InitFunc
-	mutex           sync.Mutex
-	ErrNotSupported = errors.New("Driver implementation not supported")
-	ErrExist        = errors.New("Driver already exists")
-	ErrNotFound     = errors.New("Driver implementation not found")
+	instances         map[string]VolumeDriver
+	drivers           map[string]InitFunc
+	mutex             sync.Mutex
+	ErrNotSupported   = errors.New("Driver implementation not supported")
+	ErrExist          = errors.New("Driver already exists")
+	ErrDriverNotFound = errors.New("Driver implementation not found")
+	ErrEnoEnt         = errors.New("Volume does not exist.")
+	ErrVolDetached    = errors.New("Volume is detached")
+	ErrVolAttached    = errors.New("Volume is attached")
+	ErrVolHasSnaps    = errors.New("Volume has snapshots associated")
 )
 
 type DriverParams map[string]string
@@ -31,55 +35,65 @@ type VolumeDriver interface {
 	// volume is found then it is returned instead of creating a new volume.
 	Create(locator api.VolumeLocator,
 		options *api.CreateOptions,
-		spec *api.VolumeSpec) (volumeID api.VolumeID, err error)
+		spec *api.VolumeSpec) (api.VolumeID, error)
 
-	// Attach map device to the host and mount device on specified path.
+	// Attach map device to the host.
 	// On success the devicePath specifies location where the device is exported
-	// An error is returned if the volume is already attached, the volumeID doesn't
-	// exist or an internal error occurs.
-	Attach(volumeID api.VolumeID, path string) (devicePath string, err error)
+	// Errors ErrEnoEnt, ErrVolAttached may be returned.
+	Attach(volumeID api.VolumeID) (devicePath string, err error)
+
+	// Mount volume at specified path
+	// Errors ErrEnoEnt, ErrVolDetached may be returned.
+	Mount(volumeID api.VolumeID, mountpath string) error
 
 	// Format volume according to spec provided in Create
-	// An error is returned if the volume is not detached or an internal error occurs.
+	// Errors ErrEnoEnt, ErrVolDetached may be returned.
 	Format(volumeID api.VolumeID) error
 
 	// Detach device from the host.
-	// An error is returned if the volume was not attached.
-	Detach(volumeID api.VolumeID) (err error)
+	// Errors ErrEnoEnt, ErrVolDetached may be returned.
+	Detach(volumeID api.VolumeID) error
+
+	// Unmount volume at specified path
+	// Errors ErrEnoEnt, ErrVolDetached may be returned.
+	Unmount(volumeID api.VolumeID, mountpath string) error
 
 	// Inspect specified volumes.
-	Inspect(ids []api.VolumeID) (volume []api.Volume, err error)
+	// Errors ErrEnoEnt may be returned.
+	Inspect(volumeIDs []api.VolumeID) ([]api.Volume, error)
 
 	// Delete volume.
-	// Returns an error if there are any snaps associated with the volume.
-	Delete(volumeID api.VolumeID) (err error)
+	// Errors ErrEnoEnt, ErrVolHasSnaps may be returned.
+	Delete(volumeID api.VolumeID) error
 
 	// Enumerate volumes that map to the volumeLocator. Locator fields may be regexp.
 	// If locator fields are left blank, this will return all volumes.
-	// If err is set to ErrEagain then the call should be retried with empty cursor
 	Enumerate(locator api.VolumeLocator, labels api.Labels) []api.Volume
 
 	// Snap specified volume. IO to the underlying volume should be quiesced before
 	// calling this function.
-	// On success, system generated label is returned.
-	Snapshot(volumeID api.VolumeID, lables api.Labels) (snapID api.SnapID, err error)
+	// Errors ErrEnoEnt may be returned
+	Snapshot(volumeID api.VolumeID, lables api.Labels) (api.SnapID, error)
 
 	// SnapDelete snap specified by snapID.
-	SnapDelete(snapID api.SnapID) (err error)
+	// Errors ErrEnoEnt may be returned
+	SnapDelete(snapID api.SnapID) error
 
 	// SnapInspect provides details on this snapshot.
-	SnapInspect(snapID api.SnapID) (snap api.VolumeSnap, err error)
+	// Errors ErrEnoEnt may be returned
+	SnapInspect(snapID api.SnapID) (api.VolumeSnap, error)
 
 	// Enumerate snaps for specified volume
 	// Count indicates the number of snaps populated.
-	// If err is set to ErrEagain then the call should be retried with empty cursor
 	SnapEnumerate(locator api.VolumeLocator, labels api.Labels) *[]api.SnapID
 
 	// Stats for specified volume.
-	Stats(volumeID api.VolumeID) (stats api.VolumeStats, err error)
+	// Errors ErrEnoEnt may be returned
+	Stats(volumeID api.VolumeID) (api.VolumeStats, error)
 
 	// Alerts on this volume.
-	Alerts(volumeID api.VolumeID) (stats api.VolumeAlerts, err error)
+	// Errors ErrEnoEnt may be returned
+	Alerts(volumeID api.VolumeID) (api.VolumeAlerts, error)
 
 	// Shutdown and cleanup.
 	Shutdown()
@@ -97,7 +111,7 @@ func Get(name string) (VolumeDriver, error) {
 	if v, ok := instances[name]; ok {
 		return v, nil
 	}
-	return nil, ErrNotFound
+	return nil, ErrDriverNotFound
 }
 
 func New(name string, params DriverParams) (VolumeDriver, error) {
