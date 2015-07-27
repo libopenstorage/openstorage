@@ -71,11 +71,6 @@ func (self *awsProvider) Create(l api.VolumeLocator, opt *api.CreateOptions, spe
 	return api.VolumeID(*v.VolumeID), err
 }
 
-func (self *awsProvider) AttachInfo(volInfo *api.VolumeInfo) (int32, string, error) {
-	s := fmt.Sprintf("/tmp/gdd_%v", int(devMinor))
-	return devMinor, s, nil
-}
-
 func (self *awsProvider) Attach(volInfo api.VolumeID, path string) (string, error) {
 	devMinor++
 	s := fmt.Sprintf("/tmp/gdd_%v", int(devMinor))
