@@ -65,16 +65,16 @@ func (self *awsProvider) Create(l api.VolumeLocator, opt *api.CreateOptions, spe
 }
 
 func (self *awsProvider) Attach(volInfo api.VolumeID, path string) (string, error) {
+	devMinor++
+	device := fmt.Sprintf("/dev/ec2%v", int(devMinor))
 	volumeID := string(api.VolumeID)
-	req := ec2.AttachVolumeInput{
+	req, err := ec2.AttachVolumeInput{
 		Device:     &device,
 		InstanceID: &instanceID,
 		VolumeID:   &volumeID,
 	}
-	devMinor++
-	s := fmt.Sprintf("/tmp/gdd_%v", int(devMinor))
-	os.Create(s)
-	return s, nil
+
+	return device, err
 }
 
 func (self *awsProvider) Detach(volID api.VolumeID) error {
