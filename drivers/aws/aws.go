@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"syscall"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -23,8 +24,20 @@ var (
 	devMinor int32
 )
 
+type fstype string
+
+const (
+	ext4 = fstype("ext4")
+	xfs  = fstype("xfs")
+)
+
+// This data is persisted in a DB.
 type awsVolume struct {
+	fs         fstype
+	attached   bool
+	mounted    bool
 	device     string
+	mountpath  string
 	instanceID string
 }
 
@@ -117,19 +130,29 @@ func (self *awsProvider) Create(l api.VolumeLocator, opt *api.CreateOptions, spe
 		Size:             &sz,
 		IOPS:             &iops}
 	v, err := self.ec2.CreateVolume(req)
+	if err != nil {
+		return api.VolumeID(""), err
+	}
+
+	err = self.put(*v.VolumeID, &awsVolume{})
 
 	return api.VolumeID(*v.VolumeID), err
 }
 
-func (self *awsProvider) Attach(volInfo api.VolumeID) (string, error) {
+func (self *awsProvider) Attach(volumeID api.VolumeID) (string, error) {
+	v, err := self.get(string(volumeID))
+	if err != nil {
+		return "", err
+	}
+
 	devMinor++
 	device := fmt.Sprintf("/dev/ec2%v", int(devMinor))
-	volumeID := string(volInfo)
-	instanceID := string("")
+	vol := string(volumeID)
+	inst := string("")
 	req := &ec2.AttachVolumeInput{
 		Device:     &device,
-		InstanceID: &instanceID,
-		VolumeID:   &volumeID,
+		InstanceID: &inst,
+		VolumeID:   &vol,
 	}
 
 	resp, err := self.ec2.AttachVolume(req)
@@ -137,32 +160,85 @@ func (self *awsProvider) Attach(volInfo api.VolumeID) (string, error) {
 		return "", err
 	}
 
-	err = self.put(volumeID, &awsVolume{instanceID: instanceID})
+	v.instanceID = inst
+	v.attached = true
+	err = self.put(string(volumeID), v)
 
 	return *resp.Device, err
 }
 
 func (self *awsProvider) Mount(volumeID api.VolumeID, mountpath string) error {
-	return nil
+	v, err := self.get(string(volumeID))
+	if err != nil {
+		return err
+	}
+
+	err = syscall.Mount(v.device, mountpath, "ext4", 0, "")
+	if err != nil {
+		return err
+	}
+
+	v.mountpath = mountpath
+	v.mounted = true
+	err = self.put(string(volumeID), v)
+
+	return err
 }
 
-func (self *awsProvider) Detach(volID api.VolumeID) error {
-	return nil
+func (self *awsProvider) Detach(volumeID api.VolumeID) error {
+	v, err := self.get(string(volumeID))
+	if err != nil {
+		return err
+	}
+
+	vol := string(volumeID)
+	inst := v.instanceID
+	force := true
+	req := &ec2.DetachVolumeInput{
+		InstanceID: &inst,
+		VolumeID:   &vol,
+		Force:      &force,
+	}
+
+	_, err = self.ec2.DetachVolume(req)
+	if err != nil {
+		return err
+	}
+
+	v.instanceID = inst
+	v.attached = false
+	err = self.put(string(volumeID), v)
+
+	return err
 }
 
 func (self *awsProvider) Unmount(volumeID api.VolumeID, mountpath string) error {
+	v, err := self.get(string(volumeID))
+	if err != nil {
+		return err
+	}
+
+	err = syscall.Unmount(v.mountpath, 0)
+	if err != nil {
+		return err
+	}
+
+	v.mountpath = ""
+	v.mounted = false
+	err = self.put(string(volumeID), v)
+
+	return err
+}
+
+func (self *awsProvider) Delete(volumeID api.VolumeID) error {
 	return nil
 }
 
-func (self *awsProvider) Delete(volID api.VolumeID) error {
+func (self *awsProvider) Format(volumeID api.VolumeID) error {
 	return nil
 }
 
-func (self *awsProvider) Format(id api.VolumeID) error {
-	return nil
-}
-
-func (self *awsProvider) Inspect(ids []api.VolumeID) ([]api.Volume, error) {
+func (self *awsProvider) Inspect(volumeIDs []api.VolumeID) ([]api.Volume, error) {
 	return nil, nil
 }
 
@@ -170,7 +246,7 @@ func (self *awsProvider) Enumerate(locator api.VolumeLocator, labels api.Labels)
 	return nil
 }
 
-func (self *awsProvider) Snapshot(volID api.VolumeID, labels api.Labels) (snap api.SnapID, err error) {
+func (self *awsProvider) Snapshot(volumeID api.VolumeID, labels api.Labels) (snap api.SnapID, err error) {
 	return "", nil
 }
 
@@ -186,11 +262,11 @@ func (self *awsProvider) SnapEnumerate(locator api.VolumeLocator, labels api.Lab
 	return nil
 }
 
-func (self *awsProvider) Stats(volID api.VolumeID) (stats api.VolumeStats, err error) {
+func (self *awsProvider) Stats(volumeID api.VolumeID) (stats api.VolumeStats, err error) {
 	return api.VolumeStats{}, nil
 }
 
-func (self *awsProvider) Alerts(volID api.VolumeID) (stats api.VolumeAlerts, err error) {
+func (self *awsProvider) Alerts(volumeID api.VolumeID) (stats api.VolumeAlerts, err error) {
 	return api.VolumeAlerts{}, nil
 }
 
