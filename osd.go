@@ -14,7 +14,7 @@ const (
 )
 
 var (
-	providers = []string{ebs.Name}
+	providers = []string{aws.Name}
 )
 
 func start(c *cli.Context) {
