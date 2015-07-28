@@ -1,4 +1,4 @@
-package ebs
+package aws
 
 import (
 	"errors"
