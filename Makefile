@@ -15,6 +15,8 @@ openstorage:
 	@echo "Building openstorage..."
 	@go build $(BUILD_OPTIONS)  -o osd
 
+test:
+
 clean:
 	@echo "Cleaning openstorage..."
 	@rm -f tags

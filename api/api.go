@@ -1,41 +1,18 @@
 package api
 
-type StatusReason string
-
-const (
-	StatusReasonUnknown StatusReason = "Unknown"
-)
-
-const (
-	StatusSuccess = "OK"
-	StatusFail    = "FAIL"
-)
-
-var ResponseSuccess ResponseStatus = ResponseStatus{
-	Status:    StatusSuccess,
-	Reason:    StatusReason(StatusSuccess),
-	ErrorCode: 0,
-}
-
 type Options map[OptionKey]interface{}
 type OptionKey string
 
 const (
 	OptName        = OptionKey("Name")
 	OptID          = OptionKey("ID")
-	OptDiskLabel   = OptionKey("DiskLabel")
+	OptVolumeLabel = OptionKey("VolumeLabel")
 	OptConfigLabel = OptionKey("ConfigLabel")
 )
 
 type DriverStatus struct {
 	Status  string `json:"status"`
 	Version string `json:"version"`
-}
-
-type ResponseStatus struct {
-	Status    string       `json:"status"`
-	Reason    StatusReason `json:"reason"`
-	ErrorCode int          `json:"errorCode"`
 }
 
 type VolumeCreateRequest struct {
@@ -45,25 +22,27 @@ type VolumeCreateRequest struct {
 }
 
 type VolumeCreateResponse struct {
-	Status ResponseStatus
-	ID     VolumeID
+	ID     VolumeID `json:"id"`
+	Status string   `json:"status"`
 }
 
 type VolumeAttachRequest struct {
-	ID   VolumeID `json:"ID"`
-	Path string   `json:"path,omitempty"`
+	ID   VolumeID `json:"id"`
+	Path string   `json:"path"`
 }
 
 type VolumeAttachResponse struct {
-	Status ResponseStatus
-	Path   string
+	Path   string `json:"path"`
+	Status string `json:"status"`
 }
 
-func ResponseStatusNew(err error) ResponseStatus {
+type VolumeResponse struct {
+	Status string `json:"status"`
+}
+
+func ResponseStatusNew(err error) VolumeResponse {
 	if err == nil {
-		return ResponseSuccess
+		return VolumeResponse{}
 	}
-	return ResponseStatus{
-		Status: StatusFail,
-		Reason: StatusReason(err.Error())}
+	return VolumeResponse{Status: err.Error()}
 }
