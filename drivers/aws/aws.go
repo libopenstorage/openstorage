@@ -1,25 +1,24 @@
 package ebs
 
 import (
-	_ "encoding/json"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os/exec"
 	"syscall"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
-
+	"github.com/boltdb/bolt"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
 )
 
 const (
-	Name         = "aws"
-	AwsTableName = "AwsOpenStorage"
+	Name          = "aws"
+	AwsBucketName = "OpenStorageAWSBucket"
 )
 
 var (
@@ -39,19 +38,35 @@ type awsVolume struct {
 
 // Implements the open storage volume interface.
 type awsProvider struct {
+	db  *bolt.DB
 	ec2 *ec2.EC2
-	db  *dynamodb.DynamoDB
 }
 
 func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 	// Initialize the EC2 interface.
 	creds := credentials.NewEnvCredentials()
+	inst := &awsProvider{ec2: ec2.New(&aws.Config{
+		Region:      "us-west-1",
+		Credentials: creds,
+	}),
+	}
 
-	// TODO make the region an env variable.
-	config := &aws.Config{Region: "us-west-1", Credentials: creds}
-	inst := &awsProvider{ec2: ec2.New(config), db: dynamodb.New(config)}
+	// Create a DB if one does not exist.  This is where we persist the
+	// Amazon instance ID, sdevice and volume ID mappings.
+	db, err := bolt.Open("openstorage.aws.db", 0600, &bolt.Options{Timeout: 1 * time.Second})
+	if err != nil {
+		return nil, err
+	}
 
-	err := inst.init()
+	err = db.Update(func(tx *bolt.Tx) error {
+		_, err := tx.CreateBucket([]byte(AwsBucketName))
+		if err != nil {
+			return fmt.Errorf("create bucket: %s", err)
+		}
+		return nil
+	})
+
+	inst.db = db
 
 	return inst, err
 }
@@ -68,181 +83,33 @@ func mapIops(cos api.VolumeCos) int64 {
 }
 
 func (self *awsProvider) get(volumeID string) (*awsVolume, error) {
-	params := &dynamodb.GetItemInput{
-		Key: map[string]*dynamodb.AttributeValue{
-			"Key": {
-				B:    []byte("PAYLOAD"),
-				BOOL: aws.Boolean(true),
-				BS: [][]byte{
-					[]byte("PAYLOAD"),
-				},
-				L: []*dynamodb.AttributeValue{
-					{},
-				},
-				M: map[string]*dynamodb.AttributeValue{
-					"Key": {},
-				},
-				N: aws.String("NumberAttributeValue"),
-				NS: []*string{
-					aws.String("NumberAttributeValue"),
-				},
-				NULL: aws.Boolean(true),
-				S:    aws.String("StringAttributeValue"),
-				SS: []*string{
-					aws.String("StringAttributeValue"),
-				},
-			},
-		},
-		TableName: aws.String("TableName"),
-		AttributesToGet: []*string{
-			aws.String("AttributeName"),
-		},
-		ConsistentRead: aws.Boolean(true),
-		ExpressionAttributeNames: map[string]*string{
-			"Key": aws.String("AttributeName"),
-		},
-		ProjectionExpression:   aws.String("ProjectionExpression"),
-		ReturnConsumedCapacity: aws.String("ReturnConsumedCapacity"),
-	}
-	resp, err := self.db.GetItem(params)
-
-	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			fmt.Println(awsErr.Code(), awsErr.Message(), awsErr.OrigErr())
-			if reqErr, ok := err.(awserr.RequestFailure); ok {
-				fmt.Println(reqErr.Code(), reqErr.Message(), reqErr.StatusCode(), reqErr.RequestID())
-			}
-		} else {
-			fmt.Println(err.Error())
-		}
-		return nil, err
-	}
-
 	v := &awsVolume{}
-	// err = json.Unmarshal(b, v)
-	return v, nil
 
-	/*
-		err := self.db.Update(func(tx *bolt.Tx) error {
-			bucket := tx.Bucket([]byte(AwsBucketName))
-			b := bucket.Get([]byte(volumeID))
+	err := self.db.Update(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(AwsBucketName))
+		b := bucket.Get([]byte(volumeID))
 
-			if b == nil {
-				return errors.New("no such volume ID")
-			} else {
-			}
-		})
+		if b == nil {
+			return errors.New("no such volume ID")
+		} else {
+			err := json.Unmarshal(b, v)
+			return err
+		}
+	})
 
-		return v, err
-	*/
+	return v, err
 }
 
 func (self *awsProvider) put(volumeID string, v *awsVolume) error {
-	/*
-		b, _ := json.Marshal(v)
+	b, _ := json.Marshal(v)
 
-		err := self.db.Update(func(tx *bolt.Tx) error {
-			bucket := tx.Bucket([]byte(AwsBucketName))
-			err := bucket.Put([]byte(volumeID), b)
-			return err
-		})
-
+	err := self.db.Update(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(AwsBucketName))
+		err := bucket.Put([]byte(volumeID), b)
 		return err
-	*/
-	return nil
-}
+	})
 
-// Create a DB if one does not exist.  This is where we persist the
-// Amazon instance ID, sdevice and volume ID mappings.
-func (self *awsProvider) init() error {
-	listParams := &dynamodb.ListTablesInput{
-		ExclusiveStartTableName: aws.String(AwsTableName),
-		Limit: aws.Long(1),
-	}
-
-	_, err := self.db.ListTables(listParams)
-	if err == nil {
-		return nil
-	}
-
-	// Assume table does not exist and re-create it.
-	createParams := &dynamodb.CreateTableInput{
-		AttributeDefinitions: []*dynamodb.AttributeDefinition{
-			{
-				AttributeName: aws.String("KeySchemaAttributeName"),
-				AttributeType: aws.String("ScalarAttributeType"),
-			},
-		},
-		KeySchema: []*dynamodb.KeySchemaElement{
-			{
-				AttributeName: aws.String("KeySchemaAttributeName"),
-				KeyType:       aws.String("KeyType"),
-			},
-		},
-		ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
-			ReadCapacityUnits:  aws.Long(1),
-			WriteCapacityUnits: aws.Long(1),
-		},
-		TableName: aws.String(AwsTableName),
-		GlobalSecondaryIndexes: []*dynamodb.GlobalSecondaryIndex{
-			{
-				IndexName: aws.String("IndexName"),
-				KeySchema: []*dynamodb.KeySchemaElement{
-					{
-						AttributeName: aws.String("KeySchemaAttributeName"),
-						KeyType:       aws.String("KeyType"),
-					},
-				},
-				Projection: &dynamodb.Projection{
-					NonKeyAttributes: []*string{
-						aws.String("NonKeyAttributeName"),
-					},
-					ProjectionType: aws.String("ProjectionType"),
-				},
-				ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
-					ReadCapacityUnits:  aws.Long(1),
-					WriteCapacityUnits: aws.Long(1),
-				},
-			},
-		},
-		LocalSecondaryIndexes: []*dynamodb.LocalSecondaryIndex{
-			{
-				IndexName: aws.String("IndexName"),
-				KeySchema: []*dynamodb.KeySchemaElement{
-					{
-						AttributeName: aws.String("KeySchemaAttributeName"),
-						KeyType:       aws.String("KeyType"),
-					},
-				},
-				Projection: &dynamodb.Projection{
-					NonKeyAttributes: []*string{
-						aws.String("NonKeyAttributeName"),
-					},
-					ProjectionType: aws.String("ProjectionType"),
-				},
-			},
-		},
-		StreamSpecification: &dynamodb.StreamSpecification{
-			StreamEnabled:  aws.Boolean(true),
-			StreamViewType: aws.String("StreamViewType"),
-		},
-	}
-
-	_, err = self.db.CreateTable(createParams)
-	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			fmt.Println(awsErr.Code(), awsErr.Message(), awsErr.OrigErr())
-			if reqErr, ok := err.(awserr.RequestFailure); ok {
-				fmt.Println(reqErr.Code(), reqErr.Message(), reqErr.StatusCode(), reqErr.RequestID())
-			}
-		} else {
-			fmt.Println(err.Error())
-		}
-
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func (self *awsProvider) String() string {
@@ -250,7 +117,6 @@ func (self *awsProvider) String() string {
 }
 
 func (self *awsProvider) Create(l api.VolumeLocator, opt *api.CreateOptions, spec *api.VolumeSpec) (api.VolumeID, error) {
-	// TODO get this via an env variable.
 	availabilityZone := "us-west-1a"
 	sz := int64(spec.Size / (1024 * 1024 * 1024))
 	iops := mapIops(spec.Cos)
@@ -260,7 +126,6 @@ func (self *awsProvider) Create(l api.VolumeLocator, opt *api.CreateOptions, spe
 		IOPS:             &iops}
 	v, err := self.ec2.CreateVolume(req)
 	if err != nil {
-		fmt.Println(err)
 		return api.VolumeID(""), err
 	}
 
@@ -287,7 +152,6 @@ func (self *awsProvider) Attach(volumeID api.VolumeID) (string, error) {
 
 	resp, err := self.ec2.AttachVolume(req)
 	if err != nil {
-		fmt.Println(err)
 		return "", err
 	}
 
@@ -306,7 +170,6 @@ func (self *awsProvider) Mount(volumeID api.VolumeID, mountpath string) error {
 
 	err = syscall.Mount(v.device, mountpath, "ext4", 0, "")
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 
@@ -334,7 +197,6 @@ func (self *awsProvider) Detach(volumeID api.VolumeID) error {
 
 	_, err = self.ec2.DetachVolume(req)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 
@@ -353,7 +215,6 @@ func (self *awsProvider) Unmount(volumeID api.VolumeID, mountpath string) error 
 
 	err = syscall.Unmount(v.mountpath, 0)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 
@@ -389,10 +250,9 @@ func (self *awsProvider) Format(volumeID api.VolumeID) error {
 	cmd := "/sbin/mkfs." + string(v.spec.Format)
 	_, err = exec.Command(cmd, v.device).Output()
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
-	// TODO validate output
+	// XXX TODO validate output
 
 	v.formatted = true
 	err = self.put(string(volumeID), v)
