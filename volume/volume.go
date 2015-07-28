@@ -68,7 +68,7 @@ type VolumeDriver interface {
 
 	// Enumerate volumes that map to the volumeLocator. Locator fields may be regexp.
 	// If locator fields are left blank, this will return all volumes.
-	Enumerate(locator api.VolumeLocator, labels api.Labels) []api.Volume
+	Enumerate(locator api.VolumeLocator, labels api.Labels) ([]api.Volume, error)
 
 	// Snap specified volume. IO to the underlying volume should be quiesced before
 	// calling this function.
@@ -85,7 +85,7 @@ type VolumeDriver interface {
 
 	// Enumerate snaps for specified volume
 	// Count indicates the number of snaps populated.
-	SnapEnumerate(locator api.VolumeLocator, labels api.Labels) *[]api.SnapID
+	SnapEnumerate(locator api.VolumeLocator, labels api.Labels) (*[]api.SnapID, error)
 
 	// Stats for specified volume.
 	// Errors ErrEnoEnt may be returned
