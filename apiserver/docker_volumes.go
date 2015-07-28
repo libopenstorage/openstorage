@@ -4,15 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
 	"os"
-	"path"
 	"strconv"
 	"strings"
-
-	log "github.com/Sirupsen/logrus"
-	"github.com/gorilla/mux"
 
 	types "github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
@@ -22,13 +17,8 @@ const (
 	VolumeDriver = "VolumeDriver"
 )
 
-type Driver interface {
-	Listen(path string) error
-}
-
 type driver struct {
-	version string
-	name    string
+	restBase
 }
 
 type handshakeResp struct {
@@ -40,11 +30,11 @@ type volumeRequest struct {
 }
 
 type volumeResponse struct {
-	Err error
+	Err string
 }
 type volumePathResponse struct {
 	Mountpoint string
-	Err        error
+	Err        string
 }
 
 type volumeInfo struct {
@@ -52,72 +42,38 @@ type volumeInfo struct {
 	vol      *types.Volume
 }
 
-func NewVolumePlugin(name string) Driver {
-	return &driver{version: "0.3"}
+func NewVolumePlugin(name string) restServer {
+	return &driver{restBase{name: name, version: "0.3"}}
 }
 
-func logReq(request string, id string) *log.Entry {
-	return log.WithFields(log.Fields{
-		"Driver":  VolumeDriver,
-		"Request": request,
-		"ID":      id,
-	})
+func (d *driver) String() string {
+	return d.name
 }
 
-func (d *driver) Listen(socketPath string) error {
-	var (
-		listener net.Listener
-		err      error
-	)
-	router := mux.NewRouter()
-	router.NotFoundHandler = http.HandlerFunc(notFound)
-	router.Methods("GET").Path("/status").HandlerFunc(d.status)
-	router.Methods("POST").Path("/Plugin.Activate").HandlerFunc(d.handshake)
-	handleMethod := func(method string, h http.HandlerFunc) {
-		router.Methods("POST").Path(fmt.Sprintf("/%s.%s", VolumeDriver, method)).HandlerFunc(h)
+func volDriverPath(method string) string {
+	return fmt.Sprintf("/%s.%s", VolumeDriver, method)
+}
+
+func (d *driver) Routes() []*Route {
+	return []*Route{
+		&Route{verb: "POST", path: volDriverPath("Create"), fn: d.create},
+		&Route{verb: "POST", path: volDriverPath("Remove"), fn: d.remove},
+		&Route{verb: "POST", path: volDriverPath("Mount"), fn: d.mount},
+		&Route{verb: "POST", path: volDriverPath("Path"), fn: d.path},
+		&Route{verb: "POST", path: volDriverPath("Unmount"), fn: d.unmount},
+		&Route{verb: "POST", path: "/Plugin.Activate", fn: d.handshake},
+		&Route{verb: "GET", path: "/status", fn: d.status},
 	}
-	handleMethod("Create", d.create)
-	handleMethod("Remove", d.remove)
-	handleMethod("Mount", d.mount)
-	handleMethod("Path", d.path)
-	handleMethod("Unmount", d.unmount)
-
-	socket := path.Join(socketPath, d.name)
-	os.Remove(socket)
-	os.MkdirAll(path.Dir(socket), 0755)
-
-	log.Printf("Docker volume plugin listening on %+v", socket)
-	listener, err = net.Listen("unix", socket)
-	if err != nil {
-		return err
-	}
-	return http.Serve(listener, router)
 }
 
-func notFound(w http.ResponseWriter, r *http.Request) {
-	log.Warnf("[%s] Not found: %+v", VolumeDriver, r)
-	http.NotFound(w, r)
-}
-
-func sendError(request string, id string, w http.ResponseWriter, msg string, code int) {
-	logReq(request, id).Warn("%d %s", code, msg)
-	http.Error(w, msg, code)
-}
-
-func volNotFound(request string, id string, e error, w http.ResponseWriter) error {
-	err := fmt.Errorf("Failed to locate volume:" + e.Error())
-	logReq(request, id).Warn("%d %s", http.StatusNotFound, err.Error())
-	return err
-}
-
-func emptyResponse(w http.ResponseWriter) {
+func (d *driver) emptyResponse(w http.ResponseWriter) {
 	json.NewEncoder(w).Encode(&volumeResponse{})
 }
 
 func (d *driver) volFromName(name string) (*volumeInfo, error) {
 	s := strings.Split(name, ":")
 	if len(s) != 2 {
-		return nil, fmt.Errorf("Invalid logReq for name %s", name)
+		return nil, fmt.Errorf("Invalid d.logReq for name %s", name)
 	}
 	id, err := strconv.ParseUint(s[0], 10, 64)
 	if err != nil {
@@ -139,10 +95,10 @@ func (d *driver) decode(method string, w http.ResponseWriter, r *http.Request) (
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		e := fmt.Errorf("Unable to decode JSON payload")
-		sendError(method, "", w, e.Error()+":"+err.Error(), http.StatusBadRequest)
+		d.sendError(method, "", w, e.Error()+":"+err.Error(), http.StatusBadRequest)
 		return nil, e
 	}
-	logReq(method, request.Name).Debug()
+	d.logReq(method, request.Name).Debug()
 	return &request, nil
 }
 
@@ -151,10 +107,10 @@ func (d *driver) handshake(w http.ResponseWriter, r *http.Request) {
 		[]string{VolumeDriver},
 	})
 	if err != nil {
-		sendError("handshake", "", w, "encode error", http.StatusInternalServerError)
+		d.sendError("handshake", "", w, "encode error", http.StatusInternalServerError)
 		return
 	}
-	logReq("handshake", "").Info("Handshake completed")
+	d.logReq("handshake", "").Info("Handshake completed")
 }
 
 func (d *driver) status(w http.ResponseWriter, r *http.Request) {
@@ -170,11 +126,11 @@ func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 	// It is an error if the volume doesn't already exist.
 	_, err = d.volFromName(request.Name)
 	if err != nil {
-		e := volNotFound(method, request.Name, err, w)
-		json.NewEncoder(w).Encode(&volumeResponse{Err: e})
+		e := d.volNotFound(method, request.Name, err, w)
+		json.NewEncoder(w).Encode(&volumeResponse{Err: e.Error()})
 		return
 	}
-	json.NewEncoder(w).Encode(&volumeResponse{Err: nil})
+	json.NewEncoder(w).Encode(&volumeResponse{})
 }
 
 func (d *driver) remove(w http.ResponseWriter, r *http.Request) {
@@ -186,11 +142,11 @@ func (d *driver) remove(w http.ResponseWriter, r *http.Request) {
 	// It is an error if the volume doesn't exist.
 	_, err = d.volFromName(request.Name)
 	if err != nil {
-		e := volNotFound(method, request.Name, err, w)
-		json.NewEncoder(w).Encode(&volumeResponse{Err: e})
+		e := d.volNotFound(method, request.Name, err, w)
+		json.NewEncoder(w).Encode(&volumeResponse{Err: e.Error()})
 		return
 	}
-	json.NewEncoder(w).Encode(&volumeResponse{Err: nil})
+	json.NewEncoder(w).Encode(&volumeResponse{})
 }
 
 func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
@@ -202,8 +158,8 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 	}
 	volInfo, err := d.volFromName(request.Name)
 	if err != nil {
-		e := volNotFound(method, request.Name, err, w)
-		json.NewEncoder(w).Encode(&volumePathResponse{Err: e})
+		e := d.volNotFound(method, request.Name, err, w)
+		json.NewEncoder(w).Encode(&volumePathResponse{Err: e.Error()})
 		return
 	}
 	response.Mountpoint = fmt.Sprintf("/mnt/%s", request.Name)
@@ -211,16 +167,16 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 
 	v, err := volume.Get(d.name)
 	if err != nil {
-		json.NewEncoder(w).Encode(&volumePathResponse{Err: err})
+		json.NewEncoder(w).Encode(&volumePathResponse{Err: err.Error()})
 		return
 	}
-	path, err := v.Attach(volInfo.vol.ID, response.Mountpoint)
+	path, err := v.Attach(volInfo.vol.ID)
 	if err != nil {
-		json.NewEncoder(w).Encode(&volumePathResponse{Err: err})
+		json.NewEncoder(w).Encode(&volumePathResponse{Err: err.Error()})
 		return
 	}
 	response.Mountpoint = path
-	logReq(method, request.Name).Debugf("response %v", path)
+	d.logReq(method, request.Name).Debugf("response %v", path)
 	json.NewEncoder(w).Encode(&response)
 }
 
@@ -234,12 +190,12 @@ func (d *driver) path(w http.ResponseWriter, r *http.Request) {
 	}
 	volInfo, err := d.volFromName(request.Name)
 	if err != nil {
-		e := volNotFound(method, request.Name, err, w)
-		json.NewEncoder(w).Encode(&volumePathResponse{Err: e})
+		e := d.volNotFound(method, request.Name, err, w)
+		json.NewEncoder(w).Encode(&volumePathResponse{Err: e.Error()})
 		return
 	}
 	response.Mountpoint = volInfo.vol.AttachPath
-	logReq(method, request.Name).Debugf("response %v", response.Mountpoint)
+	d.logReq(method, request.Name).Debugf("response %v", response.Mountpoint)
 	json.NewEncoder(w).Encode(&response)
 }
 
@@ -251,21 +207,21 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 	}
 	volInfo, err := d.volFromName(request.Name)
 	if err != nil {
-		e := volNotFound(method, request.Name, err, w)
-		json.NewEncoder(w).Encode(&volumeResponse{Err: e})
+		e := d.volNotFound(method, request.Name, err, w)
+		json.NewEncoder(w).Encode(&volumeResponse{Err: e.Error()})
 		return
 	}
 	v, err := volume.Get(d.name)
 	if err != nil {
-		json.NewEncoder(w).Encode(&volumeResponse{Err: err})
+		json.NewEncoder(w).Encode(&volumeResponse{Err: err.Error()})
 		return
 	}
 	err = v.Detach(volInfo.vol.ID)
 	if err != nil {
-		logReq(request.Name, method).Warnf("%s", err.Error())
-		json.NewEncoder(w).Encode(&volumeResponse{Err: err})
+		d.logReq(request.Name, method).Warnf("%s", err.Error())
+		json.NewEncoder(w).Encode(&volumeResponse{Err: err.Error()})
 		return
 	}
 
-	emptyResponse(w)
+	d.emptyResponse(w)
 }
