@@ -33,6 +33,14 @@ or run only unit tests:
 
 ```
 $GOPATH/src/github.com/libopenstorage/openstorage $ godep go test ./... -test.short
+```
+## Updating to latest Source
+
+To update the source folder and all dependencies:
+
+```
+$GOPATH/src/github.com/libopenstorage/openstorage $ go get -u all
+```
 
 #### Using openstorage with systemd
 
