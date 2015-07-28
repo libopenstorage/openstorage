@@ -27,8 +27,9 @@ type InitFunc func(params DriverParams) (VolumeDriver, error)
 type DriverType string
 
 const (
-	TypeFileDriver  = DriverType("FilesystemDriver")
-	TypeBlockDriver = DriverType("BlockDriver")
+	TypeFileDriver   = DriverType("FilesystemDriver")
+	TypeBlockDriver  = DriverType("BlockDriver")
+	TypeObjectDriver = DriverType("ObjectDriver")
 )
 
 type VolumeDriver interface {
