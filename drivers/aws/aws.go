@@ -95,7 +95,9 @@ func (self *awsProvider) Create(l api.VolumeLocator, opt *api.CreateOptions, spe
 		return api.VolumeID(""), err
 	}
 
-	err = self.put(*v.VolumeID, &awsVolume{spec: *spec})
+	// Persist the volume spec.  We use this for all subsequent operations on
+	// this volume ID.
+	err = self.put(string(*v.VolumeID), &awsVolume{spec: *spec})
 
 	return api.VolumeID(*v.VolumeID), err
 }
