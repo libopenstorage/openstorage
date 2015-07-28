@@ -23,7 +23,7 @@ var (
 )
 
 type osd struct {
-	Providers map[string]volume.DriverParams
+	Providers map[string][]volume.DriverParams
 }
 
 type Config struct {
