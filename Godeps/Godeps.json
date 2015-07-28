@@ -1,0 +1,75 @@
+{
+	"ImportPath": "github.com/libopenstorage/openstorage",
+	"GoVersion": "go1.4.2",
+	"Packages": [
+		"./..."
+	],
+	"Deps": [
+		{
+			"ImportPath": "github.com/Sirupsen/logrus",
+			"Comment": "v0.8.2-8-ge3eccfa",
+			"Rev": "e3eccfaeb58b95c9ce22aea6867562f07a0d68c7"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/aws",
+			"Comment": "v0.6.8-2-g034c293",
+			"Rev": "034c293ded73cf710ba12f9173d45b5d9c69ec20"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/internal/endpoints",
+			"Comment": "v0.6.8-2-g034c293",
+			"Rev": "034c293ded73cf710ba12f9173d45b5d9c69ec20"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/internal/protocol/ec2query",
+			"Comment": "v0.6.8-2-g034c293",
+			"Rev": "034c293ded73cf710ba12f9173d45b5d9c69ec20"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/internal/protocol/query/queryutil",
+			"Comment": "v0.6.8-2-g034c293",
+			"Rev": "034c293ded73cf710ba12f9173d45b5d9c69ec20"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/internal/protocol/rest",
+			"Comment": "v0.6.8-2-g034c293",
+			"Rev": "034c293ded73cf710ba12f9173d45b5d9c69ec20"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/internal/protocol/xml/xmlutil",
+			"Comment": "v0.6.8-2-g034c293",
+			"Rev": "034c293ded73cf710ba12f9173d45b5d9c69ec20"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/internal/signer/v4",
+			"Comment": "v0.6.8-2-g034c293",
+			"Rev": "034c293ded73cf710ba12f9173d45b5d9c69ec20"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/service/ec2",
+			"Comment": "v0.6.8-2-g034c293",
+			"Rev": "034c293ded73cf710ba12f9173d45b5d9c69ec20"
+		},
+		{
+			"ImportPath": "github.com/codegangsta/cli",
+			"Comment": "1.2.0-107-g942282e",
+			"Rev": "942282e931e8286aa802a30b01fa7e16befb50f3"
+		},
+		{
+			"ImportPath": "github.com/gorilla/context",
+			"Rev": "215affda49addc4c8ef7e2534915df2c8c35c6cd"
+		},
+		{
+			"ImportPath": "github.com/gorilla/mux",
+			"Rev": "47e8f450ef38c857cdd922ec08862ca9d65a1c6d"
+		},
+		{
+			"ImportPath": "github.com/libopenstorage/kvdb",
+			"Rev": "adecc7b55fa2f33de0a3b0f21e0e3adfbf70512f"
+		},
+		{
+			"ImportPath": "github.com/vaughan0/go-ini",
+			"Rev": "a98ad7ee00ec53921f08832bc06ecf7fd600e6a1"
+		}
+	]
+}
