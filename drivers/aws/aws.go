@@ -1,24 +1,22 @@
 package ebs
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os/exec"
 	"syscall"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/boltdb/bolt"
+	"github.com/libopenstorage/kvdb"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
 )
 
 const (
-	Name          = "aws"
-	AwsBucketName = "OpenStorageAWSBucket"
+	Name     = "aws"
+	AwsDBKey = "OpenStorageAWSKey"
 )
 
 var (
@@ -38,7 +36,7 @@ type awsVolume struct {
 
 // Implements the open storage volume interface.
 type awsProvider struct {
-	db  *bolt.DB
+	db  kvdb.Kvdb
 	ec2 *ec2.EC2
 }
 
@@ -51,24 +49,9 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 	}),
 	}
 
-	// Create a DB if one does not exist.  This is where we persist the
-	// Amazon instance ID, sdevice and volume ID mappings.
-	db, err := bolt.Open("openstorage.aws.db", 0600, &bolt.Options{Timeout: 1 * time.Second})
-	if err != nil {
-		return nil, err
-	}
+	inst.db = kvdb.Instance()
 
-	err = db.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucket([]byte(AwsBucketName))
-		if err != nil {
-			return fmt.Errorf("create bucket: %s", err)
-		}
-		return nil
-	})
-
-	inst.db = db
-
-	return inst, err
+	return inst, nil
 }
 
 // AWS provisioned IOPS range is 100 - 20000.
@@ -84,31 +67,14 @@ func mapIops(cos api.VolumeCos) int64 {
 
 func (self *awsProvider) get(volumeID string) (*awsVolume, error) {
 	v := &awsVolume{}
-
-	err := self.db.Update(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket([]byte(AwsBucketName))
-		b := bucket.Get([]byte(volumeID))
-
-		if b == nil {
-			return errors.New("no such volume ID")
-		} else {
-			err := json.Unmarshal(b, v)
-			return err
-		}
-	})
-
+	key := AwsDBKey + "/" + volumeID
+	_, err := self.db.GetVal(key, v)
 	return v, err
 }
 
 func (self *awsProvider) put(volumeID string, v *awsVolume) error {
-	b, _ := json.Marshal(v)
-
-	err := self.db.Update(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket([]byte(AwsBucketName))
-		err := bucket.Put([]byte(volumeID), b)
-		return err
-	})
-
+	key := AwsDBKey + "/" + volumeID
+	_, err := self.db.Put(key, v, 0)
 	return err
 }
 
