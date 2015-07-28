@@ -6,19 +6,24 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 )
 
-// BlockDriver is a default (null) block driver implementation.  This can be used by drivers
-// that do not want to (or care about) implement the attach, format and detach interfaces.
+var (
+	ErrNotSupported = errors.New("Operation not supported")
+)
+
+// DefaultBlockDriver is a default (null) block driver implementation.  This can be
+// used by drivers that do not want to (or care about) implement the attach,
+// format and detach interfaces.
 type DefaultBlockDriver struct {
 }
 
-func (self *DefaultBlockDriver) Attach(volumeID api.VolumeID) error {
-	return errors.New("Not supported.")
+func (d *DefaultBlockDriver) Attach(volumeID api.VolumeID) (string, error) {
+	return "", ErrNotSupported
 }
 
-func (self *DefaultBlockDriver) Format(volumeID api.VolumeID) error {
-	return errors.New("Not supported.")
+func (d *DefaultBlockDriver) Format(volumeID api.VolumeID) error {
+	return ErrNotSupported
 }
 
-func (self *DefaultBlockDriver) Detach(volumeID api.VolumeID) error {
-	return errors.New("Not supported.")
+func (d *DefaultBlockDriver) Detach(volumeID api.VolumeID) error {
+	return ErrNotSupported
 }
