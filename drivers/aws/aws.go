@@ -168,7 +168,7 @@ func (self *awsProvider) Mount(volumeID api.VolumeID, mountpath string) error {
 		return err
 	}
 
-	err = syscall.Mount(v.device, mountpath, "ext4", 0, "")
+	err = syscall.Mount(v.device, mountpath, string(v.spec.Format), 0, "")
 	if err != nil {
 		return err
 	}
