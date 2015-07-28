@@ -1,6 +1,8 @@
 package volume
 
 import (
+	"errors"
+
 	"github.com/libopenstorage/openstorage/api"
 )
 
@@ -9,14 +11,14 @@ import (
 type DefaultBlockDriver struct {
 }
 
-func (self *DefaultBlockDriver) Attach(volumeID api.VolumeID) (devicePath string, err error) {
-	return "", nil
+func (self *DefaultBlockDriver) Attach(volumeID api.VolumeID) error {
+	return errors.New("Not supported.")
 }
 
 func (self *DefaultBlockDriver) Format(volumeID api.VolumeID) error {
-	return nil
+	return errors.New("Not supported.")
 }
 
 func (self *DefaultBlockDriver) Detach(volumeID api.VolumeID) error {
-	return nil
+	return errors.New("Not supported.")
 }

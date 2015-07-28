@@ -24,6 +24,13 @@ type DriverParams map[string]string
 
 type InitFunc func(params DriverParams) (VolumeDriver, error)
 
+type DriverType string
+
+const (
+	TypeFileDriver  = DriverType("FilesystemDriver")
+	TypeBlockDriver = DriverType("BlockDriver")
+)
+
 type VolumeDriver interface {
 	ProtoDriver
 	BlockDriver
@@ -91,7 +98,7 @@ type BlockDriver interface {
 	// Attach map device to the host.
 	// On success the devicePath specifies location where the device is exported
 	// Errors ErrEnoEnt, ErrVolAttached may be returned.
-	Attach(volumeID api.VolumeID) (devicePath string, err error)
+	Attach(volumeID api.VolumeID) error
 
 	// Format volume according to spec provided in Create
 	// Errors ErrEnoEnt, ErrVolDetached may be returned.
@@ -145,7 +152,7 @@ func New(name string, params DriverParams) (VolumeDriver, error) {
 	return nil, ErrNotSupported
 }
 
-func Register(name string, initFunc InitFunc) error {
+func Register(name string, driverType DriverType, initFunc InitFunc) error {
 	mutex.Lock()
 	defer mutex.Unlock()
 	if _, exists := drivers[name]; exists {

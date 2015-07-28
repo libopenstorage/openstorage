@@ -138,10 +138,10 @@ func (self *awsProvider) SnapEnumerate(locator api.VolumeLocator, labels api.Lab
 	return nil, errors.New("Unsupported")
 }
 
-func (self *awsProvider) Attach(volumeID api.VolumeID) (string, error) {
+func (self *awsProvider) Attach(volumeID api.VolumeID) error {
 	v, err := self.get(string(volumeID))
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	devMinor++
@@ -154,16 +154,16 @@ func (self *awsProvider) Attach(volumeID api.VolumeID) (string, error) {
 		VolumeID:   &vol,
 	}
 
-	resp, err := self.ec2.AttachVolume(req)
+	_, err = self.ec2.AttachVolume(req)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	v.instanceID = inst
 	v.attached = true
 	err = self.put(string(volumeID), v)
 
-	return *resp.Device, err
+	return err
 }
 
 func (self *awsProvider) Format(volumeID api.VolumeID) error {
@@ -266,5 +266,5 @@ func (self *awsProvider) Shutdown() {
 
 func init() {
 	// Register ourselves as an openstorage volume driver.
-	volume.Register(Name, Init)
+	volume.Register(Name, volume.TypeBlockDriver, Init)
 }
