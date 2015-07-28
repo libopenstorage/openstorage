@@ -102,6 +102,42 @@ func (self *awsProvider) Create(l api.VolumeLocator, opt *api.CreateOptions, spe
 	return api.VolumeID(*v.VolumeID), err
 }
 
+func (self *awsProvider) Inspect(volumeIDs []api.VolumeID) (volume []api.Volume, err error) {
+	return nil, nil
+}
+
+func (self *awsProvider) Delete(volumeID api.VolumeID) error {
+	return nil
+}
+
+func (self *awsProvider) Snapshot(volumeID api.VolumeID, labels api.Labels) (snap api.SnapID, err error) {
+	return "", errors.New("Unsupported")
+}
+
+func (self *awsProvider) SnapDelete(snapID api.SnapID) (err error) {
+	return errors.New("Unsupported")
+}
+
+func (self *awsProvider) SnapInspect(snapID api.SnapID) (snap api.VolumeSnap, err error) {
+	return api.VolumeSnap{}, errors.New("Unsupported")
+}
+
+func (self *awsProvider) Stats(volumeID api.VolumeID) (stats api.VolumeStats, err error) {
+	return api.VolumeStats{}, errors.New("Unsupported")
+}
+
+func (self *awsProvider) Alerts(volumeID api.VolumeID) (stats api.VolumeAlerts, err error) {
+	return api.VolumeAlerts{}, errors.New("Unsupported")
+}
+
+func (self *awsProvider) Enumerate(locator api.VolumeLocator, labels api.Labels) (volumes []api.Volume, err error) {
+	return nil, errors.New("Unsupported")
+}
+
+func (self *awsProvider) SnapEnumerate(locator api.VolumeLocator, labels api.Labels) (snaps *[]api.SnapID, err error) {
+	return nil, errors.New("Unsupported")
+}
+
 func (self *awsProvider) Attach(volumeID api.VolumeID) (string, error) {
 	v, err := self.get(string(volumeID))
 	if err != nil {
@@ -128,73 +164,6 @@ func (self *awsProvider) Attach(volumeID api.VolumeID) (string, error) {
 	err = self.put(string(volumeID), v)
 
 	return *resp.Device, err
-}
-
-func (self *awsProvider) Mount(volumeID api.VolumeID, mountpath string) error {
-	v, err := self.get(string(volumeID))
-	if err != nil {
-		return err
-	}
-
-	err = syscall.Mount(v.device, mountpath, string(v.spec.Format), 0, "")
-	if err != nil {
-		return err
-	}
-
-	v.mountpath = mountpath
-	v.mounted = true
-	err = self.put(string(volumeID), v)
-
-	return err
-}
-
-func (self *awsProvider) Detach(volumeID api.VolumeID) error {
-	v, err := self.get(string(volumeID))
-	if err != nil {
-		return err
-	}
-
-	vol := string(volumeID)
-	inst := v.instanceID
-	force := true
-	req := &ec2.DetachVolumeInput{
-		InstanceID: &inst,
-		VolumeID:   &vol,
-		Force:      &force,
-	}
-
-	_, err = self.ec2.DetachVolume(req)
-	if err != nil {
-		return err
-	}
-
-	v.instanceID = inst
-	v.attached = false
-	err = self.put(string(volumeID), v)
-
-	return err
-}
-
-func (self *awsProvider) Unmount(volumeID api.VolumeID, mountpath string) error {
-	v, err := self.get(string(volumeID))
-	if err != nil {
-		return err
-	}
-
-	err = syscall.Unmount(v.mountpath, 0)
-	if err != nil {
-		return err
-	}
-
-	v.mountpath = ""
-	v.mounted = false
-	err = self.put(string(volumeID), v)
-
-	return err
-}
-
-func (self *awsProvider) Delete(volumeID api.VolumeID) error {
-	return nil
 }
 
 func (self *awsProvider) Format(volumeID api.VolumeID) error {
@@ -228,36 +197,67 @@ func (self *awsProvider) Format(volumeID api.VolumeID) error {
 	return err
 }
 
-func (self *awsProvider) Inspect(volumeIDs []api.VolumeID) (volume []api.Volume, err error) {
-	return nil, nil
+func (self *awsProvider) Detach(volumeID api.VolumeID) error {
+	v, err := self.get(string(volumeID))
+	if err != nil {
+		return err
+	}
+
+	vol := string(volumeID)
+	inst := v.instanceID
+	force := true
+	req := &ec2.DetachVolumeInput{
+		InstanceID: &inst,
+		VolumeID:   &vol,
+		Force:      &force,
+	}
+
+	_, err = self.ec2.DetachVolume(req)
+	if err != nil {
+		return err
+	}
+
+	v.instanceID = inst
+	v.attached = false
+	err = self.put(string(volumeID), v)
+
+	return err
 }
 
-func (self *awsProvider) Enumerate(locator api.VolumeLocator, labels api.Labels) (volumes []api.Volume, err error) {
-	return nil, errors.New("Unsupported")
+func (self *awsProvider) Mount(volumeID api.VolumeID, mountpath string) error {
+	v, err := self.get(string(volumeID))
+	if err != nil {
+		return err
+	}
+
+	err = syscall.Mount(v.device, mountpath, string(v.spec.Format), 0, "")
+	if err != nil {
+		return err
+	}
+
+	v.mountpath = mountpath
+	v.mounted = true
+	err = self.put(string(volumeID), v)
+
+	return err
 }
 
-func (self *awsProvider) Snapshot(volumeID api.VolumeID, labels api.Labels) (snap api.SnapID, err error) {
-	return "", errors.New("Unsupported")
-}
+func (self *awsProvider) Unmount(volumeID api.VolumeID, mountpath string) error {
+	v, err := self.get(string(volumeID))
+	if err != nil {
+		return err
+	}
 
-func (self *awsProvider) SnapDelete(snapID api.SnapID) (err error) {
-	return errors.New("Unsupported")
-}
+	err = syscall.Unmount(v.mountpath, 0)
+	if err != nil {
+		return err
+	}
 
-func (self *awsProvider) SnapInspect(snapID api.SnapID) (snap api.VolumeSnap, err error) {
-	return api.VolumeSnap{}, errors.New("Unsupported")
-}
+	v.mountpath = ""
+	v.mounted = false
+	err = self.put(string(volumeID), v)
 
-func (self *awsProvider) SnapEnumerate(locator api.VolumeLocator, labels api.Labels) (snaps *[]api.SnapID, err error) {
-	return nil, errors.New("Unsupported")
-}
-
-func (self *awsProvider) Stats(volumeID api.VolumeID) (stats api.VolumeStats, err error) {
-	return api.VolumeStats{}, errors.New("Unsupported")
-}
-
-func (self *awsProvider) Alerts(volumeID api.VolumeID) (stats api.VolumeAlerts, err error) {
-	return api.VolumeAlerts{}, errors.New("Unsupported")
+	return err
 }
 
 func (self *awsProvider) Shutdown() {

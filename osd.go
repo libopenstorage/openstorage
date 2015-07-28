@@ -7,6 +7,7 @@ import (
 
 	osd "github.com/libopenstorage/openstorage/cli"
 	"github.com/libopenstorage/openstorage/drivers/aws"
+	"github.com/libopenstorage/openstorage/drivers/nfs"
 )
 
 const (
@@ -14,7 +15,7 @@ const (
 )
 
 var (
-	providers = []string{aws.Name}
+	providers = []string{aws.Name, nfs.Name}
 )
 
 func start(c *cli.Context) {
