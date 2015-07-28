@@ -14,7 +14,7 @@ import (
 
 const (
 	Name     = "nfs"
-	AwsDBKey = "OpenStorageNFSKey"
+	NfsDBKey = "OpenStorageNFSKey"
 )
 
 var (
@@ -40,23 +40,39 @@ type nfsProvider struct {
 }
 
 func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
+	out, err := exec.Command("uuidgen").Output()
+
 	inst := &nfsProvider{nfsServer: "",
-		db: kvdb.Instance()}
+		db:      kvdb.Instance(),
+		mntPath: "/mnt/" + string(out)}
+
+	// Mount the nfs server locally on a unique path.
+	err = syscall.Mount(inst.nfsServer, inst.mntPath, "", 0, "")
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Printf("NFS driver mounting volumes at %s.", inst.mntPath)
 
 	return inst, nil
 }
 
 func (self *nfsProvider) get(volumeID string) (*awsVolume, error) {
 	v := &awsVolume{}
-	key := AwsDBKey + "/" + volumeID
+	key := NfsDBKey + "/" + volumeID
 	_, err := self.db.GetVal(key, v)
 	return v, err
 }
 
 func (self *nfsProvider) put(volumeID string, v *awsVolume) error {
-	key := AwsDBKey + "/" + volumeID
+	key := NfsDBKey + "/" + volumeID
 	_, err := self.db.Put(key, v, 0)
 	return err
+}
+
+func (self *nfsProvider) del(volumeID string) {
+	key := NfsDBKey + "/" + volumeID
+	self.db.Delete(key)
 }
 
 func (self *nfsProvider) String() string {
@@ -79,7 +95,7 @@ func (self *nfsProvider) Create(l api.VolumeLocator, opt *api.CreateOptions, spe
 
 	// Persist the volume spec.  We use this for all subsequent operations on
 	// this volume ID.
-	err = self.put(volumeID, &awsVolume{spec: *spec})
+	err = self.put(volumeID, &awsVolume{device: self.mntPath + volumeID, spec: *spec})
 
 	return api.VolumeID(volumeID), err
 }
@@ -89,6 +105,19 @@ func (self *nfsProvider) Inspect(volumeIDs []api.VolumeID) (volume []api.Volume,
 }
 
 func (self *nfsProvider) Delete(volumeID api.VolumeID) error {
+	v, err := self.get(string(volumeID))
+	if err != nil {
+		return err
+	}
+
+	// Delete the directory on the nfs server.
+	err = os.Remove(v.device)
+	if err != nil {
+		return err
+	}
+
+	self.del(string(volumeID))
+
 	return nil
 }
 

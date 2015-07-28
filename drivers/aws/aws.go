@@ -78,6 +78,11 @@ func (self *awsProvider) put(volumeID string, v *awsVolume) error {
 	return err
 }
 
+func (self *awsProvider) del(volumeID string) {
+	key := AwsDBKey + "/" + volumeID
+	self.db.Delete(key)
+}
+
 func (self *awsProvider) String() string {
 	return Name
 }
