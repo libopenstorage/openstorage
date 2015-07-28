@@ -25,6 +25,13 @@ type DriverParams map[string]string
 type InitFunc func(params DriverParams) (VolumeDriver, error)
 
 type VolumeDriver interface {
+	ProtoDriver
+	BlockDriver
+	MountDriver
+	Enumerator
+}
+
+type ProtoDriver interface {
 	// String description of this driver.
 	String() string
 
@@ -37,27 +44,6 @@ type VolumeDriver interface {
 		options *api.CreateOptions,
 		spec *api.VolumeSpec) (api.VolumeID, error)
 
-	// Attach map device to the host.
-	// On success the devicePath specifies location where the device is exported
-	// Errors ErrEnoEnt, ErrVolAttached may be returned.
-	Attach(volumeID api.VolumeID) (devicePath string, err error)
-
-	// Mount volume at specified path
-	// Errors ErrEnoEnt, ErrVolDetached may be returned.
-	Mount(volumeID api.VolumeID, mountpath string) error
-
-	// Format volume according to spec provided in Create
-	// Errors ErrEnoEnt, ErrVolDetached may be returned.
-	Format(volumeID api.VolumeID) error
-
-	// Detach device from the host.
-	// Errors ErrEnoEnt, ErrVolDetached may be returned.
-	Detach(volumeID api.VolumeID) error
-
-	// Unmount volume at specified path
-	// Errors ErrEnoEnt, ErrVolDetached may be returned.
-	Unmount(volumeID api.VolumeID, mountpath string) error
-
 	// Inspect specified volumes.
 	// Errors ErrEnoEnt may be returned.
 	Inspect(volumeIDs []api.VolumeID) ([]api.Volume, error)
@@ -65,10 +51,6 @@ type VolumeDriver interface {
 	// Delete volume.
 	// Errors ErrEnoEnt, ErrVolHasSnaps may be returned.
 	Delete(volumeID api.VolumeID) error
-
-	// Enumerate volumes that map to the volumeLocator. Locator fields may be regexp.
-	// If locator fields are left blank, this will return all volumes.
-	Enumerate(locator api.VolumeLocator, labels api.Labels) ([]api.Volume, error)
 
 	// Snap specified volume. IO to the underlying volume should be quiesced before
 	// calling this function.
@@ -83,10 +65,6 @@ type VolumeDriver interface {
 	// Errors ErrEnoEnt may be returned
 	SnapInspect(snapID api.SnapID) (api.VolumeSnap, error)
 
-	// Enumerate snaps for specified volume
-	// Count indicates the number of snaps populated.
-	SnapEnumerate(locator api.VolumeLocator, labels api.Labels) (*[]api.SnapID, error)
-
 	// Stats for specified volume.
 	// Errors ErrEnoEnt may be returned
 	Stats(volumeID api.VolumeID) (api.VolumeStats, error)
@@ -97,6 +75,41 @@ type VolumeDriver interface {
 
 	// Shutdown and cleanup.
 	Shutdown()
+}
+
+type Enumerator interface {
+	// Enumerate volumes that map to the volumeLocator. Locator fields may be regexp.
+	// If locator fields are left blank, this will return all volumes.
+	Enumerate(locator api.VolumeLocator, labels api.Labels) ([]api.Volume, error)
+
+	// Enumerate snaps for specified volume
+	// Count indicates the number of snaps populated.
+	SnapEnumerate(locator api.VolumeLocator, labels api.Labels) (*[]api.SnapID, error)
+}
+
+type BlockDriver interface {
+	// Attach map device to the host.
+	// On success the devicePath specifies location where the device is exported
+	// Errors ErrEnoEnt, ErrVolAttached may be returned.
+	Attach(volumeID api.VolumeID) (devicePath string, err error)
+
+	// Format volume according to spec provided in Create
+	// Errors ErrEnoEnt, ErrVolDetached may be returned.
+	Format(volumeID api.VolumeID) error
+
+	// Detach device from the host.
+	// Errors ErrEnoEnt, ErrVolDetached may be returned.
+	Detach(volumeID api.VolumeID) error
+}
+
+type MountDriver interface {
+	// Mount volume at specified path
+	// Errors ErrEnoEnt, ErrVolDetached may be returned.
+	Mount(volumeID api.VolumeID, mountpath string) error
+
+	// Unmount volume at specified path
+	// Errors ErrEnoEnt, ErrVolDetached may be returned.
+	Unmount(volumeID api.VolumeID, mountpath string) error
 }
 
 func Shutdown() {
