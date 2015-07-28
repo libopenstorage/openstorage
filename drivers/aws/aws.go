@@ -1,26 +1,36 @@
 package ebs
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
-	"os"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/boltdb/bolt"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
 )
 
 const (
-	Name = "aws"
+	Name          = "aws"
+	AwsBucketName = "OpenStorageAWSBucket"
 )
 
 var (
 	devMinor int32
 )
 
+type awsVolume struct {
+	device     string
+	instanceID string
+}
+
 // Implements the open storage volume interface.
 type awsProvider struct {
+	db  *bolt.DB
 	ec2 *ec2.EC2
 }
 
@@ -33,7 +43,24 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 	}),
 	}
 
-	return inst, nil
+	// Create a DB if one does not exist.  This is where we persist the
+	// Amazon instance ID, sdevice and volume ID mappings.
+	db, err := bolt.Open("openstorage.aws.db", 0600, &bolt.Options{Timeout: 1 * time.Second})
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.Update(func(tx *bolt.Tx) error {
+		_, err := tx.CreateBucket([]byte(AwsBucketName))
+		if err != nil {
+			return fmt.Errorf("create bucket: %s", err)
+		}
+		return nil
+	})
+
+	inst.db = db
+
+	return inst, err
 }
 
 // AWS provisioned IOPS range is 100 - 20000.
@@ -45,6 +72,36 @@ func mapIops(cos api.VolumeCos) int64 {
 	} else {
 		return 20000
 	}
+}
+
+func (self *awsProvider) get(volumeID string) (*awsVolume, error) {
+	v := &awsVolume{}
+
+	err := self.db.Update(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(AwsBucketName))
+		b := bucket.Get([]byte(volumeID))
+
+		if b == nil {
+			return errors.New("no such volume ID")
+		} else {
+			err := json.Unmarshal(b, v)
+			return err
+		}
+	})
+
+	return v, err
+}
+
+func (self *awsProvider) put(volumeID string, v *awsVolume) error {
+	b, _ := json.Marshal(v)
+
+	err := self.db.Update(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(AwsBucketName))
+		err := bucket.Put([]byte(volumeID), b)
+		return err
+	})
+
+	return err
 }
 
 func (self *awsProvider) String() string {
@@ -67,14 +124,22 @@ func (self *awsProvider) Create(l api.VolumeLocator, opt *api.CreateOptions, spe
 func (self *awsProvider) Attach(volInfo api.VolumeID) (string, error) {
 	devMinor++
 	device := fmt.Sprintf("/dev/ec2%v", int(devMinor))
-	volumeID := string(api.VolumeID)
-	req, err := ec2.AttachVolumeInput{
+	volumeID := string(volInfo)
+	instanceID := string("")
+	req := &ec2.AttachVolumeInput{
 		Device:     &device,
 		InstanceID: &instanceID,
 		VolumeID:   &volumeID,
 	}
 
-	return device, err
+	resp, err := self.ec2.AttachVolume(req)
+	if err != nil {
+		return "", err
+	}
+
+	err = self.put(volumeID, &awsVolume{instanceID: instanceID})
+
+	return *resp.Device, err
 }
 
 func (self *awsProvider) Mount(volumeID api.VolumeID, mountpath string) error {
