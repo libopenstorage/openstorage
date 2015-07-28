@@ -70,6 +70,7 @@ func main() {
 		cli.StringSliceFlag{
 			Name:  "provider, p",
 			Usage: "provider name and options: name=btrfs,root_vol=/var/openstorage/btrfs",
+			Value: new(cli.StringSlice),
 		},
 		cli.StringFlag{
 			Name:  "file,f",
