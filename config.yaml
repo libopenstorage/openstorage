@@ -1,7 +1,7 @@
 osd:
 	providers:
 			nfs:
-				nfsserver: nfs://localhost/mnt/
+				- nfsserver: nfs://localhost/mnt/
 			aws:
-                AWS_ACCESS_KEY_ID: your_aws_access_key_id
-                AWS_SECRET_ACCESS_KEY: your_aws_secret_access_key
+                - aws_access_key_id: your_aws_access_key_id
+                - aws_secret_access_key: your_aws_secret_access_key

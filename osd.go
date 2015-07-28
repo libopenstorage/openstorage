@@ -1,13 +1,17 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
 	"os"
 
 	"github.com/codegangsta/cli"
+	"gopkg.in/yaml.v2"
 
-	osd "github.com/libopenstorage/openstorage/cli"
+	osdcli "github.com/libopenstorage/openstorage/cli"
 	"github.com/libopenstorage/openstorage/drivers/aws"
 	"github.com/libopenstorage/openstorage/drivers/nfs"
+	"github.com/libopenstorage/openstorage/volume"
 )
 
 const (
@@ -18,8 +22,33 @@ var (
 	providers = []string{aws.Name, nfs.Name}
 )
 
+type osd struct {
+	Providers map[string]volume.DriverParams
+}
+
+type Config struct {
+	Osd osd
+}
+
 func start(c *cli.Context) {
-	if !osd.DaemonMode(c) {
+	cfg := Config{}
+
+	file := c.String("file")
+	if file != "" {
+		b, err := ioutil.ReadFile(file)
+		if err != nil {
+			panic(err)
+		}
+		err = yaml.Unmarshal(b, &cfg)
+		if err != nil {
+			panic(err)
+		}
+
+	}
+
+	fmt.Printf("%+v\n", cfg)
+
+	if !osdcli.DaemonMode(c) {
 		cli.ShowAppHelp(c)
 	}
 }
@@ -35,12 +64,17 @@ func main() {
 			Usage: "output in json",
 		},
 		cli.BoolFlag{
-			Name:  osd.DaemonAlias,
+			Name:  osdcli.DaemonAlias,
 			Usage: "Start OSD in daemon mode",
 		},
 		cli.StringSliceFlag{
 			Name:  "provider, p",
 			Usage: "provider name and options: name=btrfs,root_vol=/var/openstorage/btrfs",
+		},
+		cli.StringFlag{
+			Name:  "file,f",
+			Usage: "file to read the OSD configuration from.",
+			Value: "",
 		},
 	}
 	app.Action = start
@@ -49,13 +83,13 @@ func main() {
 			Name:        "volume",
 			Aliases:     []string{"v"},
 			Usage:       "Manage volumes",
-			Subcommands: osd.VolumeCommands(),
+			Subcommands: osdcli.VolumeCommands(),
 		},
 		{
 			Name:        "provider",
 			Aliases:     []string{"p"},
 			Usage:       "Manage providers",
-			Subcommands: osd.ProviderCommands(),
+			Subcommands: osdcli.ProviderCommands(),
 		},
 	}
 	app.Run(os.Args)
