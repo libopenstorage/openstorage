@@ -68,8 +68,60 @@ func mapIops(cos api.VolumeCos) int64 {
 }
 
 func (self *awsProvider) get(volumeID string) (*awsVolume, error) {
+	params := &dynamodb.GetItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			"Key": {
+				B:    []byte("PAYLOAD"),
+				BOOL: aws.Boolean(true),
+				BS: [][]byte{
+					[]byte("PAYLOAD"),
+				},
+				L: []*dynamodb.AttributeValue{
+					{},
+				},
+				M: map[string]*dynamodb.AttributeValue{
+					"Key": {},
+				},
+				N: aws.String("NumberAttributeValue"),
+				NS: []*string{
+					aws.String("NumberAttributeValue"),
+				},
+				NULL: aws.Boolean(true),
+				S:    aws.String("StringAttributeValue"),
+				SS: []*string{
+					aws.String("StringAttributeValue"),
+				},
+			},
+		},
+		TableName: aws.String("TableName"),
+		AttributesToGet: []*string{
+			aws.String("AttributeName"),
+		},
+		ConsistentRead: aws.Boolean(true),
+		ExpressionAttributeNames: map[string]*string{
+			"Key": aws.String("AttributeName"),
+		},
+		ProjectionExpression:   aws.String("ProjectionExpression"),
+		ReturnConsumedCapacity: aws.String("ReturnConsumedCapacity"),
+	}
+	resp, err := self.db.GetItem(params)
+
+	if err != nil {
+		if awsErr, ok := err.(awserr.Error); ok {
+			fmt.Println(awsErr.Code(), awsErr.Message(), awsErr.OrigErr())
+			if reqErr, ok := err.(awserr.RequestFailure); ok {
+				fmt.Println(reqErr.Code(), reqErr.Message(), reqErr.StatusCode(), reqErr.RequestID())
+			}
+		} else {
+			fmt.Println(err.Error())
+		}
+		return nil, err
+	}
+
 	v := &awsVolume{}
+	// err = json.Unmarshal(b, v)
 	return v, nil
+
 	/*
 		err := self.db.Update(func(tx *bolt.Tx) error {
 			bucket := tx.Bucket([]byte(AwsBucketName))
@@ -78,8 +130,6 @@ func (self *awsProvider) get(volumeID string) (*awsVolume, error) {
 			if b == nil {
 				return errors.New("no such volume ID")
 			} else {
-				err := json.Unmarshal(b, v)
-				return err
 			}
 		})
 
@@ -186,7 +236,7 @@ func (self *awsProvider) init() error {
 				fmt.Println(reqErr.Code(), reqErr.Message(), reqErr.StatusCode(), reqErr.RequestID())
 			}
 		} else {
-			fmt.Println(err)
+			fmt.Println(err.Error())
 		}
 
 		return err
