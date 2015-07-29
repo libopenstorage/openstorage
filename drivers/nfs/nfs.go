@@ -1,6 +1,7 @@
 package nfs
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -73,7 +74,7 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 		return nil, err
 	}
 
-	fmt.Printf("NFS initialized and driver mounted at %s.", inst.mntPath)
+	fmt.Println("NFS initialized and driver mounted at %s.", inst.mntPath)
 	return inst, nil
 }
 
