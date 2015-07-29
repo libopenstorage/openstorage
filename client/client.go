@@ -13,7 +13,7 @@ type Client struct {
 	httpClient *http.Client
 }
 
-func (c *Client) Volume() volume.VolumeDriver {
+func (c *Client) VolumeDriver() volume.VolumeDriver {
 	return newVolumeClient(c)
 }
 

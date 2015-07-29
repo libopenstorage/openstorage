@@ -1,9 +1,16 @@
 package cli
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/url"
+	"os"
+	"strings"
 
 	"github.com/codegangsta/cli"
+	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/client"
+	"github.com/libopenstorage/openstorage/volume"
 )
 
 type VolumeSzUnits uint64
@@ -17,31 +24,269 @@ const (
 	PB
 )
 
+var (
+	clnt      *client.Client
+	volDriver volume.VolumeDriver
+)
+
 func initVolumeClient(volumeUrl *url.URL) {
+	volDriver = clnt.VolumeDriver()
+}
+
+func processLabels(s string) (api.Labels, error) {
+	m := make(map[string]string)
+	labels := strings.Split(s, ",")
+	for _, v := range labels {
+		label := strings.Split(v, "=")
+		if len(label) != 2 {
+			return nil, fmt.Errorf("Malformed label: %s", v)
+		}
+		if _, ok := m[label[0]]; ok {
+			return nil, fmt.Errorf("Duplicate label: %s", v)
+		}
+		m[label[0]] = label[1]
+	}
+	return m, nil
 }
 
 func volumeOptions(c *cli.Context) {
+	var volumeUrl *url.URL
+	var err error
+
+	if err != nil {
+		b, _ := json.MarshalIndent(err, "", " ")
+		fmt.Printf("%+v\n", string(b))
+		os.Exit(1)
+	}
+	initVolumeClient(volumeUrl)
 }
 
 func volumeCreate(c *cli.Context) {
-}
+	var err error
+	var labels api.Labels
+	var locator api.VolumeLocator
+	var id api.VolumeID
+	fn := "create"
 
-func volumeEnumerate(c *cli.Context) {
-}
+	if len(c.Args()) != 1 {
+		missingParameter(c, fn, "name", "Invalid number of arguments")
+		return
+	}
 
-func volumeInspect(c *cli.Context) {
+	volumeOptions(c)
+	if l := c.String("label"); l != "" {
+		if labels, err = processLabels(l); err != nil {
+			cmdError(c, fn, err)
+			return
+		}
+	}
+	locator = api.VolumeLocator{
+		Name:         c.Args()[0],
+		VolumeLabels: labels,
+	}
+	spec := &api.VolumeSpec{
+		Size:             uint64(VolumeSzUnits(c.Int("s")) * MB),
+		Format:           api.Filesystem(c.String("fs")),
+		BlockSize:        c.Int("b") * 1024,
+		HALevel:          c.Int("r"),
+		Cos:              api.VolumeCos(c.Int("cos")),
+		SnapShotInterval: c.Int("si"),
+	}
+	if id, err = volDriver.Create(locator, nil, spec); err != nil {
+		cmdError(c, fn, err)
+		return
+	}
+
+	fmtOutput(c, &Format{Uuid: []string{string(id)}})
 }
 
 func volumeFormat(c *cli.Context) {
+	volumeOptions(c)
+	fn := "format"
+	if len(c.Args()) < 1 {
+		missingParameter(c, fn, "volumeID", "Invalid number of arguments")
+		return
+	}
+	volumeID := c.Args()[0]
+
+	err := volDriver.Format(api.VolumeID(volumeID))
+	if err != nil {
+		cmdError(c, fn, err)
+		return
+	}
+
+	fmtOutput(c, &Format{Uuid: []string{c.Args()[0]}})
 }
 
 func volumeAttach(c *cli.Context) {
+	fn := "attach"
+	if len(c.Args()) < 1 {
+		missingParameter(c, fn, "volumeID", "Invalid number of arguments")
+		return
+	}
+	volumeOptions(c)
+	volumeID := c.Args()[0]
+
+	devicePath, err := volDriver.Attach(api.VolumeID(volumeID))
+	if err != nil {
+		cmdError(c, fn, err)
+		return
+	}
+
+	fmtOutput(c, &Format{Result: devicePath})
 }
 
 func volumeDetach(c *cli.Context) {
+	fn := "detach"
+	if len(c.Args()) < 1 {
+		missingParameter(c, fn, "volumeID", "Invalid number of arguments")
+		return
+	}
+	volumeID := c.Args()[0]
+	volumeOptions(c)
+	err := volDriver.Detach(api.VolumeID(volumeID))
+	if err != nil {
+		cmdError(c, fn, err)
+		return
+	}
+
+	fmtOutput(c, &Format{Uuid: []string{c.Args()[0]}})
+}
+
+func volumeInspect(c *cli.Context) {
+
+	volumeOptions(c)
+	fn := "inspect"
+	if len(c.Args()) < 1 {
+		missingParameter(c, fn, "volumeID", "Invalid number of arguments")
+		return
+	}
+
+	d := make([]api.VolumeID, len(c.Args()))
+	for i, v := range c.Args() {
+		d[i] = api.VolumeID(v)
+	}
+
+	volumes, err := volDriver.Inspect(d)
+	if err != nil {
+		cmdError(c, fn, err)
+		return
+	}
+
+	cmdOutput(c, volumes)
+}
+
+func volumeEnumerate(c *cli.Context) {
+	var locator api.VolumeLocator
+	var err error
+
+	fn := "enumerate"
+	locator.Name = c.String("name")
+	if l := c.String("label"); l != "" {
+		locator.VolumeLabels, err = processLabels(l)
+		if err != nil {
+			cmdError(c, fn, err)
+			return
+		}
+	}
+
+	volumeOptions(c)
+	volumes, err := volDriver.Enumerate(locator, nil)
+	if err != nil {
+		cmdError(c, fn, err)
+		return
+	}
+	if volumes == nil {
+		cmdError(c, fn, err)
+		return
+	}
+	cmdOutput(c, volumes)
 }
 
 func volumeDelete(c *cli.Context) {
+	fn := "delete"
+	if len(c.Args()) < 1 {
+		missingParameter(c, fn, "volumeID", "Invalid number of arguments")
+		return
+	}
+	volumeID := c.Args()[0]
+	volumeOptions(c)
+	err := volDriver.Delete(api.VolumeID(volumeID))
+	if err != nil {
+		cmdError(c, fn, err)
+		return
+	}
+
+	fmtOutput(c, &Format{Uuid: []string{c.Args()[0]}})
+}
+
+func snapCreate(c *cli.Context) {
+}
+
+func snapInspect(c *cli.Context) {
+
+	volumeOptions(c)
+	fn := "inspect"
+	if len(c.Args()) < 1 {
+		missingParameter(c, fn, "snapID", "Invalid number of arguments")
+		return
+	}
+	d := make([]api.SnapID, len(c.Args()))
+	for i, v := range c.Args() {
+		d[i] = api.SnapID(v)
+	}
+
+	snaps, err := volDriver.SnapInspect(d)
+	if err != nil {
+		cmdError(c, fn, err)
+		return
+	}
+
+	cmdOutput(c, snaps)
+}
+
+func snapEnumerate(c *cli.Context) {
+	var locator api.VolumeLocator
+	var err error
+
+	fn := "enumerate"
+	locator.Name = c.String("name")
+	if l := c.String("label"); l != "" {
+		locator.VolumeLabels, err = processLabels(l)
+		if err != nil {
+			cmdError(c, fn, err)
+			return
+		}
+	}
+
+	volumeOptions(c)
+	snaps, err := volDriver.Enumerate(locator, nil)
+	if err != nil {
+		cmdError(c, fn, err)
+		return
+	}
+	if snaps == nil {
+		cmdError(c, fn, err)
+		return
+	}
+	cmdOutput(c, snaps)
+}
+
+func snapDelete(c *cli.Context) {
+	fn := "delete"
+	if len(c.Args()) < 1 {
+		missingParameter(c, fn, "snapID", "Invalid number of arguments")
+		return
+	}
+	volumeOptions(c)
+	snapID := c.Args()[0]
+	err := volDriver.SnapDelete(api.SnapID(snapID))
+	if err != nil {
+		cmdError(c, fn, err)
+		return
+	}
+
+	fmtOutput(c, &Format{Uuid: []string{c.Args()[0]}})
 }
 
 func VolumeCommands() []cli.Command {
@@ -141,6 +386,46 @@ func VolumeCommands() []cli.Command {
 			Aliases: []string{"i"},
 			Usage:   "Inspect volume",
 			Action:  volumeInspect,
+		},
+		{
+			Name:    "snap",
+			Aliases: []string{"sc"},
+			Usage:   "create snap",
+			Action:  snapCreate,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "label,l",
+					Usage: "Comma separated name=value pairs, e.g name=sqlvolume,type=production",
+				},
+			},
+		},
+		{
+			Name:    "snapInspect",
+			Aliases: []string{"si"},
+			Usage:   "Inspect snap",
+			Action:  snapInspect,
+		},
+		{
+			Name:    "snapEnumerate",
+			Aliases: []string{"se"},
+			Usage:   "Enumerate snap",
+			Action:  snapEnumerate,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "name, n",
+					Usage: "snap name used during creation",
+				},
+				cli.StringFlag{
+					Name:  "label,l",
+					Usage: "Comma separated name=value pairs, e.g name=sqlvolume,type=production",
+				},
+			},
+		},
+		{
+			Name:    "snapDelete",
+			Aliases: []string{"si"},
+			Usage:   "Delete snap",
+			Action:  snapDelete,
 		},
 	}
 	return commands
