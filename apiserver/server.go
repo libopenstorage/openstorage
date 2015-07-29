@@ -79,12 +79,16 @@ func startServer(name string, sockBase string, rest restServer) error {
 	return http.Serve(listener, router)
 }
 
-func StartVolumePlugin(name string, sockBase string) error {
-	rest := NewVolumePlugin(name)
-	return startServer(name, sockBase, rest)
+// StartVolumeDriver starts a REST server to receive driver configuration commands
+// from the CLI/UX.
+func StartDriverApi(name string, port int, restBase string) error {
+	rest := NewVolumeDriver(name)
+	return startServer(name, restBase, rest)
 }
 
-func StartDriver(name string, port int, sockBase string) error {
-	rest := NewVolumeDriver(name)
-	return startServer(name, sockBase, rest)
+// StartVolumePlugin starts a REST server to receive volume commands from the
+// Linux container engine.
+func StartPluginApi(name string, pluginBase string) error {
+	rest := NewVolumePlugin(name)
+	return startServer(name, pluginBase, rest)
 }

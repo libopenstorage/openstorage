@@ -18,7 +18,9 @@ import (
 )
 
 const (
-	version = "0.3"
+	version       = "0.3"
+	driverApiBase = "/var/lib/osd/driver/"
+	pluginApiBase = "/var/lib/osd/plugin/"
 )
 
 var (
@@ -37,6 +39,11 @@ type Config struct {
 func start(c *cli.Context) {
 	cfg := Config{}
 
+	err := os.Mkdir(driverApiBase, 0744)
+	if err != nil {
+		panic(err)
+	}
+
 	file := c.String("file")
 	if file != "" {
 		b, err := ioutil.ReadFile(file)
@@ -54,9 +61,13 @@ func start(c *cli.Context) {
 		cli.ShowAppHelp(c)
 	}
 
-	// Start the drivers.
+	// Start the volume drivers.
 	for d, v := range cfg.Osd.Drivers {
-		fmt.Println("Starting driver: ", d)
+		// 1. Create a new volume driver of the requested type.
+		// 2. Start the driver API server for this volume.
+		// 3. Start the plugin API server for this volume.
+
+		fmt.Println("Starting volume driver: ", d)
 		_, err := volume.New(d, v)
 		if err != nil {
 			panic(err)
@@ -70,8 +81,14 @@ func start(c *cli.Context) {
 		uuid := string(out)
 		uuid = strings.TrimSuffix(uuid, "\n")
 
-		sock := "/tmp/" + uuid
-		err = apiserver.StartDriver(d, 0, sock)
+		sock := driverApiBase + uuid
+		err = apiserver.StartDriverApi(d, 0, sock)
+		if err != nil {
+			panic(err)
+		}
+
+		sock = pluginApiBase + uuid
+		err = apiserver.StartPluginApi(d, sock)
 		if err != nil {
 			panic(err)
 		}
