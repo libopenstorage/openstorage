@@ -36,9 +36,6 @@ func start(c *cli.Context) {
 
 	// Start the volume drivers.
 	for d, v := range cfg.Osd.Drivers {
-		// 1. Create a new volume driver of the requested type.
-		// 2. Start the driver API server for this volume.
-		// 3. Start the plugin API server for this volume.
 
 		fmt.Println("Starting volume driver: ", d)
 		_, err := volume.New(d, v)
@@ -47,15 +44,13 @@ func start(c *cli.Context) {
 			os.Exit(-1)
 		}
 
-		sock := config.DriverApiBase + d
-		err = apiserver.StartDriverApi(d, 0, sock)
+		err = apiserver.StartDriverApi(d, 0, config.DriverApiBase)
 		if err != nil {
 			fmt.Println("Unable to start volume driver: ", err)
 			return
 		}
 
-		sock = config.PluginApiBase + d
-		err = apiserver.StartPluginApi(d, sock)
+		err = apiserver.StartPluginApi(d, config.PluginApiBase)
 		if err != nil {
 			fmt.Println("Unable to start volume plugin: ", err)
 			return

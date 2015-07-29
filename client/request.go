@@ -252,6 +252,9 @@ func (r *Request) Do() *Response {
 	if err != nil {
 		goto done
 	}
+	if r.headers == nil {
+		r.headers = http.Header{}
+	}
 	req.Header = r.headers
 	req.Header.Set("Content-Type", "application/json")
 	resp, err = r.client.Do(req)
