@@ -43,10 +43,11 @@ type awsProvider struct {
 func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 	// Initialize the EC2 interface.
 	creds := credentials.NewEnvCredentials()
-	inst := &awsProvider{ec2: ec2.New(&aws.Config{
-		Region:      "us-west-1",
-		Credentials: creds,
-	}),
+	inst := &awsProvider{
+		ec2: ec2.New(&aws.Config{
+			Region:      "us-west-1",
+			Credentials: creds,
+		}),
 	}
 
 	inst.db = kvdb.Instance()

@@ -53,8 +53,6 @@ func start(c *cli.Context) {
 		cli.ShowAppHelp(c)
 	}
 
-	fmt.Println("Config: ", cfg)
-
 	// Start the drivers.
 	for d, v := range cfg.Osd.Drivers {
 		fmt.Println("Starting driver: ", d)

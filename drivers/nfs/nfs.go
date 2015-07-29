@@ -40,14 +40,22 @@ type nfsProvider struct {
 }
 
 func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
+	uri, ok := params["uri"]
+	if !ok {
+		return nil, errors.New("No NFS server URI provided")
+	}
+
+	fmt.Println("NFS driver initializing with server:", uri)
+
 	out, err := exec.Command("uuidgen").Output()
 	if err != nil {
 		return nil, err
 	}
 
-	inst := &nfsProvider{nfsServer: "",
-		db:      kvdb.Instance(),
-		mntPath: "/mnt/" + string(out)}
+	inst := &nfsProvider{
+		db:        kvdb.Instance(),
+		mntPath:   "/mnt/" + string(out),
+		nfsServer: uri}
 
 	// Mount the nfs server locally on a unique path.
 	err = syscall.Mount(inst.nfsServer, inst.mntPath, "", 0, "")
@@ -55,8 +63,7 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 		return nil, err
 	}
 
-	fmt.Printf("NFS driver mounting volumes at %s.", inst.mntPath)
-
+	fmt.Printf("NFS initialized and driver mounted at %s.", inst.mntPath)
 	return inst, nil
 }
 
