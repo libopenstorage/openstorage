@@ -9,17 +9,11 @@ import (
 	"github.com/libopenstorage/openstorage/apiserver"
 	osdcli "github.com/libopenstorage/openstorage/cli"
 	"github.com/libopenstorage/openstorage/config"
-	"github.com/libopenstorage/openstorage/drivers/aws"
-	"github.com/libopenstorage/openstorage/drivers/nfs"
 	"github.com/libopenstorage/openstorage/volume"
 )
 
 const (
 	version = "0.3"
-)
-
-var (
-	drivers = []string{aws.Name, nfs.Name}
 )
 
 func start(c *cli.Context) {

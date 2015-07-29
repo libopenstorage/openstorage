@@ -71,7 +71,7 @@ func startServer(name string, sockBase string, rest restServer) error {
 	os.Remove(socket)
 	os.MkdirAll(path.Dir(socket), 0755)
 
-	log.Printf("Volume plugin listening on %+v", socket)
+	log.Printf("Starting REST service on %+v", socket)
 	listener, err = net.Listen("unix", socket)
 	if err != nil {
 		return err
