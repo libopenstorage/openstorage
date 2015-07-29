@@ -143,10 +143,10 @@ func (self *awsProvider) SnapEnumerate(locator api.VolumeLocator, labels api.Lab
 	return nil, errors.New("Unsupported")
 }
 
-func (self *awsProvider) Attach(volumeID api.VolumeID) error {
+func (self *awsProvider) Attach(volumeID api.VolumeID) (path string, err error) {
 	v, err := self.get(string(volumeID))
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	devMinor++
@@ -159,16 +159,16 @@ func (self *awsProvider) Attach(volumeID api.VolumeID) error {
 		VolumeID:   &vol,
 	}
 
-	_, err = self.ec2.AttachVolume(req)
+	resp, err := self.ec2.AttachVolume(req)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	v.instanceID = inst
 	v.attached = true
 	err = self.put(string(volumeID), v)
 
-	return err
+	return *resp.Device, err
 }
 
 func (self *awsProvider) Format(volumeID api.VolumeID) error {

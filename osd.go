@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 
 	"github.com/codegangsta/cli"
 	"gopkg.in/yaml.v2"
 
+	"github.com/libopenstorage/openstorage/apiserver"
 	osdcli "github.com/libopenstorage/openstorage/cli"
 	"github.com/libopenstorage/openstorage/drivers/aws"
 	"github.com/libopenstorage/openstorage/drivers/nfs"
@@ -19,11 +21,12 @@ const (
 )
 
 var (
-	providers = []string{aws.Name, nfs.Name}
+	drivers = []string{aws.Name, nfs.Name}
 )
 
 type osd struct {
-	Providers map[string][]volume.DriverParams
+	// Drivers map[string][]volume.DriverParams
+	Drivers map[string]volume.DriverParams
 }
 
 type Config struct {
@@ -46,10 +49,31 @@ func start(c *cli.Context) {
 
 	}
 
-	fmt.Printf("%+v\n", cfg)
-
 	if !osdcli.DaemonMode(c) {
 		cli.ShowAppHelp(c)
+	}
+
+	fmt.Println("Config: ", cfg)
+
+	// Start the drivers.
+	for d, v := range cfg.Osd.Drivers {
+		fmt.Println("Starting driver: ", d)
+		_, err := volume.New(d, v)
+		if err != nil {
+			panic(err)
+		}
+
+		// Create a unique path for a UNIX socket that the driver will listen on.
+		out, err := exec.Command("uuidgen").Output()
+		if err != nil {
+			panic(err)
+		}
+
+		sock := "/tmp/" + string(out)
+		err = apiserver.StartDriver(d, 0, sock)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -87,10 +111,10 @@ func main() {
 			Subcommands: osdcli.VolumeCommands(),
 		},
 		{
-			Name:        "provider",
-			Aliases:     []string{"p"},
-			Usage:       "Manage providers",
-			Subcommands: osdcli.ProviderCommands(),
+			Name:        "driver",
+			Aliases:     []string{"d"},
+			Usage:       "Manage drivers",
+			Subcommands: osdcli.DriverCommands(),
 		},
 	}
 	app.Run(os.Args)

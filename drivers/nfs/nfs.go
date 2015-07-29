@@ -41,6 +41,9 @@ type nfsProvider struct {
 
 func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 	out, err := exec.Command("uuidgen").Output()
+	if err != nil {
+		return nil, err
+	}
 
 	inst := &nfsProvider{nfsServer: "",
 		db:      kvdb.Instance(),

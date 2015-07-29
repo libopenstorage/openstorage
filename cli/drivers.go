@@ -4,23 +4,23 @@ import (
 	"github.com/codegangsta/cli"
 )
 
-func providerList(c *cli.Context) {
+func driverList(c *cli.Context) {
 }
 
-func providerAdd(c *cli.Context) {
+func driverAdd(c *cli.Context) {
 }
 
-func ProviderCommands() []cli.Command {
+func DriverCommands() []cli.Command {
 	commands := []cli.Command{
 		{
 			Name:    "add",
 			Aliases: []string{"a"},
-			Usage:   "add a new provider",
-			Action:  providerAdd,
+			Usage:   "add a new driver",
+			Action:  driverAdd,
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "name,n",
-					Usage: "Provider Name",
+					Usage: "Driver Name",
 				},
 				cli.StringFlag{
 					Name:  "options,o",
@@ -31,8 +31,8 @@ func ProviderCommands() []cli.Command {
 		{
 			Name:    "list",
 			Aliases: []string{"l"},
-			Usage:   "List providers",
-			Action:  providerList,
+			Usage:   "List drivers",
+			Action:  driverList,
 		},
 	}
 	return commands

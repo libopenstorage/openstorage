@@ -84,8 +84,7 @@ func StartVolumePlugin(name string, sockBase string) error {
 	return startServer(name, sockBase, rest)
 }
 
-func StartOSD(name string, port int, sockBase string) error {
-
+func StartDriver(name string, port int, sockBase string) error {
 	rest := NewVolumeDriver(name)
 	return startServer(name, sockBase, rest)
 }
