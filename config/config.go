@@ -24,7 +24,7 @@ const (
 )
 
 var (
-	cfg *Config
+	cfg Config
 )
 
 func Parse(file string) (*Config, error) {
@@ -34,11 +34,11 @@ func Parse(file string) (*Config, error) {
 		return nil, fmt.Errorf("Unable to read the OSD configuration file (%s): %s", file, err.Error())
 	}
 
-	err = yaml.Unmarshal(b, cfg)
+	err = yaml.Unmarshal(b, &cfg)
 	if err != nil {
 		fmt.Println("Unable to parse OSD configuration: ", err)
 		return nil, fmt.Errorf("Unable to parse OSD configuration: %s", err.Error())
 		return nil, err
 	}
-	return cfg, nil
+	return &cfg, nil
 }
