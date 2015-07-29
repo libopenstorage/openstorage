@@ -63,58 +63,59 @@ func (vd *volDriver) create(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(&dcRes)
 }
 
-func (vd *volDriver) attach(w http.ResponseWriter, r *http.Request) {
+func (vd *volDriver) volumeState(w http.ResponseWriter, r *http.Request) {
+	var (
+		volumeID types.VolumeID
+		err      error
+		req      types.VolumeStateRequest
+		resp     types.VolumeStateResponse
+	)
+	method := "volumeState"
 
-	var attachReq types.VolumeAttachRequest
-	method := "attach"
-
-	err := json.NewDecoder(r.Body).Decode(&attachReq)
+	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	d, err := volume.Get(vd.name)
-	if err != nil {
-		vd.notFound(w, r)
-		return
-	}
-
-	path, err := d.Attach(attachReq.ID)
-	res := types.VolumeAttachResponse{
-		Status: responseStatus(err),
-		Path:   path,
-	}
-	json.NewEncoder(w).Encode(res)
-}
-
-func (vd *volDriver) detach(w http.ResponseWriter, r *http.Request) {
-
-	var volumeID types.VolumeID
-	var err error
-
-	method := "detach"
 	if volumeID, err = vd.parseVolumeID(r); err != nil {
-		log.Printf("Server: couldn't vd.parse volumeID: %s", err.Error())
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	log.Printf("Server: detaching %v\n", volumeID)
 	d, err := volume.Get(vd.name)
 	if err != nil {
 		vd.notFound(w, r)
 		return
 	}
-	err = d.Detach(volumeID)
-	res := types.ResponseStatusNew(err)
-	json.NewEncoder(w).Encode(res)
-}
 
-func (vd *volDriver) mount(w http.ResponseWriter, r *http.Request) {
-}
+	resp.VolumeStateRequest = req
 
-func (vd *volDriver) unmount(w http.ResponseWriter, r *http.Request) {
+	for {
+		if req.Mount {
+			if req.Path == "" {
+				vd.sendError(vd.name, method, w, "Invalid mount path",
+					http.StatusBadRequest)
+			}
+			err = d.Mount(volumeID, req.Path)
+			break
+		}
+		if req.Path != "" {
+			err = d.Unmount(volumeID, req.Path)
+			break
+		}
+		if req.Attach {
+			resp.Path, err = d.Attach(volumeID)
+			break
+		}
+		err = d.Detach(volumeID)
+		break
+	}
+
+	if err != nil {
+		resp.Status = err.Error()
+	}
+	json.NewEncoder(w).Encode(resp)
 }
 
 func (vd *volDriver) inspect(w http.ResponseWriter, r *http.Request) {
@@ -164,29 +165,6 @@ func (vd *volDriver) delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = d.Delete(volumeID)
-	res := types.ResponseStatusNew(err)
-	json.NewEncoder(w).Encode(res)
-}
-
-func (vd *volDriver) format(w http.ResponseWriter, r *http.Request) {
-	var volumeID types.VolumeID
-	var err error
-
-	method := "format"
-	if volumeID, err = vd.parseVolumeID(r); err != nil {
-		log.Printf("Server: couldn't vd.parse volumeID: %s", err.Error())
-		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	log.Printf("Server: formatting %v\n", volumeID)
-	d, err := volume.Get(vd.name)
-	if err != nil {
-		vd.notFound(w, r)
-		return
-	}
-
-	err = d.Format(volumeID)
 	res := types.ResponseStatusNew(err)
 	json.NewEncoder(w).Encode(res)
 }
@@ -259,10 +237,7 @@ func snapPath(route string) string {
 func (vd *volDriver) Routes() []*Route {
 	return []*Route{
 		&Route{verb: "POST", path: volPath(""), fn: vd.create},
-		&Route{verb: "PUT", path: volPath("attach/{id}"), fn: vd.attach},
-		&Route{verb: "PUT", path: volPath("detach/{id}"), fn: vd.detach},
-		&Route{verb: "PUT", path: volPath("mount/{id}"), fn: vd.mount},
-		&Route{verb: "PUT", path: volPath("unmount/{id}"), fn: vd.unmount},
+		&Route{verb: "PUT", path: volPath("{id}"), fn: vd.volumeState},
 		&Route{verb: "GET", path: volPath(""), fn: vd.enumerate},
 		&Route{verb: "GET", path: volPath("{id}"), fn: vd.inspect},
 		&Route{verb: "DELETE", path: volPath("{id}"), fn: vd.delete},

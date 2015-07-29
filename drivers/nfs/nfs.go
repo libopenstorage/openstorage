@@ -1,7 +1,6 @@
 package nfs
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -121,7 +120,7 @@ func (self *nfsProvider) Create(l api.VolumeLocator, opt *api.CreateOptions, spe
 	return api.VolumeID(volumeID), err
 }
 
-func (self *nfsProvider) Inspect(volumeIDs []api.VolumeID) (volume []api.Volume, err error) {
+func (self *nfsProvider) Inspect(volumeIDs []api.VolumeID) ([]api.Volume, error) {
 	return nil, nil
 }
 
@@ -142,32 +141,32 @@ func (self *nfsProvider) Delete(volumeID api.VolumeID) error {
 	return nil
 }
 
-func (self *nfsProvider) Snapshot(volumeID api.VolumeID, labels api.Labels) (snap api.SnapID, err error) {
-	return "", errors.New("Unsupported")
+func (self *nfsProvider) Snapshot(volumeID api.VolumeID, labels api.Labels) (api.SnapID, error) {
+	return "", volume.ErrNotSupported
 }
 
-func (self *nfsProvider) SnapDelete(snapID api.SnapID) (err error) {
-	return errors.New("Unsupported")
+func (self *nfsProvider) SnapDelete(snapID api.SnapID) error {
+	return volume.ErrNotSupported
 }
 
-func (self *nfsProvider) SnapInspect(snapID api.SnapID) (snap api.VolumeSnap, err error) {
-	return api.VolumeSnap{}, errors.New("Unsupported")
+func (self *nfsProvider) SnapInspect(snapID []api.SnapID) ([]api.VolumeSnap, error) {
+	return []api.VolumeSnap{}, volume.ErrNotSupported
 }
 
-func (self *nfsProvider) Stats(volumeID api.VolumeID) (stats api.VolumeStats, err error) {
-	return api.VolumeStats{}, errors.New("Unsupported")
+func (self *nfsProvider) Stats(volumeID api.VolumeID) (api.VolumeStats, error) {
+	return api.VolumeStats{}, volume.ErrNotSupported
 }
 
-func (self *nfsProvider) Alerts(volumeID api.VolumeID) (stats api.VolumeAlerts, err error) {
-	return api.VolumeAlerts{}, errors.New("Unsupported")
+func (self *nfsProvider) Alerts(volumeID api.VolumeID) (api.VolumeAlerts, error) {
+	return api.VolumeAlerts{}, volume.ErrNotSupported
 }
 
-func (self *nfsProvider) Enumerate(locator api.VolumeLocator, labels api.Labels) (volumes []api.Volume, err error) {
-	return nil, errors.New("Unsupported")
+func (self *nfsProvider) Enumerate(locator api.VolumeLocator, labels api.Labels) ([]api.Volume, error) {
+	return nil, volume.ErrNotSupported
 }
 
-func (self *nfsProvider) SnapEnumerate(locator api.VolumeLocator, labels api.Labels) (snaps *[]api.SnapID, err error) {
-	return nil, errors.New("Unsupported")
+func (self *nfsProvider) SnapEnumerate(locator api.VolumeLocator, labels api.Labels) ([]api.VolumeSnap, error) {
+	return nil, volume.ErrNotSupported
 }
 
 func (self *nfsProvider) Mount(volumeID api.VolumeID, mountpath string) error {
