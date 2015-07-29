@@ -3,6 +3,8 @@ package api
 type Options map[OptionKey]interface{}
 type OptionKey string
 
+const version = "v1"
+
 const (
 	OptName        = OptionKey("Name")
 	OptID          = OptionKey("ID")

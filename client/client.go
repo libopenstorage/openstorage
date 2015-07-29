@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/volume"
 )
 
@@ -67,7 +68,7 @@ func newHTTPClient(u *url.URL, tlsConfig *tls.Config, timeout time.Duration) *ht
 	return &http.Client{Transport: httpTransport}
 }
 
-func New(host string, version string) (*Client, error) {
+func NewClient(host string, version string) (*Client, error) {
 
 	baseURL, err := url.Parse(host)
 	if err != nil {
@@ -83,4 +84,9 @@ func New(host string, version string) (*Client, error) {
 		httpClient: httpClient,
 	}
 	return c, nil
+}
+
+func NewDriverClient(driverName string) (*Client, error) {
+	sockPath := "unix://" + config.DriverApiBase + driverName
+	return NewClient(sockPath, config.Version)
 }

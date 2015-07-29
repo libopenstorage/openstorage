@@ -2,77 +2,42 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
-	"os/exec"
-	"strings"
 
 	"github.com/codegangsta/cli"
-	"gopkg.in/yaml.v2"
 
 	"github.com/libopenstorage/openstorage/apiserver"
 	osdcli "github.com/libopenstorage/openstorage/cli"
+	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/drivers/aws"
 	"github.com/libopenstorage/openstorage/drivers/nfs"
 	"github.com/libopenstorage/openstorage/volume"
 )
 
 const (
-	version       = "0.3"
-	driverApiBase = "/var/lib/osd/driver/"
-	pluginApiBase = "/var/lib/osd/plugin/"
+	version = "0.3"
 )
 
 var (
 	drivers = []string{aws.Name, nfs.Name}
 )
 
-type osd struct {
-	// Drivers map[string][]volume.DriverParams
-	Drivers map[string]volume.DriverParams
-}
-
-type Config struct {
-	Osd osd
-}
-
 func start(c *cli.Context) {
-	cfg := Config{}
-
-	err := os.MkdirAll(driverApiBase, 0744)
-	if err != nil {
-		fmt.Println("Unable to create UNIX socket path: ", err)
-		os.Exit(-1)
-	}
-
-	err = os.MkdirAll(pluginApiBase, 0744)
-	if err != nil {
-		fmt.Println("Unable to create UNIX socket path: ", err)
-		os.Exit(-1)
-	}
 
 	if !osdcli.DaemonMode(c) {
 		cli.ShowAppHelp(c)
 	}
 
 	// We are in daemon mode.  Bring up the volume drivers.
-
 	file := c.String("file")
 	if file == "" {
 		fmt.Println("OSD configuration file not specified.  Visit openstorage.org for an example.")
 		os.Exit(-1)
 	}
-
-	b, err := ioutil.ReadFile(file)
+	cfg, err := config.Parse(file)
 	if err != nil {
-		fmt.Println("Unable to read the OSD configuration file.")
-		os.Exit(-1)
-	}
-
-	err = yaml.Unmarshal(b, &cfg)
-	if err != nil {
-		fmt.Println("Unable to parse OSD configuration: ", err)
-		os.Exit(-1)
+		fmt.Println(err)
+		return
 	}
 
 	// Start the volume drivers.
@@ -88,27 +53,18 @@ func start(c *cli.Context) {
 			os.Exit(-1)
 		}
 
-		// Create a unique path for a UNIX socket that the driver will listen on.
-		out, err := exec.Command("uuidgen").Output()
-		if err != nil {
-			fmt.Println("Unable to create UUID: ", err)
-			os.Exit(-1)
-		}
-		uuid := string(out)
-		uuid = strings.TrimSuffix(uuid, "\n")
-
-		sock := driverApiBase + uuid
+		sock := config.DriverApiBase + d
 		err = apiserver.StartDriverApi(d, 0, sock)
 		if err != nil {
 			fmt.Println("Unable to start volume driver: ", err)
-			os.Exit(-1)
+			return
 		}
 
-		sock = pluginApiBase + uuid
+		sock = config.PluginApiBase + d
 		err = apiserver.StartPluginApi(d, sock)
 		if err != nil {
 			fmt.Println("Unable to start volume plugin: ", err)
-			os.Exit(-1)
+			return
 		}
 	}
 
@@ -131,8 +87,8 @@ func main() {
 			Usage: "Start OSD in daemon mode",
 		},
 		cli.StringSliceFlag{
-			Name:  "provider, p",
-			Usage: "provider name and options: name=btrfs,root_vol=/var/openstorage/btrfs",
+			Name:  "driver",
+			Usage: "driver name and options: name=btrfs,root_vol=/var/openstorage/btrfs",
 			Value: new(cli.StringSlice),
 		},
 		cli.StringFlag{
@@ -142,19 +98,24 @@ func main() {
 		},
 	}
 	app.Action = start
+
 	app.Commands = []cli.Command{
-		{
-			Name:        "volume",
-			Aliases:     []string{"v"},
-			Usage:       "Manage volumes",
-			Subcommands: osdcli.VolumeCommands(),
-		},
 		{
 			Name:        "driver",
 			Aliases:     []string{"d"},
 			Usage:       "Manage drivers",
 			Subcommands: osdcli.DriverCommands(),
 		},
+	}
+
+	for _, v := range drivers {
+		c := cli.Command{
+			Name:        v,
+			Aliases:     []string{"v"},
+			Usage:       fmt.Sprintf("Manage %s volumes", v),
+			Subcommands: osdcli.VolumeCommands(v),
+		}
+		app.Commands = append(app.Commands, c)
 	}
 	app.Run(os.Args)
 }

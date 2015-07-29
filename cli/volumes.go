@@ -1,9 +1,7 @@
 package cli
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/url"
 	"os"
 	"strings"
 
@@ -24,13 +22,9 @@ const (
 	PB
 )
 
-var (
-	clnt      *client.Client
+type VolDriver struct {
 	volDriver volume.VolumeDriver
-)
-
-func initVolumeClient(volumeUrl *url.URL) {
-	volDriver = clnt.VolumeDriver()
+	name      string
 }
 
 func processLabels(s string) (api.Labels, error) {
@@ -49,19 +43,16 @@ func processLabels(s string) (api.Labels, error) {
 	return m, nil
 }
 
-func volumeOptions(c *cli.Context) {
-	var volumeUrl *url.URL
-	var err error
-
+func (v *VolDriver) volumeOptions(c *cli.Context) {
+	clnt, err := client.NewDriverClient(v.name)
 	if err != nil {
-		b, _ := json.MarshalIndent(err, "", " ")
-		fmt.Printf("%+v\n", string(b))
+		fmt.Printf("Failed to initialize client library: %v\n", err)
 		os.Exit(1)
 	}
-	initVolumeClient(volumeUrl)
+	v.volDriver = clnt.VolumeDriver()
 }
 
-func volumeCreate(c *cli.Context) {
+func (v *VolDriver) volumeCreate(c *cli.Context) {
 	var err error
 	var labels api.Labels
 	var locator api.VolumeLocator
@@ -73,7 +64,7 @@ func volumeCreate(c *cli.Context) {
 		return
 	}
 
-	volumeOptions(c)
+	v.volumeOptions(c)
 	if l := c.String("label"); l != "" {
 		if labels, err = processLabels(l); err != nil {
 			cmdError(c, fn, err)
@@ -92,7 +83,7 @@ func volumeCreate(c *cli.Context) {
 		Cos:              api.VolumeCos(c.Int("cos")),
 		SnapShotInterval: c.Int("si"),
 	}
-	if id, err = volDriver.Create(locator, nil, spec); err != nil {
+	if id, err = v.volDriver.Create(locator, nil, spec); err != nil {
 		cmdError(c, fn, err)
 		return
 	}
@@ -100,8 +91,8 @@ func volumeCreate(c *cli.Context) {
 	fmtOutput(c, &Format{Uuid: []string{string(id)}})
 }
 
-func volumeFormat(c *cli.Context) {
-	volumeOptions(c)
+func (v *VolDriver) volumeFormat(c *cli.Context) {
+	v.volumeOptions(c)
 	fn := "format"
 	if len(c.Args()) < 1 {
 		missingParameter(c, fn, "volumeID", "Invalid number of arguments")
@@ -109,7 +100,7 @@ func volumeFormat(c *cli.Context) {
 	}
 	volumeID := c.Args()[0]
 
-	err := volDriver.Format(api.VolumeID(volumeID))
+	err := v.volDriver.Format(api.VolumeID(volumeID))
 	if err != nil {
 		cmdError(c, fn, err)
 		return
@@ -118,16 +109,16 @@ func volumeFormat(c *cli.Context) {
 	fmtOutput(c, &Format{Uuid: []string{c.Args()[0]}})
 }
 
-func volumeAttach(c *cli.Context) {
+func (v *VolDriver) volumeAttach(c *cli.Context) {
 	fn := "attach"
 	if len(c.Args()) < 1 {
 		missingParameter(c, fn, "volumeID", "Invalid number of arguments")
 		return
 	}
-	volumeOptions(c)
+	v.volumeOptions(c)
 	volumeID := c.Args()[0]
 
-	devicePath, err := volDriver.Attach(api.VolumeID(volumeID))
+	devicePath, err := v.volDriver.Attach(api.VolumeID(volumeID))
 	if err != nil {
 		cmdError(c, fn, err)
 		return
@@ -136,15 +127,15 @@ func volumeAttach(c *cli.Context) {
 	fmtOutput(c, &Format{Result: devicePath})
 }
 
-func volumeDetach(c *cli.Context) {
+func (v *VolDriver) volumeDetach(c *cli.Context) {
 	fn := "detach"
 	if len(c.Args()) < 1 {
 		missingParameter(c, fn, "volumeID", "Invalid number of arguments")
 		return
 	}
 	volumeID := c.Args()[0]
-	volumeOptions(c)
-	err := volDriver.Detach(api.VolumeID(volumeID))
+	v.volumeOptions(c)
+	err := v.volDriver.Detach(api.VolumeID(volumeID))
 	if err != nil {
 		cmdError(c, fn, err)
 		return
@@ -153,9 +144,9 @@ func volumeDetach(c *cli.Context) {
 	fmtOutput(c, &Format{Uuid: []string{c.Args()[0]}})
 }
 
-func volumeInspect(c *cli.Context) {
+func (v *VolDriver) volumeInspect(c *cli.Context) {
 
-	volumeOptions(c)
+	v.volumeOptions(c)
 	fn := "inspect"
 	if len(c.Args()) < 1 {
 		missingParameter(c, fn, "volumeID", "Invalid number of arguments")
@@ -167,7 +158,7 @@ func volumeInspect(c *cli.Context) {
 		d[i] = api.VolumeID(v)
 	}
 
-	volumes, err := volDriver.Inspect(d)
+	volumes, err := v.volDriver.Inspect(d)
 	if err != nil {
 		cmdError(c, fn, err)
 		return
@@ -176,7 +167,7 @@ func volumeInspect(c *cli.Context) {
 	cmdOutput(c, volumes)
 }
 
-func volumeEnumerate(c *cli.Context) {
+func (v *VolDriver) volumeEnumerate(c *cli.Context) {
 	var locator api.VolumeLocator
 	var err error
 
@@ -190,8 +181,8 @@ func volumeEnumerate(c *cli.Context) {
 		}
 	}
 
-	volumeOptions(c)
-	volumes, err := volDriver.Enumerate(locator, nil)
+	v.volumeOptions(c)
+	volumes, err := v.volDriver.Enumerate(locator, nil)
 	if err != nil {
 		cmdError(c, fn, err)
 		return
@@ -203,15 +194,15 @@ func volumeEnumerate(c *cli.Context) {
 	cmdOutput(c, volumes)
 }
 
-func volumeDelete(c *cli.Context) {
+func (v *VolDriver) volumeDelete(c *cli.Context) {
 	fn := "delete"
 	if len(c.Args()) < 1 {
 		missingParameter(c, fn, "volumeID", "Invalid number of arguments")
 		return
 	}
 	volumeID := c.Args()[0]
-	volumeOptions(c)
-	err := volDriver.Delete(api.VolumeID(volumeID))
+	v.volumeOptions(c)
+	err := v.volDriver.Delete(api.VolumeID(volumeID))
 	if err != nil {
 		cmdError(c, fn, err)
 		return
@@ -220,12 +211,12 @@ func volumeDelete(c *cli.Context) {
 	fmtOutput(c, &Format{Uuid: []string{c.Args()[0]}})
 }
 
-func snapCreate(c *cli.Context) {
+func (v *VolDriver) snapCreate(c *cli.Context) {
 }
 
-func snapInspect(c *cli.Context) {
+func (v *VolDriver) snapInspect(c *cli.Context) {
 
-	volumeOptions(c)
+	v.volumeOptions(c)
 	fn := "inspect"
 	if len(c.Args()) < 1 {
 		missingParameter(c, fn, "snapID", "Invalid number of arguments")
@@ -236,7 +227,7 @@ func snapInspect(c *cli.Context) {
 		d[i] = api.SnapID(v)
 	}
 
-	snaps, err := volDriver.SnapInspect(d)
+	snaps, err := v.volDriver.SnapInspect(d)
 	if err != nil {
 		cmdError(c, fn, err)
 		return
@@ -245,7 +236,7 @@ func snapInspect(c *cli.Context) {
 	cmdOutput(c, snaps)
 }
 
-func snapEnumerate(c *cli.Context) {
+func (v *VolDriver) snapEnumerate(c *cli.Context) {
 	var locator api.VolumeLocator
 	var err error
 
@@ -259,8 +250,8 @@ func snapEnumerate(c *cli.Context) {
 		}
 	}
 
-	volumeOptions(c)
-	snaps, err := volDriver.Enumerate(locator, nil)
+	v.volumeOptions(c)
+	snaps, err := v.volDriver.Enumerate(locator, nil)
 	if err != nil {
 		cmdError(c, fn, err)
 		return
@@ -272,15 +263,15 @@ func snapEnumerate(c *cli.Context) {
 	cmdOutput(c, snaps)
 }
 
-func snapDelete(c *cli.Context) {
+func (v *VolDriver) snapDelete(c *cli.Context) {
 	fn := "delete"
 	if len(c.Args()) < 1 {
 		missingParameter(c, fn, "snapID", "Invalid number of arguments")
 		return
 	}
-	volumeOptions(c)
+	v.volumeOptions(c)
 	snapID := c.Args()[0]
-	err := volDriver.SnapDelete(api.SnapID(snapID))
+	err := v.volDriver.SnapDelete(api.SnapID(snapID))
 	if err != nil {
 		cmdError(c, fn, err)
 		return
@@ -289,14 +280,16 @@ func snapDelete(c *cli.Context) {
 	fmtOutput(c, &Format{Uuid: []string{c.Args()[0]}})
 }
 
-func VolumeCommands() []cli.Command {
+func VolumeCommands(name string) []cli.Command {
+
+	v := &VolDriver{name: name}
 
 	commands := []cli.Command{
 		{
 			Name:    "create",
 			Aliases: []string{"c"},
 			Usage:   "create a new volume",
-			Action:  volumeCreate,
+			Action:  v.volumeCreate,
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "label,l",
@@ -339,13 +332,13 @@ func VolumeCommands() []cli.Command {
 			Name:    "format",
 			Aliases: []string{"f"},
 			Usage:   "Format volume to spec in create",
-			Action:  volumeFormat,
+			Action:  v.volumeFormat,
 		},
 		{
 			Name:    "attach",
 			Aliases: []string{"a"},
 			Usage:   "Attach volume to specified path",
-			Action:  volumeAttach,
+			Action:  v.volumeAttach,
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "path,p",
@@ -357,19 +350,19 @@ func VolumeCommands() []cli.Command {
 			Name:    "detach",
 			Aliases: []string{"d"},
 			Usage:   "Detach specified volume",
-			Action:  volumeDetach,
+			Action:  v.volumeDetach,
 		},
 		{
 			Name:    "delete",
 			Aliases: []string{"rm"},
 			Usage:   "Detach specified volume",
-			Action:  volumeDelete,
+			Action:  v.volumeDelete,
 		},
 		{
 			Name:    "enumerate",
 			Aliases: []string{"e"},
 			Usage:   "Enumerate volumes",
-			Action:  volumeEnumerate,
+			Action:  v.volumeEnumerate,
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "name",
@@ -385,13 +378,13 @@ func VolumeCommands() []cli.Command {
 			Name:    "inspect",
 			Aliases: []string{"i"},
 			Usage:   "Inspect volume",
-			Action:  volumeInspect,
+			Action:  v.volumeInspect,
 		},
 		{
 			Name:    "snap",
 			Aliases: []string{"sc"},
 			Usage:   "create snap",
-			Action:  snapCreate,
+			Action:  v.snapCreate,
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "label,l",
@@ -403,13 +396,13 @@ func VolumeCommands() []cli.Command {
 			Name:    "snapInspect",
 			Aliases: []string{"si"},
 			Usage:   "Inspect snap",
-			Action:  snapInspect,
+			Action:  v.snapInspect,
 		},
 		{
 			Name:    "snapEnumerate",
 			Aliases: []string{"se"},
 			Usage:   "Enumerate snap",
-			Action:  snapEnumerate,
+			Action:  v.snapEnumerate,
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "name, n",
@@ -425,7 +418,7 @@ func VolumeCommands() []cli.Command {
 			Name:    "snapDelete",
 			Aliases: []string{"si"},
 			Usage:   "Delete snap",
-			Action:  snapDelete,
+			Action:  v.snapDelete,
 		},
 	}
 	return commands
