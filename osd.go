@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/codegangsta/cli"
 	"gopkg.in/yaml.v2"
@@ -66,8 +67,10 @@ func start(c *cli.Context) {
 		if err != nil {
 			panic(err)
 		}
+		uuid := string(out)
+		uuid = strings.TrimSuffix(uuid, "\n")
 
-		sock := "/tmp/" + string(out)
+		sock := "/tmp/" + uuid
 		err = apiserver.StartDriver(d, 0, sock)
 		if err != nil {
 			panic(err)

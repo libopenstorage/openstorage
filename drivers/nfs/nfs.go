@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 
 	"github.com/libopenstorage/kvdb"
@@ -51,11 +52,20 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 	if err != nil {
 		return nil, err
 	}
+	uuid := string(out)
+	uuid = strings.TrimSuffix(uuid, "\n")
 
 	inst := &nfsProvider{
 		db:        kvdb.Instance(),
-		mntPath:   "/mnt/" + string(out),
+		mntPath:   "/mnt/" + uuid,
 		nfsServer: uri}
+
+	err = os.Mkdir(inst.mntPath, 0744)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println("Binding NFS server to:", inst.mntPath)
 
 	// Mount the nfs server locally on a unique path.
 	err = syscall.Mount(inst.nfsServer, inst.mntPath, "", 0, "")
@@ -94,8 +104,8 @@ func (self *nfsProvider) Create(l api.VolumeLocator, opt *api.CreateOptions, spe
 	if err != nil {
 		return "", err
 	}
-
 	volumeID := string(out)
+	volumeID = strings.TrimSuffix(volumeID, "\n")
 
 	// Create a directory on the NFS server with this UUID.
 	err = os.Mkdir(self.mntPath+volumeID, 0744)
