@@ -7,5 +7,9 @@ import (
 )
 
 var (
-	drivers = []string{aws.Name, nfs.Name}
+	drivers = []string{
+		// AWS driver.  This provisoins storage from EBS.
+		aws.Name,
+		// NFS driver.  This provisions storage from an NFS server.
+		nfs.Name}
 )
