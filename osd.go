@@ -111,6 +111,9 @@ func start(c *cli.Context) {
 			os.Exit(-1)
 		}
 	}
+
+	// Daemon does not exit.
+	select {}
 }
 
 func main() {

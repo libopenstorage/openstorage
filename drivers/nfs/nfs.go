@@ -47,7 +47,7 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 		return nil, errors.New("No NFS server URI provided")
 	}
 
-	log.Println("NFS driver initializing with server:", uri)
+	log.Println("NFS driver initializing with server: ", uri)
 
 	out, err := exec.Command("uuidgen").Output()
 	if err != nil {
@@ -75,7 +75,7 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 		return nil, err
 	}
 
-	log.Println("NFS initialized and driver mounted at %s.", inst.mntPath)
+	log.Println("NFS initialized and driver mounted at: ", inst.mntPath)
 	return inst, nil
 }
 

@@ -76,7 +76,8 @@ func startServer(name string, sockBase string, rest restServer) error {
 	if err != nil {
 		return err
 	}
-	return http.Serve(listener, router)
+	go http.Serve(listener, router)
+	return err
 }
 
 // StartVolumeDriver starts a REST server to receive driver configuration commands
