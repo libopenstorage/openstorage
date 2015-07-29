@@ -6,9 +6,12 @@ import (
 	"os/exec"
 	"syscall"
 
+	log "github.com/Sirupsen/logrus"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/service/ec2"
+
 	"github.com/libopenstorage/kvdb"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
@@ -267,7 +270,7 @@ func (self *awsProvider) Unmount(volumeID api.VolumeID, mountpath string) error 
 }
 
 func (self *awsProvider) Shutdown() {
-	fmt.Printf("%s Shutting down", Name)
+	log.Printf("%s Shutting down", Name)
 }
 
 func init() {

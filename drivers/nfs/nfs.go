@@ -2,11 +2,12 @@ package nfs
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"os/exec"
 	"strings"
 	"syscall"
+
+	log "github.com/Sirupsen/logrus"
 
 	"github.com/libopenstorage/kvdb"
 	"github.com/libopenstorage/openstorage/api"
@@ -46,7 +47,7 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 		return nil, errors.New("No NFS server URI provided")
 	}
 
-	fmt.Println("NFS driver initializing with server:", uri)
+	log.Println("NFS driver initializing with server:", uri)
 
 	out, err := exec.Command("uuidgen").Output()
 	if err != nil {
@@ -65,7 +66,7 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 		return nil, err
 	}
 
-	fmt.Println("Binding NFS server to:", inst.mntPath)
+	log.Println("Binding NFS server to:", inst.mntPath)
 
 	// Mount the nfs server locally on a unique path.
 	err = syscall.Mount(inst.nfsServer, inst.mntPath, "tmpfs", 0, "mode=0700,uid=65534")
@@ -74,7 +75,7 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 		return nil, err
 	}
 
-	fmt.Println("NFS initialized and driver mounted at %s.", inst.mntPath)
+	log.Println("NFS initialized and driver mounted at %s.", inst.mntPath)
 	return inst, nil
 }
 
@@ -207,7 +208,7 @@ func (self *nfsProvider) Unmount(volumeID api.VolumeID, mountpath string) error 
 }
 
 func (self *nfsProvider) Shutdown() {
-	fmt.Printf("%s Shutting down", Name)
+	log.Printf("%s Shutting down", Name)
 }
 
 func init() {
