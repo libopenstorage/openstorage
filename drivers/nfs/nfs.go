@@ -60,7 +60,7 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 		mntPath:   "/mnt/" + uuid,
 		nfsServer: uri}
 
-	err = os.Mkdir(inst.mntPath, 0744)
+	err = os.MkdirAll(inst.mntPath, 0744)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func (self *nfsProvider) Create(l api.VolumeLocator, opt *api.CreateOptions, spe
 	volumeID = strings.TrimSuffix(volumeID, "\n")
 
 	// Create a directory on the NFS server with this UUID.
-	err = os.Mkdir(self.mntPath+volumeID, 0744)
+	err = os.MkdirAll(self.mntPath+volumeID, 0744)
 	if err != nil {
 		return "", err
 	}
