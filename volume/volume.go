@@ -11,13 +11,13 @@ var (
 	instances         map[string]VolumeDriver
 	drivers           map[string]InitFunc
 	mutex             sync.Mutex
-	ErrNotSupported   = errors.New("Driver implementation not supported")
 	ErrExist          = errors.New("Driver already exists")
 	ErrDriverNotFound = errors.New("Driver implementation not found")
 	ErrEnoEnt         = errors.New("Volume does not exist.")
 	ErrVolDetached    = errors.New("Volume is detached")
 	ErrVolAttached    = errors.New("Volume is attached")
 	ErrVolHasSnaps    = errors.New("Volume has snapshots associated")
+	ErrNotSupported   = errors.New("Operation not supported")
 )
 
 type DriverParams map[string]string
@@ -71,7 +71,7 @@ type ProtoDriver interface {
 
 	// SnapInspect provides details on this snapshot.
 	// Errors ErrEnoEnt may be returned
-	SnapInspect(snapID api.SnapID) (api.VolumeSnap, error)
+	SnapInspect(snapID []api.SnapID) ([]api.VolumeSnap, error)
 
 	// Stats for specified volume.
 	// Errors ErrEnoEnt may be returned
@@ -92,14 +92,14 @@ type Enumerator interface {
 
 	// Enumerate snaps for specified volume
 	// Count indicates the number of snaps populated.
-	SnapEnumerate(locator api.VolumeLocator, labels api.Labels) (*[]api.SnapID, error)
+	SnapEnumerate(locator api.VolumeLocator, labels api.Labels) ([]api.VolumeSnap, error)
 }
 
 type BlockDriver interface {
 	// Attach map device to the host.
 	// On success the devicePath specifies location where the device is exported
 	// Errors ErrEnoEnt, ErrVolAttached may be returned.
-	Attach(volumeID api.VolumeID) (path string, err error)
+	Attach(volumeID api.VolumeID) (string, error)
 
 	// Format volume according to spec provided in Create
 	// Errors ErrEnoEnt, ErrVolDetached may be returned.

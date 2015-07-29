@@ -108,7 +108,7 @@ func (self *awsProvider) Create(l api.VolumeLocator, opt *api.CreateOptions, spe
 	return api.VolumeID(*v.VolumeID), err
 }
 
-func (self *awsProvider) Inspect(volumeIDs []api.VolumeID) (volume []api.Volume, err error) {
+func (self *awsProvider) Inspect(volumeIDs []api.VolumeID) ([]api.Volume, error) {
 	return nil, nil
 }
 
@@ -116,32 +116,32 @@ func (self *awsProvider) Delete(volumeID api.VolumeID) error {
 	return nil
 }
 
-func (self *awsProvider) Snapshot(volumeID api.VolumeID, labels api.Labels) (snap api.SnapID, err error) {
-	return "", errors.New("Unsupported")
+func (self *awsProvider) Snapshot(volumeID api.VolumeID, labels api.Labels) (api.SnapID, error) {
+	return "", volume.ErrNotSupported
 }
 
-func (self *awsProvider) SnapDelete(snapID api.SnapID) (err error) {
-	return errors.New("Unsupported")
+func (self *awsProvider) SnapDelete(snapID api.SnapID) error {
+	return volume.ErrNotSupported
 }
 
-func (self *awsProvider) SnapInspect(snapID api.SnapID) (snap api.VolumeSnap, err error) {
-	return api.VolumeSnap{}, errors.New("Unsupported")
+func (self *awsProvider) SnapInspect(snapID []api.SnapID) ([]api.VolumeSnap, error) {
+	return []api.VolumeSnap{}, volume.ErrNotSupported
 }
 
-func (self *awsProvider) Stats(volumeID api.VolumeID) (stats api.VolumeStats, err error) {
-	return api.VolumeStats{}, errors.New("Unsupported")
+func (self *awsProvider) Stats(volumeID api.VolumeID) (api.VolumeStats, error) {
+	return api.VolumeStats{}, volume.ErrNotSupported
 }
 
-func (self *awsProvider) Alerts(volumeID api.VolumeID) (stats api.VolumeAlerts, err error) {
-	return api.VolumeAlerts{}, errors.New("Unsupported")
+func (self *awsProvider) Alerts(volumeID api.VolumeID) (api.VolumeAlerts, error) {
+	return api.VolumeAlerts{}, volume.ErrNotSupported
 }
 
-func (self *awsProvider) Enumerate(locator api.VolumeLocator, labels api.Labels) (volumes []api.Volume, err error) {
-	return nil, errors.New("Unsupported")
+func (self *awsProvider) Enumerate(locator api.VolumeLocator, labels api.Labels) ([]api.Volume, error) {
+	return nil, volume.ErrNotSupported
 }
 
-func (self *awsProvider) SnapEnumerate(locator api.VolumeLocator, labels api.Labels) (snaps *[]api.SnapID, err error) {
-	return nil, errors.New("Unsupported")
+func (self *awsProvider) SnapEnumerate(locator api.VolumeLocator, labels api.Labels) ([]api.VolumeSnap, error) {
+	return nil, volume.ErrNotSupported
 }
 
 func (self *awsProvider) Attach(volumeID api.VolumeID) (path string, err error) {
