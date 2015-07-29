@@ -1,8 +1,11 @@
 package client
 
 import (
+	"crypto/tls"
+	"net"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/libopenstorage/openstorage/volume"
 )
@@ -39,7 +42,33 @@ func (c *Client) Delete() *Request {
 	return NewRequest(&http.Client{}, c.base, "DELETE", c.version)
 }
 
+func newHTTPClient(u *url.URL, tlsConfig *tls.Config, timeout time.Duration) *http.Client {
+
+	httpTransport := &http.Transport{
+		TLSClientConfig: tlsConfig,
+	}
+
+	switch u.Scheme {
+	default:
+		httpTransport.Dial = func(proto, addr string) (net.Conn, error) {
+			return net.DialTimeout(proto, addr, timeout)
+		}
+	case "unix":
+		socketPath := u.Path
+		unixDial := func(proto, addr string) (net.Conn, error) {
+			return net.DialTimeout("unix", socketPath, timeout)
+		}
+		httpTransport.Dial = unixDial
+		// Override the main URL object so the HTTP lib won't complain
+		u.Scheme = "http"
+		u.Host = "unix.sock"
+		u.Path = ""
+	}
+	return &http.Client{Transport: httpTransport}
+}
+
 func New(host string, version string) (*Client, error) {
+
 	baseURL, err := url.Parse(host)
 	if err != nil {
 		return nil, err
@@ -47,10 +76,11 @@ func New(host string, version string) (*Client, error) {
 	if baseURL.Path == "" {
 		baseURL.Path = "/"
 	}
+	httpClient := newHTTPClient(baseURL, nil, 10*time.Second)
 	c := &Client{
 		base:       baseURL,
 		version:    version,
-		httpClient: &http.Client{},
+		httpClient: httpClient,
 	}
 	return c, nil
 }
