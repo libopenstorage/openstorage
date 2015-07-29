@@ -165,4 +165,5 @@ func Register(name string, driverType DriverType, initFunc InitFunc) error {
 
 func init() {
 	drivers = make(map[string]InitFunc)
+	instances = make(map[string]VolumeDriver)
 }
