@@ -68,8 +68,9 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 	fmt.Println("Binding NFS server to:", inst.mntPath)
 
 	// Mount the nfs server locally on a unique path.
-	err = syscall.Mount(inst.nfsServer, inst.mntPath, "", 0, "")
+	err = syscall.Mount(inst.nfsServer, inst.mntPath, "tmpfs", 0, "mode=0700,uid=65534")
 	if err != nil {
+		os.Remove(inst.mntPath)
 		return nil, err
 	}
 
