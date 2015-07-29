@@ -23,7 +23,7 @@ $ go get github.com/tools/godep
 
 ## Building from Source
 
-At this point you can build cAdvisor from the source folder:
+At this point you can build openstorage from the source folder:
 
 ```
 $GOPATH/src/github.com/libopenstorage/openstorage $ godep go build .
@@ -32,7 +32,7 @@ $GOPATH/src/github.com/libopenstorage/openstorage $ godep go build .
 or run only unit tests:
 
 ```
-$GOPATH/src/github.com/libopenstorage/openstorage $ godep go test ./... -test.short
+$GOPATH/src/github.com/libopenstorage/openstorage $ godep go test ./... 
 ```
 ## Updating to latest Source
 
