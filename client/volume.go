@@ -182,7 +182,6 @@ func (v *volumeClient) Enumerate(locator api.VolumeLocator, labels api.Labels) (
 	if len(labels) != 0 {
 		req.QueryOptionLabel(string(api.OptConfigLabel), labels)
 	}
-	fmt.Println("Gotback ", vols)
 	err := req.Do().Unmarshal(&vols)
 	if err != nil {
 		return nil, err
