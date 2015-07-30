@@ -202,7 +202,7 @@ func headerVal(key string, resp *http.Response) (int, bool) {
 	return 0, false
 }
 
-func parseHttpStatus(resp *http.Response, body []byte) error {
+func parseHTTPStatus(resp *http.Response, body []byte) error {
 
 	var (
 		status *Status
@@ -274,7 +274,7 @@ func (r *Request) Do() *Response {
 		status:     resp.Status,
 		statusCode: resp.StatusCode,
 		body:       body,
-		err:        parseHttpStatus(resp, body),
+		err:        parseHTTPStatus(resp, body),
 	}
 
 done:

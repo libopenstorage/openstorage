@@ -34,7 +34,7 @@ type awsVolume struct {
 }
 
 // Implements the open storage volume interface.
-type nfsProvider struct {
+type nfsDriver struct {
 	volume.DefaultBlockDriver
 	db        kvdb.Kvdb
 	nfsServer string
@@ -56,7 +56,7 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 	uuid := string(out)
 	uuid = strings.TrimSuffix(uuid, "\n")
 
-	inst := &nfsProvider{
+	inst := &nfsDriver{
 		db:        kvdb.Instance(),
 		mntPath:   "/mnt/" + uuid,
 		nfsServer: uri}
@@ -79,29 +79,29 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 	return inst, nil
 }
 
-func (self *nfsProvider) get(volumeID string) (*awsVolume, error) {
+func (d *nfsDriver) get(volumeID string) (*awsVolume, error) {
 	v := &awsVolume{}
 	key := NfsDBKey + "/" + volumeID
-	_, err := self.db.GetVal(key, v)
+	_, err := d.db.GetVal(key, v)
 	return v, err
 }
 
-func (self *nfsProvider) put(volumeID string, v *awsVolume) error {
+func (d *nfsDriver) put(volumeID string, v *awsVolume) error {
 	key := NfsDBKey + "/" + volumeID
-	_, err := self.db.Put(key, v, 0)
+	_, err := d.db.Put(key, v, 0)
 	return err
 }
 
-func (self *nfsProvider) del(volumeID string) {
+func (d *nfsDriver) del(volumeID string) {
 	key := NfsDBKey + "/" + volumeID
-	self.db.Delete(key)
+	d.db.Delete(key)
 }
 
-func (self *nfsProvider) String() string {
+func (d *nfsDriver) String() string {
 	return Name
 }
 
-func (self *nfsProvider) Create(l api.VolumeLocator, opt *api.CreateOptions, spec *api.VolumeSpec) (api.VolumeID, error) {
+func (d *nfsDriver) Create(l api.VolumeLocator, opt *api.CreateOptions, spec *api.VolumeSpec) (api.VolumeID, error) {
 	out, err := exec.Command("uuidgen").Output()
 	if err != nil {
 		return "", err
@@ -110,24 +110,24 @@ func (self *nfsProvider) Create(l api.VolumeLocator, opt *api.CreateOptions, spe
 	volumeID = strings.TrimSuffix(volumeID, "\n")
 
 	// Create a directory on the NFS server with this UUID.
-	err = os.MkdirAll(self.mntPath+volumeID, 0744)
+	err = os.MkdirAll(d.mntPath+volumeID, 0744)
 	if err != nil {
 		return "", err
 	}
 
 	// Persist the volume spec.  We use this for all subsequent operations on
 	// this volume ID.
-	err = self.put(volumeID, &awsVolume{device: self.mntPath + volumeID, spec: *spec})
+	err = d.put(volumeID, &awsVolume{device: d.mntPath + volumeID, spec: *spec})
 
 	return api.VolumeID(volumeID), err
 }
 
-func (self *nfsProvider) Inspect(volumeIDs []api.VolumeID) ([]api.Volume, error) {
+func (d *nfsDriver) Inspect(volumeIDs []api.VolumeID) ([]api.Volume, error) {
 	return nil, nil
 }
 
-func (self *nfsProvider) Delete(volumeID api.VolumeID) error {
-	v, err := self.get(string(volumeID))
+func (d *nfsDriver) Delete(volumeID api.VolumeID) error {
+	v, err := d.get(string(volumeID))
 	if err != nil {
 		return err
 	}
@@ -138,41 +138,41 @@ func (self *nfsProvider) Delete(volumeID api.VolumeID) error {
 		return err
 	}
 
-	self.del(string(volumeID))
+	d.del(string(volumeID))
 
 	return nil
 }
 
-func (self *nfsProvider) Snapshot(volumeID api.VolumeID, labels api.Labels) (api.SnapID, error) {
+func (d *nfsDriver) Snapshot(volumeID api.VolumeID, labels api.Labels) (api.SnapID, error) {
 	return "", volume.ErrNotSupported
 }
 
-func (self *nfsProvider) SnapDelete(snapID api.SnapID) error {
+func (d *nfsDriver) SnapDelete(snapID api.SnapID) error {
 	return volume.ErrNotSupported
 }
 
-func (self *nfsProvider) SnapInspect(snapID []api.SnapID) ([]api.VolumeSnap, error) {
+func (d *nfsDriver) SnapInspect(snapID []api.SnapID) ([]api.VolumeSnap, error) {
 	return []api.VolumeSnap{}, volume.ErrNotSupported
 }
 
-func (self *nfsProvider) Stats(volumeID api.VolumeID) (api.VolumeStats, error) {
+func (d *nfsDriver) Stats(volumeID api.VolumeID) (api.VolumeStats, error) {
 	return api.VolumeStats{}, volume.ErrNotSupported
 }
 
-func (self *nfsProvider) Alerts(volumeID api.VolumeID) (api.VolumeAlerts, error) {
+func (d *nfsDriver) Alerts(volumeID api.VolumeID) (api.VolumeAlerts, error) {
 	return api.VolumeAlerts{}, volume.ErrNotSupported
 }
 
-func (self *nfsProvider) Enumerate(locator api.VolumeLocator, labels api.Labels) ([]api.Volume, error) {
+func (d *nfsDriver) Enumerate(locator api.VolumeLocator, labels api.Labels) ([]api.Volume, error) {
 	return []api.Volume{}, volume.ErrNotSupported
 }
 
-func (self *nfsProvider) SnapEnumerate(locator api.VolumeLocator, labels api.Labels) ([]api.VolumeSnap, error) {
+func (d *nfsDriver) SnapEnumerate(locator api.VolumeLocator, labels api.Labels) ([]api.VolumeSnap, error) {
 	return nil, volume.ErrNotSupported
 }
 
-func (self *nfsProvider) Mount(volumeID api.VolumeID, mountpath string) error {
-	v, err := self.get(string(volumeID))
+func (d *nfsDriver) Mount(volumeID api.VolumeID, mountpath string) error {
+	v, err := d.get(string(volumeID))
 	if err != nil {
 		return err
 	}
@@ -184,13 +184,13 @@ func (self *nfsProvider) Mount(volumeID api.VolumeID, mountpath string) error {
 
 	v.mountpath = mountpath
 	v.mounted = true
-	err = self.put(string(volumeID), v)
+	err = d.put(string(volumeID), v)
 
 	return err
 }
 
-func (self *nfsProvider) Unmount(volumeID api.VolumeID, mountpath string) error {
-	v, err := self.get(string(volumeID))
+func (d *nfsDriver) Unmount(volumeID api.VolumeID, mountpath string) error {
+	v, err := d.get(string(volumeID))
 	if err != nil {
 		return err
 	}
@@ -202,12 +202,12 @@ func (self *nfsProvider) Unmount(volumeID api.VolumeID, mountpath string) error 
 
 	v.mountpath = ""
 	v.mounted = false
-	err = self.put(string(volumeID), v)
+	err = d.put(string(volumeID), v)
 
 	return err
 }
 
-func (self *nfsProvider) Shutdown() {
+func (d *nfsDriver) Shutdown() {
 	log.Printf("%s Shutting down", Name)
 }
 

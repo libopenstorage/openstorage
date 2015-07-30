@@ -88,7 +88,7 @@ func (v *VolDriver) volumeCreate(c *cli.Context) {
 		return
 	}
 
-	fmtOutput(c, &Format{Uuid: []string{string(id)}})
+	fmtOutput(c, &Format{UUID: []string{string(id)}})
 }
 
 func (v *VolDriver) volumeFormat(c *cli.Context) {
@@ -106,7 +106,7 @@ func (v *VolDriver) volumeFormat(c *cli.Context) {
 		return
 	}
 
-	fmtOutput(c, &Format{Uuid: []string{c.Args()[0]}})
+	fmtOutput(c, &Format{UUID: []string{c.Args()[0]}})
 }
 
 func (v *VolDriver) volumeAttach(c *cli.Context) {
@@ -141,7 +141,7 @@ func (v *VolDriver) volumeDetach(c *cli.Context) {
 		return
 	}
 
-	fmtOutput(c, &Format{Uuid: []string{c.Args()[0]}})
+	fmtOutput(c, &Format{UUID: []string{c.Args()[0]}})
 }
 
 func (v *VolDriver) volumeInspect(c *cli.Context) {
@@ -204,7 +204,7 @@ func (v *VolDriver) volumeDelete(c *cli.Context) {
 		return
 	}
 
-	fmtOutput(c, &Format{Uuid: []string{c.Args()[0]}})
+	fmtOutput(c, &Format{UUID: []string{c.Args()[0]}})
 }
 
 func (v *VolDriver) snapCreate(c *cli.Context) {
@@ -273,7 +273,7 @@ func (v *VolDriver) snapDelete(c *cli.Context) {
 		return
 	}
 
-	fmtOutput(c, &Format{Uuid: []string{c.Args()[0]}})
+	fmtOutput(c, &Format{UUID: []string{c.Args()[0]}})
 }
 
 func VolumeCommands(name string) []cli.Command {

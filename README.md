@@ -3,11 +3,7 @@
 
 # About OpenStorage
 
-openstorage is an implementation of the Open Storage specification
-
-### Building:
-
-**Note**: libopenstorage only builds on Linux since it uses Linux-only APIs.
+openstorage is an implementation of the [Open Storage](https://github.com/libopenstorage/specs) specification
 
 ## Installing Dependencies
 
@@ -47,7 +43,7 @@ To start the OSD in daemon mode:
 ```
 osd -d -f config.yaml
 ```
-Where config.yaml is the daemon's configuiration file and it's format is explained below.
+Where config.yaml is the daemon's configuiration file and it's format is explained [below](https://github.com/libopenstorage/openstorage/blob/master/README.md#osd-config-file).
 
 To use the OSD cli, see the CLI help menu:
 ```
@@ -92,7 +88,10 @@ osd:
 ## Adding your driver
 
 Adding a driver is fairly straightforward:
+
 1. Add your driver decleration in `drivers.go`
+
+
 2. Add your driver `mydriver` implementation in the `drivers/mydriver` directory.  The driver must implement the `VolumeDriver` interface specified in `volumes/volumes.go`.
 
 Here is an example of `drivers.go`:

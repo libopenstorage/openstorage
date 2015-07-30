@@ -13,7 +13,7 @@ type Format struct {
 	Status string      `json:"status,omitempty"`
 	Err    string      `json:"error,omitempty"`
 	Desc   string      `json:"desc,omitempty"`
-	Uuid   []string    `json:"uuid,omitempty"`
+	UUID   []string    `json:"uuid,omitempty"`
 	Result interface{} `json:"result,omitempty"`
 }
 
@@ -77,7 +77,7 @@ func fmtOutput(c *cli.Context, format *Format) {
 	}
 	if format.Err == "" {
 		if format.Result == nil {
-			for _, v := range format.Uuid {
+			for _, v := range format.UUID {
 				fmt.Println(v)
 			}
 			return

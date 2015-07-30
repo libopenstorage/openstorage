@@ -27,12 +27,12 @@ func responseStatus(err error) string {
 	return err.Error()
 }
 
-func NewVolumeDriver(name string) restServer {
+func newVolumeDriver(name string) restServer {
 	return &volDriver{restBase{version: apiVersion, name: name}}
 }
 
-func (d *volDriver) String() string {
-	return d.name
+func (vd *volDriver) String() string {
+	return vd.name
 }
 
 func (vd *volDriver) parseVolumeID(r *http.Request) (types.VolumeID, error) {

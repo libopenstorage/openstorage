@@ -42,7 +42,7 @@ type volumeInfo struct {
 	vol      *types.Volume
 }
 
-func NewVolumePlugin(name string) restServer {
+func newVolumePlugin(name string) restServer {
 	return &driver{restBase{name: name, version: "0.3"}}
 }
 

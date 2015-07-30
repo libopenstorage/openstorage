@@ -38,7 +38,7 @@ type awsVolume struct {
 }
 
 // Implements the open storage volume interface.
-type awsProvider struct {
+type awsDriver struct {
 	db  kvdb.Kvdb
 	ec2 *ec2.EC2
 }
@@ -46,7 +46,7 @@ type awsProvider struct {
 func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 	// Initialize the EC2 interface.
 	creds := credentials.NewEnvCredentials()
-	inst := &awsProvider{
+	inst := &awsDriver{
 		ec2: ec2.New(&aws.Config{
 			Region:      "us-west-1",
 			Credentials: creds,
@@ -69,29 +69,29 @@ func mapIops(cos api.VolumeCos) int64 {
 	}
 }
 
-func (self *awsProvider) get(volumeID string) (*awsVolume, error) {
+func (d *awsDriver) get(volumeID string) (*awsVolume, error) {
 	v := &awsVolume{}
 	key := AwsDBKey + "/" + volumeID
-	_, err := self.db.GetVal(key, v)
+	_, err := d.db.GetVal(key, v)
 	return v, err
 }
 
-func (self *awsProvider) put(volumeID string, v *awsVolume) error {
+func (d *awsDriver) put(volumeID string, v *awsVolume) error {
 	key := AwsDBKey + "/" + volumeID
-	_, err := self.db.Put(key, v, 0)
+	_, err := d.db.Put(key, v, 0)
 	return err
 }
 
-func (self *awsProvider) del(volumeID string) {
+func (d *awsDriver) del(volumeID string) {
 	key := AwsDBKey + "/" + volumeID
-	self.db.Delete(key)
+	d.db.Delete(key)
 }
 
-func (self *awsProvider) String() string {
+func (d *awsDriver) String() string {
 	return Name
 }
 
-func (self *awsProvider) Create(l api.VolumeLocator, opt *api.CreateOptions, spec *api.VolumeSpec) (api.VolumeID, error) {
+func (d *awsDriver) Create(l api.VolumeLocator, opt *api.CreateOptions, spec *api.VolumeSpec) (api.VolumeID, error) {
 	availabilityZone := "us-west-1a"
 	sz := int64(spec.Size / (1024 * 1024 * 1024))
 	iops := mapIops(spec.Cos)
@@ -99,56 +99,56 @@ func (self *awsProvider) Create(l api.VolumeLocator, opt *api.CreateOptions, spe
 		AvailabilityZone: &availabilityZone,
 		Size:             &sz,
 		IOPS:             &iops}
-	v, err := self.ec2.CreateVolume(req)
+	v, err := d.ec2.CreateVolume(req)
 	if err != nil {
 		return api.VolumeID(""), err
 	}
 
 	// Persist the volume spec.  We use this for all subsequent operations on
 	// this volume ID.
-	err = self.put(string(*v.VolumeID), &awsVolume{spec: *spec})
+	err = d.put(string(*v.VolumeID), &awsVolume{spec: *spec})
 
 	return api.VolumeID(*v.VolumeID), err
 }
 
-func (self *awsProvider) Inspect(volumeIDs []api.VolumeID) ([]api.Volume, error) {
+func (d *awsDriver) Inspect(volumeIDs []api.VolumeID) ([]api.Volume, error) {
 	return nil, nil
 }
 
-func (self *awsProvider) Delete(volumeID api.VolumeID) error {
+func (d *awsDriver) Delete(volumeID api.VolumeID) error {
 	return nil
 }
 
-func (self *awsProvider) Snapshot(volumeID api.VolumeID, labels api.Labels) (api.SnapID, error) {
+func (d *awsDriver) Snapshot(volumeID api.VolumeID, labels api.Labels) (api.SnapID, error) {
 	return "", volume.ErrNotSupported
 }
 
-func (self *awsProvider) SnapDelete(snapID api.SnapID) error {
+func (d *awsDriver) SnapDelete(snapID api.SnapID) error {
 	return volume.ErrNotSupported
 }
 
-func (self *awsProvider) SnapInspect(snapID []api.SnapID) ([]api.VolumeSnap, error) {
+func (d *awsDriver) SnapInspect(snapID []api.SnapID) ([]api.VolumeSnap, error) {
 	return []api.VolumeSnap{}, volume.ErrNotSupported
 }
 
-func (self *awsProvider) Stats(volumeID api.VolumeID) (api.VolumeStats, error) {
+func (d *awsDriver) Stats(volumeID api.VolumeID) (api.VolumeStats, error) {
 	return api.VolumeStats{}, volume.ErrNotSupported
 }
 
-func (self *awsProvider) Alerts(volumeID api.VolumeID) (api.VolumeAlerts, error) {
+func (d *awsDriver) Alerts(volumeID api.VolumeID) (api.VolumeAlerts, error) {
 	return api.VolumeAlerts{}, volume.ErrNotSupported
 }
 
-func (self *awsProvider) Enumerate(locator api.VolumeLocator, labels api.Labels) ([]api.Volume, error) {
+func (d *awsDriver) Enumerate(locator api.VolumeLocator, labels api.Labels) ([]api.Volume, error) {
 	return nil, volume.ErrNotSupported
 }
 
-func (self *awsProvider) SnapEnumerate(locator api.VolumeLocator, labels api.Labels) ([]api.VolumeSnap, error) {
+func (d *awsDriver) SnapEnumerate(locator api.VolumeLocator, labels api.Labels) ([]api.VolumeSnap, error) {
 	return nil, volume.ErrNotSupported
 }
 
-func (self *awsProvider) Attach(volumeID api.VolumeID) (path string, err error) {
-	v, err := self.get(string(volumeID))
+func (d *awsDriver) Attach(volumeID api.VolumeID) (path string, err error) {
+	v, err := d.get(string(volumeID))
 	if err != nil {
 		return "", err
 	}
@@ -163,20 +163,20 @@ func (self *awsProvider) Attach(volumeID api.VolumeID) (path string, err error) 
 		VolumeID:   &vol,
 	}
 
-	resp, err := self.ec2.AttachVolume(req)
+	resp, err := d.ec2.AttachVolume(req)
 	if err != nil {
 		return "", err
 	}
 
 	v.instanceID = inst
 	v.attached = true
-	err = self.put(string(volumeID), v)
+	err = d.put(string(volumeID), v)
 
 	return *resp.Device, err
 }
 
-func (self *awsProvider) Format(volumeID api.VolumeID) error {
-	v, err := self.get(string(volumeID))
+func (d *awsDriver) Format(volumeID api.VolumeID) error {
+	v, err := d.get(string(volumeID))
 	if err != nil {
 		return err
 	}
@@ -201,13 +201,13 @@ func (self *awsProvider) Format(volumeID api.VolumeID) error {
 	// XXX TODO validate output
 
 	v.formatted = true
-	err = self.put(string(volumeID), v)
+	err = d.put(string(volumeID), v)
 
 	return err
 }
 
-func (self *awsProvider) Detach(volumeID api.VolumeID) error {
-	v, err := self.get(string(volumeID))
+func (d *awsDriver) Detach(volumeID api.VolumeID) error {
+	v, err := d.get(string(volumeID))
 	if err != nil {
 		return err
 	}
@@ -221,20 +221,20 @@ func (self *awsProvider) Detach(volumeID api.VolumeID) error {
 		Force:      &force,
 	}
 
-	_, err = self.ec2.DetachVolume(req)
+	_, err = d.ec2.DetachVolume(req)
 	if err != nil {
 		return err
 	}
 
 	v.instanceID = inst
 	v.attached = false
-	err = self.put(string(volumeID), v)
+	err = d.put(string(volumeID), v)
 
 	return err
 }
 
-func (self *awsProvider) Mount(volumeID api.VolumeID, mountpath string) error {
-	v, err := self.get(string(volumeID))
+func (d *awsDriver) Mount(volumeID api.VolumeID, mountpath string) error {
+	v, err := d.get(string(volumeID))
 	if err != nil {
 		return err
 	}
@@ -246,13 +246,13 @@ func (self *awsProvider) Mount(volumeID api.VolumeID, mountpath string) error {
 
 	v.mountpath = mountpath
 	v.mounted = true
-	err = self.put(string(volumeID), v)
+	err = d.put(string(volumeID), v)
 
 	return err
 }
 
-func (self *awsProvider) Unmount(volumeID api.VolumeID, mountpath string) error {
-	v, err := self.get(string(volumeID))
+func (d *awsDriver) Unmount(volumeID api.VolumeID, mountpath string) error {
+	v, err := d.get(string(volumeID))
 	if err != nil {
 		return err
 	}
@@ -264,12 +264,12 @@ func (self *awsProvider) Unmount(volumeID api.VolumeID, mountpath string) error 
 
 	v.mountpath = ""
 	v.mounted = false
-	err = self.put(string(volumeID), v)
+	err = d.put(string(volumeID), v)
 
 	return err
 }
 
-func (self *awsProvider) Shutdown() {
+func (d *awsDriver) Shutdown() {
 	log.Printf("%s Shutting down", Name)
 }
 
