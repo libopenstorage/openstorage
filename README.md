@@ -1,9 +1,9 @@
+# Current Build Status
+[![Build Status](http://emma.openstorage.org/buildStatus/icon?job=Openstorage&style=plastic)](http://emma.openstorage.org/job/Openstorage/)
+
 # openstorage
 
 openstorage is an implementation of the Open Storage specification
-
-# Current Build Status
-[![Build Status](http://emma.openstorage.org/buildStatus/icon?job=Openstorage&style=plastic)](http://emma.openstorage.org/job/Openstorage/)
 
 ### Building:
 
