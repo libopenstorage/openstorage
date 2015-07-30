@@ -8,7 +8,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 
-	types "github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
 )
 
@@ -35,17 +35,17 @@ func (vd *volDriver) String() string {
 	return vd.name
 }
 
-func (vd *volDriver) parseVolumeID(r *http.Request) (types.VolumeID, error) {
+func (vd *volDriver) parseVolumeID(r *http.Request) (api.VolumeID, error) {
 	vars := mux.Vars(r)
 	if id, ok := vars["id"]; ok {
-		return types.VolumeID(id), nil
+		return api.VolumeID(id), nil
 	}
-	return types.VolumeID(""), fmt.Errorf("could not vd.parse volume ID")
+	return api.VolumeID(""), fmt.Errorf("could not vd.parse volume ID")
 }
 
 func (vd *volDriver) create(w http.ResponseWriter, r *http.Request) {
-	var dcRes types.VolumeCreateResponse
-	var dcReq types.VolumeCreateRequest
+	var dcRes api.VolumeCreateResponse
+	var dcReq api.VolumeCreateRequest
 	method := "create"
 
 	if err := json.NewDecoder(r.Body).Decode(&dcReq); err != nil {
@@ -58,17 +58,17 @@ func (vd *volDriver) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ID, err := d.Create(dcReq.Locator, dcReq.Options, dcReq.Spec)
-	dcRes.Status = responseStatus(err)
+	dcRes.VolumeResponse = api.VolumeResponse{Error: responseStatus(err)}
 	dcRes.ID = ID
 	json.NewEncoder(w).Encode(&dcRes)
 }
 
 func (vd *volDriver) volumeState(w http.ResponseWriter, r *http.Request) {
 	var (
-		volumeID types.VolumeID
+		volumeID api.VolumeID
 		err      error
-		req      types.VolumeStateRequest
-		resp     types.VolumeStateResponse
+		req      api.VolumeStateAction
+		resp     api.VolumeStateResponse
 	)
 	method := "volumeState"
 
@@ -88,43 +88,61 @@ func (vd *volDriver) volumeState(w http.ResponseWriter, r *http.Request) {
 		vd.notFound(w, r)
 		return
 	}
-
-	resp.VolumeStateRequest = req
-
 	for {
-		if req.Mount {
-			if req.Path == "" {
-				vd.sendError(vd.name, method, w, "Invalid mount path",
-					http.StatusBadRequest)
+		if req.Format != api.ParamIgnore {
+			if req.Format == api.ParamOff {
+				err = fmt.Errorf("Invalid request to un-format")
+				break
 			}
-			err = d.Mount(volumeID, req.Path)
-			break
+			err = d.Format(volumeID)
+			if err != nil {
+				break
+			}
+			resp.Format = api.ParamOn
 		}
-		if req.Path != "" {
-			err = d.Unmount(volumeID, req.Path)
-			break
+		if req.Attach != api.ParamIgnore {
+			if req.Attach == api.ParamOn {
+				resp.DevicePath, err = d.Attach(volumeID)
+			} else {
+				err = d.Detach(volumeID)
+			}
+			if err != nil {
+				break
+			}
+			resp.Attach = req.Attach
 		}
-		if req.Attach {
-			resp.Path, err = d.Attach(volumeID)
-			break
+		if req.Mount != api.ParamIgnore {
+			if req.MountPath == "" {
+				err = fmt.Errorf("Invalid mount path")
+				break
+			}
+			if req.Mount == api.ParamOn {
+				err = d.Mount(volumeID, req.MountPath)
+			} else {
+				err = d.Unmount(volumeID, req.MountPath)
+			}
+			if err != nil {
+				break
+			}
+			resp.Mount = req.Mount
+			resp.MountPath = req.MountPath
 		}
-		err = d.Detach(volumeID)
 		break
 	}
 
 	if err != nil {
-		resp.Status = err.Error()
+		resp.Error = err.Error()
 	}
 	json.NewEncoder(w).Encode(resp)
 }
 
 func (vd *volDriver) inspect(w http.ResponseWriter, r *http.Request) {
-	var ids []types.VolumeID
+	var ids []api.VolumeID
 	var err error
 
 	method := "inspect"
 	params := r.URL.Query()
-	v := params[string(types.OptID)]
+	v := params[string(api.OptID)]
 	if v != nil {
 		if err = json.Unmarshal([]byte(v[0]), &ids); err != nil {
 			log.Printf("Server: couldn't vd.parse VolumeIDs: %s", err.Error())
@@ -147,7 +165,7 @@ func (vd *volDriver) inspect(w http.ResponseWriter, r *http.Request) {
 }
 
 func (vd *volDriver) delete(w http.ResponseWriter, r *http.Request) {
-	var volumeID types.VolumeID
+	var volumeID api.VolumeID
 	var err error
 
 	method := "delete"
@@ -165,29 +183,29 @@ func (vd *volDriver) delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = d.Delete(volumeID)
-	res := types.ResponseStatusNew(err)
+	res := api.ResponseStatusNew(err)
 	json.NewEncoder(w).Encode(res)
 }
 
 func (vd *volDriver) enumerate(w http.ResponseWriter, r *http.Request) {
-	var locator types.VolumeLocator
-	var configLabels types.Labels
+	var locator api.VolumeLocator
+	var configLabels api.Labels
 	var err error
 
 	method := "enumerate"
 	params := r.URL.Query()
-	v := params[string(types.OptName)]
+	v := params[string(api.OptName)]
 	if v != nil {
 		locator.Name = v[0]
 	}
-	v = params[string(types.OptVolumeLabel)]
+	v = params[string(api.OptVolumeLabel)]
 	if v != nil {
 		if err = json.Unmarshal([]byte(v[0]), &locator.VolumeLabels); err != nil {
 			log.Printf("Server: couldn't vd.parse VolumeLabels: %s", err.Error())
 			vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		}
 	}
-	v = params[string(types.OptConfigLabel)]
+	v = params[string(api.OptConfigLabel)]
 	if v != nil {
 		if err = json.Unmarshal([]byte(v[0]), &configLabels); err != nil {
 			log.Printf("Server: couldn't vd.parse configLabels: %s", err.Error())

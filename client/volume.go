@@ -44,8 +44,8 @@ func (v *volumeClient) Create(locator api.VolumeLocator,
 	if err != nil {
 		return api.VolumeID(""), err
 	}
-	if response.Status != "" {
-		return api.VolumeID(""), errors.New(response.Status)
+	if response.Error != "" {
+		return api.VolumeID(""), errors.New(response.Error)
 	}
 	return response.ID, nil
 }
@@ -80,8 +80,8 @@ func (v *volumeClient) Delete(volumeID api.VolumeID) error {
 	if err != nil {
 		return err
 	}
-	if response.Status != "" {
-		return errors.New(response.Status)
+	if response.Error != "" {
+		return errors.New(response.Error)
 	}
 	return nil
 }
@@ -100,8 +100,8 @@ func (v *volumeClient) Snapshot(volumeID api.VolumeID, labels api.Labels) (api.S
 	if err != nil {
 		return api.SnapID(""), err
 	}
-	if response.Status != "" {
-		return api.SnapID(""), errors.New(response.Status)
+	if response.Error != "" {
+		return api.SnapID(""), errors.New(response.Error)
 	}
 	return response.ID, nil
 }
@@ -115,8 +115,8 @@ func (v *volumeClient) SnapDelete(snapID api.SnapID) error {
 	if err != nil {
 		return err
 	}
-	if response.Status != "" {
-		return errors.New(response.Status)
+	if response.Error != "" {
+		return errors.New(response.Error)
 	}
 	return nil
 }
@@ -216,32 +216,32 @@ func (v *volumeClient) SnapEnumerate(locator api.VolumeLocator, labels api.Label
 func (v *volumeClient) Attach(volumeID api.VolumeID) (string, error) {
 	var response api.VolumeStateResponse
 
-	req := api.VolumeStateRequest{
-		Attach: true,
+	req := api.VolumeStateAction{
+		Attach: api.ParamOn,
 	}
 	err := v.c.Put().Resource(volumePath).Instance(string(volumeID)).Body(&req).Do().Unmarshal(&response)
 	if err != nil {
 		return "", err
 	}
-	if response.Status != "" {
-		return "", errors.New(response.Status)
+	if response.Error != "" {
+		return "", errors.New(response.Error)
 	}
-	return response.Path, nil
+	return response.DevicePath, nil
 }
 
 // Format volume according to spec provided in Create
 // Errors ErrEnoEnt, ErrVolDetached may be returned.
 func (v *volumeClient) Format(volumeID api.VolumeID) error {
 	var response api.VolumeStateResponse
-	req := api.VolumeStateRequest{
-		Format: true,
+	req := api.VolumeStateAction{
+		Format: api.ParamOn,
 	}
 	err := v.c.Put().Resource(volumePath).Instance(string(volumeID)).Body(&req).Do().Unmarshal(&response)
 	if err != nil {
 		return err
 	}
-	if response.Status != "" {
-		return errors.New(response.Status)
+	if response.Error != "" {
+		return errors.New(response.Error)
 	}
 	return nil
 }
@@ -250,15 +250,15 @@ func (v *volumeClient) Format(volumeID api.VolumeID) error {
 // Errors ErrEnoEnt, ErrVolDetached may be returned.
 func (v *volumeClient) Detach(volumeID api.VolumeID) error {
 	var response api.VolumeStateResponse
-	req := api.VolumeStateRequest{
-		Attach: false,
+	req := api.VolumeStateAction{
+		Attach: api.ParamOff,
 	}
 	err := v.c.Put().Resource(volumePath).Instance(string(volumeID)).Body(&req).Do().Unmarshal(&response)
 	if err != nil {
 		return err
 	}
-	if response.Status != "" {
-		return errors.New(response.Status)
+	if response.Error != "" {
+		return errors.New(response.Error)
 	}
 	return nil
 }
@@ -267,17 +267,16 @@ func (v *volumeClient) Detach(volumeID api.VolumeID) error {
 // Errors ErrEnoEnt, ErrVolDetached may be returned.
 func (v *volumeClient) Mount(volumeID api.VolumeID, mountpath string) error {
 	var response api.VolumeStateResponse
-	req := api.VolumeStateRequest{
-		Attach: true,
-		Mount:  true,
-		Path:   mountpath,
+	req := api.VolumeStateAction{
+		Mount:     api.ParamOn,
+		MountPath: mountpath,
 	}
 	err := v.c.Put().Resource(volumePath).Instance(string(volumeID)).Body(&req).Do().Unmarshal(&response)
 	if err != nil {
 		return err
 	}
-	if response.Status != "" {
-		return errors.New(response.Status)
+	if response.Error != "" {
+		return errors.New(response.Error)
 	}
 	return nil
 }
@@ -286,16 +285,16 @@ func (v *volumeClient) Mount(volumeID api.VolumeID, mountpath string) error {
 // Errors ErrEnoEnt, ErrVolDetached may be returned.
 func (v *volumeClient) Unmount(volumeID api.VolumeID, mountpath string) error {
 	var response api.VolumeStateResponse
-	req := api.VolumeStateRequest{
-		Attach: true,
-		Mount:  false,
+	req := api.VolumeStateAction{
+		Mount:     api.ParamOff,
+		MountPath: mountpath,
 	}
 	err := v.c.Put().Resource(volumePath).Instance(string(volumeID)).Body(&req).Do().Unmarshal(&response)
 	if err != nil {
 		return err
 	}
-	if response.Status != "" {
-		return errors.New(response.Status)
+	if response.Error != "" {
+		return errors.New(response.Error)
 	}
 	return nil
 }

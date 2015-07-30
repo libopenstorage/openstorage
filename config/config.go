@@ -19,7 +19,7 @@ type Config struct {
 
 const (
 	DriverAPIBase = "/var/lib/osd/driver/"
-	PluginApiBase = "/var/lib/osd/plugin/"
+	PluginAPIBase = "/var/lib/osd/plugin/"
 	Version       = "v1"
 )
 
