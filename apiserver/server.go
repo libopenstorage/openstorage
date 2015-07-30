@@ -80,16 +80,16 @@ func startServer(name string, sockBase string, rest restServer) error {
 	return err
 }
 
-// StartDriverApi starts a REST server to receive driver configuration commands
+// StartDriverAPI starts a REST server to receive driver configuration commands
 // from the CLI/UX.
-func StartDriverApi(name string, port int, restBase string) error {
-	rest := NewVolumeDriver(name)
+func StartDriverAPI(name string, port int, restBase string) error {
+	rest := newVolumeDriver(name)
 	return startServer(name, restBase, rest)
 }
 
-// StartPluginApi starts a REST server to receive volume commands from the
+// StartPluginAPI starts a REST server to receive volume commands from the
 // Linux container engine.
-func StartPluginApi(name string, pluginBase string) error {
-	rest := NewVolumePlugin(name)
+func StartPluginAPI(name string, pluginBase string) error {
+	rest := newVolumePlugin(name)
 	return startServer(name, pluginBase, rest)
 }

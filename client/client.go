@@ -88,6 +88,6 @@ func NewClient(host string, version string) (*Client, error) {
 }
 
 func NewDriverClient(driverName string) (*Client, error) {
-	sockPath := "unix://" + config.DriverApiBase + driverName
+	sockPath := "unix://" + config.DriverAPIBase + driverName
 	return NewClient(sockPath, config.Version)
 }

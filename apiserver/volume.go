@@ -27,7 +27,7 @@ func responseStatus(err error) string {
 	return err.Error()
 }
 
-func NewVolumeDriver(name string) restServer {
+func newVolumeDriver(name string) restServer {
 	return &volDriver{restBase{version: apiVersion, name: name}}
 }
 
