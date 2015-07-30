@@ -1,5 +1,8 @@
 # openstorage
+
 openstorage is an implementation of the Open Storage specification
+
+[![Build Status](https://emma.openstorage.org/buildStatus/icon?job=test-acceptance)](https://emma.openstorage.org/job/test-acceptance/)
 
 ### Building:
 
