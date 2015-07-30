@@ -92,7 +92,10 @@ osd:
 ## Adding your driver
 
 Adding a driver is fairly straightforward:
+
 1. Add your driver decleration in `drivers.go`
+
+
 2. Add your driver `mydriver` implementation in the `drivers/mydriver` directory.  The driver must implement the `VolumeDriver` interface specified in `volumes/volumes.go`.
 
 Here is an example of `drivers.go`:
