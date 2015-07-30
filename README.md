@@ -3,7 +3,7 @@
 
 # About OpenStorage
 
-openstorage is an implementation of the Open Storage specification
+openstorage is an implementation of the [Open Storage](https://github.com/libopenstorage/specs) specification
 
 ### Building:
 
