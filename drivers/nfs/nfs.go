@@ -164,7 +164,8 @@ func (self *nfsProvider) Alerts(volumeID api.VolumeID) (api.VolumeAlerts, error)
 }
 
 func (self *nfsProvider) Enumerate(locator api.VolumeLocator, labels api.Labels) ([]api.Volume, error) {
-	return nil, volume.ErrNotSupported
+	var volumes []api.Volume
+	return volumes, nil
 }
 
 func (self *nfsProvider) SnapEnumerate(locator api.VolumeLocator, labels api.Labels) ([]api.VolumeSnap, error) {
