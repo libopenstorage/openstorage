@@ -213,7 +213,7 @@ func parseHttpStatus(resp *http.Response, body []byte) error {
 	hasStatus := false
 	if body != nil {
 		err = json.Unmarshal(body, status)
-		if err != nil && status.Message != "" {
+		if err == nil && status.Message != "" {
 			hasStatus = true
 		}
 	}

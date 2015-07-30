@@ -28,19 +28,19 @@ func (c *Client) Status() (*Status, error) {
 }
 
 func (c *Client) Get() *Request {
-	return NewRequest(&http.Client{}, c.base, "GET", c.version)
+	return NewRequest(c.httpClient, c.base, "GET", c.version)
 }
 
 func (c *Client) Post() *Request {
-	return NewRequest(&http.Client{}, c.base, "POST", c.version)
+	return NewRequest(c.httpClient, c.base, "POST", c.version)
 }
 
 func (c *Client) Put() *Request {
-	return NewRequest(&http.Client{}, c.base, "PUT", c.version)
+	return NewRequest(c.httpClient, c.base, "PUT", c.version)
 }
 
 func (c *Client) Delete() *Request {
-	return NewRequest(&http.Client{}, c.base, "DELETE", c.version)
+	return NewRequest(c.httpClient, c.base, "DELETE", c.version)
 }
 
 func newHTTPClient(u *url.URL, tlsConfig *tls.Config, timeout time.Duration) *http.Client {
@@ -57,7 +57,8 @@ func newHTTPClient(u *url.URL, tlsConfig *tls.Config, timeout time.Duration) *ht
 	case "unix":
 		socketPath := u.Path
 		unixDial := func(proto, addr string) (net.Conn, error) {
-			return net.DialTimeout("unix", socketPath, timeout)
+			ret, err := net.DialTimeout("unix", socketPath, timeout)
+			return ret, err
 		}
 		httpTransport.Dial = unixDial
 		// Override the main URL object so the HTTP lib won't complain

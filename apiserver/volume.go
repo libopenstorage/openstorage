@@ -227,27 +227,27 @@ func version(route string) string {
 }
 
 func volPath(route string) string {
-	return version("volumes/" + route)
+	return version("volumes" + route)
 }
 
 func snapPath(route string) string {
-	return version("snap/" + route)
+	return version("snapshot" + route)
 }
 
 func (vd *volDriver) Routes() []*Route {
 	return []*Route{
 		&Route{verb: "POST", path: volPath(""), fn: vd.create},
-		&Route{verb: "PUT", path: volPath("{id}"), fn: vd.volumeState},
+		&Route{verb: "PUT", path: volPath("/{id}"), fn: vd.volumeState},
 		&Route{verb: "GET", path: volPath(""), fn: vd.enumerate},
-		&Route{verb: "GET", path: volPath("{id}"), fn: vd.inspect},
-		&Route{verb: "DELETE", path: volPath("{id}"), fn: vd.delete},
-		&Route{verb: "GET", path: volPath("stats/"), fn: vd.stats},
-		&Route{verb: "GET", path: volPath("stats/{id}"), fn: vd.stats},
-		&Route{verb: "GET", path: volPath("alerts"), fn: vd.alerts},
-		&Route{verb: "GET", path: volPath("alerts/{id}"), fn: vd.alerts},
-		&Route{verb: "GET", path: snapPath("{id}"), fn: vd.snapInspect},
+		&Route{verb: "GET", path: volPath("/{id}"), fn: vd.inspect},
+		&Route{verb: "DELETE", path: volPath("/{id}"), fn: vd.delete},
+		&Route{verb: "GET", path: volPath("/stats"), fn: vd.stats},
+		&Route{verb: "GET", path: volPath("/stats/{id}"), fn: vd.stats},
+		&Route{verb: "GET", path: volPath("/alerts"), fn: vd.alerts},
+		&Route{verb: "GET", path: volPath("/alerts/{id}"), fn: vd.alerts},
+		&Route{verb: "GET", path: snapPath("/{id}"), fn: vd.snapInspect},
 		&Route{verb: "GET", path: snapPath(""), fn: vd.snapEnumerate},
-		&Route{verb: "POST", path: snapPath("{id}"), fn: vd.snap},
-		&Route{verb: "DELETE", path: snapPath("{id}"), fn: vd.snapDelete},
+		&Route{verb: "POST", path: snapPath("/{id}"), fn: vd.snap},
+		&Route{verb: "DELETE", path: snapPath("/{id}"), fn: vd.snapDelete},
 	}
 }

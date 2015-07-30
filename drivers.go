@@ -11,5 +11,6 @@ var (
 		// AWS driver.  This provisions storage from EBS.
 		aws.Name,
 		// NFS driver.  This provisions storage from an NFS server.
-		nfs.Name}
+		nfs.Name,
+	}
 )
