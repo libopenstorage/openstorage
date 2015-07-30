@@ -13,7 +13,7 @@ func TestAll(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to initialize Driver: %v", err)
 	}
-	ctx, err := test.NewTestCtx(Name)
+	ctx, err := test.NewContext(Name)
 	if err != nil {
 		t.Fatalf("Failed to initialize Driver: %v", err)
 	}
