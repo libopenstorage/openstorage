@@ -187,10 +187,6 @@ func (v *VolDriver) volumeEnumerate(c *cli.Context) {
 		cmdError(c, fn, err)
 		return
 	}
-	if volumes == nil {
-		cmdError(c, fn, err)
-		return
-	}
 	cmdOutput(c, volumes)
 }
 

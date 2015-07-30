@@ -45,7 +45,7 @@ func (rest *restBase) sendError(request string, id string, w http.ResponseWriter
 }
 
 func (rest *restBase) notFound(w http.ResponseWriter, r *http.Request) {
-	log.Warnf("[%s] Not found: %+v", rest.String(), r)
+	log.Warnf("[%s] Not found: %+v", rest.name, r.URL)
 	http.NotFound(w, r)
 }
 
@@ -80,14 +80,14 @@ func startServer(name string, sockBase string, rest restServer) error {
 	return err
 }
 
-// StartVolumeDriver starts a REST server to receive driver configuration commands
+// StartDriverApi starts a REST server to receive driver configuration commands
 // from the CLI/UX.
 func StartDriverApi(name string, port int, restBase string) error {
 	rest := NewVolumeDriver(name)
 	return startServer(name, restBase, rest)
 }
 
-// StartVolumePlugin starts a REST server to receive volume commands from the
+// StartPluginApi starts a REST server to receive volume commands from the
 // Linux container engine.
 func StartPluginApi(name string, pluginBase string) error {
 	rest := NewVolumePlugin(name)

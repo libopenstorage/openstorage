@@ -21,7 +21,7 @@ func (v *volumeClient) String() string {
 }
 
 const (
-	volumePath = "/volume"
+	volumePath = "/volumes"
 	snapPath   = "/snapshot"
 )
 
