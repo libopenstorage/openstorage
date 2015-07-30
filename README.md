@@ -34,6 +34,85 @@ or run only unit tests:
 ```
 $GOPATH/src/github.com/libopenstorage/openstorage $ godep go test ./... 
 ```
+
+## Starting OSD
+
+OSD is both the openstorage daemon and the CLI.  When run as a daemon, the OSD is ready to receive RESTful commands to operate on volumes and attach them to a Docker container.  It works with the [Docker volumes plugin interface](https://github.com/docker/docker/blob/e5af7a0e869c0a66f8ab30d3a90280843b9999e0/docs/extend/plugins_volume.md) will communicate with Docker version 1.7 and later.  When this daemon is running, Docker will automatically commincate with the daemon to manage a container's volumes.
+
+To start the OSD in daemon mode:
+```
+osd -d -f config.yaml
+```
+Where config.yaml is the daemon's configuiration file and it's format is explained below.
+
+To use the OSD cli, see the CLI help menu:
+```
+NAME:
+   osd - Open Storage CLI
+
+USAGE:
+   osd [global options] command [command options] [arguments...]
+
+VERSION:
+   0.3
+
+COMMANDS:
+   driver, d    Manage drivers
+   aws, v       Manage aws volumes
+   nfs, v       Manage nfs volumes
+   help, h      Shows a list of commands or help for one command
+   
+GLOBAL OPTIONS:
+   --json, -j                                   output in json
+   --daemon, -d                                 Start OSD in daemon mode
+   --driver [--driver option --driver option]   driver name and options: name=btrfs,root_vol=/var/openstorage/btrfs
+   --file, -f                                   file to read the OSD configuration from.
+   --help, -h                                   show help
+   --version, -v                                print the version
+```
+
+## OSD config file
+
+The OSD daemon loads a YAML configuration file that tells the daemon what drivers to load and the driver specific attributes.  Here is an example of config.yaml:
+
+```
+osd:
+  drivers:
+      nfs:
+        uri: "localhost:/nfs"
+      aws:
+        aws_access_key_id: your_aws_access_key_id
+        aws_secret_access_key: your_aws_secret_access_key
+```
+
+## Adding your driver
+
+Adding a driver is fairly straightforward:
+1. Add your driver decleration in `drivers.go`
+2. Add your driver `mydriver` implementation in the `drivers/mydriver` directory.  The driver must implement the `VolumeDriver` interface specified in `volumes/volumes.go`.
+
+Here is an example of `drivers.go`:
+
+```
+// To add a driver to openstorage, declare the driver here.
+package main
+
+import (
+        "github.com/libopenstorage/openstorage/drivers/aws"
+        "github.com/libopenstorage/openstorage/drivers/nfs"
+)
+
+var (
+        drivers = []string{
+                // AWS driver.  This provisoins storage from EBS.
+                aws.Name,
+                // NFS driver.  This provisions storage from an NFS server.
+                nfs.Name}
+)
+```
+
+That's pretty much it.  At this point, when you start the OSD, your driver will be loaded.
+
 ## Updating to latest Source
 
 To update the source folder and all dependencies:
