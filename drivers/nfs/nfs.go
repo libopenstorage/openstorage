@@ -164,7 +164,7 @@ func (self *nfsProvider) Alerts(volumeID api.VolumeID) (api.VolumeAlerts, error)
 }
 
 func (self *nfsProvider) Enumerate(locator api.VolumeLocator, labels api.Labels) ([]api.Volume, error) {
-	return nil, volume.ErrNotSupported
+	return []api.Volume{}, volume.ErrNotSupported
 }
 
 func (self *nfsProvider) SnapEnumerate(locator api.VolumeLocator, labels api.Labels) ([]api.VolumeSnap, error) {
@@ -213,5 +213,5 @@ func (self *nfsProvider) Shutdown() {
 
 func init() {
 	// Register ourselves as an openstorage volume driver.
-	volume.Register(Name, volume.TypeFileDriver, Init)
+	volume.Register(Name, volume.File, Init)
 }

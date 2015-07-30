@@ -16,6 +16,7 @@ openstorage:
 	@go build $(BUILD_OPTIONS)  -o osd
 
 test:
+	@go test ./...
 
 clean:
 	@echo "Cleaning openstorage..."
