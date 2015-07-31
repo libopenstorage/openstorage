@@ -4,22 +4,36 @@ import (
 	"time"
 )
 
+// VolumeID driver specific system wide unique volume identifier.
 type VolumeID string
+
+// SnapID driver specific system wide unique snap identifier.
 type SnapID string
+
+// VolumeCos a number representing class of servcie.
 type VolumeCos int
 
 const (
+	// VolumeCosNone minmum level of CoS
 	VolumeCosNone = VolumeCos(0)
-	VolumeCosMax  = VolumeCos(9)
+	// VolumeCosMedum in-between level of Cos
+	VolumeCosMedium = VolumeCos(5)
+	// VolumeCosNone maximum level of CoS
+	VolumeCosMax = VolumeCos(9)
 )
 
+// VolumeStatus a health status.
 type VolumeStatus string
 
 const (
+	// NotPresent This volume is not present.
 	NotPresent = VolumeStatus("NotPresent")
-	Up         = VolumeStatus("Up")
-	Down       = VolumeStatus("Down")
-	Degraded   = VolumeStatus("Degraded")
+	// Up status healthy
+	Up = VolumeStatus("Up")
+	// Down status failure.
+	Down = VolumeStatus("Down")
+	// Down status up but with degraded performance. In a RAID group, this may indicate a problem with one or more drives
+	Degraded = VolumeStatus("Degraded")
 )
 
 // VolumeState is one of the below enumerations and reflects the state
@@ -42,28 +56,40 @@ const (
 	VolumeDeleted
 )
 
+// VolumeStateAny a filter that selects all volumes
 const VolumeStateAny = VolumePending | VolumeAvailable | VolumeAttached | VolumeDetached | VolumeError | VolumeDeleted
 
+// Labels a name-value map
 type Labels map[string]string
 
 // VolumeLocator is a structure that is attached to a volume and is used to
 // carry opaque metadata.
 type VolumeLocator struct {
-	Name         string
+	// Name user friendly identifier
+	Name string
+	// VolumeLabels set of name-value pairs that acts as search filters.
 	VolumeLabels Labels
 }
 
+// CreateOptions are passed in with a CreateRequest
 type CreateOptions struct {
-	FailIfExists   bool
+	// FailIfExists fail create request if a volume with matching Locator already exists.
+	FailIfExists bool
+	// CreateFromSnap will create a volume with specified SnapID
 	CreateFromSnap SnapID
 }
 
+// Filesystem supported filesystems
 type Filesystem string
 
 const (
-	FsXfs  = Filesystem("xfs")
+	// FsXfs the XFS filesystem
+	FsXfs = Filesystem("xfs")
+	// FsExt4 the EXT4 filesystem
 	FsExt4 = Filesystem("ext4")
-	FsZfs  = Filesystem("zfs")
+	// FsZfs the ZFS filesystem
+	FsZfs = Filesystem("zfs")
+	// FsNone no file system, applicable for raw block devices.
 	FsNone = Filesystem("none")
 )
 
@@ -140,10 +166,12 @@ type VolumeSnap struct {
 	Usage uint64
 }
 
+// VolumeStats
 type VolumeStats struct {
 	// TODO
 }
 
+// VolumeAlerts
 type VolumeAlerts struct {
 	// TODO
 }

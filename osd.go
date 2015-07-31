@@ -50,7 +50,7 @@ func start(c *cli.Context) {
 			return
 		}
 
-		err = apiserver.StartPluginAPI(d, config.PluginApiBase)
+		err = apiserver.StartPluginAPI(d, config.PluginAPIBase)
 		if err != nil {
 			fmt.Println("Unable to start volume plugin: ", err)
 			return
