@@ -160,7 +160,7 @@ func (d *nfsDriver) Inspect(volumeIDs []api.VolumeID) ([]api.Volume, error) {
 
 func (d *nfsDriver) Delete(volumeID api.VolumeID) error {
 	v, err := d.get(string(volumeID))
-	log.Println("Deleting ", volumeID, v, err)
+	log.Println(err)
 	if err != nil {
 		return err
 	}
@@ -233,7 +233,6 @@ func (d *nfsDriver) Mount(volumeID api.VolumeID, mountpath string) error {
 	err = syscall.Mount(v.Device, mountpath, string(v.Spec.Format), syscall.MS_BIND, "")
 	if err != nil {
 		log.Printf("Cannot mount %s at %s because %+v", v.Device, mountpath, err)
-		panic(err)
 		return err
 	}
 

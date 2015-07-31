@@ -42,11 +42,11 @@ func Run(t *testing.T, ctx *Context) {
 	attach(t, ctx)
 	mount(t, ctx)
 	io(t, ctx)
-	detach(t, ctx)
-	deleteBad(t, ctx)
 	unmount(t, ctx)
 	detach(t, ctx)
 	delete(t, ctx)
+	// deleteBad(t, ctx)
+	detach(t, ctx)
 	shutdown(t, ctx)
 }
 
@@ -162,11 +162,8 @@ func unmount(t *testing.T, ctx *Context) {
 	fmt.Println("unmount")
 
 	assert.NotEqual(t, ctx.mountPath, "", "Device is not mounted")
+
 	err := ctx.Unmount(ctx.volID, ctx.mountPath)
-
-	assert.NoError(t, err, "Failed in unmount")
-	err = ctx.Unmount(ctx.volID, ctx.tgtPath)
-
 	assert.NoError(t, err, "Failed in unmount")
 
 	ctx.mountPath = ""
