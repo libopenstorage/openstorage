@@ -1,6 +1,7 @@
 package nfs
 
 import (
+	"encoding/json"
 	"errors"
 	"os"
 	"os/exec"
@@ -15,8 +16,9 @@ import (
 )
 
 const (
-	Name     = "nfs"
-	NfsDBKey = "OpenStorageNFSKey"
+	Name         = "nfs"
+	NfsDBKey     = "OpenStorageNFSKey"
+	nfsMountPath = "/mnt/openstoragenfs/"
 )
 
 var (
@@ -24,7 +26,7 @@ var (
 )
 
 // This data is persisted in a DB.
-type awsVolume struct {
+type nfsVolume struct {
 	spec      api.VolumeSpec
 	formatted bool
 	attached  bool
@@ -38,7 +40,6 @@ type nfsDriver struct {
 	volume.DefaultBlockDriver
 	db        kvdb.Kvdb
 	nfsServer string
-	mntPath   string
 }
 
 func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
@@ -58,35 +59,53 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 
 	inst := &nfsDriver{
 		db:        kvdb.Instance(),
-		mntPath:   "/mnt/" + uuid,
 		nfsServer: uri}
 
-	err = os.MkdirAll(inst.mntPath, 0744)
+	err = os.MkdirAll(nfsMountPath, 0744)
 	if err != nil {
 		return nil, err
 	}
-
-	log.Println("Binding NFS server to:", inst.mntPath)
 
 	// Mount the nfs server locally on a unique path.
-	err = syscall.Mount(inst.nfsServer, inst.mntPath, "tmpfs", 0, "mode=0700,uid=65534")
+	err = syscall.Mount(inst.nfsServer, nfsMountPath, "tmpfs", 0, "mode=0700,uid=65534")
 	if err != nil {
-		os.Remove(inst.mntPath)
 		return nil, err
 	}
 
-	log.Println("NFS initialized and driver mounted at: ", inst.mntPath)
+	log.Println("NFS initialized and driver mounted at: ", nfsMountPath)
 	return inst, nil
 }
 
-func (d *nfsDriver) get(volumeID string) (*awsVolume, error) {
-	v := &awsVolume{}
+func (d *nfsDriver) get(volumeID string) (*nfsVolume, error) {
+	v := &nfsVolume{}
 	key := NfsDBKey + "/" + volumeID
 	_, err := d.db.GetVal(key, v)
 	return v, err
 }
 
-func (d *nfsDriver) put(volumeID string, v *awsVolume) error {
+func (d *nfsDriver) enumerate() ([]*nfsVolume, error) {
+	key := NfsDBKey
+	kvps, err := d.db.Enumerate(key)
+	if err != nil {
+		return nil, err
+	}
+
+	i := 0
+	vs := make([]*nfsVolume, len(kvps))
+	for _, kvp := range kvps {
+		v := &nfsVolume{}
+		err = json.Unmarshal(kvp.Value, v)
+		if err != nil {
+			return nil, err
+		}
+		vs[i] = v
+		i++
+	}
+
+	return vs, err
+}
+
+func (d *nfsDriver) put(volumeID string, v *nfsVolume) error {
 	key := NfsDBKey + "/" + volumeID
 	_, err := d.db.Put(key, v, 0)
 	return err
@@ -110,20 +129,32 @@ func (d *nfsDriver) Create(l api.VolumeLocator, opt *api.CreateOptions, spec *ap
 	volumeID = strings.TrimSuffix(volumeID, "\n")
 
 	// Create a directory on the NFS server with this UUID.
-	err = os.MkdirAll(d.mntPath+volumeID, 0744)
+	err = os.MkdirAll(nfsMountPath+volumeID, 0744)
 	if err != nil {
 		return "", err
 	}
 
 	// Persist the volume spec.  We use this for all subsequent operations on
 	// this volume ID.
-	err = d.put(volumeID, &awsVolume{device: d.mntPath + volumeID, spec: *spec})
+	err = d.put(volumeID, &nfsVolume{device: nfsMountPath + volumeID, spec: *spec})
 
 	return api.VolumeID(volumeID), err
 }
 
 func (d *nfsDriver) Inspect(volumeIDs []api.VolumeID) ([]api.Volume, error) {
-	return nil, nil
+	volumes := make([]api.Volume, 0)
+
+	for _, id := range volumeIDs {
+		v, err := d.get(string(id))
+		if err != nil {
+			return nil, err
+		}
+		volumes = append(volumes, api.Volume{
+			ID:   id,
+			Spec: &v.spec})
+	}
+
+	return volumes, nil
 }
 
 func (d *nfsDriver) Delete(volumeID api.VolumeID) error {
@@ -164,7 +195,21 @@ func (d *nfsDriver) Alerts(volumeID api.VolumeID) (api.VolumeAlerts, error) {
 }
 
 func (d *nfsDriver) Enumerate(locator api.VolumeLocator, labels api.Labels) ([]api.Volume, error) {
-	return []api.Volume{}, volume.ErrNotSupported
+	volumes := make([]api.Volume, 0)
+
+	/*
+		for _, id := range volumeIDs {
+			v, err := d.get(string(id))
+			if err != nil {
+				return nil, err
+			}
+			volumes = append(volumes, api.Volume{
+				ID:   id,
+				Spec: &v.spec})
+		}
+	*/
+
+	return volumes, nil
 }
 
 func (d *nfsDriver) SnapEnumerate(locator api.VolumeLocator, labels api.Labels) ([]api.VolumeSnap, error) {
@@ -209,6 +254,7 @@ func (d *nfsDriver) Unmount(volumeID api.VolumeID, mountpath string) error {
 
 func (d *nfsDriver) Shutdown() {
 	log.Printf("%s Shutting down", Name)
+	syscall.Unmount(nfsMountPath, 0)
 }
 
 func init() {

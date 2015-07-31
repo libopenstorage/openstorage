@@ -26,12 +26,12 @@ func start(c *cli.Context) {
 	file := c.String("file")
 	if file == "" {
 		fmt.Println("OSD configuration file not specified.  Visit openstorage.org for an example.")
-		os.Exit(-1)
+		return
 	}
 	cfg, err := config.Parse(file)
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(-1)
+		return
 	}
 
 	// Start the volume drivers.
@@ -41,19 +41,19 @@ func start(c *cli.Context) {
 		_, err := volume.New(d, v)
 		if err != nil {
 			fmt.Println("Unable to start volume driver: ", err)
-			os.Exit(-1)
+			return
 		}
 
 		err = apiserver.StartDriverAPI(d, 0, config.DriverAPIBase)
 		if err != nil {
 			fmt.Println("Unable to start volume driver: ", err)
-			os.Exit(-1)
+			return
 		}
 
 		err = apiserver.StartPluginAPI(d, config.PluginApiBase)
 		if err != nil {
 			fmt.Println("Unable to start volume plugin: ", err)
-			os.Exit(-1)
+			return
 		}
 	}
 

@@ -6,9 +6,13 @@ import (
 	"os/exec"
 	"testing"
 
+	log "github.com/Sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
+
+	"github.com/libopenstorage/kvdb"
+	"github.com/libopenstorage/kvdb/mem"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
-	"github.com/stretchr/testify/assert"
 )
 
 // Context maintains current device state. It gets passed into tests
@@ -42,6 +46,7 @@ func Run(t *testing.T, ctx *Context) {
 	deleteBad(t, ctx)
 	unmount(t, ctx)
 	detach(t, ctx)
+	shutdown(t, ctx)
 	delete(t, ctx)
 }
 
@@ -150,6 +155,11 @@ func unmount(t *testing.T, ctx *Context) {
 	ctx.mountPath = ""
 }
 
+func shutdown(t *testing.T, ctx *Context) {
+	fmt.Println("shutdown")
+	ctx.Shutdown()
+}
+
 func io(t *testing.T, ctx *Context) {
 	assert.NotEqual(t, ctx.mountPath, "", "Device is not mounted")
 	cmd := exec.Command("dd", "if=/dev/urandom", "of=/tmp/xx", "bs=1M", "count=10")
@@ -192,4 +202,15 @@ func snapDiff(t *testing.T, ctx *Context) {
 }
 
 func snapDelete(t *testing.T, ctx *Context) {
+}
+
+func init() {
+	kv, err := kvdb.New(mem.Name, "driver_test", []string{}, nil)
+	if err != nil {
+		log.Panicf("Failed to intialize KVDB")
+	}
+	err = kvdb.SetInstance(kv)
+	if err != nil {
+		log.Panicf("Failed to set KVDB instance")
+	}
 }
