@@ -28,6 +28,7 @@ var (
 // This data is persisted in a DB.
 type nfsVolume struct {
 	Spec      api.VolumeSpec
+	Locator   api.VolumeLocator
 	Id        api.VolumeID
 	Formatted bool
 	Attached  bool
@@ -121,7 +122,7 @@ func (d *nfsDriver) String() string {
 	return Name
 }
 
-func (d *nfsDriver) Create(l api.VolumeLocator, opt *api.CreateOptions, spec *api.VolumeSpec) (api.VolumeID, error) {
+func (d *nfsDriver) Create(locator api.VolumeLocator, opt *api.CreateOptions, spec *api.VolumeSpec) (api.VolumeID, error) {
 	out, err := exec.Command("uuidgen").Output()
 	if err != nil {
 		return "", err
@@ -137,7 +138,7 @@ func (d *nfsDriver) Create(l api.VolumeLocator, opt *api.CreateOptions, spec *ap
 
 	// Persist the volume spec.  We use this for all subsequent operations on
 	// this volume ID.
-	err = d.put(volumeID, &nfsVolume{Id: api.VolumeID(volumeID), Device: nfsMountPath + volumeID, Spec: *spec})
+	err = d.put(volumeID, &nfsVolume{Id: api.VolumeID(volumeID), Device: nfsMountPath + volumeID, Spec: *spec, Locator: locator})
 
 	return api.VolumeID(volumeID), err
 }
@@ -200,11 +201,18 @@ func (d *nfsDriver) Enumerate(locator api.VolumeLocator, labels api.Labels) ([]a
 		return nil, err
 	}
 
-	volumes := make([]api.Volume, len(vs))
-	for i, v := range vs {
-		volumes[i] = api.Volume{
+	volumes := make([]api.Volume, 0)
+	for _, v := range vs {
+		if locator.Name != "" {
+			if v.Locator.Name != locator.Name {
+				continue
+			}
+		}
+
+		vol := api.Volume{
 			ID:   v.Id,
 			Spec: &v.Spec}
+		volumes = append(volumes, vol)
 	}
 
 	return volumes, nil
@@ -222,6 +230,8 @@ func (d *nfsDriver) Mount(volumeID api.VolumeID, mountpath string) error {
 
 	err = syscall.Mount(v.Device, mountpath, string(v.Spec.Format), 0, "")
 	if err != nil {
+		log.Printf("Cannot mount %s at %s because %+v", v.Device, mountpath, err)
+		panic(err)
 		return err
 	}
 

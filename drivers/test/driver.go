@@ -22,6 +22,7 @@ type Context struct {
 	volID      api.VolumeID
 	snapID     api.SnapID
 	mountPath  string
+	tgtPath    string
 	devicePath string
 }
 
@@ -38,7 +39,6 @@ func Run(t *testing.T, ctx *Context) {
 	inspect(t, ctx)
 	enumerate(t, ctx)
 	format(t, ctx)
-	attach(t, ctx)
 	attach(t, ctx)
 	mount(t, ctx)
 	io(t, ctx)
@@ -106,6 +106,7 @@ func enumerate(t *testing.T, ctx *Context) {
 
 func format(t *testing.T, ctx *Context) {
 	fmt.Println("format")
+
 	err := ctx.Format(ctx.volID)
 	if err != nil {
 		assert.Equal(t, err, volume.ErrNotSupported, "Error on format %v", err)
@@ -128,31 +129,47 @@ func attach(t *testing.T, ctx *Context) {
 
 func detach(t *testing.T, ctx *Context) {
 	fmt.Println("detach")
+
 	err := ctx.Detach(ctx.volID)
 	if err != nil {
 		assert.Equal(t, ctx.devicePath, "", "Error on detach %s: %v", ctx.devicePath, err)
 	}
 	ctx.devicePath = ""
+
 	err = ctx.Detach(ctx.volID)
 	assert.Error(t, err, "Detaching an already detached device should fail")
 }
 
 func mount(t *testing.T, ctx *Context) {
 	fmt.Println("mount")
+
 	mountPath := "/mnt/voltest"
 	err := os.MkdirAll(mountPath, 0755)
+
+	tgtPath := "/mnt/foo"
+	err = os.MkdirAll(tgtPath, 0755)
 	assert.NoError(t, err, "Failed in mkdir")
-	err = ctx.Mount(ctx.volID, "/mnt/foo")
+
+	err = ctx.Mount(ctx.volID, tgtPath)
 	assert.NoError(t, err, "Failed in mount")
+
 	ctx.mountPath = mountPath
+	ctx.tgtPath = tgtPath
 }
 
 func unmount(t *testing.T, ctx *Context) {
 	fmt.Println("unmount")
+
 	assert.NotEqual(t, ctx.mountPath, "", "Device is not mounted")
 	err := ctx.Unmount(ctx.volID, ctx.mountPath)
+
 	assert.NoError(t, err, "Failed in unmount")
+	err = ctx.Unmount(ctx.volID, ctx.tgtPath)
+
+	assert.NoError(t, err, "Failed in unmount")
+
 	ctx.mountPath = ""
+	ctx.tgtPath = ""
 }
 
 func shutdown(t *testing.T, ctx *Context) {
@@ -162,12 +179,15 @@ func shutdown(t *testing.T, ctx *Context) {
 
 func io(t *testing.T, ctx *Context) {
 	assert.NotEqual(t, ctx.mountPath, "", "Device is not mounted")
+
 	cmd := exec.Command("dd", "if=/dev/urandom", "of=/tmp/xx", "bs=1M", "count=10")
 	err := cmd.Run()
 	assert.NoError(t, err, "Failed to run dd")
+
 	cmd = exec.Command("dd", "if=/tmp/xx", fmt.Sprintf("of=%s", ctx.mountPath))
 	err = cmd.Run()
 	assert.NoError(t, err, "Failed to run dd on mountpoint %s", ctx.mountPath)
+
 	cmd = exec.Command("diff", "if=/tmp/xx", fmt.Sprintf("of=%s", ctx.mountPath))
 	assert.NoError(t, err, "data mismatch")
 }
