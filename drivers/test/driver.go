@@ -91,7 +91,7 @@ func enumerate(t *testing.T, ctx *Context) {
 	vols, err := ctx.Enumerate(api.VolumeLocator{}, nil)
 	assert.NoError(t, err, "Failed in Enumerate")
 	assert.NotNil(t, vols, "Nil vols")
-	assert.Equal(t, len(vols), 1, "Expect 1 volume actual %v volumes", len(vols))
+	assert.Equal(t, 1, len(vols), "Expect 1 volume actual %v volumes", len(vols))
 	assert.Equal(t, vols[0].ID, ctx.volID, "Expect volID %v actual %v", ctx.volID, vols[0].ID)
 
 	vols, err = ctx.Enumerate(api.VolumeLocator{Name: "foo"}, nil)

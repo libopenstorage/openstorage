@@ -27,12 +27,13 @@ var (
 
 // This data is persisted in a DB.
 type nfsVolume struct {
-	spec      api.VolumeSpec
-	formatted bool
-	attached  bool
-	mounted   bool
-	device    string
-	mountpath string
+	Spec      api.VolumeSpec
+	Id        api.VolumeID
+	Formatted bool
+	Attached  bool
+	Mounted   bool
+	Device    string
+	Mountpath string
 }
 
 // Implements the open storage volume interface.
@@ -136,22 +137,21 @@ func (d *nfsDriver) Create(l api.VolumeLocator, opt *api.CreateOptions, spec *ap
 
 	// Persist the volume spec.  We use this for all subsequent operations on
 	// this volume ID.
-	err = d.put(volumeID, &nfsVolume{device: nfsMountPath + volumeID, spec: *spec})
+	err = d.put(volumeID, &nfsVolume{Id: api.VolumeID(volumeID), Device: nfsMountPath + volumeID, Spec: *spec})
 
 	return api.VolumeID(volumeID), err
 }
 
 func (d *nfsDriver) Inspect(volumeIDs []api.VolumeID) ([]api.Volume, error) {
-	volumes := make([]api.Volume, 0)
-
-	for _, id := range volumeIDs {
+	volumes := make([]api.Volume, len(volumeIDs))
+	for i, id := range volumeIDs {
 		v, err := d.get(string(id))
 		if err != nil {
 			return nil, err
 		}
-		volumes = append(volumes, api.Volume{
+		volumes[i] = api.Volume{
 			ID:   id,
-			Spec: &v.spec})
+			Spec: &v.Spec}
 	}
 
 	return volumes, nil
@@ -164,7 +164,7 @@ func (d *nfsDriver) Delete(volumeID api.VolumeID) error {
 	}
 
 	// Delete the directory on the nfs server.
-	err = os.Remove(v.device)
+	err = os.Remove(v.Device)
 	if err != nil {
 		return err
 	}
@@ -195,19 +195,17 @@ func (d *nfsDriver) Alerts(volumeID api.VolumeID) (api.VolumeAlerts, error) {
 }
 
 func (d *nfsDriver) Enumerate(locator api.VolumeLocator, labels api.Labels) ([]api.Volume, error) {
-	volumes := make([]api.Volume, 0)
+	vs, err := d.enumerate()
+	if err != nil {
+		return nil, err
+	}
 
-	/*
-		for _, id := range volumeIDs {
-			v, err := d.get(string(id))
-			if err != nil {
-				return nil, err
-			}
-			volumes = append(volumes, api.Volume{
-				ID:   id,
-				Spec: &v.spec})
-		}
-	*/
+	volumes := make([]api.Volume, len(vs))
+	for i, v := range vs {
+		volumes[i] = api.Volume{
+			ID:   v.Id,
+			Spec: &v.Spec}
+	}
 
 	return volumes, nil
 }
@@ -222,13 +220,13 @@ func (d *nfsDriver) Mount(volumeID api.VolumeID, mountpath string) error {
 		return err
 	}
 
-	err = syscall.Mount(v.device, mountpath, string(v.spec.Format), 0, "")
+	err = syscall.Mount(v.Device, mountpath, string(v.Spec.Format), 0, "")
 	if err != nil {
 		return err
 	}
 
-	v.mountpath = mountpath
-	v.mounted = true
+	v.Mountpath = mountpath
+	v.Mounted = true
 	err = d.put(string(volumeID), v)
 
 	return err
@@ -240,13 +238,13 @@ func (d *nfsDriver) Unmount(volumeID api.VolumeID, mountpath string) error {
 		return err
 	}
 
-	err = syscall.Unmount(v.mountpath, 0)
+	err = syscall.Unmount(v.Mountpath, 0)
 	if err != nil {
 		return err
 	}
 
-	v.mountpath = ""
-	v.mounted = false
+	v.Mountpath = ""
+	v.Mounted = false
 	err = d.put(string(volumeID), v)
 
 	return err
