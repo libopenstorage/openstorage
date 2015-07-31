@@ -155,7 +155,7 @@ type Volume struct {
 // VolumeSnap identifies a volume snapshot.
 type VolumeSnap struct {
 	// System generated snap label
-	SnapID SnapID
+	ID SnapID
 	// Volume identifier.
 	VolumeID VolumeID
 	// Snap creation time.

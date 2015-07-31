@@ -52,10 +52,6 @@ type ProtoDriver interface {
 		options *api.CreateOptions,
 		spec *api.VolumeSpec) (api.VolumeID, error)
 
-	// Inspect specified volumes.
-	// Errors ErrEnoEnt may be returned.
-	Inspect(volumeIDs []api.VolumeID) ([]api.Volume, error)
-
 	// Delete volume.
 	// Errors ErrEnoEnt, ErrVolHasSnaps may be returned.
 	Delete(volumeID api.VolumeID) error
@@ -68,10 +64,6 @@ type ProtoDriver interface {
 	// SnapDelete snap specified by snapID.
 	// Errors ErrEnoEnt may be returned
 	SnapDelete(snapID api.SnapID) error
-
-	// SnapInspect provides details on this snapshot.
-	// Errors ErrEnoEnt may be returned
-	SnapInspect(snapID []api.SnapID) ([]api.VolumeSnap, error)
 
 	// Stats for specified volume.
 	// Errors ErrEnoEnt may be returned
@@ -86,9 +78,17 @@ type ProtoDriver interface {
 }
 
 type Enumerator interface {
+	// Inspect specified volumes.
+	// Errors ErrEnoEnt may be returned.
+	Inspect(volumeIDs []api.VolumeID) ([]api.Volume, error)
+
 	// Enumerate volumes that map to the volumeLocator. Locator fields may be regexp.
 	// If locator fields are left blank, this will return all volumes.
 	Enumerate(locator api.VolumeLocator, labels api.Labels) ([]api.Volume, error)
+
+	// SnapInspect provides details on this snapshot.
+	// Errors ErrEnoEnt may be returned
+	SnapInspect(snapID []api.SnapID) ([]api.VolumeSnap, error)
 
 	// Enumerate snaps for specified volume
 	// Count indicates the number of snaps populated.
