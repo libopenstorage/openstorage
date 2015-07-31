@@ -46,8 +46,8 @@ func Run(t *testing.T, ctx *Context) {
 	deleteBad(t, ctx)
 	unmount(t, ctx)
 	detach(t, ctx)
-	shutdown(t, ctx)
 	delete(t, ctx)
+	shutdown(t, ctx)
 }
 
 func RunSnap(t *testing.T, ctx *Context) {
@@ -88,6 +88,7 @@ func inspect(t *testing.T, ctx *Context) {
 
 func enumerate(t *testing.T, ctx *Context) {
 	fmt.Println("enumerate")
+
 	vols, err := ctx.Enumerate(api.VolumeLocator{}, nil)
 	assert.NoError(t, err, "Failed in Enumerate")
 	assert.NotNil(t, vols, "Nil vols")
@@ -178,17 +179,18 @@ func shutdown(t *testing.T, ctx *Context) {
 }
 
 func io(t *testing.T, ctx *Context) {
+	fmt.Println("io")
 	assert.NotEqual(t, ctx.mountPath, "", "Device is not mounted")
 
 	cmd := exec.Command("dd", "if=/dev/urandom", "of=/tmp/xx", "bs=1M", "count=10")
 	err := cmd.Run()
 	assert.NoError(t, err, "Failed to run dd")
 
-	cmd = exec.Command("dd", "if=/tmp/xx", fmt.Sprintf("of=%s", ctx.mountPath))
+	cmd = exec.Command("dd", "if=/tmp/xx", fmt.Sprintf("of=%s/xx", ctx.mountPath))
 	err = cmd.Run()
-	assert.NoError(t, err, "Failed to run dd on mountpoint %s", ctx.mountPath)
+	assert.NoError(t, err, "Failed to run dd on mountpoint %s/xx", ctx.mountPath)
 
-	cmd = exec.Command("diff", "if=/tmp/xx", fmt.Sprintf("of=%s", ctx.mountPath))
+	cmd = exec.Command("diff", "if=/tmp/xx", fmt.Sprintf("of=%s/xx", ctx.mountPath))
 	assert.NoError(t, err, "data mismatch")
 }
 
@@ -199,12 +201,15 @@ func detachBad(t *testing.T, ctx *Context) {
 }
 
 func deleteBad(t *testing.T, ctx *Context) {
+	fmt.Println("deleteBad")
 	assert.NotEqual(t, ctx.mountPath, "", "Device is not mounted")
+
 	err := ctx.Delete(ctx.volID)
 	assert.Error(t, err, "Delete on mounted device must fail")
 }
 
 func delete(t *testing.T, ctx *Context) {
+	fmt.Println("delete")
 	err := ctx.Delete(ctx.volID)
 	assert.NoError(t, err, "Delete failed")
 }
