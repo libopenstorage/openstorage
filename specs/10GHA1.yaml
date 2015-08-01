@@ -1,0 +1,6 @@
+---
+ Size: 10
+ Format: "ext4"
+ BlockSize: 4096
+ HALevel: 1
+ Cos: 1
