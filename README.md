@@ -92,7 +92,7 @@ Adding a driver is fairly straightforward:
 1. Add your driver decleration in `drivers.go`
 
 
-2. Add your driver `mydriver` implementation in the `drivers/mydriver` directory.  The driver must implement the `VolumeDriver` interface specified in `volumes/volumes.go`.  This interface is an implementation of the specification available [here] (https://github.com/libopenstorage/specs/blob/master/volume/)
+2. Add your driver `mydriver` implementation in the `drivers/mydriver` directory.  The driver must implement the `VolumeDriver` interface specified in `volumes/volumes.go`.  This interface is an implementation of the specification available [here] (https://github.com/libopenstorage/specs/blob/master/volume/).
 
 Here is an example of `drivers.go`:
 
