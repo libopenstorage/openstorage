@@ -112,56 +112,54 @@ type VolumeSpec struct {
 	Cos VolumeCos
 	// Perform dedupe on this disk
 	Dedupe bool
-	// SnapShotInterval in minutes, set to 0 to disable Snapshots
-	SnapShotInterval int
+	// SnapshotInterval in minutes, set to 0 to disable Snapshots
+	SnapshotInterval int
 	// Volume configuration labels
 	ConfigLabels Labels
 }
 
 // Volume represents a live, created volume.
 type Volume struct {
-	// Self referential VolumeID
+	// ID Self referential VolumeID
 	ID VolumeID
-	// User specified locator
+	// Locator User specified locator
 	Locator VolumeLocator
-	// Volume creation time
+	// Ctime Volume creation time
 	Ctime time.Time
-	// User specified disk configuration
+	// Spec User specified VolumeSpec
 	Spec *VolumeSpec
-	// Volume usage
+	// Usage Volume usage
 	Usage uint64
-	// Last time a scan was run
+	// LastScan time when an integrity check for run
 	LastScan time.Time
-	// Filesystem type if any
+	// Format Filesystem type if any
 	Format Filesystem
-	// Volume Status
+	// Status see VolumeStatus
 	Status VolumeStatus
-	// VolumeState
+	// State see VolumeState
 	State VolumeState
-	// Attached On - for clustered storage arrays
+	// AttachedOn - Node on which this volume is attached.
 	AttachedOn interface{}
-	// Device path
+	// DevicePath
 	DevicePath string
-	// Attach path
+	// AttachPath
 	AttachPath string
-	// Set of nodes no which this Volume is erasure coded - for clustered storage arrays
+	// ReplicaSet Set of nodes no which this Volume is erasure coded - for clustered storage arrays
 	ReplicaSet []interface{}
-	// Last Recorded Error
-	ErrorNum int
-	// Error String
-	ErrorString string
+	// Error Last recorded error
+	Error string
 }
 
 // VolumeSnap identifies a volume snapshot.
 type VolumeSnap struct {
-	// System generated snap label
+	// SnapID system generated ID
 	ID SnapID
-	// Volume identifier.
+	// VolumeID Volume identifier.
 	VolumeID VolumeID
-	// Snap creation time.
+	// Ctime Snap creation time.
 	Ctime time.Time
-	// User specfied label
-	UserLabel string
+	// SnapLabel arbitrary name value pairs
+	SnapLabels Labels
 	// Usage
 	Usage uint64
 }

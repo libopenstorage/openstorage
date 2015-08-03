@@ -91,8 +91,7 @@ type Enumerator interface {
 	SnapInspect(snapID []api.SnapID) ([]api.VolumeSnap, error)
 
 	// Enumerate snaps for specified volume
-	// Count indicates the number of snaps populated.
-	SnapEnumerate(locator api.VolumeLocator, labels api.Labels) ([]api.VolumeSnap, error)
+	SnapEnumerate(locator api.VolumeLocator, snapLabels api.Labels) ([]api.VolumeSnap, error)
 }
 
 type BlockDriver interface {
