@@ -81,7 +81,7 @@ func (v *VolDriver) volumeCreate(c *cli.Context) {
 		BlockSize:        c.Int("b") * 1024,
 		HALevel:          c.Int("r"),
 		Cos:              api.VolumeCos(c.Int("cos")),
-		SnapShotInterval: c.Int("si"),
+		SnapshotInterval: c.Int("si"),
 	}
 	if id, err = v.volDriver.Create(locator, nil, spec); err != nil {
 		cmdError(c, fn, err)
