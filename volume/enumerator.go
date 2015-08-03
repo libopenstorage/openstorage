@@ -16,6 +16,38 @@ const (
 	snapshots = "/snapshots/"
 )
 
+type StoreUpdate interface {
+	// Lock volume specified by volID.
+	Lock(volID api.VolumeID) (interface{}, error)
+
+	// Lock volume with token obtained from call to Lock.
+	Unlock(token interface{}) error
+
+	// CreateVol returns error if volume with the same ID already exists.
+	CreateVol(vol *api.Volume)
+
+	// GetVol from volID.
+	GetVol(volID api.VolumeID) (*api.Volume, error)
+
+	// UpdateVol with vol
+	UpdateVol(vol *api.Volume) error
+
+	// DeleteVol. Returns error if volume does not exist.
+	DeleteVol(volID api.VolumeID) error
+
+	// GetSnap from snapID
+	GetSnap(snapID api.SnapID) (*api.VolumeSnap, error)
+
+	// Update snap with snap
+	UpdateSnap(snap *api.VolumeSnap) error
+
+	// CreateSnap with new snap
+	CreateSnap(snap *api.VolumeSnap) error
+
+	// DeleteSnap with new snap
+	DeleteSnap(snapID api.SnapID) error
+}
+
 // Store for volume information. Implements the Enumerator Interface
 type Store struct {
 	mutex         sync.Mutex
@@ -35,10 +67,16 @@ func (s *Store) snapKey(snapID api.SnapID) string {
 }
 
 func (s *Store) volKey(volID api.VolumeID) string {
-	return s.lockKeyPrefix + string(volID)
+	return s.volKeyPrefix + string(volID)
 }
 
 func hasSubset(set api.Labels, subset api.Labels) bool {
+	if subset == nil {
+		return true
+	}
+	if set == nil {
+		return false
+	}
 	for k := range subset {
 		if _, ok := set[k]; !ok {
 			return false
@@ -54,10 +92,7 @@ func match(v *api.Volume, locator api.VolumeLocator, configLabels api.Labels) bo
 	if !hasSubset(v.Locator.VolumeLabels, locator.VolumeLabels) {
 		return false
 	}
-	if configLabels != nil {
-		return hasSubset(configLabels, v.Spec.ConfigLabels)
-	}
-	return true
+	return hasSubset(v.Spec.ConfigLabels, configLabels)
 }
 
 func (s *Store) enumerate(
@@ -88,7 +123,7 @@ func (s *Store) enumerate(
 
 func (s *Store) snapEnumerate(
 	locator api.VolumeLocator,
-	configLabels api.Labels) ([]api.VolumeSnap, error) {
+	snapLabels api.Labels) ([]api.VolumeSnap, error) {
 
 	kvp, err := s.kvdb.Enumerate(s.snapKeyPrefix)
 	if err != nil {
@@ -105,7 +140,11 @@ func (s *Store) snapEnumerate(
 		if err != nil {
 			return nil, err
 		}
-		if match(vol, locator, configLabels) {
+		if match(vol, locator, nil) {
+			snaps = append(snaps, elem)
+			continue
+		}
+		if hasSubset(elem.SnapLabels, snapLabels) {
 			snaps = append(snaps, elem)
 		}
 	}
