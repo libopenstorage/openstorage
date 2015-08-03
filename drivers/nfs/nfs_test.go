@@ -18,5 +18,5 @@ func TestAll(t *testing.T) {
 		t.Fatalf("Failed to initialize Driver: %v", err)
 	}
 
-	test.Run(t, ctx)
+	test.RunShort(t, ctx)
 }

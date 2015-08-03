@@ -59,7 +59,7 @@ type ProtoDriver interface {
 	// Snap specified volume. IO to the underlying volume should be quiesced before
 	// calling this function.
 	// Errors ErrEnoEnt may be returned
-	Snapshot(volumeID api.VolumeID, lables api.Labels) (api.SnapID, error)
+	Snapshot(volumeID api.VolumeID, labels api.Labels) (api.SnapID, error)
 
 	// SnapDelete snap specified by snapID.
 	// Errors ErrEnoEnt may be returned

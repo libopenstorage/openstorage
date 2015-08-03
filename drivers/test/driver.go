@@ -34,7 +34,7 @@ func NewContext(driverName string) (*Context, error) {
 	return &Context{VolumeDriver: d}, nil
 }
 
-func Run(t *testing.T, ctx *Context) {
+func RunShort(t *testing.T, ctx *Context) {
 	create(t, ctx)
 	inspect(t, ctx)
 	enumerate(t, ctx)
@@ -45,7 +45,17 @@ func Run(t *testing.T, ctx *Context) {
 	unmount(t, ctx)
 	detach(t, ctx)
 	delete(t, ctx)
-	// deleteBad(t, ctx)
+	RunEnd(t, ctx)
+}
+
+func Run(t *testing.T, ctx *Context) {
+	RunShort(t, ctx)
+	deleteBad(t, ctx)
+	RunSnap(t, ctx)
+	RunEnd(t, ctx)
+}
+
+func RunEnd(t *testing.T, ctx *Context) {
 	detach(t, ctx)
 	shutdown(t, ctx)
 }
