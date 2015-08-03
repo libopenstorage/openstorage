@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 
 	"github.com/libopenstorage/openstorage/api"
@@ -40,7 +39,7 @@ func (vd *volDriver) parseVolumeID(r *http.Request) (api.VolumeID, error) {
 	if id, ok := vars["id"]; ok {
 		return api.VolumeID(id), nil
 	}
-	return api.VolumeID(""), fmt.Errorf("could not vd.parse volume ID")
+	return api.VolumeID(""), fmt.Errorf("could not parse volume ID")
 }
 
 func (vd *volDriver) create(w http.ResponseWriter, r *http.Request) {
@@ -137,25 +136,21 @@ func (vd *volDriver) volumeState(w http.ResponseWriter, r *http.Request) {
 }
 
 func (vd *volDriver) inspect(w http.ResponseWriter, r *http.Request) {
-	var ids []api.VolumeID
 	var err error
+	var volumeID api.VolumeID
 
 	method := "inspect"
-	params := r.URL.Query()
-	v := params[string(api.OptID)]
-	if v != nil {
-		if err = json.Unmarshal([]byte(v[0]), &ids); err != nil {
-			log.Printf("Server: couldn't vd.parse VolumeIDs: %s", err.Error())
-			vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
-		}
-	}
-
 	d, err := volume.Get(vd.name)
 	if err != nil {
 		vd.notFound(w, r)
 		return
 	}
-	dk, err := d.Inspect(ids)
+	if volumeID, err = vd.parseVolumeID(r); err != nil {
+		e := fmt.Errorf("Failed to parse parse volumeID: %s", err.Error())
+		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	dk, err := d.Inspect([]api.VolumeID{volumeID})
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusNotFound)
 		return
@@ -170,12 +165,11 @@ func (vd *volDriver) delete(w http.ResponseWriter, r *http.Request) {
 
 	method := "delete"
 	if volumeID, err = vd.parseVolumeID(r); err != nil {
-		log.Printf("Server: couldn't vd.parse volumeID: %s", err.Error())
-		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+		e := fmt.Errorf("Failed to parse parse volumeID: %s", err.Error())
+		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
 		return
 	}
 
-	log.Printf("Server: deleting %v\n", volumeID)
 	d, err := volume.Get(vd.name)
 	if err != nil {
 		vd.notFound(w, r)
@@ -191,8 +185,15 @@ func (vd *volDriver) enumerate(w http.ResponseWriter, r *http.Request) {
 	var locator api.VolumeLocator
 	var configLabels api.Labels
 	var err error
+	var vols []api.Volume
 
 	method := "enumerate"
+
+	d, err := volume.Get(vd.name)
+	if err != nil {
+		vd.notFound(w, r)
+		return
+	}
 	params := r.URL.Query()
 	v := params[string(api.OptName)]
 	if v != nil {
@@ -201,25 +202,28 @@ func (vd *volDriver) enumerate(w http.ResponseWriter, r *http.Request) {
 	v = params[string(api.OptVolumeLabel)]
 	if v != nil {
 		if err = json.Unmarshal([]byte(v[0]), &locator.VolumeLabels); err != nil {
-			log.Printf("Server: couldn't vd.parse VolumeLabels: %s", err.Error())
-			vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+			e := fmt.Errorf("Failed to parse parse VolumeLabels: %s", err.Error())
+			vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
 		}
 	}
 	v = params[string(api.OptConfigLabel)]
 	if v != nil {
 		if err = json.Unmarshal([]byte(v[0]), &configLabels); err != nil {
-			log.Printf("Server: couldn't vd.parse configLabels: %s", err.Error())
-			vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+			e := fmt.Errorf("Failed to parse parse configLabels: %s", err.Error())
+			vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
 		}
 	}
-
-	d, err := volume.Get(vd.name)
-	if err != nil {
-		vd.notFound(w, r)
-		return
+	v = params[string(api.OptID)]
+	if v != nil {
+		ids := make([]api.VolumeID, len(params))
+		for i, s := range v {
+			ids[i] = api.VolumeID(s)
+		}
+		vols, err = d.Inspect(ids)
+	} else {
+		vols, _ = d.Enumerate(locator, configLabels)
 	}
-	res, _ := d.Enumerate(locator, configLabels)
-	json.NewEncoder(w).Encode(res)
+	json.NewEncoder(w).Encode(vols)
 }
 
 func (vd *volDriver) snap(w http.ResponseWriter, r *http.Request) {

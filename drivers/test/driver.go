@@ -26,12 +26,8 @@ type Context struct {
 	devicePath string
 }
 
-func NewContext(driverName string) (*Context, error) {
-	d, err := volume.Get(driverName)
-	if err != nil {
-		return nil, err
-	}
-	return &Context{VolumeDriver: d}, nil
+func NewContext(d volume.VolumeDriver) *Context {
+	return &Context{VolumeDriver: d}
 }
 
 func RunShort(t *testing.T, ctx *Context) {
@@ -93,7 +89,7 @@ func inspect(t *testing.T, ctx *Context) {
 	assert.Equal(t, vols[0].ID, ctx.volID, "Expect volID %v actual %v", ctx.volID, vols[0].ID)
 
 	vols, err = ctx.Inspect([]api.VolumeID{api.VolumeID("shouldNotExist")})
-	assert.Equal(t, len(vols), 0, "Expect 0 volume actual %v volumes", len(vols))
+	assert.Equal(t, 0, len(vols), "Expect 0 volume actual %v volumes", len(vols))
 }
 
 func enumerate(t *testing.T, ctx *Context) {

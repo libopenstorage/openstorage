@@ -13,10 +13,11 @@ func TestAll(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to initialize Driver: %v", err)
 	}
-	ctx, err := test.NewContext(Name)
+	d, err := volume.Get(Name)
 	if err != nil {
-		t.Fatalf("Failed to initialize Driver: %v", err)
+		t.Fatalf("Failed to initialize Volume Driver: %v", err)
 	}
+	ctx := test.NewContext(d)
 
 	test.RunShort(t, ctx)
 }
