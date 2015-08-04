@@ -46,7 +46,6 @@ func RunShort(t *testing.T, ctx *Context) {
 
 func Run(t *testing.T, ctx *Context) {
 	RunShort(t, ctx)
-	deleteBad(t, ctx)
 	RunSnap(t, ctx)
 	RunEnd(t, ctx)
 }
@@ -72,7 +71,7 @@ func create(t *testing.T, ctx *Context) {
 		&api.CreateOptions{FailIfExists: false},
 		&api.VolumeSpec{Size: 10240000,
 			HALevel: 1,
-			Format:  api.FsExt4,
+			Format:  api.FsBtrfs,
 		})
 
 	assert.NoError(t, err, "Failed in Create")

@@ -13,7 +13,7 @@ tags:
 
 openstorage:
 	@echo "Building openstorage..."
-	@go build $(BUILD_OPTIONS)  -o osd
+	@go build $(BUILD_OPTIONS) -tags daeomon  -o osd 
 
 test:
 	@go test ./...

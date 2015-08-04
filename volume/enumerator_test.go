@@ -52,7 +52,11 @@ func TestEnumerate(t *testing.T) {
 	}
 	err := store.CreateVol(&vol)
 	assert.NoError(t, err, "Failed in CreateVol")
-	vols, err := store.Enumerate(api.VolumeLocator{Name: volName}, nil)
+	vols, err := store.Enumerate(api.VolumeLocator{}, nil)
+	assert.NoError(t, err, "Failed in Enumerate")
+	assert.Equal(t, 1, len(vols), "Number of volumes returned in enumerate should be 1")
+
+	vols, err = store.Enumerate(api.VolumeLocator{Name: volName}, nil)
 	assert.NoError(t, err, "Failed in Enumerate")
 	assert.Equal(t, 1, len(vols), "Number of volumes returned in enumerate should be 1")
 	if len(vols) == 1 {

@@ -3,7 +3,7 @@ package volume
 import (
 	"encoding/json"
 	"fmt"
-	"sync"
+	_ "sync"
 
 	"github.com/libopenstorage/kvdb"
 	"github.com/libopenstorage/openstorage/api"
@@ -24,7 +24,7 @@ type StoreUpdate interface {
 	Unlock(token interface{}) error
 
 	// CreateVol returns error if volume with the same ID already exists.
-	CreateVol(vol *api.Volume)
+	CreateVol(vol *api.Volume) error
 
 	// GetVol from volID.
 	GetVol(volID api.VolumeID) (*api.Volume, error)
@@ -50,7 +50,6 @@ type StoreUpdate interface {
 
 // Store for volume information. Implements the Enumerator Interface
 type Store struct {
-	mutex         sync.Mutex
 	kvdb          kvdb.Kvdb
 	driver        string
 	lockKeyPrefix string

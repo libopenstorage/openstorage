@@ -7,8 +7,12 @@ import (
 // VolumeID driver specific system wide unique volume identifier.
 type VolumeID string
 
+const BadVolumeID = VolumeID("")
+
 // SnapID driver specific system wide unique snap identifier.
 type SnapID string
+
+const BadSnapID = SnapID("")
 
 // VolumeCos a number representing class of servcie.
 type VolumeCos int
@@ -89,6 +93,8 @@ const (
 	FsExt4 = Filesystem("ext4")
 	// FsZfs the ZFS filesystem
 	FsZfs = Filesystem("zfs")
+	// FsBtrfs the Btrfs filesystem
+	FsBtrfs = Filesystem("btrfs")
 	// FsNone no file system, applicable for raw block devices.
 	FsNone = Filesystem("none")
 )
@@ -118,6 +124,8 @@ type VolumeSpec struct {
 	ConfigLabels Labels
 }
 
+type MachineID string
+
 // Volume represents a live, created volume.
 type Volume struct {
 	// ID Self referential VolumeID
@@ -139,13 +147,13 @@ type Volume struct {
 	// State see VolumeState
 	State VolumeState
 	// AttachedOn - Node on which this volume is attached.
-	AttachedOn interface{}
+	AttachedOn MachineID
 	// DevicePath
 	DevicePath string
 	// AttachPath
 	AttachPath string
 	// ReplicaSet Set of nodes no which this Volume is erasure coded - for clustered storage arrays
-	ReplicaSet []interface{}
+	ReplicaSet []MachineID
 	// Error Last recorded error
 	Error string
 }
