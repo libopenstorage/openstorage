@@ -18,7 +18,7 @@ import (
 const (
 	Name         = "nfs"
 	NfsDBKey     = "OpenStorageNFSKey"
-	nfsMountPath = "/mnt/openstoragenfs/"
+	nfsMountPath = "/var/lib/openstorage/nfs/"
 )
 
 var (
@@ -123,8 +123,18 @@ func (d *nfsDriver) String() string {
 }
 
 func (d *nfsDriver) Create(locator api.VolumeLocator, opt *api.CreateOptions, spec *api.VolumeSpec) (api.VolumeID, error) {
+	// Validate options.
+	if spec.Format != "" && spec.Format != "nfs" {
+		return "", errors.New("Unsupported filesystem format: " + string(spec.Format))
+	}
+
+	if spec.BlockSize != 0 {
+		log.Println("NFS driver will ignore the blocksize option.")
+	}
+
 	out, err := exec.Command("uuidgen").Output()
 	if err != nil {
+		log.Println(err)
 		return "", err
 	}
 	volumeID := string(out)
@@ -133,6 +143,7 @@ func (d *nfsDriver) Create(locator api.VolumeLocator, opt *api.CreateOptions, sp
 	// Create a directory on the NFS server with this UUID.
 	err = os.MkdirAll(nfsMountPath+volumeID, 0744)
 	if err != nil {
+		log.Println(err)
 		return "", err
 	}
 
@@ -148,6 +159,7 @@ func (d *nfsDriver) Inspect(volumeIDs []api.VolumeID) ([]api.Volume, error) {
 	for i, id := range volumeIDs {
 		v, err := d.get(string(id))
 		if err != nil {
+			log.Println(err)
 			return nil, err
 		}
 		volumes[i] = api.Volume{
@@ -160,14 +172,15 @@ func (d *nfsDriver) Inspect(volumeIDs []api.VolumeID) ([]api.Volume, error) {
 
 func (d *nfsDriver) Delete(volumeID api.VolumeID) error {
 	v, err := d.get(string(volumeID))
-	log.Println(err)
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 
 	// Delete the directory on the nfs server.
 	err = os.Remove(v.Device)
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 
@@ -199,6 +212,7 @@ func (d *nfsDriver) Alerts(volumeID api.VolumeID) (api.VolumeAlerts, error) {
 func (d *nfsDriver) Enumerate(locator api.VolumeLocator, labels api.Labels) ([]api.Volume, error) {
 	vs, err := d.enumerate()
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 
@@ -226,6 +240,7 @@ func (d *nfsDriver) SnapEnumerate(locator api.VolumeLocator, labels api.Labels) 
 func (d *nfsDriver) Mount(volumeID api.VolumeID, mountpath string) error {
 	v, err := d.get(string(volumeID))
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 
@@ -246,11 +261,13 @@ func (d *nfsDriver) Mount(volumeID api.VolumeID, mountpath string) error {
 func (d *nfsDriver) Unmount(volumeID api.VolumeID, mountpath string) error {
 	v, err := d.get(string(volumeID))
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 
 	err = syscall.Unmount(v.Mountpath, 0)
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 
