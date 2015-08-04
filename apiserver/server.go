@@ -34,13 +34,13 @@ type restBase struct {
 
 func (rest *restBase) logReq(request string, id string) *log.Entry {
 	return log.WithFields(log.Fields{
-		"Driver":  rest.String(),
+		"Driver":  rest.name,
 		"Request": request,
 		"ID":      id,
 	})
 }
 func (rest *restBase) sendError(request string, id string, w http.ResponseWriter, msg string, code int) {
-	rest.logReq(request, id).Warn("%d %s", code, msg)
+	rest.logReq(request, id).Warn(code, " ", msg)
 	http.Error(w, msg, code)
 }
 
@@ -51,7 +51,7 @@ func (rest *restBase) notFound(w http.ResponseWriter, r *http.Request) {
 
 func (rest *restBase) volNotFound(request string, id string, e error, w http.ResponseWriter) error {
 	err := fmt.Errorf("Failed to locate volume:" + e.Error())
-	rest.logReq(request, id).Warn("%d %s", http.StatusNotFound, err.Error())
+	rest.logReq(request, id).Warn(http.StatusNotFound, " ", err.Error())
 	return err
 }
 

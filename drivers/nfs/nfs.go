@@ -124,7 +124,7 @@ func (d *nfsDriver) String() string {
 
 func (d *nfsDriver) Create(locator api.VolumeLocator, opt *api.CreateOptions, spec *api.VolumeSpec) (api.VolumeID, error) {
 	// Validate options.
-	if spec.Format != "" && spec.Format != "nfs" {
+	if spec.Format != "nfs" {
 		return "", errors.New("Unsupported filesystem format: " + string(spec.Format))
 	}
 
@@ -155,11 +155,15 @@ func (d *nfsDriver) Create(locator api.VolumeLocator, opt *api.CreateOptions, sp
 }
 
 func (d *nfsDriver) Inspect(volumeIDs []api.VolumeID) ([]api.Volume, error) {
-	volumes := make([]api.Volume, len(volumeIDs))
+	l := len(volumeIDs)
+	if l == 0 {
+		return nil, errors.New("No volume IDs specified.")
+	}
+
+	volumes := make([]api.Volume, l)
 	for i, id := range volumeIDs {
 		v, err := d.get(string(id))
 		if err != nil {
-			log.Println(err)
 			return nil, err
 		}
 		volumes[i] = api.Volume{

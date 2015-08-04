@@ -220,6 +220,11 @@ func (vd *volDriver) enumerate(w http.ResponseWriter, r *http.Request) {
 			ids[i] = api.VolumeID(s)
 		}
 		vols, err = d.Inspect(ids)
+		if err != nil {
+			e := fmt.Errorf("Failed to inspect volumeID: %s", err.Error())
+			vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+			return
+		}
 	} else {
 		vols, _ = d.Enumerate(locator, configLabels)
 	}
