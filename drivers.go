@@ -3,6 +3,7 @@ package main
 
 import (
 	"github.com/libopenstorage/openstorage/drivers/aws"
+	"github.com/libopenstorage/openstorage/drivers/btrfs"
 	"github.com/libopenstorage/openstorage/drivers/nfs"
 )
 
@@ -13,6 +14,6 @@ var (
 		// NFS driver. This provisions storage from an NFS server.
 		nfs.Name,
 		// BTRFS driver. This provisions storage from local btrfs fs.
-		nfs.Name,
+		btrfs.Name,
 	}
 )
