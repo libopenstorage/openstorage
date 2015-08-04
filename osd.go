@@ -41,8 +41,10 @@ func start(c *cli.Context) {
 	}
 	kvdb_url := c.String("kvdb")
 	u, err := url.Parse(kvdb_url)
+	scheme := u.Scheme
+	u.Scheme = "http"
 
-	kv, err := kvdb.New(u.Scheme, "openstorage", []string{u.Path}, nil)
+	kv, err := kvdb.New(scheme, "openstorage", []string{u.String()}, nil)
 	if err != nil {
 		fmt.Println("Failed to initialize KVDB: ", u.Scheme, err)
 		fmt.Println("Supported datastores: ", datastores)
