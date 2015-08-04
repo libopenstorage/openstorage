@@ -143,7 +143,7 @@ func (d *awsDriver) Enumerate(locator api.VolumeLocator, labels api.Labels) ([]a
 	return nil, volume.ErrNotSupported
 }
 
-func (d *awsDriver) SnapEnumerate(locator api.VolumeLocator, labels api.Labels) ([]api.VolumeSnap, error) {
+func (d *awsDriver) SnapEnumerate(volIds []api.VolumeID, labels api.Labels) ([]api.VolumeSnap, error) {
 	return nil, volume.ErrNotSupported
 }
 

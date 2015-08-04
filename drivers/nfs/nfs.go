@@ -237,7 +237,7 @@ func (d *nfsDriver) Enumerate(locator api.VolumeLocator, labels api.Labels) ([]a
 	return volumes, nil
 }
 
-func (d *nfsDriver) SnapEnumerate(locator api.VolumeLocator, labels api.Labels) ([]api.VolumeSnap, error) {
+func (d *nfsDriver) SnapEnumerate(volIds []api.VolumeID, labels api.Labels) ([]api.VolumeSnap, error) {
 	return nil, volume.ErrNotSupported
 }
 

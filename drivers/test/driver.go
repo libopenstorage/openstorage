@@ -27,7 +27,11 @@ type Context struct {
 }
 
 func NewContext(d volume.VolumeDriver) *Context {
-	return &Context{VolumeDriver: d}
+	return &Context{
+		VolumeDriver: d,
+		volID:        api.BadVolumeID,
+		snapID:       api.BadSnapID,
+	}
 }
 
 func RunShort(t *testing.T, ctx *Context) {
@@ -41,16 +45,16 @@ func RunShort(t *testing.T, ctx *Context) {
 	unmount(t, ctx)
 	detach(t, ctx)
 	delete(t, ctx)
-	RunEnd(t, ctx)
+	runEnd(t, ctx)
 }
 
 func Run(t *testing.T, ctx *Context) {
 	RunShort(t, ctx)
 	RunSnap(t, ctx)
-	RunEnd(t, ctx)
+	runEnd(t, ctx)
 }
 
-func RunEnd(t *testing.T, ctx *Context) {
+func runEnd(t *testing.T, ctx *Context) {
 	detach(t, ctx)
 	shutdown(t, ctx)
 }
@@ -214,21 +218,65 @@ func delete(t *testing.T, ctx *Context) {
 	fmt.Println("delete")
 	err := ctx.Delete(ctx.volID)
 	assert.NoError(t, err, "Delete failed")
+	ctx.volID = api.BadVolumeID
 }
 
 func snap(t *testing.T, ctx *Context) {
+	fmt.Println("snap")
+	if ctx.volID == api.BadVolumeID {
+		create(t, ctx)
+	}
+	assert.NotEqual(t, ctx.volID, api.BadVolumeID, "invalid volume ID")
+	id, err := ctx.Snapshot(ctx.volID, api.Labels{"oh": "snap"})
+	assert.NoError(t, err, "Failed in creating a snapshot")
+	ctx.snapID = id
 }
 
 func snapInspect(t *testing.T, ctx *Context) {
+	fmt.Println("snapInspect")
+
+	snaps, err := ctx.SnapInspect([]api.SnapID{ctx.snapID})
+	assert.NoError(t, err, "Failed in Inspect")
+	assert.NotNil(t, snaps, "Nil snaps")
+	assert.Equal(t, len(snaps), 1, "Expect 1 snaps actual %v snaps", len(snaps))
+	assert.Equal(t, snaps[0].ID, ctx.snapID, "Expect snapID %v actual %v", ctx.snapID, snaps[0].ID)
+
+	snaps, err = ctx.SnapInspect([]api.SnapID{api.SnapID("shouldNotExist")})
+	assert.Equal(t, 0, len(snaps), "Expect 0 snaps actual %v snaps", len(snaps))
 }
 
 func snapEnumerate(t *testing.T, ctx *Context) {
+	fmt.Println("snapEnumerate")
+
+	snaps, err := ctx.SnapEnumerate(nil, nil)
+	assert.NoError(t, err, "Failed in Enumerate")
+	assert.NotNil(t, snaps, "Nil snaps")
+	assert.Equal(t, 1, len(snaps), "Expect 1 snaps actual %v snaps", len(snaps))
+	assert.Equal(t, snaps[0].ID, ctx.snapID, "Expect snapID %v actual %v", ctx.snapID, snaps[0].ID)
+	labels := snaps[0].SnapLabels
+
+	snaps, err = ctx.SnapEnumerate([]api.VolumeID{ctx.volID}, nil)
+	assert.NoError(t, err, "Failed in Enumerate")
+	assert.NotNil(t, snaps, "Nil snaps")
+	assert.Equal(t, len(snaps), 1, "Expect 1 snap actual %v snaps", len(snaps))
+	assert.Equal(t, snaps[0].ID, ctx.snapID, "Expect snapID %v actual %v", ctx.snapID, snaps[0].ID)
+
+	snaps, err = ctx.SnapEnumerate([]api.VolumeID{api.VolumeID("shouldNotExist")}, nil)
+	assert.Equal(t, len(snaps), 0, "Expect 0 snap actual %v snaps", len(snaps))
+
+	snaps, err = ctx.SnapEnumerate(nil, labels)
+	assert.NoError(t, err, "Failed in Enumerate")
+	assert.NotNil(t, snaps, "Nil snaps")
+	assert.Equal(t, len(snaps), 1, "Expect 1 snap actual %v snaps", len(snaps))
+	assert.Equal(t, snaps[0].ID, ctx.snapID, "Expect snapID %v actual %v", ctx.snapID, snaps[0].ID)
 }
 
 func snapDiff(t *testing.T, ctx *Context) {
+	fmt.Println("snapDiff")
 }
 
 func snapDelete(t *testing.T, ctx *Context) {
+	fmt.Println("snapDelete")
 }
 
 func init() {

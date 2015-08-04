@@ -84,6 +84,15 @@ func hasSubset(set api.Labels, subset api.Labels) bool {
 	return true
 }
 
+func contains(volID api.VolumeID, set []api.VolumeID) bool {
+	for _, v := range set {
+		if v == volID {
+			return true
+		}
+	}
+	return false
+}
+
 func match(v *api.Volume, locator api.VolumeLocator, configLabels api.Labels) bool {
 	if locator.Name != "" && v.Locator.Name != locator.Name {
 		return false
@@ -92,62 +101,6 @@ func match(v *api.Volume, locator api.VolumeLocator, configLabels api.Labels) bo
 		return false
 	}
 	return hasSubset(v.Spec.ConfigLabels, configLabels)
-}
-
-func (s *Store) enumerate(
-	locator api.VolumeLocator,
-	configLabels api.Labels,
-	volumeState api.VolumeState) ([]api.Volume, error) {
-
-	kvp, err := s.kvdb.Enumerate(s.volKeyPrefix)
-	if err != nil {
-		return nil, err
-	}
-	vols := make([]api.Volume, 0, len(kvp))
-	for _, v := range kvp {
-		var elem api.Volume
-		err = json.Unmarshal(v.Value, &elem)
-		if err != nil {
-			return nil, err
-		}
-		if (volumeState & elem.State) == 0 {
-			continue
-		}
-		if match(&elem, locator, configLabels) {
-			vols = append(vols, elem)
-		}
-	}
-	return vols, nil
-}
-
-func (s *Store) snapEnumerate(
-	locator api.VolumeLocator,
-	snapLabels api.Labels) ([]api.VolumeSnap, error) {
-
-	kvp, err := s.kvdb.Enumerate(s.snapKeyPrefix)
-	if err != nil {
-		return nil, err
-	}
-	snaps := make([]api.VolumeSnap, 0, len(kvp))
-	for _, v := range kvp {
-		var elem api.VolumeSnap
-		err = json.Unmarshal(v.Value, &elem)
-		if err != nil {
-			return nil, err
-		}
-		vol, err := s.GetVol(elem.VolumeID)
-		if err != nil {
-			return nil, err
-		}
-		if match(vol, locator, nil) {
-			snaps = append(snaps, elem)
-			continue
-		}
-		if hasSubset(elem.SnapLabels, snapLabels) {
-			snaps = append(snaps, elem)
-		}
-	}
-	return snaps, nil
 }
 
 // NewStore initializes store with specified kvdb.
@@ -246,10 +199,25 @@ func (s *Store) Inspect(ids []api.VolumeID) ([]api.Volume, error) {
 
 // Enumerate volumes that map to the volumeLocator. Locator fields may be regexp.
 // If locator fields are left blank, this will return all volumes.
-func (s *Store) Enumerate(locator api.VolumeLocator, labels api.Labels) ([]api.Volume, error) {
+func (s *Store) Enumerate(locator api.VolumeLocator,
+	labels api.Labels) ([]api.Volume, error) {
 
-	vols, err := s.enumerate(locator, labels, api.VolumeStateAny)
-	return vols, err
+	kvp, err := s.kvdb.Enumerate(s.volKeyPrefix)
+	if err != nil {
+		return nil, err
+	}
+	vols := make([]api.Volume, 0, len(kvp))
+	for _, v := range kvp {
+		var elem api.Volume
+		err = json.Unmarshal(v.Value, &elem)
+		if err != nil {
+			return nil, err
+		}
+		if match(&elem, locator, labels) {
+			vols = append(vols, elem)
+		}
+	}
+	return vols, nil
 }
 
 // SnapInspect provides details on this snapshot.
@@ -271,7 +239,27 @@ func (s *Store) SnapInspect(ids []api.SnapID) ([]api.VolumeSnap, error) {
 
 // Enumerate snaps for specified volume
 // Count indicates the number of snaps populated.
-func (s *Store) SnapEnumerate(locator api.VolumeLocator, labels api.Labels) ([]api.VolumeSnap, error) {
-	snaps, err := s.snapEnumerate(locator, labels)
-	return snaps, err
+func (s *Store) SnapEnumerate(
+	volIDs []api.VolumeID,
+	snapLabels api.Labels) ([]api.VolumeSnap, error) {
+
+	kvp, err := s.kvdb.Enumerate(s.snapKeyPrefix)
+	if err != nil {
+		return nil, err
+	}
+	snaps := make([]api.VolumeSnap, 0, len(kvp))
+	for _, v := range kvp {
+		var elem api.VolumeSnap
+		err = json.Unmarshal(v.Value, &elem)
+		if err != nil {
+			return nil, err
+		}
+		if volIDs != nil && !contains(elem.VolumeID, volIDs) {
+			continue
+		}
+		if hasSubset(elem.SnapLabels, snapLabels) {
+			snaps = append(snaps, elem)
+		}
+	}
+	return snaps, nil
 }

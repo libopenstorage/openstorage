@@ -191,17 +191,15 @@ func (v *volumeClient) Enumerate(locator api.VolumeLocator, labels api.Labels) (
 
 // Enumerate snaps for specified volume
 // Count indicates the number of snaps populated.
-func (v *volumeClient) SnapEnumerate(locator api.VolumeLocator, labels api.Labels) ([]api.VolumeSnap, error) {
+func (v *volumeClient) SnapEnumerate(ids []api.VolumeID, snapLabels api.Labels) ([]api.VolumeSnap, error) {
 	var snaps []api.VolumeSnap
+
 	req := v.c.Get().Resource(snapPath)
-	if locator.Name != "" {
-		req.QueryOption(string(api.OptName), locator.Name)
+	for _, v := range ids {
+		req.QueryOption(string(api.OptID), string(v))
 	}
-	if len(locator.VolumeLabels) != 0 {
-		req.QueryOptionLabel(string(api.OptVolumeLabel), locator.VolumeLabels)
-	}
-	if len(labels) != 0 {
-		req.QueryOptionLabel(string(api.OptConfigLabel), labels)
+	if len(snapLabels) != 0 {
+		req.QueryOptionLabel(string(api.OptConfigLabel), snapLabels)
 	}
 	err := req.Do().Unmarshal(&snaps)
 	if err != nil {

@@ -90,8 +90,8 @@ type Enumerator interface {
 	// Errors ErrEnoEnt may be returned
 	SnapInspect(snapID []api.SnapID) ([]api.VolumeSnap, error)
 
-	// Enumerate snaps for specified volume
-	SnapEnumerate(locator api.VolumeLocator, snapLabels api.Labels) ([]api.VolumeSnap, error)
+	// Enumerate snaps for specified volumes
+	SnapEnumerate(volID []api.VolumeID, snapLabels api.Labels) ([]api.VolumeSnap, error)
 }
 
 type BlockDriver interface {
