@@ -2,10 +2,14 @@ package main
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 
 	"github.com/codegangsta/cli"
 
+	"github.com/libopenstorage/kvdb"
+	"github.com/libopenstorage/kvdb/etcd"
+	"github.com/libopenstorage/kvdb/mem"
 	"github.com/libopenstorage/openstorage/apiserver"
 	osdcli "github.com/libopenstorage/openstorage/cli"
 	"github.com/libopenstorage/openstorage/config"
@@ -22,7 +26,9 @@ func start(c *cli.Context) {
 		cli.ShowAppHelp(c)
 	}
 
-	// We are in daemon mode.  Bring up the volume drivers.
+	datastores := []string{mem.Name, etcd.Name}
+
+	// We are in daemon mode.
 	file := c.String("file")
 	if file == "" {
 		fmt.Println("OSD configuration file not specified.  Visit openstorage.org for an example.")
@@ -33,6 +39,20 @@ func start(c *cli.Context) {
 		fmt.Println(err)
 		return
 	}
+	kvdb_url := c.String("kvdb")
+	u, err := url.Parse(kvdb_url)
+
+	kv, err := kvdb.New(u.Scheme, "openstorage", []string{u.Path}, nil)
+	if err != nil {
+		fmt.Println("Failed to initialize KVDB: ", u.Scheme, err)
+		fmt.Println("Supported datastores: ", datastores)
+		return
+	}
+	err = kvdb.SetInstance(kv)
+	if err != nil {
+		fmt.Println("Failed to initialize KVDB: ", err)
+		return
+	}
 
 	// Start the volume drivers.
 	for d, v := range cfg.Osd.Drivers {
@@ -40,7 +60,7 @@ func start(c *cli.Context) {
 		fmt.Println("Starting volume driver: ", d)
 		_, err := volume.New(d, v)
 		if err != nil {
-			fmt.Println("Unable to start volume driver: ", err)
+			fmt.Println("Unable to start volume driver: ", d, err)
 			return
 		}
 
@@ -79,6 +99,11 @@ func main() {
 			Name:  "driver",
 			Usage: "driver name and options: name=btrfs,root_vol=/var/openstorage/btrfs",
 			Value: new(cli.StringSlice),
+		},
+		cli.StringFlag{
+			Name:  "kvdb,k",
+			Usage: "uri to kvdb e.g. kv-mem://localhost, etcd://localhost:4001",
+			Value: "kv-mem://localhost",
 		},
 		cli.StringFlag{
 			Name:  "file,f",
