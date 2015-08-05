@@ -277,7 +277,6 @@ func (v *VolDriver) snapDelete(c *cli.Context) {
 }
 
 func BlockVolumeCommands(name string) []cli.Command {
-
 	v := &VolDriver{name: name}
 
 	commands := []cli.Command{
@@ -421,7 +420,6 @@ func BlockVolumeCommands(name string) []cli.Command {
 }
 
 func FileVolumeCommands(name string) []cli.Command {
-
 	v := &VolDriver{name: name}
 
 	commands := []cli.Command{

@@ -22,9 +22,9 @@ const (
 )
 
 func start(c *cli.Context) {
-
 	if !osdcli.DaemonMode(c) {
 		cli.ShowAppHelp(c)
+		return
 	}
 
 	datastores := []string{mem.Name, etcd.Name}
