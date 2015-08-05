@@ -389,6 +389,30 @@ func BlockVolumeCommands(name string) []cli.Command {
 			},
 		},
 		{
+			Name:    "mount",
+			Aliases: []string{"m"},
+			Usage:   "Mount specified volume",
+			Action:  v.volumeMount,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "path",
+					Usage: "destination path at which this volume must be mounted on",
+				},
+			},
+		},
+		{
+			Name:    "unmount",
+			Aliases: []string{"u"},
+			Usage:   "Unmount specified volume",
+			Action:  v.volumeUnmount,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "path",
+					Usage: "destination path at which this volume must be mounted on",
+				},
+			},
+		},
+		{
 			Name:    "detach",
 			Aliases: []string{"d"},
 			Usage:   "Detach specified volume",
