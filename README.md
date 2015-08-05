@@ -97,20 +97,33 @@ Adding a driver is fairly straightforward:
 Here is an example of `drivers.go`:
 
 ```
-// To add a driver to openstorage, declare the driver here.
+// To add a provider to openstorage, declare the provider here.
 package main
 
 import (
-        "github.com/libopenstorage/openstorage/drivers/aws"
-        "github.com/libopenstorage/openstorage/drivers/nfs"
-)
-
-var (
-        drivers = []string{
-                // AWS driver.  This provisions storage from EBS.
-                aws.Name,
-                // NFS driver.  This provisions storage from an NFS server.
-                nfs.Name}
+    "github.com/libopenstorage/openstorage/drivers/aws"
+    "github.com/libopenstorage/openstorage/drivers/btrfs"
+    "github.com/libopenstorage/openstorage/drivers/nfs"
+    "github.com/libopenstorage/openstorage/volume"
+)           
+            
+type Driver struct {
+    providerType volume.ProviderType
+    name         string
+}       
+            
+var (       
+    providers = []Driver{
+        // AWS provider. This provisions storage from EBS.
+        {providerType: volume.Block,
+            name: aws.Name},
+        // NFS provider. This provisions storage from an NFS server.
+        {providerType: volume.File,
+            name: nfs.Name},
+        // BTRFS provider. This provisions storage from local btrfs fs.
+        {providerType: volume.File,
+            name: btrfs.Name},
+    }
 )
 ```
 
