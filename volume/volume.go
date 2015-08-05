@@ -35,10 +35,11 @@ const (
 type VolumeDriver interface {
 	ProtoDriver
 	BlockDriver
-	MountDriver
 	Enumerator
 }
 
+// ProtoDriver must be implemented by all volume drivers.  It specifies the
+// most basic functionality, such as creating and deleting volumes.
 type ProtoDriver interface {
 	// String description of this driver.
 	String() string
@@ -55,6 +56,14 @@ type ProtoDriver interface {
 	// Delete volume.
 	// Errors ErrEnoEnt, ErrVolHasSnaps may be returned.
 	Delete(volumeID api.VolumeID) error
+
+	// Mount volume at specified path
+	// Errors ErrEnoEnt, ErrVolDetached may be returned.
+	Mount(volumeID api.VolumeID, mountpath string) error
+
+	// Unmount volume at specified path
+	// Errors ErrEnoEnt, ErrVolDetached may be returned.
+	Unmount(volumeID api.VolumeID, mountpath string) error
 
 	// Snap specified volume. IO to the underlying volume should be quiesced before
 	// calling this function.
@@ -81,6 +90,7 @@ type ProtoDriver interface {
 	Shutdown()
 }
 
+// Enumerator provides a set of interfaces to get details on a set of volumes.
 type Enumerator interface {
 	// Inspect specified volumes.
 	// Errors ErrEnoEnt may be returned.
@@ -98,6 +108,8 @@ type Enumerator interface {
 	SnapEnumerate(volID []api.VolumeID, snapLabels api.Labels) ([]api.VolumeSnap, error)
 }
 
+// BlockDriver needs to be implemented by block volume drivers.  Filesystem volume
+// drivers can ignore this interface and include the builtin DefaultBlockDriver.
 type BlockDriver interface {
 	// Attach map device to the host.
 	// On success the devicePath specifies location where the device is exported
@@ -111,16 +123,6 @@ type BlockDriver interface {
 	// Detach device from the host.
 	// Errors ErrEnoEnt, ErrVolDetached may be returned.
 	Detach(volumeID api.VolumeID) error
-}
-
-type MountDriver interface {
-	// Mount volume at specified path
-	// Errors ErrEnoEnt, ErrVolDetached may be returned.
-	Mount(volumeID api.VolumeID, mountpath string) error
-
-	// Unmount volume at specified path
-	// Errors ErrEnoEnt, ErrVolDetached may be returned.
-	Unmount(volumeID api.VolumeID, mountpath string) error
 }
 
 func Shutdown() {

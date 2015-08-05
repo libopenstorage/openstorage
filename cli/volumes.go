@@ -91,6 +91,58 @@ func (v *VolDriver) volumeCreate(c *cli.Context) {
 	fmtOutput(c, &Format{UUID: []string{string(id)}})
 }
 
+func (v *VolDriver) volumeMount(c *cli.Context) {
+	v.volumeOptions(c)
+	fn := "mount"
+
+	if len(c.Args()) < 1 {
+		missingParameter(c, fn, "volumeID", "Invalid number of arguments")
+		return
+	}
+	volumeID := c.Args()[0]
+
+	path := c.String("path")
+	if path == "" {
+		missingParameter(c, fn, "path", "Target mount path")
+		return
+
+	}
+
+	err := v.volDriver.Mount(api.VolumeID(volumeID), path)
+	if err != nil {
+		cmdError(c, fn, err)
+		return
+	}
+
+	fmtOutput(c, &Format{UUID: []string{volumeID}})
+}
+
+func (v *VolDriver) volumeUnmount(c *cli.Context) {
+	v.volumeOptions(c)
+	fn := "unmount"
+
+	if len(c.Args()) < 1 {
+		missingParameter(c, fn, "volumeID", "Invalid number of arguments")
+		return
+	}
+	volumeID := c.Args()[0]
+
+	path := c.String("path")
+	if path == "" {
+		missingParameter(c, fn, "path", "Target mount path")
+		return
+
+	}
+
+	err := v.volDriver.Unmount(api.VolumeID(volumeID), path)
+	if err != nil {
+		cmdError(c, fn, err)
+		return
+	}
+
+	fmtOutput(c, &Format{UUID: []string{volumeID}})
+}
+
 func (v *VolDriver) volumeFormat(c *cli.Context) {
 	v.volumeOptions(c)
 	fn := "format"
@@ -106,7 +158,7 @@ func (v *VolDriver) volumeFormat(c *cli.Context) {
 		return
 	}
 
-	fmtOutput(c, &Format{UUID: []string{c.Args()[0]}})
+	fmtOutput(c, &Format{UUID: []string{volumeID}})
 }
 
 func (v *VolDriver) volumeAttach(c *cli.Context) {
@@ -465,6 +517,24 @@ func FileVolumeCommands(name string) []cli.Command {
 					Value: 0,
 				},
 			},
+		},
+		{
+			Name:    "mount",
+			Aliases: []string{"m"},
+			Usage:   "Mount specified volume",
+			Action:  v.volumeMount,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "path",
+					Usage: "destination path at which this volume must be mounted on",
+				},
+			},
+		},
+		{
+			Name:    "unmount",
+			Aliases: []string{"u"},
+			Usage:   "Unmount specified volume",
+			Action:  v.volumeUnmount,
 		},
 		{
 			Name:    "delete",

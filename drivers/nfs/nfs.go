@@ -42,35 +42,37 @@ type nfsDriver struct {
 	volume.DefaultBlockDriver
 	db        kvdb.Kvdb
 	nfsServer string
+	nfsPath   string
 }
 
 func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
-	uri, ok := params["uri"]
+	server, ok := params["server"]
 	if !ok {
-		return nil, errors.New("No NFS server URI provided")
+		return nil, errors.New("No NFS server provided")
 	}
 
-	log.Println("NFS driver initializing with server: ", uri)
-
-	out, err := exec.Command("uuidgen").Output()
-	if err != nil {
-		return nil, err
+	path, ok := params["path"]
+	if !ok {
+		return nil, errors.New("No NFS path provided")
 	}
-	uuid := string(out)
-	uuid = strings.TrimSuffix(uuid, "\n")
+
+	log.Printf("NFS driver initializing with %s:%s ", server, path)
 
 	inst := &nfsDriver{
 		db:        kvdb.Instance(),
-		nfsServer: uri}
+		nfsServer: server,
+		nfsPath:   path}
 
-	err = os.MkdirAll(nfsMountPath, 0744)
+	err := os.MkdirAll(nfsMountPath, 0744)
 	if err != nil {
 		return nil, err
 	}
 
 	// Mount the nfs server locally on a unique path.
-	err = syscall.Mount(inst.nfsServer, nfsMountPath, "tmpfs", 0, "mode=0700,uid=65534")
+	syscall.Unmount(nfsMountPath, 0)
+	err = syscall.Mount(":"+inst.nfsPath, nfsMountPath, "nfs", 0, "nolock,addr="+inst.nfsServer)
 	if err != nil {
+		log.Printf("Unable to mount %s at %s.\n", inst.nfsServer, nfsMountPath)
 		return nil, err
 	}
 
@@ -149,9 +151,74 @@ func (d *nfsDriver) Create(locator api.VolumeLocator, opt *api.CreateOptions, sp
 
 	// Persist the volume spec.  We use this for all subsequent operations on
 	// this volume ID.
-	err = d.put(volumeID, &nfsVolume{Id: api.VolumeID(volumeID), Device: nfsMountPath + volumeID, Spec: *spec, Locator: locator})
+	err = d.put(volumeID,
+		&nfsVolume{Id: api.VolumeID(volumeID),
+			Device: nfsMountPath + volumeID,
+			Spec:   *spec, Locator: locator})
 
 	return api.VolumeID(volumeID), err
+}
+
+func (d *nfsDriver) Delete(volumeID api.VolumeID) error {
+	v, err := d.get(string(volumeID))
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	d.del(string(volumeID))
+
+	// Delete the directory on the nfs server.
+	os.Remove(v.Device)
+
+	return nil
+}
+
+func (d *nfsDriver) Mount(volumeID api.VolumeID, mountpath string) error {
+	v, err := d.get(string(volumeID))
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	syscall.Unmount(mountpath, 0)
+	err = syscall.Mount(v.Device, mountpath, string(v.Spec.Format), syscall.MS_BIND, "")
+	if err != nil {
+		log.Printf("Cannot mount %s at %s because %+v", v.Device, mountpath, err)
+		return err
+	}
+
+	v.Mountpath = mountpath
+	v.Mounted = true
+	err = d.put(string(volumeID), v)
+
+	return err
+}
+
+func (d *nfsDriver) Unmount(volumeID api.VolumeID, mountpath string) error {
+	v, err := d.get(string(volumeID))
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	if mountpath != "" && v.Mountpath != mountpath {
+		err = errors.New("Specified mount path does not match the path at which this volume is mounted on.")
+		log.Println(err)
+		return err
+	}
+
+	err = syscall.Unmount(v.Mountpath, 0)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	v.Mountpath = ""
+	v.Mounted = false
+	err = d.put(string(volumeID), v)
+
+	return err
 }
 
 // Status diagnostic information
@@ -177,25 +244,6 @@ func (d *nfsDriver) Inspect(volumeIDs []api.VolumeID) ([]api.Volume, error) {
 	}
 
 	return volumes, nil
-}
-
-func (d *nfsDriver) Delete(volumeID api.VolumeID) error {
-	v, err := d.get(string(volumeID))
-	if err != nil {
-		log.Println(err)
-		return err
-	}
-
-	// Delete the directory on the nfs server.
-	err = os.Remove(v.Device)
-	if err != nil {
-		log.Println(err)
-		return err
-	}
-
-	d.del(string(volumeID))
-
-	return nil
 }
 
 func (d *nfsDriver) Snapshot(volumeID api.VolumeID, labels api.Labels) (api.SnapID, error) {
@@ -244,47 +292,6 @@ func (d *nfsDriver) Enumerate(locator api.VolumeLocator, labels api.Labels) ([]a
 
 func (d *nfsDriver) SnapEnumerate(volIds []api.VolumeID, labels api.Labels) ([]api.VolumeSnap, error) {
 	return nil, volume.ErrNotSupported
-}
-
-func (d *nfsDriver) Mount(volumeID api.VolumeID, mountpath string) error {
-	v, err := d.get(string(volumeID))
-	if err != nil {
-		log.Println(err)
-		return err
-	}
-
-	syscall.Unmount(mountpath, 0)
-	err = syscall.Mount(v.Device, mountpath, string(v.Spec.Format), syscall.MS_BIND, "")
-	if err != nil {
-		log.Printf("Cannot mount %s at %s because %+v", v.Device, mountpath, err)
-		return err
-	}
-
-	v.Mountpath = mountpath
-	v.Mounted = true
-	err = d.put(string(volumeID), v)
-
-	return err
-}
-
-func (d *nfsDriver) Unmount(volumeID api.VolumeID, mountpath string) error {
-	v, err := d.get(string(volumeID))
-	if err != nil {
-		log.Println(err)
-		return err
-	}
-
-	err = syscall.Unmount(v.Mountpath, 0)
-	if err != nil {
-		log.Println(err)
-		return err
-	}
-
-	v.Mountpath = ""
-	v.Mounted = false
-	err = d.put(string(volumeID), v)
-
-	return err
 }
 
 func (d *nfsDriver) Shutdown() {
