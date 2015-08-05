@@ -201,7 +201,7 @@ func (v *volumeClient) SnapEnumerate(ids []api.VolumeID, snapLabels api.Labels) 
 
 	req := v.c.Get().Resource(snapPath)
 	for _, v := range ids {
-		req.QueryOption(string(api.OptSnapID), string(v))
+		req.QueryOption(string(api.OptVolumeID), string(v))
 	}
 	if len(snapLabels) != 0 {
 		req.QueryOptionLabel(string(api.OptConfigLabel), snapLabels)

@@ -328,16 +328,8 @@ func (vd *volDriver) snapEnumerate(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	v = params[string(api.OptVolumeID)]
-	if v != nil {
-		ids = make([]api.VolumeID, len(params))
-		for i, s := range v {
-			ids[i] = api.VolumeID(s)
-		}
-	}
-
-	v = params[string(api.OptSnapID)]
-	if v != nil {
+	v, ok := params[string(api.OptSnapID)]
+	if ok && v != nil {
 		sids := make([]api.SnapID, len(params))
 		for i, s := range v {
 			sids[i] = api.SnapID(s)
@@ -349,6 +341,14 @@ func (vd *volDriver) snapEnumerate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
+		v, ok = params[string(api.OptVolumeID)]
+		if v != nil && ok {
+			ids = make([]api.VolumeID, len(params))
+			for i, s := range v {
+				ids[i] = api.VolumeID(s)
+			}
+		}
+
 		snaps, err = d.SnapEnumerate(ids, labels)
 		if err != nil {
 			e := fmt.Errorf("Failed to enumerate snaps: %s", err.Error())
