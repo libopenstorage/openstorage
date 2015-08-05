@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -125,13 +126,26 @@ func main() {
 	}
 
 	for _, v := range drivers {
-		c := cli.Command{
-			Name:        v,
-			Aliases:     []string{"v"},
-			Usage:       fmt.Sprintf("Manage %s volumes", v),
-			Subcommands: osdcli.VolumeCommands(v),
+		if v.driverType == volume.Block {
+			c := cli.Command{
+				Name:        v.name,
+				Aliases:     []string{"v"},
+				Usage:       fmt.Sprintf("Manage %s volumes", v.name),
+				Subcommands: osdcli.BlockVolumeCommands(v.name),
+			}
+			app.Commands = append(app.Commands, c)
+		} else if v.driverType == volume.File {
+			c := cli.Command{
+				Name:        v.name,
+				Aliases:     []string{"v"},
+				Usage:       fmt.Sprintf("Manage %s volumes", v.name),
+				Subcommands: osdcli.FileVolumeCommands(v.name),
+			}
+			app.Commands = append(app.Commands, c)
+		} else {
+			fmt.Println("Unable to start volume plugin: ", errors.New("Unknown driver type."))
+			return
 		}
-		app.Commands = append(app.Commands, c)
 	}
 	app.Run(os.Args)
 }

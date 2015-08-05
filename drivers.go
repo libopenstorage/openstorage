@@ -5,15 +5,24 @@ import (
 	"github.com/libopenstorage/openstorage/drivers/aws"
 	"github.com/libopenstorage/openstorage/drivers/btrfs"
 	"github.com/libopenstorage/openstorage/drivers/nfs"
+	"github.com/libopenstorage/openstorage/volume"
 )
 
+type Driver struct {
+	driverType volume.DriverType
+	name       string
+}
+
 var (
-	drivers = []string{
+	drivers = []Driver{
 		// AWS driver. This provisions storage from EBS.
-		aws.Name,
+		{driverType: volume.Block,
+			name: aws.Name},
 		// NFS driver. This provisions storage from an NFS server.
-		nfs.Name,
+		{driverType: volume.File,
+			name: nfs.Name},
 		// BTRFS driver. This provisions storage from local btrfs fs.
-		btrfs.Name,
+		{driverType: volume.File,
+			name: btrfs.Name},
 	}
 )

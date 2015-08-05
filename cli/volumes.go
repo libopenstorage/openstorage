@@ -276,7 +276,7 @@ func (v *VolDriver) snapDelete(c *cli.Context) {
 	fmtOutput(c, &Format{UUID: []string{c.Args()[0]}})
 }
 
-func VolumeCommands(name string) []cli.Command {
+func BlockVolumeCommands(name string) []cli.Command {
 
 	v := &VolDriver{name: name}
 
@@ -347,6 +347,126 @@ func VolumeCommands(name string) []cli.Command {
 			Aliases: []string{"d"},
 			Usage:   "Detach specified volume",
 			Action:  v.volumeDetach,
+		},
+		{
+			Name:    "delete",
+			Aliases: []string{"rm"},
+			Usage:   "Detach specified volume",
+			Action:  v.volumeDelete,
+		},
+		{
+			Name:    "enumerate",
+			Aliases: []string{"e"},
+			Usage:   "Enumerate volumes",
+			Action:  v.volumeEnumerate,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "name",
+					Usage: "volume name used during creation if any",
+				},
+				cli.StringFlag{
+					Name:  "label,l",
+					Usage: "Comma separated name=value pairs, e.g name=sqlvolume,type=production",
+				},
+			},
+		},
+		{
+			Name:    "inspect",
+			Aliases: []string{"i"},
+			Usage:   "Inspect volume",
+			Action:  v.volumeInspect,
+		},
+		{
+			Name:    "snap",
+			Aliases: []string{"sc"},
+			Usage:   "create snap",
+			Action:  v.snapCreate,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "label,l",
+					Usage: "Comma separated name=value pairs, e.g name=sqlvolume,type=production",
+				},
+			},
+		},
+		{
+			Name:    "snapInspect",
+			Aliases: []string{"si"},
+			Usage:   "Inspect snap",
+			Action:  v.snapInspect,
+		},
+		{
+			Name:    "snapEnumerate",
+			Aliases: []string{"se"},
+			Usage:   "Enumerate snap",
+			Action:  v.snapEnumerate,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "name, n",
+					Usage: "snap name used during creation",
+				},
+				cli.StringFlag{
+					Name:  "label,l",
+					Usage: "Comma separated name=value pairs, e.g name=sqlvolume,type=production",
+				},
+			},
+		},
+		{
+			Name:    "snapDelete",
+			Aliases: []string{"si"},
+			Usage:   "Delete snap",
+			Action:  v.snapDelete,
+		},
+	}
+	return commands
+}
+
+func FileVolumeCommands(name string) []cli.Command {
+
+	v := &VolDriver{name: name}
+
+	commands := []cli.Command{
+		{
+			Name:    "create",
+			Aliases: []string{"c"},
+			Usage:   "create a new volume",
+			Action:  v.volumeCreate,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "label,l",
+					Usage: "Comma separated name=value pairs, e.g name=sqlvolume,type=production",
+					Value: "",
+				},
+				cli.IntFlag{
+					Name:  "size,s",
+					Usage: "specify size in MB",
+					Value: 1000,
+				},
+				cli.StringFlag{
+					Name:  "fs",
+					Usage: "filesystem to be laid out: none|xfs|ext4",
+					Value: "ext4",
+				},
+				cli.IntFlag{
+					Name:  "block_size,b",
+					Usage: "block size in Kbytes",
+					Value: 32,
+				},
+				cli.IntFlag{
+					Name:  "repl,r",
+					Usage: "replication factor [1..2]",
+					Value: 1,
+				},
+				cli.IntFlag{
+					Name:  "cos",
+					Usage: "Class of Service [1..9]",
+					Value: 1,
+				},
+				cli.IntFlag{
+					Name:  "snap_interval,si",
+					Usage: "snapshot interval in minutes, 0 disables snaps",
+					Value: 0,
+				},
+			},
 		},
 		{
 			Name:    "delete",
