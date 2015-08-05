@@ -125,7 +125,8 @@ func (d *Driver) Snapshot(volumeID api.VolumeID, labels api.Labels) (api.SnapID,
 		return api.BadSnapID, err
 	}
 
-	snap := &api.VolumeSnap{ID: api.SnapID(snapID),
+	snap := &api.VolumeSnap{
+		ID:         api.SnapID(snapID),
 		VolumeID:   volumeID,
 		SnapLabels: labels,
 		Ctime:      time.Now(),
