@@ -50,6 +50,11 @@ func (v *volumeClient) Create(locator api.VolumeLocator,
 	return response.ID, nil
 }
 
+// Status diagnostic information
+func (v *volumeClient) Status() [][2]string {
+	return [][2]string{}
+}
+
 // Inspect specified volumes.
 // Errors ErrEnoEnt may be returned.
 func (v *volumeClient) Inspect(ids []api.VolumeID) ([]api.Volume, error) {
@@ -61,7 +66,7 @@ func (v *volumeClient) Inspect(ids []api.VolumeID) ([]api.Volume, error) {
 	req := v.c.Get().Resource(volumePath)
 
 	for _, v := range ids {
-		req.QueryOption(string(api.OptID), string(v))
+		req.QueryOption(string(api.OptVolumeID), string(v))
 	}
 	err := req.Do().Unmarshal(&vols)
 	if err != nil {
@@ -132,7 +137,7 @@ func (v *volumeClient) SnapInspect(ids []api.SnapID) ([]api.VolumeSnap, error) {
 	req := v.c.Get().Resource(snapPath)
 
 	for _, v := range ids {
-		req.QueryOption(string(api.OptID), string(v))
+		req.QueryOption(string(api.OptSnapID), string(v))
 	}
 	err := req.Do().Unmarshal(&snaps)
 	if err != nil {
@@ -177,7 +182,7 @@ func (v *volumeClient) Enumerate(locator api.VolumeLocator, labels api.Labels) (
 		req.QueryOption(string(api.OptName), locator.Name)
 	}
 	if len(locator.VolumeLabels) != 0 {
-		req.QueryOptionLabel(string(api.OptVolumeLabel), locator.VolumeLabels)
+		req.QueryOptionLabel(string(api.OptLabel), locator.VolumeLabels)
 	}
 	if len(labels) != 0 {
 		req.QueryOptionLabel(string(api.OptConfigLabel), labels)
@@ -196,7 +201,7 @@ func (v *volumeClient) SnapEnumerate(ids []api.VolumeID, snapLabels api.Labels) 
 
 	req := v.c.Get().Resource(snapPath)
 	for _, v := range ids {
-		req.QueryOption(string(api.OptID), string(v))
+		req.QueryOption(string(api.OptSnapID), string(v))
 	}
 	if len(snapLabels) != 0 {
 		req.QueryOptionLabel(string(api.OptConfigLabel), snapLabels)

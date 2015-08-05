@@ -73,6 +73,10 @@ type ProtoDriver interface {
 	// Errors ErrEnoEnt may be returned
 	Alerts(volumeID api.VolumeID) (api.VolumeAlerts, error)
 
+	// Status returns a set of key-value pairs which give low
+	// level diagnostic status about this driver.
+	Status() [][2]string
+
 	// Shutdown and cleanup.
 	Shutdown()
 }

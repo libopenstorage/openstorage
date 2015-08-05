@@ -154,6 +154,11 @@ func (d *nfsDriver) Create(locator api.VolumeLocator, opt *api.CreateOptions, sp
 	return api.VolumeID(volumeID), err
 }
 
+// Status diagnostic information
+func (d *nfsDriver) Status() [][2]string {
+	return [][2]string{}
+}
+
 func (d *nfsDriver) Inspect(volumeIDs []api.VolumeID) ([]api.Volume, error) {
 	l := len(volumeIDs)
 	if l == 0 {

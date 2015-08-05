@@ -24,6 +24,7 @@ type Context struct {
 	mountPath  string
 	tgtPath    string
 	devicePath string
+	Filesystem string
 }
 
 func NewContext(d volume.VolumeDriver) *Context {
@@ -31,6 +32,7 @@ func NewContext(d volume.VolumeDriver) *Context {
 		VolumeDriver: d,
 		volID:        api.BadVolumeID,
 		snapID:       api.BadSnapID,
+		Filesystem:   string(api.FsBtrfs),
 	}
 }
 
@@ -75,7 +77,7 @@ func create(t *testing.T, ctx *Context) {
 		&api.CreateOptions{FailIfExists: false},
 		&api.VolumeSpec{Size: 10240000,
 			HALevel: 1,
-			Format:  api.FsBtrfs,
+			Format:  api.Filesystem(ctx.Filesystem),
 		})
 
 	assert.NoError(t, err, "Failed in Create")
@@ -249,14 +251,14 @@ func snapEnumerate(t *testing.T, ctx *Context) {
 	fmt.Println("snapEnumerate")
 
 	snaps, err := ctx.SnapEnumerate(nil, nil)
-	assert.NoError(t, err, "Failed in Enumerate")
+	assert.NoError(t, err, "Failed in snapEnumerate")
 	assert.NotNil(t, snaps, "Nil snaps")
 	assert.Equal(t, 1, len(snaps), "Expect 1 snaps actual %v snaps", len(snaps))
 	assert.Equal(t, snaps[0].ID, ctx.snapID, "Expect snapID %v actual %v", ctx.snapID, snaps[0].ID)
 	labels := snaps[0].SnapLabels
 
 	snaps, err = ctx.SnapEnumerate([]api.VolumeID{ctx.volID}, nil)
-	assert.NoError(t, err, "Failed in Enumerate")
+	assert.NoError(t, err, "Failed in snapEnumerate")
 	assert.NotNil(t, snaps, "Nil snaps")
 	assert.Equal(t, len(snaps), 1, "Expect 1 snap actual %v snaps", len(snaps))
 	assert.Equal(t, snaps[0].ID, ctx.snapID, "Expect snapID %v actual %v", ctx.snapID, snaps[0].ID)
@@ -265,7 +267,7 @@ func snapEnumerate(t *testing.T, ctx *Context) {
 	assert.Equal(t, len(snaps), 0, "Expect 0 snap actual %v snaps", len(snaps))
 
 	snaps, err = ctx.SnapEnumerate(nil, labels)
-	assert.NoError(t, err, "Failed in Enumerate")
+	assert.NoError(t, err, "Failed in snapEnumerate")
 	assert.NotNil(t, snaps, "Nil snaps")
 	assert.Equal(t, len(snaps), 1, "Expect 1 snap actual %v snaps", len(snaps))
 	assert.Equal(t, snaps[0].ID, ctx.snapID, "Expect snapID %v actual %v", ctx.snapID, snaps[0].ID)

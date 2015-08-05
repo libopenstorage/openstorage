@@ -18,6 +18,7 @@ func TestAll(t *testing.T) {
 		t.Fatalf("Failed to initialize Volume Driver: %v", err)
 	}
 	ctx := test.NewContext(d)
+	ctx.Filesystem = "nfs"
 
 	test.RunShort(t, ctx)
 }

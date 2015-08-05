@@ -91,6 +91,10 @@ func (d *awsDriver) String() string {
 	return Name
 }
 
+// Status diagnostic information
+func (v *awsDriver) Status() [][2]string {
+	return [][2]string{}
+}
 func (d *awsDriver) Create(l api.VolumeLocator, opt *api.CreateOptions, spec *api.VolumeSpec) (api.VolumeID, error) {
 	availabilityZone := "us-west-1a"
 	sz := int64(spec.Size / (1024 * 1024 * 1024))

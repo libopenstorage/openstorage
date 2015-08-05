@@ -238,7 +238,6 @@ func (s *Store) SnapInspect(ids []api.SnapID) ([]api.VolumeSnap, error) {
 }
 
 // Enumerate snaps for specified volume
-// Count indicates the number of snaps populated.
 func (s *Store) SnapEnumerate(
 	volIDs []api.VolumeID,
 	snapLabels api.Labels) ([]api.VolumeSnap, error) {

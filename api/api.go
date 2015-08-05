@@ -10,9 +10,11 @@ const (
 	// OptName query parameter used to lookup volume by name
 	OptName = OptionKey("Name")
 	// OptID query parameter used to lookup volume by ID
-	OptID = OptionKey("ID")
+	OptVolumeID = OptionKey("VolumeID")
 	// OptVolumeLabel query parameter used to lookup volume by set of labels
-	OptVolumeLabel = OptionKey("VolumeLabel")
+	OptSnapID = OptionKey("SnapID")
+	// OptVolumeLabel query parameter used to lookup volume by set of labels
+	OptLabel = OptionKey("Label")
 	// OptConfig query parameter used to lookup volume by set of labels
 	OptConfigLabel = OptionKey("ConfigLabel")
 )
@@ -79,7 +81,7 @@ type SnapCreateRequest struct {
 // SnapCreateRespone response body to SnapCreateRequest
 type SnapCreateResponse struct {
 	// ID of newly created response
-	ID SnapID `json:"id"`
+	ID SnapID `json:"id,omitempty"`
 	VolumeResponse
 }
 

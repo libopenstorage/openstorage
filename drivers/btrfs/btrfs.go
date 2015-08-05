@@ -63,6 +63,11 @@ func (d *Driver) String() string {
 	return Name
 }
 
+// Status diagnostic information
+func (d *Driver) Status() [][2]string {
+	return d.btrfs.Status()
+}
+
 // Create a new subvolume. The volume spec is not taken into account.
 func (d *Driver) Create(locator api.VolumeLocator,
 	options *api.CreateOptions,
