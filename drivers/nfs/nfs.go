@@ -202,6 +202,12 @@ func (d *nfsDriver) Unmount(volumeID api.VolumeID, mountpath string) error {
 		return err
 	}
 
+	if v.Mountpath == "" {
+		err = errors.New("This volume is not mounted.")
+		log.Println(err)
+		return err
+	}
+
 	if mountpath != "" && v.Mountpath != mountpath {
 		err = errors.New("Specified mount path does not match the path at which this volume is mounted on.")
 		log.Println(err)

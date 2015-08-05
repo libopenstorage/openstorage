@@ -119,11 +119,11 @@ func (vd *volDriver) volumeState(w http.ResponseWriter, r *http.Request) {
 			resp.Attach = req.Attach
 		}
 		if req.Mount != api.ParamIgnore {
-			if req.MountPath == "" {
-				err = fmt.Errorf("Invalid mount path")
-				break
-			}
 			if req.Mount == api.ParamOn {
+				if req.MountPath == "" {
+					err = fmt.Errorf("Invalid mount path")
+					break
+				}
 				err = d.Mount(volumeID, req.MountPath)
 			} else {
 				err = d.Unmount(volumeID, req.MountPath)

@@ -128,11 +128,6 @@ func (v *VolDriver) volumeUnmount(c *cli.Context) {
 	volumeID := c.Args()[0]
 
 	path := c.String("path")
-	if path == "" {
-		missingParameter(c, fn, "path", "Target mount path")
-		return
-
-	}
 
 	err := v.volDriver.Unmount(api.VolumeID(volumeID), path)
 	if err != nil {
@@ -535,6 +530,12 @@ func FileVolumeCommands(name string) []cli.Command {
 			Aliases: []string{"u"},
 			Usage:   "Unmount specified volume",
 			Action:  v.volumeUnmount,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "path",
+					Usage: "destination path at which this volume must be mounted on",
+				},
+			},
 		},
 		{
 			Name:    "delete",
