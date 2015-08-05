@@ -7,7 +7,7 @@ openstorage is an implementation of the [Open Storage](https://github.com/libope
 
 # What you get from using Open Storage
 
-When you install openstorage on a Linux host, you will automatically get a stateful storage layer that integrates with your Linux container runtime.  Currently it supports Docker and will support any Linux container runtime that conforms to the [OCI](https://www.opencontainers.org/).
+When you install openstorage on a Linux host, you will automatically get a stateful storage layer that integrates with your Linux container runtime.  It starts an Open Storage Daemon - `OSD` that currently supports Docker and will support any Linux container runtime that conforms to the [OCI](https://www.opencontainers.org/).  This daemon integrates with Docker volumes and provisions storage to a container on behalf of any third party OSD driver.
 
 There are default drivers built-in for NFS, AWS and BTRFS.  By using openstorage, you can get container granular, stateful storage provisioning to Linux containers with the backends supported by openstorage.  We are working with the storage ecosystem to add more drivers for various storage providers.
 
