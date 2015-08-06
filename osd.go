@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"runtime"
 
 	"github.com/codegangsta/cli"
 
@@ -84,6 +85,14 @@ func start(c *cli.Context) {
 	select {}
 }
 
+func showVersion(c *cli.Context) {
+
+	fmt.Println("OSD Version:", version)
+	fmt.Println("Go Version:", runtime.Version())
+	fmt.Println("OS:", runtime.GOOS)
+	fmt.Println("Arch:", runtime.GOARCH)
+}
+
 func main() {
 	app := cli.NewApp()
 	app.Name = "osd"
@@ -122,6 +131,11 @@ func main() {
 			Aliases:     []string{"d"},
 			Usage:       "Manage drivers",
 			Subcommands: osdcli.DriverCommands(),
+		},
+		{
+			Name:   "version",
+			Usage:  "Display version",
+			Action: showVersion,
 		},
 	}
 
