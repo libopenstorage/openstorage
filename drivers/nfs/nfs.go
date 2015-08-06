@@ -31,17 +31,17 @@ type driver struct {
 }
 
 func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
-	server, ok := params["server"]
-	if !ok {
-		return nil, errors.New("No NFS server provided")
-	}
-
 	path, ok := params["path"]
 	if !ok {
 		return nil, errors.New("No NFS path provided")
 	}
 
-	log.Printf("NFS driver initializing with %s:%s ", server, path)
+	server, ok := params["server"]
+	if !ok {
+		log.Printf("No NFS server provided, will attempt to bind mount %s", path)
+	} else {
+		log.Printf("NFS driver initializing with %s:%s ", server, path)
+	}
 
 	inst := &driver{
 		DefaultEnumerator: volume.NewDefaultEnumerator(Name, kvdb.Instance()),
@@ -55,7 +55,11 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 
 	// Mount the nfs server locally on a unique path.
 	syscall.Unmount(nfsMountPath, 0)
-	err = syscall.Mount(":"+inst.nfsPath, nfsMountPath, "nfs", 0, "nolock,addr="+inst.nfsServer)
+	if server != "" {
+		err = syscall.Mount(":"+inst.nfsPath, nfsMountPath, "nfs", 0, "nolock,addr="+inst.nfsServer)
+	} else {
+		err = syscall.Mount(inst.nfsPath, nfsMountPath, "", syscall.MS_BIND, "")
+	}
 	if err != nil {
 		log.Printf("Unable to mount %s at %s.\n", inst.nfsServer, nfsMountPath)
 		return nil, err

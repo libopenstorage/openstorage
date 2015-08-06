@@ -1,10 +1,10 @@
 package client
 
 import (
+	"os"
 	"testing"
 	"time"
 
-	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/apiserver"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/drivers/btrfs"
@@ -12,9 +12,17 @@ import (
 	"github.com/libopenstorage/openstorage/volume"
 )
 
-func TestAll(t *testing.T) {
+var (
+	testPath = string("/tmp/openstorage_client_test")
+)
 
-	_, err := volume.New(btrfs.Name, volume.DriverParams{btrfs.RootParam: "/tmp/btrfs_test"})
+func TestAll(t *testing.T) {
+	err := os.MkdirAll(testPath, 0744)
+	if err != nil {
+		t.Fatalf("Failed to create test path: %v", err)
+	}
+
+	_, err = volume.New(btrfs.Name, volume.DriverParams{btrfs.RootParam: testPath})
 	if err != nil {
 		t.Fatalf("Failed to initialize Driver: %v", err)
 	}
@@ -26,6 +34,6 @@ func TestAll(t *testing.T) {
 	}
 	d := c.VolumeDriver()
 	ctx := test.NewContext(d)
-	ctx.Filesystem = string(api.FsBtrfs)
+	ctx.Filesystem = string("btrfs")
 	test.Run(t, ctx)
 }

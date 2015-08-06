@@ -1,15 +1,24 @@
 package nfs
 
 import (
+	"os"
 	"testing"
 
 	"github.com/libopenstorage/openstorage/drivers/test"
 	"github.com/libopenstorage/openstorage/volume"
 )
 
-func TestAll(t *testing.T) {
+var (
+	testPath = string("/tmp/openstorage_driver_test")
+)
 
-	_, err := volume.New(Name, volume.DriverParams{"uri": "localhost:/nfs"})
+func TestAll(t *testing.T) {
+	err := os.MkdirAll(testPath, 0744)
+	if err != nil {
+		t.Fatalf("Failed to create test path: %v", err)
+	}
+
+	_, err = volume.New(Name, volume.DriverParams{"path": testPath})
 	if err != nil {
 		t.Fatalf("Failed to initialize Driver: %v", err)
 	}

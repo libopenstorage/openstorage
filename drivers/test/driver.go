@@ -32,7 +32,7 @@ func NewContext(d volume.VolumeDriver) *Context {
 		VolumeDriver: d,
 		volID:        api.BadVolumeID,
 		snapID:       api.BadSnapID,
-		Filesystem:   string(api.FsBtrfs),
+		Filesystem:   string(""),
 	}
 }
 
