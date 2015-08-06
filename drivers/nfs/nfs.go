@@ -38,7 +38,7 @@ type nfsVolume struct {
 }
 
 // Implements the open storage volume interface.
-type nfsDriver struct {
+type driver struct {
 	*volume.DefaultBlockDriver
 	*volume.DefaultEnumerator
 	db        kvdb.Kvdb
@@ -59,7 +59,7 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 
 	log.Printf("NFS driver initializing with %s:%s ", server, path)
 
-	inst := &nfsDriver{
+	inst := &driver{
 		db:        kvdb.Instance(),
 		nfsServer: server,
 		nfsPath:   path}
@@ -81,14 +81,14 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 	return inst, nil
 }
 
-func (d *nfsDriver) get(volumeID string) (*nfsVolume, error) {
+func (d *driver) get(volumeID string) (*nfsVolume, error) {
 	v := &nfsVolume{}
 	key := NfsDBKey + "/" + volumeID
 	_, err := d.db.GetVal(key, v)
 	return v, err
 }
 
-func (d *nfsDriver) enumerate() ([]*nfsVolume, error) {
+func (d *driver) enumerate() ([]*nfsVolume, error) {
 	key := NfsDBKey
 	kvps, err := d.db.Enumerate(key)
 	if err != nil {
@@ -110,27 +110,27 @@ func (d *nfsDriver) enumerate() ([]*nfsVolume, error) {
 	return vs, err
 }
 
-func (d *nfsDriver) put(volumeID string, v *nfsVolume) error {
+func (d *driver) put(volumeID string, v *nfsVolume) error {
 	key := NfsDBKey + "/" + volumeID
 	_, err := d.db.Put(key, v, 0)
 	return err
 }
 
-func (d *nfsDriver) del(volumeID string) {
+func (d *driver) del(volumeID string) {
 	key := NfsDBKey + "/" + volumeID
 	d.db.Delete(key)
 }
 
-func (d *nfsDriver) String() string {
+func (d *driver) String() string {
 	return Name
 }
 
 // Status diagnostic information
-func (d *nfsDriver) Status() [][2]string {
+func (d *driver) Status() [][2]string {
 	return [][2]string{}
 }
 
-func (d *nfsDriver) Create(locator api.VolumeLocator, opt *api.CreateOptions, spec *api.VolumeSpec) (api.VolumeID, error) {
+func (d *driver) Create(locator api.VolumeLocator, opt *api.CreateOptions, spec *api.VolumeSpec) (api.VolumeID, error) {
 	// Validate options.
 	if spec.Format != "nfs" {
 		return "", errors.New("Unsupported filesystem format: " + string(spec.Format))
@@ -165,7 +165,7 @@ func (d *nfsDriver) Create(locator api.VolumeLocator, opt *api.CreateOptions, sp
 	return api.VolumeID(volumeID), err
 }
 
-func (d *nfsDriver) Delete(volumeID api.VolumeID) error {
+func (d *driver) Delete(volumeID api.VolumeID) error {
 	v, err := d.get(string(volumeID))
 	if err != nil {
 		log.Println(err)
@@ -180,7 +180,7 @@ func (d *nfsDriver) Delete(volumeID api.VolumeID) error {
 	return nil
 }
 
-func (d *nfsDriver) Mount(volumeID api.VolumeID, mountpath string) error {
+func (d *driver) Mount(volumeID api.VolumeID, mountpath string) error {
 	v, err := d.get(string(volumeID))
 	if err != nil {
 		log.Println(err)
@@ -201,7 +201,7 @@ func (d *nfsDriver) Mount(volumeID api.VolumeID, mountpath string) error {
 	return err
 }
 
-func (d *nfsDriver) Unmount(volumeID api.VolumeID, mountpath string) error {
+func (d *driver) Unmount(volumeID api.VolumeID, mountpath string) error {
 	v, err := d.get(string(volumeID))
 	if err != nil {
 		log.Println(err)
@@ -233,7 +233,7 @@ func (d *nfsDriver) Unmount(volumeID api.VolumeID, mountpath string) error {
 	return err
 }
 
-func (d *nfsDriver) Inspect(volumeIDs []api.VolumeID) ([]api.Volume, error) {
+func (d *driver) Inspect(volumeIDs []api.VolumeID) ([]api.Volume, error) {
 	l := len(volumeIDs)
 	if l == 0 {
 		return nil, errors.New("No volume IDs specified.")
@@ -253,31 +253,31 @@ func (d *nfsDriver) Inspect(volumeIDs []api.VolumeID) ([]api.Volume, error) {
 	return volumes, nil
 }
 
-func (d *nfsDriver) Snapshot(volumeID api.VolumeID, labels api.Labels) (api.SnapID, error) {
+func (d *driver) Snapshot(volumeID api.VolumeID, labels api.Labels) (api.SnapID, error) {
 	return "", volume.ErrNotSupported
 }
 
-func (d *nfsDriver) SnapDelete(snapID api.SnapID) error {
+func (d *driver) SnapDelete(snapID api.SnapID) error {
 	return volume.ErrNotSupported
 }
 
-func (d *nfsDriver) SnapInspect(snapID []api.SnapID) ([]api.VolumeSnap, error) {
+func (d *driver) SnapInspect(snapID []api.SnapID) ([]api.VolumeSnap, error) {
 	return []api.VolumeSnap{}, volume.ErrNotSupported
 }
 
-func (d *nfsDriver) Stats(volumeID api.VolumeID) (api.VolumeStats, error) {
+func (d *driver) Stats(volumeID api.VolumeID) (api.VolumeStats, error) {
 	return api.VolumeStats{}, volume.ErrNotSupported
 }
 
-func (d *nfsDriver) Alerts(volumeID api.VolumeID) (api.VolumeAlerts, error) {
+func (d *driver) Alerts(volumeID api.VolumeID) (api.VolumeAlerts, error) {
 	return api.VolumeAlerts{}, volume.ErrNotSupported
 }
 
-func (d *nfsDriver) SnapEnumerate(volIds []api.VolumeID, labels api.Labels) ([]api.VolumeSnap, error) {
+func (d *driver) SnapEnumerate(volIds []api.VolumeID, labels api.Labels) ([]api.VolumeSnap, error) {
 	return nil, volume.ErrNotSupported
 }
 
-func (d *nfsDriver) Shutdown() {
+func (d *driver) Shutdown() {
 	log.Printf("%s Shutting down", Name)
 	syscall.Unmount(nfsMountPath, 0)
 }

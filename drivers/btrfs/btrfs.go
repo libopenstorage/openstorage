@@ -28,7 +28,7 @@ var (
 	koStrayDelete chaos.ID
 )
 
-type btrfsDriver struct {
+type driver struct {
 	*volume.DefaultBlockDriver
 	*volume.DefaultEnumerator
 	btrfs graph.Driver
@@ -56,20 +56,20 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 		return nil, err
 	}
 	s := volume.NewDefaultEnumerator(Name, kvdb.Instance())
-	return &btrfsDriver{btrfs: d, root: root, DefaultEnumerator: s}, nil
+	return &driver{btrfs: d, root: root, DefaultEnumerator: s}, nil
 }
 
-func (d *btrfsDriver) String() string {
+func (d *driver) String() string {
 	return Name
 }
 
 // Status diagnostic information
-func (d *btrfsDriver) Status() [][2]string {
+func (d *driver) Status() [][2]string {
 	return d.btrfs.Status()
 }
 
 // Create a new subvolume. The volume spec is not taken into account.
-func (d *btrfsDriver) Create(locator api.VolumeLocator,
+func (d *driver) Create(locator api.VolumeLocator,
 	options *api.CreateOptions,
 	spec *api.VolumeSpec) (api.VolumeID, error) {
 
@@ -109,7 +109,7 @@ func (d *btrfsDriver) Create(locator api.VolumeLocator,
 }
 
 // Delete subvolume
-func (d *btrfsDriver) Delete(volumeID api.VolumeID) error {
+func (d *driver) Delete(volumeID api.VolumeID) error {
 	err := d.DeleteVol(volumeID)
 	chaos.Now(koStrayDelete)
 	if err == nil {
@@ -119,7 +119,7 @@ func (d *btrfsDriver) Delete(volumeID api.VolumeID) error {
 }
 
 // Mount bind mount btrfs subvolume
-func (d *btrfsDriver) Mount(volumeID api.VolumeID, mountpath string) error {
+func (d *driver) Mount(volumeID api.VolumeID, mountpath string) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
 		return err
@@ -137,7 +137,7 @@ func (d *btrfsDriver) Mount(volumeID api.VolumeID, mountpath string) error {
 }
 
 // Unmount btrfs subvolume
-func (d *btrfsDriver) Unmount(volumeID api.VolumeID, mountpath string) error {
+func (d *driver) Unmount(volumeID api.VolumeID, mountpath string) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
 		return err
@@ -155,7 +155,7 @@ func (d *btrfsDriver) Unmount(volumeID api.VolumeID, mountpath string) error {
 }
 
 // Snapshot create new subvolume from volume
-func (d *btrfsDriver) Snapshot(volumeID api.VolumeID, labels api.Labels) (api.SnapID, error) {
+func (d *driver) Snapshot(volumeID api.VolumeID, labels api.Labels) (api.SnapID, error) {
 	snapID, err := uuid()
 	if err != nil {
 		return api.BadSnapID, err
@@ -180,7 +180,7 @@ func (d *btrfsDriver) Snapshot(volumeID api.VolumeID, labels api.Labels) (api.Sn
 }
 
 // SnapDelete Delete subvolume
-func (d *btrfsDriver) SnapDelete(snapID api.SnapID) error {
+func (d *driver) SnapDelete(snapID api.SnapID) error {
 	err := d.DeleteSnap(snapID)
 	chaos.Now(koStrayDelete)
 	if err == nil {
@@ -190,17 +190,17 @@ func (d *btrfsDriver) SnapDelete(snapID api.SnapID) error {
 }
 
 // Stats for specified volume.
-func (d *btrfsDriver) Stats(volumeID api.VolumeID) (api.VolumeStats, error) {
+func (d *driver) Stats(volumeID api.VolumeID) (api.VolumeStats, error) {
 	return api.VolumeStats{}, nil
 }
 
 // Alerts on this volume.
-func (d *btrfsDriver) Alerts(volumeID api.VolumeID) (api.VolumeAlerts, error) {
+func (d *driver) Alerts(volumeID api.VolumeID) (api.VolumeAlerts, error) {
 	return api.VolumeAlerts{}, nil
 }
 
 // Shutdown and cleanup.
-func (d *btrfsDriver) Shutdown() {
+func (d *driver) Shutdown() {
 }
 
 func init() {
