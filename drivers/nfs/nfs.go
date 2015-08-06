@@ -39,7 +39,8 @@ type nfsVolume struct {
 
 // Implements the open storage volume interface.
 type nfsDriver struct {
-	volume.DefaultBlockDriver
+	*volume.DefaultBlockDriver
+	*volume.DefaultEnumerator
 	db        kvdb.Kvdb
 	nfsServer string
 	nfsPath   string
@@ -122,6 +123,11 @@ func (d *nfsDriver) del(volumeID string) {
 
 func (d *nfsDriver) String() string {
 	return Name
+}
+
+// Status diagnostic information
+func (d *nfsDriver) Status() [][2]string {
+	return [][2]string{}
 }
 
 func (d *nfsDriver) Create(locator api.VolumeLocator, opt *api.CreateOptions, spec *api.VolumeSpec) (api.VolumeID, error) {
@@ -227,11 +233,6 @@ func (d *nfsDriver) Unmount(volumeID api.VolumeID, mountpath string) error {
 	return err
 }
 
-// Status diagnostic information
-func (d *nfsDriver) Status() [][2]string {
-	return [][2]string{}
-}
-
 func (d *nfsDriver) Inspect(volumeIDs []api.VolumeID) ([]api.Volume, error) {
 	l := len(volumeIDs)
 	if l == 0 {
@@ -270,30 +271,6 @@ func (d *nfsDriver) Stats(volumeID api.VolumeID) (api.VolumeStats, error) {
 
 func (d *nfsDriver) Alerts(volumeID api.VolumeID) (api.VolumeAlerts, error) {
 	return api.VolumeAlerts{}, volume.ErrNotSupported
-}
-
-func (d *nfsDriver) Enumerate(locator api.VolumeLocator, labels api.Labels) ([]api.Volume, error) {
-	vs, err := d.enumerate()
-	if err != nil {
-		log.Println(err)
-		return nil, err
-	}
-
-	volumes := make([]api.Volume, 0)
-	for _, v := range vs {
-		if locator.Name != "" {
-			if v.Locator.Name != locator.Name {
-				continue
-			}
-		}
-
-		vol := api.Volume{
-			ID:   v.Id,
-			Spec: &v.Spec}
-		volumes = append(volumes, vol)
-	}
-
-	return volumes, nil
 }
 
 func (d *nfsDriver) SnapEnumerate(volIds []api.VolumeID, labels api.Labels) ([]api.VolumeSnap, error) {
