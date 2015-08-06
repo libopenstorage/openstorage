@@ -140,6 +140,10 @@ var (
 
 That's pretty much it.  At this point, when you start the OSD, your driver will be loaded.
 
+## Testing
+
+`go test -tags daemon -v ./...`
+
 ## Updating to latest Source
 
 To update the source folder and all dependencies:
