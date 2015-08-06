@@ -86,19 +86,6 @@ type CreateOptions struct {
 // Filesystem supported filesystems
 type Filesystem string
 
-const (
-	// FsXfs the XFS filesystem
-	FsXfs = Filesystem("xfs")
-	// FsExt4 the EXT4 filesystem
-	FsExt4 = Filesystem("ext4")
-	// FsZfs the ZFS filesystem
-	FsZfs = Filesystem("zfs")
-	// FsBtrfs the Btrfs filesystem
-	FsBtrfs = Filesystem("btrfs")
-	// FsNone no file system, applicable for raw block devices.
-	FsNone = Filesystem("none")
-)
-
 // VolumeSpec has the properties needed to create a volume.
 type VolumeSpec struct {
 	// Ephemeral storage

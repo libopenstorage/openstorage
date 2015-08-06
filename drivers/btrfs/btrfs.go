@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	log "github.com/Sirupsen/logrus"
 	graph "github.com/docker/docker/daemon/graphdriver"
 	"github.com/docker/docker/daemon/graphdriver/btrfs"
 
@@ -73,9 +74,9 @@ func (d *driver) Create(locator api.VolumeLocator,
 	options *api.CreateOptions,
 	spec *api.VolumeSpec) (api.VolumeID, error) {
 
-	if spec.Format != api.FsBtrfs && spec.Format != "" {
+	if spec.Format != "btrfs" && spec.Format != "" {
 		return api.BadVolumeID, fmt.Errorf("Filesystem format (%v) must be %v",
-			spec.Format, api.FsBtrfs)
+			spec.Format, "btrfs")
 	}
 
 	volumeID, err := uuid()
@@ -89,7 +90,7 @@ func (d *driver) Create(locator api.VolumeLocator,
 		Ctime:    time.Now(),
 		Spec:     spec,
 		LastScan: time.Now(),
-		Format:   api.FsBtrfs,
+		Format:   "btrfs",
 		State:    api.VolumeAvailable,
 	}
 	err = d.CreateVol(v)
@@ -111,6 +112,11 @@ func (d *driver) Create(locator api.VolumeLocator,
 // Delete subvolume
 func (d *driver) Delete(volumeID api.VolumeID) error {
 	err := d.DeleteVol(volumeID)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
 	chaos.Now(koStrayDelete)
 	if err == nil {
 		err = d.btrfs.Remove(string(volumeID))
@@ -122,6 +128,7 @@ func (d *driver) Delete(volumeID api.VolumeID) error {
 func (d *driver) Mount(volumeID api.VolumeID, mountpath string) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 	err = syscall.Mount(v.DevicePath,
