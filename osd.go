@@ -60,7 +60,6 @@ func start(c *cli.Context) {
 
 	// Start the volume drivers.
 	for d, v := range cfg.Osd.Drivers {
-
 		fmt.Println("Starting volume driver: ", d)
 		_, err := volume.New(d, v)
 		if err != nil {

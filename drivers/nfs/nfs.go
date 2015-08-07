@@ -4,12 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"strings"
 	"syscall"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+
+	"code.google.com/p/go-uuid/uuid"
 
 	"github.com/libopenstorage/kvdb"
 	"github.com/libopenstorage/openstorage/api"
@@ -92,16 +93,11 @@ func (d *driver) Create(locator api.VolumeLocator, opt *api.CreateOptions, spec 
 		log.Println("NFS driver will ignore the blocksize option.")
 	}
 
-	out, err := exec.Command("uuidgen").Output()
-	if err != nil {
-		log.Println(err)
-		return "", err
-	}
-	volumeID := string(out)
+	volumeID := uuid.New()
 	volumeID = strings.TrimSuffix(volumeID, "\n")
 
 	// Create a directory on the NFS server with this UUID.
-	err = os.MkdirAll(nfsMountPath+volumeID, 0744)
+	err := os.MkdirAll(nfsMountPath+volumeID, 0744)
 	if err != nil {
 		log.Println(err)
 		return api.BadVolumeID, err

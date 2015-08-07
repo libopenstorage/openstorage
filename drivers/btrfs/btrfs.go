@@ -2,15 +2,15 @@ package btrfs
 
 import (
 	"fmt"
-	"os/exec"
 	"path"
-	"strings"
 	"syscall"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
 	graph "github.com/docker/docker/daemon/graphdriver"
 	"github.com/docker/docker/daemon/graphdriver/btrfs"
+
+	"code.google.com/p/go-uuid/uuid"
 
 	"github.com/libopenstorage/kvdb"
 	"github.com/libopenstorage/openstorage/api"
@@ -34,16 +34,6 @@ type driver struct {
 	*volume.DefaultEnumerator
 	btrfs graph.Driver
 	root  string
-}
-
-func uuid() (string, error) {
-	out, err := exec.Command("uuidgen").Output()
-	if err != nil {
-		return "", err
-	}
-	id := string(out)
-	id = strings.TrimSuffix(id, "\n")
-	return id, nil
 }
 
 func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
@@ -83,10 +73,7 @@ func (d *driver) Create(locator api.VolumeLocator,
 			spec.Format, "btrfs")
 	}
 
-	volumeID, err := uuid()
-	if err != nil {
-		return api.BadVolumeID, err
-	}
+	volumeID := uuid.New()
 
 	v := &api.Volume{
 		ID:       api.VolumeID(volumeID),
@@ -97,7 +84,7 @@ func (d *driver) Create(locator api.VolumeLocator,
 		Format:   "btrfs",
 		State:    api.VolumeAvailable,
 	}
-	err = d.CreateVol(v)
+	err := d.CreateVol(v)
 	if err != nil {
 		return api.BadVolumeID, err
 	}
@@ -167,10 +154,7 @@ func (d *driver) Unmount(volumeID api.VolumeID, mountpath string) error {
 
 // Snapshot create new subvolume from volume
 func (d *driver) Snapshot(volumeID api.VolumeID, labels api.Labels) (api.SnapID, error) {
-	snapID, err := uuid()
-	if err != nil {
-		return api.BadSnapID, err
-	}
+	snapID := uuid.New()
 
 	snap := &api.VolumeSnap{
 		ID:         api.SnapID(snapID),
@@ -178,7 +162,7 @@ func (d *driver) Snapshot(volumeID api.VolumeID, labels api.Labels) (api.SnapID,
 		SnapLabels: labels,
 		Ctime:      time.Now(),
 	}
-	err = d.CreateSnap(snap)
+	err := d.CreateSnap(snap)
 	if err != nil {
 		return api.BadSnapID, err
 	}
