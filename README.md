@@ -156,7 +156,9 @@ $GOPATH/src/github.com/libopenstorage/openstorage $ go get -u all
 
 OSD can run inside of Docker:
 
-`make docker`
+```
+make docker
+```
 
 This builds a Docker image called `osd`.  You can then run the image as
 
