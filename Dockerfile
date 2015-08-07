@@ -1,4 +1,4 @@
 FROM golang:latest
-ADD osd /
-CMD ["/osd"]
+ADD osd /bin/osd
+CMD ["/bin/osd"]
 
