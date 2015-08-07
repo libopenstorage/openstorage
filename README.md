@@ -87,7 +87,9 @@ The OSD daemon loads a YAML configuration file that tells the daemon what driver
 osd:
   drivers:
       nfs:
-        uri: "localhost:/nfs"
+        server: "172.31.1.20"
+        path: "/nfs"
+      btrfs:
       aws:
         aws_access_key_id: your_aws_access_key_id
         aws_secret_access_key: your_aws_secret_access_key
