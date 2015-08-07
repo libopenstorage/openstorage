@@ -20,6 +20,11 @@ func (v *volumeClient) String() string {
 	return "VolumeDriver"
 }
 
+func (v *volumeClient) Type() volume.DriverType {
+	// Block drivers implement the superset.
+	return volume.Block
+}
+
 const (
 	volumePath = "/volumes"
 	snapPath   = "/snapshot"

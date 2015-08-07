@@ -73,6 +73,10 @@ func (d *driver) String() string {
 	return Name
 }
 
+func (d *driver) Type() volume.DriverType {
+	return volume.File
+}
+
 // Status diagnostic information
 func (d *driver) Status() [][2]string {
 	return [][2]string{}

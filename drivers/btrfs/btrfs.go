@@ -69,6 +69,10 @@ func (d *driver) Status() [][2]string {
 	return d.btrfs.Status()
 }
 
+func (d *driver) Type() volume.DriverType {
+	return volume.File
+}
+
 // Create a new subvolume. The volume spec is not taken into account.
 func (d *driver) Create(locator api.VolumeLocator,
 	options *api.CreateOptions,

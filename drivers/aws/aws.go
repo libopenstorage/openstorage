@@ -91,6 +91,10 @@ func (d *awsDriver) String() string {
 	return Name
 }
 
+func (d *awsDriver) Type() volume.DriverType {
+	return volume.File
+}
+
 // Status diagnostic information
 func (v *awsDriver) Status() [][2]string {
 	return [][2]string{}

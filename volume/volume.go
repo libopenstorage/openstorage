@@ -44,6 +44,9 @@ type ProtoDriver interface {
 	// String description of this driver.
 	String() string
 
+	// Type of this driver
+	Type() DriverType
+
 	// Create a new Vol for the specific volume spec.
 	// It returns a system generated VolumeID that uniquely identifies the volume
 	// If CreateOptions.FailIfExists is set and a volume matching the locator
