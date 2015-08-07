@@ -1,3 +1,5 @@
+// This file is a Docker daemon plugin.  It is specific to the Docker runtime and
+// facilitates the provisioning of volumes via the Docker volumes plugin specification.
 package apiserver
 
 import (
@@ -107,7 +109,7 @@ func (d *driver) handshake(w http.ResponseWriter, r *http.Request) {
 }
 
 func (d *driver) status(w http.ResponseWriter, r *http.Request) {
-	io.WriteString(w, fmt.Sprintln("pwx plugin", d.version))
+	io.WriteString(w, fmt.Sprintln("osd plugin", d.version))
 }
 
 func (d *driver) create(w http.ResponseWriter, r *http.Request) {
@@ -117,6 +119,8 @@ func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
+
+	log.Info("Plugin instructed to create volume ", request.Name)
 
 	// It is an error if the volume doesn't already exist.
 	_, err = d.volFromName(request.Name)
@@ -136,6 +140,8 @@ func (d *driver) remove(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
+
+	log.Info("Plugin instructed to remove volume ", request.Name)
 
 	// It is an error if the volume doesn't exist.
 	_, err = d.volFromName(request.Name)
@@ -164,6 +170,8 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(&volumePathResponse{Err: err})
 		return
 	}
+
+	log.Info("Plugin instructed to mount volume ", request.Name)
 
 	volInfo, err := d.volFromName(request.Name)
 	if err != nil {
@@ -215,6 +223,8 @@ func (d *driver) path(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Info("Plugin requested to resolve the path for volume ", request.Name)
+
 	response.Mountpoint = volInfo.vol.AttachPath
 	d.logReq(method, request.Name).Debugf("response %v", response.Mountpoint)
 	json.NewEncoder(w).Encode(&response)
@@ -234,6 +244,8 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
+
+	log.Info("Plugin instructed to unmount volume ", request.Name)
 
 	volInfo, err := d.volFromName(request.Name)
 	if err != nil {

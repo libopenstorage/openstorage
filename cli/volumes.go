@@ -105,7 +105,6 @@ func (v *VolDriver) volumeMount(c *cli.Context) {
 	if path == "" {
 		missingParameter(c, fn, "path", "Target mount path")
 		return
-
 	}
 
 	err := v.volDriver.Mount(api.VolumeID(volumeID), path)
