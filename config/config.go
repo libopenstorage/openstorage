@@ -38,7 +38,6 @@ func Parse(file string) (*Config, error) {
 	if err != nil {
 		fmt.Println("Unable to parse OSD configuration: ", err)
 		return nil, fmt.Errorf("Unable to parse OSD configuration: %s", err.Error())
-		return nil, err
 	}
 	return &cfg, nil
 }
