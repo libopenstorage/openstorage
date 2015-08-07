@@ -152,6 +152,21 @@ To update the source folder and all dependencies:
 $GOPATH/src/github.com/libopenstorage/openstorage $ go get -u all
 ```
 
+## Building a Docker image
+
+OSD can run inside of Docker:
+
+```
+make docker
+```
+
+This builds a Docker image called `osd`.  You can then run the image as
+
+```
+docker run osd /bin/osd version
+docker run -v $PWD:/etc osd /bin/osd -d -f /etc/config.yaml
+```
+
 #### Using openstorage with systemd
 
 ```service
