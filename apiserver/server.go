@@ -45,12 +45,12 @@ func (rest *restBase) sendError(request string, id string, w http.ResponseWriter
 }
 
 func (rest *restBase) notFound(w http.ResponseWriter, r *http.Request) {
-	log.Warnf("[%s] Not found: %+v", rest.name, r.URL)
+	log.Warnf("[%s] Not found: %+v ", rest.name, r.URL)
 	http.NotFound(w, r)
 }
 
 func (rest *restBase) volNotFound(request string, id string, e error, w http.ResponseWriter) error {
-	err := fmt.Errorf("Failed to locate volume:" + e.Error())
+	err := fmt.Errorf("Failed to locate volume: " + e.Error())
 	rest.logReq(request, id).Warn(http.StatusNotFound, " ", err.Error())
 	return err
 }
@@ -67,7 +67,7 @@ func startServer(name string, sockBase string, rest restServer) error {
 	for _, v := range routes {
 		router.Methods(v.verb).Path(v.path).HandlerFunc(v.fn)
 	}
-	socket := path.Join(sockBase, name)
+	socket := path.Join(sockBase, name+".sock")
 	os.Remove(socket)
 	os.MkdirAll(path.Dir(socket), 0755)
 

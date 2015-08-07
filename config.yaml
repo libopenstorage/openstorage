@@ -1,5 +1,6 @@
 ---
 osd:
+  pluginapibase: "/usr/share/docker/plugins/"
   drivers:
       nfs:
         server: "127.0.0.1"

@@ -86,7 +86,6 @@ func start(c *cli.Context) {
 }
 
 func showVersion(c *cli.Context) {
-
 	fmt.Println("OSD Version:", version)
 	fmt.Println("Go Version:", runtime.Version())
 	fmt.Println("OS:", runtime.GOOS)
