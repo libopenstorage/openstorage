@@ -81,15 +81,10 @@ GLOBAL OPTIONS:
 
 ## OSD config file
 
-The OSD daemon loads a YAML configuration file that specifies the following sections:
-
-1. Provides the base directories for the daemon to install a UNIX socket file in.  The `PluginAPIBase` is for the daemon to accept REST commands from the container orchestration runtime, such as the Docker daemon.  The `driverAPIBase` is for the daemon to accept REST commands to configure the storage volumes.
-2. Tells the daemon what drivers to load and the driver specific attributes.  Here is an example of config.yaml:
+The OSD daemon loads a YAML configuration file that tells the daemon what drivers to load and the driver specific attributes.  Here is an example of config.yaml:
 
 ```
 osd:
-  pluginapibase: "/usr/share/docker/plugins/"
-  driverapibase: "/var/lib/osd/driver/"
   drivers:
       nfs:
         server: "171.30.0.20"
