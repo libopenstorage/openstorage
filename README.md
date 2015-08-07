@@ -168,7 +168,7 @@ This builds a Docker image called `osd`.  You can then run the image as
 
 ```
 docker run osd /bin/osd version
-docker run --privileged -v $PWD:/etc osd /bin/osd -d -f /etc/config.yaml
+docker run --privileged -v $PWD:/etc -v /usr/share/docker/plugins:/usr/share/docker/plugins -v /var/lib/osd/driver:/var/lib/osd/driver -v /mnt:/mnt osd /bin/osd -d -f /etc/config.yaml
 ```
 
 #### Using openstorage with systemd
