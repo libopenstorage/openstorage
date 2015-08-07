@@ -242,12 +242,18 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = v.Detach(volInfo.vol.ID)
-	if err != nil {
-		d.logReq(request.Name, method).Warnf("%s", err.Error())
-		json.NewEncoder(w).Encode(&volumeResponse{Err: err})
-		return
+	if v.Type() == volume.Block {
+		err = v.Detach(volInfo.vol.ID)
+		if err != nil {
+			log.Warnf("Cannot detach volume %+v, %+v", volInfo.vol.ID, err)
+			d.logReq(request.Name, method).Warnf("%s", err.Error())
+			json.NewEncoder(w).Encode(&volumeResponse{Err: err})
+			return
+		}
 	}
+
+	// XXX TODO unmount
+	// log.Infof("Volume %+v mounted at %+v", volInfo, response.Mountpoint)
 
 	d.emptyResponse(w)
 }
