@@ -87,11 +87,15 @@ The OSD daemon loads a YAML configuration file that tells the daemon what driver
 osd:
   drivers:
       nfs:
-        uri: "localhost:/nfs"
+        server: "171.30.0.20"
+        path: "/nfs"
+      btrfs:
       aws:
         aws_access_key_id: your_aws_access_key_id
         aws_secret_access_key: your_aws_secret_access_key
 ```
+
+The above example initializes the `OSD` with three drivers: NFS, BTRFS and AWS.  Each have their own configuration sections.
 
 ## Adding your driver
 
@@ -100,7 +104,7 @@ Adding a driver is fairly straightforward:
 1. Add your driver decleration in `drivers.go`
 
 
-2. Add your driver `mydriver` implementation in the `drivers/mydriver` directory.  The driver must implement the `VolumeDriver` interface specified in `volumes/volumes.go`.  This interface is an implementation of the specification available [here] (http://api.openstorage.org/).
+2. Add your driver `mydriver` implementation in the `drivers/mydriver` directory.  The driver must implement the `VolumeDriver` interface specified in [`volumes/volume.go`](https://github.com/libopenstorage/openstorage/blob/master/volume/volume.go).  This interface is an implementation of the specification available [here] (http://api.openstorage.org/).
 
 3. You're driver must be a `File Volume` driver or a `Block Volume` driver.  A `File Volume` driver will not implement a few low level primatives, such as `Format`, `Attach` and `Detach`.
 
@@ -164,7 +168,7 @@ This builds a Docker image called `osd`.  You can then run the image as
 
 ```
 docker run osd /bin/osd version
-docker run -v $PWD:/etc osd /bin/osd -d -f /etc/config.yaml
+docker run --privileged -v $PWD:/etc osd /bin/osd -d -f /etc/config.yaml
 ```
 
 #### Using openstorage with systemd
