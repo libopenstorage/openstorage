@@ -215,5 +215,5 @@ func (d *driver) Shutdown() {
 }
 
 func init() {
-	volume.Register(Name, volume.File, Init)
+	volume.Register(Name, Init)
 }

@@ -283,5 +283,5 @@ func (d *awsDriver) Shutdown() {
 
 func init() {
 	// Register ourselves as an openstorage volume driver.
-	volume.Register(Name, volume.Block, Init)
+	volume.Register(Name, Init)
 }

@@ -61,7 +61,7 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 		err = syscall.Mount(inst.nfsPath, nfsMountPath, "", syscall.MS_BIND, "")
 	}
 	if err != nil {
-		log.Printf("Unable to mount %s:%s at %s", inst.nfsServer, inst.nfsPath, nfsMountPath)
+		log.Printf("Unable to mount %s:%s at %s (%+v)", inst.nfsServer, inst.nfsPath, nfsMountPath, err)
 		return nil, err
 	}
 
@@ -207,5 +207,5 @@ func (d *driver) Shutdown() {
 
 func init() {
 	// Register ourselves as an openstorage volume driver.
-	volume.Register(Name, volume.File, Init)
+	volume.Register(Name, Init)
 }

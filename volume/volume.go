@@ -161,7 +161,7 @@ func New(name string, params DriverParams) (VolumeDriver, error) {
 	return nil, ErrNotSupported
 }
 
-func Register(name string, driverType DriverType, initFunc InitFunc) error {
+func Register(name string, initFunc InitFunc) error {
 	mutex.Lock()
 	defer mutex.Unlock()
 	if _, exists := drivers[name]; exists {
