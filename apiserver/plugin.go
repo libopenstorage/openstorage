@@ -193,7 +193,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Infof("Volume %+v mounted at %+v", volInfo, response.Mountpoint)
+	log.Infof("Volume %+v mounted at %+v", volInfo.vol.ID, response.Mountpoint)
 
 	d.logReq(method, request.Name).Debugf("response %v", response.Mountpoint)
 	json.NewEncoder(w).Encode(&response)
