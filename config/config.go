@@ -10,8 +10,7 @@ import (
 )
 
 type osd struct {
-	PluginAPIBase string
-	Drivers       map[string]volume.DriverParams
+	Drivers map[string]volume.DriverParams
 }
 
 type Config struct {
@@ -19,8 +18,8 @@ type Config struct {
 }
 
 const (
-	DriverAPIBase = "/var/lib/osd/driver/"
 	PluginAPIBase = "/usr/share/docker/plugins/"
+	DriverAPIBase = "/var/lib/osd/driver/"
 	Version       = "v1"
 )
 

@@ -1,6 +1,5 @@
 ---
 osd:
-  pluginapibase: "/usr/share/docker/plugins/"
   drivers:
       nfs:
         server: "172.31.1.20"
