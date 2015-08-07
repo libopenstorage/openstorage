@@ -9,8 +9,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	graph "github.com/docker/docker/daemon/graphdriver"
 	"github.com/docker/docker/daemon/graphdriver/btrfs"
-
-	"code.google.com/p/go-uuid/uuid"
+	"github.com/pborman/uuid"
 
 	"github.com/libopenstorage/kvdb"
 	"github.com/libopenstorage/openstorage/api"

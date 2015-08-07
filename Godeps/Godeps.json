@@ -6,11 +6,6 @@
 	],
 	"Deps": [
 		{
-			"ImportPath": "code.google.com/p/go-uuid/uuid",
-			"Comment": "null-15",
-			"Rev": "35bc42037350f0078e3c974c6ea690f1926603ab"
-		},
-		{
 			"ImportPath": "github.com/Sirupsen/logrus",
 			"Comment": "v0.8.2-8-ge3eccfa",
 			"Rev": "e3eccfaeb58b95c9ce22aea6867562f07a0d68c7"
@@ -121,6 +116,10 @@
 		{
 			"ImportPath": "github.com/libopenstorage/kvdb",
 			"Rev": "adecc7b55fa2f33de0a3b0f21e0e3adfbf70512f"
+		},
+		{
+			"ImportPath": "github.com/pborman/uuid",
+			"Rev": "ca53cad383cad2479bbba7f7a1a05797ec1386e4"
 		},
 		{
 			"ImportPath": "github.com/stretchr/testify/assert",

@@ -9,8 +9,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-
-	"code.google.com/p/go-uuid/uuid"
+	"github.com/pborman/uuid"
 
 	"github.com/libopenstorage/kvdb"
 	"github.com/libopenstorage/openstorage/api"
