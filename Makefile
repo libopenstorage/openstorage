@@ -13,7 +13,10 @@ tags:
 
 openstorage:
 	@echo "Building openstorage..."
-	@go build $(BUILD_OPTIONS) -tags daemon  -o osd 
+	@go build $(BUILD_OPTIONS) -tags daemon  -o build/osd 
+
+docker:
+	@docker build -t osd -f Dockerfile .
 
 test:
 	@go test ./...
