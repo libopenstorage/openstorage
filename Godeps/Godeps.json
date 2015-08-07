@@ -6,6 +6,11 @@
 	],
 	"Deps": [
 		{
+			"ImportPath": "code.google.com/p/go-uuid/uuid",
+			"Comment": "null-15",
+			"Rev": "35bc42037350f0078e3c974c6ea690f1926603ab"
+		},
+		{
 			"ImportPath": "github.com/Sirupsen/logrus",
 			"Comment": "v0.8.2-8-ge3eccfa",
 			"Rev": "e3eccfaeb58b95c9ce22aea6867562f07a0d68c7"
@@ -56,6 +61,56 @@
 			"Rev": "942282e931e8286aa802a30b01fa7e16befb50f3"
 		},
 		{
+			"ImportPath": "github.com/coreos/go-etcd/etcd",
+			"Comment": "v2.0.0-18-gc904d70",
+			"Rev": "c904d7032a70da6551c43929f199244f6a45f4c1"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/daemon/graphdriver",
+			"Comment": "v1.4.1-4308-g77396bd",
+			"Rev": "77396bd66acc141f1d5a1743cecd27777af7ef1d"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/archive",
+			"Comment": "v1.4.1-4308-g77396bd",
+			"Rev": "77396bd66acc141f1d5a1743cecd27777af7ef1d"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/fileutils",
+			"Comment": "v1.4.1-4308-g77396bd",
+			"Rev": "77396bd66acc141f1d5a1743cecd27777af7ef1d"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/ioutils",
+			"Comment": "v1.4.1-4308-g77396bd",
+			"Rev": "77396bd66acc141f1d5a1743cecd27777af7ef1d"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/mount",
+			"Comment": "v1.4.1-4308-g77396bd",
+			"Rev": "77396bd66acc141f1d5a1743cecd27777af7ef1d"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/pools",
+			"Comment": "v1.4.1-4308-g77396bd",
+			"Rev": "77396bd66acc141f1d5a1743cecd27777af7ef1d"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/promise",
+			"Comment": "v1.4.1-4308-g77396bd",
+			"Rev": "77396bd66acc141f1d5a1743cecd27777af7ef1d"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/system",
+			"Comment": "v1.4.1-4308-g77396bd",
+			"Rev": "77396bd66acc141f1d5a1743cecd27777af7ef1d"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/units",
+			"Comment": "v1.4.1-4308-g77396bd",
+			"Rev": "77396bd66acc141f1d5a1743cecd27777af7ef1d"
+		},
+		{
 			"ImportPath": "github.com/gorilla/context",
 			"Rev": "215affda49addc4c8ef7e2534915df2c8c35c6cd"
 		},
@@ -68,8 +123,21 @@
 			"Rev": "adecc7b55fa2f33de0a3b0f21e0e3adfbf70512f"
 		},
 		{
+			"ImportPath": "github.com/stretchr/testify/assert",
+			"Comment": "v1.0-17-g089c718",
+			"Rev": "089c7181b8c728499929ff09b62d3fdd8df8adff"
+		},
+		{
+			"ImportPath": "github.com/ugorji/go/codec",
+			"Rev": "821cda7e48749cacf7cad2c6ed01e96457ca7e9d"
+		},
+		{
 			"ImportPath": "github.com/vaughan0/go-ini",
 			"Rev": "a98ad7ee00ec53921f08832bc06ecf7fd600e6a1"
+		},
+		{
+			"ImportPath": "gopkg.in/yaml.v2",
+			"Rev": "7ad95dd0798a40da1ccdff6dff35fd177b5edf40"
 		}
 	]
 }
