@@ -1,5 +1,5 @@
 ifeq ($(BUILD_TYPE),debug)
-BUILD_OPTIONS= -compiler gccgo --gccgoflags -static-libgo
+BUILD_OPTIONS= -gcflags "-N -l"
 else
 BUILD_OPTIONS= 
 endif
@@ -13,6 +13,7 @@ tags:
 
 openstorage:
 	@echo "Building openstorage..."
+	@echo go build $(BUILD_OPTIONS) -tags daemon  -o osd 
 	@go build $(BUILD_OPTIONS) -tags daemon  -o osd 
 
 docker:
