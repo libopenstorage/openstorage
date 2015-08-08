@@ -15,14 +15,11 @@ type Driver struct {
 
 var (
 	drivers = []Driver{
-		// AWS driver. This provisions storage from EBS.
-		{driverType: volume.Block,
-			name: aws.Name},
-		// NFS driver. This provisions storage from an NFS server.
-		{driverType: volume.File,
-			name: nfs.Name},
-		// BTRFS driver. This provisions storage from local btrfs fs.
-		{driverType: volume.File,
-			name: btrfs.Name},
+		// AWS driver provisions storage from EBS.
+		{driverType: aws.Type, name: aws.Name},
+		// NFS driver provisions storage from an NFS server.
+		{driverType: nfs.Type, name: nfs.Name},
+		// BTRFS driver provisions storage from local btrfs.
+		{driverType: btrfs.Type, name: btrfs.Name},
 	}
 )

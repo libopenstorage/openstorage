@@ -18,6 +18,7 @@ import (
 
 const (
 	Name         = "nfs"
+	Type         = volume.File
 	NfsDBKey     = "OpenStorageNFSKey"
 	nfsMountPath = "/var/lib/openstorage/nfs/"
 )
@@ -75,7 +76,7 @@ func (d *driver) String() string {
 }
 
 func (d *driver) Type() volume.DriverType {
-	return volume.File
+	return Type
 }
 
 // Status diagnostic information

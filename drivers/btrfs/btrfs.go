@@ -19,6 +19,7 @@ import (
 
 const (
 	Name      = "btrfs"
+	Type      = volume.File
 	RootParam = "home"
 	Volumes   = "volumes"
 )
@@ -59,7 +60,7 @@ func (d *driver) Status() [][2]string {
 }
 
 func (d *driver) Type() volume.DriverType {
-	return volume.File
+	return Type
 }
 
 // Create a new subvolume. The volume spec is not taken into account.
