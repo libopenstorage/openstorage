@@ -45,9 +45,9 @@ const (
 type VolumeState int
 
 const (
-	// VolumePending is being created
+	// VolumePending volume is transitioning to new state
 	VolumePending VolumeState = 1 << iota
-	// VolumeAvailable disk is ready to be assigned to a container
+	// VolumeAvailable volume is ready to be assigned to a container
 	VolumeAvailable
 	// VolumeAttached is attached to container
 	VolumeAttached
