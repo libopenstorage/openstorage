@@ -12,43 +12,58 @@
 		},
 		{
 			"ImportPath": "github.com/aws/aws-sdk-go/aws",
-			"Comment": "v0.6.8-2-g034c293",
-			"Rev": "034c293ded73cf710ba12f9173d45b5d9c69ec20"
+			"Comment": "v0.7.3",
+			"Rev": "bed164a424e75154a40550c04c313ef51a7bb275"
 		},
 		{
 			"ImportPath": "github.com/aws/aws-sdk-go/internal/endpoints",
-			"Comment": "v0.6.8-2-g034c293",
-			"Rev": "034c293ded73cf710ba12f9173d45b5d9c69ec20"
+			"Comment": "v0.7.3",
+			"Rev": "bed164a424e75154a40550c04c313ef51a7bb275"
 		},
 		{
 			"ImportPath": "github.com/aws/aws-sdk-go/internal/protocol/ec2query",
-			"Comment": "v0.6.8-2-g034c293",
-			"Rev": "034c293ded73cf710ba12f9173d45b5d9c69ec20"
+			"Comment": "v0.7.3",
+			"Rev": "bed164a424e75154a40550c04c313ef51a7bb275"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/internal/protocol/json/jsonutil",
+			"Comment": "v0.7.3",
+			"Rev": "bed164a424e75154a40550c04c313ef51a7bb275"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/internal/protocol/jsonrpc",
+			"Comment": "v0.7.3",
+			"Rev": "bed164a424e75154a40550c04c313ef51a7bb275"
 		},
 		{
 			"ImportPath": "github.com/aws/aws-sdk-go/internal/protocol/query/queryutil",
-			"Comment": "v0.6.8-2-g034c293",
-			"Rev": "034c293ded73cf710ba12f9173d45b5d9c69ec20"
+			"Comment": "v0.7.3",
+			"Rev": "bed164a424e75154a40550c04c313ef51a7bb275"
 		},
 		{
 			"ImportPath": "github.com/aws/aws-sdk-go/internal/protocol/rest",
-			"Comment": "v0.6.8-2-g034c293",
-			"Rev": "034c293ded73cf710ba12f9173d45b5d9c69ec20"
+			"Comment": "v0.7.3",
+			"Rev": "bed164a424e75154a40550c04c313ef51a7bb275"
 		},
 		{
 			"ImportPath": "github.com/aws/aws-sdk-go/internal/protocol/xml/xmlutil",
-			"Comment": "v0.6.8-2-g034c293",
-			"Rev": "034c293ded73cf710ba12f9173d45b5d9c69ec20"
+			"Comment": "v0.7.3",
+			"Rev": "bed164a424e75154a40550c04c313ef51a7bb275"
 		},
 		{
 			"ImportPath": "github.com/aws/aws-sdk-go/internal/signer/v4",
-			"Comment": "v0.6.8-2-g034c293",
-			"Rev": "034c293ded73cf710ba12f9173d45b5d9c69ec20"
+			"Comment": "v0.7.3",
+			"Rev": "bed164a424e75154a40550c04c313ef51a7bb275"
 		},
 		{
 			"ImportPath": "github.com/aws/aws-sdk-go/service/ec2",
-			"Comment": "v0.6.8-2-g034c293",
-			"Rev": "034c293ded73cf710ba12f9173d45b5d9c69ec20"
+			"Comment": "v0.7.3",
+			"Rev": "bed164a424e75154a40550c04c313ef51a7bb275"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/service/opsworks",
+			"Comment": "v0.7.3",
+			"Rev": "bed164a424e75154a40550c04c313ef51a7bb275"
 		},
 		{
 			"ImportPath": "github.com/codegangsta/cli",
