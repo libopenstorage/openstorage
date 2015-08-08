@@ -26,6 +26,7 @@ const (
 type driver struct {
 	*volume.DefaultBlockDriver
 	*volume.DefaultEnumerator
+	*volume.SnapshotNotSupported
 	nfsServer string
 	nfsPath   string
 }
@@ -177,18 +178,6 @@ func (d *driver) Unmount(volumeID api.VolumeID, mountpath string) error {
 	v.AttachPath = ""
 	err = d.UpdateVol(v)
 	return err
-}
-
-func (d *driver) Snapshot(volumeID api.VolumeID, labels api.Labels) (api.SnapID, error) {
-	return "", volume.ErrNotSupported
-}
-
-func (d *driver) SnapDelete(snapID api.SnapID) error {
-	return volume.ErrNotSupported
-}
-
-func (d *driver) Stats(volumeID api.VolumeID) (api.VolumeStats, error) {
-	return api.VolumeStats{}, volume.ErrNotSupported
 }
 
 func (d *driver) Alerts(volumeID api.VolumeID) (api.VolumeAlerts, error) {

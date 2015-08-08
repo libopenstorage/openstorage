@@ -16,7 +16,7 @@ const (
 	snapshots = "/snapshots/"
 )
 
-type DefaultEnumeratorUpdate interface {
+type Store interface {
 	// Lock volume specified by volID.
 	Lock(volID api.VolumeID) (interface{}, error)
 
