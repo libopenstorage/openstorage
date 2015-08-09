@@ -120,7 +120,7 @@ func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Info("Plugin instructed to create volume ", request.Name)
+	d.logReq(method, request.Name).Info("")
 
 	// It is an error if the volume doesn't already exist.
 	_, err = d.volFromName(request.Name)
@@ -141,7 +141,7 @@ func (d *driver) remove(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Info("Plugin instructed to remove volume ", request.Name)
+	d.logReq(method, request.Name).Info("")
 
 	// It is an error if the volume doesn't exist.
 	_, err = d.volFromName(request.Name)
@@ -171,7 +171,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Info("Plugin instructed to mount volume ", request.Name)
+	d.logReq(method, request.Name).Info("")
 
 	volInfo, err := d.volFromName(request.Name)
 	if err != nil {
@@ -223,7 +223,7 @@ func (d *driver) path(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Info("Plugin requested to resolve the path for volume ", request.Name)
+	d.logReq(method, request.Name).Info("")
 
 	response.Mountpoint = volInfo.vol.AttachPath
 	d.logReq(method, request.Name).Debugf("response %v", response.Mountpoint)
@@ -245,7 +245,7 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Info("Plugin instructed to unmount volume ", request.Name)
+	d.logReq(method, request.Name).Info("")
 
 	volInfo, err := d.volFromName(request.Name)
 	if err != nil {
