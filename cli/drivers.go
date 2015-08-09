@@ -10,6 +10,7 @@ func driverList(c *cli.Context) {
 func driverAdd(c *cli.Context) {
 }
 
+// DriverCommands exports the list of CLI driver subcommands.
 func DriverCommands() []cli.Command {
 	commands := []cli.Command{
 		{

@@ -11,6 +11,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Route is a specification and  handler for a REST endpoint.
 type Route struct {
 	verb string
 	path string

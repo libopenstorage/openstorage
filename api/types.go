@@ -7,11 +7,13 @@ import (
 // VolumeID driver specific system wide unique volume identifier.
 type VolumeID string
 
+// BadVolumeID invalid volume ID, usually accompanied by an error.
 const BadVolumeID = VolumeID("")
 
 // SnapID driver specific system wide unique snap identifier.
 type SnapID string
 
+// BadSnapID invalid snap ID, usually accompanied by an error.
 const BadSnapID = SnapID("")
 
 // VolumeCos a number representing class of servcie.
@@ -20,9 +22,9 @@ type VolumeCos int
 const (
 	// VolumeCosNone minmum level of CoS
 	VolumeCosNone = VolumeCos(0)
-	// VolumeCosMedum in-between level of Cos
+	// VolumeCosMedium in-between level of Cos
 	VolumeCosMedium = VolumeCos(5)
-	// VolumeCosNone maximum level of CoS
+	// VolumeCosMax maximum level of CoS
 	VolumeCosMax = VolumeCos(9)
 )
 
@@ -36,7 +38,7 @@ const (
 	Up = VolumeStatus("Up")
 	// Down status failure.
 	Down = VolumeStatus("Down")
-	// Down status up but with degraded performance. In a RAID group, this may indicate a problem with one or more drives
+	// Degraded status up but with degraded performance. In a RAID group, this may indicate a problem with one or more drives
 	Degraded = VolumeStatus("Degraded")
 )
 
@@ -111,6 +113,7 @@ type VolumeSpec struct {
 	ConfigLabels Labels
 }
 
+// MachineID is a node instance identifier for clustered systems.
 type MachineID string
 
 // Volume represents a live, created volume.
@@ -161,10 +164,8 @@ type VolumeSnap struct {
 
 // VolumeStats
 type VolumeStats struct {
-	// TODO
 }
 
 // VolumeAlerts
 type VolumeAlerts struct {
-	// TODO
 }

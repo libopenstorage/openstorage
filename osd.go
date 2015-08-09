@@ -41,8 +41,8 @@ func start(c *cli.Context) {
 		fmt.Println(err)
 		return
 	}
-	kvdb_url := c.String("kvdb")
-	u, err := url.Parse(kvdb_url)
+	kvdbURL := c.String("kvdb")
+	u, err := url.Parse(kvdbURL)
 	scheme := u.Scheme
 	u.Scheme = "http"
 

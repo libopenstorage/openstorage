@@ -1,5 +1,3 @@
-// This file is a Docker daemon plugin.  It is specific to the Docker runtime and
-// facilitates the provisioning of volumes via the Docker volumes plugin specification.
 package apiserver
 
 import (
@@ -15,9 +13,11 @@ import (
 )
 
 const (
+	// VolumeDriver is the string returned in the handshake protocol.
 	VolumeDriver = "VolumeDriver"
 )
 
+// Implementation of the Docker volumes plugin specification.
 type driver struct {
 	restBase
 }

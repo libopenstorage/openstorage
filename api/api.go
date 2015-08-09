@@ -9,13 +9,13 @@ type OptionKey string
 const (
 	// OptName query parameter used to lookup volume by name
 	OptName = OptionKey("Name")
-	// OptID query parameter used to lookup volume by ID
+	// OptVolumeID query parameter used to lookup volume by ID.
 	OptVolumeID = OptionKey("VolumeID")
-	// OptVolumeLabel query parameter used to lookup volume by set of labels
+	// OptSnapID query parameter used to lookup snap by ID.
 	OptSnapID = OptionKey("SnapID")
-	// OptVolumeLabel query parameter used to lookup volume by set of labels
+	// OptLabel query parameter used to lookup volume by set of labels.
 	OptLabel = OptionKey("Label")
-	// OptConfig query parameter used to lookup volume by set of labels
+	// OptConfigLabel query parameter used to lookup volume by set of labels.
 	OptConfigLabel = OptionKey("ConfigLabel")
 )
 
@@ -29,7 +29,7 @@ type VolumeCreateRequest struct {
 	Spec *VolumeSpec `json:"spec,omitempty"`
 }
 
-// VolumeCreateRequest is the body of create REST response
+// VolumeCreateResponse is the body of create REST response
 type VolumeCreateResponse struct {
 	// ID of the newly created volume
 	ID VolumeID `json:"id"`
@@ -40,8 +40,11 @@ type VolumeCreateResponse struct {
 type VolumeActionParam int
 
 const (
+	// ParamIgnore user should ignore the value of the parameter.
 	ParamIgnore VolumeActionParam = iota
+	// ParamOff maps to the boolean value false.
 	ParamOff
+	// ParamOn maps to the boolean value true.
 	ParamOn
 )
 
@@ -78,7 +81,7 @@ type SnapCreateRequest struct {
 	Labels Labels   `json:"labels"`
 }
 
-// SnapCreateRespone response body to SnapCreateRequest
+// SnapCreateResponse response body to SnapCreateRequest
 type SnapCreateResponse struct {
 	// ID of newly created response
 	ID SnapID `json:"id,omitempty"`

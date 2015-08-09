@@ -11,18 +11,24 @@ import (
 	"github.com/libopenstorage/openstorage/volume"
 )
 
+// VolumeSzUnits number representing size units.
 type VolumeSzUnits uint64
 
 const (
-	_                = iota
-	KB VolumeSzUnits = 1 << (10 * iota)
-	MB
-	GB
-	TB
-	PB
+	_ = iota
+	// KiB 1024 bytes
+	KiB VolumeSzUnits = 1 << (10 * iota)
+	// MiB 1024 KiB
+	MiB
+	// GiB 1024 MiB
+	GiB
+	// TiB 1024 GiB
+	TiB
+	// PiB 1024 PiB
+	PiB
 )
 
-type VolDriver struct {
+type volDriver struct {
 	volDriver volume.VolumeDriver
 	name      string
 }
@@ -43,7 +49,7 @@ func processLabels(s string) (api.Labels, error) {
 	return m, nil
 }
 
-func (v *VolDriver) volumeOptions(c *cli.Context) {
+func (v *volDriver) volumeOptions(c *cli.Context) {
 	clnt, err := client.NewDriverClient(v.name)
 	if err != nil {
 		fmt.Printf("Failed to initialize client library: %v\n", err)
@@ -52,7 +58,7 @@ func (v *VolDriver) volumeOptions(c *cli.Context) {
 	v.volDriver = clnt.VolumeDriver()
 }
 
-func (v *VolDriver) volumeCreate(c *cli.Context) {
+func (v *volDriver) volumeCreate(c *cli.Context) {
 	var err error
 	var labels api.Labels
 	var locator api.VolumeLocator
@@ -76,7 +82,7 @@ func (v *VolDriver) volumeCreate(c *cli.Context) {
 		VolumeLabels: labels,
 	}
 	spec := &api.VolumeSpec{
-		Size:             uint64(VolumeSzUnits(c.Int("s")) * MB),
+		Size:             uint64(VolumeSzUnits(c.Int("s")) * MiB),
 		Format:           api.Filesystem(c.String("fs")),
 		BlockSize:        c.Int("b") * 1024,
 		HALevel:          c.Int("r"),
@@ -91,7 +97,7 @@ func (v *VolDriver) volumeCreate(c *cli.Context) {
 	fmtOutput(c, &Format{UUID: []string{string(id)}})
 }
 
-func (v *VolDriver) volumeMount(c *cli.Context) {
+func (v *volDriver) volumeMount(c *cli.Context) {
 	v.volumeOptions(c)
 	fn := "mount"
 
@@ -116,7 +122,7 @@ func (v *VolDriver) volumeMount(c *cli.Context) {
 	fmtOutput(c, &Format{UUID: []string{volumeID}})
 }
 
-func (v *VolDriver) volumeUnmount(c *cli.Context) {
+func (v *volDriver) volumeUnmount(c *cli.Context) {
 	v.volumeOptions(c)
 	fn := "unmount"
 
@@ -137,7 +143,7 @@ func (v *VolDriver) volumeUnmount(c *cli.Context) {
 	fmtOutput(c, &Format{UUID: []string{volumeID}})
 }
 
-func (v *VolDriver) volumeFormat(c *cli.Context) {
+func (v *volDriver) volumeFormat(c *cli.Context) {
 	v.volumeOptions(c)
 	fn := "format"
 	if len(c.Args()) < 1 {
@@ -155,7 +161,7 @@ func (v *VolDriver) volumeFormat(c *cli.Context) {
 	fmtOutput(c, &Format{UUID: []string{volumeID}})
 }
 
-func (v *VolDriver) volumeAttach(c *cli.Context) {
+func (v *volDriver) volumeAttach(c *cli.Context) {
 	fn := "attach"
 	if len(c.Args()) < 1 {
 		missingParameter(c, fn, "volumeID", "Invalid number of arguments")
@@ -173,7 +179,7 @@ func (v *VolDriver) volumeAttach(c *cli.Context) {
 	fmtOutput(c, &Format{Result: devicePath})
 }
 
-func (v *VolDriver) volumeDetach(c *cli.Context) {
+func (v *volDriver) volumeDetach(c *cli.Context) {
 	fn := "detach"
 	if len(c.Args()) < 1 {
 		missingParameter(c, fn, "volumeID", "Invalid number of arguments")
@@ -190,7 +196,7 @@ func (v *VolDriver) volumeDetach(c *cli.Context) {
 	fmtOutput(c, &Format{UUID: []string{c.Args()[0]}})
 }
 
-func (v *VolDriver) volumeInspect(c *cli.Context) {
+func (v *volDriver) volumeInspect(c *cli.Context) {
 
 	v.volumeOptions(c)
 	fn := "inspect"
@@ -213,7 +219,7 @@ func (v *VolDriver) volumeInspect(c *cli.Context) {
 	cmdOutput(c, volumes)
 }
 
-func (v *VolDriver) volumeEnumerate(c *cli.Context) {
+func (v *volDriver) volumeEnumerate(c *cli.Context) {
 	var locator api.VolumeLocator
 	var err error
 
@@ -236,7 +242,7 @@ func (v *VolDriver) volumeEnumerate(c *cli.Context) {
 	cmdOutput(c, volumes)
 }
 
-func (v *VolDriver) volumeDelete(c *cli.Context) {
+func (v *volDriver) volumeDelete(c *cli.Context) {
 	fn := "delete"
 	if len(c.Args()) < 1 {
 		missingParameter(c, fn, "volumeID", "Invalid number of arguments")
@@ -253,10 +259,10 @@ func (v *VolDriver) volumeDelete(c *cli.Context) {
 	fmtOutput(c, &Format{UUID: []string{c.Args()[0]}})
 }
 
-func (v *VolDriver) snapCreate(c *cli.Context) {
+func (v *volDriver) snapCreate(c *cli.Context) {
 }
 
-func (v *VolDriver) snapInspect(c *cli.Context) {
+func (v *volDriver) snapInspect(c *cli.Context) {
 
 	v.volumeOptions(c)
 	fn := "inspect"
@@ -278,7 +284,7 @@ func (v *VolDriver) snapInspect(c *cli.Context) {
 	cmdOutput(c, snaps)
 }
 
-func (v *VolDriver) snapEnumerate(c *cli.Context) {
+func (v *volDriver) snapEnumerate(c *cli.Context) {
 	var locator api.VolumeLocator
 	var err error
 
@@ -305,7 +311,7 @@ func (v *VolDriver) snapEnumerate(c *cli.Context) {
 	cmdOutput(c, snaps)
 }
 
-func (v *VolDriver) snapDelete(c *cli.Context) {
+func (v *volDriver) snapDelete(c *cli.Context) {
 	fn := "delete"
 	if len(c.Args()) < 1 {
 		missingParameter(c, fn, "snapID", "Invalid number of arguments")
@@ -322,8 +328,9 @@ func (v *VolDriver) snapDelete(c *cli.Context) {
 	fmtOutput(c, &Format{UUID: []string{c.Args()[0]}})
 }
 
+// BlockVolumeCommands exports CLI comamnds for a Block VolumeDriver.
 func BlockVolumeCommands(name string) []cli.Command {
-	v := &VolDriver{name: name}
+	v := &volDriver{name: name}
 
 	commands := []cli.Command{
 		{
@@ -339,8 +346,8 @@ func BlockVolumeCommands(name string) []cli.Command {
 				},
 				cli.IntFlag{
 					Name:  "size,s",
-					Usage: "specify size in MB",
-					Value: 1000,
+					Usage: "specify size in MiB",
+					Value: 1024,
 				},
 				cli.StringFlag{
 					Name:  "fs",
@@ -489,8 +496,9 @@ func BlockVolumeCommands(name string) []cli.Command {
 	return commands
 }
 
+// FileVolumeCommands exports CLI comamnds for File VolumeDriver
 func FileVolumeCommands(name string) []cli.Command {
-	v := &VolDriver{name: name}
+	v := &volDriver{name: name}
 
 	commands := []cli.Command{
 		{

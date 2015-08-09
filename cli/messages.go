@@ -8,6 +8,7 @@ import (
 	"github.com/codegangsta/cli"
 )
 
+// Format standardizes the screen output of commands.
 type Format struct {
 	Cmd    string      `json:"cmd,omitempty"`
 	Status string      `json:"status,omitempty"`

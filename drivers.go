@@ -1,4 +1,3 @@
-// To add a driver to openstorage, declare the driver here.
 package main
 
 import (
@@ -8,6 +7,8 @@ import (
 	"github.com/libopenstorage/openstorage/volume"
 )
 
+// Driver is the description of a supported OST driver. New Drivers are added to
+// the drivers array
 type Driver struct {
 	driverType volume.DriverType
 	name       string
