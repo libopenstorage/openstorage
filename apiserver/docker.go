@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 
-	log "github.com/Sirupsen/logrus"
 	types "github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
 )
@@ -73,13 +72,11 @@ func (d *driver) emptyResponse(w http.ResponseWriter) {
 func (d *driver) volFromName(name string) (*volumeInfo, error) {
 	v, err := volume.Get(d.name)
 	if err != nil {
-		log.Warn("Cannot locate volume driver for %s", d.name)
-		return nil, err
+		return nil, fmt.Errorf("Cannot locate volume driver for %s: %s", d.name, err.Error())
 	}
 	volumes, err := v.Inspect([]types.VolumeID{types.VolumeID(name)})
 	if err != nil || len(volumes) == 0 {
-		log.Warn("Cannot locate volume %s", name)
-		return nil, err
+		return nil, fmt.Errorf("Cannot locate volume %s", name)
 	}
 	return &volumeInfo{vol: &volumes[0]}, nil
 }
@@ -88,12 +85,11 @@ func (d *driver) decode(method string, w http.ResponseWriter, r *http.Request) (
 	var request volumeRequest
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
-		log.Warn("Cannot decode request.", err)
 		e := fmt.Errorf("Unable to decode JSON payload")
 		d.sendError(method, "", w, e.Error()+":"+err.Error(), http.StatusBadRequest)
 		return nil, e
 	}
-	d.logReq(method, request.Name).Debug()
+	d.logReq(method, request.Name).Info()
 	return &request, nil
 }
 
@@ -160,7 +156,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 
 	v, err := volume.Get(d.name)
 	if err != nil {
-		log.Warnf("Cannot locate volume driver for %+v", d.name)
+		d.logReq(method, "").Warn("Cannot locate volume driver")
 		json.NewEncoder(w).Encode(&volumePathResponse{Err: err})
 		return
 	}
@@ -181,13 +177,13 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 
 	// If this is a block driver, first attach the volume.
 	if v.Type() == volume.Block {
-		_, err = v.Attach(volInfo.vol.ID)
+		attachPath, err := v.Attach(volInfo.vol.ID)
 		if err != nil {
-			log.Warnf("Cannot attach volume %+v, %+v", volInfo.vol.ID, err)
+			d.logReq(method, request.Name).Warnf("Cannot attach volume: %v", err.Error())
 			json.NewEncoder(w).Encode(&volumePathResponse{Err: err})
 			return
 		}
-		log.Infof("Volume %+v attached", volInfo.vol.ID)
+		d.logReq(method, request.Name).Infof("response %v", attachPath)
 	}
 
 	// Now mount it.
@@ -196,14 +192,13 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 
 	err = v.Mount(volInfo.vol.ID, response.Mountpoint)
 	if err != nil {
-		log.Warnf("Cannot mount volume %+v at %+v, %+v", volInfo.vol.ID, response.Mountpoint, err)
+		d.logReq(method, request.Name).Warnf("Cannot mount volume %v, %v",
+			response.Mountpoint, err)
 		json.NewEncoder(w).Encode(&volumePathResponse{Err: err})
 		return
 	}
 
-	log.Infof("Volume %+v mounted at %+v", volInfo.vol.ID, response.Mountpoint)
-
-	d.logReq(method, request.Name).Debugf("response %v", response.Mountpoint)
+	d.logReq(method, request.Name).Infof("response %v", response.Mountpoint)
 	json.NewEncoder(w).Encode(&response)
 }
 
@@ -226,7 +221,7 @@ func (d *driver) path(w http.ResponseWriter, r *http.Request) {
 	d.logReq(method, request.Name).Info("")
 
 	response.Mountpoint = volInfo.vol.AttachPath
-	d.logReq(method, request.Name).Debugf("response %v", response.Mountpoint)
+	d.logReq(method, request.Name).Infof("response %v", response.Mountpoint)
 	json.NewEncoder(w).Encode(&response)
 }
 
@@ -235,7 +230,7 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 
 	v, err := volume.Get(d.name)
 	if err != nil {
-		log.Warn("Cannot locate volume driver for %s", d.name)
+		d.logReq(method, "").Warnf("Cannot locate volume driver: %v", err.Error())
 		json.NewEncoder(w).Encode(&volumeResponse{Err: err})
 		return
 	}
@@ -257,8 +252,7 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 	if v.Type() == volume.Block {
 		err = v.Detach(volInfo.vol.ID)
 		if err != nil {
-			log.Warnf("Cannot detach volume %+v, %+v", volInfo.vol.ID, err)
-			d.logReq(request.Name, method).Warnf("%s", err.Error())
+			d.logReq(method, request.Name).Warnf("Cannot detach volume : %s", err.Error())
 			json.NewEncoder(w).Encode(&volumeResponse{Err: err})
 			return
 		}
