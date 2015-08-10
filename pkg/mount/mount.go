@@ -11,7 +11,7 @@ import (
 	"github.com/docker/docker/pkg/mount"
 )
 
-// Ops defined the interface for keep track of volume driver mounts.
+// Ops defines the interface for keep track of volume driver mounts.
 type Ops interface {
 	// String representation of the mount table
 	String() string
@@ -20,9 +20,9 @@ type Ops interface {
 	Load(devPrefix string) error
 	// Inspect mount table for specified device. ErrEnoent may be returned.
 	Inspect(device string) (Info, error)
-	// Exists returns true if the device is mounted at specified path. ErrEnoent is
+	// Exists returns true if the device is mounted at specified path.
 	// returned if the device does not exists.
-	Exists(device, path string) bool
+	Exists(device, path string) (bool, error)
 	// Mount device at mountpoint or increment refcnt if device is already mounted
 	// at specified mountpoint.
 	Mount(Minor int32, device, path, fs string, flags uintptr, data string) error
