@@ -10,17 +10,9 @@ import (
 	"github.com/libopenstorage/openstorage/volume"
 )
 
-var (
-	testPath = string("/tmp/openstorage_driver_test")
-)
-
 func TestAll(t *testing.T) {
-	err := os.MkdirAll(testPath, 0744)
-	if err != nil {
-		t.Fatalf("Failed to create test path: %v", err)
-	}
-
-	_, err = volume.New(Name, volume.DriverParams{RootParam: testPath})
+	testPath := "/tmp/openstorage_driver_test"
+	_, err := volume.New(Name, volume.DriverParams{RootParam: testPath})
 	if err != nil {
 		t.Fatalf("Failed to initialize Driver: %v", err)
 	}
