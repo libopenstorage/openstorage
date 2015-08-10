@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"os/exec"
 	"strings"
 	"syscall"
@@ -16,8 +17,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 
+	"github.com/libopenstorage/kvdb"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/chaos"
+	"github.com/libopenstorage/openstorage/pkg/device"
 	"github.com/libopenstorage/openstorage/volume"
 )
 
@@ -40,6 +43,7 @@ var (
 // Driver implements VolumeDriver interface
 type Driver struct {
 	*volume.DefaultEnumerator
+	*device.SingleLetter
 	md        *Metadata
 	ec2       *ec2.EC2
 	devices   string
@@ -56,33 +60,93 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 	if err != nil {
 		return nil, err
 	}
+	log.Infof("AWS instance %v zone %v", instance, zone)
+	if accessKey, ok := params["AWS_ACCESS_KEY_ID"]; ok {
+		os.Setenv("AWS_ACCESS_KEY_ID", accessKey)
+	}
+	if secretKey, ok := params["AWS_SECRET_ACCESS_KEY"]; ok {
+		os.Setenv("AWS_SECRET_ACCESS_KEY", secretKey)
+	}
+	if accessKey := os.Getenv("AWS_ACCESS_KEY_ID"); accessKey == "" {
+		return nil, fmt.Errorf("AWS_ACCESS_KEY_ID environment variable must be set")
+	}
+	if secretKey := os.Getenv("AWS_SECRET_ACCESS_KEY"); secretKey == "" {
+		return nil, fmt.Errorf("AWS_SECRET_ACCESS_KEY environment variable must be set")
+	}
 
 	creds := credentials.NewEnvCredentials()
+	region := zone[:len(zone)-1]
 	inst := &Driver{
 		ec2: ec2.New(&aws.Config{
-			Region:      &zone,
+			Region:      &region,
 			Credentials: creds,
 		}),
 		md: &Metadata{
 			zone:     zone,
 			instance: instance,
 		},
-		devices: "abcdefghijklmnopqrstuvwxyz",
+		devices:           "abcdefghijklmnopqrstuvwxyz",
+		DefaultEnumerator: volume.NewDefaultEnumerator(Name, kvdb.Instance()),
 	}
 	return inst, nil
 }
 
+// freeDevices returns list of available device IDs
+func (d *Driver) freeDevices() (string, error) {
+	initial := []byte("fghijklmnop")
+	free := make([]byte, len(initial))
+	self, err := d.describe()
+	if err != nil {
+		return "", err
+	}
+	for _, dev := range self.BlockDeviceMappings {
+		devPrefix := "/dev/sd"
+		if dev.DeviceName == nil {
+			return "", fmt.Errorf("Nil device name")
+		}
+		devName := *dev.DeviceName
+		if !strings.HasPrefix(devName, devPrefix) {
+			devPrefix := "/dev/xvd"
+			if !strings.HasPrefix(devName, devPrefix) {
+				return "", fmt.Errorf("bad device name %q", devName)
+			}
+		}
+		letter := devName[len(devPrefix):]
+		if len(letter) != 1 {
+			return "", fmt.Errorf("too many letters %q", devName)
+		}
+		index := letter[0] - 'f'
+		if index > ('p' - 'f') {
+			return "", fmt.Errorf("bad letter %q", devName)
+		}
+		initial[index] = '0'
+	}
+	count := 0
+	for _, b := range initial {
+		if b != '0' {
+			free[count] = b
+			count++
+		}
+	}
+	return string(free[:count]), nil
+}
+
 // mapCos translates a CoS specified in spec to a volume.
-func mapCos(cos api.VolumeCos) (int64, string) {
-	// AWS provisioned IOPS range is 100 - 20000.
+func mapCos(cos api.VolumeCos) (*int64, *string) {
+	volType := opsworks.VolumeTypeIo1
 	if cos < 5 {
 		// General purpose SSDs don't have provisioned IOPS
-		return 0, opsworks.VolumeTypeGp2
+		volType = opsworks.VolumeTypeGp2
+		return nil, &volType
 	}
+	// AWS provisioned IOPS range is 100 - 20000.
+	var iops int64
 	if cos < 7 {
-		return 10000, opsworks.VolumeTypeIo1
+		iops = 10000
+	} else {
+		iops = 20000
 	}
-	return 20000, opsworks.VolumeTypeIo1
+	return &iops, &volType
 }
 
 // metadata retrieves instance metadata specified by key.
@@ -106,26 +170,29 @@ func metadata(key string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Error querying AWS metadata for key %s: %v", key, err)
 	}
+	if len(body) == 0 {
+		return "", fmt.Errorf("Failed to retrieve AWS metadata for key %s: %v", key, err)
+	}
 
 	return string(body), nil
 }
 
-func (d *Driver) assign() (string, error) {
-	if len(d.devices) == 0 {
-		return "", fmt.Errorf("No free device IDs")
+// describe retrieves running instance desscription.
+func (d *Driver) describe() (*ec2.Instance, error) {
+	request := &ec2.DescribeInstancesInput{}
+	out, err := d.ec2.DescribeInstances(request)
+	if err != nil {
+		return nil, err
 	}
-	device := d.devPrefix + d.devices[:1]
-	d.devices = d.devices[1:]
-	return device, nil
-}
-
-func (d *Driver) release(dev string) error {
-	if !strings.HasPrefix(dev, d.devPrefix) {
-		return fmt.Errorf("Invalid device %s", dev)
+	if len(out.Reservations) != 1 {
+		return nil, fmt.Errorf("DescribeInstances(%v) returned %v reservations, expect 1",
+			d.md.instance, len(out.Reservations))
 	}
-	dev = dev[len(d.devPrefix):]
-	d.devices += dev
-	return nil
+	if len(out.Reservations[0].Instances) != 1 {
+		return nil, fmt.Errorf("DescribeInstances(%v) returned %v Reservations, expect 1",
+			d.md.instance, len(out.Reservations[0].Instances))
+	}
+	return out.Reservations[0].Instances[0], nil
 }
 
 // String is a description of this driver.
@@ -166,13 +233,14 @@ func (d *Driver) Create(
 		DryRun:           &dryRun,
 		Encrypted:        &encrypted,
 		Size:             &sz,
-		IOPS:             &iops,
-		VolumeType:       &volType,
+		IOPS:             iops,
+		VolumeType:       volType,
 		SnapshotID:       snapID,
 	}
 
 	vol, err := d.ec2.CreateVolume(req)
 	if err != nil {
+		log.Warnf("Failed in CreateVolumeRequest :%v", err)
 		return api.BadVolumeID, err
 	}
 	v := &api.Volume{
@@ -185,6 +253,7 @@ func (d *Driver) Create(
 		State:    api.VolumeAvailable,
 	}
 	err = d.UpdateVol(v)
+	log.Infof("Created volume %v", v.ID)
 	return v.ID, err
 }
 
@@ -288,7 +357,6 @@ func (d *Driver) Inspect(volumeIDs []api.VolumeID) ([]api.Volume, error) {
 
 func (d *Driver) Delete(volumeID api.VolumeID) error {
 	dryRun := false
-
 	id := string(volumeID)
 	req := &ec2.DeleteVolumeInput{
 		VolumeID: &id,
@@ -349,7 +417,7 @@ func (d *Driver) SnapEnumerate(volIds []api.VolumeID, labels api.Labels) ([]api.
 }
 
 func (d *Driver) Attach(volumeID api.VolumeID) (path string, err error) {
-	device, err := d.assign()
+	device, err := d.Assign()
 	if err != nil {
 		return "", err
 	}
