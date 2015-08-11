@@ -291,6 +291,37 @@ func (d *Driver) merge(v *api.Volume, aws *ec2.Volume) {
 	}
 }
 
+func (d *Driver) waitStatus(volumeID api.VolumeID, desired string) error {
+
+	id := string(volumeID)
+	request := &ec2.DescribeVolumesInput{VolumeIDs: []*string{&id}}
+	actual := ""
+
+	for retries, max_retries := 0, 10; actual != desired && retries < max_retries; retries++ {
+		awsVols, err := d.ec2.DescribeVolumes(request)
+		if err != nil {
+			return err
+		}
+		if len(awsVols.Volumes) != 1 {
+			return fmt.Errorf("expected one volume %v got %v",
+				volumeID, len(awsVols.Volumes))
+		}
+		if awsVols.Volumes[0].State == nil {
+			return fmt.Errorf("Nil volume state for %v", volumeID)
+		}
+		actual = *awsVols.Volumes[0].State
+		if actual == desired {
+			break
+		}
+		time.Sleep(2 * time.Second)
+	}
+	if actual != desired {
+		return fmt.Errorf("Volume %v failed to transition to  %v current state %v",
+			volumeID, desired, actual)
+	}
+	return nil
+}
+
 func (d *Driver) devicePath(volumeID api.VolumeID) (string, error) {
 
 	awsVolID := string(volumeID)
