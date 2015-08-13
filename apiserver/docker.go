@@ -6,8 +6,10 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path"
 
 	types "github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/volume"
 )
 
@@ -187,7 +189,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Now mount it.
-	response.Mountpoint = fmt.Sprintf("/mnt/%s", request.Name)
+	response.Mountpoint = path.Join(config.MountBase, request.Name)
 	os.MkdirAll(response.Mountpoint, 0755)
 
 	err = v.Mount(volInfo.vol.ID, response.Mountpoint)
@@ -249,17 +251,17 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if v.Type() == volume.Block {
-		err = v.Detach(volInfo.vol.ID)
-		if err != nil {
-			d.logReq(method, request.Name).Warnf("Cannot detach volume : %s", err.Error())
-			json.NewEncoder(w).Encode(&volumeResponse{Err: err})
-			return
-		}
+	mountpoint := path.Join(config.MountBase, request.Name)
+	err = v.Unmount(volInfo.vol.ID, mountpoint)
+	if err != nil {
+		d.logReq(method, request.Name).Warnf("Cannot unmount volume %v, %v",
+			mountpoint, err)
+		json.NewEncoder(w).Encode(&volumeResponse{Err: err})
+		return
 	}
 
-	// XXX TODO unmount
-	// log.Infof("Volume %+v mounted at %+v", volInfo, response.Mountpoint)
-
+	if v.Type() == volume.Block {
+		_ = v.Detach(volInfo.vol.ID)
+	}
 	d.emptyResponse(w)
 }
