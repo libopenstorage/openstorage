@@ -88,6 +88,14 @@ type CreateOptions struct {
 // Filesystem supported filesystems
 type Filesystem string
 
+const (
+	FsNone Filesystem = "none"
+	FsExt4 Filesystem = "ext4"
+	FsXfs  Filesystem = "xfs"
+	FsZfs  Filesystem = "zfs"
+	FsNfs  Filesystem = "nfs"
+)
+
 // VolumeSpec has the properties needed to create a volume.
 type VolumeSpec struct {
 	// Ephemeral storage
@@ -115,6 +123,8 @@ type VolumeSpec struct {
 
 // MachineID is a node instance identifier for clustered systems.
 type MachineID string
+
+const MachineNone MachineID = ""
 
 // Volume represents a live, created volume.
 type Volume struct {
