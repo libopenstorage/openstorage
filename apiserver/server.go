@@ -56,7 +56,8 @@ func (rest *restBase) volNotFound(request string, id string, e error, w http.Res
 	return err
 }
 
-func startServer(name string, sockBase string, rest restServer) error {
+func startServer(name string, sockBase string, port int, rest restServer) error {
+
 	var (
 		listener net.Listener
 		err      error
@@ -78,6 +79,9 @@ func startServer(name string, sockBase string, rest restServer) error {
 		return err
 	}
 	go http.Serve(listener, router)
+	if port != 0 {
+		go http.ListenAndServe(fmt.Sprintf(":%v", port), router)
+	}
 	return err
 }
 
@@ -85,12 +89,12 @@ func startServer(name string, sockBase string, rest restServer) error {
 // from the CLI/UX.
 func StartDriverAPI(name string, port int, restBase string) error {
 	rest := newVolumeDriver(name)
-	return startServer(name, restBase, rest)
+	return startServer(name, restBase, port, rest)
 }
 
 // StartPluginAPI starts a REST server to receive volume commands from the
 // Linux container engine.
 func StartPluginAPI(name string, pluginBase string) error {
 	rest := newVolumePlugin(name)
-	return startServer(name, pluginBase, rest)
+	return startServer(name, pluginBase, 0, rest)
 }
