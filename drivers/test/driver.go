@@ -16,6 +16,8 @@ import (
 	"github.com/libopenstorage/openstorage/volume"
 )
 
+const testPath = "/tmp/openstorage/mount"
+
 // Context maintains current device state. It gets passed into tests
 // so that tests can build on other tests' work
 type Context struct {
@@ -23,7 +25,6 @@ type Context struct {
 	volID      api.VolumeID
 	snapID     api.SnapID
 	mountPath  string
-	tgtPath    string
 	devicePath string
 	Filesystem string
 }
@@ -59,6 +60,7 @@ func Run(t *testing.T, ctx *Context) {
 
 func runEnd(t *testing.T, ctx *Context) {
 	time.Sleep(time.Second * 2)
+	os.RemoveAll(testPath)
 	shutdown(t, ctx)
 }
 
@@ -153,18 +155,12 @@ func detach(t *testing.T, ctx *Context) {
 func mount(t *testing.T, ctx *Context) {
 	fmt.Println("mount")
 
-	mountPath := "/mnt/voltest"
-	err := os.MkdirAll(mountPath, 0755)
+	err := os.MkdirAll(testPath, 0755)
 
-	tgtPath := "/mnt/foo"
-	err = os.MkdirAll(tgtPath, 0755)
-	assert.NoError(t, err, "Failed in mkdir")
-
-	err = ctx.Mount(ctx.volID, tgtPath)
+	err = ctx.Mount(ctx.volID, testPath)
 	assert.NoError(t, err, "Failed in mount")
 
-	ctx.mountPath = mountPath
-	ctx.tgtPath = tgtPath
+	ctx.mountPath = testPath
 }
 
 func unmount(t *testing.T, ctx *Context) {
@@ -176,7 +172,6 @@ func unmount(t *testing.T, ctx *Context) {
 	assert.NoError(t, err, "Failed in unmount")
 
 	ctx.mountPath = ""
-	ctx.tgtPath = ""
 }
 
 func shutdown(t *testing.T, ctx *Context) {
