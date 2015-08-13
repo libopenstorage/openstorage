@@ -118,7 +118,7 @@ func (m *Matrix) Mount(minor int, device, path, fs string, flags uintptr, data s
 	if !ok {
 		info = &Info{
 			Device:     device,
-			Mountpoint: make([]PathInfo, 8),
+			Mountpoint: make([]PathInfo, 0),
 			Minor:      minor,
 			Fs:         fs,
 		}
