@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 
 	"gopkg.in/yaml.v2"
 
@@ -20,6 +21,7 @@ type Config struct {
 const (
 	PluginAPIBase = "/usr/share/docker/plugins/"
 	DriverAPIBase = "/var/lib/osd/driver/"
+	MountBase     = "/var/lib/osd/mounts/"
 	Version       = "v1"
 )
 
@@ -40,4 +42,7 @@ func Parse(file string) (*Config, error) {
 		return nil, fmt.Errorf("Unable to parse OSD configuration: %s", err.Error())
 	}
 	return &cfg, nil
+}
+func init() {
+	os.MkdirAll(MountBase, 0755)
 }
