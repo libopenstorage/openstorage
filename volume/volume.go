@@ -14,6 +14,8 @@ var (
 	ErrExist          = errors.New("Driver already exists")
 	ErrDriverNotFound = errors.New("Driver implementation not found")
 	ErrEnoEnt         = errors.New("Volume does not exist.")
+	ErrEnomem         = errors.New("Out of memory.")
+	ErrEinval         = errors.New("Invalid argument")
 	ErrVolDetached    = errors.New("Volume is detached")
 	ErrVolAttached    = errors.New("Volume is attached")
 	ErrVolHasSnaps    = errors.New("Volume has snapshots associated")
@@ -27,9 +29,9 @@ type InitFunc func(params DriverParams) (VolumeDriver, error)
 type DriverType string
 
 const (
-	File  = DriverType("FileDriver")
-	Block = DriverType("BlockDriver")
-	Objec = DriverType("ObjectDriver")
+	File   = DriverType("FileDriver")
+	Block  = DriverType("BlockDriver")
+	Object = DriverType("ObjectDriver")
 )
 
 type VolumeDriver interface {
