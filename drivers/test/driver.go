@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"testing"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -40,8 +41,8 @@ func RunShort(t *testing.T, ctx *Context) {
 	create(t, ctx)
 	inspect(t, ctx)
 	enumerate(t, ctx)
-	format(t, ctx)
 	attach(t, ctx)
+	format(t, ctx)
 	mount(t, ctx)
 	io(t, ctx)
 	unmount(t, ctx)
@@ -57,7 +58,7 @@ func Run(t *testing.T, ctx *Context) {
 }
 
 func runEnd(t *testing.T, ctx *Context) {
-	detach(t, ctx)
+	time.Sleep(time.Second * 2)
 	shutdown(t, ctx)
 }
 
@@ -142,15 +143,11 @@ func attach(t *testing.T, ctx *Context) {
 
 func detach(t *testing.T, ctx *Context) {
 	fmt.Println("detach")
-
 	err := ctx.Detach(ctx.volID)
 	if err != nil {
 		assert.Equal(t, ctx.devicePath, "", "Error on detach %s: %v", ctx.devicePath, err)
 	}
 	ctx.devicePath = ""
-
-	err = ctx.Detach(ctx.volID)
-	assert.Error(t, err, "Detaching an already detached device should fail")
 }
 
 func mount(t *testing.T, ctx *Context) {
