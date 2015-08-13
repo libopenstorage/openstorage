@@ -1,3 +1,5 @@
+// +build linux
+
 package mount
 
 import (
@@ -20,6 +22,8 @@ type Ops interface {
 	Load(devPrefix string) error
 	// Inspect mount table for specified device. ErrEnoent may be returned.
 	Inspect(device string) (Info, error)
+	// HasMounts determines returns the number of mounts for the device.
+	HasMounts(devPath string)
 	// Exists returns true if the device is mounted at specified path.
 	// returned if the device does not exists.
 	Exists(device, path string) (bool, error)
@@ -73,6 +77,18 @@ func New(devPrefix string) (*Matrix, error) {
 		return nil, err
 	}
 	return m, nil
+}
+
+// HasMounts determines returns the number of mounts for the device.
+func (m *Matrix) HasMounts(devPath string) int {
+	m.Lock()
+	defer m.Unlock()
+
+	v, ok := m.mounts[devPath]
+	if !ok {
+		return 0
+	}
+	return len(v.Mountpoint)
 }
 
 // Exists scans mountpaths for specified device and returns true if path is one of the
