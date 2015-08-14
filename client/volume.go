@@ -66,7 +66,7 @@ func (v *volumeClient) Inspect(ids []api.VolumeID) ([]api.Volume, error) {
 	var vols []api.Volume
 
 	if len(ids) == 0 {
-		return nil, fmt.Errorf("No volume IDs provided")
+		return nil, nil
 	}
 	req := v.c.Get().Resource(volumePath)
 
