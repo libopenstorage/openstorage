@@ -109,7 +109,7 @@ func (r *Request) QueryOption(key string, value string) *Request {
 	if r.params == nil {
 		r.params = make(url.Values)
 	}
-	r.params.Set(string(key), value)
+	r.params.Add(string(key), value)
 	return r
 }
 
@@ -124,7 +124,7 @@ func (r *Request) QueryOptionLabel(key string, labels map[string]string) *Reques
 		if r.params == nil {
 			r.params = make(url.Values)
 		}
-		r.params.Set(string(key), string(b))
+		r.params.Add(string(key), string(b))
 	}
 	return r
 }
@@ -182,7 +182,7 @@ func (r *Request) URL() *url.URL {
 	query := url.Values{}
 	for key, values := range r.params {
 		for _, value := range values {
-			query.Set(key, value)
+			query.Add(key, value)
 		}
 	}
 	if r.timeout != 0 {

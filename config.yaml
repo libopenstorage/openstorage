@@ -1,9 +1,11 @@
 ---
 osd:
   drivers:
-      nfs:
-        server: "172.31.1.20"
-        path: "/nfs"
+      #nfs:
+         #server: "localhost"
+         #path: "/nfs"
+      #btrfs:
+         #home: "/var/lib/openstorage/btrfs"
 #      aws:
 #        aws_access_key_id: your_aws_access_key_id
 #        aws_secret_access_key: your_aws_secret_access_key
