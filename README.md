@@ -171,6 +171,12 @@ docker run osd /bin/osd version
 docker run --privileged -v $PWD:/etc -v /usr/share/docker/plugins:/usr/share/docker/plugins -v /var/lib/osd/driver:/var/lib/osd/driver -v /mnt:/mnt osd /bin/osd -d -f /etc/config.yaml
 ```
 
+## Running the latest openstorage OSD build in Docker
+```
+docker run --privileged -v $PWD:/etc -v /usr/share/docker/plugins:/usr/share/docker/plugins -v /var/lib/osd/driver:/var/lib/osd/driver -v /mnt:/mnt openstorage/osd:experimental /bin/osd -d -f /etc/config.yaml
+```
+
+
 #### Using openstorage with systemd
 
 ```service
