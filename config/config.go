@@ -19,7 +19,7 @@ type Config struct {
 }
 
 const (
-	PluginAPIBase = "/usr/share/docker/plugins/"
+	PluginAPIBase = "/run/docker/plugins/"
 	DriverAPIBase = "/var/lib/osd/driver/"
 	MountBase     = "/var/lib/osd/mounts/"
 	Version       = "v1"
