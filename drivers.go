@@ -4,6 +4,7 @@ import (
 	"github.com/libopenstorage/openstorage/drivers/aws"
 	"github.com/libopenstorage/openstorage/drivers/btrfs"
 	"github.com/libopenstorage/openstorage/drivers/nfs"
+	"github.com/libopenstorage/openstorage/drivers/pwx"
 	"github.com/libopenstorage/openstorage/volume"
 )
 
@@ -22,5 +23,7 @@ var (
 		{driverType: nfs.Type, name: nfs.Name},
 		// BTRFS driver provisions storage from local btrfs.
 		{driverType: btrfs.Type, name: btrfs.Name},
+		// PWX driver provisions storage from PWX cluster.
+		{driverType: pwx.Type, name: pwx.Name},
 	}
 )
