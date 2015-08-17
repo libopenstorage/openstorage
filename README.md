@@ -3,7 +3,7 @@
 
 # About Open Storage
 
-openstorage is an implementation of the [Open Storage](https://github.com/libopenstorage/specs) specification
+openstorage is an implementation of the [Open Storage](https://github.com/libopenstorage/specs) specification and relies on the Docker runtime.
 
 # What you get from using Open Storage
 
