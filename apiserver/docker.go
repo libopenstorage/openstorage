@@ -178,7 +178,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// If this is a block driver, first attach the volume.
-	if v.Type() == volume.Block {
+	if v.Type()&volume.Block != 0 {
 		attachPath, err := v.Attach(volInfo.vol.ID)
 		if err != nil {
 			d.logReq(method, request.Name).Warnf("Cannot attach volume: %v", err.Error())
@@ -260,7 +260,7 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if v.Type() == volume.Block {
+	if v.Type()&volume.Block != 0 {
 		_ = v.Detach(volInfo.vol.ID)
 	}
 	d.emptyResponse(w)

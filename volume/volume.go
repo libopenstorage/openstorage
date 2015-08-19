@@ -26,12 +26,13 @@ type DriverParams map[string]string
 
 type InitFunc func(params DriverParams) (VolumeDriver, error)
 
-type DriverType string
+type DriverType int
 
 const (
-	File   = DriverType("FileDriver")
-	Block  = DriverType("BlockDriver")
-	Object = DriverType("ObjectDriver")
+	File = 1 << iota
+	Block
+	Object
+	Clustered
 )
 
 type VolumeDriver interface {
