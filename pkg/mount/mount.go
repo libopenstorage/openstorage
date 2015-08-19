@@ -218,3 +218,15 @@ func (m *Matrix) Load(devPrefix string) error {
 	}
 	return nil
 }
+
+// Inspect mount table for device
+func (m *Matrix) Inspect(devPath string) []PathInfo {
+	m.Lock()
+	defer m.Unlock()
+
+	v, ok := m.mounts[devPath]
+	if !ok {
+		return []PathInfo{}
+	}
+	return v.Mountpoint
+}

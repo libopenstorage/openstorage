@@ -7,7 +7,11 @@ openstorage is an implementation of the [Open Storage](https://github.com/libope
 
 # What you get from using Open Storage
 
-When you install openstorage on a Linux host, you will automatically get a stateful storage layer that integrates with your Linux container runtime.  It starts an Open Storage Daemon - `OSD` that currently supports Docker and will support any Linux container runtime that conforms to the [OCI](https://www.opencontainers.org/).  This daemon integrates with Docker volumes and provisions storage to a container on behalf of any third party OSD driver.
+When you install openstorage on a Linux host, you will automatically get a stateful storage layer that integrates with the Docker runtime and operates in a multi host environment.  It starts an Open Storage Daemon - `OSD` that currently supports Docker and will support any Linux container runtime that conforms to the [OCI](https://www.opencontainers.org/).  This daemon integrates with Docker volumes and provisions storage to a container on behalf of any third party OSD driver and ensures the volumes are available in a multi host environment with a scheduler that can support the openstorage plugin API.
+
+The diagram below shows OSD integrated with Docker and Swarm to allow for provisioning of storage to containers in a multi node environment.
+
+![OSD - Docker - Swarm integration](http://i.imgur.com/W2pXsqb.png)
 
 There are default drivers built-in for NFS, AWS and BTRFS.  By using openstorage, you can get container granular, stateful storage provisioning to Linux containers with the backends supported by openstorage.  We are working with the storage ecosystem to add more drivers for various storage providers.
 
@@ -51,7 +55,7 @@ To start the OSD in daemon mode:
 ```
 osd -d -f config.yaml
 ```
-Where config.yaml is the daemon's configuiration file and it's format is explained [below](https://github.com/libopenstorage/openstorage/blob/master/README.md#osd-config-file).
+where, config.yaml is the daemon's configuiration file and it's format is explained [below](https://github.com/libopenstorage/openstorage/blob/master/README.md#osd-config-file).
 
 To use the OSD cli, see the CLI help menu:
 ```
