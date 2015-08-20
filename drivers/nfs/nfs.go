@@ -11,7 +11,8 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/pborman/uuid"
 
-	"github.com/libopenstorage/kvdb"
+	"github.com/portworx/kvdb"
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
 )

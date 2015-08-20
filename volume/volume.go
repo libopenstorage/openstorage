@@ -35,6 +35,8 @@ const (
 	Clustered
 )
 
+// VolumeDriver is the main interface to be implemented by any storage driver.
+// Every driver must at minimum implement the ProtoDriver sub interface.
 type VolumeDriver interface {
 	ProtoDriver
 	BlockDriver

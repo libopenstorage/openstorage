@@ -5,7 +5,8 @@ import (
 	"fmt"
 	_ "sync"
 
-	"github.com/libopenstorage/kvdb"
+	"github.com/portworx/kvdb"
+
 	"github.com/libopenstorage/openstorage/api"
 )
 

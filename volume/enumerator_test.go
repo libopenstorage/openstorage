@@ -6,8 +6,9 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/libopenstorage/kvdb"
-	"github.com/libopenstorage/kvdb/mem"
+	"github.com/portworx/kvdb"
+	"github.com/portworx/kvdb/mem"
+
 	"github.com/libopenstorage/openstorage/api"
 )
 

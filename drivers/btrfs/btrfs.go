@@ -11,7 +11,8 @@ import (
 	"github.com/docker/docker/daemon/graphdriver/btrfs"
 	"github.com/pborman/uuid"
 
-	"github.com/libopenstorage/kvdb"
+	"github.com/portworx/kvdb"
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/chaos"
 	"github.com/libopenstorage/openstorage/volume"
