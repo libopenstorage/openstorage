@@ -129,12 +129,12 @@
 			"Rev": "47e8f450ef38c857cdd922ec08862ca9d65a1c6d"
 		},
 		{
-			"ImportPath": "github.com/libopenstorage/kvdb",
-			"Rev": "adecc7b55fa2f33de0a3b0f21e0e3adfbf70512f"
-		},
-		{
 			"ImportPath": "github.com/pborman/uuid",
 			"Rev": "ca53cad383cad2479bbba7f7a1a05797ec1386e4"
+		},
+		{
+			"ImportPath": "github.com/portworx/kvdb",
+			"Rev": "c0ff624588bd8ef70457dedd196859bb6d273ac3"
 		},
 		{
 			"ImportPath": "github.com/stretchr/testify/assert",
