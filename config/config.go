@@ -7,11 +7,13 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/volume"
 )
 
 type osd struct {
-	Drivers map[string]volume.DriverParams
+	ClusterConfig cluster.Config
+	Drivers       map[string]volume.DriverParams
 }
 
 type Config struct {

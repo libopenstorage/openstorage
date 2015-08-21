@@ -15,6 +15,7 @@ import (
 
 	"github.com/libopenstorage/openstorage/apiserver"
 	osdcli "github.com/libopenstorage/openstorage/cli"
+	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/volume"
 )
@@ -57,6 +58,14 @@ func start(c *cli.Context) {
 	if err != nil {
 		fmt.Println("Failed to initialize KVDB: ", err)
 		return
+	}
+
+	if cfg.Osd.ClusterConfig.NodeId != "" && cfg.Osd.ClusterConfig.ClusterId != "" {
+		_, err = cluster.New(cfg.Osd.ClusterConfig, kv)
+		if err != nil {
+			fmt.Println("Failed to initialize cluster: ", err)
+			return
+		}
 	}
 
 	// Start the volume drivers.

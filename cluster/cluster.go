@@ -1,7 +1,11 @@
 package cluster
 
 import (
+	"errors"
 	"time"
+
+	"github.com/portworx/kvdb"
+	"github.com/portworx/systemutils"
 )
 
 const (
@@ -11,12 +15,21 @@ const (
 	StatusError
 )
 
+var (
+	inst *ClusterManager
+)
+
+type Config struct {
+	ClusterId string
+	NodeId    string
+}
+
+// NodeInfo describes the physical parameters of a node.
 type NodeInfo struct {
-	UUID      string
-	Id        int
-	Cpu       int
-	Memory    int
-	Iops      int
+	Config    Config
+	Cpu       float64 // percentage.
+	Memory    float64 // percentage.
+	Luns      map[string]systemutils.Lun
 	Avgload   int
 	Timestamp time.Time
 	Status    uint8
@@ -71,7 +84,24 @@ type ClusterListener interface {
 }
 
 type Cluster interface {
-	AddEventListener(ClusterListener)
-	Connect() error
-	Start()
+	AddEventListener(ClusterListener) error
+	Start() error
+}
+
+func New(cfg Config, kv kvdb.Kvdb) (*ClusterManager, error) {
+	inst = &ClusterManager{config: cfg, kv: kv}
+
+	err := inst.Start()
+	if err != nil {
+		inst = nil
+		return nil, err
+	}
+	return inst, nil
+}
+
+func Inst() (*ClusterManager, error) {
+	if inst == nil {
+		return nil, errors.New("Cluster is not initialized.")
+	}
+	return inst, nil
 }
