@@ -3,7 +3,7 @@
 
 # About Open Storage
 
-openstorage is an implementation of the [Open Storage](https://github.com/libopenstorage/specs) specification and relies on the Docker runtime.
+openstorage is a clustered implementation of the [Open Storage](https://github.com/libopenstorage/specs) specification and relies on the Docker runtime.  It allows you to run stateful services in Docker in a multi-host environment.  It plugs into Docker volumes to provide storage to a container and plugs into Swarm to operate in a clustered environment. 
 
 # What you get from using Open Storage
 

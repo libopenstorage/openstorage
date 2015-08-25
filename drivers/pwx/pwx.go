@@ -2,6 +2,7 @@ package pwx
 
 import (
 	"github.com/libopenstorage/openstorage/client"
+	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/volume"
 )
 
@@ -19,11 +20,11 @@ type driver struct {
 // Portworx natively implements the openstorage.org API specification, so
 // we can directly point the VolumeDriver to the PWX API server.
 func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
-	url, ok := params["pwx"]
+	url, ok := params[config.UrlKey]
 	if !ok {
 		url = DefaultUrl
 	}
-	version, ok := params["version"]
+	version, ok := params[config.VersionKey]
 	if !ok {
 		version = DefaultVersion
 	}
@@ -31,7 +32,8 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 	if err != nil {
 		return nil, err
 	}
-	return c.VolumeDriver(), nil
+
+	return &driver{VolumeDriver: c.VolumeDriver()}, nil
 }
 
 func (d *driver) String() string {
