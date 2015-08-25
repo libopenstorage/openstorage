@@ -60,6 +60,7 @@ func start(c *cli.Context) {
 		return
 	}
 
+	// Start the cluster state machine, if enabled.
 	if cfg.Osd.ClusterConfig.NodeId != "" && cfg.Osd.ClusterConfig.ClusterId != "" {
 		_, err = cluster.New(cfg.Osd.ClusterConfig, kv)
 		if err != nil {

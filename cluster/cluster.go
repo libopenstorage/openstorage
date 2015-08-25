@@ -8,8 +8,10 @@ import (
 	"github.com/portworx/systemutils"
 )
 
+type Status int
+
 const (
-	StatusInit = 1 << iota
+	StatusInit Status = 1 << iota
 	StatusOk
 	StatusOffline
 	StatusError
@@ -26,26 +28,23 @@ type Config struct {
 
 // NodeInfo describes the physical parameters of a node.
 type NodeInfo struct {
-	Config    Config
+	NodeId    string
 	Cpu       float64 // percentage.
 	Memory    float64 // percentage.
 	Luns      map[string]systemutils.Lun
 	Avgload   int
 	Timestamp time.Time
-	Status    uint8
-	Last      *NodeInfo
+	Status    Status
+	Ip        string
 }
 
 type Node struct {
-	Id        int
-	Timestamp time.Time
-	UUID      string
-	Ip        string
-	Status    uint8
+	Ip     string
+	Status Status
 }
 
 type Info struct {
-	Status    uint8
+	Status    Status
 	ClusterId string
 }
 
@@ -55,32 +54,34 @@ type Database struct {
 }
 
 // ClusterListener is an interface to be implemented by a storage driver
-// if it is participating in a multi host environment.
+// if it is participating in a multi host environment.  It exposes events
+// in the cluster state machine.  Your driver can do the needful when
+// these events are provided.
 type ClusterListener interface {
 	// String returns a string representation of this listener.
 	String() string
 
 	// ClusterInit is called when a brand new cluster is initialized.
-	ClusterInit(db *Database) error
+	ClusterInit(self *NodeInfo, db *Database) error
 
 	// Init is called when this node is joining an existing cluster for the first time.
-	Init(node *Node, db *Database) error
+	Init(self *NodeInfo, db *Database) error
 
 	// Join is called when this node is joining an existing cluster.
-	Join(node *Node, db *Database) error
+	Join(self *NodeInfo, db *Database) error
 
 	// Add is called when a new node joins the cluster.
-	Add(newNode *Node, db *Database) error
+	Add(info *NodeInfo) error
 
 	// Remove is called when a node leaves the cluster
-	Remove(oldNode *Node, db *Database) error
+	Remove(info *NodeInfo) error
 
 	// Update is called when a node status changes significantly
 	// in the cluster changes.
-	Update(node *Node, info *NodeInfo, db *Database) error
+	Update(info *NodeInfo) error
 
 	// Leave is called when this node leaves the cluster.
-	Leave(node *Node, db *Database) error
+	Leave(info *NodeInfo) error
 }
 
 type Cluster interface {
@@ -88,6 +89,7 @@ type Cluster interface {
 	Start() error
 }
 
+// New instantiates and starts a new cluster manager.
 func New(cfg Config, kv kvdb.Kvdb) (*ClusterManager, error) {
 	inst = &ClusterManager{config: cfg, kv: kv}
 
@@ -99,6 +101,7 @@ func New(cfg Config, kv kvdb.Kvdb) (*ClusterManager, error) {
 	return inst, nil
 }
 
+// Inst returns an instance of an already instantiated cluster manager.
 func Inst() (*ClusterManager, error) {
 	if inst == nil {
 		return nil, errors.New("Cluster is not initialized.")
