@@ -2,19 +2,10 @@ package cluster
 
 import (
 	"errors"
-	"time"
+
+	"github.com/libopenstorage/openstorage/api"
 
 	"github.com/portworx/kvdb"
-	"github.com/portworx/systemutils"
-)
-
-type Status int
-
-const (
-	StatusInit Status = 1 << iota
-	StatusOk
-	StatusOffline
-	StatusError
 )
 
 var (
@@ -26,31 +17,17 @@ type Config struct {
 	NodeId    string
 }
 
-// NodeInfo describes the physical parameters of a node.
-type NodeInfo struct {
-	NodeId    string
-	Cpu       float64 // percentage.
-	Memory    float64 // percentage.
-	Luns      map[string]systemutils.Lun
-	Avgload   int
-	Timestamp time.Time
-	Status    Status
-	Ip        string
-}
-
-type Node struct {
-	Ip     string
-	Status Status
-}
-
-type Info struct {
-	Status    Status
-	ClusterId string
+// NodeEntry is used to discover other nodes in the cluster
+// and setup the gossip protocol with them.
+type NodeEntry struct {
+	Id string
+	Ip string
 }
 
 type Database struct {
-	Cluster Info
-	Nodes   map[string]Node
+	Status      api.Status
+	Id          string
+	NodeEntries map[string]NodeEntry
 }
 
 // ClusterListener is an interface to be implemented by a storage driver
@@ -62,30 +39,44 @@ type ClusterListener interface {
 	String() string
 
 	// ClusterInit is called when a brand new cluster is initialized.
-	ClusterInit(self *NodeInfo, db *Database) error
+	ClusterInit(self *api.Node, db *Database) error
 
 	// Init is called when this node is joining an existing cluster for the first time.
-	Init(self *NodeInfo, db *Database) error
+	Init(self *api.Node, db *Database) error
 
 	// Join is called when this node is joining an existing cluster.
-	Join(self *NodeInfo, db *Database) error
+	Join(self *api.Node, db *Database) error
 
 	// Add is called when a new node joins the cluster.
-	Add(info *NodeInfo) error
+	Add(info *api.Node) error
 
 	// Remove is called when a node leaves the cluster
-	Remove(info *NodeInfo) error
+	Remove(info *api.Node) error
 
 	// Update is called when a node status changes significantly
 	// in the cluster changes.
-	Update(info *NodeInfo) error
+	Update(info *api.Node) error
 
 	// Leave is called when this node leaves the cluster.
-	Leave(info *NodeInfo) error
+	Leave(info *api.Node) error
 }
 
+// Cluster is the API that a cluster provider will implement.
 type Cluster interface {
+	// AddEventListener adds an event listener and exposes cluster events.
 	AddEventListener(ClusterListener) error
+
+	// Enumerate lists all the nodes in the cluster.
+	Enumerate() (api.Cluster, error)
+
+	// Remove node(s) from the cluster permanently.
+	Remove(nodes []api.Node) error
+
+	// Shutdown node(s) or the entire cluster.
+	Shutdown(cluster bool, nodes []api.Node) error
+
+	// Start starts the cluster manager and state machine.
+	// It also causes this node to join the cluster.
 	Start() error
 }
 

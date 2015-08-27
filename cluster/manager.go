@@ -9,6 +9,8 @@ import (
 	"net"
 	"time"
 
+	"github.com/libopenstorage/openstorage/api"
+
 	log "github.com/Sirupsen/logrus"
 
 	kv "github.com/portworx/kvdb"
@@ -19,7 +21,8 @@ type ClusterManager struct {
 	listeners *list.List
 	config    Config
 	kv        kv.Kvdb
-	nodeInfo  map[string]NodeInfo // Info on the nodes in the cluster
+	status    api.Status
+	nodes     map[string]api.Node // Info on the nodes in the cluster
 }
 
 func externalIp() (string, error) {
@@ -66,40 +69,37 @@ func (c *ClusterManager) AddEventListener(listener ClusterListener) error {
 	return nil
 }
 
-func (c *ClusterManager) getInfo() *NodeInfo {
-	var info = NodeInfo{}
+func (c *ClusterManager) getSelf() *api.Node {
+	var node = api.Node{}
 	s := systemutils.New()
 
-	info.Cpu, _, _ = s.CpuUsage()
-	info.Memory = s.MemUsage()
-	info.Luns = s.Luns()
-	info.NodeId = c.config.NodeId
-	info.Ip, _ = externalIp()
-	info.Status = StatusOk
+	node.Id = c.config.NodeId
+	node.Status = api.StatusOk
+	node.Ip, _ = externalIp()
 
-	return &info
+	node.Cpu, _, _ = s.CpuUsage()
+	node.Memory = s.MemUsage()
+	node.Luns = s.Luns()
+
+	return &node
 }
 
-func (c *ClusterManager) initNode(db *Database) (*NodeInfo, bool) {
-	info := c.getInfo()
+func (c *ClusterManager) initNode(db *Database) (*api.Node, bool) {
+	node := c.getSelf()
 
-	node := Node{
-		Ip:     info.Ip,
-		Status: info.Status}
-
-	_, exists := db.Nodes[c.config.NodeId]
+	_, exists := db.NodeEntries[node.Id]
 
 	// Add us into the database.
-	db.Nodes[c.config.NodeId] = node
+	db.NodeEntries[c.config.NodeId] = NodeEntry{Id: node.Id, Ip: node.Ip}
 
 	log.Infof("Node %d joining cluster %s... \n\tIP: %s",
 		c.config.NodeId, c.config.ClusterId, node.Ip)
 
-	return info, exists
+	return node, exists
 }
 
 // Initialize node and alert listeners that we are joining the cluster.
-func (c *ClusterManager) joinCluster(db *Database, self *NodeInfo, exist bool) error {
+func (c *ClusterManager) joinCluster(db *Database, self *api.Node, exist bool) error {
 	var err error
 
 	// If I am already in the cluster map, don't add me again.
@@ -128,7 +128,7 @@ found:
 		}
 	}
 
-	for id, n := range db.Nodes {
+	for id, n := range db.NodeEntries {
 		if id != c.config.NodeId {
 			// Check to see if the IP is the same.  If it is, then we have a stale entry.
 			if n.Ip == self.Ip {
@@ -152,7 +152,7 @@ done:
 	return err
 }
 
-func (c *ClusterManager) initCluster(db *Database, self *NodeInfo, exist bool) error {
+func (c *ClusterManager) initCluster(db *Database, self *api.Node, exist bool) error {
 	err := error(nil)
 
 	// Alert all listeners that we are initializing a new cluster.
@@ -176,18 +176,18 @@ done:
 }
 
 func (c *ClusterManager) processHeartbeat(err error, ip string, t interface{}) {
-	var info *NodeInfo = t.(*NodeInfo)
+	var node *api.Node = t.(*api.Node)
 
-	last, ok := c.nodeInfo[info.NodeId]
-	c.nodeInfo[info.NodeId] = *info
+	last, ok := c.nodes[node.Id]
+	c.nodes[node.Id] = *node
 
 	// Allert listeners if status changed significantly...
-	if !ok || last.Status != info.Status {
-		log.Info("Node ", info.NodeId, " changed status\n\tIP: ",
-			info.Ip, "\n\tTime: ", info.Timestamp, "\n\tStatus: ", info.Status)
+	if !ok || last.Status != node.Status {
+		log.Info("Node ", node.Id, " changed status\n\tIP: ",
+			node.Ip, "\n\tTime: ", node.Timestamp, "\n\tStatus: ", node.Status)
 
 		for e := c.listeners.Front(); e != nil; e = e.Next() {
-			err = e.Value.(ClusterListener).Update(info)
+			err = e.Value.(ClusterListener).Update(node)
 			if err != nil {
 				log.Warn("Failed to notify ", e.Value.(ClusterListener).String())
 			}
@@ -203,15 +203,15 @@ func (c *ClusterManager) heartBeat() {
 		// ubcast.Push(NodeUpdate, &myInfo)
 
 		// Process heartbeats from other nodes...
-		for id, info := range c.nodeInfo {
-			if info.Status == StatusOk && time.Since(info.Timestamp) > 10000*time.Millisecond {
+		for id, n := range c.nodes {
+			if n.Status == api.StatusOk && time.Since(n.Timestamp) > 10000*time.Millisecond {
 				log.Warn("Detected node ", id, " to be offline.")
 
-				info.Status = StatusOffline
-				c.nodeInfo[id] = info
+				n.Status = api.StatusOffline
+				c.nodes[id] = n
 
 				for e := c.listeners.Front(); e != nil; e = e.Next() {
-					err := e.Value.(ClusterListener).Leave(&info)
+					err := e.Value.(ClusterListener).Leave(&n)
 					if err != nil {
 						log.Warn("Failed to notify ",
 							e.Value.(ClusterListener).String())
@@ -236,10 +236,11 @@ func (c *ClusterManager) Start() error {
 		log.Panic(err)
 	}
 
-	if db.Cluster.Status == StatusInit {
+	if db.Status == api.StatusInit {
 		log.Info("Will initialize a new cluster.")
 
-		db.Cluster.Status = StatusOk
+		c.status = api.StatusOk
+		db.Status = api.StatusOk
 		self, _ := c.initNode(&db)
 
 		// Update the new state of the cluster in the KV Database
@@ -257,9 +258,10 @@ func (c *ClusterManager) Start() error {
 		if err != nil {
 			log.Panic(err)
 		}
-	} else if db.Cluster.Status&StatusOk > 0 {
+	} else if db.Status&api.StatusOk > 0 {
 		log.Info("Cluster state is OK... Joining the cluster.")
 
+		c.status = api.StatusOk
 		self, exist := c.initNode(&db)
 
 		err = writeDatabase(&db)
@@ -285,5 +287,28 @@ func (c *ClusterManager) Start() error {
 	// Join the clusterwide heartbeat mesh.
 	go c.heartBeat()
 
+	return nil
+}
+
+func (c *ClusterManager) Enumerate() (api.Cluster, error) {
+	i := 0
+
+	cluster := api.Cluster{Id: c.config.ClusterId, Status: c.status}
+	cluster.Nodes = make([]api.Node, len(c.nodes))
+	for _, n := range c.nodes {
+		cluster.Nodes[i] = n
+		i++
+	}
+
+	return cluster, nil
+}
+
+func (c *ClusterManager) Remove(nodes []api.Node) error {
+	// TODO
+	return nil
+}
+
+func (c *ClusterManager) Shutdown(cluster bool, nodes []api.Node) error {
+	// TODO
 	return nil
 }

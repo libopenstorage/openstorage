@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"strings"
 
+	"github.com/libopenstorage/openstorage/api"
+
 	log "github.com/Sirupsen/logrus"
 
 	kv "github.com/portworx/kvdb"
@@ -13,8 +15,8 @@ import (
 func readDatabase() (Database, error) {
 	kvdb := kv.Instance()
 
-	db := Database{Cluster: Info{Status: StatusInit},
-		Nodes: make(map[string]Node)}
+	db := Database{Status: api.StatusInit,
+		NodeEntries: make(map[string]NodeEntry)}
 
 	kv, err := kvdb.Get("cluster/database")
 	if err != nil && !strings.Contains(err.Error(), "100: Key not found") {

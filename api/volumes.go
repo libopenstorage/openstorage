@@ -1,8 +1,5 @@
 package api
 
-// Version API version
-const Version = "v1"
-
 // OptionKey specifies a set of recognized query params
 type OptionKey string
 
