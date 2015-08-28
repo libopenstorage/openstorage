@@ -12,10 +12,10 @@ import (
 )
 
 const (
-	apiVersion = "v1"
+	volApiVersion = "v1"
 )
 
-type volDriver struct {
+type volApi struct {
 	restBase
 }
 
@@ -26,15 +26,15 @@ func responseStatus(err error) string {
 	return err.Error()
 }
 
-func newVolumeDriver(name string) restServer {
-	return &volDriver{restBase{version: apiVersion, name: name}}
+func newVolumeAPI(name string) restServer {
+	return &volApi{restBase{version: volApiVersion, name: name}}
 }
 
-func (vd *volDriver) String() string {
+func (vd *volApi) String() string {
 	return vd.name
 }
 
-func (vd *volDriver) parseVolumeID(r *http.Request) (api.VolumeID, error) {
+func (vd *volApi) parseVolumeID(r *http.Request) (api.VolumeID, error) {
 	vars := mux.Vars(r)
 	if id, ok := vars["id"]; ok {
 		return api.VolumeID(id), nil
@@ -42,7 +42,7 @@ func (vd *volDriver) parseVolumeID(r *http.Request) (api.VolumeID, error) {
 	return api.BadVolumeID, fmt.Errorf("could not parse snap ID")
 }
 
-func (vd *volDriver) parseSnapID(r *http.Request) (api.SnapID, error) {
+func (vd *volApi) parseSnapID(r *http.Request) (api.SnapID, error) {
 	vars := mux.Vars(r)
 	if id, ok := vars["id"]; ok {
 		return api.SnapID(id), nil
@@ -50,7 +50,7 @@ func (vd *volDriver) parseSnapID(r *http.Request) (api.SnapID, error) {
 	return api.BadSnapID, fmt.Errorf("could not parse snap ID")
 }
 
-func (vd *volDriver) create(w http.ResponseWriter, r *http.Request) {
+func (vd *volApi) create(w http.ResponseWriter, r *http.Request) {
 	var dcRes api.VolumeCreateResponse
 	var dcReq api.VolumeCreateRequest
 	method := "create"
@@ -61,7 +61,7 @@ func (vd *volDriver) create(w http.ResponseWriter, r *http.Request) {
 	}
 	d, err := volume.Get(vd.name)
 	if err != nil {
-		vd.notFound(w, r)
+		notFound(w, r)
 		return
 	}
 	ID, err := d.Create(dcReq.Locator, dcReq.Options, dcReq.Spec)
@@ -70,7 +70,7 @@ func (vd *volDriver) create(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(&dcRes)
 }
 
-func (vd *volDriver) volumeState(w http.ResponseWriter, r *http.Request) {
+func (vd *volApi) volumeState(w http.ResponseWriter, r *http.Request) {
 	var (
 		volumeID api.VolumeID
 		err      error
@@ -92,7 +92,7 @@ func (vd *volDriver) volumeState(w http.ResponseWriter, r *http.Request) {
 
 	d, err := volume.Get(vd.name)
 	if err != nil {
-		vd.notFound(w, r)
+		notFound(w, r)
 		return
 	}
 	for {
@@ -143,14 +143,14 @@ func (vd *volDriver) volumeState(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
-func (vd *volDriver) inspect(w http.ResponseWriter, r *http.Request) {
+func (vd *volApi) inspect(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var volumeID api.VolumeID
 
 	method := "inspect"
 	d, err := volume.Get(vd.name)
 	if err != nil {
-		vd.notFound(w, r)
+		notFound(w, r)
 		return
 	}
 	if volumeID, err = vd.parseVolumeID(r); err != nil {
@@ -167,7 +167,7 @@ func (vd *volDriver) inspect(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(dk)
 }
 
-func (vd *volDriver) delete(w http.ResponseWriter, r *http.Request) {
+func (vd *volApi) delete(w http.ResponseWriter, r *http.Request) {
 	var volumeID api.VolumeID
 	var err error
 
@@ -180,7 +180,7 @@ func (vd *volDriver) delete(w http.ResponseWriter, r *http.Request) {
 
 	d, err := volume.Get(vd.name)
 	if err != nil {
-		vd.notFound(w, r)
+		notFound(w, r)
 		return
 	}
 
@@ -189,7 +189,7 @@ func (vd *volDriver) delete(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-func (vd *volDriver) enumerate(w http.ResponseWriter, r *http.Request) {
+func (vd *volApi) enumerate(w http.ResponseWriter, r *http.Request) {
 	var locator api.VolumeLocator
 	var configLabels api.Labels
 	var err error
@@ -199,7 +199,7 @@ func (vd *volDriver) enumerate(w http.ResponseWriter, r *http.Request) {
 
 	d, err := volume.Get(vd.name)
 	if err != nil {
-		vd.notFound(w, r)
+		notFound(w, r)
 		return
 	}
 	params := r.URL.Query()
@@ -239,7 +239,7 @@ func (vd *volDriver) enumerate(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(vols)
 }
 
-func (vd *volDriver) snap(w http.ResponseWriter, r *http.Request) {
+func (vd *volApi) snap(w http.ResponseWriter, r *http.Request) {
 	var snapReq api.SnapCreateRequest
 	var snapRes api.SnapCreateResponse
 	method := "snap"
@@ -250,7 +250,7 @@ func (vd *volDriver) snap(w http.ResponseWriter, r *http.Request) {
 	}
 	d, err := volume.Get(vd.name)
 	if err != nil {
-		vd.notFound(w, r)
+		notFound(w, r)
 		return
 	}
 	ID, err := d.Snapshot(snapReq.ID, snapReq.Labels)
@@ -259,14 +259,14 @@ func (vd *volDriver) snap(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(&snapRes)
 }
 
-func (vd *volDriver) snapDelete(w http.ResponseWriter, r *http.Request) {
+func (vd *volApi) snapDelete(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var snapID api.SnapID
 
 	method := "snapDelete"
 	d, err := volume.Get(vd.name)
 	if err != nil {
-		vd.notFound(w, r)
+		notFound(w, r)
 		return
 	}
 	if snapID, err = vd.parseSnapID(r); err != nil {
@@ -283,14 +283,14 @@ func (vd *volDriver) snapDelete(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(api.VolumeResponse{Error: responseStatus(err)})
 }
 
-func (vd *volDriver) snapInspect(w http.ResponseWriter, r *http.Request) {
+func (vd *volApi) snapInspect(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var snapID api.SnapID
 
 	method := "snapInspect"
 	d, err := volume.Get(vd.name)
 	if err != nil {
-		vd.notFound(w, r)
+		notFound(w, r)
 		return
 	}
 	if snapID, err = vd.parseSnapID(r); err != nil {
@@ -307,7 +307,7 @@ func (vd *volDriver) snapInspect(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(dk)
 }
 
-func (vd *volDriver) snapEnumerate(w http.ResponseWriter, r *http.Request) {
+func (vd *volApi) snapEnumerate(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var labels api.Labels
 	var ids []api.VolumeID
@@ -316,7 +316,7 @@ func (vd *volDriver) snapEnumerate(w http.ResponseWriter, r *http.Request) {
 	method := "snapEnumerate"
 	d, err := volume.Get(vd.name)
 	if err != nil {
-		vd.notFound(w, r)
+		notFound(w, r)
 		return
 	}
 	params := r.URL.Query()
@@ -360,25 +360,25 @@ func (vd *volDriver) snapEnumerate(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(snaps)
 }
 
-func (vd *volDriver) stats(w http.ResponseWriter, r *http.Request) {
+func (vd *volApi) stats(w http.ResponseWriter, r *http.Request) {
 }
 
-func (vd *volDriver) alerts(w http.ResponseWriter, r *http.Request) {
+func (vd *volApi) alerts(w http.ResponseWriter, r *http.Request) {
 }
 
-func version(route string) string {
-	return "/" + apiVersion + "/" + route
+func volVersion(route string) string {
+	return "/" + volApiVersion + "/" + route
 }
 
 func volPath(route string) string {
-	return version("volumes" + route)
+	return volVersion("volumes" + route)
 }
 
 func snapPath(route string) string {
-	return version("snapshot" + route)
+	return volVersion("snapshot" + route)
 }
 
-func (vd *volDriver) Routes() []*Route {
+func (vd *volApi) Routes() []*Route {
 	return []*Route{
 		&Route{verb: "POST", path: volPath(""), fn: vd.create},
 		&Route{verb: "PUT", path: volPath("/{id}"), fn: vd.volumeState},

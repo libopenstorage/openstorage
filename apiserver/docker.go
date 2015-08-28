@@ -55,6 +55,12 @@ func volDriverPath(method string) string {
 	return fmt.Sprintf("/%s.%s", VolumeDriver, method)
 }
 
+func (d *driver) volNotFound(request string, id string, e error, w http.ResponseWriter) error {
+	err := fmt.Errorf("Failed to locate volume: " + e.Error())
+	d.logReq(request, id).Warn(http.StatusNotFound, " ", err.Error())
+	return err
+}
+
 func (d *driver) Routes() []*Route {
 	return []*Route{
 		&Route{verb: "POST", path: volDriverPath("Create"), fn: d.create},

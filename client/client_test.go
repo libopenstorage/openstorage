@@ -26,7 +26,7 @@ func TestAll(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to initialize Driver: %v", err)
 	}
-	apiserver.StartDriverAPI(btrfs.Name, 9003, config.DriverAPIBase)
+	apiserver.StartServerAPI(btrfs.Name, 9003, config.DriverAPIBase)
 	time.Sleep(time.Second * 2)
 	c, err := NewDriverClient(btrfs.Name)
 	if err != nil {

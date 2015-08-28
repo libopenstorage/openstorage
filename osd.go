@@ -78,7 +78,7 @@ func start(c *cli.Context) {
 			return
 		}
 
-		err = apiserver.StartDriverAPI(d, 0, config.DriverAPIBase)
+		err = apiserver.StartServerAPI(d, 0, config.DriverAPIBase)
 		if err != nil {
 			fmt.Println("Unable to start volume driver: ", err)
 			return
