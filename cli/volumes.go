@@ -7,7 +7,7 @@ import (
 
 	"github.com/codegangsta/cli"
 	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/client"
+	"github.com/libopenstorage/openstorage/api/client"
 	"github.com/libopenstorage/openstorage/volume"
 )
 

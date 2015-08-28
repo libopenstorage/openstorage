@@ -13,7 +13,7 @@ import (
 	"github.com/portworx/kvdb/etcd"
 	"github.com/portworx/kvdb/mem"
 
-	"github.com/libopenstorage/openstorage/apiserver"
+	apiserver "github.com/libopenstorage/openstorage/api/server"
 	osdcli "github.com/libopenstorage/openstorage/cli"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/config"

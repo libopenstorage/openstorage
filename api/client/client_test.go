@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/libopenstorage/openstorage/apiserver"
+	apiserver "github.com/libopenstorage/openstorage/api/server"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/drivers/btrfs"
 	"github.com/libopenstorage/openstorage/drivers/test"

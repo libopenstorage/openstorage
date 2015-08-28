@@ -1,7 +1,7 @@
 package pwx
 
 import (
-	"github.com/libopenstorage/openstorage/client"
+	"github.com/libopenstorage/openstorage/api/client"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/volume"
 )
