@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/volume"
 )
@@ -19,9 +20,14 @@ type Client struct {
 	httpClient *http.Client
 }
 
-// VolumeDriver returns REST wrapper for the VolumeDriver interface.
+// VolumeDriver returns a REST wrapper for the VolumeDriver interface.
 func (c *Client) VolumeDriver() volume.VolumeDriver {
 	return newVolumeClient(c)
+}
+
+// ClusterManager returns a REST wrapper for the Cluster interface.
+func (c *Client) ClusterManager() cluster.Cluster {
+	return newClusterClient(c)
 }
 
 // Status sends a Status request at the /status REST endpoint.
