@@ -86,6 +86,7 @@ func (c *ClusterManager) getSelf() *api.Node {
 
 func (c *ClusterManager) initNode(db *Database) (*api.Node, bool) {
 	node := c.getSelf()
+	c.nodes[node.Id] = *node
 
 	_, exists := db.NodeEntries[node.Id]
 
@@ -227,6 +228,7 @@ func (c *ClusterManager) Start() error {
 	kvdb := kv.Instance()
 
 	c.listeners = list.New()
+	c.nodes = make(map[string]api.Node)
 
 	kvlock, err := kvdb.Lock("cluster/lock", 60)
 	if err != nil {
