@@ -279,7 +279,7 @@ func (r *Request) Do() *Response {
 
 done:
 	if err != nil {
-		return &Response{err: r.err}
+		return &Response{err: err}
 	}
 	return response
 }

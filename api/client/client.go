@@ -58,7 +58,6 @@ func (c *Client) Delete() *Request {
 }
 
 func newHTTPClient(u *url.URL, tlsConfig *tls.Config, timeout time.Duration) *http.Client {
-
 	httpTransport := &http.Transport{
 		TLSClientConfig: tlsConfig,
 	}
@@ -85,7 +84,6 @@ func newHTTPClient(u *url.URL, tlsConfig *tls.Config, timeout time.Duration) *ht
 
 // NewClient returns a new REST client for specified server.
 func NewClient(host string, version string) (*Client, error) {
-
 	baseURL, err := url.Parse(host)
 	if err != nil {
 		return nil, err
