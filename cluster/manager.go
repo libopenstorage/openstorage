@@ -92,7 +92,7 @@ func (c *ClusterManager) initNode(db *Database) (*api.Node, bool) {
 	// Add us into the database.
 	db.NodeEntries[c.config.NodeId] = NodeEntry{Id: node.Id, Ip: node.Ip}
 
-	log.Infof("Node %d joining cluster %s... \n\tIP: %s",
+	log.Infof("Node %s joining cluster... \n\tCluster ID: %s\n\tIP: %s",
 		c.config.NodeId, c.config.ClusterId, node.Ip)
 
 	return node, exists
@@ -225,6 +225,8 @@ func (c *ClusterManager) heartBeat() {
 func (c *ClusterManager) Start() error {
 	log.Info("Cluster manager starting...")
 	kvdb := kv.Instance()
+
+	c.listeners = list.New()
 
 	kvlock, err := kvdb.Lock("cluster/lock", 60)
 	if err != nil {

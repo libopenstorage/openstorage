@@ -50,7 +50,7 @@ func ClusterCommands(name string) []cli.Command {
 	commands := []cli.Command{
 		{
 			Name:    "inspect",
-			Aliases: []string{"i"},
+			Aliases: []string{"ci"},
 			Usage:   "Inspect the cluster",
 			Action:  c.enumerate,
 			Flags: []cli.Flag{

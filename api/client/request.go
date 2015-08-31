@@ -261,6 +261,7 @@ func (r *Request) Do() *Response {
 	if err != nil {
 		goto done
 	}
+
 	if resp.Body != nil {
 		defer resp.Body.Close()
 		body, err = ioutil.ReadAll(resp.Body)

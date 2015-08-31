@@ -12,7 +12,7 @@ import (
 )
 
 type osd struct {
-	ClusterConfig cluster.Config
+	ClusterConfig cluster.Config `yaml:"cluster"`
 	Drivers       map[string]volume.DriverParams
 }
 

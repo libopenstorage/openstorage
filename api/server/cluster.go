@@ -29,11 +29,13 @@ func (c *clusterApi) enumerate(w http.ResponseWriter, r *http.Request) {
 	inst, err := cluster.Inst()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	cluster, err := inst.Enumerate()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	json.NewEncoder(w).Encode(cluster)
@@ -52,7 +54,7 @@ func (c *clusterApi) delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *clusterApi) shutdown(w http.ResponseWriter, r *http.Request) {
-	method := "dhutdown"
+	method := "shutdown"
 
 	c.sendError(c.name, method, w, "Not implemented.", http.StatusNotImplemented)
 }

@@ -142,27 +142,32 @@ func main() {
 			Subcommands: osdcli.DriverCommands(),
 		},
 		{
-			Name:   "version",
-			Usage:  "Display version",
-			Action: showVersion,
+			Name:    "version",
+			Aliases: []string{"v"},
+			Usage:   "Display version",
+			Action:  showVersion,
 		},
 	}
 
 	for _, v := range drivers {
 		if v.driverType == volume.Block {
+			bCmds := osdcli.BlockVolumeCommands(v.name)
+			clstrCmds := osdcli.ClusterCommands(v.name)
+			cmds := append(bCmds, clstrCmds...)
 			c := cli.Command{
 				Name:        v.name,
-				Aliases:     []string{"v"},
-				Usage:       fmt.Sprintf("Manage %s volumes", v.name),
-				Subcommands: osdcli.BlockVolumeCommands(v.name),
+				Usage:       fmt.Sprintf("Manage %s storage", v.name),
+				Subcommands: cmds,
 			}
 			app.Commands = append(app.Commands, c)
 		} else if v.driverType == volume.File {
+			fCmds := osdcli.FileVolumeCommands(v.name)
+			clstrCmds := osdcli.ClusterCommands(v.name)
+			cmds := append(fCmds, clstrCmds...)
 			c := cli.Command{
 				Name:        v.name,
-				Aliases:     []string{"v"},
 				Usage:       fmt.Sprintf("Manage %s volumes", v.name),
-				Subcommands: osdcli.FileVolumeCommands(v.name),
+				Subcommands: cmds,
 			}
 			app.Commands = append(app.Commands, c)
 		} else {

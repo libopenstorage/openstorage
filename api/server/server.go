@@ -75,7 +75,7 @@ func startServer(name string, sockBase string, port int, routes []*Route) error 
 	return err
 }
 
-// StartDriverAPI starts a REST server to receive driver configuration commands
+// StartServerAPI starts a REST server to receive driver configuration commands
 // from the CLI/UX.
 func StartServerAPI(name string, port int, restBase string) error {
 	volApi := newVolumeAPI(name)

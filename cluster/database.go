@@ -19,8 +19,8 @@ func readDatabase() (Database, error) {
 		NodeEntries: make(map[string]NodeEntry)}
 
 	kv, err := kvdb.Get("cluster/database")
-	if err != nil && !strings.Contains(err.Error(), "100: Key not found") {
-		log.Warn("Warning, Could not read cluster database")
+	if err != nil && !strings.Contains(err.Error(), "Key not found") {
+		log.Warn("Warning, could not read cluster database")
 		goto done
 	}
 
