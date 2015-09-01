@@ -122,7 +122,6 @@ func (m *Matrix) Mount(minor int, device, path, fs string, flags uintptr, data s
 			Minor:      minor,
 			Fs:         fs,
 		}
-		m.mounts[device] = info
 	}
 
 	// Validate input params
@@ -145,6 +144,7 @@ func (m *Matrix) Mount(minor int, device, path, fs string, flags uintptr, data s
 		return err
 	}
 	info.Mountpoint = append(info.Mountpoint, PathInfo{Path: path, ref: 1})
+	m.mounts[device] = info
 	return nil
 }
 
