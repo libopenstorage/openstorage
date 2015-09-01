@@ -40,13 +40,15 @@ $ go get github.com/tools/godep
 At this point you can build openstorage from the source folder:
 
 ```
-$GOPATH/src/github.com/libopenstorage/openstorage $ godep go build .
+$GOPATH/src/github.com/libopenstorage/openstorage $ godep restore ./...
+
+$GOPATH/src/github.com/libopenstorage/openstorage $ make
 ```
 
 or run only unit tests:
 
 ```
-$GOPATH/src/github.com/libopenstorage/openstorage $ godep go test ./... 
+$GOPATH/src/github.com/libopenstorage/openstorage $ make test
 ```
 
 ## Starting OSD
