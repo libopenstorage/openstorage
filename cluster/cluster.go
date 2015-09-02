@@ -48,17 +48,17 @@ type ClusterListener interface {
 	Join(self *api.Node, db *Database) error
 
 	// Add is called when a new node joins the cluster.
-	Add(info *api.Node) error
+	Add(node *api.Node) error
 
 	// Remove is called when a node leaves the cluster
-	Remove(info *api.Node) error
+	Remove(node *api.Node) error
 
 	// Update is called when a node status changes significantly
 	// in the cluster changes.
-	Update(info *api.Node) error
+	Update(node *api.Node) error
 
 	// Leave is called when this node leaves the cluster.
-	Leave(info *api.Node) error
+	Leave(node *api.Node) error
 }
 
 // Cluster is the API that a cluster provider will implement.
@@ -84,12 +84,28 @@ type Cluster interface {
 func New(cfg Config, kv kvdb.Kvdb) (*ClusterManager, error) {
 	inst = &ClusterManager{config: cfg, kv: kv}
 
-	err := inst.Start()
+	err := inst.Init()
 	if err != nil {
 		inst = nil
 		return nil, err
 	}
+
 	return inst, nil
+}
+
+// Start will run the cluster manager daemon.
+func Start() error {
+	if inst == nil {
+		return errors.New("Cluster is not initialized.")
+	}
+
+	err := inst.Start()
+	if err != nil {
+		inst = nil
+		return err
+	}
+
+	return nil
 }
 
 // Inst returns an instance of an already instantiated cluster manager.

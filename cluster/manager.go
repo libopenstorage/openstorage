@@ -227,9 +227,6 @@ func (c *ClusterManager) Start() error {
 	log.Info("Cluster manager starting...")
 	kvdb := kv.Instance()
 
-	c.listeners = list.New()
-	c.nodes = make(map[string]api.Node)
-
 	kvlock, err := kvdb.Lock("cluster/lock", 60)
 	if err != nil {
 		log.Panic("Fatal, Unable to obtain cluster lock.", err)
@@ -290,6 +287,13 @@ func (c *ClusterManager) Start() error {
 
 	// Join the clusterwide heartbeat mesh.
 	go c.heartBeat()
+
+	return nil
+}
+
+func (c *ClusterManager) Init() error {
+	c.listeners = list.New()
+	c.nodes = make(map[string]api.Node)
 
 	return nil
 }
