@@ -23,13 +23,6 @@ type VolumeInfo struct {
 	VolumeID VolumeID
 }
 
-type Container struct {
-	DockerID string
-	Config   dockerclient.ContainerConfig
-	Info     *dockerclient.ContainerInfo
-	Volumes  []VolumeInfo
-}
-
 // Node describes the state of a node.
 // It includes the current physical state (CPU, memory, storage, network usage) as
 // well as the containers running on the system.
@@ -42,7 +35,7 @@ type Node struct {
 	Ip         string
 	Timestamp  time.Time
 	Status     Status
-	Containers []Container
+	Containers []dockerclient.Container
 }
 
 // Cluster represents the state of the cluster.

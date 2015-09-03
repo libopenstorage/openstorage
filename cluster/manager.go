@@ -9,6 +9,8 @@ import (
 	"net"
 	"time"
 
+	"github.com/samalba/dockerclient"
+
 	"github.com/libopenstorage/openstorage/api"
 
 	log "github.com/Sirupsen/logrus"
@@ -17,12 +19,17 @@ import (
 	"github.com/portworx/systemutils"
 )
 
+const (
+	dockerHost = "unix:///var/run/docker.sock"
+)
+
 type ClusterManager struct {
 	listeners *list.List
 	config    Config
 	kv        kv.Kvdb
 	status    api.Status
 	nodes     map[string]api.Node // Info on the nodes in the cluster
+	docker    *dockerclient.DockerClient
 }
 
 func externalIp() (string, error) {
@@ -73,6 +80,7 @@ func (c *ClusterManager) getSelf() *api.Node {
 	var node = api.Node{}
 	s := systemutils.New()
 
+	// Get physical node info.
 	node.Id = c.config.NodeId
 	node.Status = api.StatusOk
 	node.Ip, _ = externalIp()
@@ -80,6 +88,9 @@ func (c *ClusterManager) getSelf() *api.Node {
 	node.Cpu, _, _ = s.CpuUsage()
 	node.Memory = s.MemUsage()
 	node.Luns = s.Luns()
+
+	// Get containers running on this system.
+	node.Containers, _ = c.docker.ListContainers(true, true, "")
 
 	return &node
 }
@@ -292,8 +303,15 @@ func (c *ClusterManager) Start() error {
 }
 
 func (c *ClusterManager) Init() error {
+	docker, err := dockerclient.NewDockerClient(dockerHost, nil)
+	if err != nil {
+		log.Printf("Fatal, could not connect to Docker.")
+		return err
+	}
+
 	c.listeners = list.New()
 	c.nodes = make(map[string]api.Node)
+	c.docker = docker
 
 	return nil
 }
