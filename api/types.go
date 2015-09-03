@@ -10,12 +10,6 @@ type VolumeID string
 // BadVolumeID invalid volume ID, usually accompanied by an error.
 const BadVolumeID = VolumeID("")
 
-// SnapID driver specific system wide unique snap identifier.
-type SnapID string
-
-// BadSnapID invalid snap ID, usually accompanied by an error.
-const BadSnapID = SnapID("")
-
 // VolumeCos a number representing class of servcie.
 type VolumeCos int
 
@@ -82,7 +76,7 @@ type CreateOptions struct {
 	// FailIfExists fail create request if a volume with matching Locator already exists.
 	FailIfExists bool
 	// CreateFromSnap will create a volume with specified SnapID
-	CreateFromSnap SnapID
+	CreateFromSnap VolumeID
 }
 
 // Filesystem supported filesystems
@@ -130,6 +124,10 @@ const MachineNone MachineID = ""
 type Volume struct {
 	// ID Self referential VolumeID
 	ID VolumeID
+	// Parent ID if this was a snap
+	Parent VolumeID
+	// Readonly
+	ReadOnly bool
 	// Locator User specified locator
 	Locator VolumeLocator
 	// Ctime Volume creation time
@@ -156,20 +154,6 @@ type Volume struct {
 	ReplicaSet []MachineID
 	// Error Last recorded error
 	Error string
-}
-
-// VolumeSnap identifies a volume snapshot.
-type VolumeSnap struct {
-	// SnapID system generated ID
-	ID SnapID
-	// VolumeID Volume identifier.
-	VolumeID VolumeID
-	// Ctime Snap creation time.
-	Ctime time.Time
-	// SnapLabel arbitrary name value pairs
-	SnapLabels Labels
-	// Usage
-	Usage uint64
 }
 
 // VolumeStats

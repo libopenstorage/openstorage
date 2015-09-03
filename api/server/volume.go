@@ -42,14 +42,6 @@ func (vd *volApi) parseVolumeID(r *http.Request) (api.VolumeID, error) {
 	return api.BadVolumeID, fmt.Errorf("could not parse snap ID")
 }
 
-func (vd *volApi) parseSnapID(r *http.Request) (api.SnapID, error) {
-	vars := mux.Vars(r)
-	if id, ok := vars["id"]; ok {
-		return api.SnapID(id), nil
-	}
-	return api.BadSnapID, fmt.Errorf("could not parse snap ID")
-}
-
 func (vd *volApi) create(w http.ResponseWriter, r *http.Request) {
 	var dcRes api.VolumeCreateResponse
 	var dcReq api.VolumeCreateRequest
@@ -253,65 +245,16 @@ func (vd *volApi) snap(w http.ResponseWriter, r *http.Request) {
 		notFound(w, r)
 		return
 	}
-	ID, err := d.Snapshot(snapReq.ID, snapReq.Labels)
-	snapRes.VolumeResponse = api.VolumeResponse{Error: responseStatus(err)}
-	snapRes.ID = ID
+	ID, err := d.Snapshot(snapReq.ID, snapReq.Readonly, snapReq.Locator)
+	snapRes.VolumeCreateResponse.VolumeResponse = api.VolumeResponse{Error: responseStatus(err)}
+	snapRes.VolumeCreateResponse.ID = ID
 	json.NewEncoder(w).Encode(&snapRes)
-}
-
-func (vd *volApi) snapDelete(w http.ResponseWriter, r *http.Request) {
-	var err error
-	var snapID api.SnapID
-
-	method := "snapDelete"
-	d, err := volume.Get(vd.name)
-	if err != nil {
-		notFound(w, r)
-		return
-	}
-	if snapID, err = vd.parseSnapID(r); err != nil {
-		e := fmt.Errorf("Failed to parse SnapID: %s", err.Error())
-		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
-		return
-	}
-	err = d.SnapDelete(snapID)
-	if err != nil {
-		vd.sendError(vd.name, method, w, err.Error(), http.StatusNotFound)
-		return
-	}
-
-	json.NewEncoder(w).Encode(api.VolumeResponse{Error: responseStatus(err)})
-}
-
-func (vd *volApi) snapInspect(w http.ResponseWriter, r *http.Request) {
-	var err error
-	var snapID api.SnapID
-
-	method := "snapInspect"
-	d, err := volume.Get(vd.name)
-	if err != nil {
-		notFound(w, r)
-		return
-	}
-	if snapID, err = vd.parseSnapID(r); err != nil {
-		e := fmt.Errorf("Failed to parse SnapID: %s", err.Error())
-		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
-		return
-	}
-	dk, err := d.SnapInspect([]api.SnapID{snapID})
-	if err != nil {
-		vd.sendError(vd.name, method, w, err.Error(), http.StatusNotFound)
-		return
-	}
-
-	json.NewEncoder(w).Encode(dk)
 }
 
 func (vd *volApi) snapEnumerate(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var labels api.Labels
 	var ids []api.VolumeID
-	var snaps []api.VolumeSnap
 
 	method := "snapEnumerate"
 	d, err := volume.Get(vd.name)
@@ -328,33 +271,19 @@ func (vd *volApi) snapEnumerate(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	v, ok := params[string(api.OptSnapID)]
-	if ok && v != nil {
-		sids := make([]api.SnapID, len(params))
+	v, ok := params[string(api.OptVolumeID)]
+	if v != nil && ok {
+		ids = make([]api.VolumeID, len(params))
 		for i, s := range v {
-			sids[i] = api.SnapID(s)
+			ids[i] = api.VolumeID(s)
 		}
-		snaps, err = d.SnapInspect(sids)
-		if err != nil {
-			e := fmt.Errorf("Failed to inspect snaps: %s", err.Error())
-			vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
-			return
-		}
-	} else {
-		v, ok = params[string(api.OptVolumeID)]
-		if v != nil && ok {
-			ids = make([]api.VolumeID, len(params))
-			for i, s := range v {
-				ids[i] = api.VolumeID(s)
-			}
-		}
+	}
 
-		snaps, err = d.SnapEnumerate(ids, labels)
-		if err != nil {
-			e := fmt.Errorf("Failed to enumerate snaps: %s", err.Error())
-			vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
-			return
-		}
+	snaps, err := d.SnapEnumerate(ids, labels)
+	if err != nil {
+		e := fmt.Errorf("Failed to enumerate snaps: %s", err.Error())
+		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+		return
 	}
 
 	json.NewEncoder(w).Encode(snaps)
@@ -391,7 +320,5 @@ func (vd *volApi) Routes() []*Route {
 		&Route{verb: "GET", path: volPath("/alerts/{id}"), fn: vd.alerts},
 		&Route{verb: "POST", path: snapPath(""), fn: vd.snap},
 		&Route{verb: "GET", path: snapPath(""), fn: vd.snapEnumerate},
-		&Route{verb: "GET", path: snapPath("/{id}"), fn: vd.snapInspect},
-		&Route{verb: "DELETE", path: snapPath("/{id}"), fn: vd.snapDelete},
 	}
 }

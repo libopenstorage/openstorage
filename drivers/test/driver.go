@@ -24,7 +24,7 @@ const testPath = "/tmp/openstorage/mount"
 type Context struct {
 	volume.VolumeDriver
 	volID      api.VolumeID
-	snapID     api.SnapID
+	snapID     api.VolumeID
 	mountPath  string
 	devicePath string
 	Filesystem string
@@ -34,7 +34,7 @@ func NewContext(d volume.VolumeDriver) *Context {
 	return &Context{
 		VolumeDriver: d,
 		volID:        api.BadVolumeID,
-		snapID:       api.BadSnapID,
+		snapID:       api.BadVolumeID,
 		Filesystem:   string(""),
 	}
 }
@@ -222,8 +222,10 @@ func snap(t *testing.T, ctx *Context) {
 	if ctx.volID == api.BadVolumeID {
 		create(t, ctx)
 	}
+	labels := api.Labels{"oh": "snap"}
 	assert.NotEqual(t, ctx.volID, api.BadVolumeID, "invalid volume ID")
-	id, err := ctx.Snapshot(ctx.volID, api.Labels{"oh": "snap"})
+	id, err := ctx.Snapshot(ctx.volID, false,
+		api.VolumeLocator{Name: "snappy", VolumeLabels: labels})
 	assert.NoError(t, err, "Failed in creating a snapshot")
 	ctx.snapID = id
 }
@@ -231,13 +233,13 @@ func snap(t *testing.T, ctx *Context) {
 func snapInspect(t *testing.T, ctx *Context) {
 	fmt.Println("snapInspect")
 
-	snaps, err := ctx.SnapInspect([]api.SnapID{ctx.snapID})
+	snaps, err := ctx.Inspect([]api.VolumeID{ctx.snapID})
 	assert.NoError(t, err, "Failed in Inspect")
 	assert.NotNil(t, snaps, "Nil snaps")
 	assert.Equal(t, len(snaps), 1, "Expect 1 snaps actual %v snaps", len(snaps))
 	assert.Equal(t, snaps[0].ID, ctx.snapID, "Expect snapID %v actual %v", ctx.snapID, snaps[0].ID)
 
-	snaps, err = ctx.SnapInspect([]api.SnapID{api.SnapID("shouldNotExist")})
+	snaps, err = ctx.Inspect([]api.VolumeID{api.VolumeID("shouldNotExist")})
 	assert.Equal(t, 0, len(snaps), "Expect 0 snaps actual %v snaps", len(snaps))
 }
 
@@ -249,7 +251,7 @@ func snapEnumerate(t *testing.T, ctx *Context) {
 	assert.NotNil(t, snaps, "Nil snaps")
 	assert.Equal(t, 1, len(snaps), "Expect 1 snaps actual %v snaps", len(snaps))
 	assert.Equal(t, snaps[0].ID, ctx.snapID, "Expect snapID %v actual %v", ctx.snapID, snaps[0].ID)
-	labels := snaps[0].SnapLabels
+	labels := snaps[0].Locator.VolumeLabels
 
 	snaps, err = ctx.SnapEnumerate([]api.VolumeID{ctx.volID}, nil)
 	assert.NoError(t, err, "Failed in snapEnumerate")

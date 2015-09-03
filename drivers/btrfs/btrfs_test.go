@@ -3,7 +3,6 @@
 package btrfs
 
 import (
-	"os"
 	"testing"
 
 	"github.com/libopenstorage/openstorage/drivers/test"

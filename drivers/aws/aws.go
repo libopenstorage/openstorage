@@ -401,8 +401,15 @@ func (d *Driver) Delete(volumeID api.VolumeID) error {
 	return nil
 }
 
-func (d *Driver) Snapshot(volumeID api.VolumeID, labels api.Labels) (api.SnapID, error) {
+func (d *Driver) Snapshot(volumeID api.VolumeID, readonly bool, locator api.VolumeLocator) (api.VolumeID, error) {
 	dryRun := false
+	vols, err := d.DefaultEnumerator.Inspect([]api.VolumeID{volumeID})
+	if err != nil {
+		return api.BadVolumeID, err
+	}
+	if len(vols) != 1 {
+		return api.BadVolumeID, fmt.Errorf("Failed to inspect %v len %v", volumeID, len(vols))
+	}
 	awsID := string(volumeID)
 	request := &ec2.CreateSnapshotInput{
 		VolumeID: &awsID,
@@ -410,26 +417,17 @@ func (d *Driver) Snapshot(volumeID api.VolumeID, labels api.Labels) (api.SnapID,
 	}
 	snap, err := d.ec2.CreateSnapshot(request)
 	chaos.Now(koStrayCreate)
-	volSnap := &api.VolumeSnap{
-		ID:         api.SnapID(*snap.SnapshotID),
-		VolumeID:   volumeID,
-		SnapLabels: labels,
-		Ctime:      time.Now(),
-	}
+	vols[0].ID = api.VolumeID(*snap.SnapshotID)
+	vols[0].Parent = volumeID
+	vols[0].Locator = locator
+	vols[0].Ctime = time.Now()
+
 	chaos.Now(koStrayCreate)
-	err = d.CreateSnap(volSnap)
+	err = d.CreateVol(&vols[0])
 	if err != nil {
-		return api.BadSnapID, err
+		return api.BadVolumeID, err
 	}
-	return volSnap.ID, nil
-}
-
-func (d *Driver) SnapDelete(snapID api.SnapID) error {
-	return volume.ErrNotSupported
-}
-
-func (d *Driver) SnapInspect(snapID []api.SnapID) ([]api.VolumeSnap, error) {
-	return []api.VolumeSnap{}, volume.ErrNotSupported
+	return vols[0].ID, nil
 }
 
 func (d *Driver) Stats(volumeID api.VolumeID) (api.VolumeStats, error) {
@@ -444,7 +442,7 @@ func (d *Driver) Enumerate(locator api.VolumeLocator, labels api.Labels) ([]api.
 	return nil, volume.ErrNotSupported
 }
 
-func (d *Driver) SnapEnumerate(volIds []api.VolumeID, labels api.Labels) ([]api.VolumeSnap, error) {
+func (d *Driver) SnapEnumerate(volIds []api.VolumeID, labels api.Labels) ([]api.Volume, error) {
 	return nil, volume.ErrNotSupported
 }
 

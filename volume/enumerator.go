@@ -11,10 +11,9 @@ import (
 )
 
 const (
-	keyBase   = "openstorage/"
-	locks     = "/locks/"
-	volumes   = "/volumes/"
-	snapshots = "/snapshots/"
+	keyBase = "openstorage/"
+	locks   = "/locks/"
+	volumes = "/volumes/"
 )
 
 type Store interface {
@@ -35,18 +34,6 @@ type Store interface {
 
 	// DeleteVol. Returns error if volume does not exist.
 	DeleteVol(volID api.VolumeID) error
-
-	// GetSnap from snapID
-	GetSnap(snapID api.SnapID) (*api.VolumeSnap, error)
-
-	// Update snap with snap
-	UpdateSnap(snap *api.VolumeSnap) error
-
-	// CreateSnap with new snap
-	CreateSnap(snap *api.VolumeSnap) error
-
-	// DeleteSnap with new snap
-	DeleteSnap(snapID api.SnapID) error
 }
 
 // DefaultEnumerator for volume information. Implements the Enumerator Interface
@@ -55,15 +42,10 @@ type DefaultEnumerator struct {
 	driver        string
 	lockKeyPrefix string
 	volKeyPrefix  string
-	snapKeyPrefix string
 }
 
 func (e *DefaultEnumerator) lockKey(volID api.VolumeID) string {
 	return e.volKeyPrefix + string(volID) + ".lock"
-}
-
-func (e *DefaultEnumerator) snapKey(snapID api.SnapID) string {
-	return e.snapKeyPrefix + string(snapID)
 }
 
 func (e *DefaultEnumerator) volKey(volID api.VolumeID) string {
@@ -111,7 +93,6 @@ func NewDefaultEnumerator(driver string, kvdb kvdb.Kvdb) *DefaultEnumerator {
 		driver:        driver,
 		lockKeyPrefix: keyBase + driver + locks,
 		volKeyPrefix:  keyBase + driver + volumes,
-		snapKeyPrefix: keyBase + driver + snapshots,
 	}
 }
 
@@ -155,32 +136,6 @@ func (e *DefaultEnumerator) DeleteVol(volID api.VolumeID) error {
 	return err
 }
 
-// GetSnap from snapID
-func (e *DefaultEnumerator) GetSnap(snapID api.SnapID) (*api.VolumeSnap, error) {
-	var snap api.VolumeSnap
-	_, err := e.kvdb.GetVal(e.snapKey(snapID), &snap)
-
-	return &snap, err
-}
-
-// Update snap with snap
-func (e *DefaultEnumerator) UpdateSnap(snap *api.VolumeSnap) error {
-	_, err := e.kvdb.Put(e.snapKey(snap.ID), snap, 0)
-	return err
-}
-
-// CreateSnap with new snap
-func (e *DefaultEnumerator) CreateSnap(snap *api.VolumeSnap) error {
-	_, err := e.kvdb.Create(e.snapKey(snap.ID), snap, 0)
-	return err
-}
-
-// DeleteSnap with new snap
-func (e *DefaultEnumerator) DeleteSnap(snapID api.SnapID) error {
-	_, err := e.kvdb.Delete(e.snapKey(snapID))
-	return err
-}
-
 // Inspect specified volumee.
 // Errors ErrEnoEnt may be returned.
 func (e *DefaultEnumerator) Inspect(ids []api.VolumeID) ([]api.Volume, error) {
@@ -221,45 +176,28 @@ func (e *DefaultEnumerator) Enumerate(locator api.VolumeLocator,
 	return vols, nil
 }
 
-// SnapInspect provides details on this snapshot.
-// Errors ErrEnoEnt may be returned
-func (e *DefaultEnumerator) SnapInspect(ids []api.SnapID) ([]api.VolumeSnap, error) {
-	var err error
-	var snap *api.VolumeSnap
-	snaps := make([]api.VolumeSnap, 0, len(ids))
-
-	for _, v := range ids {
-		snap, err = e.GetSnap(v)
-		if err != nil {
-			break
-		}
-		snaps = append(snaps, *snap)
-	}
-	return snaps, err
-}
-
-// Enumerate snaps for specified volume
+// SnapEnumerate for specified volume
 func (e *DefaultEnumerator) SnapEnumerate(
 	volIDs []api.VolumeID,
-	snapLabels api.Labels) ([]api.VolumeSnap, error) {
-
-	kvp, err := e.kvdb.Enumerate(e.snapKeyPrefix)
+	labels api.Labels) ([]api.Volume, error) {
+	kvp, err := e.kvdb.Enumerate(e.volKeyPrefix)
 	if err != nil {
 		return nil, err
 	}
-	snaps := make([]api.VolumeSnap, 0, len(kvp))
+	vols := make([]api.Volume, 0, len(kvp))
 	for _, v := range kvp {
-		var elem api.VolumeSnap
+		var elem api.Volume
 		err = json.Unmarshal(v.Value, &elem)
 		if err != nil {
 			return nil, err
 		}
-		if volIDs != nil && !contains(elem.VolumeID, volIDs) {
+		if elem.Parent == api.BadVolumeID ||
+			(volIDs != nil && !contains(elem.Parent, volIDs)) {
 			continue
 		}
-		if hasSubset(elem.SnapLabels, snapLabels) {
-			snaps = append(snaps, elem)
+		if hasSubset(elem.Locator.VolumeLabels, labels) {
+			vols = append(vols, elem)
 		}
 	}
-	return snaps, nil
+	return vols, nil
 }

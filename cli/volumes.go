@@ -259,27 +259,35 @@ func (v *volDriver) volumeDelete(context *cli.Context) {
 }
 
 func (v *volDriver) snapCreate(context *cli.Context) {
-}
+	var err error
+	var labels api.Labels
+	fn := "snapCreate"
 
-func (v *volDriver) snapInspect(context *cli.Context) {
-	v.volumeOptions(context)
-	fn := "inspect"
-	if len(context.Args()) < 1 {
-		missingParameter(context, fn, "snapID", "Invalid number of arguments")
+	if len(context.Args()) != 1 {
+		missingParameter(context, fn, "volumeID", "Invalid number of arguments")
 		return
 	}
-	d := make([]api.SnapID, len(context.Args()))
-	for i, v := range context.Args() {
-		d[i] = api.SnapID(v)
-	}
+	volumeID := api.VolumeID(context.Args()[0])
 
-	snaps, err := v.volDriver.SnapInspect(d)
+	v.volumeOptions(context)
+	if l := context.String("label"); l != "" {
+		if labels, err = processLabels(l); err != nil {
+			cmdError(context, fn, err)
+			return
+		}
+	}
+	locator := api.VolumeLocator{
+		Name:         context.String("name"),
+		VolumeLabels: labels,
+	}
+	readonly := context.Bool("readonly")
+	id, err := v.volDriver.Snapshot(volumeID, readonly, locator)
 	if err != nil {
 		cmdError(context, fn, err)
 		return
 	}
 
-	cmdOutput(context, snaps)
+	fmtOutput(context, &Format{UUID: []string{string(id)}})
 }
 
 func (v *volDriver) snapEnumerate(context *cli.Context) {
@@ -309,194 +317,8 @@ func (v *volDriver) snapEnumerate(context *cli.Context) {
 	cmdOutput(context, snaps)
 }
 
-func (v *volDriver) snapDelete(context *cli.Context) {
-	fn := "snap delete"
-	if len(context.Args()) < 1 {
-		missingParameter(context, fn, "snapID", "Invalid number of arguments")
-		return
-	}
-	v.volumeOptions(context)
-	snapID := context.Args()[0]
-	err := v.volDriver.SnapDelete(api.SnapID(snapID))
-	if err != nil {
-		cmdError(context, fn, err)
-		return
-	}
-
-	fmtOutput(context, &Format{UUID: []string{context.Args()[0]}})
-}
-
-// BlockVolumeCommands exports CLI comamnds for a Block VolumeDriver.
-func BlockVolumeCommands(name string) []cli.Command {
-	v := &volDriver{name: name}
-
-	commands := []cli.Command{
-		{
-			Name:    "create",
-			Aliases: []string{"c"},
-			Usage:   "create a new volume",
-			Action:  v.volumeCreate,
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "label,l",
-					Usage: "Comma separated name=value pairs, e.g name=sqlvolume,type=production",
-					Value: "",
-				},
-				cli.IntFlag{
-					Name:  "size,s",
-					Usage: "specify size in MiB",
-					Value: 1024,
-				},
-				cli.StringFlag{
-					Name:  "fs",
-					Usage: "filesystem to be laid out: none|xfs|ext4",
-					Value: "ext4",
-				},
-				cli.IntFlag{
-					Name:  "block_size,b",
-					Usage: "block size in Kbytes",
-					Value: 32,
-				},
-				cli.IntFlag{
-					Name:  "repl,r",
-					Usage: "replication factor [1..2]",
-					Value: 1,
-				},
-				cli.IntFlag{
-					Name:  "cos",
-					Usage: "Class of Service [1..9]",
-					Value: 1,
-				},
-				cli.IntFlag{
-					Name:  "snap_interval,si",
-					Usage: "snapshot interval in minutes, 0 disables snaps",
-					Value: 0,
-				},
-			},
-		},
-		{
-			Name:    "format",
-			Aliases: []string{"f"},
-			Usage:   "Format volume to spec in create",
-			Action:  v.volumeFormat,
-		},
-		{
-			Name:    "attach",
-			Aliases: []string{"a"},
-			Usage:   "Attach volume to specified path",
-			Action:  v.volumeAttach,
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "path,p",
-					Usage: "Path on local filesystem",
-				},
-			},
-		},
-		{
-			Name:    "mount",
-			Aliases: []string{"m"},
-			Usage:   "Mount specified volume",
-			Action:  v.volumeMount,
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "path",
-					Usage: "destination path at which this volume must be mounted on",
-				},
-			},
-		},
-		{
-			Name:    "unmount",
-			Aliases: []string{"u"},
-			Usage:   "Unmount specified volume",
-			Action:  v.volumeUnmount,
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "path",
-					Usage: "destination path at which this volume must be mounted on",
-				},
-			},
-		},
-		{
-			Name:    "detach",
-			Aliases: []string{"d"},
-			Usage:   "Detach specified volume",
-			Action:  v.volumeDetach,
-		},
-		{
-			Name:    "delete",
-			Aliases: []string{"rm"},
-			Usage:   "Detach specified volume",
-			Action:  v.volumeDelete,
-		},
-		{
-			Name:    "enumerate",
-			Aliases: []string{"e"},
-			Usage:   "Enumerate volumes",
-			Action:  v.volumeEnumerate,
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "name",
-					Usage: "volume name used during creation if any",
-				},
-				cli.StringFlag{
-					Name:  "label,l",
-					Usage: "Comma separated name=value pairs, e.g name=sqlvolume,type=production",
-				},
-			},
-		},
-		{
-			Name:    "inspect",
-			Aliases: []string{"i"},
-			Usage:   "Inspect volume",
-			Action:  v.volumeInspect,
-		},
-		{
-			Name:    "snap",
-			Aliases: []string{"sc"},
-			Usage:   "create snap",
-			Action:  v.snapCreate,
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "label,l",
-					Usage: "Comma separated name=value pairs, e.g name=sqlvolume,type=production",
-				},
-			},
-		},
-		{
-			Name:    "snapInspect",
-			Aliases: []string{"si"},
-			Usage:   "Inspect snap",
-			Action:  v.snapInspect,
-		},
-		{
-			Name:    "snapEnumerate",
-			Aliases: []string{"se"},
-			Usage:   "Enumerate snap",
-			Action:  v.snapEnumerate,
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "name, n",
-					Usage: "snap name used during creation",
-				},
-				cli.StringFlag{
-					Name:  "label,l",
-					Usage: "Comma separated name=value pairs, e.g name=sqlvolume,type=production",
-				},
-			},
-		},
-		{
-			Name:    "snapDelete",
-			Aliases: []string{"si"},
-			Usage:   "Delete snap",
-			Action:  v.snapDelete,
-		},
-	}
-	return commands
-}
-
-// FileVolumeCommands exports CLI comamnds for File VolumeDriver
-func FileVolumeCommands(name string) []cli.Command {
-	v := &volDriver{name: name}
+// baseVolumeCommand exports commands common to block and file volume drivers.
+func baseVolumeCommand(v *volDriver) []cli.Command {
 
 	commands := []cli.Command{
 		{
@@ -601,16 +423,18 @@ func FileVolumeCommands(name string) []cli.Command {
 			Action:  v.snapCreate,
 			Flags: []cli.Flag{
 				cli.StringFlag{
+					Name:  "name",
+					Usage: "user friendly name",
+				},
+				cli.StringFlag{
 					Name:  "label,l",
 					Usage: "Comma separated name=value pairs, e.g name=sqlvolume,type=production",
 				},
+				cli.BoolFlag{
+					Name:  "readonly",
+					Usage: "true if snapshot is readonly",
+				},
 			},
-		},
-		{
-			Name:    "snapInspect",
-			Aliases: []string{"si"},
-			Usage:   "Inspect snap",
-			Action:  v.snapInspect,
 		},
 		{
 			Name:    "snapEnumerate",
@@ -628,12 +452,49 @@ func FileVolumeCommands(name string) []cli.Command {
 				},
 			},
 		},
-		{
-			Name:    "snapDelete",
-			Aliases: []string{"si"},
-			Usage:   "Delete snap",
-			Action:  v.snapDelete,
-		},
 	}
 	return commands
+}
+
+// BlockVolumeCommands exports CLI comamnds for a Block VolumeDriver.
+func BlockVolumeCommands(name string) []cli.Command {
+	v := &volDriver{name: name}
+
+	blockCommands := []cli.Command{
+		{
+			Name:    "format",
+			Aliases: []string{"f"},
+			Usage:   "Format volume to spec in create",
+			Action:  v.volumeFormat,
+		},
+		{
+			Name:    "attach",
+			Aliases: []string{"a"},
+			Usage:   "Attach volume to specified path",
+			Action:  v.volumeAttach,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "path,p",
+					Usage: "Path on local filesystem",
+				},
+			},
+		},
+		{
+			Name:    "detach",
+			Aliases: []string{"d"},
+			Usage:   "Detach specified volume",
+			Action:  v.volumeDetach,
+		},
+	}
+
+	baseCommands := baseVolumeCommand(v)
+
+	return append(baseCommands, blockCommands...)
+}
+
+// FileVolumeCommands exports CLI comamnds for File VolumeDriver
+func FileVolumeCommands(name string) []cli.Command {
+	v := &volDriver{name: name}
+
+	return baseVolumeCommand(v)
 }

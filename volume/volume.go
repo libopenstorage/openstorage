@@ -73,14 +73,9 @@ type ProtoDriver interface {
 	// Errors ErrEnoEnt, ErrVolDetached may be returned.
 	Unmount(volumeID api.VolumeID, mountpath string) error
 
-	// Snap specified volume. IO to the underlying volume should be quiesced before
-	// calling this function.
+	// Snapshot create volume snapshot.
 	// Errors ErrEnoEnt may be returned
-	Snapshot(volumeID api.VolumeID, labels api.Labels) (api.SnapID, error)
-
-	// SnapDelete snap specified by snapID.
-	// Errors ErrEnoEnt may be returned
-	SnapDelete(snapID api.SnapID) error
+	Snapshot(volumeID api.VolumeID, readonly bool, locator api.VolumeLocator) (api.VolumeID, error)
 
 	// Stats for specified volume.
 	// Errors ErrEnoEnt may be returned
@@ -108,12 +103,8 @@ type Enumerator interface {
 	// If locator fields are left blank, this will return all volumes.
 	Enumerate(locator api.VolumeLocator, labels api.Labels) ([]api.Volume, error)
 
-	// SnapInspect provides details on this snapshot.
-	// Errors ErrEnoEnt may be returned
-	SnapInspect(snapID []api.SnapID) ([]api.VolumeSnap, error)
-
 	// Enumerate snaps for specified volumes
-	SnapEnumerate(volID []api.VolumeID, snapLabels api.Labels) ([]api.VolumeSnap, error)
+	SnapEnumerate(volID []api.VolumeID, snapLabels api.Labels) ([]api.Volume, error)
 }
 
 // BlockDriver needs to be implemented by block volume drivers.  Filesystem volume

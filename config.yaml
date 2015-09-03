@@ -1,15 +1,15 @@
 ---
 osd:
-  cluster:
-    nodeid: "1"
-    clusterid: "deadbeeef"
+  #cluster:
+    #nodeid: "1"
+    #clusterid: "deadbeeef"
   drivers:
-    pwx:
+#    pwx:
 #   nfs:
 #     server: "localhost"
 #     path: "/nfs"
-#   btrfs:
-#     home: "/var/lib/openstorage/btrfs"
+   btrfs:
+      home: "/var/lib/openstorage/btrfs"
 #   aws:
 #     aws_access_key_id: your_aws_access_key_id
 #     aws_secret_access_key: your_aws_secret_access_key

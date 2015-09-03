@@ -154,35 +154,30 @@ func (d *driver) Unmount(volumeID api.VolumeID, mountpath string) error {
 }
 
 // Snapshot create new subvolume from volume
-func (d *driver) Snapshot(volumeID api.VolumeID, labels api.Labels) (api.SnapID, error) {
-	snapID := uuid.New()
-
-	snap := &api.VolumeSnap{
-		ID:         api.SnapID(snapID),
-		VolumeID:   volumeID,
-		SnapLabels: labels,
-		Ctime:      time.Now(),
-	}
-	err := d.CreateSnap(snap)
+func (d *driver) Snapshot(volumeID api.VolumeID, readonly bool, locator api.VolumeLocator) (api.VolumeID, error) {
+	vols, err := d.Inspect([]api.VolumeID{volumeID})
 	if err != nil {
-		return api.BadSnapID, err
+		return api.BadVolumeID, err
+	}
+	if len(vols) != 1 {
+		return api.BadVolumeID, fmt.Errorf("Failed to inspect %v len %v", volumeID, len(vols))
+	}
+	snapID := uuid.New()
+	vols[0].ID = api.VolumeID(snapID)
+	vols[0].Parent = volumeID
+	vols[0].Locator = locator
+	vols[0].Ctime = time.Now()
+
+	err = d.CreateVol(&vols[0])
+	if err != nil {
+		return api.BadVolumeID, err
 	}
 	chaos.Now(koStrayCreate)
 	err = d.btrfs.Create(snapID, string(volumeID))
 	if err != nil {
-		return api.BadSnapID, err
+		return api.BadVolumeID, err
 	}
-	return snap.ID, nil
-}
-
-// SnapDelete Delete subvolume
-func (d *driver) SnapDelete(snapID api.SnapID) error {
-	err := d.DeleteSnap(snapID)
-	chaos.Now(koStrayDelete)
-	if err == nil {
-		err = d.btrfs.Remove(string(snapID))
-	}
-	return err
+	return vols[0].ID, nil
 }
 
 // Stats for specified volume.

@@ -182,6 +182,10 @@ func (d *driver) Unmount(volumeID api.VolumeID, mountpath string) error {
 	return err
 }
 
+func (d *driver) Stats(volumeID api.VolumeID) (api.VolumeStats, error) {
+	return api.VolumeStats{}, volume.ErrNotSupported
+}
+
 func (d *driver) Alerts(volumeID api.VolumeID) (api.VolumeAlerts, error) {
 	return api.VolumeAlerts{}, volume.ErrNotSupported
 }
