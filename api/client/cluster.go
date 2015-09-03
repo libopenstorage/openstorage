@@ -24,7 +24,7 @@ func (c *clusterClient) String() string {
 
 func (c *clusterClient) Enumerate() (api.Cluster, error) {
 	var cluster api.Cluster
-	err := c.c.Get().Resource(clusterPath).Do().Unmarshal(&cluster)
+	err := c.c.Get().Resource(clusterPath + "/enumerate").Do().Unmarshal(&cluster)
 	if err != nil {
 		return cluster, err
 	}
