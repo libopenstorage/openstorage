@@ -150,7 +150,7 @@ found:
 		if id != c.config.NodeId {
 			// Check to see if the IP is the same.  If it is, then we have a stale entry.
 			if n.Ip == self.Ip {
-				log.Warn("Warning, Detected node %s with the same IP %s in the database.  Will not connect to this node.",
+				log.Warnf("Warning, Detected node %s with the same IP %s in the database.  Will not connect to this node.",
 					id, n.Ip)
 			} else {
 				// Gossip with this node.
