@@ -127,7 +127,7 @@ type Volume struct {
 	// Parent ID if this was a snap
 	Parent VolumeID
 	// Readonly
-	ReadOnly bool
+	Readonly bool
 	// Locator User specified locator
 	Locator VolumeLocator
 	// Ctime Volume creation time
