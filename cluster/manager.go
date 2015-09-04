@@ -191,8 +191,6 @@ done:
 
 func (c *ClusterManager) heartBeat() {
 	for {
-		time.Sleep(2 * time.Second)
-
 		node := c.getSelf()
 		c.nodeCache[node.Id] = *node
 
@@ -200,6 +198,7 @@ func (c *ClusterManager) heartBeat() {
 
 		// Process heartbeats from other nodes...
 		gossipValues := c.g.GetStoreKeyValue(heartbeatKey)
+
 		for _, nodeInfo := range gossipValues {
 			n, ok := nodeInfo.Value.(api.Node)
 
@@ -255,7 +254,11 @@ func (c *ClusterManager) heartBeat() {
 
 		// Process stale entries in our local cache.
 		for _, n := range c.nodeCache {
-			if time.Since(n.Timestamp) > 10*time.Second {
+			if n.Id == node.Id {
+				continue
+			}
+
+			if time.Since(n.Timestamp) > 60*time.Second {
 				log.Warn("Detected node ", n.Id, " to be offline.")
 
 				n.Status = api.StatusOffline
@@ -270,6 +273,8 @@ func (c *ClusterManager) heartBeat() {
 				delete(c.nodeCache, n.Id)
 			}
 		}
+
+		time.Sleep(2 * time.Second)
 	}
 }
 
@@ -279,7 +284,6 @@ func (c *ClusterManager) Start() error {
 
 	// Start the gossip protocol.
 	// XXX make the port configurable.
-	// id, _ := c.config.NodeId.(gossiptypes.NodeId)
 	c.g = gossip.New("0.0.0.0:9002", gossiptypes.NodeId(c.config.NodeId))
 	c.g.SetGossipInterval(2 * time.Second)
 
@@ -342,7 +346,7 @@ func (c *ClusterManager) Start() error {
 	}
 
 	// Start heartbeating to other nodes.
-	// go c.heartBeat()
+	go c.heartBeat()
 
 	return nil
 }
