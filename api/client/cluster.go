@@ -1,7 +1,6 @@
 package client
 
 import (
-	"fmt"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
 )
@@ -25,8 +24,6 @@ func (c *clusterClient) String() string {
 
 func (c *clusterClient) Enumerate() (api.Cluster, error) {
 	var cluster api.Cluster
-
-	fmt.Println("In cluster")
 
 	err := c.c.Get().Resource(clusterPath + "/enumerate").Do().Unmarshal(&cluster)
 	if err != nil {

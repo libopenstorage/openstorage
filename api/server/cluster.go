@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/libopenstorage/openstorage/cluster"
@@ -26,7 +25,6 @@ func (c *clusterApi) String() string {
 
 func (c *clusterApi) enumerate(w http.ResponseWriter, r *http.Request) {
 	method := "enumerate"
-	fmt.Println("In cluster")
 
 	inst, err := cluster.Inst()
 	if err != nil {
