@@ -342,7 +342,7 @@ func (c *ClusterManager) Start() error {
 	}
 
 	// Start heartbeating to other nodes.
-	go c.heartBeat()
+	// go c.heartBeat()
 
 	return nil
 }

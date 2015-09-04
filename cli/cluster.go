@@ -16,7 +16,7 @@ type clusterClient struct {
 }
 
 func (c *clusterClient) clusterOptions(context *cli.Context) {
-	clnt, err := client.NewDriverClient(c.name)
+	clnt, err := client.NewClient("http://localhost:9001", "v1")
 	if err != nil {
 		fmt.Printf("Failed to initialize client library: %v\n", err)
 		os.Exit(1)
