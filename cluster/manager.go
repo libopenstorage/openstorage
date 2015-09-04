@@ -11,6 +11,8 @@ import (
 
 	"github.com/samalba/dockerclient"
 
+	"github.com/libopenstorage/gossip"
+	gossiptypes "github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
 
 	log "github.com/Sirupsen/logrus"
@@ -20,7 +22,8 @@ import (
 )
 
 const (
-	dockerHost = "unix:///var/run/docker.sock"
+	dockerHost   = "unix:///var/run/docker.sock"
+	heartbeatKey = "heartbeat"
 )
 
 type ClusterManager struct {
@@ -28,8 +31,9 @@ type ClusterManager struct {
 	config    Config
 	kv        kv.Kvdb
 	status    api.Status
-	nodes     map[string]api.Node // Info on the nodes in the cluster
+	nodeCache map[string]api.Node // Cached info on the nodes in the cluster.
 	docker    *dockerclient.DockerClient
+	g         gossip.Gossiper
 }
 
 func externalIp() (string, error) {
@@ -89,6 +93,8 @@ func (c *ClusterManager) getSelf() *api.Node {
 	node.Memory = s.MemUsage()
 	node.Luns = s.Luns()
 
+	node.Timestamp = time.Now()
+
 	// Get containers running on this system.
 	node.Containers, _ = c.docker.ListContainers(true, true, "")
 
@@ -97,7 +103,7 @@ func (c *ClusterManager) getSelf() *api.Node {
 
 func (c *ClusterManager) initNode(db *Database) (*api.Node, bool) {
 	node := c.getSelf()
-	c.nodes[node.Id] = *node
+	c.nodeCache[node.Id] = *node
 
 	_, exists := db.NodeEntries[node.Id]
 
@@ -147,15 +153,11 @@ found:
 				log.Warn("Warning, Detected node %s with the same IP %s in the database.  Will not connect to this node.",
 					id, n.Ip)
 			} else {
-				// err = ubcast.AddNode(n.Ip)
-				if err != nil {
-					log.Infof("Node %d is OFFLINE in the cluster %s... \n\tUUID: %s\n\tIP: %s\n\t",
-						id, c.config.ClusterId, n.Ip)
-					err = nil
-				} else {
-					log.Infof("Node %d is ONLINE in the cluster %s... \n\tUUID: %s\n\tIP: %s\n\t",
-						id, c.config.ClusterId, n.Ip)
-				}
+				// Gossip with this node.
+				c.g.AddNode(n.Ip + ":9002")
+
+				// Assume this node is OK.  We will catch any problems during heartbeating.
+				c.nodeCache[id] = api.Node{Status: api.StatusOk, Timestamp: time.Now()}
 			}
 		}
 	}
@@ -187,48 +189,85 @@ done:
 	return err
 }
 
-func (c *ClusterManager) processHeartbeat(err error, ip string, t interface{}) {
-	var node *api.Node = t.(*api.Node)
-
-	last, ok := c.nodes[node.Id]
-	c.nodes[node.Id] = *node
-
-	// Allert listeners if status changed significantly...
-	if !ok || last.Status != node.Status {
-		log.Info("Node ", node.Id, " changed status\n\tIP: ",
-			node.Ip, "\n\tTime: ", node.Timestamp, "\n\tStatus: ", node.Status)
-
-		for e := c.listeners.Front(); e != nil; e = e.Next() {
-			err = e.Value.(ClusterListener).Update(node)
-			if err != nil {
-				log.Warn("Failed to notify ", e.Value.(ClusterListener).String())
-			}
-		}
-	}
-}
-
 func (c *ClusterManager) heartBeat() {
 	for {
 		time.Sleep(2 * time.Second)
 
-		// myInfo := c.getInfo()
-		// ubcast.Push(NodeUpdate, &myInfo)
+		node := c.getSelf()
+		c.nodeCache[node.Id] = *node
+
+		c.g.UpdateSelf(heartbeatKey, *node)
 
 		// Process heartbeats from other nodes...
-		for id, n := range c.nodes {
-			if n.Status == api.StatusOk && time.Since(n.Timestamp) > 10000*time.Millisecond {
-				log.Warn("Detected node ", id, " to be offline.")
+		gossipValues := c.g.GetStoreKeyValue(heartbeatKey)
+		for _, nodeInfo := range gossipValues {
+			n, ok := nodeInfo.Value.(api.Node)
 
-				n.Status = api.StatusOffline
-				c.nodes[id] = n
+			if !ok {
+				log.Warn("Received a bad broadcast packet: %v", nodeInfo.Value)
+				continue
+			}
 
+			if n.Id == node.Id {
+				continue
+			}
+
+			_, ok = c.nodeCache[n.Id]
+			if ok {
+				if n.Status != api.StatusOk {
+					log.Warn("Detected node ", n.Id, " to be unhealthy.")
+
+					for e := c.listeners.Front(); e != nil; e = e.Next() {
+						err := e.Value.(ClusterListener).Update(&n)
+						if err != nil {
+							log.Warn("Failed to notify ", e.Value.(ClusterListener).String())
+						}
+					}
+
+					delete(c.nodeCache, n.Id)
+				} else if time.Since(n.Timestamp) > 10*time.Second {
+					log.Warn("Detected node ", n.Id, " to be offline.")
+
+					n.Status = api.StatusOffline
+
+					for e := c.listeners.Front(); e != nil; e = e.Next() {
+						err := e.Value.(ClusterListener).Update(&n)
+						if err != nil {
+							log.Warn("Failed to notify ", e.Value.(ClusterListener).String())
+						}
+					}
+
+					delete(c.nodeCache, n.Id)
+				}
+			} else if time.Since(n.Timestamp) <= 10*time.Second {
+				// A node joined the cluster.
+				log.Warn("Detected node ", n.Id, " to be online.")
+
+				c.nodeCache[n.Id] = n
 				for e := c.listeners.Front(); e != nil; e = e.Next() {
-					err := e.Value.(ClusterListener).Leave(&n)
+					err := e.Value.(ClusterListener).Update(&n)
 					if err != nil {
-						log.Warn("Failed to notify ",
-							e.Value.(ClusterListener).String())
+						log.Warn("Failed to notify ", e.Value.(ClusterListener).String())
 					}
 				}
+			}
+		}
+
+		// Process stale entries in our local cache.
+		for _, n := range c.nodeCache {
+			if time.Since(n.Timestamp) > 10*time.Second {
+				log.Warn("Detected node ", n.Id, " to be offline.")
+
+				n.Status = api.StatusOffline
+
+				for e := c.listeners.Front(); e != nil; e = e.Next() {
+					err := e.Value.(ClusterListener).Update(&n)
+					if err != nil {
+						log.Warn("Failed to notify ", e.Value.(ClusterListener).String())
+					}
+				}
+
+				delete(c.nodeCache, n.Id)
 			}
 		}
 	}
@@ -237,6 +276,12 @@ func (c *ClusterManager) heartBeat() {
 func (c *ClusterManager) Start() error {
 	log.Info("Cluster manager starting...")
 	kvdb := kv.Instance()
+
+	// Start the gossip protocol.
+	// XXX make the port configurable.
+	// id, _ := c.config.NodeId.(gossiptypes.NodeId)
+	c.g = gossip.New("0.0.0.0:9002", gossiptypes.NodeId(c.config.NodeId))
+	c.g.SetGossipInterval(2 * time.Second)
 
 	kvlock, err := kvdb.Lock("cluster/lock", 60)
 	if err != nil {
@@ -296,7 +341,7 @@ func (c *ClusterManager) Start() error {
 		log.Panic(err)
 	}
 
-	// Join the clusterwide heartbeat mesh.
+	// Start heartbeating to other nodes.
 	go c.heartBeat()
 
 	return nil
@@ -310,7 +355,7 @@ func (c *ClusterManager) Init() error {
 	}
 
 	c.listeners = list.New()
-	c.nodes = make(map[string]api.Node)
+	c.nodeCache = make(map[string]api.Node)
 	c.docker = docker
 
 	return nil
@@ -320,8 +365,8 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 	i := 0
 
 	cluster := api.Cluster{Id: c.config.ClusterId, Status: c.status}
-	cluster.Nodes = make([]api.Node, len(c.nodes))
-	for _, n := range c.nodes {
+	cluster.Nodes = make([]api.Node, len(c.nodeCache))
+	for _, n := range c.nodeCache {
 		cluster.Nodes[i] = n
 		i++
 	}
