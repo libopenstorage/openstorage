@@ -130,7 +130,7 @@
 		},
 		{
 			"ImportPath": "github.com/libopenstorage/gossip",
-			"Rev": "38710408d6e472a9624d2ab27cacba455653891e"
+			"Rev": "e87c77ac1198d710937fdf14a52eac6c62ad6fac"
 		},
 		{
 			"ImportPath": "github.com/pborman/uuid",
