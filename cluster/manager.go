@@ -154,6 +154,7 @@ found:
 				log.Warnf("Warning, Detected node %s with the same IP %s in the database.  Will not connect to this node.",
 					id, n.Ip)
 			} else {
+				log.Infof("Connecting to node %s with IP %s.", id, n.Ip)
 				// Gossip with this node.
 				c.g.AddNode(n.Ip + ":9002")
 
@@ -226,7 +227,7 @@ func (c *ClusterManager) heartBeat() {
 
 					delete(c.nodeCache, n.Id)
 				} else if time.Since(n.Timestamp) > 10*time.Second {
-					log.Warn("Detected node ", n.Id, " to be offline.")
+					log.Warn("Detected node ", n.Id, " to be offline due to inactivity.")
 
 					n.Status = api.StatusOffline
 
@@ -254,13 +255,13 @@ func (c *ClusterManager) heartBeat() {
 		}
 
 		// Process stale entries in our local cache.
-		for _, n := range c.nodeCache {
-			if n.Id == node.Id {
+		for id, n := range c.nodeCache {
+			if id == node.Id {
 				continue
 			}
 
 			if time.Since(n.Timestamp) > 60*time.Second {
-				log.Warn("Detected node ", n.Id, " to be offline.")
+				log.Warn("Detected node ", n.Id, " to be offline due to a lack of heartbeat.")
 
 				n.Status = api.StatusOffline
 
@@ -271,7 +272,7 @@ func (c *ClusterManager) heartBeat() {
 					}
 				}
 
-				delete(c.nodeCache, n.Id)
+				delete(c.nodeCache, id)
 			}
 		}
 
