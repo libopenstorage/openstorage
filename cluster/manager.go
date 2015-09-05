@@ -226,7 +226,7 @@ func (c *ClusterManager) heartBeat() {
 					}
 
 					delete(c.nodeCache, n.Id)
-				} else if time.Since(n.Timestamp) > 10*time.Second {
+				} else if time.Since(n.Timestamp) > 60*time.Second {
 					log.Warn("Detected node ", n.Id, " to be offline due to inactivity.")
 
 					n.Status = api.StatusOffline
@@ -240,7 +240,7 @@ func (c *ClusterManager) heartBeat() {
 
 					delete(c.nodeCache, n.Id)
 				}
-			} else if time.Since(n.Timestamp) <= 10*time.Second {
+			} else {
 				// A node joined the cluster.
 				log.Warn("Detected node ", n.Id, " to be online.")
 
