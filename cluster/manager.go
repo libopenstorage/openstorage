@@ -5,6 +5,7 @@ package cluster
 
 import (
 	"container/list"
+	"encoding/gob"
 	"errors"
 	"net"
 	"time"
@@ -284,6 +285,7 @@ func (c *ClusterManager) Start() error {
 
 	// Start the gossip protocol.
 	// XXX make the port configurable.
+	gob.Register(api.Node{})
 	c.g = gossip.New("0.0.0.0:9002", gossiptypes.NodeId(c.config.NodeId))
 	c.g.SetGossipInterval(2 * time.Second)
 
