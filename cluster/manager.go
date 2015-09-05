@@ -240,7 +240,7 @@ func (c *ClusterManager) heartBeat() {
 
 					delete(c.nodeCache, n.Id)
 				}
-			} else {
+			} else if time.Since(n.Timestamp) <= 60*time.Second {
 				// A node joined the cluster.
 				log.Warn("Detected node ", n.Id, " to be online.")
 
