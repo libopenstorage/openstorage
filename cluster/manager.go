@@ -83,12 +83,19 @@ func (c *ClusterManager) AddEventListener(listener ClusterListener) error {
 
 func (c *ClusterManager) getSelf() *api.Node {
 	var node = api.Node{}
-	s := systemutils.New()
 
 	// Get physical node info.
 	node.Id = c.config.NodeId
 	node.Status = api.StatusOk
 	node.Ip, _ = externalIp()
+	node.Timestamp = time.Now()
+
+	return &node
+}
+
+func (c *ClusterManager) getCurrentState() *api.Node {
+	node := c.getSelf()
+	s := systemutils.New()
 
 	node.Cpu, _, _ = s.CpuUsage()
 	node.Memory = s.MemUsage()
@@ -99,7 +106,7 @@ func (c *ClusterManager) getSelf() *api.Node {
 	// Get containers running on this system.
 	node.Containers, _ = c.docker.ListContainers(true, true, "")
 
-	return &node
+	return node
 }
 
 func (c *ClusterManager) initNode(db *Database) (*api.Node, bool) {
@@ -130,7 +137,7 @@ func (c *ClusterManager) joinCluster(db *Database, self *api.Node, exist bool) e
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err = e.Value.(ClusterListener).Init(self, db)
 		if err != nil {
-			log.Warnf("Failed to initialize %s: %v\n",
+			log.Warnf("Failed to initialize %s: %v",
 				e.Value.(ClusterListener).String(), err)
 			goto done
 		}
@@ -141,7 +148,7 @@ found:
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err = e.Value.(ClusterListener).Join(self, db)
 		if err != nil {
-			log.Warnf("Failed to initialize %s: %v\n",
+			log.Warnf("Failed to initialize %s: %v",
 				e.Value.(ClusterListener).String(), err)
 			goto done
 		}
@@ -175,7 +182,7 @@ func (c *ClusterManager) initCluster(db *Database, self *api.Node, exist bool) e
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err = e.Value.(ClusterListener).ClusterInit(self, db)
 		if err != nil {
-			log.Printf("Failed to initialize %s\n",
+			log.Printf("Failed to initialize %s",
 				e.Value.(ClusterListener).String())
 			goto done
 		}
@@ -183,7 +190,7 @@ func (c *ClusterManager) initCluster(db *Database, self *api.Node, exist bool) e
 
 	err = c.joinCluster(db, self, exist)
 	if err != nil {
-		log.Printf("Failed to join new cluster\n")
+		log.Printf("Failed to join new cluster")
 		goto done
 	}
 
@@ -193,7 +200,7 @@ done:
 
 func (c *ClusterManager) heartBeat() {
 	for {
-		node := c.getSelf()
+		node := c.getCurrentState()
 		c.nodeCache[node.Id] = *node
 
 		c.g.UpdateSelf(heartbeatKey, *node)
