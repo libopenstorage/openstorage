@@ -61,6 +61,12 @@ func (d *driver) volNotFound(request string, id string, e error, w http.Response
 	return err
 }
 
+func (d *driver) volNotMounted(request string, id string) error {
+	err := fmt.Errorf("volume not mounted")
+	d.logReq(request, id).Warn(http.StatusNotFound, " ", err.Error())
+	return err
+}
+
 func (d *driver) Routes() []*Route {
 	return []*Route{
 		&Route{verb: "POST", path: volDriverPath("Create"), fn: d.create},
@@ -229,8 +235,13 @@ func (d *driver) path(w http.ResponseWriter, r *http.Request) {
 	}
 
 	d.logReq(method, request.Name).Info("")
-
 	response.Mountpoint = volInfo.vol.AttachPath
+	if response.Mountpoint == "" {
+		e := d.volNotMounted(method, request.Name)
+		json.NewEncoder(w).Encode(&volumePathResponse{Err: e})
+		return
+	}
+	response.Mountpoint = path.Join(response.Mountpoint, config.DataDir)
 	d.logReq(method, request.Name).Infof("response %v", response.Mountpoint)
 	json.NewEncoder(w).Encode(&response)
 }
