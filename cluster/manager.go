@@ -314,6 +314,12 @@ func (c *ClusterManager) Start() error {
 		db.Status = api.StatusOk
 		self, _ := c.initNode(&db)
 
+		err = c.initCluster(&db, self, false)
+		if err != nil {
+			kvdb.Unlock(kvlock)
+			log.Panic(err)
+		}
+
 		// Update the new state of the cluster in the KV Database
 		err = writeDatabase(&db)
 		if err != nil {
@@ -324,16 +330,17 @@ func (c *ClusterManager) Start() error {
 		if err != nil {
 			log.Panic("Fatal, unable to unlock cluster... Did something take too long to initialize?", err)
 		}
-
-		err = c.initCluster(&db, self, false)
-		if err != nil {
-			log.Panic(err)
-		}
 	} else if db.Status&api.StatusOk > 0 {
 		log.Info("Cluster state is OK... Joining the cluster.")
 
 		c.status = api.StatusOk
 		self, exist := c.initNode(&db)
+
+		err = c.joinCluster(&db, self, exist)
+		if err != nil {
+			kvdb.Unlock(kvlock)
+			log.Panic(err)
+		}
 
 		err = writeDatabase(&db)
 		if err != nil {
@@ -344,13 +351,8 @@ func (c *ClusterManager) Start() error {
 		if err != nil {
 			log.Panic("Fatal, unable to unlock cluster... Did something take too long to initialize?", err)
 		}
-
-		err = c.joinCluster(&db, self, exist)
-		if err != nil {
-			log.Panic(err)
-		}
 	} else {
-		err = kvdb.Unlock(kvlock)
+		kvdb.Unlock(kvlock)
 		err = errors.New("Fatal, Cluster is in an unexpected state.")
 		log.Panic(err)
 	}
