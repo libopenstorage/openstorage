@@ -205,6 +205,8 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(&volumePathResponse{Err: err})
 		return
 	}
+	response.Mountpoint = path.Join(response.Mountpoint, config.DataDir)
+	os.MkdirAll(response.Mountpoint, 0755)
 
 	d.logReq(method, request.Name).Infof("response %v", response.Mountpoint)
 	json.NewEncoder(w).Encode(&response)

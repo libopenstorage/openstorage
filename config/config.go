@@ -26,6 +26,7 @@ const (
 	UrlKey        = "url"
 	VersionKey    = "version"
 	MountBase     = "/var/lib/osd/mounts/"
+	DataDir       = ".data"
 	Version       = "v1"
 )
 
