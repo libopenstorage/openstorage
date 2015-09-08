@@ -203,10 +203,10 @@ func (c *ClusterManager) heartBeat() {
 		node := c.getCurrentState()
 		c.nodeCache[node.Id] = *node
 
-		c.g.UpdateSelf(heartbeatKey, *node)
+		c.g.UpdateSelf(gossiptypes.StoreKey(heartbeatKey+c.config.ClusterId), *node)
 
 		// Process heartbeats from other nodes...
-		gossipValues := c.g.GetStoreKeyValue(heartbeatKey)
+		gossipValues := c.g.GetStoreKeyValue(gossiptypes.StoreKey(heartbeatKey + c.config.ClusterId))
 
 		for _, nodeInfo := range gossipValues {
 			n, ok := nodeInfo.Value.(api.Node)
