@@ -6,6 +6,9 @@ endif
 .PHONY: clean all
 TARGETS := openstorage
 
+export BASE_DIR=$(shell git rev-parse --show-toplevel)
+export GOPATH=$(shell echo ${BASE_DIR}| sed 's@\(.*\)/src/github.com.*@\1@g')
+
 all: $(TARGETS) tags
 
 tags:
