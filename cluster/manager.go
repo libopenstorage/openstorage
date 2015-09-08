@@ -239,7 +239,7 @@ func (c *ClusterManager) heartBeat() {
 					n.Status = api.StatusOffline
 
 					for e := c.listeners.Front(); e != nil; e = e.Next() {
-						err := e.Value.(ClusterListener).Update(&n)
+						// err := e.Value.(ClusterListener).Update(&n)
 						if err != nil {
 							log.Warn("Failed to notify ", e.Value.(ClusterListener).String())
 						}
@@ -273,7 +273,7 @@ func (c *ClusterManager) heartBeat() {
 				n.Status = api.StatusOffline
 
 				for e := c.listeners.Front(); e != nil; e = e.Next() {
-					err := e.Value.(ClusterListener).Update(&n)
+					// err := e.Value.(ClusterListener).Update(&n)
 					if err != nil {
 						log.Warn("Failed to notify ", e.Value.(ClusterListener).String())
 					}
