@@ -321,12 +321,14 @@ func (c *ClusterManager) Start() error {
 		err = c.initCluster(&db, self, false)
 		if err != nil {
 			kvdb.Unlock(kvlock)
+			log.Errorf("Failed to initialize the cluster.", err)
 			log.Panic(err)
 		}
 
 		// Update the new state of the cluster in the KV Database
 		err = writeDatabase(&db)
 		if err != nil {
+			log.Errorf("Failed to save the database.", err)
 			log.Panic(err)
 		}
 
