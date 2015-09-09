@@ -66,13 +66,14 @@ func startServer(name string, sockBase string, port int, routes []*Route) error 
 	log.Printf("Starting REST service on %+v", socket)
 	listener, err = net.Listen("unix", socket)
 	if err != nil {
+		log.Warn("Cannot listen on UNIX socket: ", err)
 		return err
 	}
 	go http.Serve(listener, router)
 	if port != 0 {
 		go http.ListenAndServe(fmt.Sprintf(":%v", port), router)
 	}
-	return err
+	return nil
 }
 
 // StartServerAPI starts a REST server to receive driver configuration commands

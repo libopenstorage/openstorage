@@ -88,7 +88,7 @@ func (d *driver) Status() [][2]string {
 func (d *driver) Create(locator api.VolumeLocator, opt *api.CreateOptions, spec *api.VolumeSpec) (api.VolumeID, error) {
 	// Validate options.
 	if spec.Format != "nfs" && spec.Format != "" {
-		return api.BadVolumeID, errors.New("Unsupported filesystem format: " + string(spec.Format))
+		log.Warnf("Ignoring unsupported filesystem format: " + string(spec.Format))
 	}
 
 	if spec.BlockSize != 0 {
