@@ -237,15 +237,12 @@ func (c *ClusterManager) heartBeat() {
 					log.Warn("Detected node ", n.Id, " to be offline due to inactivity.")
 
 					n.Status = api.StatusOffline
-
-					/*
-						for e := c.listeners.Front(); e != nil; e = e.Next() {
-							err := e.Value.(ClusterListener).Update(&n)
-							if err != nil {
-								log.Warn("Failed to notify ", e.Value.(ClusterListener).String())
-							}
+					for e := c.listeners.Front(); e != nil; e = e.Next() {
+						err := e.Value.(ClusterListener).Update(&n)
+						if err != nil {
+							log.Warn("Failed to notify ", e.Value.(ClusterListener).String())
 						}
-					*/
+					}
 
 					delete(c.nodeCache, n.Id)
 				}
@@ -274,14 +271,12 @@ func (c *ClusterManager) heartBeat() {
 
 				n.Status = api.StatusOffline
 
-				/*
-					for e := c.listeners.Front(); e != nil; e = e.Next() {
-						 err := e.Value.(ClusterListener).Update(&n)
-						if err != nil {
-							log.Warn("Failed to notify ", e.Value.(ClusterListener).String())
-						}
+				for e := c.listeners.Front(); e != nil; e = e.Next() {
+					err := e.Value.(ClusterListener).Update(&n)
+					if err != nil {
+						log.Warn("Failed to notify ", e.Value.(ClusterListener).String())
 					}
-				*/
+				}
 
 				delete(c.nodeCache, id)
 			}
