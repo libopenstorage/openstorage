@@ -22,11 +22,11 @@ const (
 	Type         = volume.File
 	NfsDBKey     = "OpenStorageNFSKey"
 	nfsMountPath = "/var/lib/openstorage/nfs/"
+	nfsBlockFile = ".blockdevice"
 )
 
 // Implements the open storage volume interface.
 type driver struct {
-	*volume.DefaultBlockDriver
 	*volume.DefaultEnumerator
 	*volume.SnapshotNotSupported
 	nfsServer string
@@ -100,6 +100,20 @@ func (d *driver) Create(locator api.VolumeLocator, opt *api.CreateOptions, spec 
 
 	// Create a directory on the NFS server with this UUID.
 	err := os.MkdirAll(nfsMountPath+volumeID, 0744)
+	if err != nil {
+		log.Println(err)
+		return api.BadVolumeID, err
+	}
+
+	f, err := os.Create(nfsMountPath + volumeID + nfsBlockFile)
+	if err != nil {
+		log.Println(err)
+		return api.BadVolumeID, err
+	}
+
+	defer f.Close()
+
+	err = f.Truncate(int64(spec.Size))
 	if err != nil {
 		log.Println(err)
 		return api.BadVolumeID, err
@@ -180,6 +194,18 @@ func (d *driver) Unmount(volumeID api.VolumeID, mountpath string) error {
 	v.AttachPath = ""
 	err = d.UpdateVol(v)
 	return err
+}
+
+func (d *driver) Attach(volumeID api.VolumeID) (path string, err error) {
+	return nfsMountPath + string(volumeID) + nfsBlockFile, nil
+}
+
+func (d *driver) Format(volumeID api.VolumeID) error {
+	return nil
+}
+
+func (d *driver) Detach(volumeID api.VolumeID) error {
+	return nil
 }
 
 func (d *driver) Stats(volumeID api.VolumeID) (api.VolumeStats, error) {

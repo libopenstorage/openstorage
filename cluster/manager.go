@@ -248,11 +248,11 @@ func (c *ClusterManager) heartBeat() {
 				}
 			} else if time.Since(n.Timestamp) <= 60*time.Second {
 				// A node joined the cluster.
-				log.Warn("Detected node ", n.Id, " to be online.")
+				log.Warn("Detected new node ", n.Id, " to join the cluster.")
 
 				c.nodeCache[n.Id] = n
 				for e := c.listeners.Front(); e != nil; e = e.Next() {
-					err := e.Value.(ClusterListener).Update(&n)
+					err := e.Value.(ClusterListener).Add(&n)
 					if err != nil {
 						log.Warn("Failed to notify ", e.Value.(ClusterListener).String())
 					}
