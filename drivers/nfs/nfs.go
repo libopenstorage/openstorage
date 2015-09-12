@@ -141,6 +141,9 @@ func (d *driver) Delete(volumeID api.VolumeID) error {
 	// Delete the directory on the nfs server.
 	os.Remove(v.DevicePath)
 
+	// Delete the simulated block volume
+	os.Remove(v.DevicePath + nfsBlockFile)
+
 	err = d.DeleteVol(volumeID)
 	if err != nil {
 		log.Println(err)
