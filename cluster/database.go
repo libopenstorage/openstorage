@@ -54,6 +54,8 @@ func writeDatabase(db *Database) error {
 		goto done
 	}
 
+	log.Info("Cluster database updated.")
+
 done:
 	if err != nil {
 		log.Println(err)

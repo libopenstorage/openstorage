@@ -291,7 +291,7 @@ func (c *ClusterManager) Start() error {
 	kvdb := kv.Instance()
 
 	// Start the gossip protocol.
-	// XXX make the port configurable.
+	// XXX Make the port configurable.
 	gob.Register(api.Node{})
 	c.g = gossip.New("0.0.0.0:9002", gossiptypes.NodeId(c.config.NodeId))
 	c.g.SetGossipInterval(2 * time.Second)
@@ -316,7 +316,7 @@ func (c *ClusterManager) Start() error {
 		err = c.initCluster(&db, self, false)
 		if err != nil {
 			kvdb.Unlock(kvlock)
-			log.Errorf("Failed to initialize the cluster.", err)
+			log.Error("Failed to initialize the cluster.", err)
 			log.Panic(err)
 		}
 
