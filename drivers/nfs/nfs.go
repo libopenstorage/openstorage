@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path"
 	"strings"
 	"syscall"
 	"time"
@@ -118,7 +119,7 @@ func (d *driver) Create(locator api.VolumeLocator, opt *api.CreateOptions, spec 
 		LastScan:   time.Now(),
 		Format:     "nfs",
 		State:      api.VolumeAvailable,
-		DevicePath: nfsMountPath + volumeID,
+		DevicePath: path.Join(nfsMountPath, string(volumeID), nfsBlockFile),
 	}
 
 	err = d.CreateVol(v)
@@ -138,11 +139,11 @@ func (d *driver) Delete(volumeID api.VolumeID) error {
 		return err
 	}
 
-	// Delete the directory on the nfs server.
-	os.RemoveAll(v.DevicePath)
-
 	// Delete the simulated block volume
-	os.Remove(v.DevicePath + nfsBlockFile)
+	os.Remove(v.DevicePath)
+
+	// Delete the directory on the nfs server.
+	os.RemoveAll(path.Join(nfsMountPath, string(volumeID)))
 
 	err = d.DeleteVol(volumeID)
 	if err != nil {
@@ -159,11 +160,11 @@ func (d *driver) Mount(volumeID api.VolumeID, mountpath string) error {
 		log.Println(err)
 		return err
 	}
-
 	syscall.Unmount(mountpath, 0)
-	err = syscall.Mount(v.DevicePath, mountpath, string(v.Spec.Format), syscall.MS_BIND, "")
+	err = syscall.Mount(path.Join(nfsMountPath, string(volumeID)), mountpath, string(v.Spec.Format), syscall.MS_BIND, "")
 	if err != nil {
-		log.Printf("Cannot mount %s at %s because %+v", v.DevicePath, mountpath, err)
+		log.Printf("Cannot mount %s at %s because %+v",
+			path.Join(nfsMountPath, string(volumeID)), mountpath, err)
 		return err
 	}
 
@@ -190,8 +191,8 @@ func (d *driver) Unmount(volumeID api.VolumeID, mountpath string) error {
 	return err
 }
 
-func (d *driver) Attach(volumeID api.VolumeID) (path string, err error) {
-	return nfsMountPath + string(volumeID) + nfsBlockFile, nil
+func (d *driver) Attach(volumeID api.VolumeID) (string, error) {
+	return path.Join(nfsMountPath, string(volumeID), nfsBlockFile), nil
 }
 
 func (d *driver) Format(volumeID api.VolumeID) error {
