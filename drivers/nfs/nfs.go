@@ -280,12 +280,6 @@ func (d *driver) Snapshot(volumeID api.VolumeID, readonly bool, locator api.Volu
 		return api.BadVolumeID, nil
 	}
 
-	err = copyFile(nfsMountPath+string(volumeID)+nfsBlockFile, nfsMountPath+string(newVolumeID)+nfsBlockFile)
-	if err != nil {
-		d.Delete(newVolumeID)
-		return api.BadVolumeID, nil
-	}
-
 	return newVolumeID, nil
 }
 
