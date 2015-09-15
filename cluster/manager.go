@@ -161,12 +161,9 @@ found:
 				log.Warnf("Warning, Detected node %s with the same IP %s in the database.  Will not connect to this node.",
 					id, n.Ip)
 			} else {
-				log.Infof("Connecting to node %s with IP %s.", id, n.Ip)
 				// Gossip with this node.
+				log.Infof("Connecting to node %s with IP %s.", id, n.Ip)
 				c.g.AddNode(n.Ip + ":9002")
-
-				// Assume this node is OK.  We will catch any problems during heartbeating.
-				c.nodeCache[id] = api.Node{Status: api.StatusOk, Timestamp: time.Now()}
 			}
 		}
 	}
@@ -245,10 +242,12 @@ func (c *ClusterManager) heartBeat() {
 					}
 
 					delete(c.nodeCache, n.Id)
+				} else {
+					c.nodeCache[n.Id] = n
 				}
 			} else if time.Since(n.Timestamp) <= 60*time.Second {
-				// A node joined the cluster.
-				log.Warn("Detected new node ", n.Id, " to join the cluster.")
+				// A node discovered in the cluster.
+				log.Warn("Detected node ", n.Id, " to be in the cluster.")
 
 				c.nodeCache[n.Id] = n
 				for e := c.listeners.Front(); e != nil; e = e.Next() {
@@ -257,28 +256,6 @@ func (c *ClusterManager) heartBeat() {
 						log.Warn("Failed to notify ", e.Value.(ClusterListener).String())
 					}
 				}
-			}
-		}
-
-		// Process stale entries in our local cache.
-		for id, n := range c.nodeCache {
-			if id == node.Id {
-				continue
-			}
-
-			if time.Since(n.Timestamp) > 60*time.Second {
-				log.Warn("Detected node ", n.Id, " to be offline due to a lack of heartbeat.")
-
-				n.Status = api.StatusOffline
-
-				for e := c.listeners.Front(); e != nil; e = e.Next() {
-					err := e.Value.(ClusterListener).Update(&n)
-					if err != nil {
-						log.Warn("Failed to notify ", e.Value.(ClusterListener).String())
-					}
-				}
-
-				delete(c.nodeCache, id)
 			}
 		}
 
