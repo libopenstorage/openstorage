@@ -66,11 +66,14 @@ func runEnd(t *testing.T, ctx *Context) {
 }
 
 func RunSnap(t *testing.T, ctx *Context) {
+	attach(t, ctx)
 	snap(t, ctx)
 	snapInspect(t, ctx)
 	snapEnumerate(t, ctx)
 	snapDiff(t, ctx)
 	snapDelete(t, ctx)
+	detach(t, ctx)
+	delete(t, ctx)
 }
 
 func create(t *testing.T, ctx *Context) {
@@ -222,6 +225,7 @@ func snap(t *testing.T, ctx *Context) {
 	if ctx.volID == api.BadVolumeID {
 		create(t, ctx)
 	}
+	attach(t, ctx)
 	labels := api.Labels{"oh": "snap"}
 	assert.NotEqual(t, ctx.volID, api.BadVolumeID, "invalid volume ID")
 	id, err := ctx.Snapshot(ctx.volID, false,
