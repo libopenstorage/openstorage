@@ -9,6 +9,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/libopenstorage/openstorage/api"
 )
 
 const (
@@ -17,23 +19,10 @@ const (
 
 type DiskStats struct {
 	sync.Mutex
-	stats       map[string]*Stats
+	stats       map[string]*api.Stats
 	frequency   time.Duration
 	lastCollect time.Time
 	c           chan int
-}
-
-type Stats struct {
-	Reads        int64
-	ReadsMerged  int64
-	ReadSectors  int64
-	ReadMs       int64
-	Writes       int64
-	WritesMerged int64
-	WriteSectors int64
-	WriteMs      int64
-	IOProgress   int64
-	IOWeightedMS int64
 }
 
 func NewDiskStats(frequency time.Duration) *DiskStats {
@@ -41,13 +30,13 @@ func NewDiskStats(frequency time.Duration) *DiskStats {
 		frequency = FrequencyMin
 	}
 	return &DiskStats{
-		stats:     make(map[string]*Stats),
+		stats:     make(map[string]*api.Stats),
 		frequency: frequency,
 		c:         make(chan int, 100),
 	}
 }
 
-func (d *DiskStats) Get(dev string) *Stats {
+func (d *DiskStats) Get(dev string) *api.Stats {
 	if time.Since(d.lastCollect) > 2*d.frequency {
 		d.collect()
 	}
@@ -59,8 +48,7 @@ func (d *DiskStats) Get(dev string) *Stats {
 func (d *DiskStats) Collect() {
 	for {
 		d.collect()
-		d.lastCollect = time.Now()
-		time.Sleep(time.Second * d.frequency)
+		time.Sleep(d.frequency)
 		doCollect := <-d.c
 		if doCollect == 0 {
 			break
@@ -108,17 +96,15 @@ func (d *DiskStats) collect() {
 			fmt.Printf("len(values) %v is not 14", len(values))
 			continue
 		}
-		d.stats[values[2]] = &Stats{
-			Reads:        statCounter(values[3]),
-			ReadsMerged:  statCounter(values[4]),
-			ReadSectors:  statCounter(values[5]),
-			ReadMs:       statCounter(values[6]),
-			Writes:       statCounter(values[7]),
-			WritesMerged: statCounter(values[8]),
-			WriteSectors: statCounter(values[9]),
-			WriteMs:      statCounter(values[10]),
-			IOProgress:   statCounter(values[11]),
-			IOWeightedMS: statCounter(values[12]),
+		// See https://www.kernel.org/doc/Documentation/ABI/testing/procfs-diskstats
+		d.stats[values[2]] = &api.Stats{
+			Reads:      statCounter(values[3]),
+			ReadMs:     statCounter(values[6]),
+			Writes:     statCounter(values[7]),
+			WriteMs:    statCounter(values[10]),
+			IOProgress: statCounter(values[11]),
+			IOMs:       statCounter(values[12]),
 		}
 	}
+	d.lastCollect = time.Now()
 }

@@ -156,10 +156,22 @@ type Volume struct {
 	Error string
 }
 
-// VolumeStats
-type VolumeStats struct {
+// Alerts
+type Stats struct {
+	// Reads completed successfully.
+	Reads int64
+	// ReadMs time spent in reads in ms.
+	ReadMs int64
+	// Writes completed successfully.
+	Writes int64
+	// WriteMs time spent in writes in ms.
+	WriteMs int64
+	// IOProgress I/Os curently in progress.
+	IOProgress int64
+	// IOMs time spent doing I/Os ms.
+	IOMs int64
 }
 
-// VolumeAlerts
-type VolumeAlerts struct {
+// Alerts
+type Alerts struct {
 }

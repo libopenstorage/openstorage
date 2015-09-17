@@ -430,12 +430,12 @@ func (d *Driver) Snapshot(volumeID api.VolumeID, readonly bool, locator api.Volu
 	return vols[0].ID, nil
 }
 
-func (d *Driver) Stats(volumeID api.VolumeID) (api.VolumeStats, error) {
-	return api.VolumeStats{}, volume.ErrNotSupported
+func (d *Driver) Stats(volumeID api.VolumeID) (api.Stats, error) {
+	return api.Stats{}, volume.ErrNotSupported
 }
 
-func (d *Driver) Alerts(volumeID api.VolumeID) (api.VolumeAlerts, error) {
-	return api.VolumeAlerts{}, volume.ErrNotSupported
+func (d *Driver) Alerts(volumeID api.VolumeID) (api.Alerts, error) {
+	return api.Alerts{}, volume.ErrNotSupported
 }
 
 func (d *Driver) Enumerate(locator api.VolumeLocator, labels api.Labels) ([]api.Volume, error) {

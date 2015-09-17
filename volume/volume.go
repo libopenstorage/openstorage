@@ -79,11 +79,11 @@ type ProtoDriver interface {
 
 	// Stats for specified volume.
 	// Errors ErrEnoEnt may be returned
-	Stats(volumeID api.VolumeID) (api.VolumeStats, error)
+	Stats(volumeID api.VolumeID) (api.Stats, error)
 
 	// Alerts on this volume.
 	// Errors ErrEnoEnt may be returned
-	Alerts(volumeID api.VolumeID) (api.VolumeAlerts, error)
+	Alerts(volumeID api.VolumeID) (api.Alerts, error)
 
 	// Status returns a set of key-value pairs which give low
 	// level diagnostic status about this driver.

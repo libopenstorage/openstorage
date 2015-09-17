@@ -295,12 +295,12 @@ func (d *driver) Detach(volumeID api.VolumeID) error {
 	return nil
 }
 
-func (d *driver) Stats(volumeID api.VolumeID) (api.VolumeStats, error) {
-	return api.VolumeStats{}, volume.ErrNotSupported
+func (d *driver) Stats(volumeID api.VolumeID) (api.Stats, error) {
+	return api.Stats{}, volume.ErrNotSupported
 }
 
-func (d *driver) Alerts(volumeID api.VolumeID) (api.VolumeAlerts, error) {
-	return api.VolumeAlerts{}, volume.ErrNotSupported
+func (d *driver) Alerts(volumeID api.VolumeID) (api.Alerts, error) {
+	return api.Alerts{}, volume.ErrNotSupported
 }
 
 func (d *driver) Shutdown() {

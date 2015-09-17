@@ -119,22 +119,22 @@ func (v *volumeClient) Snapshot(volumeID api.VolumeID, readonly bool, locator ap
 
 // Stats for specified volume.
 // Errors ErrEnoEnt may be returned
-func (v *volumeClient) Stats(volumeID api.VolumeID) (api.VolumeStats, error) {
-	var stats api.VolumeStats
+func (v *volumeClient) Stats(volumeID api.VolumeID) (api.Stats, error) {
+	var stats api.Stats
 	err := v.c.Get().Resource(volumePath + "/stats").Instance(string(volumeID)).Do().Unmarshal(&stats)
 	if err != nil {
-		return api.VolumeStats{}, err
+		return api.Stats{}, err
 	}
 	return stats, nil
 }
 
 // Alerts on this volume.
 // Errors ErrEnoEnt may be returned
-func (v *volumeClient) Alerts(volumeID api.VolumeID) (api.VolumeAlerts, error) {
-	var alerts api.VolumeAlerts
+func (v *volumeClient) Alerts(volumeID api.VolumeID) (api.Alerts, error) {
+	var alerts api.Alerts
 	err := v.c.Get().Resource(volumePath + "/alerts").Instance(string(volumeID)).Do().Unmarshal(&alerts)
 	if err != nil {
-		return api.VolumeAlerts{}, err
+		return api.Alerts{}, err
 	}
 	return alerts, nil
 }

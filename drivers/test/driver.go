@@ -66,7 +66,6 @@ func runEnd(t *testing.T, ctx *Context) {
 }
 
 func RunSnap(t *testing.T, ctx *Context) {
-	attach(t, ctx)
 	snap(t, ctx)
 	snapInspect(t, ctx)
 	snapEnumerate(t, ctx)

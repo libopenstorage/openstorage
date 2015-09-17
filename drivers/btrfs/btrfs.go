@@ -181,13 +181,13 @@ func (d *driver) Snapshot(volumeID api.VolumeID, readonly bool, locator api.Volu
 }
 
 // Stats for specified volume.
-func (d *driver) Stats(volumeID api.VolumeID) (api.VolumeStats, error) {
-	return api.VolumeStats{}, nil
+func (d *driver) Stats(volumeID api.VolumeID) (api.Stats, error) {
+	return api.Stats{}, nil
 }
 
 // Alerts on this volume.
-func (d *driver) Alerts(volumeID api.VolumeID) (api.VolumeAlerts, error) {
-	return api.VolumeAlerts{}, nil
+func (d *driver) Alerts(volumeID api.VolumeID) (api.Alerts, error) {
+	return api.Alerts{}, nil
 }
 
 // Shutdown and cleanup.
