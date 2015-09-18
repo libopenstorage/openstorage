@@ -290,9 +290,55 @@ func (vd *volApi) snapEnumerate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (vd *volApi) stats(w http.ResponseWriter, r *http.Request) {
+	var volumeID api.VolumeID
+	var err error
+
+	method := "stats"
+	if volumeID, err = vd.parseVolumeID(r); err != nil {
+		e := fmt.Errorf("Failed to parse parse volumeID: %s", err.Error())
+		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+		return
+	}
+
+	d, err := volume.Get(vd.name)
+	if err != nil {
+		notFound(w, r)
+		return
+	}
+
+	stats, err := d.Stats(volumeID)
+	if err != nil {
+		e := fmt.Errorf("Failed to get stats: %s", err.Error())
+		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	json.NewEncoder(w).Encode(stats)
 }
 
 func (vd *volApi) alerts(w http.ResponseWriter, r *http.Request) {
+	var volumeID api.VolumeID
+	var err error
+
+	method := "stats"
+	if volumeID, err = vd.parseVolumeID(r); err != nil {
+		e := fmt.Errorf("Failed to parse parse volumeID: %s", err.Error())
+		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+		return
+	}
+
+	d, err := volume.Get(vd.name)
+	if err != nil {
+		notFound(w, r)
+		return
+	}
+
+	alerts, err := d.Alerts(volumeID)
+	if err != nil {
+		e := fmt.Errorf("Failed to get alerts: %s", err.Error())
+		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	json.NewEncoder(w).Encode(alerts)
 }
 
 func volVersion(route string) string {
