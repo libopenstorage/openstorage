@@ -2,9 +2,11 @@ package client
 
 import (
 	"crypto/tls"
+	"fmt"
 	"net"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
 
 	"github.com/libopenstorage/openstorage/cluster"
@@ -19,6 +21,11 @@ type Client struct {
 	version    string
 	httpClient *http.Client
 }
+
+var (
+	httpCache map[string]*http.Client
+	cacheLock sync.Mutex
+)
 
 // VolumeDriver returns a REST wrapper for the VolumeDriver interface.
 func (c *Client) VolumeDriver() volume.VolumeDriver {
@@ -57,6 +64,15 @@ func (c *Client) Delete() *Request {
 	return NewRequest(c.httpClient, c.base, "DELETE", c.version)
 }
 
+func unix2HTTP(u *url.URL) {
+	if u.Scheme == "unix" {
+		// Override the main URL object so the HTTP lib won't complain
+		u.Scheme = "http"
+		u.Host = "unix.sock"
+		u.Path = ""
+	}
+}
+
 func newHTTPClient(u *url.URL, tlsConfig *tls.Config, timeout time.Duration) *http.Client {
 	httpTransport := &http.Transport{
 		TLSClientConfig: tlsConfig,
@@ -74,10 +90,7 @@ func newHTTPClient(u *url.URL, tlsConfig *tls.Config, timeout time.Duration) *ht
 			return ret, err
 		}
 		httpTransport.Dial = unixDial
-		// Override the main URL object so the HTTP lib won't complain
-		u.Scheme = "http"
-		u.Host = "unix.sock"
-		u.Path = ""
+		unix2HTTP(u)
 	}
 	return &http.Client{Transport: httpTransport}
 }
@@ -91,7 +104,8 @@ func NewClient(host string, version string) (*Client, error) {
 	if baseURL.Path == "" {
 		baseURL.Path = "/"
 	}
-	httpClient := newHTTPClient(baseURL, nil, 10*time.Second)
+	httpClient := getHttpClient(host)
+	unix2HTTP(baseURL)
 	c := &Client{
 		base:       baseURL,
 		version:    version,
@@ -100,8 +114,34 @@ func NewClient(host string, version string) (*Client, error) {
 	return c, nil
 }
 
+func getHttpClient(host string) *http.Client {
+	c, ok := httpCache[host]
+	if !ok {
+		cacheLock.Lock()
+		defer cacheLock.Unlock()
+		c, ok = httpCache[host]
+		if !ok {
+			u, err := url.Parse(host)
+			if err != nil {
+				fmt.Println("Failed to parse into url", host)
+				return nil
+			}
+			if u.Path == "" {
+				u.Path = "/"
+			}
+			c = newHTTPClient(u, nil, 10*time.Second)
+			httpCache[host] = c
+		}
+	}
+	return c
+}
+
 // NewDriver returns a new REST client for specified driver.
 func NewDriverClient(driverName string) (*Client, error) {
 	sockPath := "unix://" + config.DriverAPIBase + driverName + ".sock"
 	return NewClient(sockPath, config.Version)
+}
+
+func init() {
+	httpCache = make(map[string]*http.Client)
 }

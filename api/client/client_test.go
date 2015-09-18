@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/libopenstorage/openstorage/api"
 	apiserver "github.com/libopenstorage/openstorage/api/server"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/drivers/btrfs"
@@ -15,6 +16,18 @@ import (
 var (
 	testPath = string("/tmp/openstorage_client_test")
 )
+
+func makeRequest(t *testing.T) {
+	c, err := NewDriverClient(btrfs.Name)
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+	d := c.VolumeDriver()
+	_, err = d.Stats(api.VolumeID("foo"))
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+}
 
 func TestAll(t *testing.T) {
 	err := os.MkdirAll(testPath, 0744)
@@ -35,5 +48,12 @@ func TestAll(t *testing.T) {
 	d := c.VolumeDriver()
 	ctx := test.NewContext(d)
 	ctx.Filesystem = string("btrfs")
+	return
 	test.Run(t, ctx)
+}
+
+func TestConnections(t *testing.T) {
+	for i := 0; i < 2000; i++ {
+		makeRequest(t)
+	}
 }
