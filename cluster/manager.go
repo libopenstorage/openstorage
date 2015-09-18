@@ -104,7 +104,7 @@ func (c *ClusterManager) getCurrentState() *api.Node {
 	node.Timestamp = time.Now()
 
 	// Get containers running on this system.
-	node.Containers, _ = c.docker.ListContainers(true, true, "")
+	node.Containers, _ = c.docker.ListContainers(true, false, "")
 
 	return node
 }
