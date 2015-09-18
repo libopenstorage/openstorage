@@ -218,6 +218,40 @@ func (v *volDriver) volumeInspect(context *cli.Context) {
 	cmdOutput(context, volumes)
 }
 
+func (v *volDriver) volumeStats(context *cli.Context) {
+	v.volumeOptions(context)
+	fn := "stats"
+	if len(context.Args()) != 1 {
+		missingParameter(context, fn, "volumeID", "Invalid number of arguments")
+		return
+	}
+
+	stats, err := v.volDriver.Stats(api.VolumeID(context.Args()[0]))
+	if err != nil {
+		cmdError(context, fn, err)
+		return
+	}
+
+	cmdOutput(context, stats)
+}
+
+func (v *volDriver) volumeAlerts(context *cli.Context) {
+	v.volumeOptions(context)
+	fn := "alerts"
+	if len(context.Args()) != 1 {
+		missingParameter(context, fn, "volumeID", "Invalid number of arguments")
+		return
+	}
+
+	alerts, err := v.volDriver.Alerts(api.VolumeID(context.Args()[0]))
+	if err != nil {
+		cmdError(context, fn, err)
+		return
+	}
+
+	cmdOutput(context, alerts)
+}
+
 func (v *volDriver) volumeEnumerate(context *cli.Context) {
 	var locator api.VolumeLocator
 	var err error
@@ -415,6 +449,16 @@ func baseVolumeCommand(v *volDriver) []cli.Command {
 			Aliases: []string{"i"},
 			Usage:   "Inspect volume",
 			Action:  v.volumeInspect,
+		},
+		{
+			Name:   "alerts",
+			Usage:  "volume alerts",
+			Action: v.volumeAlerts,
+		},
+		{
+			Name:   "stats",
+			Usage:  "volume stats",
+			Action: v.volumeStats,
 		},
 		{
 			Name:    "snap",
