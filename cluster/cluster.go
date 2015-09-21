@@ -63,6 +63,9 @@ type ClusterListener interface {
 
 // Cluster is the API that a cluster provider will implement.
 type Cluster interface {
+	// LocateNode find the node given a UUID.
+	LocateNode(string) (api.Node, error)
+
 	// AddEventListener adds an event listener and exposes cluster events.
 	AddEventListener(ClusterListener) error
 

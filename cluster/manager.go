@@ -75,6 +75,16 @@ func externalIp() (string, error) {
 	return "", errors.New("Node not connected to the network.")
 }
 
+func (c *ClusterManager) LocateNode(nodeID string) (api.Node, error) {
+	n, ok := c.nodeCache[nodeID]
+
+	if !ok {
+		return api.Node{}, errors.New("Unable to locate node with provided UUID.")
+	} else {
+		return n, nil
+	}
+}
+
 func (c *ClusterManager) AddEventListener(listener ClusterListener) error {
 	log.Printf("Adding cluster event listener: %s", listener.String())
 	c.listeners.PushBack(listener)

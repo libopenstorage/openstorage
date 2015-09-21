@@ -32,6 +32,10 @@ func (c *clusterClient) Enumerate() (api.Cluster, error) {
 	return cluster, nil
 }
 
+func (c *clusterClient) LocateNode(nodeID string) (api.Node, error) {
+	return api.Node{}, nil
+}
+
 func (c *clusterClient) AddEventListener(cluster.ClusterListener) error {
 	return nil
 }
