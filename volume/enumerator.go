@@ -136,8 +136,8 @@ func (e *DefaultEnumerator) DeleteVol(volID api.VolumeID) error {
 	return err
 }
 
-// Inspect specified volumee.
-// Errors ErrEnoEnt may be returned.
+// Inspect specified volumes.
+// Returns slice of volumes that were found.
 func (e *DefaultEnumerator) Inspect(ids []api.VolumeID) ([]api.Volume, error) {
 	var err error
 	var vol *api.Volume
@@ -145,12 +145,13 @@ func (e *DefaultEnumerator) Inspect(ids []api.VolumeID) ([]api.Volume, error) {
 
 	for _, v := range ids {
 		vol, err = e.GetVol(v)
+		// XXX Distinguish between ENOENT and an internal error from KVDB
 		if err != nil {
-			break
+			continue
 		}
 		vols = append(vols, *vol)
 	}
-	return vols, err
+	return vols, nil
 }
 
 // Enumerate volumes that map to the volumeLocator. Locator fields may be regexp.

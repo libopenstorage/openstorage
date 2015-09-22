@@ -96,7 +96,7 @@ type ProtoDriver interface {
 // Enumerator provides a set of interfaces to get details on a set of volumes.
 type Enumerator interface {
 	// Inspect specified volumes.
-	// Errors ErrEnoEnt may be returned.
+	// Returns slice of volumes that were found.
 	Inspect(volumeIDs []api.VolumeID) ([]api.Volume, error)
 
 	// Enumerate volumes that map to the volumeLocator. Locator fields may be regexp.
