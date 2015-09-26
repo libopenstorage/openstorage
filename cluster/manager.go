@@ -240,7 +240,7 @@ func (c *ClusterManager) heartBeat() {
 					}
 
 					delete(c.nodeCache, n.Id)
-				} else if time.Since(n.Timestamp) > 60*time.Second {
+				} else if nodeInfo.Status == gossiptypes.NODE_STATUS_DOWN {
 					log.Warn("Detected node ", n.Id, " to be offline due to inactivity.")
 
 					n.Status = api.StatusOffline
@@ -255,7 +255,7 @@ func (c *ClusterManager) heartBeat() {
 				} else {
 					c.nodeCache[n.Id] = n
 				}
-			} else if time.Since(n.Timestamp) <= 60*time.Second {
+			} else if nodeInfo.Status == gossiptypes.NODE_STATUS_UP {
 				// A node discovered in the cluster.
 				log.Warn("Detected node ", n.Id, " to be in the cluster.")
 
