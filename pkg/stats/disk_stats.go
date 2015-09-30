@@ -99,8 +99,10 @@ func (d *DiskStats) collect() {
 		// See https://www.kernel.org/doc/Documentation/ABI/testing/procfs-diskstats
 		d.stats[values[2]] = &api.Stats{
 			Reads:      statCounter(values[3]),
+			ReadBytes:  statCounter(values[5]) * 512,
 			ReadMs:     statCounter(values[6]),
 			Writes:     statCounter(values[7]),
+			WriteBytes: statCounter(values[9]) * 512,
 			WriteMs:    statCounter(values[10]),
 			IOProgress: statCounter(values[11]),
 			IOMs:       statCounter(values[12]),

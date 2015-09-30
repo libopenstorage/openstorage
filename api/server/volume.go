@@ -319,7 +319,7 @@ func (vd *volApi) alerts(w http.ResponseWriter, r *http.Request) {
 	var volumeID api.VolumeID
 	var err error
 
-	method := "stats"
+	method := "alerts"
 	if volumeID, err = vd.parseVolumeID(r); err != nil {
 		e := fmt.Errorf("Failed to parse parse volumeID: %s", err.Error())
 		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)

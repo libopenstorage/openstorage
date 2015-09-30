@@ -162,8 +162,13 @@ type Stats struct {
 	Reads int64
 	// ReadMs time spent in reads in ms.
 	ReadMs int64
+	// ReadBytes
+	ReadBytes int64
+	// Writes completed successfully.
 	// Writes completed successfully.
 	Writes int64
+	// WriteBytes
+	WriteBytes int64
 	// WriteMs time spent in writes in ms.
 	WriteMs int64
 	// IOProgress I/Os curently in progress.
