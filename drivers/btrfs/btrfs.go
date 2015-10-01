@@ -84,6 +84,7 @@ func (d *driver) Create(locator api.VolumeLocator,
 		LastScan: time.Now(),
 		Format:   "btrfs",
 		State:    api.VolumeAvailable,
+		Status:   api.Up,
 	}
 	err := d.CreateVol(v)
 	if err != nil {

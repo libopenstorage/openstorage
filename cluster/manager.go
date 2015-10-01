@@ -310,7 +310,7 @@ func (c *ClusterManager) Start() error {
 		// Update the new state of the cluster in the KV Database
 		err = writeDatabase(&db)
 		if err != nil {
-			log.Errorf("Failed to save the database.", err)
+			log.Error("Failed to save the database.", err)
 			log.Panic(err)
 		}
 

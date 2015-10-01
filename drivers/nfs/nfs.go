@@ -188,6 +188,7 @@ func (d *driver) Create(locator api.VolumeLocator, opt *api.CreateOptions, spec 
 		LastScan:   time.Now(),
 		Format:     "nfs",
 		State:      api.VolumeAvailable,
+		Status:     api.Up,
 		DevicePath: path.Join(nfsMountPath, string(volumeID), nfsBlockFile),
 	}
 

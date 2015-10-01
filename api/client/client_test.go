@@ -48,7 +48,6 @@ func TestAll(t *testing.T) {
 	d := c.VolumeDriver()
 	ctx := test.NewContext(d)
 	ctx.Filesystem = string("btrfs")
-	return
 	test.Run(t, ctx)
 }
 

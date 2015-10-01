@@ -252,6 +252,7 @@ func (d *Driver) Create(
 		LastScan: time.Now(),
 		Format:   "none",
 		State:    api.VolumeAvailable,
+		Status:   api.Up,
 	}
 	err = d.UpdateVol(v)
 	log.Infof("Created volume %v", v.ID)
