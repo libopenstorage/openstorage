@@ -138,6 +138,20 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 		return nil, err
 	}
 
+	volumeInfo, err := inst.DefaultEnumerator.Enumerate(
+		api.VolumeLocator{},
+		nil)
+	if err == nil {
+		for _, info := range volumeInfo {
+			if info.Status == "" {
+				info.Status = api.Up
+				inst.UpdateVol(&info)
+			}
+		}
+	} else {
+		log.Println("Could not enumerate Volumes, ", err)
+	}
+
 	log.Println("NFS initialized and driver mounted at: ", nfsMountPath)
 	return inst, nil
 }
