@@ -242,7 +242,7 @@ func (d *driver) path(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	response.Mountpoint = path.Join(response.Mountpoint, config.DataDir)
-	d.logReq(method, request.Name).Infof("response %v", response.Mountpoint)
+	d.logReq(method, request.Name).Debugf("response %v", response.Mountpoint)
 	json.NewEncoder(w).Encode(&response)
 }
 
