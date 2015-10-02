@@ -57,13 +57,13 @@ func volDriverPath(method string) string {
 
 func (d *driver) volNotFound(request string, id string, e error, w http.ResponseWriter) error {
 	err := fmt.Errorf("Failed to locate volume: " + e.Error())
-	d.logReq(request, id).Warn(http.StatusNotFound, " ", err.Error())
+	d.logReq(request, id).Warnf(http.StatusNotFound, " ", err.Error())
 	return err
 }
 
 func (d *driver) volNotMounted(request string, id string) error {
 	err := fmt.Errorf("volume not mounted")
-	d.logReq(request, id).Debug(http.StatusNotFound, " ", err.Error())
+	d.logReq(request, id).Warn(http.StatusNotFound, " ", err.Error())
 	return err
 }
 
@@ -130,7 +130,7 @@ func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	d.logReq(method, request.Name).Debug("")
+	d.logReq(method, request.Name).Info("")
 
 	// It is an error if the volume doesn't already exist.
 	_, err = d.volFromName(request.Name)
@@ -151,7 +151,7 @@ func (d *driver) remove(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	d.logReq(method, request.Name).Debug("")
+	d.logReq(method, request.Name).Info("")
 
 	// It is an error if the volume doesn't exist.
 	_, err = d.volFromName(request.Name)
@@ -214,7 +214,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 	response.Mountpoint = path.Join(response.Mountpoint, config.DataDir)
 	os.MkdirAll(response.Mountpoint, 0755)
 
-	d.logReq(method, request.Name).Debugf("response %v", response.Mountpoint)
+	d.logReq(method, request.Name).Infof("response %v", response.Mountpoint)
 	json.NewEncoder(w).Encode(&response)
 }
 
@@ -242,7 +242,7 @@ func (d *driver) path(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	response.Mountpoint = path.Join(response.Mountpoint, config.DataDir)
-	d.logReq(method, request.Name).Debugf("response %v", response.Mountpoint)
+	d.logReq(method, request.Name).Infof("response %v", response.Mountpoint)
 	json.NewEncoder(w).Encode(&response)
 }
 
@@ -261,7 +261,7 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	d.logReq(method, request.Name).Debug("")
+	d.logReq(method, request.Name).Info("")
 
 	volInfo, err := d.volFromName(request.Name)
 	if err != nil {
