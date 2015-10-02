@@ -165,7 +165,6 @@ type Stats struct {
 	// ReadBytes
 	ReadBytes int64
 	// Writes completed successfully.
-	// Writes completed successfully.
 	Writes int64
 	// WriteBytes
 	WriteBytes int64
