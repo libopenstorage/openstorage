@@ -57,7 +57,7 @@ func volDriverPath(method string) string {
 
 func (d *driver) volNotFound(request string, id string, e error, w http.ResponseWriter) error {
 	err := fmt.Errorf("Failed to locate volume: " + e.Error())
-	d.logReq(request, id).Warnf(http.StatusNotFound, " ", err.Error())
+	d.logReq(request, id).Warn(http.StatusNotFound, " ", err.Error())
 	return err
 }
 
