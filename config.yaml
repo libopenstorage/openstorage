@@ -4,6 +4,7 @@ osd:
     #nodeid: "1"
     #clusterid: "deadbeeef"
   drivers:
+      vfs:
 #    pwx:
 #   nfs:
 #     server: "localhost"
