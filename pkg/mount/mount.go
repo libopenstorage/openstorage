@@ -5,36 +5,50 @@ package mount
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"sync"
 	"syscall"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/docker/docker/pkg/mount"
 )
 
-// Ops defines the interface for keep track of volume driver mounts.
-type Ops interface {
+// Mangager defines the interface for keep track of volume driver mounts.
+type Manager interface {
 	// String representation of the mount table
 	String() string
-	// Load mount table for all devices that match the prefix. An empty prefix may
-	// be provided.
-	Load(devPrefix string) error
-	// Inspect mount table for specified device. ErrEnoent may be returned.
-	Inspect(device string) (Info, error)
-	// HasMounts determines returns the number of mounts for the device.
-	HasMounts(devPath string)
+	// Load mount table for all devices that match this identifier
+	Load(source string) error
+	// Inspect mount table for specified source. ErrEnoent may be returned.
+	Inspect(source string) []PathInfo
+	// HasMounts determines returns the number of mounts for the source.
+	HasMounts(source string) int
 	// Exists returns true if the device is mounted at specified path.
 	// returned if the device does not exists.
-	Exists(device, path string) (bool, error)
+	Exists(source, path string) (bool, error)
 	// Mount device at mountpoint or increment refcnt if device is already mounted
 	// at specified mountpoint.
-	Mount(Minor int32, device, path, fs string, flags uintptr, data string) error
+	Mount(minor int, device, path, fs string, flags uintptr, data string) error
 	// Unmount device at mountpoint or decrement refcnt. If device has no
 	// mountpoints left after this operation, it is removed from the matrix.
 	// ErrEnoent is returned if the device or mountpoint for the device is not found.
-	Unmount(device, path string) error
+	Unmount(source, path string) error
 }
+
+type MountType int
+
+const (
+	DeviceMount MountType = 1 << iota
+	NFSMount
+)
+
+var (
+	// ErrEnoent is returned for a non existent mount point
+	ErrEnoent = errors.New("Mountpath is not mounted")
+	// ErrEinval is returned is fields for an entry do no match
+	// existing fields
+	ErrEinval = errors.New("Invalid arguments for mount entry")
+	// ErrUnsupported is returned for an operation or a mount type not suppored.
+	ErrUnsupported = errors.New("Not supported")
+)
 
 // DeviceMap map device name to Info
 type DeviceMap map[string]*Info
@@ -53,34 +67,31 @@ type Info struct {
 	Fs         string
 }
 
-// Matrix implements Ops and keeps track of active mounts for volume drivers.
-type Matrix struct {
+// Mounter implements Ops and keeps track of active mounts for volume drivers.
+type Mounter struct {
 	sync.Mutex
 	mounts DeviceMap
 }
 
-var (
-	// ErrEnoent is returned for a non existent mount point
-	ErrEnoent = errors.New("Mountpath is not mounted")
-	// ErrEinval is returned is fields for an entry do no match
-	// existing fields
-	ErrEinval = errors.New("Invalid arguments for mount entry")
-)
+// String representation of Mounter
+func (m *Mounter) String() string {
+	return fmt.Sprintf("%#v", *m)
+}
 
-// New instance of Matrix
-func New(devPrefix string) (*Matrix, error) {
-	m := &Matrix{
-		mounts: make(DeviceMap),
+// Inspect mount table for device
+func (m *Mounter) Inspect(devPath string) []PathInfo {
+	m.Lock()
+	defer m.Unlock()
+
+	v, ok := m.mounts[devPath]
+	if !ok {
+		return []PathInfo{}
 	}
-	err := m.Load(devPrefix)
-	if err != nil {
-		return nil, err
-	}
-	return m, nil
+	return v.Mountpoint
 }
 
 // HasMounts determines returns the number of mounts for the device.
-func (m *Matrix) HasMounts(devPath string) int {
+func (m *Mounter) HasMounts(devPath string) int {
 	m.Lock()
 	defer m.Unlock()
 
@@ -93,7 +104,7 @@ func (m *Matrix) HasMounts(devPath string) int {
 
 // Exists scans mountpaths for specified device and returns true if path is one of the
 // mountpaths. ErrEnoent may be retuned if the device is not found
-func (m *Matrix) Exists(devPath string, path string) (bool, error) {
+func (m *Mounter) Exists(devPath string, path string) (bool, error) {
 	m.Lock()
 	defer m.Unlock()
 
@@ -110,7 +121,7 @@ func (m *Matrix) Exists(devPath string, path string) (bool, error) {
 }
 
 // Mount new mountpoint for specified device.
-func (m *Matrix) Mount(minor int, device, path, fs string, flags uintptr, data string) error {
+func (m *Mounter) Mount(minor int, device, path, fs string, flags uintptr, data string) error {
 	m.Lock()
 	defer m.Unlock()
 
@@ -151,7 +162,7 @@ func (m *Matrix) Mount(minor int, device, path, fs string, flags uintptr, data s
 // Unmount device at mountpoint or decrement refcnt. If device has no
 // mountpoints left after this operation, it is removed from the matrix.
 // ErrEnoent is returned if the device or mountpoint for the device is not found.
-func (m *Matrix) Unmount(device, path string) error {
+func (m *Mounter) Unmount(device, path string) error {
 	m.Lock()
 	defer m.Unlock()
 
@@ -182,51 +193,12 @@ func (m *Matrix) Unmount(device, path string) error {
 	return ErrEnoent
 }
 
-// String representation of Matrix
-func (m *Matrix) String() string {
-	return fmt.Sprintf("%#v", *m)
-}
-
-// Load mount table
-func (m *Matrix) Load(devPrefix string) error {
-	info, err := mount.GetMounts()
-	if err != nil {
-		return err
+func New(mounterType MountType, identifier string) (Manager, error) {
+	switch mounterType {
+	case DeviceMount:
+		return NewDeviceMounter(identifier)
+	case NFSMount:
+		return NewNFSMounter(identifier)
 	}
-	for _, v := range info {
-		if !strings.HasPrefix(v.Source, devPrefix) {
-			continue
-		}
-		mount, ok := m.mounts[v.Source]
-		if !ok {
-			mount = &Info{
-				Device:     v.Source,
-				Fs:         v.Fstype,
-				Minor:      v.Minor,
-				Mountpoint: make([]PathInfo, 0),
-			}
-			m.mounts[v.Source] = mount
-		}
-		// Allow Load to be called multiple times.
-		for _, p := range mount.Mountpoint {
-			if p.Path == v.Mountpoint {
-				continue
-			}
-		}
-		// XXX Reconstruct refs.
-		mount.Mountpoint = append(mount.Mountpoint, PathInfo{Path: v.Mountpoint, ref: 1})
-	}
-	return nil
-}
-
-// Inspect mount table for device
-func (m *Matrix) Inspect(devPath string) []PathInfo {
-	m.Lock()
-	defer m.Unlock()
-
-	v, ok := m.mounts[devPath]
-	if !ok {
-		return []PathInfo{}
-	}
-	return v.Mountpoint
+	return nil, ErrUnsupported
 }
