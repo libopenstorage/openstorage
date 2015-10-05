@@ -16,6 +16,7 @@ import (
 	"github.com/portworx/kvdb"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/pkg/mount"
 	"github.com/libopenstorage/openstorage/volume"
 )
 
@@ -32,6 +33,7 @@ type driver struct {
 	*volume.DefaultEnumerator
 	nfsServer string
 	nfsPath   string
+	mounter   mount.Manager
 }
 
 func copyFile(source string, dest string) (err error) {
@@ -116,26 +118,43 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 		log.Printf("NFS driver initializing with %s:%s ", server, path)
 	}
 
+	// Create a mount manager for this NFS server. Blank sever is OK.
+	mounter, err := mount.New(mount.NFSMount, server)
+	if err != nil {
+		log.Warnf("Failed to create mount manager for server: %v (%v)", server, err)
+		return nil, err
+	}
+
 	inst := &driver{
 		DefaultEnumerator: volume.NewDefaultEnumerator(Name, kvdb.Instance()),
 		nfsServer:         server,
-		nfsPath:           path}
+		nfsPath:           path,
+		mounter:           mounter,
+	}
 
-	err := os.MkdirAll(nfsMountPath, 0744)
+	err = os.MkdirAll(nfsMountPath, 0744)
 	if err != nil {
 		return nil, err
 	}
-
-	// Mount the nfs server locally on a unique path.
-	syscall.Unmount(nfsMountPath, 0)
+	src := inst.nfsPath
 	if server != "" {
-		err = syscall.Mount(":"+inst.nfsPath, nfsMountPath, "nfs", 0, "nolock,addr="+inst.nfsServer)
-	} else {
-		err = syscall.Mount(inst.nfsPath, nfsMountPath, "", syscall.MS_BIND, "")
+		src = ":" + inst.nfsPath
 	}
-	if err != nil {
-		log.Printf("Unable to mount %s:%s at %s (%+v)", inst.nfsServer, inst.nfsPath, nfsMountPath, err)
-		return nil, err
+
+	// If src is already mounted at dest, leave it be.
+	mountExists, err := mounter.Exists(src, nfsMountPath)
+	if !mountExists {
+		// Mount the nfs server locally on a unique path.
+		syscall.Unmount(nfsMountPath, 0)
+		if server != "" {
+			err = syscall.Mount(src, nfsMountPath, "nfs", 0, "nolock,addr="+inst.nfsServer)
+		} else {
+			err = syscall.Mount(src, nfsMountPath, "", syscall.MS_BIND, "")
+		}
+		if err != nil {
+			log.Printf("Unable to mount %s:%s at %s (%+v)", inst.nfsServer, inst.nfsPath, nfsMountPath, err)
+			return nil, err
+		}
 	}
 
 	volumeInfo, err := inst.DefaultEnumerator.Enumerate(
@@ -244,12 +263,17 @@ func (d *driver) Mount(volumeID api.VolumeID, mountpath string) error {
 		log.Println(err)
 		return err
 	}
-	syscall.Unmount(mountpath, 0)
-	err = syscall.Mount(path.Join(nfsMountPath, string(volumeID)), mountpath, string(v.Spec.Format), syscall.MS_BIND, "")
-	if err != nil {
-		log.Printf("Cannot mount %s at %s because %+v",
-			path.Join(nfsMountPath, string(volumeID)), mountpath, err)
-		return err
+
+	srcPath := path.Join(":", d.nfsPath, string(volumeID))
+	mountExists, err := d.mounter.Exists(srcPath, mountpath)
+	if !mountExists {
+		syscall.Unmount(mountpath, 0)
+		err = syscall.Mount(path.Join(nfsMountPath, string(volumeID)), mountpath, string(v.Spec.Format), syscall.MS_BIND, "")
+		if err != nil {
+			log.Printf("Cannot mount %s at %s because %+v",
+				path.Join(nfsMountPath, string(volumeID)), mountpath, err)
+			return err
+		}
 	}
 
 	v.AttachPath = mountpath
