@@ -2,7 +2,6 @@ package seed
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/url"
 	"os/exec"
 	"path"
@@ -25,8 +24,7 @@ func (g *Git) String() string {
 func (g *Git) Load(dest string) error {
 
 	g.ready = false
-	cmd := exec.Command("git", "clone", g.host)
-	cmd.Dir = dest
+	cmd := exec.Command("git", "clone", g.host, dest)
 
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("'wd: %s git clone %s': %s: %s", dest, g.host, output, err)
@@ -35,20 +33,13 @@ func (g *Git) Load(dest string) error {
 		g.ready = true
 		return nil
 	}
-	repo, err := ioutil.ReadDir(dest)
-	if err != nil {
-		return err
-	}
-	if len(repo) != 1 {
-		return fmt.Errorf("Expect a single dir containing the repo no %v files/dirs", len(repo))
-	}
 	cmd = exec.Command("git", "checkout", g.revision)
-	cmd.Dir = path.Join(dest, repo[0].Name())
+	cmd.Dir = dest
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("wd %v 'git checkout %s': %s: %s", cmd.Dir, g.revision, output, err)
 	}
 	cmd = exec.Command("git", "reset", "--hard")
-	cmd.Dir = path.Join(dest, repo[0].Name())
+	cmd.Dir = dest
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("wd %v 'git reset --hard  %s': %s: %s", cmd.Dir, output, err)
 	}
