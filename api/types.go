@@ -73,10 +73,14 @@ type VolumeLocator struct {
 
 // CreateOptions are passed in with a CreateRequest
 type CreateOptions struct {
-	// FailIfExists fail create request if a volume with matching Locator already exists.
+	// FailIfExists fail create request if a volume with matching Locator
+	// already exists.
 	FailIfExists bool
 	// CreateFromSnap will create a volume with specified SnapID
 	CreateFromSnap VolumeID
+	// CreateFromSource will seed the volume from the specified URI. Any
+	// additional config for the source comes from the labels in the spec.
+	CreateFromSource string
 }
 
 // Filesystem supported filesystems
