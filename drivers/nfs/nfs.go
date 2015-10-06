@@ -192,6 +192,7 @@ func (d *driver) Status() [][2]string {
 func (d *driver) Create(locator api.VolumeLocator, opt *api.CreateOptions, spec *api.VolumeSpec) (api.VolumeID, error) {
 	volumeID := uuid.New()
 	volumeID = strings.TrimSuffix(volumeID, "\n")
+	parent := api.BadVolumeID
 
 	// Create a directory on the NFS server with this UUID.
 	volPath := path.Join(nfsMountPath, volumeID)
@@ -213,6 +214,8 @@ func (d *driver) Create(locator api.VolumeLocator, opt *api.CreateOptions, spec 
 				opt.CreateFromSource, nfsMountPath, err)
 			return api.BadVolumeID, err
 		}
+	} else if len(opt.CreateFromSnap) != 0 {
+		parent = opt.CreateFromSnap
 	}
 
 	f, err := os.Create(path.Join(nfsMountPath, volumeID, nfsBlockFile))
@@ -230,6 +233,7 @@ func (d *driver) Create(locator api.VolumeLocator, opt *api.CreateOptions, spec 
 
 	v := &api.Volume{
 		ID:         api.VolumeID(volumeID),
+		Parent:     parent,
 		Locator:    locator,
 		Ctime:      time.Now(),
 		Spec:       spec,
@@ -318,8 +322,8 @@ func (d *driver) Snapshot(volumeID api.VolumeID, readonly bool, locator api.Volu
 	if err != nil {
 		return api.BadVolumeID, nil
 	}
-
-	newVolumeID, err := d.Create(locator, nil, vols[0].Spec)
+	options := &api.CreateOptions{CreateFromSnap: volumeID}
+	newVolumeID, err := d.Create(locator, options, vols[0].Spec)
 	if err != nil {
 		return api.BadVolumeID, nil
 	}
