@@ -218,7 +218,7 @@ func (d *driver) Create(locator api.VolumeLocator, opt *api.CreateOptions, spec 
 		parent = opt.CreateFromSnap
 	}
 
-	f, err := os.Create(path.Join(nfsMountPath, volumeID, nfsBlockFile))
+	f, err := os.Create(path.Join(nfsMountPath, string(volumeID)+nfsBlockFile))
 	if err != nil {
 		log.Println(err)
 		return api.BadVolumeID, err
@@ -241,7 +241,7 @@ func (d *driver) Create(locator api.VolumeLocator, opt *api.CreateOptions, spec 
 		Format:     "nfs",
 		State:      api.VolumeAvailable,
 		Status:     api.Up,
-		DevicePath: path.Join(nfsMountPath, string(volumeID), nfsBlockFile),
+		DevicePath: path.Join(nfsMountPath, string(volumeID)+nfsBlockFile),
 	}
 
 	err = d.CreateVol(v)
@@ -339,7 +339,7 @@ func (d *driver) Snapshot(volumeID api.VolumeID, readonly bool, locator api.Volu
 }
 
 func (d *driver) Attach(volumeID api.VolumeID) (string, error) {
-	return path.Join(nfsMountPath, string(volumeID), nfsBlockFile), nil
+	return path.Join(nfsMountPath, string(volumeID)+nfsBlockFile), nil
 }
 
 func (d *driver) Format(volumeID api.VolumeID) error {
