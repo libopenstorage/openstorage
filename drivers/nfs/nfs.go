@@ -201,21 +201,23 @@ func (d *driver) Create(locator api.VolumeLocator, opt *api.CreateOptions, spec 
 		log.Println(err)
 		return api.BadVolumeID, err
 	}
-	if opt != nil && len(opt.CreateFromSource) != 0 {
-		seed, err := seed.New(opt.CreateFromSource, spec.ConfigLabels)
-		if err != nil {
-			log.Warnf("Failed to initailize seed from %q : %v",
-				opt.CreateFromSource, err)
-			return api.BadVolumeID, err
+	if opt != nil {
+		if len(opt.CreateFromSource) != 0 {
+			seed, err := seed.New(opt.CreateFromSource, spec.ConfigLabels)
+			if err != nil {
+				log.Warnf("Failed to initailize seed from %q : %v",
+					opt.CreateFromSource, err)
+				return api.BadVolumeID, err
+			}
+			err = seed.Load(volPath)
+			if err != nil {
+				log.Warnf("Failed to  seed from %q to %q: %v",
+					opt.CreateFromSource, nfsMountPath, err)
+				return api.BadVolumeID, err
+			}
+		} else if len(opt.CreateFromSnap) != 0 {
+			parent = opt.CreateFromSnap
 		}
-		err = seed.Load(volPath)
-		if err != nil {
-			log.Warnf("Failed to  seed from %q to %q: %v",
-				opt.CreateFromSource, nfsMountPath, err)
-			return api.BadVolumeID, err
-		}
-	} else if len(opt.CreateFromSnap) != 0 {
-		parent = opt.CreateFromSnap
 	}
 
 	f, err := os.Create(path.Join(nfsMountPath, string(volumeID)+nfsBlockFile))
