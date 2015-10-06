@@ -2,8 +2,6 @@ ifeq ($(BUILD_TYPE),debug)
 BUILD_OPTIONS= -gcflags "-N -l"
 endif
 
-.PHONY: clean all
-
 all: test
 
 deps:
@@ -18,33 +16,30 @@ test-deps:
 update-test-deps:
 	GO15VENDOREXPERIMENT=0 go get -d -v -t -u -f ./...
 
-restore:
-	godep restore ./...
-
-update-vendor-all:
+vendor:
 	go get -u github.com/tools/godep
-	CGO_ENABLED=1 GOOS=linux GOARCH=amd64 GO15VENDOREXPERIMENT=0 go get -d -v -t -u -f ./...
+	-CGO_ENABLED=1 GOOS=linux GOARCH=amd64 GO15VENDOREXPERIMENT=0 go get -d -v -t -u -f ./...
 	rm -rf Godeps
 	rm -rf vendor
 	CGO_ENABLED=1 GOOS=linux GOARCH=amd64 godep save ./...
 
-build: restore
+build:
 	go build ./...
 
-lint: restore
+lint:
 	go get -v github.com/golang/lint/golint
 	golint ./...
 
-vet: restore
+vet:
 	go vet ./...
 
-errcheck: restore
+errcheck:
 	go get -v github.com/kisielk/errcheck
 	errcheck ./...
 
 pretest: lint vet errcheck
 
-test: restore pretest
+test:
 	go test ./...
 
 docker-build:
@@ -62,8 +57,7 @@ clean:
 	update-deps \
 	test-deps \
 	update-test-deps \
-	restore \
-	update-vendor-all \
+	vendor \
 	build \
 	install \
 	lint \
