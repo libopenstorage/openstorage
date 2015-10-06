@@ -49,6 +49,8 @@ const (
 	VolumeAttached
 	// VolumeDetached is detached but associated with a container.
 	VolumeDetached
+	// VolumeDetaching is detach is in progress.
+	VolumeDetaching
 	// VolumeError is in Error State
 	VolumeError
 	// VolumeDeleted is deleted, it will remain in this state while resources are
