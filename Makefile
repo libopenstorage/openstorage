@@ -24,7 +24,7 @@ docker:
 	@docker build -t osd -f Dockerfile .
 
 test:
-	@go test ./...
+	@go test ./... -tags daemon
 
 clean:
 	@echo "Cleaning openstorage..."
