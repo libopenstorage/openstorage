@@ -1,32 +1,76 @@
 ifeq ($(BUILD_TYPE),debug)
 BUILD_OPTIONS= -gcflags "-N -l"
-else
-BUILD_OPTIONS= 
 endif
+
 .PHONY: clean all
-TARGETS := openstorage
 
-export BASE_DIR=$(shell git rev-parse --show-toplevel)
-export GOPATH=$(shell echo ${BASE_DIR}| sed 's@\(.*\)/src/github.com.*@\1@g')
+all: test
 
-all: $(TARGETS) tags
+deps:
+	GO15VENDOREXPERIMENT=0 go get -d -v ./...
 
-tags:
-	@ctags -R 
+update-deps:
+	GO15VENDOREXPERIMENT=0 go get -d -v -u -f ./...
 
-openstorage:
-	@echo "Building openstorage..."
-	@echo go build $(BUILD_OPTIONS) -tags daemon  -o osd 
-	@go build $(BUILD_OPTIONS) -tags daemon  -o osd 
+test-deps:
+	GO15VENDOREXPERIMENT=0 go get -d -v -t ./...
 
-docker:
-	@docker rmi -f osd || true
-	@docker build -t osd -f Dockerfile .
+update-test-deps:
+	GO15VENDOREXPERIMENT=0 go get -d -v -t -u -f ./...
 
-test:
-	@go test ./...
+restore:
+	godep restore ./...
+
+update-vendor-all:
+	go get -u github.com/tools/godep
+	CGO_ENABLED=1 GOOS=linux GOARCH=amd64 GO15VENDOREXPERIMENT=0 go get -d -v -t -u -f ./...
+	rm -rf Godeps
+	rm -rf vendor
+	CGO_ENABLED=1 GOOS=linux GOARCH=amd64 godep save ./...
+
+build: restore
+	go build ./...
+
+lint: restore
+	go get -v github.com/golang/lint/golint
+	golint ./...
+
+vet: restore
+	go vet ./...
+
+errcheck: restore
+	go get -v github.com/kisielk/errcheck
+	errcheck ./...
+
+pretest: lint vet errcheck
+
+test: restore pretest
+	go test ./...
+
+docker-build:
+	docker build -t openstorage/osd .
+
+docker-test: docker-build
+	docker run openstorage/osd make test
 
 clean:
-	@echo "Cleaning openstorage..."
-	@rm -f tags
-	@rm -f osd
+	go clean ./...
+
+.PHONY: \
+	all \
+	deps \
+	update-deps \
+	test-deps \
+	update-test-deps \
+	restore \
+	update-vendor-all \
+	build \
+	install \
+	lint \
+	vet \
+	errcheck \
+	pretest \
+	test \
+	docker-build \
+	docker-test \
+	clean
