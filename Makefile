@@ -21,7 +21,9 @@ vendor:
 	-CGO_ENABLED=1 GOOS=linux GOARCH=amd64 GO15VENDOREXPERIMENT=0 go get -d -v -t -u -f ./...
 	rm -rf Godeps
 	rm -rf vendor
-	CGO_ENABLED=1 GOOS=linux GOARCH=amd64 godep save ./...
+	CGO_ENABLED=1 GOOS=linux GOARCH=amd64 godep save \
+							./... \
+							github.com/docker/docker/pkg/chrootarchive
 
 build:
 	go build ./...

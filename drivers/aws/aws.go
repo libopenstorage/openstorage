@@ -234,9 +234,9 @@ func (d *Driver) Create(
 		DryRun:           &dryRun,
 		Encrypted:        &encrypted,
 		Size:             &sz,
-		IOPS:             iops,
+		Iops:             iops,
 		VolumeType:       volType,
-		SnapshotID:       snapID,
+		SnapshotId:       snapID,
 	}
 
 	vol, err := d.ec2.CreateVolume(req)
@@ -245,7 +245,7 @@ func (d *Driver) Create(
 		return api.BadVolumeID, err
 	}
 	v := &api.Volume{
-		ID:       api.VolumeID(*vol.VolumeID),
+		ID:       api.VolumeID(*vol.VolumeId),
 		Locator:  locator,
 		Ctime:    time.Now(),
 		Spec:     spec,
@@ -280,8 +280,8 @@ func (d *Driver) merge(v *api.Volume, aws *ec2.Volume) {
 	case ec2.VolumeStateInUse:
 		v.Status = api.Up
 		if aws.Attachments != nil && len(aws.Attachments) != 0 {
-			if aws.Attachments[0].InstanceID != nil {
-				v.AttachedOn = api.MachineID(*aws.Attachments[0].InstanceID)
+			if aws.Attachments[0].InstanceId != nil {
+				v.AttachedOn = api.MachineID(*aws.Attachments[0].InstanceId)
 			}
 			if aws.Attachments[0].State != nil {
 				v.State = d.volumeState(aws.Attachments[0].State)
@@ -296,7 +296,7 @@ func (d *Driver) merge(v *api.Volume, aws *ec2.Volume) {
 func (d *Driver) waitStatus(volumeID api.VolumeID, desired string) error {
 
 	id := string(volumeID)
-	request := &ec2.DescribeVolumesInput{VolumeIDs: []*string{&id}}
+	request := &ec2.DescribeVolumesInput{VolumeIds: []*string{&id}}
 	actual := ""
 
 	for retries, max_retries := 0, 10; actual != desired && retries < max_retries; retries++ {
@@ -328,7 +328,7 @@ func (d *Driver) devicePath(volumeID api.VolumeID) (string, error) {
 
 	awsVolID := string(volumeID)
 
-	request := &ec2.DescribeVolumesInput{VolumeIDs: []*string{&awsVolID}}
+	request := &ec2.DescribeVolumesInput{VolumeIds: []*string{&awsVolID}}
 	awsVols, err := d.ec2.DescribeVolumes(request)
 	if err != nil {
 		return "", err
@@ -341,12 +341,12 @@ func (d *Driver) devicePath(volumeID api.VolumeID) (string, error) {
 	if aws.Attachments == nil || len(aws.Attachments) == 0 {
 		return "", fmt.Errorf("Invalid volume state, volume must be attached")
 	}
-	if aws.Attachments[0].InstanceID == nil {
+	if aws.Attachments[0].InstanceId == nil {
 		return "", fmt.Errorf("Unable to determine volume instance attachment")
 	}
-	if d.md.instance != *aws.Attachments[0].InstanceID {
+	if d.md.instance != *aws.Attachments[0].InstanceId {
 		return "", fmt.Errorf("volume is attched on %q, it must be attached on %q",
-			*aws.Attachments[0].InstanceID, d.md.instance)
+			*aws.Attachments[0].InstanceId, d.md.instance)
 
 	}
 	if aws.Attachments[0].State == nil {
@@ -372,7 +372,7 @@ func (d *Driver) Inspect(volumeIDs []api.VolumeID) ([]api.Volume, error) {
 		id := string(v.ID)
 		ids[i] = &id
 	}
-	request := &ec2.DescribeVolumesInput{VolumeIDs: ids}
+	request := &ec2.DescribeVolumesInput{VolumeIds: ids}
 	awsVols, err := d.ec2.DescribeVolumes(request)
 	if err != nil {
 		return nil, err
@@ -381,7 +381,7 @@ func (d *Driver) Inspect(volumeIDs []api.VolumeID) ([]api.Volume, error) {
 		return nil, fmt.Errorf("AwsVols (%v) do not match recorded vols (%v)", awsVols, vols)
 	}
 	for i, v := range awsVols.Volumes {
-		if string(vols[i].ID) != *v.VolumeID {
+		if string(vols[i].ID) != *v.VolumeId {
 			d.merge(&vols[i], v)
 		}
 	}
@@ -392,7 +392,7 @@ func (d *Driver) Delete(volumeID api.VolumeID) error {
 	dryRun := false
 	id := string(volumeID)
 	req := &ec2.DeleteVolumeInput{
-		VolumeID: &id,
+		VolumeId: &id,
 		DryRun:   &dryRun,
 	}
 	_, err := d.ec2.DeleteVolume(req)
@@ -413,12 +413,12 @@ func (d *Driver) Snapshot(volumeID api.VolumeID, readonly bool, locator api.Volu
 	}
 	awsID := string(volumeID)
 	request := &ec2.CreateSnapshotInput{
-		VolumeID: &awsID,
+		VolumeId: &awsID,
 		DryRun:   &dryRun,
 	}
 	snap, err := d.ec2.CreateSnapshot(request)
 	chaos.Now(koStrayCreate)
-	vols[0].ID = api.VolumeID(*snap.SnapshotID)
+	vols[0].ID = api.VolumeID(*snap.SnapshotId)
 	vols[0].Parent = volumeID
 	vols[0].Locator = locator
 	vols[0].Ctime = time.Now()
@@ -455,8 +455,8 @@ func (d *Driver) Attach(volumeID api.VolumeID) (path string, err error) {
 	awsVolID := string(volumeID)
 	req := &ec2.AttachVolumeInput{
 		Device:     &device,
-		InstanceID: &d.md.instance,
-		VolumeID:   &awsVolID,
+		InstanceId: &d.md.instance,
+		VolumeId:   &awsVolID,
 	}
 	resp, err := d.ec2.AttachVolume(req)
 	if err != nil {
@@ -507,8 +507,8 @@ func (d *Driver) Detach(volumeID api.VolumeID) error {
 	force := false
 	awsVolID := string(volumeID)
 	req := &ec2.DetachVolumeInput{
-		InstanceID: &d.md.instance,
-		VolumeID:   &awsVolID,
+		InstanceId: &d.md.instance,
+		VolumeId:   &awsVolID,
 		Force:      &force,
 	}
 	_, err := d.ec2.DetachVolume(req)
