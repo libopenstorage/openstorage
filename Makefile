@@ -26,32 +26,32 @@ vendor:
 							github.com/docker/docker/pkg/chrootarchive
 
 build:
-	go build ./...
+	go build -tags daemon $(shell go list ./... | grep -v 'openstorage/vendor')
 
 lint:
 	go get -v github.com/golang/lint/golint
-	golint ./...
+	golint $(shell go list ./... | grep -v 'openstorage/vendor')
 
 vet:
-	go vet ./...
+	go vet $(shell go list ./... | grep -v 'openstorage/vendor')
 
 errcheck:
 	go get -v github.com/kisielk/errcheck
-	errcheck ./...
+	errcheck $(shell go list ./... | grep -v 'openstorage/vendor')
 
 pretest: lint vet errcheck
 
 test:
-	go test ./...
+	go test -tags daemon $(shell go list ./... | grep -v 'openstorage/vendor')
 
 docker-build:
 	docker build -t openstorage/osd .
 
 docker-test: docker-build
-	docker run openstorage/osd make test
+	docker run --privileged openstorage/osd make test
 
 clean:
-	go clean ./...
+	go clean $(shell go list ./... | grep -v 'openstorage/vendor')
 
 .PHONY: \
 	all \
