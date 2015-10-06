@@ -8,7 +8,7 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	apiserver "github.com/libopenstorage/openstorage/api/server"
 	"github.com/libopenstorage/openstorage/config"
-	"github.com/libopenstorage/openstorage/drivers/btrfs"
+	"github.com/libopenstorage/openstorage/drivers/nfs"
 	"github.com/libopenstorage/openstorage/drivers/test"
 	"github.com/libopenstorage/openstorage/volume"
 )
@@ -18,12 +18,12 @@ var (
 )
 
 func makeRequest(t *testing.T) {
-	c, err := NewDriverClient(btrfs.Name)
+	c, err := NewDriverClient(nfs.Name)
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
 	d := c.VolumeDriver()
-	_, err = d.Stats(api.VolumeID("foo"))
+	_, err = d.Inspect([]api.VolumeID{api.VolumeID("foo")})
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
@@ -35,13 +35,13 @@ func TestAll(t *testing.T) {
 		t.Fatalf("Failed to create test path: %v", err)
 	}
 
-	_, err = volume.New(btrfs.Name, volume.DriverParams{btrfs.RootParam: testPath})
+	_, err = volume.New(nfs.Name, volume.DriverParams{"path": testPath})
 	if err != nil {
 		t.Fatalf("Failed to initialize Driver: %v", err)
 	}
-	apiserver.StartServerAPI(btrfs.Name, 9003, config.DriverAPIBase)
+	apiserver.StartServerAPI(nfs.Name, 9003, config.DriverAPIBase)
 	time.Sleep(time.Second * 2)
-	c, err := NewDriverClient(btrfs.Name)
+	c, err := NewDriverClient(nfs.Name)
 	if err != nil {
 		t.Fatalf("Failed to initialize Driver: %v", err)
 	}
