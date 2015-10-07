@@ -63,7 +63,7 @@ func (d *driver) volNotFound(request string, id string, e error, w http.Response
 
 func (d *driver) volNotMounted(request string, id string) error {
 	err := fmt.Errorf("volume not mounted")
-	d.logReq(request, id).Warn(http.StatusNotFound, " ", err.Error())
+	d.logReq(request, id).Debug(http.StatusNotFound, " ", err.Error())
 	return err
 }
 
