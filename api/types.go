@@ -128,7 +128,7 @@ type Volume struct {
 	// ID Self referential VolumeID
 	ID VolumeID
 	// Source
-	Source Source
+	Source *Source
 	// Readonly
 	Readonly bool
 	// Locator User specified locator

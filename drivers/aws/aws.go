@@ -230,7 +230,7 @@ func (d *Driver) Create(
 	// Spec size is in bytes, translate to GiB.
 	sz := int64(spec.Size / (1024 * 1024 * 1024))
 	iops, volType := mapCos(spec.Cos)
-	if string(source.Parent) != "" {
+	if source != nil && string(source.Parent) != "" {
 		id := string(source.Parent)
 		snapID = &id
 	}
@@ -257,6 +257,7 @@ func (d *Driver) Create(
 		Locator:  locator,
 		Ctime:    time.Now(),
 		Spec:     spec,
+		Source:   source,
 		LastScan: time.Now(),
 		Format:   "none",
 		State:    api.VolumeAvailable,
@@ -475,7 +476,7 @@ func (d *Driver) Snapshot(volumeID api.VolumeID, readonly bool, locator api.Volu
 	snap, err := d.ec2.CreateSnapshot(request)
 	chaos.Now(koStrayCreate)
 	vols[0].ID = api.VolumeID(*snap.SnapshotID)
-	vols[0].Source.Parent = volumeID
+	vols[0].Source = &api.Source{Parent: volumeID}
 	vols[0].Locator = locator
 	vols[0].Ctime = time.Now()
 

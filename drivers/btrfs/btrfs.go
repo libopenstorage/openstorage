@@ -81,6 +81,7 @@ func (d *driver) Create(locator api.VolumeLocator,
 		Locator:  locator,
 		Ctime:    time.Now(),
 		Spec:     spec,
+		Source:   source,
 		LastScan: time.Now(),
 		Format:   "btrfs",
 		State:    api.VolumeAvailable,
@@ -165,7 +166,7 @@ func (d *driver) Snapshot(volumeID api.VolumeID, readonly bool, locator api.Volu
 	}
 	snapID := uuid.New()
 	vols[0].ID = api.VolumeID(snapID)
-	vols[0].Source.Parent = volumeID
+	vols[0].Source = &api.Source{Parent: volumeID}
 	vols[0].Locator = locator
 	vols[0].Ctime = time.Now()
 

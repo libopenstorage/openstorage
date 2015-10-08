@@ -192,7 +192,6 @@ func (d *driver) Status() [][2]string {
 func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api.VolumeSpec) (api.VolumeID, error) {
 	volumeID := uuid.New()
 	volumeID = strings.TrimSuffix(volumeID, "\n")
-	parent := api.BadVolumeID
 
 	// Create a directory on the NFS server with this UUID.
 	volPath := path.Join(nfsMountPath, volumeID)
@@ -215,8 +214,6 @@ func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api
 					source.Seed, nfsMountPath, err)
 				return api.BadVolumeID, err
 			}
-		} else if len(source.Parent) != 0 {
-			parent = source.Parent
 		}
 	}
 
@@ -235,7 +232,7 @@ func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api
 
 	v := &api.Volume{
 		ID:         api.VolumeID(volumeID),
-		Source:     api.Source{Parent: parent},
+		Source:     source,
 		Locator:    locator,
 		Ctime:      time.Now(),
 		Spec:       spec,

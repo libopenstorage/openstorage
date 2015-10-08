@@ -195,7 +195,8 @@ func (e *DefaultEnumerator) SnapEnumerate(
 		if err != nil {
 			return nil, err
 		}
-		if elem.Source.Parent == api.BadVolumeID ||
+		if elem.Source == nil ||
+			elem.Source.Parent == api.BadVolumeID ||
 			(volIDs != nil && !contains(elem.Source.Parent, volIDs)) {
 			continue
 		}
