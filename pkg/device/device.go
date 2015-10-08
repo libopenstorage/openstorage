@@ -38,7 +38,8 @@ func (s *SingleLetter) String() string {
 // New instance of Matrix
 func NewSingleLetter(devPrefix, devices string) (*SingleLetter, error) {
 	s := &SingleLetter{
-		devices: devices,
+		devPrefix: devPrefix,
+		devices:   devices,
 	}
 	return s, nil
 }

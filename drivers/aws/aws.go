@@ -263,7 +263,7 @@ func (d *Driver) Create(
 		Status:   api.Up,
 	}
 	err = d.UpdateVol(v)
-	log.Infof("Created volume %v", v.ID)
+	err = d.waitStatus(v.ID, ec2.VolumeStateAvailable)
 	return v.ID, err
 }
 
@@ -332,6 +332,42 @@ func (d *Driver) waitStatus(volumeID api.VolumeID, desired string) error {
 	return nil
 }
 
+func (d *Driver) waitAttachmentStatus(volumeID api.VolumeID, desired string) error {
+
+	id := string(volumeID)
+	request := &ec2.DescribeVolumesInput{VolumeIDs: []*string{&id}}
+	actual := ""
+
+	for retries, max_retries := 0, 10; actual != desired && retries < max_retries; retries++ {
+		awsVols, err := d.ec2.DescribeVolumes(request)
+		if err != nil {
+			return err
+		}
+		if len(awsVols.Volumes) != 1 {
+			return fmt.Errorf("expected one volume %v got %v",
+				volumeID, len(awsVols.Volumes))
+		}
+		awsAttachment := awsVols.Volumes[0].Attachments
+		if awsAttachment == nil || len(awsAttachment) == 0 {
+			actual = ec2.VolumeAttachmentStateDetached
+			if actual == desired {
+				break
+			}
+			return fmt.Errorf("Nil attachment state for %v", volumeID)
+		}
+		actual = *awsAttachment[0].State
+		if actual == desired {
+			break
+		}
+		time.Sleep(2 * time.Second)
+	}
+	if actual != desired {
+		return fmt.Errorf("Volume %v failed to transition to  %v current state %v",
+			volumeID, desired, actual)
+	}
+	return nil
+}
+
 func (d *Driver) devicePath(volumeID api.VolumeID) (string, error) {
 
 	awsVolID := string(volumeID)
@@ -367,7 +403,11 @@ func (d *Driver) devicePath(volumeID api.VolumeID) (string, error) {
 	if aws.Attachments[0].Device == nil {
 		return "", fmt.Errorf("Unable to determine volume attachment path")
 	}
-	return *aws.Attachments[0].Device, nil
+	dev := strings.TrimPrefix(*aws.Attachments[0].Device, "/dev/sd")
+	if dev != *aws.Attachments[0].Device {
+		dev = "/dev/xvd" + dev
+	}
+	return dev, nil
 }
 
 func (d *Driver) Inspect(volumeIDs []api.VolumeID) ([]api.Volume, error) {
@@ -448,12 +488,14 @@ func (d *Driver) Alerts(volumeID api.VolumeID) (api.Alerts, error) {
 }
 
 func (d *Driver) Attach(volumeID api.VolumeID) (path string, err error) {
+	dryRun := false
 	device, err := d.Assign()
 	if err != nil {
 		return "", err
 	}
 	awsVolID := string(volumeID)
 	req := &ec2.AttachVolumeInput{
+		DryRun:     &dryRun,
 		Device:     &device,
 		InstanceID: &d.md.instance,
 		VolumeID:   &awsVolID,
@@ -462,6 +504,7 @@ func (d *Driver) Attach(volumeID api.VolumeID) (path string, err error) {
 	if err != nil {
 		return "", err
 	}
+	err = d.waitAttachmentStatus(volumeID, ec2.VolumeAttachmentStateAttached)
 	return *resp.Device, err
 }
 
@@ -494,8 +537,9 @@ func (d *Driver) Format(volumeID api.VolumeID) error {
 		return err
 	}
 	cmd := "/sbin/mkfs." + string(v.Spec.Format)
-	_, err = exec.Command(cmd, devicePath).Output()
+	o, err := exec.Command(cmd, devicePath).Output()
 	if err != nil {
+		log.Warnf("Failed to run command %v %v: %v", cmd, devicePath, o)
 		return err
 	}
 	v.Format = v.Spec.Format
@@ -515,6 +559,7 @@ func (d *Driver) Detach(volumeID api.VolumeID) error {
 	if err != nil {
 		return err
 	}
+	err = d.waitAttachmentStatus(volumeID, ec2.VolumeAttachmentStateDetached)
 	return err
 }
 
