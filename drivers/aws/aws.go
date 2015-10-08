@@ -141,7 +141,7 @@ func (d *Driver) freeDevices() (string, string, error) {
 // mapCos translates a CoS specified in spec to a volume.
 func mapCos(cos api.VolumeCos) (*int64, *string) {
 	volType := opsworks.VolumeTypeIo1
-	if cos < 5 {
+	if cos < 2 {
 		// General purpose SSDs don't have provisioned IOPS
 		volType = opsworks.VolumeTypeGp2
 		return nil, &volType
@@ -307,7 +307,7 @@ func (d *Driver) waitStatus(volumeID api.VolumeID, desired string) error {
 	request := &ec2.DescribeVolumesInput{VolumeIDs: []*string{&id}}
 	actual := ""
 
-	for retries, max_retries := 0, 10; actual != desired && retries < max_retries; retries++ {
+	for retries, maxRetries := 0, 10; actual != desired && retries < maxRetries; retries++ {
 		awsVols, err := d.ec2.DescribeVolumes(request)
 		if err != nil {
 			return err
@@ -332,13 +332,17 @@ func (d *Driver) waitStatus(volumeID api.VolumeID, desired string) error {
 	return nil
 }
 
-func (d *Driver) waitAttachmentStatus(volumeID api.VolumeID, desired string) error {
+func (d *Driver) waitAttachmentStatus(
+	volumeID api.VolumeID,
+	desired string,
+	timeout time.Duration) error {
 
 	id := string(volumeID)
 	request := &ec2.DescribeVolumesInput{VolumeIDs: []*string{&id}}
 	actual := ""
-
-	for retries, max_retries := 0, 10; actual != desired && retries < max_retries; retries++ {
+	interval := 2 * time.Second
+	fmt.Printf("Waiting for state transition to %q", desired)
+	for elapsed, runs := 0*time.Second, 0; actual != desired && elapsed < timeout; elapsed += interval {
 		awsVols, err := d.ec2.DescribeVolumes(request)
 		if err != nil {
 			return err
@@ -359,7 +363,10 @@ func (d *Driver) waitAttachmentStatus(volumeID api.VolumeID, desired string) err
 		if actual == desired {
 			break
 		}
-		time.Sleep(2 * time.Second)
+		time.Sleep(interval)
+		if (runs % 10) == 0 {
+			fmt.Print(".")
+		}
 	}
 	if actual != desired {
 		return fmt.Errorf("Volume %v failed to transition to  %v current state %v",
@@ -504,7 +511,7 @@ func (d *Driver) Attach(volumeID api.VolumeID) (path string, err error) {
 	if err != nil {
 		return "", err
 	}
-	err = d.waitAttachmentStatus(volumeID, ec2.VolumeAttachmentStateAttached)
+	err = d.waitAttachmentStatus(volumeID, ec2.VolumeAttachmentStateAttached, time.Minute*5)
 	return *resp.Device, err
 }
 
@@ -559,7 +566,7 @@ func (d *Driver) Detach(volumeID api.VolumeID) error {
 	if err != nil {
 		return err
 	}
-	err = d.waitAttachmentStatus(volumeID, ec2.VolumeAttachmentStateDetached)
+	err = d.waitAttachmentStatus(volumeID, ec2.VolumeAttachmentStateDetached, time.Minute*5)
 	return err
 }
 
