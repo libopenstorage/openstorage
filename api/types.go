@@ -59,7 +59,7 @@ const (
 )
 
 // VolumeStateAny a filter that selects all volumes
-const VolumeStateAny = VolumePending | VolumeAvailable | VolumeAttached | VolumeDetached | VolumeError | VolumeDeleted
+const VolumeStateAny = VolumePending | VolumeAvailable | VolumeAttached | VolumeDetaching | VolumeDetached | VolumeError | VolumeDeleted
 
 // Labels a name-value map
 type Labels map[string]string
