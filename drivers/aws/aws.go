@@ -47,7 +47,6 @@ type Driver struct {
 	*device.SingleLetter
 	md        *Metadata
 	ec2       *ec2.EC2
-	devices   string
 	devPrefix string
 }
 
@@ -77,7 +76,7 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 
 	creds := credentials.NewEnvCredentials()
 	region := zone[:len(zone)-1]
-	inst := &Driver{
+	d := &Driver{
 		ec2: ec2.New(&aws.Config{
 			Region:      &region,
 			Credentials: creds,
@@ -86,39 +85,46 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 			zone:     zone,
 			instance: instance,
 		},
-		devices:           "abcdefghijklmnopqrstuvwxyz",
 		DefaultEnumerator: volume.NewDefaultEnumerator(Name, kvdb.Instance()),
 	}
-	return inst, nil
+	devPrefix, letters, err := d.freeDevices()
+	if err != nil {
+		return nil, err
+	}
+	d.SingleLetter, err = device.NewSingleLetter(devPrefix, letters)
+	if err != nil {
+		return nil, err
+	}
+	return d, nil
 }
 
-// freeDevices returns list of available device IDs
-func (d *Driver) freeDevices() (string, error) {
+// freeDevices returns list of available device IDs.
+func (d *Driver) freeDevices() (string, string, error) {
 	initial := []byte("fghijklmnop")
 	free := make([]byte, len(initial))
 	self, err := d.describe()
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
+	devPrefix := "/dev/sd"
 	for _, dev := range self.BlockDeviceMappings {
-		devPrefix := "/dev/sd"
 		if dev.DeviceName == nil {
-			return "", fmt.Errorf("Nil device name")
+			return "", "", fmt.Errorf("Nil device name")
 		}
 		devName := *dev.DeviceName
 		if !strings.HasPrefix(devName, devPrefix) {
-			devPrefix := "/dev/xvd"
+			devPrefix = "/dev/xvd"
 			if !strings.HasPrefix(devName, devPrefix) {
-				return "", fmt.Errorf("bad device name %q", devName)
+				return "", "", fmt.Errorf("bad device name %q", devName)
 			}
 		}
 		letter := devName[len(devPrefix):]
 		if len(letter) != 1 {
-			return "", fmt.Errorf("too many letters %q", devName)
+			return "", "", fmt.Errorf("too many letters %q", devName)
 		}
 		index := letter[0] - 'f'
 		if index > ('p' - 'f') {
-			return "", fmt.Errorf("bad letter %q", devName)
+			continue
 		}
 		initial[index] = '0'
 	}
@@ -129,7 +135,7 @@ func (d *Driver) freeDevices() (string, error) {
 			count++
 		}
 	}
-	return string(free[:count]), nil
+	return devPrefix, string(free[:count]), nil
 }
 
 // mapCos translates a CoS specified in spec to a volume.
@@ -180,7 +186,9 @@ func metadata(key string) (string, error) {
 
 // describe retrieves running instance desscription.
 func (d *Driver) describe() (*ec2.Instance, error) {
-	request := &ec2.DescribeInstancesInput{}
+	request := &ec2.DescribeInstancesInput{
+		InstanceIDs: []*string{&d.md.instance},
+	}
 	out, err := d.ec2.DescribeInstances(request)
 	if err != nil {
 		return nil, err
