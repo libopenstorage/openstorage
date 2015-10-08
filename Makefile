@@ -1,5 +1,5 @@
 TAGS := daemon btrfs_noversion
-PKGS := $(shell go list ./... | grep -v 'github.com/openstorage/openstorage/vendor')
+PKGS := $(shell go list ./... | grep -v 'github.com/libopenstorage/openstorage/vendor')
 
 ifeq ($(BUILD_TYPE),debug)
 BUILDFLAGS := -gcflags "-N -l"
@@ -21,16 +21,16 @@ test-deps:
 update-test-deps:
 	GO15VENDOREXPERIMENT=0 go get -d -v -t -u -f $(PKGS)
 
-vendor: update-test-deps
+vendor:
 	go get -v github.com/tools/godep
 	rm -rf Godeps
 	rm -rf vendor
 	godep save $(PKGS)
 
-build: deps
+build:
 	go build -tags "$(TAGS)" $(BUILDFLAGS) $(PKGS)
 
-install: deps
+install:
 	go install -tags "$(TAGS)" $(PKGS)
 
 lint:
