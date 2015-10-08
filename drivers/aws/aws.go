@@ -439,14 +439,6 @@ func (d *Driver) Alerts(volumeID api.VolumeID) (api.Alerts, error) {
 	return api.Alerts{}, volume.ErrNotSupported
 }
 
-func (d *Driver) Enumerate(locator api.VolumeLocator, labels api.Labels) ([]api.Volume, error) {
-	return nil, volume.ErrNotSupported
-}
-
-func (d *Driver) SnapEnumerate(volIds []api.VolumeID, labels api.Labels) ([]api.Volume, error) {
-	return nil, volume.ErrNotSupported
-}
-
 func (d *Driver) Attach(volumeID api.VolumeID) (path string, err error) {
 	device, err := d.Assign()
 	if err != nil {

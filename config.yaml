@@ -4,13 +4,13 @@ osd:
     #nodeid: "1"
     #clusterid: "deadbeeef"
   drivers:
-    vfs:
+#   vfs:
 #   pwx:
 #   nfs:
 #     server: "localhost"
 #     path: "/nfs"
 #   btrfs:
 #      home: "/var/lib/openstorage/btrfs"
-#    aws:
-#      AWS_ACCESS_KEY_ID: your_aws_access_key_id
-#      AWS_SECRET_ACCESS_KEY: your_aws_secret_access_key
+    aws:
+      AWS_ACCESS_KEY_ID: AKIAJTBR2J2DI547QSUA
+      AWS_SECRET_ACCESS_KEY: NNpwwuc0HQcCB9ujxYHWIXQaCG1bbRUDDO/VyPqE
