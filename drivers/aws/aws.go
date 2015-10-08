@@ -368,6 +368,7 @@ func (d *Driver) waitAttachmentStatus(
 			fmt.Print(".")
 		}
 	}
+	fmt.Printf("\n")
 	if actual != desired {
 		return fmt.Errorf("Volume %v failed to transition to  %v current state %v",
 			volumeID, desired, actual)
