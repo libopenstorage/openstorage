@@ -48,7 +48,7 @@ errcheck:
 
 pretest: lint vet errcheck
 
-test: test-deps
+test:
 	go test -tags "$(TAGS)" $(PKGS)
 
 docker-build:
