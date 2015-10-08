@@ -1,8 +1,8 @@
 ifeq ($(BUILD_TYPE),debug)
-BUILD_OPTIONS= -gcflags "-N -l"
+BUILDFLAGS := -gcflags "-N -l"
 endif
 
-all: test
+all: test install
 
 deps:
 	GO15VENDOREXPERIMENT=0 go get -d -v ./...
@@ -16,42 +16,36 @@ test-deps:
 update-test-deps:
 	GO15VENDOREXPERIMENT=0 go get -d -v -t -u -f ./...
 
-vendor:
-	go get -u github.com/tools/godep
-	-CGO_ENABLED=1 GOOS=linux GOARCH=amd64 GO15VENDOREXPERIMENT=0 go get -d -v -t -u -f ./...
-	rm -rf Godeps
-	rm -rf vendor
-	CGO_ENABLED=1 GOOS=linux GOARCH=amd64 godep save \
-							./... \
-							github.com/docker/docker/pkg/chrootarchive
+build: deps
+	go build -tags daemon $(BUILDFLAGS) ./...
 
-build:
-	go build -tags daemon $(shell go list ./... | grep -v 'openstorage/vendor')
+install: deps
+	go install -tags daemon ./...
 
 lint:
 	go get -v github.com/golang/lint/golint
-	golint $(shell go list ./... | grep -v 'openstorage/vendor')
+	golint ./...
 
 vet:
-	go vet $(shell go list ./... | grep -v 'openstorage/vendor')
+	go vet ./...
 
 errcheck:
 	go get -v github.com/kisielk/errcheck
-	errcheck $(shell go list ./... | grep -v 'openstorage/vendor')
+	errcheck ./...
 
 pretest: lint vet errcheck
 
-test:
-	go test -tags daemon $(shell go list ./... | grep -v 'openstorage/vendor')
+test: test-deps
+	go test -tags daemon ./...
 
 docker-build:
 	docker build -t openstorage/osd .
 
 docker-test: docker-build
-	docker run --privileged openstorage/osd make test
+	docker run openstorage/osd make test
 
 clean:
-	go clean $(shell go list ./... | grep -v 'openstorage/vendor')
+	go clean -i ./...
 
 .PHONY: \
 	all \
