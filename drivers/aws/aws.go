@@ -187,7 +187,7 @@ func metadata(key string) (string, error) {
 // describe retrieves running instance desscription.
 func (d *Driver) describe() (*ec2.Instance, error) {
 	request := &ec2.DescribeInstancesInput{
-		InstanceIDs: []*string{&d.md.instance},
+		InstanceIds: []*string{&d.md.instance},
 	}
 	out, err := d.ec2.DescribeInstances(request)
 	if err != nil {
@@ -339,7 +339,7 @@ func (d *Driver) waitAttachmentStatus(
 	timeout time.Duration) error {
 
 	id := string(volumeID)
-	request := &ec2.DescribeVolumesInput{VolumeIDs: []*string{&id}}
+	request := &ec2.DescribeVolumesInput{VolumeIds: []*string{&id}}
 	actual := ""
 	interval := 2 * time.Second
 	fmt.Printf("Waiting for state transition to %q", desired)
@@ -475,7 +475,7 @@ func (d *Driver) Snapshot(volumeID api.VolumeID, readonly bool, locator api.Volu
 	}
 	snap, err := d.ec2.CreateSnapshot(request)
 	chaos.Now(koStrayCreate)
-	vols[0].ID = api.VolumeID(*snap.SnapshotID)
+	vols[0].ID = api.VolumeID(*snap.SnapshotId)
 	vols[0].Source = &api.Source{Parent: volumeID}
 	vols[0].Locator = locator
 	vols[0].Ctime = time.Now()
