@@ -26,6 +26,7 @@ RUN \
   make install && \
   rm -rf /tmp/btrfs-progs
 
+ENV GO15VENDOREXPERIMENT 1
 RUN mkdir -p /go/src/github.com/libopenstorage/openstorage
 ADD . /go/src/github.com/libopenstorage/openstorage/
 WORKDIR /go/src/github.com/libopenstorage/openstorage

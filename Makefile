@@ -25,7 +25,9 @@ vendor:
 	go get -v github.com/tools/godep
 	rm -rf Godeps
 	rm -rf vendor
-	godep save $(PKGS)
+	# TODO: when godep fixes downloading all tags, remove the custom package
+	# https://github.com/tools/godep/issues/271
+	godep save $(PKGS) github.com/docker/docker/pkg/chrootarchive
 
 build:
 	go build -tags "$(TAGS)" $(BUILDFLAGS) $(PKGS)
