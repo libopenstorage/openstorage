@@ -26,11 +26,8 @@ RUN \
   make install && \
   rm -rf /tmp/btrfs-progs
 
-RUN go get github.com/tools/godep
-RUN mkdir -p /go/src/github.com/libopenstorage/openstorage/Godeps
-WORKDIR /go/src/github.com/libopenstorage/openstorage
-ADD Godeps/ /go/src/github.com/libopenstorage/openstorage/Godeps/
-RUN godep restore
+RUN mkdir -p /go/src/github.com/libopenstorage/openstorage
 ADD . /go/src/github.com/libopenstorage/openstorage/
-RUN go build -tags daemon -o /bin/osd
-CMD ["/bin/osd"]
+WORKDIR /go/src/github.com/libopenstorage/openstorage
+RUN make install
+CMD ["/go/bin/osd"]
