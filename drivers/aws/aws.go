@@ -47,7 +47,6 @@ type Driver struct {
 	*device.SingleLetter
 	md        *Metadata
 	ec2       *ec2.EC2
-	devices   string
 	devPrefix string
 }
 
@@ -77,7 +76,7 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 
 	creds := credentials.NewEnvCredentials()
 	region := zone[:len(zone)-1]
-	inst := &Driver{
+	d := &Driver{
 		ec2: ec2.New(&aws.Config{
 			Region:      &region,
 			Credentials: creds,
@@ -86,39 +85,46 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 			zone:     zone,
 			instance: instance,
 		},
-		devices:           "abcdefghijklmnopqrstuvwxyz",
 		DefaultEnumerator: volume.NewDefaultEnumerator(Name, kvdb.Instance()),
 	}
-	return inst, nil
+	devPrefix, letters, err := d.freeDevices()
+	if err != nil {
+		return nil, err
+	}
+	d.SingleLetter, err = device.NewSingleLetter(devPrefix, letters)
+	if err != nil {
+		return nil, err
+	}
+	return d, nil
 }
 
-// freeDevices returns list of available device IDs
-func (d *Driver) freeDevices() (string, error) {
+// freeDevices returns list of available device IDs.
+func (d *Driver) freeDevices() (string, string, error) {
 	initial := []byte("fghijklmnop")
 	free := make([]byte, len(initial))
 	self, err := d.describe()
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
+	devPrefix := "/dev/sd"
 	for _, dev := range self.BlockDeviceMappings {
-		devPrefix := "/dev/sd"
 		if dev.DeviceName == nil {
-			return "", fmt.Errorf("Nil device name")
+			return "", "", fmt.Errorf("Nil device name")
 		}
 		devName := *dev.DeviceName
 		if !strings.HasPrefix(devName, devPrefix) {
-			devPrefix := "/dev/xvd"
+			devPrefix = "/dev/xvd"
 			if !strings.HasPrefix(devName, devPrefix) {
-				return "", fmt.Errorf("bad device name %q", devName)
+				return "", "", fmt.Errorf("bad device name %q", devName)
 			}
 		}
 		letter := devName[len(devPrefix):]
 		if len(letter) != 1 {
-			return "", fmt.Errorf("too many letters %q", devName)
+			return "", "", fmt.Errorf("too many letters %q", devName)
 		}
 		index := letter[0] - 'f'
 		if index > ('p' - 'f') {
-			return "", fmt.Errorf("bad letter %q", devName)
+			continue
 		}
 		initial[index] = '0'
 	}
@@ -129,13 +135,13 @@ func (d *Driver) freeDevices() (string, error) {
 			count++
 		}
 	}
-	return string(free[:count]), nil
+	return devPrefix, string(free[:count]), nil
 }
 
 // mapCos translates a CoS specified in spec to a volume.
 func mapCos(cos api.VolumeCos) (*int64, *string) {
 	volType := opsworks.VolumeTypeIo1
-	if cos < 5 {
+	if cos < 2 {
 		// General purpose SSDs don't have provisioned IOPS
 		volType = opsworks.VolumeTypeGp2
 		return nil, &volType
@@ -180,7 +186,9 @@ func metadata(key string) (string, error) {
 
 // describe retrieves running instance desscription.
 func (d *Driver) describe() (*ec2.Instance, error) {
-	request := &ec2.DescribeInstancesInput{}
+	request := &ec2.DescribeInstancesInput{
+		InstanceIDs: []*string{&d.md.instance},
+	}
 	out, err := d.ec2.DescribeInstances(request)
 	if err != nil {
 		return nil, err
@@ -214,7 +222,7 @@ func (v *Driver) Status() [][2]string {
 // Create aws volume from spec.
 func (d *Driver) Create(
 	locator api.VolumeLocator,
-	opt *api.CreateOptions,
+	source *api.Source,
 	spec *api.VolumeSpec) (api.VolumeID, error) {
 
 	var snapID *string
@@ -222,8 +230,8 @@ func (d *Driver) Create(
 	// Spec size is in bytes, translate to GiB.
 	sz := int64(spec.Size / (1024 * 1024 * 1024))
 	iops, volType := mapCos(spec.Cos)
-	if string(opt.CreateFromSnap) != "" {
-		id := string(opt.CreateFromSnap)
+	if source != nil && string(source.Parent) != "" {
+		id := string(source.Parent)
 		snapID = &id
 	}
 	dryRun := false
@@ -249,13 +257,14 @@ func (d *Driver) Create(
 		Locator:  locator,
 		Ctime:    time.Now(),
 		Spec:     spec,
+		Source:   source,
 		LastScan: time.Now(),
 		Format:   "none",
 		State:    api.VolumeAvailable,
 		Status:   api.Up,
 	}
 	err = d.UpdateVol(v)
-	log.Infof("Created volume %v", v.ID)
+	err = d.waitStatus(v.ID, ec2.VolumeStateAvailable)
 	return v.ID, err
 }
 
@@ -299,7 +308,7 @@ func (d *Driver) waitStatus(volumeID api.VolumeID, desired string) error {
 	request := &ec2.DescribeVolumesInput{VolumeIds: []*string{&id}}
 	actual := ""
 
-	for retries, max_retries := 0, 10; actual != desired && retries < max_retries; retries++ {
+	for retries, maxRetries := 0, 10; actual != desired && retries < maxRetries; retries++ {
 		awsVols, err := d.ec2.DescribeVolumes(request)
 		if err != nil {
 			return err
@@ -317,6 +326,50 @@ func (d *Driver) waitStatus(volumeID api.VolumeID, desired string) error {
 		}
 		time.Sleep(2 * time.Second)
 	}
+	if actual != desired {
+		return fmt.Errorf("Volume %v failed to transition to  %v current state %v",
+			volumeID, desired, actual)
+	}
+	return nil
+}
+
+func (d *Driver) waitAttachmentStatus(
+	volumeID api.VolumeID,
+	desired string,
+	timeout time.Duration) error {
+
+	id := string(volumeID)
+	request := &ec2.DescribeVolumesInput{VolumeIDs: []*string{&id}}
+	actual := ""
+	interval := 2 * time.Second
+	fmt.Printf("Waiting for state transition to %q", desired)
+	for elapsed, runs := 0*time.Second, 0; actual != desired && elapsed < timeout; elapsed += interval {
+		awsVols, err := d.ec2.DescribeVolumes(request)
+		if err != nil {
+			return err
+		}
+		if len(awsVols.Volumes) != 1 {
+			return fmt.Errorf("expected one volume %v got %v",
+				volumeID, len(awsVols.Volumes))
+		}
+		awsAttachment := awsVols.Volumes[0].Attachments
+		if awsAttachment == nil || len(awsAttachment) == 0 {
+			actual = ec2.VolumeAttachmentStateDetached
+			if actual == desired {
+				break
+			}
+			return fmt.Errorf("Nil attachment state for %v", volumeID)
+		}
+		actual = *awsAttachment[0].State
+		if actual == desired {
+			break
+		}
+		time.Sleep(interval)
+		if (runs % 10) == 0 {
+			fmt.Print(".")
+		}
+	}
+	fmt.Printf("\n")
 	if actual != desired {
 		return fmt.Errorf("Volume %v failed to transition to  %v current state %v",
 			volumeID, desired, actual)
@@ -359,7 +412,11 @@ func (d *Driver) devicePath(volumeID api.VolumeID) (string, error) {
 	if aws.Attachments[0].Device == nil {
 		return "", fmt.Errorf("Unable to determine volume attachment path")
 	}
-	return *aws.Attachments[0].Device, nil
+	dev := strings.TrimPrefix(*aws.Attachments[0].Device, "/dev/sd")
+	if dev != *aws.Attachments[0].Device {
+		dev = "/dev/xvd" + dev
+	}
+	return dev, nil
 }
 
 func (d *Driver) Inspect(volumeIDs []api.VolumeID) ([]api.Volume, error) {
@@ -418,8 +475,8 @@ func (d *Driver) Snapshot(volumeID api.VolumeID, readonly bool, locator api.Volu
 	}
 	snap, err := d.ec2.CreateSnapshot(request)
 	chaos.Now(koStrayCreate)
-	vols[0].ID = api.VolumeID(*snap.SnapshotId)
-	vols[0].Parent = volumeID
+	vols[0].ID = api.VolumeID(*snap.SnapshotID)
+	vols[0].Source = &api.Source{Parent: volumeID}
 	vols[0].Locator = locator
 	vols[0].Ctime = time.Now()
 
@@ -439,21 +496,15 @@ func (d *Driver) Alerts(volumeID api.VolumeID) (api.Alerts, error) {
 	return api.Alerts{}, volume.ErrNotSupported
 }
 
-func (d *Driver) Enumerate(locator api.VolumeLocator, labels api.Labels) ([]api.Volume, error) {
-	return nil, volume.ErrNotSupported
-}
-
-func (d *Driver) SnapEnumerate(volIds []api.VolumeID, labels api.Labels) ([]api.Volume, error) {
-	return nil, volume.ErrNotSupported
-}
-
 func (d *Driver) Attach(volumeID api.VolumeID) (path string, err error) {
+	dryRun := false
 	device, err := d.Assign()
 	if err != nil {
 		return "", err
 	}
 	awsVolID := string(volumeID)
 	req := &ec2.AttachVolumeInput{
+		DryRun:     &dryRun,
 		Device:     &device,
 		InstanceId: &d.md.instance,
 		VolumeId:   &awsVolID,
@@ -462,6 +513,7 @@ func (d *Driver) Attach(volumeID api.VolumeID) (path string, err error) {
 	if err != nil {
 		return "", err
 	}
+	err = d.waitAttachmentStatus(volumeID, ec2.VolumeAttachmentStateAttached, time.Minute*5)
 	return *resp.Device, err
 }
 
@@ -494,8 +546,9 @@ func (d *Driver) Format(volumeID api.VolumeID) error {
 		return err
 	}
 	cmd := "/sbin/mkfs." + string(v.Spec.Format)
-	_, err = exec.Command(cmd, devicePath).Output()
+	o, err := exec.Command(cmd, devicePath).Output()
 	if err != nil {
+		log.Warnf("Failed to run command %v %v: %v", cmd, devicePath, o)
 		return err
 	}
 	v.Format = v.Spec.Format
@@ -515,6 +568,7 @@ func (d *Driver) Detach(volumeID api.VolumeID) error {
 	if err != nil {
 		return err
 	}
+	err = d.waitAttachmentStatus(volumeID, ec2.VolumeAttachmentStateDetached, time.Minute*5)
 	return err
 }
 

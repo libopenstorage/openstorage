@@ -18,8 +18,8 @@ const (
 type VolumeCreateRequest struct {
 	// Locator user specified volume name and labels.
 	Locator VolumeLocator `json:"locator"`
-	// Options to create volume
-	Options *CreateOptions `json:"options,omitempty"`
+	// Source to create volume
+	Source *Source `json:"source,omitempty"`
 	// Spec is the storage spec for the volume
 	Spec *VolumeSpec `json:"spec,omitempty"`
 }

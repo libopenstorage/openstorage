@@ -211,7 +211,7 @@
 		},
 		{
 			"ImportPath": "github.com/libopenstorage/gossip",
-			"Rev": "e87c77ac1198d710937fdf14a52eac6c62ad6fac"
+			"Rev": "187a7b0b5d95aee66c862b7857fe37ff5f2574d7"
 		},
 		{
 			"ImportPath": "github.com/opencontainers/runc/libcontainer/user",

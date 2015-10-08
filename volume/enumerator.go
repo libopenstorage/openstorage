@@ -53,7 +53,7 @@ func (e *DefaultEnumerator) volKey(volID api.VolumeID) string {
 }
 
 func hasSubset(set api.Labels, subset api.Labels) bool {
-	if subset == nil {
+	if subset == nil || len(subset) == 0 {
 		return true
 	}
 	if set == nil {
@@ -68,6 +68,9 @@ func hasSubset(set api.Labels, subset api.Labels) bool {
 }
 
 func contains(volID api.VolumeID, set []api.VolumeID) bool {
+	if len(set) == 0 {
+		return true
+	}
 	for _, v := range set {
 		if v == volID {
 			return true
@@ -192,8 +195,9 @@ func (e *DefaultEnumerator) SnapEnumerate(
 		if err != nil {
 			return nil, err
 		}
-		if elem.Parent == api.BadVolumeID ||
-			(volIDs != nil && !contains(elem.Parent, volIDs)) {
+		if elem.Source == nil ||
+			elem.Source.Parent == api.BadVolumeID ||
+			(volIDs != nil && !contains(elem.Source.Parent, volIDs)) {
 			continue
 		}
 		if hasSubset(elem.Locator.VolumeLabels, labels) {

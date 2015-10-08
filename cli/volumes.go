@@ -89,7 +89,10 @@ func (v *volDriver) volumeCreate(context *cli.Context) {
 		Cos:              api.VolumeCos(context.Int("cos")),
 		SnapshotInterval: context.Int("si"),
 	}
-	if id, err = v.volDriver.Create(locator, nil, spec); err != nil {
+	source := &api.Source{
+		Seed: context.String("seed"),
+	}
+	if id, err = v.volDriver.Create(locator, source, spec); err != nil {
 		cmdError(context, fn, err)
 		return
 	}
@@ -375,6 +378,10 @@ func baseVolumeCommand(v *volDriver) []cli.Command {
 					Name:  "fs",
 					Usage: "filesystem to be laid out: none|xfs|ext4",
 					Value: "ext4",
+				},
+				cli.StringFlag{
+					Name:  "seed",
+					Usage: "optional data that the volume should be seeded with",
 				},
 				cli.IntFlag{
 					Name:  "block_size,b",

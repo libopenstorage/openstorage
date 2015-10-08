@@ -189,7 +189,7 @@ func (d *driver) Status() [][2]string {
 	return [][2]string{}
 }
 
-func (d *driver) Create(locator api.VolumeLocator, opt *api.CreateOptions, spec *api.VolumeSpec) (api.VolumeID, error) {
+func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api.VolumeSpec) (api.VolumeID, error) {
 	volumeID := uuid.New()
 	volumeID = strings.TrimSuffix(volumeID, "\n")
 
@@ -200,22 +200,24 @@ func (d *driver) Create(locator api.VolumeLocator, opt *api.CreateOptions, spec 
 		log.Println(err)
 		return api.BadVolumeID, err
 	}
-	if opt != nil && len(opt.CreateFromSource) != 0 {
-		seed, err := seed.New(opt.CreateFromSource, spec.ConfigLabels)
-		if err != nil {
-			log.Warnf("Failed to initailize seed from %q : %v",
-				opt.CreateFromSource, err)
-			return api.BadVolumeID, err
-		}
-		err = seed.Load(volPath)
-		if err != nil {
-			log.Warnf("Failed to  seed from %q to %q: %v",
-				opt.CreateFromSource, nfsMountPath, err)
-			return api.BadVolumeID, err
+	if source != nil {
+		if len(source.Seed) != 0 {
+			seed, err := seed.New(source.Seed, spec.ConfigLabels)
+			if err != nil {
+				log.Warnf("Failed to initailize seed from %q : %v",
+					source.Seed, err)
+				return api.BadVolumeID, err
+			}
+			err = seed.Load(volPath)
+			if err != nil {
+				log.Warnf("Failed to  seed from %q to %q: %v",
+					source.Seed, nfsMountPath, err)
+				return api.BadVolumeID, err
+			}
 		}
 	}
 
-	f, err := os.Create(path.Join(nfsMountPath, volumeID, nfsBlockFile))
+	f, err := os.Create(path.Join(nfsMountPath, string(volumeID)+nfsBlockFile))
 	if err != nil {
 		log.Println(err)
 		return api.BadVolumeID, err
@@ -230,6 +232,7 @@ func (d *driver) Create(locator api.VolumeLocator, opt *api.CreateOptions, spec 
 
 	v := &api.Volume{
 		ID:         api.VolumeID(volumeID),
+		Source:     source,
 		Locator:    locator,
 		Ctime:      time.Now(),
 		Spec:       spec,
@@ -237,7 +240,7 @@ func (d *driver) Create(locator api.VolumeLocator, opt *api.CreateOptions, spec 
 		Format:     "nfs",
 		State:      api.VolumeAvailable,
 		Status:     api.Up,
-		DevicePath: path.Join(nfsMountPath, string(volumeID), nfsBlockFile),
+		DevicePath: path.Join(nfsMountPath, string(volumeID)+nfsBlockFile),
 	}
 
 	err = d.CreateVol(v)
@@ -318,8 +321,8 @@ func (d *driver) Snapshot(volumeID api.VolumeID, readonly bool, locator api.Volu
 	if err != nil {
 		return api.BadVolumeID, nil
 	}
-
-	newVolumeID, err := d.Create(locator, nil, vols[0].Spec)
+	source := &api.Source{Parent: volumeID}
+	newVolumeID, err := d.Create(locator, source, vols[0].Spec)
 	if err != nil {
 		return api.BadVolumeID, nil
 	}
@@ -335,7 +338,7 @@ func (d *driver) Snapshot(volumeID api.VolumeID, readonly bool, locator api.Volu
 }
 
 func (d *driver) Attach(volumeID api.VolumeID) (string, error) {
-	return path.Join(nfsMountPath, string(volumeID), nfsBlockFile), nil
+	return path.Join(nfsMountPath, string(volumeID)+nfsBlockFile), nil
 }
 
 func (d *driver) Format(volumeID api.VolumeID) error {

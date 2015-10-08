@@ -80,7 +80,7 @@ func create(t *testing.T, ctx *Context) {
 
 	volID, err := ctx.Create(
 		api.VolumeLocator{Name: "foo"},
-		&api.CreateOptions{FailIfExists: false},
+		nil,
 		&api.VolumeSpec{
 			Size:    1 * 1024 * 1024 * 1024,
 			HALevel: 1,
@@ -132,8 +132,32 @@ func format(t *testing.T, ctx *Context) {
 	}
 }
 
+func waitReady(t *testing.T, ctx *Context) error {
+	total := time.Minute * 5
+	inc := time.Second * 2
+	elapsed := time.Second * 0
+	vols, err := ctx.Inspect([]api.VolumeID{ctx.volID})
+	for err == nil && len(vols) == 1 && vols[0].Status != api.Up && elapsed < total {
+		time.Sleep(inc)
+		elapsed += inc
+		vols, err = ctx.Inspect([]api.VolumeID{ctx.volID})
+	}
+	if err != nil {
+		return err
+	}
+	if len(vols) != 1 {
+		return fmt.Errorf("Expect one volume from inspect got %v", len(vols))
+	}
+	if vols[0].Status != api.Up {
+		return fmt.Errorf("Timed out waiting for volume status %v", vols)
+	}
+	return err
+}
+
 func attach(t *testing.T, ctx *Context) {
 	fmt.Println("attach")
+	err := waitReady(t, ctx)
+	assert.NoError(t, err, "Volume status is not up")
 	p, err := ctx.Attach(ctx.volID)
 	if err != nil {
 		assert.Equal(t, err, volume.ErrNotSupported, "Error on attach %v", err)

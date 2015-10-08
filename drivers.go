@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/libopenstorage/openstorage/drivers/aws"
 	"github.com/libopenstorage/openstorage/drivers/btrfs"
+	"github.com/libopenstorage/openstorage/drivers/vfs"
 	"github.com/libopenstorage/openstorage/drivers/nfs"
 	"github.com/libopenstorage/openstorage/drivers/pwx"
 	"github.com/libopenstorage/openstorage/volume"
@@ -25,5 +26,7 @@ var (
 		{driverType: btrfs.Type, name: btrfs.Name},
 		// PWX driver provisions storage from PWX cluster.
 		{driverType: pwx.Type, name: pwx.Name},
+		// VFS driver provisions storage from local filesystem
+		{driverType: vfs.Type, name: vfs.Name},
 	}
 )

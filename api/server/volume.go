@@ -56,7 +56,7 @@ func (vd *volApi) create(w http.ResponseWriter, r *http.Request) {
 		notFound(w, r)
 		return
 	}
-	ID, err := d.Create(dcReq.Locator, dcReq.Options, dcReq.Spec)
+	ID, err := d.Create(dcReq.Locator, dcReq.Source, dcReq.Spec)
 	dcRes.VolumeResponse = api.VolumeResponse{Error: responseStatus(err)}
 	dcRes.ID = ID
 	json.NewEncoder(w).Encode(&dcRes)
