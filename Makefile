@@ -1,3 +1,4 @@
+TAGS := daemon btrfs_noversion
 ifeq ($(BUILD_TYPE),debug)
 BUILDFLAGS := -gcflags "-N -l"
 endif
@@ -17,10 +18,10 @@ update-test-deps:
 	go get -d -v -t -u -f ./...
 
 build: deps
-	go build -tags daemon $(BUILDFLAGS) ./...
+	go build -tags "$(TAGS)" $(BUILDFLAGS) ./...
 
 install: deps
-	go install -tags daemon ./...
+	go install -tags "$(TAGS)" ./...
 
 lint:
 	go get -v github.com/golang/lint/golint
@@ -36,7 +37,7 @@ errcheck:
 pretest: lint vet errcheck
 
 test: test-deps
-	go test -tags daemon ./...
+	go test -tags "$(TAGS)" ./...
 
 docker-build:
 	docker build -t openstorage/osd .
