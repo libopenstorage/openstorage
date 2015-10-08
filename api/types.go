@@ -74,15 +74,12 @@ type VolumeLocator struct {
 }
 
 // CreateOptions are passed in with a CreateRequest
-type CreateOptions struct {
-	// FailIfExists fail create request if a volume with matching Locator
-	// already exists.
-	FailIfExists bool
-	// CreateFromSnap will create a volume with specified SnapID
-	CreateFromSnap VolumeID
-	// CreateFromSource will seed the volume from the specified URI. Any
+type Source struct {
+	// Parent if specified will create a clone of Parent.
+	Parent VolumeID
+	// Seed will seed the volume from the specified URI. Any
 	// additional config for the source comes from the labels in the spec.
-	CreateFromSource string
+	Seed string
 }
 
 // Filesystem supported filesystems
@@ -130,8 +127,8 @@ const MachineNone MachineID = ""
 type Volume struct {
 	// ID Self referential VolumeID
 	ID VolumeID
-	// Parent ID if this was a snap
-	Parent VolumeID
+	// Source
+	Source Source
 	// Readonly
 	Readonly bool
 	// Locator User specified locator

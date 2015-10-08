@@ -189,7 +189,7 @@ func (d *driver) Status() [][2]string {
 	return [][2]string{}
 }
 
-func (d *driver) Create(locator api.VolumeLocator, opt *api.CreateOptions, spec *api.VolumeSpec) (api.VolumeID, error) {
+func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api.VolumeSpec) (api.VolumeID, error) {
 	volumeID := uuid.New()
 	volumeID = strings.TrimSuffix(volumeID, "\n")
 	parent := api.BadVolumeID
@@ -201,22 +201,22 @@ func (d *driver) Create(locator api.VolumeLocator, opt *api.CreateOptions, spec 
 		log.Println(err)
 		return api.BadVolumeID, err
 	}
-	if opt != nil {
-		if len(opt.CreateFromSource) != 0 {
-			seed, err := seed.New(opt.CreateFromSource, spec.ConfigLabels)
+	if source != nil {
+		if len(source.Seed) != 0 {
+			seed, err := seed.New(source.Seed, spec.ConfigLabels)
 			if err != nil {
 				log.Warnf("Failed to initailize seed from %q : %v",
-					opt.CreateFromSource, err)
+					source.Seed, err)
 				return api.BadVolumeID, err
 			}
 			err = seed.Load(volPath)
 			if err != nil {
 				log.Warnf("Failed to  seed from %q to %q: %v",
-					opt.CreateFromSource, nfsMountPath, err)
+					source.Seed, nfsMountPath, err)
 				return api.BadVolumeID, err
 			}
-		} else if len(opt.CreateFromSnap) != 0 {
-			parent = opt.CreateFromSnap
+		} else if len(source.Parent) != 0 {
+			parent = source.Parent
 		}
 	}
 
@@ -235,7 +235,7 @@ func (d *driver) Create(locator api.VolumeLocator, opt *api.CreateOptions, spec 
 
 	v := &api.Volume{
 		ID:         api.VolumeID(volumeID),
-		Parent:     parent,
+		Source:     api.Source{Parent: parent},
 		Locator:    locator,
 		Ctime:      time.Now(),
 		Spec:       spec,
@@ -324,8 +324,8 @@ func (d *driver) Snapshot(volumeID api.VolumeID, readonly bool, locator api.Volu
 	if err != nil {
 		return api.BadVolumeID, nil
 	}
-	options := &api.CreateOptions{CreateFromSnap: volumeID}
-	newVolumeID, err := d.Create(locator, options, vols[0].Spec)
+	source := &api.Source{Parent: volumeID}
+	newVolumeID, err := d.Create(locator, source, vols[0].Spec)
 	if err != nil {
 		return api.BadVolumeID, nil
 	}

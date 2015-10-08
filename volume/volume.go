@@ -54,11 +54,8 @@ type ProtoDriver interface {
 
 	// Create a new Vol for the specific volume spec.
 	// It returns a system generated VolumeID that uniquely identifies the volume
-	// If CreateOptions.FailIfExists is set and a volume matching the locator
-	// exists then this will fail with ErrEexist. Otherwise if a matching available
-	// volume is found then it is returned instead of creating a new volume.
 	Create(locator api.VolumeLocator,
-		options *api.CreateOptions,
+		Source *api.Source,
 		spec *api.VolumeSpec) (api.VolumeID, error)
 
 	// Delete volume.

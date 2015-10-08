@@ -90,7 +90,7 @@ func TestSnapEnumerate(t *testing.T) {
 		Locator: api.VolumeLocator{Name: volName, VolumeLabels: labels},
 		State:   api.VolumeAvailable,
 		Spec:    &api.VolumeSpec{},
-		Parent:  id,
+		Source:  api.Source{Parent: id},
 	}
 	err = e.CreateVol(&snap)
 	assert.NoError(t, err, "Failed in CreateSnap")

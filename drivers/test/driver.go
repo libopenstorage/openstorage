@@ -80,7 +80,7 @@ func create(t *testing.T, ctx *Context) {
 
 	volID, err := ctx.Create(
 		api.VolumeLocator{Name: "foo"},
-		&api.CreateOptions{FailIfExists: false},
+		nil,
 		&api.VolumeSpec{
 			Size:    1 * 1024 * 1024 * 1024,
 			HALevel: 1,

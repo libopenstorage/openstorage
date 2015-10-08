@@ -41,7 +41,7 @@ func (d *driver) Type() volume.DriverType {
 	return Type
 }
 
-func (d *driver) Create(locator api.VolumeLocator, options *api.CreateOptions, spec *api.VolumeSpec) (api.VolumeID, error) {
+func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api.VolumeSpec) (api.VolumeID, error) {
 
 	volumeID := uuid.New()
 	volumeID = strings.TrimSuffix(volumeID, "\n")

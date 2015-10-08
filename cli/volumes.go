@@ -89,11 +89,10 @@ func (v *volDriver) volumeCreate(context *cli.Context) {
 		Cos:              api.VolumeCos(context.Int("cos")),
 		SnapshotInterval: context.Int("si"),
 	}
-	options := &api.CreateOptions{
-		FailIfExists:     true,
-		CreateFromSource: context.String("seed"),
+	source := &api.Source{
+		Seed: context.String("seed"),
 	}
-	if id, err = v.volDriver.Create(locator, options, spec); err != nil {
+	if id, err = v.volDriver.Create(locator, source, spec); err != nil {
 		cmdError(context, fn, err)
 		return
 	}

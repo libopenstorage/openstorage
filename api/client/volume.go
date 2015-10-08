@@ -32,17 +32,14 @@ const (
 
 // Create a new Vol for the specific volume spev.c.
 // It returns a system generated VolumeID that uniquely identifies the volume
-// If CreateOptions.FailIfExists is set and a volume matching the locator
-// exists then this will fail with ErrEexist. Otherwise if a matching available
-// volume is found then it is returned instead of creating a new volume.
 func (v *volumeClient) Create(locator api.VolumeLocator,
-	options *api.CreateOptions,
+	source *api.Source,
 	spec *api.VolumeSpec) (api.VolumeID, error) {
 
 	var response api.VolumeCreateResponse
 	createReq := api.VolumeCreateRequest{
 		Locator: locator,
-		Options: options,
+		Source:  source,
 		Spec:    spec,
 	}
 	err := v.c.Post().Resource(volumePath).Body(&createReq).Do().Unmarshal(&response)
