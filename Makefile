@@ -1,32 +1,67 @@
+TAGS := daemon btrfs_noversion
 ifeq ($(BUILD_TYPE),debug)
-BUILD_OPTIONS= -gcflags "-N -l"
-else
-BUILD_OPTIONS= 
+BUILDFLAGS := -gcflags "-N -l"
 endif
-.PHONY: clean all
-TARGETS := openstorage
 
-export BASE_DIR=$(shell git rev-parse --show-toplevel)
-export GOPATH=$(shell echo ${BASE_DIR}| sed 's@\(.*\)/src/github.com.*@\1@g')
+all: test install
 
-all: $(TARGETS) tags
+deps:
+	go get -d -v ./...
 
-tags:
-	@ctags -R 
+update-deps:
+	go get -d -v -u -f ./...
 
-openstorage:
-	@echo "Building openstorage..."
-	@echo go build $(BUILD_OPTIONS) -tags daemon  -o osd 
-	@go build $(BUILD_OPTIONS) -tags daemon  -o osd 
+test-deps:
+	go get -d -v -t ./...
 
-docker:
-	@docker rmi -f osd || true
-	@docker build -t osd -f Dockerfile .
+update-test-deps:
+	go get -d -v -t -u -f ./...
 
-test:
-	@go test ./... -tags daemon
+build: deps
+	go build -tags "$(TAGS)" $(BUILDFLAGS) ./...
+
+install: deps
+	go install -tags "$(TAGS)" ./...
+
+lint:
+	go get -v github.com/golang/lint/golint
+	golint ./...
+
+vet:
+	go vet ./...
+
+errcheck:
+	go get -v github.com/kisielk/errcheck
+	errcheck ./...
+
+pretest: lint vet errcheck
+
+test: test-deps
+	go test -tags "$(TAGS)" ./...
+
+docker-build:
+	docker build -t openstorage/osd .
+
+docker-test: docker-build
+	docker run openstorage/osd make test
 
 clean:
-	@echo "Cleaning openstorage..."
-	@rm -f tags
-	@rm -f osd
+	go clean -i ./...
+
+.PHONY: \
+	all \
+	deps \
+	update-deps \
+	test-deps \
+	update-test-deps \
+	vendor \
+	build \
+	install \
+	lint \
+	vet \
+	errcheck \
+	pretest \
+	test \
+	docker-build \
+	docker-test \
+	clean
