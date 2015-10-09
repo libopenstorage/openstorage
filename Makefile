@@ -56,7 +56,13 @@ docker-build:
 	docker build -t openstorage/osd .
 
 docker-test: docker-build
-	docker run openstorage/osd make test
+	docker run \
+		--privileged \
+		-e AWS_ACCESS_KEY_ID \
+		-e AWS_SECRET_ACCESS_KEY \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		openstorage/osd \
+			make test
 
 clean:
 	go clean -i $(PKGS)
