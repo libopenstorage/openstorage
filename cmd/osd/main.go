@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -18,6 +17,7 @@ import (
 	osdcli "github.com/libopenstorage/openstorage/cli"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/config"
+	"github.com/libopenstorage/openstorage/drivers"
 	"github.com/libopenstorage/openstorage/volume"
 )
 
@@ -151,29 +151,30 @@ func main() {
 		},
 	}
 
-	for _, v := range drivers {
-		if v.driverType == volume.Block {
-			bCmds := osdcli.BlockVolumeCommands(v.name)
-			clstrCmds := osdcli.ClusterCommands(v.name)
+	for _, v := range drivers.AllDrivers {
+		switch v.DriverType {
+		case volume.Block:
+			bCmds := osdcli.BlockVolumeCommands(v.Name)
+			clstrCmds := osdcli.ClusterCommands(v.Name)
 			cmds := append(bCmds, clstrCmds...)
 			c := cli.Command{
-				Name:        v.name,
-				Usage:       fmt.Sprintf("Manage %s storage", v.name),
+				Name:        v.Name,
+				Usage:       fmt.Sprintf("Manage %s storage", v.Name),
 				Subcommands: cmds,
 			}
 			app.Commands = append(app.Commands, c)
-		} else if v.driverType == volume.File {
-			fCmds := osdcli.FileVolumeCommands(v.name)
-			clstrCmds := osdcli.ClusterCommands(v.name)
+		case volume.File:
+			fCmds := osdcli.FileVolumeCommands(v.Name)
+			clstrCmds := osdcli.ClusterCommands(v.Name)
 			cmds := append(fCmds, clstrCmds...)
 			c := cli.Command{
-				Name:        v.name,
-				Usage:       fmt.Sprintf("Manage %s volumes", v.name),
+				Name:        v.Name,
+				Usage:       fmt.Sprintf("Manage %s volumes", v.Name),
 				Subcommands: cmds,
 			}
 			app.Commands = append(app.Commands, c)
-		} else {
-			fmt.Println("Unable to start volume plugin: ", errors.New("Unknown driver type."))
+		default:
+			fmt.Println("Unable to start volume plugin: ", fmt.Errorf("Unknown driver type: %v", v.DriverType))
 			return
 		}
 	}
