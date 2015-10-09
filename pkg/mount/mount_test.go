@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -41,7 +42,7 @@ func TestInspect(t *testing.T) {
 	p := m.Inspect("foo")
 	assert.Equal(t, 0, len(p), "Expect 0 mounts actual %v mounts", len(p))
 	p = m.Inspect(source)
-	assert.Equal(t, 1, len(p), "Expect 1 mounts actual %v mounts", len(p))
+	require.Equal(t, 1, len(p), "Expect 1 mounts actual %v mounts", len(p))
 	assert.Equal(t, dest, p[0].Path, "Expect %q got %q", dest, p[0].Path)
 }
 
