@@ -41,7 +41,7 @@ func (g *Git) Load(dest string) error {
 	cmd = exec.Command("git", "reset", "--hard")
 	cmd.Dir = dest
 	if output, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("wd %v 'git reset --hard  %s': %s: %s", cmd.Dir, output, err)
+		return fmt.Errorf("wd %v 'git reset --hard  %s': %s: %s", cmd.Dir, g.revision, output, err)
 	}
 
 	g.ready = true
