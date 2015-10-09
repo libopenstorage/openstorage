@@ -61,20 +61,19 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 		return nil, err
 	}
 	log.Infof("AWS instance %v zone %v", instance, zone)
-	if accessKey, ok := params["AWS_ACCESS_KEY_ID"]; ok {
-		os.Setenv("AWS_ACCESS_KEY_ID", accessKey)
+	accessKey, ok := params["AWS_ACCESS_KEY_ID"]
+	if !ok {
+		if accessKey = os.Getenv("AWS_ACCESS_KEY_ID"); accessKey == "" {
+			return nil, fmt.Errorf("AWS_ACCESS_KEY_ID environment variable must be set")
+		}
 	}
-	if secretKey, ok := params["AWS_SECRET_ACCESS_KEY"]; ok {
-		os.Setenv("AWS_SECRET_ACCESS_KEY", secretKey)
+	secretKey, ok := params["AWS_SECRET_ACCESS_KEY"]
+	if !ok {
+		if secretKey = os.Getenv("AWS_SECRET_ACCESS_KEY"); secretKey == "" {
+			return nil, fmt.Errorf("AWS_SECRET_ACCESS_KEY environment variable must be set")
+		}
 	}
-	if accessKey := os.Getenv("AWS_ACCESS_KEY_ID"); accessKey == "" {
-		return nil, fmt.Errorf("AWS_ACCESS_KEY_ID environment variable must be set")
-	}
-	if secretKey := os.Getenv("AWS_SECRET_ACCESS_KEY"); secretKey == "" {
-		return nil, fmt.Errorf("AWS_SECRET_ACCESS_KEY environment variable must be set")
-	}
-
-	creds := credentials.NewEnvCredentials()
+	creds := credentials.NewStaticCredentials(accessKey, secretKey, "")
 	region := zone[:len(zone)-1]
 	d := &Driver{
 		ec2: ec2.New(&aws.Config{

@@ -38,7 +38,7 @@ install:
 
 lint:
 	go get -v github.com/golang/lint/golint
-	golint $(PKGS)
+	$(foreach pkg,$(PKGS),golint $(pkg);)
 
 vet:
 	go vet $(PKGS)
