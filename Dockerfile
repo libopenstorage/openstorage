@@ -7,6 +7,7 @@ RUN \
     asciidoc \
     autoconf \
     automake \
+    ca-certificates \
     e2fslibs-dev \
     libacl1-dev \
     libattr1-dev \
