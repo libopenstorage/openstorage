@@ -8,6 +8,7 @@ import (
 	"runtime"
 
 	"github.com/codegangsta/cli"
+	"github.com/fsouza/go-dockerclient"
 
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/etcd"
@@ -62,11 +63,12 @@ func start(c *cli.Context) {
 
 	// Start the cluster state machine, if enabled.
 	if cfg.Osd.ClusterConfig.NodeId != "" && cfg.Osd.ClusterConfig.ClusterId != "" {
-		_, err = cluster.New(cfg.Osd.ClusterConfig, kv)
+		dockerClient, err := docker.NewClientFromEnv()
 		if err != nil {
-			fmt.Println("Failed to initialize cluster: ", err)
+			fmt.Println("Failed to initialize docker client: ", err)
 			return
 		}
+		_ = cluster.New(cfg.Osd.ClusterConfig, kv, dockerClient)
 	}
 
 	// Start the volume drivers.

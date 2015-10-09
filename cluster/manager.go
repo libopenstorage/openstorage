@@ -349,20 +349,6 @@ func (c *ClusterManager) Start() error {
 	return nil
 }
 
-func (c *ClusterManager) Init() error {
-	docker, err := docker.NewClientFromEnv()
-	if err != nil {
-		log.Printf("Fatal, could not connect to Docker.")
-		return err
-	}
-
-	c.listeners = list.New()
-	c.nodeCache = make(map[string]api.Node)
-	c.docker = docker
-
-	return nil
-}
-
 func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 	i := 0
 
