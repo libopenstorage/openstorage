@@ -1,32 +1,79 @@
+TAGS := daemon btrfs_noversion
+PKGS := $(shell go list ./... | grep -v 'github.com/libopenstorage/openstorage/vendor')
+
 ifeq ($(BUILD_TYPE),debug)
-BUILD_OPTIONS= -gcflags "-N -l"
-else
-BUILD_OPTIONS= 
+BUILDFLAGS := -gcflags "-N -l"
 endif
-.PHONY: clean all
-TARGETS := openstorage
 
-export BASE_DIR=$(shell git rev-parse --show-toplevel)
-export GOPATH=$(shell echo ${BASE_DIR}| sed 's@\(.*\)/src/github.com.*@\1@g')
+export GO15VENDOREXPERIMENT=1
 
-all: $(TARGETS) tags
+all: test install
 
-tags:
-	@ctags -R 
+deps:
+	GO15VENDOREXPERIMENT=0 go get -d -v $(PKGS)
 
-openstorage:
-	@echo "Building openstorage..."
-	@echo go build $(BUILD_OPTIONS) -tags daemon  -o osd 
-	@go build $(BUILD_OPTIONS) -tags daemon  -o osd 
+update-deps:
+	GO15VENDOREXPERIMENT=0 go get -d -v -u -f $(PKGS)
 
-docker:
-	@docker rmi -f osd || true
-	@docker build -t osd -f Dockerfile .
+test-deps:
+	GO15VENDOREXPERIMENT=0 go get -d -v -t $(PKGS)
+
+update-test-deps:
+	GO15VENDOREXPERIMENT=0 go get -d -v -t -u -f $(PKGS)
+
+vendor:
+	go get -v github.com/tools/godep
+	rm -rf Godeps
+	rm -rf vendor
+	# TODO: when godep fixes downloading all tags, remove the custom package
+	# https://github.com/tools/godep/issues/271
+	godep save $(PKGS) github.com/docker/docker/pkg/chrootarchive
+
+build:
+	go build -tags "$(TAGS)" $(BUILDFLAGS) $(PKGS)
+
+install:
+	go install -tags "$(TAGS)" $(PKGS)
+
+lint:
+	go get -v github.com/golang/lint/golint
+	golint $(PKGS)
+
+vet:
+	go vet $(PKGS)
+
+errcheck:
+	go get -v github.com/kisielk/errcheck
+	errcheck $(PKGS)
+
+pretest: lint vet errcheck
 
 test:
-	@go test ./... -tags daemon
+	go test -tags "$(TAGS)" $(PKGS)
+
+docker-build:
+	docker build -t openstorage/osd .
+
+docker-test: docker-build
+	docker run openstorage/osd make test
 
 clean:
-	@echo "Cleaning openstorage..."
-	@rm -f tags
-	@rm -f osd
+	go clean -i $(PKGS)
+
+.PHONY: \
+	all \
+	deps \
+	update-deps \
+	test-deps \
+	update-test-deps \
+	vendor \
+	build \
+	install \
+	lint \
+	vet \
+	errcheck \
+	pretest \
+	test \
+	docker-build \
+	docker-test \
+	clean
