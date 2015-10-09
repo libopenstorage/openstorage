@@ -103,4 +103,5 @@ clean:
 	docker-test \
 	docker-build-osd-internal \
 	docker-build-osd \
+	launch \
 	clean
