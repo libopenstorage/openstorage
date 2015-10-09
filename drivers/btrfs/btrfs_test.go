@@ -5,7 +5,6 @@ package btrfs
 import (
 	"os"
 	"os/exec"
-	"strings"
 	"testing"
 
 	"github.com/libopenstorage/openstorage/drivers/test"
@@ -18,19 +17,7 @@ const (
 )
 
 func TestSetup(t *testing.T) {
-	umount, err := which("umount")
-	if err != nil {
-		t.Fatal(err)
-	}
-	mount, err := which("mount")
-	if err != nil {
-		t.Fatal(err)
-	}
-	mkfs, err := which("mkfs")
-	if err != nil {
-		t.Fatal(err)
-	}
-	exec.Command(umount, btrfsFile).Output()
+	exec.Command("umount", btrfsFile).Output()
 	os.Remove(btrfsFile)
 	os.MkdirAll(testPath, 0755)
 
@@ -42,12 +29,12 @@ func TestSetup(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to truncate /var/btrfs 1G  %v", err)
 	}
-	o, err := exec.Command(mkfs, "-t", "btrfs", "-f", btrfsFile).Output()
+	o, err := exec.Command("mkfs", "-t", "btrfs", "-f", btrfsFile).Output()
 	if err != nil {
 		t.Fatalf("Failed to format to btrfs: %v: %v", err, o)
 	}
 
-	o, err = exec.Command(mount, btrfsFile, testPath).Output()
+	o, err = exec.Command("mount", btrfsFile, testPath).Output()
 	if err != nil {
 		t.Fatalf("Failed to mount to btrfs: %v: %v", err, o)
 	}
@@ -66,12 +53,4 @@ func TestAll(t *testing.T) {
 	ctx.Filesystem = "btrfs"
 
 	test.Run(t, ctx)
-}
-
-func which(executable string) (string, error) {
-	output, err := exec.Command("which", executable).Output()
-	if err != nil {
-		return "", err
-	}
-	return strings.TrimSpace(string(output)), nil
 }
