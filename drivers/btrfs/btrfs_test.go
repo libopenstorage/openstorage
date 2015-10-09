@@ -17,7 +17,7 @@ const (
 )
 
 func TestSetup(t *testing.T) {
-	exec.Command("/usr/bin/umount", btrfsFile).Output()
+	exec.Command("umount", btrfsFile).Output()
 	os.Remove(btrfsFile)
 	os.MkdirAll(testPath, 0755)
 
@@ -29,14 +29,12 @@ func TestSetup(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to truncate /var/btrfs 1G  %v", err)
 	}
-	o, err := exec.Command(
-		"/sbin/mkfs", "-t", "btrfs", "-f",
-		btrfsFile).Output()
+	o, err := exec.Command("mkfs", "-t", "btrfs", "-f", btrfsFile).Output()
 	if err != nil {
 		t.Fatalf("Failed to format to btrfs: %v: %v", err, o)
 	}
 
-	o, err = exec.Command("/usr/bin/mount", btrfsFile, testPath).Output()
+	o, err = exec.Command("mount", btrfsFile, testPath).Output()
 	if err != nil {
 		t.Fatalf("Failed to mount to btrfs: %v: %v", err, o)
 	}
