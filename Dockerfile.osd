@@ -1,0 +1,6 @@
+FROM gliderlabs/alpine:3.2
+MAINTAINER gou@portworx.com
+
+RUN apk --update add btrfs-progs ca-certificates
+ADD _tmp/osd /
+ENTRYPOINT ["/osd"]

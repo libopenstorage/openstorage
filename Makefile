@@ -53,7 +53,7 @@ test:
 	go test -tags "$(TAGS)" $(PKGS)
 
 docker-build:
-	docker build -t openstorage/osd .
+	docker build -t openstorage/osd-dev -f Dockerfile.osd-dev .
 
 docker-test: docker-build
 	docker run \
@@ -61,8 +61,26 @@ docker-test: docker-build
 		-e AWS_ACCESS_KEY_ID \
 		-e AWS_SECRET_ACCESS_KEY \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		openstorage/osd \
+		openstorage/osd-dev \
 			make test
+
+docker-build-osd-internal:
+	rm -rf _tmp
+	mkdir -p _tmp
+	go build -a -tags "$(TAGS)" -o _tmp/osd cmd/osd/main.go
+	docker build -t openstorage/osd -f Dockerfile.osd .
+
+docker-build-osd: docker-build
+	docker run -v /var/run/docker.sock:/var/run/docker.sock openstorage/osd-dev make docker-build-osd-internal
+
+launch: docker-build-osd
+	docker run \
+		--privileged \
+		-v $(shell pwd):/etc \
+		-v /usr/share/docker/plugins:/usr/share/docker/plugins \
+		-v /var/lib/osd/driver:/var/lib/osd/driver \
+		-v /mnt:/mnt \
+		openstorage/osd -d -f /etc/config.yaml
 
 clean:
 	go clean -i $(PKGS)
@@ -83,4 +101,6 @@ clean:
 	test \
 	docker-build \
 	docker-test \
+	docker-build-osd-internal \
+	docker-build-osd \
 	clean

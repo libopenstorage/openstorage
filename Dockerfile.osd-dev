@@ -6,9 +6,10 @@ RUN \
   apt-get install -yq --no-install-recommends \
     btrfs-tools \
     ca-certificates
+RUN \
+  curl -sSL https://get.docker.com/builds/Linux/x86_64/docker-1.8.2 > /bin/docker && \
+  chmod +x /bin/docker
 ENV GO15VENDOREXPERIMENT 1
 RUN mkdir -p /go/src/github.com/libopenstorage/openstorage
 ADD . /go/src/github.com/libopenstorage/openstorage/
 WORKDIR /go/src/github.com/libopenstorage/openstorage
-RUN make install
-CMD ["/go/bin/osd"]
