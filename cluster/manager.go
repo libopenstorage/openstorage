@@ -10,8 +10,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/samalba/dockerclient"
-
+	"github.com/fsouza/go-dockerclient"
 	"github.com/libopenstorage/gossip"
 	gossiptypes "github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
@@ -23,7 +22,6 @@ import (
 )
 
 const (
-	dockerHost   = "unix:///var/run/docker.sock"
 	heartbeatKey = "heartbeat"
 )
 
@@ -33,7 +31,7 @@ type ClusterManager struct {
 	kv        kv.Kvdb
 	status    api.Status
 	nodeCache map[string]api.Node // Cached info on the nodes in the cluster.
-	docker    *dockerclient.DockerClient
+	docker    *docker.Client
 	g         gossip.Gossiper
 }
 
@@ -114,7 +112,7 @@ func (c *ClusterManager) getCurrentState() *api.Node {
 	node.Timestamp = time.Now()
 
 	// Get containers running on this system.
-	node.Containers, _ = c.docker.ListContainers(true, false, "")
+	node.Containers, _ = c.docker.ListContainers(docker.ListContainersOptions{All: true})
 
 	return node
 }
@@ -352,7 +350,7 @@ func (c *ClusterManager) Start() error {
 }
 
 func (c *ClusterManager) Init() error {
-	docker, err := dockerclient.NewDockerClient(dockerHost, nil)
+	docker, err := docker.NewClientFromEnv()
 	if err != nil {
 		log.Printf("Fatal, could not connect to Docker.")
 		return err
