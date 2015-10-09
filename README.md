@@ -21,18 +21,12 @@ Providers that support a multi-node environment, such as AWS or NFS to name a fe
 
 ## Installing Dependencies
 
-libopenstorage is written in the [Go](http://golang.org) programming language. If you haven't set up a Go development environment, please follow [these instructions](http://golang.org/doc/code.html) to install `golang` and set up GOPATH. Ensure that your version of Go is at least 1.3. Note that the version of Go in package repositories of some operating systems is outdated, so please [download](https://golang.org/dl/) the latest version.
+libopenstorage is written in the [Go](http://golang.org) programming language. If you haven't set up a Go development environment, please follow [these instructions](http://golang.org/doc/code.html) to install `golang` and set up GOPATH. Your version of Go must be at least 1.5 - we use the golang 1.5 vendor experiment https://golang.org/s/go15vendor. Note that the version of Go in package repositories of some operating systems is outdated, so please [download](https://golang.org/dl/) the latest version.
 
 After setting up Go, you should be able to `go get` libopenstorage as expected (we use `-d` to only download):
 
 ```
-$ go get -d github.com/libopenstorage/openstorage
-```
-
-We use `godep` so you will need to get that as well:
-
-```
-$ go get github.com/tools/godep
+$ go get -d github.com/libopenstorage/openstorage/...
 ```
 
 ## Building from Source
@@ -40,9 +34,7 @@ $ go get github.com/tools/godep
 At this point you can build openstorage from the source folder:
 
 ```
-$GOPATH/src/github.com/libopenstorage/openstorage $ godep restore ./...
-
-$GOPATH/src/github.com/libopenstorage/openstorage $ make
+$GOPATH/src/github.com/libopenstorage/openstorage $ make install
 ```
 
 or run only unit tests:
@@ -154,14 +146,23 @@ That's pretty much it.  At this point, when you start the OSD, your driver will 
 
 ## Testing
 
-`go test -tags daemon -v ./...`
+```
+make test # test on your local machine
+make docker-test # test within a docker container
+```
 
 ## Updating to latest Source
 
 To update the source folder and all dependencies:
 
 ```
-$GOPATH/src/github.com/libopenstorage/openstorage $ go get -u all
+$GOPATH/src/github.com/libopenstorage/openstorage $ make update-test-deps
+```
+
+However note that all dependencies are vendored in the vendor directory, so this is not necessary in general as long as you have `GO15VENDOREXPERIMENT` set:
+
+```
+export GO15VENDOREXPERIMENT=1
 ```
 
 ## Building a Docker image
@@ -169,21 +170,14 @@ $GOPATH/src/github.com/libopenstorage/openstorage $ go get -u all
 OSD can run inside of Docker:
 
 ```
-make docker
+make docker-build-osd
 ```
 
-This builds a Docker image called `osd`.  You can then run the image as
+This builds a Docker image called `openstorage/osd`.  You can then run the image:
 
 ```
-docker run osd /bin/osd version
-docker run --privileged -v $PWD:/etc -v /usr/share/docker/plugins:/usr/share/docker/plugins -v /var/lib/osd/driver:/var/lib/osd/driver -v /mnt:/mnt osd /bin/osd -d -f /etc/config.yaml
+make launch
 ```
-
-## Running the latest openstorage OSD build in Docker
-```
-docker run --privileged -v $PWD:/etc -v /usr/share/docker/plugins:/usr/share/docker/plugins -v /var/lib/osd/driver:/var/lib/osd/driver -v /mnt:/mnt openstorage/osd:experimental /bin/osd -d -f /etc/config.yaml
-```
-
 
 #### Using openstorage with systemd
 
