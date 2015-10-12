@@ -211,15 +211,17 @@ func io(t *testing.T, ctx *Context) {
 	assert.NotEqual(t, ctx.mountPath, "", "Device is not mounted")
 
 	cmd := exec.Command("dd", "if=/dev/urandom", "of=/tmp/xx", "bs=1M", "count=10")
-	err := cmd.Run()
-	assert.NoError(t, err, "Failed to run dd")
+	o, err := cmd.CombinedOutput()
+	assert.NoError(t, err, "Failed to run dd %s", string(o))
 
 	cmd = exec.Command("dd", "if=/tmp/xx", fmt.Sprintf("of=%s/xx", ctx.mountPath))
-	err = cmd.Run()
-	assert.NoError(t, err, "Failed to run dd on mountpoint %s/xx", ctx.mountPath)
+	o, err = cmd.CombinedOutput()
+	assert.NoError(t, err, "Failed to run dd on mountpoint %s/xx : %s",
+		ctx.mountPath, string(o))
 
-	cmd = exec.Command("diff", "if=/tmp/xx", fmt.Sprintf("of=%s/xx", ctx.mountPath))
-	assert.NoError(t, err, "data mismatch")
+	cmd = exec.Command("diff", "/tmp/xx", fmt.Sprintf("%s/xx", ctx.mountPath))
+	o, err = cmd.CombinedOutput()
+	assert.NoError(t, err, "data mismatch %s", string(o))
 }
 
 func detachBad(t *testing.T, ctx *Context) {
