@@ -161,6 +161,10 @@ func (nbd *NBD) Connect() (dev string, err error) {
 	return dev, err
 }
 
+func (nbd *NBD) Disconnect() {
+	// XXX TODO
+}
+
 func (nbd *NBD) do(c chan error) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()

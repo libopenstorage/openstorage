@@ -24,21 +24,27 @@ const (
 	Type          = volume.Block
 	BuseDBKey     = "OpenStorageBuseKey"
 	BuseMountPath = "/var/lib/openstorage/buse/"
-	NbdMax        = 16
 )
 
 // Implements the open storage volume interface.
 type driver struct {
 	*volume.DefaultEnumerator
-	nbdSlots [NbdMax]bool
+	buseDevices map[string]*buseDev
 }
 
-func allocNBD(sz uint) (string, error) {
-	return "/dev/nbd0", nil
+// Implements the Device interface.
+type buseDev struct {
+	file string
+	f    *os.File
+	nbd  *NBD
 }
 
-func freeNBD(dev string) {
-	// XXX FIXME dellocate NBD device.
+func (d *buseDev) ReadAt(b []byte, off int64) (n int, err error) {
+	return d.f.ReadAt(b, off)
+}
+
+func (d *buseDev) WriteAt(b []byte, off int64) (n int, err error) {
+	return d.f.WriteAt(b, off)
 }
 
 func copyFile(source string, dest string) (err error) {
@@ -72,6 +78,8 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 	inst := &driver{
 		DefaultEnumerator: volume.NewDefaultEnumerator(Name, kvdb.Instance()),
 	}
+
+	inst.buseDevices = make(map[string]*buseDev)
 
 	err := os.MkdirAll(BuseMountPath, 0744)
 	if err != nil {
@@ -121,12 +129,12 @@ func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api
 		return api.BadVolumeID, err
 	}
 
-	f, err := os.Create(path.Join(BuseMountPath, string(volumeID)))
+	buseFile := path.Join(BuseMountPath, string(volumeID))
+	f, err := os.Create(buseFile)
 	if err != nil {
 		log.Println(err)
 		return api.BadVolumeID, err
 	}
-	defer f.Close()
 
 	err = f.Truncate(int64(spec.Size))
 	if err != nil {
@@ -134,11 +142,20 @@ func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api
 		return api.BadVolumeID, err
 	}
 
-	dev, err := allocNBD(uint(spec.Size))
+	bd := &buseDev{
+		file: buseFile,
+		f:    f}
+
+	nbd := Create(bd, int64(spec.Size))
+	bd.nbd = nbd
+
+	dev, err := bd.nbd.Connect()
 	if err != nil {
 		log.Println(err)
 		return api.BadVolumeID, err
 	}
+
+	d.buseDevices[dev] = bd
 
 	v := &api.Volume{
 		ID:         api.VolumeID(volumeID),
@@ -167,10 +184,17 @@ func (d *driver) Delete(volumeID api.VolumeID) error {
 		return err
 	}
 
-	// Delete the block file on the local buse path.
-	os.Remove(path.Join(BuseMountPath, string(volumeID)))
+	bd, ok := d.buseDevices[v.DevicePath]
+	if !ok {
+		err = fmt.Errorf("Cannot locate a BUSE device for %s", v.DevicePath)
+		log.Println(err)
+		return err
+	}
 
-	freeNBD(v.DevicePath)
+	// Clean up buse block file and close the NBD connection.
+	os.Remove(bd.file)
+	bd.f.Close()
+	bd.nbd.Disconnect()
 
 	err = d.DeleteVol(volumeID)
 	if err != nil {
@@ -280,6 +304,7 @@ func (d *driver) Shutdown() {
 }
 
 func init() {
+
 	// Register ourselves as an openstorage volume driver.
 	volume.Register(Name, Init)
 }
