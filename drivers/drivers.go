@@ -3,6 +3,7 @@ package drivers
 import (
 	"github.com/libopenstorage/openstorage/drivers/aws"
 	"github.com/libopenstorage/openstorage/drivers/btrfs"
+	"github.com/libopenstorage/openstorage/drivers/buse"
 	"github.com/libopenstorage/openstorage/drivers/nfs"
 	"github.com/libopenstorage/openstorage/drivers/pwx"
 	"github.com/libopenstorage/openstorage/drivers/vfs"
@@ -29,5 +30,7 @@ var (
 		{DriverType: pwx.Type, Name: pwx.Name},
 		// VFS driver provisions storage from local filesystem
 		{DriverType: vfs.Type, Name: vfs.Name},
+		// BUSE driver provisions storage from local volumes and implements block in user space.
+		{DriverType: buse.Type, Name: buse.Name},
 	}
 )
