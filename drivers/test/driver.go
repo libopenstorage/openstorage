@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"testing"
 	"time"
 
@@ -17,8 +18,6 @@ import (
 	"github.com/libopenstorage/openstorage/volume"
 )
 
-const testPath = "/tmp/openstorage/mount"
-
 // Context maintains current device state. It gets passed into tests
 // so that tests can build on other tests' work
 type Context struct {
@@ -28,6 +27,8 @@ type Context struct {
 	mountPath  string
 	devicePath string
 	Filesystem string
+	testPath   string
+	testFile   string
 }
 
 func NewContext(d volume.VolumeDriver) *Context {
@@ -36,6 +37,8 @@ func NewContext(d volume.VolumeDriver) *Context {
 		volID:        api.BadVolumeID,
 		snapID:       api.BadVolumeID,
 		Filesystem:   string(""),
+		testPath:     path.Join("/tmp/openstorage/mount/", d.String()),
+		testFile:     path.Join("/tmp/", d.String()),
 	}
 }
 
@@ -61,7 +64,8 @@ func Run(t *testing.T, ctx *Context) {
 
 func runEnd(t *testing.T, ctx *Context) {
 	time.Sleep(time.Second * 2)
-	os.RemoveAll(testPath)
+	os.RemoveAll(ctx.testPath)
+	os.Remove(ctx.testFile)
 	shutdown(t, ctx)
 }
 
@@ -182,12 +186,12 @@ func detach(t *testing.T, ctx *Context) {
 func mount(t *testing.T, ctx *Context) {
 	fmt.Println("mount")
 
-	err := os.MkdirAll(testPath, 0755)
+	err := os.MkdirAll(ctx.testPath, 0755)
 
-	err = ctx.Mount(ctx.volID, testPath)
-	assert.NoError(t, err, "Failed in mount")
+	err = ctx.Mount(ctx.volID, ctx.testPath)
+	assert.NoError(t, err, "Failed in mount %v", ctx.testPath)
 
-	ctx.mountPath = testPath
+	ctx.mountPath = ctx.testPath
 }
 
 func unmount(t *testing.T, ctx *Context) {
@@ -196,7 +200,7 @@ func unmount(t *testing.T, ctx *Context) {
 	assert.NotEqual(t, ctx.mountPath, "", "Device is not mounted")
 
 	err := ctx.Unmount(ctx.volID, ctx.mountPath)
-	assert.NoError(t, err, "Failed in unmount")
+	assert.NoError(t, err, "Failed in unmount %v", ctx.mountPath)
 
 	ctx.mountPath = ""
 }
@@ -210,16 +214,16 @@ func io(t *testing.T, ctx *Context) {
 	fmt.Println("io")
 	assert.NotEqual(t, ctx.mountPath, "", "Device is not mounted")
 
-	cmd := exec.Command("dd", "if=/dev/urandom", "of=/tmp/xx", "bs=1M", "count=10")
+	cmd := exec.Command("dd", "if=/dev/urandom", fmt.Sprintf("of=%s", ctx.testFile), "bs=1M", "count=10")
 	o, err := cmd.CombinedOutput()
 	assert.NoError(t, err, "Failed to run dd %s", string(o))
 
-	cmd = exec.Command("dd", "if=/tmp/xx", fmt.Sprintf("of=%s/xx", ctx.mountPath))
+	cmd = exec.Command("dd", fmt.Sprintf("if=%s", ctx.testFile), fmt.Sprintf("of=%s/xx", ctx.mountPath))
 	o, err = cmd.CombinedOutput()
 	assert.NoError(t, err, "Failed to run dd on mountpoint %s/xx : %s",
 		ctx.mountPath, string(o))
 
-	cmd = exec.Command("diff", "/tmp/xx", fmt.Sprintf("%s/xx", ctx.mountPath))
+	cmd = exec.Command("diff", ctx.testFile, fmt.Sprintf("%s/xx", ctx.mountPath))
 	o, err = cmd.CombinedOutput()
 	assert.NoError(t, err, "data mismatch %s", string(o))
 }
