@@ -33,6 +33,14 @@ type driver struct {
 	nbdSlots [NbdMax]bool
 }
 
+func allocNBD(sz uint) (string, error) {
+	return "/dev/nbd0", nil
+}
+
+func freeNBD(dev string) {
+	// XXX FIXME dellocate NBD device.
+}
+
 func copyFile(source string, dest string) (err error) {
 	sourcefile, err := os.Open(source)
 	if err != nil {
@@ -126,6 +134,12 @@ func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api
 		return api.BadVolumeID, err
 	}
 
+	dev, err := allocNBD(uint(spec.Size))
+	if err != nil {
+		log.Println(err)
+		return api.BadVolumeID, err
+	}
+
 	v := &api.Volume{
 		ID:         api.VolumeID(volumeID),
 		Source:     source,
@@ -136,7 +150,7 @@ func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api
 		Format:     "buse",
 		State:      api.VolumeAvailable,
 		Status:     api.Up,
-		DevicePath: "/dev/nbd0",
+		DevicePath: dev,
 	}
 
 	err = d.CreateVol(v)
@@ -147,7 +161,7 @@ func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api
 }
 
 func (d *driver) Delete(volumeID api.VolumeID) error {
-	_, err := d.GetVol(volumeID)
+	v, err := d.GetVol(volumeID)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -155,6 +169,8 @@ func (d *driver) Delete(volumeID api.VolumeID) error {
 
 	// Delete the block file on the local buse path.
 	os.Remove(path.Join(BuseMountPath, string(volumeID)))
+
+	freeNBD(v.DevicePath)
 
 	err = d.DeleteVol(volumeID)
 	if err != nil {
