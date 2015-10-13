@@ -121,14 +121,11 @@ func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api
 	volumeID := uuid.New()
 	volumeID = strings.TrimSuffix(volumeID, "\n")
 
-	// Create a file on the local buse path with this UUID.
-	volPath := path.Join(BuseMountPath, volumeID)
-	err := os.MkdirAll(volPath, 0744)
-	if err != nil {
-		log.Println(err)
-		return api.BadVolumeID, err
+	if spec.Size == 0 {
+		return api.BadVolumeID, fmt.Errorf("Volume size cannot be zero", "buse")
 	}
 
+	// Create a file on the local buse path with this UUID.
 	buseFile := path.Join(BuseMountPath, string(volumeID))
 	f, err := os.Create(buseFile)
 	if err != nil {
@@ -146,9 +143,11 @@ func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api
 		file: buseFile,
 		f:    f}
 
+	log.Infof("Creating dev")
 	nbd := Create(bd, int64(spec.Size))
 	bd.nbd = nbd
 
+	log.Infof("Connecting")
 	dev, err := bd.nbd.Connect()
 	if err != nil {
 		log.Println(err)
@@ -156,6 +155,8 @@ func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api
 	}
 
 	d.buseDevices[dev] = bd
+
+	log.Infof("BUSE mapped NBD device %s (size=%v) to block file %s", dev, spec.Size, buseFile)
 
 	v := &api.Volume{
 		ID:         api.VolumeID(volumeID),
@@ -196,6 +197,8 @@ func (d *driver) Delete(volumeID api.VolumeID) error {
 	bd.f.Close()
 	bd.nbd.Disconnect()
 
+	log.Infof("BUSE deleted volume %v at NBD device %s", volumeID, v.DevicePath)
+
 	err = d.DeleteVol(volumeID)
 	if err != nil {
 		log.Println(err)
@@ -214,6 +217,8 @@ func (d *driver) Mount(volumeID api.VolumeID, mountpath string) error {
 	if err != nil {
 		return fmt.Errorf("Faield to mount %v at %v: %v", v.DevicePath, mountpath, err)
 	}
+
+	log.Infof("BUSE mounted NBD device %s at %s", v.DevicePath, mountpath)
 
 	v.AttachPath = mountpath
 	err = d.UpdateVol(v)

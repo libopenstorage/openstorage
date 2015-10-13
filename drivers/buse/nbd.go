@@ -6,10 +6,14 @@ package buse
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"os"
 	"runtime"
 	"syscall"
+	"time"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 const (
@@ -77,86 +81,85 @@ type reply struct {
 }
 
 type NBD struct {
-	device Device
-	size   int64
-	nbd    *os.File
-	socket int
+	device     Device
+	devicePath string
+	size       int64
+	f          *os.File
+	socket     int
 }
 
 func Create(device Device, size int64) *NBD {
 	if size >= 0 {
-		return &NBD{device, size, nil, 0}
+		return &NBD{device: device,
+			devicePath: "",
+			size:       size,
+			f:          nil,
+			socket:     0}
 	}
 	return nil
 }
 
-// return true if connected
+// Return true if connected.
 func (nbd *NBD) IsConnected() bool {
-	return nbd.nbd != nil && nbd.socket > 0
+	return nbd.f != nil && nbd.socket > 0
 }
 
-// get the size of the NBD
+// Get the size of the NBD.
 func (nbd *NBD) GetSize() int64 {
 	return nbd.size
 }
 
-// set the size of the NBD
+// Set the size of the NBD.
 func (nbd *NBD) Size(size int64) (err error) {
-	if err = ioctl(nbd.nbd.Fd(), NBD_SET_BLKSIZE, 4096); err != nil {
-		err = &os.PathError{nbd.nbd.Name(), "ioctl NBD_SET_BLKSIZE", err}
-	} else if err = ioctl(nbd.nbd.Fd(), NBD_SET_SIZE_BLOCKS, uintptr(size/4096)); err != nil {
-		err = &os.PathError{nbd.nbd.Name(), "ioctl NBD_SET_SIZE_BLOCKS", err}
+	if err = ioctl(nbd.f.Fd(), NBD_SET_BLKSIZE, 4096); err != nil {
+		err = &os.PathError{nbd.f.Name(), "ioctl NBD_SET_BLKSIZE", err}
+	} else if err = ioctl(nbd.f.Fd(), NBD_SET_SIZE_BLOCKS, uintptr(size/4096)); err != nil {
+		err = &os.PathError{nbd.f.Name(), "ioctl NBD_SET_SIZE_BLOCKS", err}
 	}
 
 	return err
 }
 
-// connect the network block device
+// Connect the network block device.
 func (nbd *NBD) Connect() (dev string, err error) {
 	pair, err := syscall.Socketpair(syscall.SOCK_STREAM, syscall.AF_UNIX, 0)
-
 	if err != nil {
 		return "", err
 	}
 
-	// find free nbd device
+	// Find free NBD device.
 	for i := 0; ; i++ {
 		dev = fmt.Sprintf("/dev/nbd%d", i)
 		if _, err = os.Stat(dev); os.IsNotExist(err) {
 			dev = ""
-			break // no more devices
+			return "", errors.New("No more NBD devices left.")
 		}
 		if _, err = os.Stat(fmt.Sprintf("/sys/block/nbd%d/pid", i)); !os.IsNotExist(err) {
-			continue // busy
+			continue // Busy.
 		}
 
-		if nbd.nbd, err = os.Open(dev); err == nil {
-			// possible candidate
-			ioctl(nbd.nbd.Fd(), BLKROSET, 0) // I'm really sorry about this
-			if err := ioctl(nbd.nbd.Fd(), NBD_SET_SOCK, uintptr(pair[0])); err == nil {
+		if nbd.f, err = os.Open(dev); err == nil {
+			// Possible candidate.
+			ioctl(nbd.f.Fd(), BLKROSET, 0) // I'm really sorry about this.
+			if err := ioctl(nbd.f.Fd(), NBD_SET_SOCK, uintptr(pair[0])); err == nil {
 				nbd.socket = pair[1]
-				break // success
+				break // Success.
 			}
 		}
 	}
 
-	// setup
+	// Setup.
 	if err = nbd.Size(nbd.size); err != nil {
-		// already set by nbd.Size()
-	} else if err = ioctl(nbd.nbd.Fd(), NBD_SET_FLAGS, 1); err != nil {
-		err = &os.PathError{nbd.nbd.Name(), "ioctl NBD_SET_FLAGS", err}
+		// Already set by nbd.Size().
+	} else if err = ioctl(nbd.f.Fd(), NBD_SET_FLAGS, 1); err != nil {
+		err = &os.PathError{nbd.f.Name(), "ioctl NBD_SET_FLAGS", err}
 	} else {
 		c := make(chan error)
 		go nbd.do(c)
-		for {
-			select {
-			case err = <-c:
-				return dev, err
-			default:
-				nbd.handle()
-			}
-		}
+		go nbd.handle(c)
 	}
+
+	nbd.devicePath = dev
 
 	return dev, err
 }
@@ -169,21 +172,22 @@ func (nbd *NBD) do(c chan error) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 
-	// NBD_DO_IT does not return until disconnect
-	if err := ioctl(nbd.nbd.Fd(), NBD_DO_IT, 0); err != nil {
-		c <- &os.PathError{nbd.nbd.Name(), "ioctl NBD_DO_IT", err}
-	} else if err = ioctl(nbd.nbd.Fd(), NBD_DISCONNECT, 0); err != nil {
-		c <- &os.PathError{nbd.nbd.Name(), "ioctl NBD_DISCONNECT", err}
-	} else if err = ioctl(nbd.nbd.Fd(), NBD_CLEAR_SOCK, 0); err != nil {
-		c <- &os.PathError{nbd.nbd.Name(), "ioctl NBD_CLEAR_SOCK", err}
+	// NBD_DO_IT does not return until disconnect.
+	if err := ioctl(nbd.f.Fd(), NBD_DO_IT, 0); err != nil {
+		c <- &os.PathError{nbd.f.Name(), "ioctl NBD_DO_IT", err}
+	} else if err = ioctl(nbd.f.Fd(), NBD_DISCONNECT, 0); err != nil {
+		c <- &os.PathError{nbd.f.Name(), "ioctl NBD_DISCONNECT", err}
+	} else if err = ioctl(nbd.f.Fd(), NBD_CLEAR_SOCK, 0); err != nil {
+		c <- &os.PathError{nbd.f.Name(), "ioctl NBD_CLEAR_SOCK", err}
 	}
-
 }
 
-// handle requests
-func (nbd *NBD) handle() {
+// Handle block requests.
+func (nbd *NBD) handle(c chan error) {
 	buf := make([]byte, 2<<19)
 	var x request
+
+	time.Sleep(1)
 
 	for {
 		syscall.Read(nbd.socket, buf[0:28])
@@ -215,7 +219,9 @@ func (nbd *NBD) handle() {
 				binary.BigEndian.PutUint32(buf[4:8], 0)
 				syscall.Write(nbd.socket, buf[0:16])
 			case NBD_CMD_DISC:
-				panic("Disconnect")
+				log.Infof("Disconnecting device %s", nbd.devicePath)
+				nbd.Disconnect()
+				return
 			case NBD_CMD_FLUSH:
 				fallthrough
 			case NBD_CMD_TRIM:
@@ -223,10 +229,14 @@ func (nbd *NBD) handle() {
 				binary.BigEndian.PutUint32(buf[4:8], 1)
 				syscall.Write(nbd.socket, buf[0:16])
 			default:
-				panic("unknown command")
+				log.Errorf("Unknown command recieved on device %s", nbd.devicePath)
+				nbd.Disconnect()
+				return
 			}
 		default:
-			panic("Invalid packet")
+			log.Errorf("Invalid packet command recieved on device %s", nbd.devicePath)
+			nbd.Disconnect()
+			return
 		}
 	}
 }
