@@ -3,8 +3,11 @@ package proto
 import (
 	"errors"
 	log "github.com/Sirupsen/logrus"
+	"math"
 	"math/rand"
+	"sort"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/libopenstorage/gossip/types"
@@ -28,12 +31,64 @@ type GossiperImpl struct {
 	done              chan bool
 	gossipInterval    time.Duration
 	nodeDeathInterval time.Duration
+	peerSelector      PeerSelector
 }
 
 // Utility methods
 func logAndGetError(msg string) error {
 	log.Error(msg)
 	return errors.New(msg)
+}
+
+type PeerSelector interface {
+	SetMaxLen(uint32)
+	NextPeer() int32
+	SetStartHint(m uint32)
+}
+
+type RoundRobinPeerSelector struct {
+	maxLen       uint32
+	lastSelected uint32
+}
+
+func (r *RoundRobinPeerSelector) Init() {
+	r.maxLen = 0
+	r.lastSelected = 0
+}
+
+func (r *RoundRobinPeerSelector) SetStartHint(m uint32) {
+	maxLen := atomic.LoadUint32(&r.maxLen)
+	var lastSelected uint32
+	lastSelected = 0
+	if m != maxLen {
+		lastSelected = uint32((m + 1) % maxLen)
+	}
+	atomic.StoreUint32(&r.lastSelected, lastSelected)
+}
+
+func (r *RoundRobinPeerSelector) SetMaxLen(m uint32) {
+	if m > math.MaxUint16 {
+		log.Panicf("Number of peers %v greater than those suported %v",
+			m, math.MaxUint16)
+	}
+	atomic.StoreUint32(&r.maxLen, m)
+}
+
+func (r *RoundRobinPeerSelector) NextPeer() int32 {
+	maxLen := atomic.LoadUint32(&r.maxLen)
+	lastSelected := atomic.LoadUint32(&r.lastSelected)
+	if maxLen < 2 {
+		return -1
+	}
+
+	atomic.StoreUint32(&r.lastSelected, (lastSelected+1)%maxLen)
+	return int32(r.lastSelected)
+}
+
+func NewPeerSelector() PeerSelector {
+	s := new(RoundRobinPeerSelector)
+	s.Init()
+	return s
 }
 
 func (g *GossiperImpl) Init(ip string, selfNodeId types.NodeId) {
@@ -43,6 +98,7 @@ func (g *GossiperImpl) Init(ip string, selfNodeId types.NodeId) {
 	g.done = make(chan bool, 1)
 	g.gossipInterval = DEFAULT_GOSSIP_INTERVAL
 	g.nodeDeathInterval = DEFAULT_NODE_DEATH_INTERVAL
+	g.peerSelector = NewPeerSelector()
 	rand.Seed(time.Now().UnixNano())
 
 	// start gossiping
@@ -87,6 +143,23 @@ func (g *GossiperImpl) AddNode(ip string) error {
 		}
 	}
 	g.nodes = append(g.nodes, ip)
+	sort.Strings(g.nodes)
+	g.peerSelector.SetMaxLen(uint32(len(g.nodes)))
+	if len(g.nodes) >= 2 {
+		// In order to make sure that not all of the
+		// nodes go in the same order, try to reset the order
+		// by sorting the nodes by name and starting at the position
+		// next to this node
+		temp := make([]string, len(g.nodes))
+		copy(temp, g.nodes)
+		temp = append(temp, g.name)
+		sort.Strings(temp)
+		for i, n := range temp {
+			if n == g.name {
+				g.peerSelector.SetStartHint(uint32(i % len(g.nodes)))
+			}
+		}
+	}
 
 	return nil
 }
@@ -99,6 +172,7 @@ func (g *GossiperImpl) RemoveNode(ip string) error {
 		if node == ip {
 			// not sure if this is the most efficient way
 			g.nodes = append(g.nodes[:i], g.nodes[i+1:]...)
+			g.peerSelector.SetMaxLen(uint32(len(g.nodes)))
 			return nil
 		}
 	}
@@ -236,7 +310,7 @@ func (g *GossiperImpl) selectGossipPeer() string {
 		return ""
 	}
 
-	return g.nodes[rand.Intn(nodesLen)]
+	return g.nodes[g.peerSelector.NextPeer()]
 }
 
 func (g *GossiperImpl) gossip() {
