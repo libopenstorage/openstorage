@@ -129,7 +129,7 @@ func (d *driver) Mount(volumeID api.VolumeID, mountpath string) error {
 	}
 	err = syscall.Mount(v.DevicePath, mountpath, string(v.Format), syscall.MS_BIND, "")
 	if err != nil {
-		return fmt.Errorf("Faield to mount %v at %v: %v", v.DevicePath, mountpath, err)
+		return fmt.Errorf("Failed to mount %v at %v: %v", v.DevicePath, mountpath, err)
 	}
 
 	v.AttachPath = mountpath

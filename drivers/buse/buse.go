@@ -125,6 +125,10 @@ func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api
 		return api.BadVolumeID, fmt.Errorf("Volume size cannot be zero", "buse")
 	}
 
+	if spec.Format == "" {
+		return api.BadVolumeID, fmt.Errorf("Missing volume format", "buse")
+	}
+
 	// Create a file on the local buse path with this UUID.
 	buseFile := path.Join(BuseMountPath, string(volumeID))
 	f, err := os.Create(buseFile)
@@ -143,18 +147,23 @@ func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api
 		file: buseFile,
 		f:    f}
 
-	log.Infof("Creating dev")
 	nbd := Create(bd, int64(spec.Size))
 	bd.nbd = nbd
 
-	log.Infof("Connecting")
+	log.Infof("Connecting to NBD...")
 	dev, err := bd.nbd.Connect()
 	if err != nil {
 		log.Println(err)
 		return api.BadVolumeID, err
 	}
 
-	d.buseDevices[dev] = bd
+	cmd := "/sbin/mkfs." + string(spec.Format)
+	log.Infof("Formatting %v", cmd)
+	o, err := exec.Command(cmd, dev).Output()
+	if err != nil {
+		log.Warnf("Failed to run command %v %v: %v", cmd, dev, o)
+		return api.BadVolumeID, err
+	}
 
 	log.Infof("BUSE mapped NBD device %s (size=%v) to block file %s", dev, spec.Size, buseFile)
 
@@ -165,11 +174,13 @@ func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api
 		Ctime:      time.Now(),
 		Spec:       spec,
 		LastScan:   time.Now(),
-		Format:     "buse",
+		Format:     spec.Format,
 		State:      api.VolumeAvailable,
 		Status:     api.Up,
 		DevicePath: dev,
 	}
+
+	d.buseDevices[dev] = bd
 
 	err = d.CreateVol(v)
 	if err != nil {
@@ -215,7 +226,7 @@ func (d *driver) Mount(volumeID api.VolumeID, mountpath string) error {
 	}
 	err = syscall.Mount(v.DevicePath, mountpath, string(v.Spec.Format), syscall.MS_BIND, "")
 	if err != nil {
-		return fmt.Errorf("Faield to mount %v at %v: %v", v.DevicePath, mountpath, err)
+		return fmt.Errorf("Failed to mount %v at %v: %v", v.DevicePath, mountpath, err)
 	}
 
 	log.Infof("BUSE mounted NBD device %s at %s", v.DevicePath, mountpath)
