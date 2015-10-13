@@ -151,6 +151,13 @@ make test # test on your local machine
 make docker-test # test within a docker container
 ```
 
+To create a volume and attach it to a Docker container, you can do the following
+```
+$ osd nfs c vol1
+$ 9ccb7280-918b-464f-8a34-34e73e9214d2
+$ docker run —volume-driver=pxd -v 9ccb7280-918b-464f-8a34-34e73e9214d2:/root -ti busybox
+```
+
 ## Updating to latest Source
 
 To update the source folder and all dependencies:
