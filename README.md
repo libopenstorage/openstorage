@@ -151,9 +151,9 @@ make test # test on your local machine
 make docker-test # test within a docker container
 ```
 
-Assuming you are using the NFS driver, to create a volume and attach it to a Docker container, you can do the following
+Assuming you are using the NFS driver, to create a volume with a default size of 1GB and attach it to a Docker container, you can do the following
 ```
-$ osd nfs c vol1
+$ osd nfs create vol1
 $ 9ccb7280-918b-464f-8a34-34e73e9214d2
 $ docker run —volume-driver=nfs -v 9ccb7280-918b-464f-8a34-34e73e9214d2:/root -ti busybox
 ```
