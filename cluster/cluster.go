@@ -1,8 +1,10 @@
 package cluster
 
 import (
+	"container/list"
 	"errors"
 
+	"github.com/fsouza/go-dockerclient"
 	"github.com/libopenstorage/openstorage/api"
 
 	"github.com/portworx/kvdb"
@@ -84,16 +86,14 @@ type Cluster interface {
 }
 
 // New instantiates and starts a new cluster manager.
-func New(cfg Config, kv kvdb.Kvdb) (*ClusterManager, error) {
-	inst = &ClusterManager{config: cfg, kv: kv}
-
-	err := inst.Init()
-	if err != nil {
-		inst = nil
-		return nil, err
+func New(cfg Config, kv kvdb.Kvdb, dockerClient *docker.Client) *ClusterManager {
+	return &ClusterManager{
+		listeners: list.New(),
+		config:    cfg,
+		kv:        kv,
+		nodeCache: make(map[string]api.Node),
+		docker:    dockerClient,
 	}
-
-	return inst, nil
 }
 
 // Start will run the cluster manager daemon.

@@ -3,9 +3,8 @@ package api
 import (
 	"time"
 
+	"github.com/fsouza/go-dockerclient"
 	"github.com/portworx/systemutils"
-
-	"github.com/samalba/dockerclient"
 )
 
 type Status int
@@ -35,7 +34,7 @@ type Node struct {
 	Ip         string
 	Timestamp  time.Time
 	Status     Status
-	Containers []dockerclient.Container
+	Containers []docker.APIContainers
 }
 
 // Cluster represents the state of the cluster.
