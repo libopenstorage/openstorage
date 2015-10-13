@@ -155,7 +155,7 @@ Assuming you are using the NFS driver, to create a volume with a default size of
 ```
 $ osd nfs create vol1
 $ 9ccb7280-918b-464f-8a34-34e73e9214d2
-$ docker run —volume-driver=nfs -v 9ccb7280-918b-464f-8a34-34e73e9214d2:/root -ti busybox
+$ docker run -v 9ccb7280-918b-464f-8a34-34e73e9214d2:/root --volume-driver=nfs -ti busybox
 ```
 
 ## Updating to latest Source
