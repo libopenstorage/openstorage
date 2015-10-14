@@ -146,24 +146,6 @@ func (v *volDriver) volumeUnmount(context *cli.Context) {
 	fmtOutput(context, &Format{UUID: []string{volumeID}})
 }
 
-func (v *volDriver) volumeFormat(context *cli.Context) {
-	v.volumeOptions(context)
-	fn := "format"
-	if len(context.Args()) < 1 {
-		missingParameter(context, fn, "volumeID", "Invalid number of arguments")
-		return
-	}
-	volumeID := context.Args()[0]
-
-	err := v.volDriver.Format(api.VolumeID(volumeID))
-	if err != nil {
-		cmdError(context, fn, err)
-		return
-	}
-
-	fmtOutput(context, &Format{UUID: []string{volumeID}})
-}
-
 func (v *volDriver) volumeAttach(context *cli.Context) {
 	fn := "attach"
 	if len(context.Args()) < 1 {
@@ -512,12 +494,6 @@ func BlockVolumeCommands(name string) []cli.Command {
 	v := &volDriver{name: name}
 
 	blockCommands := []cli.Command{
-		{
-			Name:    "format",
-			Aliases: []string{"f"},
-			Usage:   "Format volume to spec in create",
-			Action:  v.volumeFormat,
-		},
 		{
 			Name:    "attach",
 			Aliases: []string{"a"},

@@ -88,17 +88,6 @@ func (vd *volApi) volumeState(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	for {
-		if req.Format != api.ParamIgnore {
-			if req.Format == api.ParamOff {
-				err = fmt.Errorf("Invalid request to un-format")
-				break
-			}
-			err = d.Format(volumeID)
-			if err != nil {
-				break
-			}
-			resp.Format = api.ParamOn
-		}
 		if req.Attach != api.ParamIgnore {
 			if req.Attach == api.ParamOn {
 				resp.DevicePath, err = d.Attach(volumeID)

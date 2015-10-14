@@ -341,10 +341,6 @@ func (d *driver) Attach(volumeID api.VolumeID) (string, error) {
 	return path.Join(nfsMountPath, string(volumeID)+nfsBlockFile), nil
 }
 
-func (d *driver) Format(volumeID api.VolumeID) error {
-	return nil
-}
-
 func (d *driver) Detach(volumeID api.VolumeID) error {
 	return nil
 }

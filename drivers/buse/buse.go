@@ -283,24 +283,6 @@ func (d *driver) Attach(volumeID api.VolumeID) (string, error) {
 	return path.Join(BuseMountPath, string(volumeID)), nil
 }
 
-func (d *driver) Format(volumeID api.VolumeID) error {
-	v, err := d.GetVol(volumeID)
-	if err != nil {
-		return fmt.Errorf("Failed to locate volume %q", string(volumeID))
-	}
-
-	cmd := "/sbin/mkfs." + string(v.Spec.Format)
-	o, err := exec.Command(cmd, v.DevicePath).Output()
-	if err != nil {
-		log.Warnf("Failed to run command %v %v: %v", cmd, v.DevicePath, o)
-		return err
-	}
-	v.Format = v.Spec.Format
-	err = d.UpdateVol(v)
-
-	return nil
-}
-
 func (d *driver) Detach(volumeID api.VolumeID) error {
 	// Nothing to do on detach.
 	return nil

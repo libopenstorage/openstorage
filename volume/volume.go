@@ -112,10 +112,6 @@ type BlockDriver interface {
 	// Errors ErrEnoEnt, ErrVolAttached may be returned.
 	Attach(volumeID api.VolumeID) (string, error)
 
-	// Format volume according to spec provided in Create
-	// Errors ErrEnoEnt, ErrVolDetached may be returned.
-	Format(volumeID api.VolumeID) error
-
 	// Detach device from the host.
 	// Errors ErrEnoEnt, ErrVolDetached may be returned.
 	Detach(volumeID api.VolumeID) error

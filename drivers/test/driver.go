@@ -47,7 +47,6 @@ func RunShort(t *testing.T, ctx *Context) {
 	inspect(t, ctx)
 	enumerate(t, ctx)
 	attach(t, ctx)
-	format(t, ctx)
 	mount(t, ctx)
 	io(t, ctx)
 	unmount(t, ctx)
@@ -125,15 +124,6 @@ func enumerate(t *testing.T, ctx *Context) {
 
 	vols, err = ctx.Enumerate(api.VolumeLocator{Name: "shouldNotExist"}, nil)
 	assert.Equal(t, len(vols), 0, "Expect 0 volume actual %v volumes", len(vols))
-}
-
-func format(t *testing.T, ctx *Context) {
-	fmt.Println("format")
-
-	err := ctx.Format(ctx.volID)
-	if err != nil {
-		assert.Equal(t, err, volume.ErrNotSupported, "Error on format %v", err)
-	}
 }
 
 func waitReady(t *testing.T, ctx *Context) error {

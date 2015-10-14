@@ -45,8 +45,6 @@ const (
 
 // VolumeStateAction is the body of the REST request to specify desired actions
 type VolumeStateAction struct {
-	// Format volume
-	Format VolumeActionParam `json:"format"`
 	// Attach or Detach volume
 	Attach VolumeActionParam `json:"attach"`
 	// Mount or unmount volume

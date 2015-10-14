@@ -200,23 +200,6 @@ func (v *volumeClient) Attach(volumeID api.VolumeID) (string, error) {
 	return response.DevicePath, nil
 }
 
-// Format volume according to spec provided in Create
-// Errors ErrEnoEnt, ErrVolDetached may be returned.
-func (v *volumeClient) Format(volumeID api.VolumeID) error {
-	var response api.VolumeStateResponse
-	req := api.VolumeStateAction{
-		Format: api.ParamOn,
-	}
-	err := v.c.Put().Resource(volumePath).Instance(string(volumeID)).Body(&req).Do().Unmarshal(&response)
-	if err != nil {
-		return err
-	}
-	if response.Error != "" {
-		return errors.New(response.Error)
-	}
-	return nil
-}
-
 // Detach device from the host.
 // Errors ErrEnoEnt, ErrVolDetached may be returned.
 func (v *volumeClient) Detach(volumeID api.VolumeID) error {

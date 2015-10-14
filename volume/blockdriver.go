@@ -14,10 +14,6 @@ func (d *DefaultBlockDriver) Attach(volumeID api.VolumeID) (path string, err err
 	return "", ErrNotSupported
 }
 
-func (d *DefaultBlockDriver) Format(volumeID api.VolumeID) error {
-	return ErrNotSupported
-}
-
 func (d *DefaultBlockDriver) Detach(volumeID api.VolumeID) error {
 	return ErrNotSupported
 }
