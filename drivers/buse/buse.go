@@ -224,8 +224,9 @@ func (d *driver) Mount(volumeID api.VolumeID, mountpath string) error {
 	if err != nil {
 		return fmt.Errorf("Failed to locate volume %q", string(volumeID))
 	}
-	err = syscall.Mount(v.DevicePath, mountpath, string(v.Spec.Format), syscall.MS_BIND, "")
+	err = syscall.Mount(v.DevicePath, mountpath, string(v.Spec.Format), 0, "")
 	if err != nil {
+		log.Errorf("Mounting %s on %s failed because of %v", v.DevicePath, mountpath, err)
 		return fmt.Errorf("Failed to mount %v at %v: %v", v.DevicePath, mountpath, err)
 	}
 
