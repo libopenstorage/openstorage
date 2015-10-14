@@ -140,7 +140,7 @@ func (nbd *NBD) Connect() (dev string, err error) {
 			continue // Busy.
 		}
 
-		log.Infof("Attempting to open device %v\n", dev)
+		log.Infof("Attempting to open device %v", dev)
 		if nbd.deviceFile, err = os.Open(dev); err == nil {
 			// Possible candidate.
 			ioctl(nbd.deviceFile.Fd(), BLKROSET, 0)
