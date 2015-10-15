@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"syscall"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/libopenstorage/gossip/types"
@@ -50,7 +51,7 @@ func connectionString(ip string) string {
 
 func NewMessageChannel(ip string) types.MessageChannel {
 	// if ip string is localhost and any port,
-	c, err := net.Dial(CONN_TYPE, connectionString(ip))
+	c, err := net.DialTimeout(CONN_TYPE, connectionString(ip), 2*time.Second)
 	if err != nil {
 		return nil
 	}
