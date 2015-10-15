@@ -16,6 +16,7 @@ import (
 	"github.com/portworx/kvdb"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/pkg/mount"
 	"github.com/libopenstorage/openstorage/pkg/seed"
 	"github.com/libopenstorage/openstorage/volume"
@@ -208,7 +209,7 @@ func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api
 					source.Seed, err)
 				return api.BadVolumeID, err
 			}
-			err = seed.Load(volPath)
+			err = seed.Load(path.Join(volPath, config.DataDir))
 			if err != nil {
 				log.Warnf("Failed to  seed from %q to %q: %v",
 					source.Seed, nfsMountPath, err)
