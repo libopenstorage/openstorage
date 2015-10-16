@@ -87,13 +87,14 @@ type Cluster interface {
 
 // New instantiates and starts a new cluster manager.
 func New(cfg Config, kv kvdb.Kvdb, dockerClient *docker.Client) *ClusterManager {
-	return &ClusterManager{
+	inst = &ClusterManager{
 		listeners: list.New(),
 		config:    cfg,
 		kv:        kv,
 		nodeCache: make(map[string]api.Node),
 		docker:    dockerClient,
 	}
+	return inst
 }
 
 // Start will run the cluster manager daemon.
