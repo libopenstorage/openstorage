@@ -77,7 +77,7 @@ func (r *RoundRobinPeerSelector) SetMaxLen(m uint32) {
 func (r *RoundRobinPeerSelector) NextPeer() int32 {
 	maxLen := atomic.LoadUint32(&r.maxLen)
 	lastSelected := atomic.LoadUint32(&r.lastSelected)
-	if maxLen < 2 {
+	if maxLen < 1 {
 		return -1
 	}
 
@@ -310,7 +310,11 @@ func (g *GossiperImpl) selectGossipPeer() string {
 		return ""
 	}
 
-	return g.nodes[g.peerSelector.NextPeer()]
+	peer := g.peerSelector.NextPeer()
+	if peer < 0 {
+		return ""
+	}
+	return g.nodes[peer]
 }
 
 func (g *GossiperImpl) gossip() {
