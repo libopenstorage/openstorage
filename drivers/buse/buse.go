@@ -16,6 +16,7 @@ import (
 	"github.com/portworx/kvdb"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/volume"
 )
 
@@ -98,6 +99,14 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 		}
 	} else {
 		log.Println("Could not enumerate Volumes, ", err)
+	}
+
+	c, err := cluster.Inst()
+	if err != nil {
+		log.Println("BUSE initializing in clustered mode")
+		c.AddEventListener(inst)
+	} else {
+		log.Println("BUSE initializing in single node mode")
 	}
 
 	log.Println("BUSE initialized and driver mounted at: ", BuseMountPath)
@@ -300,6 +309,34 @@ func (d *driver) Alerts(volumeID api.VolumeID) (api.Alerts, error) {
 func (d *driver) Shutdown() {
 	log.Printf("%s Shutting down", Name)
 	syscall.Unmount(BuseMountPath, 0)
+}
+
+func (d *driver) ClusterInit(self *api.Node, db *cluster.Database) error {
+	return nil
+}
+
+func (d *driver) Init(self *api.Node, db *cluster.Database) error {
+	return nil
+}
+
+func (d *driver) Join(self *api.Node, db *cluster.Database) error {
+	return nil
+}
+
+func (d *driver) Add(self *api.Node) error {
+	return nil
+}
+
+func (d *driver) Remove(self *api.Node) error {
+	return nil
+}
+
+func (d *driver) Update(self *api.Node) error {
+	return nil
+}
+
+func (d *driver) Leave(self *api.Node) error {
+	return nil
 }
 
 func init() {

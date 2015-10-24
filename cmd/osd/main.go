@@ -26,6 +26,8 @@ const (
 )
 
 func start(c *cli.Context) {
+	var cm *cluster.ClusterManager
+
 	if !osdcli.DaemonMode(c) {
 		cli.ShowAppHelp(c)
 		return
@@ -68,7 +70,7 @@ func start(c *cli.Context) {
 			fmt.Println("Failed to initialize docker client: ", err)
 			return
 		}
-		_ = cluster.New(cfg.Osd.ClusterConfig, kv, dockerClient)
+		cm = cluster.New(cfg.Osd.ClusterConfig, kv, dockerClient)
 	}
 
 	// Start the volume drivers.
@@ -89,6 +91,14 @@ func start(c *cli.Context) {
 		err = apiserver.StartPluginAPI(d, config.PluginAPIBase)
 		if err != nil {
 			fmt.Println("Unable to start volume plugin: ", err)
+			return
+		}
+	}
+
+	if cm != nil {
+		err = cm.Start()
+		if err != nil {
+			fmt.Println("Unable to start cluster manager: ", err)
 			return
 		}
 	}
