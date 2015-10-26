@@ -69,8 +69,8 @@ func clusterPath(route string) string {
 
 func (c *clusterApi) Routes() []*Route {
 	return []*Route{
-		&Route{verb: "GET", path: clusterPath(""), fn: c.enumerate},
-		&Route{verb: "GET", path: clusterPath("/{id}"), fn: c.inspect},
+		&Route{verb: "GET", path: clusterPath("/enumerate"), fn: c.enumerate},
+		&Route{verb: "GET", path: clusterPath("/inspect/{id}"), fn: c.inspect},
 		&Route{verb: "DELETE", path: clusterPath(""), fn: c.delete},
 		&Route{verb: "DELETE", path: clusterPath("/{id}"), fn: c.delete},
 		&Route{verb: "PUT", path: snapPath("shutdown"), fn: c.shutdown},
