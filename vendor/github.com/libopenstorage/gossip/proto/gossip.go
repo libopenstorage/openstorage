@@ -28,7 +28,9 @@ type GossiperImpl struct {
 	name      string
 	nodesLock sync.Mutex
 	// to signal exit gossip loop
-	done              chan bool
+	send_done         chan bool
+	rcv_done          chan bool
+	update_done       chan bool
 	gossipInterval    time.Duration
 	nodeDeathInterval time.Duration
 	peerSelector      PeerSelector
@@ -95,12 +97,16 @@ func (g *GossiperImpl) Init(ip string, selfNodeId types.NodeId) {
 	g.InitStore(selfNodeId)
 	g.name = ip
 	g.nodes = make([]string, 0)
-	g.done = make(chan bool, 1)
+	g.send_done = make(chan bool, 1)
+	g.rcv_done = make(chan bool, 1)
+	g.update_done = make(chan bool, 1)
 	g.gossipInterval = DEFAULT_GOSSIP_INTERVAL
 	g.nodeDeathInterval = DEFAULT_NODE_DEATH_INTERVAL
 	g.peerSelector = NewPeerSelector()
 	rand.Seed(time.Now().UnixNano())
+}
 
+func (g *GossiperImpl) Start() {
 	// start gossiping
 	go g.sendLoop()
 	go g.receiveLoop()
@@ -108,12 +114,17 @@ func (g *GossiperImpl) Init(ip string, selfNodeId types.NodeId) {
 }
 
 func (g *GossiperImpl) Stop() {
-	// one for send loop, one for receive loop, one for update loop
-	if g.done != nil {
-		g.done <- true
-		g.done <- true
-		g.done <- true
-		g.done = nil
+	if g.send_done != nil {
+		g.send_done <- true
+		g.send_done = nil
+	}
+	if g.rcv_done != nil {
+		g.rcv_done <- true
+		g.rcv_done = nil
+	}
+	if g.update_done != nil {
+		g.update_done <- true
+		g.update_done = nil
 	}
 }
 
@@ -267,7 +278,7 @@ func (g *GossiperImpl) receiveLoop() {
 	c := NewRunnableMessageChannel(g.name, handler)
 	go c.RunOnRcvData()
 	// block waiting for the done signal
-	<-g.done
+	<-g.rcv_done
 	c.Close()
 }
 
@@ -279,7 +290,7 @@ func (g *GossiperImpl) sendLoop() {
 		select {
 		case <-tick:
 			g.gossip()
-		case <-g.done:
+		case <-g.send_done:
 			return
 		}
 	}
@@ -293,7 +304,7 @@ func (g *GossiperImpl) updateStatusLoop() {
 		select {
 		case <-tick:
 			g.UpdateNodeStatuses(g.nodeDeathInterval)
-		case <-g.done:
+		case <-g.update_done:
 			return
 		}
 	}

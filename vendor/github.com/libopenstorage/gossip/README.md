@@ -12,6 +12,8 @@ g.AddNode("<peer_ip>:<peer_port>")
 ...
 // update self values 
 g.UpdateSelf("<some_key>", "<any_value>")
+// start gossip
+g.Start()
 ```
 
 These values are exchanged using the gossip protocol between the configured

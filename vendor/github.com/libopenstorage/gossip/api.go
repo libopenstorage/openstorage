@@ -53,6 +53,9 @@ type Gossiper interface {
 	// Gossiper has a gossip store
 	GossipStore
 
+	// Start begins the gossip protocol
+	Start()
+
 	// SetGossipInterval sets the gossip interval
 	SetGossipInterval(time.Duration)
 	// GossipInterval gets the gossip interval
