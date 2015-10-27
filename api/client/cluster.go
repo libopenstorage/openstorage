@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	clusterPath = "/cluster/v1"
+	clusterPath = "/cluster"
 )
 
 type clusterClient struct {
