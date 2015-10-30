@@ -43,6 +43,16 @@ func (c *clusterClient) remove(context *cli.Context) {
 func (c *clusterClient) shutdown(context *cli.Context) {
 }
 
+func (c *clusterClient) disableGossip(context *cli.Context) {
+	c.clusterOptions(context)
+	c.manager.DisableGossipUpdates()
+}
+
+func (c *clusterClient) enableGossip(context *cli.Context) {
+	c.clusterOptions(context)
+	c.manager.EnableGossipUpdates()
+}
+
 // ClusterCommands exports CLI comamnds for File VolumeDriver
 func ClusterCommands(name string) []cli.Command {
 	c := &clusterClient{name: name}
@@ -60,6 +70,18 @@ func ClusterCommands(name string) []cli.Command {
 					Value: "",
 				},
 			},
+		},
+		{
+			Name:    "disable-gossip",
+			Aliases: []string{"dg"},
+			Usage:   "Disable gossip updates",
+			Action:  c.disableGossip,
+		},
+		{
+			Name:    "enable-gossip",
+			Aliases: []string{"eg"},
+			Usage:   "Enable gossip updates",
+			Action:  c.enableGossip,
 		},
 		{
 			Name:    "remove",

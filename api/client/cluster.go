@@ -51,3 +51,11 @@ func (c *clusterClient) Shutdown(cluster bool, nodes []api.Node) error {
 func (c *clusterClient) Start() error {
 	return nil
 }
+
+func (c *clusterClient) DisableGossipUpdates() {
+	c.c.Post().Resource(clusterPath + "/disablegossip").Do()
+}
+
+func (c *clusterClient) EnableGossipUpdates() {
+	c.c.Post().Resource(clusterPath + "/enablegossip").Do()
+}

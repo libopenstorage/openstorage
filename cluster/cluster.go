@@ -83,6 +83,12 @@ type Cluster interface {
 	// Start starts the cluster manager and state machine.
 	// It also causes this node to join the cluster.
 	Start() error
+
+	// Enables notifications from gossip
+	EnableGossipUpdates()
+
+	// Disable notifications from gossip
+	DisableGossipUpdates()
 }
 
 // New instantiates and starts a new cluster manager.

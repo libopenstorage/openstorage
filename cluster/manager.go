@@ -33,6 +33,7 @@ type ClusterManager struct {
 	nodeCache map[string]api.Node // Cached info on the nodes in the cluster.
 	docker    *docker.Client
 	g         gossip.Gossiper
+	gEnabled  bool
 }
 
 func externalIp() (string, error) {
@@ -230,7 +231,7 @@ func (c *ClusterManager) heartBeat() {
 				if n.Status != api.StatusOk {
 					log.Warn("Detected node ", n.Id, " to be unhealthy.")
 
-					for e := c.listeners.Front(); e != nil; e = e.Next() {
+					for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
 						err := e.Value.(ClusterListener).Update(&n)
 						if err != nil {
 							log.Warn("Failed to notify ", e.Value.(ClusterListener).String())
@@ -242,7 +243,7 @@ func (c *ClusterManager) heartBeat() {
 					log.Warn("Detected node ", n.Id, " to be offline due to inactivity.")
 
 					n.Status = api.StatusOffline
-					for e := c.listeners.Front(); e != nil; e = e.Next() {
+					for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
 						err := e.Value.(ClusterListener).Update(&n)
 						if err != nil {
 							log.Warn("Failed to notify ", e.Value.(ClusterListener).String())
@@ -258,7 +259,7 @@ func (c *ClusterManager) heartBeat() {
 				log.Warn("Detected node ", n.Id, " to be in the cluster.")
 
 				c.nodeCache[n.Id] = n
-				for e := c.listeners.Front(); e != nil; e = e.Next() {
+				for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
 					err := e.Value.(ClusterListener).Add(&n)
 					if err != nil {
 						log.Warn("Failed to notify ", e.Value.(ClusterListener).String())
@@ -271,6 +272,16 @@ func (c *ClusterManager) heartBeat() {
 	}
 }
 
+func (c *ClusterManager) DisableGossipUpdates() {
+	log.Warn("Disabling gossip updates")
+	c.gEnabled = false
+}
+
+func (c *ClusterManager) EnableGossipUpdates() {
+	log.Warn("Enabling gossip updates")
+	c.gEnabled = true
+}
+
 func (c *ClusterManager) Start() error {
 	log.Info("Cluster manager starting...")
 	kvdb := kv.Instance()
@@ -280,6 +291,7 @@ func (c *ClusterManager) Start() error {
 	gob.Register(api.Node{})
 	c.g = gossip.New("0.0.0.0:9002", gossiptypes.NodeId(c.config.NodeId))
 	c.g.SetGossipInterval(2 * time.Second)
+	c.gEnabled = true
 
 	kvlock, err := kvdb.Lock("cluster/lock", 60)
 	if err != nil {
