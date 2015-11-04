@@ -134,6 +134,11 @@ func (v *volumeDriver) Unmount(volumeID api.VolumeID, mountpath string) error {
 	return v.UpdateVol(volume)
 }
 
+func (v *volumeDriver) Set(volumeID api.VolumeID, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
+	return volume.ErrNotSupported
+
+}
+
 func (v *volumeDriver) Stats(volumeID api.VolumeID) (api.Stats, error) {
 	return api.Stats{}, volume.ErrNotSupported
 }

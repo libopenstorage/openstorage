@@ -67,10 +67,20 @@ type VolumeStateAction struct {
 	DevicePath string `json:"device_path"`
 }
 
-// VolumeStateResponse is the body of the REST response
-type VolumeStateResponse struct {
-	// VolumeStateRequest the current state of the volume
-	VolumeStateAction
+type VolumeSetRequest struct {
+	// Locator user specified volume name and labels.
+	Locator *VolumeLocator `json:"locator,omitempty"`
+	// Spec is the storage spec for the volume
+	Spec *VolumeSpec `json:"spec,omitempty"`
+	// Action state modification on this volume.
+	Action *VolumeStateAction `json:"action,omitempty"`
+}
+
+// VolumeSetResponse is the body of the REST response
+type VolumeSetResponse struct {
+	// Volume updated volume
+	Volume
+	// VolumeResponse error status
 	VolumeResponse
 }
 

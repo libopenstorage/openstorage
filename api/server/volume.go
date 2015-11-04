@@ -62,14 +62,14 @@ func (vd *volApi) create(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(&dcRes)
 }
 
-func (vd *volApi) volumeState(w http.ResponseWriter, r *http.Request) {
+func (vd *volApi) volumeSet(w http.ResponseWriter, r *http.Request) {
 	var (
 		volumeID api.VolumeID
 		err      error
-		req      api.VolumeStateAction
-		resp     api.VolumeStateResponse
+		req      api.VolumeSetRequest
+		resp     api.VolumeSetResponse
 	)
-	method := "volumeState"
+	method := "volumeSet"
 
 	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
@@ -87,39 +87,51 @@ func (vd *volApi) volumeState(w http.ResponseWriter, r *http.Request) {
 		notFound(w, r)
 		return
 	}
-	for {
-		if req.Attach != api.ParamIgnore {
-			if req.Attach == api.ParamOn {
-				resp.DevicePath, err = d.Attach(volumeID)
+
+	if req.Locator != nil || req.Spec != nil {
+		err = d.Set(volumeID, req.Locator, req.Spec)
+	}
+
+	for err == nil && req.Action != nil {
+		if req.Action.Attach != api.ParamIgnore {
+			if req.Action.Attach == api.ParamOn {
+				_, err = d.Attach(volumeID)
 			} else {
 				err = d.Detach(volumeID)
 			}
 			if err != nil {
 				break
 			}
-			resp.Attach = req.Attach
 		}
-		if req.Mount != api.ParamIgnore {
-			if req.Mount == api.ParamOn {
-				if req.MountPath == "" {
+		if req.Action.Mount != api.ParamIgnore {
+			if req.Action.Mount == api.ParamOn {
+				if req.Action.MountPath == "" {
 					err = fmt.Errorf("Invalid mount path")
 					break
 				}
-				err = d.Mount(volumeID, req.MountPath)
+				err = d.Mount(volumeID, req.Action.MountPath)
 			} else {
-				err = d.Unmount(volumeID, req.MountPath)
+				err = d.Unmount(volumeID, req.Action.MountPath)
 			}
 			if err != nil {
 				break
 			}
-			resp.Mount = req.Mount
-			resp.MountPath = req.MountPath
 		}
 		break
 	}
 
 	if err != nil {
-		resp.Error = err.Error()
+		resp.VolumeResponse.Error = err.Error()
+	} else {
+		v, err := d.Inspect([]api.VolumeID{volumeID})
+		if err != nil || v == nil || len(v) != 1 {
+			if err == nil {
+				err = fmt.Errorf("Failed to inspect volume")
+			}
+			resp.VolumeResponse.Error = err.Error()
+		} else {
+			resp.Volume = v[0]
+		}
 	}
 	json.NewEncoder(w).Encode(resp)
 }
@@ -345,7 +357,7 @@ func snapPath(route string) string {
 func (vd *volApi) Routes() []*Route {
 	return []*Route{
 		&Route{verb: "POST", path: volPath(""), fn: vd.create},
-		&Route{verb: "PUT", path: volPath("/{id}"), fn: vd.volumeState},
+		&Route{verb: "PUT", path: volPath("/{id}"), fn: vd.volumeSet},
 		&Route{verb: "GET", path: volPath(""), fn: vd.enumerate},
 		&Route{verb: "GET", path: volPath("/{id}"), fn: vd.inspect},
 		&Route{verb: "DELETE", path: volPath("/{id}"), fn: vd.delete},

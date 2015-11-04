@@ -73,6 +73,10 @@ type ProtoDriver interface {
 	// Errors ErrEnoEnt, ErrVolDetached may be returned.
 	Unmount(volumeID api.VolumeID, mountpath string) error
 
+	// Update not all fields of the spec are supported, ErrNotSupported will be thrown for unsupported
+	// updates.
+	Set(volumeID api.VolumeID, locator *api.VolumeLocator, spec *api.VolumeSpec) error
+
 	// Snapshot create volume snapshot.
 	// Errors ErrEnoEnt may be returned
 	Snapshot(volumeID api.VolumeID, readonly bool, locator api.VolumeLocator) (api.VolumeID, error)

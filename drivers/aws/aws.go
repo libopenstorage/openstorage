@@ -598,6 +598,10 @@ func (d *Driver) Shutdown() {
 	log.Printf("%s Shutting down", Name)
 }
 
+func (d *Driver) Set(volumeID api.VolumeID, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
+	return volume.ErrNotSupported
+}
+
 func init() {
 	// Register ourselves as an openstorage volume driver.
 	volume.Register(Name, Init)

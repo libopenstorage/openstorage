@@ -280,17 +280,17 @@ func (v *volumeClient) SnapEnumerate(ids []api.VolumeID, snapLabels api.Labels) 
 // On success the devicePath specifies location where the device is exported
 // Errors ErrEnoEnt, ErrVolAttached may be returned.
 func (v *volumeClient) Attach(volumeID api.VolumeID) (string, error) {
-	var response api.VolumeStateResponse
+	var response api.VolumeSetResponse
 
-	req := api.VolumeStateAction{
-		Attach: api.ParamOn,
+	req := api.VolumeSetRequest{
+		Action: &api.VolumeStateAction{Attach: api.ParamOn},
 	}
 	err := v.c.Put().Resource(volumePath).Instance(string(volumeID)).Body(&req).Do().Unmarshal(&response)
 	if err != nil {
 		return "", err
 	}
-	if response.Error != "" {
-		return "", errors.New(response.Error)
+	if response.VolumeResponse.Error != "" {
+		return "", errors.New(response.VolumeResponse.Error)
 	}
 	return response.DevicePath, nil
 }
@@ -298,16 +298,16 @@ func (v *volumeClient) Attach(volumeID api.VolumeID) (string, error) {
 // Detach device from the host.
 // Errors ErrEnoEnt, ErrVolDetached may be returned.
 func (v *volumeClient) Detach(volumeID api.VolumeID) error {
-	var response api.VolumeStateResponse
-	req := api.VolumeStateAction{
-		Attach: api.ParamOff,
+	var response api.VolumeSetResponse
+	req := api.VolumeSetRequest{
+		Action: &api.VolumeStateAction{Attach: api.ParamOff},
 	}
 	err := v.c.Put().Resource(volumePath).Instance(string(volumeID)).Body(&req).Do().Unmarshal(&response)
 	if err != nil {
 		return err
 	}
-	if response.Error != "" {
-		return errors.New(response.Error)
+	if response.VolumeResponse.Error != "" {
+		return errors.New(response.VolumeResponse.Error)
 	}
 	return nil
 }
@@ -315,17 +315,16 @@ func (v *volumeClient) Detach(volumeID api.VolumeID) error {
 // Mount volume at specified path
 // Errors ErrEnoEnt, ErrVolDetached may be returned.
 func (v *volumeClient) Mount(volumeID api.VolumeID, mountpath string) error {
-	var response api.VolumeStateResponse
-	req := api.VolumeStateAction{
-		Mount:     api.ParamOn,
-		MountPath: mountpath,
+	var response api.VolumeSetResponse
+	req := api.VolumeSetRequest{
+		Action: &api.VolumeStateAction{Mount: api.ParamOn, MountPath: mountpath},
 	}
 	err := v.c.Put().Resource(volumePath).Instance(string(volumeID)).Body(&req).Do().Unmarshal(&response)
 	if err != nil {
 		return err
 	}
-	if response.Error != "" {
-		return errors.New(response.Error)
+	if response.VolumeResponse.Error != "" {
+		return errors.New(response.VolumeResponse.Error)
 	}
 	return nil
 }
@@ -333,17 +332,33 @@ func (v *volumeClient) Mount(volumeID api.VolumeID, mountpath string) error {
 // Unmount volume at specified path
 // Errors ErrEnoEnt, ErrVolDetached may be returned.
 func (v *volumeClient) Unmount(volumeID api.VolumeID, mountpath string) error {
-	var response api.VolumeStateResponse
-	req := api.VolumeStateAction{
-		Mount:     api.ParamOff,
-		MountPath: mountpath,
+	var response api.VolumeSetResponse
+	req := api.VolumeSetRequest{
+		Action: &api.VolumeStateAction{Mount: api.ParamOff, MountPath: mountpath},
 	}
 	err := v.c.Put().Resource(volumePath).Instance(string(volumeID)).Body(&req).Do().Unmarshal(&response)
 	if err != nil {
 		return err
 	}
-	if response.Error != "" {
-		return errors.New(response.Error)
+	if response.VolumeResponse.Error != "" {
+		return errors.New(response.VolumeResponse.Error)
+	}
+	return nil
+}
+
+// Update volume
+func (v *volumeClient) Set(volumeID api.VolumeID, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
+	var response api.VolumeSetResponse
+	req := api.VolumeSetRequest{
+		Locator: locator,
+		Spec:    spec,
+	}
+	err := v.c.Put().Resource(volumePath).Instance(string(volumeID)).Body(&req).Do().Unmarshal(&response)
+	if err != nil {
+		return err
+	}
+	if response.VolumeResponse.Error != "" {
+		return errors.New(response.VolumeResponse.Error)
 	}
 	return nil
 }

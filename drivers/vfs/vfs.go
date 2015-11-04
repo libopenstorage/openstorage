@@ -141,6 +141,22 @@ func (d *driver) Unmount(volumeID api.VolumeID, mountpath string) error {
 	return nil
 }
 
+// Set update volume with specified parameters.
+func (d *driver) Set(volumeID api.VolumeID, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
+	if spec != nil {
+		return volume.ErrNotSupported
+	}
+	v, err := d.GetVol(volumeID)
+	if err != nil {
+		return err
+	}
+	if locator != nil {
+		v.Locator = *locator
+	}
+	err = d.UpdateVol(v)
+	return err
+}
+
 // Stats Not Supported.
 func (d *driver) Stats(volumeID api.VolumeID) (api.Stats, error) {
 	return api.Stats{}, volume.ErrNotSupported
