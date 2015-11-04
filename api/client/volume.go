@@ -24,9 +24,9 @@ func (v *volumeClient) String() string {
 	return "VolumeDriver"
 }
 
-func (v *volumeClient) Type() volume.DriverType {
+func (v *volumeClient) Type() api.DriverType {
 	// Block drivers implement the superset.
-	return volume.Block
+	return api.Block
 }
 
 const (

@@ -17,7 +17,7 @@ import (
 
 const (
 	Name       = "vfs"
-	Type       = volume.File
+	Type       = api.File
 	volumeBase = "/var/lib/osd/"
 )
 
@@ -37,7 +37,7 @@ func (d *driver) String() string {
 	return Name
 }
 
-func (d *driver) Type() volume.DriverType {
+func (d *driver) Type() api.DriverType {
 	return Type
 }
 

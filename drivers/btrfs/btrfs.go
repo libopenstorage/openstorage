@@ -22,7 +22,7 @@ import (
 
 const (
 	Name      = "btrfs"
-	Type      = volume.File
+	Type      = api.File
 	RootParam = "home"
 	Volumes   = "volumes"
 )
@@ -62,7 +62,7 @@ func (d *driver) Status() [][2]string {
 	return d.btrfs.Status()
 }
 
-func (d *driver) Type() volume.DriverType {
+func (d *driver) Type() api.DriverType {
 	return Type
 }
 

@@ -4,8 +4,6 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/docker/docker/daemon/graphdriver"
-
 	"github.com/libopenstorage/openstorage/api"
 )
 
@@ -28,16 +26,6 @@ type DriverParams map[string]string
 
 type InitFunc func(params DriverParams) (VolumeDriver, error)
 
-type DriverType int
-
-const (
-	File = 1 << iota
-	Block
-	Object
-	Clustered
-	Graph
-)
-
 // VolumeDriver is the main interface to be implemented by any storage driver.
 // Every driver must at minimum implement the ProtoDriver sub interface.
 type VolumeDriver interface {
@@ -53,7 +41,7 @@ type ProtoDriver interface {
 	String() string
 
 	// Type of this driver
-	Type() DriverType
+	Type() api.DriverType
 
 	// Create a new Vol for the specific volume spec.
 	// It returns a system generated VolumeID that uniquely identifies the volume
@@ -122,12 +110,6 @@ type BlockDriver interface {
 	// Detach device from the host.
 	// Errors ErrEnoEnt, ErrVolDetached may be returned.
 	Detach(volumeID api.VolumeID) error
-}
-
-// BlockDriver needs to be implemented by graph volume drivers.
-// Graph drivers implement this PR: https://github.com/docker/docker/blob/master/experimental/plugins_graphdriver.md
-type GraphDriver interface {
-	graphdriver.Driver
 }
 
 func Shutdown() {

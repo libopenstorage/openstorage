@@ -22,7 +22,7 @@ import (
 
 const (
 	Name          = "buse"
-	Type          = volume.Block
+	Type          = api.Block | api.Graph
 	BuseDBKey     = "OpenStorageBuseKey"
 	BuseMountPath = "/var/lib/openstorage/buse/"
 )
@@ -117,7 +117,7 @@ func (d *driver) String() string {
 	return Name
 }
 
-func (d *driver) Type() volume.DriverType {
+func (d *driver) Type() api.DriverType {
 	return Type
 }
 

@@ -24,7 +24,7 @@ import (
 
 const (
 	Name         = "nfs"
-	Type         = volume.File
+	Type         = api.File
 	NfsDBKey     = "OpenStorageNFSKey"
 	nfsMountPath = "/var/lib/openstorage/nfs/"
 	nfsBlockFile = ".blockdevice"
@@ -181,7 +181,7 @@ func (d *driver) String() string {
 	return Name
 }
 
-func (d *driver) Type() volume.DriverType {
+func (d *driver) Type() api.DriverType {
 	return Type
 }
 

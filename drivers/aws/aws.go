@@ -27,7 +27,7 @@ import (
 
 const (
 	Name     = "aws"
-	Type     = volume.Block
+	Type     = api.Block
 	AwsDBKey = "OpenStorageAWSKey"
 )
 
@@ -209,7 +209,7 @@ func (d *Driver) String() string {
 }
 
 // Type returns aws as a Block driver.
-func (d *Driver) Type() volume.DriverType {
+func (d *Driver) Type() api.DriverType {
 	return Type
 }
 

@@ -13,6 +13,7 @@ import (
 	"github.com/portworx/kvdb/etcd"
 	"github.com/portworx/kvdb/mem"
 
+	"github.com/libopenstorage/openstorage/api"
 	apiserver "github.com/libopenstorage/openstorage/api/server"
 	osdcli "github.com/libopenstorage/openstorage/cli"
 	"github.com/libopenstorage/openstorage/cluster"
@@ -161,9 +162,10 @@ func main() {
 		},
 	}
 
+	// Start all volume drivers.
 	for _, v := range drivers.AllDrivers {
 		switch v.DriverType {
-		case volume.Block:
+		case api.Block:
 			bCmds := osdcli.BlockVolumeCommands(v.Name)
 			clstrCmds := osdcli.ClusterCommands(v.Name)
 			cmds := append(bCmds, clstrCmds...)
@@ -173,7 +175,7 @@ func main() {
 				Subcommands: cmds,
 			}
 			app.Commands = append(app.Commands, c)
-		case volume.File:
+		case api.File:
 			fCmds := osdcli.FileVolumeCommands(v.Name)
 			clstrCmds := osdcli.ClusterCommands(v.Name)
 			cmds := append(fCmds, clstrCmds...)
@@ -188,5 +190,8 @@ func main() {
 			return
 		}
 	}
+
+	// Start all graph drivers.
+
 	app.Run(os.Args)
 }

@@ -1,6 +1,7 @@
 package pwx
 
 import (
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/client"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/volume"
@@ -8,7 +9,7 @@ import (
 
 const (
 	Name           = "pwx"
-	Type           = volume.Block
+	Type           = api.Block
 	DefaultUrl     = "unix:///" + config.DriverAPIBase + "pxd.sock"
 	DefaultVersion = "v1"
 )
@@ -40,7 +41,7 @@ func (d *driver) String() string {
 	return Name
 }
 
-func (d *driver) Type() volume.DriverType {
+func (d *driver) Type() api.DriverType {
 	return Type
 }
 
