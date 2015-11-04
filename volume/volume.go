@@ -42,7 +42,6 @@ const (
 type VolumeDriver interface {
 	ProtoDriver
 	BlockDriver
-	GraphDriver
 	Enumerator
 }
 
