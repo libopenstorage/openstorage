@@ -34,6 +34,7 @@ const (
 	Block
 	Object
 	Clustered
+	Graph
 )
 
 // VolumeDriver is the main interface to be implemented by any storage driver.
@@ -41,6 +42,7 @@ const (
 type VolumeDriver interface {
 	ProtoDriver
 	BlockDriver
+	GraphDriver
 	Enumerator
 }
 

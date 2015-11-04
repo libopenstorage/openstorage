@@ -44,6 +44,7 @@ var (
 // Driver implements VolumeDriver interface
 type Driver struct {
 	*volume.DefaultEnumerator
+	*volume.DefaultGraphDriver
 	*device.SingleLetter
 	md        *Metadata
 	ec2       *ec2.EC2

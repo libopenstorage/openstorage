@@ -23,6 +23,7 @@ const (
 
 type driver struct {
 	*volume.DefaultBlockDriver
+	*volume.DefaultGraphDriver
 	*volume.DefaultEnumerator
 	*volume.SnapshotNotSupported
 }
