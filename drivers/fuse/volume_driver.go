@@ -21,7 +21,6 @@ type volumeDriver struct {
 	baseDirPath string
 	provider    Provider
 	*volume.DefaultBlockDriver
-	*volume.DefaultGraphDriver
 	*volume.DefaultEnumerator
 	*volume.SnapshotNotSupported
 }
@@ -36,7 +35,6 @@ func newVolumeDriver(
 		baseDirPath,
 		provider,
 		&volume.DefaultBlockDriver{},
-		&volume.DefaultGraphDriver{},
 		volume.NewDefaultEnumerator(
 			name,
 			kvdb.Instance(),

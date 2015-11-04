@@ -2,8 +2,9 @@ package volume
 
 import (
 	"errors"
-	"io"
 	"sync"
+
+	"github.com/docker/docker/daemon/graphdriver"
 
 	"github.com/libopenstorage/openstorage/api"
 )
@@ -126,36 +127,7 @@ type BlockDriver interface {
 // BlockDriver needs to be implemented by graph volume drivers.
 // Graph drivers implement this PR: https://github.com/docker/docker/blob/master/experimental/plugins_graphdriver.md
 type GraphDriver interface {
-	// Create a new, empty, filesystem layer with the specified ID and Parent. Parent may be an empty string,
-	// which would indicate that there is no parent layer.
-	GraphDriverCreate(id, parent string) error
-
-	// Remove the filesystem layer with this given ID.
-	GraphDriverRemove(id string) error
-
-	// Get the mountpoint for the layered filesystem referred to by the given ID.
-	GraphDriverGet(id, mountLabel string) (string, error)
-
-	// Release the system resources for the specified ID,
-	// such as unmounting the filesystem layer.
-	GraphDriverRelease(id string) error
-
-	// Determine if a filesystem layer with the specified ID exists.
-	GraphDriverExists(id string) bool
-
-	// Get an archive of the changes between the filesystem layers specified by the ID
-	// and Parent. Parent may be an empty string, in which case there is no parent.
-	GraphDriverDiff(id, parent string) io.Writer
-
-	// Get a list of changes between the filesystem layers specified by the ID and Parent.
-	// Parent may be an empty string, in which case there is no parent.
-	GraphDriverChanges(id, parent string) ([]api.GraphDriverChanges, error)
-
-	// Extract the changeset from the given diff into the layer with the specified ID and Parent
-	GraphDriverApplyDiff(id, parent string, diff io.Reader) (int, error)
-
-	// Calculate the changes between the specified ID
-	GraphDriverDiffSize(id, parent string) (int, error)
+	graphdriver.Driver
 }
 
 func Shutdown() {

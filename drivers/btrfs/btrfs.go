@@ -34,7 +34,6 @@ var (
 
 type driver struct {
 	*volume.DefaultBlockDriver
-	*volume.DefaultGraphDriver
 	*volume.DefaultEnumerator
 	btrfs graph.Driver
 	root  string
