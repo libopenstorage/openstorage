@@ -162,10 +162,9 @@ func main() {
 		},
 	}
 
-	// Start all volume drivers.
+	// Start all drivers.
 	for _, v := range drivers.AllDrivers {
-		switch v.DriverType {
-		case api.Block:
+		if v.DriverType&api.Block == api.Block {
 			bCmds := osdcli.BlockVolumeCommands(v.Name)
 			clstrCmds := osdcli.ClusterCommands(v.Name)
 			cmds := append(bCmds, clstrCmds...)
@@ -175,7 +174,7 @@ func main() {
 				Subcommands: cmds,
 			}
 			app.Commands = append(app.Commands, c)
-		case api.File:
+		} else if v.DriverType&api.File == api.File {
 			fCmds := osdcli.FileVolumeCommands(v.Name)
 			clstrCmds := osdcli.ClusterCommands(v.Name)
 			cmds := append(fCmds, clstrCmds...)
@@ -185,13 +184,12 @@ func main() {
 				Subcommands: cmds,
 			}
 			app.Commands = append(app.Commands, c)
-		default:
-			fmt.Println("Unable to start volume plugin: ", fmt.Errorf("Unknown driver type: %v", v.DriverType))
-			return
+		}
+
+		if v.DriverType&api.Graph == api.Graph {
+			// TODO - register this as a graph driver with Docker.
 		}
 	}
-
-	// Start all graph drivers.
 
 	app.Run(os.Args)
 }
