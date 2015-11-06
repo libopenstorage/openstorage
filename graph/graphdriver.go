@@ -2,62 +2,59 @@ package graph
 
 import (
 	"errors"
-	"io"
+	"sync"
 
 	"github.com/docker/docker/daemon/graphdriver"
-
-	"github.com/libopenstorage/openstorage/api"
+	"github.com/docker/docker/pkg/idtools"
 )
 
 var (
-	ErrNotSupported = errors.New("Operation not supported")
+	instances         map[string]graphdriver.Driver
+	drivers           map[string]InitFunc
+	mutex             sync.Mutex
+	ErrExist          = errors.New("Driver already exists")
+	ErrNotSupported   = errors.New("Operation not supported")
+	ErrDriverNotFound = errors.New("Driver implementation not found")
 )
 
-// BlockDriver needs to be implemented by graph volume drivers.
-// Graph drivers implement this PR: https://github.com/docker/docker/blob/master/experimental/plugins_graphdriver.md
-type GraphDriver interface {
-	graphdriver.Driver
+type InitFunc func(root string, options []string, uidMaps, gidMaps []idtools.IDMap) (graphdriver.Driver, error)
+
+func Get(name string) (graphdriver.Driver, error) {
+	if v, ok := instances[name]; ok {
+		return v, nil
+	}
+	return nil, ErrDriverNotFound
 }
 
-// DefaultGraphDriver is a default (null) graph driver implementation.  This can be
-// used by drivers that do not want to (or care about) implementing the
-// graph driver interface.
-type DefaultGraphDriver struct {
+func New(name, root string, options []string) (graphdriver.Driver, error) {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	if _, ok := instances[name]; ok {
+		return nil, ErrExist
+	}
+	if initFunc, exists := drivers[name]; exists {
+		driver, err := initFunc(root, options, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+		instances[name] = driver
+		return driver, err
+	}
+	return nil, ErrNotSupported
 }
 
-func (d *DefaultGraphDriver) GraphDriverCreate(id, parent string) error {
-	return ErrNotSupported
-}
-
-func (d *DefaultGraphDriver) GraphDriverRemove(id string) error {
-	return ErrNotSupported
-}
-
-func (d *DefaultGraphDriver) GraphDriverGet(id, mountLabel string) (string, error) {
-	return "", ErrNotSupported
-}
-
-func (d *DefaultGraphDriver) GraphDriverRelease(id string) error {
-	return ErrNotSupported
-}
-
-func (d *DefaultGraphDriver) GraphDriverExists(id string) bool {
-	return false
-}
-
-func (d *DefaultGraphDriver) GraphDriverDiff(id, parent string) io.Writer {
+func Register(name string, initFunc InitFunc) error {
+	mutex.Lock()
+	defer mutex.Unlock()
+	if _, exists := drivers[name]; exists {
+		return ErrExist
+	}
+	drivers[name] = initFunc
 	return nil
 }
 
-func (d *DefaultGraphDriver) GraphDriverChanges(id, parent string) ([]api.GraphDriverChanges, error) {
-	changes := make([]api.GraphDriverChanges, 0)
-	return changes, ErrNotSupported
-}
-
-func (d *DefaultGraphDriver) GraphDriverApplyDiff(id, parent string, diff io.Reader) (int, error) {
-	return 0, ErrNotSupported
-}
-
-func (d *DefaultGraphDriver) GraphDriverDiffSize(id, parent string) (int, error) {
-	return 0, ErrNotSupported
+func init() {
+	drivers = make(map[string]InitFunc)
+	instances = make(map[string]graphdriver.Driver)
 }
