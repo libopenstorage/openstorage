@@ -19,6 +19,16 @@ type KeyValuePair struct {
 // NetworkMode represents the container network stack.
 type NetworkMode string
 
+// IsolationLevel represents the isolation level of a container. The supported
+// values are platform specific
+type IsolationLevel string
+
+// IsDefault indicates the default isolation level of a container. On Linux this
+// is the native driver. On Windows, this is a Windows Server Container.
+func (i IsolationLevel) IsDefault() bool {
+	return strings.ToLower(string(i)) == "default" || string(i) == ""
+}
+
 // IpcMode represents the container ipc stack.
 type IpcMode string
 
@@ -154,69 +164,12 @@ type LogConfig struct {
 	Config map[string]string
 }
 
-// LxcConfig represents the specific LXC configuration of the container.
-type LxcConfig struct {
-	values []KeyValuePair
-}
-
-// MarshalJSON marshals (or serializes) the LxcConfig into JSON.
-func (c *LxcConfig) MarshalJSON() ([]byte, error) {
-	if c == nil {
-		return []byte{}, nil
-	}
-	return json.Marshal(c.Slice())
-}
-
-// UnmarshalJSON unmarshals (or deserializes) the specified byte slices from JSON to
-// a LxcConfig.
-func (c *LxcConfig) UnmarshalJSON(b []byte) error {
-	if len(b) == 0 {
-		return nil
-	}
-
-	var kv []KeyValuePair
-	if err := json.Unmarshal(b, &kv); err != nil {
-		var h map[string]string
-		if err := json.Unmarshal(b, &h); err != nil {
-			return err
-		}
-		for k, v := range h {
-			kv = append(kv, KeyValuePair{k, v})
-		}
-	}
-	c.values = kv
-
-	return nil
-}
-
-// Len returns the number of specific lxc configuration.
-func (c *LxcConfig) Len() int {
-	if c == nil {
-		return 0
-	}
-	return len(c.values)
-}
-
-// Slice returns the specific lxc configuration into a slice of KeyValuePair.
-func (c *LxcConfig) Slice() []KeyValuePair {
-	if c == nil {
-		return nil
-	}
-	return c.values
-}
-
-// NewLxcConfig creates a LxcConfig from the specified slice of KeyValuePair.
-func NewLxcConfig(values []KeyValuePair) *LxcConfig {
-	return &LxcConfig{values}
-}
-
 // HostConfig the non-portable Config structure of a container.
 // Here, "non-portable" means "dependent of the host we are running on".
 // Portable information *should* appear in Config.
 type HostConfig struct {
 	Binds             []string              // List of volume bindings for this container
 	ContainerIDFile   string                // File (path) where the containerId is written
-	LxcConf           *LxcConfig            // Additional lxc configuration
 	Memory            int64                 // Memory limit (in bytes)
 	MemoryReservation int64                 // Memory soft limit (in bytes)
 	MemorySwap        int64                 // Total memory usage (memory + swap); set `-1` to disable swap
@@ -240,20 +193,21 @@ type HostConfig struct {
 	VolumesFrom       []string              // List of volumes to take from other container
 	Devices           []DeviceMapping       // List of devices to map inside the container
 	NetworkMode       NetworkMode           // Network namespace to use for the container
-	IpcMode           IpcMode               // IPC namespace to use for the container
-	PidMode           PidMode               // PID namespace to use for the container
-	UTSMode           UTSMode               // UTS namespace to use for the container
+	IpcMode           IpcMode               // IPC namespace to use for the container	// Unix specific
+	PidMode           PidMode               // PID namespace to use for the container	// Unix specific
+	UTSMode           UTSMode               // UTS namespace to use for the container	// Unix specific
 	CapAdd            *stringutils.StrSlice // List of kernel capabilities to add to the container
 	CapDrop           *stringutils.StrSlice // List of kernel capabilities to remove from the container
 	GroupAdd          []string              // List of additional groups that the container process will run as
 	RestartPolicy     RestartPolicy         // Restart policy to be used for the container
 	SecurityOpt       []string              // List of string values to customize labels for MLS systems, such as SELinux.
-	ReadonlyRootfs    bool                  // Is the container root filesystem in read-only
+	ReadonlyRootfs    bool                  // Is the container root filesystem in read-only	// Unix specific
 	Ulimits           []*ulimit.Ulimit      // List of ulimits to be set in the container
 	LogConfig         LogConfig             // Configuration of the logs for this container
 	CgroupParent      string                // Parent cgroup.
 	ConsoleSize       [2]int                // Initial console size on Windows
 	VolumeDriver      string                // Name of the volume driver used to mount volumes
+	Isolation         IsolationLevel        // Isolation level of the container (eg default, hyperv)
 }
 
 // DecodeHostConfig creates a HostConfig based on the specified Reader.

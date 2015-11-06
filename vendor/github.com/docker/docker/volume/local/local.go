@@ -11,6 +11,9 @@ import (
 	"path/filepath"
 	"sync"
 
+	derr "github.com/docker/docker/errors"
+	"github.com/docker/docker/pkg/idtools"
+	"github.com/docker/docker/utils"
 	"github.com/docker/docker/volume"
 )
 
@@ -22,16 +25,22 @@ const (
 	volumesPathName    = "volumes"
 )
 
-// ErrNotFound is the typed error returned when the requested volume name can't be found
-var ErrNotFound = errors.New("volume not found")
+var (
+	// ErrNotFound is the typed error returned when the requested volume name can't be found
+	ErrNotFound = errors.New("volume not found")
+	// volumeNameRegex ensures the name asigned for the volume is valid.
+	// This name is used to create the bind directory, so we need to avoid characters that
+	// would make the path to escape the root directory.
+	volumeNameRegex = utils.RestrictedNamePattern
+)
 
 // New instantiates a new Root instance with the provided scope. Scope
 // is the base path that the Root instance uses to store its
 // volumes. The base path is created here if it does not exist.
-func New(scope string) (*Root, error) {
+func New(scope string, rootUID, rootGID int) (*Root, error) {
 	rootDirectory := filepath.Join(scope, volumesPathName)
 
-	if err := os.MkdirAll(rootDirectory, 0700); err != nil {
+	if err := idtools.MkdirAllAs(rootDirectory, 0700, rootUID, rootGID); err != nil {
 		return nil, err
 	}
 
@@ -39,6 +48,8 @@ func New(scope string) (*Root, error) {
 		scope:   scope,
 		path:    rootDirectory,
 		volumes: make(map[string]*localVolume),
+		rootUID: rootUID,
+		rootGID: rootGID,
 	}
 
 	dirs, err := ioutil.ReadDir(rootDirectory)
@@ -66,6 +77,8 @@ type Root struct {
 	scope   string
 	path    string
 	volumes map[string]*localVolume
+	rootUID int
+	rootGID int
 }
 
 // List lists all the volumes
@@ -91,6 +104,10 @@ func (r *Root) Name() string {
 // the underlying directory tree required for this volume in the
 // process.
 func (r *Root) Create(name string, _ map[string]string) (volume.Volume, error) {
+	if err := r.validateName(name); err != nil {
+		return nil, err
+	}
+
 	r.m.Lock()
 	defer r.m.Unlock()
 
@@ -100,7 +117,7 @@ func (r *Root) Create(name string, _ map[string]string) (volume.Volume, error) {
 	}
 
 	path := r.DataPath(name)
-	if err := os.MkdirAll(path, 0755); err != nil {
+	if err := idtools.MkdirAllAs(path, 0755, r.rootUID, r.rootGID); err != nil {
 		if os.IsExist(err) {
 			return nil, fmt.Errorf("volume already exists under %s", filepath.Dir(path))
 		}
@@ -167,6 +184,13 @@ func (r *Root) Get(name string) (volume.Volume, error) {
 		return nil, ErrNotFound
 	}
 	return v, nil
+}
+
+func (r *Root) validateName(name string) error {
+	if !volumeNameRegex.MatchString(name) {
+		return derr.ErrorCodeVolumeName.WithArgs(name, utils.RestrictedNameChars)
+	}
+	return nil
 }
 
 // localVolume implements the Volume interface from the volume package and

@@ -40,7 +40,7 @@ func chmodTarEntry(perm os.FileMode) os.FileMode {
 	return perm // noop for unix as golang APIs provide perm bits correctly
 }
 
-func setHeaderForSpecialDevice(hdr *tar.Header, ta *tarAppender, name string, stat interface{}) (nlink uint32, inode uint64, err error) {
+func setHeaderForSpecialDevice(hdr *tar.Header, ta *tarAppender, name string, stat interface{}) (inode uint64, err error) {
 	s, ok := stat.(*syscall.Stat_t)
 
 	if !ok {
@@ -48,7 +48,6 @@ func setHeaderForSpecialDevice(hdr *tar.Header, ta *tarAppender, name string, st
 		return
 	}
 
-	nlink = uint32(s.Nlink)
 	inode = uint64(s.Ino)
 
 	// Currently go does not fill in the major/minors
@@ -59,6 +58,15 @@ func setHeaderForSpecialDevice(hdr *tar.Header, ta *tarAppender, name string, st
 	}
 
 	return
+}
+
+func getFileUIDGID(stat interface{}) (int, int, error) {
+	s, ok := stat.(*syscall.Stat_t)
+
+	if !ok {
+		return -1, -1, errors.New("cannot convert stat value to syscall.Stat_t")
+	}
+	return int(s.Uid), int(s.Gid), nil
 }
 
 func major(device uint64) uint64 {

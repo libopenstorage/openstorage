@@ -6,6 +6,11 @@ import (
 	"strings"
 )
 
+// IsValid indicates is an isolation level is valid
+func (i IsolationLevel) IsValid() bool {
+	return i.IsDefault()
+}
+
 // IsPrivate indicates whether container uses it's private network stack.
 func (n NetworkMode) IsPrivate() bool {
 	return !(n.IsHost() || n.IsContainer())
@@ -61,9 +66,24 @@ func (n NetworkMode) IsNone() bool {
 	return n == "none"
 }
 
+// ConnectedContainer is the id of the container which network this container is connected to.
+func (n NetworkMode) ConnectedContainer() string {
+	parts := strings.SplitN(string(n), ":", 2)
+	if len(parts) > 1 {
+		return parts[1]
+	}
+	return ""
+}
+
 // IsUserDefined indicates user-created network
 func (n NetworkMode) IsUserDefined() bool {
 	return !n.IsDefault() && !n.IsBridge() && !n.IsHost() && !n.IsNone() && !n.IsContainer()
+}
+
+// IsPreDefinedNetwork indicates if a network is predefined by the daemon
+func IsPreDefinedNetwork(network string) bool {
+	n := NetworkMode(network)
+	return n.IsBridge() || n.IsHost() || n.IsNone()
 }
 
 //UserDefined indicates user-created network

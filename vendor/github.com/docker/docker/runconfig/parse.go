@@ -12,6 +12,7 @@ import (
 	"github.com/docker/docker/pkg/signal"
 	"github.com/docker/docker/pkg/stringutils"
 	"github.com/docker/docker/pkg/units"
+	"github.com/docker/docker/volume"
 )
 
 var (
@@ -46,7 +47,7 @@ func Parse(cmd *flag.FlagSet, args []string) (*Config, *HostConfig, *flag.FlagSe
 	var (
 		// FIXME: use utils.ListOpts for attach and volumes?
 		flAttach  = opts.NewListOpts(opts.ValidateAttach)
-		flVolumes = opts.NewListOpts(opts.ValidatePath)
+		flVolumes = opts.NewListOpts(nil)
 		flLinks   = opts.NewListOpts(opts.ValidateLink)
 		flEnv     = opts.NewListOpts(opts.ValidateEnv)
 		flLabels  = opts.NewListOpts(opts.ValidateEnv)
@@ -54,22 +55,20 @@ func Parse(cmd *flag.FlagSet, args []string) (*Config, *HostConfig, *flag.FlagSe
 
 		flUlimits = opts.NewUlimitOpt(nil)
 
-		flPublish     = opts.NewListOpts(nil)
-		flExpose      = opts.NewListOpts(nil)
-		flDNS         = opts.NewListOpts(opts.ValidateIPAddress)
-		flDNSSearch   = opts.NewListOpts(opts.ValidateDNSSearch)
-		flDNSOptions  = opts.NewListOpts(nil)
-		flExtraHosts  = opts.NewListOpts(opts.ValidateExtraHost)
-		flVolumesFrom = opts.NewListOpts(nil)
-		flLxcOpts     = opts.NewListOpts(nil)
-		flEnvFile     = opts.NewListOpts(nil)
-		flCapAdd      = opts.NewListOpts(nil)
-		flCapDrop     = opts.NewListOpts(nil)
-		flGroupAdd    = opts.NewListOpts(nil)
-		flSecurityOpt = opts.NewListOpts(nil)
-		flLabelsFile  = opts.NewListOpts(nil)
-		flLoggingOpts = opts.NewListOpts(nil)
-
+		flPublish           = opts.NewListOpts(nil)
+		flExpose            = opts.NewListOpts(nil)
+		flDNS               = opts.NewListOpts(opts.ValidateIPAddress)
+		flDNSSearch         = opts.NewListOpts(opts.ValidateDNSSearch)
+		flDNSOptions        = opts.NewListOpts(nil)
+		flExtraHosts        = opts.NewListOpts(opts.ValidateExtraHost)
+		flVolumesFrom       = opts.NewListOpts(nil)
+		flEnvFile           = opts.NewListOpts(nil)
+		flCapAdd            = opts.NewListOpts(nil)
+		flCapDrop           = opts.NewListOpts(nil)
+		flGroupAdd          = opts.NewListOpts(nil)
+		flSecurityOpt       = opts.NewListOpts(nil)
+		flLabelsFile        = opts.NewListOpts(nil)
+		flLoggingOpts       = opts.NewListOpts(nil)
 		flNetwork           = cmd.Bool([]string{"#n", "#-networking"}, true, "Enable networking for this container")
 		flPrivileged        = cmd.Bool([]string{"#privileged", "-privileged"}, false, "Give extended privileges to this container")
 		flPidMode           = cmd.String([]string{"-pid"}, "", "PID namespace to use")
@@ -103,6 +102,7 @@ func Parse(cmd *flag.FlagSet, args []string) (*Config, *HostConfig, *flag.FlagSe
 		flCgroupParent      = cmd.String([]string{"-cgroup-parent"}, "", "Optional parent cgroup for the container")
 		flVolumeDriver      = cmd.String([]string{"-volume-driver"}, "", "Optional volume driver for the container")
 		flStopSignal        = cmd.String([]string{"-stop-signal"}, signal.DefaultStopSignal, fmt.Sprintf("Signal to stop a container, %v by default", signal.DefaultStopSignal))
+		flIsolation         = cmd.String([]string{"-isolation"}, "", "Container isolation level")
 	)
 
 	cmd.Var(&flAttach, []string{"a", "-attach"}, "Attach to STDIN, STDOUT or STDERR")
@@ -120,7 +120,6 @@ func Parse(cmd *flag.FlagSet, args []string) (*Config, *HostConfig, *flag.FlagSe
 	cmd.Var(&flDNSOptions, []string{"-dns-opt"}, "Set DNS options")
 	cmd.Var(&flExtraHosts, []string{"-add-host"}, "Add a custom host-to-IP mapping (host:ip)")
 	cmd.Var(&flVolumesFrom, []string{"#volumes-from", "-volumes-from"}, "Mount volumes from the specified container(s)")
-	cmd.Var(&flLxcOpts, []string{"#lxc-conf", "-lxc-conf"}, "Add custom lxc options")
 	cmd.Var(&flCapAdd, []string{"-cap-add"}, "Add Linux capabilities")
 	cmd.Var(&flCapDrop, []string{"-cap-drop"}, "Drop Linux capabilities")
 	cmd.Var(&flGroupAdd, []string{"-group-add"}, "Add additional groups to join")
@@ -201,16 +200,11 @@ func Parse(cmd *flag.FlagSet, args []string) (*Config, *HostConfig, *flag.FlagSe
 	var binds []string
 	// add any bind targets to the list of container volumes
 	for bind := range flVolumes.GetMap() {
-		if arr := strings.Split(bind, ":"); len(arr) > 1 {
-			if arr[1] == "/" {
-				return nil, nil, cmd, fmt.Errorf("Invalid bind mount: destination can't be '/'")
-			}
+		if arr := volume.SplitN(bind, 2); len(arr) > 1 {
 			// after creating the bind mount we want to delete it from the flVolumes values because
 			// we do not want bind mounts being committed to image configs
 			binds = append(binds, bind)
 			flVolumes.Delete(bind)
-		} else if bind == "/" {
-			return nil, nil, cmd, fmt.Errorf("Invalid volume: path can't be '/'")
 		}
 	}
 
@@ -226,12 +220,6 @@ func Parse(cmd *flag.FlagSet, args []string) (*Config, *HostConfig, *flag.FlagSe
 	if *flEntrypoint != "" {
 		entrypoint = stringutils.NewStrSlice(*flEntrypoint)
 	}
-
-	lc, err := parseKeyValueOpts(flLxcOpts)
-	if err != nil {
-		return nil, nil, cmd, err
-	}
-	lxcConf := NewLxcConfig(lc)
 
 	var (
 		domainname string
@@ -344,7 +332,6 @@ func Parse(cmd *flag.FlagSet, args []string) (*Config, *HostConfig, *flag.FlagSe
 	hostConfig := &HostConfig{
 		Binds:             binds,
 		ContainerIDFile:   *flContainerIDFile,
-		LxcConf:           lxcConf,
 		Memory:            flMemory,
 		MemoryReservation: MemoryReservation,
 		MemorySwap:        memorySwap,
@@ -381,6 +368,7 @@ func Parse(cmd *flag.FlagSet, args []string) (*Config, *HostConfig, *flag.FlagSe
 		LogConfig:         LogConfig{Type: *flLoggingDriver, Config: loggingOpts},
 		CgroupParent:      *flCgroupParent,
 		VolumeDriver:      *flVolumeDriver,
+		Isolation:         IsolationLevel(*flIsolation),
 	}
 
 	// When allocating stdin in attached mode, close stdin at client disconnect

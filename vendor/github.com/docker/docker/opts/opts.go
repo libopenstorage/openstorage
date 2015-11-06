@@ -9,24 +9,30 @@ import (
 	"strings"
 
 	"github.com/docker/docker/pkg/parsers"
-	"github.com/docker/docker/volume"
 )
 
 var (
 	alphaRegexp  = regexp.MustCompile(`[a-zA-Z]`)
 	domainRegexp = regexp.MustCompile(`^(:?(:?[a-zA-Z0-9]|(:?[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9]))(:?\.(:?[a-zA-Z0-9]|(:?[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])))*)\.?\s*$`)
 	// DefaultHTTPHost Default HTTP Host used if only port is provided to -H flag e.g. docker daemon -H tcp://:8080
-	DefaultHTTPHost = "127.0.0.1"
+	DefaultHTTPHost = "localhost"
+
 	// DefaultHTTPPort Default HTTP Port used if only the protocol is provided to -H flag e.g. docker daemon -H tcp://
 	// TODO Windows. DefaultHTTPPort is only used on Windows if a -H parameter
 	// is not supplied. A better longer term solution would be to use a named
 	// pipe as the default on the Windows daemon.
+	// These are the IANA registered port numbers for use with Docker
+	// see http://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml?search=docker
 	DefaultHTTPPort = 2375 // Default HTTP Port
+	// DefaultTLSHTTPPort Default HTTP Port used when TLS enabled
+	DefaultTLSHTTPPort = 2376 // Default TLS encrypted HTTP Port
 	// DefaultUnixSocket Path for the unix socket.
 	// Docker daemon by default always listens on the default unix socket
 	DefaultUnixSocket = "/var/run/docker.sock"
 	// DefaultTCPHost constant defines the default host string used by docker on Windows
 	DefaultTCPHost = fmt.Sprintf("tcp://%s:%d", DefaultHTTPHost, DefaultHTTPPort)
+	// DefaultTLSHost constant defines the default host string used by docker for TLS sockets
+	DefaultTLSHost = fmt.Sprintf("tcp://%s:%d", DefaultHTTPHost, DefaultTLSHTTPPort)
 )
 
 // ListOpts holds a list of values and a validation function.
@@ -79,7 +85,6 @@ func (opts *ListOpts) Delete(key string) {
 
 // GetMap returns the content of values in a map in order to avoid
 // duplicates.
-// FIXME: can we remove this?
 func (opts *ListOpts) GetMap() map[string]struct{} {
 	ret := make(map[string]struct{})
 	for _, k := range *opts.values {
@@ -89,7 +94,6 @@ func (opts *ListOpts) GetMap() map[string]struct{} {
 }
 
 // GetAll returns the values of slice.
-// FIXME: Can we remove this?
 func (opts *ListOpts) GetAll() []string {
 	return (*opts.values)
 }
@@ -205,14 +209,6 @@ func ValidDeviceMode(mode string) bool {
 // It also validates the device mode.
 func ValidateDevice(val string) (string, error) {
 	return validatePath(val, ValidDeviceMode)
-}
-
-// ValidatePath validates a path for volumes
-// It will make sure 'val' is in the form:
-//    [host-dir:]container-path[:rw|ro]
-// It also validates the mount mode.
-func ValidatePath(val string) (string, error) {
-	return validatePath(val, volume.ValidMountMode)
 }
 
 func validatePath(val string, validator func(string) bool) (string, error) {
@@ -335,7 +331,18 @@ func ValidateLabel(val string) (string, error) {
 
 // ValidateHost validates that the specified string is a valid host and returns it.
 func ValidateHost(val string) (string, error) {
-	host, err := parsers.ParseDockerDaemonHost(DefaultTCPHost, DefaultUnixSocket, val)
+	_, err := parsers.ParseDockerDaemonHost(DefaultTCPHost, DefaultTLSHost, DefaultUnixSocket, "", val)
+	if err != nil {
+		return val, err
+	}
+	// Note: unlike most flag validators, we don't return the mutated value here
+	//       we need to know what the user entered later (using ParseHost) to adjust for tls
+	return val, nil
+}
+
+// ParseHost and set defaults for a Daemon host string
+func ParseHost(defaultHost, val string) (string, error) {
+	host, err := parsers.ParseDockerDaemonHost(DefaultTCPHost, DefaultTLSHost, DefaultUnixSocket, defaultHost, val)
 	if err != nil {
 		return val, err
 	}

@@ -496,6 +496,11 @@ func (c *Client) TagImage(name string, opts TagImageOptions) error {
 	}
 	resp, err := c.do("POST", fmt.Sprintf("/images/"+name+"/tag?%s",
 		queryString(&opts)), doOptions{})
+
+	if err != nil {
+		return err
+	}
+
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotFound {
@@ -560,5 +565,31 @@ func (c *Client) SearchImages(term string) ([]APIImageSearch, error) {
 	if err := json.NewDecoder(resp.Body).Decode(&searchResult); err != nil {
 		return nil, err
 	}
+	return searchResult, nil
+}
+
+// SearchImagesEx search the docker hub with a specific given term and authentication.
+//
+// See https://goo.gl/AYjyrF for more details.
+func (c *Client) SearchImagesEx(term string, auth AuthConfiguration) ([]APIImageSearch, error) {
+	headers, err := headersWithAuth(auth)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := c.do("GET", "/images/search?term="+term, doOptions{
+		headers: headers,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	var searchResult []APIImageSearch
+	if err := json.NewDecoder(resp.Body).Decode(&searchResult); err != nil {
+		return nil, err
+	}
+
 	return searchResult, nil
 }
