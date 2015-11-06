@@ -5,18 +5,23 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
+	"github.com/docker/docker/daemon/graphdriver"
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/graph"
 )
 
 const (
 	// GraphDriver is the string returned in the handshake protocol.
-	GraphDriver = "GraphDriver"
+	GraphDriver        = "GraphDriver"
+	DefaultGraphDriver = "overlay"
 )
 
 // Implementation of the Docker GraphgraphDriver plugin specification.
 type graphDriver struct {
 	restBase
+	gd graphdriver.Driver
 }
 
 type GraphResponse struct {
@@ -24,7 +29,7 @@ type GraphResponse struct {
 }
 
 func newGraphPlugin(name string) restServer {
-	return &graphDriver{restBase{name: name, version: "0.3"}}
+	return &graphDriver{restBase{name: name, version: "0.3"}, nil}
 }
 
 func (d *graphDriver) String() string {
@@ -42,6 +47,7 @@ func (d *graphDriver) Routes() []*Route {
 		&Route{verb: "POST", path: graphDriverPath("Remove"), fn: d.remove},
 		&Route{verb: "POST", path: graphDriverPath("Get"), fn: d.get},
 		&Route{verb: "POST", path: graphDriverPath("Put"), fn: d.put},
+		&Route{verb: "POST", path: graphDriverPath("Exists"), fn: d.exists},
 		&Route{verb: "POST", path: graphDriverPath("Status"), fn: d.graphStatus},
 		&Route{verb: "POST", path: graphDriverPath("GetMetadata"), fn: d.getMetadata},
 		&Route{verb: "POST", path: graphDriverPath("Cleanup"), fn: d.cleanup},
@@ -55,6 +61,11 @@ func (d *graphDriver) Routes() []*Route {
 
 func (d *graphDriver) emptyResponse(w http.ResponseWriter) {
 	json.NewEncoder(w).Encode(&GraphResponse{})
+}
+
+func (d *graphDriver) errResponse(method string, w http.ResponseWriter, err error) {
+	d.logReq("ErrReponse", method).Warnf("%v", err)
+	json.NewEncoder(w).Encode(&GraphResponse{Err: err})
 }
 
 func (d *graphDriver) decode(method string, w http.ResponseWriter, r *http.Request) (*volumeRequest, error) {
@@ -86,7 +97,7 @@ func (d *graphDriver) status(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, fmt.Sprintln("osd graphgraphDriver", d.version))
 }
 
-func (d *graphDriver) decodeError(w http.ResponseWriter, method string, err error) {
+func (d *graphDriver) decodeError(method string, w http.ResponseWriter, err error) {
 	e := fmt.Errorf("Unable to decode JSON payload")
 	d.sendError(method, "", w, e.Error()+":"+err.Error(), http.StatusBadRequest)
 	return
@@ -98,12 +109,29 @@ func (d *graphDriver) init(w http.ResponseWriter, r *http.Request) {
 		Home string
 		Opts []string
 	}
+	var name string
 	d.logReq(method, request.Home).Info("")
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		d.decodeError(w, method, err)
+		d.decodeError(method, w, err)
 		return
 	}
-	// XXX Initialize GraphgraphDriver
+	for _, v := range request.Opts {
+		opt := strings.Split(v, ":")
+		if len(opt) == 2 {
+			if opt[0] == "name" {
+				name = opt[1]
+			}
+		}
+		if len(name) == 0 {
+			name = DefaultGraphDriver
+		}
+	}
+	gd, err := graph.New(name, request.Home, request.Opts)
+	if err != nil {
+		d.errResponse(method, w, err)
+		return
+	}
+	d.gd = gd
 	d.emptyResponse(w)
 }
 
@@ -115,10 +143,13 @@ func (d *graphDriver) create(w http.ResponseWriter, r *http.Request) {
 	method := "create"
 	d.logReq(method, request.ID).Info("")
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		d.decodeError(w, method, err)
+		d.decodeError(method, w, err)
 		return
 	}
-
+	if err := d.gd.Create(request.ID, request.Parent); err != nil {
+		d.errResponse(method, w, err)
+		return
+	}
 	d.emptyResponse(w)
 }
 
@@ -128,10 +159,14 @@ func (d *graphDriver) remove(w http.ResponseWriter, r *http.Request) {
 	}
 	method := "remove"
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		d.decodeError(w, method, err)
+		d.decodeError(method, w, err)
 		return
 	}
 	d.logReq(method, request.ID).Info("")
+	if err := d.gd.Remove(request.ID); err != nil {
+		d.errResponse(method, w, err)
+		return
+	}
 	d.emptyResponse(w)
 }
 
@@ -146,10 +181,14 @@ func (d *graphDriver) get(w http.ResponseWriter, r *http.Request) {
 	}
 	method := "get"
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		d.decodeError(w, method, err)
+		d.decodeError(method, w, err)
 		return
 	}
 	d.logReq(method, request.ID).Info("")
+	response.Dir, response.Err = d.gd.Get(request.ID, request.MountLabel)
+	if response.Err != nil {
+		d.logReq("ErrReponse", method).Warnf("%v", response.Err)
+	}
 	json.NewEncoder(w).Encode(&response)
 }
 
@@ -159,11 +198,33 @@ func (d *graphDriver) put(w http.ResponseWriter, r *http.Request) {
 	}
 	method := "put"
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		d.decodeError(w, method, err)
+		d.decodeError(method, w, err)
 		return
 	}
 	d.logReq(method, request.ID).Info("")
+	err := d.gd.Put(request.ID)
+	if err != nil {
+		d.errResponse(method, w, err)
+		return
+	}
 	d.emptyResponse(w)
+}
+
+func (d *graphDriver) exists(w http.ResponseWriter, r *http.Request) {
+	var request struct {
+		ID string
+	}
+	var response struct {
+		Exists bool
+	}
+	method := "put"
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		d.decodeError(method, w, err)
+		return
+	}
+	d.logReq(method, request.ID).Info("")
+	response.Exists = d.gd.Exists(request.ID)
+	json.NewEncoder(w).Encode(&response)
 }
 
 func (d *graphDriver) graphStatus(w http.ResponseWriter, r *http.Request) {
@@ -172,6 +233,7 @@ func (d *graphDriver) graphStatus(w http.ResponseWriter, r *http.Request) {
 	}
 	method := "status"
 	d.logReq(method, "").Info("")
+	response.Status = d.gd.Status()
 	json.NewEncoder(w).Encode(&response)
 }
 
@@ -183,19 +245,28 @@ func (d *graphDriver) getMetadata(w http.ResponseWriter, r *http.Request) {
 		Metadata map[string]string
 		GraphResponse
 	}
-	method := "put"
+	method := "getMetadata"
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		d.decodeError(w, method, err)
+		d.decodeError(method, w, err)
 		return
 	}
 	d.logReq(method, request.ID).Info("")
+	response.Metadata, response.Err = d.gd.GetMetadata(request.ID)
+	if response.Err != nil {
+		d.logReq("ErrReponse", method).Warnf("%v", response.Err)
+	}
 	json.NewEncoder(w).Encode(&response)
 }
 
 func (d *graphDriver) cleanup(w http.ResponseWriter, r *http.Request) {
 	method := "cleanup"
+	var response GraphResponse
 	d.logReq(method, "").Info("")
-	d.emptyResponse(w)
+	response.Err = d.gd.Cleanup()
+	if response.Err != nil {
+		d.logReq("ErrReponse", method).Warnf("%v", response.Err)
+	}
+	json.NewEncoder(w).Encode(&response)
 }
 
 func (d *graphDriver) diff(w http.ResponseWriter, r *http.Request) {
@@ -205,7 +276,7 @@ func (d *graphDriver) diff(w http.ResponseWriter, r *http.Request) {
 	}
 	method := "diff"
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		d.decodeError(w, method, err)
+		d.decodeError(method, w, err)
 		return
 	}
 	d.logReq(method, request.ID).Info("")
@@ -222,7 +293,7 @@ func (d *graphDriver) changes(w http.ResponseWriter, r *http.Request) {
 	}
 	method := "changes"
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		d.decodeError(w, method, err)
+		d.decodeError(method, w, err)
 		return
 	}
 	d.logReq(method, request.ID).Info("")
@@ -251,7 +322,7 @@ func (d *graphDriver) diffSize(w http.ResponseWriter, r *http.Request) {
 	}
 	method := "applyDirff"
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		d.decodeError(w, method, err)
+		d.decodeError(method, w, err)
 		return
 	}
 	d.logReq(method, request.ID).Info("")
