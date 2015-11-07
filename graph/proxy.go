@@ -5,5 +5,5 @@ import (
 )
 
 func init() {
-	Register("overlay", overlay.Init)
+	Register("proxy", overlay.Init)
 }

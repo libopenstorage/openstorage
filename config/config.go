@@ -14,6 +14,7 @@ import (
 type osd struct {
 	ClusterConfig cluster.Config `yaml:"cluster"`
 	Drivers       map[string]volume.DriverParams
+	GraphDrivers  map[string]volume.DriverParams
 }
 
 type Config struct {

@@ -19,6 +19,7 @@ import (
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/drivers"
+	_ "github.com/libopenstorage/openstorage/graph"
 	"github.com/libopenstorage/openstorage/volume"
 )
 
@@ -82,14 +83,22 @@ func start(c *cli.Context) {
 			fmt.Println("Unable to start volume driver: ", d, err)
 			return
 		}
-
 		err = apiserver.StartServerAPI(d, 0, config.DriverAPIBase)
 		if err != nil {
 			fmt.Println("Unable to start volume driver: ", err)
 			return
 		}
-
 		err = apiserver.StartPluginAPI(d, config.PluginAPIBase)
+		if err != nil {
+			fmt.Println("Unable to start volume plugin: ", err)
+			return
+		}
+	}
+
+	// Start the graph drivers.
+	for d, _ := range cfg.Osd.GraphDrivers {
+		fmt.Println("Starting graph driver: ", d)
+		err = apiserver.StartGraphAPI(d, 0, config.PluginAPIBase)
 		if err != nil {
 			fmt.Println("Unable to start volume plugin: ", err)
 			return
