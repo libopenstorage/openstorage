@@ -76,6 +76,13 @@ func startServer(name string, sockBase string, port int, routes []*Route) error 
 	return nil
 }
 
+// StartGraphAPI starts a REST server to receive GraphDriver commands
+func StartGraphAPI(name string, port int, restBase string) error {
+	graphPlugin := newGraphPlugin(name)
+	routes := append(graphPlugin.Routes())
+	return startServer(name, restBase, port, routes)
+}
+
 // StartServerAPI starts a REST server to receive driver configuration commands
 // from the CLI/UX.
 func StartServerAPI(name string, port int, restBase string) error {

@@ -21,13 +21,14 @@ type Config struct {
 }
 
 const (
-	PluginAPIBase = "/run/docker/plugins/"
-	DriverAPIBase = "/var/lib/osd/driver/"
-	UrlKey        = "url"
-	VersionKey    = "version"
-	MountBase     = "/var/lib/osd/mounts/"
-	DataDir       = ".data"
-	Version       = "v1"
+	PluginAPIBase      = "/run/docker/plugins/"
+	DriverAPIBase      = "/var/lib/osd/driver/"
+	GraphDriverAPIBase = "/var/lib/osd/graphdriver/"
+	UrlKey             = "url"
+	VersionKey         = "version"
+	MountBase          = "/var/lib/osd/mounts/"
+	DataDir            = ".data"
+	Version            = "v1"
 )
 
 var (

@@ -9,6 +9,7 @@ import (
 
 	"github.com/docker/docker/daemon/graphdriver"
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/graph"
 )
 
@@ -126,7 +127,7 @@ func (d *graphDriver) init(w http.ResponseWriter, r *http.Request) {
 			name = DefaultGraphDriver
 		}
 	}
-	gd, err := graph.New(name, request.Home, request.Opts)
+	gd, err := graph.New(name, config.GraphDriverAPIBase, request.Opts)
 	if err != nil {
 		d.errResponse(method, w, err)
 		return
