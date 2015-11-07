@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/docker/docker/daemon/graphdriver"
-	"github.com/libopenstorage/openstorage/api"
+	"github.com/docker/docker/pkg/archive"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/graph"
 )
@@ -25,8 +25,20 @@ type graphDriver struct {
 	gd graphdriver.Driver
 }
 
-type GraphResponse struct {
-	Err error
+type graphRequest struct {
+	ID         string `json:",omitempty"`
+	Parent     string `json:",omitempty"`
+	MountLabel string `json:",omitempty"`
+}
+
+type graphResponse struct {
+	Err      error             `json:",omitempty"`
+	Dir      string            `json:",omitempty"`
+	Exists   bool              `json:",omitempty"`
+	Status   [][2]string       `json:",omitempty"`
+	Metadata map[string]string `json:",omitempty"`
+	Changes  []archive.Change  `json:",omitempty"`
+	Size     int64             `json:",omitempty"`
 }
 
 func newGraphPlugin(name string) restServer {
@@ -61,23 +73,27 @@ func (d *graphDriver) Routes() []*Route {
 }
 
 func (d *graphDriver) emptyResponse(w http.ResponseWriter) {
-	json.NewEncoder(w).Encode(&GraphResponse{})
+	json.NewEncoder(w).Encode(&graphResponse{})
 }
 
 func (d *graphDriver) errResponse(method string, w http.ResponseWriter, err error) {
 	d.logReq("ErrReponse", method).Warnf("%v", err)
-	json.NewEncoder(w).Encode(&GraphResponse{Err: err})
+	json.NewEncoder(w).Encode(&graphResponse{Err: err})
 }
 
-func (d *graphDriver) decode(method string, w http.ResponseWriter, r *http.Request) (*volumeRequest, error) {
-	var request volumeRequest
-	err := json.NewDecoder(r.Body).Decode(&request)
-	if err != nil {
-		e := fmt.Errorf("Unable to decode JSON payload")
-		d.sendError(method, "", w, e.Error()+":"+err.Error(), http.StatusBadRequest)
-		return nil, e
+func (d *graphDriver) decodeError(method string, w http.ResponseWriter, err error) {
+	e := fmt.Errorf("Unable to decode JSON payload")
+	d.sendError(method, "", w, e.Error()+":"+err.Error(), http.StatusBadRequest)
+	return
+}
+
+func (d *graphDriver) decode(method string, w http.ResponseWriter, r *http.Request) (*graphRequest, error) {
+	var request graphRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		d.decodeError(method, w, err)
+		return nil, err
 	}
-	d.logReq(method, request.Name).Debug("")
+	d.logReq(method, request.ID).Info("")
 	return &request, nil
 }
 
@@ -92,16 +108,6 @@ func (d *graphDriver) handshake(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	d.logReq("handshake", "").Debug("Handshake completed")
-}
-
-func (d *graphDriver) status(w http.ResponseWriter, r *http.Request) {
-	io.WriteString(w, fmt.Sprintln("osd graphgraphDriver", d.version))
-}
-
-func (d *graphDriver) decodeError(method string, w http.ResponseWriter, err error) {
-	e := fmt.Errorf("Unable to decode JSON payload")
-	d.sendError(method, "", w, e.Error()+":"+err.Error(), http.StatusBadRequest)
-	return
 }
 
 func (d *graphDriver) init(w http.ResponseWriter, r *http.Request) {
@@ -137,14 +143,9 @@ func (d *graphDriver) init(w http.ResponseWriter, r *http.Request) {
 }
 
 func (d *graphDriver) create(w http.ResponseWriter, r *http.Request) {
-	var request struct {
-		ID     string
-		Parent string
-	}
 	method := "create"
-	d.logReq(method, request.ID).Info("")
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		d.decodeError(method, w, err)
+	request, err := d.decode(method, w, r)
+	if err != nil {
 		return
 	}
 	if err := d.gd.Create(request.ID, request.Parent); err != nil {
@@ -155,15 +156,11 @@ func (d *graphDriver) create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (d *graphDriver) remove(w http.ResponseWriter, r *http.Request) {
-	var request struct {
-		ID string
-	}
 	method := "remove"
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		d.decodeError(method, w, err)
+	request, err := d.decode(method, w, r)
+	if err != nil {
 		return
 	}
-	d.logReq(method, request.ID).Info("")
 	if err := d.gd.Remove(request.ID); err != nil {
 		d.errResponse(method, w, err)
 		return
@@ -172,38 +169,27 @@ func (d *graphDriver) remove(w http.ResponseWriter, r *http.Request) {
 }
 
 func (d *graphDriver) get(w http.ResponseWriter, r *http.Request) {
-	var request struct {
-		ID         string
-		MountLabel string
-	}
-	var response struct {
-		Dir string
-		GraphResponse
-	}
+	var response graphResponse
 	method := "get"
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		d.decodeError(method, w, err)
+	request, err := d.decode(method, w, r)
+	if err != nil {
 		return
 	}
-	d.logReq(method, request.ID).Info("")
 	response.Dir, response.Err = d.gd.Get(request.ID, request.MountLabel)
 	if response.Err != nil {
-		d.logReq("ErrReponse", method).Warnf("%v", response.Err)
+		d.errResponse(method, w, response.Err)
+		return
 	}
 	json.NewEncoder(w).Encode(&response)
 }
 
 func (d *graphDriver) put(w http.ResponseWriter, r *http.Request) {
-	var request struct {
-		ID string
-	}
 	method := "put"
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		d.decodeError(method, w, err)
+	request, err := d.decode(method, w, r)
+	if err != nil {
 		return
 	}
-	d.logReq(method, request.ID).Info("")
-	err := d.gd.Put(request.ID)
+	err = d.gd.Put(request.ID)
 	if err != nil {
 		d.errResponse(method, w, err)
 		return
@@ -212,120 +198,98 @@ func (d *graphDriver) put(w http.ResponseWriter, r *http.Request) {
 }
 
 func (d *graphDriver) exists(w http.ResponseWriter, r *http.Request) {
-	var request struct {
-		ID string
-	}
-	var response struct {
-		Exists bool
-	}
+	var response graphResponse
 	method := "put"
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		d.decodeError(method, w, err)
+	request, err := d.decode(method, w, r)
+	if err != nil {
 		return
 	}
-	d.logReq(method, request.ID).Info("")
 	response.Exists = d.gd.Exists(request.ID)
 	json.NewEncoder(w).Encode(&response)
 }
 
 func (d *graphDriver) graphStatus(w http.ResponseWriter, r *http.Request) {
-	var response struct {
-		Status [][2]string
-	}
-	method := "status"
-	d.logReq(method, "").Info("")
+	var response graphResponse
 	response.Status = d.gd.Status()
 	json.NewEncoder(w).Encode(&response)
 }
 
 func (d *graphDriver) getMetadata(w http.ResponseWriter, r *http.Request) {
-	var request struct {
-		ID string
-	}
-	var response struct {
-		Metadata map[string]string
-		GraphResponse
-	}
+	var response graphResponse
 	method := "getMetadata"
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		d.decodeError(method, w, err)
+	request, err := d.decode(method, w, r)
+	if err != nil {
 		return
 	}
-	d.logReq(method, request.ID).Info("")
 	response.Metadata, response.Err = d.gd.GetMetadata(request.ID)
 	if response.Err != nil {
-		d.logReq("ErrReponse", method).Warnf("%v", response.Err)
+		d.errResponse(method, w, response.Err)
+		return
 	}
 	json.NewEncoder(w).Encode(&response)
 }
 
 func (d *graphDriver) cleanup(w http.ResponseWriter, r *http.Request) {
 	method := "cleanup"
-	var response GraphResponse
-	d.logReq(method, "").Info("")
-	response.Err = d.gd.Cleanup()
-	if response.Err != nil {
-		d.logReq("ErrReponse", method).Warnf("%v", response.Err)
+	err := d.gd.Cleanup()
+	if err != nil {
+		d.errResponse(method, w, err)
+		return
 	}
-	json.NewEncoder(w).Encode(&response)
+	d.emptyResponse(w)
 }
 
 func (d *graphDriver) diff(w http.ResponseWriter, r *http.Request) {
-	var request struct {
-		ID     string
-		Parent string
-	}
 	method := "diff"
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		d.decodeError(method, w, err)
+	request, err := d.decode(method, w, r)
+	if err != nil {
 		return
 	}
-	d.logReq(method, request.ID).Info("")
+	archive, err := d.gd.Diff(request.ID, request.Parent)
+	if err != nil {
+		d.errResponse(method, w, err)
+		return
+	}
+	io.Copy(w, archive)
 }
 
 func (d *graphDriver) changes(w http.ResponseWriter, r *http.Request) {
-	var request struct {
-		ID     string
-		Parent string
-	}
-	var response struct {
-		Changes []api.GraphDriverChanges
-		GraphResponse
-	}
 	method := "changes"
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		d.decodeError(method, w, err)
+	request, err := d.decode(method, w, r)
+	if err != nil {
 		return
 	}
-	d.logReq(method, request.ID).Info("")
-	json.NewEncoder(w).Encode(&response)
+	changes, err := d.gd.Changes(request.ID, request.Parent)
+	if err != nil {
+		d.errResponse(method, w, err)
+		return
+	}
+	json.NewEncoder(w).Encode(&graphResponse{Changes: changes})
 }
 
 func (d *graphDriver) applyDiff(w http.ResponseWriter, r *http.Request) {
-	var response struct {
-		Size uint64
-		GraphResponse
+	method := "applyDiff"
+	id := r.URL.Query().Get("id")
+	parent := r.URL.Query().Get("parent")
+
+	size, err := d.gd.ApplyDiff(id, parent, r.Body)
+	if err != nil {
+		d.errResponse(method, w, err)
+		return
 	}
-	method := "applyDirff"
-	// XXX Input is a Tar stream.
-	d.logReq(method, "").Info("")
-	json.NewEncoder(w).Encode(&response)
+	json.NewEncoder(w).Encode(&graphResponse{Size: size})
 }
 
 func (d *graphDriver) diffSize(w http.ResponseWriter, r *http.Request) {
-	var request struct {
-		ID     string
-		Parent string
-	}
-	var response struct {
-		Size uint64
-		GraphResponse
-	}
-	method := "applyDirff"
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		d.decodeError(method, w, err)
+	method := "diffSize"
+	request, err := d.decode(method, w, r)
+	if err != nil {
 		return
 	}
-	d.logReq(method, request.ID).Info("")
-	json.NewEncoder(w).Encode(&response)
+	size, err := d.gd.DiffSize(request.ID, request.Parent)
+	if err != nil {
+		d.errResponse(method, w, err)
+		return
+	}
+	json.NewEncoder(w).Encode(&graphResponse{Size: size})
 }

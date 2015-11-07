@@ -100,7 +100,7 @@ func start(c *cli.Context) {
 		fmt.Println("Starting graph driver: ", d)
 		err = apiserver.StartGraphAPI(d, 0, config.PluginAPIBase)
 		if err != nil {
-			fmt.Println("Unable to start volume plugin: ", err)
+			fmt.Println("Unable to start graph plugin: ", err)
 			return
 		}
 	}
