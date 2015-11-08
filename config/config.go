@@ -52,4 +52,5 @@ func Parse(file string) (*Config, error) {
 }
 func init() {
 	os.MkdirAll(MountBase, 0755)
+	os.MkdirAll(GraphDriverAPIBase, 0755)
 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 
 	"github.com/docker/docker/daemon/graphdriver"
 	"github.com/docker/docker/pkg/archive"
@@ -77,8 +76,8 @@ func (d *graphDriver) emptyResponse(w http.ResponseWriter) {
 }
 
 func (d *graphDriver) errResponse(method string, w http.ResponseWriter, err error) {
-	d.logReq("ErrReponse", method).Warnf("%v", err)
-	json.NewEncoder(w).Encode(&graphResponse{Err: err})
+	d.logReq(method, "").Warnf("%v", err)
+	fmt.Fprintln(w, fmt.Sprintf(`{"Err": %s}`, err.Error()))
 }
 
 func (d *graphDriver) decodeError(method string, w http.ResponseWriter, err error) {
@@ -116,24 +115,12 @@ func (d *graphDriver) init(w http.ResponseWriter, r *http.Request) {
 		Home string
 		Opts []string
 	}
-	var name string
 	d.logReq(method, request.Home).Info("")
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		d.decodeError(method, w, err)
 		return
 	}
-	for _, v := range request.Opts {
-		opt := strings.Split(v, ":")
-		if len(opt) == 2 {
-			if opt[0] == "name" {
-				name = opt[1]
-			}
-		}
-		if len(name) == 0 {
-			name = DefaultGraphDriver
-		}
-	}
-	gd, err := graph.New(name, config.GraphDriverAPIBase, request.Opts)
+	gd, err := graph.New(d.name, config.GraphDriverAPIBase, request.Opts)
 	if err != nil {
 		d.errResponse(method, w, err)
 		return
@@ -271,7 +258,7 @@ func (d *graphDriver) applyDiff(w http.ResponseWriter, r *http.Request) {
 	method := "applyDiff"
 	id := r.URL.Query().Get("id")
 	parent := r.URL.Query().Get("parent")
-
+	d.logReq(method, "").Infof("applyDiff ID %v Parent %v", id, parent)
 	size, err := d.gd.ApplyDiff(id, parent, r.Body)
 	if err != nil {
 		d.errResponse(method, w, err)

@@ -7,6 +7,7 @@ import (
 	"runtime"
 
 	"github.com/codegangsta/cli"
+	"github.com/docker/docker/pkg/reexec"
 	"github.com/fsouza/go-dockerclient"
 
 	"github.com/portworx/kvdb"
@@ -125,6 +126,9 @@ func showVersion(c *cli.Context) {
 }
 
 func main() {
+	if reexec.Init() {
+		return
+	}
 	app := cli.NewApp()
 	app.Name = "osd"
 	app.Usage = "Open Storage CLI"
