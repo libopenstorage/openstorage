@@ -91,7 +91,7 @@ func (d *graphDriver) decode(method string, w http.ResponseWriter, r *http.Reque
 		d.decodeError(method, w, err)
 		return nil, err
 	}
-	if len(request.Parent) {
+	if len(request.Parent) != 0 {
 		d.logReq(method, request.ID).Info("Parent: ", request.Parent)
 	} else {
 		d.logReq(method, request.ID).Info("")
