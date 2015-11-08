@@ -14,8 +14,7 @@ import (
 
 const (
 	// GraphDriver is the string returned in the handshake protocol.
-	GraphDriver        = "GraphDriver"
-	DefaultGraphDriver = "overlay"
+	GraphDriver = "GraphDriver"
 )
 
 // Implementation of the Docker GraphgraphDriver plugin specification.
@@ -77,7 +76,7 @@ func (d *graphDriver) emptyResponse(w http.ResponseWriter) {
 
 func (d *graphDriver) errResponse(method string, w http.ResponseWriter, err error) {
 	d.logReq(method, "").Warnf("%v", err)
-	fmt.Fprintln(w, fmt.Sprintf(`{"Err": %s}`, err.Error()))
+	fmt.Fprintln(w, fmt.Sprintf(`{"Err": %q}`, err.Error()))
 }
 
 func (d *graphDriver) decodeError(method string, w http.ResponseWriter, err error) {
@@ -92,7 +91,11 @@ func (d *graphDriver) decode(method string, w http.ResponseWriter, r *http.Reque
 		d.decodeError(method, w, err)
 		return nil, err
 	}
-	d.logReq(method, request.ID).Info("")
+	if len(request.Parent) {
+		d.logReq(method, request.ID).Info("Parent: ", request.Parent)
+	} else {
+		d.logReq(method, request.ID).Info("")
+	}
 	return &request, nil
 }
 
@@ -258,7 +261,7 @@ func (d *graphDriver) applyDiff(w http.ResponseWriter, r *http.Request) {
 	method := "applyDiff"
 	id := r.URL.Query().Get("id")
 	parent := r.URL.Query().Get("parent")
-	d.logReq(method, "").Infof("applyDiff ID %v Parent %v", id, parent)
+	d.logReq(method, id).Infof("Parent %v", parent)
 	size, err := d.gd.ApplyDiff(id, parent, r.Body)
 	if err != nil {
 		d.errResponse(method, w, err)
