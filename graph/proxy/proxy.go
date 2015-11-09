@@ -2,8 +2,9 @@ package graph
 
 import (
 	"github.com/docker/docker/daemon/graphdriver/overlay"
+	"github.com/libopenstorage/openstorage/graph"
 )
 
 func init() {
-	Register("proxy", overlay.Init)
+	graph.Register("proxy", overlay.Init)
 }
