@@ -2,9 +2,11 @@ package graph
 
 import (
 	"fmt"
+	"os"
 	"path"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/docker/docker/daemon/graphdriver"
@@ -124,7 +126,6 @@ func (l *Layer0) realID(id string) string {
 }
 
 func (l *Layer0) create(id, parent string) (string, error) {
-
 	l.Lock()
 	defer l.Unlock()
 
@@ -193,9 +194,28 @@ func (l *Layer0) Create(id string, parent string) error {
 	}
 	return l.Driver.Create(id, parent)
 }
+
 func (l *Layer0) Remove(id string) error {
-	id = l.realID(id)
-	return l.Driver.Remove(id)
+	err := l.Driver.Remove(l.realID(id))
+	if err != nil {
+		log.Warnf("Failed to remove layer for %v, realID: %v", id, l.realID(id))
+	}
+	l.Lock()
+	defer l.Unlock()
+	if l.isLayer0(id) {
+		v, ok := l.volumes[id]
+		if ok {
+			atomic.AddInt32(&v.ref, -1)
+			if v.ref == 0 {
+				l.volDriver.Unmount(v.volumeID, v.path)
+				err = os.RemoveAll(v.path)
+				delete(l.volumes, v.id)
+			}
+		} else {
+			log.Warnf("Failed to find layer0 vol for id %v", id)
+		}
+	}
+	return err
 }
 
 func (l *Layer0) Get(id string, mountLabel string) (string, error) {
