@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"path"
 	"strings"
+	"sync"
 
-	_ "github.com/Sirupsen/logrus"
+	log "github.com/Sirupsen/logrus"
 	"github.com/docker/docker/daemon/graphdriver"
 	"github.com/docker/docker/daemon/graphdriver/overlay"
 	"github.com/docker/docker/pkg/archive"
@@ -31,6 +32,7 @@ type Layer0Vol struct {
 }
 
 type Layer0 struct {
+	sync.Mutex
 	// Driver is an implementation of GraphDriver. Only select methods are overridden
 	graphdriver.Driver
 	// home base string
@@ -85,10 +87,16 @@ func Init(home string, options []string, uidMaps, gidMaps []idtools.IDMap) (grap
 
 	return d, nil
 }
-
-func (l *Layer0) isLayer0(id string) bool {
+func (l *Layer0) isLayer0Parent(id string) (string, bool) {
 	// This relies on an <instance_id>-init volume being created for
 	// every new container.
+	if strings.HasSuffix(id, "-init") {
+		return strings.TrimSuffix(id, "-init"), true
+	}
+	return "", false
+}
+
+func (l *Layer0) isLayer0(id string) bool {
 	if strings.HasSuffix(id, "-init") {
 		baseID := strings.TrimSuffix(id, "-init")
 		if _, ok := l.volumes[baseID]; !ok {
@@ -116,7 +124,66 @@ func (l *Layer0) realID(id string) string {
 }
 
 func (l *Layer0) create(id, parent string) (string, error) {
-	return id, nil
+
+	l.Lock()
+	defer l.Unlock()
+
+	// If this is the parent of the Layer0, add an entry for it.
+	baseID, l0 := l.isLayer0Parent(id)
+	if l0 {
+		l.volumes[baseID] = &Layer0Vol{id: baseID, parent: parent}
+		return id, nil
+	}
+
+	// Don't do anything if this is not layer 0
+	if !l.isLayer0(id) {
+		return id, nil
+	}
+
+	vol, ok := l.volumes[id]
+	if !ok {
+		log.Warnf("Failed to find layer0 volume for id %v", id)
+		return id, nil
+	}
+
+	// Query volume for Layer 0
+	vols, err := l.volDriver.Enumerate(api.VolumeLocator{Name: vol.parent}, nil)
+
+	// If we don't find a volume configured for this image,
+	// then don't track layer0
+	if err != nil || vols == nil {
+		log.Warnf("Failed to find configured volume for id %v", vol.parent)
+		delete(l.volumes, id)
+		return id, nil
+	}
+
+	// Find a volume that is available.
+	index := -1
+	for i, v := range vols {
+		if len(v.AttachPath) == 0 {
+			index = i
+			break
+		}
+	}
+	if index == -1 {
+		log.Warnf("Failed to find free volume for id %v", vol.parent)
+		delete(l.volumes, id)
+		return id, nil
+	}
+
+	mountPath := path.Join(l.home, l.loID(id))
+	err = l.volDriver.Mount(vols[index].ID, mountPath)
+	if err != nil {
+		log.Errorf("Failed to mount volume %v at path %v",
+			vols[index].ID, mountPath)
+		delete(l.volumes, id)
+		return id, nil
+	}
+	vol.path = mountPath
+	vol.volumeID = vols[index].ID
+	vol.ref = 1
+
+	return l.realID(id), nil
 }
 
 func (l *Layer0) Create(id string, parent string) error {
