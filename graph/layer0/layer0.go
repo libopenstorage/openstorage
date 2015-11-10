@@ -20,6 +20,13 @@ import (
 	"github.com/libopenstorage/openstorage/volume"
 )
 
+// Layer0 implemenation piggy backs on existing overlay graphdriver implementation
+// to provide persistent storage for the uppermost/writeable layer in the
+// container rootfs. The persistent storage is derived from one of the OSD volume drivers.
+// To use this as the graphdriver in Docker with aws as the backend volume provider:
+//
+// DOCKER_STORAGE_OPTIONS= -s layer0 --storage-opt layer0.volume_driver=aws
+
 type Layer0Vol struct {
 	// id self referential ID
 	id string
@@ -45,7 +52,7 @@ type Layer0 struct {
 	volDriver volume.VolumeDriver
 }
 
-// Layer0Graphdriver options
+// Layer0Graphdriver options. This should be passed in as a st
 const (
 	Layer0VolumeDriver = "layer0.volume_driver"
 )
