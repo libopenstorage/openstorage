@@ -9,12 +9,13 @@ osd:
 #   nfs:
 #     server: "localhost"
 #     path: "/nfs"
-#   btrfs:
-#      home: "/var/lib/openstorage/btrfs"
+   btrfs:
+      home: "/var/lib/openstorage/btrfs"
 #    aws:
 #      AWS_ACCESS_KEY_ID: your_access_key
 #      AWS_SECRET_ACCESS_KEY: your_secret_access_key
 #   buse:
   graphdrivers:
     proxy:
+    layer0:
 

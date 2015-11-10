@@ -57,7 +57,6 @@ func init() {
 func Init(home string, options []string, uidMaps, gidMaps []idtools.IDMap) (graphdriver.Driver, error) {
 
 	var volumeDriver string
-	var params volume.DriverParams
 	for _, option := range options {
 		key, val, err := parsers.ParseKeyValueOpt(option)
 		if err != nil {
@@ -70,8 +69,8 @@ func Init(home string, options []string, uidMaps, gidMaps []idtools.IDMap) (grap
 			return nil, fmt.Errorf("Unknown option %s\n", key)
 		}
 	}
-	// XXX populate params
-	volDriver, err := volume.New(volumeDriver, params)
+	log.Infof("Layer0 volume driver: %v", volumeDriver)
+	volDriver, err := volume.Get(volumeDriver)
 	if err != nil {
 		return nil, err
 	}
@@ -173,6 +172,7 @@ func (l *Layer0) create(id, parent string) (string, error) {
 	}
 
 	mountPath := path.Join(l.home, l.loID(id))
+	os.MkdirAll(mountPath, 0755)
 	err = l.volDriver.Mount(vols[index].ID, mountPath)
 	if err != nil {
 		log.Errorf("Failed to mount volume %v at path %v",
@@ -196,24 +196,23 @@ func (l *Layer0) Create(id string, parent string) error {
 }
 
 func (l *Layer0) Remove(id string) error {
-	err := l.Driver.Remove(l.realID(id))
-	if err != nil {
-		log.Warnf("Failed to remove layer for %v, realID: %v", id, l.realID(id))
+	if !l.isLayer0(id) {
+		return l.Driver.Remove(l.realID(id))
 	}
 	l.Lock()
 	defer l.Unlock()
-	if l.isLayer0(id) {
-		v, ok := l.volumes[id]
-		if ok {
-			atomic.AddInt32(&v.ref, -1)
-			if v.ref == 0 {
-				l.volDriver.Unmount(v.volumeID, v.path)
-				err = os.RemoveAll(v.path)
-				delete(l.volumes, v.id)
-			}
-		} else {
-			log.Warnf("Failed to find layer0 vol for id %v", id)
+	var err error
+	v, ok := l.volumes[id]
+
+	if ok {
+		atomic.AddInt32(&v.ref, -1)
+		if v.ref == 0 {
+			l.volDriver.Unmount(v.volumeID, v.path)
+			err = os.RemoveAll(v.path)
+			delete(l.volumes, v.id)
 		}
+	} else {
+		log.Warnf("Failed to find layer0 vol for id %v", id)
 	}
 	return err
 }
@@ -236,4 +235,9 @@ func (l *Layer0) ApplyDiff(id string, parent string, diff archive.Reader) (size 
 func (l *Layer0) Exists(id string) bool {
 	id = l.realID(id)
 	return l.Driver.Exists(id)
+}
+
+func (l *Layer0) GetMetadata(id string) (map[string]string, error) {
+	id = l.realID(id)
+	return l.Driver.GetMetadata(id)
 }

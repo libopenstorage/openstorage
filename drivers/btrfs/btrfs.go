@@ -47,7 +47,6 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 	home := path.Join(root, Volumes)
 	d, err := btrfs.Init(home, nil, nil, nil)
 	if err != nil {
-		panic("failed to init btrfs")
 		return nil, err
 	}
 	s := volume.NewDefaultEnumerator(Name, kvdb.Instance())
