@@ -113,10 +113,6 @@ func (l *Layer0) loID(id string) string {
 	return id + "-vol"
 }
 
-func (l *Layer0) upperBase(id string) string {
-	return path.Join(l.home, l.loID(id))
-}
-
 func (l *Layer0) realID(id string) string {
 	if l.isLayer0(id) {
 		return path.Join(l.loID(id), id)
@@ -124,7 +120,7 @@ func (l *Layer0) realID(id string) string {
 	return id
 }
 
-func (l *Layer0) create(id, parent string) (string, error) {
+func (l *Layer0) create(id, parent string) (string, *Layer0Vol, error) {
 	l.Lock()
 	defer l.Unlock()
 
@@ -132,18 +128,18 @@ func (l *Layer0) create(id, parent string) (string, error) {
 	baseID, l0 := l.isLayer0Parent(id)
 	if l0 {
 		l.volumes[baseID] = &Layer0Vol{id: baseID, parent: parent}
-		return id, nil
+		return id, nil, nil
 	}
 
 	// Don't do anything if this is not layer 0
 	if !l.isLayer0(id) {
-		return id, nil
+		return id, nil, nil
 	}
 
 	vol, ok := l.volumes[id]
 	if !ok {
 		log.Warnf("Failed to find layer0 volume for id %v", id)
-		return id, nil
+		return id, nil, nil
 	}
 
 	// Query volume for Layer 0
@@ -152,9 +148,9 @@ func (l *Layer0) create(id, parent string) (string, error) {
 	// If we don't find a volume configured for this image,
 	// then don't track layer0
 	if err != nil || vols == nil {
-		log.Warnf("Failed to find configured volume for id %v", vol.parent)
+		log.Infof("Failed to find configured volume for id %v", vol.parent)
 		delete(l.volumes, id)
-		return id, nil
+		return id, nil, nil
 	}
 
 	// Find a volume that is available.
@@ -166,9 +162,9 @@ func (l *Layer0) create(id, parent string) (string, error) {
 		}
 	}
 	if index == -1 {
-		log.Warnf("Failed to find free volume for id %v", vol.parent)
+		log.Infof("Failed to find free volume for id %v", vol.parent)
 		delete(l.volumes, id)
-		return id, nil
+		return id, nil, nil
 	}
 
 	mountPath := path.Join(l.home, l.loID(id))
@@ -178,21 +174,34 @@ func (l *Layer0) create(id, parent string) (string, error) {
 		log.Errorf("Failed to mount volume %v at path %v",
 			vols[index].ID, mountPath)
 		delete(l.volumes, id)
-		return id, nil
+		return id, nil, nil
 	}
 	vol.path = mountPath
 	vol.volumeID = vols[index].ID
 	vol.ref = 1
 
-	return l.realID(id), nil
+	return l.realID(id), vol, nil
 }
 
 func (l *Layer0) Create(id string, parent string) error {
-	id, err := l.create(id, parent)
+	id, vol, err := l.create(id, parent)
 	if err != nil {
 		return err
 	}
-	return l.Driver.Create(id, parent)
+	err = l.Driver.Create(id, parent)
+	if err != nil || vol == nil {
+		return err
+	}
+	// This is layer0. Restore saved upper dir, if one exists.
+	savedUpper := path.Join(vol.path, "upper")
+	if _, err := os.Stat(savedUpper); err != nil {
+		// It's not an error if didn't have a saved upper
+		return nil
+	}
+	// We found a saved upper, restore to newly created upper.
+	upperDir := path.Join(path.Join(l.home, id), "upper")
+	os.RemoveAll(upperDir)
+	return os.Rename(savedUpper, upperDir)
 }
 
 func (l *Layer0) Remove(id string) error {
@@ -207,7 +216,14 @@ func (l *Layer0) Remove(id string) error {
 	if ok {
 		atomic.AddInt32(&v.ref, -1)
 		if v.ref == 0 {
-			l.volDriver.Unmount(v.volumeID, v.path)
+			// Save the upper dir and blow away the rest.
+			upperDir := path.Join(path.Join(l.home, l.realID(id)), "upper")
+			err := os.Rename(upperDir, path.Join(v.path, "upper"))
+			if err != nil {
+				log.Warnf("Failed in rename(%v): %v", id, err)
+			}
+			l.Driver.Remove(l.realID(id))
+			err = l.volDriver.Unmount(v.volumeID, v.path)
 			err = os.RemoveAll(v.path)
 			delete(l.volumes, v.id)
 		}
