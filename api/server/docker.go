@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strconv"
 
 	types "github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
@@ -29,6 +30,7 @@ type handshakeResp struct {
 
 type volumeRequest struct {
 	Name string
+	Opts map[string]string
 }
 
 type volumeResponse struct {
@@ -88,11 +90,15 @@ func (d *driver) volFromName(name string) (*volumeInfo, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Cannot locate volume driver for %s: %s", d.name, err.Error())
 	}
-	volumes, err := v.Inspect([]types.VolumeID{types.VolumeID(name)})
-	if err != nil || len(volumes) == 0 {
-		return nil, fmt.Errorf("Cannot locate volume %s", name)
+	vols, err := v.Inspect([]types.VolumeID{types.VolumeID(name)})
+	if err == nil && len(vols) == 1 {
+		return &volumeInfo{vol: &vols[0]}, nil
 	}
-	return &volumeInfo{vol: &volumes[0]}, nil
+	vols, err = v.Enumerate(types.VolumeLocator{Name: name}, nil)
+	if err == nil && len(vols) == 1 {
+		return &volumeInfo{vol: &vols[0]}, nil
+	}
+	return nil, fmt.Errorf("Cannot locate volume %s", name)
 }
 
 func (d *driver) decode(method string, w http.ResponseWriter, r *http.Request) (*volumeRequest, error) {
@@ -122,22 +128,58 @@ func (d *driver) status(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, fmt.Sprintln("osd plugin", d.version))
 }
 
+func (d *driver) specFromOpts(Opts map[string]string) *types.VolumeSpec {
+	var spec types.VolumeSpec
+	for k, v := range Opts {
+		switch k {
+		case types.SpecEphemeral:
+			spec.Ephemeral, _ = strconv.ParseBool(v)
+		case types.SpecSize:
+			spec.Size, _ = strconv.ParseUint(v, 10, 64)
+		case types.SpecFilesystem:
+			spec.Format = types.Filesystem(v)
+		case types.SpecBlockSize:
+			blockSize, _ := strconv.ParseInt(v, 10, 64)
+			spec.BlockSize = int(blockSize)
+		case types.SpecHaLevel:
+			haLevel, _ := strconv.ParseInt(v, 10, 64)
+			spec.HALevel = int(haLevel)
+		case types.SpecCos:
+			cos, _ := strconv.ParseInt(v, 10, 64)
+			spec.Cos = types.VolumeCos(cos)
+		case types.SpecDedupe:
+			spec.Dedupe, _ = strconv.ParseBool(v)
+		case types.SpecSnapshotInterval:
+			snapshotInterval, _ := strconv.ParseInt(v, 10, 64)
+			spec.SnapshotInterval = int(snapshotInterval)
+		}
+	}
+	return &spec
+}
+
 func (d *driver) create(w http.ResponseWriter, r *http.Request) {
+	var err error
 	method := "create"
 
 	request, err := d.decode(method, w, r)
 	if err != nil {
 		return
 	}
-
 	d.logReq(method, request.Name).Info("")
 
-	// It is an error if the volume doesn't already exist.
 	_, err = d.volFromName(request.Name)
 	if err != nil {
-		e := d.volNotFound(method, request.Name, err, w)
-		json.NewEncoder(w).Encode(&volumeResponse{Err: e})
-		return
+		v, err := volume.Get(d.name)
+		if err != nil {
+			json.NewEncoder(w).Encode(&volumeResponse{Err: err})
+			return
+		}
+		spec := d.specFromOpts(request.Opts)
+		_, err = v.Create(types.VolumeLocator{Name: request.Name}, nil, spec)
+		if err != nil {
+			json.NewEncoder(w).Encode(&volumeResponse{Err: err})
+			return
+		}
 	}
 
 	json.NewEncoder(w).Encode(&volumeResponse{})

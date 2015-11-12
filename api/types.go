@@ -93,6 +93,18 @@ const (
 	FsNfs  Filesystem = "nfs"
 )
 
+// Strings for VolumeSpec
+const (
+	SpecEphemeral        = "ephemeral"
+	SpecSize             = "size"
+	SpecFilesystem       = "format"
+	SpecBlockSize        = "blocksize"
+	SpecHaLevel          = "ha_level"
+	SpecCos              = "cos"
+	SpecSnapshotInterval = "snapshot_interval"
+	SpecDedupe           = "dedupe"
+)
+
 // VolumeSpec has the properties needed to create a volume.
 type VolumeSpec struct {
 	// Ephemeral storage
