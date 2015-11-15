@@ -55,10 +55,11 @@ type Layer0 struct {
 // Layer0Graphdriver options. This should be passed in as a st
 const (
 	Layer0VolumeDriver = "layer0.volume_driver"
+	Name               = "layer0"
 )
 
 func init() {
-	graph.Register("layer0", Init)
+	graph.Register(Name, Init)
 }
 
 func Init(home string, options []string, uidMaps, gidMaps []idtools.IDMap) (graphdriver.Driver, error) {
@@ -176,6 +177,16 @@ func (l *Layer0) create(id, parent string) (string, *Layer0Vol, error) {
 
 	mountPath := path.Join(l.home, l.loID(id))
 	os.MkdirAll(mountPath, 0755)
+
+	// If this is a block driver, first attach the volume.
+	if l.volDriver.Type()&api.Block != 0 {
+		_, err := l.volDriver.Attach(vols[index].ID)
+		if err != nil {
+			log.Errorf("Failed to attach volume %v", vols[index].ID)
+			delete(l.volumes, id)
+			return id, nil, nil
+		}
+	}
 	err = l.volDriver.Mount(vols[index].ID, mountPath)
 	if err != nil {
 		log.Errorf("Failed to mount volume %v at path %v",
@@ -231,6 +242,9 @@ func (l *Layer0) Remove(id string) error {
 			}
 			l.Driver.Remove(l.realID(id))
 			err = l.volDriver.Unmount(v.volumeID, v.path)
+			if l.volDriver.Type()&api.Block != 0 {
+				_ = l.volDriver.Detach(v.volumeID)
+			}
 			err = os.RemoveAll(v.path)
 			delete(l.volumes, v.id)
 		}
