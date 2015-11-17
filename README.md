@@ -97,14 +97,14 @@ osd:
 
 The above example initializes the `OSD` with three drivers: NFS, BTRFS and AWS.  Each have their own configuration sections.
 
-## Adding your driver
+## Adding your volume driver
 
 Adding a driver is fairly straightforward:
 
-1. Add your driver decleration in `drivers.go`
+1. Add your driver decleration in `volumes/drivers.go`
 
 
-2. Add your driver `mydriver` implementation in the `drivers/mydriver` directory.  The driver must implement the `VolumeDriver` interface specified in [`volumes/volume.go`](https://github.com/libopenstorage/openstorage/blob/master/volume/volume.go).  This interface is an implementation of the specification available [here] (http://api.openstorage.org/).
+2. Add your driver `mydriver` implementation in the `volumes/drivers/mydriver` directory.  The driver must implement the `VolumeDriver` interface specified in [`volumes/volume.go`](https://github.com/libopenstorage/openstorage/blob/master/volume/volume.go).  This interface is an implementation of the specification available [here] (http://api.openstorage.org/).
 
 3. You're driver must be a `File Volume` driver or a `Block Volume` driver.  A `File Volume` driver will not implement a few low level primatives, such as `Format`, `Attach` and `Detach`.
 
@@ -113,12 +113,12 @@ Here is an example of `drivers.go`:
 
 ```
 // To add a provider to openstorage, declare the provider here.
-package main
+package drivers
 
 import (
-    "github.com/libopenstorage/openstorage/drivers/aws"
-    "github.com/libopenstorage/openstorage/drivers/btrfs"
-    "github.com/libopenstorage/openstorage/drivers/nfs"
+    "github.com/libopenstorage/openstorage/volume/drivers/aws"
+    "github.com/libopenstorage/openstorage/volume/drivers/btrfs"
+    "github.com/libopenstorage/openstorage/volume/drivers/nfs"
     "github.com/libopenstorage/openstorage/volume"
 )           
             

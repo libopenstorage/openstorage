@@ -22,7 +22,7 @@ import (
 
 const (
 	Name          = "buse"
-	Type          = api.Block | api.Graph
+	Type          = api.Block
 	BuseDBKey     = "OpenStorageBuseKey"
 	BuseMountPath = "/var/lib/openstorage/buse/"
 )

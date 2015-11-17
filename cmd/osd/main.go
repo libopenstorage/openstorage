@@ -19,10 +19,8 @@ import (
 	osdcli "github.com/libopenstorage/openstorage/cli"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/config"
-	"github.com/libopenstorage/openstorage/drivers"
-	_ "github.com/libopenstorage/openstorage/graph/layer0"
-	_ "github.com/libopenstorage/openstorage/graph/proxy"
 	"github.com/libopenstorage/openstorage/volume"
+	"github.com/libopenstorage/openstorage/volume/drivers"
 )
 
 const (

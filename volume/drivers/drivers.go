@@ -2,12 +2,12 @@ package drivers
 
 import (
 	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/drivers/aws"
-	"github.com/libopenstorage/openstorage/drivers/btrfs"
-	"github.com/libopenstorage/openstorage/drivers/buse"
-	"github.com/libopenstorage/openstorage/drivers/nfs"
-	"github.com/libopenstorage/openstorage/drivers/pwx"
-	"github.com/libopenstorage/openstorage/drivers/vfs"
+	"github.com/libopenstorage/openstorage/volume/drivers/aws"
+	"github.com/libopenstorage/openstorage/volume/drivers/btrfs"
+	"github.com/libopenstorage/openstorage/volume/drivers/buse"
+	"github.com/libopenstorage/openstorage/volume/drivers/nfs"
+	"github.com/libopenstorage/openstorage/volume/drivers/pwx"
+	"github.com/libopenstorage/openstorage/volume/drivers/vfs"
 )
 
 // Driver is the description of a supported OST driver. New Drivers are added to

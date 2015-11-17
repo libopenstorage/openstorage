@@ -8,9 +8,9 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	apiserver "github.com/libopenstorage/openstorage/api/server"
 	"github.com/libopenstorage/openstorage/config"
-	"github.com/libopenstorage/openstorage/drivers/nfs"
-	"github.com/libopenstorage/openstorage/drivers/test"
 	"github.com/libopenstorage/openstorage/volume"
+	"github.com/libopenstorage/openstorage/volume/drivers/nfs"
+	"github.com/libopenstorage/openstorage/volume/drivers/test"
 )
 
 var (

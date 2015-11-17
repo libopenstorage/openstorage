@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/libopenstorage/openstorage/drivers/test"
 	"github.com/libopenstorage/openstorage/volume"
+	"github.com/libopenstorage/openstorage/volume/drivers/test"
 )
 
 var (
