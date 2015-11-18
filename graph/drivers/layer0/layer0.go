@@ -63,7 +63,6 @@ func init() {
 }
 
 func Init(home string, options []string, uidMaps, gidMaps []idtools.IDMap) (graphdriver.Driver, error) {
-
 	var volumeDriver string
 	for _, option := range options {
 		key, val, err := parsers.ParseKeyValueOpt(option)
