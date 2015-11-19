@@ -93,6 +93,9 @@ osd:
       aws:
         aws_access_key_id: your_aws_access_key_id
         aws_secret_access_key: your_aws_secret_access_key
+  graphdrivers:
+     proxy:
+     layer0:
 ```
 
 The above example initializes the `OSD` with three drivers: NFS, BTRFS and AWS.  Each have their own configuration sections.
