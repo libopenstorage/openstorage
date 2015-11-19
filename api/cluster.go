@@ -35,6 +35,7 @@ type Node struct {
 	Timestamp  time.Time
 	Status     Status
 	Containers []docker.APIContainers
+	NodeData   map[string]interface{}
 }
 
 // Cluster represents the state of the cluster.

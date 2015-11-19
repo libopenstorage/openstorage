@@ -40,6 +40,13 @@ func (c *clusterClient) AddEventListener(cluster.ClusterListener) error {
 	return nil
 }
 
+func (c *clusterClient) UpdateNodeData(dataKey string, value interface{}) {
+}
+
+func (c *clusterClient) GetClusterNodeData() []*api.Node {
+	return nil
+}
+
 func (c *clusterClient) Remove(nodes []api.Node) error {
 	return nil
 }

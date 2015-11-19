@@ -84,6 +84,12 @@ type Cluster interface {
 	// It also causes this node to join the cluster.
 	Start() error
 
+	// Update Node data associated with this node
+	UpdateNodeData(dataKey string, value interface{})
+
+	// Get Node data associated with all nodes
+	GetClusterNodeData() []*api.Node
+
 	// Enables notifications from gossip
 	EnableGossipUpdates()
 

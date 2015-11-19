@@ -34,6 +34,7 @@ type ClusterManager struct {
 	docker    *docker.Client
 	g         gossip.Gossiper
 	gEnabled  bool
+	selfNode  api.Node
 }
 
 func externalIp() (string, error) {
@@ -90,47 +91,48 @@ func (c *ClusterManager) AddEventListener(listener ClusterListener) error {
 	return nil
 }
 
-func (c *ClusterManager) getSelf() *api.Node {
-	var node = api.Node{}
+func (c *ClusterManager) UpdateNodeData(dataKey string, value interface{}) {
+	c.selfNode.NodeData[dataKey] = value
+}
 
-	// Get physical node info.
-	node.Id = c.config.NodeId
-	node.Status = api.StatusOk
-	node.Ip, _ = externalIp()
-	node.Timestamp = time.Now()
-
-	return &node
+func (c *ClusterManager) GetClusterNodeData() []*api.Node {
+	nodes := make([]*api.Node, len(c.nodeCache), len(c.nodeCache))
+	i := 0
+	for _, value := range c.nodeCache {
+		nodes[i] = &value
+	}
+	return nodes
 }
 
 func (c *ClusterManager) getCurrentState() *api.Node {
-	node := c.getSelf()
+	c.selfNode.Timestamp = time.Now()
 	s := systemutils.New()
 
-	node.Cpu, _, _ = s.CpuUsage()
-	node.Memory = s.MemUsage()
-	node.Luns = s.Luns()
+	c.selfNode.Cpu, _, _ = s.CpuUsage()
+	c.selfNode.Memory = s.MemUsage()
+	c.selfNode.Luns = s.Luns()
 
-	node.Timestamp = time.Now()
+	c.selfNode.Timestamp = time.Now()
 
 	// Get containers running on this system.
-	node.Containers, _ = c.docker.ListContainers(docker.ListContainersOptions{All: true})
+	c.selfNode.Containers, _ = c.docker.ListContainers(docker.ListContainersOptions{All: true})
 
-	return node
+	return &c.selfNode
 }
 
 func (c *ClusterManager) initNode(db *Database) (*api.Node, bool) {
-	node := c.getSelf()
-	c.nodeCache[node.Id] = *node
+	c.nodeCache[c.selfNode.Id] = *c.getCurrentState()
 
-	_, exists := db.NodeEntries[node.Id]
+	_, exists := db.NodeEntries[c.selfNode.Id]
 
 	// Add us into the database.
-	db.NodeEntries[c.config.NodeId] = NodeEntry{Id: node.Id, Ip: node.Ip}
+	db.NodeEntries[c.config.NodeId] = NodeEntry{Id: c.selfNode.Id,
+		Ip: c.selfNode.Ip}
 
 	log.Infof("Node %s joining cluster... \n\tCluster ID: %s\n\tIP: %s",
-		c.config.NodeId, c.config.ClusterId, node.Ip)
+		c.config.NodeId, c.config.ClusterId, c.selfNode.Ip)
 
-	return node, exists
+	return &c.selfNode, exists
 }
 
 // Initialize node and alert listeners that we are joining the cluster.
@@ -292,6 +294,10 @@ func (c *ClusterManager) Start() error {
 	c.g = gossip.New("0.0.0.0:9002", gossiptypes.NodeId(c.config.NodeId))
 	c.g.SetGossipInterval(2 * time.Second)
 	c.gEnabled = true
+	c.selfNode = api.Node{}
+	c.selfNode.Id = c.config.NodeId
+	c.selfNode.Status = api.StatusOk
+	c.selfNode.Ip, _ = externalIp()
 
 	kvlock, err := kvdb.Lock("cluster/lock", 60)
 	if err != nil {
