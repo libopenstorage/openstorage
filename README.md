@@ -186,6 +186,9 @@ This builds a Docker image called `openstorage/osd`.  You can then run the image
 make launch
 ```
 
+#### OSD on the Docker registry
+Pre-built Docker images of the OSD are available at https://hub.docker.com/r/openstorage/osd/
+
 #### Using openstorage with systemd
 
 ```service
