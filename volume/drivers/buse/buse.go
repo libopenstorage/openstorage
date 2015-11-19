@@ -103,10 +103,10 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 
 	c, err := cluster.Inst()
 	if err != nil {
+		log.Println("BUSE initializing in single node mode")
+	} else {
 		log.Println("BUSE initializing in clustered mode")
 		c.AddEventListener(inst)
-	} else {
-		log.Println("BUSE initializing in single node mode")
 	}
 
 	log.Println("BUSE initialized and driver mounted at: ", BuseMountPath)
