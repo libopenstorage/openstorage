@@ -27,7 +27,7 @@ vendor:
 	rm -rf vendor
 	# TODO: when godep fixes downloading all tags, remove the custom package
 	# https://github.com/tools/godep/issues/271
-	godep save $(PKGS) github.com/docker/docker/pkg/chrootarchive
+	godep save $(PKGS) github.com/docker/docker/pkg/chrootarchive github.com/stretchr/testify/require
 	rm -rf Godeps
 
 build:
