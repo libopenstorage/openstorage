@@ -3,9 +3,11 @@ package cli
 import (
 	"fmt"
 	"os"
+	"text/tabwriter"
 
 	"github.com/codegangsta/cli"
 
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/client"
 	"github.com/libopenstorage/openstorage/cluster"
 )
@@ -24,8 +26,53 @@ func (c *clusterClient) clusterOptions(context *cli.Context) {
 	c.manager = clnt.ClusterManager()
 }
 
+func (c *clusterClient) inspect(context *cli.Context) {
+	c.clusterOptions(context)
+	jsonOut := context.GlobalBool("json")
+	outFd := os.Stdout
+	fn := "inspect"
+
+	cluster, err := c.manager.Enumerate()
+	if err != nil {
+		cmdError(context, fn, err)
+		return
+	}
+
+	if jsonOut {
+		fmtOutput(context, &Format{Cluster: &cluster})
+	} else {
+		fmt.Fprintf(outFd, "ID %s: Status: %v\n",
+			cluster.Id, cluster.Status)
+
+		w := new(tabwriter.Writer)
+		w.Init(outFd, 12, 12, 1, ' ', 0)
+
+		fmt.Fprintln(w, "ID\t IP\t STATUS\t CPU\t MEMORY\t CONTAINERS")
+		for _, n := range cluster.Nodes {
+			status := ""
+			if n.Status == api.StatusInit {
+				status = "Initializing"
+			} else if n.Status == api.StatusOk {
+				status = "OK"
+			} else if n.Status == api.StatusOffline {
+				status = "Off Line"
+			} else {
+				status = "Error"
+			}
+
+			fmt.Fprintln(w, n.Id, "\t", n.Ip, "\t", status, "\t",
+				n.Cpu, "\t", n.Memory, "\t", len(n.Containers))
+		}
+
+		fmt.Fprintln(w)
+		w.Flush()
+	}
+}
+
 func (c *clusterClient) enumerate(context *cli.Context) {
 	c.clusterOptions(context)
+	jsonOut := context.GlobalBool("json")
+	outFd := os.Stdout
 	fn := "enumerate"
 
 	cluster, err := c.manager.Enumerate()
@@ -34,7 +81,25 @@ func (c *clusterClient) enumerate(context *cli.Context) {
 		return
 	}
 
-	cmdOutput(context, cluster)
+	if jsonOut {
+		fmtOutput(context, &Format{Cluster: &cluster})
+	} else {
+		w := new(tabwriter.Writer)
+		for _, n := range cluster.Nodes {
+			for _, c := range n.Containers {
+				w.Init(outFd, 12, 12, 1, ' ', 0)
+
+				fmt.Fprintln(w, "ID\t IMAGE\t STATUS\t NAMES\t NODE")
+				for _, n := range cluster.Nodes {
+					fmt.Fprintln(w, c.ID, "\t", c.Image, "\t", c.Status, "\t",
+						c.Names, "\t", n.Ip)
+				}
+			}
+		}
+
+		fmt.Fprintln(w)
+		w.Flush()
+	}
 }
 
 func (c *clusterClient) remove(context *cli.Context) {
@@ -60,8 +125,21 @@ func ClusterCommands(name string) []cli.Command {
 	commands := []cli.Command{
 		{
 			Name:    "inspect",
-			Aliases: []string{"ci"},
+			Aliases: []string{"i"},
 			Usage:   "Inspect the cluster",
+			Action:  c.inspect,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "machine,m",
+					Usage: "Comma separated machine ids, e.g uuid1,uuid2",
+					Value: "",
+				},
+			},
+		},
+		{
+			Name:    "enumerate",
+			Aliases: []string{"e"},
+			Usage:   "Enumerate containers in the cluster",
 			Action:  c.enumerate,
 			Flags: []cli.Flag{
 				cli.StringFlag{

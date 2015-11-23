@@ -7,16 +7,19 @@ import (
 	"strings"
 
 	"github.com/codegangsta/cli"
+
+	"github.com/libopenstorage/openstorage/api"
 )
 
 // Format standardizes the screen output of commands.
 type Format struct {
-	Cmd    string      `json:"cmd,omitempty"`
-	Status string      `json:"status,omitempty"`
-	Err    string      `json:"error,omitempty"`
-	Desc   string      `json:"desc,omitempty"`
-	UUID   []string    `json:"uuid,omitempty"`
-	Result interface{} `json:"result,omitempty"`
+	Cmd     string       `json:"cmd,omitempty"`
+	Status  string       `json:"status,omitempty"`
+	Err     string       `json:"error,omitempty"`
+	Desc    string       `json:"desc,omitempty"`
+	UUID    []string     `json:"uuid,omitempty"`
+	Result  interface{}  `json:"result,omitempty"`
+	Cluster *api.Cluster `json:"cluster,omitempty"`
 }
 
 func exitCli() {
@@ -82,14 +85,17 @@ func cmdOutput(c *cli.Context, body interface{}) {
 func fmtOutput(c *cli.Context, format *Format) {
 	jsonOut := c.GlobalBool("json")
 	outFd := os.Stdout
+
 	if format.Err != "" {
 		outFd = os.Stderr
 	}
+
 	if jsonOut {
 		b, _ := json.MarshalIndent(format, "", " ")
 		fmt.Fprintf(outFd, "%+v\n", string(b))
 		return
 	}
+
 	if format.Err == "" {
 		if format.Result == nil {
 			for _, v := range format.UUID {
@@ -101,10 +107,12 @@ func fmtOutput(c *cli.Context, format *Format) {
 		fmt.Fprintf(outFd, "%+v\n", string(b))
 		return
 	}
+
 	if format.Desc != "" {
 		fmt.Fprintf(outFd, "%s: %v - %s\n", format.Cmd, format.Err,
 			format.Desc)
 		return
 	}
+
 	fmt.Fprintf(outFd, "%s: %v\n", format.Cmd, format.Err)
 }
