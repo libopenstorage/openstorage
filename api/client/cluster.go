@@ -43,7 +43,7 @@ func (c *clusterClient) AddEventListener(cluster.ClusterListener) error {
 func (c *clusterClient) UpdateNodeData(dataKey string, value interface{}) {
 }
 
-func (c *clusterClient) GetClusterNodeData() []*api.Node {
+func (c *clusterClient) GetClusterNodeData() map[string]*api.Node {
 	return nil
 }
 

@@ -95,11 +95,10 @@ func (c *ClusterManager) UpdateNodeData(dataKey string, value interface{}) {
 	c.selfNode.NodeData[dataKey] = value
 }
 
-func (c *ClusterManager) GetClusterNodeData() []*api.Node {
-	nodes := make([]*api.Node, len(c.nodeCache), len(c.nodeCache))
-	i := 0
+func (c *ClusterManager) GetClusterNodeData() map[string]*api.Node {
+	nodes := make(map[string]*api.Node)
 	for _, value := range c.nodeCache {
-		nodes[i] = &value
+		nodes[value.Id] = &value
 	}
 	return nodes
 }

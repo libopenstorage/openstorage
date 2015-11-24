@@ -87,8 +87,9 @@ type Cluster interface {
 	// Update Node data associated with this node
 	UpdateNodeData(dataKey string, value interface{})
 
-	// Get Node data associated with all nodes
-	GetClusterNodeData() []*api.Node
+	// Get Node data associated with all nodes. Key is
+	// the node id.
+	GetClusterNodeData() map[string]*api.Node
 
 	// Enables notifications from gossip
 	EnableGossipUpdates()
