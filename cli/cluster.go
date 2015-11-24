@@ -85,15 +85,13 @@ func (c *clusterClient) enumerate(context *cli.Context) {
 		fmtOutput(context, &Format{Cluster: &cluster})
 	} else {
 		w := new(tabwriter.Writer)
+		w.Init(outFd, 12, 12, 1, ' ', 0)
+
+		fmt.Fprintln(w, "ID\t IMAGE\t STATUS\t NAMES\t NODE")
 		for _, n := range cluster.Nodes {
 			for _, c := range n.Containers {
-				w.Init(outFd, 12, 12, 1, ' ', 0)
-
-				fmt.Fprintln(w, "ID\t IMAGE\t STATUS\t NAMES\t NODE")
-				for _, n := range cluster.Nodes {
-					fmt.Fprintln(w, c.ID, "\t", c.Image, "\t", c.Status, "\t",
-						c.Names, "\t", n.Ip)
-				}
+				fmt.Fprintln(w, c.ID, "\t", c.Image, "\t", c.Status, "\t",
+					c.Names, "\t", n.Ip)
 			}
 		}
 
