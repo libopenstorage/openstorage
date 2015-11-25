@@ -1,8 +1,8 @@
 ---
 osd:
-  _cluster:
-    _nodeid: "1"
-    _clusterid: "deadbeeef"
+  cluster:
+    nodeid: "1"
+    clusterid: "deadbeeef"
   drivers:
 #   vfs:
 #   pwx:

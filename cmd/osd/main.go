@@ -58,7 +58,7 @@ func start(c *cli.Context) {
 
 	kv, err := kvdb.New(scheme, "openstorage", []string{u.String()}, nil)
 	if err != nil {
-		log.Warnf("Failed to initialize KVDB: %v (%v)", u.Scheme, err)
+		log.Warnf("Failed to initialize KVDB: %v (%v)", scheme, err)
 		log.Warnf("Supported datastores: %v", datastores)
 		return
 	}
@@ -151,7 +151,7 @@ func main() {
 		},
 		cli.StringFlag{
 			Name:  "kvdb,k",
-			Usage: "uri to kvdb e.g. kv-mem://localhost, etcd://localhost:4001, consul://localhost:8500",
+			Usage: "uri to kvdb e.g. kv-mem://localhost, etcd-kv://localhost:4001, consul-kv://localhost:8500",
 			Value: "kv-mem://localhost",
 		},
 		cli.StringFlag{
