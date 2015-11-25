@@ -39,6 +39,20 @@ func Run(t *testing.T) {
 	cas(t)
 }
 
+func RunBasic(t *testing.T) {
+	get(t)
+	getInterface(t)
+	create(t)
+	update(t)
+	deleteKey(t)
+	deleteTree(t)
+	enumerate(t)
+	lockBasic(t)
+	// watchKey(t)
+	// watchTree(t)
+	// cas(t)
+}
+
 func get(t *testing.T) {
 	fmt.Println("get")
 
@@ -247,10 +261,39 @@ func lock(t *testing.T) {
 	kvPair, err := kv.Lock(key, 100)
 	assert.NoError(t, err, "Unexpected error in lock")
 
+	if kvPair == nil {
+		return
+	}
+
 	stash := *kvPair
 	stash.Value = []byte("hoohah")
 	err = kv.Unlock(&stash)
 	assert.Error(t, err, "Unlock should fail for bad KVPair")
+
+	err = kv.Unlock(kvPair)
+	assert.NoError(t, err, "Unexpected error from Unlock")
+
+	kvPair, err = kv.Lock(key, 20)
+	assert.NoError(t, err, "Failed to lock after unlock")
+
+	err = kv.Unlock(kvPair)
+	assert.NoError(t, err, "Unexpected error from Unlock")
+}
+
+func lockBasic(t *testing.T) {
+
+	fmt.Println("lock")
+
+	kv := kvdb.Instance()
+	assert.NotNil(t, kv, "Default KVDB is not set")
+
+	key := "locktest"
+	kvPair, err := kv.Lock(key, 100)
+	assert.NoError(t, err, "Unexpected error in lock")
+
+	if kvPair == nil {
+		return
+	}
 
 	err = kv.Unlock(kvPair)
 	assert.NoError(t, err, "Unexpected error from Unlock")
@@ -362,8 +405,14 @@ func watchKey(t *testing.T) {
 		stop:       "stop",
 		iterations: 2,
 	}
+
 	kv.Delete(watchData.key)
-	kv.WatchKey(watchData.key, 0, &watchData, watchFn)
+	err := kv.WatchKey(watchData.key, 0, &watchData, watchFn)
+	if err != nil {
+		fmt.Printf("Cannot test watchKey: %v\n", err)
+		return
+	}
+
 	go watchUpdate(&watchData)
 
 	for watchData.watchStopped == false {
@@ -387,7 +436,11 @@ func watchTree(t *testing.T) {
 	}
 	kv.Delete(watchData.key)
 	time.Sleep(time.Second)
-	kv.WatchTree(tree, 0, &watchData, watchFn)
+	err := kv.WatchTree(tree, 0, &watchData, watchFn)
+	if err != nil {
+		fmt.Printf("Cannot test watchKey: %v\n", err)
+		return
+	}
 	go watchUpdate(&watchData)
 
 	for watchData.watchStopped == false {
