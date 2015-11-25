@@ -51,6 +51,7 @@ func (vd *volApi) create(w http.ResponseWriter, r *http.Request) {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
 	d, err := volume.Get(vd.name)
 	if err != nil {
 		notFound(w, r)
@@ -59,6 +60,9 @@ func (vd *volApi) create(w http.ResponseWriter, r *http.Request) {
 	ID, err := d.Create(dcReq.Locator, dcReq.Source, dcReq.Spec)
 	dcRes.VolumeResponse = api.VolumeResponse{Error: responseStatus(err)}
 	dcRes.ID = ID
+
+	vd.logReq(method, string(ID)).Info("")
+
 	json.NewEncoder(w).Encode(&dcRes)
 }
 
@@ -81,6 +85,8 @@ func (vd *volApi) volumeSet(w http.ResponseWriter, r *http.Request) {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	vd.logReq(method, string(volumeID)).Info("")
 
 	d, err := volume.Get(vd.name)
 	if err != nil {
@@ -146,11 +152,15 @@ func (vd *volApi) inspect(w http.ResponseWriter, r *http.Request) {
 		notFound(w, r)
 		return
 	}
+
 	if volumeID, err = vd.parseVolumeID(r); err != nil {
 		e := fmt.Errorf("Failed to parse parse volumeID: %s", err.Error())
 		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
 		return
 	}
+
+	vd.logReq(method, string(volumeID)).Info("")
+
 	dk, err := d.Inspect([]api.VolumeID{volumeID})
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusNotFound)
@@ -170,6 +180,8 @@ func (vd *volApi) delete(w http.ResponseWriter, r *http.Request) {
 		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
 		return
 	}
+
+	vd.logReq(method, string(volumeID)).Info("")
 
 	d, err := volume.Get(vd.name)
 	if err != nil {
@@ -246,6 +258,9 @@ func (vd *volApi) snap(w http.ResponseWriter, r *http.Request) {
 		notFound(w, r)
 		return
 	}
+
+	vd.logReq(method, string(snapReq.ID)).Info("")
+
 	ID, err := d.Snapshot(snapReq.ID, snapReq.Readonly, snapReq.Locator)
 	snapRes.VolumeCreateResponse.VolumeResponse = api.VolumeResponse{Error: responseStatus(err)}
 	snapRes.VolumeCreateResponse.ID = ID
@@ -300,6 +315,8 @@ func (vd *volApi) stats(w http.ResponseWriter, r *http.Request) {
 		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
 		return
 	}
+
+	vd.logReq(method, string(volumeID)).Info("")
 
 	d, err := volume.Get(vd.name)
 	if err != nil {
