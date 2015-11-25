@@ -11,6 +11,7 @@ import (
 	"github.com/fsouza/go-dockerclient"
 
 	"github.com/portworx/kvdb"
+	"github.com/portworx/kvdb/consul"
 	"github.com/portworx/kvdb/etcd"
 	"github.com/portworx/kvdb/mem"
 
@@ -37,7 +38,7 @@ func start(c *cli.Context) {
 		return
 	}
 
-	datastores := []string{mem.Name, etcd.Name}
+	datastores := []string{mem.Name, etcd.Name, consul.Name}
 
 	// We are in daemon mode.
 	file := c.String("file")
@@ -150,7 +151,7 @@ func main() {
 		},
 		cli.StringFlag{
 			Name:  "kvdb,k",
-			Usage: "uri to kvdb e.g. kv-mem://localhost, etcd://localhost:4001",
+			Usage: "uri to kvdb e.g. kv-mem://localhost, etcd://localhost:4001, consul://localhost:8500",
 			Value: "kv-mem://localhost",
 		},
 		cli.StringFlag{
