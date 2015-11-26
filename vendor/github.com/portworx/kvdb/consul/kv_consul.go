@@ -35,6 +35,12 @@ func ConsulInit(domain string,
 
 	if len(machines) == 0 {
 		machines = []string{defHost}
+	} else {
+		if strings.HasPrefix(machines[0], "http://") {
+			machines[0] = strings.TrimPrefix(machines[0], "http://")
+		} else if strings.HasPrefix(machines[0], "https://") {
+			machines[0] = strings.TrimPrefix(machines[0], "https://")
+		}
 	}
 
 	if domain != "" && !strings.HasSuffix(domain, "/") {
