@@ -13,6 +13,8 @@ When you install openstorage on a Linux host, you will automatically get a state
 
 OSD will work with any distributed scheduler that is compatible with the [Docker remote API](https://docs.docker.com/engine/reference/api/docker_remote_api/).
 
+![OSD with schedulers](http://i.imgur.com/fNfSprv.png)
+
 ### Docker Volumes
 
 OSD integrates with [Docker Volumes](https://docs.docker.com/engine/extend/plugins_volume/) and provisions storage to a container on behalf of any third party OSD driver and ensures the volumes are available in a multi host environment. 
