@@ -29,7 +29,7 @@ OpenStorage provides support for the [Graph Driver](https://godoc.org/github.com
 
 The diagram below shows OSD integrated with Docker and Swarm to allow for provisioning of storage to containers in a multi node environment.
 
-![OSD - Docker - Swarm integration](http://i.imgur.com/W2pXsqb.png)
+![OSD - Docker - Swarm integration](http://i.imgur.com/ZqwnKIj.png)
 
 There are default drivers built-in for NFS, AWS and BTRFS.  By using openstorage, you can get container granular, stateful storage provisioning to Linux containers with the backends supported by openstorage.  We are working with the storage ecosystem to add more drivers for various storage providers.
 
