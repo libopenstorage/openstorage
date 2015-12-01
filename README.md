@@ -23,7 +23,7 @@ OSD integrates with [Docker Volumes](https://docs.docker.com/engine/extend/plugi
 
 OpenStorage provides support for the [Graph Driver](https://godoc.org/github.com/docker/docker/daemon/graphdriver) in addition to `Docker Volumes`.  When used as a graph driver, the container's layers will be stored on a volume provided by the OSD.
 
-![OSD - Graph Driver and Docker Volumes](http://i.imgur.com/MvC0tKZ.png)
+![OSD - Graph Driver and Docker Volumes](http://i.imgur.com/jFUsHh3.png)
 
 ### An example usage
 
