@@ -8,6 +8,7 @@ import (
 	"github.com/libopenstorage/openstorage/volume/drivers/nfs"
 	"github.com/libopenstorage/openstorage/volume/drivers/pwx"
 	"github.com/libopenstorage/openstorage/volume/drivers/vfs"
+	"github.com/libopenstorage/openstorage/volume/drivers/coprhd"
 )
 
 // Driver is the description of a supported OST driver. New Drivers are added to
@@ -32,5 +33,7 @@ var (
 		{DriverType: vfs.Type, Name: vfs.Name},
 		// BUSE driver provisions storage from local volumes and implements block in user space.
 		{DriverType: buse.Type, Name: buse.Name},
+		// EMC Vipr
+		{DriverType: coprhd.Type, Name: coprhd.Name},
 	}
 )

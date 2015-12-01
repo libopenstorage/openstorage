@@ -4,11 +4,15 @@ osd:
     _nodeid: "1"
     _clusterid: "deadbeeef"
   drivers:
+    coprhd:
+     url: "https://192.168.3.220:4443/"
+     user: "root"
+     password: "D1g1tal*23"
 #   vfs:
 #   pwx:
-    nfs:
-      server: "127.0.0.1"
-      path: "/nfs"
+#    nfs:
+#      server: "127.0.0.1"
+#      path: "/nfs"
 #    btrfs:
 #      home: "/var/lib/openstorage/btrfs"
 #    aws:
