@@ -6,5 +6,5 @@ The persistent storage is derived from one of the OSD volume drivers.
 To use this as the graphdriver in Docker with aws as the backend volume provider:
 
 ```
-``` DOCKER_STORAGE_OPTIONS= -s layer0 --storage-opt layer0.volume_driver=aws
+DOCKER_STORAGE_OPTIONS= -s layer0 --storage-opt layer0.volume_driver=aws
 ```
