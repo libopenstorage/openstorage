@@ -43,6 +43,7 @@ var (
 
 // Driver implements VolumeDriver interface
 type Driver struct {
+	*volume.IoNotSupported
 	*volume.DefaultEnumerator
 	*device.SingleLetter
 	md        *Metadata
@@ -84,6 +85,7 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 			zone:     zone,
 			instance: instance,
 		},
+		IoNotSupported:    &volume.IoNotSupported{},
 		DefaultEnumerator: volume.NewDefaultEnumerator(Name, kvdb.Instance()),
 	}
 	devPrefix, letters, err := d.freeDevices()

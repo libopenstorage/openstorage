@@ -29,9 +29,31 @@ type InitFunc func(params DriverParams) (VolumeDriver, error)
 // VolumeDriver is the main interface to be implemented by any storage driver.
 // Every driver must at minimum implement the ProtoDriver sub interface.
 type VolumeDriver interface {
+	IODriver
 	ProtoDriver
 	BlockDriver
 	Enumerator
+}
+
+// IODriver interfaces applicable to object store interfaces.
+type IODriver interface {
+	// Read sz bytes from specified volume at specified offset.
+	// Return number of bytes read and error.
+	Read(volumeID api.VolumeID,
+		buf []byte,
+		sz uint64,
+		offset int64) (int64, error)
+
+	// Write sz bytes from specified volume at specified offset.
+	// Return number of bytes written and error.
+	Write(volumeID api.VolumeID,
+		buf []byte,
+		sz uint64,
+		offset int64) (int64, error)
+
+	// Flush writes to stable storage.
+	// Return error.
+	Flush(volumeID api.VolumeID) error
 }
 
 // ProtoDriver must be implemented by all volume drivers.  It specifies the

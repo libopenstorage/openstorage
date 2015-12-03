@@ -22,6 +22,7 @@ const (
 )
 
 type driver struct {
+	*volume.IoNotSupported
 	*volume.DefaultBlockDriver
 	*volume.DefaultEnumerator
 	*volume.SnapshotNotSupported
@@ -30,7 +31,9 @@ type driver struct {
 // Init Driver intialization.
 func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 	return &driver{
-		DefaultEnumerator: volume.NewDefaultEnumerator(Name, kvdb.Instance())}, nil
+		IoNotSupported:    &volume.IoNotSupported{},
+		DefaultEnumerator: volume.NewDefaultEnumerator(Name, kvdb.Instance()),
+	}, nil
 }
 
 func (d *driver) String() string {

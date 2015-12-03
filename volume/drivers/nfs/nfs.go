@@ -32,6 +32,7 @@ const (
 
 // Implements the open storage volume interface.
 type driver struct {
+	*volume.IoNotSupported
 	*volume.DefaultEnumerator
 	nfsServer string
 	nfsPath   string
@@ -128,6 +129,7 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 	}
 
 	inst := &driver{
+		IoNotSupported:    &volume.IoNotSupported{},
 		DefaultEnumerator: volume.NewDefaultEnumerator(Name, kvdb.Instance()),
 		nfsServer:         server,
 		nfsPath:           path,

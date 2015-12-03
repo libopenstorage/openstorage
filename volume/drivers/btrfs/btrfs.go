@@ -33,6 +33,7 @@ var (
 )
 
 type driver struct {
+	*volume.IoNotSupported
 	*volume.DefaultBlockDriver
 	*volume.DefaultEnumerator
 	btrfs graph.Driver
@@ -50,7 +51,11 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 		return nil, err
 	}
 	s := volume.NewDefaultEnumerator(Name, kvdb.Instance())
-	return &driver{btrfs: d, root: root, DefaultEnumerator: s}, nil
+	return &driver{
+		btrfs:             d,
+		root:              root,
+		IoNotSupported:    &volume.IoNotSupported{},
+		DefaultEnumerator: s}, nil
 }
 
 func (d *driver) String() string {

@@ -20,6 +20,7 @@ type volumeDriver struct {
 	name        string
 	baseDirPath string
 	provider    Provider
+	*volume.IoNotSupported
 	*volume.DefaultBlockDriver
 	*volume.DefaultEnumerator
 	*volume.SnapshotNotSupported
@@ -34,6 +35,7 @@ func newVolumeDriver(
 		name,
 		baseDirPath,
 		provider,
+		&volume.IoNotSupported{},
 		&volume.DefaultBlockDriver{},
 		volume.NewDefaultEnumerator(
 			name,
