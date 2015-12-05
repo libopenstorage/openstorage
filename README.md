@@ -42,7 +42,7 @@ libopenstorage is written in the [Go](http://golang.org) programming language. I
 After setting up Go, you should be able to `go get` libopenstorage as expected (we use `-d` to only download):
 
 ```
-$ go get -d github.com/libopenstorage/openstorage/...
+$ GO15VENDOREXPERIMENT=1 go get -d github.com/libopenstorage/openstorage/...
 ```
 
 ## Building from Source
