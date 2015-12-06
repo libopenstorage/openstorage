@@ -50,7 +50,8 @@ $ GO15VENDOREXPERIMENT=1 go get -d github.com/libopenstorage/openstorage/...
 At this point you can build openstorage from the source folder:
 
 ```
-$GOPATH/src/github.com/libopenstorage/openstorage $ make install
+$ cd $GOPATH/src/github.com/libopenstorage/openstorage 
+$ make install
 ```
 
 or run only unit tests:
