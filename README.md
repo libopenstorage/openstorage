@@ -57,7 +57,8 @@ $ make install
 or run only unit tests:
 
 ```
-$GOPATH/src/github.com/libopenstorage/openstorage $ make test
+$ cd $GOPATH/src/github.com/libopenstorage/openstorage 
+$ make test
 ```
 
 ## Starting OSD
