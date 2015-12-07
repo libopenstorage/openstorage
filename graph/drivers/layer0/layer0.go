@@ -95,6 +95,7 @@ func Init(home string, options []string, uidMaps, gidMaps []idtools.IDMap) (grap
 
 	return d, nil
 }
+
 func (l *Layer0) isLayer0Parent(id string) (string, bool) {
 	// This relies on an <instance_id>-init volume being created for
 	// every new container.
