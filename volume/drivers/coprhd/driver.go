@@ -1,51 +1,53 @@
 package coprhd
 
 import (
-	"strings"
-	"net/url"
+	"crypto/tls"
 	"log"
 	"net/http"
-	"crypto/tls"
+	"net/url"
+	"strings"
 
 	"github.com/portworx/kvdb"
-	
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
 	"gopkg.in/jmcvetta/napping.v3"
 )
 
 const (
-	Name           = "coprhd"
-	Type           = api.Block
+	Name = "coprhd"
+	Type = api.Block
 
-   // Place holders
-	RESTBaseUrl    = "https://localhost:4443/"
-	APIUser	       = "root"
-	APIPassword    = "ChangeMe"
+	// Place holders
+	RESTBaseUrl = "https://localhost:4443/"
+	APIUser     = "root"
+	APIPassword = "ChangeMe"
 
-   // Common API URIs
-	LoginURI      = "login.json"
-	CreateVolURI  = "block/volumes.json"
-   DeleteVolURI  = "block/volumes/%s/deactivate.json"
-   CreateSnapURI = "block/volumes/%s/protections/snapshots.json"
+	// Common API URIs
+	LoginURI       = "login.json"
+	CreateVolURI   = "block/volumes.json"
+	DeleteVolURI   = "block/volumes/%s/deactivate.json"
+	CreateSnapURI  = "block/volumes/%s/protections/snapshots.json"
+	ExportVolURI   = "block/export.json"
+	UnexportVolURI = "block/export/%s/deactivate.json"
 )
 
 type driver struct {
 	*volume.DefaultEnumerator
 	consistency_group string
-	project string
-	varray string
-	vpool string
-	url string
-	user string
-	password string
+	project           string
+	varray            string
+	vpool             string
+	url               string
+	user              string
+	password          string
 }
 
 type ApiError struct {
-	code string
-	retryable string
+	code        string
+	retryable   string
 	description string
-	details string
+	details     string
 }
 
 func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
@@ -84,19 +86,19 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 	if !ok {
 		user = APIPassword
 	}
-	
+
 	d := &driver{
 		consistency_group: consistency_group,
-		project: project,
-		varray: varray,
-		vpool: vpool,
-		url: url,
-		user: user,
-		password: pass,
+		project:           project,
+		varray:            varray,
+		vpool:             vpool,
+		url:               url,
+		user:              user,
+		password:          pass,
 		DefaultEnumerator: volume.NewDefaultEnumerator(Name, kvdb.Instance()),
-	} 
+	}
 
-	return d, nil	
+	return d, nil
 }
 
 func (d *driver) String() string {
@@ -112,23 +114,23 @@ func init() {
 }
 
 // API volume create args
-type CreateVolumeArgs struct{
+type CreateVolumeArgs struct {
 	consistency_group string `json:"consistency_group"`
-	count int `json:"count"`
-	name string `json:"name"`
-	project string `json:"project"`
-	size string `json:"size"`
-	varray string `json:"varray"`
-	vpool string `json:"vpool"`
+	count             int    `json:"count"`
+	name              string `json:"name"`
+	project           string `json:"project"`
+	size              string `json:"size"`
+	varray            string `json:"varray"`
+	vpool             string `json:"vpool"`
 }
 
-type CreateVolumeReply struct{
-   Task []struct {
-      Resource struct {
-         Name string `json:"name"`
-         Id api.VolumeID `json:"id"`
-      } `json:"resource"`
-   } `json:"task"`
+type CreateVolumeReply struct {
+	Task []struct {
+		Resource struct {
+			Name string       `json:"name"`
+			Id   api.VolumeID `json:"id"`
+		} `json:"resource"`
+	} `json:"task"`
 }
 
 func (d *driver) Create(
@@ -137,14 +139,14 @@ func (d *driver) Create(
 	spec *api.VolumeSpec) (api.VolumeID, error) {
 
 	e := ApiError{}
-	
+
 	token, err := d.getAuthToken()
 
 	if err != nil {
-		log.Fatal(err)
+		log.Printf(err)
 		return api.BadVolumeID, err
 	}
-	
+
 	log.Printf("API auth token: %s\n\n", token)
 
 	p := []string{d.url, CreateVolURI}
@@ -154,26 +156,26 @@ func (d *driver) Create(
 	h := http.Header{}
 
 	h.Add("X-SDS-AUTH-TOKEN", token)
-	
+
 	s := napping.Session{
 		Client: &http.Client{
 			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify : true},
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 			},
 		},
 		Header: &h,
 	}
 
-   res := &CreateVolumeReply{}
-   
+	res := &CreateVolumeReply{}
+
 	payload := CreateVolumeArgs{
 		consistency_group: "Default",
-		count: 1,
-		name: locator.Name,
-		project: "Default",
-		size: "1GB",
-		varray: "Default",
-		vpool: "Default",
+		count:             1,
+		name:              locator.Name,
+		project:           "Default",
+		size:              "1GB",
+		varray:            "Default",
+		vpool:             "Default",
 	}
 
 	resp, err := s.Post(url, &payload, res, &e)
@@ -184,9 +186,9 @@ func (d *driver) Create(
 		log.Println("Bad response status from API server")
 		log.Printf("\t Status:  %v\n", resp.Status())
 	}
-	
+
 	println("")
-	
+
 	return api.BadVolumeID, err
 }
 
@@ -215,7 +217,7 @@ func (d *driver) Mount(volumeID api.VolumeID, mountpath string) error {
 }
 
 func (d *driver) Unmount(volumeID api.VolumeID, mountpath string) error {
-	
+
 	return nil
 }
 
@@ -236,17 +238,17 @@ func (v *driver) Status() [][2]string {
 }
 
 // Retrieves an API Session Auth Token
-func (d *driver) getAuthToken () (token string, err error) {
+func (d *driver) getAuthToken() (token string, err error) {
 
 	p := []string{d.url, LoginURI}
 
 	e := ApiError{}
-	
+
 	s := napping.Session{
 		Userinfo: url.UserPassword(d.user, d.password),
 		Client: &http.Client{
 			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify : true},
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 			},
 		},
 	}
@@ -258,9 +260,8 @@ func (d *driver) getAuthToken () (token string, err error) {
 	if err != nil {
 		return "", err
 	}
-	
+
 	token = resp.HttpResponse().Header.Get("X-SDS-AUTH-TOKEN")
-	
+
 	return token, nil
 }
-

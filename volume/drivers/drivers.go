@@ -5,10 +5,10 @@ import (
 	"github.com/libopenstorage/openstorage/volume/drivers/aws"
 	"github.com/libopenstorage/openstorage/volume/drivers/btrfs"
 	"github.com/libopenstorage/openstorage/volume/drivers/buse"
+	"github.com/libopenstorage/openstorage/volume/drivers/coprhd"
 	"github.com/libopenstorage/openstorage/volume/drivers/nfs"
 	"github.com/libopenstorage/openstorage/volume/drivers/pwx"
 	"github.com/libopenstorage/openstorage/volume/drivers/vfs"
-	"github.com/libopenstorage/openstorage/volume/drivers/coprhd"
 )
 
 // Driver is the description of a supported OST driver. New Drivers are added to
