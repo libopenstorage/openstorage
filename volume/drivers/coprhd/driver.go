@@ -1,7 +1,6 @@
 package coprhd
 
 import (
-	"fmt"
 	"strings"
 	"net/url"
 	"log"
@@ -18,11 +17,15 @@ import (
 const (
 	Name           = "coprhd"
 	Type           = api.Block
+
+   // Place holders
 	RESTBaseUrl    = "https://localhost:4443/"
 	APIUser	       = "root"
 	APIPassword    = "ChangeMe"
-	LoginPath      = "login.json"
-	VolumePath     = "block/volumes.json"
+
+   // Common API URIs
+	LoginURI     = "login.json"
+	VolumeURI     = "block/volumes.json"
 )
 
 type driver struct {
@@ -41,16 +44,6 @@ type ApiError struct {
 	retryable string
 	description string
 	details string
-}
-
-type CreateVolume struct{
-	consistency_group string `json:"consistency_group"`
-	count int `json:"count"`
-	name string `json:"name"`
-	project string `json:"project"`
-	size string `json:"size"`
-	varray string `json:"varray"`
-	vpool string `json:"vpool"`
 }
 
 func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
@@ -116,6 +109,17 @@ func init() {
 	volume.Register(Name, Init)
 }
 
+// API volume create args
+type CreateVolumeArgs struct{
+	consistency_group string `json:"consistency_group"`
+	count int `json:"count"`
+	name string `json:"name"`
+	project string `json:"project"`
+	size string `json:"size"`
+	varray string `json:"varray"`
+	vpool string `json:"vpool"`
+}
+
 func (d *driver) Create(
 	locator api.VolumeLocator,
 	source *api.Source,
@@ -130,13 +134,11 @@ func (d *driver) Create(
 		return api.BadVolumeID, err
 	}
 	
-	fmt.Printf("API auth token: %s\n\n", token)
+	log.Printf("API auth token: %s\n\n", token)
 
-	p := []string{d.url, VolumePath}
+	p := []string{d.url, VolumeURI}
 
 	url := strings.Join(p, "")
-
-	fmt.Println(url)
 
 	h := http.Header{}
 
@@ -151,7 +153,7 @@ func (d *driver) Create(
 		Header: &h,
 	}
 	
-	payload := CreateVolume{
+	payload := CreateVolumeArgs{
 		consistency_group: "Default",
 		count: 1,
 		name: locator.Name,
@@ -166,8 +168,8 @@ func (d *driver) Create(
 	if resp.Status() == 200 {
 		return api.BadVolumeID, err
 	} else {
-		fmt.Println("Bad response status from API server")
-		fmt.Printf("\t Status:  %v\n", resp.Status())
+		log.Println("Bad response status from API server")
+		log.Printf("\t Status:  %v\n", resp.Status())
 	}
 	
 	println("")
@@ -220,9 +222,10 @@ func (v *driver) Status() [][2]string {
 	return [][2]string{}
 }
 
+// Retrieves an API Session Auth Token
 func (d *driver) getAuthToken () (token string, err error) {
 
-	p := []string{d.url, LoginPath}
+	p := []string{d.url, LoginURI}
 
 	e := ApiError{}
 	
