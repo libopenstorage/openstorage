@@ -24,8 +24,10 @@ const (
 	APIPassword    = "ChangeMe"
 
    // Common API URIs
-	LoginURI     = "login.json"
-	VolumeURI     = "block/volumes.json"
+	LoginURI      = "login.json"
+	CreateVolURI  = "block/volumes.json"
+   DeleteVolURI  = "block/volumes/%s/deactivate.json"
+   CreateSnapURI = "block/volumes/%s/protections/snapshots.json"
 )
 
 type driver struct {
@@ -120,6 +122,15 @@ type CreateVolumeArgs struct{
 	vpool string `json:"vpool"`
 }
 
+type CreateVolumeReply struct{
+   Task []struct {
+      Resource struct {
+         Name string `json:"name"`
+         Id api.VolumeID `json:"id"`
+      } `json:"resource"`
+   } `json:"task"`
+}
+
 func (d *driver) Create(
 	locator api.VolumeLocator,
 	source *api.Source,
@@ -136,7 +147,7 @@ func (d *driver) Create(
 	
 	log.Printf("API auth token: %s\n\n", token)
 
-	p := []string{d.url, VolumeURI}
+	p := []string{d.url, CreateVolURI}
 
 	url := strings.Join(p, "")
 
@@ -152,7 +163,9 @@ func (d *driver) Create(
 		},
 		Header: &h,
 	}
-	
+
+   res := &CreateVolumeReply{}
+   
 	payload := CreateVolumeArgs{
 		consistency_group: "Default",
 		count: 1,
@@ -163,10 +176,10 @@ func (d *driver) Create(
 		vpool: "Default",
 	}
 
-	resp, err := s.Post(url, &payload, nil, &e)
+	resp, err := s.Post(url, &payload, res, &e)
 
 	if resp.Status() == 200 {
-		return api.BadVolumeID, err
+		return res.Task[0].Resource.Id, err
 	} else {
 		log.Println("Bad response status from API server")
 		log.Printf("\t Status:  %v\n", resp.Status())
