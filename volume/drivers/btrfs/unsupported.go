@@ -1,11 +1,17 @@
-// +build !linux
+// +build !have_btrfs
 
 package btrfs
 
 import (
 	"errors"
 
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
+)
+
+const (
+	Name = "btrfs"
+	Type = api.File
 )
 
 var (
