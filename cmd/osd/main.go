@@ -22,6 +22,7 @@ import (
 	osdcli "github.com/libopenstorage/openstorage/cli"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/config"
+	"github.com/libopenstorage/openstorage/graph/drivers"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
 )
@@ -177,8 +178,8 @@ func main() {
 		},
 	}
 
-	// Start all drivers.
-	for _, v := range drivers.AllDrivers {
+	// Register all volume drivers with the CLI.
+	for _, v := range volumedrivers.AllDrivers {
 		if v.DriverType&api.Block == api.Block {
 			bCmds := osdcli.BlockVolumeCommands(v.Name)
 			clstrCmds := osdcli.ClusterCommands(v.Name)
@@ -200,9 +201,18 @@ func main() {
 			}
 			app.Commands = append(app.Commands, c)
 		}
+	}
 
+	// Register all graph drivers with the CLI.
+	for _, v := range graphdrivers.AllDrivers {
 		if v.DriverType&api.Graph == api.Graph {
-			// TODO - register this as a graph driver with Docker.
+			cmds := osdcli.GraphDriverCommands(v.Name)
+			c := cli.Command{
+				Name:        v.Name,
+				Usage:       fmt.Sprintf("Manage %s graph storage", v.Name),
+				Subcommands: cmds,
+			}
+			app.Commands = append(app.Commands, c)
 		}
 	}
 

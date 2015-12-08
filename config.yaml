@@ -18,3 +18,4 @@ osd:
   graphdrivers:
     proxy:
     layer0:
+    fuse:

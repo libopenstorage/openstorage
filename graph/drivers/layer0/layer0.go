@@ -1,4 +1,4 @@
-package graph
+package layer0
 
 import (
 	"fmt"
@@ -54,8 +54,9 @@ type Layer0 struct {
 
 // Layer0Graphdriver options. This should be passed in as a st
 const (
-	Layer0VolumeDriver = "layer0.volume_driver"
 	Name               = "layer0"
+	Type               = api.Graph
+	Layer0VolumeDriver = "layer0.volume_driver"
 )
 
 func init() {

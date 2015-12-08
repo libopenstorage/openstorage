@@ -1,4 +1,4 @@
-package drivers
+package volumedrivers
 
 import (
 	"github.com/libopenstorage/openstorage/api"
