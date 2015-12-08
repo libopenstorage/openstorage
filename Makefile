@@ -76,6 +76,7 @@ docker-build-osd: docker-build
 launch: docker-build-osd
 	docker run \
 		--privileged \
+		-d \
 		-v $(shell pwd):/etc \
 		-v /usr/share/docker/plugins:/usr/share/docker/plugins \
 		-v /var/lib/osd/driver:/var/lib/osd/driver \
