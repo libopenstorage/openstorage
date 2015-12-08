@@ -6,16 +6,16 @@ osd:
   drivers:
 #   vfs:
 #   pwx:
-    nfs:
-      server: "127.0.0.1"
-      path: "/nfs"
+    #nfs:
+      #server: "127.0.0.1"
+      #path: "/nfs"
 #    btrfs:
 #      home: "/var/lib/openstorage/btrfs"
 #    aws:
 #      AWS_ACCESS_KEY_ID: your_access_key
 #      AWS_SECRET_ACCESS_KEY: your_secret_access_key
-    buse:
+    #buse:
   graphdrivers:
-    proxy:
-    layer0:
-    fuse:
+    #proxy:
+    #layer0:
+    #fuse:
