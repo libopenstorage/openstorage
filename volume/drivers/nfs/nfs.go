@@ -140,6 +140,7 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	src := inst.nfsPath
 	if server != "" {
 		src = ":" + inst.nfsPath

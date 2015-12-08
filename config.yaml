@@ -6,9 +6,9 @@ osd:
   drivers:
 #   vfs:
 #   pwx:
-    #nfs:
-      #server: "127.0.0.1"
-      #path: "/nfs"
+    nfs:
+      server: "127.0.0.1"
+      path: "/nfs"
 #    btrfs:
 #      home: "/var/lib/openstorage/btrfs"
 #    aws:
@@ -18,4 +18,4 @@ osd:
   graphdrivers:
     #proxy:
     #layer0:
-    #fuse:
+    fuse:
