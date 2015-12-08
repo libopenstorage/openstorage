@@ -5,9 +5,12 @@ osd:
     _clusterid: "deadbeeef"
   drivers:
     coprhd:
-     url: "https://192.168.3.220:4443/"
+     url: "https://172.16.70.20:4443/"
      user: "root"
      password: "D1g1tal*23"
+     project: "urn:storageos:Project:9fbc0945-4fb9-4f4b-b169-c06a7f2f5f11:global"
+     varray: "urn:storageos:VirtualArray:f91f95ff-f233-4f82-aea8-79294261de09:vdc1"
+     vpool: "urn:storageos:VirtualPool:ef39cca6-2e0b-4a24-bbe0-be552ae9d62b:vdc1"
 #   vfs:
 #   pwx:
 #    nfs:

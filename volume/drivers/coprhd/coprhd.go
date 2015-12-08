@@ -2,6 +2,7 @@ package coprhd
 
 import (
 	"crypto/tls"
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -44,18 +45,15 @@ type driver struct {
 }
 
 type ApiError struct {
-	code        string
-	retryable   string
-	description string
-	details     string
+	Code        int    `json:"code"`
+	Retryable   bool   `json:"retryable"`
+	Description string `json:"description"`
+	Details     string `json:"details"`
 }
 
 func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 
 	consistency_group, ok := params["consistency_group"]
-	if !ok {
-		consistency_group = "Default"
-	}
 
 	project, ok := params["project"]
 	if !ok {
@@ -115,13 +113,13 @@ func init() {
 
 // API volume create args
 type CreateVolumeArgs struct {
-	consistency_group string `json:"consistency_group"`
-	count             int    `json:"count"`
-	name              string `json:"name"`
-	project           string `json:"project"`
-	size              string `json:"size"`
-	varray            string `json:"varray"`
-	vpool             string `json:"vpool"`
+	Consistency_group string `json:"consistency_group,omitempty"`
+	Count             int    `json:"count"`
+	Name              string `json:"name"`
+	Project           string `json:"project"`
+	Size              string `json:"size"`
+	Varray            string `json:"varray"`
+	Vpool             string `json:"vpool"`
 }
 
 type CreateVolumeReply struct {
@@ -143,7 +141,7 @@ func (d *driver) Create(
 	token, err := d.getAuthToken()
 
 	if err != nil {
-		log.Printf(err)
+		log.Printf("error: %s", err.Error())
 		return api.BadVolumeID, err
 	}
 
@@ -166,28 +164,34 @@ func (d *driver) Create(
 		Header: &h,
 	}
 
-	res := &CreateVolumeReply{}
+	res := CreateVolumeReply{}
+
+	sz := float64(spec.Size / (1024 * 1024 * 1000))
 
 	payload := CreateVolumeArgs{
-		consistency_group: "Default",
-		count:             1,
-		name:              locator.Name,
-		project:           "Default",
-		size:              "1GB",
-		varray:            "Default",
-		vpool:             "Default",
+		Consistency_group: d.consistency_group,
+		Count:             1,
+		Name:              locator.Name,
+		Project:           d.project,
+		Size:              fmt.Sprintf("%.6fGB", sz),
+		Varray:            d.varray,
+		Vpool:             d.vpool,
 	}
 
-	resp, err := s.Post(url, &payload, res, &e)
+	resp, err := s.Post(url, &payload, &res, &e)
 
-	if resp.Status() == 200 {
-		return res.Task[0].Resource.Id, err
+	if resp.Status() == 202 {
+
+		volId := res.Task[0].Resource.Id
+
+		log.Printf("Coprhd volume %s created\n", volId)
+
+		return volId, err
 	} else {
-		log.Println("Bad response status from API server")
-		log.Printf("\t Status:  %v\n", resp.Status())
-	}
+		log.Printf("error: %s (%d)", e.Details, e.Code)
 
-	println("")
+		err = fmt.Errorf("%s", e.Details)
+	}
 
 	return api.BadVolumeID, err
 }
