@@ -2,6 +2,7 @@ package fuse
 
 import (
 	"os"
+	"syscall"
 
 	"github.com/docker/docker/daemon/graphdriver/overlay"
 	"github.com/libopenstorage/openstorage/api"
@@ -67,16 +68,15 @@ func (File) ReadAll(ctx context.Context) ([]byte, error) {
 	return []byte(greeting), nil
 }
 
-func init() {
-	log.Infof("Initializing Fuse Graph driver.")
+func startFuse() {
+	log.Infof("Initializing Fuse Graph driver...")
 
-	graph.Register("fuse", overlay.Init)
-
-	// XXX move this to Init()
+	// In case it is mounted.
+	syscall.Unmount(fuseMountPath, 0)
 
 	err := os.MkdirAll(fuseMountPath, 0744)
 	if err != nil {
-		log.Fatal("Error while creating FUSE mount path: %v", err)
+		log.Fatalf("Error while creating FUSE mount path: %v", err)
 	}
 
 	c, err := fuse.Mount(
@@ -94,14 +94,25 @@ func init() {
 
 	defer c.Close()
 
+	log.Infof("Fuse ready.")
+
 	err = fs.Serve(c, FS{})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// check if the mount process has an error to report
+	// Check if the mount process has an error to report
 	<-c.Ready
 	if err := c.MountError; err != nil {
 		log.Fatal(err)
 	}
+
+}
+
+func init() {
+
+	graph.Register("fuse", overlay.Init)
+
+	// XXX move this to Init()
+	go startFuse()
 }
