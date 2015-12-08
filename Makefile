@@ -1,4 +1,4 @@
-TAGS := daemon btrfs_noversion
+TAGS := daemon btrfs_noversion have_btrfs
 PKGS := $(shell go list ./... | grep -v 'github.com/libopenstorage/openstorage/vendor')
 
 ifeq ($(BUILD_TYPE),debug)
