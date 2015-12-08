@@ -78,9 +78,8 @@ launch: docker-build-osd
 		--privileged \
 		-d \
 		-v $(shell pwd):/etc \
-		-v /usr/share/docker/plugins:/usr/share/docker/plugins \
-		-v /var/lib/osd/driver:/var/lib/osd/driver \
-		-v /mnt:/mnt \
+		-v /run/docker/plugins:/run/docker/plugins \
+		-v /var/lib/osd/:/var/lib/osd/\
 		openstorage/osd -d -f /etc/config.yaml
 
 clean:
