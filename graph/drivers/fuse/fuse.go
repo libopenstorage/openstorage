@@ -17,8 +17,7 @@ import (
 const (
 	Name          = "fuse"
 	Type          = api.Graph
-	FuseDBKey     = "OpenStorageBuseKey"
-	FuseMountPath = "/var/lib/openstorage/fuse/"
+	fuseMountPath = "/var/lib/openstorage/fuse/"
 )
 
 // FS implements the graph file system.
@@ -73,8 +72,15 @@ func init() {
 
 	graph.Register("fuse", overlay.Init)
 
+	// XXX move this to Init()
+
+	err := os.MkdirAll(fuseMountPath, 0744)
+	if err != nil {
+		log.Fatal("Error while creating FUSE mount path: %v", err)
+	}
+
 	c, err := fuse.Mount(
-		FuseMountPath,
+		fuseMountPath,
 		fuse.FSName("openstorage"),
 		fuse.Subtype("openstoragefs"),
 		fuse.LocalVolume(),
