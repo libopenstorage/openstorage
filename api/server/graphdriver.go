@@ -123,10 +123,13 @@ func (d *graphDriver) init(w http.ResponseWriter, r *http.Request) {
 		d.decodeError(method, w, err)
 		return
 	}
-	gd, err := graph.New(d.name, config.GraphDriverAPIBase, request.Opts)
+	gd, err := graph.Get(d.name)
 	if err != nil {
-		d.errResponse(method, w, err)
-		return
+		gd, err = graph.New(d.name, config.GraphDriverAPIBase, request.Opts)
+		if err != nil {
+			d.errResponse(method, w, err)
+			return
+		}
 	}
 	d.gd = gd
 	d.emptyResponse(w)
