@@ -1,15 +1,10 @@
 package fuse
 
 import (
-	"fmt"
+	"io/ioutil"
 	"os"
+	"path"
 	"syscall"
-
-	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/graph"
-
-	"github.com/docker/docker/daemon/graphdriver"
-	"github.com/docker/docker/pkg/idtools"
 
 	log "github.com/Sirupsen/logrus"
 
@@ -19,29 +14,166 @@ import (
 )
 
 const (
-	Name          = "fuse"
-	Type          = api.Graph
-	fuseMountPath = "/var/lib/openstorage/fuse/"
+	virtPath = "/var/lib/openstorage/fuse/virtual"
+	physPath = "/var/lib/openstorage/fuse/physical"
 )
 
-type Driver struct {
-	// Driver is an implementation of GraphDriver. Only select methods are overridden
-	graphdriver.Driver
+// FS implements the graph file system.
+type FS struct{}
+
+func (FS) Root() (fs.Node, error) {
+	return &Dir{path: physPath}, nil
+}
+
+// Directory operations.
+type Dir struct {
+	path string
+}
+
+func (d *Dir) Attr(ctx context.Context, a *fuse.Attr) error {
+	log.Infof("Checking directory attributes on %s", d.path)
+
+	fi, err := os.Stat(d.path)
+	if err != nil {
+		return err
+	}
+
+	a.Inode = (fi.Sys().(*syscall.Stat_t).Ino)
+	a.Mode = fi.Mode()
+	return nil
+}
+
+func (d *Dir) Lookup(ctx context.Context, name string) (fs.Node, error) {
+	fullPath := path.Join(d.path, name)
+	log.Infof("Directory lookup on %s", fullPath)
+
+	fi, err := os.Stat(fullPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if fi.Mode()&os.ModeDir == os.ModeDir {
+		return &Dir{path: fullPath}, nil
+	} else {
+		return &File{path: fullPath}, nil
+	}
+}
+
+func (d *Dir) ReadDirAll(ctx context.Context) ([]fuse.Dirent, error) {
+	log.Infof("Readdir on %s", d.path)
+
+	fi, err := ioutil.ReadDir(d.path)
+	if err != nil {
+		return nil, err
+	}
+
+	var res []fuse.Dirent
+	for _, f := range fi {
+		var de fuse.Dirent
+		de.Name = f.Name()
+		de.Inode = (f.Sys().(*syscall.Stat_t).Ino)
+		if f.IsDir() {
+			de.Type = fuse.DT_Dir
+		} else {
+			de.Type = fuse.DT_File
+		}
+
+		res = append(res, de)
+	}
+
+	return res, nil
+}
+
+func (d *Dir) Mkdir(ctx context.Context, req *fuse.MkdirRequest) (fs.Node, error) {
+	fullPath := path.Join(d.path, req.Name)
+	log.Infof("Mkdir on %s", fullPath)
+
+	err := os.MkdirAll(fullPath, req.Mode)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Dir{path: fullPath}, nil
+}
+
+func (d *Dir) Create(ctx context.Context, req *fuse.CreateRequest, resp *fuse.CreateResponse) (fs.Node, fs.Handle, error) {
+	log.Infof("Creating file %s: %v", d.path, req)
+	return nil, nil, fuse.ENOENT
+}
+
+// File operations.
+type File struct {
+	path string
+}
+
+func (f *File) Attr(ctx context.Context, a *fuse.Attr) error {
+	log.Infof("Checking file attributes on %s", f.path)
+
+	fi, err := os.Stat(f.path)
+	if err != nil {
+		return err
+	}
+
+	a.Inode = (fi.Sys().(*syscall.Stat_t).Ino)
+	a.Mode = fi.Mode()
+	a.Size = uint64(fi.Size())
+	a.Mtime = fi.ModTime()
+
+	return nil
+}
+
+func (f *File) Open(ctx context.Context, req *fuse.OpenRequest, resp *fuse.OpenResponse) (fs.Handle, error) {
+	log.Infof("Opening file %s: %v", f.path, req)
+	return nil, fuse.ENOENT
+}
+
+func (f *File) ReadAll(ctx context.Context) ([]byte, error) {
+	log.Infof("Reading file %s", f.path)
+
+	b, err := ioutil.ReadFile(f.path)
+	return b, err
+}
+
+// File handle operations.
+type FileHandle struct {
+	path string
+	f    os.File
+}
+
+func (fh *FileHandle) Write(ctx context.Context, req *fuse.WriteRequest, resp *fuse.WriteResponse) error {
+	log.Infof("Writing file %s", fh.path)
+
+	_, err := fh.f.WriteAt(req.Data, req.Offset)
+	return err
+}
+
+func (fh *FileHandle) Read(ctx context.Context, req *fuse.ReadRequest, resp *fuse.ReadResponse) error {
+	log.Infof("Reading file %s", fh.path)
+
+	buf := make([]byte, req.Size)
+	n, err := fh.f.ReadAt(buf, req.Offset)
+	resp.Data = buf[:n]
+	return err
 }
 
 func startFuse() {
-	log.Infof("Initializing Fuse Graph driver at %v...", fuseMountPath)
+	log.Infof("Initializing Fuse Graph driver at %v...", virtPath)
 
 	// In case it is mounted.
-	syscall.Unmount(fuseMountPath, 0)
+	syscall.Unmount(virtPath, 0)
 
-	err := os.MkdirAll(fuseMountPath, 0744)
+	err := os.MkdirAll(virtPath, 0744)
+	if err != nil {
+		log.Fatalf("Error while creating FUSE mount path: %v", err)
+	}
+
+	err = os.MkdirAll(physPath, 0744)
 	if err != nil {
 		log.Fatalf("Error while creating FUSE mount path: %v", err)
 	}
 
 	c, err := fuse.Mount(
-		fuseMountPath,
+		virtPath,
 		fuse.FSName("openstorage"),
 		fuse.Subtype("openstoragefs"),
 		fuse.LocalVolume(),
@@ -69,126 +201,6 @@ func startFuse() {
 	}
 }
 
-func Init(home string, options []string, uidMaps, gidMaps []idtools.IDMap) (graphdriver.Driver, error) {
-	d := &Driver{}
-
-	go startFuse()
-
-	return d, nil
-}
-
-func (d *Driver) String() string {
-	return "fuse"
-}
-
-// Cleanup performs necessary tasks to release resources
-// held by the driver, e.g., unmounting all layered filesystems
-// known to this driver.
-func (d *Driver) Cleanup() error {
-	return nil
-}
-
-// Status returns a set of key-value pairs which give low
-// level diagnostic status about this driver.
-func (d *Driver) Status() [][2]string {
-	return [][2]string{
-		{"OpenStorage FUSE", "OK"},
-	}
-}
-
-// Create creates a new, empty, filesystem layer with the
-// specified id and parent and mountLabel. Parent and mountLabel may be "".
-func (d *Driver) Create(id string, parent string) error {
-	path := fuseMountPath + id
-	log.Infof("Creating layer %s/%s", path)
-
-	err := os.MkdirAll(path, 0744)
-	if err != nil {
-		return fmt.Errorf("Error while creating FUSE mount path %v: %v", path, err)
-	}
-
-	return nil
-}
-
-// Remove attempts to remove the filesystem layer with this id.
-func (d *Driver) Remove(id string) error {
-	return nil
-}
-
-// Returns a set of key-value pairs which give low level information
-// about the image/container driver is managing.
-func (d *Driver) GetMetadata(id string) (map[string]string, error) {
-	return nil, nil
-}
-
-// Get returns the mountpoint for the layered filesystem referred
-// to by this id. You can optionally specify a mountLabel or "".
-// Returns the absolute path to the mounted layered filesystem.
-func (d *Driver) Get(id, mountLabel string) (string, error) {
-	path := fuseMountPath + id
-	return path, nil
-}
-
-// Put releases the system resources for the specified id,
-// e.g, unmounting layered filesystem.
-func (d *Driver) Put(id string) error {
-	return nil
-}
-
-// Exists returns whether a filesystem layer with the specified
-// ID exists on this driver.
-// All cache entries exist.
-func (d *Driver) Exists(id string) bool {
-	return true
-}
-
-// FS implements the graph file system.
-type FS struct{}
-
-func (FS) Root() (fs.Node, error) {
-	return Dir{}, nil
-}
-
-// Dir implements both Node and Handle for the root directory.
-type Dir struct{}
-
-func (Dir) Attr(ctx context.Context, a *fuse.Attr) error {
-	a.Inode = 1
-	a.Mode = os.ModeDir | 0555
-	return nil
-}
-
-func (Dir) Lookup(ctx context.Context, name string) (fs.Node, error) {
-	if name == "hello" {
-		return File{}, nil
-	}
-	return nil, fuse.ENOENT
-}
-
-var dirDirs = []fuse.Dirent{
-	{Inode: 2, Name: "hello", Type: fuse.DT_File},
-}
-
-func (Dir) ReadDirAll(ctx context.Context) ([]fuse.Dirent, error) {
-	return dirDirs, nil
-}
-
-// File implements both Node and Handle for the hello file.
-type File struct{}
-
-const greeting = "hello, world\n"
-
-func (File) Attr(ctx context.Context, a *fuse.Attr) error {
-	a.Inode = 2
-	a.Mode = 0444
-	a.Size = uint64(len(greeting))
-	return nil
-}
-
-func (File) ReadAll(ctx context.Context) ([]byte, error) {
-	return []byte(greeting), nil
-}
-
-func init() {
-	graph.Register("fuse", Init)
+func fusePath() string {
+	return virtPath
 }
