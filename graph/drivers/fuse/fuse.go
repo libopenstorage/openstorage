@@ -1,6 +1,7 @@
 package fuse
 
 import (
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -49,7 +50,8 @@ func (d *Dir) Lookup(ctx context.Context, name string) (fs.Node, error) {
 
 	fi, err := os.Stat(fullPath)
 	if err != nil {
-		return nil, err
+		log.Infof("Error is %v", err)
+		return nil, fuse.ENOENT
 	}
 
 	if fi.Mode()&os.ModeDir == os.ModeDir {
@@ -97,8 +99,18 @@ func (d *Dir) Mkdir(ctx context.Context, req *fuse.MkdirRequest) (fs.Node, error
 }
 
 func (d *Dir) Create(ctx context.Context, req *fuse.CreateRequest, resp *fuse.CreateResponse) (fs.Node, fs.Handle, error) {
-	log.Infof("Creating file %s: %v", d.path, req)
-	return nil, nil, fuse.ENOENT
+	file := path.Join(d.path, req.Name)
+	log.Infof("Creating file %s", file)
+	f, err := os.Create(file)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	fh := &FileHandle{
+		path: file,
+		f:    f}
+
+	return &File{path: file}, fh, nil
 }
 
 // File operations.
@@ -124,26 +136,42 @@ func (f *File) Attr(ctx context.Context, a *fuse.Attr) error {
 
 func (f *File) Open(ctx context.Context, req *fuse.OpenRequest, resp *fuse.OpenResponse) (fs.Handle, error) {
 	log.Infof("Opening file %s: %v", f.path, req)
-	return nil, fuse.ENOENT
+
+	file, err := os.Open(f.path)
+	if err != nil {
+		return nil, err
+	}
+
+	fh := &FileHandle{
+		path: f.path,
+		f:    file}
+
+	return fh, nil
 }
 
 func (f *File) ReadAll(ctx context.Context) ([]byte, error) {
 	log.Infof("Reading file %s", f.path)
 
 	b, err := ioutil.ReadFile(f.path)
+	if err == io.ErrUnexpectedEOF || err == io.EOF {
+		err = nil
+	}
 	return b, err
 }
 
 // File handle operations.
 type FileHandle struct {
 	path string
-	f    os.File
+	f    *os.File
 }
 
 func (fh *FileHandle) Write(ctx context.Context, req *fuse.WriteRequest, resp *fuse.WriteResponse) error {
 	log.Infof("Writing file %s", fh.path)
 
-	_, err := fh.f.WriteAt(req.Data, req.Offset)
+	sz, err := fh.f.WriteAt(req.Data, req.Offset)
+
+	resp.Size = sz
+
 	return err
 }
 
@@ -153,6 +181,10 @@ func (fh *FileHandle) Read(ctx context.Context, req *fuse.ReadRequest, resp *fus
 	buf := make([]byte, req.Size)
 	n, err := fh.f.ReadAt(buf, req.Offset)
 	resp.Data = buf[:n]
+	if err == io.ErrUnexpectedEOF || err == io.EOF {
+		err = nil
+	}
+
 	return err
 }
 
