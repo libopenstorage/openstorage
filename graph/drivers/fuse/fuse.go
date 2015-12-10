@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"syscall"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 
@@ -17,6 +18,11 @@ import (
 const (
 	virtPath = "/var/lib/openstorage/fuse/virtual"
 	physPath = "/var/lib/openstorage/fuse/physical"
+)
+
+var (
+	fhCache  map[string]*FileHandle
+	fuseConn *fuse.Conn
 )
 
 // FS implements the graph file system.
@@ -32,9 +38,9 @@ type Dir struct {
 }
 
 func (d *Dir) Attr(ctx context.Context, a *fuse.Attr) error {
-	log.Infof("Checking directory attributes on %s", d.path)
+	// log.Infof("Checking directory attributes on %s", d.path)
 
-	fi, err := os.Stat(d.path)
+	fi, err := os.Lstat(d.path)
 	if err != nil {
 		return err
 	}
@@ -48,7 +54,7 @@ func (d *Dir) Lookup(ctx context.Context, name string) (fs.Node, error) {
 	fullPath := path.Join(d.path, name)
 	log.Infof("Directory lookup on %s", fullPath)
 
-	fi, err := os.Stat(fullPath)
+	fi, err := os.Lstat(fullPath)
 	if err != nil {
 		log.Infof("Error is %v", err)
 		return nil, fuse.ENOENT
@@ -62,7 +68,7 @@ func (d *Dir) Lookup(ctx context.Context, name string) (fs.Node, error) {
 }
 
 func (d *Dir) ReadDirAll(ctx context.Context) ([]fuse.Dirent, error) {
-	log.Infof("Readdir on %s", d.path)
+	// log.Infof("Readdir on %s", d.path)
 
 	fi, err := ioutil.ReadDir(d.path)
 	if err != nil {
@@ -110,7 +116,47 @@ func (d *Dir) Create(ctx context.Context, req *fuse.CreateRequest, resp *fuse.Cr
 		path: file,
 		f:    f}
 
+	putFileHandle(fh)
+
 	return &File{path: file}, fh, nil
+}
+
+func (d *Dir) Remove(ctx context.Context, req *fuse.RemoveRequest) error {
+	fullPath := path.Join(d.path, req.Name)
+	log.Infof("Remove on %s", fullPath)
+
+	err := os.RemoveAll(fullPath)
+
+	return err
+}
+
+func (d *Dir) Rename(ctx context.Context, req *fuse.RenameRequest, newDir fs.Node) error {
+
+	tgtDir := newDir.(*Dir)
+	oldpath := path.Join(d.path, req.OldName)
+	newpath := path.Join(tgtDir.path, req.NewName)
+
+	if newDir != d {
+		log.Warnf("Rename called from incorrect directory: %s.", tgtDir)
+		return fuse.Errno(syscall.EXDEV)
+	}
+
+	log.Infof("Renaming %s to %s", oldpath, newpath)
+
+	err := os.Rename(oldpath, newpath)
+	if err != nil {
+		return err
+	}
+
+	fi, err := os.Lstat(newpath)
+	stat := fi.Sys().(*syscall.Stat_t)
+	fuseConn.InvalidateNode(fuse.NodeID(stat.Ino), 0, 0)
+
+	fi, err = os.Lstat(d.path)
+	stat = fi.Sys().(*syscall.Stat_t)
+	fuseConn.InvalidateEntry(fuse.NodeID(stat.Ino), req.OldName)
+
+	return nil
 }
 
 // File operations.
@@ -121,15 +167,25 @@ type File struct {
 func (f *File) Attr(ctx context.Context, a *fuse.Attr) error {
 	log.Infof("Checking file attributes on %s", f.path)
 
-	fi, err := os.Stat(f.path)
+	fi, err := os.Lstat(f.path)
 	if err != nil {
+		log.Warnf("%v", err)
 		return err
 	}
 
-	a.Inode = (fi.Sys().(*syscall.Stat_t).Ino)
-	a.Mode = fi.Mode()
-	a.Size = uint64(fi.Size())
-	a.Mtime = fi.ModTime()
+	stat := fi.Sys().(*syscall.Stat_t)
+
+	a.Inode = stat.Ino
+	a.Atime = time.Unix(int64(stat.Atim.Sec), int64(stat.Atim.Nsec))
+	a.Ctime = time.Unix(int64(stat.Ctim.Sec), int64(stat.Ctim.Nsec))
+	a.Mtime = time.Unix(int64(stat.Mtim.Sec), int64(stat.Mtim.Nsec))
+	a.Mode = os.FileMode(stat.Mode)
+	a.Nlink = uint32(stat.Nlink)
+	a.Blocks = uint64(stat.Blocks)
+	a.Size = uint64(stat.Size)
+	a.Uid = stat.Uid
+	a.Gid = stat.Gid
+	a.Rdev = uint32(stat.Rdev)
 
 	return nil
 }
@@ -146,17 +202,30 @@ func (f *File) Open(ctx context.Context, req *fuse.OpenRequest, resp *fuse.OpenR
 		path: f.path,
 		f:    file}
 
+	putFileHandle(fh)
+
 	return fh, nil
 }
 
 func (f *File) ReadAll(ctx context.Context) ([]byte, error) {
-	log.Infof("Reading file %s", f.path)
+	// log.Infof("Reading file %s", f.path)
 
 	b, err := ioutil.ReadFile(f.path)
 	if err == io.ErrUnexpectedEOF || err == io.EOF {
 		err = nil
 	}
 	return b, err
+}
+
+func (f *File) Fsync(ctx context.Context, req *fuse.FsyncRequest) error {
+	log.Infof("Syncing file %s", f.path)
+	fh, err := getFileHandle(f)
+	if err != nil {
+		log.Warnf("Could not find file %s in the file handle cache.", f.path)
+		return err
+	}
+	err = fh.f.Sync()
+	return err
 }
 
 // File handle operations.
@@ -166,7 +235,7 @@ type FileHandle struct {
 }
 
 func (fh *FileHandle) Write(ctx context.Context, req *fuse.WriteRequest, resp *fuse.WriteResponse) error {
-	log.Infof("Writing file %s", fh.path)
+	// log.Infof("Writing file %s", fh.path)
 
 	sz, err := fh.f.WriteAt(req.Data, req.Offset)
 
@@ -176,7 +245,7 @@ func (fh *FileHandle) Write(ctx context.Context, req *fuse.WriteRequest, resp *f
 }
 
 func (fh *FileHandle) Read(ctx context.Context, req *fuse.ReadRequest, resp *fuse.ReadResponse) error {
-	log.Infof("Reading file %s", fh.path)
+	// log.Infof("Reading file %s", fh.path)
 
 	buf := make([]byte, req.Size)
 	n, err := fh.f.ReadAt(buf, req.Offset)
@@ -186,6 +255,41 @@ func (fh *FileHandle) Read(ctx context.Context, req *fuse.ReadRequest, resp *fus
 	}
 
 	return err
+}
+
+func (fh *FileHandle) Fsync(ctx context.Context, req *fuse.FsyncRequest) error {
+	log.Infof("Syncing file %s", fh.path)
+
+	err := fh.f.Sync()
+	return err
+}
+
+func (fh *FileHandle) Flush(ctx context.Context, req *fuse.FlushRequest) error {
+	log.Infof("Syncing file %s", fh.path)
+
+	err := fh.f.Sync()
+	return err
+}
+
+func (fh *FileHandle) Release(ctx context.Context, req *fuse.ReleaseRequest) error {
+	log.Infof("Releasing file %s", fh.path)
+
+	err := fh.f.Close()
+	return err
+}
+
+func getFileHandle(f *File) (*FileHandle, error) {
+	fh, ok := fhCache[f.path]
+
+	if !ok {
+		return nil, fuse.EIO
+	} else {
+		return fh, nil
+	}
+}
+
+func putFileHandle(fh *FileHandle) {
+	fhCache[fh.path] = fh
 }
 
 func startFuse() {
@@ -204,7 +308,7 @@ func startFuse() {
 		log.Fatalf("Error while creating FUSE mount path: %v", err)
 	}
 
-	c, err := fuse.Mount(
+	fuseConn, err = fuse.Mount(
 		virtPath,
 		fuse.FSName("openstorage"),
 		fuse.Subtype("openstoragefs"),
@@ -217,22 +321,26 @@ func startFuse() {
 		return
 	}
 
-	defer c.Close()
+	defer fuseConn.Close()
 
 	log.Infof("Fuse ready.")
 
-	err = fs.Serve(c, FS{})
+	err = fs.Serve(fuseConn, FS{})
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Check if the mount process has an error to report
-	<-c.Ready
-	if err := c.MountError; err != nil {
+	<-fuseConn.Ready
+	if err := fuseConn.MountError; err != nil {
 		log.Fatal(err)
 	}
 }
 
 func fusePath() string {
 	return virtPath
+}
+
+func init() {
+	fhCache = make(map[string]*FileHandle)
 }
