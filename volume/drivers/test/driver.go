@@ -53,6 +53,7 @@ func RunShort(t *testing.T, ctx *Context) {
 	unmount(t, ctx)
 	detach(t, ctx)
 	delete(t, ctx)
+	multi_mount(t, ctx)
 	runEnd(t, ctx)
 }
 
@@ -204,6 +205,26 @@ func mount(t *testing.T, ctx *Context) {
 	assert.NoError(t, err, "Failed in mount %v", ctx.testPath)
 
 	ctx.mountPath = ctx.testPath
+}
+
+func multi_mount(t *testing.T, ctx *Context) {
+	ctx2 := *ctx
+	create(t, ctx)
+	attach(t, ctx)
+	mount(t, ctx)
+
+	create(t, &ctx2)
+	attach(t, &ctx2)
+
+	err := ctx2.Mount(ctx2.volID, ctx2.testPath)
+	assert.Error(t, err, "Mount of different devices to same path must fail")
+
+	unmount(t, ctx)
+	detach(t, ctx)
+	delete(t, ctx)
+
+	detach(t, &ctx2)
+	delete(t, &ctx2)
 }
 
 func unmount(t *testing.T, ctx *Context) {
