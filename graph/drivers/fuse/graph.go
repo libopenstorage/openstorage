@@ -121,5 +121,5 @@ func (d *Driver) Exists(id string) bool {
 func init() {
 	graph.Register("fuse", Init)
 
-	go startFuse()
+	// go startFuse()
 }

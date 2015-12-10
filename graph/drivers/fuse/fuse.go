@@ -161,16 +161,6 @@ func (d *Dir) Rename(ctx context.Context, req *fuse.RenameRequest, newDir fs.Nod
 	f.path = newpath
 	putFile(newpath, f)
 
-	/*
-		fi, err := os.Lstat(newpath)
-		stat := fi.Sys().(*syscall.Stat_t)
-		fuseConn.InvalidateNode(fuse.NodeID(stat.Ino), 0, 0)
-
-		fi, err = os.Lstat(d.path)
-		stat = fi.Sys().(*syscall.Stat_t)
-		fuseConn.InvalidateEntry(fuse.NodeID(stat.Ino), req.OldName)
-	*/
-
 	return nil
 }
 
@@ -210,8 +200,11 @@ func (f *File) Open(ctx context.Context, req *fuse.OpenRequest, resp *fuse.OpenR
 
 	file, err := os.Open(f.path)
 	if err != nil {
+		log.Errorf("Error while opening %s: %v", f.path, err)
 		return nil, err
 	}
+
+	log.Infof("OPEN FILE handle %v", file)
 
 	fh := &FileHandle{
 		path: f.path,
@@ -252,7 +245,14 @@ type FileHandle struct {
 func (fh *FileHandle) Write(ctx context.Context, req *fuse.WriteRequest, resp *fuse.WriteResponse) error {
 	// log.Infof("Writing file %s", fh.path)
 
+	log.Infof("WRITE FILE handle %v", fh.f)
+
 	sz, err := fh.f.WriteAt(req.Data, req.Offset)
+	if err != nil {
+		log.Errorf("Error while writing to %s: %v", fh.path, err)
+		os.Exit(-1)
+		return err
+	}
 
 	resp.Size = sz
 
