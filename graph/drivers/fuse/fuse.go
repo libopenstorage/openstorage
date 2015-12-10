@@ -21,8 +21,9 @@ const (
 )
 
 var (
-	fhCache  map[string]*FileHandle
-	fuseConn *fuse.Conn
+	fhCache   map[string]*FileHandle
+	fileCache map[string]*File
+	fuseConn  *fuse.Conn
 )
 
 // FS implements the graph file system.
@@ -63,7 +64,9 @@ func (d *Dir) Lookup(ctx context.Context, name string) (fs.Node, error) {
 	if fi.Mode()&os.ModeDir == os.ModeDir {
 		return &Dir{path: fullPath}, nil
 	} else {
-		return &File{path: fullPath}, nil
+		f := &File{path: fullPath}
+		putFile(fullPath, f)
+		return f, nil
 	}
 }
 
@@ -116,9 +119,11 @@ func (d *Dir) Create(ctx context.Context, req *fuse.CreateRequest, resp *fuse.Cr
 		path: file,
 		f:    f}
 
-	putFileHandle(fh)
+	putFileHandle(file, fh)
 
-	return &File{path: file}, fh, nil
+	fc := &File{path: file}
+	putFile(file, fc)
+	return fc, fh, nil
 }
 
 func (d *Dir) Remove(ctx context.Context, req *fuse.RemoveRequest) error {
@@ -131,7 +136,6 @@ func (d *Dir) Remove(ctx context.Context, req *fuse.RemoveRequest) error {
 }
 
 func (d *Dir) Rename(ctx context.Context, req *fuse.RenameRequest, newDir fs.Node) error {
-
 	tgtDir := newDir.(*Dir)
 	oldpath := path.Join(d.path, req.OldName)
 	newpath := path.Join(tgtDir.path, req.NewName)
@@ -148,13 +152,23 @@ func (d *Dir) Rename(ctx context.Context, req *fuse.RenameRequest, newDir fs.Nod
 		return err
 	}
 
-	fi, err := os.Lstat(newpath)
-	stat := fi.Sys().(*syscall.Stat_t)
-	fuseConn.InvalidateNode(fuse.NodeID(stat.Ino), 0, 0)
+	f, err := getFile(oldpath)
+	if err != nil {
+		log.Warnf("Could not find old file in the cache.")
+		return err
+	}
 
-	fi, err = os.Lstat(d.path)
-	stat = fi.Sys().(*syscall.Stat_t)
-	fuseConn.InvalidateEntry(fuse.NodeID(stat.Ino), req.OldName)
+	f.path = newpath
+
+	/*
+		fi, err := os.Lstat(newpath)
+		stat := fi.Sys().(*syscall.Stat_t)
+		fuseConn.InvalidateNode(fuse.NodeID(stat.Ino), 0, 0)
+
+		fi, err = os.Lstat(d.path)
+		stat = fi.Sys().(*syscall.Stat_t)
+		fuseConn.InvalidateEntry(fuse.NodeID(stat.Ino), req.OldName)
+	*/
 
 	return nil
 }
@@ -202,7 +216,7 @@ func (f *File) Open(ctx context.Context, req *fuse.OpenRequest, resp *fuse.OpenR
 		path: f.path,
 		f:    file}
 
-	putFileHandle(fh)
+	putFileHandle(fh.path, fh)
 
 	return fh, nil
 }
@@ -219,7 +233,7 @@ func (f *File) ReadAll(ctx context.Context) ([]byte, error) {
 
 func (f *File) Fsync(ctx context.Context, req *fuse.FsyncRequest) error {
 	log.Infof("Syncing file %s", f.path)
-	fh, err := getFileHandle(f)
+	fh, err := getFileHandle(f.path)
 	if err != nil {
 		log.Warnf("Could not find file %s in the file handle cache.", f.path)
 		return err
@@ -278,8 +292,22 @@ func (fh *FileHandle) Release(ctx context.Context, req *fuse.ReleaseRequest) err
 	return err
 }
 
-func getFileHandle(f *File) (*FileHandle, error) {
-	fh, ok := fhCache[f.path]
+func getFile(path string) (*File, error) {
+	f, ok := fileCache[path]
+
+	if !ok {
+		return nil, fuse.EIO
+	} else {
+		return f, nil
+	}
+}
+
+func putFile(path string, file *File) {
+	fileCache[path] = file
+}
+
+func getFileHandle(path string) (*FileHandle, error) {
+	fh, ok := fhCache[path]
 
 	if !ok {
 		return nil, fuse.EIO
@@ -288,8 +316,8 @@ func getFileHandle(f *File) (*FileHandle, error) {
 	}
 }
 
-func putFileHandle(fh *FileHandle) {
-	fhCache[fh.path] = fh
+func putFileHandle(path string, fh *FileHandle) {
+	fhCache[path] = fh
 }
 
 func startFuse() {
@@ -343,4 +371,5 @@ func fusePath() string {
 
 func init() {
 	fhCache = make(map[string]*FileHandle)
+	fileCache = make(map[string]*File)
 }
