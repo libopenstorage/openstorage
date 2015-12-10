@@ -18,7 +18,7 @@ type NFSMounter struct {
 func NewNFSMounter(server string) (Manager, error) {
 	m := &NFSMounter{
 		server:  server,
-		Mounter: Mounter{mounts: make(DeviceMap)},
+		Mounter: Mounter{mounts: make(DeviceMap), paths: make(PathMap)},
 	}
 	err := m.Load("")
 	if err != nil {

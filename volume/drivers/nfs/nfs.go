@@ -162,9 +162,7 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 		}
 	}
 
-	volumeInfo, err := inst.DefaultEnumerator.Enumerate(
-		api.VolumeLocator{},
-		nil)
+	volumeInfo, err := inst.DefaultEnumerator.Enumerate(api.VolumeLocator{}, nil)
 	if err == nil {
 		for _, info := range volumeInfo {
 			if info.Status == "" {
@@ -290,8 +288,8 @@ func (d *driver) Mount(volumeID api.VolumeID, mountpath string) error {
 	srcPath := path.Join(":", d.nfsPath, string(volumeID))
 	mountExists, err := d.mounter.Exists(srcPath, mountpath)
 	if !mountExists {
-		syscall.Unmount(mountpath, 0)
-		err = syscall.Mount(path.Join(nfsMountPath, string(volumeID)), mountpath, string(v.Spec.Format), syscall.MS_BIND, "")
+		d.mounter.Unmount(path.Join(nfsMountPath, string(volumeID)), mountpath)
+		err = d.mounter.Mount(0, path.Join(nfsMountPath, string(volumeID)), mountpath, string(v.Spec.Format), syscall.MS_BIND, "")
 		if err != nil {
 			log.Printf("Cannot mount %s at %s because %+v",
 				path.Join(nfsMountPath, string(volumeID)), mountpath, err)
@@ -313,7 +311,7 @@ func (d *driver) Unmount(volumeID api.VolumeID, mountpath string) error {
 	if v.AttachPath == "" {
 		return fmt.Errorf("Device %v not mounted", volumeID)
 	}
-	err = syscall.Unmount(v.AttachPath, 0)
+	err = d.mounter.Unmount(path.Join(nfsMountPath, string(volumeID)), v.AttachPath)
 	if err != nil {
 		return err
 	}

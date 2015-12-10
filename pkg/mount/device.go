@@ -16,7 +16,7 @@ type DeviceMounter struct {
 // NewDeviceMounter
 func NewDeviceMounter(devPrefix string) (*DeviceMounter, error) {
 	m := &DeviceMounter{
-		Mounter: Mounter{mounts: make(DeviceMap)},
+		Mounter: Mounter{mounts: make(DeviceMap), paths: make(PathMap)},
 	}
 	err := m.Load(devPrefix)
 	if err != nil {
@@ -31,6 +31,7 @@ func (m *DeviceMounter) Load(devPrefix string) error {
 	if err != nil {
 		return err
 	}
+DeviceLoop:
 	for _, v := range info {
 		if !strings.HasPrefix(v.Source, devPrefix) {
 			continue
@@ -48,11 +49,12 @@ func (m *DeviceMounter) Load(devPrefix string) error {
 		// Allow Load to be called multiple times.
 		for _, p := range mount.Mountpoint {
 			if p.Path == v.Mountpoint {
-				continue
+				continue DeviceLoop
 			}
 		}
 		// XXX Reconstruct refs.
 		mount.Mountpoint = append(mount.Mountpoint, PathInfo{Path: v.Mountpoint, ref: 1})
+		m.paths[v.Mountpoint] = v.Source
 	}
 	return nil
 }
