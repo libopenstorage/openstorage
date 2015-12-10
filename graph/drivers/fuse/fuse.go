@@ -159,6 +159,7 @@ func (d *Dir) Rename(ctx context.Context, req *fuse.RenameRequest, newDir fs.Nod
 	}
 
 	f.path = newpath
+	putFile(newpath, f)
 
 	/*
 		fi, err := os.Lstat(newpath)
