@@ -123,6 +123,9 @@ func (d *Dir) Create(ctx context.Context, req *fuse.CreateRequest, resp *fuse.Cr
 
 	fc := &File{path: file}
 	putFile(file, fc)
+
+	// XXX do we need to populate resp.LookupResponse https://godoc.org/bazil.org/fuse#LookupResponse
+
 	return fc, fh, nil
 }
 
@@ -195,22 +198,38 @@ func (f *File) Attr(ctx context.Context, a *fuse.Attr) error {
 	return nil
 }
 
+func (f *File) Setattr(ctx context.Context, req *fuse.SetattrRequest, resp *fuse.SetattrResponse) error {
+	log.Infof("Setting file attributes on %s: %v", f.path, req)
+
+	err := os.Chmod(f.path, req.Mode)
+	if err != nil {
+		return err
+	}
+
+	err = os.Chown(f.path, int(req.Uid), int(req.Gid))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (f *File) Open(ctx context.Context, req *fuse.OpenRequest, resp *fuse.OpenResponse) (fs.Handle, error) {
 	log.Infof("Opening file %s: %v", f.path, req)
 
-	file, err := os.Open(f.path)
+	flags := int(req.Flags)
+	file, err := os.OpenFile(f.path, flags, 0777)
 	if err != nil {
-		log.Errorf("Error while opening %s: %v", f.path, err)
 		return nil, err
 	}
-
-	log.Infof("OPEN FILE handle %v", file)
 
 	fh := &FileHandle{
 		path: f.path,
 		f:    file}
 
 	putFileHandle(fh.path, fh)
+
+	// resp.Flags = fuse.OpenKeepCache
 
 	return fh, nil
 }
@@ -245,12 +264,9 @@ type FileHandle struct {
 func (fh *FileHandle) Write(ctx context.Context, req *fuse.WriteRequest, resp *fuse.WriteResponse) error {
 	// log.Infof("Writing file %s", fh.path)
 
-	log.Infof("WRITE FILE handle %v", fh.f)
-
 	sz, err := fh.f.WriteAt(req.Data, req.Offset)
 	if err != nil {
 		log.Errorf("Error while writing to %s: %v", fh.path, err)
-		os.Exit(-1)
 		return err
 	}
 
