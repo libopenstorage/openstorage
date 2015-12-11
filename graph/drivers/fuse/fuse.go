@@ -53,11 +53,10 @@ func (d *Dir) Attr(ctx context.Context, a *fuse.Attr) error {
 
 func (d *Dir) Lookup(ctx context.Context, name string) (fs.Node, error) {
 	fullPath := path.Join(d.path, name)
-	log.Infof("Directory lookup on %s", fullPath)
+	// log.Infof("Directory lookup on %s", fullPath)
 
 	fi, err := os.Lstat(fullPath)
 	if err != nil {
-		log.Infof("Error is %v", err)
 		return nil, fuse.ENOENT
 	}
 
@@ -97,7 +96,7 @@ func (d *Dir) ReadDirAll(ctx context.Context) ([]fuse.Dirent, error) {
 
 func (d *Dir) Mkdir(ctx context.Context, req *fuse.MkdirRequest) (fs.Node, error) {
 	fullPath := path.Join(d.path, req.Name)
-	log.Infof("Mkdir on %s", fullPath)
+	// log.Infof("Mkdir on %s", fullPath)
 
 	err := os.MkdirAll(fullPath, req.Mode)
 	if err != nil {
@@ -109,7 +108,7 @@ func (d *Dir) Mkdir(ctx context.Context, req *fuse.MkdirRequest) (fs.Node, error
 
 func (d *Dir) Create(ctx context.Context, req *fuse.CreateRequest, resp *fuse.CreateResponse) (fs.Node, fs.Handle, error) {
 	file := path.Join(d.path, req.Name)
-	log.Infof("Creating file %s", file)
+	// log.Infof("Creating file %s", file)
 	f, err := os.Create(file)
 	if err != nil {
 		return nil, nil, err
@@ -131,7 +130,7 @@ func (d *Dir) Create(ctx context.Context, req *fuse.CreateRequest, resp *fuse.Cr
 
 func (d *Dir) Remove(ctx context.Context, req *fuse.RemoveRequest) error {
 	fullPath := path.Join(d.path, req.Name)
-	log.Infof("Remove on %s", fullPath)
+	// log.Infof("Remove on %s", fullPath)
 
 	err := os.RemoveAll(fullPath)
 
@@ -148,7 +147,7 @@ func (d *Dir) Rename(ctx context.Context, req *fuse.RenameRequest, newDir fs.Nod
 		return fuse.Errno(syscall.EXDEV)
 	}
 
-	log.Infof("Renaming %s to %s", oldpath, newpath)
+	// log.Infof("Renaming %s to %s", oldpath, newpath)
 
 	err := os.Rename(oldpath, newpath)
 	if err != nil {
@@ -173,7 +172,7 @@ type File struct {
 }
 
 func (f *File) Attr(ctx context.Context, a *fuse.Attr) error {
-	log.Infof("Checking file attributes on %s", f.path)
+	// log.Infof("Checking file attributes on %s", f.path)
 
 	fi, err := os.Lstat(f.path)
 	if err != nil {
@@ -199,7 +198,7 @@ func (f *File) Attr(ctx context.Context, a *fuse.Attr) error {
 }
 
 func (f *File) Setattr(ctx context.Context, req *fuse.SetattrRequest, resp *fuse.SetattrResponse) error {
-	log.Infof("Setting file attributes on %s: %v", f.path, req)
+	// log.Infof("Setting file attributes on %s: %v", f.path, req)
 
 	err := os.Chmod(f.path, req.Mode)
 	if err != nil {
@@ -215,7 +214,7 @@ func (f *File) Setattr(ctx context.Context, req *fuse.SetattrRequest, resp *fuse
 }
 
 func (f *File) Open(ctx context.Context, req *fuse.OpenRequest, resp *fuse.OpenResponse) (fs.Handle, error) {
-	log.Infof("Opening file %s: %v", f.path, req)
+	// log.Infof("Opening file %s: %v", f.path, req)
 
 	flags := int(req.Flags)
 	file, err := os.OpenFile(f.path, flags, 0777)
@@ -229,7 +228,7 @@ func (f *File) Open(ctx context.Context, req *fuse.OpenRequest, resp *fuse.OpenR
 
 	putFileHandle(fh.path, fh)
 
-	// resp.Flags = fuse.OpenKeepCache
+	resp.Flags = fuse.OpenKeepCache
 
 	return fh, nil
 }
@@ -245,7 +244,7 @@ func (f *File) ReadAll(ctx context.Context) ([]byte, error) {
 }
 
 func (f *File) Fsync(ctx context.Context, req *fuse.FsyncRequest) error {
-	log.Infof("Syncing file %s", f.path)
+	// log.Infof("Syncing file %s", f.path)
 	fh, err := getFileHandle(f.path)
 	if err != nil {
 		log.Warnf("Could not find file %s in the file handle cache.", f.path)
@@ -289,21 +288,21 @@ func (fh *FileHandle) Read(ctx context.Context, req *fuse.ReadRequest, resp *fus
 }
 
 func (fh *FileHandle) Fsync(ctx context.Context, req *fuse.FsyncRequest) error {
-	log.Infof("Syncing file %s", fh.path)
+	// log.Infof("Syncing file %s", fh.path)
 
 	err := fh.f.Sync()
 	return err
 }
 
 func (fh *FileHandle) Flush(ctx context.Context, req *fuse.FlushRequest) error {
-	log.Infof("Syncing file %s", fh.path)
+	// log.Infof("Syncing file %s", fh.path)
 
 	err := fh.f.Sync()
 	return err
 }
 
 func (fh *FileHandle) Release(ctx context.Context, req *fuse.ReleaseRequest) error {
-	log.Infof("Releasing file %s", fh.path)
+	// log.Infof("Releasing file %s", fh.path)
 
 	err := fh.f.Close()
 	return err
