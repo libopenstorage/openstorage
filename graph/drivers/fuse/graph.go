@@ -1,5 +1,11 @@
 package fuse
 
+/*
+extern int start_fuse(char *, char *);
+#cgo LDFLAGS: -lfuse -lulockmgr
+*/
+import "C"
+
 import (
 	"fmt"
 	"os"
@@ -16,8 +22,10 @@ import (
 )
 
 const (
-	Name = "fuse"
-	Type = api.Graph
+	Name     = "fuse"
+	Type     = api.Graph
+	virtPath = "/var/lib/openstorage/fuse/virtual"
+	physPath = "/var/lib/openstorage/fuse/physical"
 )
 
 type Driver struct {
@@ -28,7 +36,24 @@ type Driver struct {
 func Init(home string, options []string, uidMaps, gidMaps []idtools.IDMap) (graphdriver.Driver, error) {
 	d := &Driver{}
 
-	go startFuse()
+	log.Infof("Initializing Fuse Graph driver at %v...", virtPath)
+
+	// In case it is mounted.
+	syscall.Unmount(virtPath, 0)
+
+	err := os.MkdirAll(virtPath, 0744)
+	if err != nil {
+		log.Fatalf("Error while creating FUSE mount path: %v", err)
+	}
+
+	err = os.MkdirAll(physPath, 0744)
+	if err != nil {
+		log.Fatalf("Error while creating FUSE mount path: %v", err)
+	}
+
+	cVirtPath := C.CString(virtPath)
+	cPhysPath := C.CString(physPath)
+	C.start_fuse(cPhysPath, cVirtPath)
 
 	return d, nil
 }
@@ -41,7 +66,7 @@ func (d *Driver) String() string {
 // held by the driver, e.g., unmounting all layered filesystems
 // known to this driver.
 func (d *Driver) Cleanup() error {
-	syscall.Unmount(fusePath(), 0)
+	syscall.Unmount(virtPath, 0)
 	return nil
 }
 
@@ -56,7 +81,7 @@ func (d *Driver) Status() [][2]string {
 // Create creates a new, empty, filesystem layer with the
 // specified id and parent and mountLabel. Parent and mountLabel may be "".
 func (d *Driver) Create(id string, parent string) error {
-	path := path.Join(fusePath(), string(id))
+	path := path.Join(virtPath, string(id))
 	log.Infof("Creating layer %s", path)
 
 	err := os.MkdirAll(path, 0744)
@@ -69,7 +94,7 @@ func (d *Driver) Create(id string, parent string) error {
 
 // Remove attempts to remove the filesystem layer with this id.
 func (d *Driver) Remove(id string) error {
-	path := path.Join(fusePath(), string(id))
+	path := path.Join(virtPath, string(id))
 	log.Infof("Removing layer %s", path)
 
 	os.RemoveAll(path)
@@ -87,7 +112,7 @@ func (d *Driver) GetMetadata(id string) (map[string]string, error) {
 // to by this id. You can optionally specify a mountLabel or "".
 // Returns the absolute path to the mounted layered filesystem.
 func (d *Driver) Get(id, mountLabel string) (string, error) {
-	path := path.Join(fusePath(), string(id))
+	path := path.Join(virtPath, string(id))
 	log.Infof("Getting layer %s", path)
 
 	return path, nil
@@ -96,7 +121,7 @@ func (d *Driver) Get(id, mountLabel string) (string, error) {
 // Put releases the system resources for the specified id,
 // e.g, unmounting layered filesystem.
 func (d *Driver) Put(id string) error {
-	path := path.Join(fusePath(), string(id))
+	path := path.Join(virtPath, string(id))
 	log.Infof("Putting layer %s", path)
 
 	return nil
@@ -106,7 +131,7 @@ func (d *Driver) Put(id string) error {
 // ID exists on this driver.
 // All cache entries exist.
 func (d *Driver) Exists(id string) bool {
-	path := path.Join(fusePath(), string(id))
+	path := path.Join(virtPath, string(id))
 	log.Infof("Checking if layer %s exists", path)
 
 	_, err := os.Stat(path)
@@ -121,5 +146,9 @@ func (d *Driver) Exists(id string) bool {
 func init() {
 	graph.Register("fuse", Init)
 
-	// go startFuse()
+	/*
+		cVirtPath := C.CString(virtPath)
+		cPhysPath := C.CString(physPath)
+		C.start_fuse(cPhysPath, cVirtPath)
+	*/
 }
