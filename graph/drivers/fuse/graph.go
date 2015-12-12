@@ -55,7 +55,7 @@ func Init(home string, options []string, uidMaps, gidMaps []idtools.IDMap) (grap
 
 	cVirtPath := C.CString(virtPath)
 	cPhysPath := C.CString(physPath)
-	C.start_fuse(cPhysPath, cVirtPath)
+	go C.start_fuse(cPhysPath, cVirtPath)
 
 	return d, nil
 }
@@ -148,9 +148,7 @@ func (d *Driver) Exists(id string) bool {
 func init() {
 	graph.Register("fuse", Init)
 
-	/*
-		cVirtPath := C.CString(virtPath)
-		cPhysPath := C.CString(physPath)
-		C.start_fuse(cPhysPath, cVirtPath)
-	*/
+	cVirtPath := C.CString(virtPath)
+	cPhysPath := C.CString(physPath)
+	go C.start_fuse(cPhysPath, cVirtPath)
 }

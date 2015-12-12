@@ -1,5 +1,6 @@
 // gcc fuse.c -D_FILE_OFFSET_BITS=64 -lfuse -lulockmgr -o fuse
 
+#define _GNU_SOURCE
 #define _FILE_OFFSET_BITS 64
 #define FUSE_USE_VERSION 26
 
@@ -26,6 +27,8 @@
 #endif
 
 #define MAXDESC 4096
+
+static char *graph_src;
 
 struct descriptor {
 	char name[PATH_MAX];
@@ -64,73 +67,123 @@ static int register_fd(const char* path, int fd) {
 
 static int maybe_open(const char* path, int mode, int mode2) {
 	int fd;
-	fd = find_descriptor(path);
-	if (fd!=-1) return fd;
-	
-	int fixedup_mode = (mode & (~O_WRONLY) & (~O_RDONLY)) | O_RDWR;
-	
-	fd = open(path, fixedup_mode, mode2);
-	
-	if (fd==-1) fd = open(path, mode, mode2);
-	
-	if (fd==-1) return -1;
 	int ret;
+
+	fd = find_descriptor(path);
+	if (fd != -1) {
+		return fd;
+	}
+
+	int fixedup_mode = (mode & (~O_WRONLY) & (~O_RDONLY)) | O_RDWR;
+
+	fd = open(path, fixedup_mode, mode2);
+	if (fd==-1) {
+		fd = open(path, mode, mode2);
+	}
+
+	if (fd==-1) {
+		return -1;
+	}
+
 	ret = register_fd(path, fd);
-	if(ret==-1)  {
+	if (ret==-1)  {
 		close(fd);
 		return -1;
 	}
+
 	fprintf(stderr, "Successfully opened new file %s\n", path);
 	return fd;
 }
 
+static char *real_path(const char *path)
+{
+	char *r = NULL;
+
+	asprintf(&r, "%s%s", graph_src, path);
+
+	return r;
+}
+
+static void free_path(char *path)
+{
+	free(path);
+}
 
 static int graph_getattr(const char *path, struct stat *stbuf)
 {
-	int res;
-	
-	res = lstat(path, stbuf);
-	if (res == -1)
-		return -errno;
+	int res = 0;
+	char *rp = NULL;
 
-	return 0;
+	rp = real_path(path);
+
+	res = lstat(rp, stbuf);
+	if (res == -1) {
+		res = -errno;
+		goto done;
+	}
+
+done:
+	if (rp) {
+		free_path(rp);
+	}
+
+	return res;
 }
 
 static int graph_fgetattr(const char *path, struct stat *stbuf,
-			struct fuse_file_info *fi)
+		struct fuse_file_info *fi)
 {
-	int res;
-
+	int res = 0;
 	(void) path;
 
 	res = fstat(fi->fh, stbuf);
-	if (res == -1)
+	if (res == -1) {
 		return -errno;
+	}
 
 	return 0;
 }
 
 static int graph_access(const char *path, int mask)
 {
-	int res;
+	int res = 0;
+	char *rp = NULL;
 
-	res = access(path, mask);
-	if (res == -1)
-		return -errno;
+	rp = real_path(path);
 
-	return 0;
+	res = access(rp, mask);
+	if (res == -1) {
+		res = -errno;
+		goto done;
+	}
+
+done:
+	if (rp) {
+		free_path(rp);
+	}
+	return res;
 }
 
 static int graph_readlink(const char *path, char *buf, size_t size)
 {
-	int res;
+	int res = 0;
+	char *rp = NULL;
 
-	res = readlink(path, buf, size - 1);
-	if (res == -1)
-		return -errno;
+	rp = real_path(path);
 
+	res = readlink(rp, buf, size - 1);
+	if (res == -1) {
+		res = -errno;
+		goto done;
+	}
 	buf[res] = '\0';
-	return 0;
+	res = 0;
+
+done:
+	if (rp) {
+		free_path(rp);
+	}
+	return res;
 }
 
 struct graph_dirp {
@@ -141,22 +194,34 @@ struct graph_dirp {
 
 static int graph_opendir(const char *path, struct fuse_file_info *fi)
 {
-	int res;
+	int res = 0;
+	char *rp = NULL;
 	struct graph_dirp *d = malloc(sizeof(struct graph_dirp));
-	if (d == NULL)
-		return -ENOMEM;
 
-	d->dp = opendir(path);
+	if (d == NULL) {
+		res = -ENOMEM;
+		goto done;
+	}
+
+	rp = real_path(path);
+
+	d->dp = opendir(rp);
 	if (d->dp == NULL) {
 		res = -errno;
 		free(d);
-		return res;
+		goto done;
 	}
 	d->offset = 0;
 	d->entry = NULL;
 
 	fi->fh = (unsigned long) d;
-	return 0;
+
+done:
+	if (rp) {
+		free_path(rp);
+	}
+
+	return res;
 }
 
 static inline struct graph_dirp *get_dirp(struct fuse_file_info *fi)
@@ -165,32 +230,35 @@ static inline struct graph_dirp *get_dirp(struct fuse_file_info *fi)
 }
 
 static int graph_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
-		       off_t offset, struct fuse_file_info *fi)
+		off_t offset, struct fuse_file_info *fi)
 {
 	struct graph_dirp *d = get_dirp(fi);
-
 	(void) path;
+
 	if (offset != d->offset) {
 		seekdir(d->dp, offset);
 		d->entry = NULL;
 		d->offset = offset;
 	}
+
 	while (1) {
 		struct stat st;
 		off_t nextoff;
 
 		if (!d->entry) {
 			d->entry = readdir(d->dp);
-			if (!d->entry)
+			if (!d->entry) {
 				break;
+			}
 		}
 
 		memset(&st, 0, sizeof(st));
 		st.st_ino = d->entry->d_ino;
 		st.st_mode = d->entry->d_type << 12;
 		nextoff = telldir(d->dp);
-		if (filler(buf, d->entry->d_name, &st, nextoff))
+		if (filler(buf, d->entry->d_name, &st, nextoff)) {
 			break;
+		}
 
 		d->entry = NULL;
 		d->offset = nextoff;
@@ -203,215 +271,383 @@ static int graph_releasedir(const char *path, struct fuse_file_info *fi)
 {
 	struct graph_dirp *d = get_dirp(fi);
 	(void) path;
+
 	closedir(d->dp);
 	free(d);
+
 	return 0;
 }
 
 static int graph_mknod(const char *path, mode_t mode, dev_t rdev)
 {
-	int res;
+	int res = 0;
+	char *rp = NULL;
 
-	if (S_ISFIFO(mode))
-		res = mkfifo(path, mode);
-	else
-		res = mknod(path, mode, rdev);
-	if (res == -1)
-		return -errno;
+	rp = real_path(path);
 
-	return 0;
+	if (S_ISFIFO(mode)) {
+		res = mkfifo(rp, mode);
+	} else {
+		res = mknod(rp, mode, rdev);
+	}
+
+	if (res == -1) {
+		res = -errno;
+		goto done;
+	}
+
+done:
+	if (rp) {
+		free_path(rp);
+	}
+
+	return res;
 }
 
 static int graph_mkdir(const char *path, mode_t mode)
 {
-	int res;
+	int res = 0;
+	char *rp = NULL;
 
-	res = mkdir(path, mode);
-	if (res == -1)
-		return -errno;
+	rp = real_path(path);
 
-	return 0;
+	res = mkdir(rp, mode);
+	if (res == -1) {
+		res = -errno;
+		goto done;
+	}
+
+done:
+	if (rp) {
+		free_path(rp);
+	}
+
+	return res;
 }
 
 static int graph_unlink(const char *path)
 {
-	int res;
+	int res = 0;
+	char *rp = NULL;
 
-	res = unlink(path);
-	if (res == -1)
-		return -errno;
+	rp = real_path(path);
 
-	return 0;
+	res = unlink(rp);
+	if (res == -1) {
+		res = -errno;
+		goto done;
+	}
+
+done:
+	if (rp) {
+		free_path(rp);
+	}
+
+	return res;
 }
 
 static int graph_rmdir(const char *path)
 {
-	int res;
+	int res = 0;
+	char *rp = NULL;
 
-	res = rmdir(path);
-	if (res == -1)
-		return -errno;
+	rp = real_path(path);
 
-	return 0;
+	res = rmdir(rp);
+	if (res == -1) {
+		res = -errno;
+		goto done;
+	}
+
+done:
+	if (rp) {
+		free_path(rp);
+	}
+
+	return res;
 }
 
 static int graph_symlink(const char *from, const char *to)
 {
-	int res;
+	int res = 0;
+	char *from_rp = NULL;
+	char *to_rp = NULL;
 
-	res = symlink(from, to);
-	if (res == -1)
-		return -errno;
+	from_rp = real_path(from);
+	to_rp = real_path(to);
 
-	return 0;
+	res = symlink(from_rp, to_rp);
+	if (res == -1) {
+		res = -errno;
+		goto done;
+	}
+
+done:
+	if (from_rp) {
+		free_path(from_rp);
+	}
+
+	if (to_rp) {
+		free_path(to_rp);
+	}
+
+	return res;
 }
 
 static int graph_rename(const char *from, const char *to)
 {
-	int res;
+	int res = 0;
+	char *from_rp = NULL;
+	char *to_rp = NULL;
 
-	res = rename(from, to);
-	if (res == -1)
-		return -errno;
+	from_rp = real_path(from);
+	to_rp = real_path(to);
 
-	return 0;
+	res = rename(from_rp, to_rp);
+	if (res == -1) {
+		res = -errno;
+		goto done;
+	}
+
+done:
+	if (from_rp) {
+		free_path(from_rp);
+	}
+
+	if (to_rp) {
+		free_path(to_rp);
+	}
+
+	return res;
 }
 
 static int graph_link(const char *from, const char *to)
 {
-	int res;
+	int res = 0;
+	char *from_rp = NULL;
+	char *to_rp = NULL;
 
-	res = link(from, to);
-	if (res == -1)
-		return -errno;
+	from_rp = real_path(from);
+	to_rp = real_path(to);
 
-	return 0;
+	res = link(from_rp, to_rp);
+	if (res == -1) {
+		res = -errno;
+		goto done;
+	}
+
+done:
+	if (from_rp) {
+		free_path(from_rp);
+	}
+
+	if (to_rp) {
+		free_path(to_rp);
+	}
+
+	return res;
 }
 
 static int graph_chmod(const char *path, mode_t mode)
 {
-	int res;
+	int res = 0;
+	char *rp = NULL;
 
-	res = chmod(path, mode);
-	if (res == -1)
-		return -errno;
+	rp = real_path(path);
 
-	return 0;
+	res = chmod(rp, mode);
+	if (res == -1) {
+		res = -errno;
+		goto done;
+	}
+
+done:
+	if (rp) {
+		free_path(rp);
+	}
+
+	return res;
 }
 
 static int graph_chown(const char *path, uid_t uid, gid_t gid)
 {
-	int res;
+	int res = 0;
+	char *rp = NULL;
 
-	res = lchown(path, uid, gid);
-	if (res == -1)
-		return -errno;
+	rp = real_path(path);
 
-	return 0;
+	res = lchown(rp, uid, gid);
+	if (res == -1) {
+		res = -errno;
+		goto done;
+	}
+
+done:
+	if (rp) {
+		free_path(rp);
+	}
+
+	return res;
 }
 
 static int graph_truncate(const char *path, off_t size)
 {
-	int res;
-	
-	int fd = maybe_open(path, O_RDWR, 0777);
-	res = ftruncate(fd, size);
-	if (res == -1)
-		return -errno;
+	int res = 0;
+	char *rp = NULL;
 
-	return 0;
+	rp = real_path(path);
+
+	int fd = maybe_open(rp, O_RDWR, 0777);
+	res = ftruncate(fd, size);
+	if (res == -1) {
+		res = -errno;
+		goto done;
+	}
+
+done:
+	if (rp) {
+		free_path(rp);
+	}
+
+	return res;
 }
 
 static int graph_ftruncate(const char *path, off_t size,
-			 struct fuse_file_info *fi)
+		struct fuse_file_info *fi)
 {
 	int res;
-
 	(void) path;
 
 	res = ftruncate(fi->fh, size);
-	if (res == -1)
+	if (res == -1) {
 		return -errno;
+	}
 
 	return 0;
 }
 
 static int graph_utimens(const char *path, const struct timespec ts[2])
 {
-	int res;
 	struct timeval tv[2];
+	int res = 0;
+	char *rp = NULL;
+
+	rp = real_path(path);
 
 	tv[0].tv_sec = ts[0].tv_sec;
 	tv[0].tv_usec = ts[0].tv_nsec / 1000;
 	tv[1].tv_sec = ts[1].tv_sec;
 	tv[1].tv_usec = ts[1].tv_nsec / 1000;
 
-	res = utimes(path, tv);
-	if (res == -1)
-		return -errno;
+	res = utimes(rp, tv);
+	if (res == -1) {
+		res = -errno;
+		goto done;
+	}
 
-	return 0;
+done:
+	if (rp) {
+		free_path(rp);
+	}
+
+	return res;
 }
 
 static int graph_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 {
+	int res = 0;
+	char *rp = NULL;
 	int fd;
 
-	fd = maybe_open(path, fi->flags, mode);
-	if (fd == -1)
-		return -errno;
+	rp = real_path(path);
+
+	fd = maybe_open(rp, fi->flags, mode);
+	if (res == -1) {
+		res = -errno;
+		goto done;
+	}
 
 	fi->fh = fd;
-	return 0;
+
+done:
+	if (rp) {
+		free_path(rp);
+	}
+
+	return res;
 }
 
 static int graph_open(const char *path, struct fuse_file_info *fi)
 {
+	int res = 0;
+	char *rp = NULL;
 	int fd;
 
-	fd = maybe_open(path, fi->flags, 0777);
-	if (fd == -1)
-		return -errno;
+	rp = real_path(path);
+
+	fd = maybe_open(rp, fi->flags, 0777);
+	if (res == -1) {
+		res = -errno;
+		goto done;
+	}
 
 	fi->fh = fd;
-	return 0;
+
+done:
+	if (rp) {
+		free_path(rp);
+	}
+
+	return res;
 }
 
 static int graph_read(const char *path, char *buf, size_t size, off_t offset,
-		    struct fuse_file_info *fi)
+		struct fuse_file_info *fi)
 {
 	int res;
-
 	(void) path;
+
 	res = pread(fi->fh, buf, size, offset);
-	if (res == -1)
+	if (res == -1) {
 		res = -errno;
+	}
 
 	return res;
 }
 
 static int graph_write(const char *path, const char *buf, size_t size,
-		     off_t offset, struct fuse_file_info *fi)
+		off_t offset, struct fuse_file_info *fi)
 {
 	int res;
 
 	(void) path;
 	res = pwrite(fi->fh, buf, size, offset);
-	if (res == -1)
+	if (res == -1) {
 		res = -errno;
+	}
 
 	return res;
 }
 
 static int graph_statfs(const char *path, struct statvfs *stbuf)
 {
-	int res;
+	int res = 0;
+	char *rp = NULL;
 
-	res = statvfs(path, stbuf);
-	if (res == -1)
-		return -errno;
+	rp = real_path(path);
 
-	return 0;
+	res = statvfs(rp, stbuf);
+	if (res == -1) {
+		res = -errno;
+		goto done;
+	}
+
+done:
+	if (rp) {
+		free_path(rp);
+	}
+
+	return res;
 }
 
 static int graph_flush(const char *path, struct fuse_file_info *fi)
@@ -430,7 +666,7 @@ static int graph_release(const char *path, struct fuse_file_info *fi)
 }
 
 static int graph_fsync(const char *path, int isdatasync,
-		     struct fuse_file_info *fi)
+		struct fuse_file_info *fi)
 {
 	int res;
 	(void) path;
@@ -452,47 +688,102 @@ static int graph_fsync(const char *path, int isdatasync,
 #ifdef HAVE_SETXATTR
 /* xattr operations are optional and can safely be left unimplemented */
 static int graph_setxattr(const char *path, const char *name, const char *value,
-			size_t size, int flags)
+		size_t size, int flags)
 {
-	int res = lsetxattr(path, name, value, size, flags);
-	if (res == -1)
-		return -errno;
-	return 0;
+	int res = 0;
+	char *rp = NULL;
+
+	rp = real_path(path);
+
+	res = lsetxattr(rp, name, value, size, flags);
+	if (res == -1) {
+		res = -errno;
+		goto done;
+	}
+	res = 0;
+
+done:
+	if (rp) {
+		free_path(rp);
+	}
+
+	return res;
 }
 
 static int graph_getxattr(const char *path, const char *name, char *value,
-			size_t size)
+		size_t size)
 {
-	int res = lgetxattr(path, name, value, size);
-	if (res == -1)
-		return -errno;
+	int res = 0;
+	char *rp = NULL;
+
+	rp = real_path(path);
+
+	res = lgetxattr(rp, name, value, size);
+	if (res == -1) {
+		res = -errno;
+		goto done;
+	}
+
+done:
+	if (rp) {
+		free_path(rp);
+	}
+
 	return res;
 }
 
 static int graph_listxattr(const char *path, char *list, size_t size)
 {
-	int res = llistxattr(path, list, size);
-	if (res == -1)
-		return -errno;
+	int res = 0;
+	char *rp = NULL;
+
+	rp = real_path(path);
+
+	res = llistxattr(rp, list, size);
+	if (res == -1) {
+		res = -errno;
+		goto done;
+	}
+
+done:
+	if (rp) {
+		free_path(rp);
+	}
+
 	return res;
 }
 
 static int graph_removexattr(const char *path, const char *name)
 {
-	int res = lremovexattr(path, name);
-	if (res == -1)
-		return -errno;
-	return 0;
+	int res = 0;
+	char *rp = NULL;
+
+	rp = real_path(path);
+
+	int res = lremovexattr(rp, name);
+	if (res == -1) {
+		ret = -errno;
+		goto done;
+	}
+	res = 0;
+
+done:
+	if (rp) {
+		free_path(rp);
+	}
+
+	return res;
 }
+
 #endif /* HAVE_SETXATTR */
 
 static int graph_lock(const char *path, struct fuse_file_info *fi, int cmd,
-		    struct flock *lock)
+		struct flock *lock)
 {
 	(void) path;
 
 	return ulockmgr_op(fi->fh, cmd, lock, &fi->lock_owner,
-			   sizeof(fi->lock_owner));
+			sizeof(fi->lock_owner));
 }
 
 static struct fuse_operations graph_oper = {
@@ -536,14 +827,24 @@ static struct fuse_operations graph_oper = {
 
 int start_fuse(char *src_path, char *mount_path)
 {
-	char *argv[3];
+	char *argv[4];
+
+	graph_src = src_path;
 
 	descriptors_init();
 	umask(0);
 
 	argv[0] = "graph";
 	argv[1] = mount_path;
- 
-	return fuse_main(2, argv, &graph_oper, NULL);
+	argv[2] = "-f";
+
+	return fuse_main(3, argv, &graph_oper, NULL);
 }
 #endif
+
+/*
+int main()
+{
+	start_fuse("/var/lib/openstorage/fuse/physical", "/var/lib/openstorage/fuse/virtual");
+}
+*/
