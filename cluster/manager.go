@@ -297,6 +297,7 @@ func (c *ClusterManager) Start() error {
 	c.selfNode.Id = c.config.NodeId
 	c.selfNode.Status = api.StatusOk
 	c.selfNode.Ip, _ = externalIp()
+	c.selfNode.NodeData = make(map[string]interface{})
 
 	kvlock, err := kvdb.Lock("cluster/lock", 60)
 	if err != nil {
