@@ -1,3 +1,5 @@
+// +build linux,have_fuse,experimenatl
+
 package fuse
 
 /*

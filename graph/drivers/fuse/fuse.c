@@ -7,6 +7,8 @@
 #include <config.h>
 #endif
 
+#ifdef EXPERIMENTAL_
+
 #define _GNU_SOURCE
 
 #include <fuse.h>
@@ -544,3 +546,4 @@ int start_fuse(char *src_path, char *mount_path)
  
 	return fuse_main(2, argv, &graph_oper, NULL);
 }
+#endif
