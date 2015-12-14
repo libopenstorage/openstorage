@@ -147,7 +147,7 @@ func main() {
 		},
 		cli.StringSliceFlag{
 			Name:  "driver",
-			Usage: "driver name and options: name=btrfs,root_vol=/var/openstorage/btrfs",
+			Usage: "driver name and options: name=btrfs,home=/var/openstorage/btrfs",
 			Value: new(cli.StringSlice),
 		},
 		cli.StringFlag{
