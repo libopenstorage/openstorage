@@ -14,43 +14,46 @@ import (
 const (
 	btrfsFile = "/var/btrfs"
 	testPath  = "/var/test_dir"
+
+	KiB = 1024
+	MiB = KiB * 1024
+	GiB = MiB * 1024
 )
 
-func TestSetup(t *testing.T) {
-	exec.Command("umount", btrfsFile).Output()
-	os.Remove(btrfsFile)
-	os.MkdirAll(testPath, 0755)
-
-	f, err := os.Create(btrfsFile)
-	if err != nil {
-		t.Fatalf("Failed to setup btrfs store: %v", err)
-	}
-	err = f.Truncate(int64(8) << 30)
-	if err != nil {
-		t.Fatalf("Failed to truncate /var/btrfs 1G  %v", err)
-	}
-	o, err := exec.Command("mkfs", "-t", "btrfs", "-f", btrfsFile).Output()
-	if err != nil {
-		t.Fatalf("Failed to format to btrfs: %v: %v", err, o)
-	}
-
-	o, err = exec.Command("mount", btrfsFile, testPath).Output()
-	if err != nil {
-		t.Fatalf("Failed to mount to btrfs: %v: %v", err, o)
-	}
-}
-
 func TestAll(t *testing.T) {
-	_, err := volume.New(Name, volume.DriverParams{RootParam: testPath})
+	output, err := exec.Command("umount", btrfsFile).Output()
 	if err != nil {
-		t.Fatalf("Failed to initialize Driver: %v", err)
+		t.Logf("error on umount %s (not fatal): %s %v", btrfsFile, string(output), err)
 	}
-	d, err := volume.Get(Name)
+	if err := os.Remove(btrfsFile); err != nil {
+		t.Logf("error on rm %s (not fatal): %v", btrfsFile, err)
+	}
+	if err := os.MkdirAll(testPath, 0755); err != nil {
+		t.Fatalf("failed on mkdir -p %s: %v", testPath, err)
+	}
+	file, err := os.Create(btrfsFile)
 	if err != nil {
-		t.Fatalf("Failed to initialize Volume Driver: %v", err)
+		t.Fatalf("failed to setup btrfs file at %s: %v", btrfsFile, err)
 	}
-	ctx := test.NewContext(d)
+	if err := file.Truncate(GiB); err != nil {
+		t.Fatalf("failed to truncate %s 1G  %v", btrfsFile, err)
+	}
+	output, err = exec.Command("mkfs", "-t", "btrfs", "-f", btrfsFile).Output()
+	if err != nil {
+		t.Fatalf("failed to format to btrfs: %s %v", string(output), err)
+	}
+	output, err = exec.Command("mount", btrfsFile, testPath).Output()
+	if err != nil {
+		t.Fatalf("failed to mount to btrfs: %s %v", string(output), err)
+	}
+	if _, err := volume.New(Name, volume.DriverParams{RootParam: testPath}); err != nil {
+		t.Fatalf("failed to initialize Driver: %v", err)
+	}
+	volumeDriver, err := volume.Get(Name)
+	if err != nil {
+		t.Fatalf("failed to initialize VolumeDriver: %v", err)
+	}
+	ctx := test.NewContext(volumeDriver)
 	ctx.Filesystem = "btrfs"
-
 	test.Run(t, ctx)
 }
