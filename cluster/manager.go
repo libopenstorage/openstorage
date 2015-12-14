@@ -147,7 +147,7 @@ func (c *ClusterManager) joinCluster(db *Database, self *api.Node, exist bool) e
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err = e.Value.(ClusterListener).Init(self, db)
 		if err != nil {
-			log.Warnf("Failed to initialize %s: %v",
+			log.Errorf("Failed to initialize %s: %v",
 				e.Value.(ClusterListener).String(), err)
 			goto done
 		}
@@ -158,7 +158,7 @@ found:
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err = e.Value.(ClusterListener).Join(self, db)
 		if err != nil {
-			log.Warnf("Failed to initialize %s: %v",
+			log.Errorf("Failed to initialize %s: %v",
 				e.Value.(ClusterListener).String(), err)
 			goto done
 		}
@@ -168,7 +168,7 @@ found:
 		if id != c.config.NodeId {
 			// Check to see if the IP is the same.  If it is, then we have a stale entry.
 			if n.Ip == self.Ip {
-				log.Warnf("Warning, Detected node %s with the same IP %s in the database.  Will not connect to this node.",
+				log.Errorf("Erroring, Detected node %s with the same IP %s in the database.  Will not connect to this node.",
 					id, n.Ip)
 			} else {
 				// Gossip with this node.
@@ -219,7 +219,7 @@ func (c *ClusterManager) heartBeat() {
 			n, ok := nodeInfo.Value.(api.Node)
 
 			if !ok {
-				log.Warn("Received a bad broadcast packet: %v", nodeInfo.Value)
+				log.Error("Received a bad broadcast packet: %v", nodeInfo.Value)
 				continue
 			}
 
@@ -230,24 +230,24 @@ func (c *ClusterManager) heartBeat() {
 			_, ok = c.nodeCache[n.Id]
 			if ok {
 				if n.Status != api.StatusOk {
-					log.Warn("Detected node ", n.Id, " to be unhealthy.")
+					log.Error("Detected node ", n.Id, " to be unhealthy.")
 
 					for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
 						err := e.Value.(ClusterListener).Update(&n)
 						if err != nil {
-							log.Warn("Failed to notify ", e.Value.(ClusterListener).String())
+							log.Error("Failed to notify ", e.Value.(ClusterListener).String())
 						}
 					}
 
 					delete(c.nodeCache, n.Id)
 				} else if nodeInfo.Status == gossiptypes.NODE_STATUS_DOWN {
-					log.Warn("Detected node ", n.Id, " to be offline due to inactivity.")
+					log.Error("Detected node ", n.Id, " to be offline due to inactivity.")
 
 					n.Status = api.StatusOffline
 					for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
 						err := e.Value.(ClusterListener).Update(&n)
 						if err != nil {
-							log.Warn("Failed to notify ", e.Value.(ClusterListener).String())
+							log.Error("Failed to notify ", e.Value.(ClusterListener).String())
 						}
 					}
 
@@ -257,13 +257,13 @@ func (c *ClusterManager) heartBeat() {
 				}
 			} else if nodeInfo.Status == gossiptypes.NODE_STATUS_UP {
 				// A node discovered in the cluster.
-				log.Warn("Detected node ", n.Id, " to be in the cluster.")
+				log.Error("Detected node ", n.Id, " to be in the cluster.")
 
 				c.nodeCache[n.Id] = n
 				for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
 					err := e.Value.(ClusterListener).Add(&n)
 					if err != nil {
-						log.Warn("Failed to notify ", e.Value.(ClusterListener).String())
+						log.Error("Failed to notify ", e.Value.(ClusterListener).String())
 					}
 				}
 			}
@@ -274,12 +274,12 @@ func (c *ClusterManager) heartBeat() {
 }
 
 func (c *ClusterManager) DisableGossipUpdates() {
-	log.Warn("Disabling gossip updates")
+	log.Error("Disabling gossip updates")
 	c.gEnabled = false
 }
 
 func (c *ClusterManager) EnableGossipUpdates() {
-	log.Warn("Enabling gossip updates")
+	log.Error("Enabling gossip updates")
 	c.gEnabled = true
 }
 

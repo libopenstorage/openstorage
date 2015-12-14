@@ -59,7 +59,7 @@ func volDriverPath(method string) string {
 
 func (d *driver) volNotFound(request string, id string, e error, w http.ResponseWriter) error {
 	err := fmt.Errorf("Failed to locate volume: " + e.Error())
-	d.logReq(request, id).Warn(http.StatusNotFound, " ", err.Error())
+	d.logReq(request, id).Error(http.StatusNotFound, " ", err.Error())
 	return err
 }
 
@@ -212,7 +212,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 
 	v, err := volume.Get(d.name)
 	if err != nil {
-		d.logReq(method, "").Warn("Cannot locate volume driver")
+		d.logReq(method, "").Error("Cannot locate volume driver")
 		json.NewEncoder(w).Encode(&volumePathResponse{Err: err})
 		return
 	}
@@ -235,7 +235,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 	if v.Type()&types.Block != 0 {
 		attachPath, err := v.Attach(volInfo.vol.ID)
 		if err != nil {
-			d.logReq(method, request.Name).Warnf("Cannot attach volume: %v", err.Error())
+			d.logReq(method, request.Name).Errorf("Cannot attach volume: %v", err.Error())
 			json.NewEncoder(w).Encode(&volumePathResponse{Err: err})
 			return
 		}
@@ -248,7 +248,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 
 	err = v.Mount(volInfo.vol.ID, response.Mountpoint)
 	if err != nil {
-		d.logReq(method, request.Name).Warnf("Cannot mount volume %v, %v",
+		d.logReq(method, request.Name).Errorf("Cannot mount volume %v, %v",
 			response.Mountpoint, err)
 		json.NewEncoder(w).Encode(&volumePathResponse{Err: err})
 		return
@@ -293,7 +293,7 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 
 	v, err := volume.Get(d.name)
 	if err != nil {
-		d.logReq(method, "").Warnf("Cannot locate volume driver: %v", err.Error())
+		d.logReq(method, "").Errorf("Cannot locate volume driver: %v", err.Error())
 		json.NewEncoder(w).Encode(&volumeResponse{Err: err})
 		return
 	}
@@ -315,7 +315,7 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 	mountpoint := path.Join(config.MountBase, request.Name)
 	err = v.Unmount(volInfo.vol.ID, mountpoint)
 	if err != nil {
-		d.logReq(method, request.Name).Warnf("Cannot unmount volume %v, %v",
+		d.logReq(method, request.Name).Errorf("Cannot unmount volume %v, %v",
 			mountpoint, err)
 		json.NewEncoder(w).Encode(&volumeResponse{Err: err})
 		return

@@ -124,7 +124,7 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 	// Create a mount manager for this NFS server. Blank sever is OK.
 	mounter, err := mount.New(mount.NFSMount, server)
 	if err != nil {
-		log.Warnf("Failed to create mount manager for server: %v (%v)", server, err)
+		log.Errorf("Failed to create mount manager for server: %v (%v)", server, err)
 		return nil, err
 	}
 
@@ -210,13 +210,13 @@ func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api
 		if len(source.Seed) != 0 {
 			seed, err := seed.New(source.Seed, spec.ConfigLabels)
 			if err != nil {
-				log.Warnf("Failed to initailize seed from %q : %v",
+				log.Errorf("Failed to initailize seed from %q : %v",
 					source.Seed, err)
 				return api.BadVolumeID, err
 			}
 			err = seed.Load(path.Join(volPath, config.DataDir))
 			if err != nil {
-				log.Warnf("Failed to  seed from %q to %q: %v",
+				log.Errorf("Failed to  seed from %q to %q: %v",
 					source.Seed, nfsMountPath, err)
 				return api.BadVolumeID, err
 			}

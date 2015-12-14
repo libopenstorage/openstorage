@@ -147,7 +147,7 @@ func (l *Layer0) create(id, parent string) (string, *Layer0Vol, error) {
 
 	vol, ok := l.volumes[id]
 	if !ok {
-		log.Warnf("Failed to find layer0 volume for id %v", id)
+		log.Errorf("Failed to find layer0 volume for id %v", id)
 		return id, nil, nil
 	}
 
@@ -239,7 +239,7 @@ func (l *Layer0) Remove(id string) error {
 			upperDir := path.Join(path.Join(l.home, l.realID(id)), "upper")
 			err := os.Rename(upperDir, path.Join(v.path, "upper"))
 			if err != nil {
-				log.Warnf("Failed in rename(%v): %v", id, err)
+				log.Errorf("Failed in rename(%v): %v", id, err)
 			}
 			l.Driver.Remove(l.realID(id))
 			err = l.volDriver.Unmount(v.volumeID, v.path)
@@ -250,7 +250,7 @@ func (l *Layer0) Remove(id string) error {
 			delete(l.volumes, v.id)
 		}
 	} else {
-		log.Warnf("Failed to find layer0 vol for id %v", id)
+		log.Errorf("Failed to find layer0 vol for id %v", id)
 	}
 	return err
 }

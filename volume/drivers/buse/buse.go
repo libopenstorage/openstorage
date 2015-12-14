@@ -176,7 +176,7 @@ func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api
 	cmd := "/sbin/mkfs." + string(spec.Format)
 	o, err := exec.Command(cmd, dev).Output()
 	if err != nil {
-		log.Warnf("Failed to run command %v %v: %v", cmd, dev, o)
+		log.Errorf("Failed to run command %v %v: %v", cmd, dev, o)
 		return api.BadVolumeID, err
 	}
 
