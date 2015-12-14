@@ -53,7 +53,6 @@ func RunShort(t *testing.T, ctx *Context) {
 	unmount(t, ctx)
 	detach(t, ctx)
 	delete(t, ctx)
-	multi_mount(t, ctx)
 	runEnd(t, ctx)
 }
 
@@ -207,7 +206,7 @@ func mount(t *testing.T, ctx *Context) {
 	ctx.mountPath = ctx.testPath
 }
 
-func multi_mount(t *testing.T, ctx *Context) {
+func multiMount(t *testing.T, ctx *Context) {
 	ctx2 := *ctx
 	create(t, ctx)
 	attach(t, ctx)
