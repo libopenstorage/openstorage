@@ -1,6 +1,9 @@
+ifndef TAGS
 TAGS := daemon btrfs_noversion have_btrfs
+endif
+ifndef PKGS
 PKGS := $(shell go list ./... | grep -v 'github.com/libopenstorage/openstorage/vendor')
-
+endif
 ifeq ($(BUILD_TYPE),debug)
 BUILDFLAGS := -gcflags "-N -l"
 endif
@@ -58,9 +61,12 @@ docker-build:
 docker-test: docker-build
 	docker run \
 		--privileged \
+		-v /var/run/docker.sock:/var/run/docker.sock \
 		-e AWS_ACCESS_KEY_ID \
 		-e AWS_SECRET_ACCESS_KEY \
-		-v /var/run/docker.sock:/var/run/docker.sock \
+		-e TAGS \
+		-e PKGS \
+		-e BUILDFLAGS \
 		openstorage/osd-dev \
 			make test
 
@@ -71,7 +77,13 @@ docker-build-osd-internal:
 	docker build -t openstorage/osd -f Dockerfile.osd .
 
 docker-build-osd: docker-build
-	docker run -v /var/run/docker.sock:/var/run/docker.sock openstorage/osd-dev make docker-build-osd-internal
+	docker run \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-e TAGS \
+		-e PKGS \
+		-e BUILDFLAGS \
+		openstorage/osd-dev \
+			make docker-build-osd-internal
 
 launch: docker-build-osd
 	docker run \
