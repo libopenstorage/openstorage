@@ -94,6 +94,10 @@ launch: docker-build-osd
 		-v /var/lib/osd/:/var/lib/osd/\
 		openstorage/osd -d -f /etc/config.yaml
 
+launch-local-btrfs: install
+	sudo bash -x etc/btrfs/init.sh
+	sudo $(shell which osd) -d -f config_btrfs.yaml
+
 clean:
 	go clean -i $(PKGS)
 
@@ -116,4 +120,5 @@ clean:
 	docker-build-osd-internal \
 	docker-build-osd \
 	launch \
+	launch-local-btrfs \
 	clean
