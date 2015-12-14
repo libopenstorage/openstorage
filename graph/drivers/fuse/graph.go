@@ -155,6 +155,11 @@ func (d *Driver) Exists(id string) bool {
 	}
 }
 
+func (d *Driver) ApplyDiff(id string, parent string, diff archive.Reader) (size int64, err error) {
+	log.Infof("Applying diff %s on %s", id, parent)
+	return d.Driver.ApplyDiff(id, parent, diff)
+}
+
 func init() {
 	graph.Register("fuse", Init)
 

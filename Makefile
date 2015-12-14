@@ -10,7 +10,7 @@ endif
 
 export GO15VENDOREXPERIMENT=1
 
-all: docker-test install
+all: test install
 
 deps:
 	GO15VENDOREXPERIMENT=0 go get -d -v $(PKGS)

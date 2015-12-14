@@ -262,9 +262,13 @@ func (d *graphDriver) changes(w http.ResponseWriter, r *http.Request) {
 
 func (d *graphDriver) applyDiff(w http.ResponseWriter, r *http.Request) {
 	method := "applyDiff"
+	fmt.Printf("PASS 1\n")
 	id := r.URL.Query().Get("id")
+	fmt.Printf("PASS 2\n")
 	parent := r.URL.Query().Get("parent")
+	fmt.Printf("PASS 3\n")
 	d.logReq(method, id).Infof("Parent %v", parent)
+	fmt.Printf("Applying DIFF\n")
 	size, err := d.gd.ApplyDiff(id, parent, r.Body)
 	if err != nil {
 		d.errResponse(method, w, err)
