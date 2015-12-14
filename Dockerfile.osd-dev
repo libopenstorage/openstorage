@@ -1,4 +1,4 @@
-FROM golang:1.5.1
+FROM golang:1.5.2
 MAINTAINER gou@portworx.com
 
 RUN \
@@ -7,9 +7,9 @@ RUN \
     btrfs-tools \
     ca-certificates && \
   apt-get clean && \
-  rm -rf /var/lib/apt
+  rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN \
-  curl -sSL https://get.docker.com/builds/Linux/x86_64/docker-1.8.2 > /bin/docker && \
+  curl -sSL https://get.docker.com/builds/Linux/x86_64/docker-1.9.1 > /bin/docker && \
   chmod +x /bin/docker
 ENV GO15VENDOREXPERIMENT 1
 RUN mkdir -p /go/src/github.com/libopenstorage/openstorage
