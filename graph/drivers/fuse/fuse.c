@@ -91,7 +91,6 @@ static int maybe_open(const char* path, int mode, int mode2) {
 		return -1;
 	}
 
-	fprintf(stderr, "Successfully opened new file %s\n", path);
 	return fd;
 }
 

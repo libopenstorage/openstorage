@@ -18,6 +18,7 @@ import (
 	"github.com/libopenstorage/openstorage/graph"
 
 	"github.com/docker/docker/daemon/graphdriver"
+	"github.com/docker/docker/daemon/graphdriver/overlay"
 	"github.com/docker/docker/pkg/idtools"
 
 	log "github.com/Sirupsen/logrus"
@@ -36,9 +37,8 @@ type Driver struct {
 }
 
 func Init(home string, options []string, uidMaps, gidMaps []idtools.IDMap) (graphdriver.Driver, error) {
-	d := &Driver{}
 
-	log.Infof("Initializing Fuse Graph driver at %v...", virtPath)
+	log.Infof("Initializing Fuse Graph driver at home:%s and storage: %v...", home, virtPath)
 
 	// In case it is mounted.
 	syscall.Unmount(virtPath, 0)
@@ -56,6 +56,16 @@ func Init(home string, options []string, uidMaps, gidMaps []idtools.IDMap) (grap
 	cVirtPath := C.CString(virtPath)
 	cPhysPath := C.CString(physPath)
 	go C.start_fuse(cPhysPath, cVirtPath)
+
+	ov, err := overlay.Init(home, options, uidMaps, gidMaps)
+	if err != nil {
+		volDriver.Shutdown()
+		return nil, err
+	}
+
+	d := &Driver{
+		Driver: ov,
+	}
 
 	return d, nil
 }
@@ -150,5 +160,4 @@ func init() {
 
 	cVirtPath := C.CString(virtPath)
 	cPhysPath := C.CString(physPath)
-	go C.start_fuse(cPhysPath, cVirtPath)
 }
