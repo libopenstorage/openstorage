@@ -8,8 +8,6 @@
 #include <config.h>
 #endif
 
-#define EXPERIMENTAL_
-
 #ifdef EXPERIMENTAL_
 
 #define _GNU_SOURCE
