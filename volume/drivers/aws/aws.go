@@ -250,7 +250,7 @@ func (d *Driver) Create(
 
 	vol, err := d.ec2.CreateVolume(req)
 	if err != nil {
-		log.Warnf("Failed in CreateVolumeRequest :%v", err)
+		log.Errorf("Failed in CreateVolumeRequest :%v", err)
 		return api.BadVolumeID, err
 	}
 	v := &api.Volume{
@@ -530,7 +530,7 @@ func (d *Driver) volumeState(ec2VolState *string) api.VolumeState {
 	case ec2.VolumeAttachmentStateAttaching, ec2.VolumeAttachmentStateDetaching:
 		return api.VolumePending
 	default:
-		log.Warnf("Failed to translate EC2 volume status %v", ec2VolState)
+		log.Errorf("Failed to translate EC2 volume status %v", ec2VolState)
 	}
 	return api.VolumeError
 }
@@ -549,7 +549,7 @@ func (d *Driver) Format(volumeID api.VolumeID) error {
 	cmd := "/sbin/mkfs." + string(v.Spec.Format)
 	o, err := exec.Command(cmd, devicePath).Output()
 	if err != nil {
-		log.Warnf("Failed to run command %v %v: %v", cmd, devicePath, o)
+		log.Errorf("Failed to run command %v %v: %v", cmd, devicePath, o)
 		return err
 	}
 	v.Format = v.Spec.Format

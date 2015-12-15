@@ -44,7 +44,7 @@ func start(c *cli.Context) {
 	// We are in daemon mode.
 	file := c.String("file")
 	if file == "" {
-		log.Warn("OSD configuration file not specified.  Visit openstorage.org for an example.")
+		log.Error("OSD configuration file not specified.  Visit openstorage.org for an example.")
 		return
 	}
 	cfg, err := config.Parse(file)
@@ -59,13 +59,13 @@ func start(c *cli.Context) {
 
 	kv, err := kvdb.New(scheme, "openstorage", []string{u.String()}, nil)
 	if err != nil {
-		log.Warnf("Failed to initialize KVDB: %v (%v)", scheme, err)
-		log.Warnf("Supported datastores: %v", datastores)
+		log.Errorf("Failed to initialize KVDB: %v (%v)", scheme, err)
+		log.Errorf("Supported datastores: %v", datastores)
 		return
 	}
 	err = kvdb.SetInstance(kv)
 	if err != nil {
-		log.Warnf("Failed to initialize KVDB: %v", err)
+		log.Errorf("Failed to initialize KVDB: %v", err)
 		return
 	}
 
@@ -73,7 +73,7 @@ func start(c *cli.Context) {
 	if cfg.Osd.ClusterConfig.NodeId != "" && cfg.Osd.ClusterConfig.ClusterId != "" {
 		dockerClient, err := docker.NewClientFromEnv()
 		if err != nil {
-			log.Warnf("Failed to initialize docker client: %v", err)
+			log.Errorf("Failed to initialize docker client: %v", err)
 			return
 		}
 		cm = cluster.New(cfg.Osd.ClusterConfig, kv, dockerClient)
@@ -84,17 +84,17 @@ func start(c *cli.Context) {
 		log.Infof("Starting volume driver: %v", d)
 		_, err := volume.New(d, v)
 		if err != nil {
-			log.Warnf("Unable to start volume driver: %v, %v", d, err)
+			log.Errorf("Unable to start volume driver: %v, %v", d, err)
 			return
 		}
 		err = apiserver.StartServerAPI(d, 0, config.DriverAPIBase)
 		if err != nil {
-			log.Warnf("Unable to start volume driver: %v", err)
+			log.Errorf("Unable to start volume driver: %v", err)
 			return
 		}
 		err = apiserver.StartPluginAPI(d, config.PluginAPIBase)
 		if err != nil {
-			log.Warnf("Unable to start volume plugin: %v", err)
+			log.Errorf("Unable to start volume plugin: %v", err)
 			return
 		}
 	}
@@ -104,7 +104,7 @@ func start(c *cli.Context) {
 		log.Infof("Starting graph driver: %v", d)
 		err = apiserver.StartGraphAPI(d, 0, config.PluginAPIBase)
 		if err != nil {
-			log.Warnf("Unable to start graph plugin: %v", err)
+			log.Errorf("Unable to start graph plugin: %v", err)
 			return
 		}
 	}
@@ -112,7 +112,7 @@ func start(c *cli.Context) {
 	if cm != nil {
 		err = cm.Start()
 		if err != nil {
-			log.Warnf("Unable to start cluster manager: %v", err)
+			log.Errorf("Unable to start cluster manager: %v", err)
 			return
 		}
 	}

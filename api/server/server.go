@@ -39,12 +39,12 @@ func (rest *restBase) logReq(request string, id string) *log.Entry {
 	})
 }
 func (rest *restBase) sendError(request string, id string, w http.ResponseWriter, msg string, code int) {
-	rest.logReq(request, id).Warn(code, " ", msg)
+	rest.logReq(request, id).Error(code, " ", msg)
 	http.Error(w, msg, code)
 }
 
 func notFound(w http.ResponseWriter, r *http.Request) {
-	log.Warnf("Not found: %+v ", r.URL)
+	log.Errorf("Not found: %+v ", r.URL)
 	http.NotFound(w, r)
 }
 
@@ -66,7 +66,7 @@ func startServer(name string, sockBase string, port int, routes []*Route) error 
 	log.Printf("Starting REST service on %+v", socket)
 	listener, err = net.Listen("unix", socket)
 	if err != nil {
-		log.Warn("Cannot listen on UNIX socket: ", err)
+		log.Error("Cannot listen on UNIX socket: ", err)
 		return err
 	}
 	go http.Serve(listener, router)
