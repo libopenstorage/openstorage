@@ -33,6 +33,7 @@ func New(name, root string, options []string) (graphdriver.Driver, error) {
 	if _, ok := instances[name]; ok {
 		return nil, ErrExist
 	}
+
 	if initFunc, exists := drivers[name]; exists {
 		driver, err := initFunc(root, options, nil, nil)
 		if err != nil {

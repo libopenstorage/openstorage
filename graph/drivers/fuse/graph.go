@@ -1,4 +1,4 @@
-// +build linux,have_fuse,experimenatl
+// +build linux,have_fuse
 
 package fuse
 
@@ -10,6 +10,7 @@ import "C"
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"syscall"
@@ -18,7 +19,9 @@ import (
 	"github.com/libopenstorage/openstorage/graph"
 
 	"github.com/docker/docker/daemon/graphdriver"
-	"github.com/docker/docker/daemon/graphdriver/overlay"
+	"github.com/docker/docker/pkg/archive"
+	"github.com/docker/docker/pkg/chrootarchive"
+	"github.com/docker/docker/pkg/directory"
 	"github.com/docker/docker/pkg/idtools"
 
 	log "github.com/Sirupsen/logrus"
@@ -32,12 +35,9 @@ const (
 )
 
 type Driver struct {
-	// Driver is an implementation of GraphDriver. Only select methods are overridden
-	graphdriver.Driver
 }
 
 func Init(home string, options []string, uidMaps, gidMaps []idtools.IDMap) (graphdriver.Driver, error) {
-
 	log.Infof("Initializing Fuse Graph driver at home:%s and storage: %v...", home, virtPath)
 
 	// In case it is mounted.
@@ -57,15 +57,7 @@ func Init(home string, options []string, uidMaps, gidMaps []idtools.IDMap) (grap
 	cPhysPath := C.CString(physPath)
 	go C.start_fuse(cPhysPath, cVirtPath)
 
-	ov, err := overlay.Init(home, options, uidMaps, gidMaps)
-	if err != nil {
-		volDriver.Shutdown()
-		return nil, err
-	}
-
-	d := &Driver{
-		Driver: ov,
-	}
+	d := &Driver{}
 
 	return d, nil
 }
@@ -78,7 +70,8 @@ func (d *Driver) String() string {
 // held by the driver, e.g., unmounting all layered filesystems
 // known to this driver.
 func (d *Driver) Cleanup() error {
-	syscall.Unmount(virtPath, 0)
+	log.Infof("Cleaning up fuse %s", virtPath)
+	// syscall.Unmount(virtPath, 0)
 	return nil
 }
 
@@ -90,10 +83,25 @@ func (d *Driver) Status() [][2]string {
 	}
 }
 
+func (d *Driver) linkParent(child, parent string) error {
+	parent = path.Join(physPath, parent)
+
+	child = child + "/_parent"
+
+	log.Infof("Linking layer %s to %s", parent, child)
+
+	err := os.Symlink(parent, child)
+	if err != nil {
+		return fmt.Errorf("Error while linking FUSE mount path %v to %v: %v", child, parent, err)
+	}
+
+	return nil
+}
+
 // Create creates a new, empty, filesystem layer with the
 // specified id and parent and mountLabel. Parent and mountLabel may be "".
 func (d *Driver) Create(id string, parent string) error {
-	path := path.Join(virtPath, string(id))
+	path := path.Join(virtPath, id)
 	log.Infof("Creating layer %s", path)
 
 	err := os.MkdirAll(path, 0744)
@@ -101,12 +109,16 @@ func (d *Driver) Create(id string, parent string) error {
 		return fmt.Errorf("Error while creating FUSE mount path %v: %v", path, err)
 	}
 
+	if parent != "" {
+		return d.linkParent(path, parent)
+	}
+
 	return nil
 }
 
 // Remove attempts to remove the filesystem layer with this id.
 func (d *Driver) Remove(id string) error {
-	path := path.Join(virtPath, string(id))
+	path := path.Join(virtPath, id)
 	log.Infof("Removing layer %s", path)
 
 	os.RemoveAll(path)
@@ -124,7 +136,7 @@ func (d *Driver) GetMetadata(id string) (map[string]string, error) {
 // to by this id. You can optionally specify a mountLabel or "".
 // Returns the absolute path to the mounted layered filesystem.
 func (d *Driver) Get(id, mountLabel string) (string, error) {
-	path := path.Join(virtPath, string(id))
+	path := path.Join(virtPath, id)
 	log.Infof("Getting layer %s", path)
 
 	return path, nil
@@ -133,7 +145,7 @@ func (d *Driver) Get(id, mountLabel string) (string, error) {
 // Put releases the system resources for the specified id,
 // e.g, unmounting layered filesystem.
 func (d *Driver) Put(id string) error {
-	path := path.Join(virtPath, string(id))
+	path := path.Join(virtPath, id)
 	log.Infof("Putting layer %s", path)
 
 	return nil
@@ -143,7 +155,7 @@ func (d *Driver) Put(id string) error {
 // ID exists on this driver.
 // All cache entries exist.
 func (d *Driver) Exists(id string) bool {
-	path := path.Join(virtPath, string(id))
+	path := path.Join(virtPath, id)
 	log.Infof("Checking if layer %s exists", path)
 
 	_, err := os.Stat(path)
@@ -155,14 +167,56 @@ func (d *Driver) Exists(id string) bool {
 	}
 }
 
+// ApplyDiff extracts the changeset from the given diff into the
+// layer with the specified id and parent, returning the size of the
+// new layer in bytes.
+// The archive.Reader must be an uncompressed stream.
 func (d *Driver) ApplyDiff(id string, parent string, diff archive.Reader) (size int64, err error) {
-	log.Infof("Applying diff %s on %s", id, parent)
-	return d.Driver.ApplyDiff(id, parent, diff)
+	if parent != "" {
+		log.Infof("Applying diff %s on %s", id, parent)
+	} else {
+		log.Infof("Applying diff %s", id)
+	}
+
+	dir := path.Join(virtPath, id)
+	if err := chrootarchive.UntarUncompressed(diff, dir, nil); err != nil {
+		log.Warnf("Error while applying diff to %s: %v", id, err)
+		os.Exit(-1)
+		return 0, err
+	}
+
+	// show invalid whiteouts warning.
+	files, err := ioutil.ReadDir(path.Join(dir, archive.WhiteoutLinkDir))
+	if err == nil && len(files) > 0 {
+		log.Warnf("Archive contains aufs hardlink references that are not supported.")
+	}
+
+	return d.DiffSize(id, parent)
+}
+
+// Changes produces a list of changes between the specified layer
+// and its parent layer. If parent is "", then all changes will be ADD changes.
+func (d *Driver) Changes(id, parent string) ([]archive.Change, error) {
+
+	return nil, nil
+}
+
+// Diff produces an archive of the changes between the specified
+// layer and its parent layer which may be "".
+func (d *Driver) Diff(id, parent string) (archive.Archive, error) {
+	return archive.TarWithOptions(path.Join(virtPath, id), &archive.TarOptions{
+		Compression:     archive.Uncompressed,
+		ExcludePatterns: []string{archive.WhiteoutMetaPrefix + "*", "!" + archive.WhiteoutOpaqueDir},
+	})
+}
+
+// DiffSize calculates the changes between the specified id
+// and its parent and returns the size in bytes of the changes
+// relative to its base filesystem directory.
+func (d *Driver) DiffSize(id, parent string) (size int64, err error) {
+	return directory.Size(path.Join(virtPath, id))
 }
 
 func init() {
 	graph.Register("fuse", Init)
-
-	cVirtPath := C.CString(virtPath)
-	cPhysPath := C.CString(physPath)
 }

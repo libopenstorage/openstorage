@@ -8,6 +8,8 @@
 #include <config.h>
 #endif
 
+#define EXPERIMENTAL_
+
 #ifdef EXPERIMENTAL_
 
 #define _GNU_SOURCE
@@ -115,8 +117,12 @@ static int graph_getattr(const char *path, struct stat *stbuf)
 
 	rp = real_path(path);
 
+
 	res = lstat(rp, stbuf);
 	if (res == -1) {
+		fprintf(stderr, "\nSTAT ON %s\n", rp);
+		perror("");
+
 		res = -errno;
 		goto done;
 	}
@@ -135,8 +141,11 @@ static int graph_fgetattr(const char *path, struct stat *stbuf,
 	int res = 0;
 	(void) path;
 
+
 	res = fstat(fi->fh, stbuf);
 	if (res == -1) {
+		fprintf(stderr, "\nFFFFFFFFFFFFFFF STAT ON %s\n", path);
+		perror("");
 		return -errno;
 	}
 
@@ -369,25 +378,19 @@ done:
 static int graph_symlink(const char *from, const char *to)
 {
 	int res = 0;
-	char *from_rp = NULL;
-	char *to_rp = NULL;
+	char *rp = NULL;
 
-	from_rp = real_path(from);
-	to_rp = real_path(to);
+	rp = real_path(to);
 
-	res = symlink(from_rp, to_rp);
+	res = symlink(from, rp);
 	if (res == -1) {
 		res = -errno;
 		goto done;
 	}
 
 done:
-	if (from_rp) {
-		free_path(from_rp);
-	}
-
-	if (to_rp) {
-		free_path(to_rp);
+	if (rp) {
+		free_path(rp);
 	}
 
 	return res;
