@@ -67,7 +67,7 @@ OSD is both the openstorage daemon and the CLI.  When run as a daemon, the OSD i
 
 To start the OSD in daemon mode:
 ```
-osd -d -f config.yaml
+osd -d -f etc/config/config.yaml
 ```
 where, config.yaml is the daemon's configuiration file and it's format is explained [below](https://github.com/libopenstorage/openstorage/blob/master/README.md#osd-config-file).
 
