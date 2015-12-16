@@ -13,7 +13,7 @@ import (
 	"sync"
 	"syscall"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 )
 
 const (
@@ -140,7 +140,7 @@ func (nbd *NBD) Connect() (dev string, err error) {
 			continue // Busy.
 		}
 
-		log.Infof("Attempting to open device %v", dev)
+		logrus.Infof("Attempting to open device %v", dev)
 		if nbd.deviceFile, err = os.Open(dev); err == nil {
 			// Possible candidate.
 			ioctl(nbd.deviceFile.Fd(), BLKROSET, 0)
@@ -190,7 +190,7 @@ func (nbd *NBD) connect() {
 	// NBD_CONNECT does not return until disconnect.
 	ioctl(nbd.deviceFile.Fd(), NBD_CONNECT, 0)
 
-	log.Infof("Closing device file %s", nbd.devicePath)
+	logrus.Infof("Closing device file %s", nbd.devicePath)
 }
 
 // Handle block requests.
@@ -201,12 +201,12 @@ func (nbd *NBD) handle() {
 	for {
 		bytes, err := syscall.Read(nbd.socket, buf[0:28])
 		if nbd.deviceFile == nil {
-			log.Infof("Disconnecting device %s", nbd.devicePath)
+			logrus.Infof("Disconnecting device %s", nbd.devicePath)
 			return
 		}
 
 		if bytes < 0 || err != nil {
-			log.Errorf("Error reading from device %s", nbd.devicePath)
+			logrus.Errorf("Error reading from device %s", nbd.devicePath)
 			nbd.Disconnect()
 			return
 		}
@@ -238,7 +238,7 @@ func (nbd *NBD) handle() {
 				binary.BigEndian.PutUint32(buf[4:8], 0)
 				syscall.Write(nbd.socket, buf[0:16])
 			case NBD_CMD_DISC:
-				log.Infof("Disconnecting device %s", nbd.devicePath)
+				logrus.Infof("Disconnecting device %s", nbd.devicePath)
 				nbd.Disconnect()
 				return
 			case NBD_CMD_FLUSH:
@@ -248,12 +248,12 @@ func (nbd *NBD) handle() {
 				binary.BigEndian.PutUint32(buf[4:8], 1)
 				syscall.Write(nbd.socket, buf[0:16])
 			default:
-				log.Errorf("Unknown command recieved on device %s", nbd.devicePath)
+				logrus.Errorf("Unknown command recieved on device %s", nbd.devicePath)
 				nbd.Disconnect()
 				return
 			}
 		default:
-			log.Errorf("Invalid packet command recieved on device %s", nbd.devicePath)
+			logrus.Errorf("Invalid packet command recieved on device %s", nbd.devicePath)
 			nbd.Disconnect()
 			return
 		}

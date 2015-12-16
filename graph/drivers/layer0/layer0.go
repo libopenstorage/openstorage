@@ -8,7 +8,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	"github.com/docker/docker/daemon/graphdriver"
 	"github.com/docker/docker/daemon/graphdriver/overlay"
 	"github.com/docker/docker/pkg/archive"
@@ -77,7 +77,7 @@ func Init(home string, options []string, uidMaps, gidMaps []idtools.IDMap) (grap
 			return nil, fmt.Errorf("Unknown option %s\n", key)
 		}
 	}
-	log.Infof("Layer0 volume driver: %v", volumeDriver)
+	logrus.Infof("Layer0 volume driver: %v", volumeDriver)
 	volDriver, err := volume.Get(volumeDriver)
 	if err != nil {
 		return nil, err
@@ -147,7 +147,7 @@ func (l *Layer0) create(id, parent string) (string, *Layer0Vol, error) {
 
 	vol, ok := l.volumes[id]
 	if !ok {
-		log.Warnf("Failed to find layer0 volume for id %v", id)
+		logrus.Warnf("Failed to find layer0 volume for id %v", id)
 		return id, nil, nil
 	}
 
@@ -157,7 +157,7 @@ func (l *Layer0) create(id, parent string) (string, *Layer0Vol, error) {
 	// If we don't find a volume configured for this image,
 	// then don't track layer0
 	if err != nil || vols == nil {
-		log.Infof("Failed to find configured volume for id %v", vol.parent)
+		logrus.Infof("Failed to find configured volume for id %v", vol.parent)
 		delete(l.volumes, id)
 		return id, nil, nil
 	}
@@ -171,7 +171,7 @@ func (l *Layer0) create(id, parent string) (string, *Layer0Vol, error) {
 		}
 	}
 	if index == -1 {
-		log.Infof("Failed to find free volume for id %v", vol.parent)
+		logrus.Infof("Failed to find free volume for id %v", vol.parent)
 		delete(l.volumes, id)
 		return id, nil, nil
 	}
@@ -183,14 +183,14 @@ func (l *Layer0) create(id, parent string) (string, *Layer0Vol, error) {
 	if l.volDriver.Type()&api.Block != 0 {
 		_, err := l.volDriver.Attach(vols[index].ID)
 		if err != nil {
-			log.Errorf("Failed to attach volume %v", vols[index].ID)
+			logrus.Errorf("Failed to attach volume %v", vols[index].ID)
 			delete(l.volumes, id)
 			return id, nil, nil
 		}
 	}
 	err = l.volDriver.Mount(vols[index].ID, mountPath)
 	if err != nil {
-		log.Errorf("Failed to mount volume %v at path %v",
+		logrus.Errorf("Failed to mount volume %v at path %v",
 			vols[index].ID, mountPath)
 		delete(l.volumes, id)
 		return id, nil, nil
@@ -239,7 +239,7 @@ func (l *Layer0) Remove(id string) error {
 			upperDir := path.Join(path.Join(l.home, l.realID(id)), "upper")
 			err := os.Rename(upperDir, path.Join(v.path, "upper"))
 			if err != nil {
-				log.Warnf("Failed in rename(%v): %v", id, err)
+				logrus.Warnf("Failed in rename(%v): %v", id, err)
 			}
 			l.Driver.Remove(l.realID(id))
 			err = l.volDriver.Unmount(v.volumeID, v.path)
@@ -250,7 +250,7 @@ func (l *Layer0) Remove(id string) error {
 			delete(l.volumes, v.id)
 		}
 	} else {
-		log.Warnf("Failed to find layer0 vol for id %v", id)
+		logrus.Warnf("Failed to find layer0 vol for id %v", id)
 	}
 	return err
 }

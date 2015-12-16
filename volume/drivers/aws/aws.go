@@ -10,19 +10,16 @@ import (
 	"syscall"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
-
+	"github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-
-	"github.com/portworx/kvdb"
-
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/chaos"
 	"github.com/libopenstorage/openstorage/pkg/device"
 	"github.com/libopenstorage/openstorage/volume"
+	"github.com/portworx/kvdb"
 )
 
 const (
@@ -61,7 +58,7 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Infof("AWS instance %v zone %v", instance, zone)
+	logrus.Infof("AWS instance %v zone %v", instance, zone)
 	accessKey, ok := params["AWS_ACCESS_KEY_ID"]
 	if !ok {
 		if accessKey = os.Getenv("AWS_ACCESS_KEY_ID"); accessKey == "" {
@@ -250,7 +247,7 @@ func (d *Driver) Create(
 
 	vol, err := d.ec2.CreateVolume(req)
 	if err != nil {
-		log.Warnf("Failed in CreateVolumeRequest :%v", err)
+		logrus.Warnf("Failed in CreateVolumeRequest :%v", err)
 		return api.BadVolumeID, err
 	}
 	v := &api.Volume{
@@ -530,7 +527,7 @@ func (d *Driver) volumeState(ec2VolState *string) api.VolumeState {
 	case ec2.VolumeAttachmentStateAttaching, ec2.VolumeAttachmentStateDetaching:
 		return api.VolumePending
 	default:
-		log.Warnf("Failed to translate EC2 volume status %v", ec2VolState)
+		logrus.Warnf("Failed to translate EC2 volume status %v", ec2VolState)
 	}
 	return api.VolumeError
 }
@@ -549,7 +546,7 @@ func (d *Driver) Format(volumeID api.VolumeID) error {
 	cmd := "/sbin/mkfs." + string(v.Spec.Format)
 	o, err := exec.Command(cmd, devicePath).Output()
 	if err != nil {
-		log.Warnf("Failed to run command %v %v: %v", cmd, devicePath, o)
+		logrus.Warnf("Failed to run command %v %v: %v", cmd, devicePath, o)
 		return err
 	}
 	v.Format = v.Spec.Format
@@ -596,7 +593,7 @@ func (d *Driver) Unmount(volumeID api.VolumeID, mountpath string) error {
 }
 
 func (d *Driver) Shutdown() {
-	log.Printf("%s Shutting down", Name)
+	logrus.Printf("%s Shutting down", Name)
 }
 
 func (d *Driver) Set(volumeID api.VolumeID, locator *api.VolumeLocator, spec *api.VolumeSpec) error {

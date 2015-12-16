@@ -15,10 +15,10 @@ import (
 	"github.com/portworx/kvdb/etcd"
 	"github.com/portworx/kvdb/mem"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 
 	"github.com/libopenstorage/openstorage/api"
-	apiserver "github.com/libopenstorage/openstorage/api/server"
+	"github.com/libopenstorage/openstorage/api/server"
 	osdcli "github.com/libopenstorage/openstorage/cli"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/config"
@@ -44,12 +44,12 @@ func start(c *cli.Context) {
 	// We are in daemon mode.
 	file := c.String("file")
 	if file == "" {
-		log.Warn("OSD configuration file not specified.  Visit openstorage.org for an example.")
+		logrus.Warn("OSD configuration file not specified.  Visit openstorage.org for an example.")
 		return
 	}
 	cfg, err := config.Parse(file)
 	if err != nil {
-		log.Error(err)
+		logrus.Error(err)
 		return
 	}
 	kvdbURL := c.String("kvdb")
@@ -59,13 +59,13 @@ func start(c *cli.Context) {
 
 	kv, err := kvdb.New(scheme, "openstorage", []string{u.String()}, nil)
 	if err != nil {
-		log.Warnf("Failed to initialize KVDB: %v (%v)", scheme, err)
-		log.Warnf("Supported datastores: %v", datastores)
+		logrus.Warnf("Failed to initialize KVDB: %v (%v)", scheme, err)
+		logrus.Warnf("Supported datastores: %v", datastores)
 		return
 	}
 	err = kvdb.SetInstance(kv)
 	if err != nil {
-		log.Warnf("Failed to initialize KVDB: %v", err)
+		logrus.Warnf("Failed to initialize KVDB: %v", err)
 		return
 	}
 
@@ -73,7 +73,7 @@ func start(c *cli.Context) {
 	if cfg.Osd.ClusterConfig.NodeId != "" && cfg.Osd.ClusterConfig.ClusterId != "" {
 		dockerClient, err := docker.NewClientFromEnv()
 		if err != nil {
-			log.Warnf("Failed to initialize docker client: %v", err)
+			logrus.Warnf("Failed to initialize docker client: %v", err)
 			return
 		}
 		cm = cluster.New(cfg.Osd.ClusterConfig, kv, dockerClient)
@@ -81,30 +81,30 @@ func start(c *cli.Context) {
 
 	// Start the volume drivers.
 	for d, v := range cfg.Osd.Drivers {
-		log.Infof("Starting volume driver: %v", d)
+		logrus.Infof("Starting volume driver: %v", d)
 		_, err := volume.New(d, v)
 		if err != nil {
-			log.Warnf("Unable to start volume driver: %v, %v", d, err)
+			logrus.Warnf("Unable to start volume driver: %v, %v", d, err)
 			return
 		}
-		err = apiserver.StartServerAPI(d, 0, config.DriverAPIBase)
+		err = server.StartServerAPI(d, 0, config.DriverAPIBase)
 		if err != nil {
-			log.Warnf("Unable to start volume driver: %v", err)
+			logrus.Warnf("Unable to start volume driver: %v", err)
 			return
 		}
-		err = apiserver.StartPluginAPI(d, config.PluginAPIBase)
+		err = server.StartPluginAPI(d, config.PluginAPIBase)
 		if err != nil {
-			log.Warnf("Unable to start volume plugin: %v", err)
+			logrus.Warnf("Unable to start volume plugin: %v", err)
 			return
 		}
 	}
 
 	// Start the graph drivers.
 	for d, _ := range cfg.Osd.GraphDrivers {
-		log.Infof("Starting graph driver: %v", d)
-		err = apiserver.StartGraphAPI(d, 0, config.PluginAPIBase)
+		logrus.Infof("Starting graph driver: %v", d)
+		err = server.StartGraphAPI(d, 0, config.PluginAPIBase)
 		if err != nil {
-			log.Warnf("Unable to start graph plugin: %v", err)
+			logrus.Warnf("Unable to start graph plugin: %v", err)
 			return
 		}
 	}
@@ -112,7 +112,7 @@ func start(c *cli.Context) {
 	if cm != nil {
 		err = cm.Start()
 		if err != nil {
-			log.Warnf("Unable to start cluster manager: %v", err)
+			logrus.Warnf("Unable to start cluster manager: %v", err)
 			return
 		}
 	}

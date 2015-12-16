@@ -10,14 +10,13 @@ import (
 	"net"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/libopenstorage/gossip"
-	gossiptypes "github.com/libopenstorage/gossip/types"
+	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
 
-	log "github.com/Sirupsen/logrus"
-
-	kv "github.com/portworx/kvdb"
+	"github.com/portworx/kvdb"
 	"github.com/portworx/systemutils"
 )
 
@@ -28,7 +27,7 @@ const (
 type ClusterManager struct {
 	listeners *list.List
 	config    Config
-	kv        kv.Kvdb
+	kv        kvdb.Kvdb
 	status    api.Status
 	nodeCache map[string]api.Node // Cached info on the nodes in the cluster.
 	docker    *docker.Client
@@ -86,7 +85,7 @@ func (c *ClusterManager) LocateNode(nodeID string) (api.Node, error) {
 }
 
 func (c *ClusterManager) AddEventListener(listener ClusterListener) error {
-	log.Printf("Adding cluster event listener: %s", listener.String())
+	logrus.Printf("Adding cluster event listener: %s", listener.String())
 	c.listeners.PushBack(listener)
 	return nil
 }
@@ -128,7 +127,7 @@ func (c *ClusterManager) initNode(db *Database) (*api.Node, bool) {
 	db.NodeEntries[c.config.NodeId] = NodeEntry{Id: c.selfNode.Id,
 		Ip: c.selfNode.Ip}
 
-	log.Infof("Node %s joining cluster... \n\tCluster ID: %s\n\tIP: %s",
+	logrus.Infof("Node %s joining cluster... \n\tCluster ID: %s\n\tIP: %s",
 		c.config.NodeId, c.config.ClusterId, c.selfNode.Ip)
 
 	return &c.selfNode, exists
@@ -147,7 +146,7 @@ func (c *ClusterManager) joinCluster(db *Database, self *api.Node, exist bool) e
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err = e.Value.(ClusterListener).Init(self, db)
 		if err != nil {
-			log.Warnf("Failed to initialize %s: %v",
+			logrus.Warnf("Failed to initialize %s: %v",
 				e.Value.(ClusterListener).String(), err)
 			goto done
 		}
@@ -158,7 +157,7 @@ found:
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err = e.Value.(ClusterListener).Join(self, db)
 		if err != nil {
-			log.Warnf("Failed to initialize %s: %v",
+			logrus.Warnf("Failed to initialize %s: %v",
 				e.Value.(ClusterListener).String(), err)
 			goto done
 		}
@@ -168,11 +167,11 @@ found:
 		if id != c.config.NodeId {
 			// Check to see if the IP is the same.  If it is, then we have a stale entry.
 			if n.Ip == self.Ip {
-				log.Warnf("Warning, Detected node %s with the same IP %s in the database.  Will not connect to this node.",
+				logrus.Warnf("Warning, Detected node %s with the same IP %s in the database.  Will not connect to this node.",
 					id, n.Ip)
 			} else {
 				// Gossip with this node.
-				log.Infof("Connecting to node %s with IP %s.", id, n.Ip)
+				logrus.Infof("Connecting to node %s with IP %s.", id, n.Ip)
 				c.g.AddNode(n.Ip + ":9002")
 			}
 		}
@@ -189,7 +188,7 @@ func (c *ClusterManager) initCluster(db *Database, self *api.Node, exist bool) e
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err = e.Value.(ClusterListener).ClusterInit(self, db)
 		if err != nil {
-			log.Printf("Failed to initialize %s",
+			logrus.Printf("Failed to initialize %s",
 				e.Value.(ClusterListener).String())
 			goto done
 		}
@@ -197,7 +196,7 @@ func (c *ClusterManager) initCluster(db *Database, self *api.Node, exist bool) e
 
 	err = c.joinCluster(db, self, exist)
 	if err != nil {
-		log.Printf("Failed to join new cluster")
+		logrus.Printf("Failed to join new cluster")
 		goto done
 	}
 
@@ -210,16 +209,16 @@ func (c *ClusterManager) heartBeat() {
 		node := c.getCurrentState()
 		c.nodeCache[node.Id] = *node
 
-		c.g.UpdateSelf(gossiptypes.StoreKey(heartbeatKey+c.config.ClusterId), *node)
+		c.g.UpdateSelf(types.StoreKey(heartbeatKey+c.config.ClusterId), *node)
 
 		// Process heartbeats from other nodes...
-		gossipValues := c.g.GetStoreKeyValue(gossiptypes.StoreKey(heartbeatKey + c.config.ClusterId))
+		gossipValues := c.g.GetStoreKeyValue(types.StoreKey(heartbeatKey + c.config.ClusterId))
 
 		for _, nodeInfo := range gossipValues {
 			n, ok := nodeInfo.Value.(api.Node)
 
 			if !ok {
-				log.Warn("Received a bad broadcast packet: %v", nodeInfo.Value)
+				logrus.Warn("Received a bad broadcast packet: %v", nodeInfo.Value)
 				continue
 			}
 
@@ -230,24 +229,24 @@ func (c *ClusterManager) heartBeat() {
 			_, ok = c.nodeCache[n.Id]
 			if ok {
 				if n.Status != api.StatusOk {
-					log.Warn("Detected node ", n.Id, " to be unhealthy.")
+					logrus.Warn("Detected node ", n.Id, " to be unhealthy.")
 
 					for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
 						err := e.Value.(ClusterListener).Update(&n)
 						if err != nil {
-							log.Warn("Failed to notify ", e.Value.(ClusterListener).String())
+							logrus.Warn("Failed to notify ", e.Value.(ClusterListener).String())
 						}
 					}
 
 					delete(c.nodeCache, n.Id)
-				} else if nodeInfo.Status == gossiptypes.NODE_STATUS_DOWN {
-					log.Warn("Detected node ", n.Id, " to be offline due to inactivity.")
+				} else if nodeInfo.Status == types.NODE_STATUS_DOWN {
+					logrus.Warn("Detected node ", n.Id, " to be offline due to inactivity.")
 
 					n.Status = api.StatusOffline
 					for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
 						err := e.Value.(ClusterListener).Update(&n)
 						if err != nil {
-							log.Warn("Failed to notify ", e.Value.(ClusterListener).String())
+							logrus.Warn("Failed to notify ", e.Value.(ClusterListener).String())
 						}
 					}
 
@@ -255,15 +254,15 @@ func (c *ClusterManager) heartBeat() {
 				} else {
 					c.nodeCache[n.Id] = n
 				}
-			} else if nodeInfo.Status == gossiptypes.NODE_STATUS_UP {
+			} else if nodeInfo.Status == types.NODE_STATUS_UP {
 				// A node discovered in the cluster.
-				log.Warn("Detected node ", n.Id, " to be in the cluster.")
+				logrus.Warn("Detected node ", n.Id, " to be in the cluster.")
 
 				c.nodeCache[n.Id] = n
 				for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
 					err := e.Value.(ClusterListener).Add(&n)
 					if err != nil {
-						log.Warn("Failed to notify ", e.Value.(ClusterListener).String())
+						logrus.Warn("Failed to notify ", e.Value.(ClusterListener).String())
 					}
 				}
 			}
@@ -274,23 +273,23 @@ func (c *ClusterManager) heartBeat() {
 }
 
 func (c *ClusterManager) DisableGossipUpdates() {
-	log.Warn("Disabling gossip updates")
+	logrus.Warn("Disabling gossip updates")
 	c.gEnabled = false
 }
 
 func (c *ClusterManager) EnableGossipUpdates() {
-	log.Warn("Enabling gossip updates")
+	logrus.Warn("Enabling gossip updates")
 	c.gEnabled = true
 }
 
 func (c *ClusterManager) Start() error {
-	log.Info("Cluster manager starting...")
-	kvdb := kv.Instance()
+	logrus.Info("Cluster manager starting...")
+	kvdb := kvdb.Instance()
 
 	// Start the gossip protocol.
 	// XXX Make the port configurable.
 	gob.Register(api.Node{})
-	c.g = gossip.New("0.0.0.0:9002", gossiptypes.NodeId(c.config.NodeId))
+	c.g = gossip.New("0.0.0.0:9002", types.NodeId(c.config.NodeId))
 	c.g.SetGossipInterval(2 * time.Second)
 	c.gEnabled = true
 	c.selfNode = api.Node{}
@@ -301,16 +300,16 @@ func (c *ClusterManager) Start() error {
 
 	kvlock, err := kvdb.Lock("cluster/lock", 60)
 	if err != nil {
-		log.Panic("Fatal, Unable to obtain cluster lock.", err)
+		logrus.Panic("Fatal, Unable to obtain cluster lock.", err)
 	}
 
 	db, err := readDatabase()
 	if err != nil {
-		log.Panic(err)
+		logrus.Panic(err)
 	}
 
 	if db.Status == api.StatusInit {
-		log.Info("Will initialize a new cluster.")
+		logrus.Info("Will initialize a new cluster.")
 
 		c.status = api.StatusOk
 		db.Status = api.StatusOk
@@ -319,23 +318,23 @@ func (c *ClusterManager) Start() error {
 		err = c.initCluster(&db, self, false)
 		if err != nil {
 			kvdb.Unlock(kvlock)
-			log.Error("Failed to initialize the cluster.", err)
-			log.Panic(err)
+			logrus.Error("Failed to initialize the cluster.", err)
+			logrus.Panic(err)
 		}
 
 		// Update the new state of the cluster in the KV Database
 		err = writeDatabase(&db)
 		if err != nil {
-			log.Error("Failed to save the database.", err)
-			log.Panic(err)
+			logrus.Error("Failed to save the database.", err)
+			logrus.Panic(err)
 		}
 
 		err = kvdb.Unlock(kvlock)
 		if err != nil {
-			log.Panic("Fatal, unable to unlock cluster... Did something take too long to initialize?", err)
+			logrus.Panic("Fatal, unable to unlock cluster... Did something take too long to initialize?", err)
 		}
 	} else if db.Status&api.StatusOk > 0 {
-		log.Info("Cluster state is OK... Joining the cluster.")
+		logrus.Info("Cluster state is OK... Joining the cluster.")
 
 		c.status = api.StatusOk
 		self, exist := c.initNode(&db)
@@ -343,22 +342,22 @@ func (c *ClusterManager) Start() error {
 		err = c.joinCluster(&db, self, exist)
 		if err != nil {
 			kvdb.Unlock(kvlock)
-			log.Panic(err)
+			logrus.Panic(err)
 		}
 
 		err = writeDatabase(&db)
 		if err != nil {
-			log.Panic(err)
+			logrus.Panic(err)
 		}
 
 		err = kvdb.Unlock(kvlock)
 		if err != nil {
-			log.Panic("Fatal, unable to unlock cluster... Did something take too long to initialize?", err)
+			logrus.Panic("Fatal, unable to unlock cluster... Did something take too long to initialize?", err)
 		}
 	} else {
 		kvdb.Unlock(kvlock)
 		err = errors.New("Fatal, Cluster is in an unexpected state.")
-		log.Panic(err)
+		logrus.Panic(err)
 	}
 
 	// Start heartbeating to other nodes.

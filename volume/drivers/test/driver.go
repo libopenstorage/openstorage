@@ -8,14 +8,12 @@ import (
 	"testing"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
-
-	"github.com/portworx/kvdb"
-	"github.com/portworx/kvdb/mem"
-
+	"github.com/Sirupsen/logrus"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
+	"github.com/portworx/kvdb"
+	"github.com/portworx/kvdb/mem"
+	"github.com/stretchr/testify/assert"
 )
 
 // Context maintains current device state. It gets passed into tests
@@ -345,10 +343,10 @@ func snapDelete(t *testing.T, ctx *Context) {
 func init() {
 	kv, err := kvdb.New(mem.Name, "driver_test", []string{}, nil)
 	if err != nil {
-		log.Panicf("Failed to intialize KVDB")
+		logrus.Panicf("Failed to intialize KVDB")
 	}
 	err = kvdb.SetInstance(kv)
 	if err != nil {
-		log.Panicf("Failed to set KVDB instance")
+		logrus.Panicf("Failed to set KVDB instance")
 	}
 }

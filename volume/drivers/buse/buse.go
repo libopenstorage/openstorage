@@ -10,14 +10,12 @@ import (
 	"syscall"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
-	"github.com/pborman/uuid"
-
-	"github.com/portworx/kvdb"
-
+	"github.com/Sirupsen/logrus"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/volume"
+	"github.com/pborman/uuid"
+	"github.com/portworx/kvdb"
 )
 
 const (
@@ -100,18 +98,18 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 			}
 		}
 	} else {
-		log.Println("Could not enumerate Volumes, ", err)
+		logrus.Println("Could not enumerate Volumes, ", err)
 	}
 
 	c, err := cluster.Inst()
 	if err != nil {
-		log.Println("BUSE initializing in single node mode")
+		logrus.Println("BUSE initializing in single node mode")
 	} else {
-		log.Println("BUSE initializing in clustered mode")
+		logrus.Println("BUSE initializing in clustered mode")
 		c.AddEventListener(inst)
 	}
 
-	log.Println("BUSE initialized and driver mounted at: ", BuseMountPath)
+	logrus.Println("BUSE initialized and driver mounted at: ", BuseMountPath)
 	return inst, nil
 }
 
@@ -148,13 +146,13 @@ func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api
 	buseFile := path.Join(BuseMountPath, string(volumeID))
 	f, err := os.Create(buseFile)
 	if err != nil {
-		log.Println(err)
+		logrus.Println(err)
 		return api.BadVolumeID, err
 	}
 
 	err = f.Truncate(int64(spec.Size))
 	if err != nil {
-		log.Println(err)
+		logrus.Println(err)
 		return api.BadVolumeID, err
 	}
 
@@ -165,22 +163,22 @@ func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api
 	nbd := Create(bd, int64(spec.Size))
 	bd.nbd = nbd
 
-	log.Infof("Connecting to NBD...")
+	logrus.Infof("Connecting to NBD...")
 	dev, err := bd.nbd.Connect()
 	if err != nil {
-		log.Println(err)
+		logrus.Println(err)
 		return api.BadVolumeID, err
 	}
 
-	log.Infof("Formatting %s with %v", dev, spec.Format)
+	logrus.Infof("Formatting %s with %v", dev, spec.Format)
 	cmd := "/sbin/mkfs." + string(spec.Format)
 	o, err := exec.Command(cmd, dev).Output()
 	if err != nil {
-		log.Warnf("Failed to run command %v %v: %v", cmd, dev, o)
+		logrus.Warnf("Failed to run command %v %v: %v", cmd, dev, o)
 		return api.BadVolumeID, err
 	}
 
-	log.Infof("BUSE mapped NBD device %s (size=%v) to block file %s", dev, spec.Size, buseFile)
+	logrus.Infof("BUSE mapped NBD device %s (size=%v) to block file %s", dev, spec.Size, buseFile)
 
 	v := &api.Volume{
 		ID:         api.VolumeID(volumeID),
@@ -207,14 +205,14 @@ func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api
 func (d *driver) Delete(volumeID api.VolumeID) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
-		log.Println(err)
+		logrus.Println(err)
 		return err
 	}
 
 	bd, ok := d.buseDevices[v.DevicePath]
 	if !ok {
 		err = fmt.Errorf("Cannot locate a BUSE device for %s", v.DevicePath)
-		log.Println(err)
+		logrus.Println(err)
 		return err
 	}
 
@@ -223,11 +221,11 @@ func (d *driver) Delete(volumeID api.VolumeID) error {
 	bd.f.Close()
 	bd.nbd.Disconnect()
 
-	log.Infof("BUSE deleted volume %v at NBD device %s", volumeID, v.DevicePath)
+	logrus.Infof("BUSE deleted volume %v at NBD device %s", volumeID, v.DevicePath)
 
 	err = d.DeleteVol(volumeID)
 	if err != nil {
-		log.Println(err)
+		logrus.Println(err)
 		return err
 	}
 
@@ -241,11 +239,11 @@ func (d *driver) Mount(volumeID api.VolumeID, mountpath string) error {
 	}
 	err = syscall.Mount(v.DevicePath, mountpath, string(v.Spec.Format), 0, "")
 	if err != nil {
-		log.Errorf("Mounting %s on %s failed because of %v", v.DevicePath, mountpath, err)
+		logrus.Errorf("Mounting %s on %s failed because of %v", v.DevicePath, mountpath, err)
 		return fmt.Errorf("Failed to mount %v at %v: %v", v.DevicePath, mountpath, err)
 	}
 
-	log.Infof("BUSE mounted NBD device %s at %s", v.DevicePath, mountpath)
+	logrus.Infof("BUSE mounted NBD device %s at %s", v.DevicePath, mountpath)
 
 	v.AttachPath = mountpath
 	err = d.UpdateVol(v)
@@ -328,7 +326,7 @@ func (d *driver) Alerts(volumeID api.VolumeID) (api.Alerts, error) {
 }
 
 func (d *driver) Shutdown() {
-	log.Printf("%s Shutting down", Name)
+	logrus.Printf("%s Shutting down", Name)
 	syscall.Unmount(BuseMountPath, 0)
 }
 

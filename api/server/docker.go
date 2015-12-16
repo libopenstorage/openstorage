@@ -9,7 +9,7 @@ import (
 	"path"
 	"strconv"
 
-	types "github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/volume"
 )
@@ -42,7 +42,7 @@ type volumePathResponse struct {
 }
 
 type volumeInfo struct {
-	vol *types.Volume
+	vol *api.Volume
 }
 
 func newVolumePlugin(name string) restServer {
@@ -90,11 +90,11 @@ func (d *driver) volFromName(name string) (*volumeInfo, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Cannot locate volume driver for %s: %s", d.name, err.Error())
 	}
-	vols, err := v.Inspect([]types.VolumeID{types.VolumeID(name)})
+	vols, err := v.Inspect([]api.VolumeID{api.VolumeID(name)})
 	if err == nil && len(vols) == 1 {
 		return &volumeInfo{vol: &vols[0]}, nil
 	}
-	vols, err = v.Enumerate(types.VolumeLocator{Name: name}, nil)
+	vols, err = v.Enumerate(api.VolumeLocator{Name: name}, nil)
 	if err == nil && len(vols) == 1 {
 		return &volumeInfo{vol: &vols[0]}, nil
 	}
@@ -128,28 +128,28 @@ func (d *driver) status(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, fmt.Sprintln("osd plugin", d.version))
 }
 
-func (d *driver) specFromOpts(Opts map[string]string) *types.VolumeSpec {
-	var spec types.VolumeSpec
+func (d *driver) specFromOpts(Opts map[string]string) *api.VolumeSpec {
+	var spec api.VolumeSpec
 	for k, v := range Opts {
 		switch k {
-		case types.SpecEphemeral:
+		case api.SpecEphemeral:
 			spec.Ephemeral, _ = strconv.ParseBool(v)
-		case types.SpecSize:
+		case api.SpecSize:
 			spec.Size, _ = strconv.ParseUint(v, 10, 64)
-		case types.SpecFilesystem:
-			spec.Format = types.Filesystem(v)
-		case types.SpecBlockSize:
+		case api.SpecFilesystem:
+			spec.Format = api.Filesystem(v)
+		case api.SpecBlockSize:
 			blockSize, _ := strconv.ParseInt(v, 10, 64)
 			spec.BlockSize = int(blockSize)
-		case types.SpecHaLevel:
+		case api.SpecHaLevel:
 			haLevel, _ := strconv.ParseInt(v, 10, 64)
 			spec.HALevel = int(haLevel)
-		case types.SpecCos:
+		case api.SpecCos:
 			cos, _ := strconv.ParseInt(v, 10, 64)
-			spec.Cos = types.VolumeCos(cos)
-		case types.SpecDedupe:
+			spec.Cos = api.VolumeCos(cos)
+		case api.SpecDedupe:
 			spec.Dedupe, _ = strconv.ParseBool(v)
-		case types.SpecSnapshotInterval:
+		case api.SpecSnapshotInterval:
 			snapshotInterval, _ := strconv.ParseInt(v, 10, 64)
 			spec.SnapshotInterval = int(snapshotInterval)
 		}
@@ -175,7 +175,7 @@ func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		spec := d.specFromOpts(request.Opts)
-		_, err = v.Create(types.VolumeLocator{Name: request.Name}, nil, spec)
+		_, err = v.Create(api.VolumeLocator{Name: request.Name}, nil, spec)
 		if err != nil {
 			json.NewEncoder(w).Encode(&volumeResponse{Err: err})
 			return
@@ -232,7 +232,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// If this is a block driver, first attach the volume.
-	if v.Type()&types.Block != 0 {
+	if v.Type()&api.Block != 0 {
 		attachPath, err := v.Attach(volInfo.vol.ID)
 		if err != nil {
 			d.logReq(method, request.Name).Warnf("Cannot attach volume: %v", err.Error())
@@ -321,7 +321,7 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if v.Type()&types.Block != 0 {
+	if v.Type()&api.Block != 0 {
 		_ = v.Detach(volInfo.vol.ID)
 	}
 	d.emptyResponse(w)

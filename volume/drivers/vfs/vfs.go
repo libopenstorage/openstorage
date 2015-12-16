@@ -8,7 +8,7 @@ import (
 	"syscall"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/pborman/uuid"
@@ -52,7 +52,7 @@ func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api
 	// Create a directory on the Local machine with this UUID.
 	err := os.MkdirAll(path.Join(volumeBase, string(volumeID)), 0744)
 	if err != nil {
-		log.Println(err)
+		logrus.Println(err)
 		return api.BadVolumeID, err
 	}
 
@@ -83,7 +83,7 @@ func (d *driver) Delete(volumeID api.VolumeID) error {
 	// Check if volume exists
 	_, err := d.GetVol(volumeID)
 	if err != nil {
-		log.Println("Volume not found ", err)
+		logrus.Println("Volume not found ", err)
 		return err
 	}
 
@@ -92,7 +92,7 @@ func (d *driver) Delete(volumeID api.VolumeID) error {
 
 	err = d.DeleteVol(volumeID)
 	if err != nil {
-		log.Println(err)
+		logrus.Println(err)
 		return err
 	}
 
@@ -106,13 +106,13 @@ func (d *driver) Mount(volumeID api.VolumeID, mountpath string) error {
 
 	v, err := d.GetVol(volumeID)
 	if err != nil {
-		log.Println(err)
+		logrus.Println(err)
 		return err
 	}
 	syscall.Unmount(mountpath, 0)
 	err = syscall.Mount(path.Join(volumeBase, string(volumeID)), mountpath, string(v.Spec.Format), syscall.MS_BIND, "")
 	if err != nil {
-		log.Printf("Cannot mount %s at %s because %+v",
+		logrus.Printf("Cannot mount %s at %s because %+v",
 			path.Join(volumeBase, string(volumeID)), mountpath, err)
 		return err
 	}
@@ -177,7 +177,7 @@ func (d *driver) Status() [][2]string {
 
 // Shutdown and cleanup.
 func (d *driver) Shutdown() {
-	log.Debugf("%s Shutting down", Name)
+	logrus.Debugf("%s Shutting down", Name)
 }
 
 func init() {

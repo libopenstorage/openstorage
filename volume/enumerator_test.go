@@ -3,13 +3,11 @@ package volume
 import (
 	"testing"
 
-	log "github.com/Sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
-
+	"github.com/Sirupsen/logrus"
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
-
-	"github.com/libopenstorage/openstorage/api"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -135,11 +133,11 @@ func TestSnapEnumerate(t *testing.T) {
 func init() {
 	kv, err := kvdb.New(mem.Name, "driver_test", []string{}, nil)
 	if err != nil {
-		log.Panicf("Failed to intialize KVDB")
+		logrus.Panicf("Failed to intialize KVDB")
 	}
 	err = kvdb.SetInstance(kv)
 	if err != nil {
-		log.Panicf("Failed to set KVDB instance")
+		logrus.Panicf("Failed to set KVDB instance")
 	}
 
 	e = NewDefaultEnumerator("enumerator_test", kv)

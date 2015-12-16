@@ -8,16 +8,14 @@ import (
 	"syscall"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
-	graph "github.com/docker/docker/daemon/graphdriver"
+	"github.com/Sirupsen/logrus"
+	"github.com/docker/docker/daemon/graphdriver"
 	"github.com/docker/docker/daemon/graphdriver/btrfs"
-	"github.com/pborman/uuid"
-
-	"github.com/portworx/kvdb"
-
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/chaos"
 	"github.com/libopenstorage/openstorage/volume"
+	"github.com/pborman/uuid"
+	"github.com/portworx/kvdb"
 )
 
 const (
@@ -36,7 +34,7 @@ type driver struct {
 	*volume.IoNotSupported
 	*volume.DefaultBlockDriver
 	*volume.DefaultEnumerator
-	btrfs graph.Driver
+	btrfs graphdriver.Driver
 	root  string
 }
 
@@ -114,7 +112,7 @@ func (d *driver) Create(locator api.VolumeLocator,
 func (d *driver) Delete(volumeID api.VolumeID) error {
 	err := d.DeleteVol(volumeID)
 	if err != nil {
-		log.Println(err)
+		logrus.Println(err)
 		return err
 	}
 
@@ -129,7 +127,7 @@ func (d *driver) Delete(volumeID api.VolumeID) error {
 func (d *driver) Mount(volumeID api.VolumeID, mountpath string) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
-		log.Println(err)
+		logrus.Println(err)
 		return err
 	}
 	err = syscall.Mount(v.DevicePath, mountpath, string(v.Format), syscall.MS_BIND, "")

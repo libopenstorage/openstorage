@@ -8,7 +8,7 @@ import (
 	"sync"
 	"syscall"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 )
 
 // Mangager defines the interface for keep track of volume driver mounts.
@@ -133,7 +133,7 @@ func (m *Mounter) Mount(minor int, device, path, fs string, flags uintptr, data 
 
 	dev, ok := m.paths[path]
 	if ok && dev != device {
-		log.Warnf("cannot mount %q,  device %q is mounted at %q", device, dev, path)
+		logrus.Warnf("cannot mount %q,  device %q is mounted at %q", device, dev, path)
 		return ErrExist
 	}
 	info, ok := m.mounts[device]
@@ -148,7 +148,7 @@ func (m *Mounter) Mount(minor int, device, path, fs string, flags uintptr, data 
 
 	// Validate input params
 	if fs != info.Fs {
-		log.Warnf("%s Existing mountpoint has fs %q cannot change to %q",
+		logrus.Warnf("%s Existing mountpoint has fs %q cannot change to %q",
 			device, info.Fs, fs)
 		return ErrEinval
 	}
@@ -194,7 +194,7 @@ func (m *Mounter) Unmount(device, path string) error {
 				if _, pathExists := m.paths[path]; pathExists {
 					delete(m.paths, path)
 				} else {
-					log.Warnf("Path %q for device %q does not exist in pathMap", path, device)
+					logrus.Warnf("Path %q for device %q does not exist in pathMap", path, device)
 				}
 				// Blow away this mountpoint.
 				info.Mountpoint[i] = info.Mountpoint[len(info.Mountpoint)-1]

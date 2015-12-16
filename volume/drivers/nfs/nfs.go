@@ -10,16 +10,14 @@ import (
 	"syscall"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
-	"github.com/pborman/uuid"
-
-	"github.com/portworx/kvdb"
-
+	"github.com/Sirupsen/logrus"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/pkg/mount"
 	"github.com/libopenstorage/openstorage/pkg/seed"
 	"github.com/libopenstorage/openstorage/volume"
+	"github.com/pborman/uuid"
+	"github.com/portworx/kvdb"
 )
 
 const (
@@ -116,15 +114,15 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 
 	server, ok := params["server"]
 	if !ok {
-		log.Printf("No NFS server provided, will attempt to bind mount %s", path)
+		logrus.Printf("No NFS server provided, will attempt to bind mount %s", path)
 	} else {
-		log.Printf("NFS driver initializing with %s:%s ", server, path)
+		logrus.Printf("NFS driver initializing with %s:%s ", server, path)
 	}
 
 	// Create a mount manager for this NFS server. Blank sever is OK.
 	mounter, err := mount.New(mount.NFSMount, server)
 	if err != nil {
-		log.Warnf("Failed to create mount manager for server: %v (%v)", server, err)
+		logrus.Warnf("Failed to create mount manager for server: %v (%v)", server, err)
 		return nil, err
 	}
 
@@ -157,7 +155,7 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 			err = syscall.Mount(src, nfsMountPath, "", syscall.MS_BIND, "")
 		}
 		if err != nil {
-			log.Printf("Unable to mount %s:%s at %s (%+v)", inst.nfsServer, inst.nfsPath, nfsMountPath, err)
+			logrus.Printf("Unable to mount %s:%s at %s (%+v)", inst.nfsServer, inst.nfsPath, nfsMountPath, err)
 			return nil, err
 		}
 	}
@@ -171,10 +169,10 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 			}
 		}
 	} else {
-		log.Println("Could not enumerate Volumes, ", err)
+		logrus.Println("Could not enumerate Volumes, ", err)
 	}
 
-	log.Println("NFS initialized and driver mounted at: ", nfsMountPath)
+	logrus.Println("NFS initialized and driver mounted at: ", nfsMountPath)
 	return inst, nil
 }
 
@@ -203,20 +201,20 @@ func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api
 	volPath := path.Join(nfsMountPath, volumeID)
 	err := os.MkdirAll(volPath, 0744)
 	if err != nil {
-		log.Println(err)
+		logrus.Println(err)
 		return api.BadVolumeID, err
 	}
 	if source != nil {
 		if len(source.Seed) != 0 {
 			seed, err := seed.New(source.Seed, spec.ConfigLabels)
 			if err != nil {
-				log.Warnf("Failed to initailize seed from %q : %v",
+				logrus.Warnf("Failed to initailize seed from %q : %v",
 					source.Seed, err)
 				return api.BadVolumeID, err
 			}
 			err = seed.Load(path.Join(volPath, config.DataDir))
 			if err != nil {
-				log.Warnf("Failed to  seed from %q to %q: %v",
+				logrus.Warnf("Failed to  seed from %q to %q: %v",
 					source.Seed, nfsMountPath, err)
 				return api.BadVolumeID, err
 			}
@@ -225,14 +223,14 @@ func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api
 
 	f, err := os.Create(path.Join(nfsMountPath, string(volumeID)+nfsBlockFile))
 	if err != nil {
-		log.Println(err)
+		logrus.Println(err)
 		return api.BadVolumeID, err
 	}
 	defer f.Close()
 
 	err = f.Truncate(int64(spec.Size))
 	if err != nil {
-		log.Println(err)
+		logrus.Println(err)
 		return api.BadVolumeID, err
 	}
 
@@ -259,7 +257,7 @@ func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api
 func (d *driver) Delete(volumeID api.VolumeID) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
-		log.Println(err)
+		logrus.Println(err)
 		return err
 	}
 
@@ -271,7 +269,7 @@ func (d *driver) Delete(volumeID api.VolumeID) error {
 
 	err = d.DeleteVol(volumeID)
 	if err != nil {
-		log.Println(err)
+		logrus.Println(err)
 		return err
 	}
 
@@ -281,7 +279,7 @@ func (d *driver) Delete(volumeID api.VolumeID) error {
 func (d *driver) Mount(volumeID api.VolumeID, mountpath string) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
-		log.Println(err)
+		logrus.Println(err)
 		return err
 	}
 
@@ -291,7 +289,7 @@ func (d *driver) Mount(volumeID api.VolumeID, mountpath string) error {
 		d.mounter.Unmount(path.Join(nfsMountPath, string(volumeID)), mountpath)
 		err = d.mounter.Mount(0, path.Join(nfsMountPath, string(volumeID)), mountpath, string(v.Spec.Format), syscall.MS_BIND, "")
 		if err != nil {
-			log.Printf("Cannot mount %s at %s because %+v",
+			logrus.Printf("Cannot mount %s at %s because %+v",
 				path.Join(nfsMountPath, string(volumeID)), mountpath, err)
 			return err
 		}
@@ -375,7 +373,7 @@ func (d *driver) Alerts(volumeID api.VolumeID) (api.Alerts, error) {
 }
 
 func (d *driver) Shutdown() {
-	log.Printf("%s Shutting down", Name)
+	logrus.Printf("%s Shutting down", Name)
 	syscall.Unmount(nfsMountPath, 0)
 }
 

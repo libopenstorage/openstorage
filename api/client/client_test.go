@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/libopenstorage/openstorage/api"
-	apiserver "github.com/libopenstorage/openstorage/api/server"
+	"github.com/libopenstorage/openstorage/api/server"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers/nfs"
@@ -39,7 +39,7 @@ func TestAll(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to initialize Driver: %v", err)
 	}
-	apiserver.StartServerAPI(nfs.Name, 9003, config.DriverAPIBase)
+	server.StartServerAPI(nfs.Name, 9003, config.DriverAPIBase)
 	time.Sleep(time.Second * 2)
 	c, err := NewDriverClient(nfs.Name)
 	if err != nil {

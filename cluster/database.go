@@ -5,60 +5,48 @@ import (
 	"encoding/json"
 	"strings"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/libopenstorage/openstorage/api"
-
-	log "github.com/Sirupsen/logrus"
-
-	kv "github.com/portworx/kvdb"
+	"github.com/portworx/kvdb"
 )
 
 func readDatabase() (Database, error) {
-	kvdb := kv.Instance()
+	kvdb := kvdb.Instance()
 
 	db := Database{Status: api.StatusInit,
 		NodeEntries: make(map[string]NodeEntry)}
 
 	kv, err := kvdb.Get("cluster/database")
 	if err != nil && !strings.Contains(err.Error(), "Key not found") {
-		log.Warn("Warning, could not read cluster database")
-		goto done
+		logrus.Warn("Warning, could not read cluster database")
+		return db, err
 	}
 
 	if kv == nil || bytes.Compare(kv.Value, []byte("{}")) == 0 {
-		log.Info("Cluster is uninitialized...")
-		err = nil
-		goto done
-	} else {
-		err = json.Unmarshal(kv.Value, &db)
-		if err != nil {
-			log.Warn("Fatal, Could not parse cluster database ", kv)
-			goto done
-		}
+		logrus.Info("Cluster is uninitialized...")
+		return db, nil
+	}
+	if err := json.Unmarshal(kv.Value, &db); err != nil {
+		logrus.Warn("Fatal, Could not parse cluster database ", kv)
+		return db, err
 	}
 
-done:
-	return db, err
+	return db, nil
 }
 
 func writeDatabase(db *Database) error {
-	kvdb := kv.Instance()
+	kvdb := kvdb.Instance()
 	b, err := json.Marshal(db)
 	if err != nil {
-		log.Warn("Fatal, Could not marshal cluster database to JSON")
-		goto done
+		logrus.Warnf("Fatal, Could not marshal cluster database to JSON: %v", err)
+		return err
 	}
 
-	_, err = kvdb.Put("cluster/database", b, 0)
-	if err != nil {
-		log.Warn("Fatal, Could not marshal cluster database to JSON")
-		goto done
+	if _, err := kvdb.Put("cluster/database", b, 0); err != nil {
+		logrus.Warnf("Fatal, Could not marshal cluster database to JSON: %v", err)
+		return err
 	}
 
-	log.Info("Cluster database updated.")
-
-done:
-	if err != nil {
-		log.Println(err)
-	}
-	return err
+	logrus.Info("Cluster database updated.")
+	return nil
 }
