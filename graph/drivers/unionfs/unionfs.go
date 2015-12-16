@@ -20,12 +20,13 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/graph"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/docker/docker/daemon/graphdriver"
 	"github.com/docker/docker/pkg/archive"
 	"github.com/docker/docker/pkg/chrootarchive"
 	"github.com/docker/docker/pkg/directory"
 	"github.com/docker/docker/pkg/idtools"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 const (
@@ -39,19 +40,19 @@ type Driver struct {
 }
 
 func Init(home string, options []string, uidMaps, gidMaps []idtools.IDMap) (graphdriver.Driver, error) {
-	logrus.Infof("Initializing Fuse Graph driver at home:%s and storage: %v...", home, virtPath)
+	log.Infof("Initializing Fuse Graph driver at home:%s and storage: %v...", home, virtPath)
 
 	// In case it is mounted.
 	syscall.Unmount(virtPath, 0)
 
 	err := os.MkdirAll(virtPath, 0744)
 	if err != nil {
-		logrus.Fatalf("Error while creating FUSE mount path: %v", err)
+		log.Fatalf("Error while creating FUSE mount path: %v", err)
 	}
 
 	err = os.MkdirAll(physPath, 0744)
 	if err != nil {
-		logrus.Fatalf("Error while creating FUSE mount path: %v", err)
+		log.Fatalf("Error while creating FUSE mount path: %v", err)
 	}
 
 	cVirtPath := C.CString(virtPath)
@@ -71,7 +72,7 @@ func (d *Driver) String() string {
 // held by the driver, e.g., unmounting all layered filesystems
 // known to this driver.
 func (d *Driver) Cleanup() error {
-	logrus.Infof("Cleaning up fuse %s", virtPath)
+	log.Infof("Cleaning up fuse %s", virtPath)
 	// syscall.Unmount(virtPath, 0)
 	return nil
 }
@@ -87,9 +88,9 @@ func (d *Driver) Status() [][2]string {
 func (d *Driver) linkParent(child, parent string) error {
 	parent = path.Join(physPath, parent)
 
-	child = child + "/_parent"
+	log.Infof("Linking layer %s to parent layer %s", child, parent)
 
-	logrus.Infof("Linking layer %s to parent layer %s", child, parent)
+	child = child + "/_parent"
 
 	err := os.Symlink(parent, child)
 	if err != nil {
@@ -103,7 +104,7 @@ func (d *Driver) linkParent(child, parent string) error {
 // specified id and parent and mountLabel. Parent and mountLabel may be "".
 func (d *Driver) Create(id string, parent string) error {
 	path := path.Join(physPath, id)
-	logrus.Infof("Creating layer %s", path)
+	log.Infof("Creating layer %s", path)
 
 	err := os.MkdirAll(path, 0744)
 	if err != nil {
@@ -120,7 +121,7 @@ func (d *Driver) Create(id string, parent string) error {
 // Remove attempts to remove the filesystem layer with this id.
 func (d *Driver) Remove(id string) error {
 	path := path.Join(physPath, id)
-	logrus.Infof("Removing layer %s", path)
+	log.Infof("Removing layer %s", path)
 
 	// XXX FIXME os.RemoveAll(path)
 
@@ -140,14 +141,12 @@ func (d *Driver) Get(id, mountLabel string) (string, error) {
 	layerPath := path.Join(physPath, id)
 	// unionPath := path.Join(virtPath, id)
 
-	logrus.Infof("Unifying layer %s", layerPath)
+	log.Infof("Unifying layer %s", layerPath)
 
 	cLayerPath := C.CString(layerPath)
 	cID := C.CString(id)
 
 	_, err := C.alloc_unionfs(cLayerPath, cID)
-
-	logrus.Infof("GOT %v\n", err)
 
 	// return unionPath, err
 	return virtPath, err
@@ -157,7 +156,7 @@ func (d *Driver) Get(id, mountLabel string) (string, error) {
 // e.g, unmounting layered filesystem.
 func (d *Driver) Put(id string) error {
 	unionPath := path.Join(virtPath, id)
-	logrus.Infof("Releasing union layer %s", unionPath)
+	log.Infof("Releasing union layer %s", unionPath)
 
 	cID := C.CString(id)
 
@@ -187,14 +186,14 @@ func (d *Driver) Exists(id string) bool {
 // The archive.Reader must be an uncompressed stream.
 func (d *Driver) ApplyDiff(id string, parent string, diff archive.Reader) (size int64, err error) {
 	if parent != "" {
-		logrus.Infof("Applying diff %s on %s", id, parent)
+		log.Infof("Applying diff %s on %s", id, parent)
 	} else {
-		logrus.Infof("Applying diff %s", id)
+		log.Infof("Applying diff %s", id)
 	}
 
 	dir := path.Join(physPath, id)
 	if err := chrootarchive.UntarUncompressed(diff, dir, nil); err != nil {
-		logrus.Warnf("Error while applying diff to %s: %v", id, err)
+		log.Warnf("Error while applying diff to %s: %v", id, err)
 		os.Exit(-1)
 		return 0, err
 	}
@@ -202,7 +201,7 @@ func (d *Driver) ApplyDiff(id string, parent string, diff archive.Reader) (size 
 	// show invalid whiteouts warning.
 	files, err := ioutil.ReadDir(path.Join(dir, archive.WhiteoutLinkDir))
 	if err == nil && len(files) > 0 {
-		logrus.Warnf("Archive contains aufs hardlink references that are not supported.")
+		log.Warnf("Archive contains aufs hardlink references that are not supported.")
 	}
 
 	return d.DiffSize(id, parent)

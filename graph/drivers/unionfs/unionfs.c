@@ -1,4 +1,4 @@
-// gcc fuse.c -D_FILE_OFFSET_BITS=64 -lfuse -lulockmgr -o fuse
+// gcc fuse.c -D_FILE_OFFSET_BITS=64 -lfuse -lulockmgr -lpthread -o fuse
 
 #define _GNU_SOURCE
 #define _FILE_OFFSET_BITS 64
@@ -15,10 +15,12 @@
 #define _GNU_SOURCE
 
 #include <fuse.h>
+#include <pthread.h>
 #include <ulockmgr.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <libgen.h>
 #include <unistd.h>
 #include <stdbool.h>
 #include <fcntl.h>
@@ -38,7 +40,8 @@ struct union_fs {
 	char *layers[MAX_LAYERS];
 };
 
-struct union_fs *ufs = NULL;
+static struct union_fs *ufs = NULL;
+static pthread_mutex_t _ufs_lock;
 
 struct descriptor {
 	char name[PATH_MAX];
@@ -50,6 +53,16 @@ struct graph_dirp {
 	struct dirent *entry;
 	off_t offset;
 };
+
+static void lock_ufs()
+{
+	pthread_mutex_lock(&_ufs_lock);
+}
+
+static void unlock_ufs()
+{
+	pthread_mutex_unlock(&_ufs_lock);
+}
 
 static void descriptors_init() {
 	int i;
@@ -84,10 +97,18 @@ static int register_fd(const char* path, int fd) {
 static char *real_path(const char *path, bool create_mode)
 {
 	char *r = NULL;
+	char file[PATH_MAX];
+	char *dir;
+
+	lock_ufs();
+
+	strncpy(file, path, sizeof(file));
+	dir = dirname(file);
 
 	errno = 0;
 
 	if (ufs != NULL) {
+		int base_layer = -1;
 		int i;
 		int ret;
 		struct stat st;
@@ -97,31 +118,61 @@ static char *real_path(const char *path, bool create_mode)
 			if (!r) {
 				errno = ENOMEM;
 				fprintf(stderr, "Warning, cannot allocate memory\n");
-				break;
+				goto done;
 			}
 
 			ret = lstat(r, &st);
 			if (ret == 0) {
-				break;
+				// Found the file.
+				goto done;
+			}
+
+			// See if this layer contains the parent directory.  We give
+			// preference to the upper layers.
+			if (base_layer == -1) {
+				char *tmp_r;
+				asprintf(&tmp_r, "%s%s", ufs->layers[i], dir);
+				if (!r) {
+					errno = ENOMEM;
+					fprintf(stderr, "Warning, cannot allocate memory\n");
+					goto done;
+				}
+
+				ret = lstat(tmp_r, &st);
+				if (ret == 0) {
+					// This layer can be used to create the file.
+					base_layer = i;
+				}
+				free(tmp_r);
 			}
 
 			free(r);
 			r = NULL;
 		}
 
-		if (create_mode && ufs->layers[0]) {
-			asprintf(&r, "%s%s", ufs->layers[i], path);
-			if (!r) {
-				errno = ENOMEM;
-				fprintf(stderr, "Warning, cannot allocate memory\n");
+		// If we did not find the file and create mode was requested, construct
+		// a file path in the appropriate layer.	
+		if (!r && create_mode && ufs->layers[0]) {
+			if (base_layer == -1) {
+				fprintf(stderr, "Warning, create mode requested on %s, "
+						"but no layer could be found that could create this file\n", path);
+				errno = ENOENT;
+			} else {
+				asprintf(&r, "%s%s", ufs->layers[base_layer], path);
+				if (!r) {
+					fprintf(stderr, "Warning, cannot allocate memory\n");
+					errno = ENOMEM;
+				}
 			}
 		}
-	}
-
-	if (!errno && !r) {
-		fprintf(stderr, "Warning, requested path not found: %s\n", path);
+	} else {
+		fprintf(stderr, "Warning, union FS not yet initialized.  Cannot open: %s\n", path);
 		errno = ENOENT;
 	}
+
+done:
+
+	unlock_ufs();
 
 	return r;
 }
@@ -154,6 +205,7 @@ static int maybe_open(const char* path, int flags, int mode) {
 	}
 
 	if (fd==-1) {
+		fprintf(stderr, "Warning, failed to open %s (create == %d)\n", rp, flags & O_CREAT);
 		goto done;
 	}
 
@@ -217,39 +269,76 @@ static inline struct graph_dirp *get_dirp(struct fuse_file_info *fi)
 static int graph_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 		off_t offset, struct fuse_file_info *fi)
 {
-	struct graph_dirp *d = get_dirp(fi);
-	(void) path;
+	int res = 0;
 
-	if (offset != d->offset) {
-		seekdir(d->dp, offset);
-		d->entry = NULL;
-		d->offset = offset;
-	}
+	lock_ufs();
 
-	while (1) {
+	if (ufs != NULL) {
+		off_t nextoff = 0;
 		struct stat st;
-		off_t nextoff;
+		int i;
 
-		if (!d->entry) {
-			d->entry = readdir(d->dp);
-			if (!d->entry) {
+		for (i = 0; ufs->layers[i]; i++) {
+			char *rp = NULL;
+			int ret;
+
+			asprintf(&rp, "%s%s", ufs->layers[i], path);
+			if (!rp) {
+				errno = ENOMEM;
+				fprintf(stderr, "Warning, cannot allocate memory\n");
 				break;
 			}
-		}
 
-		memset(&st, 0, sizeof(st));
-		st.st_ino = d->entry->d_ino;
-		st.st_mode = d->entry->d_type << 12;
-		nextoff = telldir(d->dp);
-		if (filler(buf, d->entry->d_name, &st, nextoff)) {
-			break;
-		}
+			fprintf(stderr, "Listing entries from %s\n", rp);
+			ret = lstat(rp, &st);
+			if (ret == 0) {
+				DIR *dp;
 
-		d->entry = NULL;
-		d->offset = nextoff;
+				dp = opendir(rp);
+				if (!dp) {
+					fprintf(stderr, "Warning, %s not a directory.\n", rp);
+					free(rp);
+					continue;
+				}
+
+				while (true) {
+					struct dirent *entry = NULL;
+					entry = readdir(dp);
+					if (!entry) {
+						break;
+					}
+
+					if (strcmp(".", entry->d_name) == 0 ||
+						strcmp("..", entry->d_name) == 0 || 
+						strcmp("_parent", entry->d_name) == 0) {
+						continue;
+					}
+
+					memset(&st, 0, sizeof(st));
+					st.st_ino = entry->d_ino;
+					st.st_mode = entry->d_type << 12;
+
+					nextoff = 0;
+					if (filler(buf, entry->d_name, &st, nextoff)) {
+						fprintf(stderr, "Warning, Filler too full on %s.\n", rp);
+						break;
+					}
+				}
+			}
+
+			free(rp);
+		}
+	} else {
+		fprintf(stderr, "Warning, union FS not yet initialized.  Cannot readdir: %s\n", path);
+		errno = ENOENT;
+		res = -errno;
 	}
 
-	return 0;
+done:
+
+	unlock_ufs();
+
+	return res;
 }
 
 static int graph_releasedir(const char *path, struct fuse_file_info *fi)
@@ -603,6 +692,10 @@ static int graph_open(const char *path, struct fuse_file_info *fi)
 
 done:
 
+	if (res) {
+		fprintf(stderr, "\n\n---> open %s errno = %d\n\n", path, errno);
+	}
+
 	return res;
 }
 
@@ -620,6 +713,39 @@ static int graph_create(const char *path, mode_t mode, struct fuse_file_info *fi
 	fi->fh = fd;
 
 done:
+
+	if (res) {
+		fprintf(stderr, "\n\n---> create %s errno = %d\n\n", path, errno);
+	}
+
+	return res;
+}
+
+static int graph_mkdir(const char *path, mode_t mode)
+{
+	int res = 0;
+	char *rp = NULL;
+
+	rp = real_path(path, true);
+	if (!rp) {
+		res = -errno;
+		goto done;
+	}
+
+	res = mkdir(rp, mode);
+	if (res == -1) {
+		res = -errno;
+		goto done;
+	}
+
+done:
+	if (rp) {
+		free_path(rp);
+	}
+
+	if (res) {
+		fprintf(stderr, "\n\n---> mkdir %s errno = %d\n\n", path, errno);
+	}
 
 	return res;
 }
@@ -641,31 +767,6 @@ static int graph_mknod(const char *path, mode_t mode, dev_t rdev)
 		res = mknod(rp, mode, rdev);
 	}
 
-	if (res == -1) {
-		res = -errno;
-		goto done;
-	}
-
-done:
-	if (rp) {
-		free_path(rp);
-	}
-
-	return res;
-}
-
-static int graph_mkdir(const char *path, mode_t mode)
-{
-	int res = 0;
-	char *rp = NULL;
-
-	rp = real_path(path, true);
-	if (!rp) {
-		res = -errno;
-		goto done;
-	}
-
-	res = mkdir(rp, mode);
 	if (res == -1) {
 		res = -errno;
 		goto done;
@@ -947,6 +1048,8 @@ int start_unionfs(char *src_path, char *mount_path)
 		return -errno;
 	}
 
+	pthread_mutex_init(&_ufs_lock, NULL);
+
 	descriptors_init();
 	umask(0);
 
@@ -963,6 +1066,12 @@ int alloc_unionfs(char *layer_path, char *id)
 	char *layer;
 	int res = 0;
 	int i;
+
+	lock_ufs();
+
+	if (ufs) {
+		free(ufs);
+	}
 
 	ufs = (struct union_fs *)calloc(1, sizeof(struct union_fs));
 	if (!ufs) {
@@ -989,6 +1098,7 @@ int alloc_unionfs(char *layer_path, char *id)
 			goto done;
 		}
 
+		memset(link, 0, sizeof(link));
 		res = readlink(parent, link, sizeof(link));
 		if (res != -1) {
 			layer = link;
@@ -1009,6 +1119,11 @@ done:
 		errno = 0;
 	}
 
+	unlock_ufs();
+
+	fprintf(stderr, "Press any key to continue...\n");
+	getchar();
+
 	return res;
 }
 
@@ -1019,10 +1134,10 @@ int release_unionfs(char *id)
 
 
 /*
-int main()
-{
-	start_unionfs("/var/lib/openstorage/fuse/physical", "/var/lib/openstorage/fuse/virtual");
-}
-*/
+   int main()
+   {
+   start_unionfs("/var/lib/openstorage/fuse/physical", "/var/lib/openstorage/fuse/virtual");
+   }
+   */
 
 #endif
