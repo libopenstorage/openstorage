@@ -1,9 +1,11 @@
-// +build linux,have_fuse
+// +build linux,have_unionfs
 
-package fuse
+package unionfs
 
 /*
-extern int start_fuse(char *, char *);
+extern int start_unionfs(char *, char *);
+extern int alloc_unionfs(char *, char *);
+extern int release_unionfs(char *);
 #cgo LDFLAGS: -lfuse -lulockmgr
 */
 import "C"
@@ -55,7 +57,7 @@ func Init(home string, options []string, uidMaps, gidMaps []idtools.IDMap) (grap
 
 	cVirtPath := C.CString(virtPath)
 	cPhysPath := C.CString(physPath)
-	go C.start_fuse(cPhysPath, cVirtPath)
+	go C.start_unionfs(cPhysPath, cVirtPath)
 
 	d := &Driver{}
 
@@ -88,7 +90,7 @@ func (d *Driver) linkParent(child, parent string) error {
 
 	child = child + "/_parent"
 
-	log.Infof("Linking layer %s to %s", parent, child)
+	log.Infof("Linking layer %s to parent layer %s", child, parent)
 
 	err := os.Symlink(parent, child)
 	if err != nil {
@@ -101,7 +103,7 @@ func (d *Driver) linkParent(child, parent string) error {
 // Create creates a new, empty, filesystem layer with the
 // specified id and parent and mountLabel. Parent and mountLabel may be "".
 func (d *Driver) Create(id string, parent string) error {
-	path := path.Join(virtPath, id)
+	path := path.Join(physPath, id)
 	log.Infof("Creating layer %s", path)
 
 	err := os.MkdirAll(path, 0744)
@@ -118,10 +120,10 @@ func (d *Driver) Create(id string, parent string) error {
 
 // Remove attempts to remove the filesystem layer with this id.
 func (d *Driver) Remove(id string) error {
-	path := path.Join(virtPath, id)
+	path := path.Join(physPath, id)
 	log.Infof("Removing layer %s", path)
 
-	os.RemoveAll(path)
+	// XXX FIXME os.RemoveAll(path)
 
 	return nil
 }
@@ -136,27 +138,40 @@ func (d *Driver) GetMetadata(id string) (map[string]string, error) {
 // to by this id. You can optionally specify a mountLabel or "".
 // Returns the absolute path to the mounted layered filesystem.
 func (d *Driver) Get(id, mountLabel string) (string, error) {
-	path := path.Join(virtPath, id)
-	log.Infof("Getting layer %s", path)
+	layerPath := path.Join(physPath, id)
+	// unionPath := path.Join(virtPath, id)
 
-	return path, nil
+	log.Infof("Unifying layer %s", layerPath)
+
+	cLayerPath := C.CString(layerPath)
+	cID := C.CString(id)
+
+	_, err := C.alloc_unionfs(cLayerPath, cID)
+
+	log.Infof("GOT %v\n", err)
+
+	// return unionPath, err
+	return virtPath, err
 }
 
 // Put releases the system resources for the specified id,
 // e.g, unmounting layered filesystem.
 func (d *Driver) Put(id string) error {
-	path := path.Join(virtPath, id)
-	log.Infof("Putting layer %s", path)
+	unionPath := path.Join(virtPath, id)
+	log.Infof("Releasing union layer %s", unionPath)
 
-	return nil
+	cID := C.CString(id)
+
+	_, err := C.release_unionfs(cID)
+
+	return err
 }
 
 // Exists returns whether a filesystem layer with the specified
 // ID exists on this driver.
 // All cache entries exist.
 func (d *Driver) Exists(id string) bool {
-	path := path.Join(virtPath, id)
-	log.Infof("Checking if layer %s exists", path)
+	path := path.Join(physPath, id)
 
 	_, err := os.Stat(path)
 
@@ -178,7 +193,7 @@ func (d *Driver) ApplyDiff(id string, parent string, diff archive.Reader) (size 
 		log.Infof("Applying diff %s", id)
 	}
 
-	dir := path.Join(virtPath, id)
+	dir := path.Join(physPath, id)
 	if err := chrootarchive.UntarUncompressed(diff, dir, nil); err != nil {
 		log.Warnf("Error while applying diff to %s: %v", id, err)
 		os.Exit(-1)
@@ -204,7 +219,7 @@ func (d *Driver) Changes(id, parent string) ([]archive.Change, error) {
 // Diff produces an archive of the changes between the specified
 // layer and its parent layer which may be "".
 func (d *Driver) Diff(id, parent string) (archive.Archive, error) {
-	return archive.TarWithOptions(path.Join(virtPath, id), &archive.TarOptions{
+	return archive.TarWithOptions(path.Join(physPath, id), &archive.TarOptions{
 		Compression:     archive.Uncompressed,
 		ExcludePatterns: []string{archive.WhiteoutMetaPrefix + "*", "!" + archive.WhiteoutOpaqueDir},
 	})
@@ -214,7 +229,7 @@ func (d *Driver) Diff(id, parent string) (archive.Archive, error) {
 // and its parent and returns the size in bytes of the changes
 // relative to its base filesystem directory.
 func (d *Driver) DiffSize(id, parent string) (size int64, err error) {
-	return directory.Size(path.Join(virtPath, id))
+	return directory.Size(path.Join(physPath, id))
 }
 
 func init() {

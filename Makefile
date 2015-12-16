@@ -1,5 +1,5 @@
 ifndef TAGS
-TAGS := daemon btrfs_noversion have_btrfs
+TAGS := daemon btrfs_noversion have_btrfs have_unionfs
 endif
 ifndef PKGS
 PKGS := $(shell go list ./... | grep -v 'github.com/libopenstorage/openstorage/vendor')
