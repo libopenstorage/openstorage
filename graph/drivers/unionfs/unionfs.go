@@ -30,7 +30,7 @@ import (
 )
 
 const (
-	Name     = "fuse"
+	Name     = "unionfs"
 	Type     = api.Graph
 	virtPath = "/var/lib/openstorage/fuse/virtual"
 	physPath = "/var/lib/openstorage/fuse/physical"
@@ -233,5 +233,5 @@ func (d *Driver) DiffSize(id, parent string) (size int64, err error) {
 }
 
 func init() {
-	graph.Register("fuse", Init)
+	graph.Register(Name, Init)
 }
