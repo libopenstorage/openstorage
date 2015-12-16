@@ -44,7 +44,7 @@ func start(c *cli.Context) {
 	// We are in daemon mode.
 	file := c.String("file")
 	if file == "" {
-		logrus.Warn("OSD configuration file not specified.  Visit openstorage.org for an example.")
+		logrus.Error("OSD configuration file not specified.  Visit openstorage.org for an example.")
 		return
 	}
 	cfg, err := config.Parse(file)
@@ -59,13 +59,13 @@ func start(c *cli.Context) {
 
 	kv, err := kvdb.New(scheme, "openstorage", []string{u.String()}, nil)
 	if err != nil {
-		logrus.Warnf("Failed to initialize KVDB: %v (%v)", scheme, err)
-		logrus.Warnf("Supported datastores: %v", datastores)
+		logrus.Errorf("Failed to initialize KVDB: %v (%v)", scheme, err)
+		logrus.Errorf("Supported datastores: %v", datastores)
 		return
 	}
 	err = kvdb.SetInstance(kv)
 	if err != nil {
-		logrus.Warnf("Failed to initialize KVDB: %v", err)
+		logrus.Errorf("Failed to initialize KVDB: %v", err)
 		return
 	}
 
@@ -73,7 +73,7 @@ func start(c *cli.Context) {
 	if cfg.Osd.ClusterConfig.NodeId != "" && cfg.Osd.ClusterConfig.ClusterId != "" {
 		dockerClient, err := docker.NewClientFromEnv()
 		if err != nil {
-			logrus.Warnf("Failed to initialize docker client: %v", err)
+			logrus.Errorf("Failed to initialize docker client: %v", err)
 			return
 		}
 		cm = cluster.New(cfg.Osd.ClusterConfig, kv, dockerClient)
@@ -84,17 +84,17 @@ func start(c *cli.Context) {
 		logrus.Infof("Starting volume driver: %v", d)
 		_, err := volume.New(d, v)
 		if err != nil {
-			logrus.Warnf("Unable to start volume driver: %v, %v", d, err)
+			logrus.Errorf("Unable to start volume driver: %v, %v", d, err)
 			return
 		}
 		err = server.StartServerAPI(d, 0, config.DriverAPIBase)
 		if err != nil {
-			logrus.Warnf("Unable to start volume driver: %v", err)
+			logrus.Errorf("Unable to start volume driver: %v", err)
 			return
 		}
 		err = server.StartPluginAPI(d, config.PluginAPIBase)
 		if err != nil {
-			logrus.Warnf("Unable to start volume plugin: %v", err)
+			logrus.Errorf("Unable to start volume plugin: %v", err)
 			return
 		}
 	}
@@ -104,7 +104,7 @@ func start(c *cli.Context) {
 		logrus.Infof("Starting graph driver: %v", d)
 		err = server.StartGraphAPI(d, 0, config.PluginAPIBase)
 		if err != nil {
-			logrus.Warnf("Unable to start graph plugin: %v", err)
+			logrus.Errorf("Unable to start graph plugin: %v", err)
 			return
 		}
 	}
@@ -112,7 +112,7 @@ func start(c *cli.Context) {
 	if cm != nil {
 		err = cm.Start()
 		if err != nil {
-			logrus.Warnf("Unable to start cluster manager: %v", err)
+			logrus.Errorf("Unable to start cluster manager: %v", err)
 			return
 		}
 	}

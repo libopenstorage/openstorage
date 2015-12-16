@@ -76,7 +76,7 @@ func (d *graphDriver) emptyResponse(w http.ResponseWriter) {
 }
 
 func (d *graphDriver) errResponse(method string, w http.ResponseWriter, err error) {
-	d.logReq(method, "").Warnf("%v", err)
+	d.logReq(method, "").Errorf("%v", err)
 	fmt.Fprintln(w, fmt.Sprintf(`{"Err": %q}`, err.Error()))
 }
 

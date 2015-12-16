@@ -18,7 +18,7 @@ func readDatabase() (Database, error) {
 
 	kv, err := kvdb.Get("cluster/database")
 	if err != nil && !strings.Contains(err.Error(), "Key not found") {
-		logrus.Warn("Warning, could not read cluster database")
+		logrus.Error("Erroring, could not read cluster database")
 		return db, err
 	}
 
@@ -27,7 +27,7 @@ func readDatabase() (Database, error) {
 		return db, nil
 	}
 	if err := json.Unmarshal(kv.Value, &db); err != nil {
-		logrus.Warn("Fatal, Could not parse cluster database ", kv)
+		logrus.Error("Fatal, Could not parse cluster database ", kv)
 		return db, err
 	}
 
@@ -38,12 +38,12 @@ func writeDatabase(db *Database) error {
 	kvdb := kvdb.Instance()
 	b, err := json.Marshal(db)
 	if err != nil {
-		logrus.Warnf("Fatal, Could not marshal cluster database to JSON: %v", err)
+		logrus.Errorf("Fatal, Could not marshal cluster database to JSON: %v", err)
 		return err
 	}
 
 	if _, err := kvdb.Put("cluster/database", b, 0); err != nil {
-		logrus.Warnf("Fatal, Could not marshal cluster database to JSON: %v", err)
+		logrus.Errorf("Fatal, Could not marshal cluster database to JSON: %v", err)
 		return err
 	}
 

@@ -194,7 +194,7 @@ func (d *Driver) ApplyDiff(id string, parent string, diff archive.Reader) (size 
 
 	dir := path.Join(physPath, id)
 	if err := chrootarchive.UntarUncompressed(diff, dir, nil); err != nil {
-		logrus.Warnf("Error while applying diff to %s: %v", id, err)
+		logrus.Errorf("Error while applying diff to %s: %v", id, err)
 		os.Exit(-1)
 		return 0, err
 	}
@@ -202,7 +202,7 @@ func (d *Driver) ApplyDiff(id string, parent string, diff archive.Reader) (size 
 	// show invalid whiteouts warning.
 	files, err := ioutil.ReadDir(path.Join(dir, archive.WhiteoutLinkDir))
 	if err == nil && len(files) > 0 {
-		logrus.Warnf("Archive contains aufs hardlink references that are not supported.")
+		logrus.Errorf("Archive contains aufs hardlink references that are not supported.")
 	}
 
 	return d.DiffSize(id, parent)
