@@ -24,6 +24,8 @@ docker daemon --storage-driver=unionfs
 
 ### Building
 
+Make sure you have `fuse` installed.
+
 When building `OSD`, run:
 
 ```
