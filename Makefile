@@ -9,7 +9,7 @@ BUILDFLAGS := -gcflags "-N -l"
 endif
 
 ifdef HAVE_UNIONFS
-TAGS+=" have_unionfs"
+TAGS+="have_unionfs"
 endif
 
 export GO15VENDOREXPERIMENT=1
