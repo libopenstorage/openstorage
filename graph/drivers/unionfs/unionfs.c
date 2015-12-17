@@ -1,4 +1,4 @@
-// gcc fuse.c -D_FILE_OFFSET_BITS=64 -lfuse -lulockmgr -lpthread -o fuse
+// gcc fuse.c -DiFILE_OFFSET_BITS=64 -lfuse -lulockmgr -lithread -o fuse
 
 #define _GNU_SOURCE
 #define _FILE_OFFSET_BITS 64
@@ -31,17 +31,23 @@
 #include <sys/xattr.h>
 #endif
 
-#define MAX_DESC 4096
-#define MAX_LAYERS 16
+#include "hash.h"
 
-static char *union_src;
+#define MAX_DESC 4096
+#define MAX_LAYERS 64
+#define MAX_INSTANCES 128
 
 struct union_fs {
 	char *layers[MAX_LAYERS];
+	pthread_mutex_t lock;
+	char id[256];
+	bool available;
 };
 
-static struct union_fs *ufs = NULL;
-static pthread_mutex_t _ufs_lock;
+static char *union_src;
+static pthread_mutex_t ufs_lock;
+static struct union_fs ufs_instances[MAX_INSTANCES];
+static hashtable_t *ufs_hash;
 
 struct descriptor {
 	char name[PATH_MAX];
@@ -54,14 +60,53 @@ struct graph_dirp {
 	off_t offset;
 };
 
-static void lock_ufs()
+static void lock_ufs(struct union_fs *ufs)
 {
-	pthread_mutex_lock(&_ufs_lock);
+	pthread_mutex_lock(&ufs->lock);
 }
 
-static void unlock_ufs()
+static void unlock_ufs(struct union_fs *ufs)
 {
-	pthread_mutex_unlock(&_ufs_lock);
+	pthread_mutex_unlock(&ufs->lock);
+}
+
+static struct union_fs *get_ufs(const char *path, char **new_path)
+{
+	struct union_fs *ufs = NULL;
+	char *p, *tmp_path = NULL;
+	int i, id;
+
+	*new_path = NULL;
+
+	tmp_path = strdup(path + 1);
+	if (!tmp_path) {
+		fprintf(stderr, "Cannot allocate memory.\n");
+		goto done;
+	}	
+	p = strchr(tmp_path, '/');
+	if (p) *p = 0;
+
+	ufs = ht_get(ufs_hash, tmp_path);
+	if (!ufs) {
+		goto done;
+	}
+
+	if (!ufs->available) {
+		*new_path = strchr(path+1, '/');
+		if (!*new_path) {
+			// Must be a request for root.
+			*new_path = "/";
+		}
+	} else {
+		ufs = NULL; 
+	}
+
+done:
+	if (tmp_path) {
+		free(tmp_path);
+	}
+
+	return ufs;
 }
 
 static void descriptors_init() {
@@ -99,10 +144,26 @@ static char *real_path(const char *path, bool create_mode)
 	char *r = NULL;
 	char file[PATH_MAX];
 	char *dir;
+	struct union_fs *ufs = NULL;
+	char *fixed_path = NULL;
 
-	lock_ufs();
+	if (!strcmp(path, "/")) {
+		// This is a request for the root virtual path.  There are only
+		// union FS volumes at this location and no specific union FS context.
+		r = strdup(union_src);
+		goto done;
+	}
 
-	strncpy(file, path, sizeof(file));
+	ufs = get_ufs(path, &fixed_path);
+	if (!ufs) {
+		errno = ENOENT;
+		fprintf(stderr, "No valid union FS for %s\n", path);
+		goto done;
+	}
+
+	lock_ufs(ufs);
+
+	strncpy(file, fixed_path, sizeof(file));
 	dir = dirname(file);
 
 	errno = 0;
@@ -114,7 +175,7 @@ static char *real_path(const char *path, bool create_mode)
 		struct stat st;
 
 		for (i = 0; ufs->layers[i]; i++) {
-			asprintf(&r, "%s%s", ufs->layers[i], path);
+			asprintf(&r, "%s%s", ufs->layers[i], fixed_path);
 			if (!r) {
 				errno = ENOMEM;
 				fprintf(stderr, "Warning, cannot allocate memory\n");
@@ -155,10 +216,10 @@ static char *real_path(const char *path, bool create_mode)
 		if (!r && create_mode && ufs->layers[0]) {
 			if (base_layer == -1) {
 				fprintf(stderr, "Warning, create mode requested on %s, "
-						"but no layer could be found that could create this file\n", path);
+						"but no layer could be found that could create this file\n", fixed_path);
 				errno = ENOENT;
 			} else {
-				asprintf(&r, "%s%s", ufs->layers[base_layer], path);
+				asprintf(&r, "%s%s", ufs->layers[base_layer], fixed_path);
 				if (!r) {
 					fprintf(stderr, "Warning, cannot allocate memory\n");
 					errno = ENOMEM;
@@ -166,13 +227,15 @@ static char *real_path(const char *path, bool create_mode)
 			}
 		}
 	} else {
-		fprintf(stderr, "Warning, union FS not yet initialized.  Cannot open: %s\n", path);
+		fprintf(stderr, "Warning, union FS not yet initialized.  Cannot access: %s\n", fixed_path);
 		errno = ENOENT;
 	}
 
 done:
 
-	unlock_ufs();
+	if (ufs) {
+		unlock_ufs(ufs);
+	}
 
 	return r;
 }
@@ -205,7 +268,9 @@ static int maybe_open(const char* path, int flags, int mode) {
 	}
 
 	if (fd==-1) {
-		fprintf(stderr, "Warning, failed to open %s (create == %d)\n", rp, flags & O_CREAT);
+		if (flags & O_CREAT) {
+			fprintf(stderr, "Warning, failed to create %s (errno=%d)\n", rp, errno);
+		}
 		goto done;
 	}
 
@@ -270,73 +335,105 @@ static int graph_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 		off_t offset, struct fuse_file_info *fi)
 {
 	int res = 0;
+	struct union_fs *ufs = NULL;
+	char *fixed_path = NULL;
+	off_t nextoff = 0;
+	struct stat st;
+	int i;
 
-	lock_ufs();
+	if (!strcmp(path, "/")) {
+		// List valid union FS paths.
 
-	if (ufs != NULL) {
-		off_t nextoff = 0;
-		struct stat st;
-		int i;
+		// XXX do we need to lock here?
+		pthread_mutex_lock(&ufs_lock);
+		{
+			for (i = 0; i < MAX_INSTANCES; i++) {
+				if (!ufs_instances[i].available) {
+					char phys_path[PATH_MAX];
+					char d_name[8];
 
-		for (i = 0; ufs->layers[i]; i++) {
-			char *rp = NULL;
-			int ret;
+					snprintf(phys_path, sizeof(phys_path), "%s/%s",
+						union_src, ufs_instances[i].id);
+					stat(phys_path, &st);
 
-			asprintf(&rp, "%s%s", ufs->layers[i], path);
-			if (!rp) {
-				errno = ENOMEM;
-				fprintf(stderr, "Warning, cannot allocate memory\n");
-				break;
+					sprintf(d_name, "%s", ufs_instances[i].id);
+					if (filler(buf, d_name, &st, 0)) {
+						fprintf(stderr, "Warning, Filler too full on root.\n");
+						break;
+					}
+				}
+			}
+		}
+		pthread_mutex_unlock(&ufs_lock);
+
+		goto done;
+	}
+
+	ufs = get_ufs(path, &fixed_path);
+	if (!ufs) {
+		errno = ENOENT;
+		res = -errno;
+		fprintf(stderr, "No valid union FS for %s\n", path);
+		goto done;
+	}
+
+	lock_ufs(ufs);
+
+	for (i = 0; ufs->layers[i]; i++) {
+		char *rp = NULL;
+		int ret;
+
+		asprintf(&rp, "%s%s", ufs->layers[i], fixed_path);
+		if (!rp) {
+			errno = ENOMEM;
+			fprintf(stderr, "Warning, cannot allocate memory\n");
+			break;
+		}
+
+		ret = lstat(rp, &st);
+		if (ret == 0) {
+			DIR *dp;
+
+			dp = opendir(rp);
+			if (!dp) {
+				fprintf(stderr, "Warning, %s not a directory.\n", rp);
+				free(rp);
+				continue;
 			}
 
-			fprintf(stderr, "Listing entries from %s\n", rp);
-			ret = lstat(rp, &st);
-			if (ret == 0) {
-				DIR *dp;
+			while (true) {
+				struct dirent *entry = NULL;
+				entry = readdir(dp);
+				if (!entry) {
+					break;
+				}
 
-				dp = opendir(rp);
-				if (!dp) {
-					fprintf(stderr, "Warning, %s not a directory.\n", rp);
-					free(rp);
+				if (strcmp(".", entry->d_name) == 0 ||
+					strcmp("..", entry->d_name) == 0 || 
+					strcmp("_parent", entry->d_name) == 0) {
 					continue;
 				}
 
-				while (true) {
-					struct dirent *entry = NULL;
-					entry = readdir(dp);
-					if (!entry) {
-						break;
-					}
+				memset(&st, 0, sizeof(st));
+				st.st_ino = entry->d_ino;
+				st.st_mode = entry->d_type << 12;
 
-					if (strcmp(".", entry->d_name) == 0 ||
-						strcmp("..", entry->d_name) == 0 || 
-						strcmp("_parent", entry->d_name) == 0) {
-						continue;
-					}
-
-					memset(&st, 0, sizeof(st));
-					st.st_ino = entry->d_ino;
-					st.st_mode = entry->d_type << 12;
-
-					nextoff = 0;
-					if (filler(buf, entry->d_name, &st, nextoff)) {
-						fprintf(stderr, "Warning, Filler too full on %s.\n", rp);
-						break;
-					}
+				nextoff = 0;
+				if (filler(buf, entry->d_name, &st, nextoff)) {
+					fprintf(stderr, "Warning, Filler too full on %s.\n", rp);
+					break;
 				}
 			}
-
-			free(rp);
 		}
-	} else {
-		fprintf(stderr, "Warning, union FS not yet initialized.  Cannot readdir: %s\n", path);
-		errno = ENOENT;
-		res = -errno;
+
+		free(rp);
 	}
 
 done:
 
-	unlock_ufs();
+	if (ufs) {
+		unlock_ufs(ufs);
+	}
 
 	return res;
 }
@@ -692,10 +789,6 @@ static int graph_open(const char *path, struct fuse_file_info *fi)
 
 done:
 
-	if (res) {
-		fprintf(stderr, "\n\n---> open %s errno = %d\n\n", path, errno);
-	}
-
 	return res;
 }
 
@@ -713,10 +806,6 @@ static int graph_create(const char *path, mode_t mode, struct fuse_file_info *fi
 	fi->fh = fd;
 
 done:
-
-	if (res) {
-		fprintf(stderr, "\n\n---> create %s errno = %d\n\n", path, errno);
-	}
 
 	return res;
 }
@@ -741,10 +830,6 @@ static int graph_mkdir(const char *path, mode_t mode)
 done:
 	if (rp) {
 		free_path(rp);
-	}
-
-	if (res) {
-		fprintf(stderr, "\n\n---> mkdir %s errno = %d\n\n", path, errno);
 	}
 
 	return res;
@@ -1042,13 +1127,22 @@ static struct fuse_operations graph_oper = {
 int start_unionfs(char *src_path, char *mount_path)
 {
 	char *argv[4];
+	int i;
 
 	union_src = strdup(src_path);
 	if (!union_src) {
 		return -errno;
 	}
 
-	pthread_mutex_init(&_ufs_lock, NULL);
+	pthread_mutex_init(&ufs_lock, NULL);
+
+	for (i = 0; i < MAX_INSTANCES; i++) {
+		pthread_mutex_init(&ufs_instances[i].lock, NULL);
+
+		ufs_instances[i].available = true;
+	}
+
+	ufs_hash = ht_create( 65536 );
 
 	descriptors_init();
 	umask(0);
@@ -1062,24 +1156,38 @@ int start_unionfs(char *src_path, char *mount_path)
 
 int alloc_unionfs(char *layer_path, char *id)
 {
+	struct union_fs *ufs = NULL;
 	char link[PATH_MAX];
 	char *layer;
 	int res = 0;
 	int i;
 
-	lock_ufs();
-
-	if (ufs) {
-		free(ufs);
+	pthread_mutex_lock(&ufs_lock);
+	{
+		for (i = 0; i < MAX_INSTANCES; i++) {
+			if (ufs_instances[i].available) {
+				ufs_instances[i].available = false;
+				ufs = &ufs_instances[i];
+				break;
+			}
+		}
 	}
+	pthread_mutex_unlock(&ufs_lock);
 
-	ufs = (struct union_fs *)calloc(1, sizeof(struct union_fs));
 	if (!ufs) {
+		errno = ENOMEM;
 		res = -errno;
+		printf("Warning, no more union FS instances available.\n");
 		goto done;
 	}
 
-	printf("Unifying %s\n", layer_path);
+	lock_ufs(ufs);
+
+	memset(ufs, 0, sizeof(struct union_fs));
+	strncpy(ufs->id, id, sizeof(ufs->id));
+	ht_set(ufs_hash, id, ufs);
+
+	printf("Unifying %s\n", id);
 
 	for (i = 0, layer = layer_path; layer && (i < MAX_LAYERS); i++) {
 		char *parent = NULL;
@@ -1089,8 +1197,6 @@ int alloc_unionfs(char *layer_path, char *id)
 			res = -errno;
 			goto done;
 		}
-
-		printf("Added Layer: %d: %s\n", i, layer);
 
 		asprintf(&parent, "%s/_parent", layer);
 		if (!parent) {
@@ -1119,25 +1225,36 @@ done:
 		errno = 0;
 	}
 
-	unlock_ufs();
-
-	fprintf(stderr, "Press any key to continue...\n");
-	getchar();
+	if (ufs) {
+		unlock_ufs(ufs);
+	}
 
 	return res;
 }
 
 int release_unionfs(char *id)
 {
+	int i;
+
+	pthread_mutex_lock(&ufs_lock);
+	{
+		for (i = 0; i < MAX_INSTANCES; i++) {
+			if (!ufs_instances[i].available && !strcmp(ufs_instances[i].id, id)) {
+				ufs_instances[i].available = true;
+				break;
+			}
+		}
+	}
+	pthread_mutex_unlock(&ufs_lock);
+
 	return 0;
 }
 
-
 /*
-   int main()
-   {
+int main()
+{
    start_unionfs("/var/lib/openstorage/fuse/physical", "/var/lib/openstorage/fuse/virtual");
-   }
-   */
+}
+*/
 
 #endif

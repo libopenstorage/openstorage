@@ -88,7 +88,7 @@ func (d *Driver) Status() [][2]string {
 func (d *Driver) linkParent(child, parent string) error {
 	parent = path.Join(physPath, parent)
 
-	log.Infof("Linking layer %s to parent layer %s", child, parent)
+	// log.Infof("Linking layer %s to parent layer %s", child, parent)
 
 	child = child + "/_parent"
 
@@ -104,7 +104,8 @@ func (d *Driver) linkParent(child, parent string) error {
 // specified id and parent and mountLabel. Parent and mountLabel may be "".
 func (d *Driver) Create(id string, parent string) error {
 	path := path.Join(physPath, id)
-	log.Infof("Creating layer %s", path)
+
+	// log.Infof("Creating layer %s", path)
 
 	err := os.MkdirAll(path, 0744)
 	if err != nil {
@@ -120,8 +121,9 @@ func (d *Driver) Create(id string, parent string) error {
 
 // Remove attempts to remove the filesystem layer with this id.
 func (d *Driver) Remove(id string) error {
-	path := path.Join(physPath, id)
-	log.Infof("Removing layer %s", path)
+	// path := path.Join(physPath, id)
+
+	// log.Infof("Removing layer %s", path)
 
 	// XXX FIXME os.RemoveAll(path)
 
@@ -139,27 +141,28 @@ func (d *Driver) GetMetadata(id string) (map[string]string, error) {
 // Returns the absolute path to the mounted layered filesystem.
 func (d *Driver) Get(id, mountLabel string) (string, error) {
 	layerPath := path.Join(physPath, id)
-	// unionPath := path.Join(virtPath, id)
-
-	log.Infof("Unifying layer %s", layerPath)
 
 	cLayerPath := C.CString(layerPath)
 	cID := C.CString(id)
 
-	_, err := C.alloc_unionfs(cLayerPath, cID)
+	ret, err := C.alloc_unionfs(cLayerPath, cID)
+	if int(ret) != 0 {
+		log.Warnf("Error while creating a union FS for %s", id)
+		return "", err
+	} else {
+		log.Infof("Created a union FS for %s", id)
+		unionPath := path.Join(virtPath, id)
 
-	// return unionPath, err
-	return virtPath, err
+		return unionPath, err
+	}
 }
 
 // Put releases the system resources for the specified id,
 // e.g, unmounting layered filesystem.
 func (d *Driver) Put(id string) error {
-	unionPath := path.Join(virtPath, id)
-	log.Infof("Releasing union layer %s", unionPath)
+	log.Infof("Releasing union FS for %s", id)
 
 	cID := C.CString(id)
-
 	_, err := C.release_unionfs(cID)
 
 	return err
@@ -185,12 +188,6 @@ func (d *Driver) Exists(id string) bool {
 // new layer in bytes.
 // The archive.Reader must be an uncompressed stream.
 func (d *Driver) ApplyDiff(id string, parent string, diff archive.Reader) (size int64, err error) {
-	if parent != "" {
-		log.Infof("Applying diff %s on %s", id, parent)
-	} else {
-		log.Infof("Applying diff %s", id)
-	}
-
 	dir := path.Join(physPath, id)
 	if err := chrootarchive.UntarUncompressed(diff, dir, nil); err != nil {
 		log.Warnf("Error while applying diff to %s: %v", id, err)
