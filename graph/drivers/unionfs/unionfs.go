@@ -88,7 +88,7 @@ func (d *Driver) Status() [][2]string {
 func (d *Driver) linkParent(child, parent string) error {
 	parent = path.Join(physPath, parent)
 
-	// logrus.Infof("Linking layer %s to parent layer %s", child, parent)
+	logrus.Debugf("Linking layer %s to parent layer %s", child, parent)
 
 	child = child + "/_parent"
 
@@ -105,7 +105,7 @@ func (d *Driver) linkParent(child, parent string) error {
 func (d *Driver) Create(id string, parent string) error {
 	path := path.Join(physPath, id)
 
-	// logrus.Infof("Creating layer %s", path)
+	logrus.Debugf("Creating layer %s", path)
 
 	err := os.MkdirAll(path, 0744)
 	if err != nil {
@@ -123,7 +123,7 @@ func (d *Driver) Create(id string, parent string) error {
 func (d *Driver) Remove(id string) error {
 	path := path.Join(physPath, id)
 
-	// logrus.Infof("Removing layer %s", path)
+	logrus.Debugf("Removing layer %s", path)
 
 	os.RemoveAll(path)
 
@@ -150,7 +150,7 @@ func (d *Driver) Get(id, mountLabel string) (string, error) {
 		logrus.Warnf("Error while creating a union FS for %s", id)
 		return "", err
 	} else {
-		// logrus.Infof("Created a union FS for %s", id)
+		logrus.Debugf("Created a union FS for %s", id)
 		unionPath := path.Join(virtPath, id)
 
 		return unionPath, err
@@ -160,7 +160,7 @@ func (d *Driver) Get(id, mountLabel string) (string, error) {
 // Put releases the system resources for the specified id,
 // e.g, unmounting layered filesystem.
 func (d *Driver) Put(id string) error {
-	// logrus.Infof("Releasing union FS for %s", id)
+	logrus.Debugf("Releasing union FS for %s", id)
 
 	cID := C.CString(id)
 	_, err := C.release_unionfs(cID)
