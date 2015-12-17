@@ -8,6 +8,9 @@
 #include <config.h>
 #endif
 
+// XXX FIXME
+#define EXPERIMENTAL_ 1
+
 #ifdef EXPERIMENTAL_
 
 #define _GNU_SOURCE
@@ -243,6 +246,7 @@ static void free_path(char *path)
 	free(path);
 }
 
+// Find a file in the FD cache.
 static int maybe_open(const char* path, int flags, int mode) {
 	int fd;
 	int ret;
@@ -329,13 +333,14 @@ static inline struct graph_dirp *get_dirp(struct fuse_file_info *fi)
 	return (struct graph_dirp *) (uintptr_t) fi->fh;
 }
 
+// This does the bulk of unifying entries from the various layers.
+// It has to make sure dup entries are avoided.
 static int graph_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 		off_t offset, struct fuse_file_info *fi)
 {
 	int res = 0;
 	struct union_fs *ufs = NULL;
 	char *fixed_path = NULL;
-	off_t nextoff = 0;
 	struct stat st;
 	int i;
 
@@ -416,8 +421,8 @@ static int graph_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 				st.st_ino = entry->d_ino;
 				st.st_mode = entry->d_type << 12;
 
-				nextoff = 0;
-				if (filler(buf, entry->d_name, &st, nextoff)) {
+				// XXX FIXME - make use of tge bext off feature in fuse.
+				if (filler(buf, entry->d_name, &st, 0)) {
 					fprintf(stderr, "Warning, Filler too full on %s.\n", rp);
 					break;
 				}
