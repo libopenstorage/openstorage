@@ -93,9 +93,9 @@ func (d *graphDriver) decode(method string, w http.ResponseWriter, r *http.Reque
 		return nil, err
 	}
 	if len(request.Parent) != 0 {
-		d.logReq(method, request.ID).Info("Parent: ", request.Parent)
+		d.logReq(method, request.ID).Debug("Parent: ", request.Parent)
 	} else {
-		d.logReq(method, request.ID).Info("")
+		d.logReq(method, request.ID).Debug("")
 	}
 	return &request, nil
 }
@@ -315,7 +315,7 @@ func (d *graphDriver) applyDiff(w http.ResponseWriter, r *http.Request) {
 
 	id := r.URL.Query().Get("id")
 	parent := r.URL.Query().Get("parent")
-	d.logReq(method, id).Infof("Parent %v", parent)
+	d.logReq(method, id).Debugf("Parent %v", parent)
 	size, err := d.gd.ApplyDiff(id, parent, r.Body)
 	if err != nil {
 		d.errResponse(method, w, err)

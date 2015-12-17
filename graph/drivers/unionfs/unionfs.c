@@ -80,7 +80,7 @@ static struct union_fs *get_ufs(const char *path, char **new_path)
 
 	tmp_path = strdup(path + 1);
 	if (!tmp_path) {
-		fprintf(stderr, "Cannot allocate memory.\n");
+		fprintf(stderr, "Warning, cannot allocate memory.\n");
 		goto done;
 	}	
 	p = strchr(tmp_path, '/');
@@ -157,7 +157,7 @@ static char *real_path(const char *path, bool create_mode)
 	ufs = get_ufs(path, &fixed_path);
 	if (!ufs) {
 		errno = ENOENT;
-		fprintf(stderr, "No valid union FS for %s\n", path);
+		// fprintf(stderr, "Warning, no valid union FS for %s\n", path);
 		goto done;
 	}
 
@@ -373,7 +373,7 @@ static int graph_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	if (!ufs) {
 		errno = ENOENT;
 		res = -errno;
-		fprintf(stderr, "No valid union FS for %s\n", path);
+		// fprintf(stderr, "Warning, no valid union FS for %s\n", path);
 		goto done;
 	}
 
@@ -1186,8 +1186,6 @@ int alloc_unionfs(char *layer_path, char *id)
 	memset(ufs, 0, sizeof(struct union_fs));
 	strncpy(ufs->id, id, sizeof(ufs->id));
 	ht_set(ufs_hash, id, ufs);
-
-	printf("Unifying %s\n", id);
 
 	for (i = 0, layer = layer_path; layer && (i < MAX_LAYERS); i++) {
 		char *parent = NULL;

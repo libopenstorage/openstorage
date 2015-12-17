@@ -121,11 +121,11 @@ func (d *Driver) Create(id string, parent string) error {
 
 // Remove attempts to remove the filesystem layer with this id.
 func (d *Driver) Remove(id string) error {
-	// path := path.Join(physPath, id)
+	path := path.Join(physPath, id)
 
 	// log.Infof("Removing layer %s", path)
 
-	// XXX FIXME os.RemoveAll(path)
+	os.RemoveAll(path)
 
 	return nil
 }
@@ -150,7 +150,7 @@ func (d *Driver) Get(id, mountLabel string) (string, error) {
 		log.Warnf("Error while creating a union FS for %s", id)
 		return "", err
 	} else {
-		log.Infof("Created a union FS for %s", id)
+		// log.Infof("Created a union FS for %s", id)
 		unionPath := path.Join(virtPath, id)
 
 		return unionPath, err
@@ -160,7 +160,7 @@ func (d *Driver) Get(id, mountLabel string) (string, error) {
 // Put releases the system resources for the specified id,
 // e.g, unmounting layered filesystem.
 func (d *Driver) Put(id string) error {
-	log.Infof("Releasing union FS for %s", id)
+	// log.Infof("Releasing union FS for %s", id)
 
 	cID := C.CString(id)
 	_, err := C.release_unionfs(cID)
