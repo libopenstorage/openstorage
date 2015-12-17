@@ -21,3 +21,13 @@ or
 ```
 docker daemon --storage-driver=unionfs
 ```
+
+### Building
+
+Make sure you have `fuse` installed.
+
+When building `OSD`, run:
+
+```
+HAVE_UNIONFS=1 EXPERIMENTAL_=1 make
+```

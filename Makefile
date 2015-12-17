@@ -8,6 +8,10 @@ ifeq ($(BUILD_TYPE),debug)
 BUILDFLAGS := -gcflags "-N -l"
 endif
 
+ifdef HAVE_UNIONFS
+TAGS+=" have_unionfs"
+endif
+
 export GO15VENDOREXPERIMENT=1
 
 all: test install
