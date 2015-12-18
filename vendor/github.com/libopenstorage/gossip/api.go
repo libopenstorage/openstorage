@@ -22,16 +22,20 @@ type GossipStore interface {
 	// GetStoreKeys returns all the keys present in the store
 	GetStoreKeys() []types.StoreKey
 
+	// Note that the store has stale (old generation) info for given node id
+	// Retuns true meaning successfully marked, false meaning node does not exist.
+	MarkNodeHasOldGen(nodeId types.NodeId) bool
+
 	// Used for gossiping
 
 	// Update updates the current state of the gossip data
 	// with the newly available data
-	Update(newData types.StoreDiff)
+	Update(newData types.NodeInfoMap)
 
 	// Subset returns the available gossip data for the given
 	// nodes. Node data is returned if there is none available
 	// for a given node
-	Subset(nodes types.StoreNodes) types.StoreDiff
+	Subset(nodes types.StoreNodes) types.NodeInfoMap
 
 	// MetaInfoMap returns meta information for the
 	// current available data
@@ -46,7 +50,7 @@ type GossipStore interface {
 
 	// UpdateNodeStatuses updates the statuses of
 	// the nodes this node has information about
-	UpdateNodeStatuses(time.Duration)
+	UpdateNodeStatuses(time.Duration, time.Duration)
 }
 
 type Gossiper interface {
@@ -75,7 +79,7 @@ type Gossiper interface {
 	Stop()
 
 	// AddNode adds a node to gossip with
-	AddNode(ip string) error
+	AddNode(ip string, id types.NodeId) error
 
 	// RemoveNode removes the node to gossip with
 	RemoveNode(ip string) error
@@ -87,8 +91,8 @@ type Gossiper interface {
 
 // New returns an initialized Gossip node
 // which identifies itself with the given ip
-func New(ip string, selfNodeId types.NodeId) Gossiper {
+func New(ip string, selfNodeId types.NodeId, genNumber uint64) Gossiper {
 	g := new(proto.GossiperImpl)
-	g.Init(ip, selfNodeId)
+	g.Init(ip, selfNodeId, genNumber)
 	return g
 }

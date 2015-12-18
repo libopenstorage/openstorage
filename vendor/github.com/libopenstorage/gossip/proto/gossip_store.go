@@ -8,10 +8,15 @@ import (
 	"github.com/libopenstorage/gossip/types"
 )
 
+const (
+	INVALID_GEN_NUMBER = 0
+)
+
 type GossipStoreImpl struct {
 	sync.Mutex
-	id    types.NodeId
-	kvMap map[types.StoreKey]types.NodeInfoMap
+	id        types.NodeId
+	GenNumber uint64
+	nodeMap   types.NodeInfoMap
 }
 
 func NewGossipStore(id types.NodeId) *GossipStoreImpl {
@@ -25,7 +30,7 @@ func (s *GossipStoreImpl) NodeId() types.NodeId {
 }
 
 func (s *GossipStoreImpl) InitStore(id types.NodeId) {
-	s.kvMap = make(map[types.StoreKey]types.NodeInfoMap)
+	s.nodeMap = make(types.NodeInfoMap)
 	s.id = id
 }
 
@@ -33,36 +38,53 @@ func (s *GossipStoreImpl) UpdateSelf(key types.StoreKey, val interface{}) {
 	s.Lock()
 	defer s.Unlock()
 
-	nodeValue, ok := s.kvMap[key]
+	nodeInfo, ok := s.nodeMap[s.id]
 	if !ok {
-		nodeValue = make(types.NodeInfoMap)
-		s.kvMap[key] = nodeValue
+		nodeInfo = types.NodeInfo{Id: s.id,
+			GenNumber:    s.GenNumber,
+			Value:        make(types.StoreMap),
+			LastUpdateTs: time.Now(),
+			Status:       types.NODE_STATUS_UP}
+		s.nodeMap[s.id] = nodeInfo
 	}
 
-	nodeValue[s.id] = types.NodeInfo{Id: s.id,
-		Value:        val,
-		LastUpdateTs: time.Now(),
-		Status:       types.NODE_STATUS_UP}
+	nodeInfo.Value[key] = val
+	nodeInfo.LastUpdateTs = time.Now()
+	s.nodeMap[s.id] = nodeInfo
+}
+
+func (s *GossipStoreImpl) MarkNodeHasOldGen(nodeId types.NodeId) bool {
+	s.Lock()
+	defer s.Unlock()
+
+	nodeInfo, ok := s.nodeMap[nodeId]
+	if !ok {
+		return false
+	}
+
+	nodeInfo.Status = types.NODE_STATUS_WAITING_FOR_NEW_UPDATE
+	nodeInfo.WaitForGenUpdateTs = time.Now()
+	s.nodeMap[nodeId] = nodeInfo
+	return true
 }
 
 func (s *GossipStoreImpl) GetStoreKeyValue(key types.StoreKey) types.NodeInfoMap {
 	s.Lock()
 	defer s.Unlock()
 
-	// we return an array, indexed by the node id.
-	// Find the max node id.
 	nodeInfoMap := make(types.NodeInfoMap)
-	nodeInfos, ok := s.kvMap[key]
-	if !ok || len(nodeInfos) == 0 {
-		return nodeInfoMap
-	}
-
-	for id, nodeInfo := range nodeInfos {
-		if nodeInfo.Status == types.NODE_STATUS_INVALID {
-			continue
+	for id, nodeInfo := range s.nodeMap {
+		if statusValid(nodeInfo.Status) && nodeInfo.Value != nil {
+			if val, ok := nodeInfo.Value[key]; ok {
+				n := types.NodeInfo{Id: nodeInfo.Id,
+					GenNumber:    nodeInfo.GenNumber,
+					Value:        make(types.StoreMap),
+					LastUpdateTs: nodeInfo.LastUpdateTs,
+					Status:       nodeInfo.Status}
+				n.Value[key] = val
+				nodeInfoMap[id] = n
+			}
 		}
-		// this must create a copy
-		nodeInfoMap[id] = nodeInfo
 	}
 
 	return nodeInfoMap
@@ -72,35 +94,40 @@ func (s *GossipStoreImpl) GetStoreKeys() []types.StoreKey {
 	s.Lock()
 	defer s.Unlock()
 
-	storeKeys := make([]types.StoreKey, len(s.kvMap))
+	keyMap := make(map[types.StoreKey]bool)
+	for _, nodeInfo := range s.nodeMap {
+		if nodeInfo.Value != nil {
+			for key, _ := range nodeInfo.Value {
+				keyMap[key] = true
+			}
+		}
+	}
+	storeKeys := make([]types.StoreKey, len(keyMap))
 	i := 0
-	for key, _ := range s.kvMap {
+	for key, _ := range keyMap {
 		storeKeys[i] = key
 		i++
 	}
 	return storeKeys
 }
 
+func statusValid(s types.NodeStatus) bool {
+	return (s != types.NODE_STATUS_INVALID &&
+		s != types.NODE_STATUS_NEVER_GOSSIPED)
+}
+
 func (s *GossipStoreImpl) MetaInfo() types.StoreMetaInfo {
 	s.Lock()
 	defer s.Unlock()
 
-	mInfo := make(types.StoreMetaInfo, len(s.kvMap))
+	mInfo := make(types.StoreMetaInfo)
 
-	for key, nodeValue := range s.kvMap {
-		metaInfoList := make([]types.NodeMetaInfo, 0, len(nodeValue))
-
-		for key, _ := range nodeValue {
-			if nodeValue[key].Status != types.NODE_STATUS_INVALID {
-				nodeMetaInfo := types.NodeMetaInfo{
-					Id:           nodeValue[key].Id,
-					LastUpdateTs: nodeValue[key].LastUpdateTs}
-				metaInfoList = append(metaInfoList, nodeMetaInfo)
-			}
-		}
-
-		if len(metaInfoList) > 0 {
-			mInfo[key] = types.NodeMetaInfoList{List: metaInfoList}
+	for nodeId, nodeValue := range s.nodeMap {
+		if statusValid(nodeValue.Status) {
+			nodeMetaInfo := types.NodeMetaInfo{
+				Id:           nodeId,
+				LastUpdateTs: nodeValue.LastUpdateTs}
+			mInfo[nodeId] = nodeMetaInfo
 		}
 	}
 
@@ -112,155 +139,142 @@ func (s *GossipStoreImpl) Diff(
 	s.Lock()
 	defer s.Unlock()
 
-	diffNewNodes := make(map[types.StoreKey][]types.NodeId)
-	selfNewNodes := make(map[types.StoreKey][]types.NodeId)
+	diffNewNodes := make([]types.NodeId, 0)
+	selfNewNodes := make([]types.NodeId, 0)
 
-	for key, metaInfoList := range d {
-		selfNodeInfo, ok := s.kvMap[key]
+	for nodeId, nodeMetaInfo := range d {
 
-		metaInfoLen := len(metaInfoList.List)
+		selfNodeInfo, ok := s.nodeMap[nodeId]
 		if !ok {
-			// we do not have info about this key
-			newIds := make([]types.NodeId, metaInfoLen)
-			for i := 0; i < metaInfoLen; i++ {
-				newIds[i] = metaInfoList.List[i].Id
-			}
-			diffNewNodes[key] = newIds
+			// we do not have info about this node
+			diffNewNodes = append(diffNewNodes, nodeId)
 			// nothing to add in selfNewNodes
 			continue
 		}
 
-		diffNewIds := make([]types.NodeId, 0, metaInfoLen)
-		selfNewIds := make([]types.NodeId, 0, metaInfoLen)
-		for i := 0; i < metaInfoLen; i++ {
-			metaId := metaInfoList.List[i].Id
-			_, ok := selfNodeInfo[metaId]
-			switch {
-			case !ok:
-				diffNewIds = append(diffNewIds, metaId)
-
-			// avoid copying the whole node info
-			// the diff has newer node if our status for node is invalid
-			case selfNodeInfo[metaId].Status ==
-				types.NODE_STATUS_INVALID:
-				diffNewIds = append(diffNewIds, metaId)
-
-			// or if its last update timestamp is newer than ours
-			case selfNodeInfo[metaId].LastUpdateTs.Before(
-				metaInfoList.List[i].LastUpdateTs):
-				diffNewIds = append(diffNewIds, metaId)
-
-			case selfNodeInfo[metaId].LastUpdateTs.After(
-				metaInfoList.List[i].LastUpdateTs):
-				selfNewIds = append(selfNewIds, metaId)
-			}
-		}
-
-		if len(diffNewIds) > 0 {
-			diffNewNodes[key] = diffNewIds
-		}
-		if len(selfNewIds) > 0 {
-			selfNewNodes[key] = selfNewIds
+		// the diff has newer node if our status for node is invalid
+		if !statusValid(selfNodeInfo.Status) ||
+			selfNodeInfo.LastUpdateTs.Before(nodeMetaInfo.LastUpdateTs) {
+			diffNewNodes = append(diffNewNodes, nodeId)
+		} else if selfNodeInfo.LastUpdateTs.After(nodeMetaInfo.LastUpdateTs) {
+			selfNewNodes = append(selfNewNodes, nodeId)
 		}
 	}
 
-	// go over keys present with us but not in the meta info
-	for key, nodeInfoMap := range s.kvMap {
-		_, ok := d[key]
-		if ok {
+	// go over nodes present with us but not in the given meta info
+	for nodeId, nodeInfo := range s.nodeMap {
+		if _, ok := d[nodeId]; ok {
 			// we have handled this case above
 			continue
 		}
 
-		// we do not have info about this key
-		newIds := make([]types.NodeId, 0)
-		for nodeId, _ := range nodeInfoMap {
-			if nodeInfoMap[nodeId].Status != types.NODE_STATUS_INVALID {
-				newIds = append(newIds, nodeId)
-			}
+		// peer does not have info about this node
+		if statusValid(nodeInfo.Status) {
+			selfNewNodes = append(selfNewNodes, nodeId)
 		}
-		selfNewNodes[key] = newIds
 	}
 
 	return diffNewNodes, selfNewNodes
 }
 
-func (s *GossipStoreImpl) Subset(nodes types.StoreNodes) types.StoreDiff {
+func (s *GossipStoreImpl) Subset(nodes types.StoreNodes) types.NodeInfoMap {
 	s.Lock()
 	defer s.Unlock()
 
-	subset := make(types.StoreDiff)
+	subset := make(types.NodeInfoMap)
 
-	for key, nodeIdList := range nodes {
-		selfNodeInfos, ok := s.kvMap[key]
-		if !ok {
-			log.Info("No subset for key ", key)
+	for _, nodeId := range nodes {
+		nodeInfo, ok := s.nodeMap[nodeId]
+		if !ok || !statusValid(nodeInfo.Status) {
 			continue
 		}
-
-		// create a new map to hold the diff
-		nodeInfoMap := make(types.NodeInfoMap)
-		for _, id := range nodeIdList {
-			_, ok := selfNodeInfos[id]
-			if !ok {
-				log.Info("Id missing from store, id: ", id, " for key: ", key)
-				continue
-			}
-			nodeInfoMap[id] = selfNodeInfos[id]
+		status := nodeInfo.Status
+		if status == types.NODE_STATUS_WAITING_FOR_NEW_UPDATE ||
+			status == types.NODE_STATUS_DOWN_WAITING_FOR_NEW_UPDATE {
+			status = types.NODE_STATUS_DOWN
 		}
-		// put it in the subset
-		subset[key] = nodeInfoMap
+		n := types.NodeInfo{Id: nodeInfo.Id,
+			GenNumber:    nodeInfo.GenNumber,
+			Value:        make(types.StoreMap),
+			LastUpdateTs: nodeInfo.LastUpdateTs,
+			Status:       status}
+		for key, value := range nodeInfo.Value {
+			n.Value[key] = value
+		}
+		subset[nodeId] = n
 	}
 
 	return subset
 }
 
-func (s *GossipStoreImpl) Update(diff types.StoreDiff) {
+func (s *GossipStoreImpl) Update(diff types.NodeInfoMap) {
 	s.Lock()
 	defer s.Unlock()
 
-	for key, newValue := range diff {
-
-		// XXX/gsangle: delete updates for self node, will this ever happen
-		// given that we always have the most updated info ?
-		delete(newValue, s.id)
-
-		selfValue, ok := s.kvMap[key]
-		if !ok {
-			// create a copy
-			nodeInfoMap := make(types.NodeInfoMap)
-			for id, _ := range newValue {
-				nodeInfoMap[id] = newValue[id]
-			}
-			s.kvMap[key] = nodeInfoMap
+	for id, newNodeInfo := range diff {
+		if id == s.id {
 			continue
 		}
-		for id, info := range newValue {
-			if selfValue[id].Status == types.NODE_STATUS_INVALID ||
-				selfValue[id].LastUpdateTs.Before(info.LastUpdateTs) {
-				selfValue[id] = info
+		selfValue, ok := s.nodeMap[id]
+		if !ok || !statusValid(selfValue.Status) ||
+			selfValue.LastUpdateTs.Before(newNodeInfo.LastUpdateTs) {
+			if selfValue.Status == types.NODE_STATUS_WAITING_FOR_NEW_UPDATE {
+				newNodeInfo.Status = selfValue.Status
 			}
+			s.nodeMap[id] = newNodeInfo
 		}
 	}
 }
 
-func (s *GossipStoreImpl) UpdateNodeStatuses(d time.Duration) {
+func (s *GossipStoreImpl) UpdateNodeStatuses(d time.Duration, sd time.Duration) {
 	s.Lock()
 	defer s.Unlock()
 
-	for _, nodeValue := range s.kvMap {
-		for id, _ := range nodeValue {
-			currTime := time.Now()
-			timeDiff := currTime.Sub(nodeValue[id].LastUpdateTs)
-			if nodeValue[id].Status != types.NODE_STATUS_INVALID &&
-				id != s.id && timeDiff >= d {
-				log.Debugf("Marking node %s down since time diff %v is greater "+
-					"than %v, its last update time was %v and current time is"+
-					" %v", id, timeDiff, d, nodeValue[id].LastUpdateTs, currTime)
-				nodeInfo := nodeValue[id]
-				nodeInfo.Status = types.NODE_STATUS_DOWN
-				nodeValue[id] = nodeInfo
+	for id, nodeInfo := range s.nodeMap {
+		if id == s.id {
+			continue
+		}
+		currTime := time.Now()
+		timeDiff := currTime.Sub(nodeInfo.LastUpdateTs)
+		waitGenTimeDiff := currTime.Sub(nodeInfo.WaitForGenUpdateTs)
+		nodeStatus := nodeInfo.Status
+		switch {
+		case nodeInfo.Status == types.NODE_STATUS_WAITING_FOR_NEW_UPDATE,
+			nodeInfo.Status == types.NODE_STATUS_DOWN_WAITING_FOR_NEW_UPDATE:
+			if nodeInfo.LastUpdateTs.After(nodeInfo.WaitForGenUpdateTs) {
+				// new update has happened since we marked us
+				// waiting for new update
+				if timeDiff >= d {
+					// mark the node down
+					nodeStatus = types.NODE_STATUS_DOWN_WAITING_FOR_NEW_UPDATE
+				} else {
+					// mark the node up
+					nodeStatus = types.NODE_STATUS_UP
+				}
+			} else {
+				// no new update has happened
+				if waitGenTimeDiff >= d {
+					nodeStatus = types.NODE_STATUS_DOWN_WAITING_FOR_NEW_UPDATE
+				} // else maintain the current status
 			}
+		case nodeInfo.Status == types.NODE_STATUS_NEVER_GOSSIPED:
+			if timeDiff >= sd {
+				nodeStatus = types.NODE_STATUS_DOWN
+			} // else node is now marked up
+		case nodeInfo.Status != types.NODE_STATUS_INVALID:
+			if timeDiff >= d {
+				nodeStatus = types.NODE_STATUS_DOWN
+			} // else node is marked up
+		}
+		if nodeInfo.Status != nodeStatus {
+			log.Warnf("Gossip Status change: for node: %v newStatus: %v "+
+				", time diff: %v , limit: %v, its last update time "+
+				"was %v and current time is %v",
+				nodeStatus, id, timeDiff, d, nodeInfo.LastUpdateTs, currTime)
+		}
+		if nodeInfo.Status != nodeStatus {
+			nodeInfo.Status = nodeStatus
+			s.nodeMap[id] = nodeInfo
 		}
 	}
 }

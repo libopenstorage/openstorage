@@ -93,9 +93,10 @@ func NewPeerSelector() PeerSelector {
 	return s
 }
 
-func (g *GossiperImpl) Init(ip string, selfNodeId types.NodeId) {
+func (g *GossiperImpl) Init(ip string, selfNodeId types.NodeId, genNumber uint64) {
 	g.InitStore(selfNodeId)
 	g.name = ip
+	g.GenNumber = genNumber
 	g.nodes = make([]string, 0)
 	g.send_done = make(chan bool, 1)
 	g.rcv_done = make(chan bool, 1)
@@ -144,7 +145,7 @@ func (g *GossiperImpl) NodeDeathInterval() time.Duration {
 	return g.nodeDeathInterval
 }
 
-func (g *GossiperImpl) AddNode(ip string) error {
+func (g *GossiperImpl) AddNode(ip string, id types.NodeId) error {
 	g.nodesLock.Lock()
 	defer g.nodesLock.Unlock()
 
@@ -203,7 +204,7 @@ func (g *GossiperImpl) GetNodes() []string {
 // for which the peer has more latest information available
 func (g *GossiperImpl) getUpdatesFromPeer(conn types.MessageChannel) error {
 
-	var newPeerData types.StoreDiff
+	var newPeerData types.NodeInfoMap
 	err := conn.RcvData(&newPeerData)
 	if err != nil {
 		log.Error("Error fetching the latest peer data", err)
@@ -303,7 +304,7 @@ func (g *GossiperImpl) updateStatusLoop() {
 	for {
 		select {
 		case <-tick:
-			g.UpdateNodeStatuses(g.nodeDeathInterval)
+			g.UpdateNodeStatuses(g.nodeDeathInterval, 4*g.nodeDeathInterval)
 		case <-g.update_done:
 			return
 		}
@@ -376,5 +377,4 @@ func (g *GossiperImpl) gossip() {
 		return
 	}
 	log.Debug("Ending gossip with ", peerNode)
-
 }
