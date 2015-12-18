@@ -36,6 +36,7 @@ type Node struct {
 	Status     Status
 	Containers []docker.APIContainers
 	NodeData   map[string]interface{}
+	GenNumber  uint64
 }
 
 // Cluster represents the state of the cluster.

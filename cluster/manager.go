@@ -118,6 +118,30 @@ func (c *ClusterManager) getCurrentState() *api.Node {
 	return &c.selfNode
 }
 
+func (c *ClusterManager) getLatestNodeConfig(nodeId string) *NodeEntry {
+	kvdb := kvdb.Instance()
+	kvlock, err := kvdb.Lock("cluster/lock", 20)
+	if err != nil {
+		logrus.Warn(" Unable to obtain cluster lock for updating config", err)
+		return nil
+	}
+	defer kvdb.Unlock(kvlock)
+
+	db, err := readDatabase()
+	if err != nil {
+		logrus.Warn("Failed to read the database for updating config")
+		return nil
+	}
+
+	ne, exists := db.NodeEntries[nodeId]
+	if !exists {
+		logrus.Warn("Could not find info for node with id ", nodeId)
+		return nil
+	}
+
+	return &ne
+}
+
 func (c *ClusterManager) initNode(db *Database) (*api.Node, bool) {
 	c.nodeCache[c.selfNode.Id] = *c.getCurrentState()
 
@@ -125,7 +149,7 @@ func (c *ClusterManager) initNode(db *Database) (*api.Node, bool) {
 
 	// Add us into the database.
 	db.NodeEntries[c.config.NodeId] = NodeEntry{Id: c.selfNode.Id,
-		Ip: c.selfNode.Ip}
+		Ip: c.selfNode.Ip, GenNumber: c.selfNode.GenNumber}
 
 	logrus.Infof("Node %s joining cluster... \n\tCluster ID: %s\n\tIP: %s",
 		c.config.NodeId, c.config.ClusterId, c.selfNode.Ip)
@@ -172,7 +196,7 @@ found:
 			} else {
 				// Gossip with this node.
 				logrus.Infof("Connecting to node %s with IP %s.", id, n.Ip)
-				c.g.AddNode(n.Ip + ":9002")
+				c.g.AddNode(n.Ip+":9002", types.NodeId(c.config.NodeId))
 			}
 		}
 	}
@@ -205,29 +229,38 @@ done:
 }
 
 func (c *ClusterManager) heartBeat() {
+	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
 	for {
 		node := c.getCurrentState()
 		c.nodeCache[node.Id] = *node
 
-		c.g.UpdateSelf(types.StoreKey(heartbeatKey+c.config.ClusterId), *node)
+		c.g.UpdateSelf(gossipStoreKey, *node)
 
 		// Process heartbeats from other nodes...
-		gossipValues := c.g.GetStoreKeyValue(types.StoreKey(heartbeatKey + c.config.ClusterId))
+		gossipValues := c.g.GetStoreKeyValue(gossipStoreKey)
 
-		for _, nodeInfo := range gossipValues {
-			n, ok := nodeInfo.Value.(api.Node)
-
-			if !ok {
-				logrus.Warn("Received a bad broadcast packet: %v", nodeInfo.Value)
+		for id, nodeInfo := range gossipValues {
+			if id == types.NodeId(node.Id) {
 				continue
 			}
 
-			if n.Id == node.Id {
-				continue
+			cachedNodeInfo, nodeFoundInCache := c.nodeCache[string(id)]
+			n := cachedNodeInfo
+			if nodeInfo.Value != nil {
+				v, ok := nodeInfo.Value[gossipStoreKey]
+				if !ok || v == nil {
+					logrus.Error("Received a bad broadcast packet: %v", nodeInfo.Value)
+					continue
+				}
+
+				n, ok = v.(api.Node)
+				if !ok {
+					logrus.Error("Received a bad broadcast packet: %v", nodeInfo.Value)
+					continue
+				}
 			}
 
-			_, ok = c.nodeCache[n.Id]
-			if ok {
+			if nodeFoundInCache {
 				if n.Status != api.StatusOk {
 					logrus.Warn("Detected node ", n.Id, " to be unhealthy.")
 
@@ -239,7 +272,29 @@ func (c *ClusterManager) heartBeat() {
 					}
 
 					delete(c.nodeCache, n.Id)
+					continue
 				} else if nodeInfo.Status == types.NODE_STATUS_DOWN {
+					ne := c.getLatestNodeConfig(string(id))
+					if ne != nil && nodeInfo.GenNumber < ne.GenNumber {
+						logrus.Warn("Detected stale update for node ", id,
+							" going down, ignoring it")
+						c.g.MarkNodeHasOldGen(id)
+						delete(c.nodeCache, cachedNodeInfo.Id)
+						continue
+					}
+
+					logrus.Warn("Detected node ", id, " to be offline due to inactivity.")
+
+					n.Status = api.StatusOffline
+					for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
+						err := e.Value.(ClusterListener).Update(&n)
+						if err != nil {
+							logrus.Warn("Failed to notify ", e.Value.(ClusterListener).String())
+						}
+					}
+
+					delete(c.nodeCache, cachedNodeInfo.Id)
+				} else if nodeInfo.Status == types.NODE_STATUS_DOWN_WAITING_FOR_NEW_UPDATE {
 					logrus.Warn("Detected node ", n.Id, " to be offline due to inactivity.")
 
 					n.Status = api.StatusOffline
@@ -250,9 +305,11 @@ func (c *ClusterManager) heartBeat() {
 						}
 					}
 
-					delete(c.nodeCache, n.Id)
+					delete(c.nodeCache, cachedNodeInfo.Id)
 				} else {
-					c.nodeCache[n.Id] = n
+					// node may be up or waiting for new update,
+					// no need to tell listeners as yet.
+					c.nodeCache[cachedNodeInfo.Id] = n
 				}
 			} else if nodeInfo.Status == types.NODE_STATUS_UP {
 				// A node discovered in the cluster.
@@ -284,20 +341,22 @@ func (c *ClusterManager) EnableGossipUpdates() {
 
 func (c *ClusterManager) Start() error {
 	logrus.Info("Cluster manager starting...")
-	kvdb := kvdb.Instance()
 
-	// Start the gossip protocol.
-	// XXX Make the port configurable.
-	gob.Register(api.Node{})
-	c.g = gossip.New("0.0.0.0:9002", types.NodeId(c.config.NodeId))
-	c.g.SetGossipInterval(2 * time.Second)
 	c.gEnabled = true
 	c.selfNode = api.Node{}
+	c.selfNode.GenNumber = uint64(time.Now().UnixNano())
 	c.selfNode.Id = c.config.NodeId
 	c.selfNode.Status = api.StatusOk
 	c.selfNode.Ip, _ = externalIp()
 	c.selfNode.NodeData = make(map[string]interface{})
+	// Start the gossip protocol.
+	// XXX Make the port configurable.
+	gob.Register(api.Node{})
+	c.g = gossip.New("0.0.0.0:9002", types.NodeId(c.config.NodeId),
+		c.selfNode.GenNumber)
+	c.g.SetGossipInterval(2 * time.Second)
 
+	kvdb := kvdb.Instance()
 	kvlock, err := kvdb.Lock("cluster/lock", 60)
 	if err != nil {
 		logrus.Panic("Fatal, Unable to obtain cluster lock.", err)
@@ -323,7 +382,7 @@ func (c *ClusterManager) Start() error {
 		}
 
 		// Update the new state of the cluster in the KV Database
-		err = writeDatabase(&db)
+		err := writeDatabase(&db)
 		if err != nil {
 			logrus.Error("Failed to save the database.", err)
 			logrus.Panic(err)
@@ -345,7 +404,7 @@ func (c *ClusterManager) Start() error {
 			logrus.Panic(err)
 		}
 
-		err = writeDatabase(&db)
+		err := writeDatabase(&db)
 		if err != nil {
 			logrus.Panic(err)
 		}

@@ -22,8 +22,9 @@ type Config struct {
 // NodeEntry is used to discover other nodes in the cluster
 // and setup the gossip protocol with them.
 type NodeEntry struct {
-	Id string
-	Ip string
+	Id        string
+	Ip        string
+	GenNumber uint64
 }
 
 type Database struct {
