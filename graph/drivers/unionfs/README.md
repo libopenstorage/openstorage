@@ -13,13 +13,13 @@ It also uses an optimized way of computing the layer diffs and avoids using the 
 To use this as the graphdriver in Docker with aws as the backend volume provider:
 
 ```
-DOCKER_STORAGE_OPTIONS= -s unionfs
+DOCKER_STORAGE_OPTIONS= -s unionfs --storage-opt unionfs.volume_driver=btrfs
 ```
 
 or
 
 ```
-docker daemon --storage-driver=unionfs
+docker daemon --storage-driver=unionfs --storage-opt unionfs.volume_driver=btrfs
 ```
 
 ### Building
