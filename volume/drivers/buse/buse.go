@@ -79,17 +79,14 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 		IoNotSupported:    &volume.IoNotSupported{},
 		DefaultEnumerator: volume.NewDefaultEnumerator(Name, kvdb.Instance()),
 	}
-
 	inst.buseDevices = make(map[string]*buseDev)
-
-	err := os.MkdirAll(BuseMountPath, 0744)
-	if err != nil {
+	if err := os.MkdirAll(BuseMountPath, 0744); err != nil {
 		return nil, err
 	}
-
 	volumeInfo, err := inst.DefaultEnumerator.Enumerate(
-		api.VolumeLocator{},
-		nil)
+		&api.VolumeLocator{},
+		nil,
+	)
 	if err == nil {
 		for _, info := range volumeInfo {
 			if info.Status == "" {
