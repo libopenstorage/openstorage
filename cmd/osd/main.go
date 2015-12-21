@@ -76,7 +76,10 @@ func start(c *cli.Context) {
 			logrus.Warnf("Failed to initialize docker client: %v", err)
 			return
 		}
-		cm = cluster.New(cfg.Osd.ClusterConfig, kv, dockerClient)
+		if err := cluster.Init(cfg.Osd.ClusterConfig, kv, dockerClient); err != nil {
+			logrus.Errorln(err)
+			return
+		}
 	}
 
 	// Start the volume drivers.
@@ -109,12 +112,9 @@ func start(c *cli.Context) {
 		}
 	}
 
-	if cm != nil {
-		err = cm.Start()
-		if err != nil {
-			logrus.Warnf("Unable to start cluster manager: %v", err)
-			return
-		}
+	if err := cluster.Start(); err != nil {
+		logrus.Warnf("Unable to start cluster manager: %v", err)
+		return
 	}
 
 	// Daemon does not exit.

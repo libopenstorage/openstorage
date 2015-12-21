@@ -301,7 +301,7 @@ func (c *ClusterManager) EnableGossipUpdates() {
 	c.gEnabled = true
 }
 
-func (c *ClusterManager) Start() error {
+func (c *ClusterManager) start() error {
 	logrus.Info("Cluster manager starting...")
 
 	c.gEnabled = true

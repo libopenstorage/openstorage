@@ -11,6 +11,9 @@ import (
 
 var (
 	inst *ClusterManager
+
+	errClusterInitialized = errors.New("openstorage.cluster: already initialized")
+	errClusterNotInitialized = errors.New("openstorage.cluster: not initialized")
 )
 
 type Config struct {
@@ -98,8 +101,11 @@ type Cluster interface {
 	DisableGossipUpdates()
 }
 
-// New instantiates and starts a new cluster manager.
-func New(cfg Config, kv kvdb.Kvdb, dockerClient *docker.Client) *ClusterManager {
+// Init instantiates a new cluster manager.
+func Init(cfg Config, kv kvdb.Kvdb, dockerClient *docker.Client) error {
+	if inst != nil {
+		return errClusterInitialized
+	}
 	inst = &ClusterManager{
 		listeners: list.New(),
 		config:    cfg,
@@ -107,28 +113,24 @@ func New(cfg Config, kv kvdb.Kvdb, dockerClient *docker.Client) *ClusterManager 
 		nodeCache: make(map[string]api.Node),
 		docker:    dockerClient,
 	}
-	return inst
+	return nil
 }
 
 // Start will run the cluster manager daemon.
 func Start() error {
 	if inst == nil {
-		return errors.New("Cluster is not initialized.")
+		return errClusterNotInitialized
 	}
-
-	err := inst.Start()
-	if err != nil {
-		inst = nil
+	if err := inst.start(); err != nil {
 		return err
 	}
-
 	return nil
 }
 
 // Inst returns an instance of an already instantiated cluster manager.
 func Inst() (*ClusterManager, error) {
 	if inst == nil {
-		return nil, errors.New("Cluster is not initialized.")
+		return nil, errClusterNotInitialized
 	}
 	return inst, nil
 }
