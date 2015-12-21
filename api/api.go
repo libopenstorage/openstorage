@@ -1,6 +1,9 @@
 package api
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/fsouza/go-dockerclient"
@@ -56,4 +59,92 @@ type Cluster struct {
 	Status Status
 	Id     string
 	Nodes  []Node
+}
+
+func StatusSimpleValueOf(s string) (Status, error) {
+	obj, err := simpleValueOf("status", Status_value, s)
+	return Status(obj), err
+}
+
+func (x Status) SimpleString() string {
+	return simpleString("status", Status_name, int32(x))
+}
+
+func DriverTypeSimpleValueOf(s string) (DriverType, error) {
+	obj, err := simpleValueOf("driver_type", DriverType_value, s)
+	return DriverType(obj), err
+}
+
+func (x DriverType) SimpleString() string {
+	return simpleString("driver_type", DriverType_name, int32(x))
+}
+
+func FSTypeSimpleValueOf(s string) (FSType, error) {
+	obj, err := simpleValueOf("fs_type", FSType_value, s)
+	return FSType(obj), err
+}
+
+func (x FSType) SimpleString() string {
+	return simpleString("fs_type", FSType_name, int32(x))
+}
+
+func GraphDriverChangeTypeSimpleValueOf(s string) (GraphDriverChangeType, error) {
+	obj, err := simpleValueOf("graph_driver_change_type", GraphDriverChangeType_value, s)
+	return GraphDriverChangeType(obj), err
+}
+
+func (x GraphDriverChangeType) SimpleString() string {
+	return simpleString("graph_driver_change_type", GraphDriverChangeType_name, int32(x))
+}
+
+func VolumeActionParamSimpleValueOf(s string) (VolumeActionParam, error) {
+	obj, err := simpleValueOf("volume_action_param", VolumeActionParam_value, s)
+	return VolumeActionParam(obj), err
+}
+
+func (x VolumeActionParam) SimpleString() string {
+	return simpleString("volume_action_param", VolumeActionParam_name, int32(x))
+}
+
+func VolumeCOSSimpleValueOf(s string) (VolumeCOS, error) {
+	obj, err := simpleValueOf("volume_cos", VolumeCOS_value, s)
+	return VolumeCOS(obj), err
+}
+
+func (x VolumeCOS) SimpleString() string {
+	return simpleString("volume_cos", VolumeCOS_name, int32(x))
+}
+
+func VolumeStateSimpleValueOf(s string) (VolumeState, error) {
+	obj, err := simpleValueOf("volume_state", VolumeState_value, s)
+	return VolumeState(obj), err
+}
+
+func (x VolumeState) SimpleString() string {
+	return simpleString("volume_state", VolumeState_name, int32(x))
+}
+
+func VolumeStatusSimpleValueOf(s string) (VolumeStatus, error) {
+	obj, err := simpleValueOf("volume_status", VolumeStatus_value, s)
+	return VolumeStatus(obj), err
+}
+
+func (x VolumeStatus) SimpleString() string {
+	return simpleString("volume_status", VolumeStatus_name, int32(x))
+}
+
+func simpleValueOf(typeString string, valueMap map[string]int32, s string) (int32, error) {
+	obj, ok := valueMap[strings.ToUpper(fmt.Sprintf("%s_%s", typeString, s))]
+	if !ok {
+		return 0, fmt.Errorf("no openstorage.%s for %s", strings.ToUpper(typeString), s)
+	}
+	return obj, nil
+}
+
+func simpleString(typeString string, nameMap map[int32]string, v int32) string {
+	s, ok := nameMap[v]
+	if !ok {
+		return strconv.Itoa(int(v))
+	}
+	return strings.TrimPrefix(strings.ToLower(s), fmt.Sprintf("%s_", strings.ToLower(typeString)))
 }
