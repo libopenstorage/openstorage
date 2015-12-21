@@ -27,7 +27,7 @@ enum DriverType {
   DRIVER_TYPE_GRAPH = 5;
 }
 
-// CHANGE: was Filesystem, no NONE
+// CHANGE: was Filesystem, no NONE, was a string
 enum FSType {
   FS_TYPE_NONE = 0;
   FS_TYPE_BTRFS = 1;
