@@ -45,28 +45,3 @@ type Cluster struct {
 	Id     string
 	Nodes  []Node
 }
-
-// VolumeActionParam desired action on volume
-type ClusterActionParam int
-
-// ClusterStateAction is the body of the REST request to specify desired actions
-type ClusterStateAction struct {
-	// Remove a node or a set of nodes
-	Remove ClusterActionParam `json:"remove"`
-
-	// Shutdown a node or a set of nodes
-	Shutdown ClusterActionParam `json:"shutdown"`
-}
-
-// ClusterStateResponse is the body of the REST response
-type ClusterStateResponse struct {
-	// VolumeStateRequest the current state of the volume
-	ClusterStateAction
-	ClusterResponse
-}
-
-// VolumeResponse is embedded in all REST responses.
-type ClusterResponse struct {
-	// Error is "" on success or contains the error message on failure.
-	Error string `json:"error"`
-}

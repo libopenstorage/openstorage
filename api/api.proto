@@ -1,11 +1,14 @@
 syntax = "proto3";
 
+import "google/protobuf/timestamp.proto";
+
 package openstorage.api;
 
 option go_package = "api";
 option java_multiple_files = true;
 option java_package = "com.openstorage.api";
 
+// CHANGE: was Status, no NONE, was 1 << iota
 enum ClusterStatus {
   CLUSTER_STATUS_NONE = 0;
   CLUSTER_STATUS_INIT = 1;
@@ -14,14 +17,17 @@ enum ClusterStatus {
   CLUSTER_STATUS_ERROR = 4;
 }
 
+// CHANGE: no NONE, was 1 << iota
 enum DriverType {
   DRIVER_TYPE_NONE = 0;
   DRIVER_TYPE_FILE = 1;
-  DRIVER_TYPE_OBJECT = 2;
-  DRIVER_TYPE_CLUSTERED = 3;
-  DRIVER_TYPE_GRAPH = 4;
+  DRIVER_TYPE_BLOCK = 2;
+  DRIVER_TYPE_OBJECT = 3;
+  DRIVER_TYPE_CLUSTERED = 4;
+  DRIVER_TYPE_GRAPH = 5;
 }
 
+// CHANGE: was Filesystem, no NONE
 enum FSType {
   FS_TYPE_NONE = 0;
   FS_TYPE_BTRFS = 1;
@@ -33,6 +39,15 @@ enum FSType {
   FS_TYPE_ZFS = 7;
 }
 
+// CHANGE: was an int, 0 was modified, 1 was added, 2 was deleted
+enum GraphDriverChangeType {
+  GRAPH_DRIVER_CHANGE_TYPE_NONE = 0;
+  GRAPH_DRIVER_CHANGE_TYPE_MODIFIED = 1;
+  GRAPH_DRIVER_CHANGE_TYPE_ADDED = 2;
+  GRAPH_DRIVER_CHANGE_TYPE_DELETED = 3;
+}
+
+// CHANGE: no NONE
 enum VolumeActionParam {
   VOLUME_ACTION_PARAM_NONE = 0;
 	// User should ignore the value of the parameter
@@ -44,6 +59,7 @@ enum VolumeActionParam {
 }
 
 // VolumeCOS represents a class of service for a volume.
+// CHANGE: min is new (originally none) and was 0, medium was 5, max was 9
 enum VolumeCOS {
   VOLUME_COS_NONE = 0;
   // A minimum level of COS.
@@ -55,6 +71,7 @@ enum VolumeCOS {
 }
 
 // VolumeState represents the state of a volume.
+// CHANGE: no NONE, was 1 << iota (and was bit or'ed/and'ed)
 enum VolumeState {
   VOLUME_STATE_NONE = 0;
 	// Volume is transitioning to new state
@@ -75,6 +92,7 @@ enum VolumeState {
 }
 
 // VolumeStatus represents a health status for a volume.
+// CHANGE: no NONE, was a string
 enum VolumeStatus {
   VOLUME_STATUS_NONE = 0;
   // Volume is not present
@@ -86,4 +104,167 @@ enum VolumeStatus {
 	// Volume is up but with degraded performance
   // In a RAID group, this may indicate a problem with one or more drives
   VOLUME_STATUS_DEGRADED = 4;
+}
+
+// VolumeLocator is a structure that is attached to a volume
+// and is used to carry opaque metadata.
+message VolumeLocator {
+	// User friendly identifier
+  string name = 1;
+	// A set of name-value pairs that acts as search filters
+  map<string, string> volume_labels = 2;
+}
+
+message Source {
+  // A volume id, if specified will create a clone of the parent.
+  string parent = 1;
+	// Seed will seed the volume from the specified URI
+  // Any additional config for the source comes from the labels in the spec
+  string seed = 2;
+}
+
+// VolumeSpec has the properties needed to create a volume.
+message VolumeSpec {
+	// Ephemeral storage
+  bool ephemeral = 1;
+	// Thin provisioned volume size in bytes
+  uint64 size = 2;
+	// Format disk with this FSType
+  FSType format = 3;
+	// Block size for filesystem
+  int64 block_size = 4;
+	// Specifies the number of nodes that are
+	// allowed to fail, and yet data is available
+	// A value of 0 implies that data is not erasure coded,
+	// a failure of a node will lead to data loss
+  int64 ha_level = 5;
+  // The COS
+  VolumeCOS cos = 6;
+	// Perform dedupe on this disk
+  bool dedupe = 7;
+	// SnapshotInterval in minutes, set to 0 to disable snapshots
+  uint32 snapshot_interval = 8;
+	// Volume configuration labels
+  map<string, string> config_labels = 9;
+}
+
+// Volume represents a live, created volume.
+message Volume {
+  // Self referential volume ID
+  string id = 1;
+  Source source = 2;
+  bool readonly = 3;
+  // User specified locator
+  VolumeLocator locator = 4;
+	// Volume creation time
+  google.protobuf.Timestamp ctime = 5;
+	// User specified VolumeSpec
+  VolumeSpec spec = 6;
+	// Volume usage
+  uint64 usage = 7;
+	// Time when an integrity check for run
+  google.protobuf.Timestamp last_scan = 8;
+	// Format FSType type if any
+  FSType format = 9;
+  VolumeStatus status = 10;
+  VolumeState state = 11;
+  // Machine ID (node) on which this volume is attached
+  // Machine ID is a node instance identifier for clustered systems.
+  string attached_on = 12;
+  string device_path = 14;
+  string attach_path = 15;
+	// Set of machine IDs (nodes) to which this volume is erasure coded - for clustered storage arrays
+  repeated string replica_set = 16;
+	// Last recorded error
+  string error = 17;
+}
+
+message Stats {
+	// Reads completed successfully
+  int64 reads = 1;
+	// Time spent in reads in ms
+  int64 read_ms = 2;
+  int64 read_bytes = 3;
+	// Writes completed successfully
+  int64 writes = 4;
+	// Time spent in writes in ms
+  int64 write_ms = 5;
+  int64 write_bytes = 6;
+	// IOs curently in progress
+  int64 io_progress = 7;
+	// Time spent doing IOs ms
+  int64 io_ms = 8;
+}
+
+// TODO: what?
+message Alerts {
+}
+
+message VolumeCreateRequest {
+	// User specified volume name and labels
+  VolumeLocator locator = 1;
+	// Source to create volume
+  Source source = 2;
+	// The storage spec for the volume
+  VolumeSpec spec = 3;
+}
+
+// CHANGE: error was embedded VolumeResponse
+message VolumeCreateResponse {
+	// ID of the newly created volume
+  string id = 1;
+  string error = 2;
+}
+
+// VolumeStateAction specifies desired actions.
+message VolumeStateAction {
+	// Attach or Detach volume
+  VolumeActionParam attach = 1;
+	// Mount or unmount volume
+  VolumeActionParam mount = 2;
+  string mount_path = 3;
+	// Device path returned in attach
+  string device_path = 4;
+}
+
+message VolumeSetRequest {
+	// User specified volume name and labels
+  VolumeLocator locator = 1;
+	// The storage spec for the volume
+  VolumeSpec spec = 2;
+	// State modification on this volume.
+  VolumeStateAction action = 3;
+}
+
+// CHANGE: error was embedded VolumeResponse
+message VolumeSetResponse {
+  Volume volume = 1;
+  string error = 2;
+}
+
+message SnapCreateRequest {
+  // volume id
+  string id = 1;
+  VolumeLocator locator = 2;
+  bool readonly = 3;
+}
+
+message SnapCreateResponse {
+  VolumeCreateResponse volume_create_response = 1;
+}
+
+message VolumeInfo {
+  string volume_id = 1;
+  string path = 2;
+  VolumeSpec storage = 3;
+}
+
+// GraphDriverChanges represent a list of changes between the filesystem layers
+// specified by the ID and Parent.  // Parent may be an empty string, in which
+// case there is no parent.
+// Where the Path is the filesystem path within the layered filesystem
+// CHANGE: kind was an int
+message GraphDriverChanges {
+  string path = 1;
+  GraphDriverChangeType kind = 2;
 }
