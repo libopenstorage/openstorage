@@ -17,7 +17,7 @@ import (
 
 const (
 	Name       = "vfs"
-	Type       = api.File
+	Type       = api.DriverType_DRIVER_TYPE_FILE
 	volumeBase = "/var/lib/osd/"
 )
 
