@@ -21,7 +21,7 @@ type Route struct {
 type restServer interface {
 	Routes() []*Route
 	String() string
-	logReq(request string, id string) *log.Entry
+	logRequest(request string, id string) *log.Entry
 	sendError(request string, id string, w http.ResponseWriter, msg string, code int)
 }
 
@@ -31,7 +31,7 @@ type restBase struct {
 	name    string
 }
 
-func (rest *restBase) logReq(request string, id string) *log.Entry {
+func (rest *restBase) logRequest(request string, id string) *log.Entry {
 	return log.WithFields(log.Fields{
 		"Driver":  rest.name,
 		"Request": request,
@@ -39,7 +39,7 @@ func (rest *restBase) logReq(request string, id string) *log.Entry {
 	})
 }
 func (rest *restBase) sendError(request string, id string, w http.ResponseWriter, msg string, code int) {
-	rest.logReq(request, id).Warn(code, " ", msg)
+	rest.logRequest(request, id).Warn(code, " ", msg)
 	http.Error(w, msg, code)
 }
 
