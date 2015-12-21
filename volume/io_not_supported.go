@@ -1,23 +1,25 @@
 package volume
 
-import "github.com/libopenstorage/openstorage/api"
+type IoNotSupported struct {}
 
-type IoNotSupported struct {
-}
-
-func (io *IoNotSupported) Read(volumeID api.VolumeID,
-	buf []byte,
-	sz uint64,
-	offset int64) (int64, error) {
+func (io *IoNotSupported) Read(
+	volumeID string,
+	buffer []byte,
+	size uint64,
+	offset int64,
+) (int64, error) {
 	return 0, ErrNotSupported
 }
 
-func (io *IoNotSupported) Write(volumeID api.VolumeID,
-	buf []byte,
-	sz uint64,
-	offset int64) (int64, error) {
+func (io *IoNotSupported) Write(
+	volumeID string,
+	buffer []byte,
+	size uint64,
+	offset int64,
+) (int64, error) {
 	return 0, ErrNotSupported
 }
-func (io *IoNotSupported) Flush(volumeID api.VolumeID) error {
+
+func (io *IoNotSupported) Flush(volumeID string) error {
 	return ErrNotSupported
 }

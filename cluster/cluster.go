@@ -6,7 +6,6 @@ import (
 
 	"github.com/fsouza/go-dockerclient"
 	"github.com/libopenstorage/openstorage/api"
-
 	"github.com/portworx/kvdb"
 )
 

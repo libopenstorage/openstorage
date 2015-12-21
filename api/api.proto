@@ -209,11 +209,15 @@ message VolumeCreateRequest {
   VolumeSpec spec = 3;
 }
 
+message VolumeResponse {
+  string error = 1;
+}
+
 // CHANGE: error was embedded VolumeResponse
 message VolumeCreateResponse {
 	// ID of the newly created volume
   string id = 1;
-  string error = 2;
+  VolumeResponse volume_response = 2;
 }
 
 // VolumeStateAction specifies desired actions.
@@ -239,7 +243,7 @@ message VolumeSetRequest {
 // CHANGE: error was embedded VolumeResponse
 message VolumeSetResponse {
   Volume volume = 1;
-  string error = 2;
+  VolumeResponse volume_response = 2;
 }
 
 message SnapCreateRequest {

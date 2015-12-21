@@ -36,44 +36,6 @@ type ClusterManager struct {
 	selfNode  api.Node
 }
 
-func externalIp() (string, error) {
-	ifaces, err := net.Interfaces()
-	if err != nil {
-		return "", err
-	}
-	for _, iface := range ifaces {
-		if iface.Flags&net.FlagUp == 0 {
-			continue // interface down
-		}
-		if iface.Flags&net.FlagLoopback != 0 {
-			continue // loopback interface
-		}
-		addrs, err := iface.Addrs()
-		if err != nil {
-			return "", err
-		}
-		for _, addr := range addrs {
-			var ip net.IP
-			switch v := addr.(type) {
-			case *net.IPNet:
-				ip = v.IP
-			case *net.IPAddr:
-				ip = v.IP
-			}
-			if ip == nil || ip.IsLoopback() {
-				continue
-			}
-			ip = ip.To4()
-			if ip == nil {
-				continue // not an ipv4 address
-			}
-			return ip.String(), nil
-		}
-	}
-
-	return "", errors.New("Node not connected to the network.")
-}
-
 func (c *ClusterManager) LocateNode(nodeID string) (api.Node, error) {
 	n, ok := c.nodeCache[nodeID]
 
@@ -261,7 +223,7 @@ func (c *ClusterManager) heartBeat() {
 			}
 
 			if nodeFoundInCache {
-				if n.Status != api.StatusOk {
+				if n.Status != api.Status_STATUS_OK {
 					logrus.Warn("Detected node ", n.Id, " to be unhealthy.")
 
 					for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
@@ -285,7 +247,7 @@ func (c *ClusterManager) heartBeat() {
 
 					logrus.Warn("Detected node ", id, " to be offline due to inactivity.")
 
-					n.Status = api.StatusOffline
+					n.Status = api.Status_STATUS_OFFLINE
 					for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
 						err := e.Value.(ClusterListener).Update(&n)
 						if err != nil {
@@ -297,7 +259,7 @@ func (c *ClusterManager) heartBeat() {
 				} else if nodeInfo.Status == types.NODE_STATUS_DOWN_WAITING_FOR_NEW_UPDATE {
 					logrus.Warn("Detected node ", n.Id, " to be offline due to inactivity.")
 
-					n.Status = api.StatusOffline
+					n.Status = api.Status_STATUS_OFFLINE
 					for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
 						err := e.Value.(ClusterListener).Update(&n)
 						if err != nil {
@@ -346,7 +308,7 @@ func (c *ClusterManager) Start() error {
 	c.selfNode = api.Node{}
 	c.selfNode.GenNumber = uint64(time.Now().UnixNano())
 	c.selfNode.Id = c.config.NodeId
-	c.selfNode.Status = api.StatusOk
+	c.selfNode.Status = api.Status_STATUS_OK
 	c.selfNode.Ip, _ = externalIp()
 	c.selfNode.NodeData = make(map[string]interface{})
 	// Start the gossip protocol.
@@ -367,11 +329,11 @@ func (c *ClusterManager) Start() error {
 		logrus.Panic(err)
 	}
 
-	if db.Status == api.StatusInit {
+	if db.Status == api.Status_STATUS_INIT {
 		logrus.Info("Will initialize a new cluster.")
 
-		c.status = api.StatusOk
-		db.Status = api.StatusOk
+		c.status = api.Status_STATUS_OK
+		db.Status = api.Status_STATUS_OK
 		self, _ := c.initNode(&db)
 
 		err = c.initCluster(&db, self, false)
@@ -392,10 +354,10 @@ func (c *ClusterManager) Start() error {
 		if err != nil {
 			logrus.Panic("Fatal, unable to unlock cluster... Did something take too long to initialize?", err)
 		}
-	} else if db.Status&api.StatusOk > 0 {
+	} else if db.Status&api.Status_STATUS_OK > 0 {
 		logrus.Info("Cluster state is OK... Joining the cluster.")
 
-		c.status = api.StatusOk
+		c.status = api.Status_STATUS_OK
 		self, exist := c.initNode(&db)
 
 		err = c.joinCluster(&db, self, exist)
@@ -447,4 +409,42 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 func (c *ClusterManager) Shutdown(cluster bool, nodes []api.Node) error {
 	// TODO
 	return nil
+}
+
+func externalIp() (string, error) {
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return "", err
+	}
+	for _, iface := range ifaces {
+		if iface.Flags&net.FlagUp == 0 {
+			continue // interface down
+		}
+		if iface.Flags&net.FlagLoopback != 0 {
+			continue // loopback interface
+		}
+		addrs, err := iface.Addrs()
+		if err != nil {
+			return "", err
+		}
+		for _, addr := range addrs {
+			var ip net.IP
+			switch v := addr.(type) {
+			case *net.IPNet:
+				ip = v.IP
+			case *net.IPAddr:
+				ip = v.IP
+			}
+			if ip == nil || ip.IsLoopback() {
+				continue
+			}
+			ip = ip.To4()
+			if ip == nil {
+				continue // not an ipv4 address
+			}
+			return ip.String(), nil
+		}
+	}
+
+	return "", errors.New("Node not connected to the network.")
 }

@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/server"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/volume"
@@ -23,7 +22,7 @@ func makeRequest(t *testing.T) {
 		t.Fatalf("Failed to create client: %v", err)
 	}
 	d := c.VolumeDriver()
-	_, err = d.Inspect([]api.VolumeID{api.VolumeID("foo")})
+	_, err = d.Inspect([]string{"foo"})
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}

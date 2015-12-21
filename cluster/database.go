@@ -13,8 +13,10 @@ import (
 func readDatabase() (Database, error) {
 	kvdb := kvdb.Instance()
 
-	db := Database{Status: api.StatusInit,
-		NodeEntries: make(map[string]NodeEntry)}
+	db := Database{
+		Status: api.Status_STATUS_INIT,
+		NodeEntries: make(map[string]NodeEntry),
+	}
 
 	kv, err := kvdb.Get("cluster/database")
 	if err != nil && !strings.Contains(err.Error(), "Key not found") {

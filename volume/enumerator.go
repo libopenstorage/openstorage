@@ -17,8 +17,8 @@ const (
 )
 
 type Store interface {
-	// Lock volume specified by volID.
-	Lock(volID api.VolumeID) (interface{}, error)
+	// Lock volume specified by volumeID.
+	Lock(volumeID string) (interface{}, error)
 
 	// Lock volume with token obtained from call to Lock.
 	Unlock(token interface{}) error
@@ -26,14 +26,14 @@ type Store interface {
 	// CreateVol returns error if volume with the same ID already existe.
 	CreateVol(vol *api.Volume) error
 
-	// GetVol from volID.
-	GetVol(volID api.VolumeID) (*api.Volume, error)
+	// GetVol from volumeID.
+	GetVol(volumeID string) (*api.Volume, error)
 
 	// UpdateVol with vol
 	UpdateVol(vol *api.Volume) error
 
 	// DeleteVol. Returns error if volume does not exist.
-	DeleteVol(volID api.VolumeID) error
+	DeleteVol(volumeID string) error
 }
 
 // DefaultEnumerator for volume information. Implements the Enumerator Interface
@@ -44,15 +44,15 @@ type DefaultEnumerator struct {
 	volKeyPrefix  string
 }
 
-func (e *DefaultEnumerator) lockKey(volID api.VolumeID) string {
-	return e.volKeyPrefix + string(volID) + ".lock"
+func (e *DefaultEnumerator) lockKey(volumeID string) string {
+	return e.volKeyPrefix + volumeID + ".lock"
 }
 
-func (e *DefaultEnumerator) volKey(volID api.VolumeID) string {
-	return e.volKeyPrefix + string(volID)
+func (e *DefaultEnumerator) volKey(volumeID string) string {
+	return e.volKeyPrefix + volumeID
 }
 
-func hasSubset(set api.Labels, subset api.Labels) bool {
+func hasSubset(set map[string]string, subset map[string]string) bool {
 	if subset == nil || len(subset) == 0 {
 		return true
 	}
@@ -67,19 +67,23 @@ func hasSubset(set api.Labels, subset api.Labels) bool {
 	return true
 }
 
-func contains(volID api.VolumeID, set []api.VolumeID) bool {
+func contains(volumeID string, set []string) bool {
 	if len(set) == 0 {
 		return true
 	}
 	for _, v := range set {
-		if v == volID {
+		if v == volumeID {
 			return true
 		}
 	}
 	return false
 }
 
-func match(v *api.Volume, locator api.VolumeLocator, configLabels api.Labels) bool {
+func match(
+	v *api.Volume,
+	locator *api.VolumeLocator,
+	configLabels map[string]string,
+) bool {
 	if locator.Name != "" && v.Locator.Name != locator.Name {
 		return false
 	}
@@ -99,9 +103,9 @@ func NewDefaultEnumerator(driver string, kvdb kvdb.Kvdb) *DefaultEnumerator {
 	}
 }
 
-// Lock volume specified by volID.
-func (e *DefaultEnumerator) Lock(volID api.VolumeID) (interface{}, error) {
-	return e.kvdb.Lock(e.lockKey(volID), 10)
+// Lock volume specified by volumeID.
+func (e *DefaultEnumerator) Lock(volumeID string) (interface{}, error) {
+	return e.kvdb.Lock(e.lockKey(volumeID), 10)
 }
 
 // Lock volume with token obtained from call to Lock.
@@ -115,58 +119,56 @@ func (e *DefaultEnumerator) Unlock(token interface{}) error {
 
 // CreateVol returns error if volume with the same ID already existe.
 func (e *DefaultEnumerator) CreateVol(vol *api.Volume) error {
-	_, err := e.kvdb.Create(e.volKey(vol.ID), vol, 0)
+	_, err := e.kvdb.Create(e.volKey(vol.Id), vol, 0)
 	return err
 }
 
-// GetVol from volID.
-func (e *DefaultEnumerator) GetVol(volID api.VolumeID) (*api.Volume, error) {
+// GetVol from volumeID.
+func (e *DefaultEnumerator) GetVol(volumeID string) (*api.Volume, error) {
 	var v api.Volume
-	_, err := e.kvdb.GetVal(e.volKey(volID), &v)
-
+	_, err := e.kvdb.GetVal(e.volKey(volumeID), &v)
 	return &v, err
 }
 
 // UpdateVol with vol
 func (e *DefaultEnumerator) UpdateVol(vol *api.Volume) error {
-	_, err := e.kvdb.Put(e.volKey(vol.ID), vol, 0)
+	_, err := e.kvdb.Put(e.volKey(vol.Id), vol, 0)
 	return err
 }
 
 // DeleteVol. Returns error if volume does not exist.
-func (e *DefaultEnumerator) DeleteVol(volID api.VolumeID) error {
-	_, err := e.kvdb.Delete(e.volKey(volID))
+func (e *DefaultEnumerator) DeleteVol(volumeID string) error {
+	_, err := e.kvdb.Delete(e.volKey(volumeID))
 	return err
 }
 
 // Inspect specified volumes.
 // Returns slice of volumes that were found.
-func (e *DefaultEnumerator) Inspect(ids []api.VolumeID) ([]api.Volume, error) {
-	var err error
-	var vol *api.Volume
-	vols := make([]api.Volume, 0, len(ids))
-
-	for _, v := range ids {
-		vol, err = e.GetVol(v)
+func (e *DefaultEnumerator) Inspect(ids []string) ([]api.Volume, error) {
+	volumes := make([]api.Volume, 0, len(ids))
+	for _, id := range ids {
+		volume, err := e.GetVol(id)
 		// XXX Distinguish between ENOENT and an internal error from KVDB
 		if err != nil {
 			continue
 		}
-		vols = append(vols, *vol)
+		volumes = append(volumes, *volume)
 	}
-	return vols, nil
+	return volumes, nil
 }
 
 // Enumerate volumes that map to the volumeLocator. Locator fields may be regexp.
 // If locator fields are left blank, this will return all volumee.
-func (e *DefaultEnumerator) Enumerate(locator api.VolumeLocator,
-	labels api.Labels) ([]api.Volume, error) {
+func (e *DefaultEnumerator) Enumerate(
+	locator *api.VolumeLocator,
+	labels map[string]string,
+) ([]api.Volume, error) {
 
 	kvp, err := e.kvdb.Enumerate(e.volKeyPrefix)
 	if err != nil {
 		return nil, err
 	}
-	vols := make([]api.Volume, 0, len(kvp))
+	volumes := make([]api.Volume, 0, len(kvp))
 	for _, v := range kvp {
 		var elem api.Volume
 		err = json.Unmarshal(v.Value, &elem)
@@ -174,21 +176,22 @@ func (e *DefaultEnumerator) Enumerate(locator api.VolumeLocator,
 			return nil, err
 		}
 		if match(&elem, locator, labels) {
-			vols = append(vols, elem)
+			volumes = append(volumes, elem)
 		}
 	}
-	return vols, nil
+	return volumes, nil
 }
 
 // SnapEnumerate for specified volume
 func (e *DefaultEnumerator) SnapEnumerate(
-	volIDs []api.VolumeID,
-	labels api.Labels) ([]api.Volume, error) {
+	volumeIDs []string,
+	labels map[string]string,
+) ([]api.Volume, error) {
 	kvp, err := e.kvdb.Enumerate(e.volKeyPrefix)
 	if err != nil {
 		return nil, err
 	}
-	vols := make([]api.Volume, 0, len(kvp))
+	volumes := make([]api.Volume, 0, len(kvp))
 	for _, v := range kvp {
 		var elem api.Volume
 		err = json.Unmarshal(v.Value, &elem)
@@ -196,13 +199,13 @@ func (e *DefaultEnumerator) SnapEnumerate(
 			return nil, err
 		}
 		if elem.Source == nil ||
-			elem.Source.Parent == api.BadVolumeID ||
-			(volIDs != nil && !contains(elem.Source.Parent, volIDs)) {
+			elem.Source.Parent == "" ||
+			(volumeIDs != nil && !contains(elem.Source.Parent, volumeIDs)) {
 			continue
 		}
 		if hasSubset(elem.Locator.VolumeLabels, labels) {
-			vols = append(vols, elem)
+			volumes = append(volumes, elem)
 		}
 	}
-	return vols, nil
+	return volumes, nil
 }
