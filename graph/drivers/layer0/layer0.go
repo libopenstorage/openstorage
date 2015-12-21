@@ -35,7 +35,7 @@ type Layer0Vol struct {
 	// path where the external volume is mounted.
 	path string
 	// volumeID mapping to this external volume
-	volumeID api.VolumeID
+	volumeID string
 	// ref keeps track of mount and unmounts.
 	ref int32
 }
@@ -55,7 +55,7 @@ type Layer0 struct {
 // Layer0Graphdriver options. This should be passed in as a st
 const (
 	Name               = "layer0"
-	Type               = api.Graph
+	Type               = api.DriverType_DRIVER_TYPE_GRAPH
 	Layer0VolumeDriver = "layer0.volume_driver"
 )
 
@@ -152,7 +152,7 @@ func (l *Layer0) create(id, parent string) (string, *Layer0Vol, error) {
 	}
 
 	// Query volume for Layer 0
-	vols, err := l.volDriver.Enumerate(api.VolumeLocator{Name: vol.parent}, nil)
+	vols, err := l.volDriver.Enumerate(&api.VolumeLocator{Name: vol.parent}, nil)
 
 	// If we don't find a volume configured for this image,
 	// then don't track layer0
@@ -180,23 +180,23 @@ func (l *Layer0) create(id, parent string) (string, *Layer0Vol, error) {
 	os.MkdirAll(mountPath, 0755)
 
 	// If this is a block driver, first attach the volume.
-	if l.volDriver.Type()&api.Block != 0 {
-		_, err := l.volDriver.Attach(vols[index].ID)
+	if l.volDriver.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
+		_, err := l.volDriver.Attach(vols[index].Id)
 		if err != nil {
-			logrus.Errorf("Failed to attach volume %v", vols[index].ID)
+			logrus.Errorf("Failed to attach volume %v", vols[index].Id)
 			delete(l.volumes, id)
 			return id, nil, nil
 		}
 	}
-	err = l.volDriver.Mount(vols[index].ID, mountPath)
+	err = l.volDriver.Mount(vols[index].Id, mountPath)
 	if err != nil {
 		logrus.Errorf("Failed to mount volume %v at path %v",
-			vols[index].ID, mountPath)
+			vols[index].Id, mountPath)
 		delete(l.volumes, id)
 		return id, nil, nil
 	}
 	vol.path = mountPath
-	vol.volumeID = vols[index].ID
+	vol.volumeID = vols[index].Id
 	vol.ref = 1
 
 	return l.realID(id), vol, nil
@@ -243,7 +243,7 @@ func (l *Layer0) Remove(id string) error {
 			}
 			l.Driver.Remove(l.realID(id))
 			err = l.volDriver.Unmount(v.volumeID, v.path)
-			if l.volDriver.Type()&api.Block != 0 {
+			if l.volDriver.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
 				_ = l.volDriver.Detach(v.volumeID)
 			}
 			err = os.RemoveAll(v.path)

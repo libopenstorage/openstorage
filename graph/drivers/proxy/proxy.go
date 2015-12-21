@@ -8,9 +8,9 @@ import (
 
 const (
 	Name = "proxy"
-	Type = api.Graph
+	Type = api.DriverType_DRIVER_TYPE_GRAPH
 )
 
 func init() {
-	graph.Register("proxy", overlay.Init)
+	graph.Register(Name, overlay.Init)
 }

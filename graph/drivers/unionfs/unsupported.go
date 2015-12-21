@@ -14,7 +14,7 @@ import (
 
 const (
 	Name = "unionfs"
-	Type = api.Graph
+	Type = api.DriverType_DRIVER_TYPE_GRAPH
 )
 
 var (
