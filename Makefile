@@ -50,7 +50,7 @@ vet:
 
 errcheck:
 	go get -v github.com/kisielk/errcheck
-	errcheck $(PKGS)
+	errcheck -tags "$(TAGS)" $(PKGS)
 
 pretest: lint vet errcheck
 
