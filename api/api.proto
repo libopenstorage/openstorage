@@ -8,13 +8,13 @@ option go_package = "api";
 option java_multiple_files = true;
 option java_package = "com.openstorage.api";
 
-// CHANGE: was Status, no NONE, was 1 << iota
-enum ClusterStatus {
-  CLUSTER_STATUS_NONE = 0;
-  CLUSTER_STATUS_INIT = 1;
-  CLUSTER_STATUS_OK = 2;
-  CLUSTER_STATUS_OFFLINE = 3;
-  CLUSTER_STATUS_ERROR = 4;
+// CHANGE: no NONE, was 1 << iota
+enum Status {
+  STATUS_NONE = 0;
+  STATUS_INIT = 1;
+  STATUS_OK = 2;
+  STATUS_OFFLINE = 3;
+  STATUS_ERROR = 4;
 }
 
 // CHANGE: no NONE, was 1 << iota
