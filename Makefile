@@ -66,9 +66,9 @@ docker-test: docker-build
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-e AWS_ACCESS_KEY_ID \
 		-e AWS_SECRET_ACCESS_KEY \
-		-e TAGS \
-		-e PKGS \
-		-e BUILDFLAGS \
+		-e "TAGS=$(TAGS)" \
+		-e "PKGS=$(PKGS)" \
+		-e "BUILDFLAGS=$(BUILDFLAGS)" \
 		openstorage/osd-dev \
 			make test
 
@@ -81,9 +81,9 @@ docker-build-osd-internal:
 docker-build-osd: docker-build
 	docker run \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		-e TAGS \
-		-e PKGS \
-		-e BUILDFLAGS \
+		-e "TAGS=$(TAGS)" \
+		-e "PKGS=$(PKGS)" \
+		-e "BUILDFLAGS=$(BUILDFLAGS)" \
 		openstorage/osd-dev \
 			make docker-build-osd-internal
 
