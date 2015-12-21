@@ -13,6 +13,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/libopenstorage/openstorage/api"
@@ -74,10 +75,14 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 	creds := credentials.NewStaticCredentials(accessKey, secretKey, "")
 	region := zone[:len(zone)-1]
 	d := &Driver{
-		ec2: ec2.New(&aws.Config{
-			Region:      &region,
-			Credentials: creds,
-		}),
+		ec2: ec2.New(
+			session.New(
+				&aws.Config{
+					Region:      &region,
+					Credentials: creds,
+				},
+			),
+		),
 		md: &Metadata{
 			zone:     zone,
 			instance: instance,

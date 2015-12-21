@@ -7,10 +7,18 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 )
 
 type system struct {
+}
+
+func Command(name string, arg ...string) *exec.Cmd {
+	cmd := exec.Command(name, arg...)
+	cmd.SysProcAttr = new(syscall.SysProcAttr)
+	cmd.SysProcAttr.Cloneflags = syscall.CLONE_VFORK
+	return cmd
 }
 
 func getCPUSample() (idle, total uint64) {
@@ -52,7 +60,7 @@ func (s system) CpuUsage() (usage float64, total float64, ticks float64) {
 }
 
 func (s system) MemUsage() (available float64) {
-	out, _ := exec.Command("/bin/free", "-m").Output()
+	out, _ := Command("/bin/free", "-m").Output()
 	r := regexp.MustCompile("(^|\\s)([0-9]+)($|\\s)")
 	str := r.FindString(string(out))
 	f, _ := strconv.ParseFloat(str, 64)
@@ -60,23 +68,18 @@ func (s system) MemUsage() (available float64) {
 }
 
 func (s system) Luns() map[string]Lun {
-    var dev string
-    // var sz float64
-    // var bytes, sectors uint64
-    luns := make(map[string]Lun)
+	var dev string
+	luns := make(map[string]Lun)
 
-    out, _ := exec.Command("/sbin/fdisk", "-l").Output()
+	out, _ := Command("/sbin/fdisk", "-l").Output()
 
-    lines := strings.Split(string(out), "\n")
+	lines := strings.Split(string(out), "\n")
 
-    for _, line := range lines {
-        if strings.HasPrefix(line, "Disk /") {
-            // _, err := fmt.Sscanf(line, "Disk %s: %f GB, %d bytes, %d sectors\n", &dev, &sz, &bytes, &sectors)
-            luns[dev] = Lun{Capacity: 800}
-            // fmt.Printf("%s\nDevice: %s, Size: %f, %d %d\n", line, dev, sz, bytes, sectors)
-        }
-    }
+	for _, line := range lines {
+		if strings.HasPrefix(line, "Disk /") {
+			luns[dev] = Lun{Capacity: 800}
+		}
+	}
 
-    return luns
+	return luns
 }
-

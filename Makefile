@@ -29,16 +29,11 @@ update-test-deps:
 	GO15VENDOREXPERIMENT=0 go get -d -v -t -u -f $(PKGS)
 
 vendor:
-	#go get -v github.com/tools/godep
-	rm -f $$GOPATH/bin/godep
-	curl -sS -L https://github.com/tools/godep/releases/download/v32/godep_$(shell uname -s)_amd64 > $$GOPATH/bin/godep
-	chmod +x $$GOPATH/bin/godep
-	rm -rf Godeps
+	go get -v github.com/kardianos/govendor
 	rm -rf vendor
-	# TODO: when godep fixes downloading all tags, remove the custom package
-	# https://github.com/tools/godep/issues/271
-	godep save $(PKGS) github.com/docker/docker/pkg/chrootarchive github.com/stretchr/testify/require
-	rm -rf Godeps
+	govendor init
+	GOOS=linux GOARCH=amd64 govendor add +external
+	GOOS=linux GOARCH=amd64 govendor update +vendor
 
 build:
 	go build -tags "$(TAGS)" $(BUILDFLAGS) $(PKGS)

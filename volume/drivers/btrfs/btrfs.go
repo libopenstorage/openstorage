@@ -96,7 +96,7 @@ func (d *driver) Create(locator api.VolumeLocator,
 	if err != nil {
 		return api.BadVolumeID, err
 	}
-	err = d.btrfs.Create(volumeID, "")
+	err = d.btrfs.Create(volumeID, "", "")
 	if err != nil {
 		return api.BadVolumeID, err
 	}
@@ -194,7 +194,7 @@ func (d *driver) Snapshot(volumeID api.VolumeID, readonly bool, locator api.Volu
 		return api.BadVolumeID, err
 	}
 	chaos.Now(koStrayCreate)
-	err = d.btrfs.Create(snapID, string(volumeID))
+	err = d.btrfs.Create(snapID, string(volumeID), "")
 	if err != nil {
 		return api.BadVolumeID, err
 	}

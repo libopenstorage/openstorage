@@ -266,17 +266,22 @@ func (kv *EtcdKV) WatchTree(
 func (kv *EtcdKV) Lock(key string, ttl uint64) (*kvdb.KVPair, error) {
 	key = kv.domain + key
 
+	count := 1
 	duration := time.Duration(math.Min(float64(time.Second),
 		float64((time.Duration(ttl)*time.Second)/10)))
 
 	result, err := kv.client.Create(key, "locked", ttl)
 	for err != nil {
 		time.Sleep(duration)
+		count++
 		result, err = kv.client.Create(key, "locked", ttl)
 	}
 
 	if err != nil {
 		return nil, err
+	}
+	if count > 3 {
+		fmt.Printf("ETCD: spent %v iteations locking %v", count, key)
 	}
 	return kv.resultToKv(result), err
 }

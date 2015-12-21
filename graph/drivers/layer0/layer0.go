@@ -202,12 +202,12 @@ func (l *Layer0) create(id, parent string) (string, *Layer0Vol, error) {
 	return l.realID(id), vol, nil
 }
 
-func (l *Layer0) Create(id string, parent string) error {
+func (l *Layer0) Create(id string, parent string, mountLabel string) error {
 	id, vol, err := l.create(id, parent)
 	if err != nil {
 		return err
 	}
-	err = l.Driver.Create(id, parent)
+	err = l.Driver.Create(id, parent, mountLabel)
 	if err != nil || vol == nil {
 		return err
 	}
