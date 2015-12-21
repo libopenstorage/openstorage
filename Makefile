@@ -41,6 +41,10 @@ build:
 install:
 	go install -tags "$(TAGS)" $(PKGS)
 
+proto:
+	go get -v go.pedge.io/protoeasy/cmd/protoeasy
+	protoeasy --go --go-import-path github.com/libopenstorage/openstorage .
+
 lint:
 	go get -v github.com/golang/lint/golint
 	$(foreach pkg,$(PKGS),golint $(pkg);)
@@ -108,6 +112,7 @@ clean:
 	vendor \
 	build \
 	install \
+	proto \
 	lint \
 	vet \
 	errcheck \
