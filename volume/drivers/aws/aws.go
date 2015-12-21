@@ -10,8 +10,6 @@ import (
 	"syscall"
 	"time"
 
-	"go.pedge.io/proto/time"
-
 	"github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -22,6 +20,7 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/chaos"
 	"github.com/libopenstorage/openstorage/pkg/device"
 	"github.com/libopenstorage/openstorage/volume"
+	"github.com/libopenstorage/openstorage/volume/drivers/common"
 	"github.com/portworx/kvdb"
 )
 
@@ -246,23 +245,20 @@ func (d *Driver) Create(
 		logrus.Warnf("Failed in CreateVolumeRequest :%v", err)
 		return "", err
 	}
-	v := &api.Volume{
-		Id:       *vol.VolumeId,
-		Locator:  locator,
-		Ctime:    prototime.Now(),
-		Spec:     spec,
-		Source:   source,
-		LastScan: prototime.Now(),
-		Format:   api.FSType_FS_TYPE_NONE,
-		State:    api.VolumeState_VOLUME_STATE_AVAILABLE,
-		Status:   api.VolumeStatus_VOLUME_STATUS_UP,
-	}
-	err = d.UpdateVol(v)
+	volume := common.NewVolume(
+		*vol.VolumeId,
+		api.FSType_FS_TYPE_NONE,
+		locator,
+		source,
+		spec,
+
+	)
+	err = d.UpdateVol(volume)
 	if err != nil {
 		return "", err
 	}
-	err = d.waitStatus(v.Id, ec2.VolumeStateAvailable)
-	return v.Id, err
+	err = d.waitStatus(volume.Id, ec2.VolumeStateAvailable)
+	return volume.Id, err
 }
 
 // merge volume properties from aws into volume.
