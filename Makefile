@@ -43,11 +43,18 @@ install:
 
 proto:
 	go get -v go.pedge.io/protoeasy/cmd/protoeasy
+	go get -v go.pedge.io/pkg/cmd/strip-package-comments
 	protoeasy --go --go-import-path github.com/libopenstorage/openstorage .
+	find . -name *\.pb\*\.go | xargs strip-package-comments
 
 lint:
 	go get -v github.com/golang/lint/golint
-	$(foreach pkg,$(PKGS),golint $(pkg);)
+	for file in $$(find . -name '*.go' | grep -v vendor | grep -v '\.pb\.go' | grep -v '\.pb\.gw\.go'); do \
+		golint $${file}; \
+		if [ -n "$$(golint $${file})" ]; then \
+			exit 1; \
+		fi; \
+	done
 
 vet:
 	go vet $(PKGS)
