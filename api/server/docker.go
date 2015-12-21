@@ -137,7 +137,8 @@ func (d *driver) specFromOpts(Opts map[string]string) *api.VolumeSpec {
 		case api.SpecSize:
 			spec.Size, _ = strconv.ParseUint(v, 10, 64)
 		case api.SpecFilesystem:
-			spec.Format = api.Filesystem(v)
+			value, _ := api.FSTypeSimpleValueOf(v)
+			spec.Format = value
 		case api.SpecBlockSize:
 			blockSize, _ := strconv.ParseInt(v, 10, 64)
 			spec.BlockSize = blockSize
@@ -145,8 +146,8 @@ func (d *driver) specFromOpts(Opts map[string]string) *api.VolumeSpec {
 			haLevel, _ := strconv.ParseInt(v, 10, 64)
 			spec.HaLevel = haLevel
 		case api.SpecCos:
-			cos, _ := strconv.ParseInt(v, 10, 64)
-			spec.Cos = api.VolumeCos(cos)
+			value, _ := api.VolumeCOSSimpleValueOf(v)
+			spec.Cos = value
 		case api.SpecDedupe:
 			spec.Dedupe, _ = strconv.ParseBool(v)
 		case api.SpecSnapshotInterval:
@@ -158,51 +159,40 @@ func (d *driver) specFromOpts(Opts map[string]string) *api.VolumeSpec {
 }
 
 func (d *driver) create(w http.ResponseWriter, r *http.Request) {
-	var err error
 	method := "create"
-
 	request, err := d.decode(method, w, r)
 	if err != nil {
 		return
 	}
 	d.logRequest(method, request.Name).Info("")
-
-	_, err = d.volFromName(request.Name)
-	if err != nil {
+	if _, err = d.volFromName(request.Name); err != nil {
 		v, err := volume.Get(d.name)
 		if err != nil {
 			json.NewEncoder(w).Encode(&volumeResponse{Err: err})
 			return
 		}
 		spec := d.specFromOpts(request.Opts)
-		_, err = v.Create(&api.VolumeLocator{Name: request.Name}, nil, spec)
-		if err != nil {
+		if _, err := v.Create(&api.VolumeLocator{Name: request.Name}, nil, spec); err != nil {
 			json.NewEncoder(w).Encode(&volumeResponse{Err: err})
 			return
 		}
 	}
-
 	json.NewEncoder(w).Encode(&volumeResponse{})
 }
 
 func (d *driver) remove(w http.ResponseWriter, r *http.Request) {
 	method := "remove"
-
 	request, err := d.decode(method, w, r)
 	if err != nil {
 		return
 	}
-
 	d.logRequest(method, request.Name).Info("")
-
 	// It is an error if the volume doesn't exist.
-	_, err = d.volFromName(request.Name)
-	if err != nil {
+	if _, err := d.volFromName(request.Name); err != nil {
 		e := d.volNotFound(method, request.Name, err, w)
 		json.NewEncoder(w).Encode(&volumeResponse{Err: e})
 		return
 	}
-
 	json.NewEncoder(w).Encode(&volumeResponse{})
 }
 
@@ -232,7 +222,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// If this is a block driver, first attach the volume.
-	if v.Type()&api.Block != 0 {
+	if v.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
 		attachPath, err := v.Attach(volInfo.vol.Id)
 		if err != nil {
 			d.logRequest(method, request.Name).Warnf("Cannot attach volume: %v", err.Error())
@@ -321,7 +311,7 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if v.Type()&api.Block != 0 {
+	if v.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
 		_ = v.Detach(volInfo.vol.Id)
 	}
 	d.emptyResponse(w)

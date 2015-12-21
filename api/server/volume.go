@@ -99,8 +99,8 @@ func (vd *volApi) volumeSet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for err == nil && req.Action != nil {
-		if req.Action.Attach != api.ParamIgnore {
-			if req.Action.Attach == api.ParamOn {
+		if req.Action.Attach != api.VolumeActionParam_VOLUME_ACTION_PARAM_IGNORE {
+			if req.Action.Attach == api.VolumeActionParam_VOLUME_ACTION_PARAM_ON {
 				_, err = d.Attach(volumeID)
 			} else {
 				err = d.Detach(volumeID)
@@ -109,8 +109,8 @@ func (vd *volApi) volumeSet(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 		}
-		if req.Action.Mount != api.ParamIgnore {
-			if req.Action.Mount == api.ParamOn {
+		if req.Action.Mount != api.VolumeActionParam_VOLUME_ACTION_PARAM_IGNORE {
+			if req.Action.Mount == api.VolumeActionParam_VOLUME_ACTION_PARAM_ON {
 				if req.Action.MountPath == "" {
 					err = fmt.Errorf("Invalid mount path")
 					break
