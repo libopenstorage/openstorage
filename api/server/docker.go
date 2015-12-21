@@ -90,11 +90,11 @@ func (d *driver) volFromName(name string) (*volumeInfo, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Cannot locate volume driver for %s: %s", d.name, err.Error())
 	}
-	vols, err := v.Inspect([]api.VolumeID{api.VolumeID(name)})
+	vols, err := v.Inspect([]string{name})
 	if err == nil && len(vols) == 1 {
 		return &volumeInfo{vol: &vols[0]}, nil
 	}
-	vols, err = v.Enumerate(api.VolumeLocator{Name: name}, nil)
+	vols, err = v.Enumerate(&api.VolumeLocator{Name: name}, nil)
 	if err == nil && len(vols) == 1 {
 		return &volumeInfo{vol: &vols[0]}, nil
 	}
@@ -140,18 +140,18 @@ func (d *driver) specFromOpts(Opts map[string]string) *api.VolumeSpec {
 			spec.Format = api.Filesystem(v)
 		case api.SpecBlockSize:
 			blockSize, _ := strconv.ParseInt(v, 10, 64)
-			spec.BlockSize = int(blockSize)
+			spec.BlockSize = blockSize
 		case api.SpecHaLevel:
 			haLevel, _ := strconv.ParseInt(v, 10, 64)
-			spec.HALevel = int(haLevel)
+			spec.HaLevel = haLevel
 		case api.SpecCos:
 			cos, _ := strconv.ParseInt(v, 10, 64)
 			spec.Cos = api.VolumeCos(cos)
 		case api.SpecDedupe:
 			spec.Dedupe, _ = strconv.ParseBool(v)
 		case api.SpecSnapshotInterval:
-			snapshotInterval, _ := strconv.ParseInt(v, 10, 64)
-			spec.SnapshotInterval = int(snapshotInterval)
+			snapshotInterval, _ := strconv.ParseUint(v, 10, 32)
+			spec.SnapshotInterval = uint32(snapshotInterval)
 		}
 	}
 	return &spec
@@ -175,7 +175,7 @@ func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		spec := d.specFromOpts(request.Opts)
-		_, err = v.Create(api.VolumeLocator{Name: request.Name}, nil, spec)
+		_, err = v.Create(&api.VolumeLocator{Name: request.Name}, nil, spec)
 		if err != nil {
 			json.NewEncoder(w).Encode(&volumeResponse{Err: err})
 			return
@@ -233,7 +233,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 
 	// If this is a block driver, first attach the volume.
 	if v.Type()&api.Block != 0 {
-		attachPath, err := v.Attach(volInfo.vol.ID)
+		attachPath, err := v.Attach(volInfo.vol.Id)
 		if err != nil {
 			d.logReq(method, request.Name).Warnf("Cannot attach volume: %v", err.Error())
 			json.NewEncoder(w).Encode(&volumePathResponse{Err: err})
@@ -246,7 +246,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 	response.Mountpoint = path.Join(config.MountBase, request.Name)
 	os.MkdirAll(response.Mountpoint, 0755)
 
-	err = v.Mount(volInfo.vol.ID, response.Mountpoint)
+	err = v.Mount(volInfo.vol.Id, response.Mountpoint)
 	if err != nil {
 		d.logReq(method, request.Name).Warnf("Cannot mount volume %v, %v",
 			response.Mountpoint, err)
@@ -313,7 +313,7 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	mountpoint := path.Join(config.MountBase, request.Name)
-	err = v.Unmount(volInfo.vol.ID, mountpoint)
+	err = v.Unmount(volInfo.vol.Id, mountpoint)
 	if err != nil {
 		d.logReq(method, request.Name).Warnf("Cannot unmount volume %v, %v",
 			mountpoint, err)
@@ -322,7 +322,7 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if v.Type()&api.Block != 0 {
-		_ = v.Detach(volInfo.vol.ID)
+		_ = v.Detach(volInfo.vol.Id)
 	}
 	d.emptyResponse(w)
 }

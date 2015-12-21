@@ -34,12 +34,12 @@ func (vd *volApi) String() string {
 	return vd.name
 }
 
-func (vd *volApi) parseVolumeID(r *http.Request) (api.VolumeID, error) {
+func (vd *volApi) parseVolumeID(r *http.Request) (string, error) {
 	vars := mux.Vars(r)
 	if id, ok := vars["id"]; ok {
-		return api.VolumeID(id), nil
+		return string(id), nil
 	}
-	return api.BadVolumeID, fmt.Errorf("could not parse snap ID")
+	return "", fmt.Errorf("could not parse snap ID")
 }
 
 func (vd *volApi) create(w http.ResponseWriter, r *http.Request) {
@@ -57,18 +57,18 @@ func (vd *volApi) create(w http.ResponseWriter, r *http.Request) {
 		notFound(w, r)
 		return
 	}
-	ID, err := d.Create(dcReq.Locator, dcReq.Source, dcReq.Spec)
-	dcRes.VolumeResponse = api.VolumeResponse{Error: responseStatus(err)}
-	dcRes.ID = ID
+	id, err := d.Create(dcReq.Locator, dcReq.Source, dcReq.Spec)
+	dcRes.VolumeResponse = &api.VolumeResponse{Error: responseStatus(err)}
+	dcRes.Id = id
 
-	vd.logReq(method, string(ID)).Info("")
+	vd.logReq(method, id).Info("")
 
 	json.NewEncoder(w).Encode(&dcRes)
 }
 
 func (vd *volApi) volumeSet(w http.ResponseWriter, r *http.Request) {
 	var (
-		volumeID api.VolumeID
+		volumeID string
 		err      error
 		req      api.VolumeSetRequest
 		resp     api.VolumeSetResponse
@@ -129,14 +129,15 @@ func (vd *volApi) volumeSet(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		resp.VolumeResponse.Error = err.Error()
 	} else {
-		v, err := d.Inspect([]api.VolumeID{volumeID})
+		v, err := d.Inspect([]string{volumeID})
 		if err != nil || v == nil || len(v) != 1 {
 			if err == nil {
 				err = fmt.Errorf("Failed to inspect volume")
 			}
 			resp.VolumeResponse.Error = err.Error()
 		} else {
-			resp.Volume = v[0]
+			v0 := v[0]
+			resp.Volume = &v0
 		}
 	}
 	json.NewEncoder(w).Encode(resp)
@@ -144,7 +145,7 @@ func (vd *volApi) volumeSet(w http.ResponseWriter, r *http.Request) {
 
 func (vd *volApi) inspect(w http.ResponseWriter, r *http.Request) {
 	var err error
-	var volumeID api.VolumeID
+	var volumeID string
 
 	method := "inspect"
 	d, err := volume.Get(vd.name)
@@ -161,7 +162,7 @@ func (vd *volApi) inspect(w http.ResponseWriter, r *http.Request) {
 
 	vd.logReq(method, string(volumeID)).Info("")
 
-	dk, err := d.Inspect([]api.VolumeID{volumeID})
+	dk, err := d.Inspect([]string{volumeID})
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusNotFound)
 		return
@@ -171,7 +172,7 @@ func (vd *volApi) inspect(w http.ResponseWriter, r *http.Request) {
 }
 
 func (vd *volApi) delete(w http.ResponseWriter, r *http.Request) {
-	var volumeID api.VolumeID
+	var volumeID string
 	var err error
 
 	method := "delete"
@@ -189,14 +190,18 @@ func (vd *volApi) delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = d.Delete(volumeID)
-	res := api.ResponseStatusNew(err)
-	json.NewEncoder(w).Encode(res)
+	if err := d.Delete(volumeID); err != nil {
+		json.NewEncoder(w).Encode(
+			&api.VolumeResponse{
+				Error: err.Error(),
+			},
+		)
+	}
 }
 
 func (vd *volApi) enumerate(w http.ResponseWriter, r *http.Request) {
 	var locator api.VolumeLocator
-	var configLabels api.Labels
+	var configLabels map[string]string
 	var err error
 	var vols []api.Volume
 
@@ -228,9 +233,9 @@ func (vd *volApi) enumerate(w http.ResponseWriter, r *http.Request) {
 	}
 	v = params[string(api.OptVolumeID)]
 	if v != nil {
-		ids := make([]api.VolumeID, len(v))
+		ids := make([]string, len(v))
 		for i, s := range v {
-			ids[i] = api.VolumeID(s)
+			ids[i] = string(s)
 		}
 		vols, err = d.Inspect(ids)
 		if err != nil {
@@ -239,7 +244,7 @@ func (vd *volApi) enumerate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		vols, _ = d.Enumerate(locator, configLabels)
+		vols, _ = d.Enumerate(&locator, configLabels)
 	}
 	json.NewEncoder(w).Encode(vols)
 }
@@ -259,18 +264,18 @@ func (vd *volApi) snap(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	vd.logReq(method, string(snapReq.ID)).Info("")
+	vd.logReq(method, string(snapReq.Id)).Info("")
 
-	ID, err := d.Snapshot(snapReq.ID, snapReq.Readonly, snapReq.Locator)
-	snapRes.VolumeCreateResponse.VolumeResponse = api.VolumeResponse{Error: responseStatus(err)}
-	snapRes.VolumeCreateResponse.ID = ID
+	id, err := d.Snapshot(snapReq.Id, snapReq.Readonly, snapReq.Locator)
+	snapRes.VolumeCreateResponse.VolumeResponse = &api.VolumeResponse{Error: responseStatus(err)}
+	snapRes.VolumeCreateResponse.Id = id
 	json.NewEncoder(w).Encode(&snapRes)
 }
 
 func (vd *volApi) snapEnumerate(w http.ResponseWriter, r *http.Request) {
 	var err error
-	var labels api.Labels
-	var ids []api.VolumeID
+	var labels map[string]string
+	var ids []string
 
 	method := "snapEnumerate"
 	d, err := volume.Get(vd.name)
@@ -289,9 +294,9 @@ func (vd *volApi) snapEnumerate(w http.ResponseWriter, r *http.Request) {
 
 	v, ok := params[string(api.OptVolumeID)]
 	if v != nil && ok {
-		ids = make([]api.VolumeID, len(params))
+		ids = make([]string, len(params))
 		for i, s := range v {
-			ids[i] = api.VolumeID(s)
+			ids[i] = string(s)
 		}
 	}
 
@@ -306,7 +311,7 @@ func (vd *volApi) snapEnumerate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (vd *volApi) stats(w http.ResponseWriter, r *http.Request) {
-	var volumeID api.VolumeID
+	var volumeID string
 	var err error
 
 	method := "stats"
@@ -334,7 +339,7 @@ func (vd *volApi) stats(w http.ResponseWriter, r *http.Request) {
 }
 
 func (vd *volApi) alerts(w http.ResponseWriter, r *http.Request) {
-	var volumeID api.VolumeID
+	var volumeID string
 	var err error
 
 	method := "alerts"
