@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+package openstorage.api;
+
+option go_package = "api";
+option java_multiple_files = true;
+option java_package = "com.openstorage.api";
+
+enum ClusterStatus {
+  CLUSTER_STATUS_NONE = 0;
+  CLUSTER_STATUS_INIT = 1;
+  CLUSTER_STATUS_OK = 2;
+  CLUSTER_STATUS_OFFLINE = 3;
+  CLUSTER_STATUS_ERROR = 4;
+}
+
+enum DriverType {
+  DRIVER_TYPE_NONE = 0;
+  DRIVER_TYPE_FILE = 1;
+  DRIVER_TYPE_OBJECT = 2;
+  DRIVER_TYPE_CLUSTERED = 3;
+  DRIVER_TYPE_GRAPH = 4;
+}
+
+enum FSType {
+  FS_TYPE_NONE = 0;
+  FS_TYPE_BTRFS = 1;
+  FS_TYPE_EXT4 = 2;
+  FS_TYPE_FUSE = 3;
+  FS_TYPE_NFS = 4;
+  FS_TYPE_VFS = 5;
+  FS_TYPE_XFS = 6;
+  FS_TYPE_ZFS = 7;
+}
+
+enum VolumeActionParam {
+  VOLUME_ACTION_PARAM_NONE = 0;
+	// User should ignore the value of the parameter
+  VOLUME_ACTION_PARAM_IGNORE = 1;
+	// Maps to the boolean value false
+  VOLUME_ACTION_PARAM_OFF = 2;
+	// Maps to the boolean value true.
+  VOLUME_ACTION_PARAM_ON = 3;
+}
+
+// VolumeCOS represents a class of service for a volume.
+enum VolumeCOS {
+  VOLUME_COS_NONE = 0;
+  // A minimum level of COS.
+  VOLUME_COS_MIN = 1;
+  // An in-between level of COS.
+  VOLUME_COS_MEDIUM = 2;
+  // A maximum level of COS.
+  VOLUME_COS_MAX = 3;
+}
+
+// VolumeState represents the state of a volume.
+enum VolumeState {
+  VOLUME_STATE_NONE = 0;
+	// Volume is transitioning to new state
+  VOLUME_STATE_PENDING = 1;
+	// Volume is ready to be assigned to a container
+  VOLUME_STATE_AVAILABLE = 2;
+	// Volume is attached to container
+  VOLUME_STATE_ATTACHED = 3;
+	// Volume is detached but associated with a container
+  VOLUME_STATE_DETACHED = 4;
+	// Volume detach is in progress
+  VOLUME_STATE_DETATCHING = 5;
+	// Volume is in error state
+  VOLUME_STATE_ERROR = 6;
+	// Volume is deleted, it will remain in this state
+  // while resources are asynchronously reclaimed
+  VOLUME_STATE_DELETED = 7;
+}
+
+// VolumeStatus represents a health status for a volume.
+enum VolumeStatus {
+  VOLUME_STATUS_NONE = 0;
+  // Volume is not present
+  VOLUME_STATUS_NOT_PRESENT = 1;
+  // Volume is healthy
+  VOLUME_STATUS_UP = 2;
+  // Volume is in fail mode
+  VOLUME_STATUS_DOWN = 3;
+	// Volume is up but with degraded performance
+  // In a RAID group, this may indicate a problem with one or more drives
+  VOLUME_STATUS_DEGRADED = 4;
+}
