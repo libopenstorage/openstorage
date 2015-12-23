@@ -381,18 +381,18 @@
 		},
 		{
 			"path": "github.com/libopenstorage/gossip",
-			"revision": "402f446ae2b0b8372919c309a7115aa124aa3fcb",
-			"revisionTime": "2015-12-18T03:44:14Z"
+			"revision": "7811c3e4114e168a85bcd968e48600eee6922d19",
+			"revisionTime": "2015-12-23T03:41:10Z"
 		},
 		{
 			"path": "github.com/libopenstorage/gossip/proto",
-			"revision": "402f446ae2b0b8372919c309a7115aa124aa3fcb",
-			"revisionTime": "2015-12-18T03:44:14Z"
+			"revision": "7811c3e4114e168a85bcd968e48600eee6922d19",
+			"revisionTime": "2015-12-23T03:41:10Z"
 		},
 		{
 			"path": "github.com/libopenstorage/gossip/types",
-			"revision": "402f446ae2b0b8372919c309a7115aa124aa3fcb",
-			"revisionTime": "2015-12-18T03:44:14Z"
+			"revision": "7811c3e4114e168a85bcd968e48600eee6922d19",
+			"revisionTime": "2015-12-23T03:41:10Z"
 		},
 		{
 			"path": "github.com/opencontainers/runc/libcontainer/label",

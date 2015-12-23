@@ -116,6 +116,46 @@ func (c *clusterClient) enableGossip(context *cli.Context) {
 	c.manager.EnableGossipUpdates()
 }
 
+func (c *clusterClient) displayGossipStatus(context *cli.Context) {
+	c.clusterOptions(context)
+	jsonOut := context.GlobalBool("json")
+	outFd := os.Stdout
+	fn := "displayGossipStatus"
+
+	s := c.manager.GetGossipStatus()
+	if s == nil {
+		cmdError(context, fn, fmt.Errorf("Failed to get status"))
+		return
+	}
+
+	if jsonOut {
+		fmtOutput(context, &Format{Result: s})
+	} else {
+		w := new(tabwriter.Writer)
+		w.Init(outFd, 12, 12, 1, ' ', 0)
+
+		fmt.Fprintln(w, "ID\t LAST CONTACT TS\t DIR\t Errors")
+		for _, n := range s.History {
+			fmt.Fprintln(w, n.Node, "\t", n.Ts, "\t", n.Dir, "\t", n.Err)
+		}
+
+		fmt.Fprintln(w)
+		w.Flush()
+
+		fmt.Println("Individual Node Status")
+		w = new(tabwriter.Writer)
+		w.Init(outFd, 12, 12, 1, ' ', 0)
+
+		fmt.Fprintln(w, "ID\t LAST UPDATE TS\t STATUS")
+		for _, n := range s.NodeStatus {
+			fmt.Fprintln(w, n.Id, "\t", n.LastUpdateTs, "\t", n.Status)
+		}
+
+		fmt.Fprintln(w)
+		w.Flush()
+	}
+}
+
 // ClusterCommands exports CLI comamnds for File VolumeDriver
 func ClusterCommands(name string) []cli.Command {
 	c := &clusterClient{name: name}
@@ -158,6 +198,12 @@ func ClusterCommands(name string) []cli.Command {
 			Aliases: []string{"eg"},
 			Usage:   "Enable gossip updates",
 			Action:  c.enableGossip,
+		},
+		{
+			Name:    "gossip-status",
+			Aliases: []string{"gs"},
+			Usage:   "Display gossip status",
+			Action:  c.displayGossipStatus,
 		},
 		{
 			Name:    "remove",

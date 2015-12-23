@@ -14,14 +14,16 @@ const (
 
 type GossipStoreImpl struct {
 	sync.Mutex
-	id        types.NodeId
-	GenNumber uint64
-	nodeMap   types.NodeInfoMap
+	id          types.NodeId
+	GenNumber   uint64
+	nodeMap     types.NodeInfoMap
+	selfCorrect bool
 }
 
 func NewGossipStore(id types.NodeId) *GossipStoreImpl {
 	n := &GossipStoreImpl{}
 	n.InitStore(id)
+	n.selfCorrect = false
 	return n
 }
 
@@ -32,6 +34,7 @@ func (s *GossipStoreImpl) NodeId() types.NodeId {
 func (s *GossipStoreImpl) InitStore(id types.NodeId) {
 	s.nodeMap = make(types.NodeInfoMap)
 	s.id = id
+	s.selfCorrect = true
 }
 
 func (s *GossipStoreImpl) UpdateSelf(key types.StoreKey, val interface{}) {
@@ -68,20 +71,19 @@ func (s *GossipStoreImpl) MarkNodeHasOldGen(nodeId types.NodeId) bool {
 	return true
 }
 
-func (s *GossipStoreImpl) GetStoreKeyValue(key types.StoreKey) types.NodeInfoMap {
+func (s *GossipStoreImpl) GetStoreKeyValue(key types.StoreKey) types.NodeValueMap {
 	s.Lock()
 	defer s.Unlock()
 
-	nodeInfoMap := make(types.NodeInfoMap)
+	nodeInfoMap := make(types.NodeValueMap)
 	for id, nodeInfo := range s.nodeMap {
 		if statusValid(nodeInfo.Status) && nodeInfo.Value != nil {
 			if val, ok := nodeInfo.Value[key]; ok {
-				n := types.NodeInfo{Id: nodeInfo.Id,
+				n := types.NodeValue{Id: nodeInfo.Id,
 					GenNumber:    nodeInfo.GenNumber,
-					Value:        make(types.StoreMap),
 					LastUpdateTs: nodeInfo.LastUpdateTs,
 					Status:       nodeInfo.Status}
-				n.Value[key] = val
+				n.Value = val
 				nodeInfoMap[id] = n
 			}
 		}
@@ -231,11 +233,19 @@ func (s *GossipStoreImpl) UpdateNodeStatuses(d time.Duration, sd time.Duration) 
 	defer s.Unlock()
 
 	for id, nodeInfo := range s.nodeMap {
-		if id == s.id {
-			continue
-		}
 		currTime := time.Now()
 		timeDiff := currTime.Sub(nodeInfo.LastUpdateTs)
+		if id == s.id {
+			if timeDiff > d && s.selfCorrect {
+				log.Warnf("No self update for long, updating self update ts "+
+					"to not be marked down, time diff: %v, limit: %v, "+
+					"Last TS: %v,Current TS: %v",
+					timeDiff, d, nodeInfo.LastUpdateTs, currTime)
+				nodeInfo.LastUpdateTs = currTime
+				s.nodeMap[id] = nodeInfo
+			}
+			continue
+		}
 		waitGenTimeDiff := currTime.Sub(nodeInfo.WaitForGenUpdateTs)
 		nodeStatus := nodeInfo.Status
 		switch {
@@ -259,6 +269,7 @@ func (s *GossipStoreImpl) UpdateNodeStatuses(d time.Duration, sd time.Duration) 
 			}
 		case nodeInfo.Status == types.NODE_STATUS_NEVER_GOSSIPED:
 			if timeDiff >= sd {
+				log.Warnf("Node ", id, " never gossiped, marking it down")
 				nodeStatus = types.NODE_STATUS_DOWN
 			} // else node is now marked up
 		case nodeInfo.Status != types.NODE_STATUS_INVALID:
@@ -267,12 +278,9 @@ func (s *GossipStoreImpl) UpdateNodeStatuses(d time.Duration, sd time.Duration) 
 			} // else node is marked up
 		}
 		if nodeInfo.Status != nodeStatus {
-			log.Warnf("Gossip Status change: for node: %v newStatus: %v "+
-				", time diff: %v , limit: %v, its last update time "+
-				"was %v and current time is %v",
-				nodeStatus, id, timeDiff, d, nodeInfo.LastUpdateTs, currTime)
-		}
-		if nodeInfo.Status != nodeStatus {
+			log.Warnf("Gossip Status change: for node: %v newStatus: %v, "+
+				"time diff: %v, limit: %v, Last TS: %v,Current TS: %v", id,
+				nodeStatus, timeDiff, d, nodeInfo.LastUpdateTs, currTime)
 			nodeInfo.Status = nodeStatus
 			s.nodeMap[id] = nodeInfo
 		}

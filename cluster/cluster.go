@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/fsouza/go-dockerclient"
+	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
 
 	"github.com/portworx/kvdb"
@@ -31,6 +32,11 @@ type Database struct {
 	Status      api.Status
 	Id          string
 	NodeEntries map[string]NodeEntry
+}
+
+type GossipStatus struct {
+	History    []*types.GossipSessionInfo
+	NodeStatus []types.NodeValue
 }
 
 // ClusterListener is an interface to be implemented by a storage driver
@@ -97,6 +103,9 @@ type Cluster interface {
 
 	// Disable notifications from gossip
 	DisableGossipUpdates()
+
+	// Status of nodes according to gossip
+	GetGossipStatus() *GossipStatus
 }
 
 // New instantiates and starts a new cluster manager.

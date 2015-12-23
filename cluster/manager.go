@@ -246,14 +246,9 @@ func (c *ClusterManager) heartBeat() {
 
 			cachedNodeInfo, nodeFoundInCache := c.nodeCache[string(id)]
 			n := cachedNodeInfo
+			ok := false
 			if nodeInfo.Value != nil {
-				v, ok := nodeInfo.Value[gossipStoreKey]
-				if !ok || v == nil {
-					logrus.Error("Received a bad broadcast packet: %v", nodeInfo.Value)
-					continue
-				}
-
-				n, ok = v.(api.Node)
+				n, ok = nodeInfo.Value.(api.Node)
 				if !ok {
 					logrus.Error("Received a bad broadcast packet: %v", nodeInfo.Value)
 					continue
@@ -337,6 +332,21 @@ func (c *ClusterManager) DisableGossipUpdates() {
 func (c *ClusterManager) EnableGossipUpdates() {
 	logrus.Warn("Enabling gossip updates")
 	c.gEnabled = true
+}
+
+func (c *ClusterManager) GetGossipStatus() *GossipStatus {
+	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
+	nodeValue := c.g.GetStoreKeyValue(gossipStoreKey)
+	nodes := make([]types.NodeValue, len(nodeValue), len(nodeValue))
+	i := 0
+	for _, value := range nodeValue {
+		nodes[i] = value
+		i++
+	}
+
+	history := c.g.GetGossipHistory()
+	return &GossipStatus{
+		History: history, NodeStatus: nodes}
 }
 
 func (c *ClusterManager) Start() error {
