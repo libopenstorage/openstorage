@@ -33,7 +33,7 @@ type GossipSessionInfo struct {
 	Node string
 	Ts   time.Time
 	Dir  GossipDirection
-	Err  error
+	Err  string
 }
 
 type NodeMetaInfo struct {

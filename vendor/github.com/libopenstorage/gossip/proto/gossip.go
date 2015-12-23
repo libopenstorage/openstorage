@@ -31,7 +31,7 @@ func NewGossipSessionInfo(node string,
 	gs.Node = node
 	gs.Dir = dir
 	gs.Ts = time.Now()
-	gs.Err = nil
+	gs.Err = ""
 	return gs
 }
 
@@ -401,14 +401,14 @@ func (g *GossiperImpl) gossip() *types.GossipSessionInfo {
 
 	conn := NewMessageChannel(peerNode)
 	if conn == nil {
-		gs.Err = errors.New("Could not connect to host")
+		gs.Err = "Could not connect to host"
 		return gs
 	}
 
 	// send meta data info about the node to the peer
 	err := g.sendNodeMetaInfo(conn)
 	if err != nil {
-		gs.Err = errors.New("Failed to send meta info to the peer")
+		gs.Err = "Failed to send meta info to the peer"
 		log.Error(gs.Err)
 		return gs
 	}
@@ -417,7 +417,7 @@ func (g *GossiperImpl) gossip() *types.GossipSessionInfo {
 	var diff types.StoreNodes
 	err = conn.RcvData(&diff)
 	if err != nil {
-		gs.Err = errors.New("Failed to get request info to the peer")
+		gs.Err = "Failed to get request info to the peer"
 		log.Error(gs.Err)
 		return gs
 	}
@@ -425,7 +425,7 @@ func (g *GossiperImpl) gossip() *types.GossipSessionInfo {
 	// send back the data
 	err = g.sendUpdatesToPeer(&diff, conn)
 	if err != nil {
-		gs.Err = errors.New("Failed to send newer data to the peer")
+		gs.Err = "Failed to send newer data to the peer"
 		log.Error(gs.Err)
 		return gs
 	}
@@ -433,7 +433,7 @@ func (g *GossiperImpl) gossip() *types.GossipSessionInfo {
 	// receive any updates the send has for us
 	err = g.getUpdatesFromPeer(conn)
 	if err != nil {
-		gs.Err = errors.New("Failed to get newer data from the peer")
+		gs.Err = "Failed to get newer data from the peer"
 		log.Error(gs.Err)
 		return gs
 	}
