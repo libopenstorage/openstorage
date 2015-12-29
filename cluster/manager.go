@@ -230,11 +230,18 @@ done:
 
 func (c *ClusterManager) heartBeat() {
 	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
+	lastUpdateTs := time.Now()
+
 	for {
 		node := c.getCurrentState()
 		c.nodeCache[node.Id] = *node
 
+		currTime := time.Now()
+		if currTime.Sub(lastUpdateTs) > 10*time.Second {
+			logrus.Warn("No gossip update for 10 seconds")
+		}
 		c.g.UpdateSelf(gossipStoreKey, *node)
+		lastUpdateTs = currTime
 
 		// Process heartbeats from other nodes...
 		gossipValues := c.g.GetStoreKeyValue(gossipStoreKey)
