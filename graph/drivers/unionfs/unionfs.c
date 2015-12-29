@@ -1,4 +1,4 @@
-// gcc fuse.c -DiFILE_OFFSET_BITS=64 -lfuse -lulockmgr -lithread -o fuse
+// gcc unionfs.c -DiFILE_OFFSET_BITS=64 -lfuse -lulockmgr -lithread -o unionfs
 
 #define _GNU_SOURCE
 #define _FILE_OFFSET_BITS 64
@@ -39,6 +39,13 @@
 #define MAX_LAYERS 64
 #define MAX_INSTANCES 128
 
+struct graph_dirp 
+{
+	DIR *dp;
+	struct dirent *entry;
+	off_t offset;
+};
+
 // Minimal inode structure.
 struct inode {
 	mode_t mode;
@@ -73,13 +80,6 @@ static hashtable_t *ufs_hash;
 // The physical file systems for each layer.
 static pthread_mutex_t inode_lock;
 static hashtable_t *inode_hash;
-
-struct graph_dirp 
-{
-	DIR *dp;
-	struct dirent *entry;
-	off_t offset;
-};
 
 static void trace(const char *fn, const char *path)
 {
@@ -135,7 +135,7 @@ done:
 	return ufs;
 }
 
-static char *real_path(const char *path, bool create_mode)
+static char *path_to_inode(const char *path, bool create_mode)
 {
 	char *r = NULL;
 	char file[PATH_MAX];
@@ -146,7 +146,7 @@ static char *real_path(const char *path, bool create_mode)
 	if (!strcmp(path, "/")) {
 		// This is a request for the root virtual path.  There are only
 		// union FS volumes at this location and no specific union FS context.
-		r = strdup(union_src);
+		r = strdup("/");
 		goto done;
 	}
 
