@@ -59,8 +59,8 @@ func (s *GossipHistory) GetAllRecords() []*types.GossipSessionInfo {
 	i := 0
 	for element := s.nodes.Front(); element != nil; element = element.Next() {
 		r, ok := element.Value.(*types.GossipSessionInfo)
-		if !ok {
-			log.Error("Failed to convert element: ", r)
+		if !ok || r == nil {
+			log.Error("Failed to convert element")
 			continue
 		}
 		records[i] = &types.GossipSessionInfo{Node: r.Node,

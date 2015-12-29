@@ -236,7 +236,7 @@ func (s *GossipStoreImpl) UpdateNodeStatuses(d time.Duration, sd time.Duration) 
 		currTime := time.Now()
 		timeDiff := currTime.Sub(nodeInfo.LastUpdateTs)
 		if id == s.id {
-			if timeDiff > d && s.selfCorrect {
+			if (timeDiff > d/2) && s.selfCorrect {
 				log.Warnf("No self update for long, updating self update ts "+
 					"to not be marked down, time diff: %v, limit: %v, "+
 					"Last TS: %v,Current TS: %v",
