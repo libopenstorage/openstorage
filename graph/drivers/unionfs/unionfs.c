@@ -9,7 +9,7 @@
 #endif
 
 // XXX FIXME
-// #define EXPERIMENTAL_ 1
+#define EXPERIMENTAL_ 1
 
 #ifdef EXPERIMENTAL_
 
@@ -28,6 +28,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <sys/time.h>
+#include <sys/types.h>
 #ifdef HAVE_SETXATTR
 #include <sys/xattr.h>
 #endif
@@ -38,23 +39,40 @@
 #define MAX_LAYERS 64
 #define MAX_INSTANCES 128
 
+// Minimal inode structure.
+struct inode {
+	mode_t mode;
+	nlink_t nlink;
+	uid_t uid;
+	gid_t gid;
+	off_t size;
+	time_t atime;
+	time_t mtime;
+	time_t ctime;
+
+	bool layer;
+
+	struct inode *parent;
+	hashtable_t *children;
+
+	pthread_mutex_t lock;
+};
+
 struct union_fs {
-	char *layers[MAX_LAYERS];
+	hashtable_t *layers;
 	pthread_mutex_t lock;
 	char id[256];
 	bool available;
 };
 
-static char *union_src;
+// The union filesystems for each virtual combined layer.
 static pthread_mutex_t ufs_lock;
 static struct union_fs ufs_instances[MAX_INSTANCES];
 static hashtable_t *ufs_hash;
 
-struct descriptor 
-{
-	char name[PATH_MAX];
-	int fd;
-} descriptors[MAX_DESC];
+// The physical file systems for each layer.
+static pthread_mutex_t inode_lock;
+static hashtable_t *inode_hash;
 
 struct graph_dirp 
 {
@@ -117,39 +135,6 @@ done:
 	return ufs;
 }
 
-static void descriptors_init() 
-{
-	int i;
-	for (i=0; i<MAX_DESC; ++i) {
-		descriptors[i].fd = -1;
-		descriptors[i].name[0] = 0;
-	}
-}
-
-static int find_descriptor(const char* path) 
-{
-	int i;
-	for (i=0; i<MAX_DESC; ++i) {
-		if(!strcmp(descriptors[i].name, path)) {
-			return descriptors[i].fd;
-		}
-	}
-	return -1;
-}
-
-static int register_fd(const char* path, int fd) 
-{
-	int i;
-	for (i=0; i<MAX_DESC; ++i) {
-		if(descriptors[i].fd == -1) {
-			descriptors[i].fd = fd;
-			snprintf(descriptors[i].name, PATH_MAX, "%s", path);
-			return fd;
-		}
-	}
-	return -1;
-}
-
 static char *real_path(const char *path, bool create_mode)
 {
 	char *r = NULL;
@@ -167,7 +152,7 @@ static char *real_path(const char *path, bool create_mode)
 
 	ufs = get_ufs(path, &fixed_path);
 	if (!ufs) {
-		// Assume the request is for a raw physical layer.
+		// Assume the request is for a  layer.
 		asprintf(&r, "%s%s", union_src, path);
 		goto done;
 	}
@@ -254,53 +239,6 @@ done:
 static void free_path(char *path)
 {
 	free(path);
-}
-
-// Find a file in the FD cache.
-static int maybe_open(const char* path, int flags, int mode) 
-{
-	int fd;
-	int ret;
-	char *rp = NULL;
-
-	rp = real_path(path, (flags & O_CREAT ? true : false));
-	if (!rp) {
-		goto done;
-	}
-
-	fd = find_descriptor(rp);
-	if (fd != -1) {
-		goto done;
-	}
-
-	int fixed_flags = (flags & (~O_WRONLY) & (~O_RDONLY)) | O_RDWR;
-
-	fd = open(rp, fixed_flags, mode);
-	if (fd==-1) {
-		fd = open(rp, flags, mode);
-	}
-
-	if (fd==-1) {
-		if (flags & O_CREAT) {
-			fprintf(stderr, "Warning, failed to create %s (errno=%d)\n", rp, errno);
-		}
-		goto done;
-	}
-
-	ret = register_fd(rp, fd);
-	if (ret==-1)  {
-		fprintf(stderr, "Warning, error while registering FD for %s.\n", rp);
-		close(fd);
-		fd = -1;
-		goto done;
-	}
-
-done:
-	if (rp) {
-		free_path(rp);
-	}
-
-	return fd;
 }
 
 static int graph_opendir(const char *path, struct fuse_file_info *fi)
@@ -1185,17 +1123,13 @@ static struct fuse_operations graph_oper = {
 	.flag_nullpath_ok = 1,
 };
 
-int start_unionfs(char *src_path, char *mount_path)
+int start_unionfs(char *mount_path)
 {
 	char *argv[4];
 	int i;
 
-	union_src = strdup(src_path);
-	if (!union_src) {
-		return -errno;
-	}
-
 	pthread_mutex_init(&ufs_lock, NULL);
+	pthread_mutex_init(&inode_lock, NULL);
 
 	for (i = 0; i < MAX_INSTANCES; i++) {
 		pthread_mutex_init(&ufs_instances[i].lock, NULL);
@@ -1203,9 +1137,12 @@ int start_unionfs(char *src_path, char *mount_path)
 		ufs_instances[i].available = true;
 	}
 
-	ufs_hash = ht_create( 65536 );
+	// Create a hash table to map an ID to a union FS.
+	ufs_hash = ht_create(65536);
 
-	descriptors_init();
+	// Create a hash table to map an inode to a layer FS.
+	inode_hash = ht_create(65536);
+
 	umask(0);
 
 	argv[0] = "graph";
@@ -1215,7 +1152,89 @@ int start_unionfs(char *src_path, char *mount_path)
 	return fuse_main(3, argv, &graph_oper, NULL);
 }
 
-int alloc_unionfs(char *layer_path, char *id)
+int create_layer(char *layer, char *parent)
+{
+	struct inode *p_ino = NULL;
+	struct inode *ino = NULL;
+	char *str = NULL;
+	int ret = 0;
+
+	ino = ht_get(inode_hash, layer);
+	if (ino) {
+		ino = NULL;		errno = EEXIST;
+		ret = -errno;
+		goto done;
+	}
+
+	if (parent && parent != "") {
+		p_ino = ht_get(inode_hash, parent);
+		if (!ino) {
+			fprintf(stderr, "Warning, cannot find parent layer %s.\n", parent);
+			errno = ENOENT;
+			ret = -errno;
+			goto done;
+		}
+	}
+
+	ino = calloc(1, sizeof(struct inode));
+	if (!ino) {
+		ret = -errno;
+		goto done;
+	}
+
+	ino->parent = p_ino;
+	ino->atime = ino->mtime = ino->ctime = time(NULL);
+	ino->uid = getuid();
+	ino->gid = getgid();
+	ino->mode = S_IFDIR;
+
+	ino->parent = p_ino;
+	ino->layer = true;
+
+	pthread_mutex_init(&ino->lock, NULL);
+
+	pthread_mutex_lock(&inode_lock);
+	{
+		ht_set(inode_hash, layer, ino);
+	}
+	pthread_mutex_unlock(&inode_lock);
+
+done:
+	if (str) {
+		free(str);
+	}
+
+	if (ret) {
+		if (ino) {
+			free(ino);
+		}
+
+		if (p_ino) {
+			free(p_ino);
+		}
+	}
+
+	return ret;
+}
+
+int remove_layer(char *layer)
+{
+	struct inode *ino = NULL;
+
+	// XXX FIXME
+	pthread_mutex_lock(&inode_lock);
+	{
+		ino = ht_get(inode_hash, layer);
+		if (ino) {
+			ht_remove(inode_hash, layer);
+			free(ino);
+		} 
+	}
+	pthread_mutex_unlock(&inode_lock);
+	return 0;
+}
+
+int alloc_unionfs(char *id)
 {
 	struct union_fs *ufs = NULL;
 	char link[PATH_MAX];
