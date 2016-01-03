@@ -1,0 +1,6 @@
+version: v1
+plugins:
+  - go
+options:
+  go:
+    import_path: github.com/libopenstorage/openstorage

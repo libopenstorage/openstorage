@@ -44,7 +44,7 @@ install:
 proto:
 	go get -v go.pedge.io/protoeasy/cmd/protoeasy
 	go get -v go.pedge.io/pkg/cmd/strip-package-comments
-	protoeasy --go --go-import-path github.com/libopenstorage/openstorage .
+	protoeasy
 	find . -name *\.pb\*\.go | xargs strip-package-comments
 
 lint:
