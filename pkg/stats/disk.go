@@ -104,8 +104,8 @@ func (d *DiskStats) collect() {
 			Writes:     statCounter(values[7]),
 			WriteBytes: statCounter(values[9]) * 512,
 			WriteMs:    statCounter(values[10]),
-			IOProgress: statCounter(values[11]),
-			IOMs:       statCounter(values[12]),
+			IoProgress: statCounter(values[11]),
+			IoMs:       statCounter(values[12]),
 		}
 	}
 	d.lastCollect = time.Now()
