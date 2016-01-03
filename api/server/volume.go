@@ -137,7 +137,7 @@ func (vd *volApi) volumeSet(w http.ResponseWriter, r *http.Request) {
 			resp.VolumeResponse.Error = err.Error()
 		} else {
 			v0 := v[0]
-			resp.Volume = &v0
+			resp.Volume = v0
 		}
 	}
 	json.NewEncoder(w).Encode(resp)
@@ -182,7 +182,7 @@ func (vd *volApi) delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	vd.logRequest(method, string(volumeID)).Info("")
+	vd.logRequest(method, volumeID).Info("")
 
 	d, err := volume.Get(vd.name)
 	if err != nil {
@@ -203,7 +203,7 @@ func (vd *volApi) enumerate(w http.ResponseWriter, r *http.Request) {
 	var locator api.VolumeLocator
 	var configLabels map[string]string
 	var err error
-	var vols []api.Volume
+	var vols []*api.Volume
 
 	method := "enumerate"
 

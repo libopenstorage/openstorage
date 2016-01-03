@@ -92,11 +92,11 @@ func (d *driver) volFromName(name string) (*volumeInfo, error) {
 	}
 	vols, err := v.Inspect([]string{name})
 	if err == nil && len(vols) == 1 {
-		return &volumeInfo{vol: &vols[0]}, nil
+		return &volumeInfo{vol: vols[0]}, nil
 	}
 	vols, err = v.Enumerate(&api.VolumeLocator{Name: name}, nil)
 	if err == nil && len(vols) == 1 {
-		return &volumeInfo{vol: &vols[0]}, nil
+		return &volumeInfo{vol: vols[0]}, nil
 	}
 	return nil, fmt.Errorf("Cannot locate volume %s", name)
 }
