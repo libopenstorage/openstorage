@@ -41,17 +41,21 @@ type VolumeDriver interface {
 type IODriver interface {
 	// Read sz bytes from specified volume at specified offset.
 	// Return number of bytes read and error.
-	Read(volumeID string,
+	Read(
+		volumeID string,
 		buf []byte,
 		sz uint64,
-		offset int64) (int64, error)
+		offset int64,
+	) (int64, error)
 
 	// Write sz bytes from specified volume at specified offset.
 	// Return number of bytes written and error.
-	Write(volumeID string,
+	Write(
+		volumeID string,
 		buf []byte,
 		sz uint64,
-		offset int64) (int64, error)
+		offset int64,
+	) (int64, error)
 
 	// Flush writes to stable storage.
 	// Return error.
@@ -115,14 +119,14 @@ type ProtoDriver interface {
 type Enumerator interface {
 	// Inspect specified volumes.
 	// Returns slice of volumes that were found.
-	Inspect(volumeIDs []string) ([]api.Volume, error)
+	Inspect(volumeIDs []string) ([]*api.Volume, error)
 
 	// Enumerate volumes that map to the volumeLocator. Locator fields may be regexp.
 	// If locator fields are left blank, this will return all volumes.
-	Enumerate(locator *api.VolumeLocator, labels map[string]string) ([]api.Volume, error)
+	Enumerate(locator *api.VolumeLocator, labels map[string]string) ([]*api.Volume, error)
 
 	// Enumerate snaps for specified volumes
-	SnapEnumerate(volID []string, snapLabels map[string]string) ([]api.Volume, error)
+	SnapEnumerate(volID []string, snapLabels map[string]string) ([]*api.Volume, error)
 }
 
 // BlockDriver needs to be implemented by block volume drivers.  Filesystem volume

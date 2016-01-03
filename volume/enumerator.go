@@ -3,6 +3,7 @@ package volume
 import (
 	"encoding/json"
 	"fmt"
+	// TODO(pedge): what is this for?
 	_ "sync"
 
 	"github.com/portworx/kvdb"
@@ -11,9 +12,7 @@ import (
 )
 
 const (
-	keyBase = "openstorage/"
-	locks   = "/locks/"
-	volumes = "/volumes/"
+	keyBase = "openstorage"
 )
 
 type Store interface {
@@ -40,57 +39,6 @@ type Store interface {
 type DefaultEnumerator struct {
 	kvdb          kvdb.Kvdb
 	driver        string
-	lockKeyPrefix string
-	volKeyPrefix  string
-}
-
-func (e *DefaultEnumerator) lockKey(volumeID string) string {
-	return e.volKeyPrefix + volumeID + ".lock"
-}
-
-func (e *DefaultEnumerator) volKey(volumeID string) string {
-	return e.volKeyPrefix + volumeID
-}
-
-func hasSubset(set map[string]string, subset map[string]string) bool {
-	if subset == nil || len(subset) == 0 {
-		return true
-	}
-	if set == nil {
-		return false
-	}
-	for k := range subset {
-		if _, ok := set[k]; !ok {
-			return false
-		}
-	}
-	return true
-}
-
-func contains(volumeID string, set []string) bool {
-	if len(set) == 0 {
-		return true
-	}
-	for _, v := range set {
-		if v == volumeID {
-			return true
-		}
-	}
-	return false
-}
-
-func match(
-	v *api.Volume,
-	locator *api.VolumeLocator,
-	configLabels map[string]string,
-) bool {
-	if locator.Name != "" && v.Locator.Name != locator.Name {
-		return false
-	}
-	if !hasSubset(v.Locator.VolumeLabels, locator.VolumeLabels) {
-		return false
-	}
-	return hasSubset(v.Spec.ConfigLabels, configLabels)
 }
 
 // NewDefaultEnumerator initializes store with specified kvdb.
@@ -98,8 +46,6 @@ func NewDefaultEnumerator(driver string, kvdb kvdb.Kvdb) *DefaultEnumerator {
 	return &DefaultEnumerator{
 		kvdb:          kvdb,
 		driver:        driver,
-		lockKeyPrefix: keyBase + driver + locks,
-		volKeyPrefix:  keyBase + driver + volumes,
 	}
 }
 
@@ -144,15 +90,15 @@ func (e *DefaultEnumerator) DeleteVol(volumeID string) error {
 
 // Inspect specified volumes.
 // Returns slice of volumes that were found.
-func (e *DefaultEnumerator) Inspect(ids []string) ([]api.Volume, error) {
-	volumes := make([]api.Volume, 0, len(ids))
+func (e *DefaultEnumerator) Inspect(ids []string) ([]*api.Volume, error) {
+	volumes := make([]*api.Volume, 0, len(ids))
 	for _, id := range ids {
 		volume, err := e.GetVol(id)
 		// XXX Distinguish between ENOENT and an internal error from KVDB
 		if err != nil {
 			continue
 		}
-		volumes = append(volumes, *volume)
+		volumes = append(volumes, volume)
 	}
 	return volumes, nil
 }
@@ -162,20 +108,19 @@ func (e *DefaultEnumerator) Inspect(ids []string) ([]api.Volume, error) {
 func (e *DefaultEnumerator) Enumerate(
 	locator *api.VolumeLocator,
 	labels map[string]string,
-) ([]api.Volume, error) {
+) ([]*api.Volume, error) {
 
-	kvp, err := e.kvdb.Enumerate(e.volKeyPrefix)
+	kvp, err := e.kvdb.Enumerate(e.volKeyPrefix())
 	if err != nil {
 		return nil, err
 	}
-	volumes := make([]api.Volume, 0, len(kvp))
+	volumes := make([]*api.Volume, 0, len(kvp))
 	for _, v := range kvp {
-		var elem api.Volume
-		err = json.Unmarshal(v.Value, &elem)
-		if err != nil {
+		elem := &api.Volume{}
+		if err := json.Unmarshal(v.Value, elem); err != nil {
 			return nil, err
 		}
-		if match(&elem, locator, labels) {
+		if match(elem, locator, labels) {
 			volumes = append(volumes, elem)
 		}
 	}
@@ -186,16 +131,15 @@ func (e *DefaultEnumerator) Enumerate(
 func (e *DefaultEnumerator) SnapEnumerate(
 	volumeIDs []string,
 	labels map[string]string,
-) ([]api.Volume, error) {
-	kvp, err := e.kvdb.Enumerate(e.volKeyPrefix)
+) ([]*api.Volume, error) {
+	kvp, err := e.kvdb.Enumerate(e.volKeyPrefix())
 	if err != nil {
 		return nil, err
 	}
-	volumes := make([]api.Volume, 0, len(kvp))
+	volumes := make([]*api.Volume, 0, len(kvp))
 	for _, v := range kvp {
-		var elem api.Volume
-		err = json.Unmarshal(v.Value, &elem)
-		if err != nil {
+		elem := &api.Volume{}
+		if err := json.Unmarshal(v.Value, elem); err != nil {
 			return nil, err
 		}
 		if elem.Source == nil ||
@@ -208,4 +152,62 @@ func (e *DefaultEnumerator) SnapEnumerate(
 		}
 	}
 	return volumes, nil
+}
+
+func (e *DefaultEnumerator) lockKey(volumeID string) string {
+	return e.volKeyPrefix() + volumeID + ".lock"
+}
+
+func (e *DefaultEnumerator) volKey(volumeID string) string {
+	return e.volKeyPrefix() + volumeID
+}
+
+// TODO(pedge): not used - bug?
+func (d *DefaultEnumerator) lockKeyPrefix() string {
+	return fmt.Sprintf("%s/%s/locks/", keyBase, d.driver)
+}
+
+func (d *DefaultEnumerator) volKeyPrefix() string {
+	return fmt.Sprintf("%s/%s/volumes/", keyBase, d.driver)
+}
+
+func hasSubset(set map[string]string, subset map[string]string) bool {
+	if subset == nil || len(subset) == 0 {
+		return true
+	}
+	if set == nil {
+		return false
+	}
+	for k := range subset {
+		if _, ok := set[k]; !ok {
+			return false
+		}
+	}
+	return true
+}
+
+func contains(volumeID string, set []string) bool {
+	if len(set) == 0 {
+		return true
+	}
+	for _, v := range set {
+		if v == volumeID {
+			return true
+		}
+	}
+	return false
+}
+
+func match(
+	v *api.Volume,
+	locator *api.VolumeLocator,
+	configLabels map[string]string,
+) bool {
+	if locator.Name != "" && v.Locator.Name != locator.Name {
+		return false
+	}
+	if !hasSubset(v.Locator.VolumeLabels, locator.VolumeLabels) {
+		return false
+	}
+	return hasSubset(v.Spec.ConfigLabels, configLabels)
 }
