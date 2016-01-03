@@ -93,9 +93,9 @@ void ht_set(hashtable_t *hashtable, char *key, void *value) {
 		newpair = ht_newpair(key, value);
 
 		/* We're at the start of the linked list in this bin. */
-		if (next == hashtable->table[ bin ]) {
+		if (next == hashtable->table[bin]) {
 			newpair->next = next;
-			hashtable->table[ bin ] = newpair;
+			hashtable->table[bin] = newpair;
 	
 		/* We're at the end of the linked list in this bin. */
 		} else if (next == NULL) {
