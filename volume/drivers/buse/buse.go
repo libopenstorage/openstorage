@@ -9,12 +9,11 @@ import (
 	"strings"
 	"syscall"
 
-	"go.pedge.io/proto/time"
-
 	"github.com/Sirupsen/logrus"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/volume"
+	"github.com/libopenstorage/openstorage/volume/drivers/common"
 	"github.com/pborman/uuid"
 	"github.com/portworx/kvdb"
 )
@@ -178,18 +177,14 @@ func (d *driver) Create(locator *api.VolumeLocator, source *api.Source, spec *ap
 
 	logrus.Infof("BUSE mapped NBD device %s (size=%v) to block file %s", dev, spec.Size, buseFile)
 
-	v := &api.Volume{
-		Id:         volumeID,
-		Source:     source,
-		Locator:    locator,
-		Ctime:      prototime.Now(),
-		Spec:       spec,
-		LastScan:   prototime.Now(),
-		Format:     spec.Format,
-		State:      api.VolumeState_VOLUME_STATE_AVAILABLE,
-		Status:     api.VolumeStatus_VOLUME_STATUS_UP,
-		DevicePath: dev,
-	}
+	v := common.NewVolume(
+		volumeID,
+		spec.Format,
+		locator,
+		source,
+		spec,
+	)
+	v.DevicePath = dev
 
 	d.buseDevices[dev] = bd
 
