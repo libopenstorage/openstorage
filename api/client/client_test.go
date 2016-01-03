@@ -11,11 +11,16 @@ import (
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers/nfs"
 	"github.com/libopenstorage/openstorage/volume/drivers/test"
+	"github.com/Sirupsen/logrus"
 )
 
 var (
 	testPath = string("/tmp/openstorage_client_test")
 )
+
+func init() {
+	logrus.SetLevel(logrus.DebugLevel)
+}
 
 func makeRequest(t *testing.T) {
 	c, err := NewDriverClient(nfs.Name)
