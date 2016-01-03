@@ -66,7 +66,7 @@ errcheck:
 pretest: lint vet errcheck
 
 test:
-	go test -tags "$(TAGS)" $(PKGS)
+	go test -tags "$(TAGS)" $(TESTFLAGS) $(PKGS)
 
 docker-build:
 	docker build -t openstorage/osd-dev -f Dockerfile.osd-dev .
@@ -80,6 +80,7 @@ docker-test: docker-build
 		-e "TAGS=$(TAGS)" \
 		-e "PKGS=$(PKGS)" \
 		-e "BUILDFLAGS=$(BUILDFLAGS)" \
+		-e "TESTFLAGS=$(TESTFLAGS)" \
 		openstorage/osd-dev \
 			make test
 
