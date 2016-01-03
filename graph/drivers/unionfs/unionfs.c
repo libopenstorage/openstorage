@@ -30,28 +30,6 @@
 
 #include "hash.h"
 #include "layer.h"
-#include "inode.h"
-
-#define MAX_DESC 4096
-#define MAX_LAYERS 64
-#define MAX_INSTANCES 128
-
-struct union_fs {
-	hashtable_t *layers;
-	pthread_mutex_t lock;
-	char id[256];
-	bool available;
-};
-
-static struct union_fs ufs_heap[MAX_INSTANCES];
-
-// The union filesystems for each virtual combined layer.
-static pthread_mutex_t ufs_lock;
-static hashtable_t *ufs_hash;
-
-// The physical file systems for each layer.
-static pthread_mutex_t inode_lock;
-static hashtable_t *inode_hash;
 
 struct graph_dirp 
 {
@@ -63,188 +41,6 @@ struct graph_dirp
 static void trace(const char *fn, const char *path)
 {
 	fprintf(stderr, "unionfs operation: %s on %s\n", fn, path);
-}
-
-static void lock_ufs(struct union_fs *ufs)
-{
-	pthread_mutex_lock(&ufs->lock);
-}
-
-static void unlock_ufs(struct union_fs *ufs)
-{
-	pthread_mutex_unlock(&ufs->lock);
-}
-
-static struct union_fs *get_ufs(const char *path, char **new_path)
-{
-	struct union_fs *ufs = NULL;
-	char *p, *tmp_path = NULL;
-	int i, id;
-
-	*new_path = NULL;
-
-	tmp_path = strdup(path + 1);
-	if (!tmp_path) {
-		fprintf(stderr, "Warning, cannot allocate memory.\n");
-		goto done;
-	}
-
-	p = strchr(tmp_path, '/');
-	if (p) *p = 0;
-
-	ufs = ht_get(ufs_hash, tmp_path);
-	if (!ufs) {
-		goto done;
-	}
-
-	if (!ufs->available) {
-		*new_path = strchr(path+1, '/');
-		if (!*new_path) {
-			// Must be a request for root.
-			*new_path = "/";
-		}
-	} else {
-		ufs = NULL; 
-	}
-
-done:
-	if (tmp_path) {
-		free(tmp_path);
-	}
-
-	return ufs;
-}
-
-// This function converts a virtual or physical 'path' request to a physical path.
-// If 'path' is a Union FS path, it will be resolved to a physical layer path.
-// If 'path' is already is a request for a physical layer path, then 'path' is unchanged.
-static char *real_path(const char *path, bool create, bool *is_ufs)
-{
-	struct union_fs *ufs = NULL;
-	struct stat st;
-	char file[PATH_MAX];
-	char *fixed_path = NULL;
-	char *r = NULL;
-	char *dir;
-	int base_layer = -1;
-	int ret;
-	int i;
-
-	if (!strcmp(path, "/")) {
-		// This is a request for the root virtual path.  There are only
-		// union FS volumes at this location and no specific union FS context.
-
-		errno = 0;
-		*is_ufs = false;
-
-		r = strdup("/");
-		if (!r) {
-			errno = ENOMEM;
-			fprintf(stderr, "Warning, cannot allocate memory\n");
-		}
-
-		goto done;
-	}
-
-	ufs = get_ufs(path, &fixed_path);
-	if (!ufs) {
-		// Assume the request is for a layer.
-
-		errno = 0;
-		*is_ufs = false;
-
-		r = strdup(path);
-		if (!r) {
-			errno = ENOMEM;
-			fprintf(stderr, "Warning, cannot allocate memory\n");
-		}
-
-		goto done;
-	}
-
-	*is_ufs = true;
-
-	lock_ufs(ufs);
-
-	strncpy(file, fixed_path, sizeof(file));
-	dir = dirname(file);
-
-	for (i = 0; ufs->layers[i] && (i < MAX_LAYERS); i++) {
-		asprintf(&r, "%s%s", ufs->layers[i], fixed_path);
-		if (!r) {
-			errno = ENOMEM;
-			fprintf(stderr, "Warning, cannot allocate memory\n");
-			goto done;
-		}
-
-		ret = lstat(r, &st);
-		if (ret == 0) {
-			// Found the file.
-
-			errno = 0;
-			goto done;
-		}
-
-		// See if this layer contains the parent directory.  We give
-		// preference to the upper layers.
-		if (base_layer == -1) {
-			char *tmp_r;
-			asprintf(&tmp_r, "%s%s", ufs->layers[i], dir);
-			if (!r) {
-				errno = ENOMEM;
-				fprintf(stderr, "Warning, cannot allocate memory\n");
-				goto done;
-			}
-
-			ret = lstat(tmp_r, &st);
-			if (ret == 0) {
-				// This layer can be used to create the file.
-				base_layer = i;
-			}
-			free(tmp_r);
-		}
-
-		free(r);
-		r = NULL;
-	}
-
-	// If we did not find the file and create mode was requested, construct
-	// a file path in the appropriate layer.	
-	if (!r && create) {
-		if (base_layer == -1) {
-			errno = ENOENT;
-			fprintf(stderr, "Warning, create mode requested on %s, "
-					"but no layer could be found that could create this file\n", fixed_path);
-		} else {
-			errno = 0;
-			asprintf(&r, "%s%s", ufs->layers[base_layer], fixed_path);
-			if (!r) {
-				fprintf(stderr, "Warning, cannot allocate memory\n");
-				errno = ENOMEM;
-			}
-		}
-	} else {
-		errno = ENOENT;
-	}
-
-done:
-
-	if (ufs) {
-		unlock_ufs(ufs);
-	}
-
-	return r;
-}
-
-static void free_path(char *path)
-{
-	free(path);
-}
-
-static struct inode *path_to_inode(const char *path, bool create)
-{
-
-
 }
 
 static int graph_opendir(const char *path, struct fuse_file_info *fi)
@@ -1134,24 +930,11 @@ int start_unionfs(char *mount_path)
 	char *argv[4];
 	int i;
 
-	pthread_mutex_init(&ufs_lock, NULL);
-	pthread_mutex_init(&inode_lock, NULL);
-
-	for (i = 0; i < MAX_INSTANCES; i++) {
-		pthread_mutex_init(&ufs_heap[i].lock, NULL);
-
-		ufs_heap[i].available = true;
-	}
-
-	// Create a hash table to map an ID to a union FS.
-	ufs_hash = ht_create(65536);
-
-	// Create a hash table to map an inode to a layer FS.
-	inode_hash = ht_create(65536);
+	init_layers();
 
 	umask(0);
 
-	argv[0] = "graph";
+	argv[0] = "graph-unionfs";
 	argv[1] = mount_path;
 	argv[2] = "-f";
 
@@ -1160,96 +943,12 @@ int start_unionfs(char *mount_path)
 
 int alloc_unionfs(char *id)
 {
-	struct union_fs *ufs = NULL;
-	char link[PATH_MAX];
-	char *layer;
-	int res = 0;
-	int i;
-
-	pthread_mutex_lock(&ufs_lock);
-	{
-		for (i = 0; i < MAX_INSTANCES; i++) {
-			if (ufs_heap[i].available) {
-				ufs_heap[i].available = false;
-				ufs = &ufs_heap[i];
-				break;
-			}
-		}
-	}
-	pthread_mutex_unlock(&ufs_lock);
-
-	if (!ufs) {
-		errno = ENOMEM;
-		res = -errno;
-		printf("Warning, no more union FS instances available.\n");
-		goto done;
-	}
-
-	lock_ufs(ufs);
-
-	memset(ufs, 0, sizeof(struct union_fs));
-	strncpy(ufs->id, id, sizeof(ufs->id));
-	ht_set(ufs_hash, id, ufs);
-
-	for (i = 0, layer = layer_path; layer && (i < MAX_LAYERS); i++) {
-		char *parent = NULL;
-
-		ufs->layers[i] = strdup(layer);
-		if (!ufs->layers[i]) {
-			res = -errno;
-			goto done;
-		}
-
-		asprintf(&parent, "%s/.unionfs.parent", layer);
-		if (!parent) {
-			res = -errno;
-			goto done;
-		}
-
-		memset(link, 0, sizeof(link));
-		res = readlink(parent, link, sizeof(link));
-		if (res != -1) {
-			layer = link;
-		} else {
-			res = 0;
-			layer = NULL;
-		}
-
-		free(parent);
-	}
-
-done:
-	if (res != 0) {
-		if (ufs) {
-			free(ufs);
-		}
-	} else {
-		errno = 0;
-	}
-
-	if (ufs) {
-		unlock_ufs(ufs);
-	}
-
-	return res;
+	return 0;
 }
 
 int release_unionfs(char *id)
 {
-	int i;
-
-	pthread_mutex_lock(&ufs_lock);
-	{
-		for (i = 0; i < MAX_INSTANCES; i++) {
-			if (!ufs_heap[i].available && !strcmp(ufs_heap[i].id, id)) {
-				ufs_heap[i].available = true;
-				break;
-			}
-		}
-	}
-	pthread_mutex_unlock(&ufs_lock);
-
-	return 0;
+	return remove_layer(id);
 }
 
 /*

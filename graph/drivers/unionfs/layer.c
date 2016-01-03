@@ -19,7 +19,13 @@
 
 static hashtable_t *layer_hash;
 
-static struct inode *alloc_inode(struct inode *parent, char *name, 
+// Guards against a deleted inode getting free'd if someone 
+// is still referencing it.
+static pthread_rwlock_t inode_reaper_lock;
+
+// Allocate an inode, add it to the layer and link it to the namespace.
+// Initial reference is 1.
+struct inode *alloc_inode(struct inode *parent, char *name, 
 	mode_t mode, struct layer *layer)
 {
 	struct inode *inode;
@@ -27,7 +33,7 @@ static struct inode *alloc_inode(struct inode *parent, char *name,
 	char *dupname;
 	char *base;
 
-	inode = calloc(1, sizeof(struct inode));
+	inode = (struct inode *)malloc(sizeof(struct inode));
 	if (!inode) {
 		ret = -1;
 		goto done;
@@ -38,6 +44,8 @@ static struct inode *alloc_inode(struct inode *parent, char *name,
 		ret = -1;
 		goto done;
 	}
+
+	inode->ref = 1;
 
 	inode->deleted = false;
 
@@ -53,10 +61,13 @@ static struct inode *alloc_inode(struct inode *parent, char *name,
 	inode->gid = getgid();
 	inode->mode = mode;
 
-	inode->f = tmpfile();
-	if (!inode->f) {
-		ret = -1;
-		goto done;
+	if (mode & S_IFREG) {
+		// XXX this needs to point to a block device.
+		inode->f = tmpfile();
+		if (!inode->f) {
+			ret = -1;
+			goto done;
+		}
 	}
 
 	pthread_mutex_init(&inode->lock, NULL);
@@ -73,6 +84,9 @@ static struct inode *alloc_inode(struct inode *parent, char *name,
 		}
 		pthread_mutex_unlock(&parent->lock);
 	}
+
+	inode->child = NULL;
+	inode->next = NULL;
 
 	ht_set(layer->children, name, inode);
 
@@ -127,7 +141,8 @@ done:
 }
 
 // Locate an inode given a path.  Create one if 'create' flag is specified.
-static struct inode *locate(const char *path, bool create, mode_t mode)
+// Increment reference count on the inode.
+struct inode *ref_inode(const char *path, bool create, mode_t mode)
 {
 	struct layer *layer = NULL;
 	struct layer *parent_layer = NULL;
@@ -137,6 +152,8 @@ static struct inode *locate(const char *path, bool create, mode_t mode)
 	char *fixed_path = NULL;
 	char *dir;
 	int i;
+
+	pthread_rwlock_rdlock(&inode_reaper_lock);
 
 	errno = 0;
 
@@ -184,7 +201,26 @@ done:
 		}
 	}
 
+	pthread_rwlock_unlock(&inode_reaper_lock);
+
 	return inode;
+}
+
+// Decrement ref count on an inode.  A deleted inode with a ref count of 0 
+// will be garbage collected.
+void deref_inode(struct inode *inode)
+{
+	pthread_mutex_lock(&inode->lock);
+	{
+		inode->ref--;
+	}
+	pthread_mutex_lock(&inode->lock);
+}
+
+// Must be called with reference held.
+void delete_inode(struct inode *inode)
+{
+	inode->deleted = true;
 }
 
 int create_layer(char *id, char *parent_id)
@@ -227,6 +263,8 @@ int create_layer(char *id, char *parent_id)
 		goto done;
 	}
 
+	deref_inode(layer->root);
+
 	ht_set(layer_hash, id, layer);
 
 done:
@@ -247,7 +285,7 @@ int remove_layer(char *id)
 {
 	ht_remove(layer_hash, id);
 
-	// XXX remove inodes lazily.
+	// XXX mark all inodes for deletion.
 
 	return 0;
 }
@@ -258,6 +296,8 @@ int init_layers()
 	if (!layer_hash) {
 		return -1;
 	}
+
+	pthread_rwlock_init(&inode_reaper_lock, 0);
 
 	return 0;
 }
