@@ -1,4 +1,4 @@
-// gcc unionfs.c layer.c hash.c -DEXPERIMENTAL_ -DiFILE_OFFSET_BITS=64 -lfuse -lulockmgr -lpthread -o unionfs
+// gcc unionfs.c layer.c hash.c -DEXPERIMENTAL_ -DSTANDALONE_ -DiFILE_OFFSET_BITS=64 -lfuse -lulockmgr -lpthread -o unionfs
 
 #ifdef EXPERIMENTAL_
 
@@ -33,23 +33,16 @@
 
 struct graph_dirp 
 {
-	DIR *dp;
 	struct dirent *entry;
 	off_t offset;
 };
 
-static void trace(const char *fn, const char *path)
-{
-	fprintf(stderr, "unionfs operation: %s on %s\n", fn, path);
-}
-
 static int graph_opendir(const char *path, struct fuse_file_info *fi)
 {
 	int res = 0;
+#if 0
 	char *rp = NULL;
 	struct graph_dirp *d = malloc(sizeof(struct graph_dirp));
-
-	// trace(__func__, path);
 
 	if (d == NULL) {
 		res = -ENOMEM;
@@ -77,7 +70,7 @@ done:
 	if (rp) {
 		free_path(rp);
 	}
-
+#endif
 	return res;
 }
 
@@ -92,37 +85,30 @@ static int graph_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 		off_t offset, struct fuse_file_info *fi)
 {
 	int res = 0;
+#if 0
 	struct union_fs *ufs = NULL;
 	char *fixed_path = NULL;
 	struct stat st;
 	int i;
 
-	// trace(__func__, path);
-
 	if (!strcmp(path, "/")) {
-		// List valid union FS paths.
+		// List all layers.
+		for (i = 0; i < MAX_INSTANCES; i++) {
+			if (!ufs_heap[i].available) {
+				char phys_path[PATH_MAX];
+				char d_name[8];
 
-		// XXX do we need to lock here?
-		pthread_mutex_lock(&ufs_lock);
-		{
-			for (i = 0; i < MAX_INSTANCES; i++) {
-				if (!ufs_heap[i].available) {
-					char phys_path[PATH_MAX];
-					char d_name[8];
+				snprintf(phys_path, sizeof(phys_path), "%s/%s",
+					union_src, ufs_heap[i].id);
+				stat(phys_path, &st);
 
-					snprintf(phys_path, sizeof(phys_path), "%s/%s",
-						union_src, ufs_heap[i].id);
-					stat(phys_path, &st);
-
-					sprintf(d_name, "%s", ufs_heap[i].id);
-					if (filler(buf, d_name, &st, 0)) {
-						fprintf(stderr, "Warning, Filler too full on root.\n");
-						break;
-					}
+				sprintf(d_name, "%s", ufs_heap[i].id);
+				if (filler(buf, d_name, &st, 0)) {
+					fprintf(stderr, "Warning, Filler too full on root.\n");
+					break;
 				}
 			}
 		}
-		pthread_mutex_unlock(&ufs_lock);
 
 		goto done;
 	}
@@ -193,45 +179,48 @@ done:
 		unlock_ufs(ufs);
 	}
 
+#endif
 	return res;
 }
 
 static int graph_releasedir(const char *path, struct fuse_file_info *fi)
 {
+#if 0
 	struct graph_dirp *d = get_dirp(fi);
 	(void) path;
 
-	// trace(__func__, path);
-
 	closedir(d->dp);
 	free(d);
-
+#endif
 	return 0;
 }
 
 static int graph_getattr(const char *path, struct stat *stbuf)
 {
 	int res = 0;
-	char *rp = NULL;
+	struct inode *inode = NULL;
 
-	// trace(__func__, path);
-
-	rp = real_path(path, false);
-	if (!rp) {
+	inode = ref_inode(path, false, 0);	
+	if (!inode) {
 		res = -errno;
 		goto done;
 	}
 
-	res = lstat(rp, stbuf);
+	memset(stbuf, 0, sizeof(struct stat));
+
+	stbuf->st_mode = inode->mode;
+	stbuf->st_nlink = inode->nlink;
+	stbuf->st_uid = inode->uid;
+	stbuf->st_gid = inode->gid;
+	stbuf->st_size = inode->size;
+	stbuf->st_atime = inode->atime;
+	stbuf->st_mtime = inode->mtime;
+	stbuf->st_ctime = inode->ctime;
 	stbuf->st_ino = 0;
-	if (res == -1) {
-		res = -errno;
-		goto done;
-	}
 
 done:
-	if (rp) {
-		free_path(rp);
+	if (inode) {
+		deref_inode(inode);
 	}
 
 	return res;
@@ -240,79 +229,40 @@ done:
 static int graph_access(const char *path, int mask)
 {
 	int res = 0;
-	char *rp = NULL;
+	struct inode *inode = NULL;
 
-	// trace(__func__, path);
-
-	rp = real_path(path, false);
-	if (!rp) {
+	inode = ref_inode(path, false, 0);	
+	if (!inode) {
 		res = -errno;
 		goto done;
 	}
 
-	res = access(rp, mask);
-	if (res == -1) {
-		res = -errno;
-		goto done;
-	}
+	// TODO check mask bits against the inode.
 
 done:
-	if (rp) {
-		free_path(rp);
-	}
-	return res;
-}
-
-static int graph_readlink(const char *path, char *buf, size_t size)
-{
-	int res = 0;
-	char *rp = NULL;
-
-	// trace(__func__, path);
-
-	rp = real_path(path, false);
-	if (!rp) {
-		res = -errno;
-		goto done;
+	if (inode) {
+		deref_inode(inode);
 	}
 
-	res = readlink(rp, buf, size - 1);
-	if (res == -1) {
-		res = -errno;
-		goto done;
-	}
-	buf[res] = '\0';
-	res = 0;
-
-done:
-	if (rp) {
-		free_path(rp);
-	}
 	return res;
 }
 
 static int graph_unlink(const char *path)
 {
 	int res = 0;
-	char *rp = NULL;
+	struct inode *inode = NULL;
 
-	// trace(__func__, path);
-
-	rp = real_path(path, false);
-	if (!rp) {
+	inode = ref_inode(path, false, 0);	
+	if (!inode) {
 		res = -errno;
 		goto done;
 	}
 
-	res = unlink(rp);
-	if (res == -1) {
-		res = -errno;
-		goto done;
-	}
+	delete_inode(inode);
 
 done:
-	if (rp) {
-		free_path(rp);
+	if (inode) {
+		deref_inode(inode);
 	}
 
 	return res;
@@ -321,53 +271,31 @@ done:
 static int graph_rmdir(const char *path)
 {
 	int res = 0;
-	char *rp = NULL;
+	struct inode *inode = NULL;
 
-	// trace(__func__, path);
-
-	rp = real_path(path, false);
-	if (!rp) {
+	inode = ref_inode(path, false, 0);	
+	if (!inode) {
 		res = -errno;
 		goto done;
 	}
 
-	res = rmdir(rp);
-	if (res == -1) {
+	if (!inode->mode & S_IFDIR) {
+		errno = ENOTDIR;
 		res = -errno;
 		goto done;
 	}
+
+	if (inode->child != NULL) {
+		errno = ENOTEMPTY;
+		res = -errno;
+		goto done;
+	}
+
+	delete_inode(inode);
 
 done:
-	if (rp) {
-		free_path(rp);
-	}
-
-	return res;
-}
-
-static int graph_symlink(const char *from, const char *to)
-{
-	int res = 0;
-	char *rp = NULL;
-
-	// trace(__func__, from);
-	// trace(__func__, to);
-
-	rp = real_path(to, true);
-	if (!rp) {
-		res = -errno;
-		goto done;
-	}
-
-	res = symlink(from, rp);
-	if (res == -1) {
-		res = -errno;
-		goto done;
-	}
-
-done:
-	if (rp) {
-		free_path(rp);
+	if (inode) {
+		deref_inode(inode);
 	}
 
 	return res;
@@ -375,104 +303,27 @@ done:
 
 static int graph_rename(const char *from, const char *to)
 {
-	int res = 0;
-	char *from_rp = NULL;
-	char *to_rp = NULL;
-
-	// trace(__func__, from);
-	// trace(__func__, to);
-
-	from_rp = real_path(from, false);
-	if (!from_rp) {
-		res = -errno;
-		goto done;
-	}
-
-	to_rp = real_path(to, true);
-	if (!to_rp) {
-		res = -errno;
-		goto done;
-	}
-
-	res = rename(from_rp, to_rp);
-	if (res == -1) {
-		res = -errno;
-		goto done;
-	}
-
-done:
-	if (from_rp) {
-		free_path(from_rp);
-	}
-
-	if (to_rp) {
-		free_path(to_rp);
-	}
-
-	return res;
-}
-
-static int graph_link(const char *from, const char *to)
-{
-	int res = 0;
-	char *from_rp = NULL;
-	char *to_rp = NULL;
-
-	// trace(__func__, from);
-	// trace(__func__, to);
-
-	from_rp = real_path(from, false);
-	if (!from_rp) {
-		res = -errno;
-		goto done;
-	}
-
-	to_rp = real_path(to, true);
-	if (!to_rp) {
-		res = -errno;
-		goto done;
-	}
-
-	res = link(from_rp, to_rp);
-	if (res == -1) {
-		res = -errno;
-		goto done;
-	}
-
-done:
-	if (from_rp) {
-		free_path(from_rp);
-	}
-
-	if (to_rp) {
-		free_path(to_rp);
-	}
-
-	return res;
+	// XXX TODO
+	errno = EINVAL;
+	return -EINVAL;
 }
 
 static int graph_chmod(const char *path, mode_t mode)
 {
 	int res = 0;
-	char *rp = NULL;
+	struct inode *inode = NULL;
 
-	// trace(__func__, path);
-
-	rp = real_path(path, false);
-	if (!rp) {
+	inode = ref_inode(path, false, 0);	
+	if (!inode) {
 		res = -errno;
 		goto done;
 	}
 
-	res = chmod(rp, mode);
-	if (res == -1) {
-		res = -errno;
-		goto done;
-	}
+	inode->mode = mode;
 
 done:
-	if (rp) {
-		free_path(rp);
+	if (inode) {
+		deref_inode(inode);
 	}
 
 	return res;
@@ -481,23 +332,20 @@ done:
 static int graph_chown(const char *path, uid_t uid, gid_t gid)
 {
 	int res = 0;
-	char *rp = NULL;
+	struct inode *inode = NULL;
 
-	rp = real_path(path, false);
-	if (!rp) {
+	inode = ref_inode(path, false, 0);	
+	if (!inode) {
 		res = -errno;
 		goto done;
 	}
 
-	res = lchown(rp, uid, gid);
-	if (res == -1) {
-		res = -errno;
-		goto done;
-	}
+	inode->gid = gid;
+	inode->uid = uid;
 
 done:
-	if (rp) {
-		free_path(rp);
+	if (inode) {
+		deref_inode(inode);
 	}
 
 	return res;
@@ -506,227 +354,196 @@ done:
 static int graph_truncate(const char *path, off_t size)
 {
 	int res = 0;
+	struct inode *inode = NULL;
 
-	// trace(__func__, path);
-
-	int fd = maybe_open(path, O_RDWR, 0777);
-	if (fd == -1) {
-		errno = ENOENT;
-		res = -ENOENT;
-		goto done;
-	}
-
-	res = ftruncate(fd, size);
-	if (res == -1) {
+	inode = ref_inode(path, false, 0);	
+	if (!inode) {
 		res = -errno;
 		goto done;
 	}
 
+	if (inode->mode & S_IFDIR) {
+		errno = EISDIR;
+		res = -EISDIR;
+		goto done;
+	}
+
+	ftruncate(fileno(inode->f), size);
+	inode->size = size;
+
 done:
+	if (inode) {
+		deref_inode(inode);
+	}
 
 	return res;
 }
 
 static int graph_utimens(const char *path, const struct timespec ts[2])
 {
-	struct timeval tv[2];
-	int res = 0;
-	char *rp = NULL;
+	 int res = 0;
+	 struct inode *inode = NULL;
 
-	// trace(__func__, path);
+	 inode = ref_inode(path, false, 0);
+	 if (!inode) {
+		  res = -errno;
+		  goto done;
+	 }
 
-	rp = real_path(path, false);
-	if (!rp) {
-		res = -errno;
-		goto done;
-	}
-
-	tv[0].tv_sec = ts[0].tv_sec;
-	tv[0].tv_usec = ts[0].tv_nsec / 1000;
-	tv[1].tv_sec = ts[1].tv_sec;
-	tv[1].tv_usec = ts[1].tv_nsec / 1000;
-
-	res = utimes(rp, tv);
-	if (res == -1) {
-		res = -errno;
-		goto done;
-	}
+	inode->atime = (time_t)ts[0].tv_sec;
+	inode->mtime = (time_t)ts[1].tv_sec;
 
 done:
-	if (rp) {
-		free_path(rp);
-	}
+	 if (inode) {
+		  deref_inode(inode);
+	 }
 
-	return res;
+	 return res;
 }
 
 static int graph_open(const char *path, struct fuse_file_info *fi)
 {
-	int res = 0;
-	int fd;
+	 int res = 0;
+	 struct inode *inode = NULL;
 
-	trace(__func__, path);
-
-	fd = maybe_open(path, fi->flags, 0777);
-	if (fd == -1) {
-		res = -errno;
-		goto done;
-	}
-
-	fi->fh = fd;
+	 inode = ref_inode(path, (fi->flags & O_CREAT ? true : false), 0777 & S_IFREG);
+	 if (!inode) {
+		  res = -errno;
+		  goto done;
+	 }
 
 done:
+	 if (inode) {
+		  deref_inode(inode);
+	 }
 
-	return res;
+	 return res;
 }
 
 static int graph_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 {
-	int res = 0;
-	int fd;
+	 int res = 0;
+	 struct inode *inode = NULL;
 
-	trace(__func__, path);
-
-	fd = maybe_open(path, fi->flags, mode);
-	if (fd == -1) {
-		res = -errno;
-		goto done;
-	}
-
-	fi->fh = fd;
+	 inode = ref_inode(path, (fi->flags & O_CREAT ? true : false), mode & S_IFREG);
+	 if (!inode) {
+		  res = -errno;
+		  goto done;
+	 }
 
 done:
+	 if (inode) {
+		  deref_inode(inode);
+	 }
 
-	return res;
+	 return res;
 }
 
 static int graph_mkdir(const char *path, mode_t mode)
 {
-	int res = 0;
-	char *rp = NULL;
+	 int res = 0;
+	 struct inode *inode = NULL;
 
-	// trace(__func__, path);
-
-	rp = real_path(path, true);
-	if (!rp) {
-		res = -errno;
-		goto done;
-	}
-
-	res = mkdir(rp, mode);
-	if (res == -1) {
-		res = -errno;
-		goto done;
-	}
+	 inode = ref_inode(path, true, mode & S_IFDIR);
+	 if (!inode) {
+		  res = -errno;
+		  goto done;
+	 }
 
 done:
-	if (rp) {
-		free_path(rp);
-	}
+	 if (inode) {
+		  deref_inode(inode);
+	 }
 
-	return res;
+	 return res;
 }
 
 static int graph_mknod(const char *path, mode_t mode, dev_t rdev)
 {
-	int res = 0;
-	char *rp = NULL;
-
-	// trace(__func__, path);
-
-	rp = real_path(path, true);
-	if (!rp) {
-		res = -errno;
-		goto done;
-	}
-
-	if (S_ISFIFO(mode)) {
-		res = mkfifo(rp, mode);
-	} else {
-		res = mknod(rp, mode, rdev);
-	}
-
-	if (res == -1) {
-		res = -errno;
-		goto done;
-	}
-
-done:
-	if (rp) {
-		free_path(rp);
-	}
-
-	return res;
+	// XXX TODO
+	errno = EINVAL;
+	return -EINVAL;
 }
 
 static int graph_fgetattr(const char *path, struct stat *stbuf,
 		struct fuse_file_info *fi)
 {
-	int res = 0;
-	(void) path;
-
-	// trace(__func__, path);
-
-	res = fstat(fi->fh, stbuf);
-	stbuf->st_ino = 0;
-	if (res == -1) {
-		return -errno;
-	}
-
-	return 0;
+	return graph_getattr(path, stbuf);
 }
 
 static int graph_ftruncate(const char *path, off_t size,
-		struct fuse_file_info *fi)
+	struct fuse_file_info *fi)
 {
-	int res;
-	(void) path;
-
-	// trace(__func__, path);
-
-	res = ftruncate(fi->fh, size);
-	if (res == -1) {
-		return -errno;
-	}
-
-	return 0;
+	return graph_truncate(path, size);
 }
 
 static int graph_read(const char *path, char *buf, size_t size, off_t offset,
 		struct fuse_file_info *fi)
 {
-	int res;
-	(void) path;
+    int res = 0;
+    struct inode *inode = NULL;
 
-	res = pread(fi->fh, buf, size, offset);
+    inode = ref_inode(path, false, 0);
+    if (!inode) {
+        res = -errno;
+        goto done;
+    }
+    
+    if (inode->mode & S_IFDIR) {
+        errno = EISDIR;
+        res = -EISDIR;
+        goto done;
+    }
+
+	res = pread(fileno(inode->f), buf, size, offset);
 	if (res == -1) {
 		res = -errno;
 	}
 
-	return res;
+done:
+    if (inode) {
+        deref_inode(inode);
+    }
+
+    return res;
 }
 
 static int graph_write(const char *path, const char *buf, size_t size,
 		off_t offset, struct fuse_file_info *fi)
 {
-	int res;
-	(void) path;
+    int res = 0;
+    struct inode *inode = NULL;
 
-	res = pwrite(fi->fh, buf, size, offset);
-	if (res == -1) {
-		res = -errno;
-	}
+    inode = ref_inode(path, false, 0);
+    if (!inode) {
+        res = -errno;
+        goto done;
+    }
 
-	return res;
+    if (inode->mode & S_IFDIR) {
+        errno = EISDIR;
+        res = -EISDIR;
+        goto done;
+    }
+
+    res = pwrite(fileno(inode->f), buf, size, offset);
+    if (res == -1) {
+        res = -errno;
+    }
+
+done:
+    if (inode) {
+        deref_inode(inode);
+    }
+
+    return res;
 }
 
 static int graph_statfs(const char *path, struct statvfs *stbuf)
 {
 	int res = 0;
 
-	// trace(__func__, path);
-
-	res = statvfs(union_src, stbuf);
+	res = statvfs("/", stbuf);
 	if (res == -1) {
 		res = -errno;
 	}
@@ -744,7 +561,6 @@ static int graph_flush(const char *path, struct fuse_file_info *fi)
 static int graph_release(const char *path, struct fuse_file_info *fi)
 {
 	(void) path;
-	// intentionally omit closing fi->fh.
 
 	return 0;
 }
@@ -752,21 +568,50 @@ static int graph_release(const char *path, struct fuse_file_info *fi)
 static int graph_fsync(const char *path, int isdatasync,
 		struct fuse_file_info *fi)
 {
-	int res;
-	(void) path;
+    int res = 0;
+    struct inode *inode = NULL;
 
-#ifndef HAVE_FDATASYNC
-	(void) isdatasync;
-#else
-	if (isdatasync)
-		res = fdatasync(fi->fh);
-	else
-#endif
-		res = fsync(fi->fh);
-	if (res == -1)
-		return -errno;
+    inode = ref_inode(path, false, 0);
+    if (!inode) {
+        res = -errno;
+        goto done;
+    }
+    
+    if (inode->mode & S_IFDIR) {
+        errno = EISDIR;
+        res = -EISDIR;
+        goto done;
+    }
 
-	return 0;
+    fsync(fileno(inode->f));
+
+done:
+    if (inode) {
+        deref_inode(inode);
+    }
+
+    return res;
+}
+
+static int graph_readlink(const char *path, char *buf, size_t size)
+{
+	// XXX TODO
+	errno = EINVAL;
+	return -EINVAL;
+}
+
+static int graph_symlink(const char *from, const char *to)
+{
+	// XXX TODO
+	errno = EINVAL;
+	return -EINVAL;
+}
+
+static int graph_link(const char *from, const char *to)
+{
+	// XXX TODO
+	errno = EINVAL;
+	return -EINVAL;
 }
 
 #ifdef HAVE_SETXATTR
@@ -774,105 +619,32 @@ static int graph_fsync(const char *path, int isdatasync,
 static int graph_setxattr(const char *path, const char *name, const char *value,
 		size_t size, int flags)
 {
-	int res = 0;
-	char *rp = NULL;
-
-	rp = real_path(path, false);
-	if (!rp) {
-		res = -errno;
-		goto done;
-	}
-
-	res = lsetxattr(rp, name, value, size, flags);
-	if (res == -1) {
-		res = -errno;
-		goto done;
-	}
-	res = 0;
-
-done:
-	if (rp) {
-		free_path(rp);
-	}
-
-	return res;
+	// XXX TODO
+	errno = EINVAL;
+	return -EINVAL;
 }
 
 static int graph_getxattr(const char *path, const char *name, char *value,
 		size_t size)
 {
-	int res = 0;
-	char *rp = NULL;
-
-	rp = real_path(path, false);
-	if (!rp) {
-		res = -errno;
-		goto done;
-	}
-
-	res = lgetxattr(rp, name, value, size);
-	if (res == -1) {
-		res = -errno;
-		goto done;
-	}
-
-done:
-	if (rp) {
-		free_path(rp);
-	}
-
-	return res;
+	// XXX TODO
+	errno = EINVAL;
+	return -EINVAL;
 }
 
 static int graph_listxattr(const char *path, char *list, size_t size)
 {
-	int res = 0;
-	char *rp = NULL;
-
-	rp = real_path(path, false);
-	if (!rp) {
-		res = -errno;
-		goto done;
-	}
-
-	res = llistxattr(rp, list, size);
-	if (res == -1) {
-		res = -errno;
-		goto done;
-	}
-
-done:
-	if (rp) {
-		free_path(rp);
-	}
-
-	return res;
+	// XXX TODO
+	errno = EINVAL;
+	return -EINVAL;
 }
 
 static int graph_removexattr(const char *path, const char *name)
 {
+	// XXX TODO
+	errno = EINVAL;
+	return -EINVAL;
 	int res = 0;
-	char *rp = NULL;
-
-	rp = real_path(path, false);
-	if (!rp) {
-		res = -errno;
-		goto done;
-	}
-
-	int res = lremovexattr(rp, name);
-	if (res == -1) {
-		ret = -errno;
-		goto done;
-	}
-	res = 0;
-
-done:
-	if (rp) {
-		free_path(rp);
-	}
-
-	return res;
 }
 
 #endif /* HAVE_SETXATTR */
@@ -943,19 +715,19 @@ int start_unionfs(char *mount_path)
 
 int alloc_unionfs(char *id)
 {
-	return 0;
+	return set_upper(id);
 }
 
 int release_unionfs(char *id)
 {
-	return remove_layer(id);
+	return unset_upper(id);
 }
 
-/*
+#ifdef STANDALONE_
 int main()
 {
-   start_unionfs("/var/lib/openstorage/fuse/physical", "/var/lib/openstorage/fuse/virtual");
+	start_unionfs("/var/lib/openstorage/fuse");
 }
-*/
+#endif
 
 #endif

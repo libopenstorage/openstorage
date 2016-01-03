@@ -130,11 +130,21 @@ static struct layer *get_layer(const char *path, char **new_path)
 	p = strchr(tmp_path, '/');
 	if (p) *p = 0;
 
+	*new_path = strchr(path+1, '/');
+	if (!*new_path) {
+		// Must be a request for root.
+		*new_path = "/";
+	}
+
 	layer = ht_get(layer_hash, tmp_path);
 
 done:
 	if (tmp_path) {
 		free(tmp_path);
+	}
+
+	if (!layer) {
+		errno = ENOENT;
 	}
 
 	return layer;
@@ -169,6 +179,12 @@ struct inode *ref_inode(const char *path, bool create, mode_t mode)
 		// See if this layer has 'path'
 		inode = ht_get(layer->children, fixed_path);
 		if (inode) {
+			pthread_mutex_lock(&inode->lock);
+			{
+				inode->ref++;
+			}
+			pthread_mutex_lock(&inode->lock);
+			
 			goto done;
 		}
 
@@ -195,13 +211,13 @@ struct inode *ref_inode(const char *path, bool create, mode_t mode)
 
 done:
 
+	pthread_rwlock_unlock(&inode_reaper_lock);
+
 	if (!inode) {
 		if (!errno) {
 			errno = ENOENT;
 		}
 	}
-
-	pthread_rwlock_unlock(&inode_reaper_lock);
 
 	return inode;
 }
@@ -257,7 +273,7 @@ int create_layer(char *id, char *parent_id)
 	layer->parent = parent;
 	layer->children = ht_create(65536);
 
-	layer->root = alloc_inode(NULL, "/", S_IFDIR, layer);
+	layer->root = alloc_inode(NULL, "/", 0777 & S_IFDIR, layer);
 	if (layer->root == NULL) {
 		ret = -errno;
 		goto done;
@@ -287,6 +303,40 @@ int remove_layer(char *id)
 
 	// XXX mark all inodes for deletion.
 
+	return 0;
+}
+
+// Mark a layer as the top most layer.
+int set_upper(char *id)
+{
+	struct layer *layer = NULL;
+
+	layer = ht_get(layer_hash, id);
+	if (!layer) {
+		errno = ENOENT;
+		return -1;
+	}
+
+	layer->upper = true;
+
+	errno = 0;
+	return 0;
+}
+
+// Unmark a layer as the top most layer.
+int unset_upper(char *id)
+{
+	struct layer *layer = NULL;
+
+	layer = ht_get(layer_hash, id);
+	if (!layer) {
+		errno = ENOENT;
+		return -1;
+	}
+
+	layer->upper = false;
+
+	errno = 0;
 	return 0;
 }
 

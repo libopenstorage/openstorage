@@ -10,8 +10,15 @@
 
 // Minimal inode structure.
 struct inode {
+	pthread_mutex_t lock;
+
+	// Reference count.
 	int ref;
 
+	// If this flag is set, the inode will be garbage collected.
+	bool deleted;
+
+	// Stat buf.
 	mode_t mode;
 	nlink_t nlink;
 	uid_t uid;
@@ -21,6 +28,7 @@ struct inode {
 	time_t mtime;
 	time_t ctime;
 
+	// Full path name.
 	char *name;
 
 	// The filesystem tree.
@@ -31,17 +39,15 @@ struct inode {
 	// The layer this inode belongs to.
 	struct layer *layer;
 
+
 	// XXX This should point to a block device.
 	FILE *f;
-
-	// If this flag is set, the inode will be garbage collected.
-	bool deleted;
-
-	pthread_mutex_t lock;
 };
 
 struct layer {
 	char id[256];
+
+	bool upper;
 
 	struct inode *root;
 	hashtable_t *children;
@@ -68,6 +74,16 @@ extern struct inode *ref_inode(const char *path, bool create, mode_t mode);
 // will be garbage collected.
 extern void deref_inode(struct inode *inode);
 
+// Must be called with reference held.
+extern void delete_inode(struct inode *inode);
+
+// Mark a layer as the top most layer.
+extern int set_upper(char *id);
+
+// Unmark a layer as the top most layer.
+extern int unset_upper(char *id);
+
+// Initialize the layer file system.
 extern int init_layers(void);
 
 #endif // _LAYER_H_
