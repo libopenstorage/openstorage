@@ -20,11 +20,11 @@ import (
 // so that tests can build on other tests' work
 type Context struct {
 	volume.VolumeDriver
-	volID      api.VolumeID
-	snapID     api.VolumeID
+	volID      string
+	snapID     string
 	mountPath  string
 	devicePath string
-	Filesystem string
+	Filesystem api.FSType
 	testPath   string
 	testFile   string
 }
@@ -32,9 +32,9 @@ type Context struct {
 func NewContext(d volume.VolumeDriver) *Context {
 	return &Context{
 		VolumeDriver: d,
-		volID:        api.BadVolumeID,
-		snapID:       api.BadVolumeID,
-		Filesystem:   string(""),
+		volID:        "",
+		snapID:       "",
+		Filesystem:   api.FSType_FS_TYPE_NONE,
 		testPath:     path.Join("/tmp/openstorage/mount/", d.String()),
 		testFile:     path.Join("/tmp/", d.String()),
 	}
@@ -81,12 +81,12 @@ func create(t *testing.T, ctx *Context) {
 	fmt.Println("create")
 
 	volID, err := ctx.Create(
-		api.VolumeLocator{Name: "foo", VolumeLabels: api.Labels{"oh": "create"}},
+		&api.VolumeLocator{Name: "foo", VolumeLabels: map[string]string{"oh": "create"}},
 		nil,
 		&api.VolumeSpec{
 			Size:    1 * 1024 * 1024 * 1024,
-			HALevel: 1,
-			Format:  api.Filesystem(ctx.Filesystem),
+			HaLevel: 1,
+			Format:  ctx.Filesystem,
 		})
 
 	assert.NoError(t, err, "Failed in Create")
@@ -96,30 +96,30 @@ func create(t *testing.T, ctx *Context) {
 func inspect(t *testing.T, ctx *Context) {
 	fmt.Println("inspect")
 
-	vols, err := ctx.Inspect([]api.VolumeID{ctx.volID})
+	vols, err := ctx.Inspect([]string{ctx.volID})
 	assert.NoError(t, err, "Failed in Inspect")
 	assert.NotNil(t, vols, "Nil vols")
 	assert.Equal(t, len(vols), 1, "Expect 1 volume actual %v volumes", len(vols))
-	assert.Equal(t, vols[0].ID, ctx.volID, "Expect volID %v actual %v", ctx.volID, vols[0].ID)
+	assert.Equal(t, vols[0].Id, ctx.volID, "Expect volID %v actual %v", ctx.volID, vols[0].Id)
 
-	vols, err = ctx.Inspect([]api.VolumeID{api.VolumeID("shouldNotExist")})
+	vols, err = ctx.Inspect([]string{string("shouldNotExist")})
 	assert.Equal(t, 0, len(vols), "Expect 0 volume actual %v volumes", len(vols))
 }
 
 func set(t *testing.T, ctx *Context) {
 	fmt.Println("update")
 
-	vols, err := ctx.Inspect([]api.VolumeID{ctx.volID})
+	vols, err := ctx.Inspect([]string{ctx.volID})
 	assert.NoError(t, err, "Failed in Inspect")
 	assert.NotNil(t, vols, "Nil vols")
 	assert.Equal(t, len(vols), 1, "Expect 1 volume actual %v volumes", len(vols))
-	assert.Equal(t, vols[0].ID, ctx.volID, "Expect volID %v actual %v", ctx.volID, vols[0].ID)
+	assert.Equal(t, vols[0].Id, ctx.volID, "Expect volID %v actual %v", ctx.volID, vols[0].Id)
 
 	vols[0].Locator.VolumeLabels["UpdateTest"] = "Success"
-	err = ctx.Set(ctx.volID, &vols[0].Locator, nil)
+	err = ctx.Set(ctx.volID, vols[0].Locator, nil)
 	assert.NoError(t, err, "Failed in Update")
 
-	vols, err = ctx.Inspect([]api.VolumeID{ctx.volID})
+	vols, err = ctx.Inspect([]string{ctx.volID})
 	assert.NoError(t, err, "Failed in Inspect")
 	assert.NotNil(t, vols, "Nil vols")
 	assert.Equal(t, len(vols), 1, "Expect 1 volume actual %v volumes", len(vols))
@@ -130,19 +130,19 @@ func set(t *testing.T, ctx *Context) {
 func enumerate(t *testing.T, ctx *Context) {
 	fmt.Println("enumerate")
 
-	vols, err := ctx.Enumerate(api.VolumeLocator{}, nil)
+	vols, err := ctx.Enumerate(&api.VolumeLocator{}, nil)
 	assert.NoError(t, err, "Failed in Enumerate")
 	assert.NotNil(t, vols, "Nil vols")
 	assert.Equal(t, 1, len(vols), "Expect 1 volume actual %v volumes", len(vols))
-	assert.Equal(t, vols[0].ID, ctx.volID, "Expect volID %v actual %v", ctx.volID, vols[0].ID)
+	assert.Equal(t, vols[0].Id, ctx.volID, "Expect volID %v actual %v", ctx.volID, vols[0].Id)
 
-	vols, err = ctx.Enumerate(api.VolumeLocator{Name: "foo"}, nil)
+	vols, err = ctx.Enumerate(&api.VolumeLocator{Name: "foo"}, nil)
 	assert.NoError(t, err, "Failed in Enumerate")
 	assert.NotNil(t, vols, "Nil vols")
 	assert.Equal(t, len(vols), 1, "Expect 1 volume actual %v volumes", len(vols))
-	assert.Equal(t, vols[0].ID, ctx.volID, "Expect volID %v actual %v", ctx.volID, vols[0].ID)
+	assert.Equal(t, vols[0].Id, ctx.volID, "Expect volID %v actual %v", ctx.volID, vols[0].Id)
 
-	vols, err = ctx.Enumerate(api.VolumeLocator{Name: "shouldNotExist"}, nil)
+	vols, err = ctx.Enumerate(&api.VolumeLocator{Name: "shouldNotExist"}, nil)
 	assert.Equal(t, len(vols), 0, "Expect 0 volume actual %v volumes", len(vols))
 }
 
@@ -150,11 +150,11 @@ func waitReady(t *testing.T, ctx *Context) error {
 	total := time.Minute * 5
 	inc := time.Second * 2
 	elapsed := time.Second * 0
-	vols, err := ctx.Inspect([]api.VolumeID{ctx.volID})
-	for err == nil && len(vols) == 1 && vols[0].Status != api.Up && elapsed < total {
+	vols, err := ctx.Inspect([]string{ctx.volID})
+	for err == nil && len(vols) == 1 && vols[0].Status != api.VolumeStatus_VOLUME_STATUS_UP && elapsed < total {
 		time.Sleep(inc)
 		elapsed += inc
-		vols, err = ctx.Inspect([]api.VolumeID{ctx.volID})
+		vols, err = ctx.Inspect([]string{ctx.volID})
 	}
 	if err != nil {
 		return err
@@ -162,7 +162,7 @@ func waitReady(t *testing.T, ctx *Context) error {
 	if len(vols) != 1 {
 		return fmt.Errorf("Expect one volume from inspect got %v", len(vols))
 	}
-	if vols[0].Status != api.Up {
+	if vols[0].Status != api.VolumeStatus_VOLUME_STATUS_UP {
 		return fmt.Errorf("Timed out waiting for volume status %v", vols)
 	}
 	return err
@@ -276,19 +276,19 @@ func delete(t *testing.T, ctx *Context) {
 	fmt.Println("delete")
 	err := ctx.Delete(ctx.volID)
 	assert.NoError(t, err, "Delete failed")
-	ctx.volID = api.BadVolumeID
+	ctx.volID = ""
 }
 
 func snap(t *testing.T, ctx *Context) {
 	fmt.Println("snap")
-	if ctx.volID == api.BadVolumeID {
+	if ctx.volID == "" {
 		create(t, ctx)
 	}
 	attach(t, ctx)
-	labels := api.Labels{"oh": "snap"}
-	assert.NotEqual(t, ctx.volID, api.BadVolumeID, "invalid volume ID")
+	labels := map[string]string{"oh": "snap"}
+	assert.NotEqual(t, ctx.volID, "", "invalid volume ID")
 	id, err := ctx.Snapshot(ctx.volID, false,
-		api.VolumeLocator{Name: "snappy", VolumeLabels: labels})
+		&api.VolumeLocator{Name: "snappy", VolumeLabels: labels})
 	assert.NoError(t, err, "Failed in creating a snapshot")
 	ctx.snapID = id
 }
@@ -296,13 +296,13 @@ func snap(t *testing.T, ctx *Context) {
 func snapInspect(t *testing.T, ctx *Context) {
 	fmt.Println("snapInspect")
 
-	snaps, err := ctx.Inspect([]api.VolumeID{ctx.snapID})
+	snaps, err := ctx.Inspect([]string{ctx.snapID})
 	assert.NoError(t, err, "Failed in Inspect")
 	assert.NotNil(t, snaps, "Nil snaps")
 	assert.Equal(t, len(snaps), 1, "Expect 1 snaps actual %v snaps", len(snaps))
-	assert.Equal(t, snaps[0].ID, ctx.snapID, "Expect snapID %v actual %v", ctx.snapID, snaps[0].ID)
+	assert.Equal(t, snaps[0].Id, ctx.snapID, "Expect snapID %v actual %v", ctx.snapID, snaps[0].Id)
 
-	snaps, err = ctx.Inspect([]api.VolumeID{api.VolumeID("shouldNotExist")})
+	snaps, err = ctx.Inspect([]string{string("shouldNotExist")})
 	assert.Equal(t, 0, len(snaps), "Expect 0 snaps actual %v snaps", len(snaps))
 }
 
@@ -313,23 +313,23 @@ func snapEnumerate(t *testing.T, ctx *Context) {
 	assert.NoError(t, err, "Failed in snapEnumerate")
 	assert.NotNil(t, snaps, "Nil snaps")
 	assert.Equal(t, 1, len(snaps), "Expect 1 snaps actual %v snaps", len(snaps))
-	assert.Equal(t, snaps[0].ID, ctx.snapID, "Expect snapID %v actual %v", ctx.snapID, snaps[0].ID)
+	assert.Equal(t, snaps[0].Id, ctx.snapID, "Expect snapID %v actual %v", ctx.snapID, snaps[0].Id)
 	labels := snaps[0].Locator.VolumeLabels
 
-	snaps, err = ctx.SnapEnumerate([]api.VolumeID{ctx.volID}, nil)
+	snaps, err = ctx.SnapEnumerate([]string{ctx.volID}, nil)
 	assert.NoError(t, err, "Failed in snapEnumerate")
 	assert.NotNil(t, snaps, "Nil snaps")
 	assert.Equal(t, len(snaps), 1, "Expect 1 snap actual %v snaps", len(snaps))
-	assert.Equal(t, snaps[0].ID, ctx.snapID, "Expect snapID %v actual %v", ctx.snapID, snaps[0].ID)
+	assert.Equal(t, snaps[0].Id, ctx.snapID, "Expect snapID %v actual %v", ctx.snapID, snaps[0].Id)
 
-	snaps, err = ctx.SnapEnumerate([]api.VolumeID{api.VolumeID("shouldNotExist")}, nil)
+	snaps, err = ctx.SnapEnumerate([]string{string("shouldNotExist")}, nil)
 	assert.Equal(t, len(snaps), 0, "Expect 0 snap actual %v snaps", len(snaps))
 
 	snaps, err = ctx.SnapEnumerate(nil, labels)
 	assert.NoError(t, err, "Failed in snapEnumerate")
 	assert.NotNil(t, snaps, "Nil snaps")
 	assert.Equal(t, len(snaps), 1, "Expect 1 snap actual %v snaps", len(snaps))
-	assert.Equal(t, snaps[0].ID, ctx.snapID, "Expect snapID %v actual %v", ctx.snapID, snaps[0].ID)
+	assert.Equal(t, snaps[0].Id, ctx.snapID, "Expect snapID %v actual %v", ctx.snapID, snaps[0].Id)
 }
 
 func snapDiff(t *testing.T, ctx *Context) {
