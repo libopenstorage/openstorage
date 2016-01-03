@@ -11,8 +11,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/Sirupsen/logrus"
 )
 
 // Request is contructed iteratively by the client and finally dispatched.
@@ -262,7 +260,6 @@ func (r *Request) Do() *Response {
 	if resp.Body != nil {
 		defer resp.Body.Close()
 		body, err = ioutil.ReadAll(resp.Body)
-		logrus.Debugln(string(body))
 	}
 	if err != nil {
 		return &Response{err: err}
