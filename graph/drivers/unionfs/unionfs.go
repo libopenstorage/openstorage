@@ -11,9 +11,9 @@ extern int remove_layer(char *);
 extern int check_layer(char *);
 #cgo LDFLAGS: -lfuse -lulockmgr
 */
+import "C"
 
 import (
-	"C"
 	"fmt"
 	"io/ioutil"
 	"os"
