@@ -31,52 +31,29 @@
 #include "hash.h"
 #include "layer.h"
 
-struct graph_dirp 
-{
-	struct dirent *entry;
-	off_t offset;
-};
-
 static int graph_opendir(const char *path, struct fuse_file_info *fi)
 {
 	int res = 0;
-#if 0
-	char *rp = NULL;
-	struct graph_dirp *d = malloc(sizeof(struct graph_dirp));
+	struct inode *inode = NULL;
 
-	if (d == NULL) {
-		res = -ENOMEM;
-		goto done;
-	}
-
-	rp = real_path(path, false);
-	if (!rp) {
+	inode = ref_inode(path, false, 0);
+	if (!inode) {
 		res = -errno;
 		goto done;
 	}
 
-	d->dp = opendir(rp);
-	if (d->dp == NULL) {
+	if (!(inode->mode & S_IFDIR)) {
+		errno = ENOTDIR;
 		res = -errno;
-		free(d);
 		goto done;
 	}
-	d->offset = 0;
-	d->entry = NULL;
-
-	fi->fh = (unsigned long) d;
 
 done:
-	if (rp) {
-		free_path(rp);
+	if (inode) {
+		deref_inode(inode);
 	}
-#endif
-	return res;
-}
 
-static inline struct graph_dirp *get_dirp(struct fuse_file_info *fi)
-{
-	return (struct graph_dirp *) (uintptr_t) fi->fh;
+	return res;
 }
 
 // This does the bulk of unifying entries from the various layers.
@@ -185,13 +162,6 @@ done:
 
 static int graph_releasedir(const char *path, struct fuse_file_info *fi)
 {
-#if 0
-	struct graph_dirp *d = get_dirp(fi);
-	(void) path;
-
-	closedir(d->dp);
-	free(d);
-#endif
 	return 0;
 }
 
@@ -279,7 +249,7 @@ static int graph_rmdir(const char *path)
 		goto done;
 	}
 
-	if (!inode->mode & S_IFDIR) {
+	if (!(inode->mode & S_IFDIR)) {
 		errno = ENOTDIR;
 		res = -errno;
 		goto done;
@@ -480,20 +450,20 @@ static int graph_ftruncate(const char *path, off_t size,
 static int graph_read(const char *path, char *buf, size_t size, off_t offset,
 		struct fuse_file_info *fi)
 {
-    int res = 0;
-    struct inode *inode = NULL;
+	int res = 0;
+	struct inode *inode = NULL;
 
-    inode = ref_inode(path, false, 0);
-    if (!inode) {
-        res = -errno;
-        goto done;
-    }
-    
-    if (inode->mode & S_IFDIR) {
-        errno = EISDIR;
-        res = -EISDIR;
-        goto done;
-    }
+	inode = ref_inode(path, false, 0);
+	if (!inode) {
+		res = -errno;
+		goto done;
+	}
+	
+	if (inode->mode & S_IFDIR) {
+		errno = EISDIR;
+		res = -EISDIR;
+		goto done;
+	}
 
 	res = pread(fileno(inode->f), buf, size, offset);
 	if (res == -1) {
@@ -501,42 +471,42 @@ static int graph_read(const char *path, char *buf, size_t size, off_t offset,
 	}
 
 done:
-    if (inode) {
-        deref_inode(inode);
-    }
+	if (inode) {
+		deref_inode(inode);
+	}
 
-    return res;
+	return res;
 }
 
 static int graph_write(const char *path, const char *buf, size_t size,
 		off_t offset, struct fuse_file_info *fi)
 {
-    int res = 0;
-    struct inode *inode = NULL;
+	int res = 0;
+	struct inode *inode = NULL;
 
-    inode = ref_inode(path, false, 0);
-    if (!inode) {
-        res = -errno;
-        goto done;
-    }
+	inode = ref_inode(path, false, 0);
+	if (!inode) {
+		res = -errno;
+		goto done;
+	}
 
-    if (inode->mode & S_IFDIR) {
-        errno = EISDIR;
-        res = -EISDIR;
-        goto done;
-    }
+	if (inode->mode & S_IFDIR) {
+		errno = EISDIR;
+		res = -EISDIR;
+		goto done;
+	}
 
-    res = pwrite(fileno(inode->f), buf, size, offset);
-    if (res == -1) {
-        res = -errno;
-    }
+	res = pwrite(fileno(inode->f), buf, size, offset);
+	if (res == -1) {
+		res = -errno;
+	}
 
 done:
-    if (inode) {
-        deref_inode(inode);
-    }
+	if (inode) {
+		deref_inode(inode);
+	}
 
-    return res;
+	return res;
 }
 
 static int graph_statfs(const char *path, struct statvfs *stbuf)
@@ -568,29 +538,29 @@ static int graph_release(const char *path, struct fuse_file_info *fi)
 static int graph_fsync(const char *path, int isdatasync,
 		struct fuse_file_info *fi)
 {
-    int res = 0;
-    struct inode *inode = NULL;
+	int res = 0;
+	struct inode *inode = NULL;
 
-    inode = ref_inode(path, false, 0);
-    if (!inode) {
-        res = -errno;
-        goto done;
-    }
-    
-    if (inode->mode & S_IFDIR) {
-        errno = EISDIR;
-        res = -EISDIR;
-        goto done;
-    }
+	inode = ref_inode(path, false, 0);
+	if (!inode) {
+		res = -errno;
+		goto done;
+	}
+	
+	if (inode->mode & S_IFDIR) {
+		errno = EISDIR;
+		res = -EISDIR;
+		goto done;
+	}
 
-    fsync(fileno(inode->f));
+	fsync(fileno(inode->f));
 
 done:
-    if (inode) {
-        deref_inode(inode);
-    }
+	if (inode) {
+		deref_inode(inode);
+	}
 
-    return res;
+	return res;
 }
 
 static int graph_readlink(const char *path, char *buf, size_t size)
@@ -726,7 +696,7 @@ int release_unionfs(char *id)
 #ifdef STANDALONE_
 int main()
 {
-	start_unionfs("/var/lib/openstorage/fuse");
+	start_unionfs("/var/lib/openstorage/unionfs");
 }
 #endif
 
