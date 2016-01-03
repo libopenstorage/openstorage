@@ -4,3 +4,5 @@ plugins:
 options:
   go:
     import_path: github.com/libopenstorage/openstorage
+  exclude:
+    - vendor

@@ -50,12 +50,10 @@ enum GraphDriverChangeType {
 // CHANGE: no NONE
 enum VolumeActionParam {
   VOLUME_ACTION_PARAM_NONE = 0;
-	// User should ignore the value of the parameter
-  VOLUME_ACTION_PARAM_IGNORE = 1;
 	// Maps to the boolean value false
-  VOLUME_ACTION_PARAM_OFF = 2;
+  VOLUME_ACTION_PARAM_OFF = 1;
 	// Maps to the boolean value true.
-  VOLUME_ACTION_PARAM_ON = 3;
+  VOLUME_ACTION_PARAM_ON = 2;
 }
 
 // VolumeCOS represents a class of service for a volume.
