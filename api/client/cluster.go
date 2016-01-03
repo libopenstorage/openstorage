@@ -66,3 +66,10 @@ func (c *clusterClient) DisableGossipUpdates() {
 func (c *clusterClient) EnableGossipUpdates() {
 	c.c.Post().Resource(clusterPath + "/enablegossip").Do()
 }
+
+func (c *clusterClient) GetGossipStatus() *cluster.GossipStatus {
+	var status *cluster.GossipStatus
+
+	c.c.Get().Resource(clusterPath + "/gossipstatus").Do().Unmarshal(&status)
+	return status
+}

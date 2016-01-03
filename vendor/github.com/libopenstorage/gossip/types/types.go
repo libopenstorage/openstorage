@@ -9,6 +9,7 @@ type NodeId string
 type StoreKey string
 type NodeStatus uint8
 type NodeInfoMap map[NodeId]NodeInfo
+type NodeValueMap map[NodeId]NodeValue
 type StoreMap map[StoreKey]interface{}
 
 const (
@@ -19,6 +20,21 @@ const (
 	NODE_STATUS_WAITING_FOR_NEW_UPDATE
 	NODE_STATUS_DOWN_WAITING_FOR_NEW_UPDATE
 )
+
+type GossipDirection uint8
+
+const (
+	// Direction of gossip
+	GD_ME_TO_PEER GossipDirection = iota
+	GD_PEER_TO_ME
+)
+
+type GossipSessionInfo struct {
+	Node string
+	Ts   time.Time
+	Dir  GossipDirection
+	Err  string
+}
 
 type NodeMetaInfo struct {
 	Id           NodeId
@@ -33,6 +49,14 @@ type NodeInfo struct {
 	WaitForGenUpdateTs time.Time
 	Status             NodeStatus
 	Value              StoreMap
+}
+
+type NodeValue struct {
+	Id           NodeId
+	GenNumber    uint64
+	LastUpdateTs time.Time
+	Status       NodeStatus
+	Value        interface{}
 }
 
 func (n NodeInfo) String() string {

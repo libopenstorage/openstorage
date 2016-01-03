@@ -19,47 +19,83 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/graph"
+	"github.com/libopenstorage/openstorage/volume"
 
 	"github.com/docker/docker/daemon/graphdriver"
 	"github.com/docker/docker/pkg/archive"
 	"github.com/docker/docker/pkg/chrootarchive"
 	"github.com/docker/docker/pkg/directory"
 	"github.com/docker/docker/pkg/idtools"
+	"github.com/docker/docker/pkg/parsers"
 
 	"github.com/Sirupsen/logrus"
 )
 
 const (
-	Name     = "unionfs"
-	Type     = api.DriverType_DRIVER_TYPE_GRAPH
-	virtPath = "/var/lib/openstorage/fuse/virtual"
-	physPath = "/var/lib/openstorage/fuse/physical"
+	Name                = "unionfs"
+	Type				= api.DriverType_DRIVER_TYPE_GRAPH
+	UnionFSVolumeDriver = "unionfs.volume_driver"
+	virtPath            = "/var/lib/openstorage/fuse/virtual"
+	physPath            = "/var/lib/openstorage/fuse/physical"
 )
 
 type Driver struct {
+	volDriver volume.VolumeDriver
 }
 
 func Init(home string, options []string, uidMaps, gidMaps []idtools.IDMap) (graphdriver.Driver, error) {
 	logrus.Infof("Initializing Fuse Graph driver at home:%s and storage: %v...", home, virtPath)
 
+	var volumeDriver string
+	for _, option := range options {
+		key, val, err := parsers.ParseKeyValueOpt(option)
+		if err != nil {
+			return nil, err
+		}
+		switch key {
+		case UnionFSVolumeDriver:
+			volumeDriver = val
+		default:
+			return nil, fmt.Errorf("Unknown option %s\n", key)
+		}
+	}
+
+	if volumeDriver == "" {
+		logrus.Warnf("Error - no volume driver specified for UnionFS")
+		return nil, fmt.Errorf("No volume driver specified for UnionFS")
+	}
+
+	logrus.Infof("UnionFS volume driver: %v", volumeDriver)
+	volDriver, err := volume.Get(volumeDriver)
+	if err != nil {
+		logrus.Warnf("Error while loading volume driver: %s", volumeDriver)
+		return nil, err
+	}
+
 	// In case it is mounted.
 	syscall.Unmount(virtPath, 0)
 
-	err := os.MkdirAll(virtPath, 0744)
+	err = os.MkdirAll(virtPath, 0744)
 	if err != nil {
-		logrus.Fatalf("Error while creating FUSE mount path: %v", err)
+		volDriver.Shutdown()
+		logrus.Warnf("Error while creating FUSE mount path: %v", err)
+		return nil, err
 	}
 
 	err = os.MkdirAll(physPath, 0744)
 	if err != nil {
-		logrus.Fatalf("Error while creating FUSE mount path: %v", err)
+		volDriver.Shutdown()
+		logrus.Warnf("Error while creating FUSE mount path: %v", err)
+		return nil, err
 	}
 
 	cVirtPath := C.CString(virtPath)
 	cPhysPath := C.CString(physPath)
 	go C.start_unionfs(cPhysPath, cVirtPath)
 
-	d := &Driver{}
+	d := &Driver{
+		volDriver: volDriver,
+	}
 
 	return d, nil
 }
@@ -73,7 +109,10 @@ func (d *Driver) String() string {
 // known to this driver.
 func (d *Driver) Cleanup() error {
 	logrus.Infof("Cleaning up fuse %s", virtPath)
-	// syscall.Unmount(virtPath, 0)
+
+	d.volDriver.Shutdown()
+	syscall.Unmount(virtPath, 0)
+
 	return nil
 }
 
@@ -90,7 +129,7 @@ func (d *Driver) linkParent(child, parent string) error {
 
 	logrus.Debugf("Linking layer %s to parent layer %s", child, parent)
 
-	child = child + "/_parent"
+	child = child + "/.unionfs.parent"
 
 	err := os.Symlink(parent, child)
 	if err != nil {
@@ -188,7 +227,8 @@ func (d *Driver) Exists(id string) bool {
 // new layer in bytes.
 // The archive.Reader must be an uncompressed stream.
 func (d *Driver) ApplyDiff(id string, parent string, diff archive.Reader) (size int64, err error) {
-	dir := path.Join(physPath, id)
+	dir := path.Join(virtPath, id)
+
 	if err := chrootarchive.UntarUncompressed(diff, dir, nil); err != nil {
 		logrus.Warnf("Error while applying diff to %s: %v", id, err)
 		os.Exit(-1)
@@ -214,7 +254,7 @@ func (d *Driver) Changes(id, parent string) ([]archive.Change, error) {
 // Diff produces an archive of the changes between the specified
 // layer and its parent layer which may be "".
 func (d *Driver) Diff(id, parent string) (archive.Archive, error) {
-	return archive.TarWithOptions(path.Join(physPath, id), &archive.TarOptions{
+	return archive.TarWithOptions(path.Join(virtPath, id), &archive.TarOptions{
 		Compression:     archive.Uncompressed,
 		ExcludePatterns: []string{archive.WhiteoutMetaPrefix + "*", "!" + archive.WhiteoutOpaqueDir},
 	})
@@ -224,7 +264,12 @@ func (d *Driver) Diff(id, parent string) (archive.Archive, error) {
 // and its parent and returns the size in bytes of the changes
 // relative to its base filesystem directory.
 func (d *Driver) DiffSize(id, parent string) (size int64, err error) {
-	return directory.Size(path.Join(physPath, id))
+	return directory.Size(path.Join(virtPath, id))
+}
+
+func (d *Driver) Read() (size int64, err error) {
+
+	return 0, nil
 }
 
 func init() {
