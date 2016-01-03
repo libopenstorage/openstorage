@@ -50,11 +50,11 @@ func (c *clusterClient) inspect(context *cli.Context) {
 		fmt.Fprintln(w, "ID\t IP\t STATUS\t CPU\t MEMORY\t CONTAINERS")
 		for _, n := range cluster.Nodes {
 			status := ""
-			if n.Status == api.StatusInit {
+			if n.Status == api.Status_STATUS_INIT {
 				status = "Initializing"
-			} else if n.Status == api.StatusOk {
+			} else if n.Status == api.Status_STATUS_OK {
 				status = "OK"
-			} else if n.Status == api.StatusOffline {
+			} else if n.Status == api.Status_STATUS_OFFLINE {
 				status = "Off Line"
 			} else {
 				status = "Error"
