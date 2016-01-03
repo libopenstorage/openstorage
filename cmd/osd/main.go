@@ -32,8 +32,6 @@ const (
 )
 
 func start(c *cli.Context) {
-	var cm *cluster.ClusterManager
-
 	if !osdcli.DaemonMode(c) {
 		cli.ShowAppHelp(c)
 		return
@@ -180,7 +178,8 @@ func main() {
 
 	// Register all volume drivers with the CLI.
 	for _, v := range volumedrivers.AllDrivers {
-		if v.DriverType&api.Block == api.Block {
+		// TODO(pedge): was an and, but we have no drivers that have two types
+		if v.DriverType == api.DriverType_DRIVER_TYPE_BLOCK {
 			bCmds := osdcli.BlockVolumeCommands(v.Name)
 			clstrCmds := osdcli.ClusterCommands(v.Name)
 			cmds := append(bCmds, clstrCmds...)
@@ -190,7 +189,8 @@ func main() {
 				Subcommands: cmds,
 			}
 			app.Commands = append(app.Commands, c)
-		} else if v.DriverType&api.File == api.File {
+		// TODO(pedge): was an and, but we have no drivers that have two types
+		} else if v.DriverType == api.DriverType_DRIVER_TYPE_FILE {
 			fCmds := osdcli.FileVolumeCommands(v.Name)
 			clstrCmds := osdcli.ClusterCommands(v.Name)
 			cmds := append(fCmds, clstrCmds...)
@@ -205,7 +205,8 @@ func main() {
 
 	// Register all graph drivers with the CLI.
 	for _, v := range graphdrivers.AllDrivers {
-		if v.DriverType&api.Graph == api.Graph {
+		// TODO(pedge): was an and, but we have no drivers that have two types
+		if v.DriverType == api.DriverType_DRIVER_TYPE_GRAPH {
 			cmds := osdcli.GraphDriverCommands(v.Name)
 			c := cli.Command{
 				Name:        v.Name,
