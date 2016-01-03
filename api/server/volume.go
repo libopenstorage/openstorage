@@ -194,13 +194,11 @@ func (vd *volApi) delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	volumeResponse := &api.VolumeResponse{}
 	if err := d.Delete(volumeID); err != nil {
-		json.NewEncoder(w).Encode(
-			&api.VolumeResponse{
-				Error: err.Error(),
-			},
-		)
+		volumeResponse.Error = err.Error()
 	}
+	json.NewEncoder(w).Encode(volumeResponse)
 }
 
 func (vd *volApi) enumerate(w http.ResponseWriter, r *http.Request) {
