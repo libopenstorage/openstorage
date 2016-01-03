@@ -140,11 +140,11 @@ func (v *volumeClient) Status() [][2]string {
 
 // Inspect specified volumes.
 // Errors ErrEnoEnt may be returned.
-func (v *volumeClient) Inspect(ids []string) ([]api.Volume, error) {
+func (v *volumeClient) Inspect(ids []string) ([]*api.Volume, error) {
 	if len(ids) == 0 {
 		return nil, nil
 	}
-	var volumes []api.Volume
+	var volumes []*api.Volume
 	request := v.c.Get().Resource(volumePath)
 	for _, id := range ids {
 		request.QueryOption(api.OptVolumeID, id)
@@ -216,8 +216,8 @@ func (v *volumeClient) Shutdown() {}
 
 // Enumerate volumes that map to the volumeLocator. Locator fields may be regexp.
 // If locator fields are left blank, this will return all volumes.
-func (v *volumeClient) Enumerate(locator *api.VolumeLocator, labels map[string]string) ([]api.Volume, error) {
-	var volumes []api.Volume
+func (v *volumeClient) Enumerate(locator *api.VolumeLocator, labels map[string]string) ([]*api.Volume, error) {
+	var volumes []*api.Volume
 	req := v.c.Get().Resource(volumePath)
 	if locator.Name != "" {
 		req.QueryOption(api.OptName, locator.Name)
@@ -236,8 +236,8 @@ func (v *volumeClient) Enumerate(locator *api.VolumeLocator, labels map[string]s
 
 // Enumerate snaps for specified volume
 // Count indicates the number of snaps populated.
-func (v *volumeClient) SnapEnumerate(ids []string, snapLabels map[string]string) ([]api.Volume, error) {
-	var volumes []api.Volume
+func (v *volumeClient) SnapEnumerate(ids []string, snapLabels map[string]string) ([]*api.Volume, error) {
+	var volumes []*api.Volume
 	request := v.c.Get().Resource(snapPath)
 	for _, id := range ids {
 		request.QueryOption(api.OptVolumeID, id)

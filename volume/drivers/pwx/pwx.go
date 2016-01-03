@@ -9,7 +9,7 @@ import (
 
 const (
 	Name           = "pwx"
-	Type           = api.Block
+	Type           = api.DriverType_DRIVER_TYPE_BLOCK
 	DefaultUrl     = "unix:///" + config.DriverAPIBase + "pxd.sock"
 	DefaultVersion = "v1"
 )
