@@ -5,13 +5,13 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
+	"github.com/libopenstorage/openstorage/volume/drivers/common"
 	"github.com/pborman/uuid"
 	"github.com/portworx/kvdb"
 )
@@ -50,40 +50,37 @@ func (v *volumeDriver) String() string {
 }
 
 func (v *volumeDriver) Type() api.DriverType {
-	return api.File
+	return api.DriverType_DRIVER_TYPE_FILE
 }
 
 func (v *volumeDriver) Create(
-	volumeLocator api.VolumeLocator,
+	volumeLocator *api.VolumeLocator,
 	source *api.Source,
 	spec *api.VolumeSpec,
-) (api.VolumeID, error) {
+) (string, error) {
 	volumeID := strings.TrimSpace(string(uuid.New()))
 	dirPath := filepath.Join(v.baseDirPath, volumeID)
 	if err := os.MkdirAll(dirPath, 0777); err != nil {
-		return api.BadVolumeID, err
+		return "", err
 	}
-	volume := &api.Volume{
-		ID:         api.VolumeID(volumeID),
-		Locator:    volumeLocator,
-		Ctime:      time.Now(),
-		Spec:       spec,
-		LastScan:   time.Now(),
-		Format:     "fuse",
-		State:      api.VolumeAvailable,
-		Status:     api.Up,
-		DevicePath: dirPath,
-	}
+	volume := common.NewVolume(
+		volumeID,
+		api.FSType_FS_TYPE_FUSE,
+		volumeLocator,
+		source,
+		spec,
+	)
+	volume.DevicePath = dirPath
 	if err := v.CreateVol(volume); err != nil {
-		return api.BadVolumeID, err
+		return "", err
 	}
 	if err := v.UpdateVol(volume); err != nil {
-		return api.BadVolumeID, err
+		return "", err
 	}
-	return volume.ID, nil
+	return volume.Id, nil
 }
 
-func (v *volumeDriver) Delete(volumeID api.VolumeID) error {
+func (v *volumeDriver) Delete(volumeID string) error {
 	if _, err := v.GetVol(volumeID); err != nil {
 		return err
 	}
@@ -93,7 +90,7 @@ func (v *volumeDriver) Delete(volumeID api.VolumeID) error {
 	return v.DeleteVol(volumeID)
 }
 
-func (v *volumeDriver) Mount(volumeID api.VolumeID, mountpath string) error {
+func (v *volumeDriver) Mount(volumeID string, mountpath string) error {
 	volume, err := v.GetVol(volumeID)
 	if err != nil {
 		return err
@@ -119,7 +116,7 @@ func (v *volumeDriver) Mount(volumeID api.VolumeID, mountpath string) error {
 	return conn.MountError
 }
 
-func (v *volumeDriver) Unmount(volumeID api.VolumeID, mountpath string) error {
+func (v *volumeDriver) Unmount(volumeID string, mountpath string) error {
 	volume, err := v.GetVol(volumeID)
 	if err != nil {
 		return err
@@ -134,22 +131,21 @@ func (v *volumeDriver) Unmount(volumeID api.VolumeID, mountpath string) error {
 	return v.UpdateVol(volume)
 }
 
-func (v *volumeDriver) Set(volumeID api.VolumeID, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
+func (v *volumeDriver) Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
 	return volume.ErrNotSupported
 
 }
 
-func (v *volumeDriver) Stats(volumeID api.VolumeID) (api.Stats, error) {
-	return api.Stats{}, volume.ErrNotSupported
+func (v *volumeDriver) Stats(volumeID string) (*api.Stats, error) {
+	return nil, volume.ErrNotSupported
 }
 
-func (v *volumeDriver) Alerts(volumeID api.VolumeID) (api.Alerts, error) {
-	return api.Alerts{}, volume.ErrNotSupported
+func (v *volumeDriver) Alerts(volumeID string) (*api.Alerts, error) {
+	return nil, volume.ErrNotSupported
 }
 
 func (v *volumeDriver) Status() [][2]string {
 	return [][2]string{}
 }
 
-func (v *volumeDriver) Shutdown() {
-}
+func (v *volumeDriver) Shutdown() {}
