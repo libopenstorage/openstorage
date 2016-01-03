@@ -8,7 +8,8 @@ import (
 	"path"
 	"strings"
 	"syscall"
-	"time"
+
+	"go.pedge.io/proto/time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/libopenstorage/openstorage/api"
@@ -24,6 +25,10 @@ const (
 	BuseDBKey     = "OpenStorageBuseKey"
 	BuseMountPath = "/var/lib/openstorage/buse/"
 )
+
+func init() {
+	volume.Register(Name, Init)
+}
 
 // Implements the open storage volume interface.
 type driver struct {
@@ -89,9 +94,9 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 	)
 	if err == nil {
 		for _, info := range volumeInfo {
-			if info.Status == "" {
-				info.Status = api.Up
-				inst.UpdateVol(&info)
+			if info.Status == api.VolumeStatus_VOLUME_STATUS_NONE {
+				info.Status = api.VolumeStatus_VOLUME_STATUS_UP
+				inst.UpdateVol(info)
 			}
 		}
 	} else {
@@ -127,18 +132,15 @@ func (d *driver) Status() [][2]string {
 	return [][2]string{}
 }
 
-func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api.VolumeSpec) (string, error) {
+func (d *driver) Create(locator *api.VolumeLocator, source *api.Source, spec *api.VolumeSpec) (string, error) {
 	volumeID := uuid.New()
 	volumeID = strings.TrimSuffix(volumeID, "\n")
-
 	if spec.Size == 0 {
 		return "", fmt.Errorf("Volume size cannot be zero", "buse")
 	}
-
-	if spec.Format == "" {
+	if spec.Format == api.FSType_FS_TYPE_NONE {
 		return "", fmt.Errorf("Missing volume format", "buse")
 	}
-
 	// Create a file on the local buse path with this UUID.
 	buseFile := path.Join(BuseMountPath, volumeID)
 	f, err := os.Create(buseFile)
@@ -147,16 +149,15 @@ func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api
 		return "", err
 	}
 
-	err = f.Truncate(int64(spec.Size))
-	if err != nil {
+	if err := f.Truncate(int64(spec.Size)); err != nil {
 		logrus.Println(err)
 		return "", err
 	}
 
 	bd := &buseDev{
 		file: buseFile,
-		f:    f}
-
+		f:    f,
+	}
 	nbd := Create(bd, int64(spec.Size))
 	bd.nbd = nbd
 
@@ -168,7 +169,7 @@ func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api
 	}
 
 	logrus.Infof("Formatting %s with %v", dev, spec.Format)
-	cmd := "/sbin/mkfs." + spec.Format
+	cmd := "/sbin/mkfs." + spec.Format.SimpleString()
 	o, err := exec.Command(cmd, dev).Output()
 	if err != nil {
 		logrus.Warnf("Failed to run command %v %v: %v", cmd, dev, o)
@@ -178,15 +179,15 @@ func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api
 	logrus.Infof("BUSE mapped NBD device %s (size=%v) to block file %s", dev, spec.Size, buseFile)
 
 	v := &api.Volume{
-		ID:         volumeID,
+		Id:         volumeID,
 		Source:     source,
 		Locator:    locator,
-		Ctime:      time.Now(),
+		Ctime:      prototime.Now(),
 		Spec:       spec,
-		LastScan:   time.Now(),
+		LastScan:   prototime.Now(),
 		Format:     spec.Format,
-		State:      api.VolumeAvailable,
-		Status:     api.Up,
+		State:      api.VolumeState_VOLUME_STATE_AVAILABLE,
+		Status:     api.VolumeStatus_VOLUME_STATUS_UP,
 		DevicePath: dev,
 	}
 
@@ -196,7 +197,7 @@ func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api
 	if err != nil {
 		return "", err
 	}
-	return v.ID, err
+	return v.Id, err
 }
 
 func (d *driver) Delete(volumeID string) error {
@@ -220,8 +221,7 @@ func (d *driver) Delete(volumeID string) error {
 
 	logrus.Infof("BUSE deleted volume %v at NBD device %s", volumeID, v.DevicePath)
 
-	err = d.DeleteVol(volumeID)
-	if err != nil {
+	if err := d.DeleteVol(volumeID); err != nil {
 		logrus.Println(err)
 		return err
 	}
@@ -234,8 +234,8 @@ func (d *driver) Mount(volumeID string, mountpath string) error {
 	if err != nil {
 		return fmt.Errorf("Failed to locate volume %q", volumeID)
 	}
-	err = syscall.Mount(v.DevicePath, mountpath, v.Spec.Format, 0, "")
-	if err != nil {
+	if err := syscall.Mount(v.DevicePath, mountpath, v.Spec.Format.SimpleString(), 0, ""); err != nil {
+		// TODO(pedge): same string for log message and error?
 		logrus.Errorf("Mounting %s on %s failed because of %v", v.DevicePath, mountpath, err)
 		return fmt.Errorf("Failed to mount %v at %v: %v", v.DevicePath, mountpath, err)
 	}
@@ -243,6 +243,7 @@ func (d *driver) Mount(volumeID string, mountpath string) error {
 	logrus.Infof("BUSE mounted NBD device %s at %s", v.DevicePath, mountpath)
 
 	v.AttachPath = mountpath
+	// TODO(pedge): why ignoring the error?
 	err = d.UpdateVol(v)
 
 	return nil
@@ -256,16 +257,14 @@ func (d *driver) Unmount(volumeID string, mountpath string) error {
 	if v.AttachPath == "" {
 		return fmt.Errorf("Device %v not mounted", volumeID)
 	}
-	err = syscall.Unmount(v.AttachPath, 0)
-	if err != nil {
+	if err := syscall.Unmount(v.AttachPath, 0); err != nil {
 		return err
 	}
 	v.AttachPath = ""
-	err = d.UpdateVol(v)
-	return err
+	return d.UpdateVol(v)
 }
 
-func (d *driver) Snapshot(volumeID string, readonly bool, locator api.VolumeLocator) (api.VolumeID, error) {
+func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator) (string, error) {
 	volIDs := make([]string, 1)
 	volIDs[0] = volumeID
 	vols, err := d.Inspect(volIDs)
@@ -298,10 +297,9 @@ func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.Volu
 		return err
 	}
 	if locator != nil {
-		v.Locator = *locator
+		v.Locator = locator
 	}
-	err = d.UpdateVol(v)
-	return err
+	return d.UpdateVol(v)
 }
 
 func (d *driver) Attach(volumeID string) (string, error) {
@@ -353,10 +351,4 @@ func (d *driver) Update(self *api.Node) error {
 
 func (d *driver) Leave(self *api.Node) error {
 	return nil
-}
-
-func init() {
-
-	// Register ourselves as an openstorage volume driver.
-	volume.Register(Name, Init)
 }

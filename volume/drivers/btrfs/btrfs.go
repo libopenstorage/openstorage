@@ -169,7 +169,7 @@ func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 	vols[0].Locator = locator
 	vols[0].Ctime = prototime.Now()
 
-	if err := d.CreateVol(&vols[0]); err != nil {
+	if err := d.CreateVol(vols[0]); err != nil {
 		return "", err
 	}
 	chaos.Now(koStrayCreate)

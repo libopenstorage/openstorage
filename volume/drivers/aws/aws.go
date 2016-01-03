@@ -10,6 +10,8 @@ import (
 	"syscall"
 	"time"
 
+	"go.pedge.io/proto/time"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -412,7 +414,7 @@ func (d *Driver) devicePath(volumeID string) (string, error) {
 	return dev, nil
 }
 
-func (d *Driver) Inspect(volumeIDs []string) ([]api.Volume, error) {
+func (d *Driver) Inspect(volumeIDs []string) ([]*api.Volume, error) {
 	vols, err := d.DefaultEnumerator.Inspect(volumeIDs)
 	if err != nil {
 		return nil, err
@@ -432,7 +434,7 @@ func (d *Driver) Inspect(volumeIDs []string) ([]api.Volume, error) {
 	}
 	for i, v := range awsVols.Volumes {
 		if string(vols[i].Id) != *v.VolumeId {
-			d.merge(&vols[i], v)
+			d.merge(vols[i], v)
 		}
 	}
 	return vols, nil
@@ -474,7 +476,7 @@ func (d *Driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 	vols[0].Ctime = prototime.Now()
 
 	chaos.Now(koStrayCreate)
-	err = d.CreateVol(&vols[0])
+	err = d.CreateVol(vols[0])
 	if err != nil {
 		return "", err
 	}
