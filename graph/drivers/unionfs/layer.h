@@ -1,5 +1,4 @@
-#ifdef EXPERIMENTAL_
-
+#ifndef _LAYER_H_
 #define _LAYER_H_
 
 #include <sys/types.h>
@@ -8,7 +7,6 @@
 #include <pthread.h>
 
 #include "hash.h"
-#include "layer.h"
 
 // Minimal inode structure.
 struct inode {
@@ -43,7 +41,7 @@ struct inode {
 struct layer {
 	char id[256];
 
-	struct inode root;
+	struct inode *root;
 	hashtable_t *children;
 
 	struct layer *parent;
@@ -56,5 +54,3 @@ extern int create_layer(char *id, char *parent_id);
 extern int remove_layer(char *id);
 
 #endif // _LAYER_H_
-
-#endif // EXPERIMENTAL_

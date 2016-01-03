@@ -1,4 +1,4 @@
-// gcc unionfs.c layerfs.c hash.c -DEXPERIMENTAL_ -DiFILE_OFFSET_BITS=64 -lfuse -lulockmgr -lithread -o unionfs
+// gcc unionfs.c layer.c hash.c -DEXPERIMENTAL_ -DiFILE_OFFSET_BITS=64 -lfuse -lulockmgr -lpthread -o unionfs
 
 #ifdef EXPERIMENTAL_
 
@@ -9,7 +9,6 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-
 
 #include <fuse.h>
 #include <pthread.h>
