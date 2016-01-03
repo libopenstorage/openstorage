@@ -127,14 +127,18 @@ func (vd *volApi) volumeSet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		resp.VolumeResponse.Error = err.Error()
+		resp.VolumeResponse = &api.VolumeResponse{
+			Error: err.Error(),
+		}
 	} else {
 		v, err := d.Inspect([]string{volumeID})
 		if err != nil || v == nil || len(v) != 1 {
 			if err == nil {
 				err = fmt.Errorf("Failed to inspect volume")
 			}
-			resp.VolumeResponse.Error = err.Error()
+			resp.VolumeResponse = &api.VolumeResponse{
+				Error: err.Error(),
+			}
 		} else {
 			v0 := v[0]
 			resp.Volume = v0
@@ -267,8 +271,12 @@ func (vd *volApi) snap(w http.ResponseWriter, r *http.Request) {
 	vd.logRequest(method, string(snapReq.Id)).Info("")
 
 	id, err := d.Snapshot(snapReq.Id, snapReq.Readonly, snapReq.Locator)
-	snapRes.VolumeCreateResponse.VolumeResponse = &api.VolumeResponse{Error: responseStatus(err)}
-	snapRes.VolumeCreateResponse.Id = id
+	snapRes.VolumeCreateResponse = &api.VolumeCreateResponse{
+		Id: id,
+		VolumeResponse: &api.VolumeResponse{
+			Error: responseStatus(err),
+		},
+	}
 	json.NewEncoder(w).Encode(&snapRes)
 }
 

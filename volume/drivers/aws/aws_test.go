@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers/test"
 )
@@ -21,6 +22,6 @@ func TestAll(t *testing.T) {
 		t.Fatalf("Failed to initialize Volume Driver: %v", err)
 	}
 	ctx := test.NewContext(d)
-	ctx.Filesystem = "ext4"
+	ctx.Filesystem = api.FSType_FS_TYPE_EXT4
 	test.RunShort(t, ctx)
 }

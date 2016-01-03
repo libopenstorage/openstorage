@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/server"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/volume"
@@ -46,7 +47,7 @@ func TestAll(t *testing.T) {
 	}
 	d := c.VolumeDriver()
 	ctx := test.NewContext(d)
-	ctx.Filesystem = string("btrfs")
+	ctx.Filesystem = api.FSType_FS_TYPE_BTRFS
 	test.Run(t, ctx)
 }
 

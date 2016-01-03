@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"testing"
 
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers/test"
 )
@@ -54,6 +55,6 @@ func TestAll(t *testing.T) {
 		t.Fatalf("failed to initialize VolumeDriver: %v", err)
 	}
 	ctx := test.NewContext(volumeDriver)
-	ctx.Filesystem = "btrfs"
+	ctx.Filesystem = api.FSType_FS_TYPE_BTRFS
 	test.Run(t, ctx)
 }
