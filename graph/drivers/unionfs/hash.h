@@ -11,12 +11,13 @@ typedef struct entry_s entry_t;
 
 struct hashtable_s {
 	int size;
+	char *name;
 	struct entry_s **table;	
 };
 
 typedef struct hashtable_s hashtable_t;
 
-extern hashtable_t *ht_create(int size);
+extern hashtable_t *ht_create(int size, char *name);
 extern void ht_set(hashtable_t *hashtable, char *key, void *value);
 extern void *ht_get(hashtable_t *hashtable, char *key);
 

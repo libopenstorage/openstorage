@@ -48,12 +48,17 @@ struct inode {
 struct layer {
 	char id[256];
 
+	// True if this is the top most later.  This flag is used
+	// for determining of modified files should go into this layer.
 	bool upper;
 
+	// Handy reference to the root inode.
 	struct inode *root;
+
+	// Hash of all direct children inodes.
 	hashtable_t *children;
 
-	// Linkage to parent and sibling nodes.
+	// Linkage to parent and sibling layers.
 	struct layer *parent;
 	struct layer *next;
 	struct layer *prev;
@@ -65,9 +70,6 @@ extern int create_layer(char *id, char *parent_id);
 // Remove a layer and all the inodes in this layer.
 extern int remove_layer(char *id);
 
-// Get's the owner layer given a path.
-extern struct layer *get_layer(const char *path, char **new_path);
-
 // Returns true if layer exists.
 extern int check_layer(char *id);
 
@@ -76,9 +78,11 @@ extern int check_layer(char *id);
 extern struct inode *alloc_inode(struct inode *parent, char *name, 
 	mode_t mode, struct layer *layer);
 
-// Locate an inode given a path.  Create one if 'create' flag is specified.
-// Increment reference count on the inode.
-extern struct inode *ref_inode(const char *path, bool create, mode_t mode);
+// Locate an inode given a path.  If 'follow' is specified, then search
+// all linked layers for the path.  Create one if 'create' flag is specified.
+// Increment reference count on the returned inode.
+extern struct inode *ref_inode(const char *path, bool follow,
+		bool create, mode_t mode);
 
 // Decrement ref count on an inode.  A deleted inode with a ref count of 0 
 // will be garbage collected.

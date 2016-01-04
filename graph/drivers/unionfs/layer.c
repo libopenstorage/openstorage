@@ -1,4 +1,4 @@
-// gcc layer.c hash.c -DEXPERIMENTAL_ -DiFILE_OFFSET_BITS=64 -lfuse -lulockmgr -lpthread -c
+// gcc layer.c hash.c -DEXPERIMENTAL_ -DFILE_OFFSET_BITS=64 -lfuse -lulockmgr -lpthread -c
 
 #ifndef EXPERIMENTAL_
 #define EXPERIMENTAL_
@@ -35,19 +35,19 @@ static struct layer *layer_head = NULL;
 static hashtable_t *layer_hash;
 static pthread_mutex_t layer_lock;
 
-// Guards against a deleted inode getting free'd if someone 
+// Guards against a deleted inode getting free'd if someone
 // is still referencing it.
 static pthread_rwlock_t inode_reaper_lock;
 
 // Allocate an inode, add it to the layer and link it to the namespace.
 // Initial reference is 1.
-struct inode *alloc_inode(struct inode *parent, char *name, 
+struct inode *alloc_inode(struct inode *parent, char *name,
 	mode_t mode, struct layer *layer)
 {
 	struct inode *inode;
-	int ret = 0;
 	char *dupname;
 	char *base;
+	int ret = 0;
 
 	inode = (struct inode *)malloc(sizeof(struct inode));
 	if (!inode) {
@@ -132,21 +132,21 @@ done:
 }
 
 // Get's the owner layer given a path.
-struct layer *get_layer(const char *path, char **new_path)
+static struct layer *get_layer(const char *path, char **new_path)
 {
 	struct layer *layer = NULL;
-	char *p, *tmp_path = NULL;
+	char *p, *layer_id = NULL;
 	int i, id;
 
 	*new_path = NULL;
 
-	tmp_path = strdup(path + 1);
-	if (!tmp_path) {
+	layer_id = strdup(path + 1);
+	if (!layer_id) {
 		fprintf(stderr, "Warning, cannot allocate memory.\n");
 		goto done;
 	}
 
-	p = strchr(tmp_path, '/');
+	p = strchr(layer_id, '/');
 	if (p) *p = 0;
 
 	*new_path = strchr(path+1, '/');
@@ -155,11 +155,11 @@ struct layer *get_layer(const char *path, char **new_path)
 		*new_path = "/";
 	}
 
-	layer = ht_get(layer_hash, tmp_path);
+	layer = ht_get(layer_hash, layer_id);
 
 done:
-	if (tmp_path) {
-		free(tmp_path);
+	if (layer_id) {
+		free(layer_id);
 	}
 
 	if (!layer) {
@@ -169,9 +169,10 @@ done:
 	return layer;
 }
 
-// Locate an inode given a path.  Create one if 'create' flag is specified.
-// Increment reference count on the inode.
-struct inode *ref_inode(const char *path, bool create, mode_t mode)
+// Locate an inode given a path.  If 'follow' is specified, then search
+// all linked layers for the path.  Create one if 'create' flag is specified.
+// Increment reference count on the returned inode.
+struct inode *ref_inode(const char *path, bool follow, bool create, mode_t mode)
 {
 	struct layer *layer = NULL;
 	struct layer *parent_layer = NULL;
@@ -206,7 +207,7 @@ struct inode *ref_inode(const char *path, bool create, mode_t mode)
 			{
 				inode->ref++;
 			}
-			pthread_mutex_lock(&inode->lock);
+			pthread_mutex_unlock(&inode->lock);
 
 			goto done;
 		}
@@ -218,11 +219,15 @@ struct inode *ref_inode(const char *path, bool create, mode_t mode)
 			parent_layer = layer;
 		}
 
+		if (!follow) {
+			break;
+		}
+
 		layer = layer->parent;
 	}
 
 	// If we did not find the file and create mode was requested, construct
-	// a file path in the appropriate layer.	
+	// a file path in the appropriate layer.
 	if (!inode && create) {
 		if (!parent) {
 			fprintf(stderr, "Warning, create mode requested on %s, but no layer "
@@ -245,7 +250,7 @@ done:
 	return inode;
 }
 
-// Decrement ref count on an inode.  A deleted inode with a ref count of 0 
+// Decrement ref count on an inode.  A deleted inode with a ref count of 0
 // will be garbage collected.
 void deref_inode(struct inode *inode)
 {
@@ -312,7 +317,7 @@ int create_layer(char *id, char *parent_id)
 
 	strncpy(layer->id, id, sizeof(layer->id));
 
-	layer->children = ht_create(65536);
+	layer->children = ht_create(65536, id);
 
 	// Layer namespace creation.
 	layer->root = alloc_inode(NULL, "/", 0777 | S_IFDIR, layer);
@@ -351,7 +356,7 @@ done:
 	return ret;
 }
 
-static int remove_inodes(struct inode *inode)
+static int remove_inodes(struct layer *layer)
 {
 	// TODO First mark all inodes for deletion.
 
@@ -382,7 +387,7 @@ int remove_layer(char *id)
 				layer_head = layer->next;
 			}
 
-			if (remove_inodes(layer->root)) {
+			if (remove_inodes(layer)) {
 				errno = EBUSY;
 				ret = -1;
 			}
@@ -426,7 +431,7 @@ int root_fill(fuse_fill_dir_t filler, char *buf)
 			struct stat st;
 			char d_name[8];
 
-			snprintf(d_name, sizeof(d_name), "%s", layer->id);        
+			snprintf(d_name, sizeof(d_name), "%s", layer->id);
 
 			st.st_mode = layer->root->mode;
 			st.st_nlink = layer->root->nlink;
@@ -490,7 +495,7 @@ int unset_upper(char *id)
 
 int init_layers()
 {
-	layer_hash = ht_create(65536);
+	layer_hash = ht_create(65536, "layers");
 	if (!layer_hash) {
 		return -1;
 	}

@@ -8,8 +8,8 @@
 #include "hash.h"
 
 /* Create a new hashtable. */
-hashtable_t *ht_create(int size) {
-
+hashtable_t *ht_create(int size, char *name)
+{
 	hashtable_t *hashtable = NULL;
 	int i;
 
@@ -19,6 +19,8 @@ hashtable_t *ht_create(int size) {
 	if ((hashtable = malloc(sizeof(hashtable_t))) == NULL) {
 		return NULL;
 	}
+
+	hashtable->name = strdup(name);
 
 	/* Allocate pointers to the head nodes. */
 	if ((hashtable->table = malloc(sizeof(entry_t *) * size)) == NULL) {
@@ -30,13 +32,13 @@ hashtable_t *ht_create(int size) {
 
 	hashtable->size = size;
 
-	return hashtable;	
+	return hashtable;
 }
 
 /* Hash a string for a particular hash table. */
-int ht_hash(hashtable_t *hashtable, char *key) {
-
-	unsigned long int hashval;
+int ht_hash(hashtable_t *hashtable, char *key)
+{
+	unsigned long int hashval = 0;
 	int i = 0;
 
 	/* Convert our string to an integer */
@@ -50,7 +52,8 @@ int ht_hash(hashtable_t *hashtable, char *key) {
 }
 
 /* Create a key-value pair. */
-entry_t *ht_newpair(char *key, void *value) {
+entry_t *ht_newpair(char *key, void *value)
+{
 	entry_t *newpair;
 
 	if ((newpair = malloc(sizeof(entry_t))) == NULL) {
@@ -69,7 +72,8 @@ entry_t *ht_newpair(char *key, void *value) {
 }
 
 /* Insert a key-value pair into a hash table. */
-void ht_set(hashtable_t *hashtable, char *key, void *value) {
+void ht_set(hashtable_t *hashtable, char *key, void *value)
+{
 	int bin = 0;
 	entry_t *newpair = NULL;
 	entry_t *next = NULL;
@@ -96,11 +100,11 @@ void ht_set(hashtable_t *hashtable, char *key, void *value) {
 		if (next == hashtable->table[bin]) {
 			newpair->next = next;
 			hashtable->table[bin] = newpair;
-	
+
 		/* We're at the end of the linked list in this bin. */
 		} else if (next == NULL) {
 			last->next = newpair;
-	
+
 		/* We're in the middle of the list. */
 		} else  {
 			newpair->next = next;
@@ -110,7 +114,8 @@ void ht_set(hashtable_t *hashtable, char *key, void *value) {
 }
 
 /* Retrieve a key-value pair from a hash table. */
-void *ht_get(hashtable_t *hashtable, char *key) {
+void *ht_get(hashtable_t *hashtable, char *key)
+{
 	int bin = 0;
 	entry_t *pair;
 
@@ -130,7 +135,8 @@ void *ht_get(hashtable_t *hashtable, char *key) {
 	}
 }
 
-void ht_remove(hashtable_t *hashtable, char *key) {
+void ht_remove(hashtable_t *hashtable, char *key)
+{
     int bin = 0;
     entry_t *prev = NULL, *pair;
 

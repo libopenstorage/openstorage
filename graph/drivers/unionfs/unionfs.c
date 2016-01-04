@@ -1,4 +1,4 @@
-// gcc unionfs.c layer.c hash.c -DEXPERIMENTAL_ -DSTANDALONE_ -DiFILE_OFFSET_BITS=64 -lfuse -lulockmgr -lpthread -o unionfs
+// gcc unionfs.c layer.c hash.c -DEXPERIMENTAL_ -DSTANDALONE_ -DFILE_OFFSET_BITS=64 -lfuse -lulockmgr -lpthread -o unionfs
 
 #ifndef EXPERIMENTAL_
 #define EXPERIMENTAL_
@@ -35,14 +35,28 @@
 #include "hash.h"
 #include "layer.h"
 
-static int graph_opendir(const char *path, struct fuse_file_info *fi)
+static char *upper_path(struct layer *upper, const char *path)
+{
+	char *p, *new_path = NULL;
+
+	p = strchr(path+1, '/');
+	if (!p) {
+		asprintf(&new_path, "/%s", upper->id);
+	} else {
+		asprintf(&new_path, "/%s%s", upper->id, p);
+	}
+
+	return new_path;
+}
+
+static int union_opendir(const char *path, struct fuse_file_info *fi)
 {
 	int res = 0;
 	struct inode *inode = NULL;
 
 	fprintf(stderr, "%s  %s\n", __func__, path);
 
-	inode = ref_inode(path, false, 0);
+	inode = ref_inode(path, true, false, 0);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -64,12 +78,12 @@ done:
 
 // This does the bulk of unifying entries from the various layers.
 // It has to make sure dup entries are avoided.
-static int graph_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
+static int union_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 		off_t offset, struct fuse_file_info *fi)
 {
 	int res = 0;
+	struct inode *inode = NULL;
 	struct layer *layer;
-	char *fixed_path = NULL;
 
 	fprintf(stderr, "%s  %s\n", __func__, path);
 
@@ -83,59 +97,87 @@ static int graph_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 		goto done;
 	}
 
-	layer = get_layer(path, &fixed_path);
-	if (!layer) {
+	// Find the directory inode in the first layer that contains this path.
+	inode = ref_inode(path, true, false, 0);
+	if (!inode) {
 		res = -errno;
 		goto done;
 	}
 
-	while (layer) {
-		struct inode *inode = layer->root;
-		struct stat stbuf;
+	if (!(inode->mode & S_IFDIR)) {
+		errno = ENOTDIR;
+		res = -errno;
+		goto done;
+	}
 
-		while (inode) {
-			memset(&stbuf, 0, sizeof(struct stat));
+	layer = inode->layer;
 
-			stbuf.st_mode = inode->mode;
-			stbuf.st_nlink = inode->nlink;
-			stbuf.st_uid = inode->uid;
-			stbuf.st_gid = inode->gid;
-			stbuf.st_size = inode->size;
-			stbuf.st_atime = inode->atime;
-			stbuf.st_mtime = inode->mtime;
-			stbuf.st_ctime = inode->ctime;
+	do {
+		char *new_path;
 
-			if (filler(buf, inode->name, &stbuf, 0)) {
-				fprintf(stderr, "Warning, Filler too full on %s.\n", path);
-				errno = ENOMEM;
-				res = -errno;
-				goto done;
+		if (inode) {
+			struct inode *child = inode->child;
+			struct stat stbuf;
+
+			while (child) {
+				memset(&stbuf, 0, sizeof(struct stat));
+
+				stbuf.st_mode = child->mode;
+				stbuf.st_nlink = child->nlink;
+				stbuf.st_uid = child->uid;
+				stbuf.st_gid = child->gid;
+				stbuf.st_size = child->size;
+				stbuf.st_atime = child->atime;
+				stbuf.st_mtime = child->mtime;
+				stbuf.st_ctime = child->ctime;
+
+				if (filler(buf, child->name, &stbuf, 0)) {
+					fprintf(stderr, "Warning, Filler too full on %s.\n", path);
+					errno = ENOMEM;
+					res = -errno;
+					goto done;
+				}
+
+				child = child->next;
 			}
 
-			inode = inode->next;
+			deref_inode(inode);
 		}
 
 		layer = layer->parent;
-	}
+		if (!layer) {
+			break;
+		}
+
+		new_path = upper_path(layer, path);
+		if (!new_path) {
+			res = -errno;
+			goto done;
+		}
+
+		// Recursively find other directory inodes that have the same path
+		// in the upper layers.
+		inode = ref_inode(new_path, false, false, 0);
+	} while (true);
 
 done:
 
 	return res;
 }
 
-static int graph_releasedir(const char *path, struct fuse_file_info *fi)
+static int union_releasedir(const char *path, struct fuse_file_info *fi)
 {
 	return 0;
 }
 
-static int graph_getattr(const char *path, struct stat *stbuf)
+static int union_getattr(const char *path, struct stat *stbuf)
 {
 	int res = 0;
 	struct inode *inode = NULL;
 
 	fprintf(stderr, "%s  %s\n", __func__, path);
 
-	inode = ref_inode(path, false, 0);
+	inode = ref_inode(path, true, false, 0);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -161,14 +203,14 @@ done:
 	return res;
 }
 
-static int graph_access(const char *path, int mask)
+static int union_access(const char *path, int mask)
 {
 	int res = 0;
 	struct inode *inode = NULL;
 
 	fprintf(stderr, "%s  %s\n", __func__, path);
 
-	inode = ref_inode(path, false, 0);
+	inode = ref_inode(path, true, false, 0);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -184,14 +226,14 @@ done:
 	return res;
 }
 
-static int graph_unlink(const char *path)
+static int union_unlink(const char *path)
 {
 	int res = 0;
 	struct inode *inode = NULL;
 
 	fprintf(stderr, "%s  %s\n", __func__, path);
 
-	inode = ref_inode(path, false, 0);	
+	inode = ref_inode(path, true, false, 0);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -207,14 +249,14 @@ done:
 	return res;
 }
 
-static int graph_rmdir(const char *path)
+static int union_rmdir(const char *path)
 {
 	int res = 0;
 	struct inode *inode = NULL;
 
 	fprintf(stderr, "%s  %s\n", __func__, path);
 
-	inode = ref_inode(path, false, 0);	
+	inode = ref_inode(path, true, false, 0);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -242,7 +284,7 @@ done:
 	return res;
 }
 
-static int graph_rename(const char *from, const char *to)
+static int union_rename(const char *from, const char *to)
 {
 	fprintf(stderr, "%s  %s\n", __func__, from);
 
@@ -251,14 +293,14 @@ static int graph_rename(const char *from, const char *to)
 	return -EINVAL;
 }
 
-static int graph_chmod(const char *path, mode_t mode)
+static int union_chmod(const char *path, mode_t mode)
 {
 	int res = 0;
 	struct inode *inode = NULL;
 
 	fprintf(stderr, "%s  %s\n", __func__, path);
 
-	inode = ref_inode(path, false, 0);	
+	inode = ref_inode(path, true, false, 0);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -274,14 +316,14 @@ done:
 	return res;
 }
 
-static int graph_chown(const char *path, uid_t uid, gid_t gid)
+static int union_chown(const char *path, uid_t uid, gid_t gid)
 {
 	int res = 0;
 	struct inode *inode = NULL;
 
 	fprintf(stderr, "%s  %s\n", __func__, path);
 
-	inode = ref_inode(path, false, 0);	
+	inode = ref_inode(path, true, false, 0);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -298,14 +340,14 @@ done:
 	return res;
 }
 
-static int graph_truncate(const char *path, off_t size)
+static int union_truncate(const char *path, off_t size)
 {
 	int res = 0;
 	struct inode *inode = NULL;
 
 	fprintf(stderr, "%s  %s\n", __func__, path);
 
-	inode = ref_inode(path, false, 0);	
+	inode = ref_inode(path, true, false, 0);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -328,14 +370,14 @@ done:
 	return res;
 }
 
-static int graph_utimens(const char *path, const struct timespec ts[2])
+static int union_utimens(const char *path, const struct timespec ts[2])
 {
 	int res = 0;
 	struct inode *inode = NULL;
 
 	fprintf(stderr, "%s  %s\n", __func__, path);
 
-	inode = ref_inode(path, false, 0);
+	inode = ref_inode(path, true, false, 0);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -352,14 +394,15 @@ done:
 	return res;
 }
 
-static int graph_open(const char *path, struct fuse_file_info *fi)
+static int union_open(const char *path, struct fuse_file_info *fi)
 {
 	int res = 0;
 	struct inode *inode = NULL;
 
 	fprintf(stderr, "%s  %s\n", __func__, path);
 
-	inode = ref_inode(path, (fi->flags & O_CREAT ? true : false), 0777 | S_IFREG);
+	inode = ref_inode(path, true, (fi->flags & O_CREAT ? true : false),
+			0777 | S_IFREG);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -373,14 +416,15 @@ done:
 	return res;
 }
 
-static int graph_create(const char *path, mode_t mode, struct fuse_file_info *fi)
+static int union_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 {
 	int res = 0;
 	struct inode *inode = NULL;
 
 	fprintf(stderr, "%s  %s\n", __func__, path);
 
-	inode = ref_inode(path, (fi->flags & O_CREAT ? true : false), mode | S_IFREG);
+	inode = ref_inode(path, true, (fi->flags & O_CREAT ? true : false),
+			mode | S_IFREG);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -394,14 +438,14 @@ done:
 	return res;
 }
 
-static int graph_mkdir(const char *path, mode_t mode)
+static int union_mkdir(const char *path, mode_t mode)
 {
 	int res = 0;
 	struct inode *inode = NULL;
 
 	fprintf(stderr, "%s  %s\n", __func__, path);
 
-	inode = ref_inode(path, true, mode | S_IFDIR);
+	inode = ref_inode(path, true, true, mode | S_IFDIR);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -415,7 +459,7 @@ done:
 	return res;
 }
 
-static int graph_mknod(const char *path, mode_t mode, dev_t rdev)
+static int union_mknod(const char *path, mode_t mode, dev_t rdev)
 {
 	fprintf(stderr, "%s  %s\n", __func__, path);
 
@@ -424,25 +468,25 @@ static int graph_mknod(const char *path, mode_t mode, dev_t rdev)
 	return -EINVAL;
 }
 
-static int graph_fgetattr(const char *path, struct stat *stbuf,
+static int union_fgetattr(const char *path, struct stat *stbuf,
 		struct fuse_file_info *fi)
 {
-	return graph_getattr(path, stbuf);
+	return union_getattr(path, stbuf);
 }
 
-static int graph_ftruncate(const char *path, off_t size,
+static int union_ftruncate(const char *path, off_t size,
 	struct fuse_file_info *fi)
 {
-	return graph_truncate(path, size);
+	return union_truncate(path, size);
 }
 
-static int graph_read(const char *path, char *buf, size_t size, off_t offset,
+static int union_read(const char *path, char *buf, size_t size, off_t offset,
 		struct fuse_file_info *fi)
 {
 	int res = 0;
 	struct inode *inode = NULL;
 
-	inode = ref_inode(path, false, 0);
+	inode = ref_inode(path, true, false, 0);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -467,13 +511,13 @@ done:
 	return res;
 }
 
-static int graph_write(const char *path, const char *buf, size_t size,
+static int union_write(const char *path, const char *buf, size_t size,
 		off_t offset, struct fuse_file_info *fi)
 {
 	int res = 0;
 	struct inode *inode = NULL;
 
-	inode = ref_inode(path, false, 0);
+	inode = ref_inode(path, true, false, 0);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -498,7 +542,7 @@ done:
 	return res;
 }
 
-static int graph_statfs(const char *path, struct statvfs *stbuf)
+static int union_statfs(const char *path, struct statvfs *stbuf)
 {
 	int res = 0;
 
@@ -512,27 +556,27 @@ static int graph_statfs(const char *path, struct statvfs *stbuf)
 	return res;
 }
 
-static int graph_flush(const char *path, struct fuse_file_info *fi)
+static int union_flush(const char *path, struct fuse_file_info *fi)
 {
 	(void) path;
 
 	return 0;
 }
 
-static int graph_release(const char *path, struct fuse_file_info *fi)
+static int union_release(const char *path, struct fuse_file_info *fi)
 {
 	(void) path;
 
 	return 0;
 }
 
-static int graph_fsync(const char *path, int isdatasync,
+static int union_fsync(const char *path, int isdatasync,
 		struct fuse_file_info *fi)
 {
 	int res = 0;
 	struct inode *inode = NULL;
 
-	inode = ref_inode(path, false, 0);
+	inode = ref_inode(path, true, false, 0);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -554,7 +598,7 @@ done:
 	return res;
 }
 
-static int graph_readlink(const char *path, char *buf, size_t size)
+static int union_readlink(const char *path, char *buf, size_t size)
 {
 	fprintf(stderr, "%s  %s\n", __func__, path);
 
@@ -563,7 +607,7 @@ static int graph_readlink(const char *path, char *buf, size_t size)
 	return -EINVAL;
 }
 
-static int graph_symlink(const char *from, const char *to)
+static int union_symlink(const char *from, const char *to)
 {
 	fprintf(stderr, "%s  %s\n", __func__, from);
 
@@ -572,7 +616,7 @@ static int graph_symlink(const char *from, const char *to)
 	return -EINVAL;
 }
 
-static int graph_link(const char *from, const char *to)
+static int union_link(const char *from, const char *to)
 {
 	fprintf(stderr, "%s  %s\n", __func__, from);
 
@@ -583,7 +627,7 @@ static int graph_link(const char *from, const char *to)
 
 #ifdef HAVE_SETXATTR
 /* xattr operations are optional and can safely be left unimplemented */
-static int graph_setxattr(const char *path, const char *name, const char *value,
+static int union_setxattr(const char *path, const char *name, const char *value,
 		size_t size, int flags)
 {
 	// XXX TODO
@@ -591,7 +635,7 @@ static int graph_setxattr(const char *path, const char *name, const char *value,
 	return -EINVAL;
 }
 
-static int graph_getxattr(const char *path, const char *name, char *value,
+static int union_getxattr(const char *path, const char *name, char *value,
 		size_t size)
 {
 	// XXX TODO
@@ -599,14 +643,14 @@ static int graph_getxattr(const char *path, const char *name, char *value,
 	return -EINVAL;
 }
 
-static int graph_listxattr(const char *path, char *list, size_t size)
+static int union_listxattr(const char *path, char *list, size_t size)
 {
 	// XXX TODO
 	errno = EINVAL;
 	return -EINVAL;
 }
 
-static int graph_removexattr(const char *path, const char *name)
+static int union_removexattr(const char *path, const char *name)
 {
 	// XXX TODO
 	errno = EINVAL;
@@ -616,50 +660,52 @@ static int graph_removexattr(const char *path, const char *name)
 
 #endif /* HAVE_SETXATTR */
 
-static int graph_lock(const char *path, struct fuse_file_info *fi, int cmd,
+static int union_lock(const char *path, struct fuse_file_info *fi, int cmd,
 		struct flock *lock)
 {
 	(void) path;
+
+	fprintf(stderr, "%s  %s\n", __func__, path);
 
 	return ulockmgr_op(fi->fh, cmd, lock, &fi->lock_owner,
 			sizeof(fi->lock_owner));
 }
 
-static struct fuse_operations graph_oper = {
-	.getattr	= graph_getattr,
-	.fgetattr	= graph_fgetattr,
-	.access		= graph_access,
-	.readlink	= graph_readlink,
-	.opendir	= graph_opendir,
-	.readdir	= graph_readdir,
-	.releasedir	= graph_releasedir,
-	.mknod		= graph_mknod,
-	.mkdir		= graph_mkdir,
-	.symlink	= graph_symlink,
-	.unlink		= graph_unlink,
-	.rmdir		= graph_rmdir,
-	.rename		= graph_rename,
-	.link		= graph_link,
-	.chmod		= graph_chmod,
-	.chown		= graph_chown,
-	.truncate	= graph_truncate,
-	.ftruncate	= graph_ftruncate,
-	.utimens	= graph_utimens,
-	.create		= graph_create,
-	.open		= graph_open,
-	.read		= graph_read,
-	.write		= graph_write,
-	.statfs		= graph_statfs,
-	.flush		= graph_flush,
-	.release	= graph_release,
-	.fsync		= graph_fsync,
+static struct fuse_operations union_oper = {
+	.getattr	= union_getattr,
+	.fgetattr	= union_fgetattr,
+	.access		= union_access,
+	.readlink	= union_readlink,
+	.opendir	= union_opendir,
+	.readdir	= union_readdir,
+	.releasedir	= union_releasedir,
+	.mknod		= union_mknod,
+	.mkdir		= union_mkdir,
+	.symlink	= union_symlink,
+	.unlink		= union_unlink,
+	.rmdir		= union_rmdir,
+	.rename		= union_rename,
+	.link		= union_link,
+	.chmod		= union_chmod,
+	.chown		= union_chown,
+	.truncate	= union_truncate,
+	.ftruncate	= union_ftruncate,
+	.utimens	= union_utimens,
+	.create		= union_create,
+	.open		= union_open,
+	.read		= union_read,
+	.write		= union_write,
+	.statfs		= union_statfs,
+	.flush		= union_flush,
+	.release	= union_release,
+	.fsync		= union_fsync,
 #ifdef HAVE_SETXATTR
-	.setxattr	= graph_setxattr,
-	.getxattr	= graph_getxattr,
-	.listxattr	= graph_listxattr,
-	.removexattr= graph_removexattr,
+	.setxattr	= union_setxattr,
+	.getxattr	= union_getxattr,
+	.listxattr	= union_listxattr,
+	.removexattr= union_removexattr,
 #endif
-	.lock		= graph_lock,
+	.lock		= union_lock,
 
 	.flag_nullpath_ok = 1,
 };
@@ -677,7 +723,7 @@ int start_unionfs(char *mount_path)
 	argv[1] = mount_path;
 	argv[2] = "-f";
 
-	return fuse_main(3, argv, &graph_oper, NULL);
+	return fuse_main(3, argv, &union_oper, NULL);
 }
 
 int alloc_unionfs(char *id)
