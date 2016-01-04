@@ -298,7 +298,7 @@ static int union_chmod(const char *path, mode_t mode)
 		goto done;
 	}
 
-	inode->mode = mode;
+	chmod_inode(inode, mode);
 
 done:
 	if (inode) {

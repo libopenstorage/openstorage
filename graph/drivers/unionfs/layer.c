@@ -41,7 +41,7 @@ static pthread_rwlock_t inode_reaper_lock;
 
 // Allocate an inode, add it to the layer and link it to the namespace.
 // Initial reference is 1.
-struct inode *alloc_inode(struct inode *parent, char *name,
+static struct inode *alloc_inode(struct inode *parent, char *name,
 	mode_t mode, struct layer *layer)
 {
 	struct inode *inode;
@@ -84,15 +84,20 @@ struct inode *alloc_inode(struct inode *parent, char *name,
 			ret = -1;
 			goto done;
 		}
+	} else {
+		inode->f = NULL;
 	}
 
 	pthread_mutex_init(&inode->lock, NULL);
 
 	inode->layer = layer;
+	inode->child = NULL;
+	inode->next = NULL;
 
 	if (parent) {
 		inode->parent = parent;
 
+		// XXX check for ref logic.
 		pthread_mutex_lock(&parent->lock);
 		{
 			inode->next = parent->child;
@@ -100,9 +105,6 @@ struct inode *alloc_inode(struct inode *parent, char *name,
 		}
 		pthread_mutex_unlock(&parent->lock);
 	}
-
-	inode->child = NULL;
-	inode->next = NULL;
 
 	if (layer) {
 		ht_set(layer->children, name, inode);
@@ -217,6 +219,9 @@ struct inode *ref_inode(const char *path, bool follow, bool create, mode_t mode)
 		if (!parent) {
 			parent = ht_get(layer->children, dir);
 			parent_layer = layer;
+
+			// No need to refcount parent since it is used in the zone
+			// protected by the inode_reaper_lock.
 		}
 
 		if (!follow) {
@@ -280,6 +285,16 @@ void stat_inode(struct inode *inode, struct stat *stbuf)
 		stbuf->st_mtime = inode->mtime;
 		stbuf->st_ctime = inode->ctime;
 		stbuf->st_ino = 0;
+	}
+}
+
+// Set mode on an inode.
+void chmod_inode(struct inode *inode, mode_t mode)
+{
+	if (inode->f) {
+		fchmod(fileno(inode->f), mode);
+	} else {
+		inode->mode = mode;
 	}
 }
 

@@ -73,11 +73,6 @@ extern int remove_layer(char *id);
 // Returns true if layer exists.
 extern int check_layer(char *id);
 
-// Allocate an inode, add it to the layer and link it to the namespace.
-// Initial reference is 1.
-extern struct inode *alloc_inode(struct inode *parent, char *name, 
-	mode_t mode, struct layer *layer);
-
 // Locate an inode given a path.  If 'follow' is specified, then search
 // all linked layers for the path.  Create one if 'create' flag is specified.
 // Increment reference count on the returned inode.
@@ -90,6 +85,9 @@ extern void deref_inode(struct inode *inode);
 
 // Get statbuf on an inode.
 extern void stat_inode(struct inode *inode, struct stat *stbuf);
+
+// Set mode on an inode.
+extern void chmod_inode(struct inode *inode, mode_t mode);
 
 // Must be called with reference held.
 extern void delete_inode(struct inode *inode);
