@@ -27,6 +27,9 @@
 #include "hash.h"
 #include "layer.h"
 
+// A reference to the root inode.
+static struct inode *root_inode;
+
 // All layers in the system.
 static struct layer *layer_head = NULL;
 static hashtable_t *layer_hash;
@@ -101,7 +104,9 @@ struct inode *alloc_inode(struct inode *parent, char *name,
 	inode->child = NULL;
 	inode->next = NULL;
 
-	ht_set(layer->children, name, inode);
+	if (layer) {
+		ht_set(layer->children, name, inode);
+	}
 
 done:
 	if (dupname) {
@@ -177,6 +182,10 @@ struct inode *ref_inode(const char *path, bool create, mode_t mode)
 	char *dir;
 	int i;
 
+	if (!strcmp(path, "/")) {
+		return root_inode;
+	}
+
 	pthread_rwlock_rdlock(&inode_reaper_lock);
 
 	errno = 0;
@@ -198,7 +207,7 @@ struct inode *ref_inode(const char *path, bool create, mode_t mode)
 				inode->ref++;
 			}
 			pthread_mutex_lock(&inode->lock);
-			
+
 			goto done;
 		}
 
@@ -240,16 +249,25 @@ done:
 // will be garbage collected.
 void deref_inode(struct inode *inode)
 {
+	if (inode == root_inode) {
+		return;
+	}
+
 	pthread_mutex_lock(&inode->lock);
 	{
 		inode->ref--;
 	}
-	pthread_mutex_lock(&inode->lock);
+	pthread_mutex_unlock(&inode->lock);
 }
 
 // Must be called with reference held.
 void delete_inode(struct inode *inode)
 {
+	if (inode == root_inode) {
+		fprintf(stderr, "Warning, trying to delete root inode.\n");
+		return;
+	}
+
 	// This will be recycled when the ref counts go to 0.
 	inode->deleted = true;
 }
@@ -261,6 +279,12 @@ int create_layer(char *id, char *parent_id)
 	struct layer *layer = NULL;
 	char *str = NULL;
 	int ret = 0;
+
+	if (!layer_hash) {
+		errno = EINVAL;
+		ret = -errno;
+		goto done;
+	}
 
 	layer = ht_get(layer_hash, id);
 	if (layer) {
@@ -288,15 +312,16 @@ int create_layer(char *id, char *parent_id)
 
 	strncpy(layer->id, id, sizeof(layer->id));
 
+	layer->children = ht_create(65536);
+
 	// Layer namespace creation.
 	layer->root = alloc_inode(NULL, "/", 0777 | S_IFDIR, layer);
 	if (layer->root == NULL) {
 		ret = -errno;
 		goto done;
 	}
-	deref_inode(layer->root);
 
-	layer->children = ht_create(65536);
+	deref_inode(layer->root);
 
 	// Layer linkages.
 	layer->upper = false;
@@ -469,6 +494,8 @@ int init_layers()
 	if (!layer_hash) {
 		return -1;
 	}
+
+	root_inode = alloc_inode(NULL, "/", 0777 | S_IFDIR, NULL);
 
 	pthread_rwlock_init(&inode_reaper_lock, 0);
 	pthread_mutex_init(&layer_lock, 0);

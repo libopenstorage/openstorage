@@ -40,6 +40,8 @@ static int graph_opendir(const char *path, struct fuse_file_info *fi)
 	int res = 0;
 	struct inode *inode = NULL;
 
+	fprintf(stderr, "%s  %s\n", __func__, path);
+
 	inode = ref_inode(path, false, 0);
 	if (!inode) {
 		res = -errno;
@@ -69,10 +71,12 @@ static int graph_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	struct layer *layer;
 	char *fixed_path = NULL;
 
+	fprintf(stderr, "%s  %s\n", __func__, path);
+
 	// Check to see if it is a root listing.
 	if (!strcmp(path, "/")) {
 		// List all layers.
-		if (!root_fill(filler, buf)) {
+		if (root_fill(filler, buf)) {
 			res = -errno;
 		}
 
@@ -100,7 +104,7 @@ static int graph_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 			stbuf.st_atime = inode->atime;
 			stbuf.st_mtime = inode->mtime;
 			stbuf.st_ctime = inode->ctime;
-    
+
 			if (filler(buf, inode->name, &stbuf, 0)) {
 				fprintf(stderr, "Warning, Filler too full on %s.\n", path);
 				errno = ENOMEM;
@@ -129,7 +133,9 @@ static int graph_getattr(const char *path, struct stat *stbuf)
 	int res = 0;
 	struct inode *inode = NULL;
 
-	inode = ref_inode(path, false, 0);	
+	fprintf(stderr, "%s  %s\n", __func__, path);
+
+	inode = ref_inode(path, false, 0);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -160,7 +166,9 @@ static int graph_access(const char *path, int mask)
 	int res = 0;
 	struct inode *inode = NULL;
 
-	inode = ref_inode(path, false, 0);	
+	fprintf(stderr, "%s  %s\n", __func__, path);
+
+	inode = ref_inode(path, false, 0);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -180,6 +188,8 @@ static int graph_unlink(const char *path)
 {
 	int res = 0;
 	struct inode *inode = NULL;
+
+	fprintf(stderr, "%s  %s\n", __func__, path);
 
 	inode = ref_inode(path, false, 0);	
 	if (!inode) {
@@ -201,6 +211,8 @@ static int graph_rmdir(const char *path)
 {
 	int res = 0;
 	struct inode *inode = NULL;
+
+	fprintf(stderr, "%s  %s\n", __func__, path);
 
 	inode = ref_inode(path, false, 0);	
 	if (!inode) {
@@ -232,6 +244,8 @@ done:
 
 static int graph_rename(const char *from, const char *to)
 {
+	fprintf(stderr, "%s  %s\n", __func__, from);
+
 	// XXX TODO
 	errno = EINVAL;
 	return -EINVAL;
@@ -241,6 +255,8 @@ static int graph_chmod(const char *path, mode_t mode)
 {
 	int res = 0;
 	struct inode *inode = NULL;
+
+	fprintf(stderr, "%s  %s\n", __func__, path);
 
 	inode = ref_inode(path, false, 0);	
 	if (!inode) {
@@ -263,6 +279,8 @@ static int graph_chown(const char *path, uid_t uid, gid_t gid)
 	int res = 0;
 	struct inode *inode = NULL;
 
+	fprintf(stderr, "%s  %s\n", __func__, path);
+
 	inode = ref_inode(path, false, 0);	
 	if (!inode) {
 		res = -errno;
@@ -284,6 +302,8 @@ static int graph_truncate(const char *path, off_t size)
 {
 	int res = 0;
 	struct inode *inode = NULL;
+
+	fprintf(stderr, "%s  %s\n", __func__, path);
 
 	inode = ref_inode(path, false, 0);	
 	if (!inode) {
@@ -310,85 +330,95 @@ done:
 
 static int graph_utimens(const char *path, const struct timespec ts[2])
 {
-	 int res = 0;
-	 struct inode *inode = NULL;
+	int res = 0;
+	struct inode *inode = NULL;
 
-	 inode = ref_inode(path, false, 0);
-	 if (!inode) {
-		  res = -errno;
-		  goto done;
-	 }
+	fprintf(stderr, "%s  %s\n", __func__, path);
+
+	inode = ref_inode(path, false, 0);
+	if (!inode) {
+		res = -errno;
+		goto done;
+	}
 
 	inode->atime = (time_t)ts[0].tv_sec;
 	inode->mtime = (time_t)ts[1].tv_sec;
 
 done:
-	 if (inode) {
-		  deref_inode(inode);
-	 }
+	if (inode) {
+		deref_inode(inode);
+	}
 
-	 return res;
+	return res;
 }
 
 static int graph_open(const char *path, struct fuse_file_info *fi)
 {
-	 int res = 0;
-	 struct inode *inode = NULL;
+	int res = 0;
+	struct inode *inode = NULL;
 
-	 inode = ref_inode(path, (fi->flags & O_CREAT ? true : false), 0777 | S_IFREG);
-	 if (!inode) {
-		  res = -errno;
-		  goto done;
-	 }
+	fprintf(stderr, "%s  %s\n", __func__, path);
+
+	inode = ref_inode(path, (fi->flags & O_CREAT ? true : false), 0777 | S_IFREG);
+	if (!inode) {
+		res = -errno;
+		goto done;
+	}
 
 done:
-	 if (inode) {
-		  deref_inode(inode);
-	 }
+	if (inode) {
+		deref_inode(inode);
+	}
 
-	 return res;
+	return res;
 }
 
 static int graph_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 {
-	 int res = 0;
-	 struct inode *inode = NULL;
+	int res = 0;
+	struct inode *inode = NULL;
 
-	 inode = ref_inode(path, (fi->flags & O_CREAT ? true : false), mode | S_IFREG);
-	 if (!inode) {
-		  res = -errno;
-		  goto done;
-	 }
+	fprintf(stderr, "%s  %s\n", __func__, path);
+
+	inode = ref_inode(path, (fi->flags & O_CREAT ? true : false), mode | S_IFREG);
+	if (!inode) {
+		res = -errno;
+		goto done;
+	}
 
 done:
-	 if (inode) {
-		  deref_inode(inode);
-	 }
+	if (inode) {
+		deref_inode(inode);
+	}
 
-	 return res;
+	return res;
 }
 
 static int graph_mkdir(const char *path, mode_t mode)
 {
-	 int res = 0;
-	 struct inode *inode = NULL;
+	int res = 0;
+	struct inode *inode = NULL;
 
-	 inode = ref_inode(path, true, mode | S_IFDIR);
-	 if (!inode) {
-		  res = -errno;
-		  goto done;
-	 }
+	fprintf(stderr, "%s  %s\n", __func__, path);
+
+	inode = ref_inode(path, true, mode | S_IFDIR);
+	if (!inode) {
+		res = -errno;
+		goto done;
+	}
 
 done:
-	 if (inode) {
-		  deref_inode(inode);
-	 }
+	if (inode) {
+		deref_inode(inode);
+	}
 
-	 return res;
+	return res;
 }
 
 static int graph_mknod(const char *path, mode_t mode, dev_t rdev)
 {
+	fprintf(stderr, "%s  %s\n", __func__, path);
+
 	// XXX TODO
 	errno = EINVAL;
 	return -EINVAL;
@@ -417,7 +447,7 @@ static int graph_read(const char *path, char *buf, size_t size, off_t offset,
 		res = -errno;
 		goto done;
 	}
-	
+
 	if (inode->mode & S_IFDIR) {
 		errno = EISDIR;
 		res = -EISDIR;
@@ -472,6 +502,8 @@ static int graph_statfs(const char *path, struct statvfs *stbuf)
 {
 	int res = 0;
 
+	fprintf(stderr, "%s  %s\n", __func__, path);
+
 	res = statvfs("/", stbuf);
 	if (res == -1) {
 		res = -errno;
@@ -505,7 +537,7 @@ static int graph_fsync(const char *path, int isdatasync,
 		res = -errno;
 		goto done;
 	}
-	
+
 	if (inode->mode & S_IFDIR) {
 		errno = EISDIR;
 		res = -EISDIR;
@@ -524,6 +556,8 @@ done:
 
 static int graph_readlink(const char *path, char *buf, size_t size)
 {
+	fprintf(stderr, "%s  %s\n", __func__, path);
+
 	// XXX TODO
 	errno = EINVAL;
 	return -EINVAL;
@@ -531,6 +565,8 @@ static int graph_readlink(const char *path, char *buf, size_t size)
 
 static int graph_symlink(const char *from, const char *to)
 {
+	fprintf(stderr, "%s  %s\n", __func__, from);
+
 	// XXX TODO
 	errno = EINVAL;
 	return -EINVAL;
@@ -538,6 +574,8 @@ static int graph_symlink(const char *from, const char *to)
 
 static int graph_link(const char *from, const char *to)
 {
+	fprintf(stderr, "%s  %s\n", __func__, from);
+
 	// XXX TODO
 	errno = EINVAL;
 	return -EINVAL;
@@ -653,9 +691,32 @@ int release_unionfs(char *id)
 }
 
 #ifdef STANDALONE_
-int main()
+void *launch(void *arg)
 {
 	start_unionfs("/var/lib/openstorage/unionfs");
+
+	return NULL;
+}
+
+int main()
+{
+	pthread_t tid;
+
+	system("umount /var/lib/openstorage/unionfs");
+
+	pthread_create(&tid, NULL, launch, NULL);
+
+	sleep(2);
+
+	fprintf(stderr, "Creating layers...\n");
+
+	create_layer("layer1", NULL);
+	create_layer("layer2", "layer1");
+
+	fprintf(stderr, "Ready... Press any key to exit.\n");
+	getchar();
+
+	system("umount /var/lib/openstorage/unionfs");
 }
 #endif
 
