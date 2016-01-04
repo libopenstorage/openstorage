@@ -1,6 +1,8 @@
 // gcc unionfs.c layer.c hash.c -DEXPERIMENTAL_ -DSTANDALONE_ -DiFILE_OFFSET_BITS=64 -lfuse -lulockmgr -lpthread -o unionfs
 
+#ifndef EXPERIMENTAL_
 #define EXPERIMENTAL_
+#endif
 
 #ifdef EXPERIMENTAL_
 

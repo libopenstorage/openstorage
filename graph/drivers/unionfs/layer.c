@@ -1,6 +1,8 @@
 // gcc layer.c hash.c -DEXPERIMENTAL_ -DiFILE_OFFSET_BITS=64 -lfuse -lulockmgr -lpthread -c
 
+#ifndef EXPERIMENTAL_
 #define EXPERIMENTAL_
+#endif
 
 #ifdef EXPERIMENTAL_
 
