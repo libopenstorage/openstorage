@@ -1,6 +1,7 @@
 #ifndef _LAYER_H_
 #define _LAYER_H_
 
+#include <fuse.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -52,14 +53,20 @@ struct layer {
 	struct inode *root;
 	hashtable_t *children;
 
+	// Linkage to parent and sibling nodes.
 	struct layer *parent;
+	struct layer *next;
+	struct layer *prev;
 };
 
-// Create a layer and link it to a parent.  Parent can be "".
+// Create a layer and link it to a parent.  Parent can be "" or NULL.
 extern int create_layer(char *id, char *parent_id);
 
 // Remove a layer and all the inodes in this layer.
 extern int remove_layer(char *id);
+
+// Get's the owner layer given a path.
+extern struct layer *get_layer(const char *path, char **new_path);
 
 // Allocate an inode, add it to the layer and link it to the namespace.
 // Initial reference is 1.
@@ -82,6 +89,9 @@ extern int set_upper(char *id);
 
 // Unmark a layer as the top most layer.
 extern int unset_upper(char *id);
+
+// Fill buf with the dir entries of the root FS.
+extern int root_fill(fuse_fill_dir_t filler, char *buf);
 
 // Initialize the layer file system.
 extern int init_layers(void);

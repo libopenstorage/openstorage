@@ -62,101 +62,56 @@ static int graph_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 		off_t offset, struct fuse_file_info *fi)
 {
 	int res = 0;
-#if 0
-	struct union_fs *ufs = NULL;
+	struct layer *layer;
 	char *fixed_path = NULL;
-	struct stat st;
-	int i;
 
+	// Check to see if it is a root listing.
 	if (!strcmp(path, "/")) {
 		// List all layers.
-		for (i = 0; i < MAX_INSTANCES; i++) {
-			if (!ufs_heap[i].available) {
-				char phys_path[PATH_MAX];
-				char d_name[8];
-
-				snprintf(phys_path, sizeof(phys_path), "%s/%s",
-					union_src, ufs_heap[i].id);
-				stat(phys_path, &st);
-
-				sprintf(d_name, "%s", ufs_heap[i].id);
-				if (filler(buf, d_name, &st, 0)) {
-					fprintf(stderr, "Warning, Filler too full on root.\n");
-					break;
-				}
-			}
+		if (!root_fill(filler, buf)) {
+			res = -errno;
 		}
 
 		goto done;
 	}
 
-	ufs = get_ufs(path, &fixed_path);
-	if (!ufs) {
-		errno = ENOENT;
+	layer = get_layer(path, &fixed_path);
+	if (!layer) {
 		res = -errno;
-		// fprintf(stderr, "Warning, no valid union FS for %s\n", path);
 		goto done;
 	}
 
-	lock_ufs(ufs);
+	while (layer) {
+		struct inode *inode = layer->root;
+		struct stat stbuf;
 
-	for (i = 0; ufs->layers[i]; i++) {
-		char *rp = NULL;
-		int ret;
+		while (inode) {
+			memset(&stbuf, 0, sizeof(struct stat));
 
-		asprintf(&rp, "%s%s", ufs->layers[i], fixed_path);
-		if (!rp) {
-			errno = ENOMEM;
-			fprintf(stderr, "Warning, cannot allocate memory\n");
-			break;
-		}
-
-		ret = lstat(rp, &st);
-		if (ret == 0) {
-			DIR *dp;
-
-			dp = opendir(rp);
-			if (!dp) {
-				fprintf(stderr, "Warning, %s not a directory.\n", rp);
-				free(rp);
-				continue;
+			stbuf.st_mode = inode->mode;
+			stbuf.st_nlink = inode->nlink;
+			stbuf.st_uid = inode->uid;
+			stbuf.st_gid = inode->gid;
+			stbuf.st_size = inode->size;
+			stbuf.st_atime = inode->atime;
+			stbuf.st_mtime = inode->mtime;
+			stbuf.st_ctime = inode->ctime;
+    
+			if (filler(buf, inode->name, &stbuf, 0)) {
+				fprintf(stderr, "Warning, Filler too full on %s.\n", path);
+				errno = ENOMEM;
+				res = -errno;
+				goto done;
 			}
 
-			while (true) {
-				struct dirent *entry = NULL;
-				entry = readdir(dp);
-				if (!entry) {
-					break;
-				}
-
-				if (strcmp(".", entry->d_name) == 0 ||
-					strcmp("..", entry->d_name) == 0 || 
-					strcmp(".unionfs.parent", entry->d_name) == 0) {
-					continue;
-				}
-
-				memset(&st, 0, sizeof(st));
-				// st.st_ino = entry->d_ino;
-				// st.st_mode = entry->d_type << 12;
-
-				// XXX FIXME - make use of tge bext off feature in fuse.
-				if (filler(buf, entry->d_name, &st, 0)) {
-					fprintf(stderr, "Warning, Filler too full on %s.\n", rp);
-					break;
-				}
-			}
+			inode = inode->next;
 		}
 
-		free(rp);
+		layer = layer->parent;
 	}
 
 done:
 
-	if (ufs) {
-		unlock_ufs(ufs);
-	}
-
-#endif
 	return res;
 }
 
@@ -376,7 +331,7 @@ static int graph_open(const char *path, struct fuse_file_info *fi)
 	 int res = 0;
 	 struct inode *inode = NULL;
 
-	 inode = ref_inode(path, (fi->flags & O_CREAT ? true : false), 0777 & S_IFREG);
+	 inode = ref_inode(path, (fi->flags & O_CREAT ? true : false), 0777 | S_IFREG);
 	 if (!inode) {
 		  res = -errno;
 		  goto done;
@@ -395,7 +350,7 @@ static int graph_create(const char *path, mode_t mode, struct fuse_file_info *fi
 	 int res = 0;
 	 struct inode *inode = NULL;
 
-	 inode = ref_inode(path, (fi->flags & O_CREAT ? true : false), mode & S_IFREG);
+	 inode = ref_inode(path, (fi->flags & O_CREAT ? true : false), mode | S_IFREG);
 	 if (!inode) {
 		  res = -errno;
 		  goto done;
@@ -414,7 +369,7 @@ static int graph_mkdir(const char *path, mode_t mode)
 	 int res = 0;
 	 struct inode *inode = NULL;
 
-	 inode = ref_inode(path, true, mode & S_IFDIR);
+	 inode = ref_inode(path, true, mode | S_IFDIR);
 	 if (!inode) {
 		  res = -errno;
 		  goto done;

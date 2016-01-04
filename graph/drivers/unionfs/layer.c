@@ -1,6 +1,11 @@
 // gcc layer.c hash.c -DEXPERIMENTAL_ -DiFILE_OFFSET_BITS=64 -lfuse -lulockmgr -lpthread -c
 #ifdef EXPERIMENTAL_
 
+#define _GNU_SOURCE
+#define _FILE_OFFSET_BITS 64
+#define FUSE_USE_VERSION 26
+
+#include <fuse.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,7 +22,10 @@
 #include "hash.h"
 #include "layer.h"
 
+// All layers in the system.
+static struct layer *layer_head = NULL;
 static hashtable_t *layer_hash;
+static pthread_mutex_t layer_lock;
 
 // Guards against a deleted inode getting free'd if someone 
 // is still referencing it.
@@ -113,7 +121,8 @@ done:
 	return inode;
 }
 
-static struct layer *get_layer(const char *path, char **new_path)
+// Get's the owner layer given a path.
+struct layer *get_layer(const char *path, char **new_path)
 {
 	struct layer *layer = NULL;
 	char *p, *tmp_path = NULL;
@@ -236,9 +245,11 @@ void deref_inode(struct inode *inode)
 // Must be called with reference held.
 void delete_inode(struct inode *inode)
 {
+	// This will be recycled when the ref counts go to 0.
 	inode->deleted = true;
 }
 
+// Create a layer and link it to a parent.  Parent can be "" or NULL.
 int create_layer(char *id, char *parent_id)
 {
 	struct layer *parent = NULL;
@@ -248,8 +259,8 @@ int create_layer(char *id, char *parent_id)
 
 	layer = ht_get(layer_hash, id);
 	if (layer) {
-		errno = EEXIST;
 		layer = NULL;
+		errno = EEXIST;
 		ret = -errno;
 		goto done;
 	}
@@ -270,18 +281,31 @@ int create_layer(char *id, char *parent_id)
 		goto done;
 	}
 
-	layer->parent = parent;
-	layer->children = ht_create(65536);
+	strncpy(layer->id, id, sizeof(layer->id));
 
-	layer->root = alloc_inode(NULL, "/", 0777 & S_IFDIR, layer);
+	// Layer namespace creation.
+	layer->root = alloc_inode(NULL, "/", 0777 | S_IFDIR, layer);
 	if (layer->root == NULL) {
 		ret = -errno;
 		goto done;
 	}
-
 	deref_inode(layer->root);
 
-	ht_set(layer_hash, id, layer);
+	layer->children = ht_create(65536);
+
+	// Layer linkages.
+	layer->upper = false;
+	layer->parent = parent;
+	pthread_mutex_lock(&layer_lock);
+	{
+		ht_set(layer_hash, id, layer);
+		layer->next = layer_head;
+		if (layer_head) {
+			layer_head->prev = layer;
+		}
+		layer_head = layer;
+	}
+	pthread_mutex_unlock(&layer_lock);
 
 done:
 	if (str) {
@@ -297,13 +321,90 @@ done:
 	return ret;
 }
 
-int remove_layer(char *id)
+static int remove_inodes(struct inode *inode)
 {
-	ht_remove(layer_hash, id);
+	// TODO First mark all inodes for deletion.
 
-	// XXX mark all inodes for deletion.
+	// TODO Lazily remove all inodes based on refcounts.
 
 	return 0;
+}
+
+int remove_layer(char *id)
+{
+	int ret = 0;
+
+	pthread_mutex_lock(&layer_lock);
+	{
+		struct layer *layer = ht_get(layer_hash, id);
+
+		if (layer) {
+			ht_remove(layer_hash, id);
+			if (layer->next) {
+				layer->next->prev = layer->prev;
+			}
+
+			if (layer->prev) {
+				layer->prev->next = layer->next;
+			}
+
+			if (layer == layer_head) {
+				layer_head = layer->next;
+			}
+
+			if (remove_inodes(layer->root)) {
+				errno = EBUSY;
+				ret = -1;
+			}
+		} else {
+			errno = ENOENT;
+			ret = -1;
+		}
+	}
+	pthread_mutex_unlock(&layer_lock);
+
+	return ret;
+}
+
+// Fill buf with the dir entries of the root FS.
+int root_fill(fuse_fill_dir_t filler, char *buf)
+{
+	int ret = 0;
+
+	pthread_mutex_lock(&layer_lock);
+	{
+		struct layer *layer = layer_head;
+
+		while (layer) {
+			struct stat st;
+			char d_name[8];
+
+			snprintf(d_name, sizeof(d_name), "%s", layer->id);        
+
+			st.st_mode = layer->root->mode;
+			st.st_nlink = layer->root->nlink;
+			st.st_uid = layer->root->uid;
+			st.st_gid = layer->root->gid;
+			st.st_size = layer->root->size;
+			st.st_atime = layer->root->atime;
+			st.st_mtime = layer->root->mtime;
+			st.st_ctime = layer->root->ctime;
+			st.st_ino = 0;
+
+			if (filler(buf, d_name, &st, 0)) {
+				errno = ENOMEM;
+				ret = -1;
+
+				fprintf(stderr, "Warning, Filler too full on root.\n");
+				break;
+			}
+
+			layer = layer->next;
+		}
+	}
+	pthread_mutex_unlock(&layer_lock);
+
+	return ret;
 }
 
 // Mark a layer as the top most layer.
@@ -348,6 +449,7 @@ int init_layers()
 	}
 
 	pthread_rwlock_init(&inode_reaper_lock, 0);
+	pthread_mutex_init(&layer_lock, 0);
 
 	return 0;
 }
