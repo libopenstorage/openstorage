@@ -120,10 +120,11 @@ func (d *Driver) Status() [][2]string {
 
 // Create creates a new, empty, filesystem layer with the
 // specified id and parent and mountLabel. Parent and mountLabel may be "".
-func (d *Driver) Create(id string, parent string) error {
+// XXX unknown?
+func (d *Driver) Create(id string, parent string, mountLabel string) error {
 	logrus.Debugf("Creating layer %s", id)
 
-	cID := C.CString(id)
+	cId := C.CString(id)
 	cParent := C.CString(parent)
 	ret, err := C.create_layer(cId, cParent)
 	if int(ret) != 0 {
@@ -136,9 +137,9 @@ func (d *Driver) Create(id string, parent string) error {
 
 // Remove attempts to remove the filesystem layer with this id.
 func (d *Driver) Remove(id string) error {
-	logrus.Debugf("Removing layer %s", path)
+	logrus.Debugf("Removing layer %s", id)
 
-	cID := C.CString(id)
+	cId := C.CString(id)
 	ret, err := C.remove_layer(cId)
 	if int(ret) != 0 {
 		logrus.Warnf("Error while removing union FS layer for %s", id)
@@ -188,7 +189,7 @@ func (d *Driver) Put(id string) error {
 // All cache entries exist.
 func (d *Driver) Exists(id string) bool {
 	cID := C.CString(id)
-	ret, err := C.check_layer(cID)
+	ret, _ := C.check_layer(cID)
 
 	if int(ret) == 0 {
 		return true

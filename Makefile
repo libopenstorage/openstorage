@@ -13,6 +13,7 @@ TAGS+=have_unionfs
 endif
 
 export GO15VENDOREXPERIMENT=1
+export EXPERIMENTAL_=1
 
 all: test install
 
