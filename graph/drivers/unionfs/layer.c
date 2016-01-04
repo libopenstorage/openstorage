@@ -366,6 +366,23 @@ int remove_layer(char *id)
 	return ret;
 }
 
+// Returns true if layer exists.
+int check_layer(char *id)
+{
+	bool ret = false;
+
+	pthread_mutex_lock(&layer_lock);
+	{
+		struct layer *layer = ht_get(layer_hash, id);
+		if (layer) {
+			ret = true;
+		}
+	}
+	pthread_mutex_unlock(&layer_lock);
+
+	return ret;
+}
+
 // Fill buf with the dir entries of the root FS.
 int root_fill(fuse_fill_dir_t filler, char *buf)
 {

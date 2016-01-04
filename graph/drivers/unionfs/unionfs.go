@@ -3,12 +3,12 @@
 package unionfs
 
 /*
-extern int start_unionfs(char *);
-extern int alloc_unionfs(char *);
-extern int release_unionfs(char *);
-extern int create_layer(char *);
-extern int remove_layer(char *);
-extern int check_layer(char *);
+extern int start_unionfs(char *mount_path);
+extern int alloc_unionfs(char *id);
+extern int release_unionfs(char *id);
+extern int create_layer(char *id, char *parent_id);
+extern int remove_layer(char *id);
+extern int check_layer(char *id);
 #cgo LDFLAGS: -lfuse -lulockmgr
 */
 import "C"

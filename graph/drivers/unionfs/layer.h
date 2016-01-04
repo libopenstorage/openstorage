@@ -1,5 +1,6 @@
 #ifndef _LAYER_H_
 #define _LAYER_H_
+#define _FILE_OFFSET_BITS 64
 
 #include <fuse.h>
 #include <sys/types.h>
@@ -40,7 +41,6 @@ struct inode {
 	// The layer this inode belongs to.
 	struct layer *layer;
 
-
 	// XXX This should point to a block device.
 	FILE *f;
 };
@@ -67,6 +67,9 @@ extern int remove_layer(char *id);
 
 // Get's the owner layer given a path.
 extern struct layer *get_layer(const char *path, char **new_path);
+
+// Returns true if layer exists.
+extern int check_layer(char *id);
 
 // Allocate an inode, add it to the layer and link it to the namespace.
 // Initial reference is 1.
