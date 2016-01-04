@@ -265,6 +265,24 @@ void deref_inode(struct inode *inode)
 	pthread_mutex_unlock(&inode->lock);
 }
 
+// Get statbuf on an inode.
+void stat_inode(struct inode *inode, struct stat *stbuf)
+{
+	if (inode->f) {
+		fstat(fileno(inode->f), stbuf);
+	} else {
+		stbuf->st_mode = inode->mode;
+		stbuf->st_nlink = inode->nlink;
+		stbuf->st_uid = inode->uid;
+		stbuf->st_gid = inode->gid;
+		stbuf->st_size = inode->size;
+		stbuf->st_atime = inode->atime;
+		stbuf->st_mtime = inode->mtime;
+		stbuf->st_ctime = inode->ctime;
+		stbuf->st_ino = 0;
+	}
+}
+
 // Must be called with reference held.
 void delete_inode(struct inode *inode)
 {

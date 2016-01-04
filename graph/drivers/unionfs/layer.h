@@ -88,6 +88,9 @@ extern struct inode *ref_inode(const char *path, bool follow,
 // will be garbage collected.
 extern void deref_inode(struct inode *inode);
 
+// Get statbuf on an inode.
+extern void stat_inode(struct inode *inode, struct stat *stbuf);
+
 // Must be called with reference held.
 extern void delete_inode(struct inode *inode);
 
