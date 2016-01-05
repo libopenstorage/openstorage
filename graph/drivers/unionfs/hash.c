@@ -89,8 +89,8 @@ void ht_set(hashtable_t *hashtable, char *key, void *value)
 		next = next->next;
 	}
 
-	if (next != NULL && next->key != NULL && !strcmp(key, next->key) == 0) {
-		/* There's already a pair.  Let's replace that string. */
+	if (next != NULL && next->key != NULL && strcmp(key, next->key) == 0) {
+		/* There's already a pair.  Let's replace that value. */
 		next->value = value;
 	} else {
 		/* Nope, could't find it.  Time to grow a pair. */
