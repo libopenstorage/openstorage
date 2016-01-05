@@ -85,6 +85,7 @@ static struct inode *alloc_inode(struct inode *parent, char *name,
 			ret = -1;
 			goto done;
 		}
+		fchmod(fileno(inode->f), mode);
 	} else {
 		inode->f = NULL;
 	}
@@ -235,7 +236,6 @@ struct inode *ref_inode(const char *path, bool follow, bool create, mode_t mode)
 					parent_layer = layer;
 				}
 			}
-
 
 			// No need to refcount parent since it is used in the zone
 			// protected by the inode_reaper_lock.
