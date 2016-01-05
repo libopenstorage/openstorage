@@ -66,6 +66,7 @@ static struct inode *alloc_inode(struct inode *parent, char *name,
 	inode->deleted = false;
 
 	base = basename(name);
+	inode->full_name = strdup(name);
 	inode->name = strdup(base);
 	if (!inode->name) {
 		ret = -1;
@@ -131,6 +132,11 @@ done:
 	}
 
 	return inode;
+}
+
+void release_inode(struct inode *inode)
+{
+	// TODO
 }
 
 // Get's the owner layer given a path.
@@ -270,8 +276,8 @@ void deref_inode(struct inode *inode)
 	pthread_mutex_unlock(&inode->lock);
 }
 
-// Get statbuf on an inode.
-void stat_inode(struct inode *inode, struct stat *stbuf)
+// Get statbuf on an inode.  Must be called with reference held.
+int stat_inode(struct inode *inode, struct stat *stbuf)
 {
 	if (inode->f) {
 		fstat(fileno(inode->f), stbuf);
@@ -286,16 +292,50 @@ void stat_inode(struct inode *inode, struct stat *stbuf)
 		stbuf->st_ctime = inode->ctime;
 		stbuf->st_ino = 0;
 	}
+
+	return 0;
 }
 
-// Set mode on an inode.
-void chmod_inode(struct inode *inode, mode_t mode)
+// Set mode on an inode.  Must be called with reference held.
+int chmod_inode(struct inode *inode, mode_t mode)
 {
 	if (inode->f) {
 		fchmod(fileno(inode->f), mode);
 	} else {
 		inode->mode = mode;
 	}
+
+	return 0;
+}
+
+// Rename an inode.  Must be called with reference held.
+struct inode *rename_inode(struct inode *inode, const char *to)
+{
+	struct inode *new_inode;
+
+	new_inode = ref_inode(to, true, true, 0);
+	if (!new_inode) {
+		return NULL;
+	}
+
+	new_inode->f = inode->f;
+	new_inode->nlink = inode->nlink;
+	new_inode->uid = inode->uid;
+	new_inode->gid = inode->gid;
+	new_inode->size = inode->size;
+	new_inode->atime = inode->atime;
+	new_inode->mtime = inode->mtime;
+	new_inode->ctime = inode->ctime;
+
+	// This will be recycled when the ref counts go to 0.
+	inode->deleted = true;
+	inode->f = NULL;
+
+	ht_remove(inode->layer->children, inode->full_name);
+
+	release_inode(inode);
+
+	return new_inode;
 }
 
 // Must be called with reference held.
@@ -308,6 +348,8 @@ void delete_inode(struct inode *inode)
 
 	// This will be recycled when the ref counts go to 0.
 	inode->deleted = true;
+
+	release_inode(inode);
 }
 
 // Create a layer and link it to a parent.  Parent can be "" or NULL.

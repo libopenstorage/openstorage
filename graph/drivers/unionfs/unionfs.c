@@ -120,22 +120,26 @@ static int union_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 			struct stat stbuf;
 
 			while (child) {
-				memset(&stbuf, 0, sizeof(struct stat));
 
-				stbuf.st_mode = child->mode;
-				stbuf.st_nlink = child->nlink;
-				stbuf.st_uid = child->uid;
-				stbuf.st_gid = child->gid;
-				stbuf.st_size = child->size;
-				stbuf.st_atime = child->atime;
-				stbuf.st_mtime = child->mtime;
-				stbuf.st_ctime = child->ctime;
+				if (!child->deleted) {
+					memset(&stbuf, 0, sizeof(struct stat));
 
-				if (filler(buf, child->name, &stbuf, 0)) {
-					fprintf(stderr, "Warning, Filler too full on %s.\n", path);
-					errno = ENOMEM;
-					res = -errno;
-					goto done;
+					stbuf.st_mode = child->mode;
+					stbuf.st_nlink = child->nlink;
+					stbuf.st_uid = child->uid;
+					stbuf.st_gid = child->gid;
+					stbuf.st_size = child->size;
+					stbuf.st_atime = child->atime;
+					stbuf.st_mtime = child->mtime;
+					stbuf.st_ctime = child->ctime;
+
+					if (filler(buf, child->name, &stbuf, 0)) {
+						fprintf(stderr, "Warning, Filler too full on %s.\n",
+								path);
+						errno = ENOMEM;
+						res = -errno;
+						goto done;
+					}
 				}
 
 				child = child->next;
@@ -278,11 +282,29 @@ done:
 
 static int union_rename(const char *from, const char *to)
 {
+	int res = 0;
+	struct inode *inode = NULL;
+
 	fprintf(stderr, "%s  %s\n", __func__, from);
 
-	// XXX TODO
-	errno = EINVAL;
-	return -EINVAL;
+	inode = ref_inode(from, true, false, 0);
+	if (!inode) {
+		res = -errno;
+		goto done;
+	}
+
+	inode = rename_inode(inode, to);
+	if (!inode) {
+		res = -errno;
+		goto done;
+	}
+
+done:
+	if (inode) {
+		deref_inode(inode);
+	}
+
+	return res;
 }
 
 static int union_chmod(const char *path, mode_t mode)

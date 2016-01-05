@@ -31,6 +31,9 @@ struct inode {
 	time_t ctime;
 
 	// Full path name.
+	char *full_name;
+
+	// Short path name.
 	char *name;
 
 	// The filesystem tree.
@@ -83,14 +86,18 @@ extern struct inode *ref_inode(const char *path, bool follow,
 // will be garbage collected.
 extern void deref_inode(struct inode *inode);
 
-// Get statbuf on an inode.
-extern void stat_inode(struct inode *inode, struct stat *stbuf);
+// Get statbuf on an inode.  Must be called with reference held.
+extern int stat_inode(struct inode *inode, struct stat *stbuf);
 
-// Set mode on an inode.
-extern void chmod_inode(struct inode *inode, mode_t mode);
+// Set mode on an inode.  Must be called with reference held.
+extern int chmod_inode(struct inode *inode, mode_t mode);
 
 // Must be called with reference held.
 extern void delete_inode(struct inode *inode);
+
+// Rename an inode.  Must be called with reference held.  Returns the inoe
+// of the new file.  New inode ref is 1.
+extern struct inode *rename_inode(struct inode *inode, const char *to);
 
 // Mark a layer as the top most layer.
 extern int set_upper(char *id);
