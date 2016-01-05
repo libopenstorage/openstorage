@@ -419,7 +419,7 @@ int create_layer(char *id, char *parent_id)
 
 	strncpy(layer->id, id, sizeof(layer->id));
 
-	layer->children = ht_create(65536, id);
+	layer->children = ht_create(65536);
 
 	// Layer namespace creation.
 	layer->root = alloc_inode(NULL, "/", 0777 | S_IFDIR, layer);
@@ -597,7 +597,9 @@ int unset_upper(char *id)
 
 int init_layers()
 {
-	layer_hash = ht_create(65536, "layers");
+	pthread_t tid;
+
+	layer_hash = ht_create(65536);
 	if (!layer_hash) {
 		return -1;
 	}
@@ -608,6 +610,8 @@ int init_layers()
 	pthread_mutex_init(&layer_lock, 0);
 
 	sem_init(&reaper_sem, 0, 0);
+
+	pthread_create(&tid, NULL, inode_reaper, NULL);
 
 	return 0;
 }

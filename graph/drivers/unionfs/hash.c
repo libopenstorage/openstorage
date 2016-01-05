@@ -8,7 +8,7 @@
 #include "hash.h"
 
 /* Create a new hashtable. */
-hashtable_t *ht_create(int size, char *name)
+hashtable_t *ht_create(int size)
 {
 	hashtable_t *hashtable = NULL;
 	int i;
@@ -19,8 +19,6 @@ hashtable_t *ht_create(int size, char *name)
 	if ((hashtable = malloc(sizeof(hashtable_t))) == NULL) {
 		return NULL;
 	}
-
-	hashtable->name = strdup(name);
 
 	/* Allocate pointers to the head nodes. */
 	if ((hashtable->table = malloc(sizeof(entry_t *) * size)) == NULL) {
