@@ -211,20 +211,31 @@ struct inode *ref_inode(const char *path, bool follow, bool create, mode_t mode)
 		// See if this layer has 'path'
 		inode = ht_get(layer->children, fixed_path);
 		if (inode) {
-			pthread_mutex_lock(&inode->lock);
-			{
-				inode->ref++;
-			}
-			pthread_mutex_unlock(&inode->lock);
+			if (inode->deleted) {
+				inode = NULL;
+			} else {
+				pthread_mutex_lock(&inode->lock);
+				{
+					inode->ref++;
+				}
+				pthread_mutex_unlock(&inode->lock);
 
-			goto done;
+				goto done;
+			}
 		}
 
 		// See if this layer contains the parent directory.  We give
 		// preference to the upper layers.
 		if (!parent) {
 			parent = ht_get(layer->children, dir);
-			parent_layer = layer;
+			if (parent) {
+				if (parent->deleted) {
+					parent = NULL;
+				} else {
+					parent_layer = layer;
+				}
+			}
+
 
 			// No need to refcount parent since it is used in the zone
 			// protected by the inode_reaper_lock.

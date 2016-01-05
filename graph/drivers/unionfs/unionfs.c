@@ -32,7 +32,6 @@
 #include <sys/xattr.h>
 #endif
 
-#include "hash.h"
 #include "layer.h"
 
 static char *upper_path(struct layer *upper, const char *path)
@@ -761,6 +760,7 @@ void *launch(void *arg)
 int main()
 {
 	pthread_t tid;
+	int c;
 
 	system("umount /var/lib/openstorage/unionfs");
 
@@ -774,7 +774,10 @@ int main()
 	create_layer("layer2", "layer1");
 
 	fprintf(stderr, "Ready... Press any key to exit.\n");
-	getchar();
+	do {
+		c = getchar();
+	} while (c != 'q');
+
 
 	system("umount /var/lib/openstorage/unionfs");
 }

@@ -26,6 +26,7 @@ hashtable_t *ht_create(int size, char *name)
 	if ((hashtable->table = malloc(sizeof(entry_t *) * size)) == NULL) {
 		return NULL;
 	}
+
 	for(i = 0; i < size; i++) {
 		hashtable->table[i] = NULL;
 	}
@@ -88,25 +89,22 @@ void ht_set(hashtable_t *hashtable, char *key, void *value)
 		next = next->next;
 	}
 
-	/* There's already a pair.  Let's replace that string. */
-	if (next != NULL && next->key != NULL && strcmp(key, next->key) == 0) {
+	if (next != NULL && next->key != NULL && !strcmp(key, next->key) == 0) {
+		/* There's already a pair.  Let's replace that string. */
 		next->value = value;
-
-	/* Nope, could't find it.  Time to grow a pair. */
 	} else {
+		/* Nope, could't find it.  Time to grow a pair. */
 		newpair = ht_newpair(key, value);
 
-		/* We're at the start of the linked list in this bin. */
 		if (next == hashtable->table[bin]) {
+			/* We're at the start of the linked list in this bin. */
 			newpair->next = next;
 			hashtable->table[bin] = newpair;
-
-		/* We're at the end of the linked list in this bin. */
 		} else if (next == NULL) {
+			/* We're at the end of the linked list in this bin. */
 			last->next = newpair;
-
-		/* We're in the middle of the list. */
 		} else  {
+			/* We're in the middle of the list. */
 			newpair->next = next;
 			last->next = newpair;
 		}
@@ -156,6 +154,11 @@ void ht_remove(hashtable_t *hashtable, char *key)
 		if (prev) {
 			prev->next = pair->next;
 		}
+
+		if (pair == hashtable->table[bin]) {
+			hashtable->table[bin] = pair->next;
+		}
+
 		free(pair->key);
 		free(pair);
     }
