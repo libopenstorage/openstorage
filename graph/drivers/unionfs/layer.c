@@ -10,6 +10,7 @@
 #define _FILE_OFFSET_BITS 64
 #define FUSE_USE_VERSION 26
 
+#include <semaphore.h>
 #include <fuse.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -38,6 +39,7 @@ static pthread_mutex_t layer_lock;
 // Guards against a deleted inode getting free'd if someone
 // is still referencing it.
 static pthread_rwlock_t inode_reaper_lock;
+static sem_t reaper_sem;
 
 // Allocate an inode, add it to the layer and link it to the namespace.
 // Initial reference is 1.
@@ -135,9 +137,23 @@ done:
 	return inode;
 }
 
+void *inode_reaper(void *arg)
+{
+	do {
+		sem_wait(&reaper_sem);
+
+		pthread_rwlock_wrlock(&inode_reaper_lock);
+		{
+			// TODO
+
+		}
+		pthread_rwlock_unlock(&inode_reaper_lock);
+	} while (true);
+}
+
 void release_inode(struct inode *inode)
 {
-	// TODO
+	sem_post(&reaper_sem);
 }
 
 // Get's the owner layer given a path.
@@ -590,6 +606,8 @@ int init_layers()
 
 	pthread_rwlock_init(&inode_reaper_lock, 0);
 	pthread_mutex_init(&layer_lock, 0);
+
+	sem_init(&reaper_sem, 0, 0);
 
 	return 0;
 }
