@@ -111,6 +111,7 @@ static int union_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 
 	layer = inode->layer;
 
+	// TODO filter dup entries from other layers.
 	do {
 		char *new_path;
 
