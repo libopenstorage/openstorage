@@ -235,7 +235,10 @@ static int union_unlink(const char *path)
 		goto done;
 	}
 
-	delete_inode(inode);
+	if (delete_inode(inode)) {
+		res = -errno;
+		goto done;
+	}
 
 done:
 	if (inode) {
@@ -264,13 +267,10 @@ static int union_rmdir(const char *path)
 		goto done;
 	}
 
-	if (inode->child != NULL) {
-		errno = ENOTEMPTY;
+	if (delete_inode(inode)) {
 		res = -errno;
 		goto done;
 	}
-
-	delete_inode(inode);
 
 done:
 	if (inode) {

@@ -36,6 +36,10 @@ static struct layer *layer_head = NULL;
 static hashtable_t *layer_hash;
 static pthread_mutex_t layer_lock;
 
+// inodes to be reaped.
+static struct inode *reaper_inode_root;
+static pthread_mutex_t reaper_lock;
+
 // Guards against a deleted inode getting free'd if someone
 // is still referencing it.
 static pthread_rwlock_t inode_reaper_lock;
@@ -43,6 +47,7 @@ static sem_t reaper_sem;
 
 // Allocate an inode, add it to the layer and link it to the namespace.
 // Initial reference is 1.
+// Warning - reaper read lock must be held.
 static struct inode *alloc_inode(struct inode *parent, char *name,
 	mode_t mode, struct layer *layer)
 {
@@ -50,6 +55,16 @@ static struct inode *alloc_inode(struct inode *parent, char *name,
 	char *dupname;
 	char *base;
 	int ret = 0;
+
+	if (parent) {
+		pthread_mutex_lock(&parent->lock);
+	}
+
+	if (parent && parent->deleted) {
+		errno = ENOENT;
+		ret = -1;
+		goto done;
+	}
 
 	inode = (struct inode *)malloc(sizeof(struct inode));
 	if (!inode) {
@@ -97,24 +112,29 @@ static struct inode *alloc_inode(struct inode *parent, char *name,
 	inode->layer = layer;
 	inode->child = NULL;
 	inode->next = NULL;
+	inode->prev = NULL;
 
 	if (parent) {
 		inode->parent = parent;
 
-		// XXX check for ref logic.
-		pthread_mutex_lock(&parent->lock);
-		{
-			inode->next = parent->child;
-			parent->child = inode;
+		// Insert into head.  No need to worry about paren'ts ref count
+		// since this function can only be called with the reaper lock held.
+		inode->next = parent->child;
+		if (parent->child) {
+			parent->child->prev = inode;
 		}
-		pthread_mutex_unlock(&parent->lock);
+		parent->child = inode;
 	}
 
 	if (layer) {
-		ht_set(layer->children, name, inode);
+		ht_set(layer->namespace, name, inode);
 	}
 
 done:
+	if (parent) {
+		pthread_mutex_unlock(&parent->lock);
+	}
+
 	if (dupname) {
 		free(dupname);
 	}
@@ -153,6 +173,14 @@ void *inode_reaper(void *arg)
 
 void release_inode(struct inode *inode)
 {
+	pthread_mutex_lock(&reaper_lock);
+	{
+
+
+
+	}
+	pthread_mutex_unlock(&reaper_lock);
+
 	sem_post(&reaper_sem);
 }
 
@@ -226,7 +254,7 @@ struct inode *ref_inode(const char *path, bool follow, bool create, mode_t mode)
 
 	while (layer) {
 		// See if this layer has 'path'
-		inode = ht_get(layer->children, fixed_path);
+		inode = ht_get(layer->namespace, fixed_path);
 		if (inode) {
 			if (inode->deleted) {
 				inode = NULL;
@@ -244,7 +272,7 @@ struct inode *ref_inode(const char *path, bool follow, bool create, mode_t mode)
 		// See if this layer contains the parent directory.  We give
 		// preference to the upper layers.
 		if (!parent) {
-			parent = ht_get(layer->children, dir);
+			parent = ht_get(layer->namespace, dir);
 			if (parent) {
 				if (parent->deleted) {
 					parent = NULL;
@@ -358,7 +386,7 @@ struct inode *rename_inode(struct inode *inode, const char *to)
 	inode->deleted = true;
 	inode->f = NULL;
 
-	ht_remove(inode->layer->children, inode->full_name);
+	ht_remove(inode->layer->namespace, inode->full_name);
 
 	release_inode(inode);
 
@@ -366,17 +394,31 @@ struct inode *rename_inode(struct inode *inode, const char *to)
 }
 
 // Must be called with reference held.
-void delete_inode(struct inode *inode)
+int delete_inode(struct inode *inode)
 {
 	if (inode == root_inode) {
 		fprintf(stderr, "Warning, trying to delete root inode.\n");
-		return;
+		return -1;
+	}
+
+	pthread_mutex_lock(&inode->lock);
+
+	if (inode->child != NULL) {
+		pthread_mutex_unlock(&inode->lock);
+
+		errno = ENOTEMPTY;
+		return -1;
 	}
 
 	// This will be recycled when the ref counts go to 0.
 	inode->deleted = true;
+	ht_remove(inode->layer->namespace, inode->full_name);
+
+	pthread_mutex_unlock(&inode->lock);
 
 	release_inode(inode);
+
+	return 0;
 }
 
 // Create a layer and link it to a parent.  Parent can be "" or NULL.
@@ -419,7 +461,7 @@ int create_layer(char *id, char *parent_id)
 
 	strncpy(layer->id, id, sizeof(layer->id));
 
-	layer->children = ht_create(65536);
+	layer->namespace = ht_create(65536);
 
 	// Layer namespace creation.
 	layer->root = alloc_inode(NULL, "/", 0777 | S_IFDIR, layer);
@@ -608,6 +650,7 @@ int init_layers()
 
 	pthread_rwlock_init(&inode_reaper_lock, 0);
 	pthread_mutex_init(&layer_lock, 0);
+	pthread_mutex_init(&reaper_lock, 0);
 
 	sem_init(&reaper_sem, 0, 0);
 

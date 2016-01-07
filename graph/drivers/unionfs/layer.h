@@ -40,6 +40,7 @@ struct inode {
 	struct inode *parent;
 	struct inode *child;
 	struct inode *next;
+	struct inode *prev;
 
 	// The layer this inode belongs to.
 	struct layer *layer;
@@ -58,8 +59,8 @@ struct layer {
 	// Handy reference to the root inode.
 	struct inode *root;
 
-	// Hash of all direct children inodes.
-	hashtable_t *children;
+	// namespace to inode mapping.
+	hashtable_t *namespace;
 
 	// Linkage to parent and sibling layers.
 	struct layer *parent;
@@ -93,7 +94,7 @@ extern int stat_inode(struct inode *inode, struct stat *stbuf);
 extern int chmod_inode(struct inode *inode, mode_t mode);
 
 // Must be called with reference held.
-extern void delete_inode(struct inode *inode);
+extern int delete_inode(struct inode *inode);
 
 // Rename an inode.  Must be called with reference held.  Returns the inoe
 // of the new file.  New inode ref is 1.
