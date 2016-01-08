@@ -18,6 +18,8 @@ var (
 type Config struct {
 	ClusterId string
 	NodeId    string
+	MgtIface  string
+	DataIface string
 }
 
 // NodeEntry is used to discover other nodes in the cluster
