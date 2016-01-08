@@ -36,14 +36,9 @@ static struct layer *layer_head = NULL;
 static hashtable_t *layer_hash;
 static pthread_mutex_t layer_lock;
 
-// inodes to be reaped.
-static struct inode *reaper_inode_root;
-static pthread_mutex_t reaper_lock;
-
-// Guards against a deleted inode getting free'd if someone
-// is still referencing it.
+// Guards against a deleted inode getting free'd if we are about to 
+// ref count one of it's children.
 static pthread_rwlock_t inode_reaper_lock;
-static sem_t reaper_sem;
 
 // Allocate an inode, add it to the layer and link it to the namespace.
 // Initial reference is 1.
@@ -58,12 +53,12 @@ static struct inode *alloc_inode(struct inode *parent, char *name,
 
 	if (parent) {
 		pthread_mutex_lock(&parent->lock);
-	}
 
-	if (parent && parent->deleted) {
-		errno = ENOENT;
-		ret = -1;
-		goto done;
+		if (parent->deleted) {
+			errno = ENOENT;
+			ret = -1;
+			goto done;
+		}
 	}
 
 	inode = (struct inode *)malloc(sizeof(struct inode));
@@ -157,33 +152,6 @@ done:
 	return inode;
 }
 
-void *inode_reaper(void *arg)
-{
-	do {
-		sem_wait(&reaper_sem);
-
-		pthread_rwlock_wrlock(&inode_reaper_lock);
-		{
-			// TODO
-
-		}
-		pthread_rwlock_unlock(&inode_reaper_lock);
-	} while (true);
-}
-
-void release_inode(struct inode *inode)
-{
-	pthread_mutex_lock(&reaper_lock);
-	{
-
-
-
-	}
-	pthread_mutex_unlock(&reaper_lock);
-
-	sem_post(&reaper_sem);
-}
-
 // Get's the owner layer given a path.
 static struct layer *get_layer(const char *path, char **new_path)
 {
@@ -256,15 +224,13 @@ struct inode *ref_inode(const char *path, bool follow, bool create, mode_t mode)
 		// See if this layer has 'path'
 		inode = ht_get(layer->namespace, fixed_path);
 		if (inode) {
+			pthread_mutex_lock(&inode->lock);
 			if (inode->deleted) {
 				inode = NULL;
-			} else {
-				pthread_mutex_lock(&inode->lock);
-				{
-					inode->ref++;
-				}
 				pthread_mutex_unlock(&inode->lock);
-
+			} else {
+				inode->ref++;
+				pthread_mutex_unlock(&inode->lock);
 				goto done;
 			}
 		}
@@ -281,7 +247,7 @@ struct inode *ref_inode(const char *path, bool follow, bool create, mode_t mode)
 				}
 			}
 
-			// No need to refcount parent since it is used in the zone
+			// No need to lock  or refcount parent since it is used in the zone
 			// protected by the inode_reaper_lock.
 		}
 
@@ -388,7 +354,7 @@ struct inode *rename_inode(struct inode *inode, const char *to)
 
 	ht_remove(inode->layer->namespace, inode->full_name);
 
-	release_inode(inode);
+	delete_inode(inode);
 
 	return new_inode;
 }
@@ -396,29 +362,42 @@ struct inode *rename_inode(struct inode *inode, const char *to)
 // Must be called with reference held.
 int delete_inode(struct inode *inode)
 {
+	int ret = 0;
+
+	errno = 0;
+
 	if (inode == root_inode) {
 		fprintf(stderr, "Warning, trying to delete root inode.\n");
-		return -1;
+		errno = EINVAL;
+		ret = -1;
+		goto done;
 	}
 
+	pthread_rwlock_wrlock(&inode_reaper_lock);
 	pthread_mutex_lock(&inode->lock);
 
 	if (inode->child != NULL) {
-		pthread_mutex_unlock(&inode->lock);
-
 		errno = ENOTEMPTY;
-		return -1;
+		ret = -1;
+		goto done;
+	}
+
+	if (inode->ref > 1) {
+		errno = EBUSY;
+		ret = -1;
+		goto done;
 	}
 
 	// This will be recycled when the ref counts go to 0.
 	inode->deleted = true;
 	ht_remove(inode->layer->namespace, inode->full_name);
 
+done:
+
 	pthread_mutex_unlock(&inode->lock);
+	pthread_rwlock_unlock(&inode_reaper_lock);
 
-	release_inode(inode);
-
-	return 0;
+	return ret;
 }
 
 // Create a layer and link it to a parent.  Parent can be "" or NULL.
@@ -650,11 +629,6 @@ int init_layers()
 
 	pthread_rwlock_init(&inode_reaper_lock, 0);
 	pthread_mutex_init(&layer_lock, 0);
-	pthread_mutex_init(&reaper_lock, 0);
-
-	sem_init(&reaper_sem, 0, 0);
-
-	pthread_create(&tid, NULL, inode_reaper, NULL);
 
 	return 0;
 }
