@@ -208,6 +208,7 @@ struct inode *ref_inode(const char *path, bool follow, bool create, mode_t mode)
 		return root_inode;
 	}
 
+	// Prevents parent inode's children linkage from changing.
 	pthread_rwlock_rdlock(&inode_reaper_lock);
 
 	errno = 0;
@@ -265,6 +266,8 @@ struct inode *ref_inode(const char *path, bool follow, bool create, mode_t mode)
 			fprintf(stderr, "Warning, create mode requested on %s, but no layer "
 					"could be found that could create this file\n", fixed_path);
 		} else {
+			// At this point, parent is safe to use because we have the
+			// reaper lock held.
 			inode = alloc_inode(parent, fixed_path, mode, parent_layer);
 		}
 	}
@@ -329,38 +332,7 @@ int chmod_inode(struct inode *inode, mode_t mode)
 	return 0;
 }
 
-// Rename an inode.  Must be called with reference held.
-struct inode *rename_inode(struct inode *inode, const char *to)
-{
-	struct inode *new_inode;
-
-	new_inode = ref_inode(to, true, true, 0);
-	if (!new_inode) {
-		return NULL;
-	}
-
-	new_inode->f = inode->f;
-	new_inode->nlink = inode->nlink;
-	new_inode->uid = inode->uid;
-	new_inode->gid = inode->gid;
-	new_inode->size = inode->size;
-	new_inode->atime = inode->atime;
-	new_inode->mtime = inode->mtime;
-	new_inode->ctime = inode->ctime;
-
-	// This will be recycled when the ref counts go to 0.
-	inode->deleted = true;
-	inode->f = NULL;
-
-	ht_remove(inode->layer->namespace, inode->full_name);
-
-	delete_inode(inode);
-
-	return new_inode;
-}
-
-// Must be called with reference held.
-int delete_inode(struct inode *inode)
+static int reap_inode(struct inode *inode, bool release)
 {
 	int ret = 0;
 
@@ -373,7 +345,10 @@ int delete_inode(struct inode *inode)
 		goto done;
 	}
 
+	// Prevents parent inode's children linkage from changing.
 	pthread_rwlock_wrlock(&inode_reaper_lock);
+
+	// Locks ref from changing.
 	pthread_mutex_lock(&inode->lock);
 
 	if (inode->child != NULL) {
@@ -382,22 +357,84 @@ int delete_inode(struct inode *inode)
 		goto done;
 	}
 
-	if (inode->ref > 1) {
+	// refcount must be exactly 1.
+	if (inode->ref != 1) {
 		errno = EBUSY;
 		ret = -1;
 		goto done;
 	}
 
-	// This will be recycled when the ref counts go to 0.
 	inode->deleted = true;
 	ht_remove(inode->layer->namespace, inode->full_name);
+
+	// Remove this inode from parent.
+	if (inode->prev) {
+		inode->prev->next = inode->next;
+	}
+
+	if (inode->next) {
+		inode->next->prev = inode->prev;
+	}
 
 done:
 
 	pthread_mutex_unlock(&inode->lock);
+	if (ret == 0 && release) {
+		if (inode->f) {
+			fclose(inode->f);
+		}
+
+		free(inode);
+	}
+
 	pthread_rwlock_unlock(&inode_reaper_lock);
 
 	return ret;
+}
+
+// Rename an inode.  Must be called with reference held.
+struct inode *rename_inode(struct inode *inode, const char *to)
+{
+	struct inode *new_inode = NULL;
+	time_t atime, mtime, ctime;
+	int nlink, size;
+	FILE *f;
+	uid_t uid;
+	gid_t gid;
+
+	errno = 0;
+
+	if (reap_inode(inode, false) != 0) {
+		goto done;
+	}
+
+	new_inode = ref_inode(to, true, true, 0);
+	if (!new_inode) {
+		goto done;
+	}
+
+	new_inode->f = inode->f;
+	new_inode->nlink = inode->nlink;
+	new_inode->uid = inode->uid;
+	new_inode->gid = inode->gid;
+	new_inode->size = inode->size;
+	new_inode->atime = inode->atime;
+	new_inode->mtime = inode->mtime;
+	new_inode->ctime = inode->ctime;
+
+done:
+
+	if (new_inode != NULL) {
+		free(inode);
+	}
+
+	return new_inode;
+}
+
+// Must be called with reference held.
+int delete_inode(struct inode *inode)
+{
+	return reap_inode(inode, true);
 }
 
 // Create a layer and link it to a parent.  Parent can be "" or NULL.
