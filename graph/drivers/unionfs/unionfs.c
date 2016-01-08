@@ -119,9 +119,9 @@ static int union_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 			struct inode *child = inode->child;
 			struct stat stbuf;
 
-			while (child) {
-
-				if (!child->deleted) {
+			pthread_mutex_lock(&inode->lock);
+			{
+				while (child) {
 					memset(&stbuf, 0, sizeof(struct stat));
 
 					stbuf.st_mode = child->mode;
@@ -134,16 +134,17 @@ static int union_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 					stbuf.st_ctime = child->ctime;
 
 					if (filler(buf, child->name, &stbuf, 0)) {
-						fprintf(stderr, "Warning, Filler too full on %s.\n",
-								path);
+						fprintf(stderr, "Warning, Filler too full on %s.\n", path);
 						errno = ENOMEM;
 						res = -errno;
+						pthread_mutex_unlock(&inode->lock);
 						goto done;
 					}
-				}
 
-				child = child->next;
+					child = child->next;
+				}
 			}
+			pthread_mutex_unlock(&inode->lock);
 
 			deref_inode(inode);
 		}
@@ -241,9 +242,6 @@ static int union_unlink(const char *path)
 	}
 
 done:
-	if (inode) {
-		deref_inode(inode);
-	}
 
 	return res;
 }
@@ -273,9 +271,6 @@ static int union_rmdir(const char *path)
 	}
 
 done:
-	if (inode) {
-		deref_inode(inode);
-	}
 
 	return res;
 }
@@ -774,7 +769,7 @@ int main()
 	create_layer("layer1", NULL);
 	create_layer("layer2", "layer1");
 
-	fprintf(stderr, "Ready... Press any key to exit.\n");
+	fprintf(stderr, "Ready... Press 'q' to exit.\n");
 	do {
 		c = getchar();
 	} while (c != 'q');

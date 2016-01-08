@@ -17,9 +17,6 @@ struct inode {
 	// Reference count.
 	int ref;
 
-	// If this flag is set, the inode will be garbage collected.
-	bool deleted;
-
 	// Stat buf.
 	mode_t mode;
 	nlink_t nlink;
@@ -83,8 +80,8 @@ extern int check_layer(char *id);
 extern struct inode *ref_inode(const char *path, bool follow,
 		bool create, mode_t mode);
 
-// Decrement ref count on an inode.  A deleted inode with a ref count of 0 
-// will be garbage collected.
+// Decrement ref count on an inode.  A node with a refcount of 0 can be 
+// deleted if delete_inode is called on it.
 extern void deref_inode(struct inode *inode);
 
 // Get statbuf on an inode.  Must be called with reference held.

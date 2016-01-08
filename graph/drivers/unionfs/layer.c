@@ -37,12 +37,12 @@ static hashtable_t *layer_hash;
 static pthread_mutex_t layer_lock;
 
 // Guards against a deleted inode getting free'd if we are about to 
-// ref count one of it's children.
-static pthread_rwlock_t inode_reaper_lock;
+// ref count one of it's children.  TODO make this per layer and not global.
+static pthread_rwlock_t namespace_lock;
 
 // Allocate an inode, add it to the layer and link it to the namespace.
 // Initial reference is 1.
-// Warning - reaper read lock must be held.
+// Warning - namespace lock must be held.
 static struct inode *alloc_inode(struct inode *parent, char *name,
 	mode_t mode, struct layer *layer)
 {
@@ -53,12 +53,6 @@ static struct inode *alloc_inode(struct inode *parent, char *name,
 
 	if (parent) {
 		pthread_mutex_lock(&parent->lock);
-
-		if (parent->deleted) {
-			errno = ENOENT;
-			ret = -1;
-			goto done;
-		}
 	}
 
 	inode = (struct inode *)malloc(sizeof(struct inode));
@@ -74,8 +68,6 @@ static struct inode *alloc_inode(struct inode *parent, char *name,
 	}
 
 	inode->ref = 1;
-
-	inode->deleted = false;
 
 	base = basename(name);
 	inode->full_name = strdup(name);
@@ -208,8 +200,8 @@ struct inode *ref_inode(const char *path, bool follow, bool create, mode_t mode)
 		return root_inode;
 	}
 
-	// Prevents parent inode's children linkage from changing.
-	pthread_rwlock_rdlock(&inode_reaper_lock);
+	// Needed because we will be looking for inodes with 'path' in the namespace.
+	pthread_rwlock_rdlock(&namespace_lock);
 
 	errno = 0;
 
@@ -226,14 +218,11 @@ struct inode *ref_inode(const char *path, bool follow, bool create, mode_t mode)
 		inode = ht_get(layer->namespace, fixed_path);
 		if (inode) {
 			pthread_mutex_lock(&inode->lock);
-			if (inode->deleted) {
-				inode = NULL;
-				pthread_mutex_unlock(&inode->lock);
-			} else {
+			{
 				inode->ref++;
-				pthread_mutex_unlock(&inode->lock);
-				goto done;
 			}
+			pthread_mutex_unlock(&inode->lock);
+			goto done;
 		}
 
 		// See if this layer contains the parent directory.  We give
@@ -241,15 +230,11 @@ struct inode *ref_inode(const char *path, bool follow, bool create, mode_t mode)
 		if (!parent) {
 			parent = ht_get(layer->namespace, dir);
 			if (parent) {
-				if (parent->deleted) {
-					parent = NULL;
-				} else {
-					parent_layer = layer;
-				}
+				parent_layer = layer;
 			}
 
 			// No need to lock  or refcount parent since it is used in the zone
-			// protected by the inode_reaper_lock.
+			// protected by namespace_lock.
 		}
 
 		if (!follow) {
@@ -274,7 +259,7 @@ struct inode *ref_inode(const char *path, bool follow, bool create, mode_t mode)
 
 done:
 
-	pthread_rwlock_unlock(&inode_reaper_lock);
+	pthread_rwlock_unlock(&namespace_lock);
 
 	if (!inode) {
 		if (!errno) {
@@ -285,8 +270,8 @@ done:
 	return inode;
 }
 
-// Decrement ref count on an inode.  A deleted inode with a ref count of 0
-// will be garbage collected.
+// Decrement ref count on an inode.  A node with a refcount of 0 can be 
+// deleted if delete_inode is called on it.
 void deref_inode(struct inode *inode)
 {
 	if (inode == root_inode) {
@@ -342,14 +327,19 @@ static int reap_inode(struct inode *inode, bool release)
 		fprintf(stderr, "Warning, trying to delete root inode.\n");
 		errno = EINVAL;
 		ret = -1;
-		goto done;
+		return ret;
 	}
 
-	// Prevents parent inode's children linkage from changing.
-	pthread_rwlock_wrlock(&inode_reaper_lock);
+	// We will be removing an inode from the namespace.
+	pthread_rwlock_wrlock(&namespace_lock);
 
 	// Locks ref from changing.
 	pthread_mutex_lock(&inode->lock);
+
+	// We will be making changes to the parent's children links.
+	if (inode->parent) {
+		pthread_mutex_lock(&inode->parent->lock);
+	}
 
 	if (inode->child != NULL) {
 		errno = ENOTEMPTY;
@@ -364,7 +354,6 @@ static int reap_inode(struct inode *inode, bool release)
 		goto done;
 	}
 
-	inode->deleted = true;
 	ht_remove(inode->layer->namespace, inode->full_name);
 
 	// Remove this inode from parent.
@@ -376,7 +365,15 @@ static int reap_inode(struct inode *inode, bool release)
 		inode->next->prev = inode->prev;
 	}
 
+	if (inode->parent && inode->parent->child == inode) {
+		inode->parent->child = inode->next;
+	}
+
 done:
+
+	if (inode->parent) {
+		pthread_mutex_unlock(&inode->parent->lock);
+	}
 
 	pthread_mutex_unlock(&inode->lock);
 	if (ret == 0 && release) {
@@ -387,7 +384,7 @@ done:
 		free(inode);
 	}
 
-	pthread_rwlock_unlock(&inode_reaper_lock);
+	pthread_rwlock_unlock(&namespace_lock);
 
 	return ret;
 }
@@ -664,7 +661,7 @@ int init_layers()
 
 	root_inode = alloc_inode(NULL, "/", 0777 | S_IFDIR, NULL);
 
-	pthread_rwlock_init(&inode_reaper_lock, 0);
+	pthread_rwlock_init(&namespace_lock, 0);
 	pthread_mutex_init(&layer_lock, 0);
 
 	return 0;
