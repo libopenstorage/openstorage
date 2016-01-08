@@ -36,7 +36,43 @@ type ClusterManager struct {
 	selfNode  api.Node
 }
 
+func ifaceToIp(iface *net.Interface) (string, error) {
+	addrs, err := iface.Addrs()
+	if err != nil {
+		return "", err
+	}
+	for _, addr := range addrs {
+		var ip net.IP
+		switch v := addr.(type) {
+		case *net.IPNet:
+			ip = v.IP
+		case *net.IPAddr:
+			ip = v.IP
+		}
+		if ip == nil || ip.IsLoopback() {
+			continue
+		}
+		ip = ip.To4()
+		if ip == nil {
+			continue // not an ipv4 address
+		}
+		return ip.String(), nil
+	}
+
+	return "", errors.New("Node not connected to the network.")
+}
+
 func externalIp() (string, error) {
+
+	if config.MgtIface != "" {
+		iface, err := net.InterfaceByName(config.MgtIface)
+		if err != nil {
+			return "", errors.New("Invalid network interface specified.")
+		}
+		return ifaceToIp(iface)
+	}
+
+	// No network interface specified, pick first default.
 	ifaces, err := net.Interfaces()
 	if err != nil {
 		return "", err
@@ -48,27 +84,8 @@ func externalIp() (string, error) {
 		if iface.Flags&net.FlagLoopback != 0 {
 			continue // loopback interface
 		}
-		addrs, err := iface.Addrs()
-		if err != nil {
-			return "", err
-		}
-		for _, addr := range addrs {
-			var ip net.IP
-			switch v := addr.(type) {
-			case *net.IPNet:
-				ip = v.IP
-			case *net.IPAddr:
-				ip = v.IP
-			}
-			if ip == nil || ip.IsLoopback() {
-				continue
-			}
-			ip = ip.To4()
-			if ip == nil {
-				continue // not an ipv4 address
-			}
-			return ip.String(), nil
-		}
+
+		return ifaceToIp(&iface)
 	}
 
 	return "", errors.New("Node not connected to the network.")
@@ -364,7 +381,7 @@ func (c *ClusterManager) Start() error {
 	c.selfNode.GenNumber = uint64(time.Now().UnixNano())
 	c.selfNode.Id = c.config.NodeId
 	c.selfNode.Status = api.StatusOk
-	c.selfNode.Ip, _ = externalIp()
+	c.selfNode.Ip, _ = externalIp(&c.config)
 	c.selfNode.NodeData = make(map[string]interface{})
 	// Start the gossip protocol.
 	// XXX Make the port configurable.
