@@ -174,6 +174,28 @@ func (c *ClusterManager) initNode(db *Database) (*api.Node, bool) {
 	return &c.selfNode, exists
 }
 
+func (c *ClusterManager) cleanupInit(db *Database, self *api.Node) error {
+	var resErr error
+	var err error
+
+	logrus.Infof("Cleanup Init services")
+
+	for e := c.listeners.Front(); e != nil; e = e.Next() {
+		logrus.Warnf("Cleanup Init for service %s.",
+			e.Value.(ClusterListener).String())
+
+		err = e.Value.(ClusterListener).CleanupInit(self, db)
+		if err != nil {
+			logrus.Warnf("Failed to Cleanup Init %s: %v",
+				e.Value.(ClusterListener).String(), err)
+			resErr = err
+		}
+
+	}
+
+	return resErr
+}
+
 // Initialize node and alert listeners that we are joining the cluster.
 func (c *ClusterManager) joinCluster(db *Database, self *api.Node, exist bool) error {
 	var err error
@@ -187,8 +209,9 @@ func (c *ClusterManager) joinCluster(db *Database, self *api.Node, exist bool) e
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err = e.Value.(ClusterListener).Init(self, db)
 		if err != nil {
-			logrus.Warnf("Failed to initialize %s: %v",
+			logrus.Warnf("Failed to initialize Init %s: %v",
 				e.Value.(ClusterListener).String(), err)
+			c.cleanupInit(db, self)
 			goto done
 		}
 	}
@@ -198,8 +221,12 @@ found:
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err = e.Value.(ClusterListener).Join(self, db)
 		if err != nil {
-			logrus.Warnf("Failed to initialize %s: %v",
+			logrus.Warnf("Failed to initialize Join %s: %v",
 				e.Value.(ClusterListener).String(), err)
+
+			if exist == false {
+				c.cleanupInit(db, self)
+			}
 			goto done
 		}
 	}
@@ -395,6 +422,7 @@ func (c *ClusterManager) Start() error {
 	if err != nil {
 		logrus.Panic("Fatal, Unable to obtain cluster lock.", err)
 	}
+	defer kvdb.Unlock(kvlock)
 
 	db, err := readDatabase()
 	if err != nil {
@@ -410,22 +438,17 @@ func (c *ClusterManager) Start() error {
 
 		err = c.initCluster(&db, self, false)
 		if err != nil {
-			kvdb.Unlock(kvlock)
 			logrus.Error("Failed to initialize the cluster.", err)
-			logrus.Panic(err)
+			return err
 		}
 
 		// Update the new state of the cluster in the KV Database
 		err := writeDatabase(&db)
 		if err != nil {
 			logrus.Error("Failed to save the database.", err)
-			logrus.Panic(err)
+			return err
 		}
 
-		err = kvdb.Unlock(kvlock)
-		if err != nil {
-			logrus.Panic("Fatal, unable to unlock cluster... Did something take too long to initialize?", err)
-		}
 	} else if db.Status&api.StatusOk > 0 {
 		logrus.Info("Cluster state is OK... Joining the cluster.")
 
@@ -434,23 +457,17 @@ func (c *ClusterManager) Start() error {
 
 		err = c.joinCluster(&db, self, exist)
 		if err != nil {
-			kvdb.Unlock(kvlock)
-			logrus.Panic(err)
+			logrus.Error("Failed to join cluster.", err)
+			return err
 		}
 
 		err := writeDatabase(&db)
 		if err != nil {
-			logrus.Panic(err)
+			return err
 		}
 
-		err = kvdb.Unlock(kvlock)
-		if err != nil {
-			logrus.Panic("Fatal, unable to unlock cluster... Did something take too long to initialize?", err)
-		}
 	} else {
-		kvdb.Unlock(kvlock)
-		err = errors.New("Fatal, Cluster is in an unexpected state.")
-		logrus.Panic(err)
+		return errors.New("Fatal, Cluster is in an unexpected state.")
 	}
 
 	// Start heartbeating to other nodes.

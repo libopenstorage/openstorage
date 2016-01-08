@@ -338,6 +338,10 @@ func (d *driver) Init(self *api.Node, db *cluster.Database) error {
 	return nil
 }
 
+func (d *driver) CleanupInit(self *api.Node, db *cluster.Database) error {
+	return nil
+}
+
 func (d *driver) Join(self *api.Node, db *cluster.Database) error {
 	return nil
 }
