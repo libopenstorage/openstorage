@@ -62,7 +62,7 @@ func ifaceToIp(iface *net.Interface) (string, error) {
 	return "", errors.New("Node not connected to the network.")
 }
 
-func externalIp() (string, error) {
+func externalIp(config *Config) (string, error) {
 
 	if config.MgtIface != "" {
 		iface, err := net.InterfaceByName(config.MgtIface)
