@@ -431,6 +431,13 @@ done:
 // Must be called with reference held.
 int delete_inode(struct inode *inode)
 {
+	if (inode->parent == NULL) {
+		// Cannot delete root inodes... Those can only be
+		// removed by calling remove_layer.
+		errno = EBUSY;
+		return -1;
+	}
+
 	return reap_inode(inode, true);
 }
 

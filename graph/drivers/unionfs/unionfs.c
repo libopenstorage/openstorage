@@ -36,7 +36,7 @@
 
 static void trace(const char *fn, const char *path)
 {
-	// fprintf(stderr, "%s  %s\n", __func__, path);
+	fprintf(stderr, "%s  %s\n", __func__, path);
 }
 
 static char *upper_path(struct layer *upper, const char *path)
