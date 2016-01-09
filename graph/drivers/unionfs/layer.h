@@ -14,7 +14,7 @@
 struct inode {
 	pthread_mutex_t lock;
 
-	// Reference count.
+	// Reference count.  TODO this should be a read/write lock.
 	int ref;
 
 	// Stat buf.

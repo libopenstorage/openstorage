@@ -34,6 +34,11 @@
 
 #include "layer.h"
 
+static void trace(const char *fn, const char *path)
+{
+	// fprintf(stderr, "%s  %s\n", __func__, path);
+}
+
 static char *upper_path(struct layer *upper, const char *path)
 {
 	char *p, *new_path = NULL;
@@ -53,7 +58,7 @@ static int union_opendir(const char *path, struct fuse_file_info *fi)
 	int res = 0;
 	struct inode *inode = NULL;
 
-	fprintf(stderr, "%s  %s\n", __func__, path);
+	trace(__func__, path);
 
 	inode = ref_inode(path, true, false, 0);
 	if (!inode) {
@@ -84,7 +89,7 @@ static int union_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	struct inode *inode = NULL;
 	struct layer *layer;
 
-	fprintf(stderr, "%s  %s\n", __func__, path);
+	trace(__func__, path);
 
 	// Check to see if it is a root listing.
 	if (!strcmp(path, "/")) {
@@ -134,10 +139,12 @@ static int union_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 					stbuf.st_ctime = child->ctime;
 
 					if (filler(buf, child->name, &stbuf, 0)) {
+						pthread_mutex_unlock(&inode->lock);
+
 						fprintf(stderr, "Warning, Filler too full on %s.\n", path);
 						errno = ENOMEM;
 						res = -errno;
-						pthread_mutex_unlock(&inode->lock);
+
 						goto done;
 					}
 
@@ -180,7 +187,7 @@ static int union_getattr(const char *path, struct stat *stbuf)
 	int res = 0;
 	struct inode *inode = NULL;
 
-	fprintf(stderr, "%s  %s\n", __func__, path);
+	trace(__func__, path);
 
 	inode = ref_inode(path, true, false, 0);
 	if (!inode) {
@@ -205,7 +212,7 @@ static int union_access(const char *path, int mask)
 	int res = 0;
 	struct inode *inode = NULL;
 
-	fprintf(stderr, "%s  %s\n", __func__, path);
+	trace(__func__, path);
 
 	inode = ref_inode(path, true, false, 0);
 	if (!inode) {
@@ -228,7 +235,7 @@ static int union_unlink(const char *path)
 	int res = 0;
 	struct inode *inode = NULL;
 
-	fprintf(stderr, "%s  %s\n", __func__, path);
+	trace(__func__, path);
 
 	inode = ref_inode(path, true, false, 0);
 	if (!inode) {
@@ -251,7 +258,7 @@ static int union_rmdir(const char *path)
 	int res = 0;
 	struct inode *inode = NULL;
 
-	fprintf(stderr, "%s  %s\n", __func__, path);
+	trace(__func__, path);
 
 	inode = ref_inode(path, true, false, 0);
 	if (!inode) {
@@ -280,7 +287,7 @@ static int union_rename(const char *from, const char *to)
 	int res = 0;
 	struct inode *inode = NULL;
 
-	fprintf(stderr, "%s  %s\n", __func__, from);
+	trace(__func__, from);
 
 	inode = ref_inode(from, true, false, 0);
 	if (!inode) {
@@ -307,7 +314,7 @@ static int union_chmod(const char *path, mode_t mode)
 	int res = 0;
 	struct inode *inode = NULL;
 
-	fprintf(stderr, "%s  %s\n", __func__, path);
+	trace(__func__, path);
 
 	inode = ref_inode(path, true, false, 0);
 	if (!inode) {
@@ -330,7 +337,7 @@ static int union_chown(const char *path, uid_t uid, gid_t gid)
 	int res = 0;
 	struct inode *inode = NULL;
 
-	fprintf(stderr, "%s  %s\n", __func__, path);
+	trace(__func__, path);
 
 	inode = ref_inode(path, true, false, 0);
 	if (!inode) {
@@ -354,7 +361,7 @@ static int union_truncate(const char *path, off_t size)
 	int res = 0;
 	struct inode *inode = NULL;
 
-	fprintf(stderr, "%s  %s\n", __func__, path);
+	trace(__func__, path);
 
 	inode = ref_inode(path, true, false, 0);
 	if (!inode) {
@@ -384,7 +391,7 @@ static int union_utimens(const char *path, const struct timespec ts[2])
 	int res = 0;
 	struct inode *inode = NULL;
 
-	fprintf(stderr, "%s  %s\n", __func__, path);
+	trace(__func__, path);
 
 	inode = ref_inode(path, true, false, 0);
 	if (!inode) {
@@ -408,7 +415,7 @@ static int union_open(const char *path, struct fuse_file_info *fi)
 	int res = 0;
 	struct inode *inode = NULL;
 
-	fprintf(stderr, "%s  %s\n", __func__, path);
+	trace(__func__, path);
 
 	inode = ref_inode(path, true, (fi->flags & O_CREAT ? true : false),
 			0777 | S_IFREG);
@@ -430,7 +437,7 @@ static int union_create(const char *path, mode_t mode, struct fuse_file_info *fi
 	int res = 0;
 	struct inode *inode = NULL;
 
-	fprintf(stderr, "%s  %s\n", __func__, path);
+	trace(__func__, path);
 
 	inode = ref_inode(path, true, (fi->flags & O_CREAT ? true : false),
 			mode | S_IFREG);
@@ -452,7 +459,7 @@ static int union_mkdir(const char *path, mode_t mode)
 	int res = 0;
 	struct inode *inode = NULL;
 
-	fprintf(stderr, "%s  %s\n", __func__, path);
+	trace(__func__, path);
 
 	inode = ref_inode(path, true, true, mode | S_IFDIR);
 	if (!inode) {
@@ -470,7 +477,7 @@ done:
 
 static int union_mknod(const char *path, mode_t mode, dev_t rdev)
 {
-	fprintf(stderr, "%s  %s\n", __func__, path);
+	trace(__func__, path);
 
 	// XXX TODO
 	errno = EINVAL;
@@ -555,7 +562,7 @@ static int union_statfs(const char *path, struct statvfs *stbuf)
 {
 	int res = 0;
 
-	fprintf(stderr, "%s  %s\n", __func__, path);
+	trace(__func__, path);
 
 	res = statvfs("/", stbuf);
 	if (res == -1) {
@@ -609,7 +616,7 @@ done:
 
 static int union_readlink(const char *path, char *buf, size_t size)
 {
-	fprintf(stderr, "%s  %s\n", __func__, path);
+	trace(__func__, path);
 
 	// XXX TODO
 	errno = EINVAL;
@@ -618,7 +625,7 @@ static int union_readlink(const char *path, char *buf, size_t size)
 
 static int union_symlink(const char *from, const char *to)
 {
-	fprintf(stderr, "%s  %s\n", __func__, from);
+	trace(__func__, from);
 
 	// XXX TODO
 	errno = EINVAL;
@@ -627,7 +634,7 @@ static int union_symlink(const char *from, const char *to)
 
 static int union_link(const char *from, const char *to)
 {
-	fprintf(stderr, "%s  %s\n", __func__, from);
+	trace(__func__, from);
 
 	// XXX TODO
 	errno = EINVAL;
@@ -674,7 +681,7 @@ static int union_lock(const char *path, struct fuse_file_info *fi, int cmd,
 {
 	(void) path;
 
-	fprintf(stderr, "%s  %s\n", __func__, path);
+	trace(__func__, path);
 
 	return ulockmgr_op(fi->fh, cmd, lock, &fi->lock_owner,
 			sizeof(fi->lock_owner));
