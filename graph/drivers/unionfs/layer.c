@@ -46,8 +46,8 @@ static pthread_rwlock_t namespace_lock;
 static struct inode *alloc_inode(struct inode *parent, char *name,
 	mode_t mode, struct layer *layer)
 {
-	struct inode *inode;
-	char *dupname;
+	struct inode *inode = NULL;
+	char *dupname = NULL;
 	char *base;
 	int ret = 0;
 
@@ -55,7 +55,7 @@ static struct inode *alloc_inode(struct inode *parent, char *name,
 		pthread_mutex_lock(&parent->lock);
 	}
 
-	inode = (struct inode *)malloc(sizeof(struct inode));
+	inode = (struct inode *)calloc(1, sizeof(struct inode));
 	if (!inode) {
 		ret = -1;
 		goto done;
@@ -70,6 +70,12 @@ static struct inode *alloc_inode(struct inode *parent, char *name,
 	inode->ref = 1;
 
 	base = basename(name);
+	if (strlen(base) > 255) {
+		errno = ENAMETOOLONG;
+		ret = -1;
+		goto done;
+	}
+
 	inode->full_name = strdup(name);
 	inode->name = strdup(base);
 	if (!inode->name) {
