@@ -244,6 +244,7 @@ static int union_unlink(const char *path)
 	}
 
 	if (delete_inode(inode)) {
+		deref_inode(inode);
 		res = -errno;
 		goto done;
 	}
@@ -273,6 +274,7 @@ static int union_rmdir(const char *path)
 	}
 
 	if (delete_inode(inode)) {
+		deref_inode(inode);
 		res = -errno;
 		goto done;
 	}
