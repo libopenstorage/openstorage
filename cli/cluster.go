@@ -7,6 +7,7 @@ import (
 
 	"github.com/codegangsta/cli"
 
+	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/client"
 	"github.com/libopenstorage/openstorage/cluster"
@@ -136,7 +137,11 @@ func (c *clusterClient) displayGossipStatus(context *cli.Context) {
 
 		fmt.Fprintln(w, "ID\t LAST CONTACT TS\t DIR\t Errors")
 		for _, n := range s.History {
-			fmt.Fprintln(w, n.Node, "\t", n.Ts, "\t", n.Dir, "\t", n.Err)
+			dirStr := "From Peer"
+			if n.Dir == types.GD_ME_TO_PEER {
+				dirStr = "To Peer"
+			}
+			fmt.Fprintln(w, n.Node, "\t", n.Ts, "\t", dirStr, "\t", n.Err)
 		}
 
 		fmt.Fprintln(w)
@@ -148,7 +153,19 @@ func (c *clusterClient) displayGossipStatus(context *cli.Context) {
 
 		fmt.Fprintln(w, "ID\t LAST UPDATE TS\t STATUS")
 		for _, n := range s.NodeStatus {
-			fmt.Fprintln(w, n.Id, "\t", n.LastUpdateTs, "\t", n.Status)
+			statusStr := "Up"
+			switch {
+			case n.Status == types.NODE_STATUS_DOWN,
+				n.Status == types.NODE_STATUS_DOWN_WAITING_FOR_NEW_UPDATE:
+				statusStr = "Down"
+			case n.Status == types.NODE_STATUS_INVALID:
+				statusStr = "Invalid"
+			case n.Status == types.NODE_STATUS_NEVER_GOSSIPED:
+				statusStr = "Node not yet gossiped"
+			case n.Status == types.NODE_STATUS_WAITING_FOR_NEW_UPDATE:
+				statusStr = "Waiting for new data with new generation"
+			}
+			fmt.Fprintln(w, n.Id, "\t", n.LastUpdateTs, "\t", statusStr)
 		}
 
 		fmt.Fprintln(w)
