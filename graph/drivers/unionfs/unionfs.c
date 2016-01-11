@@ -730,7 +730,7 @@ static struct fuse_operations union_oper = {
 
 int start_unionfs(char *mount_path)
 {
-	char *argv[4];
+	char *argv[6];
 	int i;
 
 	init_layers();
@@ -740,8 +740,10 @@ int start_unionfs(char *mount_path)
 	argv[0] = "graph-unionfs";
 	argv[1] = mount_path;
 	argv[2] = "-f";
+	argv[3] = "-o";
+	argv[4] = "allow_other";
 
-	return fuse_main(3, argv, &union_oper, NULL);
+	return fuse_main(5, argv, &union_oper, NULL);
 }
 
 int alloc_unionfs(char *id)

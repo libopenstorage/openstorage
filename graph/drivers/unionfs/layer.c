@@ -47,6 +47,7 @@ static struct inode *alloc_inode(struct inode *parent, char *name,
 	mode_t mode, struct layer *layer)
 {
 	struct inode *inode = NULL;
+	struct fuse_context *fuse_ctx;
 	char *dupname = NULL;
 	char *base;
 	int ret = 0;
@@ -84,8 +85,9 @@ static struct inode *alloc_inode(struct inode *parent, char *name,
 	}
 
 	inode->atime = inode->mtime = inode->ctime = time(NULL);
-	inode->uid = getuid();
-	inode->gid = getgid();
+	fuse_ctx = fuse_get_context();
+	inode->uid = fuse_ctx->uid;
+	inode->gid = fuse_ctx->gid;
 	inode->mode = mode;
 
 	if (mode & S_IFREG) {
