@@ -8,12 +8,12 @@ ifeq ($(BUILD_TYPE),debug)
 BUILDFLAGS := -gcflags "-N -l"
 endif
 
-ifdef HAVE_UNIONFS
-TAGS+=have_unionfs
-endif
-
 export GO15VENDOREXPERIMENT=1
 export EXPERIMENTAL_=1
+
+ifeq ($(EXPERIMENTAL_),1)
+TAGS+=have_unionfs
+endif
 
 all: test install
 
