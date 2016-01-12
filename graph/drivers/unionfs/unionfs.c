@@ -60,7 +60,7 @@ static int union_opendir(const char *path, struct fuse_file_info *fi)
 
 	trace(__func__, path);
 
-	inode = ref_inode(path, true, false, 0);
+	inode = ref_inode(path, true, REF_OPEN, 0);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -102,7 +102,7 @@ static int union_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	}
 
 	// Find the directory inode in the first layer that contains this path.
-	inode = ref_inode(path, true, false, 0);
+	inode = ref_inode(path, true, REF_OPEN, 0);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -127,28 +127,25 @@ static int union_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 			pthread_mutex_lock(&inode->lock);
 			{
 				while (child) {
-					if (!child->deleted) {
-						memset(&stbuf, 0, sizeof(struct stat));
+					memset(&stbuf, 0, sizeof(struct stat));
 
-						stbuf.st_mode = child->mode;
-						stbuf.st_nlink = child->nlink;
-						stbuf.st_uid = child->uid;
-						stbuf.st_gid = child->gid;
-						stbuf.st_size = child->size;
-						stbuf.st_atime = child->atime;
-						stbuf.st_mtime = child->mtime;
-						stbuf.st_ctime = child->ctime;
+					stbuf.st_mode = child->mode;
+					stbuf.st_nlink = child->nlink;
+					stbuf.st_uid = child->uid;
+					stbuf.st_gid = child->gid;
+					stbuf.st_size = child->size;
+					stbuf.st_atime = child->atime;
+					stbuf.st_mtime = child->mtime;
+					stbuf.st_ctime = child->ctime;
 
-						if (filler(buf, child->name, &stbuf, 0)) {
-							pthread_mutex_unlock(&inode->lock);
+					if (filler(buf, child->name, &stbuf, 0)) {
+						pthread_mutex_unlock(&inode->lock);
 
-							fprintf(stderr, "Warning, Filler too full on %s.\n",
-									path);
-							errno = ENOMEM;
-							res = -errno;
+						fprintf(stderr, "Warning, Filler too full on %s.\n", path);
+						errno = ENOMEM;
+						res = -errno;
 
-							goto done;
-						}
+						goto done;
 					}
 
 					child = child->next;
@@ -172,7 +169,7 @@ static int union_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 
 		// Recursively find other directory inodes that have the same path
 		// in the upper layers.
-		inode = ref_inode(new_path, false, false, 0);
+		inode = ref_inode(new_path, false, REF_OPEN, 0);
 	} while (true);
 
 done:
@@ -192,7 +189,7 @@ static int union_getattr(const char *path, struct stat *stbuf)
 
 	trace(__func__, path);
 
-	inode = ref_inode(path, true, false, 0);
+	inode = ref_inode(path, true, REF_OPEN, 0);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -217,7 +214,7 @@ static int union_access(const char *path, int mask)
 
 	trace(__func__, path);
 
-	inode = ref_inode(path, true, false, 0);
+	inode = ref_inode(path, true, REF_OPEN, 0);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -240,7 +237,7 @@ static int union_unlink(const char *path)
 
 	trace(__func__, path);
 
-	inode = ref_inode(path, true, false, 0);
+	inode = ref_inode(path, true, REF_OPEN, 0);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -264,7 +261,7 @@ static int union_rmdir(const char *path)
 
 	trace(__func__, path);
 
-	inode = ref_inode(path, true, false, 0);
+	inode = ref_inode(path, true, REF_OPEN, 0);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -294,7 +291,7 @@ static int union_rename(const char *from, const char *to)
 
 	trace(__func__, from);
 
-	inode = ref_inode(from, true, false, 0);
+	inode = ref_inode(from, true, REF_OPEN, 0);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -321,7 +318,7 @@ static int union_chmod(const char *path, mode_t mode)
 
 	trace(__func__, path);
 
-	inode = ref_inode(path, true, false, 0);
+	inode = ref_inode(path, true, REF_OPEN, 0);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -344,7 +341,7 @@ static int union_chown(const char *path, uid_t uid, gid_t gid)
 
 	trace(__func__, path);
 
-	inode = ref_inode(path, true, false, 0);
+	inode = ref_inode(path, true, REF_OPEN, 0);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -367,7 +364,7 @@ static int union_truncate(const char *path, off_t size)
 
 	trace(__func__, path);
 
-	inode = ref_inode(path, true, false, 0);
+	inode = ref_inode(path, true, REF_OPEN, 0);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -396,7 +393,7 @@ static int union_utimens(const char *path, const struct timespec ts[2])
 
 	trace(__func__, path);
 
-	inode = ref_inode(path, true, false, 0);
+	inode = ref_inode(path, true, REF_OPEN, 0);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -419,7 +416,7 @@ static int union_open(const char *path, struct fuse_file_info *fi)
 
 	trace(__func__, path);
 
-	inode = ref_inode(path, true, (fi->flags & O_CREAT ? true : false),
+	inode = ref_inode(path, true, (fi->flags & O_CREAT ? REF_CREATE : false),
 			0777 | S_IFREG);
 	if (!inode) {
 		res = -errno;
@@ -441,7 +438,7 @@ static int union_create(const char *path, mode_t mode, struct fuse_file_info *fi
 
 	trace(__func__, path);
 
-	inode = ref_inode(path, true, (fi->flags & O_CREAT ? true : false),
+	inode = ref_inode(path, true, (fi->flags & O_CREAT ? REF_CREATE : false),
 			mode | S_IFREG);
 	if (!inode) {
 		res = -errno;
@@ -463,7 +460,7 @@ static int union_mkdir(const char *path, mode_t mode)
 
 	trace(__func__, path);
 
-	inode = ref_inode(path, true, true, mode | S_IFDIR);
+	inode = ref_inode(path, true, REF_CREATE, mode | S_IFDIR);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -504,7 +501,7 @@ static int union_read(const char *path, char *buf, size_t size, off_t offset,
 	int res = 0;
 	struct inode *inode = NULL;
 
-	inode = ref_inode(path, true, false, 0);
+	inode = ref_inode(path, true, REF_OPEN, 0);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -532,7 +529,7 @@ static int union_write(const char *path, const char *buf, size_t size,
 	int res = 0;
 	struct inode *inode = NULL;
 
-	inode = ref_inode(path, true, false, 0);
+	inode = ref_inode(path, true, REF_OPEN, 0);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -588,7 +585,7 @@ static int union_fsync(const char *path, int isdatasync,
 	int res = 0;
 	struct inode *inode = NULL;
 
-	inode = ref_inode(path, true, false, 0);
+	inode = ref_inode(path, true, REF_OPEN, 0);
 	if (!inode) {
 		res = -errno;
 		goto done;
@@ -635,7 +632,7 @@ static int union_link(const char *from, const char *to)
 
 	trace(__func__, from);
 
-	inode = ref_inode(from, true, false, 0);
+	inode = ref_inode(from, true, REF_OPEN, 0);
 	if (!inode) {
 		res = -errno;
 		goto done;

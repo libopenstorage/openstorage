@@ -41,8 +41,9 @@ static pthread_mutex_t layer_lock;
 static pthread_rwlock_t namespace_lock;
 
 // Delete an inode if the link count is down to 0.
-static int reap_inode(struct inode *inode, bool release)
+static int reap_inode(struct inode *inode)
 {
+	bool release = true;
 	int ret = 0;
 
 	errno = 0;
@@ -80,6 +81,15 @@ static int reap_inode(struct inode *inode, bool release)
 
 	ht_remove(inode->layer->namespace, inode->full_name);
 
+	inode->nlink--;
+
+	if (inode->nlink) {
+		// Someone still links to us, so hide this inode but do not delete it.
+		// It will get deleted when all it's links go to zero (that is, when a 
+		// dependant inode get's deleted.
+		release = false;
+	}
+
 	// Remove this inode from parent.
 	if (inode->prev) {
 		inode->prev->next = inode->next;
@@ -93,6 +103,11 @@ static int reap_inode(struct inode *inode, bool release)
 		inode->parent->child = inode->next;
 	}
 
+	if (inode->link) {
+		// XXX TODO
+
+	}
+
 done:
 
 	if (inode->parent) {
@@ -100,6 +115,7 @@ done:
 	}
 
 	pthread_mutex_unlock(&inode->lock);
+
 	if (ret == 0 && release) {
 		if (inode->f) {
 			fclose(inode->f);
@@ -116,7 +132,7 @@ done:
 // Allocate an inode, add it to the layer and link it to the namespace.
 // Initial reference is 1.
 // Warning - namespace lock must be held.
-static struct inode *alloc_inode(struct inode *parent, char *name,
+static struct inode *__alloc_inode(struct inode *parent, char *name,
 	mode_t mode, struct layer *layer)
 {
 	struct inode *inode = NULL;
@@ -270,7 +286,8 @@ done:
 // Locate an inode given a path.  If 'follow' is specified, then search
 // all linked layers for the path.  Create one if 'create' flag is specified.
 // Increment reference count on the returned inode.
-struct inode *ref_inode(const char *path, bool follow, bool create, mode_t mode)
+struct inode *ref_inode(const char *path, bool follow, 
+		ref_mode_t ref_mode, mode_t mode)
 {
 	struct layer *layer = NULL;
 	struct layer *parent_layer = NULL;
@@ -285,7 +302,7 @@ struct inode *ref_inode(const char *path, bool follow, bool create, mode_t mode)
 		return root_inode;
 	}
 
-	if (create) {
+	if (ref_mode == REF_CREATE || ref_mode == REF_CREATE_EXCL) {
 		// Needed because we may be adding new inodes to the namespace
 		// and we don't want duplicate entries added for the same name.
 		pthread_rwlock_wrlock(&namespace_lock);
@@ -309,19 +326,18 @@ struct inode *ref_inode(const char *path, bool follow, bool create, mode_t mode)
 		// See if this layer has 'path'
 		inode = ht_get(layer->namespace, fixed_path);
 		if (inode) {
+			if (ref_mode == REF_CREATE_EXCL) {
+				// This inode already exists... do not ref it or create a new one.
+				inode = NULL;
+				errno = EEXIST;
+				goto done;
+			}
+
 			pthread_mutex_lock(&inode->lock);
 			{
 				inode->ref++;
 			}
 			pthread_mutex_unlock(&inode->lock);
-
-			if (inode->link) {
-				pthread_mutex_lock(&inode->link->lock);
-				{
-					inode->link->ref++;
-				}
-				pthread_mutex_unlock(&inode->link->lock);
-			}
 			goto done;
 		}
 
@@ -346,14 +362,14 @@ struct inode *ref_inode(const char *path, bool follow, bool create, mode_t mode)
 
 	// If we did not find the file and create mode was requested, construct
 	// a file path in the appropriate layer.
-	if (!inode && create) {
+	if (!inode && ref_mode == REF_CREATE || ref_mode == REF_CREATE_EXCL) {
 		if (!parent) {
 			fprintf(stderr, "Warning, create mode requested on %s, but no layer "
 					"could be found that could create this file\n", fixed_path);
 		} else {
 			// At this point, parent is safe to use because we have the
 			// reaper lock held.
-			inode = alloc_inode(parent, fixed_path, mode, parent_layer);
+			inode = __alloc_inode(parent, fixed_path, mode, parent_layer);
 		}
 	}
 
@@ -385,14 +401,6 @@ void deref_inode(struct inode *inode)
 		inode->ref--;
 	}
 	pthread_mutex_unlock(&inode->lock);
-
-	if (inode->link) {
-		pthread_mutex_lock(&inode->link->lock);
-		{
-			inode->link->ref--;
-		}
-		pthread_mutex_unlock(&inode->link->lock);
-	}
 }
 
 // Get statbuf on an inode.  Must be called with reference held.
@@ -555,9 +563,6 @@ int link_inode(struct inode *inode, const char *to)
 
 	errno = 0;
 
-	// Needed because we are adding a new entry to the namespace.
-	pthread_rwlock_wrlock(&namespace_lock);
-
 	if (inode->link) {
 		inode = inode->link;
 	}
@@ -567,14 +572,7 @@ int link_inode(struct inode *inode, const char *to)
 		ret = -errno;
 	}
 
-	new_inode = ref_inode(to, true, false, 0);
-	if (new_inode) {
-		errno = EEXIST;
-		ret = -errno;
-		goto done;
-	}
-
-	new_inode = ref_inode(to, true, true, 0);
+	new_inode = ref_inode(to, true, REF_CREATE_EXCL, 0);
 	if (!new_inode) {
 		ret = -errno;
 		goto done;
@@ -582,14 +580,13 @@ int link_inode(struct inode *inode, const char *to)
 
 	new_inode->link = inode;
 
-	pthread_mutex_lock(&inode->link->lock);
+	pthread_mutex_lock(&inode->lock);
 	{
-		inode->link->nlink++;
+		inode->nlink++;
 	}
-	pthread_mutex_unlock(&inode->link->lock);
+	pthread_mutex_unlock(&inode->lock);
 
 done:
-	pthread_rwlock_unlock(&namespace_lock);
 
 	return ret;
 }
@@ -598,37 +595,41 @@ done:
 struct inode *rename_inode(struct inode *inode, const char *to)
 {
 	struct inode *new_inode = NULL;
-	time_t atime, mtime, ctime;
-	int nlink, size;
-	FILE *f;
-	uid_t uid;
-	gid_t gid;
+	struct inode *orig = inode;
 
 	errno = 0;
 
-	if (reap_inode(inode, false) != 0) {
-		goto done;
+	if (inode->link) {
+		inode = inode->link;
 	}
 
-	new_inode = ref_inode(to, true, true, 0);
+	// XXX FIXME old name and new name are in the name space at the same time
+	// for the duration of this function.  Need to atomically swap the namespace.
+	// This can be done by leveraging the REF_CREATE_EXCL flag.
+	new_inode = ref_inode(to, true, REF_CREATE_EXCL, 0);
 	if (!new_inode) {
 		goto done;
 	}
 
-	new_inode->f = inode->f;
-	new_inode->nlink = inode->nlink;
-	new_inode->uid = inode->uid;
-	new_inode->gid = inode->gid;
-	new_inode->size = inode->size;
-	new_inode->atime = inode->atime;
-	new_inode->mtime = inode->mtime;
-	new_inode->ctime = inode->ctime;
+	// Just make the new node a link to the previous node.
+	// XXX FIXME this needs to be done better.
+	new_inode->link = inode;
+	pthread_mutex_lock(&inode->lock);
+	{
+		inode->nlink++;
+	}
+	pthread_mutex_unlock(&inode->lock);
+
+	// Release orig if it was a link itself.
+	if (orig != inode) {
+		if (reap_inode(orig) != 0) {
+			reap_inode(new_inode);
+			new_inode = NULL;
+			goto done;
+		}
+	}
 
 done:
-
-	if (new_inode != NULL) {
-		free(inode);
-	}
 
 	return new_inode;
 }
@@ -648,7 +649,10 @@ int delete_inode(struct inode *inode)
 		goto done;
 	}
 
-	ret = reap_inode(inode, true);
+	ret = reap_inode(inode);
+	if (ret) {
+		goto done;
+	}
 
 done:
 	return ret;
@@ -697,7 +701,7 @@ int create_layer(char *id, char *parent_id)
 	layer->namespace = ht_create(65536);
 
 	// Layer namespace creation.
-	layer->root = alloc_inode(NULL, "/", 0777 | S_IFDIR, layer);
+	layer->root = __alloc_inode(NULL, "/", 0777 | S_IFDIR, layer);
 	if (layer->root == NULL) {
 		ret = -errno;
 		goto done;
@@ -881,7 +885,7 @@ int init_layers()
 		return -1;
 	}
 
-	root_inode = alloc_inode(NULL, "/", 0777 | S_IFDIR, NULL);
+	root_inode = __alloc_inode(NULL, "/", 0777 | S_IFDIR, NULL);
 
 	pthread_rwlock_init(&namespace_lock, 0);
 	pthread_mutex_init(&layer_lock, 0);

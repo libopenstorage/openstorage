@@ -14,12 +14,10 @@
 struct inode {
 	pthread_mutex_t lock;
 
-	// Reference count.  TODO this should be a read/write lock.
+	// Reference count.  This protects the inode from getting deleted while
+	// we have an IO in operation.
+	// TODO this should be a read/write lock.
 	int ref;
-
-	// Set to true if this inode is deleted, but some other inode
-	// links to this one.  It will be released when the link count goes to 0.
-	bool deleted;
 
 	// Stat buf.
 	mode_t mode;
@@ -72,6 +70,12 @@ struct layer {
 	struct layer *prev;
 };
 
+typedef enum {
+	REF_OPEN,		// Ref inode only if it already exists.
+	REF_CREATE,		// Ref inode if it exists, create one if inode does not exist.
+	REF_CREATE_EXCL	// Create and ref inode only if it does not already exist.
+} ref_mode_t;
+
 // Create a layer and link it to a parent.  Parent can be "" or NULL.
 extern int create_layer(char *id, char *parent_id);
 
@@ -85,7 +89,7 @@ extern int check_layer(char *id);
 // all linked layers for the path.  Create one if 'create' flag is specified.
 // Increment reference count on the returned inode.
 extern struct inode *ref_inode(const char *path, bool follow,
-		bool create, mode_t mode);
+		ref_mode_t ref_mode, mode_t mode);
 
 // Decrement ref count on an inode.  A node with a refcount of 0 can be 
 // deleted if delete_inode is called on it.
