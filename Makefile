@@ -1,8 +1,15 @@
 ifndef TAGS
-TAGS := daemon btrfs_noversion have_btrfs
+BTRFS_DIR=/usr/include/btrfs
+ifneq "$(wildcard $(BTRFS_DIR) )" ""
+  # BTRFS header files are installed on local machine
+  TAGS := daemon btrfs_noversion have_btrfs
+else
+  # BTRFS header files are not installed on local machine
+  TAGS := daemon
+endif
 endif
 ifndef PKGS
-PKGS := $(shell go list ./... | grep -v 'github.com/libopenstorage/openstorage/vendor')
+PKGS := $(shell go list ./... 2>&1 | grep -v 'github.com/libopenstorage/openstorage/vendor')
 endif
 ifeq ($(BUILD_TYPE),debug)
 BUILDFLAGS := -gcflags "-N -l"
