@@ -114,6 +114,13 @@ done:
 		pthread_mutex_unlock(&inode->parent->lock);
 	}
 
+	// Unset links in case reap is called on this inode again.  This
+	// can happen if a linked inode is reaped.
+	inode->prev = NULL;
+	inode->next = NULL;
+	inode->parent = NULL;
+	inode->link = NULL;
+
 	pthread_mutex_unlock(&inode->lock);
 
 	if (ret == 0 && release) {
