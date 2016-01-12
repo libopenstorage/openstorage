@@ -43,6 +43,7 @@ static pthread_rwlock_t namespace_lock;
 // Delete an inode if the link count is down to 0.
 static int reap_inode(struct inode *inode)
 {
+	struct inode *linked_inode = NULL;
 	bool release = true;
 	int ret = 0;
 
@@ -104,8 +105,7 @@ static int reap_inode(struct inode *inode)
 	}
 
 	if (inode->link) {
-		// XXX TODO
-
+		linked_inode = inode->link;
 	}
 
 done:
@@ -125,6 +125,17 @@ done:
 	}
 
 	pthread_rwlock_unlock(&namespace_lock);
+
+	// Deref linked inode and reap it too.
+	if (linked_inode) {
+		pthread_mutex_lock(&linked_inode->lock);
+		{
+			linked_inode->nlink--;
+		}
+		pthread_mutex_unlock(&linked_inode->lock);
+
+		ret = reap_inode(linked_inode);
+	}
 
 	return ret;
 }
