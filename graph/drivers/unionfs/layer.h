@@ -19,6 +19,11 @@ struct inode {
 	// TODO this should be a read/write lock.
 	int ref;
 
+	// If an inode cannot be deleted because it is linked, this flag will
+	// be turned on.  Any linked inode will check this flag and try to delete
+	// the inode when the linked inode is being deleted.
+	bool deleted;
+
 	// Stat buf.
 	mode_t mode;
 	nlink_t nlink;

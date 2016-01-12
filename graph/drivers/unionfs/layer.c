@@ -89,6 +89,10 @@ static int reap_inode(struct inode *inode)
 		// It will get deleted when all it's links go to zero (that is, when a 
 		// dependant inode get's deleted.
 		release = false;
+
+		// Set this flag so that a linked inode can reap this inode at
+		// a later point (when the linked inode is getting deleted).
+		inode->deleted = true;
 	}
 
 	// Remove this inode from parent.
@@ -141,7 +145,9 @@ done:
 		}
 		pthread_mutex_unlock(&linked_inode->lock);
 
-		ret = reap_inode(linked_inode);
+		if (linked_inode->deleted) {
+			ret = reap_inode(linked_inode);
+		}
 	}
 
 	return ret;
@@ -264,7 +270,7 @@ done:
 }
 
 // Get's the owner layer given a path.
-static struct layer *get_layer(const char *path, char **new_path)
+static struct layer *__get_layer(const char *path, char **new_path)
 {
 	struct layer *layer = NULL;
 	char *p, *layer_id = NULL;
@@ -332,7 +338,7 @@ struct inode *ref_inode(const char *path, bool follow,
 
 	errno = 0;
 
-	parent_layer = layer = get_layer(path, &fixed_path);
+	parent_layer = layer = __get_layer(path, &fixed_path);
 	if (!layer) {
 		goto done;
 	}
