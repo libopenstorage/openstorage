@@ -89,6 +89,7 @@ static struct inode *alloc_inode(struct inode *parent, char *name,
 	inode->uid = fuse_ctx->uid;
 	inode->gid = fuse_ctx->gid;
 	inode->mode = mode;
+	inode->nlink = 1;
 
 	if (mode & S_IFREG) {
 		// XXX this needs to point to a block device.
@@ -298,6 +299,7 @@ int stat_inode(struct inode *inode, struct stat *stbuf)
 {
 	if (inode->f) {
 		fstat(fileno(inode->f), stbuf);
+		stbuf->st_nlink = inode->nlink;
 	} else {
 		stbuf->st_mode = inode->mode;
 		stbuf->st_nlink = inode->nlink;
@@ -471,7 +473,7 @@ int create_layer(char *id, char *parent_id)
 		goto done;
 	}
 
-	if (parent_id && parent_id != "") {
+	if (parent_id && strcmp(parent_id, "")) {
 		parent = ht_get(layer_hash, parent_id);
 		if (!parent) {
 			fprintf(stderr, "Warning, cannot find parent layer %s.\n", parent_id);
@@ -514,6 +516,8 @@ int create_layer(char *id, char *parent_id)
 	}
 	pthread_mutex_unlock(&layer_lock);
 
+	fprintf(stderr, "Created layer %s\n", id);
+
 done:
 	if (str) {
 		free(str);
@@ -540,6 +544,8 @@ static int remove_inodes(struct layer *layer)
 int remove_layer(char *id)
 {
 	int ret = 0;
+
+	return 0;
 
 	pthread_mutex_lock(&layer_lock);
 	{
@@ -601,7 +607,7 @@ int root_fill(fuse_fill_dir_t filler, char *buf)
 
 		while (layer) {
 			struct stat st;
-			char d_name[8];
+			char d_name[PATH_MAX];
 
 			snprintf(d_name, sizeof(d_name), "%s", layer->id);
 

@@ -47,7 +47,7 @@ struct inode {
 };
 
 struct layer {
-	char id[256];
+	char id[PATH_MAX];
 
 	// True if this is the top most later.  This flag is used
 	// for determining of modified files should go into this layer.

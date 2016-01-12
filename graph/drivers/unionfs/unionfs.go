@@ -9,7 +9,7 @@ extern int release_unionfs(char *id);
 extern int create_layer(char *id, char *parent_id);
 extern int remove_layer(char *id);
 extern int check_layer(char *id);
-#cgo LDFLAGS: -lfuse -lulockmgr
+#cgo LDFLAGS: -g -lfuse -lulockmgr
 */
 import "C"
 
@@ -207,7 +207,6 @@ func (d *Driver) ApplyDiff(id string, parent string, diff archive.Reader) (size 
 
 	if err := chrootarchive.UntarUncompressed(diff, dir, nil); err != nil {
 		logrus.Warnf("Error while applying diff to %s: %v", id, err)
-		os.Exit(-1)
 		return 0, err
 	}
 
