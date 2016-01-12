@@ -17,6 +17,10 @@ struct inode {
 	// Reference count.  TODO this should be a read/write lock.
 	int ref;
 
+	// Set to true if this inode is deleted, but some other inode
+	// links to this one.  It will be released when the link count goes to 0.
+	bool deleted;
+
 	// Stat buf.
 	mode_t mode;
 	nlink_t nlink;
@@ -38,6 +42,9 @@ struct inode {
 	struct inode *child;
 	struct inode *next;
 	struct inode *prev;
+
+	// If this inode is a link, 'link' points to the actual inode.
+	struct inode *link;
 
 	// The layer this inode belongs to.
 	struct layer *layer;
@@ -89,6 +96,32 @@ extern int stat_inode(struct inode *inode, struct stat *stbuf);
 
 // Set mode on an inode.  Must be called with reference held.
 extern int chmod_inode(struct inode *inode, mode_t mode);
+
+// Set uid and gid on an inode.  Must be called with reference held.
+extern int chown_inode(struct inode *inode, uid_t uid, gid_t gid);
+
+// Get the mode of the inode.  Refcount must be held.
+extern mode_t get_inode_mode(struct inode *inode);
+
+// Create a new namespace link on an inode.  Must be called with reference held.
+extern int link_inode(struct inode *inode, const char *to);
+
+// Set atime and mtime on an inode.  Must be called with reference held.
+extern int utimens_inode(struct inode *inode, time_t atime, time_t mtime);
+
+// Truncate an inode.  Must be called with reference held.
+extern int truncate_inode(struct inode *inode, off_t size);
+
+// Read from an inode.  Must be called with reference held.
+extern int read_inode(struct inode *inode, char *buf, size_t size,
+		        off_t offset);
+
+// Write to an inode.  Must be called with reference held.
+extern int write_inode(struct inode *inode, const char *buf, size_t size,
+		        off_t offset);
+
+// Sync an inode.  Must be called with reference held.
+extern int sync_inode(struct inode *inode);
 
 // Must be called with reference held.
 extern int delete_inode(struct inode *inode);

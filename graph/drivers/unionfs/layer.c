@@ -40,6 +40,79 @@ static pthread_mutex_t layer_lock;
 // ref count one of it's children.  TODO make this per layer and not global.
 static pthread_rwlock_t namespace_lock;
 
+// Delete an inode if the link count is down to 0.
+static int reap_inode(struct inode *inode, bool release)
+{
+	int ret = 0;
+
+	errno = 0;
+
+	if (inode == root_inode) {
+		fprintf(stderr, "Warning, trying to delete root inode.\n");
+		errno = EINVAL;
+		ret = -errno;
+		return ret;
+	}
+
+	// We will be removing an inode from the namespace.
+	pthread_rwlock_wrlock(&namespace_lock);
+
+	// Locks ref from changing.
+	pthread_mutex_lock(&inode->lock);
+
+	// We will be making changes to the parent's children links.
+	if (inode->parent) {
+		pthread_mutex_lock(&inode->parent->lock);
+	}
+
+	if (inode->child != NULL) {
+		errno = ENOTEMPTY;
+		ret = -errno;
+		goto done;
+	}
+
+	// refcount must be exactly 1.
+	if (inode->ref != 1) {
+		errno = EBUSY;
+		ret = -errno;
+		goto done;
+	}
+
+	ht_remove(inode->layer->namespace, inode->full_name);
+
+	// Remove this inode from parent.
+	if (inode->prev) {
+		inode->prev->next = inode->next;
+	}
+
+	if (inode->next) {
+		inode->next->prev = inode->prev;
+	}
+
+	if (inode->parent && inode->parent->child == inode) {
+		inode->parent->child = inode->next;
+	}
+
+done:
+
+	if (inode->parent) {
+		pthread_mutex_unlock(&inode->parent->lock);
+	}
+
+	pthread_mutex_unlock(&inode->lock);
+	if (ret == 0 && release) {
+		if (inode->f) {
+			fclose(inode->f);
+		}
+
+		free(inode);
+	}
+
+	pthread_rwlock_unlock(&namespace_lock);
+
+	return ret;
+}
+
 // Allocate an inode, add it to the layer and link it to the namespace.
 // Initial reference is 1.
 // Warning - namespace lock must be held.
@@ -58,13 +131,14 @@ static struct inode *alloc_inode(struct inode *parent, char *name,
 
 	inode = (struct inode *)calloc(1, sizeof(struct inode));
 	if (!inode) {
-		ret = -1;
+		ret = -errno;
 		goto done;
 	}
 
 	dupname = strdup(name);
 	if (!dupname) {
-		ret = -1;
+		errno = ENOMEM;
+		ret = -errno;
 		goto done;
 	}
 
@@ -73,14 +147,15 @@ static struct inode *alloc_inode(struct inode *parent, char *name,
 	base = basename(name);
 	if (strlen(base) > 255) {
 		errno = ENAMETOOLONG;
-		ret = -1;
+		ret = -errno;
 		goto done;
 	}
 
 	inode->full_name = strdup(name);
 	inode->name = strdup(base);
 	if (!inode->name) {
-		ret = -1;
+		errno = ENOMEM;
+		ret = -errno;
 		goto done;
 	}
 
@@ -95,7 +170,8 @@ static struct inode *alloc_inode(struct inode *parent, char *name,
 		// XXX this needs to point to a block device.
 		inode->f = tmpfile();
 		if (!inode->f) {
-			ret = -1;
+			errno = ENOMEM;
+			ret = -errno;
 			goto done;
 		}
 		fchmod(fileno(inode->f), mode);
@@ -209,8 +285,15 @@ struct inode *ref_inode(const char *path, bool follow, bool create, mode_t mode)
 		return root_inode;
 	}
 
-	// Needed because we will be looking for inodes with 'path' in the namespace.
-	pthread_rwlock_rdlock(&namespace_lock);
+	if (create) {
+		// Needed because we may be adding new inodes to the namespace
+		// and we don't want duplicate entries added for the same name.
+		pthread_rwlock_wrlock(&namespace_lock);
+	} else {
+		// Needed because we will be looking for inodes in the namespace 
+		// and we don't want them to get deleted.
+		pthread_rwlock_rdlock(&namespace_lock);
+	}
 
 	errno = 0;
 
@@ -231,6 +314,14 @@ struct inode *ref_inode(const char *path, bool follow, bool create, mode_t mode)
 				inode->ref++;
 			}
 			pthread_mutex_unlock(&inode->lock);
+
+			if (inode->link) {
+				pthread_mutex_lock(&inode->link->lock);
+				{
+					inode->link->ref++;
+				}
+				pthread_mutex_unlock(&inode->link->lock);
+			}
 			goto done;
 		}
 
@@ -283,6 +374,8 @@ done:
 // deleted if delete_inode is called on it.
 void deref_inode(struct inode *inode)
 {
+	errno = 0;
+
 	if (inode == root_inode) {
 		return;
 	}
@@ -292,11 +385,25 @@ void deref_inode(struct inode *inode)
 		inode->ref--;
 	}
 	pthread_mutex_unlock(&inode->lock);
+
+	if (inode->link) {
+		pthread_mutex_lock(&inode->link->lock);
+		{
+			inode->link->ref--;
+		}
+		pthread_mutex_unlock(&inode->link->lock);
+	}
 }
 
 // Get statbuf on an inode.  Must be called with reference held.
 int stat_inode(struct inode *inode, struct stat *stbuf)
 {
+	errno = 0;
+
+	if (inode->link) {
+		inode = inode->link;
+	}
+
 	if (inode->f) {
 		fstat(fileno(inode->f), stbuf);
 		stbuf->st_nlink = inode->nlink;
@@ -318,6 +425,12 @@ int stat_inode(struct inode *inode, struct stat *stbuf)
 // Set mode on an inode.  Must be called with reference held.
 int chmod_inode(struct inode *inode, mode_t mode)
 {
+	errno = 0;
+
+	if (inode->link) {
+		inode = inode->link;
+	}
+
 	if (inode->f) {
 		fchmod(fileno(inode->f), mode);
 	} else {
@@ -327,73 +440,155 @@ int chmod_inode(struct inode *inode, mode_t mode)
 	return 0;
 }
 
-static int reap_inode(struct inode *inode, bool release)
+// Set uid and gid on an inode.  Must be called with reference held.
+int chown_inode(struct inode *inode, uid_t uid, gid_t gid)
 {
+	errno = 0;
+
+	if (inode->link) {
+		inode = inode->link;
+	}
+
+	inode->gid = gid;
+	inode->uid = uid;
+
+	return 0;
+}
+
+// Truncate an inode.  Must be called with reference held.
+int truncate_inode(struct inode *inode, off_t size)
+{
+	errno = 0;
+
+	if (inode->link) {
+		inode = inode->link;
+	}
+
+	ftruncate(fileno(inode->f), size);
+	inode->size = size;
+}
+
+// Read from an inode.  Must be called with reference held.
+int read_inode(struct inode *inode, char *buf, size_t size, off_t offset)
+{
+	int res = 0;
+
+	errno = 0;
+
+	if (inode->link) {
+		inode = inode->link;
+	}
+
+	res = pread(fileno(inode->f), buf, size, offset);
+	if (res == -1) {
+		res = -errno;
+	}
+
+	return res;
+}
+
+// Write to an inode.  Must be called with reference held.
+int write_inode(struct inode *inode, const char *buf, size_t size, off_t offset)
+{
+	int res = 0;
+
+	errno = 0;
+
+	if (inode->link) {
+		inode = inode->link;
+	}
+
+	res = pwrite(fileno(inode->f), buf, size, offset);
+	if (res == -1) {
+		res = -errno;
+	}
+
+	return res;
+}
+
+// Sync an inode.  Must be called with reference held.
+int sync_inode(struct inode *inode)
+{
+	errno = 0;
+
+	if (inode->link) {
+		inode = inode->link;
+	}
+
+	fsync(fileno(inode->f));
+
+	return 0;
+}
+
+// Get the mode of the inode.  Refcount must be held.
+mode_t get_inode_mode(struct inode *inode)
+{
+	errno = 0;
+
+	if (inode->link) {
+		inode = inode->link;
+	}
+
+	return inode->mode;
+}
+
+// Set atime and mtime on an inode.  Must be called with reference held.
+int utimens_inode(struct inode *inode, time_t atime, time_t mtime)
+{
+	errno = 0;
+
+	if (inode->link) {
+		inode = inode->link;
+	}
+
+	inode->atime = atime;
+	inode->mtime = mtime;
+
+	return 0;
+}
+
+// Create a new namespace link on an inode.  Must be called with reference held.
+int link_inode(struct inode *inode, const char *to)
+{
+	struct inode *new_inode = NULL;
 	int ret = 0;
 
 	errno = 0;
 
-	if (inode == root_inode) {
-		fprintf(stderr, "Warning, trying to delete root inode.\n");
-		errno = EINVAL;
-		ret = -1;
-		return ret;
-	}
-
-	// We will be removing an inode from the namespace.
+	// Needed because we are adding a new entry to the namespace.
 	pthread_rwlock_wrlock(&namespace_lock);
 
-	// Locks ref from changing.
-	pthread_mutex_lock(&inode->lock);
-
-	// We will be making changes to the parent's children links.
-	if (inode->parent) {
-		pthread_mutex_lock(&inode->parent->lock);
+	if (inode->link) {
+		inode = inode->link;
 	}
 
-	if (inode->child != NULL) {
-		errno = ENOTEMPTY;
-		ret = -1;
+	if (inode->mode & S_IFDIR) {
+		errno = EPERM;
+		ret = -errno;
+	}
+
+	new_inode = ref_inode(to, true, false, 0);
+	if (new_inode) {
+		errno = EEXIST;
+		ret = -errno;
 		goto done;
 	}
 
-	// refcount must be exactly 1.
-	if (inode->ref != 1) {
-		errno = EBUSY;
-		ret = -1;
+	new_inode = ref_inode(to, true, true, 0);
+	if (!new_inode) {
+		ret = -errno;
 		goto done;
 	}
 
-	ht_remove(inode->layer->namespace, inode->full_name);
+	new_inode->link = inode;
 
-	// Remove this inode from parent.
-	if (inode->prev) {
-		inode->prev->next = inode->next;
+	pthread_mutex_lock(&inode->link->lock);
+	{
+		inode->link->nlink++;
 	}
-
-	if (inode->next) {
-		inode->next->prev = inode->prev;
-	}
-
-	if (inode->parent && inode->parent->child == inode) {
-		inode->parent->child = inode->next;
-	}
+	pthread_mutex_unlock(&inode->link->lock);
 
 done:
-
-	if (inode->parent) {
-		pthread_mutex_unlock(&inode->parent->lock);
-	}
-
-	pthread_mutex_unlock(&inode->lock);
-	if (ret == 0 && release) {
-		if (inode->f) {
-			fclose(inode->f);
-		}
-
-		free(inode);
-	}
-
 	pthread_rwlock_unlock(&namespace_lock);
 
 	return ret;
@@ -441,14 +636,22 @@ done:
 // Must be called with reference held.
 int delete_inode(struct inode *inode)
 {
+	int ret = 0;
+
+	errno = 0;
+
 	if (inode->parent == NULL) {
 		// Cannot delete root inodes... Those can only be
 		// removed by calling remove_layer.
 		errno = EBUSY;
-		return -1;
+		ret = -errno;
+		goto done;
 	}
 
-	return reap_inode(inode, true);
+	ret = reap_inode(inode, true);
+
+done:
+	return ret;
 }
 
 // Create a layer and link it to a parent.  Parent can be "" or NULL.
@@ -534,9 +737,7 @@ done:
 
 static int remove_inodes(struct layer *layer)
 {
-	// TODO First mark all inodes for deletion.
-
-	// TODO Lazily remove all inodes based on refcounts.
+	// TODO
 
 	return 0;
 }
@@ -567,11 +768,11 @@ int remove_layer(char *id)
 
 			if (remove_inodes(layer)) {
 				errno = EBUSY;
-				ret = -1;
+				ret = -errno;
 			}
 		} else {
 			errno = ENOENT;
-			ret = -1;
+			ret = -errno;
 		}
 	}
 	pthread_mutex_unlock(&layer_lock);
@@ -623,7 +824,7 @@ int root_fill(fuse_fill_dir_t filler, char *buf)
 
 			if (filler(buf, d_name, &st, 0)) {
 				errno = ENOMEM;
-				ret = -1;
+				ret = -errno;
 
 				fprintf(stderr, "Warning, Filler too full on root.\n");
 				break;

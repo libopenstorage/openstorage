@@ -127,25 +127,28 @@ static int union_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 			pthread_mutex_lock(&inode->lock);
 			{
 				while (child) {
-					memset(&stbuf, 0, sizeof(struct stat));
+					if (!child->deleted) {
+						memset(&stbuf, 0, sizeof(struct stat));
 
-					stbuf.st_mode = child->mode;
-					stbuf.st_nlink = child->nlink;
-					stbuf.st_uid = child->uid;
-					stbuf.st_gid = child->gid;
-					stbuf.st_size = child->size;
-					stbuf.st_atime = child->atime;
-					stbuf.st_mtime = child->mtime;
-					stbuf.st_ctime = child->ctime;
+						stbuf.st_mode = child->mode;
+						stbuf.st_nlink = child->nlink;
+						stbuf.st_uid = child->uid;
+						stbuf.st_gid = child->gid;
+						stbuf.st_size = child->size;
+						stbuf.st_atime = child->atime;
+						stbuf.st_mtime = child->mtime;
+						stbuf.st_ctime = child->ctime;
 
-					if (filler(buf, child->name, &stbuf, 0)) {
-						pthread_mutex_unlock(&inode->lock);
+						if (filler(buf, child->name, &stbuf, 0)) {
+							pthread_mutex_unlock(&inode->lock);
 
-						fprintf(stderr, "Warning, Filler too full on %s.\n", path);
-						errno = ENOMEM;
-						res = -errno;
+							fprintf(stderr, "Warning, Filler too full on %s.\n",
+									path);
+							errno = ENOMEM;
+							res = -errno;
 
-						goto done;
+							goto done;
+						}
 					}
 
 					child = child->next;
@@ -267,7 +270,7 @@ static int union_rmdir(const char *path)
 		goto done;
 	}
 
-	if (!(inode->mode & S_IFDIR)) {
+	if (!(get_inode_mode(inode) & S_IFDIR)) {
 		errno = ENOTDIR;
 		res = -errno;
 		goto done;
@@ -347,8 +350,7 @@ static int union_chown(const char *path, uid_t uid, gid_t gid)
 		goto done;
 	}
 
-	inode->gid = gid;
-	inode->uid = uid;
+	res = chown_inode(inode, uid, gid);
 
 done:
 	if (inode) {
@@ -377,8 +379,7 @@ static int union_truncate(const char *path, off_t size)
 		goto done;
 	}
 
-	ftruncate(fileno(inode->f), size);
-	inode->size = size;
+	res = truncate_inode(inode, size);
 
 done:
 	if (inode) {
@@ -401,8 +402,7 @@ static int union_utimens(const char *path, const struct timespec ts[2])
 		goto done;
 	}
 
-	inode->atime = (time_t)ts[0].tv_sec;
-	inode->mtime = (time_t)ts[1].tv_sec;
+	res = utimens_inode(inode, (time_t)ts[0].tv_sec, (time_t)ts[1].tv_sec);
 
 done:
 	if (inode) {
@@ -510,16 +510,13 @@ static int union_read(const char *path, char *buf, size_t size, off_t offset,
 		goto done;
 	}
 
-	if (inode->mode & S_IFDIR) {
+	if (get_inode_mode(inode) & S_IFDIR) {
 		errno = EISDIR;
 		res = -EISDIR;
 		goto done;
 	}
 
-	res = pread(fileno(inode->f), buf, size, offset);
-	if (res == -1) {
-		res = -errno;
-	}
+	res = read_inode(inode, buf, size, offset);
 
 done:
 	if (inode) {
@@ -541,16 +538,13 @@ static int union_write(const char *path, const char *buf, size_t size,
 		goto done;
 	}
 
-	if (inode->mode & S_IFDIR) {
+	if (get_inode_mode(inode) & S_IFDIR) {
 		errno = EISDIR;
 		res = -EISDIR;
 		goto done;
 	}
 
-	res = pwrite(fileno(inode->f), buf, size, offset);
-	if (res == -1) {
-		res = -errno;
-	}
+	res = write_inode(inode, buf, size, offset);
 
 done:
 	if (inode) {
@@ -600,13 +594,13 @@ static int union_fsync(const char *path, int isdatasync,
 		goto done;
 	}
 
-	if (inode->mode & S_IFDIR) {
+	if (get_inode_mode(inode) & S_IFDIR) {
 		errno = EISDIR;
 		res = -EISDIR;
 		goto done;
 	}
 
-	fsync(fileno(inode->f));
+	res = sync_inode(inode);
 
 done:
 	if (inode) {
@@ -636,11 +630,25 @@ static int union_symlink(const char *from, const char *to)
 
 static int union_link(const char *from, const char *to)
 {
+	int res = 0;
+	struct inode *inode = NULL;
+
 	trace(__func__, from);
 
-	// XXX TODO
-	errno = EINVAL;
-	return -EINVAL;
+	inode = ref_inode(from, true, false, 0);
+	if (!inode) {
+		res = -errno;
+		goto done;
+	}
+
+	link_inode(inode, to);
+
+done:
+	if (inode) {
+		deref_inode(inode);
+	}
+
+	return res;
 }
 
 #ifdef HAVE_SETXATTR
