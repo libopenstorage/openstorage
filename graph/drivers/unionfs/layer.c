@@ -80,11 +80,11 @@ static int reap_inode(struct inode *inode)
 		goto done;
 	}
 
+	// This inode will not be discoverable any more.  But the inode
+	// may still exist if someone links to it.
 	ht_remove(inode->layer->namespace, inode->full_name);
 
-	inode->nlink--;
-
-	if (inode->nlink) {
+	if (inode->nlink > 1) {
 		// Someone still links to us, so hide this inode but do not delete it.
 		// It will get deleted when all it's links go to zero (that is, when a 
 		// dependant inode get's deleted.
