@@ -196,8 +196,12 @@ static int union_getattr(const char *path, struct stat *stbuf)
 	}
 
 	memset(stbuf, 0, sizeof(struct stat));
-
-	stat_inode(inode, stbuf);
+	if (inode->symlink[0] != '\0') {
+		stbuf->st_mode = S_IFLNK|0777;
+		stbuf->st_size = strlen(inode->symlink);
+	} else {
+		stat_inode(inode, stbuf);
+	}
 
 done:
 	if (inode) {
@@ -609,20 +613,48 @@ done:
 
 static int union_readlink(const char *path, char *buf, size_t size)
 {
+	int res = 0;
+	struct inode *inode = NULL;
+
 	trace(__func__, path);
 
-	// XXX TODO
-	errno = EINVAL;
-	return -EINVAL;
+	inode = ref_inode(path, true, REF_OPEN, 0);
+	if (!inode) {
+		res = -errno;
+		goto done;
+	}
+
+	strncpy(buf, inode->symlink, size);
+
+done:
+	if (inode) {
+		deref_inode(inode);
+	}
+
+	return res;
 }
 
 static int union_symlink(const char *from, const char *to)
 {
+	int res = 0;
+	struct inode *inode = NULL;
+
 	trace(__func__, from);
 
-	// XXX TODO
-	errno = EINVAL;
-	return -EINVAL;
+	inode = ref_inode(to, true, REF_CREATE_EXCL, S_IFLNK);
+	if (!inode) {
+		res = -errno;
+		goto done;
+	}
+
+	strncpy(inode->symlink, from, sizeof(inode->symlink));
+
+done:
+	if (inode) {
+		deref_inode(inode);
+	}
+
+	return res;
 }
 
 static int union_link(const char *from, const char *to)
