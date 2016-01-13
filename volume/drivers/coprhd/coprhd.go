@@ -77,6 +77,10 @@ type (
 	}
 )
 
+func init() {
+	volume.Register(Name, Init)
+}
+
 func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 
 	restUrl, ok := params["restUrl"]
@@ -138,10 +142,6 @@ func (d *driver) String() string {
 
 func (d *driver) Type() api.DriverType {
 	return Type
-}
-
-func init() {
-	volume.Register(Name, Init)
 }
 
 func (d *driver) Create(
