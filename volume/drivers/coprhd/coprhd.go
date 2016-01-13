@@ -163,7 +163,7 @@ func (d *driver) Create(
 	sz := int64(spec.Size / (1024 * 1024 * 1000))
 
 	payload := CreateVolumeArgs{
-		"Default",                 // ConsistencyGroup
+		d.consistency_group,       // ConsistencyGroup
 		1,                         // Count
 		locator.Name,              // Name
 		d.project,                 // Project
