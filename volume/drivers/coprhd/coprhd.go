@@ -20,18 +20,10 @@ const (
 	Name = "coprhd"
 	Type = api.Block
 
-	// URI_LOGIN path to create a authentication token
-	URI_LOGIN = "login.json"
-	// URI_LOGIN path to create volume
-	URI_CREATE_VOL = "block/volumes.json"
-	// URI_EXPORT_VOL path to export a volume
-	URI_EXPORT_VOL = "block/export.json"
-	// URI_TPL_DEL_VOL template path to delete/deactivate a volume
-	URI_TPL_DEL_VOL = "block/volumes/%s/deactivate.json"
-	// URL_TPL_NEW_SNAP path to create a volume snapshot
-	URL_TPL_NEW_SNAP = "block/volumes/%s/protections/snapshots.json"
-	// URI_TPL_UNEXP_VOL path template to remove a volume export
-	URI_TPL_UNEXP_VOL = "block/export/%s/deactivate.json"
+	// LoginUri path to create a authentication token
+	loginUri = "login.json"
+	// LoginUri path to create volume
+	createVolumeUri = "block/volumes.json"
 )
 
 type (
@@ -82,7 +74,6 @@ func init() {
 }
 
 func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
-
 	restUrl, ok := params["restUrl"]
 	if !ok {
 		return nil, fmt.Errorf("rest api 'url' configuration parameter must be set")
@@ -172,7 +163,7 @@ func (d *driver) Create(
 		d.vpool,                   // Virtual Block Pool
 	}
 
-	url := d.url + URI_CREATE_VOL
+	url := d.url + createVolumeUri
 
 	resp, err := s.Post(url, &payload, res, &e)
 
@@ -231,7 +222,6 @@ func (v *driver) Status() [][2]string {
 
 // getAuthSession returns an authenticated API Session
 func (d *driver) getAuthSession() (session *napping.Session, err error) {
-
 	e := ApiError{}
 
 	s := napping.Session{
@@ -239,7 +229,7 @@ func (d *driver) getAuthSession() (session *napping.Session, err error) {
 		Client:   d.httpClient,
 	}
 
-	url := d.url + URI_LOGIN
+	url := d.url + loginUri
 
 	resp, err := s.Get(url, nil, nil, &e)
 
