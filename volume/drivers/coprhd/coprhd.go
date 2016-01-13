@@ -3,10 +3,8 @@ package coprhd
 import (
 	"crypto/tls"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
-	"strings"
 
 	log "github.com/Sirupsen/logrus"
 
@@ -38,13 +36,15 @@ const (
 
 type (
 	driver struct {
+		*volume.IoNotSupported
 		*volume.DefaultEnumerator
 		consistency_group string
 		project           string
 		varray            string
 		vpool             string
 		url               string
-		creds             *url.UserInfo
+		httpClient        *http.Client
+		creds             *url.Userinfo
 	}
 
 	// ApiError represents the default api error code
@@ -79,8 +79,22 @@ type (
 
 func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 
-	consistency_group, ok := params["consistency_group"]
+	restUrl, ok := params["restUrl"]
+	if !ok {
+		return nil, fmt.Errorf("rest api 'url' configuration parameter must be set")
+	}
 
+	user, ok := params["user"]
+	if !ok {
+		return nil, fmt.Errorf("rest auth 'user' must be set")
+	}
+
+	pass, ok := params["password"]
+	if !ok {
+		return nil, fmt.Errorf("rest auth 'password' must be set")
+	}
+
+	consistency_group, ok := params["consistency_group"]
 	if !ok {
 		return nil, fmt.Errorf("'consistency_group' configuration parameter must be set")
 	}
@@ -100,29 +114,19 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 		return nil, fmt.Errorf("'vpool' configuration parameter must be set")
 	}
 
-	url, ok := params["url"]
-	if !ok {
-		return nil, fmt.Errorf("rest api 'url' configuration parameter must be set")
-	}
-
-	user, ok := params["user"]
-	if !ok {
-		return nil, fmt.Errorf("rest auth 'user' must be set")
-	}
-
-	pass, ok := params["password"]
-	if !ok {
-		return nil, fmt.Errorf("rest auth 'password' must be set")
-	}
-
 	d := &driver{
+		DefaultEnumerator: volume.NewDefaultEnumerator(Name, kvdb.Instance()),
 		consistency_group: consistency_group,
 		project:           project,
 		varray:            varray,
 		vpool:             vpool,
-		url:               url,
-		creads:            url.UserPassword(user, password),
-		DefaultEnumerator: volume.NewDefaultEnumerator(Name, kvdb.Instance()),
+		url:               restUrl,
+		creds:             url.UserPassword(user, pass),
+		httpClient: &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			},
+		},
 	}
 
 	return d, nil
@@ -145,39 +149,30 @@ func (d *driver) Create(
 	source *api.Source,
 	spec *api.VolumeSpec) (api.VolumeID, error) {
 
-	e := ApiError{}
-
-	token, err := d.getAuthToken()
+	s, err := d.getAuthSession()
 
 	if err != nil {
-		log.Printf("%s", err.Error())
+		log.Errorf("Failed to create session: %s", err.Error())
 		return api.BadVolumeID, err
 	}
 
-	url := d.url + URI_CREATE_VOL
-
-	h := http.Header{"X-SDS-AUTH-TOKEN": token}
-
-	s := napping.Session{
-		Client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-			},
-		},
-		Header: &h,
-	}
+	e := ApiError{}
 
 	res := &CreateVolumeReply{}
+
+	sz := int64(spec.Size / (1024 * 1024 * 1000))
 
 	payload := CreateVolumeArgs{
 		"Default",                 // ConsistencyGroup
 		1,                         // Count
 		locator.Name,              // Name
-		d.Project,                 // Project
+		d.project,                 // Project
 		fmt.Sprintf("%.6fGB", sz), // Volume Size
 		d.varray,                  // Virtual Block Array
 		d.vpool,                   // Virtual Block Pool
 	}
+
+	url := d.url + URI_CREATE_VOL
 
 	resp, err := s.Post(url, &payload, res, &e)
 
@@ -234,31 +229,34 @@ func (v *driver) Status() [][2]string {
 	return [][2]string{}
 }
 
-// getAuthToken returns an API Session Token
-func (d *driver) getAuthToken() (token string, err error) {
-
-	p := []string{d.url, LoginURI}
+// getAuthSession returns an authenticated API Session
+func (d *driver) getAuthSession() (session *napping.Session, err error) {
 
 	e := ApiError{}
 
 	s := napping.Session{
-		Userinfo: url.UserPassword(d.user, d.password),
-		Client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-			},
-		},
+		Userinfo: d.creds,
+		Client:   d.httpClient,
 	}
 
-	url := strings.Join(p, "")
+	url := d.url + URI_LOGIN
 
 	resp, err := s.Get(url, nil, nil, &e)
 
 	if err != nil {
-		return "", err
+		return
 	}
 
-	token = resp.HttpResponse().Header.Get("X-SDS-AUTH-TOKEN")
+	token := resp.HttpResponse().Header.Get("X-SDS-AUTH-TOKEN")
 
-	return token, nil
+	h := http.Header{}
+
+	h.Set("X-SDS-AUTH-TOKEN", token)
+
+	session = &napping.Session{
+		Client: d.httpClient,
+		Header: &h,
+	}
+
+	return
 }
