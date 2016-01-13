@@ -93,6 +93,8 @@ static int reap_inode(struct inode *inode)
 		// Set this flag so that a linked inode can reap this inode at
 		// a later point (when the linked inode is getting deleted).
 		inode->deleted = true;
+
+		fprintf(stderr, "Info, defering linked inode removal.\n");
 	}
 
 	// Remove this inode from parent.
@@ -108,9 +110,7 @@ static int reap_inode(struct inode *inode)
 		inode->parent->child = inode->next;
 	}
 
-	if (inode->link) {
-		linked_inode = inode->link;
-	}
+	linked_inode = inode->link;
 
 done:
 
@@ -139,13 +139,17 @@ done:
 
 	// Deref linked inode and reap it too.
 	if (linked_inode) {
+		bool delete_inode = false;
 		pthread_mutex_lock(&linked_inode->lock);
 		{
 			linked_inode->nlink--;
+			if ((linked_inode->nlink == 1) && linked_inode->deleted) {
+				delete_inode = true;
+			}
 		}
 		pthread_mutex_unlock(&linked_inode->lock);
 
-		if (linked_inode->deleted) {
+		if (delete_inode) {
 			ret = reap_inode(linked_inode);
 		}
 	}
@@ -490,14 +494,23 @@ int chown_inode(struct inode *inode, uid_t uid, gid_t gid)
 // Truncate an inode.  Must be called with reference held.
 int truncate_inode(struct inode *inode, off_t size)
 {
+	int res = 0;
 	errno = 0;
 
 	if (inode->link) {
 		inode = inode->link;
 	}
 
-	ftruncate(fileno(inode->f), size);
+	res = ftruncate(fileno(inode->f), size);
+	if (res) {
+		res = -errno;
+		goto done;
+	}
+
 	inode->size = size;
+
+done:
+	return res;
 }
 
 // Read from an inode.  Must be called with reference held.
@@ -611,6 +624,10 @@ int link_inode(struct inode *inode, const char *to)
 	pthread_mutex_unlock(&inode->lock);
 
 done:
+
+	if (new_inode) {
+		deref_inode(new_inode);
+	}
 
 	return ret;
 }
