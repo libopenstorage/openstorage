@@ -82,7 +82,11 @@ static int reap_inode(struct inode *inode)
 
 	// This inode will not be discoverable any more.  But the inode
 	// may still exist if someone links to it.
-	ht_remove(inode->layer->namespace, inode->full_name);
+	if (inode->full_name) {
+		ht_remove(inode->layer->namespace, inode->full_name);
+		free(inode->full_name);
+		inode->full_name = NULL;
+	}
 
 	if (inode->nlink > 1) {
 		// Someone still links to us, so hide this inode but do not delete it.
@@ -95,6 +99,11 @@ static int reap_inode(struct inode *inode)
 		inode->deleted = true;
 
 		fprintf(stderr, "Info, defering linked inode removal.\n");
+	}
+
+	if (inode->name) {
+		free(inode->name);
+		inode->name = NULL;
 	}
 
 	// Remove this inode from parent.
