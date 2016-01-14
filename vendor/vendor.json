@@ -470,9 +470,9 @@
 			"revisionTime": "2015-12-19T16:51:57+06:00"
 		},
 		{
-			"path": "golang.org/x/sys/unix",
-			"revision": "833a04a10549a95dc34458c195cbad61bbb6cb4d",
-			"revisionTime": "2015-12-10T17:34:15-08:00"
+			"path": "gopkg.in/jmcvetta/napping.v3",
+			"revision": "58e2b10cc328913a6d3478dfa4546395c71ada81",
+			"revisionTime": "2015-11-04T03:54:23-08:00"
 		},
 		{
 			"path": "gopkg.in/yaml.v2",
