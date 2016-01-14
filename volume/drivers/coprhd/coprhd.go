@@ -6,12 +6,14 @@ import (
 	"net/http"
 	"net/url"
 
+
+	"github.com/Sirupsen/logrus"
 	"github.com/portworx/kvdb"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
 
-	napping "gopkg.in/jmcvetta/napping.v3"
+	"gopkg.in/jmcvetta/napping.v3"
 )
 
 const (
