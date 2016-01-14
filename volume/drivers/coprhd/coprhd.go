@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"net/url"
 
-	log "github.com/Sirupsen/logrus"
-
 	"github.com/portworx/kvdb"
 
 	"github.com/libopenstorage/openstorage/api"
@@ -143,7 +141,7 @@ func (d *driver) Create(
 	s, err := d.getAuthSession()
 
 	if err != nil {
-		log.Errorf("Failed to create session: %s", err.Error())
+		logrus.Errorf("Failed to create session: %s", err.Error())
 		return api.BadVolumeID, err
 	}
 
@@ -209,7 +207,7 @@ func (d *driver) Set(volumeID api.VolumeID, locator *api.VolumeLocator, spec *ap
 }
 
 func (d *driver) Shutdown() {
-	log.Infof("%s Shutting down", Name)
+	logrus.Infof("%s Shutting down", Name)
 }
 
 func (d *driver) Snapshot(volumeID api.VolumeID, readonly bool, locator api.VolumeLocator) (api.VolumeID, error) {
