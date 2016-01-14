@@ -25,8 +25,11 @@
 #include <sys/time.h>
 #include <sys/types.h>
 
+#include "snappy.h"
 #include "hash.h"
 #include "layer.h"
+
+#define _USE_SNAPPY_
 
 // A reference to the root inode.
 static struct inode *root_inode;
@@ -104,6 +107,11 @@ static int reap_inode(struct inode *inode)
 	if (inode->name) {
 		free(inode->name);
 		inode->name = NULL;
+	}
+
+	if (inode->symlink) {
+		free(inode->symlink);
+		inode->symlink = NULL;
 	}
 
 	// Remove this inode from parent.
@@ -449,7 +457,10 @@ int stat_inode(struct inode *inode, struct stat *stbuf)
 		inode = inode->link;
 	}
 
-	if (inode->f) {
+    if (inode->symlink) {
+		stbuf->st_mode = S_IFLNK|0777;
+		stbuf->st_size = strlen(inode->symlink);
+	} else if (inode->f) {
 		fstat(fileno(inode->f), stbuf);
 		stbuf->st_nlink = inode->nlink;
 	} else {
@@ -533,12 +544,53 @@ int read_inode(struct inode *inode, char *buf, size_t size, off_t offset)
 		inode = inode->link;
 	}
 
+#ifdef _USE_SNAPPY_
+
+	return size;
+
+	char *in = NULL;
+	size_t out_len;
+	int in_len;
+
+	in_len = snappy_max_compressed_length(size);
+	in = malloc(in_len);
+	if (!in) {
+		res = -errno;
+		goto done;
+	}
+
+	res = pread(fileno(inode->f), in, in_len, offset);
+	if (res == -1) {
+		res = -errno;
+	}
+
+	if (snappy_uncompress(in, res, buf)) {
+		fprintf(stderr, "EIO in decomp %d\n", res);
+		errno = EIO;
+		res = -errno;
+		goto done;
+	}
+
+	res = snappy_uncompressed_length(in, in_len, &out_len);
+	fprintf(stderr, "Output uncompressed length vs size: %d %d\n", out_len, size);
+
+	res = size;
+
+done:
+	if (in) {
+		free(in);
+	}
+
+	return res;
+
+#else
 	res = pread(fileno(inode->f), buf, size, offset);
 	if (res == -1) {
 		res = -errno;
 	}
 
 	return res;
+#endif
 }
 
 // Write to an inode.  Must be called with reference held.
@@ -552,12 +604,52 @@ int write_inode(struct inode *inode, const char *buf, size_t size, off_t offset)
 		inode = inode->link;
 	}
 
+#ifdef _USE_SNAPPY_
+	return size;
+
+	struct snappy_env snappy_env;
+	char *out = NULL;
+	size_t out_len;
+
+	if (snappy_init_env(&snappy_env)) {
+		errno = EIO;
+		res = -errno;
+		goto done;
+	}
+
+	out = malloc(snappy_max_compressed_length(size));
+
+	res = snappy_compress(&snappy_env, buf, size, out, &out_len);
+	if (res) {
+		errno = EIO;
+		res = -errno;
+		goto done;
+	}
+
+	res = pwrite(fileno(inode->f), out, out_len, offset);
+	if (res == -1) {
+		res = -errno;
+		goto done;
+	}
+
+	res = size;
+
+done:
+	snappy_free_env(&snappy_env);
+
+	if (out) {
+		free(out);
+	}
+
+	return res;
+#else
 	res = pwrite(fileno(inode->f), buf, size, offset);
 	if (res == -1) {
 		res = -errno;
 	}
 
 	return res;
+#endif
 }
 
 // Sync an inode.  Must be called with reference held.

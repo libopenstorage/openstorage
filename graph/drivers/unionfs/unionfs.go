@@ -9,7 +9,7 @@ extern int release_unionfs(char *id);
 extern int create_layer(char *id, char *parent_id);
 extern int remove_layer(char *id);
 extern int check_layer(char *id);
-#cgo LDFLAGS: -O3 -lfuse -lulockmgr
+#cgo LDFLAGS: -lfuse -lulockmgr
 */
 import "C"
 

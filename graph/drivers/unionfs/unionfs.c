@@ -36,7 +36,7 @@
 
 static void trace(const char *fn, const char *path)
 {
-//	fprintf(stderr, "%s  %s\n", fn, path);
+	fprintf(stderr, "%s  %s\n", fn, path);
 }
 
 static char *upper_path(struct layer *upper, const char *path)
@@ -196,12 +196,7 @@ static int union_getattr(const char *path, struct stat *stbuf)
 	}
 
 	memset(stbuf, 0, sizeof(struct stat));
-	if (inode->symlink[0] != '\0') {
-		stbuf->st_mode = S_IFLNK|0777;
-		stbuf->st_size = strlen(inode->symlink);
-	} else {
-		stat_inode(inode, stbuf);
-	}
+	stat_inode(inode, stbuf);
 
 done:
 	if (inode) {
@@ -624,7 +619,12 @@ static int union_readlink(const char *path, char *buf, size_t size)
 		goto done;
 	}
 
-	strncpy(buf, inode->symlink, size);
+	if (inode->symlink) {
+		strncpy(buf, inode->symlink, size);
+	} else {
+		errno = EINVAL;
+		res = -errno;
+	}
 
 done:
 	if (inode) {
@@ -647,7 +647,10 @@ static int union_symlink(const char *from, const char *to)
 		goto done;
 	}
 
-	strncpy(inode->symlink, from, sizeof(inode->symlink));
+	inode->symlink = strdup(from);
+	if (!inode->symlink) {
+		res = -errno;
+	}
 
 done:
 	if (inode) {

@@ -25,7 +25,7 @@ struct inode {
 	bool deleted;
 
 	//If this is a synlink, then this holds the target of the link.
-	char symlink[PATH_MAX];
+	char *symlink;
 
 	// Stat buf.
 	mode_t mode;
