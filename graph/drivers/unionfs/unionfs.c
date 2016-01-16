@@ -65,7 +65,7 @@ struct graph_dirp
 
 static void trace(const char *fn, const char *path)
 {
-	fprintf(stderr, "unionfs operation: %s on %s\n", fn, path);
+	// fprintf(stderr, "unionfs operation: %s on %s\n", fn, path);
 }
 
 static void lock_ufs(struct union_fs *ufs)

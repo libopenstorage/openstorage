@@ -1,11 +1,15 @@
 ifndef TAGS
-TAGS := daemon btrfs_noversion have_btrfs
+TAGS := daemon
 endif
 ifndef PKGS
-PKGS := $(shell go list ./... | grep -v 'github.com/libopenstorage/openstorage/vendor')
+PKGS := $(shell go list ./... 2>&1 | grep -v 'github.com/libopenstorage/openstorage/vendor')
 endif
 ifeq ($(BUILD_TYPE),debug)
 BUILDFLAGS := -gcflags "-N -l"
+endif
+
+ifdef HAVE_BTRFS
+TAGS+=btrfs_noversion have_btrfs
 endif
 
 ifdef HAVE_UNIONFS

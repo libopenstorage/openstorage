@@ -141,7 +141,7 @@ func (d *Driver) linkParent(child, parent string) error {
 
 // Create creates a new, empty, filesystem layer with the
 // specified id and parent and mountLabel. Parent and mountLabel may be "".
-func (d *Driver) Create(id string, parent string) error {
+func (d *Driver) Create(id string, parent string, mountLabel string) error {
 	path := path.Join(physPath, id)
 
 	logrus.Debugf("Creating layer %s", path)
@@ -227,11 +227,10 @@ func (d *Driver) Exists(id string) bool {
 // new layer in bytes.
 // The archive.Reader must be an uncompressed stream.
 func (d *Driver) ApplyDiff(id string, parent string, diff archive.Reader) (size int64, err error) {
-	dir := path.Join(virtPath, id)
+	dir := path.Join(physPath, id)
 
 	if err := chrootarchive.UntarUncompressed(diff, dir, nil); err != nil {
 		logrus.Warnf("Error while applying diff to %s: %v", id, err)
-		os.Exit(-1)
 		return 0, err
 	}
 

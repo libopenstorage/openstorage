@@ -20,6 +20,8 @@ var (
 type Config struct {
 	ClusterId string
 	NodeId    string
+	MgtIface  string
+	DataIface string
 }
 
 // NodeEntry is used to discover other nodes in the cluster
@@ -54,6 +56,9 @@ type ClusterListener interface {
 
 	// Init is called when this node is joining an existing cluster for the first time.
 	Init(self *api.Node, db *Database) error
+
+	// CleanupInit is called when Init failed.
+	CleanupInit(self *api.Node, db *Database) error
 
 	// Join is called when this node is joining an existing cluster.
 	Join(self *api.Node, db *Database) error

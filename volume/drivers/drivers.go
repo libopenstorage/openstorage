@@ -5,6 +5,7 @@ import (
 	"github.com/libopenstorage/openstorage/volume/drivers/aws"
 	"github.com/libopenstorage/openstorage/volume/drivers/btrfs"
 	"github.com/libopenstorage/openstorage/volume/drivers/buse"
+	"github.com/libopenstorage/openstorage/volume/drivers/coprhd"
 	"github.com/libopenstorage/openstorage/volume/drivers/nfs"
 	"github.com/libopenstorage/openstorage/volume/drivers/pwx"
 	"github.com/libopenstorage/openstorage/volume/drivers/vfs"
@@ -32,5 +33,7 @@ var (
 		{DriverType: vfs.Type, Name: vfs.Name},
 		// BUSE driver provisions storage from local volumes and implements block in user space.
 		{DriverType: buse.Type, Name: buse.Name},
+		// COPRHD driver
+		{DriverType: coprhd.Type, Name: coprhd.Name},
 	}
 )
