@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 
-
 	"github.com/Sirupsen/logrus"
 	"github.com/portworx/kvdb"
 
@@ -18,7 +17,7 @@ import (
 
 const (
 	Name = "coprhd"
-	Type = api.Block
+	Type = api.DriverType_DRIVER_TYPE_BLOCK
 
 	// LoginUri path to create a authentication token
 	loginUri = "login.json"
@@ -62,8 +61,8 @@ type (
 	CreateVolumeReply struct {
 		Task []struct {
 			Resource struct {
-				Name string       `json:"name"`
-				Id   api.VolumeID `json:"id"`
+				Name string `json:"name"`
+				Id   string `json:"id"`
 			} `json:"resource"`
 		} `json:"task"`
 	}
@@ -136,15 +135,15 @@ func (d *driver) Type() api.DriverType {
 }
 
 func (d *driver) Create(
-	locator api.VolumeLocator,
+	locator *api.VolumeLocator,
 	source *api.Source,
-	spec *api.VolumeSpec) (api.VolumeID, error) {
+	spec *api.VolumeSpec) (string, error) {
 
 	s, err := d.getAuthSession()
 
 	if err != nil {
 		logrus.Errorf("Failed to create session: %s", err.Error())
-		return api.BadVolumeID, err
+		return "", err
 	}
 
 	e := ApiError{}
@@ -169,42 +168,45 @@ func (d *driver) Create(
 
 	if resp.Status() != http.StatusAccepted {
 
-		return api.BadVolumeID, fmt.Errorf("Failed to create volume: %s", resp.Status())
+		return "", fmt.Errorf("Failed to create volume: %s", resp.Status())
 	}
 
 	return res.Task[0].Resource.Id, err
 }
 
-func (d *driver) Delete(volumeID api.VolumeID) error {
+func (d *driver) Delete(volumeID string) error {
 	return nil
 }
 
-func (d *driver) Stats(volumeID api.VolumeID) (api.Stats, error) {
-	return api.Stats{}, volume.ErrNotSupported
+func (d *driver) Stats(volumeID string) (*api.Stats, error) {
+	return nil, volume.ErrNotSupported
 }
 
-func (d *driver) Alerts(volumeID api.VolumeID) (api.Alerts, error) {
-	return api.Alerts{}, volume.ErrNotSupported
+func (d *driver) Alerts(volumeID string) (*api.Alerts, error) {
+	return nil, volume.ErrNotSupported
 }
 
-func (d *driver) Attach(volumeID api.VolumeID) (path string, err error) {
+func (d *driver) Attach(volumeID string) (path string, err error) {
 	return "", nil
 }
 
-func (d *driver) Detach(volumeID api.VolumeID) error {
+func (d *driver) Detach(volumeID string) error {
 	return nil
 }
 
-func (d *driver) Mount(volumeID api.VolumeID, mountpath string) error {
+func (d *driver) Mount(volumeID string, mountpath string) error {
 	return nil
 }
 
-func (d *driver) Unmount(volumeID api.VolumeID, mountpath string) error {
+func (d *driver) Unmount(volumeID string, mountpath string) error {
 
 	return nil
 }
 
-func (d *driver) Set(volumeID api.VolumeID, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
+func (d *driver) Set(
+	volumeID string,
+	locator *api.VolumeLocator,
+	spec *api.VolumeSpec) error {
 	return volume.ErrNotSupported
 }
 
@@ -212,7 +214,10 @@ func (d *driver) Shutdown() {
 	logrus.Infof("%s Shutting down", Name)
 }
 
-func (d *driver) Snapshot(volumeID api.VolumeID, readonly bool, locator api.VolumeLocator) (api.VolumeID, error) {
+func (d *driver) Snapshot(
+	volumeID string,
+	readonly bool,
+	locator *api.VolumeLocator) (string, error) {
 	return "", nil
 }
 

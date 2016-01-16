@@ -120,7 +120,11 @@ func (d *driver) Status() [][2]string {
 // These functions below implement the volume driver interface.
 //
 
-func (d *driver) Create(locator *api.VolumeLocator, source *api.Source, spec *api.VolumeSpec) (string, error) {
+func (d *driver) Create(
+	locator *api.VolumeLocator,
+	source *api.Source,
+	spec *api.VolumeSpec) (string, error) {
+
 	volumeID := uuid.New()
 	volumeID = strings.TrimSuffix(volumeID, "\n")
 
