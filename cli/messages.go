@@ -7,8 +7,9 @@ import (
 	"strings"
 
 	"github.com/codegangsta/cli"
-
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/proto"
 )
 
 // Format standardizes the screen output of commands.
@@ -80,6 +81,12 @@ func cmdErrorBody(c *cli.Context, cmd string, err error, body string) {
 func cmdOutput(c *cli.Context, body interface{}) {
 	b, _ := json.MarshalIndent(body, "", " ")
 	fmt.Printf("%+v\n", string(b))
+}
+
+func cmdMarshalProto(c *cli.Context, message proto.Message) string {
+	marshaler := &jsonpb.Marshaler{Indent: " "}
+	s, _ := marshaler.MarshalToString(message)
+	return s
 }
 
 func fmtOutput(c *cli.Context, format *Format) {

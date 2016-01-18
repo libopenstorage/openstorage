@@ -210,7 +210,14 @@ func (v *volDriver) volumeInspect(context *cli.Context) {
 		return
 	}
 
-	cmdOutput(context, volumes)
+	fmt.Print("{")
+	for i, volume := range volumes {
+		fmt.Print(cmdMarshalProto(context, volume))
+		if i != len(volumes)-1 {
+			fmt.Print(",")
+		}
+	}
+	fmt.Println("}")
 }
 
 func (v *volDriver) volumeStats(context *cli.Context) {
