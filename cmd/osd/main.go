@@ -32,7 +32,7 @@ const (
 )
 
 func start(c *cli.Context) {
-	var cm *cluster.ClusterManager
+	var cm cluster.Cluster
 
 	if !osdcli.DaemonMode(c) {
 		cli.ShowAppHelp(c)

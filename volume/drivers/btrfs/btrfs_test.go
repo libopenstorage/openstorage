@@ -1,4 +1,4 @@
-// +build linux
+// +build linux,have_btrfs
 
 package btrfs
 

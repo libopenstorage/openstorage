@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	Name = "btrfs"
-	Type = api.File
+	Name      = "btrfs"
+	Type      = api.File
 	RootParam = "home"
 	Volumes   = "volumes"
 )
