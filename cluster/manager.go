@@ -107,11 +107,11 @@ func (c *ClusterManager) AddEventListener(listener ClusterListener) error {
 	return nil
 }
 
-func (c *ClusterManager) UpdateNodeData(dataKey string, value interface{}) {
+func (c *ClusterManager) UpdateData(dataKey string, value interface{}) {
 	c.selfNode.NodeData[dataKey] = value
 }
 
-func (c *ClusterManager) GetClusterNodeData() map[string]*api.Node {
+func (c *ClusterManager) GetData() map[string]*api.Node {
 	nodes := make(map[string]*api.Node)
 	for _, value := range c.nodeCache {
 		nodes[value.Id] = &value
@@ -375,17 +375,17 @@ func (c *ClusterManager) heartBeat() {
 	}
 }
 
-func (c *ClusterManager) DisableGossipUpdates() {
+func (c *ClusterManager) DisableUpdates() {
 	logrus.Warn("Disabling gossip updates")
 	c.gEnabled = false
 }
 
-func (c *ClusterManager) EnableGossipUpdates() {
+func (c *ClusterManager) EnableUpdates() {
 	logrus.Warn("Enabling gossip updates")
 	c.gEnabled = true
 }
 
-func (c *ClusterManager) GetGossipStatus() *GossipStatus {
+func (c *ClusterManager) GetState() *ClusterState {
 	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
 	nodeValue := c.g.GetStoreKeyValue(gossipStoreKey)
 	nodes := make([]types.NodeValue, len(nodeValue), len(nodeValue))
@@ -396,7 +396,7 @@ func (c *ClusterManager) GetGossipStatus() *GossipStatus {
 	}
 
 	history := c.g.GetGossipHistory()
-	return &GossipStatus{
+	return &ClusterState{
 		History: history, NodeStatus: nodes}
 }
 

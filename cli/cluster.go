@@ -109,12 +109,12 @@ func (c *clusterClient) shutdown(context *cli.Context) {
 
 func (c *clusterClient) disableGossip(context *cli.Context) {
 	c.clusterOptions(context)
-	c.manager.DisableGossipUpdates()
+	c.manager.DisableUpdates()
 }
 
 func (c *clusterClient) enableGossip(context *cli.Context) {
 	c.clusterOptions(context)
-	c.manager.EnableGossipUpdates()
+	c.manager.EnableUpdates()
 }
 
 func (c *clusterClient) displayGossipStatus(context *cli.Context) {
@@ -123,7 +123,7 @@ func (c *clusterClient) displayGossipStatus(context *cli.Context) {
 	outFd := os.Stdout
 	fn := "displayGossipStatus"
 
-	s := c.manager.GetGossipStatus()
+	s := c.manager.GetState()
 	if s == nil {
 		cmdError(context, fn, fmt.Errorf("Failed to get status"))
 		return

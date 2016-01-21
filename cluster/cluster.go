@@ -38,11 +38,6 @@ type Database struct {
 	NodeEntries map[string]NodeEntry
 }
 
-type GossipStatus struct {
-	History    []*types.GossipSessionInfo
-	NodeStatus []types.NodeValue
-}
-
 // ClusterListener is an interface to be implemented by a storage driver
 // if it is participating in a multi host environment.  It exposes events
 // in the cluster state machine.  Your driver can do the needful when
@@ -77,6 +72,29 @@ type ClusterListener interface {
 	Leave(node *api.Node) error
 }
 
+type ClusterState struct {
+	History    []*types.GossipSessionInfo
+	NodeStatus []types.NodeValue
+}
+
+type ClusterData interface {
+	// Update node data associated with this node
+	UpdateData(dataKey string, value interface{})
+
+	// Get data associated with all nodes.
+	// Key is the node id
+	GetData() map[string]*api.Node
+
+	// Enables cluster data updates to be sent to listeners
+	EnableUpdates()
+
+	// Disables cluster data updates to be sent to listeners
+	DisableUpdates()
+
+	// Status of nodes according to gossip
+	GetState() *ClusterState
+}
+
 // Cluster is the API that a cluster provider will implement.
 type Cluster interface {
 	// LocateNode find the node given a UUID.
@@ -98,21 +116,7 @@ type Cluster interface {
 	// It also causes this node to join the cluster.
 	Start() error
 
-	// Update Node data associated with this node
-	UpdateNodeData(dataKey string, value interface{})
-
-	// Get Node data associated with all nodes. Key is
-	// the node id.
-	GetClusterNodeData() map[string]*api.Node
-
-	// Enables notifications from gossip
-	EnableGossipUpdates()
-
-	// Disable notifications from gossip
-	DisableGossipUpdates()
-
-	// Status of nodes according to gossip
-	GetGossipStatus() *GossipStatus
+	ClusterData
 }
 
 // Init instantiates a new cluster manager.
@@ -142,7 +146,7 @@ func Start() error {
 }
 
 // Inst returns an instance of an already instantiated cluster manager.
-func Inst() (*ClusterManager, error) {
+func Inst() (Cluster, error) {
 	if inst == nil {
 		return nil, errClusterNotInitialized
 	}
