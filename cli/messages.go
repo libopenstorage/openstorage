@@ -83,10 +83,14 @@ func cmdOutput(c *cli.Context, body interface{}) {
 	fmt.Printf("%+v\n", string(b))
 }
 
-func cmdMarshalProto(c *cli.Context, message proto.Message) string {
+func cmdMarshalProto(message proto.Message) string {
 	marshaler := &jsonpb.Marshaler{Indent: " "}
 	s, _ := marshaler.MarshalToString(message)
 	return s
+}
+
+func cmdOutputProto(message proto.Message) {
+	fmt.Println(cmdMarshalProto(message))
 }
 
 func fmtOutput(c *cli.Context, format *Format) {

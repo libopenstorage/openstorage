@@ -210,14 +210,7 @@ func (v *volDriver) volumeInspect(context *cli.Context) {
 		return
 	}
 
-	fmt.Print("{")
-	for i, volume := range volumes {
-		fmt.Print(cmdMarshalProto(context, volume))
-		if i != len(volumes)-1 {
-			fmt.Print(",")
-		}
-	}
-	fmt.Println("}")
+	cmdOutputVolumes(volumes)
 }
 
 func (v *volDriver) volumeStats(context *cli.Context) {
@@ -234,7 +227,7 @@ func (v *volDriver) volumeStats(context *cli.Context) {
 		return
 	}
 
-	cmdOutput(context, stats)
+	cmdOutputProto(stats)
 }
 
 func (v *volDriver) volumeAlerts(context *cli.Context) {
@@ -251,7 +244,7 @@ func (v *volDriver) volumeAlerts(context *cli.Context) {
 		return
 	}
 
-	cmdOutput(context, alerts)
+	cmdOutputProto(alerts)
 }
 
 func (v *volDriver) volumeEnumerate(context *cli.Context) {
@@ -272,9 +265,9 @@ func (v *volDriver) volumeEnumerate(context *cli.Context) {
 	volumes, err := v.volDriver.Enumerate(locator, nil)
 	if err != nil {
 		cmdError(context, fn, err)
-		return
-	}
-	cmdOutput(context, volumes)
+        return
+    }
+	cmdOutputVolumes(volumes)
 }
 
 func (v *volDriver) volumeDelete(context *cli.Context) {
@@ -350,7 +343,7 @@ func (v *volDriver) snapEnumerate(context *cli.Context) {
 		cmdError(context, fn, err)
 		return
 	}
-	cmdOutput(context, snaps)
+	cmdOutputVolumes(snaps)
 }
 
 // baseVolumeCommand exports commands common to block and file volume drivers.
@@ -541,4 +534,15 @@ func FileVolumeCommands(name string) []cli.Command {
 	v := &volDriver{name: name}
 
 	return baseVolumeCommand(v)
+}
+
+func cmdOutputVolumes(volumes []*api.Volume) {
+	fmt.Print("{")
+	for i, volume := range volumes {
+		fmt.Print(cmdMarshalProto(volume))
+		if i != len(volumes)-1 {
+			fmt.Print(",")
+		}
+	}
+	fmt.Println("}")
 }
