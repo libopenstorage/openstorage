@@ -112,10 +112,6 @@ type Cluster interface {
 	// Shutdown node(s) or the entire cluster.
 	Shutdown(cluster bool, nodes []api.Node) error
 
-	// Start starts the cluster manager and state machine.
-	// It also causes this node to join the cluster.
-	Start() error
-
 	ClusterData
 }
 
