@@ -458,13 +458,13 @@
 		},
 		{
 			"path": "go.pedge.io/dlog",
-			"revision": "498c2b5a65c36d55fa33f87a370524bf94921c62",
-			"revisionTime": "2016-01-22T12:54:20-05:00"
+			"revision": "7484f3b321a2704e7a39c5eb75002643e18b2415",
+			"revisionTime": "2016-01-22T13:24:06-05:00"
 		},
 		{
 			"path": "go.pedge.io/dlog/logrus",
-			"revision": "498c2b5a65c36d55fa33f87a370524bf94921c62",
-			"revisionTime": "2016-01-22T12:54:20-05:00"
+			"revision": "7484f3b321a2704e7a39c5eb75002643e18b2415",
+			"revisionTime": "2016-01-22T13:24:06-05:00"
 		},
 		{
 			"path": "go.pedge.io/pb/go/google/protobuf",

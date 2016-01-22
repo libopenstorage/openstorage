@@ -1,4 +1,4 @@
-package logrus // import "go.pedge.io/dlog/logrus"
+package dlog_logrus // import "go.pedge.io/dlog/logrus"
 
 import (
 	"go.pedge.io/dlog"
@@ -18,7 +18,8 @@ var (
 	}
 )
 
-func init() {
+// Register registers the default logrus Logger as the dlog Logger.
+func Register() {
 	dlog.SetLogger(NewLogger(logrus.StandardLogger()))
 }
 

@@ -15,15 +15,23 @@ func register(logger dlog.Logger) {
 }
 ```
 
-To make things simple, packages for glog, logrus, protolog, and lion are given with the ability to blank import:
+To make things simple, packages for glog, logrus, protolog, and lion are given with the ability to easily register
+their implementations as the default logger:
 
 ```go
 import (
-  _ "go.pedge.io/dlog/glog" // set glog as the global logger
-  _ "go.pedge.io/dlog/logrus" // set logrus as the global logger with default settings
-  _ "go.pedge.io/dlog/protolog" // set protolog as the global logger with default settings
-  _ "go.pedge.io/dlog/lion" // set lion as the global logger with default settings
+  "go.pedge.io/dlog/glog" // set glog as the global logger
+  "go.pedge.io/dlog/logrus" // set logrus as the global logger with default settings
+  "go.pedge.io/dlog/protolog" // set protolog as the global logger with default settings
+  "go.pedge.io/dlog/lion" // set lion as the global logger with default settings
 )
+
+func registrationFunctions() {
+  dlog_glog.Register() // set glog as the global logger
+  dlog_logrus.Register() // set logrus as the global logger with default settings
+  dlog_protolog.Register() // set protolog as the global logger with default settings
+  dlog_lion.Register() // set lion as the global logger with default settings
+}
 ```
 
 Or, do something more custom:

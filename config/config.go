@@ -7,8 +7,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	// TODO(pedge) eventually move to osd main.go when everyone is comfortable with dlog
-	_ "go.pedge.io/dlog/logrus"
+	"go.pedge.io/dlog/logrus"
 )
 
 const (
@@ -26,6 +25,8 @@ const (
 func init() {
 	os.MkdirAll(MountBase, 0755)
 	os.MkdirAll(GraphDriverAPIBase, 0755)
+	// TODO(pedge) eventually move to osd main.go when everyone is comfortable with dlog
+	dlog_logrus.Register()
 }
 
 type ClusterConfig struct {

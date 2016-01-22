@@ -9,14 +9,22 @@ register it as the global logger by calling:
 	  dlog.SetLogger(logger)
 	}
 
-To make things simple, packages for glog, logrus, protolog, and lion are given with the ability to blank import:
+To make things simple, packages for glog, logrus, protolog, and lion are given with the ability to easily register
+their implementations as the default logger:
 
 	import (
-	  _ "go.pedge.io/dlog/glog" // set glog as the global logger
-	  _ "go.pedge.io/dlog/logrus" // set logrus as the global logger with default settings
-	  _ "go.pedge.io/dlog/protolog" // set protolog as the global logger with default settings
-	  _ "go.pedge.io/dlog/lion" // set lion as the global logger with default settings
+	  "go.pedge.io/dlog/glog" // set glog as the global logger
+	  "go.pedge.io/dlog/logrus" // set logrus as the global logger with default settings
+	  "go.pedge.io/dlog/protolog" // set protolog as the global logger with default settings
+	  "go.pedge.io/dlog/lion" // set lion as the global logger with default settings
 	)
+
+	func registrationFunctions() {
+	  dlog_glog.Register() // set glog as the global logger
+	  dlog_logrus.Register() // set logrus as the global logger with default settings
+	  dlog_protolog.Register() // set protolog as the global logger with default settings
+	  dlog_lion.Register() // set lion as the global logger with default settings
+	}
 
 Or, do something more custom:
 
@@ -53,10 +61,12 @@ import (
 )
 
 var (
+	// DefaultLogger is the default Logger.
+	DefaultLogger = NewStdLogger(log.New(os.Stderr, "", log.LstdFlags))
 	// DefaultLevel is the default Level.
 	DefaultLevel = LevelInfo
 
-	globalLogger   = NewStdLogger(log.New(os.Stderr, "", log.LstdFlags))
+	globalLogger   = DefaultLogger
 	globalLevel    = DefaultLevel
 	globalLevelSet = false
 	globalLock     = &sync.Mutex{}
@@ -86,6 +96,11 @@ type Logger interface {
 	AtLevel(level Level) Logger
 	WithField(key string, value interface{}) Logger
 	WithFields(fields map[string]interface{}) Logger
+}
+
+// Register re-registers the default Logger as the dlog global Logger.
+func Register() {
+	SetLogger(DefaultLogger)
 }
 
 // SetLogger sets the global logger used by dlog.
