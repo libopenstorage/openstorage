@@ -27,10 +27,6 @@ import (
 	"github.com/libopenstorage/openstorage/volume/drivers"
 )
 
-const (
-	version = "0.3"
-)
-
 func start(c *cli.Context) {
 	if !osdcli.DaemonMode(c) {
 		cli.ShowAppHelp(c)
@@ -120,7 +116,7 @@ func start(c *cli.Context) {
 }
 
 func showVersion(c *cli.Context) {
-	fmt.Println("OSD Version:", version)
+	fmt.Println("OSD Version:", config.Version)
 	fmt.Println("Go Version:", runtime.Version())
 	fmt.Println("OS:", runtime.GOOS)
 	fmt.Println("Arch:", runtime.GOARCH)
@@ -133,7 +129,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "osd"
 	app.Usage = "Open Storage CLI"
-	app.Version = version
+	app.Version = config.Version
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{
 			Name:  "json,j",

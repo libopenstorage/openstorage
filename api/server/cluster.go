@@ -5,10 +5,7 @@ import (
 	"net/http"
 
 	"github.com/libopenstorage/openstorage/cluster"
-)
-
-const (
-	clusterApiVersion = "v1"
+	"github.com/libopenstorage/openstorage/config"
 )
 
 type clusterApi struct {
@@ -16,7 +13,7 @@ type clusterApi struct {
 }
 
 func newClusterAPI(name string) restServer {
-	return &clusterApi{restBase{version: clusterApiVersion, name: name}}
+	return &clusterApi{restBase{version: config.Version, name: name}}
 }
 
 func (c *clusterApi) Routes() []*Route {
@@ -69,7 +66,7 @@ func (c *clusterApi) sendNotImplemented(w http.ResponseWriter, method string) {
 }
 
 func clusterVersion(route string) string {
-	return "/" + volApiVersion + "/" + route
+	return "/" + config.Version + "/" + route
 }
 
 func clusterPath(route string) string {

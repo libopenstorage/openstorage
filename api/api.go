@@ -10,9 +10,6 @@ import (
 	"github.com/portworx/systemutils"
 )
 
-// Version API version
-const Version = "v1"
-
 // Strings for VolumeSpec
 const (
 	SpecEphemeral        = "ephemeral"

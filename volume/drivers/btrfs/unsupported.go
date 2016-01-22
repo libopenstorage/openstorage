@@ -13,7 +13,6 @@ const (
 	Name = "btrfs"
 	Type = api.DriverType_DRIVER_TYPE_FILE
 	RootParam = "home"
-	Volumes   = "volumes"
 )
 
 var (

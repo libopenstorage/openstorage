@@ -3,12 +3,13 @@ package vfs
 import (
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 	"syscall"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers/common"
 	"github.com/pborman/uuid"
@@ -18,7 +19,6 @@ import (
 const (
 	Name       = "vfs"
 	Type       = api.DriverType_DRIVER_TYPE_FILE
-	volumeBase = "/var/lib/osd/"
 )
 
 func init() {
@@ -52,7 +52,7 @@ func (d *driver) Create(locator *api.VolumeLocator, source *api.Source, spec *ap
 	volumeID := uuid.New()
 	volumeID = strings.TrimSuffix(volumeID, "\n")
 	// Create a directory on the Local machine with this UUID.
-	if err := os.MkdirAll(path.Join(volumeBase, string(volumeID)), 0744); err != nil {
+	if err := os.MkdirAll(filepath.Join(config.VolumeBase, string(volumeID)), 0744); err != nil {
 		logrus.Println(err)
 		return "", err
 	}
@@ -64,7 +64,7 @@ func (d *driver) Create(locator *api.VolumeLocator, source *api.Source, spec *ap
 		source,
 		spec,
 	)
-	v.DevicePath = path.Join(volumeBase, volumeID)
+	v.DevicePath = filepath.Join(config.VolumeBase, volumeID)
 
 	if err := d.CreateVol(v); err != nil {
 		return "", err
@@ -82,7 +82,7 @@ func (d *driver) Delete(volumeID string) error {
 	}
 
 	// Delete the directory
-	os.RemoveAll(path.Join(volumeBase, string(volumeID)))
+	os.RemoveAll(filepath.Join(config.VolumeBase, string(volumeID)))
 
 	err = d.DeleteVol(volumeID)
 	if err != nil {
@@ -103,8 +103,8 @@ func (d *driver) Mount(volumeID string, mountpath string) error {
 		return err
 	}
 	syscall.Unmount(mountpath, 0)
-	if err := syscall.Mount(path.Join(volumeBase, string(volumeID)), mountpath, string(v.Spec.Format), syscall.MS_BIND, ""); err != nil {
-		logrus.Printf("Cannot mount %s at %s because %+v", path.Join(volumeBase, string(volumeID)), mountpath, err)
+	if err := syscall.Mount(filepath.Join(config.VolumeBase, string(volumeID)), mountpath, string(v.Spec.Format), syscall.MS_BIND, ""); err != nil {
+		logrus.Printf("Cannot mount %s at %s because %+v", filepath.Join(config.VolumeBase, string(volumeID)), mountpath, err)
 		return err
 	}
 	v.AttachPath = mountpath

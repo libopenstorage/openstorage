@@ -11,7 +11,6 @@ const (
 	Name           = "pwx"
 	Type           = api.DriverType_DRIVER_TYPE_BLOCK
 	DefaultUrl     = "unix:///" + config.DriverAPIBase + "pxd.sock"
-	DefaultVersion = "v1"
 )
 
 type driver struct {
@@ -27,7 +26,7 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 	}
 	version, ok := params[config.VersionKey]
 	if !ok {
-		version = DefaultVersion
+		version = config.Version
 	}
 	c, err := client.NewClient(url, version)
 	if err != nil {

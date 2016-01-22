@@ -4,7 +4,7 @@ package btrfs
 
 import (
 	"fmt"
-	"path"
+	"path/filepath"
 	"syscall"
 
 	"go.pedge.io/proto/time"
@@ -44,7 +44,7 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 	if !ok {
 		return nil, fmt.Errorf("Root directory should be specified with key %q", RootParam)
 	}
-	home := path.Join(root, Volumes)
+	home := filepath.Join(root, "volumes")
 	d, err := btrfs.Init(home, nil, nil, nil)
 	if err != nil {
 		return nil, err

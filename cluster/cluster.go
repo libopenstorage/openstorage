@@ -7,6 +7,7 @@ import (
 	"github.com/fsouza/go-dockerclient"
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/config"
 	"github.com/portworx/kvdb"
 )
 
@@ -16,13 +17,6 @@ var (
 	errClusterInitialized = errors.New("openstorage.cluster: already initialized")
 	errClusterNotInitialized = errors.New("openstorage.cluster: not initialized")
 )
-
-type Config struct {
-	ClusterId string
-	NodeId    string
-	MgtIface  string
-	DataIface string
-}
 
 // NodeEntry is used to discover other nodes in the cluster
 // and setup the gossip protocol with them.
@@ -116,7 +110,7 @@ type Cluster interface {
 }
 
 // Init instantiates a new cluster manager.
-func Init(cfg Config, kv kvdb.Kvdb, dockerClient *docker.Client) error {
+func Init(cfg config.ClusterConfig, kv kvdb.Kvdb, dockerClient *docker.Client) error {
 	if inst != nil {
 		return errClusterInitialized
 	}

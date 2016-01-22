@@ -8,11 +8,8 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/volume"
-)
-
-const (
-	volApiVersion = "v1"
 )
 
 type volApi struct {
@@ -27,7 +24,7 @@ func responseStatus(err error) string {
 }
 
 func newVolumeAPI(name string) restServer {
-	return &volApi{restBase{version: volApiVersion, name: name}}
+	return &volApi{restBase{version: config.Version, name: name}}
 }
 
 func (vd *volApi) String() string {
@@ -371,7 +368,7 @@ func (vd *volApi) alerts(w http.ResponseWriter, r *http.Request) {
 }
 
 func volVersion(route string) string {
-	return "/" + volApiVersion + "/" + route
+	return "/" + config.Version + "/" + route
 }
 
 func volPath(route string) string {

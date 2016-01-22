@@ -15,6 +15,7 @@ import (
 	"github.com/libopenstorage/gossip"
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/config"
 
 	"github.com/portworx/kvdb"
 	"github.com/portworx/systemutils"
@@ -26,7 +27,7 @@ const (
 
 type ClusterManager struct {
 	listeners *list.List
-	config    Config
+	config    config.ClusterConfig
 	kv        kvdb.Kvdb
 	status    api.Status
 	nodeCache map[string]api.Node // Cached info on the nodes in the cluster.
@@ -62,7 +63,7 @@ func ifaceToIp(iface *net.Interface) (string, error) {
 	return "", errors.New("Node not connected to the network.")
 }
 
-func externalIp(config *Config) (string, error) {
+func externalIp(config *config.ClusterConfig) (string, error) {
 
 	if config.MgtIface != "" {
 		iface, err := net.InterfaceByName(config.MgtIface)
