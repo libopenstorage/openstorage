@@ -242,6 +242,34 @@ the `LICENSE` file of this repository.
 
 See the [Style Guide](STYLEGUIDE.md).
 
+### Protoeasy quick start
+
+https://go.pedge.io/protoeasy
+
+```
+docker pull quay.io/pedge/protoeasy
+```
+
+Add to your ~/.bashrc (or equivalent):
+
+```
+# to use protoeasy for now, you must have docker installed locally or in a vm
+# if running docker using docker-machine etc, replace 192.168.10.10 with the ip of the vm
+# if running docker locally, replace 192.168.10.10 with 0.0.0.0
+export PROTOEASY_ADDRESS=192.168.10.10:6789
+
+launch-protoeasy() {
+  docker rm -f protoeasy || true
+  docker run -d -p 6789:6789 --name=protoeasy quay.io/pedge/protoeasy
+}
+```
+
+Then just run `launch-protoeasy` before compiling the protocol buffers files, and then to compile:
+
+```
+make proto
+```
+
 ### Sign your work
 
 The sign-off is a simple line at the end of the explanation for the
