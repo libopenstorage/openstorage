@@ -46,15 +46,15 @@ func init() {
 // private functions but only if they just apply to this struct, otherwise in a common file
 ```
 
-* All new code must pass `go vet`, `errcheck`, `golint`.
+* All new code must pass `go vet`, `errcheck`, `golint`. For `errcheck`, this means no more unchecked errors. Use of `_ = someFnThatReturnsError()` will be audited soon, and in general should not be used anymore. `golint` means all public types need comments to pass, which means both (A) we will have better code documentation and (B) we will think more about what should actually be public. `errcheck` and `golint` are great detterrents.
 
 * All packages have a file named `name_of_package.go`, ie in `api/server`, we have `server.go`.
 
 * Packages are named after their directory, ie `api/` is `package api`.
 
-* ALL PUBLIC TYPES GO IN `name_of_package.go`. Every other file is just a helper file that implements the types.
+* **ALL PUBLIC TYPES GO IN `name_of_package.go`.** Every other file is just a helper file that implements the types.
 
-* Variable names should reflect the type, ie an instance of  `Runner` should be `runner`. This is in contrast to golang's official recommendation, but has been found to make code more readable. Heh. So this means `api.Volume` is not `v, vol, whatever`, it's `volume`, a `request` is not `req, createReq, r`, its `request`. Only exception is the receiver argument on a function, ie `func (s *server) Foo(...) { ... }`.
+* Variable names should reflect the type, ie an instance of  `Runner` should be `runner`. This is in contrast to golang's official recommendation, but has been found to make code more readable. Heh. So this means `api.Volume` is not `v, vol, whatever`, it's `volume`, a `request` is not `req, createReq, r`, it's `request`. Only exception is the receiver argument on a function, ie `func (s *server) Foo(...) { ... }`.
 
 * Structs without a corresponding interface are data holders. Structs with functions attached have a public interface wrapper, and then the struct becomes private. Example:
 
@@ -102,6 +102,7 @@ func (r *runner) hello(i int) {
 function oneLine(a string, b string, c string) {
 }
 
+//yes
 function multiLine(
   a string,
   b string,
@@ -122,7 +123,7 @@ function multiLineNo2(a string,
 }
 ```
 
-* NO CALLING `os.Exit(...)` OR `panic(...)` IN LIBRARY CODE. Ie no where but a main package.
+* **NO CALLING `os.Exit(...)` OR `panic(...)` IN LIBRARY CODE.** Ie nowhere but a main package.
 
 * New introductions of global variables and init functions have to be vetted extensively by project owners (and existing ones should be deleted as much as we can).
 
@@ -145,17 +146,17 @@ type Volume struct {
 }
 ```
 
-* Static value primitives (also known as enums) are not strings. Most new ones should be generated with protobuf, see [api/api.proto] for examples.
+* Static value primitives (also known as enums) are not strings. Most new ones should be generated with protobuf, see [api/api.proto](api/api.proto) for examples.
 
 * Remove most uses of private variables in public structs.
 
 * Remove most extra variable definitions that are not needed or turn into constants (https://github.com/libopenstorage/openstorage/blob/8d07329468ef709838e443dc17b1eecf2c7cf77d/api/server/volume.go#L76).
 
-* Reduce adding of String() methods on most objects (let the generic `%+v' take care of it).
+* Reduce adding of String() methods on most objects (let the generic `%+v` take care of it).
 
 * Use less newlines within methods.
 
-* single errors are scoped within an if statement:
+* Single errors are scoped within an if statement:
 
 ```go
 // no
@@ -168,9 +169,14 @@ if err != nil {
 if err := foo(); err != nil {
   return nil, err
 }
+
+// yes, if ignoring return value
+// if _, err := bar(); err != nil {
+  return nil, err
+}
 ```
     
-* Empty struct:
+* Empty structs:
 
 ```go
 // no
