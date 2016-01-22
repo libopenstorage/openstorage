@@ -1,0 +1,26 @@
+63,64d62
+< 	// Whether to render enum values as simple strings, as opposed to string values.
+< 	EnumsAsSimpleStrings bool
+207,210d204
+< type simpleStringer interface {
+< 	SimpleString() string
+< }
+< 
+243,244c237
+< 	if (!m.EnumsAsInts || m.EnumsAsSimpleStrings) && prop.Enum != "" {
+< 		var enumStr string
+---
+> 	if !m.EnumsAsInts && prop.Enum != "" {
+248,257c241
+< 		if m.EnumsAsSimpleStrings {
+< 			obj, ok := v.Interface().(simpleStringer)
+< 			if ok {
+< 				enumStr = obj.SimpleString()
+< 			} else {
+< 				enumStr = v.Interface().(fmt.Stringer).String()
+< 			}
+< 		} else {
+< 			enumStr = v.Interface().(fmt.Stringer).String()
+< 		}
+---
+> 		enumStr := v.Interface().(fmt.Stringer).String()
