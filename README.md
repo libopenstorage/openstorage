@@ -240,6 +240,8 @@ WantedBy=multi-user.target
 The specification and code is licensed under the Apache 2.0 license found in 
 the `LICENSE` file of this repository.  
 
+See the [Style Guide](STYLEGUIDE.md).
+
 ### Sign your work
 
 The sign-off is a simple line at the end of the explanation for the
@@ -294,4 +296,3 @@ then you just add a line to every git commit message:
 using your real name (sorry, no pseudonyms or anonymous contributions.)
 
 You can add the sign off when creating the git commit via `git commit -s`.
-
