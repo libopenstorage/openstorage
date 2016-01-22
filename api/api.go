@@ -106,15 +106,6 @@ func (x VolumeActionParam) SimpleString() string {
 	return simpleString("volume_action_param", VolumeActionParam_name, int32(x))
 }
 
-func VolumeCOSSimpleValueOf(s string) (VolumeCOS, error) {
-	obj, err := simpleValueOf("volume_cos", VolumeCOS_value, s)
-	return VolumeCOS(obj), err
-}
-
-func (x VolumeCOS) SimpleString() string {
-	return simpleString("volume_cos", VolumeCOS_name, int32(x))
-}
-
 func VolumeStateSimpleValueOf(s string) (VolumeState, error) {
 	obj, err := simpleValueOf("volume_state", VolumeState_value, s)
 	return VolumeState(obj), err

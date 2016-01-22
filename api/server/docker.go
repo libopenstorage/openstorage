@@ -146,8 +146,8 @@ func (d *driver) specFromOpts(Opts map[string]string) *api.VolumeSpec {
 			haLevel, _ := strconv.ParseInt(v, 10, 64)
 			spec.HaLevel = haLevel
 		case api.SpecCos:
-			value, _ := api.VolumeCOSSimpleValueOf(v)
-			spec.Cos = value
+			value, _ := strconv.ParseUint(v, 10, 32)
+			spec.Cos = uint32(value)
 		case api.SpecDedupe:
 			spec.Dedupe, _ = strconv.ParseBool(v)
 		case api.SpecSnapshotInterval:

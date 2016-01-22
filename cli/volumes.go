@@ -86,17 +86,12 @@ func (v *volDriver) volumeCreate(context *cli.Context) {
 		cmdError(context, fn, err)
 		return
 	}
-	volumeCOS, err := api.VolumeCOSSimpleValueOf(context.String("cos"))
-	if err != nil {
-		cmdError(context, fn, err)
-		return
-	}
 	spec := &api.VolumeSpec{
 		Size:             uint64(VolumeSzUnits(context.Int("s")) * MiB),
 		Format:           fsType,
 		BlockSize:        int64(context.Int("b") * 1024),
 		HaLevel:          int64(context.Int("r")),
-		Cos:              volumeCOS,
+		Cos:              uint32(context.Int("cos")),
 		SnapshotInterval: uint32(context.Int("si")),
 	}
 	source := &api.Source{
@@ -385,10 +380,10 @@ func baseVolumeCommand(v *volDriver) []cli.Command {
 					Usage: "replication factor [1..2]",
 					Value: 1,
 				},
-				cli.StringFlag{
+				cli.IntFlag{
 					Name:  "cos",
-					Usage: "Class of Service: min|medium|max",
-					Value: "min",
+					Usage: "Class of Service: [1..9]",
+					Value: 1,
 				},
 				cli.IntFlag{
 					Name:  "snap_interval,si",

@@ -56,18 +56,6 @@ enum VolumeActionParam {
   VOLUME_ACTION_PARAM_ON = 2;
 }
 
-// VolumeCOS represents a class of service for a volume.
-// CHANGE: min is new (originally none) and was 0, medium was 5, max was 9
-enum VolumeCOS {
-  VOLUME_COS_NONE = 0;
-  // A minimum level of COS.
-  VOLUME_COS_MIN = 1;
-  // An in-between level of COS.
-  VOLUME_COS_MEDIUM = 2;
-  // A maximum level of COS.
-  VOLUME_COS_MAX = 3;
-}
-
 // VolumeState represents the state of a volume.
 // CHANGE: no NONE, was 1 << iota (and was bit or'ed/and'ed)
 enum VolumeState {
@@ -136,8 +124,8 @@ message VolumeSpec {
 	// A value of 0 implies that data is not erasure coded,
 	// a failure of a node will lead to data loss
   int64 ha_level = 5;
-  // The COS
-  VolumeCOS cos = 6;
+  // The COS, 1 to 9
+  uint32 cos = 6;
 	// Perform dedupe on this disk
   bool dedupe = 7;
 	// SnapshotInterval in minutes, set to 0 to disable snapshots

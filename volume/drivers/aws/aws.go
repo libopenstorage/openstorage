@@ -145,16 +145,16 @@ func (d *Driver) freeDevices() (string, string, error) {
 }
 
 // mapCos translates a CoS specified in spec to a volume.
-func mapCos(cos api.VolumeCOS) (*int64, *string) {
+func mapCos(cos uint32) (*int64, *string) {
 	var iops int64
 	var volType string
-	switch cos {
-	case api.VolumeCOS_VOLUME_COS_MEDIUM:
-		iops, volType = 10000, opsworks.VolumeTypeIo1
-	case api.VolumeCOS_VOLUME_COS_MAX:
-		iops, volType = 20000, opsworks.VolumeTypeIo1
-	default:
+	switch {
+	case cos < 2:
 		iops, volType = 0, opsworks.VolumeTypeGp2
+	case cos < 7:
+		iops, volType = 10000, opsworks.VolumeTypeIo1
+	default:
+		iops, volType = 20000, opsworks.VolumeTypeIo1
 	}
 	return &iops, &volType
 }
