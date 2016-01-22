@@ -5,13 +5,14 @@ import (
 	"testing"
 	"time"
 
+	"go.pedge.io/dlog"
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/server"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers/nfs"
 	"github.com/libopenstorage/openstorage/volume/drivers/test"
-	"github.com/Sirupsen/logrus"
 )
 
 var (
@@ -19,7 +20,7 @@ var (
 )
 
 func init() {
-	logrus.SetLevel(logrus.DebugLevel)
+	dlog.SetLevel(dlog.LevelDebug)
 }
 
 func makeRequest(t *testing.T) {

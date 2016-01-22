@@ -10,9 +10,9 @@ import (
 	"syscall"
 	"time"
 
+	"go.pedge.io/dlog"
 	"go.pedge.io/proto/time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -62,7 +62,7 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 	if err != nil {
 		return nil, err
 	}
-	logrus.Infof("AWS instance %v zone %v", instance, zone)
+	dlog.Infof("AWS instance %v zone %v", instance, zone)
 	accessKey, ok := params["AWS_ACCESS_KEY_ID"]
 	if !ok {
 		if accessKey = os.Getenv("AWS_ACCESS_KEY_ID"); accessKey == "" {
@@ -244,7 +244,7 @@ func (d *Driver) Create(
 	}
 	vol, err := d.ec2.CreateVolume(req)
 	if err != nil {
-		logrus.Warnf("Failed in CreateVolumeRequest :%v", err)
+		dlog.Warnf("Failed in CreateVolumeRequest :%v", err)
 		return "", err
 	}
 	volume := common.NewVolume(
@@ -524,7 +524,7 @@ func (d *Driver) volumeState(ec2VolState *string) api.VolumeState {
 	case ec2.VolumeAttachmentStateAttaching, ec2.VolumeAttachmentStateDetaching:
 		return api.VolumeState_VOLUME_STATE_PENDING
 	default:
-		logrus.Warnf("Failed to translate EC2 volume status %v", ec2VolState)
+		dlog.Warnf("Failed to translate EC2 volume status %v", ec2VolState)
 	}
 	return api.VolumeState_VOLUME_STATE_ERROR
 }
@@ -543,7 +543,7 @@ func (d *Driver) Format(volumeID string) error {
 	cmd := "/sbin/mkfs." + string(v.Spec.Format)
 	o, err := exec.Command(cmd, devicePath).Output()
 	if err != nil {
-		logrus.Warnf("Failed to run command %v %v: %v", cmd, devicePath, o)
+		dlog.Warnf("Failed to run command %v %v: %v", cmd, devicePath, o)
 		return err
 	}
 	v.Format = v.Spec.Format
@@ -590,7 +590,7 @@ func (d *Driver) Unmount(volumeID string, mountpath string) error {
 }
 
 func (d *Driver) Shutdown() {
-	logrus.Printf("%s Shutting down", Name)
+	dlog.Printf("%s Shutting down", Name)
 }
 
 func (d *Driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {

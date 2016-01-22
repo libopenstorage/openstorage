@@ -7,7 +7,8 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/Sirupsen/logrus"
+	"go.pedge.io/dlog"
+	
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/volume"
@@ -53,7 +54,7 @@ func (d *driver) Create(locator *api.VolumeLocator, source *api.Source, spec *ap
 	volumeID = strings.TrimSuffix(volumeID, "\n")
 	// Create a directory on the Local machine with this UUID.
 	if err := os.MkdirAll(filepath.Join(config.VolumeBase, string(volumeID)), 0744); err != nil {
-		logrus.Println(err)
+		dlog.Println(err)
 		return "", err
 	}
 
@@ -77,7 +78,7 @@ func (d *driver) Delete(volumeID string) error {
 	// Check if volume exists
 	_, err := d.GetVol(volumeID)
 	if err != nil {
-		logrus.Println("Volume not found ", err)
+		dlog.Println("Volume not found ", err)
 		return err
 	}
 
@@ -86,7 +87,7 @@ func (d *driver) Delete(volumeID string) error {
 
 	err = d.DeleteVol(volumeID)
 	if err != nil {
-		logrus.Println(err)
+		dlog.Println(err)
 		return err
 	}
 
@@ -99,12 +100,12 @@ func (d *driver) Delete(volumeID string) error {
 func (d *driver) Mount(volumeID string, mountpath string) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
-		logrus.Println(err)
+		dlog.Println(err)
 		return err
 	}
 	syscall.Unmount(mountpath, 0)
 	if err := syscall.Mount(filepath.Join(config.VolumeBase, string(volumeID)), mountpath, string(v.Spec.Format), syscall.MS_BIND, ""); err != nil {
-		logrus.Printf("Cannot mount %s at %s because %+v", filepath.Join(config.VolumeBase, string(volumeID)), mountpath, err)
+		dlog.Printf("Cannot mount %s at %s because %+v", filepath.Join(config.VolumeBase, string(volumeID)), mountpath, err)
 		return err
 	}
 	v.AttachPath = mountpath
@@ -165,5 +166,5 @@ func (d *driver) Status() [][2]string {
 
 // Shutdown and cleanup.
 func (d *driver) Shutdown() {
-	logrus.Debugf("%s Shutting down", Name)
+	dlog.Debugf("%s Shutting down", Name)
 }

@@ -93,9 +93,9 @@ func (d *graphDriver) decode(method string, w http.ResponseWriter, r *http.Reque
 		return nil, err
 	}
 	if len(request.Parent) != 0 {
-		d.logRequest(method, request.ID).Debug("Parent: ", request.Parent)
+		d.logRequest(method, request.ID).Debugln("Parent: ", request.Parent)
 	} else {
-		d.logRequest(method, request.ID).Debug("")
+		d.logRequest(method, request.ID).Debugln("")
 	}
 	return &request, nil
 }
@@ -110,7 +110,7 @@ func (d *graphDriver) handshake(w http.ResponseWriter, r *http.Request) {
 		d.sendError("handshake", "", w, "encode error", http.StatusInternalServerError)
 		return
 	}
-	d.logRequest("handshake", "").Debug("Handshake completed")
+	d.logRequest("handshake", "").Debugln("Handshake completed")
 }
 
 func (d *graphDriver) init(w http.ResponseWriter, r *http.Request) {
@@ -119,7 +119,7 @@ func (d *graphDriver) init(w http.ResponseWriter, r *http.Request) {
 		Home string
 		Opts []string
 	}
-	d.logRequest(method, request.Home).Info("")
+	d.logRequest(method, request.Home).Infoln("")
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		d.decodeError(method, w, err)
 		return

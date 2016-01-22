@@ -3,7 +3,8 @@ package volume
 import (
 	"testing"
 
-	"github.com/Sirupsen/logrus"
+	"go.pedge.io/dlog"
+	
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
@@ -18,10 +19,10 @@ var (
 func init() {
 	kv, err := kvdb.New(mem.Name, "driver_test", []string{}, nil)
 	if err != nil {
-		logrus.Panicf("Failed to initialize KVDB")
+		dlog.Panicf("Failed to initialize KVDB")
 	}
 	if err := kvdb.SetInstance(kv); err != nil {
-		logrus.Panicf("Failed to set KVDB instance")
+		dlog.Panicf("Failed to set KVDB instance")
 	}
 	testEnumerator = NewDefaultEnumerator("enumerator_test", kv)
 }

@@ -6,6 +6,9 @@ import (
 	"os"
 
 	"gopkg.in/yaml.v2"
+
+	// TODO(pedge) eventually move to osd main.go when everyone is comfortable with dlog
+	_ "go.pedge.io/dlog/logrus"
 )
 
 const (

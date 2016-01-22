@@ -6,12 +6,11 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/Sirupsen/logrus"
-	"github.com/portworx/kvdb"
+	"go.pedge.io/dlog"
 
+	"github.com/portworx/kvdb"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
-
 	"gopkg.in/jmcvetta/napping.v3"
 )
 
@@ -142,7 +141,7 @@ func (d *driver) Create(
 	s, err := d.getAuthSession()
 
 	if err != nil {
-		logrus.Errorf("Failed to create session: %s", err.Error())
+		dlog.Errorf("Failed to create session: %s", err.Error())
 		return "", err
 	}
 
@@ -211,7 +210,7 @@ func (d *driver) Set(
 }
 
 func (d *driver) Shutdown() {
-	logrus.Infof("%s Shutting down", Name)
+	dlog.Infof("%s Shutting down", Name)
 }
 
 func (d *driver) Snapshot(

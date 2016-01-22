@@ -9,7 +9,8 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/Sirupsen/logrus"
+	"go.pedge.io/dlog"
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/volume"
@@ -99,18 +100,18 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 			}
 		}
 	} else {
-		logrus.Println("Could not enumerate Volumes, ", err)
+		dlog.Println("Could not enumerate Volumes, ", err)
 	}
 
 	c, err := cluster.Inst()
 	if err != nil {
-		logrus.Println("BUSE initializing in single node mode")
+		dlog.Println("BUSE initializing in single node mode")
 	} else {
-		logrus.Println("BUSE initializing in clustered mode")
+		dlog.Println("BUSE initializing in clustered mode")
 		c.AddEventListener(inst)
 	}
 
-	logrus.Println("BUSE initialized and driver mounted at: ", BuseMountPath)
+	dlog.Println("BUSE initialized and driver mounted at: ", BuseMountPath)
 	return inst, nil
 }
 
@@ -144,12 +145,12 @@ func (d *driver) Create(locator *api.VolumeLocator, source *api.Source, spec *ap
 	buseFile := path.Join(BuseMountPath, volumeID)
 	f, err := os.Create(buseFile)
 	if err != nil {
-		logrus.Println(err)
+		dlog.Println(err)
 		return "", err
 	}
 
 	if err := f.Truncate(int64(spec.Size)); err != nil {
-		logrus.Println(err)
+		dlog.Println(err)
 		return "", err
 	}
 
@@ -160,22 +161,22 @@ func (d *driver) Create(locator *api.VolumeLocator, source *api.Source, spec *ap
 	nbd := Create(bd, int64(spec.Size))
 	bd.nbd = nbd
 
-	logrus.Infof("Connecting to NBD...")
+	dlog.Infof("Connecting to NBD...")
 	dev, err := bd.nbd.Connect()
 	if err != nil {
-		logrus.Println(err)
+		dlog.Println(err)
 		return "", err
 	}
 
-	logrus.Infof("Formatting %s with %v", dev, spec.Format)
+	dlog.Infof("Formatting %s with %v", dev, spec.Format)
 	cmd := "/sbin/mkfs." + spec.Format.SimpleString()
 	o, err := exec.Command(cmd, dev).Output()
 	if err != nil {
-		logrus.Warnf("Failed to run command %v %v: %v", cmd, dev, o)
+		dlog.Warnf("Failed to run command %v %v: %v", cmd, dev, o)
 		return "", err
 	}
 
-	logrus.Infof("BUSE mapped NBD device %s (size=%v) to block file %s", dev, spec.Size, buseFile)
+	dlog.Infof("BUSE mapped NBD device %s (size=%v) to block file %s", dev, spec.Size, buseFile)
 
 	v := common.NewVolume(
 		volumeID,
@@ -198,14 +199,14 @@ func (d *driver) Create(locator *api.VolumeLocator, source *api.Source, spec *ap
 func (d *driver) Delete(volumeID string) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
-		logrus.Println(err)
+		dlog.Println(err)
 		return err
 	}
 
 	bd, ok := d.buseDevices[v.DevicePath]
 	if !ok {
 		err = fmt.Errorf("Cannot locate a BUSE device for %s", v.DevicePath)
-		logrus.Println(err)
+		dlog.Println(err)
 		return err
 	}
 
@@ -214,10 +215,10 @@ func (d *driver) Delete(volumeID string) error {
 	bd.f.Close()
 	bd.nbd.Disconnect()
 
-	logrus.Infof("BUSE deleted volume %v at NBD device %s", volumeID, v.DevicePath)
+	dlog.Infof("BUSE deleted volume %v at NBD device %s", volumeID, v.DevicePath)
 
 	if err := d.DeleteVol(volumeID); err != nil {
-		logrus.Println(err)
+		dlog.Println(err)
 		return err
 	}
 
@@ -231,11 +232,11 @@ func (d *driver) Mount(volumeID string, mountpath string) error {
 	}
 	if err := syscall.Mount(v.DevicePath, mountpath, v.Spec.Format.SimpleString(), 0, ""); err != nil {
 		// TODO(pedge): same string for log message and error?
-		logrus.Errorf("Mounting %s on %s failed because of %v", v.DevicePath, mountpath, err)
+		dlog.Errorf("Mounting %s on %s failed because of %v", v.DevicePath, mountpath, err)
 		return fmt.Errorf("Failed to mount %v at %v: %v", v.DevicePath, mountpath, err)
 	}
 
-	logrus.Infof("BUSE mounted NBD device %s at %s", v.DevicePath, mountpath)
+	dlog.Infof("BUSE mounted NBD device %s at %s", v.DevicePath, mountpath)
 
 	v.AttachPath = mountpath
 	// TODO(pedge): why ignoring the error?
@@ -316,7 +317,7 @@ func (d *driver) Alerts(volumeID string) (*api.Alerts, error) {
 }
 
 func (d *driver) Shutdown() {
-	logrus.Printf("%s Shutting down", Name)
+	dlog.Printf("%s Shutting down", Name)
 	syscall.Unmount(BuseMountPath, 0)
 }
 

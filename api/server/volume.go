@@ -58,7 +58,7 @@ func (vd *volApi) create(w http.ResponseWriter, r *http.Request) {
 	dcRes.VolumeResponse = &api.VolumeResponse{Error: responseStatus(err)}
 	dcRes.Id = id
 
-	vd.logRequest(method, id).Info("")
+	vd.logRequest(method, id).Infoln("")
 
 	json.NewEncoder(w).Encode(&dcRes)
 }
@@ -83,7 +83,7 @@ func (vd *volApi) volumeSet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	vd.logRequest(method, string(volumeID)).Info("")
+	vd.logRequest(method, string(volumeID)).Infoln("")
 
 	d, err := volume.Get(vd.name)
 	if err != nil {
@@ -161,7 +161,7 @@ func (vd *volApi) inspect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	vd.logRequest(method, string(volumeID)).Info("")
+	vd.logRequest(method, string(volumeID)).Infoln("")
 
 	dk, err := d.Inspect([]string{volumeID})
 	if err != nil {
@@ -183,7 +183,7 @@ func (vd *volApi) delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	vd.logRequest(method, volumeID).Info("")
+	vd.logRequest(method, volumeID).Infoln("")
 
 	d, err := volume.Get(vd.name)
 	if err != nil {
@@ -263,7 +263,7 @@ func (vd *volApi) snap(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	vd.logRequest(method, string(snapReq.Id)).Info("")
+	vd.logRequest(method, string(snapReq.Id)).Infoln("")
 
 	id, err := d.Snapshot(snapReq.Id, snapReq.Readonly, snapReq.Locator)
 	snapRes.VolumeCreateResponse = &api.VolumeCreateResponse{
@@ -324,7 +324,7 @@ func (vd *volApi) stats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	vd.logRequest(method, string(volumeID)).Info("")
+	vd.logRequest(method, string(volumeID)).Infoln("")
 
 	d, err := volume.Get(vd.name)
 	if err != nil {

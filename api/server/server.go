@@ -7,7 +7,8 @@ import (
 	"os"
 	"path"
 
-	log "github.com/Sirupsen/logrus"
+	"go.pedge.io/dlog"
+
 	"github.com/gorilla/mux"
 )
 
@@ -21,7 +22,7 @@ type Route struct {
 type restServer interface {
 	Routes() []*Route
 	String() string
-	logRequest(request string, id string) *log.Entry
+	logRequest(request string, id string) dlog.Logger
 	sendError(request string, id string, w http.ResponseWriter, msg string, code int)
 }
 
@@ -31,20 +32,20 @@ type restBase struct {
 	name    string
 }
 
-func (rest *restBase) logRequest(request string, id string) *log.Entry {
-	return log.WithFields(log.Fields{
+func (rest *restBase) logRequest(request string, id string) dlog.Logger {
+	return dlog.WithFields(map[string]interface{}{
 		"Driver":  rest.name,
 		"Request": request,
 		"ID":      id,
 	})
 }
 func (rest *restBase) sendError(request string, id string, w http.ResponseWriter, msg string, code int) {
-	rest.logRequest(request, id).Warn(code, " ", msg)
+	rest.logRequest(request, id).Warnln(code, " ", msg)
 	http.Error(w, msg, code)
 }
 
 func notFound(w http.ResponseWriter, r *http.Request) {
-	log.Warnf("Not found: %+v ", r.URL)
+	dlog.Warnf("Not found: %+v ", r.URL)
 	http.NotFound(w, r)
 }
 
@@ -63,10 +64,10 @@ func startServer(name string, sockBase string, port int, routes []*Route) error 
 	os.Remove(socket)
 	os.MkdirAll(path.Dir(socket), 0755)
 
-	log.Printf("Starting REST service on %+v", socket)
+	dlog.Printf("Starting REST service on %+v", socket)
 	listener, err = net.Listen("unix", socket)
 	if err != nil {
-		log.Warn("Cannot listen on UNIX socket: ", err)
+		dlog.Warnln("Cannot listen on UNIX socket: ", err)
 		return err
 	}
 	go http.Serve(listener, router)

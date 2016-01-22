@@ -17,18 +17,17 @@ import (
 	"path"
 	"syscall"
 
+	"go.pedge.io/dlog"
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/graph"
 	"github.com/libopenstorage/openstorage/volume"
-
 	"github.com/docker/docker/daemon/graphdriver"
 	"github.com/docker/docker/pkg/archive"
 	"github.com/docker/docker/pkg/chrootarchive"
 	"github.com/docker/docker/pkg/directory"
 	"github.com/docker/docker/pkg/idtools"
 	"github.com/docker/docker/pkg/parsers"
-
-	"github.com/Sirupsen/logrus"
 )
 
 const (
@@ -44,7 +43,7 @@ type Driver struct {
 }
 
 func Init(home string, options []string, uidMaps, gidMaps []idtools.IDMap) (graphdriver.Driver, error) {
-	logrus.Infof("Initializing Fuse Graph driver at home:%s and storage: %v...", home, virtPath)
+	dlog.Infof("Initializing Fuse Graph driver at home:%s and storage: %v...", home, virtPath)
 
 	var volumeDriver string
 	for _, option := range options {
@@ -61,14 +60,14 @@ func Init(home string, options []string, uidMaps, gidMaps []idtools.IDMap) (grap
 	}
 
 	if volumeDriver == "" {
-		logrus.Warnf("Error - no volume driver specified for UnionFS")
+		dlog.Warnf("Error - no volume driver specified for UnionFS")
 		return nil, fmt.Errorf("No volume driver specified for UnionFS")
 	}
 
-	logrus.Infof("UnionFS volume driver: %v", volumeDriver)
+	dlog.Infof("UnionFS volume driver: %v", volumeDriver)
 	volDriver, err := volume.Get(volumeDriver)
 	if err != nil {
-		logrus.Warnf("Error while loading volume driver: %s", volumeDriver)
+		dlog.Warnf("Error while loading volume driver: %s", volumeDriver)
 		return nil, err
 	}
 
@@ -78,14 +77,14 @@ func Init(home string, options []string, uidMaps, gidMaps []idtools.IDMap) (grap
 	err = os.MkdirAll(virtPath, 0744)
 	if err != nil {
 		volDriver.Shutdown()
-		logrus.Warnf("Error while creating FUSE mount path: %v", err)
+		dlog.Warnf("Error while creating FUSE mount path: %v", err)
 		return nil, err
 	}
 
 	err = os.MkdirAll(physPath, 0744)
 	if err != nil {
 		volDriver.Shutdown()
-		logrus.Warnf("Error while creating FUSE mount path: %v", err)
+		dlog.Warnf("Error while creating FUSE mount path: %v", err)
 		return nil, err
 	}
 
@@ -108,7 +107,7 @@ func (d *Driver) String() string {
 // held by the driver, e.g., unmounting all layered filesystems
 // known to this driver.
 func (d *Driver) Cleanup() error {
-	logrus.Infof("Cleaning up fuse %s", virtPath)
+	dlog.Infof("Cleaning up fuse %s", virtPath)
 
 	d.volDriver.Shutdown()
 	syscall.Unmount(virtPath, 0)
@@ -127,7 +126,7 @@ func (d *Driver) Status() [][2]string {
 func (d *Driver) linkParent(child, parent string) error {
 	parent = path.Join(physPath, parent)
 
-	logrus.Debugf("Linking layer %s to parent layer %s", child, parent)
+	dlog.Debugf("Linking layer %s to parent layer %s", child, parent)
 
 	child = child + "/.unionfs.parent"
 
@@ -144,7 +143,7 @@ func (d *Driver) linkParent(child, parent string) error {
 func (d *Driver) Create(id string, parent string, mountLabel string) error {
 	path := path.Join(physPath, id)
 
-	logrus.Debugf("Creating layer %s", path)
+	dlog.Debugf("Creating layer %s", path)
 
 	err := os.MkdirAll(path, 0744)
 	if err != nil {
@@ -162,7 +161,7 @@ func (d *Driver) Create(id string, parent string, mountLabel string) error {
 func (d *Driver) Remove(id string) error {
 	path := path.Join(physPath, id)
 
-	logrus.Debugf("Removing layer %s", path)
+	dlog.Debugf("Removing layer %s", path)
 
 	os.RemoveAll(path)
 
@@ -186,10 +185,10 @@ func (d *Driver) Get(id, mountLabel string) (string, error) {
 
 	ret, err := C.alloc_unionfs(cLayerPath, cID)
 	if int(ret) != 0 {
-		logrus.Warnf("Error while creating a union FS for %s", id)
+		dlog.Warnf("Error while creating a union FS for %s", id)
 		return "", err
 	} else {
-		logrus.Debugf("Created a union FS for %s", id)
+		dlog.Debugf("Created a union FS for %s", id)
 		unionPath := path.Join(virtPath, id)
 
 		return unionPath, err
@@ -199,7 +198,7 @@ func (d *Driver) Get(id, mountLabel string) (string, error) {
 // Put releases the system resources for the specified id,
 // e.g, unmounting layered filesystem.
 func (d *Driver) Put(id string) error {
-	logrus.Debugf("Releasing union FS for %s", id)
+	dlog.Debugf("Releasing union FS for %s", id)
 
 	cID := C.CString(id)
 	_, err := C.release_unionfs(cID)
@@ -230,14 +229,14 @@ func (d *Driver) ApplyDiff(id string, parent string, diff archive.Reader) (size 
 	dir := path.Join(physPath, id)
 
 	if err := chrootarchive.UntarUncompressed(diff, dir, nil); err != nil {
-		logrus.Warnf("Error while applying diff to %s: %v", id, err)
+		dlog.Warnf("Error while applying diff to %s: %v", id, err)
 		return 0, err
 	}
 
 	// show invalid whiteouts warning.
 	files, err := ioutil.ReadDir(path.Join(dir, archive.WhiteoutLinkDir))
 	if err == nil && len(files) > 0 {
-		logrus.Warnf("Archive contains aufs hardlink references that are not supported.")
+		dlog.Warnf("Archive contains aufs hardlink references that are not supported.")
 	}
 
 	return d.DiffSize(id, parent)
