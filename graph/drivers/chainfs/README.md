@@ -1,4 +1,4 @@
-## Fuse based Union FS Graph Driver
+## Fuse based chain FS Graph Driver
 ### EXPERIMENTAL!  
 Note that this is still in development and experimental.  Currently the following are known issues
 
@@ -6,20 +6,20 @@ Note that this is still in development and experimental.  Currently the followin
 2. There are two heavy weight locks around accessing the UFS data structures which can be avoided.
 
 ### About
-The `unionfs` graph driver leverages the kernel-userspace communication protocol `fuse` to implement the storage of graph layers.
+The `chainfs` graph driver leverages the kernel-userspace communication protocol `fuse` to implement the storage of graph layers.
 
 It also uses an optimized way of computing the layer diffs and avoids using the NaiveDiff implementation.
 
 To use this as the graphdriver in Docker with aws as the backend volume provider:
 
 ```
-DOCKER_STORAGE_OPTIONS= -s unionfs --storage-opt unionfs.volume_driver=btrfs
+DOCKER_STORAGE_OPTIONS= -s chainfs --storage-opt chainfs.volume_driver=btrfs
 ```
 
 or
 
 ```
-docker daemon --storage-driver=unionfs --storage-opt unionfs.volume_driver=btrfs
+docker daemon --storage-driver=chainfs --storage-opt chainfs.volume_driver=btrfs
 ```
 
 ### Building
@@ -29,5 +29,5 @@ Make sure you have `fuse` installed.
 When building `OSD`, run:
 
 ```
-HAVE_UNIONFS=1 EXPERIMENTAL_=1 make
+HAVE_CHAINFS=1 EXPERIMENTAL_=1 make
 ```
