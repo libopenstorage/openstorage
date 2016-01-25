@@ -12,8 +12,8 @@ ifdef HAVE_BTRFS
 TAGS+=btrfs_noversion have_btrfs
 endif
 
-ifdef HAVE_UNIONFS
-TAGS+=have_unionfs
+ifdef HAVE_CHAINFS
+TAGS+=have_chainfs
 endif
 
 export GO15VENDOREXPERIMENT=1

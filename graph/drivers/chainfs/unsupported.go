@@ -1,8 +1,6 @@
-// +build !have_unionfs
+// +build !have_chainfs
 
-package unionfs
-
-import "C"
+package chainfs
 
 import (
 	"errors"
