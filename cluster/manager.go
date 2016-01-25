@@ -34,6 +34,7 @@ type ClusterManager struct {
 	g         gossip.Gossiper
 	gEnabled  bool
 	selfNode  api.Node
+	system    systemutils.System
 }
 
 func ifaceToIp(iface *net.Interface) (string, error) {
@@ -121,11 +122,10 @@ func (c *ClusterManager) GetData() map[string]*api.Node {
 
 func (c *ClusterManager) getCurrentState() *api.Node {
 	c.selfNode.Timestamp = time.Now()
-	s := systemutils.New()
 
-	c.selfNode.Cpu, _, _ = s.CpuUsage()
-	c.selfNode.Memory = s.MemUsage()
-	c.selfNode.Luns = s.Luns()
+	c.selfNode.Cpu, _, _ = c.system.CpuUsage()
+	c.selfNode.Memory = c.system.MemUsage()
+	c.selfNode.Luns = c.system.Luns()
 
 	c.selfNode.Timestamp = time.Now()
 
@@ -410,6 +410,8 @@ func (c *ClusterManager) Start() error {
 	c.selfNode.Status = api.StatusOk
 	c.selfNode.Ip, _ = externalIp(&c.config)
 	c.selfNode.NodeData = make(map[string]interface{})
+	c.system = systemutils.New()
+
 	// Start the gossip protocol.
 	// XXX Make the port configurable.
 	gob.Register(api.Node{})
