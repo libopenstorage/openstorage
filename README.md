@@ -65,6 +65,8 @@ $ make test
 
 OSD is both the openstorage daemon and the CLI.  When run as a daemon, the OSD is ready to receive RESTful commands to operate on volumes and attach them to a Docker container.  It works with the [Docker volumes plugin interface](https://github.com/docker/docker/blob/e5af7a0e869c0a66f8ab30d3a90280843b9999e0/docs/extend/plugins_volume.md) will communicate with Docker version 1.7 and later.  When this daemon is running, Docker will automatically commincate with the daemon to manage a container's volumes.
 
+Note: OSD needs to be run as root.
+
 To start the OSD in daemon mode:
 ```
 osd -d -f etc/config/config.yaml
