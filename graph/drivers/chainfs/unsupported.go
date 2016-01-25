@@ -11,12 +11,12 @@ import (
 )
 
 const (
-	Name = "unionfs"
+	Name = "chainfs"
 	Type = api.Graph
 )
 
 var (
-	errUnsupported = errors.New("unionfs not supported on this platform")
+	errUnsupported = errors.New("chainfs not supported on this platform")
 )
 
 func Init(home string, options []string, uidMaps, gidMaps []idtools.IDMap) (graphdriver.Driver, error) {

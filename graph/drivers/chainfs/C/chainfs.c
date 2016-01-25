@@ -1337,7 +1337,7 @@ int check_layer(char *id)
 
 int main()
 {
-   start_unionfs("/var/lib/openstorage/unionfs");
+	system("umount -l /var/lib/openstorage/chainfs");
+	system("mkdir -p /var/lib/openstorage/chainfs");
+	start_unionfs("/var/lib/openstorage/chainfs");
 }
-
-
