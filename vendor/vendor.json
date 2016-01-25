@@ -446,8 +446,8 @@
 		},
 		{
 			"path": "github.com/portworx/systemutils",
-			"revision": "231787edf3530fee4c73695dd8c4090f4af7764e",
-			"revisionTime": "2015-12-12T00:25:20Z"
+			"revision": "b37c25c6db56e7a1e76f35e375643bd74fe29553",
+			"revisionTime": "2016-01-25T18:31:28Z"
 		},
 		{
 			"path": "github.com/stretchr/testify/assert",
