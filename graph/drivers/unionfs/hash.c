@@ -8,8 +8,8 @@
 #include "hash.h"
 
 /* Create a new hashtable. */
-hashtable_t *ht_create(int size)
-{
+hashtable_t *ht_create(int size) {
+
 	hashtable_t *hashtable = NULL;
 	int i;
 
@@ -24,20 +24,19 @@ hashtable_t *ht_create(int size)
 	if ((hashtable->table = malloc(sizeof(entry_t *) * size)) == NULL) {
 		return NULL;
 	}
-
 	for(i = 0; i < size; i++) {
 		hashtable->table[i] = NULL;
 	}
 
 	hashtable->size = size;
 
-	return hashtable;
+	return hashtable;	
 }
 
 /* Hash a string for a particular hash table. */
-int ht_hash(hashtable_t *hashtable, char *key)
-{
-	unsigned long int hashval = 0;
+int ht_hash(hashtable_t *hashtable, char *key) {
+
+	unsigned long int hashval;
 	int i = 0;
 
 	/* Convert our string to an integer */
@@ -51,8 +50,7 @@ int ht_hash(hashtable_t *hashtable, char *key)
 }
 
 /* Create a key-value pair. */
-entry_t *ht_newpair(char *key, void *value)
-{
+entry_t *ht_newpair(char *key, void *value) {
 	entry_t *newpair;
 
 	if ((newpair = malloc(sizeof(entry_t))) == NULL) {
@@ -71,8 +69,7 @@ entry_t *ht_newpair(char *key, void *value)
 }
 
 /* Insert a key-value pair into a hash table. */
-void ht_set(hashtable_t *hashtable, char *key, void *value)
-{
+void ht_set(hashtable_t *hashtable, char *key, void *value) {
 	int bin = 0;
 	entry_t *newpair = NULL;
 	entry_t *next = NULL;
@@ -80,29 +77,32 @@ void ht_set(hashtable_t *hashtable, char *key, void *value)
 
 	bin = ht_hash(hashtable, key);
 
-	next = hashtable->table[bin];
+	next = hashtable->table[ bin ];
 
 	while (next != NULL && next->key != NULL && strcmp(key, next->key) > 0) {
 		last = next;
 		next = next->next;
 	}
 
+	/* There's already a pair.  Let's replace that string. */
 	if (next != NULL && next->key != NULL && strcmp(key, next->key) == 0) {
-		/* There's already a pair.  Let's replace that value. */
 		next->value = value;
+
+	/* Nope, could't find it.  Time to grow a pair. */
 	} else {
-		/* Nope, could't find it.  Time to grow a pair. */
 		newpair = ht_newpair(key, value);
 
-		if (next == hashtable->table[bin]) {
-			/* We're at the start of the linked list in this bin. */
+		/* We're at the start of the linked list in this bin. */
+		if (next == hashtable->table[ bin ]) {
 			newpair->next = next;
-			hashtable->table[bin] = newpair;
+			hashtable->table[ bin ] = newpair;
+	
+		/* We're at the end of the linked list in this bin. */
 		} else if (next == NULL) {
-			/* We're at the end of the linked list in this bin. */
 			last->next = newpair;
+	
+		/* We're in the middle of the list. */
 		} else  {
-			/* We're in the middle of the list. */
 			newpair->next = next;
 			last->next = newpair;
 		}
@@ -110,15 +110,14 @@ void ht_set(hashtable_t *hashtable, char *key, void *value)
 }
 
 /* Retrieve a key-value pair from a hash table. */
-void *ht_get(hashtable_t *hashtable, char *key)
-{
+void *ht_get(hashtable_t *hashtable, char *key) {
 	int bin = 0;
 	entry_t *pair;
 
 	bin = ht_hash(hashtable, key);
 
 	/* Step through the bin, looking for our value. */
-	pair = hashtable->table[bin];
+	pair = hashtable->table[ bin ];
 	while (pair != NULL && pair->key != NULL && strcmp(key, pair->key) > 0) {
 		pair = pair->next;
 	}
@@ -126,38 +125,8 @@ void *ht_get(hashtable_t *hashtable, char *key)
 	/* Did we actually find anything? */
 	if (pair == NULL || pair->key == NULL || strcmp(key, pair->key) != 0) {
 		return NULL;
+
 	} else {
 		return pair->value;
 	}
-}
-
-void ht_remove(hashtable_t *hashtable, char *key)
-{
-    int bin = 0;
-    entry_t *prev = NULL, *pair;
-
-    bin = ht_hash(hashtable, key);
-
-    /* Step through the bin, looking for our value. */
-    pair = hashtable->table[bin];
-    while (pair != NULL && pair->key != NULL && strcmp(key, pair->key) > 0) {
-		prev = pair;
-        pair = pair->next;
-    }
-
-    /* Did we actually find anything? */
-    if (pair == NULL || pair->key == NULL || strcmp(key, pair->key) != 0) {
-        return;
-    } else {
-		if (prev) {
-			prev->next = pair->next;
-		}
-
-		if (pair == hashtable->table[bin]) {
-			hashtable->table[bin] = pair->next;
-		}
-
-		free(pair->key);
-		free(pair);
-    }
 }

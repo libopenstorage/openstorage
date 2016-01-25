@@ -1,4 +1,4 @@
-// gcc chainfs.c hash.c -DiFILE_OFFSET_BITS=64 -lfuse -lulockmgr -lpthread -o chainfs
+// gcc fuse.c -DiFILE_OFFSET_BITS=64 -lfuse -lulockmgr -lithread -o fuse
 
 #define _GNU_SOURCE
 #define _FILE_OFFSET_BITS 64
@@ -8,6 +8,10 @@
 #include <config.h>
 #endif
 
+// XXX FIXME
+// #define EXPERIMENTAL_ 1
+
+#ifdef EXPERIMENTAL_
 
 #define _GNU_SOURCE
 
@@ -46,16 +50,23 @@ static pthread_mutex_t ufs_lock;
 static struct union_fs ufs_instances[MAX_INSTANCES];
 static hashtable_t *ufs_hash;
 
-struct descriptor {
+struct descriptor 
+{
 	char name[PATH_MAX];
 	int fd;
 } descriptors[MAX_DESC];
 
-struct graph_dirp {
+struct graph_dirp 
+{
 	DIR *dp;
 	struct dirent *entry;
 	off_t offset;
 };
+
+static void trace(const char *fn, const char *path)
+{
+	// fprintf(stderr, "unionfs operation: %s on %s\n", fn, path);
+}
 
 static void lock_ufs(struct union_fs *ufs)
 {
@@ -79,7 +90,7 @@ static struct union_fs *get_ufs(const char *path, char **new_path)
 	if (!tmp_path) {
 		fprintf(stderr, "Warning, cannot allocate memory.\n");
 		goto done;
-	}	
+	}
 	p = strchr(tmp_path, '/');
 	if (p) *p = 0;
 
@@ -106,7 +117,8 @@ done:
 	return ufs;
 }
 
-static void descriptors_init() {
+static void descriptors_init() 
+{
 	int i;
 	for (i=0; i<MAX_DESC; ++i) {
 		descriptors[i].fd = -1;
@@ -114,7 +126,8 @@ static void descriptors_init() {
 	}
 }
 
-static int find_descriptor(const char* path) {
+static int find_descriptor(const char* path) 
+{
 	int i;
 	for (i=0; i<MAX_DESC; ++i) {
 		if(!strcmp(descriptors[i].name, path)) {
@@ -124,7 +137,8 @@ static int find_descriptor(const char* path) {
 	return -1;
 }
 
-static int register_fd(const char* path, int fd) {
+static int register_fd(const char* path, int fd) 
+{
 	int i;
 	for (i=0; i<MAX_DESC; ++i) {
 		if(descriptors[i].fd == -1) {
@@ -151,20 +165,17 @@ static char *real_path(const char *path, bool create_mode)
 		goto done;
 	}
 
-	fprintf(stderr, "BP1 %s\n", path);
 	ufs = get_ufs(path, &fixed_path);
 	if (!ufs) {
+		// Assume the request is for a raw physical layer.
 		asprintf(&r, "%s%s", union_src, path);
 		goto done;
 	}
-	fprintf(stderr, "BP2 %s\n", fixed_path);
 
 	lock_ufs(ufs);
 
 	strncpy(file, fixed_path, sizeof(file));
 	dir = dirname(file);
-
-	fprintf(stderr, "BP3 dirname %s\n", dir);
 
 	errno = 0;
 
@@ -174,9 +185,7 @@ static char *real_path(const char *path, bool create_mode)
 		int ret;
 		struct stat st;
 
-		fprintf(stderr, "BP3-1 %s\n", ufs->layers[0]);
 		for (i = 0; ufs->layers[i]; i++) {
-			fprintf(stderr, "BP3-2 %s\n", ufs->layers[i]);
 			asprintf(&r, "%s%s", ufs->layers[i], fixed_path);
 			if (!r) {
 				errno = ENOMEM;
@@ -184,9 +193,7 @@ static char *real_path(const char *path, bool create_mode)
 				goto done;
 			}
 
-			fprintf(stderr, "BP4 calling lstat on  %s\n", r);
 			ret = lstat(r, &st);
-			fprintf(stderr, "BP5 lstat returned  %d\n", ret);
 			if (ret == 0) {
 				// Found the file.
 				goto done;
@@ -241,8 +248,6 @@ done:
 		unlock_ufs(ufs);
 	}
 
-	fprintf(stderr, "BP6 Translated %s to %s\n", path, r);
-
 	return r;
 }
 
@@ -251,7 +256,9 @@ static void free_path(char *path)
 	free(path);
 }
 
-static int maybe_open(const char* path, int flags, int mode) {
+// Find a file in the FD cache.
+static int maybe_open(const char* path, int flags, int mode) 
+{
 	int fd;
 	int ret;
 	char *rp = NULL;
@@ -261,12 +268,10 @@ static int maybe_open(const char* path, int flags, int mode) {
 		goto done;
 	}
 
-#if 0
 	fd = find_descriptor(rp);
 	if (fd != -1) {
 		goto done;
 	}
-#endif
 
 	int fixed_flags = (flags & (~O_WRONLY) & (~O_RDONLY)) | O_RDWR;
 
@@ -282,7 +287,6 @@ static int maybe_open(const char* path, int flags, int mode) {
 		goto done;
 	}
 
-#if 0
 	ret = register_fd(rp, fd);
 	if (ret==-1)  {
 		fprintf(stderr, "Warning, error while registering FD for %s.\n", rp);
@@ -290,7 +294,6 @@ static int maybe_open(const char* path, int flags, int mode) {
 		fd = -1;
 		goto done;
 	}
-#endif
 
 done:
 	if (rp) {
@@ -306,12 +309,12 @@ static int graph_opendir(const char *path, struct fuse_file_info *fi)
 	char *rp = NULL;
 	struct graph_dirp *d = malloc(sizeof(struct graph_dirp));
 
+	// trace(__func__, path);
+
 	if (d == NULL) {
 		res = -ENOMEM;
 		goto done;
 	}
-
-	fprintf(stderr, "Starting %s on %s\n", __func__, path);
 
 	rp = real_path(path, false);
 	if (!rp) {
@@ -335,7 +338,6 @@ done:
 		free_path(rp);
 	}
 
-	fprintf(stderr, "Done  %s on %s\n", __func__, path);
 	return res;
 }
 
@@ -344,15 +346,18 @@ static inline struct graph_dirp *get_dirp(struct fuse_file_info *fi)
 	return (struct graph_dirp *) (uintptr_t) fi->fh;
 }
 
+// This does the bulk of unifying entries from the various layers.
+// It has to make sure dup entries are avoided.
 static int graph_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 		off_t offset, struct fuse_file_info *fi)
 {
 	int res = 0;
 	struct union_fs *ufs = NULL;
 	char *fixed_path = NULL;
-	off_t nextoff = 0;
 	struct stat st;
 	int i;
+
+	// trace(__func__, path);
 
 	if (!strcmp(path, "/")) {
 		// List valid union FS paths.
@@ -423,16 +428,16 @@ static int graph_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 
 				if (strcmp(".", entry->d_name) == 0 ||
 					strcmp("..", entry->d_name) == 0 || 
-					strcmp("_parent", entry->d_name) == 0) {
+					strcmp(".unionfs.parent", entry->d_name) == 0) {
 					continue;
 				}
 
 				memset(&st, 0, sizeof(st));
-				st.st_ino = entry->d_ino;
-				st.st_mode = entry->d_type << 12;
+				// st.st_ino = entry->d_ino;
+				// st.st_mode = entry->d_type << 12;
 
-				nextoff = 0;
-				if (filler(buf, entry->d_name, &st, nextoff)) {
+				// XXX FIXME - make use of tge bext off feature in fuse.
+				if (filler(buf, entry->d_name, &st, 0)) {
 					fprintf(stderr, "Warning, Filler too full on %s.\n", rp);
 					break;
 				}
@@ -456,6 +461,8 @@ static int graph_releasedir(const char *path, struct fuse_file_info *fi)
 	struct graph_dirp *d = get_dirp(fi);
 	(void) path;
 
+	// trace(__func__, path);
+
 	closedir(d->dp);
 	free(d);
 
@@ -467,7 +474,7 @@ static int graph_getattr(const char *path, struct stat *stbuf)
 	int res = 0;
 	char *rp = NULL;
 
-	fprintf(stderr, "Start  %s on %s\n", __func__, path);
+	// trace(__func__, path);
 
 	rp = real_path(path, false);
 	if (!rp) {
@@ -475,9 +482,8 @@ static int graph_getattr(const char *path, struct stat *stbuf)
 		goto done;
 	}
 
-	fprintf(stderr, "Real Path = %s\n", rp);
-
 	res = lstat(rp, stbuf);
+	stbuf->st_ino = 0;
 	if (res == -1) {
 		res = -errno;
 		goto done;
@@ -487,7 +493,6 @@ done:
 	if (rp) {
 		free_path(rp);
 	}
-	fprintf(stderr, "Finished  %s on %s\n", __func__, path);
 
 	return res;
 }
@@ -496,7 +501,8 @@ static int graph_access(const char *path, int mask)
 {
 	int res = 0;
 	char *rp = NULL;
-	fprintf(stderr, "Start  %s on %s\n", __func__, path);
+
+	// trace(__func__, path);
 
 	rp = real_path(path, false);
 	if (!rp) {
@@ -514,7 +520,6 @@ done:
 	if (rp) {
 		free_path(rp);
 	}
-	fprintf(stderr, "Finished  %s on %s\n", __func__, path);
 	return res;
 }
 
@@ -522,7 +527,8 @@ static int graph_readlink(const char *path, char *buf, size_t size)
 {
 	int res = 0;
 	char *rp = NULL;
-	fprintf(stderr, "Start  %s on %s\n", __func__, path);
+
+	// trace(__func__, path);
 
 	rp = real_path(path, false);
 	if (!rp) {
@@ -542,7 +548,6 @@ done:
 	if (rp) {
 		free_path(rp);
 	}
-	fprintf(stderr, "Finished  %s on %s\n", __func__, path);
 	return res;
 }
 
@@ -550,7 +555,8 @@ static int graph_unlink(const char *path)
 {
 	int res = 0;
 	char *rp = NULL;
-	fprintf(stderr, "Start  %s on %s\n", __func__, path);
+
+	// trace(__func__, path);
 
 	rp = real_path(path, false);
 	if (!rp) {
@@ -568,7 +574,6 @@ done:
 	if (rp) {
 		free_path(rp);
 	}
-	fprintf(stderr, "Finished  %s on %s\n", __func__, path);
 
 	return res;
 }
@@ -577,7 +582,8 @@ static int graph_rmdir(const char *path)
 {
 	int res = 0;
 	char *rp = NULL;
-	fprintf(stderr, "Start  %s on %s\n", __func__, path);
+
+	// trace(__func__, path);
 
 	rp = real_path(path, false);
 	if (!rp) {
@@ -595,16 +601,17 @@ done:
 	if (rp) {
 		free_path(rp);
 	}
-	fprintf(stderr, "Finished  %s on %s\n", __func__, path);
 
 	return res;
 }
 
-static int graph_symlink(const char *path, const char *to)
+static int graph_symlink(const char *from, const char *to)
 {
 	int res = 0;
 	char *rp = NULL;
-	fprintf(stderr, "Start  %s on %s\n", __func__, path);
+
+	// trace(__func__, from);
+	// trace(__func__, to);
 
 	rp = real_path(to, true);
 	if (!rp) {
@@ -612,7 +619,7 @@ static int graph_symlink(const char *path, const char *to)
 		goto done;
 	}
 
-	res = symlink(path, rp);
+	res = symlink(from, rp);
 	if (res == -1) {
 		res = -errno;
 		goto done;
@@ -622,20 +629,21 @@ done:
 	if (rp) {
 		free_path(rp);
 	}
-	fprintf(stderr, "Finished  %s on %s\n", __func__, path);
 
 	return res;
 }
 
-static int graph_rename(const char *path, const char *to)
+static int graph_rename(const char *from, const char *to)
 {
 	int res = 0;
-	char *path_rp = NULL;
+	char *from_rp = NULL;
 	char *to_rp = NULL;
-	fprintf(stderr, "Start  %s on %s\n", __func__, path);
 
-	path_rp = real_path(path, false);
-	if (!path_rp) {
+	// trace(__func__, from);
+	// trace(__func__, to);
+
+	from_rp = real_path(from, false);
+	if (!from_rp) {
 		res = -errno;
 		goto done;
 	}
@@ -646,34 +654,35 @@ static int graph_rename(const char *path, const char *to)
 		goto done;
 	}
 
-	res = rename(path_rp, to_rp);
+	res = rename(from_rp, to_rp);
 	if (res == -1) {
 		res = -errno;
 		goto done;
 	}
 
 done:
-	if (path_rp) {
-		free_path(path_rp);
+	if (from_rp) {
+		free_path(from_rp);
 	}
 
 	if (to_rp) {
 		free_path(to_rp);
 	}
-	fprintf(stderr, "Finished  %s on %s\n", __func__, path);
 
 	return res;
 }
 
-static int graph_link(const char *path, const char *to)
+static int graph_link(const char *from, const char *to)
 {
 	int res = 0;
-	char *path_rp = NULL;
+	char *from_rp = NULL;
 	char *to_rp = NULL;
-	fprintf(stderr, "Start  %s on %s\n", __func__, path);
 
-	path_rp = real_path(path, false);
-	if (!path_rp) {
+	// trace(__func__, from);
+	// trace(__func__, to);
+
+	from_rp = real_path(from, false);
+	if (!from_rp) {
 		res = -errno;
 		goto done;
 	}
@@ -684,21 +693,20 @@ static int graph_link(const char *path, const char *to)
 		goto done;
 	}
 
-	res = link(path_rp, to_rp);
+	res = link(from_rp, to_rp);
 	if (res == -1) {
 		res = -errno;
 		goto done;
 	}
 
 done:
-	if (path_rp) {
-		free_path(path_rp);
+	if (from_rp) {
+		free_path(from_rp);
 	}
 
 	if (to_rp) {
 		free_path(to_rp);
 	}
-	fprintf(stderr, "Finished  %s on %s\n", __func__, path);
 
 	return res;
 }
@@ -707,7 +715,8 @@ static int graph_chmod(const char *path, mode_t mode)
 {
 	int res = 0;
 	char *rp = NULL;
-	fprintf(stderr, "Start  %s on %s\n", __func__, path);
+
+	// trace(__func__, path);
 
 	rp = real_path(path, false);
 	if (!rp) {
@@ -725,7 +734,6 @@ done:
 	if (rp) {
 		free_path(rp);
 	}
-	fprintf(stderr, "Finished  %s on %s\n", __func__, path);
 
 	return res;
 }
@@ -734,7 +742,6 @@ static int graph_chown(const char *path, uid_t uid, gid_t gid)
 {
 	int res = 0;
 	char *rp = NULL;
-	fprintf(stderr, "Start  %s on %s\n", __func__, path);
 
 	rp = real_path(path, false);
 	if (!rp) {
@@ -752,7 +759,6 @@ done:
 	if (rp) {
 		free_path(rp);
 	}
-	fprintf(stderr, "Finished  %s on %s\n", __func__, path);
 
 	return res;
 }
@@ -760,7 +766,8 @@ done:
 static int graph_truncate(const char *path, off_t size)
 {
 	int res = 0;
-	fprintf(stderr, "Start  %s on %s\n", __func__, path);
+
+	// trace(__func__, path);
 
 	int fd = maybe_open(path, O_RDWR, 0777);
 	if (fd == -1) {
@@ -776,7 +783,6 @@ static int graph_truncate(const char *path, off_t size)
 	}
 
 done:
-	fprintf(stderr, "Finished  %s on %s\n", __func__, path);
 
 	return res;
 }
@@ -786,7 +792,8 @@ static int graph_utimens(const char *path, const struct timespec ts[2])
 	struct timeval tv[2];
 	int res = 0;
 	char *rp = NULL;
-	fprintf(stderr, "Start  %s on %s\n", __func__, path);
+
+	// trace(__func__, path);
 
 	rp = real_path(path, false);
 	if (!rp) {
@@ -800,8 +807,6 @@ static int graph_utimens(const char *path, const struct timespec ts[2])
 	tv[1].tv_usec = ts[1].tv_nsec / 1000;
 
 	res = utimes(rp, tv);
-	res = 0;
-	errno = 0;
 	if (res == -1) {
 		res = -errno;
 		goto done;
@@ -811,7 +816,6 @@ done:
 	if (rp) {
 		free_path(rp);
 	}
-	fprintf(stderr, "Finished  %s on %s\n", __func__, path);
 
 	return res;
 }
@@ -820,7 +824,8 @@ static int graph_open(const char *path, struct fuse_file_info *fi)
 {
 	int res = 0;
 	int fd;
-	fprintf(stderr, "Start  %s on %s\n", __func__, path);
+
+	trace(__func__, path);
 
 	fd = maybe_open(path, fi->flags, 0777);
 	if (fd == -1) {
@@ -831,7 +836,6 @@ static int graph_open(const char *path, struct fuse_file_info *fi)
 	fi->fh = fd;
 
 done:
-	fprintf(stderr, "Finished  %s on %s\n", __func__, path);
 
 	return res;
 }
@@ -840,7 +844,8 @@ static int graph_create(const char *path, mode_t mode, struct fuse_file_info *fi
 {
 	int res = 0;
 	int fd;
-	fprintf(stderr, "Start  %s on %s\n", __func__, path);
+
+	trace(__func__, path);
 
 	fd = maybe_open(path, fi->flags, mode);
 	if (fd == -1) {
@@ -851,7 +856,6 @@ static int graph_create(const char *path, mode_t mode, struct fuse_file_info *fi
 	fi->fh = fd;
 
 done:
-	fprintf(stderr, "Finished  %s on %s\n", __func__, path);
 
 	return res;
 }
@@ -860,7 +864,8 @@ static int graph_mkdir(const char *path, mode_t mode)
 {
 	int res = 0;
 	char *rp = NULL;
-	fprintf(stderr, "Start  %s on %s\n", __func__, path);
+
+	// trace(__func__, path);
 
 	rp = real_path(path, true);
 	if (!rp) {
@@ -878,7 +883,6 @@ done:
 	if (rp) {
 		free_path(rp);
 	}
-	fprintf(stderr, "Finished  %s on %s\n", __func__, path);
 
 	return res;
 }
@@ -887,7 +891,8 @@ static int graph_mknod(const char *path, mode_t mode, dev_t rdev)
 {
 	int res = 0;
 	char *rp = NULL;
-	fprintf(stderr, "Start  %s on %s\n", __func__, path);
+
+	// trace(__func__, path);
 
 	rp = real_path(path, true);
 	if (!rp) {
@@ -910,7 +915,6 @@ done:
 	if (rp) {
 		free_path(rp);
 	}
-	fprintf(stderr, "Finished  %s on %s\n", __func__, path);
 
 	return res;
 }
@@ -920,13 +924,14 @@ static int graph_fgetattr(const char *path, struct stat *stbuf,
 {
 	int res = 0;
 	(void) path;
-	fprintf(stderr, "Start  %s on %s\n", __func__, path);
+
+	// trace(__func__, path);
 
 	res = fstat(fi->fh, stbuf);
+	stbuf->st_ino = 0;
 	if (res == -1) {
 		return -errno;
 	}
-	fprintf(stderr, "Finished  %s on %s\n", __func__, path);
 
 	return 0;
 }
@@ -936,13 +941,13 @@ static int graph_ftruncate(const char *path, off_t size,
 {
 	int res;
 	(void) path;
-	fprintf(stderr, "Start  %s on %s\n", __func__, path);
+
+	// trace(__func__, path);
 
 	res = ftruncate(fi->fh, size);
 	if (res == -1) {
 		return -errno;
 	}
-	fprintf(stderr, "Finished  %s on %s\n", __func__, path);
 
 	return 0;
 }
@@ -979,6 +984,8 @@ static int graph_statfs(const char *path, struct statvfs *stbuf)
 {
 	int res = 0;
 
+	// trace(__func__, path);
+
 	res = statvfs(union_src, stbuf);
 	if (res == -1) {
 		res = -errno;
@@ -998,8 +1005,6 @@ static int graph_release(const char *path, struct fuse_file_info *fi)
 {
 	(void) path;
 	// intentionally omit closing fi->fh.
-
-	close(fi->fh);
 
 	return 0;
 }
@@ -1180,12 +1185,12 @@ static struct fuse_operations graph_oper = {
 	.flag_nullpath_ok = 1,
 };
 
-int start_unionfs(char *mount_path)
+int start_unionfs(char *src_path, char *mount_path)
 {
 	char *argv[4];
 	int i;
 
-	union_src = strdup("/tmp/test");
+	union_src = strdup(src_path);
 	if (!union_src) {
 		return -errno;
 	}
@@ -1252,7 +1257,7 @@ int alloc_unionfs(char *layer_path, char *id)
 			goto done;
 		}
 
-		asprintf(&parent, "%s/_parent", layer);
+		asprintf(&parent, "%s/.unionfs.parent", layer);
 		if (!parent) {
 			res = -errno;
 			goto done;
@@ -1304,40 +1309,11 @@ int release_unionfs(char *id)
 	return 0;
 }
 
-
-int create_layer(char *id)
-{  
-    char dir[4096];
-
-    sprintf(dir, "/tmp/test/%s", id);
-    mkdir(dir, 0644);
-
-    fprintf(stderr, "Created layer %s\n", dir);
-
-    return 0;
-}
-
-int remove_layer(char *id)
-{   
-
-    return 0;
-}  
-
-int check_layer(char *id)
-{
-    struct stat st;
-    char dir[4096];
-
-    sprintf(dir, "/tmp/test/%s", id);
-
-    int ret = stat(dir, &st);
-
-    return ret;
-}  
-
+/*
 int main()
 {
-   start_unionfs("/var/lib/openstorage/unionfs");
+   start_unionfs("/var/lib/openstorage/fuse/physical", "/var/lib/openstorage/fuse/virtual");
 }
+*/
 
-
+#endif

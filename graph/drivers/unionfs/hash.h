@@ -11,7 +11,6 @@ typedef struct entry_s entry_t;
 
 struct hashtable_s {
 	int size;
-	char *name;
 	struct entry_s **table;	
 };
 

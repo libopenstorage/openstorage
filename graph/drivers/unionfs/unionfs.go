@@ -1,6 +1,14 @@
-// +build linux,have_chainfs
+// +build linux,have_unionfs
 
-package chainfs
+package unionfs
+
+/*
+extern int start_unionfs(char *, char *);
+extern int alloc_unionfs(char *, char *);
+extern int release_unionfs(char *);
+#cgo LDFLAGS: -lfuse -lulockmgr
+*/
+import "C"
 
 import (
 	"fmt"
@@ -11,45 +19,83 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/graph"
+	"github.com/libopenstorage/openstorage/volume"
 
 	"github.com/docker/docker/daemon/graphdriver"
 	"github.com/docker/docker/pkg/archive"
 	"github.com/docker/docker/pkg/chrootarchive"
 	"github.com/docker/docker/pkg/directory"
 	"github.com/docker/docker/pkg/idtools"
+	"github.com/docker/docker/pkg/parsers"
 
 	"github.com/Sirupsen/logrus"
 )
 
 const (
-	Name     = "chainfs"
-	Type     = api.Graph
-	virtPath = "/var/lib/openstorage/chainfs"
+	Name                = "unionfs"
+	Type                = api.Graph
+	UnionFSVolumeDriver = "unionfs.volume_driver"
+	virtPath            = "/var/lib/openstorage/fuse/virtual"
+	physPath            = "/var/lib/openstorage/fuse/physical"
 )
 
 type Driver struct {
+	volDriver volume.VolumeDriver
 }
 
 func Init(home string, options []string, uidMaps, gidMaps []idtools.IDMap) (graphdriver.Driver, error) {
 	logrus.Infof("Initializing Fuse Graph driver at home:%s and storage: %v...", home, virtPath)
 
+	var volumeDriver string
+	for _, option := range options {
+		key, val, err := parsers.ParseKeyValueOpt(option)
+		if err != nil {
+			return nil, err
+		}
+		switch key {
+		case UnionFSVolumeDriver:
+			volumeDriver = val
+		default:
+			return nil, fmt.Errorf("Unknown option %s\n", key)
+		}
+	}
+
+	if volumeDriver == "" {
+		logrus.Warnf("Error - no volume driver specified for UnionFS")
+		return nil, fmt.Errorf("No volume driver specified for UnionFS")
+	}
+
+	logrus.Infof("UnionFS volume driver: %v", volumeDriver)
+	volDriver, err := volume.Get(volumeDriver)
+	if err != nil {
+		logrus.Warnf("Error while loading volume driver: %s", volumeDriver)
+		return nil, err
+	}
+
 	// In case it is mounted.
 	syscall.Unmount(virtPath, 0)
 
-	err := os.MkdirAll(virtPath, 0744)
-	if err != nil {
-		logrus.Fatalf("Error while creating FUSE mount path: %v", err)
-	}
-
 	err = os.MkdirAll(virtPath, 0744)
 	if err != nil {
-		logrus.Fatalf("Error while creating FUSE mount path: %v", err)
+		volDriver.Shutdown()
+		logrus.Warnf("Error while creating FUSE mount path: %v", err)
+		return nil, err
 	}
 
-	// cVirtPath := C.CString(virtPath)
-	// go C.start_chainfs(cVirtPath)
+	err = os.MkdirAll(physPath, 0744)
+	if err != nil {
+		volDriver.Shutdown()
+		logrus.Warnf("Error while creating FUSE mount path: %v", err)
+		return nil, err
+	}
 
-	d := &Driver{}
+	cVirtPath := C.CString(virtPath)
+	cPhysPath := C.CString(physPath)
+	go C.start_unionfs(cPhysPath, cVirtPath)
+
+	d := &Driver{
+		volDriver: volDriver,
+	}
 
 	return d, nil
 }
@@ -63,7 +109,10 @@ func (d *Driver) String() string {
 // known to this driver.
 func (d *Driver) Cleanup() error {
 	logrus.Infof("Cleaning up fuse %s", virtPath)
-	// syscall.Unmount(virtPath, 0)
+
+	d.volDriver.Shutdown()
+	syscall.Unmount(virtPath, 0)
+
 	return nil
 }
 
@@ -76,28 +125,26 @@ func (d *Driver) Status() [][2]string {
 }
 
 func (d *Driver) linkParent(child, parent string) error {
-	parent = path.Join(virtPath, parent)
+	parent = path.Join(physPath, parent)
 
-	logrus.Infof("Linking layer %s to parent layer %s", child, parent)
+	logrus.Debugf("Linking layer %s to parent layer %s", child, parent)
 
-	child = child + "/_parent"
+	child = child + "/.unionfs.parent"
 
 	err := os.Symlink(parent, child)
 	if err != nil {
 		return fmt.Errorf("Error while linking FUSE mount path %v to %v: %v", child, parent, err)
 	}
 
-	logrus.Infof("Done linking")
-
 	return nil
 }
 
 // Create creates a new, empty, filesystem layer with the
 // specified id and parent and mountLabel. Parent and mountLabel may be "".
-func (d *Driver) Create(id string, parent string, ml string) error {
-	path := path.Join(virtPath, id)
+func (d *Driver) Create(id string, parent string, mountLabel string) error {
+	path := path.Join(physPath, id)
 
-	logrus.Infof("Creating layer %s", path)
+	logrus.Debugf("Creating layer %s", path)
 
 	err := os.MkdirAll(path, 0744)
 	if err != nil {
@@ -113,7 +160,7 @@ func (d *Driver) Create(id string, parent string, ml string) error {
 
 // Remove attempts to remove the filesystem layer with this id.
 func (d *Driver) Remove(id string) error {
-	path := path.Join(virtPath, id)
+	path := path.Join(physPath, id)
 
 	logrus.Debugf("Removing layer %s", path)
 
@@ -132,45 +179,39 @@ func (d *Driver) GetMetadata(id string) (map[string]string, error) {
 // to by this id. You can optionally specify a mountLabel or "".
 // Returns the absolute path to the mounted layered filesystem.
 func (d *Driver) Get(id, mountLabel string) (string, error) {
-	layerPath := path.Join(virtPath, id)
-	return layerPath, nil
+	layerPath := path.Join(physPath, id)
 
-	/*
-		cLayerPath := C.CString(layerPath)
-		cID := C.CString(id)
+	cLayerPath := C.CString(layerPath)
+	cID := C.CString(id)
 
-		ret, err := C.alloc_chainfs(cLayerPath, cID)
-		if int(ret) != 0 {
-			logrus.Warnf("Error while creating a chain FS for %s", id)
-			return "", err
-		} else {
-			logrus.Debugf("Created a chain FS for %s", id)
-			chainPath := path.Join(virtPath, id)
+	ret, err := C.alloc_unionfs(cLayerPath, cID)
+	if int(ret) != 0 {
+		logrus.Warnf("Error while creating a union FS for %s", id)
+		return "", err
+	} else {
+		logrus.Debugf("Created a union FS for %s", id)
+		unionPath := path.Join(virtPath, id)
 
-			return chainPath, err
-		}
-	*/
+		return unionPath, err
+	}
 }
 
 // Put releases the system resources for the specified id,
 // e.g, unmounting layered filesystem.
 func (d *Driver) Put(id string) error {
-	logrus.Debugf("Releasing chain FS for %s", id)
-	return nil
+	logrus.Debugf("Releasing union FS for %s", id)
 
-	/*
-		cID := C.CString(id)
-		_, err := C.release_chainfs(cID)
+	cID := C.CString(id)
+	_, err := C.release_unionfs(cID)
 
-		return err
-	*/
+	return err
 }
 
 // Exists returns whether a filesystem layer with the specified
 // ID exists on this driver.
 // All cache entries exist.
 func (d *Driver) Exists(id string) bool {
-	path := path.Join(virtPath, id)
+	path := path.Join(physPath, id)
 
 	_, err := os.Stat(path)
 
@@ -186,7 +227,8 @@ func (d *Driver) Exists(id string) bool {
 // new layer in bytes.
 // The archive.Reader must be an uncompressed stream.
 func (d *Driver) ApplyDiff(id string, parent string, diff archive.Reader) (size int64, err error) {
-	dir := path.Join(virtPath, id)
+	dir := path.Join(physPath, id)
+
 	if err := chrootarchive.UntarUncompressed(diff, dir, nil); err != nil {
 		logrus.Warnf("Error while applying diff to %s: %v", id, err)
 		return 0, err
@@ -224,18 +266,11 @@ func (d *Driver) DiffSize(id, parent string) (size int64, err error) {
 	return directory.Size(path.Join(virtPath, id))
 }
 
+func (d *Driver) Read() (size int64, err error) {
+
+	return 0, nil
+}
+
 func init() {
 	graph.Register(Name, Init)
 }
-
-/*
-extern int start_chainfs(char *mount_path);
-extern int alloc_chainfs(char *, char *id);
-extern int release_chainfs(char *id);
-extern int create_layer(char *id, char *parent_id);
-extern int remove_layer(char *id);
-extern int check_layer(char *id);
-#cgo LDFLAGS: -lfuse -lulockmgr
-#cgo CFLAGS: -g3
-*/
-// import "C"
