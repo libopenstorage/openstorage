@@ -48,6 +48,8 @@ import (
 	"strconv"
 	"strings"
 
+	"go.pedge.io/pb/go/google/protobuf"
+
 	"github.com/golang/protobuf/proto"
 )
 
@@ -94,6 +96,13 @@ func (s int32Slice) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 
 // marshalObject writes a struct to the Writer.
 func (m *Marshaler) marshalObject(out *errWriter, v proto.Message, indent string) error {
+	if v != nil {
+		if timestamp, ok := v.(*google_protobuf.Timestamp); ok {
+			out.write(`"`)
+			out.write(timestamp.GoTime().String())
+			out.write(`"`)
+		}
+	}
 	out.write("{")
 	if m.Indent != "" {
 		out.write("\n")
