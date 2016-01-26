@@ -3,11 +3,12 @@ package chainfs
 
 /*
 extern int start_chainfs(int mode, char *mount_path);
-extern int alloc_chainfs(char *, char *id);
-extern int release_chainfs(char *id);
+extern void stop_chainfs(void);
 extern int create_layer(char *id, char *parent_id);
 extern int remove_layer(char *id);
 extern int check_layer(char *id);
+extern int alloc_chainfs(char *id);
+extern int release_chainfs(char *id);
 #cgo LDFLAGS: -lfuse -lulockmgr -lchainfs
 #cgo CFLAGS: -g3
 */
@@ -58,7 +59,8 @@ func (d *Driver) String() string {
 // held by the driver, e.g., unmounting all layered filesystems
 // known to this driver.
 func (d *Driver) Cleanup() error {
-	logrus.Infof("Cleaning up fuse %s", virtPath)
+	logrus.Infof("Stopping libchainfs at %s", virtPath)
+	C.stop_chainfs()
 	return nil
 }
 
