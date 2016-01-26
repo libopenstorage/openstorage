@@ -51,3 +51,6 @@ osd:
   graphdrivers:
      chainfs:
 ```
+
+#### Note
+Set your ulimit -n to run out of open files.  Graph drivers tend to have many concurrently open files.
