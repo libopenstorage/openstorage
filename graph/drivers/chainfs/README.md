@@ -48,5 +48,5 @@ osd:
   drivers:
      btrfs:
   graphdrivers:
-    chainfs:
+     chainfs:
 ```
