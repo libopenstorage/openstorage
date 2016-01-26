@@ -18,4 +18,4 @@ osd:
   graphdrivers:
     #proxy:
     #layer0:
-    unionfs:
+    chainfs:
