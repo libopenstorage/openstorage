@@ -165,6 +165,9 @@ func (d *Driver) Exists(id string) bool {
 // The archive.Reader must be an uncompressed stream.
 func (d *Driver) ApplyDiff(id string, parent string, diff archive.Reader) (size int64, err error) {
 	dir := path.Join(virtPath, id)
+
+	logrus.Infof("Applying diff at path %s\n", dir)
+
 	if err := chrootarchive.UntarUncompressed(diff, dir, nil); err != nil {
 		logrus.Warnf("Error while applying diff to %s: %v", id, err)
 		return 0, err
