@@ -1,4 +1,5 @@
 // +build linux,have_chainfs
+
 package chainfs
 
 /*
@@ -75,7 +76,11 @@ func (d *Driver) Status() [][2]string {
 // Create creates a new, empty, filesystem layer with the
 // specified id and parent and mountLabel. Parent and mountLabel may be "".
 func (d *Driver) Create(id string, parent string, ml string) error {
-	logrus.Infof("Creating layer %s with parent %s", id, parent)
+	if parent != "" {
+		logrus.Infof("Creating layer %s with parent %s", id, parent)
+	} else {
+		logrus.Infof("Creating parent layer %s", id)
+	}
 
 	cID := C.CString(id)
 	cParent := C.CString(parent)
