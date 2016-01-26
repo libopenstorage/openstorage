@@ -1,4 +1,5 @@
-## Fuse based Union FS Graph Driver
+## ChainFS Graph Driver
+
 ### EXPERIMENTAL!  
 Note that this is still in development and experimental.
 
