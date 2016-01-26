@@ -14,7 +14,6 @@ extern int check_layer(char *id);
 import "C"
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -41,7 +40,7 @@ type Driver struct {
 }
 
 func Init(home string, options []string, uidMaps, gidMaps []idtools.IDMap) (graphdriver.Driver, error) {
-	logrus.Infof("Initializing Fuse Graph driver at home:%s and storage: %v...", home, virtPath)
+	logrus.Infof("Initializing libchainfs at home: %s and storage: %v...", home, virtPath)
 
 	cVirtPath := C.CString(virtPath)
 	go C.start_chainfs(1, cVirtPath)
@@ -113,10 +112,9 @@ func (d *Driver) GetMetadata(id string) (map[string]string, error) {
 // to by this id. You can optionally specify a mountLabel or "".
 // Returns the absolute path to the mounted layered filesystem.
 func (d *Driver) Get(id, mountLabel string) (string, error) {
-	cLayerPath := C.CString(layerPath)
 	cID := C.CString(id)
 
-	ret, err := C.alloc_chainfs(cLayerPath, cID)
+	ret, err := C.alloc_chainfs(cID)
 	if int(ret) != 0 {
 		logrus.Warnf("Error while creating a chain FS for %s", id)
 		return "", err
