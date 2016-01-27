@@ -13,7 +13,7 @@ When you install openstorage on a Linux host, you will automatically get a state
 
 OSD will work with any distributed scheduler that is compatible with the [Docker remote API](https://docs.docker.com/engine/reference/api/docker_remote_api/).
 
-![OSD with schedulers](http://i.imgur.com/9Gf00Ky.png)
+![OSD with schedulers](http://i.imgur.com/K7rsETa.jpg)
 
 ### Docker Volumes
 
@@ -23,13 +23,13 @@ OSD integrates with [Docker Volumes](https://docs.docker.com/engine/extend/plugi
 
 OpenStorage provides support for the [Graph Driver](https://godoc.org/github.com/docker/docker/daemon/graphdriver) in addition to `Docker Volumes`.  When used as a graph driver, the container's layers will be stored on a volume provided by the OSD.
 
-![OSD - Graph Driver and Docker Volumes](http://i.imgur.com/990x7Ay.png)
+![OSD - Graph Driver and Docker Volumes](http://i.imgur.com/jdBPFqG.jpg)
 
 ### An example usage
 
 The diagram below shows OSD integrated with Docker and Swarm to allow for provisioning of storage to containers in a multi node environment.
 
-![OSD - Docker - Swarm integration](http://i.imgur.com/ZqwnKIj.png)
+![OSD - Docker - Swarm integration](http://i.imgur.com/uqbvq4c.jpg)
 
 There are default drivers built-in for NFS, AWS and BTRFS.  By using openstorage, you can get container granular, stateful storage provisioning to Linux containers with the backends supported by openstorage.  We are working with the storage ecosystem to add more drivers for various storage providers.
 
