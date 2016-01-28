@@ -10,6 +10,7 @@ extern int remove_layer(char *id);
 extern int check_layer(char *id);
 extern int alloc_chainfs(char *id);
 extern int release_chainfs(char *id);
+extern int release_cache(void);
 #cgo LDFLAGS: -lfuse -lulockmgr -lchainfs
 #cgo CFLAGS: -g3
 */
@@ -69,7 +70,7 @@ func (d *Driver) Cleanup() error {
 // level diagnostic status about this driver.
 func (d *Driver) Status() [][2]string {
 	return [][2]string{
-		{"OpenStorage FUSE", "OK"},
+		{"OpenStorage ChainFS", "OK"},
 	}
 }
 
@@ -141,6 +142,8 @@ func (d *Driver) Put(id string) error {
 	cID := C.CString(id)
 	_, err := C.release_chainfs(cID)
 
+	// C.release_cache()
+
 	return err
 }
 
@@ -164,7 +167,8 @@ func (d *Driver) Exists(id string) bool {
 // new layer in bytes.
 // The archive.Reader must be an uncompressed stream.
 func (d *Driver) ApplyDiff(id string, parent string, diff archive.Reader) (size int64, err error) {
-	dir := path.Join(virtPath, id)
+	// dir := path.Join(virtPath, id)
+	dir := path.Join("/tmp/chainfs/", id)
 
 	logrus.Infof("Applying diff at path %s\n", dir)
 
