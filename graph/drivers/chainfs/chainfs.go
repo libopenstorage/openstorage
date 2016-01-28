@@ -167,8 +167,8 @@ func (d *Driver) Exists(id string) bool {
 // new layer in bytes.
 // The archive.Reader must be an uncompressed stream.
 func (d *Driver) ApplyDiff(id string, parent string, diff archive.Reader) (size int64, err error) {
-	// dir := path.Join(virtPath, id)
-	dir := path.Join("/tmp/chainfs/", id)
+	dir := path.Join(virtPath, id)
+	// dir := path.Join("/tmp/chainfs/", id)
 
 	logrus.Infof("Applying diff at path %s\n", dir)
 
