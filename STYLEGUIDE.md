@@ -186,7 +186,6 @@ type EmptyStruct {
 }
 // yes
 type EmptyStruct {}
-}
 ```
 
 * Blank imports should have explanation (https://github.com/libopenstorage/openstorage/blob/8d07329468ef709838e443dc17b1eecf2c7cf77d/volume/enumerator.go#L6).
