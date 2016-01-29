@@ -25,6 +25,7 @@ const (
 	PluginAPIBase      = "/run/docker/plugins/"
 	DriverAPIBase      = "/var/lib/osd/driver/"
 	GraphDriverAPIBase = "/var/lib/osd/graphdriver/"
+	ClusterAPIBase     = "/var/lib/osd/cluster/"
 	UrlKey             = "url"
 	VersionKey         = "version"
 	MountBase          = "/var/lib/osd/mounts/"

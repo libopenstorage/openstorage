@@ -15,11 +15,10 @@ import (
 
 type clusterClient struct {
 	manager cluster.Cluster
-	name    string
 }
 
 func (c *clusterClient) clusterOptions(context *cli.Context) {
-	clnt, err := client.NewClient("http://localhost:9001", "v1")
+	clnt, err := client.NewClusterClient()
 	if err != nil {
 		fmt.Printf("Failed to initialize client library: %v\n", err)
 		os.Exit(1)
@@ -174,8 +173,8 @@ func (c *clusterClient) displayGossipStatus(context *cli.Context) {
 }
 
 // ClusterCommands exports CLI comamnds for File VolumeDriver
-func ClusterCommands(name string) []cli.Command {
-	c := &clusterClient{name: name}
+func ClusterCommands() []cli.Command {
+	c := &clusterClient{}
 
 	commands := []cli.Command{
 		{

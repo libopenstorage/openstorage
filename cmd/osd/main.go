@@ -71,29 +71,31 @@ func start(c *cli.Context) {
 
 	// Start the cluster state machine, if enabled.
 	if cfg.Osd.ClusterConfig.NodeId != "" && cfg.Osd.ClusterConfig.ClusterId != "" {
+		logrus.Infof("OSD enabling cluster mode.")
+
 		dockerClient, err := docker.NewClientFromEnv()
 		if err != nil {
 			logrus.Warnf("Failed to initialize docker client: %v", err)
 			return
 		}
+
 		cm = cluster.New(cfg.Osd.ClusterConfig, kv, dockerClient)
+
+		if err := server.StartClusterAPI(config.ClusterAPIBase); err != nil {
+			logrus.Warnf("Unable to start cluster API server: %v", err)
+			return
+		}
 	}
 
 	// Start the volume drivers.
 	for d, v := range cfg.Osd.Drivers {
 		logrus.Infof("Starting volume driver: %v", d)
-		_, err := volume.New(d, v)
-		if err != nil {
+		if _, err := volume.New(d, v); err != nil {
 			logrus.Warnf("Unable to start volume driver: %v, %v", d, err)
 			return
 		}
-		err = server.StartServerAPI(d, 0, config.DriverAPIBase)
-		if err != nil {
-			logrus.Warnf("Unable to start volume driver: %v", err)
-			return
-		}
-		err = server.StartPluginAPI(d, config.PluginAPIBase)
-		if err != nil {
+
+		if err := server.StartPluginAPI(d, config.DriverAPIBase, config.PluginAPIBase); err != nil {
 			logrus.Warnf("Unable to start volume plugin: %v", err)
 			return
 		}
@@ -102,16 +104,14 @@ func start(c *cli.Context) {
 	// Start the graph drivers.
 	for d, _ := range cfg.Osd.GraphDrivers {
 		logrus.Infof("Starting graph driver: %v", d)
-		err = server.StartGraphAPI(d, 0, config.PluginAPIBase)
-		if err != nil {
+		if err := server.StartGraphAPI(d, config.PluginAPIBase); err != nil {
 			logrus.Warnf("Unable to start graph plugin: %v", err)
 			return
 		}
 	}
 
 	if cm != nil {
-		err = cm.Start()
-		if err != nil {
+		if err := cm.Start(); err != nil {
 			logrus.Warnf("Unable to start cluster manager: %v", err)
 			return
 		}
@@ -171,6 +171,12 @@ func main() {
 			Subcommands: osdcli.DriverCommands(),
 		},
 		{
+			Name:        "cluster",
+			Aliases:     []string{"c"},
+			Usage:       "Manage cluster",
+			Subcommands: osdcli.ClusterCommands(),
+		},
+		{
 			Name:    "version",
 			Aliases: []string{"v"},
 			Usage:   "Display version",
@@ -182,8 +188,7 @@ func main() {
 	for _, v := range volumedrivers.AllDrivers {
 		if v.DriverType&api.Block == api.Block {
 			bCmds := osdcli.BlockVolumeCommands(v.Name)
-			clstrCmds := osdcli.ClusterCommands(v.Name)
-			cmds := append(bCmds, clstrCmds...)
+			cmds := append(bCmds)
 			c := cli.Command{
 				Name:        v.Name,
 				Usage:       fmt.Sprintf("Manage %s storage", v.Name),
@@ -192,8 +197,7 @@ func main() {
 			app.Commands = append(app.Commands, c)
 		} else if v.DriverType&api.File == api.File {
 			fCmds := osdcli.FileVolumeCommands(v.Name)
-			clstrCmds := osdcli.ClusterCommands(v.Name)
-			cmds := append(fCmds, clstrCmds...)
+			cmds := append(fCmds)
 			c := cli.Command{
 				Name:        v.Name,
 				Usage:       fmt.Sprintf("Manage %s volumes", v.Name),

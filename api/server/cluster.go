@@ -9,18 +9,19 @@ import (
 
 const (
 	clusterApiVersion = "v1"
+	name              = "Cluster API"
 )
 
 type clusterApi struct {
 	restBase
 }
 
-func newClusterAPI(name string) restServer {
+func newClusterAPI() restServer {
 	return &clusterApi{restBase{version: clusterApiVersion, name: name}}
 }
 
 func (c *clusterApi) String() string {
-	return c.name
+	return name
 }
 
 func (c *clusterApi) enumerate(w http.ResponseWriter, r *http.Request) {
@@ -28,13 +29,13 @@ func (c *clusterApi) enumerate(w http.ResponseWriter, r *http.Request) {
 
 	inst, err := cluster.Inst()
 	if err != nil {
-		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		c.sendError(name, method, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	cluster, err := inst.Enumerate()
 	if err != nil {
-		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		c.sendError(name, method, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -44,19 +45,19 @@ func (c *clusterApi) enumerate(w http.ResponseWriter, r *http.Request) {
 func (c *clusterApi) inspect(w http.ResponseWriter, r *http.Request) {
 	method := "inspect"
 
-	c.sendError(c.name, method, w, "Not implemented.", http.StatusNotImplemented)
+	c.sendError(name, method, w, "Not implemented.", http.StatusNotImplemented)
 }
 
 func (c *clusterApi) delete(w http.ResponseWriter, r *http.Request) {
 	method := "delete"
 
-	c.sendError(c.name, method, w, "Not implemented.", http.StatusNotImplemented)
+	c.sendError(name, method, w, "Not implemented.", http.StatusNotImplemented)
 }
 
 func (c *clusterApi) shutdown(w http.ResponseWriter, r *http.Request) {
 	method := "shutdown"
 
-	c.sendError(c.name, method, w, "Not implemented.", http.StatusNotImplemented)
+	c.sendError(name, method, w, "Not implemented.", http.StatusNotImplemented)
 }
 
 func clusterVersion(route string) string {
