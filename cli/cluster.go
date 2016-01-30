@@ -41,9 +41,10 @@ func (c *clusterClient) status(context *cli.Context) {
 	if jsonOut {
 		fmtOutput(context, &Format{Cluster: &cluster})
 	} else {
-		fmt.Fprintf(outFd, "ID %s: Status: %v\n",
+		fmt.Fprintf(outFd, "Cluster Information:\nCluster ID %s: Status: %v\n\n",
 			cluster.Id, cluster.Status)
 
+		fmt.Fprintf(outFd, "Load Information:\n")
 		w := new(tabwriter.Writer)
 		w.Init(outFd, 12, 12, 1, ' ', 0)
 
