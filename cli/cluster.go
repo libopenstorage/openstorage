@@ -26,11 +26,11 @@ func (c *clusterClient) clusterOptions(context *cli.Context) {
 	c.manager = clnt.ClusterManager()
 }
 
-func (c *clusterClient) inspect(context *cli.Context) {
+func (c *clusterClient) status(context *cli.Context) {
 	c.clusterOptions(context)
 	jsonOut := context.GlobalBool("json")
 	outFd := os.Stdout
-	fn := "inspect"
+	fn := "status"
 
 	cluster, err := c.manager.Enumerate()
 	if err != nil {
@@ -69,11 +69,11 @@ func (c *clusterClient) inspect(context *cli.Context) {
 	}
 }
 
-func (c *clusterClient) enumerate(context *cli.Context) {
+func (c *clusterClient) load(context *cli.Context) {
 	c.clusterOptions(context)
 	jsonOut := context.GlobalBool("json")
 	outFd := os.Stdout
-	fn := "enumerate"
+	fn := "load"
 
 	cluster, err := c.manager.Enumerate()
 	if err != nil {
@@ -116,11 +116,11 @@ func (c *clusterClient) enableGossip(context *cli.Context) {
 	c.manager.EnableUpdates()
 }
 
-func (c *clusterClient) displayGossipStatus(context *cli.Context) {
+func (c *clusterClient) gossipStatus(context *cli.Context) {
 	c.clusterOptions(context)
 	jsonOut := context.GlobalBool("json")
 	outFd := os.Stdout
-	fn := "displayGossipStatus"
+	fn := "gossipstatus"
 
 	s := c.manager.GetState()
 	if s == nil {
@@ -178,10 +178,10 @@ func ClusterCommands() []cli.Command {
 
 	commands := []cli.Command{
 		{
-			Name:    "inspect",
-			Aliases: []string{"i"},
+			Name:    "status",
+			Aliases: []string{"s"},
 			Usage:   "Inspect the cluster",
-			Action:  c.inspect,
+			Action:  c.status,
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "machine,m",
@@ -191,10 +191,10 @@ func ClusterCommands() []cli.Command {
 			},
 		},
 		{
-			Name:    "enumerate",
-			Aliases: []string{"e"},
-			Usage:   "Enumerate containers in the cluster",
-			Action:  c.enumerate,
+			Name:    "load",
+			Aliases: []string{"l"},
+			Usage:   "List containers in the cluster",
+			Action:  c.load,
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "machine,m",
@@ -219,7 +219,7 @@ func ClusterCommands() []cli.Command {
 			Name:    "gossip-status",
 			Aliases: []string{"gs"},
 			Usage:   "Display gossip status",
-			Action:  c.displayGossipStatus,
+			Action:  c.gossipStatus,
 		},
 		{
 			Name:    "remove",
