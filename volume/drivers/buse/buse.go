@@ -362,6 +362,10 @@ func (d *driver) Leave(self *api.Node) error {
 	return nil
 }
 
+func (d *driver) Halt(self *api.Node, db *cluster.Database) error {
+	return nil
+}
+
 func init() {
 
 	// Register ourselves as an openstorage volume driver.

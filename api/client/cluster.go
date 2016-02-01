@@ -55,7 +55,7 @@ func (c *clusterClient) Remove(nodes []api.Node) error {
 	return nil
 }
 
-func (c *clusterClient) Shutdown(cluster bool, nodes []api.Node) error {
+func (c *clusterClient) Shutdown() error {
 	return nil
 }
 

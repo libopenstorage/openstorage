@@ -479,6 +479,7 @@ func (c *ClusterManager) Start() error {
 	return nil
 }
 
+// Enumerate lists all the nodes in the cluster.
 func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 	i := 0
 
@@ -492,12 +493,31 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 	return cluster, nil
 }
 
+// Remove node(s) from the cluster permanently.
 func (c *ClusterManager) Remove(nodes []api.Node) error {
 	// TODO
 	return nil
 }
 
-func (c *ClusterManager) Shutdown(cluster bool, nodes []api.Node) error {
-	// TODO
-	return nil
+// Shutdown can be called when THIS node is gracefully shutting down.
+func (c *ClusterManager) Shutdown() error {
+	err := error(nil)
+
+	db, err := readDatabase()
+	if err != nil {
+		logrus.Warnf("Could not read cluster database (%v).", err)
+		goto done
+	}
+
+	// Alert all listeners that we are shutting this node down.
+	for e := c.listeners.Front(); e != nil; e = e.Next() {
+		if err := e.Value.(ClusterListener).Halt(&c.selfNode, &db); err != nil {
+			logrus.Warnf("Failed to shutdown %s",
+				e.Value.(ClusterListener).String())
+			goto done
+		}
+	}
+
+done:
+	return err
 }
