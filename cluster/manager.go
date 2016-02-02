@@ -501,23 +501,19 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 
 // Shutdown can be called when THIS node is gracefully shutting down.
 func (c *ClusterManager) Shutdown() error {
-	err := error(nil)
-
 	db, err := readDatabase()
 	if err != nil {
 		logrus.Warnf("Could not read cluster database (%v).", err)
-		goto done
+		return err
 	}
 
 	// Alert all listeners that we are shutting this node down.
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
+		logrus.Infof("Shutting down %s", e.Value.(ClusterListener).String())
 		if err := e.Value.(ClusterListener).Halt(&c.selfNode, &db); err != nil {
 			logrus.Warnf("Failed to shutdown %s",
 				e.Value.(ClusterListener).String())
-			goto done
 		}
 	}
-
-done:
-	return err
+	return nil
 }

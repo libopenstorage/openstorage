@@ -8,23 +8,25 @@ import (
 )
 
 var (
-	instances         map[string]VolumeDriver
-	drivers           map[string]InitFunc
-	mutex             sync.Mutex
-	ErrExist          = errors.New("Driver already exists")
-	ErrDriverNotFound = errors.New("Driver implementation not found")
-	ErrEnoEnt         = errors.New("Volume does not exist.")
-	ErrEnomem         = errors.New("Out of memory.")
-	ErrEinval         = errors.New("Invalid argument")
-	ErrVolDetached    = errors.New("Volume is detached")
-	ErrVolAttached    = errors.New("Volume is attached")
-	ErrVolHasSnaps    = errors.New("Volume has snapshots associated")
-	ErrNotSupported   = errors.New("Operation not supported")
+	instances             map[string]VolumeDriver
+	drivers               map[string]InitFunc
+	mutex                 sync.Mutex
+	ErrExist              = errors.New("Driver already exists")
+	ErrDriverNotFound     = errors.New("Driver implementation not found")
+	ErrDriverInitializing = errors.New("Driver is initializing")
+	ErrEnoEnt             = errors.New("Volume does not exist.")
+	ErrEnomem             = errors.New("Out of memory.")
+	ErrEinval             = errors.New("Invalid argument")
+	ErrVolDetached        = errors.New("Volume is detached")
+	ErrVolAttached        = errors.New("Volume is attached")
+	ErrVolHasSnaps        = errors.New("Volume has snapshots associated")
+	ErrNotSupported       = errors.New("Operation not supported")
 )
 
 type DriverParams map[string]string
 
 type InitFunc func(params DriverParams) (VolumeDriver, error)
+type StatusFunc func() error
 
 // VolumeDriver is the main interface to be implemented by any storage driver.
 // Every driver must at minimum implement the ProtoDriver sub interface.
