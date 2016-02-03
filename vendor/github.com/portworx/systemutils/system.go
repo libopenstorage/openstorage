@@ -7,18 +7,28 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 )
 
 type system struct {
+	cpuUsage   float64
+	totalTicks float64
+	ticks      float64
 }
 
-func Command(name string, arg ...string) *exec.Cmd {
-	cmd := exec.Command(name, arg...)
-	cmd.SysProcAttr = new(syscall.SysProcAttr)
-	cmd.SysProcAttr.Cloneflags = syscall.CLONE_VFORK
-	return cmd
+func (s *system) start() {
+	go func() {
+		for {
+			idle0, total0 := getCPUSample()
+			time.Sleep(2 * time.Second)
+			idle1, total1 := getCPUSample()
+
+			idleTicks := float64(idle1 - idle0)
+			s.totalTicks = float64(total1 - total0)
+			s.ticks = s.totalTicks - idleTicks
+			s.cpuUsage = 100 * s.ticks / s.totalTicks
+		}
+	}()
 }
 
 func getCPUSample() (idle, total uint64) {
@@ -47,31 +57,25 @@ func getCPUSample() (idle, total uint64) {
 	return
 }
 
-func (s system) CpuUsage() (usage float64, total float64, ticks float64) {
-	idle0, total0 := getCPUSample()
-	time.Sleep(3 * time.Second)
-	idle1, total1 := getCPUSample()
-
-	idleTicks := float64(idle1 - idle0)
-	totalTicks := float64(total1 - total0)
-	cpuUsage := 100 * (totalTicks - idleTicks) / totalTicks
-
-	return cpuUsage, totalTicks - idleTicks, totalTicks
+func (s *system) CpuUsage() (usage float64, total float64, ticks float64) {
+	return s.cpuUsage, s.ticks, s.totalTicks
 }
 
-func (s system) MemUsage() (available float64) {
-	out, _ := Command("/bin/free", "-m").Output()
+func (s *system) MemUsage() (available float64) {
+	out, _ := exec.Command("/bin/free", "-m").Output()
 	r := regexp.MustCompile("(^|\\s)([0-9]+)($|\\s)")
 	str := r.FindString(string(out))
 	f, _ := strconv.ParseFloat(str, 64)
 	return f
 }
 
-func (s system) Luns() map[string]Lun {
+func (s *system) Luns() map[string]Lun {
 	var dev string
 	luns := make(map[string]Lun)
 
-	out, _ := Command("/sbin/fdisk", "-l").Output()
+	//XXX Temporarily disable scanning devices.
+	return luns
+	out, _ := exec.Command("/sbin/fdisk", "-l").Output()
 
 	lines := strings.Split(string(out), "\n")
 

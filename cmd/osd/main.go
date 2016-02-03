@@ -11,10 +11,6 @@ import (
 	"github.com/codegangsta/cli"
 	"github.com/docker/docker/pkg/reexec"
 	"github.com/fsouza/go-dockerclient"
-	"github.com/portworx/kvdb"
-	"github.com/portworx/kvdb/consul"
-	"github.com/portworx/kvdb/etcd"
-	"github.com/portworx/kvdb/mem"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/server"
 	osdcli "github.com/libopenstorage/openstorage/cli"
@@ -23,9 +19,14 @@ import (
 	"github.com/libopenstorage/openstorage/graph/drivers"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
+	"github.com/portworx/kvdb"
+	"github.com/portworx/kvdb/consul"
+	"github.com/portworx/kvdb/etcd"
+	"github.com/portworx/kvdb/mem"
 )
 
 func start(c *cli.Context) {
+
 	if !osdcli.DaemonMode(c) {
 		cli.ShowAppHelp(c)
 		return
@@ -63,6 +64,8 @@ func start(c *cli.Context) {
 
 	// Start the cluster state machine, if enabled.
 	if cfg.Osd.ClusterConfig.NodeId != "" && cfg.Osd.ClusterConfig.ClusterId != "" {
+		dlog.Infof("OSD enabling cluster mode.")
+
 		dockerClient, err := docker.NewClientFromEnv()
 		if err != nil {
 			dlog.Warnf("Failed to initialize docker client: %v", err)
@@ -72,23 +75,26 @@ func start(c *cli.Context) {
 			dlog.Errorln(err)
 			return
 		}
+		if err := cluster.Init(cfg.Osd.ClusterConfig, kv, dockerClient); err != nil {
+			dlog.Warnf("Unable to init cluster server: %v", err)
+			return
+		}
+
+		if err := server.StartClusterAPI(config.ClusterAPIBase); err != nil {
+			dlog.Warnf("Unable to start cluster API server: %v", err)
+			return
+		}
 	}
 
 	// Start the volume drivers.
 	for d, v := range cfg.Osd.Drivers {
 		dlog.Infof("Starting volume driver: %v", d)
-		_, err := volume.New(d, v)
-		if err != nil {
+		if _, err := volume.New(d, v); err != nil {
 			dlog.Warnf("Unable to start volume driver: %v, %v", d, err)
 			return
 		}
-		err = server.StartServerAPI(d, 0, config.DriverAPIBase)
-		if err != nil {
-			dlog.Warnf("Unable to start volume driver: %v", err)
-			return
-		}
-		err = server.StartPluginAPI(d, config.PluginAPIBase)
-		if err != nil {
+
+		if err := server.StartPluginAPI(d, config.DriverAPIBase, config.PluginAPIBase); err != nil {
 			dlog.Warnf("Unable to start volume plugin: %v", err)
 			return
 		}
@@ -97,13 +103,11 @@ func start(c *cli.Context) {
 	// Start the graph drivers.
 	for d, _ := range cfg.Osd.GraphDrivers {
 		dlog.Infof("Starting graph driver: %v", d)
-		err = server.StartGraphAPI(d, 0, config.PluginAPIBase)
-		if err != nil {
+		if err := server.StartGraphAPI(d, config.PluginAPIBase); err != nil {
 			dlog.Warnf("Unable to start graph plugin: %v", err)
 			return
 		}
 	}
-
 	if err := cluster.Start(); err != nil {
 		dlog.Warnf("Unable to start cluster manager: %v", err)
 		return
@@ -163,6 +167,12 @@ func main() {
 			Subcommands: osdcli.DriverCommands(),
 		},
 		{
+			Name:        "cluster",
+			Aliases:     []string{"c"},
+			Usage:       "Manage cluster",
+			Subcommands: osdcli.ClusterCommands(),
+		},
+		{
 			Name:    "version",
 			Aliases: []string{"v"},
 			Usage:   "Display version",
@@ -175,19 +185,17 @@ func main() {
 		// TODO(pedge): was an and, but we have no drivers that have two types
 		if v.DriverType == api.DriverType_DRIVER_TYPE_BLOCK {
 			bCmds := osdcli.BlockVolumeCommands(v.Name)
-			clstrCmds := osdcli.ClusterCommands(v.Name)
-			cmds := append(bCmds, clstrCmds...)
+			cmds := append(bCmds)
 			c := cli.Command{
 				Name:        v.Name,
 				Usage:       fmt.Sprintf("Manage %s storage", v.Name),
 				Subcommands: cmds,
 			}
 			app.Commands = append(app.Commands, c)
-		// TODO(pedge): was an and, but we have no drivers that have two types
+			// TODO(pedge): was an and, but we have no drivers that have two types
 		} else if v.DriverType == api.DriverType_DRIVER_TYPE_FILE {
 			fCmds := osdcli.FileVolumeCommands(v.Name)
-			clstrCmds := osdcli.ClusterCommands(v.Name)
-			cmds := append(fCmds, clstrCmds...)
+			cmds := append(fCmds)
 			c := cli.Command{
 				Name:        v.Name,
 				Usage:       fmt.Sprintf("Manage %s volumes", v.Name),

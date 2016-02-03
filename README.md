@@ -13,7 +13,7 @@ When you install openstorage on a Linux host, you will automatically get a state
 
 OSD will work with any distributed scheduler that is compatible with the [Docker remote API](https://docs.docker.com/engine/reference/api/docker_remote_api/).
 
-![OSD with schedulers](http://i.imgur.com/9Gf00Ky.png)
+![OSD with schedulers](http://i.imgur.com/K7rsETa.jpg)
 
 ### Docker Volumes
 
@@ -23,13 +23,13 @@ OSD integrates with [Docker Volumes](https://docs.docker.com/engine/extend/plugi
 
 OpenStorage provides support for the [Graph Driver](https://godoc.org/github.com/docker/docker/daemon/graphdriver) in addition to `Docker Volumes`.  When used as a graph driver, the container's layers will be stored on a volume provided by the OSD.
 
-![OSD - Graph Driver and Docker Volumes](http://i.imgur.com/990x7Ay.png)
+![OSD - Graph Driver and Docker Volumes](http://i.imgur.com/jdBPFqG.jpg)
 
 ### An example usage
 
 The diagram below shows OSD integrated with Docker and Swarm to allow for provisioning of storage to containers in a multi node environment.
 
-![OSD - Docker - Swarm integration](http://i.imgur.com/ZqwnKIj.png)
+![OSD - Docker - Swarm integration](http://i.imgur.com/UaHdQje.jpg)
 
 There are default drivers built-in for NFS, AWS and BTRFS.  By using openstorage, you can get container granular, stateful storage provisioning to Linux containers with the backends supported by openstorage.  We are working with the storage ecosystem to add more drivers for various storage providers.
 
@@ -64,6 +64,8 @@ $ make test
 ## Starting OSD
 
 OSD is both the openstorage daemon and the CLI.  When run as a daemon, the OSD is ready to receive RESTful commands to operate on volumes and attach them to a Docker container.  It works with the [Docker volumes plugin interface](https://github.com/docker/docker/blob/e5af7a0e869c0a66f8ab30d3a90280843b9999e0/docs/extend/plugins_volume.md) will communicate with Docker version 1.7 and later.  When this daemon is running, Docker will automatically commincate with the daemon to manage a container's volumes.
+
+Note: OSD needs to be run as root.
 
 To start the OSD in daemon mode:
 ```
@@ -112,13 +114,13 @@ osd:
         aws_access_key_id: your_aws_access_key_id
         aws_secret_access_key: your_aws_secret_access_key
       coprhd:
-	restUrl: coprhd_rest_url
-	user: rest_user_name
-	password: rest_user_password
-	consistency_group: consistency_group_id
+        restUrl: coprhd_rest_url
+        user: rest_user_name
+        password: rest_user_password
+        consistency_group: consistency_group_id
         project: project_id
-	varray: varray_id
-	vpool: vpool_id
+        varray: varray_id
+        vpool: vpool_id
 	
   graphdrivers:
      proxy:

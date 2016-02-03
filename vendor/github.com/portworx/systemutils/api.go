@@ -19,5 +19,7 @@ type System interface {
 }
 
 func New() System {
-	return system{}
+	s := system{}
+	s.start()
+	return &s
 }

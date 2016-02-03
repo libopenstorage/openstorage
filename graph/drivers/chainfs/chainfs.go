@@ -1,117 +1,69 @@
-// +build linux,have_unionfs
+// +build linux,have_chainfs
 
-package unionfs
+package chainfs
 
 /*
-extern int start_unionfs(char *, char *);
-extern int alloc_unionfs(char *, char *);
-extern int release_unionfs(char *);
-#cgo LDFLAGS: -lfuse -lulockmgr
+extern int start_chainfs(int mode, char *mount_path);
+extern void stop_chainfs(void);
+extern int create_layer(char *id, char *parent_id);
+extern int remove_layer(char *id);
+extern int check_layer(char *id);
+extern int alloc_chainfs(char *id);
+extern int release_chainfs(char *id);
+extern int release_cache(void);
+#cgo LDFLAGS: -lfuse -lulockmgr -lchainfs
+#cgo CFLAGS: -g3
 */
 import "C"
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
-	"syscall"
 
 	"go.pedge.io/dlog"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/graph"
-	"github.com/libopenstorage/openstorage/volume"
+
 	"github.com/docker/docker/daemon/graphdriver"
 	"github.com/docker/docker/pkg/archive"
 	"github.com/docker/docker/pkg/chrootarchive"
 	"github.com/docker/docker/pkg/directory"
 	"github.com/docker/docker/pkg/idtools"
-	"github.com/docker/docker/pkg/parsers"
 )
 
 const (
-	Name                = "unionfs"
-	Type				= api.DriverType_DRIVER_TYPE_GRAPH
-	UnionFSVolumeDriver = "unionfs.volume_driver"
-	virtPath            = "/var/lib/openstorage/fuse/virtual"
-	physPath            = "/var/lib/openstorage/fuse/physical"
+	Name     = "chainfs"
+	Type     = api.DriverType_DRIVER_TYPE_GRAPH
+	Type     = api.Graph
+	virtPath = "/var/lib/openstorage/chainfs"
 )
 
 type Driver struct {
-	volDriver volume.VolumeDriver
 }
 
 func Init(home string, options []string, uidMaps, gidMaps []idtools.IDMap) (graphdriver.Driver, error) {
-	dlog.Infof("Initializing Fuse Graph driver at home:%s and storage: %v...", home, virtPath)
-
-	var volumeDriver string
-	for _, option := range options {
-		key, val, err := parsers.ParseKeyValueOpt(option)
-		if err != nil {
-			return nil, err
-		}
-		switch key {
-		case UnionFSVolumeDriver:
-			volumeDriver = val
-		default:
-			return nil, fmt.Errorf("Unknown option %s\n", key)
-		}
-	}
-
-	if volumeDriver == "" {
-		dlog.Warnf("Error - no volume driver specified for UnionFS")
-		return nil, fmt.Errorf("No volume driver specified for UnionFS")
-	}
-
-	dlog.Infof("UnionFS volume driver: %v", volumeDriver)
-	volDriver, err := volume.Get(volumeDriver)
-	if err != nil {
-		dlog.Warnf("Error while loading volume driver: %s", volumeDriver)
-		return nil, err
-	}
-
-	// In case it is mounted.
-	syscall.Unmount(virtPath, 0)
-
-	err = os.MkdirAll(virtPath, 0744)
-	if err != nil {
-		volDriver.Shutdown()
-		dlog.Warnf("Error while creating FUSE mount path: %v", err)
-		return nil, err
-	}
-
-	err = os.MkdirAll(physPath, 0744)
-	if err != nil {
-		volDriver.Shutdown()
-		dlog.Warnf("Error while creating FUSE mount path: %v", err)
-		return nil, err
-	}
+	dlog.Infof("Initializing libchainfs at home: %s and storage: %v...", home, virtPath)
 
 	cVirtPath := C.CString(virtPath)
-	cPhysPath := C.CString(physPath)
-	go C.start_unionfs(cPhysPath, cVirtPath)
+	go C.start_chainfs(1, cVirtPath)
 
-	d := &Driver{
-		volDriver: volDriver,
-	}
+	d := &Driver{}
 
 	return d, nil
 }
 
 func (d *Driver) String() string {
-	return "openstorage-fuse"
+	return "openstorage-chainfs"
 }
 
 // Cleanup performs necessary tasks to release resources
 // held by the driver, e.g., unmounting all layered filesystems
 // known to this driver.
 func (d *Driver) Cleanup() error {
-	dlog.Infof("Cleaning up fuse %s", virtPath)
-
-	d.volDriver.Shutdown()
-	syscall.Unmount(virtPath, 0)
-
+	dlog.Infof("Stopping libchainfs at %s", virtPath)
+	C.stop_chainfs()
 	return nil
 }
 
@@ -119,39 +71,26 @@ func (d *Driver) Cleanup() error {
 // level diagnostic status about this driver.
 func (d *Driver) Status() [][2]string {
 	return [][2]string{
-		{"OpenStorage FUSE", "OK"},
+		{"OpenStorage ChainFS", "OK"},
 	}
-}
-
-func (d *Driver) linkParent(child, parent string) error {
-	parent = path.Join(physPath, parent)
-
-	dlog.Debugf("Linking layer %s to parent layer %s", child, parent)
-
-	child = child + "/.unionfs.parent"
-
-	err := os.Symlink(parent, child)
-	if err != nil {
-		return fmt.Errorf("Error while linking FUSE mount path %v to %v: %v", child, parent, err)
-	}
-
-	return nil
 }
 
 // Create creates a new, empty, filesystem layer with the
 // specified id and parent and mountLabel. Parent and mountLabel may be "".
-func (d *Driver) Create(id string, parent string, mountLabel string) error {
-	path := path.Join(physPath, id)
-
-	dlog.Debugf("Creating layer %s", path)
-
-	err := os.MkdirAll(path, 0744)
-	if err != nil {
-		return fmt.Errorf("Error while creating FUSE mount path %v: %v", path, err)
+func (d *Driver) Create(id string, parent string, ml string) error {
+	if parent != "" {
+		dlog.Infof("Creating layer %s with parent %s", id, parent)
+	} else {
+		dlog.Infof("Creating parent layer %s", id)
 	}
 
-	if parent != "" {
-		return d.linkParent(path, parent)
+	cID := C.CString(id)
+	cParent := C.CString(parent)
+
+	ret, err := C.create_layer(cID, cParent)
+	if int(ret) != 0 {
+		dlog.Warnf("Error while creating layer %s", id)
+		return err
 	}
 
 	return nil
@@ -159,11 +98,14 @@ func (d *Driver) Create(id string, parent string, mountLabel string) error {
 
 // Remove attempts to remove the filesystem layer with this id.
 func (d *Driver) Remove(id string) error {
-	path := path.Join(physPath, id)
+	dlog.Infof("Removing layer %s", id)
 
-	dlog.Debugf("Removing layer %s", path)
-
-	os.RemoveAll(path)
+	cID := C.CString(id)
+	ret, err := C.remove_layer(cID)
+	if int(ret) != 0 {
+		dlog.Warnf("Error while removing layer %s", id)
+		return err
+	}
 
 	return nil
 }
@@ -178,30 +120,28 @@ func (d *Driver) GetMetadata(id string) (map[string]string, error) {
 // to by this id. You can optionally specify a mountLabel or "".
 // Returns the absolute path to the mounted layered filesystem.
 func (d *Driver) Get(id, mountLabel string) (string, error) {
-	layerPath := path.Join(physPath, id)
-
-	cLayerPath := C.CString(layerPath)
 	cID := C.CString(id)
 
-	ret, err := C.alloc_unionfs(cLayerPath, cID)
+	ret, err := C.alloc_chainfs(cID)
 	if int(ret) != 0 {
-		dlog.Warnf("Error while creating a union FS for %s", id)
+		dlog.Warnf("Error while creating a chain FS for %s", id)
 		return "", err
 	} else {
-		dlog.Debugf("Created a union FS for %s", id)
-		unionPath := path.Join(virtPath, id)
-
-		return unionPath, err
+		dlog.Debugf("Created a chain FS for %s", id)
+		chainPath := path.Join(virtPath, id)
+		return chainPath, err
 	}
 }
 
 // Put releases the system resources for the specified id,
 // e.g, unmounting layered filesystem.
 func (d *Driver) Put(id string) error {
-	dlog.Debugf("Releasing union FS for %s", id)
+	dlog.Debugf("Releasing chain FS for %s", id)
 
 	cID := C.CString(id)
-	_, err := C.release_unionfs(cID)
+	_, err := C.release_chainfs(cID)
+
+	// C.release_cache()
 
 	return err
 }
@@ -210,7 +150,7 @@ func (d *Driver) Put(id string) error {
 // ID exists on this driver.
 // All cache entries exist.
 func (d *Driver) Exists(id string) bool {
-	path := path.Join(physPath, id)
+	path := path.Join(virtPath, id)
 
 	_, err := os.Stat(path)
 
@@ -226,7 +166,10 @@ func (d *Driver) Exists(id string) bool {
 // new layer in bytes.
 // The archive.Reader must be an uncompressed stream.
 func (d *Driver) ApplyDiff(id string, parent string, diff archive.Reader) (size int64, err error) {
-	dir := path.Join(physPath, id)
+	dir := path.Join(virtPath, id)
+	// dir := path.Join("/tmp/chainfs/", id)
+
+	dlog.Infof("Applying diff at path %s\n", dir)
 
 	if err := chrootarchive.UntarUncompressed(diff, dir, nil); err != nil {
 		dlog.Warnf("Error while applying diff to %s: %v", id, err)
@@ -263,11 +206,6 @@ func (d *Driver) Diff(id, parent string) (archive.Archive, error) {
 // relative to its base filesystem directory.
 func (d *Driver) DiffSize(id, parent string) (size int64, err error) {
 	return directory.Size(path.Join(virtPath, id))
-}
-
-func (d *Driver) Read() (size int64, err error) {
-
-	return 0, nil
 }
 
 func init() {

@@ -15,11 +15,12 @@ const (
 	PluginAPIBase      = "/run/docker/plugins/"
 	DriverAPIBase      = "/var/lib/osd/driver/"
 	GraphDriverAPIBase = "/var/lib/osd/graphdriver/"
-	MountBase          = "/var/lib/osd/mounts/"
-	VolumeBase		   = "/var/lib/osd/"
-	DataDir            = ".data"
+	ClusterAPIBase     = "/var/lib/osd/cluster/"
 	UrlKey             = "url"
 	VersionKey         = "version"
+	MountBase          = "/var/lib/osd/mounts/"
+	VolumeBase         = "/var/lib/osd/"
+	DataDir            = ".data"
 )
 
 func init() {
@@ -40,9 +41,9 @@ type Config struct {
 	Osd struct {
 		ClusterConfig ClusterConfig `yaml:"cluster"`
 		// map[string]string is volume.VolumeParams equivalent
-		Drivers       map[string]map[string]string
+		Drivers map[string]map[string]string
 		// map[string]string is volume.VolumeParams equivalent
-		GraphDrivers  map[string]map[string]string
+		GraphDrivers map[string]map[string]string
 	}
 }
 

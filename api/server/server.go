@@ -77,25 +77,40 @@ func startServer(name string, sockBase string, port int, routes []*Route) error 
 	return nil
 }
 
-// StartGraphAPI starts a REST server to receive GraphDriver commands
-func StartGraphAPI(name string, port int, restBase string) error {
+// StartGraphAPI starts a REST server to receive GraphDriver commands from
+// the Linux container engine.
+func StartGraphAPI(name string, restBase string) error {
 	graphPlugin := newGraphPlugin(name)
-	routes := append(graphPlugin.Routes())
-	return startServer(name, restBase, port, routes)
+	if err := startServer(name, restBase, 0, graphPlugin.Routes()); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-// StartServerAPI starts a REST server to receive driver configuration commands
-// from the CLI/UX.
-func StartServerAPI(name string, port int, restBase string) error {
-	volApi := newVolumeAPI(name)
-	clusterApi := newClusterAPI(name)
-	routes := append(volApi.Routes(), clusterApi.Routes()...)
-	return startServer(name, restBase, port, routes)
+// StartPluginAPI starts a REST server to receive volume API commands from the
+// Linux container engine and volume management commands from the CLI/UX.
+func StartPluginAPI(name string, mngmtBase, pluginBase string) error {
+	volMngmtApi := newVolumeAPI(name)
+	if err := startServer(name, mngmtBase, 0, volMngmtApi.Routes()); err != nil {
+		return err
+	}
+
+	volPluginApi := newVolumePlugin(name)
+	if err := startServer(name, pluginBase, 0, volPluginApi.Routes()); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-// StartPluginAPI starts a REST server to receive volume commands from the
-// Linux container engine.
-func StartPluginAPI(name string, pluginBase string) error {
-	rest := newVolumePlugin(name)
-	return startServer(name, pluginBase, 0, rest.Routes())
+// StartClusterAPI starts a REST server to receive driver configuration commands
+// from the CLI/UX to control the OSD cluster.
+func StartClusterAPI(clusterApiBase string) error {
+	clusterApi := newClusterAPI()
+	if err := startServer("osd", clusterApiBase, 0, clusterApi.Routes()); err != nil {
+		return err
+	}
+
+	return nil
 }

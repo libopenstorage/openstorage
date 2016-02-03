@@ -1,8 +1,6 @@
-// +build !have_unionfs
+// +build !have_chainfs
 
-package unionfs
-
-import "C"
+package chainfs
 
 import (
 	"errors"
@@ -13,12 +11,12 @@ import (
 )
 
 const (
-	Name = "unionfs"
+	Name = "chainfs"
 	Type = api.DriverType_DRIVER_TYPE_GRAPH
 )
 
 var (
-	errUnsupported = errors.New("unionfs not supported on this platform")
+	errUnsupported = errors.New("chainfs not supported on this platform")
 )
 
 func Init(home string, options []string, uidMaps, gidMaps []idtools.IDMap) (graphdriver.Driver, error) {

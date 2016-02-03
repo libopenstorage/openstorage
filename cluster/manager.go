@@ -36,6 +36,7 @@ type ClusterManager struct {
 	g         gossip.Gossiper
 	gEnabled  bool
 	selfNode  api.Node
+	system    systemutils.System
 }
 
 func ifaceToIp(iface *net.Interface) (string, error) {
@@ -123,11 +124,10 @@ func (c *ClusterManager) GetData() map[string]*api.Node {
 
 func (c *ClusterManager) getCurrentState() *api.Node {
 	c.selfNode.Timestamp = time.Now()
-	s := systemutils.New()
 
-	c.selfNode.Cpu, _, _ = s.CpuUsage()
-	c.selfNode.Memory = s.MemUsage()
-	c.selfNode.Luns = s.Luns()
+	c.selfNode.Cpu, _, _ = c.system.CpuUsage()
+	c.selfNode.Memory = c.system.MemUsage()
+	c.selfNode.Luns = c.system.Luns()
 
 	c.selfNode.Timestamp = time.Now()
 
@@ -170,8 +170,9 @@ func (c *ClusterManager) initNode(db *Database) (*api.Node, bool) {
 	db.NodeEntries[c.config.NodeId] = NodeEntry{Id: c.selfNode.Id,
 		Ip: c.selfNode.Ip, GenNumber: c.selfNode.GenNumber}
 
-	dlog.Infof("Node %s joining cluster... \n\tCluster ID: %s\n\tIP: %s",
-		c.config.NodeId, c.config.ClusterId, c.selfNode.Ip)
+	dlog.Infof("Node %s joining cluster...", c.config.NodeId)
+	dlog.Infof("Cluster ID: %s", c.config.ClusterId)
+	dlog.Infof("Node IP: %s", c.selfNode.Ip)
 
 	return &c.selfNode, exists
 }
@@ -412,6 +413,8 @@ func (c *ClusterManager) start() error {
 	c.selfNode.Status = api.Status_STATUS_OK
 	c.selfNode.Ip, _ = externalIp(&c.config)
 	c.selfNode.NodeData = make(map[string]interface{})
+	c.system = systemutils.New()
+
 	// Start the gossip protocol.
 	// XXX Make the port configurable.
 	gob.Register(api.Node{})
@@ -479,6 +482,7 @@ func (c *ClusterManager) start() error {
 	return nil
 }
 
+// Enumerate lists all the nodes in the cluster.
 func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 	i := 0
 
@@ -492,12 +496,27 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 	return cluster, nil
 }
 
+// Remove node(s) from the cluster permanently.
 func (c *ClusterManager) Remove(nodes []api.Node) error {
 	// TODO
 	return nil
 }
 
-func (c *ClusterManager) Shutdown(cluster bool, nodes []api.Node) error {
-	// TODO
+// Shutdown can be called when THIS node is gracefully shutting down.
+func (c *ClusterManager) Shutdown() error {
+	db, err := readDatabase()
+	if err != nil {
+		dlog.Warnf("Could not read cluster database (%v).", err)
+		return err
+	}
+
+	// Alert all listeners that we are shutting this node down.
+	for e := c.listeners.Front(); e != nil; e = e.Next() {
+		dlog.Infof("Shutting down %s", e.Value.(ClusterListener).String())
+		if err := e.Value.(ClusterListener).Halt(&c.selfNode, &db); err != nil {
+			dlog.Warnf("Failed to shutdown %s",
+				e.Value.(ClusterListener).String())
+		}
+	}
 	return nil
 }

@@ -114,6 +114,12 @@ func NewClient(host string, version string) (*Client, error) {
 	return c, nil
 }
 
+// NewClusterClient returns a new REST client for cluster management.
+func NewClusterClient() (*Client, error) {
+	sockPath := "unix://" + config.ClusterAPIBase + "osd.sock"
+	return NewClient(sockPath, config.Version)
+}
+
 func getHttpClient(host string) *http.Client {
 	c, ok := httpCache[host]
 	if !ok {

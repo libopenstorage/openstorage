@@ -15,11 +15,10 @@ import (
 
 type clusterClient struct {
 	manager cluster.Cluster
-	name    string
 }
 
 func (c *clusterClient) clusterOptions(context *cli.Context) {
-	clnt, err := client.NewClient("http://localhost:9001", "v1")
+	clnt, err := client.NewClusterClient()
 	if err != nil {
 		fmt.Printf("Failed to initialize client library: %v\n", err)
 		os.Exit(1)
@@ -27,11 +26,11 @@ func (c *clusterClient) clusterOptions(context *cli.Context) {
 	c.manager = clnt.ClusterManager()
 }
 
-func (c *clusterClient) inspect(context *cli.Context) {
+func (c *clusterClient) status(context *cli.Context) {
 	c.clusterOptions(context)
 	jsonOut := context.GlobalBool("json")
 	outFd := os.Stdout
-	fn := "inspect"
+	fn := "status"
 
 	cluster, err := c.manager.Enumerate()
 	if err != nil {
@@ -42,9 +41,10 @@ func (c *clusterClient) inspect(context *cli.Context) {
 	if jsonOut {
 		fmtOutput(context, &Format{Cluster: &cluster})
 	} else {
-		fmt.Fprintf(outFd, "ID %s: Status: %v\n",
+		fmt.Fprintf(outFd, "Cluster Information:\nCluster ID %s: Status: %v\n\n",
 			cluster.Id, cluster.Status)
 
+		fmt.Fprintf(outFd, "Load Information:\n")
 		w := new(tabwriter.Writer)
 		w.Init(outFd, 12, 12, 1, ' ', 0)
 
@@ -70,11 +70,11 @@ func (c *clusterClient) inspect(context *cli.Context) {
 	}
 }
 
-func (c *clusterClient) enumerate(context *cli.Context) {
+func (c *clusterClient) load(context *cli.Context) {
 	c.clusterOptions(context)
 	jsonOut := context.GlobalBool("json")
 	outFd := os.Stdout
-	fn := "enumerate"
+	fn := "load"
 
 	cluster, err := c.manager.Enumerate()
 	if err != nil {
@@ -117,11 +117,11 @@ func (c *clusterClient) enableGossip(context *cli.Context) {
 	c.manager.EnableUpdates()
 }
 
-func (c *clusterClient) displayGossipStatus(context *cli.Context) {
+func (c *clusterClient) gossipStatus(context *cli.Context) {
 	c.clusterOptions(context)
 	jsonOut := context.GlobalBool("json")
 	outFd := os.Stdout
-	fn := "displayGossipStatus"
+	fn := "gossipstatus"
 
 	s := c.manager.GetState()
 	if s == nil {
@@ -174,15 +174,15 @@ func (c *clusterClient) displayGossipStatus(context *cli.Context) {
 }
 
 // ClusterCommands exports CLI comamnds for File VolumeDriver
-func ClusterCommands(name string) []cli.Command {
-	c := &clusterClient{name: name}
+func ClusterCommands() []cli.Command {
+	c := &clusterClient{}
 
 	commands := []cli.Command{
 		{
-			Name:    "inspect",
-			Aliases: []string{"i"},
+			Name:    "status",
+			Aliases: []string{"s"},
 			Usage:   "Inspect the cluster",
-			Action:  c.inspect,
+			Action:  c.status,
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "machine,m",
@@ -192,10 +192,10 @@ func ClusterCommands(name string) []cli.Command {
 			},
 		},
 		{
-			Name:    "enumerate",
-			Aliases: []string{"e"},
-			Usage:   "Enumerate containers in the cluster",
-			Action:  c.enumerate,
+			Name:    "load",
+			Aliases: []string{"l"},
+			Usage:   "List containers in the cluster",
+			Action:  c.load,
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "machine,m",
@@ -220,7 +220,7 @@ func ClusterCommands(name string) []cli.Command {
 			Name:    "gossip-status",
 			Aliases: []string{"gs"},
 			Usage:   "Display gossip status",
-			Action:  c.displayGossipStatus,
+			Action:  c.gossipStatus,
 		},
 		{
 			Name:    "remove",

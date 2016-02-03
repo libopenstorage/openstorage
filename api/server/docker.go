@@ -34,15 +34,17 @@ type volumeRequest struct {
 }
 
 type volumeResponse struct {
-	Err error
+	Err string
 }
+
 type volumePathResponse struct {
 	Mountpoint string
-	Err        error
+	volumeResponse
 }
 
 type volumeInfo struct {
-	vol *api.Volume
+	Name       string
+	Mountpoint string
 }
 
 func newVolumePlugin(name string) restServer {
@@ -75,6 +77,8 @@ func (d *driver) Routes() []*Route {
 		&Route{verb: "POST", path: volDriverPath("Remove"), fn: d.remove},
 		&Route{verb: "POST", path: volDriverPath("Mount"), fn: d.mount},
 		&Route{verb: "POST", path: volDriverPath("Path"), fn: d.path},
+		&Route{verb: "POST", path: volDriverPath("List"), fn: d.list},
+		&Route{verb: "POST", path: volDriverPath("Get"), fn: d.get},
 		&Route{verb: "POST", path: volDriverPath("Unmount"), fn: d.unmount},
 		&Route{verb: "POST", path: "/Plugin.Activate", fn: d.handshake},
 		&Route{verb: "GET", path: "/status", fn: d.status},
@@ -85,18 +89,22 @@ func (d *driver) emptyResponse(w http.ResponseWriter) {
 	json.NewEncoder(w).Encode(&volumeResponse{})
 }
 
-func (d *driver) volFromName(name string) (*volumeInfo, error) {
+func (d *driver) errorResponse(w http.ResponseWriter, err error) {
+	json.NewEncoder(w).Encode(&volumeResponse{Err: err.Error()})
+}
+
+func (d *driver) volFromName(name string) (*api.Volume, error) {
 	v, err := volume.Get(d.name)
 	if err != nil {
 		return nil, fmt.Errorf("Cannot locate volume driver for %s: %s", d.name, err.Error())
 	}
 	vols, err := v.Inspect([]string{name})
 	if err == nil && len(vols) == 1 {
-		return &volumeInfo{vol: vols[0]}, nil
+		return vols[0], nil
 	}
 	vols, err = v.Enumerate(&api.VolumeLocator{Name: name}, nil)
 	if err == nil && len(vols) == 1 {
-		return &volumeInfo{vol: vols[0]}, nil
+		return vols[0], nil
 	}
 	return nil, fmt.Errorf("Cannot locate volume %s", name)
 }
@@ -168,12 +176,12 @@ func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 	if _, err = d.volFromName(request.Name); err != nil {
 		v, err := volume.Get(d.name)
 		if err != nil {
-			json.NewEncoder(w).Encode(&volumeResponse{Err: err})
+			d.errorResponse(w, err)
 			return
 		}
 		spec := d.specFromOpts(request.Opts)
 		if _, err := v.Create(&api.VolumeLocator{Name: request.Name}, nil, spec); err != nil {
-			json.NewEncoder(w).Encode(&volumeResponse{Err: err})
+			d.errorResponse(w, err)
 			return
 		}
 	}
@@ -190,7 +198,7 @@ func (d *driver) remove(w http.ResponseWriter, r *http.Request) {
 	// It is an error if the volume doesn't exist.
 	if _, err := d.volFromName(request.Name); err != nil {
 		e := d.volNotFound(method, request.Name, err, w)
-		json.NewEncoder(w).Encode(&volumeResponse{Err: e})
+		d.errorResponse(w, e)
 		return
 	}
 	json.NewEncoder(w).Encode(&volumeResponse{})
@@ -202,31 +210,31 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 
 	v, err := volume.Get(d.name)
 	if err != nil {
-		d.logRequest(method, "").Warnln("Cannot locate volume driver")
-		json.NewEncoder(w).Encode(&volumePathResponse{Err: err})
+		d.logRequest(method, "").Warnf("Cannot locate volume driver")
+		d.errorResponse(w, err)
 		return
 	}
 
 	request, err := d.decode(method, w, r)
 	if err != nil {
-		json.NewEncoder(w).Encode(&volumePathResponse{Err: err})
+		d.errorResponse(w, err)
 		return
 	}
 
 	d.logRequest(method, request.Name).Debugln("")
 
-	volInfo, err := d.volFromName(request.Name)
+	vol, err := d.volFromName(request.Name)
 	if err != nil {
-		json.NewEncoder(w).Encode(&volumePathResponse{Err: err})
+		d.errorResponse(w, err)
 		return
 	}
 
 	// If this is a block driver, first attach the volume.
 	if v.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-		attachPath, err := v.Attach(volInfo.vol.Id)
+		attachPath, err := v.Attach(vol.Id)
 		if err != nil {
 			d.logRequest(method, request.Name).Warnf("Cannot attach volume: %v", err.Error())
-			json.NewEncoder(w).Encode(&volumePathResponse{Err: err})
+			d.errorResponse(w, err)
 			return
 		}
 		d.logRequest(method, request.Name).Debugf("response %v", attachPath)
@@ -236,11 +244,11 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 	response.Mountpoint = path.Join(config.MountBase, request.Name)
 	os.MkdirAll(response.Mountpoint, 0755)
 
-	err = v.Mount(volInfo.vol.Id, response.Mountpoint)
+	err = v.Mount(vol.Id, response.Mountpoint)
 	if err != nil {
 		d.logRequest(method, request.Name).Warnf("Cannot mount volume %v, %v",
 			response.Mountpoint, err)
-		json.NewEncoder(w).Encode(&volumePathResponse{Err: err})
+		d.errorResponse(w, err)
 		return
 	}
 	response.Mountpoint = path.Join(response.Mountpoint, config.DataDir)
@@ -259,23 +267,71 @@ func (d *driver) path(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	volInfo, err := d.volFromName(request.Name)
+	vol, err := d.volFromName(request.Name)
 	if err != nil {
 		e := d.volNotFound(method, request.Name, err, w)
-		json.NewEncoder(w).Encode(&volumePathResponse{Err: e})
+		d.errorResponse(w, e)
 		return
 	}
 
-	d.logRequest(method, request.Name).Debugln("")
-	response.Mountpoint = volInfo.vol.AttachPath
+	d.logRequest(method, request.Name).Debugf("")
+	response.Mountpoint = vol.AttachPath
 	if response.Mountpoint == "" {
 		e := d.volNotMounted(method, request.Name)
-		json.NewEncoder(w).Encode(&volumePathResponse{Err: e})
+		d.errorResponse(w, e)
 		return
 	}
 	response.Mountpoint = path.Join(response.Mountpoint, config.DataDir)
 	d.logRequest(method, request.Name).Debugf("response %v", response.Mountpoint)
 	json.NewEncoder(w).Encode(&response)
+}
+
+func (d *driver) list(w http.ResponseWriter, r *http.Request) {
+	method := "list"
+
+	v, err := volume.Get(d.name)
+	if err != nil {
+		d.logRequest(method, "").Warnf("Cannot locate volume driver: %v", err.Error())
+		d.errorResponse(w, err)
+		return
+	}
+
+	vols, err := v.Enumerate(nil, nil)
+	if err != nil {
+		d.errorResponse(w, err)
+		return
+	}
+
+	volInfo := make([]volumeInfo, len(vols))
+	for i, v := range vols {
+		volInfo[i].Name = v.Locator.Name
+		if v.AttachPath != "" {
+			volInfo[i].Mountpoint = path.Join(v.AttachPath, config.DataDir)
+		}
+	}
+	json.NewEncoder(w).Encode(map[string][]volumeInfo{"Volumes": volInfo})
+}
+
+func (d *driver) get(w http.ResponseWriter, r *http.Request) {
+	method := "get"
+
+	request, err := d.decode(method, w, r)
+	if err != nil {
+		return
+	}
+	vol, err := d.volFromName(request.Name)
+	if err != nil {
+		e := d.volNotFound(method, request.Name, err, w)
+		d.errorResponse(w, e)
+		return
+	}
+
+	volInfo := volumeInfo{Name: request.Name}
+	if vol.AttachPath != "" {
+		volInfo.Mountpoint = path.Join(vol.AttachPath, config.DataDir)
+	}
+
+	json.NewEncoder(w).Encode(map[string]volumeInfo{"Volume": volInfo})
 }
 
 func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
@@ -284,7 +340,7 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 	v, err := volume.Get(d.name)
 	if err != nil {
 		d.logRequest(method, "").Warnf("Cannot locate volume driver: %v", err.Error())
-		json.NewEncoder(w).Encode(&volumeResponse{Err: err})
+		d.errorResponse(w, err)
 		return
 	}
 
@@ -295,24 +351,24 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 
 	d.logRequest(method, request.Name).Infoln("")
 
-	volInfo, err := d.volFromName(request.Name)
+	vol, err := d.volFromName(request.Name)
 	if err != nil {
 		e := d.volNotFound(method, request.Name, err, w)
-		json.NewEncoder(w).Encode(&volumeResponse{Err: e})
+		d.errorResponse(w, e)
 		return
 	}
 
 	mountpoint := path.Join(config.MountBase, request.Name)
-	err = v.Unmount(volInfo.vol.Id, mountpoint)
+	err = v.Unmount(vol.Id, mountpoint)
 	if err != nil {
 		d.logRequest(method, request.Name).Warnf("Cannot unmount volume %v, %v",
 			mountpoint, err)
-		json.NewEncoder(w).Encode(&volumeResponse{Err: err})
+		d.errorResponse(w, err)
 		return
 	}
 
 	if v.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-		_ = v.Detach(volInfo.vol.Id)
+		_ = v.Detach(vol.Id)
 	}
 	d.emptyResponse(w)
 }

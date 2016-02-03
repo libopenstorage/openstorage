@@ -14,7 +14,7 @@ import (
 var (
 	inst *ClusterManager
 
-	errClusterInitialized = errors.New("openstorage.cluster: already initialized")
+	errClusterInitialized    = errors.New("openstorage.cluster: already initialized")
 	errClusterNotInitialized = errors.New("openstorage.cluster: not initialized")
 )
 
@@ -48,6 +48,9 @@ type ClusterListener interface {
 
 	// CleanupInit is called when Init failed.
 	CleanupInit(self *api.Node, db *Database) error
+
+	// Shutdown is called when a node is gracefully shutting down.
+	Halt(self *api.Node, db *Database) error
 
 	// Join is called when this node is joining an existing cluster.
 	Join(self *api.Node, db *Database) error
@@ -103,8 +106,8 @@ type Cluster interface {
 	// Remove node(s) from the cluster permanently.
 	Remove(nodes []api.Node) error
 
-	// Shutdown node(s) or the entire cluster.
-	Shutdown(cluster bool, nodes []api.Node) error
+	// Shutdown can be called when THIS node is gracefully shutting down.
+	Shutdown() error
 
 	ClusterData
 }
