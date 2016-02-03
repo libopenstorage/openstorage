@@ -391,6 +391,11 @@
 			"revisionTime": "2015-12-29T08:45:58Z"
 		},
 		{
+			"path": "github.com/libopenstorage/systemutils",
+			"revision": "29c564b8ce09eba5a15066b6f86d489950be9d55",
+			"revisionTime": "2016-02-03T14:59:10-08:00"
+		},
+		{
 			"path": "github.com/opencontainers/runc/libcontainer/label",
 			"revision": "4e6893b05a6aa723daa5f9194361032c6beaca25",
 			"revisionTime": "2016-01-22T09:50:38+08:00"
