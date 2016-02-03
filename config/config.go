@@ -7,21 +7,11 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/libopenstorage/openstorage/cluster"
-	"github.com/libopenstorage/openstorage/volume"
+	"go.pedge.io/dlog/logrus"
 )
 
-type osd struct {
-	ClusterConfig cluster.Config `yaml:"cluster"`
-	Drivers       map[string]volume.DriverParams
-	GraphDrivers  map[string]volume.DriverParams
-}
-
-type Config struct {
-	Osd osd
-}
-
 const (
+	Version            = "v1"
 	PluginAPIBase      = "/run/docker/plugins/"
 	DriverAPIBase      = "/var/lib/osd/driver/"
 	GraphDriverAPIBase = "/var/lib/osd/graphdriver/"
@@ -29,29 +19,42 @@ const (
 	UrlKey             = "url"
 	VersionKey         = "version"
 	MountBase          = "/var/lib/osd/mounts/"
+	VolumeBase         = "/var/lib/osd/"
 	DataDir            = ".data"
-	Version            = "v1"
 )
 
-var (
-	cfg Config
-)
-
-func Parse(file string) (*Config, error) {
-
-	b, err := ioutil.ReadFile(file)
-	if err != nil {
-		return nil, fmt.Errorf("Unable to read the OSD configuration file (%s): %s", file, err.Error())
-	}
-
-	err = yaml.Unmarshal(b, &cfg)
-	if err != nil {
-		fmt.Println("Unable to parse OSD configuration: ", err)
-		return nil, fmt.Errorf("Unable to parse OSD configuration: %s", err.Error())
-	}
-	return &cfg, nil
-}
 func init() {
 	os.MkdirAll(MountBase, 0755)
 	os.MkdirAll(GraphDriverAPIBase, 0755)
+	// TODO(pedge) eventually move to osd main.go when everyone is comfortable with dlog
+	dlog_logrus.Register()
+}
+
+type ClusterConfig struct {
+	ClusterId string
+	NodeId    string
+	MgtIface  string
+	DataIface string
+}
+
+type Config struct {
+	Osd struct {
+		ClusterConfig ClusterConfig `yaml:"cluster"`
+		// map[string]string is volume.VolumeParams equivalent
+		Drivers map[string]map[string]string
+		// map[string]string is volume.VolumeParams equivalent
+		GraphDrivers map[string]map[string]string
+	}
+}
+
+func Parse(filePath string) (*Config, error) {
+	config := &Config{}
+	data, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to read the OSD configuration file (%s): %s", filePath, err.Error())
+	}
+	if err := yaml.Unmarshal(data, config); err != nil {
+		return nil, fmt.Errorf("Unable to parse OSD configuration: %s", err.Error())
+	}
+	return config, nil
 }

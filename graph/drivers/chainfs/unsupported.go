@@ -12,7 +12,7 @@ import (
 
 const (
 	Name = "chainfs"
-	Type = api.Graph
+	Type = api.DriverType_DRIVER_TYPE_GRAPH
 )
 
 var (

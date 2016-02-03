@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers/test"
 )
@@ -27,7 +28,7 @@ func TestAll(t *testing.T) {
 		t.Fatalf("Failed to initialize Volume Driver: %v", err)
 	}
 	ctx := test.NewContext(d)
-	ctx.Filesystem = "nfs"
+	ctx.Filesystem = api.FSType_FS_TYPE_NFS
 
 	test.RunShort(t, ctx)
 }

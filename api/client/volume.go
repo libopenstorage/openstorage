@@ -11,6 +11,12 @@ import (
 	"github.com/libopenstorage/openstorage/volume"
 )
 
+const (
+	graphPath  = "/graph"
+	volumePath = "/volumes"
+	snapPath   = "/snapshot"
+)
+
 type volumeClient struct {
 	*volume.IoNotSupported
 	c *Client
@@ -27,102 +33,79 @@ func (v *volumeClient) String() string {
 
 func (v *volumeClient) Type() api.DriverType {
 	// Block drivers implement the superset.
-	return api.Block
+	return api.DriverType_DRIVER_TYPE_BLOCK
 }
 
-const (
-	graphPath  = "/graph"
-	volumePath = "/volumes"
-	snapPath   = "/snapshot"
-)
-
-func (v *volumeClient) GraphDriverCreate(id, parent string) error {
-	resp := ""
-	err := v.c.Put().Resource(graphPath + "/create").Instance(id).Do().Unmarshal(&resp)
-	if err != nil {
+func (v *volumeClient) GraphDriverCreate(id string, parent string) error {
+	response := ""
+	if err := v.c.Put().Resource(graphPath + "/create").Instance(id).Do().Unmarshal(&response); err != nil {
 		return err
 	}
-
-	if resp != id {
-		return fmt.Errorf("Invalid response: %v", resp)
+	if response != id {
+		return fmt.Errorf("Invalid response: %s", response)
 	}
-
 	return nil
 }
 
 func (v *volumeClient) GraphDriverRemove(id string) error {
-	resp := ""
-	err := v.c.Put().Resource(graphPath + "/remove").Instance(id).Do().Unmarshal(&resp)
-	if err != nil {
+	response := ""
+	if err := v.c.Put().Resource(graphPath + "/remove").Instance(id).Do().Unmarshal(&response); err != nil {
 		return err
 	}
-
-	if resp != id {
-		return fmt.Errorf("Invalid response: %v", resp)
+	if response != id {
+		return fmt.Errorf("Invalid response: %s", response)
 	}
-
 	return nil
 }
 
-func (v *volumeClient) GraphDriverGet(id, mountLabel string) (string, error) {
-	resp := ""
-	err := v.c.Get().Resource(graphPath + "/inspect").Instance(id).Do().Unmarshal(&resp)
-	if err != nil {
+func (v *volumeClient) GraphDriverGet(id string, mountLabel string) (string, error) {
+	response := ""
+	if err := v.c.Get().Resource(graphPath + "/inspect").Instance(id).Do().Unmarshal(&response); err != nil {
 		return "", err
 	}
-
-	return resp, nil
+	return response, nil
 }
 
 func (v *volumeClient) GraphDriverRelease(id string) error {
-	resp := ""
-	err := v.c.Put().Resource(graphPath + "/release").Instance(id).Do().Unmarshal(&resp)
-	if err != nil {
+	response := ""
+	if err := v.c.Put().Resource(graphPath + "/release").Instance(id).Do().Unmarshal(&response); err != nil {
 		return err
 	}
-
-	if resp != id {
-		return fmt.Errorf("Invalid response: %v", resp)
+	if response != id {
+		return fmt.Errorf("Invalid response: %v", response)
 	}
-
 	return nil
 }
 
 func (v *volumeClient) GraphDriverExists(id string) bool {
-	resp := false
-	v.c.Get().Resource(graphPath + "/exists").Instance(id).Do().Unmarshal(&resp)
-	return resp
+	response := false
+	v.c.Get().Resource(graphPath + "/exists").Instance(id).Do().Unmarshal(&response)
+	return response
 }
 
-func (v *volumeClient) GraphDriverDiff(id, parent string) io.Writer {
-	path := graphPath + "/diff?id=" + id + "&parent=" + parent
-	resp := v.c.Get().Resource(path).Do()
-	return bytes.NewBuffer(resp.body)
+func (v *volumeClient) GraphDriverDiff(id string, parent string) io.Writer {
+	return bytes.NewBuffer(v.c.Get().Resource(graphPath + "/diff?id=" + id + "&parent=" + parent).Do().body)
 }
 
-func (v *volumeClient) GraphDriverChanges(id, parent string) ([]api.GraphDriverChanges, error) {
+func (v *volumeClient) GraphDriverChanges(id string, parent string) ([]api.GraphDriverChanges, error) {
 	var changes []api.GraphDriverChanges
 	err := v.c.Get().Resource(graphPath + "/changes").Instance(id).Do().Unmarshal(&changes)
 	return changes, err
 }
 
-func (v *volumeClient) GraphDriverApplyDiff(id, parent string, diff io.Reader) (int, error) {
-	resp := 0
-	path := graphPath + "/diff?id=" + id + "&parent=" + parent
-
+func (v *volumeClient) GraphDriverApplyDiff(id string, parent string, diff io.Reader) (int, error) {
 	b, err := ioutil.ReadAll(diff)
 	if err != nil {
 		return 0, err
 	}
-
-	err = v.c.Put().Resource(path).Instance(id).Body(b).Do().Unmarshal(&resp)
-	if err != nil {
+	response := 0
+	if err = v.c.Put().Resource(graphPath + "/diff?id=" + id + "&parent=" + parent).Instance(id).Body(b).Do().Unmarshal(&response); err != nil {
 		return 0, err
 	}
-	return resp, nil
+	return response, nil
 }
 
-func (v *volumeClient) GraphDriverDiffSize(id, parent string) (int, error) {
+func (v *volumeClient) GraphDriverDiffSize(id string, parent string) (int, error) {
 	size := 0
 	err := v.c.Get().Resource(graphPath + "/diffsize").Instance(id).Do().Unmarshal(&size)
 	return size, err
@@ -130,24 +113,24 @@ func (v *volumeClient) GraphDriverDiffSize(id, parent string) (int, error) {
 
 // Create a new Vol for the specific volume spev.c.
 // It returns a system generated VolumeID that uniquely identifies the volume
-func (v *volumeClient) Create(locator api.VolumeLocator,
+func (v *volumeClient) Create(
+	locator *api.VolumeLocator,
 	source *api.Source,
-	spec *api.VolumeSpec) (api.VolumeID, error) {
-
-	var response api.VolumeCreateResponse
-	createReq := api.VolumeCreateRequest{
+	spec *api.VolumeSpec,
+) (string, error) {
+	response := &api.VolumeCreateResponse{}
+	request := &api.VolumeCreateRequest{
 		Locator: locator,
 		Source:  source,
 		Spec:    spec,
 	}
-	err := v.c.Post().Resource(volumePath).Body(&createReq).Do().Unmarshal(&response)
-	if err != nil {
-		return api.VolumeID(""), err
+	if err := v.c.Post().Resource(volumePath).Body(request).Do().Unmarshal(response); err != nil {
+		return "", err
 	}
-	if response.Error != "" {
-		return api.VolumeID(""), errors.New(response.Error)
+	if response.VolumeResponse != nil && response.VolumeResponse.Error != "" {
+		return "", errors.New(response.VolumeResponse.Error)
 	}
-	return response.ID, nil
+	return response.Id, nil
 }
 
 // Status diagnostic information
@@ -157,31 +140,26 @@ func (v *volumeClient) Status() [][2]string {
 
 // Inspect specified volumes.
 // Errors ErrEnoEnt may be returned.
-func (v *volumeClient) Inspect(ids []api.VolumeID) ([]api.Volume, error) {
-	var vols []api.Volume
-
+func (v *volumeClient) Inspect(ids []string) ([]*api.Volume, error) {
 	if len(ids) == 0 {
 		return nil, nil
 	}
-	req := v.c.Get().Resource(volumePath)
-
-	for _, v := range ids {
-		req.QueryOption(string(api.OptVolumeID), string(v))
+	var volumes []*api.Volume
+	request := v.c.Get().Resource(volumePath)
+	for _, id := range ids {
+		request.QueryOption(api.OptVolumeID, id)
 	}
-	err := req.Do().Unmarshal(&vols)
-	if err != nil {
+	if err := request.Do().Unmarshal(&volumes); err != nil {
 		return nil, err
 	}
-	return vols, nil
+	return volumes, nil
 }
 
 // Delete volume.
 // Errors ErrEnoEnt, ErrVolHasSnaps may be returned.
-func (v *volumeClient) Delete(volumeID api.VolumeID) error {
-	var response api.VolumeResponse
-
-	err := v.c.Delete().Resource(volumePath).Instance(string(volumeID)).Do().Unmarshal(&response)
-	if err != nil {
+func (v *volumeClient) Delete(volumeID string) error {
+	response := &api.VolumeResponse{}
+	if err := v.c.Delete().Resource(volumePath).Instance(volumeID).Do().Unmarshal(response); err != nil {
 		return err
 	}
 	if response.Error != "" {
@@ -193,173 +171,171 @@ func (v *volumeClient) Delete(volumeID api.VolumeID) error {
 // Snap specified volume. IO to the underlying volume should be quiesced before
 // calling this function.
 // Errors ErrEnoEnt may be returned
-func (v *volumeClient) Snapshot(volumeID api.VolumeID, readonly bool, locator api.VolumeLocator) (api.VolumeID, error) {
-	var response api.SnapCreateResponse
-	createReq := api.SnapCreateRequest{
-		ID:       volumeID,
+func (v *volumeClient) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator) (string, error) {
+	response := &api.SnapCreateResponse{}
+	request := &api.SnapCreateRequest{
+		Id:       volumeID,
 		Readonly: readonly,
 		Locator:  locator,
 	}
-	err := v.c.Post().Resource(snapPath).Body(&createReq).Do().Unmarshal(&response)
-	if err != nil {
-		return api.BadVolumeID, err
+	if err := v.c.Post().Resource(snapPath).Body(request).Do().Unmarshal(response); err != nil {
+		return "", err
 	}
-	if response.Error != "" {
-		return api.BadVolumeID, errors.New(response.Error)
+	// TODO(pedge): this probably should not be embedded in this way
+	if response.VolumeCreateResponse != nil && response.VolumeCreateResponse.VolumeResponse != nil && response.VolumeCreateResponse.VolumeResponse.Error != "" {
+		return "", errors.New(response.VolumeCreateResponse.VolumeResponse.Error)
 	}
-	return response.ID, nil
+	if response.VolumeCreateResponse != nil {
+		return response.VolumeCreateResponse.Id, nil
+	}
+	return "", nil
 }
 
 // Stats for specified volume.
 // Errors ErrEnoEnt may be returned
-func (v *volumeClient) Stats(volumeID api.VolumeID) (api.Stats, error) {
-	var stats api.Stats
-	err := v.c.Get().Resource(volumePath + "/stats").Instance(string(volumeID)).Do().Unmarshal(&stats)
-	if err != nil {
-		return api.Stats{}, err
+func (v *volumeClient) Stats(volumeID string) (*api.Stats, error) {
+	stats := &api.Stats{}
+	if err := v.c.Get().Resource(volumePath + "/stats").Instance(volumeID).Do().Unmarshal(stats); err != nil {
+		return nil, err
 	}
 	return stats, nil
 }
 
 // Alerts on this volume.
 // Errors ErrEnoEnt may be returned
-func (v *volumeClient) Alerts(volumeID api.VolumeID) (api.Alerts, error) {
-	var alerts api.Alerts
-	err := v.c.Get().Resource(volumePath + "/alerts").Instance(string(volumeID)).Do().Unmarshal(&alerts)
-	if err != nil {
-		return api.Alerts{}, err
+func (v *volumeClient) Alerts(volumeID string) (*api.Alerts, error) {
+	alerts:= &api.Alerts{}
+	if err := v.c.Get().Resource(volumePath + "/alerts").Instance(volumeID).Do().Unmarshal(alerts); err != nil {
+		return nil, err
 	}
 	return alerts, nil
 }
 
 // Shutdown and cleanup.
-func (v *volumeClient) Shutdown() {
-	return
-}
+func (v *volumeClient) Shutdown() {}
 
 // Enumerate volumes that map to the volumeLocator. Locator fields may be regexp.
 // If locator fields are left blank, this will return all volumes.
-func (v *volumeClient) Enumerate(locator api.VolumeLocator, labels api.Labels) ([]api.Volume, error) {
-	var vols []api.Volume
+func (v *volumeClient) Enumerate(locator *api.VolumeLocator, labels map[string]string) ([]*api.Volume, error) {
+	var volumes []*api.Volume
 	req := v.c.Get().Resource(volumePath)
 	if locator.Name != "" {
-		req.QueryOption(string(api.OptName), locator.Name)
+		req.QueryOption(api.OptName, locator.Name)
 	}
 	if len(locator.VolumeLabels) != 0 {
-		req.QueryOptionLabel(string(api.OptLabel), locator.VolumeLabels)
+		req.QueryOptionLabel(api.OptLabel, locator.VolumeLabels)
 	}
 	if len(labels) != 0 {
-		req.QueryOptionLabel(string(api.OptConfigLabel), labels)
+		req.QueryOptionLabel(api.OptConfigLabel, labels)
 	}
-	err := req.Do().Unmarshal(&vols)
-	if err != nil {
+	if err := req.Do().Unmarshal(&volumes); err != nil {
 		return nil, err
 	}
-	return vols, nil
+	return volumes, nil
 }
 
 // Enumerate snaps for specified volume
 // Count indicates the number of snaps populated.
-func (v *volumeClient) SnapEnumerate(ids []api.VolumeID, snapLabels api.Labels) ([]api.Volume, error) {
-	var snaps []api.Volume
-
-	req := v.c.Get().Resource(snapPath)
-	for _, v := range ids {
-		req.QueryOption(string(api.OptVolumeID), string(v))
+func (v *volumeClient) SnapEnumerate(ids []string, snapLabels map[string]string) ([]*api.Volume, error) {
+	var volumes []*api.Volume
+	request := v.c.Get().Resource(snapPath)
+	for _, id := range ids {
+		request.QueryOption(api.OptVolumeID, id)
 	}
 	if len(snapLabels) != 0 {
-		req.QueryOptionLabel(string(api.OptConfigLabel), snapLabels)
+		request.QueryOptionLabel(api.OptConfigLabel, snapLabels)
 	}
-	err := req.Do().Unmarshal(&snaps)
-	if err != nil {
+	if err := request.Do().Unmarshal(&volumes); err != nil {
 		return nil, err
 	}
-	return snaps, nil
+	return volumes, nil
 }
 
 // Attach map device to the host.
 // On success the devicePath specifies location where the device is exported
 // Errors ErrEnoEnt, ErrVolAttached may be returned.
-func (v *volumeClient) Attach(volumeID api.VolumeID) (string, error) {
-	var response api.VolumeSetResponse
-
-	req := api.VolumeSetRequest{
-		Action: &api.VolumeStateAction{Attach: api.ParamOn},
-	}
-	err := v.c.Put().Resource(volumePath).Instance(string(volumeID)).Body(&req).Do().Unmarshal(&response)
+func (v *volumeClient) Attach(volumeID string) (string, error) {
+	response, err := v.doVolumeSetGetResponse(
+		volumeID,
+		&api.VolumeSetRequest{
+			Action: &api.VolumeStateAction{
+				Attach: api.VolumeActionParam_VOLUME_ACTION_PARAM_ON,
+			},
+		},
+	)
 	if err != nil {
 		return "", err
 	}
-	if response.VolumeResponse.Error != "" {
-		return "", errors.New(response.VolumeResponse.Error)
+	if response.Volume != nil {
+		return response.Volume.DevicePath, nil
 	}
-	return response.DevicePath, nil
+	return "", nil
 }
 
 // Detach device from the host.
 // Errors ErrEnoEnt, ErrVolDetached may be returned.
-func (v *volumeClient) Detach(volumeID api.VolumeID) error {
-	var response api.VolumeSetResponse
-	req := api.VolumeSetRequest{
-		Action: &api.VolumeStateAction{Attach: api.ParamOff},
-	}
-	err := v.c.Put().Resource(volumePath).Instance(string(volumeID)).Body(&req).Do().Unmarshal(&response)
-	if err != nil {
-		return err
-	}
-	if response.VolumeResponse.Error != "" {
-		return errors.New(response.VolumeResponse.Error)
-	}
-	return nil
+func (v *volumeClient) Detach(volumeID string) error {
+	return v.doVolumeSet(
+		volumeID,
+		&api.VolumeSetRequest{
+			Action: &api.VolumeStateAction{
+				Attach: api.VolumeActionParam_VOLUME_ACTION_PARAM_OFF,
+			},
+		},
+	)
 }
 
 // Mount volume at specified path
 // Errors ErrEnoEnt, ErrVolDetached may be returned.
-func (v *volumeClient) Mount(volumeID api.VolumeID, mountpath string) error {
-	var response api.VolumeSetResponse
-	req := api.VolumeSetRequest{
-		Action: &api.VolumeStateAction{Mount: api.ParamOn, MountPath: mountpath},
-	}
-	err := v.c.Put().Resource(volumePath).Instance(string(volumeID)).Body(&req).Do().Unmarshal(&response)
-	if err != nil {
-		return err
-	}
-	if response.VolumeResponse.Error != "" {
-		return errors.New(response.VolumeResponse.Error)
-	}
-	return nil
+func (v *volumeClient) Mount(volumeID string, mountPath string) error {
+	return v.doVolumeSet(
+		volumeID,
+		&api.VolumeSetRequest{
+			Action: &api.VolumeStateAction{
+				Mount: api.VolumeActionParam_VOLUME_ACTION_PARAM_ON,
+				MountPath: mountPath,
+			},
+		},
+	)
 }
 
 // Unmount volume at specified path
 // Errors ErrEnoEnt, ErrVolDetached may be returned.
-func (v *volumeClient) Unmount(volumeID api.VolumeID, mountpath string) error {
-	var response api.VolumeSetResponse
-	req := api.VolumeSetRequest{
-		Action: &api.VolumeStateAction{Mount: api.ParamOff, MountPath: mountpath},
-	}
-	err := v.c.Put().Resource(volumePath).Instance(string(volumeID)).Body(&req).Do().Unmarshal(&response)
-	if err != nil {
-		return err
-	}
-	if response.VolumeResponse.Error != "" {
-		return errors.New(response.VolumeResponse.Error)
-	}
-	return nil
+func (v *volumeClient) Unmount(volumeID string, mountPath string) error {
+	return v.doVolumeSet(
+		volumeID,
+		&api.VolumeSetRequest{
+			Action: &api.VolumeStateAction{
+				Mount: api.VolumeActionParam_VOLUME_ACTION_PARAM_OFF,
+				MountPath: mountPath,
+			},
+		},
+	)
 }
 
 // Update volume
-func (v *volumeClient) Set(volumeID api.VolumeID, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
-	var response api.VolumeSetResponse
-	req := api.VolumeSetRequest{
-		Locator: locator,
-		Spec:    spec,
+func (v *volumeClient) Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
+	return v.doVolumeSet(
+		volumeID,
+		&api.VolumeSetRequest{
+			Locator: locator,
+			Spec:    spec,
+		},
+	)
+}
+
+func (v *volumeClient) doVolumeSet(volumeID string, request *api.VolumeSetRequest) error {
+	_, err := v.doVolumeSetGetResponse(volumeID, request)
+	return err
+}
+
+func (v *volumeClient) doVolumeSetGetResponse(volumeID string, request *api.VolumeSetRequest) (*api.VolumeSetResponse, error) {
+	response := &api.VolumeSetResponse{}
+	if err := v.c.Put().Resource(volumePath).Instance(volumeID).Body(request).Do().Unmarshal(response); err != nil {
+		return nil, err
 	}
-	err := v.c.Put().Resource(volumePath).Instance(string(volumeID)).Body(&req).Do().Unmarshal(&response)
-	if err != nil {
-		return err
+	if response.VolumeResponse != nil && response.VolumeResponse.Error != "" {
+		return nil, errors.New(response.VolumeResponse.Error)
 	}
-	if response.VolumeResponse.Error != "" {
-		return errors.New(response.VolumeResponse.Error)
-	}
-	return nil
+	return response, nil
 }

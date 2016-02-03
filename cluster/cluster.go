@@ -7,20 +7,16 @@ import (
 	"github.com/fsouza/go-dockerclient"
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
-
+	"github.com/libopenstorage/openstorage/config"
 	"github.com/portworx/kvdb"
 )
 
 var (
-	inst Cluster
-)
+	inst *ClusterManager
 
-type Config struct {
-	ClusterId string
-	NodeId    string
-	MgtIface  string
-	DataIface string
-}
+	errClusterInitialized    = errors.New("openstorage.cluster: already initialized")
+	errClusterNotInitialized = errors.New("openstorage.cluster: not initialized")
+)
 
 // NodeEntry is used to discover other nodes in the cluster
 // and setup the gossip protocol with them.
@@ -113,15 +109,14 @@ type Cluster interface {
 	// Shutdown can be called when THIS node is gracefully shutting down.
 	Shutdown() error
 
-	// Start starts the cluster manager and state machine.
-	// It also causes this node to join the cluster.
-	Start() error
-
 	ClusterData
 }
 
-// New instantiates and starts a new cluster manager.
-func New(cfg Config, kv kvdb.Kvdb, dockerClient *docker.Client) Cluster {
+// Init instantiates a new cluster manager.
+func Init(cfg config.ClusterConfig, kv kvdb.Kvdb, dockerClient *docker.Client) error {
+	if inst != nil {
+		return errClusterInitialized
+	}
 	inst = &ClusterManager{
 		listeners: list.New(),
 		config:    cfg,
@@ -129,28 +124,24 @@ func New(cfg Config, kv kvdb.Kvdb, dockerClient *docker.Client) Cluster {
 		nodeCache: make(map[string]api.Node),
 		docker:    dockerClient,
 	}
-	return inst
+	return nil
 }
 
 // Start will run the cluster manager daemon.
 func Start() error {
 	if inst == nil {
-		return errors.New("Cluster is not initialized.")
+		return errClusterNotInitialized
 	}
-
-	err := inst.Start()
-	if err != nil {
-		inst = nil
+	if err := inst.start(); err != nil {
 		return err
 	}
-
 	return nil
 }
 
 // Inst returns an instance of an already instantiated cluster manager.
 func Inst() (Cluster, error) {
 	if inst == nil {
-		return nil, errors.New("Cluster is not initialized.")
+		return nil, errClusterNotInitialized
 	}
 	return inst, nil
 }

@@ -33,7 +33,7 @@ type volDriver struct {
 	name      string
 }
 
-func processLabels(s string) (api.Labels, error) {
+func processLabels(s string) (map[string]string, error) {
 	m := make(map[string]string)
 	labels := strings.Split(s, ",")
 	for _, v := range labels {
@@ -60,9 +60,9 @@ func (v *volDriver) volumeOptions(context *cli.Context) {
 
 func (v *volDriver) volumeCreate(context *cli.Context) {
 	var err error
-	var labels api.Labels
-	var locator api.VolumeLocator
-	var id api.VolumeID
+	var labels map[string]string
+	locator := &api.VolumeLocator{}
+	var id string
 	fn := "create"
 
 	if len(context.Args()) != 1 {
@@ -77,17 +77,22 @@ func (v *volDriver) volumeCreate(context *cli.Context) {
 			return
 		}
 	}
-	locator = api.VolumeLocator{
+	locator = &api.VolumeLocator{
 		Name:         context.Args()[0],
 		VolumeLabels: labels,
 	}
+	fsType, err := api.FSTypeSimpleValueOf(context.String("fs"))
+	if err != nil {
+		cmdError(context, fn, err)
+		return
+	}
 	spec := &api.VolumeSpec{
 		Size:             uint64(VolumeSzUnits(context.Int("s")) * MiB),
-		Format:           api.Filesystem(context.String("fs")),
-		BlockSize:        context.Int("b") * 1024,
-		HALevel:          context.Int("r"),
-		Cos:              api.VolumeCos(context.Int("cos")),
-		SnapshotInterval: context.Int("si"),
+		Format:           fsType,
+		BlockSize:        int64(context.Int("b") * 1024),
+		HaLevel:          int64(context.Int("r")),
+		Cos:              uint32(context.Int("cos")),
+		SnapshotInterval: uint32(context.Int("si")),
 	}
 	source := &api.Source{
 		Seed: context.String("seed"),
@@ -116,7 +121,7 @@ func (v *volDriver) volumeMount(context *cli.Context) {
 		return
 	}
 
-	err := v.volDriver.Mount(api.VolumeID(volumeID), path)
+	err := v.volDriver.Mount(string(volumeID), path)
 	if err != nil {
 		cmdError(context, fn, err)
 		return
@@ -137,7 +142,7 @@ func (v *volDriver) volumeUnmount(context *cli.Context) {
 
 	path := context.String("path")
 
-	err := v.volDriver.Unmount(api.VolumeID(volumeID), path)
+	err := v.volDriver.Unmount(string(volumeID), path)
 	if err != nil {
 		cmdError(context, fn, err)
 		return
@@ -155,7 +160,7 @@ func (v *volDriver) volumeAttach(context *cli.Context) {
 	v.volumeOptions(context)
 	volumeID := context.Args()[0]
 
-	devicePath, err := v.volDriver.Attach(api.VolumeID(volumeID))
+	devicePath, err := v.volDriver.Attach(string(volumeID))
 	if err != nil {
 		cmdError(context, fn, err)
 		return
@@ -172,7 +177,7 @@ func (v *volDriver) volumeDetach(context *cli.Context) {
 	}
 	volumeID := context.Args()[0]
 	v.volumeOptions(context)
-	err := v.volDriver.Detach(api.VolumeID(volumeID))
+	err := v.volDriver.Detach(string(volumeID))
 	if err != nil {
 		cmdError(context, fn, err)
 		return
@@ -189,9 +194,9 @@ func (v *volDriver) volumeInspect(context *cli.Context) {
 		return
 	}
 
-	d := make([]api.VolumeID, len(context.Args()))
+	d := make([]string, len(context.Args()))
 	for i, v := range context.Args() {
-		d[i] = api.VolumeID(v)
+		d[i] = string(v)
 	}
 
 	volumes, err := v.volDriver.Inspect(d)
@@ -200,7 +205,7 @@ func (v *volDriver) volumeInspect(context *cli.Context) {
 		return
 	}
 
-	cmdOutput(context, volumes)
+	cmdOutputVolumes(volumes)
 }
 
 func (v *volDriver) volumeStats(context *cli.Context) {
@@ -211,13 +216,13 @@ func (v *volDriver) volumeStats(context *cli.Context) {
 		return
 	}
 
-	stats, err := v.volDriver.Stats(api.VolumeID(context.Args()[0]))
+	stats, err := v.volDriver.Stats(string(context.Args()[0]))
 	if err != nil {
 		cmdError(context, fn, err)
 		return
 	}
 
-	cmdOutput(context, stats)
+	cmdOutputProto(stats)
 }
 
 func (v *volDriver) volumeAlerts(context *cli.Context) {
@@ -228,17 +233,17 @@ func (v *volDriver) volumeAlerts(context *cli.Context) {
 		return
 	}
 
-	alerts, err := v.volDriver.Alerts(api.VolumeID(context.Args()[0]))
+	alerts, err := v.volDriver.Alerts(string(context.Args()[0]))
 	if err != nil {
 		cmdError(context, fn, err)
 		return
 	}
 
-	cmdOutput(context, alerts)
+	cmdOutputProto(alerts)
 }
 
 func (v *volDriver) volumeEnumerate(context *cli.Context) {
-	var locator api.VolumeLocator
+	locator := &api.VolumeLocator{}
 	var err error
 
 	fn := "enumerate"
@@ -255,9 +260,9 @@ func (v *volDriver) volumeEnumerate(context *cli.Context) {
 	volumes, err := v.volDriver.Enumerate(locator, nil)
 	if err != nil {
 		cmdError(context, fn, err)
-		return
-	}
-	cmdOutput(context, volumes)
+        return
+    }
+	cmdOutputVolumes(volumes)
 }
 
 func (v *volDriver) volumeDelete(context *cli.Context) {
@@ -268,7 +273,7 @@ func (v *volDriver) volumeDelete(context *cli.Context) {
 	}
 	volumeID := context.Args()[0]
 	v.volumeOptions(context)
-	err := v.volDriver.Delete(api.VolumeID(volumeID))
+	err := v.volDriver.Delete(volumeID)
 	if err != nil {
 		cmdError(context, fn, err)
 		return
@@ -279,14 +284,14 @@ func (v *volDriver) volumeDelete(context *cli.Context) {
 
 func (v *volDriver) snapCreate(context *cli.Context) {
 	var err error
-	var labels api.Labels
+	var labels map[string]string
 	fn := "snapCreate"
 
 	if len(context.Args()) != 1 {
 		missingParameter(context, fn, "volumeID", "Invalid number of arguments")
 		return
 	}
-	volumeID := api.VolumeID(context.Args()[0])
+	volumeID := context.Args()[0]
 
 	v.volumeOptions(context)
 	if l := context.String("label"); l != "" {
@@ -295,7 +300,7 @@ func (v *volDriver) snapCreate(context *cli.Context) {
 			return
 		}
 	}
-	locator := api.VolumeLocator{
+	locator := &api.VolumeLocator{
 		Name:         context.String("name"),
 		VolumeLabels: labels,
 	}
@@ -310,7 +315,7 @@ func (v *volDriver) snapCreate(context *cli.Context) {
 }
 
 func (v *volDriver) snapEnumerate(context *cli.Context) {
-	var locator api.VolumeLocator
+	locator := &api.VolumeLocator{}
 	var err error
 
 	fn := "snap enumerate"
@@ -333,7 +338,7 @@ func (v *volDriver) snapEnumerate(context *cli.Context) {
 		cmdError(context, fn, err)
 		return
 	}
-	cmdOutput(context, snaps)
+	cmdOutputVolumes(snaps)
 }
 
 // baseVolumeCommand exports commands common to block and file volume drivers.
@@ -377,7 +382,7 @@ func baseVolumeCommand(v *volDriver) []cli.Command {
 				},
 				cli.IntFlag{
 					Name:  "cos",
-					Usage: "Class of Service [1..9]",
+					Usage: "Class of Service: [1..9]",
 					Value: 1,
 				},
 				cli.IntFlag{
@@ -524,4 +529,15 @@ func FileVolumeCommands(name string) []cli.Command {
 	v := &volDriver{name: name}
 
 	return baseVolumeCommand(v)
+}
+
+func cmdOutputVolumes(volumes []*api.Volume) {
+	fmt.Print("{")
+	for i, volume := range volumes {
+		fmt.Print(cmdMarshalProto(volume))
+		if i != len(volumes)-1 {
+			fmt.Print(",")
+		}
+	}
+	fmt.Println("}")
 }

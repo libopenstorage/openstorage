@@ -21,6 +21,8 @@ import (
 	"os"
 	"path"
 
+	"go.pedge.io/dlog"
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/graph"
 
@@ -29,12 +31,11 @@ import (
 	"github.com/docker/docker/pkg/chrootarchive"
 	"github.com/docker/docker/pkg/directory"
 	"github.com/docker/docker/pkg/idtools"
-
-	"github.com/Sirupsen/logrus"
 )
 
 const (
 	Name     = "chainfs"
+	Type     = api.DriverType_DRIVER_TYPE_GRAPH
 	Type     = api.Graph
 	virtPath = "/var/lib/openstorage/chainfs"
 )
@@ -43,7 +44,7 @@ type Driver struct {
 }
 
 func Init(home string, options []string, uidMaps, gidMaps []idtools.IDMap) (graphdriver.Driver, error) {
-	logrus.Infof("Initializing libchainfs at home: %s and storage: %v...", home, virtPath)
+	dlog.Infof("Initializing libchainfs at home: %s and storage: %v...", home, virtPath)
 
 	cVirtPath := C.CString(virtPath)
 	go C.start_chainfs(1, cVirtPath)
@@ -61,7 +62,7 @@ func (d *Driver) String() string {
 // held by the driver, e.g., unmounting all layered filesystems
 // known to this driver.
 func (d *Driver) Cleanup() error {
-	logrus.Infof("Stopping libchainfs at %s", virtPath)
+	dlog.Infof("Stopping libchainfs at %s", virtPath)
 	C.stop_chainfs()
 	return nil
 }
@@ -78,9 +79,9 @@ func (d *Driver) Status() [][2]string {
 // specified id and parent and mountLabel. Parent and mountLabel may be "".
 func (d *Driver) Create(id string, parent string, ml string) error {
 	if parent != "" {
-		logrus.Infof("Creating layer %s with parent %s", id, parent)
+		dlog.Infof("Creating layer %s with parent %s", id, parent)
 	} else {
-		logrus.Infof("Creating parent layer %s", id)
+		dlog.Infof("Creating parent layer %s", id)
 	}
 
 	cID := C.CString(id)
@@ -88,7 +89,7 @@ func (d *Driver) Create(id string, parent string, ml string) error {
 
 	ret, err := C.create_layer(cID, cParent)
 	if int(ret) != 0 {
-		logrus.Warnf("Error while creating layer %s", id)
+		dlog.Warnf("Error while creating layer %s", id)
 		return err
 	}
 
@@ -97,13 +98,12 @@ func (d *Driver) Create(id string, parent string, ml string) error {
 
 // Remove attempts to remove the filesystem layer with this id.
 func (d *Driver) Remove(id string) error {
-	logrus.Infof("Removing layer %s", id)
+	dlog.Infof("Removing layer %s", id)
 
 	cID := C.CString(id)
-
 	ret, err := C.remove_layer(cID)
 	if int(ret) != 0 {
-		logrus.Warnf("Error while removing layer %s", id)
+		dlog.Warnf("Error while removing layer %s", id)
 		return err
 	}
 
@@ -124,12 +124,11 @@ func (d *Driver) Get(id, mountLabel string) (string, error) {
 
 	ret, err := C.alloc_chainfs(cID)
 	if int(ret) != 0 {
-		logrus.Warnf("Error while creating a chain FS for %s", id)
+		dlog.Warnf("Error while creating a chain FS for %s", id)
 		return "", err
 	} else {
-		logrus.Debugf("Created a chain FS for %s", id)
+		dlog.Debugf("Created a chain FS for %s", id)
 		chainPath := path.Join(virtPath, id)
-
 		return chainPath, err
 	}
 }
@@ -137,7 +136,7 @@ func (d *Driver) Get(id, mountLabel string) (string, error) {
 // Put releases the system resources for the specified id,
 // e.g, unmounting layered filesystem.
 func (d *Driver) Put(id string) error {
-	logrus.Debugf("Releasing chain FS for %s", id)
+	dlog.Debugf("Releasing chain FS for %s", id)
 
 	cID := C.CString(id)
 	_, err := C.release_chainfs(cID)
@@ -170,17 +169,17 @@ func (d *Driver) ApplyDiff(id string, parent string, diff archive.Reader) (size 
 	dir := path.Join(virtPath, id)
 	// dir := path.Join("/tmp/chainfs/", id)
 
-	logrus.Infof("Applying diff at path %s\n", dir)
+	dlog.Infof("Applying diff at path %s\n", dir)
 
 	if err := chrootarchive.UntarUncompressed(diff, dir, nil); err != nil {
-		logrus.Warnf("Error while applying diff to %s: %v", id, err)
+		dlog.Warnf("Error while applying diff to %s: %v", id, err)
 		return 0, err
 	}
 
 	// show invalid whiteouts warning.
 	files, err := ioutil.ReadDir(path.Join(dir, archive.WhiteoutLinkDir))
 	if err == nil && len(files) > 0 {
-		logrus.Warnf("Archive contains aufs hardlink references that are not supported.")
+		dlog.Warnf("Archive contains aufs hardlink references that are not supported.")
 	}
 
 	return d.DiffSize(id, parent)

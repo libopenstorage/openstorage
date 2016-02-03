@@ -1,0 +1,37 @@
+51,52d50
+< 	"go.pedge.io/pb/go/google/protobuf"
+< 
+65,66d62
+< 	// Whether to render enum values as simple strings, as opposed to string values.
+< 	EnumsAsSimpleStrings bool
+99,105d94
+< 	if v != nil {
+< 		if timestamp, ok := v.(*google_protobuf.Timestamp); ok {
+< 			out.write(`"`)
+< 			out.write(timestamp.GoTime().String())
+< 			out.write(`"`)
+< 		}
+< 	}
+216,219d204
+< type simpleStringer interface {
+< 	SimpleString() string
+< }
+< 
+252,253c237
+< 	if (!m.EnumsAsInts || m.EnumsAsSimpleStrings) && prop.Enum != "" {
+< 		var enumStr string
+---
+> 	if !m.EnumsAsInts && prop.Enum != "" {
+257,266c241
+< 		if m.EnumsAsSimpleStrings {
+< 			obj, ok := v.Interface().(simpleStringer)
+< 			if ok {
+< 				enumStr = obj.SimpleString()
+< 			} else {
+< 				enumStr = v.Interface().(fmt.Stringer).String()
+< 			}
+< 		} else {
+< 			enumStr = v.Interface().(fmt.Stringer).String()
+< 		}
+---
+> 		enumStr := v.Interface().(fmt.Stringer).String()

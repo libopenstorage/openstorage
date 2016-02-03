@@ -45,9 +45,20 @@ build:
 install:
 	go install -tags "$(TAGS)" $(PKGS)
 
+proto:
+	go get -v go.pedge.io/protoeasy/cmd/protoeasy
+	go get -v go.pedge.io/pkg/cmd/strip-package-comments
+	protoeasy --exclude vendor --go --go-import-path github.com/libopenstorage/openstorage .
+	find . -name *\.pb\*\.go | xargs strip-package-comments
+
 lint:
 	go get -v github.com/golang/lint/golint
-	$(foreach pkg,$(PKGS),golint $(pkg);)
+	for file in $$(find . -name '*.go' | grep -v vendor | grep -v '\.pb\.go' | grep -v '\.pb\.gw\.go'); do \
+		golint $${file}; \
+		if [ -n "$$(golint $${file})" ]; then \
+			exit 1; \
+		fi; \
+	done
 
 vet:
 	go vet $(PKGS)
@@ -61,10 +72,22 @@ pretest: lint vet errcheck
 test:
 	go test -tags "$(TAGS)" $(TESTFLAGS) $(PKGS)
 
-docker-build:
+docker-build-osd-dev:
 	docker build -t openstorage/osd-dev -f Dockerfile.osd-dev .
 
-docker-test: docker-build
+docker-build: docker-build-osd-dev
+	docker run \
+		--privileged \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-e AWS_ACCESS_KEY_ID \
+		-e AWS_SECRET_ACCESS_KEY \
+		-e "TAGS=$(TAGS)" \
+		-e "PKGS=$(PKGS)" \
+		-e "BUILDFLAGS=$(BUILDFLAGS)" \
+		openstorage/osd-dev \
+			make build
+
+docker-test: docker-build-osd-dev
 	docker run \
 		--privileged \
 		-v /var/run/docker.sock:/var/run/docker.sock \
@@ -83,7 +106,7 @@ docker-build-osd-internal:
 	go build -a -tags "$(TAGS)" -o _tmp/osd cmd/osd/main.go
 	docker build -t openstorage/osd -f Dockerfile.osd .
 
-docker-build-osd: docker-build
+docker-build-osd: docker-build-osd-dev
 	docker run \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-e "TAGS=$(TAGS)" \
@@ -113,11 +136,13 @@ clean:
 	vendor \
 	build \
 	install \
+	proto \
 	lint \
 	vet \
 	errcheck \
 	pretest \
 	test \
+	docker-build-osd-dev \
 	docker-build \
 	docker-test \
 	docker-build-osd-internal \

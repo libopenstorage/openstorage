@@ -8,22 +8,27 @@ import (
 	"path"
 	"strings"
 	"syscall"
-	"time"
 
-	"github.com/Sirupsen/logrus"
+	"go.pedge.io/dlog"
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/volume"
+	"github.com/libopenstorage/openstorage/volume/drivers/common"
 	"github.com/pborman/uuid"
 	"github.com/portworx/kvdb"
 )
 
 const (
 	Name          = "buse"
-	Type          = api.Block
+	Type          = api.DriverType_DRIVER_TYPE_BLOCK
 	BuseDBKey     = "OpenStorageBuseKey"
 	BuseMountPath = "/var/lib/openstorage/buse/"
 )
+
+func init() {
+	volume.Register(Name, Init)
+}
 
 // Implements the open storage volume interface.
 type driver struct {
@@ -79,37 +84,34 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 		IoNotSupported:    &volume.IoNotSupported{},
 		DefaultEnumerator: volume.NewDefaultEnumerator(Name, kvdb.Instance()),
 	}
-
 	inst.buseDevices = make(map[string]*buseDev)
-
-	err := os.MkdirAll(BuseMountPath, 0744)
-	if err != nil {
+	if err := os.MkdirAll(BuseMountPath, 0744); err != nil {
 		return nil, err
 	}
-
 	volumeInfo, err := inst.DefaultEnumerator.Enumerate(
-		api.VolumeLocator{},
-		nil)
+		&api.VolumeLocator{},
+		nil,
+	)
 	if err == nil {
 		for _, info := range volumeInfo {
-			if info.Status == "" {
-				info.Status = api.Up
-				inst.UpdateVol(&info)
+			if info.Status == api.VolumeStatus_VOLUME_STATUS_NONE {
+				info.Status = api.VolumeStatus_VOLUME_STATUS_UP
+				inst.UpdateVol(info)
 			}
 		}
 	} else {
-		logrus.Println("Could not enumerate Volumes, ", err)
+		dlog.Println("Could not enumerate Volumes, ", err)
 	}
 
 	c, err := cluster.Inst()
 	if err != nil {
-		logrus.Println("BUSE initializing in single node mode")
+		dlog.Println("BUSE initializing in single node mode")
 	} else {
-		logrus.Println("BUSE initializing in clustered mode")
+		dlog.Println("BUSE initializing in clustered mode")
 		c.AddEventListener(inst)
 	}
 
-	logrus.Println("BUSE initialized and driver mounted at: ", BuseMountPath)
+	dlog.Println("BUSE initialized and driver mounted at: ", BuseMountPath)
 	return inst, nil
 }
 
@@ -130,89 +132,81 @@ func (d *driver) Status() [][2]string {
 	return [][2]string{}
 }
 
-func (d *driver) Create(locator api.VolumeLocator, source *api.Source, spec *api.VolumeSpec) (api.VolumeID, error) {
+func (d *driver) Create(locator *api.VolumeLocator, source *api.Source, spec *api.VolumeSpec) (string, error) {
 	volumeID := uuid.New()
 	volumeID = strings.TrimSuffix(volumeID, "\n")
-
 	if spec.Size == 0 {
-		return api.BadVolumeID, fmt.Errorf("Volume size cannot be zero", "buse")
+		return "", fmt.Errorf("Volume size cannot be zero", "buse")
 	}
-
-	if spec.Format == "" {
-		return api.BadVolumeID, fmt.Errorf("Missing volume format", "buse")
+	if spec.Format == api.FSType_FS_TYPE_NONE {
+		return "", fmt.Errorf("Missing volume format", "buse")
 	}
-
 	// Create a file on the local buse path with this UUID.
-	buseFile := path.Join(BuseMountPath, string(volumeID))
+	buseFile := path.Join(BuseMountPath, volumeID)
 	f, err := os.Create(buseFile)
 	if err != nil {
-		logrus.Println(err)
-		return api.BadVolumeID, err
+		dlog.Println(err)
+		return "", err
 	}
 
-	err = f.Truncate(int64(spec.Size))
-	if err != nil {
-		logrus.Println(err)
-		return api.BadVolumeID, err
+	if err := f.Truncate(int64(spec.Size)); err != nil {
+		dlog.Println(err)
+		return "", err
 	}
 
 	bd := &buseDev{
 		file: buseFile,
-		f:    f}
-
+		f:    f,
+	}
 	nbd := Create(bd, int64(spec.Size))
 	bd.nbd = nbd
 
-	logrus.Infof("Connecting to NBD...")
+	dlog.Infof("Connecting to NBD...")
 	dev, err := bd.nbd.Connect()
 	if err != nil {
-		logrus.Println(err)
-		return api.BadVolumeID, err
+		dlog.Println(err)
+		return "", err
 	}
 
-	logrus.Infof("Formatting %s with %v", dev, spec.Format)
-	cmd := "/sbin/mkfs." + string(spec.Format)
+	dlog.Infof("Formatting %s with %v", dev, spec.Format)
+	cmd := "/sbin/mkfs." + spec.Format.SimpleString()
 	o, err := exec.Command(cmd, dev).Output()
 	if err != nil {
-		logrus.Warnf("Failed to run command %v %v: %v", cmd, dev, o)
-		return api.BadVolumeID, err
+		dlog.Warnf("Failed to run command %v %v: %v", cmd, dev, o)
+		return "", err
 	}
 
-	logrus.Infof("BUSE mapped NBD device %s (size=%v) to block file %s", dev, spec.Size, buseFile)
+	dlog.Infof("BUSE mapped NBD device %s (size=%v) to block file %s", dev, spec.Size, buseFile)
 
-	v := &api.Volume{
-		ID:         api.VolumeID(volumeID),
-		Source:     source,
-		Locator:    locator,
-		Ctime:      time.Now(),
-		Spec:       spec,
-		LastScan:   time.Now(),
-		Format:     spec.Format,
-		State:      api.VolumeAvailable,
-		Status:     api.Up,
-		DevicePath: dev,
-	}
+	v := common.NewVolume(
+		volumeID,
+		spec.Format,
+		locator,
+		source,
+		spec,
+	)
+	v.DevicePath = dev
 
 	d.buseDevices[dev] = bd
 
 	err = d.CreateVol(v)
 	if err != nil {
-		return api.BadVolumeID, err
+		return "", err
 	}
-	return v.ID, err
+	return v.Id, err
 }
 
-func (d *driver) Delete(volumeID api.VolumeID) error {
+func (d *driver) Delete(volumeID string) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
-		logrus.Println(err)
+		dlog.Println(err)
 		return err
 	}
 
 	bd, ok := d.buseDevices[v.DevicePath]
 	if !ok {
 		err = fmt.Errorf("Cannot locate a BUSE device for %s", v.DevicePath)
-		logrus.Println(err)
+		dlog.Println(err)
 		return err
 	}
 
@@ -221,37 +215,37 @@ func (d *driver) Delete(volumeID api.VolumeID) error {
 	bd.f.Close()
 	bd.nbd.Disconnect()
 
-	logrus.Infof("BUSE deleted volume %v at NBD device %s", volumeID, v.DevicePath)
+	dlog.Infof("BUSE deleted volume %v at NBD device %s", volumeID, v.DevicePath)
 
-	err = d.DeleteVol(volumeID)
-	if err != nil {
-		logrus.Println(err)
+	if err := d.DeleteVol(volumeID); err != nil {
+		dlog.Println(err)
 		return err
 	}
 
 	return nil
 }
 
-func (d *driver) Mount(volumeID api.VolumeID, mountpath string) error {
+func (d *driver) Mount(volumeID string, mountpath string) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
-		return fmt.Errorf("Failed to locate volume %q", string(volumeID))
+		return fmt.Errorf("Failed to locate volume %q", volumeID)
 	}
-	err = syscall.Mount(v.DevicePath, mountpath, string(v.Spec.Format), 0, "")
-	if err != nil {
-		logrus.Errorf("Mounting %s on %s failed because of %v", v.DevicePath, mountpath, err)
+	if err := syscall.Mount(v.DevicePath, mountpath, v.Spec.Format.SimpleString(), 0, ""); err != nil {
+		// TODO(pedge): same string for log message and error?
+		dlog.Errorf("Mounting %s on %s failed because of %v", v.DevicePath, mountpath, err)
 		return fmt.Errorf("Failed to mount %v at %v: %v", v.DevicePath, mountpath, err)
 	}
 
-	logrus.Infof("BUSE mounted NBD device %s at %s", v.DevicePath, mountpath)
+	dlog.Infof("BUSE mounted NBD device %s at %s", v.DevicePath, mountpath)
 
 	v.AttachPath = mountpath
+	// TODO(pedge): why ignoring the error?
 	err = d.UpdateVol(v)
 
 	return nil
 }
 
-func (d *driver) Unmount(volumeID api.VolumeID, mountpath string) error {
+func (d *driver) Unmount(volumeID string, mountpath string) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
 		return err
@@ -259,40 +253,38 @@ func (d *driver) Unmount(volumeID api.VolumeID, mountpath string) error {
 	if v.AttachPath == "" {
 		return fmt.Errorf("Device %v not mounted", volumeID)
 	}
-	err = syscall.Unmount(v.AttachPath, 0)
-	if err != nil {
+	if err := syscall.Unmount(v.AttachPath, 0); err != nil {
 		return err
 	}
 	v.AttachPath = ""
-	err = d.UpdateVol(v)
-	return err
+	return d.UpdateVol(v)
 }
 
-func (d *driver) Snapshot(volumeID api.VolumeID, readonly bool, locator api.VolumeLocator) (api.VolumeID, error) {
-	volIDs := make([]api.VolumeID, 1)
+func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator) (string, error) {
+	volIDs := make([]string, 1)
 	volIDs[0] = volumeID
 	vols, err := d.Inspect(volIDs)
 	if err != nil {
-		return api.BadVolumeID, nil
+		return "", nil
 	}
 
 	source := &api.Source{Parent: volumeID}
 	newVolumeID, err := d.Create(locator, source, vols[0].Spec)
 	if err != nil {
-		return api.BadVolumeID, nil
+		return "", nil
 	}
 
 	// BUSE does not support snapshots, so just copy the block files.
-	err = copyFile(BuseMountPath+string(volumeID), BuseMountPath+string(newVolumeID))
+	err = copyFile(BuseMountPath+volumeID, BuseMountPath+newVolumeID)
 	if err != nil {
 		d.Delete(newVolumeID)
-		return api.BadVolumeID, nil
+		return "", nil
 	}
 
 	return newVolumeID, nil
 }
 
-func (d *driver) Set(volumeID api.VolumeID, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
+func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
 	if spec != nil {
 		return volume.ErrNotSupported
 	}
@@ -301,32 +293,31 @@ func (d *driver) Set(volumeID api.VolumeID, locator *api.VolumeLocator, spec *ap
 		return err
 	}
 	if locator != nil {
-		v.Locator = *locator
+		v.Locator = locator
 	}
-	err = d.UpdateVol(v)
-	return err
+	return d.UpdateVol(v)
 }
 
-func (d *driver) Attach(volumeID api.VolumeID) (string, error) {
+func (d *driver) Attach(volumeID string) (string, error) {
 	// Nothing to do on attach.
-	return path.Join(BuseMountPath, string(volumeID)), nil
+	return path.Join(BuseMountPath, volumeID), nil
 }
 
-func (d *driver) Detach(volumeID api.VolumeID) error {
+func (d *driver) Detach(volumeID string) error {
 	// Nothing to do on detach.
 	return nil
 }
 
-func (d *driver) Stats(volumeID api.VolumeID) (api.Stats, error) {
-	return api.Stats{}, volume.ErrNotSupported
+func (d *driver) Stats(volumeID string) (*api.Stats, error) {
+	return nil, volume.ErrNotSupported
 }
 
-func (d *driver) Alerts(volumeID api.VolumeID) (api.Alerts, error) {
-	return api.Alerts{}, volume.ErrNotSupported
+func (d *driver) Alerts(volumeID string) (*api.Alerts, error) {
+	return nil, volume.ErrNotSupported
 }
 
 func (d *driver) Shutdown() {
-	logrus.Printf("%s Shutting down", Name)
+	dlog.Printf("%s Shutting down", Name)
 	syscall.Unmount(BuseMountPath, 0)
 }
 

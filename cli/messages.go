@@ -7,8 +7,13 @@ import (
 	"strings"
 
 	"github.com/codegangsta/cli"
-
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/pkg/jsonpb"
+	"github.com/golang/protobuf/proto"
+)
+
+var (
+	marshaler = &jsonpb.Marshaler{EnumsAsSimpleStrings: true, Indent: " "}
 )
 
 // Format standardizes the screen output of commands.
@@ -80,6 +85,15 @@ func cmdErrorBody(c *cli.Context, cmd string, err error, body string) {
 func cmdOutput(c *cli.Context, body interface{}) {
 	b, _ := json.MarshalIndent(body, "", " ")
 	fmt.Printf("%+v\n", string(b))
+}
+
+func cmdMarshalProto(message proto.Message) string {
+	s, _ := marshaler.MarshalToString(message)
+	return s
+}
+
+func cmdOutputProto(message proto.Message) {
+	fmt.Println(cmdMarshalProto(message))
 }
 
 func fmtOutput(c *cli.Context, format *Format) {

@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"go.pedge.io/dlog"
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/server"
 	"github.com/libopenstorage/openstorage/config"
@@ -17,13 +19,17 @@ var (
 	testPath = string("/tmp/openstorage_client_test")
 )
 
+func init() {
+	dlog.SetLevel(dlog.LevelDebug)
+}
+
 func makeRequest(t *testing.T) {
 	c, err := NewDriverClient(nfs.Name)
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
 	d := c.VolumeDriver()
-	_, err = d.Inspect([]api.VolumeID{api.VolumeID("foo")})
+	_, err = d.Inspect([]string{"foo"})
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
@@ -48,7 +54,7 @@ func TestAll(t *testing.T) {
 	}
 	d := c.VolumeDriver()
 	ctx := test.NewContext(d)
-	ctx.Filesystem = string("btrfs")
+	ctx.Filesystem = api.FSType_FS_TYPE_BTRFS
 	test.Run(t, ctx)
 }
 

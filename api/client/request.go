@@ -239,51 +239,37 @@ func (r *Request) Do() *Response {
 		resp     *http.Response
 		url      string
 		body     []byte
-		response *Response
 	)
-
 	if r.err != nil {
-		err = r.err
-		goto done
+		return &Response{err: r.err}
 	}
-
 	url = r.URL().String()
 	req, err = http.NewRequest(r.verb, url, bytes.NewBuffer(r.body))
 	if err != nil {
-		goto done
+		return &Response{err: err}
 	}
 	if r.headers == nil {
 		r.headers = http.Header{}
 	}
-
 	req.Header = r.headers
 	req.Header.Set("Content-Type", "application/json")
 	resp, err = r.client.Do(req)
 	if err != nil {
-		goto done
+		return &Response{err: err}
 	}
-
 	if resp.Body != nil {
 		defer resp.Body.Close()
 		body, err = ioutil.ReadAll(resp.Body)
 	}
-
 	if err != nil {
-		goto done
+		return &Response{err: err}
 	}
-
-	response = &Response{
+	return &Response{
 		status:     resp.Status,
 		statusCode: resp.StatusCode,
 		body:       body,
 		err:        parseHTTPStatus(resp, body),
 	}
-
-done:
-	if err != nil {
-		return &Response{err: err}
-	}
-	return response
 }
 
 // Body return http body, valid only if there is no error
