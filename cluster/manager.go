@@ -18,8 +18,8 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
 
+	"github.com/libopenstorage/systemutils"
 	"github.com/portworx/kvdb"
-	"github.com/portworx/systemutils"
 )
 
 const (

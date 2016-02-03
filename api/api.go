@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/fsouza/go-dockerclient"
-	"github.com/portworx/systemutils"
+	"github.com/libopenstorage/systemutils"
 )
 
 // Strings for VolumeSpec
