@@ -168,8 +168,9 @@ func (c *ClusterManager) initNode(db *Database) (*api.Node, bool) {
 	db.NodeEntries[c.config.NodeId] = NodeEntry{Id: c.selfNode.Id,
 		Ip: c.selfNode.Ip, GenNumber: c.selfNode.GenNumber}
 
-	logrus.Infof("Node %s joining cluster... \n\tCluster ID: %s\n\tIP: %s",
-		c.config.NodeId, c.config.ClusterId, c.selfNode.Ip)
+	logrus.Infof("Node %s joining cluster...", c.config.NodeId)
+	logrus.Infof("Cluster ID: %s", c.config.ClusterId)
+	logrus.Infof("Node IP: %s", c.selfNode.Ip)
 
 	return &c.selfNode, exists
 }
