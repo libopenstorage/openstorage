@@ -63,10 +63,10 @@ func ifaceToIp(iface *net.Interface) (string, error) {
 	return "", errors.New("Node not connected to the network.")
 }
 
-func externalIp(config *Config) (string, error) {
+func externalIp(mgtIface string) (string, error) {
 
-	if config.MgtIface != "" {
-		iface, err := net.InterfaceByName(config.MgtIface)
+	if mgtIface != "" {
+		iface, err := net.InterfaceByName(mgtIface)
 		if err != nil {
 			return "", errors.New("Invalid network interface specified.")
 		}
@@ -90,6 +90,10 @@ func externalIp(config *Config) (string, error) {
 	}
 
 	return "", errors.New("Node not connected to the network.")
+}
+
+func ExternalIp(mgtIface string) (string, error) {
+	return externalIp(mgtIface)
 }
 
 func (c *ClusterManager) LocateNode(nodeID string) (api.Node, error) {
@@ -409,7 +413,7 @@ func (c *ClusterManager) Start() error {
 	c.selfNode.GenNumber = uint64(time.Now().UnixNano())
 	c.selfNode.Id = c.config.NodeId
 	c.selfNode.Status = api.StatusOk
-	c.selfNode.Ip, _ = externalIp(&c.config)
+	c.selfNode.Ip, _ = externalIp(c.config.MgtIface)
 	c.selfNode.NodeData = make(map[string]interface{})
 	c.system = systemutils.New()
 
