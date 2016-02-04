@@ -109,6 +109,10 @@ type Cluster interface {
 	// Shutdown can be called when THIS node is gracefully shutting down.
 	Shutdown() error
 
+	// Start starts the cluster manager and state machine.
+	// It also causes this node to join the cluster.
+	Start() error
+
 	ClusterData
 }
 
@@ -123,17 +127,6 @@ func Init(cfg config.ClusterConfig, kv kvdb.Kvdb, dockerClient *docker.Client) e
 		kv:        kv,
 		nodeCache: make(map[string]api.Node),
 		docker:    dockerClient,
-	}
-	return nil
-}
-
-// Start will run the cluster manager daemon.
-func Start() error {
-	if inst == nil {
-		return errClusterNotInitialized
-	}
-	if err := inst.start(); err != nil {
-		return err
 	}
 	return nil
 }

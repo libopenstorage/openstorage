@@ -40,6 +40,7 @@ func start(c *cli.Context) {
 		dlog.Warnln("OSD configuration file not specified.  Visit openstorage.org for an example.")
 		return
 	}
+
 	cfg, err := config.Parse(file)
 	if err != nil {
 		dlog.Errorln(err)
@@ -71,12 +72,9 @@ func start(c *cli.Context) {
 			dlog.Warnf("Failed to initialize docker client: %v", err)
 			return
 		}
+
 		if err := cluster.Init(cfg.Osd.ClusterConfig, kv, dockerClient); err != nil {
-			dlog.Errorln(err)
-			return
-		}
-		if err := cluster.Init(cfg.Osd.ClusterConfig, kv, dockerClient); err != nil {
-			dlog.Warnf("Unable to init cluster server: %v", err)
+			dlog.Errorln("Unable to init cluster server: %v", err)
 			return
 		}
 
@@ -108,9 +106,12 @@ func start(c *cli.Context) {
 			return
 		}
 	}
-	if err := cluster.Start(); err != nil {
-		dlog.Warnf("Unable to start cluster manager: %v", err)
-		return
+
+	if cm, err := cluster.Inst(); err != nil {
+		if err := cm.Start(); err != nil {
+			dlog.Warnf("Unable to start cluster manager: %v", err)
+			return
+		}
 	}
 
 	// Daemon does not exit.

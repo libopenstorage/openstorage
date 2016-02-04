@@ -65,8 +65,7 @@ func ifaceToIp(iface *net.Interface) (string, error) {
 	return "", errors.New("Node not connected to the network.")
 }
 
-func externalIp(config *config.ClusterConfig) (string, error) {
-
+func ExternalIp(config *config.ClusterConfig) (string, error) {
 	if config.MgtIface != "" {
 		iface, err := net.InterfaceByName(config.MgtIface)
 		if err != nil {
@@ -403,7 +402,7 @@ func (c *ClusterManager) GetState() *ClusterState {
 		History: history, NodeStatus: nodes}
 }
 
-func (c *ClusterManager) start() error {
+func (c *ClusterManager) Start() error {
 	dlog.Infoln("Cluster manager starting...")
 
 	c.gEnabled = true
@@ -411,7 +410,7 @@ func (c *ClusterManager) start() error {
 	c.selfNode.GenNumber = uint64(time.Now().UnixNano())
 	c.selfNode.Id = c.config.NodeId
 	c.selfNode.Status = api.Status_STATUS_OK
-	c.selfNode.Ip, _ = externalIp(&c.config)
+	c.selfNode.Ip, _ = ExternalIp(&c.config)
 	c.selfNode.NodeData = make(map[string]interface{})
 	c.system = systemutils.New()
 
