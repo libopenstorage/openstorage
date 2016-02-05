@@ -260,8 +260,8 @@ func (v *volDriver) volumeEnumerate(context *cli.Context) {
 	volumes, err := v.volDriver.Enumerate(locator, nil)
 	if err != nil {
 		cmdError(context, fn, err)
-        return
-    }
+		return
+	}
 	cmdOutputVolumes(volumes)
 }
 
@@ -532,12 +532,12 @@ func FileVolumeCommands(name string) []cli.Command {
 }
 
 func cmdOutputVolumes(volumes []*api.Volume) {
-	fmt.Print("{")
+	fmt.Print("[")
 	for i, volume := range volumes {
 		fmt.Print(cmdMarshalProto(volume))
 		if i != len(volumes)-1 {
 			fmt.Print(",")
 		}
 	}
-	fmt.Println("}")
+	fmt.Println("]")
 }
