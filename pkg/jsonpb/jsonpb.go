@@ -47,6 +47,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.pedge.io/pb/go/google/protobuf"
 
@@ -99,7 +100,7 @@ func (m *Marshaler) marshalObject(out *errWriter, v proto.Message, indent string
 	if v != nil {
 		if timestamp, ok := v.(*google_protobuf.Timestamp); ok {
 			out.write(`"`)
-			out.write(timestamp.GoTime().String())
+			out.write(timestamp.GoTime().Format(time.RFC3339))
 			out.write(`"`)
 		}
 	}

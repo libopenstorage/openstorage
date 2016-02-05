@@ -8,7 +8,7 @@
 < 	if v != nil {
 < 		if timestamp, ok := v.(*google_protobuf.Timestamp); ok {
 < 			out.write(`"`)
-< 			out.write(timestamp.GoTime().String())
+< 			out.write(timestamp.GoTime().Format(time.RFC3339))
 < 			out.write(`"`)
 < 		}
 < 	}
