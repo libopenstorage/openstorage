@@ -102,6 +102,7 @@ func (m *Marshaler) marshalObject(out *errWriter, v proto.Message, indent string
 			out.write(`"`)
 			out.write(timestamp.GoTime().Format(time.RFC3339))
 			out.write(`"`)
+			return nil
 		}
 	}
 	out.write("{")
