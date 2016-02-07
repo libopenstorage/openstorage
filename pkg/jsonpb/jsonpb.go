@@ -55,8 +55,26 @@ import (
 )
 
 var (
-	byteArrayType = reflect.TypeOf([]byte{})
+	byteArrayType         = reflect.TypeOf([]byte{})
+	simpleStringValueMaps = make(map[string]map[string]int32, 0)
 )
+
+// RegisterSimpleStringEnum registers a simple string value map.
+func RegisterSimpleStringEnum(typeName string, typePrefix string, valueMap map[string]int32) {
+	if _, ok := simpleStringValueMaps[typeName]; ok {
+		panic("jsonpb: duplicate enum registered: " + typeName)
+	}
+	m := make(map[string]int32)
+	for key, value := range valueMap {
+		m[strings.TrimPrefix(strings.ToLower(key), fmt.Sprintf("%s_", strings.ToLower(typePrefix)))] = value
+	}
+	simpleStringValueMaps[typeName] = m
+}
+
+// SimpleStringEnumValueMap gets a simple string value map.
+func SimpleStringEnumValueMap(typeName string) map[string]int32 {
+	return simpleStringValueMaps[typeName]
+}
 
 // Marshaler is a configurable object for converting between
 // protocol buffer objects and a JSON representation for them
@@ -373,6 +391,8 @@ func UnmarshalString(str string, pb proto.Message) error {
 	return Unmarshal(strings.NewReader(str), pb)
 }
 
+var timestampTargetType = reflect.TypeOf(google_protobuf.Timestamp{})
+
 // unmarshalValue converts/copies a value into the target.
 func unmarshalValue(target reflect.Value, inputValue json.RawMessage) error {
 	targetType := target.Type()
@@ -381,6 +401,20 @@ func unmarshalValue(target reflect.Value, inputValue json.RawMessage) error {
 	if targetType.Kind() == reflect.Ptr {
 		target.Set(reflect.New(targetType.Elem()))
 		return unmarshalValue(target.Elem(), inputValue)
+	}
+
+	if targetType == timestampTargetType {
+		var s string
+		if err := json.Unmarshal(inputValue, &s); err != nil {
+			return err
+		}
+		t, err := time.Parse(time.RFC3339, s)
+		if err != nil {
+			return err
+		}
+		tpb := google_protobuf.TimeToProto(t)
+		target.Set(reflect.ValueOf(tpb).Elem())
+		return nil
 	}
 
 	// Handle nested messages.
@@ -416,7 +450,11 @@ func unmarshalValue(target reflect.Value, inputValue json.RawMessage) error {
 				s := valueForField[1 : len(valueForField)-1]
 				n, ok := vmap[string(s)]
 				if !ok {
-					return fmt.Errorf("unknown value %q for enum %s", s, enum)
+					vmap = SimpleStringEnumValueMap(enum)
+					n, ok = vmap[strings.ToLower(string(s))]
+					if !ok {
+						return fmt.Errorf("unknown value %q for enum %s", s, enum)
+					}
 				}
 				f := target.Field(i)
 				if f.Kind() == reflect.Ptr { // proto2
