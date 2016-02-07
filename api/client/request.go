@@ -11,6 +11,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/golang/protobuf/proto"
+	"github.com/libopenstorage/openstorage/pkg/jsonpb"
 )
 
 // Request is contructed iteratively by the client and finally dispatched.
@@ -234,11 +237,11 @@ func parseHTTPStatus(resp *http.Response, body []byte) error {
 // Do executes the request and returns a Response.
 func (r *Request) Do() *Response {
 	var (
-		err      error
-		req      *http.Request
-		resp     *http.Response
-		url      string
-		body     []byte
+		err  error
+		req  *http.Request
+		resp *http.Response
+		url  string
+		body []byte
 	)
 	if r.err != nil {
 		return &Response{err: r.err}
@@ -286,6 +289,9 @@ func (r Response) StatusCode() int {
 func (r Response) Unmarshal(v interface{}) error {
 	if r.err != nil {
 		return r.err
+	}
+	if protoMessage, ok := v.(proto.Message); ok {
+		return jsonpb.Unmarshal(bytes.NewReader(r.body), protoMessage)
 	}
 	return json.Unmarshal(r.body, v)
 }

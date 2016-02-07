@@ -1,7 +1,7 @@
 package volume
 
 import (
-	"encoding/json"
+	"bytes"
 	"fmt"
 	// TODO(pedge): what is this for?
 	_ "sync"
@@ -9,6 +9,7 @@ import (
 	"github.com/portworx/kvdb"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/pkg/jsonpb"
 )
 
 const (
@@ -37,15 +38,15 @@ type Store interface {
 
 // DefaultEnumerator for volume information. Implements the Enumerator Interface
 type DefaultEnumerator struct {
-	kvdb          kvdb.Kvdb
-	driver        string
+	kvdb   kvdb.Kvdb
+	driver string
 }
 
 // NewDefaultEnumerator initializes store with specified kvdb.
 func NewDefaultEnumerator(driver string, kvdb kvdb.Kvdb) *DefaultEnumerator {
 	return &DefaultEnumerator{
-		kvdb:          kvdb,
-		driver:        driver,
+		kvdb:   kvdb,
+		driver: driver,
 	}
 }
 
@@ -117,7 +118,7 @@ func (e *DefaultEnumerator) Enumerate(
 	volumes := make([]*api.Volume, 0, len(kvp))
 	for _, v := range kvp {
 		elem := &api.Volume{}
-		if err := json.Unmarshal(v.Value, elem); err != nil {
+		if err := jsonpb.Unmarshal(bytes.NewReader(v.Value), elem); err != nil {
 			return nil, err
 		}
 		if match(elem, locator, labels) {
@@ -139,7 +140,7 @@ func (e *DefaultEnumerator) SnapEnumerate(
 	volumes := make([]*api.Volume, 0, len(kvp))
 	for _, v := range kvp {
 		elem := &api.Volume{}
-		if err := json.Unmarshal(v.Value, elem); err != nil {
+		if err := jsonpb.Unmarshal(bytes.NewReader(v.Value), elem); err != nil {
 			return nil, err
 		}
 		if elem.Source == nil ||
