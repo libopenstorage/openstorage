@@ -138,6 +138,11 @@
 			"revisionTime": "2016-01-21T14:17:43-08:00"
 		},
 		{
+			"path": "github.com/cloudfoundry/gosigar",
+			"revision": "3ed7c74352dae6dc00bdc8c74045375352e3ec05",
+			"revisionTime": "2015-04-02T10:07:47-07:00"
+		},
+		{
 			"path": "github.com/codegangsta/cli",
 			"revision": "f9cc3001e04f9783cb4ad08ca6791aa07134787c",
 			"revisionTime": "2016-01-21T21:44:38-08:00"
@@ -392,8 +397,8 @@
 		},
 		{
 			"path": "github.com/libopenstorage/systemutils",
-			"revision": "29c564b8ce09eba5a15066b6f86d489950be9d55",
-			"revisionTime": "2016-02-03T14:59:10-08:00"
+			"revision": "44ac83be3ce1b19b1df34efdd763f22b2b554891",
+			"revisionTime": "2016-02-08T22:01:49Z"
 		},
 		{
 			"path": "github.com/opencontainers/runc/libcontainer/label",

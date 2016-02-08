@@ -5,6 +5,8 @@ import (
 	"os"
 	"text/tabwriter"
 
+	humanize "github.com/dustin/go-humanize"
+
 	"github.com/codegangsta/cli"
 
 	"github.com/libopenstorage/gossip/types"
@@ -48,7 +50,7 @@ func (c *clusterClient) status(context *cli.Context) {
 		w := new(tabwriter.Writer)
 		w.Init(outFd, 12, 12, 1, ' ', 0)
 
-		fmt.Fprintln(w, "ID\t IP\t STATUS\t CPU\t MEMORY\t CONTAINERS")
+		fmt.Fprintln(w, "ID\t IP\t STATUS\t CPU\t MEM TOTAL\t MEM FREE\t CONTAINERS")
 		for _, n := range cluster.Nodes {
 			status := ""
 			if n.Status == api.Status_STATUS_INIT {
@@ -62,7 +64,8 @@ func (c *clusterClient) status(context *cli.Context) {
 			}
 
 			fmt.Fprintln(w, n.Id, "\t", n.Ip, "\t", status, "\t",
-				n.Cpu, "\t", n.Memory, "\t", len(n.Containers))
+				n.Cpu, "\t", humanize.Bytes(n.MemTotal), "\t",
+				humanize.Bytes(n.MemFree), "\t", len(n.Containers))
 		}
 
 		fmt.Fprintln(w)
