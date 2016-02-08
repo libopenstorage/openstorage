@@ -9,10 +9,10 @@ import (
 
 func TestCmdMarshalProto(t *testing.T) {
 	volumeSpec := &api.VolumeSpec{
-		Size: 64,
+		Size:   64,
 		Format: api.FSType_FS_TYPE_EXT4,
 	}
-	data := cmdMarshalProto(volumeSpec)
+	data := cmdMarshalProto(volumeSpec, false)
 	require.Equal(
 		t,
 		`{
