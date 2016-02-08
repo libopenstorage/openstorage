@@ -1,7 +1,7 @@
 package volume
 
 import (
-	"bytes"
+	"encoding/json"
 	"fmt"
 	// TODO(pedge): what is this for?
 	_ "sync"
@@ -9,7 +9,6 @@ import (
 	"github.com/portworx/kvdb"
 
 	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/pkg/jsonpb"
 )
 
 const (
@@ -118,7 +117,7 @@ func (e *DefaultEnumerator) Enumerate(
 	volumes := make([]*api.Volume, 0, len(kvp))
 	for _, v := range kvp {
 		elem := &api.Volume{}
-		if err := jsonpb.Unmarshal(bytes.NewReader(v.Value), elem); err != nil {
+		if err := json.Unmarshal(v.Value, elem); err != nil {
 			return nil, err
 		}
 		if match(elem, locator, labels) {
@@ -140,7 +139,7 @@ func (e *DefaultEnumerator) SnapEnumerate(
 	volumes := make([]*api.Volume, 0, len(kvp))
 	for _, v := range kvp {
 		elem := &api.Volume{}
-		if err := jsonpb.Unmarshal(bytes.NewReader(v.Value), elem); err != nil {
+		if err := json.Unmarshal(v.Value, elem); err != nil {
 			return nil, err
 		}
 		if elem.Source == nil ||

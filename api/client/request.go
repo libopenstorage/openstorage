@@ -11,9 +11,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/golang/protobuf/proto"
-	"github.com/libopenstorage/openstorage/pkg/jsonpb"
 )
 
 // Request is contructed iteratively by the client and finally dispatched.
@@ -289,9 +286,6 @@ func (r Response) StatusCode() int {
 func (r Response) Unmarshal(v interface{}) error {
 	if r.err != nil {
 		return r.err
-	}
-	if protoMessage, ok := v.(proto.Message); ok {
-		return jsonpb.Unmarshal(bytes.NewReader(r.body), protoMessage)
 	}
 	return json.Unmarshal(r.body, v)
 }
