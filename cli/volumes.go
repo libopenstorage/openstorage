@@ -205,7 +205,7 @@ func (v *volDriver) volumeInspect(context *cli.Context) {
 		return
 	}
 
-	cmdOutputVolumes(volumes)
+	cmdOutputVolumes(volumes, context.GlobalBool("json"))
 }
 
 func (v *volDriver) volumeStats(context *cli.Context) {
@@ -222,7 +222,7 @@ func (v *volDriver) volumeStats(context *cli.Context) {
 		return
 	}
 
-	cmdOutputProto(stats)
+	cmdOutputProto(stats, context.GlobalBool("json"))
 }
 
 func (v *volDriver) volumeAlerts(context *cli.Context) {
@@ -239,7 +239,7 @@ func (v *volDriver) volumeAlerts(context *cli.Context) {
 		return
 	}
 
-	cmdOutputProto(alerts)
+	cmdOutputProto(alerts, context.GlobalBool("json"))
 }
 
 func (v *volDriver) volumeEnumerate(context *cli.Context) {
@@ -262,7 +262,7 @@ func (v *volDriver) volumeEnumerate(context *cli.Context) {
 		cmdError(context, fn, err)
 		return
 	}
-	cmdOutputVolumes(volumes)
+	cmdOutputVolumes(volumes, context.GlobalBool("json"))
 }
 
 func (v *volDriver) volumeDelete(context *cli.Context) {
@@ -338,7 +338,7 @@ func (v *volDriver) snapEnumerate(context *cli.Context) {
 		cmdError(context, fn, err)
 		return
 	}
-	cmdOutputVolumes(snaps)
+	cmdOutputVolumes(snaps, context.GlobalBool("json"))
 }
 
 // baseVolumeCommand exports commands common to block and file volume drivers.
@@ -531,10 +531,10 @@ func FileVolumeCommands(name string) []cli.Command {
 	return baseVolumeCommand(v)
 }
 
-func cmdOutputVolumes(volumes []*api.Volume) {
+func cmdOutputVolumes(volumes []*api.Volume, j bool) {
 	fmt.Print("[")
 	for i, volume := range volumes {
-		fmt.Print(cmdMarshalProto(volume))
+		fmt.Print(cmdMarshalProto(volume, j))
 		if i != len(volumes)-1 {
 			fmt.Print(",")
 		}

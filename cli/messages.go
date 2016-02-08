@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/codegangsta/cli"
+	"github.com/golang/protobuf/proto"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/jsonpb"
-	"github.com/golang/protobuf/proto"
 )
 
 var (
@@ -83,17 +83,24 @@ func cmdErrorBody(c *cli.Context, cmd string, err error, body string) {
 }
 
 func cmdOutput(c *cli.Context, body interface{}) {
-	b, _ := json.MarshalIndent(body, "", " ")
-	fmt.Printf("%+v\n", string(b))
+	fmt.Printf("%+v\n", cmdMarshal(body))
 }
 
-func cmdMarshalProto(message proto.Message) string {
+func cmdMarshal(body interface{}) string {
+	b, _ := json.MarshalIndent(body, "", " ")
+	return string(b)
+}
+
+func cmdMarshalProto(message proto.Message, j bool) string {
+	if j {
+		return cmdMarshal(message)
+	}
 	s, _ := marshaler.MarshalToString(message)
 	return s
 }
 
-func cmdOutputProto(message proto.Message) {
-	fmt.Println(cmdMarshalProto(message))
+func cmdOutputProto(message proto.Message, j bool) {
+	fmt.Println(cmdMarshalProto(message, j))
 }
 
 func fmtOutput(c *cli.Context, format *Format) {
