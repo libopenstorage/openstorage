@@ -249,6 +249,11 @@
 			"revisionTime": "2015-12-30T09:58:59-08:00"
 		},
 		{
+			"path": "github.com/dustin/go-humanize",
+			"revision": "8929fe90cee4b2cb9deb468b51fb34eba64d1bf0",
+			"revisionTime": "2015-11-25T16:46:33-05:00"
+		},
+		{
 			"path": "github.com/fsouza/go-dockerclient",
 			"revision": "296e36969d9d7606c4a6cbcd38eced50a39a0fd1",
 			"revisionTime": "2016-01-21T18:29:44-05:00"
