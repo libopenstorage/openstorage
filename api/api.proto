@@ -165,10 +165,6 @@ message Volume {
   string error = 17;
 }
 
-message Volumes {
-  repeated Volume volume = 1;
-}
-
 message Stats {
 	// Reads completed successfully
   int64 reads = 1;
