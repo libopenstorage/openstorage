@@ -12,7 +12,7 @@ type System interface {
 	CpuUsage() (usage float64, total float64, ticks float64)
 
 	// MemUsage returns the available memory on this system.
-	MemUsage() (available float64)
+	MemUsage() (total, used, free uint64)
 
 	// Luns returns information on the available LUNs on this system.
 	Luns() (luns map[string]Lun)

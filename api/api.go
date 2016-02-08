@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/fsouza/go-dockerclient"
-	"github.com/libopenstorage/openstorage/pkg/jsonpb"
 	"github.com/libopenstorage/systemutils"
 )
 
@@ -35,23 +34,15 @@ const (
 	OptConfigLabel = "ConfigLabel"
 )
 
-func init() {
-	jsonpb.RegisterSimpleStringEnum("openstorage.api.Status", "status", Status_value)
-	jsonpb.RegisterSimpleStringEnum("openstorage.api.DriverType", "driver_type", DriverType_value)
-	jsonpb.RegisterSimpleStringEnum("openstorage.api.FSType", "fs_type", FSType_value)
-	jsonpb.RegisterSimpleStringEnum("openstorage.api.GraphDriverChangeType", "graph_driver_change_type", GraphDriverChangeType_value)
-	jsonpb.RegisterSimpleStringEnum("openstorage.api.VolumeActionParam", "volume_action_param", VolumeActionParam_value)
-	jsonpb.RegisterSimpleStringEnum("openstorage.api.VolumeState", "volume_state", VolumeState_value)
-	jsonpb.RegisterSimpleStringEnum("openstorage.api.VolumeStatus", "volume_status", VolumeStatus_value)
-}
-
 // Node describes the state of a node.
 // It includes the current physical state (CPU, memory, storage, network usage) as
 // well as the containers running on the system.
 type Node struct {
 	Id         string
 	Cpu        float64 // percentage.
-	Memory     float64 // percentage.
+	MemTotal   uint64
+	MemUsed    uint64
+	MemFree    uint64
 	Luns       map[string]systemutils.Lun
 	Avgload    int
 	Ip         string

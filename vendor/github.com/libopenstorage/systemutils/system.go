@@ -3,11 +3,11 @@ package systemutils
 import (
 	"fmt"
 	"io/ioutil"
-	"os/exec"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/cloudfoundry/gosigar"
 )
 
 type system struct {
@@ -61,29 +61,30 @@ func (s *system) CpuUsage() (usage float64, total float64, ticks float64) {
 	return s.cpuUsage, s.ticks, s.totalTicks
 }
 
-func (s *system) MemUsage() (available float64) {
-	out, _ := exec.Command("/bin/free", "-m").Output()
-	r := regexp.MustCompile("(^|\\s)([0-9]+)($|\\s)")
-	str := r.FindString(string(out))
-	f, _ := strconv.ParseFloat(str, 64)
-	return f
+func (s *system) MemUsage() (total, used, free uint64) {
+	mem := sigar.Mem{}
+
+	mem.Get()
+
+	return mem.Total, mem.ActualUsed, mem.ActualFree
 }
 
 func (s *system) Luns() map[string]Lun {
-	var dev string
 	luns := make(map[string]Lun)
 
-	//XXX Temporarily disable scanning devices.
-	return luns
-	out, _ := exec.Command("/sbin/fdisk", "-l").Output()
+	/*
+		var dev string
+		//XXX Temporarily disable scanning devices.
+		return luns
+		out, _ := exec.Command("/sbin/fdisk", "-l").Output()
 
-	lines := strings.Split(string(out), "\n")
+		lines := strings.Split(string(out), "\n")
 
-	for _, line := range lines {
-		if strings.HasPrefix(line, "Disk /") {
-			luns[dev] = Lun{Capacity: 800}
+		for _, line := range lines {
+			if strings.HasPrefix(line, "Disk /") {
+				luns[dev] = Lun{Capacity: 800}
+			}
 		}
-	}
-
+	*/
 	return luns
 }
