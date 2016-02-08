@@ -91,8 +91,8 @@ func cmdMarshal(body interface{}) string {
 	return string(b)
 }
 
-func cmdMarshalProto(message proto.Message, j bool) string {
-	if j {
+func cmdMarshalProto(message proto.Message, raw bool) string {
+	if raw {
 		return cmdMarshal(message)
 	}
 	s, _ := marshaler.MarshalToString(message)

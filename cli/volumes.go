@@ -205,7 +205,7 @@ func (v *volDriver) volumeInspect(context *cli.Context) {
 		return
 	}
 
-	cmdOutputVolumes(volumes, context.GlobalBool("json"))
+	cmdOutputVolumes(volumes, context.GlobalBool("raw"))
 }
 
 func (v *volDriver) volumeStats(context *cli.Context) {
@@ -222,7 +222,7 @@ func (v *volDriver) volumeStats(context *cli.Context) {
 		return
 	}
 
-	cmdOutputProto(stats, context.GlobalBool("json"))
+	cmdOutputProto(stats, context.GlobalBool("raw"))
 }
 
 func (v *volDriver) volumeAlerts(context *cli.Context) {
@@ -239,7 +239,7 @@ func (v *volDriver) volumeAlerts(context *cli.Context) {
 		return
 	}
 
-	cmdOutputProto(alerts, context.GlobalBool("json"))
+	cmdOutputProto(alerts, context.GlobalBool("raw"))
 }
 
 func (v *volDriver) volumeEnumerate(context *cli.Context) {
@@ -262,7 +262,7 @@ func (v *volDriver) volumeEnumerate(context *cli.Context) {
 		cmdError(context, fn, err)
 		return
 	}
-	cmdOutputVolumes(volumes, context.GlobalBool("json"))
+	cmdOutputVolumes(volumes, context.GlobalBool("raw"))
 }
 
 func (v *volDriver) volumeDelete(context *cli.Context) {
@@ -338,7 +338,7 @@ func (v *volDriver) snapEnumerate(context *cli.Context) {
 		cmdError(context, fn, err)
 		return
 	}
-	cmdOutputVolumes(snaps, context.GlobalBool("json"))
+	cmdOutputVolumes(snaps, context.GlobalBool("raw"))
 }
 
 // baseVolumeCommand exports commands common to block and file volume drivers.
