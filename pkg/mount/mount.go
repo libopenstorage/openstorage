@@ -66,6 +66,7 @@ type PathInfo struct {
 
 // Info per device
 type Info struct {
+	sync.Mutex
 	Device     string
 	Minor      int
 	Mountpoint []PathInfo
@@ -129,11 +130,11 @@ func (m *Mounter) Exists(devPath string, path string) (bool, error) {
 // Mount new mountpoint for specified device.
 func (m *Mounter) Mount(minor int, device, path, fs string, flags uintptr, data string) error {
 	m.Lock()
-	defer m.Unlock()
 
 	dev, ok := m.paths[path]
 	if ok && dev != device {
 		dlog.Warnf("cannot mount %q,  device %q is mounted at %q", device, dev, path)
+		m.Unlock()
 		return ErrExist
 	}
 	info, ok := m.mounts[device]
@@ -145,6 +146,10 @@ func (m *Mounter) Mount(minor int, device, path, fs string, flags uintptr, data 
 			Fs:         fs,
 		}
 	}
+	m.mounts[device] = info
+	m.Unlock()
+	info.Lock()
+	defer info.Unlock()
 
 	// Validate input params
 	if fs != info.Fs {
@@ -166,9 +171,19 @@ func (m *Mounter) Mount(minor int, device, path, fs string, flags uintptr, data 
 		return err
 	}
 	info.Mountpoint = append(info.Mountpoint, PathInfo{Path: path, ref: 1})
-	m.mounts[device] = info
 	m.paths[path] = device
 	return nil
+}
+
+func (m *Mounter) maybeRemoveDevice(device string) {
+	m.Lock()
+	defer m.Unlock()
+	if info, ok := m.mounts[device]; ok {
+		// If the device has no more mountpoints, remove it from the map
+		if len(info.Mountpoint) == 0 {
+			delete(m.mounts, device)
+		}
+	}
 }
 
 // Unmount device at mountpoint or decrement refcnt. If device has no
@@ -176,12 +191,15 @@ func (m *Mounter) Mount(minor int, device, path, fs string, flags uintptr, data 
 // ErrEnoent is returned if the device or mountpoint for the device is not found.
 func (m *Mounter) Unmount(device, path string) error {
 	m.Lock()
-	defer m.Unlock()
 
 	info, ok := m.mounts[device]
 	if !ok {
+		m.Unlock()
 		return ErrEnoent
 	}
+	m.Unlock()
+	info.Lock()
+	defer info.Unlock()
 	for i, p := range info.Mountpoint {
 		if p.Path == path {
 			p.ref--
@@ -199,10 +217,7 @@ func (m *Mounter) Unmount(device, path string) error {
 				// Blow away this mountpoint.
 				info.Mountpoint[i] = info.Mountpoint[len(info.Mountpoint)-1]
 				info.Mountpoint = info.Mountpoint[0 : len(info.Mountpoint)-1]
-				// If the device has no more mountpoints, remove it from the map
-				if len(info.Mountpoint) == 0 {
-					delete(m.mounts, device)
-				}
+				m.maybeRemoveDevice(device)
 			}
 			return nil
 		}
