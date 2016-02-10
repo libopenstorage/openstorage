@@ -180,6 +180,8 @@ message Stats {
   int64 io_progress = 7;
 	// Time spent doing IOs ms
   int64 io_ms = 8;
+	// BytesUsed
+  uint64 bytes_used = 9;
 }
 
 // TODO: what?
