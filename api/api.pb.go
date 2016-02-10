@@ -421,6 +421,8 @@ type Stats struct {
 	IoProgress int64 `protobuf:"varint,7,opt,name=io_progress" json:"io_progress,omitempty"`
 	// Time spent doing IOs ms
 	IoMs int64 `protobuf:"varint,8,opt,name=io_ms" json:"io_ms,omitempty"`
+	// BytesUsed
+	BytesUsed uint64 `protobuf:"varint,9,opt,name=bytes_used" json:"bytes_used,omitempty"`
 }
 
 func (m *Stats) Reset()                    { *m = Stats{} }
