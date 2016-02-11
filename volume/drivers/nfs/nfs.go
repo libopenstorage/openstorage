@@ -138,7 +138,7 @@ func (d *driver) Create(
 	}
 	if source != nil {
 		if len(source.Seed) != 0 {
-			seed, err := seed.New(source.Seed, spec.ConfigLabels)
+			seed, err := seed.New(source.Seed, spec.VolumeLabels)
 			if err != nil {
 				dlog.Warnf("Failed to initailize seed from %q : %v",
 					source.Seed, err)

@@ -131,7 +131,7 @@ message VolumeSpec {
 	// SnapshotInterval in minutes, set to 0 to disable snapshots
   uint32 snapshot_interval = 8;
 	// Volume configuration labels
-  map<string, string> config_labels = 9;
+  map<string, string> volume_labels = 9;
 }
 
 // Volume represents a live, created volume.

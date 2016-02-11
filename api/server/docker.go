@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"strings"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
@@ -138,12 +139,21 @@ func (d *driver) status(w http.ResponseWriter, r *http.Request) {
 
 func (d *driver) specFromOpts(Opts map[string]string) *api.VolumeSpec {
 	var spec api.VolumeSpec
+	spec.VolumeLabels = make(map[string]string)
 	for k, v := range Opts {
 		switch k {
 		case api.SpecEphemeral:
 			spec.Ephemeral, _ = strconv.ParseBool(v)
 		case api.SpecSize:
-			spec.Size, _ = strconv.ParseUint(v, 10, 64)
+			sizeMulti := uint64(1024 * 1024 * 1024)
+			if strings.HasSuffix(v, "G") || strings.HasSuffix(v, "g") {
+				sizeMulti = 1024 * 1024 * 1024
+				last := len(v) - 1
+				v = v[:last]
+			}
+
+			size, _ := strconv.ParseUint(v, 10, 64)
+			spec.Size = size * sizeMulti
 		case api.SpecFilesystem:
 			value, _ := api.FSTypeSimpleValueOf(v)
 			spec.Format = value
@@ -161,6 +171,8 @@ func (d *driver) specFromOpts(Opts map[string]string) *api.VolumeSpec {
 		case api.SpecSnapshotInterval:
 			snapshotInterval, _ := strconv.ParseUint(v, 10, 32)
 			spec.SnapshotInterval = uint32(snapshotInterval)
+		default:
+			spec.VolumeLabels[k] = v
 		}
 	}
 	return &spec

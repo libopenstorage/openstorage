@@ -14,11 +14,11 @@ import (
 const (
 	SpecEphemeral        = "ephemeral"
 	SpecSize             = "size"
-	SpecFilesystem       = "format"
-	SpecBlockSize        = "blocksize"
-	SpecHaLevel          = "ha_level"
+	SpecFilesystem       = "fs"
+	SpecBlockSize        = "bs"
+	SpecHaLevel          = "ha"
 	SpecCos              = "cos"
-	SpecSnapshotInterval = "snapshot_interval"
+	SpecSnapshotInterval = "snap"
 	SpecDedupe           = "dedupe"
 )
 

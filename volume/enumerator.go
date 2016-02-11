@@ -201,7 +201,7 @@ func contains(volumeID string, set []string) bool {
 func match(
 	v *api.Volume,
 	locator *api.VolumeLocator,
-	configLabels map[string]string,
+	volumeLabels map[string]string,
 ) bool {
 	if locator.Name != "" && v.Locator.Name != locator.Name {
 		return false
@@ -209,5 +209,5 @@ func match(
 	if !hasSubset(v.Locator.VolumeLabels, locator.VolumeLabels) {
 		return false
 	}
-	return hasSubset(v.Spec.ConfigLabels, configLabels)
+	return hasSubset(v.Spec.VolumeLabels, volumeLabels)
 }
