@@ -211,6 +211,7 @@ func (c *ClusterManager) joinCluster(db *Database, self *api.Node, exist bool) e
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err = e.Value.(ClusterListener).Init(self, db)
 		if err != nil {
+			self.Status = api.Status_STATUS_ERROR
 			dlog.Warnf("Failed to initialize Init %s: %v",
 				e.Value.(ClusterListener).String(), err)
 			c.cleanupInit(db, self)
@@ -223,6 +224,7 @@ found:
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err = e.Value.(ClusterListener).Join(self, db)
 		if err != nil {
+			self.Status = api.Status_STATUS_ERROR
 			dlog.Warnf("Failed to initialize Join %s: %v",
 				e.Value.(ClusterListener).String(), err)
 
@@ -258,6 +260,7 @@ func (c *ClusterManager) initCluster(db *Database, self *api.Node, exist bool) e
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err = e.Value.(ClusterListener).ClusterInit(self, db)
 		if err != nil {
+			self.Status = api.Status_STATUS_ERROR
 			dlog.Printf("Failed to initialize %s",
 				e.Value.(ClusterListener).String())
 			goto done
