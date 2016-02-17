@@ -138,8 +138,11 @@ func (d *driver) status(w http.ResponseWriter, r *http.Request) {
 }
 
 func (d *driver) specFromOpts(Opts map[string]string) *api.VolumeSpec {
-	var spec api.VolumeSpec
-	spec.VolumeLabels = make(map[string]string)
+	spec := api.VolumeSpec{
+		VolumeLabels: make(map[string]string),
+		Format:       api.FSType_FS_TYPE_EXT4,
+	}
+
 	for k, v := range Opts {
 		switch k {
 		case api.SpecEphemeral:
