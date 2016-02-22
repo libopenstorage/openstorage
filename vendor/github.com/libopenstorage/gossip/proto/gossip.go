@@ -80,7 +80,6 @@ func (s *GossipHistory) LogRecords() {
 	for element := s.nodes.Front(); element != nil; element = element.Next() {
 		r, ok := element.Value.(*types.GossipSessionInfo)
 		if !ok || r == nil {
-			log.Error("Failed to convert element")
 			continue
 		}
 		log.Infof("Node: %v LastTs: %v Dir: %v Error: %v",

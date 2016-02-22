@@ -387,18 +387,18 @@
 		},
 		{
 			"path": "github.com/libopenstorage/gossip",
-			"revision": "ddea009da8ef232b368198e7e6b50d58b2e09a1f",
-			"revisionTime": "2016-02-22T06:41:02Z"
+			"revision": "7a192e15e6b32111d483ce5148a054eddd431973",
+			"revisionTime": "2016-02-22T19:50:33Z"
 		},
 		{
 			"path": "github.com/libopenstorage/gossip/proto",
-			"revision": "ddea009da8ef232b368198e7e6b50d58b2e09a1f",
-			"revisionTime": "2016-02-22T06:41:02Z"
+			"revision": "7a192e15e6b32111d483ce5148a054eddd431973",
+			"revisionTime": "2016-02-22T19:50:33Z"
 		},
 		{
 			"path": "github.com/libopenstorage/gossip/types",
-			"revision": "ddea009da8ef232b368198e7e6b50d58b2e09a1f",
-			"revisionTime": "2016-02-22T06:41:02Z"
+			"revision": "7a192e15e6b32111d483ce5148a054eddd431973",
+			"revisionTime": "2016-02-22T19:50:33Z"
 		},
 		{
 			"path": "github.com/libopenstorage/systemutils",
