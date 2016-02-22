@@ -228,9 +228,11 @@ func (s *GossipStoreImpl) Update(diff types.NodeInfoMap) {
 	}
 }
 
-func (s *GossipStoreImpl) UpdateNodeStatuses(d time.Duration, sd time.Duration) {
+func (s *GossipStoreImpl) UpdateNodeStatuses(d time.Duration,
+	sd time.Duration) bool {
 	s.Lock()
 	defer s.Unlock()
+	retValue := false
 
 	for id, nodeInfo := range s.nodeMap {
 		currTime := time.Now()
@@ -283,6 +285,12 @@ func (s *GossipStoreImpl) UpdateNodeStatuses(d time.Duration, sd time.Duration) 
 				nodeStatus, timeDiff, d, nodeInfo.LastUpdateTs, currTime)
 			nodeInfo.Status = nodeStatus
 			s.nodeMap[id] = nodeInfo
+			if nodeInfo.Status == types.NODE_STATUS_DOWN ||
+				nodeInfo.Status == types.NODE_STATUS_DOWN_WAITING_FOR_NEW_UPDATE {
+				retValue = true
+			}
 		}
 	}
+	return retValue
+
 }

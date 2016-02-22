@@ -70,6 +70,26 @@ func (s *GossipHistory) GetAllRecords() []*types.GossipSessionInfo {
 	return records
 }
 
+func (s *GossipHistory) LogRecords() {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	status := make([]string, 2)
+	status[types.GD_ME_TO_PEER] = "ME_TO_PEER"
+	status[types.GD_PEER_TO_ME] = "PEER_TO_ME"
+
+	for element := s.nodes.Front(); element != nil; element = element.Next() {
+		r, ok := element.Value.(*types.GossipSessionInfo)
+		if !ok || r == nil {
+			log.Error("Failed to convert element")
+			continue
+		}
+		log.Infof("Node: %v LastTs: %v Dir: %v Error: %v",
+			r.Node, r.Ts, status[r.Dir], r.Err)
+	}
+}
+
+// Implements the UnreliableBroadcast interface
+
 // Implements the UnreliableBroadcast interface
 type GossiperImpl struct {
 	// GossipstoreImpl implements the GossipStoreInterface
@@ -290,7 +310,7 @@ func (g *GossiperImpl) sendUpdatesToPeer(diff *types.StoreNodes,
 	return conn.SendData(&dataToSend)
 }
 
-func (g *GossiperImpl) handleGossip(conn types.MessageChannel) {
+func (g *GossiperImpl) handleGossip(peerId string, conn types.MessageChannel) {
 	log.Debug(g.id, " Servicing gossip request")
 	var peerMetaInfo types.StoreMetaInfo
 	err := error(nil)
@@ -330,10 +350,13 @@ func (g *GossiperImpl) handleGossip(conn types.MessageChannel) {
 		return
 	}
 	log.Debug(g.id, " Finished Servicing gossip request")
+	g.history.AddLatest(NewGossipSessionInfo(peerId, types.GD_PEER_TO_ME))
 }
 
 func (g *GossiperImpl) receiveLoop() {
-	var handler types.OnMessageRcv = func(c types.MessageChannel) { g.handleGossip(c) }
+	var handler types.OnMessageRcv = func(peer string, c types.MessageChannel) {
+		g.handleGossip(peer, c)
+	}
 	c := NewRunnableMessageChannel(g.name, handler)
 	go c.RunOnRcvData()
 	// block waiting for the done signal
@@ -363,7 +386,10 @@ func (g *GossiperImpl) updateStatusLoop() {
 	for {
 		select {
 		case <-tick:
-			g.UpdateNodeStatuses(g.nodeDeathInterval, 4*g.nodeDeathInterval)
+			if g.UpdateNodeStatuses(g.nodeDeathInterval,
+				4*g.nodeDeathInterval) {
+				g.history.LogRecords()
+			}
 		case <-g.update_done:
 			return
 		}

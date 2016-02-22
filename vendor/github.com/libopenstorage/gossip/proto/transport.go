@@ -84,7 +84,7 @@ func (c *ConnObj) RunOnRcvData() {
 		}
 		connObj := &ConnObj{Ip: c.Ip, conn: tcpConn,
 			rcvHandler: c.rcvHandler}
-		connObj.rcvHandler(connObj)
+		connObj.rcvHandler(tcpConn.RemoteAddr().String(), connObj)
 		connObj.Close()
 	}
 }

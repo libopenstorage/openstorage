@@ -70,7 +70,7 @@ type StoreNodes []NodeId
 
 // OnMessageRcv is a handler that is invoked when
 // message arrives on the message channel.
-type OnMessageRcv func(c MessageChannel)
+type OnMessageRcv func(peerid string, c MessageChannel)
 
 // MessageChanne defines an interface for sending and
 // receiving messages between peer nodes. It abstracts

@@ -50,7 +50,8 @@ type GossipStore interface {
 
 	// UpdateNodeStatuses updates the statuses of
 	// the nodes this node has information about
-	UpdateNodeStatuses(time.Duration, time.Duration)
+	// Returns true if a node was marked down
+	UpdateNodeStatuses(time.Duration, time.Duration) bool
 }
 
 type Gossiper interface {
