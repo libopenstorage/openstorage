@@ -279,11 +279,10 @@ done:
 
 func (c *ClusterManager) heartBeat() {
 	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
-	lastUpdateTs := time.Now()
 
+	lastUpdateTs := time.Now()
 	for {
 		node := c.getCurrentState()
-		c.nodeCache[node.Id] = *node
 
 		currTime := time.Now()
 		if currTime.Sub(lastUpdateTs) > 10*time.Second {
@@ -291,6 +290,17 @@ func (c *ClusterManager) heartBeat() {
 		}
 		c.g.UpdateSelf(gossipStoreKey, *node)
 		lastUpdateTs = currTime
+
+		time.Sleep(2 * time.Second)
+	}
+}
+
+func (c *ClusterManager) updateClusterStatus() {
+	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
+
+	for {
+		node := c.getCurrentState()
+		c.nodeCache[node.Id] = *node
 
 		// Process heartbeats from other nodes...
 		gossipValues := c.g.GetStoreKeyValue(gossipStoreKey)
@@ -480,6 +490,7 @@ func (c *ClusterManager) Start() error {
 	// Start heartbeating to other nodes.
 	c.g.Start()
 	go c.heartBeat()
+	go c.updateClusterStatus()
 
 	return nil
 }
