@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fsouza/go-dockerclient"
 	"github.com/libopenstorage/systemutils"
 )
 
@@ -38,19 +37,18 @@ const (
 // It includes the current physical state (CPU, memory, storage, network usage) as
 // well as the containers running on the system.
 type Node struct {
-	Id         string
-	Cpu        float64 // percentage.
-	MemTotal   uint64
-	MemUsed    uint64
-	MemFree    uint64
-	Luns       map[string]systemutils.Lun
-	Avgload    int
-	Ip         string
-	Timestamp  time.Time
-	Status     Status
-	Containers []docker.APIContainers
-	NodeData   map[string]interface{}
-	GenNumber  uint64
+	Id        string
+	Cpu       float64 // percentage.
+	MemTotal  uint64
+	MemUsed   uint64
+	MemFree   uint64
+	Luns      map[string]systemutils.Lun
+	Avgload   int
+	Ip        string
+	Timestamp time.Time
+	Status    Status
+	NodeData  map[string]interface{}
+	GenNumber uint64
 }
 
 // Cluster represents the state of the cluster.

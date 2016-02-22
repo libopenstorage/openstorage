@@ -50,7 +50,7 @@ func (c *clusterClient) status(context *cli.Context) {
 		w := new(tabwriter.Writer)
 		w.Init(outFd, 12, 12, 1, ' ', 0)
 
-		fmt.Fprintln(w, "ID\t IP\t STATUS\t CPU\t MEM TOTAL\t MEM FREE\t CONTAINERS")
+		fmt.Fprintln(w, "ID\t IP\t STATUS\t CPU\t MEM TOTAL\t MEM FREE")
 		for _, n := range cluster.Nodes {
 			status := ""
 			if n.Status == api.Status_STATUS_INIT {
@@ -65,7 +65,7 @@ func (c *clusterClient) status(context *cli.Context) {
 
 			fmt.Fprintln(w, n.Id, "\t", n.Ip, "\t", status, "\t",
 				n.Cpu, "\t", humanize.Bytes(n.MemTotal), "\t",
-				humanize.Bytes(n.MemFree), "\t", len(n.Containers))
+				humanize.Bytes(n.MemFree))
 		}
 
 		fmt.Fprintln(w)
@@ -73,11 +73,10 @@ func (c *clusterClient) status(context *cli.Context) {
 	}
 }
 
-func (c *clusterClient) load(context *cli.Context) {
+func (c *clusterClient) inspect(context *cli.Context) {
 	c.clusterOptions(context)
 	jsonOut := context.GlobalBool("json")
-	outFd := os.Stdout
-	fn := "load"
+	fn := "inspect"
 
 	cluster, err := c.manager.Enumerate()
 	if err != nil {
@@ -88,19 +87,6 @@ func (c *clusterClient) load(context *cli.Context) {
 	if jsonOut {
 		fmtOutput(context, &Format{Cluster: &cluster})
 	} else {
-		w := new(tabwriter.Writer)
-		w.Init(outFd, 12, 12, 1, ' ', 0)
-
-		fmt.Fprintln(w, "ID\t IMAGE\t STATUS\t NAMES\t NODE")
-		for _, n := range cluster.Nodes {
-			for _, c := range n.Containers {
-				fmt.Fprintln(w, c.ID, "\t", c.Image, "\t", c.Status, "\t",
-					c.Names, "\t", n.Ip)
-			}
-		}
-
-		fmt.Fprintln(w)
-		w.Flush()
 	}
 }
 
@@ -195,10 +181,10 @@ func ClusterCommands() []cli.Command {
 			},
 		},
 		{
-			Name:    "load",
+			Name:    "inspect",
 			Aliases: []string{"l"},
-			Usage:   "List containers in the cluster",
-			Action:  c.load,
+			Usage:   "Inspect nodes in the cluster",
+			Action:  c.inspect,
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "machine,m",
