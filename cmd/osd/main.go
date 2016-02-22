@@ -10,7 +10,6 @@ import (
 
 	"github.com/codegangsta/cli"
 	"github.com/docker/docker/pkg/reexec"
-	"github.com/fsouza/go-dockerclient"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/server"
 	osdcli "github.com/libopenstorage/openstorage/cli"
@@ -67,13 +66,7 @@ func start(c *cli.Context) {
 	if cfg.Osd.ClusterConfig.NodeId != "" && cfg.Osd.ClusterConfig.ClusterId != "" {
 		dlog.Infof("OSD enabling cluster mode.")
 
-		dockerClient, err := docker.NewClientFromEnv()
-		if err != nil {
-			dlog.Warnf("Failed to initialize docker client: %v", err)
-			return
-		}
-
-		if err := cluster.Init(cfg.Osd.ClusterConfig, kv, dockerClient); err != nil {
+		if err := cluster.Init(cfg.Osd.ClusterConfig); err != nil {
 			dlog.Errorln("Unable to init cluster server: %v", err)
 			return
 		}

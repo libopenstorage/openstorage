@@ -12,7 +12,6 @@ import (
 
 	"go.pedge.io/dlog"
 
-	"github.com/fsouza/go-dockerclient"
 	"github.com/libopenstorage/gossip"
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
@@ -32,7 +31,6 @@ type ClusterManager struct {
 	kv        kvdb.Kvdb
 	status    api.Status
 	nodeCache map[string]api.Node // Cached info on the nodes in the cluster.
-	docker    *docker.Client
 	g         gossip.Gossiper
 	gEnabled  bool
 	selfNode  api.Node
@@ -129,9 +127,6 @@ func (c *ClusterManager) getCurrentState() *api.Node {
 	c.selfNode.Luns = c.system.Luns()
 
 	c.selfNode.Timestamp = time.Now()
-
-	// Get containers running on this system.
-	c.selfNode.Containers, _ = c.docker.ListContainers(docker.ListContainersOptions{All: true})
 
 	return &c.selfNode
 }

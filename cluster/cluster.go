@@ -4,7 +4,6 @@ import (
 	"container/list"
 	"errors"
 
-	"github.com/fsouza/go-dockerclient"
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
@@ -117,17 +116,24 @@ type Cluster interface {
 }
 
 // Init instantiates a new cluster manager.
-func Init(cfg config.ClusterConfig, kv kvdb.Kvdb, dockerClient *docker.Client) error {
+func Init(cfg config.ClusterConfig) error {
 	if inst != nil {
 		return errClusterInitialized
 	}
+
+	kv := kvdb.Instance()
+	if kv == nil {
+		return errors.New("KVDB is not yet initialized.  " +
+			"A valid KVDB instance required for the cluster to start.")
+	}
+
 	inst = &ClusterManager{
 		listeners: list.New(),
 		config:    cfg,
 		kv:        kv,
 		nodeCache: make(map[string]api.Node),
-		docker:    dockerClient,
 	}
+
 	return nil
 }
 
