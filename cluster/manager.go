@@ -8,6 +8,7 @@ import (
 	"encoding/gob"
 	"errors"
 	"net"
+	"os"
 	"time"
 
 	"go.pedge.io/dlog"
@@ -312,8 +313,9 @@ func (c *ClusterManager) updateClusterStatus() {
 		for id, nodeInfo := range gossipValues {
 			numNodes = numNodes + 1
 			if c.size > 0 && numNodes > c.size {
-				dlog.Panicf("Fatal, number of nodes in the cluster has"+
+				dlog.Fatalf("Fatal, number of nodes in the cluster has"+
 					"exceeded the cluster size: %d > %d", numNodes, c.size)
+				os.Exit(-1)
 			}
 
 			if id == types.NodeId(node.Id) {
@@ -531,7 +533,6 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 // SetSize sets the maximum number of nodes in a cluster.
 func (c *ClusterManager) SetSize(size int) error {
 	kvdb := kvdb.Instance()
-	dlog.Infof("GETTING LOCK")
 	kvlock, err := kvdb.Lock(clusterLockKey, 20)
 	if err != nil {
 		dlog.Warnln("Unable to obtain cluster lock for updating config", err)
@@ -539,7 +540,6 @@ func (c *ClusterManager) SetSize(size int) error {
 	}
 	defer kvdb.Unlock(kvlock)
 
-	dlog.Infof("READING DB")
 	db, err := readDatabase()
 	if err != nil {
 		return err
@@ -547,9 +547,7 @@ func (c *ClusterManager) SetSize(size int) error {
 
 	db.Size = size
 
-	dlog.Infof("WRITING DB")
 	err = writeDatabase(&db)
-	dlog.Infof("DONE")
 
 	return err
 }
