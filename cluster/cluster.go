@@ -75,26 +75,26 @@ type ClusterState struct {
 
 type ClusterData interface {
 	// Update node data associated with this node
-	UpdateData(dataKey string, value interface{})
+	UpdateData(dataKey string, value interface{}) error
 
 	// Get data associated with all nodes.
 	// Key is the node id
-	GetData() map[string]*api.Node
+	GetData() (map[string]*api.Node, error)
 
 	// Enables cluster data updates to be sent to listeners
-	EnableUpdates()
+	EnableUpdates() error
 
 	// Disables cluster data updates to be sent to listeners
-	DisableUpdates()
+	DisableUpdates() error
 
 	// Status of nodes according to gossip
-	GetState() *ClusterState
+	GetState() (*ClusterState, error)
 }
 
 // Cluster is the API that a cluster provider will implement.
 type Cluster interface {
-	// LocateNode find the node given a UUID.
-	LocateNode(string) (api.Node, error)
+	// Inspect the node given a UUID.
+	Inspect(string) (api.Node, error)
 
 	// AddEventListener adds an event listener and exposes cluster events.
 	AddEventListener(ClusterListener) error
@@ -104,6 +104,9 @@ type Cluster interface {
 
 	// Remove node(s) from the cluster permanently.
 	Remove(nodes []api.Node) error
+
+	// SetSize sets the maximum number of nodes in a cluster.
+	SetSize(size int) error
 
 	// Shutdown can be called when THIS node is gracefully shutting down.
 	Shutdown() error

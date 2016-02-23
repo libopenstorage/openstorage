@@ -113,11 +113,8 @@ func (v *volumeClient) GraphDriverDiffSize(id string, parent string) (int, error
 
 // Create a new Vol for the specific volume spev.c.
 // It returns a system generated VolumeID that uniquely identifies the volume
-func (v *volumeClient) Create(
-	locator *api.VolumeLocator,
-	source *api.Source,
-	spec *api.VolumeSpec,
-) (string, error) {
+func (v *volumeClient) Create(locator *api.VolumeLocator, source *api.Source,
+	spec *api.VolumeSpec) (string, error) {
 	response := &api.VolumeCreateResponse{}
 	request := &api.VolumeCreateRequest{
 		Locator: locator,
@@ -171,7 +168,8 @@ func (v *volumeClient) Delete(volumeID string) error {
 // Snap specified volume. IO to the underlying volume should be quiesced before
 // calling this function.
 // Errors ErrEnoEnt may be returned
-func (v *volumeClient) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator) (string, error) {
+func (v *volumeClient) Snapshot(volumeID string, readonly bool,
+	locator *api.VolumeLocator) (string, error) {
 	response := &api.SnapCreateResponse{}
 	request := &api.SnapCreateRequest{
 		Id:       volumeID,
@@ -216,7 +214,8 @@ func (v *volumeClient) Shutdown() {}
 
 // Enumerate volumes that map to the volumeLocator. Locator fields may be regexp.
 // If locator fields are left blank, this will return all volumes.
-func (v *volumeClient) Enumerate(locator *api.VolumeLocator, labels map[string]string) ([]*api.Volume, error) {
+func (v *volumeClient) Enumerate(locator *api.VolumeLocator,
+	labels map[string]string) ([]*api.Volume, error) {
 	var volumes []*api.Volume
 	req := v.c.Get().Resource(volumePath)
 	if locator.Name != "" {
@@ -236,7 +235,8 @@ func (v *volumeClient) Enumerate(locator *api.VolumeLocator, labels map[string]s
 
 // Enumerate snaps for specified volume
 // Count indicates the number of snaps populated.
-func (v *volumeClient) SnapEnumerate(ids []string, snapLabels map[string]string) ([]*api.Volume, error) {
+func (v *volumeClient) SnapEnumerate(ids []string,
+	snapLabels map[string]string) ([]*api.Volume, error) {
 	var volumes []*api.Volume
 	request := v.c.Get().Resource(snapPath)
 	for _, id := range ids {
@@ -314,7 +314,8 @@ func (v *volumeClient) Unmount(volumeID string, mountPath string) error {
 }
 
 // Update volume
-func (v *volumeClient) Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
+func (v *volumeClient) Set(volumeID string, locator *api.VolumeLocator,
+	spec *api.VolumeSpec) error {
 	return v.doVolumeSet(
 		volumeID,
 		&api.VolumeSetRequest{
@@ -324,12 +325,14 @@ func (v *volumeClient) Set(volumeID string, locator *api.VolumeLocator, spec *ap
 	)
 }
 
-func (v *volumeClient) doVolumeSet(volumeID string, request *api.VolumeSetRequest) error {
+func (v *volumeClient) doVolumeSet(volumeID string,
+	request *api.VolumeSetRequest) error {
 	_, err := v.doVolumeSetGetResponse(volumeID, request)
 	return err
 }
 
-func (v *volumeClient) doVolumeSetGetResponse(volumeID string, request *api.VolumeSetRequest) (*api.VolumeSetResponse, error) {
+func (v *volumeClient) doVolumeSetGetResponse(volumeID string,
+	request *api.VolumeSetRequest) (*api.VolumeSetResponse, error) {
 	response := &api.VolumeSetResponse{}
 	if err := v.c.Put().Resource(volumePath).Instance(volumeID).Body(request).Do().Unmarshal(response); err != nil {
 		return nil, err

@@ -1,6 +1,9 @@
 package client
 
 import (
+	"errors"
+	"strconv"
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
 )
@@ -23,20 +26,32 @@ func (c *clusterClient) String() string {
 }
 
 func (c *clusterClient) Enumerate() (api.Cluster, error) {
-	var cluster api.Cluster
+	cluster := api.Cluster{}
 
-	err := c.c.Get().Resource(clusterPath + "/enumerate").Do().Unmarshal(&cluster)
-	if err != nil {
+	if err := c.c.Get().Resource(clusterPath + "/enumerate").Do().Unmarshal(&cluster); err != nil {
 		return cluster, err
 	}
 	return cluster, nil
 }
 
-func (c *clusterClient) Inspect(nodeID string) error {
+func (c *clusterClient) SetSize(size int) error {
+	cluster := api.Cluster{}
+
+	request := c.c.Get().Resource(clusterPath + "/setsize")
+	request.QueryOption("size", strconv.FormatInt(int64(size), 16))
+	request.Do()
+	if err := request.Do().Unmarshal(&cluster); err != nil {
+		return err
+	}
+
+	if size != cluster.Size {
+		return errors.New("Failed to set the cluster size.")
+	}
+
 	return nil
 }
 
-func (c *clusterClient) LocateNode(nodeID string) (api.Node, error) {
+func (c *clusterClient) Inspect(nodeID string) (api.Node, error) {
 	return api.Node{}, nil
 }
 
@@ -44,11 +59,12 @@ func (c *clusterClient) AddEventListener(cluster.ClusterListener) error {
 	return nil
 }
 
-func (c *clusterClient) UpdateData(dataKey string, value interface{}) {
+func (c *clusterClient) UpdateData(dataKey string, value interface{}) error {
+	return nil
 }
 
-func (c *clusterClient) GetData() map[string]*api.Node {
-	return nil
+func (c *clusterClient) GetData() (map[string]*api.Node, error) {
+	return nil, nil
 }
 
 func (c *clusterClient) Remove(nodes []api.Node) error {
@@ -63,17 +79,21 @@ func (c *clusterClient) Start() error {
 	return nil
 }
 
-func (c *clusterClient) DisableUpdates() {
+func (c *clusterClient) DisableUpdates() error {
 	c.c.Put().Resource(clusterPath + "/disablegossip").Do()
+	return nil
 }
 
-func (c *clusterClient) EnableUpdates() {
+func (c *clusterClient) EnableUpdates() error {
 	c.c.Put().Resource(clusterPath + "/enablegossip").Do()
+	return nil
 }
 
-func (c *clusterClient) GetState() *cluster.ClusterState {
+func (c *clusterClient) GetState() (*cluster.ClusterState, error) {
 	var status *cluster.ClusterState
 
-	c.c.Get().Resource(clusterPath + "/status").Do().Unmarshal(&status)
-	return status
+	if err := c.c.Get().Resource(clusterPath + "/status").Do().Unmarshal(&status); err != nil {
+		return nil, err
+	}
+	return status, nil
 }

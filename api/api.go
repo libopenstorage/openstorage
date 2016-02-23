@@ -54,8 +54,15 @@ type Node struct {
 // Cluster represents the state of the cluster.
 type Cluster struct {
 	Status Status
-	Id     string
-	Nodes  []Node
+
+	// Size is the maximal cluster size.
+	Size int
+
+	// Id is the ID of the cluster.
+	Id string
+
+	// Nodes is an array of all the nodes in the cluster.
+	Nodes []Node
 }
 
 func StatusSimpleValueOf(s string) (Status, error) {

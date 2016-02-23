@@ -101,7 +101,11 @@ func (c *clusterApi) status(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := inst.GetState()
+	resp, err := inst.GetState()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	json.NewEncoder(w).Encode(resp)
 }

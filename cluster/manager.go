@@ -91,7 +91,7 @@ func ExternalIp(config *config.ClusterConfig) (string, error) {
 	return "", errors.New("Node not connected to the network.")
 }
 
-func (c *ClusterManager) LocateNode(nodeID string) (api.Node, error) {
+func (c *ClusterManager) Inspect(nodeID string) (api.Node, error) {
 	n, ok := c.nodeCache[nodeID]
 
 	if !ok {
@@ -107,16 +107,17 @@ func (c *ClusterManager) AddEventListener(listener ClusterListener) error {
 	return nil
 }
 
-func (c *ClusterManager) UpdateData(dataKey string, value interface{}) {
+func (c *ClusterManager) UpdateData(dataKey string, value interface{}) error {
 	c.selfNode.NodeData[dataKey] = value
+	return nil
 }
 
-func (c *ClusterManager) GetData() map[string]*api.Node {
+func (c *ClusterManager) GetData() (map[string]*api.Node, error) {
 	nodes := make(map[string]*api.Node)
 	for _, value := range c.nodeCache {
 		nodes[value.Id] = &value
 	}
-	return nodes
+	return nodes, nil
 }
 
 func (c *ClusterManager) getCurrentState() *api.Node {
@@ -385,17 +386,21 @@ func (c *ClusterManager) updateClusterStatus() {
 	}
 }
 
-func (c *ClusterManager) DisableUpdates() {
+func (c *ClusterManager) DisableUpdates() error {
 	dlog.Warnln("Disabling gossip updates")
 	c.gEnabled = false
+
+	return nil
 }
 
-func (c *ClusterManager) EnableUpdates() {
+func (c *ClusterManager) EnableUpdates() error {
 	dlog.Warnln("Enabling gossip updates")
 	c.gEnabled = true
+
+	return nil
 }
 
-func (c *ClusterManager) GetState() *ClusterState {
+func (c *ClusterManager) GetState() (*ClusterState, error) {
 	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
 	nodeValue := c.g.GetStoreKeyValue(gossipStoreKey)
 	nodes := make([]types.NodeValue, len(nodeValue), len(nodeValue))
@@ -407,7 +412,7 @@ func (c *ClusterManager) GetState() *ClusterState {
 
 	history := c.g.GetGossipHistory()
 	return &ClusterState{
-		History: history, NodeStatus: nodes}
+		History: history, NodeStatus: nodes}, nil
 }
 
 func (c *ClusterManager) Start() error {
@@ -502,6 +507,12 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 	}
 
 	return cluster, nil
+}
+
+// SetSize sets the maximum number of nodes in a cluster.
+func (c *ClusterManager) SetSize(size int) error {
+
+	return nil
 }
 
 // Remove node(s) from the cluster permanently.
