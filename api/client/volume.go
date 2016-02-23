@@ -204,7 +204,7 @@ func (v *volumeClient) Stats(volumeID string) (*api.Stats, error) {
 // Alerts on this volume.
 // Errors ErrEnoEnt may be returned
 func (v *volumeClient) Alerts(volumeID string) (*api.Alerts, error) {
-	alerts:= &api.Alerts{}
+	alerts := &api.Alerts{}
 	if err := v.c.Get().Resource(volumePath + "/alerts").Instance(volumeID).Do().Unmarshal(alerts); err != nil {
 		return nil, err
 	}
@@ -243,7 +243,7 @@ func (v *volumeClient) SnapEnumerate(ids []string, snapLabels map[string]string)
 		request.QueryOption(api.OptVolumeID, id)
 	}
 	if len(snapLabels) != 0 {
-		request.QueryOptionLabel(api.OptConfigLabel, snapLabels)
+		request.QueryOptionLabel(api.OptLabel, snapLabels)
 	}
 	if err := request.Do().Unmarshal(&volumes); err != nil {
 		return nil, err
@@ -292,7 +292,7 @@ func (v *volumeClient) Mount(volumeID string, mountPath string) error {
 		volumeID,
 		&api.VolumeSetRequest{
 			Action: &api.VolumeStateAction{
-				Mount: api.VolumeActionParam_VOLUME_ACTION_PARAM_ON,
+				Mount:     api.VolumeActionParam_VOLUME_ACTION_PARAM_ON,
 				MountPath: mountPath,
 			},
 		},
@@ -306,7 +306,7 @@ func (v *volumeClient) Unmount(volumeID string, mountPath string) error {
 		volumeID,
 		&api.VolumeSetRequest{
 			Action: &api.VolumeStateAction{
-				Mount: api.VolumeActionParam_VOLUME_ACTION_PARAM_OFF,
+				Mount:     api.VolumeActionParam_VOLUME_ACTION_PARAM_OFF,
 				MountPath: mountPath,
 			},
 		},
