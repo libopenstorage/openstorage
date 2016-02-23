@@ -11,15 +11,19 @@ import (
 	"github.com/portworx/kvdb"
 )
 
+const (
+	ClusterDBKey = "cluster/database"
+)
+
 func readDatabase() (Database, error) {
 	kvdb := kvdb.Instance()
 
 	db := Database{
-		Status: api.Status_STATUS_INIT,
+		Status:      api.Status_STATUS_INIT,
 		NodeEntries: make(map[string]NodeEntry),
 	}
 
-	kv, err := kvdb.Get("cluster/database")
+	kv, err := kvdb.Get(ClusterDBKey)
 	if err != nil && !strings.Contains(err.Error(), "Key not found") {
 		dlog.Warnln("Warning, could not read cluster database")
 		return db, err
@@ -45,7 +49,7 @@ func writeDatabase(db *Database) error {
 		return err
 	}
 
-	if _, err := kvdb.Put("cluster/database", b, 0); err != nil {
+	if _, err := kvdb.Put(ClusterDBKey, b, 0); err != nil {
 		dlog.Warnf("Fatal, Could not marshal cluster database to JSON: %v", err)
 		return err
 	}

@@ -134,6 +134,19 @@ func (c *ClusterManager) getCurrentState() *api.Node {
 	return &c.selfNode
 }
 
+// Get the latest config.
+func (c *ClusterManager) watchDB(key string, opaque interface{},
+	kvp *kvdb.KVPair, err error) error {
+
+	db, err := readDatabase()
+	if err == nil {
+		// The only value we rely on during an update is the cluster size.
+		c.size = db.Size
+	}
+
+	return nil
+}
+
 func (c *ClusterManager) getLatestNodeConfig(nodeId string) *NodeEntry {
 	db, err := readDatabase()
 	if err != nil {
@@ -295,7 +308,14 @@ func (c *ClusterManager) updateClusterStatus() {
 		// Process heartbeats from other nodes...
 		gossipValues := c.gossip.GetStoreKeyValue(gossipStoreKey)
 
+		numNodes := 0
 		for id, nodeInfo := range gossipValues {
+			numNodes = numNodes + 1
+			if c.size > 0 && numNodes > c.size {
+				dlog.Panicf("Fatal, number of nodes in the cluster has"+
+					"exceeded the cluster size: %d > %d", numNodes, c.size)
+			}
+
 			if id == types.NodeId(node.Id) {
 				continue
 			}
@@ -440,6 +460,9 @@ func (c *ClusterManager) Start() error {
 		dlog.Panicln(err)
 	}
 
+	// Cluster database max size... 0 if unlimited.
+	c.size = db.Size
+
 	if db.Status == api.Status_STATUS_INIT {
 		dlog.Infoln("Will initialize a new cluster.")
 
@@ -485,6 +508,8 @@ func (c *ClusterManager) Start() error {
 	c.gossip.Start()
 	go c.heartBeat()
 	go c.updateClusterStatus()
+
+	kvdb.WatchKey(ClusterDBKey, 0, nil, c.watchDB)
 
 	return nil
 }
