@@ -23,7 +23,7 @@ import (
 
 const (
 	heartbeatKey   = "heartbeat"
-	clusterLockKey = ""
+	clusterLockKey = "/cluster/lock"
 )
 
 type ClusterManager struct {
@@ -531,13 +531,15 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 // SetSize sets the maximum number of nodes in a cluster.
 func (c *ClusterManager) SetSize(size int) error {
 	kvdb := kvdb.Instance()
+	dlog.Infof("GETTING LOCK")
 	kvlock, err := kvdb.Lock(clusterLockKey, 20)
 	if err != nil {
-		dlog.Warnln(" Unable to obtain cluster lock for updating config", err)
+		dlog.Warnln("Unable to obtain cluster lock for updating config", err)
 		return nil
 	}
 	defer kvdb.Unlock(kvlock)
 
+	dlog.Infof("READING DB")
 	db, err := readDatabase()
 	if err != nil {
 		return err
@@ -545,7 +547,9 @@ func (c *ClusterManager) SetSize(size int) error {
 
 	db.Size = size
 
+	dlog.Infof("WRITING DB")
 	err = writeDatabase(&db)
+	dlog.Infof("DONE")
 
 	return err
 }
