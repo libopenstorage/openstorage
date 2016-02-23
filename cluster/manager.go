@@ -22,16 +22,18 @@ import (
 )
 
 const (
-	heartbeatKey = "heartbeat"
+	heartbeatKey   = "heartbeat"
+	clusterLockKey = ""
 )
 
 type ClusterManager struct {
+	size      int
 	listeners *list.List
 	config    config.ClusterConfig
 	kv        kvdb.Kvdb
 	status    api.Status
 	nodeCache map[string]api.Node // Cached info on the nodes in the cluster.
-	g         gossip.Gossiper
+	gossip    gossip.Gossiper
 	gEnabled  bool
 	selfNode  api.Node
 	system    systemutils.System
@@ -133,14 +135,6 @@ func (c *ClusterManager) getCurrentState() *api.Node {
 }
 
 func (c *ClusterManager) getLatestNodeConfig(nodeId string) *NodeEntry {
-	kvdb := kvdb.Instance()
-	kvlock, err := kvdb.Lock("cluster/lock", 20)
-	if err != nil {
-		dlog.Warnln(" Unable to obtain cluster lock for updating config", err)
-		return nil
-	}
-	defer kvdb.Unlock(kvlock)
-
 	db, err := readDatabase()
 	if err != nil {
 		dlog.Warnln("Failed to read the database for updating config")
@@ -240,7 +234,7 @@ found:
 			} else {
 				// Gossip with this node.
 				dlog.Infof("Connecting to node %s with IP %s.", id, n.Ip)
-				c.g.AddNode(n.Ip+":9002", types.NodeId(c.config.NodeId))
+				c.gossip.AddNode(n.Ip+":9002", types.NodeId(c.config.NodeId))
 			}
 		}
 	}
@@ -284,7 +278,7 @@ func (c *ClusterManager) heartBeat() {
 		if currTime.Sub(lastUpdateTs) > 10*time.Second {
 			dlog.Warnln("No gossip update for 10 seconds")
 		}
-		c.g.UpdateSelf(gossipStoreKey, *node)
+		c.gossip.UpdateSelf(gossipStoreKey, *node)
 		lastUpdateTs = currTime
 
 		time.Sleep(2 * time.Second)
@@ -299,7 +293,7 @@ func (c *ClusterManager) updateClusterStatus() {
 		c.nodeCache[node.Id] = *node
 
 		// Process heartbeats from other nodes...
-		gossipValues := c.g.GetStoreKeyValue(gossipStoreKey)
+		gossipValues := c.gossip.GetStoreKeyValue(gossipStoreKey)
 
 		for id, nodeInfo := range gossipValues {
 			if id == types.NodeId(node.Id) {
@@ -335,7 +329,7 @@ func (c *ClusterManager) updateClusterStatus() {
 					if ne != nil && nodeInfo.GenNumber < ne.GenNumber {
 						dlog.Warnln("Detected stale update for node ", id,
 							" going down, ignoring it")
-						c.g.MarkNodeHasOldGen(id)
+						c.gossip.MarkNodeHasOldGen(id)
 						delete(c.nodeCache, cachedNodeInfo.Id)
 						continue
 					}
@@ -402,7 +396,7 @@ func (c *ClusterManager) EnableUpdates() error {
 
 func (c *ClusterManager) GetState() (*ClusterState, error) {
 	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
-	nodeValue := c.g.GetStoreKeyValue(gossipStoreKey)
+	nodeValue := c.gossip.GetStoreKeyValue(gossipStoreKey)
 	nodes := make([]types.NodeValue, len(nodeValue), len(nodeValue))
 	i := 0
 	for _, value := range nodeValue {
@@ -410,7 +404,7 @@ func (c *ClusterManager) GetState() (*ClusterState, error) {
 		i++
 	}
 
-	history := c.g.GetGossipHistory()
+	history := c.gossip.GetGossipHistory()
 	return &ClusterState{
 		History: history, NodeStatus: nodes}, nil
 }
@@ -430,12 +424,12 @@ func (c *ClusterManager) Start() error {
 	// Start the gossip protocol.
 	// XXX Make the port configurable.
 	gob.Register(api.Node{})
-	c.g = gossip.New("0.0.0.0:9002", types.NodeId(c.config.NodeId),
+	c.gossip = gossip.New("0.0.0.0:9002", types.NodeId(c.config.NodeId),
 		c.selfNode.GenNumber)
-	c.g.SetGossipInterval(2 * time.Second)
+	c.gossip.SetGossipInterval(2 * time.Second)
 
 	kvdb := kvdb.Instance()
-	kvlock, err := kvdb.Lock("cluster/lock", 60)
+	kvlock, err := kvdb.Lock(clusterLockKey, 60)
 	if err != nil {
 		dlog.Panicln("Fatal, Unable to obtain cluster lock.", err)
 	}
@@ -488,7 +482,7 @@ func (c *ClusterManager) Start() error {
 	}
 
 	// Start heartbeating to other nodes.
-	c.g.Start()
+	c.gossip.Start()
 	go c.heartBeat()
 	go c.updateClusterStatus()
 
@@ -511,8 +505,24 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 
 // SetSize sets the maximum number of nodes in a cluster.
 func (c *ClusterManager) SetSize(size int) error {
+	kvdb := kvdb.Instance()
+	kvlock, err := kvdb.Lock(clusterLockKey, 20)
+	if err != nil {
+		dlog.Warnln(" Unable to obtain cluster lock for updating config", err)
+		return nil
+	}
+	defer kvdb.Unlock(kvlock)
 
-	return nil
+	db, err := readDatabase()
+	if err != nil {
+		return err
+	}
+
+	db.Size = size
+
+	err = writeDatabase(&db)
+
+	return err
 }
 
 // Remove node(s) from the cluster permanently.

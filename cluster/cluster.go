@@ -26,6 +26,7 @@ type NodeEntry struct {
 }
 
 type Database struct {
+	Size        int
 	Status      api.Status
 	Id          string
 	NodeEntries map[string]NodeEntry

@@ -260,3 +260,7 @@ message GraphDriverChanges {
   string path = 1;
   GraphDriverChangeType kind = 2;
 }
+
+message ClusterResponse {
+  string error = 1;
+}

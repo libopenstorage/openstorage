@@ -55,9 +55,6 @@ type Node struct {
 type Cluster struct {
 	Status Status
 
-	// Size is the maximal cluster size.
-	Size int
-
 	// Id is the ID of the cluster.
 	Id string
 

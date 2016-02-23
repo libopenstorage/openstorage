@@ -3,18 +3,15 @@ package server
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/config"
 )
 
 type clusterApi struct {
 	restBase
-}
-
-type clusterResponse struct {
-	Status  string
-	Version string
 }
 
 func (c *clusterApi) Routes() []*Route {
@@ -53,6 +50,30 @@ func (c *clusterApi) enumerate(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(cluster)
 }
 
+func (c *clusterApi) setSize(w http.ResponseWriter, r *http.Request) {
+	method := "set size"
+	inst, err := cluster.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	params := r.URL.Query()
+
+	size := params["size"]
+	if size == nil {
+		c.sendError(c.name, method, w, "Missing size param", http.StatusBadRequest)
+		return
+	}
+
+	sz, _ := strconv.Atoi(size[0])
+
+	err = inst.SetSize(sz)
+
+	clusterResponse := &api.ClusterResponse{Error: err.Error()}
+	json.NewEncoder(w).Encode(clusterResponse)
+}
+
 func (c *clusterApi) inspect(w http.ResponseWriter, r *http.Request) {
 	method := "inspect"
 	c.sendNotImplemented(w, method)
@@ -69,10 +90,8 @@ func (c *clusterApi) enableGossip(w http.ResponseWriter, r *http.Request) {
 
 	inst.EnableUpdates()
 
-	json.NewEncoder(w).Encode(&clusterResponse{
-		Status:  "OK",
-		Version: config.Version,
-	})
+	clusterResponse := &api.ClusterResponse{}
+	json.NewEncoder(w).Encode(clusterResponse)
 }
 
 func (c *clusterApi) disableGossip(w http.ResponseWriter, r *http.Request) {
@@ -86,10 +105,8 @@ func (c *clusterApi) disableGossip(w http.ResponseWriter, r *http.Request) {
 
 	inst.DisableUpdates()
 
-	json.NewEncoder(w).Encode(&clusterResponse{
-		Status:  "OK",
-		Version: config.Version,
-	})
+	clusterResponse := &api.ClusterResponse{}
+	json.NewEncoder(w).Encode(clusterResponse)
 }
 
 func (c *clusterApi) status(w http.ResponseWriter, r *http.Request) {

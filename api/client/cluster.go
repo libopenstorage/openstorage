@@ -35,17 +35,17 @@ func (c *clusterClient) Enumerate() (api.Cluster, error) {
 }
 
 func (c *clusterClient) SetSize(size int) error {
-	cluster := api.Cluster{}
+	resp := api.ClusterResponse{}
 
 	request := c.c.Get().Resource(clusterPath + "/setsize")
 	request.QueryOption("size", strconv.FormatInt(int64(size), 16))
 	request.Do()
-	if err := request.Do().Unmarshal(&cluster); err != nil {
+	if err := request.Do().Unmarshal(&resp); err != nil {
 		return err
 	}
 
-	if size != cluster.Size {
-		return errors.New("Failed to set the cluster size.")
+	if resp.Error != "" {
+		return errors.New(resp.Error)
 	}
 
 	return nil
