@@ -87,7 +87,24 @@ func (s *GossipHistory) LogRecords() {
 	}
 }
 
-// Implements the UnreliableBroadcast interface
+type GossipNode struct {
+	Id types.NodeId
+	Ip string
+}
+
+type GossipNodeList []GossipNode
+
+func (nodes GossipNodeList) Len() int {
+	return len(nodes)
+}
+
+func (nodes GossipNodeList) Less(i, j int) bool {
+	return nodes[i].Id < nodes[i].Id
+}
+
+func (nodes GossipNodeList) Swap(i, j int) {
+	nodes[i], nodes[j] = nodes[j], nodes[i]
+}
 
 // Implements the UnreliableBroadcast interface
 type GossiperImpl struct {
@@ -95,7 +112,7 @@ type GossiperImpl struct {
 	GossipStoreImpl
 
 	// node list, maintained separately
-	nodes     []string
+	nodes     GossipNodeList
 	name      string
 	nodesLock sync.Mutex
 	// to signal exit gossip loop
@@ -169,7 +186,7 @@ func (g *GossiperImpl) Init(ip string, selfNodeId types.NodeId, genNumber uint64
 	g.InitStore(selfNodeId)
 	g.name = ip
 	g.GenNumber = genNumber
-	g.nodes = make([]string, 0)
+	g.nodes = make(GossipNodeList, 0)
 	g.send_done = make(chan bool, 1)
 	g.rcv_done = make(chan bool, 1)
 	g.update_done = make(chan bool, 1)
@@ -227,24 +244,23 @@ func (g *GossiperImpl) AddNode(ip string, id types.NodeId) error {
 	defer g.nodesLock.Unlock()
 
 	for _, node := range g.nodes {
-		if node == ip {
+		if node.Ip == ip {
 			return logAndGetError("Node being added already exists:" + ip)
 		}
 	}
-	g.nodes = append(g.nodes, ip)
-	sort.Strings(g.nodes)
+	g.nodes = append(g.nodes, GossipNode{Id: id, Ip: ip})
+	sort.Sort(g.nodes)
 	g.peerSelector.SetMaxLen(uint32(len(g.nodes)))
 	if len(g.nodes) >= 2 {
 		// In order to make sure that not all of the
 		// nodes go in the same order, try to reset the order
 		// by sorting the nodes by name and starting at the position
-		// next to this node
-		temp := make([]string, len(g.nodes))
+		temp := make(GossipNodeList, len(g.nodes)+1)
 		copy(temp, g.nodes)
-		temp = append(temp, g.name)
-		sort.Strings(temp)
+		temp[len(g.nodes)] = GossipNode{Id: g.id, Ip: g.name}
+		// next to this node
 		for i, n := range temp {
-			if n == g.name {
+			if n.Id == g.id {
 				g.peerSelector.SetStartHint(uint32(i % len(g.nodes)))
 			}
 		}
@@ -253,12 +269,26 @@ func (g *GossiperImpl) AddNode(ip string, id types.NodeId) error {
 	return nil
 }
 
+func (g *GossiperImpl) UpdateNode(ip string, id types.NodeId) error {
+	g.nodesLock.Lock()
+	defer g.nodesLock.Unlock()
+
+	for i, node := range g.nodes {
+		if node.Id == id {
+			// not sure if this is the most efficient way
+			g.nodes[i].Ip = ip
+			return nil
+		}
+	}
+	return logAndGetError("Node being updated does not exist:" + ip)
+}
+
 func (g *GossiperImpl) RemoveNode(ip string) error {
 	g.nodesLock.Lock()
 	defer g.nodesLock.Unlock()
 
 	for i, node := range g.nodes {
-		if node == ip {
+		if node.Ip == ip {
 			// not sure if this is the most efficient way
 			g.nodes = append(g.nodes[:i], g.nodes[i+1:]...)
 			g.peerSelector.SetMaxLen(uint32(len(g.nodes)))
@@ -273,7 +303,9 @@ func (g *GossiperImpl) GetNodes() []string {
 	defer g.nodesLock.Unlock()
 
 	nodeList := make([]string, len(g.nodes))
-	copy(nodeList, g.nodes)
+	for i, node := range g.nodes {
+		nodeList[i] = node.Ip
+	}
 	return nodeList
 }
 
@@ -410,7 +442,7 @@ func (g *GossiperImpl) selectGossipPeer() string {
 	if peer < 0 {
 		return ""
 	}
-	return g.nodes[peer]
+	return g.nodes[peer].Ip
 }
 
 func (g *GossiperImpl) gossip() *types.GossipSessionInfo {

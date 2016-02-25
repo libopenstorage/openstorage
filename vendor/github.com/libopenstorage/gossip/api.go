@@ -82,6 +82,9 @@ type Gossiper interface {
 	// AddNode adds a node to gossip with
 	AddNode(ip string, id types.NodeId) error
 
+	// Updates the connection details for the node
+	UpdateNode(ip string, id types.NodeId) error
+
 	// RemoveNode removes the node to gossip with
 	RemoveNode(ip string) error
 
