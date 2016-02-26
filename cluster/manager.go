@@ -140,9 +140,18 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 	kvp *kvdb.KVPair, err error) error {
 
 	db, err := readDatabase()
-	if err == nil {
-		// The only value we rely on during an update is the cluster size.
-		c.size = db.Size
+	if err != nil {
+		dlog.Warnln("Failed to read database after update ", err)
+		return nil
+	}
+
+	// The only value we rely on during an update is the cluster size.
+	c.size = db.Size
+	for id, n := range db.NodeEntries {
+		if id != c.config.NodeId {
+			// Check to see if the IP is the same.  If it is, then we have a stale entry.
+			c.gossip.UpdateNode(n.Ip+":9002", types.NodeId(id))
+		}
 	}
 
 	return nil
@@ -248,7 +257,7 @@ found:
 			} else {
 				// Gossip with this node.
 				dlog.Infof("Connecting to node %s with IP %s.", id, n.Ip)
-				c.gossip.AddNode(n.Ip+":9002", types.NodeId(c.config.NodeId))
+				c.gossip.AddNode(n.Ip+":9002", types.NodeId(id))
 			}
 		}
 	}
