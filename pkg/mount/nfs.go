@@ -54,7 +54,7 @@ MountLoop:
 				Device:     v.Source,
 				Fs:         v.Fstype,
 				Minor:      v.Minor,
-				Mountpoint: make([]PathInfo, 0),
+				Mountpoint: make([]*PathInfo, 0),
 			}
 			m.mounts[v.Source] = mount
 		}
@@ -65,7 +65,7 @@ MountLoop:
 			}
 		}
 		// XXX Reconstruct refs.
-		mount.Mountpoint = append(mount.Mountpoint, PathInfo{Path: v.Mountpoint, ref: 1})
+		mount.Mountpoint = append(mount.Mountpoint, &PathInfo{Path: v.Mountpoint, ref: 1})
 	}
 	return nil
 }

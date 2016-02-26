@@ -18,7 +18,7 @@ type Manager interface {
 	// Load mount table for all devices that match this identifier
 	Load(source string) error
 	// Inspect mount table for specified source. ErrEnoent may be returned.
-	Inspect(source string) []PathInfo
+	Inspect(source string) []*PathInfo
 	// HasMounts determines returns the number of mounts for the source.
 	HasMounts(source string) int
 	// Exists returns true if the device is mounted at specified path.
@@ -69,7 +69,7 @@ type Info struct {
 	sync.Mutex
 	Device     string
 	Minor      int
-	Mountpoint []PathInfo
+	Mountpoint []*PathInfo
 	Fs         string
 }
 
@@ -86,13 +86,13 @@ func (m *Mounter) String() string {
 }
 
 // Inspect mount table for device
-func (m *Mounter) Inspect(devPath string) []PathInfo {
+func (m *Mounter) Inspect(devPath string) []*PathInfo {
 	m.Lock()
 	defer m.Unlock()
 
 	v, ok := m.mounts[devPath]
 	if !ok {
-		return []PathInfo{}
+		return nil
 	}
 	return v.Mountpoint
 }
@@ -141,7 +141,7 @@ func (m *Mounter) Mount(minor int, device, path, fs string, flags uintptr, data 
 	if !ok {
 		info = &Info{
 			Device:     device,
-			Mountpoint: make([]PathInfo, 0),
+			Mountpoint: make([]*PathInfo, 0),
 			Minor:      minor,
 			Fs:         fs,
 		}
@@ -170,7 +170,7 @@ func (m *Mounter) Mount(minor int, device, path, fs string, flags uintptr, data 
 	if err != nil {
 		return err
 	}
-	info.Mountpoint = append(info.Mountpoint, PathInfo{Path: path, ref: 1})
+	info.Mountpoint = append(info.Mountpoint, &PathInfo{Path: path, ref: 1})
 	m.paths[path] = device
 	return nil
 }
