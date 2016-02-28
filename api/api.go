@@ -44,7 +44,8 @@ type Node struct {
 	MemFree   uint64
 	Luns      map[string]systemutils.Lun
 	Avgload   int
-	Ip        string
+	MgmtIp    string
+	DataIp    string
 	Timestamp time.Time
 	Status    Status
 	NodeData  map[string]interface{}

@@ -50,7 +50,7 @@ func (c *clusterClient) status(context *cli.Context) {
 		w := new(tabwriter.Writer)
 		w.Init(outFd, 12, 12, 1, ' ', 0)
 
-		fmt.Fprintln(w, "ID\t IP\t STATUS\t CPU\t MEM TOTAL\t MEM FREE")
+		fmt.Fprintln(w, "ID\t MGMT IP\t STATUS\t CPU\t MEM TOTAL\t MEM FREE")
 		for _, n := range cluster.Nodes {
 			status := ""
 			if n.Status == api.Status_STATUS_INIT {
@@ -63,7 +63,7 @@ func (c *clusterClient) status(context *cli.Context) {
 				status = "Error"
 			}
 
-			fmt.Fprintln(w, n.Id, "\t", n.Ip, "\t", status, "\t",
+			fmt.Fprintln(w, n.Id, "\t", n.MgmtIp, "\t", status, "\t",
 				n.Cpu, "\t", humanize.Bytes(n.MemTotal), "\t",
 				humanize.Bytes(n.MemFree))
 		}

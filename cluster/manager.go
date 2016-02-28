@@ -66,19 +66,46 @@ func ifaceToIp(iface *net.Interface) (string, error) {
 	return "", errors.New("Node not connected to the network.")
 }
 
-func ExternalIp(config *config.ClusterConfig) (string, error) {
+func ExternalIp(config *config.ClusterConfig) (string, string, error) {
+	mgmtIp := ""
+	dataIp := ""
+
 	if config.MgtIface != "" {
 		iface, err := net.InterfaceByName(config.MgtIface)
 		if err != nil {
-			return "", errors.New("Invalid network interface specified.")
+			return "", "", errors.New("Invalid management network " +
+				"interface specified.")
 		}
-		return ifaceToIp(iface)
+		mgmtIp, err = ifaceToIp(iface)
+		if err != nil {
+			return "", "", err
+		}
 	}
+
+	if config.DataIface != "" {
+		iface, err := net.InterfaceByName(config.DataIface)
+		if err != nil {
+			return "", "", errors.New("Invalid data network interface " +
+				"specified.")
+		}
+		dataIp, err = ifaceToIp(iface)
+		if err != nil {
+			return "", "", err
+		}
+	}
+
+	if mgmtIp != "" && dataIp != "" {
+		return mgmtIp, dataIp, nil
+	} else if mgmtIp != "" { // dataIp is empty
+		return mgmtIp, mgmtIp, nil
+	} else if dataIp != "" { // mgmtIp is empty
+		return dataIp, dataIp, nil
+	} // both are empty, try to pick first available interface for both
 
 	// No network interface specified, pick first default.
 	ifaces, err := net.Interfaces()
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	for _, iface := range ifaces {
 		if iface.Flags&net.FlagUp == 0 {
@@ -88,10 +115,11 @@ func ExternalIp(config *config.ClusterConfig) (string, error) {
 			continue // loopback interface
 		}
 
-		return ifaceToIp(&iface)
+		mgmtIp, err = ifaceToIp(&iface)
+		return mgmtIp, mgmtIp, err
 	}
 
-	return "", errors.New("Node not connected to the network.")
+	return "", "", errors.New("Node not connected to the network.")
 }
 
 func (c *ClusterManager) Inspect(nodeID string) (api.Node, error) {
@@ -150,7 +178,7 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 	for id, n := range db.NodeEntries {
 		if id != c.config.NodeId {
 			// Check to see if the IP is the same.  If it is, then we have a stale entry.
-			c.gossip.UpdateNode(n.Ip+":9002", types.NodeId(id))
+			c.gossip.UpdateNode(n.MgmtIp+":9002", types.NodeId(id))
 		}
 	}
 
@@ -180,11 +208,13 @@ func (c *ClusterManager) initNode(db *Database) (*api.Node, bool) {
 
 	// Add us into the database.
 	db.NodeEntries[c.config.NodeId] = NodeEntry{Id: c.selfNode.Id,
-		Ip: c.selfNode.Ip, GenNumber: c.selfNode.GenNumber}
+		MgmtIp: c.selfNode.MgmtIp, DataIp: c.selfNode.DataIp,
+		GenNumber: c.selfNode.GenNumber}
 
 	dlog.Infof("Node %s joining cluster...", c.config.NodeId)
 	dlog.Infof("Cluster ID: %s", c.config.ClusterId)
-	dlog.Infof("Node IP: %s", c.selfNode.Ip)
+	dlog.Infof("Node Mgmt IP: %s", c.selfNode.MgmtIp)
+	dlog.Infof("Node Data IP: %s", c.selfNode.DataIp)
 
 	return &c.selfNode, exists
 }
@@ -251,13 +281,13 @@ found:
 	for id, n := range db.NodeEntries {
 		if id != c.config.NodeId {
 			// Check to see if the IP is the same.  If it is, then we have a stale entry.
-			if n.Ip == self.Ip {
+			if n.MgmtIp == self.MgmtIp {
 				dlog.Warnf("Warning, Detected node %s with the same IP %s in the database.  Will not connect to this node.",
-					id, n.Ip)
+					id, n.MgmtIp)
 			} else {
 				// Gossip with this node.
-				dlog.Infof("Connecting to node %s with IP %s.", id, n.Ip)
-				c.gossip.AddNode(n.Ip+":9002", types.NodeId(id))
+				dlog.Infof("Connecting to node %s with IP %s.", id, n.MgmtIp)
+				c.gossip.AddNode(n.MgmtIp+":9002", types.NodeId(id))
 			}
 		}
 	}
@@ -448,7 +478,7 @@ func (c *ClusterManager) Start() error {
 	c.selfNode.GenNumber = uint64(time.Now().UnixNano())
 	c.selfNode.Id = c.config.NodeId
 	c.selfNode.Status = api.Status_STATUS_OK
-	c.selfNode.Ip, _ = ExternalIp(&c.config)
+	c.selfNode.MgmtIp, c.selfNode.DataIp, _ = ExternalIp(&c.config)
 	c.selfNode.NodeData = make(map[string]interface{})
 	c.system = systemutils.New()
 
