@@ -19,64 +19,6 @@ type Route struct {
 	fn   func(http.ResponseWriter, *http.Request)
 }
 
-type restServer interface {
-	Routes() []*Route
-	String() string
-	logRequest(request string, id string) dlog.Logger
-	sendError(request string, id string, w http.ResponseWriter, msg string, code int)
-}
-
-type restBase struct {
-	restServer
-	version string
-	name    string
-}
-
-func (rest *restBase) logRequest(request string, id string) dlog.Logger {
-	return dlog.WithFields(map[string]interface{}{
-		"Driver":  rest.name,
-		"Request": request,
-		"ID":      id,
-	})
-}
-func (rest *restBase) sendError(request string, id string, w http.ResponseWriter, msg string, code int) {
-	rest.logRequest(request, id).Warnln(code, " ", msg)
-	http.Error(w, msg, code)
-}
-
-func notFound(w http.ResponseWriter, r *http.Request) {
-	dlog.Warnf("Not found: %+v ", r.URL)
-	http.NotFound(w, r)
-}
-
-func startServer(name string, sockBase string, port int, routes []*Route) error {
-	var (
-		listener net.Listener
-		err      error
-	)
-	router := mux.NewRouter()
-	router.NotFoundHandler = http.HandlerFunc(notFound)
-
-	for _, v := range routes {
-		router.Methods(v.verb).Path(v.path).HandlerFunc(v.fn)
-	}
-	socket := path.Join(sockBase, name+".sock")
-	os.Remove(socket)
-	os.MkdirAll(path.Dir(socket), 0755)
-
-	dlog.Printf("Starting REST service on %+v", socket)
-	listener, err = net.Listen("unix", socket)
-	if err != nil {
-		dlog.Warnln("Cannot listen on UNIX socket: ", err)
-		return err
-	}
-	go http.Serve(listener, router)
-	if port != 0 {
-		go http.ListenAndServe(fmt.Sprintf(":%v", port), router)
-	}
-	return nil
-}
-
 // StartGraphAPI starts a REST server to receive GraphDriver commands from
 // the Linux container engine.
 func StartGraphAPI(name string, restBase string) error {
@@ -113,4 +55,62 @@ func StartClusterAPI(clusterApiBase string) error {
 	}
 
 	return nil
+}
+
+func startServer(name string, sockBase string, port int, routes []*Route) error {
+	var (
+		listener net.Listener
+		err      error
+	)
+	router := mux.NewRouter()
+	router.NotFoundHandler = http.HandlerFunc(notFound)
+
+	for _, v := range routes {
+		router.Methods(v.verb).Path(v.path).HandlerFunc(v.fn)
+	}
+	socket := path.Join(sockBase, name+".sock")
+	os.Remove(socket)
+	os.MkdirAll(path.Dir(socket), 0755)
+
+	dlog.Printf("Starting REST service on %+v", socket)
+	listener, err = net.Listen("unix", socket)
+	if err != nil {
+		dlog.Warnln("Cannot listen on UNIX socket: ", err)
+		return err
+	}
+	go http.Serve(listener, router)
+	if port != 0 {
+		go http.ListenAndServe(fmt.Sprintf(":%v", port), router)
+	}
+	return nil
+}
+
+type restServer interface {
+	Routes() []*Route
+	String() string
+	logRequest(request string, id string) dlog.Logger
+	sendError(request string, id string, w http.ResponseWriter, msg string, code int)
+}
+
+type restBase struct {
+	restServer
+	version string
+	name    string
+}
+
+func (rest *restBase) logRequest(request string, id string) dlog.Logger {
+	return dlog.WithFields(map[string]interface{}{
+		"Driver":  rest.name,
+		"Request": request,
+		"ID":      id,
+	})
+}
+func (rest *restBase) sendError(request string, id string, w http.ResponseWriter, msg string, code int) {
+	rest.logRequest(request, id).Warnln(code, " ", msg)
+	http.Error(w, msg, code)
+}
+
+func notFound(w http.ResponseWriter, r *http.Request) {
+	dlog.Warnf("Not found: %+v ", r.URL)
+	http.NotFound(w, r)
 }
