@@ -5,10 +5,53 @@ import "google/protobuf/empty.proto";
 
 package flexvolume;
 
+message AttachRequest {
+  bytes json_options = 1;
+}
+
+message DetachRequest {
+  string mount_device = 1;
+}
+
+message MountRequest {
+  string target_mount_dir = 1;
+  string mount_device = 2;
+  bytes json_options = 3;
+}
+
+message UnmountRequest {
+  string mount_dir = 1;
+}
+
 service API {
   rpc Init(google.protobuf.Empty) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      get: "/init"
+      post: "/init"
+      body: "*"
+    };
+  }
+  rpc Attach(AttachRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/attach"
+      body: "*"
+    };
+  }
+  rpc Detach(DetachRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/detach"
+      body: "*"
+    };
+  }
+  rpc Mount(MountRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/mount"
+      body: "*"
+    };
+  }
+  rpc Unmount(UnmountRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/unmount"
+      body: "*"
     };
   }
 }
