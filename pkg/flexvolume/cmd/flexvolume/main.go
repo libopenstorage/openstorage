@@ -98,7 +98,7 @@ func do(appEnvObj interface{}) error {
 }
 
 func getClient(appEnv *appEnv) (flexvolume.Client, error) {
-	clientConn, err := grpc.Dial(appEnv.OpenstorageAddress)
+	clientConn, err := grpc.Dial(appEnv.OpenstorageAddress, grpc.WithInsecure())
 	if err != nil {
 		return nil, err
 	}

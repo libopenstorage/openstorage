@@ -63,6 +63,7 @@ func start(c *cli.Context) {
 	}
 
 	// Start the cluster state machine, if enabled.
+	clusterInit := false
 	if cfg.Osd.ClusterConfig.NodeId != "" && cfg.Osd.ClusterConfig.ClusterId != "" {
 		dlog.Infof("OSD enabling cluster mode.")
 
@@ -70,6 +71,7 @@ func start(c *cli.Context) {
 			dlog.Errorln("Unable to init cluster server: %v", err)
 			return
 		}
+		clusterInit = true
 
 		if err := server.StartClusterAPI(config.ClusterAPIBase); err != nil {
 			dlog.Warnf("Unable to start cluster API server: %v", err)
@@ -91,6 +93,11 @@ func start(c *cli.Context) {
 		}
 	}
 
+	if err := server.StartFlexVolumeAPI(config.FlexVolumePort); err != nil {
+		dlog.Warnf("Unable to start flexvolume API: %v", err)
+		return
+	}
+
 	// Start the graph drivers.
 	for d, _ := range cfg.Osd.GraphDrivers {
 		dlog.Infof("Starting graph driver: %v", d)
@@ -100,7 +107,12 @@ func start(c *cli.Context) {
 		}
 	}
 
-	if cm, err := cluster.Inst(); err != nil {
+	if clusterInit {
+		cm, err := cluster.Inst()
+		if err != nil {
+			dlog.Warnf("Unable to find cluster instance: %v", err)
+			return
+		}
 		if err := cm.Start(); err != nil {
 			dlog.Warnf("Unable to start cluster manager: %v", err)
 			return

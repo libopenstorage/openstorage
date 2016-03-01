@@ -2,14 +2,18 @@ package server
 
 import (
 	"fmt"
+	"math"
 	"net"
 	"net/http"
 	"os"
 	"path"
 
+	"google.golang.org/grpc"
+
 	"go.pedge.io/dlog"
 
 	"github.com/gorilla/mux"
+	"github.com/libopenstorage/openstorage/pkg/flexvolume"
 )
 
 // Route is a specification and  handler for a REST endpoint.
@@ -54,6 +58,22 @@ func StartClusterAPI(clusterApiBase string) error {
 		return err
 	}
 
+	return nil
+}
+
+// StartFlexVolumeAPI starts the flexvolume API on the given port.
+func StartFlexVolumeAPI(port uint16) error {
+	grpcServer := grpc.NewServer(grpc.MaxConcurrentStreams(math.MaxUint32))
+	flexvolume.RegisterAPIServer(grpcServer, flexvolume.NewAPIServer(newFlexVolumeClient()))
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	if err != nil {
+		return err
+	}
+	go func() {
+		if err := grpcServer.Serve(listener); err != nil {
+			dlog.Errorln(err.Error())
+		}
+	}()
 	return nil
 }
 

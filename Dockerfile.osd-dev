@@ -1,6 +1,7 @@
 FROM golang:1.6.0
 MAINTAINER gou@portworx.com
 
+EXPOSE 2345
 RUN \
   apt-get update -yq && \
   apt-get install -yq --no-install-recommends \

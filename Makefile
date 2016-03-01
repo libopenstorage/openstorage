@@ -123,12 +123,14 @@ launch: docker-build-osd
 		-d \
 		-v $(shell pwd):/etc \
 		-v /run/docker/plugins:/run/docker/plugins \
-		-v /var/lib/osd/:/var/lib/osd/\
+		-v /var/lib/osd/:/var/lib/osd/ \
+		-p 2345:2345 \
 		openstorage/osd -d -f /etc/config.yaml
 
+# must set HAVE_BTRFS
 launch-local-btrfs: install
 	sudo bash -x etc/btrfs/init.sh
-	sudo $(shell which osd) -d -f config_btrfs.yaml
+	sudo $(shell which osd) -d -f etc/config/config_btrfs.yaml
 
 clean:
 	go clean -i $(PKGS)
