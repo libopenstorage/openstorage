@@ -4,138 +4,143 @@
 	"package": [
 		{
 			"path": "bazil.org/fuse",
-			"revision": "2345f52f9d579e93916093ea4f19e29a79dd5050",
-			"revisionTime": "2016-01-08T15:59:59-08:00"
+			"revision": "4a4e0029e1364436782cd3cd5073a1e9bb10176f",
+			"revisionTime": "2016-02-19T14:47:17-08:00"
 		},
 		{
 			"path": "bazil.org/fuse/fs",
-			"revision": "2345f52f9d579e93916093ea4f19e29a79dd5050",
-			"revisionTime": "2016-01-08T15:59:59-08:00"
+			"revision": "4a4e0029e1364436782cd3cd5073a1e9bb10176f",
+			"revisionTime": "2016-02-19T14:47:17-08:00"
 		},
 		{
 			"path": "bazil.org/fuse/fuseutil",
-			"revision": "2345f52f9d579e93916093ea4f19e29a79dd5050",
-			"revisionTime": "2016-01-08T15:59:59-08:00"
+			"revision": "4a4e0029e1364436782cd3cd5073a1e9bb10176f",
+			"revisionTime": "2016-02-19T14:47:17-08:00"
 		},
 		{
 			"path": "github.com/Sirupsen/logrus",
-			"revision": "f7f79f729e0fbe2fcc061db48a9ba0263f588252",
-			"revisionTime": "2016-01-18T19:00:32-05:00"
+			"revision": "219c8cb75c258c552e999735be6df753ffc7afdc",
+			"revisionTime": "2016-02-24T16:10:30-05:00"
 		},
 		{
 			"path": "github.com/aws/aws-sdk-go/aws",
-			"revision": "87b1e60a50b09e4812dee560b33a238f67305804",
-			"revisionTime": "2016-01-21T14:17:43-08:00"
+			"revision": "84dd2369d1041b2c79c67bc81bba00636711d01b",
+			"revisionTime": "2016-03-04T22:42:15-08:00"
 		},
 		{
 			"path": "github.com/aws/aws-sdk-go/aws/awserr",
-			"revision": "87b1e60a50b09e4812dee560b33a238f67305804",
-			"revisionTime": "2016-01-21T14:17:43-08:00"
+			"revision": "84dd2369d1041b2c79c67bc81bba00636711d01b",
+			"revisionTime": "2016-03-04T22:42:15-08:00"
 		},
 		{
 			"path": "github.com/aws/aws-sdk-go/aws/awsutil",
-			"revision": "87b1e60a50b09e4812dee560b33a238f67305804",
-			"revisionTime": "2016-01-21T14:17:43-08:00"
+			"revision": "84dd2369d1041b2c79c67bc81bba00636711d01b",
+			"revisionTime": "2016-03-04T22:42:15-08:00"
 		},
 		{
 			"path": "github.com/aws/aws-sdk-go/aws/client",
-			"revision": "87b1e60a50b09e4812dee560b33a238f67305804",
-			"revisionTime": "2016-01-21T14:17:43-08:00"
+			"revision": "84dd2369d1041b2c79c67bc81bba00636711d01b",
+			"revisionTime": "2016-03-04T22:42:15-08:00"
 		},
 		{
 			"path": "github.com/aws/aws-sdk-go/aws/client/metadata",
-			"revision": "87b1e60a50b09e4812dee560b33a238f67305804",
-			"revisionTime": "2016-01-21T14:17:43-08:00"
+			"revision": "84dd2369d1041b2c79c67bc81bba00636711d01b",
+			"revisionTime": "2016-03-04T22:42:15-08:00"
 		},
 		{
 			"path": "github.com/aws/aws-sdk-go/aws/corehandlers",
-			"revision": "87b1e60a50b09e4812dee560b33a238f67305804",
-			"revisionTime": "2016-01-21T14:17:43-08:00"
+			"revision": "84dd2369d1041b2c79c67bc81bba00636711d01b",
+			"revisionTime": "2016-03-04T22:42:15-08:00"
 		},
 		{
 			"path": "github.com/aws/aws-sdk-go/aws/credentials",
-			"revision": "87b1e60a50b09e4812dee560b33a238f67305804",
-			"revisionTime": "2016-01-21T14:17:43-08:00"
+			"revision": "84dd2369d1041b2c79c67bc81bba00636711d01b",
+			"revisionTime": "2016-03-04T22:42:15-08:00"
 		},
 		{
 			"path": "github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds",
-			"revision": "87b1e60a50b09e4812dee560b33a238f67305804",
-			"revisionTime": "2016-01-21T14:17:43-08:00"
+			"revision": "84dd2369d1041b2c79c67bc81bba00636711d01b",
+			"revisionTime": "2016-03-04T22:42:15-08:00"
 		},
 		{
 			"path": "github.com/aws/aws-sdk-go/aws/defaults",
-			"revision": "87b1e60a50b09e4812dee560b33a238f67305804",
-			"revisionTime": "2016-01-21T14:17:43-08:00"
+			"revision": "84dd2369d1041b2c79c67bc81bba00636711d01b",
+			"revisionTime": "2016-03-04T22:42:15-08:00"
 		},
 		{
 			"path": "github.com/aws/aws-sdk-go/aws/ec2metadata",
-			"revision": "87b1e60a50b09e4812dee560b33a238f67305804",
-			"revisionTime": "2016-01-21T14:17:43-08:00"
+			"revision": "84dd2369d1041b2c79c67bc81bba00636711d01b",
+			"revisionTime": "2016-03-04T22:42:15-08:00"
 		},
 		{
 			"path": "github.com/aws/aws-sdk-go/aws/request",
-			"revision": "87b1e60a50b09e4812dee560b33a238f67305804",
-			"revisionTime": "2016-01-21T14:17:43-08:00"
+			"revision": "84dd2369d1041b2c79c67bc81bba00636711d01b",
+			"revisionTime": "2016-03-04T22:42:15-08:00"
 		},
 		{
 			"path": "github.com/aws/aws-sdk-go/aws/session",
-			"revision": "87b1e60a50b09e4812dee560b33a238f67305804",
-			"revisionTime": "2016-01-21T14:17:43-08:00"
+			"revision": "84dd2369d1041b2c79c67bc81bba00636711d01b",
+			"revisionTime": "2016-03-04T22:42:15-08:00"
 		},
 		{
 			"path": "github.com/aws/aws-sdk-go/private/endpoints",
-			"revision": "87b1e60a50b09e4812dee560b33a238f67305804",
-			"revisionTime": "2016-01-21T14:17:43-08:00"
+			"revision": "84dd2369d1041b2c79c67bc81bba00636711d01b",
+			"revisionTime": "2016-03-04T22:42:15-08:00"
+		},
+		{
+			"path": "github.com/aws/aws-sdk-go/private/protocol",
+			"revision": "84dd2369d1041b2c79c67bc81bba00636711d01b",
+			"revisionTime": "2016-03-04T22:42:15-08:00"
 		},
 		{
 			"path": "github.com/aws/aws-sdk-go/private/protocol/ec2query",
-			"revision": "87b1e60a50b09e4812dee560b33a238f67305804",
-			"revisionTime": "2016-01-21T14:17:43-08:00"
+			"revision": "84dd2369d1041b2c79c67bc81bba00636711d01b",
+			"revisionTime": "2016-03-04T22:42:15-08:00"
 		},
 		{
 			"path": "github.com/aws/aws-sdk-go/private/protocol/json/jsonutil",
-			"revision": "87b1e60a50b09e4812dee560b33a238f67305804",
-			"revisionTime": "2016-01-21T14:17:43-08:00"
+			"revision": "84dd2369d1041b2c79c67bc81bba00636711d01b",
+			"revisionTime": "2016-03-04T22:42:15-08:00"
 		},
 		{
 			"path": "github.com/aws/aws-sdk-go/private/protocol/jsonrpc",
-			"revision": "87b1e60a50b09e4812dee560b33a238f67305804",
-			"revisionTime": "2016-01-21T14:17:43-08:00"
+			"revision": "84dd2369d1041b2c79c67bc81bba00636711d01b",
+			"revisionTime": "2016-03-04T22:42:15-08:00"
 		},
 		{
 			"path": "github.com/aws/aws-sdk-go/private/protocol/query/queryutil",
-			"revision": "87b1e60a50b09e4812dee560b33a238f67305804",
-			"revisionTime": "2016-01-21T14:17:43-08:00"
+			"revision": "84dd2369d1041b2c79c67bc81bba00636711d01b",
+			"revisionTime": "2016-03-04T22:42:15-08:00"
 		},
 		{
 			"path": "github.com/aws/aws-sdk-go/private/protocol/rest",
-			"revision": "87b1e60a50b09e4812dee560b33a238f67305804",
-			"revisionTime": "2016-01-21T14:17:43-08:00"
+			"revision": "84dd2369d1041b2c79c67bc81bba00636711d01b",
+			"revisionTime": "2016-03-04T22:42:15-08:00"
 		},
 		{
 			"path": "github.com/aws/aws-sdk-go/private/protocol/xml/xmlutil",
-			"revision": "87b1e60a50b09e4812dee560b33a238f67305804",
-			"revisionTime": "2016-01-21T14:17:43-08:00"
+			"revision": "84dd2369d1041b2c79c67bc81bba00636711d01b",
+			"revisionTime": "2016-03-04T22:42:15-08:00"
 		},
 		{
 			"path": "github.com/aws/aws-sdk-go/private/signer/v4",
-			"revision": "87b1e60a50b09e4812dee560b33a238f67305804",
-			"revisionTime": "2016-01-21T14:17:43-08:00"
+			"revision": "84dd2369d1041b2c79c67bc81bba00636711d01b",
+			"revisionTime": "2016-03-04T22:42:15-08:00"
 		},
 		{
 			"path": "github.com/aws/aws-sdk-go/private/waiter",
-			"revision": "87b1e60a50b09e4812dee560b33a238f67305804",
-			"revisionTime": "2016-01-21T14:17:43-08:00"
+			"revision": "84dd2369d1041b2c79c67bc81bba00636711d01b",
+			"revisionTime": "2016-03-04T22:42:15-08:00"
 		},
 		{
 			"path": "github.com/aws/aws-sdk-go/service/ec2",
-			"revision": "87b1e60a50b09e4812dee560b33a238f67305804",
-			"revisionTime": "2016-01-21T14:17:43-08:00"
+			"revision": "84dd2369d1041b2c79c67bc81bba00636711d01b",
+			"revisionTime": "2016-03-04T22:42:15-08:00"
 		},
 		{
 			"path": "github.com/aws/aws-sdk-go/service/opsworks",
-			"revision": "87b1e60a50b09e4812dee560b33a238f67305804",
-			"revisionTime": "2016-01-21T14:17:43-08:00"
+			"revision": "84dd2369d1041b2c79c67bc81bba00636711d01b",
+			"revisionTime": "2016-03-04T22:42:15-08:00"
 		},
 		{
 			"path": "github.com/cloudfoundry/gosigar",
@@ -144,8 +149,8 @@
 		},
 		{
 			"path": "github.com/codegangsta/cli",
-			"revision": "f9cc3001e04f9783cb4ad08ca6791aa07134787c",
-			"revisionTime": "2016-01-21T21:44:38-08:00"
+			"revision": "aca5b047ed14d17224157c3434ea93bf6cdaadee",
+			"revisionTime": "2016-03-06T20:12:29-08:00"
 		},
 		{
 			"path": "github.com/coreos/go-etcd/etcd",
@@ -160,93 +165,108 @@
 		},
 		{
 			"path": "github.com/docker/docker/daemon/graphdriver",
-			"revision": "c91045a78bf138aa32acd215fed4084d3b912bec",
-			"revisionTime": "2016-01-22T11:18:53+01:00"
+			"revision": "bc730f3d997ee4b2d53f7362c1d9f40f4074584a",
+			"revisionTime": "2016-03-07T11:20:14-05:00"
 		},
 		{
 			"path": "github.com/docker/docker/daemon/graphdriver/btrfs",
-			"revision": "c91045a78bf138aa32acd215fed4084d3b912bec",
-			"revisionTime": "2016-01-22T11:18:53+01:00"
+			"revision": "bc730f3d997ee4b2d53f7362c1d9f40f4074584a",
+			"revisionTime": "2016-03-07T11:20:14-05:00"
 		},
 		{
 			"path": "github.com/docker/docker/daemon/graphdriver/overlay",
-			"revision": "c91045a78bf138aa32acd215fed4084d3b912bec",
-			"revisionTime": "2016-01-22T11:18:53+01:00"
+			"revision": "bc730f3d997ee4b2d53f7362c1d9f40f4074584a",
+			"revisionTime": "2016-03-07T11:20:14-05:00"
 		},
 		{
 			"path": "github.com/docker/docker/pkg/archive",
-			"revision": "c91045a78bf138aa32acd215fed4084d3b912bec",
-			"revisionTime": "2016-01-22T11:18:53+01:00"
+			"revision": "bc730f3d997ee4b2d53f7362c1d9f40f4074584a",
+			"revisionTime": "2016-03-07T11:20:14-05:00"
 		},
 		{
 			"path": "github.com/docker/docker/pkg/chrootarchive",
-			"revision": "c91045a78bf138aa32acd215fed4084d3b912bec",
-			"revisionTime": "2016-01-22T11:18:53+01:00"
+			"revision": "bc730f3d997ee4b2d53f7362c1d9f40f4074584a",
+			"revisionTime": "2016-03-07T11:20:14-05:00"
 		},
 		{
 			"path": "github.com/docker/docker/pkg/directory",
-			"revision": "c91045a78bf138aa32acd215fed4084d3b912bec",
-			"revisionTime": "2016-01-22T11:18:53+01:00"
+			"revision": "bc730f3d997ee4b2d53f7362c1d9f40f4074584a",
+			"revisionTime": "2016-03-07T11:20:14-05:00"
 		},
 		{
 			"path": "github.com/docker/docker/pkg/fileutils",
-			"revision": "c91045a78bf138aa32acd215fed4084d3b912bec",
-			"revisionTime": "2016-01-22T11:18:53+01:00"
+			"revision": "bc730f3d997ee4b2d53f7362c1d9f40f4074584a",
+			"revisionTime": "2016-03-07T11:20:14-05:00"
 		},
 		{
 			"path": "github.com/docker/docker/pkg/idtools",
-			"revision": "c91045a78bf138aa32acd215fed4084d3b912bec",
-			"revisionTime": "2016-01-22T11:18:53+01:00"
+			"revision": "bc730f3d997ee4b2d53f7362c1d9f40f4074584a",
+			"revisionTime": "2016-03-07T11:20:14-05:00"
 		},
 		{
 			"path": "github.com/docker/docker/pkg/ioutils",
-			"revision": "c91045a78bf138aa32acd215fed4084d3b912bec",
-			"revisionTime": "2016-01-22T11:18:53+01:00"
+			"revision": "bc730f3d997ee4b2d53f7362c1d9f40f4074584a",
+			"revisionTime": "2016-03-07T11:20:14-05:00"
 		},
 		{
 			"path": "github.com/docker/docker/pkg/longpath",
-			"revision": "c91045a78bf138aa32acd215fed4084d3b912bec",
-			"revisionTime": "2016-01-22T11:18:53+01:00"
+			"revision": "bc730f3d997ee4b2d53f7362c1d9f40f4074584a",
+			"revisionTime": "2016-03-07T11:20:14-05:00"
 		},
 		{
 			"path": "github.com/docker/docker/pkg/mount",
-			"revision": "c91045a78bf138aa32acd215fed4084d3b912bec",
-			"revisionTime": "2016-01-22T11:18:53+01:00"
+			"revision": "bc730f3d997ee4b2d53f7362c1d9f40f4074584a",
+			"revisionTime": "2016-03-07T11:20:14-05:00"
 		},
 		{
 			"path": "github.com/docker/docker/pkg/parsers",
-			"revision": "c91045a78bf138aa32acd215fed4084d3b912bec",
-			"revisionTime": "2016-01-22T11:18:53+01:00"
+			"revision": "bc730f3d997ee4b2d53f7362c1d9f40f4074584a",
+			"revisionTime": "2016-03-07T11:20:14-05:00"
 		},
 		{
 			"path": "github.com/docker/docker/pkg/plugins",
-			"revision": "c91045a78bf138aa32acd215fed4084d3b912bec",
-			"revisionTime": "2016-01-22T11:18:53+01:00"
+			"revision": "bc730f3d997ee4b2d53f7362c1d9f40f4074584a",
+			"revisionTime": "2016-03-07T11:20:14-05:00"
+		},
+		{
+			"path": "github.com/docker/docker/pkg/plugins/transport",
+			"revision": "bc730f3d997ee4b2d53f7362c1d9f40f4074584a",
+			"revisionTime": "2016-03-07T11:20:14-05:00"
 		},
 		{
 			"path": "github.com/docker/docker/pkg/pools",
-			"revision": "c91045a78bf138aa32acd215fed4084d3b912bec",
-			"revisionTime": "2016-01-22T11:18:53+01:00"
+			"revision": "bc730f3d997ee4b2d53f7362c1d9f40f4074584a",
+			"revisionTime": "2016-03-07T11:20:14-05:00"
 		},
 		{
 			"path": "github.com/docker/docker/pkg/promise",
-			"revision": "c91045a78bf138aa32acd215fed4084d3b912bec",
-			"revisionTime": "2016-01-22T11:18:53+01:00"
+			"revision": "bc730f3d997ee4b2d53f7362c1d9f40f4074584a",
+			"revisionTime": "2016-03-07T11:20:14-05:00"
 		},
 		{
 			"path": "github.com/docker/docker/pkg/reexec",
-			"revision": "c91045a78bf138aa32acd215fed4084d3b912bec",
-			"revisionTime": "2016-01-22T11:18:53+01:00"
+			"revision": "bc730f3d997ee4b2d53f7362c1d9f40f4074584a",
+			"revisionTime": "2016-03-07T11:20:14-05:00"
 		},
 		{
 			"path": "github.com/docker/docker/pkg/system",
-			"revision": "c91045a78bf138aa32acd215fed4084d3b912bec",
-			"revisionTime": "2016-01-22T11:18:53+01:00"
+			"revision": "bc730f3d997ee4b2d53f7362c1d9f40f4074584a",
+			"revisionTime": "2016-03-07T11:20:14-05:00"
+		},
+		{
+			"path": "github.com/docker/go-connections/sockets",
+			"revision": "3ef1e92d1b93e587895dfa466e1682ae63448801",
+			"revisionTime": "2016-02-05T09:26:39-08:00"
+		},
+		{
+			"path": "github.com/docker/go-connections/tlsconfig",
+			"revision": "3ef1e92d1b93e587895dfa466e1682ae63448801",
+			"revisionTime": "2016-02-05T09:26:39-08:00"
 		},
 		{
 			"path": "github.com/docker/go-units",
-			"revision": "0bbddae09c5a5419a8c6dcdd7ff90da3d450393b",
-			"revisionTime": "2015-12-30T09:58:59-08:00"
+			"revision": "5d2041e26a699eaca682e2ea41c8f891e1060444",
+			"revisionTime": "2016-01-25T09:48:45-08:00"
 		},
 		{
 			"path": "github.com/dustin/go-humanize",
@@ -254,136 +274,48 @@
 			"revisionTime": "2015-11-25T16:46:33-05:00"
 		},
 		{
-			"path": "github.com/fsouza/go-dockerclient",
-			"revision": "296e36969d9d7606c4a6cbcd38eced50a39a0fd1",
-			"revisionTime": "2016-01-21T18:29:44-05:00"
-		},
-		{
-			"path": "github.com/fsouza/go-dockerclient/external/github.com/Sirupsen/logrus",
-			"revision": "296e36969d9d7606c4a6cbcd38eced50a39a0fd1",
-			"revisionTime": "2016-01-21T18:29:44-05:00"
-		},
-		{
-			"path": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/opts",
-			"revision": "296e36969d9d7606c4a6cbcd38eced50a39a0fd1",
-			"revisionTime": "2016-01-21T18:29:44-05:00"
-		},
-		{
-			"path": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/archive",
-			"revision": "296e36969d9d7606c4a6cbcd38eced50a39a0fd1",
-			"revisionTime": "2016-01-21T18:29:44-05:00"
-		},
-		{
-			"path": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/fileutils",
-			"revision": "296e36969d9d7606c4a6cbcd38eced50a39a0fd1",
-			"revisionTime": "2016-01-21T18:29:44-05:00"
-		},
-		{
-			"path": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/homedir",
-			"revision": "296e36969d9d7606c4a6cbcd38eced50a39a0fd1",
-			"revisionTime": "2016-01-21T18:29:44-05:00"
-		},
-		{
-			"path": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/idtools",
-			"revision": "296e36969d9d7606c4a6cbcd38eced50a39a0fd1",
-			"revisionTime": "2016-01-21T18:29:44-05:00"
-		},
-		{
-			"path": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/ioutils",
-			"revision": "296e36969d9d7606c4a6cbcd38eced50a39a0fd1",
-			"revisionTime": "2016-01-21T18:29:44-05:00"
-		},
-		{
-			"path": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/longpath",
-			"revision": "296e36969d9d7606c4a6cbcd38eced50a39a0fd1",
-			"revisionTime": "2016-01-21T18:29:44-05:00"
-		},
-		{
-			"path": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/pools",
-			"revision": "296e36969d9d7606c4a6cbcd38eced50a39a0fd1",
-			"revisionTime": "2016-01-21T18:29:44-05:00"
-		},
-		{
-			"path": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/promise",
-			"revision": "296e36969d9d7606c4a6cbcd38eced50a39a0fd1",
-			"revisionTime": "2016-01-21T18:29:44-05:00"
-		},
-		{
-			"path": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/stdcopy",
-			"revision": "296e36969d9d7606c4a6cbcd38eced50a39a0fd1",
-			"revisionTime": "2016-01-21T18:29:44-05:00"
-		},
-		{
-			"path": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/system",
-			"revision": "296e36969d9d7606c4a6cbcd38eced50a39a0fd1",
-			"revisionTime": "2016-01-21T18:29:44-05:00"
-		},
-		{
-			"path": "github.com/fsouza/go-dockerclient/external/github.com/docker/go-units",
-			"revision": "296e36969d9d7606c4a6cbcd38eced50a39a0fd1",
-			"revisionTime": "2016-01-21T18:29:44-05:00"
-		},
-		{
-			"path": "github.com/fsouza/go-dockerclient/external/github.com/hashicorp/go-cleanhttp",
-			"revision": "296e36969d9d7606c4a6cbcd38eced50a39a0fd1",
-			"revisionTime": "2016-01-21T18:29:44-05:00"
-		},
-		{
-			"path": "github.com/fsouza/go-dockerclient/external/github.com/opencontainers/runc/libcontainer/user",
-			"revision": "296e36969d9d7606c4a6cbcd38eced50a39a0fd1",
-			"revisionTime": "2016-01-21T18:29:44-05:00"
-		},
-		{
-			"path": "github.com/fsouza/go-dockerclient/external/golang.org/x/net/context",
-			"revision": "296e36969d9d7606c4a6cbcd38eced50a39a0fd1",
-			"revisionTime": "2016-01-21T18:29:44-05:00"
-		},
-		{
-			"path": "github.com/fsouza/go-dockerclient/external/golang.org/x/sys/unix",
-			"revision": "296e36969d9d7606c4a6cbcd38eced50a39a0fd1",
-			"revisionTime": "2016-01-21T18:29:44-05:00"
-		},
-		{
 			"origin": "github.com/aws/aws-sdk-go/vendor/github.com/go-ini/ini",
 			"path": "github.com/go-ini/ini",
-			"revision": "afbd495e5aaea13597b5e14fe514ddeaa4d76fc3",
-			"revisionTime": "2016-01-06T18:56:16+08:00"
+			"revision": "776aa739ce9373377cd16f526cdf06cb4c89b40f",
+			"revisionTime": "2016-02-22T18:24:41-05:00"
 		},
 		{
 			"path": "github.com/golang/protobuf/proto",
-			"revision": "5fc2294e655b78ed8a02082d37808d46c17d7e64",
-			"revisionTime": "2016-01-21T14:29:00+11:00"
+			"revision": "c75fbf01dc6cb73649c4cd4326182c3e44aa9dbb",
+			"revisionTime": "2016-03-04T09:17:00+11:00"
 		},
 		{
 			"path": "github.com/gorilla/context",
-			"revision": "1c83b3eabd45b6d76072b66b746c20815fb2872d",
-			"revisionTime": "2015-08-19T22:12:45-07:00"
+			"revision": "1ea25387ff6f684839d82767c1733ff4d4d15d0a",
+			"revisionTime": "2016-02-26T13:46:23-08:00"
 		},
 		{
 			"path": "github.com/gorilla/mux",
-			"revision": "26a6070f849969ba72b72256e9f14cf519751690",
-			"revisionTime": "2015-12-31T08:19:08-08:00"
+			"revision": "147a95f5e36a65f1c7b29440b9b0283aab154693",
+			"revisionTime": "2016-03-05T05:56:38-08:00"
 		},
 		{
 			"path": "github.com/hashicorp/consul/api",
-			"revision": "c353aa9260b695987d45e4e975be52f60da348ed",
-			"revisionTime": "2016-01-20T16:59:46-08:00"
+			"revision": "f6e042b6f2ba7373a80c4aaf4576eaca7e0142bb",
+			"revisionTime": "2016-03-07T08:18:08-08:00"
 		},
 		{
+			"origin": "github.com/hashicorp/consul/vendor/github.com/hashicorp/go-cleanhttp",
 			"path": "github.com/hashicorp/go-cleanhttp",
-			"revision": "ce617e79981a8fff618bb643d155133a8f38db96",
-			"revisionTime": "2015-12-17T15:04:12-05:00"
+			"revision": "875fb671b3ddc66f8e2f0acc33829c8cb989a38d",
+			"revisionTime": "2016-02-17T16:48:20-05:00"
 		},
 		{
+			"origin": "github.com/hashicorp/consul/vendor/github.com/hashicorp/serf/coordinate",
 			"path": "github.com/hashicorp/serf/coordinate",
-			"revision": "64d10e9428bd70dbcd831ad087573b66731c014b",
-			"revisionTime": "2016-01-19T11:37:02-08:00"
+			"revision": "b00b7b98ce2bfe59534177e56a8e7d12c4a0ca70",
+			"revisionTime": "2016-02-24T18:57:27-08:00"
 		},
 		{
 			"origin": "github.com/aws/aws-sdk-go/vendor/github.com/jmespath/go-jmespath",
 			"path": "github.com/jmespath/go-jmespath",
-			"revision": "c01cf91b011868172fdcd9f41838e80c9d716264",
-			"revisionTime": "2015-12-07T23:18:31-08:00"
+			"revision": "0b12d6b521d83fc7f755e7cfc1b1fbdd35a01a74",
+			"revisionTime": "2016-02-02T10:50:14-08:00"
 		},
 		{
 			"path": "github.com/libopenstorage/gossip",
@@ -407,23 +339,28 @@
 		},
 		{
 			"path": "github.com/opencontainers/runc/libcontainer/label",
-			"revision": "4e6893b05a6aa723daa5f9194361032c6beaca25",
-			"revisionTime": "2016-01-22T09:50:38+08:00"
+			"revision": "7b6c4c418d5090f4f11eee949fdf49afd15838c9",
+			"revisionTime": "2016-03-04T08:53:41-08:00"
 		},
 		{
 			"path": "github.com/opencontainers/runc/libcontainer/selinux",
-			"revision": "4e6893b05a6aa723daa5f9194361032c6beaca25",
-			"revisionTime": "2016-01-22T09:50:38+08:00"
+			"revision": "7b6c4c418d5090f4f11eee949fdf49afd15838c9",
+			"revisionTime": "2016-03-04T08:53:41-08:00"
 		},
 		{
 			"path": "github.com/opencontainers/runc/libcontainer/system",
-			"revision": "4e6893b05a6aa723daa5f9194361032c6beaca25",
-			"revisionTime": "2016-01-22T09:50:38+08:00"
+			"revision": "7b6c4c418d5090f4f11eee949fdf49afd15838c9",
+			"revisionTime": "2016-03-04T08:53:41-08:00"
+		},
+		{
+			"path": "github.com/opencontainers/runc/libcontainer/user",
+			"revision": "7b6c4c418d5090f4f11eee949fdf49afd15838c9",
+			"revisionTime": "2016-03-04T08:53:41-08:00"
 		},
 		{
 			"path": "github.com/pborman/uuid",
-			"revision": "dee7705ef7b324f27ceb85a121c61f2c2e8ce988",
-			"revisionTime": "2015-12-15T07:05:54-08:00"
+			"revision": "c55201b036063326c5b1b89ccfe45a184973d073",
+			"revisionTime": "2016-02-16T08:37:10-08:00"
 		},
 		{
 			"origin": "github.com/stretchr/testify/vendor/github.com/pmezard/go-difflib/difflib",
@@ -433,78 +370,78 @@
 		},
 		{
 			"path": "github.com/portworx/kvdb",
-			"revision": "496e86135d7e307722af6649ec640fd385a385c5",
-			"revisionTime": "2015-11-30T22:44:29Z"
+			"revision": "3dd7c011aeec906ec656dcde19a352465227b75f",
+			"revisionTime": "2016-02-07T07:19:42Z"
 		},
 		{
 			"path": "github.com/portworx/kvdb/consul",
-			"revision": "496e86135d7e307722af6649ec640fd385a385c5",
-			"revisionTime": "2015-11-30T22:44:29Z"
+			"revision": "3dd7c011aeec906ec656dcde19a352465227b75f",
+			"revisionTime": "2016-02-07T07:19:42Z"
 		},
 		{
 			"path": "github.com/portworx/kvdb/etcd",
-			"revision": "496e86135d7e307722af6649ec640fd385a385c5",
-			"revisionTime": "2015-11-30T22:44:29Z"
+			"revision": "3dd7c011aeec906ec656dcde19a352465227b75f",
+			"revisionTime": "2016-02-07T07:19:42Z"
 		},
 		{
 			"path": "github.com/portworx/kvdb/mem",
-			"revision": "496e86135d7e307722af6649ec640fd385a385c5",
-			"revisionTime": "2015-11-30T22:44:29Z"
-		},
-		{
-			"path": "github.com/portworx/systemutils",
-			"revision": "b37c25c6db56e7a1e76f35e375643bd74fe29553",
-			"revisionTime": "2016-01-25T18:31:28Z"
+			"revision": "3dd7c011aeec906ec656dcde19a352465227b75f",
+			"revisionTime": "2016-02-07T07:19:42Z"
 		},
 		{
 			"path": "github.com/stretchr/testify/assert",
-			"revision": "f390dcf405f7b83c997eac1b06768bb9f44dec18",
-			"revisionTime": "2016-01-09T21:38:47+01:00"
+			"revision": "6fe211e493929a8aac0469b93f28b1d0688a9a3a",
+			"revisionTime": "2016-03-05T16:54:46Z"
 		},
 		{
 			"path": "github.com/stretchr/testify/require",
-			"revision": "f390dcf405f7b83c997eac1b06768bb9f44dec18",
-			"revisionTime": "2016-01-09T21:38:47+01:00"
+			"revision": "6fe211e493929a8aac0469b93f28b1d0688a9a3a",
+			"revisionTime": "2016-03-05T16:54:46Z"
 		},
 		{
 			"path": "github.com/ugorji/go/codec",
-			"revision": "646ae4a518c1c3be0739df898118d9bccf993858",
-			"revisionTime": "2015-12-18T14:34:38-05:00"
+			"revision": "187fa0f8af224437e08ecb3f208c4d1a94859a61",
+			"revisionTime": "2016-02-25T14:46:54-05:00"
+		},
+		{
+			"path": "github.com/vbatts/tar-split/tar/storage",
+			"revision": "e2a62d6b0d98fd7f1a57646812c74564fda999b4",
+			"revisionTime": "2016-02-29T11:40:38-05:00"
 		},
 		{
 			"path": "go.pedge.io/dlog",
-			"revision": "7484f3b321a2704e7a39c5eb75002643e18b2415",
-			"revisionTime": "2016-01-22T13:24:06-05:00"
+			"revision": "df39f69056a766a01437996bd6491558624d068c",
+			"revisionTime": "2016-01-27T15:12:35+01:00"
 		},
 		{
 			"path": "go.pedge.io/dlog/logrus",
-			"revision": "7484f3b321a2704e7a39c5eb75002643e18b2415",
-			"revisionTime": "2016-01-22T13:24:06-05:00"
+			"revision": "df39f69056a766a01437996bd6491558624d068c",
+			"revisionTime": "2016-01-27T15:12:35+01:00"
 		},
 		{
 			"path": "go.pedge.io/pb/go/google/protobuf",
-			"revision": "b1918bb6ce22548082eede5d04eb1618c03be709",
-			"revisionTime": "2016-01-22T00:13:50-05:00"
+			"revision": "ef2d6ce423942f63c6beb5af281989eb274fe917",
+			"revisionTime": "2016-02-07T16:41:34+01:00"
 		},
 		{
 			"path": "go.pedge.io/proto/time",
-			"revision": "ff06a6e997a8616d58dceb168f5b6aa81be63f4a",
-			"revisionTime": "2016-01-21T20:53:50-05:00"
+			"revision": "b4d26fe4a1244bc9ea33a13a497354465050a549",
+			"revisionTime": "2016-01-30T12:16:28+01:00"
 		},
 		{
 			"path": "golang.org/x/net/context",
-			"revision": "2e9cee70ee697e0a2ef894b560dda50dec7dff58",
-			"revisionTime": "2016-01-21T16:20:05Z"
+			"revision": "a4bbce9fcae005b22ae5443f6af064d80a6f5a55",
+			"revisionTime": "2016-03-05T22:58:14Z"
 		},
 		{
 			"path": "gopkg.in/jmcvetta/napping.v3",
-			"revision": "58e2b10cc328913a6d3478dfa4546395c71ada81",
-			"revisionTime": "2015-11-04T03:54:23-08:00"
+			"revision": "6c845f879618cc607cbc2bb1d8e817e618505341",
+			"revisionTime": "2016-02-12T15:58:06-08:00"
 		},
 		{
 			"path": "gopkg.in/yaml.v2",
-			"revision": "f7716cbe52baa25d2e9b0d0da546fcf909fc16b4",
-			"revisionTime": "2015-12-01T14:27:45-02:00"
+			"revision": "a83829b6f1293c91addabc89d0571c246397bbf4",
+			"revisionTime": "2016-03-01T17:40:22-03:00"
 		}
 	]
 }

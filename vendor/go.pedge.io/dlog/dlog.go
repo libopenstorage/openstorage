@@ -9,21 +9,21 @@ register it as the global logger by calling:
 	  dlog.SetLogger(logger)
 	}
 
-To make things simple, packages for glog, logrus, protolog, and lion are given with the ability to easily register
+To make things simple, packages for glog, logrus, log15, and lion are given with the ability to easily register
 their implementations as the default logger:
 
 	import (
-	  "go.pedge.io/dlog/glog" // set glog as the global logger
-	  "go.pedge.io/dlog/logrus" // set logrus as the global logger with default settings
-	  "go.pedge.io/dlog/protolog" // set protolog as the global logger with default settings
-	  "go.pedge.io/dlog/lion" // set lion as the global logger with default settings
+	  "go.pedge.io/dlog/glog"
+	  "go.pedge.io/dlog/lion"
+	  "go.pedge.io/dlog/log15"
+	  "go.pedge.io/dlog/logrus"
 	)
 
 	func registrationFunctions() {
 	  dlog_glog.Register() // set glog as the global logger
-	  dlog_logrus.Register() // set logrus as the global logger with default settings
-	  dlog_protolog.Register() // set protolog as the global logger with default settings
 	  dlog_lion.Register() // set lion as the global logger with default settings
+	  dlog_log15.Register() // set log15 as the global logger with default settings
+	  dlog_logrus.Register() // set logrus as the global logger with default settings
 	}
 
 Or, do something more custom:
@@ -32,7 +32,7 @@ Or, do something more custom:
 	  "os"
 
 	  "go.pedge.io/dlog"
-	  dloglogrus "go.pedge.io/dlog/logrus"
+	  "go.pedge.io/dlog/logrus"
 
 	  "github.com/Sirupsen/logrus"
 	)
@@ -43,7 +43,7 @@ Or, do something more custom:
 	  logger.Formatter = &logrus.TextFormatter{
 		ForceColors: true,
 	  }
-	  dlog.SetLogger(dloglogrus.NewLogger(logger))
+	  dlog.SetLogger(dlog_logrus.NewLogger(logger))
 	}
 
 By default, golang's standard logger is used. This is not recommended, however, as the implementation

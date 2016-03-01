@@ -1,3 +1,8 @@
+/*
+Package dlog_logrus provides logrus functionality for dlog.
+
+https://github.com/Sirupsen/logrus
+*/
 package dlog_logrus // import "go.pedge.io/dlog/logrus"
 
 import (
@@ -61,6 +66,8 @@ func newLogger(l logrusLogger) *logger {
 }
 
 func (l *logger) AtLevel(level dlog.Level) dlog.Logger {
+	// TODO(pedge): not thread safe, tradeoff here
+	// TODO(pedge): neither implementation checks map, even though we expect coverage
 	l.l.SetLevel(level)
 	return l
 }

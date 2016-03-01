@@ -248,7 +248,10 @@ func (kv *EtcdKV) WatchKey(
 	cb kvdb.WatchCB) error {
 
 	key = kv.domain + key
-	go kv.watchStart(key, false, waitIndex, opaque, cb)
+	started := make(chan bool, 1)
+	go kv.watchStart(key, false, waitIndex, opaque, cb, started)
+	<-started
+	close(started)
 	return nil
 }
 
@@ -259,7 +262,10 @@ func (kv *EtcdKV) WatchTree(
 	cb kvdb.WatchCB) error {
 
 	prefix = kv.domain + prefix
-	go kv.watchStart(prefix, true, waitIndex, opaque, cb)
+	started := make(chan bool, 1)
+	go kv.watchStart(prefix, true, waitIndex, opaque, cb, started)
+	<-started
+	close(started)
 	return nil
 }
 
@@ -316,13 +322,16 @@ func (kv *EtcdKV) watchStart(key string,
 	recursive bool,
 	waitIndex uint64,
 	opaque interface{},
-	cb kvdb.WatchCB) {
+	cb kvdb.WatchCB,
+	started chan bool,
+) {
 
 	ch := make(chan *e.Response, 10)
 	stop := make(chan bool, 1)
 
 	go kv.watchReceive(key, opaque, ch, stop, cb)
 
+	started <- true
 	_, err := kv.client.Watch(key, waitIndex, recursive, ch, stop)
 	if err != e.ErrWatchStoppedByUser {
 		e, ok := err.(e.EtcdError)
