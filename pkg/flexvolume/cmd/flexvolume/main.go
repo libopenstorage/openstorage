@@ -6,6 +6,7 @@ import (
 	"go.pedge.io/env"
 	"go.pedge.io/lion/env"
 	"go.pedge.io/pkg/cobra"
+	"google.golang.org/grpc"
 )
 
 type appEnv struct {
@@ -17,7 +18,7 @@ func main() {
 }
 
 func do(appEnvObj interface{}) error {
-	//appEnv := appEnvObj.(*appEnv)
+	appEnv := appEnvObj.(*appEnv)
 	if err := envlion.Setup(); err != nil {
 		return err
 	}
@@ -25,7 +26,11 @@ func do(appEnvObj interface{}) error {
 	initCmd := &cobra.Command{
 		Use: "init",
 		Run: pkgcobra.RunFixedArgs(0, func(args []string) error {
-			return nil
+			client, err := getClient(appEnv)
+			if err != nil {
+				return err
+			}
+			return client.Init()
 		}),
 	}
 
@@ -37,5 +42,9 @@ func do(appEnvObj interface{}) error {
 }
 
 func getClient(appEnv *appEnv) (flexvolume.Client, error) {
-	return nil, nil
+	clientConn, err := grpc.Dial(appEnv.OpenstorageAddress)
+	if err != nil {
+		return nil, err
+	}
+	return flexvolume.NewClient(flexvolume.NewAPIClient(clientConn)), nil
 }

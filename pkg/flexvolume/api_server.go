@@ -24,7 +24,7 @@ func (a *apiServer) Init(_ context.Context, _ *google_protobuf.Empty) (_ *google
 
 func (a *apiServer) Attach(_ context.Context, request *AttachRequest) (_ *google_protobuf.Empty, err error) {
 	defer func(start time.Time) { a.Log(request, nil, err, time.Since(start)) }(time.Now())
-	jsonOptions, err := bytesToJSONOptions(request.JsonOptions)
+	jsonOptions, err := BytesToJSONOptions(request.JsonOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (a *apiServer) Detach(_ context.Context, request *DetachRequest) (_ *google
 
 func (a *apiServer) Mount(_ context.Context, request *MountRequest) (_ *google_protobuf.Empty, err error) {
 	defer func(start time.Time) { a.Log(request, nil, err, time.Since(start)) }(time.Now())
-	jsonOptions, err := bytesToJSONOptions(request.JsonOptions)
+	jsonOptions, err := BytesToJSONOptions(request.JsonOptions)
 	if err != nil {
 		return nil, err
 	}

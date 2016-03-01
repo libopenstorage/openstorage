@@ -22,7 +22,7 @@ func (c *client) Init() error {
 }
 
 func (c *client) Attach(jsonOptions map[string]interface{}) error {
-	value, err := jsonOptionsToBytes(jsonOptions)
+	value, err := JSONOptionsToBytes(jsonOptions)
 	if err != nil {
 		return err
 	}
@@ -46,7 +46,7 @@ func (c *client) Detach(mountDevice string) error {
 }
 
 func (c *client) Mount(targetMountDir string, mountDevice string, jsonOptions map[string]interface{}) error {
-	value, err := jsonOptionsToBytes(jsonOptions)
+	value, err := JSONOptionsToBytes(jsonOptions)
 	if err != nil {
 		return err
 	}
