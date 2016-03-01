@@ -274,6 +274,11 @@
 			"revisionTime": "2015-11-25T16:46:33-05:00"
 		},
 		{
+			"path": "github.com/fatih/color",
+			"revision": "4f7bcef27eec7925456d0c30c5e7b0408b3339be",
+			"revisionTime": "2016-02-25T00:11:55+02:00"
+		},
+		{
 			"path": "github.com/gengo/grpc-gateway/runtime",
 			"revision": "6a84588ee708fe6dae875dda157230fd2071e526",
 			"revisionTime": "2016-03-04T11:27:05+09:00"
@@ -298,6 +303,11 @@
 			"path": "github.com/golang/glog",
 			"revision": "23def4e6c14b4da8ac2ed8007337bc5eb5007998",
 			"revisionTime": "2016-01-25T21:49:56+01:00"
+		},
+		{
+			"path": "github.com/golang/protobuf/jsonpb",
+			"revision": "c75fbf01dc6cb73649c4cd4326182c3e44aa9dbb",
+			"revisionTime": "2016-03-04T09:17:00+11:00"
 		},
 		{
 			"path": "github.com/golang/protobuf/proto",
@@ -363,6 +373,17 @@
 			"revisionTime": "2016-02-08T22:01:49Z"
 		},
 		{
+			"origin": "github.com/fatih/color/vendor/github.com/mattn/go-colorable",
+			"path": "github.com/mattn/go-colorable",
+			"revision": "4f7bcef27eec7925456d0c30c5e7b0408b3339be",
+			"revisionTime": "2016-02-25T00:11:55+02:00"
+		},
+		{
+			"path": "github.com/mattn/go-isatty",
+			"revision": "56b76bdf51f7708750eac80fa38b952bb9f32639",
+			"revisionTime": "2015-12-11T09:06:21+09:00"
+		},
+		{
 			"path": "github.com/opencontainers/runc/libcontainer/label",
 			"revision": "7b6c4c418d5090f4f11eee949fdf49afd15838c9",
 			"revisionTime": "2016-03-04T08:53:41-08:00"
@@ -414,6 +435,11 @@
 			"revisionTime": "2016-02-07T07:19:42Z"
 		},
 		{
+			"path": "github.com/satori/go.uuid",
+			"revision": "e673fdd4dea8a7334adbbe7f57b7e4b00bdc5502",
+			"revisionTime": "2016-02-18T23:57:46Z"
+		},
+		{
 			"path": "github.com/stretchr/testify/assert",
 			"revision": "6fe211e493929a8aac0469b93f28b1d0688a9a3a",
 			"revisionTime": "2016-03-05T16:54:46Z"
@@ -444,9 +470,24 @@
 			"revisionTime": "2016-01-27T15:12:35+01:00"
 		},
 		{
+			"path": "go.pedge.io/lion",
+			"revision": "e286008c1b64f054b141163fbe3377dcd2a1ab91",
+			"revisionTime": "2016-03-01T01:57:51+01:00"
+		},
+		{
+			"path": "go.pedge.io/lion/proto",
+			"revision": "e286008c1b64f054b141163fbe3377dcd2a1ab91",
+			"revisionTime": "2016-03-01T01:57:51+01:00"
+		},
+		{
 			"path": "go.pedge.io/pb/go/google/protobuf",
 			"revision": "ef2d6ce423942f63c6beb5af281989eb274fe917",
 			"revisionTime": "2016-02-07T16:41:34+01:00"
+		},
+		{
+			"path": "go.pedge.io/proto/rpclog",
+			"revision": "b4d26fe4a1244bc9ea33a13a497354465050a549",
+			"revisionTime": "2016-01-30T12:16:28+01:00"
 		},
 		{
 			"path": "go.pedge.io/proto/time",

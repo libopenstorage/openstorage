@@ -1,23 +1,29 @@
 package flexvolume
 
 import (
+	"time"
+
 	"go.pedge.io/pb/go/google/protobuf"
+	"go.pedge.io/proto/rpclog"
 	"golang.org/x/net/context"
 )
 
 type apiServer struct {
+	protorpclog.Logger
 	client Client
 }
 
 func newAPIServer(client Client) *apiServer {
-	return &apiServer{client}
+	return &apiServer{protorpclog.NewLogger("flexvolume.API"), client}
 }
 
-func (a *apiServer) Init(_ context.Context, _ *google_protobuf.Empty) (*google_protobuf.Empty, error) {
+func (a *apiServer) Init(_ context.Context, _ *google_protobuf.Empty) (_ *google_protobuf.Empty, err error) {
+	defer func(start time.Time) { a.Log(nil, nil, err, time.Since(start)) }(time.Now())
 	return checkClientError(a.client.Init())
 }
 
-func (a *apiServer) Attach(_ context.Context, request *AttachRequest) (*google_protobuf.Empty, error) {
+func (a *apiServer) Attach(_ context.Context, request *AttachRequest) (_ *google_protobuf.Empty, err error) {
+	defer func(start time.Time) { a.Log(request, nil, err, time.Since(start)) }(time.Now())
 	jsonOptions, err := bytesToJSONOptions(request.JsonOptions)
 	if err != nil {
 		return nil, err
@@ -25,11 +31,13 @@ func (a *apiServer) Attach(_ context.Context, request *AttachRequest) (*google_p
 	return checkClientError(a.client.Attach(jsonOptions))
 }
 
-func (a *apiServer) Detach(_ context.Context, request *DetachRequest) (*google_protobuf.Empty, error) {
+func (a *apiServer) Detach(_ context.Context, request *DetachRequest) (_ *google_protobuf.Empty, err error) {
+	defer func(start time.Time) { a.Log(request, nil, err, time.Since(start)) }(time.Now())
 	return checkClientError(a.client.Detach(request.MountDevice))
 }
 
-func (a *apiServer) Mount(_ context.Context, request *MountRequest) (*google_protobuf.Empty, error) {
+func (a *apiServer) Mount(_ context.Context, request *MountRequest) (_ *google_protobuf.Empty, err error) {
+	defer func(start time.Time) { a.Log(request, nil, err, time.Since(start)) }(time.Now())
 	jsonOptions, err := bytesToJSONOptions(request.JsonOptions)
 	if err != nil {
 		return nil, err
@@ -37,7 +45,8 @@ func (a *apiServer) Mount(_ context.Context, request *MountRequest) (*google_pro
 	return checkClientError(a.client.Mount(request.TargetMountDir, request.MountDevice, jsonOptions))
 }
 
-func (a *apiServer) Unmount(_ context.Context, request *UnmountRequest) (*google_protobuf.Empty, error) {
+func (a *apiServer) Unmount(_ context.Context, request *UnmountRequest) (_ *google_protobuf.Empty, err error) {
+	defer func(start time.Time) { a.Log(request, nil, err, time.Since(start)) }(time.Now())
 	return checkClientError(a.client.Unmount(request.MountDir))
 }
 
