@@ -34,10 +34,66 @@ func do(appEnvObj interface{}) error {
 		}),
 	}
 
+	attachCmd := &cobra.Command{
+		Use: "attach jsonOptions",
+		Run: pkgcobra.RunFixedArgs(1, func(args []string) error {
+			jsonOptions, err := flexvolume.BytesToJSONOptions([]byte(args[0]))
+			if err != nil {
+				return err
+			}
+			client, err := getClient(appEnv)
+			if err != nil {
+				return err
+			}
+			return client.Attach(jsonOptions)
+		}),
+	}
+
+	detachCmd := &cobra.Command{
+		Use: "detach mountDevice",
+		Run: pkgcobra.RunFixedArgs(1, func(args []string) error {
+			client, err := getClient(appEnv)
+			if err != nil {
+				return err
+			}
+			return client.Detach(args[0])
+		}),
+	}
+
+	mountCmd := &cobra.Command{
+		Use: "mount targetMountDir mountDevice jsonOptions",
+		Run: pkgcobra.RunFixedArgs(3, func(args []string) error {
+			jsonOptions, err := flexvolume.BytesToJSONOptions([]byte(args[2]))
+			if err != nil {
+				return err
+			}
+			client, err := getClient(appEnv)
+			if err != nil {
+				return err
+			}
+			return client.Mount(args[0], args[1], jsonOptions)
+		}),
+	}
+
+	unmountCmd := &cobra.Command{
+		Use: "unmount mountDir",
+		Run: pkgcobra.RunFixedArgs(1, func(args []string) error {
+			client, err := getClient(appEnv)
+			if err != nil {
+				return err
+			}
+			return client.Unmount(args[0])
+		}),
+	}
+
 	rootCmd := &cobra.Command{
 		Use: "app",
 	}
 	rootCmd.AddCommand(initCmd)
+	rootCmd.AddCommand(attachCmd)
+	rootCmd.AddCommand(detachCmd)
+	rootCmd.AddCommand(mountCmd)
+	rootCmd.AddCommand(unmountCmd)
 	return rootCmd.Execute()
 }
 
