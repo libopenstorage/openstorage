@@ -440,6 +440,16 @@
 			"revisionTime": "2016-02-18T23:57:46Z"
 		},
 		{
+			"path": "github.com/spf13/cobra",
+			"revision": "65a708cee0a4424f4e353d031ce440643e312f92",
+			"revisionTime": "2016-02-08T02:29:17+08:00"
+		},
+		{
+			"path": "github.com/spf13/pflag",
+			"revision": "7f60f83a2c81bc3c3c0d5297f61ddfa68da9d3b7",
+			"revisionTime": "2015-10-24T12:54:09+02:00"
+		},
+		{
 			"path": "github.com/stretchr/testify/assert",
 			"revision": "6fe211e493929a8aac0469b93f28b1d0688a9a3a",
 			"revisionTime": "2016-03-05T16:54:46Z"
@@ -470,7 +480,22 @@
 			"revisionTime": "2016-01-27T15:12:35+01:00"
 		},
 		{
+			"path": "go.pedge.io/env",
+			"revision": "422595ad100ba6ecdf26f7a7fba79a9693453943",
+			"revisionTime": "2016-02-02T17:47:42+01:00"
+		},
+		{
 			"path": "go.pedge.io/lion",
+			"revision": "e286008c1b64f054b141163fbe3377dcd2a1ab91",
+			"revisionTime": "2016-03-01T01:57:51+01:00"
+		},
+		{
+			"path": "go.pedge.io/lion/current",
+			"revision": "e286008c1b64f054b141163fbe3377dcd2a1ab91",
+			"revisionTime": "2016-03-01T01:57:51+01:00"
+		},
+		{
+			"path": "go.pedge.io/lion/env",
 			"revision": "e286008c1b64f054b141163fbe3377dcd2a1ab91",
 			"revisionTime": "2016-03-01T01:57:51+01:00"
 		},
@@ -480,9 +505,19 @@
 			"revisionTime": "2016-03-01T01:57:51+01:00"
 		},
 		{
+			"path": "go.pedge.io/lion/syslog",
+			"revision": "e286008c1b64f054b141163fbe3377dcd2a1ab91",
+			"revisionTime": "2016-03-01T01:57:51+01:00"
+		},
+		{
 			"path": "go.pedge.io/pb/go/google/protobuf",
 			"revision": "ef2d6ce423942f63c6beb5af281989eb274fe917",
 			"revisionTime": "2016-02-07T16:41:34+01:00"
+		},
+		{
+			"path": "go.pedge.io/pkg/cobra",
+			"revision": "b9629392448bf13e7951adacf4028f700caf1330",
+			"revisionTime": "2016-02-16T23:39:42+01:00"
 		},
 		{
 			"path": "go.pedge.io/proto/rpclog",
@@ -568,6 +603,11 @@
 			"path": "gopkg.in/jmcvetta/napping.v3",
 			"revision": "6c845f879618cc607cbc2bb1d8e817e618505341",
 			"revisionTime": "2016-02-12T15:58:06-08:00"
+		},
+		{
+			"path": "gopkg.in/natefinch/lumberjack.v2",
+			"revision": "514cbda263a734ae8caac038dadf05f8f3f9f738",
+			"revisionTime": "2016-01-25T06:17:49-05:00"
 		},
 		{
 			"path": "gopkg.in/yaml.v2",
