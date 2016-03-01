@@ -133,10 +133,10 @@ launch-local-btrfs: install
 	sudo $(shell which osd) -d -f etc/config/config_btrfs.yaml
 
 install-flexvolume-plugin:
-	sudo rm -rf /usr/libexec/kubernetes/kublet-plugins/openstorage~openstorage
-	sudo mkdir -p /usr/libexec/kubernetes/kublet-plugins/openstorage~openstorage
-	sudo chmod 777 /usr/libexec/kubernetes/kublet-plugins/openstorage~openstorage
-	go build -a -tags "$(TAGS)" -o /usr/libexec/kubernetes/kublet-plugins/openstorage~openstorage/openstorage pkg/flexvolume/cmd/flexvolume/main.go
+	sudo rm -rf /usr/libexec/kubernetes/kubelet/volume/exec-plugins/openstorage~openstorage
+	sudo mkdir -p /usr/libexec/kubernetes/kubelet/volume/exec-plugins/openstorage~openstorage
+	sudo chmod 777 /usr/libexec/kubernetes/kubelet/volume/exec-plugins/openstorage~openstorage
+	go build -a -tags "$(TAGS)" -o /usr/libexec/kubernetes/kubelet/volume/exec-plugins/openstorage~openstorage/openstorage pkg/flexvolume/cmd/flexvolume/main.go
 
 clean:
 	go clean -i $(PKGS)
