@@ -274,13 +274,38 @@
 			"revisionTime": "2015-11-25T16:46:33-05:00"
 		},
 		{
+			"path": "github.com/gengo/grpc-gateway/runtime",
+			"revision": "6a84588ee708fe6dae875dda157230fd2071e526",
+			"revisionTime": "2016-03-04T11:27:05+09:00"
+		},
+		{
+			"path": "github.com/gengo/grpc-gateway/third_party/googleapis/google/api",
+			"revision": "6a84588ee708fe6dae875dda157230fd2071e526",
+			"revisionTime": "2016-03-04T11:27:05+09:00"
+		},
+		{
+			"path": "github.com/gengo/grpc-gateway/utilities",
+			"revision": "6a84588ee708fe6dae875dda157230fd2071e526",
+			"revisionTime": "2016-03-04T11:27:05+09:00"
+		},
+		{
 			"origin": "github.com/aws/aws-sdk-go/vendor/github.com/go-ini/ini",
 			"path": "github.com/go-ini/ini",
 			"revision": "776aa739ce9373377cd16f526cdf06cb4c89b40f",
 			"revisionTime": "2016-02-22T18:24:41-05:00"
 		},
 		{
+			"path": "github.com/golang/glog",
+			"revision": "23def4e6c14b4da8ac2ed8007337bc5eb5007998",
+			"revisionTime": "2016-01-25T21:49:56+01:00"
+		},
+		{
 			"path": "github.com/golang/protobuf/proto",
+			"revision": "c75fbf01dc6cb73649c4cd4326182c3e44aa9dbb",
+			"revisionTime": "2016-03-04T09:17:00+11:00"
+		},
+		{
+			"path": "github.com/golang/protobuf/protoc-gen-go/descriptor",
 			"revision": "c75fbf01dc6cb73649c4cd4326182c3e44aa9dbb",
 			"revisionTime": "2016-03-04T09:17:00+11:00"
 		},
@@ -432,6 +457,71 @@
 			"path": "golang.org/x/net/context",
 			"revision": "a4bbce9fcae005b22ae5443f6af064d80a6f5a55",
 			"revisionTime": "2016-03-05T22:58:14Z"
+		},
+		{
+			"path": "golang.org/x/net/http2",
+			"revision": "a4bbce9fcae005b22ae5443f6af064d80a6f5a55",
+			"revisionTime": "2016-03-05T22:58:14Z"
+		},
+		{
+			"path": "golang.org/x/net/http2/hpack",
+			"revision": "a4bbce9fcae005b22ae5443f6af064d80a6f5a55",
+			"revisionTime": "2016-03-05T22:58:14Z"
+		},
+		{
+			"path": "golang.org/x/net/internal/timeseries",
+			"revision": "a4bbce9fcae005b22ae5443f6af064d80a6f5a55",
+			"revisionTime": "2016-03-05T22:58:14Z"
+		},
+		{
+			"path": "golang.org/x/net/trace",
+			"revision": "a4bbce9fcae005b22ae5443f6af064d80a6f5a55",
+			"revisionTime": "2016-03-05T22:58:14Z"
+		},
+		{
+			"path": "google.golang.org/grpc",
+			"revision": "fea7689493da00c4590150b3534c256a962259d3",
+			"revisionTime": "2016-03-02T10:59:35-08:00"
+		},
+		{
+			"path": "google.golang.org/grpc/codes",
+			"revision": "fea7689493da00c4590150b3534c256a962259d3",
+			"revisionTime": "2016-03-02T10:59:35-08:00"
+		},
+		{
+			"path": "google.golang.org/grpc/credentials",
+			"revision": "fea7689493da00c4590150b3534c256a962259d3",
+			"revisionTime": "2016-03-02T10:59:35-08:00"
+		},
+		{
+			"path": "google.golang.org/grpc/grpclog",
+			"revision": "fea7689493da00c4590150b3534c256a962259d3",
+			"revisionTime": "2016-03-02T10:59:35-08:00"
+		},
+		{
+			"path": "google.golang.org/grpc/internal",
+			"revision": "fea7689493da00c4590150b3534c256a962259d3",
+			"revisionTime": "2016-03-02T10:59:35-08:00"
+		},
+		{
+			"path": "google.golang.org/grpc/metadata",
+			"revision": "fea7689493da00c4590150b3534c256a962259d3",
+			"revisionTime": "2016-03-02T10:59:35-08:00"
+		},
+		{
+			"path": "google.golang.org/grpc/naming",
+			"revision": "fea7689493da00c4590150b3534c256a962259d3",
+			"revisionTime": "2016-03-02T10:59:35-08:00"
+		},
+		{
+			"path": "google.golang.org/grpc/peer",
+			"revision": "fea7689493da00c4590150b3534c256a962259d3",
+			"revisionTime": "2016-03-02T10:59:35-08:00"
+		},
+		{
+			"path": "google.golang.org/grpc/transport",
+			"revision": "fea7689493da00c4590150b3534c256a962259d3",
+			"revisionTime": "2016-03-02T10:59:35-08:00"
 		},
 		{
 			"path": "gopkg.in/jmcvetta/napping.v3",

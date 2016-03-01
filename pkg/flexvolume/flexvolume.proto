@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+
+package flexvolume;
+
+service API {
+  rpc Init(google.protobuf.Empty) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      get: "/init"
+    };
+  }
+}
