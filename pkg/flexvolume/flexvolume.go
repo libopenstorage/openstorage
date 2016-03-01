@@ -19,7 +19,7 @@ type Client interface {
 
 // NewClient returns a new Client for the given APIClient.
 func NewClient(apiClient APIClient) Client {
-	return nil
+	return newClient(apiClient)
 }
 
 // NewLocalAPIClient returns a new APIClient for the given APIServer.
