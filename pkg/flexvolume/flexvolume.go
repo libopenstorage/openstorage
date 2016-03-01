@@ -24,7 +24,7 @@ func NewClient(apiClient APIClient) Client {
 
 // NewLocalAPIClient returns a new APIClient for the given APIServer.
 func NewLocalAPIClient(apiServer APIServer) APIClient {
-	return nil
+	return newLocalAPIClient(apiServer)
 }
 
 // NewAPIServer returns a new APIServer for the given Client.
