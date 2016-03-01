@@ -24,11 +24,7 @@ func (a *apiServer) Init(_ context.Context, _ *google_protobuf.Empty) (_ *google
 
 func (a *apiServer) Attach(_ context.Context, request *AttachRequest) (_ *google_protobuf.Empty, err error) {
 	defer func(start time.Time) { a.Log(request, nil, err, time.Since(start)) }(time.Now())
-	jsonOptions, err := BytesToJSONOptions(request.JsonOptions)
-	if err != nil {
-		return nil, err
-	}
-	return checkClientError(a.client.Attach(jsonOptions))
+	return checkClientError(a.client.Attach(request.JsonOptions))
 }
 
 func (a *apiServer) Detach(_ context.Context, request *DetachRequest) (_ *google_protobuf.Empty, err error) {
@@ -38,11 +34,7 @@ func (a *apiServer) Detach(_ context.Context, request *DetachRequest) (_ *google
 
 func (a *apiServer) Mount(_ context.Context, request *MountRequest) (_ *google_protobuf.Empty, err error) {
 	defer func(start time.Time) { a.Log(request, nil, err, time.Since(start)) }(time.Now())
-	jsonOptions, err := BytesToJSONOptions(request.JsonOptions)
-	if err != nil {
-		return nil, err
-	}
-	return checkClientError(a.client.Mount(request.TargetMountDir, request.MountDevice, jsonOptions))
+	return checkClientError(a.client.Mount(request.TargetMountDir, request.MountDevice, request.JsonOptions))
 }
 
 func (a *apiServer) Unmount(_ context.Context, request *UnmountRequest) (_ *google_protobuf.Empty, err error) {

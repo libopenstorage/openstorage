@@ -6,7 +6,7 @@ import "google/protobuf/empty.proto";
 package flexvolume;
 
 message AttachRequest {
-  bytes json_options = 1;
+  map<string, string> json_options = 1;
 }
 
 message DetachRequest {
@@ -16,7 +16,7 @@ message DetachRequest {
 message MountRequest {
   string target_mount_dir = 1;
   string mount_device = 2;
-  bytes json_options = 3;
+  map<string, string> json_options = 3;
 }
 
 message UnmountRequest {

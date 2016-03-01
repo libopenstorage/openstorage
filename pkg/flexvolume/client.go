@@ -21,15 +21,11 @@ func (c *client) Init() error {
 	return err
 }
 
-func (c *client) Attach(jsonOptions map[string]interface{}) error {
-	value, err := JSONOptionsToBytes(jsonOptions)
-	if err != nil {
-		return err
-	}
-	_, err = c.apiClient.Attach(
+func (c *client) Attach(jsonOptions map[string]string) error {
+	_, err := c.apiClient.Attach(
 		context.Background(),
 		&AttachRequest{
-			JsonOptions: value,
+			JsonOptions: jsonOptions,
 		},
 	)
 	return err
@@ -45,17 +41,13 @@ func (c *client) Detach(mountDevice string) error {
 	return err
 }
 
-func (c *client) Mount(targetMountDir string, mountDevice string, jsonOptions map[string]interface{}) error {
-	value, err := JSONOptionsToBytes(jsonOptions)
-	if err != nil {
-		return err
-	}
-	_, err = c.apiClient.Mount(
+func (c *client) Mount(targetMountDir string, mountDevice string, jsonOptions map[string]string) error {
+	_, err := c.apiClient.Mount(
 		context.Background(),
 		&MountRequest{
 			TargetMountDir: targetMountDir,
 			MountDevice:    mountDevice,
-			JsonOptions:    value,
+			JsonOptions:    jsonOptions,
 		},
 	)
 	return err
