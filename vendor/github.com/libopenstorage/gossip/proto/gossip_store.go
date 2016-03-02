@@ -78,7 +78,9 @@ func (s *GossipStoreImpl) GetStoreKeyValue(key types.StoreKey) types.NodeValueMa
 	nodeInfoMap := make(types.NodeValueMap)
 	for id, nodeInfo := range s.nodeMap {
 		if statusValid(nodeInfo.Status) && nodeInfo.Value != nil {
-			if val, ok := nodeInfo.Value[key]; ok {
+			ok := len(nodeInfo.Value) == 0
+			val, exists := nodeInfo.Value[key]
+			if ok || exists {
 				n := types.NodeValue{Id: nodeInfo.Id,
 					GenNumber:    nodeInfo.GenNumber,
 					LastUpdateTs: nodeInfo.LastUpdateTs,
@@ -116,6 +118,22 @@ func (s *GossipStoreImpl) GetStoreKeys() []types.StoreKey {
 func statusValid(s types.NodeStatus) bool {
 	return (s != types.NODE_STATUS_INVALID &&
 		s != types.NODE_STATUS_NEVER_GOSSIPED)
+}
+
+func (s *GossipStoreImpl) NewNode(id types.NodeId) {
+	s.Lock()
+	defer s.Unlock()
+
+	if _, ok := s.nodeMap[id]; ok {
+		return
+	}
+
+	newNodeInfo := types.NodeInfo{Id: id, GenNumber: 0,
+		LastUpdateTs: time.Now(), WaitForGenUpdateTs: time.Now(),
+		Status: types.NODE_STATUS_NEVER_GOSSIPED, Value: make(types.StoreMap)}
+
+	s.nodeMap[id] = newNodeInfo
+	log.Info("Added node ", id, " s: ", s.nodeMap)
 }
 
 func (s *GossipStoreImpl) MetaInfo() types.StoreMetaInfo {

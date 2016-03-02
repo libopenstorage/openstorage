@@ -243,6 +243,7 @@ func (g *GossiperImpl) AddNode(ip string, id types.NodeId) error {
 	g.nodesLock.Lock()
 	defer g.nodesLock.Unlock()
 
+	log.Info("Adding node ", ip, " id:", id)
 	for _, node := range g.nodes {
 		if node.Ip == ip {
 			return logAndGetError("Node being added already exists:" + ip)
@@ -265,6 +266,8 @@ func (g *GossiperImpl) AddNode(ip string, id types.NodeId) error {
 			}
 		}
 	}
+
+	g.NewNode(id)
 
 	return nil
 }

@@ -52,6 +52,9 @@ type GossipStore interface {
 	// the nodes this node has information about
 	// Returns true if a node was marked down
 	UpdateNodeStatuses(time.Duration, time.Duration) bool
+
+	// Register a new node in the database
+	NewNode(types.NodeId)
 }
 
 type Gossiper interface {
