@@ -184,8 +184,45 @@ message Stats {
   uint64 bytes_used = 9;
 }
 
-// TODO: what?
+enum SeverityType {
+        // Unknown severity type
+   UNKNOWN_SEVERITY = 0;
+        // Alarm severity type   	   
+   ALARM = 1;
+        // Warning severity type
+   WARNING = 2;
+        // Notify severity type
+   NOTIFY = 3;
+}
+
+enum ResourceType {
+        // Unknown resource type undefined.
+   UNKNOWN_RESOURCE = 0;
+	// Volume Resource Type
+   VOLUMES = 1;
+	// Node Resource Type
+   NODE = 2;
+	// Cluster Resource Type
+   CLUSTER = 3;
+}
+
 message Alerts {
+	// Id for Alert
+   int64 id = 1;
+	// Severity of the Alert
+   SeverityType severity = 2;
+	// Name of the Alert
+   string name = 3;
+	// Message describing the Alert
+   string message = 4;
+	//Timestamp when Alert occured
+   google.protobuf.Timestamp timestamp = 5;	
+	// ResourceId where Alert occured
+   string resource_id = 6;
+	// Resource where Alert occured
+   ResourceType resource = 7;
+	// Cleared Flag
+   bool cleared = 8;
 }
 
 message VolumeCreateRequest {
