@@ -133,10 +133,11 @@ func Init(cfg config.ClusterConfig) error {
 	}
 
 	inst = &ClusterManager{
-		listeners: list.New(),
-		config:    cfg,
-		kv:        kv,
-		nodeCache: make(map[string]api.Node),
+		listeners:    list.New(),
+		config:       cfg,
+		kv:           kv,
+		nodeCache:    make(map[string]api.Node),
+		oldNodeCache: make(map[string]api.Node),
 	}
 
 	return nil
