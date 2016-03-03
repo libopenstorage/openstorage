@@ -42,14 +42,14 @@ type Node struct {
 	MemTotal  uint64
 	MemUsed   uint64
 	MemFree   uint64
-	Luns      map[string]systemutils.Lun
 	Avgload   int
+	Status    Status
+	GenNumber uint64
+	Luns      map[string]systemutils.Lun
 	MgmtIp    string
 	DataIp    string
 	Timestamp time.Time
-	Status    Status
 	NodeData  map[string]interface{}
-	GenNumber uint64
 }
 
 // Cluster represents the state of the cluster.

@@ -451,9 +451,9 @@ func (c *ClusterManager) updateClusterStatus() {
 					c.nodeCache[newNodeInfo.Id] = newNodeInfo
 				}
 			} else {
+				newNodeInfo.Status = api.Status_STATUS_OFFLINE
 				c.nodeCache[newNodeInfo.Id] = newNodeInfo
 			}
-
 		}
 
 		time.Sleep(2 * time.Second)
