@@ -438,7 +438,6 @@ func (c *ClusterManager) updateClusterStatus() {
 							e.Value.(ClusterListener).String())
 					}
 				}
-
 			}
 
 			// Update cache.
