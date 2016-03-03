@@ -380,7 +380,10 @@ func (c *ClusterManager) updateClusterStatus() {
 			}
 
 			// Add this node's info to the active cache.
-			c.nodeCache[newNodeInfo.Id] = newNodeInfo
+			if newNodeInfo.Id != "" {
+				// XXX FIXME - Why is newNodeInfo.Id empty at this point?
+				c.nodeCache[newNodeInfo.Id] = newNodeInfo
+			}
 
 			if nodeFoundInCache {
 				if newNodeInfo.Status != api.Status_STATUS_OK {
