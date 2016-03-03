@@ -379,12 +379,6 @@ func (c *ClusterManager) updateClusterStatus() {
 				}
 			}
 
-			// Add this node's info to the active cache.
-			if newNodeInfo.Id != "" {
-				// XXX FIXME - Why is newNodeInfo.Id empty at this point?
-				c.nodeCache[newNodeInfo.Id] = newNodeInfo
-			}
-
 			if nodeFoundInCache {
 				if newNodeInfo.Status != api.Status_STATUS_OK {
 					dlog.Warnln("Detected node ", newNodeInfo.Id,
@@ -398,6 +392,7 @@ func (c *ClusterManager) updateClusterStatus() {
 						}
 					}
 
+					c.nodeCache[newNodeInfo.Id] = newNodeInfo
 					delete(c.oldNodeCache, newNodeInfo.Id)
 					continue
 				} else if nodeInfo.Status == types.NODE_STATUS_DOWN {
@@ -442,6 +437,7 @@ func (c *ClusterManager) updateClusterStatus() {
 				} else {
 					// node may be up or waiting for new update,
 					// no need to tell listeners as yet.
+					c.nodeCache[newNodeInfo.Id] = newNodeInfo
 					c.oldNodeCache[cachedNodeInfo.Id] = newNodeInfo
 				}
 			} else if nodeInfo.Status == types.NODE_STATUS_UP {
@@ -449,6 +445,7 @@ func (c *ClusterManager) updateClusterStatus() {
 				dlog.Warnln("Detected node ", newNodeInfo.Id,
 					" to be in the cluster.")
 
+				c.nodeCache[newNodeInfo.Id] = newNodeInfo
 				c.oldNodeCache[newNodeInfo.Id] = newNodeInfo
 				for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
 					err := e.Value.(ClusterListener).Add(&newNodeInfo)
