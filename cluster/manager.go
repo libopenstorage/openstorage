@@ -33,8 +33,8 @@ type ClusterManager struct {
 	config       config.ClusterConfig
 	kv           kvdb.Kvdb
 	status       api.Status
-	nodeCache    map[string]api.Node // Cached info on the nodes in the cluster.
-	oldNodeCache map[string]api.Node // Cached info on the nodes in the cluster.
+	nodeCache    map[string]api.Node   // Cached info on the nodes in the cluster.
+	nodeStatuses map[string]api.Status // Set of nodes currently marked down.
 	gossip       gossip.Gossiper
 	gEnabled     bool
 	selfNode     api.Node
@@ -204,7 +204,6 @@ func (c *ClusterManager) getLatestNodeConfig(nodeId string) *NodeEntry {
 
 func (c *ClusterManager) initNode(db *Database) (*api.Node, bool) {
 	c.nodeCache[c.selfNode.Id] = *c.getCurrentState()
-	c.oldNodeCache[c.selfNode.Id] = *c.getCurrentState()
 
 	_, exists := db.NodeEntries[c.selfNode.Id]
 
@@ -361,92 +360,77 @@ func (c *ClusterManager) updateClusterStatus() {
 				os.Exit(-1)
 			}
 
+			// Ignore updates from self node.
 			if id == types.NodeId(node.Id) {
-				// Ignore updates from self node.
 				continue
 			}
 
-			cachedNodeInfo, nodeFoundInCache := c.oldNodeCache[string(id)]
-			newNodeInfo := cachedNodeInfo
+			// Notify node status change if required.
+			newNodeInfo := api.Node{}
+			newNodeInfo.Id = string(id)
+			newNodeInfo.Status = api.Status_STATUS_OK
 
-			ok := false
-			if nodeInfo.Value != nil {
-				newNodeInfo, ok = nodeInfo.Value.(api.Node)
-				if !ok {
-					dlog.Errorln("Received a bad broadcast packet: %v",
-						nodeInfo.Value)
-					continue
+			switch {
+			case nodeInfo.Status == types.NODE_STATUS_DOWN:
+				newNodeInfo.Status = api.Status_STATUS_OFFLINE
+				lastStatus, ok := c.nodeStatuses[string(id)]
+				if ok && lastStatus == newNodeInfo.Status {
+					break
 				}
-			}
 
-			if nodeFoundInCache {
-				if newNodeInfo.Status != api.Status_STATUS_OK {
-					dlog.Warnln("Detected node ", newNodeInfo.Id,
-						" to be unhealthy.")
-
-					for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
-						err := e.Value.(ClusterListener).Update(&newNodeInfo)
-						if err != nil {
-							dlog.Warnln("Failed to notify ",
-								e.Value.(ClusterListener).String())
-						}
-					}
-
-					c.nodeCache[newNodeInfo.Id] = newNodeInfo
-					delete(c.oldNodeCache, newNodeInfo.Id)
-					continue
-				} else if nodeInfo.Status == types.NODE_STATUS_DOWN {
-					ne := c.getLatestNodeConfig(string(id))
-					if ne != nil && nodeInfo.GenNumber < ne.GenNumber {
-						dlog.Warnln("Detected stale update for node ", id,
-							" going down, ignoring it")
-						c.gossip.MarkNodeHasOldGen(id)
-						delete(c.oldNodeCache, cachedNodeInfo.Id)
-						continue
-					}
-
-					dlog.Warnln("Detected node ", id,
-						" to be offline due to inactivity.")
-
-					newNodeInfo.Status = api.Status_STATUS_OFFLINE
-					for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
-						err := e.Value.(ClusterListener).Update(&newNodeInfo)
-						if err != nil {
-							dlog.Warnln("Failed to notify ",
-								e.Value.(ClusterListener).String())
-						}
-					}
-
-					c.nodeCache[newNodeInfo.Id] = newNodeInfo
-					delete(c.oldNodeCache, cachedNodeInfo.Id)
-				} else if nodeInfo.Status == types.NODE_STATUS_DOWN_WAITING_FOR_NEW_UPDATE {
-					dlog.Warnln("Detected node ", newNodeInfo.Id,
-						" to be offline due to inactivity.")
-
-					newNodeInfo.Status = api.Status_STATUS_OFFLINE
-					for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
-						err := e.Value.(ClusterListener).Update(&newNodeInfo)
-						if err != nil {
-							dlog.Warnln("Failed to notify ",
-								e.Value.(ClusterListener).String())
-						}
-					}
-
-					c.nodeCache[newNodeInfo.Id] = newNodeInfo
-					delete(c.oldNodeCache, cachedNodeInfo.Id)
-				} else {
-					// node may be up or waiting for new update,
-					// no need to tell listeners as yet.
-					c.nodeCache[newNodeInfo.Id] = newNodeInfo
-					c.oldNodeCache[cachedNodeInfo.Id] = newNodeInfo
+				// Check if it is a stale update
+				ne := c.getLatestNodeConfig(string(id))
+				if ne != nil && nodeInfo.GenNumber != 0 &&
+					nodeInfo.GenNumber < ne.GenNumber {
+					dlog.Warnln("Detected stale update for node ", id,
+						" going down, ignoring it")
+					c.gossip.MarkNodeHasOldGen(id)
+					break
 				}
-			} else if nodeInfo.Status == types.NODE_STATUS_UP {
+				c.nodeStatuses[string(id)] = newNodeInfo.Status
+
+				dlog.Warnln("Detected node ", id,
+					" to be offline due to inactivity.")
+
+				for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
+					err := e.Value.(ClusterListener).Update(&newNodeInfo)
+					if err != nil {
+						dlog.Warnln("Failed to notify ",
+							e.Value.(ClusterListener).String())
+					}
+				}
+
+			case nodeInfo.Status == types.NODE_STATUS_DOWN_WAITING_FOR_NEW_UPDATE:
+				newNodeInfo.Status = api.Status_STATUS_OFFLINE
+				lastStatus, ok := c.nodeStatuses[string(id)]
+				if ok && lastStatus == newNodeInfo.Status {
+					break
+				}
+				c.nodeStatuses[string(id)] = newNodeInfo.Status
+
+				dlog.Warnln("Detected node ", newNodeInfo.Id,
+					" to be offline due to inactivity.")
+
+				for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
+					err := e.Value.(ClusterListener).Update(&newNodeInfo)
+					if err != nil {
+						dlog.Warnln("Failed to notify ",
+							e.Value.(ClusterListener).String())
+					}
+				}
+
+			case nodeInfo.Status == types.NODE_STATUS_UP:
+				newNodeInfo.Status = api.Status_STATUS_OK
+				lastStatus, ok := c.nodeStatuses[string(id)]
+				if ok && lastStatus == newNodeInfo.Status {
+					break
+				}
+				c.nodeStatuses[string(id)] = newNodeInfo.Status
+
 				// A node discovered in the cluster.
 				dlog.Warnln("Detected node ", newNodeInfo.Id,
 					" to be in the cluster.")
 
-				c.nodeCache[newNodeInfo.Id] = newNodeInfo
-				c.oldNodeCache[newNodeInfo.Id] = newNodeInfo
 				for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
 					err := e.Value.(ClusterListener).Add(&newNodeInfo)
 					if err != nil {
@@ -454,7 +438,22 @@ func (c *ClusterManager) updateClusterStatus() {
 							e.Value.(ClusterListener).String())
 					}
 				}
+
 			}
+
+			// Update cache.
+			if nodeInfo.Value != nil {
+				n, ok := nodeInfo.Value.(api.Node)
+				if ok {
+					n.Status = newNodeInfo.Status
+					c.nodeCache[n.Id] = n
+				} else {
+					c.nodeCache[newNodeInfo.Id] = newNodeInfo
+				}
+			} else {
+				c.nodeCache[newNodeInfo.Id] = newNodeInfo
+			}
+
 		}
 
 		time.Sleep(2 * time.Second)

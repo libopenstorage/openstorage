@@ -137,7 +137,7 @@ func Init(cfg config.ClusterConfig) error {
 		config:       cfg,
 		kv:           kv,
 		nodeCache:    make(map[string]api.Node),
-		oldNodeCache: make(map[string]api.Node),
+		nodeStatuses: make(map[string]api.Status),
 	}
 
 	return nil
