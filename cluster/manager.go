@@ -422,6 +422,7 @@ func (c *ClusterManager) updateClusterStatus() {
 						}
 					}
 
+					c.nodeCache[newNodeInfo.Id] = newNodeInfo
 					delete(c.oldNodeCache, cachedNodeInfo.Id)
 				} else if nodeInfo.Status == types.NODE_STATUS_DOWN_WAITING_FOR_NEW_UPDATE {
 					dlog.Warnln("Detected node ", newNodeInfo.Id,
@@ -436,6 +437,7 @@ func (c *ClusterManager) updateClusterStatus() {
 						}
 					}
 
+					c.nodeCache[newNodeInfo.Id] = newNodeInfo
 					delete(c.oldNodeCache, cachedNodeInfo.Id)
 				} else {
 					// node may be up or waiting for new update,
