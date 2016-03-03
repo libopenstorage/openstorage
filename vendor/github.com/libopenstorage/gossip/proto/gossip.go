@@ -283,7 +283,10 @@ func (g *GossiperImpl) UpdateNode(ip string, id types.NodeId) error {
 			return nil
 		}
 	}
-	return logAndGetError("Node being updated does not exist:" + ip)
+	g.nodes = append(g.nodes, GossipNode{Id: id, Ip: ip})
+	sort.Sort(g.nodes)
+	g.peerSelector.SetMaxLen(uint32(len(g.nodes)))
+	return nil
 }
 
 func (g *GossiperImpl) RemoveNode(ip string) error {

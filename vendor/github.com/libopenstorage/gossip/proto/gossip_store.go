@@ -289,7 +289,7 @@ func (s *GossipStoreImpl) UpdateNodeStatuses(d time.Duration,
 			}
 		case nodeInfo.Status == types.NODE_STATUS_NEVER_GOSSIPED:
 			if timeDiff >= sd {
-				log.Warnf("Node %f never gossiped, marking it down", id)
+				log.Warnf("Node ", id, " never gossiped, marking it down")
 				nodeStatus = types.NODE_STATUS_DOWN
 			} // else node is now marked up
 		case nodeInfo.Status != types.NODE_STATUS_INVALID:
