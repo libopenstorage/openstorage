@@ -163,6 +163,8 @@ message Volume {
   repeated string replica_set = 16;
 	// Last recorded error
   string error = 17;
+	// Name value mapping of driver specific runtime information.
+  map<string, string> runtime_state = 18;
 }
 
 message Stats {
