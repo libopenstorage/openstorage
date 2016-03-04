@@ -321,12 +321,16 @@ done:
 	return err
 }
 
-func (c *ClusterManager) heartBeat() {
+func (c *ClusterManager) startHeartBeat() {
 	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
+
+	node := c.getCurrentState()
+	c.gossip.UpdateSelf(gossipStoreKey, *node)
+	c.gossip.Start()
 
 	lastUpdateTs := time.Now()
 	for {
-		node := c.getCurrentState()
+		node = c.getCurrentState()
 
 		currTime := time.Now()
 		diffTime := currTime.Sub(lastUpdateTs)
@@ -565,8 +569,7 @@ func (c *ClusterManager) Start() error {
 	}
 
 	// Start heartbeating to other nodes.
-	c.gossip.Start()
-	go c.heartBeat()
+	go c.startHeartBeat()
 	go c.updateClusterStatus()
 
 	kvdb.WatchKey(ClusterDBKey, 0, nil, c.watchDB)
