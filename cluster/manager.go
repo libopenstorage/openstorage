@@ -329,8 +329,9 @@ func (c *ClusterManager) heartBeat() {
 		node := c.getCurrentState()
 
 		currTime := time.Now()
-		if currTime.Sub(lastUpdateTs) > 10*time.Second {
-			dlog.Warnln("No gossip update for 10 seconds")
+		diffTime := currTime.Sub(lastUpdateTs)
+		if diffTime > 10*time.Second {
+			dlog.Warnln("No gossip update for ", diffTime.Seconds(), "s")
 		}
 		c.gossip.UpdateSelf(gossipStoreKey, *node)
 		lastUpdateTs = currTime
