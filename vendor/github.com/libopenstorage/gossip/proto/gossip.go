@@ -183,9 +183,9 @@ func NewPeerSelector() PeerSelector {
 }
 
 func (g *GossiperImpl) Init(ip string, selfNodeId types.NodeId, genNumber uint64) {
-	g.InitStore(selfNodeId)
 	g.name = ip
 	g.GenNumber = genNumber
+	g.InitStore(selfNodeId)
 	g.nodes = make(GossipNodeList, 0)
 	g.send_done = make(chan bool, 1)
 	g.rcv_done = make(chan bool, 1)

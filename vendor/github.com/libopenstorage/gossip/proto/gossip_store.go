@@ -35,22 +35,19 @@ func (s *GossipStoreImpl) InitStore(id types.NodeId) {
 	s.nodeMap = make(types.NodeInfoMap)
 	s.id = id
 	s.selfCorrect = true
+	nodeInfo := types.NodeInfo{Id: s.id,
+		GenNumber:    s.GenNumber,
+		Value:        make(types.StoreMap),
+		LastUpdateTs: time.Now(),
+		Status:       types.NODE_STATUS_UP}
+	s.nodeMap[s.id] = nodeInfo
 }
 
 func (s *GossipStoreImpl) UpdateSelf(key types.StoreKey, val interface{}) {
 	s.Lock()
 	defer s.Unlock()
 
-	nodeInfo, ok := s.nodeMap[s.id]
-	if !ok {
-		nodeInfo = types.NodeInfo{Id: s.id,
-			GenNumber:    s.GenNumber,
-			Value:        make(types.StoreMap),
-			LastUpdateTs: time.Now(),
-			Status:       types.NODE_STATUS_UP}
-		s.nodeMap[s.id] = nodeInfo
-	}
-
+	nodeInfo, _ := s.nodeMap[s.id]
 	nodeInfo.Value[key] = val
 	nodeInfo.LastUpdateTs = time.Now()
 	s.nodeMap[s.id] = nodeInfo
