@@ -43,6 +43,15 @@ func (s *GossipStoreImpl) InitStore(id types.NodeId) {
 	s.nodeMap[s.id] = nodeInfo
 }
 
+func (s *GossipStoreImpl) updateSelfTs() {
+	s.Lock()
+	defer s.Unlock()
+
+	nodeInfo, _ := s.nodeMap[s.id]
+	nodeInfo.LastUpdateTs = time.Now()
+	s.nodeMap[s.id] = nodeInfo
+}
+
 func (s *GossipStoreImpl) UpdateSelf(key types.StoreKey, val interface{}) {
 	s.Lock()
 	defer s.Unlock()
