@@ -17,9 +17,11 @@ const (
 )
 
 var (
-	ErrArrayRequired   = errors.New("varray is required")
-	ErrPoolRequired    = errors.New("vpool is required")
-	ErrProjectRequired = errors.New("project label is required")
+	ErrArrayRequired       = errors.New("varray is required")
+	ErrPoolRequired        = errors.New("vpool is required")
+	ErrProjectRequired     = errors.New("project label is required")
+	ErrInvalidPool         = errors.New("pool does not support block type")
+	ErrInvalidPoolProtocol = errors.New("pool does not iscsi")
 )
 
 type (
@@ -86,25 +88,51 @@ func (d *driver) Create(
 	source *api.Source,
 	spec *api.VolumeSpec) (string, error) {
 
-	project, ok := spec.VolumeLabels["project"]
+	name, ok := locator.VolumeLabels["project"]
 	if !ok {
 		return "", ErrProjectRequired
 	}
 
-	varray, ok := spec.VolumeLabels["varray"]
+	project, err := d.client.Project().
+		Search("name=" + name)
+	if err != nil {
+		return "", err
+	}
+
+	name, ok = locator.VolumeLabels["varray"]
 	if !ok {
 		return "", ErrArrayRequired
 	}
 
-	vpool, ok := spec.VolumeLabels["vpool"]
+	varray, err := d.client.VArray().
+		Search("name=" + name)
+	if err != nil {
+		return "", err
+	}
+
+	name, ok = locator.VolumeLabels["vpool"]
 	if !ok {
 		return "", ErrPoolRequired
 	}
 
+	vpool, err := d.client.VPool().
+		Search("name=" + name)
+	if err != nil {
+		return "", err
+	}
+
+	if !vpool.IsBlock() {
+		return "", ErrInvalidPool
+	}
+
+	if !vpool.HasProtocol(coprhd.InitiatorTypeISCSI) {
+		return "", ErrInvalidPoolProtocol
+	}
+
 	vol, err := d.client.Volume().
-		Project(project).
-		Array(varray).
-		Pool(vpool).
+		Project(project.Id).
+		Array(varray.Id).
+		Pool(vpool.Id).
 		Create(locator.Name, spec.Size)
 	if err != nil {
 		return "", err
