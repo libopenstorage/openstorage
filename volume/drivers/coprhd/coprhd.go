@@ -1,69 +1,34 @@
 package coprhd
 
 import (
-	"crypto/tls"
+	"errors"
 	"fmt"
-	"net/http"
-	"net/url"
-
-	"go.pedge.io/dlog"
-
-	"github.com/portworx/kvdb"
+	"github.com/ModelRocket/coprhd"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
-	"gopkg.in/jmcvetta/napping.v3"
+	"github.com/libopenstorage/openstorage/volume/drivers/common"
+	"github.com/portworx/kvdb"
+	"go.pedge.io/dlog"
 )
 
 const (
 	Name = "coprhd"
 	Type = api.DriverType_DRIVER_TYPE_BLOCK
+)
 
-	// LoginUri path to create a authentication token
-	loginUri = "login.json"
-	// LoginUri path to create volume
-	createVolumeUri = "block/volumes.json"
+var (
+	ErrArrayRequired   = errors.New("varray is required")
+	ErrPoolRequired    = errors.New("vpool is required")
+	ErrProjectRequired = errors.New("project label is required")
 )
 
 type (
 	driver struct {
 		*volume.IoNotSupported
 		*volume.DefaultEnumerator
-		consistency_group string
-		project           string
-		varray            string
-		vpool             string
-		url               string
-		httpClient        *http.Client
-		creds             *url.Userinfo
-	}
 
-	// ApiError represents the default api error code
-	ApiError struct {
-		Code        string `json:"code"`
-		Retryable   string `json:"retryable"`
-		Description string `json:"description"`
-		Details     string `json:"details"`
-	}
-
-	// CreateVolumeArgs represents the json parameters for the create volume REST call
-	CreateVolumeArgs struct {
-		ConsistencyGroup string `json:"consistency_group"`
-		Count            int    `json:"count"`
-		Name             string `json:"name"`
-		Project          string `json:"project"`
-		Size             string `json:"size"`
-		VArray           string `json:"varray"`
-		VPool            string `json:"vpool"`
-	}
-
-	// CreateVolumeReply is the reply from the create volume REST call
-	CreateVolumeReply struct {
-		Task []struct {
-			Resource struct {
-				Name string `json:"name"`
-				Id   string `json:"id"`
-			} `json:"resource"`
-		} `json:"task"`
+		client *coprhd.Client
+		itr    *coprhd.Initiator
 	}
 )
 
@@ -72,54 +37,37 @@ func init() {
 }
 
 func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
-	restUrl, ok := params["restUrl"]
+	host, ok := params["url"]
 	if !ok {
 		return nil, fmt.Errorf("rest api 'url' configuration parameter must be set")
 	}
 
-	user, ok := params["user"]
+	token, ok := params["token"]
 	if !ok {
-		return nil, fmt.Errorf("rest auth 'user' must be set")
+		return nil, fmt.Errorf("rest auth 'token' must be set")
 	}
 
-	pass, ok := params["password"]
+	iqn, ok := params["iqn"]
 	if !ok {
-		return nil, fmt.Errorf("rest auth 'password' must be set")
+		return nil, fmt.Errorf("iscsi 'iqn' must be set")
 	}
 
-	consistency_group, ok := params["consistency_group"]
-	if !ok {
-		return nil, fmt.Errorf("'consistency_group' configuration parameter must be set")
+	// create a coprhd api client instance
+	client := coprhd.NewClient(host, token)
+
+	// search for the specified initiator
+	itr, err := client.Initiator().
+		Search("initiator_port=" + iqn)
+	if err != nil {
+		return nil, fmt.Errorf("iSCSI initiator %s could not be located: %s", iqn, err.Error())
 	}
 
-	project, ok := params["project"]
-	if !ok {
-		return nil, fmt.Errorf("'project' configuration parameter must be set")
-	}
-
-	varray, ok := params["varray"]
-	if !ok {
-		return nil, fmt.Errorf("'varray' configuration parameter must be set")
-	}
-
-	vpool, ok := params["vpool"]
-	if !ok {
-		return nil, fmt.Errorf("'vpool' configuration parameter must be set")
-	}
+	dlog.Infof("iSCSI initiator found %s", itr.Id)
 
 	d := &driver{
 		DefaultEnumerator: volume.NewDefaultEnumerator(Name, kvdb.Instance()),
-		consistency_group: consistency_group,
-		project:           project,
-		varray:            varray,
-		vpool:             vpool,
-		url:               restUrl,
-		creds:             url.UserPassword(user, pass),
-		httpClient: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-			},
-		},
+		client:            client,
+		itr:               itr,
 	}
 
 	return d, nil
@@ -138,43 +86,49 @@ func (d *driver) Create(
 	source *api.Source,
 	spec *api.VolumeSpec) (string, error) {
 
-	s, err := d.getAuthSession()
+	project, ok := spec.VolumeLabels["project"]
+	if !ok {
+		return "", ErrProjectRequired
+	}
 
+	varray, ok := spec.VolumeLabels["varray"]
+	if !ok {
+		return "", ErrArrayRequired
+	}
+
+	vpool, ok := spec.VolumeLabels["vpool"]
+	if !ok {
+		return "", ErrPoolRequired
+	}
+
+	vol, err := d.client.Volume().
+		Project(project).
+		Array(varray).
+		Pool(vpool).
+		Create(locator.Name, spec.Size)
 	if err != nil {
-		dlog.Errorf("Failed to create session: %s", err.Error())
 		return "", err
 	}
 
-	e := ApiError{}
+	volume := common.NewVolume(
+		vol.Id,
+		api.FSType_FS_TYPE_NONE,
+		locator,
+		source,
+		spec)
 
-	res := &CreateVolumeReply{}
-
-	sz := int64(spec.Size / (1024 * 1024 * 1000))
-
-	payload := CreateVolumeArgs{
-		d.consistency_group,       // ConsistencyGroup
-		1,                         // Count
-		locator.Name,              // Name
-		d.project,                 // Project
-		fmt.Sprintf("%.6fGB", sz), // Volume Size
-		d.varray,                  // Virtual Block Array
-		d.vpool,                   // Virtual Block Pool
+	err = d.UpdateVol(volume)
+	if err != nil {
+		return "", nil
 	}
 
-	url := d.url + createVolumeUri
-
-	resp, err := s.Post(url, &payload, res, &e)
-
-	if resp.Status() != http.StatusAccepted {
-
-		return "", fmt.Errorf("Failed to create volume: %s", resp.Status())
-	}
-
-	return res.Task[0].Resource.Id, err
+	return vol.Id, nil
 }
 
 func (d *driver) Delete(volumeID string) error {
-	return nil
+	return d.client.Volume().
+		Id(volumeID).
+		Delete(true)
 }
 
 func (d *driver) Stats(volumeID string) (*api.Stats, error) {
@@ -198,7 +152,6 @@ func (d *driver) Mount(volumeID string, mountpath string) error {
 }
 
 func (d *driver) Unmount(volumeID string, mountpath string) error {
-
 	return nil
 }
 
@@ -222,35 +175,4 @@ func (d *driver) Snapshot(
 
 func (v *driver) Status() [][2]string {
 	return [][2]string{}
-}
-
-// getAuthSession returns an authenticated API Session
-func (d *driver) getAuthSession() (session *napping.Session, err error) {
-	e := ApiError{}
-
-	s := napping.Session{
-		Userinfo: d.creds,
-		Client:   d.httpClient,
-	}
-
-	url := d.url + loginUri
-
-	resp, err := s.Get(url, nil, nil, &e)
-
-	if err != nil {
-		return
-	}
-
-	token := resp.HttpResponse().Header.Get("X-SDS-AUTH-TOKEN")
-
-	h := http.Header{}
-
-	h.Set("X-SDS-AUTH-TOKEN", token)
-
-	session = &napping.Session{
-		Client: d.httpClient,
-		Header: &h,
-	}
-
-	return
 }
