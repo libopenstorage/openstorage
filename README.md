@@ -114,13 +114,9 @@ osd:
         aws_access_key_id: your_aws_access_key_id
         aws_secret_access_key: your_aws_secret_access_key
       coprhd:
-        restUrl: coprhd_rest_url
-        user: rest_user_name
-        password: rest_user_password
-        consistency_group: consistency_group_id
-        project: project_id
-        varray: varray_id
-        vpool: vpool_id
+	url: corphd_rest_url
+	token: coprhd_proxy_token
+	iqn: host_isci_iqn
 	
   graphdrivers:
      proxy:
