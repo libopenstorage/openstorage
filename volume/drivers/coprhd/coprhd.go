@@ -29,7 +29,7 @@ type (
 		*volume.IoNotSupported
 		*volume.DefaultEnumerator
 
-		client *coprhd.Client
+		coprhd *coprhd.Client
 		itr    *coprhd.Initiator
 	}
 )
@@ -64,11 +64,11 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 		return nil, fmt.Errorf("iSCSI initiator %s could not be located: %s", iqn, err.Error())
 	}
 
-	dlog.Infof("iSCSI initiator found %s", itr.Id)
+	dlog.Debugf("iSCSI initiator found %s", itr.Id)
 
 	d := &driver{
 		DefaultEnumerator: volume.NewDefaultEnumerator(Name, kvdb.Instance()),
-		client:            client,
+		coprhd:            client,
 		itr:               itr,
 	}
 
@@ -93,7 +93,7 @@ func (d *driver) Create(
 		return "", ErrProjectRequired
 	}
 
-	project, err := d.client.Project().
+	project, err := d.coprhd.Project().
 		Search("name=" + name)
 	if err != nil {
 		return "", err
@@ -104,7 +104,7 @@ func (d *driver) Create(
 		return "", ErrArrayRequired
 	}
 
-	varray, err := d.client.VArray().
+	varray, err := d.coprhd.VArray().
 		Search("name=" + name)
 	if err != nil {
 		return "", err
@@ -115,7 +115,7 @@ func (d *driver) Create(
 		return "", ErrPoolRequired
 	}
 
-	vpool, err := d.client.VPool().
+	vpool, err := d.coprhd.VPool().
 		Search("name=" + name)
 	if err != nil {
 		return "", err
@@ -129,11 +129,12 @@ func (d *driver) Create(
 		return "", ErrInvalidPoolProtocol
 	}
 
-	vol, err := d.client.Volume().
+	vol, err := d.coprhd.Volume().
+		Name(locator.Name).
 		Project(project.Id).
 		Array(varray.Id).
 		Pool(vpool.Id).
-		Create(locator.Name, spec.Size)
+		Create(spec.Size)
 	if err != nil {
 		return "", err
 	}
@@ -154,7 +155,7 @@ func (d *driver) Create(
 }
 
 func (d *driver) Delete(volumeID string) error {
-	return d.client.Volume().
+	return d.coprhd.Volume().
 		Id(volumeID).
 		Delete(true)
 }
@@ -168,6 +169,15 @@ func (d *driver) Alerts(volumeID string) (*api.Alerts, error) {
 }
 
 func (d *driver) Attach(volumeID string) (path string, err error) {
+	vol, err := d.coprhd.Volume().
+		Id(volumeID).
+		Query()
+	if err != nil {
+		return "", err
+	}
+
+	fmt.Printf("vol %s, project %s, array %s\n", vol.Id, vol.Project.Id, vol.VArray.Id)
+
 	return "", nil
 }
 
@@ -198,7 +208,7 @@ func (d *driver) Snapshot(
 	volumeID string,
 	readonly bool,
 	locator *api.VolumeLocator) (string, error) {
-	return "", nil
+	return "", volume.ErrNotSupported
 }
 
 func (v *driver) Status() [][2]string {
