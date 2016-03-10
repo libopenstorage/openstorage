@@ -5,12 +5,13 @@ import (
 	"time"
 	"sync"
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/portworx/kvdb"
 )
 
 // AlertAction used to indicate the action performed on a KV pair
 type AlertAction int
 // InitFunc initialization function for alerts
-type InitFunc func() (AlertsClient, error)
+type InitFunc func(string, string, []string, string) (AlertsClient, error)
 // AlertsWatcherFunc is a function type used as a callback for KV WatchTree
 type AlertsWatcherFunc func(*api.Alerts, AlertAction, string, string) (error)
 
@@ -54,11 +55,11 @@ type AlertsClient interface {
 	// Shutdown
 	Shutdown()
 
+	// GetKvdbInstance
+	GetKvdbInstance() (kvdb.Kvdb)
+
 	// Raise raises an Alerts
 	Raise(alert api.Alerts) (api.Alerts, error)
-
-	// RaiseWithGenerateId raises an Alerts with a custom generateId function for alertIds
-	RaiseWithGenerateId(alert api.Alerts, generateId func() (int64, error)) (api.Alerts, error)
 
 	// Retrieve retrieves specific  Alerts
 	Retrieve(resourceType api.ResourceType, id int64) (api.Alerts, error)
@@ -76,7 +77,7 @@ type AlertsClient interface {
 	Clear(resourceType api.ResourceType, alertID int64) error
 
 	// Watch on all Alerts
-	Watch(alertsWatcher AlertsWatcherFunc) error
+	Watch(clusterId string, alertsWatcher AlertsWatcherFunc) error
 }
 
 // Shutdown the alerts instance
@@ -97,7 +98,7 @@ func Get(name string) (AlertsClient, error) {
 }
 
 // New returns a new alerts instance
-func New(name string) (AlertsClient, error) {
+func New(name string, kvdbName string, kvdbBase string, kvdbMachines []string, clusterId string) (AlertsClient, error) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
@@ -105,7 +106,7 @@ func New(name string) (AlertsClient, error) {
 		return nil, ErrExist
 	}
 	if initFunc, exists := drivers[name]; exists {
-		driver, err := initFunc()
+		driver, err := initFunc(kvdbName, kvdbBase, kvdbMachines, clusterId)
 		if err != nil {
 			return nil, err
 		}

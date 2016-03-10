@@ -21,10 +21,15 @@ var (
 	watcherKey      string
 )
 
+const (
+	kvdbDomain = "openstorage"
+	clusterName = "1"
+)
+
 func TestSetup(t *testing.T) {
 	kv := kvdb.Instance()
 	if kv == nil {
-		kv, err := kvdb.New(mem.Name, "openstorage/1", []string{}, nil)
+		kv, err := kvdb.New(mem.Name, kvdbDomain+"/"+clusterName, []string{}, nil)
 		if err != nil {
 			t.Fatalf("Failed to set default KV store : (%v): %v", mem.Name, err)
 		}
@@ -35,19 +40,19 @@ func TestSetup(t *testing.T) {
 	}
 
 	var err error
-	kva, err = New("alerts_kvdb")
+	kva, err = New("alerts_kvdb", mem.Name, kvdbDomain, []string{}, clusterName)
 	if err != nil {
 		t.Fatalf("Failed to create new Kvapi.Alerts object")
 	}
 }
 
-func TestRaiseWithGenerateIdAndErase(t *testing.T) {
-	// RaiseWithGenerateId api.Alerts Id : 1
+func TestRaiseAndErase(t *testing.T) {
+	// Raise api.Alerts Id : 1
 
-	raiseAlerts, err := kva.RaiseWithGenerateId(api.Alerts{Resource: api.ResourceType_VOLUMES, Severity: api.SeverityType_NOTIFY}, mockGenerateId)
+	raiseAlerts, err := kva.Raise(api.Alerts{Resource: api.ResourceType_VOLUMES, Severity: api.SeverityType_NOTIFY, Message: "Test Message"})
 	require.NoError(t, err, "Failed in raising an alert")
 
-	kv := kvdb.Instance()
+	kv := kva.GetKvdbInstance()
 	var alert api.Alerts
 
 	_, err = kv.GetVal(getResourceKey(api.ResourceType_VOLUMES)+strconv.FormatInt(raiseAlerts.Id, 10), &alert)
@@ -57,8 +62,8 @@ func TestRaiseWithGenerateIdAndErase(t *testing.T) {
 	require.Equal(t, api.ResourceType_VOLUMES, alert.Resource, "api.Alerts Resource mismatch")
 	require.Equal(t, api.SeverityType_NOTIFY, alert.Severity, "api.Alerts Severity mismatch")
 
-	// RaiseWithGenerateId api.Alerts with no Resource
-	_, err = kva.RaiseWithGenerateId(api.Alerts{Severity: api.SeverityType_NOTIFY}, mockGenerateId)
+	// Raise api.Alerts with no Resource
+	_, err = kva.Raise(api.Alerts{Severity: api.SeverityType_NOTIFY})
 	require.Error(t, err, "An error was expected")
 	require.Equal(t, ErrResourceNotFound, err, "Error mismatch")
 
@@ -74,8 +79,8 @@ func TestRaiseWithGenerateIdAndErase(t *testing.T) {
 func TestRetrieve(t *testing.T) {
 	var alert api.Alerts
 
-	// RaiseWithGenerateId a ResourceType_NODE specific api.Alerts
-	raiseAlerts, err := kva.RaiseWithGenerateId(api.Alerts{Resource: api.ResourceType_NODE, Severity: api.SeverityType_ALARM}, mockGenerateId)
+	// Raise a ResourceType_NODE specific api.Alerts
+	raiseAlerts, err := kva.Raise(api.Alerts{Resource: api.ResourceType_NODE, Severity: api.SeverityType_ALARM})
 
 	alert, err = kva.Retrieve(api.ResourceType_NODE, raiseAlerts.Id)
 	require.NoError(t, err, "Failed to retrieve alert")
@@ -93,10 +98,10 @@ func TestRetrieve(t *testing.T) {
 }
 
 func TestClear(t *testing.T) {
-	// RaiseWithGenerateId an alert
+	// Raise an alert
 	var alert api.Alerts
-	kv := kvdb.Instance()
-	raiseAlerts, err := kva.RaiseWithGenerateId(api.Alerts{Resource: api.ResourceType_NODE, Severity: api.SeverityType_ALARM}, mockGenerateId)
+	kv := kva.GetKvdbInstance()
+	raiseAlerts, err := kva.Raise(api.Alerts{Resource: api.ResourceType_NODE, Severity: api.SeverityType_ALARM})
 
 	err = kva.Clear(api.ResourceType_NODE, raiseAlerts.Id)
 	require.NoError(t, err, "Failed to clear alert")
@@ -108,11 +113,11 @@ func TestClear(t *testing.T) {
 }
 
 func TestEnumerateAlerts(t *testing.T) {
-	// RaiseWithGenerateId a few alerts
-	raiseAlert1, err := kva.RaiseWithGenerateId(api.Alerts{Resource: api.ResourceType_VOLUMES, Severity: api.SeverityType_NOTIFY}, mockGenerateId)
-	raiseAlert2, err := kva.RaiseWithGenerateId(api.Alerts{Resource: api.ResourceType_VOLUMES, Severity: api.SeverityType_NOTIFY}, mockGenerateId)
-	raiseAlert3, err := kva.RaiseWithGenerateId(api.Alerts{Resource: api.ResourceType_VOLUMES, Severity: api.SeverityType_WARNING}, mockGenerateId)
-	raiseAlert4, err := kva.RaiseWithGenerateId(api.Alerts{Resource: api.ResourceType_NODE, Severity: api.SeverityType_WARNING}, mockGenerateId)
+	// Raise a few alerts
+	raiseAlert1, err := kva.Raise(api.Alerts{Resource: api.ResourceType_VOLUMES, Severity: api.SeverityType_NOTIFY})
+	raiseAlert2, err := kva.Raise(api.Alerts{Resource: api.ResourceType_VOLUMES, Severity: api.SeverityType_NOTIFY})
+	raiseAlert3, err := kva.Raise(api.Alerts{Resource: api.ResourceType_VOLUMES, Severity: api.SeverityType_WARNING})
+	raiseAlert4, err := kva.Raise(api.Alerts{Resource: api.ResourceType_NODE, Severity: api.SeverityType_WARNING})
 
 	enAlerts, err := kva.Enumerate(api.Alerts{Resource: api.ResourceType_VOLUMES})
 	require.NoError(t, err, "Failed to enumerate alerts")
@@ -133,7 +138,7 @@ func TestEnumerateAlerts(t *testing.T) {
 	require.Equal(t, api.SeverityType_WARNING, enAlerts[0].Severity, "Severity mismatch")
 
 	// Add a dummy event into kvdb two hours ago
-	kv := kvdb.Instance()
+	kv := kva.GetKvdbInstance()
 	currentTime := time.Now()
 	delayedTime := currentTime.Add(-1 * time.Duration(2) * time.Hour)
 
@@ -169,10 +174,10 @@ func testAlertsWatcher(alert *api.Alerts, action AlertAction, prefix string, key
 func TestWatch(t *testing.T) {
 	isWatcherCalled = 0
 
-	err := kva.Watch(testAlertsWatcher)
+	err := kva.Watch(clusterName, testAlertsWatcher)
 	require.NoError(t, err, "Failed to subscribe a watch function")
 
-	raiseAlert1, err := kva.RaiseWithGenerateId(api.Alerts{Resource: api.ResourceType_CLUSTER, Severity: api.SeverityType_NOTIFY}, mockGenerateId)
+	raiseAlert1, err := kva.Raise(api.Alerts{Resource: api.ResourceType_CLUSTER, Severity: api.SeverityType_NOTIFY})
 
 	// Sleep for sometime so that we pass on some previous watch callbacks
 	time.Sleep(time.Millisecond * 100)
@@ -197,9 +202,31 @@ func TestWatch(t *testing.T) {
 
 	require.Equal(t, AlertDeleteAction, watcherAction, "action mismatch for delete")
 	require.Equal(t, "alerts/cluster/"+strconv.FormatInt(raiseAlert1.Id, 10), watcherKey, "key mismatch")
+
+	// Watch on a new clusterID
+	newClusterId := "2"
+	isWatcherCalled = 0
+	err = kva.Watch(newClusterId, testAlertsWatcher)
+
+	// Create a new alerts instance for raising an alert in this new cluster id
+	kvaNew, err := New("alerts_kvdb_test", mem.Name, kvdbDomain, []string{}, newClusterId)
+	if err != nil {
+		t.Fatalf("Failed to create new Kvapi.Alerts object %s", err.Error())
+	}
+
+	raiseAlertNew, err := kvaNew.Raise(api.Alerts{Resource: api.ResourceType_NODE, Severity: api.SeverityType_ALARM})
+	// Sleep for sometime so that we pass on some previous watch callbacks
+	time.Sleep(time.Millisecond * 100)
+
+	require.Equal(t, 1, isWatcherCalled, "Callback function not called")
+	require.Equal(t, AlertCreateAction, watcherAction, "action mismatch for create")
+	require.Equal(t, raiseAlertNew.Id, watcherAlert.Id, "alert id mismatch")
+	require.Equal(t, "alerts/node/"+strconv.FormatInt(raiseAlertNew.Id, 10), watcherKey, "key mismatch")
+	
 }
 
-func mockGenerateId() (int64, error) {
+
+func mockGenerateId(clusterId string) (int64, error) {
 	nextId = nextId + 1
 	return nextId, nil
 }
