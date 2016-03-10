@@ -22,6 +22,8 @@ var (
 	ErrUnmarshal = errors.New("Failed to unmarshal value")
 	// ErrIllegal raised if object is not valid.
 	ErrIllegal = errors.New("Illegal operation")
+	// ErrValueMismatch raised if existing KVDB value mismatches with user provided value
+	ErrValueMismatch = errors.New("Value mismatch")
 )
 
 // KVAction specifies the action on a KV pair. This is useful to make decisions
