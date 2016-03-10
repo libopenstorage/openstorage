@@ -210,7 +210,7 @@ func (kva *KvAlerts) Watch(clusterId string, alertsWatcherFunc AlertsWatcherFunc
 	
 	kv := kvdbMap[clusterId]
 	alertsWatcher := &watcher{status: watchBootstrap, cb: alertsWatcherFunc, kvcb: kvdbWatch, kvdb: kv}
-	watcherKey = kva.kvdbDomain + "/" + clusterId + "/"
+	watcherKey := kva.kvdbDomain + "/" + clusterId + "/"
 	watcherMap[watcherKey] = alertsWatcher
 
 	if err := subscribeWatch(watcherKey); err != nil {
