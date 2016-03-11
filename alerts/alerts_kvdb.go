@@ -210,7 +210,7 @@ func (kva *KvAlerts) Watch(clusterId string, alertsWatcherFunc AlertsWatcherFunc
 	
 	kv := kvdbMap[clusterId]
 	alertsWatcher := &watcher{status: watchBootstrap, cb: alertsWatcherFunc, kvcb: kvdbWatch, kvdb: kv}
-	watcherKey := kva.kvdbDomain + "/" + clusterId + "/"
+	watcherKey := clusterId
 	watcherMap[watcherKey] = alertsWatcher
 
 	if err := subscribeWatch(watcherKey); err != nil {
@@ -323,7 +323,9 @@ func (kva *KvAlerts) getAllAlerts() ([]*api.Alerts, error) {
 
 	if len(allAlerts) > 0 {
 		return allAlerts, nil
-	} 
+	} else if len(allAlerts) == 0 {
+		return nil, fmt.Errorf("No alerts raised yet")
+	}
 	return allAlerts, err
 }
 
@@ -331,8 +333,8 @@ func kvdbWatch(prefix string, opaque interface{}, kvp *kvdb.KVPair, err error) e
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	watcherKey := strings.TrimSuffix(prefix, kvp.Key)
-
+	watcherKey := strings.Split(prefix, "/")[1]
+	
 	if err == nil && strings.HasSuffix(kvp.Key, bootstrap) {
 		w := watcherMap[watcherKey]
 		w.status = watchReady
