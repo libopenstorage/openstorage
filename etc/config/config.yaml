@@ -1,8 +1,7 @@
----
 osd:
   cluster:
     nodeid: "1"
-    clusterid: "deadbeeef"
+    clusterid: "rodriguise"
   drivers:
 #   vfs:
 #   pwx:
@@ -16,9 +15,13 @@ osd:
 #      AWS_SECRET_ACCESS_KEY: your_secret_access_key
     #buse:
     coprhd:
-        url: "https://54.153.46.171:4443/"
-        token: "BAAcQ3luNXJsM0tXMzhmb3VlbUtZU24wNGRlVTRrPQMAZwQAG3Byb3h5VG9rZW5TaWduYXR1cmVLZXlFbnRyeQIAAQEFAEJ1cm46c3RvcmFnZW9zOlByb3h5VG9rZW46NWQzNmM3OWUtMDY0Yy00MjMzLThkY2QtYjdjMmQ2YmI2MzA1OnZkYzECAALQDw=="
-        iqn: "iqn.1994-05.com.redhat:98d5cd397a18"
+        url: "https://172.31.32.189:4443/"
+        token: "BAAcZTdIT2dLUDJ1OGtHMTY0QjduWmhLc1Y3c1QwPQMAZwQAG3Byb3h5VG9rZW5TaWduYXR1cmVLZXlFbnRyeQIAAQEFAEJ1cm46c3RvcmFnZW9zOlByb3h5VG9rZW46OGY4OGM5NGItNDNlNi00ZDEyLWE3OGUtMWY4NWJmMTRiMDJjOnZkYzECAALQDw=="
+        project: "default"
+        varray: "default"
+        vpool: "default"
+        port: "0d7c7cc100000000"
+        
   graphdrivers:
     #proxy:
     #layer0:
