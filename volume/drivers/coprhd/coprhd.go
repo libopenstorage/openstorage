@@ -368,9 +368,21 @@ func (d *driver) Mount(volumeID string, mountpath string) error {
 }
 
 func (d *driver) Unmount(volumeID string, mountpath string) error {
-	// XXX:  determine if valid mount path
-	err := syscall.Unmount(mountpath, 0)
-	return err
+	v, err := d.GetVol(volumeID)
+	if err != nil {
+		return fmt.Errorf("Failed to locate attached volume %q", volumeID)
+	}
+	err = syscall.Unmount(mountpath, 0)
+	if err != nil {
+		v.AttachPath = ""
+	}
+
+	err = d.UpdateVol(v)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (d *driver) Set(

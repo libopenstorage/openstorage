@@ -1,12 +1,9 @@
 package coprhd
 
 import (
-   "testing"
-
-//   "github.com/libopenstorage/openstorage/volume"
-//	"github.com/libopenstorage/openstorage/volume/drivers/test"
+	"testing"
 )
 
 func TestAll(t *testing.T) {
-	t.Skip("Not implemented")   
+	t.Skip("Not implemented")
 }
