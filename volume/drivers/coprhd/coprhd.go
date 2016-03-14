@@ -16,8 +16,9 @@ import (
 )
 
 const (
-	Name = "coprhd"
-	Type = api.DriverType_DRIVER_TYPE_BLOCK
+	Name          = "coprhd"
+	Type          = api.DriverType_DRIVER_TYPE_BLOCK
+	minVolumeSize = 1024 * 1024 * 1000
 )
 
 var (
@@ -189,12 +190,17 @@ func (d *driver) Create(
 		return "", ErrInvalidPort
 	}
 
+	sz := spec.Size
+	if sz < minVolumeSize {
+		sz = minVolumeSize
+	}
+
 	vol, err := d.coprhd.Volume().
 		Name(locator.Name).
 		Project(project.Id).
 		Array(varray.Id).
 		Pool(vpool.Id).
-		Create(spec.Size)
+		Create(sz)
 	if err != nil {
 		return "", err
 	}
@@ -374,8 +380,10 @@ func (d *driver) Unmount(volumeID string, mountpath string) error {
 	}
 	err = syscall.Unmount(mountpath, 0)
 	if err != nil {
-		v.AttachPath = ""
+		return err
 	}
+
+	v.AttachPath = ""
 
 	err = d.UpdateVol(v)
 	if err != nil {
