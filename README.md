@@ -35,6 +35,44 @@ There are default drivers built-in for NFS, AWS and BTRFS.  By using openstorage
 
 Providers that support a multi-node environment, such as AWS or NFS to name a few, can provide highly available storage to linux containers across multiple hosts.
 
+### Built-In Drivers
+#### CoprHd
+The coprhd driver provides access to ScaleIO volumes via the coprhd/vipr REST API.
+
+[![asciicast](https://asciinema.org/a/39456.png)](https://asciinema.org/a/39456)
+
+#### Configuration
+The configuration is added to the osd config.yaml in the drivers section, described below:
+
+```yaml
+	drivers:
+	  coprhd:
+	    url: corphd_rest_url
+	    token: coprhd_proxy_token
+	    port: host_initiator_port_name
+	    project: opt_default_project_name
+	    varray: opt_default_varray_name
+	    vpool: opt_default_vpool_name
+```
+All parameters are by name, do not use the storageos urn ids.
+
+Only the `url`, `token`, and `port` parameters are required. If the other parameter defaults are not provided, or need to be overidden when creating a volume, they must be passed as labels.
+
+```bash
+$ osd coprhd c -l project=myproject,varray=myarray,vpool=mypool <name>
+```
+
+##### CoprHd Auth Token
+The coprhd driver requires a coprhd proxy authentication token to function. This can be obtained using the coprhd api, or a simple cli tool available [here](https://github.com/ModelRocket/coprhd). You can install the tool on any system with access to your coprhd server.
+
+```bash
+$ go get github.com/ModelRocket/coprhd/...
+$ $GOPATH/bin/coprtop -u root -p pass -H 172.31.32.100 token
+```
+
+This token does not expire.
+
+
 ## Installing Dependencies
 
 libopenstorage is written in the [Go](http://golang.org) programming language. If you haven't set up a Go development environment, please follow [these instructions](http://golang.org/doc/code.html) to install `golang` and set up GOPATH. Your version of Go must be at least 1.5 - we use the golang 1.5 vendor experiment https://golang.org/s/go15vendor. Note that the version of Go in package repositories of some operating systems is outdated, so please [download](https://golang.org/dl/) the latest version.
