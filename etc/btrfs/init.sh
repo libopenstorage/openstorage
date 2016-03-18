@@ -20,16 +20,18 @@ apt-get install -yq btrfs-tools
 
 if [ -z "${NO_RM}" ]; then
   if [ -d ${MOUNT_DIR} ]; then
-    fuser -km ${MOUNT_DIR} || true
-    fuser -km ${MOUNT_DIR}/volumes || true
+    #fuser -km ${MOUNT_DIR} || true
+    #fuser -km ${MOUNT_DIR}/volumes || true
     umount -f ${MOUNT_DIR}/volumes || true
-    umount -f ${MOUNT_DIR}
+    umount -f ${MOUNT_DIR} || true
+    rm -rf ${MOUNT_DIR}
   fi
   rm -f ${MOUNT_IMAGE}
-  rm -rf ${MOUNT_DIR}
+fi
+
+if [ ! -z "${NO_START}" ]; then
   truncate ${MOUNT_IMAGE} -s ${IMAGE_SIZE}
   mkfs.btrfs ${MOUNT_IMAGE}
   mkdir -p ${MOUNT_DIR}
+  mount ${MOUNT_IMAGE} ${MOUNT_DIR}
 fi
-
-mount ${MOUNT_IMAGE} ${MOUNT_DIR}
