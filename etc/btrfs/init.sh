@@ -29,9 +29,7 @@ if [ -z "${NO_RM}" ]; then
   rm -f ${MOUNT_IMAGE}
 fi
 
-if [ ! -z "${NO_START}" ]; then
-  truncate ${MOUNT_IMAGE} -s ${IMAGE_SIZE}
-  mkfs.btrfs ${MOUNT_IMAGE}
-  mkdir -p ${MOUNT_DIR}
-  mount ${MOUNT_IMAGE} ${MOUNT_DIR}
-fi
+truncate ${MOUNT_IMAGE} -s ${IMAGE_SIZE}
+mkfs.btrfs ${MOUNT_IMAGE}
+mkdir -p ${MOUNT_DIR}
+mount ${MOUNT_IMAGE} ${MOUNT_DIR}
