@@ -6,6 +6,7 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/portworx/kvdb"
 	"go.pedge.io/proto/time"
+	"go.pedge.io/dlog"
 	"strconv"
 	"strings"
 	"time"
@@ -347,12 +348,13 @@ func kvdbWatch(prefix string, opaque interface{}, kvp *kvdb.KVPair, err error) e
 			return err
 		}
 		if watchErrors == 5 {
-			return fmt.Errorf("Too many watch errors (%v)", watchErrors)
+			dlog.Warnf("Too many watch errors : %v. Error is %s", watchErrors, err.Error())
 		}
 		watchErrors++
 		if err := subscribeWatch(watcherKey); err != nil {
-			return fmt.Errorf("Failed to resubscribe")
+			dlog.Warnf("Failed to resubscribe : %s", err.Error())
 		}
+		return err
 	}
 
 
