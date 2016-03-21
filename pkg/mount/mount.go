@@ -24,6 +24,9 @@ type Manager interface {
 	// Exists returns true if the device is mounted at specified path.
 	// returned if the device does not exists.
 	Exists(source, path string) (bool, error)
+	// GetDevPath scans mount for a specified mountPath and returns the devPath
+	// if found or returnes an ErrEnoent
+	GetDevPath(mountPath string) (string, error)
 	// Mount device at mountpoint or increment refcnt if device is already mounted
 	// at specified mountpoint.
 	Mount(minor int, device, path, fs string, flags uintptr, data string) error
@@ -125,6 +128,22 @@ func (m *Mounter) Exists(devPath string, path string) (bool, error) {
 		}
 	}
 	return false, nil
+}
+
+// GetDevPath scans mount for a specified mountPath and returns the devPath
+// if found or returnes an ErrEnoent
+func (m *Mounter) GetDevPath(mountPath string) (string, error) {
+	m.Lock()
+	defer m.Unlock()
+
+	for k, v := range m.mounts {
+		for _, p := range v.Mountpoint {
+			if p.Path == mountPath {
+				return k, nil
+			}
+		}
+	}
+	return "", ErrEnoent
 }
 
 // Mount new mountpoint for specified device.
