@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/libopenstorage/openstorage/pkg/mount"
@@ -11,30 +12,24 @@ import (
 
 const (
 	osdDriverKey = "osdDriver"
-	volumeIdKey  = "volumeID"
+	volumeIDKey  = "volumeID"
 	pxDriverKey  = "pxd"
 )
 
 var (
 	deviceDriverMap map[string]string
+	// ErrInvalidSpecDriver is returned when incorrect or no OSD driver is specified in spec file
+	ErrInvalidSpecDriver = errors.New("Invalid kubernetes spec file : No OSD driver specified in flexvolume")
+	// ErrInvalidSpecVolumeID is returned when incorrect or no volumeID is specified in spec file
+	ErrInvalidSpecVolumeID = errors.New("Invalid kubernetes spec file : No volumeID specified in flexvolume")
+	// ErrNoMountInfo is returned when flexvolume is unable to read from proc/self/mountinfo
+	ErrNoMountInfo = errors.New("Could not read mountpoints from /proc/self/mountinfo. ")
+	// ErrMissingMountPath is returned when no mountPath specified in mount call
+	ErrMissingMountPath = errors.New("Missing target mount path")
 )
 
-type flexVolumeClient struct {
-}
+type flexVolumeClient struct{}
 
-func newFlexVolumeClient() *flexVolumeClient {
-	deviceDriverMap = make(map[string]string)
-
-	return &flexVolumeClient{}
-}
-
-func (c *flexVolumeClient) getVolumeDriver(driverName string) (volume.VolumeDriver, error) {
-	driver, err := volume.Get(driverName)
-	if err != nil {
-		return nil, fmt.Errorf("%v driver not initialized in OSD", driverName)
-	}
-	return driver, nil
-}
 func (c *flexVolumeClient) Init() error {
 	return nil
 }
@@ -42,7 +37,7 @@ func (c *flexVolumeClient) Init() error {
 func (c *flexVolumeClient) Attach(jsonOptions map[string]string) error {
 	driverName, ok := jsonOptions[osdDriverKey]
 	if !ok {
-		return fmt.Errorf("Invalid kubernetes spec file : No OSD driver specified in flexvolume")
+		return ErrInvalidSpecDriver
 	}
 
 	driver, err := c.getVolumeDriver(driverName)
@@ -50,21 +45,18 @@ func (c *flexVolumeClient) Attach(jsonOptions map[string]string) error {
 		return err
 	}
 
-	mountDevice, ok := jsonOptions[volumeIdKey]
+	mountDevice, ok := jsonOptions[volumeIDKey]
 	if !ok {
-		return fmt.Errorf("Invalid kubernetes spec file : No volumeID specified in flexvolume")
+		return ErrInvalidSpecVolumeID
 	}
 
-	_, err = driver.Attach(mountDevice)
-	if err != nil {
+	if _, err = driver.Attach(mountDevice); err != nil {
 		return err
 	}
-
 	return nil
 }
 
 func (c *flexVolumeClient) Detach(mountDevice string) error {
-	var driverName string
 	driverName, ok := deviceDriverMap[mountDevice]
 	if !ok {
 		dlog.Infof("Could not find driver for (%v). Defaulting to pxd", mountDevice)
@@ -76,8 +68,7 @@ func (c *flexVolumeClient) Detach(mountDevice string) error {
 		return err
 	}
 
-	err = driver.Detach(mountDevice)
-	if err != nil {
+	if err = driver.Detach(mountDevice); err != nil {
 		return err
 	}
 	return nil
@@ -85,9 +76,10 @@ func (c *flexVolumeClient) Detach(mountDevice string) error {
 
 func (c *flexVolumeClient) Mount(targetMountDir string, mountDevice string,
 	jsonOptions map[string]string) error {
+
 	driverName, ok := jsonOptions[osdDriverKey]
 	if !ok {
-		return fmt.Errorf("Invalid kubernetes spec file : No OSD driver specified in flexvolume")
+		return ErrInvalidSpecDriver
 	}
 
 	driver, err := c.getVolumeDriver(driverName)
@@ -96,22 +88,25 @@ func (c *flexVolumeClient) Mount(targetMountDir string, mountDevice string,
 	}
 
 	if targetMountDir == "" {
-		return fmt.Errorf("Missing target mount path")
+		return ErrMissingMountPath
 	}
 
-	err = driver.Mount(mountDevice, targetMountDir)
-	if err != nil {
-		return fmt.Errorf("Failed in mount. Driver returned error : (%v)", err)
+	if err = driver.Mount(mountDevice, targetMountDir); err != nil {
+		return err
 	}
 
 	// Update the deviceDriverMap
-	mountManager, _ := mount.New(mount.DeviceMount, "")
+	mountManager, err := mount.New(mount.DeviceMount, "")
+	if err != nil {
+		dlog.Infof("Could not read mountpoints from /proc/self/mountinfo. Device - Driver mapping not saved!")
+		return nil
+	}
+
 	devPath, err := mountManager.GetDevPath(targetMountDir)
 	if err != nil {
 		return fmt.Errorf("Mount Failed. Could not find mountpoint in /proc/self/mountinfo")
 	}
 	deviceDriverMap[devPath] = driverName
-
 	return nil
 }
 
@@ -119,7 +114,11 @@ func (c *flexVolumeClient) Unmount(mountDir string) error {
 	var driverName string
 
 	// Get the mountDevice from mount manager
-	mountManager, _ := mount.New(mount.DeviceMount, "")
+	mountManager, err := mount.New(mount.DeviceMount, "")
+	if err != nil {
+		return ErrNoMountInfo
+	}
+
 	mountDevice, err := mountManager.GetDevPath(mountDir)
 	if err != nil {
 		return fmt.Errorf("Invalid mountDir (%v). No device mounted on this path", mountDir)
@@ -136,10 +135,21 @@ func (c *flexVolumeClient) Unmount(mountDir string) error {
 		return err
 	}
 
-	err = driver.Unmount(mountDevice, mountDir)
-	if err != nil {
+	if err = driver.Unmount(mountDevice, mountDir); err != nil {
 		return err
 	}
-
 	return nil
+}
+
+func newFlexVolumeClient() *flexVolumeClient {
+	deviceDriverMap = make(map[string]string)
+	return &flexVolumeClient{}
+}
+
+func (c *flexVolumeClient) getVolumeDriver(driverName string) (volume.VolumeDriver, error) {
+	driver, err := volume.Get(driverName)
+	if err != nil {
+		return nil, fmt.Errorf("%v driver not initialized in OSD", driverName)
+	}
+	return driver, nil
 }
