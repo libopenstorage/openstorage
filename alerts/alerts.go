@@ -2,19 +2,21 @@ package alerts
 
 import (
 	"errors"
-	"time"
-	"sync"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/portworx/kvdb"
+	"go.pedge.io/dlog"
+	"sync"
+	"time"
 )
 
 // AlertAction used to indicate the action performed on a KV pair
 type AlertAction int
+
 // InitFunc initialization function for alerts
 type InitFunc func(string, string, []string, string) (AlertsClient, error)
-// AlertsWatcherFunc is a function type used as a callback for KV WatchTree
-type AlertsWatcherFunc func(*api.Alerts, AlertAction, string, string) (error)
 
+// AlertsWatcherFunc is a function type used as a callback for KV WatchTree
+type AlertsWatcherFunc func(*api.Alerts, AlertAction, string, string) error
 
 const (
 	// AlertDeleteAction is an alerts watch action for delete
@@ -23,6 +25,21 @@ const (
 	AlertCreateAction
 	// AlertUpdateAction is an alerts watch action for update
 	AlertUpdateAction
+)
+
+// Resource is equaivalent to api.ResourceType and is used in the alerts instance
+// so that callers of the instance don't have to worry about api.*
+type Resource int
+
+const (
+	//Unknown Resource
+	Unknown Resource = iota
+	// Volume Resource
+	Volume
+	// Node Resource
+	Node
+	// Cluster Resource
+	Cluster
 )
 
 var (
@@ -42,9 +59,9 @@ var (
 	ErrAlertsClientNotFound = errors.New("Alerts client not found")
 	// ErrResourceNotFound raised if ResourceType is not found
 	ErrResourceNotFound = errors.New("Resource not found in Alerts")
-	instances             map[string]AlertsClient
-	drivers               map[string]InitFunc
-	mutex                 sync.Mutex
+	instances           map[string]AlertsClient
+	drivers             map[string]InitFunc
+	mutex               sync.Mutex
 )
 
 // AlertsClient interface for Alerts API
@@ -56,7 +73,7 @@ type AlertsClient interface {
 	Shutdown()
 
 	// GetKvdbInstance
-	GetKvdbInstance() (kvdb.Kvdb)
+	GetKvdbInstance() kvdb.Kvdb
 
 	// Raise raises an Alerts
 	Raise(alert api.Alerts) (api.Alerts, error)
@@ -78,6 +95,24 @@ type AlertsClient interface {
 
 	// Watch on all Alerts
 	Watch(clusterId string, alertsWatcher AlertsWatcherFunc) error
+}
+
+type AlertsInstance interface {
+	// Clear clears an alert
+	Clear(resource Resource, resourceId string, alertID int64)
+
+	// Alarm raises an alert with severity : ALARM
+	Alarm(name string, msg string, resource Resource, resourceId string) (int64, error)
+
+	// Notify raises an alert with severity : NOTIFY
+	Notify(name string, msg string, resource Resource, resourceId string) (int64, error)
+
+	// Warn raises an alert with severity : WARNING
+	Warn(name string, msg string, resource Resource, resourceId string) (int64, error)
+
+	// Alert :  Keeping this function for backward compatibility
+	// until we remove all calls to this function
+	Alert(name string, msg string) error
 }
 
 // Shutdown the alerts instance
@@ -114,6 +149,23 @@ func New(name string, kvdbName string, kvdbBase string, kvdbMachines []string, c
 		return driver, err
 	}
 	return nil, ErrNotSupported
+}
+
+// NewAlertsInstance creates a new singleton istance of AlertsInstance
+func NewAlertsInstance(version, nodeId, clusterId, kvdbName, kvdbBase string, kvdbMachines []string) {
+	kva, err := Get(Name)
+	if err != nil {
+		kva, err = New(Name, kvdbName, kvdbBase, kvdbMachines, clusterId)
+		if err != nil {
+			dlog.Errorf("Failed to initialize an AlertsInstance ")
+		}
+	}
+	newAlertsInstance(nodeId, clusterId, version, kva)
+}
+
+// Instance returns the singleton AlertsInstance
+func Instance() AlertsInstance {
+	return instance()
 }
 
 // Register an alerts interface
