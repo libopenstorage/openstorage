@@ -79,6 +79,7 @@ func start(c *cli.Context) {
 		}
 	}
 
+	isDefaultSet := false
 	// Start the volume drivers.
 	for d, v := range cfg.Osd.Drivers {
 		dlog.Infof("Starting volume driver: %v", d)
@@ -91,9 +92,17 @@ func start(c *cli.Context) {
 			dlog.Warnf("Unable to start volume plugin: %v", err)
 			return
 		}
+		if d != "" && cfg.Osd.ClusterConfig.DefaultDriver == d {
+			isDefaultSet = true
+		}
 	}
 
-	if err := server.StartFlexVolumeAPI(config.FlexVolumePort); err != nil {
+	if cfg.Osd.ClusterConfig.DefaultDriver != "" && !isDefaultSet {
+		dlog.Warnf("Invalid OSD config file: Default Driver specified but driver not initialized")
+		return
+	}
+
+	if err := server.StartFlexVolumeAPI(config.FlexVolumePort, cfg.Osd.ClusterConfig.DefaultDriver); err != nil {
 		dlog.Warnf("Unable to start flexvolume API: %v", err)
 		return
 	}

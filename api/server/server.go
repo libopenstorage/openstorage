@@ -62,9 +62,9 @@ func StartClusterAPI(clusterApiBase string) error {
 }
 
 // StartFlexVolumeAPI starts the flexvolume API on the given port.
-func StartFlexVolumeAPI(port uint16) error {
+func StartFlexVolumeAPI(port uint16, defaultDriver string) error {
 	grpcServer := grpc.NewServer(grpc.MaxConcurrentStreams(math.MaxUint32))
-	flexvolume.RegisterAPIServer(grpcServer, flexvolume.NewAPIServer(newFlexVolumeClient()))
+	flexvolume.RegisterAPIServer(grpcServer, flexvolume.NewAPIServer(newFlexVolumeClient(defaultDriver)))
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		return err

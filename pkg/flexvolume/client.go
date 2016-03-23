@@ -21,10 +21,6 @@ var (
 	successBytes = []byte(`{"Status":"Success"}`)
 )
 
-func newClient(apiClient APIClient) *client {
-	return &client{apiClient}
-}
-
 func (c *client) Init() error {
 	_, err := c.apiClient.Init(
 		context.Background(),
@@ -34,8 +30,6 @@ func (c *client) Init() error {
 }
 
 func (c *client) Attach(jsonOptions map[string]string) error {
-	var output []byte
-
 	_, err := c.apiClient.Attach(
 		context.Background(),
 		&AttachRequest{
@@ -43,12 +37,9 @@ func (c *client) Attach(jsonOptions map[string]string) error {
 		},
 	)
 	if err == nil {
-		output = []byte(fmt.Sprintf(`{"Status":"Success", "Device":"%s"}`, jsonOptions[volumeIDKey]))
+		writeOutput(newAttachSuccessOutput(jsonOptions[volumeIDKey]))
 	} else {
-		output = newFailureBytes(err)
-	}
-	if _, osErr := os.Stdout.Write(output); osErr != nil {
-		dlog.Warnf("Unable to write output to stdout : %s", osErr.Error())
+		writeOutput(newFailureBytes(err))
 	}
 	return err
 }
@@ -60,33 +51,24 @@ func (c *client) Detach(mountDevice string) error {
 			MountDevice: mountDevice,
 		},
 	)
-
-	output := newOutput(err)
-	if _, osErr := os.Stdout.Write(output); osErr != nil {
-		dlog.Warnf("Unable to write output to stdout : %s", osErr.Error())
-	}
-
+	writeOutput(newOutput(err))
 	return err
 }
 
 func (c *client) Mount(targetMountDir string, mountDevice string, jsonOptions map[string]string) error {
-	var err error
-	if err = os.MkdirAll(targetMountDir, os.ModeDir); err == nil {
-		_, err = c.apiClient.Mount(
-			context.Background(),
-			&MountRequest{
-				TargetMountDir: targetMountDir,
-				MountDevice:    mountDevice,
-				JsonOptions:    jsonOptions,
-			},
-		)
+	if err := os.MkdirAll(targetMountDir, os.ModeDir); err != nil {
+		writeOutput(newOutput(err))
+		return err
 	}
-	output := newOutput(err)
-
-	if _, osErr := os.Stdout.Write(output); osErr != nil {
-		dlog.Warnf("Unable to write output to stdout : %s", osErr.Error())
-	}
-
+	_, err := c.apiClient.Mount(
+		context.Background(),
+		&MountRequest{
+			TargetMountDir: targetMountDir,
+			MountDevice:    mountDevice,
+			JsonOptions:    jsonOptions,
+		},
+	)
+	writeOutput(newOutput(err))
 	return err
 }
 
@@ -97,13 +79,12 @@ func (c *client) Unmount(mountDir string) error {
 			MountDir: mountDir,
 		},
 	)
-	output := newOutput(err)
-
-	if _, osErr := os.Stdout.Write(output); osErr != nil {
-		dlog.Warnf("Unable to write output to stdout : %s", osErr.Error())
-	}
-
+	writeOutput(newOutput(err))
 	return err
+}
+
+func newClient(apiClient APIClient) *client {
+	return &client{apiClient}
 }
 
 func newFailureBytes(err error) []byte {
@@ -115,5 +96,15 @@ func newOutput(err error) []byte {
 		return newFailureBytes(err)
 	} else {
 		return successBytes
+	}
+}
+
+func newAttachSuccessOutput(deviceID string) []byte {
+	return []byte(fmt.Sprintf(`{"Status":"Success", "Device":"%s"}`, deviceID))
+}
+
+func writeOutput(output []byte) {
+	if _, err := os.Stdout.Write(output); err != nil {
+		dlog.Warnf("Unable to write output to stdout : %s", err.Error())
 	}
 }
