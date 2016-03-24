@@ -15,10 +15,14 @@ type NFSMounter struct {
 }
 
 // NewNFSMounter instance
-func NewNFSMounter(server string) (Manager, error) {
+func NewNFSMounter(server string, mountImpl MountImpl) (Manager, error) {
 	m := &NFSMounter{
-		server:  server,
-		Mounter: Mounter{mounts: make(DeviceMap), paths: make(PathMap)},
+		server: server,
+		Mounter: Mounter{
+			mountImpl: mountImpl,
+			mounts:    make(DeviceMap),
+			paths:     make(PathMap),
+		},
 	}
 	err := m.Load("")
 	if err != nil {

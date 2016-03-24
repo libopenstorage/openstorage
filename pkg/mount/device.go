@@ -14,9 +14,13 @@ type DeviceMounter struct {
 }
 
 // NewDeviceMounter
-func NewDeviceMounter(devPrefix string) (*DeviceMounter, error) {
+func NewDeviceMounter(devPrefix string, mountImpl MountImpl) (*DeviceMounter, error) {
 	m := &DeviceMounter{
-		Mounter: Mounter{mounts: make(DeviceMap), paths: make(PathMap)},
+		Mounter: Mounter{
+			mountImpl: mountImpl,
+			mounts:    make(DeviceMap),
+			paths:     make(PathMap),
+		},
 	}
 	err := m.Load(devPrefix)
 	if err != nil {

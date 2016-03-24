@@ -33,6 +33,12 @@ type Manager interface {
 	Unmount(source, path string) error
 }
 
+// MountImpl backend implementation for Mount/Unmount calls
+type MountImpl interface {
+	Mount(source, target, fstype string, flags uintptr, data string) error
+	Unmount(target string, flags int) error
+}
+
 type MountType int
 
 const (
@@ -76,8 +82,29 @@ type Info struct {
 // Mounter implements Ops and keeps track of active mounts for volume drivers.
 type Mounter struct {
 	sync.Mutex
-	mounts DeviceMap
-	paths  PathMap
+	mountImpl MountImpl
+	mounts    DeviceMap
+	paths     PathMap
+}
+
+// DefaultMounter defaults to syscall implementation.
+type DefaultMounter struct {
+}
+
+// Mount default mount implementation is syscall.
+func (m *DefaultMounter) Mount(
+	source string,
+	target string,
+	fstype string,
+	flags uintptr,
+	data string,
+) error {
+	return syscall.Mount(source, target, fstype, flags, data)
+}
+
+// Unmount default unmount implementation is syscall.
+func (m *DefaultMounter) Unmount(target string, flags int) error {
+	return syscall.Unmount(target, flags)
 }
 
 // String representation of Mounter
@@ -166,7 +193,7 @@ func (m *Mounter) Mount(minor int, device, path, fs string, flags uintptr, data 
 		}
 	}
 	// The device is not mounted at path, mount it and add to its mountpoints.
-	err := syscall.Mount(device, path, fs, flags, data)
+	err := m.mountImpl.Mount(device, path, fs, flags, data)
 	if err != nil {
 		return err
 	}
@@ -205,7 +232,7 @@ func (m *Mounter) Unmount(device, path string) error {
 			p.ref--
 			// Unmount only if refcnt is 0
 			if p.ref == 0 {
-				err := syscall.Unmount(path, 0)
+				err := m.mountImpl.Unmount(path, 0)
 				if err != nil {
 					return err
 				}
@@ -225,12 +252,17 @@ func (m *Mounter) Unmount(device, path string) error {
 	return ErrEnoent
 }
 
-func New(mounterType MountType, identifier string) (Manager, error) {
+func New(mounterType MountType, mountImpl MountImpl, identifier string) (Manager, error) {
+
+	if mountImpl == nil {
+		mountImpl = &DefaultMounter{}
+	}
+
 	switch mounterType {
 	case DeviceMount:
-		return NewDeviceMounter(identifier)
+		return NewDeviceMounter(identifier, mountImpl)
 	case NFSMount:
-		return NewNFSMounter(identifier)
+		return NewNFSMounter(identifier, mountImpl)
 	}
 	return nil, ErrUnsupported
 }

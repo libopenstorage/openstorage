@@ -18,7 +18,7 @@ var m Manager
 
 func TestSetup(t *testing.T) {
 	var err error
-	m, err = New(NFSMount, "")
+	m, err = New(NFSMount, nil, "")
 	if err != nil {
 		t.Fatalf("Failed to setup test %v", err)
 	}
