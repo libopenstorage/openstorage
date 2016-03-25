@@ -21,6 +21,10 @@ var (
 	successBytes = []byte(`{"Status":"Success"}`)
 )
 
+func newClient(apiClient APIClient) *client {
+	return &client{apiClient}
+}
+
 func (c *client) Init() error {
 	_, err := c.apiClient.Init(
 		context.Background(),
@@ -81,10 +85,6 @@ func (c *client) Unmount(mountDir string) error {
 	)
 	writeOutput(newOutput(err))
 	return err
-}
-
-func newClient(apiClient APIClient) *client {
-	return &client{apiClient}
 }
 
 func newFailureBytes(err error) []byte {
