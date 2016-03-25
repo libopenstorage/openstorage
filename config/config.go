@@ -36,6 +36,7 @@ type ClusterConfig struct {
 	NodeId    string
 	MgtIface  string
 	DataIface string
+	DefaultDriver string
 }
 
 type Config struct {
