@@ -20,7 +20,6 @@ const (
 	CONN_PORT     = "9002"
 	CONN_TYPE     = "tcp"
 	HEADER_LENGTH = 12
-	IO_DEADLINE   = time.Minute
 )
 
 type ConnObj struct {
@@ -50,13 +49,12 @@ func connectionString(ip string) string {
 	return ip
 }
 
-func NewMessageChannel(ip string, deadline time.Duration) types.MessageChannel {
+func NewMessageChannel(ip string) types.MessageChannel {
 	// if ip string is localhost and any port,
 	c, err := net.DialTimeout(CONN_TYPE, connectionString(ip), 2*time.Second)
 	if err != nil {
 		return nil
 	}
-	c.SetDeadline(time.Now().Add(deadline))
 	return &ConnObj{conn: c, listener: nil}
 }
 
@@ -68,7 +66,7 @@ func NewRunnableMessageChannel(addr string,
 	return &ConnObj{Ip: connectionString(addr), rcvHandler: f}
 }
 
-func (c *ConnObj) RunOnRcvData(deadline time.Duration) {
+func (c *ConnObj) RunOnRcvData() {
 	fn := "RunOnRcvData"
 	l, err := net.Listen(CONN_TYPE, c.Ip)
 	if err != nil {
@@ -84,7 +82,6 @@ func (c *ConnObj) RunOnRcvData(deadline time.Duration) {
 			transportLog(c, fn, err).Error("Error in Accept")
 			return
 		}
-		tcpConn.SetDeadline(time.Now().Add(deadline))
 		connObj := &ConnObj{Ip: c.Ip, conn: tcpConn,
 			rcvHandler: c.rcvHandler}
 		connObj.rcvHandler(tcpConn.RemoteAddr().String(), connObj)
