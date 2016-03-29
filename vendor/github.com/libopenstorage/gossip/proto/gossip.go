@@ -397,7 +397,7 @@ func (g *GossiperImpl) handleGossip(peerId string, conn types.MessageChannel) {
 	if err != nil {
 		return
 	}
-	log.Debug(g.id, " Finished Servicing gossip request")
+	log.Debug(g.id, "Finished Servicing gossip request")
 	g.history.AddLatest(NewGossipSessionInfo(peerId, types.GD_PEER_TO_ME))
 	g.updateGossipTs()
 }
@@ -407,7 +407,7 @@ func (g *GossiperImpl) receiveLoop() {
 		g.handleGossip(peer, c)
 	}
 	c := NewRunnableMessageChannel(g.name, handler)
-	go c.RunOnRcvData()
+	go c.RunOnRcvData(IO_DEADLINE)
 	// block waiting for the done signal
 	<-g.rcv_done
 	c.Close()
@@ -482,7 +482,7 @@ func (g *GossiperImpl) gossip() *types.GossipSessionInfo {
 
 	gs := NewGossipSessionInfo(peerNode, types.GD_ME_TO_PEER)
 
-	conn := NewMessageChannel(peerNode)
+	conn := NewMessageChannel(peerNode, IO_DEADLINE)
 	if conn == nil {
 		gs.Err = "Could not connect to host"
 		return gs

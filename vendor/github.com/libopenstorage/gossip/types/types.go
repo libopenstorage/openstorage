@@ -85,7 +85,7 @@ type MessageChannel interface {
 	RcvData(obj interface{}) error
 	// RunOnRcvData loops in continously and runs a handler
 	// which is activated on receiving any data
-	RunOnRcvData()
+	RunOnRcvData(time.Duration)
 	// Close terminates the message channel.
 	Close()
 }
