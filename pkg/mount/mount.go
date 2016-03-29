@@ -253,6 +253,7 @@ func (m *Mounter) Unmount(device, path string) error {
 			if p.ref == 0 {
 				err := m.mountImpl.Unmount(path, 0)
 				if err != nil {
+					p.ref++
 					return err
 				}
 				if _, pathExists := m.paths[path]; pathExists {
