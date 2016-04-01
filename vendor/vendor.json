@@ -31,172 +31,172 @@
 			"revisionTime": "2016-03-17T14:11:10Z"
 		},
 		{
-			"checksumSHA1": "zc33XQb7bKpmdner7IE8cI2+GPs=",
+			"checksumSHA1": "hO3a7h3wGPAdtpa02tKJIkOGAKM=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/aws/aws-sdk-go/aws",
 			"path": "github.com/aws/aws-sdk-go/aws",
-			"revision": "75f718b3a52577de25555fc636228fa9f63cc78d",
-			"revisionTime": "2016-03-28T21:50:22Z"
+			"revision": "2884593601c39716d85a2fcb5af8e4a20294cee6",
+			"revisionTime": "2016-03-30T16:27:15Z"
 		},
 		{
 			"checksumSHA1": "AWg3FBA1NTPdIVZipaQf/rGx38o=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/aws/aws-sdk-go/aws/awserr",
 			"path": "github.com/aws/aws-sdk-go/aws/awserr",
-			"revision": "75f718b3a52577de25555fc636228fa9f63cc78d",
-			"revisionTime": "2016-03-28T21:50:22Z"
+			"revision": "2884593601c39716d85a2fcb5af8e4a20294cee6",
+			"revisionTime": "2016-03-30T16:27:15Z"
 		},
 		{
 			"checksumSHA1": "dkfyy7aRNZ6BmUZ4ZdLIcMMXiPA=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/aws/aws-sdk-go/aws/awsutil",
 			"path": "github.com/aws/aws-sdk-go/aws/awsutil",
-			"revision": "75f718b3a52577de25555fc636228fa9f63cc78d",
-			"revisionTime": "2016-03-28T21:50:22Z"
+			"revision": "2884593601c39716d85a2fcb5af8e4a20294cee6",
+			"revisionTime": "2016-03-30T16:27:15Z"
 		},
 		{
 			"checksumSHA1": "H3TOR2XBZxM79D3y0xfAM0MHzHc=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/aws/aws-sdk-go/aws/client",
 			"path": "github.com/aws/aws-sdk-go/aws/client",
-			"revision": "75f718b3a52577de25555fc636228fa9f63cc78d",
-			"revisionTime": "2016-03-28T21:50:22Z"
+			"revision": "2884593601c39716d85a2fcb5af8e4a20294cee6",
+			"revisionTime": "2016-03-30T16:27:15Z"
 		},
 		{
 			"checksumSHA1": "ieAJ+Cvp/PKv1LpUEnUXpc3OI6E=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/aws/aws-sdk-go/aws/client/metadata",
 			"path": "github.com/aws/aws-sdk-go/aws/client/metadata",
-			"revision": "75f718b3a52577de25555fc636228fa9f63cc78d",
-			"revisionTime": "2016-03-28T21:50:22Z"
+			"revision": "2884593601c39716d85a2fcb5af8e4a20294cee6",
+			"revisionTime": "2016-03-30T16:27:15Z"
 		},
 		{
 			"checksumSHA1": "H9CrCkCfJPzsh2Ll0mIDHpvV7Ek=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/aws/aws-sdk-go/aws/corehandlers",
 			"path": "github.com/aws/aws-sdk-go/aws/corehandlers",
-			"revision": "75f718b3a52577de25555fc636228fa9f63cc78d",
-			"revisionTime": "2016-03-28T21:50:22Z"
+			"revision": "2884593601c39716d85a2fcb5af8e4a20294cee6",
+			"revisionTime": "2016-03-30T16:27:15Z"
 		},
 		{
 			"checksumSHA1": "t+StYYU8PtTVNj8VEni4XV7bBJQ=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/aws/aws-sdk-go/aws/credentials",
 			"path": "github.com/aws/aws-sdk-go/aws/credentials",
-			"revision": "75f718b3a52577de25555fc636228fa9f63cc78d",
-			"revisionTime": "2016-03-28T21:50:22Z"
+			"revision": "2884593601c39716d85a2fcb5af8e4a20294cee6",
+			"revisionTime": "2016-03-30T16:27:15Z"
 		},
 		{
 			"checksumSHA1": "KQiUK/zr3mqnAXD7x/X55/iNme0=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds",
 			"path": "github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds",
-			"revision": "75f718b3a52577de25555fc636228fa9f63cc78d",
-			"revisionTime": "2016-03-28T21:50:22Z"
+			"revision": "2884593601c39716d85a2fcb5af8e4a20294cee6",
+			"revisionTime": "2016-03-30T16:27:15Z"
 		},
 		{
 			"checksumSHA1": "+bxLAbdUZ2SeCxImaMZkzZw+55E=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/aws/aws-sdk-go/aws/defaults",
 			"path": "github.com/aws/aws-sdk-go/aws/defaults",
-			"revision": "75f718b3a52577de25555fc636228fa9f63cc78d",
-			"revisionTime": "2016-03-28T21:50:22Z"
+			"revision": "2884593601c39716d85a2fcb5af8e4a20294cee6",
+			"revisionTime": "2016-03-30T16:27:15Z"
 		},
 		{
 			"checksumSHA1": "U0SthWum+t9ACanK7SDJOg3dO6M=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/aws/aws-sdk-go/aws/ec2metadata",
 			"path": "github.com/aws/aws-sdk-go/aws/ec2metadata",
-			"revision": "75f718b3a52577de25555fc636228fa9f63cc78d",
-			"revisionTime": "2016-03-28T21:50:22Z"
+			"revision": "2884593601c39716d85a2fcb5af8e4a20294cee6",
+			"revisionTime": "2016-03-30T16:27:15Z"
 		},
 		{
 			"checksumSHA1": "cOeTp/djUDbv1QjxBmJ9FfOT2bQ=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/aws/aws-sdk-go/aws/request",
 			"path": "github.com/aws/aws-sdk-go/aws/request",
-			"revision": "75f718b3a52577de25555fc636228fa9f63cc78d",
-			"revisionTime": "2016-03-28T21:50:22Z"
+			"revision": "2884593601c39716d85a2fcb5af8e4a20294cee6",
+			"revisionTime": "2016-03-30T16:27:15Z"
 		},
 		{
 			"checksumSHA1": "vDCy4q7PoOTy5IFejfV8WlWvdew=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/aws/aws-sdk-go/aws/session",
 			"path": "github.com/aws/aws-sdk-go/aws/session",
-			"revision": "75f718b3a52577de25555fc636228fa9f63cc78d",
-			"revisionTime": "2016-03-28T21:50:22Z"
+			"revision": "2884593601c39716d85a2fcb5af8e4a20294cee6",
+			"revisionTime": "2016-03-30T16:27:15Z"
 		},
 		{
 			"checksumSHA1": "sgft7A0lRCVD7QBogydg46lr3NM=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/aws/aws-sdk-go/private/endpoints",
 			"path": "github.com/aws/aws-sdk-go/private/endpoints",
-			"revision": "75f718b3a52577de25555fc636228fa9f63cc78d",
-			"revisionTime": "2016-03-28T21:50:22Z"
+			"revision": "2884593601c39716d85a2fcb5af8e4a20294cee6",
+			"revisionTime": "2016-03-30T16:27:15Z"
 		},
 		{
 			"checksumSHA1": "wk7EyvDaHwb5qqoOP/4d3cV0708=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/aws/aws-sdk-go/private/protocol",
 			"path": "github.com/aws/aws-sdk-go/private/protocol",
-			"revision": "75f718b3a52577de25555fc636228fa9f63cc78d",
-			"revisionTime": "2016-03-28T21:50:22Z"
+			"revision": "2884593601c39716d85a2fcb5af8e4a20294cee6",
+			"revisionTime": "2016-03-30T16:27:15Z"
 		},
 		{
 			"checksumSHA1": "G1he3uSmd1h8ZRnKOIWuDrWp2zQ=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/aws/aws-sdk-go/private/protocol/ec2query",
 			"path": "github.com/aws/aws-sdk-go/private/protocol/ec2query",
-			"revision": "75f718b3a52577de25555fc636228fa9f63cc78d",
-			"revisionTime": "2016-03-28T21:50:22Z"
+			"revision": "2884593601c39716d85a2fcb5af8e4a20294cee6",
+			"revisionTime": "2016-03-30T16:27:15Z"
 		},
 		{
 			"checksumSHA1": "zSYguMq6pUDxHBylsWefZhxj6fs=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/aws/aws-sdk-go/private/protocol/json/jsonutil",
 			"path": "github.com/aws/aws-sdk-go/private/protocol/json/jsonutil",
-			"revision": "75f718b3a52577de25555fc636228fa9f63cc78d",
-			"revisionTime": "2016-03-28T21:50:22Z"
+			"revision": "2884593601c39716d85a2fcb5af8e4a20294cee6",
+			"revisionTime": "2016-03-30T16:27:15Z"
 		},
 		{
 			"checksumSHA1": "MPzz1x/qt6f2R/JW6aELbm/qT4k=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/aws/aws-sdk-go/private/protocol/jsonrpc",
 			"path": "github.com/aws/aws-sdk-go/private/protocol/jsonrpc",
-			"revision": "75f718b3a52577de25555fc636228fa9f63cc78d",
-			"revisionTime": "2016-03-28T21:50:22Z"
+			"revision": "2884593601c39716d85a2fcb5af8e4a20294cee6",
+			"revisionTime": "2016-03-30T16:27:15Z"
 		},
 		{
 			"checksumSHA1": "5xzix1R8prUyWxgLnzUQoxTsfik=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/aws/aws-sdk-go/private/protocol/query/queryutil",
 			"path": "github.com/aws/aws-sdk-go/private/protocol/query/queryutil",
-			"revision": "75f718b3a52577de25555fc636228fa9f63cc78d",
-			"revisionTime": "2016-03-28T21:50:22Z"
+			"revision": "2884593601c39716d85a2fcb5af8e4a20294cee6",
+			"revisionTime": "2016-03-30T16:27:15Z"
 		},
 		{
 			"checksumSHA1": "TW/7U+/8ormL7acf6z2rv2hDD+s=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/aws/aws-sdk-go/private/protocol/rest",
 			"path": "github.com/aws/aws-sdk-go/private/protocol/rest",
-			"revision": "75f718b3a52577de25555fc636228fa9f63cc78d",
-			"revisionTime": "2016-03-28T21:50:22Z"
+			"revision": "2884593601c39716d85a2fcb5af8e4a20294cee6",
+			"revisionTime": "2016-03-30T16:27:15Z"
 		},
 		{
 			"checksumSHA1": "LsCIsjbzX2r3n/AhpNJvAC5ueNA=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/aws/aws-sdk-go/private/protocol/xml/xmlutil",
 			"path": "github.com/aws/aws-sdk-go/private/protocol/xml/xmlutil",
-			"revision": "75f718b3a52577de25555fc636228fa9f63cc78d",
-			"revisionTime": "2016-03-28T21:50:22Z"
+			"revision": "2884593601c39716d85a2fcb5af8e4a20294cee6",
+			"revisionTime": "2016-03-30T16:27:15Z"
 		},
 		{
 			"checksumSHA1": "L2bf110xGGQ4+8MwLrRYfOXkOsg=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/aws/aws-sdk-go/private/signer/v4",
 			"path": "github.com/aws/aws-sdk-go/private/signer/v4",
-			"revision": "75f718b3a52577de25555fc636228fa9f63cc78d",
-			"revisionTime": "2016-03-28T21:50:22Z"
+			"revision": "2884593601c39716d85a2fcb5af8e4a20294cee6",
+			"revisionTime": "2016-03-30T16:27:15Z"
 		},
 		{
 			"checksumSHA1": "Eo9yODN5U99BK0pMzoqnBm7PCrY=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/aws/aws-sdk-go/private/waiter",
 			"path": "github.com/aws/aws-sdk-go/private/waiter",
-			"revision": "75f718b3a52577de25555fc636228fa9f63cc78d",
-			"revisionTime": "2016-03-28T21:50:22Z"
+			"revision": "2884593601c39716d85a2fcb5af8e4a20294cee6",
+			"revisionTime": "2016-03-30T16:27:15Z"
 		},
 		{
 			"checksumSHA1": "A/prA97cV813P+GN98Khdd87CTM=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/aws/aws-sdk-go/service/ec2",
 			"path": "github.com/aws/aws-sdk-go/service/ec2",
-			"revision": "75f718b3a52577de25555fc636228fa9f63cc78d",
-			"revisionTime": "2016-03-28T21:50:22Z"
+			"revision": "2884593601c39716d85a2fcb5af8e4a20294cee6",
+			"revisionTime": "2016-03-30T16:27:15Z"
 		},
 		{
 			"checksumSHA1": "FUBQISClG+J3S9wQVf9GAMrvQIM=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/aws/aws-sdk-go/service/opsworks",
 			"path": "github.com/aws/aws-sdk-go/service/opsworks",
-			"revision": "75f718b3a52577de25555fc636228fa9f63cc78d",
-			"revisionTime": "2016-03-28T21:50:22Z"
+			"revision": "2884593601c39716d85a2fcb5af8e4a20294cee6",
+			"revisionTime": "2016-03-30T16:27:15Z"
 		},
 		{
 			"checksumSHA1": "rXq5zXSW6ZfBBSV2xc6Dz1Wor2w=",
@@ -213,25 +213,25 @@
 			"revisionTime": "2016-03-26T22:39:47Z"
 		},
 		{
-			"checksumSHA1": "934R1lazzxwTFpRLN0PMx+692Nw=",
+			"checksumSHA1": "Q9uO+fNH5uUpG7GwjpK9z8BVyIE=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/coreos/etcd/client",
 			"path": "github.com/coreos/etcd/client",
-			"revision": "1637b371320aaa7e6ab17cc2b95231c84c90ec87",
-			"revisionTime": "2016-03-29T05:30:58Z"
+			"revision": "307cb5167c936f65714d30da33b22157c4d011e7",
+			"revisionTime": "2016-04-01T05:24:54Z"
 		},
 		{
 			"checksumSHA1": "mKIXx1kDwmVmdIpZ3pJtRBuUKso=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/coreos/etcd/pkg/pathutil",
 			"path": "github.com/coreos/etcd/pkg/pathutil",
-			"revision": "1637b371320aaa7e6ab17cc2b95231c84c90ec87",
-			"revisionTime": "2016-03-29T05:30:58Z"
+			"revision": "307cb5167c936f65714d30da33b22157c4d011e7",
+			"revisionTime": "2016-04-01T05:24:54Z"
 		},
 		{
 			"checksumSHA1": "sWFTfWCr1bOglNmNA7WxlEgXKv0=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/coreos/etcd/pkg/types",
 			"path": "github.com/coreos/etcd/pkg/types",
-			"revision": "1637b371320aaa7e6ab17cc2b95231c84c90ec87",
-			"revisionTime": "2016-03-29T05:30:58Z"
+			"revision": "307cb5167c936f65714d30da33b22157c4d011e7",
+			"revisionTime": "2016-04-01T05:24:54Z"
 		},
 		{
 			"checksumSHA1": "5rPfda8jFccr3A6heL+JAmi9K9g=",
@@ -244,127 +244,127 @@
 			"checksumSHA1": "swrmSZR/wRFxtu7eftd7Vm9ykrI=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/docker/docker/daemon/graphdriver",
 			"path": "github.com/docker/docker/daemon/graphdriver",
-			"revision": "78076d5cf9413476a8d4e27822b96fef7a55e055",
-			"revisionTime": "2016-03-29T07:58:20Z"
+			"revision": "4a7bd7eaef0038b006cf23adface84081e5aab3b",
+			"revisionTime": "2016-03-31T23:39:25Z"
 		},
 		{
 			"checksumSHA1": "/fcXXMR0pE1ezr5gmUMbgbjycqE=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/docker/docker/daemon/graphdriver/btrfs",
 			"path": "github.com/docker/docker/daemon/graphdriver/btrfs",
-			"revision": "78076d5cf9413476a8d4e27822b96fef7a55e055",
-			"revisionTime": "2016-03-29T07:58:20Z"
+			"revision": "4a7bd7eaef0038b006cf23adface84081e5aab3b",
+			"revisionTime": "2016-03-31T23:39:25Z"
 		},
 		{
 			"checksumSHA1": "kgzWyVqpikmzFeB4og3+UUpu/Bs=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/docker/docker/daemon/graphdriver/overlay",
 			"path": "github.com/docker/docker/daemon/graphdriver/overlay",
-			"revision": "78076d5cf9413476a8d4e27822b96fef7a55e055",
-			"revisionTime": "2016-03-29T07:58:20Z"
+			"revision": "4a7bd7eaef0038b006cf23adface84081e5aab3b",
+			"revisionTime": "2016-03-31T23:39:25Z"
 		},
 		{
 			"checksumSHA1": "oizLQsc8wf9Q4yryDSJ4sgJLOoM=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/docker/docker/pkg/archive",
 			"path": "github.com/docker/docker/pkg/archive",
-			"revision": "78076d5cf9413476a8d4e27822b96fef7a55e055",
-			"revisionTime": "2016-03-29T07:58:20Z"
+			"revision": "4a7bd7eaef0038b006cf23adface84081e5aab3b",
+			"revisionTime": "2016-03-31T23:39:25Z"
 		},
 		{
 			"checksumSHA1": "uAySKAfrq7kZM9AC4feL1CTIZ/0=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/docker/docker/pkg/chrootarchive",
 			"path": "github.com/docker/docker/pkg/chrootarchive",
-			"revision": "78076d5cf9413476a8d4e27822b96fef7a55e055",
-			"revisionTime": "2016-03-29T07:58:20Z"
+			"revision": "4a7bd7eaef0038b006cf23adface84081e5aab3b",
+			"revisionTime": "2016-03-31T23:39:25Z"
 		},
 		{
 			"checksumSHA1": "NMCbFFtbH0wLXIUD8zjc1xpPDyQ=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/docker/docker/pkg/directory",
 			"path": "github.com/docker/docker/pkg/directory",
-			"revision": "78076d5cf9413476a8d4e27822b96fef7a55e055",
-			"revisionTime": "2016-03-29T07:58:20Z"
+			"revision": "4a7bd7eaef0038b006cf23adface84081e5aab3b",
+			"revisionTime": "2016-03-31T23:39:25Z"
 		},
 		{
 			"checksumSHA1": "AQxJWY7ZdZadY7pJh3A9gtuHXBM=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/docker/docker/pkg/fileutils",
 			"path": "github.com/docker/docker/pkg/fileutils",
-			"revision": "78076d5cf9413476a8d4e27822b96fef7a55e055",
-			"revisionTime": "2016-03-29T07:58:20Z"
+			"revision": "4a7bd7eaef0038b006cf23adface84081e5aab3b",
+			"revisionTime": "2016-03-31T23:39:25Z"
 		},
 		{
 			"checksumSHA1": "H1MEXwnDQYGmnKMBTQCHsYKLlEo=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/docker/docker/pkg/idtools",
 			"path": "github.com/docker/docker/pkg/idtools",
-			"revision": "78076d5cf9413476a8d4e27822b96fef7a55e055",
-			"revisionTime": "2016-03-29T07:58:20Z"
+			"revision": "4a7bd7eaef0038b006cf23adface84081e5aab3b",
+			"revisionTime": "2016-03-31T23:39:25Z"
 		},
 		{
-			"checksumSHA1": "biEA77iKzS3BzkpIj1CgU39oG08=",
+			"checksumSHA1": "6tQKHmtn2zgh2hCli+fKBBCvnc0=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/docker/docker/pkg/ioutils",
 			"path": "github.com/docker/docker/pkg/ioutils",
-			"revision": "78076d5cf9413476a8d4e27822b96fef7a55e055",
-			"revisionTime": "2016-03-29T07:58:20Z"
+			"revision": "4a7bd7eaef0038b006cf23adface84081e5aab3b",
+			"revisionTime": "2016-03-31T23:39:25Z"
 		},
 		{
 			"checksumSHA1": "ndnAFCfsGC3upNQ6jAEwzxcurww=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/docker/docker/pkg/longpath",
 			"path": "github.com/docker/docker/pkg/longpath",
-			"revision": "78076d5cf9413476a8d4e27822b96fef7a55e055",
-			"revisionTime": "2016-03-29T07:58:20Z"
+			"revision": "4a7bd7eaef0038b006cf23adface84081e5aab3b",
+			"revisionTime": "2016-03-31T23:39:25Z"
 		},
 		{
 			"checksumSHA1": "8CK7JrnnsOMVWok/Z3C7VB8YRjA=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/docker/docker/pkg/mount",
 			"path": "github.com/docker/docker/pkg/mount",
-			"revision": "78076d5cf9413476a8d4e27822b96fef7a55e055",
-			"revisionTime": "2016-03-29T07:58:20Z"
+			"revision": "4a7bd7eaef0038b006cf23adface84081e5aab3b",
+			"revisionTime": "2016-03-31T23:39:25Z"
 		},
 		{
 			"checksumSHA1": "wsrsKCboNY7/vbL7BHExXKX90qg=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/docker/docker/pkg/parsers",
 			"path": "github.com/docker/docker/pkg/parsers",
-			"revision": "78076d5cf9413476a8d4e27822b96fef7a55e055",
-			"revisionTime": "2016-03-29T07:58:20Z"
+			"revision": "4a7bd7eaef0038b006cf23adface84081e5aab3b",
+			"revisionTime": "2016-03-31T23:39:25Z"
 		},
 		{
 			"checksumSHA1": "usIyx8wIIFMMhXt8K20epHw+VT8=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/docker/docker/pkg/plugins",
 			"path": "github.com/docker/docker/pkg/plugins",
-			"revision": "78076d5cf9413476a8d4e27822b96fef7a55e055",
-			"revisionTime": "2016-03-29T07:58:20Z"
+			"revision": "4a7bd7eaef0038b006cf23adface84081e5aab3b",
+			"revisionTime": "2016-03-31T23:39:25Z"
 		},
 		{
 			"checksumSHA1": "7PpleyPctFC+y0OS4+kksrD6sJE=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/docker/docker/pkg/plugins/transport",
 			"path": "github.com/docker/docker/pkg/plugins/transport",
-			"revision": "78076d5cf9413476a8d4e27822b96fef7a55e055",
-			"revisionTime": "2016-03-29T07:58:20Z"
+			"revision": "4a7bd7eaef0038b006cf23adface84081e5aab3b",
+			"revisionTime": "2016-03-31T23:39:25Z"
 		},
 		{
 			"checksumSHA1": "rArZ5mYIe9I1L5PRQOJu8BwafFw=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/docker/docker/pkg/pools",
 			"path": "github.com/docker/docker/pkg/pools",
-			"revision": "78076d5cf9413476a8d4e27822b96fef7a55e055",
-			"revisionTime": "2016-03-29T07:58:20Z"
+			"revision": "4a7bd7eaef0038b006cf23adface84081e5aab3b",
+			"revisionTime": "2016-03-31T23:39:25Z"
 		},
 		{
 			"checksumSHA1": "txf3EORYff4hO6PEvwBm2lyh1MU=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/docker/docker/pkg/promise",
 			"path": "github.com/docker/docker/pkg/promise",
-			"revision": "78076d5cf9413476a8d4e27822b96fef7a55e055",
-			"revisionTime": "2016-03-29T07:58:20Z"
+			"revision": "4a7bd7eaef0038b006cf23adface84081e5aab3b",
+			"revisionTime": "2016-03-31T23:39:25Z"
 		},
 		{
 			"checksumSHA1": "2ILeP8x+Srk5LgFaEI37VkqjbDA=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/docker/docker/pkg/reexec",
 			"path": "github.com/docker/docker/pkg/reexec",
-			"revision": "78076d5cf9413476a8d4e27822b96fef7a55e055",
-			"revisionTime": "2016-03-29T07:58:20Z"
+			"revision": "4a7bd7eaef0038b006cf23adface84081e5aab3b",
+			"revisionTime": "2016-03-31T23:39:25Z"
 		},
 		{
 			"checksumSHA1": "VcjQzWgph4gRBVHeEP5QuTS/yx8=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/docker/docker/pkg/system",
 			"path": "github.com/docker/docker/pkg/system",
-			"revision": "78076d5cf9413476a8d4e27822b96fef7a55e055",
-			"revisionTime": "2016-03-29T07:58:20Z"
+			"revision": "4a7bd7eaef0038b006cf23adface84081e5aab3b",
+			"revisionTime": "2016-03-31T23:39:25Z"
 		},
 		{
 			"checksumSHA1": "18hmvak2Dc9x5cgKeZ2iApviT7w=",
@@ -416,32 +416,25 @@
 			"revisionTime": "2016-03-21T23:18:31Z"
 		},
 		{
-			"checksumSHA1": "HmbftipkadrLlCfzzVQ+iFHbl6g=",
-			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/golang/glog",
-			"path": "github.com/golang/glog",
-			"revision": "23def4e6c14b4da8ac2ed8007337bc5eb5007998",
-			"revisionTime": "2016-01-25T20:49:56Z"
-		},
-		{
 			"checksumSHA1": "JrwZ3Zebmgw1nB4IwCMys0euNgA=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/golang/protobuf/jsonpb",
 			"path": "github.com/golang/protobuf/jsonpb",
-			"revision": "8d92cf5fc15a4382f8964b08e1f42a75c0591aa3",
-			"revisionTime": "2016-03-18T18:57:00Z"
+			"revision": "dda510ac0fd43b39770f22ac6260eb91d377bce3",
+			"revisionTime": "2016-03-30T00:19:00Z"
 		},
 		{
-			"checksumSHA1": "UQtJP2n/HEBhHaq6a9R2hCHgy+8=",
+			"checksumSHA1": "r2217M+60ykOkomU6p2mO4pLzug=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/golang/protobuf/proto",
 			"path": "github.com/golang/protobuf/proto",
-			"revision": "8d92cf5fc15a4382f8964b08e1f42a75c0591aa3",
-			"revisionTime": "2016-03-18T18:57:00Z"
+			"revision": "dda510ac0fd43b39770f22ac6260eb91d377bce3",
+			"revisionTime": "2016-03-30T00:19:00Z"
 		},
 		{
 			"checksumSHA1": "+cT5a/FtqhkUAnVuajBTUAS2iHU=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/golang/protobuf/protoc-gen-go/descriptor",
 			"path": "github.com/golang/protobuf/protoc-gen-go/descriptor",
-			"revision": "8d92cf5fc15a4382f8964b08e1f42a75c0591aa3",
-			"revisionTime": "2016-03-18T18:57:00Z"
+			"revision": "dda510ac0fd43b39770f22ac6260eb91d377bce3",
+			"revisionTime": "2016-03-30T00:19:00Z"
 		},
 		{
 			"checksumSHA1": "iIUYZyoanCQQTUaWsu8b+iOSPt4=",
@@ -461,15 +454,22 @@
 			"checksumSHA1": "rix4F+CSyo3wrlhURNU8sTxYjzg=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/hashicorp/consul/api",
 			"path": "github.com/hashicorp/consul/api",
-			"revision": "ae32a3ceae9fddb431b933ed7b2a82110e41e1bf",
-			"revisionTime": "2016-03-25T22:03:18Z"
+			"revision": "a440433ac832516bb026872f698669122a4789b6",
+			"revisionTime": "2016-04-01T01:07:39Z"
 		},
 		{
-			"checksumSHA1": "4+Hm+kHM6jPeYOBrXriWcIp0+HY=",
+			"checksumSHA1": "fSe5y1UgTDeYlnFfUcDA1zzcw+U=",
+			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/hashicorp/go-cleanhttp",
+			"path": "github.com/hashicorp/go-cleanhttp",
+			"revision": "875fb671b3ddc66f8e2f0acc33829c8cb989a38d",
+			"revisionTime": "2016-02-17T21:48:20Z"
+		},
+		{
+			"checksumSHA1": "E3Xcanc9ouQwL+CZGOUyA/+giLg=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/hashicorp/serf/coordinate",
 			"path": "github.com/hashicorp/serf/coordinate",
-			"revision": "598c54895cc5a7b1a24a398d635e8c0ea0959870",
-			"revisionTime": "2016-03-17T19:36:12Z"
+			"revision": "979180d19cb3c60f58fda490533e8e22a21c5aae",
+			"revisionTime": "2016-03-31T22:59:36Z"
 		},
 		{
 			"checksumSHA1": "0ZrwvB6KoGPj2PoDNSEJwxQ6Mog=",
@@ -524,22 +524,22 @@
 			"checksumSHA1": "0ORMSN0QacGK4KBvnS9OWBOzU6g=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/opencontainers/runc/libcontainer/label",
 			"path": "github.com/opencontainers/runc/libcontainer/label",
-			"revision": "ed03709656ec07c8d3430dba603236cac5ae76f0",
-			"revisionTime": "2016-03-28T23:47:26Z"
+			"revision": "89ab7f2ccc1e45ddf6485eaa802c35dcf321dfc8",
+			"revisionTime": "2016-03-31T09:02:02Z"
 		},
 		{
 			"checksumSHA1": "CVbXk//JZmRXJZr7EoyH+WrVRgQ=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/opencontainers/runc/libcontainer/selinux",
 			"path": "github.com/opencontainers/runc/libcontainer/selinux",
-			"revision": "ed03709656ec07c8d3430dba603236cac5ae76f0",
-			"revisionTime": "2016-03-28T23:47:26Z"
+			"revision": "89ab7f2ccc1e45ddf6485eaa802c35dcf321dfc8",
+			"revisionTime": "2016-03-31T09:02:02Z"
 		},
 		{
 			"checksumSHA1": "xo2LfoL27cGF6cChWvew2KfhpNI=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/opencontainers/runc/libcontainer/system",
 			"path": "github.com/opencontainers/runc/libcontainer/system",
-			"revision": "ed03709656ec07c8d3430dba603236cac5ae76f0",
-			"revisionTime": "2016-03-28T23:47:26Z"
+			"revision": "89ab7f2ccc1e45ddf6485eaa802c35dcf321dfc8",
+			"revisionTime": "2016-03-31T09:02:02Z"
 		},
 		{
 			"checksumSHA1": "xN14ZoFcgefABp24aowYtQVMDsc=",
@@ -556,32 +556,32 @@
 			"revisionTime": "2016-01-10T10:55:54Z"
 		},
 		{
-			"checksumSHA1": "sASPVBK0HDUTmFmV3B7w1ttVCqY=",
+			"checksumSHA1": "nXOOAvYogCYNl6v2sxIH39ZSvUM=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/portworx/kvdb",
 			"path": "github.com/portworx/kvdb",
-			"revision": "33e6ac0762b27567f19f8f1cefc1ee16139e6558",
-			"revisionTime": "2016-03-25T19:33:24Z"
+			"revision": "fc7643520be64ba06552823f694876d78830a52c",
+			"revisionTime": "2016-03-30T02:29:09Z"
 		},
 		{
 			"checksumSHA1": "VqrtAthHzmqBamt6GvYMJnzAf4E=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/portworx/kvdb/consul",
 			"path": "github.com/portworx/kvdb/consul",
-			"revision": "33e6ac0762b27567f19f8f1cefc1ee16139e6558",
-			"revisionTime": "2016-03-25T19:33:24Z"
+			"revision": "fc7643520be64ba06552823f694876d78830a52c",
+			"revisionTime": "2016-03-30T02:29:09Z"
 		},
 		{
-			"checksumSHA1": "d4Vi1+2YQ0jDx/FEPy5/4F7ziAA=",
+			"checksumSHA1": "BxwK0x/U8t8UsPsGIQdzJq5qWHg=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/portworx/kvdb/etcd",
 			"path": "github.com/portworx/kvdb/etcd",
-			"revision": "33e6ac0762b27567f19f8f1cefc1ee16139e6558",
-			"revisionTime": "2016-03-25T19:33:24Z"
+			"revision": "fc7643520be64ba06552823f694876d78830a52c",
+			"revisionTime": "2016-03-30T02:29:09Z"
 		},
 		{
 			"checksumSHA1": "lWM17KOOJ4n0zg6qgM22D0F8Vj0=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/portworx/kvdb/mem",
 			"path": "github.com/portworx/kvdb/mem",
-			"revision": "33e6ac0762b27567f19f8f1cefc1ee16139e6558",
-			"revisionTime": "2016-03-25T19:33:24Z"
+			"revision": "fc7643520be64ba06552823f694876d78830a52c",
+			"revisionTime": "2016-03-30T02:29:09Z"
 		},
 		{
 			"checksumSHA1": "cKNzpMpci3WUAzXpe+tVnBv2cjE=",
@@ -591,11 +591,11 @@
 			"revisionTime": "2016-03-24T11:22:44Z"
 		},
 		{
-			"checksumSHA1": "4KcCyGRFquWUgZaljRgjPbk7i7o=",
+			"checksumSHA1": "hIqjKFj2xCIhm89ccyrIezt5h7g=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/spf13/cobra",
 			"path": "github.com/spf13/cobra",
-			"revision": "c678ff029ee250b65714e518f4f5c5cb934955de",
-			"revisionTime": "2016-03-22T17:10:42Z"
+			"revision": "b0d571e7d5f7c0dca407fa86567e6297c4776564",
+			"revisionTime": "2016-03-31T14:32:10Z"
 		},
 		{
 			"checksumSHA1": "MrBzoMkuXdrGKo09/ka+JCC2Mlk=",
@@ -629,8 +629,8 @@
 			"checksumSHA1": "Cu5bXApv9vuX7Ar2zEgAXX8EIKA=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/vbatts/tar-split/tar/storage",
 			"path": "github.com/vbatts/tar-split/tar/storage",
-			"revision": "e2a62d6b0d98fd7f1a57646812c74564fda999b4",
-			"revisionTime": "2016-02-29T16:40:38Z"
+			"revision": "226f7c74905f1fcc08ac128b517a1d65a1948eb9",
+			"revisionTime": "2016-03-30T20:38:51Z"
 		},
 		{
 			"checksumSHA1": "LIXg0Q/PP3Zb/1ucUfwBC/rcXZM=",
@@ -727,99 +727,99 @@
 			"checksumSHA1": "9QKY4bQlbQ/VZZFP8/1WtH4b0mA=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/golang.org/x/net/context",
 			"path": "golang.org/x/net/context",
-			"revision": "31df19d69da8728e9220def59b80ee577c3e48bf",
-			"revisionTime": "2016-03-28T23:16:23Z"
+			"revision": "3e8a7b0329d536af18e227bb21b6da4d1dbbe180",
+			"revisionTime": "2016-03-29T01:55:07Z"
 		},
 		{
 			"checksumSHA1": "ClIslOd+ahFw742wZTJW0XpSLLQ=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/golang.org/x/net/http2",
 			"path": "golang.org/x/net/http2",
-			"revision": "31df19d69da8728e9220def59b80ee577c3e48bf",
-			"revisionTime": "2016-03-28T23:16:23Z"
+			"revision": "3e8a7b0329d536af18e227bb21b6da4d1dbbe180",
+			"revisionTime": "2016-03-29T01:55:07Z"
 		},
 		{
 			"checksumSHA1": "VYl3cuReuGeFp9vb1cm8x87qdlU=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/golang.org/x/net/http2/hpack",
 			"path": "golang.org/x/net/http2/hpack",
-			"revision": "31df19d69da8728e9220def59b80ee577c3e48bf",
-			"revisionTime": "2016-03-28T23:16:23Z"
+			"revision": "3e8a7b0329d536af18e227bb21b6da4d1dbbe180",
+			"revisionTime": "2016-03-29T01:55:07Z"
 		},
 		{
 			"checksumSHA1": "/k7k6eJDkxXx6K9Zpo/OwNm58XM=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/golang.org/x/net/internal/timeseries",
 			"path": "golang.org/x/net/internal/timeseries",
-			"revision": "31df19d69da8728e9220def59b80ee577c3e48bf",
-			"revisionTime": "2016-03-28T23:16:23Z"
+			"revision": "3e8a7b0329d536af18e227bb21b6da4d1dbbe180",
+			"revisionTime": "2016-03-29T01:55:07Z"
 		},
 		{
 			"checksumSHA1": "dZJWvQmmWOwDkGPxJqoE8rN005w=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/golang.org/x/net/trace",
 			"path": "golang.org/x/net/trace",
-			"revision": "31df19d69da8728e9220def59b80ee577c3e48bf",
-			"revisionTime": "2016-03-28T23:16:23Z"
+			"revision": "3e8a7b0329d536af18e227bb21b6da4d1dbbe180",
+			"revisionTime": "2016-03-29T01:55:07Z"
 		},
 		{
 			"checksumSHA1": "tv1u5zxov+2dO83iba/fR7vRY3g=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/google.golang.org/grpc",
 			"path": "google.golang.org/grpc",
-			"revision": "d1f7152c46d141a3924d5abb3a2cb8704f6421b6",
-			"revisionTime": "2016-03-29T06:31:13Z"
+			"revision": "68dadb4d0004911b9148648839bd6f5ba0f5e15d",
+			"revisionTime": "2016-03-31T16:36:46Z"
 		},
 		{
 			"checksumSHA1": "08icuA15HRkdYCt6H+Cs90RPQsY=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/google.golang.org/grpc/codes",
 			"path": "google.golang.org/grpc/codes",
-			"revision": "d1f7152c46d141a3924d5abb3a2cb8704f6421b6",
-			"revisionTime": "2016-03-29T06:31:13Z"
+			"revision": "68dadb4d0004911b9148648839bd6f5ba0f5e15d",
+			"revisionTime": "2016-03-31T16:36:46Z"
 		},
 		{
 			"checksumSHA1": "a+C+FoyX7Tc4iNFhBndt/y/iPEg=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/google.golang.org/grpc/credentials",
 			"path": "google.golang.org/grpc/credentials",
-			"revision": "d1f7152c46d141a3924d5abb3a2cb8704f6421b6",
-			"revisionTime": "2016-03-29T06:31:13Z"
+			"revision": "68dadb4d0004911b9148648839bd6f5ba0f5e15d",
+			"revisionTime": "2016-03-31T16:36:46Z"
 		},
 		{
 			"checksumSHA1": "3Lt5hNAG8qJAYSsNghR5uA1zQns=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/google.golang.org/grpc/grpclog",
 			"path": "google.golang.org/grpc/grpclog",
-			"revision": "d1f7152c46d141a3924d5abb3a2cb8704f6421b6",
-			"revisionTime": "2016-03-29T06:31:13Z"
+			"revision": "68dadb4d0004911b9148648839bd6f5ba0f5e15d",
+			"revisionTime": "2016-03-31T16:36:46Z"
 		},
 		{
 			"checksumSHA1": "T3Q0p8kzvXFnRkMaK/G8mCv6mc0=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/google.golang.org/grpc/internal",
 			"path": "google.golang.org/grpc/internal",
-			"revision": "d1f7152c46d141a3924d5abb3a2cb8704f6421b6",
-			"revisionTime": "2016-03-29T06:31:13Z"
+			"revision": "68dadb4d0004911b9148648839bd6f5ba0f5e15d",
+			"revisionTime": "2016-03-31T16:36:46Z"
 		},
 		{
 			"checksumSHA1": "IlzBp7dylW8F4D7eINj8xHt/jMk=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/google.golang.org/grpc/metadata",
 			"path": "google.golang.org/grpc/metadata",
-			"revision": "d1f7152c46d141a3924d5abb3a2cb8704f6421b6",
-			"revisionTime": "2016-03-29T06:31:13Z"
+			"revision": "68dadb4d0004911b9148648839bd6f5ba0f5e15d",
+			"revisionTime": "2016-03-31T16:36:46Z"
 		},
 		{
 			"checksumSHA1": "fGJlPKvpYAZ6+HRX3qScFnZ9dd4=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/google.golang.org/grpc/naming",
 			"path": "google.golang.org/grpc/naming",
-			"revision": "d1f7152c46d141a3924d5abb3a2cb8704f6421b6",
-			"revisionTime": "2016-03-29T06:31:13Z"
+			"revision": "68dadb4d0004911b9148648839bd6f5ba0f5e15d",
+			"revisionTime": "2016-03-31T16:36:46Z"
 		},
 		{
 			"checksumSHA1": "3RRoLeH6X2//7tVClOVzxW2bY+E=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/google.golang.org/grpc/peer",
 			"path": "google.golang.org/grpc/peer",
-			"revision": "d1f7152c46d141a3924d5abb3a2cb8704f6421b6",
-			"revisionTime": "2016-03-29T06:31:13Z"
+			"revision": "68dadb4d0004911b9148648839bd6f5ba0f5e15d",
+			"revisionTime": "2016-03-31T16:36:46Z"
 		},
 		{
-			"checksumSHA1": "1M3pgWElWQcG+9nK8MCTgSZAzG8=",
+			"checksumSHA1": "cRWo9TGarK76Z52yd2qC8uiE0nc=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/google.golang.org/grpc/transport",
 			"path": "google.golang.org/grpc/transport",
-			"revision": "d1f7152c46d141a3924d5abb3a2cb8704f6421b6",
-			"revisionTime": "2016-03-29T06:31:13Z"
+			"revision": "68dadb4d0004911b9148648839bd6f5ba0f5e15d",
+			"revisionTime": "2016-03-31T16:36:46Z"
 		},
 		{
 			"checksumSHA1": "tr9VfMj5HNs7UqT6MrGnqMSakOE=",

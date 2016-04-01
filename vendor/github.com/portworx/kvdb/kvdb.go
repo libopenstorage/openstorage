@@ -76,6 +76,8 @@ const (
 	KVCreatedIndex
 	// KVModifiedIndex flag compares with passed in index (possibly in KVPair)
 	KVModifiedIndex
+	// KVTTL uses TTL val from KVPair.
+	KVTTL
 )
 
 // Tx Interface to transactionally apply updates to a set of keys.

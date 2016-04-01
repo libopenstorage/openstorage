@@ -32,14 +32,21 @@ test-deps:
 	GO15VENDOREXPERIMENT=0 go get -d -v -t $(PKGS)
 
 update-test-deps:
-	GO15VENDOREXPERIMENT=0 go get -d -v -t -u -f $(PKGS)
+	GO15VENDOREXPERIMENT=0 go get -tags "$(TAGS)" -d -v -t -u -f $(PKGS)
 
-vendor:
+vendor-update:
+	GO15VENDOREXPERIMENT=0 GOOS=linux GOARCH=amd64 go get -tags "daemon btrfs_noversion have_btrfs have_chainfs" -d -v -t -u -f $(shell go list ./... 2>&1 | grep -v 'github.com/libopenstorage/openstorage/vendor')
+	
+vendor-without-update:
 	go get -v github.com/kardianos/govendor
 	rm -rf vendor
 	govendor init
 	GOOS=linux GOARCH=amd64 govendor add +external
 	GOOS=linux GOARCH=amd64 govendor update +vendor
+	GOOS=linux GOARCH=amd64 govendor add +external
+	GOOS=linux GOARCH=amd64 govendor update +vendor
+
+vendor: vendor-update vendor-without-update
 
 build:
 	go build -tags "$(TAGS)" $(BUILDFLAGS) $(PKGS)
@@ -147,6 +154,8 @@ clean:
 	update-deps \
 	test-deps \
 	update-test-deps \
+	vendor-update \
+	vendor-without-update \
 	vendor \
 	build \
 	install \

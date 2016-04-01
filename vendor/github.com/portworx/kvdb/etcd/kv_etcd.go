@@ -3,8 +3,8 @@ package etcd
 import (
 	"encoding/json"
 	"fmt"
-	"math"
 	"strings"
+	"sync"
 	"time"
 
 	"golang.org/x/net/context"
@@ -15,7 +15,7 @@ import (
 
 const (
 	Name    = "etcd-kv"
-	defHost = "http://127.0.0.1:4001"
+	defHost = "http://etcd.portworx.com:4001"
 )
 
 type EtcdKV struct {
@@ -23,9 +23,17 @@ type EtcdKV struct {
 	domain string
 }
 
+type etcdLock struct {
+	done     chan struct{}
+	unlocked bool
+	err      error
+	sync.Mutex
+}
+
 func EtcdInit(domain string,
 	machines []string,
-	options map[string]string) (kvdb.Kvdb, error) {
+	options map[string]string,
+) (kvdb.Kvdb, error) {
 
 	if len(machines) == 0 {
 		machines = []string{defHost}
@@ -148,16 +156,22 @@ func (kv *EtcdKV) toBytes(val interface{}) ([]byte, error) {
 func (kv *EtcdKV) Put(
 	key string,
 	val interface{},
-	ttl uint64) (*kvdb.KVPair, error) {
+	ttl uint64,
+) (*kvdb.KVPair, error) {
 
 	key = kv.domain + key
 	b, err := kv.toBytes(val)
 	if err != nil {
 		return nil, err
 	}
-	result, err := kv.client.Set(context.Background(), key, string(b), &e.SetOptions{
-		TTL: time.Duration(ttl) * time.Second,
-	})
+	result, err := kv.client.Set(
+		context.Background(),
+		key,
+		string(b),
+		&e.SetOptions{
+			TTL: time.Duration(ttl) * time.Second,
+		},
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +179,12 @@ func (kv *EtcdKV) Put(
 	return kv.resultToKv(result), err
 }
 
-func (kv *EtcdKV) Create(key string, val interface{}, ttl uint64) (*kvdb.KVPair, error) {
+func (kv *EtcdKV) Create(
+	key string,
+	val interface{},
+	ttl uint64,
+) (*kvdb.KVPair, error) {
+
 	key = kv.domain + key
 
 	b, err := kv.toBytes(val)
@@ -182,7 +201,12 @@ func (kv *EtcdKV) Create(key string, val interface{}, ttl uint64) (*kvdb.KVPair,
 	return kv.resultToKv(result), err
 }
 
-func (kv *EtcdKV) Update(key string, val interface{}, ttl uint64) (*kvdb.KVPair, error) {
+func (kv *EtcdKV) Update(
+	key string,
+	val interface{},
+	ttl uint64,
+) (*kvdb.KVPair, error) {
+
 	key = kv.domain + key
 
 	b, err := kv.toBytes(val)
@@ -240,20 +264,24 @@ func (kv *EtcdKV) Keys(prefix, key string) ([]string, error) {
 func (kv *EtcdKV) CompareAndSet(
 	kvp *kvdb.KVPair,
 	flags kvdb.KVFlags,
-	prevValue []byte) (*kvdb.KVPair, error) {
+	prevValue []byte,
+) (*kvdb.KVPair, error) {
 
-	prevIndex := uint64(0)
+	opts := &e.SetOptions{
+		PrevValue: string(prevValue),
+	}
 	if (flags & kvdb.KVModifiedIndex) != 0 {
-		prevIndex = kvp.ModifiedIndex
+		opts.PrevIndex = kvp.ModifiedIndex
+	}
+	if (flags & kvdb.KVTTL) != 0 {
+		opts.TTL = time.Duration(kvp.TTL)
 	}
 	result, err := kv.client.Set(
 		context.Background(),
 		kv.domain+kvp.Key,
 		string(kvp.Value),
-		&e.SetOptions{
-			PrevValue: string(prevValue),
-			PrevIndex: prevIndex,
-		})
+		opts,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -262,7 +290,9 @@ func (kv *EtcdKV) CompareAndSet(
 
 func (kv *EtcdKV) CompareAndDelete(
 	kvp *kvdb.KVPair,
-	flags kvdb.KVFlags) (*kvdb.KVPair, error) {
+	flags kvdb.KVFlags,
+) (*kvdb.KVPair, error) {
+
 	result, err := kv.client.Delete(
 		context.Background(),
 		kv.domain+kvp.Key,
@@ -280,7 +310,8 @@ func (kv *EtcdKV) WatchKey(
 	key string,
 	waitIndex uint64,
 	opaque interface{},
-	cb kvdb.WatchCB) error {
+	cb kvdb.WatchCB,
+) error {
 
 	key = kv.domain + key
 	go kv.watchStart(key, false, waitIndex, opaque, cb)
@@ -291,7 +322,8 @@ func (kv *EtcdKV) WatchTree(
 	prefix string,
 	waitIndex uint64,
 	opaque interface{},
-	cb kvdb.WatchCB) error {
+	cb kvdb.WatchCB,
+) error {
 
 	prefix = kv.domain + prefix
 	go kv.watchStart(prefix, true, waitIndex, opaque, cb)
@@ -300,34 +332,74 @@ func (kv *EtcdKV) WatchTree(
 
 func (kv *EtcdKV) Lock(key string, ttl uint64) (*kvdb.KVPair, error) {
 	key = kv.domain + key
+	duration := time.Second
 
-	count := 1
-	duration := time.Duration(math.Min(float64(time.Second),
-		float64((time.Duration(ttl)*time.Second)/10)))
-
-	result, err := kv.client.Set(context.Background(), key, "locked", &e.SetOptions{
-		TTL: time.Duration(ttl) * time.Second,
-	})
-	for err != nil {
+	count := 0
+	kvPair, err := kv.Create(key, "locked", ttl)
+	for maxCount := 300; err != nil && count < maxCount; count++ {
 		time.Sleep(duration)
-		count++
-		result, err = kv.client.Set(context.Background(), key, "locked", &e.SetOptions{
-			TTL: time.Duration(ttl) * time.Second,
-		})
+		kvPair, err = kv.Create(key, "locked", ttl)
 	}
-
 	if err != nil {
 		return nil, err
 	}
-	if count > 3 {
-		fmt.Printf("ETCD: spent %v iteations locking %v", count, key)
+	if count > 10 {
+		fmt.Printf("ETCD: spent %v iterations locking %v\n", count, key)
 	}
-	return kv.resultToKv(result), err
+	kvPair.TTL = int64(time.Duration(ttl) * time.Second)
+	kvPair.Lock = &etcdLock{done: make(chan struct{})}
+	go kv.refreshLock(kvPair)
+
+	return kvPair, err
+}
+
+func (kv *EtcdKV) refreshLock(kvPair *kvdb.KVPair) {
+
+	l := kvPair.Lock.(*etcdLock)
+	ttl := kvPair.TTL
+	refresh := time.NewTicker(time.Duration(kvPair.TTL) / 4)
+	defer refresh.Stop()
+	for {
+		select {
+		case <-refresh.C:
+			l.Lock()
+			if l.unlocked {
+				l.Unlock()
+				return
+			}
+			kvPair.TTL = ttl
+			kvp, err := kv.CompareAndSet(kvPair, kvdb.KVTTL|kvdb.KVModifiedIndex, kvPair.Value)
+			if err != nil {
+				l.Unlock()
+				fmt.Printf("Error refreshing lock for key %v: %v\n",
+					string(kvp.Key), err)
+				l.err = err
+				return
+			}
+			kvPair.ModifiedIndex = kvp.ModifiedIndex
+			l.Unlock()
+
+		case <-l.done:
+			return
+		}
+	}
 }
 
 func (kv *EtcdKV) Unlock(kvp *kvdb.KVPair) error {
+	l, ok := kvp.Lock.(*etcdLock)
+	if !ok {
+		return fmt.Errorf("Invalid lock structure for key %v", string(kvp.Key))
+	}
+	l.Lock()
 	// Don't modify kvp here, CompareAndDelete does that.
 	_, err := kv.CompareAndDelete(kvp, kvdb.KVFlags(0))
+	if err == nil {
+		l.unlocked = true
+		l.Unlock()
+		l.done <- struct{}{}
+		return nil
+	}
+	l.Unlock()
 	return err
 }
 
