@@ -52,7 +52,7 @@ var (
 	instances = make(map[string]AlertsClient)
 	drivers   = make(map[string]InitFunc)
 
-	mutex sync.Mutex
+	lock sync.Mutex
 )
 
 // AlertAction used to indicate the action performed on a KV pair
@@ -120,8 +120,8 @@ type AlertsInstance interface {
 
 // Shutdown the alerts instance
 func Shutdown() {
-	mutex.Lock()
-	defer mutex.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
 	for _, v := range instances {
 		v.Shutdown()
 	}
@@ -137,8 +137,8 @@ func Get(name string) (AlertsClient, error) {
 
 // New returns a new alerts instance
 func New(name string, kvdbName string, kvdbBase string, kvdbMachines []string, clusterId string) (AlertsClient, error) {
-	mutex.Lock()
-	defer mutex.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
 
 	if _, ok := instances[name]; ok {
 		return nil, ErrExist
@@ -173,8 +173,8 @@ func Instance() AlertsInstance {
 
 // Register an alerts interface
 func Register(name string, initFunc InitFunc) error {
-	mutex.Lock()
-	defer mutex.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
 	if _, exists := drivers[name]; exists {
 		return ErrExist
 	}
