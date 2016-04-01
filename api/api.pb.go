@@ -18,7 +18,6 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 const _ = proto.ProtoPackageIsVersion1
 
-// CHANGE: no NONE, was 1 << iota
 type Status int32
 
 const (
@@ -49,7 +48,6 @@ func (x Status) String() string {
 }
 func (Status) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
-// CHANGE: no NONE, was 1 << iota
 type DriverType int32
 
 const (
@@ -83,7 +81,6 @@ func (x DriverType) String() string {
 }
 func (DriverType) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
 
-// CHANGE: was Filesystem, no NONE, was a string
 type FSType int32
 
 const (
@@ -123,7 +120,6 @@ func (x FSType) String() string {
 }
 func (FSType) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
 
-// CHANGE: was an int, 0 was modified, 1 was added, 2 was deleted
 type GraphDriverChangeType int32
 
 const (
@@ -151,7 +147,6 @@ func (x GraphDriverChangeType) String() string {
 }
 func (GraphDriverChangeType) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
 
-// CHANGE: no NONE
 type VolumeActionParam int32
 
 const (
@@ -179,7 +174,6 @@ func (x VolumeActionParam) String() string {
 func (VolumeActionParam) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
 
 // VolumeState represents the state of a volume.
-// CHANGE: no NONE, was 1 << iota (and was bit or'ed/and'ed)
 type VolumeState int32
 
 const (
@@ -228,7 +222,6 @@ func (x VolumeState) String() string {
 func (VolumeState) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
 
 // VolumeStatus represents a health status for a volume.
-// CHANGE: no NONE, was a string
 type VolumeStatus int32
 
 const (
@@ -576,7 +569,6 @@ func (m *VolumeResponse) String() string            { return proto.CompactTextSt
 func (*VolumeResponse) ProtoMessage()               {}
 func (*VolumeResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
 
-// CHANGE: error was embedded VolumeResponse
 type VolumeCreateResponse struct {
 	// ID of the newly created volume
 	Id             string          `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
@@ -646,7 +638,6 @@ func (m *VolumeSetRequest) GetAction() *VolumeStateAction {
 	return nil
 }
 
-// CHANGE: error was embedded VolumeResponse
 type VolumeSetResponse struct {
 	Volume         *Volume         `protobuf:"bytes,1,opt,name=volume" json:"volume,omitempty"`
 	VolumeResponse *VolumeResponse `protobuf:"bytes,2,opt,name=volume_response,json=volumeResponse" json:"volume_response,omitempty"`
@@ -728,7 +719,6 @@ func (m *VolumeInfo) GetStorage() *VolumeSpec {
 // specified by the ID and Parent.  // Parent may be an empty string, in which
 // case there is no parent.
 // Where the Path is the filesystem path within the layered filesystem
-// CHANGE: kind was an int
 type GraphDriverChanges struct {
 	Path string                `protobuf:"bytes,1,opt,name=path" json:"path,omitempty"`
 	Kind GraphDriverChangeType `protobuf:"varint,2,opt,name=kind,enum=openstorage.api.GraphDriverChangeType" json:"kind,omitempty"`

@@ -4,11 +4,10 @@ import "google/protobuf/timestamp.proto";
 
 package openstorage.api;
 
-option go_package = "github.com/libopenstorage/openstorage/api;api";
+option go_package = "api";
 option java_multiple_files = true;
 option java_package = "com.openstorage.api";
 
-// CHANGE: no NONE, was 1 << iota
 enum Status {
   STATUS_NONE = 0;
   STATUS_INIT = 1;
@@ -17,7 +16,6 @@ enum Status {
   STATUS_ERROR = 4;
 }
 
-// CHANGE: no NONE, was 1 << iota
 enum DriverType {
   DRIVER_TYPE_NONE = 0;
   DRIVER_TYPE_FILE = 1;
@@ -27,7 +25,6 @@ enum DriverType {
   DRIVER_TYPE_GRAPH = 5;
 }
 
-// CHANGE: was Filesystem, no NONE, was a string
 enum FSType {
   FS_TYPE_NONE = 0;
   FS_TYPE_BTRFS = 1;
@@ -39,7 +36,6 @@ enum FSType {
   FS_TYPE_ZFS = 7;
 }
 
-// CHANGE: was an int, 0 was modified, 1 was added, 2 was deleted
 enum GraphDriverChangeType {
   GRAPH_DRIVER_CHANGE_TYPE_NONE = 0;
   GRAPH_DRIVER_CHANGE_TYPE_MODIFIED = 1;
@@ -47,7 +43,6 @@ enum GraphDriverChangeType {
   GRAPH_DRIVER_CHANGE_TYPE_DELETED = 3;
 }
 
-// CHANGE: no NONE
 enum VolumeActionParam {
   VOLUME_ACTION_PARAM_NONE = 0;
   // Maps to the boolean value false
@@ -57,7 +52,6 @@ enum VolumeActionParam {
 }
 
 // VolumeState represents the state of a volume.
-// CHANGE: no NONE, was 1 << iota (and was bit or'ed/and'ed)
 enum VolumeState {
   VOLUME_STATE_NONE = 0;
   // Volume is transitioning to new state
@@ -78,7 +72,6 @@ enum VolumeState {
 }
 
 // VolumeStatus represents a health status for a volume.
-// CHANGE: no NONE, was a string
 enum VolumeStatus {
   VOLUME_STATUS_NONE = 0;
   // Volume is not present
@@ -240,7 +233,6 @@ message VolumeResponse {
   string error = 1;
 }
 
-// CHANGE: error was embedded VolumeResponse
 message VolumeCreateResponse {
   // ID of the newly created volume
   string id = 1;
@@ -267,7 +259,6 @@ message VolumeSetRequest {
   VolumeStateAction action = 3;
 }
 
-// CHANGE: error was embedded VolumeResponse
 message VolumeSetResponse {
   Volume volume = 1;
   VolumeResponse volume_response = 2;
@@ -294,7 +285,6 @@ message VolumeInfo {
 // specified by the ID and Parent.  // Parent may be an empty string, in which
 // case there is no parent.
 // Where the Path is the filesystem path within the layered filesystem
-// CHANGE: kind was an int
 message GraphDriverChanges {
   string path = 1;
   GraphDriverChangeType kind = 2;
