@@ -43,6 +43,28 @@ enum GraphDriverChangeType {
   GRAPH_DRIVER_CHANGE_TYPE_DELETED = 3;
 }
 
+enum SeverityType {
+  // Unknown severity type
+  UNKNOWN_SEVERITY = 0;
+  // Alarm severity type   	   
+  ALARM = 1;
+  // Warning severity type
+  WARNING = 2;
+  // Notify severity type
+  NOTIFY = 3;
+}
+
+enum ResourceType {
+  // Unknown resource type undefined.
+  UNKNOWN_RESOURCE = 0;
+  // Volume Resource Type
+  VOLUMES = 1;
+  // Node Resource Type
+  NODE = 2;
+  // Cluster Resource Type
+  CLUSTER = 3;
+}
+
 enum VolumeActionParam {
   VOLUME_ACTION_PARAM_NONE = 0;
   // Maps to the boolean value false
@@ -177,28 +199,6 @@ message Stats {
   int64 io_ms = 8;
   // BytesUsed
   uint64 bytes_used = 9;
-}
-
-enum SeverityType {
-  // Unknown severity type
-  UNKNOWN_SEVERITY = 0;
-  // Alarm severity type   	   
-  ALARM = 1;
-  // Warning severity type
-  WARNING = 2;
-  // Notify severity type
-  NOTIFY = 3;
-}
-
-enum ResourceType {
-  // Unknown resource type undefined.
-  UNKNOWN_RESOURCE = 0;
-  // Volume Resource Type
-  VOLUMES = 1;
-  // Node Resource Type
-  NODE = 2;
-  // Cluster Resource Type
-  CLUSTER = 3;
 }
 
 message Alerts {
