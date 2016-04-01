@@ -19,7 +19,7 @@ func TestAll(t *testing.T) {
 		t.Fatalf("Failed to create test path: %v", err)
 	}
 
-	_, err = volume.New(Name, volume.DriverParams{"path": testPath})
+	_, err = volume.New(Name, map[string]string{"path": testPath})
 	if err != nil {
 		t.Fatalf("Failed to initialize Driver: %v", err)
 	}

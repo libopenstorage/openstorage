@@ -71,7 +71,7 @@ func init() {
 	volume.Register(Name, Init)
 }
 
-func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
+func Init(params map[string]string) (volume.VolumeDriver, error) {
 	restUrl, ok := params["restUrl"]
 	if !ok {
 		return nil, fmt.Errorf("rest api 'url' configuration parameter must be set")

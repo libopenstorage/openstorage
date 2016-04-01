@@ -47,7 +47,7 @@ func TestAll(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to mount to btrfs: %s %v", string(output), err)
 	}
-	if _, err := volume.New(Name, volume.DriverParams{RootParam: testPath}); err != nil {
+	if _, err := volume.New(Name, map[string]string{RootParam: testPath}); err != nil {
 		t.Fatalf("failed to initialize Driver: %v", err)
 	}
 	volumeDriver, err := volume.Get(Name)

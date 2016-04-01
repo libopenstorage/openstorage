@@ -23,10 +23,7 @@ var (
 	mutex                 sync.Mutex
 )
 
-// TODO(pedge): remove
-type DriverParams map[string]string
-
-type InitFunc func(params DriverParams) (VolumeDriver, error)
+type InitFunc func(params map[string]string) (VolumeDriver, error)
 type StatusFunc func() error
 
 // VolumeDriver is the main interface to be implemented by any storage driver.
@@ -158,7 +155,7 @@ func Get(name string) (VolumeDriver, error) {
 	return nil, ErrDriverNotFound
 }
 
-func New(name string, params DriverParams) (VolumeDriver, error) {
+func New(name string, params map[string]string) (VolumeDriver, error) {
 	mutex.Lock()
 	defer mutex.Unlock()
 

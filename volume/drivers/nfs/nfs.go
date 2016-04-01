@@ -42,7 +42,7 @@ type driver struct {
 	mounter   mount.Manager
 }
 
-func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
+func Init(params map[string]string) (volume.VolumeDriver, error) {
 	path, ok := params["path"]
 	if !ok {
 		return nil, errors.New("No NFS path provided")

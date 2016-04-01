@@ -53,7 +53,7 @@ type Driver struct {
 }
 
 // Init aws volume driver metadata.
-func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
+func Init(params map[string]string) (volume.VolumeDriver, error) {
 	zone, err := metadata("placement/availability-zone")
 	if err != nil {
 		return nil, err

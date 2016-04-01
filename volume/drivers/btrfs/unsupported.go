@@ -19,6 +19,6 @@ var (
 	errUnsupported = errors.New("btrfs not supported on this platform")
 )
 
-func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
+func Init(params map[string]string) (volume.VolumeDriver, error) {
 	return nil, errUnsupported
 }

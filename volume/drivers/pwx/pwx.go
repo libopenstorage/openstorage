@@ -19,7 +19,7 @@ type driver struct {
 
 // Portworx natively implements the openstorage.org API specification, so
 // we can directly point the VolumeDriver to the PWX API server.
-func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
+func Init(params map[string]string) (volume.VolumeDriver, error) {
 	url, ok := params[config.UrlKey]
 	if !ok {
 		url = DefaultUrl

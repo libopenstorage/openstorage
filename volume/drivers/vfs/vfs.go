@@ -34,7 +34,7 @@ type driver struct {
 }
 
 // Init Driver intialization.
-func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
+func Init(params map[string]string) (volume.VolumeDriver, error) {
 	return &driver{
 		IoNotSupported:    &volume.IoNotSupported{},
 		DefaultEnumerator: volume.NewDefaultEnumerator(Name, kvdb.Instance()),

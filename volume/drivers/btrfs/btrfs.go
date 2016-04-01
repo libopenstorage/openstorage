@@ -39,7 +39,7 @@ type driver struct {
 	root  string
 }
 
-func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
+func Init(params map[string]string) (volume.VolumeDriver, error) {
 	root, ok := params[RootParam]
 	if !ok {
 		return nil, fmt.Errorf("Root directory should be specified with key %q", RootParam)
