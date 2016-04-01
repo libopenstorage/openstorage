@@ -18,9 +18,10 @@ var (
 	ErrVolAttached        = errors.New("Volume is attached")
 	ErrVolHasSnaps        = errors.New("Volume has snapshots associated")
 	ErrNotSupported       = errors.New("Operation not supported")
-	instances             map[string]VolumeDriver
-	drivers               map[string]InitFunc
-	mutex                 sync.Mutex
+
+	drivers   = make(map[string]InitFunc)
+	instances = make(map[string]VolumeDriver)
+	lock      sync.Mutex
 )
 
 type InitFunc func(params map[string]string) (VolumeDriver, error)
@@ -141,8 +142,8 @@ type BlockDriver interface {
 }
 
 func Shutdown() {
-	mutex.Lock()
-	defer mutex.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
 	for _, v := range instances {
 		v.Shutdown()
 	}
@@ -156,8 +157,8 @@ func Get(name string) (VolumeDriver, error) {
 }
 
 func New(name string, params map[string]string) (VolumeDriver, error) {
-	mutex.Lock()
-	defer mutex.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
 
 	if _, ok := instances[name]; ok {
 		return nil, ErrExist
@@ -174,16 +175,11 @@ func New(name string, params map[string]string) (VolumeDriver, error) {
 }
 
 func Register(name string, initFunc InitFunc) error {
-	mutex.Lock()
-	defer mutex.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
 	if _, exists := drivers[name]; exists {
 		return ErrExist
 	}
 	drivers[name] = initFunc
 	return nil
-}
-
-func init() {
-	drivers = make(map[string]InitFunc)
-	instances = make(map[string]VolumeDriver)
 }
