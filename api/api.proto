@@ -50,9 +50,9 @@ enum GraphDriverChangeType {
 // CHANGE: no NONE
 enum VolumeActionParam {
   VOLUME_ACTION_PARAM_NONE = 0;
-	// Maps to the boolean value false
+  // Maps to the boolean value false
   VOLUME_ACTION_PARAM_OFF = 1;
-	// Maps to the boolean value true.
+  // Maps to the boolean value true.
   VOLUME_ACTION_PARAM_ON = 2;
 }
 
@@ -60,19 +60,19 @@ enum VolumeActionParam {
 // CHANGE: no NONE, was 1 << iota (and was bit or'ed/and'ed)
 enum VolumeState {
   VOLUME_STATE_NONE = 0;
-	// Volume is transitioning to new state
+  // Volume is transitioning to new state
   VOLUME_STATE_PENDING = 1;
-	// Volume is ready to be assigned to a container
+  // Volume is ready to be assigned to a container
   VOLUME_STATE_AVAILABLE = 2;
-	// Volume is attached to container
+  // Volume is attached to container
   VOLUME_STATE_ATTACHED = 3;
-	// Volume is detached but associated with a container
+  // Volume is detached but associated with a container
   VOLUME_STATE_DETACHED = 4;
-	// Volume detach is in progress
+  // Volume detach is in progress
   VOLUME_STATE_DETATCHING = 5;
-	// Volume is in error state
+  // Volume is in error state
   VOLUME_STATE_ERROR = 6;
-	// Volume is deleted, it will remain in this state
+  // Volume is deleted, it will remain in this state
   // while resources are asynchronously reclaimed
   VOLUME_STATE_DELETED = 7;
 }
@@ -87,7 +87,7 @@ enum VolumeStatus {
   VOLUME_STATUS_UP = 2;
   // Volume is in fail mode
   VOLUME_STATUS_DOWN = 3;
-	// Volume is up but with degraded performance
+  // Volume is up but with degraded performance
   // In a RAID group, this may indicate a problem with one or more drives
   VOLUME_STATUS_DEGRADED = 4;
 }
@@ -95,42 +95,42 @@ enum VolumeStatus {
 // VolumeLocator is a structure that is attached to a volume
 // and is used to carry opaque metadata.
 message VolumeLocator {
-	// User friendly identifier
+  // User friendly identifier
   string name = 1;
-	// A set of name-value pairs that acts as search filters
+  // A set of name-value pairs that acts as search filters
   map<string, string> volume_labels = 2;
 }
 
 message Source {
   // A volume id, if specified will create a clone of the parent.
   string parent = 1;
-	// Seed will seed the volume from the specified URI
+  // Seed will seed the volume from the specified URI
   // Any additional config for the source comes from the labels in the spec
   string seed = 2;
 }
 
 // VolumeSpec has the properties needed to create a volume.
 message VolumeSpec {
-	// Ephemeral storage
+  // Ephemeral storage
   bool ephemeral = 1;
-	// Thin provisioned volume size in bytes
+  // Thin provisioned volume size in bytes
   uint64 size = 2;
-	// Format disk with this FSType
+  // Format disk with this FSType
   FSType format = 3;
-	// Block size for filesystem
+  // Block size for filesystem
   int64 block_size = 4;
-	// Specifies the number of nodes that are
-	// allowed to fail, and yet data is available
-	// A value of 0 implies that data is not erasure coded,
-	// a failure of a node will lead to data loss
+  // Specifies the number of nodes that are
+  // allowed to fail, and yet data is available
+  // A value of 0 implies that data is not erasure coded,
+  // a failure of a node will lead to data loss
   int64 ha_level = 5;
   // The COS, 1 to 9
   uint32 cos = 6;
-	// Perform dedupe on this disk
+  // Perform dedupe on this disk
   bool dedupe = 7;
-	// SnapshotInterval in minutes, set to 0 to disable snapshots
+  // SnapshotInterval in minutes, set to 0 to disable snapshots
   uint32 snapshot_interval = 8;
-	// Volume configuration labels
+  // Volume configuration labels
   map<string, string> volume_labels = 9;
 }
 
@@ -142,15 +142,15 @@ message Volume {
   bool readonly = 3;
   // User specified locator
   VolumeLocator locator = 4;
-	// Volume creation time
+  // Volume creation time
   google.protobuf.Timestamp ctime = 5;
-	// User specified VolumeSpec
+  // User specified VolumeSpec
   VolumeSpec spec = 6;
-	// Volume usage
+  // Volume usage
   uint64 usage = 7;
-	// Time when an integrity check for run
+  // Time when an integrity check for run
   google.protobuf.Timestamp last_scan = 8;
-	// Format FSType type if any
+  // Format FSType type if any
   FSType format = 9;
   VolumeStatus status = 10;
   VolumeState state = 11;
@@ -159,80 +159,80 @@ message Volume {
   string attached_on = 12;
   string device_path = 14;
   string attach_path = 15;
-	// Set of machine IDs (nodes) to which this volume is erasure coded - for clustered storage arrays
+  // Set of machine IDs (nodes) to which this volume is erasure coded - for clustered storage arrays
   repeated string replica_set = 16;
-	// Last recorded error
+  // Last recorded error
   string error = 17;
-	// Name value mapping of driver specific runtime information.
+  // Name value mapping of driver specific runtime information.
   map<string, string> runtime_state = 18;
 }
 
 message Stats {
-	// Reads completed successfully
+  // Reads completed successfully
   int64 reads = 1;
-	// Time spent in reads in ms
+  // Time spent in reads in ms
   int64 read_ms = 2;
   int64 read_bytes = 3;
-	// Writes completed successfully
+  // Writes completed successfully
   int64 writes = 4;
-	// Time spent in writes in ms
+  // Time spent in writes in ms
   int64 write_ms = 5;
   int64 write_bytes = 6;
-	// IOs curently in progress
+  // IOs curently in progress
   int64 io_progress = 7;
-	// Time spent doing IOs ms
+  // Time spent doing IOs ms
   int64 io_ms = 8;
-	// BytesUsed
+  // BytesUsed
   uint64 bytes_used = 9;
 }
 
 enum SeverityType {
-        // Unknown severity type
-   UNKNOWN_SEVERITY = 0;
-        // Alarm severity type   	   
-   ALARM = 1;
-        // Warning severity type
-   WARNING = 2;
-        // Notify severity type
-   NOTIFY = 3;
+  // Unknown severity type
+  UNKNOWN_SEVERITY = 0;
+  // Alarm severity type   	   
+  ALARM = 1;
+  // Warning severity type
+  WARNING = 2;
+  // Notify severity type
+  NOTIFY = 3;
 }
 
 enum ResourceType {
-        // Unknown resource type undefined.
-   UNKNOWN_RESOURCE = 0;
-	// Volume Resource Type
-   VOLUMES = 1;
-	// Node Resource Type
-   NODE = 2;
-	// Cluster Resource Type
-   CLUSTER = 3;
+  // Unknown resource type undefined.
+  UNKNOWN_RESOURCE = 0;
+  // Volume Resource Type
+  VOLUMES = 1;
+  // Node Resource Type
+  NODE = 2;
+  // Cluster Resource Type
+  CLUSTER = 3;
 }
 
 message Alerts {
-	// Id for Alert
-   int64 id = 1;
-	// Severity of the Alert
-   SeverityType severity = 2;
-	// Name of the Alert
-   string name = 3;
-	// Message describing the Alert
-   string message = 4;
-	//Timestamp when Alert occured
-   google.protobuf.Timestamp timestamp = 5;	
-	// ResourceId where Alert occured
-   string resource_id = 6;
-	// Resource where Alert occured
-   ResourceType resource = 7;
-	// Cleared Flag
-   bool cleared = 8;
+  // Id for Alert
+  int64 id = 1;
+  // Severity of the Alert
+  SeverityType severity = 2;
+  // Name of the Alert
+  string name = 3;
+  // Message describing the Alert
+  string message = 4;
+  //Timestamp when Alert occured
+  google.protobuf.Timestamp timestamp = 5;	
+  // ResourceId where Alert occured
+  string resource_id = 6;
+  // Resource where Alert occured
+  ResourceType resource = 7;
+  // Cleared Flag
+  bool cleared = 8;
 }
 
 message VolumeCreateRequest {
-	// User specified volume name and labels
+  // User specified volume name and labels
   VolumeLocator locator = 1;
-	// Source to create volume
+  // Source to create volume
   Source source = 2;
-	// The storage spec for the volume
+  // The storage spec for the volume
   VolumeSpec spec = 3;
 }
 
@@ -242,28 +242,28 @@ message VolumeResponse {
 
 // CHANGE: error was embedded VolumeResponse
 message VolumeCreateResponse {
-	// ID of the newly created volume
+  // ID of the newly created volume
   string id = 1;
   VolumeResponse volume_response = 2;
 }
 
 // VolumeStateAction specifies desired actions.
 message VolumeStateAction {
-	// Attach or Detach volume
+  // Attach or Detach volume
   VolumeActionParam attach = 1;
-	// Mount or unmount volume
+  // Mount or unmount volume
   VolumeActionParam mount = 2;
   string mount_path = 3;
-	// Device path returned in attach
+  // Device path returned in attach
   string device_path = 4;
 }
 
 message VolumeSetRequest {
-	// User specified volume name and labels
+  // User specified volume name and labels
   VolumeLocator locator = 1;
-	// The storage spec for the volume
+  // The storage spec for the volume
   VolumeSpec spec = 2;
-	// State modification on this volume.
+  // State modification on this volume.
   VolumeStateAction action = 3;
 }
 
