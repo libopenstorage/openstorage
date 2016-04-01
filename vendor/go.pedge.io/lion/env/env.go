@@ -4,17 +4,15 @@ Package envlion provides simple utilities to setup lion from the environment.
 package envlion // import "go.pedge.io/lion/env"
 
 import (
-	"fmt"
 	"log/syslog"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"go.pedge.io/env"
 	"go.pedge.io/lion"
 	"go.pedge.io/lion/current"
+	"go.pedge.io/lion/grpc"
 	"go.pedge.io/lion/syslog"
-	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 // Env defines a struct for environment variables that can be parsed with go.pedge.io/env.
@@ -25,9 +23,6 @@ type Env struct {
 	LogLevel string `env:"LOG_LEVEL"`
 	// LogDisableStderr says to disable logging to stderr.
 	LogDisableStderr bool `env:"LOG_DISABLE_STDERR"`
-	// The directory to write rotating logs to.
-	// If not set and SyslogNetwork and SyslogAddress not set, logs will be to stderr.
-	LogDirPath string `env:"LOG_DIR_PATH"`
 	// The syslog network, either udp or tcp.
 	// Must be set with SyslogAddress.
 	// If not set and LogDir not set, logs will be to stderr.
@@ -68,9 +63,6 @@ func SetupEnv(env Env) error {
 	if env.CurrentStdout {
 		pushers = append(pushers, lion.NewWritePusher(os.Stdout, currentlion.NewMarshaller()))
 	}
-	if env.LogDirPath != "" {
-		pushers = append(pushers, newLogDirPusher(env.LogDirPath, logAppName))
-	}
 	if env.SyslogNetwork != "" && env.SyslogAddress != "" {
 		pusher, err := newSyslogPusher(env.SyslogNetwork, env.SyslogAddress, logAppName)
 		if err != nil {
@@ -94,6 +86,7 @@ func SetupEnv(env Env) error {
 		lion.SetLogger(lion.NewLogger(lion.NewMultiPusher(pushers...)))
 	}
 	lion.RedirectStdLogger()
+	grpclion.RedirectGrpclog()
 	if env.LogLevel != "" {
 		level, err := lion.NameToLevel(strings.ToUpper(env.LogLevel))
 		if err != nil {
@@ -104,12 +97,17 @@ func SetupEnv(env Env) error {
 	return nil
 }
 
-func newLogDirPusher(logDirPath string, logAppName string) lion.Pusher {
-	return lion.NewTextWritePusher(
-		&lumberjack.Logger{
-			Filename:   filepath.Join(logDirPath, fmt.Sprintf("%s.log", logAppName)),
-			MaxBackups: 3,
+// Main runs env.Main along with Setup.
+func Main(do func(interface{}) error, appEnv interface{}, decoders ...env.Decoder) {
+	env.Main(
+		func(appEnvObj interface{}) error {
+			if err := Setup(); err != nil {
+				return err
+			}
+			return do(appEnvObj)
 		},
+		appEnv,
+		decoders...,
 	)
 }
 

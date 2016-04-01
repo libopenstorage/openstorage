@@ -11,12 +11,12 @@ import (
 
 	"github.com/gengo/grpc-gateway/runtime"
 	"github.com/gengo/grpc-gateway/utilities"
-	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
 	"go.pedge.io/pb/go/google/protobuf"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/grpclog"
 )
 
 var _ codes.Code
@@ -25,54 +25,69 @@ var _ = runtime.String
 var _ = json.Marshal
 var _ = utilities.NewDoubleArray
 
-func request_API_Init_0(ctx context.Context, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, error) {
+func request_API_Init_0(ctx context.Context, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq google_protobuf.Empty
+	var metadata runtime.ServerMetadata
 
 	if err := json.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-		return nil, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	return client.Init(ctx, &protoReq)
+	msg, err := client.Init(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
 }
 
-func request_API_Attach_0(ctx context.Context, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, error) {
+func request_API_Attach_0(ctx context.Context, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq AttachRequest
+	var metadata runtime.ServerMetadata
 
 	if err := json.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-		return nil, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	return client.Attach(ctx, &protoReq)
+	msg, err := client.Attach(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
 }
 
-func request_API_Detach_0(ctx context.Context, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, error) {
+func request_API_Detach_0(ctx context.Context, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq DetachRequest
+	var metadata runtime.ServerMetadata
 
 	if err := json.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-		return nil, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	return client.Detach(ctx, &protoReq)
+	msg, err := client.Detach(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
 }
 
-func request_API_Mount_0(ctx context.Context, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, error) {
+func request_API_Mount_0(ctx context.Context, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq MountRequest
+	var metadata runtime.ServerMetadata
 
 	if err := json.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-		return nil, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	return client.Mount(ctx, &protoReq)
+	msg, err := client.Mount(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
 }
 
-func request_API_Unmount_0(ctx context.Context, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, error) {
+func request_API_Unmount_0(ctx context.Context, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq UnmountRequest
+	var metadata runtime.ServerMetadata
 
 	if err := json.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-		return nil, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	return client.Unmount(ctx, &protoReq)
+	msg, err := client.Unmount(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
 }
 
 // RegisterAPIHandlerFromEndpoint is same as RegisterAPIHandler but
@@ -85,14 +100,14 @@ func RegisterAPIHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, 
 	defer func() {
 		if err != nil {
 			if cerr := conn.Close(); cerr != nil {
-				glog.Errorf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 			return
 		}
 		go func() {
 			<-ctx.Done()
 			if cerr := conn.Close(); cerr != nil {
-				glog.Errorf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 		}()
 	}()
@@ -107,14 +122,18 @@ func RegisterAPIHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.C
 
 	mux.Handle("POST", pattern_API_Init_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(ctx)
-		closeNotifier, ok := w.(http.CloseNotifier)
-		if ok {
-			go func() {
-				<-closeNotifier.CloseNotify()
-				cancel()
-			}()
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
 		}
-		resp, err := request_API_Init_0(runtime.AnnotateContext(ctx, req), client, req, pathParams)
+		resp, md, err := request_API_Init_0(runtime.AnnotateContext(ctx, req), client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, w, req, err)
 			return
@@ -126,14 +145,18 @@ func RegisterAPIHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.C
 
 	mux.Handle("POST", pattern_API_Attach_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(ctx)
-		closeNotifier, ok := w.(http.CloseNotifier)
-		if ok {
-			go func() {
-				<-closeNotifier.CloseNotify()
-				cancel()
-			}()
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
 		}
-		resp, err := request_API_Attach_0(runtime.AnnotateContext(ctx, req), client, req, pathParams)
+		resp, md, err := request_API_Attach_0(runtime.AnnotateContext(ctx, req), client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, w, req, err)
 			return
@@ -145,14 +168,18 @@ func RegisterAPIHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.C
 
 	mux.Handle("POST", pattern_API_Detach_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(ctx)
-		closeNotifier, ok := w.(http.CloseNotifier)
-		if ok {
-			go func() {
-				<-closeNotifier.CloseNotify()
-				cancel()
-			}()
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
 		}
-		resp, err := request_API_Detach_0(runtime.AnnotateContext(ctx, req), client, req, pathParams)
+		resp, md, err := request_API_Detach_0(runtime.AnnotateContext(ctx, req), client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, w, req, err)
 			return
@@ -164,14 +191,18 @@ func RegisterAPIHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.C
 
 	mux.Handle("POST", pattern_API_Mount_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(ctx)
-		closeNotifier, ok := w.(http.CloseNotifier)
-		if ok {
-			go func() {
-				<-closeNotifier.CloseNotify()
-				cancel()
-			}()
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
 		}
-		resp, err := request_API_Mount_0(runtime.AnnotateContext(ctx, req), client, req, pathParams)
+		resp, md, err := request_API_Mount_0(runtime.AnnotateContext(ctx, req), client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, w, req, err)
 			return
@@ -183,14 +214,18 @@ func RegisterAPIHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.C
 
 	mux.Handle("POST", pattern_API_Unmount_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(ctx)
-		closeNotifier, ok := w.(http.CloseNotifier)
-		if ok {
-			go func() {
-				<-closeNotifier.CloseNotify()
-				cancel()
-			}()
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
 		}
-		resp, err := request_API_Unmount_0(runtime.AnnotateContext(ctx, req), client, req, pathParams)
+		resp, md, err := request_API_Unmount_0(runtime.AnnotateContext(ctx, req), client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, w, req, err)
 			return

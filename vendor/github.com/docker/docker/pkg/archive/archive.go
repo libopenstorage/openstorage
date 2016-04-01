@@ -425,10 +425,19 @@ func createTarFile(path, extractDir string, hdr *tar.Header, reader io.Reader, L
 		}
 	}
 
+	var errors []string
 	for key, value := range hdr.Xattrs {
 		if err := system.Lsetxattr(path, key, []byte(value), 0); err != nil {
-			return err
+			// We ignore errors here because not all graphdrivers support xattrs.
+			errors = append(errors, err.Error())
 		}
+
+	}
+
+	if len(errors) > 0 {
+		logrus.WithFields(logrus.Fields{
+			"errors": errors,
+		}).Warn("ignored xattrs in archive: underlying filesystem doesn't support them")
 	}
 
 	// There is no LChmod, so ignore mode for symlink. Also, this
@@ -634,7 +643,7 @@ func TarWithOptions(srcPath string, options *TarOptions) (io.ReadCloser, error) 
 
 				if err := ta.addTarFile(filePath, relFilePath); err != nil {
 					logrus.Errorf("Can't add file %s to tar: %s", filePath, err)
-					// if pipe is broken, stop writting tar stream to it
+					// if pipe is broken, stop writing tar stream to it
 					if err == io.ErrClosedPipe {
 						return err
 					}
@@ -881,9 +890,17 @@ func (archiver *Archiver) CopyWithTar(src, dst string) error {
 	if !srcSt.IsDir() {
 		return archiver.CopyFileWithTar(src, dst)
 	}
+
+	// if this archiver is set up with ID mapping we need to create
+	// the new destination directory with the remapped root UID/GID pair
+	// as owner
+	rootUID, rootGID, err := idtools.GetRootUIDGID(archiver.UIDMaps, archiver.GIDMaps)
+	if err != nil {
+		return err
+	}
 	// Create dst, copy src's content into it
 	logrus.Debugf("Creating dest directory: %s", dst)
-	if err := system.MkdirAll(dst, 0755); err != nil {
+	if err := idtools.MkdirAllNewAs(dst, 0755, rootUID, rootGID); err != nil {
 		return err
 	}
 	logrus.Debugf("Calling TarUntar(%s, %s)", src, dst)

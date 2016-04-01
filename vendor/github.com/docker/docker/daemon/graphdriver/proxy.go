@@ -54,7 +54,7 @@ func (d *graphDriverProxy) String() string {
 	return d.name
 }
 
-func (d *graphDriverProxy) Create(id, parent, mountLabel string) error {
+func (d *graphDriverProxy) Create(id, parent, mountLabel string, storageOpt map[string]string) error {
 	args := &graphDriverRequest{
 		ID:         id,
 		Parent:     parent,
@@ -161,7 +161,6 @@ func (d *graphDriverProxy) Diff(id, parent string) (archive.Archive, error) {
 	}
 	body, err := d.client.Stream("GraphDriver.Diff", args)
 	if err != nil {
-		body.Close()
 		return nil, err
 	}
 	return archive.Archive(body), nil

@@ -77,7 +77,7 @@ func (d *Driver) Status() [][2]string {
 
 // Create creates a new, empty, filesystem layer with the
 // specified id and parent and mountLabel. Parent and mountLabel may be "".
-func (d *Driver) Create(id string, parent string, ml string) error {
+func (d *Driver) Create(id string, parent string, ml string, storageOpts map[string]string) error {
 	if parent != "" {
 		dlog.Infof("Creating layer %s with parent %s", id, parent)
 	} else {

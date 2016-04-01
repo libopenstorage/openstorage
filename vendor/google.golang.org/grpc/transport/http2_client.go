@@ -330,6 +330,8 @@ func (t *http2Client) NewStream(ctx context.Context, callHdr *CallHdr) (_ *Strea
 		t.hEnc.WriteField(hpack.HeaderField{Name: "grpc-timeout", Value: timeoutEncode(timeout)})
 	}
 	for k, v := range authData {
+		// Capital header names are illegal in HTTP/2.
+		k = strings.ToLower(k)
 		t.hEnc.WriteField(hpack.HeaderField{Name: k, Value: v})
 	}
 	var (
@@ -719,14 +721,14 @@ func (t *http2Client) operateHeaders(frame *http2.MetaHeadersFrame) {
 	s.write(recvMsg{err: io.EOF})
 }
 
-func handleMalformedHTTP2(s *Stream, err http2.StreamError) {
+func handleMalformedHTTP2(s *Stream, err error) {
 	s.mu.Lock()
 	if !s.headerDone {
 		close(s.headerChan)
 		s.headerDone = true
 	}
 	s.mu.Unlock()
-	s.write(recvMsg{err: StreamErrorf(http2ErrConvTab[err.Code], "%v", err)})
+	s.write(recvMsg{err: err})
 }
 
 // reader runs as a separate goroutine in charge of reading data from network
@@ -761,7 +763,8 @@ func (t *http2Client) reader() {
 				s := t.activeStreams[se.StreamID]
 				t.mu.Unlock()
 				if s != nil {
-					handleMalformedHTTP2(s, se)
+					// use error detail to provide better err message
+					handleMalformedHTTP2(s, StreamErrorf(http2ErrConvTab[se.Code], "%v", t.framer.errorDetail()))
 				}
 				continue
 			} else {

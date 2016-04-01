@@ -85,12 +85,11 @@ func (d *driver) Create(
 		locator,
 		source,
 		spec,
-
 	)
 	if err := d.CreateVol(volume); err != nil {
 		return "", err
 	}
-	if err := d.btrfs.Create(volume.Id, "", ""); err != nil {
+	if err := d.btrfs.Create(volume.Id, "", "", nil); err != nil {
 		return "", err
 	}
 	devicePath, err := d.btrfs.Get(volume.Id, "")
@@ -173,7 +172,7 @@ func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 		return "", err
 	}
 	chaos.Now(koStrayCreate)
-	err = d.btrfs.Create(snapID, volumeID, "")
+	err = d.btrfs.Create(snapID, volumeID, "", nil)
 	if err != nil {
 		return "", err
 	}

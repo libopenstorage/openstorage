@@ -1,6 +1,7 @@
 [![Coverage](http://gocover.io/_badge/github.com/codegangsta/cli?0)](http://gocover.io/github.com/codegangsta/cli)
 [![Build Status](https://travis-ci.org/codegangsta/cli.svg?branch=master)](https://travis-ci.org/codegangsta/cli)
 [![GoDoc](https://godoc.org/github.com/codegangsta/cli?status.svg)](https://godoc.org/github.com/codegangsta/cli)
+[![codebeat](https://codebeat.co/badges/0a8f30aa-f975-404b-b878-5fab3ae1cc5f)](https://codebeat.co/projects/github-com-codegangsta-cli)
 
 # cli.go
 
@@ -325,6 +326,45 @@ app.Commands = []cli.Command{
     },
   },
 }
+...
+```
+
+### Subcommands categories
+
+For additional organization in apps that have many subcommands, you can
+associate a category for each command to group them together in the help
+output.
+
+E.g.
+
+```go
+...
+	app.Commands = []cli.Command{
+		{
+			Name: "noop",
+		},
+		{
+			Name:     "add",
+			Category: "template",
+		},
+		{
+			Name:     "remove",
+			Category: "template",
+		},
+	}
+...
+```
+
+Will include:
+
+```
+...
+COMMANDS:
+    noop
+
+  Template actions:
+    add
+    remove
 ...
 ```
 
