@@ -52,7 +52,7 @@ var (
 	instances = make(map[string]AlertsClient)
 	drivers   = make(map[string]InitFunc)
 
-	lock sync.Mutex
+	lock sync.RWMutex
 )
 
 // AlertAction used to indicate the action performed on a KV pair
@@ -129,6 +129,9 @@ func Shutdown() {
 
 // Get an alerts instance
 func Get(name string) (AlertsClient, error) {
+	lock.RLock()
+	defer lock.RUnlock()
+
 	if v, ok := instances[name]; ok {
 		return v, nil
 	}

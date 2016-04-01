@@ -21,8 +21,7 @@ var inst *alertsInstance
 func (ai *alertsInstance) Clear(resource Resource, resourceId string, alertID int64) {
 	resourceType, _ := ai.getResource(resource, resourceId)
 	if err := ai.kva.Clear(resourceType, alertID); err != nil {
-		dlog.Errorf("Failed to clear alert, type: %v, id: %v", resourceType,
-			alertID)
+		dlog.Errorf("Failed to clear alert, type: %v, id: %v", resourceType, alertID)
 	}
 }
 
@@ -64,7 +63,6 @@ func newAlertsInstance(nodeId, clusterId, version string, kva AlertsClient) {
 func instance() *alertsInstance {
 	return inst
 }
-
 
 func (ai *alertsInstance) getResource(resource Resource, id string) (resourceType api.ResourceType, resourceId string) {
 	resourceId = id
