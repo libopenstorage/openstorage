@@ -2,21 +2,14 @@ package alerts
 
 import (
 	"errors"
+	"fmt"
+	"sync"
+	"time"
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/portworx/kvdb"
 	"go.pedge.io/dlog"
-	"sync"
-	"time"
 )
-
-// AlertAction used to indicate the action performed on a KV pair
-type AlertAction int
-
-// InitFunc initialization function for alerts
-type InitFunc func(string, string, []string, string) (AlertsClient, error)
-
-// AlertsWatcherFunc is a function type used as a callback for KV WatchTree
-type AlertsWatcherFunc func(*api.Alerts, AlertAction, string, string) error
 
 const (
 	// AlertDeleteAction is an alerts watch action for delete
@@ -26,10 +19,6 @@ const (
 	// AlertUpdateAction is an alerts watch action for update
 	AlertUpdateAction
 )
-
-// Resource is equaivalent to api.ResourceType and is used in the alerts instance
-// so that callers of the instance don't have to worry about api.*
-type Resource int
 
 const (
 	//Unknown Resource
@@ -59,15 +48,29 @@ var (
 	ErrAlertsClientNotFound = errors.New("Alerts client not found")
 	// ErrResourceNotFound raised if ResourceType is not found
 	ErrResourceNotFound = errors.New("Resource not found in Alerts")
-	instances           map[string]AlertsClient
-	drivers             map[string]InitFunc
-	mutex               sync.Mutex
+
+	instances = make(map[string]AlertsClient)
+	drivers   = make(map[string]InitFunc)
+
+	mutex sync.Mutex
 )
+
+// AlertAction used to indicate the action performed on a KV pair
+type AlertAction int
+
+// Resource is equaivalent to api.ResourceType and is used in the alerts instance
+// so that callers of the instance don't have to worry about api.*
+type Resource int
+
+// InitFunc initialization function for alerts
+type InitFunc func(string, string, []string, string) (AlertsClient, error)
+
+// AlertsWatcherFunc is a function type used as a callback for KV WatchTree
+type AlertsWatcherFunc func(*api.Alerts, AlertAction, string, string) error
 
 // AlertsClient interface for Alerts API
 type AlertsClient interface {
-	//String
-	String() string
+	fmt.Stringer
 
 	// Shutdown
 	Shutdown()
@@ -177,9 +180,4 @@ func Register(name string, initFunc InitFunc) error {
 	}
 	drivers[name] = initFunc
 	return nil
-}
-
-func init() {
-	drivers = make(map[string]InitFunc)
-	instances = make(map[string]AlertsClient)
 }
