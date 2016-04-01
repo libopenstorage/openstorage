@@ -3,16 +3,50 @@ package alerts
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/portworx/kvdb"
 	"go.pedge.io/dlog"
 	"go.pedge.io/proto/time"
-	"strconv"
-	"strings"
-	"time"
 )
 
+const (
+	// Name of this alerts client implementation.
+	Name = "alerts_kvdb"
+	// NameTest, this alert instance used only for unit tests.
+	NameTest = "alerts_kvdb_test"
+
+	alertsKey       = "alerts/"
+	nextAlertsIdKey = "nextAlertsId"
+	clusterKey      = "cluster/"
+	volumeKey       = "volume/"
+	nodeKey         = "node/"
+	bootstrap       = "bootstrap"
+)
+
+const (
+	watchBootstrap watcherStatus = iota
+	watchReady
+	watchError
+)
+
+var (
+	kvdbMap          = make(map[string]kvdb.Kvdb)
+	watcherMap       = make(map[string]*watcher)
+	alertsWatchIndex uint64
+	watchErrors      int
+)
+
+func init() {
+	Register(Name, Init)
+	Register(NameTest, Init)
+}
+
 type watcherStatus int
+
 type watcher struct {
 	kvcb      kvdb.WatchCB
 	status    watcherStatus
@@ -27,38 +61,12 @@ type KvAlerts struct {
 	clusterId    string
 }
 
-const (
-	alertsKey       = "alerts/"
-	nextAlertsIdKey = "nextAlertsId"
-	clusterKey      = "cluster/"
-	volumeKey       = "volume/"
-	nodeKey         = "node/"
-	bootstrap       = "bootstrap"
-	// Name of this alerts client implementation
-	Name = "alerts_kvdb"
-	// NameTest :  This alert instance used only for unit tests
-	NameTest = "alerts_kvdb_test"
-)
-
-const (
-	watchBootstrap = watcherStatus(iota)
-	watchReady
-	watchError
-)
-
-var (
-	kvdbMap          map[string]kvdb.Kvdb
-	watcherMap       map[string]*watcher
-	alertsWatchIndex uint64
-	watchErrors      int
-)
-
-// GetKvdbInstance - Returns a kvdb instance associated with this alert client and clusterId combination
+// GetKvdbInstance returns a kvdb instance associated with this alert client and clusterId combination.
 func (kva *KvAlerts) GetKvdbInstance() kvdb.Kvdb {
 	return kvdbMap[kva.clusterId]
 }
 
-// Init initializes a AlertsClient interface implementation
+// Init initializes a AlertsClient interface implementation.
 func Init(name string, domain string, machines []string, clusterId string) (AlertsClient, error) {
 	if _, ok := kvdbMap[clusterId]; !ok {
 		kv, err := kvdb.New(name, domain+"/"+clusterId, machines, nil)
@@ -67,10 +75,10 @@ func Init(name string, domain string, machines []string, clusterId string) (Aler
 		}
 		kvdbMap[clusterId] = kv
 	}
-	return &KvAlerts{kvdbName: name, kvdbDomain: domain, kvdbMachines: machines, clusterId: clusterId}, nil
+	return &KvAlerts{name, domain, machines, clusterId}, nil
 }
 
-// Raise raises an Alert
+// Raise raises an Alert.
 func (kva *KvAlerts) Raise(a api.Alerts) (api.Alerts, error) {
 	kv := kva.GetKvdbInstance()
 	if a.Resource == api.ResourceType_UNKNOWN_RESOURCE {
@@ -80,6 +88,7 @@ func (kva *KvAlerts) Raise(a api.Alerts) (api.Alerts, error) {
 	if err != nil {
 		return a, err
 	}
+	// TODO(pedge): when this is changed to a pointer, we need to rethink this.
 	a.Id = alertId
 	a.Timestamp = prototime.Now()
 	a.Cleared = false
@@ -87,7 +96,7 @@ func (kva *KvAlerts) Raise(a api.Alerts) (api.Alerts, error) {
 	return a, err
 }
 
-// Erase erases an alert
+// Erase erases an alert.
 func (kva *KvAlerts) Erase(resourceType api.ResourceType, alertId int64) error {
 	kv := kva.GetKvdbInstance()
 	if resourceType == api.ResourceType_UNKNOWN_RESOURCE {
@@ -97,7 +106,7 @@ func (kva *KvAlerts) Erase(resourceType api.ResourceType, alertId int64) error {
 	return err
 }
 
-// Clear clears an alert
+// Clear clears an alert.
 func (kva *KvAlerts) Clear(resourceType api.ResourceType, alertId int64) error {
 	kv := kva.GetKvdbInstance()
 	var alert api.Alerts
@@ -113,7 +122,7 @@ func (kva *KvAlerts) Clear(resourceType api.ResourceType, alertId int64) error {
 	return err
 }
 
-// Retrieve retrieves a specific alert
+// Retrieve retrieves a specific alert.
 func (kva *KvAlerts) Retrieve(resourceType api.ResourceType, alertId int64) (api.Alerts, error) {
 	var alert api.Alerts
 	if resourceType == api.ResourceType_UNKNOWN_RESOURCE {
@@ -152,7 +161,7 @@ func (kva *KvAlerts) Enumerate(filter api.Alerts) ([]*api.Alerts, error) {
 	return allAlerts, err
 }
 
-// EnumerateWithinTimeRange enumerates alerts between timeStart and timeEnd
+// EnumerateWithinTimeRange enumerates alerts between timeStart and timeEnd.
 func (kva *KvAlerts) EnumerateWithinTimeRange(
 	timeStart time.Time,
 	timeEnd time.Time,
@@ -182,7 +191,7 @@ func (kva *KvAlerts) EnumerateWithinTimeRange(
 	return allAlerts, nil
 }
 
-// Watch on all alerts
+// Watch on all alerts.
 func (kva *KvAlerts) Watch(clusterId string, alertsWatcherFunc AlertsWatcherFunc) error {
 	_, ok := kvdbMap[clusterId]
 	if !ok {
@@ -211,8 +220,10 @@ func (kva *KvAlerts) Watch(clusterId string, alertsWatcherFunc AlertsWatcherFunc
 		}
 		if alertsWatcher.status == watchBootstrap {
 			retries++
+			// TODO(pedge): constant, maybe configurable
 			time.Sleep(time.Millisecond * 100)
 		}
+		// TODO(pedge): constant, maybe configurable
 		if retries == 5 {
 			return fmt.Errorf("Failed to bootstrap watch on %s", clusterId)
 		}
@@ -223,11 +234,11 @@ func (kva *KvAlerts) Watch(clusterId string, alertsWatcherFunc AlertsWatcherFunc
 	return nil
 }
 
-// Shutdown
+// Shutdown.
 func (kva *KvAlerts) Shutdown() {
 }
 
-// String
+// String.
 func (kva *KvAlerts) String() string {
 	return Name
 }
@@ -312,8 +323,8 @@ func (kva *KvAlerts) getAllAlerts() ([]*api.Alerts, error) {
 }
 
 func kvdbWatch(prefix string, opaque interface{}, kvp *kvdb.KVPair, err error) error {
-	mutex.Lock()
-	defer mutex.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
 
 	watcherKey := strings.Split(prefix, "/")[1]
 
@@ -388,11 +399,4 @@ func subscribeWatch(key string) error {
 		return err
 	}
 	return nil
-}
-
-func init() {
-	kvdbMap = make(map[string]kvdb.Kvdb)
-	watcherMap = make(map[string]*watcher)
-	Register(Name, Init)
-	Register(NameTest, Init)
 }
