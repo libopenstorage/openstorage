@@ -19,13 +19,10 @@ var (
 	ErrVolHasSnaps        = errors.New("Volume has snapshots associated")
 	ErrNotSupported       = errors.New("Operation not supported")
 
-	drivers   = make(map[string]InitFunc)
+	drivers   = make(map[string]func(map[string]string) (VolumeDriver, error))
 	instances = make(map[string]VolumeDriver)
 	lock      sync.Mutex
 )
-
-type InitFunc func(params map[string]string) (VolumeDriver, error)
-type StatusFunc func() error
 
 // VolumeDriver is the main interface to be implemented by any storage driver.
 // Every driver must at minimum implement the ProtoDriver sub interface.
@@ -174,7 +171,7 @@ func New(name string, params map[string]string) (VolumeDriver, error) {
 	return nil, ErrNotSupported
 }
 
-func Register(name string, initFunc InitFunc) error {
+func Register(name string, initFunc func(map[string]string) (VolumeDriver, error)) error {
 	lock.Lock()
 	defer lock.Unlock()
 	if _, exists := drivers[name]; exists {
