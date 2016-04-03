@@ -46,6 +46,7 @@ func ifaceToIp(iface *net.Interface) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	for _, addr := range addrs {
 		var ip net.IP
 		switch v := addr.(type) {
@@ -60,6 +61,9 @@ func ifaceToIp(iface *net.Interface) (string, error) {
 		ip = ip.To4()
 		if ip == nil {
 			continue // not an ipv4 address
+		}
+		if ip.String() == "" {
+			continue // address is empty string
 		}
 		return ip.String(), nil
 	}
@@ -117,6 +121,11 @@ func ExternalIp(config *config.ClusterConfig) (string, string, error) {
 		}
 
 		mgmtIp, err = ifaceToIp(&iface)
+		if err != nil {
+			dlog.Printf("Skipping interface without IP: %v: %v",
+				iface, err)
+			continue
+		}
 		return mgmtIp, mgmtIp, err
 	}
 
@@ -494,6 +503,8 @@ func (c *ClusterManager) GetState() (*ClusterState, error) {
 }
 
 func (c *ClusterManager) Start() error {
+	var err error
+
 	dlog.Infoln("Cluster manager starting...")
 
 	c.gEnabled = true
@@ -501,7 +512,13 @@ func (c *ClusterManager) Start() error {
 	c.selfNode.GenNumber = uint64(time.Now().UnixNano())
 	c.selfNode.Id = c.config.NodeId
 	c.selfNode.Status = api.Status_STATUS_OK
-	c.selfNode.MgmtIp, c.selfNode.DataIp, _ = ExternalIp(&c.config)
+	c.selfNode.MgmtIp, c.selfNode.DataIp, err = ExternalIp(&c.config)
+	if err != nil {
+		dlog.Errorln("Failed to get external IP address for "+
+			"mgt/data interfaces: %s, mgt '%s', data '%s'",
+			err, c.selfNode.MgmtIp, c.selfNode.DataIp)
+	}
+
 	c.selfNode.NodeData = make(map[string]interface{})
 	c.system = systemutils.New()
 
