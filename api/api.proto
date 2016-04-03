@@ -44,25 +44,17 @@ enum GraphDriverChangeType {
 }
 
 enum SeverityType {
-  // Unknown severity type
-  UNKNOWN_SEVERITY = 0;
-  // Alarm severity type   	   
-  ALARM = 1;
-  // Warning severity type
-  WARNING = 2;
-  // Notify severity type
-  NOTIFY = 3;
+  SEVERITY_TYPE_NONE = 0;
+  SEVERITY_TYPE_ALARM = 1;
+  SEVERITY_TYPE_WARNING = 2;
+  SEVERITY_TYPE_NOTIFY = 3;
 }
 
 enum ResourceType {
-  // Unknown resource type undefined.
-  UNKNOWN_RESOURCE = 0;
-  // Volume Resource Type
-  VOLUMES = 1;
-  // Node Resource Type
-  NODE = 2;
-  // Cluster Resource Type
-  CLUSTER = 3;
+  RESOURCE_TYPE_NONE = 0;
+  RESOURCE_TYPE_VOLUME = 1;
+  RESOURCE_TYPE_NODE = 2;
+  RESOURCE_TYPE_CLUSTER = 3;
 }
 
 enum VolumeActionParam {
@@ -201,7 +193,7 @@ message Stats {
   uint64 bytes_used = 9;
 }
 
-message Alerts {
+message Alert {
   // Id for Alert
   int64 id = 1;
   // Severity of the Alert
@@ -218,6 +210,10 @@ message Alerts {
   ResourceType resource = 7;
   // Cleared Flag
   bool cleared = 8;
+}
+
+message Alerts {
+  repeated Alert alerts = 1;
 }
 
 message VolumeCreateRequest {

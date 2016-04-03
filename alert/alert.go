@@ -1,4 +1,4 @@
-package alerts
+package alert
 
 import (
 	"errors"
@@ -12,17 +12,17 @@ import (
 )
 
 const (
-	// AlertDeleteAction is an alerts watch action for delete.
+	// AlertDeleteAction is an alert watch action for delete.
 	AlertDeleteAction AlertAction = iota
-	// AlertCreateAction is an alerts watch action for create.
+	// AlertCreateAction is an alert watch action for create.
 	AlertCreateAction
-	// AlertUpdateAction is an alerts watch action for update.
+	// AlertUpdateAction is an alert watch action for update.
 	AlertUpdateAction
 )
 
 const (
-	//Unknown Resource.
-	Unknown Resource = iota
+	//None Resource. (Unknown Resource)
+	None Resource = iota
 	// Volume Resource.
 	Volume
 	// Node Resource.
@@ -42,14 +42,14 @@ var (
 	ErrUnmarshal = errors.New("Failed to unmarshal value")
 	// ErrIllegal raised if object is not valid.
 	ErrIllegal = errors.New("Illegal operation")
-	// ErrNotInitialized raised if alerts not initialized.
-	ErrNotInitialized = errors.New("Alerts not initialized")
-	// ErrAlertsClientNotFound raised if no client implementation found.
-	ErrAlertsClientNotFound = errors.New("Alerts client not found")
+	// ErrNotInitialized raised if alert not initialized.
+	ErrNotInitialized = errors.New("Alert not initialized")
+	// ErrAlertClientNotFound raised if no client implementation found.
+	ErrAlertClientNotFound = errors.New("Alert client not found")
 	// ErrResourceNotFound raised if ResourceType is not found>
-	ErrResourceNotFound = errors.New("Resource not found in Alerts")
+	ErrResourceNotFound = errors.New("Resource not found in Alert")
 
-	instances = make(map[string]AlertsClient)
+	instances = make(map[string]AlertClient)
 	drivers   = make(map[string]InitFunc)
 
 	lock sync.RWMutex
@@ -58,18 +58,18 @@ var (
 // AlertAction used to indicate the action performed on a KV pair.
 type AlertAction int
 
-// Resource is equaivalent to api.ResourceType and is used in the alerts instance
+// Resource is equaivalent to api.ResourceType and is used in the alert instance
 // so that callers of the instance don't have to worry about api.*
 type Resource int
 
-// InitFunc initialization function for alerts.
-type InitFunc func(string, string, []string, string) (AlertsClient, error)
+// InitFunc initialization function for alert.
+type InitFunc func(string, string, []string, string) (AlertClient, error)
 
-// AlertsWatcherFunc is a function type used as a callback for KV WatchTree.
-type AlertsWatcherFunc func(*api.Alerts, AlertAction, string, string) error
+// AlertWatcherFunc is a function type used as a callback for KV WatchTree.
+type AlertWatcherFunc func(*api.Alert, AlertAction, string, string) error
 
-// AlertsClient interface for Alerts API.
-type AlertsClient interface {
+// AlertClient interface for Alert API.
+type AlertClient interface {
 	fmt.Stringer
 
 	// Shutdown.
@@ -78,29 +78,29 @@ type AlertsClient interface {
 	// GetKvdbInstance.
 	GetKvdbInstance() kvdb.Kvdb
 
-	// Raise raises an Alerts.
-	Raise(alert api.Alerts) (api.Alerts, error)
+	// Raise raises an Alert.
+	Raise(alert api.Alert) (api.Alert, error)
 
-	// Retrieve retrieves specific Alerts.
-	Retrieve(resourceType api.ResourceType, id int64) (api.Alerts, error)
+	// Retrieve retrieves specific Alert.
+	Retrieve(resourceType api.ResourceType, id int64) (api.Alert, error)
 
-	// Enumerate enumerates Alerts.
-	Enumerate(filter api.Alerts) ([]*api.Alerts, error)
+	// Enumerate enumerates Alert.
+	Enumerate(filter api.Alert) ([]*api.Alert, error)
 
-	// EnumerateWithinTimeRange enumerates Alertss between timeStart and timeEnd.
-	EnumerateWithinTimeRange(timeStart time.Time, timeEnd time.Time, resourceType api.ResourceType) ([]*api.Alerts, error)
+	// EnumerateWithinTimeRange enumerates Alert between timeStart and timeEnd.
+	EnumerateWithinTimeRange(timeStart time.Time, timeEnd time.Time, resourceType api.ResourceType) ([]*api.Alert, error)
 
-	// Erase erases an Alerts.
+	// Erase erases an Alert.
 	Erase(resourceType api.ResourceType, alertID int64) error
 
-	// Clear an Alerts.
+	// Clear an Alert.
 	Clear(resourceType api.ResourceType, alertID int64) error
 
-	// Watch on all Alerts>
-	Watch(clusterId string, alertsWatcher AlertsWatcherFunc) error
+	// Watch on all Alert>
+	Watch(clusterId string, alertWatcher AlertWatcherFunc) error
 }
 
-type AlertsInstance interface {
+type AlertInstance interface {
 	// Clear clears an alert.
 	Clear(resource Resource, resourceId string, alertID int64)
 
@@ -118,7 +118,7 @@ type AlertsInstance interface {
 	Alert(name string, msg string) error
 }
 
-// Shutdown the alerts instance.
+// Shutdown the alert instance.
 func Shutdown() {
 	lock.Lock()
 	defer lock.Unlock()
@@ -127,19 +127,19 @@ func Shutdown() {
 	}
 }
 
-// Get an alerts instance.
-func Get(name string) (AlertsClient, error) {
+// Get an alert instance.
+func Get(name string) (AlertClient, error) {
 	lock.RLock()
 	defer lock.RUnlock()
 
 	if v, ok := instances[name]; ok {
 		return v, nil
 	}
-	return nil, ErrAlertsClientNotFound
+	return nil, ErrAlertClientNotFound
 }
 
-// New returns a new alerts instance.
-func New(name string, kvdbName string, kvdbBase string, kvdbMachines []string, clusterId string) (AlertsClient, error) {
+// New returns a new alert instance.
+func New(name string, kvdbName string, kvdbBase string, kvdbMachines []string, clusterId string) (AlertClient, error) {
 	lock.Lock()
 	defer lock.Unlock()
 
@@ -157,24 +157,24 @@ func New(name string, kvdbName string, kvdbBase string, kvdbMachines []string, c
 	return nil, ErrNotSupported
 }
 
-// NewAlertsInstance creates a new singleton istance of AlertsInstance.
-func NewAlertsInstance(version, nodeId, clusterId, kvdbName, kvdbBase string, kvdbMachines []string) {
+// NewAlertInstance creates a new singleton istance of AlertInstance.
+func NewAlertInstance(version, nodeId, clusterId, kvdbName, kvdbBase string, kvdbMachines []string) {
 	kva, err := Get(Name)
 	if err != nil {
 		kva, err = New(Name, kvdbName, kvdbBase, kvdbMachines, clusterId)
 		if err != nil {
-			dlog.Errorf("Failed to initialize an AlertsInstance ")
+			dlog.Errorf("Failed to initialize an AlertInstance ")
 		}
 	}
-	newAlertsInstance(nodeId, clusterId, version, kva)
+	newAlertInstance(nodeId, clusterId, version, kva)
 }
 
-// Instance returns the singleton AlertsInstance.
-func Instance() AlertsInstance {
+// Instance returns the singleton AlertInstance.
+func Instance() AlertInstance {
 	return instance()
 }
 
-// Register an alerts interface.
+// Register an alert interface.
 func Register(name string, initFunc InitFunc) error {
 	lock.Lock()
 	defer lock.Unlock()
