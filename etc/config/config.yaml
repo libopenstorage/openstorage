@@ -1,7 +1,7 @@
 osd:
   cluster:
     nodeid: "1"
-    clusterid: "rodriguise"
+    clusterid: "deadbeeef"
   drivers:
 #   vfs:
 #   pwx:
@@ -10,17 +10,15 @@ osd:
 #      path: "/nfs"
 #    btrfs:
 #      home: "/var/lib/openstorage/btrfs"
-#    aws:
-#      AWS_ACCESS_KEY_ID: your_access_key
-#      AWS_SECRET_ACCESS_KEY: your_secret_access_key
+    #aws:
     #buse:
     coprhd:
-        url: "https://172.31.32.189:4443/"
-        token: "BAAcZTdIT2dLUDJ1OGtHMTY0QjduWmhLc1Y3c1QwPQMAZwQAG3Byb3h5VG9rZW5TaWduYXR1cmVLZXlFbnRyeQIAAQEFAEJ1cm46c3RvcmFnZW9zOlByb3h5VG9rZW46OGY4OGM5NGItNDNlNi00ZDEyLWE3OGUtMWY4NWJmMTRiMDJjOnZkYzECAALQDw=="
-        project: "default"
-        varray: "default"
-        vpool: "default"
-        port: "0d7c7cc100000000"
+        url: "https://<host:port>/"
+        token: ""
+        project: "<project name>"
+        varray: "<varray name>"
+        vpool: "<vpool name>"
+        port: "<initiator id>"
         
   graphdrivers:
     #proxy:
