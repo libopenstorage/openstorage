@@ -16,18 +16,34 @@ import (
 )
 
 const (
-	Name          = "coprhd"
-	Type          = api.DriverType_DRIVER_TYPE_BLOCK
+	// Name is the name of the coprhd driver
+	Name = "coprhd"
+
+	// Type is the coprhd driver type
+	Type = api.DriverType_DRIVER_TYPE_BLOCK
+
+	// minVolumeSize is the minimum volume size for coprhd
 	minVolumeSize = 1024 * 1024 * 1000
 )
 
 var (
-	ErrArrayRequired   = errors.New("varray name is required")
-	ErrPoolRequired    = errors.New("vpool name is required")
-	ErrPortRequired    = errors.New("port name is required")
+	// ErrArrayRequired is returned when the varray name is not provided in the config
+	ErrArrayRequired = errors.New("varray name is required")
+
+	// ErrPoolRequired is returned when the vpool name is not provided in the config
+	ErrPoolRequired = errors.New("vpool name is required")
+
+	// ErrPortRequired is returned when the initiator name is not provided in the config
+	ErrPortRequired = errors.New("port name is required")
+
+	// ErrProjectRequired is returned when the project name is not provided in the config
 	ErrProjectRequired = errors.New("project name is required")
-	ErrInvalidPool     = errors.New("pool does not support block type")
-	ErrInvalidPort     = errors.New("port does not support pool initiator type")
+
+	// ErrInvalidPool is returned when the virtual pool can not be located for the resource
+	ErrInvalidPool = errors.New("pool does not support block type")
+
+	// ErrInvalidPort is returned when the initiator does not exist or is of an unsupported type
+	ErrInvalidPort = errors.New("port does not support pool initiator type")
 )
 
 type (
@@ -35,13 +51,13 @@ type (
 		*volume.IoNotSupported
 		*volume.DefaultEnumerator
 
-		coprhd *coprhd.Client
+		client *coprhd.Client
 
 		// driver defaults
-		project *coprhd.Project
-		varray  *coprhd.VArray
-		vpool   *coprhd.VPool
-		itr     *coprhd.Initiator
+		project   *coprhd.Project
+		varray    *coprhd.VArray
+		vpool     *coprhd.VPool
+		initiator *coprhd.Initiator
 	}
 )
 
@@ -65,7 +81,7 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 
 	d := &driver{
 		DefaultEnumerator: volume.NewDefaultEnumerator(Name, kvdb.Instance()),
-		coprhd:            client,
+		client:            client,
 	}
 
 	if p, ok := params["project"]; ok {
@@ -77,7 +93,7 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 		}
 		d.project = project
 	} else {
-		dlog.Warnf("Default coprhd 'project' not set")
+		dlog.Warnln("Default coprhd 'project' not set")
 	}
 
 	if va, ok := params["varray"]; ok {
@@ -105,13 +121,13 @@ func Init(params volume.DriverParams) (volume.VolumeDriver, error) {
 	}
 
 	if port, ok := params["port"]; ok {
-		itr, err := client.Initiator().
+		initiator, err := client.Initiator().
 			Port(port).
 			Query()
 		if err != nil {
 			return nil, err
 		}
-		d.itr = itr
+		d.initiator = initiator
 	} else {
 		return nil, fmt.Errorf("coprhd initiator 'port' must be set")
 	}
@@ -137,10 +153,10 @@ func (d *driver) Create(
 	project := d.project
 	varray := d.varray
 	vpool := d.vpool
-	itr := d.itr
+	initiator := d.initiator
 
 	if name, ok := locator.VolumeLabels["project"]; ok {
-		project, err = d.coprhd.Project().
+		project, err = d.client.Project().
 			Name(name).
 			Query()
 		if err != nil {
@@ -152,7 +168,7 @@ func (d *driver) Create(
 	}
 
 	if name, ok := locator.VolumeLabels["varray"]; ok {
-		varray, err = d.coprhd.VArray().
+		varray, err = d.client.VArray().
 			Name(name).
 			Query()
 		if err != nil {
@@ -164,7 +180,7 @@ func (d *driver) Create(
 	}
 
 	if name, ok := locator.VolumeLabels["vpool"]; ok {
-		vpool, err = d.coprhd.VPool().
+		vpool, err = d.client.VPool().
 			Name(name).
 			Query()
 		if err != nil {
@@ -180,13 +196,7 @@ func (d *driver) Create(
 	}
 
 	// make sure this pool supports the initiator protocol
-	found := false
-	for _, t := range vpool.Protocols {
-		if t == itr.Protocol {
-			found = true
-		}
-	}
-	if !found {
+	if !vpool.HasProtocol(initiator.Protocol) {
 		return "", ErrInvalidPort
 	}
 
@@ -195,7 +205,7 @@ func (d *driver) Create(
 		sz = minVolumeSize
 	}
 
-	vol, err := d.coprhd.Volume().
+	vol, err := d.client.Volume().
 		Name(locator.Name).
 		Project(project.Id).
 		Array(varray.Id).
@@ -216,25 +226,21 @@ func (d *driver) Create(
 		source,
 		spec)
 
-	err = d.UpdateVol(volume)
-	if err != nil {
+	if err := d.UpdateVol(volume); err != nil {
 		return "", err
 	}
 
-	_, err = d.Attach(volumeID)
-	if err != nil {
+	if _, err := d.Attach(volumeID); err != nil {
 		return "", err
 	}
 
 	dlog.Infof("coprhd preparing volume %s...", vol.WWN)
 
-	err = d.Format(volumeID)
-	if err != nil {
+	if err := d.Format(volumeID); err != nil {
 		return "", err
 	}
 
-	err = d.Detach(volumeID)
-	if err != nil {
+	if err := d.Detach(volumeID); err != nil {
 		return "", err
 	}
 
@@ -242,21 +248,17 @@ func (d *driver) Create(
 }
 
 func (d *driver) Delete(volumeID string) error {
-	_, err := d.GetVol(volumeID)
-	if err != nil {
+	if _, err := d.GetVol(volumeID); err != nil {
 		return fmt.Errorf("Volume could not be located")
 	}
 
-	err = d.coprhd.Volume().
+	if err := d.client.Volume().
 		WWN(volumeID).
-		Delete(true)
-	if err != nil {
+		Delete(true); err != nil {
 		return err
 	}
 
-	err = d.DeleteVol(volumeID)
-	if err != nil {
-		dlog.Println(err)
+	if err := d.DeleteVol(volumeID); err != nil {
 		return err
 	}
 
@@ -272,35 +274,35 @@ func (d *driver) Alerts(volumeID string) (*api.Alerts, error) {
 }
 
 func (d *driver) Attach(volumeID string) (path string, err error) {
-	v, err := d.GetVol(volumeID)
+	volume, err := d.GetVol(volumeID)
 	if err != nil {
 		return "", fmt.Errorf("Volume %s could not be located", volumeID)
 	}
 
-	vol, err := d.coprhd.Volume().
+	coprVolume, err := d.client.Volume().
 		WWN(volumeID).
 		Query()
 	if err != nil {
 		return "", err
 	}
 
-	group, err := d.coprhd.Export().
-		Name(vol.Name).
-		Initiators(d.itr.Id).
-		Volumes(vol.Id).
-		Project(vol.Project.Id).
-		Array(vol.VArray.Id).
+	group, err := d.client.Export().
+		Name(coprVolume.Name).
+		Initiators(d.initiator.Id).
+		Volumes(coprVolume.Id).
+		Project(coprVolume.Project.Id).
+		Array(coprVolume.VArray.Id).
 		Create()
 	if err != nil {
 		return "", err
 	}
 
-	proto := d.itr.Protocol
-	dev := ""
+	protocol := d.initiator.Protocol
+	device := ""
 
-	switch proto {
+	switch protocol {
 	case coprhd.InitiatorTypeScaleIO:
-		dev, err = d.waitAttachDevice(volumeID, time.Second*180)
+		device, err = d.waitAttachDevice(volumeID, time.Second*180)
 		if err != nil {
 			return "", err
 		}
@@ -308,15 +310,14 @@ func (d *driver) Attach(volumeID string) (path string, err error) {
 		return "", fmt.Errorf("Unsupported initiator protocol")
 	}
 
-	v.AttachedOn = group.Id
-	v.DevicePath = dev
-	v.Status = api.VolumeStatus_VOLUME_STATUS_UP
+	volume.AttachedOn = group.Id
+	volume.DevicePath = device
+	volume.Status = api.VolumeStatus_VOLUME_STATUS_UP
 
-	err = d.UpdateVol(v)
-	if err != nil {
+	if err := d.UpdateVol(volume); err != nil {
 		return "", err
 	}
-	return dev, nil
+	return device, nil
 }
 
 func (d *driver) Detach(volumeID string) error {
@@ -327,7 +328,7 @@ func (d *driver) Detach(volumeID string) error {
 
 	export := v.AttachedOn
 	if export != "" {
-		err = d.coprhd.Export().
+		err = d.client.Export().
 			Id(export).
 			Delete()
 		if err != nil {
@@ -339,8 +340,7 @@ func (d *driver) Detach(volumeID string) error {
 	v.DevicePath = ""
 	v.Status = api.VolumeStatus_VOLUME_STATUS_DOWN
 
-	err = d.UpdateVol(v)
-	if err != nil {
+	if err := d.UpdateVol(v); err != nil {
 		return err
 	}
 
@@ -348,55 +348,48 @@ func (d *driver) Detach(volumeID string) error {
 }
 
 func (d *driver) Mount(volumeID string, mountpath string) error {
-	v, err := d.GetVol(volumeID)
+	volume, err := d.GetVol(volumeID)
 	if err != nil {
 		return fmt.Errorf("Failed to locate attached volume %q", volumeID)
 	}
-	devicePath := v.DevicePath
+	devicePath := volume.DevicePath
 	if devicePath == "" {
 		return fmt.Errorf("Invalid device path")
 	}
 
-	fstype := v.Spec.Format.SimpleString()
+	fstype := volume.Spec.Format.SimpleString()
 
-	err = syscall.Mount(devicePath, mountpath, fstype, 0, "")
-	if err != nil {
+	if err := syscall.Mount(devicePath, mountpath, fstype, 0, ""); err != nil {
 		return err
 	}
 
-	v.AttachPath = mountpath
+	volume.AttachPath = mountpath
 
-	err = d.UpdateVol(v)
-	if err != nil {
+	if err := d.UpdateVol(volume); err != nil {
 		return err
 	}
 	return nil
 }
 
 func (d *driver) Unmount(volumeID string, mountpath string) error {
-	v, err := d.GetVol(volumeID)
+	volume, err := d.GetVol(volumeID)
 	if err != nil {
 		return fmt.Errorf("Failed to locate attached volume %q", volumeID)
 	}
-	err = syscall.Unmount(mountpath, 0)
-	if err != nil {
+	if err := syscall.Unmount(mountpath, 0); err != nil {
 		return err
 	}
 
-	v.AttachPath = ""
+	volume.AttachPath = ""
 
-	err = d.UpdateVol(v)
-	if err != nil {
+	if err := d.UpdateVol(volume); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (d *driver) Set(
-	volumeID string,
-	locator *api.VolumeLocator,
-	spec *api.VolumeSpec) error {
+func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
 	return volume.ErrNotSupported
 }
 
@@ -404,10 +397,7 @@ func (d *driver) Shutdown() {
 	dlog.Infof("%s Shutting down", Name)
 }
 
-func (d *driver) Snapshot(
-	volumeID string,
-	readonly bool,
-	locator *api.VolumeLocator) (string, error) {
+func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator) (string, error) {
 	return "", volume.ErrNotSupported
 }
 
@@ -416,65 +406,64 @@ func (v *driver) Status() [][2]string {
 }
 
 func (d *driver) Inspect(volumeIDs []string) ([]*api.Volume, error) {
-	vols, err := d.DefaultEnumerator.Inspect(volumeIDs)
+	volumes, err := d.DefaultEnumerator.Inspect(volumeIDs)
 	if err != nil {
 		return nil, err
 	}
 
-	for i, v := range vols {
-		proto := d.itr.Protocol
-		dev := ""
+	for _, volume := range volumes {
+		protocol := d.initiator.Protocol
+		device := ""
 
-		switch proto {
+		switch protocol {
 		case coprhd.InitiatorTypeScaleIO:
-			dev, err = d.waitAttachDevice(v.Id, time.Second*1)
+			device, err = d.waitAttachDevice(volume.Id, time.Second*1)
 			if err == nil {
-				vols[i].DevicePath = dev
+				volume.DevicePath = device
 			}
 		default:
 		}
 	}
-	return vols, nil
+	return volumes, nil
 }
 
 func (d *driver) Format(volumeID string) error {
-	v, err := d.GetVol(volumeID)
+	volume, err := d.GetVol(volumeID)
 	if err != nil {
 		return fmt.Errorf("Volume is not attached")
 	}
 
-	fstype := v.Spec.Format.SimpleString()
-	devicePath := v.DevicePath
+	fstype := volume.Spec.Format.SimpleString()
+	devicePath := volume.DevicePath
 
 	cmd := "/sbin/mkfs." + fstype
-	o, err := exec.Command(cmd, devicePath).Output()
-	if err != nil {
-		dlog.Warnf("Failed to run command %v %v: %v", cmd, devicePath, o)
+	if _, err := exec.Command(cmd, devicePath).Output(); err != nil {
 		return err
 	}
-	v.Format = v.Spec.Format
-	err = d.UpdateVol(v)
-	return err
+	volume.Format = volume.Spec.Format
+	if err := d.UpdateVol(volume); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (d *driver) waitAttachDevice(volumeID string, to time.Duration) (string, error) {
-	_, err := d.GetVol(volumeID)
-	if err != nil {
+	if _, err := d.GetVol(volumeID); err != nil {
 		return "", fmt.Errorf("Volume is not attached")
 	}
 
 	timeout := time.After(to)
 	timer := time.Tick(time.Millisecond * 100)
 
-	proto := d.itr.Protocol
-	dev := ""
+	protocol := d.initiator.Protocol
+	device := ""
 
 	for {
-		switch proto {
+		switch protocol {
 		case coprhd.InitiatorTypeScaleIO:
-			dev, _ = d.getScaleIoDevice(volumeID)
-			if dev != "" {
-				return dev, nil
+			device, _ = d.getScaleIoDevice(volumeID)
+			if device != "" {
+				return device, nil
 			}
 		default:
 			return "", fmt.Errorf("Unsupported initiator protocol")
