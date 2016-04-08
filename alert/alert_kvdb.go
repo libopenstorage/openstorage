@@ -363,7 +363,7 @@ func kvdbWatch(prefix string, opaque interface{}, kvp *kvdb.KVPair, err error) e
 	w := watcherMap[watcherKey]
 
 	if kvp.Action == kvdb.KVDelete {
-		err = w.cb(nil, AlertDeleteAction, prefix, kvp.Key)
+		err = w.cb(nil, api.AlertActionType_ALERT_ACTION_TYPE_DELETE, prefix, kvp.Key)
 		return err
 	}
 
@@ -374,9 +374,9 @@ func kvdbWatch(prefix string, opaque interface{}, kvp *kvdb.KVPair, err error) e
 
 	switch kvp.Action {
 	case kvdb.KVCreate:
-		err = w.cb(&alert, AlertCreateAction, prefix, kvp.Key)
+		err = w.cb(&alert, api.AlertActionType_ALERT_ACTION_TYPE_CREATE, prefix, kvp.Key)
 	case kvdb.KVSet:
-		err = w.cb(&alert, AlertUpdateAction, prefix, kvp.Key)
+		err = w.cb(&alert, api.AlertActionType_ALERT_ACTION_TYPE_UPDATE, prefix, kvp.Key)
 	default:
 		err = fmt.Errorf("Unhandled KV Action")
 	}

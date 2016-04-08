@@ -11,26 +11,6 @@ import (
 	"go.pedge.io/dlog"
 )
 
-const (
-	// AlertDeleteAction is an alert watch action for delete.
-	AlertDeleteAction AlertAction = iota
-	// AlertCreateAction is an alert watch action for create.
-	AlertCreateAction
-	// AlertUpdateAction is an alert watch action for update.
-	AlertUpdateAction
-)
-
-const (
-	//None Resource. (Unknown Resource)
-	None Resource = iota
-	// Volume Resource.
-	Volume
-	// Node Resource.
-	Node
-	// Cluster Resource.
-	Cluster
-)
-
 var (
 	// ErrNotSupported implemenation of a specific function is not supported.
 	ErrNotSupported = errors.New("implementation not supported")
@@ -55,18 +35,11 @@ var (
 	lock sync.RWMutex
 )
 
-// AlertAction used to indicate the action performed on a KV pair.
-type AlertAction int
-
-// Resource is equaivalent to api.ResourceType and is used in the alert instance
-// so that callers of the instance don't have to worry about api.*
-type Resource int
-
 // InitFunc initialization function for alert.
 type InitFunc func(string, string, []string, string) (AlertClient, error)
 
 // AlertWatcherFunc is a function type used as a callback for KV WatchTree.
-type AlertWatcherFunc func(*api.Alert, AlertAction, string, string) error
+type AlertWatcherFunc func(*api.Alert, api.AlertActionType, string, string) error
 
 // AlertClient interface for Alert API.
 type AlertClient interface {
@@ -102,16 +75,16 @@ type AlertClient interface {
 
 type AlertInstance interface {
 	// Clear clears an alert.
-	Clear(resource Resource, resourceId string, alertID int64)
+	Clear(resourceType api.ResourceType, resourceId string, alertID int64)
 
 	// Alarm raises an alert with severity : ALARM.
-	Alarm(name string, msg string, resource Resource, resourceId string) (int64, error)
+	Alarm(name string, msg string, resourceType api.ResourceType, resourceId string) (int64, error)
 
 	// Notify raises an alert with severity : NOTIFY.
-	Notify(name string, msg string, resource Resource, resourceId string) (int64, error)
+	Notify(name string, msg string, resourceType api.ResourceType, resourceId string) (int64, error)
 
 	// Warn raises an alert with severity : WARNING.
-	Warn(name string, msg string, resource Resource, resourceId string) (int64, error)
+	Warn(name string, msg string, resourceType api.ResourceType, resourceId string) (int64, error)
 
 	// Alert :  Keeping this function for backward compatibility
 	// until we remove all calls to this function.

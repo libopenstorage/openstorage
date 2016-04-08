@@ -15,7 +15,7 @@ var (
 	kva             AlertClient
 	nextId          int64
 	isWatcherCalled int
-	watcherAction   AlertAction
+	watcherAction   api.AlertActionType
 	watcherAlert    api.Alert
 	watcherPrefix   string
 	watcherKey      string
@@ -154,11 +154,11 @@ func TestEnumerateAlert(t *testing.T) {
 	err = kva.Erase(api.ResourceType_RESOURCE_TYPE_NODE, raiseAlert4.Id)
 }
 
-func testAlertWatcher(alert *api.Alert, action AlertAction, prefix string, key string) error {
+func testAlertWatcher(alert *api.Alert, action api.AlertActionType, prefix string, key string) error {
 	// A dummy callback function
 	// Setting the global variables so that we can check them in our unit tests
 	isWatcherCalled = 1
-	if action != AlertDeleteAction {
+	if action != api.AlertActionType_ALERT_ACTION_TYPE_DELETE {
 		watcherAlert = *alert
 	} else {
 		watcherAlert = api.Alert{}
@@ -182,7 +182,7 @@ func TestWatch(t *testing.T) {
 	time.Sleep(time.Millisecond * 100)
 
 	require.Equal(t, 1, isWatcherCalled, "Callback function not called")
-	require.Equal(t, AlertCreateAction, watcherAction, "action mismatch for create")
+	require.Equal(t, api.AlertActionType_ALERT_ACTION_TYPE_CREATE, watcherAction, "action mismatch for create")
 	require.Equal(t, raiseAlert1.Id, watcherAlert.Id, "alert id mismatch")
 	require.Equal(t, "alert/cluster/"+strconv.FormatInt(raiseAlert1.Id, 10), watcherKey, "key mismatch")
 
@@ -191,7 +191,7 @@ func TestWatch(t *testing.T) {
 	// Sleep for sometime so that we pass on some previous watch callbacks
 	time.Sleep(time.Millisecond * 100)
 
-	require.Equal(t, AlertUpdateAction, watcherAction, "action mismatch for update")
+	require.Equal(t, api.AlertActionType_ALERT_ACTION_TYPE_UPDATE, watcherAction, "action mismatch for update")
 	require.Equal(t, "alert/cluster/"+strconv.FormatInt(raiseAlert1.Id, 10), watcherKey, "key mismatch")
 
 	err = kva.Erase(api.ResourceType_RESOURCE_TYPE_CLUSTER, raiseAlert1.Id)
@@ -199,7 +199,7 @@ func TestWatch(t *testing.T) {
 	// Sleep for sometime so that we pass on some previous watch callbacks
 	time.Sleep(time.Millisecond * 100)
 
-	require.Equal(t, AlertDeleteAction, watcherAction, "action mismatch for delete")
+	require.Equal(t, api.AlertActionType_ALERT_ACTION_TYPE_DELETE, watcherAction, "action mismatch for delete")
 	require.Equal(t, "alert/cluster/"+strconv.FormatInt(raiseAlert1.Id, 10), watcherKey, "key mismatch")
 
 	// Watch on a new clusterID
@@ -218,7 +218,7 @@ func TestWatch(t *testing.T) {
 	time.Sleep(time.Millisecond * 100)
 
 	require.Equal(t, 1, isWatcherCalled, "Callback function not called")
-	require.Equal(t, AlertCreateAction, watcherAction, "action mismatch for create")
+	require.Equal(t, api.AlertActionType_ALERT_ACTION_TYPE_CREATE, watcherAction, "action mismatch for create")
 	require.Equal(t, raiseAlertNew.Id, watcherAlert.Id, "alert id mismatch")
 	require.Equal(t, "alert/node/"+strconv.FormatInt(raiseAlertNew.Id, 10), watcherKey, "key mismatch")
 }

@@ -57,6 +57,13 @@ enum ResourceType {
   RESOURCE_TYPE_CLUSTER = 3;
 }
 
+enum AlertActionType {
+  ALERT_ACTION_TYPE_NONE = 0;
+  ALERT_ACTION_TYPE_DELETE = 1;
+  ALERT_ACTION_TYPE_CREATE = 2;
+  ALERT_ACTION_TYPE_UPDATE = 3;
+}
+
 enum VolumeActionParam {
   VOLUME_ACTION_PARAM_NONE = 0;
   // Maps to the boolean value false
@@ -213,7 +220,7 @@ message Alert {
 }
 
 message Alerts {
-  repeated Alert alerts = 1;
+  repeated Alert alert = 1;
 }
 
 message VolumeCreateRequest {
