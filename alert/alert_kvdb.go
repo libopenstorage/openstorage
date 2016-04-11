@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/libopenstorage/openstorage/api"
@@ -16,15 +17,17 @@ import (
 const (
 	// Name of this alert client implementation.
 	Name = "alert_kvdb"
-	// NameTest, this alert instance used only for unit tests.
+	// NameTest of this alert instance used only for unit tests.
 	NameTest = "alert_kvdb_test"
 
 	alertKey       = "alert/"
-	nextAlertIdKey = "nextAlertId"
-	clusterKey      = "cluster/"
-	volumeKey       = "volume/"
-	nodeKey         = "node/"
-	bootstrap       = "bootstrap"
+	nextAlertIDKey = "nextAlertId"
+	clusterKey     = "cluster/"
+	volumeKey      = "volume/"
+	nodeKey        = "node/"
+	bootstrap      = "bootstrap"
+	watchRetries   = 5
+	watchSleep     = 100
 )
 
 const (
@@ -34,10 +37,11 @@ const (
 )
 
 var (
-	kvdbMap          = make(map[string]kvdb.Kvdb)
-	watcherMap       = make(map[string]*watcher)
+	kvdbMap         = make(map[string]kvdb.Kvdb)
+	watcherMap      = make(map[string]*watcher)
 	alertWatchIndex uint64
-	watchErrors      int
+	watchErrors     int
+	kvdbLock        sync.RWMutex
 )
 
 func init() {
@@ -51,114 +55,107 @@ type watcher struct {
 	kvcb      kvdb.WatchCB
 	status    watcherStatus
 	cb        AlertWatcherFunc
-	clusterId string
+	clusterID string
 	kvdb      kvdb.Kvdb
 }
+
+// KvAlert is used for managing the alerts and its kvdb instance
 type KvAlert struct {
 	kvdbName     string
 	kvdbDomain   string
 	kvdbMachines []string
-	clusterId    string
+	clusterID    string
 }
 
-// GetKvdbInstance returns a kvdb instance associated with this alert client and clusterId combination.
+// GetKvdbInstance returns a kvdb instance associated with this alert client and clusterID combination.
 func (kva *KvAlert) GetKvdbInstance() kvdb.Kvdb {
-	return kvdbMap[kva.clusterId]
+	kvdbLock.RLock()
+	defer kvdbLock.RUnlock()
+	return kvdbMap[kva.clusterID]
 }
 
 // Init initializes a AlertClient interface implementation.
-func Init(name string, domain string, machines []string, clusterId string) (AlertClient, error) {
-	if _, ok := kvdbMap[clusterId]; !ok {
-		kv, err := kvdb.New(name, domain+"/"+clusterId, machines, nil)
+func Init(name string, domain string, machines []string, clusterID string) (AlertClient, error) {
+	kvdbLock.Lock()
+	defer kvdbLock.Unlock()
+	if _, ok := kvdbMap[clusterID]; !ok {
+		kv, err := kvdb.New(name, domain+"/"+clusterID, machines, nil)
 		if err != nil {
 			return nil, err
 		}
-		kvdbMap[clusterId] = kv
+		kvdbMap[clusterID] = kv
 	}
-	return &KvAlert{name, domain, machines, clusterId}, nil
+	return &KvAlert{name, domain, machines, clusterID}, nil
 }
 
 // Raise raises an Alert.
-func (kva *KvAlert) Raise(a api.Alert) (api.Alert, error) {
+func (kva *KvAlert) Raise(a *api.Alert) error {
 	kv := kva.GetKvdbInstance()
 	if a.Resource == api.ResourceType_RESOURCE_TYPE_NONE {
-		return api.Alert{}, ErrResourceNotFound
+		return ErrResourceNotFound
 	}
-	alertId, err := kva.getNextIdFromKVDB()
+	alertID, err := kva.getNextIDFromKVDB()
 	if err != nil {
-		return a, err
+		return err
 	}
 	// TODO(pedge): when this is changed to a pointer, we need to rethink this.
-	a.Id = alertId
+	a.Id = alertID
 	a.Timestamp = prototime.Now()
 	a.Cleared = false
-	_, err = kv.Create(getResourceKey(a.Resource)+strconv.FormatInt(a.Id, 10), &a, 0)
-	return a, err
+	_, err = kv.Create(getResourceKey(a.Resource)+strconv.FormatInt(a.Id, 10), a, 0)
+	return err
 }
 
 // Erase erases an alert.
-func (kva *KvAlert) Erase(resourceType api.ResourceType, alertId int64) error {
+func (kva *KvAlert) Erase(resourceType api.ResourceType, alertID int64) error {
 	kv := kva.GetKvdbInstance()
 	if resourceType == api.ResourceType_RESOURCE_TYPE_NONE {
 		return ErrResourceNotFound
 	}
-	_, err := kv.Delete(getResourceKey(resourceType) + strconv.FormatInt(alertId, 10))
+	_, err := kv.Delete(getResourceKey(resourceType) + strconv.FormatInt(alertID, 10))
 	return err
 }
 
 // Clear clears an alert.
-func (kva *KvAlert) Clear(resourceType api.ResourceType, alertId int64) error {
+func (kva *KvAlert) Clear(resourceType api.ResourceType, alertID int64) error {
 	kv := kva.GetKvdbInstance()
 	var alert api.Alert
 	if resourceType == api.ResourceType_RESOURCE_TYPE_NONE {
 		return ErrResourceNotFound
 	}
-	if _, err := kv.GetVal(getResourceKey(resourceType)+strconv.FormatInt(alertId, 10), &alert); err != nil {
+	if _, err := kv.GetVal(getResourceKey(resourceType)+strconv.FormatInt(alertID, 10), &alert); err != nil {
 		return err
 	}
 	alert.Cleared = true
 
-	_, err := kv.Update(getResourceKey(resourceType)+strconv.FormatInt(alertId, 10), &alert, 0)
+	_, err := kv.Update(getResourceKey(resourceType)+strconv.FormatInt(alertID, 10), &alert, 0)
 	return err
 }
 
 // Retrieve retrieves a specific alert.
-func (kva *KvAlert) Retrieve(resourceType api.ResourceType, alertId int64) (api.Alert, error) {
+func (kva *KvAlert) Retrieve(resourceType api.ResourceType, alertID int64) (*api.Alert, error) {
 	var alert api.Alert
 	if resourceType == api.ResourceType_RESOURCE_TYPE_NONE {
-		return api.Alert{}, ErrResourceNotFound
+		return &alert, ErrResourceNotFound
 	}
 	kv := kva.GetKvdbInstance()
-	_, err := kv.GetVal(getResourceKey(resourceType)+strconv.FormatInt(alertId, 10), &alert)
-	return alert, err
+	_, err := kv.GetVal(getResourceKey(resourceType)+strconv.FormatInt(alertID, 10), &alert)
+	return &alert, err
 }
 
 // Enumerate enumerates alert
-func (kva *KvAlert) Enumerate(filter api.Alert) ([]*api.Alert, error) {
-	allAlerts := []*api.Alert{}
-	resourceAlerts := []*api.Alert{}
-	var err error
+func (kva *KvAlert) Enumerate(filter *api.Alert) ([]*api.Alert, error) {
+	kv := kva.GetKvdbInstance()
+	return kva.enumerate(kv, filter)
+}
 
-	if filter.Resource != api.ResourceType_RESOURCE_TYPE_NONE {
-		resourceAlerts, err = kva.getResourceSpecificAlerts(filter.Resource)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		resourceAlerts, err = kva.getAllAlerts()
+// EnumerateByCluster enumerates alerts by clusterID
+func (kva *KvAlert) EnumerateByCluster(clusterID string, filter *api.Alert) ([]*api.Alert, error) {
+	kv, err := kva.getKvdbForCluster(clusterID)
+	if err != nil {
+		return []*api.Alert{}, err
 	}
-
-	if filter.Severity != 0 {
-		for _, v := range resourceAlerts {
-			if v.Severity <= filter.Severity {
-				allAlerts = append(allAlerts, v)
-			}
-		}
-	} else {
-		allAlerts = append(allAlerts, resourceAlerts...)
-	}
-
-	return allAlerts, err
+	return kva.enumerate(kv, filter)
 }
 
 // EnumerateWithinTimeRange enumerates alert between timeStart and timeEnd.
@@ -171,13 +168,14 @@ func (kva *KvAlert) EnumerateWithinTimeRange(
 	resourceAlerts := []*api.Alert{}
 	var err error
 
+	kv := kva.GetKvdbInstance()
 	if resourceType != 0 {
-		resourceAlerts, err = kva.getResourceSpecificAlerts(resourceType)
+		resourceAlerts, err = kva.getResourceSpecificAlerts(resourceType, kv)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		resourceAlerts, err = kva.getAllAlerts()
+		resourceAlerts, err = kva.getAllAlerts(kv)
 		if err != nil {
 			return nil, err
 		}
@@ -192,19 +190,15 @@ func (kva *KvAlert) EnumerateWithinTimeRange(
 }
 
 // Watch on all alert.
-func (kva *KvAlert) Watch(clusterId string, alertWatcherFunc AlertWatcherFunc) error {
-	_, ok := kvdbMap[clusterId]
-	if !ok {
-		kv, err := kvdb.New(kva.kvdbName, kva.kvdbDomain+"/"+clusterId, kva.kvdbMachines, nil)
-		if err != nil {
-			return err
-		}
-		kvdbMap[clusterId] = kv
+func (kva *KvAlert) Watch(clusterID string, alertWatcherFunc AlertWatcherFunc) error {
+
+	kv, err := kva.getKvdbForCluster(clusterID)
+	if err != nil {
+		return err
 	}
 
-	kv := kvdbMap[clusterId]
 	alertWatcher := &watcher{status: watchBootstrap, cb: alertWatcherFunc, kvcb: kvdbWatch, kvdb: kv}
-	watcherKey := clusterId
+	watcherKey := clusterID
 	watcherMap[watcherKey] = alertWatcher
 
 	if err := subscribeWatch(watcherKey); err != nil {
@@ -221,24 +215,24 @@ func (kva *KvAlert) Watch(clusterId string, alertWatcherFunc AlertWatcherFunc) e
 		if alertWatcher.status == watchBootstrap {
 			retries++
 			// TODO(pedge): constant, maybe configurable
-			time.Sleep(time.Millisecond * 100)
+			time.Sleep(time.Millisecond * watchSleep)
 		}
 		// TODO(pedge): constant, maybe configurable
-		if retries == 5 {
-			return fmt.Errorf("Failed to bootstrap watch on %s", clusterId)
+		if retries == watchRetries {
+			return fmt.Errorf("Failed to bootstrap watch on %s", clusterID)
 		}
 	}
 	if alertWatcher.status != watchReady {
-		return fmt.Errorf("Failed to watch on %s", clusterId)
+		return fmt.Errorf("Failed to watch on %s", clusterID)
 	}
 	return nil
 }
 
-// Shutdown.
+// Shutdown shutdown
 func (kva *KvAlert) Shutdown() {
 }
 
-// String.
+// String
 func (kva *KvAlert) String() string {
 	return Name
 }
@@ -253,31 +247,30 @@ func getResourceKey(resourceType api.ResourceType) string {
 	return alertKey + clusterKey
 }
 
-func getNextAlertIdKey() string {
-	return alertKey + nextAlertIdKey
+func getNextAlertIDKey() string {
+	return alertKey + nextAlertIDKey
 }
 
-func (kva *KvAlert) getNextIdFromKVDB() (int64, error) {
+func (kva *KvAlert) getNextIDFromKVDB() (int64, error) {
 	kv := kva.GetKvdbInstance()
-	nextAlertId := 0
-	kvp, err := kv.Create(getNextAlertIdKey(), strconv.FormatInt(int64(nextAlertId+1), 10), 0)
+	nextAlertID := 0
+	kvp, err := kv.Create(getNextAlertIDKey(), strconv.FormatInt(int64(nextAlertID+1), 10), 0)
 
 	for err != nil {
-		kvp, err = kv.GetVal(getNextAlertIdKey(), &nextAlertId)
+		kvp, err = kv.GetVal(getNextAlertIDKey(), &nextAlertID)
 		if err != nil {
 			err = ErrNotInitialized
 			return -1, err
 		}
 		prevValue := kvp.Value
 		newKvp := *kvp
-		newKvp.Value = []byte(strconv.FormatInt(int64(nextAlertId+1), 10))
+		newKvp.Value = []byte(strconv.FormatInt(int64(nextAlertID+1), 10))
 		kvp, err = kv.CompareAndSet(&newKvp, kvdb.KVFlags(0), prevValue)
 	}
-	return int64(nextAlertId), err
+	return int64(nextAlertID), err
 }
 
-func (kva *KvAlert) getResourceSpecificAlerts(resourceType api.ResourceType) ([]*api.Alert, error) {
-	kv := kva.GetKvdbInstance()
+func (kva *KvAlert) getResourceSpecificAlerts(resourceType api.ResourceType, kv kvdb.Kvdb) ([]*api.Alert, error) {
 	allAlerts := []*api.Alert{}
 	kvp, err := kv.Enumerate(getResourceKey(resourceType))
 	if err != nil {
@@ -294,22 +287,22 @@ func (kva *KvAlert) getResourceSpecificAlerts(resourceType api.ResourceType) ([]
 	return allAlerts, nil
 }
 
-func (kva *KvAlert) getAllAlerts() ([]*api.Alert, error) {
+func (kva *KvAlert) getAllAlerts(kv kvdb.Kvdb) ([]*api.Alert, error) {
 	allAlerts := []*api.Alert{}
 	clusterAlerts := []*api.Alert{}
 	nodeAlerts := []*api.Alert{}
-	volumeAlerts:= []*api.Alert{}
+	volumeAlerts := []*api.Alert{}
 	var err error
 
-	nodeAlerts, err = kva.getResourceSpecificAlerts(api.ResourceType_RESOURCE_TYPE_NODE)
+	nodeAlerts, err = kva.getResourceSpecificAlerts(api.ResourceType_RESOURCE_TYPE_NODE, kv)
 	if err == nil {
 		allAlerts = append(allAlerts, nodeAlerts...)
 	}
-	volumeAlerts, err = kva.getResourceSpecificAlerts(api.ResourceType_RESOURCE_TYPE_VOLUME)
+	volumeAlerts, err = kva.getResourceSpecificAlerts(api.ResourceType_RESOURCE_TYPE_VOLUME, kv)
 	if err == nil {
 		allAlerts = append(allAlerts, volumeAlerts...)
 	}
-	clusterAlerts, err = kva.getResourceSpecificAlerts(api.ResourceType_RESOURCE_TYPE_CLUSTER)
+	clusterAlerts, err = kva.getResourceSpecificAlerts(api.ResourceType_RESOURCE_TYPE_CLUSTER, kv)
 	if err == nil {
 		allAlerts = append(allAlerts, clusterAlerts...)
 	}
@@ -320,6 +313,49 @@ func (kva *KvAlert) getAllAlerts() ([]*api.Alert, error) {
 		return nil, fmt.Errorf("No alert raised yet")
 	}
 	return allAlerts, err
+}
+
+func (kva *KvAlert) enumerate(kv kvdb.Kvdb, filter *api.Alert) ([]*api.Alert, error) {
+	allAlerts := []*api.Alert{}
+	resourceAlerts := []*api.Alert{}
+	var err error
+
+	if filter.Resource != api.ResourceType_RESOURCE_TYPE_NONE {
+		resourceAlerts, err = kva.getResourceSpecificAlerts(filter.Resource, kv)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		resourceAlerts, err = kva.getAllAlerts(kv)
+	}
+
+	if filter.Severity != 0 {
+		for _, v := range resourceAlerts {
+			if v.Severity <= filter.Severity {
+				allAlerts = append(allAlerts, v)
+			}
+		}
+	} else {
+		allAlerts = append(allAlerts, resourceAlerts...)
+	}
+
+	return allAlerts, err
+}
+
+func (kva *KvAlert) getKvdbForCluster(clusterID string) (kvdb.Kvdb, error) {
+	kvdbLock.Lock()
+	defer kvdbLock.Unlock()
+
+	_, ok := kvdbMap[clusterID]
+	if !ok {
+		kv, err := kvdb.New(kva.kvdbName, kva.kvdbDomain+"/"+clusterID, kva.kvdbMachines, nil)
+		if err != nil {
+			return nil, err
+		}
+		kvdbMap[clusterID] = kv
+	}
+	kv := kvdbMap[clusterID]
+	return kv, nil
 }
 
 func kvdbWatch(prefix string, opaque interface{}, kvp *kvdb.KVPair, err error) error {
@@ -349,7 +385,7 @@ func kvdbWatch(prefix string, opaque interface{}, kvp *kvdb.KVPair, err error) e
 		return err
 	}
 
-	if strings.HasSuffix(kvp.Key, nextAlertIdKey) {
+	if strings.HasSuffix(kvp.Key, nextAlertIDKey) {
 		// Ignore write on this key
 		// Todo : Add a map of ignore keys
 		return nil

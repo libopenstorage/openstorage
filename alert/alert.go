@@ -52,13 +52,16 @@ type AlertClient interface {
 	GetKvdbInstance() kvdb.Kvdb
 
 	// Raise raises an Alert.
-	Raise(alert api.Alert) (api.Alert, error)
+	Raise(alert *api.Alert) error
 
 	// Retrieve retrieves specific Alert.
-	Retrieve(resourceType api.ResourceType, id int64) (api.Alert, error)
+	Retrieve(resourceType api.ResourceType, id int64) (*api.Alert, error)
 
 	// Enumerate enumerates Alert.
-	Enumerate(filter api.Alert) ([]*api.Alert, error)
+	Enumerate(filter *api.Alert) ([]*api.Alert, error)
+
+	// EnumerateByCluster enumerates Alerts by ClusterID
+	EnumerateByCluster(clusterID string, filter *api.Alert) ([]*api.Alert, error)
 
 	// EnumerateWithinTimeRange enumerates Alert between timeStart and timeEnd.
 	EnumerateWithinTimeRange(timeStart time.Time, timeEnd time.Time, resourceType api.ResourceType) ([]*api.Alert, error)
@@ -70,21 +73,22 @@ type AlertClient interface {
 	Clear(resourceType api.ResourceType, alertID int64) error
 
 	// Watch on all Alert>
-	Watch(clusterId string, alertWatcher AlertWatcherFunc) error
+	Watch(clusterID string, alertWatcher AlertWatcherFunc) error
 }
 
+// AlertInstance is an instance used to raise and clear alerts
 type AlertInstance interface {
 	// Clear clears an alert.
-	Clear(resourceType api.ResourceType, resourceId string, alertID int64)
+	Clear(resourceType api.ResourceType, resourceID string, alertID int64)
 
 	// Alarm raises an alert with severity : ALARM.
-	Alarm(name string, msg string, resourceType api.ResourceType, resourceId string) (int64, error)
+	Alarm(name string, msg string, resourceType api.ResourceType, resourceID string) (int64, error)
 
 	// Notify raises an alert with severity : NOTIFY.
-	Notify(name string, msg string, resourceType api.ResourceType, resourceId string) (int64, error)
+	Notify(name string, msg string, resourceType api.ResourceType, resourceID string) (int64, error)
 
 	// Warn raises an alert with severity : WARNING.
-	Warn(name string, msg string, resourceType api.ResourceType, resourceId string) (int64, error)
+	Warn(name string, msg string, resourceType api.ResourceType, resourceID string) (int64, error)
 
 	// Alert :  Keeping this function for backward compatibility
 	// until we remove all calls to this function.
@@ -112,7 +116,7 @@ func Get(name string) (AlertClient, error) {
 }
 
 // New returns a new alert instance.
-func New(name string, kvdbName string, kvdbBase string, kvdbMachines []string, clusterId string) (AlertClient, error) {
+func New(name string, kvdbName string, kvdbBase string, kvdbMachines []string, clusterID string) (AlertClient, error) {
 	lock.Lock()
 	defer lock.Unlock()
 
@@ -120,7 +124,7 @@ func New(name string, kvdbName string, kvdbBase string, kvdbMachines []string, c
 		return nil, ErrExist
 	}
 	if initFunc, exists := drivers[name]; exists {
-		driver, err := initFunc(kvdbName, kvdbBase, kvdbMachines, clusterId)
+		driver, err := initFunc(kvdbName, kvdbBase, kvdbMachines, clusterID)
 		if err != nil {
 			return nil, err
 		}
@@ -131,15 +135,15 @@ func New(name string, kvdbName string, kvdbBase string, kvdbMachines []string, c
 }
 
 // NewAlertInstance creates a new singleton istance of AlertInstance.
-func NewAlertInstance(version, nodeId, clusterId, kvdbName, kvdbBase string, kvdbMachines []string) {
+func NewAlertInstance(version, nodeID, clusterID, kvdbName, kvdbBase string, kvdbMachines []string) {
 	kva, err := Get(Name)
 	if err != nil {
-		kva, err = New(Name, kvdbName, kvdbBase, kvdbMachines, clusterId)
+		kva, err = New(Name, kvdbName, kvdbBase, kvdbMachines, clusterID)
 		if err != nil {
 			dlog.Errorf("Failed to initialize an AlertInstance ")
 		}
 	}
-	newAlertInstance(nodeId, clusterId, version, kva)
+	newAlertInstance(nodeID, clusterID, version, kva)
 }
 
 // Instance returns the singleton AlertInstance.
