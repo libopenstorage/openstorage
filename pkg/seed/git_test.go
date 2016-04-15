@@ -24,9 +24,10 @@ func TestSetup(t *testing.T) {
 		t.Fatalf("Failed to setup test %v", err)
 	}
 	os.RemoveAll(dest)
-	os.MkdirAll(dest, 0755)
 }
 
 func TestLoad(t *testing.T) {
+	os.MkdirAll(dest, 0755)
 	assert.NoError(t, s.Load(dest), "Failed in load")
+	os.RemoveAll(dest)
 }

@@ -218,7 +218,10 @@ func (d *driver) Mount(volumeID string, mountpath string) error {
 			return err
 		}
 	}
-	v.AttachPath = mountpath
+	if v.AttachPath == nil {
+		v.AttachPath = make([]string, 0)
+	}
+	v.AttachPath = append(v.AttachPath, mountpath)
 	return d.UpdateVol(v)
 }
 
@@ -227,16 +230,15 @@ func (d *driver) Unmount(volumeID string, mountpath string) error {
 	if err != nil {
 		return err
 	}
-	if v.AttachPath == "" {
+	if len(v.AttachPath) == 0 {
 		return fmt.Errorf("Device %v not mounted", volumeID)
 	}
-	err = d.mounter.Unmount(path.Join(nfsMountPath, volumeID), v.AttachPath)
+	err = d.mounter.Unmount(path.Join(nfsMountPath, volumeID), mountpath)
 	if err != nil {
 		return err
 	}
-	v.AttachPath = ""
-	err = d.UpdateVol(v)
-	return err
+	v.AttachPath = d.mounter.Mounts(path.Join(nfsMountPath, volumeID))
+	return d.UpdateVol(v)
 }
 
 func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator) (string, error) {

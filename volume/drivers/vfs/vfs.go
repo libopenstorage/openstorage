@@ -8,7 +8,7 @@ import (
 	"syscall"
 
 	"go.pedge.io/dlog"
-	
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/volume"
@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	Name       = "vfs"
-	Type       = api.DriverType_DRIVER_TYPE_FILE
+	Name = "vfs"
+	Type = api.DriverType_DRIVER_TYPE_FILE
 )
 
 func init() {
@@ -103,15 +103,28 @@ func (d *driver) Mount(volumeID string, mountpath string) error {
 		dlog.Println(err)
 		return err
 	}
+	if len(v.AttachPath) > 0 && len(v.AttachPath) > 0 {
+		return fmt.Errorf("Volume %q already mounted at %q", v.AttachPath[0])
+	}
 	syscall.Unmount(mountpath, 0)
-	if err := syscall.Mount(filepath.Join(config.VolumeBase, string(volumeID)), mountpath, string(v.Spec.Format), syscall.MS_BIND, ""); err != nil {
-		dlog.Printf("Cannot mount %s at %s because %+v", filepath.Join(config.VolumeBase, string(volumeID)), mountpath, err)
+	if err := syscall.Mount(
+		filepath.Join(config.VolumeBase, string(volumeID)),
+		mountpath,
+		string(v.Spec.Format),
+		syscall.MS_BIND, "",
+	); err != nil {
+		dlog.Printf("Cannot mount %s at %s because %+v",
+			filepath.Join(config.VolumeBase, string(volumeID)),
+			mountpath,
+			err,
+		)
 		return err
 	}
-	v.AttachPath = mountpath
-	// TODO(pedge): why ignoring error?
-	err = d.UpdateVol(v)
-	return nil
+	if v.AttachPath == nil {
+		v.AttachPath = make([]string, 1)
+	}
+	v.AttachPath[0] = mountpath
+	return d.UpdateVol(v)
 }
 
 // Unmount volume at specified path
@@ -121,16 +134,14 @@ func (d *driver) Unmount(volumeID string, mountpath string) error {
 	if err != nil {
 		return err
 	}
-	if v.AttachPath == "" {
+	if len(v.AttachPath) == 0 || len(v.AttachPath[0]) == 0 {
 		return fmt.Errorf("Device %v not mounted", volumeID)
 	}
-	if err := syscall.Unmount(v.AttachPath, 0); err != nil {
+	if err := syscall.Unmount(v.AttachPath[0], 0); err != nil {
 		return err
 	}
-	v.AttachPath = ""
-	// TODO(pedge): why ignoring error?
-	err = d.UpdateVol(v)
-	return nil
+	v.AttachPath = nil
+	return d.UpdateVol(v)
 }
 
 // Set update volume with specified parameters.

@@ -95,6 +95,9 @@ func (v *volumeDriver) Mount(volumeID string, mountpath string) error {
 	if err != nil {
 		return err
 	}
+	if len(volume.AttachPath) > 0 && len(volume.AttachPath) > 0 {
+		return fmt.Errorf("Volume %q already mounted at %q", volume.AttachPath[0])
+	}
 	mountOptions, err := v.provider.GetMountOptions(volume.Spec)
 	if err != nil {
 		return err
@@ -113,6 +116,12 @@ func (v *volumeDriver) Mount(volumeID string, mountpath string) error {
 		_ = conn.Close()
 	}()
 	<-conn.Ready
+	if conn.MountError == nil {
+		if volume.AttachPath == nil {
+			volume.AttachPath = make([]string, 1)
+		}
+		volume.AttachPath[0] = mountpath
+	}
 	return conn.MountError
 }
 
@@ -121,13 +130,13 @@ func (v *volumeDriver) Unmount(volumeID string, mountpath string) error {
 	if err != nil {
 		return err
 	}
-	if volume.AttachPath == "" {
-		return fmt.Errorf("openstorage: device not mounted: %v", volumeID)
+	if len(volume.AttachPath) == 0 || len(volume.AttachPath[0]) == 0 {
+		return fmt.Errorf("Device %v not mounted", volumeID)
 	}
-	if err := fuse.Unmount(volume.AttachPath); err != nil {
+	if err := fuse.Unmount(volume.AttachPath[0]); err != nil {
 		return err
 	}
-	volume.AttachPath = ""
+	volume.AttachPath = nil
 	return v.UpdateVol(volume)
 }
 

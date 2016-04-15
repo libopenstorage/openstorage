@@ -19,6 +19,8 @@ type Manager interface {
 	Load(source string) error
 	// Inspect mount table for specified source. ErrEnoent may be returned.
 	Inspect(source string) []*PathInfo
+	// Mounts returns paths for specified source.
+	Mounts(source string) []string
 	// HasMounts determines returns the number of mounts for the source.
 	HasMounts(source string) int
 	// Exists returns true if the device is mounted at specified path.
@@ -125,6 +127,24 @@ func (m *Mounter) Inspect(devPath string) []*PathInfo {
 		return nil
 	}
 	return v.Mountpoint
+}
+
+// Inspect mount table for device
+func (m *Mounter) Mounts(devPath string) []string {
+	m.Lock()
+	defer m.Unlock()
+
+	v, ok := m.mounts[devPath]
+	if !ok {
+		return nil
+	}
+
+	mounts := make([]string, len(v.Mountpoint))
+	for i, v := range v.Mountpoint {
+		mounts[i] = v.Path
+	}
+
+	return mounts
 }
 
 // HasMounts determines returns the number of mounts for the device.

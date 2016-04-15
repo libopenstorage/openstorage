@@ -290,12 +290,13 @@ func (d *driver) path(w http.ResponseWriter, r *http.Request) {
 	}
 
 	d.logRequest(method, request.Name).Debugf("")
-	response.Mountpoint = vol.AttachPath
-	if response.Mountpoint == "" {
+
+	if len(vol.AttachPath) == 0 || len(vol.AttachPath) == 0 {
 		e := d.volNotMounted(method, request.Name)
 		d.errorResponse(w, e)
 		return
 	}
+	response.Mountpoint = vol.AttachPath[0]
 	response.Mountpoint = path.Join(response.Mountpoint, config.DataDir)
 	d.logRequest(method, request.Name).Debugf("response %v", response.Mountpoint)
 	json.NewEncoder(w).Encode(&response)
@@ -320,8 +321,8 @@ func (d *driver) list(w http.ResponseWriter, r *http.Request) {
 	volInfo := make([]volumeInfo, len(vols))
 	for i, v := range vols {
 		volInfo[i].Name = v.Locator.Name
-		if v.AttachPath != "" {
-			volInfo[i].Mountpoint = path.Join(v.AttachPath, config.DataDir)
+		if len(v.AttachPath) > 0 || len(v.AttachPath) > 0 {
+			volInfo[i].Mountpoint = path.Join(v.AttachPath[0], config.DataDir)
 		}
 	}
 	json.NewEncoder(w).Encode(map[string][]volumeInfo{"Volumes": volInfo})
@@ -342,8 +343,8 @@ func (d *driver) get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	volInfo := volumeInfo{Name: request.Name}
-	if vol.AttachPath != "" {
-		volInfo.Mountpoint = path.Join(vol.AttachPath, config.DataDir)
+	if len(vol.AttachPath) > 0 || len(vol.AttachPath) > 0 {
+		volInfo.Mountpoint = path.Join(vol.AttachPath[0], config.DataDir)
 	}
 
 	json.NewEncoder(w).Encode(map[string]volumeInfo{"Volume": volInfo})

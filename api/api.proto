@@ -172,8 +172,8 @@ message Volume {
   // Machine ID is a node instance identifier for clustered systems.
   string attached_on = 12;
   string device_path = 14;
-  string attach_path = 15;
-  // Set of machine IDs (nodes) to which this volume is erasure coded - for clustered storage arrays
+  repeated string attach_path = 15;
+	// Set of machine IDs (nodes) to which this volume is erasure coded - for clustered storage arrays
   repeated string replica_set = 16;
   // Last recorded error
   string error = 17;

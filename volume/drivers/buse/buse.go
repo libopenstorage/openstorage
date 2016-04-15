@@ -230,19 +230,20 @@ func (d *driver) Mount(volumeID string, mountpath string) error {
 	if err != nil {
 		return fmt.Errorf("Failed to locate volume %q", volumeID)
 	}
+	if len(v.AttachPath) > 0 && len(v.AttachPath) > 0 {
+		return fmt.Errorf("Volume %q already mounted at %q", v.AttachPath[0])
+	}
 	if err := syscall.Mount(v.DevicePath, mountpath, v.Spec.Format.SimpleString(), 0, ""); err != nil {
-		// TODO(pedge): same string for log message and error?
-		dlog.Errorf("Mounting %s on %s failed because of %v", v.DevicePath, mountpath, err)
 		return fmt.Errorf("Failed to mount %v at %v: %v", v.DevicePath, mountpath, err)
 	}
 
 	dlog.Infof("BUSE mounted NBD device %s at %s", v.DevicePath, mountpath)
 
-	v.AttachPath = mountpath
-	// TODO(pedge): why ignoring the error?
-	err = d.UpdateVol(v)
-
-	return nil
+	if v.AttachPath == nil {
+		v.AttachPath = make([]string, 1)
+	}
+	v.AttachPath[0] = mountpath
+	return d.UpdateVol(v)
 }
 
 func (d *driver) Unmount(volumeID string, mountpath string) error {
@@ -250,13 +251,13 @@ func (d *driver) Unmount(volumeID string, mountpath string) error {
 	if err != nil {
 		return err
 	}
-	if v.AttachPath == "" {
+	if len(v.AttachPath) == 0 || len(v.AttachPath[0]) == 0 {
 		return fmt.Errorf("Device %v not mounted", volumeID)
 	}
-	if err := syscall.Unmount(v.AttachPath, 0); err != nil {
+	if err := syscall.Unmount(v.AttachPath[0], 0); err != nil {
 		return err
 	}
-	v.AttachPath = ""
+	v.AttachPath = nil
 	return d.UpdateVol(v)
 }
 
