@@ -24,120 +24,9 @@ import (
 	"github.com/portworx/kvdb/mem"
 )
 
-func start(c *cli.Context) {
-
-	if !osdcli.DaemonMode(c) {
-		cli.ShowAppHelp(c)
-		return
-	}
-
-	datastores := []string{mem.Name, etcd.Name, consul.Name}
-
-	// We are in daemon mode.
-	file := c.String("file")
-	if file == "" {
-		dlog.Warnln("OSD configuration file not specified.  Visit openstorage.org for an example.")
-		return
-	}
-
-	cfg, err := config.Parse(file)
-	if err != nil {
-		dlog.Errorln(err)
-		return
-	}
-	kvdbURL := c.String("kvdb")
-	u, err := url.Parse(kvdbURL)
-	scheme := u.Scheme
-	u.Scheme = "http"
-
-	kv, err := kvdb.New(scheme, "openstorage", []string{u.String()}, nil)
-	if err != nil {
-		dlog.Warnf("Failed to initialize KVDB: %v (%v)", scheme, err)
-		dlog.Warnf("Supported datastores: %v", datastores)
-		return
-	}
-	err = kvdb.SetInstance(kv)
-	if err != nil {
-		dlog.Warnf("Failed to initialize KVDB: %v", err)
-		return
-	}
-
-	// Start the cluster state machine, if enabled.
-	clusterInit := false
-	if cfg.Osd.ClusterConfig.NodeId != "" && cfg.Osd.ClusterConfig.ClusterId != "" {
-		dlog.Infof("OSD enabling cluster mode.")
-
-		if err := cluster.Init(cfg.Osd.ClusterConfig); err != nil {
-			dlog.Errorln("Unable to init cluster server: %v", err)
-			return
-		}
-		clusterInit = true
-
-		if err := server.StartClusterAPI(config.ClusterAPIBase); err != nil {
-			dlog.Warnf("Unable to start cluster API server: %v", err)
-			return
-		}
-	}
-
-	isDefaultSet := false
-	// Start the volume drivers.
-	for d, v := range cfg.Osd.Drivers {
-		dlog.Infof("Starting volume driver: %v", d)
-		if _, err := volume.New(d, v); err != nil {
-			dlog.Warnf("Unable to start volume driver: %v, %v", d, err)
-			return
-		}
-
-		if err := server.StartPluginAPI(d, config.DriverAPIBase, config.PluginAPIBase); err != nil {
-			dlog.Warnf("Unable to start volume plugin: %v", err)
-			return
-		}
-		if d != "" && cfg.Osd.ClusterConfig.DefaultDriver == d {
-			isDefaultSet = true
-		}
-	}
-
-	if cfg.Osd.ClusterConfig.DefaultDriver != "" && !isDefaultSet {
-		dlog.Warnf("Invalid OSD config file: Default Driver specified but driver not initialized")
-		return
-	}
-
-	if err := server.StartFlexVolumeAPI(config.FlexVolumePort, cfg.Osd.ClusterConfig.DefaultDriver); err != nil {
-		dlog.Warnf("Unable to start flexvolume API: %v", err)
-		return
-	}
-
-	// Start the graph drivers.
-	for d, _ := range cfg.Osd.GraphDrivers {
-		dlog.Infof("Starting graph driver: %v", d)
-		if err := server.StartGraphAPI(d, config.PluginAPIBase); err != nil {
-			dlog.Warnf("Unable to start graph plugin: %v", err)
-			return
-		}
-	}
-
-	if clusterInit {
-		cm, err := cluster.Inst()
-		if err != nil {
-			dlog.Warnf("Unable to find cluster instance: %v", err)
-			return
-		}
-		if err := cm.Start(); err != nil {
-			dlog.Warnf("Unable to start cluster manager: %v", err)
-			return
-		}
-	}
-
-	// Daemon does not exit.
-	select {}
-}
-
-func showVersion(c *cli.Context) {
-	fmt.Println("OSD Version:", config.Version)
-	fmt.Println("Go Version:", runtime.Version())
-	fmt.Println("OS:", runtime.GOOS)
-	fmt.Println("Arch:", runtime.GOARCH)
-}
+var (
+	datastores = []string{mem.Name, etcd.Name, consul.Name}
+)
 
 func main() {
 	if reexec.Init() {
@@ -172,8 +61,7 @@ func main() {
 			Value: "",
 		},
 	}
-	app.Action = start
-
+	app.Action = wrapAction(start)
 	app.Commands = []cli.Command{
 		{
 			Name:        "driver",
@@ -191,14 +79,15 @@ func main() {
 			Name:    "version",
 			Aliases: []string{"v"},
 			Usage:   "Display version",
-			Action:  showVersion,
+			Action:  wrapAction(showVersion),
 		},
 	}
 
 	// Register all volume drivers with the CLI.
 	for _, v := range volumedrivers.AllDrivers {
 		// TODO(pedge): was an and, but we have no drivers that have two types
-		if v.DriverType == api.DriverType_DRIVER_TYPE_BLOCK {
+		switch v.DriverType {
+		case api.DriverType_DRIVER_TYPE_BLOCK:
 			bCmds := osdcli.BlockVolumeCommands(v.Name)
 			cmds := append(bCmds)
 			c := cli.Command{
@@ -207,8 +96,7 @@ func main() {
 				Subcommands: cmds,
 			}
 			app.Commands = append(app.Commands, c)
-			// TODO(pedge): was an and, but we have no drivers that have two types
-		} else if v.DriverType == api.DriverType_DRIVER_TYPE_FILE {
+		case api.DriverType_DRIVER_TYPE_FILE:
 			fCmds := osdcli.FileVolumeCommands(v.Name)
 			cmds := append(fCmds)
 			c := cli.Command{
@@ -235,4 +123,108 @@ func main() {
 	}
 
 	app.Run(os.Args)
+}
+
+func start(c *cli.Context) error {
+	if !osdcli.DaemonMode(c) {
+		cli.ShowAppHelp(c)
+		return nil
+	}
+
+	// We are in daemon mode.
+	file := c.String("file")
+	if file == "" {
+		return fmt.Errorf("OSD configuration file not specified.  Visit openstorage.org for an example.")
+	}
+
+	cfg, err := config.Parse(file)
+	if err != nil {
+		return err
+	}
+	kvdbURL := c.String("kvdb")
+	u, err := url.Parse(kvdbURL)
+	scheme := u.Scheme
+	u.Scheme = "http"
+
+	kv, err := kvdb.New(scheme, "openstorage", []string{u.String()}, nil)
+	if err != nil {
+		return fmt.Errorf("Failed to initialize KVDB: %v (%v)\nSupported datastores: %v", scheme, err, datastores)
+	}
+	if err := kvdb.SetInstance(kv); err != nil {
+		return fmt.Errorf("Failed to initialize KVDB: %v", err)
+	}
+
+	// Start the cluster state machine, if enabled.
+	clusterInit := false
+	if cfg.Osd.ClusterConfig.NodeId != "" && cfg.Osd.ClusterConfig.ClusterId != "" {
+		dlog.Infof("OSD enabling cluster mode.")
+		if err := cluster.Init(cfg.Osd.ClusterConfig); err != nil {
+			return fmt.Errorf("Unable to init cluster server: %v", err)
+		}
+		if err := server.StartClusterAPI(config.ClusterAPIBase); err != nil {
+			return fmt.Errorf("Unable to start cluster API server: %v", err)
+		}
+		clusterInit = true
+	}
+
+	isDefaultSet := false
+	// Start the volume drivers.
+	for d, v := range cfg.Osd.Drivers {
+		dlog.Infof("Starting volume driver: %v", d)
+		if _, err := volume.New(d, v); err != nil {
+			return fmt.Errorf("Unable to start volume driver: %v, %v", d, err)
+		}
+		if err := server.StartPluginAPI(d, config.DriverAPIBase, config.PluginAPIBase); err != nil {
+			return fmt.Errorf("Unable to start volume plugin: %v", err)
+		}
+		if d != "" && cfg.Osd.ClusterConfig.DefaultDriver == d {
+			isDefaultSet = true
+		}
+	}
+
+	if cfg.Osd.ClusterConfig.DefaultDriver != "" && !isDefaultSet {
+		return fmt.Errorf("Invalid OSD config file: Default Driver specified but driver not initialized")
+	}
+
+	if err := server.StartFlexVolumeAPI(config.FlexVolumePort, cfg.Osd.ClusterConfig.DefaultDriver); err != nil {
+		return fmt.Errorf("Unable to start flexvolume API: %v", err)
+	}
+
+	// Start the graph drivers.
+	for d := range cfg.Osd.GraphDrivers {
+		dlog.Infof("Starting graph driver: %v", d)
+		if err := server.StartGraphAPI(d, config.PluginAPIBase); err != nil {
+			return fmt.Errorf("Unable to start graph plugin: %v", err)
+		}
+	}
+
+	if clusterInit {
+		cm, err := cluster.Inst()
+		if err != nil {
+			return fmt.Errorf("Unable to find cluster instance: %v", err)
+		}
+		if err := cm.Start(); err != nil {
+			return fmt.Errorf("Unable to start cluster manager: %v", err)
+		}
+	}
+
+	// Daemon does not exit.
+	select {}
+	return nil
+}
+
+func showVersion(c *cli.Context) error {
+	fmt.Println("OSD Version:", config.Version)
+	fmt.Println("Go Version:", runtime.Version())
+	fmt.Println("OS:", runtime.GOOS)
+	fmt.Println("Arch:", runtime.GOARCH)
+	return nil
+}
+
+func wrapAction(f func(*cli.Context) error) func(*cli.Context) {
+	return func(c *cli.Context) {
+		if err := f(c); err != nil {
+			dlog.Warnln(err.Error())
+		}
+	}
 }
