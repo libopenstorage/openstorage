@@ -111,7 +111,8 @@ func main() {
 	// Register all graph drivers with the CLI.
 	for _, v := range graphdrivers.AllDrivers {
 		// TODO(pedge): was an and, but we have no drivers that have two types
-		if v.DriverType == api.DriverType_DRIVER_TYPE_GRAPH {
+		switch v.DriverType {
+		case api.DriverType_DRIVER_TYPE_GRAPH:
 			cmds := osdcli.GraphDriverCommands(v.Name)
 			c := cli.Command{
 				Name:        v.Name,
