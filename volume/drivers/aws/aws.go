@@ -113,11 +113,17 @@ func (d *Driver) freeDevices() (string, string, error) {
 		return "", "", err
 	}
 	devPrefix := "/dev/sd"
+
 	for _, dev := range self.BlockDeviceMappings {
 		if dev.DeviceName == nil {
 			return "", "", fmt.Errorf("Nil device name")
 		}
 		devName := *dev.DeviceName
+
+		// sda1 is reserved for the root device, skip
+		if devName == "/dev/sda1" {
+			continue
+		}
 		if !strings.HasPrefix(devName, devPrefix) {
 			devPrefix = "/dev/xvd"
 			if !strings.HasPrefix(devName, devPrefix) {
@@ -238,28 +244,50 @@ func (d *Driver) Create(
 		DryRun:           &dryRun,
 		Encrypted:        &encrypted,
 		Size:             &sz,
-		Iops:             iops,
 		VolumeType:       volType,
 		SnapshotId:       snapID,
+	}
+	// Gp2 Volumes don't support the iops parameter
+	if *volType != opsworks.VolumeTypeGp2 {
+		req.Iops = iops
 	}
 	vol, err := d.ec2.CreateVolume(req)
 	if err != nil {
 		dlog.Warnf("Failed in CreateVolumeRequest :%v", err)
 		return "", err
 	}
+
+	volumeID := *vol.VolumeId
+
 	volume := common.NewVolume(
-		*vol.VolumeId,
-		api.FSType_FS_TYPE_NONE,
+		volumeID,
+		api.FSType_FS_TYPE_EXT4,
 		locator,
 		source,
 		spec,
-
 	)
 	err = d.UpdateVol(volume)
 	if err != nil {
 		return "", err
 	}
-	err = d.waitStatus(volume.Id, ec2.VolumeStateAvailable)
+	if err = d.waitStatus(volume.Id, ec2.VolumeStateAvailable); err != nil {
+		return "", err
+	}
+
+	if _, err := d.Attach(volumeID); err != nil {
+		return "", err
+	}
+
+	dlog.Infof("aws preparing volume %s...", volumeID)
+
+	if err := d.Format(volumeID); err != nil {
+		return "", err
+	}
+
+	if err := d.Detach(volumeID); err != nil {
+		return "", err
+	}
+
 	return volume.Id, err
 }
 
@@ -492,6 +520,11 @@ func (d *Driver) Alerts(volumeID string) (*api.Alerts, error) {
 }
 
 func (d *Driver) Attach(volumeID string) (path string, err error) {
+	volume, err := d.GetVol(volumeID)
+	if err != nil {
+		return "", fmt.Errorf("Volume %s could not be located", volumeID)
+	}
+
 	dryRun := false
 	device, err := d.Assign()
 	if err != nil {
@@ -509,7 +542,16 @@ func (d *Driver) Attach(volumeID string) (path string, err error) {
 		return "", err
 	}
 	err = d.waitAttachmentStatus(volumeID, ec2.VolumeAttachmentStateAttached, time.Minute*5)
-	return *resp.Device, err
+	if err != nil {
+		return "", nil
+	}
+
+	volume.DevicePath = *resp.Device
+	if err := d.UpdateVol(volume); err != nil {
+		return "", err
+	}
+
+	return *resp.Device, nil
 }
 
 func (d *Driver) volumeState(ec2VolState *string) api.VolumeState {
@@ -530,7 +572,7 @@ func (d *Driver) volumeState(ec2VolState *string) api.VolumeState {
 }
 
 func (d *Driver) Format(volumeID string) error {
-	v, err := d.GetVol(volumeID)
+	volume, err := d.GetVol(volumeID)
 	if err != nil {
 		return fmt.Errorf("Failed to locate volume %q", volumeID)
 	}
@@ -540,14 +582,15 @@ func (d *Driver) Format(volumeID string) error {
 	if err != nil {
 		return err
 	}
-	cmd := "/sbin/mkfs." + string(v.Spec.Format)
+	fstype := volume.Spec.Format.SimpleString()
+	cmd := "/sbin/mkfs." + fstype
 	o, err := exec.Command(cmd, devicePath).Output()
 	if err != nil {
 		dlog.Warnf("Failed to run command %v %v: %v", cmd, devicePath, o)
 		return err
 	}
-	v.Format = v.Spec.Format
-	err = d.UpdateVol(v)
+	volume.Format = volume.Spec.Format
+	err = d.UpdateVol(volume)
 	return err
 }
 
@@ -568,7 +611,7 @@ func (d *Driver) Detach(volumeID string) error {
 }
 
 func (d *Driver) Mount(volumeID string, mountpath string) error {
-	v, err := d.GetVol(volumeID)
+	volume, err := d.GetVol(volumeID)
 	if err != nil {
 		return fmt.Errorf("Failed to locate volume %q", volumeID)
 	}
@@ -576,7 +619,8 @@ func (d *Driver) Mount(volumeID string, mountpath string) error {
 	if err != nil {
 		return err
 	}
-	err = syscall.Mount(devicePath, mountpath, string(v.Spec.Format), 0, "")
+	fstype := volume.Spec.Format.SimpleString()
+	err = syscall.Mount(devicePath, mountpath, fstype, 0, "")
 	if err != nil {
 		return err
 	}
