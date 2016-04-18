@@ -11,27 +11,29 @@ const (
 	diskById = "/dev/disk/by-id"
 )
 
-// getScaleIoDevice returns the local device associated with the volume
-func (d *driver) getScaleIoDevice(volumeID string) (string, error) {
-	_, err := d.GetVol(volumeID)
-	if err != nil {
+// GetScaleIoDevice returns the local device associated with the volume
+func (d *driver) GetScaleIoDevice(volumeID string) (string, error) {
+	if _, err := d.GetVol(volumeID); err != nil {
 		return "", fmt.Errorf("Volume could not be located")
 	}
 
 	wwn := volumeID
 
-	devs, _ := ioutil.ReadDir(diskById)
+	devices, err := ioutil.ReadDir(diskById)
+	if err != nil {
+		return "", fmt.Errorf("Failed to read devices directory")
+	}
 
-	for _, p := range devs {
-		name := strings.Replace(p.Name(), "-", "", -1)
-		if strings.Contains(name, wwn) {
-			path := filepath.Join(diskById, p.Name())
-			dev, err := filepath.EvalSymlinks(path)
-			if err != nil {
+	for _, deviceInfo := range devices {
+		name := strings.Replace(deviceInfo.Name(), "-", "", -1)
+		name = strings.TrimPrefix(name, "emcvol")
+		if name == wwn {
+			path := filepath.Join(diskById, deviceInfo.Name())
+
+			if device, err := filepath.EvalSymlinks(path); err != nil {
 				return "", err
-			}
-			if dev != "" {
-				return dev, nil
+			} else if device != "" {
+				return device, nil
 			}
 		}
 	}
