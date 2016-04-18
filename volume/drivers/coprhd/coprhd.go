@@ -27,6 +27,12 @@ const (
 )
 
 var (
+	// ErrApiUrlRequired is returned when the config is missing the url parameter
+	ErrApiUrlRequired = errors.New("coprhd api url parameter must be set")
+
+	// ErrApiAuthTokenRequired is returned when the auth token is missing from the config file
+	ErrApiAuthTokenRequired = errors.New("coprhd auth token parameter is required")
+
 	// ErrArrayRequired is returned when the varray name is not provided in the config
 	ErrArrayRequired = errors.New("varray name is required")
 
@@ -68,12 +74,12 @@ func init() {
 func Init(params map[string]string) (volume.VolumeDriver, error) {
 	host, ok := params["url"]
 	if !ok {
-		return nil, fmt.Errorf("coprhd rest api 'url' configuration parameter must be set")
+		return nil, ErrApiUrlRequired
 	}
 
 	token, ok := params["token"]
 	if !ok {
-		return nil, fmt.Errorf("coprhd rest auth 'token' must be set")
+		return nil, ErrApiAuthTokenRequired
 	}
 
 	// create a coprhd api client instance
@@ -84,52 +90,44 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		client:            client,
 	}
 
-	if p, ok := params["project"]; ok {
-		project, err := client.Project().
-			Name(p).
-			Query()
-		if err != nil {
+	if projectName, ok := params["project"]; ok {
+		if project, err := client.Project().Name(projectName).Query(); err != nil {
 			return nil, err
+		} else {
+			d.project = project
 		}
-		d.project = project
 	} else {
 		dlog.Warnln("Default coprhd 'project' not set")
 	}
 
-	if va, ok := params["varray"]; ok {
-		varray, err := client.VArray().
-			Name(va).
-			Query()
-		if err != nil {
+	if varrayName, ok := params["varray"]; ok {
+		if varray, err := client.VArray().Name(varrayName).Query(); err != nil {
 			return nil, err
+		} else {
+			d.varray = varray
 		}
-		d.varray = varray
 	} else {
 		dlog.Warnf("Default coprhd 'varray' not set")
 	}
 
-	if vp, ok := params["vpool"]; ok {
-		vpool, err := client.VPool().
-			Name(vp).
-			Query()
-		if err != nil {
+	if vpoolName, ok := params["vpool"]; ok {
+		if vpool, err := client.VPool().Name(vpoolName).Query(); err != nil {
 			return nil, err
+		} else {
+			d.vpool = vpool
 		}
-		d.vpool = vpool
 	} else {
 		dlog.Warnf("Default coprhd 'vpool' not set")
 	}
 
 	if port, ok := params["port"]; ok {
-		initiator, err := client.Initiator().
-			Port(port).
-			Query()
-		if err != nil {
+		if initiator, err := client.Initiator().Port(port).Query(); err != nil {
 			return nil, err
+		} else {
+			d.initiator = initiator
 		}
-		d.initiator = initiator
 	} else {
-		return nil, fmt.Errorf("coprhd initiator 'port' must be set")
+		return nil, ErrPortRequired
 	}
 
 	return d, nil
@@ -215,13 +213,13 @@ func (d *driver) Create(
 		return "", err
 	}
 
-	dlog.Infof("coprhd volume %s created", vol.WWN)
-
 	volumeID := strings.ToLower(vol.WWN)
+
+	dlog.Infof("coprhd volume %s created", volumeID)
 
 	volume := common.NewVolume(
 		volumeID,
-		api.FSType_FS_TYPE_NONE,
+		api.FSType_FS_TYPE_EXT4,
 		locator,
 		source,
 		spec)
@@ -234,7 +232,7 @@ func (d *driver) Create(
 		return "", err
 	}
 
-	dlog.Infof("coprhd preparing volume %s...", vol.WWN)
+	dlog.Infof("coprhd preparing volume %s...", volumeID)
 
 	if err := d.Format(volumeID); err != nil {
 		return "", err
@@ -249,7 +247,7 @@ func (d *driver) Create(
 
 func (d *driver) Delete(volumeID string) error {
 	if _, err := d.GetVol(volumeID); err != nil {
-		return fmt.Errorf("Volume could not be located")
+		return fmt.Errorf("Volume %q could not be located", volumeID)
 	}
 
 	if err := d.client.Volume().
@@ -276,7 +274,7 @@ func (d *driver) Alerts(volumeID string) (*api.Alerts, error) {
 func (d *driver) Attach(volumeID string) (path string, err error) {
 	volume, err := d.GetVol(volumeID)
 	if err != nil {
-		return "", fmt.Errorf("Volume %s could not be located", volumeID)
+		return "", fmt.Errorf("Volume %q could not be located", volumeID)
 	}
 
 	coprVolume, err := d.client.Volume().
@@ -307,7 +305,7 @@ func (d *driver) Attach(volumeID string) (path string, err error) {
 			return "", err
 		}
 	default:
-		return "", fmt.Errorf("Unsupported initiator protocol")
+		return "", ErrInvalidPort
 	}
 
 	volume.AttachedOn = group.Id
@@ -323,7 +321,7 @@ func (d *driver) Attach(volumeID string) (path string, err error) {
 func (d *driver) Detach(volumeID string) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
-		return fmt.Errorf("Volume is not attached")
+		return fmt.Errorf("Volume %q is not attached", volumeID)
 	}
 
 	export := v.AttachedOn
@@ -430,7 +428,7 @@ func (d *driver) Inspect(volumeIDs []string) ([]*api.Volume, error) {
 func (d *driver) Format(volumeID string) error {
 	volume, err := d.GetVol(volumeID)
 	if err != nil {
-		return fmt.Errorf("Volume is not attached")
+		return fmt.Errorf("Volume %q is not attached", volumeID)
 	}
 
 	fstype := volume.Spec.Format.SimpleString()
@@ -449,7 +447,7 @@ func (d *driver) Format(volumeID string) error {
 
 func (d *driver) waitAttachDevice(volumeID string, to time.Duration) (string, error) {
 	if _, err := d.GetVol(volumeID); err != nil {
-		return "", fmt.Errorf("Volume is not attached")
+		return "", fmt.Errorf("Volume %s is not attached", volumeID)
 	}
 
 	timeout := time.After(to)
@@ -466,7 +464,7 @@ func (d *driver) waitAttachDevice(volumeID string, to time.Duration) (string, er
 				return device, nil
 			}
 		default:
-			return "", fmt.Errorf("Unsupported initiator protocol")
+			return "", ErrInvalidPort
 		}
 
 		select {
