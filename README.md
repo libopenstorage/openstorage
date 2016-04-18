@@ -154,10 +154,10 @@ osd:
       coprhd:
         url: corphd_rest_url
         token: coprhd_proxy_token
-        port: host_initiator_port_name
+	port: host_initiator_port_name
 	project: opt_default_project_name
-        varray: opt_default_varray_name
-        vpool: opt_default_vpool_name
+	varray: opt_default_varray_name
+	vpool: opt_default_vpool_name
 	
   graphdrivers:
      proxy:
