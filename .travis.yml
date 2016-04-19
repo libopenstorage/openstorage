@@ -1,0 +1,8 @@
+sudo: required
+services:
+  - docker
+language: go
+go:
+  - 1.6
+script:
+  - make docker-build
