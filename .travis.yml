@@ -7,3 +7,5 @@ go:
   - 1.6
 script:
   - make docker-test
+after_success:
+  - bash etc/travis/docker-push.bash
