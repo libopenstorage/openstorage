@@ -7,7 +7,7 @@ go:
   - 1.6
 before_install:  
   - sudo apt-get update -yq
-  - sudo apt-get install -yq docker-engine
+  - sudo apt-get -o Dpkg::Options::="--force-confnew" install -yq docker-engine
 script:
   - make docker-test
 after_success:
