@@ -1,4 +1,4 @@
-FROM golang:1.6.0
+FROM golang:1.6.1
 MAINTAINER gou@portworx.com
 
 EXPOSE 2345

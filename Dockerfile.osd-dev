@@ -1,4 +1,4 @@
-FROM golang:1.6.0
+FROM golang:1.6.1
 MAINTAINER gou@portworx.com
 
 EXPOSE 2345
@@ -10,7 +10,7 @@ RUN \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN \
-  curl -sSL https://get.docker.com/builds/Linux/x86_64/docker-1.10.3 > /bin/docker && \
+  curl -sSL https://get.docker.com/builds/Linux/x86_64/docker-1.11.0 > /bin/docker && \
   chmod +x /bin/docker
 RUN mkdir -p /go/src/github.com/libopenstorage/openstorage
 ADD . /go/src/github.com/libopenstorage/openstorage/
