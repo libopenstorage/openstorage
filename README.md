@@ -1,5 +1,5 @@
 # Current Build Status
-[![Build Status](http://emma.openstorage.org/buildStatus/icon?job=Openstorage&style=plastic)](http://emma.openstorage.org/job/Openstorage/)
+[![Build Status](https://travis-ci.org/libopenstorage/openstorage.svg?branch=master)](https://travis-ci.org/libopenstorage/openstorage)
 
 # About Open Storage
 
