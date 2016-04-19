@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -Ee
+set -Eex
 
 DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "${DIR}"
@@ -10,17 +10,17 @@ if [[ "${TRAVIS_BRANCH}" != "master" ]]; then
   exit 0
 fi
 
-if [ -z "${DOCKER_EMAIL}" ]; then
+if [[ -z "${DOCKER_EMAIL}" ]]; then
   echo "error: DOCKER_EMAIL not set" >&2
   exit 1
 fi
 
-if [ -z "${DOCKER_USER}" ]; then
+if [[ -z "${DOCKER_USER}" ]]; then
   echo "error: DOCKER_USER not set" >&2
   exit 1
 fi
 
-if [ -z "${DOCKER_PASS}" ]; then
+if [[ -z "${DOCKER_PASS}" ]]; then
   echo "error: DOCKER_PASS not set" >&2
   exit 1
 fi
