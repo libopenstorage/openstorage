@@ -1,7 +1,7 @@
-# Current Build Status
-[![Build Status](https://travis-ci.org/libopenstorage/openstorage.svg?branch=master)](https://travis-ci.org/libopenstorage/openstorage)
+# Open Storage
 
-# About Open Storage
+[![Travis branch](https://img.shields.io/travis/libopenstorage/openstorage/master.svg)](https://travis-ci.org/libopenstorage/openstorage)
+[![Docker Pulls](https://img.shields.io/docker/pulls/openstorage/osd.svg)](https://hub.docker.com/r/openstorage/osd)
 
 OpenStorage is a clustered implementation of the [Open Storage](https://github.com/libopenstorage/specs) specification and relies on the Docker runtime.  It allows you to run stateful services in Docker in a multi-host environment.  It plugs into Docker volumes to provide storage to a container and plugs into Swarm to operate in a clustered environment. 
 
