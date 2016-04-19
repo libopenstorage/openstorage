@@ -106,6 +106,37 @@ enum VolumeStatus {
   VOLUME_STATUS_DEGRADED = 4;
 }
 
+enum StorageMedium {
+  // Magnetic spinning disk.
+  STORAGE_MEDIUM_MAGNETIC = 0;
+  // SSD disk
+  STORAGE_MEDIUM_SSD = 1;
+  // NVME disk
+  STORAGE_MEDIUM_NVME = 2;
+}
+
+// StorageResource groups properties of a storage device.
+message StorageResource {
+  // Unique identifier for this storage resource.
+  string uuid = 1;
+  // Storage medium.
+  StorageMedium medium = 2;
+  // True if this device is online.
+  bool online = 3;;
+  // IOPS 
+  uint64 iops = 4;;
+  // Total size in bytes.
+  uint64 size = 5;;
+  // Physical Bytes used.
+  uint64 used = 6;
+  // True if this device is rotational.
+  bool rotational = 7;;
+  // True if this device is rotational.
+  string rotation_speed = 8;
+  // Timestamp of last time this device was scanned.
+  google.protobuf.Timestamp last_scan = 9;
+}
+
 // VolumeLocator is a structure that is attached to a volume
 // and is used to carry opaque metadata.
 message VolumeLocator {
