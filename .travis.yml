@@ -5,4 +5,4 @@ language: go
 go:
   - 1.6
 script:
-  - make docker-build
+  - make docker-test
