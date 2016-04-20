@@ -63,6 +63,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		return nil, err
 	}
 	dlog.Infof("AWS instance %v zone %v", instance, zone)
+
 	accessKey, ok := params["AWS_ACCESS_KEY_ID"]
 	if !ok {
 		if accessKey = os.Getenv("AWS_ACCESS_KEY_ID"); accessKey == "" {
@@ -75,6 +76,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 			return nil, fmt.Errorf("AWS_SECRET_ACCESS_KEY environment variable must be set")
 		}
 	}
+
 	creds := credentials.NewStaticCredentials(accessKey, secretKey, "")
 	region := zone[:len(zone)-1]
 	d := &Driver{
@@ -113,14 +115,13 @@ func (d *Driver) freeDevices() (string, string, error) {
 		return "", "", err
 	}
 	devPrefix := "/dev/sd"
-
 	for _, dev := range self.BlockDeviceMappings {
 		if dev.DeviceName == nil {
 			return "", "", fmt.Errorf("Nil device name")
 		}
 		devName := *dev.DeviceName
 
-		// sda1 is reserved for the root device, skip
+		// per AWS docs EC instances have the root mounted at /dev/sda1, this label should be skipped
 		if devName == "/dev/sda1" {
 			continue
 		}
@@ -256,9 +257,6 @@ func (d *Driver) Create(
 		dlog.Warnf("Failed in CreateVolumeRequest :%v", err)
 		return "", err
 	}
-
-	volumeID := *vol.VolumeId
-
 	volume := common.NewVolume(
 		volumeID,
 		api.FSType_FS_TYPE_EXT4,
@@ -273,18 +271,16 @@ func (d *Driver) Create(
 	if err = d.waitStatus(volume.Id, ec2.VolumeStateAvailable); err != nil {
 		return "", err
 	}
-
-	if _, err := d.Attach(volumeID); err != nil {
+	if _, err := d.Attach(volume.Id); err != nil {
 		return "", err
 	}
 
-	dlog.Infof("aws preparing volume %s...", volumeID)
+	dlog.Infof("aws preparing volume %s...", *vol.VolumeId)
 
-	if err := d.Format(volumeID); err != nil {
+	if err := d.Format(volume.Idd); err != nil {
 		return "", err
 	}
-
-	if err := d.Detach(volumeID); err != nil {
+	if err := d.Detach(volume.Id); err != nil {
 		return "", err
 	}
 
@@ -504,8 +500,7 @@ func (d *Driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 	vols[0].Ctime = prototime.Now()
 
 	chaos.Now(koStrayCreate)
-	err = d.CreateVol(vols[0])
-	if err != nil {
+	if err = d.CreateVol(vols[0]); err != nil {
 		return "", err
 	}
 	return vols[0].Id, nil
@@ -541,9 +536,8 @@ func (d *Driver) Attach(volumeID string) (path string, err error) {
 	if err != nil {
 		return "", err
 	}
-	err = d.waitAttachmentStatus(volumeID, ec2.VolumeAttachmentStateAttached, time.Minute*5)
-	if err != nil {
-		return "", nil
+	if err = d.waitAttachmentStatus(volumeID, ec2.VolumeAttachmentStateAttached, time.Minute*5); err != nil {
+		return "", err
 	}
 
 	volume.DevicePath = *resp.Device
@@ -582,16 +576,14 @@ func (d *Driver) Format(volumeID string) error {
 	if err != nil {
 		return err
 	}
-	fstype := volume.Spec.Format.SimpleString()
-	cmd := "/sbin/mkfs." + fstype
+	cmd := "/sbin/mkfs." + volume.Spec.Format.SimpleString()
 	o, err := exec.Command(cmd, devicePath).Output()
 	if err != nil {
 		dlog.Warnf("Failed to run command %v %v: %v", cmd, devicePath, o)
 		return err
 	}
 	volume.Format = volume.Spec.Format
-	err = d.UpdateVol(volume)
-	return err
+	return d.UpdateVol(volume)
 }
 
 func (d *Driver) Detach(volumeID string) error {
@@ -602,12 +594,11 @@ func (d *Driver) Detach(volumeID string) error {
 		VolumeId:   &awsVolID,
 		Force:      &force,
 	}
-	_, err := d.ec2.DetachVolume(req)
-	if err != nil {
+	if _, err := d.ec2.DetachVolume(req); err != nil {
+
 		return err
 	}
-	err = d.waitAttachmentStatus(volumeID, ec2.VolumeAttachmentStateDetached, time.Minute*5)
-	return err
+	return d.waitAttachmentStatus(volumeID, ec2.VolumeAttachmentStateDetached, time.Minute*5)
 }
 
 func (d *Driver) Mount(volumeID string, mountpath string) error {
@@ -619,8 +610,7 @@ func (d *Driver) Mount(volumeID string, mountpath string) error {
 	if err != nil {
 		return err
 	}
-	fstype := volume.Spec.Format.SimpleString()
-	err = syscall.Mount(devicePath, mountpath, fstype, 0, "")
+	err = syscall.Mount(devicePath, mountpath, volume.Spec.Format.SimpleString(), 0, "")
 	if err != nil {
 		return err
 	}
