@@ -258,7 +258,7 @@ func (d *Driver) Create(
 		return "", err
 	}
 	volume := common.NewVolume(
-		volumeID,
+		*vol.VolumeId,
 		api.FSType_FS_TYPE_EXT4,
 		locator,
 		source,
@@ -277,7 +277,7 @@ func (d *Driver) Create(
 
 	dlog.Infof("aws preparing volume %s...", *vol.VolumeId)
 
-	if err := d.Format(volume.Idd); err != nil {
+	if err := d.Format(volume.Id); err != nil {
 		return "", err
 	}
 	if err := d.Detach(volume.Id); err != nil {
