@@ -63,6 +63,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		return nil, err
 	}
 	dlog.Infof("AWS instance %v zone %v", instance, zone)
+
 	accessKey, ok := params["AWS_ACCESS_KEY_ID"]
 	if !ok {
 		if accessKey = os.Getenv("AWS_ACCESS_KEY_ID"); accessKey == "" {
@@ -75,6 +76,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 			return nil, fmt.Errorf("AWS_SECRET_ACCESS_KEY environment variable must be set")
 		}
 	}
+
 	creds := credentials.NewStaticCredentials(accessKey, secretKey, "")
 	region := zone[:len(zone)-1]
 	d := &Driver{
@@ -118,6 +120,11 @@ func (d *Driver) freeDevices() (string, string, error) {
 			return "", "", fmt.Errorf("Nil device name")
 		}
 		devName := *dev.DeviceName
+
+		// per AWS docs EC instances have the root mounted at /dev/sda1, this label should be skipped
+		if devName == "/dev/sda1" {
+			continue
+		}
 		if !strings.HasPrefix(devName, devPrefix) {
 			devPrefix = "/dev/xvd"
 			if !strings.HasPrefix(devName, devPrefix) {
@@ -238,9 +245,12 @@ func (d *Driver) Create(
 		DryRun:           &dryRun,
 		Encrypted:        &encrypted,
 		Size:             &sz,
-		Iops:             iops,
 		VolumeType:       volType,
 		SnapshotId:       snapID,
+	}
+	// Gp2 Volumes don't support the iops parameter
+	if *volType != opsworks.VolumeTypeGp2 {
+		req.Iops = iops
 	}
 	vol, err := d.ec2.CreateVolume(req)
 	if err != nil {
@@ -249,17 +259,31 @@ func (d *Driver) Create(
 	}
 	volume := common.NewVolume(
 		*vol.VolumeId,
-		api.FSType_FS_TYPE_NONE,
+		api.FSType_FS_TYPE_EXT4,
 		locator,
 		source,
 		spec,
-
 	)
 	err = d.UpdateVol(volume)
 	if err != nil {
 		return "", err
 	}
-	err = d.waitStatus(volume.Id, ec2.VolumeStateAvailable)
+	if err = d.waitStatus(volume.Id, ec2.VolumeStateAvailable); err != nil {
+		return "", err
+	}
+	if _, err := d.Attach(volume.Id); err != nil {
+		return "", err
+	}
+
+	dlog.Infof("aws preparing volume %s...", *vol.VolumeId)
+
+	if err := d.Format(volume.Id); err != nil {
+		return "", err
+	}
+	if err := d.Detach(volume.Id); err != nil {
+		return "", err
+	}
+
 	return volume.Id, err
 }
 
@@ -476,8 +500,7 @@ func (d *Driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 	vols[0].Ctime = prototime.Now()
 
 	chaos.Now(koStrayCreate)
-	err = d.CreateVol(vols[0])
-	if err != nil {
+	if err = d.CreateVol(vols[0]); err != nil {
 		return "", err
 	}
 	return vols[0].Id, nil
@@ -492,6 +515,11 @@ func (d *Driver) Alerts(volumeID string) (*api.Alerts, error) {
 }
 
 func (d *Driver) Attach(volumeID string) (path string, err error) {
+	volume, err := d.GetVol(volumeID)
+	if err != nil {
+		return "", fmt.Errorf("Volume %s could not be located", volumeID)
+	}
+
 	dryRun := false
 	device, err := d.Assign()
 	if err != nil {
@@ -508,8 +536,16 @@ func (d *Driver) Attach(volumeID string) (path string, err error) {
 	if err != nil {
 		return "", err
 	}
-	err = d.waitAttachmentStatus(volumeID, ec2.VolumeAttachmentStateAttached, time.Minute*5)
-	return *resp.Device, err
+	if err = d.waitAttachmentStatus(volumeID, ec2.VolumeAttachmentStateAttached, time.Minute*5); err != nil {
+		return "", err
+	}
+
+	volume.DevicePath = *resp.Device
+	if err := d.UpdateVol(volume); err != nil {
+		return "", err
+	}
+
+	return *resp.Device, nil
 }
 
 func (d *Driver) volumeState(ec2VolState *string) api.VolumeState {
@@ -530,7 +566,7 @@ func (d *Driver) volumeState(ec2VolState *string) api.VolumeState {
 }
 
 func (d *Driver) Format(volumeID string) error {
-	v, err := d.GetVol(volumeID)
+	volume, err := d.GetVol(volumeID)
 	if err != nil {
 		return fmt.Errorf("Failed to locate volume %q", volumeID)
 	}
@@ -540,15 +576,14 @@ func (d *Driver) Format(volumeID string) error {
 	if err != nil {
 		return err
 	}
-	cmd := "/sbin/mkfs." + string(v.Spec.Format)
+	cmd := "/sbin/mkfs." + volume.Spec.Format.SimpleString()
 	o, err := exec.Command(cmd, devicePath).Output()
 	if err != nil {
 		dlog.Warnf("Failed to run command %v %v: %v", cmd, devicePath, o)
 		return err
 	}
-	v.Format = v.Spec.Format
-	err = d.UpdateVol(v)
-	return err
+	volume.Format = volume.Spec.Format
+	return d.UpdateVol(volume)
 }
 
 func (d *Driver) Detach(volumeID string) error {
@@ -559,16 +594,15 @@ func (d *Driver) Detach(volumeID string) error {
 		VolumeId:   &awsVolID,
 		Force:      &force,
 	}
-	_, err := d.ec2.DetachVolume(req)
-	if err != nil {
+	if _, err := d.ec2.DetachVolume(req); err != nil {
+
 		return err
 	}
-	err = d.waitAttachmentStatus(volumeID, ec2.VolumeAttachmentStateDetached, time.Minute*5)
-	return err
+	return d.waitAttachmentStatus(volumeID, ec2.VolumeAttachmentStateDetached, time.Minute*5)
 }
 
 func (d *Driver) Mount(volumeID string, mountpath string) error {
-	v, err := d.GetVol(volumeID)
+	volume, err := d.GetVol(volumeID)
 	if err != nil {
 		return fmt.Errorf("Failed to locate volume %q", volumeID)
 	}
@@ -576,7 +610,7 @@ func (d *Driver) Mount(volumeID string, mountpath string) error {
 	if err != nil {
 		return err
 	}
-	err = syscall.Mount(devicePath, mountpath, string(v.Spec.Format), 0, "")
+	err = syscall.Mount(devicePath, mountpath, volume.Spec.Format.SimpleString(), 0, "")
 	if err != nil {
 		return err
 	}
