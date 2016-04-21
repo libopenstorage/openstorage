@@ -248,6 +248,8 @@ message Alert {
   ResourceType resource = 7;
   // Cleared Flag
   bool cleared = 8;
+  // AlertType user defined alert type
+  int64 alert_type = 9;
 }
 
 message Alerts {
