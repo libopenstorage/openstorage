@@ -55,6 +55,7 @@ enum ResourceType {
   RESOURCE_TYPE_VOLUME = 1;
   RESOURCE_TYPE_NODE = 2;
   RESOURCE_TYPE_CLUSTER = 3;
+  RESOURCE_TYPE_DRIVE = 4;
 }
 
 enum AlertActionType {
@@ -236,8 +237,8 @@ message Alert {
   int64 id = 1;
   // Severity of the Alert
   SeverityType severity = 2;
-  // Name of the Alert
-  string name = 3;
+  // AlertType user defined alert type
+  int64 alert_type = 3;
   // Message describing the Alert
   string message = 4;
   //Timestamp when Alert occured
@@ -248,8 +249,6 @@ message Alert {
   ResourceType resource = 7;
   // Cleared Flag
   bool cleared = 8;
-  // AlertType user defined alert type
-  int64 alert_type = 9;
 }
 
 message Alerts {

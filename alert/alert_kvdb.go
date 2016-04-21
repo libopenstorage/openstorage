@@ -25,6 +25,7 @@ const (
 	clusterKey     = "cluster/"
 	volumeKey      = "volume/"
 	nodeKey        = "node/"
+	driveKey       = "drive/"
 	bootstrap      = "bootstrap"
 	watchRetries   = 5
 	watchSleep     = 100
@@ -244,7 +245,10 @@ func getResourceKey(resourceType api.ResourceType) string {
 	if resourceType == api.ResourceType_RESOURCE_TYPE_NODE {
 		return alertKey + nodeKey
 	}
-	return alertKey + clusterKey
+	if resourceType == api.ResourceType_RESOURCE_TYPE_CLUSTER {
+		return alertKey + clusterKey
+	}
+	return alertKey + driveKey
 }
 
 func getNextAlertIDKey() string {
@@ -292,6 +296,7 @@ func (kva *KvAlert) getAllAlerts(kv kvdb.Kvdb) ([]*api.Alert, error) {
 	clusterAlerts := []*api.Alert{}
 	nodeAlerts := []*api.Alert{}
 	volumeAlerts := []*api.Alert{}
+	driveAlerts := []*api.Alert{}
 	var err error
 
 	nodeAlerts, err = kva.getResourceSpecificAlerts(api.ResourceType_RESOURCE_TYPE_NODE, kv)
@@ -306,6 +311,11 @@ func (kva *KvAlert) getAllAlerts(kv kvdb.Kvdb) ([]*api.Alert, error) {
 	if err == nil {
 		allAlerts = append(allAlerts, clusterAlerts...)
 	}
+	driveAlerts, err = kva.getResourceSpecificAlerts(api.ResourceType_RESOURCE_TYPE_DRIVE, kv)
+	if err == nil {
+		allAlerts = append(allAlerts, driveAlerts...)
+	}
+
 
 	if len(allAlerts) > 0 {
 		return allAlerts, nil

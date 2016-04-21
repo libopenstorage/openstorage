@@ -2,8 +2,6 @@ package alert
 
 import (
 	"github.com/libopenstorage/openstorage/api"
-
-	"go.pedge.io/dlog"
 )
 
 // AlertInstance is a singleton which should be used to raise/clear alert
@@ -18,27 +16,25 @@ type alertInstance struct {
 var inst *alertInstance
 
 // Clear clears an alert
-func (ai *alertInstance) Clear(resourceType api.ResourceType, resourceID string, alertID int64) {
-	if err := ai.kva.Clear(resourceType, alertID); err != nil {
-		dlog.Errorf("Failed to clear alert, type: %v, id: %v", resourceType, alertID)
-	}
+func (ai *alertInstance) Clear(resourceType api.ResourceType, alertID int64) error {
+	return ai.kva.Clear(resourceType, alertID)
 }
 
 // Alarm raises an alert with severity : ALARM
-func (ai *alertInstance) Alarm(name string, msg string, resourceType api.ResourceType, resourceID string) (int64, error) {
-	alert, err := ai.raiseAlert(name, msg, resourceType, resourceID, api.SeverityType_SEVERITY_TYPE_ALARM)
+func (ai *alertInstance) Alarm(alertType int64, msg string, resourceType api.ResourceType, resourceID string) (int64, error) {
+	alert, err := ai.raiseAlert(alertType, msg, resourceType, resourceID, api.SeverityType_SEVERITY_TYPE_ALARM)
 	return alert.Id, err
 }
 
 // Notify raises an alert with severity : NOTIFY
-func (ai *alertInstance) Notify(name string, msg string, resourceType api.ResourceType, resourceID string) (int64, error) {
-	alert, err := ai.raiseAlert(name, msg, resourceType, resourceID, api.SeverityType_SEVERITY_TYPE_NOTIFY)
+func (ai *alertInstance) Notify(alertType int64, msg string, resourceType api.ResourceType, resourceID string) (int64, error) {
+	alert, err := ai.raiseAlert(alertType, msg, resourceType, resourceID, api.SeverityType_SEVERITY_TYPE_NOTIFY)
 	return alert.Id, err
 }
 
 // Warn raises an alert with severity : WARNING
-func (ai *alertInstance) Warn(name string, msg string, resourceType api.ResourceType, resourceID string) (int64, error) {
-	alert, err := ai.raiseAlert(name, msg, resourceType, resourceID, api.SeverityType_SEVERITY_TYPE_WARNING)
+func (ai *alertInstance) Warn(alertType int64, msg string, resourceType api.ResourceType, resourceID string) (int64, error) {
+	alert, err := ai.raiseAlert(alertType, msg, resourceType, resourceID, api.SeverityType_SEVERITY_TYPE_WARNING)
 	return alert.Id, err
 }
 
@@ -63,12 +59,12 @@ func instance() *alertInstance {
 	return inst
 }
 
-func (ai *alertInstance) raiseAlert(name string, msg string, resourceType api.ResourceType, resourceID string, severity api.SeverityType) (*api.Alert, error) {
+func (ai *alertInstance) raiseAlert(alertType int64, msg string, resourceType api.ResourceType, resourceID string, severity api.SeverityType) (*api.Alert, error) {
 	alert := api.Alert{
+		AlertType:  alertType,
 		Resource:   resourceType,
 		ResourceId: resourceID,
 		Severity:   severity,
-		Name:       name,
 		Message:    msg,
 	}
 	err := ai.kva.Raise(&alert)

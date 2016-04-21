@@ -79,16 +79,16 @@ type AlertClient interface {
 // AlertInstance is an instance used to raise and clear alerts
 type AlertInstance interface {
 	// Clear clears an alert.
-	Clear(resourceType api.ResourceType, resourceID string, alertID int64)
+	Clear(resourceType api.ResourceType, alertID int64) error
 
 	// Alarm raises an alert with severity : ALARM.
-	Alarm(name string, msg string, resourceType api.ResourceType, resourceID string) (int64, error)
+	Alarm(alertType int64, msg string, resourceType api.ResourceType, resourceID string) (int64, error)
 
 	// Notify raises an alert with severity : NOTIFY.
-	Notify(name string, msg string, resourceType api.ResourceType, resourceID string) (int64, error)
+	Notify(alertType int64, msg string, resourceType api.ResourceType, resourceID string) (int64, error)
 
 	// Warn raises an alert with severity : WARNING.
-	Warn(name string, msg string, resourceType api.ResourceType, resourceID string) (int64, error)
+	Warn(alertType int64, msg string, resourceType api.ResourceType, resourceID string) (int64, error)
 
 	// Alert :  Keeping this function for backward compatibility
 	// until we remove all calls to this function.
