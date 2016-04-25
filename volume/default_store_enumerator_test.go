@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"go.pedge.io/dlog"
-	
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	testEnumerator			*DefaultEnumerator
-	testLabels				= map[string]string{"Foo": "DEADBEEF"}
+	testEnumerator StoreEnumerator
+	testLabels     = map[string]string{"Foo": "DEADBEEF"}
 )
 
 func init() {
@@ -24,11 +24,11 @@ func init() {
 	if err := kvdb.SetInstance(kv); err != nil {
 		dlog.Panicf("Failed to set KVDB instance")
 	}
-	testEnumerator = NewDefaultEnumerator("enumerator_test", kv)
+	testEnumerator = NewDefaultStoreEnumerator("enumerator_test", kv)
 }
 
 func TestInspect(t *testing.T) {
-	volume := newTestVolume("TestVolume") 
+	volume := newTestVolume("TestVolume")
 	err := testEnumerator.CreateVol(volume)
 	assert.NoError(t, err, "Failed in CreateVol")
 	volumes, err := testEnumerator.Inspect([]string{volume.Id})
@@ -45,7 +45,7 @@ func TestInspect(t *testing.T) {
 }
 
 func TestEnumerate(t *testing.T) {
-	volume := newTestVolume("TestVolume") 
+	volume := newTestVolume("TestVolume")
 	err := testEnumerator.CreateVol(volume)
 	assert.NoError(t, err, "Failed in CreateVol")
 	volumes, err := testEnumerator.Enumerate(&api.VolumeLocator{}, nil)
@@ -71,10 +71,10 @@ func TestEnumerate(t *testing.T) {
 }
 
 func TestSnapEnumerate(t *testing.T) {
-	vol := newTestVolume("TestVolume") 
+	vol := newTestVolume("TestVolume")
 	err := testEnumerator.CreateVol(vol)
 	assert.NoError(t, err, "Failed in CreateVol")
-	snap := newSnapVolume("SnapVolume", "TestVolume") 
+	snap := newSnapVolume("SnapVolume", "TestVolume")
 	err = testEnumerator.CreateVol(snap)
 	assert.NoError(t, err, "Failed in CreateSnap")
 

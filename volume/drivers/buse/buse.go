@@ -32,8 +32,8 @@ func init() {
 
 // Implements the open storage volume interface.
 type driver struct {
-	*volume.IoNotSupported
-	*volume.DefaultEnumerator
+	volume.IODriver
+	volume.StoreEnumerator
 	buseDevices map[string]*buseDev
 }
 
@@ -81,14 +81,14 @@ func copyFile(source string, dest string) (err error) {
 
 func Init(params map[string]string) (volume.VolumeDriver, error) {
 	inst := &driver{
-		IoNotSupported:    &volume.IoNotSupported{},
-		DefaultEnumerator: volume.NewDefaultEnumerator(Name, kvdb.Instance()),
+		IODriver:        volume.IONotSupported,
+		StoreEnumerator: volume.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
 	}
 	inst.buseDevices = make(map[string]*buseDev)
 	if err := os.MkdirAll(BuseMountPath, 0744); err != nil {
 		return nil, err
 	}
-	volumeInfo, err := inst.DefaultEnumerator.Enumerate(
+	volumeInfo, err := inst.StoreEnumerator.Enumerate(
 		&api.VolumeLocator{},
 		nil,
 	)
@@ -356,10 +356,4 @@ func (d *driver) Leave(self *api.Node) error {
 
 func (d *driver) Halt(self *api.Node, db *cluster.Database) error {
 	return nil
-}
-
-func init() {
-
-	// Register ourselves as an openstorage volume driver.
-	volume.Register(Name, Init)
 }

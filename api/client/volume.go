@@ -18,12 +18,12 @@ const (
 )
 
 type volumeClient struct {
-	*volume.IoNotSupported
+	volume.IODriver
 	c *Client
 }
 
 func newVolumeClient(c *Client) volume.VolumeDriver {
-	return &volumeClient{IoNotSupported: &volume.IoNotSupported{}, c: c}
+	return &volumeClient{volume.IONotSupported, c}
 }
 
 // String description of this driver.

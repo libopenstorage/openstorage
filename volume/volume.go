@@ -6,9 +6,11 @@ import (
 	"sync"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/portworx/kvdb"
 )
 
 var (
+	ErrAlreadyShutdown    = errors.New("VolumeDriverProvider already shutdown")
 	ErrExist              = errors.New("Driver already exists")
 	ErrDriverNotFound     = errors.New("Driver implementation not found")
 	ErrDriverInitializing = errors.New("Driver is initializing")
@@ -20,10 +22,32 @@ var (
 	ErrVolHasSnaps        = errors.New("Volume has snapshots associated")
 	ErrNotSupported       = errors.New("Operation not supported")
 
+	// BlockNotSupported is a default (null) block driver implementation.  This can be
+	// used by drivers that do not want to (or care about) implementing the attach,
+	// format and detach interfaces.
+	BlockNotSupported    = &blockNotSupported{}
+	SnapshotNotSupported = &snapshotNotSupported{}
+	IONotSupported       = &ioNotSupported{}
+
 	drivers   = make(map[string]func(map[string]string) (VolumeDriver, error))
 	instances = make(map[string]VolumeDriver)
 	lock      sync.Mutex
 )
+
+type Store interface {
+	// Lock volume specified by volumeID.
+	Lock(volumeID string) (interface{}, error)
+	// Lock volume with token obtained from call to Lock.
+	Unlock(token interface{}) error
+	// CreateVol returns error if volume with the same ID already existe.
+	CreateVol(vol *api.Volume) error
+	// GetVol from volumeID.
+	GetVol(volumeID string) (*api.Volume, error)
+	// UpdateVol with vol
+	UpdateVol(vol *api.Volume) error
+	// DeleteVol. Returns error if volume does not exist.
+	DeleteVol(volumeID string) error
+}
 
 // VolumeDriver is the main interface to be implemented by any storage driver.
 // Every driver must at minimum implement the ProtoDriver sub interface.
@@ -47,10 +71,17 @@ type IODriver interface {
 	Flush(volumeID string) error
 }
 
+type SnapshotDriver interface {
+	// Snapshot create volume snapshot.
+	// Errors ErrEnoEnt may be returned
+	Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator) (string, error)
+}
+
 // ProtoDriver must be implemented by all volume drivers.  It specifies the
 // most basic functionality, such as creating and deleting volumes.
 type ProtoDriver interface {
 	fmt.Stringer
+	SnapshotDriver
 	// Type of this driver
 	Type() api.DriverType
 	// Create a new Vol for the specific volume spec.
@@ -68,9 +99,6 @@ type ProtoDriver interface {
 	// Update not all fields of the spec are supported, ErrNotSupported will be thrown for unsupported
 	// updates.
 	Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error
-	// Snapshot create volume snapshot.
-	// Errors ErrEnoEnt may be returned
-	Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator) (string, error)
 	// Stats for specified volume.
 	// Errors ErrEnoEnt may be returned
 	Stats(volumeID string) (*api.Stats, error)
@@ -94,6 +122,15 @@ type Enumerator interface {
 	Enumerate(locator *api.VolumeLocator, labels map[string]string) ([]*api.Volume, error)
 	// Enumerate snaps for specified volumes
 	SnapEnumerate(volID []string, snapLabels map[string]string) ([]*api.Volume, error)
+}
+
+type StoreEnumerator interface {
+	Store
+	Enumerator
+}
+
+func NewDefaultStoreEnumerator(driver string, kvdb kvdb.Kvdb) StoreEnumerator {
+	return newDefaultStoreEnumerator(driver, kvdb)
 }
 
 // BlockDriver needs to be implemented by block volume drivers.  Filesystem volume

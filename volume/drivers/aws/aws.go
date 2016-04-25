@@ -44,8 +44,8 @@ var (
 
 // Driver implements VolumeDriver interface
 type Driver struct {
-	*volume.IoNotSupported
-	*volume.DefaultEnumerator
+	volume.StoreEnumerator
+	volume.IODriver
 	*device.SingleLetter
 	md        *Metadata
 	ec2       *ec2.EC2
@@ -92,8 +92,8 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 			zone:     zone,
 			instance: instance,
 		},
-		IoNotSupported:    &volume.IoNotSupported{},
-		DefaultEnumerator: volume.NewDefaultEnumerator(Name, kvdb.Instance()),
+		IODriver:        volume.IONotSupported,
+		StoreEnumerator: volume.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
 	}
 	devPrefix, letters, err := d.freeDevices()
 	if err != nil {
@@ -439,7 +439,7 @@ func (d *Driver) devicePath(volumeID string) (string, error) {
 }
 
 func (d *Driver) Inspect(volumeIDs []string) ([]*api.Volume, error) {
-	vols, err := d.DefaultEnumerator.Inspect(volumeIDs)
+	vols, err := d.StoreEnumerator.Inspect(volumeIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -480,7 +480,7 @@ func (d *Driver) Delete(volumeID string) error {
 
 func (d *Driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator) (string, error) {
 	dryRun := false
-	vols, err := d.DefaultEnumerator.Inspect([]string{volumeID})
+	vols, err := d.StoreEnumerator.Inspect([]string{volumeID})
 	if err != nil {
 		return "", err
 	}

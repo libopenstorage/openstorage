@@ -35,8 +35,8 @@ func init() {
 
 // Implements the open storage volume interface.
 type driver struct {
-	*volume.IoNotSupported
-	*volume.DefaultEnumerator
+	volume.IODriver
+	volume.StoreEnumerator
 	nfsServer string
 	nfsPath   string
 	mounter   mount.Manager
@@ -60,11 +60,11 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		return nil, err
 	}
 	inst := &driver{
-		IoNotSupported:    &volume.IoNotSupported{},
-		DefaultEnumerator: volume.NewDefaultEnumerator(Name, kvdb.Instance()),
-		nfsServer:         server,
-		nfsPath:           path,
-		mounter:           mounter,
+		IODriver:        volume.IONotSupported,
+		StoreEnumerator: volume.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
+		nfsServer:       server,
+		nfsPath:         path,
+		mounter:         mounter,
 	}
 	if err := os.MkdirAll(nfsMountPath, 0744); err != nil {
 		return nil, err
@@ -88,16 +88,15 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 			return nil, err
 		}
 	}
-	volumeInfo, err := inst.DefaultEnumerator.Enumerate(&api.VolumeLocator{}, nil)
-	if err == nil {
-		for _, info := range volumeInfo {
-			if info.Status == api.VolumeStatus_VOLUME_STATUS_NONE {
-				info.Status = api.VolumeStatus_VOLUME_STATUS_UP
-				inst.UpdateVol(info)
-			}
+	volumeInfo, err := inst.StoreEnumerator.Enumerate(&api.VolumeLocator{}, nil)
+	if err != nil {
+		return nil, err
+	}
+	for _, info := range volumeInfo {
+		if info.Status == api.VolumeStatus_VOLUME_STATUS_NONE {
+			info.Status = api.VolumeStatus_VOLUME_STATUS_UP
+			inst.UpdateVol(info)
 		}
-	} else {
-		dlog.Println("Could not enumerate Volumes, ", err)
 	}
 
 	dlog.Println("NFS initialized and driver mounted at: ", nfsMountPath)
