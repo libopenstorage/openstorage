@@ -27,17 +27,19 @@ func init() {
 }
 
 type driver struct {
-	*volume.IoNotSupported
-	*volume.DefaultBlockDriver
-	*volume.DefaultEnumerator
-	*volume.SnapshotNotSupported
+	volume.IODriver
+	volume.BlockDriver
+	volume.SnapshotDriver
+	volume.StoreEnumerator
 }
 
 // Init Driver intialization.
 func Init(params map[string]string) (volume.VolumeDriver, error) {
 	return &driver{
-		IoNotSupported:    &volume.IoNotSupported{},
-		DefaultEnumerator: volume.NewDefaultEnumerator(Name, kvdb.Instance()),
+		volume.IONotSupported,
+		volume.BlockNotSupported,
+		volume.SnapshotNotSupported,
+		volume.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
 	}, nil
 }
 
@@ -50,14 +52,11 @@ func (d *driver) Type() api.DriverType {
 }
 
 func (d *driver) Create(locator *api.VolumeLocator, source *api.Source, spec *api.VolumeSpec) (string, error) {
-	volumeID := uuid.New()
-	volumeID = strings.TrimSuffix(volumeID, "\n")
+	volumeID := strings.TrimSuffix(uuid.New(), "\n")
 	// Create a directory on the Local machine with this UUID.
 	if err := os.MkdirAll(filepath.Join(config.VolumeBase, string(volumeID)), 0744); err != nil {
-		dlog.Println(err)
 		return "", err
 	}
-
 	v := common.NewVolume(
 		volumeID,
 		api.FSType_FS_TYPE_VFS,
@@ -66,7 +65,6 @@ func (d *driver) Create(locator *api.VolumeLocator, source *api.Source, spec *ap
 		spec,
 	)
 	v.DevicePath = filepath.Join(config.VolumeBase, volumeID)
-
 	if err := d.CreateVol(v); err != nil {
 		return "", err
 	}
@@ -74,23 +72,13 @@ func (d *driver) Create(locator *api.VolumeLocator, source *api.Source, spec *ap
 }
 
 func (d *driver) Delete(volumeID string) error {
-
-	// Check if volume exists
-	_, err := d.GetVol(volumeID)
-	if err != nil {
-		dlog.Println("Volume not found ", err)
+	if _, err := d.GetVol(volumeID); err != nil {
 		return err
 	}
-
-	// Delete the directory
 	os.RemoveAll(filepath.Join(config.VolumeBase, string(volumeID)))
-
-	err = d.DeleteVol(volumeID)
-	if err != nil {
-		dlog.Println(err)
+	if err := d.DeleteVol(volumeID); err != nil {
 		return err
 	}
-
 	return nil
 
 }
@@ -144,7 +132,6 @@ func (d *driver) Unmount(volumeID string, mountpath string) error {
 	return d.UpdateVol(v)
 }
 
-// Set update volume with specified parameters.
 func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
 	if spec != nil {
 		return volume.ErrNotSupported
@@ -159,23 +146,16 @@ func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.Volu
 	return d.UpdateVol(v)
 }
 
-// Stats Not Supported.
 func (d *driver) Stats(volumeID string) (*api.Stats, error) {
 	return nil, volume.ErrNotSupported
 }
 
-// Alerts Not Supported.
 func (d *driver) Alerts(volumeID string) (*api.Alerts, error) {
 	return nil, volume.ErrNotSupported
 }
 
-// Status returns a set of key-value pairs which give low
-// level diagnostic status about this driver.
 func (d *driver) Status() [][2]string {
 	return [][2]string{}
 }
 
-// Shutdown and cleanup.
-func (d *driver) Shutdown() {
-	dlog.Debugf("%s Shutting down", Name)
-}
+func (d *driver) Shutdown() {}

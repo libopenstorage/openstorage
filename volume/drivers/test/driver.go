@@ -17,6 +17,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func init() {
+	kv, err := kvdb.New(mem.Name, "driver_test", []string{}, nil)
+	if err != nil {
+		dlog.Panicf("Failed to intialize KVDB")
+	}
+	err = kvdb.SetInstance(kv)
+	if err != nil {
+		dlog.Panicf("Failed to set KVDB instance")
+	}
+}
+
 // Context maintains current device state. It gets passed into tests
 // so that tests can build on other tests' work
 type Context struct {
@@ -339,15 +350,4 @@ func snapDiff(t *testing.T, ctx *Context) {
 
 func snapDelete(t *testing.T, ctx *Context) {
 	fmt.Println("snapDelete")
-}
-
-func init() {
-	kv, err := kvdb.New(mem.Name, "driver_test", []string{}, nil)
-	if err != nil {
-		dlog.Panicf("Failed to intialize KVDB")
-	}
-	err = kvdb.SetInstance(kv)
-	if err != nil {
-		dlog.Panicf("Failed to set KVDB instance")
-	}
 }

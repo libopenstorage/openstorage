@@ -17,13 +17,13 @@ import (
 )
 
 type volumeDriver struct {
+	volume.IODriver
+	volume.BlockDriver
+	volume.SnapshotDriver
+	volume.StoreEnumerator
 	name        string
 	baseDirPath string
 	provider    Provider
-	*volume.IoNotSupported
-	*volume.DefaultBlockDriver
-	*volume.DefaultEnumerator
-	*volume.SnapshotNotSupported
 }
 
 func newVolumeDriver(
@@ -32,16 +32,16 @@ func newVolumeDriver(
 	provider Provider,
 ) *volumeDriver {
 	return &volumeDriver{
-		name,
-		baseDirPath,
-		provider,
-		&volume.IoNotSupported{},
-		&volume.DefaultBlockDriver{},
-		volume.NewDefaultEnumerator(
+		volume.IONotSupported,
+		volume.BlockNotSupported,
+		volume.SnapshotNotSupported,
+		volume.NewDefaultStoreEnumerator(
 			name,
 			kvdb.Instance(),
 		),
-		&volume.SnapshotNotSupported{},
+		name,
+		baseDirPath,
+		provider,
 	}
 }
 

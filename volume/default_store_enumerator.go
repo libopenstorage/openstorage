@@ -15,47 +15,25 @@ const (
 	keyBase = "openstorage"
 )
 
-type Store interface {
-	// Lock volume specified by volumeID.
-	Lock(volumeID string) (interface{}, error)
-
-	// Lock volume with token obtained from call to Lock.
-	Unlock(token interface{}) error
-
-	// CreateVol returns error if volume with the same ID already existe.
-	CreateVol(vol *api.Volume) error
-
-	// GetVol from volumeID.
-	GetVol(volumeID string) (*api.Volume, error)
-
-	// UpdateVol with vol
-	UpdateVol(vol *api.Volume) error
-
-	// DeleteVol. Returns error if volume does not exist.
-	DeleteVol(volumeID string) error
-}
-
-// DefaultEnumerator for volume information. Implements the Enumerator Interface
-type DefaultEnumerator struct {
-	kvdb   kvdb.Kvdb
+type defaultStoreEnumerator struct {
 	driver string
+	kvdb   kvdb.Kvdb
 }
 
-// NewDefaultEnumerator initializes store with specified kvdb.
-func NewDefaultEnumerator(driver string, kvdb kvdb.Kvdb) *DefaultEnumerator {
-	return &DefaultEnumerator{
+func newDefaultStoreEnumerator(driver string, kvdb kvdb.Kvdb) *defaultStoreEnumerator {
+	return &defaultStoreEnumerator{
 		kvdb:   kvdb,
 		driver: driver,
 	}
 }
 
 // Lock volume specified by volumeID.
-func (e *DefaultEnumerator) Lock(volumeID string) (interface{}, error) {
+func (e *defaultStoreEnumerator) Lock(volumeID string) (interface{}, error) {
 	return e.kvdb.Lock(e.lockKey(volumeID), 10)
 }
 
 // Lock volume with token obtained from call to Lock.
-func (e *DefaultEnumerator) Unlock(token interface{}) error {
+func (e *defaultStoreEnumerator) Unlock(token interface{}) error {
 	v, ok := token.(*kvdb.KVPair)
 	if !ok {
 		return fmt.Errorf("Invalid token of type %T", token)
@@ -64,33 +42,33 @@ func (e *DefaultEnumerator) Unlock(token interface{}) error {
 }
 
 // CreateVol returns error if volume with the same ID already existe.
-func (e *DefaultEnumerator) CreateVol(vol *api.Volume) error {
+func (e *defaultStoreEnumerator) CreateVol(vol *api.Volume) error {
 	_, err := e.kvdb.Create(e.volKey(vol.Id), vol, 0)
 	return err
 }
 
 // GetVol from volumeID.
-func (e *DefaultEnumerator) GetVol(volumeID string) (*api.Volume, error) {
+func (e *defaultStoreEnumerator) GetVol(volumeID string) (*api.Volume, error) {
 	var v api.Volume
 	_, err := e.kvdb.GetVal(e.volKey(volumeID), &v)
 	return &v, err
 }
 
 // UpdateVol with vol
-func (e *DefaultEnumerator) UpdateVol(vol *api.Volume) error {
+func (e *defaultStoreEnumerator) UpdateVol(vol *api.Volume) error {
 	_, err := e.kvdb.Put(e.volKey(vol.Id), vol, 0)
 	return err
 }
 
 // DeleteVol. Returns error if volume does not exist.
-func (e *DefaultEnumerator) DeleteVol(volumeID string) error {
+func (e *defaultStoreEnumerator) DeleteVol(volumeID string) error {
 	_, err := e.kvdb.Delete(e.volKey(volumeID))
 	return err
 }
 
 // Inspect specified volumes.
 // Returns slice of volumes that were found.
-func (e *DefaultEnumerator) Inspect(ids []string) ([]*api.Volume, error) {
+func (e *defaultStoreEnumerator) Inspect(ids []string) ([]*api.Volume, error) {
 	volumes := make([]*api.Volume, 0, len(ids))
 	for _, id := range ids {
 		volume, err := e.GetVol(id)
@@ -105,7 +83,7 @@ func (e *DefaultEnumerator) Inspect(ids []string) ([]*api.Volume, error) {
 
 // Enumerate volumes that map to the volumeLocator. Locator fields may be regexp.
 // If locator fields are left blank, this will return all volumee.
-func (e *DefaultEnumerator) Enumerate(
+func (e *defaultStoreEnumerator) Enumerate(
 	locator *api.VolumeLocator,
 	labels map[string]string,
 ) ([]*api.Volume, error) {
@@ -128,7 +106,7 @@ func (e *DefaultEnumerator) Enumerate(
 }
 
 // SnapEnumerate for specified volume
-func (e *DefaultEnumerator) SnapEnumerate(
+func (e *defaultStoreEnumerator) SnapEnumerate(
 	volumeIDs []string,
 	labels map[string]string,
 ) ([]*api.Volume, error) {
@@ -154,20 +132,20 @@ func (e *DefaultEnumerator) SnapEnumerate(
 	return volumes, nil
 }
 
-func (e *DefaultEnumerator) lockKey(volumeID string) string {
+func (e *defaultStoreEnumerator) lockKey(volumeID string) string {
 	return e.volKeyPrefix() + volumeID + ".lock"
 }
 
-func (e *DefaultEnumerator) volKey(volumeID string) string {
+func (e *defaultStoreEnumerator) volKey(volumeID string) string {
 	return e.volKeyPrefix() + volumeID
 }
 
 // TODO(pedge): not used - bug?
-func (d *DefaultEnumerator) lockKeyPrefix() string {
+func (d *defaultStoreEnumerator) lockKeyPrefix() string {
 	return fmt.Sprintf("%s/%s/locks/", keyBase, d.driver)
 }
 
-func (d *DefaultEnumerator) volKeyPrefix() string {
+func (d *defaultStoreEnumerator) volKeyPrefix() string {
 	return fmt.Sprintf("%s/%s/volumes/", keyBase, d.driver)
 }
 

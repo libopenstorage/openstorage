@@ -8,10 +8,14 @@ import (
 )
 
 const (
-	Name           = "pwx"
-	Type           = api.DriverType_DRIVER_TYPE_BLOCK
-	DefaultUrl     = "unix:///" + config.DriverAPIBase + "pxd.sock"
+	Name       = "pwx"
+	Type       = api.DriverType_DRIVER_TYPE_BLOCK
+	DefaultUrl = "unix:///" + config.DriverAPIBase + "pxd.sock"
 )
+
+func init() {
+	volume.Register(Name, Init)
+}
 
 type driver struct {
 	volume.VolumeDriver
@@ -42,8 +46,4 @@ func (d *driver) String() string {
 
 func (d *driver) Type() api.DriverType {
 	return Type
-}
-
-func init() {
-	volume.Register(Name, Init)
 }

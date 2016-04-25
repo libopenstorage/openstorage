@@ -31,10 +31,14 @@ var (
 	koStrayDelete chaos.ID
 )
 
+func init() {
+	volume.Register(Name, Init)
+}
+
 type driver struct {
-	*volume.IoNotSupported
-	*volume.DefaultBlockDriver
-	*volume.DefaultEnumerator
+	volume.StoreEnumerator
+	volume.IODriver
+	volume.BlockDriver
 	btrfs graphdriver.Driver
 	root  string
 }
@@ -50,10 +54,11 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		return nil, err
 	}
 	return &driver{
-		btrfs:             d,
-		root:              root,
-		IoNotSupported:    &volume.IoNotSupported{},
-		DefaultEnumerator: volume.NewDefaultEnumerator(Name, kvdb.Instance()),
+		volume.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
+		volume.IONotSupported
+		volume.BlockNotSupported,
+		d,
+		root,
 	}, nil
 }
 
@@ -61,7 +66,6 @@ func (d *driver) String() string {
 	return Name
 }
 
-// Status diagnostic information
 func (d *driver) Status() [][2]string {
 	return d.btrfs.Status()
 }
@@ -97,11 +101,9 @@ func (d *driver) Create(
 		return volume.Id, err
 	}
 	volume.DevicePath = devicePath
-	err = d.UpdateVol(volume)
-	return volume.Id, err
+	return volume.Id, d.UpdateVol(volume)
 }
 
-// Delete subvolume
 func (d *driver) Delete(volumeID string) error {
 	if err := d.DeleteVol(volumeID); err != nil {
 		return err
@@ -110,7 +112,6 @@ func (d *driver) Delete(volumeID string) error {
 	return d.btrfs.Remove(volumeID)
 }
 
-// Mount bind mount btrfs subvolume
 func (d *driver) Mount(volumeID string, mountpath string) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
@@ -123,7 +124,6 @@ func (d *driver) Mount(volumeID string, mountpath string) error {
 	return d.UpdateVol(v)
 }
 
-// Unmount btrfs subvolume
 func (d *driver) Unmount(volumeID string, mountpath string) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
@@ -179,20 +179,12 @@ func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 	return vols[0].Id, nil
 }
 
-// Stats for specified volume.
 func (d *driver) Stats(volumeID string) (*api.Stats, error) {
 	return nil, nil
 }
 
-// Alerts on this volume.
 func (d *driver) Alerts(volumeID string) (*api.Alerts, error) {
 	return nil, nil
 }
 
-// Shutdown and cleanup.
-func (d *driver) Shutdown() {
-}
-
-func init() {
-	volume.Register(Name, Init)
-}
+func (d *driver) Shutdown() {}

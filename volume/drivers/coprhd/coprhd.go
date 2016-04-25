@@ -8,9 +8,9 @@ import (
 
 	"go.pedge.io/dlog"
 
-	"github.com/portworx/kvdb"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
+	"github.com/portworx/kvdb"
 	"gopkg.in/jmcvetta/napping.v3"
 )
 
@@ -24,51 +24,49 @@ const (
 	createVolumeUri = "block/volumes.json"
 )
 
-type (
-	driver struct {
-		*volume.IoNotSupported
-		*volume.DefaultEnumerator
-		consistency_group string
-		project           string
-		varray            string
-		vpool             string
-		url               string
-		httpClient        *http.Client
-		creds             *url.Userinfo
-	}
-
-	// ApiError represents the default api error code
-	ApiError struct {
-		Code        string `json:"code"`
-		Retryable   string `json:"retryable"`
-		Description string `json:"description"`
-		Details     string `json:"details"`
-	}
-
-	// CreateVolumeArgs represents the json parameters for the create volume REST call
-	CreateVolumeArgs struct {
-		ConsistencyGroup string `json:"consistency_group"`
-		Count            int    `json:"count"`
-		Name             string `json:"name"`
-		Project          string `json:"project"`
-		Size             string `json:"size"`
-		VArray           string `json:"varray"`
-		VPool            string `json:"vpool"`
-	}
-
-	// CreateVolumeReply is the reply from the create volume REST call
-	CreateVolumeReply struct {
-		Task []struct {
-			Resource struct {
-				Name string `json:"name"`
-				Id   string `json:"id"`
-			} `json:"resource"`
-		} `json:"task"`
-	}
-)
-
 func init() {
 	volume.Register(Name, Init)
+}
+
+// ApiError represents the default api error code
+type ApiError struct {
+	Code        string `json:"code"`
+	Retryable   string `json:"retryable"`
+	Description string `json:"description"`
+	Details     string `json:"details"`
+}
+
+// CreateVolumeArgs represents the json parameters for the create volume REST call
+type CreateVolumeArgs struct {
+	ConsistencyGroup string `json:"consistency_group"`
+	Count            int    `json:"count"`
+	Name             string `json:"name"`
+	Project          string `json:"project"`
+	Size             string `json:"size"`
+	VArray           string `json:"varray"`
+	VPool            string `json:"vpool"`
+}
+
+// CreateVolumeReply is the reply from the create volume REST call
+type CreateVolumeReply struct {
+	Task []struct {
+		Resource struct {
+			Name string `json:"name"`
+			Id   string `json:"id"`
+		} `json:"resource"`
+	} `json:"task"`
+}
+
+type driver struct {
+	volume.IODriver
+	volume.StoreEnumerator
+	consistency_group string
+	project           string
+	varray            string
+	vpool             string
+	url               string
+	httpClient        *http.Client
+	creds             *url.Userinfo
 }
 
 func Init(params map[string]string) (volume.VolumeDriver, error) {
@@ -108,7 +106,8 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 	}
 
 	d := &driver{
-		DefaultEnumerator: volume.NewDefaultEnumerator(Name, kvdb.Instance()),
+		IODriver:          volume.IONotSupported,
+		StoreEnumerator:   volume.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
 		consistency_group: consistency_group,
 		project:           project,
 		varray:            varray,
@@ -136,7 +135,8 @@ func (d *driver) Type() api.DriverType {
 func (d *driver) Create(
 	locator *api.VolumeLocator,
 	source *api.Source,
-	spec *api.VolumeSpec) (string, error) {
+	spec *api.VolumeSpec,
+) (string, error) {
 
 	s, err := d.getAuthSession()
 
