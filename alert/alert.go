@@ -90,6 +90,9 @@ type AlertInstance interface {
 	// Warn raises an alert with severity : WARNING.
 	Warn(alertType int64, msg string, resourceType api.ResourceType, resourceID string) (int64, error)
 
+	// EnumerateByResource enumerates alerts of the specific resource type
+	EnumerateByResource(resourceType api.ResourceType) ([]*api.Alert, error)
+
 	// Alert :  Keeping this function for backward compatibility
 	// until we remove all calls to this function.
 	Alert(name string, msg string) error

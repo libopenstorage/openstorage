@@ -38,6 +38,14 @@ func (ai *alertInstance) Warn(alertType int64, msg string, resourceType api.Reso
 	return alert.Id, err
 }
 
+// EnumerateByResource enumerates alerts of the specific resourceType
+func (ai *alertInstance) EnumerateByResource(resourceType api.ResourceType) ([]*api.Alert, error) {
+	filter := api.Alert {
+		Resource: resourceType,
+	}
+	return ai.kva.Enumerate(&filter)
+}
+
 // Alert :  Keeping this function for backward compatibility until we remove all calls to this function
 func (ai *alertInstance) Alert(name string, msg string) error {
 	// Do nothing
