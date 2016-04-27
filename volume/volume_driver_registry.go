@@ -2,27 +2,6 @@ package volume
 
 import "sync"
 
-// VolumeDriverProvider provides VolumeDrivers.
-type VolumeDriverProvider interface {
-	// Get gets the VolumeDriver for the given name.
-	// If a VolumeDriver was not created for the given name, the error ErrDriverNotFound is returned.
-	Get(name string) (VolumeDriver, error)
-	// Shutdown shuts down all volume drivers.
-	Shutdown() error
-}
-
-// VolumeDriverRegistry registers VolumeDrivers.
-type VolumeDriverRegistry interface {
-	// New creates the VolumeDriver for the given name.
-	// If a VolumeDriver was already created for the given name, the error ErrExist is returned.
-	Register(name string, params map[string]string) error
-}
-
-// VolumeDriverRegistry constructs a new VolumeDriverRegistry.
-func NewVolumeDriverRegistry(nameToInitFunc map[string]func(map[string]string) (VolumeDriver, error)) VolumeDriverRegistry {
-	return newVolumeDriverRegistry(nameToInitFunc)
-}
-
 type volumeDriverRegistry struct {
 	nameToInitFunc     map[string]func(map[string]string) (VolumeDriver, error)
 	nameToVolumeDriver map[string]VolumeDriver

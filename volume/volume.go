@@ -133,6 +133,28 @@ type BlockDriver interface {
 	Detach(volumeID string) error
 }
 
+// VolumeDriverProvider provides VolumeDrivers.
+type VolumeDriverProvider interface {
+	// Get gets the VolumeDriver for the given name.
+	// If a VolumeDriver was not created for the given name, the error ErrDriverNotFound is returned.
+	Get(name string) (VolumeDriver, error)
+	// Shutdown shuts down all volume drivers.
+	Shutdown() error
+}
+
+// VolumeDriverRegistry registers VolumeDrivers.
+type VolumeDriverRegistry interface {
+	VolumeDriverProvider
+	// New creates the VolumeDriver for the given name.
+	// If a VolumeDriver was already created for the given name, the error ErrExist is returned.
+	Register(name string, params map[string]string) error
+}
+
+// VolumeDriverRegistry constructs a new VolumeDriverRegistry.
+func NewVolumeDriverRegistry(nameToInitFunc map[string]func(map[string]string) (VolumeDriver, error)) VolumeDriverRegistry {
+	return newVolumeDriverRegistry(nameToInitFunc)
+}
+
 func Shutdown() {
 	lock.Lock()
 	defer lock.Unlock()

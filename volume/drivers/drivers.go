@@ -2,6 +2,7 @@ package volumedrivers
 
 import (
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers/aws"
 	"github.com/libopenstorage/openstorage/volume/drivers/btrfs"
 	"github.com/libopenstorage/openstorage/volume/drivers/buse"
@@ -36,4 +37,28 @@ var (
 		// COPRHD driver
 		{DriverType: coprhd.Type, Name: coprhd.Name},
 	}
+
+	volumeDriverRegistry = volume.NewVolumeDriverRegistry(
+		map[string]func(map[string]string) (volume.VolumeDriver, error){
+			aws.Name:    aws.Init,
+			nfs.Name:    nfs.Init,
+			btrfs.Name:  btrfs.Init,
+			pwx.Name:    pwx.Init,
+			vfs.Name:    vfs.Init,
+			buse.Name:   buse.Init,
+			coprhd.Name: coprhd.Init,
+		},
+	)
 )
+
+func Get(name string) (volume.VolumeDriver, error) {
+	return volumeDriverRegistry.Get(name)
+}
+
+func Register(name string, params map[string]string) error {
+	return volumeDriverRegistry.Register(name, params)
+}
+
+func Shutdown() error {
+	return volumeDriverRegistry.Shutdown()
+}
