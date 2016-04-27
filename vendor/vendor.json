@@ -559,8 +559,8 @@
 			"checksumSHA1": "nXOOAvYogCYNl6v2sxIH39ZSvUM=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/portworx/kvdb",
 			"path": "github.com/portworx/kvdb",
-			"revision": "3dd7c011aeec906ec656dcde19a352465227b75f",
-			"revisionTime": "2016-02-07T07:19:42Z"
+			"revision": "fc7643520be64ba06552823f694876d78830a52c",
+			"revisionTime": "2016-03-30T02:29:09Z"
 		},
 		{
 			"checksumSHA1": "VqrtAthHzmqBamt6GvYMJnzAf4E=",
