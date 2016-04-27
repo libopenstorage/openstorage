@@ -12,7 +12,7 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
-	"github.com/libopenstorage/openstorage/volume"
+	"github.com/libopenstorage/openstorage/volume/drivers"
 )
 
 const (
@@ -95,7 +95,7 @@ func (d *driver) errorResponse(w http.ResponseWriter, err error) {
 }
 
 func (d *driver) volFromName(name string) (*api.Volume, error) {
-	v, err := volume.Get(d.name)
+	v, err := volumedrivers.Get(d.name)
 	if err != nil {
 		return nil, fmt.Errorf("Cannot locate volume driver for %s: %s", d.name, err.Error())
 	}
@@ -189,7 +189,7 @@ func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 	}
 	d.logRequest(method, request.Name).Infoln("")
 	if _, err = d.volFromName(request.Name); err != nil {
-		v, err := volume.Get(d.name)
+		v, err := volumedrivers.Get(d.name)
 		if err != nil {
 			d.errorResponse(w, err)
 			return
@@ -223,7 +223,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 	var response volumePathResponse
 	method := "mount"
 
-	v, err := volume.Get(d.name)
+	v, err := volumedrivers.Get(d.name)
 	if err != nil {
 		d.logRequest(method, "").Warnf("Cannot locate volume driver")
 		d.errorResponse(w, err)
@@ -303,7 +303,7 @@ func (d *driver) path(w http.ResponseWriter, r *http.Request) {
 func (d *driver) list(w http.ResponseWriter, r *http.Request) {
 	method := "list"
 
-	v, err := volume.Get(d.name)
+	v, err := volumedrivers.Get(d.name)
 	if err != nil {
 		d.logRequest(method, "").Warnf("Cannot locate volume driver: %v", err.Error())
 		d.errorResponse(w, err)
@@ -351,7 +351,7 @@ func (d *driver) get(w http.ResponseWriter, r *http.Request) {
 func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 	method := "unmount"
 
-	v, err := volume.Get(d.name)
+	v, err := volumedrivers.Get(d.name)
 	if err != nil {
 		d.logRequest(method, "").Warnf("Cannot locate volume driver: %v", err.Error())
 		d.errorResponse(w, err)

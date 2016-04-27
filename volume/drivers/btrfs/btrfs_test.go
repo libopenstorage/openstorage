@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers/test"
 )
 
@@ -47,12 +46,9 @@ func TestAll(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to mount to btrfs: %s %v", string(output), err)
 	}
-	if _, err := volume.New(Name, map[string]string{RootParam: testPath}); err != nil {
-		t.Fatalf("failed to initialize Driver: %v", err)
-	}
-	volumeDriver, err := volume.Get(Name)
+	volumeDriver, err := Init(map[string]string{RootParam: testPath})
 	if err != nil {
-		t.Fatalf("failed to initialize VolumeDriver: %v", err)
+		t.Fatalf("failed to initialize Driver: %v", err)
 	}
 	ctx := test.NewContext(volumeDriver)
 	ctx.Filesystem = api.FSType_FS_TYPE_BTRFS

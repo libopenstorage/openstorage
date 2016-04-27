@@ -16,7 +16,6 @@ import (
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/graph/drivers"
-	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/consul"
@@ -172,7 +171,7 @@ func start(c *cli.Context) error {
 	// Start the volume drivers.
 	for d, v := range cfg.Osd.Drivers {
 		dlog.Infof("Starting volume driver: %v", d)
-		if _, err := volume.New(d, v); err != nil {
+		if err := volumedrivers.Register(d, v); err != nil {
 			return fmt.Errorf("Unable to start volume driver: %v, %v", d, err)
 		}
 		if err := server.StartPluginAPI(d, config.DriverAPIBase, config.PluginAPIBase); err != nil {

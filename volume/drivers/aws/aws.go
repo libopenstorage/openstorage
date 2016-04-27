@@ -33,15 +33,9 @@ const (
 )
 
 var (
-	koStrayCreate chaos.ID
-	koStrayDelete chaos.ID
-)
-
-func init() {
-	volume.Register(Name, Init)
 	koStrayCreate = chaos.Add("aws", "create", "create in driver before DB")
 	koStrayDelete = chaos.Add("aws", "delete", "create in driver before DB")
-}
+)
 
 type Metadata struct {
 	zone     string

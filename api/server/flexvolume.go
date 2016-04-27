@@ -6,6 +6,7 @@ import (
 
 	"github.com/libopenstorage/openstorage/pkg/mount"
 	"github.com/libopenstorage/openstorage/volume"
+	"github.com/libopenstorage/openstorage/volume/drivers"
 
 	"go.pedge.io/dlog"
 )
@@ -133,5 +134,5 @@ func newFlexVolumeClient(defaultDriver string) *flexVolumeClient {
 }
 
 func (c *flexVolumeClient) getVolumeDriver(driverName string) (volume.VolumeDriver, error) {
-	return volume.Get(driverName)
+	return volumedrivers.Get(driverName)
 }

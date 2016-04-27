@@ -22,10 +22,6 @@ const (
 	Type = api.DriverType_DRIVER_TYPE_FILE
 )
 
-func init() {
-	volume.Register(Name, Init)
-}
-
 type driver struct {
 	volume.IODriver
 	volume.BlockDriver

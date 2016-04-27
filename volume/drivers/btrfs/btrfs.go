@@ -31,10 +31,6 @@ var (
 	koStrayDelete chaos.ID
 )
 
-func init() {
-	volume.Register(Name, Init)
-}
-
 type driver struct {
 	volume.StoreEnumerator
 	volume.IODriver

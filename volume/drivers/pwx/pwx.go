@@ -13,10 +13,6 @@ const (
 	DefaultUrl = "unix:///" + config.DriverAPIBase + "pxd.sock"
 )
 
-func init() {
-	volume.Register(Name, Init)
-}
-
 type driver struct {
 	volume.VolumeDriver
 }

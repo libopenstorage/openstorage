@@ -18,6 +18,7 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/graph"
 	"github.com/libopenstorage/openstorage/volume"
+	"github.com/libopenstorage/openstorage/volume/drivers"
 )
 
 // Layer0 implemenation piggy backs on existing overlay graphdriver implementation
@@ -78,7 +79,7 @@ func Init(home string, options []string, uidMaps, gidMaps []idtools.IDMap) (grap
 		}
 	}
 	dlog.Infof("Layer0 volume driver: %v", volumeDriver)
-	volDriver, err := volume.Get(volumeDriver)
+	volDriver, err := volumedrivers.Get(volumeDriver)
 	if err != nil {
 		return nil, err
 	}

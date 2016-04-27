@@ -9,7 +9,7 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
-	"github.com/libopenstorage/openstorage/volume"
+	"github.com/libopenstorage/openstorage/volume/drivers"
 )
 
 type volApi struct {
@@ -49,7 +49,7 @@ func (vd *volApi) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	d, err := volume.Get(vd.name)
+	d, err := volumedrivers.Get(vd.name)
 	if err != nil {
 		notFound(w, r)
 		return
@@ -85,7 +85,7 @@ func (vd *volApi) volumeSet(w http.ResponseWriter, r *http.Request) {
 
 	vd.logRequest(method, string(volumeID)).Infoln("")
 
-	d, err := volume.Get(vd.name)
+	d, err := volumedrivers.Get(vd.name)
 	if err != nil {
 		notFound(w, r)
 		return
@@ -149,7 +149,7 @@ func (vd *volApi) inspect(w http.ResponseWriter, r *http.Request) {
 	var volumeID string
 
 	method := "inspect"
-	d, err := volume.Get(vd.name)
+	d, err := volumedrivers.Get(vd.name)
 	if err != nil {
 		notFound(w, r)
 		return
@@ -185,7 +185,7 @@ func (vd *volApi) delete(w http.ResponseWriter, r *http.Request) {
 
 	vd.logRequest(method, volumeID).Infoln("")
 
-	d, err := volume.Get(vd.name)
+	d, err := volumedrivers.Get(vd.name)
 	if err != nil {
 		notFound(w, r)
 		return
@@ -206,7 +206,7 @@ func (vd *volApi) enumerate(w http.ResponseWriter, r *http.Request) {
 
 	method := "enumerate"
 
-	d, err := volume.Get(vd.name)
+	d, err := volumedrivers.Get(vd.name)
 	if err != nil {
 		notFound(w, r)
 		return
@@ -257,7 +257,7 @@ func (vd *volApi) snap(w http.ResponseWriter, r *http.Request) {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	d, err := volume.Get(vd.name)
+	d, err := volumedrivers.Get(vd.name)
 	if err != nil {
 		notFound(w, r)
 		return
@@ -281,7 +281,7 @@ func (vd *volApi) snapEnumerate(w http.ResponseWriter, r *http.Request) {
 	var ids []string
 
 	method := "snapEnumerate"
-	d, err := volume.Get(vd.name)
+	d, err := volumedrivers.Get(vd.name)
 	if err != nil {
 		notFound(w, r)
 		return
@@ -326,7 +326,7 @@ func (vd *volApi) stats(w http.ResponseWriter, r *http.Request) {
 
 	vd.logRequest(method, string(volumeID)).Infoln("")
 
-	d, err := volume.Get(vd.name)
+	d, err := volumedrivers.Get(vd.name)
 	if err != nil {
 		notFound(w, r)
 		return
@@ -352,7 +352,7 @@ func (vd *volApi) alerts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	d, err := volume.Get(vd.name)
+	d, err := volumedrivers.Get(vd.name)
 	if err != nil {
 		notFound(w, r)
 		return

@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers/test"
 )
 
@@ -19,11 +18,7 @@ func TestAll(t *testing.T) {
 		t.Fatalf("Failed to create test path: %v", err)
 	}
 
-	_, err = volume.New(Name, map[string]string{"path": testPath})
-	if err != nil {
-		t.Fatalf("Failed to initialize Driver: %v", err)
-	}
-	d, err := volume.Get(Name)
+	d, err := Init(map[string]string{"path": testPath})
 	if err != nil {
 		t.Fatalf("Failed to initialize Volume Driver: %v", err)
 	}

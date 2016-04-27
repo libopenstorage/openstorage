@@ -1,4 +1,4 @@
-package client
+package testing
 
 import (
 	"os"
@@ -8,9 +8,10 @@ import (
 	"go.pedge.io/dlog"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/api/client"
 	"github.com/libopenstorage/openstorage/api/server"
 	"github.com/libopenstorage/openstorage/config"
-	"github.com/libopenstorage/openstorage/volume"
+	"github.com/libopenstorage/openstorage/volume/drivers"
 	"github.com/libopenstorage/openstorage/volume/drivers/nfs"
 	"github.com/libopenstorage/openstorage/volume/drivers/test"
 )
@@ -24,7 +25,7 @@ func init() {
 }
 
 func makeRequest(t *testing.T) {
-	c, err := NewDriverClient(nfs.Name)
+	c, err := client.NewDriverClient(nfs.Name)
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
@@ -41,14 +42,14 @@ func TestAll(t *testing.T) {
 		t.Fatalf("Failed to create test path: %v", err)
 	}
 
-	_, err = volume.New(nfs.Name, map[string]string{"path": testPath})
+	err = volumedrivers.Register(nfs.Name, map[string]string{"path": testPath})
 	if err != nil {
 		t.Fatalf("Failed to initialize Driver: %v", err)
 	}
 
 	server.StartPluginAPI(nfs.Name, config.DriverAPIBase, config.PluginAPIBase)
 	time.Sleep(time.Second * 2)
-	c, err := NewDriverClient(nfs.Name)
+	c, err := client.NewDriverClient(nfs.Name)
 	if err != nil {
 		t.Fatalf("Failed to initialize Driver: %v", err)
 	}

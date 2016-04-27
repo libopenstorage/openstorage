@@ -3,7 +3,6 @@ package volume
 import (
 	"errors"
 	"fmt"
-	"sync"
 
 	"github.com/libopenstorage/openstorage/api"
 )
@@ -20,10 +19,6 @@ var (
 	ErrVolAttached        = errors.New("Volume is attached")
 	ErrVolHasSnaps        = errors.New("Volume has snapshots associated")
 	ErrNotSupported       = errors.New("Operation not supported")
-
-	drivers   = make(map[string]func(map[string]string) (VolumeDriver, error))
-	instances = make(map[string]VolumeDriver)
-	lock      sync.Mutex
 )
 
 type Store interface {
@@ -153,47 +148,4 @@ type VolumeDriverRegistry interface {
 // VolumeDriverRegistry constructs a new VolumeDriverRegistry.
 func NewVolumeDriverRegistry(nameToInitFunc map[string]func(map[string]string) (VolumeDriver, error)) VolumeDriverRegistry {
 	return newVolumeDriverRegistry(nameToInitFunc)
-}
-
-func Shutdown() {
-	lock.Lock()
-	defer lock.Unlock()
-	for _, v := range instances {
-		v.Shutdown()
-	}
-}
-
-func Get(name string) (VolumeDriver, error) {
-	if v, ok := instances[name]; ok {
-		return v, nil
-	}
-	return nil, ErrDriverNotFound
-}
-
-func New(name string, params map[string]string) (VolumeDriver, error) {
-	lock.Lock()
-	defer lock.Unlock()
-
-	if _, ok := instances[name]; ok {
-		return nil, ErrExist
-	}
-	if initFunc, exists := drivers[name]; exists {
-		driver, err := initFunc(params)
-		if err != nil {
-			return nil, err
-		}
-		instances[name] = driver
-		return driver, err
-	}
-	return nil, ErrNotSupported
-}
-
-func Register(name string, initFunc func(map[string]string) (VolumeDriver, error)) error {
-	lock.Lock()
-	defer lock.Unlock()
-	if _, exists := drivers[name]; exists {
-		return ErrExist
-	}
-	drivers[name] = initFunc
-	return nil
 }

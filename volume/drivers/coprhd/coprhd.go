@@ -26,10 +26,6 @@ const (
 	createVolumeUri = "block/volumes.json"
 )
 
-func init() {
-	volume.Register(Name, Init)
-}
-
 // ApiError represents the default api error code
 type ApiError struct {
 	Code        string `json:"code"`

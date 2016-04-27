@@ -26,10 +26,6 @@ const (
 	BuseMountPath = "/var/lib/openstorage/buse/"
 )
 
-func init() {
-	volume.Register(Name, Init)
-}
-
 // Implements the open storage volume interface.
 type driver struct {
 	volume.IODriver

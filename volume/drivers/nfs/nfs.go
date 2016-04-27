@@ -29,10 +29,6 @@ const (
 	nfsBlockFile = ".blockdevice"
 )
 
-func init() {
-	volume.Register(Name, Init)
-}
-
 // Implements the open storage volume interface.
 type driver struct {
 	volume.IODriver
