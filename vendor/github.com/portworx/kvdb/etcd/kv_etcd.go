@@ -1,6 +1,7 @@
 package etcd
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -14,8 +15,10 @@ import (
 )
 
 const (
-	Name    = "etcd-kv"
-	defHost = "http://etcd.portworx.com:4001"
+	Name                          = "etcd-kv"
+	defHost                       = "http://127.0.0.1:4001"
+	defaultRetryCount             = 60
+	defaultIntervalBetweenRetries = time.Millisecond * 500
 )
 
 type EtcdKV struct {
@@ -41,7 +44,7 @@ func EtcdInit(domain string,
 	cfg := e.Config{
 		Endpoints: machines,
 		Transport: e.DefaultTransport,
-		// The time required for a request to fail - 10 sec
+		// The time required for a request to fail - 30 sec
 		HeaderTimeoutPerRequest: time.Duration(10) * time.Second,
 	}
 	c, err := e.New(cfg)
@@ -111,16 +114,36 @@ func (kv *EtcdKV) resultToKvs(result *e.Response) kvdb.KVPairs {
 	return kvs
 }
 
+func (kv *EtcdKV) get(key string, recursive, sort bool) (*kvdb.KVPair, error) {
+	var err error
+	var result *e.Response
+	for i := 0; i < defaultRetryCount; i++ {
+		result, err = kv.client.Get(context.Background(), key, &e.GetOptions{
+			Recursive: recursive,
+			Sort:      sort,
+		})
+		if err == nil {
+			return kv.resultToKv(result), nil
+		}
+
+		switch err.(type) {
+		case *e.ClusterError:
+			fmt.Printf("kvdb get error: %v, retry count: %v\n", err, i)
+			time.Sleep(defaultIntervalBetweenRetries)
+		default:
+			etcdErr := err.(e.Error)
+			if etcdErr.Code == e.ErrorCodeKeyNotFound {
+				return nil, kvdb.ErrNotFound
+			}
+			return nil, err
+		}
+	}
+	return nil, err
+}
+
 func (kv *EtcdKV) Get(key string) (*kvdb.KVPair, error) {
 	key = kv.domain + key
-	result, err := kv.client.Get(context.Background(), key, &e.GetOptions{
-		Recursive: false,
-		Sort:      false,
-	})
-	if err != nil {
-		return nil, err
-	}
-	return kv.resultToKv(result), err
+	return kv.get(key, false, false)
 }
 
 func (kv *EtcdKV) GetVal(key string, val interface{}) (*kvdb.KVPair, error) {
@@ -129,7 +152,11 @@ func (kv *EtcdKV) GetVal(key string, val interface{}) (*kvdb.KVPair, error) {
 		return nil, err
 	}
 	err = json.Unmarshal(kvp.Value, val)
-	return kvp, err
+	if err != nil {
+		return kvp, kvdb.ErrUnmarshal
+	} else {
+		return kvp, nil
+	}
 }
 
 func (kv *EtcdKV) toBytes(val interface{}) ([]byte, error) {
@@ -153,6 +180,46 @@ func (kv *EtcdKV) toBytes(val interface{}) ([]byte, error) {
 	return b, nil
 }
 
+func (kv *EtcdKV) setWithRetry(ctx context.Context, key, value string,
+	opts *e.SetOptions) (*kvdb.KVPair, error) {
+	var (
+		err    error
+		i      int
+		result *e.Response
+	)
+	for i = 0; i < defaultRetryCount; i++ {
+		result, err = kv.client.Set(ctx, key, value, opts)
+		if err == nil {
+			return kv.resultToKv(result), nil
+		}
+		switch err.(type) {
+		case *e.ClusterError:
+			cerr := err.(*e.ClusterError)
+			fmt.Printf("kvdb set error: %v %v, retry count: %v\n",
+				err, cerr.Detail(), i)
+			time.Sleep(defaultIntervalBetweenRetries)
+		default:
+			goto out
+		}
+	}
+
+out:
+	// It's possible that update succeeded but the re-update failed.
+	if i > 0 && i < defaultRetryCount && err != nil {
+		kvp, err := kv.get(key, false, false)
+		if err == nil && bytes.Equal(kvp.Value, []byte(value)) {
+			if opts.PrevExist == e.PrevNoExist {
+				kvp.Action = kvdb.KVCreate
+			} else {
+				kvp.Action = kvdb.KVSet
+			}
+			return kvp, nil
+		}
+	}
+
+	return nil, err
+}
+
 func (kv *EtcdKV) Put(
 	key string,
 	val interface{},
@@ -164,19 +231,13 @@ func (kv *EtcdKV) Put(
 	if err != nil {
 		return nil, err
 	}
-	result, err := kv.client.Set(
+	return kv.setWithRetry(
 		context.Background(),
 		key,
 		string(b),
 		&e.SetOptions{
 			TTL: time.Duration(ttl) * time.Second,
-		},
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return kv.resultToKv(result), err
+		})
 }
 
 func (kv *EtcdKV) Create(
@@ -191,14 +252,10 @@ func (kv *EtcdKV) Create(
 	if err != nil {
 		return nil, err
 	}
-	result, err := kv.client.Set(context.Background(), key, string(b), &e.SetOptions{
+	return kv.setWithRetry(context.Background(), key, string(b), &e.SetOptions{
 		TTL:       time.Duration(ttl) * time.Second,
 		PrevExist: e.PrevNoExist,
 	})
-	if err != nil {
-		return nil, err
-	}
-	return kv.resultToKv(result), err
 }
 
 func (kv *EtcdKV) Update(
@@ -213,27 +270,32 @@ func (kv *EtcdKV) Update(
 	if err != nil {
 		return nil, err
 	}
-	result, err := kv.client.Set(context.Background(), key, string(b), &e.SetOptions{
+	return kv.setWithRetry(context.Background(), key, string(b), &e.SetOptions{
 		TTL:       time.Duration(ttl) * time.Second,
 		PrevExist: e.PrevExist,
 	})
-	if err != nil {
-		return nil, err
-	}
-	return kv.resultToKv(result), err
 }
 
 func (kv *EtcdKV) Enumerate(prefix string) (kvdb.KVPairs, error) {
 	prefix = kv.domain + prefix
-
-	result, err := kv.client.Get(context.Background(), prefix, &e.GetOptions{
-		Recursive: true,
-		Sort:      true,
-	})
-	if err != nil {
-		return nil, err
+	var err error
+	for i := 0; i < defaultRetryCount; i++ {
+		result, err := kv.client.Get(context.Background(), prefix, &e.GetOptions{
+			Recursive: true,
+			Sort:      true,
+		})
+		if err == nil {
+			return kv.resultToKvs(result), nil
+		}
+		switch err.(type) {
+		case *e.ClusterError:
+			fmt.Printf("kvdb set error: %v, retry count: %v\n", err, i)
+			time.Sleep(defaultIntervalBetweenRetries)
+		default:
+			return nil, err
+		}
 	}
-	return kv.resultToKvs(result), err
+	return nil, err
 }
 
 func (kv *EtcdKV) Delete(key string) (*kvdb.KVPair, error) {
@@ -358,27 +420,35 @@ func (kv *EtcdKV) refreshLock(kvPair *kvdb.KVPair) {
 	l := kvPair.Lock.(*etcdLock)
 	ttl := kvPair.TTL
 	refresh := time.NewTicker(time.Duration(kvPair.TTL) / 4)
+	var keyString string
+	if kvPair != nil {
+		keyString = kvPair.Key
+	}
 	defer refresh.Stop()
 	for {
 		select {
 		case <-refresh.C:
 			l.Lock()
-			if l.unlocked {
-				l.Unlock()
-				return
+			for !l.unlocked {
+				kvPair.TTL = ttl
+				kvp, err := kv.CompareAndSet(
+					kvPair,
+					kvdb.KVTTL|kvdb.KVModifiedIndex,
+					kvPair.Value,
+				)
+				if err != nil {
+					fmt.Printf(
+						"Error refreshing lock for key %v: %v\n",
+						keyString, err,
+					)
+					l.err = err
+					l.Unlock()
+					return
+				}
+				kvPair.ModifiedIndex = kvp.ModifiedIndex
+				break
 			}
-			kvPair.TTL = ttl
-			kvp, err := kv.CompareAndSet(kvPair, kvdb.KVTTL|kvdb.KVModifiedIndex, kvPair.Value)
-			if err != nil {
-				l.Unlock()
-				fmt.Printf("Error refreshing lock for key %v: %v\n",
-					string(kvp.Key), err)
-				l.err = err
-				return
-			}
-			kvPair.ModifiedIndex = kvp.ModifiedIndex
 			l.Unlock()
-
 		case <-l.done:
 			return
 		}

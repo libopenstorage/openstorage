@@ -559,29 +559,29 @@
 			"checksumSHA1": "nXOOAvYogCYNl6v2sxIH39ZSvUM=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/portworx/kvdb",
 			"path": "github.com/portworx/kvdb",
-			"revision": "fc7643520be64ba06552823f694876d78830a52c",
-			"revisionTime": "2016-03-30T02:29:09Z"
+			"revision": "dde6ca0716cf08f73e4b8f2baf4af8910e03f337",
+			"revisionTime": "2016-04-26T09:52:31+01:00"
 		},
 		{
 			"checksumSHA1": "VqrtAthHzmqBamt6GvYMJnzAf4E=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/portworx/kvdb/consul",
 			"path": "github.com/portworx/kvdb/consul",
-			"revision": "fc7643520be64ba06552823f694876d78830a52c",
-			"revisionTime": "2016-03-30T02:29:09Z"
+			"revision": "dde6ca0716cf08f73e4b8f2baf4af8910e03f337",
+			"revisionTime": "2016-04-26T09:52:31+01:00"
 		},
 		{
 			"checksumSHA1": "BxwK0x/U8t8UsPsGIQdzJq5qWHg=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/portworx/kvdb/etcd",
 			"path": "github.com/portworx/kvdb/etcd",
-			"revision": "fc7643520be64ba06552823f694876d78830a52c",
-			"revisionTime": "2016-03-30T02:29:09Z"
+			"revision": "dde6ca0716cf08f73e4b8f2baf4af8910e03f337",
+			"revisionTime": "2016-04-26T09:52:31+01:00"
 		},
 		{
 			"checksumSHA1": "lWM17KOOJ4n0zg6qgM22D0F8Vj0=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/portworx/kvdb/mem",
 			"path": "github.com/portworx/kvdb/mem",
-			"revision": "fc7643520be64ba06552823f694876d78830a52c",
-			"revisionTime": "2016-03-30T02:29:09Z"
+			"revision": "dde6ca0716cf08f73e4b8f2baf4af8910e03f337",
+			"revisionTime": "2016-04-26T09:52:31+01:00"
 		},
 		{
 			"checksumSHA1": "cKNzpMpci3WUAzXpe+tVnBv2cjE=",
