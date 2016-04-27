@@ -16,7 +16,18 @@ const (
 
 var m Manager
 
-func TestSetup(t *testing.T) {
+func TestAll(t *testing.T) {
+	setup(t)
+	load(t)
+	mountTest(t)
+	inspect(t)
+	hasMounts(t)
+	refcounts(t)
+	exists(t)
+	shutdown(t)
+}
+
+func setup(t *testing.T) {
 	var err error
 	m, err = New(NFSMount, nil, "")
 	if err != nil {
@@ -32,18 +43,18 @@ func cleandir(dir string) {
 	os.MkdirAll(dir, 0755)
 }
 
-func TestLoad(t *testing.T) {
+func load(t *testing.T) {
 	require.NoError(t, m.Load(""), "Failed in load")
 }
 
-func TestMount(t *testing.T) {
+func mountTest(t *testing.T) {
 	err := m.Mount(0, source, dest, "", syscall.MS_BIND, "")
 	require.NoError(t, err, "Failed in mount")
 	err = m.Unmount(source, dest)
 	require.NoError(t, err, "Failed in unmount")
 }
 
-func TestInspect(t *testing.T) {
+func inspect(t *testing.T) {
 	p := m.Inspect(source)
 	require.Equal(t, 0, len(p), "Expect 0 mounts actual %v mounts", len(p))
 
@@ -56,7 +67,7 @@ func TestInspect(t *testing.T) {
 	require.NoError(t, err, "Failed in unmount")
 }
 
-func TestHasMounts(t *testing.T) {
+func hasMounts(t *testing.T) {
 	count := m.HasMounts(source)
 	require.Equal(t, 0, count, "Expect 0 mounts actual %v mounts", count)
 
@@ -90,7 +101,7 @@ func TestHasMounts(t *testing.T) {
 	require.Equal(t, mounts, 0, "Expect 0 mounts actual %v mounts", mounts)
 }
 
-func TestRefcounts(t *testing.T) {
+func refcounts(t *testing.T) {
 	require.Equal(t, m.HasMounts(source) == 0, true, "Don't expect mounts in the beginning")
 	for i := 0; i < 10; i++ {
 		err := m.Mount(0, source, dest, "", syscall.MS_BIND, "")
@@ -107,7 +118,7 @@ func TestRefcounts(t *testing.T) {
 	require.Equal(t, m.HasMounts(source), 0, "Refcnt must go down to zero")
 }
 
-func TestExists(t *testing.T) {
+func exists(t *testing.T) {
 	err := m.Mount(0, source, dest, "", syscall.MS_BIND, "")
 	require.NoError(t, err, "Failed in mount")
 	exists, _ := m.Exists(source, "foo")
@@ -118,7 +129,7 @@ func TestExists(t *testing.T) {
 	require.NoError(t, err, "Failed in unmount")
 }
 
-func TestShutdown(t *testing.T) {
+func shutdown(t *testing.T) {
 	os.RemoveAll(dest)
 	os.RemoveAll(source)
 }
