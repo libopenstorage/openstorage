@@ -98,8 +98,8 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 			zone:     zone,
 			instance: instance,
 		},
-		IODriver:        volume.IONotSupported,
-		StoreEnumerator: volume.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
+		IODriver:        common.IONotSupported,
+		StoreEnumerator: common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
 	}
 	devPrefix, letters, err := d.freeDevices()
 	if err != nil {

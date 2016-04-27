@@ -54,9 +54,9 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		return nil, err
 	}
 	return &driver{
-		volume.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
-		volume.IONotSupported
-		volume.BlockNotSupported,
+		common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
+		common.IONotSupported
+		common.BlockNotSupported,
 		d,
 		root,
 	}, nil

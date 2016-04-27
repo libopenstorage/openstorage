@@ -9,6 +9,7 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
+	"github.com/libopenstorage/openstorage/volume/drivers/common"
 )
 
 const (
@@ -23,7 +24,7 @@ type volumeClient struct {
 }
 
 func newVolumeClient(c *Client) volume.VolumeDriver {
-	return &volumeClient{volume.IONotSupported, c}
+	return &volumeClient{common.IONotSupported, c}
 }
 
 // String description of this driver.

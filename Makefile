@@ -20,7 +20,7 @@ endif
 
 export GO15VENDOREXPERIMENT=1
 
-all: test install
+all: build
 
 deps:
 	GO15VENDOREXPERIMENT=0 go get -d -v $(PKGS)

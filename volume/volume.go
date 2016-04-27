@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	"github.com/libopenstorage/openstorage/api"
-	"github.com/portworx/kvdb"
 )
 
 var (
@@ -21,13 +20,6 @@ var (
 	ErrVolAttached        = errors.New("Volume is attached")
 	ErrVolHasSnaps        = errors.New("Volume has snapshots associated")
 	ErrNotSupported       = errors.New("Operation not supported")
-
-	// BlockNotSupported is a default (null) block driver implementation.  This can be
-	// used by drivers that do not want to (or care about) implementing the attach,
-	// format and detach interfaces.
-	BlockNotSupported    = &blockNotSupported{}
-	SnapshotNotSupported = &snapshotNotSupported{}
-	IONotSupported       = &ioNotSupported{}
 
 	drivers   = make(map[string]func(map[string]string) (VolumeDriver, error))
 	instances = make(map[string]VolumeDriver)
@@ -127,10 +119,6 @@ type Enumerator interface {
 type StoreEnumerator interface {
 	Store
 	Enumerator
-}
-
-func NewDefaultStoreEnumerator(driver string, kvdb kvdb.Kvdb) StoreEnumerator {
-	return newDefaultStoreEnumerator(driver, kvdb)
 }
 
 // BlockDriver needs to be implemented by block volume drivers.  Filesystem volume

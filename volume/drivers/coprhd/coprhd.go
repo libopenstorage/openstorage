@@ -6,12 +6,14 @@ import (
 	"net/http"
 	"net/url"
 
+	"gopkg.in/jmcvetta/napping.v3"
+
 	"go.pedge.io/dlog"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
+	"github.com/libopenstorage/openstorage/volume/drivers/common"
 	"github.com/portworx/kvdb"
-	"gopkg.in/jmcvetta/napping.v3"
 )
 
 const (
@@ -106,8 +108,8 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 	}
 
 	d := &driver{
-		IODriver:          volume.IONotSupported,
-		StoreEnumerator:   volume.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
+		IODriver:          common.IONotSupported,
+		StoreEnumerator:   common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
 		consistency_group: consistency_group,
 		project:           project,
 		varray:            varray,

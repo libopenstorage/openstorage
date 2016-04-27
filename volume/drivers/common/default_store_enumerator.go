@@ -1,4 +1,4 @@
-package volume
+package common
 
 import (
 	"encoding/json"

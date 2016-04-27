@@ -1,4 +1,4 @@
-package volume
+package common
 
 import (
 	"testing"
@@ -6,13 +6,14 @@ import (
 	"go.pedge.io/dlog"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/volume"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
 	"github.com/stretchr/testify/assert"
 )
 
 var (
-	testEnumerator StoreEnumerator
+	testEnumerator volume.StoreEnumerator
 	testLabels     = map[string]string{"Foo": "DEADBEEF"}
 )
 

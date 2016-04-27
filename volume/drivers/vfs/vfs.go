@@ -36,10 +36,10 @@ type driver struct {
 // Init Driver intialization.
 func Init(params map[string]string) (volume.VolumeDriver, error) {
 	return &driver{
-		volume.IONotSupported,
-		volume.BlockNotSupported,
-		volume.SnapshotNotSupported,
-		volume.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
+		common.IONotSupported,
+		common.BlockNotSupported,
+		common.SnapshotNotSupported,
+		common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
 	}, nil
 }
 
