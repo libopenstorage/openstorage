@@ -28,7 +28,17 @@ const (
 	newClusterName = "2"
 )
 
-func TestSetup(t *testing.T) {
+func TestAll(t *testing.T) {
+	setup(t)
+	raiseAndErase(t)
+	retrieve(t)
+	clear(t)
+	enumerate(t)
+	enumerateByCluster(t)
+	watch(t)
+}
+
+func setup(t *testing.T) {
 	kv := kvdb.Instance()
 	if kv == nil {
 		kv, err := kvdb.New(mem.Name, kvdbDomain+"/"+clusterName, []string{}, nil)
@@ -48,7 +58,7 @@ func TestSetup(t *testing.T) {
 	}
 }
 
-func TestRaiseAndErase(t *testing.T) {
+func raiseAndErase(t *testing.T) {
 	// Raise api.Alert Id : 1
 	raiseAlert := api.Alert{
 		Resource: api.ResourceType_RESOURCE_TYPE_VOLUME,
@@ -81,7 +91,7 @@ func TestRaiseAndErase(t *testing.T) {
 	require.Error(t, err, "api.Alert not erased from kvdb")
 }
 
-func TestRetrieve(t *testing.T) {
+func retrieve(t *testing.T) {
 	var alert *api.Alert
 
 	// Raise a ResourceType_RESOURCE_TYPE_NODE specific api.Alert
@@ -107,7 +117,7 @@ func TestRetrieve(t *testing.T) {
 	err = kva.Erase(api.ResourceType_RESOURCE_TYPE_NODE, raiseAlert.Id)
 }
 
-func TestClear(t *testing.T) {
+func clear(t *testing.T) {
 	// Raise an alert
 	var alert api.Alert
 	kv := kva.GetKvdbInstance()
@@ -126,7 +136,7 @@ func TestClear(t *testing.T) {
 	err = kva.Erase(api.ResourceType_RESOURCE_TYPE_NODE, raiseAlert.Id)
 }
 
-func TestEnumerateAlert(t *testing.T) {
+func enumerate(t *testing.T) {
 	// Raise a few alert
 	raiseAlert1 := api.Alert{
 		Resource: api.ResourceType_RESOURCE_TYPE_VOLUME,
@@ -185,7 +195,7 @@ func TestEnumerateAlert(t *testing.T) {
 	err = kva.Erase(api.ResourceType_RESOURCE_TYPE_NODE, raiseAlert4.Id)
 }
 
-func TestEnumerateByCluster(t *testing.T) {
+func enumerateByCluster(t *testing.T) {
 	// Create a new alert instance for raising an alert in this new cluster id
 	kvaNew, err := Get("alert_kvdb_test")
 	if err != nil {
@@ -239,7 +249,7 @@ func testAlertWatcher(alert *api.Alert, action api.AlertActionType, prefix strin
 
 }
 
-func TestWatch(t *testing.T) {
+func watch(t *testing.T) {
 	isWatcherCalled = 0
 
 	err := kva.Watch(clusterName, testAlertWatcher)
