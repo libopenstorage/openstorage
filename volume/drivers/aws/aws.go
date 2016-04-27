@@ -32,15 +32,21 @@ const (
 	AwsDBKey = "OpenStorageAWSKey"
 )
 
-type Metadata struct {
-	zone     string
-	instance string
-}
-
 var (
 	koStrayCreate chaos.ID
 	koStrayDelete chaos.ID
 )
+
+func init() {
+	volume.Register(Name, Init)
+	koStrayCreate = chaos.Add("aws", "create", "create in driver before DB")
+	koStrayDelete = chaos.Add("aws", "delete", "create in driver before DB")
+}
+
+type Metadata struct {
+	zone     string
+	instance string
+}
 
 // Driver implements VolumeDriver interface
 type Driver struct {
@@ -629,11 +635,4 @@ func (d *Driver) Shutdown() {
 
 func (d *Driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
 	return volume.ErrNotSupported
-}
-
-func init() {
-	// Register ourselves as an openstorage volume driver.
-	volume.Register(Name, Init)
-	koStrayCreate = chaos.Add("aws", "create", "create in driver before DB")
-	koStrayDelete = chaos.Add("aws", "delete", "create in driver before DB")
 }
