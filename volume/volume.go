@@ -2,7 +2,6 @@ package volume
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/libopenstorage/openstorage/api"
 )
@@ -67,8 +66,9 @@ type SnapshotDriver interface {
 // ProtoDriver must be implemented by all volume drivers.  It specifies the
 // most basic functionality, such as creating and deleting volumes.
 type ProtoDriver interface {
-	fmt.Stringer
 	SnapshotDriver
+	// Name returns the name of the driver.
+	Name() string
 	// Type of this driver
 	Type() api.DriverType
 	// Create a new Vol for the specific volume spec.

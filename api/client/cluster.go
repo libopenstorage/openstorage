@@ -21,7 +21,7 @@ func newClusterClient(c *Client) cluster.Cluster {
 }
 
 // String description of this driver.
-func (c *clusterClient) String() string {
+func (c *clusterClient) Name() string {
 	return "ClusterManager"
 }
 

@@ -45,7 +45,7 @@ func newVolumeDriver(
 	}
 }
 
-func (v *volumeDriver) String() string {
+func (v *volumeDriver) Name() string {
 	return v.name
 }
 

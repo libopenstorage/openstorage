@@ -28,7 +28,7 @@ func newVolumeClient(c *Client) volume.VolumeDriver {
 }
 
 // String description of this driver.
-func (v *volumeClient) String() string {
+func (v *volumeClient) Name() string {
 	return "VolumeDriver"
 }
 

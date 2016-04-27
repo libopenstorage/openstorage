@@ -119,6 +119,10 @@ func (d *driver) String() string {
 	return Name
 }
 
+func (d *driver) Name() string {
+	return Name
+}
+
 func (d *driver) Type() api.DriverType {
 	return Type
 }

@@ -209,22 +209,18 @@ func (d *Driver) describe() (*ec2.Instance, error) {
 	return out.Reservations[0].Instances[0], nil
 }
 
-// String is a description of this driver.
-func (d *Driver) String() string {
+func (d *Driver) Name() string {
 	return Name
 }
 
-// Type returns aws as a Block driver.
 func (d *Driver) Type() api.DriverType {
 	return Type
 }
 
-// Status diagnostic information
 func (v *Driver) Status() [][2]string {
 	return [][2]string{}
 }
 
-// Create aws volume from spec.
 func (d *Driver) Create(
 	locator *api.VolumeLocator,
 	source *api.Source,

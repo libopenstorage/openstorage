@@ -36,7 +36,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 	return &driver{VolumeDriver: c.VolumeDriver()}, nil
 }
 
-func (d *driver) String() string {
+func (d *driver) Name() string {
 	return Name
 }
 
