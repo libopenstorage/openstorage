@@ -20,15 +20,16 @@ const (
 	// NameTest of this alert instance used only for unit tests.
 	NameTest = "alert_kvdb_test"
 
-	alertKey       = "alert/"
-	nextAlertIDKey = "nextAlertId"
-	clusterKey     = "cluster/"
-	volumeKey      = "volume/"
-	nodeKey        = "node/"
-	driveKey       = "drive/"
-	bootstrap      = "bootstrap"
-	watchRetries   = 5
-	watchSleep     = 100
+	alertKey         = "alert/"
+	subscriptionsKey = "subscriptions"
+	nextAlertIDKey   = "nextAlertId"
+	clusterKey       = "cluster/"
+	volumeKey        = "volume/"
+	nodeKey          = "node/"
+	driveKey         = "drive/"
+	bootstrap        = "bootstrap"
+	watchRetries     = 5
+	watchSleep       = 100
 )
 
 const (
@@ -91,19 +92,33 @@ func Init(name string, domain string, machines []string, clusterID string) (Aler
 
 // Raise raises an Alert.
 func (kva *KvAlert) Raise(a *api.Alert) error {
+	var subscriptions []api.Alert
 	kv := kva.GetKvdbInstance()
-	if a.Resource == api.ResourceType_RESOURCE_TYPE_NONE {
-		return ErrResourceNotFound
+	if _, err := kv.GetVal(getSubscriptionsKey(a.AlertType), &subscriptions); err != nil {
+		if err != kvdb.ErrNotFound {
+			return err
+		}
+	} else {
+		for _, alert := range subscriptions {
+			if err := kva.Raise(&alert); err != nil {
+				return ErrSubscribedRaise
+			}
+		}
 	}
-	alertID, err := kva.getNextIDFromKVDB()
-	if err != nil {
-		return err
+	return kva.raise(a)
+}
+
+// Subscribe allows a child (dependent) alert to subscribe to a parent alert
+func (kva *KvAlert) Subscribe(parentAlertType int64, childAlert *api.Alert) error {
+	var subscriptions []api.Alert
+	kv := kva.GetKvdbInstance()
+	if _, err := kv.GetVal(getSubscriptionsKey(parentAlertType), &subscriptions); err != nil {
+		if err != kvdb.ErrNotFound {
+			return err
+		}
 	}
-	// TODO(pedge): when this is changed to a pointer, we need to rethink this.
-	a.Id = alertID
-	a.Timestamp = prototime.Now()
-	a.Cleared = false
-	_, err = kv.Create(getResourceKey(a.Resource)+strconv.FormatInt(a.Id, 10), a, 0)
+	subscriptions = append(subscriptions, *childAlert)
+	_, err := kv.Put(getSubscriptionsKey(parentAlertType), subscriptions, 1)
 	return err
 }
 
@@ -119,18 +134,7 @@ func (kva *KvAlert) Erase(resourceType api.ResourceType, alertID int64) error {
 
 // Clear clears an alert.
 func (kva *KvAlert) Clear(resourceType api.ResourceType, alertID int64) error {
-	kv := kva.GetKvdbInstance()
-	var alert api.Alert
-	if resourceType == api.ResourceType_RESOURCE_TYPE_NONE {
-		return ErrResourceNotFound
-	}
-	if _, err := kv.GetVal(getResourceKey(resourceType)+strconv.FormatInt(alertID, 10), &alert); err != nil {
-		return err
-	}
-	alert.Cleared = true
-
-	_, err := kv.Update(getResourceKey(resourceType)+strconv.FormatInt(alertID, 10), &alert, 0)
-	return err
+	return kva.clear(resourceType, alertID)
 }
 
 // Retrieve retrieves a specific alert.
@@ -255,6 +259,43 @@ func getNextAlertIDKey() string {
 	return alertKey + nextAlertIDKey
 }
 
+func getSubscriptionsKey(alertType int64) string {
+	return alertKey + subscriptionsKey + "/" + strconv.FormatInt(alertType, 10)
+}
+
+func (kva *KvAlert) raise(a *api.Alert) error {
+	kv := kva.GetKvdbInstance()
+	if a.Resource == api.ResourceType_RESOURCE_TYPE_NONE {
+		return ErrResourceNotFound
+	}
+	alertID, err := kva.getNextIDFromKVDB()
+	if err != nil {
+		return err
+	}
+	// TODO(pedge): when this is changed to a pointer, we need to rethink this.
+	a.Id = alertID
+	a.Timestamp = prototime.Now()
+	a.Cleared = false
+	_, err = kv.Create(getResourceKey(a.Resource)+strconv.FormatInt(a.Id, 10), a, 0)
+	return err
+
+}
+
+func (kva *KvAlert) clear(resourceType api.ResourceType, alertID int64) error {
+	kv := kva.GetKvdbInstance()
+	var alert api.Alert
+	if resourceType == api.ResourceType_RESOURCE_TYPE_NONE {
+		return ErrResourceNotFound
+	}
+	if _, err := kv.GetVal(getResourceKey(resourceType)+strconv.FormatInt(alertID, 10), &alert); err != nil {
+		return err
+	}
+	alert.Cleared = true
+
+	_, err := kv.Update(getResourceKey(resourceType)+strconv.FormatInt(alertID, 10), &alert, 0)
+	return err
+}
+
 func (kva *KvAlert) getNextIDFromKVDB() (int64, error) {
 	kv := kva.GetKvdbInstance()
 	nextAlertID := 0
@@ -315,7 +356,6 @@ func (kva *KvAlert) getAllAlerts(kv kvdb.Kvdb) ([]*api.Alert, error) {
 	if err == nil {
 		allAlerts = append(allAlerts, driveAlerts...)
 	}
-
 
 	if len(allAlerts) > 0 {
 		return allAlerts, nil
@@ -395,7 +435,7 @@ func kvdbWatch(prefix string, opaque interface{}, kvp *kvdb.KVPair, err error) e
 		return err
 	}
 
-	if strings.HasSuffix(kvp.Key, nextAlertIDKey) {
+	if strings.HasSuffix(kvp.Key, nextAlertIDKey) || strings.Contains(kvp.Key, subscriptionsKey) {
 		// Ignore write on this key
 		// Todo : Add a map of ignore keys
 		return nil

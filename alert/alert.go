@@ -13,7 +13,7 @@ import (
 
 var (
 	// ErrNotSupported implemenation of a specific function is not supported.
-	ErrNotSupported = errors.New("implementation not supported")
+	ErrNotSupported = errors.New("Implementation not supported")
 	// ErrNotFound raised if Key is not found.
 	ErrNotFound = errors.New("Key not found")
 	// ErrExist raised if key already exists.
@@ -28,6 +28,8 @@ var (
 	ErrAlertClientNotFound = errors.New("Alert client not found")
 	// ErrResourceNotFound raised if ResourceType is not found>
 	ErrResourceNotFound = errors.New("Resource not found in Alert")
+	// ErrSubscribedRaise raised if unable to raise a subscribed alert
+	ErrSubscribedRaise = errors.New("Could not raise alert and its subscribed alerts")
 
 	instances = make(map[string]AlertClient)
 	drivers   = make(map[string]InitFunc)
@@ -53,6 +55,9 @@ type AlertClient interface {
 
 	// Raise raises an Alert.
 	Raise(alert *api.Alert) error
+
+	// Subscribe allows a child (dependent) alert to subscribe to a parent alert
+	Subscribe(parentAlertType int64, childAlert *api.Alert) error
 
 	// Retrieve retrieves specific Alert.
 	Retrieve(resourceType api.ResourceType, id int64) (*api.Alert, error)

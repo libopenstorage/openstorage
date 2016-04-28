@@ -31,6 +31,7 @@ const (
 func TestAll(t *testing.T) {
 	setup(t)
 	raiseAndErase(t)
+	subscribe(t)
 	retrieve(t)
 	clear(t)
 	enumerate(t)
@@ -89,6 +90,61 @@ func raiseAndErase(t *testing.T) {
 
 	_, err = kv.GetVal(getResourceKey(api.ResourceType_RESOURCE_TYPE_VOLUME)+"1", &alert)
 	require.Error(t, err, "api.Alert not erased from kvdb")
+}
+
+func subscribe(t *testing.T) {
+	parentAlertType := int64(1)
+	child1Alert := api.Alert{
+		AlertType: 2,
+		Message: "child 1",
+		Resource: api.ResourceType_RESOURCE_TYPE_DRIVE,
+		Severity: api.SeverityType_SEVERITY_TYPE_NOTIFY,
+	}
+	child2Alert := api.Alert{
+		AlertType: 3,
+		Message: "child 2",
+		Resource: api.ResourceType_RESOURCE_TYPE_VOLUME,
+		Severity: api.SeverityType_SEVERITY_TYPE_NOTIFY,
+	}
+	err := kva.Subscribe(parentAlertType, &child1Alert)
+	require.NoError(t, err, "Failed to subscribe alert")
+	err = kva.Subscribe(2, &child2Alert)
+	require.NoError(t, err, "Failed to subscribe alert")
+
+	raiseAlert := api.Alert{
+		AlertType: parentAlertType,
+		Resource:  api.ResourceType_RESOURCE_TYPE_NODE,
+		Severity:  api.SeverityType_SEVERITY_TYPE_NOTIFY,
+		Message:   "parent",
+	}
+	err = kva.Raise(&raiseAlert)
+	require.NoError(t, err, "Failed to raise parent alert")
+
+	enAlerts, err := kva.Enumerate(&api.Alert{})
+	require.Equal(t, 3, len(enAlerts), "Incorrect number of alerts raised")
+
+	for _, a := range enAlerts {
+		err = kva.Erase(a.Resource, a.Id)
+	}
+
+	child3Alert := api.Alert{
+		AlertType: 4,
+		Message: "child 3",
+		Resource: api.ResourceType_RESOURCE_TYPE_VOLUME,
+		Severity: api.SeverityType_SEVERITY_TYPE_NOTIFY,
+	}
+	err = kva.Subscribe(parentAlertType, &child3Alert)
+	require.NoError(t, err, "Failed to subscribe alert")
+	err = kva.Raise(&raiseAlert)
+	require.NoError(t, err, "Failed to raise parent alert")
+
+	enAlerts, err = kva.Enumerate(&api.Alert{})
+	require.Equal(t, 4, len(enAlerts), "Incorrect number of alerts raised")
+
+	for _, a := range enAlerts {
+		err = kva.Erase(a.Resource, a.Id)
+	}
+
 }
 
 func retrieve(t *testing.T) {
@@ -182,9 +238,11 @@ func enumerate(t *testing.T) {
 	currentTime := time.Now()
 	delayedTime := currentTime.Add(-1 * time.Duration(2) * time.Hour)
 
-	alert := api.Alert{Timestamp: prototime.TimeToTimestamp(delayedTime), Id: 10, Resource: api.ResourceType_RESOURCE_TYPE_VOLUME}
+	var fakeAlertId int64
+	fakeAlertId = 100
+	alert := api.Alert{Timestamp: prototime.TimeToTimestamp(delayedTime), Id: fakeAlertId, Resource: api.ResourceType_RESOURCE_TYPE_VOLUME}
 
-	_, err = kv.Put(getResourceKey(api.ResourceType_RESOURCE_TYPE_VOLUME)+strconv.FormatInt(10, 10), &alert, 0)
+	_, err = kv.Put(getResourceKey(api.ResourceType_RESOURCE_TYPE_VOLUME)+strconv.FormatInt(fakeAlertId, 10), &alert, 0)
 	enAlerts, err = kva.EnumerateWithinTimeRange(currentTime.Add(-1*time.Duration(10)*time.Second), currentTime, api.ResourceType_RESOURCE_TYPE_VOLUME)
 	require.NoError(t, err, "Failed to enumerate results")
 	require.Equal(t, 3, len(enAlerts), "Enumerated incorrect number of alert")
@@ -193,6 +251,7 @@ func enumerate(t *testing.T) {
 	err = kva.Erase(api.ResourceType_RESOURCE_TYPE_VOLUME, raiseAlert2.Id)
 	err = kva.Erase(api.ResourceType_RESOURCE_TYPE_VOLUME, raiseAlert3.Id)
 	err = kva.Erase(api.ResourceType_RESOURCE_TYPE_NODE, raiseAlert4.Id)
+	err = kva.Erase(api.ResourceType_RESOURCE_TYPE_VOLUME, fakeAlertId)
 }
 
 func enumerateByCluster(t *testing.T) {
@@ -307,4 +366,6 @@ func watch(t *testing.T) {
 	require.Equal(t, api.AlertActionType_ALERT_ACTION_TYPE_CREATE, watcherAction, "action mismatch for create")
 	require.Equal(t, raiseAlertNew.Id, watcherAlert.Id, "alert id mismatch")
 	require.Equal(t, "alert/node/"+strconv.FormatInt(raiseAlertNew.Id, 10), watcherKey, "key mismatch")
+
+	err = kva.Erase(api.ResourceType_RESOURCE_TYPE_NODE, raiseAlertNew.Id)
 }
