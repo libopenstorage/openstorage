@@ -13,8 +13,7 @@ import (
 
 	"go.pedge.io/dlog"
 
-	"github.com/libopenstorage/gossip"
-	"github.com/libopenstorage/gossip/types"
+	gossiper "github.com/libopenstorage/memberlist"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
 
@@ -35,7 +34,7 @@ type ClusterManager struct {
 	status       api.Status
 	nodeCache    map[string]api.Node   // Cached info on the nodes in the cluster.
 	nodeStatuses map[string]api.Status // Set of nodes currently marked down.
-	gossip       gossip.Gossiper
+	gossip       gossiper.GossiperImpl //FIXME (change to interface Gossiper)
 	gEnabled     bool
 	selfNode     api.Node
 	system       systemutils.System
@@ -188,7 +187,7 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 	for id, n := range db.NodeEntries {
 		if id != c.config.NodeId {
 			// Check to see if the IP is the same.  If it is, then we have a stale entry.
-			c.gossip.UpdateNode(n.MgmtIp+":9002", types.NodeId(id))
+			c.gossip.UpdateNode(n.MgmtIp+":9002", gossiper.NodeId(id))
 		}
 	}
 
@@ -297,7 +296,7 @@ found:
 			} else {
 				// Gossip with this node.
 				dlog.Infof("Connecting to node %s with IP %s.", id, n.MgmtIp)
-				c.gossip.AddNode(n.MgmtIp+":9002", types.NodeId(id))
+				c.gossip.AddNode(n.MgmtIp+":9002", gossiper.NodeId(id))
 			}
 		}
 	}
@@ -331,7 +330,7 @@ done:
 }
 
 func (c *ClusterManager) startHeartBeat() {
-	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
+	gossipStoreKey := gossiper.StoreKey(heartbeatKey + c.config.ClusterId)
 
 	node := c.getCurrentState()
 	c.gossip.UpdateSelf(gossipStoreKey, *node)
@@ -354,7 +353,7 @@ func (c *ClusterManager) startHeartBeat() {
 }
 
 func (c *ClusterManager) updateClusterStatus() {
-	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
+	gossipStoreKey := gossiper.StoreKey(heartbeatKey + c.config.ClusterId)
 
 	for {
 		node := c.getCurrentState()
@@ -375,7 +374,7 @@ func (c *ClusterManager) updateClusterStatus() {
 			}
 
 			// Ignore updates from self node.
-			if id == types.NodeId(node.Id) {
+			if id == gossiper.NodeId(node.Id) {
 				continue
 			}
 
@@ -385,7 +384,7 @@ func (c *ClusterManager) updateClusterStatus() {
 			newNodeInfo.Status = api.Status_STATUS_OK
 
 			switch {
-			case nodeInfo.Status == types.NODE_STATUS_DOWN:
+			case nodeInfo.Status == gossiper.NODE_STATUS_DOWN:
 				newNodeInfo.Status = api.Status_STATUS_OFFLINE
 				lastStatus, ok := c.nodeStatuses[string(id)]
 				if ok && lastStatus == newNodeInfo.Status {
@@ -414,7 +413,7 @@ func (c *ClusterManager) updateClusterStatus() {
 					}
 				}
 
-			case nodeInfo.Status == types.NODE_STATUS_DOWN_WAITING_FOR_NEW_UPDATE:
+			case nodeInfo.Status == gossiper.NODE_STATUS_DOWN_WAITING_FOR_NEW_UPDATE:
 				newNodeInfo.Status = api.Status_STATUS_OFFLINE
 				lastStatus, ok := c.nodeStatuses[string(id)]
 				if ok && lastStatus == newNodeInfo.Status {
@@ -433,7 +432,7 @@ func (c *ClusterManager) updateClusterStatus() {
 					}
 				}
 
-			case nodeInfo.Status == types.NODE_STATUS_UP:
+			case nodeInfo.Status == gossiper.NODE_STATUS_UP:
 				newNodeInfo.Status = api.Status_STATUS_OK
 				lastStatus, ok := c.nodeStatuses[string(id)]
 				if ok && lastStatus == newNodeInfo.Status {
@@ -488,9 +487,9 @@ func (c *ClusterManager) EnableUpdates() error {
 }
 
 func (c *ClusterManager) GetState() (*ClusterState, error) {
-	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
+	gossipStoreKey := gossiper.StoreKey(heartbeatKey + c.config.ClusterId)
 	nodeValue := c.gossip.GetStoreKeyValue(gossipStoreKey)
-	nodes := make([]types.NodeValue, len(nodeValue), len(nodeValue))
+	nodes := make([]gossiper.NodeValue, len(nodeValue), len(nodeValue))
 	i := 0
 	for _, value := range nodeValue {
 		nodes[i] = value
@@ -525,7 +524,7 @@ func (c *ClusterManager) Start() error {
 	// Start the gossip protocol.
 	// XXX Make the port configurable.
 	gob.Register(api.Node{})
-	c.gossip = gossip.New("0.0.0.0:9002", types.NodeId(c.config.NodeId),
+	c.gossip = c.gossip.New("0.0.0.0:9002", gossiper.NodeId(c.config.NodeId),
 		c.selfNode.GenNumber)
 	c.gossip.SetGossipInterval(2 * time.Second)
 

@@ -4,7 +4,7 @@ import (
 	"container/list"
 	"errors"
 
-	"github.com/libopenstorage/gossip/types"
+	gossiper "github.com/libopenstorage/memberlist"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/portworx/kvdb"
@@ -62,8 +62,7 @@ type ClusterListener interface {
 	// Remove is called when a node leaves the cluster
 	Remove(node *api.Node) error
 
-	// Update is called when a node status changes significantly
-	// in the cluster changes.
+	// Update is called when a node's status changes significantly in the cluster.
 	Update(node *api.Node) error
 
 	// Leave is called when this node leaves the cluster.
@@ -71,8 +70,8 @@ type ClusterListener interface {
 }
 
 type ClusterState struct {
-	History    []*types.GossipSessionInfo
-	NodeStatus []types.NodeValue
+	History    []*gossiper.GossipSessionInfo
+	NodeStatus []gossiper.NodeValue
 }
 
 type ClusterData interface {
