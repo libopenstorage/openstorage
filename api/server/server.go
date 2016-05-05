@@ -36,14 +36,31 @@ func StartGraphAPI(name string, restBase string) error {
 
 // StartPluginAPI starts a REST server to receive volume API commands from the
 // Linux container engine and volume management commands from the CLI/UX.
-func StartPluginAPI(name string, mngmtBase, pluginBase string) error {
+func StartPluginAPI(
+	name string,
+	mngmtBase string,
+	pluginBase string,
+	mgmtPort uint16,
+	pluginPort uint16,
+) error {
 	volMngmtApi := newVolumeAPI(name)
-	if err := startServer(name, mngmtBase, 0, volMngmtApi.Routes()); err != nil {
+
+	if err := startServer(
+		name,
+		mngmtBase,
+		mgmtPort,
+		volMngmtApi.Routes(),
+	); err != nil {
 		return err
 	}
 
 	volPluginApi := newVolumePlugin(name)
-	if err := startServer(name, pluginBase, 0, volPluginApi.Routes()); err != nil {
+	if err := startServer(
+		name,
+		pluginBase,
+		pluginPort,
+		volPluginApi.Routes(),
+	); err != nil {
 		return err
 	}
 
@@ -77,7 +94,7 @@ func StartFlexVolumeAPI(port uint16, defaultDriver string) error {
 	return nil
 }
 
-func startServer(name string, sockBase string, port int, routes []*Route) error {
+func startServer(name string, sockBase string, port uint16, routes []*Route) error {
 	var (
 		listener net.Listener
 		err      error
@@ -92,7 +109,7 @@ func startServer(name string, sockBase string, port int, routes []*Route) error 
 	os.Remove(socket)
 	os.MkdirAll(path.Dir(socket), 0755)
 
-	dlog.Printf("Starting REST service on %+v", socket)
+	dlog.Printf("Starting REST service on socket : %+v", socket)
 	listener, err = net.Listen("unix", socket)
 	if err != nil {
 		dlog.Warnln("Cannot listen on UNIX socket: ", err)
@@ -100,7 +117,8 @@ func startServer(name string, sockBase string, port int, routes []*Route) error 
 	}
 	go http.Serve(listener, router)
 	if port != 0 {
-		go http.ListenAndServe(fmt.Sprintf(":%v", port), router)
+		dlog.Printf("Starting REST service on port : %v", port)
+		go http.ListenAndServe(fmt.Sprintf(":%d", port), router)
 	}
 	return nil
 }

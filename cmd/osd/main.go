@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"os"
 	"runtime"
+	"strconv"
 
 	"go.pedge.io/dlog"
 
@@ -174,7 +175,33 @@ func start(c *cli.Context) error {
 		if err := volumedrivers.Register(d, v); err != nil {
 			return fmt.Errorf("Unable to start volume driver: %v, %v", d, err)
 		}
-		if err := server.StartPluginAPI(d, config.DriverAPIBase, config.PluginAPIBase); err != nil {
+
+		var mgmtPort, pluginPort uint64
+		if port, ok := v[config.MgmtPortKey]; ok {
+			mgmtPort, err = strconv.ParseUint(port, 10, 16)
+			if err != nil {
+				return fmt.Errorf("Invalid OSD Config File. Invalid Mgmt Port number for Driver : %s", d)
+			}
+		} else {
+			mgmtPort = 0
+		}
+
+		if port, ok := v[config.PluginPortKey]; ok {
+			pluginPort, err = strconv.ParseUint(port, 10, 16)
+			if err != nil {
+				return fmt.Errorf("Invalid OSD Config File. Invalid Plugin Port number for Driver : %s", d)
+			}
+		} else {
+			pluginPort = 0
+		}
+
+		if err := server.StartPluginAPI(
+			d,
+			config.DriverAPIBase,
+			config.PluginAPIBase,
+			uint16(mgmtPort),
+			uint16(pluginPort),
+		); err != nil {
 			return fmt.Errorf("Unable to start volume plugin: %v", err)
 		}
 		if d != "" && cfg.Osd.ClusterConfig.DefaultDriver == d {

@@ -17,6 +17,8 @@ const (
 	GraphDriverAPIBase        = "/var/lib/osd/graphdriver/"
 	ClusterAPIBase            = "/var/lib/osd/cluster/"
 	UrlKey                    = "url"
+	MgmtPortKey               = "mgmtPort"
+	PluginPortKey             = "pluginPort"
 	VersionKey                = "version"
 	MountBase                 = "/var/lib/osd/mounts/"
 	VolumeBase                = "/var/lib/osd/"
@@ -32,10 +34,10 @@ func init() {
 }
 
 type ClusterConfig struct {
-	ClusterId string
-	NodeId    string
-	MgtIface  string
-	DataIface string
+	ClusterId     string
+	NodeId        string
+	MgtIface      string
+	DataIface     string
 	DefaultDriver string
 }
 
