@@ -144,6 +144,9 @@ type VolumeDriverRegistry interface {
 	// New creates the VolumeDriver for the given name.
 	// If a VolumeDriver was already created for the given name, the error ErrExist is returned.
 	Register(name string, params map[string]string) error
+
+	// Add inserts a new VolumeDriver provider with a well known name.
+	Add(name string, init func(map[string]string) (VolumeDriver, error)) error
 }
 
 // VolumeDriverRegistry constructs a new VolumeDriverRegistry.

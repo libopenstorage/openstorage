@@ -59,6 +59,10 @@ func Register(name string, params map[string]string) error {
 	return volumeDriverRegistry.Register(name, params)
 }
 
+func Add(name string, init func(map[string]string) (volume.VolumeDriver, error)) error {
+	return volumeDriverRegistry.Add(name, init)
+}
+
 func Shutdown() error {
 	return volumeDriverRegistry.Shutdown()
 }
