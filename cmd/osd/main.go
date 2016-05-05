@@ -195,7 +195,13 @@ func start(c *cli.Context) error {
 			pluginPort = 0
 		}
 
-		if err := server.StartPluginAPI(d, config.DriverAPIBase, config.PluginAPIBase, uint16(mgmtPort), uint16(pluginPort)); err != nil {
+		if err := server.StartPluginAPI(
+			d,
+			config.DriverAPIBase,
+			config.PluginAPIBase,
+			uint16(mgmtPort),
+			uint16(pluginPort),
+		); err != nil {
 			return fmt.Errorf("Unable to start volume plugin: %v", err)
 		}
 		if d != "" && cfg.Osd.ClusterConfig.DefaultDriver == d {

@@ -47,7 +47,13 @@ func TestAll(t *testing.T) {
 		t.Fatalf("Failed to initialize Driver: %v", err)
 	}
 
-	server.StartPluginAPI(nfs.Name, config.DriverAPIBase, config.PluginAPIBase, 0, 0)
+	server.StartPluginAPI(
+		nfs.Name,
+		config.DriverAPIBase,
+		config.PluginAPIBase,
+		0,
+		0,
+	)
 	time.Sleep(time.Second * 2)
 	c, err := client.NewDriverClient(nfs.Name)
 	if err != nil {

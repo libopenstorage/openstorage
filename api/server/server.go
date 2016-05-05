@@ -36,15 +36,31 @@ func StartGraphAPI(name string, restBase string) error {
 
 // StartPluginAPI starts a REST server to receive volume API commands from the
 // Linux container engine and volume management commands from the CLI/UX.
-func StartPluginAPI(name string, mngmtBase, pluginBase string, mgmtPort, pluginPort uint16) error {
+func StartPluginAPI(
+	name string,
+	mngmtBase string,
+	pluginBase string,
+	mgmtPort uint16,
+	pluginPort uint16,
+) error {
 	volMngmtApi := newVolumeAPI(name)
 
-	if err := startServer(name, mngmtBase, mgmtPort, volMngmtApi.Routes()); err != nil {
+	if err := startServer(
+		name,
+		mngmtBase,
+		mgmtPort,
+		volMngmtApi.Routes(),
+	); err != nil {
 		return err
 	}
 
 	volPluginApi := newVolumePlugin(name)
-	if err := startServer(name, pluginBase, pluginPort, volPluginApi.Routes()); err != nil {
+	if err := startServer(
+		name,
+		pluginBase,
+		pluginPort,
+		volPluginApi.Routes(),
+	); err != nil {
 		return err
 	}
 
