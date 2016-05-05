@@ -4,7 +4,7 @@ import (
 	"container/list"
 	"errors"
 
-	gossiper "github.com/libopenstorage/memberlist"
+	"github.com/libopenstorage/gossiper"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/portworx/kvdb"

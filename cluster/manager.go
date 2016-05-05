@@ -13,7 +13,7 @@ import (
 
 	"go.pedge.io/dlog"
 
-	gossiper "github.com/libopenstorage/memberlist"
+	"github.com/libopenstorage/gossiper"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
 
@@ -32,9 +32,9 @@ type ClusterManager struct {
 	config       config.ClusterConfig
 	kv           kvdb.Kvdb
 	status       api.Status
-	nodeCache    map[string]api.Node   // Cached info on the nodes in the cluster.
-	nodeStatuses map[string]api.Status // Set of nodes currently marked down.
-	gossip       gossiper.GossiperImpl //FIXME (change to interface Gossiper)
+	nodeCache    map[string]api.Node    // Cached info on the nodes in the cluster.
+	nodeStatuses map[string]api.Status  // Set of nodes currently marked down.
+	gossip       *gossiper.GossiperImpl //FIXME (change to interface Gossiper)
 	gEnabled     bool
 	selfNode     api.Node
 	system       systemutils.System
@@ -334,7 +334,7 @@ func (c *ClusterManager) startHeartBeat() {
 
 	node := c.getCurrentState()
 	c.gossip.UpdateSelf(gossipStoreKey, *node)
-	c.gossip.Start()
+	//c.gossip.Start() in memberlist when we create a new node, it automatically starts
 
 	lastUpdateTs := time.Now()
 	for {
@@ -524,9 +524,8 @@ func (c *ClusterManager) Start() error {
 	// Start the gossip protocol.
 	// XXX Make the port configurable.
 	gob.Register(api.Node{})
-	c.gossip = c.gossip.New("0.0.0.0:9002", gossiper.NodeId(c.config.NodeId),
+	c.gossip = gossiper.New("0.0.0.0:9002", gossiper.NodeId(c.config.NodeId),
 		c.selfNode.GenNumber)
-	c.gossip.SetGossipInterval(2 * time.Second)
 
 	kvdb := kvdb.Instance()
 	kvlock, err := kvdb.Lock(clusterLockKey, 60)

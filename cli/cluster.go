@@ -9,7 +9,7 @@ import (
 
 	"github.com/codegangsta/cli"
 
-	gossiper "github.com/libopenstorage/memberlist"
+	"github.com/libopenstorage/gossiper"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/client"
 	"github.com/libopenstorage/openstorage/cluster"
