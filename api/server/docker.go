@@ -12,6 +12,7 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
+	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
 )
 
@@ -248,11 +249,16 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 	if v.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
 		attachPath, err := v.Attach(vol.Id)
 		if err != nil {
-			d.logRequest(method, request.Name).Warnf("Cannot attach volume: %v", err.Error())
-			d.errorResponse(w, err)
-			return
+			if err == volume.ErrVolAttachedOnRemoteNode {
+				d.logRequest(method, request.Name).Infof("Volume is attached on a remote node... will attempt to mount it.")
+			} else {
+				d.logRequest(method, request.Name).Warnf("Cannot attach volume: %v", err.Error())
+				d.errorResponse(w, err)
+				return
+			}
+		} else {
+			d.logRequest(method, request.Name).Debugf("response %v", attachPath)
 		}
-		d.logRequest(method, request.Name).Debugf("response %v", attachPath)
 	}
 
 	// Now mount it.
