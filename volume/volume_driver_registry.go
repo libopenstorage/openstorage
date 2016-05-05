@@ -31,6 +31,12 @@ func (v *volumeDriverRegistry) Get(name string) (VolumeDriver, error) {
 	return volumeDriver, nil
 }
 
+func (v *volumeDriverRegistry) Add(name string, init func(map[string]string) (VolumeDriver, error)) error {
+	v.nameToInitFunc[name] = init
+
+	return nil
+}
+
 func (v *volumeDriverRegistry) Register(name string, params map[string]string) error {
 	initFunc, ok := v.nameToInitFunc[name]
 	if !ok {
