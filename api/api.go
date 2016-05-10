@@ -49,6 +49,7 @@ type Node struct {
 	MgmtIp    string
 	DataIp    string
 	Timestamp time.Time
+	StartTime time.Time
 	NodeData  map[string]interface{}
 }
 

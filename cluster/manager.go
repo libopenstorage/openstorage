@@ -217,9 +217,14 @@ func (c *ClusterManager) initNode(db *Database) (*api.Node, bool) {
 	_, exists := db.NodeEntries[c.selfNode.Id]
 
 	// Add us into the database.
-	db.NodeEntries[c.config.NodeId] = NodeEntry{Id: c.selfNode.Id,
-		MgmtIp: c.selfNode.MgmtIp, DataIp: c.selfNode.DataIp,
-		GenNumber: c.selfNode.GenNumber}
+	db.NodeEntries[c.config.NodeId] = NodeEntry{
+		Id:        c.selfNode.Id,
+		MgmtIp:    c.selfNode.MgmtIp,
+		DataIp:    c.selfNode.DataIp,
+		GenNumber: c.selfNode.GenNumber,
+		StartTime: c.selfNode.StartTime,
+		MemTotal:  c.selfNode.MemTotal,
+	}
 
 	dlog.Infof("Node %s joining cluster...", c.config.NodeId)
 	dlog.Infof("Cluster ID: %s", c.config.ClusterId)
@@ -513,6 +518,7 @@ func (c *ClusterManager) Start() error {
 	c.selfNode.Id = c.config.NodeId
 	c.selfNode.Status = api.Status_STATUS_OK
 	c.selfNode.MgmtIp, c.selfNode.DataIp, err = ExternalIp(&c.config)
+	c.selfNode.StartTime = time.Now()
 	if err != nil {
 		dlog.Errorln("Failed to get external IP address for "+
 			"mgt/data interfaces: %s, mgt '%s', data '%s'",
@@ -543,6 +549,8 @@ func (c *ClusterManager) Start() error {
 
 	// Cluster database max size... 0 if unlimited.
 	c.size = db.Size
+	// Set the clusterID in db
+	db.Id = c.config.ClusterId
 
 	if db.Status == api.Status_STATUS_INIT {
 		dlog.Infoln("Will initialize a new cluster.")

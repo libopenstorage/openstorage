@@ -3,6 +3,7 @@ package cluster
 import (
 	"container/list"
 	"errors"
+	"time"
 
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
@@ -24,6 +25,8 @@ type NodeEntry struct {
 	MgmtIp    string
 	DataIp    string
 	GenNumber uint64
+	StartTime time.Time
+	MemTotal uint64
 }
 
 type Database struct {
