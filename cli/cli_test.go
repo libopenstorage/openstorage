@@ -23,7 +23,8 @@ func TestCmdMarshalProto(t *testing.T) {
  "ha_level": "0",
  "cos": 0,
  "dedupe": false,
- "snapshot_interval": 0
+ "snapshot_interval": 0,
+ "shared": false
 }`,
 		data,
 	)
