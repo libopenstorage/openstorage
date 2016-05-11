@@ -178,8 +178,6 @@ message VolumeSpec {
   uint32 snapshot_interval = 8;
   // Volume configuration labels
   map<string, string> volume_labels = 9;
-  // Indicates if this volume is part of a shared namespace.
-  bool shared = 10;
 }
 
 // Volume represents a live, created volume.
