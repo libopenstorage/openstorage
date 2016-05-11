@@ -271,7 +271,7 @@ func (m *Mounter) Unmount(device, path string) error {
 			p.ref--
 			// Unmount only if refcnt is 0
 			if p.ref == 0 {
-				err := m.mountImpl.Unmount(path, 0)
+				err := m.mountImpl.Unmount(path, syscall.MNT_DETACH)
 				if err != nil {
 					p.ref++
 					return err
