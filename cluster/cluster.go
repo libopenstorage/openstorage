@@ -26,7 +26,8 @@ type NodeEntry struct {
 	DataIp    string
 	GenNumber uint64
 	StartTime time.Time
-	MemTotal uint64
+	MemTotal  uint64
+	Hostname  string
 }
 
 type Database struct {

@@ -50,6 +50,7 @@ type Node struct {
 	DataIp    string
 	Timestamp time.Time
 	StartTime time.Time
+	Hostname  string
 	NodeData  map[string]interface{}
 }
 

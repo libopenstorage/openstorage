@@ -224,6 +224,7 @@ func (c *ClusterManager) initNode(db *Database) (*api.Node, bool) {
 		GenNumber: c.selfNode.GenNumber,
 		StartTime: c.selfNode.StartTime,
 		MemTotal:  c.selfNode.MemTotal,
+		Hostname:  c.selfNode.Hostname,
 	}
 
 	dlog.Infof("Node %s joining cluster...", c.config.NodeId)
@@ -519,6 +520,7 @@ func (c *ClusterManager) Start() error {
 	c.selfNode.Status = api.Status_STATUS_OK
 	c.selfNode.MgmtIp, c.selfNode.DataIp, err = ExternalIp(&c.config)
 	c.selfNode.StartTime = time.Now()
+	c.selfNode.Hostname, _ = os.Hostname()
 	if err != nil {
 		dlog.Errorln("Failed to get external IP address for "+
 			"mgt/data interfaces: %s, mgt '%s', data '%s'",
