@@ -52,6 +52,8 @@ type Node struct {
 	StartTime time.Time
 	Hostname  string
 	NodeData  map[string]interface{}
+	// User defined labels for node. Key Value pairs
+	NodeLabels map[string]string
 }
 
 // Cluster represents the state of the cluster.

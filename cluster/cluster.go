@@ -28,6 +28,7 @@ type NodeEntry struct {
 	StartTime time.Time
 	MemTotal  uint64
 	Hostname  string
+	NodeLabels map[string]string
 }
 
 type Database struct {
