@@ -322,19 +322,19 @@ func (d *driver) Shutdown() {
 	syscall.Unmount(BuseMountPath, 0)
 }
 
-func (d *driver) ClusterInit(self *api.Node, db *cluster.Database) error {
+func (d *driver) ClusterInit(self *api.Node, initState *cluster.ClusterInitState) error {
 	return nil
 }
 
-func (d *driver) Init(self *api.Node, db *cluster.Database) error {
+func (d *driver) Init(self *api.Node, initState *cluster.ClusterInitState) error {
 	return nil
 }
 
-func (d *driver) CleanupInit(self *api.Node, db *cluster.Database) error {
+func (d *driver) CleanupInit(self *api.Node, db *cluster.ClusterInfo) error {
 	return nil
 }
 
-func (d *driver) Join(self *api.Node, db *cluster.Database) error {
+func (d *driver) Join(self *api.Node, initState *cluster.ClusterInitState) error {
 	return nil
 }
 
@@ -354,6 +354,6 @@ func (d *driver) Leave(self *api.Node) error {
 	return nil
 }
 
-func (d *driver) Halt(self *api.Node, db *cluster.Database) error {
+func (d *driver) Halt(self *api.Node, db *cluster.ClusterInfo) error {
 	return nil
 }

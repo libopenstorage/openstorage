@@ -15,10 +15,46 @@ const (
 	ClusterDBKey = "cluster/database"
 )
 
-func readDatabase() (Database, error) {
+func snapAndReadClusterInfo() (*ClusterInitState, error) {
 	kvdb := kvdb.Instance()
 
-	db := Database{
+	snap, version, err := kvdb.Snapshot("")
+	if err != nil {
+		return nil, err
+	}
+
+	kv, err := snap.Get(ClusterDBKey)
+	if err != nil && !strings.Contains(err.Error(), "Key not found") {
+		dlog.Warnln("Warning, could not read cluster database")
+		return nil, err
+	}
+
+	db := ClusterInfo{
+		Status:      api.Status_STATUS_INIT,
+		NodeEntries: make(map[string]NodeEntry),
+	}
+	state := &ClusterInitState{
+		ClusterInfo: &db,
+		InitDb:      snap,
+		Version:     version,
+	}
+
+	if kv == nil || bytes.Compare(kv.Value, []byte("{}")) == 0 {
+		dlog.Infoln("Cluster is uninitialized...")
+		return state, nil
+	}
+	if err := json.Unmarshal(kv.Value, &db); err != nil {
+		dlog.Warnln("Fatal, Could not parse cluster database ", kv)
+		return state, err
+	}
+
+	return state, nil
+}
+
+func readClusterInfo() (ClusterInfo, error) {
+	kvdb := kvdb.Instance()
+
+	db := ClusterInfo{
 		Status:      api.Status_STATUS_INIT,
 		NodeEntries: make(map[string]NodeEntry),
 	}
@@ -41,7 +77,7 @@ func readDatabase() (Database, error) {
 	return db, nil
 }
 
-func writeDatabase(db *Database) error {
+func writeClusterInfo(db *ClusterInfo) error {
 	kvdb := kvdb.Instance()
 	b, err := json.Marshal(db)
 	if err != nil {

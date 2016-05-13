@@ -21,21 +21,28 @@ var (
 // NodeEntry is used to discover other nodes in the cluster
 // and setup the gossip protocol with them.
 type NodeEntry struct {
-	Id        string
-	MgmtIp    string
-	DataIp    string
-	GenNumber uint64
-	StartTime time.Time
-	MemTotal  uint64
-	Hostname  string
+	Id         string
+	MgmtIp     string
+	DataIp     string
+	GenNumber  uint64
+	StartTime  time.Time
+	MemTotal   uint64
+	Hostname   string
 	NodeLabels map[string]string
 }
 
-type Database struct {
+type ClusterInfo struct {
 	Size        int
 	Status      api.Status
 	Id          string
 	NodeEntries map[string]NodeEntry
+}
+
+// ClusterInitState is the snapshot state which should be used to initialize
+type ClusterInitState struct {
+	ClusterInfo *ClusterInfo
+	InitDb      kvdb.Kvdb
+	Version     uint64
 }
 
 // ClusterListener is an interface to be implemented by a storage driver
@@ -47,19 +54,19 @@ type ClusterListener interface {
 	String() string
 
 	// ClusterInit is called when a brand new cluster is initialized.
-	ClusterInit(self *api.Node, db *Database) error
+	ClusterInit(self *api.Node, state *ClusterInitState) error
 
 	// Init is called when this node is joining an existing cluster for the first time.
-	Init(self *api.Node, db *Database) error
+	Init(self *api.Node, state *ClusterInitState) error
 
 	// CleanupInit is called when Init failed.
-	CleanupInit(self *api.Node, db *Database) error
+	CleanupInit(self *api.Node, clusterInfo *ClusterInfo) error
 
 	// Shutdown is called when a node is gracefully shutting down.
-	Halt(self *api.Node, db *Database) error
+	Halt(self *api.Node, clusterInfo *ClusterInfo) error
 
 	// Join is called when this node is joining an existing cluster.
-	Join(self *api.Node, db *Database) error
+	Join(self *api.Node, state *ClusterInitState) error
 
 	// Add is called when a new node joins the cluster.
 	Add(node *api.Node) error

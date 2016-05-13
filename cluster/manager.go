@@ -177,7 +177,7 @@ func (c *ClusterManager) getCurrentState() *api.Node {
 func (c *ClusterManager) watchDB(key string, opaque interface{},
 	kvp *kvdb.KVPair, err error) error {
 
-	db, err := readDatabase()
+	db, err := readClusterInfo()
 	if err != nil {
 		dlog.Warnln("Failed to read database after update ", err)
 		return nil
@@ -196,7 +196,7 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 }
 
 func (c *ClusterManager) getLatestNodeConfig(nodeId string) *NodeEntry {
-	db, err := readDatabase()
+	db, err := readClusterInfo()
 	if err != nil {
 		dlog.Warnln("Failed to read the database for updating config")
 		return nil
@@ -211,7 +211,7 @@ func (c *ClusterManager) getLatestNodeConfig(nodeId string) *NodeEntry {
 	return &ne
 }
 
-func (c *ClusterManager) initNode(db *Database) (*api.Node, bool) {
+func (c *ClusterManager) initNode(db *ClusterInfo) (*api.Node, bool) {
 	c.nodeCache[c.selfNode.Id] = *c.getCurrentState()
 
 	_, exists := db.NodeEntries[c.selfNode.Id]
@@ -235,7 +235,7 @@ func (c *ClusterManager) initNode(db *Database) (*api.Node, bool) {
 	return &c.selfNode, exists
 }
 
-func (c *ClusterManager) cleanupInit(db *Database, self *api.Node) error {
+func (c *ClusterManager) cleanupInit(db *ClusterInfo, self *api.Node) error {
 	var resErr error
 	var err error
 
@@ -258,8 +258,10 @@ func (c *ClusterManager) cleanupInit(db *Database, self *api.Node) error {
 }
 
 // Initialize node and alert listeners that we are joining the cluster.
-func (c *ClusterManager) joinCluster(db *Database, self *api.Node, exist bool) error {
+func (c *ClusterManager) joinCluster(initState *ClusterInitState,
+	self *api.Node, exist bool) error {
 	var err error
+	var newInitState *ClusterInitState
 
 	// If I am already in the cluster map, don't add me again.
 	if exist {
@@ -268,33 +270,38 @@ func (c *ClusterManager) joinCluster(db *Database, self *api.Node, exist bool) e
 
 	// Alert all listeners that we are a new node joining an existing cluster.
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		err = e.Value.(ClusterListener).Init(self, db)
+		err = e.Value.(ClusterListener).Init(self, initState)
 		if err != nil {
 			self.Status = api.Status_STATUS_ERROR
 			dlog.Warnf("Failed to initialize Init %s: %v",
 				e.Value.(ClusterListener).String(), err)
-			c.cleanupInit(db, self)
+			c.cleanupInit(initState.ClusterInfo, self)
 			goto done
 		}
 	}
 
+	// Listeners may update initial state, so snap again
+	newInitState, err = snapAndReadClusterInfo()
+	initState.InitDb = newInitState.InitDb
+	initState.Version = newInitState.Version
+
 found:
 	// Alert all listeners that we are joining the cluster.
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		err = e.Value.(ClusterListener).Join(self, db)
+		err = e.Value.(ClusterListener).Join(self, initState)
 		if err != nil {
 			self.Status = api.Status_STATUS_ERROR
 			dlog.Warnf("Failed to initialize Join %s: %v",
 				e.Value.(ClusterListener).String(), err)
 
 			if exist == false {
-				c.cleanupInit(db, self)
+				c.cleanupInit(initState.ClusterInfo, self)
 			}
 			goto done
 		}
 	}
 
-	for id, n := range db.NodeEntries {
+	for id, n := range initState.ClusterInfo.NodeEntries {
 		if id != c.config.NodeId {
 			// Check to see if the IP is the same.  If it is, then we have a stale entry.
 			if n.MgmtIp == self.MgmtIp {
@@ -312,12 +319,13 @@ done:
 	return err
 }
 
-func (c *ClusterManager) initCluster(db *Database, self *api.Node, exist bool) error {
+func (c *ClusterManager) initCluster(initState *ClusterInitState,
+	self *api.Node, exist bool) error {
 	err := error(nil)
 
 	// Alert all listeners that we are initializing a new cluster.
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		err = e.Value.(ClusterListener).ClusterInit(self, db)
+		err = e.Value.(ClusterListener).ClusterInit(self, initState)
 		if err != nil {
 			self.Status = api.Status_STATUS_ERROR
 			dlog.Printf("Failed to initialize %s",
@@ -326,7 +334,7 @@ func (c *ClusterManager) initCluster(db *Database, self *api.Node, exist bool) e
 		}
 	}
 
-	err = c.joinCluster(db, self, exist)
+	err = c.joinCluster(initState, self, exist)
 	if err != nil {
 		dlog.Printf("Failed to join new cluster")
 		goto done
@@ -544,49 +552,49 @@ func (c *ClusterManager) Start() error {
 	}
 	defer kvdb.Unlock(kvlock)
 
-	db, err := readDatabase()
+	initState, err := snapAndReadClusterInfo()
 	if err != nil {
 		dlog.Panicln(err)
 	}
 
 	// Cluster database max size... 0 if unlimited.
-	c.size = db.Size
+	c.size = initState.ClusterInfo.Size
 	// Set the clusterID in db
-	db.Id = c.config.ClusterId
+	initState.ClusterInfo.Id = c.config.ClusterId
 
-	if db.Status == api.Status_STATUS_INIT {
+	if initState.ClusterInfo.Status == api.Status_STATUS_INIT {
 		dlog.Infoln("Will initialize a new cluster.")
 
 		c.status = api.Status_STATUS_OK
-		db.Status = api.Status_STATUS_OK
-		self, _ := c.initNode(&db)
+		initState.ClusterInfo.Status = api.Status_STATUS_OK
+		self, _ := c.initNode(initState.ClusterInfo)
 
-		err = c.initCluster(&db, self, false)
+		err = c.initCluster(initState, self, false)
 		if err != nil {
 			dlog.Errorln("Failed to initialize the cluster.", err)
 			return err
 		}
 
-		// Update the new state of the cluster in the KV Database
-		err := writeDatabase(&db)
+		// Update the new state of the cluster in the KV database
+		err := writeClusterInfo(initState.ClusterInfo)
 		if err != nil {
 			dlog.Errorln("Failed to save the database.", err)
 			return err
 		}
 
-	} else if db.Status&api.Status_STATUS_OK > 0 {
+	} else if initState.ClusterInfo.Status&api.Status_STATUS_OK > 0 {
 		dlog.Infoln("Cluster state is OK... Joining the cluster.")
 
 		c.status = api.Status_STATUS_OK
-		self, exist := c.initNode(&db)
+		self, exist := c.initNode(initState.ClusterInfo)
 
-		err = c.joinCluster(&db, self, exist)
+		err = c.joinCluster(initState, self, exist)
 		if err != nil {
 			dlog.Errorln("Failed to join cluster.", err)
 			return err
 		}
 
-		err := writeDatabase(&db)
+		err := writeClusterInfo(initState.ClusterInfo)
 		if err != nil {
 			return err
 		}
@@ -628,14 +636,14 @@ func (c *ClusterManager) SetSize(size int) error {
 	}
 	defer kvdb.Unlock(kvlock)
 
-	db, err := readDatabase()
+	db, err := readClusterInfo()
 	if err != nil {
 		return err
 	}
 
 	db.Size = size
 
-	err = writeDatabase(&db)
+	err = writeClusterInfo(&db)
 
 	return err
 }
@@ -648,7 +656,7 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 
 // Shutdown can be called when THIS node is gracefully shutting down.
 func (c *ClusterManager) Shutdown() error {
-	db, err := readDatabase()
+	db, err := readClusterInfo()
 	if err != nil {
 		dlog.Warnf("Could not read cluster database (%v).", err)
 		return err
