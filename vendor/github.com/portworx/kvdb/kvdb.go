@@ -4,10 +4,27 @@ import (
 	"errors"
 )
 
-// WatchCB is called when a watched key or tree is modified. If the callback
-// returns an error, then watch stops and the cb is called one last time
-// with ErrWatchStopped.
-type WatchCB func(prefix string, opaque interface{}, kvp *KVPair, err error) error
+const (
+	// KVSet signifies the KV was modified.
+	KVSet KVAction = 1 << iota
+	// KVCreate set if the KV pair was created.
+	KVCreate
+	// KVGet set when the key is fetched from the KV store
+	KVGet
+	// KVDelete set when the key is deleted from the KV store
+	KVDelete
+	// KVUknown operation on KV pair
+	KVUknown
+
+	// KVPrevExists flag to check key already exists
+	KVPrevExists KVFlags = 1 << iota
+	// KVCreatedIndex flag compares with passed in index (possibly in KVPair)
+	KVCreatedIndex
+	// KVModifiedIndex flag compares with passed in index (possibly in KVPair)
+	KVModifiedIndex
+	// KVTTL uses TTL val from KVPair.
+	KVTTL
+)
 
 var (
 	// ErrNotSupported implemenation of a specific function is not supported.
@@ -30,21 +47,16 @@ var (
 // from the results of  a Watch.
 type KVAction int
 
-const (
-	// KVSet signifies the KV was modified.
-	KVSet KVAction = 1 << iota
-	// KVCreate set if the KV pair was created.
-	KVCreate
-	// KVGet set when the key is fetched from the KV store
-	KVGet
-	// KVDelete set when the key is deleted from the KV store
-	KVDelete
-	// KVUknown operation on KV pair
-	KVUknown
-)
+// KVFlags options for operations on KVDB
+type KVFlags uint64
 
-// KVPairs list of KVPairs
-type KVPairs []*KVPair
+// WatchCB is called when a watched key or tree is modified. If the callback
+// returns an error, then watch stops and the cb is called one last time
+// with ErrWatchStopped.
+type WatchCB func(prefix string, opaque interface{}, kvp *KVPair, err error) error
+
+// DatastoreInit is called to activate a backend KV store.
+type DatastoreInit func(domain string, machines []string, options map[string]string) (Kvdb, error)
 
 // KVPair represents the results of an operation on KVDB.
 type KVPair struct {
@@ -66,19 +78,8 @@ type KVPair struct {
 	Lock interface{}
 }
 
-// KVFlags options for operations on KVDB
-type KVFlags uint64
-
-const (
-	// KVPrevExists flag to check key already exists
-	KVPrevExists KVFlags = 1 << iota
-	// KVCreatedIndex flag compares with passed in index (possibly in KVPair)
-	KVCreatedIndex
-	// KVModifiedIndex flag compares with passed in index (possibly in KVPair)
-	KVModifiedIndex
-	// KVTTL uses TTL val from KVPair.
-	KVTTL
-)
+// KVPairs list of KVPairs
+type KVPairs []*KVPair
 
 // Tx Interface to transactionally apply updates to a set of keys.
 type Tx interface {
@@ -146,4 +147,6 @@ type Kvdb interface {
 	Unlock(kvp *KVPair) error
 	// TxNew returns a new Tx coordinator object or ErrNotSupported
 	TxNew() (Tx, error)
+	// Snapshot returns a kvdb snapshot and its version.
+	Snapshot(prefix string) (Kvdb, uint64, error)
 }

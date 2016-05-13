@@ -556,32 +556,34 @@
 			"revisionTime": "2016-01-10T10:55:54Z"
 		},
 		{
-			"checksumSHA1": "nXOOAvYogCYNl6v2sxIH39ZSvUM=",
-			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/portworx/kvdb",
+			"checksumSHA1": "BuJOaXANJs56EibzXh2c2aqy2pk=",
 			"path": "github.com/portworx/kvdb",
-			"revision": "dde6ca0716cf08f73e4b8f2baf4af8910e03f337",
-			"revisionTime": "2016-04-26T09:52:31+01:00"
+			"revision": "dd876290baa1c4b216f08c033246cbe56677b65c",
+			"revisionTime": "2016-05-12T15:28:35-04:00"
 		},
 		{
-			"checksumSHA1": "VqrtAthHzmqBamt6GvYMJnzAf4E=",
-			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/portworx/kvdb/consul",
+			"checksumSHA1": "NdrvQf96pNxXaXyTYGxwxZ0yAX4=",
+			"path": "github.com/portworx/kvdb/common",
+			"revision": "dd876290baa1c4b216f08c033246cbe56677b65c",
+			"revisionTime": "2016-05-12T15:28:35-04:00"
+		},
+		{
+			"checksumSHA1": "YLUt+7GMNsO7IFHmsNba+7/JEOk=",
 			"path": "github.com/portworx/kvdb/consul",
-			"revision": "dde6ca0716cf08f73e4b8f2baf4af8910e03f337",
-			"revisionTime": "2016-04-26T09:52:31+01:00"
+			"revision": "dd876290baa1c4b216f08c033246cbe56677b65c",
+			"revisionTime": "2016-05-12T15:28:35-04:00"
 		},
 		{
-			"checksumSHA1": "BxwK0x/U8t8UsPsGIQdzJq5qWHg=",
-			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/portworx/kvdb/etcd",
+			"checksumSHA1": "Dj9RmpJ0qKklrQ43hMAxGvP9H8A=",
 			"path": "github.com/portworx/kvdb/etcd",
-			"revision": "dde6ca0716cf08f73e4b8f2baf4af8910e03f337",
-			"revisionTime": "2016-04-26T09:52:31+01:00"
+			"revision": "dd876290baa1c4b216f08c033246cbe56677b65c",
+			"revisionTime": "2016-05-12T15:28:35-04:00"
 		},
 		{
-			"checksumSHA1": "lWM17KOOJ4n0zg6qgM22D0F8Vj0=",
-			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/portworx/kvdb/mem",
+			"checksumSHA1": "O4rOrPHLHePwfpGF9ajchTKE70Q=",
 			"path": "github.com/portworx/kvdb/mem",
-			"revision": "dde6ca0716cf08f73e4b8f2baf4af8910e03f337",
-			"revisionTime": "2016-04-26T09:52:31+01:00"
+			"revision": "dd876290baa1c4b216f08c033246cbe56677b65c",
+			"revisionTime": "2016-05-12T15:28:35-04:00"
 		},
 		{
 			"checksumSHA1": "cKNzpMpci3WUAzXpe+tVnBv2cjE=",

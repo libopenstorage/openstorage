@@ -4,24 +4,42 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"math/rand"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/Sirupsen/logrus"
 
 	"golang.org/x/net/context"
 
 	e "github.com/coreos/etcd/client"
 	"github.com/portworx/kvdb"
+	"github.com/portworx/kvdb/common"
+	"github.com/portworx/kvdb/mem"
 )
 
 const (
-	Name                          = "etcd-kv"
-	defHost                       = "http://127.0.0.1:4001"
+	// Name is the name of this kvdb implementation.
+	Name = "etcd-kv"
+
 	defaultRetryCount             = 60
 	defaultIntervalBetweenRetries = time.Millisecond * 500
+	bootstrap                     = "kvdb/bootstrap"
 )
 
-type EtcdKV struct {
+var (
+	defaultMachines = []string{"http://127.0.0.1:4001"}
+)
+
+func init() {
+	if err := kvdb.Register(Name, New); err != nil {
+		panic(err.Error())
+	}
+}
+
+type etcdKV struct {
 	client e.KeysAPI
 	domain string
 }
@@ -33,13 +51,14 @@ type etcdLock struct {
 	sync.Mutex
 }
 
-func EtcdInit(domain string,
+// New constructs a new kvdb.Kvdb.
+func New(
+	domain string,
 	machines []string,
 	options map[string]string,
 ) (kvdb.Kvdb, error) {
-
 	if len(machines) == 0 {
-		machines = []string{defHost}
+		machines = defaultMachines
 	}
 	cfg := e.Config{
 		Endpoints: machines,
@@ -54,180 +73,40 @@ func EtcdInit(domain string,
 	if domain != "" && !strings.HasSuffix(domain, "/") {
 		domain = domain + "/"
 	}
-	kvapi := e.NewKeysAPI(c)
-	kv := &EtcdKV{
-		client: kvapi,
-		domain: domain,
-	}
-	return kv, nil
+	return &etcdKV{
+		e.NewKeysAPI(c),
+		domain,
+	}, nil
 }
 
-func (kv *EtcdKV) String() string {
+func (kv *etcdKV) String() string {
 	return Name
 }
 
-func (kv *EtcdKV) nodeToKv(node *e.Node) *kvdb.KVPair {
-
-	kvp := &kvdb.KVPair{
-		Value:         []byte(node.Value),
-		TTL:           node.TTL,
-		ModifiedIndex: node.ModifiedIndex,
-		CreatedIndex:  node.CreatedIndex,
-	}
-
-	// Strip out the leading '/'
-	if len(node.Key) != 0 {
-		kvp.Key = node.Key[1:]
-	} else {
-		kvp.Key = node.Key
-	}
-	kvp.Key = strings.TrimPrefix(kvp.Key, kv.domain)
-	return kvp
-}
-
-func (kv *EtcdKV) resultToKv(result *e.Response) *kvdb.KVPair {
-
-	kvp := kv.nodeToKv(result.Node)
-	switch result.Action {
-	case "create":
-		kvp.Action = kvdb.KVCreate
-	case "set", "update":
-		kvp.Action = kvdb.KVSet
-	case "delete":
-		kvp.Action = kvdb.KVDelete
-	case "get":
-		kvp.Action = kvdb.KVGet
-	default:
-		kvp.Action = kvdb.KVUknown
-	}
-	kvp.KVDBIndex = result.Index
-	return kvp
-}
-
-func (kv *EtcdKV) resultToKvs(result *e.Response) kvdb.KVPairs {
-
-	kvs := make([]*kvdb.KVPair, len(result.Node.Nodes))
-	for i := range result.Node.Nodes {
-		kvs[i] = kv.nodeToKv(result.Node.Nodes[i])
-		kvs[i].KVDBIndex = result.Index
-	}
-	return kvs
-}
-
-func (kv *EtcdKV) get(key string, recursive, sort bool) (*kvdb.KVPair, error) {
-	var err error
-	var result *e.Response
-	for i := 0; i < defaultRetryCount; i++ {
-		result, err = kv.client.Get(context.Background(), key, &e.GetOptions{
-			Recursive: recursive,
-			Sort:      sort,
-		})
-		if err == nil {
-			return kv.resultToKv(result), nil
-		}
-
-		switch err.(type) {
-		case *e.ClusterError:
-			fmt.Printf("kvdb get error: %v, retry count: %v\n", err, i)
-			time.Sleep(defaultIntervalBetweenRetries)
-		default:
-			etcdErr := err.(e.Error)
-			if etcdErr.Code == e.ErrorCodeKeyNotFound {
-				return nil, kvdb.ErrNotFound
-			}
-			return nil, err
-		}
-	}
-	return nil, err
-}
-
-func (kv *EtcdKV) Get(key string) (*kvdb.KVPair, error) {
+func (kv *etcdKV) Get(key string) (*kvdb.KVPair, error) {
 	key = kv.domain + key
 	return kv.get(key, false, false)
 }
 
-func (kv *EtcdKV) GetVal(key string, val interface{}) (*kvdb.KVPair, error) {
+func (kv *etcdKV) GetVal(key string, val interface{}) (*kvdb.KVPair, error) {
 	kvp, err := kv.Get(key)
 	if err != nil {
 		return nil, err
 	}
-	err = json.Unmarshal(kvp.Value, val)
-	if err != nil {
+	if err := json.Unmarshal(kvp.Value, val); err != nil {
 		return kvp, kvdb.ErrUnmarshal
-	} else {
-		return kvp, nil
 	}
+	return kvp, nil
 }
 
-func (kv *EtcdKV) toBytes(val interface{}) ([]byte, error) {
-	var (
-		b   []byte
-		err error
-	)
-
-	switch val.(type) {
-	case string:
-		b = []byte(val.(string))
-	case []byte:
-		b = val.([]byte)
-	default:
-		b, err = json.Marshal(val)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return b, nil
-}
-
-func (kv *EtcdKV) setWithRetry(ctx context.Context, key, value string,
-	opts *e.SetOptions) (*kvdb.KVPair, error) {
-	var (
-		err    error
-		i      int
-		result *e.Response
-	)
-	for i = 0; i < defaultRetryCount; i++ {
-		result, err = kv.client.Set(ctx, key, value, opts)
-		if err == nil {
-			return kv.resultToKv(result), nil
-		}
-		switch err.(type) {
-		case *e.ClusterError:
-			cerr := err.(*e.ClusterError)
-			fmt.Printf("kvdb set error: %v %v, retry count: %v\n",
-				err, cerr.Detail(), i)
-			time.Sleep(defaultIntervalBetweenRetries)
-		default:
-			goto out
-		}
-	}
-
-out:
-	// It's possible that update succeeded but the re-update failed.
-	if i > 0 && i < defaultRetryCount && err != nil {
-		kvp, err := kv.get(key, false, false)
-		if err == nil && bytes.Equal(kvp.Value, []byte(value)) {
-			if opts.PrevExist == e.PrevNoExist {
-				kvp.Action = kvdb.KVCreate
-			} else {
-				kvp.Action = kvdb.KVSet
-			}
-			return kvp, nil
-		}
-	}
-
-	return nil, err
-}
-
-func (kv *EtcdKV) Put(
+func (kv *etcdKV) Put(
 	key string,
 	val interface{},
 	ttl uint64,
 ) (*kvdb.KVPair, error) {
 
 	key = kv.domain + key
-	b, err := kv.toBytes(val)
+	b, err := common.ToBytes(val)
 	if err != nil {
 		return nil, err
 	}
@@ -240,7 +119,7 @@ func (kv *EtcdKV) Put(
 		})
 }
 
-func (kv *EtcdKV) Create(
+func (kv *etcdKV) Create(
 	key string,
 	val interface{},
 	ttl uint64,
@@ -248,7 +127,7 @@ func (kv *EtcdKV) Create(
 
 	key = kv.domain + key
 
-	b, err := kv.toBytes(val)
+	b, err := common.ToBytes(val)
 	if err != nil {
 		return nil, err
 	}
@@ -258,7 +137,7 @@ func (kv *EtcdKV) Create(
 	})
 }
 
-func (kv *EtcdKV) Update(
+func (kv *etcdKV) Update(
 	key string,
 	val interface{},
 	ttl uint64,
@@ -266,7 +145,7 @@ func (kv *EtcdKV) Update(
 
 	key = kv.domain + key
 
-	b, err := kv.toBytes(val)
+	b, err := common.ToBytes(val)
 	if err != nil {
 		return nil, err
 	}
@@ -276,7 +155,7 @@ func (kv *EtcdKV) Update(
 	})
 }
 
-func (kv *EtcdKV) Enumerate(prefix string) (kvdb.KVPairs, error) {
+func (kv *etcdKV) Enumerate(prefix string) (kvdb.KVPairs, error) {
 	prefix = kv.domain + prefix
 	var err error
 	for i := 0; i < defaultRetryCount; i++ {
@@ -289,7 +168,7 @@ func (kv *EtcdKV) Enumerate(prefix string) (kvdb.KVPairs, error) {
 		}
 		switch err.(type) {
 		case *e.ClusterError:
-			fmt.Printf("kvdb set error: %v, retry count: %v\n", err, i)
+			logrus.Errorf("kvdb set error: %v, retry count: %v\n", err, i)
 			time.Sleep(defaultIntervalBetweenRetries)
 		default:
 			return nil, err
@@ -298,7 +177,7 @@ func (kv *EtcdKV) Enumerate(prefix string) (kvdb.KVPairs, error) {
 	return nil, err
 }
 
-func (kv *EtcdKV) Delete(key string) (*kvdb.KVPair, error) {
+func (kv *etcdKV) Delete(key string) (*kvdb.KVPair, error) {
 	key = kv.domain + key
 
 	result, err := kv.client.Delete(context.Background(), key, &e.DeleteOptions{
@@ -310,7 +189,7 @@ func (kv *EtcdKV) Delete(key string) (*kvdb.KVPair, error) {
 	return nil, err
 }
 
-func (kv *EtcdKV) DeleteTree(prefix string) error {
+func (kv *etcdKV) DeleteTree(prefix string) error {
 	prefix = kv.domain + prefix
 
 	_, err := kv.client.Delete(context.Background(), prefix, &e.DeleteOptions{
@@ -319,11 +198,11 @@ func (kv *EtcdKV) DeleteTree(prefix string) error {
 	return err
 }
 
-func (kv *EtcdKV) Keys(prefix, key string) ([]string, error) {
+func (kv *etcdKV) Keys(prefix, key string) ([]string, error) {
 	return nil, kvdb.ErrNotSupported
 }
 
-func (kv *EtcdKV) CompareAndSet(
+func (kv *etcdKV) CompareAndSet(
 	kvp *kvdb.KVPair,
 	flags kvdb.KVFlags,
 	prevValue []byte,
@@ -350,7 +229,7 @@ func (kv *EtcdKV) CompareAndSet(
 	return kv.resultToKv(result), err
 }
 
-func (kv *EtcdKV) CompareAndDelete(
+func (kv *etcdKV) CompareAndDelete(
 	kvp *kvdb.KVPair,
 	flags kvdb.KVFlags,
 ) (*kvdb.KVPair, error) {
@@ -368,7 +247,7 @@ func (kv *EtcdKV) CompareAndDelete(
 	return kv.resultToKv(result), err
 }
 
-func (kv *EtcdKV) WatchKey(
+func (kv *etcdKV) WatchKey(
 	key string,
 	waitIndex uint64,
 	opaque interface{},
@@ -380,7 +259,7 @@ func (kv *EtcdKV) WatchKey(
 	return nil
 }
 
-func (kv *EtcdKV) WatchTree(
+func (kv *etcdKV) WatchTree(
 	prefix string,
 	waitIndex uint64,
 	opaque interface{},
@@ -392,7 +271,7 @@ func (kv *EtcdKV) WatchTree(
 	return nil
 }
 
-func (kv *EtcdKV) Lock(key string, ttl uint64) (*kvdb.KVPair, error) {
+func (kv *etcdKV) Lock(key string, ttl uint64) (*kvdb.KVPair, error) {
 	key = kv.domain + key
 	duration := time.Second
 
@@ -406,7 +285,7 @@ func (kv *EtcdKV) Lock(key string, ttl uint64) (*kvdb.KVPair, error) {
 		return nil, err
 	}
 	if count > 10 {
-		fmt.Printf("ETCD: spent %v iterations locking %v\n", count, key)
+		logrus.Warnf("ETCD: spent %v iterations locking %v\n", count, key)
 	}
 	kvPair.TTL = int64(time.Duration(ttl) * time.Second)
 	kvPair.Lock = &etcdLock{done: make(chan struct{})}
@@ -415,8 +294,141 @@ func (kv *EtcdKV) Lock(key string, ttl uint64) (*kvdb.KVPair, error) {
 	return kvPair, err
 }
 
-func (kv *EtcdKV) refreshLock(kvPair *kvdb.KVPair) {
+func (kv *etcdKV) Unlock(kvp *kvdb.KVPair) error {
+	l, ok := kvp.Lock.(*etcdLock)
+	if !ok {
+		return fmt.Errorf("Invalid lock structure for key %v", string(kvp.Key))
+	}
+	l.Lock()
+	// Don't modify kvp here, CompareAndDelete does that.
+	_, err := kv.CompareAndDelete(kvp, kvdb.KVFlags(0))
+	if err == nil {
+		l.unlocked = true
+		l.Unlock()
+		l.done <- struct{}{}
+		return nil
+	}
+	l.Unlock()
+	return err
+}
 
+func (kv *etcdKV) TxNew() (kvdb.Tx, error) {
+	return nil, kvdb.ErrNotSupported
+}
+
+func (kv *etcdKV) nodeToKv(node *e.Node) *kvdb.KVPair {
+	kvp := &kvdb.KVPair{
+		Value:         []byte(node.Value),
+		TTL:           node.TTL,
+		ModifiedIndex: node.ModifiedIndex,
+		CreatedIndex:  node.CreatedIndex,
+	}
+
+	// Strip out the leading '/'
+	if len(node.Key) != 0 {
+		kvp.Key = node.Key[1:]
+	} else {
+		kvp.Key = node.Key
+	}
+	kvp.Key = strings.TrimPrefix(kvp.Key, kv.domain)
+	return kvp
+}
+
+func (kv *etcdKV) resultToKv(result *e.Response) *kvdb.KVPair {
+	kvp := kv.nodeToKv(result.Node)
+	switch result.Action {
+	case "create":
+		kvp.Action = kvdb.KVCreate
+	case "set", "update":
+		kvp.Action = kvdb.KVSet
+	case "delete":
+		kvp.Action = kvdb.KVDelete
+	case "get":
+		kvp.Action = kvdb.KVGet
+	default:
+		kvp.Action = kvdb.KVUknown
+	}
+	kvp.KVDBIndex = result.Index
+	return kvp
+}
+
+func (kv *etcdKV) resultToKvs(result *e.Response) kvdb.KVPairs {
+	kvs := make([]*kvdb.KVPair, len(result.Node.Nodes))
+	for i := range result.Node.Nodes {
+		kvs[i] = kv.nodeToKv(result.Node.Nodes[i])
+		kvs[i].KVDBIndex = result.Index
+	}
+	return kvs
+}
+
+func (kv *etcdKV) get(key string, recursive, sort bool) (*kvdb.KVPair, error) {
+	var err error
+	var result *e.Response
+	for i := 0; i < defaultRetryCount; i++ {
+		result, err = kv.client.Get(context.Background(), key, &e.GetOptions{
+			Recursive: recursive,
+			Sort:      sort,
+		})
+		if err == nil {
+			return kv.resultToKv(result), nil
+		}
+
+		switch err.(type) {
+		case *e.ClusterError:
+			logrus.Errorf("kvdb get error: %v, retry count: %v\n", err, i)
+			time.Sleep(defaultIntervalBetweenRetries)
+		default:
+			etcdErr := err.(e.Error)
+			if etcdErr.Code == e.ErrorCodeKeyNotFound {
+				return nil, kvdb.ErrNotFound
+			}
+			return nil, err
+		}
+	}
+	return nil, err
+}
+
+func (kv *etcdKV) setWithRetry(ctx context.Context, key, value string,
+	opts *e.SetOptions) (*kvdb.KVPair, error) {
+	var (
+		err    error
+		i      int
+		result *e.Response
+	)
+	for i = 0; i < defaultRetryCount; i++ {
+		result, err = kv.client.Set(ctx, key, value, opts)
+		if err == nil {
+			return kv.resultToKv(result), nil
+		}
+		switch err.(type) {
+		case *e.ClusterError:
+			cerr := err.(*e.ClusterError)
+			logrus.Errorf("kvdb set error: %v %v, retry count: %v\n",
+				err, cerr.Detail(), i)
+			time.Sleep(defaultIntervalBetweenRetries)
+		default:
+			goto out
+		}
+	}
+
+out:
+	// It's possible that update succeeded but the re-update failed.
+	if i > 0 && i < defaultRetryCount && err != nil {
+		kvp, err := kv.get(key, false, false)
+		if err == nil && bytes.Equal(kvp.Value, []byte(value)) {
+			if opts.PrevExist == e.PrevNoExist {
+				kvp.Action = kvdb.KVCreate
+			} else {
+				kvp.Action = kvdb.KVSet
+			}
+			return kvp, nil
+		}
+	}
+
+	return nil, err
+}
+
+func (kv *etcdKV) refreshLock(kvPair *kvdb.KVPair) {
 	l := kvPair.Lock.(*etcdLock)
 	ttl := kvPair.TTL
 	refresh := time.NewTicker(time.Duration(kvPair.TTL) / 4)
@@ -437,7 +449,7 @@ func (kv *EtcdKV) refreshLock(kvPair *kvdb.KVPair) {
 					kvPair.Value,
 				)
 				if err != nil {
-					fmt.Printf(
+					logrus.Errorf(
 						"Error refreshing lock for key %v: %v\n",
 						keyString, err,
 					)
@@ -455,25 +467,8 @@ func (kv *EtcdKV) refreshLock(kvPair *kvdb.KVPair) {
 	}
 }
 
-func (kv *EtcdKV) Unlock(kvp *kvdb.KVPair) error {
-	l, ok := kvp.Lock.(*etcdLock)
-	if !ok {
-		return fmt.Errorf("Invalid lock structure for key %v", string(kvp.Key))
-	}
-	l.Lock()
-	// Don't modify kvp here, CompareAndDelete does that.
-	_, err := kv.CompareAndDelete(kvp, kvdb.KVFlags(0))
-	if err == nil {
-		l.unlocked = true
-		l.Unlock()
-		l.done <- struct{}{}
-		return nil
-	}
-	l.Unlock()
-	return err
-}
-
-func (kv *EtcdKV) watchStart(key string,
+func (kv *etcdKV) watchStart(
+	key string,
 	recursive bool,
 	waitIndex uint64,
 	opaque interface{},
@@ -490,12 +485,13 @@ func (kv *EtcdKV) watchStart(key string,
 		if watchErr != nil && !isCancelSent {
 			e, ok := watchErr.(e.Error)
 			if ok {
-				fmt.Printf("Etcd error code %d Message %s Cause %s Index %ju\n",
+				logrus.Errorf("Etcd error code %d Message %s Cause %s Index %d\n",
 					e.Code, e.Message, e.Cause, e.Index)
 			} else {
-				fmt.Printf("Etcd returned an error : %s", watchErr.Error())
+				logrus.Errorf("Etcd returned an error : %s\n", watchErr.Error())
 			}
-			cb(key, opaque, nil, watchErr)
+			// TODO: handle error
+			_ = cb(key, opaque, nil, watchErr)
 		} else if watchErr == nil && !isCancelSent {
 			err := cb(key, opaque, kv.resultToKv(r), nil)
 			if err != nil {
@@ -504,16 +500,122 @@ func (kv *EtcdKV) watchStart(key string,
 				isCancelSent = true
 			}
 		} else {
-			cb(key, opaque, nil, kvdb.ErrWatchStopped)
+			// TODO: handle error
+			_ = cb(key, opaque, nil, kvdb.ErrWatchStopped)
 			break
 		}
 	}
 }
 
-func (kv *EtcdKV) TxNew() (kvdb.Tx, error) {
-	return nil, kvdb.ErrNotSupported
-}
+func (kv *etcdKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
+	// Create a new bootstrap key
+	r := rand.New(rand.NewSource(time.Now().UnixNano())).Int63()
+	bootStrapKey := bootstrap + strconv.FormatInt(r, 10) +
+		strconv.FormatInt(time.Now().UnixNano(), 10)
+	kvPair, err := kv.Put(bootStrapKey, time.Now().UnixNano(), 0)
+	if err != nil {
+		return nil, 0, err
+	}
+	lowestKvdbIndex := kvPair.ModifiedIndex
 
-func init() {
-	kvdb.Register(Name, EtcdInit)
+	kvPairs, err := kv.Enumerate(prefix)
+	if err != nil {
+		return nil, 0, err
+	}
+	snapDb, err := mem.New(kv.domain, nil, nil)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	for i := 0; i < len(kvPairs); i++ {
+		kvPair := kvPairs[i]
+		if len(kvPair.Value) > 0 {
+			// Only create a leaf node
+			_, err := snapDb.Put(kvPair.Key, kvPair.Value, 0)
+			if err != nil {
+				return nil, 0, fmt.Errorf("Failed creating snap: %v", err)
+			}
+		} else {
+			newKvPairs, err := kv.Enumerate(kvPair.Key)
+			if err != nil {
+				return nil, 0, fmt.Errorf("Failed to get child keys: %v", err)
+			}
+			if len(newKvPairs) > 0 {
+				kvPairs = append(kvPairs, newKvPairs...)
+			}
+		}
+	}
+
+	kvPair, err = kv.Delete(bootStrapKey)
+	highestKvdbIndex := kvPair.ModifiedIndex
+	if lowestKvdbIndex+1 != highestKvdbIndex {
+		// create a watch to get all changes
+		// between lowestKvdbIndex and highestKvdbIndex
+		done := make(chan error)
+		mutex := &sync.Mutex{}
+		cb := func(
+			prefix string,
+			opaque interface{},
+			kvp *kvdb.KVPair,
+			err error,
+		) error {
+			var watchErr error
+			var sendErr error
+			var m *sync.Mutex
+			ok := false
+
+			if err != nil {
+				watchErr = err
+				sendErr = err
+				goto errordone
+			}
+
+			if kvp == nil {
+				watchErr = fmt.Errorf("kvp is nil")
+				sendErr = watchErr
+				goto errordone
+
+			}
+
+			m, ok = opaque.(*sync.Mutex)
+			if !ok {
+				watchErr = fmt.Errorf("Failed to get mutex")
+				sendErr = watchErr
+				goto errordone
+			}
+
+			m.Lock()
+			defer m.Unlock()
+
+			if kvp.ModifiedIndex >= highestKvdbIndex {
+				// done applying changes, return
+				watchErr = fmt.Errorf("done")
+				sendErr = nil
+				goto errordone
+			}
+
+			_, err = snapDb.Put(kvp.Key, kvp.Value, 0)
+			if err != nil {
+				watchErr = fmt.Errorf("Failed to apply update to snap: %v", err)
+				sendErr = watchErr
+				goto errordone
+			}
+
+			return nil
+		errordone:
+			done <- sendErr
+			return watchErr
+		}
+
+		if err := kv.WatchTree("", lowestKvdbIndex+1, mutex,
+			cb); err != nil {
+			return nil, 0, fmt.Errorf("Failed to start watch: %v", err)
+		}
+		err = <-done
+		if err != nil {
+			return nil, 0, err
+		}
+	}
+
+	return snapDb, highestKvdbIndex, nil
 }

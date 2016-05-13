@@ -10,18 +10,21 @@ import (
 	"time"
 
 	"github.com/portworx/kvdb"
+	"github.com/portworx/kvdb/common"
 )
 
 const (
+	// Name is the name of this kvdb implementation.
 	Name = "kv-mem"
 )
 
-type watchData struct {
-	cb     kvdb.WatchCB
-	opaque interface{}
+func init() {
+	if err := kvdb.Register(Name, New); err != nil {
+		panic(err.Error())
+	}
 }
 
-type MemKV struct {
+type memKV struct {
 	m      map[string]*kvdb.KVPair
 	w      map[string]*watchData
 	wt     map[string]*watchData
@@ -30,91 +33,74 @@ type MemKV struct {
 	domain string
 }
 
-func MemInit(domain string,
-	machines []string,
-	options map[string]string) (kvdb.Kvdb, error) {
+type watchData struct {
+	cb     kvdb.WatchCB
+	opaque interface{}
+}
 
+// New constructs a new kvdb.Kvdb.
+func New(
+	domain string,
+	machines []string,
+	options map[string]string,
+) (kvdb.Kvdb, error) {
 	if domain != "" && !strings.HasSuffix(domain, "/") {
 		domain = domain + "/"
 	}
-	kv := &MemKV{
+	return &memKV{
 		m:      make(map[string]*kvdb.KVPair),
 		w:      make(map[string]*watchData),
 		wt:     make(map[string]*watchData),
 		domain: domain,
-	}
-	return kv, nil
+	}, nil
 }
 
-func (kv *MemKV) String() string {
+func (kv *memKV) String() string {
 	return Name
 }
 
-func (kv *MemKV) normalize(kvp *kvdb.KVPair) {
-	kvp.Key = strings.TrimPrefix(kvp.Key, kv.domain)
-}
-
-func (kv *MemKV) fireCB(key string, kvp *kvdb.KVPair, err error) {
-
-	for k, v := range kv.w {
-		if k == key {
-			err := v.cb(key, v.opaque, kvp, err)
-			if err != nil {
-				v.cb("", v.opaque, nil, kvdb.ErrWatchStopped)
-				delete(kv.w, key)
-
-			}
-			return
-		}
-	}
-	for k, v := range kv.wt {
-		if strings.HasPrefix(key, k) {
-			err := v.cb(key, v.opaque, kvp, err)
-			if err != nil {
-				v.cb("", v.opaque, nil, kvdb.ErrWatchStopped)
-				delete(kv.wt, key)
-			}
-		}
-	}
-}
-
-func (kv *MemKV) toBytes(val interface{}) ([]byte, error) {
-	var (
-		b   []byte
-		err error
-	)
-
-	switch val.(type) {
-	case string:
-		s := val.(string)
-		b = []byte(s)
-	case []byte:
-		b = make([]byte, len(val.([]byte)))
-		copy(b, val.([]byte))
-	default:
-		b, err = json.Marshal(val)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return b, nil
-}
-
-func (kv *MemKV) Get(key string) (*kvdb.KVPair, error) {
+func (kv *memKV) Get(key string) (*kvdb.KVPair, error) {
 
 	key = kv.domain + key
-	if v, ok := kv.m[key]; !ok {
+	v, ok := kv.m[key]
+	if !ok {
 		return nil, kvdb.ErrNotFound
-	} else {
-		return v, nil
 	}
+	return v, nil
 }
 
-func (kv *MemKV) Put(
+func (kv *memKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
+	kv.mutex.Lock()
+	defer kv.mutex.Unlock()
+
+	data := make(map[string]*kvdb.KVPair)
+	for key, value := range kv.m {
+		if strings.HasPrefix(key, prefix) && !strings.Contains(key, "/_") {
+			continue
+		}
+		byteValue := make([]byte, len(value.Value))
+		copyValue := &kvdb.KVPair{}
+		*copyValue = *value
+		copy(byteValue, value.Value)
+		copyValue.Value = byteValue
+		data[key] = value
+	}
+
+	// only snapshot data, watches are not copied
+	return &memKV{
+		m:      data,
+		w:      make(map[string]*watchData),
+		wt:     make(map[string]*watchData),
+		domain: kv.domain,
+	}, kv.index, nil
+
+}
+
+func (kv *memKV) Put(
 	key string,
 	value interface{},
-	ttl uint64) (*kvdb.KVPair, error) {
+	ttl uint64,
+) (*kvdb.KVPair, error) {
 
 	var kvp *kvdb.KVPair
 
@@ -125,10 +111,11 @@ func (kv *MemKV) Put(
 	index := atomic.AddUint64(&kv.index, 1)
 	if ttl != 0 {
 		time.AfterFunc(time.Second*time.Duration(ttl), func() {
-			kvdb.Instance().Delete(key)
+			// TODO: handle error
+			_, _ = kv.Delete(key)
 		})
 	}
-	b, err := kv.toBytes(value)
+	b, err := common.ToBytes(value)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +144,7 @@ func (kv *MemKV) Put(
 	return kvp, nil
 }
 
-func (kv *MemKV) GetVal(key string, v interface{}) (*kvdb.KVPair, error) {
+func (kv *memKV) GetVal(key string, v interface{}) (*kvdb.KVPair, error) {
 	kvp, err := kv.Get(key)
 	if err != nil {
 		return nil, err
@@ -167,46 +154,45 @@ func (kv *MemKV) GetVal(key string, v interface{}) (*kvdb.KVPair, error) {
 	return kvp, err
 }
 
-func (kv *MemKV) Create(
+func (kv *memKV) Create(
 	key string,
 	value interface{},
 	ttl uint64) (*kvdb.KVPair, error) {
 
-	if result, err := kv.Get(key); err != nil {
+	result, err := kv.Get(key)
+	if err != nil {
 		return kv.Put(key, value, ttl)
-	} else {
-		return result, kvdb.ErrExist
 	}
+	return result, kvdb.ErrExist
 }
 
-func (kv *MemKV) Update(
+func (kv *memKV) Update(
 	key string,
 	value interface{},
 	ttl uint64) (*kvdb.KVPair, error) {
 
 	if _, err := kv.Get(key); err != nil {
 		return nil, kvdb.ErrNotFound
-	} else {
-		return kv.Put(key, value, ttl)
 	}
+	return kv.Put(key, value, ttl)
 }
 
-func (kv *MemKV) Enumerate(prefix string) (kvdb.KVPairs, error) {
+func (kv *memKV) Enumerate(prefix string) (kvdb.KVPairs, error) {
 	var kvp = make(kvdb.KVPairs, 0, 100)
 	prefix = kv.domain + prefix
 
 	for k, v := range kv.m {
 		if strings.HasPrefix(k, prefix) && !strings.Contains(k, "/_") {
-			kvp_local := *v
-			kv.normalize(&kvp_local)
-			kvp = append(kvp, &kvp_local)
+			kvpLocal := *v
+			kv.normalize(&kvpLocal)
+			kvp = append(kvp, &kvpLocal)
 		}
 	}
 
 	return kvp, nil
 }
 
-func (kv *MemKV) Delete(key string) (*kvdb.KVPair, error) {
+func (kv *memKV) Delete(key string) (*kvdb.KVPair, error) {
 	kvp, err := kv.Get(key)
 	if err != nil {
 		return nil, err
@@ -219,29 +205,32 @@ func (kv *MemKV) Delete(key string) (*kvdb.KVPair, error) {
 	return kvp, nil
 }
 
-func (kv *MemKV) DeleteTree(prefix string) error {
+func (kv *memKV) DeleteTree(prefix string) error {
 
-	if kvp, err := kv.Enumerate(prefix); err != nil {
+	kvp, err := kv.Enumerate(prefix)
+	if err != nil {
 		return err
-	} else {
-		for _, v := range kvp {
-			kv.Delete(v.Key)
+	}
+	for _, v := range kvp {
+		// TODO: multiple errors
+		if _, iErr := kv.Delete(v.Key); iErr != nil {
+			err = iErr
 		}
 	}
-	return nil
+	return err
 }
 
-func (kv *MemKV) Keys(prefix, key string) ([]string, error) {
+func (kv *memKV) Keys(prefix, key string) ([]string, error) {
 	return nil, kvdb.ErrNotSupported
 }
 
-func (kv *MemKV) CompareAndSet(
+func (kv *memKV) CompareAndSet(
 	kvp *kvdb.KVPair,
 	flags kvdb.KVFlags,
 	prevValue []byte) (*kvdb.KVPair, error) {
 
 	kv.mutex.Lock()
-	
+
 	if flags == kvdb.KVModifiedIndex {
 		if kvp.ModifiedIndex != kv.index {
 			kv.mutex.Unlock()
@@ -257,13 +246,13 @@ func (kv *MemKV) CompareAndSet(
 		if !bytes.Equal(result.Value, prevValue) {
 			kv.mutex.Unlock()
 			return nil, kvdb.ErrValueMismatch
-		}	
+		}
 	}
 	kv.mutex.Unlock()
 	return kv.Put(kvp.Key, kvp.Value, 0)
 }
 
-func (kv *MemKV) CompareAndDelete(kvp *kvdb.KVPair, flags kvdb.KVFlags) (*kvdb.KVPair, error) {
+func (kv *memKV) CompareAndDelete(kvp *kvdb.KVPair, flags kvdb.KVFlags) (*kvdb.KVPair, error) {
 	if flags != kvdb.KVFlags(0) {
 		return nil, kvdb.ErrNotSupported
 	}
@@ -275,7 +264,7 @@ func (kv *MemKV) CompareAndDelete(kvp *kvdb.KVPair, flags kvdb.KVFlags) (*kvdb.K
 	return kv.Delete(kvp.Key)
 }
 
-func (kv *MemKV) WatchKey(
+func (kv *memKV) WatchKey(
 	key string,
 	waitIndex uint64,
 	opaque interface{},
@@ -290,7 +279,7 @@ func (kv *MemKV) WatchKey(
 	return nil
 }
 
-func (kv *MemKV) WatchTree(
+func (kv *memKV) WatchTree(
 	prefix string,
 	waitIndex uint64,
 	opaque interface{},
@@ -306,7 +295,7 @@ func (kv *MemKV) WatchTree(
 	return nil
 }
 
-func (kv *MemKV) Lock(key string, ttl uint64) (*kvdb.KVPair, error) {
+func (kv *memKV) Lock(key string, ttl uint64) (*kvdb.KVPair, error) {
 	key = kv.domain + key
 	duration := time.Duration(math.Min(float64(time.Second),
 		float64((time.Duration(ttl)*time.Second)/10)))
@@ -323,15 +312,40 @@ func (kv *MemKV) Lock(key string, ttl uint64) (*kvdb.KVPair, error) {
 	return result, err
 }
 
-func (kv *MemKV) Unlock(kvp *kvdb.KVPair) error {
+func (kv *memKV) Unlock(kvp *kvdb.KVPair) error {
 	_, err := kv.CompareAndDelete(kvp, kvdb.KVFlags(0))
 	return err
 }
 
-func (kv *MemKV) TxNew() (kvdb.Tx, error) {
+func (kv *memKV) TxNew() (kvdb.Tx, error) {
 	return nil, kvdb.ErrNotSupported
 }
 
-func init() {
-	kvdb.Register(Name, MemInit)
+func (kv *memKV) normalize(kvp *kvdb.KVPair) {
+	kvp.Key = strings.TrimPrefix(kvp.Key, kv.domain)
+}
+
+func (kv *memKV) fireCB(key string, kvp *kvdb.KVPair, err error) {
+	for k, v := range kv.w {
+		if k == key {
+			err := v.cb(key, v.opaque, kvp, err)
+			if err != nil {
+				// TODO: handle error
+				_ = v.cb("", v.opaque, nil, kvdb.ErrWatchStopped)
+				delete(kv.w, key)
+
+			}
+			return
+		}
+	}
+	for k, v := range kv.wt {
+		if strings.HasPrefix(key, k) {
+			err := v.cb(key, v.opaque, kvp, err)
+			if err != nil {
+				// TODO: handle error
+				_ = v.cb("", v.opaque, nil, kvdb.ErrWatchStopped)
+				delete(kv.wt, key)
+			}
+		}
+	}
 }
