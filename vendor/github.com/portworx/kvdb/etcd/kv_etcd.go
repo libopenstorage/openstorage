@@ -587,7 +587,7 @@ func (kv *etcdKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 			m.Lock()
 			defer m.Unlock()
 
-			if kvp.ModifiedIndex >= highestKvdbIndex {
+			if kvp.ModifiedIndex > highestKvdbIndex {
 				// done applying changes, return
 				watchErr = fmt.Errorf("done")
 				sendErr = nil
@@ -607,7 +607,7 @@ func (kv *etcdKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 			return watchErr
 		}
 
-		if err := kv.WatchTree("", lowestKvdbIndex+1, mutex,
+		if err := kv.WatchTree("", lowestKvdbIndex, mutex,
 			cb); err != nil {
 			return nil, 0, fmt.Errorf("Failed to start watch: %v", err)
 		}

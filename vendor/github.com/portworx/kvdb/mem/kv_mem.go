@@ -78,12 +78,11 @@ func (kv *memKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 		if strings.HasPrefix(key, prefix) && !strings.Contains(key, "/_") {
 			continue
 		}
-		byteValue := make([]byte, len(value.Value))
-		copyValue := &kvdb.KVPair{}
-		*copyValue = *value
-		copy(byteValue, value.Value)
-		copyValue.Value = byteValue
-		data[key] = value
+		snap := &kvdb.KVPair{}
+		*snap = *value
+		snap.Value = make([]byte, len(value.Value))
+		copy(snap.Value, value.Value)
+		data[key] = snap
 	}
 
 	// only snapshot data, watches are not copied
