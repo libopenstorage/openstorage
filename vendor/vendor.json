@@ -567,7 +567,7 @@
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/portworx/kvdb/common",
 			"path": "github.com/portworx/kvdb/common",
 			"revision": "601a7ead4163db9705d460085250e2aad09d8b3a",
-			"revisionTime": "2016-05-13T19:09:59-04:00"
+			"revisionTime": "2016-05-13T23:09:59Z"
 		},
 		{
 			"checksumSHA1": "YLUt+7GMNsO7IFHmsNba+7/JEOk=",
