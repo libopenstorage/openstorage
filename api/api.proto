@@ -118,24 +118,28 @@ enum StorageMedium {
 
 // StorageResource groups properties of a storage device.
 message StorageResource {
-  // Unique identifier for this storage resource.
-  string uuid = 1;
+  // Path device path for this storage resource.
+  string path = 1;
   // Storage medium.
   StorageMedium medium = 2;
   // True if this device is online.
   bool online = 3;;
   // IOPS 
   uint64 iops = 4;;
+  // SeqWrite
+  double seq_write = 5;
+  // SeqRead 
+  double seq_read = 6;
+  // RandRW 
+  double randRW  = 7;
   // Total size in bytes.
-  uint64 size = 5;;
+  uint64 size = 8;;
   // Physical Bytes used.
-  uint64 used = 6;
+  uint64 used = 9;
   // True if this device is rotational.
-  bool rotational = 7;;
-  // True if this device is rotational.
-  string rotation_speed = 8;
+  string rotation_speed = 10;
   // Timestamp of last time this device was scanned.
-  google.protobuf.Timestamp last_scan = 9;
+  google.protobuf.Timestamp last_scan = 11;
 }
 
 // VolumeLocator is a structure that is attached to a volume
