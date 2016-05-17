@@ -35,6 +35,11 @@ type volumeRequest struct {
 	Opts map[string]string
 }
 
+type mountRequest struct {
+	Name string
+	ID   string
+}
+
 type volumeResponse struct {
 	Err string
 }
@@ -123,6 +128,18 @@ func (d *driver) decode(method string, w http.ResponseWriter, r *http.Request) (
 	return &request, nil
 }
 
+func (d *driver) decodeMount(method string, w http.ResponseWriter, r *http.Request) (*mountRequest, error) {
+	var request mountRequest
+	err := json.NewDecoder(r.Body).Decode(&request)
+	if err != nil {
+		e := fmt.Errorf("Unable to decode JSON payload")
+		d.sendError(method, "", w, e.Error()+":"+err.Error(), http.StatusBadRequest)
+		return nil, e
+	}
+	d.logRequest(method, request.Name).Debugf("ID: %v", request.ID)
+	return &request, nil
+}
+
 func (d *driver) handshake(w http.ResponseWriter, r *http.Request) {
 	err := json.NewEncoder(w).Encode(&handshakeResp{
 		[]string{VolumeDriver},
@@ -182,6 +199,13 @@ func (d *driver) specFromOpts(Opts map[string]string) *api.VolumeSpec {
 	return &spec
 }
 
+func (d *driver) mountpath(request *mountRequest) string {
+	if len(request.ID) != 0 {
+		return path.Join(config.MountBase, request.Name+"_"+request.ID)
+	}
+	return path.Join(config.MountBase, request.Name)
+}
+
 func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 	method := "create"
 	request, err := d.decode(method, w, r)
@@ -231,13 +255,11 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	request, err := d.decode(method, w, r)
+	request, err := d.decodeMount(method, w, r)
 	if err != nil {
 		d.errorResponse(w, err)
 		return
 	}
-
-	d.logRequest(method, request.Name).Debugln("")
 
 	vol, err := d.volFromName(request.Name)
 	if err != nil {
@@ -262,7 +284,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Now mount it.
-	response.Mountpoint = path.Join(config.MountBase, request.Name)
+	response.Mountpoint = d.mountpath(request)
 	os.MkdirAll(response.Mountpoint, 0755)
 
 	err = v.Mount(vol.Id, response.Mountpoint)
@@ -364,12 +386,10 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	request, err := d.decode(method, w, r)
+	request, err := d.decodeMount(method, w, r)
 	if err != nil {
 		return
 	}
-
-	d.logRequest(method, request.Name).Infoln("")
 
 	vol, err := d.volFromName(request.Name)
 	if err != nil {
@@ -378,7 +398,7 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	mountpoint := path.Join(config.MountBase, request.Name)
+	mountpoint := d.mountpath(request)
 	err = v.Unmount(vol.Id, mountpoint)
 	if err != nil {
 		d.logRequest(method, request.Name).Warnf("Cannot unmount volume %v, %v",
