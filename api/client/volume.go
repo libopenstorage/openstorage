@@ -15,6 +15,7 @@ import (
 const (
 	graphPath  = "/graph"
 	volumePath = "/volumes"
+	specPath   = "/spec"
 	snapPath   = "/snapshot"
 )
 
@@ -250,6 +251,20 @@ func (v *volumeClient) SnapEnumerate(ids []string,
 		return nil, err
 	}
 	return volumes, nil
+}
+
+// EnumerateDisks
+// If locator fields are left blank, this will return all volumes.
+func (v *volumeClient) EnumerateDisks() ([]*map[string]api.StorageResource, error) {
+
+	var storageResourceMap []*map[string]api.StorageResource
+	req := v.c.Get().Resource(specPath)
+
+	if err := req.Do().Unmarshal(&storageResourceMap); err != nil {
+		return nil, err
+	}
+
+	return storageResourceMap, nil
 }
 
 // Attach map device to the host.
