@@ -232,6 +232,12 @@ func (c *ClusterManager) initNode(db *ClusterInfo) (*api.Node, bool) {
 	dlog.Infof("Node Mgmt IP: %s", c.selfNode.MgmtIp)
 	dlog.Infof("Node Data IP: %s", c.selfNode.DataIp)
 
+	// Update the db with latest data
+	err := writeClusterInfo(db)
+	if err != nil {
+		dlog.Panicf("Failed to save the database.", err)
+	}
+
 	return &c.selfNode, exists
 }
 
