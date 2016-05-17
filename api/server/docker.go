@@ -130,8 +130,7 @@ func (d *driver) decode(method string, w http.ResponseWriter, r *http.Request) (
 
 func (d *driver) decodeMount(method string, w http.ResponseWriter, r *http.Request) (*mountRequest, error) {
 	var request mountRequest
-	err := json.NewDecoder(r.Body).Decode(&request)
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		e := fmt.Errorf("Unable to decode JSON payload")
 		d.sendError(method, "", w, e.Error()+":"+err.Error(), http.StatusBadRequest)
 		return nil, e
