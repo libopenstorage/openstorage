@@ -43,7 +43,6 @@ type VolumeDriver interface {
 	ProtoDriver
 	BlockDriver
 	Enumerator
-	DiskEnumerator
 }
 
 // IODriver interfaces applicable to object store interfaces.
@@ -113,15 +112,9 @@ type Enumerator interface {
 	SnapEnumerate(volID []string, snapLabels map[string]string) ([]*api.Volume, error)
 }
 
-// DiskEnumerator provides a set of interfaces to get details on a set of disks.
-type DiskEnumerator interface {
-	EnumerateDisks() (map[string]*map[string]api.StorageResource, error)
-}
-
 type StoreEnumerator interface {
 	Store
 	Enumerator
-	DiskEnumerator
 }
 
 // BlockDriver needs to be implemented by block volume drivers.  Filesystem volume

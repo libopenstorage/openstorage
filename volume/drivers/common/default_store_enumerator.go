@@ -105,12 +105,6 @@ func (e *defaultStoreEnumerator) Enumerate(
 	return volumes, nil
 }
 
-// EnumerateDisks
-func (e *defaultStoreEnumerator) EnumerateDisks() (map[string]*map[string]api.StorageResource, error) {
-
-	return nil, nil
-}
-
 // SnapEnumerate for specified volume
 func (e *defaultStoreEnumerator) SnapEnumerate(
 	volumeIDs []string,
