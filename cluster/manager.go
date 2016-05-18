@@ -481,10 +481,10 @@ func (c *ClusterManager) updateClusterStatus() {
 					n.Status = newNodeInfo.Status
 					c.nodeCache[n.Id] = n
 				} else {
+					dlog.Errorln("Unable to get node info from gossip")
 					c.nodeCache[newNodeInfo.Id] = newNodeInfo
 				}
 			} else {
-				newNodeInfo.Status = api.Status_STATUS_OFFLINE
 				c.nodeCache[newNodeInfo.Id] = newNodeInfo
 			}
 		}
