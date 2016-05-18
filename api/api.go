@@ -46,6 +46,7 @@ type Node struct {
 	Status    Status
 	GenNumber uint64
 	Luns      map[string]systemutils.Lun
+	Disks     map[string]StorageResource
 	MgmtIp    string
 	DataIp    string
 	Timestamp time.Time
