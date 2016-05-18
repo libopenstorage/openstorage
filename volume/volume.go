@@ -115,7 +115,7 @@ type Enumerator interface {
 
 // DiskEnumerator provides a set of interfaces to get details on a set of disks.
 type DiskEnumerator interface {
-	EnumerateDisks() ([]*map[string]api.StorageResource, error)
+	EnumerateDisks() (map[string]*map[string]api.StorageResource, error)
 }
 
 type StoreEnumerator interface {

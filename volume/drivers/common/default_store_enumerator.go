@@ -106,7 +106,7 @@ func (e *defaultStoreEnumerator) Enumerate(
 }
 
 // EnumerateDisks
-func (e *defaultStoreEnumerator) EnumerateDisks() ([]*map[string]api.StorageResource, error) {
+func (e *defaultStoreEnumerator) EnumerateDisks() (map[string]*map[string]api.StorageResource, error) {
 
 	return nil, nil
 }

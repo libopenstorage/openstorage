@@ -255,9 +255,9 @@ func (v *volumeClient) SnapEnumerate(ids []string,
 
 // EnumerateDisks
 // If locator fields are left blank, this will return all volumes.
-func (v *volumeClient) EnumerateDisks() ([]*map[string]api.StorageResource, error) {
+func (v *volumeClient) EnumerateDisks() (map[string]*map[string]api.StorageResource, error) {
 
-	var storageResourceMap []*map[string]api.StorageResource
+	var storageResourceMap map[string]*map[string]api.StorageResource
 	req := v.c.Get().Resource(specPath)
 
 	if err := req.Do().Unmarshal(&storageResourceMap); err != nil {
