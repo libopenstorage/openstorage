@@ -121,6 +121,7 @@ type DiskEnumerator interface {
 type StoreEnumerator interface {
 	Store
 	Enumerator
+	DiskEnumerator
 }
 
 // BlockDriver needs to be implemented by block volume drivers.  Filesystem volume
