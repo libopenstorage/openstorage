@@ -514,17 +514,19 @@ func (kv *etcdKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 		strconv.FormatInt(time.Now().UnixNano(), 10)
 	kvPair, err := kv.Put(bootStrapKey, time.Now().UnixNano(), 0)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, fmt.Errorf("Failed to create snap bootstrap key %v, "+
+			"err: %v", bootStrapKey, err)
 	}
 	lowestKvdbIndex := kvPair.ModifiedIndex
 
 	kvPairs, err := kv.Enumerate(prefix)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, fmt.Errorf("Failed to enumerate %v: err: %v", prefix,
+			err)
 	}
 	snapDb, err := mem.New(kv.domain, nil, nil)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, fmt.Errorf("Failed to create in-mem kv store: %v", err)
 	}
 
 	for i := 0; i < len(kvPairs); i++ {
@@ -547,6 +549,10 @@ func (kv *etcdKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 	}
 
 	kvPair, err = kv.Delete(bootStrapKey)
+	if err != nil {
+		return nil, 0, fmt.Errorf("Failed to delete snap bootstrap key: %v, "+
+			"err: %v", bootStrapKey, err)
+	}
 	highestKvdbIndex := kvPair.ModifiedIndex
 	if lowestKvdbIndex+1 != highestKvdbIndex {
 		// create a watch to get all changes

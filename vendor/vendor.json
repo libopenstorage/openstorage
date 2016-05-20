@@ -557,38 +557,33 @@
 		},
 		{
 			"checksumSHA1": "BuJOaXANJs56EibzXh2c2aqy2pk=",
-			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/portworx/kvdb",
 			"path": "github.com/portworx/kvdb",
-			"revision": "601a7ead4163db9705d460085250e2aad09d8b3a",
-			"revisionTime": "2016-05-13T19:09:59-04:00"
+			"revision": "c03f19d4343ef2134d996495033cafeff2c5c4f0",
+			"revisionTime": "2016-05-20T16:05:44-04:00"
 		},
 		{
 			"checksumSHA1": "NdrvQf96pNxXaXyTYGxwxZ0yAX4=",
-			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/portworx/kvdb/common",
 			"path": "github.com/portworx/kvdb/common",
-			"revision": "601a7ead4163db9705d460085250e2aad09d8b3a",
-			"revisionTime": "2016-05-13T23:09:59Z"
+			"revision": "c03f19d4343ef2134d996495033cafeff2c5c4f0",
+			"revisionTime": "2016-05-20T16:05:44-04:00"
 		},
 		{
 			"checksumSHA1": "YLUt+7GMNsO7IFHmsNba+7/JEOk=",
-			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/portworx/kvdb/consul",
 			"path": "github.com/portworx/kvdb/consul",
-			"revision": "601a7ead4163db9705d460085250e2aad09d8b3a",
-			"revisionTime": "2016-05-13T19:09:59-04:00"
+			"revision": "c03f19d4343ef2134d996495033cafeff2c5c4f0",
+			"revisionTime": "2016-05-20T16:05:44-04:00"
 		},
 		{
-			"checksumSHA1": "Cb3me/Nnw/vQUoF+/lVFDI2KHmw=",
-			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/portworx/kvdb/etcd",
+			"checksumSHA1": "O6x/YXrvB4m/i2KXLraTpFL/S7I=",
 			"path": "github.com/portworx/kvdb/etcd",
-			"revision": "601a7ead4163db9705d460085250e2aad09d8b3a",
-			"revisionTime": "2016-05-13T19:09:59-04:00"
+			"revision": "c03f19d4343ef2134d996495033cafeff2c5c4f0",
+			"revisionTime": "2016-05-20T16:05:44-04:00"
 		},
 		{
-			"checksumSHA1": "WGflaw5riAul3IE3tYNwKxBoMHU=",
-			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/portworx/kvdb/mem",
+			"checksumSHA1": "5AZpEHym6NxjOrOf9g+JIXgQGBk=",
 			"path": "github.com/portworx/kvdb/mem",
-			"revision": "601a7ead4163db9705d460085250e2aad09d8b3a",
-			"revisionTime": "2016-05-13T19:09:59-04:00"
+			"revision": "c03f19d4343ef2134d996495033cafeff2c5c4f0",
+			"revisionTime": "2016-05-20T16:05:44-04:00"
 		},
 		{
 			"checksumSHA1": "cKNzpMpci3WUAzXpe+tVnBv2cjE=",
