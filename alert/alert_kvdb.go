@@ -41,7 +41,6 @@ const (
 var (
 	kvdbMap         = make(map[string]kvdb.Kvdb)
 	watcherMap      = make(map[string]*watcher)
-	alertWatchIndex uint64
 	watchErrors     int
 	kvdbLock        sync.RWMutex
 )
@@ -442,10 +441,6 @@ func kvdbWatch(prefix string, opaque interface{}, kvp *kvdb.KVPair, err error) e
 	}
 	watchErrors = 0
 
-	if kvp.ModifiedIndex > alertWatchIndex {
-		alertWatchIndex = kvp.ModifiedIndex
-	}
-
 	w := watcherMap[watcherKey]
 
 	if kvp.Action == kvdb.KVDelete {
@@ -470,18 +465,15 @@ func kvdbWatch(prefix string, opaque interface{}, kvp *kvdb.KVPair, err error) e
 }
 
 func subscribeWatch(key string) error {
-	watchIndex := alertWatchIndex
-	if watchIndex != 0 {
-		watchIndex = alertWatchIndex + 1
-	}
-
+	// Always set the watchIndex to 0
+	watchIndex := 0
 	w, ok := watcherMap[key]
 	if !ok {
 		return fmt.Errorf("Failed to find a watch on cluster : %v", key)
 	}
 
 	kv := w.kvdb
-	if err := kv.WatchTree(alertKey, watchIndex, nil, w.kvcb); err != nil {
+	if err := kv.WatchTree(alertKey, uint64(watchIndex), nil, w.kvcb); err != nil {
 		return err
 	}
 	return nil
