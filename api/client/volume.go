@@ -210,6 +210,18 @@ func (v *volumeClient) Alerts(volumeID string) (*api.Alerts, error) {
 	return alerts, nil
 }
 
+// Active Requests on this volume.
+// Errors ErrEnoEnt may be returned
+func (v *volumeClient) DumpRequests(id string) (*api.ActiveRequests, error) {
+
+	requests := &api.ActiveRequests{}
+	if err := v.c.Get().Resource(volumePath + "/requests").Instance(id).Do().Unmarshal(requests); err != nil {
+		return nil, err
+	}
+
+	return requests, nil
+}
+
 // Shutdown and cleanup.
 func (v *volumeClient) Shutdown() {}
 

@@ -158,3 +158,7 @@ func (v *volumeDriver) Status() [][2]string {
 }
 
 func (v *volumeDriver) Shutdown() {}
+
+func (v *volumeDriver) DumpRequests(volumeID string) (*api.ActiveRequests, error) {
+	return nil, nil
+}

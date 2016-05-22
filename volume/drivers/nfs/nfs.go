@@ -291,6 +291,10 @@ func (d *driver) Shutdown() {
 	syscall.Unmount(nfsMountPath, 0)
 }
 
+func (d *driver) DumpRequests(volumeID string) (*api.ActiveRequests, error) {
+	return nil, nil
+}
+
 func copyFile(source string, dest string) (err error) {
 	sourcefile, err := os.Open(source)
 	if err != nil {

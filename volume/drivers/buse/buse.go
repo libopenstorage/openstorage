@@ -357,3 +357,7 @@ func (d *driver) Leave(self *api.Node) error {
 func (d *driver) Halt(self *api.Node, db *cluster.ClusterInfo) error {
 	return nil
 }
+
+func (d *driver) DumpRequests(volumeID string) (*api.ActiveRequests, error) {
+	return nil, nil
+}

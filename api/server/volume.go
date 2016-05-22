@@ -367,6 +367,32 @@ func (vd *volApi) alerts(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(alerts)
 }
 
+func (vd *volApi) requests(w http.ResponseWriter, r *http.Request) {
+	var volumeID string
+	var err error
+
+	method := "requests"
+	if volumeID, err = vd.parseVolumeID(r); err != nil {
+		e := fmt.Errorf("Failed to parse parse volumeID: %s", err.Error())
+		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+		return
+	}
+
+	d, err := volumedrivers.Get(vd.name)
+	if err != nil {
+		notFound(w, r)
+		return
+	}
+
+	requests, err := d.DumpRequests(volumeID)
+	if err != nil {
+		e := fmt.Errorf("Failed to get active requests: %s", err.Error())
+		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	json.NewEncoder(w).Encode(requests)
+}
+
 func volVersion(route string) string {
 	return "/" + config.Version + "/" + route
 }
@@ -390,6 +416,8 @@ func (vd *volApi) Routes() []*Route {
 		&Route{verb: "GET", path: volPath("/stats/{id}"), fn: vd.stats},
 		&Route{verb: "GET", path: volPath("/alerts"), fn: vd.alerts},
 		&Route{verb: "GET", path: volPath("/alerts/{id}"), fn: vd.alerts},
+		&Route{verb: "GET", path: volPath("/requests"), fn: vd.requests},
+		&Route{verb: "GET", path: volPath("/requests/{id}"), fn: vd.requests},
 		&Route{verb: "POST", path: snapPath(""), fn: vd.snap},
 		&Route{verb: "GET", path: snapPath(""), fn: vd.snapEnumerate},
 	}

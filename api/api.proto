@@ -334,3 +334,12 @@ message GraphDriverChanges {
 message ClusterResponse {
   string error = 1;
 }
+
+message ActiveRequest {
+  // RequestCount for volume
+  int64 RequestCount = 1;
+}
+
+message ActiveRequests {
+  repeated ActiveRequests ActiveRequest = 1;
+}
