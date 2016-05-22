@@ -341,5 +341,5 @@ message ActiveRequest {
 }
 
 message ActiveRequests {
-  repeated ActiveRequests ActiveRequest = 1;
+  repeated ActiveRequest ActiveRequest = 1;
 }
