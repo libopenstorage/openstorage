@@ -158,6 +158,7 @@ func (d *driver) specFromOpts(Opts map[string]string) *api.VolumeSpec {
 	spec := api.VolumeSpec{
 		VolumeLabels: make(map[string]string),
 		Format:       api.FSType_FS_TYPE_EXT4,
+		HaLevel:      1,
 	}
 
 	for k, v := range Opts {
