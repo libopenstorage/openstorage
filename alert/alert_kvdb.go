@@ -425,7 +425,11 @@ func kvdbWatch(prefix string, opaque interface{}, kvp *kvdb.KVPair, err error) e
 			return err
 		}
 		if watchErrors == 5 {
-			dlog.Warnf("Too many watch errors : %v. Error is %s", watchErrors, err.Error())
+			w := watcherMap[watcherKey]
+			dlog.Warnf("Too many watch errors for key (%v). Error: %s. Stopping the watch!!", watcherKey, err.Error())
+			w.cb(nil, api.AlertActionType_ALERT_ACTION_TYPE_NONE, prefix, "")
+			// Too many watch errors. Stop the watch
+			return err
 		}
 		watchErrors++
 		if err := subscribeWatch(watcherKey); err != nil {
