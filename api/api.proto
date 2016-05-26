@@ -183,7 +183,15 @@ message VolumeSpec {
   // Volume configuration labels
   map<string, string> volume_labels = 9;
   // Shared is true is this volume can be remotely accessed.
- bool shared = 10;
+  bool shared = 10;
+  // Specifies the number of segments that the volume can
+  // be aggregated from.
+  uint32 aggregation_level = 11;
+}
+
+// Set of machine IDs (nodes) to which part of this volume is erasure coded - for clustered storage arrays
+message ReplicaSet {
+  repeated string nodes = 1;
 }
 
 // Volume represents a live, created volume.
@@ -211,8 +219,8 @@ message Volume {
   string attached_on = 12;
   string device_path = 14;
   repeated string attach_path = 15;
-	// Set of machine IDs (nodes) to which this volume is erasure coded - for clustered storage arrays
-  repeated string replica_set = 16;
+  // List of ReplicaSets which provide storage for this volume, for clustered storage arrays
+  repeated ReplicaSet  replica_sets = 16;
   // Last recorded error
   string error = 17;
   // Name value mapping of driver specific runtime information.
