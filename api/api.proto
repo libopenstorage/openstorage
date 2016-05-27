@@ -184,9 +184,6 @@ message VolumeSpec {
   map<string, string> volume_labels = 9;
   // Shared is true is this volume can be remotely accessed.
   bool shared = 10;
-  // Specifies the number of segments that the volume can
-  // be aggregated from.
-  uint32 aggregation_level = 11;
 }
 
 // Set of machine IDs (nodes) to which part of this volume is erasure coded - for clustered storage arrays

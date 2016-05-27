@@ -24,8 +24,7 @@ func TestCmdMarshalProto(t *testing.T) {
  "cos": 0,
  "dedupe": false,
  "snapshot_interval": 0,
- "shared": false,
- "aggregation_level": 0
+ "shared": false
 }`,
 		data,
 	)
