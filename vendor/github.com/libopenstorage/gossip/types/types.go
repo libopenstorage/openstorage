@@ -29,11 +29,22 @@ const (
 	GD_PEER_TO_ME
 )
 
+type GossipOp string
+
+const (
+	LocalPush   GossipOp = "Local Push"
+	MergeRemote GossipOp = "Merge Remote"
+	NotifyAlive GossipOp = "Notify Alive"
+	NotifyJoin  GossipOp = "Notify Join"
+	NotifyLeave GossipOp = "Notify Leave"
+)
+
 type GossipSessionInfo struct {
 	Node string
 	Ts   time.Time
 	Dir  GossipDirection
 	Err  string
+	Op   GossipOp
 }
 
 type NodeMetaInfo struct {
@@ -62,6 +73,26 @@ type NodeValue struct {
 func (n NodeInfo) String() string {
 	return fmt.Sprintf("\nId: %v\nLastUpdateTs: %v\nStatus: : %v\nValue: %v",
 		n.Id, n.LastUpdateTs, n.Status, n.Value)
+}
+
+
+const (
+	DEFAULT_GOSSIP_INTERVAL    time.Duration = 2 * time.Second
+	DEFAULT_PUSH_PULL_INTERVAL time.Duration = 2 * time.Second
+	DEFAULT_PROBE_INTERVAL     time.Duration = 5 * time.Second
+	DEFAULT_PROBE_TIMEOUT      time.Duration = 200 * time.Millisecond
+)
+
+type GossipIntervals struct {
+	// Time Interval with which the nodes gossip
+	GossipInterval   time.Duration
+	// Interval for full local state tcp sync amongst nodes
+	PushPullInterval time.Duration
+	// Interval for probing other nodes. Used for failure detection amongst peers and reap dead nodes.
+	// It is also the interval for broadcasts (Broadcasts Not used currently)
+	ProbeInterval    time.Duration
+	// Timeout used to determine if a node is down. Should be atleast twice the RTT of network
+	ProbeTimeout     time.Duration
 }
 
 // Used by the Gossip protocol
