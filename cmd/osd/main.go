@@ -18,6 +18,7 @@ import (
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/graph/drivers"
 	"github.com/libopenstorage/openstorage/volume/drivers"
+	"github.com/libopenstorage/openstorage/volume/drivers/all"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/consul"
 	"github.com/portworx/kvdb/etcd"
@@ -84,7 +85,7 @@ func main() {
 	}
 
 	// Register all volume drivers with the CLI.
-	for _, v := range volumedrivers.AllDrivers {
+	for _, v := range all.AllDrivers {
 		// TODO(pedge): was an and, but we have no drivers that have two types
 		switch v.DriverType {
 		case api.DriverType_DRIVER_TYPE_BLOCK:

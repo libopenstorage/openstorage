@@ -10,6 +10,9 @@ type volumeDriverRegistry struct {
 }
 
 func newVolumeDriverRegistry(nameToInitFunc map[string]func(map[string]string) (VolumeDriver, error)) *volumeDriverRegistry {
+	if nameToInitFunc == nil {
+		nameToInitFunc = make(map[string]func(map[string]string) (VolumeDriver, error))
+	}
 	return &volumeDriverRegistry{
 		nameToInitFunc,
 		make(map[string]VolumeDriver),
