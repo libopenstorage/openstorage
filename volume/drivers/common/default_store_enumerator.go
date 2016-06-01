@@ -181,6 +181,9 @@ func match(
 	locator *api.VolumeLocator,
 	volumeLabels map[string]string,
 ) bool {
+	if locator == nil {
+		return hasSubset(v.Spec.VolumeLabels, volumeLabels)
+	}
 	if locator.Name != "" && v.Locator.Name != locator.Name {
 		return false
 	}
