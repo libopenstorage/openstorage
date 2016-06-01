@@ -291,7 +291,7 @@ func (d *driver) Shutdown() {
 	syscall.Unmount(nfsMountPath, 0)
 }
 
-func (d *driver) DumpRequests(volumeID string) (*api.ActiveRequests, error) {
+func (d *driver) GetActiveRequests(volumeID string) (*api.ActiveRequests, error) {
 	return nil, nil
 }
 

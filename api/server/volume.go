@@ -384,7 +384,7 @@ func (vd *volApi) requests(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	requests, err := d.DumpRequests(volumeID)
+	requests, err := d.GetActiveRequests(volumeID)
 	if err != nil {
 		e := fmt.Errorf("Failed to get active requests: %s", err.Error())
 		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)

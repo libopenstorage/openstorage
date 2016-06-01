@@ -212,7 +212,7 @@ func (v *volumeClient) Alerts(volumeID string) (*api.Alerts, error) {
 
 // Active Requests on this volume.
 // Errors ErrEnoEnt may be returned
-func (v *volumeClient) DumpRequests(id string) (*api.ActiveRequests, error) {
+func (v *volumeClient) GetActiveRequests(id string) (*api.ActiveRequests, error) {
 
 	requests := &api.ActiveRequests{}
 	if err := v.c.Get().Resource(volumePath + "/requests").Instance(id).Do().Unmarshal(requests); err != nil {

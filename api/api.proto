@@ -341,10 +341,10 @@ message ClusterResponse {
 }
 
 message ActiveRequest {
-  // RequestCount for volume
-  int64 RequestCount = 1;
+  map<int64, string> ReqestKV = 1;
 }
 
 message ActiveRequests {
-  repeated ActiveRequest ActiveRequest = 1;
+  int64 RequestCount = 1;
+  repeated ActiveRequest ActiveRequest = 2;
 }
