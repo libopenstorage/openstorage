@@ -234,11 +234,15 @@ func (d *driver) remove(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	d.logRequest(method, request.Name).Infoln("")
-	// It is an error if the volume doesn't exist.
-	if _, err := d.volFromName(request.Name); err != nil {
-		e := d.volNotFound(method, request.Name, err, w)
-		d.errorResponse(w, e)
+
+	v, err := volumedrivers.Get(d.name)
+	if err != nil {
+		d.logRequest(method, "").Warnf("Cannot locate volume driver")
+		d.errorResponse(w, err)
+		return
+	}
+	if err = v.Delete(request.Name); err != nil {
+		d.errorResponse(w, err)
 		return
 	}
 	json.NewEncoder(w).Encode(&volumeResponse{})
