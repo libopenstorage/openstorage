@@ -595,34 +595,34 @@
 			"revisionTime": "2016-01-10T10:55:54Z"
 		},
 		{
-			"checksumSHA1": "BuJOaXANJs56EibzXh2c2aqy2pk=",
+			"checksumSHA1": "lFeo16pirHPYYlyBFiKj/gIcXRY=",
 			"path": "github.com/portworx/kvdb",
-			"revision": "c03f19d4343ef2134d996495033cafeff2c5c4f0",
-			"revisionTime": "2016-05-20T16:05:44-04:00"
+			"revision": "d1e57967f4df6c2553eb4a4cd7789e06c6d3faa8",
+			"revisionTime": "2016-06-03T23:36:51Z"
 		},
 		{
 			"checksumSHA1": "NdrvQf96pNxXaXyTYGxwxZ0yAX4=",
 			"path": "github.com/portworx/kvdb/common",
-			"revision": "c03f19d4343ef2134d996495033cafeff2c5c4f0",
-			"revisionTime": "2016-05-20T16:05:44-04:00"
+			"revision": "d1e57967f4df6c2553eb4a4cd7789e06c6d3faa8",
+			"revisionTime": "2016-06-03T23:36:51Z"
 		},
 		{
-			"checksumSHA1": "YLUt+7GMNsO7IFHmsNba+7/JEOk=",
+			"checksumSHA1": "Vc/ViLrpJ0bX/5t6RDnaMhfOmgI=",
 			"path": "github.com/portworx/kvdb/consul",
-			"revision": "c03f19d4343ef2134d996495033cafeff2c5c4f0",
-			"revisionTime": "2016-05-20T16:05:44-04:00"
+			"revision": "d1e57967f4df6c2553eb4a4cd7789e06c6d3faa8",
+			"revisionTime": "2016-06-03T23:36:51Z"
 		},
 		{
-			"checksumSHA1": "O6x/YXrvB4m/i2KXLraTpFL/S7I=",
+			"checksumSHA1": "3NjTr0mbaxGr8yFpQ0SKB5Dh1xM=",
 			"path": "github.com/portworx/kvdb/etcd",
-			"revision": "c03f19d4343ef2134d996495033cafeff2c5c4f0",
-			"revisionTime": "2016-05-20T16:05:44-04:00"
+			"revision": "d1e57967f4df6c2553eb4a4cd7789e06c6d3faa8",
+			"revisionTime": "2016-06-03T23:36:51Z"
 		},
 		{
-			"checksumSHA1": "5AZpEHym6NxjOrOf9g+JIXgQGBk=",
+			"checksumSHA1": "Z9IHQASm9C63ilfaWKBeCHdzjNQ=",
 			"path": "github.com/portworx/kvdb/mem",
-			"revision": "c03f19d4343ef2134d996495033cafeff2c5c4f0",
-			"revisionTime": "2016-05-20T16:05:44-04:00"
+			"revision": "d1e57967f4df6c2553eb4a4cd7789e06c6d3faa8",
+			"revisionTime": "2016-06-03T23:36:51Z"
 		},
 		{
 			"checksumSHA1": "cKNzpMpci3WUAzXpe+tVnBv2cjE=",

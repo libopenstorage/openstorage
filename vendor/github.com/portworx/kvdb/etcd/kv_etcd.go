@@ -339,13 +339,16 @@ func (kv *etcdKV) resultToKv(result *e.Response) *kvdb.KVPair {
 	switch result.Action {
 	case "create":
 		kvp.Action = kvdb.KVCreate
-	case "set", "update":
+	case "set", "update", "compareAndSwap":
 		kvp.Action = kvdb.KVSet
-	case "delete":
+	case "delete", "compareAndDelete":
 		kvp.Action = kvdb.KVDelete
 	case "get":
 		kvp.Action = kvdb.KVGet
+	case "expire":
+		kvp.Action = kvdb.KVExpire
 	default:
+		logrus.Warnf("unhandled kvdb operation %q", result.Action)
 		kvp.Action = kvdb.KVUknown
 	}
 	kvp.KVDBIndex = result.Index

@@ -230,19 +230,19 @@ func (kv *memKV) CompareAndSet(
 
 	kv.mutex.Lock()
 
-	if flags == kvdb.KVModifiedIndex {
-		if kvp.ModifiedIndex != kv.index {
-			kv.mutex.Unlock()
-			return nil, kvdb.ErrValueMismatch
-		}
-	}
-
 	result, err := kv.Get(kvp.Key)
 	if err != nil {
 		kv.mutex.Unlock()
 		return nil, err
-	} else if prevValue != nil {
+	}
+	if prevValue != nil {
 		if !bytes.Equal(result.Value, prevValue) {
+			kv.mutex.Unlock()
+			return nil, kvdb.ErrValueMismatch
+		}
+	}
+	if flags == kvdb.KVModifiedIndex {
+		if kvp.ModifiedIndex != result.ModifiedIndex {
 			kv.mutex.Unlock()
 			return nil, kvdb.ErrValueMismatch
 		}

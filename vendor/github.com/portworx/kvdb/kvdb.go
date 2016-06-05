@@ -13,9 +13,13 @@ const (
 	KVGet
 	// KVDelete set when the key is deleted from the KV store
 	KVDelete
+	// KVExpire set when the key expires
+	KVExpire
 	// KVUknown operation on KV pair
 	KVUknown
+)
 
+const (
 	// KVPrevExists flag to check key already exists
 	KVPrevExists KVFlags = 1 << iota
 	// KVCreatedIndex flag compares with passed in index (possibly in KVPair)
@@ -41,6 +45,14 @@ var (
 	ErrIllegal = errors.New("Illegal operation")
 	// ErrValueMismatch raised if existing KVDB value mismatches with user provided value
 	ErrValueMismatch = errors.New("Value mismatch")
+	// ErrModified raised during an atomic operation if the index does not match the one in the store
+	ErrModified = errors.New("Key Index mismatch")
+	// ErrSetTTLFailed raised if unable to set ttl value for a key create/put/update action
+	ErrSetTTLFailed = errors.New("Unable to set ttl value")
+	// ErrTTLNotSupported
+	ErrTTLNotSupported = errors.New("TTL value not supported")
+	// ErrInvalidLock
+	ErrInvalidLock = errors.New("Invalid lock/unlock operation")
 )
 
 // KVAction specifies the action on a KV pair. This is useful to make decisions
