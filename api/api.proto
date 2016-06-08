@@ -260,6 +260,8 @@ message Alert {
   ResourceType resource = 7;
   // Cleared Flag
   bool cleared = 8;
+  // TTL in seconds for this Alert
+  uint64 ttl = 9;
 }
 
 message Alerts {

@@ -87,13 +87,13 @@ type AlertInstance interface {
 	Clear(resourceType api.ResourceType, alertID int64) error
 
 	// Alarm raises an alert with severity : ALARM.
-	Alarm(alertType int64, msg string, resourceType api.ResourceType, resourceID string) (int64, error)
+	Alarm(alertType int64, msg string, resourceType api.ResourceType, resourceID string, ttl uint64) (int64, error)
 
 	// Notify raises an alert with severity : NOTIFY.
-	Notify(alertType int64, msg string, resourceType api.ResourceType, resourceID string) (int64, error)
+	Notify(alertType int64, msg string, resourceType api.ResourceType, resourceID string, ttl uint64) (int64, error)
 
 	// Warn raises an alert with severity : WARNING.
-	Warn(alertType int64, msg string, resourceType api.ResourceType, resourceID string) (int64, error)
+	Warn(alertType int64, msg string, resourceType api.ResourceType, resourceID string, ttl uint64) (int64, error)
 
 	// EnumerateByResource enumerates alerts of the specific resource type
 	EnumerateByResource(resourceType api.ResourceType) ([]*api.Alert, error)

@@ -275,7 +275,7 @@ func (kva *KvAlert) raise(a *api.Alert) error {
 	a.Id = alertID
 	a.Timestamp = prototime.Now()
 	a.Cleared = false
-	_, err = kv.Create(getResourceKey(a.Resource)+strconv.FormatInt(a.Id, 10), a, 0)
+	_, err = kv.Create(getResourceKey(a.Resource)+strconv.FormatInt(a.Id, 10), a, a.Ttl)
 	return err
 
 }
