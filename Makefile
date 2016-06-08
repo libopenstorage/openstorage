@@ -36,7 +36,7 @@ update-test-deps:
 
 vendor-update:
 	GO15VENDOREXPERIMENT=0 GOOS=linux GOARCH=amd64 go get -tags "daemon btrfs_noversion have_btrfs have_chainfs" -d -v -t -u -f $(shell go list ./... 2>&1 | grep -v 'github.com/libopenstorage/openstorage/vendor')
-	
+
 vendor-without-update:
 	go get -v github.com/kardianos/govendor
 	rm -rf vendor
@@ -139,11 +139,14 @@ launch-local-btrfs: install
 	sudo bash -x etc/btrfs/init.sh
 	sudo $(shell which osd) -d -f etc/config/config_btrfs.yaml
 
-install-flexvolume-plugin:
+install-flexvolume:
+	go install -a -tags "$(TAGS)" github.com/libopenstorage/openstorage/pkg/flexvolume github.com/libopenstorage/openstorage/pkg/flexvolume/cmd/flexvolume
+
+install-flexvolume-plugin: install-flexvolume
 	sudo rm -rf /usr/libexec/kubernetes/kubelet/volume/exec-plugins/openstorage~openstorage
 	sudo mkdir -p /usr/libexec/kubernetes/kubelet/volume/exec-plugins/openstorage~openstorage
 	sudo chmod 777 /usr/libexec/kubernetes/kubelet/volume/exec-plugins/openstorage~openstorage
-	go build -a -tags "$(TAGS)" -o /usr/libexec/kubernetes/kubelet/volume/exec-plugins/openstorage~openstorage/openstorage pkg/flexvolume/cmd/flexvolume/main.go
+	cp $(GOPATH)/bin/flexvolume /usr/libexec/kubernetes/kubelet/volume/exec-plugins/openstorage~openstorage/openstorage
 
 clean:
 	go clean -i $(PKGS)
