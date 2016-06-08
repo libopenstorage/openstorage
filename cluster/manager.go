@@ -226,11 +226,6 @@ func (c *ClusterManager) initNode(db *ClusterInfo) (*api.Node, bool) {
 	dlog.Infof("Node Mgmt IP: %s", c.selfNode.MgmtIp)
 	dlog.Infof("Node Data IP: %s", c.selfNode.DataIp)
 
-	// Update the db with latest data
-	if err := writeClusterInfo(db); err != nil {
-		dlog.Panicf("Failed to save the database.", err)
-	}
-
 	return &c.selfNode, exists
 }
 
@@ -506,10 +501,10 @@ func (c *ClusterManager) Start() error {
 	// XXX Make the port configurable.
 	gob.Register(api.Node{})
 	gossipIntervals := types.GossipIntervals{
-		GossipInterval: types.DEFAULT_GOSSIP_INTERVAL,
+		GossipInterval:   types.DEFAULT_GOSSIP_INTERVAL,
 		PushPullInterval: types.DEFAULT_PUSH_PULL_INTERVAL,
-		ProbeInterval: types.DEFAULT_PROBE_INTERVAL,
-		ProbeTimeout: types.DEFAULT_PROBE_TIMEOUT,
+		ProbeInterval:    types.DEFAULT_PROBE_INTERVAL,
+		ProbeTimeout:     types.DEFAULT_PROBE_TIMEOUT,
 	}
 	c.gossip = gossip.New(
 		c.selfNode.MgmtIp+":9002",
