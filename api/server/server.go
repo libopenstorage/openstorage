@@ -69,9 +69,9 @@ func StartPluginAPI(
 
 // StartClusterAPI starts a REST server to receive driver configuration commands
 // from the CLI/UX to control the OSD cluster.
-func StartClusterAPI(clusterApiBase string) error {
+func StartClusterAPI(clusterApiBase string, clusterPort uint16) error {
 	clusterApi := newClusterAPI()
-	if err := startServer("osd", clusterApiBase, 0, clusterApi.Routes()); err != nil {
+	if err := startServer("osd", clusterApiBase, clusterPort, clusterApi.Routes()); err != nil {
 		return err
 	}
 
