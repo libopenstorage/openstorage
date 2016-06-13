@@ -78,7 +78,7 @@ type StatPoint struct {
 	Tags      map[string]string
 	// Fields and values of the stat
 	Fields    map[string]interface{}
-	// Unix Timestamp
+	// Timestamp in Unix format
 	Timestamp int64
 }
 
