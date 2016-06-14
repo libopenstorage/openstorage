@@ -26,9 +26,9 @@ type Manager interface {
 	// Exists returns true if the device is mounted at specified path.
 	// returned if the device does not exists.
 	Exists(source, path string) (bool, error)
-	// GetDevPath scans mount for a specified mountPath and returns the devPath
+	// GetSourcePath scans mount for a specified mountPath and returns the sourcePath
 	// if found or returnes an ErrEnoent
-	GetDevPath(mountPath string) (string, error)
+	GetSourcePath(mountPath string) (string, error)
 	// Mount device at mountpoint or increment refcnt if device is already mounted
 	// at specified mountpoint.
 	Mount(minor int, device, path, fs string, flags uintptr, data string) error
@@ -118,11 +118,11 @@ func (m *Mounter) String() string {
 }
 
 // Inspect mount table for device
-func (m *Mounter) Inspect(devPath string) []*PathInfo {
+func (m *Mounter) Inspect(sourcePath string) []*PathInfo {
 	m.Lock()
 	defer m.Unlock()
 
-	v, ok := m.mounts[devPath]
+	v, ok := m.mounts[sourcePath]
 	if !ok {
 		return nil
 	}
@@ -130,11 +130,11 @@ func (m *Mounter) Inspect(devPath string) []*PathInfo {
 }
 
 // Inspect mount table for device
-func (m *Mounter) Mounts(devPath string) []string {
+func (m *Mounter) Mounts(sourcePath string) []string {
 	m.Lock()
 	defer m.Unlock()
 
-	v, ok := m.mounts[devPath]
+	v, ok := m.mounts[sourcePath]
 	if !ok {
 		return nil
 	}
@@ -148,11 +148,11 @@ func (m *Mounter) Mounts(devPath string) []string {
 }
 
 // HasMounts determines returns the number of mounts for the device.
-func (m *Mounter) HasMounts(devPath string) int {
+func (m *Mounter) HasMounts(sourcePath string) int {
 	m.Lock()
 	defer m.Unlock()
 
-	v, ok := m.mounts[devPath]
+	v, ok := m.mounts[sourcePath]
 	if !ok {
 		return 0
 	}
@@ -161,11 +161,11 @@ func (m *Mounter) HasMounts(devPath string) int {
 
 // Exists scans mountpaths for specified device and returns true if path is one of the
 // mountpaths. ErrEnoent may be retuned if the device is not found
-func (m *Mounter) Exists(devPath string, path string) (bool, error) {
+func (m *Mounter) Exists(sourcePath string, path string) (bool, error) {
 	m.Lock()
 	defer m.Unlock()
 
-	v, ok := m.mounts[devPath]
+	v, ok := m.mounts[sourcePath]
 	if !ok {
 		return false, ErrEnoent
 	}
@@ -177,9 +177,9 @@ func (m *Mounter) Exists(devPath string, path string) (bool, error) {
 	return false, nil
 }
 
-// GetDevPath scans mount for a specified mountPath and returns the devPath
+// GetSourcePath scans mount for a specified mountPath and returns the sourcePath
 // if found or returnes an ErrEnoent
-func (m *Mounter) GetDevPath(mountPath string) (string, error) {
+func (m *Mounter) GetSourcePath(mountPath string) (string, error) {
 	m.Lock()
 	defer m.Unlock()
 
