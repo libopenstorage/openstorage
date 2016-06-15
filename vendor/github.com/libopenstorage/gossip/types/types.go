@@ -48,9 +48,10 @@ type GossipSessionInfo struct {
 }
 
 type NodeMetaInfo struct {
-	Id           NodeId
-	GenNumber    uint64
-	LastUpdateTs time.Time
+	GossipVersion string
+	Id            NodeId
+	GenNumber     uint64
+	LastUpdateTs  time.Time
 }
 
 type NodeInfo struct {
@@ -75,24 +76,24 @@ func (n NodeInfo) String() string {
 		n.Id, n.LastUpdateTs, n.Status, n.Value)
 }
 
-
 const (
 	DEFAULT_GOSSIP_INTERVAL    time.Duration = 2 * time.Second
 	DEFAULT_PUSH_PULL_INTERVAL time.Duration = 2 * time.Second
 	DEFAULT_PROBE_INTERVAL     time.Duration = 5 * time.Second
 	DEFAULT_PROBE_TIMEOUT      time.Duration = 200 * time.Millisecond
+	DEFAULT_GOSSIP_VERSION     string        = "v1"
 )
 
 type GossipIntervals struct {
 	// Time Interval with which the nodes gossip
-	GossipInterval   time.Duration
+	GossipInterval time.Duration
 	// Interval for full local state tcp sync amongst nodes
 	PushPullInterval time.Duration
 	// Interval for probing other nodes. Used for failure detection amongst peers and reap dead nodes.
 	// It is also the interval for broadcasts (Broadcasts Not used currently)
-	ProbeInterval    time.Duration
+	ProbeInterval time.Duration
 	// Timeout used to determine if a node is down. Should be atleast twice the RTT of network
-	ProbeTimeout     time.Duration
+	ProbeTimeout time.Duration
 }
 
 // Used by the Gossip protocol

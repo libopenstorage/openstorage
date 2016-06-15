@@ -24,10 +24,10 @@ type GossipDelegate struct {
 	history          *GossipHistory
 }
 
-func (gd *GossipDelegate) InitGossipDelegate(genNumber uint64, selfNodeId types.NodeId) {
+func (gd *GossipDelegate) InitGossipDelegate(genNumber uint64, selfNodeId types.NodeId, gossipVersion string) {
 	gd.GenNumber = genNumber
 	gd.nodeId = string(selfNodeId)
-	gd.InitStore(selfNodeId)
+	gd.InitStore(selfNodeId, gossipVersion)
 	gd.history = NewGossipHistory(20)
 }
 
@@ -55,6 +55,27 @@ func (gd *GossipDelegate) convertFromBytes(buf []byte, msg interface{}) error {
 		return err
 	}
 	return nil
+}
+
+func (gd *GossipDelegate) gossipVersionCheck(node *memberlist.Node) error {
+	// Check the gossip version of other node
+	var nodeMetaInfo types.NodeMetaInfo
+	nodeMeta := node.Meta
+	err := gd.convertFromBytes(nodeMeta, &nodeMetaInfo)
+	if err != nil {
+		err = fmt.Errorf("Error in unmarshalling peer's meta data. Error : %v", err.Error())
+	} else {
+		if nodeMetaInfo.GossipVersion != gd.GetGossipVersion() {
+			// Version Mismatch
+			// We do not add this node in our memberlist
+			err = fmt.Errorf("Gossip Version mismatch with Node (%v):(%v)", node.Name, node.Addr)
+		} else {
+			// Version Match
+			// Add this new node in our node map
+			err = nil
+		}
+	}
+	return err
 }
 
 // NodeMeta is used to retrieve meta-data about the current node
@@ -135,7 +156,7 @@ func (gd *GossipDelegate) MergeRemoteState(buf []byte, join bool) {
 	gs := NewGossipSessionInfo("", types.GD_PEER_TO_ME)
 	err := gd.convertFromBytes(buf, &remoteState)
 	if err != nil {
-		gs.Err = fmt.Sprintf("Error in unmarshalling peer's data. Error : %v", err.Error())
+		gs.Err = fmt.Sprintf("Error in unmarshalling peer's local data. Error : %v", err.Error())
 		logrus.Infof(gs.Err)
 	}
 	gd.Update(remoteState)
@@ -154,12 +175,22 @@ func (gd *GossipDelegate) NotifyJoin(node *memberlist.Node) {
 		return
 	}
 
-	// Add this new node in our node map
 	gs := NewGossipSessionInfo(node.Name, types.GD_PEER_TO_ME)
-	gd.NewNode(types.NodeId(types.NodeId(node.Name)))
 	gs.Op = types.NotifyJoin
-	gs.Err = ""
 	gd.updateGossipTs()
+
+	// NotifyAlive should remove a node from memberlist if the
+	// gossip version mismatches.
+	// Nevertheless we are doing an extra check here.
+	err := gd.gossipVersionCheck(node)
+	if err != nil {
+		gs.Err = err.Error()
+		logrus.Infof(gs.Err)
+	} else {
+		gd.NewNode(types.NodeId(types.NodeId(node.Name)))
+		gs.Err = ""
+	}
+
 	gd.history.AddLatest(gs)
 	gd.GetLocalNodeInfo(types.NodeId(node.Name))
 }
@@ -202,19 +233,32 @@ func (gd *GossipDelegate) NotifyAlive(node *memberlist.Node) error {
 		return nil
 	}
 
+	gs := NewGossipSessionInfo(node.Name, types.GD_PEER_TO_ME)
+	gs.Op = types.NotifyAlive
+	gs.Err = ""
+	gd.updateGossipTs()
+
 	diffNode, err := gd.GetLocalNodeInfo(types.NodeId(node.Name))
 	if err != nil {
 		// We found a new node!!
-		gd.NewNode(types.NodeId(node.Name))
+		// Check if gossip version matches
+		err := gd.gossipVersionCheck(node)
+		if err != nil {
+			gs.Err = err.Error()
+			logrus.Infof(gs.Err)
+			gd.history.AddLatest(gs)
+			// Do not add this node to the memberlist.
+			// Returning a non-nil err value
+			return err
+		} else {
+			gd.NewNode(types.NodeId(node.Name))
+		}
 	} else {
 		if diffNode.Status != types.NODE_STATUS_UP {
 			gd.UpdateNodeStatus(types.NodeId(node.Name), types.NODE_STATUS_UP)
 		}
-		gs := NewGossipSessionInfo(node.Name, types.GD_PEER_TO_ME)
-		gs.Err = ""
-		gs.Op = types.NotifyAlive
-		gd.updateGossipTs()
-		gd.history.AddLatest(gs)
 	}
+	gd.history.AddLatest(gs)
+
 	return nil
 }

@@ -34,9 +34,9 @@ type GossipStore interface {
 	// UpdateNodeStatus
 	UpdateNodeStatus(types.NodeId, types.NodeStatus) error
 
-	// MetaInfoMap returns meta information for the
+	// MetaInfo returns meta information for the
 	// current available data
-	MetaInfo() types.StoreMetaInfo
+	MetaInfo() types.NodeMetaInfo
 
 	// GetLocalState returns our nodeInfoMap
 	GetLocalState() types.NodeInfoMap
@@ -72,8 +72,8 @@ type Gossiper interface {
 
 // New returns an initialized Gossip node
 // which identifies itself with the given ip
-func New(ip string, selfNodeId types.NodeId, genNumber uint64, gossipIntervals types.GossipIntervals) Gossiper {
+func New(ip string, selfNodeId types.NodeId, genNumber uint64, gossipIntervals types.GossipIntervals, gossipVersion string) Gossiper {
 	g := new(proto.GossiperImpl)
-	g.Init(ip, selfNodeId, genNumber, gossipIntervals)
+	g.Init(ip, selfNodeId, genNumber, gossipIntervals, gossipVersion)
 	return g
 }

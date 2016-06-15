@@ -135,6 +135,7 @@ func (g *GossiperImpl) Init(
 	selfNodeId types.NodeId,
 	genNumber uint64,
 	gossipIntervals types.GossipIntervals,
+	gossipVersion string,
 ) {
 	g.name = ipPort
 	g.shutDown = false
@@ -163,7 +164,7 @@ func (g *GossiperImpl) Init(
 	mlConf.ProbeInterval = gossipIntervals.ProbeInterval
 
 	// MemberDelegates
-	g.InitGossipDelegate(genNumber, selfNodeId)
+	g.InitGossipDelegate(genNumber, selfNodeId, gossipVersion)
 	mlConf.Delegate = ml.Delegate(g)
 	mlConf.Events = ml.EventDelegate(g)
 	mlConf.Alive = ml.AliveDelegate(g)

@@ -14,15 +14,16 @@ const (
 
 type GossipStoreImpl struct {
 	sync.Mutex
-	id          types.NodeId
-	GenNumber   uint64
-	nodeMap     types.NodeInfoMap
-	selfCorrect bool
+	id            types.NodeId
+	GenNumber     uint64
+	nodeMap       types.NodeInfoMap
+	selfCorrect   bool
+	GossipVersion string
 }
 
-func NewGossipStore(id types.NodeId) *GossipStoreImpl {
+func NewGossipStore(id types.NodeId, version string) *GossipStoreImpl {
 	n := &GossipStoreImpl{}
-	n.InitStore(id)
+	n.InitStore(id, version)
 	n.selfCorrect = false
 	return n
 }
@@ -31,15 +32,18 @@ func (s *GossipStoreImpl) NodeId() types.NodeId {
 	return s.id
 }
 
-func (s *GossipStoreImpl) InitStore(id types.NodeId) {
+func (s *GossipStoreImpl) InitStore(id types.NodeId, version string) {
 	s.nodeMap = make(types.NodeInfoMap)
 	s.id = id
 	s.selfCorrect = true
-	nodeInfo := types.NodeInfo{Id: s.id,
+	s.GossipVersion = version
+	nodeInfo := types.NodeInfo{
+		Id:           s.id,
 		GenNumber:    s.GenNumber,
 		Value:        make(types.StoreMap),
 		LastUpdateTs: time.Now(),
-		Status:       types.NODE_STATUS_UP}
+		Status:       types.NODE_STATUS_UP,
+	}
 	s.nodeMap[s.id] = nodeInfo
 }
 
@@ -129,6 +133,10 @@ func (s *GossipStoreImpl) GetStoreKeys() []types.StoreKey {
 	return storeKeys
 }
 
+func (s *GossipStoreImpl) GetGossipVersion() string {
+	return s.GossipVersion
+}
+
 func statusValid(s types.NodeStatus) bool {
 	return (s != types.NODE_STATUS_INVALID &&
 		s != types.NODE_STATUS_NEVER_GOSSIPED)
@@ -154,22 +162,18 @@ func (s *GossipStoreImpl) NewNode(id types.NodeId) {
 	s.nodeMap[id] = newNodeInfo
 }
 
-func (s *GossipStoreImpl) MetaInfo() types.StoreMetaInfo {
+func (s *GossipStoreImpl) MetaInfo() types.NodeMetaInfo {
 	s.Lock()
 	defer s.Unlock()
 
-	mInfo := make(types.StoreMetaInfo)
-
-	for nodeId, nodeValue := range s.nodeMap {
-		if statusValid(nodeValue.Status) {
-			nodeMetaInfo := types.NodeMetaInfo{
-				Id:           nodeId,
-				LastUpdateTs: nodeValue.LastUpdateTs,
-			}
-			mInfo[nodeId] = nodeMetaInfo
-		}
+	selfNodeInfo, _ := s.nodeMap[s.id]
+	nodeMetaInfo := types.NodeMetaInfo{
+		Id:            selfNodeInfo.Id,
+		LastUpdateTs:  selfNodeInfo.LastUpdateTs,
+		GenNumber:     selfNodeInfo.GenNumber,
+		GossipVersion: s.GossipVersion,
 	}
-	return mInfo
+	return nodeMetaInfo
 }
 
 func (s *GossipStoreImpl) GetLocalState() types.NodeInfoMap {
@@ -198,7 +202,6 @@ func (s *GossipStoreImpl) Update(diff types.NodeInfoMap) {
 			continue
 		}
 		selfValue, ok := s.nodeMap[id]
-
 		if !ok || !statusValid(selfValue.Status) ||
 			selfValue.LastUpdateTs.Before(newNodeInfo.LastUpdateTs) {
 			// Our view of Status of a Node, should only be determined by memberlist.
