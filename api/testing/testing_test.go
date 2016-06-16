@@ -25,7 +25,14 @@ func init() {
 }
 
 func makeRequest(t *testing.T) {
-	c, err := client.NewDriverClient(nfs.Name)
+	versions, err := client.GetSupportedDriverVersions(nfs.Name)
+	if err != nil {
+		t.Fatalf("Failed to obtain supported versions. Err: %v", err)
+	}
+	if len(versions) == 0 {
+		t.Fatalf("Versions array is empty")
+	}
+	c, err := client.NewDriverClient(nfs.Name, versions[0])
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
@@ -55,7 +62,14 @@ func TestAll(t *testing.T) {
 		0,
 	)
 	time.Sleep(time.Second * 2)
-	c, err := client.NewDriverClient(nfs.Name)
+	versions, err := client.GetSupportedDriverVersions(nfs.Name)
+	if err != nil {
+		t.Fatalf("Failed to obtain supported versions. Err: %v", err)
+	}
+	if len(versions) == 0 {
+		t.Fatalf("Versions array is empty")
+	}
+	c, err := client.NewDriverClient(nfs.Name, versions[0])
 	if err != nil {
 		t.Fatalf("Failed to initialize Driver: %v", err)
 	}
