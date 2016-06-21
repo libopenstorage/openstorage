@@ -365,6 +365,7 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *ClusterInfo) {
 		nodeIps = append(nodeIps, nodeEntry.MgmtIp+":9002")
 	}
 	c.gossip.Start(nodeIps)
+	c.gossip.UpdateClusterSize(len(clusterInfo.NodeEntries))
 
 	lastUpdateTs := time.Now()
 	for {
@@ -598,7 +599,7 @@ func (c *ClusterManager) Start() error {
 
 		self, exist := c.initNode(initState.ClusterInfo)
 
-		err = c.initNodeInCluster(initState, &c.selfNode, exist)
+		err = c.initNodeInCluster(initState, self, exist)
 		if err != nil {
 			dlog.Errorln("Failed to initialize node in cluster.", err)
 			return err
@@ -656,7 +657,10 @@ func (c *ClusterManager) Start() error {
 				err := fmt.Errorf("Unable to achieve Quorum."+
 					"Quorum Timeout (%v) exceeded.",
 					types.DEFAULT_QUORUM_TIMEOUT)
-				dlog.Warnf("Failed to join cluster.", err)
+				dlog.Warnln("Failed to join cluster: ", err)
+				c.status = api.Status_STATUS_NOT_IN_QUORUM
+				c.selfNode.Status = api.Status_STATUS_OFFLINE
+				c.gossip.UpdateSelfStatus(types.NODE_STATUS_DOWN)
 				return err
 			}
 			time.Sleep(types.DEFAULT_GOSSIP_INTERVAL)
