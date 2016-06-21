@@ -10,6 +10,7 @@ import (
 	"net"
 	"os"
 	"time"
+	"fmt"
 
 	"go.pedge.io/dlog"
 
@@ -173,6 +174,15 @@ func (c *ClusterManager) getCurrentState() *api.Node {
 	return &c.selfNode
 }
 
+func (c *ClusterManager) getPeerNodeIps(db ClusterInfo) ([]string, error) {
+	var nodeIps []string
+	for _, nodeEntry := range db.NodeEntries {
+		url := nodeEntry.MgmtIp + ":9002"
+		nodeIps = append(nodeIps, url)
+	}
+	return nodeIps, nil
+}
+
 // Get the latest config.
 func (c *ClusterManager) watchDB(key string, opaque interface{},
 	kvp *kvdb.KVPair, err error) error {
@@ -186,6 +196,9 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 	// The only value we rely on during an update is the cluster size.
 	c.size = db.Size
 
+	// Probably new node was added into the cluster db
+	peerIps, _ := c.getPeerNodeIps(db)
+	c.gossip.UpdateClusterSize(len(peerIps))
 	return nil
 }
 
@@ -252,14 +265,18 @@ func (c *ClusterManager) cleanupInit(db *ClusterInfo, self *api.Node) error {
 }
 
 // Initialize node and alert listeners that we are joining the cluster.
-func (c *ClusterManager) joinCluster(initState *ClusterInitState,
-	self *api.Node, exist bool) error {
+func (c *ClusterManager) joinCluster(
+	initState *ClusterInitState,
+	self *api.Node,
+	exist bool,
+) error {
 	var err error
 	var newInitState *ClusterInitState
 
 	// If I am already in the cluster map, don't add me again.
 	if exist {
-		goto found
+		err = nil
+		goto done
 	}
 
 	// Alert all listeners that we are a new node joining an existing cluster.
@@ -279,28 +296,15 @@ func (c *ClusterManager) joinCluster(initState *ClusterInitState,
 	initState.InitDb = newInitState.InitDb
 	initState.Version = newInitState.Version
 
-found:
-	// Alert all listeners that we are joining the cluster.
-	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		err = e.Value.(ClusterListener).Join(self, initState)
-		if err != nil {
-			self.Status = api.Status_STATUS_ERROR
-			dlog.Warnf("Failed to initialize Join %s: %v",
-				e.Value.(ClusterListener).String(), err)
-
-			if exist == false {
-				c.cleanupInit(initState.ClusterInfo, self)
-			}
-			goto done
-		}
-	}
-
 done:
 	return err
 }
 
-func (c *ClusterManager) initCluster(initState *ClusterInitState,
-	self *api.Node, exist bool) error {
+func (c *ClusterManager) initCluster(
+	initState *ClusterInitState,
+	self *api.Node,
+	exist bool,
+) error {
 	err := error(nil)
 
 	// Alert all listeners that we are initializing a new cluster.
@@ -375,8 +379,22 @@ func (c *ClusterManager) updateClusterStatus() {
 				os.Exit(-1)
 			}
 
-			// Ignore updates from self node.
+			// Special handling for self node
 			if id == types.NodeId(node.Id) {
+				if c.selfNode.Status == api.Status_STATUS_OK &&
+					nodeInfo.Status == types.NODE_STATUS_WAITING_FOR_QUORUM {
+					// We have lost quorum
+					dlog.Warnf("Not in quorum. Going down...")
+					c.gossip.UpdateSelfStatus(types.NODE_STATUS_DOWN)
+					c.selfNode.Status = api.Status_STATUS_OFFLINE
+					for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
+						err := e.Value.(ClusterListener).Leave(&c.selfNode)
+						if err != nil {
+							dlog.Warnln("Failed to notify ",
+								e.Value.(ClusterListener).String())
+						}
+					}
+				} //else Ignore this update
 				continue
 			}
 
@@ -441,7 +459,6 @@ func (c *ClusterManager) updateClusterStatus() {
 				c.nodeCache[newNodeInfo.Id] = newNodeInfo
 			}
 		}
-
 		time.Sleep(2 * time.Second)
 	}
 }
@@ -484,7 +501,10 @@ func (c *ClusterManager) Start() error {
 	c.selfNode = api.Node{}
 	c.selfNode.GenNumber = uint64(time.Now().UnixNano())
 	c.selfNode.Id = c.config.NodeId
-	c.selfNode.Status = api.Status_STATUS_OK
+	// Set the status to NONE to start the node.
+	// Once we achieve quorum then we actually join the cluster
+	// and change the status
+	c.selfNode.Status = api.Status_STATUS_NONE
 	c.selfNode.MgmtIp, c.selfNode.DataIp, err = ExternalIp(&c.config)
 	c.selfNode.StartTime = time.Now()
 	c.selfNode.Hostname, _ = os.Hostname()
@@ -505,6 +525,7 @@ func (c *ClusterManager) Start() error {
 		PushPullInterval: types.DEFAULT_PUSH_PULL_INTERVAL,
 		ProbeInterval:    types.DEFAULT_PROBE_INTERVAL,
 		ProbeTimeout:     types.DEFAULT_PROBE_TIMEOUT,
+		QuorumTimeout:    types.DEFAULT_QUORUM_TIMEOUT,
 	}
 	c.gossip = gossip.New(
 		c.selfNode.MgmtIp+":9002",
@@ -531,6 +552,7 @@ func (c *ClusterManager) Start() error {
 	// Set the clusterID in db
 	initState.ClusterInfo.Id = c.config.ClusterId
 
+	var exist bool
 	if initState.ClusterInfo.Status == api.Status_STATUS_INIT {
 		dlog.Infoln("Will initialize a new cluster.")
 
@@ -546,6 +568,7 @@ func (c *ClusterManager) Start() error {
 		dlog.Infoln("Cluster state is OK... Joining the cluster.")
 
 		c.status = api.Status_STATUS_OK
+
 		self, exist := c.initNode(initState.ClusterInfo)
 
 		err = c.joinCluster(initState, self, exist)
@@ -584,6 +607,47 @@ func (c *ClusterManager) Start() error {
 
 	// Start heartbeating to other nodes.
 	go c.startHeartBeat(initState.ClusterInfo)
+
+	// Max quorum retries allowed = 30
+	// 30 * 2 seconds (gossip interval) = 1 minute (quorum timeout)
+	quorumRetries := 0
+	for {
+		gossipSelfStatus := c.gossip.GetSelfStatus()
+		if c.selfNode.Status == api.Status_STATUS_NONE &&
+			gossipSelfStatus == types.NODE_STATUS_UP {
+			// Node not initialized yet
+			// Achieved quorum in the cluster.
+			// Lets start the node
+			// Alert all listeners that we are joining the cluster.
+			c.selfNode.Status = api.Status_STATUS_OK
+			for e := c.listeners.Front(); e != nil; e = e.Next() {
+				err := e.Value.(ClusterListener).Join(&c.selfNode, initState)
+				if err != nil {
+					c.selfNode.Status = api.Status_STATUS_ERROR
+					dlog.Warnf("Failed to initialize Join %s: %v",
+						e.Value.(ClusterListener).String(), err)
+
+					if exist == false {
+						c.cleanupInit(initState.ClusterInfo, &c.selfNode)
+					}
+					dlog.Errorln("Failed to join cluster.", err)
+					return err
+				}
+
+			}
+			break
+		} else {
+			if quorumRetries == 30 {
+				err := fmt.Errorf("Unable to achieve Quorum."+
+					"Quorum Timeout (%v) exceeded.",
+					types.DEFAULT_QUORUM_TIMEOUT)
+				dlog.Warnf("Failed to join cluster.", err)
+				return err
+			}
+			time.Sleep(types.DEFAULT_GOSSIP_INTERVAL)
+			quorumRetries++
+		}
+	}
 	go c.updateClusterStatus()
 
 	kvdb.WatchKey(ClusterDBKey, 0, nil, c.watchDB)
