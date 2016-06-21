@@ -261,12 +261,11 @@ func (g *GossiperImpl) CheckAndUpdateQuorum() {
 		}
 	}
 
-	if selfStatus == types.NODE_STATUS_DOWN {
-		// We are already down. No need of checking for quorum.
-		return
-	}
-
 	if upNodes < quorum {
+		if selfStatus == types.NODE_STATUS_DOWN {
+			// We are already down. No need of updating the status based on quorum.
+			return
+		}
 		// We do not have quorum
 		if selfStatus == types.NODE_STATUS_UP {
 			// We were up, but now we have lost quorum

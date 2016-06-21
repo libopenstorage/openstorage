@@ -7,10 +7,10 @@ import (
 	"container/list"
 	"encoding/gob"
 	"errors"
+	"fmt"
 	"net"
 	"os"
 	"time"
-	"fmt"
 
 	"go.pedge.io/dlog"
 
@@ -264,8 +264,8 @@ func (c *ClusterManager) cleanupInit(db *ClusterInfo, self *api.Node) error {
 	return resErr
 }
 
-// Initialize node and alert listeners that we are joining the cluster.
-func (c *ClusterManager) joinCluster(
+// Initialize node and alert listeners that we are initializing a node in the cluster.
+func (c *ClusterManager) initNodeInCluster(
 	initState *ClusterInitState,
 	self *api.Node,
 	exist bool,
@@ -279,7 +279,7 @@ func (c *ClusterManager) joinCluster(
 		goto done
 	}
 
-	// Alert all listeners that we are a new node joining an existing cluster.
+	// Alert all listeners that we are a new node and we are initializing.
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err = e.Value.(ClusterListener).Init(self, initState)
 		if err != nil {
@@ -300,6 +300,30 @@ done:
 	return err
 }
 
+// Alert all listeners that we are joining the cluster
+func (c *ClusterManager) joinCluster(
+	initState *ClusterInitState,
+	self *api.Node,
+	exist bool,
+) error {
+	// Alert all listeners that we are joining the cluster.
+	for e := c.listeners.Front(); e != nil; e = e.Next() {
+		err := e.Value.(ClusterListener).Join(self, initState)
+		if err != nil {
+			self.Status = api.Status_STATUS_ERROR
+			dlog.Warnf("Failed to initialize Join %s: %v",
+				e.Value.(ClusterListener).String(), err)
+
+			if exist == false {
+				c.cleanupInit(initState.ClusterInfo, self)
+			}
+			dlog.Errorln("Failed to join cluster.", err)
+			return err
+		}
+	}
+	return nil
+}
+
 func (c *ClusterManager) initCluster(
 	initState *ClusterInitState,
 	self *api.Node,
@@ -318,7 +342,7 @@ func (c *ClusterManager) initCluster(
 		}
 	}
 
-	err = c.joinCluster(initState, self, exist)
+	err = c.initNodeInCluster(initState, self, exist)
 	if err != nil {
 		dlog.Printf("Failed to join new cluster")
 		goto done
@@ -358,7 +382,7 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *ClusterInfo) {
 	}
 }
 
-func (c *ClusterManager) updateClusterStatus() {
+func (c *ClusterManager) updateClusterStatus(initState *ClusterInitState, exist bool) {
 	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
 
 	for {
@@ -384,17 +408,20 @@ func (c *ClusterManager) updateClusterStatus() {
 				if c.selfNode.Status == api.Status_STATUS_OK &&
 					nodeInfo.Status == types.NODE_STATUS_WAITING_FOR_QUORUM {
 					// We have lost quorum
-					dlog.Warnf("Not in quorum. Going down...")
+					dlog.Warnf("Not in quorum. Gracefully shutting down...")
 					c.gossip.UpdateSelfStatus(types.NODE_STATUS_DOWN)
 					c.selfNode.Status = api.Status_STATUS_OFFLINE
-					for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
-						err := e.Value.(ClusterListener).Leave(&c.selfNode)
-						if err != nil {
-							dlog.Warnln("Failed to notify ",
-								e.Value.(ClusterListener).String())
-						}
+					c.status = api.Status_STATUS_NOT_IN_QUORUM
+					c.Shutdown()
+				} else if c.selfNode.Status == api.Status_STATUS_OFFLINE &&
+					nodeInfo.Status == types.NODE_STATUS_UP {
+					dlog.Infof("Back in quorum..")
+					err := c.joinCluster(initState, &c.selfNode, exist)
+					if err == nil {
+						c.selfNode.Status = api.Status_STATUS_OK
 					}
-				} //else Ignore this update
+				}
+				//else Ignore this update
 				continue
 			}
 
@@ -571,9 +598,9 @@ func (c *ClusterManager) Start() error {
 
 		self, exist := c.initNode(initState.ClusterInfo)
 
-		err = c.joinCluster(initState, self, exist)
+		err = c.initNodeInCluster(initState, &c.selfNode, exist)
 		if err != nil {
-			dlog.Errorln("Failed to join cluster.", err)
+			dlog.Errorln("Failed to initialize node in cluster.", err)
 			return err
 		}
 	} else {
@@ -618,23 +645,11 @@ func (c *ClusterManager) Start() error {
 			// Node not initialized yet
 			// Achieved quorum in the cluster.
 			// Lets start the node
-			// Alert all listeners that we are joining the cluster.
-			c.selfNode.Status = api.Status_STATUS_OK
-			for e := c.listeners.Front(); e != nil; e = e.Next() {
-				err := e.Value.(ClusterListener).Join(&c.selfNode, initState)
-				if err != nil {
-					c.selfNode.Status = api.Status_STATUS_ERROR
-					dlog.Warnf("Failed to initialize Join %s: %v",
-						e.Value.(ClusterListener).String(), err)
-
-					if exist == false {
-						c.cleanupInit(initState.ClusterInfo, &c.selfNode)
-					}
-					dlog.Errorln("Failed to join cluster.", err)
-					return err
-				}
-
+			err := c.joinCluster(initState, &c.selfNode, exist)
+			if err != nil {
+				return err
 			}
+			c.selfNode.Status = api.Status_STATUS_OK
 			break
 		} else {
 			if quorumRetries == 30 {
@@ -648,7 +663,7 @@ func (c *ClusterManager) Start() error {
 			quorumRetries++
 		}
 	}
-	go c.updateClusterStatus()
+	go c.updateClusterStatus(initState, exist)
 
 	kvdb.WatchKey(ClusterDBKey, 0, nil, c.watchDB)
 

@@ -62,7 +62,7 @@ type ClusterListener interface {
 	// CleanupInit is called when Init failed.
 	CleanupInit(self *api.Node, clusterInfo *ClusterInfo) error
 
-	// Shutdown is called when a node is gracefully shutting down.
+	// Halt is called when a node is gracefully shutting down.
 	Halt(self *api.Node, clusterInfo *ClusterInfo) error
 
 	// Join is called when this node is joining an existing cluster.
