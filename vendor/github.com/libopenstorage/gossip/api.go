@@ -31,6 +31,9 @@ type GossipStore interface {
 	// UpdateSelfStatus
 	UpdateSelfStatus(types.NodeStatus)
 
+	// UpdateClusterSize
+	UpdateClusterSize(int)
+
 	// UpdateNodeStatus
 	UpdateNodeStatus(types.NodeId, types.NodeStatus) error
 

@@ -17,8 +17,8 @@ const (
 	NODE_STATUS_UP
 	NODE_STATUS_DOWN
 	NODE_STATUS_NEVER_GOSSIPED
-	NODE_STATUS_WAITING_FOR_NEW_UPDATE
-	NODE_STATUS_DOWN_WAITING_FOR_NEW_UPDATE
+	NODE_STATUS_WAITING_FOR_QUORUM
+	NODE_STATUS_UP_AND_WAITING_FOR_QUORUM
 )
 
 type GossipDirection uint8
@@ -81,19 +81,24 @@ const (
 	DEFAULT_PUSH_PULL_INTERVAL time.Duration = 2 * time.Second
 	DEFAULT_PROBE_INTERVAL     time.Duration = 5 * time.Second
 	DEFAULT_PROBE_TIMEOUT      time.Duration = 200 * time.Millisecond
+	DEFAULT_QUORUM_TIMEOUT     time.Duration = 1 * time.Minute
 	DEFAULT_GOSSIP_VERSION     string        = "v1"
 )
 
 type GossipIntervals struct {
-	// Time Interval with which the nodes gossip
+	// GossipInterval is the time interval within which the nodes gossip
 	GossipInterval time.Duration
-	// Interval for full local state tcp sync amongst nodes
+	// PushPullInterval is the time interval for full local state tcp sync amongst nodes
 	PushPullInterval time.Duration
-	// Interval for probing other nodes. Used for failure detection amongst peers and reap dead nodes.
+	// ProbeInterval is the time interval for probing other nodes.
+	// Used for failure detection amongst peers and reap dead nodes.
 	// It is also the interval for broadcasts (Broadcasts Not used currently)
 	ProbeInterval time.Duration
-	// Timeout used to determine if a node is down. Should be atleast twice the RTT of network
+	// ProbeTimeout used to determine if a node is down. Should be atleast twice the RTT of network
 	ProbeTimeout time.Duration
+	// QuorumTimout is the timeout for which a node will stay in the UP_AND_WAITING_FOR_QUORUM
+	// and then transition to WAITING_FOR_QUORUM (Not UP) if quorum is not satisfied
+	QuorumTimeout time.Duration
 }
 
 // Used by the Gossip protocol

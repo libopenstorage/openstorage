@@ -19,6 +19,14 @@ type GossipStoreImpl struct {
 	nodeMap       types.NodeInfoMap
 	selfCorrect   bool
 	GossipVersion string
+	// This cluster size is updated from an external source
+	// such as a kv database. This is an extra measure to find the
+	// number of nodes in the cluster other than just relying on
+	// memberlist and the length of nodeMap. It is used in
+	// determining the cluster quorum
+	clusterSize int
+	// Ts at which we lost quorum
+	lostQuorumTs time.Time
 }
 
 func NewGossipStore(id types.NodeId, version string) *GossipStoreImpl {
@@ -32,6 +40,29 @@ func (s *GossipStoreImpl) NodeId() types.NodeId {
 	return s.id
 }
 
+// UpdateClusterSize is called from an external source indicating the cluster size
+func (s *GossipStoreImpl) UpdateClusterSize(clusterSize int) {
+	s.Lock()
+	defer s.Unlock()
+
+	s.clusterSize = clusterSize
+}
+
+func (s *GossipStoreImpl) GetClusterSize() int {
+	return s.clusterSize
+}
+
+func (s *GossipStoreImpl) UpdateLostQuorumTs() {
+	s.Lock()
+	defer s.Unlock()
+
+	s.lostQuorumTs = time.Now()
+}
+
+func (s *GossipStoreImpl) GetLostQuorumTs() time.Time {
+	return s.lostQuorumTs
+}
+
 func (s *GossipStoreImpl) InitStore(id types.NodeId, version string) {
 	s.nodeMap = make(types.NodeInfoMap)
 	s.id = id
@@ -42,7 +73,7 @@ func (s *GossipStoreImpl) InitStore(id types.NodeId, version string) {
 		GenNumber:    s.GenNumber,
 		Value:        make(types.StoreMap),
 		LastUpdateTs: time.Now(),
-		Status:       types.NODE_STATUS_UP,
+		Status:       types.NODE_STATUS_WAITING_FOR_QUORUM,
 	}
 	s.nodeMap[s.id] = nodeInfo
 }
@@ -74,6 +105,14 @@ func (s *GossipStoreImpl) UpdateSelfStatus(status types.NodeStatus) {
 	nodeInfo.Status = status
 	nodeInfo.LastUpdateTs = time.Now()
 	s.nodeMap[s.id] = nodeInfo
+}
+
+func (s *GossipStoreImpl) GetSelfStatus() types.NodeStatus {
+	s.Lock()
+	defer s.Unlock()
+
+	nodeInfo, _ := s.nodeMap[s.id]
+	return nodeInfo.Status
 }
 
 func (s *GossipStoreImpl) UpdateNodeStatus(nodeId types.NodeId, status types.NodeStatus) error {
