@@ -364,6 +364,7 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *ClusterInfo) {
 		}
 		nodeIps = append(nodeIps, nodeEntry.MgmtIp+":9002")
 	}
+	dlog.Infof("Heartbeating to these nodes : %v", nodeIps)
 	c.gossip.Start(nodeIps)
 	c.gossip.UpdateClusterSize(len(clusterInfo.NodeEntries))
 
@@ -529,10 +530,10 @@ func (c *ClusterManager) Start() error {
 	c.selfNode = api.Node{}
 	c.selfNode.GenNumber = uint64(time.Now().UnixNano())
 	c.selfNode.Id = c.config.NodeId
-	// Set the status to NONE to start the node.
+	// Set the status to NOT_IN_QUORUM to start the node.
 	// Once we achieve quorum then we actually join the cluster
-	// and change the status
-	c.selfNode.Status = api.Status_STATUS_NONE
+	// and change the status to OK
+	c.selfNode.Status = api.Status_STATUS_NOT_IN_QUORUM
 	c.selfNode.MgmtIp, c.selfNode.DataIp, err = ExternalIp(&c.config)
 	c.selfNode.StartTime = time.Now()
 	c.selfNode.Hostname, _ = os.Hostname()
@@ -641,7 +642,7 @@ func (c *ClusterManager) Start() error {
 	quorumRetries := 0
 	for {
 		gossipSelfStatus := c.gossip.GetSelfStatus()
-		if c.selfNode.Status == api.Status_STATUS_NONE &&
+		if c.selfNode.Status == api.Status_STATUS_NOT_IN_QUORUM &&
 			gossipSelfStatus == types.NODE_STATUS_UP {
 			// Node not initialized yet
 			// Achieved quorum in the cluster.
@@ -650,9 +651,11 @@ func (c *ClusterManager) Start() error {
 			if err != nil {
 				return err
 			}
+			c.status = api.Status_STATUS_OK
 			c.selfNode.Status = api.Status_STATUS_OK
 			break
 		} else {
+			c.status = api.Status_STATUS_NOT_IN_QUORUM
 			if quorumRetries == 30 {
 				err := fmt.Errorf("Unable to achieve Quorum."+
 					"Quorum Timeout (%v) exceeded.",
@@ -663,6 +666,7 @@ func (c *ClusterManager) Start() error {
 				c.gossip.UpdateSelfStatus(types.NODE_STATUS_DOWN)
 				return err
 			}
+			dlog.Infof("Sleeping as no quorum")
 			time.Sleep(types.DEFAULT_GOSSIP_INTERVAL)
 			quorumRetries++
 		}
