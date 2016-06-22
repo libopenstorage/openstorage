@@ -519,7 +519,6 @@ func (c *ClusterManager) Start() error {
 	if err != nil {
 		dlog.Panicln("Fatal, Unable to obtain cluster lock.", err)
 	}
-	defer kvdb.Unlock(kvlock)
 
 	initState, err := snapAndReadClusterInfo()
 	if err != nil {
@@ -537,38 +536,41 @@ func (c *ClusterManager) Start() error {
 		c.status = api.Status_STATUS_OK
 		initState.ClusterInfo.Status = api.Status_STATUS_OK
 		self, _ := c.initNode(initState.ClusterInfo)
+		// Add ourselves into the cluster DB and release the lock
+		err := writeClusterInfo(initState.ClusterInfo)
+		if err != nil {
+			dlog.Errorln("Failed to save the database.", err)
+			kvdb.Unlock(kvlock)
+			return err
+		}
+		kvdb.Unlock(kvlock)
 
 		err = c.initCluster(initState, self, false)
 		if err != nil {
 			dlog.Errorln("Failed to initialize the cluster.", err)
 			return err
 		}
-
-		// Update the new state of the cluster in the KV database
-		err := writeClusterInfo(initState.ClusterInfo)
-		if err != nil {
-			dlog.Errorln("Failed to save the database.", err)
-			return err
-		}
-
 	} else if initState.ClusterInfo.Status&api.Status_STATUS_OK > 0 {
 		dlog.Infoln("Cluster state is OK... Joining the cluster.")
 
 		c.status = api.Status_STATUS_OK
 		self, exist := c.initNode(initState.ClusterInfo)
+		// Add ourselves into the cluster DB and release the lock
+		err := writeClusterInfo(initState.ClusterInfo)
+		if err != nil {
+			dlog.Errorln("Failed to save the database.", err)
+			kvdb.Unlock(kvlock)
+			return err
+		}
+		kvdb.Unlock(kvlock)
 
 		err = c.joinCluster(initState, self, exist)
 		if err != nil {
 			dlog.Errorln("Failed to join cluster.", err)
 			return err
 		}
-
-		err := writeClusterInfo(initState.ClusterInfo)
-		if err != nil {
-			return err
-		}
-
 	} else {
+		kvdb.Unlock(kvlock)
 		return errors.New("Fatal, Cluster is in an unexpected state.")
 	}
 
