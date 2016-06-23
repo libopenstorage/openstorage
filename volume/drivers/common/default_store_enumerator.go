@@ -29,7 +29,7 @@ func newDefaultStoreEnumerator(driver string, kvdb kvdb.Kvdb) *defaultStoreEnume
 
 // Lock volume specified by volumeID.
 func (e *defaultStoreEnumerator) Lock(volumeID string) (interface{}, error) {
-	return e.kvdb.Lock(e.lockKey(volumeID), 10)
+	return e.kvdb.Lock(e.lockKey(volumeID))
 }
 
 // Lock volume with token obtained from call to Lock.

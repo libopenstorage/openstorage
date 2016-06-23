@@ -515,7 +515,7 @@ func (c *ClusterManager) Start() error {
 	)
 
 	kvdb := kvdb.Instance()
-	kvlock, err := kvdb.Lock(clusterLockKey, 60)
+	kvlock, err := kvdb.Lock(clusterLockKey)
 	if err != nil {
 		dlog.Panicln("Fatal, Unable to obtain cluster lock.", err)
 	}
@@ -600,7 +600,7 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 // SetSize sets the maximum number of nodes in a cluster.
 func (c *ClusterManager) SetSize(size int) error {
 	kvdb := kvdb.Instance()
-	kvlock, err := kvdb.Lock(clusterLockKey, 20)
+	kvlock, err := kvdb.Lock(clusterLockKey)
 	if err != nil {
 		dlog.Warnln("Unable to obtain cluster lock for updating config", err)
 		return nil

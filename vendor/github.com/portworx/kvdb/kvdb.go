@@ -49,9 +49,9 @@ var (
 	ErrModified = errors.New("Key Index mismatch")
 	// ErrSetTTLFailed raised if unable to set ttl value for a key create/put/update action
 	ErrSetTTLFailed = errors.New("Unable to set ttl value")
-	// ErrTTLNotSupported
+	// ErrTTLNotSupported if kvdb implementation doesn't support TTL
 	ErrTTLNotSupported = errors.New("TTL value not supported")
-	// ErrInvalidLock
+	// ErrInvalidLock Lock and unlock operations don't match.
 	ErrInvalidLock = errors.New("Invalid lock/unlock operation")
 )
 
@@ -152,9 +152,8 @@ type Kvdb interface {
 	// WatchTree is the same as WatchKey except that watchCB is triggered
 	// for updates on all keys that share the prefix.
 	WatchTree(prefix string, waitIndex uint64, opaque interface{}, watchCB WatchCB) error
-	// Lock specfied key for specified ttl. The KVPair returned should be used
-	// to unlock.
-	Lock(key string, ttl uint64) (*KVPair, error)
+	// Lock specfied key. The KVPair returned should be used to unlock.
+	Lock(key string) (*KVPair, error)
 	// Unlock kvp previously acquired through a call to lock.
 	Unlock(kvp *KVPair) error
 	// TxNew returns a new Tx coordinator object or ErrNotSupported

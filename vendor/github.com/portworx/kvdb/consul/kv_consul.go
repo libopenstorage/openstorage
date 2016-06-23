@@ -25,7 +25,7 @@ const (
 	// Name is the name of this kvdb implementation.
 	Name      = "consul-kv"
 	bootstrap = "kvdb/bootstrap"
-
+	// MaxRenewRetries to renew TTL.
 	MaxRenewRetries = 5
 )
 
@@ -126,18 +126,22 @@ func (kv *consulKV) Put(key string, val interface{}, ttl uint64) (*kvdb.KVPair, 
 	}
 
 	if ttl > 0 {
-		return nil, kvdb.ErrTTLNotSupported
-
+		if ttl < 20 {
+			return nil, kvdb.ErrTTLNotSupported
+		}
 		// Future Use : To Support TTL values
-		/* for retries := 1; retries <= MaxRenewRetries; retries++ {
-			err := kv.renewSession(pair, ttl)
+		for retries := 1; retries <= MaxRenewRetries; retries++ {
+			// Consul doubles the ttl value. Hence we divide it by 2
+			// Consul does not support ttl values less than 10.
+			// Hence we set our lower limit to 20
+			err := kv.renewSession(pair, ttl/2)
 			if err == nil {
 				break
 			}
 			if retries == MaxRenewRetries {
 				return nil, kvdb.ErrSetTTLFailed
 			}
-		}*/
+		}
 	}
 
 	if _, err := kv.client.KV().Put(pair, nil); err != nil {
@@ -319,13 +323,13 @@ func (kv *consulKV) WatchTree(prefix string, waitIndex uint64, opaque interface{
 	return nil
 }
 
-func (kv *consulKV) Lock(key string, ttl uint64) (*kvdb.KVPair, error) {
+func (kv *consulKV) Lock(key string) (*kvdb.KVPair, error) {
 	// Strip of the leading slash or else consul throws error
 	if key[0] == '/' {
 		key = key[1:]
 	}
 
-	l, err := kv.getLock(key, ttl)
+	l, err := kv.getLock(key, 3)
 	if err != nil {
 		return nil, err
 	}
@@ -702,7 +706,7 @@ func (kv *consulKV) watchKeyStart(key string, keyExisted bool, waitIndex uint64,
 }
 
 // Future Use : Support for ttl values in create/update/put
-/*
+
 func (kv *consulKV) renewSession(pair *api.KVPair, ttl uint64) error {
 	// Check if there is any previous session with an active TTL
 	session, err := kv.getActiveSession(pair.Key)
@@ -718,17 +722,12 @@ func (kv *consulKV) renewSession(pair *api.KVPair, ttl uint64) error {
 		}
 	}
 
-	//if ttl < 20 {
-		// Consul requires minimum of 10 sec of ttl
-		//ttl = 20
-	//}
-	// Consul multiplies the TTL by 2x
 	durationTTL := time.Duration(int64(ttl)) * time.Second
 
 	entry := &api.SessionEntry{
 		Behavior:  api.SessionBehaviorDelete, // Delete the key when the session expires
 		TTL:       durationTTL.String(),
-		LockDelay: 1 * time.Millisecond,      // Virtually disable lock delay
+		LockDelay: 1 * time.Millisecond, // Virtually disable lock delay
 	}
 
 	// Create the key session
@@ -766,4 +765,3 @@ func (kv *consulKV) getActiveSession(key string) (string, error) {
 	}
 	return "", nil
 }
-*/

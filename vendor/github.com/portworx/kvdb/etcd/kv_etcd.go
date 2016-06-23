@@ -30,7 +30,7 @@ const (
 )
 
 var (
-	defaultMachines = []string{"http://127.0.0.1:4001"}
+	defaultMachines = []string{"http://127.0.0.1:5001"}
 )
 
 func init() {
@@ -271,10 +271,10 @@ func (kv *etcdKV) WatchTree(
 	return nil
 }
 
-func (kv *etcdKV) Lock(key string, ttl uint64) (*kvdb.KVPair, error) {
+func (kv *etcdKV) Lock(key string) (*kvdb.KVPair, error) {
 	key = kv.domain + key
 	duration := time.Second
-
+	ttl := uint64(4)
 	count := 0
 	kvPair, err := kv.Create(key, "locked", ttl)
 	for maxCount := 300; err != nil && count < maxCount; count++ {
@@ -574,12 +574,16 @@ func (kv *etcdKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 			ok := false
 
 			if err != nil {
+				if err == kvdb.ErrWatchStopped {
+					return nil
+				}
 				watchErr = err
 				sendErr = err
 				goto errordone
 			}
 
 			if kvp == nil {
+
 				watchErr = fmt.Errorf("kvp is nil")
 				sendErr = watchErr
 				goto errordone
@@ -596,8 +600,8 @@ func (kv *etcdKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 			m.Lock()
 			defer m.Unlock()
 
-			if kvp.ModifiedIndex > highestKvdbIndex {
-				// done applying changes, return
+			if kvp.ModifiedIndex >= highestKvdbIndex {
+				// Done applying changes.
 				watchErr = fmt.Errorf("done")
 				sendErr = nil
 				goto errordone
