@@ -68,6 +68,20 @@ type Cluster struct {
 	Nodes []Node
 }
 
+// StatPoint represents the basic structure of a single Stat reported
+// TODO: This is the first step to introduce stats in openstorage.
+//       Follow up task is to introduce an API for logging stats
+type StatPoint struct {
+	// Name of the Stat
+	Name      string
+	// Tags for the Stat
+	Tags      map[string]string
+	// Fields and values of the stat
+	Fields    map[string]interface{}
+	// Timestamp in Unix format
+	Timestamp int64
+}
+
 func StatusSimpleValueOf(s string) (Status, error) {
 	obj, err := simpleValueOf("status", Status_value, s)
 	return Status(obj), err

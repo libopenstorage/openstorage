@@ -173,7 +173,7 @@ func (r *Request) URL() *url.URL {
 	if len(r.resource) != 0 {
 		p = path.Join(p, strings.ToLower(r.resource))
 		if len(r.instance) != 0 {
-			p = path.Join(p, strings.ToLower(r.instance))
+			p = path.Join(p, r.instance)
 		}
 	}
 

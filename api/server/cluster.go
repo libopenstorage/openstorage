@@ -16,15 +16,16 @@ type clusterApi struct {
 
 func (c *clusterApi) Routes() []*Route {
 	return []*Route{
-		&Route{verb: "GET", path: clusterPath("/enumerate"), fn: c.enumerate},
-		&Route{verb: "GET", path: clusterPath("/status"), fn: c.status},
-		&Route{verb: "GET", path: clusterPath("/inspect/{id}"), fn: c.inspect},
-		&Route{verb: "DELETE", path: clusterPath(""), fn: c.delete},
-		&Route{verb: "DELETE", path: clusterPath("/{id}"), fn: c.delete},
-		&Route{verb: "PUT", path: clusterPath("/enablegossip"), fn: c.enableGossip},
-		&Route{verb: "PUT", path: clusterPath("/disablegossip"), fn: c.disableGossip},
-		&Route{verb: "PUT", path: clusterPath("/shutdown"), fn: c.shutdown},
-		&Route{verb: "PUT", path: clusterPath("/shutdown/{id}"), fn: c.shutdown},
+		&Route{verb: "GET", path: "/versions", fn: c.versions},
+		&Route{verb: "GET", path: clusterPath("/enumerate", config.Version), fn: c.enumerate},
+		&Route{verb: "GET", path: clusterPath("/status", config.Version), fn: c.status},
+		&Route{verb: "GET", path: clusterPath("/inspect/{id}", config.Version), fn: c.inspect},
+		&Route{verb: "DELETE", path: clusterPath("", config.Version), fn: c.delete},
+		&Route{verb: "DELETE", path: clusterPath("/{id}", config.Version), fn: c.delete},
+		&Route{verb: "PUT", path: clusterPath("/enablegossip", config.Version), fn: c.enableGossip},
+		&Route{verb: "PUT", path: clusterPath("/disablegossip", config.Version), fn: c.disableGossip},
+		&Route{verb: "PUT", path: clusterPath("/shutdown", config.Version), fn: c.shutdown},
+		&Route{verb: "PUT", path: clusterPath("/shutdown/{id}", config.Version), fn: c.shutdown},
 	}
 }
 func newClusterAPI() restServer {
@@ -137,14 +138,23 @@ func (c *clusterApi) shutdown(w http.ResponseWriter, r *http.Request) {
 	c.sendNotImplemented(w, method)
 }
 
+func (c *clusterApi) versions(w http.ResponseWriter, r *http.Request) {
+	versions := []string{
+		config.Version,
+		// Update supported versions by adding them here
+	}
+	json.NewEncoder(w).Encode(versions)
+}
+
+
 func (c *clusterApi) sendNotImplemented(w http.ResponseWriter, method string) {
 	c.sendError(c.name, method, w, "Not implemented.", http.StatusNotImplemented)
 }
 
-func clusterVersion(route string) string {
-	return "/" + config.Version + "/" + route
+func clusterVersion(route, version string) string {
+	return "/" + version + "/" + route
 }
 
-func clusterPath(route string) string {
-	return clusterVersion("cluster" + route)
+func clusterPath(route, version string) string {
+	return clusterVersion("cluster" + route, version)
 }

@@ -358,6 +358,6 @@ func (d *driver) Halt(self *api.Node, db *cluster.ClusterInfo) error {
 	return nil
 }
 
-func (d *driver) DumpRequests(volumeID string) (*api.ActiveRequests, error) {
+func (d *driver) GetActiveRequests(volumeID string) (*api.ActiveRequests, error) {
 	return nil, nil
 }

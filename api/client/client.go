@@ -37,19 +37,59 @@ func NewClient(host string, version string) (*Client, error) {
 	return c, nil
 }
 
-// NewClusterClient returns a new REST client for cluster management.
-func NewClusterClient() (*Client, error) {
+// NewClusterClient returns a new REST client of the supplied version for cluster management.
+func NewClusterClient(version string) (*Client, error) {
 	sockPath := "unix://" + config.ClusterAPIBase + "osd.sock"
-	return NewClient(sockPath, config.Version)
+	if version == "" {
+		// Set the default version
+		version = config.Version
+	}
+
+	return NewClient(sockPath, version)
 }
 
-// NewDriver returns a new REST client for specified driver.
-func NewDriverClient(driverName string) (*Client, error) {
+// GetSupportedClusterVersions returns a list of supported versions
+// of the OSD cluster api
+func GetSupportedClusterVersions() ([]string, error) {
+	sockPath := "unix://" + config.ClusterAPIBase + "osd.sock"
+	client, err := NewClient(sockPath, "")
+	if err != nil {
+		return []string{}, err
+	}
+	versions, err := client.Versions()
+	if err != nil {
+		return []string{}, err
+	}
+	return versions, nil
+}
+
+// NewDriver returns a new REST client of the supplied version for specified driver.
+func NewDriverClient(driverName, version string) (*Client, error) {
 	sockPath := "unix://" + config.DriverAPIBase + driverName + ".sock"
-	return NewClient(sockPath, config.Version)
+	if version == "" {
+		// Set the default version
+		version = config.Version
+	}
+	return NewClient(sockPath, version)
 }
 
-// Client is an HTTP REST wrapper. Use one of Get/Porst/Put/Delete to get a request
+// GetSupportedDriverVersions returns a list of supported versions
+// for the provided driver
+func GetSupportedDriverVersions(driverName string) ([]string, error) {
+	// Get a client handler
+	sockPath := "unix://" + config.DriverAPIBase + driverName + ".sock"
+	client, err := NewClient(sockPath, "")
+	if err != nil {
+		return []string{}, err
+	}
+	versions, err := client.Versions()
+	if err != nil {
+		return []string{}, err
+	}
+	return versions, nil
+}
+
+// Client is an HTTP REST wrapper. Use one of Get/Post/Put/Delete to get a request
 // object.
 type Client struct {
 	base       *url.URL
@@ -72,6 +112,13 @@ func (c *Client) Status() (*Status, error) {
 	status := &Status{}
 	err := c.Get().UsePath("/status").Do().Unmarshal(status)
 	return status, err
+}
+
+// Version send a request at the /versions REST endpoint.
+func (c *Client) Versions() ([]string, error) {
+	versions := []string{}
+	err := c.Get().Resource("/versions").Do().Unmarshal(&versions)
+	return versions, err
 }
 
 // Get returns a Request object setup for GET call.

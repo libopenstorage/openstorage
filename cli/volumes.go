@@ -8,6 +8,7 @@ import (
 	"github.com/codegangsta/cli"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/client"
+	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/volume"
 )
 
@@ -50,7 +51,8 @@ func processLabels(s string) (map[string]string, error) {
 }
 
 func (v *volDriver) volumeOptions(context *cli.Context) {
-	clnt, err := client.NewDriverClient(v.name)
+	// Currently we choose the default version
+	clnt, err := client.NewDriverClient(v.name, config.Version)
 	if err != nil {
 		fmt.Printf("Failed to initialize client library: %v\n", err)
 		os.Exit(1)

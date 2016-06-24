@@ -93,8 +93,8 @@ type ProtoDriver interface {
 	// Alerts on this volume.
 	// Errors ErrEnoEnt may be returned
 	Alerts(volumeID string) (*api.Alerts, error)
-	// DumpRequests dump active requests
-	DumpRequests(volumeID string) (*api.ActiveRequests, error)
+	// GetActiveRequests get active requests
+	GetActiveRequests(volumeID string) (*api.ActiveRequests, error)
 	// Status returns a set of key-value pairs which give low
 	// level diagnostic status about this driver.
 	Status() [][2]string

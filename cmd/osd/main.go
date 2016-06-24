@@ -163,7 +163,7 @@ func start(c *cli.Context) error {
 		if err := cluster.Init(cfg.Osd.ClusterConfig); err != nil {
 			return fmt.Errorf("Unable to init cluster server: %v", err)
 		}
-		if err := server.StartClusterAPI(config.ClusterAPIBase); err != nil {
+		if err := server.StartClusterAPI(config.ClusterAPIBase, 0); err != nil {
 			return fmt.Errorf("Unable to start cluster API server: %v", err)
 		}
 		clusterInit = true

@@ -117,7 +117,7 @@ func (kva *KvAlert) Subscribe(parentAlertType int64, childAlert *api.Alert) erro
 		}
 	}
 	subscriptions = append(subscriptions, *childAlert)
-	_, err := kv.Put(getSubscriptionsKey(parentAlertType), subscriptions, 1)
+	_, err := kv.Put(getSubscriptionsKey(parentAlertType), subscriptions, 0)
 	return err
 }
 
@@ -213,7 +213,7 @@ func (kva *KvAlert) Watch(clusterID string, alertWatcherFunc AlertWatcherFunc) e
 	retries := 0
 
 	for alertWatcher.status == watchBootstrap {
-		if _, err := kv.Put(alertKey+bootstrap, time.Now(), 1); err != nil {
+		if _, err := kv.Put(alertKey+bootstrap, time.Now(), 0); err != nil {
 			return err
 		}
 		if alertWatcher.status == watchBootstrap {
@@ -275,7 +275,7 @@ func (kva *KvAlert) raise(a *api.Alert) error {
 	a.Id = alertID
 	a.Timestamp = prototime.Now()
 	a.Cleared = false
-	_, err = kv.Create(getResourceKey(a.Resource)+strconv.FormatInt(a.Id, 10), a, 0)
+	_, err = kv.Create(getResourceKey(a.Resource)+strconv.FormatInt(a.Id, 10), a, a.Ttl)
 	return err
 
 }

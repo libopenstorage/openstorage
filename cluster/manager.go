@@ -185,12 +185,6 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 
 	// The only value we rely on during an update is the cluster size.
 	c.size = db.Size
-	for id, n := range db.NodeEntries {
-		if id != c.config.NodeId {
-			// Check to see if the IP is the same.  If it is, then we have a stale entry.
-			c.gossip.UpdateNode(n.MgmtIp+":9002", types.NodeId(id))
-		}
-	}
 
 	return nil
 }
@@ -231,11 +225,6 @@ func (c *ClusterManager) initNode(db *ClusterInfo) (*api.Node, bool) {
 	dlog.Infof("Cluster ID: %s", c.config.ClusterId)
 	dlog.Infof("Node Mgmt IP: %s", c.selfNode.MgmtIp)
 	dlog.Infof("Node Data IP: %s", c.selfNode.DataIp)
-
-	// Update the db with latest data
-	if err := writeClusterInfo(db); err != nil {
-		dlog.Panicf("Failed to save the database.", err)
-	}
 
 	return &c.selfNode, exists
 }
@@ -306,20 +295,6 @@ found:
 		}
 	}
 
-	for id, n := range initState.ClusterInfo.NodeEntries {
-		if id != c.config.NodeId {
-			// Check to see if the IP is the same.  If it is, then we have a stale entry.
-			if n.MgmtIp == self.MgmtIp {
-				dlog.Warnf("Warning, Detected node %s with the same IP %s in the database.  Will not connect to this node.",
-					id, n.MgmtIp)
-			} else {
-				// Gossip with this node.
-				dlog.Infof("Connecting to node %s with IP %s.", id, n.MgmtIp)
-				c.gossip.AddNode(n.MgmtIp+":9002", types.NodeId(id))
-			}
-		}
-	}
-
 done:
 	return err
 }
@@ -349,12 +324,19 @@ done:
 	return err
 }
 
-func (c *ClusterManager) startHeartBeat() {
+func (c *ClusterManager) startHeartBeat(clusterInfo *ClusterInfo) {
 	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
 
 	node := c.getCurrentState()
 	c.gossip.UpdateSelf(gossipStoreKey, *node)
-	c.gossip.Start()
+	var nodeIps []string
+	for nodeId, nodeEntry := range clusterInfo.NodeEntries {
+		if nodeId == node.Id {
+			continue
+		}
+		nodeIps = append(nodeIps, nodeEntry.MgmtIp+":9002")
+	}
+	c.gossip.Start(nodeIps)
 
 	lastUpdateTs := time.Now()
 	for {
@@ -411,37 +393,9 @@ func (c *ClusterManager) updateClusterStatus() {
 					break
 				}
 
-				// Check if it is a stale update
-				ne := c.getLatestNodeConfig(string(id))
-				if ne != nil && nodeInfo.GenNumber != 0 &&
-					nodeInfo.GenNumber < ne.GenNumber {
-					dlog.Warnln("Detected stale update for node ", id,
-						" going down, ignoring it")
-					c.gossip.MarkNodeHasOldGen(id)
-					break
-				}
 				c.nodeStatuses[string(id)] = newNodeInfo.Status
 
 				dlog.Warnln("Detected node ", id,
-					" to be offline due to inactivity.")
-
-				for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
-					err := e.Value.(ClusterListener).Update(&newNodeInfo)
-					if err != nil {
-						dlog.Warnln("Failed to notify ",
-							e.Value.(ClusterListener).String())
-					}
-				}
-
-			case nodeInfo.Status == types.NODE_STATUS_DOWN_WAITING_FOR_NEW_UPDATE:
-				newNodeInfo.Status = api.Status_STATUS_OFFLINE
-				lastStatus, ok := c.nodeStatuses[string(id)]
-				if ok && lastStatus == newNodeInfo.Status {
-					break
-				}
-				c.nodeStatuses[string(id)] = newNodeInfo.Status
-
-				dlog.Warnln("Detected node ", newNodeInfo.Id,
 					" to be offline due to inactivity.")
 
 				for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
@@ -546,16 +500,25 @@ func (c *ClusterManager) Start() error {
 	// Start the gossip protocol.
 	// XXX Make the port configurable.
 	gob.Register(api.Node{})
-	c.gossip = gossip.New("0.0.0.0:9002", types.NodeId(c.config.NodeId),
-		c.selfNode.GenNumber)
-	c.gossip.SetGossipInterval(2 * time.Second)
+	gossipIntervals := types.GossipIntervals{
+		GossipInterval:   types.DEFAULT_GOSSIP_INTERVAL,
+		PushPullInterval: types.DEFAULT_PUSH_PULL_INTERVAL,
+		ProbeInterval:    types.DEFAULT_PROBE_INTERVAL,
+		ProbeTimeout:     types.DEFAULT_PROBE_TIMEOUT,
+	}
+	c.gossip = gossip.New(
+		c.selfNode.MgmtIp+":9002",
+		types.NodeId(c.config.NodeId),
+		c.selfNode.GenNumber,
+		gossipIntervals,
+		types.DEFAULT_GOSSIP_VERSION,
+	)
 
 	kvdb := kvdb.Instance()
-	kvlock, err := kvdb.Lock(clusterLockKey, 60)
+	kvlock, err := kvdb.Lock(clusterLockKey)
 	if err != nil {
 		dlog.Panicln("Fatal, Unable to obtain cluster lock.", err)
 	}
-	defer kvdb.Unlock(kvlock)
 
 	initState, err := snapAndReadClusterInfo()
 	if err != nil {
@@ -573,43 +536,46 @@ func (c *ClusterManager) Start() error {
 		c.status = api.Status_STATUS_OK
 		initState.ClusterInfo.Status = api.Status_STATUS_OK
 		self, _ := c.initNode(initState.ClusterInfo)
+		// Add ourselves into the cluster DB and release the lock
+		err := writeClusterInfo(initState.ClusterInfo)
+		if err != nil {
+			dlog.Errorln("Failed to save the database.", err)
+			kvdb.Unlock(kvlock)
+			return err
+		}
+		kvdb.Unlock(kvlock)
 
 		err = c.initCluster(initState, self, false)
 		if err != nil {
 			dlog.Errorln("Failed to initialize the cluster.", err)
 			return err
 		}
-
-		// Update the new state of the cluster in the KV database
-		err := writeClusterInfo(initState.ClusterInfo)
-		if err != nil {
-			dlog.Errorln("Failed to save the database.", err)
-			return err
-		}
-
 	} else if initState.ClusterInfo.Status&api.Status_STATUS_OK > 0 {
 		dlog.Infoln("Cluster state is OK... Joining the cluster.")
 
 		c.status = api.Status_STATUS_OK
 		self, exist := c.initNode(initState.ClusterInfo)
+		// Add ourselves into the cluster DB and release the lock
+		err := writeClusterInfo(initState.ClusterInfo)
+		if err != nil {
+			dlog.Errorln("Failed to save the database.", err)
+			kvdb.Unlock(kvlock)
+			return err
+		}
+		kvdb.Unlock(kvlock)
 
 		err = c.joinCluster(initState, self, exist)
 		if err != nil {
 			dlog.Errorln("Failed to join cluster.", err)
 			return err
 		}
-
-		err := writeClusterInfo(initState.ClusterInfo)
-		if err != nil {
-			return err
-		}
-
 	} else {
+		kvdb.Unlock(kvlock)
 		return errors.New("Fatal, Cluster is in an unexpected state.")
 	}
 
 	// Start heartbeating to other nodes.
-	go c.startHeartBeat()
+	go c.startHeartBeat(initState.ClusterInfo)
 	go c.updateClusterStatus()
 
 	kvdb.WatchKey(ClusterDBKey, 0, nil, c.watchDB)
@@ -634,7 +600,7 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 // SetSize sets the maximum number of nodes in a cluster.
 func (c *ClusterManager) SetSize(size int) error {
 	kvdb := kvdb.Instance()
-	kvlock, err := kvdb.Lock(clusterLockKey, 20)
+	kvlock, err := kvdb.Lock(clusterLockKey)
 	if err != nil {
 		dlog.Warnln("Unable to obtain cluster lock for updating config", err)
 		return nil

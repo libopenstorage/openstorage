@@ -92,6 +92,28 @@ func raiseAndErase(t *testing.T) {
 	require.Error(t, err, "api.Alert not erased from kvdb")
 }
 
+func raiseWithTTL(t *testing.T) {
+	raiseAlert := api.Alert{
+		Resource: api.ResourceType_RESOURCE_TYPE_VOLUME,
+		Severity: api.SeverityType_SEVERITY_TYPE_NOTIFY,
+		Message:  "Test Message",
+		Ttl: 3,
+	}
+	err := kva.Raise(&raiseAlert)
+	require.NoError(t, err, "Failed in raising an alert")
+
+	kv := kva.GetKvdbInstance()
+	var alert api.Alert
+
+	_, err = kv.GetVal(getResourceKey(api.ResourceType_RESOURCE_TYPE_VOLUME)+strconv.FormatInt(raiseAlert.Id, 10), &alert)
+	require.NoError(t, err, "Failed to retrieve alert from kvdb")
+	require.NotNil(t, alert, "api.Alert object null in kvdb")
+
+	time.Sleep(3*time.Second)
+	_, err = kv.GetVal(getResourceKey(api.ResourceType_RESOURCE_TYPE_VOLUME)+strconv.FormatInt(raiseAlert.Id, 10), &alert)
+	require.Error(t, err, "Alert should have been removed after the ttl value")
+}
+
 func subscribe(t *testing.T) {
 	parentAlertType := int64(1)
 	child1Alert := api.Alert{

@@ -384,7 +384,7 @@ func (vd *volApi) requests(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	requests, err := d.DumpRequests(volumeID)
+	requests, err := d.GetActiveRequests(volumeID)
 	if err != nil {
 		e := fmt.Errorf("Failed to get active requests: %s", err.Error())
 		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
@@ -393,32 +393,45 @@ func (vd *volApi) requests(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(requests)
 }
 
-func volVersion(route string) string {
-	return "/" + config.Version + "/" + route
+func (vd *volApi) versions(w http.ResponseWriter, r *http.Request) {
+	versions := []string{
+		config.Version,
+		// Update supported versions by adding them here
+	}
+	json.NewEncoder(w).Encode(versions)
 }
 
-func volPath(route string) string {
-	return volVersion("volumes" + route)
+func volVersion(route, version string) string {
+	if version == "" {
+		return "/" + route
+	} else {
+		return "/" + version + "/" + route
+	}
 }
 
-func snapPath(route string) string {
-	return volVersion("snapshot" + route)
+func volPath(route, version string) string {
+	return volVersion("volumes" + route, version)
+}
+
+func snapPath(route, version string) string {
+	return volVersion("snapshot" + route, version)
 }
 
 func (vd *volApi) Routes() []*Route {
 	return []*Route{
-		&Route{verb: "POST", path: volPath(""), fn: vd.create},
-		&Route{verb: "PUT", path: volPath("/{id}"), fn: vd.volumeSet},
-		&Route{verb: "GET", path: volPath(""), fn: vd.enumerate},
-		&Route{verb: "GET", path: volPath("/{id}"), fn: vd.inspect},
-		&Route{verb: "DELETE", path: volPath("/{id}"), fn: vd.delete},
-		&Route{verb: "GET", path: volPath("/stats"), fn: vd.stats},
-		&Route{verb: "GET", path: volPath("/stats/{id}"), fn: vd.stats},
-		&Route{verb: "GET", path: volPath("/alerts"), fn: vd.alerts},
-		&Route{verb: "GET", path: volPath("/alerts/{id}"), fn: vd.alerts},
-		&Route{verb: "GET", path: volPath("/requests"), fn: vd.requests},
-		&Route{verb: "GET", path: volPath("/requests/{id}"), fn: vd.requests},
-		&Route{verb: "POST", path: snapPath(""), fn: vd.snap},
-		&Route{verb: "GET", path: snapPath(""), fn: vd.snapEnumerate},
+		&Route{verb: "GET", path: "/versions", fn: vd.versions},
+		&Route{verb: "POST", path: volPath("", config.Version), fn: vd.create},
+		&Route{verb: "PUT", path: volPath("/{id}", config.Version), fn: vd.volumeSet},
+		&Route{verb: "GET", path: volPath("", config.Version), fn: vd.enumerate},
+		&Route{verb: "GET", path: volPath("/{id}", config.Version), fn: vd.inspect},
+		&Route{verb: "DELETE", path: volPath("/{id}", config.Version), fn: vd.delete},
+		&Route{verb: "GET", path: volPath("/stats", config.Version), fn: vd.stats},
+		&Route{verb: "GET", path: volPath("/stats/{id}", config.Version), fn: vd.stats},
+		&Route{verb: "GET", path: volPath("/alerts", config.Version), fn: vd.alerts},
+		&Route{verb: "GET", path: volPath("/alerts/{id}", config.Version), fn: vd.alerts},
+		&Route{verb: "GET", path: volPath("/requests", config.Version), fn: vd.requests},
+		&Route{verb: "GET", path: volPath("/requests/{id}", config.Version), fn: vd.requests},
+		&Route{verb: "POST", path: snapPath("", config.Version), fn: vd.snap},
+		&Route{verb: "GET", path: snapPath("", config.Version), fn: vd.snapEnumerate},
 	}
 }

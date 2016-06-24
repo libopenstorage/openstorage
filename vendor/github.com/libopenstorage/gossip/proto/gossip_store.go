@@ -1,7 +1,7 @@
 package proto
 
 import (
-	log "github.com/Sirupsen/logrus"
+	"fmt"
 	"sync"
 	"time"
 
@@ -14,15 +14,16 @@ const (
 
 type GossipStoreImpl struct {
 	sync.Mutex
-	id          types.NodeId
-	GenNumber   uint64
-	nodeMap     types.NodeInfoMap
-	selfCorrect bool
+	id            types.NodeId
+	GenNumber     uint64
+	nodeMap       types.NodeInfoMap
+	selfCorrect   bool
+	GossipVersion string
 }
 
-func NewGossipStore(id types.NodeId) *GossipStoreImpl {
+func NewGossipStore(id types.NodeId, version string) *GossipStoreImpl {
 	n := &GossipStoreImpl{}
-	n.InitStore(id)
+	n.InitStore(id, version)
 	n.selfCorrect = false
 	return n
 }
@@ -31,15 +32,18 @@ func (s *GossipStoreImpl) NodeId() types.NodeId {
 	return s.id
 }
 
-func (s *GossipStoreImpl) InitStore(id types.NodeId) {
+func (s *GossipStoreImpl) InitStore(id types.NodeId, version string) {
 	s.nodeMap = make(types.NodeInfoMap)
 	s.id = id
 	s.selfCorrect = true
-	nodeInfo := types.NodeInfo{Id: s.id,
+	s.GossipVersion = version
+	nodeInfo := types.NodeInfo{
+		Id:           s.id,
 		GenNumber:    s.GenNumber,
 		Value:        make(types.StoreMap),
 		LastUpdateTs: time.Now(),
-		Status:       types.NODE_STATUS_UP}
+		Status:       types.NODE_STATUS_UP,
+	}
 	s.nodeMap[s.id] = nodeInfo
 }
 
@@ -62,26 +66,35 @@ func (s *GossipStoreImpl) UpdateSelf(key types.StoreKey, val interface{}) {
 	s.nodeMap[s.id] = nodeInfo
 }
 
-func (s *GossipStoreImpl) MarkNodeHasOldGen(nodeId types.NodeId) bool {
+func (s *GossipStoreImpl) UpdateSelfStatus(status types.NodeStatus) {
+	s.Lock()
+	defer s.Unlock()
+
+	nodeInfo, _ := s.nodeMap[s.id]
+	nodeInfo.Status = status
+	nodeInfo.LastUpdateTs = time.Now()
+	s.nodeMap[s.id] = nodeInfo
+}
+
+func (s *GossipStoreImpl) UpdateNodeStatus(nodeId types.NodeId, status types.NodeStatus) error {
 	s.Lock()
 	defer s.Unlock()
 
 	nodeInfo, ok := s.nodeMap[nodeId]
 	if !ok {
-		return false
+		return fmt.Errorf("Node with id (%v) not found", nodeId)
 	}
-
-	nodeInfo.Status = types.NODE_STATUS_WAITING_FOR_NEW_UPDATE
-	nodeInfo.WaitForGenUpdateTs = time.Now()
+	nodeInfo.Status = status
+	nodeInfo.LastUpdateTs = time.Now()
 	s.nodeMap[nodeId] = nodeInfo
-	return true
+	return nil
 }
 
 func (s *GossipStoreImpl) GetStoreKeyValue(key types.StoreKey) types.NodeValueMap {
 	s.Lock()
 	defer s.Unlock()
 
-	nodeInfoMap := make(types.NodeValueMap)
+	nodeValueMap := make(types.NodeValueMap)
 	for id, nodeInfo := range s.nodeMap {
 		if statusValid(nodeInfo.Status) && nodeInfo.Value != nil {
 			ok := len(nodeInfo.Value) == 0
@@ -92,12 +105,11 @@ func (s *GossipStoreImpl) GetStoreKeyValue(key types.StoreKey) types.NodeValueMa
 					LastUpdateTs: nodeInfo.LastUpdateTs,
 					Status:       nodeInfo.Status}
 				n.Value = val
-				nodeInfoMap[id] = n
+				nodeValueMap[id] = n
 			}
 		}
 	}
-
-	return nodeInfoMap
+	return nodeValueMap
 }
 
 func (s *GossipStoreImpl) GetStoreKeys() []types.StoreKey {
@@ -121,6 +133,10 @@ func (s *GossipStoreImpl) GetStoreKeys() []types.StoreKey {
 	return storeKeys
 }
 
+func (s *GossipStoreImpl) GetGossipVersion() string {
+	return s.GossipVersion
+}
+
 func statusValid(s types.NodeStatus) bool {
 	return (s != types.NODE_STATUS_INVALID &&
 		s != types.NODE_STATUS_NEVER_GOSSIPED)
@@ -134,103 +150,47 @@ func (s *GossipStoreImpl) NewNode(id types.NodeId) {
 		return
 	}
 
-	newNodeInfo := types.NodeInfo{Id: id, GenNumber: 0,
-		LastUpdateTs: time.Now(), WaitForGenUpdateTs: time.Now(),
-		Status: types.NODE_STATUS_NEVER_GOSSIPED, Value: make(types.StoreMap)}
+	newNodeInfo := types.NodeInfo{
+		Id:                 id,
+		GenNumber:          0,
+		LastUpdateTs:       time.Now(),
+		WaitForGenUpdateTs: time.Now(),
+		Status:             types.NODE_STATUS_UP,
+		Value:              make(types.StoreMap),
+	}
 
 	s.nodeMap[id] = newNodeInfo
-	log.Info("Added node ", id, " s: ", s.nodeMap)
 }
 
-func (s *GossipStoreImpl) MetaInfo() types.StoreMetaInfo {
+func (s *GossipStoreImpl) MetaInfo() types.NodeMetaInfo {
 	s.Lock()
 	defer s.Unlock()
 
-	mInfo := make(types.StoreMetaInfo)
-
-	for nodeId, nodeValue := range s.nodeMap {
-		if statusValid(nodeValue.Status) {
-			nodeMetaInfo := types.NodeMetaInfo{
-				Id:           nodeId,
-				LastUpdateTs: nodeValue.LastUpdateTs}
-			mInfo[nodeId] = nodeMetaInfo
-		}
+	selfNodeInfo, _ := s.nodeMap[s.id]
+	nodeMetaInfo := types.NodeMetaInfo{
+		Id:            selfNodeInfo.Id,
+		LastUpdateTs:  selfNodeInfo.LastUpdateTs,
+		GenNumber:     selfNodeInfo.GenNumber,
+		GossipVersion: s.GossipVersion,
 	}
-
-	return mInfo
+	return nodeMetaInfo
 }
 
-func (s *GossipStoreImpl) Diff(
-	d types.StoreMetaInfo) (types.StoreNodes, types.StoreNodes) {
+func (s *GossipStoreImpl) GetLocalState() types.NodeInfoMap {
+	s.Lock()
+	defer s.Unlock()
+	return s.nodeMap
+}
+
+func (s *GossipStoreImpl) GetLocalNodeInfo(id types.NodeId) (types.NodeInfo, error) {
 	s.Lock()
 	defer s.Unlock()
 
-	diffNewNodes := make([]types.NodeId, 0)
-	selfNewNodes := make([]types.NodeId, 0)
-
-	for nodeId, nodeMetaInfo := range d {
-
-		selfNodeInfo, ok := s.nodeMap[nodeId]
-		if !ok {
-			// we do not have info about this node
-			diffNewNodes = append(diffNewNodes, nodeId)
-			// nothing to add in selfNewNodes
-			continue
-		}
-
-		// the diff has newer node if our status for node is invalid
-		if !statusValid(selfNodeInfo.Status) ||
-			selfNodeInfo.LastUpdateTs.Before(nodeMetaInfo.LastUpdateTs) {
-			diffNewNodes = append(diffNewNodes, nodeId)
-		} else if selfNodeInfo.LastUpdateTs.After(nodeMetaInfo.LastUpdateTs) {
-			selfNewNodes = append(selfNewNodes, nodeId)
-		}
+	nodeInfo, ok := s.nodeMap[id]
+	if !ok {
+		return types.NodeInfo{}, fmt.Errorf("Node with id (%v) not found", id)
 	}
-
-	// go over nodes present with us but not in the given meta info
-	for nodeId, nodeInfo := range s.nodeMap {
-		if _, ok := d[nodeId]; ok {
-			// we have handled this case above
-			continue
-		}
-
-		// peer does not have info about this node
-		if statusValid(nodeInfo.Status) {
-			selfNewNodes = append(selfNewNodes, nodeId)
-		}
-	}
-
-	return diffNewNodes, selfNewNodes
-}
-
-func (s *GossipStoreImpl) Subset(nodes types.StoreNodes) types.NodeInfoMap {
-	s.Lock()
-	defer s.Unlock()
-
-	subset := make(types.NodeInfoMap)
-
-	for _, nodeId := range nodes {
-		nodeInfo, ok := s.nodeMap[nodeId]
-		if !ok || !statusValid(nodeInfo.Status) {
-			continue
-		}
-		status := nodeInfo.Status
-		if status == types.NODE_STATUS_WAITING_FOR_NEW_UPDATE ||
-			status == types.NODE_STATUS_DOWN_WAITING_FOR_NEW_UPDATE {
-			status = types.NODE_STATUS_DOWN
-		}
-		n := types.NodeInfo{Id: nodeInfo.Id,
-			GenNumber:    nodeInfo.GenNumber,
-			Value:        make(types.StoreMap),
-			LastUpdateTs: nodeInfo.LastUpdateTs,
-			Status:       status}
-		for key, value := range nodeInfo.Value {
-			n.Value[key] = value
-		}
-		subset[nodeId] = n
-	}
-
-	return subset
+	return nodeInfo, nil
 }
 
 func (s *GossipStoreImpl) Update(diff types.NodeInfoMap) {
@@ -244,77 +204,11 @@ func (s *GossipStoreImpl) Update(diff types.NodeInfoMap) {
 		selfValue, ok := s.nodeMap[id]
 		if !ok || !statusValid(selfValue.Status) ||
 			selfValue.LastUpdateTs.Before(newNodeInfo.LastUpdateTs) {
-			if selfValue.Status == types.NODE_STATUS_WAITING_FOR_NEW_UPDATE {
-				newNodeInfo.Status = selfValue.Status
-			}
+			// Our view of Status of a Node, should only be determined by memberlist.
+			// We should not update the Status field in our nodeInfo based on what other node's
+			// value is.
+			newNodeInfo.Status = selfValue.Status
 			s.nodeMap[id] = newNodeInfo
 		}
 	}
-}
-
-func (s *GossipStoreImpl) UpdateNodeStatuses(d time.Duration,
-	sd time.Duration) bool {
-	s.Lock()
-	defer s.Unlock()
-	retValue := false
-
-	for id, nodeInfo := range s.nodeMap {
-		currTime := time.Now()
-		timeDiff := currTime.Sub(nodeInfo.LastUpdateTs)
-		if id == s.id {
-			if (timeDiff > d/2) && s.selfCorrect {
-				log.Warnf("No self update for long, updating self update ts "+
-					"to not be marked down, time diff: %v, limit: %v, "+
-					"Last TS: %v,Current TS: %v",
-					timeDiff, d, nodeInfo.LastUpdateTs, currTime)
-				nodeInfo.LastUpdateTs = currTime
-				s.nodeMap[id] = nodeInfo
-			}
-			continue
-		}
-		waitGenTimeDiff := currTime.Sub(nodeInfo.WaitForGenUpdateTs)
-		nodeStatus := nodeInfo.Status
-		switch {
-		case nodeInfo.Status == types.NODE_STATUS_WAITING_FOR_NEW_UPDATE,
-			nodeInfo.Status == types.NODE_STATUS_DOWN_WAITING_FOR_NEW_UPDATE:
-			if nodeInfo.LastUpdateTs.After(nodeInfo.WaitForGenUpdateTs) {
-				// new update has happened since we marked us
-				// waiting for new update
-				if timeDiff >= d {
-					// mark the node down
-					nodeStatus = types.NODE_STATUS_DOWN_WAITING_FOR_NEW_UPDATE
-				} else {
-					// mark the node up
-					nodeStatus = types.NODE_STATUS_UP
-				}
-			} else {
-				// no new update has happened
-				if waitGenTimeDiff >= d {
-					nodeStatus = types.NODE_STATUS_DOWN_WAITING_FOR_NEW_UPDATE
-				} // else maintain the current status
-			}
-		case nodeInfo.Status == types.NODE_STATUS_NEVER_GOSSIPED:
-			if timeDiff >= sd {
-				log.Warnf("Node ", id, " never gossiped, marking it down")
-				nodeStatus = types.NODE_STATUS_DOWN
-			} // else node is now marked up
-		case nodeInfo.Status != types.NODE_STATUS_INVALID:
-			if timeDiff >= d {
-				nodeStatus = types.NODE_STATUS_DOWN
-			} // else node is marked up
-		}
-		if nodeInfo.Status != nodeStatus {
-			log.Warnf("Gossip Status change: for node: %v newStatus: %v, "+
-				"time diff: %v, limit: %v, Last TS: %v,Current TS: %v", id,
-				nodeStatus, timeDiff, d, nodeInfo.LastUpdateTs, currTime)
-			nodeInfo.Status = nodeStatus
-			s.nodeMap[id] = nodeInfo
-			if nodeInfo.Status == types.NODE_STATUS_DOWN ||
-				nodeInfo.Status == types.NODE_STATUS_DOWN_WAITING_FOR_NEW_UPDATE {
-				retValue = true
-			}
-		}
-	}
-	return retValue
-
 }
