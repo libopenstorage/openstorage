@@ -8,6 +8,7 @@ import (
 type NodeId string
 type StoreKey string
 type NodeStatus uint8
+type StateEvent uint8
 type NodeInfoMap map[NodeId]NodeInfo
 type NodeValueMap map[NodeId]NodeValue
 type StoreMap map[StoreKey]interface{}
@@ -17,8 +18,17 @@ const (
 	NODE_STATUS_UP
 	NODE_STATUS_DOWN
 	NODE_STATUS_NEVER_GOSSIPED
-	NODE_STATUS_WAITING_FOR_QUORUM
-	NODE_STATUS_UP_AND_WAITING_FOR_QUORUM
+	NODE_STATUS_NOT_IN_QUORUM
+	NODE_STATUS_SUSPECT_NOT_IN_QUORUM
+)
+
+const (
+	SELF_ALIVE StateEvent = iota
+	NODE_ALIVE
+	SELF_LEAVE
+	NODE_LEAVE
+	UPDATE_CLUSTER_SIZE
+	TIMEOUT
 )
 
 type GossipDirection uint8
@@ -96,8 +106,8 @@ type GossipIntervals struct {
 	ProbeInterval time.Duration
 	// ProbeTimeout used to determine if a node is down. Should be atleast twice the RTT of network
 	ProbeTimeout time.Duration
-	// QuorumTimout is the timeout for which a node will stay in the UP_AND_WAITING_FOR_QUORUM
-	// and then transition to WAITING_FOR_QUORUM (Not UP) if quorum is not satisfied
+	// QuorumTimout is the timeout for which a node will stay in the SUSPECT_NOT_IN_QUORUM
+	// and then transition to NOT_IN_QUORUM (Not UP) if quorum is not satisfied
 	QuorumTimeout time.Duration
 }
 

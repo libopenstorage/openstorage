@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	//"github.com/Sirupsen/logrus"
 	"github.com/libopenstorage/gossip/types"
 )
 
@@ -26,30 +27,18 @@ type GossipStoreImpl struct {
 	// determining the cluster quorum
 	clusterSize int
 	// Ts at which we lost quorum
-	lostQuorumTs time.Time
+	lostQuorumTs  time.Time
 }
 
 func NewGossipStore(id types.NodeId, version string) *GossipStoreImpl {
 	n := &GossipStoreImpl{}
-	n.InitStore(id, version)
+	n.InitStore(id, version, types.NODE_STATUS_NOT_IN_QUORUM)
 	n.selfCorrect = false
 	return n
 }
 
 func (s *GossipStoreImpl) NodeId() types.NodeId {
 	return s.id
-}
-
-// UpdateClusterSize is called from an external source indicating the cluster size
-func (s *GossipStoreImpl) UpdateClusterSize(clusterSize int) {
-	s.Lock()
-	defer s.Unlock()
-
-	s.clusterSize = clusterSize
-}
-
-func (s *GossipStoreImpl) GetClusterSize() int {
-	return s.clusterSize
 }
 
 func (s *GossipStoreImpl) UpdateLostQuorumTs() {
@@ -63,7 +52,7 @@ func (s *GossipStoreImpl) GetLostQuorumTs() time.Time {
 	return s.lostQuorumTs
 }
 
-func (s *GossipStoreImpl) InitStore(id types.NodeId, version string) {
+func (s *GossipStoreImpl) InitStore(id types.NodeId, version string, status types.NodeStatus) {
 	s.nodeMap = make(types.NodeInfoMap)
 	s.id = id
 	s.selfCorrect = true
@@ -73,7 +62,7 @@ func (s *GossipStoreImpl) InitStore(id types.NodeId, version string) {
 		GenNumber:    s.GenNumber,
 		Value:        make(types.StoreMap),
 		LastUpdateTs: time.Now(),
-		Status:       types.NODE_STATUS_WAITING_FOR_QUORUM,
+		Status:       status,
 	}
 	s.nodeMap[s.id] = nodeInfo
 }
@@ -183,9 +172,8 @@ func statusValid(s types.NodeStatus) bool {
 
 func (s *GossipStoreImpl) NewNode(id types.NodeId) {
 	s.Lock()
-	defer s.Unlock()
-
 	if _, ok := s.nodeMap[id]; ok {
+		s.Unlock()
 		return
 	}
 
@@ -197,8 +185,8 @@ func (s *GossipStoreImpl) NewNode(id types.NodeId) {
 		Status:             types.NODE_STATUS_UP,
 		Value:              make(types.StoreMap),
 	}
-
 	s.nodeMap[id] = newNodeInfo
+	s.Unlock()
 }
 
 func (s *GossipStoreImpl) MetaInfo() types.NodeMetaInfo {
@@ -218,7 +206,11 @@ func (s *GossipStoreImpl) MetaInfo() types.NodeMetaInfo {
 func (s *GossipStoreImpl) GetLocalState() types.NodeInfoMap {
 	s.Lock()
 	defer s.Unlock()
-	return s.nodeMap
+	localCopy := make(types.NodeInfoMap)
+	for key, value := range s.nodeMap {
+		localCopy[key] = value
+	}
+	return localCopy
 }
 
 func (s *GossipStoreImpl) GetLocalNodeInfo(id types.NodeId) (types.NodeInfo, error) {
@@ -250,4 +242,14 @@ func (s *GossipStoreImpl) Update(diff types.NodeInfoMap) {
 			s.nodeMap[id] = newNodeInfo
 		}
 	}
+}
+
+func (s *GossipStoreImpl) updateClusterSize(clusterSize int) {
+	s.Lock()
+	s.clusterSize = clusterSize
+	s.Unlock()
+}
+
+func (s *GossipStoreImpl) getClusterSize() int {
+	return s.clusterSize
 }

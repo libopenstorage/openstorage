@@ -120,12 +120,8 @@ type GossiperImpl struct {
 	nodesLock sync.Mutex
 	// to signal exit gossip loop
 	gossipInterval time.Duration
-	// quorum timeout to change the quorum status of a node
-	quorumTimeout time.Duration
 	//nodeDeathInterval time.Duration
 	shutDown bool
-	// stopQuorumCheck
-	stopQuorumCheck chan bool
 }
 
 // Utility methods
@@ -146,8 +142,6 @@ func (g *GossiperImpl) Init(
 
 	g.nodes = make(GossipNodeList, 0)
 	g.gossipInterval = gossipIntervals.GossipInterval
-	g.quorumTimeout = gossipIntervals.QuorumTimeout
-	g.stopQuorumCheck = make(chan bool)
 
 	// Memberlist Config setup
 	mlConf := ml.DefaultLANConfig()
@@ -170,7 +164,12 @@ func (g *GossiperImpl) Init(
 	mlConf.ProbeInterval = gossipIntervals.ProbeInterval
 
 	// MemberDelegates
-	g.InitGossipDelegate(genNumber, selfNodeId, gossipVersion)
+	g.InitGossipDelegate(
+		genNumber,
+		selfNodeId,
+		gossipVersion,
+		gossipIntervals.QuorumTimeout,
+	)
 	mlConf.Delegate = ml.Delegate(g)
 	mlConf.Events = ml.EventDelegate(g)
 	mlConf.Alive = ml.AliveDelegate(g)
@@ -186,6 +185,7 @@ func (g *GossiperImpl) Init(
 }
 
 func (g *GossiperImpl) Start(knownIps []string) error {
+	g.InitCurrentState(len(knownIps) + 1)
 	list, err := ml.Create(g.mlConf)
 	if err != nil {
 		log.Warnf("Unable to create memberlist: " + err.Error())
@@ -193,8 +193,6 @@ func (g *GossiperImpl) Start(knownIps []string) error {
 	}
 	// Set the memberlist in gossiper object
 	g.mlist = list
-	// We are started gossiping
-	g.UpdateSelfStatus(types.NODE_STATUS_WAITING_FOR_QUORUM)
 
 	if len(knownIps) != 0 {
 		// Joining an existing cluster
@@ -204,22 +202,6 @@ func (g *GossiperImpl) Start(knownIps []string) error {
 			return err
 		}
 	}
-
-	// Check and update quorum periodically
-	go func() {
-		for {
-			g.CheckAndUpdateQuorum()
-			select {
-			case stop := <-g.stopQuorumCheck:
-				if stop {
-					return
-				}
-			default:
-				time.Sleep(g.GossipInterval())
-			}
-		}
-	}()
-
 	return nil
 }
 
@@ -227,7 +209,6 @@ func (g *GossiperImpl) Stop(leaveTimeout time.Duration) error {
 	if g.shutDown == true {
 		return fmt.Errorf("Gossiper already stopped")
 	}
-
 	err := g.mlist.Leave(leaveTimeout)
 	if err != nil {
 		return err
@@ -237,67 +218,7 @@ func (g *GossiperImpl) Stop(leaveTimeout time.Duration) error {
 		return err
 	}
 	g.shutDown = true
-	g.stopQuorumCheck <- true
 	return nil
-}
-
-func (g *GossiperImpl) CheckAndUpdateQuorum() {
-	clusterSize := g.GetClusterSize()
-
-	quorum := (clusterSize / 2) + 1
-	selfNodeId := g.NodeId()
-
-	upNodes := 0
-	var selfStatus types.NodeStatus
-	localNodeInfoMap := g.GetLocalState()
-	for _, nodeInfo := range localNodeInfoMap {
-		if nodeInfo.Id == selfNodeId {
-			selfStatus = nodeInfo.Status
-		}
-		if nodeInfo.Status == types.NODE_STATUS_UP ||
-			nodeInfo.Status == types.NODE_STATUS_WAITING_FOR_QUORUM ||
-			nodeInfo.Status == types.NODE_STATUS_UP_AND_WAITING_FOR_QUORUM {
-			upNodes++
-		}
-	}
-
-	if upNodes < quorum {
-		if selfStatus == types.NODE_STATUS_DOWN {
-			// We are already down. No need of updating the status based on quorum.
-			return
-		}
-		// We do not have quorum
-		if selfStatus == types.NODE_STATUS_UP {
-			// We were up, but now we have lost quorum
-			log.Warnf("Node %v : %v with status: (UP) lost quorum. "+
-				"New Status: (UP_AND_WAITING_FOR_QUORUM)", g.NodeId(), g.mlConf.BindAddr)
-			g.UpdateLostQuorumTs()
-			g.UpdateSelfStatus(types.NODE_STATUS_UP_AND_WAITING_FOR_QUORUM)
-		} else {
-			if selfStatus == types.NODE_STATUS_UP_AND_WAITING_FOR_QUORUM {
-				waitTime := g.quorumTimeout
-				diffTime := time.Since(g.GetLostQuorumTs())
-				// Check the difference between the current time and the time
-				// when we found out we were up and not in quorum
-				if diffTime > waitTime {
-					// Change the status to waiting for quorum
-					log.Warnf("Quorum Timeout for Node %v : %v with status:"+
-						" (UP_AND_WAITING_FOR_QUORUM). "+
-						"New Status: (WAITING_FOR_QUORUM)", g.NodeId(), g.mlConf.BindAddr)
-					g.UpdateSelfStatus(types.NODE_STATUS_WAITING_FOR_QUORUM)
-				}
-			} else {
-				g.UpdateSelfStatus(types.NODE_STATUS_WAITING_FOR_QUORUM)
-			}
-		}
-	} else {
-		if selfStatus != types.NODE_STATUS_UP {
-			g.UpdateSelfStatus(types.NODE_STATUS_UP)
-		} else {
-			// No need to update status, we are already up
-		}
-	}
-
 }
 
 func (g *GossiperImpl) GossipInterval() time.Duration {
@@ -316,4 +237,9 @@ func (g *GossiperImpl) GetNodes() []string {
 	}
 	return nodeList
 
+}
+
+func (g *GossiperImpl) UpdateClusterSize(clusterSize int) {
+	g.updateClusterSize(clusterSize)
+	g.triggerStateEvent(types.UPDATE_CLUSTER_SIZE)
 }

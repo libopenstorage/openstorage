@@ -408,7 +408,7 @@ func (c *ClusterManager) updateClusterStatus(initState *ClusterInitState, exist 
 			// Special handling for self node
 			if id == types.NodeId(node.Id) {
 				if c.selfNode.Status == api.Status_STATUS_OK &&
-					nodeInfo.Status == types.NODE_STATUS_WAITING_FOR_QUORUM {
+					nodeInfo.Status == types.NODE_STATUS_NOT_IN_QUORUM {
 					// We have lost quorum
 					dlog.Warnf("Not in quorum. Gracefully shutting down...")
 					c.gossip.UpdateSelfStatus(types.NODE_STATUS_DOWN)
@@ -658,7 +658,7 @@ func (c *ClusterManager) Start() error {
 			c.status = api.Status_STATUS_NOT_IN_QUORUM
 			if quorumRetries == 30 {
 				err := fmt.Errorf("Unable to achieve Quorum."+
-					"Quorum Timeout (%v) exceeded.",
+					" Timeout (%v) exceeded.",
 					types.DEFAULT_QUORUM_TIMEOUT)
 				dlog.Warnln("Failed to join cluster: ", err)
 				c.status = api.Status_STATUS_NOT_IN_QUORUM

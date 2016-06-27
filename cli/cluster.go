@@ -147,13 +147,13 @@ func (c *clusterClient) gossipStatus(context *cli.Context) {
 			statusStr := "Up"
 			switch {
 			case n.Status == types.NODE_STATUS_DOWN,
-				n.Status == types.NODE_STATUS_WAITING_FOR_QUORUM:
+				n.Status == types.NODE_STATUS_NOT_IN_QUORUM:
 				statusStr = "Down"
 			case n.Status == types.NODE_STATUS_INVALID:
 				statusStr = "Invalid"
 			case n.Status == types.NODE_STATUS_NEVER_GOSSIPED:
 				statusStr = "Node not yet gossiped"
-			case n.Status == types.NODE_STATUS_UP_AND_WAITING_FOR_QUORUM:
+			case n.Status == types.NODE_STATUS_SUSPECT_NOT_IN_QUORUM:
 				statusStr = "Node Up but not in Quorum."
 			}
 			fmt.Fprintln(w, n.Id, "\t", n.LastUpdateTs, "\t", statusStr)

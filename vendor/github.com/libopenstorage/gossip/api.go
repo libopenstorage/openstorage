@@ -34,9 +34,6 @@ type GossipStore interface {
 	// UpdateSelfStatus
 	UpdateSelfStatus(types.NodeStatus)
 
-	// UpdateClusterSize
-	UpdateClusterSize(int)
-
 	// UpdateNodeStatus
 	UpdateNodeStatus(types.NodeId, types.NodeStatus) error
 
@@ -74,6 +71,10 @@ type Gossiper interface {
 
 	// GetGossipHistory returns the gossip records for last 20 sessions.
 	GetGossipHistory() []*types.GossipSessionInfo
+
+	// UpdateClusterSize updates the number of nodes in the cluster.
+	UpdateClusterSize(int)
+
 }
 
 // New returns an initialized Gossip node

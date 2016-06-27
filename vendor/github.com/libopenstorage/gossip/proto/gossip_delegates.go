@@ -11,6 +11,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/hashicorp/memberlist"
 
+	"github.com/libopenstorage/gossip/proto/state"
 	"github.com/libopenstorage/gossip/types"
 )
 
@@ -22,13 +23,35 @@ type GossipDelegate struct {
 	lastGossipTsLock sync.Mutex
 	lastGossipTs     time.Time
 	history          *GossipHistory
+	// channel to receive state change events
+	stateEvent chan types.StateEvent
+	// current State object
+	currentState state.State
+	// quorum timeout to change the quorum status of a node
+	quorumTimeout time.Duration
 }
 
-func (gd *GossipDelegate) InitGossipDelegate(genNumber uint64, selfNodeId types.NodeId, gossipVersion string) {
+func (gd *GossipDelegate) InitGossipDelegate(
+	genNumber uint64,
+	selfNodeId types.NodeId,
+	gossipVersion string,
+	quorumTimeout time.Duration,
+) {
 	gd.GenNumber = genNumber
 	gd.nodeId = string(selfNodeId)
-	gd.InitStore(selfNodeId, gossipVersion)
+	gd.stateEvent = make(chan types.StateEvent)
+	// We start with a NOT_IN_QUORUM status
+	gd.InitStore(selfNodeId, gossipVersion, types.NODE_STATUS_NOT_IN_QUORUM)
+	gd.quorumTimeout = quorumTimeout
 	gd.history = NewGossipHistory(20)
+}
+
+func (gd *GossipDelegate) InitCurrentState(clusterSize int) {
+	// Our initial state is NOT_IN_QUORUM
+	gd.currentState = state.GetNotInQuorum(clusterSize, types.NodeId(gd.nodeId), gd.stateEvent)
+	// Start the go routine which handles all the events
+	// and changes state of the node
+	go gd.handleStateEvents()
 }
 
 func (gd *GossipDelegate) updateGossipTs() {
@@ -150,7 +173,6 @@ func (gd *GossipDelegate) MergeRemoteState(buf []byte, join bool) {
 		// NotifyJoin will take care of this info
 		return
 	}
-
 	gd.updateSelfTs()
 
 	gs := NewGossipSessionInfo("", types.GD_PEER_TO_ME)
@@ -188,24 +210,26 @@ func (gd *GossipDelegate) NotifyJoin(node *memberlist.Node) {
 		logrus.Infof(gs.Err)
 	} else {
 		gd.NewNode(types.NodeId(types.NodeId(node.Name)))
+		gd.triggerStateEvent(types.NODE_ALIVE)
 		gs.Err = ""
 	}
 
 	gd.history.AddLatest(gs)
-	gd.GetLocalNodeInfo(types.NodeId(node.Name))
 }
 
 // NotifyLeave is invoked when a node is detected to have left.
 // The Node argument must not be modified.
 func (gd *GossipDelegate) NotifyLeave(node *memberlist.Node) {
 	if node.Name == gd.nodeId {
-		gd.UpdateSelfStatus(types.NODE_STATUS_DOWN)
+		gd.triggerStateEvent(types.SELF_LEAVE)
+		//gd.UpdateSelfStatus(types.NODE_STATUS_DOWN)
 	} else {
 		err := gd.UpdateNodeStatus(types.NodeId(node.Name), types.NODE_STATUS_DOWN)
 		if err != nil {
 			logrus.Infof("Could not update status on NotifyLeave : %v", err.Error())
 			return
 		}
+		gd.triggerStateEvent(types.NODE_LEAVE)
 	}
 
 	gs := NewGossipSessionInfo(node.Name, types.GD_PEER_TO_ME)
@@ -230,6 +254,7 @@ func (gd *GossipDelegate) NotifyUpdate(node *memberlist.Node) {
 func (gd *GossipDelegate) NotifyAlive(node *memberlist.Node) error {
 	// Ignore self NotifyAlive
 	if node.Name == gd.nodeId {
+		gd.triggerStateEvent(types.SELF_ALIVE)
 		return nil
 	}
 
@@ -252,13 +277,59 @@ func (gd *GossipDelegate) NotifyAlive(node *memberlist.Node) error {
 			return err
 		} else {
 			gd.NewNode(types.NodeId(node.Name))
+			gd.triggerStateEvent(types.NODE_ALIVE)
 		}
 	} else {
 		if diffNode.Status != types.NODE_STATUS_UP {
 			gd.UpdateNodeStatus(types.NodeId(node.Name), types.NODE_STATUS_UP)
+			gd.triggerStateEvent(types.NODE_ALIVE)
 		}
 	}
 	gd.history.AddLatest(gs)
-
 	return nil
+}
+
+func (gd *GossipDelegate) triggerStateEvent(event types.StateEvent) {
+	gd.stateEvent <- event
+	return
+}
+
+func startQuorumTimer(quorumTimeout time.Duration, stateEvent chan types.StateEvent) {
+	logrus.Infof("Starting Quorum Timer. Waiting for quorum timeout of (%v)", quorumTimeout)
+	time.Sleep(quorumTimeout)
+	stateEvent <- types.TIMEOUT
+}
+
+func (gd *GossipDelegate) handleStateEvents() {
+	for {
+		// We block here until we get an event
+		event := <-gd.stateEvent
+		previousStatus := gd.currentState.NodeStatus()
+		switch event {
+		case types.SELF_ALIVE:
+			//logrus.Infof("SELF ALIVE %v", gd.NodeId())
+			gd.currentState, _ = gd.currentState.SelfAlive(gd.GetLocalState())
+		case types.NODE_ALIVE:
+			//logrus.Infof("NODE_ALIVE %v", gd.NodeId())
+			gd.currentState, _ = gd.currentState.NodeAlive(gd.GetLocalState())
+		case types.SELF_LEAVE:
+			//logrus.Infof("SELF_LEAVE %v", gd.NodeId())
+			gd.currentState, _ = gd.currentState.SelfLeave()
+		case types.NODE_LEAVE:
+			//logrus.Infof("NODE LEAVE %v", gd.NodeId())
+			gd.currentState, _ = gd.currentState.NodeLeave(gd.GetLocalState())
+		case types.UPDATE_CLUSTER_SIZE:
+			//logrus.Infof("SIZE %v %v", gd.NodeId(), gd.currentState.String())
+			gd.currentState, _ = gd.currentState.UpdateClusterSize(gd.getClusterSize(), gd.GetLocalState())
+		case types.TIMEOUT:
+			logrus.Infof("Quorum Timeout. Waited for (%v)", gd.quorumTimeout)
+			gd.currentState, _ = gd.currentState.Timeout()
+		}
+		newStatus := gd.currentState.NodeStatus()
+		if previousStatus == types.NODE_STATUS_UP && newStatus == types.NODE_STATUS_SUSPECT_NOT_IN_QUORUM {
+			// Start a timer
+			go startQuorumTimer(gd.quorumTimeout, gd.stateEvent)
+		}
+		gd.UpdateSelfStatus(gd.currentState.NodeStatus())
+	}
 }
