@@ -621,8 +621,7 @@ func (c *ClusterManager) SetSize(size int) error {
 
 // Remove node(s) from the cluster permanently.
 func (c *ClusterManager) Remove(nodes []api.Node) error {
-	// TODO
-	return nil
+	return errors.New("Node decommission not supported in this version.")
 }
 
 // Shutdown can be called when THIS node is gracefully shutting down.

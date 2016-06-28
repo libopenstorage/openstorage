@@ -68,6 +68,22 @@ func (c *clusterClient) GetData() (map[string]*api.Node, error) {
 }
 
 func (c *clusterClient) Remove(nodes []api.Node) error {
+	resp := api.ClusterResponse{}
+
+	request := c.c.Delete().Resource(clusterPath + "/")
+
+	for _, n := range nodes {
+		request.QueryOption("id", n.Id)
+	}
+
+	if err := request.Do().Unmarshal(&resp); err != nil {
+		return err
+	}
+
+	if resp.Error != "" {
+		return errors.New(resp.Error)
+	}
+
 	return nil
 }
 

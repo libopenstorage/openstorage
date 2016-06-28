@@ -2,9 +2,11 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/config"
@@ -130,7 +132,34 @@ func (c *clusterApi) status(w http.ResponseWriter, r *http.Request) {
 
 func (c *clusterApi) delete(w http.ResponseWriter, r *http.Request) {
 	method := "delete"
-	c.sendNotImplemented(w, method)
+	logrus.Infof("Server side node delete")
+
+	params := r.URL.Query()
+
+	nodeID := params["id"]
+	if nodeID == nil {
+		c.sendError(c.name, method, w, "Missing id param", http.StatusBadRequest)
+		return
+	}
+
+	inst, err := cluster.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	nodes := make([]api.Node, 0)
+	for _, id := range nodeID {
+		nodes = append(nodes, api.Node{Id: id})
+	}
+
+	clusterResponse := &api.ClusterResponse{}
+
+	err = inst.Remove(nodes)
+	if err != nil {
+		clusterResponse.Error = fmt.Errorf("Node Remove: %s", err).Error()
+	}
+	json.NewEncoder(w).Encode(clusterResponse)
 }
 
 func (c *clusterApi) shutdown(w http.ResponseWriter, r *http.Request) {
@@ -146,7 +175,6 @@ func (c *clusterApi) versions(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(versions)
 }
 
-
 func (c *clusterApi) sendNotImplemented(w http.ResponseWriter, method string) {
 	c.sendError(c.name, method, w, "Not implemented.", http.StatusNotImplemented)
 }
@@ -156,5 +184,5 @@ func clusterVersion(route, version string) string {
 }
 
 func clusterPath(route, version string) string {
-	return clusterVersion("cluster" + route, version)
+	return clusterVersion("cluster"+route, version)
 }
