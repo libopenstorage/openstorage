@@ -415,6 +415,7 @@ func (c *ClusterManager) updateClusterStatus(initState *ClusterInitState, exist 
 					c.selfNode.Status = api.Status_STATUS_OFFLINE
 					c.status = api.Status_STATUS_NOT_IN_QUORUM
 					c.Shutdown()
+					os.Exit(-1)
 				} else if c.selfNode.Status == api.Status_STATUS_OFFLINE &&
 					nodeInfo.Status == types.NODE_STATUS_UP {
 					dlog.Infof("Back in quorum..")
