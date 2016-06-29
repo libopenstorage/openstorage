@@ -210,12 +210,22 @@ func (v *volumeClient) Alerts(volumeID string) (*api.Alerts, error) {
 	return alerts, nil
 }
 
+func formatRespErr(resp *Response) error {
+	return fmt.Errorf("%d: %s", resp.statusCode, string(resp.body))
+}
+
 // Active Requests on this volume.
 // Errors ErrEnoEnt may be returned
 func (v *volumeClient) GetActiveRequests(id string) (*api.ActiveRequests, error) {
 
 	requests := &api.ActiveRequests{}
-	if err := v.c.Get().Resource(volumePath + "/requests").Instance(id).Do().Unmarshal(requests); err != nil {
+	resp := v.c.Get().Resource(volumePath + "/requests").Instance(id).Do()
+
+	if resp.err != nil {
+		return nil, formatRespErr(resp)
+	}
+
+	if err := resp.Unmarshal(requests); err != nil {
 		return nil, err
 	}
 
