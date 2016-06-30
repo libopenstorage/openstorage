@@ -524,6 +524,7 @@ func (c *ClusterManager) Start() error {
 	if err != nil {
 		dlog.Panicln(err)
 	}
+	kvdb.Unlock(kvlock)
 
 	// Cluster database max size... 0 if unlimited.
 	c.size = initState.ClusterInfo.Size
@@ -536,15 +537,6 @@ func (c *ClusterManager) Start() error {
 		c.status = api.Status_STATUS_OK
 		initState.ClusterInfo.Status = api.Status_STATUS_OK
 		self, _ := c.initNode(initState.ClusterInfo)
-		// Add ourselves into the cluster DB and release the lock
-		err := writeClusterInfo(initState.ClusterInfo)
-		if err != nil {
-			dlog.Errorln("Failed to save the database.", err)
-			kvdb.Unlock(kvlock)
-			return err
-		}
-		kvdb.Unlock(kvlock)
-
 		err = c.initCluster(initState, self, false)
 		if err != nil {
 			dlog.Errorln("Failed to initialize the cluster.", err)
@@ -555,14 +547,6 @@ func (c *ClusterManager) Start() error {
 
 		c.status = api.Status_STATUS_OK
 		self, exist := c.initNode(initState.ClusterInfo)
-		// Add ourselves into the cluster DB and release the lock
-		err := writeClusterInfo(initState.ClusterInfo)
-		if err != nil {
-			dlog.Errorln("Failed to save the database.", err)
-			kvdb.Unlock(kvlock)
-			return err
-		}
-		kvdb.Unlock(kvlock)
 
 		err = c.joinCluster(initState, self, exist)
 		if err != nil {
@@ -570,9 +554,33 @@ func (c *ClusterManager) Start() error {
 			return err
 		}
 	} else {
-		kvdb.Unlock(kvlock)
 		return errors.New("Fatal, Cluster is in an unexpected state.")
 	}
+
+	kvlock, err = kvdb.Lock(clusterLockKey)
+	if err != nil {
+		dlog.Panicln("Fatal, Unable to obtain cluster lock. ", err)
+	}
+	selfNodeEntry, ok := initState.ClusterInfo.NodeEntries[c.config.NodeId]
+	if !ok {
+		kvdb.Unlock(kvlock)
+		dlog.Panicln("Fatal, Unable to find self node entry in local cache")
+	}
+	// Add ourselves into the cluster DB and release the lock
+	currentState, err := readClusterInfo()
+	if err != nil {
+		kvdb.Unlock(kvlock)
+		dlog.Errorln("Failed to read cluster info. ", err)
+		return err
+	}
+	currentState.NodeEntries[c.config.NodeId] = selfNodeEntry
+	err = writeClusterInfo(&currentState)
+	if err != nil {
+		dlog.Errorln("Failed to save the database.", err)
+		kvdb.Unlock(kvlock)
+		return err
+	}
+	kvdb.Unlock(kvlock)
 
 	// Start heartbeating to other nodes.
 	go c.startHeartBeat(initState.ClusterInfo)
