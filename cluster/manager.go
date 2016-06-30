@@ -636,7 +636,7 @@ func (c *ClusterManager) Start() error {
 	kvdb.Unlock(kvlock)
 
 	// Start heartbeating to other nodes.
-	go c.startHeartBeat(initState.ClusterInfo)
+	go c.startHeartBeat(&currentState)
 
 	// Max quorum retries allowed = 30
 	// 30 * 2 seconds (gossip interval) = 1 minute (quorum timeout)
