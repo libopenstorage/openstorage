@@ -627,6 +627,10 @@ func (c *ClusterManager) Start() error {
 		return err
 	}
 	currentState.NodeEntries[c.config.NodeId] = selfNodeEntry
+	if currentState.Status == api.Status_STATUS_INIT {
+		// We are the first node to join the cluster.
+		currentState.Status = api.Status_STATUS_OK
+	}
 	err = writeClusterInfo(&currentState)
 	if err != nil {
 		dlog.Errorln("Failed to save the database.", err)
