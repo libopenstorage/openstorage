@@ -1,8 +1,6 @@
 package state
 
 import (
-	"sync"
-
 	"github.com/libopenstorage/gossip/types"
 )
 
@@ -13,19 +11,14 @@ type down struct {
 	stateEvent  chan types.StateEvent
 }
 
-var instanceDown *down
-var dOnce sync.Once
 
 func GetDown(clusterSize int, selfId types.NodeId, stateEvent chan types.StateEvent) State {
-	dOnce.Do(func() {
-		instanceDown = &down{
-			nodeStatus: types.NODE_STATUS_DOWN,
-		}
-	})
-	instanceDown.clusterSize = clusterSize
-	instanceDown.id = selfId
-	instanceDown.stateEvent = stateEvent
-	return instanceDown
+	return &down{
+		nodeStatus: types.NODE_STATUS_DOWN,
+		clusterSize: clusterSize,
+		id: selfId,
+		stateEvent: stateEvent,
+	}
 }
 
 func (d *down) String() string {

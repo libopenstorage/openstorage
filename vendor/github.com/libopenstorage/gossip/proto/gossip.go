@@ -239,7 +239,7 @@ func (g *GossiperImpl) GetNodes() []string {
 
 }
 
-func (g *GossiperImpl) UpdateClusterSize(clusterSize int) {
-	g.updateClusterSize(clusterSize)
+func (g *GossiperImpl) UpdateCluster(peers map[types.NodeId]string) {
+	g.updateCluster(peers)
 	g.triggerStateEvent(types.UPDATE_CLUSTER_SIZE)
 }

@@ -47,8 +47,11 @@ type GossipStore interface {
 	// GetLocalNodeInfo returns
 	GetLocalNodeInfo(types.NodeId) (types.NodeInfo, error)
 
-	// Register a new node in the database
-	NewNode(types.NodeId)
+	// Add a new node in the database
+	AddNode(types.NodeId, types.NodeStatus)
+
+	// Remove a node from the database
+	RemoveNode(types.NodeId) error
 }
 
 type Gossiper interface {
@@ -72,8 +75,8 @@ type Gossiper interface {
 	// GetGossipHistory returns the gossip records for last 20 sessions.
 	GetGossipHistory() []*types.GossipSessionInfo
 
-	// UpdateClusterSize updates the number of nodes in the cluster.
-	UpdateClusterSize(int)
+	// UpdateCluster updates gossip with latest peer nodes Id-Ip mapping
+	UpdateCluster(map[types.NodeId]string)
 
 }
 

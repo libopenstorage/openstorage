@@ -170,9 +170,12 @@ func statusValid(s types.NodeStatus) bool {
 		s != types.NODE_STATUS_NEVER_GOSSIPED)
 }
 
-func (s *GossipStoreImpl) NewNode(id types.NodeId) {
+func (s *GossipStoreImpl) AddNode(id types.NodeId, status types.NodeStatus) {
 	s.Lock()
-	if _, ok := s.nodeMap[id]; ok {
+	if nodeInfo, ok := s.nodeMap[id]; ok {
+		nodeInfo.Status = status
+		nodeInfo.LastUpdateTs = time.Now()
+		s.nodeMap[id] = nodeInfo
 		s.Unlock()
 		return
 	}
@@ -182,11 +185,22 @@ func (s *GossipStoreImpl) NewNode(id types.NodeId) {
 		GenNumber:          0,
 		LastUpdateTs:       time.Now(),
 		WaitForGenUpdateTs: time.Now(),
-		Status:             types.NODE_STATUS_UP,
+		Status:             status,
 		Value:              make(types.StoreMap),
 	}
 	s.nodeMap[id] = newNodeInfo
 	s.Unlock()
+}
+
+func (s *GossipStoreImpl) RemoveNode(id types.NodeId) error {
+	s.Lock()
+	if _, ok := s.nodeMap[id]; !ok {
+		s.Unlock()
+		return fmt.Errorf("Node %v does not exist in map", id)
+	}
+	delete(s.nodeMap, id)
+	s.Unlock()
+	return nil
 }
 
 func (s *GossipStoreImpl) MetaInfo() types.NodeMetaInfo {
@@ -244,10 +258,47 @@ func (s *GossipStoreImpl) Update(diff types.NodeInfoMap) {
 	}
 }
 
-func (s *GossipStoreImpl) updateClusterSize(clusterSize int) {
+func (s *GossipStoreImpl) updateCluster(peers map[types.NodeId]string) {
+	removeNodeIds := []types.NodeId{}
+	addNodeIds := []types.NodeId{}
 	s.Lock()
-	s.clusterSize = clusterSize
+	s.clusterSize = len(peers)
+	// Lets check if a node was added or removed.
+	if len(s.nodeMap) > len(peers) {
+		// Node removed
+		for id, _ := range s.nodeMap {
+			if _, ok := peers[id]; !ok {
+				removeNodeIds = append(removeNodeIds, id)
+			}
+		}
+	} else if len(s.nodeMap) < len(peers) {
+		// Node added
+		for id, _ := range peers {
+			if _, ok := s.nodeMap[id]; !ok {
+				addNodeIds = append(addNodeIds, id)
+			}
+		}
+	} else {
+		// Nodes removed
+		for id, _ := range s.nodeMap {
+			if _, ok := peers[id]; !ok {
+				removeNodeIds = append(removeNodeIds, id)
+			}
+		}
+		// Nodes added
+		for id, _ := range peers {
+			if _, ok := s.nodeMap[id]; !ok {
+				addNodeIds = append(addNodeIds, id)
+			}
+		}
+	}
 	s.Unlock()
+	for _, nodeId := range removeNodeIds {
+		s.RemoveNode(nodeId)
+	}
+	for _, nodeId := range addNodeIds {
+		s.AddNode(nodeId, types.NODE_STATUS_DOWN)
+	}
 }
 
 func (s *GossipStoreImpl) getClusterSize() int {

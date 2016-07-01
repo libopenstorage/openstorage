@@ -209,7 +209,7 @@ func (gd *GossipDelegate) NotifyJoin(node *memberlist.Node) {
 		gs.Err = err.Error()
 		logrus.Infof(gs.Err)
 	} else {
-		gd.NewNode(types.NodeId(types.NodeId(node.Name)))
+		gd.AddNode(types.NodeId(types.NodeId(node.Name)), types.NODE_STATUS_UP)
 		gd.triggerStateEvent(types.NODE_ALIVE)
 		gs.Err = ""
 	}
@@ -276,7 +276,7 @@ func (gd *GossipDelegate) NotifyAlive(node *memberlist.Node) error {
 			// Returning a non-nil err value
 			return err
 		} else {
-			gd.NewNode(types.NodeId(node.Name))
+			gd.AddNode(types.NodeId(node.Name), types.NODE_STATUS_UP)
 			gd.triggerStateEvent(types.NODE_ALIVE)
 		}
 	} else {
@@ -307,19 +307,14 @@ func (gd *GossipDelegate) handleStateEvents() {
 		previousStatus := gd.currentState.NodeStatus()
 		switch event {
 		case types.SELF_ALIVE:
-			//logrus.Infof("SELF ALIVE %v", gd.NodeId())
 			gd.currentState, _ = gd.currentState.SelfAlive(gd.GetLocalState())
 		case types.NODE_ALIVE:
-			//logrus.Infof("NODE_ALIVE %v", gd.NodeId())
 			gd.currentState, _ = gd.currentState.NodeAlive(gd.GetLocalState())
 		case types.SELF_LEAVE:
-			//logrus.Infof("SELF_LEAVE %v", gd.NodeId())
 			gd.currentState, _ = gd.currentState.SelfLeave()
 		case types.NODE_LEAVE:
-			//logrus.Infof("NODE LEAVE %v", gd.NodeId())
 			gd.currentState, _ = gd.currentState.NodeLeave(gd.GetLocalState())
 		case types.UPDATE_CLUSTER_SIZE:
-			//logrus.Infof("SIZE %v %v", gd.NodeId(), gd.currentState.String())
 			gd.currentState, _ = gd.currentState.UpdateClusterSize(gd.getClusterSize(), gd.GetLocalState())
 		case types.TIMEOUT:
 			logrus.Infof("Quorum Timeout. Waited for (%v)", gd.quorumTimeout)

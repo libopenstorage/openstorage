@@ -1,8 +1,6 @@
 package state
 
 import (
-	"sync"
-
 	"github.com/libopenstorage/gossip/types"
 )
 
@@ -14,18 +12,14 @@ type notInQuorum struct {
 }
 
 var instanceNotInQuorum *notInQuorum
-var niqOnce sync.Once
 
 func GetNotInQuorum(clusterSize int, selfId types.NodeId, stateEvent chan types.StateEvent) State {
-	niqOnce.Do(func() {
-		instanceNotInQuorum = &notInQuorum{
-			nodeStatus: types.NODE_STATUS_NOT_IN_QUORUM,
-		}
-	})
-	instanceNotInQuorum.clusterSize = clusterSize
-	instanceNotInQuorum.id = selfId
-	instanceNotInQuorum.stateEvent = stateEvent
-	return instanceNotInQuorum
+	return &notInQuorum{
+		nodeStatus: types.NODE_STATUS_NOT_IN_QUORUM,
+		clusterSize: clusterSize,
+		id: selfId,
+		stateEvent: stateEvent,
+	}
 }
 
 func (niq *notInQuorum) String() string {

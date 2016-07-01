@@ -2,7 +2,6 @@ package state
 
 import (
 	"github.com/libopenstorage/gossip/types"
-	"sync"
 )
 
 type suspectNotInQuorum struct {
@@ -13,18 +12,14 @@ type suspectNotInQuorum struct {
 }
 
 var instanceSuspectNotInQuorum *suspectNotInQuorum
-var siqOnce sync.Once
 
 func GetSuspectNotInQuorum(clusterSize int, selfId types.NodeId, stateEvent chan types.StateEvent) State {
-	siqOnce.Do(func() {
-		instanceSuspectNotInQuorum = &suspectNotInQuorum{
-			nodeStatus: types.NODE_STATUS_SUSPECT_NOT_IN_QUORUM,
-		}
-	})
-	instanceSuspectNotInQuorum.clusterSize = clusterSize
-	instanceSuspectNotInQuorum.id = selfId
-	instanceSuspectNotInQuorum.stateEvent = stateEvent
-	return instanceSuspectNotInQuorum
+	return &suspectNotInQuorum{
+		nodeStatus: types.NODE_STATUS_SUSPECT_NOT_IN_QUORUM,
+		clusterSize: clusterSize,
+		id: selfId,
+		stateEvent: stateEvent,
+	}
 }
 
 func (siq *suspectNotInQuorum) String() string {
