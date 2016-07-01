@@ -175,13 +175,13 @@ func (c *ClusterManager) getCurrentState() *api.Node {
 	return &c.selfNode
 }
 
-func (c *ClusterManager) getPeerNodeIps(db ClusterInfo) ([]string, error) {
-	var nodeIps []string
+func (c *ClusterManager) getPeers(db ClusterInfo) (map[types.NodeId]string) {
+	peers :=  make(map[types.NodeId]string)
 	for _, nodeEntry := range db.NodeEntries {
-		url := nodeEntry.MgmtIp + ":9002"
-		nodeIps = append(nodeIps, url)
+		ip := nodeEntry.MgmtIp + ":9002"
+		peers[types.NodeId(nodeEntry.Id)] = ip
 	}
-	return nodeIps, nil
+	return peers
 }
 
 // Get the latest config.
@@ -198,8 +198,8 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 	c.size = db.Size
 
 	// Probably new node was added into the cluster db
-	peerIps, _ := c.getPeerNodeIps(db)
-	c.gossip.UpdateClusterSize(len(peerIps))
+	peers := c.getPeers(db)
+	c.gossip.UpdateCluster(peers)
 	return nil
 }
 
@@ -367,7 +367,8 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *ClusterInfo) {
 	}
 	dlog.Infof("Heartbeating to these nodes : %v", nodeIps)
 	c.gossip.Start(nodeIps)
-	c.gossip.UpdateClusterSize(len(clusterInfo.NodeEntries))
+	peers := c.getPeers(*clusterInfo)
+	c.gossip.UpdateCluster(peers)
 
 	lastUpdateTs := time.Now()
 	for {
