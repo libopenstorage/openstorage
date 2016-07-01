@@ -19,6 +19,7 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/libopenstorage/systemutils"
 	"github.com/portworx/kvdb"
 )
@@ -721,7 +722,42 @@ func (c *ClusterManager) SetSize(size int) error {
 
 // Remove node(s) from the cluster permanently.
 func (c *ClusterManager) Remove(nodes []api.Node) error {
-	return errors.New("Node decommission not supported in this version.")
+	logrus.Infof("ClusterManager Remove node.")
+
+	for _, n := range nodes {
+
+		if _, exist := c.nodeCache[n.Id]; !exist {
+			msg := fmt.Sprintf("Node does not exist in cluster, Node ID %s.", n.Id)
+			dlog.Errorf(msg)
+			return errors.New(msg)
+		}
+
+		// If removing node is self, return error
+		if n.Id == c.selfNode.Id {
+			msg := fmt.Sprintf("Cannot remove self from cluster, Node ID %s.", n.Id)
+			dlog.Errorf(msg)
+			return errors.New(msg)
+		}
+
+		// If node is not down, do not remove it
+		if c.nodeCache[n.Id].Status != api.Status_STATUS_OFFLINE {
+			msg := fmt.Sprintf("Cannot remove node that is not offline, Node ID %s.", n.Id)
+			dlog.Errorf(msg)
+			return errors.New(msg)
+		}
+
+		// Alert all listeners that we are removing this node.
+		for e := c.listeners.Front(); e != nil; e = e.Next() {
+			dlog.Infof("Remove node: notify cluster listener: %s",
+				e.Value.(ClusterListener).String())
+			if err := e.Value.(ClusterListener).Remove(&n); err != nil {
+				dlog.Warnf("Cluster listener failed to remove node: %s: %s",
+					e.Value.(ClusterListener).String(), err)
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // Shutdown can be called when THIS node is gracefully shutting down.
