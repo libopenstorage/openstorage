@@ -15,7 +15,6 @@ enum Status {
   STATUS_OFFLINE = 3;
   STATUS_ERROR = 4;
   STATUS_NOT_IN_QUORUM = 5;
-  STATUS_DECOMMISSIONED = 6;
 }
 
 enum DriverType {
