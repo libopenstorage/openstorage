@@ -540,9 +540,9 @@ func (c *ClusterManager) Start() error {
 	c.selfNode.StartTime = time.Now()
 	c.selfNode.Hostname, _ = os.Hostname()
 	if err != nil {
-		dlog.Errorln("Failed to get external IP address for "+
-			"mgt/data interfaces: %s, mgt '%s', data '%s'",
-			err, c.selfNode.MgmtIp, c.selfNode.DataIp)
+		dlog.Errorf("Failed to get external IP address for mgt/data interfaces: %s.",
+			err)
+		return err
 	}
 
 	c.selfNode.NodeData = make(map[string]interface{})
