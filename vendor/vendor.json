@@ -517,26 +517,26 @@
 		{
 			"checksumSHA1": "b4QG5fRhyOUSYvmhXJgJdY7oyzk=",
 			"path": "github.com/libopenstorage/gossip",
-			"revision": "e7fc0be7fea282624044eedf9d8c31c52350cbdb",
-			"revisionTime": "2016-07-03T00:57:18Z"
+			"revision": "978ca6e3777c9cddebb9f6c68458958e5f2ba34f",
+			"revisionTime": "2016-07-05T09:07:10Z"
 		},
 		{
-			"checksumSHA1": "Y0K8AB1P11EuzNYkCTPwXNAZ5B0=",
+			"checksumSHA1": "EZ42xM0lbwGif7ZM+x/ogdmp0wo=",
 			"path": "github.com/libopenstorage/gossip/proto",
-			"revision": "e7fc0be7fea282624044eedf9d8c31c52350cbdb",
-			"revisionTime": "2016-07-03T00:57:18Z"
+			"revision": "978ca6e3777c9cddebb9f6c68458958e5f2ba34f",
+			"revisionTime": "2016-07-05T09:07:10Z"
 		},
 		{
 			"checksumSHA1": "iyRJ96cSFJbzigPfzdR6eo4j2Q4=",
 			"path": "github.com/libopenstorage/gossip/proto/state",
-			"revision": "e7fc0be7fea282624044eedf9d8c31c52350cbdb",
-			"revisionTime": "2016-07-03T00:57:18Z"
+			"revision": "978ca6e3777c9cddebb9f6c68458958e5f2ba34f",
+			"revisionTime": "2016-07-05T09:07:10Z"
 		},
 		{
 			"checksumSHA1": "2gnFEy/PrL83dAgKqno79nntiYg=",
 			"path": "github.com/libopenstorage/gossip/types",
-			"revision": "e7fc0be7fea282624044eedf9d8c31c52350cbdb",
-			"revisionTime": "2016-07-03T00:57:18Z"
+			"revision": "978ca6e3777c9cddebb9f6c68458958e5f2ba34f",
+			"revisionTime": "2016-07-05T09:07:10Z"
 		},
 		{
 			"checksumSHA1": "//fxGW9CLGgr6AMunoZkR4lbYzk=",

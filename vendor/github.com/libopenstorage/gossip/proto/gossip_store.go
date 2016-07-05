@@ -247,6 +247,11 @@ func (s *GossipStoreImpl) Update(diff types.NodeInfoMap) {
 			continue
 		}
 		selfValue, ok := s.nodeMap[id]
+		if !ok {
+			// We got an update for a node which we do not have in our map
+			// Lets add it with an offline state
+			selfValue.Status = types.NODE_STATUS_DOWN
+		}
 		if !ok || !statusValid(selfValue.Status) ||
 			selfValue.LastUpdateTs.Before(newNodeInfo.LastUpdateTs) {
 			// Our view of Status of a Node, should only be determined by memberlist.

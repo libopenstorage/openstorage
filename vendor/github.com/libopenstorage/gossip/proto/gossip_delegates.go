@@ -317,8 +317,11 @@ func (gd *GossipDelegate) handleStateEvents() {
 		case types.UPDATE_CLUSTER_SIZE:
 			gd.currentState, _ = gd.currentState.UpdateClusterSize(gd.getClusterSize(), gd.GetLocalState())
 		case types.TIMEOUT:
-			logrus.Infof("Quorum Timeout. Waited for (%v)", gd.quorumTimeout)
-			gd.currentState, _ = gd.currentState.Timeout()
+			newState, _ := gd.currentState.Timeout()
+			if newState.NodeStatus() != gd.currentState.NodeStatus() {
+				logrus.Infof("Quorum Timeout. Waited for (%v)", gd.quorumTimeout)
+			}
+			gd.currentState = newState
 		}
 		newStatus := gd.currentState.NodeStatus()
 		if previousStatus == types.NODE_STATUS_UP && newStatus == types.NODE_STATUS_SUSPECT_NOT_IN_QUORUM {
