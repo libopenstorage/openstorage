@@ -132,6 +132,8 @@ type Cluster interface {
 	ClusterData
 }
 
+type NotifyCluster func(api.ClusterNotify) error
+
 // Init instantiates a new cluster manager.
 func Init(cfg config.ClusterConfig) error {
 	if inst != nil {

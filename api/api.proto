@@ -117,6 +117,11 @@ enum StorageMedium {
   STORAGE_MEDIUM_NVME = 2;
 }
 
+enum ClusterNotify {
+ // Node is down
+ CLUSTER_NOTIFY_DOWN = 0;
+}
+
 // StorageResource groups properties of a storage device.
 message StorageResource {
   // Path device path for this storage resource.
