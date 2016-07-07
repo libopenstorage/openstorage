@@ -175,8 +175,8 @@ func (c *ClusterManager) getCurrentState() *api.Node {
 	return &c.selfNode
 }
 
-func (c *ClusterManager) getPeers(db ClusterInfo) (map[types.NodeId]string) {
-	peers :=  make(map[types.NodeId]string)
+func (c *ClusterManager) getPeers(db ClusterInfo) map[types.NodeId]string {
+	peers := make(map[types.NodeId]string)
 	for _, nodeEntry := range db.NodeEntries {
 		ip := nodeEntry.MgmtIp + ":9002"
 		peers[types.NodeId(nodeEntry.Id)] = ip
@@ -689,7 +689,11 @@ func (c *ClusterManager) Start() error {
 func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 	i := 0
 
-	cluster := api.Cluster{Id: c.config.ClusterId, Status: c.status}
+	cluster := api.Cluster{
+		Id:     c.config.ClusterId,
+		Status: c.status,
+		NodeId: c.selfNode.Id,
+	}
 	cluster.Nodes = make([]api.Node, len(c.nodeCache))
 	for _, n := range c.nodeCache {
 		cluster.Nodes[i] = n

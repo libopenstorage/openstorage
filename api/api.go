@@ -64,6 +64,10 @@ type Cluster struct {
 	// Id is the ID of the cluster.
 	Id string
 
+	// NodeId is the ID of the node on which this cluster object
+	// is initialized
+	NodeId string
+
 	// Nodes is an array of all the nodes in the cluster.
 	Nodes []Node
 }
