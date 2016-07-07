@@ -197,6 +197,11 @@ message ReplicaSet {
   repeated string nodes = 1;
 }
 
+ // List of name value mapping of driver specific runtime information.
+message RuntimeStateMap {
+  map<string, string> runtime_state = 1;
+}
+
 // Volume represents a live, created volume.
 message Volume {
   // Self referential volume ID
@@ -226,8 +231,8 @@ message Volume {
   repeated ReplicaSet  replica_sets = 16;
   // Last recorded error
   string error = 17;
-  // Name value mapping of driver specific runtime information.
-  map<string, string> runtime_state = 18;
+  // List of name value mapping of driver specific runtime information.
+  repeated RuntimeStateMap runtime_state = 18;
 }
 
 message Stats {
