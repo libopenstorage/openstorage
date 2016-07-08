@@ -29,7 +29,7 @@ type State interface {
 	UpdateClusterSize(clusterSize int, nodeInfoMap types.NodeInfoMap) (State, error)
 
 	// Timeout is an event triggered when quorum timeout has reached
-	Timeout() (State, error)
+	Timeout(clusterSize int, nodeInfoMap types.NodeInfoMap) (State, error)
 
 	// String
 	String() string

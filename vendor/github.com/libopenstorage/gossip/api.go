@@ -78,6 +78,10 @@ type Gossiper interface {
 	// UpdateCluster updates gossip with latest peer nodes Id-Ip mapping
 	UpdateCluster(map[types.NodeId]string)
 
+	// ExternalNodeLeave is used to indicate gossip that one of the nodes might be down.
+	// It checks quorum and appropriately marks either self down or the other node down.
+	// It returns the nodeId that was marked down
+	ExternalNodeLeave(nodeId types.NodeId) types.NodeId
 }
 
 // New returns an initialized Gossip node

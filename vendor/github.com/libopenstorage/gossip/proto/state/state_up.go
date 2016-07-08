@@ -13,10 +13,10 @@ type up struct {
 
 func GetUp(clusterSize int, selfId types.NodeId, stateEvent chan types.StateEvent) State {
 	return &up{
-		nodeStatus: types.NODE_STATUS_UP,
+		nodeStatus:  types.NODE_STATUS_UP,
 		clusterSize: clusterSize,
-		id: selfId,
-		stateEvent: stateEvent,
+		id:          selfId,
+		stateEvent:  stateEvent,
 	}
 }
 
@@ -76,6 +76,6 @@ func (u *up) UpdateClusterSize(clusterSize int, localNodeInfoMap types.NodeInfoM
 	}
 }
 
-func (u *up) Timeout() (State, error) {
+func (u *up) Timeout(clusterSize int, localNodeInfoMap types.NodeInfoMap) (State, error) {
 	return u, nil
 }
