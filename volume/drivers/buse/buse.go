@@ -334,7 +334,7 @@ func (d *driver) CleanupInit(self *api.Node, db *cluster.ClusterInfo) error {
 	return nil
 }
 
-func (d *driver) Join(self *api.Node, initState *cluster.ClusterInitState) error {
+func (d *driver) Join(self *api.Node, initState *cluster.ClusterInitState, handleNotifications cluster.ClusterNotify) error {
 	return nil
 }
 

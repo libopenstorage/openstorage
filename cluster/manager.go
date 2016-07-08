@@ -309,7 +309,7 @@ func (c *ClusterManager) joinCluster(
 ) error {
 	// Alert all listeners that we are joining the cluster.
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		err := e.Value.(ClusterListener).Join(self, initState)
+		err := e.Value.(ClusterListener).Join(self, initState, c.HandleNotifications)
 		if err != nil {
 			self.Status = api.Status_STATUS_ERROR
 			dlog.Warnf("Failed to initialize Join %s: %v",
@@ -365,7 +365,11 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *ClusterInfo) {
 		}
 		nodeIps = append(nodeIps, nodeEntry.MgmtIp+":9002")
 	}
-	dlog.Infof("Heartbeating to these nodes : %v", nodeIps)
+	if len(nodeIps) > 0 {
+		dlog.Infof("Starting Gossip... Gossiping to these nodes : %v", nodeIps)
+	} else {
+		dlog.Infof("Starting Gossip...")
+	}
 	c.gossip.Start(nodeIps)
 	peers := c.getPeers(*clusterInfo)
 	c.gossip.UpdateCluster(peers)
@@ -410,7 +414,8 @@ func (c *ClusterManager) updateClusterStatus(initState *ClusterInitState, exist 
 			// Special handling for self node
 			if id == types.NodeId(node.Id) {
 				if c.selfNode.Status == api.Status_STATUS_OK &&
-					nodeInfo.Status == types.NODE_STATUS_NOT_IN_QUORUM {
+					(nodeInfo.Status == types.NODE_STATUS_NOT_IN_QUORUM ||
+						nodeInfo.Status == types.NODE_STATUS_DOWN) {
 					// We have lost quorum
 					dlog.Warnf("Not in quorum. Gracefully shutting down...")
 					c.gossip.UpdateSelfStatus(types.NODE_STATUS_DOWN)
@@ -782,4 +787,13 @@ func (c *ClusterManager) Shutdown() error {
 		}
 	}
 	return nil
+}
+
+func (c *ClusterManager) HandleNotifications(culpritNodeId string, notification api.ClusterNotify) (string, error) {
+	if notification == api.ClusterNotify_CLUSTER_NOTIFY_DOWN {
+		killNodeId := c.gossip.ExternalNodeLeave(types.NodeId(culpritNodeId))
+		return string(killNodeId), nil
+	} else {
+		return "", fmt.Errorf("Error in Handle Notifications. Unknown Notification : %v", notification)
+	}
 }

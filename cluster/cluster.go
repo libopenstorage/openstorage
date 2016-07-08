@@ -66,7 +66,7 @@ type ClusterListener interface {
 	Halt(self *api.Node, clusterInfo *ClusterInfo) error
 
 	// Join is called when this node is joining an existing cluster.
-	Join(self *api.Node, state *ClusterInitState) error
+	Join(self *api.Node, state *ClusterInitState, clusterNotify ClusterNotify) error
 
 	// Add is called when a new node joins the cluster.
 	Add(node *api.Node) error
@@ -132,7 +132,7 @@ type Cluster interface {
 	ClusterData
 }
 
-type NotifyCluster func(api.ClusterNotify) error
+type ClusterNotify func(string, api.ClusterNotify) (string, error)
 
 // Init instantiates a new cluster manager.
 func Init(cfg config.ClusterConfig) error {
