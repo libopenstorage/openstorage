@@ -69,7 +69,12 @@ MountLoop:
 			}
 		}
 		// XXX Reconstruct refs.
-		mount.Mountpoint = append(mount.Mountpoint, &PathInfo{Path: v.Mountpoint, ref: 1})
+		mount.Mountpoint = append(mount.Mountpoint,
+			&PathInfo{
+				Path: normalizeMountPath(v.Mountpoint),
+				ref:  1,
+			},
+		)
 	}
 	return nil
 }

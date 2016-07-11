@@ -8,13 +8,17 @@ import (
 	"github.com/docker/docker/pkg/mount"
 )
 
-// DeviceMounter implements Ops and keeps track of active mounts for volume drivers.
+// DeviceMounter implements Ops and tracks active mounts for volume drivers.
 type DeviceMounter struct {
 	Mounter
 }
 
 // NewDeviceMounter
-func NewDeviceMounter(devPrefix string, mountImpl MountImpl) (*DeviceMounter, error) {
+func NewDeviceMounter(
+	devPrefix string,
+	mountImpl MountImpl,
+) (*DeviceMounter, error) {
+
 	m := &DeviceMounter{
 		Mounter: Mounter{
 			mountImpl: mountImpl,
@@ -57,7 +61,13 @@ DeviceLoop:
 			}
 		}
 		// XXX Reconstruct refs.
-		mount.Mountpoint = append(mount.Mountpoint, &PathInfo{Path: v.Mountpoint, ref: 1})
+		mount.Mountpoint = append(
+			mount.Mountpoint,
+			&PathInfo{
+				Path: normalizeMountPath(v.Mountpoint),
+				ref:  1,
+			},
+		)
 		m.paths[v.Mountpoint] = v.Source
 	}
 	return nil

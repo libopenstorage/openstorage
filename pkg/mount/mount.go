@@ -5,6 +5,7 @@ package mount
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"syscall"
 
@@ -26,15 +27,16 @@ type Manager interface {
 	// Exists returns true if the device is mounted at specified path.
 	// returned if the device does not exists.
 	Exists(source, path string) (bool, error)
-	// GetSourcePath scans mount for a specified mountPath and returns the sourcePath
-	// if found or returnes an ErrEnoent
+	// GetSourcePath scans mount for a specified mountPath and returns the
+	// sourcePath if found or returnes an ErrEnoent
 	GetSourcePath(mountPath string) (string, error)
-	// Mount device at mountpoint or increment refcnt if device is already mounted
-	// at specified mountpoint.
+	// Mount device at mountpoint or increment refcnt if device is already
+	//  mounted at specified mountpoint.
 	Mount(minor int, device, path, fs string, flags uintptr, data string) error
 	// Unmount device at mountpoint or decrement refcnt. If device has no
 	// mountpoints left after this operation, it is removed from the matrix.
-	// ErrEnoent is returned if the device or mountpoint for the device is not found.
+	// ErrEnoent is returned if the device or mountpoint for the device
+	// is not found.
 	Unmount(source, path string) error
 }
 
@@ -59,7 +61,7 @@ var (
 	// ErrEinval is returned is fields for an entry do no match
 	// existing fields
 	ErrEinval = errors.New("Invalid arguments for mount entry")
-	// ErrUnsupported is returned for an operation or a mount type not suppored.
+	// ErrUnsupported is returned for an unsupported operation or a mount type.
 	ErrUnsupported = errors.New("Not supported")
 )
 
@@ -110,6 +112,11 @@ func (m *DefaultMounter) Mount(
 // Unmount default unmount implementation is syscall.
 func (m *DefaultMounter) Unmount(target string, flags int) error {
 	return syscall.Unmount(target, flags)
+}
+
+// Refcnt for PathInfo
+func (p *PathInfo) Refcnt() int {
+	return p.ref
 }
 
 // String representation of Mounter
@@ -193,10 +200,31 @@ func (m *Mounter) GetSourcePath(mountPath string) (string, error) {
 	return "", ErrEnoent
 }
 
+func normalizeMountPath(mountPath string) string {
+	if len(mountPath) > 1 && strings.HasSuffix(mountPath, "/") {
+		return mountPath[:len(mountPath)-1]
+	}
+	return mountPath
+}
+
+func (m *Mounter) maybeRemoveDevice(device string) {
+	m.Lock()
+	defer m.Unlock()
+	if info, ok := m.mounts[device]; ok {
+		// If the device has no more mountpoints, remove it from the map
+		if len(info.Mountpoint) == 0 {
+			delete(m.mounts, device)
+		}
+	}
+}
+
+// Unmount device at mountpoint or decrement refcnt. If device has no
+// mountpoints left after this operation, it is removed from the matrix.
 // Mount new mountpoint for specified device.
 func (m *Mounter) Mount(minor int, device, path, fs string, flags uintptr, data string) error {
 	m.Lock()
 
+	path = normalizeMountPath(path)
 	dev, ok := m.paths[path]
 	if ok && dev != device {
 		dlog.Warnf("cannot mount %q,  device %q is mounted at %q", device, dev, path)
@@ -241,23 +269,11 @@ func (m *Mounter) Mount(minor int, device, path, fs string, flags uintptr, data 
 	return nil
 }
 
-func (m *Mounter) maybeRemoveDevice(device string) {
-	m.Lock()
-	defer m.Unlock()
-	if info, ok := m.mounts[device]; ok {
-		// If the device has no more mountpoints, remove it from the map
-		if len(info.Mountpoint) == 0 {
-			delete(m.mounts, device)
-		}
-	}
-}
-
-// Unmount device at mountpoint or decrement refcnt. If device has no
-// mountpoints left after this operation, it is removed from the matrix.
 // ErrEnoent is returned if the device or mountpoint for the device is not found.
 func (m *Mounter) Unmount(device, path string) error {
 	m.Lock()
 
+	path = normalizeMountPath(path)
 	info, ok := m.mounts[device]
 	if !ok {
 		m.Unlock()
@@ -267,32 +283,38 @@ func (m *Mounter) Unmount(device, path string) error {
 	info.Lock()
 	defer info.Unlock()
 	for i, p := range info.Mountpoint {
-		if p.Path == path {
-			p.ref--
-			// Unmount only if refcnt is 0
-			if p.ref == 0 {
-				err := m.mountImpl.Unmount(path, syscall.MNT_DETACH)
-				if err != nil {
-					p.ref++
-					return err
-				}
-				if _, pathExists := m.paths[path]; pathExists {
-					delete(m.paths, path)
-				} else {
-					dlog.Warnf("Path %q for device %q does not exist in pathMap", path, device)
-				}
-				// Blow away this mountpoint.
-				info.Mountpoint[i] = info.Mountpoint[len(info.Mountpoint)-1]
-				info.Mountpoint = info.Mountpoint[0 : len(info.Mountpoint)-1]
-				m.maybeRemoveDevice(device)
-			}
+		if p.Path != path {
+			continue
+		}
+		p.ref--
+		// Unmount only if refcnt is 0
+		if p.ref != 0 {
 			return nil
 		}
+		err := m.mountImpl.Unmount(path, syscall.MNT_DETACH)
+		if err != nil {
+			p.ref++
+			return err
+		}
+		if _, pathExists := m.paths[path]; pathExists {
+			delete(m.paths, path)
+		} else {
+			dlog.Warnf("Path %q for device %q does not exist in pathMap",
+				path, device)
+		}
+		// Blow away this mountpoint.
+		info.Mountpoint[i] = info.Mountpoint[len(info.Mountpoint)-1]
+		info.Mountpoint = info.Mountpoint[0 : len(info.Mountpoint)-1]
+		m.maybeRemoveDevice(device)
+		return nil
 	}
 	return ErrEnoent
 }
 
-func New(mounterType MountType, mountImpl MountImpl, identifier string) (Manager, error) {
+func New(mounterType MountType,
+	mountImpl MountImpl,
+	identifier string,
+) (Manager, error) {
 
 	if mountImpl == nil {
 		mountImpl = &DefaultMounter{}
