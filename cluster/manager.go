@@ -678,7 +678,9 @@ func (c *ClusterManager) Start() error {
 				c.gossip.UpdateSelfStatus(types.NODE_STATUS_DOWN)
 				return err
 			}
-			dlog.Infof("Sleeping as no quorum")
+			if quorumRetries == 0 {
+				dlog.Infof("Waiting for the cluster to reach quorum...")
+			}
 			time.Sleep(types.DEFAULT_GOSSIP_INTERVAL)
 			quorumRetries++
 		}
