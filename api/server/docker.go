@@ -192,6 +192,11 @@ func (d *driver) specFromOpts(Opts map[string]string) *api.VolumeSpec {
 		case api.SpecSnapshotInterval:
 			snapshotInterval, _ := strconv.ParseUint(v, 10, 32)
 			spec.SnapshotInterval = uint32(snapshotInterval)
+		case api.SpecShared:
+			shared, _ := strconv.ParseUint(v, 10, 32)
+			if shared != 0 {
+				spec.Shared = true
+			}
 		default:
 			spec.VolumeLabels[k] = v
 		}
