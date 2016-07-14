@@ -12,6 +12,7 @@ import (
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/client"
+	clusterclient "github.com/libopenstorage/openstorage/api/client/cluster"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/config"
 )
@@ -27,7 +28,7 @@ func (c *clusterClient) clusterOptions(context *cli.Context) {
 		fmt.Printf("Failed to initialize client library: %v\n", err)
 		os.Exit(1)
 	}
-	c.manager = clnt.ClusterManager()
+	c.manager = clusterclient.ClusterManager(clnt)
 }
 
 func (c *clusterClient) status(context *cli.Context) {

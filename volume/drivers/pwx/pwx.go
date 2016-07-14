@@ -3,6 +3,7 @@ package pwx
 import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/client"
+	volumeclient "github.com/libopenstorage/openstorage/api/client/volume"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/volume"
 )
@@ -33,7 +34,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		return nil, err
 	}
 
-	return &driver{VolumeDriver: c.VolumeDriver()}, nil
+	return &driver{VolumeDriver: volumeclient.VolumeDriver(c)}, nil
 }
 
 func (d *driver) Name() string {

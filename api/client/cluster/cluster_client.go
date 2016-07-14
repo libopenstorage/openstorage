@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/api/client"
 	"github.com/libopenstorage/openstorage/cluster"
 )
 
@@ -13,10 +14,10 @@ const (
 )
 
 type clusterClient struct {
-	c *Client
+	c *client.Client
 }
 
-func newClusterClient(c *Client) cluster.Cluster {
+func newClusterClient(c *client.Client) cluster.Cluster {
 	return &clusterClient{c: c}
 }
 

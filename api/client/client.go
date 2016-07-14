@@ -9,9 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/config"
-	"github.com/libopenstorage/openstorage/volume"
 )
 
 var (
@@ -37,32 +35,6 @@ func NewClient(host string, version string) (*Client, error) {
 	return c, nil
 }
 
-// NewClusterClient returns a new REST client of the supplied version for cluster management.
-func NewClusterClient(version string) (*Client, error) {
-	sockPath := "unix://" + config.ClusterAPIBase + "osd.sock"
-	if version == "" {
-		// Set the default version
-		version = config.Version
-	}
-
-	return NewClient(sockPath, version)
-}
-
-// GetSupportedClusterVersions returns a list of supported versions
-// of the OSD cluster api
-func GetSupportedClusterVersions() ([]string, error) {
-	sockPath := "unix://" + config.ClusterAPIBase + "osd.sock"
-	client, err := NewClient(sockPath, "")
-	if err != nil {
-		return []string{}, err
-	}
-	versions, err := client.Versions()
-	if err != nil {
-		return []string{}, err
-	}
-	return versions, nil
-}
-
 // NewDriver returns a new REST client of the supplied version for specified driver.
 func NewDriverClient(driverName, version string) (*Client, error) {
 	sockPath := "unix://" + config.DriverAPIBase + driverName + ".sock"
@@ -78,11 +50,37 @@ func NewDriverClient(driverName, version string) (*Client, error) {
 func GetSupportedDriverVersions(driverName string) ([]string, error) {
 	// Get a client handler
 	sockPath := "unix://" + config.DriverAPIBase + driverName + ".sock"
-	client, err := NewClient(sockPath, "")
+	volumeClient, err := NewClient(sockPath, "")
 	if err != nil {
 		return []string{}, err
 	}
-	versions, err := client.Versions()
+	versions, err := volumeClient.Versions()
+	if err != nil {
+		return []string{}, err
+	}
+	return versions, nil
+}
+
+// NewClusterClient returns a new REST client of the supplied version for cluster management.
+func NewClusterClient(version string) (*Client, error) {
+	sockPath := "unix://" + config.ClusterAPIBase + "osd.sock"
+	if version == "" {
+		// Set the default version
+		version = config.Version
+	}
+
+	return NewClient(sockPath, version)
+}
+
+// GetSupportedClusterVersions returns a list of supported versions
+// of the OSD cluster api
+func GetSupportedClusterVersions() ([]string, error) {
+	sockPath := "unix://" + config.ClusterAPIBase + "osd.sock"
+	clusterClient, err := NewClient(sockPath, "")
+	if err != nil {
+		return []string{}, err
+	}
+	versions, err := clusterClient.Versions()
 	if err != nil {
 		return []string{}, err
 	}
@@ -95,16 +93,6 @@ type Client struct {
 	base       *url.URL
 	version    string
 	httpClient *http.Client
-}
-
-// VolumeDriver returns a REST wrapper for the VolumeDriver interface.
-func (c *Client) VolumeDriver() volume.VolumeDriver {
-	return newVolumeClient(c)
-}
-
-// ClusterManager returns a REST wrapper for the Cluster interface.
-func (c *Client) ClusterManager() cluster.Cluster {
-	return newClusterClient(c)
 }
 
 // Status sends a Status request at the /status REST endpoint.

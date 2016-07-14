@@ -8,6 +8,7 @@ import (
 	"github.com/codegangsta/cli"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/client"
+	volumeclient "github.com/libopenstorage/openstorage/api/client/volume"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/volume"
 )
@@ -57,7 +58,7 @@ func (v *volDriver) volumeOptions(context *cli.Context) {
 		fmt.Printf("Failed to initialize client library: %v\n", err)
 		os.Exit(1)
 	}
-	v.volDriver = clnt.VolumeDriver()
+	v.volDriver = volumeclient.VolumeDriver(clnt)
 }
 
 func (v *volDriver) volumeCreate(context *cli.Context) {
