@@ -24,6 +24,8 @@ type Manager interface {
 	Mounts(source string) []string
 	// HasMounts determines returns the number of mounts for the source.
 	HasMounts(source string) int
+	// HasTarget determines returns the number of mounts for the target.
+	HasTarget(target string) (string, bool)
 	// Exists returns true if the device is mounted at specified path.
 	// returned if the device does not exists.
 	Exists(source, path string) (bool, error)
@@ -165,6 +167,22 @@ func (m *Mounter) HasMounts(sourcePath string) int {
 	}
 	return len(v.Mountpoint)
 }
+
+func (m *Mounter) HasTarget(targetPath string) (string, bool) {
+	m.Lock()
+	defer m.Unlock()
+
+	for k, v := range m.mounts {
+		for _, p := range v.Mountpoint {
+			if p.Path == targetPath {
+				return k, true
+			}
+		}
+	}
+	return "", false
+}
+
+// Exists scans mountpaths for specified device and returns true if path is one of the
 
 // Exists scans mountpaths for specified device and returns true if path is one of the
 // mountpaths. ErrEnoent may be retuned if the device is not found
