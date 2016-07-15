@@ -132,8 +132,8 @@ func (kva *KvAlert) Erase(resourceType api.ResourceType, alertID int64) error {
 }
 
 // Clear clears an alert.
-func (kva *KvAlert) Clear(resourceType api.ResourceType, alertID int64) error {
-	return kva.clear(resourceType, alertID)
+func (kva *KvAlert) Clear(resourceType api.ResourceType, alertID int64, ttl uint64) error {
+	return kva.clear(resourceType, alertID, ttl)
 }
 
 // Retrieve retrieves a specific alert.
@@ -280,7 +280,7 @@ func (kva *KvAlert) raise(a *api.Alert) error {
 
 }
 
-func (kva *KvAlert) clear(resourceType api.ResourceType, alertID int64) error {
+func (kva *KvAlert) clear(resourceType api.ResourceType, alertID int64, ttl uint64) error {
 	kv := kva.GetKvdbInstance()
 	var alert api.Alert
 	if resourceType == api.ResourceType_RESOURCE_TYPE_NONE {
@@ -291,7 +291,7 @@ func (kva *KvAlert) clear(resourceType api.ResourceType, alertID int64) error {
 	}
 	alert.Cleared = true
 
-	_, err := kv.Update(getResourceKey(resourceType)+strconv.FormatInt(alertID, 10), &alert, 0)
+	_, err := kv.Update(getResourceKey(resourceType)+strconv.FormatInt(alertID, 10), &alert, ttl)
 	return err
 }
 

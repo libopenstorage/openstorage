@@ -31,9 +31,11 @@ const (
 func TestAll(t *testing.T) {
 	setup(t)
 	raiseAndErase(t)
+	raiseWithTTL(t)
 	subscribe(t)
 	retrieve(t)
 	clear(t)
+	clearWithTTL(t)
 	enumerate(t)
 	enumerateByCluster(t)
 	watch(t)
@@ -97,7 +99,7 @@ func raiseWithTTL(t *testing.T) {
 		Resource: api.ResourceType_RESOURCE_TYPE_VOLUME,
 		Severity: api.SeverityType_SEVERITY_TYPE_NOTIFY,
 		Message:  "Test Message",
-		Ttl: 3,
+		Ttl:      2,
 	}
 	err := kva.Raise(&raiseAlert)
 	require.NoError(t, err, "Failed in raising an alert")
@@ -109,24 +111,24 @@ func raiseWithTTL(t *testing.T) {
 	require.NoError(t, err, "Failed to retrieve alert from kvdb")
 	require.NotNil(t, alert, "api.Alert object null in kvdb")
 
-	time.Sleep(3*time.Second)
+	time.Sleep(3 * time.Second)
 	_, err = kv.GetVal(getResourceKey(api.ResourceType_RESOURCE_TYPE_VOLUME)+strconv.FormatInt(raiseAlert.Id, 10), &alert)
-	require.Error(t, err, "Alert should have been removed after the ttl value")
+	require.Error(t, err, "Alert should have been removed after the ttl value: ", time.Now())
 }
 
 func subscribe(t *testing.T) {
 	parentAlertType := int64(1)
 	child1Alert := api.Alert{
 		AlertType: 2,
-		Message: "child 1",
-		Resource: api.ResourceType_RESOURCE_TYPE_DRIVE,
-		Severity: api.SeverityType_SEVERITY_TYPE_NOTIFY,
+		Message:   "child 1",
+		Resource:  api.ResourceType_RESOURCE_TYPE_DRIVE,
+		Severity:  api.SeverityType_SEVERITY_TYPE_NOTIFY,
 	}
 	child2Alert := api.Alert{
 		AlertType: 3,
-		Message: "child 2",
-		Resource: api.ResourceType_RESOURCE_TYPE_VOLUME,
-		Severity: api.SeverityType_SEVERITY_TYPE_NOTIFY,
+		Message:   "child 2",
+		Resource:  api.ResourceType_RESOURCE_TYPE_VOLUME,
+		Severity:  api.SeverityType_SEVERITY_TYPE_NOTIFY,
 	}
 	err := kva.Subscribe(parentAlertType, &child1Alert)
 	require.NoError(t, err, "Failed to subscribe alert")
@@ -151,9 +153,9 @@ func subscribe(t *testing.T) {
 
 	child3Alert := api.Alert{
 		AlertType: 4,
-		Message: "child 3",
-		Resource: api.ResourceType_RESOURCE_TYPE_VOLUME,
-		Severity: api.SeverityType_SEVERITY_TYPE_NOTIFY,
+		Message:   "child 3",
+		Resource:  api.ResourceType_RESOURCE_TYPE_VOLUME,
+		Severity:  api.SeverityType_SEVERITY_TYPE_NOTIFY,
 	}
 	err = kva.Subscribe(parentAlertType, &child3Alert)
 	require.NoError(t, err, "Failed to subscribe alert")
@@ -205,13 +207,34 @@ func clear(t *testing.T) {
 	}
 	err := kva.Raise(&raiseAlert)
 
-	err = kva.Clear(api.ResourceType_RESOURCE_TYPE_NODE, raiseAlert.Id)
+	err = kva.Clear(api.ResourceType_RESOURCE_TYPE_NODE, raiseAlert.Id, 0)
 	require.NoError(t, err, "Failed to clear alert")
 
 	_, err = kv.GetVal(getResourceKey(api.ResourceType_RESOURCE_TYPE_NODE)+strconv.FormatInt(raiseAlert.Id, 10), &alert)
 	require.Equal(t, true, alert.Cleared, "Failed to clear alert")
 
 	err = kva.Erase(api.ResourceType_RESOURCE_TYPE_NODE, raiseAlert.Id)
+}
+
+func clearWithTTL(t *testing.T) {
+	// Raise an alert
+	var alert api.Alert
+	kv := kva.GetKvdbInstance()
+	raiseAlert := api.Alert{
+		Resource: api.ResourceType_RESOURCE_TYPE_NODE,
+		Severity: api.SeverityType_SEVERITY_TYPE_ALARM,
+	}
+	err := kva.Raise(&raiseAlert)
+
+	err = kva.Clear(api.ResourceType_RESOURCE_TYPE_NODE, raiseAlert.Id, 2)
+	require.NoError(t, err, "Failed to clear alert")
+
+	_, err = kv.GetVal(getResourceKey(api.ResourceType_RESOURCE_TYPE_NODE)+strconv.FormatInt(raiseAlert.Id, 10), &alert)
+	require.Equal(t, true, alert.Cleared, "Failed to clear alert")
+
+	time.Sleep(3 * time.Second)
+	_, err = kv.GetVal(getResourceKey(api.ResourceType_RESOURCE_TYPE_NODE)+strconv.FormatInt(raiseAlert.Id, 10), &alert)
+	require.Error(t, err, "Cleared Alert should have been removed after the ttl value")
 }
 
 func enumerate(t *testing.T) {
@@ -350,7 +373,7 @@ func watch(t *testing.T) {
 	require.Equal(t, raiseAlert1.Id, watcherAlert.Id, "alert id mismatch")
 	require.Equal(t, "alert/cluster/"+strconv.FormatInt(raiseAlert1.Id, 10), watcherKey, "key mismatch")
 
-	err = kva.Clear(api.ResourceType_RESOURCE_TYPE_CLUSTER, raiseAlert1.Id)
+	err = kva.Clear(api.ResourceType_RESOURCE_TYPE_CLUSTER, raiseAlert1.Id, 0)
 
 	// Sleep for sometime so that we pass on some previous watch callbacks
 	time.Sleep(time.Millisecond * 100)

@@ -75,7 +75,7 @@ type AlertClient interface {
 	Erase(resourceType api.ResourceType, alertID int64) error
 
 	// Clear an Alert.
-	Clear(resourceType api.ResourceType, alertID int64) error
+	Clear(resourceType api.ResourceType, alertID int64, ttl uint64) error
 
 	// Watch on all Alert>
 	Watch(clusterID string, alertWatcher AlertWatcherFunc) error
@@ -84,7 +84,7 @@ type AlertClient interface {
 // AlertInstance is an instance used to raise and clear alerts
 type AlertInstance interface {
 	// Clear clears an alert.
-	Clear(resourceType api.ResourceType, alertID int64) error
+	Clear(resourceType api.ResourceType, alertID int64, ttl uint64) error
 
 	// Alarm raises an alert with severity : ALARM.
 	Alarm(alertType int64, msg string, resourceType api.ResourceType, resourceID string, ttl uint64) (int64, error)
