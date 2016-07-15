@@ -102,7 +102,8 @@ func (kv *memKV) Put(
 
 	var kvp *kvdb.KVPair
 
-	key = kv.domain + key
+	suffix := key
+	key = kv.domain + suffix
 	kv.mutex.Lock()
 	defer kv.mutex.Unlock()
 
@@ -110,7 +111,7 @@ func (kv *memKV) Put(
 	if ttl != 0 {
 		time.AfterFunc(time.Second*time.Duration(ttl), func() {
 			// TODO: handle error
-			_, _ = kv.Delete(key)
+			_, _ = kv.Delete(suffix)
 		})
 	}
 	b, err := common.ToBytes(value)

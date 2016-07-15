@@ -807,32 +807,32 @@
 		{
 			"checksumSHA1": "UmBPHOWs25J4MmGIXboi0i/PNFI=",
 			"path": "github.com/portworx/kvdb",
-			"revision": "5e4cf710a5ade396d52e7e082b55fc24617bf5dc",
-			"revisionTime": "2016-06-23T03:59:33Z"
+			"revision": "ced774a626fe639981b1a6a337b33dffdb78107f",
+			"revisionTime": "2016-07-15T22:23:59Z"
 		},
 		{
 			"checksumSHA1": "NdrvQf96pNxXaXyTYGxwxZ0yAX4=",
 			"path": "github.com/portworx/kvdb/common",
-			"revision": "d1e57967f4df6c2553eb4a4cd7789e06c6d3faa8",
-			"revisionTime": "2016-06-03T23:36:51Z"
+			"revision": "ced774a626fe639981b1a6a337b33dffdb78107f",
+			"revisionTime": "2016-07-15T22:23:59Z"
 		},
 		{
 			"checksumSHA1": "SwxvVX853UtzYRaNBXKvX8Ie6xQ=",
 			"path": "github.com/portworx/kvdb/consul",
-			"revision": "5e4cf710a5ade396d52e7e082b55fc24617bf5dc",
-			"revisionTime": "2016-06-23T03:59:33Z"
+			"revision": "ced774a626fe639981b1a6a337b33dffdb78107f",
+			"revisionTime": "2016-07-15T22:23:59Z"
 		},
 		{
-			"checksumSHA1": "z3fVAAaEJbC3eZ7WtK3TOaRF3FY=",
+			"checksumSHA1": "ncFK+/QqeQx7JCd7I6YGE9yPcII=",
 			"path": "github.com/portworx/kvdb/etcd",
-			"revision": "5e4cf710a5ade396d52e7e082b55fc24617bf5dc",
-			"revisionTime": "2016-06-23T03:59:33Z"
+			"revision": "ced774a626fe639981b1a6a337b33dffdb78107f",
+			"revisionTime": "2016-07-15T22:23:59Z"
 		},
 		{
-			"checksumSHA1": "DVMXFcqULr+AEqmm+BzM60dBFu0=",
+			"checksumSHA1": "0m1Mmb7QdVdYXtE8CLtYKeOFGpI=",
 			"path": "github.com/portworx/kvdb/mem",
-			"revision": "5e4cf710a5ade396d52e7e082b55fc24617bf5dc",
-			"revisionTime": "2016-06-23T03:59:33Z"
+			"revision": "ced774a626fe639981b1a6a337b33dffdb78107f",
+			"revisionTime": "2016-07-15T22:23:59Z"
 		},
 		{
 			"checksumSHA1": "cKNzpMpci3WUAzXpe+tVnBv2cjE=",
