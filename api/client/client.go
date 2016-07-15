@@ -35,32 +35,6 @@ func NewClient(host string, version string) (*Client, error) {
 	return c, nil
 }
 
-// NewDriver returns a new REST client of the supplied version for specified driver.
-func NewDriverClient(driverName, version string) (*Client, error) {
-	sockPath := "unix://" + config.DriverAPIBase + driverName + ".sock"
-	if version == "" {
-		// Set the default version
-		version = config.Version
-	}
-	return NewClient(sockPath, version)
-}
-
-// GetSupportedDriverVersions returns a list of supported versions
-// for the provided driver
-func GetSupportedDriverVersions(driverName string) ([]string, error) {
-	// Get a client handler
-	sockPath := "unix://" + config.DriverAPIBase + driverName + ".sock"
-	volumeClient, err := NewClient(sockPath, "")
-	if err != nil {
-		return []string{}, err
-	}
-	versions, err := volumeClient.Versions()
-	if err != nil {
-		return []string{}, err
-	}
-	return versions, nil
-}
-
 // NewClusterClient returns a new REST client of the supplied version for cluster management.
 func NewClusterClient(version string) (*Client, error) {
 	sockPath := "unix://" + config.ClusterAPIBase + "osd.sock"
@@ -81,6 +55,32 @@ func GetSupportedClusterVersions() ([]string, error) {
 		return []string{}, err
 	}
 	versions, err := clusterClient.Versions()
+	if err != nil {
+		return []string{}, err
+	}
+	return versions, nil
+}
+
+// NewDriver returns a new REST client of the supplied version for specified driver.
+func NewDriverClient(driverName, version string) (*Client, error) {
+	sockPath := "unix://" + config.DriverAPIBase + driverName + ".sock"
+	if version == "" {
+		// Set the default version
+		version = config.Version
+	}
+	return NewClient(sockPath, version)
+}
+
+// GetSupportedDriverVersions returns a list of supported versions
+// for the provided driver
+func GetSupportedDriverVersions(driverName string) ([]string, error) {
+	// Get a client handler
+	sockPath := "unix://" + config.DriverAPIBase + driverName + ".sock"
+	volumeClient, err := NewClient(sockPath, "")
+	if err != nil {
+		return []string{}, err
+	}
+	versions, err := volumeClient.Versions()
 	if err != nil {
 		return []string{}, err
 	}

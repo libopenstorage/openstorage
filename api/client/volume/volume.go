@@ -1,8 +1,8 @@
-package client
+package volume
 
 import (
+	"github.com/libopenstorage/openstorage/api/client"
 	"github.com/libopenstorage/openstorage/volume"
-	"github.com/libopenstorage/openstorage/api/client"	
 )
 
 // VolumeDriver returns a REST wrapper for the VolumeDriver interface.

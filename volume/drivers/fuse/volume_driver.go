@@ -32,9 +32,9 @@ func newVolumeDriver(
 	provider Provider,
 ) *volumeDriver {
 	return &volumeDriver{
-		common.IONotSupported,
-		common.BlockNotSupported,
-		common.SnapshotNotSupported,
+		volume.IONotSupported,
+		volume.BlockNotSupported,
+		volume.SnapshotNotSupported,
 		common.NewDefaultStoreEnumerator(
 			name,
 			kvdb.Instance(),

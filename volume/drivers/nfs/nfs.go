@@ -56,7 +56,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		return nil, err
 	}
 	inst := &driver{
-		IODriver:        common.IONotSupported,
+		IODriver:        volume.IONotSupported,
 		StoreEnumerator: common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
 		nfsServer:       server,
 		nfsPath:         path,

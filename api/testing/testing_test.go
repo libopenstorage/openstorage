@@ -9,6 +9,7 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/client"
+	"github.com/libopenstorage/openstorage/api/client/volume"
 	"github.com/libopenstorage/openstorage/api/server"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/volume/drivers"
@@ -36,7 +37,7 @@ func makeRequest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
-	d := c.VolumeDriver()
+	d := volume.VolumeDriver(c)
 	_, err = d.Inspect([]string{"foo"})
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
@@ -73,7 +74,7 @@ func TestAll(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to initialize Driver: %v", err)
 	}
-	d := c.VolumeDriver()
+	d := volume.VolumeDriver(c)
 	ctx := test.NewContext(d)
 	ctx.Filesystem = api.FSType_FS_TYPE_BTRFS
 	test.Run(t, ctx)
