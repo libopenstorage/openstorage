@@ -5,8 +5,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/libopenstorage/systemutils"
 )
 
 // Strings for VolumeSpec
@@ -45,7 +43,6 @@ type Node struct {
 	Avgload   int
 	Status    Status
 	GenNumber uint64
-	Luns      map[string]systemutils.Lun
 	Disks     map[string]StorageResource
 	MgmtIp    string
 	DataIp    string
