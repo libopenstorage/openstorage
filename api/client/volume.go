@@ -214,12 +214,11 @@ func formatRespErr(resp *Response) error {
 	return fmt.Errorf("%d: %s", resp.statusCode, string(resp.body))
 }
 
-// Active Requests on this volume.
-// Errors ErrEnoEnt may be returned
-func (v *volumeClient) GetActiveRequests(id string) (*api.ActiveRequests, error) {
+// Active Requests on all volume.
+func (v *volumeClient) GetActiveRequests() (*api.ActiveRequests, error) {
 
 	requests := &api.ActiveRequests{}
-	resp := v.c.Get().Resource(volumePath + "/requests").Instance(id).Do()
+	resp := v.c.Get().Resource(volumePath + "/requests").Instance("vol_id").Do()
 
 	if resp.err != nil {
 		return nil, formatRespErr(resp)
