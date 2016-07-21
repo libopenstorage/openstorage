@@ -135,6 +135,7 @@ func (g *GossiperImpl) Init(
 	genNumber uint64,
 	gossipIntervals types.GossipIntervals,
 	gossipVersion string,
+	clusterId string,
 ) {
 	g.name = ipPort
 	g.shutDown = false
@@ -168,6 +169,7 @@ func (g *GossiperImpl) Init(
 		selfNodeId,
 		gossipVersion,
 		gossipIntervals.QuorumTimeout,
+		clusterId,
 	)
 	mlConf.Delegate = ml.Delegate(g)
 	mlConf.Events = ml.EventDelegate(g)

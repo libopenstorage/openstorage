@@ -570,6 +570,7 @@ func (c *ClusterManager) Start() error {
 		c.selfNode.GenNumber,
 		gossipIntervals,
 		types.DEFAULT_GOSSIP_VERSION,
+		c.config.ClusterId,
 	)
 
 	kvdb := kvdb.Instance()

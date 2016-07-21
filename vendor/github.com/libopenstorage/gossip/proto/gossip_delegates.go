@@ -38,12 +38,18 @@ func (gd *GossipDelegate) InitGossipDelegate(
 	selfNodeId types.NodeId,
 	gossipVersion string,
 	quorumTimeout time.Duration,
+	clusterId string,
 ) {
 	gd.GenNumber = genNumber
 	gd.nodeId = string(selfNodeId)
 	gd.stateEvent = make(chan types.StateEvent)
 	// We start with a NOT_IN_QUORUM status
-	gd.InitStore(selfNodeId, gossipVersion, types.NODE_STATUS_NOT_IN_QUORUM)
+	gd.InitStore(
+		selfNodeId,
+		gossipVersion,
+		types.NODE_STATUS_NOT_IN_QUORUM,
+		clusterId,
+	)
 	gd.quorumTimeout = quorumTimeout
 	gd.history = NewGossipHistory(20)
 }
@@ -82,7 +88,7 @@ func (gd *GossipDelegate) convertFromBytes(buf []byte, msg interface{}) error {
 	return nil
 }
 
-func (gd *GossipDelegate) gossipVersionCheck(node *memberlist.Node) error {
+func (gd *GossipDelegate) gossipChecks(node *memberlist.Node) error {
 	// Check the gossip version of other node
 	var nodeMetaInfo types.NodeMetaInfo
 	nodeMeta := node.Meta
@@ -93,15 +99,28 @@ func (gd *GossipDelegate) gossipVersionCheck(node *memberlist.Node) error {
 		if nodeMetaInfo.GossipVersion != gd.GetGossipVersion() {
 			// Version Mismatch
 			// We do not add this node in our memberlist
-			err = fmt.Errorf("gossip: Gossip Version mismatch with Node (%v):(%v)", node.Name, node.Addr)
+			err = fmt.Errorf("Version mismatch with "+
+				"Node (%v):(%v). Our version: (%v). Their version: (%v)",
+				node.Name, node.Addr, gd.GetGossipVersion(), nodeMetaInfo.GossipVersion)
 		} else {
 			// Version Match
-			// Add this new node in our node map
-			err = nil
+			// Check for ClusterId match
+			if nodeMetaInfo.ClusterId != gd.GetClusterId() {
+				// ClusterId Mismatch
+				// We do not add this node in our memberlist
+				err = fmt.Errorf("(%v) ClusterId mismatch with"+
+					" Node (%v):(%v). Our clusterId: (%v). Their clusterId: (%v)",
+					gd.nodeId, node.Name, node.Addr, gd.GetClusterId(), nodeMetaInfo.ClusterId)
+			} else {
+				// ClusterId Match
+				// Add this new node in our node map
+				err = nil
+			}
 		}
 	}
 	return err
 }
+
 
 // NodeMeta is used to retrieve meta-data about the current node
 // when broadcasting an alive message. It's length is limited to
@@ -207,10 +226,9 @@ func (gd *GossipDelegate) NotifyJoin(node *memberlist.Node) {
 	// NotifyAlive should remove a node from memberlist if the
 	// gossip version mismatches.
 	// Nevertheless we are doing an extra check here.
-	err := gd.gossipVersionCheck(node)
+	err := gd.gossipChecks(node)
 	if err != nil {
 		gs.Err = err.Error()
-		logrus.Infof(gs.Err)
 	} else {
 		gd.AddNode(types.NodeId(types.NodeId(node.Name)), types.NODE_STATUS_UP)
 		gd.triggerStateEvent(types.NODE_ALIVE)
@@ -267,11 +285,10 @@ func (gd *GossipDelegate) NotifyAlive(node *memberlist.Node) error {
 	diffNode, err := gd.GetLocalNodeInfo(types.NodeId(node.Name))
 	if err != nil {
 		// We found a new node!!
-		// Check if gossip version matches
-		err := gd.gossipVersionCheck(node)
+		// Check if gossip version and clusterId matches
+		err := gd.gossipChecks(node)
 		if err != nil {
 			gs.Err = err.Error()
-			logrus.Infof(gs.Err)
 			gd.history.AddLatest(gs)
 			// Do not add this node to the memberlist.
 			// Returning a non-nil err value

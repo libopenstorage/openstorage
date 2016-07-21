@@ -58,6 +58,7 @@ type GossipSessionInfo struct {
 }
 
 type NodeMetaInfo struct {
+	ClusterId     string
 	GossipVersion string
 	Id            NodeId
 	GenNumber     uint64
