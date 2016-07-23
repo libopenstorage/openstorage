@@ -190,6 +190,8 @@ message VolumeSpec {
   map<string, string> volume_labels = 9;
   // Shared is true is this volume can be remotely accessed.
   bool shared = 10;
+  // ReplicaSet is the desired replicaSet the volume want to be placed.
+  ReplicaSet replica_set = 11;
 }
 
 // Set of machine IDs (nodes) to which part of this volume is erasure coded - for clustered storage arrays
