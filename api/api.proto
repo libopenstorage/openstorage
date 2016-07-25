@@ -192,6 +192,8 @@ message VolumeSpec {
   bool shared = 10;
   // ReplicaSet is the desired replicaSet the volume want to be placed.
   ReplicaSet replica_set = 11;
+  // Specifies the number of parts the volume can be aggregated from.
+  uint32 aggregation_level = 12;
 }
 
 // Set of machine IDs (nodes) to which part of this volume is erasure coded - for clustered storage arrays
