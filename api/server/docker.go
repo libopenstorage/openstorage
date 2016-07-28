@@ -214,9 +214,6 @@ func (d *driver) specFromOpts(Opts map[string]string) *api.VolumeSpec {
 }
 
 func (d *driver) mountpath(request *mountRequest) string {
-	if len(request.ID) != 0 {
-		return path.Join(config.MountBase, request.Name+"_"+request.ID)
-	}
 	return path.Join(config.MountBase, request.Name)
 }
 
