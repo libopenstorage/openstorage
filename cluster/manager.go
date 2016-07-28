@@ -200,6 +200,14 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 	// Probably new node was added into the cluster db
 	peers := c.getPeers(db)
 	c.gossip.UpdateCluster(peers)
+
+	for _, n := range c.nodeCache {
+		_, found := peers[types.NodeId(n.Id)]
+		if !found {
+			delete(c.nodeCache, n.Id)
+		}
+
+	}
 	return nil
 }
 
@@ -769,6 +777,30 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 				return err
 			}
 		}
+
+		// Delete node from cluster DB
+		kvdb := kvdb.Instance()
+		kvlock, err := kvdb.Lock(clusterLockKey)
+		if err != nil {
+			dlog.Panicln("fatal, unable to obtain cluster lock. ", err)
+		}
+
+		currentState, err := readClusterInfo()
+		if err != nil {
+			kvdb.Unlock(kvlock)
+			dlog.Errorln("Failed to read cluster info. ", err)
+			return err
+		}
+
+		delete(currentState.NodeEntries, n.Id)
+
+		err = writeClusterInfo(&currentState)
+		if err != nil {
+			dlog.Errorln("Failed to save the database.", err)
+			kvdb.Unlock(kvlock)
+			return err
+		}
+		kvdb.Unlock(kvlock)
 	}
 	return nil
 }
