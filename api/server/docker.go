@@ -54,6 +54,14 @@ type volumeInfo struct {
 	Mountpoint string
 }
 
+type capabilities struct {
+	Scope string
+}
+
+type capabilitiesResponse struct {
+	Capabilities capabilities
+}
+
 func newVolumePlugin(name string) restServer {
 	return &driver{restBase{name: name, version: "0.3"}}
 }
@@ -87,6 +95,7 @@ func (d *driver) Routes() []*Route {
 		&Route{verb: "POST", path: volDriverPath("List"), fn: d.list},
 		&Route{verb: "POST", path: volDriverPath("Get"), fn: d.get},
 		&Route{verb: "POST", path: volDriverPath("Unmount"), fn: d.unmount},
+		&Route{verb: "POST", path: volDriverPath("Capabilities"), fn: d.capabilities},
 		&Route{verb: "POST", path: "/Plugin.Activate", fn: d.handshake},
 		&Route{verb: "GET", path: "/status", fn: d.status},
 	}
@@ -420,4 +429,13 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 		_ = v.Detach(vol.Id)
 	}
 	d.emptyResponse(w)
+}
+
+func (d *driver) capabilities(w http.ResponseWriter, r *http.Request) {
+	method := "capabilities"
+	var response capabilitiesResponse
+
+	response.Capabilities.Scope = "global"
+	d.logRequest(method, "").Infof("response %v", response.Capabilities.Scope)
+	json.NewEncoder(w).Encode(&response)
 }
