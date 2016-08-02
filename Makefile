@@ -18,6 +18,14 @@ ifdef HAVE_CHAINFS
 TAGS+=have_chainfs
 endif
 
+ifndef PROTOC
+PROTOC = protoc
+endif
+
+ifndef PROTOS_PATH
+PROTOS_PATH = /root/git/go/src
+endif
+
 export GO15VENDOREXPERIMENT=1
 
 all: build
@@ -54,6 +62,9 @@ build:
 install:
 	go install -tags "$(TAGS)" $(PKGS)
 
+proto_flexvolume:
+	cd pkg/flexvolume && $(PROTOC) -I . -I /root/git/go/src/go.pedge.io/protoeasy/vendor -I /root/git/go/src/go.pedge.io/protoeasy/vendor/github.com/gengo/grpc-gateway/third_party/googleapis -I $(PROTOS_PATH) flexvolume.proto --go_out=plugins=grpc:.
+	cd pkg/flexvolume && $(PROTOC) -I . -I /root/git/go/src/go.pedge.io/protoeasy/vendor -I /root/git/go/src/go.pedge.io/protoeasy/vendor/github.com/gengo/grpc-gateway/third_party/googleapis -I $(PROTOS_PATH) flexvolume.proto --grpc-gateway_out=.
 proto:
 	go get -v go.pedge.io/protoeasy/cmd/protoeasy
 	go get -v go.pedge.io/pkg/cmd/strip-package-comments

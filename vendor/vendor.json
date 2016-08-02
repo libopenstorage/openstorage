@@ -422,25 +422,28 @@
 			"revisionTime": "2016-03-21T23:18:31Z"
 		},
 		{
-			"checksumSHA1": "JrwZ3Zebmgw1nB4IwCMys0euNgA=",
-			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/golang/protobuf/jsonpb",
+			"checksumSHA1": "NgOgDwqQnfQhahsECFCsSPEenE0=",
 			"path": "github.com/golang/protobuf/jsonpb",
-			"revision": "dda510ac0fd43b39770f22ac6260eb91d377bce3",
-			"revisionTime": "2016-03-30T00:19:00Z"
+			"revision": "874264fbbb43f4d91e999fecb4b40143ed611400",
+			"revisionTime": "2016-07-11T13:55:00Z"
 		},
 		{
-			"checksumSHA1": "r2217M+60ykOkomU6p2mO4pLzug=",
-			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/golang/protobuf/proto",
+			"checksumSHA1": "piwYMQqpsfAur670v6rFg6gqk/c=",
 			"path": "github.com/golang/protobuf/proto",
-			"revision": "dda510ac0fd43b39770f22ac6260eb91d377bce3",
-			"revisionTime": "2016-03-30T00:19:00Z"
+			"revision": "874264fbbb43f4d91e999fecb4b40143ed611400",
+			"revisionTime": "2016-07-11T13:55:00Z"
 		},
 		{
-			"checksumSHA1": "+cT5a/FtqhkUAnVuajBTUAS2iHU=",
-			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/golang/protobuf/protoc-gen-go/descriptor",
+			"checksumSHA1": "aydaSdA6HOlRMLMA6f2vcGyBmVA=",
 			"path": "github.com/golang/protobuf/protoc-gen-go/descriptor",
-			"revision": "dda510ac0fd43b39770f22ac6260eb91d377bce3",
-			"revisionTime": "2016-03-30T00:19:00Z"
+			"revision": "874264fbbb43f4d91e999fecb4b40143ed611400",
+			"revisionTime": "2016-07-11T13:55:00Z"
+		},
+		{
+			"checksumSHA1": "OzwaiTQPGFpr/sve6GchgkHyODc=",
+			"path": "github.com/golang/protobuf/ptypes/empty",
+			"revision": "874264fbbb43f4d91e999fecb4b40143ed611400",
+			"revisionTime": "2016-07-11T13:55:00Z"
 		},
 		{
 			"checksumSHA1": "iIUYZyoanCQQTUaWsu8b+iOSPt4=",
@@ -455,6 +458,24 @@
 			"path": "github.com/gorilla/mux",
 			"revision": "0eeaf8392f5b04950925b8a69fe70f110fa7cbfc",
 			"revisionTime": "2016-03-17T21:34:30Z"
+		},
+		{
+			"checksumSHA1": "m1ZcuEjYXGa1TVwnZBUdnL3kzhQ=",
+			"path": "github.com/grpc-ecosystem/grpc-gateway/runtime",
+			"revision": "c8ec92d0481dd77d9b8c1808eb6476d190aa039a",
+			"revisionTime": "2016-07-27T03:39:27Z"
+		},
+		{
+			"checksumSHA1": "GN9lH15GbtcX7xx70TjRYXi23Uk=",
+			"path": "github.com/grpc-ecosystem/grpc-gateway/runtime/internal",
+			"revision": "c8ec92d0481dd77d9b8c1808eb6476d190aa039a",
+			"revisionTime": "2016-07-27T03:39:27Z"
+		},
+		{
+			"checksumSHA1": "vqiK5r5dntV7JNZ+ZsGlD0Samos=",
+			"path": "github.com/grpc-ecosystem/grpc-gateway/utilities",
+			"revision": "c8ec92d0481dd77d9b8c1808eb6476d190aa039a",
+			"revisionTime": "2016-07-27T03:39:27Z"
 		},
 		{
 			"checksumSHA1": "rix4F+CSyo3wrlhURNU8sTxYjzg=",
@@ -1016,67 +1037,58 @@
 			"revisionTime": "2016-03-24T21:42:57Z"
 		},
 		{
-			"checksumSHA1": "tv1u5zxov+2dO83iba/fR7vRY3g=",
-			"origin": "github.com/libopenstorage/openstorage/vendor/google.golang.org/grpc",
+			"checksumSHA1": "hkPz6hEdYqeCfy2HFy9Xd/gDtcM=",
 			"path": "google.golang.org/grpc",
-			"revision": "68dadb4d0004911b9148648839bd6f5ba0f5e15d",
-			"revisionTime": "2016-03-31T16:36:46Z"
+			"revision": "d017580d29c7407650a21d78959701936645a3af",
+			"revisionTime": "2016-07-19T23:19:02Z"
 		},
 		{
 			"checksumSHA1": "08icuA15HRkdYCt6H+Cs90RPQsY=",
-			"origin": "github.com/libopenstorage/openstorage/vendor/google.golang.org/grpc/codes",
 			"path": "google.golang.org/grpc/codes",
-			"revision": "68dadb4d0004911b9148648839bd6f5ba0f5e15d",
-			"revisionTime": "2016-03-31T16:36:46Z"
+			"revision": "d017580d29c7407650a21d78959701936645a3af",
+			"revisionTime": "2016-07-19T23:19:02Z"
 		},
 		{
-			"checksumSHA1": "a+C+FoyX7Tc4iNFhBndt/y/iPEg=",
-			"origin": "github.com/libopenstorage/openstorage/vendor/google.golang.org/grpc/credentials",
+			"checksumSHA1": "KsjTDtH6zG7tlOVYHIch8aEzTX8=",
 			"path": "google.golang.org/grpc/credentials",
-			"revision": "68dadb4d0004911b9148648839bd6f5ba0f5e15d",
-			"revisionTime": "2016-03-31T16:36:46Z"
+			"revision": "d017580d29c7407650a21d78959701936645a3af",
+			"revisionTime": "2016-07-19T23:19:02Z"
 		},
 		{
 			"checksumSHA1": "3Lt5hNAG8qJAYSsNghR5uA1zQns=",
-			"origin": "github.com/libopenstorage/openstorage/vendor/google.golang.org/grpc/grpclog",
 			"path": "google.golang.org/grpc/grpclog",
-			"revision": "68dadb4d0004911b9148648839bd6f5ba0f5e15d",
-			"revisionTime": "2016-03-31T16:36:46Z"
+			"revision": "d017580d29c7407650a21d78959701936645a3af",
+			"revisionTime": "2016-07-19T23:19:02Z"
 		},
 		{
 			"checksumSHA1": "T3Q0p8kzvXFnRkMaK/G8mCv6mc0=",
-			"origin": "github.com/libopenstorage/openstorage/vendor/google.golang.org/grpc/internal",
 			"path": "google.golang.org/grpc/internal",
-			"revision": "68dadb4d0004911b9148648839bd6f5ba0f5e15d",
-			"revisionTime": "2016-03-31T16:36:46Z"
+			"revision": "d017580d29c7407650a21d78959701936645a3af",
+			"revisionTime": "2016-07-19T23:19:02Z"
 		},
 		{
 			"checksumSHA1": "IlzBp7dylW8F4D7eINj8xHt/jMk=",
-			"origin": "github.com/libopenstorage/openstorage/vendor/google.golang.org/grpc/metadata",
 			"path": "google.golang.org/grpc/metadata",
-			"revision": "68dadb4d0004911b9148648839bd6f5ba0f5e15d",
-			"revisionTime": "2016-03-31T16:36:46Z"
+			"revision": "d017580d29c7407650a21d78959701936645a3af",
+			"revisionTime": "2016-07-19T23:19:02Z"
 		},
 		{
-			"checksumSHA1": "fGJlPKvpYAZ6+HRX3qScFnZ9dd4=",
-			"origin": "github.com/libopenstorage/openstorage/vendor/google.golang.org/grpc/naming",
+			"checksumSHA1": "4GSUFhOQ0kdFlBH4D5OTeKy78z0=",
 			"path": "google.golang.org/grpc/naming",
-			"revision": "68dadb4d0004911b9148648839bd6f5ba0f5e15d",
-			"revisionTime": "2016-03-31T16:36:46Z"
+			"revision": "d017580d29c7407650a21d78959701936645a3af",
+			"revisionTime": "2016-07-19T23:19:02Z"
 		},
 		{
 			"checksumSHA1": "3RRoLeH6X2//7tVClOVzxW2bY+E=",
-			"origin": "github.com/libopenstorage/openstorage/vendor/google.golang.org/grpc/peer",
 			"path": "google.golang.org/grpc/peer",
-			"revision": "68dadb4d0004911b9148648839bd6f5ba0f5e15d",
-			"revisionTime": "2016-03-31T16:36:46Z"
+			"revision": "d017580d29c7407650a21d78959701936645a3af",
+			"revisionTime": "2016-07-19T23:19:02Z"
 		},
 		{
-			"checksumSHA1": "cRWo9TGarK76Z52yd2qC8uiE0nc=",
-			"origin": "github.com/libopenstorage/openstorage/vendor/google.golang.org/grpc/transport",
+			"checksumSHA1": "OGoYKheZF84fz2yepQrgffQY3wA=",
 			"path": "google.golang.org/grpc/transport",
-			"revision": "68dadb4d0004911b9148648839bd6f5ba0f5e15d",
-			"revisionTime": "2016-03-31T16:36:46Z"
+			"revision": "d017580d29c7407650a21d78959701936645a3af",
+			"revisionTime": "2016-07-19T23:19:02Z"
 		},
 		{
 			"checksumSHA1": "tr9VfMj5HNs7UqT6MrGnqMSakOE=",
