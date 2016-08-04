@@ -741,6 +741,61 @@ func (c *ClusterManager) SetSize(size int) error {
 	return err
 }
 
+func (c *ClusterManager) markNodeDecommission(node api.Node) error {
+	kvdb := kvdb.Instance()
+	kvlock, err := kvdb.Lock(clusterLockKey)
+	if err != nil {
+		dlog.Warnln("Unable to obtain cluster lock for marking "+
+			"node decommission",
+			err)
+		return err
+	}
+	defer kvdb.Unlock(kvlock)
+
+	db, err := readClusterInfo()
+	if err != nil {
+		return err
+	}
+
+	nodeEntry, ok := db.NodeEntries[node.Id]
+	if !ok {
+		msg := fmt.Sprintf("Node entry does not exist, Node ID %s",
+			node.Id)
+		return errors.New(msg)
+	}
+
+	nodeEntry.Status = api.Status_STATUS_DECOMMISSION
+	db.NodeEntries[node.Id] = nodeEntry
+
+	err = writeClusterInfo(&db)
+
+	return err
+}
+
+func (c *ClusterManager) deleteNodeFromDB(node api.Node) error {
+	// Delete node from cluster DB
+	kvdb := kvdb.Instance()
+	kvlock, err := kvdb.Lock(clusterLockKey)
+	if err != nil {
+		dlog.Panicln("fatal, unable to obtain cluster lock. ", err)
+	}
+	defer kvdb.Unlock(kvlock)
+
+	currentState, err := readClusterInfo()
+	if err != nil {
+		dlog.Errorln("Failed to read cluster info. ", err)
+		return err
+	}
+
+	delete(currentState.NodeEntries, node.Id)
+
+	err = writeClusterInfo(&currentState)
+	if err != nil {
+		dlog.Errorln("Failed to save the database.", err)
+	}
+	return err
+}
+
 // Remove node(s) from the cluster permanently.
 func (c *ClusterManager) Remove(nodes []api.Node) error {
 	logrus.Infof("ClusterManager Remove node.")
@@ -748,21 +803,36 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 	for _, n := range nodes {
 
 		if _, exist := c.nodeCache[n.Id]; !exist {
-			msg := fmt.Sprintf("Node does not exist in cluster, Node ID %s.", n.Id)
+			msg := fmt.Sprintf("Node does not exist in cluster, "+
+				"Node ID %s.",
+				n.Id)
 			dlog.Errorf(msg)
 			return errors.New(msg)
 		}
 
 		// If removing node is self, return error
 		if n.Id == c.selfNode.Id {
-			msg := fmt.Sprintf("Cannot remove self from cluster, Node ID %s.", n.Id)
+			msg := fmt.Sprintf("Cannot remove self from cluster, "+
+				"Node ID %s.",
+				n.Id)
 			dlog.Errorf(msg)
 			return errors.New(msg)
 		}
 
 		// If node is not down, do not remove it
 		if c.nodeCache[n.Id].Status != api.Status_STATUS_OFFLINE {
-			msg := fmt.Sprintf("Cannot remove node that is not offline, Node ID %s.", n.Id)
+			msg := fmt.Sprintf("Cannot remove node that is not "+
+				"offline, Node ID %s.",
+				n.Id)
+			dlog.Errorf(msg)
+			return errors.New(msg)
+		}
+
+		err := c.markNodeDecommission(n)
+		if err != nil {
+			msg := fmt.Sprintf("Failed to mark node as "+
+				"decommision, error %s",
+				err)
 			dlog.Errorf(msg)
 			return errors.New(msg)
 		}
@@ -771,36 +841,24 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 		for e := c.listeners.Front(); e != nil; e = e.Next() {
 			dlog.Infof("Remove node: notify cluster listener: %s",
 				e.Value.(ClusterListener).String())
-			if err := e.Value.(ClusterListener).Remove(&n); err != nil {
-				dlog.Warnf("Cluster listener failed to remove node: %s: %s",
-					e.Value.(ClusterListener).String(), err)
+			err := e.Value.(ClusterListener).Remove(&n)
+			if err != nil {
+				dlog.Warnf("Cluster listener failed to "+
+					"remove node: %s: %s",
+					e.Value.(ClusterListener).String(),
+					err)
 				return err
 			}
 		}
 
-		// Delete node from cluster DB
-		kvdb := kvdb.Instance()
-		kvlock, err := kvdb.Lock(clusterLockKey)
+		err = c.deleteNodeFromDB(n)
 		if err != nil {
-			dlog.Panicln("fatal, unable to obtain cluster lock. ", err)
+			msg := fmt.Sprintf("Failed to delete node %s from "+
+				"cluster database, error %s",
+				n.Id, err)
+			dlog.Errorf(msg)
+			return errors.New(msg)
 		}
-
-		currentState, err := readClusterInfo()
-		if err != nil {
-			kvdb.Unlock(kvlock)
-			dlog.Errorln("Failed to read cluster info. ", err)
-			return err
-		}
-
-		delete(currentState.NodeEntries, n.Id)
-
-		err = writeClusterInfo(&currentState)
-		if err != nil {
-			dlog.Errorln("Failed to save the database.", err)
-			kvdb.Unlock(kvlock)
-			return err
-		}
-		kvdb.Unlock(kvlock)
 	}
 	return nil
 }

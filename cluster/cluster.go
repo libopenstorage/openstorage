@@ -28,6 +28,7 @@ type NodeEntry struct {
 	StartTime  time.Time
 	MemTotal   uint64
 	Hostname   string
+	Status     api.Status
 	NodeLabels map[string]string
 }
 
