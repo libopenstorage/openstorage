@@ -573,7 +573,7 @@ func (c *ClusterManager) Start() error {
 		QuorumTimeout:    types.DEFAULT_QUORUM_TIMEOUT,
 	}
 	c.gossip = gossip.New(
-		c.selfNode.MgmtIp+":9002",
+		c.selfNode.DataIp+":9002",
 		types.NodeId(c.config.NodeId),
 		c.selfNode.GenNumber,
 		gossipIntervals,
