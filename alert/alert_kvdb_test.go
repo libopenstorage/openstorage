@@ -55,7 +55,7 @@ func setup(t *testing.T) {
 	}
 
 	var err error
-	kva, err = New("alert_kvdb", mem.Name, kvdbDomain, []string{}, clusterName)
+	kva, err = New("alert_kvdb", mem.Name, kvdbDomain, []string{}, clusterName, nil)
 	if err != nil {
 		t.Fatalf("Failed to create new Kvapi.Alert object")
 	}
@@ -303,7 +303,7 @@ func enumerateByCluster(t *testing.T) {
 	// Create a new alert instance for raising an alert in this new cluster id
 	kvaNew, err := Get("alert_kvdb_test")
 	if err != nil {
-		kvaNew, err = New("alert_kvdb_test", mem.Name, kvdbDomain, []string{}, newClusterName)
+		kvaNew, err = New("alert_kvdb_test", mem.Name, kvdbDomain, []string{}, newClusterName, nil)
 	}
 
 	raiseAlert1 := api.Alert{
@@ -396,7 +396,7 @@ func watch(t *testing.T) {
 	// Create a new alert instance for raising an alert in this new cluster id
 	kvaNew, err := Get("alert_kvdb_test")
 	if err != nil {
-		kvaNew, err = New("alert_kvdb_test", mem.Name, kvdbDomain, []string{}, newClusterName)
+		kvaNew, err = New("alert_kvdb_test", mem.Name, kvdbDomain, []string{}, newClusterName, nil)
 	}
 
 	raiseAlertNew := api.Alert{

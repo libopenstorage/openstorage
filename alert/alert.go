@@ -38,7 +38,7 @@ var (
 )
 
 // InitFunc initialization function for alert.
-type InitFunc func(string, string, []string, string) (AlertClient, error)
+type InitFunc func(string, string, []string, string, map[string]string) (AlertClient, error)
 
 // AlertWatcherFunc is a function type used as a callback for KV WatchTree.
 type AlertWatcherFunc func(*api.Alert, api.AlertActionType, string, string) error
@@ -124,7 +124,14 @@ func Get(name string) (AlertClient, error) {
 }
 
 // New returns a new alert instance.
-func New(name string, kvdbName string, kvdbBase string, kvdbMachines []string, clusterID string) (AlertClient, error) {
+func New(
+	name string,
+	kvdbName string,
+	kvdbBase string,
+	kvdbMachines []string,
+	clusterID string,
+	kvdbOptions map[string]string,
+) (AlertClient, error) {
 	lock.Lock()
 	defer lock.Unlock()
 
@@ -132,7 +139,13 @@ func New(name string, kvdbName string, kvdbBase string, kvdbMachines []string, c
 		return nil, ErrExist
 	}
 	if initFunc, exists := drivers[name]; exists {
-		driver, err := initFunc(kvdbName, kvdbBase, kvdbMachines, clusterID)
+		driver, err := initFunc(
+			kvdbName,
+			kvdbBase,
+			kvdbMachines,
+			clusterID,
+			kvdbOptions,
+		)
 		if err != nil {
 			return nil, err
 		}
@@ -143,10 +156,19 @@ func New(name string, kvdbName string, kvdbBase string, kvdbMachines []string, c
 }
 
 // NewAlertInstance creates a new singleton istance of AlertInstance.
-func NewAlertInstance(version, nodeID, clusterID, kvdbName, kvdbBase string, kvdbMachines []string) {
+// TODO: FIXME
+func NewAlertInstance(
+	version string,
+	nodeID string,
+	clusterID string,
+	kvdbName string,
+	kvdbBase string,
+	kvdbMachines []string,
+	kvdbOptions map[string]string,
+) {
 	kva, err := Get(Name)
 	if err != nil {
-		kva, err = New(Name, kvdbName, kvdbBase, kvdbMachines, clusterID)
+		kva, err = New(Name, kvdbName, kvdbBase, kvdbMachines, clusterID, kvdbOptions)
 		if err != nil {
 			dlog.Errorf("Failed to initialize an AlertInstance ")
 		}

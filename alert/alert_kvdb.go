@@ -76,11 +76,17 @@ func (kva *KvAlert) GetKvdbInstance() kvdb.Kvdb {
 }
 
 // Init initializes a AlertClient interface implementation.
-func Init(name string, domain string, machines []string, clusterID string) (AlertClient, error) {
+func Init(
+	name string,
+	domain string,
+	machines []string,
+	clusterID string,
+	kvdbOptions map[string]string,
+) (AlertClient, error) {
 	kvdbLock.Lock()
 	defer kvdbLock.Unlock()
 	if _, ok := kvdbMap[clusterID]; !ok {
-		kv, err := kvdb.New(name, domain+"/"+clusterID, machines, nil)
+		kv, err := kvdb.New(name, domain+"/"+clusterID, machines, kvdbOptions)
 		if err != nil {
 			return nil, err
 		}
