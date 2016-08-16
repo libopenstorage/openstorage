@@ -15,6 +15,7 @@ import (
 	"golang.org/x/net/context"
 
 	e "github.com/coreos/etcd/client"
+	"github.com/coreos/etcd/pkg/transport"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/common"
 	"github.com/portworx/kvdb/mem"
@@ -27,10 +28,13 @@ const (
 	defaultRetryCount             = 60
 	defaultIntervalBetweenRetries = time.Millisecond * 500
 	bootstrap                     = "kvdb/bootstrap"
+	// the maximum amount of time a dial will wait for a connection to setup.
+	// 30s is long enough for most of the network conditions.
+	defaultDialTimeout = 30 * time.Second
 )
 
 var (
-	defaultMachines = []string{"http://127.0.0.1:5001"}
+	defaultMachines = []string{"http://127.0.0.1:4001"}
 )
 
 func init() {
@@ -51,6 +55,11 @@ type etcdLock struct {
 	sync.Mutex
 }
 
+// LockerIDInfo id of locker
+type LockerIDInfo struct {
+	LockerID string
+}
+
 // New constructs a new kvdb.Kvdb.
 func New(
 	domain string,
@@ -60,9 +69,37 @@ func New(
 	if len(machines) == 0 {
 		machines = defaultMachines
 	}
+	var username, password, caFile string
+	// options provided. Probably auth options
+	if options != nil || len(options) > 0 {
+		var ok bool
+		// Check if username provided
+		username, ok = options[kvdb.UsernameKey]
+		if ok {
+			// Check if password provided
+			password, ok = options[kvdb.PasswordKey]
+			if !ok {
+				return nil, kvdb.ErrNoPassword
+			}
+			// Check if certificate provided
+			caFile, ok = options[kvdb.CAFileKey]
+			if !ok {
+				return nil, kvdb.ErrNoCertificate
+			}
+		}
+	}
+	tls := transport.TLSInfo{
+		CAFile: caFile,
+	}
+	tr, err := transport.NewTransport(tls, defaultDialTimeout)
+	if err != nil {
+		return nil, err
+	}
 	cfg := e.Config{
 		Endpoints: machines,
-		Transport: e.DefaultTransport,
+		Transport: tr,
+		Username:  username,
+		Password:  password,
 		// The time required for a request to fail - 30 sec
 		HeaderTimeoutPerRequest: time.Duration(10) * time.Second,
 	}
@@ -272,19 +309,34 @@ func (kv *etcdKV) WatchTree(
 }
 
 func (kv *etcdKV) Lock(key string) (*kvdb.KVPair, error) {
+	return kv.LockWithID(key, "locked")
+}
+
+func (kv *etcdKV) LockWithID(key string, lockerID string) (
+	*kvdb.KVPair,
+	error,
+) {
 	key = kv.domain + key
 	duration := time.Second
 	ttl := uint64(4)
 	count := 0
-	kvPair, err := kv.Create(key, "locked", ttl)
+	lockTag := LockerIDInfo{LockerID: lockerID}
+	kvPair, err := kv.Create(key, lockTag, ttl)
 	for maxCount := 300; err != nil && count < maxCount; count++ {
 		time.Sleep(duration)
-		kvPair, err = kv.Create(key, "locked", ttl)
+		kvPair, err = kv.Create(key, lockTag, ttl)
+		if count > 0 && count%15 == 0 && err != nil {
+			currLockerTag := LockerIDInfo{LockerID: ""}
+			if _, errGet := kv.GetVal(key, &currLockerTag); errGet == nil {
+				logrus.Warnf("Lock %v locked for %v seconds, tag: %v",
+					key, count, currLockerTag)
+			}
+		}
 	}
 	if err != nil {
 		return nil, err
 	}
-	if count > 10 {
+	if count >= 10 {
 		logrus.Warnf("ETCD: spent %v iterations locking %v\n", count, key)
 	}
 	kvPair.TTL = int64(time.Duration(ttl) * time.Second)
@@ -527,7 +579,11 @@ func (kv *etcdKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 		return nil, 0, fmt.Errorf("Failed to enumerate %v: err: %v", prefix,
 			err)
 	}
-	snapDb, err := mem.New(kv.domain, nil, nil)
+	snapDb, err := mem.New(
+		kv.domain,
+		nil,
+		map[string]string{mem.KvSnap: "true"},
+	)
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to create in-mem kv store: %v", err)
 	}
@@ -536,7 +592,7 @@ func (kv *etcdKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 		kvPair := kvPairs[i]
 		if len(kvPair.Value) > 0 {
 			// Only create a leaf node
-			_, err := snapDb.Put(kvPair.Key, kvPair.Value, 0)
+			_, err := snapDb.SnapPut(kvPair)
 			if err != nil {
 				return nil, 0, fmt.Errorf("Failed creating snap: %v", err)
 			}
@@ -607,7 +663,7 @@ func (kv *etcdKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 				goto errordone
 			}
 
-			_, err = snapDb.Put(kvp.Key, kvp.Value, 0)
+			_, err = snapDb.SnapPut(kvp)
 			if err != nil {
 				watchErr = fmt.Errorf("Failed to apply update to snap: %v", err)
 				sendErr = watchErr
@@ -631,4 +687,8 @@ func (kv *etcdKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 	}
 
 	return snapDb, highestKvdbIndex, nil
+}
+
+func (kv *etcdKV) SnapPut(snapKvp *kvdb.KVPair) (*kvdb.KVPair, error) {
+	return nil, kvdb.ErrNotSupported
 }

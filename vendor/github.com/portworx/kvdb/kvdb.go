@@ -30,6 +30,15 @@ const (
 	KVTTL
 )
 
+const (
+	// Username for an authenticated kvdb endpoint
+	UsernameKey = "Username"
+	// Password for an authenticated kvdb endpoint
+	PasswordKey = "Password"
+	// Certificate File Path for an authenticated kvdb endpoint
+	CAFileKey   = "CAFile"
+)
+
 var (
 	// ErrNotSupported implemenation of a specific function is not supported.
 	ErrNotSupported = errors.New("implementation not supported")
@@ -53,6 +62,12 @@ var (
 	ErrTTLNotSupported = errors.New("TTL value not supported")
 	// ErrInvalidLock Lock and unlock operations don't match.
 	ErrInvalidLock = errors.New("Invalid lock/unlock operation")
+	// ErrNoPassword provided
+	ErrNoPassword = errors.New("Username provided without any password")
+	// ErrAuthNotSupported authentication not supported for this kvdb implementation
+	ErrAuthNotSupported = errors.New("Kvdb authentication not supported")
+	// ErrNoCertificate no certificate provided for authentication
+	ErrNoCertificate = errors.New("Certificate File Path not provided")
 )
 
 // KVAction specifies the action on a KV pair. This is useful to make decisions
@@ -152,12 +167,17 @@ type Kvdb interface {
 	// WatchTree is the same as WatchKey except that watchCB is triggered
 	// for updates on all keys that share the prefix.
 	WatchTree(prefix string, waitIndex uint64, opaque interface{}, watchCB WatchCB) error
+	// Snapshot returns a kvdb snapshot and its version.
+	Snapshot(prefix string) (Kvdb, uint64, error)
+	// SnapPut records the key value pair including the index.
+	SnapPut(kvp *KVPair) (*KVPair, error)
+	// Lock specfied key and associate a lockerID with it, probably to identify
+	// who acquired the lock. The KVPair returned should be used to unlock.
+	LockWithID(key string, lockerID string) (*KVPair, error)
 	// Lock specfied key. The KVPair returned should be used to unlock.
 	Lock(key string) (*KVPair, error)
 	// Unlock kvp previously acquired through a call to lock.
 	Unlock(kvp *KVPair) error
 	// TxNew returns a new Tx coordinator object or ErrNotSupported
 	TxNew() (Tx, error)
-	// Snapshot returns a kvdb snapshot and its version.
-	Snapshot(prefix string) (Kvdb, uint64, error)
 }

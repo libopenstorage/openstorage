@@ -3,18 +3,26 @@ package mem
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"github.com/Sirupsen/logrus"
+	"github.com/portworx/kvdb"
+	"github.com/portworx/kvdb/common"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
-
-	"github.com/portworx/kvdb"
-	"github.com/portworx/kvdb/common"
 )
 
 const (
 	// Name is the name of this kvdb implementation.
 	Name = "kv-mem"
+	// KvSnap is an option passed to designate this kvdb as a snap.
+	KvSnap = "KvSnap"
+)
+
+var (
+	// ErrSnap is returned if an operation is not supported on a snap.
+	ErrSnap = errors.New("Operation not supported on snap.")
 )
 
 func init() {
@@ -32,6 +40,10 @@ type memKV struct {
 	domain string
 }
 
+type snapMem struct {
+	*memKV
+}
+
 type watchData struct {
 	cb     kvdb.WatchCB
 	opaque interface{}
@@ -46,12 +58,19 @@ func New(
 	if domain != "" && !strings.HasSuffix(domain, "/") {
 		domain = domain + "/"
 	}
-	return &memKV{
+
+	mem := &memKV{
 		m:      make(map[string]*kvdb.KVPair),
 		w:      make(map[string]*watchData),
 		wt:     make(map[string]*watchData),
 		domain: domain,
-	}, nil
+	}
+
+	if _, ok := options[KvSnap]; ok {
+		return &snapMem{memKV: mem}, nil
+	}
+	return mem, nil
+
 }
 
 func (kv *memKV) String() string {
@@ -295,13 +314,28 @@ func (kv *memKV) WatchTree(
 }
 
 func (kv *memKV) Lock(key string) (*kvdb.KVPair, error) {
+	return kv.LockWithID(key, "locked")
+}
+
+func (kv *memKV) LockWithID(key string, lockerID string) (
+	*kvdb.KVPair,
+	error,
+) {
 	key = kv.domain + key
 	duration := time.Second
 
-	result, err := kv.Create(key, []byte("locked"), uint64(duration*3))
+	result, err := kv.Create(key, lockerID, uint64(duration*3))
+	count := 0
 	for err != nil {
 		time.Sleep(duration)
-		result, err = kv.Create(key, []byte("locked"), uint64(duration*3))
+		result, err = kv.Create(key, lockerID, uint64(duration*3))
+		if err != nil && count > 0 && count%15 == 0 {
+			var currLockerID string
+			if _, errGet := kv.GetVal(key, currLockerID); errGet == nil {
+				logrus.Infof("Lock %v locked for %v seconds, tag: %v",
+					key, count, currLockerID)
+			}
+		}
 	}
 
 	if err != nil {
@@ -346,4 +380,105 @@ func (kv *memKV) fireCB(key string, kvp kvdb.KVPair, err error) {
 			}
 		}
 	}
+}
+
+func (kv *memKV) SnapPut(snapKvp *kvdb.KVPair) (*kvdb.KVPair, error) {
+	return nil, kvdb.ErrNotSupported
+}
+
+func (kv *snapMem) SnapPut(snapKvp *kvdb.KVPair) (*kvdb.KVPair, error) {
+	var kvp *kvdb.KVPair
+
+	key := kv.domain + snapKvp.Key
+	kv.mutex.Lock()
+	defer kv.mutex.Unlock()
+
+	if old, ok := kv.m[key]; ok {
+		old.Value = snapKvp.Value
+		old.Action = kvdb.KVSet
+		old.ModifiedIndex = snapKvp.ModifiedIndex
+		old.KVDBIndex = snapKvp.KVDBIndex
+		kvp = old
+
+	} else {
+		kvp = &kvdb.KVPair{
+			Key:           key,
+			Value:         snapKvp.Value,
+			TTL:           0,
+			KVDBIndex:     snapKvp.KVDBIndex,
+			ModifiedIndex: snapKvp.ModifiedIndex,
+			CreatedIndex:  snapKvp.CreatedIndex,
+			Action:        kvdb.KVCreate,
+		}
+		kv.m[key] = kvp
+	}
+
+	kv.normalize(kvp)
+	return kvp, nil
+}
+
+func (kv *snapMem) Put(
+	key string,
+	value interface{},
+	ttl uint64,
+) (*kvdb.KVPair, error) {
+	return nil, ErrSnap
+
+}
+
+func (kv *snapMem) Create(
+	key string,
+	value interface{},
+	ttl uint64,
+) (*kvdb.KVPair, error) {
+	return nil, ErrSnap
+}
+
+func (kv *snapMem) Update(
+	key string,
+	value interface{},
+	ttl uint64,
+) (*kvdb.KVPair, error) {
+	return nil, ErrSnap
+}
+
+func (kv *snapMem) Delete(key string) (*kvdb.KVPair, error) {
+	return nil, ErrSnap
+}
+
+func (kv *snapMem) DeleteTree(prefix string) error {
+	return ErrSnap
+}
+
+func (kv *snapMem) CompareAndSet(
+	kvp *kvdb.KVPair,
+	flags kvdb.KVFlags,
+	prevValue []byte,
+) (*kvdb.KVPair, error) {
+	return nil, ErrSnap
+}
+
+func (kv *snapMem) CompareAndDelete(
+	kvp *kvdb.KVPair,
+	flags kvdb.KVFlags,
+) (*kvdb.KVPair, error) {
+	return nil, ErrSnap
+}
+
+func (kv *snapMem) WatchKey(
+	key string,
+	waitIndex uint64,
+	opaque interface{},
+	watchCB kvdb.WatchCB,
+) error {
+	return ErrSnap
+}
+
+func (kv *snapMem) WatchTree(
+	prefix string,
+	waitIndex uint64,
+	opaque interface{},
+	watchCB kvdb.WatchCB,
+) error {
+	return ErrSnap
 }

@@ -1,3 +1,6 @@
+ETCD := $(shell pgrep etcd)
+CONSUL := $(shell pgrep consul)
+
 all: test
 
 deps:
@@ -41,8 +44,18 @@ errcheck: testdeps
 
 pretest: lint vet errcheck
 
-gotest: testdeps
-	go test ./...
+testcheck:
+ifndef ETCD
+	@echo "etcd not running. Unable to run tests."
+	exit 1
+endif
+ifndef CONSUL
+	@echo "consul not running. Unable to run tests."
+	exit 1
+endif
+
+gotest: testdeps testcheck
+	go test -v ./...
 
 test: pretest gotest
 

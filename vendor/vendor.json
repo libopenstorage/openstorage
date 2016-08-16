@@ -219,25 +219,52 @@
 			"revisionTime": "2016-03-26T22:39:47Z"
 		},
 		{
-			"checksumSHA1": "Q9uO+fNH5uUpG7GwjpK9z8BVyIE=",
-			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/coreos/etcd/client",
+			"checksumSHA1": "fNDjBgLI1Hux3FOtjmXgxFykpPs=",
 			"path": "github.com/coreos/etcd/client",
-			"revision": "307cb5167c936f65714d30da33b22157c4d011e7",
-			"revisionTime": "2016-04-01T05:24:54Z"
+			"revision": "cabd28516c8a77df47cb483ef711b192d4fbb003",
+			"revisionTime": "2016-08-03T17:59:00Z"
+		},
+		{
+			"checksumSHA1": "JhbEKzNRDnXICXqMDLphh+Gz9oM=",
+			"path": "github.com/coreos/etcd/pkg/fileutil",
+			"revision": "cabd28516c8a77df47cb483ef711b192d4fbb003",
+			"revisionTime": "2016-08-03T17:59:00Z"
 		},
 		{
 			"checksumSHA1": "mKIXx1kDwmVmdIpZ3pJtRBuUKso=",
-			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/coreos/etcd/pkg/pathutil",
 			"path": "github.com/coreos/etcd/pkg/pathutil",
-			"revision": "307cb5167c936f65714d30da33b22157c4d011e7",
-			"revisionTime": "2016-04-01T05:24:54Z"
+			"revision": "cabd28516c8a77df47cb483ef711b192d4fbb003",
+			"revisionTime": "2016-08-03T17:59:00Z"
 		},
 		{
-			"checksumSHA1": "sWFTfWCr1bOglNmNA7WxlEgXKv0=",
-			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/coreos/etcd/pkg/types",
+			"checksumSHA1": "rMyIh9PsSvPs6Yd+YgKITQzQJx8=",
+			"path": "github.com/coreos/etcd/pkg/tlsutil",
+			"revision": "cabd28516c8a77df47cb483ef711b192d4fbb003",
+			"revisionTime": "2016-08-03T17:59:00Z"
+		},
+		{
+			"checksumSHA1": "dtalNtJMo03VFbFi12yGRKFK3Ak=",
+			"path": "github.com/coreos/etcd/pkg/transport",
+			"revision": "cabd28516c8a77df47cb483ef711b192d4fbb003",
+			"revisionTime": "2016-08-03T17:59:00Z"
+		},
+		{
+			"checksumSHA1": "gx1gJIMU6T0UNQ0bPZ/drQ8cpCI=",
 			"path": "github.com/coreos/etcd/pkg/types",
-			"revision": "307cb5167c936f65714d30da33b22157c4d011e7",
-			"revisionTime": "2016-04-01T05:24:54Z"
+			"revision": "cabd28516c8a77df47cb483ef711b192d4fbb003",
+			"revisionTime": "2016-08-03T17:59:00Z"
+		},
+		{
+			"checksumSHA1": "d50/+u/LFlXvEV10HiEoXB9OsGg=",
+			"path": "github.com/coreos/go-systemd/journal",
+			"revision": "4484981625c1a6a2ecb40a390fcb6a9bcfee76e3",
+			"revisionTime": "2016-05-27T14:02:44Z"
+		},
+		{
+			"checksumSHA1": "SQm8aSsW9XF7F2NZ8vtmkB9xrSM=",
+			"path": "github.com/coreos/pkg/capnslog",
+			"revision": "7f080b6c11ac2d2347c3cd7521e810207ea1a041",
+			"revisionTime": "2016-05-30T11:15:57Z"
 		},
 		{
 			"checksumSHA1": "5rPfda8jFccr3A6heL+JAmi9K9g=",
@@ -826,34 +853,34 @@
 			"revisionTime": "2016-01-10T10:55:54Z"
 		},
 		{
-			"checksumSHA1": "UmBPHOWs25J4MmGIXboi0i/PNFI=",
+			"checksumSHA1": "7DB6mCP7XUWOf+ffQpZNwacrQtg=",
 			"path": "github.com/portworx/kvdb",
-			"revision": "ced774a626fe639981b1a6a337b33dffdb78107f",
-			"revisionTime": "2016-07-15T22:23:59Z"
+			"revision": "5769e65e8d7b11cbb2135d2f17be0eb25f1b73f7",
+			"revisionTime": "2016-08-16T00:58:24Z"
 		},
 		{
 			"checksumSHA1": "NdrvQf96pNxXaXyTYGxwxZ0yAX4=",
 			"path": "github.com/portworx/kvdb/common",
-			"revision": "ced774a626fe639981b1a6a337b33dffdb78107f",
-			"revisionTime": "2016-07-15T22:23:59Z"
+			"revision": "5769e65e8d7b11cbb2135d2f17be0eb25f1b73f7",
+			"revisionTime": "2016-08-16T00:58:24Z"
 		},
 		{
-			"checksumSHA1": "SwxvVX853UtzYRaNBXKvX8Ie6xQ=",
+			"checksumSHA1": "gArRFZKmmJiyViEjVqNaLbIsGWE=",
 			"path": "github.com/portworx/kvdb/consul",
-			"revision": "ced774a626fe639981b1a6a337b33dffdb78107f",
-			"revisionTime": "2016-07-15T22:23:59Z"
+			"revision": "5769e65e8d7b11cbb2135d2f17be0eb25f1b73f7",
+			"revisionTime": "2016-08-16T00:58:24Z"
 		},
 		{
-			"checksumSHA1": "ncFK+/QqeQx7JCd7I6YGE9yPcII=",
+			"checksumSHA1": "fiPyPtWOiDwPWQfwqzHYmZcgsXE=",
 			"path": "github.com/portworx/kvdb/etcd",
-			"revision": "ced774a626fe639981b1a6a337b33dffdb78107f",
-			"revisionTime": "2016-07-15T22:23:59Z"
+			"revision": "5769e65e8d7b11cbb2135d2f17be0eb25f1b73f7",
+			"revisionTime": "2016-08-16T00:58:24Z"
 		},
 		{
-			"checksumSHA1": "0m1Mmb7QdVdYXtE8CLtYKeOFGpI=",
+			"checksumSHA1": "emmQ3IWIrd+vizk5dE0e1F1xal8=",
 			"path": "github.com/portworx/kvdb/mem",
-			"revision": "ced774a626fe639981b1a6a337b33dffdb78107f",
-			"revisionTime": "2016-07-15T22:23:59Z"
+			"revision": "5769e65e8d7b11cbb2135d2f17be0eb25f1b73f7",
+			"revisionTime": "2016-08-16T00:58:24Z"
 		},
 		{
 			"checksumSHA1": "cKNzpMpci3WUAzXpe+tVnBv2cjE=",

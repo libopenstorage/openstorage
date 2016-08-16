@@ -48,6 +48,7 @@ type consulKV struct {
 type consulLock struct {
 	lock    *api.Lock
 	renewCh chan struct{}
+	tag     interface{}
 }
 
 // New constructs a new kvdb.Kvdb.
@@ -65,6 +66,27 @@ func New(
 			machines[0] = strings.TrimPrefix(machines[0], "https://")
 		}
 	}
+
+	// options provided. Probably auth options
+	if options != nil || len(options) > 0 {
+		var ok bool
+		// Check if username provided
+		_, ok = options[kvdb.UsernameKey]
+		if ok {
+			return nil, kvdb.ErrAuthNotSupported
+		}
+		// Check if password provided
+		_, ok = options[kvdb.PasswordKey]
+		if ok {
+			return nil, kvdb.ErrAuthNotSupported
+		}
+		// Check if certificate provided
+		_, ok = options[kvdb.CAFileKey]
+		if ok {
+			return nil, kvdb.ErrAuthNotSupported
+		}
+	}
+
 	config := api.DefaultConfig()
 	config.HttpClient = http.DefaultClient
 	config.Address = machines[0]
@@ -324,12 +346,19 @@ func (kv *consulKV) WatchTree(prefix string, waitIndex uint64, opaque interface{
 }
 
 func (kv *consulKV) Lock(key string) (*kvdb.KVPair, error) {
+	return kv.LockWithID(key, "locked")
+}
+
+func (kv *consulKV) LockWithID(key string, lockerID string) (
+	*kvdb.KVPair,
+	error,
+) {
 	// Strip of the leading slash or else consul throws error
 	if key[0] == '/' {
 		key = key[1:]
 	}
 
-	l, err := kv.getLock(key, 3)
+	l, err := kv.getLock(key, lockerID, 3)
 	if err != nil {
 		return nil, err
 	}
@@ -373,13 +402,17 @@ func (kv *consulKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 	}
 
 	kvPairs := kv.pairToKvs("enumerate", pairs, nil)
-	snapDb, err := mem.New(kv.domain, nil, nil)
+	snapDb, err := mem.New(
+		kv.domain,
+		nil,
+		map[string]string{mem.KvSnap: "true"},
+	)
 	if err != nil {
 		return nil, 0, err
 	}
 
 	for _, kvPair := range kvPairs {
-		_, err := snapDb.Put(kvPair.Key, kvPair.Value, 0)
+		_, err := snapDb.SnapPut(kvPair)
 		if err != nil {
 			return nil, 0, fmt.Errorf("Failed creating snap: %v", err)
 		}
@@ -445,7 +478,7 @@ func (kv *consulKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 				goto errordone
 			}
 
-			_, err = snapDb.Put(kvp.Key, kvp.Value, 0)
+			_, err = snapDb.SnapPut(kvp)
 			if err != nil {
 				watchErr = fmt.Errorf("Failed to apply update to snap: %v", err)
 				sendErr = watchErr
@@ -468,8 +501,17 @@ func (kv *consulKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 		}
 	}
 
-	kv.Delete(bootStrapKeyLow)
-	kv.Delete(bootStrapKeyHigh)
+	_, err = kv.Delete(bootStrapKeyLow)
+	if err != nil {
+		return nil, 0, fmt.Errorf("Failed to delete snap bootstrap key: %v, "+
+			"err: %v", bootStrapKeyLow, err)
+	}
+	_, err = kv.Delete(bootStrapKeyHigh)
+	if err != nil {
+		return nil, 0, fmt.Errorf("Failed to delete snap bootstrap key: %v, "+
+			"err: %v", bootStrapKeyHigh, err)
+	}
+
 	return snapDb, highestKvdbIndex, nil
 }
 
@@ -520,10 +562,19 @@ func (kv *consulKV) pairToKvs(action string, pair []*api.KVPair, meta *api.Query
 	return kvs
 }
 
-func (kv *consulKV) getLock(key string, ttl uint64) (*consulLock, error) {
+func (kv *consulKV) getLock(key string, tag interface{}, ttl uint64) (
+	*consulLock,
+	error,
+) {
 	key = kv.domain + key
+	tagValue, err := common.ToBytes(tag)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to convert tag: %v, error: %v", tag,
+			err)
+	}
 	lockOpts := &api.LockOptions{
-		Key: key,
+		Key:   key,
+		Value: tagValue,
 	}
 	lock := &consulLock{}
 	if ttl != 0 {
@@ -746,7 +797,7 @@ func (kv *consulKV) renewSession(pair *api.KVPair, ttl uint64) error {
 	// ephemeral behavior
 	lock, _ := kv.client.LockOpts(lockOpts)
 	if lock != nil {
-		lock.Lock(nil)
+		_, _ = lock.Lock(nil)
 	}
 
 	_, _, err = kv.client.Session().Renew(session, nil)
@@ -764,4 +815,8 @@ func (kv *consulKV) getActiveSession(key string) (string, error) {
 		return pair.Session, nil
 	}
 	return "", nil
+}
+
+func (kv *consulKV) SnapPut(snapKvp *kvdb.KVPair) (*kvdb.KVPair, error) {
+	return nil, kvdb.ErrNotSupported
 }
