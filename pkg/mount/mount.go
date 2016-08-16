@@ -16,6 +16,8 @@ import (
 type Manager interface {
 	// String representation of the mount table
 	String() string
+	// Reload mount table for specified device.
+	Reload(source string) error
 	// Load mount table for all devices that match this identifier
 	Load(source string) error
 	// Inspect mount table for specified source. ErrEnoent may be returned.

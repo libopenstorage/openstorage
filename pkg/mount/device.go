@@ -33,6 +33,43 @@ func NewDeviceMounter(
 	return m, nil
 }
 
+func (m *DeviceMounter) Reload(device string) error {
+	newDm, err := NewDeviceMounter(device, m.mountImpl)
+	if err != nil {
+		return err
+	}
+	m.Lock()
+	defer m.Unlock()
+
+	// New mountable has no mounts, delete old mounts.
+	newM, ok := newDm.mounts[device]
+	if !ok {
+		delete(m.mounts, device)
+		return nil
+	}
+
+	// Old mountable had no mounts, copy over new mounts.
+	oldM, ok := m.mounts[device]
+	if !ok {
+		m.mounts[device] = newM
+		return nil
+	}
+
+	// Overwrite old mount entries into new mount table, preserving refcnt.
+	for _, oldP := range oldM.Mountpoint {
+		for j, newP := range newM.Mountpoint {
+			if newP.Path == oldP.Path {
+				newM.Mountpoint[j] = oldP
+				break
+			}
+		}
+	}
+
+	// Purge old mounts.
+	m.mounts[device] = newM
+	return nil
+}
+
 // Load mount table
 func (m *DeviceMounter) Load(devPrefix string) error {
 	info, err := mount.GetMounts()
