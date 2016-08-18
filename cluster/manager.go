@@ -590,6 +590,14 @@ func (c *ClusterManager) Start() error {
 	}
 	kvdb.Unlock(kvlock)
 
+	selfNodeEntry, ok := initState.ClusterInfo.NodeEntries[c.config.NodeId]
+	if ok && selfNodeEntry.Status == api.Status_STATUS_DECOMMISSION {
+		msg := fmt.Sprintf("Node is in decommision state, Node ID %s.",
+			c.selfNode.Id)
+		dlog.Errorln(msg)
+		return errors.New(msg)
+	}
+
 	// Cluster database max size... 0 if unlimited.
 	c.size = initState.ClusterInfo.Size
 	// Set the clusterID in db
@@ -627,7 +635,7 @@ func (c *ClusterManager) Start() error {
 	if err != nil {
 		dlog.Panicln("Fatal, Unable to obtain cluster lock. ", err)
 	}
-	selfNodeEntry, ok := initState.ClusterInfo.NodeEntries[c.config.NodeId]
+	selfNodeEntry, ok = initState.ClusterInfo.NodeEntries[c.config.NodeId]
 	if !ok {
 		kvdb.Unlock(kvlock)
 		dlog.Panicln("Fatal, Unable to find self node entry in local cache")
@@ -778,7 +786,7 @@ func (c *ClusterManager) markNodeDecommission(node api.Node) error {
 	return err
 }
 
-func (c *ClusterManager) deleteNodeFromDB(node api.Node) error {
+func (c *ClusterManager) deleteNodeFromDB(nodeID string) error {
 	// Delete node from cluster DB
 	kvdb := kvdb.Instance()
 	kvlock, err := kvdb.Lock(clusterLockKey)
@@ -793,7 +801,7 @@ func (c *ClusterManager) deleteNodeFromDB(node api.Node) error {
 		return err
 	}
 
-	delete(currentState.NodeEntries, node.Id)
+	delete(currentState.NodeEntries, nodeID)
 
 	err = writeClusterInfo(&currentState)
 	if err != nil {
@@ -856,17 +864,28 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 				return err
 			}
 		}
-
-		err = c.deleteNodeFromDB(n)
-		if err != nil {
-			msg := fmt.Sprintf("Failed to delete node %s from "+
-				"cluster database, error %s",
-				n.Id, err)
-			dlog.Errorf(msg)
-			return errors.New(msg)
-		}
 	}
 	return nil
+}
+
+func (c *ClusterManager) NodeRemoveDone(nodeID string, result error) {
+	// XXX: only storage will make callback right now
+	if result != nil {
+		msg := fmt.Sprintf("Storage failed to decommission node %s, "+
+			"error %s",
+			nodeID,
+			result)
+		logrus.Errorf(msg)
+		return
+	}
+
+	err := c.deleteNodeFromDB(nodeID)
+	if err != nil {
+		msg := fmt.Sprintf("Failed to delete node %s "+
+			"from cluster database, error %s",
+			nodeID, err)
+		dlog.Errorf(msg)
+	}
 }
 
 // Shutdown can be called when THIS node is gracefully shutting down.

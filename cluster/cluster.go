@@ -106,6 +106,11 @@ type ClusterData interface {
 	GetState() (*ClusterState, error)
 }
 
+type ClusterCallback interface {
+	// NodeRemoveDone notify cluster manager NodeRemove is done.
+	NodeRemoveDone(nodeID string, result error)
+}
+
 // Cluster is the API that a cluster provider will implement.
 type Cluster interface {
 	// Inspect the node given a UUID.
@@ -131,6 +136,7 @@ type Cluster interface {
 	Start() error
 
 	ClusterData
+	ClusterCallback
 }
 
 type ClusterNotify func(string, api.ClusterNotify) (string, error)
