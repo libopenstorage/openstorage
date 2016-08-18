@@ -39,10 +39,10 @@ const (
 )
 
 var (
-	kvdbMap         = make(map[string]kvdb.Kvdb)
-	watcherMap      = make(map[string]*watcher)
-	watchErrors     int
-	kvdbLock        sync.RWMutex
+	kvdbMap     = make(map[string]kvdb.Kvdb)
+	watcherMap  = make(map[string]*watcher)
+	watchErrors int
+	kvdbLock    sync.RWMutex
 )
 
 func init() {
@@ -62,9 +62,15 @@ type watcher struct {
 
 // KvAlert is used for managing the alerts and its kvdb instance
 type KvAlert struct {
+	// kvdbOptions used to access kvdb for each cluster
+	kvdbOptions  map[string]string
+	// kvdbName is a Name/Type of kvdb instance
 	kvdbName     string
+	// kvdbDomain is the prefix witch which all kvdb requests are made
 	kvdbDomain   string
+	// kvdbMachines is a list of kvdb endpoints
 	kvdbMachines []string
+	// clusterID for which this alerts object will be used
 	clusterID    string
 }
 
@@ -92,7 +98,7 @@ func Init(
 		}
 		kvdbMap[clusterID] = kv
 	}
-	return &KvAlert{name, domain, machines, clusterID}, nil
+	return &KvAlert{kvdbOptions, name, domain, machines, clusterID}, nil
 }
 
 // Raise raises an Alert.
@@ -159,7 +165,13 @@ func (kva *KvAlert) Enumerate(filter *api.Alert) ([]*api.Alert, error) {
 	return kva.enumerate(kv, filter)
 }
 
-// EnumerateByCluster enumerates alerts by clusterID
+
+/*
+EnumerateByCluster enumerates Alerts by clusterID. It uses the global
+kvdb options provided while creating the alertClient object to access this cluster.
+This way we ensure that the caller of the api is able to enumerate for clusters that
+it is authorized for.
+*/
 func (kva *KvAlert) EnumerateByCluster(clusterID string, filter *api.Alert) ([]*api.Alert, error) {
 	kv, err := kva.getKvdbForCluster(clusterID)
 	if err != nil {
@@ -199,7 +211,12 @@ func (kva *KvAlert) EnumerateWithinTimeRange(
 	return allAlerts, nil
 }
 
-// Watch on all alert.
+/*
+Watch on all Alerts for the given clusterID. It uses the global
+kvdb options provided while creating the alertClient object to access this cluster
+This way we ensure that the caller of the api is able to watch alerts on clusters that
+it is authorized for.
+*/
 func (kva *KvAlert) Watch(clusterID string, alertWatcherFunc AlertWatcherFunc) error {
 
 	kv, err := kva.getKvdbForCluster(clusterID)
@@ -403,7 +420,7 @@ func (kva *KvAlert) getKvdbForCluster(clusterID string) (kvdb.Kvdb, error) {
 
 	_, ok := kvdbMap[clusterID]
 	if !ok {
-		kv, err := kvdb.New(kva.kvdbName, kva.kvdbDomain+"/"+clusterID, kva.kvdbMachines, nil)
+		kv, err := kvdb.New(kva.kvdbName, kva.kvdbDomain+"/"+clusterID, kva.kvdbMachines, kva.kvdbOptions)
 		if err != nil {
 			return nil, err
 		}

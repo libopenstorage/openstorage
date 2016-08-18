@@ -65,7 +65,8 @@ type AlertClient interface {
 	// Enumerate enumerates Alert.
 	Enumerate(filter *api.Alert) ([]*api.Alert, error)
 
-	// EnumerateByCluster enumerates Alerts by ClusterID
+	// EnumerateByCluster enumerates Alerts by clusterID. It uses the global
+	// kvdb options provided while creating the alertClient object to access this cluster.
 	EnumerateByCluster(clusterID string, filter *api.Alert) ([]*api.Alert, error)
 
 	// EnumerateWithinTimeRange enumerates Alert between timeStart and timeEnd.
@@ -77,7 +78,8 @@ type AlertClient interface {
 	// Clear an Alert.
 	Clear(resourceType api.ResourceType, alertID int64, ttl uint64) error
 
-	// Watch on all Alert>
+	// Watch on all Alerts for the given clusterID. It uses the global
+	// kvdb options provided while creating the alertClient object to access this cluster
 	Watch(clusterID string, alertWatcher AlertWatcherFunc) error
 }
 
