@@ -546,10 +546,7 @@ func (c *ClusterManager) Start() error {
 	c.selfNode = api.Node{}
 	c.selfNode.GenNumber = uint64(time.Now().UnixNano())
 	c.selfNode.Id = c.config.NodeId
-	// Set the status to NOT_IN_QUORUM to start the node.
-	// Once we achieve quorum then we actually join the cluster
-	// and change the status to OK
-	c.selfNode.Status = api.Status_STATUS_NOT_IN_QUORUM
+	c.selfNode.Status = api.Status_STATUS_INIT
 	c.selfNode.MgmtIp, c.selfNode.DataIp, err = ExternalIp(&c.config)
 	c.selfNode.StartTime = time.Now()
 	c.selfNode.Hostname, _ = os.Hostname()
@@ -655,6 +652,10 @@ func (c *ClusterManager) Start() error {
 	}
 	kvdb.Unlock(kvlock)
 
+	// Set the status to NOT_IN_QUORUM to start the node.
+	// Once we achieve quorum then we actually join the cluster
+	// and change the status to OK
+	c.selfNode.Status = api.Status_STATUS_NOT_IN_QUORUM
 	// Start heartbeating to other nodes.
 	go c.startHeartBeat(&currentState)
 
@@ -668,8 +669,10 @@ func (c *ClusterManager) Start() error {
 			// Node not initialized yet
 			// Achieved quorum in the cluster.
 			// Lets start the node
+			c.selfNode.Status = api.Status_STATUS_INIT
 			err := c.joinCluster(initState, &c.selfNode, exist)
 			if err != nil {
+				c.selfNode.Status = api.Status_STATUS_ERROR
 				return err
 			}
 			c.status = api.Status_STATUS_OK
@@ -712,10 +715,13 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 	}
 	cluster.Nodes = make([]api.Node, len(c.nodeCache))
 	for _, n := range c.nodeCache {
-		cluster.Nodes[i] = n
+		if n.Id == c.selfNode.Id {
+			cluster.Nodes[i] = *c.getCurrentState()
+		} else {
+			cluster.Nodes[i] = n
+		}
 		i++
 	}
-
 	return cluster, nil
 }
 
