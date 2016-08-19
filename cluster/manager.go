@@ -706,6 +706,7 @@ func (c *ClusterManager) Start() error {
 		}
 	}
 	go c.updateClusterStatus(initState, exist)
+	go c.replayNodeDecommission()
 
 	kvdb.WatchKey(ClusterDBKey, 0, nil, c.watchDB)
 
@@ -879,12 +880,52 @@ func (c *ClusterManager) NodeRemoveDone(nodeID string, result error) {
 		return
 	}
 
+	logrus.Infof("Cluster manager node remove done: node ID %s", nodeID)
+
 	err := c.deleteNodeFromDB(nodeID)
 	if err != nil {
 		msg := fmt.Sprintf("Failed to delete node %s "+
 			"from cluster database, error %s",
 			nodeID, err)
 		dlog.Errorf(msg)
+	}
+}
+
+func (c *ClusterManager) replayNodeDecommission() {
+
+	time.Sleep(60 * time.Second)
+	// For each node, if they are in decommission state,
+	//     restart the Node Remove()
+	kvdb := kvdb.Instance()
+	kvlock, err := kvdb.Lock(clusterLockKey)
+	if err != nil {
+		dlog.Panicln("fatal, unable to obtain cluster lock. ", err)
+	}
+
+	currentState, err := readClusterInfo()
+	if err != nil {
+		dlog.Errorln("Failed to read cluster info. ", err)
+		kvdb.Unlock(kvlock)
+		return
+	}
+	kvdb.Unlock(kvlock)
+
+	for _, nodeEntry := range currentState.NodeEntries {
+		if nodeEntry.Status == api.Status_STATUS_DECOMMISSION {
+			logrus.Infof("Replay Node Remove for node ID %s",
+				nodeEntry.Id)
+
+			var n api.Node
+			n.Id = nodeEntry.Id
+			nodes := make([]api.Node, 0)
+			nodes = append(nodes, n)
+			err := c.Remove(nodes)
+			if err != nil {
+				logrus.Errorf("Failed to replay node remove: "+
+					"node ID %s, error %s",
+					nodeEntry.Id, err)
+			}
+		}
 	}
 }
 
