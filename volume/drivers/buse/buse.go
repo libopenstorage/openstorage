@@ -346,6 +346,10 @@ func (d *driver) Remove(self *api.Node) error {
 	return nil
 }
 
+func (d *driver) CanNodeRemove(self *api.Node) error {
+	return nil
+}
+
 func (d *driver) Update(self *api.Node) error {
 	return nil
 }

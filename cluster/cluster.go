@@ -75,6 +75,9 @@ type ClusterListener interface {
 	// Remove is called when a node leaves the cluster
 	Remove(node *api.Node) error
 
+	// CanNodeRemove test to see if we can remove this node
+	CanNodeRemove(node *api.Node) error
+
 	// Update is called when a node status changes significantly
 	// in the cluster changes.
 	Update(node *api.Node) error

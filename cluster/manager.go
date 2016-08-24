@@ -194,7 +194,6 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 		return nil
 	}
 
-	// The only value we rely on during an update is the cluster size.
 	c.size = db.Size
 
 	// Probably new node was added into the cluster db
@@ -208,6 +207,40 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 		}
 
 	}
+
+	for _, nodeEntry := range db.NodeEntries {
+		if nodeEntry.Status == api.Status_STATUS_DECOMMISSION {
+			logrus.Infof("ClusterManager watchDB, node ID "+
+				"%s state is Decommission.",
+				nodeEntry.Id)
+
+			n, found := c.nodeCache[nodeEntry.Id]
+			if !found {
+				msg := fmt.Sprintf("ClusterManager watchDB, "+
+					"node ID %s not in node cache",
+					nodeEntry.Id)
+				logrus.Errorf(msg)
+				return errors.New(msg)
+			}
+
+			if n.Status == api.Status_STATUS_DECOMMISSION {
+				logrus.Infof("ClusterManager watchDB, "+
+					"node ID %s is already decommission "+
+					"on this node",
+					nodeEntry.Id)
+				continue
+			}
+
+			logrus.Infof("ClusterManager watchDB, "+
+				"decommsission node ID %s on this node",
+				nodeEntry.Id)
+
+			n.Status = api.Status_STATUS_DECOMMISSION
+			c.nodeCache[nodeEntry.Id] = n
+		}
+
+	}
+
 	return nil
 }
 
@@ -706,7 +739,7 @@ func (c *ClusterManager) Start() error {
 		}
 	}
 	go c.updateClusterStatus(initState, exist)
-	go c.replayNodeDecommission()
+	go c.replayNodeDecommission(initState)
 
 	kvdb.WatchKey(ClusterDBKey, 0, nil, c.watchDB)
 
@@ -834,13 +867,34 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 			return errors.New(msg)
 		}
 
+		nodeCacheStatus := c.nodeCache[n.Id].Status
 		// If node is not down, do not remove it
-		if c.nodeCache[n.Id].Status != api.Status_STATUS_OFFLINE {
+		if nodeCacheStatus != api.Status_STATUS_OFFLINE &&
+			nodeCacheStatus != api.Status_STATUS_DECOMMISSION {
 			msg := fmt.Sprintf("Cannot remove node that is not "+
 				"offline, Node ID %s.",
 				n.Id)
 			dlog.Errorf(msg)
 			return errors.New(msg)
+		}
+
+		// Ask listeners, can we remove this node?
+		for e := c.listeners.Front(); e != nil; e = e.Next() {
+			dlog.Infof("Remove node: ask cluster listener: "+
+				"can we remove node ID %s, %s",
+				n.Id, e.Value.(ClusterListener).String())
+
+			err := e.Value.(ClusterListener).CanNodeRemove(&n)
+			if err != nil {
+
+				msg := fmt.Sprintf("Cluster listener %s "+
+					"cannot remove node ID %s, error %s",
+					e.Value.(ClusterListener).String(),
+					n.Id, err)
+				dlog.Warnf(msg)
+				return errors.New(msg)
+			}
+
 		}
 
 		err := c.markNodeDecommission(n)
@@ -891,24 +945,13 @@ func (c *ClusterManager) NodeRemoveDone(nodeID string, result error) {
 	}
 }
 
-func (c *ClusterManager) replayNodeDecommission() {
+func (c *ClusterManager) replayNodeDecommission(initState *ClusterInitState) {
 
 	time.Sleep(60 * time.Second)
 	// For each node, if they are in decommission state,
 	//     restart the Node Remove()
-	kvdb := kvdb.Instance()
-	kvlock, err := kvdb.Lock(clusterLockKey)
-	if err != nil {
-		dlog.Panicln("fatal, unable to obtain cluster lock. ", err)
-	}
 
-	currentState, err := readClusterInfo()
-	if err != nil {
-		dlog.Errorln("Failed to read cluster info. ", err)
-		kvdb.Unlock(kvlock)
-		return
-	}
-	kvdb.Unlock(kvlock)
+	currentState := initState.ClusterInfo
 
 	for _, nodeEntry := range currentState.NodeEntries {
 		if nodeEntry.Status == api.Status_STATUS_DECOMMISSION {
