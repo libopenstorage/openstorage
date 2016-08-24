@@ -63,6 +63,8 @@ func inspect(t *testing.T) {
 	p = m.Inspect(source)
 	require.Equal(t, 1, len(p), "Expect 1 mounts actual %v mounts", len(p))
 	require.Equal(t, dest, p[0].Path, "Expect %q got %q", dest, p[0].Path)
+	s := m.GetSourcePaths()
+	require.NotZero(t, 1, len(s), "Expect 1 source path, actual %v", s)
 	err = m.Unmount(source, dest)
 	require.NoError(t, err, "Failed in unmount")
 }

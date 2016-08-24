@@ -34,6 +34,8 @@ type Manager interface {
 	// GetSourcePath scans mount for a specified mountPath and returns the
 	// sourcePath if found or returnes an ErrEnoent
 	GetSourcePath(mountPath string) (string, error)
+	// GetSourcePaths returns all source paths from the mount table
+	GetSourcePaths() []string
 	// Mount device at mountpoint or increment refcnt if device is already
 	//  mounted at specified mountpoint.
 	Mount(minor int, device, path, fs string, flags uintptr, data string) error
@@ -158,6 +160,20 @@ func (m *Mounter) Mounts(sourcePath string) []string {
 	return mounts
 }
 
+// GetSourcePaths returns all source paths from the mount table
+func (m *Mounter) GetSourcePaths() []string {
+	m.Lock()
+	defer m.Unlock()
+
+	sourcePaths := make([]string, len(m.mounts))
+	i := 0
+	for path := range m.mounts {
+		sourcePaths[i] = path
+		i++
+	}
+	return sourcePaths
+}
+
 // HasMounts determines returns the number of mounts for the device.
 func (m *Mounter) HasMounts(sourcePath string) int {
 	m.Lock()
@@ -183,8 +199,6 @@ func (m *Mounter) HasTarget(targetPath string) (string, bool) {
 	}
 	return "", false
 }
-
-// Exists scans mountpaths for specified device and returns true if path is one of the
 
 // Exists scans mountpaths for specified device and returns true if path is one of the
 // mountpaths. ErrEnoent may be retuned if the device is not found
@@ -238,8 +252,6 @@ func (m *Mounter) maybeRemoveDevice(device string) {
 	}
 }
 
-// Unmount device at mountpoint or decrement refcnt. If device has no
-// mountpoints left after this operation, it is removed from the matrix.
 // Mount new mountpoint for specified device.
 func (m *Mounter) Mount(minor int, device, path, fs string, flags uintptr, data string) error {
 	m.Lock()
@@ -289,6 +301,8 @@ func (m *Mounter) Mount(minor int, device, path, fs string, flags uintptr, data 
 	return nil
 }
 
+// Unmount device at mountpoint or decrement refcnt. If device has no
+// mountpoints left after this operation, it is removed from the matrix.
 // ErrEnoent is returned if the device or mountpoint for the device is not found.
 func (m *Mounter) Unmount(device, path string) error {
 	m.Lock()
