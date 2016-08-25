@@ -14,8 +14,8 @@ import (
 
 const (
 	graphPath  = "/graph"
-	volumePath = "/volumes"
-	snapPath   = "/snapshot"
+	volumePath = "/osd-volumes"
+	snapPath   = "/osd-snapshot"
 )
 
 type volumeClient struct {

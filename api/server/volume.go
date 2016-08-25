@@ -404,11 +404,11 @@ func volVersion(route, version string) string {
 }
 
 func volPath(route, version string) string {
-	return volVersion("volumes"+route, version)
+	return volVersion("osd-volumes"+route, version)
 }
 
 func snapPath(route, version string) string {
-	return volVersion("snapshot"+route, version)
+	return volVersion("osd-snapshot"+route, version)
 }
 
 func (vd *volApi) Routes() []*Route {
