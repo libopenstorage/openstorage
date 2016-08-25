@@ -23,6 +23,18 @@ type Route struct {
 	fn   func(http.ResponseWriter, *http.Request)
 }
 
+func (r *Route) GetVerb() string {
+	return r.verb
+}
+
+func (r *Route) GetPath() string {
+	return r.path
+}
+
+func (r *Route) GetFn() (func(http.ResponseWriter, *http.Request)) {
+	return r.fn
+}
+
 // StartGraphAPI starts a REST server to receive GraphDriver commands from
 // the Linux container engine.
 func StartGraphAPI(name string, restBase string) error {
@@ -38,21 +50,59 @@ func StartGraphAPI(name string, restBase string) error {
 // Linux container engine and volume management commands from the CLI/UX.
 func StartPluginAPI(
 	name string,
-	mngmtBase string,
+	mgmtBase string,
 	pluginBase string,
 	mgmtPort uint16,
 	pluginPort uint16,
 ) error {
-	volMngmtApi := newVolumeAPI(name)
-
-	if err := startServer(
+	if err := StartVolumeMgmtAPI(
 		name,
-		mngmtBase,
+		mgmtBase,
 		mgmtPort,
-		volMngmtApi.Routes(),
 	); err != nil {
 		return err
 	}
+	if err := StartVolumePluginAPI(
+		name,
+		pluginBase,
+		pluginPort,
+	); err != nil {
+		return err
+	}
+	return nil
+}
+
+// StartVolumeMgmtAPI starts a REST server to receive volume management API commands
+func StartVolumeMgmtAPI(
+	name string,
+	mgmtBase string,
+	mgmtPort uint16,
+) error {
+	volMgmtApi := newVolumeAPI(name)
+	if err := startServer(
+		name,
+		mgmtBase,
+		mgmtPort,
+		volMgmtApi.Routes(),
+	); err != nil {
+		return err
+	}
+	return nil
+}
+
+func GetVolumeAPIRoutes(name string) []*Route {
+	volMgmtApi := newVolumeAPI(name)
+	return volMgmtApi.Routes()
+}
+
+
+// StartVolumePluginAPI starts a REST server to receive volume API commands
+// from the linux container  engine
+func StartVolumePluginAPI(
+	name string,
+	pluginBase string,
+	pluginPort uint16,
+) error {
 
 	volPluginApi := newVolumePlugin(name)
 	if err := startServer(
@@ -63,7 +113,6 @@ func StartPluginAPI(
 	); err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -76,6 +125,11 @@ func StartClusterAPI(clusterApiBase string, clusterPort uint16) error {
 	}
 
 	return nil
+}
+
+func GetClusterAPIRoutes() []*Route {
+	clusterApi := newClusterAPI()
+	return clusterApi.Routes()
 }
 
 // StartFlexVolumeAPI starts the flexvolume API on the given port.
@@ -101,7 +155,6 @@ func startServer(name string, sockBase string, port uint16, routes []*Route) err
 	)
 	router := mux.NewRouter()
 	router.NotFoundHandler = http.HandlerFunc(notFound)
-
 	for _, v := range routes {
 		router.Methods(v.verb).Path(v.path).HandlerFunc(v.fn)
 	}

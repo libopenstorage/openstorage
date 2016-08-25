@@ -413,7 +413,7 @@ func snapPath(route, version string) string {
 
 func (vd *volApi) Routes() []*Route {
 	return []*Route{
-		&Route{verb: "GET", path: "/versions", fn: vd.versions},
+		&Route{verb: "GET", path: "/osd-volumes/versions", fn: vd.versions},
 		&Route{verb: "POST", path: volPath("", config.Version), fn: vd.create},
 		&Route{verb: "PUT", path: volPath("/{id}", config.Version), fn: vd.volumeSet},
 		&Route{verb: "GET", path: volPath("", config.Version), fn: vd.enumerate},

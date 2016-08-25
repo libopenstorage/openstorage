@@ -18,7 +18,7 @@ type clusterApi struct {
 
 func (c *clusterApi) Routes() []*Route {
 	return []*Route{
-		&Route{verb: "GET", path: "/versions", fn: c.versions},
+		&Route{verb: "GET", path: "/cluster/versions", fn: c.versions},
 		&Route{verb: "GET", path: clusterPath("/enumerate", config.Version), fn: c.enumerate},
 		&Route{verb: "GET", path: clusterPath("/status", config.Version), fn: c.status},
 		&Route{verb: "GET", path: clusterPath("/inspect/{id}", config.Version), fn: c.inspect},
