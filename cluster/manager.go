@@ -29,6 +29,10 @@ const (
 	clusterLockKey = "/cluster/lock"
 )
 
+var (
+	ErrNodeRemovePending = errors.New("Node remove is pending")
+)
+
 type ClusterManager struct {
 	size         int
 	listeners    *list.List
@@ -848,6 +852,8 @@ func (c *ClusterManager) deleteNodeFromDB(nodeID string) error {
 func (c *ClusterManager) Remove(nodes []api.Node) error {
 	logrus.Infof("ClusterManager Remove node.")
 
+	var resultErr error
+
 	for _, n := range nodes {
 
 		if _, exist := c.nodeCache[n.Id]; !exist {
@@ -911,16 +917,19 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 			dlog.Infof("Remove node: notify cluster listener: %s",
 				e.Value.(ClusterListener).String())
 			err := e.Value.(ClusterListener).Remove(&n)
-			if err != nil {
+			if err != nil && err != ErrNodeRemovePending {
 				dlog.Warnf("Cluster listener failed to "+
 					"remove node: %s: %s",
 					e.Value.(ClusterListener).String(),
 					err)
 				return err
+			} else if resultErr == nil &&
+				err == ErrNodeRemovePending {
+				resultErr = err
 			}
 		}
 	}
-	return nil
+	return resultErr
 }
 
 func (c *ClusterManager) NodeRemoveDone(nodeID string, result error) {
