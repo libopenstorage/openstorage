@@ -75,12 +75,19 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		// Mount the nfs server locally on a unique path.
 		syscall.Unmount(nfsMountPath, 0)
 		if server != "" {
-			err = syscall.Mount(src, nfsMountPath, "nfs", 0, "nolock,addr="+inst.nfsServer)
+			err = syscall.Mount(
+				src,
+				nfsMountPath,
+				"nfs",
+				0,
+				"nolock,addr="+inst.nfsServer,
+			)
 		} else {
 			err = syscall.Mount(src, nfsMountPath, "", syscall.MS_BIND, "")
 		}
 		if err != nil {
-			dlog.Printf("Unable to mount %s:%s at %s (%+v)", inst.nfsServer, inst.nfsPath, nfsMountPath, err)
+			dlog.Printf("Unable to mount %s:%s at %s (%+v)",
+				inst.nfsServer, inst.nfsPath, nfsMountPath, err)
 			return nil, err
 		}
 	}
@@ -207,9 +214,17 @@ func (d *driver) Mount(volumeID string, mountpath string) error {
 	srcPath := path.Join(":", d.nfsPath, volumeID)
 	mountExists, err := d.mounter.Exists(srcPath, mountpath)
 	if !mountExists {
-		d.mounter.Unmount(path.Join(nfsMountPath, volumeID), mountpath)
-		if err := d.mounter.Mount(0, path.Join(nfsMountPath, volumeID), mountpath, string(v.Spec.Format), syscall.MS_BIND, ""); err != nil {
-			dlog.Printf("Cannot mount %s at %s because %+v", path.Join(nfsMountPath, volumeID), mountpath, err)
+		d.mounter.Unmount(path.Join(nfsMountPath, volumeID), mountpath, 0)
+		if err := d.mounter.Mount(
+			0, path.Join(nfsMountPath, volumeID),
+			mountpath,
+			string(v.Spec.Format),
+			syscall.MS_BIND,
+			"",
+			0,
+		); err != nil {
+			dlog.Printf("Cannot mount %s at %s because %+v",
+				path.Join(nfsMountPath, volumeID), mountpath, err)
 			return err
 		}
 	}
@@ -228,7 +243,7 @@ func (d *driver) Unmount(volumeID string, mountpath string) error {
 	if len(v.AttachPath) == 0 {
 		return fmt.Errorf("Device %v not mounted", volumeID)
 	}
-	err = d.mounter.Unmount(path.Join(nfsMountPath, volumeID), mountpath)
+	err = d.mounter.Unmount(path.Join(nfsMountPath, volumeID), mountpath, 0)
 	if err != nil {
 		return err
 	}

@@ -38,18 +38,18 @@ type Manager interface {
 	GetSourcePaths() []string
 	// Mount device at mountpoint or increment refcnt if device is already
 	//  mounted at specified mountpoint.
-	Mount(minor int, device, path, fs string, flags uintptr, data string) error
+	Mount(minor int, device, path, fs string, flags uintptr, data string, timeout int) error
 	// Unmount device at mountpoint or decrement refcnt. If device has no
 	// mountpoints left after this operation, it is removed from the matrix.
 	// ErrEnoent is returned if the device or mountpoint for the device
 	// is not found.
-	Unmount(source, path string) error
+	Unmount(source, path string, timeout int) error
 }
 
 // MountImpl backend implementation for Mount/Unmount calls
 type MountImpl interface {
-	Mount(source, target, fstype string, flags uintptr, data string) error
-	Unmount(target string, flags int) error
+	Mount(source, target, fstype string, flags uintptr, data string, timeout int) error
+	Unmount(target string, flags int, timeout int) error
 }
 
 type MountType int
@@ -111,12 +111,13 @@ func (m *DefaultMounter) Mount(
 	fstype string,
 	flags uintptr,
 	data string,
+	timeout int,
 ) error {
 	return syscall.Mount(source, target, fstype, flags, data)
 }
 
 // Unmount default unmount implementation is syscall.
-func (m *DefaultMounter) Unmount(target string, flags int) error {
+func (m *DefaultMounter) Unmount(target string, flags int, timeout int) error {
 	return syscall.Unmount(target, flags)
 }
 
@@ -253,7 +254,13 @@ func (m *Mounter) maybeRemoveDevice(device string) {
 }
 
 // Mount new mountpoint for specified device.
-func (m *Mounter) Mount(minor int, device, path, fs string, flags uintptr, data string) error {
+func (m *Mounter) Mount(
+	minor int,
+	device, path, fs string,
+	flags uintptr,
+	data string,
+	timeout int,
+) error {
 	m.Lock()
 
 	path = normalizeMountPath(path)
@@ -292,7 +299,7 @@ func (m *Mounter) Mount(minor int, device, path, fs string, flags uintptr, data 
 		}
 	}
 	// The device is not mounted at path, mount it and add to its mountpoints.
-	err := m.mountImpl.Mount(device, path, fs, flags, data)
+	err := m.mountImpl.Mount(device, path, fs, flags, data, timeout)
 	if err != nil {
 		return err
 	}
@@ -304,7 +311,7 @@ func (m *Mounter) Mount(minor int, device, path, fs string, flags uintptr, data 
 // Unmount device at mountpoint or decrement refcnt. If device has no
 // mountpoints left after this operation, it is removed from the matrix.
 // ErrEnoent is returned if the device or mountpoint for the device is not found.
-func (m *Mounter) Unmount(device, path string) error {
+func (m *Mounter) Unmount(device, path string, timeout int) error {
 	m.Lock()
 
 	path = normalizeMountPath(path)
@@ -325,7 +332,7 @@ func (m *Mounter) Unmount(device, path string) error {
 		if p.ref != 0 {
 			return nil
 		}
-		err := m.mountImpl.Unmount(path, syscall.MNT_DETACH)
+		err := m.mountImpl.Unmount(path, syscall.MNT_DETACH, timeout)
 		if err != nil {
 			p.ref++
 			return err
