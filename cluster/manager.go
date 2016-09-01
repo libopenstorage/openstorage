@@ -437,7 +437,6 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *ClusterInfo) {
 
 func (c *ClusterManager) updateClusterStatus(initState *ClusterInitState, exist bool) {
 	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
-
 	for {
 		node := c.getCurrentState()
 		c.nodeCache[node.Id] = *node
@@ -453,7 +452,7 @@ func (c *ClusterManager) updateClusterStatus(initState *ClusterInitState, exist 
 			if c.size > 0 && numNodes > c.size {
 				dlog.Fatalf("Fatal, number of nodes in the cluster has"+
 					"exceeded the cluster size: %d > %d", numNodes, c.size)
-				os.Exit(-1)
+				os.Exit(1)
 			}
 
 			// Special handling for self node
@@ -467,7 +466,7 @@ func (c *ClusterManager) updateClusterStatus(initState *ClusterInitState, exist 
 					c.selfNode.Status = api.Status_STATUS_OFFLINE
 					c.status = api.Status_STATUS_NOT_IN_QUORUM
 					c.Shutdown()
-					os.Exit(-1)
+					os.Exit(1)
 				} else if c.selfNode.Status == api.Status_STATUS_OFFLINE &&
 					nodeInfo.Status == types.NODE_STATUS_UP {
 					dlog.Infof("Back in quorum..")
