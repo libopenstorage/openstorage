@@ -758,15 +758,35 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 		Status: c.status,
 		NodeId: c.selfNode.Id,
 	}
+	var clusterDB ClusterInfo
+	clusterDBSet := false
 	cluster.Nodes = make([]api.Node, len(c.nodeCache))
 	for _, n := range c.nodeCache {
 		if n.Id == c.selfNode.Id {
 			cluster.Nodes[i] = *c.getCurrentState()
 		} else {
+			if n.Status == api.Status_STATUS_OFFLINE &&
+				(n.DataIp == "" || n.MgmtIp == "") {
+				if !clusterDBSet {
+					clusterDB, _ = readClusterInfo()
+					clusterDBSet = true
+				}
+				// Gossip does not have essential information of
+				// an offline node. Provide the essential data
+				// that we have in the cluster db
+				nodeValueDB, ok := clusterDB.NodeEntries[n.Id]
+				if ok {
+					n.MgmtIp = nodeValueDB.MgmtIp
+					n.DataIp = nodeValueDB.DataIp
+					n.Hostname = nodeValueDB.Hostname
+					n.NodeLabels = nodeValueDB.NodeLabels
+				}
+			}
 			cluster.Nodes[i] = n
 		}
 		i++
 	}
+
 	return cluster, nil
 }
 
