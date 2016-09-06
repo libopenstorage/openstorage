@@ -69,7 +69,7 @@ Note: OSD needs to be run as root.
 
 To start the OSD in daemon mode:
 ```
-osd -d -f etc/config/config.yaml
+$GOPATH/bin/osd -d -f etc/config/config.yaml
 ```
 where, config.yaml is the daemon's configuiration file and it's format is explained [below](https://github.com/libopenstorage/openstorage/blob/master/README.md#osd-config-file).
 
