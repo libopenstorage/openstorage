@@ -89,12 +89,20 @@ func (e *defaultStoreEnumerator) Enumerate(
 ) ([]*api.Volume, error) {
 
 	kvp, err := e.kvdb.Enumerate(e.volKeyPrefix())
-	if err != nil {
+
+	if err == kvdb.ErrNotFound {
+		volumes := make([]*api.Volume, 0, 0)
+		return volumes, nil
+	} else if err != nil {
 		return nil, err
 	}
+
 	volumes := make([]*api.Volume, 0, len(kvp))
 	for _, v := range kvp {
 		elem := &api.Volume{}
+		if v.Value == nil {
+			continue
+		}
 		if err := json.Unmarshal(v.Value, elem); err != nil {
 			return nil, err
 		}
