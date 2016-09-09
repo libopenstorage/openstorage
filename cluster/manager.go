@@ -703,8 +703,8 @@ func (c *ClusterManager) Start() error {
 	// Start heartbeating to other nodes.
 	go c.startHeartBeat(&currentState)
 
-	// Max quorum retries allowed = 30
-	// 30 * 2 seconds (gossip interval) = 1 minute (quorum timeout)
+	// Max quorum retries allowed = 600
+	// 600 * 2 seconds (gossip interval) = 20 minutes before it restarts
 	quorumRetries := 0
 	for {
 		gossipSelfStatus := c.gossip.GetSelfStatus()
@@ -724,10 +724,9 @@ func (c *ClusterManager) Start() error {
 			break
 		} else {
 			c.status = api.Status_STATUS_NOT_IN_QUORUM
-			if quorumRetries == 30 {
+			if quorumRetries == 600 {
 				err := fmt.Errorf("Unable to achieve Quorum."+
-					" Timeout (%v) exceeded.",
-					types.DEFAULT_QUORUM_TIMEOUT)
+					" Timeout 20 minutes exceeded.")
 				dlog.Warnln("Failed to join cluster: ", err)
 				c.status = api.Status_STATUS_NOT_IN_QUORUM
 				c.selfNode.Status = api.Status_STATUS_OFFLINE
