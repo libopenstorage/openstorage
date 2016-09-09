@@ -408,7 +408,7 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *ClusterInfo) {
 		if nodeId == node.Id {
 			continue
 		}
-		nodeIps = append(nodeIps, nodeEntry.MgmtIp+":9002")
+		nodeIps = append(nodeIps, nodeEntry.DataIp+":9002")
 	}
 	if len(nodeIps) > 0 {
 		dlog.Infof("Starting Gossip... Gossiping to these nodes : %v", nodeIps)
