@@ -624,13 +624,13 @@ func (c *ClusterManager) Start() error {
 	if err != nil {
 		dlog.Panicln(err)
 	}
-	kvdb.Unlock(kvlock)
 
 	selfNodeEntry, ok := initState.ClusterInfo.NodeEntries[c.config.NodeId]
 	if ok && selfNodeEntry.Status == api.Status_STATUS_DECOMMISSION {
 		msg := fmt.Sprintf("Node is in decommision state, Node ID %s.",
 			c.selfNode.Id)
 		dlog.Errorln(msg)
+		kvdb.Unlock(kvlock)
 		return errors.New(msg)
 	}
 
@@ -667,10 +667,6 @@ func (c *ClusterManager) Start() error {
 		return errors.New("Fatal, Cluster is in an unexpected state.")
 	}
 
-	kvlock, err = kvdb.Lock(clusterLockKey)
-	if err != nil {
-		dlog.Panicln("Fatal, Unable to obtain cluster lock. ", err)
-	}
 	selfNodeEntry, ok = initState.ClusterInfo.NodeEntries[c.config.NodeId]
 	if !ok {
 		kvdb.Unlock(kvlock)
