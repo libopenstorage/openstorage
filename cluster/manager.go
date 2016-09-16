@@ -514,7 +514,7 @@ func (c *ClusterManager) updateClusterStatus(initState *ClusterInitState, exist 
 				c.nodeStatuses[string(id)] = newNodeInfo.Status
 
 				// A node discovered in the cluster.
-				dlog.Warnln("Detected node ", newNodeInfo.Id,
+				dlog.Infoln("Detected node", newNodeInfo.Id,
 					" to be in the cluster.")
 
 				for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
