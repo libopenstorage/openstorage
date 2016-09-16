@@ -329,7 +329,9 @@ func (c *ClusterManager) initNodeInCluster(
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err = e.Value.(ClusterListener).Init(self, initState)
 		if err != nil {
-			self.Status = api.Status_STATUS_ERROR
+			if self.Status != api.Status_STATUS_MAINTENANCE {
+				self.Status = api.Status_STATUS_ERROR
+			}
 			dlog.Warnf("Failed to initialize Init %s: %v",
 				e.Value.(ClusterListener).String(), err)
 			c.cleanupInit(initState.ClusterInfo, self)
@@ -356,7 +358,9 @@ func (c *ClusterManager) joinCluster(
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err := e.Value.(ClusterListener).Join(self, initState, c.HandleNotifications)
 		if err != nil {
-			self.Status = api.Status_STATUS_ERROR
+			if self.Status != api.Status_STATUS_MAINTENANCE {
+				self.Status = api.Status_STATUS_ERROR
+			}
 			dlog.Warnf("Failed to initialize Join %s: %v",
 				e.Value.(ClusterListener).String(), err)
 
@@ -381,7 +385,9 @@ func (c *ClusterManager) initCluster(
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err = e.Value.(ClusterListener).ClusterInit(self, initState)
 		if err != nil {
-			self.Status = api.Status_STATUS_ERROR
+			if self.Status != api.Status_STATUS_MAINTENANCE {
+				self.Status = api.Status_STATUS_ERROR
+			}
 			dlog.Printf("Failed to initialize %s",
 				e.Value.(ClusterListener).String())
 			goto done
@@ -712,7 +718,9 @@ func (c *ClusterManager) Start() error {
 			c.selfNode.Status = api.Status_STATUS_INIT
 			err := c.joinCluster(initState, &c.selfNode, exist)
 			if err != nil {
-				c.selfNode.Status = api.Status_STATUS_ERROR
+				if c.selfNode.Status != api.Status_STATUS_MAINTENANCE {
+					c.selfNode.Status = api.Status_STATUS_ERROR
+				}
 				return err
 			}
 			c.status = api.Status_STATUS_OK
@@ -721,7 +729,7 @@ func (c *ClusterManager) Start() error {
 		} else {
 			c.status = api.Status_STATUS_NOT_IN_QUORUM
 			if quorumRetries == 600 {
-				err := fmt.Errorf("Unable to achieve Quorum."+
+				err := fmt.Errorf("Unable to achieve Quorum." +
 					" Timeout 20 minutes exceeded.")
 				dlog.Warnln("Failed to join cluster: ", err)
 				c.status = api.Status_STATUS_NOT_IN_QUORUM
@@ -878,10 +886,13 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 			return errors.New(msg)
 		}
 
-		// If removing node is self, return error
-		if n.Id == c.selfNode.Id {
+		// If removing node is self and node is not in maintenance mode,
+		//	disallow node remove.
+		if n.Id == c.selfNode.Id &&
+			c.selfNode.Status != api.Status_STATUS_MAINTENANCE {
 			msg := fmt.Sprintf("Cannot remove self from cluster, "+
-				"Node ID %s.",
+				"Node ID %s. Node must be in maintenance mode "+
+				"to remove itself.",
 				n.Id)
 			dlog.Errorf(msg)
 			return errors.New(msg)
@@ -890,12 +901,21 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 		nodeCacheStatus := c.nodeCache[n.Id].Status
 		// If node is not down, do not remove it
 		if nodeCacheStatus != api.Status_STATUS_OFFLINE &&
-			nodeCacheStatus != api.Status_STATUS_DECOMMISSION {
-			msg := fmt.Sprintf("Cannot remove node that is not "+
-				"offline, Node ID %s.",
-				n.Id)
-			dlog.Errorf(msg)
-			return errors.New(msg)
+			nodeCacheStatus != api.Status_STATUS_DECOMMISSION &&
+			nodeCacheStatus != api.Status_STATUS_MAINTENANCE {
+
+			// Allow remove self during maintenance mode, stop gossip
+			if n.Id == c.selfNode.Id &&
+				c.selfNode.Status == api.Status_STATUS_MAINTENANCE {
+				c.gossip.Stop(time.Duration(10 * time.Second))
+			} else {
+				msg := fmt.Sprintf("Cannot remove node that is not "+
+					"offline or in maintenance mode, Node ID %s, "+
+					"Status %s.",
+					n.Id, nodeCacheStatus)
+				dlog.Errorf(msg)
+				return errors.New(msg)
+			}
 		}
 
 		// Ask listeners, can we remove this node?
