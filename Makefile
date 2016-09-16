@@ -68,7 +68,7 @@ proto_flexvolume:
 proto:
 	go get -v go.pedge.io/protoeasy/cmd/protoeasy
 	go get -v go.pedge.io/pkg/cmd/strip-package-comments
-	protoeasy --exclude vendor --go --go-import-path github.com/libopenstorage/openstorage --grpc --grpc-gateway .
+	protoeasy --exclude vendor,pkg/flexvolume --go --go-import-path github.com/libopenstorage/openstorage --grpc --grpc-gateway .
 	find . -name *\.pb\*\.go | grep -v '^\./vendor/' | xargs strip-package-comments
 
 lint:
