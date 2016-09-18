@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"path"
-	"strings"
 	"syscall"
 
 	"go.pedge.io/dlog"
@@ -17,7 +16,6 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/seed"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers/common"
-	"github.com/pborman/uuid"
 	"github.com/portworx/kvdb"
 )
 
@@ -128,8 +126,10 @@ func (d *driver) Create(
 	source *api.Source,
 	spec *api.VolumeSpec) (string, error) {
 
-	volumeID := uuid.New()
-	volumeID = strings.TrimSuffix(volumeID, "\n")
+	volumeID := locator.Name
+	if _, err := d.GetVol(volumeID); err == nil {
+		return "", errors.New("Volume with that name already exists")
+	}
 
 	// Create a directory on the NFS server with this UUID.
 	volPath := path.Join(nfsMountPath, volumeID)

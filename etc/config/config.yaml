@@ -20,4 +20,4 @@ osd:
   graphdrivers:
     #proxy:
     #layer0:
-    chainfs:
+    #chainfs:
