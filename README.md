@@ -71,7 +71,7 @@ To start the OSD in daemon mode:
 ```
 $GOPATH/bin/osd -d -f etc/config/config.yaml
 ```
-where, config.yaml is the daemon's configuiration file and it's format is explained [below](https://github.com/libopenstorage/openstorage/blob/master/README.md#osd-config-file).
+where, config.yaml is the daemon's configuiration file and its format is explained [below](https://github.com/libopenstorage/openstorage/blob/master/README.md#osd-config-file).
 
 To have OSD persist the volume mapping across restarts, you must use an external key value database such as [etcd](https://coreos.com/etcd/docs/latest/docker_guide.html) or [consul](https://www.consul.io/intro/getting-started/install.html).  The URL of your key value database must be passed into the OSD using the `--kvdb` option.  For example:
 
