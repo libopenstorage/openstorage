@@ -2,11 +2,6 @@
 // source: flexvolume.proto
 // DO NOT EDIT!
 
-/*
-Package flexvolume is a reverse proxy.
-
-It translates gRPC into RESTful JSON APIs.
-*/
 package flexvolume
 
 import (

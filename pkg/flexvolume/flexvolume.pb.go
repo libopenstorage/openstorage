@@ -2,18 +2,6 @@
 // source: flexvolume.proto
 // DO NOT EDIT!
 
-/*
-Package flexvolume is a generated protocol buffer package.
-
-It is generated from these files:
-	flexvolume.proto
-
-It has these top-level messages:
-	AttachRequest
-	DetachRequest
-	MountRequest
-	UnmountRequest
-*/
 package flexvolume
 
 import proto "github.com/golang/protobuf/proto"
