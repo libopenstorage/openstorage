@@ -90,13 +90,12 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		}
 	}
 	volumeInfo, err := inst.StoreEnumerator.Enumerate(&api.VolumeLocator{}, nil)
-	if err != nil {
-		return nil, err
-	}
-	for _, info := range volumeInfo {
-		if info.Status == api.VolumeStatus_VOLUME_STATUS_NONE {
-			info.Status = api.VolumeStatus_VOLUME_STATUS_UP
-			inst.UpdateVol(info)
+	if err == nil {
+		for _, info := range volumeInfo {
+			if info.Status == api.VolumeStatus_VOLUME_STATUS_NONE {
+				info.Status = api.VolumeStatus_VOLUME_STATUS_UP
+				inst.UpdateVol(info)
+			}
 		}
 	}
 
