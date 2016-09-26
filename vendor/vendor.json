@@ -467,12 +467,6 @@
 			"revisionTime": "2016-07-11T13:55:00Z"
 		},
 		{
-			"checksumSHA1": "OzwaiTQPGFpr/sve6GchgkHyODc=",
-			"path": "github.com/golang/protobuf/ptypes/empty",
-			"revision": "874264fbbb43f4d91e999fecb4b40143ed611400",
-			"revisionTime": "2016-07-11T13:55:00Z"
-		},
-		{
 			"checksumSHA1": "iIUYZyoanCQQTUaWsu8b+iOSPt4=",
 			"origin": "github.com/libopenstorage/openstorage/vendor/github.com/gorilla/context",
 			"path": "github.com/gorilla/context",
@@ -497,6 +491,12 @@
 			"path": "github.com/grpc-ecosystem/grpc-gateway/runtime/internal",
 			"revision": "c8ec92d0481dd77d9b8c1808eb6476d190aa039a",
 			"revisionTime": "2016-07-27T03:39:27Z"
+		},
+		{
+			"checksumSHA1": "D+k9iBM97p4RvkjpogAJevV8hmw=",
+			"path": "github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis/google/api",
+			"revision": "acebe0f9ff5993e130b141ee60e83e592839ca22",
+			"revisionTime": "2016-09-13T11:57:31Z"
 		},
 		{
 			"checksumSHA1": "vqiK5r5dntV7JNZ+ZsGlD0Samos=",
