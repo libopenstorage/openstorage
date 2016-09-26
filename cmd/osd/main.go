@@ -252,6 +252,7 @@ func wrapAction(f func(*cli.Context) error) func(*cli.Context) {
 	return func(c *cli.Context) {
 		if err := f(c); err != nil {
 			dlog.Warnln(err.Error())
+			os.Exit(1)
 		}
 	}
 }
