@@ -62,13 +62,10 @@ build:
 install:
 	go install -tags "$(TAGS)" $(PKGS)
 
-proto_flexvolume:
-	cd pkg/flexvolume && $(PROTOC) -I . -I /root/git/go/src/go.pedge.io/protoeasy/vendor -I /root/git/go/src/go.pedge.io/protoeasy/vendor/github.com/gengo/grpc-gateway/third_party/googleapis -I $(PROTOS_PATH) flexvolume.proto --go_out=plugins=grpc:.
-	cd pkg/flexvolume && $(PROTOC) -I . -I /root/git/go/src/go.pedge.io/protoeasy/vendor -I /root/git/go/src/go.pedge.io/protoeasy/vendor/github.com/gengo/grpc-gateway/third_party/googleapis -I $(PROTOS_PATH) flexvolume.proto --grpc-gateway_out=.
 proto:
 	go get -v go.pedge.io/protoeasy/cmd/protoeasy
 	go get -v go.pedge.io/pkg/cmd/strip-package-comments
-	protoeasy --exclude vendor,pkg/flexvolume --go --go-import-path github.com/libopenstorage/openstorage --grpc --grpc-gateway .
+	protoeasy --exclude vendor --go --go-import-path github.com/libopenstorage/openstorage --grpc --grpc-gateway .
 	find . -name *\.pb\*\.go | grep -v '^\./vendor/' | xargs strip-package-comments
 
 lint:
