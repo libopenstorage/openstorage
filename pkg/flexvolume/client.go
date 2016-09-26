@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"go.pedge.io/dlog"
-	"github.com/golang/protobuf/ptypes/empty"
+	"go.pedge.io/pb/go/google/protobuf"
 	"golang.org/x/net/context"
 )
 
@@ -28,7 +28,7 @@ func newClient(apiClient APIClient) *client {
 func (c *client) Init() error {
 	_, err := c.apiClient.Init(
 		context.Background(),
-		&empty.Empty{},
+		&google_protobuf.Empty{},
 	)
 	return err
 }
