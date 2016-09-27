@@ -371,6 +371,15 @@ func (c *ClusterManager) joinCluster(
 			return err
 		}
 	}
+	selfNodeEntry, ok := initState.ClusterInfo.NodeEntries[c.config.NodeId]
+	if !ok {
+		dlog.Panicln("Fatal, Unable to find self node entry in local cache")
+	}
+
+	err := c.updateNodeEntryDB(selfNodeEntry)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -812,6 +821,28 @@ func (c *ClusterManager) SetSize(size int) error {
 
 	err = writeClusterInfo(&db)
 
+	return err
+}
+
+func (c *ClusterManager) updateNodeEntryDB(nodeEntry NodeEntry) error {
+	kvdb := kvdb.Instance()
+	kvlock, err := kvdb.Lock(clusterLockKey)
+	if err != nil {
+		dlog.Warnln("Unable to obtain cluster lock for updating cluster DB.",
+			err)
+		return err
+	}
+	defer kvdb.Unlock(kvlock)
+
+	currentState, err := readClusterInfo()
+	if err != nil {
+		return err
+	}
+	currentState.NodeEntries[nodeEntry.Id] = nodeEntry
+	err = writeClusterInfo(&currentState)
+	if err != nil {
+		dlog.Errorln("Failed to save the database.", err)
+	}
 	return err
 }
 
