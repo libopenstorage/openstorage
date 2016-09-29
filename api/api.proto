@@ -126,28 +126,30 @@ enum ClusterNotify {
 
 // StorageResource groups properties of a storage device.
 message StorageResource {
+  // Id is the LUN identifier.
+  int32 id = 1;
   // Path device path for this storage resource.
-  string path = 1;
+  string path = 2;
   // Storage medium.
-  StorageMedium medium = 2;
+  StorageMedium medium = 3;
   // True if this device is online.
-  bool online = 3;;
+  bool online = 4;;
   // IOPS 
-  uint64 iops = 4;;
+  uint64 iops = 5;;
   // SeqWrite
-  double seq_write = 5;
+  double seq_write = 6;
   // SeqRead 
-  double seq_read = 6;
+  double seq_read = 7;
   // RandRW 
-  double randRW  = 7;
+  double randRW  = 8;
   // Total size in bytes.
-  uint64 size = 8;;
+  uint64 size = 9;;
   // Physical Bytes used.
-  uint64 used = 9;
+  uint64 used = 10;
   // True if this device is rotational.
-  string rotation_speed = 10;
+  string rotation_speed = 11;
   // Timestamp of last time this device was scanned.
-  google.protobuf.Timestamp last_scan = 11;
+  google.protobuf.Timestamp last_scan = 12;
 }
 
 // VolumeLocator is a structure that is attached to a volume
