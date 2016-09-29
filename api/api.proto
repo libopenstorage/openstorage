@@ -127,7 +127,7 @@ enum ClusterNotify {
 // StorageResource groups properties of a storage device.
 message StorageResource {
   // Id is the LUN identifier.
-  int32 id = 1;
+  string id = 1;
   // Path device path for this storage resource.
   string path = 2;
   // Storage medium.
