@@ -219,40 +219,286 @@
 			"revisionTime": "2016-03-26T22:39:47Z"
 		},
 		{
-			"checksumSHA1": "fNDjBgLI1Hux3FOtjmXgxFykpPs=",
-			"path": "github.com/coreos/etcd/client",
-			"revision": "cabd28516c8a77df47cb483ef711b192d4fbb003",
-			"revisionTime": "2016-08-03T17:59:00Z"
+			"checksumSHA1": "sFGNqtSE3WlMiyT+JkVaW2OzstM=",
+			"path": "github.com/coreos/etcd/alarm",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
 		},
 		{
-			"checksumSHA1": "JhbEKzNRDnXICXqMDLphh+Gz9oM=",
+			"checksumSHA1": "byRXfP7CTiskiHyQAkTXW2HpNmM=",
+			"path": "github.com/coreos/etcd/auth",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "qRqbXx++ivZ4+30gHchnT9uOrFM=",
+			"path": "github.com/coreos/etcd/auth/authpb",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "7L6uBG7lWAyD76IejiKVB4P3GVY=",
+			"path": "github.com/coreos/etcd/client",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "TnFETv9LzY0USRpKkLiw91m2L1I=",
+			"path": "github.com/coreos/etcd/clientv3",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "TZI2545WUMsFfLzUFLhXL9fYcoc=",
+			"path": "github.com/coreos/etcd/compactor",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "TVdgUGQAobyRkXBT2kokAqMbkRQ=",
+			"path": "github.com/coreos/etcd/discovery",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "EnBEFQt3P/EUhLqKtddUR3YtMD8=",
+			"path": "github.com/coreos/etcd/error",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "aDvdnRetdqqOJWYqYGb9sG3UdD0=",
+			"path": "github.com/coreos/etcd/etcdserver",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "mupmj/s+zO5vBrnOcfhrV8ZxoIs=",
+			"path": "github.com/coreos/etcd/etcdserver/api",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "HfvSsKfzTdYqC6EmFazOBxMk8p8=",
+			"path": "github.com/coreos/etcd/etcdserver/api/v2http/httptypes",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "Cjn1kAXu2wM4uhLNXQ4HPB6ZBeE=",
+			"path": "github.com/coreos/etcd/etcdserver/api/v3rpc/rpctypes",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "ubOKV5mZ7Sc9Xmq6oNTArLKVIDk=",
+			"path": "github.com/coreos/etcd/etcdserver/etcdserverpb",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "A8UQa1dcDaJHhFSvixAEWiwWxLg=",
+			"path": "github.com/coreos/etcd/etcdserver/membership",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "jaNHbb8Zi7mhFxAjBB7FsRbMgu4=",
+			"path": "github.com/coreos/etcd/etcdserver/stats",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "dXVD/j7IAZQhRdILAlYi+WDnyyk=",
+			"path": "github.com/coreos/etcd/lease",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "H5Wxk0cDCHGJBlNnJCJKwtX63hE=",
+			"path": "github.com/coreos/etcd/lease/leasehttp",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "Ln9e7qOYD4L1WEKy7aWFO1No4WM=",
+			"path": "github.com/coreos/etcd/lease/leasepb",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "9XzkaWVRhYO4hZ2f0ZhkUdahino=",
+			"path": "github.com/coreos/etcd/mvcc",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "xzOsMItXL9YRQ6gRcZhgVdgC9p8=",
+			"path": "github.com/coreos/etcd/mvcc/backend",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "8XkGmvWh3BZAR0AJ4nzuu7Qm564=",
+			"path": "github.com/coreos/etcd/mvcc/mvccpb",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "2g1UkqzA+UFJSryC0RPiemOkNFw=",
+			"path": "github.com/coreos/etcd/pkg/adt",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "sYxs4q1a4aBfcldumLAXzOytvq0=",
+			"path": "github.com/coreos/etcd/pkg/contention",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "1JFHG5teOXPBNsJ8NCdIp+NiStg=",
+			"path": "github.com/coreos/etcd/pkg/crc",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "Iv11QZIn/DLcduKSRYApU9l01L8=",
 			"path": "github.com/coreos/etcd/pkg/fileutil",
-			"revision": "cabd28516c8a77df47cb483ef711b192d4fbb003",
-			"revisionTime": "2016-08-03T17:59:00Z"
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "8IHkaLXBL6cGo7Ie7mEBIJKpTvM=",
+			"path": "github.com/coreos/etcd/pkg/httputil",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "PZH6tG8kWunjsTUsNt1uZqE2fFE=",
+			"path": "github.com/coreos/etcd/pkg/idutil",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "E4KsiLC0l8MUuzZSU4Od3/mvBgM=",
+			"path": "github.com/coreos/etcd/pkg/ioutil",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "Iy1IjKJovzI/nvgkuKlus6xhR3s=",
+			"path": "github.com/coreos/etcd/pkg/logutil",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "eDyM0/TlOI8vJ6jHx89gqATAzvw=",
+			"path": "github.com/coreos/etcd/pkg/netutil",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
 		},
 		{
 			"checksumSHA1": "mKIXx1kDwmVmdIpZ3pJtRBuUKso=",
 			"path": "github.com/coreos/etcd/pkg/pathutil",
-			"revision": "cabd28516c8a77df47cb483ef711b192d4fbb003",
-			"revisionTime": "2016-08-03T17:59:00Z"
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "jBkvLOiLNebKmz1lo9D+wIk5OLU=",
+			"path": "github.com/coreos/etcd/pkg/pbutil",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "sEy7Pbgh5CImrcpWVLfUC6FXrjQ=",
+			"path": "github.com/coreos/etcd/pkg/runtime",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "5CoETIEg63O2zfbz5qWn/MmIjiQ=",
+			"path": "github.com/coreos/etcd/pkg/schedule",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
 		},
 		{
 			"checksumSHA1": "rMyIh9PsSvPs6Yd+YgKITQzQJx8=",
 			"path": "github.com/coreos/etcd/pkg/tlsutil",
-			"revision": "cabd28516c8a77df47cb483ef711b192d4fbb003",
-			"revisionTime": "2016-08-03T17:59:00Z"
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
 		},
 		{
-			"checksumSHA1": "dtalNtJMo03VFbFi12yGRKFK3Ak=",
+			"checksumSHA1": "C2RXFUjfC/el2HOJwxOzSuvbfLU=",
 			"path": "github.com/coreos/etcd/pkg/transport",
-			"revision": "cabd28516c8a77df47cb483ef711b192d4fbb003",
-			"revisionTime": "2016-08-03T17:59:00Z"
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
 		},
 		{
 			"checksumSHA1": "gx1gJIMU6T0UNQ0bPZ/drQ8cpCI=",
 			"path": "github.com/coreos/etcd/pkg/types",
-			"revision": "cabd28516c8a77df47cb483ef711b192d4fbb003",
-			"revisionTime": "2016-08-03T17:59:00Z"
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "VSaVO6sSzUMwM3X0Zi40P4YXguY=",
+			"path": "github.com/coreos/etcd/pkg/wait",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "rQtpUhc7JvPjZe9SpasBe402lHc=",
+			"path": "github.com/coreos/etcd/raft",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "7iseLdwhxsT7LD5n3g01bfpTd/0=",
+			"path": "github.com/coreos/etcd/raft/raftpb",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "3E9wtxDR8az8SgUAS6/MKQ9JvzI=",
+			"path": "github.com/coreos/etcd/rafthttp",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "Hz41gnRqXNpaMqqIIjP+3dHMPmc=",
+			"path": "github.com/coreos/etcd/snap",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "3+vIJgxnmBcQvpiWz8Efju/ekBM=",
+			"path": "github.com/coreos/etcd/snap/snappb",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "5XZeTbr0ncfdsWuCzzqhtByV3V0=",
+			"path": "github.com/coreos/etcd/store",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "hHUMdQBnylyi1ll2EAYdeAhcKIM=",
+			"path": "github.com/coreos/etcd/version",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "kaJNzCunKy8BO3SQdG3XZJAK9q4=",
+			"path": "github.com/coreos/etcd/wal",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
+		},
+		{
+			"checksumSHA1": "u6uDullu5Cjd3HT3b7lnYCWI1Dg=",
+			"path": "github.com/coreos/etcd/wal/walpb",
+			"revision": "d3906e75bf2da4408ed5eb4aab2785b7931b65c3",
+			"revisionTime": "2016-09-21T10:50:34Z"
 		},
 		{
 			"checksumSHA1": "d50/+u/LFlXvEV10HiEoXB9OsGg=",
@@ -853,34 +1099,46 @@
 			"revisionTime": "2016-01-10T10:55:54Z"
 		},
 		{
-			"checksumSHA1": "7DB6mCP7XUWOf+ffQpZNwacrQtg=",
+			"checksumSHA1": "BmhY63u5/Lr/1RZDka6d5vhmUPo=",
 			"path": "github.com/portworx/kvdb",
-			"revision": "5769e65e8d7b11cbb2135d2f17be0eb25f1b73f7",
-			"revisionTime": "2016-08-16T00:58:24Z"
+			"revision": "f3f0bd797b646fa65a067d05bf2b5258d30f3dd1",
+			"revisionTime": "2016-10-06T18:17:33Z"
 		},
 		{
 			"checksumSHA1": "NdrvQf96pNxXaXyTYGxwxZ0yAX4=",
 			"path": "github.com/portworx/kvdb/common",
-			"revision": "5769e65e8d7b11cbb2135d2f17be0eb25f1b73f7",
-			"revisionTime": "2016-08-16T00:58:24Z"
+			"revision": "f3f0bd797b646fa65a067d05bf2b5258d30f3dd1",
+			"revisionTime": "2016-10-06T18:17:33Z"
 		},
 		{
-			"checksumSHA1": "gArRFZKmmJiyViEjVqNaLbIsGWE=",
+			"checksumSHA1": "pfEeN12563DbTaTNlfu7LgeHvfk=",
 			"path": "github.com/portworx/kvdb/consul",
-			"revision": "5769e65e8d7b11cbb2135d2f17be0eb25f1b73f7",
-			"revisionTime": "2016-08-16T00:58:24Z"
+			"revision": "f3f0bd797b646fa65a067d05bf2b5258d30f3dd1",
+			"revisionTime": "2016-10-06T18:17:33Z"
 		},
 		{
-			"checksumSHA1": "fiPyPtWOiDwPWQfwqzHYmZcgsXE=",
-			"path": "github.com/portworx/kvdb/etcd",
-			"revision": "5769e65e8d7b11cbb2135d2f17be0eb25f1b73f7",
-			"revisionTime": "2016-08-16T00:58:24Z"
+			"checksumSHA1": "HnwP29KagJSQbv6orXqxVO1oyQI=",
+			"path": "github.com/portworx/kvdb/etcd/common",
+			"revision": "f3f0bd797b646fa65a067d05bf2b5258d30f3dd1",
+			"revisionTime": "2016-10-06T18:17:33Z"
 		},
 		{
-			"checksumSHA1": "emmQ3IWIrd+vizk5dE0e1F1xal8=",
+			"checksumSHA1": "M/fAkUhFxRtyqrLls0AGPceI1MM=",
+			"path": "github.com/portworx/kvdb/etcd/v2",
+			"revision": "f3f0bd797b646fa65a067d05bf2b5258d30f3dd1",
+			"revisionTime": "2016-10-06T18:17:33Z"
+		},
+		{
+			"checksumSHA1": "2jjvxgv3oyFL+vVRdeXf61svmPw=",
+			"path": "github.com/portworx/kvdb/etcd/v3",
+			"revision": "f3f0bd797b646fa65a067d05bf2b5258d30f3dd1",
+			"revisionTime": "2016-10-06T18:17:33Z"
+		},
+		{
+			"checksumSHA1": "j7G9ISpoNGiTknQsZCmcs5A4cp0=",
 			"path": "github.com/portworx/kvdb/mem",
-			"revision": "5769e65e8d7b11cbb2135d2f17be0eb25f1b73f7",
-			"revisionTime": "2016-08-16T00:58:24Z"
+			"revision": "f3f0bd797b646fa65a067d05bf2b5258d30f3dd1",
+			"revisionTime": "2016-10-06T18:17:33Z"
 		},
 		{
 			"checksumSHA1": "cKNzpMpci3WUAzXpe+tVnBv2cjE=",

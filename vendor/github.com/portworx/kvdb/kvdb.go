@@ -20,6 +20,12 @@ const (
 )
 
 const (
+	// KVCapabilityOrderedUpdates support requires watch to send an watch update
+	// for every put - instead of coalescing multiple puts in one update.
+	KVCapabilityOrderedUpdates = 1 << iota
+)
+
+const (
 	// KVPrevExists flag to check key already exists
 	KVPrevExists KVFlags = 1 << iota
 	// KVCreatedIndex flag compares with passed in index (possibly in KVPair)
@@ -31,12 +37,32 @@ const (
 )
 
 const (
-	// Username for an authenticated kvdb endpoint
+	// ReadPermission for read only access
+	ReadPermission = iota
+	// WritePermission for write only access
+	WritePermission
+	// ReadWritePermission for read-write access
+	ReadWritePermission
+)
+const (
+	// UsernameKey for an authenticated kvdb endpoint
 	UsernameKey = "Username"
-	// Password for an authenticated kvdb endpoint
+	// PasswordKey for an authenticated kvdb endpoint
 	PasswordKey = "Password"
-	// Certificate File Path for an authenticated kvdb endpoint
-	CAFileKey   = "CAFile"
+	// CAFileKey is the certicficate path for an authenticated kvdb endpoint
+	CAFileKey = "CAFile"
+)
+
+// List of kvdb endpoints supported versions
+const (
+	// ConsulVersion1 key
+	ConsulVersion1 = "consulv1"
+	// EtcdBaseVersion key
+	EtcdBaseVersion = "etcd"
+	// EtcdVersion3 key
+	EtcdVersion3 = "etcdv3"
+	// MemVersion1 key
+	MemVersion1 = "memv1"
 )
 
 var (
@@ -68,6 +94,8 @@ var (
 	ErrAuthNotSupported = errors.New("Kvdb authentication not supported")
 	// ErrNoCertificate no certificate provided for authentication
 	ErrNoCertificate = errors.New("Certificate File Path not provided")
+	// ErrUnknownPermission raised if unknown permission type
+	ErrUnknownPermission = errors.New("Unknown Permission Type")
 )
 
 // KVAction specifies the action on a KV pair. This is useful to make decisions
@@ -77,6 +105,9 @@ type KVAction int
 // KVFlags options for operations on KVDB
 type KVFlags uint64
 
+// PermissionType for user access
+type PermissionType int
+
 // WatchCB is called when a watched key or tree is modified. If the callback
 // returns an error, then watch stops and the cb is called one last time
 // with ErrWatchStopped.
@@ -84,6 +115,9 @@ type WatchCB func(prefix string, opaque interface{}, kvp *KVPair, err error) err
 
 // DatastoreInit is called to activate a backend KV store.
 type DatastoreInit func(domain string, machines []string, options map[string]string) (Kvdb, error)
+
+// DatastoreVersion is called to get the version of a backend KV store
+type DatastoreVersion func(url string) (string, error)
 
 // KVPair represents the results of an operation on KVDB.
 type KVPair struct {
@@ -131,6 +165,8 @@ type Tx interface {
 type Kvdb interface {
 	// String representation of backend datastore.
 	String() string
+	// Capbilities - see KVCapabilityXXX
+	Capabilities() int
 	// Get returns KVPair that maps to specified key or ErrNotFound.
 	Get(key string) (*KVPair, error)
 	// Get returns KVPair that maps to specified key or ErrNotFound. If found
@@ -180,4 +216,28 @@ type Kvdb interface {
 	Unlock(kvp *KVPair) error
 	// TxNew returns a new Tx coordinator object or ErrNotSupported
 	TxNew() (Tx, error)
+	// AddUser adds a new user to kvdb
+	AddUser(username string, password string) error
+	// RemoveUser removes a user from kvdb
+	RemoveUser(username string) error
+	// GrantUserAccess grants user access to a subtree/prefix based on the permission
+	GrantUserAccess(username string, permType PermissionType, subtree string) error
+	// RevokeUsersAccess revokes user's access to a subtree/prefix based on the permission
+	RevokeUsersAccess(username string, permType PermissionType, subtree string) error
+}
+
+// ReplayCb provides info required for replay
+type ReplayCb struct {
+	Prefix    string
+	WaitIndex uint64
+	Opaque    interface{}
+	WatchCB   WatchCB
+}
+
+// UpdatesCollector collects updates from kvdb.
+type UpdatesCollector interface {
+	// Stop collecting updates
+	Stop()
+	// ReplayUpdates replays the collected updates
+	ReplayUpdates(updateCb []ReplayCb) error
 }

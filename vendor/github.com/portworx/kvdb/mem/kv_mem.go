@@ -26,7 +26,7 @@ var (
 )
 
 func init() {
-	if err := kvdb.Register(Name, New); err != nil {
+	if err := kvdb.Register(Name, New, Version); err != nil {
 		panic(err.Error())
 	}
 }
@@ -73,8 +73,17 @@ func New(
 
 }
 
+// Version returns the supported version of the mem implementation
+func Version(url string) (string, error) {
+	return kvdb.MemVersion1, nil
+}
+
 func (kv *memKV) String() string {
 	return Name
+}
+
+func (kv *memKV) Capabilities() int {
+	return kvdb.KVCapabilityOrderedUpdates
 }
 
 func (kv *memKV) Get(key string) (*kvdb.KVPair, error) {
@@ -205,6 +214,10 @@ func (kv *memKV) Enumerate(prefix string) (kvdb.KVPairs, error) {
 			kv.normalize(&kvpLocal)
 			kvp = append(kvp, &kvpLocal)
 		}
+	}
+
+	if len(kvp) == 0 {
+		return nil, kvdb.ErrNotFound
 	}
 
 	return kvp, nil
@@ -481,4 +494,21 @@ func (kv *snapMem) WatchTree(
 	watchCB kvdb.WatchCB,
 ) error {
 	return ErrSnap
+}
+
+
+func (kv *memKV) AddUser(username string, password string) error {
+	return kvdb.ErrNotSupported
+}
+
+func (kv *memKV) RemoveUser(username string) error {
+	return kvdb.ErrNotSupported
+}
+
+func (kv *memKV) GrantUserAccess(username string, permType kvdb.PermissionType, subtree string) error {
+	return kvdb.ErrNotSupported
+}
+
+func (kv *memKV) RevokeUsersAccess(username string, permType kvdb.PermissionType,  subtree string) error {
+	return kvdb.ErrNotSupported
 }

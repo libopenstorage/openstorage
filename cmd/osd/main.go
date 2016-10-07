@@ -20,7 +20,7 @@ import (
 	"github.com/libopenstorage/openstorage/volume/drivers"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/consul"
-	"github.com/portworx/kvdb/etcd"
+	etcd "github.com/portworx/kvdb/etcd/v2"
 	"github.com/portworx/kvdb/mem"
 )
 

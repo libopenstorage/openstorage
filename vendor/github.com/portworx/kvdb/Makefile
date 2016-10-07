@@ -39,7 +39,8 @@ errcheck: testdeps
 		github.com/portworx/kvdb \
 		github.com/portworx/kvdb/common \
 		github.com/portworx/kvdb/consul \
-		github.com/portworx/kvdb/etcd \
+		github.com/portworx/kvdb/etcd/v2 \
+		github.com/portworx/kvdb/etcd/v3 \
 		github.com/portworx/kvdb/mem
 
 pretest: lint vet errcheck
