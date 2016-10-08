@@ -20,21 +20,8 @@ type updatesCollectorImpl struct {
 	updates []*kvdbUpdate
 	// stopped is true if collection is stopped
 	stopped bool
-}
-
-// GetUpdatesCollector creates new Kvdb collector that collects updates
-// starting at startIndex + 1 index.
-func GetUpdatesCollector(
-	db Kvdb,
-	prefix string,
-	startIndex uint64,
-) (UpdatesCollector, error) {
-	collector := &updatesCollectorImpl{updates: make([]*kvdbUpdate, 0)}
-	logrus.Infof("Starting watch at %v", startIndex)
-	if err := db.WatchTree(prefix, startIndex, nil, collector.watchCb); err != nil {
-		return nil, err
-	}
-	return collector, nil
+	// start index
+	startIndex uint64
 }
 
 func (c *updatesCollectorImpl) watchCb(
@@ -46,11 +33,12 @@ func (c *updatesCollectorImpl) watchCb(
 	if c.stopped {
 		return fmt.Errorf("Stop watch")
 	}
-	update := &kvdbUpdate{prefix: prefix, kvp: kvp, err: err}
-	c.updates = append(c.updates, update)
 	if err != nil {
+		c.stopped = true
 		return err
 	}
+	update := &kvdbUpdate{prefix: prefix, kvp: kvp, err: err}
+	c.updates = append(c.updates, update)
 	return nil
 }
 
@@ -58,9 +46,13 @@ func (c *updatesCollectorImpl) Stop() {
 	c.stopped = true
 }
 
-func (c *updatesCollectorImpl) ReplayUpdates(cbList []ReplayCb) error {
+func (c *updatesCollectorImpl) ReplayUpdates(cbList []ReplayCb) (uint64, error) {
 	updates := c.updates
+	index := c.startIndex
 	for _, update := range updates {
+		if update.kvp != nil {
+			index = update.kvp.KVDBIndex
+		}
 		for _, cbInfo := range cbList {
 			if update.kvp == nil ||
 				strings.HasPrefix(update.kvp.Key, cbInfo.Prefix) {
@@ -69,10 +61,10 @@ func (c *updatesCollectorImpl) ReplayUpdates(cbList []ReplayCb) error {
 				if err != nil {
 					logrus.Infof("collect error: watchCB returned error: %v",
 						err)
-					return err
+					return index, err
 				}
 			}
 		}
 	}
-	return nil
+	return index, nil
 }

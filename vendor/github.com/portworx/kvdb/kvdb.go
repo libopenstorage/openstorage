@@ -2,6 +2,7 @@ package kvdb
 
 import (
 	"errors"
+	"github.com/Sirupsen/logrus"
 )
 
 const (
@@ -238,6 +239,24 @@ type ReplayCb struct {
 type UpdatesCollector interface {
 	// Stop collecting updates
 	Stop()
-	// ReplayUpdates replays the collected updates
-	ReplayUpdates(updateCb []ReplayCb) error
+	// ReplayUpdates replays the collected updates.
+	// Returns the version until the replay's were done
+	// and any errors it encountered.
+	ReplayUpdates(updateCb []ReplayCb) (uint64, error)
+}
+
+// NewUpdatesCollector creates new Kvdb collector that collects updates
+// starting at startIndex + 1 index.
+func NewUpdatesCollector(
+	db Kvdb,
+	prefix string,
+	startIndex uint64,
+) (UpdatesCollector, error) {
+	collector := &updatesCollectorImpl{updates: make([]*kvdbUpdate, 0),
+		startIndex: startIndex}
+	logrus.Infof("Starting collector watch at %v", startIndex)
+	if err := db.WatchTree(prefix, startIndex, nil, collector.watchCb); err != nil {
+		return nil, err
+	}
+	return collector, nil
 }

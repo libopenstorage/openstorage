@@ -422,12 +422,6 @@ func (kv *etcdKV) resultToKv(result *e.Response) *kvdb.KVPair {
 
 func (kv *etcdKV) resultToKvs(result *e.Response) kvdb.KVPairs {
 	kvs := make([]*kvdb.KVPair, len(result.Node.Nodes))
-	if len(result.Node.Nodes) == 0 {
-		// Enumerate called on an empty directory
-		kvs := make([]*kvdb.KVPair, 1)
-		kvs[0] = kv.nodeToKv(result.Node)
-		return kvs
-	}
 	for i := range result.Node.Nodes {
 		kvs[i] = kv.nodeToKv(result.Node.Nodes[i])
 		kvs[i].KVDBIndex = result.Index

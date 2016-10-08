@@ -45,8 +45,9 @@ type snapMem struct {
 }
 
 type watchData struct {
-	cb     kvdb.WatchCB
-	opaque interface{}
+	cb        kvdb.WatchCB
+	opaque    interface{}
+	waitIndex uint64
 }
 
 // New constructs a new kvdb.Kvdb.
@@ -306,7 +307,7 @@ func (kv *memKV) WatchKey(
 	if _, ok := kv.w[key]; ok {
 		return kvdb.ErrExist
 	}
-	kv.w[key] = &watchData{cb: cb, opaque: opaque}
+	kv.w[key] = &watchData{cb: cb, waitIndex: waitIndex, opaque: opaque}
 	return nil
 }
 
@@ -322,7 +323,7 @@ func (kv *memKV) WatchTree(
 	if _, ok := kv.wt[prefix]; ok {
 		return kvdb.ErrExist
 	}
-	kv.wt[prefix] = &watchData{cb: cb, opaque: opaque}
+	kv.wt[prefix] = &watchData{cb: cb, waitIndex: waitIndex, opaque: opaque}
 	return nil
 }
 
@@ -372,7 +373,7 @@ func (kv *memKV) normalize(kvp *kvdb.KVPair) {
 
 func (kv *memKV) fireCB(key string, kvp kvdb.KVPair, err error) {
 	for k, v := range kv.w {
-		if k == key {
+		if k == key && (v.waitIndex == 0 || v.waitIndex < kvp.ModifiedIndex) {
 			err := v.cb(key, v.opaque, &kvp, err)
 			if err != nil {
 				// TODO: handle error
@@ -384,7 +385,8 @@ func (kv *memKV) fireCB(key string, kvp kvdb.KVPair, err error) {
 		}
 	}
 	for k, v := range kv.wt {
-		if strings.HasPrefix(key, k) {
+		if strings.HasPrefix(key, k) &&
+			(v.waitIndex == 0 || v.waitIndex < kvp.ModifiedIndex) {
 			err := v.cb(key, v.opaque, &kvp, err)
 			if err != nil {
 				// TODO: handle error
@@ -496,7 +498,6 @@ func (kv *snapMem) WatchTree(
 	return ErrSnap
 }
 
-
 func (kv *memKV) AddUser(username string, password string) error {
 	return kvdb.ErrNotSupported
 }
@@ -509,6 +510,6 @@ func (kv *memKV) GrantUserAccess(username string, permType kvdb.PermissionType, 
 	return kvdb.ErrNotSupported
 }
 
-func (kv *memKV) RevokeUsersAccess(username string, permType kvdb.PermissionType,  subtree string) error {
+func (kv *memKV) RevokeUsersAccess(username string, permType kvdb.PermissionType, subtree string) error {
 	return kvdb.ErrNotSupported
 }
