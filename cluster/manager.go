@@ -317,7 +317,6 @@ func (c *ClusterManager) initNodeInCluster(
 	exist bool,
 ) error {
 	var err error
-	var newInitState *ClusterInitState
 
 	// If I am already in the cluster map, don't add me again.
 	if exist {
@@ -339,21 +338,28 @@ func (c *ClusterManager) initNodeInCluster(
 		}
 	}
 
-	// Listeners may update initial state, so snap again
-	newInitState, err = snapAndReadClusterInfo()
-	initState.InitDb = newInitState.InitDb
-	initState.Version = newInitState.Version
-
 done:
 	return err
 }
 
 // Alert all listeners that we are joining the cluster
 func (c *ClusterManager) joinCluster(
-	initState *ClusterInitState,
 	self *api.Node,
 	exist bool,
 ) error {
+	// Listeners may update initial state, so snap again.
+	// The cluster db may have diverged since we waited for quorum
+	// in between.
+	initState, err := snapAndReadClusterInfo()
+	defer func() {
+		if initState.Collector != nil {
+			initState.Collector.Stop()
+		}
+	}()
+	if err != nil {
+		return err
+	}
+
 	// Alert all listeners that we are joining the cluster.
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err := e.Value.(ClusterListener).Join(self, initState, c.HandleNotifications)
@@ -376,7 +382,7 @@ func (c *ClusterManager) joinCluster(
 		dlog.Panicln("Fatal, Unable to find self node entry in local cache")
 	}
 
-	err := c.updateNodeEntryDB(selfNodeEntry)
+	err = c.updateNodeEntryDB(selfNodeEntry)
 	if err != nil {
 		return err
 	}
@@ -411,6 +417,22 @@ func (c *ClusterManager) initCluster(
 
 done:
 	return err
+}
+
+func (c *ClusterManager) startClusterDBWatch(initState *ClusterInitState,
+	kv kvdb.Kvdb) error {
+	replayCb := make([]kvdb.ReplayCb, 1)
+	replayCb[0].Prefix = ClusterDBKey
+	replayCb[0].WatchCB = c.watchDB
+
+	lastReplayIndex, err := initState.Collector.ReplayUpdates(replayCb)
+	if err != nil {
+		dlog.Errorf("Failed to replay updates: %v", err)
+		return err
+	}
+
+	go kv.WatchKey(ClusterDBKey, lastReplayIndex, nil, c.watchDB)
+	return nil
 }
 
 func (c *ClusterManager) startHeartBeat(clusterInfo *ClusterInfo) {
@@ -482,13 +504,6 @@ func (c *ClusterManager) updateClusterStatus(initState *ClusterInitState, exist 
 					c.status = api.Status_STATUS_NOT_IN_QUORUM
 					c.Shutdown()
 					os.Exit(1)
-				} else if c.selfNode.Status == api.Status_STATUS_OFFLINE &&
-					nodeInfo.Status == types.NODE_STATUS_UP {
-					dlog.Infof("Back in quorum..")
-					err := c.joinCluster(initState, &c.selfNode, exist)
-					if err == nil {
-						c.selfNode.Status = api.Status_STATUS_OK
-					}
 				}
 				//else Ignore this update
 				continue
@@ -588,6 +603,50 @@ func (c *ClusterManager) GetState() (*ClusterState, error) {
 		History: history, NodeStatus: nodes}, nil
 }
 
+func (c *ClusterManager) waitForQuorum(exist bool) error {
+	// Max quorum retries allowed = 600
+	// 600 * 2 seconds (gossip interval) = 20 minutes before it restarts
+	quorumRetries := 0
+	for {
+		gossipSelfStatus := c.gossip.GetSelfStatus()
+		dlog.Infof("Self Status is: %v", gossipSelfStatus)
+		if c.selfNode.Status == api.Status_STATUS_NOT_IN_QUORUM &&
+			gossipSelfStatus == types.NODE_STATUS_UP {
+			// Node not initialized yet
+			// Achieved quorum in the cluster.
+			// Lets start the node
+			c.selfNode.Status = api.Status_STATUS_INIT
+			err := c.joinCluster(&c.selfNode, exist)
+			if err != nil {
+				if c.selfNode.Status != api.Status_STATUS_MAINTENANCE {
+					c.selfNode.Status = api.Status_STATUS_ERROR
+				}
+				return err
+			}
+			c.status = api.Status_STATUS_OK
+			c.selfNode.Status = api.Status_STATUS_OK
+			break
+		} else {
+			c.status = api.Status_STATUS_NOT_IN_QUORUM
+			if quorumRetries == 600 {
+				err := fmt.Errorf("Unable to achieve Quorum." +
+					" Timeout 20 minutes exceeded.")
+				dlog.Warnln("Failed to join cluster: ", err)
+				c.status = api.Status_STATUS_NOT_IN_QUORUM
+				c.selfNode.Status = api.Status_STATUS_OFFLINE
+				c.gossip.UpdateSelfStatus(types.NODE_STATUS_DOWN)
+				return err
+			}
+			if quorumRetries == 0 {
+				dlog.Infof("Waiting for the cluster to reach quorum...")
+			}
+			time.Sleep(types.DEFAULT_GOSSIP_INTERVAL)
+			quorumRetries++
+		}
+	}
+	return nil
+}
+
 func (c *ClusterManager) Start() error {
 	var err error
 
@@ -636,6 +695,12 @@ func (c *ClusterManager) Start() error {
 	}
 
 	initState, err := snapAndReadClusterInfo()
+	defer func() {
+		if initState.Collector != nil {
+			initState.Collector.Stop()
+		}
+	}()
+
 	if err != nil {
 		dlog.Panicln(err)
 	}
@@ -714,49 +779,15 @@ func (c *ClusterManager) Start() error {
 	// Start heartbeating to other nodes.
 	go c.startHeartBeat(&currentState)
 
-	// Max quorum retries allowed = 600
-	// 600 * 2 seconds (gossip interval) = 20 minutes before it restarts
-	quorumRetries := 0
-	for {
-		gossipSelfStatus := c.gossip.GetSelfStatus()
-		if c.selfNode.Status == api.Status_STATUS_NOT_IN_QUORUM &&
-			gossipSelfStatus == types.NODE_STATUS_UP {
-			// Node not initialized yet
-			// Achieved quorum in the cluster.
-			// Lets start the node
-			c.selfNode.Status = api.Status_STATUS_INIT
-			err := c.joinCluster(initState, &c.selfNode, exist)
-			if err != nil {
-				if c.selfNode.Status != api.Status_STATUS_MAINTENANCE {
-					c.selfNode.Status = api.Status_STATUS_ERROR
-				}
-				return err
-			}
-			c.status = api.Status_STATUS_OK
-			c.selfNode.Status = api.Status_STATUS_OK
-			break
-		} else {
-			c.status = api.Status_STATUS_NOT_IN_QUORUM
-			if quorumRetries == 600 {
-				err := fmt.Errorf("Unable to achieve Quorum." +
-					" Timeout 20 minutes exceeded.")
-				dlog.Warnln("Failed to join cluster: ", err)
-				c.status = api.Status_STATUS_NOT_IN_QUORUM
-				c.selfNode.Status = api.Status_STATUS_OFFLINE
-				c.gossip.UpdateSelfStatus(types.NODE_STATUS_DOWN)
-				return err
-			}
-			if quorumRetries == 0 {
-				dlog.Infof("Waiting for the cluster to reach quorum...")
-			}
-			time.Sleep(types.DEFAULT_GOSSIP_INTERVAL)
-			quorumRetries++
-		}
+	c.startClusterDBWatch(initState, kvdb)
+
+	err = c.waitForQuorum(exist)
+	if err != nil {
+		return err
 	}
+
 	go c.updateClusterStatus(initState, exist)
 	go c.replayNodeDecommission(initState)
-
-	kvdb.WatchKey(ClusterDBKey, 0, nil, c.watchDB)
 
 	return nil
 }

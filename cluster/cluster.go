@@ -44,6 +44,7 @@ type ClusterInitState struct {
 	ClusterInfo *ClusterInfo
 	InitDb      kvdb.Kvdb
 	Version     uint64
+	Collector   kvdb.UpdatesCollector
 }
 
 // ClusterListener is an interface to be implemented by a storage driver
