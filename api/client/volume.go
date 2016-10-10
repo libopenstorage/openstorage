@@ -211,7 +211,11 @@ func (v *volumeClient) Alerts(volumeID string) (*api.Alerts, error) {
 }
 
 func formatRespErr(resp *Response) error {
-	return fmt.Errorf("%d: %s", resp.statusCode, string(resp.body))
+	if len(resp.body) == 0 {
+		return fmt.Errorf("Error: %v", resp.err)
+	} else {
+		return fmt.Errorf("HTTP-%d: %s", resp.statusCode, string(resp.body))
+	}
 }
 
 // Active Requests on all volume.
@@ -249,9 +253,14 @@ func (v *volumeClient) Enumerate(locator *api.VolumeLocator,
 	if len(labels) != 0 {
 		req.QueryOptionLabel(api.OptConfigLabel, labels)
 	}
-	if err := req.Do().Unmarshal(&volumes); err != nil {
+	resp := req.Do()
+	if resp.err != nil {
+		return nil, formatRespErr(resp)
+	}
+	if err := resp.Unmarshal(&volumes); err != nil {
 		return nil, err
 	}
+
 	return volumes, nil
 }
 
