@@ -243,7 +243,11 @@ func (vd *volApi) enumerate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		vols, _ = d.Enumerate(&locator, configLabels)
+		vols, err = d.Enumerate(&locator, configLabels)
+		if err != nil {
+			vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 	json.NewEncoder(w).Encode(vols)
 }
