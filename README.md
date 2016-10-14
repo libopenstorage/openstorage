@@ -274,7 +274,7 @@ Add to your ~/.bashrc (or equivalent):
 # to use protoeasy for now, you must have docker installed locally or in a vm
 # if running docker using docker-machine etc, replace 192.168.10.10 with the ip of the vm
 # if running docker locally, replace 192.168.10.10 with 0.0.0.0
-export PROTOEASY_ADDRESS=192.168.10.10:6789
+export PROTOEASY_ADDRESS=127.0.0.1:6789
 
 launch-protoeasy() {
   docker rm -f protoeasy || true
