@@ -245,6 +245,7 @@ message Volume {
   string error = 17;
   // List of name value mapping of driver specific runtime information.
   repeated RuntimeStateMap runtime_state = 18;
+  string secure_device_path = 19;
 }
 
 message Stats {
