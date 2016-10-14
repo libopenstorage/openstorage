@@ -159,6 +159,8 @@ message VolumeLocator {
   string name = 1;
   // A set of name-value pairs that acts as search filters
   map<string, string> volume_labels = 2;
+  // User passphrase if this is an encrypted volume
+  string passphrase = 3;
 }
 
 message Source {
@@ -192,12 +194,14 @@ message VolumeSpec {
   uint32 snapshot_interval = 8;
   // Volume configuration labels
   map<string, string> volume_labels = 9;
-  // Shared is true is this volume can be remotely accessed.
+  // Shared is true if this volume can be remotely accessed.
   bool shared = 10;
   // ReplicaSet is the desired replicaSet the volume want to be placed.
   ReplicaSet replica_set = 11;
   // Specifies the number of parts the volume can be aggregated from.
   uint32 aggregation_level = 12;
+  // Encrypted is true if this volume will be cryptographically secured.
+  bool encrypted = 13;
 }
 
 // Set of machine IDs (nodes) to which part of this volume is erasure coded - for clustered storage arrays
