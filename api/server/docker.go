@@ -163,7 +163,21 @@ func (d *driver) status(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, fmt.Sprintln("osd plugin", d.version))
 }
 
-func (d *driver) specFromOpts(Opts map[string]string) *api.VolumeSpec {
+func (d *driver) cosLevel(cos string) (uint32, error) {
+	switch cos {
+	case "prod", "3":
+		return uint32(api.CosType_COS_TYPE_HIGH), nil
+	case "test", "2":
+		return uint32(api.CosType_COS_TYPE_MEDIUM), nil
+	case "none", "1", "":
+		return uint32(api.CosType_COS_TYPE_LOW), nil
+	}
+	return uint32(api.CosType_COS_TYPE_LOW),
+		fmt.Errorf("Cos must be one of %q | %q | %q", "prod", "test", "none")
+
+}
+
+func (d *driver) specFromOpts(Opts map[string]string) (*api.VolumeSpec, error) {
 	spec := api.VolumeSpec{
 		VolumeLabels: make(map[string]string),
 		Format:       api.FSType_FS_TYPE_EXT4,
@@ -194,8 +208,11 @@ func (d *driver) specFromOpts(Opts map[string]string) *api.VolumeSpec {
 			haLevel, _ := strconv.ParseInt(v, 10, 64)
 			spec.HaLevel = haLevel
 		case api.SpecCos:
-			value, _ := strconv.ParseUint(v, 10, 32)
-			spec.Cos = uint32(value)
+			cos, err := d.cosLevel(v)
+			if err != nil {
+				return nil, err
+			}
+			spec.Cos = cos
 		case api.SpecDedupe:
 			spec.Dedupe, _ = strconv.ParseBool(v)
 		case api.SpecSnapshotInterval:
@@ -210,7 +227,7 @@ func (d *driver) specFromOpts(Opts map[string]string) *api.VolumeSpec {
 			spec.VolumeLabels[k] = v
 		}
 	}
-	return &spec
+	return &spec, nil
 }
 
 func (d *driver) mountpath(request *mountRequest) string {
@@ -230,7 +247,11 @@ func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 			d.errorResponse(w, err)
 			return
 		}
-		spec := d.specFromOpts(request.Opts)
+		spec, err := d.specFromOpts(request.Opts)
+		if err != nil {
+			d.errorResponse(w, err)
+			return
+		}
 		if _, err := v.Create(&api.VolumeLocator{Name: request.Name}, nil, spec); err != nil {
 			d.errorResponse(w, err)
 			return
