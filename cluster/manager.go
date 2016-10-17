@@ -609,7 +609,6 @@ func (c *ClusterManager) waitForQuorum(exist bool) error {
 	quorumRetries := 0
 	for {
 		gossipSelfStatus := c.gossip.GetSelfStatus()
-		dlog.Infof("Self Status is: %v", gossipSelfStatus)
 		if c.selfNode.Status == api.Status_STATUS_NOT_IN_QUORUM &&
 			gossipSelfStatus == types.NODE_STATUS_UP {
 			// Node not initialized yet
