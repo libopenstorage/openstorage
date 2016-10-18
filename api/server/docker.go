@@ -165,15 +165,15 @@ func (d *driver) status(w http.ResponseWriter, r *http.Request) {
 
 func (d *driver) cosLevel(cos string) (uint32, error) {
 	switch cos {
-	case "prod", "3":
+	case "high", "3":
 		return uint32(api.CosType_COS_TYPE_HIGH), nil
-	case "test", "2":
+	case "medium", "2":
 		return uint32(api.CosType_COS_TYPE_MEDIUM), nil
-	case "none", "1", "":
+	case "low", "1", "":
 		return uint32(api.CosType_COS_TYPE_LOW), nil
 	}
 	return uint32(api.CosType_COS_TYPE_LOW),
-		fmt.Errorf("Cos must be one of %q | %q | %q", "prod", "test", "none")
+		fmt.Errorf("Cos must be one of %q | %q | %q", "high", "medium", "low")
 
 }
 
