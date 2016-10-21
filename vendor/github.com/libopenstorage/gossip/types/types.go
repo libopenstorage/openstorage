@@ -13,6 +13,18 @@ type NodeInfoMap map[NodeId]NodeInfo
 type NodeValueMap map[NodeId]NodeValue
 type StoreMap map[StoreKey]interface{}
 
+// Constant Definitions
+
+const (
+	DEFAULT_GOSSIP_INTERVAL    time.Duration = 2 * time.Second
+	DEFAULT_PUSH_PULL_INTERVAL time.Duration = 2 * time.Second
+	DEFAULT_PROBE_INTERVAL     time.Duration = 5 * time.Second
+	DEFAULT_PROBE_TIMEOUT      time.Duration = 200 * time.Millisecond
+	DEFAULT_QUORUM_TIMEOUT     time.Duration = 1 * time.Minute
+	DEFAULT_GOSSIP_VERSION     string        = "v1"
+	GOSSIP_VERSION_2           string        = "v2"
+)
+
 const (
 	NODE_STATUS_INVALID NodeStatus = iota
 	NODE_STATUS_UP
@@ -86,15 +98,6 @@ func (n NodeInfo) String() string {
 	return fmt.Sprintf("\nId: %v\nLastUpdateTs: %v\nStatus: : %v\nValue: %v",
 		n.Id, n.LastUpdateTs, n.Status, n.Value)
 }
-
-const (
-	DEFAULT_GOSSIP_INTERVAL    time.Duration = 2 * time.Second
-	DEFAULT_PUSH_PULL_INTERVAL time.Duration = 2 * time.Second
-	DEFAULT_PROBE_INTERVAL     time.Duration = 5 * time.Second
-	DEFAULT_PROBE_TIMEOUT      time.Duration = 200 * time.Millisecond
-	DEFAULT_QUORUM_TIMEOUT     time.Duration = 1 * time.Minute
-	DEFAULT_GOSSIP_VERSION     string        = "v1"
-)
 
 type GossipIntervals struct {
 	// GossipInterval is the time interval within which the nodes gossip

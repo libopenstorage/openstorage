@@ -221,7 +221,6 @@ func (s *GossipStoreImpl) MetaInfo() types.NodeMetaInfo {
 	nodeMetaInfo := types.NodeMetaInfo{
 		Id:            selfNodeInfo.Id,
 		LastUpdateTs:  selfNodeInfo.LastUpdateTs,
-		GenNumber:     selfNodeInfo.GenNumber,
 		GossipVersion: s.GossipVersion,
 		ClusterId: s.ClusterId,
 	}
@@ -261,9 +260,9 @@ func (s *GossipStoreImpl) Update(diff types.NodeInfoMap) {
 		if !ok {
 			// We got an update for a node which we do not have in our map
 			// Lets add it with an offline state
-			selfValue.Status = types.NODE_STATUS_DOWN
+			continue
 		}
-		if !ok || !statusValid(selfValue.Status) ||
+		if !statusValid(selfValue.Status) ||
 			selfValue.LastUpdateTs.Before(newNodeInfo.LastUpdateTs) {
 			// Our view of Status of a Node, should only be determined by memberlist.
 			// We should not update the Status field in our nodeInfo based on what other node's
@@ -311,9 +310,6 @@ func (s *GossipStoreImpl) updateCluster(peers map[types.NodeId]string) {
 	s.Unlock()
 	for _, nodeId := range removeNodeIds {
 		s.RemoveNode(nodeId)
-	}
-	for _, nodeId := range addNodeIds {
-		s.AddNode(nodeId, types.NODE_STATUS_DOWN)
 	}
 }
 

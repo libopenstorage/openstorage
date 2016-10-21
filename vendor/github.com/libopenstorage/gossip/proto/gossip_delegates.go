@@ -90,27 +90,26 @@ func (gd *GossipDelegate) convertFromBytes(buf []byte, msg interface{}) error {
 
 func (gd *GossipDelegate) gossipChecks(node *memberlist.Node) error {
 	// Check the gossip version of other node
-	var nodeMetaInfo types.NodeMetaInfo
-	nodeMeta := node.Meta
-	err := gd.convertFromBytes(nodeMeta, &nodeMetaInfo)
+	var nodeMeta types.NodeMetaInfo
+	err := gd.convertFromBytes(node.Meta, &nodeMeta)
 	if err != nil {
 		err = fmt.Errorf("gossip: Error in unmarshalling peer's meta data. Error : %v", err.Error())
 	} else {
-		if nodeMetaInfo.GossipVersion != gd.GetGossipVersion() {
+		if nodeMeta.GossipVersion != gd.GetGossipVersion() {
 			// Version Mismatch
 			// We do not add this node in our memberlist
 			err = fmt.Errorf("Version mismatch with "+
 				"Node (%v):(%v). Our version: (%v). Their version: (%v)",
-				node.Name, node.Addr, gd.GetGossipVersion(), nodeMetaInfo.GossipVersion)
+				node.Name, node.Addr, gd.GetGossipVersion(), nodeMeta.GossipVersion)
 		} else {
 			// Version Match
 			// Check for ClusterId match
-			if nodeMetaInfo.ClusterId != gd.GetClusterId() {
+			if nodeMeta.ClusterId != gd.GetClusterId() {
 				// ClusterId Mismatch
 				// We do not add this node in our memberlist
 				err = fmt.Errorf("(%v) ClusterId mismatch with"+
 					" Node (%v):(%v). Our clusterId: (%v). Their clusterId: (%v)",
-					gd.nodeId, node.Name, node.Addr, gd.GetClusterId(), nodeMetaInfo.ClusterId)
+					gd.nodeId, node.Name, node.Addr, gd.GetClusterId(), nodeMeta.ClusterId)
 			} else {
 				// ClusterId Match
 				// Add this new node in our node map
@@ -229,6 +228,7 @@ func (gd *GossipDelegate) NotifyJoin(node *memberlist.Node) {
 	err := gd.gossipChecks(node)
 	if err != nil {
 		gs.Err = err.Error()
+		gd.RemoveNode(types.NodeId(node.Name))
 	} else {
 		gd.AddNode(types.NodeId(types.NodeId(node.Name)), types.NODE_STATUS_UP)
 		gd.triggerStateEvent(types.NODE_ALIVE)
@@ -282,21 +282,22 @@ func (gd *GossipDelegate) NotifyAlive(node *memberlist.Node) error {
 	gs.Err = ""
 	gd.updateGossipTs()
 
+	err := gd.gossipChecks(node)
+	if err != nil {
+		gs.Err = err.Error()
+		gd.history.AddLatest(gs)
+		gd.RemoveNode(types.NodeId(node.Name))
+		// Do not add this node to the memberlist.
+		// Returning a non-nil err value
+		return err
+	}
+
 	diffNode, err := gd.GetLocalNodeInfo(types.NodeId(node.Name))
 	if err != nil {
 		// We found a new node!!
 		// Check if gossip version and clusterId matches
-		err := gd.gossipChecks(node)
-		if err != nil {
-			gs.Err = err.Error()
-			gd.history.AddLatest(gs)
-			// Do not add this node to the memberlist.
-			// Returning a non-nil err value
-			return err
-		} else {
-			gd.AddNode(types.NodeId(node.Name), types.NODE_STATUS_UP)
-			gd.triggerStateEvent(types.NODE_ALIVE)
-		}
+		gd.AddNode(types.NodeId(node.Name), types.NODE_STATUS_UP)
+		gd.triggerStateEvent(types.NODE_ALIVE)
 	} else {
 		if diffNode.Status != types.NODE_STATUS_UP {
 			gd.UpdateNodeStatus(types.NodeId(node.Name), types.NODE_STATUS_UP)

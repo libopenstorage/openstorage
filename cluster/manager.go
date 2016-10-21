@@ -25,8 +25,9 @@ import (
 )
 
 const (
-	heartbeatKey   = "heartbeat"
-	clusterLockKey = "/cluster/lock"
+	heartbeatKey     = "heartbeat"
+	clusterLockKey   = "/cluster/lock"
+	gossipVersionKey = "Gossip Version"
 )
 
 var (
@@ -34,17 +35,18 @@ var (
 )
 
 type ClusterManager struct {
-	size         int
-	listeners    *list.List
-	config       config.ClusterConfig
-	kv           kvdb.Kvdb
-	status       api.Status
-	nodeCache    map[string]api.Node   // Cached info on the nodes in the cluster.
-	nodeStatuses map[string]api.Status // Set of nodes currently marked down.
-	gossip       gossip.Gossiper
-	gEnabled     bool
-	selfNode     api.Node
-	system       systemutils.System
+	size          int
+	listeners     *list.List
+	config        config.ClusterConfig
+	kv            kvdb.Kvdb
+	status        api.Status
+	nodeCache     map[string]api.Node   // Cached info on the nodes in the cluster.
+	nodeStatuses  map[string]api.Status // Set of nodes currently marked down.
+	gossip        gossip.Gossiper
+	gossipVersion string
+	gEnabled      bool
+	selfNode      api.Node
+	system        systemutils.System
 }
 
 func ifaceToIp(iface *net.Interface) (string, error) {
@@ -270,15 +272,19 @@ func (c *ClusterManager) initNode(db *ClusterInfo) (*api.Node, bool) {
 	_, exists := db.NodeEntries[c.selfNode.Id]
 
 	// Add us into the database.
-	db.NodeEntries[c.config.NodeId] = NodeEntry{
-		Id:        c.selfNode.Id,
-		MgmtIp:    c.selfNode.MgmtIp,
-		DataIp:    c.selfNode.DataIp,
-		GenNumber: c.selfNode.GenNumber,
-		StartTime: c.selfNode.StartTime,
-		MemTotal:  c.selfNode.MemTotal,
-		Hostname:  c.selfNode.Hostname,
+	labels := make(map[string]string)
+	labels[gossipVersionKey] = c.gossipVersion
+	nodeEntry := NodeEntry{
+		Id:         c.selfNode.Id,
+		MgmtIp:     c.selfNode.MgmtIp,
+		DataIp:     c.selfNode.DataIp,
+		GenNumber:  c.selfNode.GenNumber,
+		StartTime:  c.selfNode.StartTime,
+		MemTotal:   c.selfNode.MemTotal,
+		Hostname:   c.selfNode.Hostname,
+		NodeLabels: labels,
 	}
+	db.NodeEntries[c.config.NodeId] = nodeEntry
 
 	dlog.Infof("Node %s joining cluster...", c.config.NodeId)
 	dlog.Infof("Cluster ID: %s", c.config.ClusterId)
@@ -445,6 +451,13 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *ClusterInfo) {
 		if nodeId == node.Id {
 			continue
 		}
+		labels := nodeEntry.NodeLabels
+		version, ok := labels[gossipVersionKey]
+		if !ok || version != c.gossipVersion {
+			// Do not add nodes with mismatched version
+			continue
+		}
+
 		nodeIps = append(nodeIps, nodeEntry.DataIp+":9002")
 	}
 	if len(nodeIps) > 0 {
@@ -683,9 +696,10 @@ func (c *ClusterManager) Start() error {
 		types.NodeId(c.config.NodeId),
 		c.selfNode.GenNumber,
 		gossipIntervals,
-		types.DEFAULT_GOSSIP_VERSION,
+		types.GOSSIP_VERSION_2,
 		c.config.ClusterId,
 	)
+	c.gossipVersion = types.GOSSIP_VERSION_2
 
 	kvdb := kvdb.Instance()
 	kvlock, err := kvdb.Lock(clusterLockKey)

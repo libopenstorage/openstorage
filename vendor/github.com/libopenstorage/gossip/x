@@ -1,0 +1,556 @@
+Fri Oct 21 02:07:01 UTC 2016 : Running on Linux 4ab1854ccc88 3.10.0-327.10.1.el7.x86_64 #1 SMP Tue Feb 16 17:03:50 UTC 2016 x86_64 x86_64 x86_64 GNU/Linux
+PXD version:  42b0f7ca861ba4c2060dbff6642edefb35d25b79
+attempting to patch fs
+px-btrfs/
+px-btrfs/locking.h
+px-btrfs/extent_map.h
+px-btrfs/inode-map.c
+px-btrfs/file.c
+px-btrfs/hash.c
+px-btrfs/locking.c
+px-btrfs/extent_io.h
+px-btrfs/async-thread.h
+px-btrfs/dir-item.c
+px-btrfs/file-item.c
+px-btrfs/ordered-data.h
+px-btrfs/tree-log.h
+px-btrfs/qgroup.h
+px-btrfs/inode-map.h
+px-btrfs/btrfs_inode.h
+px-btrfs/disk-io.h
+px-btrfs/rcu-string.h
+px-btrfs/props.h
+px-btrfs/ulist.c
+px-btrfs/dev-replace.h
+px-btrfs/print-tree.h
+px-btrfs/extent-tree.c
+px-btrfs/tree-log.c
+px-btrfs/raid56.c
+px-btrfs/send.h
+px-btrfs/struct-funcs.c
+px-btrfs/orphan.c
+px-btrfs/sysfs.h
+px-btrfs/compression.c
+px-btrfs/Kconfig
+px-btrfs/check-integrity.c
+px-btrfs/async-thread.c
+px-btrfs/extent_io.c
+px-btrfs/tests/
+px-btrfs/tests/btrfs-tests.c
+px-btrfs/tests/inode-tests.c
+px-btrfs/tests/extent-io-tests.c
+px-btrfs/tests/extent-buffer-tests.c
+px-btrfs/tests/qgroup-tests.c
+px-btrfs/tests/btrfs-tests.h
+px-btrfs/tests/free-space-tests.c
+px-btrfs/Makefile
+px-btrfs/xattr.c
+px-btrfs/xattr.h
+px-btrfs/backref.c
+px-btrfs/free-space-cache.h
+px-btrfs/delayed-inode.h
+px-btrfs/inode.c
+px-btrfs/tree-defrag.c
+px-btrfs/check-integrity.h
+px-btrfs/volumes.c
+px-btrfs/zlib.c
+px-btrfs/uuid-tree.c
+px-btrfs/export.h
+px-btrfs/lzo.c
+px-btrfs/send.c
+px-btrfs/props.c
+px-btrfs/print-tree.c
+px-btrfs/reada.c
+px-btrfs/qgroup.c
+px-btrfs/raid56.h
+px-btrfs/math.h
+px-btrfs/free-space-cache.c
+px-btrfs/volumes.h
+px-btrfs/ctree.c
+px-btrfs/ordered-data.c
+px-btrfs/export.c
+px-btrfs/inode-item.c
+px-btrfs/root-tree.c
+px-btrfs/compression.h
+px-btrfs/extent_map.c
+px-btrfs/transaction.c
+px-btrfs/relocation.c
+px-btrfs/delayed-ref.h
+px-btrfs/hash.h
+px-btrfs/ctree.h
+px-btrfs/ulist.h
+px-btrfs/backref.h
+px-btrfs/transaction.h
+px-btrfs/super.c
+px-btrfs/delayed-inode.c
+px-btrfs/acl.c
+px-btrfs/dev-replace.c
+px-btrfs/delayed-ref.c
+px-btrfs/ioctl.c
+px-btrfs/disk-io.c
+px-btrfs/sysfs.c
+px-btrfs/scrub.c
+make -C /usr/src/kernels/3.10.0-327.10.1.el7.x86_64 M=/home/px-btrfs modules
+make[1]: Entering directory `/usr/src/kernels/3.10.0-327.10.1.el7.x86_64'
+  CC [M]  /home/px-btrfs/super.o
+  CC [M]  /home/px-btrfs/ctree.o
+  CC [M]  /home/px-btrfs/extent-tree.o
+  CC [M]  /home/px-btrfs/print-tree.o
+  CC [M]  /home/px-btrfs/root-tree.o
+  CC [M]  /home/px-btrfs/dir-item.o
+  CC [M]  /home/px-btrfs/file-item.o
+  CC [M]  /home/px-btrfs/inode-item.o
+  CC [M]  /home/px-btrfs/inode-map.o
+  CC [M]  /home/px-btrfs/disk-io.o
+  CC [M]  /home/px-btrfs/transaction.o
+  CC [M]  /home/px-btrfs/inode.o
+  CC [M]  /home/px-btrfs/file.o
+  CC [M]  /home/px-btrfs/tree-defrag.o
+  CC [M]  /home/px-btrfs/extent_map.o
+  CC [M]  /home/px-btrfs/sysfs.o
+  CC [M]  /home/px-btrfs/struct-funcs.o
+  CC [M]  /home/px-btrfs/xattr.o
+  CC [M]  /home/px-btrfs/ordered-data.o
+  CC [M]  /home/px-btrfs/extent_io.o
+  CC [M]  /home/px-btrfs/volumes.o
+  CC [M]  /home/px-btrfs/async-thread.o
+  CC [M]  /home/px-btrfs/ioctl.o
+  CC [M]  /home/px-btrfs/locking.o
+  CC [M]  /home/px-btrfs/orphan.o
+  CC [M]  /home/px-btrfs/export.o
+  CC [M]  /home/px-btrfs/tree-log.o
+  CC [M]  /home/px-btrfs/free-space-cache.o
+  CC [M]  /home/px-btrfs/zlib.o
+  CC [M]  /home/px-btrfs/lzo.o
+  CC [M]  /home/px-btrfs/compression.o
+  CC [M]  /home/px-btrfs/delayed-ref.o
+  CC [M]  /home/px-btrfs/relocation.o
+  CC [M]  /home/px-btrfs/delayed-inode.o
+  CC [M]  /home/px-btrfs/scrub.o
+  CC [M]  /home/px-btrfs/reada.o
+  CC [M]  /home/px-btrfs/backref.o
+  CC [M]  /home/px-btrfs/ulist.o
+  CC [M]  /home/px-btrfs/qgroup.o
+  CC [M]  /home/px-btrfs/send.o
+  CC [M]  /home/px-btrfs/dev-replace.o
+  CC [M]  /home/px-btrfs/raid56.o
+  CC [M]  /home/px-btrfs/uuid-tree.o
+  CC [M]  /home/px-btrfs/props.o
+  CC [M]  /home/px-btrfs/hash.o
+  CC [M]  /home/px-btrfs/acl.o
+  LD [M]  /home/px-btrfs/btrfs.o
+  Building modules, stage 2.
+  MODPOST 1 modules
+  CC      /home/px-btrfs/btrfs.mod.o
+  LD [M]  /home/px-btrfs/btrfs.ko
+make[1]: Leaving directory `/usr/src/kernels/3.10.0-327.10.1.el7.x86_64'
+Fri Oct 21 02:08:11 UTC 2016 device scan begin
+Scanning for Btrfs filesystems
+Fri Oct 21 02:08:11 UTC 2016 device scan end
+Failed to enable rt scheduler
+2016-10-21 02:08:13,863 CRIT Supervisor running as root (no user in config file)
+2016-10-21 02:08:14,044 INFO supervisord started with pid 1
+2016-10-21 02:08:15,060 INFO spawned: 'relayd' with pid 1696
+2016-10-21 02:08:15,061 INFO spawned: 'lttng' with pid 1697
+2016-10-21 02:08:15,064 INFO spawned: 'exec' with pid 1698
+2016-10-21 02:08:15,065 INFO spawned: 'pxdaemon' with pid 1699
+2016-10-21 02:08:15,093 INFO spawned: 'px_event_listener' with pid 1700
+Fri Oct 21 02:08:15 UTC 2016 size 25948672 is within limits of maxsize 436207616
+lttng not started yet...sleeping 
+
+2016-10-21 02:08:16,237 INFO success: relayd entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2016-10-21 02:08:16,237 INFO success: lttng entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2016-10-21 02:08:16,237 INFO success: exec entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2016-10-21 02:08:16,237 INFO success: pxdaemon entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2016-10-21 02:08:16,237 INFO success: px_event_listener entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+lttng not started yet...sleeping 
+
+Spawning a session daemon
+Session pxd created.
+Traces will be written in net://localhost
+Live timer set to 2000000 usec
+UST channel pxd_channel enabled for session pxd
+All UST events are enabled in channel pxd_channel
+Tracing started for session pxd
+Started px-storage with pid 1749
+bash: connect: Connection refused
+bash: /dev/tcp/localhost/9009: Connection refused
+px-storage not started yet...sleeping 
+
+C++ grpc server listening on 0.0.0.0:9009
+Started px with pid 1762
+Started watchdog with pid 1763
+2016-10-21_ 2:08:24: PX-Watchdog: Starting watcher
+2016-10-21_ 2:08:24: PX-Watchdog: Waiting for px process to start
+time="2016-10-21T02:08:24Z" level=info msg="Registering [kernel] as a volume driver" 
+time="2016-10-21T02:08:24Z" level=info msg="Starting PX Version: 1.0.8-a1390b4 - Build Version a1390b4e119aaea874ad4427f6f292ea81986b13" 
+time="2016-10-21T02:08:24Z" level=info msg="Developer license detected" 
+root      1762  1699  0 02:08 ?        00:00:00 /usr/local/bin/px -daemon
+time="2016-10-21T02:08:24Z" level=info msg="NodeID: a2f28cac-b3da-4cff-b9f2-d6cebc6c8ea5" 
+time="2016-10-21T02:08:24Z" level=info msg="PX Configuration Loaded..." 
+time="2016-10-21T02:08:24Z" level=info msg="PX Cluster ID: multi-node-test" 
+time="2016-10-21T02:08:24Z" level=info msg="PX Node ID: a2f28cac-b3da-4cff-b9f2-d6cebc6c8ea5" 
+time="2016-10-21T02:08:24Z" level=info msg="PX Node Index: 1" 
+time="2016-10-21T02:08:24Z" level=info msg="PX Management Iface: " 
+time="2016-10-21T02:08:24Z" level=info msg="PX KVDB: [http://192.168.56.101:4001]" 
+time="2016-10-21T02:08:24Z" level=info msg="PX Logging API: http://harbor.portworx.com/api/stats/listen?token=7db05483-84b5-11e6-a680-0242ac110003" 
+time="2016-10-21T02:08:24Z" level=info msg="PX Storage Devices: [/dev/loop3], Raid Level: data(raid0) md()" 
+time="2016-10-21T02:08:24Z" level=info msg="PX initialized with Docker host unix:///var/run/docker.sock" 
+time="2016-10-21T02:08:24Z" level=info msg="PX starting cluster manager..." 
+time="2016-10-21T02:08:24Z" level=info msg="PX cluster manager running." 
+time="2016-10-21T02:08:24Z" level=info msg="PX limiting cluster size to 3." 
+time="2016-10-21T02:08:24Z" level=info msg="Starting server on port: 9001" 
+time="2016-10-21T02:08:24Z" level=info msg="PX API server running on port 9001." 
+time="2016-10-21T02:08:24Z" level=info msg="Adding cluster event listener: Storage service" 
+time="2016-10-21T02:08:24Z" level=info msg="Adding cluster event listener: Scheduler" 
+time="2016-10-21T02:08:24Z" level=info msg="Initialize the scheduler client and the scheduler watch" 
+time="2016-10-21T02:08:24Z" level=info msg="Started a kvdb watch on key : scheduler/containers" 
+time="2016-10-21T02:08:24Z" level=info msg="Started a kvdb watch on key : scheduler/volumes" 
+time="2016-10-21T02:08:24Z" level=info msg="Started a kvdb watch on key : scheduler/nodes/list" 
+time="2016-10-21T02:08:24Z" level=info msg="Cluster manager starting..." 
+time="2016-10-21T02:08:24Z" level=info msg="Cluster db snapshot at: 167596" 
+time="2016-10-21T02:08:24Z" level=info msg="Starting collector watch at 167596" 
+time="2016-10-21T02:08:24Z" level=info msg="Cluster state is OK... Joining the cluster." 
+time="2016-10-21T02:08:24Z" level=info msg="Node a2f28cac-b3da-4cff-b9f2-d6cebc6c8ea5 joining cluster..." 
+time="2016-10-21T02:08:24Z" level=info msg="Cluster ID: multi-node-test" 
+time="2016-10-21T02:08:24Z" level=info msg="Node Mgmt IP: 172.18.0.4" 
+time="2016-10-21T02:08:24Z" level=info msg="Node Data IP: 172.18.0.4" 
+time="2016-10-21T02:08:24Z" level=info msg="Cluster database updated." 
+time="2016-10-21T02:08:24Z" level=info msg="Starting Gossip... Gossiping to these nodes : [172.18.0.3:9002]" 
+time="2016-10-21T02:08:24Z" level=info msg="gossip: Unable to join other nodes at startup : 1 error(s) occurred:\n\n* Failed to join 172.18.0.3: dial tcp 172.18.0.3:9002: getsockopt: connection refused" 
+time="2016-10-21T02:08:24Z" level=info msg="Waiting for the cluster to reach quorum..." 
+time="2016-10-21T02:08:27Z" level=info msg="Cluster db snapshot at: 167617" 
+time="2016-10-21T02:08:27Z" level=info msg="Starting collector watch at 167617" 
+time="2016-10-21T02:08:27Z" level=info msg="Starting storage provider with PXD" 
+time="2016-10-21T02:08:27Z" level=info msg="Starting REST service on socket : /run/docker/plugins/pxd.sock" 
+time="2016-10-21T02:08:27Z" level=info msg="Alerts initialized successfully for this cluster" 
+time="2016-10-21T02:08:38Z" level=warning msg="ETCD: spent 11 iterations locking pwx/multi-node-test/storage/locks/spec.lock\n" 
+time="2016-10-21T02:08:38Z" level=info Error=<nil> Function=nodeMap.Add MID=3db2de43-cabd-4e84-ac6d-75b787b12235 NID=0 Status=Up Version= 
+time="2016-10-21T02:08:38Z" level=info Error=<nil> Function=nodeMap.Add MID=8160c24c-eaf8-41cd-b808-d3f6dc47600b NID=2 Status=Down Version= 
+time="2016-10-21T02:08:38Z" level=info msg="Migrating storage spec from version: to version 1" 
+time="2016-10-21T02:08:38Z" level=info Error=<nil> Function=nodeMap.Add MID=a2f28cac-b3da-4cff-b9f2-d6cebc6c8ea5 NID=1 Status=Up Version=1 
+time="2016-10-21T02:08:38Z" level=info msg="Found 1 DataPools" 
+time="2016-10-21T02:08:38Z" level=info msg="Loading datapool: &{0 COS_TYPE_MEDIUM STORAGE_MEDIUM_MAGNETIC  {map[1:{ /dev/loop3 STORAGE_MEDIUM_MAGNETIC true 0 0 0 0 1073741824 145101946 Unknown seconds:1477015308 nanos:798938267 }] Resources Scan OK 1 d662cb8c-d6e7-489b-b4a3-d64c97b3a8d0 map[]  0 d662cb8c-d6e7-489b-b4a3-d64c97b3a8d0 0 0 0 Up 1073741824 }  0 0}" 
+time="2016-10-21T02:08:39Z" level=info msg="Benchmarking drive  /dev/loop3" 
+time="2016-10-21T02:08:53Z" level=info msg="Storage pool WriteThroughput  151249000" 
+time="2016-10-21T02:08:53Z" level=info msg="Waiting for storage to become available" Driver=pxd Function=NodeStart 
+time="2016-10-21T02:08:53Z" level=info msg="Loading block driver: Kernel Mode Driver" 
+time="2016-10-21T02:08:53Z" level=info msg="[Version: 167617], [Identity: 1], [BaseDir: /var/.px]" Function=grpc-client.BlockInitCheck Tag=2 
+time="2016-10-21 02:08:54Z" level=INFO msg="int SystemMonitor::consistency_check() SM magic:4e4f4d53 ver: 0 ERR code:0 spare: 0"
+time="2016-10-21T02:08:54Z" level=info msg=Done Function=grpc-client.BlockInitCheck Tag=2 
+time="2016-10-21T02:08:54Z" level=info Function=grpc-client.DefaultRuntimeConfig Tag=3 
+time="2016-10-21T02:08:54Z" level=info msg=Done Function=grpc-client.DefaultRuntimeConfig Tag=3 
+Initializing node 0 with &{kernel 1.0.7-d713bab 0  0 3db2de43-cabd-4e84-ac6d-75b787b12235 tcp://172.18.0.2:9003 http://172.18.0.2:9001 /var/.px /var/.px {map[1:{ /dev/loop2 STORAGE_MEDIUM_MAGNETIC true 0 0 0 0 1073741824 145101946 Unknown seconds:1477015304 nanos:118118200 }] Resources Scan OK 1 b69279c4-f95f-444d-9f8a-351c44243fda map[]  0 b69279c4-f95f-444d-9f8a-351c44243fda 0 0 0 Up 1073741824 } {map[]  0  map[]  0  0 0 0  0 } {   }  map[] Up 0 0 false [] 0}
+Initializing node 1 with &{kernel 1.0.8-a1390b4 0 1 1 a2f28cac-b3da-4cff-b9f2-d6cebc6c8ea5 tcp://172.18.0.4:9003 http://172.18.0.4:9001 /var/.px /var/.px {map[0:1:{1 /dev/loop3 STORAGE_MEDIUM_MAGNETIC true 0 0 0 0 1073741824 145101946 Unknown seconds:1477015719 nanos:469483255 }] Resources Scan OK 1  map[]  0  0 0 0 Up 1073741824 } {map[]  0  map[]  0  0 0 0  0 } {   }  map[] Up 0 0 false [0xc8206b80e0] 0}
+Initializing node 2 with &{kernel 1.0.7-d713bab 0  2 8160c24c-eaf8-41cd-b808-d3f6dc47600b   /var/.px /var/.px {map[1:{ /dev/loop4 STORAGE_MEDIUM_MAGNETIC true 0 0 0 0 1073741824 145101946 Unknown seconds:1477015314 nanos:251778030 }] Resources Scan OK 1 eae3d6ad-d742-4840-b057-43a5f000b8f6 map[]  0 eae3d6ad-d742-4840-b057-43a5f000b8f6 0 0 0 Up 1073741824 } {map[]  0  map[]  0  0 0 0  0 } {   }  map[] Down 0 0 false [] 0}
+time="2016-10-21T02:08:54Z" level=info msg="[Version: 167617], [Identity: 1]" Function=grpc-client.BlockInit Tag=4 
+time="2016-10-21 02:08:54Z" level=INFO msg="void SystemMonitor::clear_error()"
+time="2016-10-21 02:08:54Z" level=INFO msg="void SystemMonitor::clear_error(): Wrote 72 bytes to fd: 13"
+time="2016-10-21 02:08:54Z" level=INFO msg="Using checksum: AD32"
+time="2016-10-21 02:08:54Z" level=INFO msg="Processing shared memory bufpool.shm"
+time="2016-10-21 02:08:55Z" level=INFO msg="Finished processing shared memory"
+time="2016-10-21 02:08:55Z" level=INFO msg="Creating devices... "
+time="2016-10-21 02:08:55Z" level=INFO msg="Replaying the logs ..."
+time="2016-10-21 02:08:55Z" level=INFO msg="Starting messenger ..."
+time="2016-10-21 02:08:55Z" level=WARN msg="zctx_new: Cannot set thread scheduler to SCHED_RR  1: Operation not permitted"
+time="2016-10-21 02:08:55Z" level=INFO msg="GC deleted devices..."
+time="2016-10-21 02:08:55Z" level=INFO msg="DeviceStore GC: delete unreferenced subvolumes dir /var/.px/0"
+time="2016-10-21 02:08:55Z" level=INFO msg="DeviceStore GC: done"
+time="2016-10-21 02:08:55Z" level=INFO msg="Replaying async writes ..."
+time="2016-10-21 02:08:55Z" level=INFO msg="Datastore ready."
+time="2016-10-21 02:08:55Z" level=INFO msg="Starting PX kernel mode driver..."
+time="2016-10-21T02:08:55Z" level=info msg=Done Function=grpc-client.BlockInit Tag=4 
+time="2016-10-21T02:08:55Z" level=info msg="BlockDriver Start done..." 
+time="2016-10-21 02:08:55Z" level=INFO msg="Cleaning unwanted devices..."
+time="2016-10-21 02:08:55Z" level=NOTE msg="remove_unmounted: Done removing unwanted attached devices"
+time="2016-10-21T02:08:55Z" level=info Function=grpc-server.BlockReady Tag=1 
+time="2016-10-21T02:08:55Z" level=info msg="[Done]" Function=grpc-server.BlockReady Tag=1 
+time="2016-10-21T02:08:55Z" level=info Error=<nil> Function=processNotification Notification=&{16 0001-01-01 00:00:00 +0000 UTC 0 {Up}} 
+time="2016-10-21T02:08:55Z" level=info msg="Storage is ready" Driver=pxd Function=NodeStart 
+time="2016-10-21T02:08:55Z" level=info msg="Node 0, usage info: {{0 0 0 0 0 0} 3db2de43-cabd-4e84-ac6d-75b787b12235 0 true map[0:0xc8206bc1e0]}" 
+time="2016-10-21T02:08:55Z" level=info msg="\t\tPool 0 :: {1073741824 0 0 0 2 true 0 0}" 
+time="2016-10-21T02:08:55Z" level=info msg="Current hierarchy, number of regions: 0" 
+time="2016-10-21T02:08:55Z" level=info msg="Node 0, usage info: {{0 0 0 0 0 0} 3db2de43-cabd-4e84-ac6d-75b787b12235 0 true map[0:0xc8206bc1e0]}" 
+time="2016-10-21T02:08:55Z" level=info msg="\t\tPool 0 :: {1073741824 0 0 0 2 true 0 0}" 
+time="2016-10-21T02:08:55Z" level=info msg="Node 1, usage info: {{0 0 0 0 0 0} a2f28cac-b3da-4cff-b9f2-d6cebc6c8ea5 1 true map[0:0xc8206bc600]}" 
+time="2016-10-21T02:08:55Z" level=info msg="\t\tPool 0 :: {1073741824 0 0 0 3 true 0 0}" 
+time="2016-10-21T02:08:55Z" level=info msg="Current hierarchy, number of regions: 1" 
+time="2016-10-21T02:08:55Z" level=info msg="Region: default" 
+time="2016-10-21T02:08:55Z" level=info msg="   Zone: default" 
+time="2016-10-21T02:08:55Z" level=info msg="     Rack: default" 
+time="2016-10-21T02:08:55Z" level=info msg="       Node: 0" 
+time="2016-10-21T02:08:55Z" level=info msg="Node 0, usage info: {{0 0 0 0 0 0} 3db2de43-cabd-4e84-ac6d-75b787b12235 0 true map[0:0xc8206bc1e0]}" 
+time="2016-10-21T02:08:55Z" level=info msg="\t\tPool 0 :: {1073741824 0 0 0 2 true 0 0}" 
+time="2016-10-21T02:08:55Z" level=info msg="Node 1, usage info: {{0 0 0 0 0 0} a2f28cac-b3da-4cff-b9f2-d6cebc6c8ea5 1 true map[0:0xc8206bc600]}" 
+time="2016-10-21T02:08:55Z" level=info msg="\t\tPool 0 :: {1073741824 0 0 0 3 true 0 0}" 
+time="2016-10-21T02:08:55Z" level=info msg="Node 2, usage info: {{0 0 0 0 0 0} 8160c24c-eaf8-41cd-b808-d3f6dc47600b 2 false map[0:0xc8206bc870]}" 
+time="2016-10-21T02:08:55Z" level=info msg="\t\tPool 0 :: {1073741824 0 0 0 2 false 0 0}" 
+time="2016-10-21T02:08:55Z" level=info msg="Current hierarchy, number of regions: 1" 
+time="2016-10-21T02:08:55Z" level=info msg="Region: default" 
+time="2016-10-21T02:08:55Z" level=info msg="   Zone: default" 
+time="2016-10-21T02:08:55Z" level=info msg="     Rack: default" 
+time="2016-10-21T02:08:55Z" level=info msg="       Node: 0" 
+time="2016-10-21T02:08:55Z" level=info msg="       Node: 1" 
+sh: /proc/sys/net/ipv4/tcp_tw_reuse: No such file or directory
+sh: /proc/sys/net/ipv4/tcp_tw_recycle: No such file or directory
+time="2016-10-21T02:08:55Z" level=info msg="Replaying watch updates from index 167617" 
+time="2016-10-21T02:08:55Z" level=info msg="Callback watchdog started" 
+NS client starting fuse module
+Starting NS server
+time="2016-10-21T02:08:55Z" level=info msg="Storage spec update" Error=<nil> Function=watchNodes MID=8160c24c-eaf8-41cd-b808-d3f6dc47600b NID=2 Status=Down Version=1 
+time="2016-10-21T02:08:55Z" level=info msg="Node 8160c24c-eaf8-41cd-b808-d3f6dc47600b" Driver=kernel Function=NodeStateChange Status=Down 
+time="2016-10-21T02:08:55Z" level=info msg="[NodeId: 2]" Function=grpc-client.NodeDown Tag=5 
+time="2016-10-21T02:08:55Z" level=info msg=Done Function=grpc-client.NodeDown Tag=5 
+time="2016-10-21T02:08:55Z" level=info msg="Node 0, usage info: {{0 0 0 0 0 0} 3db2de43-cabd-4e84-ac6d-75b787b12235 0 true map[0:0xc8206bc1e0]}" 
+time="2016-10-21T02:08:55Z" level=info msg="\t\tPool 0 :: {1073741824 0 0 0 2 true 0 0}" 
+time="2016-10-21T02:08:55Z" level=info msg="Node 1, usage info: {{0 0 0 0 0 0} a2f28cac-b3da-4cff-b9f2-d6cebc6c8ea5 1 true map[0:0xc8206bc600]}" 
+time="2016-10-21T02:08:55Z" level=info msg="\t\tPool 0 :: {1073741824 0 0 0 3 true 0 0}" 
+time="2016-10-21T02:08:55Z" level=info msg="Node 2, usage info: {{0 0 0 0 0 0} 8160c24c-eaf8-41cd-b808-d3f6dc47600b 2 false map[0:0xc8206bc870]}" 
+time="2016-10-21T02:08:55Z" level=info msg="\t\tPool 0 :: {1073741824 0 0 0 3 false 0 0}" 
+time="2016-10-21T02:08:55Z" level=info msg="Current hierarchy, number of regions: 1" 
+time="2016-10-21T02:08:55Z" level=info msg="Region: default" 
+time="2016-10-21T02:08:55Z" level=info msg="   Zone: default" 
+time="2016-10-21T02:08:55Z" level=info msg="     Rack: default" 
+time="2016-10-21T02:08:55Z" level=info msg="       Node: 0" 
+time="2016-10-21T02:08:55Z" level=info msg="       Node: 1" 
+time="2016-10-21T02:08:55Z" level=info msg="       Node: 2" 
+time="2016-10-21T02:08:55Z" level=info msg="Node unavailable for provisioning : spec: {kernel 1.0.8-a1390b4 0 1 2 8160c24c-eaf8-41cd-b808-d3f6dc47600b tcp://172.18.0.3:9003 http://172.18.0.3:9001 /var/.px /var/.px {map[0:1:{1 /dev/loop4 STORAGE_MEDIUM_MAGNETIC true 0 0 0 0 1073741824 145101946 Unknown seconds:1477015706 nanos:723977935 }] Resources Scan OK 1  map[]  0  0 0 0 Up 1073741824 } {map[]  0  map[]  0  0 0 0  0 } {   }  map[] Down 0 0 false [0xc82045e000] 0} current provision info: {{0 0 0 0 0 0} 8160c24c-eaf8-41cd-b808-d3f6dc47600b 2 false map[0:0xc8206bc870]}" 
+time="2016-10-21T02:08:55Z" level=info msg="Storage spec update" Error=<nil> Function=watchNodes MID=8160c24c-eaf8-41cd-b808-d3f6dc47600b NID=2 Status=Up Version=1 
+time="2016-10-21T02:08:55Z" level=info msg="Node 8160c24c-eaf8-41cd-b808-d3f6dc47600b" Driver=kernel Function=NodeStateChange Status=Up 
+time="2016-10-21T02:08:55Z" level=info msg="[NodeId: 2]" Function=grpc-client.NodeUp Tag=6 
+time="2016-10-21T02:08:55Z" level=info msg=Done Function=grpc-client.NodeUp Tag=6 
+time="2016-10-21T02:08:55Z" level=info msg="Node 0, usage info: {{0 0 0 0 0 0} 3db2de43-cabd-4e84-ac6d-75b787b12235 0 true map[0:0xc8206bc1e0]}" 
+time="2016-10-21T02:08:55Z" level=info msg="\t\tPool 0 :: {1073741824 0 0 0 2 true 0 0}" 
+time="2016-10-21T02:08:55Z" level=info msg="Node 1, usage info: {{0 0 0 0 0 0} a2f28cac-b3da-4cff-b9f2-d6cebc6c8ea5 1 true map[0:0xc8206bc600]}" 
+time="2016-10-21T02:08:55Z" level=info msg="\t\tPool 0 :: {1073741824 0 0 0 3 true 0 0}" 
+time="2016-10-21T02:08:55Z" level=info msg="Node 2, usage info: {{0 0 0 0 0 0} 8160c24c-eaf8-41cd-b808-d3f6dc47600b 2 true map[0:0xc8206bc870]}" 
+time="2016-10-21T02:08:55Z" level=info msg="\t\tPool 0 :: {1073741824 0 0 0 3 true 0 0}" 
+time="2016-10-21T02:08:55Z" level=info msg="Current hierarchy, number of regions: 1" 
+time="2016-10-21T02:08:55Z" level=info msg="Region: default" 
+time="2016-10-21T02:08:55Z" level=info msg="   Zone: default" 
+time="2016-10-21T02:08:55Z" level=info msg="     Rack: default" 
+time="2016-10-21T02:08:55Z" level=info msg="       Node: 0" 
+time="2016-10-21T02:08:55Z" level=info msg="       Node: 1" 
+time="2016-10-21T02:08:55Z" level=info msg="       Node: 2" 
+time="2016-10-21T02:08:55Z" level=info msg="Ignoring older node down update, version: 167662, node up version: 167670" Error=<nil> Function=watchNodes MID=a2f28cac-b3da-4cff-b9f2-d6cebc6c8ea5 NID=1 Status=Down Version=1 
+time="2016-10-21T02:08:55Z" level=info msg="Storage spec update" Error=<nil> Function=watchNodes MID=8160c24c-eaf8-41cd-b808-d3f6dc47600b NID=2 Status=Up Version=1 
+time="2016-10-21T02:08:55Z" level=info msg="Node 8160c24c-eaf8-41cd-b808-d3f6dc47600b" Driver=kernel Function=NodeStateChange Status=Up 
+time="2016-10-21T02:08:55Z" level=info msg="[NodeId: 2]" Function=grpc-client.NodeUp Tag=7 
+time="2016-10-21T02:08:55Z" level=info msg=Done Function=grpc-client.NodeUp Tag=7 
+time="2016-10-21T02:08:55Z" level=info msg="Node 0, usage info: {{0 0 0 0 0 0} 3db2de43-cabd-4e84-ac6d-75b787b12235 0 true map[0:0xc8206bc1e0]}" 
+time="2016-10-21T02:08:55Z" level=info msg="\t\tPool 0 :: {1073741824 0 0 0 2 true 0 0}" 
+time="2016-10-21T02:08:55Z" level=info msg="Node 1, usage info: {{0 0 0 0 0 0} a2f28cac-b3da-4cff-b9f2-d6cebc6c8ea5 1 true map[0:0xc8206bc600]}" 
+time="2016-10-21T02:08:55Z" level=info msg="\t\tPool 0 :: {1073741824 0 0 0 3 true 0 0}" 
+time="2016-10-21T02:08:55Z" level=info msg="Node 2, usage info: {{0 0 0 0 0 0} 8160c24c-eaf8-41cd-b808-d3f6dc47600b 2 true map[0:0xc8206bc870]}" 
+time="2016-10-21T02:08:55Z" level=info msg="\t\tPool 0 :: {1073741824 0 0 0 3 true 0 0}" 
+time="2016-10-21T02:08:55Z" level=info msg="Current hierarchy, number of regions: 1" 
+time="2016-10-21T02:08:55Z" level=info msg="Region: default" 
+time="2016-10-21T02:08:55Z" level=info msg="   Zone: default" 
+time="2016-10-21T02:08:55Z" level=info msg="     Rack: default" 
+time="2016-10-21T02:08:55Z" level=info msg="       Node: 0" 
+time="2016-10-21T02:08:55Z" level=info msg="       Node: 1" 
+time="2016-10-21T02:08:55Z" level=info msg="       Node: 2" 
+time="2016-10-21T02:08:55Z" level=info msg="Storage spec update" Error=<nil> Function=watchNodes MID=a2f28cac-b3da-4cff-b9f2-d6cebc6c8ea5 NID=1 Status=Up Version=1 
+time="2016-10-21T02:08:55Z" level=info msg="Node a2f28cac-b3da-4cff-b9f2-d6cebc6c8ea5" Driver=kernel Function=NodeStateChange Status=Up 
+time="2016-10-21T02:08:55Z" level=info msg="[NodeId: 1]" Function=grpc-client.NodeUp Tag=8 
+time="2016-10-21T02:08:55Z" level=info msg=Done Function=grpc-client.NodeUp Tag=8 
+time="2016-10-21T02:08:55Z" level=info msg="Node 1, usage info: {{0 0 0 0 0 0} a2f28cac-b3da-4cff-b9f2-d6cebc6c8ea5 1 true map[0:0xc8206bc600]}" 
+time="2016-10-21T02:08:55Z" level=info msg="\t\tPool 0 :: {1073741824 0 0 0 3 true 0 0}" 
+time="2016-10-21T02:08:55Z" level=info msg="Node 2, usage info: {{0 0 0 0 0 0} 8160c24c-eaf8-41cd-b808-d3f6dc47600b 2 true map[0:0xc8206bc870]}" 
+time="2016-10-21T02:08:55Z" level=info msg="\t\tPool 0 :: {1073741824 0 0 0 3 true 0 0}" 
+time="2016-10-21T02:08:55Z" level=info msg="Node 0, usage info: {{0 0 0 0 0 0} 3db2de43-cabd-4e84-ac6d-75b787b12235 0 true map[0:0xc8206bc1e0]}" 
+time="2016-10-21T02:08:55Z" level=info msg="\t\tPool 0 :: {1073741824 0 0 0 2 true 0 0}" 
+time="2016-10-21T02:08:55Z" level=info msg="Current hierarchy, number of regions: 1" 
+time="2016-10-21T02:08:55Z" level=info msg="Region: default" 
+time="2016-10-21T02:08:55Z" level=info msg="   Zone: default" 
+time="2016-10-21T02:08:55Z" level=info msg="     Rack: default" 
+time="2016-10-21T02:08:55Z" level=info msg="       Node: 0" 
+time="2016-10-21T02:08:55Z" level=info msg="       Node: 1" 
+time="2016-10-21T02:08:55Z" level=info msg="       Node: 2" 
+time="2016-10-21T02:08:55Z" level=info msg="Starting watch from index 167669" 
+time="2016-10-21T02:08:55Z" level=info msg="Storage spec update" Error=<nil> Function=watchNodes MID=a2f28cac-b3da-4cff-b9f2-d6cebc6c8ea5 NID=1 Status=Up Version=1 
+time="2016-10-21T02:08:55Z" level=info msg="Node a2f28cac-b3da-4cff-b9f2-d6cebc6c8ea5" Driver=kernel Function=NodeStateChange Status=Up 
+time="2016-10-21T02:08:55Z" level=info msg="[NodeId: 1]" Function=grpc-client.NodeUp Tag=9 
+time="2016-10-21T02:08:55Z" level=info msg=Done Function=grpc-client.NodeUp Tag=9 
+time="2016-10-21T02:08:55Z" level=info msg="Scheduler connecting to docker at unix:///var/run/docker.sock" 
+time="2016-10-21T02:08:55Z" level=info msg="Connected to Docker daemon" 
+time="2016-10-21T02:08:55Z" level=info msg="Processing containers..." 
+time="2016-10-21T02:08:55Z" level=info msg="Node 1, usage info: {{0 0 0 0 0 0} a2f28cac-b3da-4cff-b9f2-d6cebc6c8ea5 1 true map[0:0xc8206bc600]}" 
+time="2016-10-21T02:08:55Z" level=info msg="\t\tPool 0 :: {1073741824 0 0 0 3 true 0 0}" 
+time="2016-10-21T02:08:55Z" level=info msg="Node 2, usage info: {{0 0 0 0 0 0} 8160c24c-eaf8-41cd-b808-d3f6dc47600b 2 true map[0:0xc8206bc870]}" 
+time="2016-10-21T02:08:55Z" level=info msg="\t\tPool 0 :: {1073741824 0 0 0 3 true 0 0}" 
+time="2016-10-21T02:08:55Z" level=info msg="Node 0, usage info: {{0 0 0 0 0 0} 3db2de43-cabd-4e84-ac6d-75b787b12235 0 true map[0:0xc8206bc1e0]}" 
+time="2016-10-21T02:08:55Z" level=info msg="\t\tPool 0 :: {1073741824 0 0 0 2 true 0 0}" 
+time="2016-10-21T02:08:55Z" level=info msg="Current hierarchy, number of regions: 1" 
+time="2016-10-21T02:08:55Z" level=info msg="Region: default" 
+time="2016-10-21T02:08:55Z" level=info msg="   Zone: default" 
+time="2016-10-21T02:08:55Z" level=info msg="     Rack: default" 
+time="2016-10-21T02:08:55Z" level=info msg="       Node: 2" 
+time="2016-10-21T02:08:55Z" level=info msg="       Node: 0" 
+time="2016-10-21T02:08:55Z" level=info msg="       Node: 1" 
+time="2016-10-21T02:08:55Z" level=info msg="Scheduler ready." 
+time="2016-10-21T02:08:55Z" level=info msg="Cluster database updated." 
+time="2016-10-21T02:08:55Z" level=info msg="PX is ready on Node: a2f28cac-b3da-4cff-b9f2-d6cebc6c8ea5. CLI accessible at /opt/pwx/bin/pxctl." 
+time="2016-10-21T02:08:55Z" level=info msg="Detected node 8160c24c-eaf8-41cd-b808-d3f6dc47600b  to be in the cluster." 
+time="2016-10-21T02:08:57Z" level=info msg="Storage spec update" Error=<nil> Function=watchNodes MID=a2f28cac-b3da-4cff-b9f2-d6cebc6c8ea5 NID=1 Status=Up Version=1 
+time="2016-10-21T02:08:57Z" level=info msg="Node a2f28cac-b3da-4cff-b9f2-d6cebc6c8ea5" Driver=kernel Function=NodeStateChange Status=Up 
+time="2016-10-21T02:08:57Z" level=info msg="[NodeId: 1]" Function=grpc-client.NodeUp Tag=13 
+time="2016-10-21T02:08:57Z" level=info msg=Done Function=grpc-client.NodeUp Tag=13 
+time="2016-10-21T02:08:57Z" level=info msg="Node 2, usage info: {{0 0 0 1073741824 928639878 0} 8160c24c-eaf8-41cd-b808-d3f6dc47600b 2 true map[0:0xc8206bc870]}" 
+time="2016-10-21T02:08:57Z" level=info msg="\t\tPool 0 :: {1073741824 0 0 0 3 true 0 0}" 
+time="2016-10-21T02:08:57Z" level=info msg="Node 0, usage info: {{0 0 0 0 0 0} 3db2de43-cabd-4e84-ac6d-75b787b12235 0 true map[0:0xc8206bc1e0]}" 
+time="2016-10-21T02:08:57Z" level=info msg="\t\tPool 0 :: {1073741824 0 0 0 2 true 0 0}" 
+time="2016-10-21T02:08:57Z" level=info msg="Node 1, usage info: {{0 99.46236559139786 25 1073741824 928639878 0} a2f28cac-b3da-4cff-b9f2-d6cebc6c8ea5 1 true map[0:0xc8206bc600]}" 
+time="2016-10-21T02:08:57Z" level=info msg="\t\tPool 0 :: {1073741824 0 0 0 3 true 0 0}" 
+time="2016-10-21T02:08:57Z" level=info msg="Current hierarchy, number of regions: 1" 
+time="2016-10-21T02:08:57Z" level=info msg="Region: default" 
+time="2016-10-21T02:08:57Z" level=info msg="   Zone: default" 
+time="2016-10-21T02:08:57Z" level=info msg="     Rack: default" 
+time="2016-10-21T02:08:57Z" level=info msg="       Node: 0" 
+time="2016-10-21T02:08:57Z" level=info msg="       Node: 1" 
+time="2016-10-21T02:08:57Z" level=info msg="       Node: 2" 
+2016-10-21_ 2:10:25: PX-Watchdog: (pid 1762): Begin monitoring
+time="2016-10-21T02:10:55Z" level=info msg="Storage spec update" Error=<nil> Function=watchNodes MID=8160c24c-eaf8-41cd-b808-d3f6dc47600b NID=2 Status=Up Version=1 
+time="2016-10-21T02:10:55Z" level=info msg="Node 8160c24c-eaf8-41cd-b808-d3f6dc47600b" Driver=kernel Function=NodeStateChange Status=Up 
+time="2016-10-21T02:10:55Z" level=info msg="[NodeId: 2]" Function=grpc-client.NodeUp Tag=188 
+time="2016-10-21T02:10:55Z" level=info msg=Done Function=grpc-client.NodeUp Tag=188 
+time="2016-10-21T02:10:55Z" level=info msg="Node 1, usage info: {{0 0 26 1073741824 928639878 0} a2f28cac-b3da-4cff-b9f2-d6cebc6c8ea5 1 true map[0:0xc8206bc600]}" 
+time="2016-10-21T02:10:55Z" level=info msg="\t\tPool 0 :: {1073741824 0 0 0 3 true 0 0}" 
+time="2016-10-21T02:10:55Z" level=info msg="Node 2, usage info: {{0 0.5181347150259067 26 1073741824 928639878 0} 8160c24c-eaf8-41cd-b808-d3f6dc47600b 2 true map[0:0xc8206bc870]}" 
+time="2016-10-21T02:10:55Z" level=info msg="\t\tPool 0 :: {1073741824 0 0 0 3 true 0 0}" 
+time="2016-10-21T02:10:55Z" level=info msg="Node 0, usage info: {{0 0 0 0 0 0} 3db2de43-cabd-4e84-ac6d-75b787b12235 0 true map[0:0xc8206bc1e0]}" 
+time="2016-10-21T02:10:55Z" level=info msg="\t\tPool 0 :: {1073741824 0 0 0 2 true 0 0}" 
+time="2016-10-21T02:10:55Z" level=info msg="Current hierarchy, number of regions: 1" 
+time="2016-10-21T02:10:55Z" level=info msg="Region: default" 
+time="2016-10-21T02:10:55Z" level=info msg="   Zone: default" 
+time="2016-10-21T02:10:55Z" level=info msg="     Rack: default" 
+time="2016-10-21T02:10:55Z" level=info msg="       Node: 0" 
+time="2016-10-21T02:10:55Z" level=info msg="       Node: 1" 
+time="2016-10-21T02:10:55Z" level=info msg="       Node: 2" 
+time="2016-10-21T02:10:58Z" level=info msg="Storage spec update" Error=<nil> Function=watchNodes MID=a2f28cac-b3da-4cff-b9f2-d6cebc6c8ea5 NID=1 Status=Up Version=1 
+time="2016-10-21T02:10:58Z" level=info msg="Node a2f28cac-b3da-4cff-b9f2-d6cebc6c8ea5" Driver=kernel Function=NodeStateChange Status=Up 
+time="2016-10-21T02:10:58Z" level=info msg="[NodeId: 1]" Function=grpc-client.NodeUp Tag=195 
+time="2016-10-21T02:10:58Z" level=info msg=Done Function=grpc-client.NodeUp Tag=195 
+time="2016-10-21T02:10:58Z" level=info msg="Node 0, usage info: {{0 0 0 0 0 0} 3db2de43-cabd-4e84-ac6d-75b787b12235 0 true map[0:0xc8206bc1e0]}" 
+time="2016-10-21T02:10:58Z" level=info msg="\t\tPool 0 :: {1073741824 0 0 0 2 true 0 0}" 
+time="2016-10-21T02:10:58Z" level=info msg="Node 1, usage info: {{0 10.81081081081081 26 1073741824 928639878 0} a2f28cac-b3da-4cff-b9f2-d6cebc6c8ea5 1 true map[0:0xc8206bc600]}" 
+time="2016-10-21T02:10:58Z" level=info msg="\t\tPool 0 :: {1073741824 0 0 0 3 true 0 0}" 
+time="2016-10-21T02:10:58Z" level=info msg="Node 2, usage info: {{0 0.5235602094240838 26 1073741824 928639878 0} 8160c24c-eaf8-41cd-b808-d3f6dc47600b 2 true map[0:0xc8206bc870]}" 
+time="2016-10-21T02:10:58Z" level=info msg="\t\tPool 0 :: {1073741824 0 0 0 3 true 0 0}" 
+time="2016-10-21T02:10:58Z" level=info msg="Current hierarchy, number of regions: 1" 
+time="2016-10-21T02:10:58Z" level=info msg="Region: default" 
+time="2016-10-21T02:10:58Z" level=info msg="   Zone: default" 
+time="2016-10-21T02:10:58Z" level=info msg="     Rack: default" 
+time="2016-10-21T02:10:58Z" level=info msg="       Node: 0" 
+time="2016-10-21T02:10:58Z" level=info msg="       Node: 1" 
+time="2016-10-21T02:10:58Z" level=info msg="       Node: 2" 
+Fri Oct 21 02:12:28 UTC 2016 : Running on Linux 4ab1854ccc88 3.10.0-327.10.1.el7.x86_64 #1 SMP Tue Feb 16 17:03:50 UTC 2016 x86_64 x86_64 x86_64 GNU/Linux
+PXD version:  42b0f7ca861ba4c2060dbff6642edefb35d25b79
+patch_fs already done
+Failed to enable rt scheduler
+2016-10-21 02:12:29,027 CRIT Supervisor running as root (no user in config file)
+2016-10-21 02:12:29,118 INFO supervisord started with pid 1
+2016-10-21 02:12:30,120 INFO spawned: 'relayd' with pid 54
+2016-10-21 02:12:30,122 INFO spawned: 'lttng' with pid 55
+2016-10-21 02:12:30,123 INFO spawned: 'exec' with pid 56
+2016-10-21 02:12:30,125 INFO spawned: 'pxdaemon' with pid 57
+2016-10-21 02:12:30,126 INFO spawned: 'px_event_listener' with pid 58
+lttng not started yet...sleeping 
+
+Fri Oct 21 02:12:30 UTC 2016 size 26154656 is within limits of maxsize 436207616
+2016-10-21 02:12:31,234 INFO success: relayd entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2016-10-21 02:12:31,234 INFO success: lttng entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2016-10-21 02:12:31,234 INFO success: exec entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2016-10-21 02:12:31,234 INFO success: pxdaemon entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2016-10-21 02:12:31,234 INFO success: px_event_listener entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+lttng not started yet...sleeping 
+
+Spawning a session daemon
+Session pxd created.
+Traces will be written in net://localhost
+Live timer set to 2000000 usec
+UST channel pxd_channel enabled for session pxd
+All UST events are enabled in channel pxd_channel
+Tracing started for session pxd
+Started px-storage with pid 121
+bash: connect: Connection refused
+bash: /dev/tcp/localhost/9009: Connection refused
+px-storage not started yet...sleeping 
+
+C++ grpc server listening on 0.0.0.0:9009
+Started px with pid 134
+Started watchdog with pid 135
+2016-10-21_ 2:12:39: PX-Watchdog: Starting watcher
+2016-10-21_ 2:12:39: PX-Watchdog: Waiting for px process to start
+root       134    57  0 02:12 ?        00:00:00 /usr/local/bin/px -daemon
+time="2016-10-21T02:12:39Z" level=info msg="Registering [kernel] as a volume driver" 
+time="2016-10-21T02:12:39Z" level=info msg="Starting PX Version: 1.0.8-a1390b4 - Build Version a1390b4e119aaea874ad4427f6f292ea81986b13" 
+time="2016-10-21T02:12:39Z" level=info msg="Developer license detected" 
+time="2016-10-21T02:12:39Z" level=info msg="NodeID: a2f28cac-b3da-4cff-b9f2-d6cebc6c8ea5" 
+time="2016-10-21T02:12:39Z" level=info msg="PX Configuration Loaded..." 
+time="2016-10-21T02:12:39Z" level=info msg="PX Cluster ID: multi-node-test" 
+time="2016-10-21T02:12:39Z" level=info msg="PX Node ID: a2f28cac-b3da-4cff-b9f2-d6cebc6c8ea5" 
+time="2016-10-21T02:12:39Z" level=info msg="PX Node Index: 1" 
+time="2016-10-21T02:12:39Z" level=info msg="PX Management Iface: " 
+time="2016-10-21T02:12:39Z" level=info msg="PX KVDB: [http://192.168.56.101:4001]" 
+time="2016-10-21T02:12:39Z" level=info msg="PX Logging API: http://harbor.portworx.com/api/stats/listen?token=7db05483-84b5-11e6-a680-0242ac110003" 
+time="2016-10-21T02:12:39Z" level=info msg="PX Storage Devices: [/dev/loop3], Raid Level: data(raid0) md()" 
+time="2016-10-21T02:12:39Z" level=info msg="PX initialized with Docker host unix:///var/run/docker.sock" 
+time="2016-10-21T02:12:39Z" level=info msg="PX starting cluster manager..." 
+time="2016-10-21T02:12:39Z" level=info msg="PX cluster manager running." 
+time="2016-10-21T02:12:39Z" level=info msg="PX limiting cluster size to 3." 
+time="2016-10-21T02:12:39Z" level=info msg="Starting server on port: 9001" 
+time="2016-10-21T02:12:39Z" level=info msg="PX API server running on port 9001." 
+time="2016-10-21T02:12:39Z" level=info msg="Adding cluster event listener: Storage service" 
+time="2016-10-21T02:12:39Z" level=info msg="Adding cluster event listener: Scheduler" 
+time="2016-10-21T02:12:39Z" level=info msg="Initialize the scheduler client and the scheduler watch" 
+time="2016-10-21T02:12:39Z" level=info msg="Started a kvdb watch on key : scheduler/containers" 
+time="2016-10-21T02:12:39Z" level=info msg="Started a kvdb watch on key : scheduler/volumes" 
+time="2016-10-21T02:12:39Z" level=info msg="Started a kvdb watch on key : scheduler/nodes/list" 
+time="2016-10-21T02:12:39Z" level=info msg="Cluster manager starting..." 
+time="2016-10-21T02:12:39Z" level=info msg="Cluster db snapshot at: 167764" 
+time="2016-10-21T02:12:39Z" level=info msg="Starting collector watch at 167764" 
+time="2016-10-21T02:12:39Z" level=info msg="Cluster state is OK... Joining the cluster." 
+time="2016-10-21T02:12:39Z" level=info msg="Node a2f28cac-b3da-4cff-b9f2-d6cebc6c8ea5 joining cluster..." 
+time="2016-10-21T02:12:39Z" level=info msg="Cluster ID: multi-node-test" 
+time="2016-10-21T02:12:39Z" level=info msg="Node Mgmt IP: 172.18.0.2" 
+time="2016-10-21T02:12:39Z" level=info msg="Node Data IP: 172.18.0.2" 
+time="2016-10-21T02:12:39Z" level=info msg="Cluster database updated." 
+time="2016-10-21T02:12:39Z" level=info msg="Starting Gossip... Gossiping to these nodes : [172.18.0.3:9002]" 
+time="2016-10-21T02:12:39Z" level=info msg="gossip: Unable to join other nodes at startup : 1 error(s) occurred:\n\n* Failed to join 172.18.0.3: dial tcp 172.18.0.3:9002: getsockopt: connection refused" 
+time="2016-10-21T02:12:39Z" level=info msg="Waiting for the cluster to reach quorum..." 
+time="2016-10-21T02:12:41Z" level=info msg="Cluster db snapshot at: 167786" 
+time="2016-10-21T02:12:41Z" level=info msg="Starting collector watch at 167786" 
+time="2016-10-21T02:12:42Z" level=info msg="Starting storage provider with PXD" 
+time="2016-10-21T02:12:42Z" level=info msg="Starting REST service on socket : /run/docker/plugins/pxd.sock" 
+time="2016-10-21T02:12:42Z" level=info msg="Alerts initialized successfully for this cluster" 
+time="2016-10-21T02:12:42Z" level=info Error=<nil> Function=nodeMap.Add MID=3db2de43-cabd-4e84-ac6d-75b787b12235 NID=0 Status=Up Version= 
+time="2016-10-21T02:12:42Z" level=info Error=<nil> Function=nodeMap.Add MID=8160c24c-eaf8-41cd-b808-d3f6dc47600b NID=2 Status=Maintenance Version=1 
+time="2016-10-21T02:12:42Z" level=info Error=<nil> Function=nodeMap.Add MID=a2f28cac-b3da-4cff-b9f2-d6cebc6c8ea5 NID=1 Status=Up Version=1 
+time="2016-10-21T02:12:42Z" level=info msg="Found 1 DataPools" 
+time="2016-10-21T02:12:42Z" level=info msg="Loading datapool: &{0 COS_TYPE_HIGH STORAGE_MEDIUM_MAGNETIC  {map[1:{1 /dev/loop3 STORAGE_MEDIUM_MAGNETIC true 0 1.51249e+08 0 0 1073741824 145101946 Unknown seconds:1477015858 nanos:385731825 }] Resources Scan OK 1 d662cb8c-d6e7-489b-b4a3-d64c97b3a8d0 map[]  0 d662cb8c-d6e7-489b-b4a3-d64c97b3a8d0 0 1.51249e+08 0 Up 1073741824 } Up 0 0}" 
+time="2016-10-21T02:12:42Z" level=error msg="Failed to mount storage volume: Failed to mount device UUID d662cb8c-d6e7-489b-b4a3-d64c97b3a8d0, dev path /dev/loop3 at /var/.px/0: error invalid argument" 
+time="2016-10-21T02:12:42Z" level=warning msg="Entering Maintenance mode" Driver=pxd Function=NodeStart 
+time="2016-10-21T02:12:42Z" level=warning msg="Mountpoint for datapool 0 does not exist" 
+time="2016-10-21T02:12:42Z" level=error msg="Unable to start node.  Error while loading volume pxd because of: Storage is in Maintenance Mode" 
+time="2016-10-21T02:12:42Z" level=warning msg="Failed to initialize Join Storage service: Storage Maintenance Mode" 
+time="2016-10-21T02:12:42Z" level=info msg="Cleanup Init services" 
+time="2016-10-21T02:12:42Z" level=warning msg="Cleanup Init for service Storage service." 
+time="2016-10-21T02:12:42Z" level=info msg="Cleanup Init for Storage provider PXD" 
+time="2016-10-21T02:12:42Z" level=warning msg="Cleanup Init for service Scheduler." 
+time="2016-10-21T02:12:42Z" level=info msg="Cleanup Initializing node and joining the cluster ..." 
+time="2016-10-21T02:12:42Z" level=error msg="Failed to join cluster. Storage Maintenance Mode" 
+time="2016-10-21T02:12:42Z" level=error msg="Cluster Manager Failure: Entering Maintenance Mode because of Storage Maintenance Mode" 
+time="2016-10-21T02:12:42Z" level=error msg="HTTP error: Docker not yet initialized" status=500 
+time="2016-10-21T02:12:42Z" level=error msg="Error while inspecting containers : API error (500): Docker not yet initialized\n" 
+time="2016-10-21T02:12:42Z" level=warning msg="Mountpoint for datapool 0 does not exist" 
+time="2016-10-21T02:12:42Z" level=warning msg="Mountpoint for datapool 0 does not exist" 
+time="2016-10-21T02:12:42Z" level=warning msg="500   Storage is in Maintenance Mode" Driver=pxd ID=enumerate Request=pxd 
+time="2016-10-21T02:12:42Z" level=error msg="Error while calling home: HTTP-500: Storage is in Maintenance Mode\n" 
+time="2016-10-21T02:13:42Z" level=error msg="HTTP error: Docker not yet initialized" status=500 
+time="2016-10-21T02:13:42Z" level=error msg="Error while inspecting containers : API error (500): Docker not yet initialized\n" 
+2016-10-21_ 2:14:40: PX-Watchdog: (pid 134): Begin monitoring
+time="2016-10-21T02:14:42Z" level=error msg="HTTP error: Docker not yet initialized" status=500 
+time="2016-10-21T02:14:42Z" level=error msg="Error while inspecting containers : API error (500): Docker not yet initialized\n" 
+time="2016-10-21T02:14:42Z" level=warning msg="Mountpoint for datapool 0 does not exist" 
+time="2016-10-21T02:14:42Z" level=warning msg="Mountpoint for datapool 0 does not exist" 
