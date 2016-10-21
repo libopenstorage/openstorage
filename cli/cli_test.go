@@ -25,7 +25,9 @@ func TestCmdMarshalProto(t *testing.T) {
  "dedupe": false,
  "snapshot_interval": 0,
  "shared": false,
- "aggregation_level": 0
+ "aggregation_level": 0,
+ "encrypted": false,
+ "passphrase": ""
 }`,
 		data,
 	)
