@@ -26,7 +26,7 @@ func init() {
 }
 
 func makeRequest(t *testing.T) {
-	versions, err := client.GetSupportedDriverVersions(nfs.Name)
+	versions, err := client.GetSupportedDriverVersions(nfs.Name, "")
 	if err != nil {
 		t.Fatalf("Failed to obtain supported versions. Err: %v", err)
 	}
@@ -63,7 +63,7 @@ func TestAll(t *testing.T) {
 		0,
 	)
 	time.Sleep(time.Second * 2)
-	versions, err := client.GetSupportedDriverVersions(nfs.Name)
+	versions, err := client.GetSupportedDriverVersions(nfs.Name, "")
 	if err != nil {
 		t.Fatalf("Failed to obtain supported versions. Err: %v", err)
 	}

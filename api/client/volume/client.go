@@ -14,8 +14,8 @@ import (
 
 const (
 	graphPath  = "/graph"
-	volumePath = "/volumes"
-	snapPath   = "/snapshot"
+	volumePath = "/osd-volumes"
+	snapPath   = "/osd-snapshot"
 )
 
 type volumeClient struct {
@@ -211,20 +211,14 @@ func (v *volumeClient) Alerts(volumeID string) (*api.Alerts, error) {
 	return alerts, nil
 }
 
-func formatRespErr(resp *client.Response) error {
-	body, _ := resp.Body()
-	return fmt.Errorf("%d: %s", resp.StatusCode(), string(body))
-}
-
-// Active Requests on this volume.
-// Errors ErrEnoEnt may be returned
-func (v *volumeClient) GetActiveRequests(id string) (*api.ActiveRequests, error) {
+// Active Requests on all volume.
+func (v *volumeClient) GetActiveRequests() (*api.ActiveRequests, error) {
 
 	requests := &api.ActiveRequests{}
-	resp := v.c.Get().Resource(volumePath + "/requests").Instance(id).Do()
+	resp := v.c.Get().Resource(volumePath + "/requests").Instance("vol_id").Do()
 
 	if resp.Error() != nil {
-		return nil, formatRespErr(resp)
+		return nil, resp.FormatError()
 	}
 
 	if err := resp.Unmarshal(requests); err != nil {
@@ -252,9 +246,14 @@ func (v *volumeClient) Enumerate(locator *api.VolumeLocator,
 	if len(labels) != 0 {
 		req.QueryOptionLabel(api.OptConfigLabel, labels)
 	}
-	if err := req.Do().Unmarshal(&volumes); err != nil {
+	resp := req.Do()
+	if resp.Error() != nil {
+		return nil, resp.FormatError()
+	}
+	if err := resp.Unmarshal(&volumes); err != nil {
 		return nil, err
 	}
+
 	return volumes, nil
 }
 

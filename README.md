@@ -69,9 +69,15 @@ Note: OSD needs to be run as root.
 
 To start the OSD in daemon mode:
 ```
-osd -d -f etc/config/config.yaml
+$GOPATH/bin/osd -d -f etc/config/config.yaml
 ```
-where, config.yaml is the daemon's configuiration file and it's format is explained [below](https://github.com/libopenstorage/openstorage/blob/master/README.md#osd-config-file).
+where, config.yaml is the daemon's configuiration file and its format is explained [below](https://github.com/libopenstorage/openstorage/blob/master/README.md#osd-config-file).
+
+To have OSD persist the volume mapping across restarts, you must use an external key value database such as [etcd](https://coreos.com/etcd/docs/latest/docker_guide.html) or [consul](https://www.consul.io/intro/getting-started/install.html).  The URL of your key value database must be passed into the OSD using the `--kvdb` option.  For example:
+
+```
+$GOPATH/bin/osd -d -f etc/config/config.yaml -k etcd-kv://localhost:4001
+```
 
 To use the OSD cli, see the CLI help menu:
 ```
@@ -82,18 +88,28 @@ USAGE:
    osd [global options] command [command options] [arguments...]
 
 VERSION:
-   0.3
+   v1
 
 COMMANDS:
-   driver, d    Manage drivers
-   aws, v       Manage aws volumes
-   nfs, v       Manage nfs volumes
-   help, h      Shows a list of commands or help for one command
-   
+    driver      Manage drivers
+    cluster     Manage cluster
+    version     Display version
+    aws         Manage aws storage
+    btrfs       Manage btrfs volumes
+    buse        Manage buse storage
+    coprhd      Manage coprhd storage
+    nfs         Manage nfs volumes
+    pwx         Manage pwx storage
+    vfs         Manage vfs volumes
+    chainfs     Manage chainfs graph storage
+    layer0      Manage layer0 graph storage
+    proxy       Manage proxy graph storage
+
 GLOBAL OPTIONS:
    --json, -j                                   output in json
    --daemon, -d                                 Start OSD in daemon mode
-   --driver [--driver option --driver option]   driver name and options: name=btrfs,root_vol=/var/openstorage/btrfs
+   --driver [--driver option --driver option]   driver name and options: name=btrfs,home=/var/openstorage/btrfs
+   --kvdb, -k "kv-mem://localhost"              uri to kvdb e.g. kv-mem://localhost, etcd-kv://localhost:4001, consul-kv://localhost:8500
    --file, -f                                   file to read the OSD configuration from.
    --help, -h                                   show help
    --version, -v                                print the version
@@ -258,7 +274,7 @@ Add to your ~/.bashrc (or equivalent):
 # to use protoeasy for now, you must have docker installed locally or in a vm
 # if running docker using docker-machine etc, replace 192.168.10.10 with the ip of the vm
 # if running docker locally, replace 192.168.10.10 with 0.0.0.0
-export PROTOEASY_ADDRESS=192.168.10.10:6789
+export PROTOEASY_ADDRESS=127.0.0.1:6789
 
 launch-protoeasy() {
   docker rm -f protoeasy || true

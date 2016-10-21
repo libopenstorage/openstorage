@@ -346,6 +346,10 @@ func (d *driver) Remove(self *api.Node) error {
 	return nil
 }
 
+func (d *driver) CanNodeRemove(self *api.Node) error {
+	return nil
+}
+
 func (d *driver) Update(self *api.Node) error {
 	return nil
 }
@@ -358,6 +362,6 @@ func (d *driver) Halt(self *api.Node, db *cluster.ClusterInfo) error {
 	return nil
 }
 
-func (d *driver) GetActiveRequests(volumeID string) (*api.ActiveRequests, error) {
+func (d *driver) GetActiveRequests() (*api.ActiveRequests, error) {
 	return nil, nil
 }

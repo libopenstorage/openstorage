@@ -16,14 +16,21 @@ const (
 )
 
 func snapAndReadClusterInfo() (*ClusterInitState, error) {
-	kvdb := kvdb.Instance()
+	kv := kvdb.Instance()
 
-	snap, version, err := kvdb.Snapshot("")
+	snap, version, err := kv.Snapshot("")
 	if err != nil {
+		dlog.Errorf("Snapshot failed for cluster db: %v", err)
+		return nil, err
+	}
+	dlog.Infof("Cluster db snapshot at: %v", version)
+	collector, err := kvdb.NewUpdatesCollector(kv, "", version)
+	if err != nil {
+		dlog.Errorf("Failed to start collector for cluster db: %v", err)
 		return nil, err
 	}
 
-	kv, err := snap.Get(ClusterDBKey)
+	clusterDB, err := snap.Get(ClusterDBKey)
 	if err != nil && !strings.Contains(err.Error(), "Key not found") {
 		dlog.Warnln("Warning, could not read cluster database")
 		return nil, err
@@ -37,13 +44,14 @@ func snapAndReadClusterInfo() (*ClusterInitState, error) {
 		ClusterInfo: &db,
 		InitDb:      snap,
 		Version:     version,
+		Collector:   collector,
 	}
 
-	if kv == nil || bytes.Compare(kv.Value, []byte("{}")) == 0 {
+	if clusterDB == nil || bytes.Compare(clusterDB.Value, []byte("{}")) == 0 {
 		dlog.Infoln("Cluster is uninitialized...")
 		return state, nil
 	}
-	if err := json.Unmarshal(kv.Value, &db); err != nil {
+	if err := json.Unmarshal(clusterDB.Value, &db); err != nil {
 		dlog.Warnln("Fatal, Could not parse cluster database ", kv)
 		return state, err
 	}

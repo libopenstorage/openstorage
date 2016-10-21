@@ -243,7 +243,11 @@ func (vd *volApi) enumerate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		vols, _ = d.Enumerate(&locator, configLabels)
+		vols, err = d.Enumerate(&locator, configLabels)
+		if err != nil {
+			vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 	json.NewEncoder(w).Encode(vols)
 }
@@ -368,15 +372,9 @@ func (vd *volApi) alerts(w http.ResponseWriter, r *http.Request) {
 }
 
 func (vd *volApi) requests(w http.ResponseWriter, r *http.Request) {
-	var volumeID string
 	var err error
 
 	method := "requests"
-	if volumeID, err = vd.parseVolumeID(r); err != nil {
-		e := fmt.Errorf("Failed to parse parse volumeID: %s", err.Error())
-		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
-		return
-	}
 
 	d, err := volumedrivers.Get(vd.name)
 	if err != nil {
@@ -384,7 +382,7 @@ func (vd *volApi) requests(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	requests, err := d.GetActiveRequests(volumeID)
+	requests, err := d.GetActiveRequests()
 	if err != nil {
 		e := fmt.Errorf("Failed to get active requests: %s", err.Error())
 		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
@@ -410,16 +408,16 @@ func volVersion(route, version string) string {
 }
 
 func volPath(route, version string) string {
-	return volVersion("volumes" + route, version)
+	return volVersion("osd-volumes"+route, version)
 }
 
 func snapPath(route, version string) string {
-	return volVersion("snapshot" + route, version)
+	return volVersion("osd-snapshot"+route, version)
 }
 
 func (vd *volApi) Routes() []*Route {
 	return []*Route{
-		&Route{verb: "GET", path: "/versions", fn: vd.versions},
+		&Route{verb: "GET", path: "/osd-volumes/versions", fn: vd.versions},
 		&Route{verb: "POST", path: volPath("", config.Version), fn: vd.create},
 		&Route{verb: "PUT", path: volPath("/{id}", config.Version), fn: vd.volumeSet},
 		&Route{verb: "GET", path: volPath("", config.Version), fn: vd.enumerate},

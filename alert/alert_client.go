@@ -16,8 +16,8 @@ type alertInstance struct {
 var inst *alertInstance
 
 // Clear clears an alert
-func (ai *alertInstance) Clear(resourceType api.ResourceType, alertID int64) error {
-	return ai.kva.Clear(resourceType, alertID)
+func (ai *alertInstance) Clear(resourceType api.ResourceType, alertID int64, ttl uint64) error {
+	return ai.kva.Clear(resourceType, alertID, ttl)
 }
 
 // Alarm raises an alert with severity : ALARM

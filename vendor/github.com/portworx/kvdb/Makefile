@@ -1,3 +1,6 @@
+ETCD := $(shell pgrep etcd)
+CONSUL := $(shell pgrep consul)
+
 all: test
 
 deps:
@@ -36,13 +39,24 @@ errcheck: testdeps
 		github.com/portworx/kvdb \
 		github.com/portworx/kvdb/common \
 		github.com/portworx/kvdb/consul \
-		github.com/portworx/kvdb/etcd \
+		github.com/portworx/kvdb/etcd/v2 \
+		github.com/portworx/kvdb/etcd/v3 \
 		github.com/portworx/kvdb/mem
 
 pretest: lint vet errcheck
 
-gotest: testdeps
-	go test ./...
+testcheck:
+ifndef ETCD
+	@echo "etcd not running. Unable to run tests."
+	exit 1
+endif
+ifndef CONSUL
+	@echo "consul not running. Unable to run tests."
+	exit 1
+endif
+
+gotest: testdeps testcheck
+	go test -v ./...
 
 test: pretest gotest
 

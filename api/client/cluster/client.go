@@ -88,6 +88,9 @@ func (c *clusterClient) Remove(nodes []api.Node) error {
 	return nil
 }
 
+func (c *clusterClient) NodeRemoveDone(nodeID string, result error) {
+}
+
 func (c *clusterClient) Shutdown() error {
 	return nil
 }

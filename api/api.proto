@@ -15,6 +15,8 @@ enum Status {
   STATUS_OFFLINE = 3;
   STATUS_ERROR = 4;
   STATUS_NOT_IN_QUORUM = 5;
+  STATUS_DECOMMISSION = 6;
+  STATUS_MAINTENANCE = 7;
 }
 
 enum DriverType {
@@ -74,6 +76,13 @@ enum VolumeActionParam {
   VOLUME_ACTION_PARAM_ON = 2;
 }
 
+enum CosType {
+  COS_TYPE_NONE = 0;
+  COS_TYPE_LOW = 1;
+  COS_TYPE_MEDIUM = 2;
+  COS_TYPE_HIGH = 3;
+}
+
 // VolumeState represents the state of a volume.
 enum VolumeState {
   VOLUME_STATE_NONE = 0;
@@ -124,28 +133,30 @@ enum ClusterNotify {
 
 // StorageResource groups properties of a storage device.
 message StorageResource {
+  // Id is the LUN identifier.
+  string id = 1;
   // Path device path for this storage resource.
-  string path = 1;
+  string path = 2;
   // Storage medium.
-  StorageMedium medium = 2;
+  StorageMedium medium = 3;
   // True if this device is online.
-  bool online = 3;;
+  bool online = 4;;
   // IOPS 
-  uint64 iops = 4;;
+  uint64 iops = 5;;
   // SeqWrite
-  double seq_write = 5;
+  double seq_write = 6;
   // SeqRead 
-  double seq_read = 6;
+  double seq_read = 7;
   // RandRW 
-  double randRW  = 7;
+  double randRW  = 8;
   // Total size in bytes.
-  uint64 size = 8;;
+  uint64 size = 9;;
   // Physical Bytes used.
-  uint64 used = 9;
+  uint64 used = 10;
   // True if this device is rotational.
-  string rotation_speed = 10;
+  string rotation_speed = 11;
   // Timestamp of last time this device was scanned.
-  google.protobuf.Timestamp last_scan = 11;
+  google.protobuf.Timestamp last_scan = 12;
 }
 
 // VolumeLocator is a structure that is attached to a volume
@@ -188,8 +199,16 @@ message VolumeSpec {
   uint32 snapshot_interval = 8;
   // Volume configuration labels
   map<string, string> volume_labels = 9;
-  // Shared is true is this volume can be remotely accessed.
+  // Shared is true if this volume can be remotely accessed.
   bool shared = 10;
+  // ReplicaSet is the desired replicaSet the volume want to be placed.
+  ReplicaSet replica_set = 11;
+  // Specifies the number of parts the volume can be aggregated from.
+  uint32 aggregation_level = 12;
+  // Encrypted is true if this volume will be cryptographically secured.
+  bool encrypted = 13;
+  // User passphrase if this is an encrypted volume
+  string passphrase = 14;
 }
 
 // Set of machine IDs (nodes) to which part of this volume is erasure coded - for clustered storage arrays
@@ -233,6 +252,7 @@ message Volume {
   string error = 17;
   // List of name value mapping of driver specific runtime information.
   repeated RuntimeStateMap runtime_state = 18;
+  string secure_device_path = 19;
 }
 
 message Stats {

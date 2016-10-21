@@ -18,6 +18,14 @@ ifdef HAVE_CHAINFS
 TAGS+=have_chainfs
 endif
 
+ifndef PROTOC
+PROTOC = protoc
+endif
+
+ifndef PROTOS_PATH
+PROTOS_PATH = /root/git/go/src
+endif
+
 export GO15VENDOREXPERIMENT=1
 
 all: build

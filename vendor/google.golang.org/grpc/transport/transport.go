@@ -63,13 +63,11 @@ type recvMsg struct {
 	err error
 }
 
-func (recvMsg) isItem() bool {
-	return true
-}
+func (*recvMsg) item() {}
 
 // All items in an out of a recvBuffer should be the same type.
 type item interface {
-	isItem() bool
+	item()
 }
 
 // recvBuffer is an unbounded channel of item.
@@ -160,7 +158,7 @@ const (
 	streamActive    streamState = iota
 	streamWriteDone             // EndStream sent
 	streamReadDone              // EndStream received
-	streamDone                  // sendDone and recvDone or RSTStreamFrame is sent or received.
+	streamDone                  // the entire stream is finished.
 )
 
 // Stream represents an RPC in the transport layer.
@@ -171,6 +169,8 @@ type Stream struct {
 	// ctx is the associated context of the stream.
 	ctx    context.Context
 	cancel context.CancelFunc
+	// done is closed when the final status arrives.
+	done chan struct{}
 	// method records the associated RPC method of the stream.
 	method       string
 	recvCompress string
@@ -214,6 +214,10 @@ func (s *Stream) RecvCompress() string {
 // SetSendCompress sets the compression algorithm to the stream.
 func (s *Stream) SetSendCompress(str string) {
 	s.sendCompress = str
+}
+
+func (s *Stream) Done() <-chan struct{} {
+	return s.done
 }
 
 // Header acquires the key-value pairs of header metadata once it
@@ -323,6 +327,7 @@ const (
 	reachable transportState = iota
 	unreachable
 	closing
+	draining
 )
 
 // NewServerTransport creates a ServerTransport with conn or non-nil error
@@ -337,9 +342,11 @@ type ConnectOptions struct {
 	UserAgent string
 	// Dialer specifies how to dial a network address.
 	Dialer func(string, time.Duration) (net.Conn, error)
-	// AuthOptions stores the credentials required to setup a client connection and/or issue RPCs.
-	AuthOptions []credentials.Credentials
-	// Timeout specifies the timeout for dialing a client connection.
+	// PerRPCCredentials stores the PerRPCCredentials required to issue RPCs.
+	PerRPCCredentials []credentials.PerRPCCredentials
+	// TransportCredentials stores the Authenticator required to setup a client connection.
+	TransportCredentials credentials.TransportCredentials
+	// Timeout specifies the timeout for dialing a ClientTransport.
 	Timeout time.Duration
 }
 
@@ -392,6 +399,10 @@ type ClientTransport interface {
 	// should not be accessed any more. The caller must make sure this
 	// is called only once.
 	Close() error
+
+	// GracefulClose starts to tear down the transport. It stops accepting
+	// new RPCs and wait the completion of the pending RPCs.
+	GracefulClose() error
 
 	// Write sends the data for the given stream. A nil stream indicates
 	// the write is to be performed on the transport as a whole.
@@ -470,7 +481,7 @@ func (e ConnectionError) Error() string {
 	return fmt.Sprintf("connection error: desc = %q", e.Desc)
 }
 
-// Define some common ConnectionErrors.
+// ErrConnClosing indicates that the transport is closing.
 var ErrConnClosing = ConnectionError{Desc: "transport is closing"}
 
 // StreamError is an error that only affects one stream within a connection.
@@ -496,12 +507,22 @@ func ContextErr(err error) StreamError {
 
 // wait blocks until it can receive from ctx.Done, closing, or proceed.
 // If it receives from ctx.Done, it returns 0, the StreamError for ctx.Err.
+// If it receives from done, it returns 0, io.EOF if ctx is not done; otherwise
+// it return the StreamError for ctx.Err.
 // If it receives from closing, it returns 0, ErrConnClosing.
 // If it receives from proceed, it returns the received integer, nil.
-func wait(ctx context.Context, closing <-chan struct{}, proceed <-chan int) (int, error) {
+func wait(ctx context.Context, done, closing <-chan struct{}, proceed <-chan int) (int, error) {
 	select {
 	case <-ctx.Done():
 		return 0, ContextErr(ctx.Err())
+	case <-done:
+		// User cancellation has precedence.
+		select {
+		case <-ctx.Done():
+			return 0, ContextErr(ctx.Err())
+		default:
+		}
+		return 0, io.EOF
 	case <-closing:
 		return 0, ErrConnClosing
 	case i := <-proceed:

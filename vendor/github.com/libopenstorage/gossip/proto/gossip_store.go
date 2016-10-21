@@ -19,6 +19,7 @@ type GossipStoreImpl struct {
 	nodeMap       types.NodeInfoMap
 	selfCorrect   bool
 	GossipVersion string
+	ClusterId     string
 	// This cluster size is updated from an external source
 	// such as a kv database. This is an extra measure to find the
 	// number of nodes in the cluster other than just relying on
@@ -26,12 +27,12 @@ type GossipStoreImpl struct {
 	// determining the cluster quorum
 	clusterSize int
 	// Ts at which we lost quorum
-	lostQuorumTs  time.Time
+	lostQuorumTs time.Time
 }
 
-func NewGossipStore(id types.NodeId, version string) *GossipStoreImpl {
+func NewGossipStore(id types.NodeId, version, clusterId string) *GossipStoreImpl {
 	n := &GossipStoreImpl{}
-	n.InitStore(id, version, types.NODE_STATUS_NOT_IN_QUORUM)
+	n.InitStore(id, version, types.NODE_STATUS_NOT_IN_QUORUM, clusterId)
 	n.selfCorrect = false
 	return n
 }
@@ -51,11 +52,17 @@ func (s *GossipStoreImpl) GetLostQuorumTs() time.Time {
 	return s.lostQuorumTs
 }
 
-func (s *GossipStoreImpl) InitStore(id types.NodeId, version string, status types.NodeStatus) {
+func (s *GossipStoreImpl) InitStore(
+	id types.NodeId,
+	version string,
+	status types.NodeStatus,
+	clusterId string,
+) {
 	s.nodeMap = make(types.NodeInfoMap)
 	s.id = id
 	s.selfCorrect = true
 	s.GossipVersion = version
+	s.ClusterId = clusterId
 	nodeInfo := types.NodeInfo{
 		Id:           s.id,
 		GenNumber:    s.GenNumber,
@@ -164,6 +171,10 @@ func (s *GossipStoreImpl) GetGossipVersion() string {
 	return s.GossipVersion
 }
 
+func (s *GossipStoreImpl) GetClusterId() string {
+	return s.ClusterId
+}
+
 func statusValid(s types.NodeStatus) bool {
 	return (s != types.NODE_STATUS_INVALID &&
 		s != types.NODE_STATUS_NEVER_GOSSIPED)
@@ -210,8 +221,8 @@ func (s *GossipStoreImpl) MetaInfo() types.NodeMetaInfo {
 	nodeMetaInfo := types.NodeMetaInfo{
 		Id:            selfNodeInfo.Id,
 		LastUpdateTs:  selfNodeInfo.LastUpdateTs,
-		GenNumber:     selfNodeInfo.GenNumber,
 		GossipVersion: s.GossipVersion,
+		ClusterId: s.ClusterId,
 	}
 	return nodeMetaInfo
 }
@@ -249,9 +260,9 @@ func (s *GossipStoreImpl) Update(diff types.NodeInfoMap) {
 		if !ok {
 			// We got an update for a node which we do not have in our map
 			// Lets add it with an offline state
-			selfValue.Status = types.NODE_STATUS_DOWN
+			continue
 		}
-		if !ok || !statusValid(selfValue.Status) ||
+		if !statusValid(selfValue.Status) ||
 			selfValue.LastUpdateTs.Before(newNodeInfo.LastUpdateTs) {
 			// Our view of Status of a Node, should only be determined by memberlist.
 			// We should not update the Status field in our nodeInfo based on what other node's
@@ -299,9 +310,6 @@ func (s *GossipStoreImpl) updateCluster(peers map[types.NodeId]string) {
 	s.Unlock()
 	for _, nodeId := range removeNodeIds {
 		s.RemoveNode(nodeId)
-	}
-	for _, nodeId := range addNodeIds {
-		s.AddNode(nodeId, types.NODE_STATUS_DOWN)
 	}
 }
 

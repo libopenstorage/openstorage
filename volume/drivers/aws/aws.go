@@ -627,6 +627,6 @@ func (d *Driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.Volu
 	return volume.ErrNotSupported
 }
 
-func (d *Driver) GetActiveRequests(volumeID string) (*api.ActiveRequests, error) {
+func (d *Driver) GetActiveRequests() (*api.ActiveRequests, error) {
 	return nil, nil
 }

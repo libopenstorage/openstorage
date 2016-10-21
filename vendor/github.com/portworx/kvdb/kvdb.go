@@ -2,6 +2,7 @@ package kvdb
 
 import (
 	"errors"
+	"github.com/Sirupsen/logrus"
 )
 
 const (
@@ -20,6 +21,12 @@ const (
 )
 
 const (
+	// KVCapabilityOrderedUpdates support requires watch to send an watch update
+	// for every put - instead of coalescing multiple puts in one update.
+	KVCapabilityOrderedUpdates = 1 << iota
+)
+
+const (
 	// KVPrevExists flag to check key already exists
 	KVPrevExists KVFlags = 1 << iota
 	// KVCreatedIndex flag compares with passed in index (possibly in KVPair)
@@ -28,6 +35,35 @@ const (
 	KVModifiedIndex
 	// KVTTL uses TTL val from KVPair.
 	KVTTL
+)
+
+const (
+	// ReadPermission for read only access
+	ReadPermission = iota
+	// WritePermission for write only access
+	WritePermission
+	// ReadWritePermission for read-write access
+	ReadWritePermission
+)
+const (
+	// UsernameKey for an authenticated kvdb endpoint
+	UsernameKey = "Username"
+	// PasswordKey for an authenticated kvdb endpoint
+	PasswordKey = "Password"
+	// CAFileKey is the certicficate path for an authenticated kvdb endpoint
+	CAFileKey = "CAFile"
+)
+
+// List of kvdb endpoints supported versions
+const (
+	// ConsulVersion1 key
+	ConsulVersion1 = "consulv1"
+	// EtcdBaseVersion key
+	EtcdBaseVersion = "etcd"
+	// EtcdVersion3 key
+	EtcdVersion3 = "etcdv3"
+	// MemVersion1 key
+	MemVersion1 = "memv1"
 )
 
 var (
@@ -53,6 +89,14 @@ var (
 	ErrTTLNotSupported = errors.New("TTL value not supported")
 	// ErrInvalidLock Lock and unlock operations don't match.
 	ErrInvalidLock = errors.New("Invalid lock/unlock operation")
+	// ErrNoPassword provided
+	ErrNoPassword = errors.New("Username provided without any password")
+	// ErrAuthNotSupported authentication not supported for this kvdb implementation
+	ErrAuthNotSupported = errors.New("Kvdb authentication not supported")
+	// ErrNoCertificate no certificate provided for authentication
+	ErrNoCertificate = errors.New("Certificate File Path not provided")
+	// ErrUnknownPermission raised if unknown permission type
+	ErrUnknownPermission = errors.New("Unknown Permission Type")
 )
 
 // KVAction specifies the action on a KV pair. This is useful to make decisions
@@ -62,6 +106,9 @@ type KVAction int
 // KVFlags options for operations on KVDB
 type KVFlags uint64
 
+// PermissionType for user access
+type PermissionType int
+
 // WatchCB is called when a watched key or tree is modified. If the callback
 // returns an error, then watch stops and the cb is called one last time
 // with ErrWatchStopped.
@@ -69,6 +116,9 @@ type WatchCB func(prefix string, opaque interface{}, kvp *KVPair, err error) err
 
 // DatastoreInit is called to activate a backend KV store.
 type DatastoreInit func(domain string, machines []string, options map[string]string) (Kvdb, error)
+
+// DatastoreVersion is called to get the version of a backend KV store
+type DatastoreVersion func(url string) (string, error)
 
 // KVPair represents the results of an operation on KVDB.
 type KVPair struct {
@@ -116,6 +166,8 @@ type Tx interface {
 type Kvdb interface {
 	// String representation of backend datastore.
 	String() string
+	// Capbilities - see KVCapabilityXXX
+	Capabilities() int
 	// Get returns KVPair that maps to specified key or ErrNotFound.
 	Get(key string) (*KVPair, error)
 	// Get returns KVPair that maps to specified key or ErrNotFound. If found
@@ -152,12 +204,59 @@ type Kvdb interface {
 	// WatchTree is the same as WatchKey except that watchCB is triggered
 	// for updates on all keys that share the prefix.
 	WatchTree(prefix string, waitIndex uint64, opaque interface{}, watchCB WatchCB) error
+	// Snapshot returns a kvdb snapshot and its version.
+	Snapshot(prefix string) (Kvdb, uint64, error)
+	// SnapPut records the key value pair including the index.
+	SnapPut(kvp *KVPair) (*KVPair, error)
+	// Lock specfied key and associate a lockerID with it, probably to identify
+	// who acquired the lock. The KVPair returned should be used to unlock.
+	LockWithID(key string, lockerID string) (*KVPair, error)
 	// Lock specfied key. The KVPair returned should be used to unlock.
 	Lock(key string) (*KVPair, error)
 	// Unlock kvp previously acquired through a call to lock.
 	Unlock(kvp *KVPair) error
 	// TxNew returns a new Tx coordinator object or ErrNotSupported
 	TxNew() (Tx, error)
-	// Snapshot returns a kvdb snapshot and its version.
-	Snapshot(prefix string) (Kvdb, uint64, error)
+	// AddUser adds a new user to kvdb
+	AddUser(username string, password string) error
+	// RemoveUser removes a user from kvdb
+	RemoveUser(username string) error
+	// GrantUserAccess grants user access to a subtree/prefix based on the permission
+	GrantUserAccess(username string, permType PermissionType, subtree string) error
+	// RevokeUsersAccess revokes user's access to a subtree/prefix based on the permission
+	RevokeUsersAccess(username string, permType PermissionType, subtree string) error
+}
+
+// ReplayCb provides info required for replay
+type ReplayCb struct {
+	Prefix    string
+	WaitIndex uint64
+	Opaque    interface{}
+	WatchCB   WatchCB
+}
+
+// UpdatesCollector collects updates from kvdb.
+type UpdatesCollector interface {
+	// Stop collecting updates
+	Stop()
+	// ReplayUpdates replays the collected updates.
+	// Returns the version until the replay's were done
+	// and any errors it encountered.
+	ReplayUpdates(updateCb []ReplayCb) (uint64, error)
+}
+
+// NewUpdatesCollector creates new Kvdb collector that collects updates
+// starting at startIndex + 1 index.
+func NewUpdatesCollector(
+	db Kvdb,
+	prefix string,
+	startIndex uint64,
+) (UpdatesCollector, error) {
+	collector := &updatesCollectorImpl{updates: make([]*kvdbUpdate, 0),
+		startIndex: startIndex}
+	logrus.Infof("Starting collector watch at %v", startIndex)
+	if err := db.WatchTree(prefix, startIndex, nil, collector.watchCb); err != nil {
+		return nil, err
+	}
+	return collector, nil
 }

@@ -31,6 +31,10 @@ func NewNFSMounter(server string, mountImpl MountImpl) (Manager, error) {
 	return m, nil
 }
 
+func (m *NFSMounter) Reload(device string) error {
+	return ErrUnsupported
+}
+
 // Load mount table
 func (m *NFSMounter) Load(source string) error {
 	info, err := mount.GetMounts()

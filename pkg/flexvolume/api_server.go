@@ -3,9 +3,9 @@ package flexvolume
 import (
 	"time"
 
-	"go.pedge.io/pb/go/google/protobuf"
 	"go.pedge.io/proto/rpclog"
 	"golang.org/x/net/context"
+	"go.pedge.io/pb/go/google/protobuf"
 )
 
 type apiServer struct {
@@ -46,5 +46,5 @@ func checkClientError(err error) (*google_protobuf.Empty, error) {
 	if err != nil {
 		return nil, err
 	}
-	return google_protobuf.EmptyInstance, nil
+	return &google_protobuf.Empty{}, nil
 }

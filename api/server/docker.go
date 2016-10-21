@@ -54,6 +54,14 @@ type volumeInfo struct {
 	Mountpoint string
 }
 
+type capabilities struct {
+	Scope string
+}
+
+type capabilitiesResponse struct {
+	Capabilities capabilities
+}
+
 func newVolumePlugin(name string) restServer {
 	return &driver{restBase{name: name, version: "0.3"}}
 }
@@ -87,6 +95,7 @@ func (d *driver) Routes() []*Route {
 		&Route{verb: "POST", path: volDriverPath("List"), fn: d.list},
 		&Route{verb: "POST", path: volDriverPath("Get"), fn: d.get},
 		&Route{verb: "POST", path: volDriverPath("Unmount"), fn: d.unmount},
+		&Route{verb: "POST", path: volDriverPath("Capabilities"), fn: d.capabilities},
 		&Route{verb: "POST", path: "/Plugin.Activate", fn: d.handshake},
 		&Route{verb: "GET", path: "/status", fn: d.status},
 	}
@@ -154,7 +163,21 @@ func (d *driver) status(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, fmt.Sprintln("osd plugin", d.version))
 }
 
-func (d *driver) specFromOpts(Opts map[string]string) *api.VolumeSpec {
+func (d *driver) cosLevel(cos string) (uint32, error) {
+	switch cos {
+	case "high", "3":
+		return uint32(api.CosType_COS_TYPE_HIGH), nil
+	case "medium", "2":
+		return uint32(api.CosType_COS_TYPE_MEDIUM), nil
+	case "low", "1", "":
+		return uint32(api.CosType_COS_TYPE_LOW), nil
+	}
+	return uint32(api.CosType_COS_TYPE_LOW),
+		fmt.Errorf("Cos must be one of %q | %q | %q", "high", "medium", "low")
+
+}
+
+func (d *driver) specFromOpts(Opts map[string]string) (*api.VolumeSpec, error) {
 	spec := api.VolumeSpec{
 		VolumeLabels: make(map[string]string),
 		Format:       api.FSType_FS_TYPE_EXT4,
@@ -185,24 +208,29 @@ func (d *driver) specFromOpts(Opts map[string]string) *api.VolumeSpec {
 			haLevel, _ := strconv.ParseInt(v, 10, 64)
 			spec.HaLevel = haLevel
 		case api.SpecCos:
-			value, _ := strconv.ParseUint(v, 10, 32)
-			spec.Cos = uint32(value)
+			cos, err := d.cosLevel(v)
+			if err != nil {
+				return nil, err
+			}
+			spec.Cos = cos
 		case api.SpecDedupe:
 			spec.Dedupe, _ = strconv.ParseBool(v)
 		case api.SpecSnapshotInterval:
 			snapshotInterval, _ := strconv.ParseUint(v, 10, 32)
 			spec.SnapshotInterval = uint32(snapshotInterval)
+		case api.SpecShared:
+			shared, _ := strconv.ParseUint(v, 10, 32)
+			if shared != 0 {
+				spec.Shared = true
+			}
 		default:
 			spec.VolumeLabels[k] = v
 		}
 	}
-	return &spec
+	return &spec, nil
 }
 
 func (d *driver) mountpath(request *mountRequest) string {
-	if len(request.ID) != 0 {
-		return path.Join(config.MountBase, request.Name+"_"+request.ID)
-	}
 	return path.Join(config.MountBase, request.Name)
 }
 
@@ -219,7 +247,11 @@ func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 			d.errorResponse(w, err)
 			return
 		}
-		spec := d.specFromOpts(request.Opts)
+		spec, err := d.specFromOpts(request.Opts)
+		if err != nil {
+			d.errorResponse(w, err)
+			return
+		}
 		if _, err := v.Create(&api.VolumeLocator{Name: request.Name}, nil, spec); err != nil {
 			d.errorResponse(w, err)
 			return
@@ -415,4 +447,13 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 		_ = v.Detach(vol.Id)
 	}
 	d.emptyResponse(w)
+}
+
+func (d *driver) capabilities(w http.ResponseWriter, r *http.Request) {
+	method := "capabilities"
+	var response capabilitiesResponse
+
+	response.Capabilities.Scope = "global"
+	d.logRequest(method, "").Infof("response %v", response.Capabilities.Scope)
+	json.NewEncoder(w).Encode(&response)
 }

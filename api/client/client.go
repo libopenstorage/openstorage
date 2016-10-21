@@ -48,13 +48,15 @@ func NewClusterClient(version string) (*Client, error) {
 
 // GetSupportedClusterVersions returns a list of supported versions
 // of the OSD cluster api
-func GetSupportedClusterVersions() ([]string, error) {
-	sockPath := "unix://" + config.ClusterAPIBase + "osd.sock"
-	clusterClient, err := NewClient(sockPath, "")
+func GetSupportedClusterVersions(serverPath string) ([]string, error) {
+	if serverPath == "" {
+		serverPath = "unix://" + config.ClusterAPIBase + "osd.sock"
+	}
+	client, err := NewClient(serverPath, "")
 	if err != nil {
 		return []string{}, err
 	}
-	versions, err := clusterClient.Versions()
+	versions, err := client.Versions("cluster")
 	if err != nil {
 		return []string{}, err
 	}
@@ -72,15 +74,19 @@ func NewDriverClient(driverName, version string) (*Client, error) {
 }
 
 // GetSupportedDriverVersions returns a list of supported versions
-// for the provided driver
-func GetSupportedDriverVersions(driverName string) ([]string, error) {
+// for the provided driver. It uses the given server endpoint or the
+// standard unix domain socket
+func GetSupportedDriverVersions(driverName, serverPath string) ([]string, error) {
 	// Get a client handler
-	sockPath := "unix://" + config.DriverAPIBase + driverName + ".sock"
-	volumeClient, err := NewClient(sockPath, "")
+	if serverPath == "" {
+		serverPath = "unix://" + config.DriverAPIBase + driverName + ".sock"
+	}
+
+	client, err := NewClient(serverPath, "")
 	if err != nil {
 		return []string{}, err
 	}
-	versions, err := volumeClient.Versions()
+	versions, err := client.Versions("osd-volumes")
 	if err != nil {
 		return []string{}, err
 	}
@@ -103,9 +109,9 @@ func (c *Client) Status() (*Status, error) {
 }
 
 // Version send a request at the /versions REST endpoint.
-func (c *Client) Versions() ([]string, error) {
+func (c *Client) Versions(endpoint string) ([]string, error) {
 	versions := []string{}
-	err := c.Get().Resource("/versions").Do().Unmarshal(&versions)
+	err := c.Get().Resource(endpoint + "/versions").Do().Unmarshal(&versions)
 	return versions, err
 }
 

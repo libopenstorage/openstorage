@@ -20,7 +20,7 @@ import (
 	"github.com/libopenstorage/openstorage/volume/drivers"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/consul"
-	"github.com/portworx/kvdb/etcd"
+	etcd "github.com/portworx/kvdb/etcd/v2"
 	"github.com/portworx/kvdb/mem"
 )
 
@@ -252,6 +252,7 @@ func wrapAction(f func(*cli.Context) error) func(*cli.Context) {
 	return func(c *cli.Context) {
 		if err := f(c); err != nil {
 			dlog.Warnln(err.Error())
+			os.Exit(1)
 		}
 	}
 }

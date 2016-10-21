@@ -1,4 +1,4 @@
-package etcd
+package etcdv2
 
 import (
 	"bytes"
@@ -11,12 +11,13 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
-
 	"golang.org/x/net/context"
 
 	e "github.com/coreos/etcd/client"
+	"github.com/coreos/etcd/pkg/transport"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/common"
+	ec "github.com/portworx/kvdb/etcd/common"
 	"github.com/portworx/kvdb/mem"
 )
 
@@ -27,21 +28,26 @@ const (
 	defaultRetryCount             = 60
 	defaultIntervalBetweenRetries = time.Millisecond * 500
 	bootstrap                     = "kvdb/bootstrap"
+	// the maximum amount of time a dial will wait for a connection to setup.
+	// 30s is long enough for most of the network conditions.
+	defaultDialTimeout = 30 * time.Second
 )
 
 var (
-	defaultMachines = []string{"http://127.0.0.1:5001"}
+	defaultMachines = []string{"http://127.0.0.1:2379"}
 )
 
 func init() {
-	if err := kvdb.Register(Name, New); err != nil {
+	if err := kvdb.Register(Name, New, ec.Version); err != nil {
 		panic(err.Error())
 	}
 }
 
 type etcdKV struct {
-	client e.KeysAPI
-	domain string
+	client   e.KeysAPI
+	authUser e.AuthUserAPI
+	authRole e.AuthRoleAPI
+	domain   string
 }
 
 type etcdLock struct {
@@ -49,6 +55,11 @@ type etcdLock struct {
 	unlocked bool
 	err      error
 	sync.Mutex
+}
+
+// LockerIDInfo id of locker
+type LockerIDInfo struct {
+	LockerID string
 }
 
 // New constructs a new kvdb.Kvdb.
@@ -60,9 +71,37 @@ func New(
 	if len(machines) == 0 {
 		machines = defaultMachines
 	}
+	var username, password, caFile string
+	// options provided. Probably auth options
+	if options != nil || len(options) > 0 {
+		var ok bool
+		// Check if username provided
+		username, ok = options[kvdb.UsernameKey]
+		if ok {
+			// Check if password provided
+			password, ok = options[kvdb.PasswordKey]
+			if !ok {
+				return nil, kvdb.ErrNoPassword
+			}
+			// Check if certificate provided
+			caFile, ok = options[kvdb.CAFileKey]
+			if !ok {
+				return nil, kvdb.ErrNoCertificate
+			}
+		}
+	}
+	tls := transport.TLSInfo{
+		CAFile: caFile,
+	}
+	tr, err := transport.NewTransport(tls, defaultDialTimeout)
+	if err != nil {
+		return nil, err
+	}
 	cfg := e.Config{
 		Endpoints: machines,
-		Transport: e.DefaultTransport,
+		Transport: tr,
+		Username:  username,
+		Password:  password,
 		// The time required for a request to fail - 30 sec
 		HeaderTimeoutPerRequest: time.Duration(10) * time.Second,
 	}
@@ -75,12 +114,18 @@ func New(
 	}
 	return &etcdKV{
 		e.NewKeysAPI(c),
+		e.NewAuthUserAPI(c),
+		e.NewAuthRoleAPI(c),
 		domain,
 	}, nil
 }
 
 func (kv *etcdKV) String() string {
 	return Name
+}
+
+func (kv *etcdKV) Capabilities() int {
+	return kvdb.KVCapabilityOrderedUpdates
 }
 
 func (kv *etcdKV) Get(key string) (*kvdb.KVPair, error) {
@@ -162,6 +207,7 @@ func (kv *etcdKV) Enumerate(prefix string) (kvdb.KVPairs, error) {
 		result, err := kv.client.Get(context.Background(), prefix, &e.GetOptions{
 			Recursive: true,
 			Sort:      true,
+			Quorum:    true,
 		})
 		if err == nil {
 			return kv.resultToKvs(result), nil
@@ -171,6 +217,10 @@ func (kv *etcdKV) Enumerate(prefix string) (kvdb.KVPairs, error) {
 			logrus.Errorf("kvdb set error: %v, retry count: %v\n", err, i)
 			time.Sleep(defaultIntervalBetweenRetries)
 		default:
+			etcdErr := err.(e.Error)
+			if etcdErr.Code == e.ErrorCodeKeyNotFound {
+				return nil, kvdb.ErrNotFound
+			}
 			return nil, err
 		}
 	}
@@ -272,19 +322,34 @@ func (kv *etcdKV) WatchTree(
 }
 
 func (kv *etcdKV) Lock(key string) (*kvdb.KVPair, error) {
+	return kv.LockWithID(key, "locked")
+}
+
+func (kv *etcdKV) LockWithID(key string, lockerID string) (
+	*kvdb.KVPair,
+	error,
+) {
 	key = kv.domain + key
 	duration := time.Second
 	ttl := uint64(4)
 	count := 0
-	kvPair, err := kv.Create(key, "locked", ttl)
+	lockTag := LockerIDInfo{LockerID: lockerID}
+	kvPair, err := kv.Create(key, lockTag, ttl)
 	for maxCount := 300; err != nil && count < maxCount; count++ {
 		time.Sleep(duration)
-		kvPair, err = kv.Create(key, "locked", ttl)
+		kvPair, err = kv.Create(key, lockTag, ttl)
+		if count > 0 && count%15 == 0 && err != nil {
+			currLockerTag := LockerIDInfo{LockerID: ""}
+			if _, errGet := kv.GetVal(key, &currLockerTag); errGet == nil {
+				logrus.Warnf("Lock %v locked for %v seconds, tag: %v",
+					key, count, currLockerTag)
+			}
+		}
 	}
 	if err != nil {
 		return nil, err
 	}
-	if count > 10 {
+	if count >= 10 {
 		logrus.Warnf("ETCD: spent %v iterations locking %v\n", count, key)
 	}
 	kvPair.TTL = int64(time.Duration(ttl) * time.Second)
@@ -371,6 +436,7 @@ func (kv *etcdKV) get(key string, recursive, sort bool) (*kvdb.KVPair, error) {
 		result, err = kv.client.Get(context.Background(), key, &e.GetOptions{
 			Recursive: recursive,
 			Sort:      sort,
+			Quorum:    true,
 		})
 		if err == nil {
 			return kv.resultToKv(result), nil
@@ -493,8 +559,9 @@ func (kv *etcdKV) watchStart(
 			} else {
 				logrus.Errorf("Etcd returned an error : %s\n", watchErr.Error())
 			}
-			// TODO: handle error
 			_ = cb(key, opaque, nil, watchErr)
+			cancel()
+			isCancelSent = true
 		} else if watchErr == nil && !isCancelSent {
 			err := cb(key, opaque, kv.resultToKv(r), nil)
 			if err != nil {
@@ -503,7 +570,7 @@ func (kv *etcdKV) watchStart(
 				isCancelSent = true
 			}
 		} else {
-			// TODO: handle error
+			// Ignore return values since the watch is stopping
 			_ = cb(key, opaque, nil, kvdb.ErrWatchStopped)
 			break
 		}
@@ -527,7 +594,11 @@ func (kv *etcdKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 		return nil, 0, fmt.Errorf("Failed to enumerate %v: err: %v", prefix,
 			err)
 	}
-	snapDb, err := mem.New(kv.domain, nil, nil)
+	snapDb, err := mem.New(
+		kv.domain,
+		nil,
+		map[string]string{mem.KvSnap: "true"},
+	)
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to create in-mem kv store: %v", err)
 	}
@@ -536,7 +607,7 @@ func (kv *etcdKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 		kvPair := kvPairs[i]
 		if len(kvPair.Value) > 0 {
 			// Only create a leaf node
-			_, err := snapDb.Put(kvPair.Key, kvPair.Value, 0)
+			_, err := snapDb.SnapPut(kvPair)
 			if err != nil {
 				return nil, 0, fmt.Errorf("Failed creating snap: %v", err)
 			}
@@ -607,7 +678,7 @@ func (kv *etcdKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 				goto errordone
 			}
 
-			_, err = snapDb.Put(kvp.Key, kvp.Value, 0)
+			_, err = snapDb.SnapPut(kvp)
 			if err != nil {
 				watchErr = fmt.Errorf("Failed to apply update to snap: %v", err)
 				sendErr = watchErr
@@ -631,4 +702,92 @@ func (kv *etcdKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 	}
 
 	return snapDb, highestKvdbIndex, nil
+}
+
+func (kv *etcdKV) SnapPut(snapKvp *kvdb.KVPair) (*kvdb.KVPair, error) {
+	return nil, kvdb.ErrNotSupported
+}
+
+func (kv *etcdKV) AddUser(username string, password string) error {
+	// Create a role for this user
+	roleName := username
+	err := kv.authRole.AddRole(context.Background(), roleName)
+	if err != nil {
+		return err
+	}
+	// Create the user
+	err = kv.authUser.AddUser(context.Background(), username, password)
+	if err != nil {
+		return err
+	}
+	// Assign role to user
+	_, err = kv.authUser.GrantUser(context.Background(), username, []string{roleName})
+	return err
+}
+
+func (kv *etcdKV) RemoveUser(username string) error {
+	// Revoke user from this role
+	roleName := username
+	_, err := kv.authUser.RevokeUser(context.Background(), username, []string{roleName})
+	if err != nil {
+		return err
+	}
+	// Remove the role defined for this user
+	err = kv.authRole.RemoveRole(context.Background(), roleName)
+	if err != nil {
+		return err
+	}
+	// Remove the user
+	return kv.authUser.RemoveUser(context.Background(), username)
+}
+
+func (kv *etcdKV) GrantUserAccess(username string, permType kvdb.PermissionType, subtree string) error {
+	var domain string
+	if kv.domain[0] == '/' {
+		domain = kv.domain
+	} else {
+		domain = "/" + kv.domain
+	}
+	subtree = domain + subtree
+	etcdPermType, err := getEtcdPermType(permType)
+	if err != nil {
+		return err
+	}
+	// A role for this user has already been created
+	// Just assign the subtree to this role
+	roleName := username
+	_, err = kv.authRole.GrantRoleKV(context.Background(), roleName, []string{subtree}, etcdPermType)
+	return err
+}
+
+func (kv *etcdKV) RevokeUsersAccess(username string, permType kvdb.PermissionType, subtree string) error {
+	var domain string
+	if kv.domain[0] == '/' {
+		domain = kv.domain
+	} else {
+		domain = "/" + kv.domain
+	}
+	subtree = domain + subtree
+	etcdPermType, err := getEtcdPermType(permType)
+	if err != nil {
+		return err
+	}
+	roleName := username
+	// A role for this user should ideally exist
+	// Revoke the specfied permission for that subtree
+	_, err = kv.authRole.RevokeRoleKV(context.Background(), roleName, []string{subtree}, etcdPermType)
+	return err
+}
+
+func getEtcdPermType(permType kvdb.PermissionType) (e.PermissionType, error) {
+	switch permType {
+	case kvdb.ReadPermission:
+		return e.ReadPermission, nil
+	case kvdb.WritePermission:
+		return e.WritePermission, nil
+	case kvdb.ReadWritePermission:
+		return e.ReadWritePermission, nil
+	default:
+		return -1, kvdb.ErrUnknownPermission
+	}
 }

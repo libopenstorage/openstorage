@@ -28,6 +28,7 @@ type NodeEntry struct {
 	StartTime  time.Time
 	MemTotal   uint64
 	Hostname   string
+	Status     api.Status
 	NodeLabels map[string]string
 }
 
@@ -43,6 +44,7 @@ type ClusterInitState struct {
 	ClusterInfo *ClusterInfo
 	InitDb      kvdb.Kvdb
 	Version     uint64
+	Collector   kvdb.UpdatesCollector
 }
 
 // ClusterListener is an interface to be implemented by a storage driver
@@ -73,6 +75,9 @@ type ClusterListener interface {
 
 	// Remove is called when a node leaves the cluster
 	Remove(node *api.Node) error
+
+	// CanNodeRemove test to see if we can remove this node
+	CanNodeRemove(node *api.Node) error
 
 	// Update is called when a node status changes significantly
 	// in the cluster changes.
@@ -105,6 +110,11 @@ type ClusterData interface {
 	GetState() (*ClusterState, error)
 }
 
+type ClusterCallback interface {
+	// NodeRemoveDone notify cluster manager NodeRemove is done.
+	NodeRemoveDone(nodeID string, result error)
+}
+
 // Cluster is the API that a cluster provider will implement.
 type Cluster interface {
 	// Inspect the node given a UUID.
@@ -130,6 +140,7 @@ type Cluster interface {
 	Start() error
 
 	ClusterData
+	ClusterCallback
 }
 
 type ClusterNotify func(string, api.ClusterNotify) (string, error)

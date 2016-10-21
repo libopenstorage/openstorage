@@ -6,9 +6,10 @@ import (
 )
 
 var (
-	instance   Kvdb
-	datastores = make(map[string]DatastoreInit)
-	lock       sync.RWMutex
+	instance          Kvdb
+	datastores        = make(map[string]DatastoreInit)
+	datastoreVersions = make(map[string]DatastoreVersion)
+	lock              sync.RWMutex
 )
 
 // Instance returns instance set via SetInstance, nil if none was set.
@@ -49,12 +50,28 @@ func New(
 }
 
 // Register adds specified datastore backend to the list of options.
-func Register(name string, dsInit DatastoreInit) error {
+func Register(name string, dsInit DatastoreInit, dsVersion DatastoreVersion) error {
 	lock.Lock()
 	defer lock.Unlock()
 	if _, exists := datastores[name]; exists {
 		return fmt.Errorf("Datastore provider %q is already registered", name)
 	}
 	datastores[name] = dsInit
+
+	if _, exists := datastoreVersions[name]; exists {
+		return fmt.Errorf("Datastore provider's %q version function already registered", name)
+	}
+	datastoreVersions[name] = dsVersion
 	return nil
+}
+
+// Version returns the supported version for the provided kvdb endpoint.
+func Version(name string, url string) (string, error) {
+	lock.RLock()
+	defer lock.RUnlock()
+
+	if dsVersion, exists := datastoreVersions[name]; exists {
+		return dsVersion(url)
+	}
+	return "", ErrNotSupported
 }

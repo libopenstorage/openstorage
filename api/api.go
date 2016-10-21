@@ -10,12 +10,13 @@ import (
 // Strings for VolumeSpec
 const (
 	SpecEphemeral        = "ephemeral"
+	SpecShared           = "shared"
 	SpecSize             = "size"
 	SpecFilesystem       = "fs"
-	SpecBlockSize        = "bs"
-	SpecHaLevel          = "ha"
+	SpecBlockSize        = "block_size"
+	SpecHaLevel          = "repl"
 	SpecCos              = "cos"
-	SpecSnapshotInterval = "snap"
+	SpecSnapshotInterval = "snap_interval"
 	SpecDedupe           = "dedupe"
 )
 
@@ -74,11 +75,11 @@ type Cluster struct {
 //       Follow up task is to introduce an API for logging stats
 type StatPoint struct {
 	// Name of the Stat
-	Name      string
+	Name string
 	// Tags for the Stat
-	Tags      map[string]string
+	Tags map[string]string
 	// Fields and values of the stat
-	Fields    map[string]interface{}
+	Fields map[string]interface{}
 	// Timestamp in Unix format
 	Timestamp int64
 }

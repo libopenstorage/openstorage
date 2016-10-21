@@ -28,7 +28,7 @@ func newClient(apiClient APIClient) *client {
 func (c *client) Init() error {
 	_, err := c.apiClient.Init(
 		context.Background(),
-		google_protobuf.EmptyInstance,
+		&google_protobuf.Empty{},
 	)
 	return err
 }
