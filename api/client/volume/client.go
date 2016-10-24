@@ -291,7 +291,11 @@ func (v *volumeClient) Attach(volumeID string) (string, error) {
 		return "", err
 	}
 	if response.Volume != nil {
-		return response.Volume.DevicePath, nil
+		if response.Volume.Spec.Encrypted {
+			return response.Volume.SecureDevicePath, nil
+		} else {
+			return response.Volume.DevicePath, nil
+		}
 	}
 	return "", nil
 }

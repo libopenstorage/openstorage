@@ -471,7 +471,8 @@ func (d *Driver) Delete(volumeID string) error {
 	if err != nil {
 		return err
 	}
-	return nil
+	err = d.DeleteVol(volumeID)
+	return err
 }
 
 func (d *Driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator) (string, error) {
