@@ -10,11 +10,16 @@ import (
 	"time"
 
 	"github.com/libopenstorage/openstorage/config"
+	"github.com/libopenstorage/openstorage/api"
 )
 
 var (
 	httpCache = make(map[string]*http.Client)
 	cacheLock sync.Mutex
+)
+
+const (
+	OsdSocket = "osd"
 )
 
 // NewClient returns a new REST client for specified server.
@@ -37,7 +42,7 @@ func NewClient(host string, version string) (*Client, error) {
 
 // NewClusterClient returns a new REST client of the supplied version for cluster management.
 func NewClusterClient(version string) (*Client, error) {
-	sockPath := "unix://" + config.ClusterAPIBase + "osd.sock"
+	sockPath := getUnixServerPath(OsdSocket, config.ClusterAPIBase)
 	if version == "" {
 		// Set the default version
 		version = config.Version
@@ -50,7 +55,7 @@ func NewClusterClient(version string) (*Client, error) {
 // of the OSD cluster api
 func GetSupportedClusterVersions(serverPath string) ([]string, error) {
 	if serverPath == "" {
-		serverPath = "unix://" + config.ClusterAPIBase + "osd.sock"
+		serverPath = getUnixServerPath(OsdSocket, config.ClusterAPIBase)
 	}
 	client, err := NewClient(serverPath, "")
 	if err != nil {
@@ -65,7 +70,7 @@ func GetSupportedClusterVersions(serverPath string) ([]string, error) {
 
 // NewDriver returns a new REST client of the supplied version for specified driver.
 func NewDriverClient(driverName, version string) (*Client, error) {
-	sockPath := "unix://" + config.DriverAPIBase + driverName + ".sock"
+	sockPath := getUnixServerPath(driverName, config.DriverAPIBase)
 	if version == "" {
 		// Set the default version
 		version = config.Version
@@ -79,14 +84,14 @@ func NewDriverClient(driverName, version string) (*Client, error) {
 func GetSupportedDriverVersions(driverName, serverPath string) ([]string, error) {
 	// Get a client handler
 	if serverPath == "" {
-		serverPath = "unix://" + config.DriverAPIBase + driverName + ".sock"
+		serverPath = getUnixServerPath(driverName, config.DriverAPIBase)
 	}
 
 	client, err := NewClient(serverPath, "")
 	if err != nil {
 		return []string{}, err
 	}
-	versions, err := client.Versions("osd-volumes")
+	versions, err := client.Versions(api.OsdVolumePath)
 	if err != nil {
 		return []string{}, err
 	}
@@ -188,4 +193,13 @@ func getHttpClient(host string) *http.Client {
 		}
 	}
 	return c
+}
+
+func getUnixServerPath(socketName string, paths ...string) string {
+	serverPath := "unix://"
+	for _, path := range paths {
+		serverPath = serverPath + path
+	}
+	serverPath = serverPath + socketName + ".sock"
+	return serverPath
 }

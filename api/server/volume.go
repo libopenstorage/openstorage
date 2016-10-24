@@ -408,16 +408,16 @@ func volVersion(route, version string) string {
 }
 
 func volPath(route, version string) string {
-	return volVersion("osd-volumes"+route, version)
+	return volVersion(api.OsdVolumePath+route, version)
 }
 
 func snapPath(route, version string) string {
-	return volVersion("osd-snapshot"+route, version)
+	return volVersion(api.OsdSnapshotPath+route, version)
 }
 
 func (vd *volApi) Routes() []*Route {
 	return []*Route{
-		&Route{verb: "GET", path: "/osd-volumes/versions", fn: vd.versions},
+		&Route{verb: "GET", path: "/"+api.OsdVolumePath+"/versions", fn: vd.versions},
 		&Route{verb: "POST", path: volPath("", config.Version), fn: vd.create},
 		&Route{verb: "PUT", path: volPath("/{id}", config.Version), fn: vd.volumeSet},
 		&Route{verb: "GET", path: volPath("", config.Version), fn: vd.enumerate},
