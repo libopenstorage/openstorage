@@ -11,7 +11,6 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/portworx/kvdb"
 	"go.pedge.io/dlog"
-	"go.pedge.io/proto/time"
 )
 
 const (
@@ -203,7 +202,7 @@ func (kva *KvAlert) EnumerateWithinTimeRange(
 		}
 	}
 	for _, v := range resourceAlerts {
-		alertTime := prototime.TimestampToTime(v.Timestamp)
+		alertTime := time.Unix(v.Timestamp, 0)
 		if alertTime.Before(timeEnd) && alertTime.After(timeStart) {
 			allAlerts = append(allAlerts, v)
 		}
@@ -296,7 +295,7 @@ func (kva *KvAlert) raise(a *api.Alert) error {
 	}
 	// TODO(pedge): when this is changed to a pointer, we need to rethink this.
 	a.Id = alertID
-	a.Timestamp = prototime.Now()
+	a.Timestamp = time.Now().Unix()
 	a.Cleared = false
 	_, err = kv.Create(getResourceKey(a.Resource)+strconv.FormatInt(a.Id, 10), a, a.Ttl)
 	return err

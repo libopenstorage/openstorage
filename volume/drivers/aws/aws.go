@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"go.pedge.io/dlog"
-	"go.pedge.io/proto/time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -494,7 +493,7 @@ func (d *Driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 	vols[0].Id = *snap.SnapshotId
 	vols[0].Source = &api.Source{Parent: volumeID}
 	vols[0].Locator = locator
-	vols[0].Ctime = prototime.Now()
+	vols[0].Ctime = time.Now().Unix()
 
 	chaos.Now(koStrayCreate)
 	if err = d.CreateVol(vols[0]); err != nil {

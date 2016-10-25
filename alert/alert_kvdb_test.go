@@ -6,7 +6,6 @@ import (
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
 	"github.com/stretchr/testify/require"
-	"go.pedge.io/proto/time"
 	"strconv"
 	"testing"
 	"time"
@@ -285,7 +284,7 @@ func enumerate(t *testing.T) {
 
 	var fakeAlertId int64
 	fakeAlertId = 100
-	alert := api.Alert{Timestamp: prototime.TimeToTimestamp(delayedTime), Id: fakeAlertId, Resource: api.ResourceType_RESOURCE_TYPE_VOLUME}
+	alert := api.Alert{Timestamp: delayedTime.Unix(), Id: fakeAlertId, Resource: api.ResourceType_RESOURCE_TYPE_VOLUME}
 
 	_, err = kv.Put(getResourceKey(api.ResourceType_RESOURCE_TYPE_VOLUME)+strconv.FormatInt(fakeAlertId, 10), &alert, 0)
 	enAlerts, err = kva.EnumerateWithinTimeRange(currentTime.Add(-1*time.Duration(10)*time.Second), currentTime, api.ResourceType_RESOURCE_TYPE_VOLUME)
