@@ -10,7 +10,9 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"os/exec"
 	"time"
+	"strings"
 
 	"go.pedge.io/dlog"
 
@@ -79,32 +81,58 @@ func ifaceToIp(iface *net.Interface) (string, error) {
 	return "", errors.New("Node not connected to the network.")
 }
 
+func ifaceNameToIp(ifaceName string) (string, error) {
+	stdout, err := exec.Command("/usr/sbin/ip", "a", "show", ifaceName, "label", ifaceName).Output()
+	if err != nil {
+		return "", err
+	}
+	ipOp := string(stdout)
+	// Parse the output of command /usr/bin/ip a show eth0 label eth0:0
+	ipOpParts := strings.Fields(ipOp)
+	for i, tokens := range ipOpParts {
+		// Only check for ipv4 addresses
+		if tokens == "inet" {
+			ip := ipOpParts[i+1]
+			// Remove the mask
+			ipAddr := strings.Split(ip, "/")
+			if strings.Contains(ipAddr[0], "127") {
+				// Loopback address
+				continue
+			}
+			if ipAddr[0] == "" {
+				// Address is empty string
+				continue
+			}
+			return ipAddr[0], nil
+		}
+	}
+	return "", fmt.Errorf("Unable to find Ip address for given interface")
+}
+
+
 func ExternalIp(config *config.ClusterConfig) (string, string, error) {
 	mgmtIp := ""
 	dataIp := ""
 
-	if config.MgtIface != "" {
-		iface, err := net.InterfaceByName(config.MgtIface)
-		if err != nil {
-			return "", "", errors.New("Invalid management network " +
-				"interface specified.")
-		}
-		mgmtIp, err = ifaceToIp(iface)
-		if err != nil {
-			return "", "", err
-		}
-	}
-
-	if config.DataIface != "" {
-		iface, err := net.InterfaceByName(config.DataIface)
+	var err error
+	if config.MgmtIp == "" && config.MgtIface != "" {
+		mgmtIp, err = ifaceNameToIp(config.MgtIface)
 		if err != nil {
 			return "", "", errors.New("Invalid data network interface " +
 				"specified.")
 		}
-		dataIp, err = ifaceToIp(iface)
+	} else if config.MgmtIp != "" {
+		mgmtIp = config.MgmtIp
+	}
+
+	if config.DataIp == "" && config.DataIface != "" {
+		dataIp, err = ifaceNameToIp(config.DataIface)
 		if err != nil {
-			return "", "", err
+			return "", "", errors.New("Invalid data network interface " +
+				"specified.")
 		}
+	} else if config.DataIp != "" {
+		dataIp = config.DataIp
 	}
 
 	if mgmtIp != "" && dataIp != "" {
