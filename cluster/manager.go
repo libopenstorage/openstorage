@@ -523,7 +523,7 @@ func (c *ClusterManager) updateClusterStatus(initState *ClusterInitState, exist 
 		gossipValues := c.gossip.GetStoreKeyValue(gossipStoreKey)
 
 		numNodes := 0
-		for id, nodeInfo := range gossipValues {
+		for id, gossipNodeInfo := range gossipValues {
 			numNodes = numNodes + 1
 
 			// Check to make sure we are not exceeding the size of the cluster.
@@ -536,8 +536,8 @@ func (c *ClusterManager) updateClusterStatus(initState *ClusterInitState, exist 
 			// Special handling for self node
 			if id == types.NodeId(node.Id) {
 				if c.selfNode.Status == api.Status_STATUS_OK &&
-					(nodeInfo.Status == types.NODE_STATUS_NOT_IN_QUORUM ||
-						nodeInfo.Status == types.NODE_STATUS_DOWN) {
+					(gossipNodeInfo.Status == types.NODE_STATUS_NOT_IN_QUORUM ||
+						gossipNodeInfo.Status == types.NODE_STATUS_DOWN) {
 					// We have lost quorum
 					dlog.Warnf("Not in quorum. Gracefully shutting down...")
 					c.gossip.UpdateSelfStatus(types.NODE_STATUS_DOWN)
@@ -551,45 +551,46 @@ func (c *ClusterManager) updateClusterStatus(initState *ClusterInitState, exist 
 			}
 
 			// Notify node status change if required.
-			newNodeInfo := api.Node{}
-			newNodeInfo.Id = string(id)
-			newNodeInfo.Status = api.Status_STATUS_OK
+			peerNodeInCache := api.Node{}
+			peerNodeInCache.Id = string(id)
+			peerNodeInCache.Status = api.Status_STATUS_OK
 
 			switch {
-			case nodeInfo.Status == types.NODE_STATUS_DOWN:
-				newNodeInfo.Status = api.Status_STATUS_OFFLINE
+			case gossipNodeInfo.Status == types.NODE_STATUS_DOWN:
+				// Replace the status of this node in cache to offline
+				peerNodeInCache.Status = api.Status_STATUS_OFFLINE
 				lastStatus, ok := c.nodeStatuses[string(id)]
-				if ok && lastStatus == newNodeInfo.Status {
+				if ok && lastStatus == peerNodeInCache.Status {
 					break
 				}
 
-				c.nodeStatuses[string(id)] = newNodeInfo.Status
+				c.nodeStatuses[string(id)] = peerNodeInCache.Status
 
 				dlog.Warnln("Detected node ", id,
 					" to be offline due to inactivity.")
 
 				for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
-					err := e.Value.(ClusterListener).Update(&newNodeInfo)
+					err := e.Value.(ClusterListener).Update(&peerNodeInCache)
 					if err != nil {
 						dlog.Warnln("Failed to notify ",
 							e.Value.(ClusterListener).String())
 					}
 				}
 
-			case nodeInfo.Status == types.NODE_STATUS_UP:
-				newNodeInfo.Status = api.Status_STATUS_OK
+			case gossipNodeInfo.Status == types.NODE_STATUS_UP:
+				peerNodeInCache.Status = api.Status_STATUS_OK
 				lastStatus, ok := c.nodeStatuses[string(id)]
-				if ok && lastStatus == newNodeInfo.Status {
+				if ok && lastStatus == peerNodeInCache.Status {
 					break
 				}
-				c.nodeStatuses[string(id)] = newNodeInfo.Status
+				c.nodeStatuses[string(id)] = peerNodeInCache.Status
 
 				// A node discovered in the cluster.
-				dlog.Infoln("Detected node", newNodeInfo.Id,
+				dlog.Infoln("Detected node", peerNodeInCache.Id,
 					" to be in the cluster.")
 
 				for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
-					err := e.Value.(ClusterListener).Add(&newNodeInfo)
+					err := e.Value.(ClusterListener).Add(&peerNodeInCache)
 					if err != nil {
 						dlog.Warnln("Failed to notify ",
 							e.Value.(ClusterListener).String())
@@ -597,18 +598,28 @@ func (c *ClusterManager) updateClusterStatus(initState *ClusterInitState, exist 
 				}
 			}
 
-			// Update cache.
-			if nodeInfo.Value != nil {
-				n, ok := nodeInfo.Value.(api.Node)
+			// Update cache with gossip data
+			if gossipNodeInfo.Value != nil {
+				peerNodeInGossip, ok := gossipNodeInfo.Value.(api.Node)
 				if ok {
-					n.Status = newNodeInfo.Status
-					c.nodeCache[n.Id] = n
+					if peerNodeInCache.Status == api.Status_STATUS_OFFLINE {
+						// Overwrite the status of Node in Gossip data with Down
+						peerNodeInGossip.Status = peerNodeInCache.Status
+					} else {
+						if peerNodeInGossip.Status == api.Status_STATUS_MAINTENANCE {
+							// If the node sent its status as Maintenance
+							// do not overwrite it with online
+						} else {
+							peerNodeInGossip.Status = peerNodeInCache.Status
+						}
+					}
+					c.nodeCache[peerNodeInGossip.Id] = peerNodeInGossip
 				} else {
 					dlog.Errorln("Unable to get node info from gossip")
-					c.nodeCache[newNodeInfo.Id] = newNodeInfo
+					c.nodeCache[peerNodeInCache.Id] = peerNodeInCache
 				}
 			} else {
-				c.nodeCache[newNodeInfo.Id] = newNodeInfo
+				c.nodeCache[peerNodeInCache.Id] = peerNodeInCache
 			}
 		}
 		time.Sleep(2 * time.Second)
