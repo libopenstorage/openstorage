@@ -11,8 +11,8 @@ import (
 	"net"
 	"os"
 	"os/exec"
-	"time"
 	"strings"
+	"time"
 
 	"go.pedge.io/dlog"
 
@@ -108,7 +108,6 @@ func ifaceNameToIp(ifaceName string) (string, error) {
 	}
 	return "", fmt.Errorf("Unable to find Ip address for given interface")
 }
-
 
 func ExternalIp(config *config.ClusterConfig) (string, string, error) {
 	mgmtIp := ""
@@ -513,7 +512,7 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *ClusterInfo) {
 	}
 }
 
-func (c *ClusterManager) updateClusterStatus(initState *ClusterInitState, exist bool) {
+func (c *ClusterManager) updateClusterStatus() {
 	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
 	for {
 		node := c.getCurrentState()
@@ -698,6 +697,92 @@ func (c *ClusterManager) waitForQuorum(exist bool) error {
 	return nil
 }
 
+func (c *ClusterManager) startListeners(db kvdb.Kvdb, exist *bool) (
+	*ClusterInitState,
+	*ClusterInfo,
+	error,
+) {
+	kvlock, err := db.LockWithID(clusterLockKey, c.config.NodeId)
+	if err != nil {
+		dlog.Panicln("Fatal, Unable to obtain cluster lock.", err)
+	}
+	defer func() {
+		db.Unlock(kvlock)
+	}()
+
+	initState, err := snapAndReadClusterInfo()
+	if err != nil {
+		dlog.Panicln(err)
+	}
+	defer func() {
+		if initState.Collector != nil {
+			initState.Collector.Stop()
+		}
+	}()
+
+	selfNodeEntry, ok := initState.ClusterInfo.NodeEntries[c.config.NodeId]
+	if ok && selfNodeEntry.Status == api.Status_STATUS_DECOMMISSION {
+		msg := fmt.Sprintf("Node is in decommision state, Node ID %s.",
+			c.selfNode.Id)
+		dlog.Errorln(msg)
+		return nil, nil, errors.New(msg)
+	}
+
+	// Cluster database max size... 0 if unlimited.
+	c.size = initState.ClusterInfo.Size
+	// Set the clusterID in db
+	initState.ClusterInfo.Id = c.config.ClusterId
+
+	if initState.ClusterInfo.Status == api.Status_STATUS_INIT {
+		dlog.Infoln("Will initialize a new cluster.")
+
+		c.status = api.Status_STATUS_OK
+		initState.ClusterInfo.Status = api.Status_STATUS_OK
+		self, _ := c.initNode(initState.ClusterInfo)
+		err = c.initCluster(initState, self, false)
+		if err != nil {
+			dlog.Errorln("Failed to initialize the cluster.", err)
+			return nil, nil, err
+		}
+	} else if initState.ClusterInfo.Status&api.Status_STATUS_OK > 0 {
+		dlog.Infoln("Cluster state is OK... Joining the cluster.")
+
+		c.status = api.Status_STATUS_OK
+
+		self, exist := c.initNode(initState.ClusterInfo)
+
+		err = c.initNodeInCluster(initState, self, exist)
+		if err != nil {
+			dlog.Errorln("Failed to initialize node in cluster.", err)
+			return nil, nil, err
+		}
+	} else {
+		return nil, nil, errors.New("Fatal, Cluster is in an unexpected state.")
+	}
+
+	selfNodeEntry, ok = initState.ClusterInfo.NodeEntries[c.config.NodeId]
+	if !ok {
+		dlog.Panicln("Fatal, Unable to find self node entry in local cache")
+	}
+	// Add ourselves into the cluster DB and release the lock
+	clusterInfo, err := readClusterInfo()
+	if err != nil {
+		dlog.Errorln("Failed to read cluster info. ", err)
+		return nil, nil, err
+	}
+	clusterInfo.NodeEntries[c.config.NodeId] = selfNodeEntry
+	if clusterInfo.Status == api.Status_STATUS_INIT {
+		// We are the first node to join the cluster.
+		clusterInfo.Status = api.Status_STATUS_OK
+	}
+	err = writeClusterInfo(&clusterInfo)
+	if err != nil {
+		dlog.Errorln("Failed to save the database.", err)
+		return nil, nil, err
+	}
+	return initState, &clusterInfo, nil
+}
+
 func (c *ClusterManager) Start() error {
 	var err error
 
@@ -740,96 +825,19 @@ func (c *ClusterManager) Start() error {
 	)
 	c.gossipVersion = types.GOSSIP_VERSION_2
 
-	kvdb := kvdb.Instance()
-	kvlock, err := kvdb.Lock(clusterLockKey)
-	if err != nil {
-		dlog.Panicln("Fatal, Unable to obtain cluster lock.", err)
-	}
-
-	initState, err := snapAndReadClusterInfo()
-	defer func() {
-		if initState.Collector != nil {
-			initState.Collector.Stop()
-		}
-	}()
-
-	if err != nil {
-		dlog.Panicln(err)
-	}
-
-	selfNodeEntry, ok := initState.ClusterInfo.NodeEntries[c.config.NodeId]
-	if ok && selfNodeEntry.Status == api.Status_STATUS_DECOMMISSION {
-		msg := fmt.Sprintf("Node is in decommision state, Node ID %s.",
-			c.selfNode.Id)
-		dlog.Errorln(msg)
-		kvdb.Unlock(kvlock)
-		return errors.New(msg)
-	}
-
-	// Cluster database max size... 0 if unlimited.
-	c.size = initState.ClusterInfo.Size
-	// Set the clusterID in db
-	initState.ClusterInfo.Id = c.config.ClusterId
-
 	var exist bool
-	if initState.ClusterInfo.Status == api.Status_STATUS_INIT {
-		dlog.Infoln("Will initialize a new cluster.")
-
-		c.status = api.Status_STATUS_OK
-		initState.ClusterInfo.Status = api.Status_STATUS_OK
-		self, _ := c.initNode(initState.ClusterInfo)
-		err = c.initCluster(initState, self, false)
-		if err != nil {
-			dlog.Errorln("Failed to initialize the cluster.", err)
-			return err
-		}
-	} else if initState.ClusterInfo.Status&api.Status_STATUS_OK > 0 {
-		dlog.Infoln("Cluster state is OK... Joining the cluster.")
-
-		c.status = api.Status_STATUS_OK
-
-		self, exist := c.initNode(initState.ClusterInfo)
-
-		err = c.initNodeInCluster(initState, self, exist)
-		if err != nil {
-			dlog.Errorln("Failed to initialize node in cluster.", err)
-			return err
-		}
-	} else {
-		return errors.New("Fatal, Cluster is in an unexpected state.")
-	}
-
-	selfNodeEntry, ok = initState.ClusterInfo.NodeEntries[c.config.NodeId]
-	if !ok {
-		kvdb.Unlock(kvlock)
-		dlog.Panicln("Fatal, Unable to find self node entry in local cache")
-	}
-	// Add ourselves into the cluster DB and release the lock
-	currentState, err := readClusterInfo()
+	kvdb := kvdb.Instance()
+	initState, clusterInfo, err := c.startListeners(kvdb, &exist)
 	if err != nil {
-		kvdb.Unlock(kvlock)
-		dlog.Errorln("Failed to read cluster info. ", err)
 		return err
 	}
-	currentState.NodeEntries[c.config.NodeId] = selfNodeEntry
-	if currentState.Status == api.Status_STATUS_INIT {
-		// We are the first node to join the cluster.
-		currentState.Status = api.Status_STATUS_OK
-	}
-	err = writeClusterInfo(&currentState)
-	if err != nil {
-		dlog.Errorln("Failed to save the database.", err)
-		kvdb.Unlock(kvlock)
-		return err
-	}
-	kvdb.Unlock(kvlock)
 
 	// Set the status to NOT_IN_QUORUM to start the node.
 	// Once we achieve quorum then we actually join the cluster
 	// and change the status to OK
 	c.selfNode.Status = api.Status_STATUS_NOT_IN_QUORUM
 	// Start heartbeating to other nodes.
-	go c.startHeartBeat(&currentState)
+	go c.startHeartBeat(clusterInfo)
 
 	c.startClusterDBWatch(initState, kvdb)
 
@@ -838,7 +846,7 @@ func (c *ClusterManager) Start() error {
 		return err
 	}
 
-	go c.updateClusterStatus(initState, exist)
+	go c.updateClusterStatus()
 	go c.replayNodeDecommission(initState)
 
 	return nil
@@ -885,31 +893,9 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 	return cluster, nil
 }
 
-// SetSize sets the maximum number of nodes in a cluster.
-func (c *ClusterManager) SetSize(size int) error {
-	kvdb := kvdb.Instance()
-	kvlock, err := kvdb.Lock(clusterLockKey)
-	if err != nil {
-		dlog.Warnln("Unable to obtain cluster lock for updating config", err)
-		return nil
-	}
-	defer kvdb.Unlock(kvlock)
-
-	db, err := readClusterInfo()
-	if err != nil {
-		return err
-	}
-
-	db.Size = size
-
-	err = writeClusterInfo(&db)
-
-	return err
-}
-
 func (c *ClusterManager) updateNodeEntryDB(nodeEntry NodeEntry) error {
 	kvdb := kvdb.Instance()
-	kvlock, err := kvdb.Lock(clusterLockKey)
+	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
 	if err != nil {
 		dlog.Warnln("Unable to obtain cluster lock for updating cluster DB.",
 			err)
@@ -929,9 +915,31 @@ func (c *ClusterManager) updateNodeEntryDB(nodeEntry NodeEntry) error {
 	return err
 }
 
+// SetSize sets the maximum number of nodes in a cluster.
+func (c *ClusterManager) SetSize(size int) error {
+	kvdb := kvdb.Instance()
+	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
+	if err != nil {
+		dlog.Warnln("Unable to obtain cluster lock for updating config", err)
+		return nil
+	}
+	defer kvdb.Unlock(kvlock)
+
+	db, err := readClusterInfo()
+	if err != nil {
+		return err
+	}
+
+	db.Size = size
+
+	err = writeClusterInfo(&db)
+
+	return err
+}
+
 func (c *ClusterManager) markNodeDecommission(node api.Node) error {
 	kvdb := kvdb.Instance()
-	kvlock, err := kvdb.Lock(clusterLockKey)
+	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
 	if err != nil {
 		dlog.Warnln("Unable to obtain cluster lock for marking "+
 			"node decommission",
@@ -963,7 +971,7 @@ func (c *ClusterManager) markNodeDecommission(node api.Node) error {
 func (c *ClusterManager) deleteNodeFromDB(nodeID string) error {
 	// Delete node from cluster DB
 	kvdb := kvdb.Instance()
-	kvlock, err := kvdb.Lock(clusterLockKey)
+	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
 	if err != nil {
 		dlog.Panicln("fatal, unable to obtain cluster lock. ", err)
 	}
