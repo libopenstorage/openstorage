@@ -211,7 +211,7 @@ func (c *ClusterManager) getCurrentState() *api.Node {
 func (c *ClusterManager) getPeers(db ClusterInfo) map[types.NodeId]string {
 	peers := make(map[types.NodeId]string)
 	for _, nodeEntry := range db.NodeEntries {
-		ip := nodeEntry.MgmtIp + ":9002"
+		ip := nodeEntry.DataIp + ":9002"
 		peers[types.NodeId(nodeEntry.Id)] = ip
 	}
 	return peers
