@@ -24,13 +24,6 @@ import (
 const (
 	// Name is the name of this kvdb implementation.
 	Name = "etcd-kv"
-
-	defaultRetryCount             = 60
-	defaultIntervalBetweenRetries = time.Millisecond * 500
-	bootstrap                     = "kvdb/bootstrap"
-	// the maximum amount of time a dial will wait for a connection to setup.
-	// 30s is long enough for most of the network conditions.
-	defaultDialTimeout = 30 * time.Second
 )
 
 var (
@@ -44,6 +37,7 @@ func init() {
 }
 
 type etcdKV struct {
+	common.BaseKvdb
 	client   e.KeysAPI
 	authUser e.AuthUserAPI
 	authRole e.AuthRoleAPI
@@ -67,6 +61,7 @@ func New(
 	domain string,
 	machines []string,
 	options map[string]string,
+	fatalErrorCb kvdb.FatalErrorCB,
 ) (kvdb.Kvdb, error) {
 	if len(machines) == 0 {
 		machines = defaultMachines
@@ -93,7 +88,7 @@ func New(
 	tls := transport.TLSInfo{
 		CAFile: caFile,
 	}
-	tr, err := transport.NewTransport(tls, defaultDialTimeout)
+	tr, err := transport.NewTransport(tls, ec.DefaultDialTimeout)
 	if err != nil {
 		return nil, err
 	}
@@ -113,6 +108,7 @@ func New(
 		domain = domain + "/"
 	}
 	return &etcdKV{
+		common.BaseKvdb{FatalCb: fatalErrorCb},
 		e.NewKeysAPI(c),
 		e.NewAuthUserAPI(c),
 		e.NewAuthRoleAPI(c),
@@ -203,7 +199,7 @@ func (kv *etcdKV) Update(
 func (kv *etcdKV) Enumerate(prefix string) (kvdb.KVPairs, error) {
 	prefix = kv.domain + prefix
 	var err error
-	for i := 0; i < defaultRetryCount; i++ {
+	for i := 0; i < ec.DefaultRetryCount; i++ {
 		result, err := kv.client.Get(context.Background(), prefix, &e.GetOptions{
 			Recursive: true,
 			Sort:      true,
@@ -215,7 +211,7 @@ func (kv *etcdKV) Enumerate(prefix string) (kvdb.KVPairs, error) {
 		switch err.(type) {
 		case *e.ClusterError:
 			logrus.Errorf("kvdb set error: %v, retry count: %v\n", err, i)
-			time.Sleep(defaultIntervalBetweenRetries)
+			time.Sleep(ec.DefaultIntervalBetweenRetries)
 		default:
 			etcdErr := err.(e.Error)
 			if etcdErr.Code == e.ErrorCodeKeyNotFound {
@@ -331,7 +327,7 @@ func (kv *etcdKV) LockWithID(key string, lockerID string) (
 ) {
 	key = kv.domain + key
 	duration := time.Second
-	ttl := uint64(4)
+	ttl := uint64(ec.DefaultLockTTL)
 	count := 0
 	lockTag := LockerIDInfo{LockerID: lockerID}
 	kvPair, err := kv.Create(key, lockTag, ttl)
@@ -432,7 +428,7 @@ func (kv *etcdKV) resultToKvs(result *e.Response) kvdb.KVPairs {
 func (kv *etcdKV) get(key string, recursive, sort bool) (*kvdb.KVPair, error) {
 	var err error
 	var result *e.Response
-	for i := 0; i < defaultRetryCount; i++ {
+	for i := 0; i < ec.DefaultRetryCount; i++ {
 		result, err = kv.client.Get(context.Background(), key, &e.GetOptions{
 			Recursive: recursive,
 			Sort:      sort,
@@ -445,7 +441,7 @@ func (kv *etcdKV) get(key string, recursive, sort bool) (*kvdb.KVPair, error) {
 		switch err.(type) {
 		case *e.ClusterError:
 			logrus.Errorf("kvdb get error: %v, retry count: %v\n", err, i)
-			time.Sleep(defaultIntervalBetweenRetries)
+			time.Sleep(ec.DefaultIntervalBetweenRetries)
 		default:
 			etcdErr := err.(e.Error)
 			if etcdErr.Code == e.ErrorCodeKeyNotFound {
@@ -464,7 +460,7 @@ func (kv *etcdKV) setWithRetry(ctx context.Context, key, value string,
 		i      int
 		result *e.Response
 	)
-	for i = 0; i < defaultRetryCount; i++ {
+	for i = 0; i < ec.DefaultRetryCount; i++ {
 		result, err = kv.client.Set(ctx, key, value, opts)
 		if err == nil {
 			return kv.resultToKv(result), nil
@@ -474,7 +470,7 @@ func (kv *etcdKV) setWithRetry(ctx context.Context, key, value string,
 			cerr := err.(*e.ClusterError)
 			logrus.Errorf("kvdb set error: %v %v, retry count: %v\n",
 				err, cerr.Detail(), i)
-			time.Sleep(defaultIntervalBetweenRetries)
+			time.Sleep(ec.DefaultIntervalBetweenRetries)
 		default:
 			goto out
 		}
@@ -482,7 +478,7 @@ func (kv *etcdKV) setWithRetry(ctx context.Context, key, value string,
 
 out:
 	// It's possible that update succeeded but the re-update failed.
-	if i > 0 && i < defaultRetryCount && err != nil {
+	if i > 0 && i < ec.DefaultRetryCount && err != nil {
 		kvp, err := kv.get(key, false, false)
 		if err == nil && bytes.Equal(kvp.Value, []byte(value)) {
 			if opts.PrevExist == e.PrevNoExist {
@@ -500,7 +496,7 @@ out:
 func (kv *etcdKV) refreshLock(kvPair *kvdb.KVPair) {
 	l := kvPair.Lock.(*etcdLock)
 	ttl := kvPair.TTL
-	refresh := time.NewTicker(time.Duration(kvPair.TTL) / 4)
+	refresh := time.NewTicker(ec.DefaultLockRefreshDuration)
 	var keyString string
 	if kvPair != nil {
 		keyString = kvPair.Key
@@ -518,7 +514,7 @@ func (kv *etcdKV) refreshLock(kvPair *kvdb.KVPair) {
 					kvPair.Value,
 				)
 				if err != nil {
-					logrus.Errorf(
+					kv.FatalCb(
 						"Error refreshing lock for key %v: %v\n",
 						keyString, err,
 					)
@@ -580,7 +576,7 @@ func (kv *etcdKV) watchStart(
 func (kv *etcdKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 	// Create a new bootstrap key
 	r := rand.New(rand.NewSource(time.Now().UnixNano())).Int63()
-	bootStrapKey := bootstrap + strconv.FormatInt(r, 10) +
+	bootStrapKey := ec.Bootstrap + strconv.FormatInt(r, 10) +
 		strconv.FormatInt(time.Now().UnixNano(), 10)
 	kvPair, err := kv.Put(bootStrapKey, time.Now().UnixNano(), 0)
 	if err != nil {
@@ -598,6 +594,7 @@ func (kv *etcdKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 		kv.domain,
 		nil,
 		map[string]string{mem.KvSnap: "true"},
+		kv.FatalCb,
 	)
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to create in-mem kv store: %v", err)
