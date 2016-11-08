@@ -734,7 +734,7 @@ func (c *ClusterManager) startListeners(db kvdb.Kvdb, exist *bool) (
 	initState.ClusterInfo.Id = c.config.ClusterId
 
 	if initState.ClusterInfo.Status == api.Status_STATUS_INIT {
-		dlog.Infoln("Will initialize a new cluster.")
+		dlog.Infoln("Initializing a new cluster.")
 
 		c.status = api.Status_STATUS_OK
 		initState.ClusterInfo.Status = api.Status_STATUS_OK

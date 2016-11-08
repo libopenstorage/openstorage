@@ -147,7 +147,7 @@ func start(c *cli.Context) error {
 	scheme := u.Scheme
 	u.Scheme = "http"
 
-	kv, err := kvdb.New(scheme, "openstorage", []string{u.String()}, nil)
+	kv, err := kvdb.New(scheme, "openstorage", []string{u.String()}, nil, dlog.Panicf)
 	if err != nil {
 		return fmt.Errorf("Failed to initialize KVDB: %v (%v)\nSupported datastores: %v", scheme, err, datastores)
 	}

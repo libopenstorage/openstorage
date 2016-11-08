@@ -63,15 +63,15 @@ type watcher struct {
 // KvAlert is used for managing the alerts and its kvdb instance
 type KvAlert struct {
 	// kvdbOptions used to access kvdb for each cluster
-	kvdbOptions  map[string]string
+	kvdbOptions map[string]string
 	// kvdbName is a Name/Type of kvdb instance
-	kvdbName     string
+	kvdbName string
 	// kvdbDomain is the prefix witch which all kvdb requests are made
-	kvdbDomain   string
+	kvdbDomain string
 	// kvdbMachines is a list of kvdb endpoints
 	kvdbMachines []string
 	// clusterID for which this alerts object will be used
-	clusterID    string
+	clusterID string
 }
 
 // GetKvdbInstance returns a kvdb instance associated with this alert client and clusterID combination.
@@ -92,7 +92,8 @@ func Init(
 	kvdbLock.Lock()
 	defer kvdbLock.Unlock()
 	if _, ok := kvdbMap[clusterID]; !ok {
-		kv, err := kvdb.New(name, domain+"/"+clusterID, machines, kvdbOptions)
+		kv, err := kvdb.New(name, domain+"/"+clusterID, machines, kvdbOptions,
+			dlog.Panicf)
 		if err != nil {
 			return nil, err
 		}
@@ -164,7 +165,6 @@ func (kva *KvAlert) Enumerate(filter *api.Alert) ([]*api.Alert, error) {
 	kv := kva.GetKvdbInstance()
 	return kva.enumerate(kv, filter)
 }
-
 
 /*
 EnumerateByCluster enumerates Alerts by clusterID. It uses the global
@@ -420,7 +420,8 @@ func (kva *KvAlert) getKvdbForCluster(clusterID string) (kvdb.Kvdb, error) {
 
 	_, ok := kvdbMap[clusterID]
 	if !ok {
-		kv, err := kvdb.New(kva.kvdbName, kva.kvdbDomain+"/"+clusterID, kva.kvdbMachines, kva.kvdbOptions)
+		kv, err := kvdb.New(kva.kvdbName, kva.kvdbDomain+"/"+clusterID,
+			kva.kvdbMachines, kva.kvdbOptions, dlog.Panicf)
 		if err != nil {
 			return nil, err
 		}

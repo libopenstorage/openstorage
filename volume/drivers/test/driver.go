@@ -18,7 +18,7 @@ import (
 )
 
 func init() {
-	kv, err := kvdb.New(mem.Name, "driver_test", []string{}, nil)
+	kv, err := kvdb.New(mem.Name, "driver_test", []string{}, nil, dlog.Panicf)
 	if err != nil {
 		dlog.Panicf("Failed to intialize KVDB")
 	}
