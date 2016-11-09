@@ -191,7 +191,9 @@ func (c *ClusterManager) UpdateData(dataKey string, value interface{}) error {
 func (c *ClusterManager) GetData() (map[string]*api.Node, error) {
 	nodes := make(map[string]*api.Node)
 	for _, value := range c.nodeCache {
-		nodes[value.Id] = &value
+		var copyValue api.Node
+		copyValue = value
+		nodes[value.Id] = &copyValue
 	}
 	return nodes, nil
 }
