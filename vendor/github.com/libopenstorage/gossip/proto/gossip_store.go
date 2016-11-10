@@ -199,6 +199,7 @@ func (s *GossipStoreImpl) AddNode(id types.NodeId, status types.NodeStatus) {
 		Value:              make(types.StoreMap),
 	}
 	s.nodeMap[id] = newNodeInfo
+	fmt.Println("gossip: Adding Node to gossip map: ", id)
 	s.Unlock()
 }
 
@@ -208,6 +209,7 @@ func (s *GossipStoreImpl) RemoveNode(id types.NodeId) error {
 		s.Unlock()
 		return fmt.Errorf("Node %v does not exist in map", id)
 	}
+	fmt.Println("gossip: Removing node from gossip map: ", id)
 	delete(s.nodeMap, id)
 	s.Unlock()
 	return nil
@@ -310,6 +312,9 @@ func (s *GossipStoreImpl) updateCluster(peers map[types.NodeId]string) {
 	s.Unlock()
 	for _, nodeId := range removeNodeIds {
 		s.RemoveNode(nodeId)
+	}
+	for _, nodeId := range addNodeIds {
+		s.AddNode(nodeId, types.NODE_STATUS_DOWN)
 	}
 }
 
