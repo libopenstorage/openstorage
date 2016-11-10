@@ -251,11 +251,10 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 
 			n, found := c.nodeCache[nodeEntry.Id]
 			if !found {
-				msg := fmt.Sprintf("ClusterManager watchDB, "+
+				logrus.Errorf("ClusterManager watchDB, "+
 					"node ID %s not in node cache",
 					nodeEntry.Id)
-				logrus.Errorf(msg)
-				return errors.New(msg)
+				continue
 			}
 
 			if n.Status == api.Status_STATUS_DECOMMISSION {
