@@ -218,7 +218,7 @@ func (v *volDriver) volumeStats(context *cli.Context) {
 		return
 	}
 
-	stats, err := v.volDriver.Stats(string(context.Args()[0]))
+	stats, err := v.volDriver.Stats(string(context.Args()[0]), true)
 	if err != nil {
 		cmdError(context, fn, err)
 		return

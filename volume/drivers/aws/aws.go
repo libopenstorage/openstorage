@@ -503,7 +503,7 @@ func (d *Driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 	return vols[0].Id, nil
 }
 
-func (d *Driver) Stats(volumeID string) (*api.Stats, error) {
+func (d *Driver) Stats(volumeID string, cumulative bool) (*api.Stats, error) {
 	return nil, volume.ErrNotSupported
 }
 

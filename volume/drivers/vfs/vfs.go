@@ -142,7 +142,7 @@ func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.Volu
 	return d.UpdateVol(v)
 }
 
-func (d *driver) Stats(volumeID string) (*api.Stats, error) {
+func (d *driver) Stats(volumeID string, cumulative bool) (*api.Stats, error) {
 	return nil, volume.ErrNotSupported
 }
 

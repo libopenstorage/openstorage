@@ -22,9 +22,9 @@ const (
 	SpecDedupe           = "dedupe"
 )
 
-// OptionKey specifies a set of recognized query params
+// OptionKey specifies a set of recognized query params.
 const (
-	// OptName query parameter used to lookup volume by name
+	// OptName query parameter used to lookup volume by name.
 	OptName = "Name"
 	// OptVolumeID query parameter used to lookup volume by ID.
 	OptVolumeID = "VolumeID"
@@ -32,6 +32,8 @@ const (
 	OptLabel = "Label"
 	// OptConfigLabel query parameter used to lookup volume by set of labels.
 	OptConfigLabel = "ConfigLabel"
+	// OptCumulative query parameter used to request cumulative stats.
+	OptCumulative = "Cumulative"
 )
 
 // Node describes the state of a node.
@@ -164,4 +166,37 @@ func simpleString(typeString string, nameMap map[int32]string, v int32) string {
 		return strconv.Itoa(int(v))
 	}
 	return strings.TrimPrefix(strings.ToLower(s), fmt.Sprintf("%s_", strings.ToLower(typeString)))
+}
+
+func toSec(ms uint64) uint64 {
+	return ms / 1000
+}
+
+func (v *Stats) WriteThroughput() uint64 {
+	if v.IntervalMs == 0 {
+		return 0
+	}
+	return (v.WriteBytes) / toSec(v.IntervalMs)
+}
+
+func (v *Stats) ReadThroughput() uint64 {
+	if v.IntervalMs == 0 {
+		return 0
+	}
+	return (v.ReadBytes) / toSec(v.IntervalMs)
+}
+
+func (v *Stats) Latency() uint64 {
+	ops := v.Writes + v.Reads
+	if ops == 0 {
+		return 0
+	}
+	return (uint64)((v.IoMs * 1000) / (v.Writes + v.Reads))
+}
+
+func (v *Stats) Iops() uint64 {
+	if v.IntervalMs == 0 {
+		return 0
+	}
+	return (v.Writes + v.Reads) / toSec(v.IntervalMs)
 }
