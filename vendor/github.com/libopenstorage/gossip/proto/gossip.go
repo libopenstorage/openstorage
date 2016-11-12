@@ -152,7 +152,8 @@ func (g *GossiperImpl) Init(
 
 	// Memberlist conf Name is the name of the node
 	// and it should be unique in the cluster
-	mlConf.Name = string(selfNodeId)
+	nodeName := string(selfNodeId) + gossipVersion
+	mlConf.Name = nodeName
 	mlConf.BindAddr = ip
 	mlConf.BindPort = int(port64)
 
@@ -174,6 +175,7 @@ func (g *GossiperImpl) Init(
 	mlConf.Delegate = ml.Delegate(g)
 	mlConf.Events = ml.EventDelegate(g)
 	mlConf.Alive = ml.AliveDelegate(g)
+	mlConf.Merge = ml.MergeDelegate(g)
 	filter := &logutils.LevelFilter{
 		Levels:   []logutils.LogLevel{"DEBUG", "INFO", "WARN", "ERROR"},
 		MinLevel: logutils.LogLevel("INFO"),
@@ -197,11 +199,12 @@ func (g *GossiperImpl) Start(knownIps []string) error {
 
 	if len(knownIps) != 0 {
 		// Joining an existing cluster
-		_, err := list.Join(knownIps)
+		joinedNodes, err := list.Join(knownIps)
 		if err != nil {
 			log.Infof("gossip: Unable to join other nodes at startup : %v", err)
 			return err
 		}
+		log.Infof("gossip: Successfully joined with %v node(s)", joinedNodes)
 	}
 	return nil
 }
