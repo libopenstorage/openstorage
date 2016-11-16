@@ -116,6 +116,15 @@ func (x FSType) SimpleString() string {
 	return simpleString("fs_type", FSType_name, int32(x))
 }
 
+func CosTypeSimpleValueOf(s string) (CosType, error) {
+	obj, err := simpleValueOf("cos_type", CosType_value, s)
+	return CosType(obj), err
+}
+
+func (x CosType) SimpleString() string {
+	return simpleString("cos_type", CosType_name, int32(x))
+}
+
 func GraphDriverChangeTypeSimpleValueOf(s string) (GraphDriverChangeType, error) {
 	obj, err := simpleValueOf("graph_driver_change_type", GraphDriverChangeType_value, s)
 	return GraphDriverChangeType(obj), err

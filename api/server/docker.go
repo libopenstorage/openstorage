@@ -208,10 +208,7 @@ func (d *driver) specFromOpts(Opts map[string]string) (*api.VolumeSpec, error) {
 			haLevel, _ := strconv.ParseInt(v, 10, 64)
 			spec.HaLevel = haLevel
 		case api.SpecCos:
-			cos, err := d.cosLevel(v)
-			if err != nil {
-				return nil, err
-			}
+			cos, _ := api.CosTypeSimpleValueOf(v)
 			spec.Cos = cos
 		case api.SpecDedupe:
 			spec.Dedupe, _ = strconv.ParseBool(v)

@@ -229,7 +229,7 @@ func (d *Driver) Create(
 	var snapID *string
 	// Spec size is in bytes, translate to GiB.
 	sz := int64(spec.Size / (1024 * 1024 * 1024))
-	iops, volType := mapCos(spec.Cos)
+	iops, volType := mapCos(uint32(spec.Cos))
 	if source != nil && string(source.Parent) != "" {
 		id := string(source.Parent)
 		snapID = &id

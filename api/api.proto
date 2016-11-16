@@ -141,13 +141,13 @@ message StorageResource {
   StorageMedium medium = 3;
   // True if this device is online.
   bool online = 4;;
-  // IOPS 
+  // IOPS
   uint64 iops = 5;;
   // SeqWrite
   double seq_write = 6;
-  // SeqRead 
+  // SeqRead
   double seq_read = 7;
-  // RandRW 
+  // RandRW
   double randRW  = 8;
   // Total size in bytes.
   uint64 size = 9;;
@@ -192,7 +192,7 @@ message VolumeSpec {
   // a failure of a node will lead to data loss
   int64 ha_level = 5;
   // The COS, 1 to 9
-  uint32 cos = 6;
+  CosType cos = 6;
   // Perform dedupe on this disk
   bool dedupe = 7;
   // SnapshotInterval in minutes, set to 0 to disable snapshots
@@ -209,6 +209,8 @@ message VolumeSpec {
   bool encrypted = 13;
   // User passphrase if this is an encrypted volume
   string passphrase = 14;
+  // SnapshotSchedule 
+  string snapshot_schedule = 15;
 }
 
 // Set of machine IDs (nodes) to which part of this volume is erasure coded - for clustered storage arrays
@@ -286,7 +288,7 @@ message Alert {
   // Message describing the Alert
   string message = 4;
   //Timestamp when Alert occured
-  google.protobuf.Timestamp timestamp = 5;	
+  google.protobuf.Timestamp timestamp = 5;
   // ResourceId where Alert occured
   string resource_id = 6;
   // Resource where Alert occured
