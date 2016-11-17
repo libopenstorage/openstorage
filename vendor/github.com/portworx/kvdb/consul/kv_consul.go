@@ -63,6 +63,7 @@ func stripConsecutiveForwardslash(key string) string {
 }
 
 type consulKV struct {
+	common.BaseKvdb
 	client *api.Client
 	config *api.Config
 	domain string
@@ -79,6 +80,7 @@ func New(
 	domain string,
 	machines []string,
 	options map[string]string,
+	fatalErrorCb kvdb.FatalErrorCB,
 ) (kvdb.Kvdb, error) {
 	if len(machines) == 0 {
 		machines = defaultMachines
@@ -125,6 +127,7 @@ func New(
 	}
 
 	return &consulKV{
+		common.BaseKvdb{FatalCb: fatalErrorCb},
 		client,
 		config,
 		domain,
@@ -464,6 +467,7 @@ func (kv *consulKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 		kv.domain,
 		nil,
 		map[string]string{mem.KvSnap: "true"},
+		kv.FatalCb,
 	)
 	if err != nil {
 		return nil, 0, err

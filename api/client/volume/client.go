@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"strconv"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/client"
@@ -182,8 +183,11 @@ func (v *volumeClient) Snapshot(volumeID string, readonly bool,
 		return "", err
 	}
 	// TODO(pedge): this probably should not be embedded in this way
-	if response.VolumeCreateResponse != nil && response.VolumeCreateResponse.VolumeResponse != nil && response.VolumeCreateResponse.VolumeResponse.Error != "" {
-		return "", errors.New(response.VolumeCreateResponse.VolumeResponse.Error)
+	if response.VolumeCreateResponse != nil &&
+		response.VolumeCreateResponse.VolumeResponse != nil &&
+		response.VolumeCreateResponse.VolumeResponse.Error != "" {
+		return "", errors.New(
+			response.VolumeCreateResponse.VolumeResponse.Error)
 	}
 	if response.VolumeCreateResponse != nil {
 		return response.VolumeCreateResponse.Id, nil
@@ -193,11 +197,18 @@ func (v *volumeClient) Snapshot(volumeID string, readonly bool,
 
 // Stats for specified volume.
 // Errors ErrEnoEnt may be returned
-func (v *volumeClient) Stats(volumeID string) (*api.Stats, error) {
+func (v *volumeClient) Stats(
+	volumeID string,
+	cumulative bool,
+) (*api.Stats, error) {
 	stats := &api.Stats{}
-	if err := v.c.Get().Resource(volumePath + "/stats").Instance(volumeID).Do().Unmarshal(stats); err != nil {
+	req := v.c.Get().Resource(volumePath + "/stats").Instance(volumeID)
+	req.QueryOption(api.OptCumulative, strconv.FormatBool(cumulative))
+
+	if err := req.Do().Unmarshal(stats); err != nil {
 		return nil, err
 	}
+
 	return stats, nil
 }
 

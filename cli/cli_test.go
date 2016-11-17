@@ -27,7 +27,8 @@ func TestCmdMarshalProto(t *testing.T) {
  "shared": false,
  "aggregation_level": 0,
  "encrypted": false,
- "passphrase": ""
+ "passphrase": "",
+ "snapshot_schedule": ""
 }`,
 		data,
 	)

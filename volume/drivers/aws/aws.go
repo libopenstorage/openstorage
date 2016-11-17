@@ -228,7 +228,7 @@ func (d *Driver) Create(
 	var snapID *string
 	// Spec size is in bytes, translate to GiB.
 	sz := int64(spec.Size / (1024 * 1024 * 1024))
-	iops, volType := mapCos(spec.Cos)
+	iops, volType := mapCos(uint32(spec.Cos))
 	if source != nil && string(source.Parent) != "" {
 		id := string(source.Parent)
 		snapID = &id
@@ -502,7 +502,7 @@ func (d *Driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 	return vols[0].Id, nil
 }
 
-func (d *Driver) Stats(volumeID string) (*api.Stats, error) {
+func (d *Driver) Stats(volumeID string, cumulative bool) (*api.Stats, error) {
 	return nil, volume.ErrNotSupported
 }
 

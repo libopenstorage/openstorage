@@ -139,13 +139,13 @@ message StorageResource {
   StorageMedium medium = 3;
   // True if this device is online.
   bool online = 4;;
-  // IOPS 
+  // IOPS
   uint64 iops = 5;;
   // SeqWrite
   double seq_write = 6;
-  // SeqRead 
+  // SeqRead
   double seq_read = 7;
-  // RandRW 
+  // RandRW
   double randRW  = 8;
   // Total size in bytes.
   uint64 size = 9;;
@@ -190,7 +190,7 @@ message VolumeSpec {
   // a failure of a node will lead to data loss
   int64 ha_level = 5;
   // The COS, 1 to 9
-  uint32 cos = 6;
+  CosType cos = 6;
   // Perform dedupe on this disk
   bool dedupe = 7;
   // SnapshotInterval in minutes, set to 0 to disable snapshots
@@ -207,6 +207,8 @@ message VolumeSpec {
   bool encrypted = 13;
   // User passphrase if this is an encrypted volume
   string passphrase = 14;
+  // SnapshotSchedule 
+  string snapshot_schedule = 15;
 }
 
 // Set of machine IDs (nodes) to which part of this volume is erasure coded - for clustered storage arrays
@@ -255,21 +257,23 @@ message Volume {
 
 message Stats {
   // Reads completed successfully
-  int64 reads = 1;
+  uint64 reads = 1;
   // Time spent in reads in ms
-  int64 read_ms = 2;
-  int64 read_bytes = 3;
+  uint64 read_ms = 2;
+  uint64 read_bytes = 3;
   // Writes completed successfully
-  int64 writes = 4;
+  uint64 writes = 4;
   // Time spent in writes in ms
-  int64 write_ms = 5;
-  int64 write_bytes = 6;
+  uint64 write_ms = 5;
+  uint64 write_bytes = 6;
   // IOs curently in progress
-  int64 io_progress = 7;
+  uint64 io_progress = 7;
   // Time spent doing IOs ms
-  int64 io_ms = 8;
+  uint64 io_ms = 8;
   // BytesUsed
   uint64 bytes_used = 9;
+  // Interval in ms during which stats were collected
+  uint64 interval_ms = 10;
 }
 
 message Alert {

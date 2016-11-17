@@ -1,6 +1,13 @@
 package common
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"github.com/portworx/kvdb"
+)
+
+var (
+	path = "/var/cores/"
+)
 
 // ToBytes converts to value to a byte slice.
 func ToBytes(val interface{}) ([]byte, error) {
@@ -14,4 +21,10 @@ func ToBytes(val interface{}) ([]byte, error) {
 	default:
 		return json.Marshal(val)
 	}
+}
+
+// BaseKvdb provides common functionality across kvdb types
+type BaseKvdb struct {
+	// FatalCb invoked for fatal errors
+	FatalCb kvdb.FatalErrorCB
 }

@@ -114,8 +114,12 @@ type PermissionType int
 // with ErrWatchStopped.
 type WatchCB func(prefix string, opaque interface{}, kvp *KVPair, err error) error
 
+/// FatalErrorCb callback is invoked incase of fatal errors
+type FatalErrorCB func(format string, args ...interface{})
+
 // DatastoreInit is called to activate a backend KV store.
-type DatastoreInit func(domain string, machines []string, options map[string]string) (Kvdb, error)
+type DatastoreInit func(domain string, machines []string, options map[string]string,
+	cb FatalErrorCB) (Kvdb, error)
 
 // DatastoreVersion is called to get the version of a backend KV store
 type DatastoreVersion func(url string) (string, error)

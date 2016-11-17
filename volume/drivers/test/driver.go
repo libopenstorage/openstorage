@@ -18,7 +18,7 @@ import (
 )
 
 func init() {
-	kv, err := kvdb.New(mem.Name, "driver_test", []string{}, nil)
+	kv, err := kvdb.New(mem.Name, "driver_test", []string{}, nil, dlog.Panicf)
 	if err != nil {
 		dlog.Panicf("Failed to intialize KVDB")
 	}
@@ -39,6 +39,7 @@ type Context struct {
 	Filesystem api.FSType
 	testPath   string
 	testFile   string
+	Encrypted  bool
 }
 
 func NewContext(d volume.VolumeDriver) *Context {
@@ -96,9 +97,10 @@ func create(t *testing.T, ctx *Context) {
 		&api.VolumeLocator{Name: "foo", VolumeLabels: map[string]string{"oh": "create"}},
 		nil,
 		&api.VolumeSpec{
-			Size:    1 * 1024 * 1024 * 1024,
-			HaLevel: 1,
-			Format:  ctx.Filesystem,
+			Size:      1 * 1024 * 1024 * 1024,
+			HaLevel:   1,
+			Format:    ctx.Filesystem,
+			Encrypted: ctx.Encrypted,
 		})
 
 	require.NoError(t, err, "Failed in Create")

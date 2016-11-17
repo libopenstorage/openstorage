@@ -175,7 +175,7 @@ func (d *driver) Delete(volumeID string) error {
 	return nil
 }
 
-func (d *driver) Stats(volumeID string) (*api.Stats, error) {
+func (d *driver) Stats(volumeID string, cumulative bool) (*api.Stats, error) {
 	return nil, volume.ErrNotSupported
 }
 

@@ -32,6 +32,7 @@ func init() {
 }
 
 type memKV struct {
+	common.BaseKvdb
 	m      map[string]*kvdb.KVPair
 	w      map[string]*watchData
 	wt     map[string]*watchData
@@ -55,16 +56,18 @@ func New(
 	domain string,
 	machines []string,
 	options map[string]string,
+	fatalErrorCb kvdb.FatalErrorCB,
 ) (kvdb.Kvdb, error) {
 	if domain != "" && !strings.HasSuffix(domain, "/") {
 		domain = domain + "/"
 	}
 
 	mem := &memKV{
-		m:      make(map[string]*kvdb.KVPair),
-		w:      make(map[string]*watchData),
-		wt:     make(map[string]*watchData),
-		domain: domain,
+		BaseKvdb: common.BaseKvdb{FatalCb: fatalErrorCb},
+		m:        make(map[string]*kvdb.KVPair),
+		w:        make(map[string]*watchData),
+		wt:       make(map[string]*watchData),
+		domain:   domain,
 	}
 
 	if _, ok := options[KvSnap]; ok {

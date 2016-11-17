@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 
@@ -323,12 +325,24 @@ func (vd *volApi) stats(w http.ResponseWriter, r *http.Request) {
 
 	method := "stats"
 	if volumeID, err = vd.parseVolumeID(r); err != nil {
-		e := fmt.Errorf("Failed to parse parse volumeID: %s", err.Error())
+		e := fmt.Errorf("Failed to parse volumeID: %s", err.Error())
 		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
 		return
 	}
 
-	vd.logRequest(method, string(volumeID)).Infoln("")
+	params := r.URL.Query()
+	// By default always report /proc/diskstats style stats.
+	cumulative := true
+	if opt, ok := params[string(api.OptCumulative)]; ok {
+		if boolValue, err := strconv.ParseBool(strings.Join(opt[:], "")); !ok {
+			e := fmt.Errorf("Failed to parse %s option: %s",
+				api.OptCumulative, err.Error())
+			vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+			return
+		} else {
+			cumulative = boolValue
+		}
+	}
 
 	d, err := volumedrivers.Get(vd.name)
 	if err != nil {
@@ -336,7 +350,7 @@ func (vd *volApi) stats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	stats, err := d.Stats(volumeID)
+	stats, err := d.Stats(volumeID, cumulative)
 	if err != nil {
 		e := fmt.Errorf("Failed to get stats: %s", err.Error())
 		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)

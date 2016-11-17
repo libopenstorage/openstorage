@@ -145,7 +145,7 @@ func (v *volumeDriver) Set(volumeID string, locator *api.VolumeLocator, spec *ap
 
 }
 
-func (v *volumeDriver) Stats(volumeID string) (*api.Stats, error) {
+func (v *volumeDriver) Stats(volumeID string, cumulative bool) (*api.Stats, error) {
 	return nil, volume.ErrNotSupported
 }
 
