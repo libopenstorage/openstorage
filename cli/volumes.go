@@ -88,12 +88,17 @@ func (v *volDriver) volumeCreate(context *cli.Context) {
 		cmdError(context, fn, err)
 		return
 	}
+	cosType, err := api.CosTypeSimpleValueOf(context.String("cos"))
+	if err != nil {
+		cmdError(context, fn, err)
+		return
+	}
 	spec := &api.VolumeSpec{
 		Size:             uint64(VolumeSzUnits(context.Int("s")) * MiB),
 		Format:           fsType,
 		BlockSize:        int64(context.Int("b") * 1024),
 		HaLevel:          int64(context.Int("r")),
-		Cos:              uint32(context.Int("cos")),
+		Cos:              cosType,
 		SnapshotInterval: uint32(context.Int("si")),
 	}
 	source := &api.Source{
