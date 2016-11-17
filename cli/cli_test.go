@@ -21,7 +21,7 @@ func TestCmdMarshalProto(t *testing.T) {
  "format": "ext4",
  "block_size": "0",
  "ha_level": "0",
- "cos": 0,
+ "cos": "none",
  "dedupe": false,
  "snapshot_interval": 0,
  "shared": false,
