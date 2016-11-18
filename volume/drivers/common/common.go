@@ -1,7 +1,8 @@
 package common
 
 import (
-	"time"
+	"go.pedge.io/proto/time"
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/portworx/kvdb"
@@ -18,10 +19,10 @@ func NewVolume(
 	return &api.Volume{
 		Id:       volumeID,
 		Locator:  volumeLocator,
-		Ctime:    time.Now().Unix(),
+		Ctime:    prototime.Now(),
 		Spec:     volumeSpec,
 		Source:   source,
-		LastScan: time.Now().Unix(),
+		LastScan: prototime.Now(),
 		Format:   fsType,
 		State:    api.VolumeState_VOLUME_STATE_AVAILABLE,
 		Status:   api.VolumeStatus_VOLUME_STATUS_UP,

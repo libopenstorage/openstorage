@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+import "google/protobuf/timestamp.proto";
+
 package openstorage.api;
 
 option go_package = "api";
@@ -153,8 +155,8 @@ message StorageResource {
   uint64 used = 10;
   // True if this device is rotational.
   string rotation_speed = 11;
-  // Timestamp in Unix time of last time this device was scanned.
-  int64 last_scan = 12;
+  // Timestamp of last time this device was scanned.
+  google.protobuf.Timestamp last_scan = 12;
 }
 
 // VolumeLocator is a structure that is attached to a volume
@@ -229,14 +231,14 @@ message Volume {
   bool readonly = 3;
   // User specified locator
   VolumeLocator locator = 4;
-  // Volume creation timestamp in Unix time
-  int64 ctime = 5;
+  // Volume creation time
+  google.protobuf.Timestamp ctime = 5;
   // User specified VolumeSpec
   VolumeSpec spec = 6;
   // Volume usage
   uint64 usage = 7;
-  // Timestamp in Unix time when an integrity check for run
-  int64 last_scan = 8;
+  // Time when an integrity check for run
+  google.protobuf.Timestamp last_scan = 8;
   // Format FSType type if any
   FSType format = 9;
   VolumeStatus status = 10;
@@ -285,8 +287,8 @@ message Alert {
   int64 alert_type = 3;
   // Message describing the Alert
   string message = 4;
-  //Timestamp in Unix time when Alert occured
-  int64 timestamp = 5;	
+  //Timestamp when Alert occured
+  google.protobuf.Timestamp timestamp = 5;	
   // ResourceId where Alert occured
   string resource_id = 6;
   // Resource where Alert occured
