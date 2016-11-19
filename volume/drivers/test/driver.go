@@ -40,6 +40,7 @@ type Context struct {
 	testPath   string
 	testFile   string
 	Encrypted  bool
+	Passphrase string
 }
 
 func NewContext(d volume.VolumeDriver) *Context {
@@ -97,10 +98,11 @@ func create(t *testing.T, ctx *Context) {
 		&api.VolumeLocator{Name: "foo", VolumeLabels: map[string]string{"oh": "create"}},
 		nil,
 		&api.VolumeSpec{
-			Size:      1 * 1024 * 1024 * 1024,
-			HaLevel:   1,
-			Format:    ctx.Filesystem,
-			Encrypted: ctx.Encrypted,
+			Size:       1 * 1024 * 1024 * 1024,
+			HaLevel:    1,
+			Format:     ctx.Filesystem,
+			Encrypted:  ctx.Encrypted,
+			Passphrase: ctx.Passphrase,
 		})
 
 	require.NoError(t, err, "Failed in Create")
