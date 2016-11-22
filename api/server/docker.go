@@ -8,10 +8,10 @@ import (
 	"os"
 	"path"
 	"strconv"
-	"strings"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
+	"github.com/libopenstorage/openstorage/pkg/units"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
 )
@@ -189,21 +189,23 @@ func (d *driver) specFromOpts(Opts map[string]string) (*api.VolumeSpec, error) {
 		case api.SpecEphemeral:
 			spec.Ephemeral, _ = strconv.ParseBool(v)
 		case api.SpecSize:
-			sizeMulti := uint64(1024 * 1024 * 1024)
-			if strings.HasSuffix(v, "G") || strings.HasSuffix(v, "g") {
-				sizeMulti = 1024 * 1024 * 1024
-				last := len(v) - 1
-				v = v[:last]
+			if size, err := units.Parse(v); err != nil {
+				return nil, err
+			} else {
+				spec.Size = uint64(size)
 			}
-
-			size, _ := strconv.ParseUint(v, 10, 64)
-			spec.Size = size * sizeMulti
 		case api.SpecFilesystem:
-			value, _ := api.FSTypeSimpleValueOf(v)
-			spec.Format = value
+			if value, err := api.FSTypeSimpleValueOf(v); err != nil {
+				return nil, err
+			} else {
+				spec.Format = value
+			}
 		case api.SpecBlockSize:
-			blockSize, _ := strconv.ParseInt(v, 10, 64)
-			spec.BlockSize = blockSize
+			if blockSize, err := units.Parse(v); err != nil {
+				return nil, err
+			} else {
+				spec.BlockSize = blockSize
+			}
 		case api.SpecHaLevel:
 			haLevel, _ := strconv.ParseInt(v, 10, 64)
 			spec.HaLevel = haLevel
@@ -216,9 +218,10 @@ func (d *driver) specFromOpts(Opts map[string]string) (*api.VolumeSpec, error) {
 			snapshotInterval, _ := strconv.ParseUint(v, 10, 32)
 			spec.SnapshotInterval = uint32(snapshotInterval)
 		case api.SpecShared:
-			shared, _ := strconv.ParseUint(v, 10, 32)
-			if shared != 0 {
-				spec.Shared = true
+			if shared, err := strconv.ParseBool(v); err != nil {
+				return nil, err
+			} else {
+				spec.Shared = shared
 			}
 		default:
 			spec.VolumeLabels[k] = v
