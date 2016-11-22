@@ -18,6 +18,11 @@ var (
 	errClusterNotInitialized = errors.New("openstorage.cluster: not initialized")
 )
 
+const (
+	APIVersion = "v1"
+	APIBase    = "/var/lib/osd/cluster/"
+)
+
 // NodeEntry is used to discover other nodes in the cluster
 // and setup the gossip protocol with them.
 type NodeEntry struct {

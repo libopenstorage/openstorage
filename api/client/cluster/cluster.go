@@ -3,7 +3,6 @@ package cluster
 import (
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/api/client"
-	"github.com/libopenstorage/openstorage/config"
 )
 
 const (
@@ -20,12 +19,12 @@ func ClusterManager(c *client.Client) cluster.Cluster {
 // version: Cluster API version
 func NewClusterClient(host, version string) (*client.Client, error) {
 	if host == "" {
-		host = client.GetUnixServerPath(OsdSocket, config.ClusterAPIBase)
+		host = client.GetUnixServerPath(OsdSocket, cluster.APIBase)
 	}
 
 	if version == "" {
 		// Set the default version
-		version = config.Version
+		version = cluster.APIVersion
 	}
 
 	return client.NewClient(host, version)
@@ -35,7 +34,7 @@ func NewClusterClient(host, version string) (*client.Client, error) {
 // host: REST endpoint [http://<ip>:<port> OR unix://<path-to-unix-socket>]. default: [unix://var/lib/osd/cluster/osd.sock]
 func GetSupportedClusterVersions(host string) ([]string, error) {
 	if host == "" {
-		host = client.GetUnixServerPath(OsdSocket, config.ClusterAPIBase)
+		host = client.GetUnixServerPath(OsdSocket, cluster.APIBase)
 	}
 	client, err := client.NewClient(host, "")
 	if err != nil {

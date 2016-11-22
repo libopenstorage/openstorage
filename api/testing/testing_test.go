@@ -10,7 +10,7 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	volumeclient "github.com/libopenstorage/openstorage/api/client/volume"
 	"github.com/libopenstorage/openstorage/api/server"
-	"github.com/libopenstorage/openstorage/config"
+	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
 	"github.com/libopenstorage/openstorage/volume/drivers/nfs"
 	"github.com/libopenstorage/openstorage/volume/drivers/test"
@@ -56,8 +56,8 @@ func TestAll(t *testing.T) {
 
 	server.StartPluginAPI(
 		nfs.Name,
-		config.DriverAPIBase,
-		config.PluginAPIBase,
+		volume.DriverAPIBase,
+		volume.PluginAPIBase,
 		0,
 		0,
 	)

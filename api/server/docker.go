@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/volume"
+	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/volume/drivers"
 )
 
@@ -228,7 +228,7 @@ func (d *driver) specFromOpts(Opts map[string]string) (*api.VolumeSpec, error) {
 }
 
 func (d *driver) mountpath(request *mountRequest) string {
-	return path.Join(config.MountBase, request.Name)
+	return path.Join(volume.MountBase, request.Name)
 }
 
 func (d *driver) create(w http.ResponseWriter, r *http.Request) {

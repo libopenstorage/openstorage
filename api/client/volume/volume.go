@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/libopenstorage/openstorage/api/client"
 	"github.com/libopenstorage/openstorage/volume"
-	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/api"
 )
 
@@ -21,11 +20,11 @@ func NewDriverClient(host, driverName, version string) (*client.Client, error) {
 		return nil, fmt.Errorf("Driver Name cannot be empty")
 	}
 	if host == "" {
-		host = client.GetUnixServerPath(driverName, config.DriverAPIBase)
+		host = client.GetUnixServerPath(driverName, volume.DriverAPIBase)
 	}
 	if version == "" {
 		// Set the default version
-		version = config.Version
+		version = volume.APIVersion
 	}
 	return client.NewClient(host, version)
 }
@@ -36,7 +35,7 @@ func NewDriverClient(host, driverName, version string) (*client.Client, error) {
 func GetSupportedDriverVersions(driverName, host string) ([]string, error) {
 	// Get a client handler
 	if host == "" {
-		host = client.GetUnixServerPath(driverName, config.DriverAPIBase)
+		host = client.GetUnixServerPath(driverName, volume.DriverAPIBase)
 	}
 
 	client, err := client.NewClient(host, "")
