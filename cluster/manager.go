@@ -499,6 +499,11 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *ClusterInfo) {
 
 	lastUpdateTs := time.Now()
 	for {
+		if !c.gossip.IsGossipRunning() {
+			// Gossip has stopped.
+			// No point in updating self data in gossip store
+			break
+		}
 		node = c.getCurrentState()
 
 		currTime := time.Now()
