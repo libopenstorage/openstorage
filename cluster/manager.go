@@ -34,6 +34,7 @@ const (
 
 var (
 	ErrNodeRemovePending = errors.New("Node remove is pending")
+	stopHeartbeat        = make(chan bool)
 )
 
 type ClusterManager struct {
@@ -499,21 +500,20 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *ClusterInfo) {
 
 	lastUpdateTs := time.Now()
 	for {
-		if !c.gossip.IsGossipRunning() {
-			// Gossip has stopped.
-			// No point in updating self data in gossip store
-			break
-		}
-		node = c.getCurrentState()
+		select {
+		case <-stopHeartbeat:
+			return
+		default:
+			node = c.getCurrentState()
 
-		currTime := time.Now()
-		diffTime := currTime.Sub(lastUpdateTs)
-		if diffTime > 10*time.Second {
-			dlog.Warnln("No gossip update for ", diffTime.Seconds(), "s")
+			currTime := time.Now()
+			diffTime := currTime.Sub(lastUpdateTs)
+			if diffTime > 10*time.Second {
+				dlog.Warnln("No gossip update for ", diffTime.Seconds(), "s")
+			}
+			c.gossip.UpdateSelf(gossipStoreKey, *node)
+			lastUpdateTs = currTime
 		}
-		c.gossip.UpdateSelf(gossipStoreKey, *node)
-		lastUpdateTs = currTime
-
 		time.Sleep(2 * time.Second)
 	}
 }
@@ -1003,6 +1003,7 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 	logrus.Infof("ClusterManager Remove node.")
 
 	var resultErr error
+	killSelf := false
 
 	for _, n := range nodes {
 
@@ -1035,7 +1036,10 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 			// Allow remove self during maintenance mode, stop gossip
 			if n.Id == c.selfNode.Id &&
 				c.selfNode.Status == api.Status_STATUS_MAINTENANCE {
+				// Stop the hearbeat
+				stopHeartbeat <- true
 				c.gossip.Stop(time.Duration(10 * time.Second))
+				killSelf = true
 			} else {
 				msg := fmt.Sprintf("Cannot remove node that is not "+
 					"offline or in maintenance mode, Node ID %s, "+
@@ -1089,6 +1093,9 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 				resultErr = err
 			}
 		}
+	}
+	if resultErr == nil && killSelf {
+		go c.killSelf()
 	}
 	return resultErr
 }
@@ -1168,4 +1175,9 @@ func (c *ClusterManager) HandleNotifications(culpritNodeId string, notification 
 	} else {
 		return "", fmt.Errorf("Error in Handle Notifications. Unknown Notification : %v", notification)
 	}
+}
+
+func (c *ClusterManager) killSelf() {
+	time.Sleep(2 * time.Second)
+	os.Exit(0)
 }

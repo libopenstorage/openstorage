@@ -225,10 +225,6 @@ func (g *GossiperImpl) Stop(leaveTimeout time.Duration) error {
 	return nil
 }
 
-func (g *GossiperImpl) IsGossipRunning() bool {
-	return !g.shutDown
-}
-
 func (g *GossiperImpl) GossipInterval() time.Duration {
 	return g.gossipInterval
 }

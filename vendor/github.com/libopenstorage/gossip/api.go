@@ -82,10 +82,6 @@ type Gossiper interface {
 	// It checks quorum and appropriately marks either self down or the other node down.
 	// It returns the nodeId that was marked down
 	ExternalNodeLeave(nodeId types.NodeId) types.NodeId
-
-	// IsGossipRunning returns a bool indicating whether gossip on this node
-	// has been stopped or is it running
-	IsGossipRunning() bool
 }
 
 // New returns an initialized Gossip node
