@@ -1054,15 +1054,14 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 
 			err := e.Value.(ClusterListener).CanNodeRemove(&n)
 			if err != nil {
-
-				msg := fmt.Sprintf("Cluster listener %s "+
-					"cannot remove node ID %s, error %s",
-					e.Value.(ClusterListener).String(),
-					n.Id, err)
+				msg := fmt.Sprintf(
+					"Cannot remove node ID %s: %s",
+					n.Id,
+					err,
+				)
 				dlog.Warnf(msg)
 				return errors.New(msg)
 			}
-
 		}
 
 		err := c.markNodeDecommission(n)
