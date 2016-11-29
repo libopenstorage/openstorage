@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	kva             AlertClient
+	kva             Alert
 	nextID          int64
 	isWatcherCalled int
 	watcherAction   api.AlertActionType
@@ -38,7 +38,6 @@ func TestAll(t *testing.T) {
 	clear(t)
 	clearWithTTL(t)
 	enumerate(t)
-	enumerateByCluster(t)
 	watch(t)
 }
 
@@ -300,44 +299,6 @@ func enumerate(t *testing.T) {
 	err = kva.Erase(api.ResourceType_RESOURCE_TYPE_VOLUME, fakeAlertId)
 }
 
-func enumerateByCluster(t *testing.T) {
-	// Create a new alert instance for raising an alert in this new cluster id
-	kvaNew, err := Get("alert_kvdb_test")
-	if err != nil {
-		kvaNew, err = New("alert_kvdb_test", mem.Name, kvdbDomain, []string{}, newClusterName, nil)
-	}
-
-	raiseAlert1 := api.Alert{
-		Resource: api.ResourceType_RESOURCE_TYPE_NODE,
-		Severity: api.SeverityType_SEVERITY_TYPE_ALARM,
-	}
-	err = kvaNew.Raise(&raiseAlert1)
-
-	raiseAlert2 := api.Alert{
-		Resource: api.ResourceType_RESOURCE_TYPE_CLUSTER,
-		Severity: api.SeverityType_SEVERITY_TYPE_NOTIFY,
-	}
-	err = kvaNew.Raise(&raiseAlert2)
-
-	raiseAlert3 := api.Alert{
-		Resource: api.ResourceType_RESOURCE_TYPE_NODE,
-		Severity: api.SeverityType_SEVERITY_TYPE_WARNING,
-	}
-	err = kvaNew.Raise(&raiseAlert3)
-
-	enAlerts, err := kva.EnumerateByCluster(newClusterName, &api.Alert{Resource: api.ResourceType_RESOURCE_TYPE_NODE})
-	require.NoError(t, err, "Failed to enumerate alerts")
-	require.Equal(t, 2, len(enAlerts), "Enumerated incorrect number of alerts")
-
-	enAlerts, err = kva.EnumerateByCluster(newClusterName, &api.Alert{Severity: api.SeverityType_SEVERITY_TYPE_WARNING})
-	require.NoError(t, err, "Failed to enumerate alerts")
-	require.Equal(t, 2, len(enAlerts), "ENumerated incorrect number of alerts")
-
-	err = kva.Erase(api.ResourceType_RESOURCE_TYPE_NODE, raiseAlert1.Id)
-	err = kva.Erase(api.ResourceType_RESOURCE_TYPE_CLUSTER, raiseAlert2.Id)
-	err = kva.Erase(api.ResourceType_RESOURCE_TYPE_NODE, raiseAlert3.Id)
-}
-
 func testAlertWatcher(alert *api.Alert, action api.AlertActionType, prefix string, key string) error {
 	// A dummy callback function
 	// Setting the global variables so that we can check them in our unit tests
@@ -395,10 +356,7 @@ func watch(t *testing.T) {
 	err = kva.Watch(newClusterName, testAlertWatcher)
 
 	// Create a new alert instance for raising an alert in this new cluster id
-	kvaNew, err := Get("alert_kvdb_test")
-	if err != nil {
-		kvaNew, err = New("alert_kvdb_test", mem.Name, kvdbDomain, []string{}, newClusterName, nil)
-	}
+	kvaNew, err := New("alert_kvdb_test", mem.Name, kvdbDomain, []string{}, newClusterName, nil)
 
 	raiseAlertNew := api.Alert{
 		Resource: api.ResourceType_RESOURCE_TYPE_NODE,
