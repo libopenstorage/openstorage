@@ -255,6 +255,8 @@ message Volume {
   // List of name value mapping of driver specific runtime information.
   repeated RuntimeStateMap runtime_state = 18;
   string secure_device_path = 19;
+  // BackgroundProcessing is true if volume is attached but not by the user
+  bool background_processing = 20;
 }
 
 message Stats {
