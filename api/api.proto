@@ -17,6 +17,11 @@ enum Status {
   STATUS_NOT_IN_QUORUM = 5;
   STATUS_DECOMMISSION = 6;
   STATUS_MAINTENANCE = 7;
+  STATUS_STORAGE_DOWN = 8;
+  STATUS_STORAGE_DEGRADED = 9;
+  STATUS_NEEDS_REBOOT = 10;
+  // Add statuses before MAX and update the number for MAX
+  STATUS_MAX = 11;
 }
 
 enum DriverType {
