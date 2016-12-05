@@ -114,7 +114,7 @@ func (c *clusterClient) gossipStatus(context *cli.Context) {
 	outFd := os.Stdout
 	fn := "gossipstatus"
 
-	s, err := c.manager.GetState()
+	s, err := c.manager.GetPeerState()
 	if err != nil {
 		cmdError(context, fn, fmt.Errorf("Failed to get status"))
 		return

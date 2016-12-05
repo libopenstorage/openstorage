@@ -67,6 +67,17 @@ func (c *clusterClient) GetData() (map[string]*api.Node, error) {
 	return nil, nil
 }
 
+func (c *clusterClient) Status(listenerName string) (api.Status, error) {
+	var resp api.Status
+	request := c.c.Get().Resource(clusterPath+"/status")
+	request.QueryOption("name", listenerName)
+	request.Do()
+	if err := request.Do().Unmarshal(&resp); err != nil {
+		return api.Status_STATUS_NONE, err
+	}
+	return resp, nil
+}
+
 func (c *clusterClient) Remove(nodes []api.Node) error {
 	resp := api.ClusterResponse{}
 
@@ -108,10 +119,10 @@ func (c *clusterClient) EnableUpdates() error {
 	return nil
 }
 
-func (c *clusterClient) GetState() (*cluster.ClusterState, error) {
+func (c *clusterClient) GetPeerState() (*cluster.ClusterState, error) {
 	var status *cluster.ClusterState
 
-	if err := c.c.Get().Resource(clusterPath + "/status").Do().Unmarshal(&status); err != nil {
+	if err := c.c.Get().Resource(clusterPath + "/peerState").Do().Unmarshal(&status); err != nil {
 		return nil, err
 	}
 	return status, nil

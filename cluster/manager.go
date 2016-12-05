@@ -657,7 +657,7 @@ func (c *ClusterManager) EnableUpdates() error {
 	return nil
 }
 
-func (c *ClusterManager) GetState() (*ClusterState, error) {
+func (c *ClusterManager) GetPeerState() (*ClusterState, error) {
 	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
 	nodeValue := c.gossip.GetStoreKeyValue(gossipStoreKey)
 	nodes := make([]types.NodeValue, len(nodeValue), len(nodeValue))
@@ -868,6 +868,32 @@ func (c *ClusterManager) Start() error {
 	go c.replayNodeDecommission(initState)
 
 	return nil
+}
+
+func (c *ClusterManager) Status(listenerName string) (api.Status, error) {
+	clusterNodeStatus := c.selfNode.Status
+	if clusterNodeStatus != api.Status_STATUS_OK {
+		// Status of this node as seen by Cluster Manager is not OK
+		// This takes highest precedence over other listener statuses.
+		// Returning our status
+		logrus.Infof("Returning cluster stauts: %v", clusterNodeStatus)
+		return clusterNodeStatus, nil
+	}
+	if listenerName == "" {
+		return clusterNodeStatus, nil
+	}
+
+	listenerStatus := api.Status_STATUS_NONE
+	for e := c.listeners.Front(); e != nil; e = e.Next() {
+		if e.Value.(ClusterListener).String() == listenerName {
+			listenerStatus = e.Value.(ClusterListener).ListenerStatus()
+			break
+		}
+	}
+	if int(listenerStatus.StatusKind()) >= int(clusterNodeStatus.StatusKind()) {
+		return listenerStatus, nil
+	}
+	return clusterNodeStatus, nil
 }
 
 // Enumerate lists all the nodes in the cluster.

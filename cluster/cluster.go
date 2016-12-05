@@ -85,6 +85,9 @@ type ClusterListener interface {
 
 	// Leave is called when this node leaves the cluster.
 	Leave(node *api.Node) error
+
+	// Status returns the listener's Status
+	ListenerStatus() api.Status
 }
 
 type ClusterState struct {
@@ -107,7 +110,7 @@ type ClusterData interface {
 	DisableUpdates() error
 
 	// Status of nodes according to gossip
-	GetState() (*ClusterState, error)
+	GetPeerState() (*ClusterState, error)
 }
 
 type ClusterCallback interface {
@@ -125,6 +128,13 @@ type Cluster interface {
 
 	// Enumerate lists all the nodes in the cluster.
 	Enumerate() (api.Cluster, error)
+
+	// Status returns the status of THIS node as seen by the Cluster Provider
+	// for a given listener. If listenerName is empty it returns the status of
+	// THIS node maintained by the Cluster Provider.
+	// At any time the status of the Cluster Provider takes precedence over
+	// the status of listener. Precedence is determined by the severity of the status.
+	Status(listenerName string) (api.Status, error)
 
 	// Remove node(s) from the cluster permanently.
 	Remove(nodes []api.Node) error

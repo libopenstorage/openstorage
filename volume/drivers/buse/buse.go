@@ -132,6 +132,10 @@ func (d *driver) Status() [][2]string {
 	return [][2]string{}
 }
 
+func (d *driver) ListenerStatus() api.Status {
+	return api.Status_STATUS_NONE
+}
+
 func (d *driver) Create(locator *api.VolumeLocator, source *api.Source, spec *api.VolumeSpec) (string, error) {
 	volumeID := uuid.New()
 	volumeID = strings.TrimSuffix(volumeID, "\n")
