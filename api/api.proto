@@ -77,10 +77,10 @@ enum VolumeActionParam {
 }
 
 enum CosType {
-  COS_TYPE_NONE = 0;
-  COS_TYPE_LOW = 1;
-  COS_TYPE_MEDIUM = 2;
-  COS_TYPE_HIGH = 3;
+  NONE = 0;
+  LOW = 1;
+  MEDIUM = 2;
+  HIGH = 3;
 }
 
 // VolumeState represents the state of a volume.

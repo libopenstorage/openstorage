@@ -166,13 +166,13 @@ func (d *driver) status(w http.ResponseWriter, r *http.Request) {
 func (d *driver) cosLevel(cos string) (uint32, error) {
 	switch cos {
 	case "high", "3":
-		return uint32(api.CosType_COS_TYPE_HIGH), nil
+		return uint32(api.CosType_HIGH), nil
 	case "medium", "2":
-		return uint32(api.CosType_COS_TYPE_MEDIUM), nil
+		return uint32(api.CosType_MEDIUM), nil
 	case "low", "1", "":
-		return uint32(api.CosType_COS_TYPE_LOW), nil
+		return uint32(api.CosType_LOW), nil
 	}
-	return uint32(api.CosType_COS_TYPE_LOW),
+	return uint32(api.CosType_LOW),
 		fmt.Errorf("Cos must be one of %q | %q | %q", "high", "medium", "low")
 
 }
@@ -209,7 +209,7 @@ func (d *driver) specFromOpts(Opts map[string]string) (*api.VolumeSpec, error) {
 		case api.SpecHaLevel:
 			haLevel, _ := strconv.ParseInt(v, 10, 64)
 			spec.HaLevel = haLevel
-		case api.SpecCos:
+		case api.SpecPriority:
 			cos, _ := api.CosTypeSimpleValueOf(v)
 			spec.Cos = cos
 		case api.SpecDedupe:
