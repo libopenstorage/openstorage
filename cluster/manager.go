@@ -230,20 +230,7 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 		return nil
 	}
 
-	c.size = db.Size
-
-	// Probably new node was added into the cluster db
-	peers := c.getPeers(db)
-	c.gossip.UpdateCluster(peers)
-
-	for _, n := range c.nodeCache {
-		_, found := peers[types.NodeId(n.Id)]
-		if !found {
-			delete(c.nodeCache, n.Id)
-		}
-
-	}
-
+	killSelf := false
 	for _, nodeEntry := range db.NodeEntries {
 		if nodeEntry.Status == api.Status_STATUS_DECOMMISSION {
 			logrus.Infof("ClusterManager watchDB, node ID "+
@@ -272,10 +259,35 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 
 			n.Status = api.Status_STATUS_DECOMMISSION
 			c.nodeCache[nodeEntry.Id] = n
+			// We are getting decommissioned!!
+			if nodeEntry.Id == c.selfNode.Id {
+				// We are getting decommissioned.
+				// Stop the heartbeat
+				stopHeartbeat <- true
+				c.gossip.Stop(time.Duration(10 * time.Second))
+				killSelf = true
+			}
 		}
 
 	}
 
+	// We are getting decommissioned
+	if killSelf == true {
+		return nil
+	}
+
+	c.size = db.Size
+
+	// Update the peers. A node might have been removed or added
+	peers := c.getPeers(db)
+	c.gossip.UpdateCluster(peers)
+
+	for _, n := range c.nodeCache {
+		_, found := peers[types.NodeId(n.Id)]
+		if !found {
+			delete(c.nodeCache, n.Id)
+		}
+	}
 	return nil
 }
 
@@ -1016,7 +1028,7 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 		}
 
 		// If removing node is self and node is not in maintenance mode,
-		//	disallow node remove.
+		// disallow node remove.
 		if n.Id == c.selfNode.Id &&
 			c.selfNode.Status != api.Status_STATUS_MAINTENANCE {
 			msg := fmt.Sprintf("Cannot remove self from cluster, "+
@@ -1025,22 +1037,13 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 				n.Id)
 			dlog.Errorf(msg)
 			return errors.New(msg)
-		}
+		} else if n.Id != c.selfNode.Id {
+			nodeCacheStatus := c.nodeCache[n.Id].Status
+			// If node is not down, do not remove it
+			if nodeCacheStatus != api.Status_STATUS_OFFLINE &&
+				nodeCacheStatus != api.Status_STATUS_DECOMMISSION &&
+				nodeCacheStatus != api.Status_STATUS_MAINTENANCE {
 
-		nodeCacheStatus := c.nodeCache[n.Id].Status
-		// If node is not down, do not remove it
-		if nodeCacheStatus != api.Status_STATUS_OFFLINE &&
-			nodeCacheStatus != api.Status_STATUS_DECOMMISSION &&
-			nodeCacheStatus != api.Status_STATUS_MAINTENANCE {
-
-			// Allow remove self during maintenance mode, stop gossip
-			if n.Id == c.selfNode.Id &&
-				c.selfNode.Status == api.Status_STATUS_MAINTENANCE {
-				// Stop the hearbeat
-				stopHeartbeat <- true
-				c.gossip.Stop(time.Duration(10 * time.Second))
-				killSelf = true
-			} else {
 				msg := fmt.Sprintf("Cannot remove node that is not "+
 					"offline or in maintenance mode, Node ID %s, "+
 					"Status %s.",
@@ -1048,6 +1051,7 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 				dlog.Errorf(msg)
 				return errors.New(msg)
 			}
+
 		}
 
 		// Ask listeners, can we remove this node?
@@ -1058,14 +1062,13 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 
 			err := e.Value.(ClusterListener).CanNodeRemove(&n)
 			if err != nil {
-				msg := fmt.Sprintf(
-					"Cannot remove node ID %s: %s",
-					n.Id,
-					err,
-				)
+
+				msg := fmt.Sprintf("Cannot remove node ID %s: %s",
+					n.Id, err)
 				dlog.Warnf(msg)
 				return errors.New(msg)
 			}
+
 		}
 
 		err := c.markNodeDecommission(n)
