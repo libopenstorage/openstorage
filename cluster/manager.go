@@ -1029,11 +1029,9 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 
 		// If removing node is self and node is not in maintenance mode,
 		// disallow node remove.
-		if n.Id == c.selfNode.Id &&
-			c.selfNode.Status != api.Status_STATUS_MAINTENANCE {
+		if n.Id == c.selfNode.Id {
 			msg := fmt.Sprintf("Cannot remove self from cluster, "+
-				"Node ID %s. Node must be in maintenance mode "+
-				"to remove itself.",
+				"Node ID %s.",
 				n.Id)
 			dlog.Errorf(msg)
 			return errors.New(msg)
@@ -1041,11 +1039,10 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 			nodeCacheStatus := c.nodeCache[n.Id].Status
 			// If node is not down, do not remove it
 			if nodeCacheStatus != api.Status_STATUS_OFFLINE &&
-				nodeCacheStatus != api.Status_STATUS_DECOMMISSION &&
-				nodeCacheStatus != api.Status_STATUS_MAINTENANCE {
+				nodeCacheStatus != api.Status_STATUS_DECOMMISSION {
 
 				msg := fmt.Sprintf("Cannot remove node that is not "+
-					"offline or in maintenance mode, Node ID %s, "+
+					"offline, Node ID %s, "+
 					"Status %s.",
 					n.Id, nodeCacheStatus)
 				dlog.Errorf(msg)
