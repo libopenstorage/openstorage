@@ -17,7 +17,7 @@ const (
 	SpecFilesystem       = "fs"
 	SpecBlockSize        = "block_size"
 	SpecHaLevel          = "repl"
-	SpecPriority         = "priority"
+	SpecPriority         = "io_priority"
 	SpecSnapshotInterval = "snap_interval"
 	SpecDedupe           = "dedupe"
 )
