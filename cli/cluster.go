@@ -112,13 +112,8 @@ func (c *clusterClient) gossipStatus(context *cli.Context) {
 	c.clusterOptions(context)
 	jsonOut := context.GlobalBool("json")
 	outFd := os.Stdout
-	fn := "gossipstatus"
 
-	s, err := c.manager.GetPeerState()
-	if err != nil {
-		cmdError(context, fn, fmt.Errorf("Failed to get status"))
-		return
-	}
+	s := c.manager.GetGossipState()
 
 	if jsonOut {
 		fmtOutput(context, &Format{Result: s})

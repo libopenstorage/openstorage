@@ -657,7 +657,7 @@ func (c *ClusterManager) EnableUpdates() error {
 	return nil
 }
 
-func (c *ClusterManager) GetPeerState() (*ClusterState, error) {
+func (c *ClusterManager) GetGossipState() (*ClusterState) {
 	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
 	nodeValue := c.gossip.GetStoreKeyValue(gossipStoreKey)
 	nodes := make([]types.NodeValue, len(nodeValue), len(nodeValue))
@@ -669,7 +669,7 @@ func (c *ClusterManager) GetPeerState() (*ClusterState, error) {
 
 	history := c.gossip.GetGossipHistory()
 	return &ClusterState{
-		History: history, NodeStatus: nodes}, nil
+		History: history, NodeStatus: nodes}
 }
 
 func (c *ClusterManager) waitForQuorum(exist bool) error {
@@ -870,7 +870,7 @@ func (c *ClusterManager) Start() error {
 	return nil
 }
 
-func (c *ClusterManager) Status(listenerName string) (api.Status, error) {
+func (c *ClusterManager) NodeStatus(listenerName string) (api.Status, error) {
 	clusterNodeStatus := c.selfNode.Status
 	if clusterNodeStatus != api.Status_STATUS_OK {
 		// Status of this node as seen by Cluster Manager is not OK
@@ -894,6 +894,50 @@ func (c *ClusterManager) Status(listenerName string) (api.Status, error) {
 		return listenerStatus, nil
 	}
 	return clusterNodeStatus, nil
+}
+
+func (c *ClusterManager) PeerStatus(listenerName string) (map[string]api.Status, error) {
+	statusMap := make(map[string]api.Status)
+	var listenerStatusMap map[string]api.Status
+	for e := c.listeners.Front(); e != nil; e = e.Next() {
+		if e.Value.(ClusterListener).String() == listenerName {
+			listenerStatusMap = e.Value.(ClusterListener).ListenerPeerStatus()
+			break
+		}
+	}
+	// Listener failed to provide peer status
+	if listenerStatusMap == nil || len(listenerStatusMap) == 0 {
+		for _, n := range c.nodeCache {
+			if n.Id == c.selfNode.Id {
+				// skip self
+				continue
+			}
+			statusMap[n.Id] = n.Status
+		}
+		return statusMap, nil
+	}
+	// Compare listener's peer statuses and cluster provider's peer statuses
+	for _, n := range c.nodeCache {
+		if n.Id == c.selfNode.Id {
+			// Skip self
+			continue
+		}
+		clusterNodeStatus := n.Status
+		listenerNodeStatus, ok := listenerStatusMap[n.Id]
+		if !ok {
+			// Could not find listener's peer status
+			// Using cluster provider's peer status
+			statusMap[n.Id] = clusterNodeStatus
+		}
+		if int(listenerNodeStatus.StatusKind()) >= int(clusterNodeStatus.StatusKind()) {
+			// Use listener's peer status
+			statusMap[n.Id] = listenerNodeStatus
+		} else {
+			// Use the cluster provider's peer status
+			statusMap[n.Id] = clusterNodeStatus
+		}
+	}
+	return statusMap, nil
 }
 
 // Enumerate lists all the nodes in the cluster.

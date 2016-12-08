@@ -86,8 +86,11 @@ type ClusterListener interface {
 	// Leave is called when this node leaves the cluster.
 	Leave(node *api.Node) error
 
-	// Status returns the listener's Status
+	// ListenerStatus returns the listener's Status
 	ListenerStatus() api.Status
+
+	// ListenerPeerStatus returns the peer Statuses for a listener
+	ListenerPeerStatus() map[string]api.Status
 }
 
 type ClusterState struct {
@@ -96,21 +99,35 @@ type ClusterState struct {
 }
 
 type ClusterData interface {
-	// Update node data associated with this node
+	// UpdateData updates node data associated with this node
 	UpdateData(dataKey string, value interface{}) error
 
-	// Get data associated with all nodes.
+	// GetData get sdata associated with all nodes.
 	// Key is the node id
 	GetData() (map[string]*api.Node, error)
 
-	// Enables cluster data updates to be sent to listeners
+	// EnableUpdate cluster data updates to be sent to listeners
 	EnableUpdates() error
 
-	// Disables cluster data updates to be sent to listeners
+	// DisableUpdates disables cluster data updates to be sent to listeners
 	DisableUpdates() error
 
-	// Status of nodes according to gossip
-	GetPeerState() (*ClusterState, error)
+	// GetGossipState returns the state of nodes according to gossip
+	GetGossipState() *ClusterState
+}
+
+type ClusterStatus interface {
+	// NodeStatus returns the status of THIS node as seen by the Cluster Provider
+	// for a given listener. If listenerName is empty it returns the status of
+	// THIS node maintained by the Cluster Provider.
+	// At any time the status of the Cluster Provider takes precedence over
+	// the status of listener. Precedence is determined by the severity of the status.
+	NodeStatus(listenerName string) (api.Status, error)
+
+	// PeerStatus returns the statuses of all peer nodes as seen by the
+	// Cluster Provider for a given listener. If listenerName is empty is returns the
+	// statuses of all peer nodes as maintained by the ClusterProvider (gossip)
+	PeerStatus(listenerName string) (map[string]api.Status, error)
 }
 
 type ClusterCallback interface {
@@ -129,13 +146,6 @@ type Cluster interface {
 	// Enumerate lists all the nodes in the cluster.
 	Enumerate() (api.Cluster, error)
 
-	// Status returns the status of THIS node as seen by the Cluster Provider
-	// for a given listener. If listenerName is empty it returns the status of
-	// THIS node maintained by the Cluster Provider.
-	// At any time the status of the Cluster Provider takes precedence over
-	// the status of listener. Precedence is determined by the severity of the status.
-	Status(listenerName string) (api.Status, error)
-
 	// Remove node(s) from the cluster permanently.
 	Remove(nodes []api.Node) error
 
@@ -151,6 +161,7 @@ type Cluster interface {
 
 	ClusterData
 	ClusterCallback
+	ClusterStatus
 }
 
 type ClusterNotify func(string, api.ClusterNotify) (string, error)
