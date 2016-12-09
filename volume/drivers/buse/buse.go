@@ -136,6 +136,10 @@ func (d *driver) ListenerStatus() api.Status {
 	return api.Status_STATUS_NONE
 }
 
+func (d *driver) ListenerData() map[string]interface{} {
+	return nil
+}
+
 func (d *driver) ListenerPeerStatus() map[string]api.Status {
 	return nil
 }

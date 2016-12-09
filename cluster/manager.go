@@ -208,6 +208,16 @@ func (c *ClusterManager) getCurrentState() *api.Node {
 
 	c.selfNode.Timestamp = time.Now()
 
+	for e := c.listeners.Front(); e != nil; e = e.Next() {
+		listenerDataMap := e.Value.(ClusterListener).ListenerData()
+		if listenerDataMap == nil {
+			continue
+		}
+		for key, val := range listenerDataMap {
+			c.selfNode.NodeData[key] = val
+		}
+	}
+
 	return &c.selfNode
 }
 
@@ -876,7 +886,6 @@ func (c *ClusterManager) NodeStatus(listenerName string) (api.Status, error) {
 		// Status of this node as seen by Cluster Manager is not OK
 		// This takes highest precedence over other listener statuses.
 		// Returning our status
-		logrus.Infof("Returning cluster stauts: %v", clusterNodeStatus)
 		return clusterNodeStatus, nil
 	}
 	if listenerName == "" {

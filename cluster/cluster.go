@@ -91,6 +91,10 @@ type ClusterListener interface {
 
 	// ListenerPeerStatus returns the peer Statuses for a listener
 	ListenerPeerStatus() map[string]api.Status
+
+	// ListenerData returns the data that the listener wants to share
+	// with ClusterManaher and would be stored in NodeData field.
+	ListenerData() map[string]interface{}
 }
 
 type ClusterState struct {
