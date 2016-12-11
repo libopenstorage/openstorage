@@ -7,7 +7,11 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"regexp"
 	"strconv"
+	"strings"
+
+	"go.pedge.io/dlog"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
@@ -19,6 +23,17 @@ import (
 const (
 	// VolumeDriver is the string returned in the handshake protocol.
 	VolumeDriver = "VolumeDriver"
+)
+
+var (
+	nameRegex       = regexp.MustCompile("name=([0-9A-Za-z]+),?")
+	sizeRegex       = regexp.MustCompile("size=([0-9A-Za-z]+),?")
+	fsRegex         = regexp.MustCompile("fs=([0-9A-Za-z]+),?")
+	bsRegex         = regexp.MustCompile("bs=([0-9]+),?")
+	haRegex         = regexp.MustCompile("ha=([0-9]+),?")
+	cosRegex        = regexp.MustCompile("cos=([A-Za-z]+),?")
+	sharedRegex     = regexp.MustCompile("shared=([A-Za-z]+),?")
+	passphraseRegex = regexp.MustCompile("passphrase=([0-9A-Za-z_@./#&+-]+),?")
 )
 
 // Implementation of the Docker volumes plugin specification.
@@ -177,7 +192,9 @@ func (d *driver) cosLevel(cos string) (uint32, error) {
 
 }
 
-func (d *driver) specFromOpts(Opts map[string]string) (*api.VolumeSpec, error) {
+func (d *driver) specFromOpts(
+	Opts map[string]string,
+) (*api.VolumeSpec, error) {
 	spec := api.VolumeSpec{
 		VolumeLabels: make(map[string]string),
 		Format:       api.FSType_FS_TYPE_EXT4,
@@ -230,6 +247,76 @@ func (d *driver) specFromOpts(Opts map[string]string) (*api.VolumeSpec, error) {
 	return &spec, nil
 }
 
+func (d *driver) getVal(r *regexp.Regexp, str string) (bool, string) {
+	found := r.FindString(str)
+	if found == "" {
+		return false, ""
+	}
+
+	submatches := r.FindStringSubmatch(str)
+	if len(submatches) < 2 {
+		return false, ""
+	}
+
+	val := submatches[1]
+
+	return true, val
+}
+
+func (d *driver) specFromString(
+	str string,
+) (bool, *api.VolumeSpec, string) {
+	name := ""
+	spec := api.VolumeSpec{
+		VolumeLabels: make(map[string]string),
+		Format:       api.FSType_FS_TYPE_EXT4,
+		HaLevel:      1,
+	}
+
+	ok, name := d.getVal(nameRegex, str)
+	if !ok {
+		return false, &spec, str
+	}
+
+	dlog.Infof("Parsing inline spec for volume %v", name)
+
+	if ok, sz := d.getVal(sizeRegex, str); ok {
+		size, _ := units.Parse(sz)
+		spec.Size = uint64(size)
+	}
+
+	if ok, fs := d.getVal(fsRegex, str); ok {
+		spec.Format, _ = api.FSTypeSimpleValueOf(fs)
+	}
+
+	if ok, bs := d.getVal(bsRegex, str); ok {
+		val, _ := strconv.Atoi(bs)
+		spec.BlockSize = int64(val)
+	}
+
+	if ok, ha := d.getVal(haRegex, str); ok {
+		val, _ := strconv.Atoi(ha)
+		spec.HaLevel = int64(val)
+	}
+
+	if ok, cos := d.getVal(cosRegex, str); ok {
+		spec.Cos, _ = api.CosTypeSimpleValueOf(cos)
+	}
+
+	if ok, shared := d.getVal(sharedRegex, str); ok {
+		if strings.EqualFold(shared, "true") {
+			spec.Shared = true
+		}
+	}
+
+	if ok, passphrase := d.getVal(passphraseRegex, str); ok {
+		spec.Encrypted = true
+		spec.Passphrase = passphrase
+	}
+
+	return true, &spec, name
+}
+
 func (d *driver) mountpath(request *mountRequest) string {
 	return path.Join(config.MountBase, request.Name)
 }
@@ -240,19 +327,34 @@ func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	d.logRequest(method, request.Name).Infoln("")
-	if _, err = d.volFromName(request.Name); err != nil {
+
+	// Parse options from the name - If the scheduler was unable to pass in
+	// the volume spec via the API, we allow the spec to be passed in
+	// via the name in the format: "key=value;key=value;name=volname"
+	specParsed, spec, name := d.specFromString(request.Name)
+
+	d.logRequest(method, name).Infoln("")
+	// If we fail to find the volume, create it.
+	if _, err = d.volFromName(name); err != nil {
 		v, err := volumedrivers.Get(d.name)
 		if err != nil {
 			d.errorResponse(w, err)
 			return
 		}
-		spec, err := d.specFromOpts(request.Opts)
-		if err != nil {
-			d.errorResponse(w, err)
-			return
+
+		if !specParsed {
+			spec, err = d.specFromOpts(request.Opts)
+			if err != nil {
+				d.errorResponse(w, err)
+				return
+			}
 		}
-		if _, err := v.Create(&api.VolumeLocator{Name: request.Name}, nil, spec); err != nil {
+
+		if _, err := v.Create(
+			&api.VolumeLocator{Name: name},
+			nil,
+			spec,
+		); err != nil {
 			d.errorResponse(w, err)
 			return
 		}
