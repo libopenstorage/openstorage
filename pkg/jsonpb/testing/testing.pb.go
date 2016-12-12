@@ -67,6 +67,13 @@ func (m *Foo) GetTimestamp() *google_protobuf.Timestamp {
 	return nil
 }
 
+func (m *Foo) GetStatus() Status {
+	if m != nil {
+		return m.Status
+	}
+	return Status_STATUS_NONE
+}
+
 func init() {
 	proto.RegisterType((*Foo)(nil), "testing.Foo")
 	proto.RegisterEnum("testing.Status", Status_name, Status_value)

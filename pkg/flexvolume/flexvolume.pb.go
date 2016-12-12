@@ -51,6 +51,13 @@ func (m *DetachRequest) String() string            { return proto.CompactTextStr
 func (*DetachRequest) ProtoMessage()               {}
 func (*DetachRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
 
+func (m *DetachRequest) GetMountDevice() string {
+	if m != nil {
+		return m.MountDevice
+	}
+	return ""
+}
+
 type MountRequest struct {
 	TargetMountDir string            `protobuf:"bytes,1,opt,name=target_mount_dir,json=targetMountDir" json:"target_mount_dir,omitempty"`
 	MountDevice    string            `protobuf:"bytes,2,opt,name=mount_device,json=mountDevice" json:"mount_device,omitempty"`
@@ -61,6 +68,20 @@ func (m *MountRequest) Reset()                    { *m = MountRequest{} }
 func (m *MountRequest) String() string            { return proto.CompactTextString(m) }
 func (*MountRequest) ProtoMessage()               {}
 func (*MountRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+
+func (m *MountRequest) GetTargetMountDir() string {
+	if m != nil {
+		return m.TargetMountDir
+	}
+	return ""
+}
+
+func (m *MountRequest) GetMountDevice() string {
+	if m != nil {
+		return m.MountDevice
+	}
+	return ""
+}
 
 func (m *MountRequest) GetJsonOptions() map[string]string {
 	if m != nil {
@@ -78,6 +99,13 @@ func (m *UnmountRequest) String() string            { return proto.CompactTextSt
 func (*UnmountRequest) ProtoMessage()               {}
 func (*UnmountRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
 
+func (m *UnmountRequest) GetMountDir() string {
+	if m != nil {
+		return m.MountDir
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*AttachRequest)(nil), "flexvolume.AttachRequest")
 	proto.RegisterType((*DetachRequest)(nil), "flexvolume.DetachRequest")
@@ -91,7 +119,7 @@ var _ grpc.ClientConn
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
-const _ = grpc.SupportPackageIsVersion3
+const _ = grpc.SupportPackageIsVersion4
 
 // Client API for API service
 
@@ -286,7 +314,7 @@ var _API_serviceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: fileDescriptor0,
+	Metadata: "pkg/flexvolume/flexvolume.proto",
 }
 
 func init() { proto.RegisterFile("pkg/flexvolume/flexvolume.proto", fileDescriptor0) }
