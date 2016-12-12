@@ -56,10 +56,10 @@ type ClusterListener interface {
 	String() string
 
 	// ClusterInit is called when a brand new cluster is initialized.
-	ClusterInit(self *api.Node, state *ClusterInitState) error
+	ClusterInit(self *api.Node) error
 
 	// Init is called when this node is joining an existing cluster for the first time.
-	Init(self *api.Node, state *ClusterInitState) error
+	Init(self *api.Node, state *ClusterInfo) error
 
 	// CleanupInit is called when Init failed.
 	CleanupInit(self *api.Node, clusterInfo *ClusterInfo) error

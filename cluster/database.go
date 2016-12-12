@@ -85,19 +85,20 @@ func readClusterInfo() (ClusterInfo, error) {
 	return db, nil
 }
 
-func writeClusterInfo(db *ClusterInfo) error {
+func writeClusterInfo(db *ClusterInfo) (*kvdb.KVPair, error) {
 	kvdb := kvdb.Instance()
 	b, err := json.Marshal(db)
 	if err != nil {
 		dlog.Warnf("Fatal, Could not marshal cluster database to JSON: %v", err)
-		return err
+		return nil, err
 	}
 
-	if _, err := kvdb.Put(ClusterDBKey, b, 0); err != nil {
+	kvp, err := kvdb.Put(ClusterDBKey, b, 0)
+	if err != nil {
 		dlog.Warnf("Fatal, Could not marshal cluster database to JSON: %v", err)
-		return err
+		return nil, err
 	}
 
 	dlog.Infoln("Cluster database updated.")
-	return nil
+	return kvp, nil
 }

@@ -334,11 +334,11 @@ func (d *driver) Shutdown() {
 	syscall.Unmount(BuseMountPath, 0)
 }
 
-func (d *driver) ClusterInit(self *api.Node, initState *cluster.ClusterInitState) error {
+func (d *driver) ClusterInit(self *api.Node) error {
 	return nil
 }
 
-func (d *driver) Init(self *api.Node, initState *cluster.ClusterInitState) error {
+func (d *driver) Init(self *api.Node, clusterInfo *cluster.ClusterInfo) error {
 	return nil
 }
 
