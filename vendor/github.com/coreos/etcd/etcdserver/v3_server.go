@@ -15,6 +15,9 @@
 package etcdserver
 
 import (
+	"bytes"
+	"encoding/binary"
+	"io"
 	"strconv"
 	"strings"
 	"time"
@@ -26,6 +29,9 @@ import (
 	"github.com/coreos/etcd/lease/leasehttp"
 	"github.com/coreos/etcd/lease/leasepb"
 	"github.com/coreos/etcd/mvcc"
+	"github.com/coreos/etcd/raft"
+
+	"github.com/coreos/go-semver/semver"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/metadata"
 )
@@ -41,7 +47,11 @@ const (
 	// the applied index and committed index.
 	// However, if the committed entries are very heavy to apply, the gap might grow.
 	// We should stop accepting new proposals if the gap growing to a certain point.
-	maxGapBetweenApplyAndCommitIndex = 1000
+	maxGapBetweenApplyAndCommitIndex = 5000
+)
+
+var (
+	newRangeClusterVersion = *semver.Must(semver.NewVersion("3.1.0"))
 )
 
 type RaftKV interface {
@@ -86,6 +96,31 @@ type Authenticator interface {
 }
 
 func (s *EtcdServer) Range(ctx context.Context, r *pb.RangeRequest) (*pb.RangeResponse, error) {
+	// TODO: remove this checking when we release etcd 3.2
+	if s.ClusterVersion() == nil || s.ClusterVersion().LessThan(newRangeClusterVersion) {
+		return s.legacyRange(ctx, r)
+	}
+
+	if !r.Serializable {
+		err := s.linearizableReadNotify(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+	var resp *pb.RangeResponse
+	var err error
+	chk := func(ai *auth.AuthInfo) error {
+		return s.authStore.IsRangePermitted(ai, r.Key, r.RangeEnd)
+	}
+	get := func() { resp, err = s.applyV3Base.Range(noTxn, r) }
+	if serr := s.doSerialize(ctx, chk, get); serr != nil {
+		return nil, serr
+	}
+	return resp, err
+}
+
+// TODO: remove this func when we release etcd 3.2
+func (s *EtcdServer) legacyRange(ctx context.Context, r *pb.RangeRequest) (*pb.RangeResponse, error) {
 	if r.Serializable {
 		var resp *pb.RangeResponse
 		var err error
@@ -131,6 +166,41 @@ func (s *EtcdServer) DeleteRange(ctx context.Context, r *pb.DeleteRangeRequest) 
 }
 
 func (s *EtcdServer) Txn(ctx context.Context, r *pb.TxnRequest) (*pb.TxnResponse, error) {
+	// TODO: remove this checking when we release etcd 3.2
+	if s.ClusterVersion() == nil || s.ClusterVersion().LessThan(newRangeClusterVersion) {
+		return s.legacyTxn(ctx, r)
+	}
+
+	if isTxnReadonly(r) {
+		if !isTxnSerializable(r) {
+			err := s.linearizableReadNotify(ctx)
+			if err != nil {
+				return nil, err
+			}
+		}
+		var resp *pb.TxnResponse
+		var err error
+		chk := func(ai *auth.AuthInfo) error {
+			return checkTxnAuth(s.authStore, ai, r)
+		}
+		get := func() { resp, err = s.applyV3Base.Txn(r) }
+		if serr := s.doSerialize(ctx, chk, get); serr != nil {
+			return nil, serr
+		}
+		return resp, err
+	}
+	result, err := s.processInternalRaftRequest(ctx, pb.InternalRaftRequest{Txn: r})
+	if err != nil {
+		return nil, err
+	}
+	if result.err != nil {
+		return nil, result.err
+	}
+	return result.resp.(*pb.TxnResponse), nil
+}
+
+// TODO: remove this func when we release etcd 3.2
+func (s *EtcdServer) legacyTxn(ctx context.Context, r *pb.TxnRequest) (*pb.TxnResponse, error) {
 	if isTxnSerializable(r) {
 		var resp *pb.TxnResponse
 		var err error
@@ -161,6 +231,20 @@ func isTxnSerializable(r *pb.TxnRequest) bool {
 	}
 	for _, u := range r.Failure {
 		if r := u.GetRequestRange(); r == nil || !r.Serializable {
+			return false
+		}
+	}
+	return true
+}
+
+func isTxnReadonly(r *pb.TxnRequest) bool {
+	for _, u := range r.Success {
+		if r := u.GetRequestRange(); r == nil {
+			return false
+		}
+	}
+	for _, u := range r.Failure {
+		if r := u.GetRequestRange(); r == nil {
 			return false
 		}
 	}
@@ -243,6 +327,7 @@ func (s *EtcdServer) LeaseRenew(id lease.LeaseID) (int64, error) {
 		if err == nil {
 			break
 		}
+		err = convertEOFToNoLeader(err)
 	}
 	return ttl, err
 }
@@ -255,7 +340,7 @@ func (s *EtcdServer) LeaseTimeToLive(ctx context.Context, r *pb.LeaseTimeToLiveR
 			return nil, lease.ErrLeaseNotFound
 		}
 		// TODO: fill out ResponseHeader
-		resp := &pb.LeaseTimeToLiveResponse{Header: &pb.ResponseHeader{}, ID: r.ID, TTL: int64(le.Remaining().Seconds()), GrantedTTL: le.TTL}
+		resp := &pb.LeaseTimeToLiveResponse{Header: &pb.ResponseHeader{}, ID: r.ID, TTL: int64(le.Remaining().Seconds()), GrantedTTL: le.TTL()}
 		if r.Keys {
 			ks := le.Keys()
 			kbs := make([][]byte, len(ks))
@@ -273,17 +358,28 @@ func (s *EtcdServer) LeaseTimeToLive(ctx context.Context, r *pb.LeaseTimeToLiveR
 		return nil, err
 	}
 
-	var lresp *pb.LeaseTimeToLiveResponse
 	for _, url := range leader.PeerURLs {
 		lurl := url + leasehttp.LeaseInternalPrefix
 		var iresp *leasepb.LeaseInternalResponse
 		iresp, err = leasehttp.TimeToLiveHTTP(ctx, lease.LeaseID(r.ID), r.Keys, lurl, s.peerRt)
 		if err == nil {
-			lresp = iresp.LeaseTimeToLiveResponse
-			break
+			return iresp.LeaseTimeToLiveResponse, nil
 		}
+		err = convertEOFToNoLeader(err)
 	}
-	return lresp, nil
+	return nil, err
+}
+
+// convertEOFToNoLeader converts EOF erros to ErrNoLeader because
+// lease renew, timetolive requests to followers are forwarded to leader,
+// and follower might not be able to reach leader from transient network
+// errors (often EOF errors). By returning ErrNoLeader, signal clients
+// to retry its requests.
+func convertEOFToNoLeader(err error) error {
+	if err == io.EOF || err == io.ErrUnexpectedEOF {
+		return ErrNoLeader
+	}
+	return err
 }
 
 func (s *EtcdServer) waitLeader() (*membership.Member, error) {
@@ -338,24 +434,47 @@ func (s *EtcdServer) AuthDisable(ctx context.Context, r *pb.AuthDisableRequest) 
 }
 
 func (s *EtcdServer) Authenticate(ctx context.Context, r *pb.AuthenticateRequest) (*pb.AuthenticateResponse, error) {
-	st, err := s.AuthStore().GenSimpleToken()
+	var result *applyResult
+
+	err := s.linearizableReadNotify(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	internalReq := &pb.InternalAuthenticateRequest{
-		Name:        r.Name,
-		Password:    r.Password,
-		SimpleToken: st,
+	for {
+		checkedRevision, err := s.AuthStore().CheckPassword(r.Name, r.Password)
+		if err != nil {
+			plog.Errorf("invalid authentication request to user %s was issued", r.Name)
+			return nil, err
+		}
+
+		st, err := s.AuthStore().GenSimpleToken()
+		if err != nil {
+			return nil, err
+		}
+
+		internalReq := &pb.InternalAuthenticateRequest{
+			Name:        r.Name,
+			Password:    r.Password,
+			SimpleToken: st,
+		}
+
+		result, err = s.processInternalRaftRequestOnce(ctx, pb.InternalRaftRequest{Authenticate: internalReq})
+		if err != nil {
+			return nil, err
+		}
+		if result.err != nil {
+			return nil, result.err
+		}
+
+		if checkedRevision != s.AuthStore().Revision() {
+			plog.Infof("revision when password checked is obsolete, retrying")
+			continue
+		}
+
+		break
 	}
 
-	result, err := s.processInternalRaftRequestOnce(ctx, pb.InternalRaftRequest{Authenticate: internalReq})
-	if err != nil {
-		return nil, err
-	}
-	if result.err != nil {
-		return nil, result.err
-	}
 	return result.resp.(*pb.AuthenticateResponse), nil
 }
 
@@ -641,3 +760,95 @@ func (s *EtcdServer) processInternalRaftRequest(ctx context.Context, r pb.Intern
 
 // Watchable returns a watchable interface attached to the etcdserver.
 func (s *EtcdServer) Watchable() mvcc.WatchableKV { return s.KV() }
+
+func (s *EtcdServer) linearizableReadLoop() {
+	var rs raft.ReadState
+	internalTimeout := time.Second
+
+	for {
+		ctx := make([]byte, 8)
+		binary.BigEndian.PutUint64(ctx, s.reqIDGen.Next())
+
+		select {
+		case <-s.readwaitc:
+		case <-s.stopping:
+			return
+		}
+
+		nextnr := newNotifier()
+
+		s.readMu.Lock()
+		nr := s.readNotifier
+		s.readNotifier = nextnr
+		s.readMu.Unlock()
+
+		cctx, cancel := context.WithTimeout(context.Background(), internalTimeout)
+		if err := s.r.ReadIndex(cctx, ctx); err != nil {
+			cancel()
+			if err == raft.ErrStopped {
+				return
+			}
+			plog.Errorf("failed to get read index from raft: %v", err)
+			nr.notify(err)
+			continue
+		}
+		cancel()
+
+		var (
+			timeout bool
+			done    bool
+		)
+		for !timeout && !done {
+			select {
+			case rs = <-s.r.readStateC:
+				done = bytes.Equal(rs.RequestCtx, ctx)
+				if !done {
+					// a previous request might time out. now we should ignore the response of it and
+					// continue waiting for the response of the current requests.
+					plog.Warningf("ignored out-of-date read index response (want %v, got %v)", rs.RequestCtx, ctx)
+				}
+			case <-time.After(internalTimeout):
+				plog.Warningf("timed out waiting for read index response")
+				nr.notify(ErrTimeout)
+				timeout = true
+			case <-s.stopping:
+				return
+			}
+		}
+		if !done {
+			continue
+		}
+
+		if ai := s.getAppliedIndex(); ai < rs.Index {
+			select {
+			case <-s.applyWait.Wait(rs.Index):
+			case <-s.stopping:
+				return
+			}
+		}
+		// unblock all l-reads requested at indices before rs.Index
+		nr.notify(nil)
+	}
+}
+
+func (s *EtcdServer) linearizableReadNotify(ctx context.Context) error {
+	s.readMu.RLock()
+	nc := s.readNotifier
+	s.readMu.RUnlock()
+
+	// signal linearizable loop for current notify if it hasn't been already
+	select {
+	case s.readwaitc <- struct{}{}:
+	default:
+	}
+
+	// wait for read state notification
+	select {
+	case <-nc.c:
+		return nc.err
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-s.done:
+		return ErrStopped
+	}
+}

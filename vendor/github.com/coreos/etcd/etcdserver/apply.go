@@ -35,7 +35,7 @@ const (
 	// to apply functions instead of a valid txn ID.
 	noTxn = -1
 
-	warnApplyDuration = 10 * time.Millisecond
+	warnApplyDuration = 100 * time.Millisecond
 )
 
 type applyResult struct {
@@ -304,7 +304,14 @@ func (a *applierV3backend) Range(txnID int64, r *pb.RangeRequest) (*pb.RangeResp
 		pruneKVs(rr, f)
 	}
 
-	if r.SortOrder != pb.RangeRequest_NONE {
+	sortOrder := r.SortOrder
+	if r.SortTarget != pb.RangeRequest_KEY && sortOrder == pb.RangeRequest_NONE {
+		// Since current mvcc.Range implementation returns results
+		// sorted by keys in lexiographically ascending order,
+		// sort ASCEND by default only when target is not 'KEY'
+		sortOrder = pb.RangeRequest_ASCEND
+	}
+	if sortOrder != pb.RangeRequest_NONE {
 		var sorter sort.Interface
 		switch {
 		case r.SortTarget == pb.RangeRequest_KEY:
@@ -319,9 +326,9 @@ func (a *applierV3backend) Range(txnID int64, r *pb.RangeRequest) (*pb.RangeResp
 			sorter = &kvSortByValue{&kvSort{rr.KVs}}
 		}
 		switch {
-		case r.SortOrder == pb.RangeRequest_ASCEND:
+		case sortOrder == pb.RangeRequest_ASCEND:
 			sort.Sort(sorter)
-		case r.SortOrder == pb.RangeRequest_DESCEND:
+		case sortOrder == pb.RangeRequest_DESCEND:
 			sort.Sort(sort.Reverse(sorter))
 		}
 	}
@@ -444,6 +451,10 @@ func (a *applierV3backend) applyCompare(c *pb.Compare) (int64, bool) {
 		if result != 0 {
 			return rev, false
 		}
+	case pb.Compare_NOT_EQUAL:
+		if result == 0 {
+			return rev, false
+		}
 	case pb.Compare_GREATER:
 		if result != 1 {
 			return rev, false
@@ -462,7 +473,7 @@ func (a *applierV3backend) applyUnion(txnID int64, union *pb.RequestOp) *pb.Resp
 		if tv.RequestRange != nil {
 			resp, err := a.Range(txnID, tv.RequestRange)
 			if err != nil {
-				panic("unexpected error during txn")
+				plog.Panicf("unexpected error during txn: %v", err)
 			}
 			return &pb.ResponseOp{Response: &pb.ResponseOp_ResponseRange{ResponseRange: resp}}
 		}
@@ -470,7 +481,7 @@ func (a *applierV3backend) applyUnion(txnID int64, union *pb.RequestOp) *pb.Resp
 		if tv.RequestPut != nil {
 			resp, err := a.Put(txnID, tv.RequestPut)
 			if err != nil {
-				panic("unexpected error during txn")
+				plog.Panicf("unexpected error during txn: %v", err)
 			}
 			return &pb.ResponseOp{Response: &pb.ResponseOp_ResponsePut{ResponsePut: resp}}
 		}
@@ -478,7 +489,7 @@ func (a *applierV3backend) applyUnion(txnID int64, union *pb.RequestOp) *pb.Resp
 		if tv.RequestDeleteRange != nil {
 			resp, err := a.DeleteRange(txnID, tv.RequestDeleteRange)
 			if err != nil {
-				panic("unexpected error during txn")
+				plog.Panicf("unexpected error during txn: %v", err)
 			}
 			return &pb.ResponseOp{Response: &pb.ResponseOp_ResponseDeleteRange{ResponseDeleteRange: resp}}
 		}
@@ -508,7 +519,7 @@ func (a *applierV3backend) LeaseGrant(lc *pb.LeaseGrantRequest) (*pb.LeaseGrantR
 	resp := &pb.LeaseGrantResponse{}
 	if err == nil {
 		resp.ID = int64(l.ID)
-		resp.TTL = l.TTL
+		resp.TTL = l.TTL()
 		resp.Header = &pb.ResponseHeader{Revision: a.s.KV().Rev()}
 	}
 
