@@ -17,6 +17,7 @@ var (
 	ErrVolDetached             = errors.New("Volume is detached")
 	ErrVolAttached             = errors.New("Volume is attached")
 	ErrVolAttachedOnRemoteNode = errors.New("Volume is attached on another node")
+	ErrVolAttachedScale        = errors.New("Volume is attached but can be scaled")
 	ErrVolHasSnaps             = errors.New("Volume has snapshots associated")
 	ErrNotSupported            = errors.New("Operation not supported")
 )
