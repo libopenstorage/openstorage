@@ -88,7 +88,7 @@ func Init(
 	machines []string,
 	clusterID string,
 	kvdbOptions map[string]string,
-) (AlertClient, error) {
+) (Alert, error) {
 	kvdbLock.Lock()
 	defer kvdbLock.Unlock()
 	if _, ok := kvdbMap[clusterID]; !ok {
@@ -163,20 +163,6 @@ func (kva *KvAlert) Retrieve(resourceType api.ResourceType, alertID int64) (*api
 // Enumerate enumerates alert
 func (kva *KvAlert) Enumerate(filter *api.Alert) ([]*api.Alert, error) {
 	kv := kva.GetKvdbInstance()
-	return kva.enumerate(kv, filter)
-}
-
-/*
-EnumerateByCluster enumerates Alerts by clusterID. It uses the global
-kvdb options provided while creating the alertClient object to access this cluster.
-This way we ensure that the caller of the api is able to enumerate for clusters that
-it is authorized for.
-*/
-func (kva *KvAlert) EnumerateByCluster(clusterID string, filter *api.Alert) ([]*api.Alert, error) {
-	kv, err := kva.getKvdbForCluster(clusterID)
-	if err != nil {
-		return []*api.Alert{}, err
-	}
 	return kva.enumerate(kv, filter)
 }
 

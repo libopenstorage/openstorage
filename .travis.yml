@@ -15,3 +15,10 @@ script:
       docker login -u "${DOCKER_USER}" -p "${DOCKER_PASS}";
       docker push openstorage/osd;
     fi
+notifications:
+  email:
+    recipients:
+      - aditya@portworx.com
+      - eng@portworx.com
+    on_success: always
+    on_failure: always

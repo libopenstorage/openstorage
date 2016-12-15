@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
 )
@@ -19,7 +18,9 @@ func (c *clusterApi) Routes() []*Route {
 	return []*Route{
 		&Route{verb: "GET", path: "/cluster/versions", fn: c.versions},
 		&Route{verb: "GET", path: clusterPath("/enumerate", cluster.APIVersion), fn: c.enumerate},
+		&Route{verb: "GET", path: clusterPath("/gossipstate", cluster.APIVersion), fn: c.gossipState},
 		&Route{verb: "GET", path: clusterPath("/status", cluster.APIVersion), fn: c.status},
+		&Route{verb: "GET", path: clusterPath("/peerstatus", cluster.APIVersion), fn: c.peerStatus},
 		&Route{verb: "GET", path: clusterPath("/inspect/{id}", cluster.APIVersion), fn: c.inspect},
 		&Route{verb: "DELETE", path: clusterPath("", cluster.APIVersion), fn: c.delete},
 		&Route{verb: "DELETE", path: clusterPath("/{id}", cluster.APIVersion), fn: c.delete},
@@ -111,8 +112,8 @@ func (c *clusterApi) disableGossip(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(clusterResponse)
 }
 
-func (c *clusterApi) status(w http.ResponseWriter, r *http.Request) {
-	method := "status"
+func (c *clusterApi) gossipState(w http.ResponseWriter, r *http.Request) {
+	method := "gossipState"
 
 	inst, err := cluster.Inst()
 	if err != nil {
@@ -120,18 +121,60 @@ func (c *clusterApi) status(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := inst.GetState()
+	resp := inst.GetGossipState()
+	json.NewEncoder(w).Encode(resp)
+}
+
+func (c *clusterApi) status(w http.ResponseWriter, r *http.Request) {
+	method := "status"
+
+	params := r.URL.Query()
+	listenerName := params["name"]
+	if listenerName[0] == "" {
+		c.sendError(c.name, method, w, "Missing id param", http.StatusBadRequest)
+		return
+	}
+	inst, err := cluster.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	resp, err := inst.NodeStatus(listenerName[0])
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	json.NewEncoder(w).Encode(resp)
+
+}
+
+func (c *clusterApi) peerStatus(w http.ResponseWriter, r *http.Request) {
+	method := "peerStatus"
+
+	params := r.URL.Query()
+	listenerName := params["name"]
+	if listenerName[0] == "" {
+		c.sendError(c.name, method, w, "Missing id param", http.StatusBadRequest)
+		return
+	}
+	inst, err := cluster.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	resp, err := inst.PeerStatus(listenerName[0])
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(resp)
+
 }
 
 func (c *clusterApi) delete(w http.ResponseWriter, r *http.Request) {
 	method := "delete"
-	logrus.Infof("Server side node delete")
 
 	params := r.URL.Query()
 

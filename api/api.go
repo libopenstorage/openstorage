@@ -15,7 +15,7 @@ const (
 	SpecFilesystem       = "fs"
 	SpecBlockSize        = "block_size"
 	SpecHaLevel          = "repl"
-	SpecCos              = "cos"
+	SpecPriority         = "io_priority"
 	SpecSnapshotInterval = "snap_interval"
 	SpecDedupe           = "dedupe"
 )
@@ -89,15 +89,6 @@ type StatPoint struct {
 	Fields map[string]interface{}
 	// Timestamp in Unix format
 	Timestamp int64
-}
-
-func StatusSimpleValueOf(s string) (Status, error) {
-	obj, err := simpleValueOf("status", Status_value, s)
-	return Status(obj), err
-}
-
-func (x Status) SimpleString() string {
-	return simpleString("status", Status_name, int32(x))
 }
 
 func DriverTypeSimpleValueOf(s string) (DriverType, error) {

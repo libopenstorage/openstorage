@@ -8,7 +8,6 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/portworx/kvdb"
-	"go.pedge.io/dlog"
 )
 
 var (
@@ -31,20 +30,20 @@ var (
 	// ErrSubscribedRaise raised if unable to raise a subscribed alert
 	ErrSubscribedRaise = errors.New("Could not raise alert and its subscribed alerts")
 
-	instances = make(map[string]AlertClient)
+	instances = make(map[string]Alert)
 	drivers   = make(map[string]InitFunc)
 
 	lock sync.RWMutex
 )
 
 // InitFunc initialization function for alert.
-type InitFunc func(string, string, []string, string, map[string]string) (AlertClient, error)
+type InitFunc func(string, string, []string, string, map[string]string) (Alert, error)
 
 // AlertWatcherFunc is a function type used as a callback for KV WatchTree.
 type AlertWatcherFunc func(*api.Alert, api.AlertActionType, string, string) error
 
-// AlertClient interface for Alert API.
-type AlertClient interface {
+// Alert interface for Alert API.
+type Alert interface {
 	fmt.Stringer
 
 	// Shutdown.
@@ -65,10 +64,6 @@ type AlertClient interface {
 	// Enumerate enumerates Alert.
 	Enumerate(filter *api.Alert) ([]*api.Alert, error)
 
-	// EnumerateByCluster enumerates Alerts by clusterID. It uses the global
-	// kvdb options provided while creating the alertClient object to access this cluster.
-	EnumerateByCluster(clusterID string, filter *api.Alert) ([]*api.Alert, error)
-
 	// EnumerateWithinTimeRange enumerates Alert between timeStart and timeEnd.
 	EnumerateWithinTimeRange(timeStart time.Time, timeEnd time.Time, resourceType api.ResourceType) ([]*api.Alert, error)
 
@@ -83,28 +78,6 @@ type AlertClient interface {
 	Watch(clusterID string, alertWatcher AlertWatcherFunc) error
 }
 
-// AlertInstance is an instance used to raise and clear alerts
-type AlertInstance interface {
-	// Clear clears an alert.
-	Clear(resourceType api.ResourceType, alertID int64, ttl uint64) error
-
-	// Alarm raises an alert with severity : ALARM.
-	Alarm(alertType int64, msg string, resourceType api.ResourceType, resourceID string, ttl uint64) (int64, error)
-
-	// Notify raises an alert with severity : NOTIFY.
-	Notify(alertType int64, msg string, resourceType api.ResourceType, resourceID string, ttl uint64) (int64, error)
-
-	// Warn raises an alert with severity : WARNING.
-	Warn(alertType int64, msg string, resourceType api.ResourceType, resourceID string, ttl uint64) (int64, error)
-
-	// EnumerateByResource enumerates alerts of the specific resource type
-	EnumerateByResource(resourceType api.ResourceType) ([]*api.Alert, error)
-
-	// Alert :  Keeping this function for backward compatibility
-	// until we remove all calls to this function.
-	Alert(name string, msg string) error
-}
-
 // Shutdown the alert instance.
 func Shutdown() {
 	lock.Lock()
@@ -114,18 +87,7 @@ func Shutdown() {
 	}
 }
 
-// Get an alert instance.
-func Get(name string) (AlertClient, error) {
-	lock.RLock()
-	defer lock.RUnlock()
-
-	if v, ok := instances[name]; ok {
-		return v, nil
-	}
-	return nil, ErrAlertClientNotFound
-}
-
-// New returns a new alert instance.
+// New returns a new alert instance tied with a clusterID and kvdb.
 func New(
 	name string,
 	kvdbName string,
@@ -133,13 +95,10 @@ func New(
 	kvdbMachines []string,
 	clusterID string,
 	kvdbOptions map[string]string,
-) (AlertClient, error) {
+) (Alert, error) {
 	lock.Lock()
 	defer lock.Unlock()
 
-	if _, ok := instances[name]; ok {
-		return nil, ErrExist
-	}
 	if initFunc, exists := drivers[name]; exists {
 		driver, err := initFunc(
 			kvdbName,
@@ -155,32 +114,6 @@ func New(
 		return driver, err
 	}
 	return nil, ErrNotSupported
-}
-
-// NewAlertInstance creates a new singleton istance of AlertInstance.
-// TODO: FIXME
-func NewAlertInstance(
-	version string,
-	nodeID string,
-	clusterID string,
-	kvdbName string,
-	kvdbBase string,
-	kvdbMachines []string,
-	kvdbOptions map[string]string,
-) {
-	kva, err := Get(Name)
-	if err != nil {
-		kva, err = New(Name, kvdbName, kvdbBase, kvdbMachines, clusterID, kvdbOptions)
-		if err != nil {
-			dlog.Errorf("Failed to initialize an AlertInstance ")
-		}
-	}
-	newAlertInstance(nodeID, clusterID, version, kva)
-}
-
-// Instance returns the singleton AlertInstance.
-func Instance() AlertInstance {
-	return instance()
 }
 
 // Register an alert interface.

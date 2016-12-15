@@ -17,6 +17,13 @@ enum Status {
   STATUS_NOT_IN_QUORUM = 5;
   STATUS_DECOMMISSION = 6;
   STATUS_MAINTENANCE = 7;
+  STATUS_STORAGE_DOWN = 8;
+  STATUS_STORAGE_DEGRADED = 9;
+  STATUS_NEEDS_REBOOT = 10;
+  STATUS_STORAGE_REBALANCE = 11;
+  STATUS_STORAGE_DRIVE_REPLACE = 12;
+  // Add statuses before MAX and update the number for MAX
+  STATUS_MAX = 13;
 }
 
 enum DriverType {
@@ -77,10 +84,10 @@ enum VolumeActionParam {
 }
 
 enum CosType {
-  COS_TYPE_NONE = 0;
-  COS_TYPE_LOW = 1;
-  COS_TYPE_MEDIUM = 2;
-  COS_TYPE_HIGH = 3;
+  NONE = 0;
+  LOW = 1;
+  MEDIUM = 2;
+  HIGH = 3;
 }
 
 // VolumeState represents the state of a volume.
@@ -255,6 +262,8 @@ message Volume {
   // List of name value mapping of driver specific runtime information.
   repeated RuntimeStateMap runtime_state = 18;
   string secure_device_path = 19;
+  // BackgroundProcessing is true if volume is attached but not by the user
+  bool background_processing = 20;
 }
 
 message Stats {
