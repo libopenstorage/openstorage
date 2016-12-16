@@ -204,7 +204,6 @@ func (c *ClusterManager) getCurrentState() *api.Node {
 
 	c.selfNode.Cpu, _, _ = c.system.CpuUsage()
 	c.selfNode.MemTotal, c.selfNode.MemUsed, c.selfNode.MemFree = c.system.MemUsage()
-	c.selfNode.Luns = c.system.Luns()
 
 	c.selfNode.Timestamp = time.Now()
 

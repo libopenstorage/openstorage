@@ -294,3 +294,11 @@ func (r Response) Unmarshal(v interface{}) error {
 func (r Response) Error() error {
 	return r.err
 }
+
+func (r Response) FormatError() error {
+	if len(r.body) == 0 {
+		return fmt.Errorf("Error: %v", r.err)
+	} else {
+		return fmt.Errorf("HTTP-%d: %s", r.statusCode, string(r.body))
+	}
+}

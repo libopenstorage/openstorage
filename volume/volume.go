@@ -21,6 +21,15 @@ var (
 	ErrNotSupported            = errors.New("Operation not supported")
 )
 
+// Constants used by the VolumeDriver
+const (
+	APIVersion   = "v1"
+	PluginAPIBase      = "/run/docker/plugins/"
+	DriverAPIBase      = "/var/lib/osd/driver/"
+	MountBase          = "/var/lib/osd/mounts/"
+	VolumeBase         = "/var/lib/osd/"
+)
+
 type Store interface {
 	// Lock volume specified by volumeID.
 	Lock(volumeID string) (interface{}, error)

@@ -10,7 +10,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/config"
+	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
 )
 
@@ -26,7 +26,7 @@ func responseStatus(err error) string {
 }
 
 func newVolumeAPI(name string) restServer {
-	return &volApi{restBase{version: config.Version, name: name}}
+	return &volApi{restBase{version: volume.APIVersion, name: name}}
 }
 
 func (vd *volApi) String() string {
@@ -407,7 +407,7 @@ func (vd *volApi) requests(w http.ResponseWriter, r *http.Request) {
 
 func (vd *volApi) versions(w http.ResponseWriter, r *http.Request) {
 	versions := []string{
-		config.Version,
+		volume.APIVersion,
 		// Update supported versions by adding them here
 	}
 	json.NewEncoder(w).Encode(versions)
@@ -422,28 +422,28 @@ func volVersion(route, version string) string {
 }
 
 func volPath(route, version string) string {
-	return volVersion("osd-volumes"+route, version)
+	return volVersion(api.OsdVolumePath+route, version)
 }
 
 func snapPath(route, version string) string {
-	return volVersion("osd-snapshot"+route, version)
+	return volVersion(api.OsdSnapshotPath+route, version)
 }
 
 func (vd *volApi) Routes() []*Route {
 	return []*Route{
-		&Route{verb: "GET", path: "/osd-volumes/versions", fn: vd.versions},
-		&Route{verb: "POST", path: volPath("", config.Version), fn: vd.create},
-		&Route{verb: "PUT", path: volPath("/{id}", config.Version), fn: vd.volumeSet},
-		&Route{verb: "GET", path: volPath("", config.Version), fn: vd.enumerate},
-		&Route{verb: "GET", path: volPath("/{id}", config.Version), fn: vd.inspect},
-		&Route{verb: "DELETE", path: volPath("/{id}", config.Version), fn: vd.delete},
-		&Route{verb: "GET", path: volPath("/stats", config.Version), fn: vd.stats},
-		&Route{verb: "GET", path: volPath("/stats/{id}", config.Version), fn: vd.stats},
-		&Route{verb: "GET", path: volPath("/alerts", config.Version), fn: vd.alerts},
-		&Route{verb: "GET", path: volPath("/alerts/{id}", config.Version), fn: vd.alerts},
-		&Route{verb: "GET", path: volPath("/requests", config.Version), fn: vd.requests},
-		&Route{verb: "GET", path: volPath("/requests/{id}", config.Version), fn: vd.requests},
-		&Route{verb: "POST", path: snapPath("", config.Version), fn: vd.snap},
-		&Route{verb: "GET", path: snapPath("", config.Version), fn: vd.snapEnumerate},
+		&Route{verb: "GET", path: "/"+api.OsdVolumePath+"/versions", fn: vd.versions},
+		&Route{verb: "POST", path: volPath("", volume.APIVersion), fn: vd.create},
+		&Route{verb: "PUT", path: volPath("/{id}", volume.APIVersion), fn: vd.volumeSet},
+		&Route{verb: "GET", path: volPath("", volume.APIVersion), fn: vd.enumerate},
+		&Route{verb: "GET", path: volPath("/{id}", volume.APIVersion), fn: vd.inspect},
+		&Route{verb: "DELETE", path: volPath("/{id}", volume.APIVersion), fn: vd.delete},
+		&Route{verb: "GET", path: volPath("/stats", volume.APIVersion), fn: vd.stats},
+		&Route{verb: "GET", path: volPath("/stats/{id}", volume.APIVersion), fn: vd.stats},
+		&Route{verb: "GET", path: volPath("/alerts", volume.APIVersion), fn: vd.alerts},
+		&Route{verb: "GET", path: volPath("/alerts/{id}", volume.APIVersion), fn: vd.alerts},
+		&Route{verb: "GET", path: volPath("/requests", volume.APIVersion), fn: vd.requests},
+		&Route{verb: "GET", path: volPath("/requests/{id}", volume.APIVersion), fn: vd.requests},
+		&Route{verb: "POST", path: snapPath("", volume.APIVersion), fn: vd.snap},
+		&Route{verb: "GET", path: snapPath("", volume.APIVersion), fn: vd.snapEnumerate},
 	}
 }

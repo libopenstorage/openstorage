@@ -8,7 +8,6 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
-	"github.com/libopenstorage/openstorage/config"
 )
 
 type clusterApi struct {
@@ -18,21 +17,21 @@ type clusterApi struct {
 func (c *clusterApi) Routes() []*Route {
 	return []*Route{
 		&Route{verb: "GET", path: "/cluster/versions", fn: c.versions},
-		&Route{verb: "GET", path: clusterPath("/enumerate", config.Version), fn: c.enumerate},
-		&Route{verb: "GET", path: clusterPath("/gossipstate", config.Version), fn: c.gossipState},
-		&Route{verb: "GET", path: clusterPath("/status", config.Version), fn: c.status},
-		&Route{verb: "GET", path: clusterPath("/peerstatus", config.Version), fn: c.peerStatus},
-		&Route{verb: "GET", path: clusterPath("/inspect/{id}", config.Version), fn: c.inspect},
-		&Route{verb: "DELETE", path: clusterPath("", config.Version), fn: c.delete},
-		&Route{verb: "DELETE", path: clusterPath("/{id}", config.Version), fn: c.delete},
-		&Route{verb: "PUT", path: clusterPath("/enablegossip", config.Version), fn: c.enableGossip},
-		&Route{verb: "PUT", path: clusterPath("/disablegossip", config.Version), fn: c.disableGossip},
-		&Route{verb: "PUT", path: clusterPath("/shutdown", config.Version), fn: c.shutdown},
-		&Route{verb: "PUT", path: clusterPath("/shutdown/{id}", config.Version), fn: c.shutdown},
+		&Route{verb: "GET", path: clusterPath("/enumerate", cluster.APIVersion), fn: c.enumerate},
+		&Route{verb: "GET", path: clusterPath("/gossipstate", cluster.APIVersion), fn: c.gossipState},
+		&Route{verb: "GET", path: clusterPath("/status", cluster.APIVersion), fn: c.status},
+		&Route{verb: "GET", path: clusterPath("/peerstatus", cluster.APIVersion), fn: c.peerStatus},
+		&Route{verb: "GET", path: clusterPath("/inspect/{id}", cluster.APIVersion), fn: c.inspect},
+		&Route{verb: "DELETE", path: clusterPath("", cluster.APIVersion), fn: c.delete},
+		&Route{verb: "DELETE", path: clusterPath("/{id}", cluster.APIVersion), fn: c.delete},
+		&Route{verb: "PUT", path: clusterPath("/enablegossip", cluster.APIVersion), fn: c.enableGossip},
+		&Route{verb: "PUT", path: clusterPath("/disablegossip", cluster.APIVersion), fn: c.disableGossip},
+		&Route{verb: "PUT", path: clusterPath("/shutdown", cluster.APIVersion), fn: c.shutdown},
+		&Route{verb: "PUT", path: clusterPath("/shutdown/{id}", cluster.APIVersion), fn: c.shutdown},
 	}
 }
 func newClusterAPI() restServer {
-	return &clusterApi{restBase{version: config.Version, name: "Cluster API"}}
+	return &clusterApi{restBase{version: cluster.APIVersion, name: "Cluster API"}}
 }
 
 func (c *clusterApi) String() string {
@@ -212,7 +211,7 @@ func (c *clusterApi) shutdown(w http.ResponseWriter, r *http.Request) {
 
 func (c *clusterApi) versions(w http.ResponseWriter, r *http.Request) {
 	versions := []string{
-		config.Version,
+		cluster.APIVersion,
 		// Update supported versions by adding them here
 	}
 	json.NewEncoder(w).Encode(versions)

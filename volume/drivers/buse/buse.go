@@ -77,7 +77,7 @@ func copyFile(source string, dest string) (err error) {
 
 func Init(params map[string]string) (volume.VolumeDriver, error) {
 	inst := &driver{
-		IODriver:        common.IONotSupported,
+		IODriver:        volume.IONotSupported,
 		StoreEnumerator: common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
 	}
 	inst.buseDevices = make(map[string]*buseDev)

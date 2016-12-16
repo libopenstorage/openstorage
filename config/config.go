@@ -7,27 +7,23 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/libopenstorage/openstorage/volume"
 	"go.pedge.io/dlog/logrus"
 )
 
 const (
 	Version                   = "v1"
-	PluginAPIBase             = "/run/docker/plugins/"
-	DriverAPIBase             = "/var/lib/osd/driver/"
 	GraphDriverAPIBase        = "/var/lib/osd/graphdriver/"
-	ClusterAPIBase            = "/var/lib/osd/cluster/"
 	UrlKey                    = "url"
 	MgmtPortKey               = "mgmtPort"
 	PluginPortKey             = "pluginPort"
 	VersionKey                = "version"
-	MountBase                 = "/var/lib/osd/mounts/"
-	VolumeBase                = "/var/lib/osd/"
 	DataDir                   = ".data"
 	FlexVolumePort     uint16 = 2345
 )
 
 func init() {
-	os.MkdirAll(MountBase, 0755)
+	os.MkdirAll(volume.MountBase, 0755)
 	os.MkdirAll(GraphDriverAPIBase, 0755)
 	// TODO(pedge) eventually move to osd main.go when everyone is comfortable with dlog
 	dlog_logrus.Register()

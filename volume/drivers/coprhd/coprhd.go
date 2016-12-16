@@ -104,7 +104,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 	}
 
 	d := &driver{
-		IODriver:          common.IONotSupported,
+		IODriver:          volume.IONotSupported,
 		StoreEnumerator:   common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
 		consistency_group: consistency_group,
 		project:           project,

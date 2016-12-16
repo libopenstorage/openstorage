@@ -11,9 +11,8 @@ import (
 
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/api/client"
+	clusterclient "github.com/libopenstorage/openstorage/api/client/cluster"
 	"github.com/libopenstorage/openstorage/cluster"
-	"github.com/libopenstorage/openstorage/config"
 )
 
 type clusterClient struct {
@@ -22,12 +21,12 @@ type clusterClient struct {
 
 func (c *clusterClient) clusterOptions(context *cli.Context) {
 	// Currently we choose the default version
-	clnt, err := client.NewClusterClient(config.Version)
+	clnt, err := clusterclient.NewClusterClient("", cluster.APIVersion)
 	if err != nil {
 		fmt.Printf("Failed to initialize client library: %v\n", err)
 		os.Exit(1)
 	}
-	c.manager = clnt.ClusterManager()
+	c.manager = clusterclient.ClusterManager(clnt)
 }
 
 func (c *clusterClient) status(context *cli.Context) {

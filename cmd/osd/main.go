@@ -17,6 +17,7 @@ import (
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/graph/drivers"
+	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/consul"
@@ -162,7 +163,7 @@ func start(c *cli.Context) error {
 		if err := cluster.Init(cfg.Osd.ClusterConfig); err != nil {
 			return fmt.Errorf("Unable to init cluster server: %v", err)
 		}
-		if err := server.StartClusterAPI(config.ClusterAPIBase, 0); err != nil {
+		if err := server.StartClusterAPI(cluster.APIBase, 0); err != nil {
 			return fmt.Errorf("Unable to start cluster API server: %v", err)
 		}
 		clusterInit = true
@@ -197,8 +198,8 @@ func start(c *cli.Context) error {
 
 		if err := server.StartPluginAPI(
 			d,
-			config.DriverAPIBase,
-			config.PluginAPIBase,
+			volume.DriverAPIBase,
+			volume.PluginAPIBase,
 			uint16(mgmtPort),
 			uint16(pluginPort),
 		); err != nil {
@@ -220,7 +221,7 @@ func start(c *cli.Context) error {
 	// Start the graph drivers.
 	for d := range cfg.Osd.GraphDrivers {
 		dlog.Infof("Starting graph driver: %v", d)
-		if err := server.StartGraphAPI(d, config.PluginAPIBase); err != nil {
+		if err := server.StartGraphAPI(d, volume.PluginAPIBase); err != nil {
 			return fmt.Errorf("Unable to start graph plugin: %v", err)
 		}
 	}
