@@ -221,9 +221,12 @@ func (c *ClusterManager) getCurrentState() *api.Node {
 	return &c.selfNode
 }
 
-func (c *ClusterManager) getPeers(db ClusterInfo) map[types.NodeId]string {
+func (c *ClusterManager) getNonDecommisionedPeers(db ClusterInfo) map[types.NodeId]string {
 	peers := make(map[types.NodeId]string)
 	for _, nodeEntry := range db.NodeEntries {
+		if nodeEntry.Status == api.Status_STATUS_DECOMMISSION {
+			continue
+		}
 		ip := nodeEntry.DataIp + ":9002"
 		peers[types.NodeId(nodeEntry.Id)] = ip
 	}
@@ -240,7 +243,6 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 		return nil
 	}
 
-	killSelf := false
 	for _, nodeEntry := range db.NodeEntries {
 		if nodeEntry.Status == api.Status_STATUS_DECOMMISSION {
 			logrus.Infof("ClusterManager watchDB, node ID "+
@@ -272,26 +274,19 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 			// We are getting decommissioned!!
 			if nodeEntry.Id == c.selfNode.Id {
 				// We are getting decommissioned.
-				// Stop the heartbeat
+				// Stop the heartbeat and stop the watch
 				stopHeartbeat <- true
 				c.gossip.Stop(time.Duration(10 * time.Second))
-				killSelf = true
+				return fmt.Errorf("stop watch")
 			}
 		}
-
-	}
-
-	// We are getting decommissioned
-	if killSelf == true {
-		return nil
 	}
 
 	c.size = db.Size
 
 	// Update the peers. A node might have been removed or added
-	peers := c.getPeers(db)
+	peers := c.getNonDecommisionedPeers(db)
 	c.gossip.UpdateCluster(peers)
-
 	for _, n := range c.nodeCache {
 		_, found := peers[types.NodeId(n.Id)]
 		if !found {
@@ -498,8 +493,7 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *ClusterInfo) {
 		dlog.Infof("Starting Gossip...")
 	}
 	c.gossip.Start(nodeIps)
-	peers := c.getPeers(*clusterInfo)
-	c.gossip.UpdateCluster(peers)
+	c.gossip.UpdateCluster(c.getNonDecommisionedPeers(*clusterInfo))
 
 	lastUpdateTs := time.Now()
 	for {
@@ -753,7 +747,7 @@ func (c *ClusterManager) initializeCluster(db kvdb.Kvdb) (
 	} else if clusterInfo.Status&api.Status_STATUS_OK > 0 {
 		dlog.Infoln("Cluster state is OK... Joining the cluster.")
 	} else {
-		return  nil, errors.New("Fatal, Cluster is in an unexpected state.")
+		return nil, errors.New("Fatal, Cluster is in an unexpected state.")
 	}
 	// Cluster database max size... 0 if unlimited.
 	c.size = clusterInfo.Size
@@ -1089,10 +1083,8 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 	logrus.Infof("ClusterManager Remove node.")
 
 	var resultErr error
-	killSelf := false
 
 	for _, n := range nodes {
-
 		if _, exist := c.nodeCache[n.Id]; !exist {
 			msg := fmt.Sprintf("Node does not exist in cluster, "+
 				"Node ID %s.",
@@ -1103,7 +1095,8 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 
 		// If removing node is self and node is not in maintenance mode,
 		// disallow node remove.
-		if n.Id == c.selfNode.Id {
+		if n.Id == c.selfNode.Id &&
+			c.selfNode.Status != api.Status_STATUS_MAINTENANCE {
 			msg := fmt.Sprintf("Cannot remove self from cluster, "+
 				"Node ID %s.",
 				n.Id)
@@ -1113,6 +1106,7 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 			nodeCacheStatus := c.nodeCache[n.Id].Status
 			// If node is not down, do not remove it
 			if nodeCacheStatus != api.Status_STATUS_OFFLINE &&
+				nodeCacheStatus != api.Status_STATUS_MAINTENANCE &&
 				nodeCacheStatus != api.Status_STATUS_DECOMMISSION {
 
 				msg := fmt.Sprintf("Cannot remove node that is not "+
@@ -1133,7 +1127,6 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 
 			err := e.Value.(ClusterListener).CanNodeRemove(&n)
 			if err != nil {
-
 				msg := fmt.Sprintf("Cannot remove node ID %s: %s",
 					n.Id, err)
 				dlog.Warnf(msg)
@@ -1156,21 +1149,20 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 			dlog.Infof("Remove node: notify cluster listener: %s",
 				e.Value.(ClusterListener).String())
 			err := e.Value.(ClusterListener).Remove(&n)
-			if err != nil && err != ErrNodeRemovePending {
-				dlog.Warnf("Cluster listener failed to "+
-					"remove node: %s: %s",
-					e.Value.(ClusterListener).String(),
-					err)
-				return err
-			} else if resultErr == nil &&
-				err == ErrNodeRemovePending {
-				resultErr = err
+			if err != nil {
+				if err != ErrNodeRemovePending {
+					dlog.Warnf("Cluster listener failed to "+
+						"remove node: %s: %s",
+						e.Value.(ClusterListener).String(),
+						err)
+					return err
+				} else {
+					resultErr = err
+				}
 			}
 		}
 	}
-	if resultErr == nil && killSelf {
-		go c.killSelf()
-	}
+
 	return resultErr
 }
 
@@ -1197,21 +1189,15 @@ func (c *ClusterManager) NodeRemoveDone(nodeID string, result error) {
 }
 
 func (c *ClusterManager) replayNodeDecommission() {
-
-	time.Sleep(60 * time.Second)
-	// For each node, if they are in decommission state,
-	//     restart the Node Remove()
-
-	// TODO: Handle error here ?
 	currentState, err := readClusterInfo()
 	if err != nil {
+		dlog.Infof("Failed to read cluster db for node decommissions: %v", err)
 		return
 	}
 
 	for _, nodeEntry := range currentState.NodeEntries {
 		if nodeEntry.Status == api.Status_STATUS_DECOMMISSION {
-			logrus.Infof("Replay Node Remove for node ID %s",
-				nodeEntry.Id)
+			dlog.Infof("Replay Node Remove for node ID %s", nodeEntry.Id)
 
 			var n api.Node
 			n.Id = nodeEntry.Id
@@ -1219,7 +1205,7 @@ func (c *ClusterManager) replayNodeDecommission() {
 			nodes = append(nodes, n)
 			err := c.Remove(nodes)
 			if err != nil {
-				logrus.Errorf("Failed to replay node remove: "+
+				dlog.Warnf("Failed to replay node remove: "+
 					"node ID %s, error %s",
 					nodeEntry.Id, err)
 			}
@@ -1253,9 +1239,4 @@ func (c *ClusterManager) HandleNotifications(culpritNodeId string, notification 
 	} else {
 		return "", fmt.Errorf("Error in Handle Notifications. Unknown Notification : %v", notification)
 	}
-}
-
-func (c *ClusterManager) killSelf() {
-	time.Sleep(2 * time.Second)
-	os.Exit(0)
 }

@@ -98,7 +98,5 @@ func writeClusterInfo(db *ClusterInfo) (*kvdb.KVPair, error) {
 		dlog.Warnf("Fatal, Could not marshal cluster database to JSON: %v", err)
 		return nil, err
 	}
-
-	dlog.Infoln("Cluster database updated.")
 	return kvp, nil
 }
