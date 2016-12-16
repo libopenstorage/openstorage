@@ -237,6 +237,10 @@ func (d *driver) Delete(volumeID string) error {
 	return nil
 }
 
+func (d *driver) MountedAt(mountpath string) string {
+	return ""
+}
+
 func (d *driver) Mount(volumeID string, mountpath string) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {

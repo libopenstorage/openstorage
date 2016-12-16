@@ -187,6 +187,10 @@ func (d *driver) Attach(volumeID string) (path string, err error) {
 	return "", nil
 }
 
+func (d *driver) MountedAt(mountpath string) string {
+	return ""
+}
+
 func (d *driver) Detach(volumeID string) error {
 	return nil
 }

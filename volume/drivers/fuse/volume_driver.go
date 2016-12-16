@@ -90,6 +90,10 @@ func (v *volumeDriver) Delete(volumeID string) error {
 	return v.DeleteVol(volumeID)
 }
 
+func (v *volumeDriver) MountedAt(mountpath string) string {
+	return ""
+}
+
 func (v *volumeDriver) Mount(volumeID string, mountpath string) error {
 	volume, err := v.GetVol(volumeID)
 	if err != nil {

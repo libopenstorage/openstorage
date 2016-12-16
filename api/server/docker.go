@@ -447,7 +447,20 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	mountpoint := d.mountpath(name)
-	err = v.Unmount(vol.Id, mountpoint)
+	id := vol.Id
+	if vol.Spec.Scale > 1 {
+		id = v.MountedAt(mountpoint)
+		if len(id) == 0 {
+			err := fmt.Errorf("Failed to find volume mapping for %v",
+				mountpoint)
+			d.logRequest(method, request.Name).Warnf(
+				"Cannot unmount volume %v, %v",
+				mountpoint, err)
+			d.errorResponse(w, err)
+			return
+		}
+	}
+	err = v.Unmount(id, mountpoint)
 	if err != nil {
 		d.logRequest(method, request.Name).Warnf(
 			"Cannot unmount volume %v, %v",
@@ -457,7 +470,7 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if v.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-		_ = v.Detach(vol.Id)
+		_ = v.Detach(id)
 	}
 	d.emptyResponse(w)
 }

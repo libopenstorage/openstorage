@@ -24,11 +24,11 @@ var (
 
 // Constants used by the VolumeDriver
 const (
-	APIVersion   = "v1"
-	PluginAPIBase      = "/run/docker/plugins/"
-	DriverAPIBase      = "/var/lib/osd/driver/"
-	MountBase          = "/var/lib/osd/mounts/"
-	VolumeBase         = "/var/lib/osd/"
+	APIVersion    = "v1"
+	PluginAPIBase = "/run/docker/plugins/"
+	DriverAPIBase = "/var/lib/osd/driver/"
+	MountBase     = "/var/lib/osd/mounts/"
+	VolumeBase    = "/var/lib/osd/"
 )
 
 type Store interface {
@@ -91,6 +91,8 @@ type ProtoDriver interface {
 	// Mount volume at specified path
 	// Errors ErrEnoEnt, ErrVolDetached may be returned.
 	Mount(volumeID string, mountPath string) error
+	// MountedAt return volume mounted at specified mountpath.
+	MountedAt(mountPath string) string
 	// Unmount volume at specified path
 	// Errors ErrEnoEnt, ErrVolDetached may be returned.
 	Unmount(volumeID string, mountPath string) error

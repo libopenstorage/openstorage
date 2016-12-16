@@ -324,6 +324,10 @@ func (v *volumeClient) Detach(volumeID string) error {
 	)
 }
 
+func (v *volumeClient) MountedAt(mountPath string) string {
+	return ""
+}
+
 // Mount volume at specified path
 // Errors ErrEnoEnt, ErrVolDetached may be returned.
 func (v *volumeClient) Mount(volumeID string, mountPath string) error {

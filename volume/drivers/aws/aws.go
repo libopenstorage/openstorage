@@ -598,6 +598,10 @@ func (d *Driver) Detach(volumeID string) error {
 	return d.waitAttachmentStatus(volumeID, ec2.VolumeAttachmentStateDetached, time.Minute*5)
 }
 
+func (d *Driver) MountedAt(mountpath string) string {
+	return ""
+}
+
 func (d *Driver) Mount(volumeID string, mountpath string) error {
 	volume, err := d.GetVol(volumeID)
 	if err != nil {

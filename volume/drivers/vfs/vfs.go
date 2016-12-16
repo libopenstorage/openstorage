@@ -78,6 +78,10 @@ func (d *driver) Delete(volumeID string) error {
 
 }
 
+func (d *driver) MountedAt(mountpath string) string {
+	return ""
+}
+
 // Mount volume at specified path
 // Errors ErrEnoEnt, ErrVolDetached may be returned.
 func (d *driver) Mount(volumeID string, mountpath string) error {
