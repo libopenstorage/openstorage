@@ -28,7 +28,8 @@ func TestCmdMarshalProto(t *testing.T) {
  "aggregation_level": 0,
  "encrypted": false,
  "passphrase": "",
- "snapshot_schedule": ""
+ "snapshot_schedule": "",
+ "scale": 0
 }`,
 		data,
 	)

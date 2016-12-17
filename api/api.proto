@@ -218,6 +218,8 @@ message VolumeSpec {
   string passphrase = 14;
   // SnapshotSchedule 
   string snapshot_schedule = 15;
+  // Scale allows autocreation of volumes.
+  uint32 scale = 16;
 }
 
 // Set of machine IDs (nodes) to which part of this volume is erasure coded - for clustered storage arrays
