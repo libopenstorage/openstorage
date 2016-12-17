@@ -1046,6 +1046,7 @@ func (c *ClusterManager) markNodeDecommission(node api.Node) error {
 	}
 
 	nodeEntry.Status = api.Status_STATUS_DECOMMISSION
+	c.selfNode.Status = api.Status_STATUS_DECOMMISSION
 	db.NodeEntries[node.Id] = nodeEntry
 
 	_, err = writeClusterInfo(&db)
