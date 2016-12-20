@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/libopenstorage/gossip/types"
 )
 
@@ -199,7 +200,7 @@ func (s *GossipStoreImpl) AddNode(id types.NodeId, status types.NodeStatus) {
 		Value:              make(types.StoreMap),
 	}
 	s.nodeMap[id] = newNodeInfo
-	fmt.Println("gossip: Adding Node to gossip map: ", id)
+	logrus.Infof("gossip: Adding Node to gossip map: %v", id)
 	s.Unlock()
 }
 
@@ -209,7 +210,7 @@ func (s *GossipStoreImpl) RemoveNode(id types.NodeId) error {
 		s.Unlock()
 		return fmt.Errorf("Node %v does not exist in map", id)
 	}
-	fmt.Println("gossip: Removing node from gossip map: ", id)
+	logrus.Infof("gossip: Removing node from gossip map: %v", id)
 	delete(s.nodeMap, id)
 	s.Unlock()
 	return nil

@@ -232,10 +232,6 @@ func (gd *GossipDelegate) NotifyJoin(node *memberlist.Node) {
 	if err != nil {
 		gs.Err = err.Error()
 		gd.RemoveNode(types.NodeId(nodeName))
-	} else {
-		gd.AddNode(types.NodeId(types.NodeId(nodeName)), types.NODE_STATUS_UP)
-		gd.triggerStateEvent(types.NODE_ALIVE)
-		gs.Err = ""
 	}
 
 	gd.history.AddLatest(gs)
@@ -309,17 +305,11 @@ func (gd *GossipDelegate) NotifyAlive(node *memberlist.Node) error {
 	}
 
 	diffNode, err := gd.GetLocalNodeInfo(types.NodeId(nodeName))
-	if err != nil {
-		// We found a new node!!
-		// Check if gossip version and clusterId matches
-		gd.AddNode(types.NodeId(nodeName), types.NODE_STATUS_UP)
+	if err == nil && diffNode.Status != types.NODE_STATUS_UP {
+		gd.UpdateNodeStatus(types.NodeId(nodeName), types.NODE_STATUS_UP)
 		gd.triggerStateEvent(types.NODE_ALIVE)
-	} else {
-		if diffNode.Status != types.NODE_STATUS_UP {
-			gd.UpdateNodeStatus(types.NodeId(nodeName), types.NODE_STATUS_UP)
-			gd.triggerStateEvent(types.NODE_ALIVE)
-		}
-	}
+        } // else if err != nil -> A new node sending us data. We do not add node unless it is added
+         // in our local map externally
 	gd.history.AddLatest(gs)
 	return nil
 }
