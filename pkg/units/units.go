@@ -67,11 +67,16 @@ var (
 		"GiB": GiB,
 		"TiB": TiB,
 		"PiB": PiB,
+
+		"Mi": MiB,
+		"Gi": GiB,
+		"Ti": TiB,
+		"Pi": PiB,
 	}
 )
 
 var unitPattern = regexp.MustCompile(
-	"([0-9]+)(.[0-9]+)*\\s*(B|b|K|k|M|m|G|g|T|t|P|p|KB|kb|KiB|MB|mb|MiB|GB|gb|GiB|TB|tb|TiB|PB|pb|PiB)")
+	"([0-9]+)(.[0-9]+)*\\s*(B|b|K|k|M|m|G|g|T|t|P|p|KB|kb|KiB|MB|mb|MiB|Mi|GB|gb|GiB|Gi|TB|tb|TiB|Ti|PB|pb|PiB|Pi)")
 var BadUnit = errors.New("Bad unit")
 
 func String(b uint64) string {

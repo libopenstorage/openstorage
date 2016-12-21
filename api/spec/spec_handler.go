@@ -1,4 +1,4 @@
-package server
+package spec
 
 import (
 	"fmt"
@@ -9,9 +9,9 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/units"
 )
 
-// DockerSpec provides conversion function from what gets passed in over the
+// SpecHandler provides conversion function from what gets passed in over the
 // plugin API to an api.VolumeSpec object.
-type DockerSpec interface {
+type SpecHandler interface {
 	// SpecFromString parses options from the name.
 	// If the scheduler was unable to pass in the volume spec via the API,
 	// the spec can be passed in via the name in the format:
@@ -47,16 +47,14 @@ var (
 	passphraseRegex = regexp.MustCompile(api.SpecPassphrase + "=([0-9A-Za-z_@./#&+-]+),?")
 )
 
-var ds DockerSpec = NewDockerSpec()
-
-type dockerSpec struct {
+type specHandler struct {
 }
 
-func NewDockerSpec() DockerSpec {
-	return &dockerSpec{}
+func NewSpecHandler() SpecHandler {
+	return &specHandler{}
 }
 
-func (d *dockerSpec) cosLevel(cos string) (uint32, error) {
+func (d *specHandler) cosLevel(cos string) (uint32, error) {
 	switch cos {
 	case "high", "3":
 		return uint32(api.CosType_HIGH), nil
@@ -69,7 +67,7 @@ func (d *dockerSpec) cosLevel(cos string) (uint32, error) {
 		fmt.Errorf("Cos must be one of %q | %q | %q", "high", "medium", "low")
 }
 
-func (d *dockerSpec) getVal(r *regexp.Regexp, str string) (bool, string) {
+func (d *specHandler) getVal(r *regexp.Regexp, str string) (bool, string) {
 	found := r.FindString(str)
 	if found == "" {
 		return false, ""
@@ -85,7 +83,7 @@ func (d *dockerSpec) getVal(r *regexp.Regexp, str string) (bool, string) {
 	return true, val
 }
 
-func (d *dockerSpec) DefaultSpec() *api.VolumeSpec {
+func (d *specHandler) DefaultSpec() *api.VolumeSpec {
 	return &api.VolumeSpec{
 		VolumeLabels: make(map[string]string),
 		Format:       api.FSType_FS_TYPE_EXT4,
@@ -93,7 +91,7 @@ func (d *dockerSpec) DefaultSpec() *api.VolumeSpec {
 	}
 }
 
-func (d *dockerSpec) SpecFromOpts(
+func (d *specHandler) SpecFromOpts(
 	opts map[string]string,
 ) (*api.VolumeSpec, error) {
 	spec := d.DefaultSpec()
@@ -147,7 +145,7 @@ func (d *dockerSpec) SpecFromOpts(
 	return spec, nil
 }
 
-func (d *dockerSpec) SpecFromString(
+func (d *specHandler) SpecFromString(
 	str string,
 ) (bool, *api.VolumeSpec, string) {
 	// If we can't parse the name, the rest of the spec is invalid.

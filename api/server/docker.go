@@ -9,6 +9,7 @@ import (
 	"path"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/api/spec"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
@@ -22,6 +23,7 @@ const (
 // Implementation of the Docker volumes plugin specification.
 type driver struct {
 	restBase
+	spec.SpecHandler
 }
 
 type handshakeResp struct {
@@ -61,7 +63,7 @@ type capabilitiesResponse struct {
 }
 
 func newVolumePlugin(name string) restServer {
-	return &driver{restBase{name: name, version: "0.3"}}
+	return &driver{restBase{name: name, version: "0.3"}, spec.NewSpecHandler()}
 }
 
 func (d *driver) String() string {
@@ -172,7 +174,7 @@ func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	specParsed, spec, name := ds.SpecFromString(request.Name)
+	specParsed, spec, name := d.SpecFromString(request.Name)
 	d.logRequest(method, name).Infoln("")
 	// If we fail to find the volume, create it.
 	if _, err = d.volFromName(name); err != nil {
@@ -183,7 +185,7 @@ func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if !specParsed {
-			spec, err = ds.SpecFromOpts(request.Opts)
+			spec, err = d.SpecFromOpts(request.Opts)
 			if err != nil {
 				d.errorResponse(w, err)
 				return
@@ -215,7 +217,7 @@ func (d *driver) remove(w http.ResponseWriter, r *http.Request) {
 		d.errorResponse(w, err)
 		return
 	}
-	_, _, name := ds.SpecFromString(request.Name)
+	_, _, name := d.SpecFromString(request.Name)
 	if err = v.Delete(name); err != nil {
 		d.errorResponse(w, err)
 		return
@@ -308,7 +310,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 		d.errorResponse(w, err)
 		return
 	}
-	_, _, name := ds.SpecFromString(request.Name)
+	_, _, name := d.SpecFromString(request.Name)
 	vol, err := d.volFromName(name)
 	if err != nil {
 		d.errorResponse(w, err)
@@ -352,7 +354,7 @@ func (d *driver) path(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, _, name := ds.SpecFromString(request.Name)
+	_, _, name := d.SpecFromString(request.Name)
 	vol, err := d.volFromName(name)
 	if err != nil {
 		e := d.volNotFound(method, request.Name, err, w)
@@ -405,7 +407,7 @@ func (d *driver) get(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	_, _, name := ds.SpecFromString(request.Name)
+	_, _, name := d.SpecFromString(request.Name)
 	vol, err := d.volFromName(name)
 	if err != nil {
 		e := d.volNotFound(method, request.Name, err, w)
@@ -438,7 +440,7 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, _, name := ds.SpecFromString(request.Name)
+	_, _, name := d.SpecFromString(request.Name)
 	vol, err := d.volFromName(name)
 	if err != nil {
 		e := d.volNotFound(method, name, err, w)
