@@ -76,7 +76,7 @@ var (
 )
 
 var unitPattern = regexp.MustCompile(
-	"([0-9]+)(.[0-9]+)*\\s*(B|b|K|k|M|m|G|g|T|t|P|p|KB|kb|KiB|MB|mb|MiB|Mi|GB|gb|GiB|Gi|TB|tb|TiB|Ti|PB|pb|PiB|Pi)")
+	"([0-9]+)(.[0-9]+)*\\s*(B|b|K|k|M|m|G|g|T|t|P|p|KB|kb|KiB|MB|mb|MiB|Mi|GB|gb|GiB|Gi|TB|tb|TiB|Ti|PB|pb|PiB|Pi|)")
 var BadUnit = errors.New("Bad unit")
 
 func String(b uint64) string {
@@ -128,7 +128,7 @@ func Parse(bUnit string) (int64, error) {
 	}
 	multiplier, ok := unitMap[matches[2+shift]]
 	if !ok {
-		return -1, BadUnit
+		multiplier = unitMap["G"]
 	}
 	base, err := strconv.ParseInt(matches[1], 10, 64)
 	if err != nil {
