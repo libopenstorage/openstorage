@@ -30,6 +30,7 @@ const (
 	heartbeatKey     = "heartbeat"
 	clusterLockKey   = "/cluster/lock"
 	gossipVersionKey = "Gossip Version"
+	quorumTimeout    = 10 * time.Minute
 )
 
 var (
@@ -835,7 +836,7 @@ func (c *ClusterManager) Start() error {
 		PushPullInterval: types.DEFAULT_PUSH_PULL_INTERVAL,
 		ProbeInterval:    types.DEFAULT_PROBE_INTERVAL,
 		ProbeTimeout:     types.DEFAULT_PROBE_TIMEOUT,
-		QuorumTimeout:    types.DEFAULT_QUORUM_TIMEOUT,
+		QuorumTimeout:    quorumTimeout,
 	}
 	c.gossip = gossip.New(
 		c.selfNode.DataIp+":9002",

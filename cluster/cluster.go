@@ -139,7 +139,9 @@ type ClusterStatus interface {
 	PeerStatus(listenerName string) (map[string]api.Status, error)
 }
 
-type ClusterCallback interface {
+type ClusterRemove interface {
+	// Remove node(s) from the cluster permanently.
+	Remove(nodes []api.Node) error
 	// NodeRemoveDone notify cluster manager NodeRemove is done.
 	NodeRemoveDone(nodeID string, result error)
 }
@@ -155,9 +157,6 @@ type Cluster interface {
 	// Enumerate lists all the nodes in the cluster.
 	Enumerate() (api.Cluster, error)
 
-	// Remove node(s) from the cluster permanently.
-	Remove(nodes []api.Node) error
-
 	// SetSize sets the maximum number of nodes in a cluster.
 	SetSize(size int) error
 
@@ -169,7 +168,7 @@ type Cluster interface {
 	Start() error
 
 	ClusterData
-	ClusterCallback
+	ClusterRemove
 	ClusterStatus
 }
 
