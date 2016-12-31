@@ -317,6 +317,19 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// If a scaled volume is already mounted, then use that volume's id.
+	mountpoint := d.mountpath(name)
+	if vol.Spec.Scale > 1 {
+		id := v.MountedAt(mountpoint)
+		if len(id) != 0 {
+			name = id
+			if vol, err = d.volFromName(name); err != nil {
+				d.errorResponse(w, err)
+				return
+			}
+		}
+	}
+
 	// If this is a block driver, first attach the volume.
 	if v.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
 		// If volume is scaled up, a new volume is created and
@@ -329,9 +342,8 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 
 	// Note that name is unchanged even if a new volume was created as a
 	// result of scale up.
-	response.Mountpoint = d.mountpath(name)
-	os.MkdirAll(response.Mountpoint, 0755)
-
+	response.Mountpoint = mountpoint
+	os.MkdirAll(mountpoint, 0755)
 	err = v.Mount(vol.Id, response.Mountpoint)
 	if err != nil {
 		d.logRequest(method, request.Name).Warnf(
@@ -340,7 +352,6 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 		d.errorResponse(w, err)
 		return
 	}
-
 	d.logRequest(method, request.Name).Infof("response %v", response.Mountpoint)
 	json.NewEncoder(w).Encode(&response)
 }
