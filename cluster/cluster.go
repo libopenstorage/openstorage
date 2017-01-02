@@ -165,7 +165,7 @@ type Cluster interface {
 
 	// Start starts the cluster manager and state machine.
 	// It also causes this node to join the cluster.
-	Start() error
+	Start(clusterSize int) error
 
 	ClusterData
 	ClusterRemove

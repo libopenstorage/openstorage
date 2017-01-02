@@ -53,6 +53,8 @@ type ClusterManager struct {
 	system        systemutils.System
 }
 
+type checkFunc func(ClusterInfo) error
+
 func ifaceToIp(iface *net.Interface) (string, error) {
 	addrs, err := iface.Addrs()
 	if err != nil {
@@ -432,7 +434,7 @@ func (c *ClusterManager) joinCluster(
 		dlog.Panicln("Fatal, Unable to find self node entry in local cache")
 	}
 
-	_, _, err = c.updateNodeEntryDB(selfNodeEntry)
+	_, _, err = c.updateNodeEntryDB(selfNodeEntry, nil)
 	if err != nil {
 		return err
 	}
@@ -755,11 +757,11 @@ func (c *ClusterManager) initializeCluster(db kvdb.Kvdb) (
 	return &clusterInfo, nil
 }
 
-func (c *ClusterManager) initListeners(db kvdb.Kvdb, nodeExists *bool) (
-	uint64,
-	*ClusterInfo,
-	error,
-) {
+func (c *ClusterManager) initListeners(
+	db kvdb.Kvdb,
+	clusterMaxSize int,
+	nodeExists *bool,
+) (uint64, *ClusterInfo, error) {
 	// Initialize the cluster if required
 	clusterInfo, err := c.initializeCluster(db)
 	if err != nil {
@@ -780,7 +782,22 @@ func (c *ClusterManager) initListeners(db kvdb.Kvdb, nodeExists *bool) (
 		dlog.Panicln("Fatal, Unable to find self node entry in local cache")
 	}
 
-	kvp, kvClusterInfo, err := c.updateNodeEntryDB(selfNodeEntry)
+	initCheckFunc := func(clusterInfo ClusterInfo) error {
+		numNodes := 0
+		for _, node := range clusterInfo.NodeEntries {
+			if node.Status != api.Status_STATUS_DECOMMISSION {
+				numNodes++
+			}
+		}
+		if clusterMaxSize > 0 && numNodes > clusterMaxSize {
+			return fmt.Errorf("Cluster is operating at maximum capacity "+
+				"(%v nodes). Please remove a node before attempting to "+
+				"add a new node.", clusterMaxSize)
+		}
+		return nil
+	}
+
+	kvp, kvClusterInfo, err := c.updateNodeEntryDB(selfNodeEntry, initCheckFunc)
 	if err != nil {
 		dlog.Errorln("Failed to save the database.", err)
 		return 0, nil, err
@@ -791,8 +808,12 @@ func (c *ClusterManager) initListeners(db kvdb.Kvdb, nodeExists *bool) (
 	return kvp.ModifiedIndex, kvClusterInfo, nil
 }
 
-func (c *ClusterManager) initializeAndStartHeartbeat(kvdb kvdb.Kvdb, exist *bool) (uint64, error) {
-	lastIndex, clusterInfo, err := c.initListeners(kvdb, exist)
+func (c *ClusterManager) initializeAndStartHeartbeat(
+	kvdb kvdb.Kvdb,
+	clusterMaxSize int,
+	exist *bool,
+) (uint64, error) {
+	lastIndex, clusterInfo, err := c.initListeners(kvdb, clusterMaxSize, exist)
 	if err != nil {
 		return 0, err
 	}
@@ -806,7 +827,7 @@ func (c *ClusterManager) initializeAndStartHeartbeat(kvdb kvdb.Kvdb, exist *bool
 	return lastIndex, nil
 }
 
-func (c *ClusterManager) Start() error {
+func (c *ClusterManager) Start(clusterMaxSize int) error {
 	var err error
 
 	dlog.Infoln("Cluster manager starting...")
@@ -851,7 +872,7 @@ func (c *ClusterManager) Start() error {
 	var exist bool
 	kvdb := kvdb.Instance()
 
-	lastIndex, err := c.initializeAndStartHeartbeat(kvdb, &exist)
+	lastIndex, err := c.initializeAndStartHeartbeat(kvdb, clusterMaxSize, &exist)
 	if err != nil {
 		return err
 	}
@@ -979,7 +1000,10 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 	return cluster, nil
 }
 
-func (c *ClusterManager) updateNodeEntryDB(nodeEntry NodeEntry) (*kvdb.KVPair, *ClusterInfo, error) {
+func (c *ClusterManager) updateNodeEntryDB(
+	nodeEntry NodeEntry,
+	checkCbBeforeUpdate checkFunc,
+) (*kvdb.KVPair, *ClusterInfo, error) {
 	kvdb := kvdb.Instance()
 	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
 	if err != nil {
@@ -993,7 +1017,16 @@ func (c *ClusterManager) updateNodeEntryDB(nodeEntry NodeEntry) (*kvdb.KVPair, *
 	if err != nil {
 		return nil, nil, err
 	}
+
 	currentState.NodeEntries[nodeEntry.Id] = nodeEntry
+
+	if checkCbBeforeUpdate != nil {
+		err = checkCbBeforeUpdate(currentState)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
 	kvp, err := writeClusterInfo(&currentState)
 	if err != nil {
 		dlog.Errorln("Failed to save the database.", err)
