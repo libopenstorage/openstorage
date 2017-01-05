@@ -366,6 +366,10 @@ func (d *driver) CanNodeRemove(self *api.Node) error {
 	return nil
 }
 
+func (d *driver) MarkNodeDown(self *api.Node) error {
+	return nil
+}
+
 func (d *driver) Update(self *api.Node) error {
 	return nil
 }

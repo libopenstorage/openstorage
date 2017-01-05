@@ -959,21 +959,38 @@ func (c *ClusterManager) PeerStatus(listenerName string) (map[string]api.Status,
 	return statusMap, nil
 }
 
-// Enumerate lists all the nodes in the cluster.
-func (c *ClusterManager) Enumerate() (api.Cluster, error) {
-	i := 0
-
-	cluster := api.Cluster{
-		Id:     c.config.ClusterId,
-		Status: c.status,
-		NodeId: c.selfNode.Id,
+func (c *ClusterManager) enumerateNodesFromClusterDB() []api.Node {
+	clusterDB, err := readClusterInfo()
+	if err != nil {
+		dlog.Errorf("enumerateNodesFromClusterDB failed with error: %v", err)
+		return make([]api.Node, 0)
 	}
+	nodes := make([]api.Node, len(clusterDB.NodeEntries))
+	i := 0
+	for _, n := range clusterDB.NodeEntries {
+		nodes[i].Id = n.Id
+		nodes[i].Status = n.Status
+		if n.Id == c.selfNode.Id {
+			nodes[i] = *c.getCurrentState()
+		} else {
+			nodes[i].MgmtIp = n.MgmtIp
+			nodes[i].DataIp = n.DataIp
+			nodes[i].Hostname = n.Hostname
+			nodes[i].NodeLabels = n.NodeLabels
+		}
+		i++
+	}
+	return nodes
+}
+
+func (c *ClusterManager) enumerateNodesFromCache() []api.Node {
 	var clusterDB ClusterInfo
 	clusterDBSet := false
-	cluster.Nodes = make([]api.Node, len(c.nodeCache))
+	nodes := make([]api.Node, len(c.nodeCache))
+	i := 0
 	for _, n := range c.nodeCache {
 		if n.Id == c.selfNode.Id {
-			cluster.Nodes[i] = *c.getCurrentState()
+			nodes[i] = *c.getCurrentState()
 		} else {
 			if n.Status == api.Status_STATUS_OFFLINE &&
 				(n.DataIp == "" || n.MgmtIp == "") {
@@ -992,9 +1009,28 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 					n.NodeLabels = nodeValueDB.NodeLabels
 				}
 			}
-			cluster.Nodes[i] = n
+			nodes[i] = n
 		}
 		i++
+	}
+	return nodes
+}
+
+// Enumerate lists all the nodes in the cluster.
+func (c *ClusterManager) Enumerate() (api.Cluster, error) {
+	cluster := api.Cluster{
+		Id:     c.config.ClusterId,
+		Status: c.status,
+		NodeId: c.selfNode.Id,
+	}
+
+	if c.selfNode.Status == api.Status_STATUS_NOT_IN_QUORUM ||
+		c.selfNode.Status == api.Status_STATUS_MAINTENANCE {
+		// If the node is not yet ready, query the cluster db
+		// for node members since gossip is not ready yet.
+		cluster.Nodes = c.enumerateNodesFromClusterDB()
+	} else {
+		cluster.Nodes = c.enumerateNodesFromCache()
 	}
 
 	return cluster, nil
@@ -1054,6 +1090,31 @@ func (c *ClusterManager) SetSize(size int) error {
 	_, err = writeClusterInfo(&db)
 
 	return err
+}
+
+func (c *ClusterManager) getNodeInfoFromClusterDb(id string) (api.Node, error) {
+	node := api.Node{Id: id}
+	kvdb := kvdb.Instance()
+	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
+	if err != nil {
+		dlog.Warnln("Unable to obtain cluster lock for marking "+
+			"node decommission", err)
+		return node, err
+	}
+	defer kvdb.Unlock(kvlock)
+
+	db, err := readClusterInfo()
+	if err != nil {
+		return node, err
+	}
+
+	nodeEntry, ok := db.NodeEntries[id]
+	if !ok {
+		msg := fmt.Sprintf("Node entry does not exist, Node ID %s", id)
+		return node, errors.New(msg)
+	}
+	node.Status = nodeEntry.Status
+	return node, nil
 }
 
 func (c *ClusterManager) markNodeDecommission(node api.Node) error {
@@ -1120,13 +1181,17 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 
 	var resultErr error
 
+	inQuorum := !(c.selfNode.Status == api.Status_STATUS_NOT_IN_QUORUM)
+
 	for _, n := range nodes {
-		if _, exist := c.nodeCache[n.Id]; !exist {
-			msg := fmt.Sprintf("Node does not exist in cluster, "+
-				"Node ID %s.",
-				n.Id)
-			dlog.Errorf(msg)
-			return errors.New(msg)
+		node, exist := c.nodeCache[n.Id]
+		if !exist {
+			node, resultErr = c.getNodeInfoFromClusterDb(n.Id)
+			if resultErr != nil {
+				dlog.Errorf("Error getting node info for id %s : %v", n.Id,
+					resultErr)
+				return fmt.Errorf("Node %s does not exist", n.Id)
+			}
 		}
 
 		// If removing node is self and node is not in maintenance mode,
@@ -1138,8 +1203,8 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 				n.Id)
 			dlog.Errorf(msg)
 			return errors.New(msg)
-		} else if n.Id != c.selfNode.Id {
-			nodeCacheStatus := c.nodeCache[n.Id].Status
+		} else if n.Id != c.selfNode.Id && inQuorum {
+			nodeCacheStatus := node.Status
 			// If node is not down, do not remove it
 			if nodeCacheStatus != api.Status_STATUS_OFFLINE &&
 				nodeCacheStatus != api.Status_STATUS_MAINTENANCE &&
@@ -1152,7 +1217,6 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 				dlog.Errorf(msg)
 				return errors.New(msg)
 			}
-
 		}
 
 		// Ask listeners, can we remove this node?
@@ -1168,7 +1232,21 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 				dlog.Warnf(msg)
 				return errors.New(msg)
 			}
+		}
 
+		if !inQuorum {
+			// If we are not in quorum, we only mark the node as decommissioned
+			// since this node is not functional yet.
+			for e := c.listeners.Front(); e != nil; e = e.Next() {
+				dlog.Infof("Remove node: ask cluster listener %s "+
+					"to mark node %s down ",
+					e.Value.(ClusterListener).String(), n.Id)
+				err := e.Value.(ClusterListener).MarkNodeDown(&n)
+				if err != nil {
+					dlog.Warnf("Node mark down error: %v", err)
+					return err
+				}
+			}
 		}
 
 		err := c.markNodeDecommission(n)
@@ -1178,6 +1256,12 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 				err)
 			dlog.Errorf(msg)
 			return errors.New(msg)
+		}
+
+		if !inQuorum {
+			// If we are not in quorum, we only mark the node as decommissioned
+			// since this node is not functional yet.
+			continue
 		}
 
 		// Alert all listeners that we are removing this node.

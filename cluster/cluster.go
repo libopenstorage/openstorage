@@ -84,6 +84,9 @@ type ClusterListener interface {
 	// CanNodeRemove test to see if we can remove this node
 	CanNodeRemove(node *api.Node) error
 
+	// MarkNodeDown marks the given node's status as down
+	MarkNodeDown(node *api.Node) error
+
 	// Update is called when a node status changes significantly
 	// in the cluster changes.
 	Update(node *api.Node) error
