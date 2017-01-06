@@ -6,6 +6,7 @@ import (
 )
 
 const (
+	// OsdSocket is the unix socket for cluster apis
 	OsdSocket = "osd"
 )
 

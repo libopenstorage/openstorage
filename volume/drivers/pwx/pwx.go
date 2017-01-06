@@ -9,8 +9,11 @@ import (
 )
 
 const (
+	// Name of the driver
 	Name       = "pwx"
+	// Type of the driver
 	Type       = api.DriverType_DRIVER_TYPE_BLOCK
+	// DefaultUrl where the driver's socket resides
 	DefaultUrl = "unix:///" + volume.DriverAPIBase + "pxd.sock"
 )
 
@@ -18,6 +21,7 @@ type driver struct {
 	volume.VolumeDriver
 }
 
+// Init initialized the Portworx driver.
 // Portworx natively implements the openstorage.org API specification, so
 // we can directly point the VolumeDriver to the PWX API server.
 func Init(params map[string]string) (volume.VolumeDriver, error) {

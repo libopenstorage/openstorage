@@ -17,7 +17,9 @@ import (
 )
 
 const (
+	// Name of the driver
 	Name = "vfs"
+	// Type of the driver
 	Type = api.DriverType_DRIVER_TYPE_FILE
 )
 

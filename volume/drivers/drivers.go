@@ -51,18 +51,22 @@ var (
 	)
 )
 
+// Get returns a VolumeDriver based on input name.
 func Get(name string) (volume.VolumeDriver, error) {
 	return volumeDriverRegistry.Get(name)
 }
 
+// Register registers a new driver.
 func Register(name string, params map[string]string) error {
 	return volumeDriverRegistry.Register(name, params)
 }
 
+// Add adds a new driver.
 func Add(name string, init func(map[string]string) (volume.VolumeDriver, error)) error {
 	return volumeDriverRegistry.Add(name, init)
 }
 
+// Shutdown stops the volume driver registry
 func Shutdown() error {
 	return volumeDriverRegistry.Shutdown()
 }

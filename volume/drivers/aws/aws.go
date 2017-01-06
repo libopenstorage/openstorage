@@ -27,8 +27,11 @@ import (
 )
 
 const (
+	// Name of the driver
 	Name     = "aws"
+	// Type of the driver
 	Type     = api.DriverType_DRIVER_TYPE_BLOCK
+	// AwsDBKey for openstorage
 	AwsDBKey = "OpenStorageAWSKey"
 )
 
@@ -37,6 +40,7 @@ var (
 	koStrayDelete = chaos.Add("aws", "delete", "create in driver before DB")
 )
 
+// Metadata for the driver
 type Metadata struct {
 	zone     string
 	instance string
@@ -209,18 +213,22 @@ func (d *Driver) describe() (*ec2.Instance, error) {
 	return out.Reservations[0].Instances[0], nil
 }
 
+// Name returns the name of the driver
 func (d *Driver) Name() string {
 	return Name
 }
 
+// Type returns the type of the driver
 func (d *Driver) Type() api.DriverType {
 	return Type
 }
 
-func (v *Driver) Status() [][2]string {
+// Status returns the current status
+func (d *Driver) Status() [][2]string {
 	return [][2]string{}
 }
 
+// Create creates a new volume
 func (d *Driver) Create(
 	locator *api.VolumeLocator,
 	source *api.Source,
@@ -434,12 +442,13 @@ func (d *Driver) devicePath(volumeID string) (string, error) {
 	return dev, nil
 }
 
+// Inspect insepcts a volume
 func (d *Driver) Inspect(volumeIDs []string) ([]*api.Volume, error) {
 	vols, err := d.StoreEnumerator.Inspect(volumeIDs)
 	if err != nil {
 		return nil, err
 	}
-	var ids []*string = make([]*string, len(vols))
+	ids := make([]*string, len(vols))
 	for i, v := range vols {
 		id := v.Id
 		ids[i] = &id
@@ -460,6 +469,7 @@ func (d *Driver) Inspect(volumeIDs []string) ([]*api.Volume, error) {
 	return vols, nil
 }
 
+// Delete deletes a volume
 func (d *Driver) Delete(volumeID string) error {
 	dryRun := false
 	id := volumeID
@@ -475,6 +485,7 @@ func (d *Driver) Delete(volumeID string) error {
 	return err
 }
 
+// Snapshot takes a snapshot of a source volume
 func (d *Driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator) (string, error) {
 	dryRun := false
 	vols, err := d.StoreEnumerator.Inspect([]string{volumeID})
@@ -503,14 +514,17 @@ func (d *Driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 	return vols[0].Id, nil
 }
 
+// Stats returns stats
 func (d *Driver) Stats(volumeID string, cumulative bool) (*api.Stats, error) {
 	return nil, volume.ErrNotSupported
 }
 
+// Alerts returns active alerts
 func (d *Driver) Alerts(volumeID string) (*api.Alerts, error) {
 	return nil, volume.ErrNotSupported
 }
 
+// Attach attaches a volume
 func (d *Driver) Attach(volumeID string) (path string, err error) {
 	volume, err := d.GetVol(volumeID)
 	if err != nil {
@@ -562,6 +576,7 @@ func (d *Driver) volumeState(ec2VolState *string) api.VolumeState {
 	return api.VolumeState_VOLUME_STATE_ERROR
 }
 
+// Format formats a device
 func (d *Driver) Format(volumeID string) error {
 	volume, err := d.GetVol(volumeID)
 	if err != nil {
@@ -583,6 +598,7 @@ func (d *Driver) Format(volumeID string) error {
 	return d.UpdateVol(volume)
 }
 
+// Detach detaches a volume from host
 func (d *Driver) Detach(volumeID string) error {
 	force := false
 	awsVolID := volumeID
@@ -598,10 +614,12 @@ func (d *Driver) Detach(volumeID string) error {
 	return d.waitAttachmentStatus(volumeID, ec2.VolumeAttachmentStateDetached, time.Minute*5)
 }
 
+// MountedAt returns the volume mounted at specific path
 func (d *Driver) MountedAt(mountpath string) string {
 	return ""
 }
 
+// Mount mounts a volume at a given path
 func (d *Driver) Mount(volumeID string, mountpath string) error {
 	volume, err := d.GetVol(volumeID)
 	if err != nil {
@@ -618,20 +636,24 @@ func (d *Driver) Mount(volumeID string, mountpath string) error {
 	return nil
 }
 
+// Unmount unmounts a volume
 func (d *Driver) Unmount(volumeID string, mountpath string) error {
 	// XXX:  determine if valid mount path
 	err := syscall.Unmount(mountpath, 0)
 	return err
 }
 
+// Shutdown stops the driver
 func (d *Driver) Shutdown() {
 	dlog.Printf("%s Shutting down", Name)
 }
 
+// Set updates fields on a volume
 func (d *Driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
 	return volume.ErrNotSupported
 }
 
+// GetActiveRequests gets active requests
 func (d *Driver) GetActiveRequests() (*api.ActiveRequests, error) {
 	return nil, nil
 }

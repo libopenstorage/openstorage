@@ -20,9 +20,13 @@ import (
 )
 
 const (
+	// Name of the driver
 	Name          = "buse"
+	// Type of the driver
 	Type          = api.DriverType_DRIVER_TYPE_BLOCK
+	// BuseDBKey for openstorage
 	BuseDBKey     = "OpenStorageBuseKey"
+	// BuseMountPath mount path for openstorage
 	BuseMountPath = "/var/lib/openstorage/buse/"
 )
 
@@ -75,6 +79,7 @@ func copyFile(source string, dest string) (err error) {
 	return
 }
 
+// Init intialized the buse driver
 func Init(params map[string]string) (volume.VolumeDriver, error) {
 	inst := &driver{
 		IODriver:        volume.IONotSupported,

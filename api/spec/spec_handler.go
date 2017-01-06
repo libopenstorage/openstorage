@@ -50,6 +50,7 @@ var (
 type specHandler struct {
 }
 
+// NewSpecHandler returns a new SpecHandler interface
 func NewSpecHandler() SpecHandler {
 	return &specHandler{}
 }

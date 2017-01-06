@@ -24,6 +24,7 @@ var (
 	ErrEinval = errors.New("Invalid device")
 )
 
+// SingleLetter defines a new device letter
 type SingleLetter struct {
 	sync.Mutex
 	devices   string
@@ -35,7 +36,7 @@ func (s *SingleLetter) String() string {
 	return "SingleLetter"
 }
 
-// New instance of Matrix
+// NewSingleLetter instance of Matrix
 func NewSingleLetter(devPrefix, devices string) (*SingleLetter, error) {
 	s := &SingleLetter{
 		devPrefix: devPrefix,
