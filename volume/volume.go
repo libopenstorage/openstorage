@@ -31,6 +31,7 @@ const (
 	VolumeBase    = "/var/lib/osd/"
 )
 
+// Store defines the interface for basic volume store operations
 type Store interface {
 	// Lock volume specified by volumeID.
 	Lock(volumeID string) (interface{}, error)
@@ -68,6 +69,7 @@ type IODriver interface {
 	Flush(volumeID string) error
 }
 
+// SnapshotDriver interfaces provides snapshot capability
 type SnapshotDriver interface {
 	// Snapshot create volume snapshot.
 	// Errors ErrEnoEnt may be returned
@@ -128,6 +130,7 @@ type Enumerator interface {
 	SnapEnumerate(volID []string, snapLabels map[string]string) ([]*api.Volume, error)
 }
 
+// StoreEnumerator combines Store and Enumerator capabilities
 type StoreEnumerator interface {
 	Store
 	Enumerator
@@ -165,7 +168,7 @@ type VolumeDriverRegistry interface {
 	Add(name string, init func(map[string]string) (VolumeDriver, error)) error
 }
 
-// VolumeDriverRegistry constructs a new VolumeDriverRegistry.
+// NewVolumeDriverRegistry constructs a new VolumeDriverRegistry.
 func NewVolumeDriverRegistry(nameToInitFunc map[string]func(map[string]string) (VolumeDriver, error)) VolumeDriverRegistry {
 	return newVolumeDriverRegistry(nameToInitFunc)
 }

@@ -13,7 +13,7 @@ type DeviceMounter struct {
 	Mounter
 }
 
-// NewDeviceMounter
+// NewDeviceMounter returns a new DeviceMounter
 func NewDeviceMounter(
 	devPrefix string,
 	mountImpl MountImpl,
@@ -33,6 +33,7 @@ func NewDeviceMounter(
 	return m, nil
 }
 
+// Reload reloads the mount table
 func (m *DeviceMounter) Reload(device string) error {
 	newDm, err := NewDeviceMounter(device, m.mountImpl)
 	if err != nil {

@@ -80,6 +80,7 @@ type reply struct {
 	handle uint64
 }
 
+// NBD type
 type NBD struct {
 	device     Device
 	devicePath string
@@ -89,6 +90,7 @@ type NBD struct {
 	mutex      *sync.Mutex
 }
 
+// Create creates a NBD type interface
 func Create(device Device, size int64) *NBD {
 	if size >= 0 {
 		return &NBD{device: device,
@@ -101,17 +103,17 @@ func Create(device Device, size int64) *NBD {
 	return nil
 }
 
-// Return true if connected.
+// IsConnected returns true if connected.
 func (nbd *NBD) IsConnected() bool {
 	return nbd.deviceFile != nil && nbd.socket > 0
 }
 
-// Get the size of the NBD.
+// GetSize returns the size of the NBD.
 func (nbd *NBD) GetSize() int64 {
 	return nbd.size
 }
 
-// Set the size of the NBD.
+// Size sets the size of the NBD.
 func (nbd *NBD) Size(size int64) (err error) {
 	if err = ioctl(nbd.deviceFile.Fd(), NBD_SET_BLKSIZE, 4096); err != nil {
 		err = &os.PathError{nbd.deviceFile.Name(), "ioctl NBD_SET_BLKSIZE", err}
@@ -166,6 +168,7 @@ func (nbd *NBD) Connect() (dev string, err error) {
 	return dev, err
 }
 
+// Disconnect disconnects the network block device
 func (nbd *NBD) Disconnect() {
 	nbd.mutex.Lock()
 	if nbd.IsConnected() {
@@ -248,12 +251,12 @@ func (nbd *NBD) handle() {
 				binary.BigEndian.PutUint32(buf[4:8], 1)
 				syscall.Write(nbd.socket, buf[0:16])
 			default:
-				dlog.Errorf("Unknown command recieved on device %s", nbd.devicePath)
+				dlog.Errorf("Unknown command received on device %s", nbd.devicePath)
 				nbd.Disconnect()
 				return
 			}
 		default:
-			dlog.Errorf("Invalid packet command recieved on device %s", nbd.devicePath)
+			dlog.Errorf("Invalid packet command received on device %s", nbd.devicePath)
 			nbd.Disconnect()
 			return
 		}

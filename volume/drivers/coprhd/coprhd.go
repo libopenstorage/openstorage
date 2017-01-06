@@ -17,7 +17,9 @@ import (
 )
 
 const (
+	// Name of the driver
 	Name = "coprhd"
+	// Type of the driver
 	Type = api.DriverType_DRIVER_TYPE_BLOCK
 
 	// LoginUri path to create a authentication token
@@ -58,7 +60,7 @@ type CreateVolumeReply struct {
 type driver struct {
 	volume.IODriver
 	volume.StoreEnumerator
-	consistency_group string
+	consistencyGroup string
 	project           string
 	varray            string
 	vpool             string
@@ -67,6 +69,7 @@ type driver struct {
 	creds             *url.Userinfo
 }
 
+// Init initializes the driver
 func Init(params map[string]string) (volume.VolumeDriver, error) {
 	restUrl, ok := params["restUrl"]
 	if !ok {
@@ -83,7 +86,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		return nil, fmt.Errorf("rest auth 'password' must be set")
 	}
 
-	consistency_group, ok := params["consistency_group"]
+	consistencyGroup, ok := params["consistency_group"]
 	if !ok {
 		return nil, fmt.Errorf("'consistency_group' configuration parameter must be set")
 	}
@@ -106,7 +109,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 	d := &driver{
 		IODriver:          volume.IONotSupported,
 		StoreEnumerator:   common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
-		consistency_group: consistency_group,
+		consistencyGroup: consistencyGroup,
 		project:           project,
 		varray:            varray,
 		vpool:             vpool,
@@ -150,7 +153,7 @@ func (d *driver) Create(
 	sz := int64(spec.Size / (1024 * 1024 * 1000))
 
 	payload := CreateVolumeArgs{
-		d.consistency_group,       // ConsistencyGroup
+		d.consistencyGroup,       // ConsistencyGroup
 		1,                         // Count
 		locator.Name,              // Name
 		d.project,                 // Project
@@ -222,7 +225,7 @@ func (d *driver) Snapshot(
 	return "", nil
 }
 
-func (v *driver) Status() [][2]string {
+func (d *driver) Status() [][2]string {
 	return [][2]string{}
 }
 

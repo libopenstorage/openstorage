@@ -5,7 +5,7 @@ import (
 	"net/url"
 )
 
-// Mangager defines the interface for keep track of volume driver mounts.
+// Source defines the interface for keep track of volume driver mounts.
 type Source interface {
 	// String representation of this source
 	String() string
@@ -22,6 +22,7 @@ var (
 	ErrUnsupported = errors.New("Not supported")
 )
 
+// New returns a new instance of Source
 func New(uri string, options map[string]string) (Source, error) {
 	u, err := url.Parse(uri)
 	if err != nil {

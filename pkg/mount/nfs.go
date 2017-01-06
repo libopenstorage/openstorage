@@ -31,6 +31,7 @@ func NewNFSMounter(server string, mountImpl MountImpl) (Manager, error) {
 	return m, nil
 }
 
+// Reload reloads the mount table for the specified device
 func (m *NFSMounter) Reload(device string) error {
 	return ErrUnsupported
 }

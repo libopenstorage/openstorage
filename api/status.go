@@ -29,15 +29,18 @@ var statusToStatusKind = map[Status]StatusKind{
 	Status_STATUS_MAX: StatusSeverityHigh,
 }
 
+// StatusSimpleValueOf returns the string format of Status
 func StatusSimpleValueOf(s string) (Status, error) {
 	obj, err := simpleValueOf("status", Status_value, s)
 	return Status(obj), err
 }
 
+// SimpleString returns the string format of Status
 func (x Status) SimpleString() string {
 	return simpleString("status", Status_name, int32(x))
 }
 
+// StatusKind returns the king of status
 func (x Status) StatusKind() StatusKind {
 	statusType, _ := statusToStatusKind[x]
 	return statusType

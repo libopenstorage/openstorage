@@ -95,65 +95,79 @@ type StatPoint struct {
 	Timestamp int64
 }
 
+// DriverTypeSimpleValueOf returns the string format of DriverType
 func DriverTypeSimpleValueOf(s string) (DriverType, error) {
 	obj, err := simpleValueOf("driver_type", DriverType_value, s)
 	return DriverType(obj), err
 }
 
+// SimpleString returns the string format of DriverType
 func (x DriverType) SimpleString() string {
 	return simpleString("driver_type", DriverType_name, int32(x))
 }
 
+// FSTypeSimpleValueOf returns the string format of FSType
 func FSTypeSimpleValueOf(s string) (FSType, error) {
 	obj, err := simpleValueOf("fs_type", FSType_value, s)
 	return FSType(obj), err
 }
 
+// SimpleString returns the string format of DriverType
 func (x FSType) SimpleString() string {
 	return simpleString("fs_type", FSType_name, int32(x))
 }
 
+// CosTypeSimpleValueOf returns the string format of CosType
 func CosTypeSimpleValueOf(s string) (CosType, error) {
 	obj, err := simpleValueOf("cos_type", CosType_value, s)
 	return CosType(obj), err
 }
 
+// SimpleString returns the string format of CosType
 func (x CosType) SimpleString() string {
 	return simpleString("cos_type", CosType_name, int32(x))
 }
 
+// GraphDriverChangeTypeSimpleValueOf returns the string format of GraphDriverChangeType
 func GraphDriverChangeTypeSimpleValueOf(s string) (GraphDriverChangeType, error) {
 	obj, err := simpleValueOf("graph_driver_change_type", GraphDriverChangeType_value, s)
 	return GraphDriverChangeType(obj), err
 }
 
+// SimpleString returns the string format of GraphDriverChangeType
 func (x GraphDriverChangeType) SimpleString() string {
 	return simpleString("graph_driver_change_type", GraphDriverChangeType_name, int32(x))
 }
 
+// VolumeActionParamSimpleValueOf returns the string format of VolumeAction
 func VolumeActionParamSimpleValueOf(s string) (VolumeActionParam, error) {
 	obj, err := simpleValueOf("volume_action_param", VolumeActionParam_value, s)
 	return VolumeActionParam(obj), err
 }
 
+// SimpleString returns the string format of VolumeAction
 func (x VolumeActionParam) SimpleString() string {
 	return simpleString("volume_action_param", VolumeActionParam_name, int32(x))
 }
 
+// VolumeStateSimpleValueOf returns the string format of VolumeState
 func VolumeStateSimpleValueOf(s string) (VolumeState, error) {
 	obj, err := simpleValueOf("volume_state", VolumeState_value, s)
 	return VolumeState(obj), err
 }
 
+// SimpleString returns the string format of VolumeState
 func (x VolumeState) SimpleString() string {
 	return simpleString("volume_state", VolumeState_name, int32(x))
 }
 
+// VolumeStatusSimpleValueOf returns the string format of VolumeStatus
 func VolumeStatusSimpleValueOf(s string) (VolumeStatus, error) {
 	obj, err := simpleValueOf("volume_status", VolumeStatus_value, s)
 	return VolumeStatus(obj), err
 }
 
+// SimpleString returns the string format of VolumeStatus
 func (x VolumeStatus) SimpleString() string {
 	return simpleString("volume_status", VolumeStatus_name, int32(x))
 }
@@ -178,6 +192,7 @@ func toSec(ms uint64) uint64 {
 	return ms / 1000
 }
 
+// WriteThroughput returns the write throughput
 func (v *Stats) WriteThroughput() uint64 {
 	if v.IntervalMs == 0 {
 		return 0
@@ -185,6 +200,7 @@ func (v *Stats) WriteThroughput() uint64 {
 	return (v.WriteBytes) / toSec(v.IntervalMs)
 }
 
+// ReadThroughput returns the read throughput
 func (v *Stats) ReadThroughput() uint64 {
 	if v.IntervalMs == 0 {
 		return 0
@@ -192,6 +208,7 @@ func (v *Stats) ReadThroughput() uint64 {
 	return (v.ReadBytes) / toSec(v.IntervalMs)
 }
 
+// Latency returns latency
 func (v *Stats) Latency() uint64 {
 	ops := v.Writes + v.Reads
 	if ops == 0 {
@@ -200,6 +217,7 @@ func (v *Stats) Latency() uint64 {
 	return (uint64)((v.IoMs * 1000) / (v.Writes + v.Reads))
 }
 
+// Iops returns iops
 func (v *Stats) Iops() uint64 {
 	if v.IntervalMs == 0 {
 		return 0
