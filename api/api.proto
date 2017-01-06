@@ -220,6 +220,8 @@ message VolumeSpec {
   string snapshot_schedule = 15;
   // Scale allows autocreation of volumes.
   uint32 scale = 16;
+  // Sticky volumes cannot be deleted until the flag is removed.
+  bool sticky = 17;
 }
 
 // Set of machine IDs (nodes) to which part of this volume is erasure coded - for clustered storage arrays

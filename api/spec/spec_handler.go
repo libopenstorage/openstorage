@@ -45,6 +45,7 @@ var (
 	cosRegex        = regexp.MustCompile(api.SpecPriority + "=([A-Za-z]+),?")
 	sharedRegex     = regexp.MustCompile(api.SpecShared + "=([A-Za-z]+),?")
 	passphraseRegex = regexp.MustCompile(api.SpecPassphrase + "=([0-9A-Za-z_@./#&+-]+),?")
+	stickyRegex     = regexp.MustCompile(api.SpecSticky + "=([A-Za-z]+),?")
 )
 
 type specHandler struct {
@@ -139,6 +140,12 @@ func (d *specHandler) SpecFromOpts(
 			} else {
 				spec.Shared = shared
 			}
+		case api.SpecSticky:
+			if sticky, err := strconv.ParseBool(v); err != nil {
+				return nil, err
+			} else {
+				spec.Sticky = sticky
+			}
 		case api.SpecPassphrase:
 			spec.Encrypted = true
 			spec.Passphrase = v
@@ -180,6 +187,9 @@ func (d *specHandler) SpecFromString(
 	}
 	if ok, shared := d.getVal(sharedRegex, str); ok {
 		opts[api.SpecShared] = shared
+	}
+	if ok, sticky := d.getVal(stickyRegex, str); ok {
+		opts[api.SpecSticky] = sticky
 	}
 	if ok, passphrase := d.getVal(passphraseRegex, str); ok {
 		opts[api.SpecPassphrase] = passphrase

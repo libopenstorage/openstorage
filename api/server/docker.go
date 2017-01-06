@@ -217,7 +217,14 @@ func (d *driver) remove(w http.ResponseWriter, r *http.Request) {
 		d.errorResponse(w, err)
 		return
 	}
-	_, _, name := d.SpecFromString(request.Name)
+	_, spec, name := d.SpecFromString(request.Name)
+
+	if spec.Sticky {
+		d.logRequest(method, "").Warnf("Cannot delete a sticky volume")
+		d.errorResponse(w, fmt.Errorf("Cannot delete a sticky volume"))
+		return
+	}
+
 	if err = v.Delete(name); err != nil {
 		d.errorResponse(w, err)
 		return
