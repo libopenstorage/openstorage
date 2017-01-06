@@ -29,7 +29,8 @@ func TestCmdMarshalProto(t *testing.T) {
  "encrypted": false,
  "passphrase": "",
  "snapshot_schedule": "",
- "scale": 0
+ "scale": 0,
+ "sticky": false
 }`,
 		data,
 	)
