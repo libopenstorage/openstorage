@@ -1,4 +1,4 @@
-// This file implements a cluster state machine.  It relies on a cluster
+// Package cluster implements a cluster state machine.  It relies on a cluster
 // wide key-value store for coordinating the state of the cluster.
 // It also stores the state of the cluster in this key-value store.
 package cluster
@@ -34,10 +34,13 @@ const (
 )
 
 var (
+	// ErrNodeRemovePending is returned when Node remove does not succeed and is
+	// kept in pending state
 	ErrNodeRemovePending = errors.New("Node remove is pending")
 	stopHeartbeat        = make(chan bool)
 )
 
+// ClusterManager implements the cluster interface
 type ClusterManager struct {
 	size          int
 	listeners     *list.List
@@ -113,6 +116,7 @@ func ifaceNameToIp(ifaceName string) (string, error) {
 	return "", fmt.Errorf("Unable to find Ip address for given interface")
 }
 
+// ExternalIp returns the mgmt and data ip based on the config
 func ExternalIp(config *config.ClusterConfig) (string, string, error) {
 	mgmtIp := ""
 	dataIp := ""
@@ -171,6 +175,7 @@ func ExternalIp(config *config.ClusterConfig) (string, string, error) {
 	return "", "", errors.New("Node not connected to the network.")
 }
 
+// Inspect inspects given node and returns the in-memory Node object
 func (c *ClusterManager) Inspect(nodeID string) (api.Node, error) {
 	n, ok := c.nodeCache[nodeID]
 
@@ -181,17 +186,20 @@ func (c *ClusterManager) Inspect(nodeID string) (api.Node, error) {
 	}
 }
 
+// AddEventListener adds a new listener
 func (c *ClusterManager) AddEventListener(listener ClusterListener) error {
 	dlog.Printf("Adding cluster event listener: %s", listener.String())
 	c.listeners.PushBack(listener)
 	return nil
 }
 
+// UpdateData updates self node data
 func (c *ClusterManager) UpdateData(dataKey string, value interface{}) error {
 	c.selfNode.NodeData[dataKey] = value
 	return nil
 }
 
+// GetData returns self node's data
 func (c *ClusterManager) GetData() (map[string]*api.Node, error) {
 	nodes := make(map[string]*api.Node)
 	for _, value := range c.nodeCache {
@@ -630,6 +638,7 @@ func (c *ClusterManager) updateClusterStatus() {
 	}
 }
 
+// DisableUpdates disables gossip updates
 func (c *ClusterManager) DisableUpdates() error {
 	dlog.Warnln("Disabling gossip updates")
 	c.gEnabled = false
@@ -637,6 +646,7 @@ func (c *ClusterManager) DisableUpdates() error {
 	return nil
 }
 
+// EnableUpdates enables gossip updates
 func (c *ClusterManager) EnableUpdates() error {
 	dlog.Warnln("Enabling gossip updates")
 	c.gEnabled = true
@@ -644,6 +654,7 @@ func (c *ClusterManager) EnableUpdates() error {
 	return nil
 }
 
+// GetGossipState returns current gossip state
 func (c *ClusterManager) GetGossipState() *ClusterState {
 	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
 	nodeValue := c.gossip.GetStoreKeyValue(gossipStoreKey)
@@ -827,6 +838,7 @@ func (c *ClusterManager) initializeAndStartHeartbeat(
 	return lastIndex, nil
 }
 
+// Start initiates the cluster manager and the cluster state machine
 func (c *ClusterManager) Start(clusterMaxSize int) error {
 	var err error
 
@@ -890,6 +902,8 @@ func (c *ClusterManager) Start(clusterMaxSize int) error {
 	return nil
 }
 
+// NodeStatus returns the status of a node. It compares the status maintained by the
+// cluster manager and the provided listener and returns the appropriate one
 func (c *ClusterManager) NodeStatus(listenerName string) (api.Status, error) {
 	clusterNodeStatus := c.selfNode.Status
 	if clusterNodeStatus != api.Status_STATUS_OK {
@@ -915,6 +929,7 @@ func (c *ClusterManager) NodeStatus(listenerName string) (api.Status, error) {
 	return clusterNodeStatus, nil
 }
 
+// PeerStatus returns the status of a peer node as seen by us
 func (c *ClusterManager) PeerStatus(listenerName string) (map[string]api.Status, error) {
 	statusMap := make(map[string]api.Status)
 	var listenerStatusMap map[string]api.Status
@@ -1286,6 +1301,7 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 	return resultErr
 }
 
+// NodeRemoveDone is called from the listeners when their job of Node removal is done.
 func (c *ClusterManager) NodeRemoveDone(nodeID string, result error) {
 	// XXX: only storage will make callback right now
 	if result != nil {
@@ -1352,6 +1368,7 @@ func (c *ClusterManager) Shutdown() error {
 	return nil
 }
 
+// HandleNotifications is a callback function used by the listeners
 func (c *ClusterManager) HandleNotifications(culpritNodeId string, notification api.ClusterNotify) (string, error) {
 	if notification == api.ClusterNotify_CLUSTER_NOTIFY_DOWN {
 		killNodeId := c.gossip.ExternalNodeLeave(types.NodeId(culpritNodeId))

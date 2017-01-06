@@ -19,7 +19,9 @@ var (
 )
 
 const (
+	// APIVersion for cluster APIs
 	APIVersion = "v1"
+	// APIBase url for cluster APIs
 	APIBase    = "/var/lib/osd/cluster/"
 )
 
@@ -37,6 +39,7 @@ type NodeEntry struct {
 	NodeLabels map[string]string
 }
 
+// ClusterInfo is the basic info about the cluster and its nodes
 type ClusterInfo struct {
 	Size        int
 	Status      api.Status
@@ -105,11 +108,13 @@ type ClusterListener interface {
 	ListenerData() map[string]interface{}
 }
 
+// ClusterState is the gossip state of all nodes in the cluster
 type ClusterState struct {
 	History    []*types.GossipSessionInfo
 	NodeStatus []types.NodeValue
 }
 
+// ClusterData interface provides apis to handle data of the cluster
 type ClusterData interface {
 	// UpdateData updates node data associated with this node
 	UpdateData(dataKey string, value interface{}) error
@@ -128,6 +133,7 @@ type ClusterData interface {
 	GetGossipState() *ClusterState
 }
 
+// ClusterStatus interface provides apis for cluster and node status
 type ClusterStatus interface {
 	// NodeStatus returns the status of THIS node as seen by the Cluster Provider
 	// for a given listener. If listenerName is empty it returns the status of
@@ -142,6 +148,7 @@ type ClusterStatus interface {
 	PeerStatus(listenerName string) (map[string]api.Status, error)
 }
 
+// ClusterRemove interface provides apis for removing nodes from a cluster
 type ClusterRemove interface {
 	// Remove node(s) from the cluster permanently.
 	Remove(nodes []api.Node) error
@@ -175,6 +182,7 @@ type Cluster interface {
 	ClusterStatus
 }
 
+// ClusterNotify is the callback function listeners can use to notify cluster manager
 type ClusterNotify func(string, api.ClusterNotify) (string, error)
 
 // Init instantiates a new cluster manager.

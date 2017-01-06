@@ -12,6 +12,7 @@ import (
 )
 
 const (
+	// ClusterDBKey is the key at which cluster info is store in kvdb
 	ClusterDBKey = "cluster/database"
 )
 
