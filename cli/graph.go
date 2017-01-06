@@ -11,7 +11,7 @@ type graphDriver struct {
 }
 
 func (g *graphDriver) status(context *cli.Context) {
-	fmt.Printf("Graph Driver %s is OK: %v\n", g.name)
+	fmt.Printf("Graph Driver %s is OK\n", g.name)
 }
 
 // GraphDriverCommands exports CLI comamnds for a GraphDriver.

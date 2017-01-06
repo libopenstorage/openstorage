@@ -238,7 +238,6 @@ func start(c *cli.Context) error {
 
 	// Daemon does not exit.
 	select {}
-	return nil
 }
 
 func showVersion(c *cli.Context) error {

@@ -100,7 +100,7 @@ func (v *volumeDriver) Mount(volumeID string, mountpath string) error {
 		return err
 	}
 	if len(volume.AttachPath) > 0 && len(volume.AttachPath) > 0 {
-		return fmt.Errorf("Volume %q already mounted at %q", volume.AttachPath[0])
+		return fmt.Errorf("Volume %q already mounted at %q", volumeID, volume.AttachPath[0])
 	}
 	mountOptions, err := v.provider.GetMountOptions(volume.Spec)
 	if err != nil {

@@ -153,10 +153,10 @@ func (d *driver) Create(locator *api.VolumeLocator, source *api.Source, spec *ap
 	volumeID := uuid.New()
 	volumeID = strings.TrimSuffix(volumeID, "\n")
 	if spec.Size == 0 {
-		return "", fmt.Errorf("Volume size cannot be zero", "buse")
+		return "", fmt.Errorf("Volume size cannot be zero: buse")
 	}
 	if spec.Format == api.FSType_FS_TYPE_NONE {
-		return "", fmt.Errorf("Missing volume format", "buse")
+		return "", fmt.Errorf("Missing volume format: buse")
 	}
 	// Create a file on the local buse path with this UUID.
 	buseFile := path.Join(BuseMountPath, volumeID)
@@ -252,7 +252,7 @@ func (d *driver) Mount(volumeID string, mountpath string) error {
 		return fmt.Errorf("Failed to locate volume %q", volumeID)
 	}
 	if len(v.AttachPath) > 0 && len(v.AttachPath) > 0 {
-		return fmt.Errorf("Volume %q already mounted at %q", v.AttachPath[0])
+		return fmt.Errorf("Volume %q already mounted at %q", volumeID, v.AttachPath[0])
 	}
 	if err := syscall.Mount(v.DevicePath, mountpath, v.Spec.Format.SimpleString(), 0, ""); err != nil {
 		return fmt.Errorf("Failed to mount %v at %v: %v", v.DevicePath, mountpath, err)

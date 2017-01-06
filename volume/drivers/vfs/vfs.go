@@ -93,7 +93,7 @@ func (d *driver) Mount(volumeID string, mountpath string) error {
 		return err
 	}
 	if len(v.AttachPath) > 0 && len(v.AttachPath) > 0 {
-		return fmt.Errorf("Volume %q already mounted at %q", v.AttachPath[0])
+		return fmt.Errorf("Volume %q already mounted at %q", volumeID, v.AttachPath[0])
 	}
 	syscall.Unmount(mountpath, 0)
 	if err := syscall.Mount(

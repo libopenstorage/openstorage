@@ -116,9 +116,17 @@ func (nbd *NBD) GetSize() int64 {
 // Size sets the size of the NBD.
 func (nbd *NBD) Size(size int64) (err error) {
 	if err = ioctl(nbd.deviceFile.Fd(), NBD_SET_BLKSIZE, 4096); err != nil {
-		err = &os.PathError{nbd.deviceFile.Name(), "ioctl NBD_SET_BLKSIZE", err}
+		err = &os.PathError{
+			Op: nbd.deviceFile.Name(),
+			Path: "ioctl NBD_SET_BLKSIZE",
+			Err: err,
+		}
 	} else if err = ioctl(nbd.deviceFile.Fd(), NBD_SET_SIZE_BLOCKS, uintptr(size/4096)); err != nil {
-		err = &os.PathError{nbd.deviceFile.Name(), "ioctl NBD_SET_SIZE_BLOCKS", err}
+		err = &os.PathError{
+			Op: nbd.deviceFile.Name(),
+			Path: "ioctl NBD_SET_SIZE_BLOCKS",
+			Err: err,
+		}
 	}
 
 	return err
@@ -157,7 +165,11 @@ func (nbd *NBD) Connect() (dev string, err error) {
 	if err = nbd.Size(nbd.size); err != nil {
 		// Already set by nbd.Size().
 	} else if err = ioctl(nbd.deviceFile.Fd(), NBD_SET_FLAGS, 1); err != nil {
-		err = &os.PathError{nbd.deviceFile.Name(), "ioctl NBD_SET_FLAGS", err}
+		err = &os.PathError{
+			Op: nbd.deviceFile.Name(),
+			Path: "ioctl NBD_SET_FLAGS",
+			Err: err,
+		}
 	} else {
 		go nbd.connect()
 		go nbd.handle()
