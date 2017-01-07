@@ -58,9 +58,9 @@ type Layer0 struct {
 // Layer0Graphdriver options. This should be passed in as a st
 const (
 	// Name of the driver
-	Name               = "layer0"
+	Name = "layer0"
 	// Type of the driver
-	Type               = api.DriverType_DRIVER_TYPE_GRAPH
+	Type = api.DriverType_DRIVER_TYPE_GRAPH
 	// Layer0VolumeDriver constant
 	Layer0VolumeDriver = "layer0.volume_driver"
 )

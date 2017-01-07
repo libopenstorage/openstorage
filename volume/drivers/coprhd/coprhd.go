@@ -61,12 +61,12 @@ type driver struct {
 	volume.IODriver
 	volume.StoreEnumerator
 	consistencyGroup string
-	project           string
-	varray            string
-	vpool             string
-	url               string
-	httpClient        *http.Client
-	creds             *url.Userinfo
+	project          string
+	varray           string
+	vpool            string
+	url              string
+	httpClient       *http.Client
+	creds            *url.Userinfo
 }
 
 // Init initializes the driver
@@ -107,14 +107,14 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 	}
 
 	d := &driver{
-		IODriver:          volume.IONotSupported,
-		StoreEnumerator:   common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
+		IODriver:         volume.IONotSupported,
+		StoreEnumerator:  common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
 		consistencyGroup: consistencyGroup,
-		project:           project,
-		varray:            varray,
-		vpool:             vpool,
-		url:               restUrl,
-		creds:             url.UserPassword(user, pass),
+		project:          project,
+		varray:           varray,
+		vpool:            vpool,
+		url:              restUrl,
+		creds:            url.UserPassword(user, pass),
 		httpClient: &http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -153,7 +153,7 @@ func (d *driver) Create(
 	sz := int64(spec.Size / (1024 * 1024 * 1000))
 
 	payload := CreateVolumeArgs{
-		d.consistencyGroup,       // ConsistencyGroup
+		d.consistencyGroup,        // ConsistencyGroup
 		1,                         // Count
 		locator.Name,              // Name
 		d.project,                 // Project

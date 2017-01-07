@@ -1,9 +1,9 @@
 package flexvolume
 
 import (
+	"go.pedge.io/pb/go/google/protobuf"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"go.pedge.io/pb/go/google/protobuf"
 )
 
 type localAPIClient struct {

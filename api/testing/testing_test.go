@@ -45,12 +45,12 @@ func makeRequest(t *testing.T) {
 
 func TestAll(t *testing.T) {
 	// Test to check if a new status has been added appropriately
-	if api.StatusKindMapLength() != int(api.Status_STATUS_MAX) + 1 {
-		t.Fatalf("Number of defined openstorage statuses do not add up"+
-			"with those defined in StatusKind map. Did you add a"+
+	if api.StatusKindMapLength() != int(api.Status_STATUS_MAX)+1 {
+		t.Fatalf("Number of defined openstorage statuses do not add up" +
+			"with those defined in StatusKind map. Did you add a" +
 			" new Status without adding it in StatusKind map?")
 	}
-	
+
 	err := os.MkdirAll(testPath, 0744)
 	if err != nil {
 		t.Fatalf("Failed to create test path: %v", err)

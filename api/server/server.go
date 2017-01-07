@@ -31,7 +31,7 @@ func (r *Route) GetPath() string {
 	return r.path
 }
 
-func (r *Route) GetFn() (func(http.ResponseWriter, *http.Request)) {
+func (r *Route) GetFn() func(http.ResponseWriter, *http.Request) {
 	return r.fn
 }
 
@@ -94,7 +94,6 @@ func GetVolumeAPIRoutes(name string) []*Route {
 	volMgmtApi := newVolumeAPI(name)
 	return volMgmtApi.Routes()
 }
-
 
 // StartVolumePluginAPI starts a REST server to receive volume API commands
 // from the linux container  engine

@@ -10,9 +10,9 @@ import (
 
 const (
 	// Name of the driver
-	Name       = "pwx"
+	Name = "pwx"
 	// Type of the driver
-	Type       = api.DriverType_DRIVER_TYPE_BLOCK
+	Type = api.DriverType_DRIVER_TYPE_BLOCK
 	// DefaultUrl where the driver's socket resides
 	DefaultUrl = "unix:///" + volume.DriverAPIBase + "pxd.sock"
 )

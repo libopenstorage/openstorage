@@ -3,9 +3,9 @@ package flexvolume
 import (
 	"time"
 
+	"go.pedge.io/pb/go/google/protobuf"
 	"go.pedge.io/proto/rpclog"
 	"golang.org/x/net/context"
-	"go.pedge.io/pb/go/google/protobuf"
 )
 
 type apiServer struct {

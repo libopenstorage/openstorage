@@ -21,11 +21,11 @@ import (
 
 const (
 	// Name of the driver
-	Name          = "buse"
+	Name = "buse"
 	// Type of the driver
-	Type          = api.DriverType_DRIVER_TYPE_BLOCK
+	Type = api.DriverType_DRIVER_TYPE_BLOCK
 	// BuseDBKey for openstorage
-	BuseDBKey     = "OpenStorageBuseKey"
+	BuseDBKey = "OpenStorageBuseKey"
 	// BuseMountPath mount path for openstorage
 	BuseMountPath = "/var/lib/openstorage/buse/"
 )

@@ -22,7 +22,7 @@ const (
 	// APIVersion for cluster APIs
 	APIVersion = "v1"
 	// APIBase url for cluster APIs
-	APIBase    = "/var/lib/osd/cluster/"
+	APIBase = "/var/lib/osd/cluster/"
 )
 
 // NodeEntry is used to discover other nodes in the cluster

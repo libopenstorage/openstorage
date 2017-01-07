@@ -9,13 +9,13 @@ import (
 )
 
 var (
-	instances         map[string]graphdriver.Driver
-	drivers           map[string]InitFunc
-	mutex             sync.Mutex
+	instances map[string]graphdriver.Driver
+	drivers   map[string]InitFunc
+	mutex     sync.Mutex
 	// ErrExist returned when driver is already registered
-	ErrExist          = errors.New("Driver already exists")
+	ErrExist = errors.New("Driver already exists")
 	// ErrNotSupported returned when operation is not supported
-	ErrNotSupported   = errors.New("Operation not supported")
+	ErrNotSupported = errors.New("Operation not supported")
 	// ErrDriverNotFound returned when driver is not registered
 	ErrDriverNotFound = errors.New("Driver implementation not found")
 )

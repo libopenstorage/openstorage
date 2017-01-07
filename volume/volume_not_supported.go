@@ -8,14 +8,13 @@ var (
 	// BlockNotSupported is a default (null) block driver implementation.  This can be
 	// used by drivers that do not want to (or care about) implementing the attach,
 	// format and detach interfaces.
-	BlockNotSupported    = &blockNotSupported{}
+	BlockNotSupported = &blockNotSupported{}
 	// SnapshotNotSupported is a null snapshot driver implementation. This can be used
 	// by drivers that do not want to implement the snapshot interface
 	SnapshotNotSupported = &snapshotNotSupported{}
 	// IONotSupported is a null IODriver interface
-	IONotSupported       = &ioNotSupported{}
+	IONotSupported = &ioNotSupported{}
 )
-
 
 type blockNotSupported struct{}
 

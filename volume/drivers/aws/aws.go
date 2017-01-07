@@ -28,9 +28,9 @@ import (
 
 const (
 	// Name of the driver
-	Name     = "aws"
+	Name = "aws"
 	// Type of the driver
-	Type     = api.DriverType_DRIVER_TYPE_BLOCK
+	Type = api.DriverType_DRIVER_TYPE_BLOCK
 	// AwsDBKey for openstorage
 	AwsDBKey = "OpenStorageAWSKey"
 )

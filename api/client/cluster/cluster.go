@@ -1,8 +1,8 @@
 package cluster
 
 import (
-	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/api/client"
+	"github.com/libopenstorage/openstorage/cluster"
 )
 
 const (

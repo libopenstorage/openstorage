@@ -33,7 +33,7 @@ func NewClient(host string, version string) (*Client, error) {
 	return c, nil
 }
 
-// GetUnixServerPath returns a unix domain socket prepended with the 
+// GetUnixServerPath returns a unix domain socket prepended with the
 // provided path.
 func GetUnixServerPath(socketName string, paths ...string) string {
 	serverPath := "unix://"
@@ -43,7 +43,6 @@ func GetUnixServerPath(socketName string, paths ...string) string {
 	serverPath = serverPath + socketName + ".sock"
 	return serverPath
 }
-
 
 // Client is an HTTP REST wrapper. Use one of Get/Post/Put/Delete to get a request
 // object.
