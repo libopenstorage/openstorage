@@ -43,6 +43,7 @@ type Context struct {
 	Passphrase string
 }
 
+// NewContext returns a new Context
 func NewContext(d volume.VolumeDriver) *Context {
 	return &Context{
 		VolumeDriver: d,
@@ -54,6 +55,7 @@ func NewContext(d volume.VolumeDriver) *Context {
 	}
 }
 
+// RunShort runs the short test suite
 func RunShort(t *testing.T, ctx *Context) {
 	create(t, ctx)
 	inspect(t, ctx)
@@ -68,6 +70,7 @@ func RunShort(t *testing.T, ctx *Context) {
 	runEnd(t, ctx)
 }
 
+// Run runs the complete test suite
 func Run(t *testing.T, ctx *Context) {
 	RunShort(t, ctx)
 	RunSnap(t, ctx)
@@ -81,6 +84,7 @@ func runEnd(t *testing.T, ctx *Context) {
 	shutdown(t, ctx)
 }
 
+// RunSnap runs only the snap related tests
 func RunSnap(t *testing.T, ctx *Context) {
 	snap(t, ctx)
 	snapInspect(t, ctx)

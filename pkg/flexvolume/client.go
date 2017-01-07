@@ -94,9 +94,8 @@ func newFailureBytes(err error) []byte {
 func newOutput(err error) []byte {
 	if err != nil {
 		return newFailureBytes(err)
-	} else {
-		return successBytes
 	}
+	return successBytes
 }
 
 func newAttachSuccessOutput(deviceID string) []byte {

@@ -7,7 +7,9 @@ import (
 )
 
 const (
+	// Name of the driver
 	Name = "proxy"
+	// Type of the driver
 	Type = api.DriverType_DRIVER_TYPE_GRAPH
 )
 

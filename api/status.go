@@ -1,5 +1,6 @@
 package api
 
+// StatusKind indicates the severity of a status
 type StatusKind int32
 
 const (

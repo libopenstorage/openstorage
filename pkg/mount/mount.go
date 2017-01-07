@@ -12,7 +12,7 @@ import (
 	"go.pedge.io/dlog"
 )
 
-// Mangager defines the interface for keep track of volume driver mounts.
+// Manager defines the interface for keep track of volume driver mounts.
 type Manager interface {
 	// String representation of the mount table
 	String() string
@@ -52,10 +52,13 @@ type MountImpl interface {
 	Unmount(target string, flags int, timeout int) error
 }
 
+// MountType indicates different mount types supported
 type MountType int
 
 const (
+	// DeviceMount indicates a device mount type
 	DeviceMount MountType = 1 << iota
+	// NFSMount indicates a NFS mount point
 	NFSMount
 )
 
@@ -143,7 +146,7 @@ func (m *Mounter) Inspect(sourcePath string) []*PathInfo {
 	return v.Mountpoint
 }
 
-// Inspect mount table for device
+// Mounts returns  mount table for device
 func (m *Mounter) Mounts(sourcePath string) []string {
 	m.Lock()
 	defer m.Unlock()
@@ -187,6 +190,7 @@ func (m *Mounter) HasMounts(sourcePath string) int {
 	return len(v.Mountpoint)
 }
 
+// HasTarget returns true/false based on the target provided
 func (m *Mounter) HasTarget(targetPath string) (string, bool) {
 	m.Lock()
 	defer m.Unlock()
@@ -352,6 +356,7 @@ func (m *Mounter) Unmount(device, path string, timeout int) error {
 	return ErrEnoent
 }
 
+// New returns a new Mount Manager
 func New(mounterType MountType,
 	mountImpl MountImpl,
 	identifier string,

@@ -29,6 +29,7 @@ func NewVolume(
 	}
 }
 
+// NewDefaultStoreEnumerator returns a default store enumerator
 func NewDefaultStoreEnumerator(driver string, kvdb kvdb.Kvdb) volume.StoreEnumerator {
 	return newDefaultStoreEnumerator(driver, kvdb)
 }

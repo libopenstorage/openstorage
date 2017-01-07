@@ -7,27 +7,45 @@ import (
 )
 
 var (
+	// ErrAlreadyShutdown returned when driver is shutdown
 	ErrAlreadyShutdown         = errors.New("VolumeDriverProvider already shutdown")
+	// ErrExit returned when driver already registered
 	ErrExist                   = errors.New("Driver already exists")
+	// ErrDriverNotFound returned when a driver is not registered
 	ErrDriverNotFound          = errors.New("Driver implementation not found")
+	// ErrDriverInitializing returned when a driver is initializing
 	ErrDriverInitializing      = errors.New("Driver is initializing")
+	// ErrEnoEnt returned when volume does not exist
 	ErrEnoEnt                  = errors.New("Volume does not exist.")
+	// ErrEnomem returned when we are out of memory
 	ErrEnomem                  = errors.New("Out of memory.")
+	// ErrEinval returned when an invalid input is provided
 	ErrEinval                  = errors.New("Invalid argument")
+	// ErrVolDetached returned when volume is in detached state
 	ErrVolDetached             = errors.New("Volume is detached")
+	// ErrVolAttached returned when volume is in attached state
 	ErrVolAttached             = errors.New("Volume is attached")
+	// ErrVolAttachedOnRemoteNode returned when volume is in attached on different node
 	ErrVolAttachedOnRemoteNode = errors.New("Volume is attached on another node")
+	// ErrVolAttachedScale returned when volume is attached and can be scaled
 	ErrVolAttachedScale        = errors.New("Volume is attached but can be scaled")
+	// ErrVolHasSnaps returned when volume has previous snapshots
 	ErrVolHasSnaps             = errors.New("Volume has snapshots associated")
+	// ErrNotSupported returned when the operation is not supported
 	ErrNotSupported            = errors.New("Operation not supported")
 )
 
 // Constants used by the VolumeDriver
 const (
+	// APIVersion for the volume management apis
 	APIVersion    = "v1"
+	// PluginAPIBase where the docker unix socket resides
 	PluginAPIBase = "/run/docker/plugins/"
+	// DriverAPIBase where the osd unix socket resides
 	DriverAPIBase = "/var/lib/osd/driver/"
+	// MountBase for osd mountpoints
 	MountBase     = "/var/lib/osd/mounts/"
+	// VolumeBase for osd volumes
 	VolumeBase    = "/var/lib/osd/"
 )
 

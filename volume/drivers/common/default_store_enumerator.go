@@ -141,12 +141,12 @@ func (e *defaultStoreEnumerator) volKey(volumeID string) string {
 }
 
 // TODO(pedge): not used - bug?
-func (d *defaultStoreEnumerator) lockKeyPrefix() string {
-	return fmt.Sprintf("%s/%s/locks/", keyBase, d.driver)
+func (e *defaultStoreEnumerator) lockKeyPrefix() string {
+	return fmt.Sprintf("%s/%s/locks/", keyBase, e.driver)
 }
 
-func (d *defaultStoreEnumerator) volKeyPrefix() string {
-	return fmt.Sprintf("%s/%s/volumes/", keyBase, d.driver)
+func (e *defaultStoreEnumerator) volKeyPrefix() string {
+	return fmt.Sprintf("%s/%s/volumes/", keyBase, e.driver)
 }
 
 func hasSubset(set map[string]string, subset map[string]string) bool {
