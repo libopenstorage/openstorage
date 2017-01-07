@@ -193,7 +193,23 @@ func (vd *volApi) delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	volumes, err := d.Inspect([]string{volumeID})
+
+	if len(volumes) < 1 {
+		e := fmt.Errorf("Volume %s does not exist", volumeID)
+		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	vol := volumes[0]
+
 	volumeResponse := &api.VolumeResponse{}
+
+	if vol.Spec.Sticky {
+		volumeResponse.Error = "Cannot delete a sticky volume"
+		json.NewEncoder(w).Encode(volumeResponse)
+		return
+	}
+
 	if err := d.Delete(volumeID); err != nil {
 		volumeResponse.Error = err.Error()
 	}
@@ -431,7 +447,7 @@ func snapPath(route, version string) string {
 
 func (vd *volApi) Routes() []*Route {
 	return []*Route{
-		&Route{verb: "GET", path: "/"+api.OsdVolumePath+"/versions", fn: vd.versions},
+		&Route{verb: "GET", path: "/" + api.OsdVolumePath + "/versions", fn: vd.versions},
 		&Route{verb: "POST", path: volPath("", volume.APIVersion), fn: vd.create},
 		&Route{verb: "PUT", path: volPath("/{id}", volume.APIVersion), fn: vd.volumeSet},
 		&Route{verb: "GET", path: volPath("", volume.APIVersion), fn: vd.enumerate},
