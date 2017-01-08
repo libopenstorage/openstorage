@@ -226,3 +226,7 @@ func (v *Stats) Iops() uint64 {
 	}
 	return (v.Writes + v.Reads) / toSec(v.IntervalMs)
 }
+
+func (v *Volume) Scaled() bool {
+	return v.Spec.Scale > 1
+}

@@ -49,6 +49,13 @@ const (
 	VolumeBase = "/var/lib/osd/"
 )
 
+const (
+	// LocationConstaint is a label that specifies data location constraint.
+	LocationConstraint = "LocationConstraint"
+	// LocalNode is an alias for this node - similar to localhost.
+	LocalNode = "LocalNode"
+)
+
 // Store defines the interface for basic volume store operations
 type Store interface {
 	// Lock volume specified by volumeID.
