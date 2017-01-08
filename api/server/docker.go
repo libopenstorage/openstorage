@@ -231,36 +231,89 @@ func (d *driver) scaleUp(
 	method string,
 	vd volume.VolumeDriver,
 	inVol *api.Volume,
+	allVols []*api.Volume,
 ) (
 	outVol *api.Volume,
 	err error,
 ) {
-	i := uint32(1)
-	for ; i < inVol.Spec.Scale; i++ {
-		name := fmt.Sprintf("%s_%d", inVol.Locator.Name, i)
-		outVol, err = d.volFromName(name)
-		// If we fail to locate the volume, create it.
-		if err != nil {
+	for i := 1; i < int(inVol.Spec.Scale); i++ {
+		if i < len(allVols) {
+			outVol = allVols[i]
+		} else {
+			name := fmt.Sprintf("%s_%03d", inVol.Locator.Name, i)
 			id := ""
 			if id, err = vd.Create(
 				&api.VolumeLocator{Name: name},
 				nil,
 				inVol.Spec,
 			); err != nil {
-				return inVol, err
+				return nil, err
 			}
 			if outVol, err = d.volFromName(id); err != nil {
-				return inVol, err
+				return nil, err
 			}
 		}
-		// If we fail to attach the volume, continue to look for a
-		// free volume.
 		_, err = vd.Attach(outVol.Id)
 		if err == nil {
 			return outVol, nil
 		}
+		// If we fail to attach the volume, continue to look for a
+		// free volume.
 	}
-	return inVol, volume.ErrVolAttachedScale
+	return nil, volume.ErrVolAttachedScale
+}
+
+func (d *driver) attachScale(
+	method string,
+	vd volume.VolumeDriver,
+	inVol *api.Volume,
+) (
+	*api.Volume,
+	error,
+) {
+	// Find a volume that has data local to this node.
+	vols, err := vd.Enumerate(
+		&api.VolumeLocator{
+			Name: fmt.Sprintf("%s.*", inVol.Locator.Name),
+			VolumeLabels: map[string]string{
+				volume.LocationConstraint: volume.LocalNode,
+			},
+		},
+		nil,
+	)
+	// Try to attach local volumes.
+	if err == nil {
+		for _, vol := range vols {
+			if v, err := d.attachVol(method, vd, vol); err == nil {
+				return v, nil
+			}
+		}
+	}
+	// Create a new local volume if we fail to attach existing local volume
+	// or if none exist.
+	allVols, err := vd.Enumerate(
+		&api.VolumeLocator{
+			Name: fmt.Sprintf("%s.*", inVol.Locator.Name),
+		},
+		nil,
+	)
+	name := fmt.Sprintf("%s_%03d", inVol.Locator.Name, len(allVols))
+	spec := inVol.Spec.Copy()
+	spec.ReplicaSet = &api.ReplicaSet{Nodes: []string{volume.LocalNode}}
+	id, err := vd.Create(&api.VolumeLocator{Name: name}, nil, spec)
+	if err != nil {
+		return d.scaleUp(method, vd, inVol, allVols)
+	}
+	outVol, err := d.volFromName(id)
+	if err != nil {
+		return nil, err
+	}
+	if _, err = vd.Attach(outVol.Id); err == nil {
+		return outVol, nil
+	}
+	// We failed to attach, scaleUp.
+	allVols = append(allVols, outVol)
+	return d.scaleUp(method, vd, inVol, allVols)
 }
 
 func (d *driver) attachVol(
@@ -282,13 +335,6 @@ func (d *driver) attachVol(
 		d.logRequest(method, vol.Locator.Name).Infof(
 			"Mount volume attached on remote node.")
 		return vol, nil
-	case volume.ErrVolAttachedScale:
-		d.logRequest(method, vol.Locator.Name).Infof(
-			"Attempt to Scale attached volume")
-		if vol.Spec.Scale > 1 {
-			return d.scaleUp(method, vd, vol)
-		}
-		return vol, err
 	default:
 		d.logRequest(method, vol.Locator.Name).Warnf(
 			"Cannot attach volume: %v", err.Error())
@@ -336,7 +382,12 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 	if v.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
 		// If volume is scaled up, a new volume is created and
 		// vol will change.
-		if vol, err = d.attachVol(method, v, vol); err != nil {
+		if vol.Scaled() {
+			vol, err = d.attachScale(method, v, vol)
+		} else {
+			vol, err = d.attachVol(method, v, vol)
+		}
+		if err != nil {
 			d.errorResponse(w, err)
 			return
 		}

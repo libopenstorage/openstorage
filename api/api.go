@@ -227,6 +227,36 @@ func (v *Stats) Iops() uint64 {
 	return (v.Writes + v.Reads) / toSec(v.IntervalMs)
 }
 
+// Scaled returns true if the volume is scaled.
 func (v *Volume) Scaled() bool {
 	return v.Spec.Scale > 1
+}
+
+// Contains returns true if mid is a member of volume's replication set.
+func (m *Volume) Contains(mid string) bool {
+	rsets := m.GetReplicaSets()
+	for _, rset := range rsets {
+		for _, node := range rset.Nodes {
+			if node == mid {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// Copy makes a deep copy of VolumeSpec
+func (s *VolumeSpec) Copy() *VolumeSpec {
+	spec := *s
+	if s.VolumeLabels != nil {
+		spec.VolumeLabels = make(map[string]string)
+		for k, v := range s.VolumeLabels {
+			spec.VolumeLabels[k] = v
+		}
+	}
+	if s.ReplicaSet != nil {
+		spec.ReplicaSet = &ReplicaSet{Nodes: make([]string, len(s.ReplicaSet.Nodes))}
+		copy(spec.ReplicaSet.Nodes, s.ReplicaSet.Nodes)
+	}
+	return &spec
 }

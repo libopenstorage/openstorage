@@ -989,18 +989,6 @@ func (m *Volume) GetBackgroundProcessing() bool {
 	return false
 }
 
-func (m *Volume) Contains(mid string) bool {
-	rsets := m.GetReplicaSets()
-	for _, rset := range rsets {
-		for _, node := range rset.Nodes {
-			if node == mid {
-				return true
-			}
-		}
-	}
-	return false
-}
-
 type Stats struct {
 	// Reads completed successfully
 	Reads uint64 `protobuf:"varint,1,opt,name=reads" json:"reads,omitempty"`
