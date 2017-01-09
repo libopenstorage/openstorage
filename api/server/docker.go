@@ -236,25 +236,31 @@ func (d *driver) scaleUp(
 	outVol *api.Volume,
 	err error,
 ) {
-	for i := 1; i < int(inVol.Spec.Scale); i++ {
-		if i < len(allVols) {
-			outVol = allVols[i]
-		} else {
-			name := fmt.Sprintf("%s_%03d", inVol.Locator.Name, i)
-			id := ""
-			if id, err = vd.Create(
-				&api.VolumeLocator{Name: name},
-				nil,
-				inVol.Spec,
-			); err != nil {
-				return nil, err
-			}
-			if outVol, err = d.volFromName(id); err != nil {
-				return nil, err
-			}
+	// Try to attach existing volumes.
+	for _, outVol := range allVols {
+		if _, err = vd.Attach(outVol.Id); err == nil {
+			return outVol, nil
 		}
-		_, err = vd.Attach(outVol.Id)
-		if err == nil {
+	}
+
+	// Create new volume if existing volumes are not available.
+	spec := inVol.Spec.Copy()
+	spec.Scale = 1
+	spec.ReplicaSet = nil
+	for i := len(allVols); i < int(inVol.Spec.Scale); i++ {
+		name := fmt.Sprintf("%s_%03d", inVol.Locator.Name, i)
+		id := ""
+		if id, err = vd.Create(
+			&api.VolumeLocator{Name: name},
+			nil,
+			spec,
+		); err != nil {
+			return nil, err
+		}
+		if outVol, err = d.volFromName(id); err != nil {
+			return nil, err
+		}
+		if _, err = vd.Attach(outVol.Id); err == nil {
 			return outVol, nil
 		}
 		// If we fail to attach the volume, continue to look for a
@@ -297,22 +303,24 @@ func (d *driver) attachScale(
 		},
 		nil,
 	)
-	name := fmt.Sprintf("%s_%03d", inVol.Locator.Name, len(allVols))
-	spec := inVol.Spec.Copy()
-	spec.ReplicaSet = &api.ReplicaSet{Nodes: []string{volume.LocalNode}}
-	id, err := vd.Create(&api.VolumeLocator{Name: name}, nil, spec)
-	if err != nil {
-		return d.scaleUp(method, vd, inVol, allVols)
+	if len(allVols) < int(inVol.Spec.Scale) {
+		name := fmt.Sprintf("%s_%03d", inVol.Locator.Name, len(allVols))
+		spec := inVol.Spec.Copy()
+		spec.ReplicaSet = &api.ReplicaSet{Nodes: []string{volume.LocalNode}}
+		id, err := vd.Create(&api.VolumeLocator{Name: name}, nil, spec)
+		if err != nil {
+			return d.scaleUp(method, vd, inVol, allVols)
+		}
+		outVol, err := d.volFromName(id)
+		if err != nil {
+			return nil, err
+		}
+		if _, err = vd.Attach(outVol.Id); err == nil {
+			return outVol, nil
+		}
+		// We failed to attach, scaleUp.
+		allVols = append(allVols, outVol)
 	}
-	outVol, err := d.volFromName(id)
-	if err != nil {
-		return nil, err
-	}
-	if _, err = vd.Attach(outVol.Id); err == nil {
-		return outVol, nil
-	}
-	// We failed to attach, scaleUp.
-	allVols = append(allVols, outVol)
 	return d.scaleUp(method, vd, inVol, allVols)
 }
 

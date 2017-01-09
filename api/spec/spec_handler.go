@@ -38,7 +38,7 @@ type SpecHandler interface {
 var (
 	nameRegex       = regexp.MustCompile(api.Name + "=([0-9A-Za-z]+),?")
 	sizeRegex       = regexp.MustCompile(api.SpecSize + "=([0-9A-Za-z]+),?")
-	scaleRegex      = regexp.MustCompile(api.SpecScale + "=([0-9A-Za-z]+),?")
+	scaleRegex      = regexp.MustCompile(api.SpecScale + "=([0-9]+),?")
 	fsRegex         = regexp.MustCompile(api.SpecFilesystem + "=([0-9A-Za-z]+),?")
 	bsRegex         = regexp.MustCompile(api.SpecBlockSize + "=([0-9]+),?")
 	haRegex         = regexp.MustCompile(api.SpecHaLevel + "=([0-9]+),?")
@@ -108,6 +108,11 @@ func (d *specHandler) SpecFromOpts(
 			} else {
 				spec.Size = uint64(size)
 			}
+		case api.SpecScale:
+			if scale, err := strconv.ParseUint(v, 10, 64); err == nil {
+				spec.Scale = uint32(scale)
+			}
+
 		case api.SpecFilesystem:
 			if value, err := api.FSTypeSimpleValueOf(v); err != nil {
 				return nil, err
