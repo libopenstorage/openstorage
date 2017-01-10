@@ -166,6 +166,22 @@ message StorageResource {
   google.protobuf.Timestamp last_scan = 12;
 }
 
+// StoragePool groups different storage devices based on their CosType
+message StoragePool {
+  // ID pool ID
+  int32 ID = 1;
+  // Cos reflects the capabilities of this drive pool
+  CosType Cos = 2;
+  // Medium underlying storage type
+  StorageMedium Medium = 3;
+  // RaidLevel storage raid level
+  string RaidLevel = 4;
+  // TotalSize of the pool
+  uint64 TotalSize = 7;
+  // Used size of the pool
+  uint64 Used = 8;
+}
+
 // VolumeLocator is a structure that is attached to a volume
 // and is used to carry opaque metadata.
 message VolumeLocator {
