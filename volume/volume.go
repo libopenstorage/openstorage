@@ -28,7 +28,8 @@ var (
 	// ErrVolAttachedOnRemoteNode returned when volume is in attached on different node
 	ErrVolAttachedOnRemoteNode = errors.New("Volume is attached on another node")
 	// ErrVolAttachedScale returned when volume is attached and can be scaled
-	ErrVolAttachedScale = errors.New("Volume is attached but can be scaled")
+	ErrVolAttachedScale = errors.New("Volume is attached on another node." +
+		" Increase scale factor to create more instances")
 	// ErrVolHasSnaps returned when volume has previous snapshots
 	ErrVolHasSnaps = errors.New("Volume has snapshots associated")
 	// ErrNotSupported returned when the operation is not supported
