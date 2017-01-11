@@ -255,7 +255,10 @@ func (d *driver) scaleUp(
 			nil,
 			spec,
 		); err != nil {
-			return nil, err
+			// It is possible to get an error on a name conflict
+			// either due to concurrent creates or holes punched in
+			// from previous deletes.
+			continue
 		}
 		if outVol, err = d.volFromName(id); err != nil {
 			return nil, err
