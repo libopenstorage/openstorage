@@ -205,11 +205,20 @@ func (v *volumeClient) Stats(
 	req := v.c.Get().Resource(volumePath + "/stats").Instance(volumeID)
 	req.QueryOption(api.OptCumulative, strconv.FormatBool(cumulative))
 
-	if err := req.Do().Unmarshal(stats); err != nil {
-		return nil, err
-	}
+	err := req.Do().Unmarshal(stats)
+	return stats, err
 
-	return stats, nil
+}
+
+// UsedSize returns allocated volume size.
+// Errors ErrEnoEnt may be returned
+func (v *volumeClient) UsedSize(
+	volumeID string,
+) (uint64, error) {
+	var usedSize uint64
+	req := v.c.Get().Resource(volumePath + "/usedsize").Instance(volumeID)
+	err := req.Do().Unmarshal(&usedSize)
+	return usedSize, err
 }
 
 // Alerts on this volume.

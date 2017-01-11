@@ -60,6 +60,7 @@ type CreateVolumeReply struct {
 type driver struct {
 	volume.IODriver
 	volume.StoreEnumerator
+	volume.StatsDriver
 	consistencyGroup string
 	project          string
 	varray           string
@@ -109,6 +110,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 	d := &driver{
 		IODriver:         volume.IONotSupported,
 		StoreEnumerator:  common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
+		StatsDriver:      volume.StatsNotSupported,
 		consistencyGroup: consistencyGroup,
 		project:          project,
 		varray:           varray,
@@ -176,14 +178,6 @@ func (d *driver) Create(
 
 func (d *driver) Delete(volumeID string) error {
 	return nil
-}
-
-func (d *driver) Stats(volumeID string, cumulative bool) (*api.Stats, error) {
-	return nil, volume.ErrNotSupported
-}
-
-func (d *driver) Alerts(volumeID string) (*api.Alerts, error) {
-	return nil, volume.ErrNotSupported
 }
 
 func (d *driver) Attach(volumeID string) (path string, err error) {
@@ -258,8 +252,4 @@ func (d *driver) getAuthSession() (session *napping.Session, err error) {
 	}
 
 	return
-}
-
-func (d *driver) GetActiveRequests() (*api.ActiveRequests, error) {
-	return nil, nil
 }

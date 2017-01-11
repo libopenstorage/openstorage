@@ -31,6 +31,7 @@ const (
 type driver struct {
 	volume.IODriver
 	volume.StoreEnumerator
+	volume.StatsDriver
 	nfsServer string
 	nfsPath   string
 	mounter   mount.Manager
@@ -56,6 +57,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 	inst := &driver{
 		IODriver:        volume.IONotSupported,
 		StoreEnumerator: common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
+		StatsDriver:     volume.StatsNotSupported,
 		nfsServer:       server,
 		nfsPath:         path,
 		mounter:         mounter,
@@ -296,21 +298,9 @@ func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.Volu
 	return d.UpdateVol(v)
 }
 
-func (d *driver) Stats(volumeID string, cumulative bool) (*api.Stats, error) {
-	return nil, volume.ErrNotSupported
-}
-
-func (d *driver) Alerts(volumeID string) (*api.Alerts, error) {
-	return nil, volume.ErrNotSupported
-}
-
 func (d *driver) Shutdown() {
 	dlog.Printf("%s Shutting down", Name)
 	syscall.Unmount(nfsMountPath, 0)
-}
-
-func (d *driver) GetActiveRequests() (*api.ActiveRequests, error) {
-	return nil, nil
 }
 
 func copyFile(source string, dest string) (err error) {

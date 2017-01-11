@@ -34,6 +34,7 @@ const (
 type driver struct {
 	volume.IODriver
 	volume.StoreEnumerator
+	volume.StatsDriver
 	buseDevices map[string]*buseDev
 }
 
@@ -84,6 +85,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 	inst := &driver{
 		IODriver:        volume.IONotSupported,
 		StoreEnumerator: common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
+		StatsDriver:     volume.StatsNotSupported,
 	}
 	inst.buseDevices = make(map[string]*buseDev)
 	if err := os.MkdirAll(BuseMountPath, 0744); err != nil {
@@ -330,14 +332,6 @@ func (d *driver) Detach(volumeID string) error {
 	return nil
 }
 
-func (d *driver) Stats(volumeID string, cumulative bool) (*api.Stats, error) {
-	return nil, volume.ErrNotSupported
-}
-
-func (d *driver) Alerts(volumeID string) (*api.Alerts, error) {
-	return nil, volume.ErrNotSupported
-}
-
 func (d *driver) Shutdown() {
 	dlog.Printf("%s Shutting down", Name)
 	syscall.Unmount(BuseMountPath, 0)
@@ -385,8 +379,4 @@ func (d *driver) Leave(self *api.Node) error {
 
 func (d *driver) Halt(self *api.Node, db *cluster.ClusterInfo) error {
 	return nil
-}
-
-func (d *driver) GetActiveRequests() (*api.ActiveRequests, error) {
-	return nil, nil
 }

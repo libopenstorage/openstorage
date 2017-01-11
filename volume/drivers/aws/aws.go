@@ -48,6 +48,7 @@ type Metadata struct {
 
 // Driver implements VolumeDriver interface
 type Driver struct {
+	volume.StatsDriver
 	volume.StoreEnumerator
 	volume.IODriver
 	*device.SingleLetter
@@ -84,6 +85,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 	creds := credentials.NewStaticCredentials(accessKey, secretKey, "")
 	region := zone[:len(zone)-1]
 	d := &Driver{
+		StatsDriver: volume.StatsNotSupported,
 		ec2: ec2.New(
 			session.New(
 				&aws.Config{
@@ -514,16 +516,6 @@ func (d *Driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 	return vols[0].Id, nil
 }
 
-// Stats returns stats
-func (d *Driver) Stats(volumeID string, cumulative bool) (*api.Stats, error) {
-	return nil, volume.ErrNotSupported
-}
-
-// Alerts returns active alerts
-func (d *Driver) Alerts(volumeID string) (*api.Alerts, error) {
-	return nil, volume.ErrNotSupported
-}
-
 // Attach attaches a volume
 func (d *Driver) Attach(volumeID string) (path string, err error) {
 	volume, err := d.GetVol(volumeID)
@@ -651,9 +643,4 @@ func (d *Driver) Shutdown() {
 // Set updates fields on a volume
 func (d *Driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
 	return volume.ErrNotSupported
-}
-
-// GetActiveRequests gets active requests
-func (d *Driver) GetActiveRequests() (*api.ActiveRequests, error) {
-	return nil, nil
 }

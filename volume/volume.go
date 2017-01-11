@@ -102,10 +102,28 @@ type SnapshotDriver interface {
 	Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator) (string, error)
 }
 
+// StatsDriver interface provides stats features
+type StatsDriver interface {
+	// Stats for specified volume.
+	// cumulative stats are /proc/diskstats style stats.
+	// nonCumulative stats are stats for specific duration.
+	// Errors ErrEnoEnt may be returned
+	Stats(volumeID string, cumulative bool) (*api.Stats, error)
+	// UsedSize returns currently used volume size.
+	// Errors ErrEnoEnt may be returned.
+	UsedSize(volumeID string) (uint64, error)
+	// Alerts on this volume.
+	// Errors ErrEnoEnt may be returned
+	Alerts(volumeID string) (*api.Alerts, error)
+	// GetActiveRequests get active requests
+	GetActiveRequests() (*api.ActiveRequests, error)
+}
+
 // ProtoDriver must be implemented by all volume drivers.  It specifies the
 // most basic functionality, such as creating and deleting volumes.
 type ProtoDriver interface {
 	SnapshotDriver
+	StatsDriver
 	// Name returns the name of the driver.
 	Name() string
 	// Type of this driver
@@ -127,16 +145,6 @@ type ProtoDriver interface {
 	// Update not all fields of the spec are supported, ErrNotSupported will be thrown for unsupported
 	// updates.
 	Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error
-	// Stats for specified volume.
-	// cumulative stats are /proc/diskstats style stats.
-	// nonCumulative stats are stats for specific duration.
-	// Errors ErrEnoEnt may be returned
-	Stats(volumeID string, cumulative bool) (*api.Stats, error)
-	// Alerts on this volume.
-	// Errors ErrEnoEnt may be returned
-	Alerts(volumeID string) (*api.Alerts, error)
-	// GetActiveRequests get active requests
-	GetActiveRequests() (*api.ActiveRequests, error)
 	// Status returns a set of key-value pairs which give low
 	// level diagnostic status about this driver.
 	Status() [][2]string

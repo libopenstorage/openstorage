@@ -21,6 +21,7 @@ type volumeDriver struct {
 	volume.BlockDriver
 	volume.SnapshotDriver
 	volume.StoreEnumerator
+	volume.StatsDriver
 	name        string
 	baseDirPath string
 	provider    Provider
@@ -39,6 +40,7 @@ func newVolumeDriver(
 			name,
 			kvdb.Instance(),
 		),
+		volume.StatsNotSupported,
 		name,
 		baseDirPath,
 		provider,
@@ -149,20 +151,8 @@ func (v *volumeDriver) Set(volumeID string, locator *api.VolumeLocator, spec *ap
 
 }
 
-func (v *volumeDriver) Stats(volumeID string, cumulative bool) (*api.Stats, error) {
-	return nil, volume.ErrNotSupported
-}
-
-func (v *volumeDriver) Alerts(volumeID string) (*api.Alerts, error) {
-	return nil, volume.ErrNotSupported
-}
-
 func (v *volumeDriver) Status() [][2]string {
 	return [][2]string{}
 }
 
 func (v *volumeDriver) Shutdown() {}
-
-func (v *volumeDriver) GetActiveRequests() (*api.ActiveRequests, error) {
-	return nil, nil
-}

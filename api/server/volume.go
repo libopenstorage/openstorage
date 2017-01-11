@@ -375,6 +375,32 @@ func (vd *volApi) stats(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(stats)
 }
 
+func (vd *volApi) usedsize(w http.ResponseWriter, r *http.Request) {
+	var volumeID string
+	var err error
+
+	method := "newVolumeDriver"
+	if volumeID, err = vd.parseVolumeID(r); err != nil {
+		e := fmt.Errorf("Failed to parse volumeID: %s", err.Error())
+		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+		return
+	}
+
+	d, err := volumedrivers.Get(vd.name)
+	if err != nil {
+		notFound(w, r)
+		return
+	}
+
+	used, err := d.UsedSize(volumeID)
+	if err != nil {
+		e := fmt.Errorf("Failed to get used size: %s", err.Error())
+		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	json.NewEncoder(w).Encode(used)
+}
+
 func (vd *volApi) alerts(w http.ResponseWriter, r *http.Request) {
 	var volumeID string
 	var err error
@@ -455,6 +481,8 @@ func (vd *volApi) Routes() []*Route {
 		&Route{verb: "DELETE", path: volPath("/{id}", volume.APIVersion), fn: vd.delete},
 		&Route{verb: "GET", path: volPath("/stats", volume.APIVersion), fn: vd.stats},
 		&Route{verb: "GET", path: volPath("/stats/{id}", volume.APIVersion), fn: vd.stats},
+		&Route{verb: "GET", path: volPath("/usedsize", volume.APIVersion), fn: vd.usedsize},
+		&Route{verb: "GET", path: volPath("/usedsize/{id}", volume.APIVersion), fn: vd.usedsize},
 		&Route{verb: "GET", path: volPath("/alerts", volume.APIVersion), fn: vd.alerts},
 		&Route{verb: "GET", path: volPath("/alerts/{id}", volume.APIVersion), fn: vd.alerts},
 		&Route{verb: "GET", path: volPath("/requests", volume.APIVersion), fn: vd.requests},
