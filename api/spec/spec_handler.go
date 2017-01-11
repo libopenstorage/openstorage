@@ -36,7 +36,7 @@ type SpecHandler interface {
 }
 
 var (
-	nameRegex       = regexp.MustCompile(api.Name + "=([0-9A-Za-z]+),?")
+	nameRegex       = regexp.MustCompile(api.Name + "=([0-9A-Za-z_-]+),?")
 	sizeRegex       = regexp.MustCompile(api.SpecSize + "=([0-9A-Za-z]+),?")
 	scaleRegex      = regexp.MustCompile(api.SpecScale + "=([0-9]+),?")
 	fsRegex         = regexp.MustCompile(api.SpecFilesystem + "=([0-9A-Za-z]+),?")
