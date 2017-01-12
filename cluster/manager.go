@@ -721,9 +721,7 @@ func (c *ClusterManager) initializeCluster(db kvdb.Kvdb) (
 	if err != nil {
 		dlog.Panicln("Fatal, Unable to obtain cluster lock.", err)
 	}
-	defer func() {
-		db.Unlock(kvlock)
-	}()
+	defer db.Unlock(kvlock)
 
 	clusterInfo, err := readClusterInfo()
 	if err != nil {
