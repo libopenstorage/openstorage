@@ -247,7 +247,8 @@ func (d *driver) scaleUp(
 	spec := inVol.Spec.Copy()
 	spec.Scale = 1
 	spec.ReplicaSet = nil
-	for i := len(allVols); i < int(inVol.Spec.Scale); i++ {
+	volCount := len(allVols)
+	for i := len(allVols); volCount < int(inVol.Spec.Scale); i++ {
 		name := fmt.Sprintf("%s_%03d", inVol.Locator.Name, i)
 		id := ""
 		if id, err = vd.Create(
@@ -258,7 +259,10 @@ func (d *driver) scaleUp(
 			// It is possible to get an error on a name conflict
 			// either due to concurrent creates or holes punched in
 			// from previous deletes.
-			continue
+			if err == volume.ErrExist {
+				continue
+			}
+			return nil, err
 		}
 		if outVol, err = d.volFromName(id); err != nil {
 			return nil, err
@@ -268,6 +272,7 @@ func (d *driver) scaleUp(
 		}
 		// If we fail to attach the volume, continue to look for a
 		// free volume.
+		volCount++
 	}
 	return nil, volume.ErrVolAttachedScale
 }

@@ -10,7 +10,7 @@ var (
 	// ErrAlreadyShutdown returned when driver is shutdown
 	ErrAlreadyShutdown = errors.New("VolumeDriverProvider already shutdown")
 	// ErrExit returned when driver already registered
-	ErrExist = errors.New("Driver already exists")
+	ErrExist = errors.New("Already exists")
 	// ErrDriverNotFound returned when a driver is not registered
 	ErrDriverNotFound = errors.New("Driver implementation not found")
 	// ErrDriverInitializing returned when a driver is initializing
