@@ -472,7 +472,7 @@ done:
 
 func (c *ClusterManager) startClusterDBWatch(lastIndex uint64,
 	kv kvdb.Kvdb) error {
-
+	dlog.Infof("Cluster manager starting watch at version %d", lastIndex)
 	go kv.WatchKey(ClusterDBKey, lastIndex, nil, c.watchDB)
 	return nil
 }
