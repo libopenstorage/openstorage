@@ -82,6 +82,8 @@ func copyFile(source string, dest string) (err error) {
 
 // Init intialized the buse driver
 func Init(params map[string]string) (volume.VolumeDriver, error) {
+	nbdInit()
+
 	inst := &driver{
 		IODriver:        volume.IONotSupported,
 		StoreEnumerator: common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
@@ -151,7 +153,11 @@ func (d *driver) ListenerPeerStatus() map[string]api.Status {
 	return nil
 }
 
-func (d *driver) Create(locator *api.VolumeLocator, source *api.Source, spec *api.VolumeSpec) (string, error) {
+func (d *driver) Create(
+	locator *api.VolumeLocator,
+	source *api.Source,
+	spec *api.VolumeSpec,
+) (string, error) {
 	volumeID := uuid.New()
 	volumeID = strings.TrimSuffix(volumeID, "\n")
 	if spec.Size == 0 {
@@ -177,7 +183,7 @@ func (d *driver) Create(locator *api.VolumeLocator, source *api.Source, spec *ap
 		file: buseFile,
 		f:    f,
 	}
-	nbd := Create(bd, int64(spec.Size))
+	nbd := Create(bd, volumeID, int64(spec.Size))
 	bd.nbd = nbd
 
 	dlog.Infof("Connecting to NBD...")

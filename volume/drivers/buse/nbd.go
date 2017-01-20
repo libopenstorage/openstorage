@@ -9,6 +9,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
+	"os/signal"
 	"runtime"
 	"sync"
 	"syscall"
@@ -90,16 +92,35 @@ type NBD struct {
 	mutex      *sync.Mutex
 }
 
+var (
+	nbdDevices   map[string]*NBD
+	globalMutex  *sync.Mutex
+	shuttingDown bool
+)
+
 // Create creates a NBD type interface
-func Create(device Device, size int64) *NBD {
+func Create(device Device, id string, size int64) *NBD {
+	if shuttingDown {
+		dlog.Warnf("Cannot create NBD device during shutdown")
+		return nil
+	}
+
 	if size >= 0 {
-		return &NBD{device: device,
+		globalMutex.Lock()
+		defer globalMutex.Unlock()
+
+		dev := &NBD{device: device,
 			devicePath: "",
 			size:       size,
 			deviceFile: nil,
 			socket:     0,
-			mutex:      &sync.Mutex{}}
+			mutex:      &sync.Mutex{},
+		}
+
+		nbdDevices[id] = dev
+		return dev
 	}
+
 	return nil
 }
 
@@ -183,19 +204,30 @@ func (nbd *NBD) Connect() (dev string, err error) {
 // Disconnect disconnects the network block device
 func (nbd *NBD) Disconnect() {
 	nbd.mutex.Lock()
+	defer nbd.mutex.Unlock()
+
+	dlog.Infof("Disconnecting device %v...", nbd.devicePath)
+
+	syscall.Unmount(nbd.devicePath, 0)
 	if nbd.IsConnected() {
+		dlog.Infof("Issuing a disconnect on %v", nbd.devicePath)
 		ioctl(nbd.deviceFile.Fd(), NBD_DISCONNECT, 0)
+		dlog.Infof("Clearing NBD queue %v", nbd.devicePath)
 		ioctl(nbd.deviceFile.Fd(), NBD_CLEAR_QUE, 0)
+		dlog.Infof("Clearing NBD socket %v", nbd.devicePath)
 		ioctl(nbd.deviceFile.Fd(), NBD_CLEAR_SOCK, 0)
+		dlog.Infof("Closing NBD device file %v", nbd.devicePath)
 		nbd.deviceFile.Close()
 		nbd.deviceFile = nil
 
 		dummy := make([]byte, 1)
+		dlog.Infof("Waking up control socket for %v", nbd.devicePath)
 		syscall.Write(nbd.socket, dummy)
+		dlog.Infof("Closing control socket for %v", nbd.devicePath)
 		syscall.Close(nbd.socket)
 		nbd.socket = 0
 	}
-	nbd.mutex.Unlock()
+	dlog.Infof("Disconnected device %v", nbd.devicePath)
 }
 
 func (nbd *NBD) connect() {
@@ -273,4 +305,51 @@ func (nbd *NBD) handle() {
 			return
 		}
 	}
+}
+
+func nbdInit() {
+	if _, err := os.Stat("/usr/sbin/modprobe"); err == nil {
+		exec.Command("/usr/sbin/modprobe", "nbd").Output()
+	} else {
+		exec.Command("/sbin/modprobe", "nbd").Output()
+	}
+
+	globalMutex = &sync.Mutex{}
+	nbdDevices = make(map[string]*NBD)
+
+	for i := 0; ; i++ {
+		dev := fmt.Sprintf("/dev/nbd%d", i)
+		if _, err := os.Stat(dev); os.IsNotExist(err) {
+			goto done
+		}
+
+		syscall.Unmount(dev, syscall.MNT_DETACH)
+
+		if f, err := os.Open(dev); err == nil {
+			ioctl(f.Fd(), NBD_DISCONNECT, 0)
+			ioctl(f.Fd(), NBD_CLEAR_QUE, 0)
+			ioctl(f.Fd(), NBD_CLEAR_SOCK, 0)
+
+			f.Close()
+		}
+	}
+
+done:
+	go func() {
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, os.Interrupt)
+		<-c
+
+		dlog.Infof("NBD shutting down due to SIGINT")
+		shuttingDown = true
+		globalMutex.Lock()
+		defer globalMutex.Unlock()
+
+		for id, d := range nbdDevices {
+			dlog.Infof("Disconnecting device %v", id)
+			d.Disconnect()
+		}
+		dlog.Infof("Done cleaning up NBD devices")
+		os.Exit(0)
+	}()
 }
