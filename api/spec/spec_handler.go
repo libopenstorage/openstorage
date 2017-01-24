@@ -59,13 +59,13 @@ func NewSpecHandler() SpecHandler {
 func (d *specHandler) cosLevel(cos string) (uint32, error) {
 	switch cos {
 	case "high", "3":
-		return uint32(api.CosType_COS_TYPE_HIGH), nil
+		return uint32(api.CosType_HIGH), nil
 	case "medium", "2":
-		return uint32(api.CosType_COS_TYPE_MEDIUM), nil
+		return uint32(api.CosType_MEDIUM), nil
 	case "low", "1", "":
-		return uint32(api.CosType_COS_TYPE_LOW), nil
+		return uint32(api.CosType_LOW), nil
 	}
-	return uint32(api.CosType_COS_TYPE_LOW),
+	return uint32(api.CosType_LOW),
 		fmt.Errorf("Cos must be one of %q | %q | %q", "high", "medium", "low")
 }
 

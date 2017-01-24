@@ -386,10 +386,10 @@ func baseVolumeCommand(v *volDriver) []cli.Command {
 					Usage: "replication factor [1..2]",
 					Value: 1,
 				},
-				cli.StringFlag{
+				cli.IntFlag{
 					Name:  "cos",
-					Usage: "Class of Service: [high,medium,low]",
-					Value: "low",
+					Usage: "Class of Service: [1..9]",
+					Value: 1,
 				},
 				cli.IntFlag{
 					Name:  "snap_interval,si",
