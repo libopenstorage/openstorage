@@ -139,7 +139,7 @@ launch: docker-build-osd
 		-v $(shell pwd):/etc \
 		-v /run/docker/plugins:/run/docker/plugins \
 		-v /var/lib/osd/:/var/lib/osd/ \
-		-p 2345:2345 \
+		-p 9005:9005 \
 		openstorage/osd -d -f /etc/config.yaml
 
 # must set HAVE_BTRFS

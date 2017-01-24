@@ -1,7 +1,7 @@
 FROM golang:1.6.2
 MAINTAINER gou@portworx.com
 
-EXPOSE 2345
+EXPOSE 9005
 RUN \
   apt-get update -yq && \
   apt-get install -yq --no-install-recommends \

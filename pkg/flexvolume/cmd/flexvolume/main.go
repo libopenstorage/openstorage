@@ -10,7 +10,7 @@ import (
 )
 
 type appEnv struct {
-	OpenstorageAddress string `env:"OPENSTORAGE_ADDRESS,default=0.0.0.0:2345"`
+	OpenstorageAddress string `env:"OPENSTORAGE_ADDRESS,default=0.0.0.0:9005"`
 }
 
 func main() {
