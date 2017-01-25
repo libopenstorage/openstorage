@@ -376,6 +376,7 @@ func (c *ClusterManager) initNodeInCluster(
 	clusterInfo *ClusterInfo,
 	self *api.Node,
 	exist bool,
+	nodeInitialized bool,
 ) error {
 	var err error
 
@@ -383,6 +384,11 @@ func (c *ClusterManager) initNodeInCluster(
 	if exist {
 		err = nil
 		goto done
+	}
+
+	if nodeInitialized {
+		dlog.Errorf("This node is already initialized but could not be found in the cluster map.")
+		return errors.New("Node is already initialized but not found in the cluster.")
 	}
 
 	// Alert all listeners that we are a new node and we are initializing.
@@ -770,6 +776,7 @@ func (c *ClusterManager) initListeners(
 	db kvdb.Kvdb,
 	clusterMaxSize int,
 	nodeExists *bool,
+	nodeInitialized bool,
 ) (uint64, *ClusterInfo, error) {
 	// Initialize the cluster if required
 	clusterInfo, err := c.initializeCluster(db)
@@ -780,7 +787,12 @@ func (c *ClusterManager) initListeners(
 	// Initialize the node in cluster
 	self, exist := c.initNode(clusterInfo)
 	*nodeExists = exist
-	err = c.initNodeInCluster(clusterInfo, self, *nodeExists)
+	err = c.initNodeInCluster(
+		clusterInfo,
+		self,
+		*nodeExists,
+		nodeInitialized,
+	)
 	if err != nil {
 		dlog.Errorln("Failed to initialize node in cluster.", err)
 		return 0, nil, err
@@ -821,8 +833,14 @@ func (c *ClusterManager) initializeAndStartHeartbeat(
 	kvdb kvdb.Kvdb,
 	clusterMaxSize int,
 	exist *bool,
+	nodeInitialized bool,
 ) (uint64, error) {
-	lastIndex, clusterInfo, err := c.initListeners(kvdb, clusterMaxSize, exist)
+	lastIndex, clusterInfo, err := c.initListeners(
+		kvdb,
+		clusterMaxSize,
+		exist,
+		nodeInitialized,
+	)
 	if err != nil {
 		return 0, err
 	}
@@ -837,7 +855,10 @@ func (c *ClusterManager) initializeAndStartHeartbeat(
 }
 
 // Start initiates the cluster manager and the cluster state machine
-func (c *ClusterManager) Start(clusterMaxSize int) error {
+func (c *ClusterManager) Start(
+	clusterMaxSize int,
+	nodeInitialized bool,
+) error {
 	var err error
 
 	dlog.Infoln("Cluster manager starting...")
@@ -882,7 +903,12 @@ func (c *ClusterManager) Start(clusterMaxSize int) error {
 	var exist bool
 	kvdb := kvdb.Instance()
 
-	lastIndex, err := c.initializeAndStartHeartbeat(kvdb, clusterMaxSize, &exist)
+	lastIndex, err := c.initializeAndStartHeartbeat(
+		kvdb,
+		clusterMaxSize,
+		&exist,
+		nodeInitialized,
+	)
 	if err != nil {
 		return err
 	}

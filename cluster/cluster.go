@@ -175,7 +175,9 @@ type Cluster interface {
 
 	// Start starts the cluster manager and state machine.
 	// It also causes this node to join the cluster.
-	Start(clusterSize int) error
+	// nodeInitialized indicates if the caller of this method expects the node
+	// to have been in an already-initialized state.
+	Start(clusterSize int, nodeInitialized bool) error
 
 	ClusterData
 	ClusterRemove
