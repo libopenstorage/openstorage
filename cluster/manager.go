@@ -27,17 +27,22 @@ import (
 )
 
 const (
-	heartbeatKey     = "heartbeat"
-	clusterLockKey   = "/cluster/lock"
-	gossipVersionKey = "Gossip Version"
-	quorumTimeout    = 10 * time.Minute
+	heartbeatKey       = "heartbeat"
+	clusterLockKey     = "/cluster/lock"
+	gossipVersionKey   = "Gossip Version"
+	quorumTimeout      = 10 * time.Minute
+	decommissionErrMsg = "Node %s must be offline or in maintenance " +
+		"mode to be decommissioned."
 )
 
 var (
 	// ErrNodeRemovePending is returned when Node remove does not succeed and is
 	// kept in pending state
 	ErrNodeRemovePending = errors.New("Node remove is pending")
-	stopHeartbeat        = make(chan bool)
+	ErrInitNodeNotFound  = errors.New("This node is already initialized but " +
+		"could not be found in the cluster map.")
+	ErrNodeDecommissioned = errors.New("Node is decomissioned.")
+	stopHeartbeat         = make(chan bool)
 )
 
 // ClusterManager implements the cluster interface
@@ -387,8 +392,8 @@ func (c *ClusterManager) initNodeInCluster(
 	}
 
 	if nodeInitialized {
-		dlog.Errorf("This node is already initialized but could not be found in the cluster map.")
-		return errors.New("Node is already initialized but not found in the cluster.")
+		dlog.Errorf(ErrNodeDecommissioned.Error())
+		return ErrNodeDecommissioned
 	}
 
 	// Alert all listeners that we are a new node and we are initializing.
@@ -739,7 +744,7 @@ func (c *ClusterManager) initializeCluster(db kvdb.Kvdb) (
 		msg := fmt.Sprintf("Node is in decommision state, Node ID %s.",
 			c.selfNode.Id)
 		dlog.Errorln(msg)
-		return nil, errors.New(msg)
+		return nil, ErrNodeDecommissioned
 	}
 	// Set the clusterID in db
 	clusterInfo.Id = c.config.ClusterId
@@ -1237,9 +1242,7 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 		// disallow node remove.
 		if n.Id == c.selfNode.Id &&
 			c.selfNode.Status != api.Status_STATUS_MAINTENANCE {
-			msg := fmt.Sprintf("Cannot remove self from cluster, "+
-				"Node ID %s.",
-				n.Id)
+			msg := fmt.Sprintf(decommissionErrMsg, n.Id)
 			dlog.Errorf(msg)
 			return errors.New(msg)
 		} else if n.Id != c.selfNode.Id && inQuorum {
@@ -1249,11 +1252,8 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 				nodeCacheStatus != api.Status_STATUS_MAINTENANCE &&
 				nodeCacheStatus != api.Status_STATUS_DECOMMISSION {
 
-				msg := fmt.Sprintf("Cannot remove node that is not "+
-					"offline, Node ID %s, "+
-					"Status %s.",
-					n.Id, nodeCacheStatus)
-				dlog.Errorf(msg)
+				msg := fmt.Sprintf(decommissionErrMsg, n.Id)
+				dlog.Errorf(msg+", node status: %s", nodeCacheStatus)
 				return errors.New(msg)
 			}
 		}
