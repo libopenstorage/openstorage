@@ -392,8 +392,8 @@ func (c *ClusterManager) initNodeInCluster(
 	}
 
 	if nodeInitialized {
-		dlog.Errorf(ErrNodeDecommissioned.Error())
-		return ErrNodeDecommissioned
+		dlog.Errorf(ErrInitNodeNotFound.Error())
+		return ErrInitNodeNotFound
 	}
 
 	// Alert all listeners that we are a new node and we are initializing.
