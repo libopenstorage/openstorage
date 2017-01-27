@@ -37,7 +37,7 @@ var (
 )
 
 // InitFunc initialization function for alert.
-type InitFunc func(string, string, []string, string, map[string]string) (Alert, error)
+type InitFunc func(kv kvdb.Kvdb, clusterID string) (Alert, error)
 
 // AlertWatcherFunc is a function type used as a callback for KV WatchTree.
 type AlertWatcherFunc func(*api.Alert, api.AlertActionType, string, string) error
@@ -88,25 +88,12 @@ func Shutdown() {
 }
 
 // New returns a new alert instance tied with a clusterID and kvdb.
-func New(
-	name string,
-	kvdbName string,
-	kvdbBase string,
-	kvdbMachines []string,
-	clusterID string,
-	kvdbOptions map[string]string,
-) (Alert, error) {
+func New(name string, clusterID string, kv kvdb.Kvdb) (Alert, error) {
 	lock.Lock()
 	defer lock.Unlock()
 
 	if initFunc, exists := drivers[name]; exists {
-		driver, err := initFunc(
-			kvdbName,
-			kvdbBase,
-			kvdbMachines,
-			clusterID,
-			kvdbOptions,
-		)
+		driver, err := initFunc(kv, clusterID)
 		if err != nil {
 			return nil, err
 		}

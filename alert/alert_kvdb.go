@@ -62,14 +62,6 @@ type watcher struct {
 
 // KvAlert is used for managing the alerts and its kvdb instance
 type KvAlert struct {
-	// kvdbOptions used to access kvdb for each cluster
-	kvdbOptions map[string]string
-	// kvdbName is a Name/Type of kvdb instance
-	kvdbName string
-	// kvdbDomain is the prefix witch which all kvdb requests are made
-	kvdbDomain string
-	// kvdbMachines is a list of kvdb endpoints
-	kvdbMachines []string
 	// clusterID for which this alerts object will be used
 	clusterID string
 }
@@ -82,24 +74,13 @@ func (kva *KvAlert) GetKvdbInstance() kvdb.Kvdb {
 }
 
 // Init initializes a AlertClient interface implementation.
-func Init(
-	name string,
-	domain string,
-	machines []string,
-	clusterID string,
-	kvdbOptions map[string]string,
-) (Alert, error) {
+func Init(kv kvdb.Kvdb, clusterID string) (Alert, error) {
 	kvdbLock.Lock()
 	defer kvdbLock.Unlock()
 	if _, ok := kvdbMap[clusterID]; !ok {
-		kv, err := kvdb.New(name, domain+"/"+clusterID, machines, kvdbOptions,
-			dlog.Panicf)
-		if err != nil {
-			return nil, err
-		}
 		kvdbMap[clusterID] = kv
 	}
-	return &KvAlert{kvdbOptions, name, domain, machines, clusterID}, nil
+	return &KvAlert{clusterID}, nil
 }
 
 // Raise raises an Alert.
@@ -197,12 +178,10 @@ func (kva *KvAlert) EnumerateWithinTimeRange(
 	return allAlerts, nil
 }
 
-/*
-Watch on all Alerts for the given clusterID. It uses the global
-kvdb options provided while creating the alertClient object to access this cluster
-This way we ensure that the caller of the api is able to watch alerts on clusters that
-it is authorized for.
-*/
+// Watch on all Alerts for the given clusterID. It uses the global
+// kvdb options provided while creating the alertClient object to access this cluster
+// This way we ensure that the caller of the api is able to watch alerts on clusters that
+// it is authorized for.
 func (kva *KvAlert) Watch(clusterID string, alertWatcherFunc AlertWatcherFunc) error {
 
 	kv, err := kva.getKvdbForCluster(clusterID)
@@ -404,16 +383,10 @@ func (kva *KvAlert) getKvdbForCluster(clusterID string) (kvdb.Kvdb, error) {
 	kvdbLock.Lock()
 	defer kvdbLock.Unlock()
 
-	_, ok := kvdbMap[clusterID]
+	kv, ok := kvdbMap[clusterID]
 	if !ok {
-		kv, err := kvdb.New(kva.kvdbName, kva.kvdbDomain+"/"+clusterID,
-			kva.kvdbMachines, kva.kvdbOptions, dlog.Panicf)
-		if err != nil {
-			return nil, err
-		}
-		kvdbMap[clusterID] = kv
+		return nil, fmt.Errorf("Unknown cluster ID %v", clusterID)
 	}
-	kv := kvdbMap[clusterID]
 	return kv, nil
 }
 
