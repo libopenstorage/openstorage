@@ -55,7 +55,7 @@ func setup(t *testing.T) {
 	}
 
 	var err error
-	kva, err = New("alert_kvdb", mem.Name, kvdbDomain, []string{}, clusterName, nil)
+	kva, err = New("alert_kvdb", clusterName, kv)
 	if err != nil {
 		t.Fatalf("Failed to create new Kvapi.Alert object")
 	}
