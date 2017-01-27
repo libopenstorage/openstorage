@@ -558,18 +558,46 @@ func (c *ClusterManager) updateClusterStatus() {
 
 			// Special handling for self node
 			if id == types.NodeId(node.Id) {
+				// TODO: Implement State Machine for node statuses similar to the one in gossip
 				if c.selfNode.Status == api.Status_STATUS_OK &&
+					gossipNodeInfo.Status == types.NODE_STATUS_SUSPECT_NOT_IN_QUORUM {
+					// Current:
+					// Cluster Manager Status: UP.
+					// Gossip Status: Suspecting Not in Quorum (stays in this state for quorumTimeout)
+					// New:
+					// Cluster Manager: Not in Quorum
+					// Cluster Manager does not have a Suspect in Quorum status
+					dlog.Warnf("Can't reach quorum no. of nodes. Suspecting out of quorum...")
+					c.selfNode.Status = api.Status_STATUS_NOT_IN_QUORUM
+					c.status = api.Status_STATUS_NOT_IN_QUORUM
+				} else if (c.selfNode.Status == api.Status_STATUS_NOT_IN_QUORUM ||
+					c.selfNode.Status == api.Status_STATUS_OK) &&
 					(gossipNodeInfo.Status == types.NODE_STATUS_NOT_IN_QUORUM ||
-						gossipNodeInfo.Status == types.NODE_STATUS_DOWN) {
-					// We have lost quorum
+					gossipNodeInfo.Status == types.NODE_STATUS_DOWN) {
+					// Current:
+					// Cluster Manager Status: UP or Not in Quorum.
+					// Gossip Status: Not in Quorum or DOWN
+					// New:
+					// Cluster Manager: DOWN
+					// Gossip waited for quorumTimeout and indicates we are Not in Quorum and should go Down
 					dlog.Warnf("Not in quorum. Gracefully shutting down...")
 					c.gossip.UpdateSelfStatus(types.NODE_STATUS_DOWN)
 					c.selfNode.Status = api.Status_STATUS_OFFLINE
 					c.status = api.Status_STATUS_NOT_IN_QUORUM
 					c.Shutdown()
 					os.Exit(1)
+				} else if c.selfNode.Status == api.Status_STATUS_NOT_IN_QUORUM &&
+					gossipNodeInfo.Status == types.NODE_STATUS_UP {
+					// Current:
+					// Cluster Manager Status: Not in Quorum
+					// Gossip Status: Up
+					// New:
+					// Cluster Manager : UP
+					c.selfNode.Status = api.Status_STATUS_OK
+					c.status = api.Status_STATUS_OK
+				} else {
+					// Ignore the update
 				}
-				//else Ignore this update
 				continue
 			}
 
