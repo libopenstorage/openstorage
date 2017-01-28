@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -9,20 +10,21 @@ import (
 
 // Strings for VolumeSpec
 const (
-	Name                 = "name"
-	SpecEphemeral        = "ephemeral"
-	SpecShared           = "shared"
-	SpecSticky           = "sticky"
-	SpecSize             = "size"
-	SpecScale            = "scale"
-	SpecFilesystem       = "fs"
-	SpecBlockSize        = "block_size"
-	SpecHaLevel          = "repl"
-	SpecPriority         = "io_priority"
-	SpecSnapshotInterval = "snap_interval"
-	SpecAggregationLevel = "aggregation_level"
-	SpecDedupe           = "dedupe"
-	SpecPassphrase       = "passphrase"
+	Name                     = "name"
+	SpecEphemeral            = "ephemeral"
+	SpecShared               = "shared"
+	SpecSticky               = "sticky"
+	SpecSize                 = "size"
+	SpecScale                = "scale"
+	SpecFilesystem           = "fs"
+	SpecBlockSize            = "block_size"
+	SpecHaLevel              = "repl"
+	SpecPriority             = "io_priority"
+	SpecSnapshotInterval     = "snap_interval"
+	SpecAggregationLevel     = "aggregation_level"
+	SpecDedupe               = "dedupe"
+	SpecPassphrase           = "passphrase"
+	SpecAutoAggregationValue = "auto"
 )
 
 // OptionKey specifies a set of recognized query params.
@@ -43,6 +45,11 @@ const (
 const (
 	OsdVolumePath   = "osd-volumes"
 	OsdSnapshotPath = "osd-snapshot"
+)
+
+const (
+	// AutoAggregation value indicates driver to select aggregation level.
+	AutoAggregation = math.MaxUint32
 )
 
 // Node describes the state of a node.

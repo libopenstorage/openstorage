@@ -137,8 +137,12 @@ func (d *specHandler) SpecFromOpts(
 			snapshotInterval, _ := strconv.ParseUint(v, 10, 32)
 			spec.SnapshotInterval = uint32(snapshotInterval)
 		case api.SpecAggregationLevel:
-			aggregationLevel, _ := strconv.ParseUint(v, 10, 32)
-			spec.AggregationLevel = uint32(aggregationLevel)
+			if v == api.SpecAutoAggregationValue {
+				spec.AggregationLevel = api.AutoAggregation
+			} else {
+				aggregationLevel, _ := strconv.ParseUint(v, 10, 32)
+				spec.AggregationLevel = uint32(aggregationLevel)
+			}
 		case api.SpecShared:
 			if shared, err := strconv.ParseBool(v); err != nil {
 				return nil, err
