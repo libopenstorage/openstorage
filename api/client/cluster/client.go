@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strconv"
 
+	"github.com/portworx/kvdb"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/client"
 	"github.com/libopenstorage/openstorage/cluster"
@@ -118,6 +119,10 @@ func (c *clusterClient) Shutdown() error {
 }
 
 func (c *clusterClient) Start(int, bool) error {
+	return nil
+}
+
+func (c *clusterClient) PreStart(kvdb kvdb.Kvdb) error {
 	return nil
 }
 

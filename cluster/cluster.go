@@ -60,6 +60,19 @@ type ClusterInitState struct {
 // finish quickly, else it will slow down other node joins.
 type FinalizeInitCb func() error
 
+// BootstrapNodeEntry is used to bootstrap nodes in the cluster
+type BootstrapNodeEntry struct {
+	Id string
+	Ip string
+	GossipVersion string
+}
+// BootstrapClusterInfo is the cluster info used while bootstrapping nodes
+// and discovering peer nodes using gossip
+type BootstrapClusterInfo struct {
+	Size int
+	Nodes map[string]BootstrapNodeEntry
+}
+
 // ClusterListener is an interface to be implemented by a storage driver
 // if it is participating in a multi host environment.  It exposes events
 // in the cluster state machine.  Your driver can do the needful when
@@ -177,6 +190,10 @@ type Cluster interface {
 
 	// Shutdown can be called when THIS node is gracefully shutting down.
 	Shutdown() error
+
+	// PreStart has to be called before Start and needs to be provided with
+	// a bootstrap kvdb which is used to bootstrap the cluster
+	PreStart(bootstrapKvdb kvdb.Kvdb) error
 
 	// Start starts the cluster manager and state machine.
 	// It also causes this node to join the cluster.

@@ -14,6 +14,8 @@ import (
 const (
 	// ClusterDBKey is the key at which cluster info is store in kvdb
 	ClusterDBKey = "cluster/database"
+	// ClusterBootstrapKey is the key at which bootstrap info is stored in kvdb
+	ClusterBootstrapKey = "cluster/bootstrapdb"
 )
 
 func snapAndReadClusterInfo() (*ClusterInitState, error) {
@@ -100,4 +102,32 @@ func writeClusterInfo(db *ClusterInfo) (*kvdb.KVPair, error) {
 		return nil, err
 	}
 	return kvp, nil
+}
+
+func addOurselvesInBootstrapDB(bootstrapKvdb kvdb.Kvdb, bne BootstrapNodeEntry) (*BootstrapClusterInfo, error) {
+	kvlock, err := bootstrapKvdb.LockWithID(clusterLockKey, bne.Id)
+	if err != nil {
+		dlog.Warnf("Unable to obtain bootstrapDB cluster lock")
+		return nil, err
+	}
+	defer bootstrapKvdb.Unlock(kvlock)
+
+	bci := BootstrapClusterInfo{}
+	_, err = bootstrapKvdb.GetVal(ClusterBootstrapKey, &bci)
+	if err != nil && !strings.Contains(err.Error(), "Key not found") {
+		dlog.Warnln("Warning, could not read cluster database")
+		return nil, err
+	}
+
+	if bci.Size == 0 {
+		bci.Nodes = make(map[string]BootstrapNodeEntry)
+	}
+	bci.Size = bci.Size+1
+	bci.Nodes[bne.Id] = bne
+	_, err = bootstrapKvdb.Put(ClusterBootstrapKey, &bci, 0)
+	if err != nil {
+		dlog.Warnf("Unable to add ourselves in bootstrap db")
+		return nil, err
+	}
+	return &bci, nil
 }

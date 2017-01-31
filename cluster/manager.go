@@ -504,25 +504,23 @@ func (c *ClusterManager) startClusterDBWatch(lastIndex uint64,
 	return nil
 }
 
-func (c *ClusterManager) startHeartBeat(clusterInfo *ClusterInfo) {
+func (c *ClusterManager) startHeartBeat(clusterInfo *BootstrapClusterInfo) {
 	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
 
 	node := c.getCurrentState()
 	c.nodeCache[c.selfNode.Id] = *node
 	c.gossip.UpdateSelf(gossipStoreKey, *node)
 	var nodeIps []string
-	for nodeId, nodeEntry := range clusterInfo.NodeEntries {
+	for nodeId, nodeEntry := range clusterInfo.Nodes {
 		if nodeId == node.Id {
 			continue
 		}
-		labels := nodeEntry.NodeLabels
-		version, ok := labels[gossipVersionKey]
-		if !ok || version != c.gossipVersion {
+		if nodeEntry.GossipVersion != c.gossipVersion {
 			// Do not add nodes with mismatched version
 			continue
 		}
 
-		nodeIps = append(nodeIps, nodeEntry.DataIp+":9002")
+		nodeIps = append(nodeIps, nodeEntry.Ip+":9002")
 	}
 	if len(nodeIps) > 0 {
 		dlog.Infof("Starting Gossip... Gossiping to these nodes : %v", nodeIps)
@@ -530,7 +528,10 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *ClusterInfo) {
 		dlog.Infof("Starting Gossip...")
 	}
 	c.gossip.Start(nodeIps)
-	c.gossip.UpdateCluster(c.getNonDecommisionedPeers(*clusterInfo))
+	
+	// TODO: Handle decommission nodes from bootstrap db
+	
+	//c.gossip.UpdateCluster(c.getNonDecommisionedPeers(*clusterInfo))
 
 	lastUpdateTs := time.Now()
 	for {
@@ -725,7 +726,7 @@ func (c *ClusterManager) GetGossipState() *ClusterState {
 		History: history, NodeStatus: nodes}
 }
 
-func (c *ClusterManager) waitForQuorum(exist bool) error {
+func (c *ClusterManager) waitForQuorum() error {
 	// Max quorum retries allowed = 600
 	// 600 * 2 seconds (gossip interval) = 20 minutes before it restarts
 	quorumRetries := 0
@@ -737,15 +738,7 @@ func (c *ClusterManager) waitForQuorum(exist bool) error {
 			// Achieved quorum in the cluster.
 			// Lets start the node
 			c.selfNode.Status = api.Status_STATUS_INIT
-			err := c.joinCluster(&c.selfNode, exist)
-			if err != nil {
-				if c.selfNode.Status != api.Status_STATUS_MAINTENANCE {
-					c.selfNode.Status = api.Status_STATUS_ERROR
-				}
-				return err
-			}
 			c.status = api.Status_STATUS_OK
-			c.selfNode.Status = api.Status_STATUS_OK
 			break
 		} else {
 			c.status = api.Status_STATUS_NOT_IN_QUORUM
@@ -893,7 +886,7 @@ func (c *ClusterManager) initializeAndStartHeartbeat(
 	exist *bool,
 	nodeInitialized bool,
 ) (uint64, error) {
-	lastIndex, clusterInfo, err := c.initListeners(
+	lastIndex, _, err := c.initListeners(
 		kvdb,
 		clusterMaxSize,
 		exist,
@@ -902,20 +895,11 @@ func (c *ClusterManager) initializeAndStartHeartbeat(
 	if err != nil {
 		return 0, err
 	}
-
-	// Set the status to NOT_IN_QUORUM to start the node.
-	// Once we achieve quorum then we actually join the cluster
-	// and change the status to OK
-	c.selfNode.Status = api.Status_STATUS_NOT_IN_QUORUM
-	// Start heartbeating to other nodes.
-	go c.startHeartBeat(clusterInfo)
 	return lastIndex, nil
 }
 
-// Start initiates the cluster manager and the cluster state machine
-func (c *ClusterManager) Start(
-	clusterMaxSize int,
-	nodeInitialized bool,
+func (c *ClusterManager) PreStart(
+	bootstrapKvdb kvdb.Kvdb,
 ) error {
 	var err error
 
@@ -958,9 +942,37 @@ func (c *ClusterManager) Start(
 	)
 	c.gossipVersion = types.GOSSIP_VERSION_2
 
+	bne := BootstrapNodeEntry{
+		Id: c.config.NodeId,
+		Ip: c.selfNode.DataIp,
+	}
+	clusterInfo, err := addOurselvesInBootstrapDB(bootstrapKvdb, bne)
+	if err != nil {
+		return err
+	}
+
+	// Set the status to NOT_IN_QUORUM to start the node.
+	// Once we achieve quorum then we actually join the cluster
+	// and change the status to OK
+	c.selfNode.Status = api.Status_STATUS_NOT_IN_QUORUM
+	// Start heartbeating to other nodes.
+	go c.startHeartBeat(clusterInfo)
+
+	err = c.waitForQuorum()
+	if err != nil {
+		dlog.Warnf("Unable to achieve quorum.")
+		return err
+	}
+	return nil
+}
+
+// Start initiates the cluster manager and the cluster state machine
+func (c *ClusterManager) Start(
+	clusterMaxSize int,
+	nodeInitialized bool,
+) error {
 	var exist bool
 	kvdb := kvdb.Instance()
-
 	lastIndex, err := c.initializeAndStartHeartbeat(
 		kvdb,
 		clusterMaxSize,
@@ -973,11 +985,14 @@ func (c *ClusterManager) Start(
 
 	c.startClusterDBWatch(lastIndex, kvdb)
 
-	err = c.waitForQuorum(exist)
+	err = c.joinCluster(&c.selfNode, exist)
 	if err != nil {
+		if c.selfNode.Status != api.Status_STATUS_MAINTENANCE {
+			c.selfNode.Status = api.Status_STATUS_ERROR
+		}
 		return err
 	}
-
+	c.selfNode.Status = api.Status_STATUS_OK
 	go c.updateClusterStatus()
 	go c.replayNodeDecommission()
 
