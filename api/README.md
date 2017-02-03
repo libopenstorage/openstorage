@@ -41,3 +41,39 @@ func (c *myapp) listNodes() {
      }
 }
 ```
+
+### Inspect a volume in a cluster
+```go
+
+import (
+    ...
+    
+    "github.com/libopenstorage/openstorage/api"
+    volumeclient "github.com/libopenstorage/openstorage/api/client/volume"
+    "github.com/libopenstorage/openstorage/volume"
+)
+
+type myapp struct {
+    volDriver volume.VolumeDriver
+}
+
+func (c *myapp) init() {
+    // Choose the default version.
+    // Leave the host blank to use the local UNIX socket, or pass in an IP and a port at which the server is listening on.
+    clnt, err := volumeclient.NewDriverClient("", v.name, volume.APIVersion)
+    if err != nil {
+        fmt.Printf("Failed to initialize client library: %v\n", err)
+        os.Exit(1)
+    }
+    v.volDriver = volumeclient.VolumeDriver(clnt)
+}
+
+func (c *myapp) inspect(id string) {
+    stats, err := v.volDriver.Stats(id, true)
+    if err != nil {
+        return
+    }
+    
+    // stats is an object that has various volume properties and statistics.
+}
+```
