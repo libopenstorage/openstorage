@@ -59,6 +59,7 @@ type ClusterManager struct {
 	gEnabled      bool
 	selfNode      api.Node
 	system        systemutils.System
+	bootstrapKv   kvdb.Kvdb
 }
 
 type checkFunc func(ClusterInfo) error
@@ -246,6 +247,26 @@ func (c *ClusterManager) getNonDecommisionedPeers(db ClusterInfo) map[types.Node
 		peers[types.NodeId(nodeEntry.Id)] = ip
 	}
 	return peers
+}
+
+func (c *ClusterManager) getBootstrapPeers(bci *BootstrapClusterInfo) map[types.NodeId]string {
+	peers := make(map[types.NodeId]string)
+	for _, bne := range bci.Nodes {
+		peers[types.NodeId(bne.Id)] = bne.Ip + ":9002"
+	}
+	return peers
+}
+
+func (c *ClusterManager) watchBootstrapDB(key string, opaque interface{},
+	kvp *kvdb.KVPair, watchErr error) error {
+	_, bci, err := readBootstrapDB(c.bootstrapKv)
+	if err != nil {
+		dlog.Warnln("Failed to read bootstrap db after update ", err)
+		return nil
+	}
+	peers := c.getBootstrapPeers(bci)
+	c.gossip.UpdateCluster(peers)
+	return nil
 }
 
 // Get the latest config.
@@ -504,6 +525,13 @@ func (c *ClusterManager) startClusterDBWatch(lastIndex uint64,
 	return nil
 }
 
+func (c *ClusterManager) startBootstrapDBWatch(lastIndex uint64,
+	kv kvdb.Kvdb) error {
+	dlog.Infof("Cluster bootstrap starting watch at version %d", lastIndex)
+	go kv.WatchKey(ClusterBootstrapKey, lastIndex, nil, c.watchBootstrapDB)
+	return nil
+}
+
 func (c *ClusterManager) startHeartBeat(clusterInfo *BootstrapClusterInfo) {
 	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
 
@@ -528,10 +556,8 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *BootstrapClusterInfo) {
 		dlog.Infof("Starting Gossip...")
 	}
 	c.gossip.Start(nodeIps)
-	
-	// TODO: Handle decommission nodes from bootstrap db
-	
-	//c.gossip.UpdateCluster(c.getNonDecommisionedPeers(*clusterInfo))
+
+	c.gossip.UpdateCluster(c.getBootstrapPeers(clusterInfo))
 
 	lastUpdateTs := time.Now()
 	for {
@@ -913,6 +939,7 @@ func (c *ClusterManager) PreStart(
 	c.selfNode.MgmtIp, c.selfNode.DataIp, err = ExternalIp(&c.config)
 	c.selfNode.StartTime = time.Now()
 	c.selfNode.Hostname, _ = os.Hostname()
+	c.bootstrapKv = bootstrapKvdb
 	if err != nil {
 		dlog.Errorf("Failed to get external IP address for mgt/data interfaces: %s.",
 			err)
@@ -943,13 +970,16 @@ func (c *ClusterManager) PreStart(
 	c.gossipVersion = types.GOSSIP_VERSION_2
 
 	bne := BootstrapNodeEntry{
-		Id: c.config.NodeId,
-		Ip: c.selfNode.DataIp,
+		Id:            c.config.NodeId,
+		Ip:            c.selfNode.DataIp,
+		GossipVersion: types.GOSSIP_VERSION_2,
 	}
-	clusterInfo, err := addOurselvesInBootstrapDB(bootstrapKvdb, bne)
+	kvp, clusterInfo, err := addOurselvesInBootstrapDB(bootstrapKvdb, bne)
 	if err != nil {
 		return err
 	}
+
+	c.startBootstrapDBWatch(kvp.ModifiedIndex, bootstrapKvdb)
 
 	// Set the status to NOT_IN_QUORUM to start the node.
 	// Once we achieve quorum then we actually join the cluster
@@ -1408,6 +1438,15 @@ func (c *ClusterManager) NodeRemoveDone(nodeID string, result error) {
 	logrus.Infof("Cluster manager node remove done: node ID %s", nodeID)
 
 	err := c.deleteNodeFromDB(nodeID)
+	if err != nil {
+		goto error_done
+	}
+	err = removeNodeFromBootstrapDB(c.bootstrapKv, nodeID)
+	if err != nil {
+		goto error_done
+	}
+	return
+error_done:
 	if err != nil {
 		msg := fmt.Sprintf("Failed to delete node %s "+
 			"from cluster database, error %s",
