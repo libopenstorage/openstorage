@@ -55,6 +55,11 @@ type ClusterInitState struct {
 	Collector   kvdb.UpdatesCollector
 }
 
+// FinalizeInitCb is invoked when init is complete and is in the process of
+// updating the cluster database. This callback is invoked under lock and must
+// finish quickly, else it will slow down other node joins.
+type FinalizeInitCb func() error
+
 // ClusterListener is an interface to be implemented by a storage driver
 // if it is participating in a multi host environment.  It exposes events
 // in the cluster state machine.  Your driver can do the needful when
@@ -67,7 +72,7 @@ type ClusterListener interface {
 	ClusterInit(self *api.Node) error
 
 	// Init is called when this node is joining an existing cluster for the first time.
-	Init(self *api.Node, state *ClusterInfo) error
+	Init(self *api.Node, state *ClusterInfo) (FinalizeInitCb, error)
 
 	// CleanupInit is called when Init failed.
 	CleanupInit(self *api.Node, clusterInfo *ClusterInfo) error

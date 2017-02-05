@@ -85,9 +85,10 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 	nbdInit()
 
 	inst := &driver{
-		IODriver:        volume.IONotSupported,
-		StoreEnumerator: common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
-		StatsDriver:     volume.StatsNotSupported,
+		IODriver: volume.IONotSupported,
+		StoreEnumerator: common.NewDefaultStoreEnumerator(Name,
+			kvdb.Instance()),
+		StatsDriver: volume.StatsNotSupported,
 	}
 	inst.buseDevices = make(map[string]*buseDev)
 	if err := os.MkdirAll(BuseMountPath, 0744); err != nil {
@@ -201,7 +202,8 @@ func (d *driver) Create(
 		return "", err
 	}
 
-	dlog.Infof("BUSE mapped NBD device %s (size=%v) to block file %s", dev, spec.Size, buseFile)
+	dlog.Infof("BUSE mapped NBD device %s (size=%v) to block file %s", dev,
+		spec.Size, buseFile)
 
 	v := common.NewVolume(
 		volumeID,
@@ -240,7 +242,8 @@ func (d *driver) Delete(volumeID string) error {
 	bd.f.Close()
 	bd.nbd.Disconnect()
 
-	dlog.Infof("BUSE deleted volume %v at NBD device %s", volumeID, v.DevicePath)
+	dlog.Infof("BUSE deleted volume %v at NBD device %s", volumeID,
+		v.DevicePath)
 
 	if err := d.DeleteVol(volumeID); err != nil {
 		dlog.Println(err)
@@ -347,15 +350,22 @@ func (d *driver) ClusterInit(self *api.Node) error {
 	return nil
 }
 
-func (d *driver) Init(self *api.Node, clusterInfo *cluster.ClusterInfo) error {
-	return nil
+func (d *driver) Init(
+	self *api.Node,
+	clusterInfo *cluster.ClusterInfo,
+) (cluster.FinalizeInitCb, error) {
+	return nil, nil
 }
 
 func (d *driver) CleanupInit(self *api.Node, db *cluster.ClusterInfo) error {
 	return nil
 }
 
-func (d *driver) Join(self *api.Node, initState *cluster.ClusterInitState, handleNotifications cluster.ClusterNotify) error {
+func (d *driver) Join(
+	self *api.Node,
+	initState *cluster.ClusterInitState,
+	handleNotifications cluster.ClusterNotify,
+) error {
 	return nil
 }
 

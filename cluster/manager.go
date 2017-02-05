@@ -382,8 +382,9 @@ func (c *ClusterManager) initNodeInCluster(
 	self *api.Node,
 	exist bool,
 	nodeInitialized bool,
-) error {
+) ([]FinalizeInitCb, error) {
 	var err error
+	finalizeCbs := make([]FinalizeInitCb, 0)
 
 	// If I am already in the cluster map, don't add me again.
 	if exist {
@@ -393,12 +394,13 @@ func (c *ClusterManager) initNodeInCluster(
 
 	if nodeInitialized {
 		dlog.Errorf(ErrInitNodeNotFound.Error())
-		return ErrInitNodeNotFound
+		err = ErrInitNodeNotFound
+		goto done
 	}
 
 	// Alert all listeners that we are a new node and we are initializing.
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		err = e.Value.(ClusterListener).Init(self, clusterInfo)
+		finalizeCb, err := e.Value.(ClusterListener).Init(self, clusterInfo)
 		if err != nil {
 			if self.Status != api.Status_STATUS_MAINTENANCE {
 				self.Status = api.Status_STATUS_ERROR
@@ -408,9 +410,12 @@ func (c *ClusterManager) initNodeInCluster(
 			c.cleanupInit(clusterInfo, self)
 			goto done
 		}
+		if finalizeCb != nil {
+			finalizeCbs = append(finalizeCbs, finalizeCb)
+		}
 	}
 done:
-	return err
+	return finalizeCbs, err
 }
 
 // Alert all listeners that we are joining the cluster
@@ -420,8 +425,19 @@ func (c *ClusterManager) joinCluster(
 ) error {
 	// Listeners may update initial state, so snap again.
 	// The cluster db may have diverged since we waited for quorum
-	// in between.
+	// in between. Snapshot is created under cluster db lock to make
+	// sure cluster db updates do not happen during snapshot, otherwise
+	// there may be a mismatch between db updates from listeners and
+	// cluster db state.
+	kvdb := kvdb.Instance()
+	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
+	if err != nil {
+		dlog.Warnln("Unable to obtain cluster lock before creating snapshot: ",
+			err)
+		return err
+	}
 	initState, err := snapAndReadClusterInfo()
+	kvdb.Unlock(kvlock)
 	defer func() {
 		if initState.Collector != nil {
 			initState.Collector.Stop()
@@ -573,7 +589,7 @@ func (c *ClusterManager) updateClusterStatus() {
 				} else if (c.selfNode.Status == api.Status_STATUS_NOT_IN_QUORUM ||
 					c.selfNode.Status == api.Status_STATUS_OK) &&
 					(gossipNodeInfo.Status == types.NODE_STATUS_NOT_IN_QUORUM ||
-					gossipNodeInfo.Status == types.NODE_STATUS_DOWN) {
+						gossipNodeInfo.Status == types.NODE_STATUS_DOWN) {
 					// Current:
 					// Cluster Manager Status: UP or Not in Quorum.
 					// Gossip Status: Not in Quorum or DOWN
@@ -820,7 +836,7 @@ func (c *ClusterManager) initListeners(
 	// Initialize the node in cluster
 	self, exist := c.initNode(clusterInfo)
 	*nodeExists = exist
-	err = c.initNodeInCluster(
+	finalizeCbs, err := c.initNodeInCluster(
 		clusterInfo,
 		self,
 		*nodeExists,
@@ -836,7 +852,7 @@ func (c *ClusterManager) initListeners(
 		dlog.Panicln("Fatal, Unable to find self node entry in local cache")
 	}
 
-	initCheckFunc := func(clusterInfo ClusterInfo) error {
+	initFunc := func(clusterInfo ClusterInfo) error {
 		numNodes := 0
 		for _, node := range clusterInfo.NodeEntries {
 			if node.Status != api.Status_STATUS_DECOMMISSION {
@@ -848,10 +864,19 @@ func (c *ClusterManager) initListeners(
 				"(%v nodes). Please remove a node before attempting to "+
 				"add a new node.", clusterMaxSize)
 		}
+
+		// Finalize inits from subsystems under cluster db lock.
+		for _, finalizeCb := range finalizeCbs {
+			if err := finalizeCb(); err != nil {
+				dlog.Errorf("Failed finalizing init: %s", err.Error())
+				return err
+			}
+		}
 		return nil
 	}
 
-	kvp, kvClusterInfo, err := c.updateNodeEntryDB(selfNodeEntry, initCheckFunc)
+	kvp, kvClusterInfo, err := c.updateNodeEntryDB(selfNodeEntry,
+		initFunc)
 	if err != nil {
 		dlog.Errorln("Failed to save the database.", err)
 		return 0, nil, err
