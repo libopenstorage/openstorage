@@ -182,6 +182,17 @@ func (x VolumeStatus) SimpleString() string {
 	return simpleString("volume_status", VolumeStatus_name, int32(x))
 }
 
+// IoProfileSimpleValueOf returns the string format of IoProfile
+func IoProfileSimpleValueOf(s string) (IoProfile, error) {
+	obj, err := simpleValueOf("io_profile", IoProfile_value, s)
+	return IoProfile(obj), err
+}
+
+// SimpleString returns the string format of IoProfile
+func (x IoProfile) SimpleString() string {
+	return simpleString("io_profile", IoProfile_name, int32(x))
+}
+
 func simpleValueOf(typeString string, valueMap map[string]int32, s string) (int32, error) {
 	obj, ok := valueMap[strings.ToUpper(fmt.Sprintf("%s_%s", typeString, s))]
 	if !ok {
