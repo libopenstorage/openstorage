@@ -122,7 +122,7 @@ func (c *clusterClient) Start(int, bool) error {
 	return nil
 }
 
-func (c *clusterClient) PreStart(kvdb kvdb.Kvdb) error {
+func (c *clusterClient) Bootstrap(kvdb kvdb.Kvdb) error {
 	return nil
 }
 

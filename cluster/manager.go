@@ -924,7 +924,7 @@ func (c *ClusterManager) initializeAndStartHeartbeat(
 	return lastIndex, nil
 }
 
-func (c *ClusterManager) PreStart(
+func (c *ClusterManager) Bootstrap(
 	bootstrapKvdb kvdb.Kvdb,
 ) error {
 	var err error

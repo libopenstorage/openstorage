@@ -174,8 +174,19 @@ type ClusterRemove interface {
 	NodeRemoveDone(nodeID string, result error)
 }
 
+type ClusterBootstrap interface {
+	// Bootstrap has to be called before Start and needs to be provided with
+	// a bootstrap kvdb which is used to bootstrap the cluster
+	Bootstrap(bootstrapKvdb kvdb.Kvdb) error
+
+}
+
+
 // Cluster is the API that a cluster provider will implement.
 type Cluster interface {
+
+	ClusterBootstrap
+
 	// Inspect the node given a UUID.
 	Inspect(string) (api.Node, error)
 
@@ -190,10 +201,6 @@ type Cluster interface {
 
 	// Shutdown can be called when THIS node is gracefully shutting down.
 	Shutdown() error
-
-	// PreStart has to be called before Start and needs to be provided with
-	// a bootstrap kvdb which is used to bootstrap the cluster
-	PreStart(bootstrapKvdb kvdb.Kvdb) error
 
 	// Start starts the cluster manager and state machine.
 	// It also causes this node to join the cluster.
