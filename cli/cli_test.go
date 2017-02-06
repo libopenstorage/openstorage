@@ -22,7 +22,7 @@ func TestCmdMarshalProto(t *testing.T) {
  "block_size": "0",
  "ha_level": "0",
  "cos": "none",
- "io_profile": "IO_PROFILE_SEQUENTIAL",
+ "io_profile": "sequential",
  "dedupe": false,
  "snapshot_interval": 0,
  "shared": false,
