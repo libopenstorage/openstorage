@@ -88,16 +88,16 @@ func (d *driver) volNotMounted(request string, id string) error {
 
 func (d *driver) Routes() []*Route {
 	return []*Route{
-		&Route{verb: "POST", path: volDriverPath("Create"), fn: d.create},
-		&Route{verb: "POST", path: volDriverPath("Remove"), fn: d.remove},
-		&Route{verb: "POST", path: volDriverPath("Mount"), fn: d.mount},
-		&Route{verb: "POST", path: volDriverPath("Path"), fn: d.path},
-		&Route{verb: "POST", path: volDriverPath("List"), fn: d.list},
-		&Route{verb: "POST", path: volDriverPath("Get"), fn: d.get},
-		&Route{verb: "POST", path: volDriverPath("Unmount"), fn: d.unmount},
-		&Route{verb: "POST", path: volDriverPath("Capabilities"), fn: d.capabilities},
-		&Route{verb: "POST", path: "/Plugin.Activate", fn: d.handshake},
-		&Route{verb: "GET", path: "/status", fn: d.status},
+		{verb: "POST", path: volDriverPath("Create"), fn: d.create},
+		{verb: "POST", path: volDriverPath("Remove"), fn: d.remove},
+		{verb: "POST", path: volDriverPath("Mount"), fn: d.mount},
+		{verb: "POST", path: volDriverPath("Path"), fn: d.path},
+		{verb: "POST", path: volDriverPath("List"), fn: d.list},
+		{verb: "POST", path: volDriverPath("Get"), fn: d.get},
+		{verb: "POST", path: volDriverPath("Unmount"), fn: d.unmount},
+		{verb: "POST", path: volDriverPath("Capabilities"), fn: d.capabilities},
+		{verb: "POST", path: "/Plugin.Activate", fn: d.handshake},
+		{verb: "GET", path: "/status", fn: d.status},
 	}
 }
 

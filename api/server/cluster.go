@@ -16,18 +16,18 @@ type clusterApi struct {
 
 func (c *clusterApi) Routes() []*Route {
 	return []*Route{
-		&Route{verb: "GET", path: "/cluster/versions", fn: c.versions},
-		&Route{verb: "GET", path: clusterPath("/enumerate", cluster.APIVersion), fn: c.enumerate},
-		&Route{verb: "GET", path: clusterPath("/gossipstate", cluster.APIVersion), fn: c.gossipState},
-		&Route{verb: "GET", path: clusterPath("/status", cluster.APIVersion), fn: c.status},
-		&Route{verb: "GET", path: clusterPath("/peerstatus", cluster.APIVersion), fn: c.peerStatus},
-		&Route{verb: "GET", path: clusterPath("/inspect/{id}", cluster.APIVersion), fn: c.inspect},
-		&Route{verb: "DELETE", path: clusterPath("", cluster.APIVersion), fn: c.delete},
-		&Route{verb: "DELETE", path: clusterPath("/{id}", cluster.APIVersion), fn: c.delete},
-		&Route{verb: "PUT", path: clusterPath("/enablegossip", cluster.APIVersion), fn: c.enableGossip},
-		&Route{verb: "PUT", path: clusterPath("/disablegossip", cluster.APIVersion), fn: c.disableGossip},
-		&Route{verb: "PUT", path: clusterPath("/shutdown", cluster.APIVersion), fn: c.shutdown},
-		&Route{verb: "PUT", path: clusterPath("/shutdown/{id}", cluster.APIVersion), fn: c.shutdown},
+		{verb: "GET", path: "/cluster/versions", fn: c.versions},
+		{verb: "GET", path: clusterPath("/enumerate", cluster.APIVersion), fn: c.enumerate},
+		{verb: "GET", path: clusterPath("/gossipstate", cluster.APIVersion), fn: c.gossipState},
+		{verb: "GET", path: clusterPath("/status", cluster.APIVersion), fn: c.status},
+		{verb: "GET", path: clusterPath("/peerstatus", cluster.APIVersion), fn: c.peerStatus},
+		{verb: "GET", path: clusterPath("/inspect/{id}", cluster.APIVersion), fn: c.inspect},
+		{verb: "DELETE", path: clusterPath("", cluster.APIVersion), fn: c.delete},
+		{verb: "DELETE", path: clusterPath("/{id}", cluster.APIVersion), fn: c.delete},
+		{verb: "PUT", path: clusterPath("/enablegossip", cluster.APIVersion), fn: c.enableGossip},
+		{verb: "PUT", path: clusterPath("/disablegossip", cluster.APIVersion), fn: c.disableGossip},
+		{verb: "PUT", path: clusterPath("/shutdown", cluster.APIVersion), fn: c.shutdown},
+		{verb: "PUT", path: clusterPath("/shutdown/{id}", cluster.APIVersion), fn: c.shutdown},
 	}
 }
 func newClusterAPI() restServer {

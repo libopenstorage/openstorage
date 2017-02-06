@@ -54,20 +54,20 @@ func graphDriverPath(method string) string {
 
 func (d *graphDriver) Routes() []*Route {
 	return []*Route{
-		&Route{verb: "POST", path: graphDriverPath("Init"), fn: d.init},
-		&Route{verb: "POST", path: graphDriverPath("Create"), fn: d.create},
-		&Route{verb: "POST", path: graphDriverPath("Remove"), fn: d.remove},
-		&Route{verb: "POST", path: graphDriverPath("Get"), fn: d.get},
-		&Route{verb: "POST", path: graphDriverPath("Put"), fn: d.put},
-		&Route{verb: "POST", path: graphDriverPath("Exists"), fn: d.exists},
-		&Route{verb: "POST", path: graphDriverPath("Status"), fn: d.graphStatus},
-		&Route{verb: "POST", path: graphDriverPath("GetMetadata"), fn: d.getMetadata},
-		&Route{verb: "POST", path: graphDriverPath("Cleanup"), fn: d.cleanup},
-		&Route{verb: "POST", path: graphDriverPath("Diff"), fn: d.diff},
-		&Route{verb: "POST", path: graphDriverPath("Changes"), fn: d.changes},
-		&Route{verb: "POST", path: graphDriverPath("ApplyDiff"), fn: d.applyDiff},
-		&Route{verb: "POST", path: graphDriverPath("DiffSize"), fn: d.diffSize},
-		&Route{verb: "POST", path: "/Plugin.Activate", fn: d.handshake},
+		{verb: "POST", path: graphDriverPath("Init"), fn: d.init},
+		{verb: "POST", path: graphDriverPath("Create"), fn: d.create},
+		{verb: "POST", path: graphDriverPath("Remove"), fn: d.remove},
+		{verb: "POST", path: graphDriverPath("Get"), fn: d.get},
+		{verb: "POST", path: graphDriverPath("Put"), fn: d.put},
+		{verb: "POST", path: graphDriverPath("Exists"), fn: d.exists},
+		{verb: "POST", path: graphDriverPath("Status"), fn: d.graphStatus},
+		{verb: "POST", path: graphDriverPath("GetMetadata"), fn: d.getMetadata},
+		{verb: "POST", path: graphDriverPath("Cleanup"), fn: d.cleanup},
+		{verb: "POST", path: graphDriverPath("Diff"), fn: d.diff},
+		{verb: "POST", path: graphDriverPath("Changes"), fn: d.changes},
+		{verb: "POST", path: graphDriverPath("ApplyDiff"), fn: d.applyDiff},
+		{verb: "POST", path: graphDriverPath("DiffSize"), fn: d.diffSize},
+		{verb: "POST", path: "/Plugin.Activate", fn: d.handshake},
 	}
 }
 
