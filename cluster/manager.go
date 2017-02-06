@@ -974,7 +974,7 @@ func (c *ClusterManager) Bootstrap(
 		Ip:            c.selfNode.DataIp,
 		GossipVersion: types.GOSSIP_VERSION_2,
 	}
-	kvp, clusterInfo, err := addOurselvesInBootstrapDB(bootstrapKvdb, bne)
+	kvp, clusterInfo, err := addNodeInBootstrapDB(bootstrapKvdb, bne)
 	if err != nil {
 		return err
 	}
