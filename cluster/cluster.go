@@ -8,6 +8,7 @@ import (
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
+	"github.com/libopenstorage/openstorage/cluster/bootstrap"
 	"github.com/portworx/kvdb"
 )
 
@@ -59,19 +60,6 @@ type ClusterInitState struct {
 // updating the cluster database. This callback is invoked under lock and must
 // finish quickly, else it will slow down other node joins.
 type FinalizeInitCb func() error
-
-// BootstrapNodeEntry is used to bootstrap nodes in the cluster
-type BootstrapNodeEntry struct {
-	Id string
-	Ip string
-	GossipVersion string
-}
-// BootstrapClusterInfo is the cluster info used while bootstrapping nodes
-// and discovering peer nodes using gossip
-type BootstrapClusterInfo struct {
-	Size int
-	Nodes map[string]BootstrapNodeEntry
-}
 
 // ClusterListener is an interface to be implemented by a storage driver
 // if it is participating in a multi host environment.  It exposes events
@@ -174,18 +162,13 @@ type ClusterRemove interface {
 	NodeRemoveDone(nodeID string, result error)
 }
 
-type ClusterBootstrap interface {
-	// Bootstrap has to be called before Start and needs to be provided with
-	// a bootstrap kvdb which is used to bootstrap the cluster
-	Bootstrap(bootstrapKvdb kvdb.Kvdb) error
-
-}
-
-
 // Cluster is the API that a cluster provider will implement.
 type Cluster interface {
 
-	ClusterBootstrap
+	// Bootstrap has to be called before Start and needs to be provided with
+	// a bootstrap implementation that could be used to bootstrap a node in the
+	// cluster
+	Bootstrap(bootstrap.ClusterBootstrap) error
 
 	// Inspect the node given a UUID.
 	Inspect(string) (api.Node, error)
