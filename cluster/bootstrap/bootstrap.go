@@ -1,13 +1,5 @@
 package bootstrap
 
-import (
-	"fmt"
-	"strings"
-
-	"go.pedge.io/dlog"
-	"github.com/portworx/kvdb"
-)
-
 // BootstrapNodeEntry is used to bootstrap nodes in the cluster
 type BootstrapNodeEntry struct {
 	Id string
@@ -22,7 +14,7 @@ type BootstrapClusterInfo struct {
 	Version uint64
 }
 
-type WatchClusterCB func(BootstrapClusterInfo, error) (error)
+type WatchClusterCB func(*BootstrapClusterInfo, error) (error)
 
 type ClusterBootstrap interface {
 	// AddNode bootstrap a new node into a cluster
