@@ -4,10 +4,10 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/portworx/kvdb"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/client"
 	"github.com/libopenstorage/openstorage/cluster"
+	"github.com/libopenstorage/openstorage/cluster/discovery"
 )
 
 const (
@@ -122,7 +122,7 @@ func (c *clusterClient) Start(int, bool) error {
 	return nil
 }
 
-func (c *clusterClient) Bootstrap(kvdb kvdb.Kvdb) error {
+func (c *clusterClient) DiscoveryStart(discovery.Cluster) error {
 	return nil
 }
 

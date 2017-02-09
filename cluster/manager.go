@@ -20,6 +20,7 @@ import (
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
+	"github.com/libopenstorage/openstorage/cluster/discovery"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/libopenstorage/systemutils"
@@ -59,7 +60,7 @@ type ClusterManager struct {
 	gEnabled      bool
 	selfNode      api.Node
 	system        systemutils.System
-	bootstrapKv   kvdb.Kvdb
+	discoverService discovery.Cluster
 }
 
 type checkFunc func(ClusterInfo) error
@@ -249,24 +250,18 @@ func (c *ClusterManager) getNonDecommisionedPeers(db ClusterInfo) map[types.Node
 	return peers
 }
 
-func (c *ClusterManager) getBootstrapPeers(bci *BootstrapClusterInfo) map[types.NodeId]string {
+func (c *ClusterManager) getBootstrapPeers(dci *discovery.ClusterInfo) map[types.NodeId]string {
 	peers := make(map[types.NodeId]string)
-	for _, bne := range bci.Nodes {
+	for _, bne := range dci.Nodes {
 		peers[types.NodeId(bne.Id)] = bne.Ip + ":9002"
 	}
 	return peers
 }
 
-func (c *ClusterManager) watchBootstrapDB(key string, opaque interface{},
-	kvp *kvdb.KVPair, watchErr error) error {
-	_, bci, err := readBootstrapDB(c.bootstrapKv)
-	if err != nil {
-		dlog.Warnln("Failed to read bootstrap db after update ", err)
-		return nil
-	}
-	peers := c.getBootstrapPeers(bci)
+func (c *ClusterManager) watchDiscovery(dci *discovery.ClusterInfo, err error) error {
+	peers := c.getBootstrapPeers(dci)
 	c.gossip.UpdateCluster(peers)
-	return nil
+	return nil	
 }
 
 // Get the latest config.
@@ -525,14 +520,7 @@ func (c *ClusterManager) startClusterDBWatch(lastIndex uint64,
 	return nil
 }
 
-func (c *ClusterManager) startBootstrapDBWatch(lastIndex uint64,
-	kv kvdb.Kvdb) error {
-	dlog.Infof("Cluster bootstrap starting watch at version %d", lastIndex)
-	go kv.WatchKey(ClusterBootstrapKey, lastIndex, nil, c.watchBootstrapDB)
-	return nil
-}
-
-func (c *ClusterManager) startHeartBeat(clusterInfo *BootstrapClusterInfo) {
+func (c *ClusterManager) startHeartBeat(clusterInfo *discovery.ClusterInfo) {
 	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
 
 	node := c.getCurrentState()
@@ -924,12 +912,11 @@ func (c *ClusterManager) initializeAndStartHeartbeat(
 	return lastIndex, nil
 }
 
-func (c *ClusterManager) Bootstrap(
-	bootstrapKvdb kvdb.Kvdb,
+func (c *ClusterManager) DiscoveryStart(
+	discoveryService discovery.Cluster,
 ) error {
 	var err error
-
-	dlog.Infoln("Cluster manager starting...")
+	dlog.Infoln("Cluster Discovery starting...")
 
 	c.gEnabled = true
 	c.selfNode = api.Node{}
@@ -939,7 +926,7 @@ func (c *ClusterManager) Bootstrap(
 	c.selfNode.MgmtIp, c.selfNode.DataIp, err = ExternalIp(&c.config)
 	c.selfNode.StartTime = time.Now()
 	c.selfNode.Hostname, _ = os.Hostname()
-	c.bootstrapKv = bootstrapKvdb
+	c.discoverService = discoveryService
 	if err != nil {
 		dlog.Errorf("Failed to get external IP address for mgt/data interfaces: %s.",
 			err)
@@ -969,17 +956,21 @@ func (c *ClusterManager) Bootstrap(
 	)
 	c.gossipVersion = types.GOSSIP_VERSION_2
 
-	bne := BootstrapNodeEntry{
+	dne := discovery.NodeEntry{
 		Id:            c.config.NodeId,
 		Ip:            c.selfNode.DataIp,
 		GossipVersion: types.GOSSIP_VERSION_2,
 	}
-	kvp, clusterInfo, err := addNodeInBootstrapDB(bootstrapKvdb, bne)
+	clusterInfo, err := c.discoverService.AddNode(dne)
 	if err != nil {
 		return err
 	}
 
-	c.startBootstrapDBWatch(kvp.ModifiedIndex, bootstrapKvdb)
+	err = c.discoverService.WatchCluster(c.watchDiscovery, clusterInfo.Version)
+	if err != nil {
+		dlog.Errorf("Failed to watch on discovery service: %v", err)
+		return err
+	}
 
 	// Set the status to NOT_IN_QUORUM to start the node.
 	// Once we achieve quorum then we actually join the cluster
@@ -1002,6 +993,9 @@ func (c *ClusterManager) Start(
 	nodeInitialized bool,
 ) error {
 	var exist bool
+
+	dlog.Infoln("Cluster manager starting...")
+
 	kvdb := kvdb.Instance()
 	lastIndex, err := c.initializeAndStartHeartbeat(
 		kvdb,
@@ -1441,7 +1435,7 @@ func (c *ClusterManager) NodeRemoveDone(nodeID string, result error) {
 	if err != nil {
 		goto error_done
 	}
-	err = removeNodeFromBootstrapDB(c.bootstrapKv, nodeID)
+	_, err = c.discoverService.RemoveNode(discovery.NodeEntry{Id: nodeID})
 	if err != nil {
 		goto error_done
 	}
