@@ -16,8 +16,8 @@ const (
 )
 
 type discoveryKvdb struct {
-	kv       kvdb.Kvdb
-	wcb      WatchClusterCB
+	kv  kvdb.Kvdb
+	wcb WatchClusterCB
 }
 
 func NewDiscoveryKvdb(kv kvdb.Kvdb) Cluster {
@@ -89,13 +89,15 @@ func (b *discoveryKvdb) Enumerate() (*ClusterInfo, error) {
 		dlog.Warnln("Warning, could not read discovery kv database")
 		return nil, err
 	}
-	ci.Version = kvp.ModifiedIndex
+	if kvp != nil {
+		ci.Version = kvp.ModifiedIndex
+	}
 	return &ci, nil
 }
 
 func (b *discoveryKvdb) watchCluster(key string, opaque interface{}, kvp *kvdb.KVPair, watchErr error) error {
 	wcb := opaque.(WatchClusterCB)
-	ci, err  := b.Enumerate()
+	ci, err := b.Enumerate()
 	// If we fail in enumerate let the callback function decide how to handle this watch
 	werr := wcb(ci, err)
 	return werr

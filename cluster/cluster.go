@@ -7,8 +7,8 @@ import (
 
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/cluster/discovery"
+	"github.com/libopenstorage/openstorage/config"
 	"github.com/portworx/kvdb"
 )
 

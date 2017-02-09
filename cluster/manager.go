@@ -19,8 +19,8 @@ import (
 	"github.com/libopenstorage/gossip"
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/cluster/discovery"
+	"github.com/libopenstorage/openstorage/config"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/libopenstorage/systemutils"
@@ -48,18 +48,18 @@ var (
 
 // ClusterManager implements the cluster interface
 type ClusterManager struct {
-	size          int
-	listeners     *list.List
-	config        config.ClusterConfig
-	kv            kvdb.Kvdb
-	status        api.Status
-	nodeCache     map[string]api.Node   // Cached info on the nodes in the cluster.
-	nodeStatuses  map[string]api.Status // Set of nodes currently marked down.
-	gossip        gossip.Gossiper
-	gossipVersion string
-	gEnabled      bool
-	selfNode      api.Node
-	system        systemutils.System
+	size            int
+	listeners       *list.List
+	config          config.ClusterConfig
+	kv              kvdb.Kvdb
+	status          api.Status
+	nodeCache       map[string]api.Node   // Cached info on the nodes in the cluster.
+	nodeStatuses    map[string]api.Status // Set of nodes currently marked down.
+	gossip          gossip.Gossiper
+	gossipVersion   string
+	gEnabled        bool
+	selfNode        api.Node
+	system          systemutils.System
 	discoverService discovery.Cluster
 }
 
@@ -261,7 +261,7 @@ func (c *ClusterManager) getBootstrapPeers(dci *discovery.ClusterInfo) map[types
 func (c *ClusterManager) watchDiscovery(dci *discovery.ClusterInfo, err error) error {
 	peers := c.getBootstrapPeers(dci)
 	c.gossip.UpdateCluster(peers)
-	return nil	
+	return nil
 }
 
 // Get the latest config.
