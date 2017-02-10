@@ -166,7 +166,7 @@ func (v *volDriver) volumeAttach(context *cli.Context) {
 	v.volumeOptions(context)
 	volumeID := context.Args()[0]
 
-	devicePath, err := v.volDriver.Attach(string(volumeID))
+	devicePath, err := v.volDriver.Attach(string(volumeID), nil)
 	if err != nil {
 		cmdError(context, fn, err)
 		return

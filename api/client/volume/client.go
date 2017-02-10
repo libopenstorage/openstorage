@@ -298,7 +298,7 @@ func (v *volumeClient) SnapEnumerate(ids []string,
 // Attach map device to the host.
 // On success the devicePath specifies location where the device is exported
 // Errors ErrEnoEnt, ErrVolAttached may be returned.
-func (v *volumeClient) Attach(volumeID string) (string, error) {
+func (v *volumeClient) Attach(volumeID string, attachOptions map[string]string) (string, error) {
 	response, err := v.doVolumeSetGetResponse(
 		volumeID,
 		&api.VolumeSetRequest{

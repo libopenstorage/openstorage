@@ -49,7 +49,7 @@ func (c *flexVolumeClient) Attach(jsonOptions map[string]string) error {
 	if !ok {
 		return ErrInvalidSpecVolumeID
 	}
-	if _, err := driver.Attach(mountDevice); err != nil {
+	if _, err := driver.Attach(mountDevice, nil); err != nil {
 		return err
 	}
 	return nil

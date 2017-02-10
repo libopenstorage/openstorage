@@ -180,7 +180,7 @@ func (d *driver) Delete(volumeID string) error {
 	return nil
 }
 
-func (d *driver) Attach(volumeID string) (path string, err error) {
+func (d *driver) Attach(volumeID string, attachOptions map[string]string) (path string, err error) {
 	return "", nil
 }
 

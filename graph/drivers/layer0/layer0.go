@@ -188,7 +188,7 @@ func (l *Layer0) create(id, parent string) (string, *Layer0Vol, error) {
 
 	// If this is a block driver, first attach the volume.
 	if l.volDriver.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-		_, err := l.volDriver.Attach(vols[index].Id)
+		_, err := l.volDriver.Attach(vols[index].Id, nil)
 		if err != nil {
 			dlog.Errorf("Failed to attach volume %v", vols[index].Id)
 			delete(l.volumes, id)

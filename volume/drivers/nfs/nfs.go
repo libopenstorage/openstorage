@@ -276,7 +276,7 @@ func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 	return newVolumeID, nil
 }
 
-func (d *driver) Attach(volumeID string) (string, error) {
+func (d *driver) Attach(volumeID string, attachOptions map[string]string) (string, error) {
 	return path.Join(nfsMountPath, volumeID+nfsBlockFile), nil
 }
 

@@ -277,7 +277,7 @@ func (d *Driver) Create(
 	if err = d.waitStatus(volume.Id, ec2.VolumeStateAvailable); err != nil {
 		return "", err
 	}
-	if _, err := d.Attach(volume.Id); err != nil {
+	if _, err := d.Attach(volume.Id, nil); err != nil {
 		return "", err
 	}
 
@@ -517,7 +517,7 @@ func (d *Driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 }
 
 // Attach attaches a volume
-func (d *Driver) Attach(volumeID string) (path string, err error) {
+func (d *Driver) Attach(volumeID string, attachOptions map[string]string) (path string, err error) {
 	volume, err := d.GetVol(volumeID)
 	if err != nil {
 		return "", fmt.Errorf("Volume %s could not be located", volumeID)

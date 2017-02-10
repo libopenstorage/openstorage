@@ -331,7 +331,7 @@ func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.Volu
 	return d.UpdateVol(v)
 }
 
-func (d *driver) Attach(volumeID string) (string, error) {
+func (d *driver) Attach(volumeID string, attachOptions map[string]string) (string, error) {
 	// Nothing to do on attach.
 	return path.Join(BuseMountPath, volumeID), nil
 }

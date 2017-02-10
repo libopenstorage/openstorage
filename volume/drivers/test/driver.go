@@ -192,13 +192,13 @@ func attach(t *testing.T, ctx *Context) {
 	fmt.Println("attach")
 	err := waitReady(t, ctx)
 	require.NoError(t, err, "Volume status is not up")
-	p, err := ctx.Attach(ctx.volID)
+	p, err := ctx.Attach(ctx.volID, nil)
 	if err != nil {
 		require.Equal(t, err, volume.ErrNotSupported, "Error on attach %v", err)
 	}
 	ctx.devicePath = p
 
-	p, err = ctx.Attach(ctx.volID)
+	p, err = ctx.Attach(ctx.volID, nil)
 	if err == nil {
 		require.Equal(t, p, ctx.devicePath, "Multiple calls to attach if not errored should return the same path")
 	}

@@ -176,7 +176,7 @@ type BlockDriver interface {
 	// Attach map device to the host.
 	// On success the devicePath specifies location where the device is exported
 	// Errors ErrEnoEnt, ErrVolAttached may be returned.
-	Attach(volumeID string) (string, error)
+	Attach(volumeID string, attachOptions map[string]string) (string, error)
 	// Detach device from the host.
 	// Errors ErrEnoEnt, ErrVolDetached may be returned.
 	Detach(volumeID string) error

@@ -238,7 +238,7 @@ func (d *driver) scaleUp(
 ) {
 	// Try to attach existing volumes.
 	for _, outVol := range allVols {
-		if _, err = vd.Attach(outVol.Id); err == nil {
+		if _, err = vd.Attach(outVol.Id, nil); err == nil {
 			return outVol, nil
 		}
 	}
@@ -267,7 +267,7 @@ func (d *driver) scaleUp(
 		if outVol, err = d.volFromName(id); err != nil {
 			return nil, err
 		}
-		if _, err = vd.Attach(outVol.Id); err == nil {
+		if _, err = vd.Attach(outVol.Id, nil); err == nil {
 			return outVol, nil
 		}
 		// If we fail to attach the volume, continue to look for a
@@ -323,7 +323,7 @@ func (d *driver) attachScale(
 		if err != nil {
 			return nil, err
 		}
-		if _, err = vd.Attach(outVol.Id); err == nil {
+		if _, err = vd.Attach(outVol.Id, nil); err == nil {
 			return outVol, nil
 		}
 		// We failed to attach, scaleUp.
@@ -340,7 +340,7 @@ func (d *driver) attachVol(
 	outVolume *api.Volume,
 	err error,
 ) {
-	attachPath, err := vd.Attach(vol.Id)
+	attachPath, err := vd.Attach(vol.Id, nil)
 
 	switch err {
 	case nil:
