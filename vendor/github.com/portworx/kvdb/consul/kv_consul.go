@@ -92,6 +92,7 @@ func New(
 		}
 	}
 
+	var token string
 	// options provided. Probably auth options
 	if options != nil || len(options) > 0 {
 		var ok bool
@@ -110,12 +111,16 @@ func New(
 		if ok {
 			return nil, kvdb.ErrAuthNotSupported
 		}
+		// Get the ACL token if provided
+		token, ok = options[kvdb.ACLTokenKey]
+
 	}
 
 	config := api.DefaultConfig()
 	config.HttpClient = http.DefaultClient
 	config.Address = machines[0]
 	config.Scheme = "http"
+	config.Token = token
 
 	client, err := api.NewClient(config)
 	if err != nil {
@@ -135,7 +140,7 @@ func New(
 }
 
 // Version returns the supported version for consul api
-func Version(url string) (string, error) {
+func Version(url string, kvdbOptions map[string]string) (string, error) {
 	// Currently we support only v1
 	return kvdb.ConsulVersion1, nil
 }
@@ -248,9 +253,6 @@ func (kv *consulKV) Enumerate(prefix string) (kvdb.KVPairs, error) {
 	pairs, meta, err := kv.client.KV().List(prefix, nil)
 	if err != nil {
 		return nil, err
-	}
-	if pairs == nil {
-		return nil, kvdb.ErrNotFound
 	}
 	return kv.pairToKvs("enumerate", pairs, meta), nil
 }
@@ -422,14 +424,16 @@ func (kv *consulKV) Unlock(kvp *kvdb.KVPair) error {
 	if !ok {
 		return fmt.Errorf("Invalid lock structure for key: %v", string(kvp.Key))
 	}
-	if l.doneCh != nil {
-		close(l.doneCh)
-	}
 	_, err := kv.Delete(kvp.Key)
 	if err == nil {
 		_ = l.lock.Unlock()
+		if l.doneCh != nil {
+			close(l.doneCh)
+		}
 		return nil
 	}
+	logrus.Errorf("Unlock failed for key: %s, tag: %s, error: %s", kvp.Key,
+		l.tag, err.Error())
 	return err
 }
 
@@ -681,6 +685,7 @@ func (kv *consulKV) getLock(key string, tag interface{}, ttl time.Duration) (
 	// Place the session on lock
 	lockOpts.Session = session
 	lock.doneCh = make(chan struct{})
+	lock.tag = tag
 
 	l, err := kv.client.LockOpts(lockOpts)
 	if err != nil {
@@ -695,16 +700,32 @@ func (kv *consulKV) getLock(key string, tag interface{}, ttl time.Duration) (
 func (kv *consulKV) watchTreeStart(prefix string, prefixExisted bool, waitIndex uint64, opaque interface{}, cb kvdb.WatchCB) {
 	prefix = stripConsecutiveForwardslash(prefix)
 	opts := &api.QueryOptions{
-		WaitIndex: waitIndex,
+		WaitIndex:         waitIndex,
+		RequireConsistent: true,
 	}
 	prefixDeleted := false
+	prevIndex := uint64(0)
 	var cbCreateErr, cbUpdateErr error
+
+	checkIndex := func(prevIndex *uint64, pair *api.KVPair, newIndex uint64,
+		msg string, lastIndex, waitIndex uint64) {
+		if *prevIndex != 0 && newIndex <= *prevIndex {
+			kv.FatalCb(msg+" with index invoked twice: %v, prevIndex: %d"+
+				" newIndex: %d, lastIndex: %d, waitIndex: %d", *pair,
+				*prevIndex, newIndex, lastIndex, waitIndex)
+		}
+		*prevIndex = newIndex
+	}
+
 	for {
 		// Make a blocking List query
 		kvPairs, meta, err := kv.client.KV().List(prefix, opts)
 		pairs := CKVPairs(kvPairs)
 		sort.Sort(pairs)
-		if pairs == nil && prefixExisted && !prefixDeleted {
+		if err != nil {
+			logrus.Errorf("Consul returned an error : %s\n", err.Error())
+			cbUpdateErr = cb(prefix, opaque, nil, err)
+		} else if pairs == nil && prefixExisted && !prefixDeleted {
 			// Got a delete on the prefix of the tree (Last Key under the tree being deleted)
 			pair := &api.KVPair{
 				Key:   prefix,
@@ -712,6 +733,8 @@ func (kv *consulKV) watchTreeStart(prefix string, prefixExisted bool, waitIndex 
 			}
 			kvPair := kv.pairToKv("delete", pair, meta)
 			kvPair.ModifiedIndex = meta.LastIndex
+			checkIndex(&prevIndex, pair, kvPair.ModifiedIndex,
+				"delete", meta.LastIndex, opts.WaitIndex)
 
 			// Callback with a delete action
 			cbUpdateErr = cb(prefix, opaque, kvPair, nil)
@@ -729,28 +752,29 @@ func (kv *consulKV) watchTreeStart(prefix string, prefixExisted bool, waitIndex 
 			// Set the waitIndex so that we block on the next Get call
 			opts.WaitIndex = meta.LastIndex
 			continue
-		} else if err != nil {
-			logrus.Errorf("Consul returned an error : %s\n", err.Error())
-			cbUpdateErr = cb(prefix, opaque, nil, err)
 		} else {
 			// Same waitIndex as previous. Out of blocking call because
 			// waitTime timeouted. (This should not happen)
-			if opts.WaitIndex == meta.LastIndex {
+			if opts.WaitIndex >= meta.LastIndex {
 				continue
 			}
 			// Find the key value pair(s) that was(were) added/modified/deleted
 			found := false
 			for _, pair := range pairs {
 				// Check if pair's ModifyIndex lies between the wait index and the last modified index
-				if (pair.ModifyIndex > opts.WaitIndex) && (pair.ModifyIndex <= meta.LastIndex) {
+				if pair.ModifyIndex > opts.WaitIndex {
 					if pair.CreateIndex == pair.ModifyIndex {
 						// Callback with a create action
+						checkIndex(&prevIndex, pair, pair.CreateIndex,
+							"Create", meta.LastIndex, opts.WaitIndex)
 						cbCreateErr = cb(prefix, opaque, kv.pairToKv("create", pair, meta), nil)
 						prefixDeleted = false
 						prefixExisted = true
-					} else if (pair.CreateIndex > opts.WaitIndex) && (pair.CreateIndex < pair.ModifyIndex) {
+					} else if (pair.CreateIndex > opts.WaitIndex) && (pair.ModifyIndex > pair.CreateIndex) {
 						// In this single update from consul we have got both a create action and
 						// update action for this kvpair. Calling two callback functions with different actions
+						checkIndex(&prevIndex, pair, pair.ModifyIndex,
+							"Create", meta.LastIndex, opts.WaitIndex)
 						cbCreateErr = cb(prefix, opaque, kv.pairToKv("create", pair, meta), nil)
 						prefixDeleted = false
 						prefixExisted = true
@@ -758,6 +782,8 @@ func (kv *consulKV) watchTreeStart(prefix string, prefixExisted bool, waitIndex 
 						cbUpdateErr = cb(prefix, opaque, kv.pairToKv("update", pair, meta), nil)
 					} else {
 						// Callback with an update action
+						checkIndex(&prevIndex, pair, pair.ModifyIndex,
+							"Update", meta.LastIndex, opts.WaitIndex)
 						cbUpdateErr = cb(prefix, opaque, kv.pairToKv("update", pair, meta), nil)
 					}
 					found = true
@@ -771,6 +797,8 @@ func (kv *consulKV) watchTreeStart(prefix string, prefixExisted bool, waitIndex 
 				}
 				kvPair := kv.pairToKv("delete", pair, meta)
 				kvPair.ModifiedIndex = meta.LastIndex
+				checkIndex(&prevIndex, pair, kvPair.ModifiedIndex, "delete",
+					meta.LastIndex, opts.WaitIndex)
 				cbUpdateErr = cb(prefix, opaque, kvPair, nil)
 			}
 			// Set the waitIndex so that we block on the next List call
@@ -795,7 +823,10 @@ func (kv *consulKV) watchKeyStart(key string, keyExisted bool, waitIndex uint64,
 	for {
 		// Make a blocking Get query
 		pair, meta, err := kv.client.KV().Get(key, opts)
-		if pair == nil && keyExisted && !keyDeleted {
+		if err != nil {
+			logrus.Errorf("Consul returned an error : %s\n", err.Error())
+			cbErr = cb(key, opaque, nil, err)
+		} else if pair == nil && keyExisted && !keyDeleted {
 			// Key being Deleted for the first time after its creation
 			pair = &api.KVPair{
 				Key:   key,
@@ -821,9 +852,6 @@ func (kv *consulKV) watchKeyStart(key string, keyExisted bool, waitIndex uint64,
 			// Set the waitIndex so that we block on the next Get call
 			opts.WaitIndex = meta.LastIndex
 			continue
-		} else if err != nil {
-			logrus.Errorf("Consul returned an error : %s\n", err.Error())
-			cbErr = cb(key, opaque, nil, err)
 		} else {
 			// If LastIndex didn't change it means Get returned because
 			// of Wait timeout

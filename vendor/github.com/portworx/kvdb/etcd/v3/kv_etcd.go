@@ -19,8 +19,6 @@ import (
 	"github.com/coreos/etcd/etcdserver/api/v3rpc/rpctypes"
 	"github.com/coreos/etcd/mvcc/mvccpb"
 
-	"github.com/coreos/etcd/pkg/transport"
-
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/common"
 	ec "github.com/portworx/kvdb/etcd/common"
@@ -34,7 +32,7 @@ const (
 )
 
 var (
-	defaultMachines = []string{"http://localhost:2379"}
+	defaultMachines = []string{"http://127.0.0.1:2379"}
 )
 
 func init() {
@@ -48,18 +46,7 @@ type etcdKV struct {
 	kvClient   *e.Client
 	authClient e.Auth
 	domain     string
-}
-
-type etcdLock struct {
-	done     chan struct{}
-	unlocked bool
-	err      error
-	sync.Mutex
-}
-
-// LockerIDInfo id of locker
-type LockerIDInfo struct {
-	LockerID string
+	ec.EtcdCommon
 }
 
 // New constructs a new kvdb.Kvdb.
@@ -72,28 +59,13 @@ func New(
 	if len(machines) == 0 {
 		machines = defaultMachines
 	}
-	var username, password, caFile string
-	// options provided. Probably auth options
-	if options != nil || len(options) > 0 {
-		var ok bool
-		// Check if username provided
-		username, ok = options[kvdb.UsernameKey]
-		if ok {
-			// Check if password provided
-			password, ok = options[kvdb.PasswordKey]
-			if !ok {
-				return nil, kvdb.ErrNoPassword
-			}
-			// Check if certificate provided
-			caFile, ok = options[kvdb.CAFileKey]
-			if !ok {
-				//return nil, kvdb.ErrNoCertificate
-			}
-		}
+
+	etcdCommon := ec.NewEtcdCommon(options)
+	tls, username, password, err := etcdCommon.GetAuthInfoFromOptions()
+	if err != nil {
+		return nil, err
 	}
-	tls := transport.TLSInfo{
-		CAFile: caFile,
-	}
+
 	tlsCfg, err := tls.ClientConfig()
 	if err != nil {
 		return nil, err
@@ -120,6 +92,7 @@ func New(
 		c,
 		e.NewAuth(c),
 		domain,
+		etcdCommon,
 	}, nil
 }
 
@@ -141,7 +114,7 @@ func (et *etcdKV) Get(key string) (*kvdb.KVPair, error) {
 		result *e.GetResponse
 	)
 	key = et.domain + key
-	for i := 0; i < ec.DefaultRetryCount; i++ {
+	for i := 0; i < et.GetRetryCount(); i++ {
 		ctx, cancel := et.Context()
 		result, err = et.kvClient.Get(ctx, key)
 		cancel()
@@ -292,7 +265,7 @@ func (et *etcdKV) Enumerate(prefix string) (kvdb.KVPairs, error) {
 	prefix = et.domain + prefix
 	var err error
 
-	for i := 0; i < ec.DefaultRetryCount; i++ {
+	for i := 0; i < et.GetRetryCount(); i++ {
 		ctx, cancel := et.Context()
 		result, err := et.kvClient.Get(
 			ctx,
@@ -303,9 +276,6 @@ func (et *etcdKV) Enumerate(prefix string) (kvdb.KVPairs, error) {
 		cancel()
 		if err == nil && result != nil {
 			kvs := et.handleGetResponse(result, true)
-			if len(kvs) == 0 {
-				return nil, kvdb.ErrNotFound
-			}
 			return kvs, nil
 		}
 
@@ -407,6 +377,13 @@ func (et *etcdKV) CompareAndSet(
 			return nil, txnErr
 		}
 		if txnResponse.Succeeded == false {
+			if len(txnResponse.Responses) == 0 {
+				logrus.Infof("Etcd did not return any transaction responses")
+			} else {
+				for i, responseOp := range txnResponse.Responses {
+					logrus.Infof("Etcd transaction Response: %v %v", i, responseOp.String())
+				}
+			}
 			return nil, kvdb.ErrModified
 		}
 
@@ -420,6 +397,13 @@ func (et *etcdKV) CompareAndSet(
 			return nil, txnErr
 		}
 		if txnResponse.Succeeded == false {
+			if len(txnResponse.Responses) == 0 {
+				logrus.Infof("Etcd did not return any transaction responses")
+			} else {
+				for i, responseOp := range txnResponse.Responses {
+					logrus.Infof("Etcd transaction Response: %v %v", i, responseOp.String())
+				}
+			}
 			return nil, kvdb.ErrValueMismatch
 		}
 	}
@@ -446,6 +430,13 @@ func (et *etcdKV) CompareAndDelete(
 			return nil, txnErr
 		}
 		if txnResponse.Succeeded == false {
+			if len(txnResponse.Responses) == 0 {
+				logrus.Infof("Etcd did not return any transaction responses")
+			} else {
+				for i, responseOp := range txnResponse.Responses {
+					logrus.Infof("Etcd transaction Response: %v %v", i, responseOp.String())
+				}
+			}
 			return nil, kvdb.ErrModified
 		}
 	} else {
@@ -458,6 +449,13 @@ func (et *etcdKV) CompareAndDelete(
 			return nil, txnErr
 		}
 		if txnResponse.Succeeded == false {
+			if len(txnResponse.Responses) == 0 {
+				logrus.Infof("Etcd did not return any transaction responses")
+			} else {
+				for i, responseOp := range txnResponse.Responses {
+					logrus.Infof("Etcd transaction Response: %v %v", i, responseOp.String())
+				}
+			}
 			return nil, kvdb.ErrValueMismatch
 		}
 	}
@@ -498,14 +496,14 @@ func (et *etcdKV) LockWithID(key string, lockerID string) (
 	duration := time.Second
 	ttl := uint64(ec.DefaultLockTTL)
 	count := 0
-	lockTag := LockerIDInfo{LockerID: lockerID}
+	lockTag := ec.LockerIDInfo{LockerID: lockerID}
 	kvPair, err := et.Create(key, lockTag, ttl)
 
 	for maxCount := 300; err != nil && count < maxCount; count++ {
 		time.Sleep(duration)
 		kvPair, err = et.Create(key, lockTag, ttl)
 		if count > 0 && count%15 == 0 && err != nil {
-			currLockerTag := LockerIDInfo{LockerID: ""}
+			currLockerTag := ec.LockerIDInfo{LockerID: ""}
 			if _, errGet := et.GetVal(key, &currLockerTag); errGet == nil {
 				logrus.Warnf("Lock %v locked for %v seconds, tag: %v",
 					key, count, currLockerTag)
@@ -519,13 +517,13 @@ func (et *etcdKV) LockWithID(key string, lockerID string) (
 		logrus.Warnf("ETCD: spent %v iterations locking %v\n", count, key)
 	}
 	kvPair.TTL = int64(time.Duration(ttl) * time.Second)
-	kvPair.Lock = &etcdLock{done: make(chan struct{})}
+	kvPair.Lock = &ec.EtcdLock{Done: make(chan struct{})}
 	go et.refreshLock(kvPair)
 	return kvPair, err
 }
 
 func (et *etcdKV) Unlock(kvp *kvdb.KVPair) error {
-	l, ok := kvp.Lock.(*etcdLock)
+	l, ok := kvp.Lock.(*ec.EtcdLock)
 	if !ok {
 		return fmt.Errorf("Invalid lock structure for key %v", string(kvp.Key))
 	}
@@ -533,9 +531,9 @@ func (et *etcdKV) Unlock(kvp *kvdb.KVPair) error {
 	// Don't modify kvp here, CompareAndDelete does that.
 	_, err := et.CompareAndDelete(kvp, kvdb.KVFlags(0))
 	if err == nil {
-		l.unlocked = true
+		l.Unlocked = true
 		l.Unlock()
-		l.done <- struct{}{}
+		l.Done <- struct{}{}
 		return nil
 	}
 	l.Unlock()
@@ -611,7 +609,7 @@ func (et *etcdKV) setWithRetry(key, value string, ttl uint64) (*kvdb.KVPair, err
 	if ttl > 0 && ttl < 5 {
 		return nil, kvdb.ErrTTLNotSupported
 	}
-	for i = 0; i < ec.DefaultRetryCount; i++ {
+	for i = 0; i < et.GetRetryCount(); i++ {
 		if ttl > 0 {
 			var leaseResult *e.LeaseGrantResponse
 			leaseCtx, leaseCancel := et.Context()
@@ -664,22 +662,28 @@ func (et *etcdKV) setWithRetry(key, value string, ttl uint64) (*kvdb.KVPair, err
 	}
 
 out:
+	outErr := err
 	// It's possible that update succeeded but the re-update failed.
-	if i > 0 && i < ec.DefaultRetryCount && err != nil {
+	// Check only if the original error was a cluster error.
+	if i > 0 && i < et.GetRetryCount() && err != nil {
 		kvp, err := et.Get(key)
 		if err == nil && bytes.Equal(kvp.Value, []byte(value)) {
 			return kvp, nil
 		}
 	}
 
-	return nil, err
+	return nil, outErr
 }
 
 func (et *etcdKV) refreshLock(kvPair *kvdb.KVPair) {
-	l := kvPair.Lock.(*etcdLock)
+	l := kvPair.Lock.(*ec.EtcdLock)
 	ttl := kvPair.TTL
 	refresh := time.NewTicker(ec.DefaultLockRefreshDuration)
-	var keyString string
+	var (
+		keyString      string
+		currentRefresh time.Time
+		prevRefresh    time.Time
+	)
 	if kvPair != nil {
 		keyString = kvPair.Key
 	}
@@ -688,27 +692,30 @@ func (et *etcdKV) refreshLock(kvPair *kvdb.KVPair) {
 		select {
 		case <-refresh.C:
 			l.Lock()
-			for !l.unlocked {
+			for !l.Unlocked {
 				kvPair.TTL = ttl
 				kvp, err := et.CompareAndSet(
 					kvPair,
 					kvdb.KVTTL|kvdb.KVModifiedIndex,
 					kvPair.Value,
 				)
+				currentRefresh = time.Now()
 				if err != nil {
 					et.FatalCb(
-						"Error refreshing lock for key %v: %v",
-						keyString, err,
+						"Error refreshing lock. [Key %v] [Err: %v]"+
+							" [Current Refresh: %v] [Previous Refresh: %v]",
+						keyString, err, currentRefresh, prevRefresh,
 					)
-					l.err = err
+					l.Err = err
 					l.Unlock()
 					return
 				}
+				prevRefresh = currentRefresh
 				kvPair.ModifiedIndex = kvp.ModifiedIndex
 				break
 			}
 			l.Unlock()
-		case <-l.done:
+		case <-l.Done:
 			return
 		}
 	}

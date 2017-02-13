@@ -50,8 +50,20 @@ const (
 	UsernameKey = "Username"
 	// PasswordKey for an authenticated kvdb endpoint
 	PasswordKey = "Password"
-	// CAFileKey is the certicficate path for an authenticated kvdb endpoint
+	// CAFileKey is the CA file path for an authenticated kvdb endpoint
 	CAFileKey = "CAFile"
+	// CertFileKey is the certificate file path for an authenticated kvdb endpoint
+	CertFileKey = "CertFile"
+	// CertKeyFileKey is the key to the certificate
+	CertKeyFileKey = "CertKeyFile"
+	// TrustedCAFileKey is the key for the trusted CA.
+	TrustedCAFileKey = "TrustedCAFile"
+	// ClientCertAuthKey is the boolean value indicating client authenticated certificate.
+	ClientCertAuthKey = "ClientCertAuth"
+	// RetryCountKey is the integer value indicating the retry count of etcd operations
+	RetryCountKey = "RetryCount"
+	// ACLTokenKey is the token value for ACL based KV stores
+	ACLTokenKey = "ACLToken"
 )
 
 // List of kvdb endpoints supported versions
@@ -114,7 +126,7 @@ type PermissionType int
 // with ErrWatchStopped.
 type WatchCB func(prefix string, opaque interface{}, kvp *KVPair, err error) error
 
-/// FatalErrorCb callback is invoked incase of fatal errors
+// FatalErrorCB callback is invoked incase of fatal errors
 type FatalErrorCB func(format string, args ...interface{})
 
 // DatastoreInit is called to activate a backend KV store.
@@ -122,7 +134,7 @@ type DatastoreInit func(domain string, machines []string, options map[string]str
 	cb FatalErrorCB) (Kvdb, error)
 
 // DatastoreVersion is called to get the version of a backend KV store
-type DatastoreVersion func(url string) (string, error)
+type DatastoreVersion func(url string, kvdbOptions map[string]string) (string, error)
 
 // KVPair represents the results of an operation on KVDB.
 type KVPair struct {

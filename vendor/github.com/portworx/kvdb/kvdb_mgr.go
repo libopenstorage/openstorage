@@ -67,12 +67,12 @@ func Register(name string, dsInit DatastoreInit, dsVersion DatastoreVersion) err
 }
 
 // Version returns the supported version for the provided kvdb endpoint.
-func Version(name string, url string) (string, error) {
+func Version(name string, url string, kvdbOptions map[string]string) (string, error) {
 	lock.RLock()
 	defer lock.RUnlock()
 
 	if dsVersion, exists := datastoreVersions[name]; exists {
-		return dsVersion(url)
+		return dsVersion(url, kvdbOptions)
 	}
 	return "", ErrNotSupported
 }

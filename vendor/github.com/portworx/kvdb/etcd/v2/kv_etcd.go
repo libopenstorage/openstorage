@@ -42,18 +42,7 @@ type etcdKV struct {
 	authUser e.AuthUserAPI
 	authRole e.AuthRoleAPI
 	domain   string
-}
-
-type etcdLock struct {
-	done     chan struct{}
-	unlocked bool
-	err      error
-	sync.Mutex
-}
-
-// LockerIDInfo id of locker
-type LockerIDInfo struct {
-	LockerID string
+	ec.EtcdCommon
 }
 
 // New constructs a new kvdb.Kvdb.
@@ -66,27 +55,11 @@ func New(
 	if len(machines) == 0 {
 		machines = defaultMachines
 	}
-	var username, password, caFile string
-	// options provided. Probably auth options
-	if options != nil || len(options) > 0 {
-		var ok bool
-		// Check if username provided
-		username, ok = options[kvdb.UsernameKey]
-		if ok {
-			// Check if password provided
-			password, ok = options[kvdb.PasswordKey]
-			if !ok {
-				return nil, kvdb.ErrNoPassword
-			}
-			// Check if certificate provided
-			caFile, ok = options[kvdb.CAFileKey]
-			if !ok {
-				return nil, kvdb.ErrNoCertificate
-			}
-		}
-	}
-	tls := transport.TLSInfo{
-		CAFile: caFile,
+
+	etcdCommon := ec.NewEtcdCommon(options)
+	tls, username, password, err := etcdCommon.GetAuthInfoFromOptions()
+	if err != nil {
+		return nil, err
 	}
 	tr, err := transport.NewTransport(tls, ec.DefaultDialTimeout)
 	if err != nil {
@@ -113,6 +86,7 @@ func New(
 		e.NewAuthUserAPI(c),
 		e.NewAuthRoleAPI(c),
 		domain,
+		etcdCommon,
 	}, nil
 }
 
@@ -199,7 +173,7 @@ func (kv *etcdKV) Update(
 func (kv *etcdKV) Enumerate(prefix string) (kvdb.KVPairs, error) {
 	prefix = kv.domain + prefix
 	var err error
-	for i := 0; i < ec.DefaultRetryCount; i++ {
+	for i := 0; i < kv.GetRetryCount(); i++ {
 		result, err := kv.client.Get(context.Background(), prefix, &e.GetOptions{
 			Recursive: true,
 			Sort:      true,
@@ -215,7 +189,8 @@ func (kv *etcdKV) Enumerate(prefix string) (kvdb.KVPairs, error) {
 		default:
 			etcdErr := err.(e.Error)
 			if etcdErr.Code == e.ErrorCodeKeyNotFound {
-				return nil, kvdb.ErrNotFound
+				// Return an empty array
+				return kvdb.KVPairs{}, nil
 			}
 			return nil, err
 		}
@@ -329,13 +304,13 @@ func (kv *etcdKV) LockWithID(key string, lockerID string) (
 	duration := time.Second
 	ttl := uint64(ec.DefaultLockTTL)
 	count := 0
-	lockTag := LockerIDInfo{LockerID: lockerID}
+	lockTag := ec.LockerIDInfo{LockerID: lockerID}
 	kvPair, err := kv.Create(key, lockTag, ttl)
 	for maxCount := 300; err != nil && count < maxCount; count++ {
 		time.Sleep(duration)
 		kvPair, err = kv.Create(key, lockTag, ttl)
 		if count > 0 && count%15 == 0 && err != nil {
-			currLockerTag := LockerIDInfo{LockerID: ""}
+			currLockerTag := ec.LockerIDInfo{LockerID: ""}
 			if _, errGet := kv.GetVal(key, &currLockerTag); errGet == nil {
 				logrus.Warnf("Lock %v locked for %v seconds, tag: %v",
 					key, count, currLockerTag)
@@ -349,14 +324,14 @@ func (kv *etcdKV) LockWithID(key string, lockerID string) (
 		logrus.Warnf("ETCD: spent %v iterations locking %v\n", count, key)
 	}
 	kvPair.TTL = int64(time.Duration(ttl) * time.Second)
-	kvPair.Lock = &etcdLock{done: make(chan struct{})}
+	kvPair.Lock = &ec.EtcdLock{Done: make(chan struct{}), Tag: lockerID}
 	go kv.refreshLock(kvPair)
 
 	return kvPair, err
 }
 
 func (kv *etcdKV) Unlock(kvp *kvdb.KVPair) error {
-	l, ok := kvp.Lock.(*etcdLock)
+	l, ok := kvp.Lock.(*ec.EtcdLock)
 	if !ok {
 		return fmt.Errorf("Invalid lock structure for key %v", string(kvp.Key))
 	}
@@ -364,12 +339,14 @@ func (kv *etcdKV) Unlock(kvp *kvdb.KVPair) error {
 	// Don't modify kvp here, CompareAndDelete does that.
 	_, err := kv.CompareAndDelete(kvp, kvdb.KVFlags(0))
 	if err == nil {
-		l.unlocked = true
+		l.Unlocked = true
 		l.Unlock()
-		l.done <- struct{}{}
+		l.Done <- struct{}{}
 		return nil
 	}
 	l.Unlock()
+	logrus.Errorf("Unlock failed for key: %s, tag: %s, error: %s", kvp.Key,
+		l.Tag, err.Error())
 	return err
 }
 
@@ -428,7 +405,7 @@ func (kv *etcdKV) resultToKvs(result *e.Response) kvdb.KVPairs {
 func (kv *etcdKV) get(key string, recursive, sort bool) (*kvdb.KVPair, error) {
 	var err error
 	var result *e.Response
-	for i := 0; i < ec.DefaultRetryCount; i++ {
+	for i := 0; i < kv.GetRetryCount(); i++ {
 		result, err = kv.client.Get(context.Background(), key, &e.GetOptions{
 			Recursive: recursive,
 			Sort:      sort,
@@ -460,7 +437,7 @@ func (kv *etcdKV) setWithRetry(ctx context.Context, key, value string,
 		i      int
 		result *e.Response
 	)
-	for i = 0; i < ec.DefaultRetryCount; i++ {
+	for i = 0; i < kv.GetRetryCount(); i++ {
 		result, err = kv.client.Set(ctx, key, value, opts)
 		if err == nil {
 			return kv.resultToKv(result), nil
@@ -477,8 +454,10 @@ func (kv *etcdKV) setWithRetry(ctx context.Context, key, value string,
 	}
 
 out:
+	outErr := err
 	// It's possible that update succeeded but the re-update failed.
-	if i > 0 && i < ec.DefaultRetryCount && err != nil {
+	// Check only if the original error was a cluster error.
+	if i > 0 && i < kv.GetRetryCount() && err != nil {
 		kvp, err := kv.get(key, false, false)
 		if err == nil && bytes.Equal(kvp.Value, []byte(value)) {
 			if opts.PrevExist == e.PrevNoExist {
@@ -490,14 +469,18 @@ out:
 		}
 	}
 
-	return nil, err
+	return nil, outErr
 }
 
 func (kv *etcdKV) refreshLock(kvPair *kvdb.KVPair) {
-	l := kvPair.Lock.(*etcdLock)
+	l := kvPair.Lock.(*ec.EtcdLock)
 	ttl := kvPair.TTL
 	refresh := time.NewTicker(ec.DefaultLockRefreshDuration)
-	var keyString string
+	var (
+		keyString      string
+		currentRefresh time.Time
+		prevRefresh    time.Time
+	)
 	if kvPair != nil {
 		keyString = kvPair.Key
 	}
@@ -506,27 +489,30 @@ func (kv *etcdKV) refreshLock(kvPair *kvdb.KVPair) {
 		select {
 		case <-refresh.C:
 			l.Lock()
-			for !l.unlocked {
+			for !l.Unlocked {
 				kvPair.TTL = ttl
 				kvp, err := kv.CompareAndSet(
 					kvPair,
 					kvdb.KVTTL|kvdb.KVModifiedIndex,
 					kvPair.Value,
 				)
+				currentRefresh = time.Now()
 				if err != nil {
 					kv.FatalCb(
-						"Error refreshing lock for key %v: %v\n",
-						keyString, err,
+						"Error refreshing lock. [Key %v] [Err: %v]"+
+							" [Current Refresh: %v] [Previous Refresh: %v]",
+						keyString, err, currentRefresh, prevRefresh,
 					)
-					l.err = err
+					l.Err = err
 					l.Unlock()
 					return
 				}
+				prevRefresh = currentRefresh
 				kvPair.ModifiedIndex = kvp.ModifiedIndex
 				break
 			}
 			l.Unlock()
-		case <-l.done:
+		case <-l.Done:
 			return
 		}
 	}
@@ -550,7 +536,7 @@ func (kv *etcdKV) watchStart(
 		if watchErr != nil && !isCancelSent {
 			e, ok := watchErr.(e.Error)
 			if ok {
-				logrus.Errorf("Etcd error code %d Message %s Cause %s Index %d\n",
+				logrus.Errorf("Etcd error code: [%d] Message: [%s] Cause: [%s] Index: [%d]\n",
 					e.Code, e.Message, e.Cause, e.Index)
 			} else {
 				logrus.Errorf("Etcd returned an error : %s\n", watchErr.Error())
