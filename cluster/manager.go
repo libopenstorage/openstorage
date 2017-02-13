@@ -383,22 +383,18 @@ func (c *ClusterManager) initNodeInCluster(
 	exist bool,
 	nodeInitialized bool,
 ) ([]FinalizeInitCb, error) {
-	var err error
-	finalizeCbs := make([]FinalizeInitCb, 0)
-
 	// If I am already in the cluster map, don't add me again.
 	if exist {
-		err = nil
-		goto done
+		return nil, nil
 	}
 
 	if nodeInitialized {
 		dlog.Errorf(ErrInitNodeNotFound.Error())
-		err = ErrInitNodeNotFound
-		goto done
+		return nil, ErrInitNodeNotFound
 	}
 
 	// Alert all listeners that we are a new node and we are initializing.
+	finalizeCbs := make([]FinalizeInitCb, 0)
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		finalizeCb, err := e.Value.(ClusterListener).Init(self, clusterInfo)
 		if err != nil {
@@ -408,14 +404,14 @@ func (c *ClusterManager) initNodeInCluster(
 			dlog.Warnf("Failed to initialize Init %s: %v",
 				e.Value.(ClusterListener).String(), err)
 			c.cleanupInit(clusterInfo, self)
-			goto done
+			return nil, err
 		}
 		if finalizeCb != nil {
 			finalizeCbs = append(finalizeCbs, finalizeCb)
 		}
 	}
-done:
-	return finalizeCbs, err
+
+	return finalizeCbs, nil
 }
 
 // Alert all listeners that we are joining the cluster
