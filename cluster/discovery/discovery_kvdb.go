@@ -111,3 +111,8 @@ func (b *discoveryKvdb) WatchCluster(wcb WatchClusterCB, lastIndex uint64) error
 	go b.kv.WatchKey(ClusterDiscoveryKey, lastIndex, wcb, b.watchCluster)
 	return nil
 }
+
+// Shutdown is a dummy implementation
+func (b *discoveryKvdb) Shutdown() error {
+	return nil
+}

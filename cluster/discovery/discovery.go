@@ -7,6 +7,15 @@ type NodeEntry struct {
 	GossipVersion string
 }
 
+// Equals method compares two NodeEntries, and returns TRUE if the NodeEntry's data is equal.
+func (ne NodeEntry) Equals(other *NodeEntry) bool {
+	if other == nil {
+		return false
+	} else {
+		return ne.Id == other.Id && ne.Ip == other.Ip && ne.GossipVersion == other.GossipVersion
+	}
+}
+
 // ClusterInfo is the cluster info used while discoveryping nodes
 // and discovering peer nodes using gossip
 type ClusterInfo struct {
@@ -30,4 +39,9 @@ type Cluster interface {
 	// WatchCluster starts a watch on the cluster and calls the provided
 	// callback function when a node is added or removed.
 	WatchCluster(wcb WatchClusterCB, index uint64) error
+
+	// Shutdown allows cluster to stop and clean up internal resources.
+	// This method is idempotent (may be called multiple times), but after calling this method, one should
+	// no longer use this Cluster instance for cluster discovery.
+	Shutdown() error
 }
