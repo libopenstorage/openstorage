@@ -129,8 +129,11 @@ func (x FSType) SimpleString() string {
 
 // CosTypeSimpleValueOf returns the string format of CosType
 func CosTypeSimpleValueOf(s string) (CosType, error) {
-	obj, err := simpleValueOf("cos_type", CosType_value, s)
-	return CosType(obj), err
+	obj, exists := CosType_value[strings.ToUpper(s)]
+	if !exists {
+		return -1, fmt.Errorf("Invalid cos value: %s",s)
+	}
+	return CosType(obj), nil
 }
 
 // SimpleString returns the string format of CosType
