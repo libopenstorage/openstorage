@@ -96,7 +96,7 @@ func (b *discoveryKvdb) RemoveNode(ne NodeEntry) (*ClusterInfo, error) {
 	ci := prevCi
 	_, exists := ci.Nodes[ne.Id]
 	if !exists {
-		return nil, fmt.Errorf("Unable to find node %v in discovery db", ne.Id)
+		return nil, ErrNodeDoesNotExist
 	}
 	delete(ci.Nodes, ne.Id)
 	kvp, err := b.compareAndSetClusterInfo(prevCi, ci)

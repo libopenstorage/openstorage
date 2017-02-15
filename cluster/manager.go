@@ -31,6 +31,7 @@ const (
 	heartbeatKey       = "heartbeat"
 	clusterLockKey     = "/cluster/lock"
 	gossipVersionKey   = "Gossip Version"
+	gossipPort         = "9002"
 	quorumTimeout      = 10 * time.Minute
 	decommissionErrMsg = "Node %s must be offline or in maintenance " +
 		"mode to be decommissioned."
@@ -244,7 +245,7 @@ func (c *ClusterManager) getNonDecommisionedPeers(db ClusterInfo) map[types.Node
 		if nodeEntry.Status == api.Status_STATUS_DECOMMISSION {
 			continue
 		}
-		ip := nodeEntry.DataIp + ":9002"
+		ip := nodeEntry.DataIp + ":" + gossipPort
 		peers[types.NodeId(nodeEntry.Id)] = ip
 	}
 	return peers
@@ -253,7 +254,7 @@ func (c *ClusterManager) getNonDecommisionedPeers(db ClusterInfo) map[types.Node
 func (c *ClusterManager) getBootstrapPeers(dci *discovery.ClusterInfo) map[types.NodeId]string {
 	peers := make(map[types.NodeId]string)
 	for _, bne := range dci.Nodes {
-		peers[types.NodeId(bne.Id)] = bne.Ip + ":9002"
+		peers[types.NodeId(bne.Id)] = bne.Ip + ":" + gossipPort
 	}
 	return peers
 }
@@ -315,9 +316,7 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 
 	c.size = db.Size
 
-	// Update the peers. A node might have been removed or added
 	peers := c.getNonDecommisionedPeers(db)
-	c.gossip.UpdateCluster(peers)
 	for _, n := range c.nodeCache {
 		_, found := peers[types.NodeId(n.Id)]
 		if !found {
@@ -387,6 +386,15 @@ func (c *ClusterManager) cleanupInit(db *ClusterInfo, self *api.Node) error {
 			resErr = err
 		}
 
+	}
+	// Cleanup ourselves from Discovery
+	dne := discovery.NodeEntry{
+		Id: c.selfNode.Id,
+	}
+	_, err = c.discoverService.RemoveNode(dne)
+	if err != nil {
+		dlog.Warnf("Failed to Cleanup Discovery: %v", err)
+		resErr = err
 	}
 
 	return resErr
@@ -536,7 +544,7 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *discovery.ClusterInfo) {
 			continue
 		}
 
-		nodeIps = append(nodeIps, nodeEntry.Ip+":9002")
+		nodeIps = append(nodeIps, nodeEntry.Ip+":"+gossipPort)
 	}
 	if len(nodeIps) > 0 {
 		dlog.Infof("Starting Gossip... Gossiping to these nodes : %v", nodeIps)
@@ -947,7 +955,7 @@ func (c *ClusterManager) DiscoveryStart(
 		QuorumTimeout:    quorumTimeout,
 	}
 	c.gossip = gossip.New(
-		c.selfNode.DataIp+":9002",
+		c.selfNode.DataIp+":"+gossipPort,
 		types.NodeId(c.config.NodeId),
 		c.selfNode.GenNumber,
 		gossipIntervals,
@@ -957,7 +965,7 @@ func (c *ClusterManager) DiscoveryStart(
 	c.gossipVersion = types.GOSSIP_VERSION_2
 
 	dne := discovery.NodeEntry{
-		Id:            c.config.NodeId,
+		Id:            c.selfNode.Id,
 		Ip:            c.selfNode.DataIp,
 		GossipVersion: types.GOSSIP_VERSION_2,
 	}
@@ -1389,6 +1397,16 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 			return errors.New(msg)
 		}
 
+		// Remove this node from discovery service, so that new nodes that join
+		// the cluster do not add this node in their maps
+		_, err = c.discoverService.RemoveNode(discovery.NodeEntry{Id: n.Id})
+		if err != nil && err != discovery.ErrNodeDoesNotExist {
+			msg := fmt.Sprintf("Failed to remove node %v"+
+				" from discovery: %v", n.Id, err)
+			dlog.Warnf(msg)
+			return errors.New(msg)
+		}
+
 		if !inQuorum {
 			// If we are not in quorum, we only mark the node as decommissioned
 			// since this node is not functional yet.
@@ -1432,10 +1450,6 @@ func (c *ClusterManager) NodeRemoveDone(nodeID string, result error) {
 	logrus.Infof("Cluster manager node remove done: node ID %s", nodeID)
 
 	err := c.deleteNodeFromDB(nodeID)
-	if err != nil {
-		goto error_done
-	}
-	_, err = c.discoverService.RemoveNode(discovery.NodeEntry{Id: nodeID})
 	if err != nil {
 		goto error_done
 	}

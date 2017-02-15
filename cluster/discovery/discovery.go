@@ -1,5 +1,9 @@
 package discovery
 
+import (
+	"errors"
+)
+
 // NodeEntry is used to discovery nodes in the cluster
 type NodeEntry struct {
 	Id            string
@@ -20,6 +24,10 @@ type ClusterInfo struct {
 }
 
 type WatchCB func(*ClusterInfo, error) error
+
+var (
+	ErrNodeDoesNotExist = errors.New("Node does not exist in discovery service")
+)
 
 type Cluster interface {
 	// AddNode adds a new node into a cluster so that other can discover
