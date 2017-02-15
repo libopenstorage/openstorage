@@ -966,7 +966,7 @@ func (c *ClusterManager) DiscoveryStart(
 		return err
 	}
 
-	err = c.discoverService.WatchCluster(c.watchDiscovery, clusterInfo.Version)
+	err = c.discoverService.Watch(c.watchDiscovery, clusterInfo.Version)
 	if err != nil {
 		dlog.Errorf("Failed to watch on discovery service: %v", err)
 		return err
