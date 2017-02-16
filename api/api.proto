@@ -387,6 +387,9 @@ message VolumeSetRequest {
   VolumeSpec spec = 2;
   // State modification on this volume.
   VolumeStateAction action = 3;
+  // additional options
+  // required for the Set operation.
+  map<string, string> options = 4;
 }
 
 message VolumeSetResponse {

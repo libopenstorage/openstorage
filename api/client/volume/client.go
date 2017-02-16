@@ -305,6 +305,7 @@ func (v *volumeClient) Attach(volumeID string, attachOptions map[string]string) 
 			Action: &api.VolumeStateAction{
 				Attach: api.VolumeActionParam_VOLUME_ACTION_PARAM_ON,
 			},
+			Options: attachOptions,
 		},
 	)
 	if err != nil {

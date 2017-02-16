@@ -100,7 +100,7 @@ func (vd *volApi) volumeSet(w http.ResponseWriter, r *http.Request) {
 	for err == nil && req.Action != nil {
 		if req.Action.Attach != api.VolumeActionParam_VOLUME_ACTION_PARAM_NONE {
 			if req.Action.Attach == api.VolumeActionParam_VOLUME_ACTION_PARAM_ON {
-				_, err = d.Attach(volumeID, nil)
+				_, err = d.Attach(volumeID, req.Options)
 			} else {
 				err = d.Detach(volumeID)
 			}
