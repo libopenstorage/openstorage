@@ -594,6 +594,13 @@ func (d *Driver) Format(volumeID string) error {
 func (d *Driver) Detach(volumeID string) error {
 	force := false
 	awsVolID := volumeID
+	device := ""
+	volume, err := d.GetVol(volumeID)
+	if err != nil {
+		dlog.Warnf("Volume %s could not be located, attempting to detach anyway", volumeID)
+	} else {
+		device = volume.DevicePath
+	}
 	req := &ec2.DetachVolumeInput{
 		InstanceId: &d.md.instance,
 		VolumeId:   &awsVolID,
@@ -603,6 +610,13 @@ func (d *Driver) Detach(volumeID string) error {
 
 		return err
 	}
+
+	if "" != device {
+		if err := d.Release(device); err != nil {
+			return err
+		}
+	}
+
 	return d.waitAttachmentStatus(volumeID, ec2.VolumeAttachmentStateDetached, time.Minute*5)
 }
 
