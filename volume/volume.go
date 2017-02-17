@@ -57,6 +57,14 @@ const (
 	LocalNode = "LocalNode"
 )
 
+// AttachOptionsKey specifies a key type from a key-value pair
+// that will be passed in to the Attach api
+type AttachOptionsKey string
+
+const (
+	AttachOptionsSecret = AttachOptionsKey("SECRET_KEY")
+)
+
 // Store defines the interface for basic volume store operations
 type Store interface {
 	// Lock volume specified by volumeID.
