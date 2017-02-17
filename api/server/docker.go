@@ -232,13 +232,14 @@ func (d *driver) scaleUp(
 	vd volume.VolumeDriver,
 	inVol *api.Volume,
 	allVols []*api.Volume,
+	attachOptions map[string]string,
 ) (
 	outVol *api.Volume,
 	err error,
 ) {
 	// Try to attach existing volumes.
 	for _, outVol := range allVols {
-		if _, err = vd.Attach(outVol.Id, nil); err == nil {
+		if _, err = vd.Attach(outVol.Id, attachOptions); err == nil {
 			return outVol, nil
 		}
 	}
@@ -267,7 +268,7 @@ func (d *driver) scaleUp(
 		if outVol, err = d.volFromName(id); err != nil {
 			return nil, err
 		}
-		if _, err = vd.Attach(outVol.Id, nil); err == nil {
+		if _, err = vd.Attach(outVol.Id, attachOptions); err == nil {
 			return outVol, nil
 		}
 		// If we fail to attach the volume, continue to look for a
@@ -281,6 +282,7 @@ func (d *driver) attachScale(
 	method string,
 	vd volume.VolumeDriver,
 	inVol *api.Volume,
+	attachOptions map[string]string,
 ) (
 	*api.Volume,
 	error,
@@ -298,7 +300,7 @@ func (d *driver) attachScale(
 	// Try to attach local volumes.
 	if err == nil {
 		for _, vol := range vols {
-			if v, err := d.attachVol(method, vd, vol); err == nil {
+			if v, err := d.attachVol(method, vd, vol, attachOptions); err == nil {
 				return v, nil
 			}
 		}
@@ -317,30 +319,31 @@ func (d *driver) attachScale(
 		spec.ReplicaSet = &api.ReplicaSet{Nodes: []string{volume.LocalNode}}
 		id, err := vd.Create(&api.VolumeLocator{Name: name}, nil, spec)
 		if err != nil {
-			return d.scaleUp(method, vd, inVol, allVols)
+			return d.scaleUp(method, vd, inVol, allVols, attachOptions)
 		}
 		outVol, err := d.volFromName(id)
 		if err != nil {
 			return nil, err
 		}
-		if _, err = vd.Attach(outVol.Id, nil); err == nil {
+		if _, err = vd.Attach(outVol.Id, attachOptions); err == nil {
 			return outVol, nil
 		}
 		// We failed to attach, scaleUp.
 		allVols = append(allVols, outVol)
 	}
-	return d.scaleUp(method, vd, inVol, allVols)
+	return d.scaleUp(method, vd, inVol, allVols, attachOptions)
 }
 
 func (d *driver) attachVol(
 	method string,
 	vd volume.VolumeDriver,
 	vol *api.Volume,
+	attachOptions map[string]string,
 ) (
 	outVolume *api.Volume,
 	err error,
 ) {
-	attachPath, err := vd.Attach(vol.Id, nil)
+	attachPath, err := vd.Attach(vol.Id, attachOptions)
 
 	switch err {
 	case nil:
@@ -356,6 +359,17 @@ func (d *driver) attachVol(
 			"Cannot attach volume: %v", err.Error())
 		return vol, err
 	}
+}
+
+func (d *driver) attachOptionsFromSpec(
+	spec *api.VolumeSpec,
+) (map[string]string) {
+	if spec.Passphrase != "" {
+		opts := make(map[string]string)
+		opts[string(volume.AttachOptionsSecret)] = spec.Passphrase
+		return opts
+	}
+	return nil
 }
 
 func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
@@ -374,7 +388,8 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 		d.errorResponse(w, err)
 		return
 	}
-	_, _, name := d.SpecFromString(request.Name)
+	_, spec, name := d.SpecFromString(request.Name)
+	attachOptions := d.attachOptionsFromSpec(spec)
 	vol, err := d.volFromName(name)
 	if err != nil {
 		d.errorResponse(w, err)
@@ -399,9 +414,9 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 		// If volume is scaled up, a new volume is created and
 		// vol will change.
 		if vol.Scaled() {
-			vol, err = d.attachScale(method, v, vol)
+			vol, err = d.attachScale(method, v, vol, attachOptions)
 		} else {
-			vol, err = d.attachVol(method, v, vol)
+			vol, err = d.attachVol(method, v, vol, attachOptions)
 		}
 		if err != nil {
 			d.errorResponse(w, err)
@@ -487,7 +502,13 @@ func (d *driver) get(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	_, _, name := d.SpecFromString(request.Name)
+	parsed, _, name := d.SpecFromString(request.Name)
+	returnName := ""
+	if parsed {
+		returnName = request.Name
+	} else {
+		returnName = name
+	}
 	vol, err := d.volFromName(name)
 	if err != nil {
 		e := d.volNotFound(method, request.Name, err, w)
@@ -495,7 +516,7 @@ func (d *driver) get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	volInfo := volumeInfo{Name: name}
+	volInfo := volumeInfo{Name: returnName}
 	if len(vol.AttachPath) > 0 || len(vol.AttachPath) > 0 {
 		volInfo.Mountpoint = path.Join(vol.AttachPath[0], config.DataDir)
 	}

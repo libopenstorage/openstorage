@@ -23,7 +23,7 @@ const (
 	SpecSnapshotInterval     = "snap_interval"
 	SpecAggregationLevel     = "aggregation_level"
 	SpecDedupe               = "dedupe"
-	SpecPassphrase           = "passphrase"
+	SpecPassphrase           = "secret_key"
 	SpecAutoAggregationValue = "auto"
 )
 
