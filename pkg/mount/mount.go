@@ -257,6 +257,29 @@ func (m *Mounter) maybeRemoveDevice(device string) {
 	}
 }
 
+func (m *Mounter) hasPath(path string) (string, bool) {
+	m.Lock()
+	defer m.Unlock()
+	p, ok := m.paths[path]
+	return p, ok
+}
+
+func (m *Mounter) addPath(path, device string) {
+	m.Lock()
+	defer m.Unlock()
+	m.paths[path] = device
+}
+
+func (m *Mounter) deletePath(path string) bool {
+	m.Lock()
+	defer m.Unlock()
+	if _, pathExists := m.paths[path]; pathExists {
+		delete(m.paths, path)
+		return true
+	}
+	return false
+}
+
 // Mount new mountpoint for specified device.
 func (m *Mounter) Mount(
 	minor int,
@@ -265,15 +288,14 @@ func (m *Mounter) Mount(
 	data string,
 	timeout int,
 ) error {
-	m.Lock()
 
 	path = normalizeMountPath(path)
-	dev, ok := m.paths[path]
+	dev, ok := m.hasPath(path)
 	if ok && dev != device {
 		dlog.Warnf("cannot mount %q,  device %q is mounted at %q", device, dev, path)
-		m.Unlock()
 		return ErrExist
 	}
+	m.Lock()
 	info, ok := m.mounts[device]
 	if !ok {
 		info = &Info{
@@ -308,7 +330,7 @@ func (m *Mounter) Mount(
 		return err
 	}
 	info.Mountpoint = append(info.Mountpoint, &PathInfo{Path: path, ref: 1})
-	m.paths[path] = device
+	m.addPath(path, device)
 	return nil
 }
 
@@ -341,9 +363,7 @@ func (m *Mounter) Unmount(device, path string, timeout int) error {
 			p.ref++
 			return err
 		}
-		if _, pathExists := m.paths[path]; pathExists {
-			delete(m.paths, path)
-		} else {
+		if pathExists := m.deletePath(path); !pathExists {
 			dlog.Warnf("Path %q for device %q does not exist in pathMap",
 				path, device)
 		}
