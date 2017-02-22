@@ -184,6 +184,18 @@ func (c *clusterApi) delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	forceRemoveParam := params["forceRemove"]
+	forceRemove := false
+	if forceRemoveParam != nil {
+		var err error
+		forceRemove, err = strconv.ParseBool(forceRemoveParam[0])
+		if err != nil {
+			c.sendError(c.name, method, w, "Invalid forceRemove Option: "+
+				forceRemoveParam[0], http.StatusBadRequest)
+			return
+		}
+	}
+
 	inst, err := cluster.Inst()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
@@ -197,7 +209,7 @@ func (c *clusterApi) delete(w http.ResponseWriter, r *http.Request) {
 
 	clusterResponse := &api.ClusterResponse{}
 
-	err = inst.Remove(nodes)
+	err = inst.Remove(nodes, forceRemove)
 	if err != nil {
 		clusterResponse.Error = fmt.Errorf("Node Remove: %s", err).Error()
 	}

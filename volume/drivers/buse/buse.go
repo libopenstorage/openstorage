@@ -373,7 +373,7 @@ func (d *driver) Add(self *api.Node) error {
 	return nil
 }
 
-func (d *driver) Remove(self *api.Node) error {
+func (d *driver) Remove(self *api.Node, forceRemove bool) error {
 	return nil
 }
 

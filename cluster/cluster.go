@@ -87,7 +87,7 @@ type ClusterListener interface {
 	Add(node *api.Node) error
 
 	// Remove is called when a node leaves the cluster
-	Remove(node *api.Node) error
+	Remove(node *api.Node, forceRemove bool) error
 
 	// CanNodeRemove test to see if we can remove this node
 	CanNodeRemove(node *api.Node) error
@@ -156,7 +156,7 @@ type ClusterStatus interface {
 // ClusterRemove interface provides apis for removing nodes from a cluster
 type ClusterRemove interface {
 	// Remove node(s) from the cluster permanently.
-	Remove(nodes []api.Node) error
+	Remove(nodes []api.Node, forceRemove bool) error
 	// NodeRemoveDone notify cluster manager NodeRemove is done.
 	NodeRemoveDone(nodeID string, result error)
 }

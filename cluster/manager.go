@@ -41,8 +41,9 @@ var (
 	ErrNodeRemovePending = errors.New("Node remove is pending")
 	ErrInitNodeNotFound  = errors.New("This node is already initialized but " +
 		"could not be found in the cluster map.")
-	ErrNodeDecommissioned = errors.New("Node is decomissioned.")
-	stopHeartbeat         = make(chan bool)
+	ErrNodeDecommissioned   = errors.New("Node is decomissioned.")
+	stopHeartbeat           = make(chan bool)
+	ErrRemoveCausesDataLoss = errors.New("Cannot remove node without data loss")
 )
 
 // ClusterManager implements the cluster interface
@@ -1269,7 +1270,7 @@ func (c *ClusterManager) deleteNodeFromDB(nodeID string) error {
 }
 
 // Remove node(s) from the cluster permanently.
-func (c *ClusterManager) Remove(nodes []api.Node) error {
+func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 	logrus.Infof("ClusterManager Remove node.")
 
 	var resultErr error
@@ -1312,19 +1313,17 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 			dlog.Infof("Remove node: ask cluster listener: "+
 				"can we remove node ID %s, %s",
 				n.Id, e.Value.(ClusterListener).String())
-
 			err := e.Value.(ClusterListener).CanNodeRemove(&n)
-			if err != nil {
-				msg := fmt.Sprintf("Cannot remove node ID %s: %s",
-					n.Id, err)
+			if err != nil && !(err == ErrRemoveCausesDataLoss && forceRemove) {
+				msg := fmt.Sprintf("Cannot remove node ID %s: %s", n.Id, err)
 				dlog.Warnf(msg)
 				return errors.New(msg)
 			}
 		}
 
 		if !inQuorum {
-			// If we are not in quorum, we only mark the node as decommissioned
-			// since this node is not functional yet.
+			// If we are not in quorum, we mark the other node down so that
+			// it can be decommissioned.
 			for e := c.listeners.Front(); e != nil; e = e.Next() {
 				dlog.Infof("Remove node: ask cluster listener %s "+
 					"to mark node %s down ",
@@ -1356,7 +1355,7 @@ func (c *ClusterManager) Remove(nodes []api.Node) error {
 		for e := c.listeners.Front(); e != nil; e = e.Next() {
 			dlog.Infof("Remove node: notify cluster listener: %s",
 				e.Value.(ClusterListener).String())
-			err := e.Value.(ClusterListener).Remove(&n)
+			err := e.Value.(ClusterListener).Remove(&n, forceRemove)
 			if err != nil {
 				if err != ErrNodeRemovePending {
 					dlog.Warnf("Cluster listener failed to "+
@@ -1412,7 +1411,7 @@ func (c *ClusterManager) replayNodeDecommission() {
 			n.Id = nodeEntry.Id
 			nodes := make([]api.Node, 0)
 			nodes = append(nodes, n)
-			err := c.Remove(nodes)
+			err := c.Remove(nodes, false)
 			if err != nil {
 				dlog.Warnf("Failed to replay node remove: "+
 					"node ID %s, error %s",

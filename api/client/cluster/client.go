@@ -90,7 +90,7 @@ func (c *clusterClient) PeerStatus(listenerName string) (map[string]api.Status, 
 	return resp, nil
 }
 
-func (c *clusterClient) Remove(nodes []api.Node) error {
+func (c *clusterClient) Remove(nodes []api.Node, forceRemove bool) error {
 	resp := api.ClusterResponse{}
 
 	request := c.c.Delete().Resource(clusterPath + "/")
@@ -98,6 +98,7 @@ func (c *clusterClient) Remove(nodes []api.Node) error {
 	for _, n := range nodes {
 		request.QueryOption("id", n.Id)
 	}
+	request.QueryOption("forceRemove", strconv.FormatBool(forceRemove))
 
 	if err := request.Do().Unmarshal(&resp); err != nil {
 		return err
