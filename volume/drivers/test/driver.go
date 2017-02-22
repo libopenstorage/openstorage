@@ -32,15 +32,15 @@ func init() {
 // so that tests can build on other tests' work
 type Context struct {
 	volume.VolumeDriver
-	volID      string
-	snapID     string
-	mountPath  string
-	devicePath string
-	Filesystem api.FSType
-	testPath   string
-	testFile   string
-	Encrypted  bool
-	Passphrase string
+	volID         string
+	snapID        string
+	mountPath     string
+	devicePath    string
+	Filesystem    api.FSType
+	testPath      string
+	testFile      string
+	Encrypted     bool
+	Passphrase    string
 	AttachOptions map[string]string
 }
 
@@ -138,14 +138,15 @@ func set(t *testing.T, ctx *Context) {
 
 	vols[0].Locator.VolumeLabels["UpdateTest"] = "Success"
 	err = ctx.Set(ctx.volID, vols[0].Locator, nil)
-	require.NoError(t, err, "Failed in Update")
-
-	vols, err = ctx.Inspect([]string{ctx.volID})
-	require.NoError(t, err, "Failed in Inspect")
-	require.NotNil(t, vols, "Nil vols")
-	require.Equal(t, len(vols), 1, "Expect 1 volume actual %v volumes", len(vols))
-	require.Equal(t, vols[0].Locator.VolumeLabels["UpdateTest"], "Success",
-		"Expect Label %v actual %v", "UpdateTest", vols[0].Locator.VolumeLabels)
+	if err != volume.ErrNotSupported {
+		require.NoError(t, err, "Failed in Update")
+		vols, err = ctx.Inspect([]string{ctx.volID})
+		require.NoError(t, err, "Failed in Inspect")
+		require.NotNil(t, vols, "Nil vols")
+		require.Equal(t, len(vols), 1, "Expect 1 volume actual %v volumes", len(vols))
+		require.Equal(t, vols[0].Locator.VolumeLabels["UpdateTest"], "Success",
+			"Expect Label %v actual %v", "UpdateTest", vols[0].Locator.VolumeLabels)
+	}
 }
 
 func enumerate(t *testing.T, ctx *Context) {
