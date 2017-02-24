@@ -1,4 +1,7 @@
 # gossip
+
+[![Travis branch](https://img.shields.io/travis/libopenstorage/gossip/master.svg)](https://travis-ci.org/libopenstorage/gossip)
+
 Go implementation of the Gossip protocol.
 
 This package provides an implementation of an eventually consistent in-memory
@@ -6,7 +9,7 @@ data store. The data store values are exchanged using a push-pull gossip protoco
 
 ```
 // Create a gossiper
-g := NewGossiper("<ip>:<port>", "<unique node id>")
+g := NewGossiper("<ip>:<port>", "<unique node id>", "<peer-list>")
 // Add peer nodes with whom you want to gossip
 g.AddNode("<peer_ip>:<peer_port>")
 ...

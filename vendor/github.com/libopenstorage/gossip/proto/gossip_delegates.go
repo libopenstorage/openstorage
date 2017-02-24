@@ -1,12 +1,10 @@
 package proto
 
 import (
-	"bytes"
-	"encoding/gob"
 	"encoding/json"
 	"fmt"
-	"sync"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -69,26 +67,6 @@ func (gd *GossipDelegate) updateGossipTs() {
 	gd.lastGossipTs = time.Now()
 }
 
-func (gd *GossipDelegate) convertToBytes(obj interface{}) ([]byte, error) {
-	var buf bytes.Buffer
-	enc := gob.NewEncoder(&buf)
-	err := enc.Encode(obj)
-	if err != nil {
-		return []byte{}, err
-	}
-	return buf.Bytes(), nil
-}
-
-func (gd *GossipDelegate) convertFromBytes(buf []byte, msg interface{}) error {
-	msgBuffer := bytes.NewBuffer(buf)
-	dec := gob.NewDecoder(msgBuffer)
-	err := dec.Decode(msg)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (gd *GossipDelegate) gossipChecks(node *memberlist.Node) error {
 	// Check the gossip version of other node
 	var nodeMeta types.NodeMetaInfo
@@ -121,7 +99,6 @@ func (gd *GossipDelegate) gossipChecks(node *memberlist.Node) error {
 	}
 	return err
 }
-
 
 // NodeMeta is used to retrieve meta-data about the current node
 // when broadcasting an alive message. It's length is limited to
@@ -172,8 +149,8 @@ func (gd *GossipDelegate) LocalState(join bool) []byte {
 
 	// We send our local state of nodeMap
 	// The receiver will decide which nodes to merge and which to ignore
-	localState := gd.GetLocalState()
-	byteLocalState, err := gd.convertToBytes(&localState)
+
+	byteLocalState, err := gd.GetLocalStateInBytes()
 	if err != nil {
 		gs.Err = fmt.Sprintf("gossip: Error in LocalState. Unable to unmarshal: %v", err.Error())
 		logrus.Infof(gs.Err)
@@ -308,8 +285,8 @@ func (gd *GossipDelegate) NotifyAlive(node *memberlist.Node) error {
 	if err == nil && diffNode.Status != types.NODE_STATUS_UP {
 		gd.UpdateNodeStatus(types.NodeId(nodeName), types.NODE_STATUS_UP)
 		gd.triggerStateEvent(types.NODE_ALIVE)
-        } // else if err != nil -> A new node sending us data. We do not add node unless it is added
-         // in our local map externally
+	} // else if err != nil -> A new node sending us data. We do not add node unless it is added
+	// in our local map externally
 	gd.history.AddLatest(gs)
 	return nil
 }

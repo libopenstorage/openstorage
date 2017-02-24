@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sync"
 	"time"
+	"bytes"
+	"encoding/gob"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/libopenstorage/gossip/types"
@@ -154,14 +156,14 @@ func (s *GossipStoreImpl) GetStoreKeys() []types.StoreKey {
 	keyMap := make(map[types.StoreKey]bool)
 	for _, nodeInfo := range s.nodeMap {
 		if nodeInfo.Value != nil {
-			for key, _ := range nodeInfo.Value {
+			for key := range nodeInfo.Value {
 				keyMap[key] = true
 			}
 		}
 	}
 	storeKeys := make([]types.StoreKey, len(keyMap))
 	i := 0
-	for key, _ := range keyMap {
+	for key := range keyMap {
 		storeKeys[i] = key
 		i++
 	}
@@ -225,7 +227,7 @@ func (s *GossipStoreImpl) MetaInfo() types.NodeMetaInfo {
 		Id:            selfNodeInfo.Id,
 		LastUpdateTs:  selfNodeInfo.LastUpdateTs,
 		GossipVersion: s.GossipVersion,
-		ClusterId: s.ClusterId,
+		ClusterId:     s.ClusterId,
 	}
 	return nodeMetaInfo
 }
@@ -233,11 +235,13 @@ func (s *GossipStoreImpl) MetaInfo() types.NodeMetaInfo {
 func (s *GossipStoreImpl) GetLocalState() types.NodeInfoMap {
 	s.Lock()
 	defer s.Unlock()
-	localCopy := make(types.NodeInfoMap)
-	for key, value := range s.nodeMap {
-		localCopy[key] = value
-	}
-	return localCopy
+	return s.getLocalState()
+}
+
+func (s *GossipStoreImpl) GetLocalStateInBytes() ([]byte, error) {
+	s.Lock()
+	defer s.Unlock()
+	return s.convertToBytes(s.getLocalState())
 }
 
 func (s *GossipStoreImpl) GetLocalNodeInfo(id types.NodeId) (types.NodeInfo, error) {
@@ -284,27 +288,27 @@ func (s *GossipStoreImpl) updateCluster(peers map[types.NodeId]string) {
 	// Lets check if a node was added or removed.
 	if len(s.nodeMap) > len(peers) {
 		// Node removed
-		for id, _ := range s.nodeMap {
+		for id := range s.nodeMap {
 			if _, ok := peers[id]; !ok {
 				removeNodeIds = append(removeNodeIds, id)
 			}
 		}
 	} else if len(s.nodeMap) < len(peers) {
 		// Node added
-		for id, _ := range peers {
+		for id := range peers {
 			if _, ok := s.nodeMap[id]; !ok {
 				addNodeIds = append(addNodeIds, id)
 			}
 		}
 	} else {
 		// Nodes removed
-		for id, _ := range s.nodeMap {
+		for id := range s.nodeMap {
 			if _, ok := peers[id]; !ok {
 				removeNodeIds = append(removeNodeIds, id)
 			}
 		}
 		// Nodes added
-		for id, _ := range peers {
+		for id := range peers {
 			if _, ok := s.nodeMap[id]; !ok {
 				addNodeIds = append(addNodeIds, id)
 			}
@@ -321,4 +325,32 @@ func (s *GossipStoreImpl) updateCluster(peers map[types.NodeId]string) {
 
 func (s *GossipStoreImpl) getClusterSize() int {
 	return s.clusterSize
+}
+
+func (s *GossipStoreImpl) convertToBytes(obj interface{}) ([]byte, error) {
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	err := enc.Encode(obj)
+	if err != nil {
+		return []byte{}, err
+	}
+	return buf.Bytes(), nil
+}
+
+func (s *GossipStoreImpl) convertFromBytes(buf []byte, msg interface{}) error {
+	msgBuffer := bytes.NewBuffer(buf)
+	dec := gob.NewDecoder(msgBuffer)
+	err := dec.Decode(msg)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *GossipStoreImpl) getLocalState() types.NodeInfoMap {
+	localCopy := make(types.NodeInfoMap)
+	for key, value := range s.nodeMap {
+		localCopy[key] = value
+	}
+	return localCopy
 }

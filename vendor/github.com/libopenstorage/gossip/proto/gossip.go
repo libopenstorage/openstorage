@@ -115,9 +115,9 @@ type GossiperImpl struct {
 	mlist  *ml.Memberlist
 
 	// node list, maintained separately
-	nodes     GossipNodeList
-	name      string
-	nodesLock sync.Mutex
+	nodes          GossipNodeList
+	name           string
+	nodesLock      sync.Mutex
 	gossipInterval time.Duration
 	//nodeDeathInterval time.Duration
 	shutDown bool
