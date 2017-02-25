@@ -11,6 +11,7 @@ import (
 // Strings for VolumeSpec
 const (
 	Name                     = "name"
+	SpecParent               = "parent"
 	SpecEphemeral            = "ephemeral"
 	SpecShared               = "shared"
 	SpecSticky               = "sticky"
@@ -131,7 +132,7 @@ func (x FSType) SimpleString() string {
 func CosTypeSimpleValueOf(s string) (CosType, error) {
 	obj, exists := CosType_value[strings.ToUpper(s)]
 	if !exists {
-		return -1, fmt.Errorf("Invalid cos value: %s",s)
+		return -1, fmt.Errorf("Invalid cos value: %s", s)
 	}
 	return CosType(obj), nil
 }
