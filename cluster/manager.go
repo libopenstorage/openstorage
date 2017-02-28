@@ -19,6 +19,7 @@ import (
 	"github.com/libopenstorage/gossip"
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/cluster/discovery"
 	"github.com/libopenstorage/openstorage/config"
 
 	"github.com/Sirupsen/logrus"
@@ -30,6 +31,7 @@ const (
 	heartbeatKey       = "heartbeat"
 	clusterLockKey     = "/cluster/lock"
 	gossipVersionKey   = "Gossip Version"
+	gossipPort         = "9002"
 	quorumTimeout      = 10 * time.Minute
 	decommissionErrMsg = "Node %s must be offline or in maintenance " +
 		"mode to be decommissioned."
@@ -48,18 +50,19 @@ var (
 
 // ClusterManager implements the cluster interface
 type ClusterManager struct {
-	size          int
-	listeners     *list.List
-	config        config.ClusterConfig
-	kv            kvdb.Kvdb
-	status        api.Status
-	nodeCache     map[string]api.Node   // Cached info on the nodes in the cluster.
-	nodeStatuses  map[string]api.Status // Set of nodes currently marked down.
-	gossip        gossip.Gossiper
-	gossipVersion string
-	gEnabled      bool
-	selfNode      api.Node
-	system        systemutils.System
+	size            int
+	listeners       *list.List
+	config          config.ClusterConfig
+	kv              kvdb.Kvdb
+	status          api.Status
+	nodeCache       map[string]api.Node   // Cached info on the nodes in the cluster.
+	nodeStatuses    map[string]api.Status // Set of nodes currently marked down.
+	gossip          gossip.Gossiper
+	gossipVersion   string
+	gEnabled        bool
+	selfNode        api.Node
+	system          systemutils.System
+	discoverService discovery.Cluster
 }
 
 type checkFunc func(ClusterInfo) error
@@ -243,10 +246,24 @@ func (c *ClusterManager) getNonDecommisionedPeers(db ClusterInfo) map[types.Node
 		if nodeEntry.Status == api.Status_STATUS_DECOMMISSION {
 			continue
 		}
-		ip := nodeEntry.DataIp + ":9002"
+		ip := nodeEntry.DataIp + ":" + gossipPort
 		peers[types.NodeId(nodeEntry.Id)] = ip
 	}
 	return peers
+}
+
+func (c *ClusterManager) getBootstrapPeers(dci *discovery.ClusterInfo) map[types.NodeId]string {
+	peers := make(map[types.NodeId]string)
+	for _, bne := range dci.Nodes {
+		peers[types.NodeId(bne.Id)] = bne.Ip + ":" + gossipPort
+	}
+	return peers
+}
+
+func (c *ClusterManager) watchDiscovery(dci *discovery.ClusterInfo, err error) error {
+	peers := c.getBootstrapPeers(dci)
+	c.gossip.UpdateCluster(peers)
+	return nil
 }
 
 // Get the latest config.
@@ -300,9 +317,7 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 
 	c.size = db.Size
 
-	// Update the peers. A node might have been removed or added
 	peers := c.getNonDecommisionedPeers(db)
-	c.gossip.UpdateCluster(peers)
 	for _, n := range c.nodeCache {
 		_, found := peers[types.NodeId(n.Id)]
 		if !found {
@@ -372,6 +387,15 @@ func (c *ClusterManager) cleanupInit(db *ClusterInfo, self *api.Node) error {
 			resErr = err
 		}
 
+	}
+	// Cleanup ourselves from Discovery
+	dne := discovery.NodeEntry{
+		Id: c.selfNode.Id,
+	}
+	_, err = c.discoverService.RemoveNode(dne)
+	if err != nil {
+		dlog.Warnf("Failed to Cleanup Discovery: %v", err)
+		resErr = err
 	}
 
 	return resErr
@@ -501,25 +525,23 @@ func (c *ClusterManager) startClusterDBWatch(lastIndex uint64,
 	return nil
 }
 
-func (c *ClusterManager) startHeartBeat(clusterInfo *ClusterInfo) {
+func (c *ClusterManager) startHeartBeat(clusterInfo *discovery.ClusterInfo) {
 	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
 
 	node := c.getCurrentState()
 	c.nodeCache[c.selfNode.Id] = *node
 	c.gossip.UpdateSelf(gossipStoreKey, *node)
 	var nodeIps []string
-	for nodeId, nodeEntry := range clusterInfo.NodeEntries {
+	for nodeId, nodeEntry := range clusterInfo.Nodes {
 		if nodeId == node.Id {
 			continue
 		}
-		labels := nodeEntry.NodeLabels
-		version, ok := labels[gossipVersionKey]
-		if !ok || version != c.gossipVersion {
+		if nodeEntry.GossipVersion != c.gossipVersion {
 			// Do not add nodes with mismatched version
 			continue
 		}
 
-		nodeIps = append(nodeIps, nodeEntry.DataIp+":9002")
+		nodeIps = append(nodeIps, nodeEntry.Ip+":"+gossipPort)
 	}
 	if len(nodeIps) > 0 {
 		dlog.Infof("Starting Gossip... Gossiping to these nodes : %v", nodeIps)
@@ -527,7 +549,8 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *ClusterInfo) {
 		dlog.Infof("Starting Gossip...")
 	}
 	c.gossip.Start(nodeIps)
-	c.gossip.UpdateCluster(c.getNonDecommisionedPeers(*clusterInfo))
+
+	c.gossip.UpdateCluster(c.getBootstrapPeers(clusterInfo))
 
 	lastUpdateTs := time.Now()
 	for {
@@ -722,7 +745,7 @@ func (c *ClusterManager) GetGossipState() *ClusterState {
 		History: history, NodeStatus: nodes}
 }
 
-func (c *ClusterManager) waitForQuorum(exist bool) error {
+func (c *ClusterManager) waitForQuorum() error {
 	// Max quorum retries allowed = 600
 	// 600 * 2 seconds (gossip interval) = 20 minutes before it restarts
 	quorumRetries := 0
@@ -734,15 +757,7 @@ func (c *ClusterManager) waitForQuorum(exist bool) error {
 			// Achieved quorum in the cluster.
 			// Lets start the node
 			c.selfNode.Status = api.Status_STATUS_INIT
-			err := c.joinCluster(&c.selfNode, exist)
-			if err != nil {
-				if c.selfNode.Status != api.Status_STATUS_MAINTENANCE {
-					c.selfNode.Status = api.Status_STATUS_ERROR
-				}
-				return err
-			}
 			c.status = api.Status_STATUS_OK
-			c.selfNode.Status = api.Status_STATUS_OK
 			break
 		} else {
 			c.status = api.Status_STATUS_NOT_IN_QUORUM
@@ -890,7 +905,7 @@ func (c *ClusterManager) initializeAndStartHeartbeat(
 	exist *bool,
 	nodeInitialized bool,
 ) (uint64, error) {
-	lastIndex, clusterInfo, err := c.initListeners(
+	lastIndex, _, err := c.initListeners(
 		kvdb,
 		clusterMaxSize,
 		exist,
@@ -899,24 +914,14 @@ func (c *ClusterManager) initializeAndStartHeartbeat(
 	if err != nil {
 		return 0, err
 	}
-
-	// Set the status to NOT_IN_QUORUM to start the node.
-	// Once we achieve quorum then we actually join the cluster
-	// and change the status to OK
-	c.selfNode.Status = api.Status_STATUS_NOT_IN_QUORUM
-	// Start heartbeating to other nodes.
-	go c.startHeartBeat(clusterInfo)
 	return lastIndex, nil
 }
 
-// Start initiates the cluster manager and the cluster state machine
-func (c *ClusterManager) Start(
-	clusterMaxSize int,
-	nodeInitialized bool,
+func (c *ClusterManager) DiscoveryStart(
+	discoveryService discovery.Cluster,
 ) error {
 	var err error
-
-	dlog.Infoln("Cluster manager starting...")
+	dlog.Infoln("Cluster Discovery starting...")
 
 	c.gEnabled = true
 	c.selfNode = api.Node{}
@@ -926,6 +931,7 @@ func (c *ClusterManager) Start(
 	c.selfNode.MgmtIp, c.selfNode.DataIp, err = ExternalIp(&c.config)
 	c.selfNode.StartTime = time.Now()
 	c.selfNode.Hostname, _ = os.Hostname()
+	c.discoverService = discoveryService
 	if err != nil {
 		dlog.Errorf("Failed to get external IP address for mgt/data interfaces: %s.",
 			err)
@@ -946,7 +952,7 @@ func (c *ClusterManager) Start(
 		QuorumTimeout:    quorumTimeout,
 	}
 	c.gossip = gossip.New(
-		c.selfNode.DataIp+":9002",
+		c.selfNode.DataIp+":"+gossipPort,
 		types.NodeId(c.config.NodeId),
 		c.selfNode.GenNumber,
 		gossipIntervals,
@@ -955,9 +961,47 @@ func (c *ClusterManager) Start(
 	)
 	c.gossipVersion = types.GOSSIP_VERSION_2
 
-	var exist bool
-	kvdb := kvdb.Instance()
+	dne := discovery.NodeEntry{
+		Id:            c.selfNode.Id,
+		Ip:            c.selfNode.DataIp,
+		GossipVersion: types.GOSSIP_VERSION_2,
+	}
+	clusterInfo, err := c.discoverService.AddNode(dne)
+	if err != nil {
+		return err
+	}
 
+	err = c.discoverService.Watch(c.watchDiscovery, clusterInfo.Version)
+	if err != nil {
+		dlog.Errorf("Failed to watch on discovery service: %v", err)
+		return err
+	}
+
+	// Set the status to NOT_IN_QUORUM to start the node.
+	// Once we achieve quorum then we actually join the cluster
+	// and change the status to OK
+	c.selfNode.Status = api.Status_STATUS_NOT_IN_QUORUM
+	// Start heartbeating to other nodes.
+	go c.startHeartBeat(clusterInfo)
+
+	err = c.waitForQuorum()
+	if err != nil {
+		dlog.Warnf("Unable to achieve quorum.")
+		return err
+	}
+	return nil
+}
+
+// Start initiates the cluster manager and the cluster state machine
+func (c *ClusterManager) Start(
+	clusterMaxSize int,
+	nodeInitialized bool,
+) error {
+	var exist bool
+
+	dlog.Infoln("Cluster manager starting...")
+
+	kvdb := kvdb.Instance()
 	lastIndex, err := c.initializeAndStartHeartbeat(
 		kvdb,
 		clusterMaxSize,
@@ -970,11 +1014,14 @@ func (c *ClusterManager) Start(
 
 	c.startClusterDBWatch(lastIndex, kvdb)
 
-	err = c.waitForQuorum(exist)
+	err = c.joinCluster(&c.selfNode, exist)
 	if err != nil {
+		if c.selfNode.Status != api.Status_STATUS_MAINTENANCE {
+			c.selfNode.Status = api.Status_STATUS_ERROR
+		}
 		return err
 	}
-
+	c.selfNode.Status = api.Status_STATUS_OK
 	go c.updateClusterStatus()
 	go c.replayNodeDecommission()
 
@@ -1345,6 +1392,16 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 			return errors.New(msg)
 		}
 
+		// Remove this node from discovery service, so that new nodes that join
+		// the cluster do not add this node in their maps
+		_, err = c.discoverService.RemoveNode(discovery.NodeEntry{Id: n.Id})
+		if err != nil && err != discovery.ErrNodeDoesNotExist {
+			msg := fmt.Sprintf("Failed to remove node %v"+
+				" from discovery: %v", n.Id, err)
+			dlog.Warnf(msg)
+			return errors.New(msg)
+		}
+
 		if !inQuorum {
 			// If we are not in quorum, we only mark the node as decommissioned
 			// since this node is not functional yet.
@@ -1388,6 +1445,11 @@ func (c *ClusterManager) NodeRemoveDone(nodeID string, result error) {
 	logrus.Infof("Cluster manager node remove done: node ID %s", nodeID)
 
 	err := c.deleteNodeFromDB(nodeID)
+	if err != nil {
+		goto error_done
+	}
+	return
+error_done:
 	if err != nil {
 		msg := fmt.Sprintf("Failed to delete node %s "+
 			"from cluster database, error %s",

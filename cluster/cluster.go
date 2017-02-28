@@ -7,6 +7,7 @@ import (
 
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/cluster/discovery"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/portworx/kvdb"
 )
@@ -163,6 +164,12 @@ type ClusterRemove interface {
 
 // Cluster is the API that a cluster provider will implement.
 type Cluster interface {
+
+	// DiscoveryStart has to be called before Start and needs to be provided with
+	// a discovery implementation that could be used to bootstrap a node in the
+	// cluster
+	DiscoveryStart(discovery.Cluster) error
+
 	// Inspect the node given a UUID.
 	Inspect(string) (api.Node, error)
 
