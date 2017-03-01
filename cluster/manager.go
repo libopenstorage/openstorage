@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 	"time"
 
 	"go.pedge.io/dlog"
@@ -53,7 +54,8 @@ type ClusterManager struct {
 	config        config.ClusterConfig
 	kv            kvdb.Kvdb
 	status        api.Status
-	nodeCache     map[string]api.Node   // Cached info on the nodes in the cluster.
+	nodeCache     map[string]api.Node // Cached info on the nodes in the cluster.
+	nodeCacheLock sync.Mutex
 	nodeStatuses  map[string]api.Status // Set of nodes currently marked down.
 	gossip        gossip.Gossiper
 	gossipVersion string
@@ -183,7 +185,7 @@ func ExternalIp(config *config.ClusterConfig) (string, string, error) {
 
 // Inspect inspects given node and returns the in-memory Node object
 func (c *ClusterManager) Inspect(nodeID string) (api.Node, error) {
-	n, ok := c.nodeCache[nodeID]
+	n, ok := c.getNodeCacheEntry(nodeID)
 
 	if !ok {
 		return api.Node{}, errors.New("Unable to locate node with provided UUID.")
@@ -208,6 +210,8 @@ func (c *ClusterManager) UpdateData(dataKey string, value interface{}) error {
 // GetData returns self node's data
 func (c *ClusterManager) GetData() (map[string]*api.Node, error) {
 	nodes := make(map[string]*api.Node)
+	c.nodeCacheLock.Lock()
+	defer c.nodeCacheLock.Unlock()
 	for _, value := range c.nodeCache {
 		var copyValue api.Node
 		copyValue = value
@@ -265,7 +269,7 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 				"%s state is Decommission.",
 				nodeEntry.Id)
 
-			n, found := c.nodeCache[nodeEntry.Id]
+			n, found := c.getNodeCacheEntry(nodeEntry.Id)
 			if !found {
 				logrus.Errorf("ClusterManager watchDB, "+
 					"node ID %s not in node cache",
@@ -286,7 +290,7 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 				nodeEntry.Id)
 
 			n.Status = api.Status_STATUS_DECOMMISSION
-			c.nodeCache[nodeEntry.Id] = n
+			c.putNodeCacheEntry(nodeEntry.Id, n)
 			// We are getting decommissioned!!
 			if nodeEntry.Id == c.selfNode.Id {
 				// We are getting decommissioned.
@@ -303,6 +307,8 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 	// Update the peers. A node might have been removed or added
 	peers := c.getNonDecommisionedPeers(db)
 	c.gossip.UpdateCluster(peers)
+	c.nodeCacheLock.Lock()
+	defer c.nodeCacheLock.Unlock()
 	for _, n := range c.nodeCache {
 		_, found := peers[types.NodeId(n.Id)]
 		if !found {
@@ -505,7 +511,7 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *ClusterInfo) {
 	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
 
 	node := c.getCurrentState()
-	c.nodeCache[c.selfNode.Id] = *node
+	c.putNodeCacheEntry(c.selfNode.Id, *node)
 	c.gossip.UpdateSelf(gossipStoreKey, *node)
 	var nodeIps []string
 	for nodeId, nodeEntry := range clusterInfo.NodeEntries {
@@ -553,7 +559,7 @@ func (c *ClusterManager) updateClusterStatus() {
 	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
 	for {
 		node := c.getCurrentState()
-		c.nodeCache[node.Id] = *node
+		c.putNodeCacheEntry(node.Id, *node)
 
 		// Process heartbeats from other nodes...
 		gossipValues := c.gossip.GetStoreKeyValue(gossipStoreKey)
@@ -677,13 +683,13 @@ func (c *ClusterManager) updateClusterStatus() {
 							peerNodeInGossip.Status = peerNodeInCache.Status
 						}
 					}
-					c.nodeCache[peerNodeInGossip.Id] = peerNodeInGossip
+					c.putNodeCacheEntry(peerNodeInGossip.Id, peerNodeInGossip)
 				} else {
 					dlog.Errorln("Unable to get node info from gossip")
-					c.nodeCache[peerNodeInCache.Id] = peerNodeInCache
+					c.putNodeCacheEntry(peerNodeInCache.Id, peerNodeInCache)
 				}
 			} else {
-				c.nodeCache[peerNodeInCache.Id] = peerNodeInCache
+				c.putNodeCacheEntry(peerNodeInCache.Id, peerNodeInCache)
 			}
 		}
 		time.Sleep(2 * time.Second)
@@ -1018,6 +1024,8 @@ func (c *ClusterManager) PeerStatus(listenerName string) (map[string]api.Status,
 			break
 		}
 	}
+	c.nodeCacheLock.Lock()
+	defer c.nodeCacheLock.Unlock()
 	// Listener failed to provide peer status
 	if listenerStatusMap == nil || len(listenerStatusMap) == 0 {
 		for _, n := range c.nodeCache {
@@ -1080,6 +1088,8 @@ func (c *ClusterManager) enumerateNodesFromClusterDB() []api.Node {
 func (c *ClusterManager) enumerateNodesFromCache() []api.Node {
 	var clusterDB ClusterInfo
 	clusterDBSet := false
+	c.nodeCacheLock.Lock()
+	defer c.nodeCacheLock.Unlock()
 	nodes := make([]api.Node, len(c.nodeCache))
 	i := 0
 	for _, n := range c.nodeCache {
@@ -1278,7 +1288,7 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 	inQuorum := !(c.selfNode.Status == api.Status_STATUS_NOT_IN_QUORUM)
 
 	for _, n := range nodes {
-		node, exist := c.nodeCache[n.Id]
+		node, exist := c.getNodeCacheEntry(n.Id)
 		if !exist {
 			node, resultErr = c.getNodeInfoFromClusterDb(n.Id)
 			if resultErr != nil {
@@ -1448,4 +1458,17 @@ func (c *ClusterManager) HandleNotifications(culpritNodeId string, notification 
 	} else {
 		return "", fmt.Errorf("Error in Handle Notifications. Unknown Notification : %v", notification)
 	}
+}
+
+func (c *ClusterManager) getNodeCacheEntry(nodeId string) (api.Node, bool) {
+	c.nodeCacheLock.Lock()
+	defer c.nodeCacheLock.Unlock()
+	n, ok := c.nodeCache[nodeId]
+	return n, ok
+}
+
+func (c *ClusterManager) putNodeCacheEntry(nodeId string, node api.Node) {
+	c.nodeCacheLock.Lock()
+	defer c.nodeCacheLock.Unlock()
+	c.nodeCache[nodeId] = node
 }
