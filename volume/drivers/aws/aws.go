@@ -375,7 +375,14 @@ func (d *Driver) Format(volumeID string) error {
 	}
 
 	// XXX: determine mount state
-	devicePath, err := d.ops.DevicePath(volumeID)
+	awsVol, err := d.ops.Inspect([]*string{&volumeID})
+	if err != nil {
+		return err
+	}
+	if len(awsVol) != 1 {
+		return fmt.Errorf("Failed to inspect volume %v", volumeID)
+	}
+	devicePath, err := d.ops.DevicePath(awsVol[0])
 	if err != nil {
 		return err
 	}
@@ -414,7 +421,14 @@ func (d *Driver) Mount(volumeID string, mountpath string) error {
 	if err != nil {
 		return fmt.Errorf("Failed to locate volume %q", volumeID)
 	}
-	devicePath, err := d.ops.DevicePath(volumeID)
+	awsVol, err := d.ops.Inspect([]*string{&volumeID})
+	if err != nil {
+		return err
+	}
+	if len(awsVol) != 1 {
+		return fmt.Errorf("Failed to inspect volume %v", volumeID)
+	}
+	devicePath, err := d.ops.DevicePath(awsVol[0])
 	if err != nil {
 		return err
 	}

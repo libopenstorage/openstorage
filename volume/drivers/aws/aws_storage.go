@@ -18,6 +18,28 @@ type ec2Ops struct {
 	mutex    sync.Mutex
 }
 
+const (
+	SetIdentifierNone = "None"
+)
+
+// Custom AWS volume error codes.
+const (
+	_ = iota + 5000
+	ErrVolDetached
+	ErrVolInval
+	ErrVolAttachedOnRemoteNode
+)
+
+// StorageError error returned for AWS volumes
+type StorageError struct {
+	// Code is one of AWS volume error codes.
+	Code int
+	// Msg is human understandable error message.
+	Msg string
+	// Instance provides more information on the error.
+	Instance string
+}
+
 // StorageOps interface to perform basic operations on aws.
 type StorageOps interface {
 	// Create volume based on input template volume.
@@ -30,7 +52,11 @@ type StorageOps interface {
 	Detach(volumeID string) error
 	// Delete volumeID.
 	Delete(volumeID string) error
-	// Enumerate EBS volumes that match given filters.  Organized them into
+	// Inspect volumes specified by volumeID
+	Inspect(volumeIds []*string) ([]*ec2.Volume, error)
+	// DeviceMappings returns map[local_volume_path]->aws volume ID
+	DeviceMappings() (map[string]string, error)
+	// Enumerate EBS volumes that match given filters.  Organize them into
 	// sets identified by setIdentifier.
 	// labels can be nil, setIdentifier can be empty string.
 	Enumerate(volumeIds []*string,
@@ -38,9 +64,17 @@ type StorageOps interface {
 		setIdentifier string,
 	) (map[string][]*ec2.Volume, error)
 	// DevicePath for attached EBS volume.
-	DevicePath(volumeID string) (string, error)
+	DevicePath(volume *ec2.Volume) (string, error)
 	// Snapshot EBS volume
 	Snapshot(volumeID string, readonly bool) (*ec2.Snapshot, error)
+}
+
+func NewStorageError(code int, msg string, instance string) error {
+	return &StorageError{Code: code, Msg: msg, Instance: instance}
+}
+
+func (e *StorageError) Error() string {
+	return e.Msg
 }
 
 func NewEc2Storage(instance string, ec2 *ec2.EC2) StorageOps {
@@ -48,17 +82,6 @@ func NewEc2Storage(instance string, ec2 *ec2.EC2) StorageOps {
 		instance: instance,
 		ec2:      ec2,
 	}
-}
-
-func (s *ec2Ops) mapStatus(ec2Vol *ec2.Volume) bool {
-	switch *ec2Vol.State {
-	case ec2.VolumeStateAvailable, ec2.VolumeStateInUse:
-		return true
-	case ec2.VolumeStateCreating, ec2.VolumeStateDeleting,
-		ec2.VolumeStateDeleted, ec2.VolumeStateError:
-		return false
-	}
-	return false
 }
 
 func (s *ec2Ops) mapVolumeType(awsVol *ec2.Volume) api.StorageMedium {
@@ -71,13 +94,6 @@ func (s *ec2Ops) mapVolumeType(awsVol *ec2.Volume) api.StorageMedium {
 		return api.StorageMedium_STORAGE_MEDIUM_MAGNETIC
 	}
 	return api.StorageMedium_STORAGE_MEDIUM_MAGNETIC
-}
-
-func (s *ec2Ops) mapInt64Ptr(in *int64) uint64 {
-	if in != nil {
-		return uint64(*in)
-	}
-	return 0
 }
 
 func (s *ec2Ops) filters(
@@ -224,8 +240,7 @@ func (s *ec2Ops) addResource(
 	}
 }
 
-// loadDeviceMappings populates a map of ebs_vol->local_attachement.
-func (s *ec2Ops) loadDeviceMappings() (map[string]string, error) {
+func (s *ec2Ops) DeviceMappings() (map[string]string, error) {
 	instance, err := s.describe()
 	if err != nil {
 		fmt.Printf("loadDeviceMappings: %v: error %v", s.instance, err)
@@ -245,7 +260,7 @@ func (s *ec2Ops) loadDeviceMappings() (map[string]string, error) {
 			if strings.HasPrefix(devName, devPrefix) {
 				devName = "/dev/xvd" + devName[len(devPrefix):]
 			}
-			m[*d.Ebs.VolumeId] = devName
+			m[devName] = *d.Ebs.VolumeId
 		}
 	}
 	return m, nil
@@ -329,13 +344,22 @@ func (s *ec2Ops) rollbackCreate(id string, createErr error) error {
 	return createErr
 }
 
-func (s ec2Ops) deleted(v *ec2.Volume) bool {
+func (s *ec2Ops) deleted(v *ec2.Volume) bool {
 	return *v.State == ec2.VolumeStateDeleting ||
 		*v.State == ec2.VolumeStateDeleted
 }
 
 func (s *ec2Ops) available(v *ec2.Volume) bool {
 	return *v.State == ec2.VolumeStateAvailable
+}
+
+func (s *ec2Ops) Inspect(volumeIds []*string) ([]*ec2.Volume, error) {
+	req := &ec2.DescribeVolumesInput{VolumeIds: volumeIds}
+	awsVols, err := s.ec2.DescribeVolumes(req)
+	if err != nil {
+		return nil, err
+	}
+	return awsVols.Volumes, nil
 }
 
 func (s *ec2Ops) Enumerate(
@@ -347,12 +371,7 @@ func (s *ec2Ops) Enumerate(
 	sets := make(map[string][]*ec2.Volume)
 
 	// Enumerate all volumes that have same labels.
-	var f []*ec2.Filter
-	if len(setIdentifier) == 0 {
-		f = s.filters(labels, nil)
-	} else {
-		f = s.filters(labels, []string{setIdentifier})
-	}
+	f := s.filters(labels, nil)
 	req := &ec2.DescribeVolumesInput{Filters: f, VolumeIds: volumeIds}
 	awsVols, err := s.ec2.DescribeVolumes(req)
 	if err != nil {
@@ -360,18 +379,24 @@ func (s *ec2Ops) Enumerate(
 	}
 
 	// Volume sets are identified by volumes with the same setIdentifer.
+	found := false
 	for _, vol := range awsVols.Volumes {
 		if s.deleted(vol) {
 			continue
 		}
 		if len(setIdentifier) == 0 {
-			s.addResource(sets, vol, "unknown")
+			s.addResource(sets, vol, SetIdentifierNone)
 		} else {
+			found = false
 			for _, tag := range vol.Tags {
 				if s.matchTag(tag, setIdentifier) {
 					s.addResource(sets, vol, *tag.Value)
+					found = true
 					break
 				}
+			}
+			if !found {
+				s.addResource(sets, vol, SetIdentifierNone)
 			}
 		}
 	}
@@ -470,43 +495,37 @@ func (s *ec2Ops) Snapshot(
 	return s.ec2.CreateSnapshot(request)
 }
 
-func (s *ec2Ops) DevicePath(volumeID string) (string, error) {
-
-	awsVolID := volumeID
-
-	request := &ec2.DescribeVolumesInput{VolumeIds: []*string{&awsVolID}}
-	awsVols, err := s.ec2.DescribeVolumes(request)
-	if err != nil {
-		return "", err
+func (s *ec2Ops) DevicePath(vol *ec2.Volume) (string, error) {
+	if vol.Attachments == nil || len(vol.Attachments) == 0 {
+		return "", NewStorageError(ErrVolDetached,
+			"Volume %v is detached", *vol.VolumeId)
 	}
-	if awsVols == nil || len(awsVols.Volumes) == 0 {
-		return "", fmt.Errorf("Failed to retrieve volume for ID %q", volumeID)
-
+	if vol.Attachments[0].InstanceId == nil {
+		return "", NewStorageError(ErrVolInval,
+			"Unable to determine volume instance attachment", "")
 	}
-	aws := awsVols.Volumes[0]
-	if aws.Attachments == nil || len(aws.Attachments) == 0 {
-		return "", fmt.Errorf("Invalid volume state, volume must be attached")
-	}
-	if aws.Attachments[0].InstanceId == nil {
-		return "", fmt.Errorf("Unable to determine volume instance attachment")
-	}
-	if s.instance != *aws.Attachments[0].InstanceId {
-		return "", fmt.Errorf("volume is attched on %q, it must be attached on %q",
-			*aws.Attachments[0].InstanceId, s.instance)
+	if s.instance != *vol.Attachments[0].InstanceId {
+		return "", NewStorageError(ErrVolAttachedOnRemoteNode,
+			fmt.Sprintf("Volume attached on %q current instance %q",
+				*vol.Attachments[0].InstanceId, s.instance),
+			*vol.Attachments[0].InstanceId)
 
 	}
-	if aws.Attachments[0].State == nil {
-		return "", fmt.Errorf("Unable to determine volume attachment state")
+	if vol.Attachments[0].State == nil {
+		return "", NewStorageError(ErrVolInval,
+			"Unable to determine volume attachment state", "")
 	}
-	if *aws.Attachments[0].State != ec2.VolumeAttachmentStateAttached {
-		return "", fmt.Errorf("Invalid volume state %q, volume must be attached",
-			*aws.Attachments[0].State)
+	if *vol.Attachments[0].State != ec2.VolumeAttachmentStateAttached {
+		return "", NewStorageError(ErrVolInval,
+			fmt.Sprintf("Invalid state %q, volume is not attached",
+				*vol.Attachments[0].State), "")
 	}
-	if aws.Attachments[0].Device == nil {
-		return "", fmt.Errorf("Unable to determine volume attachment path")
+	if vol.Attachments[0].Device == nil {
+		return "", NewStorageError(ErrVolInval,
+			"Unable to determine volume attachment path", "")
 	}
-	dev := strings.TrimPrefix(*aws.Attachments[0].Device, "/dev/sd")
-	if dev != *aws.Attachments[0].Device {
+	dev := strings.TrimPrefix(*vol.Attachments[0].Device, "/dev/sd")
+	if dev != *vol.Attachments[0].Device {
 		dev = "/dev/xvd" + dev
 	}
 	return dev, nil
