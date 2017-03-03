@@ -244,6 +244,7 @@ func (c *ClusterManager) GetData() (map[string]*api.Node, error) {
 }
 
 func (c *ClusterManager) getCurrentState() *api.Node {
+	c.selfNodeLock.Lock()
 	c.selfNode.Timestamp = time.Now()
 
 	c.selfNode.Cpu, _, _ = c.system.CpuUsage()
@@ -257,13 +258,10 @@ func (c *ClusterManager) getCurrentState() *api.Node {
 			continue
 		}
 		for key, val := range listenerDataMap {
-			c.selfNodeLock.Lock()
 			c.selfNode.NodeData[key] = val
-			c.selfNodeLock.Unlock()
 		}
 	}
 
-	c.selfNodeLock.Lock()
 	nodeCopy := (&c.selfNode).Copy()
 	c.selfNodeLock.Unlock()
 	return nodeCopy
