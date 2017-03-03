@@ -61,6 +61,7 @@ type ClusterManager struct {
 	gossipVersion string
 	gEnabled      bool
 	selfNode      api.Node
+	selfNodeLock  sync.Mutex // Lock that guards data and label of selfNode
 	system        systemutils.System
 }
 
@@ -202,8 +203,24 @@ func (c *ClusterManager) AddEventListener(listener ClusterListener) error {
 }
 
 // UpdateData updates self node data
-func (c *ClusterManager) UpdateData(dataKey string, value interface{}) error {
-	c.selfNode.NodeData[dataKey] = value
+func (c *ClusterManager) UpdateData(nodeData map[string]interface{}) error {
+	c.selfNodeLock.Lock()
+	defer c.selfNodeLock.Unlock()
+	for dataKey, dataValue := range nodeData {
+		c.selfNode.NodeData[dataKey] = dataValue
+	}
+	return nil
+}
+
+func (c *ClusterManager) UpdateLabels(nodeLabels map[string]string) error {
+	c.selfNodeLock.Lock()
+	defer c.selfNodeLock.Unlock()
+	if c.selfNode.NodeLabels == nil {
+		c.selfNode.NodeLabels = make(map[string]string)
+	}
+	for labelKey, labelValue := range nodeLabels {
+		c.selfNode.NodeLabels[labelKey] = labelValue
+	}
 	return nil
 }
 
@@ -213,9 +230,15 @@ func (c *ClusterManager) GetData() (map[string]*api.Node, error) {
 	c.nodeCacheLock.Lock()
 	defer c.nodeCacheLock.Unlock()
 	for _, value := range c.nodeCache {
-		var copyValue api.Node
-		copyValue = value
-		nodes[value.Id] = &copyValue
+		var copyValue *api.Node
+		if value.Id == c.selfNode.Id {
+			c.selfNodeLock.Lock()
+			copyValue = c.selfNode.Copy()
+			c.selfNodeLock.Unlock()
+		} else {
+			copyValue = value.Copy()
+		}
+		nodes[value.Id] = copyValue
 	}
 	return nodes, nil
 }
@@ -234,11 +257,16 @@ func (c *ClusterManager) getCurrentState() *api.Node {
 			continue
 		}
 		for key, val := range listenerDataMap {
+			c.selfNodeLock.Lock()
 			c.selfNode.NodeData[key] = val
+			c.selfNodeLock.Unlock()
 		}
 	}
 
-	return &c.selfNode
+	c.selfNodeLock.Lock()
+	nodeCopy := (&c.selfNode).Copy()
+	c.selfNodeLock.Unlock()
+	return nodeCopy
 }
 
 func (c *ClusterManager) getNonDecommisionedPeers(db ClusterInfo) map[types.NodeId]string {

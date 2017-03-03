@@ -60,7 +60,11 @@ func (c *clusterClient) AddEventListener(cluster.ClusterListener) error {
 	return nil
 }
 
-func (c *clusterClient) UpdateData(dataKey string, value interface{}) error {
+func (c *clusterClient) UpdateData(nodeData map[string]interface{}) error {
+	return nil
+}
+
+func (c *clusterClient) UpdateLabels(nodeLabels map[string]string) error {
 	return nil
 }
 

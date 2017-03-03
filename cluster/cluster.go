@@ -122,8 +122,10 @@ type ClusterState struct {
 // ClusterData interface provides apis to handle data of the cluster
 type ClusterData interface {
 	// UpdateData updates node data associated with this node
-	UpdateData(dataKey string, value interface{}) error
+	UpdateData(nodeData map[string]interface{}) error
 
+	// UpdateLabels updates node labels associated with this node
+	UpdateLabels(nodeLabels map[string]string) error
 	// GetData get sdata associated with all nodes.
 	// Key is the node id
 	GetData() (map[string]*api.Node, error)
