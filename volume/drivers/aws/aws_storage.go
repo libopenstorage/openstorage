@@ -167,29 +167,32 @@ func (s *ec2Ops) waitStatus(id string, desired string) error {
 func (s *ec2Ops) waitAttachmentStatus(
 	volumeID string,
 	desired string,
-	timeout time.Duration) error {
-
+	timeout time.Duration,
+) (*ec2.Volume, error) {
 	id := volumeID
 	request := &ec2.DescribeVolumesInput{VolumeIds: []*string{&id}}
 	actual := ""
 	interval := 2 * time.Second
 	fmt.Printf("Waiting for state transition to %q", desired)
+
+	var outVol *ec2.Volume
 	for elapsed, runs := 0*time.Second, 0; actual != desired && elapsed < timeout; elapsed += interval {
 		awsVols, err := s.ec2.DescribeVolumes(request)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if len(awsVols.Volumes) != 1 {
-			return fmt.Errorf("expected one volume %v got %v",
+			return nil, fmt.Errorf("expected one volume %v got %v",
 				volumeID, len(awsVols.Volumes))
 		}
+		outVol = awsVols.Volumes[0]
 		awsAttachment := awsVols.Volumes[0].Attachments
 		if awsAttachment == nil || len(awsAttachment) == 0 {
 			actual = ec2.VolumeAttachmentStateDetached
 			if actual == desired {
 				break
 			}
-			return fmt.Errorf("Nil attachment state for %v", volumeID)
+			return nil, fmt.Errorf("Nil attachment state for %v", volumeID)
 		}
 		actual = *awsAttachment[0].State
 		if actual == desired {
@@ -202,10 +205,10 @@ func (s *ec2Ops) waitAttachmentStatus(
 	}
 	fmt.Printf("\n")
 	if actual != desired {
-		return fmt.Errorf("Volume %v failed to transition to  %v current state %v",
+		return nil, fmt.Errorf("Volume %v failed to transition to  %v current state %v",
 			volumeID, desired, actual)
 	}
-	return nil
+	return outVol, nil
 }
 
 func (s *ec2Ops) applyTags(
@@ -455,18 +458,18 @@ func (s *ec2Ops) Attach(volumeID string) (string, error) {
 		InstanceId: &s.instance,
 		VolumeId:   &volumeID,
 	}
-	resp, err := s.ec2.AttachVolume(req)
-	if err != nil {
+	if _, err = s.ec2.AttachVolume(req); err != nil {
 		return "", err
 	}
-	if err = s.waitAttachmentStatus(
+	vol, err := s.waitAttachmentStatus(
 		volumeID,
 		ec2.VolumeAttachmentStateAttached,
 		time.Minute,
-	); err != nil {
+	)
+	if err != nil {
 		return "", err
 	}
-	return *resp.Device, nil
+	return s.DevicePath(vol)
 }
 
 func (s *ec2Ops) Detach(volumeID string) error {
@@ -479,10 +482,11 @@ func (s *ec2Ops) Detach(volumeID string) error {
 	if _, err := s.ec2.DetachVolume(req); err != nil {
 		return err
 	}
-	return s.waitAttachmentStatus(volumeID,
+	_, err := s.waitAttachmentStatus(volumeID,
 		ec2.VolumeAttachmentStateDetached,
 		time.Minute,
 	)
+	return err
 }
 
 func (s *ec2Ops) Snapshot(
@@ -498,7 +502,7 @@ func (s *ec2Ops) Snapshot(
 func (s *ec2Ops) DevicePath(vol *ec2.Volume) (string, error) {
 	if vol.Attachments == nil || len(vol.Attachments) == 0 {
 		return "", NewStorageError(ErrVolDetached,
-			"Volume %v is detached", *vol.VolumeId)
+			"Volume is detached", *vol.VolumeId)
 	}
 	if vol.Attachments[0].InstanceId == nil {
 		return "", NewStorageError(ErrVolInval,
