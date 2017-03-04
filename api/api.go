@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/mohae/deepcopy"
 )
 
 // Strings for VolumeSpec
@@ -57,22 +59,22 @@ const (
 // It includes the current physical state (CPU, memory, storage, network usage) as
 // well as the containers running on the system.
 type Node struct {
-	Id           string
-	Cpu          float64 // percentage.
-	MemTotal     uint64
-	MemUsed      uint64
-	MemFree      uint64
-	Avgload      int
-	Status       Status
-	GenNumber    uint64
-	Disks        map[string]StorageResource
-	Pools        []StoragePool
-	MgmtIp       string
-	DataIp       string
-	Timestamp    time.Time
-	StartTime    time.Time
-	Hostname     string
-	NodeData     map[string]interface{}
+	Id        string
+	Cpu       float64 // percentage.
+	MemTotal  uint64
+	MemUsed   uint64
+	MemFree   uint64
+	Avgload   int
+	Status    Status
+	GenNumber uint64
+	Disks     map[string]StorageResource
+	Pools     []StoragePool
+	MgmtIp    string
+	DataIp    string
+	Timestamp time.Time
+	StartTime time.Time
+	Hostname  string
+	NodeData  map[string]interface{}
 	// User defined labels for node. Key Value pairs
 	NodeLabels map[string]string
 }
@@ -286,23 +288,7 @@ func (s *VolumeSpec) Copy() *VolumeSpec {
 
 // Copy makes a deep copy of Node
 func (s *Node) Copy() *Node {
-	localCopy := *s
-	if s.Disks != nil {
-		localCopy.Disks = make(map[string]StorageResource)
-		for k, v := range s.Disks {
-			localCopy.Disks[k] = v
-		}
-	}
-	if s.NodeData != nil {
-		localCopy.NodeData = make(map[string]interface{})
-		for k, v := range s.NodeData {
-			localCopy.NodeData[k] = v
-		}
-	}
-	if s.NodeLabels != nil {
-		for k, v := range s.NodeLabels {
-			localCopy.NodeLabels[k] = v
-		}
-	}
-	return &localCopy
+	localCopy := deepcopy.Copy(*s)
+	nodeCopy := localCopy.(Node)
+	return &nodeCopy
 }

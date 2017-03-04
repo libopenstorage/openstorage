@@ -230,19 +230,15 @@ func (c *ClusterManager) GetData() (map[string]*api.Node, error) {
 	c.nodeCacheLock.Lock()
 	defer c.nodeCacheLock.Unlock()
 	for _, value := range c.nodeCache {
-		var copyValue *api.Node
-		if value.Id == c.selfNode.Id {
-			c.selfNodeLock.Lock()
-			copyValue = c.selfNode.Copy()
-			c.selfNodeLock.Unlock()
-		} else {
-			copyValue = value.Copy()
-		}
+		copyValue := value.Copy()
 		nodes[value.Id] = copyValue
 	}
 	return nodes, nil
 }
 
+// getCurrentState always returns the copy of selfNode that
+// cluster manager maintains. It also updates the selfNode
+// with latest data.
 func (c *ClusterManager) getCurrentState() *api.Node {
 	c.selfNodeLock.Lock()
 	defer c.selfNodeLock.Unlock()

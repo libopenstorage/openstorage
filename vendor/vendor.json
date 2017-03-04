@@ -1005,6 +1005,12 @@
 			"revisionTime": "2016-05-12T06:43:16Z"
 		},
 		{
+			"checksumSHA1": "KGEgppxoeEqnD0vY1MCnabBXMaU=",
+			"path": "github.com/mohae/deepcopy",
+			"revision": "a40e8fd6a88555ab2b3f07a29db9e893598362a2",
+			"revisionTime": "2016-10-19T06:50:48Z"
+		},
+		{
 			"checksumSHA1": "0ORMSN0QacGK4KBvnS9OWBOzU6g=",
 			"path": "github.com/opencontainers/runc/libcontainer/label",
 			"revision": "89ab7f2ccc1e45ddf6485eaa802c35dcf321dfc8",
