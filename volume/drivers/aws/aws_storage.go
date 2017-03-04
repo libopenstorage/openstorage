@@ -67,6 +67,10 @@ type StorageOps interface {
 	DevicePath(volume *ec2.Volume) (string, error)
 	// Snapshot EBS volume
 	Snapshot(volumeID string, readonly bool) (*ec2.Snapshot, error)
+	// ApplyTags
+	ApplyTags(v *ec2.Volume, labels map[string]string) error
+	// Tags
+	Tags(v *ec2.Volume) map[string]string
 }
 
 func NewStorageError(code int, msg string, instance string) error {
@@ -211,7 +215,7 @@ func (s *ec2Ops) waitAttachmentStatus(
 	return outVol, nil
 }
 
-func (s *ec2Ops) applyTags(
+func (s *ec2Ops) ApplyTags(
 	v *ec2.Volume,
 	labels map[string]string,
 ) error {
@@ -365,6 +369,14 @@ func (s *ec2Ops) Inspect(volumeIds []*string) ([]*ec2.Volume, error) {
 	return awsVols.Volumes, nil
 }
 
+func (s *ec2Ops) Tags(v *ec2.Volume) map[string]string {
+	labels := make(map[string]string)
+	for _, tag := range v.Tags {
+		labels[*tag.Key] = *tag.Value
+	}
+	return labels
+}
+
 func (s *ec2Ops) Enumerate(
 	volumeIds []*string,
 	labels map[string]string,
@@ -414,10 +426,10 @@ func (s *ec2Ops) Create(
 		AvailabilityZone: v.AvailabilityZone,
 		Encrypted:        v.Encrypted,
 		KmsKeyId:         v.KmsKeyId,
-		Iops:             v.Iops,
-		Size:             v.Size,
-		VolumeType:       v.VolumeType,
-		SnapshotId:       v.SnapshotId,
+		//Iops:             v.Iops,
+		Size:       v.Size,
+		VolumeType: v.VolumeType,
+		SnapshotId: v.SnapshotId,
 	}
 
 	newVol, err := s.ec2.CreateVolume(req)
@@ -431,7 +443,7 @@ func (s *ec2Ops) Create(
 		return nil, s.rollbackCreate(*newVol.VolumeId, err)
 	}
 	if len(labels) > 0 {
-		if err = s.applyTags(newVol, labels); err != nil {
+		if err = s.ApplyTags(newVol, labels); err != nil {
 			return nil, s.rollbackCreate(*newVol.VolumeId, err)
 		}
 	}
