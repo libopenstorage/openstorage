@@ -22,7 +22,6 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/libopenstorage/systemutils"
 	"github.com/portworx/kvdb"
 )
@@ -184,15 +183,32 @@ func ExternalIp(config *config.ClusterConfig) (string, string, error) {
 	return "", "", errors.New("Node not connected to the network.")
 }
 
-// Inspect inspects given node and returns the in-memory Node object
+// Inspect inspects given node and returns the state
 func (c *ClusterManager) Inspect(nodeID string) (api.Node, error) {
-	n, ok := c.getNodeCacheEntry(nodeID)
+	var n api.Node
+	var ok bool
 
-	if !ok {
+	if nodeID == c.selfNode.Id {
+		n = *c.getCurrentState()
+	} else if n, ok = c.getNodeCacheEntry(nodeID); !ok {
 		return api.Node{}, errors.New("Unable to locate node with provided UUID.")
-	} else {
-		return n, nil
+	} else if n.Status == api.Status_STATUS_OFFLINE &&
+		(n.DataIp == "" || n.MgmtIp == "") {
+		// cached info unstable, read from DB
+		clusterDB, _ := readClusterInfo()
+		// Gossip does not have essential information of
+		// an offline node. Provide the essential data
+		// that we have in the cluster db
+		if v, ok := clusterDB.NodeEntries[n.Id]; ok {
+			n.MgmtIp = v.MgmtIp
+			n.DataIp = v.DataIp
+			n.Hostname = v.Hostname
+			n.NodeLabels = v.NodeLabels
+		} else {
+			return api.Node{}, errors.New("Unable to query node information.")
+		}
 	}
+	return n, nil
 }
 
 // AddEventListener adds a new listener
@@ -287,27 +303,27 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 
 	for _, nodeEntry := range db.NodeEntries {
 		if nodeEntry.Status == api.Status_STATUS_DECOMMISSION {
-			logrus.Infof("ClusterManager watchDB, node ID "+
+			dlog.Infof("ClusterManager watchDB, node ID "+
 				"%s state is Decommission.",
 				nodeEntry.Id)
 
 			n, found := c.getNodeCacheEntry(nodeEntry.Id)
 			if !found {
-				logrus.Errorf("ClusterManager watchDB, "+
+				dlog.Errorf("ClusterManager watchDB, "+
 					"node ID %s not in node cache",
 					nodeEntry.Id)
 				continue
 			}
 
 			if n.Status == api.Status_STATUS_DECOMMISSION {
-				logrus.Infof("ClusterManager watchDB, "+
+				dlog.Infof("ClusterManager watchDB, "+
 					"node ID %s is already decommission "+
 					"on this node",
 					nodeEntry.Id)
 				continue
 			}
 
-			logrus.Infof("ClusterManager watchDB, "+
+			dlog.Infof("ClusterManager watchDB, "+
 				"decommsission node ID %s on this node",
 				nodeEntry.Id)
 
@@ -1303,7 +1319,7 @@ func (c *ClusterManager) deleteNodeFromDB(nodeID string) error {
 
 // Remove node(s) from the cluster permanently.
 func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
-	logrus.Infof("ClusterManager Remove node.")
+	dlog.Infof("ClusterManager Remove node.")
 
 	var resultErr error
 
@@ -1413,11 +1429,11 @@ func (c *ClusterManager) NodeRemoveDone(nodeID string, result error) {
 			"error %s",
 			nodeID,
 			result)
-		logrus.Errorf(msg)
+		dlog.Errorf(msg)
 		return
 	}
 
-	logrus.Infof("Cluster manager node remove done: node ID %s", nodeID)
+	dlog.Infof("Cluster manager node remove done: node ID %s", nodeID)
 
 	err := c.deleteNodeFromDB(nodeID)
 	if err != nil {
