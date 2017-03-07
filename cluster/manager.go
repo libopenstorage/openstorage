@@ -21,7 +21,6 @@ import (
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
-
 	"github.com/libopenstorage/systemutils"
 	"github.com/portworx/kvdb"
 )
@@ -183,8 +182,9 @@ func ExternalIp(config *config.ClusterConfig) (string, string, error) {
 	return "", "", errors.New("Node not connected to the network.")
 }
 
-// Inspect inspects given node and returns the state
-func (c *ClusterManager) Inspect(nodeID string) (api.Node, error) {
+// getNodeEntry is internal helper method, shared between Inspect() and enumerateNodesFromCache()
+// Parameter 'clustDBRef' may be a pointer to "empty" struct, in which case it'll be populated, but it must not be NULL.
+func (c *ClusterManager) getNodeEntry(nodeID string, clustDBRef *ClusterInfo) (api.Node, error) {
 	var n api.Node
 	var ok bool
 
@@ -195,20 +195,30 @@ func (c *ClusterManager) Inspect(nodeID string) (api.Node, error) {
 	} else if n.Status == api.Status_STATUS_OFFLINE &&
 		(n.DataIp == "" || n.MgmtIp == "") {
 		// cached info unstable, read from DB
-		clusterDB, _ := readClusterInfo()
+		if clustDBRef.Id == "" {
+			// We've been passed "empty" struct, lazy-init before use
+			clusterDB, _ := readClusterInfo()
+			*clustDBRef = clusterDB
+		}
 		// Gossip does not have essential information of
 		// an offline node. Provide the essential data
 		// that we have in the cluster db
-		if v, ok := clusterDB.NodeEntries[n.Id]; ok {
+		if v, ok := clustDBRef.NodeEntries[n.Id]; ok {
 			n.MgmtIp = v.MgmtIp
 			n.DataIp = v.DataIp
 			n.Hostname = v.Hostname
 			n.NodeLabels = v.NodeLabels
 		} else {
-			return api.Node{}, errors.New("Unable to query node information.")
+			dlog.Warnf("Could not query NodeID %v", nodeID)
+			// Node entry won't be refreshed form DB, will use the "offline" original
 		}
 	}
 	return n, nil
+}
+
+// Inspect inspects given node and returns the state
+func (c *ClusterManager) Inspect(nodeID string) (api.Node, error) {
+	return c.getNodeEntry(nodeID, &ClusterInfo{})
 }
 
 // AddEventListener adds a new listener
@@ -1125,34 +1135,11 @@ func (c *ClusterManager) enumerateNodesFromClusterDB() []api.Node {
 
 func (c *ClusterManager) enumerateNodesFromCache() []api.Node {
 	var clusterDB ClusterInfo
-	clusterDBSet := false
-	c.nodeCacheLock.Lock()
-	defer c.nodeCacheLock.Unlock()
 	nodes := make([]api.Node, len(c.nodeCache))
 	i := 0
 	for _, n := range c.nodeCache {
-		if n.Id == c.selfNode.Id {
-			nodes[i] = *c.getCurrentState()
-		} else {
-			if n.Status == api.Status_STATUS_OFFLINE &&
-				(n.DataIp == "" || n.MgmtIp == "") {
-				if !clusterDBSet {
-					clusterDB, _ = readClusterInfo()
-					clusterDBSet = true
-				}
-				// Gossip does not have essential information of
-				// an offline node. Provide the essential data
-				// that we have in the cluster db
-				nodeValueDB, ok := clusterDB.NodeEntries[n.Id]
-				if ok {
-					n.MgmtIp = nodeValueDB.MgmtIp
-					n.DataIp = nodeValueDB.DataIp
-					n.Hostname = nodeValueDB.Hostname
-					n.NodeLabels = nodeValueDB.NodeLabels
-				}
-			}
-			nodes[i] = n
-		}
+		n, _ := c.getNodeEntry(n.Id, &clusterDB)
+		nodes[i] = n
 		i++
 	}
 	return nodes
