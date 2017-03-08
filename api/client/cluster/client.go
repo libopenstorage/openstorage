@@ -53,7 +53,12 @@ func (c *clusterClient) SetSize(size int) error {
 }
 
 func (c *clusterClient) Inspect(nodeID string) (api.Node, error) {
-	return api.Node{}, nil
+	var resp api.Node
+	request := c.c.Get().Resource(clusterPath + "/inspect/" + nodeID)
+	if err := request.Do().Unmarshal(&resp); err != nil {
+		return api.Node{}, err
+	}
+	return resp, nil
 }
 
 func (c *clusterClient) AddEventListener(cluster.ClusterListener) error {
