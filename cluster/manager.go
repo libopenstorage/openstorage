@@ -184,13 +184,14 @@ func ExternalIp(config *config.ClusterConfig) (string, string, error) {
 
 // getNodeEntry is internal helper method, shared between Inspect() and enumerateNodesFromCache()
 // Parameter 'clustDBRef' may be a pointer to "empty" struct, in which case it'll be populated, but it must not be NULL.
+// Also, it's caller's responsibility to lock the access to the NodeCache.
 func (c *ClusterManager) getNodeEntry(nodeID string, clustDBRef *ClusterInfo) (api.Node, error) {
 	var n api.Node
 	var ok bool
 
 	if nodeID == c.selfNode.Id {
 		n = *c.getCurrentState()
-	} else if n, ok = c.getNodeCacheEntry(nodeID); !ok {
+	} else if n, ok = c.nodeCache[nodeID]; !ok {
 		return api.Node{}, errors.New("Unable to locate node with provided UUID.")
 	} else if n.Status == api.Status_STATUS_OFFLINE &&
 		(n.DataIp == "" || n.MgmtIp == "") {
@@ -218,6 +219,8 @@ func (c *ClusterManager) getNodeEntry(nodeID string, clustDBRef *ClusterInfo) (a
 
 // Inspect inspects given node and returns the state
 func (c *ClusterManager) Inspect(nodeID string) (api.Node, error) {
+	c.nodeCacheLock.Lock()
+	defer c.nodeCacheLock.Unlock()
 	return c.getNodeEntry(nodeID, &ClusterInfo{})
 }
 
@@ -1135,6 +1138,8 @@ func (c *ClusterManager) enumerateNodesFromClusterDB() []api.Node {
 
 func (c *ClusterManager) enumerateNodesFromCache() []api.Node {
 	var clusterDB ClusterInfo
+	c.nodeCacheLock.Lock()
+	defer c.nodeCacheLock.Unlock()
 	nodes := make([]api.Node, len(c.nodeCache))
 	i := 0
 	for _, n := range c.nodeCache {
