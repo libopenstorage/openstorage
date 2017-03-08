@@ -21,8 +21,6 @@ import (
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
-
-	"github.com/Sirupsen/logrus"
 	"github.com/libopenstorage/systemutils"
 	"github.com/portworx/kvdb"
 )
@@ -184,15 +182,46 @@ func ExternalIp(config *config.ClusterConfig) (string, string, error) {
 	return "", "", errors.New("Node not connected to the network.")
 }
 
-// Inspect inspects given node and returns the in-memory Node object
-func (c *ClusterManager) Inspect(nodeID string) (api.Node, error) {
-	n, ok := c.getNodeCacheEntry(nodeID)
+// getNodeEntry is internal helper method, shared between Inspect() and enumerateNodesFromCache()
+// Parameter 'clustDBRef' may be a pointer to "empty" struct, in which case it'll be populated, but it must not be NULL.
+// Also, it's caller's responsibility to lock the access to the NodeCache.
+func (c *ClusterManager) getNodeEntry(nodeID string, clustDBRef *ClusterInfo) (api.Node, error) {
+	var n api.Node
+	var ok bool
 
-	if !ok {
+	if nodeID == c.selfNode.Id {
+		n = *c.getCurrentState()
+	} else if n, ok = c.nodeCache[nodeID]; !ok {
 		return api.Node{}, errors.New("Unable to locate node with provided UUID.")
-	} else {
-		return n, nil
+	} else if n.Status == api.Status_STATUS_OFFLINE &&
+		(n.DataIp == "" || n.MgmtIp == "") {
+		// cached info unstable, read from DB
+		if clustDBRef.Id == "" {
+			// We've been passed "empty" struct, lazy-init before use
+			clusterDB, _ := readClusterInfo()
+			*clustDBRef = clusterDB
+		}
+		// Gossip does not have essential information of
+		// an offline node. Provide the essential data
+		// that we have in the cluster db
+		if v, ok := clustDBRef.NodeEntries[n.Id]; ok {
+			n.MgmtIp = v.MgmtIp
+			n.DataIp = v.DataIp
+			n.Hostname = v.Hostname
+			n.NodeLabels = v.NodeLabels
+		} else {
+			dlog.Warnf("Could not query NodeID %v", nodeID)
+			// Node entry won't be refreshed form DB, will use the "offline" original
+		}
 	}
+	return n, nil
+}
+
+// Inspect inspects given node and returns the state
+func (c *ClusterManager) Inspect(nodeID string) (api.Node, error) {
+	c.nodeCacheLock.Lock()
+	defer c.nodeCacheLock.Unlock()
+	return c.getNodeEntry(nodeID, &ClusterInfo{})
 }
 
 // AddEventListener adds a new listener
@@ -287,27 +316,27 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 
 	for _, nodeEntry := range db.NodeEntries {
 		if nodeEntry.Status == api.Status_STATUS_DECOMMISSION {
-			logrus.Infof("ClusterManager watchDB, node ID "+
+			dlog.Infof("ClusterManager watchDB, node ID "+
 				"%s state is Decommission.",
 				nodeEntry.Id)
 
 			n, found := c.getNodeCacheEntry(nodeEntry.Id)
 			if !found {
-				logrus.Errorf("ClusterManager watchDB, "+
+				dlog.Errorf("ClusterManager watchDB, "+
 					"node ID %s not in node cache",
 					nodeEntry.Id)
 				continue
 			}
 
 			if n.Status == api.Status_STATUS_DECOMMISSION {
-				logrus.Infof("ClusterManager watchDB, "+
+				dlog.Infof("ClusterManager watchDB, "+
 					"node ID %s is already decommission "+
 					"on this node",
 					nodeEntry.Id)
 				continue
 			}
 
-			logrus.Infof("ClusterManager watchDB, "+
+			dlog.Infof("ClusterManager watchDB, "+
 				"decommsission node ID %s on this node",
 				nodeEntry.Id)
 
@@ -1109,34 +1138,13 @@ func (c *ClusterManager) enumerateNodesFromClusterDB() []api.Node {
 
 func (c *ClusterManager) enumerateNodesFromCache() []api.Node {
 	var clusterDB ClusterInfo
-	clusterDBSet := false
 	c.nodeCacheLock.Lock()
 	defer c.nodeCacheLock.Unlock()
 	nodes := make([]api.Node, len(c.nodeCache))
 	i := 0
 	for _, n := range c.nodeCache {
-		if n.Id == c.selfNode.Id {
-			nodes[i] = *c.getCurrentState()
-		} else {
-			if n.Status == api.Status_STATUS_OFFLINE &&
-				(n.DataIp == "" || n.MgmtIp == "") {
-				if !clusterDBSet {
-					clusterDB, _ = readClusterInfo()
-					clusterDBSet = true
-				}
-				// Gossip does not have essential information of
-				// an offline node. Provide the essential data
-				// that we have in the cluster db
-				nodeValueDB, ok := clusterDB.NodeEntries[n.Id]
-				if ok {
-					n.MgmtIp = nodeValueDB.MgmtIp
-					n.DataIp = nodeValueDB.DataIp
-					n.Hostname = nodeValueDB.Hostname
-					n.NodeLabels = nodeValueDB.NodeLabels
-				}
-			}
-			nodes[i] = n
-		}
+		n, _ := c.getNodeEntry(n.Id, &clusterDB)
+		nodes[i] = n
 		i++
 	}
 	return nodes
@@ -1303,7 +1311,7 @@ func (c *ClusterManager) deleteNodeFromDB(nodeID string) error {
 
 // Remove node(s) from the cluster permanently.
 func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
-	logrus.Infof("ClusterManager Remove node.")
+	dlog.Infof("ClusterManager Remove node.")
 
 	var resultErr error
 
@@ -1413,11 +1421,11 @@ func (c *ClusterManager) NodeRemoveDone(nodeID string, result error) {
 			"error %s",
 			nodeID,
 			result)
-		logrus.Errorf(msg)
+		dlog.Errorf(msg)
 		return
 	}
 
-	logrus.Infof("Cluster manager node remove done: node ID %s", nodeID)
+	dlog.Infof("Cluster manager node remove done: node ID %s", nodeID)
 
 	err := c.deleteNodeFromDB(nodeID)
 	if err != nil {

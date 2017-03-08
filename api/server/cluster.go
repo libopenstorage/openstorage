@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/gorilla/mux"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
 )
@@ -79,7 +80,25 @@ func (c *clusterApi) setSize(w http.ResponseWriter, r *http.Request) {
 
 func (c *clusterApi) inspect(w http.ResponseWriter, r *http.Request) {
 	method := "inspect"
-	c.sendNotImplemented(w, method)
+	inst, err := cluster.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	vars := mux.Vars(r)
+	nodeID, ok := vars["id"]
+
+	if !ok || nodeID == "" {
+		c.sendError(c.name, method, w, "Missing id param", http.StatusBadRequest)
+		return
+	}
+
+	if nodeStats, err := inst.Inspect(nodeID); err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+	} else {
+		json.NewEncoder(w).Encode(nodeStats)
+	}
 }
 
 func (c *clusterApi) enableGossip(w http.ResponseWriter, r *http.Request) {
