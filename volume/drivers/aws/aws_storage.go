@@ -422,14 +422,17 @@ func (s *ec2Ops) Create(
 	v *ec2.Volume,
 	labels map[string]string,
 ) (*ec2.Volume, error) {
+
 	req := &ec2.CreateVolumeInput{
 		AvailabilityZone: v.AvailabilityZone,
 		Encrypted:        v.Encrypted,
 		KmsKeyId:         v.KmsKeyId,
-		//Iops:             v.Iops,
-		Size:       v.Size,
-		VolumeType: v.VolumeType,
-		SnapshotId: v.SnapshotId,
+		Size:             v.Size,
+		VolumeType:       v.VolumeType,
+		SnapshotId:       v.SnapshotId,
+	}
+	if *v.VolumeType == opsworks.VolumeTypeIo1 {
+		req.Iops = v.Iops
 	}
 
 	newVol, err := s.ec2.CreateVolume(req)
