@@ -248,6 +248,10 @@ message VolumeSpec {
   uint32 scale = 17;
   // Sticky volumes cannot be deleted until the flag is removed.
   bool sticky = 18;
+  // MaxBackups is the maximum number of cloud backups available at any given point
+  uint32 max_backups = 19;
+  // BackupSchedule is the schedule for cloud backups
+  string backup_schedule = 20;
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure coded - for clustered storage arrays
