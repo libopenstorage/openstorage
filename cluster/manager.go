@@ -47,7 +47,7 @@ var (
 
 // ClusterManager implements the cluster interface
 type ClusterManager struct {
-	size          int
+	maxSize       int
 	listeners     *list.List
 	config        config.ClusterConfig
 	kv            kvdb.Kvdb
@@ -353,7 +353,7 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 		}
 	}
 
-	c.size = db.Size
+	c.maxSize = db.MaxSize
 
 	// Update the peers. A node might have been removed or added
 	peers := c.getNonDecommisionedPeers(db)
@@ -620,9 +620,11 @@ func (c *ClusterManager) updateClusterStatus() {
 			numNodes = numNodes + 1
 
 			// Check to make sure we are not exceeding the size of the cluster.
-			if c.size > 0 && numNodes > c.size {
+			if c.maxSize > 0 && numNodes > c.maxSize {
+				// CHECKME: improbable we'll end here, but this brings all cluster nodes down,
+				//          and sets them into perpetual container-restarts!
 				dlog.Fatalf("Fatal, number of nodes in the cluster has"+
-					"exceeded the cluster size: %d > %d", numNodes, c.size)
+					"exceeded the cluster size: %d > %d", numNodes, c.maxSize)
 				os.Exit(1)
 			}
 
@@ -870,7 +872,7 @@ func (c *ClusterManager) initializeCluster(db kvdb.Kvdb) (
 		return nil, errors.New("Fatal, Cluster is in an unexpected state.")
 	}
 	// Cluster database max size... 0 if unlimited.
-	c.size = clusterInfo.Size
+	c.maxSize = clusterInfo.MaxSize
 	c.status = api.Status_STATUS_OK
 	return &clusterInfo, nil
 }
@@ -904,6 +906,12 @@ func (c *ClusterManager) initListeners(
 	selfNodeEntry, ok := clusterInfo.NodeEntries[c.config.NodeId]
 	if !ok {
 		dlog.Panicln("Fatal, Unable to find self node entry in local cache")
+	}
+
+	if clusterMaxSize == 0 && clusterMaxSize != c.maxSize {
+		dlog.Warnf("Changing the maximum size of the cluster from %v to %v (persisted)",
+			clusterMaxSize, c.maxSize)
+		clusterMaxSize = c.maxSize
 	}
 
 	initFunc := func(clusterInfo ClusterInfo) error {
@@ -1219,7 +1227,7 @@ func (c *ClusterManager) SetSize(size int) error {
 		return err
 	}
 
-	db.Size = size
+	db.MaxSize = size
 
 	_, err = writeClusterInfo(&db)
 
