@@ -681,8 +681,16 @@ func (c *ClusterManager) updateClusterStatus() {
 				// Replace the status of this node in cache to offline
 				peerNodeInCache.Status = api.Status_STATUS_OFFLINE
 				lastStatus, ok := c.nodeStatuses[string(id)]
-				if ok && lastStatus == peerNodeInCache.Status {
+				if !ok {
+					// This node was probably added recently into gossip node
+					// map through cluster database and is yet to reach out to us.
+					// No need of updating the listeners.
+					c.nodeStatuses[string(id)] = peerNodeInCache.Status
 					break
+				} else{
+					if lastStatus == peerNodeInCache.Status {
+						break
+					}
 				}
 
 				c.nodeStatuses[string(id)] = peerNodeInCache.Status
