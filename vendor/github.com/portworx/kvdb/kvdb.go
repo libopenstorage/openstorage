@@ -245,10 +245,14 @@ type Kvdb interface {
 
 // ReplayCb provides info required for replay
 type ReplayCb struct {
-	Prefix    string
+	// Prefix is the watch key/tree prefix
+	Prefix string
+	// WaitIndex is the index after which updates must be returned
 	WaitIndex uint64
-	Opaque    interface{}
-	WatchCB   WatchCB
+	// Opaque is a hint returned by the caller
+	Opaque interface{}
+	// WatchCB is the watch callback
+	WatchCB WatchCB
 }
 
 // UpdatesCollector collects updates from kvdb.

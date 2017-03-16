@@ -19,17 +19,19 @@ const (
 func snapAndReadClusterInfo() (*ClusterInitState, error) {
 	kv := kvdb.Instance()
 
+	// Start the watch before the snapshot
+	collector, err := kvdb.NewUpdatesCollector(kv, "", 0)
+	if err != nil {
+		dlog.Errorf("Failed to start collector for cluster db: %v", err)
+		return nil, err
+	}
+	// Create the snapshot
 	snap, version, err := kv.Snapshot("")
 	if err != nil {
 		dlog.Errorf("Snapshot failed for cluster db: %v", err)
 		return nil, err
 	}
 	dlog.Infof("Cluster db snapshot at: %v", version)
-	collector, err := kvdb.NewUpdatesCollector(kv, "", version)
-	if err != nil {
-		dlog.Errorf("Failed to start collector for cluster db: %v", err)
-		return nil, err
-	}
 
 	clusterDB, err := snap.Get(ClusterDBKey)
 	if err != nil && !strings.Contains(err.Error(), "Key not found") {

@@ -28,7 +28,7 @@ const (
 	// 30s is long enough for most of the network conditions.
 	DefaultDialTimeout = 30 * time.Second
 	// DefaultLockTTL is the ttl for an etcd lock
-	DefaultLockTTL = 8
+	DefaultLockTTL = 16
 	// DefaultLockRefreshDuration is the time interval for refreshing an etcd lock
 	DefaultLockRefreshDuration = 2 * time.Second
 )
@@ -42,6 +42,7 @@ type EtcdCommon interface {
 	GetRetryCount() int
 }
 
+// EtcdLock combines Mutex and channel
 type EtcdLock struct {
 	Done     chan struct{}
 	Unlocked bool
@@ -188,7 +189,7 @@ func Version(url string, options map[string]string) (string, error) {
 		// This should never happen in an ideal scenario unless
 		// etcd messes up. To avoid a crash further in this code
 		// we return an error
-		return "", fmt.Errorf("Unable to determine etcd version. Got an empty response from etcd.")
+		return "", fmt.Errorf("Unable to determine etcd version (empty response from etcd)")
 	}
 	if version.Server[0] == '2' || version.Server[0] == '1' {
 		return kvdb.EtcdBaseVersion, nil

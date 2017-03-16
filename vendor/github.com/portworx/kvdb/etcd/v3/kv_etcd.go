@@ -516,7 +516,7 @@ func (et *etcdKV) LockWithID(key string, lockerID string) (
 	if count >= 10 {
 		logrus.Warnf("ETCD: spent %v iterations locking %v\n", count, key)
 	}
-	kvPair.TTL = int64(time.Duration(ttl) * time.Second)
+	kvPair.TTL = int64(ttl)
 	kvPair.Lock = &ec.EtcdLock{Done: make(chan struct{})}
 	go et.refreshLock(kvPair)
 	return kvPair, err
@@ -734,7 +734,7 @@ func (et *etcdKV) watchStart(
 		opts = append(opts, e.WithPrefix())
 	}
 	if waitIndex != 0 {
-		opts = append(opts, e.WithRev(int64(waitIndex)))
+		opts = append(opts, e.WithRev(int64(waitIndex+1)))
 	}
 	watcher := e.NewWatcher(et.kvClient)
 	watchChan := watcher.Watch(context.Background(), key, opts...)
@@ -748,12 +748,6 @@ func (et *etcdKV) watchStart(
 			_ = cb(key, opaque, nil, kvdb.ErrWatchStopped)
 		} else {
 			for _, ev := range wresp.Events {
-				if waitIndex != 0 {
-					if ev.Kv.ModRevision < int64(waitIndex) {
-						// Skip this updte
-						continue
-					}
-				}
 				var action string
 				if ev.Type == mvccpb.PUT {
 					if ev.Kv.Version == 1 {
@@ -784,6 +778,65 @@ func (et *etcdKV) watchStart(
 
 func (et *etcdKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 	// Create a new bootstrap key
+	updates := make([]*kvdb.KVPair, 0)
+	finalPutDone := false
+	var lowestKvdbIndex, highestKvdbIndex uint64
+	done := make(chan error)
+	mutex := &sync.Mutex{}
+	cb := func(
+		prefix string,
+		opaque interface{},
+		kvp *kvdb.KVPair,
+		err error,
+	) error {
+		var watchErr error
+		var sendErr error
+		var m *sync.Mutex
+		ok := false
+
+		if err != nil {
+			if err == kvdb.ErrWatchStopped {
+				return nil
+			}
+			watchErr = err
+			sendErr = err
+			goto errordone
+		}
+
+		if kvp == nil {
+			watchErr = fmt.Errorf("kvp is nil")
+			sendErr = watchErr
+			goto errordone
+		}
+
+		m, ok = opaque.(*sync.Mutex)
+		if !ok {
+			watchErr = fmt.Errorf("Failed to get mutex")
+			sendErr = watchErr
+			goto errordone
+		}
+
+		m.Lock()
+		defer m.Unlock()
+		updates = append(updates, kvp)
+		if finalPutDone {
+			if kvp.ModifiedIndex >= highestKvdbIndex {
+				// Done applying changes.
+				watchErr = fmt.Errorf("done")
+				sendErr = nil
+				goto errordone
+			}
+		}
+
+		return nil
+	errordone:
+		done <- sendErr
+		return watchErr
+	}
+
+	if err := et.WatchTree("", 0, mutex, cb); err != nil {
+		return nil, 0, fmt.Errorf("Failed to start watch: %v", err)
+	}
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano())).Int63()
 	bootStrapKeyLow := ec.Bootstrap + strconv.FormatInt(r, 10) +
@@ -793,7 +846,7 @@ func (et *etcdKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 		return nil, 0, fmt.Errorf("Failed to create snap bootstrap key %v, "+
 			"err: %v", bootStrapKeyLow, err)
 	}
-	lowestKvdbIndex := kvPair.ModifiedIndex
+	lowestKvdbIndex = kvPair.ModifiedIndex
 
 	kvPairs, err := et.Enumerate(prefix)
 	if err != nil {
@@ -837,77 +890,26 @@ func (et *etcdKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 		return nil, 0, fmt.Errorf("Failed to create snap bootstrap key %v, "+
 			"err: %v", bootStrapKeyHigh, err)
 	}
-	highestKvdbIndex := kvPair.ModifiedIndex
-	if lowestKvdbIndex+1 != highestKvdbIndex {
-		// create a watch to get all changes
-		// between lowestKvdbIndex and highestKvdbIndex
-		done := make(chan error)
-		mutex := &sync.Mutex{}
-		cb := func(
-			prefix string,
-			opaque interface{},
-			kvp *kvdb.KVPair,
-			err error,
-		) error {
-			var watchErr error
-			var sendErr error
-			var m *sync.Mutex
-			ok := false
+	highestKvdbIndex = kvPair.ModifiedIndex
 
+	mutex.Lock()
+	finalPutDone = true
+	mutex.Unlock()
+
+	// wait until watch finishes
+	err = <-done
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// apply all updates between lowest and highest kvdb index
+	for _, kvPair := range updates {
+		if kvPair.ModifiedIndex < highestKvdbIndex &&
+			kvPair.ModifiedIndex > lowestKvdbIndex {
+			_, err = snapDb.SnapPut(kvPair)
 			if err != nil {
-				if err == kvdb.ErrWatchStopped {
-					return nil
-				}
-				watchErr = err
-				sendErr = err
-				goto errordone
+				return nil, 0, fmt.Errorf("Failed to apply update to snap: %v", err)
 			}
-
-			if kvp == nil {
-
-				watchErr = fmt.Errorf("kvp is nil")
-				sendErr = watchErr
-				goto errordone
-
-			}
-
-			m, ok = opaque.(*sync.Mutex)
-			if !ok {
-				watchErr = fmt.Errorf("Failed to get mutex")
-				sendErr = watchErr
-				goto errordone
-			}
-
-			m.Lock()
-			defer m.Unlock()
-
-			if kvp.ModifiedIndex >= highestKvdbIndex {
-				// Done applying changes.
-				watchErr = fmt.Errorf("done")
-				sendErr = nil
-				goto errordone
-			}
-
-			_, err = snapDb.SnapPut(kvp)
-			if err != nil {
-				watchErr = fmt.Errorf("Failed to apply update to snap: %v", err)
-				sendErr = watchErr
-				goto errordone
-			}
-
-			return nil
-		errordone:
-			done <- sendErr
-			return watchErr
-		}
-
-		if err := et.WatchTree("", lowestKvdbIndex, mutex,
-			cb); err != nil {
-			return nil, 0, fmt.Errorf("Failed to start watch: %v", err)
-		}
-		err = <-done
-		if err != nil {
-			return nil, 0, err
 		}
 	}
 

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/Sirupsen/logrus"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/common"
@@ -11,20 +12,19 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-	"fmt"
 )
 
 const (
 	// Name is the name of this kvdb implementation.
 	Name = "kv-mem"
 	// KvSnap is an option passed to designate this kvdb as a snap.
-	KvSnap = "KvSnap"
+	KvSnap       = "KvSnap"
 	bootstrapKey = "bootstrap"
 )
 
 var (
 	// ErrSnap is returned if an operation is not supported on a snap.
-	ErrSnap = errors.New("Operation not supported on snap.")
+	ErrSnap = errors.New("operation not supported on snap")
 )
 
 func init() {
@@ -92,8 +92,7 @@ func (kv *memKV) Capabilities() int {
 	return kvdb.KVCapabilityOrderedUpdates
 }
 
-func (kv *memKV) Get(key string) (*kvdb.KVPair, error) {
-
+func (kv *memKV) get(key string) (*kvdb.KVPair, error) {
 	key = kv.domain + key
 	v, ok := kv.m[key]
 	if !ok {
@@ -102,12 +101,19 @@ func (kv *memKV) Get(key string) (*kvdb.KVPair, error) {
 	return v, nil
 }
 
+func (kv *memKV) Get(key string) (*kvdb.KVPair, error) {
+	kv.mutex.Lock()
+	defer kv.mutex.Unlock()
+	return kv.get(key)
+}
+
 func (kv *memKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
-	_, err := kv.Put(bootstrapKey, time.Now().UnixNano(), 0)
+	kv.mutex.Lock()
+	defer kv.mutex.Unlock()
+	_, err := kv.put(bootstrapKey, time.Now().UnixNano(), 0)
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to create snap bootstrap key: %v", err)
 	}
-	kv.mutex.Lock()
 	data := make(map[string]*kvdb.KVPair)
 	for key, value := range kv.m {
 		if !strings.HasPrefix(key, prefix) && strings.Contains(key, "/_") {
@@ -119,19 +125,17 @@ func (kv *memKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 		copy(snap.Value, value.Value)
 		data[key] = snap
 	}
-	highestKvPair, _ := kv.Delete(bootstrapKey)
-	kv.mutex.Unlock()
-	// only snapshot data, watches are not copied
+	highestKvPair, _ := kv.delete(bootstrapKey)
+	// Snapshot only data, watches are not copied.
 	return &memKV{
 		m:      data,
 		w:      make(map[string]*watchData),
 		wt:     make(map[string]*watchData),
 		domain: kv.domain,
 	}, highestKvPair.ModifiedIndex, nil
-
 }
 
-func (kv *memKV) Put(
+func (kv *memKV) put(
 	key string,
 	value interface{},
 	ttl uint64,
@@ -141,14 +145,11 @@ func (kv *memKV) Put(
 
 	suffix := key
 	key = kv.domain + suffix
-	kv.mutex.Lock()
-	defer kv.mutex.Unlock()
-
 	index := atomic.AddUint64(&kv.index, 1)
 	if ttl != 0 {
 		time.AfterFunc(time.Second*time.Duration(ttl), func() {
 			// TODO: handle error
-			_, _ = kv.Delete(suffix)
+			_, _ = kv.delete(suffix)
 		})
 	}
 	b, err := common.ToBytes(value)
@@ -180,6 +181,17 @@ func (kv *memKV) Put(
 	return kvp, nil
 }
 
+func (kv *memKV) Put(
+	key string,
+	value interface{},
+	ttl uint64,
+) (*kvdb.KVPair, error) {
+
+	kv.mutex.Lock()
+	defer kv.mutex.Unlock()
+	return kv.put(key, value, ttl)
+}
+
 func (kv *memKV) GetVal(key string, v interface{}) (*kvdb.KVPair, error) {
 	kvp, err := kv.Get(key)
 	if err != nil {
@@ -193,11 +205,14 @@ func (kv *memKV) GetVal(key string, v interface{}) (*kvdb.KVPair, error) {
 func (kv *memKV) Create(
 	key string,
 	value interface{},
-	ttl uint64) (*kvdb.KVPair, error) {
+	ttl uint64,
+) (*kvdb.KVPair, error) {
+	kv.mutex.Lock()
+	defer kv.mutex.Unlock()
 
-	result, err := kv.Get(key)
+	result, err := kv.get(key)
 	if err != nil {
-		return kv.Put(key, value, ttl)
+		return kv.put(key, value, ttl)
 	}
 	return result, kvdb.ErrExist
 }
@@ -205,12 +220,15 @@ func (kv *memKV) Create(
 func (kv *memKV) Update(
 	key string,
 	value interface{},
-	ttl uint64) (*kvdb.KVPair, error) {
+	ttl uint64,
+) (*kvdb.KVPair, error) {
+	kv.mutex.Lock()
+	defer kv.mutex.Unlock()
 
-	if _, err := kv.Get(key); err != nil {
+	if _, err := kv.get(key); err != nil {
 		return nil, kvdb.ErrNotFound
 	}
-	return kv.Put(key, value, ttl)
+	return kv.put(key, value, ttl)
 }
 
 func (kv *memKV) Enumerate(prefix string) (kvdb.KVPairs, error) {
@@ -228,8 +246,8 @@ func (kv *memKV) Enumerate(prefix string) (kvdb.KVPairs, error) {
 	return kvp, nil
 }
 
-func (kv *memKV) Delete(key string) (*kvdb.KVPair, error) {
-	kvp, err := kv.Get(key)
+func (kv *memKV) delete(key string) (*kvdb.KVPair, error) {
+	kvp, err := kv.get(key)
 	if err != nil {
 		return nil, err
 	}
@@ -241,7 +259,16 @@ func (kv *memKV) Delete(key string) (*kvdb.KVPair, error) {
 	return kvp, nil
 }
 
+func (kv *memKV) Delete(key string) (*kvdb.KVPair, error) {
+	kv.mutex.Lock()
+	defer kv.mutex.Unlock()
+
+	return kv.delete(key)
+}
+
 func (kv *memKV) DeleteTree(prefix string) error {
+	kv.mutex.Lock()
+	defer kv.mutex.Unlock()
 
 	kvp, err := kv.Enumerate(prefix)
 	if err != nil {
@@ -249,7 +276,7 @@ func (kv *memKV) DeleteTree(prefix string) error {
 	}
 	for _, v := range kvp {
 		// TODO: multiple errors
-		if _, iErr := kv.Delete(v.Key); iErr != nil {
+		if _, iErr := kv.delete(v.Key); iErr != nil {
 			err = iErr
 		}
 	}
@@ -263,48 +290,53 @@ func (kv *memKV) Keys(prefix, key string) ([]string, error) {
 func (kv *memKV) CompareAndSet(
 	kvp *kvdb.KVPair,
 	flags kvdb.KVFlags,
-	prevValue []byte) (*kvdb.KVPair, error) {
+	prevValue []byte,
+) (*kvdb.KVPair, error) {
 
 	kv.mutex.Lock()
+	defer kv.mutex.Unlock()
 
-	result, err := kv.Get(kvp.Key)
+	result, err := kv.get(kvp.Key)
 	if err != nil {
-		kv.mutex.Unlock()
 		return nil, err
 	}
 	if prevValue != nil {
 		if !bytes.Equal(result.Value, prevValue) {
-			kv.mutex.Unlock()
 			return nil, kvdb.ErrValueMismatch
 		}
 	}
 	if flags == kvdb.KVModifiedIndex {
 		if kvp.ModifiedIndex != result.ModifiedIndex {
-			kv.mutex.Unlock()
 			return nil, kvdb.ErrValueMismatch
 		}
 	}
-	kv.mutex.Unlock()
-	return kv.Put(kvp.Key, kvp.Value, 0)
+	return kv.put(kvp.Key, kvp.Value, 0)
 }
 
-func (kv *memKV) CompareAndDelete(kvp *kvdb.KVPair, flags kvdb.KVFlags) (*kvdb.KVPair, error) {
+func (kv *memKV) CompareAndDelete(
+	kvp *kvdb.KVPair,
+	flags kvdb.KVFlags,
+) (*kvdb.KVPair, error) {
+	kv.mutex.Lock()
+	defer kv.mutex.Unlock()
+
 	if flags != kvdb.KVFlags(0) {
 		return nil, kvdb.ErrNotSupported
 	}
-	if result, err := kv.Get(kvp.Key); err != nil {
+	if result, err := kv.get(kvp.Key); err != nil {
 		return nil, err
 	} else if !bytes.Equal(result.Value, kvp.Value) {
 		return nil, kvdb.ErrNotFound
 	}
-	return kv.Delete(kvp.Key)
+	return kv.delete(kvp.Key)
 }
 
 func (kv *memKV) WatchKey(
 	key string,
 	waitIndex uint64,
 	opaque interface{},
-	cb kvdb.WatchCB) error {
+	cb kvdb.WatchCB,
+) error {
 	kv.mutex.Lock()
 	defer kv.mutex.Unlock()
 	key = kv.domain + key
@@ -319,7 +351,8 @@ func (kv *memKV) WatchTree(
 	prefix string,
 	waitIndex uint64,
 	opaque interface{},
-	cb kvdb.WatchCB) error {
+	cb kvdb.WatchCB,
+) error {
 
 	kv.mutex.Lock()
 	defer kv.mutex.Unlock()
@@ -335,10 +368,10 @@ func (kv *memKV) Lock(key string) (*kvdb.KVPair, error) {
 	return kv.LockWithID(key, "locked")
 }
 
-func (kv *memKV) LockWithID(key string, lockerID string) (
-	*kvdb.KVPair,
-	error,
-) {
+func (kv *memKV) LockWithID(
+	key string,
+	lockerID string,
+) (*kvdb.KVPair, error) {
 	key = kv.domain + key
 	duration := time.Second
 
@@ -382,7 +415,9 @@ func (kv *memKV) fireCB(key string, kvp kvdb.KVPair, err error) {
 			if err != nil {
 				// TODO: handle error
 				_ = v.cb("", v.opaque, nil, kvdb.ErrWatchStopped)
+				kv.mutex.Lock()
 				delete(kv.w, key)
+				kv.mutex.Unlock()
 
 			}
 			return
@@ -395,7 +430,9 @@ func (kv *memKV) fireCB(key string, kvp kvdb.KVPair, err error) {
 			if err != nil {
 				// TODO: handle error
 				_ = v.cb("", v.opaque, nil, kvdb.ErrWatchStopped)
+				kv.mutex.Lock()
 				delete(kv.wt, key)
+				kv.mutex.Unlock()
 			}
 		}
 	}
@@ -442,7 +479,6 @@ func (kv *snapMem) Put(
 	ttl uint64,
 ) (*kvdb.KVPair, error) {
 	return nil, ErrSnap
-
 }
 
 func (kv *snapMem) Create(
@@ -510,10 +546,18 @@ func (kv *memKV) RemoveUser(username string) error {
 	return kvdb.ErrNotSupported
 }
 
-func (kv *memKV) GrantUserAccess(username string, permType kvdb.PermissionType, subtree string) error {
+func (kv *memKV) GrantUserAccess(
+	username string,
+	permType kvdb.PermissionType,
+	subtree string,
+) error {
 	return kvdb.ErrNotSupported
 }
 
-func (kv *memKV) RevokeUsersAccess(username string, permType kvdb.PermissionType, subtree string) error {
+func (kv *memKV) RevokeUsersAccess(
+	username string,
+	permType kvdb.PermissionType,
+	subtree string,
+) error {
 	return kvdb.ErrNotSupported
 }
