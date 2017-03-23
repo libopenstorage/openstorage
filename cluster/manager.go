@@ -1126,20 +1126,23 @@ func (c *ClusterManager) enumerateNodesFromClusterDB() []api.Node {
 		dlog.Errorf("enumerateNodesFromClusterDB failed with error: %v", err)
 		return make([]api.Node, 0)
 	}
-	nodes := make([]api.Node, len(clusterDB.NodeEntries))
-	i := 0
+	nodes := []api.Node{}
 	for _, n := range clusterDB.NodeEntries {
-		nodes[i].Id = n.Id
-		nodes[i].Status = n.Status
-		if n.Id == c.selfNode.Id {
-			nodes[i] = *c.getCurrentState()
-		} else {
-			nodes[i].MgmtIp = n.MgmtIp
-			nodes[i].DataIp = n.DataIp
-			nodes[i].Hostname = n.Hostname
-			nodes[i].NodeLabels = n.NodeLabels
+		node := api.Node{}
+		if n.Status == api.Status_STATUS_DECOMMISSION {
+			continue
 		}
-		i++
+		if n.Id == c.selfNode.Id {
+			node = *c.getCurrentState()
+		} else {
+			node.Id = n.Id
+			node.Status = n.Status
+			node.MgmtIp = n.MgmtIp
+			node.DataIp = n.DataIp
+			node.Hostname = n.Hostname
+			node.NodeLabels = n.NodeLabels
+		}
+		nodes = append(nodes, node)
 	}
 	return nodes
 }
