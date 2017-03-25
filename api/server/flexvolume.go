@@ -89,7 +89,7 @@ func (c *flexVolumeClient) Mount(targetMountDir string, mountDevice string,
 		return err
 	}
 	// Update the deviceDriverMap
-	mountManager, err := mount.New(mount.DeviceMount, nil, "")
+	mountManager, err := mount.New(mount.DeviceMount, nil, []string{""})
 	if err != nil {
 		dlog.Infof("Could not read mountpoints from /proc/self/mountinfo. Device - Driver mapping not saved!")
 		return nil
@@ -104,7 +104,7 @@ func (c *flexVolumeClient) Mount(targetMountDir string, mountDevice string,
 
 func (c *flexVolumeClient) Unmount(mountDir string) error {
 	// Get the mountDevice from mount manager
-	mountManager, err := mount.New(mount.DeviceMount, nil, "")
+	mountManager, err := mount.New(mount.DeviceMount, nil, []string{""})
 	if err != nil {
 		return ErrNoMountInfo
 	}

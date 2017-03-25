@@ -24,7 +24,7 @@ func NewNFSMounter(server string, mountImpl MountImpl) (Manager, error) {
 			paths:     make(PathMap),
 		},
 	}
-	err := m.Load("")
+	err := m.Load([]string{""})
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (m *NFSMounter) Reload(device string) error {
 }
 
 // Load mount table
-func (m *NFSMounter) Load(source string) error {
+func (m *NFSMounter) Load(source []string) error {
 	info, err := mount.GetMounts()
 	if err != nil {
 		return err

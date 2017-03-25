@@ -18,8 +18,8 @@ type Manager interface {
 	String() string
 	// Reload mount table for specified device.
 	Reload(source string) error
-	// Load mount table for all devices that match this identifier
-	Load(source string) error
+	// Load mount table for all devices that match the list of identifiers
+	Load(source []string) error
 	// Inspect mount table for specified source. ErrEnoent may be returned.
 	Inspect(source string) []*PathInfo
 	// Mounts returns paths for specified source.
@@ -379,7 +379,7 @@ func (m *Mounter) Unmount(device, path string, timeout int) error {
 // New returns a new Mount Manager
 func New(mounterType MountType,
 	mountImpl MountImpl,
-	identifier string,
+	identifiers []string,
 ) (Manager, error) {
 
 	if mountImpl == nil {
@@ -388,9 +388,12 @@ func New(mounterType MountType,
 
 	switch mounterType {
 	case DeviceMount:
-		return NewDeviceMounter(identifier, mountImpl)
+		return NewDeviceMounter(identifiers, mountImpl)
 	case NFSMount:
-		return NewNFSMounter(identifier, mountImpl)
+		if len(identifiers) > 1 {
+			return nil, fmt.Errorf("Multiple server addresses provided.")
+		}
+		return NewNFSMounter(identifiers[0], mountImpl)
 	}
 	return nil, ErrUnsupported
 }

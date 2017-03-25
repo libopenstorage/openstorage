@@ -29,7 +29,7 @@ func TestAll(t *testing.T) {
 
 func setup(t *testing.T) {
 	var err error
-	m, err = New(NFSMount, nil, "")
+	m, err = New(NFSMount, nil, []string{""})
 	if err != nil {
 		t.Fatalf("Failed to setup test %v", err)
 	}
@@ -44,7 +44,7 @@ func cleandir(dir string) {
 }
 
 func load(t *testing.T) {
-	require.NoError(t, m.Load(""), "Failed in load")
+	require.NoError(t, m.Load([]string{""}), "Failed in load")
 }
 
 func mountTest(t *testing.T) {
