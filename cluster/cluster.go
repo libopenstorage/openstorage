@@ -41,7 +41,7 @@ type NodeEntry struct {
 
 // ClusterInfo is the basic info about the cluster and its nodes
 type ClusterInfo struct {
-	Size        int
+	MaxSize     int
 	Status      api.Status
 	Id          string
 	NodeEntries map[string]NodeEntry
