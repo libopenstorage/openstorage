@@ -29,7 +29,6 @@ const (
 	heartbeatKey       = "heartbeat"
 	clusterLockKey     = "/cluster/lock"
 	gossipVersionKey   = "Gossip Version"
-	quorumTimeout      = 10 * time.Minute
 	decommissionErrMsg = "Node %s must be offline or in maintenance " +
 		"mode to be decommissioned."
 )
@@ -1031,7 +1030,7 @@ func (c *ClusterManager) Start(
 		PushPullInterval: types.DEFAULT_PUSH_PULL_INTERVAL,
 		ProbeInterval:    types.DEFAULT_PROBE_INTERVAL,
 		ProbeTimeout:     types.DEFAULT_PROBE_TIMEOUT,
-		QuorumTimeout:    quorumTimeout,
+		QuorumTimeout:    types.DEFAULT_QUORUM_TIMEOUT,
 	}
 	c.gossip = gossip.New(
 		c.selfNode.DataIp+":9002",
