@@ -154,6 +154,10 @@ func (d *driver) ListenerPeerStatus() map[string]api.Status {
 	return nil
 }
 
+func (d *driver) QuorumMember(node *api.Node) bool {
+	return true
+}
+
 func (d *driver) Create(
 	locator *api.VolumeLocator,
 	source *api.Source,

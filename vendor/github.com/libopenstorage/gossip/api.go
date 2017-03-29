@@ -48,7 +48,7 @@ type GossipStore interface {
 	GetLocalNodeInfo(types.NodeId) (types.NodeInfo, error)
 
 	// Add a new node in the database
-	AddNode(types.NodeId, types.NodeStatus)
+	AddNode(types.NodeId, types.NodeStatus, bool)
 
 	// Remove a node from the database
 	RemoveNode(types.NodeId) error
@@ -72,11 +72,8 @@ type Gossiper interface {
 	// GetNodes returns a list of the connection addresses
 	GetNodes() []string
 
-	// GetGossipHistory returns the gossip records for last 20 sessions.
-	GetGossipHistory() []*types.GossipSessionInfo
-
-	// UpdateCluster updates gossip with latest peer nodes Id-Ip mapping
-	UpdateCluster(map[types.NodeId]string)
+	// UpdateCluster updates gossip with latest peer nodes info
+	UpdateCluster(map[types.NodeId]types.NodeUpdate)
 
 	// ExternalNodeLeave is used to indicate gossip that one of the nodes might be down.
 	// It checks quorum and appropriately marks either self down or the other node down.

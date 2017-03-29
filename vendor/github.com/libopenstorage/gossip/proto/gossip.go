@@ -1,7 +1,6 @@
 package proto
 
 import (
-	"container/list"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -16,75 +15,6 @@ import (
 	ml "github.com/hashicorp/memberlist"
 	"github.com/libopenstorage/gossip/types"
 )
-
-type GossipHistory struct {
-	// front is the latest, back is the last
-	nodes  *list.List
-	lock   sync.Mutex
-	maxLen uint8
-}
-
-func NewGossipSessionInfo(node string,
-	dir types.GossipDirection) *types.GossipSessionInfo {
-	gs := new(types.GossipSessionInfo)
-	gs.Node = node
-	gs.Dir = dir
-	gs.Ts = time.Now()
-	gs.Err = ""
-	return gs
-}
-
-func NewGossipHistory(maxLen uint8) *GossipHistory {
-	s := new(GossipHistory)
-	s.nodes = list.New()
-	s.nodes.Init()
-	s.maxLen = maxLen
-	return s
-}
-
-func (s *GossipHistory) AddLatest(gs *types.GossipSessionInfo) {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-	if uint8(s.nodes.Len()) == s.maxLen {
-		s.nodes.Remove(s.nodes.Back())
-	}
-	s.nodes.PushFront(gs)
-}
-
-func (s *GossipHistory) GetAllRecords() []*types.GossipSessionInfo {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-	records := make([]*types.GossipSessionInfo, s.nodes.Len(), s.nodes.Len())
-	i := 0
-	for element := s.nodes.Front(); element != nil; element = element.Next() {
-		r, ok := element.Value.(*types.GossipSessionInfo)
-		if !ok || r == nil {
-			log.Error("gossip: Failed to convert element")
-			continue
-		}
-		records[i] = &types.GossipSessionInfo{Node: r.Node,
-			Ts: r.Ts, Dir: r.Dir, Err: r.Err}
-		i++
-	}
-	return records
-}
-
-func (s *GossipHistory) LogRecords() {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-	status := make([]string, 2)
-	status[types.GD_ME_TO_PEER] = "ME_TO_PEER"
-	status[types.GD_PEER_TO_ME] = "PEER_TO_ME"
-
-	for element := s.nodes.Front(); element != nil; element = element.Next() {
-		r, ok := element.Value.(*types.GossipSessionInfo)
-		if !ok || r == nil {
-			continue
-		}
-		log.Infof("Node: %v LastTs: %v Dir: %v Error: %v",
-			r.Node, r.Ts, status[r.Dir], r.Err)
-	}
-}
 
 type GossipNode struct {
 	Id types.NodeId
@@ -188,7 +118,7 @@ func (g *GossiperImpl) Init(
 }
 
 func (g *GossiperImpl) Start(knownIps []string) error {
-	g.InitCurrentState(len(knownIps) + 1)
+	g.InitCurrentState(uint(len(knownIps) + 1))
 	list, err := ml.Create(g.mlConf)
 	if err != nil {
 		log.Warnf("gossip: Unable to create memberlist: " + err.Error())
@@ -229,10 +159,6 @@ func (g *GossiperImpl) GossipInterval() time.Duration {
 	return g.gossipInterval
 }
 
-func (g *GossiperImpl) GetGossipHistory() []*types.GossipSessionInfo {
-	return g.history.GetAllRecords()
-}
-
 func (g *GossiperImpl) GetNodes() []string {
 	nodes := g.mlist.Members()
 	nodeList := make([]string, len(nodes))
@@ -240,10 +166,9 @@ func (g *GossiperImpl) GetNodes() []string {
 		nodeList[i] = node.Addr.String()
 	}
 	return nodeList
-
 }
 
-func (g *GossiperImpl) UpdateCluster(peers map[types.NodeId]string) {
+func (g *GossiperImpl) UpdateCluster(peers map[types.NodeId]types.NodeUpdate) {
 	g.updateCluster(peers)
 	g.triggerStateEvent(types.UPDATE_CLUSTER_SIZE)
 }
@@ -255,7 +180,8 @@ func (g *GossiperImpl) ExternalNodeLeave(nodeId types.NodeId) types.NodeId {
 		return nodeId
 	} else {
 		// We are the culprit as we are not in quorum
-		log.Infof("gossip: Our Status: %v. We should go down.", g.GetSelfStatus())
+		log.Infof("gossip: Our Status: %v. We should go down.",
+			g.GetSelfStatus())
 		return g.NodeId()
 	}
 }

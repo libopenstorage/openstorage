@@ -1,11 +1,11 @@
 package proto
 
 import (
+	"bytes"
+	"encoding/gob"
 	"fmt"
 	"sync"
 	"time"
-	"bytes"
-	"encoding/gob"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/libopenstorage/gossip/types"
@@ -28,7 +28,9 @@ type GossipStoreImpl struct {
 	// number of nodes in the cluster other than just relying on
 	// memberlist and the length of nodeMap. It is used in
 	// determining the cluster quorum
-	clusterSize int
+	clusterSize uint
+	// numQuorumMembers is the number of members which participate in quorum
+	numQuorumMembers uint
 	// Ts at which we lost quorum
 	lostQuorumTs time.Time
 }
@@ -96,13 +98,7 @@ func (s *GossipStoreImpl) UpdateSelf(key types.StoreKey, val interface{}) {
 }
 
 func (s *GossipStoreImpl) UpdateSelfStatus(status types.NodeStatus) {
-	s.Lock()
-	defer s.Unlock()
-
-	nodeInfo, _ := s.nodeMap[s.id]
-	nodeInfo.Status = status
-	nodeInfo.LastUpdateTs = time.Now()
-	s.nodeMap[s.id] = nodeInfo
+	s.UpdateNodeStatus(s.id, status)
 }
 
 func (s *GossipStoreImpl) GetSelfStatus() types.NodeStatus {
@@ -183,38 +179,53 @@ func statusValid(s types.NodeStatus) bool {
 		s != types.NODE_STATUS_NEVER_GOSSIPED)
 }
 
-func (s *GossipStoreImpl) AddNode(id types.NodeId, status types.NodeStatus) {
+func (s *GossipStoreImpl) AddNode(
+	id types.NodeId,
+	status types.NodeStatus,
+	quorumMember bool,
+) {
 	s.Lock()
+	defer s.Unlock()
+	s.addNodeUnlocked(id, status, quorumMember)
+}
+
+func (s *GossipStoreImpl) addNodeUnlocked(
+	id types.NodeId,
+	status types.NodeStatus,
+	quorumMember bool,
+) {
 	if nodeInfo, ok := s.nodeMap[id]; ok {
 		nodeInfo.Status = status
 		nodeInfo.LastUpdateTs = time.Now()
+		nodeInfo.QuorumMember = quorumMember
 		s.nodeMap[id] = nodeInfo
-		s.Unlock()
 		return
 	}
 
-	newNodeInfo := types.NodeInfo{
+	s.nodeMap[id] = types.NodeInfo{
 		Id:                 id,
 		GenNumber:          0,
 		LastUpdateTs:       time.Now(),
 		WaitForGenUpdateTs: time.Now(),
 		Status:             status,
 		Value:              make(types.StoreMap),
+		QuorumMember:       quorumMember,
 	}
-	s.nodeMap[id] = newNodeInfo
 	logrus.Infof("gossip: Adding Node to gossip map: %v", id)
-	s.Unlock()
 }
 
 func (s *GossipStoreImpl) RemoveNode(id types.NodeId) error {
 	s.Lock()
+	defer s.Unlock()
+	return s.removeNodeUnlocked(id)
+}
+
+func (s *GossipStoreImpl) removeNodeUnlocked(id types.NodeId) error {
 	if _, ok := s.nodeMap[id]; !ok {
-		s.Unlock()
 		return fmt.Errorf("Node %v does not exist in map", id)
 	}
 	logrus.Infof("gossip: Removing node from gossip map: %v", id)
 	delete(s.nodeMap, id)
-	s.Unlock()
 	return nil
 }
 
@@ -265,66 +276,64 @@ func (s *GossipStoreImpl) Update(diff types.NodeInfoMap) {
 		}
 		selfValue, ok := s.nodeMap[id]
 		if !ok {
-			// We got an update for a node which we do not have in our map
-			// Lets add it with an offline state
+			// Ignore updates for a node which we do not know about.
 			continue
 		}
 		if !statusValid(selfValue.Status) ||
 			selfValue.LastUpdateTs.Before(newNodeInfo.LastUpdateTs) {
-			// Our view of Status of a Node, should only be determined by memberlist.
-			// We should not update the Status field in our nodeInfo based on what other node's
-			// value is.
+			// Our view of Status of a Node, should only be determined by
+			// memberlist. We should not update the Status field in our
+			// nodeInfo based on what other node's value is.
 			newNodeInfo.Status = selfValue.Status
 			s.nodeMap[id] = newNodeInfo
 		}
 	}
 }
 
-func (s *GossipStoreImpl) updateCluster(peers map[types.NodeId]string) {
+func (s *GossipStoreImpl) updateCluster(
+	peers map[types.NodeId]types.NodeUpdate,
+) {
 	removeNodeIds := []types.NodeId{}
 	addNodeIds := []types.NodeId{}
 	s.Lock()
-	s.clusterSize = len(peers)
-	// Lets check if a node was added or removed.
-	if len(s.nodeMap) > len(peers) {
-		// Node removed
-		for id := range s.nodeMap {
-			if _, ok := peers[id]; !ok {
-				removeNodeIds = append(removeNodeIds, id)
-			}
-		}
-	} else if len(s.nodeMap) < len(peers) {
-		// Node added
-		for id := range peers {
-			if _, ok := s.nodeMap[id]; !ok {
-				addNodeIds = append(addNodeIds, id)
-			}
-		}
-	} else {
-		// Nodes removed
-		for id := range s.nodeMap {
-			if _, ok := peers[id]; !ok {
-				removeNodeIds = append(removeNodeIds, id)
-			}
-		}
-		// Nodes added
-		for id := range peers {
-			if _, ok := s.nodeMap[id]; !ok {
-				addNodeIds = append(addNodeIds, id)
-			}
+	defer s.Unlock()
+	s.clusterSize = uint(len(peers))
+	// Nodes removed
+	for id := range s.nodeMap {
+		if _, ok := peers[id]; !ok {
+			removeNodeIds = append(removeNodeIds, id)
 		}
 	}
-	s.Unlock()
+	// Nodes added
+	for id := range peers {
+		if _, ok := s.nodeMap[id]; !ok {
+			addNodeIds = append(addNodeIds, id)
+		}
+	}
+
 	for _, nodeId := range removeNodeIds {
-		s.RemoveNode(nodeId)
+		s.removeNodeUnlocked(nodeId)
 	}
 	for _, nodeId := range addNodeIds {
-		s.AddNode(nodeId, types.NODE_STATUS_DOWN)
+		update, _ := peers[nodeId]
+		s.addNodeUnlocked(nodeId, types.NODE_STATUS_DOWN, update.QuorumMember)
+	}
+
+	// Update quorum members
+	s.numQuorumMembers = 0
+	for id, nodeInfo := range s.nodeMap {
+		if update, ok := peers[id]; ok {
+			nodeInfo.QuorumMember = update.QuorumMember
+			s.nodeMap[id] = nodeInfo
+		}
+		if nodeInfo.QuorumMember {
+			s.numQuorumMembers++
+		}
 	}
 }
 
-func (s *GossipStoreImpl) getClusterSize() int {
-	return s.clusterSize
+func (s *GossipStoreImpl) getNumQuorumMembers() uint {
+	return s.numQuorumMembers
 }
 
 func (s *GossipStoreImpl) convertToBytes(obj interface{}) ([]byte, error) {

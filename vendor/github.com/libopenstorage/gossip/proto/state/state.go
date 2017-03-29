@@ -26,10 +26,16 @@ type State interface {
 	NodeLeave(nodeInfoMap types.NodeInfoMap) (State, error)
 
 	// UpdateClusterSize is an event indicating the change in cluster size
-	UpdateClusterSize(clusterSize int, nodeInfoMap types.NodeInfoMap) (State, error)
+	UpdateClusterSize(
+		numQuorumMembers uint,
+		nodeInfoMap types.NodeInfoMap,
+	) (State, error)
 
 	// Timeout is an event triggered when quorum timeout has reached
-	Timeout(clusterSize int, nodeInfoMap types.NodeInfoMap) (State, error)
+	Timeout(
+		numQuorumMembers uint,
+		nodeInfoMap types.NodeInfoMap,
+	) (State, error)
 
 	// String
 	String() string

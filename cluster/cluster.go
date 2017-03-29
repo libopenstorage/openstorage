@@ -28,15 +28,16 @@ const (
 // NodeEntry is used to discover other nodes in the cluster
 // and setup the gossip protocol with them.
 type NodeEntry struct {
-	Id         string
-	MgmtIp     string
-	DataIp     string
-	GenNumber  uint64
-	StartTime  time.Time
-	MemTotal   uint64
-	Hostname   string
-	Status     api.Status
-	NodeLabels map[string]string
+	Id              string
+	MgmtIp          string
+	DataIp          string
+	GenNumber       uint64
+	StartTime       time.Time
+	MemTotal        uint64
+	Hostname        string
+	Status          api.Status
+	NodeLabels      map[string]string
+	NonQuorumMember bool
 }
 
 // ClusterInfo is the basic info about the cluster and its nodes
@@ -111,11 +112,14 @@ type ClusterListener interface {
 	// ListenerData returns the data that the listener wants to share
 	// with ClusterManaher and would be stored in NodeData field.
 	ListenerData() map[string]interface{}
+
+	// QuorumMember returns true if the listener wants this node to
+	// participate in quorum decisions.
+	QuorumMember(node *api.Node) bool
 }
 
 // ClusterState is the gossip state of all nodes in the cluster
 type ClusterState struct {
-	History    []*types.GossipSessionInfo
 	NodeStatus []types.NodeValue
 }
 

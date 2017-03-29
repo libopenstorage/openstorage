@@ -753,28 +753,28 @@
 			"revisionTime": "2016-02-02T18:50:14Z"
 		},
 		{
-			"checksumSHA1": "HGOa8J4Im9muJaQiBgKEYV3Lpkw=",
+			"checksumSHA1": "XxSculDWJ8paPj2VbSbbxPDSb7Q=",
 			"path": "github.com/libopenstorage/gossip",
-			"revision": "964dd5f0f52d07d3870d12fbd93ceabce8cfcbdf",
-			"revisionTime": "2017-02-24T05:38:12Z"
+			"revision": "aa5bca5fb84334d7d29c26b5ccd7c819f344beac",
+			"revisionTime": "2017-03-28T20:16:54Z"
 		},
 		{
-			"checksumSHA1": "PLNW6+eikcSIOnmT4Rlmm6IIMG8=",
+			"checksumSHA1": "1CAy/Chss3flCl/bL7IXmPO/HTM=",
 			"path": "github.com/libopenstorage/gossip/proto",
-			"revision": "964dd5f0f52d07d3870d12fbd93ceabce8cfcbdf",
-			"revisionTime": "2017-02-24T05:38:12Z"
+			"revision": "aa5bca5fb84334d7d29c26b5ccd7c819f344beac",
+			"revisionTime": "2017-03-28T20:16:54Z"
 		},
 		{
-			"checksumSHA1": "bIzkz3afYrO7PtQAgf74s9VGYdo=",
+			"checksumSHA1": "J3jmnywWXsbtBGHcgwXNQx2yyHc=",
 			"path": "github.com/libopenstorage/gossip/proto/state",
-			"revision": "964dd5f0f52d07d3870d12fbd93ceabce8cfcbdf",
-			"revisionTime": "2017-02-24T05:38:12Z"
+			"revision": "aa5bca5fb84334d7d29c26b5ccd7c819f344beac",
+			"revisionTime": "2017-03-28T20:16:54Z"
 		},
 		{
-			"checksumSHA1": "mLULLZp5Lc37Jlj2atF5i8Rs4KY=",
+			"checksumSHA1": "3RvM9PQCYNAmG9Uj3/Pp0l4Sqbc=",
 			"path": "github.com/libopenstorage/gossip/types",
-			"revision": "964dd5f0f52d07d3870d12fbd93ceabce8cfcbdf",
-			"revisionTime": "2017-02-24T05:38:12Z"
+			"revision": "aa5bca5fb84334d7d29c26b5ccd7c819f344beac",
+			"revisionTime": "2017-03-28T20:16:54Z"
 		},
 		{
 			"checksumSHA1": "//fxGW9CLGgr6AMunoZkR4lbYzk=",

@@ -117,23 +117,8 @@ func (c *clusterClient) gossipStatus(context *cli.Context) {
 	if jsonOut {
 		fmtOutput(context, &Format{Result: s})
 	} else {
-		w := new(tabwriter.Writer)
-		w.Init(outFd, 12, 12, 1, ' ', 0)
-
-		fmt.Fprintln(w, "ID\t LAST CONTACT TS\t DIR\t Errors")
-		for _, n := range s.History {
-			dirStr := "From Peer"
-			if n.Dir == types.GD_ME_TO_PEER {
-				dirStr = "To Peer"
-			}
-			fmt.Fprintln(w, n.Node, "\t", n.Ts, "\t", dirStr, "\t", n.Err)
-		}
-
-		fmt.Fprintln(w)
-		w.Flush()
-
 		fmt.Println("Individual Node Status")
-		w = new(tabwriter.Writer)
+		w := new(tabwriter.Writer)
 		w.Init(outFd, 12, 12, 1, ' ', 0)
 
 		fmt.Fprintln(w, "ID\t LAST UPDATE TS\t STATUS")

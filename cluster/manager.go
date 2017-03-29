@@ -292,14 +292,18 @@ func (c *ClusterManager) getCurrentState() *api.Node {
 	return nodeCopy
 }
 
-func (c *ClusterManager) getNonDecommisionedPeers(db ClusterInfo) map[types.NodeId]string {
-	peers := make(map[types.NodeId]string)
+func (c *ClusterManager) getNonDecommisionedPeers(
+	db ClusterInfo,
+) map[types.NodeId]types.NodeUpdate {
+	peers := make(map[types.NodeId]types.NodeUpdate)
 	for _, nodeEntry := range db.NodeEntries {
 		if nodeEntry.Status == api.Status_STATUS_DECOMMISSION {
 			continue
 		}
-		ip := nodeEntry.DataIp + ":9002"
-		peers[types.NodeId(nodeEntry.Id)] = ip
+		peers[types.NodeId(nodeEntry.Id)] = types.NodeUpdate{
+			nodeEntry.DataIp + ":9002",
+			!nodeEntry.NonQuorumMember,
+		}
 	}
 	return peers
 }
@@ -687,7 +691,7 @@ func (c *ClusterManager) updateClusterStatus() {
 					// No need of updating the listeners.
 					c.nodeStatuses[string(id)] = peerNodeInCache.Status
 					break
-				} else{
+				} else {
 					if lastStatus == peerNodeInCache.Status {
 						break
 					}
@@ -782,9 +786,7 @@ func (c *ClusterManager) GetGossipState() *ClusterState {
 		i++
 	}
 
-	history := c.gossip.GetGossipHistory()
-	return &ClusterState{
-		History: history, NodeStatus: nodes}
+	return &ClusterState{NodeStatus: nodes}
 }
 
 func (c *ClusterManager) waitForQuorum(exist bool) error {
@@ -883,6 +885,15 @@ func (c *ClusterManager) initializeCluster(db kvdb.Kvdb) (
 	return &clusterInfo, nil
 }
 
+func (c *ClusterManager) quorumMember() bool {
+	quorumRequired := false
+	for e := c.listeners.Front(); e != nil; e = e.Next() {
+		quorumRequired = quorumRequired ||
+			e.Value.(ClusterListener).QuorumMember(&c.selfNode)
+	}
+	return quorumRequired
+}
+
 func (c *ClusterManager) initListeners(
 	db kvdb.Kvdb,
 	clusterMaxSize int,
@@ -912,6 +923,18 @@ func (c *ClusterManager) initListeners(
 	selfNodeEntry, ok := clusterInfo.NodeEntries[c.config.NodeId]
 	if !ok {
 		dlog.Panicln("Fatal, Unable to find self node entry in local cache")
+	}
+
+	// the inverse value is to handle upgrades.
+	// This node does not participate in quorum decisions if it is
+	// decommissioned or if none of the listeners require it.
+	selfNodeEntry.NonQuorumMember =
+		selfNodeEntry.Status == api.Status_STATUS_DECOMMISSION ||
+			!c.quorumMember()
+	if !selfNodeEntry.NonQuorumMember {
+		dlog.Infof("This node participates in quorum decisions")
+	} else {
+		dlog.Infof("This node does not participates in quorum decisions")
 	}
 
 	initFunc := func(clusterInfo ClusterInfo) error {
