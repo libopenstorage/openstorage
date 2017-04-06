@@ -149,7 +149,7 @@ func (c *clusterApi) status(w http.ResponseWriter, r *http.Request) {
 
 	params := r.URL.Query()
 	listenerName := params["name"]
-	if listenerName[0] == "" {
+	if len(listenerName) == 0 || listenerName[0] == "" {
 		c.sendError(c.name, method, w, "Missing id param", http.StatusBadRequest)
 		return
 	}
@@ -173,7 +173,7 @@ func (c *clusterApi) peerStatus(w http.ResponseWriter, r *http.Request) {
 
 	params := r.URL.Query()
 	listenerName := params["name"]
-	if listenerName[0] == "" {
+	if len(listenerName) == 0 || listenerName[0] == "" {
 		c.sendError(c.name, method, w, "Missing id param", http.StatusBadRequest)
 		return
 	}
