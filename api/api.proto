@@ -252,6 +252,8 @@ message VolumeSpec {
   uint32 max_backups = 19;
   // BackupSchedule is the schedule for cloud backups
   string backup_schedule = 20;
+  // Group identifies a consistency group
+  Group group = 21;
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure coded - for clustered storage arrays
