@@ -207,7 +207,7 @@ func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 			&api.VolumeLocator{Name: name},
 			nil,
 			spec,
-		); err != nil {
+		); err != nil && err != volume.ErrExist {
 			d.errorResponse(w, err)
 			return
 		}
