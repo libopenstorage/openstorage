@@ -522,8 +522,8 @@ func (d *driver) get(w http.ResponseWriter, r *http.Request) {
 	}
 	vol, err := d.volFromName(name)
 	if err != nil {
-		volInfo := volumeInfo{Name: request.Name}
-		json.NewEncoder(w).Encode(map[string]volumeInfo{"Volume": volInfo})
+		e := d.volNotFound(method, request.Name, err, w)
+		d.errorResponse(w, e)
 		return
 	}
 
