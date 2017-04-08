@@ -311,6 +311,11 @@ func (c *ClusterManager) getNonDecommisionedPeers(
 func (c *ClusterManager) watchDB(key string, opaque interface{},
 	kvp *kvdb.KVPair, err error) error {
 
+	if err != nil {
+		dlog.Errorf("ClusterManager watch stopped, existing (err: %v)", err)
+		os.Exit(1)
+	}
+
 	db, err := readClusterInfo()
 	if err != nil {
 		dlog.Warnln("Failed to read database after update ", err)
