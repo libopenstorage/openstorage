@@ -309,18 +309,13 @@ func (c *ClusterManager) getNonDecommisionedPeers(
 
 // Get the latest config.
 func (c *ClusterManager) watchDB(key string, opaque interface{},
-	kvp *kvdb.KVPair, err error) error {
-
-	if err != nil {
-		dlog.Errorf("ClusterManager watch stopped, restarting (err: %v)", err)
-		c.startClusterDBWatch(0, kvdb.Instance())
-		return err
-	}
+	kvp *kvdb.KVPair, watchErr error) error {
 
 	db, err := readClusterInfo()
 	if err != nil {
 		dlog.Warnln("Failed to read database after update ", err)
-		return nil
+		// Exit since an update may be missed here.
+		os.Exit(1)
 	}
 
 	for _, nodeEntry := range db.NodeEntries {
@@ -375,7 +370,13 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 			delete(c.nodeCache, n.Id)
 		}
 	}
-	return nil
+
+	if watchErr != nil {
+		dlog.Errorf("ClusterManager watch stopped, restarting (err: %v)",
+			watchErr)
+		c.startClusterDBWatch(0, kvdb.Instance())
+	}
+	return watchErr
 }
 
 func (c *ClusterManager) getLatestNodeConfig(nodeId string) *NodeEntry {
