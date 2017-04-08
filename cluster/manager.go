@@ -312,7 +312,7 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 	kvp *kvdb.KVPair, err error) error {
 
 	if err != nil {
-		dlog.Errorf("ClusterManager watch stopped, existing (err: %v)", err)
+		dlog.Errorf("ClusterManager watch stopped, exiting (err: %v)", err)
 		os.Exit(1)
 	}
 
