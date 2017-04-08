@@ -197,7 +197,7 @@ func (c *ClusterManager) getNodeEntry(nodeID string, clustDBRef *ClusterInfo) (a
 		// cached info unstable, read from DB
 		if clustDBRef.Id == "" {
 			// We've been passed "empty" struct, lazy-init before use
-			clusterDB, _ := readClusterInfo()
+			clusterDB, _, _ := readClusterInfo()
 			*clustDBRef = clusterDB
 		}
 		// Gossip does not have essential information of
@@ -311,7 +311,7 @@ func (c *ClusterManager) getNonDecommisionedPeers(
 func (c *ClusterManager) watchDB(key string, opaque interface{},
 	kvp *kvdb.KVPair, watchErr error) error {
 
-	db, err := readClusterInfo()
+	db, version, err := readClusterInfo()
 	if err != nil {
 		dlog.Warnln("Failed to read database after update ", err)
 		// Exit since an update may be missed here.
@@ -374,13 +374,13 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 	if watchErr != nil {
 		dlog.Errorf("ClusterManager watch stopped, restarting (err: %v)",
 			watchErr)
-		c.startClusterDBWatch(0, kvdb.Instance())
+		c.startClusterDBWatch(version, kvdb.Instance())
 	}
 	return watchErr
 }
 
 func (c *ClusterManager) getLatestNodeConfig(nodeId string) *NodeEntry {
-	db, err := readClusterInfo()
+	db, _, err := readClusterInfo()
 	if err != nil {
 		dlog.Warnln("Failed to read the database for updating config")
 		return nil
@@ -848,7 +848,7 @@ func (c *ClusterManager) initializeCluster(db kvdb.Kvdb) (
 	}
 	defer db.Unlock(kvlock)
 
-	clusterInfo, err := readClusterInfo()
+	clusterInfo, _, err := readClusterInfo()
 	if err != nil {
 		dlog.Panicln(err)
 	}
@@ -1150,7 +1150,7 @@ func (c *ClusterManager) PeerStatus(listenerName string) (map[string]api.Status,
 }
 
 func (c *ClusterManager) enumerateNodesFromClusterDB() []api.Node {
-	clusterDB, err := readClusterInfo()
+	clusterDB, _, err := readClusterInfo()
 	if err != nil {
 		dlog.Errorf("enumerateNodesFromClusterDB failed with error: %v", err)
 		return make([]api.Node, 0)
@@ -1223,7 +1223,7 @@ func (c *ClusterManager) updateNodeEntryDB(
 	}
 	defer kvdb.Unlock(kvlock)
 
-	currentState, err := readClusterInfo()
+	currentState, _, err := readClusterInfo()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1254,7 +1254,7 @@ func (c *ClusterManager) SetSize(size int) error {
 	}
 	defer kvdb.Unlock(kvlock)
 
-	db, err := readClusterInfo()
+	db, _, err := readClusterInfo()
 	if err != nil {
 		return err
 	}
@@ -1277,7 +1277,7 @@ func (c *ClusterManager) getNodeInfoFromClusterDb(id string) (api.Node, error) {
 	}
 	defer kvdb.Unlock(kvlock)
 
-	db, err := readClusterInfo()
+	db, _, err := readClusterInfo()
 	if err != nil {
 		return node, err
 	}
@@ -1302,7 +1302,7 @@ func (c *ClusterManager) markNodeDecommission(node api.Node) error {
 	}
 	defer kvdb.Unlock(kvlock)
 
-	db, err := readClusterInfo()
+	db, _, err := readClusterInfo()
 	if err != nil {
 		return err
 	}
@@ -1334,7 +1334,7 @@ func (c *ClusterManager) deleteNodeFromDB(nodeID string) error {
 	}
 	defer kvdb.Unlock(kvlock)
 
-	currentState, err := readClusterInfo()
+	currentState, _, err := readClusterInfo()
 	if err != nil {
 		dlog.Errorln("Failed to read cluster info. ", err)
 		return err
@@ -1477,7 +1477,7 @@ func (c *ClusterManager) NodeRemoveDone(nodeID string, result error) {
 }
 
 func (c *ClusterManager) replayNodeDecommission() {
-	currentState, err := readClusterInfo()
+	currentState, _, err := readClusterInfo()
 	if err != nil {
 		dlog.Infof("Failed to read cluster db for node decommissions: %v", err)
 		return
@@ -1503,7 +1503,7 @@ func (c *ClusterManager) replayNodeDecommission() {
 
 // Shutdown can be called when THIS node is gracefully shutting down.
 func (c *ClusterManager) Shutdown() error {
-	db, err := readClusterInfo()
+	db, _, err := readClusterInfo()
 	if err != nil {
 		dlog.Warnf("Could not read cluster database (%v).", err)
 		return err
