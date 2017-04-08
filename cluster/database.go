@@ -62,7 +62,7 @@ func snapAndReadClusterInfo() (*ClusterInitState, error) {
 	return state, nil
 }
 
-func readClusterInfo() (ClusterInfo, error) {
+func readClusterInfo() (ClusterInfo, uint64, error) {
 	kvdb := kvdb.Instance()
 
 	db := ClusterInfo{
@@ -73,19 +73,19 @@ func readClusterInfo() (ClusterInfo, error) {
 	kv, err := kvdb.Get(ClusterDBKey)
 	if err != nil && !strings.Contains(err.Error(), "Key not found") {
 		dlog.Warnln("Warning, could not read cluster database")
-		return db, err
+		return db, 0, err
 	}
 
 	if kv == nil || bytes.Compare(kv.Value, []byte("{}")) == 0 {
 		dlog.Infoln("Cluster is uninitialized...")
-		return db, nil
+		return db, 0, nil
 	}
 	if err := json.Unmarshal(kv.Value, &db); err != nil {
 		dlog.Warnln("Fatal, Could not parse cluster database ", kv)
-		return db, err
+		return db, 0, err
 	}
 
-	return db, nil
+	return db, kv.KVDBIndex, nil
 }
 
 func writeClusterInfo(db *ClusterInfo) (*kvdb.KVPair, error) {
