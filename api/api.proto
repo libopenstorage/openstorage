@@ -254,6 +254,8 @@ message VolumeSpec {
   string backup_schedule = 20;
   // Group identifies a consistency group
   Group group = 21;
+  // GroupEnforced is true if consistency group creation is enforced
+  bool group_enforced = 22;
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure coded - for clustered storage arrays

@@ -33,7 +33,8 @@ func TestCmdMarshalProto(t *testing.T) {
  "scale": 0,
  "sticky": false,
  "max_backups": 0,
- "backup_schedule": ""
+ "backup_schedule": "",
+ "group_enforced": false
 }`,
 		data,
 	)
