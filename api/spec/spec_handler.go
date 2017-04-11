@@ -163,6 +163,14 @@ func (d *specHandler) SpecFromOpts(
 		case api.SpecPassphrase:
 			spec.Encrypted = true
 			spec.Passphrase = v
+		case api.SpecGroup:
+			spec.Group = &api.Group{Id: v}
+		case api.SpecGroupEnforce:
+			if groupEnforced, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, err
+			} else {
+				spec.GroupEnforced = groupEnforced
+			}
 		default:
 			spec.VolumeLabels[k] = v
 		}
