@@ -37,6 +37,7 @@ type ClusterConfig struct {
 	DefaultDriver string
 	MgmtIp        string
 	DataIp        string
+	LoggingURL    string
 }
 
 type Config struct {

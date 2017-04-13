@@ -69,8 +69,8 @@ func readClusterInfo() (ClusterInfo, uint64, error) {
 		Status:      api.Status_STATUS_INIT,
 		NodeEntries: make(map[string]NodeEntry),
 	}
-
 	kv, err := kvdb.Get(ClusterDBKey)
+
 	if err != nil && !strings.Contains(err.Error(), "Key not found") {
 		dlog.Warnln("Warning, could not read cluster database")
 		return db, 0, err

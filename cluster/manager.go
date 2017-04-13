@@ -314,7 +314,8 @@ func (c *ClusterManager) getNonDecommisionedPeers(
 func (c *ClusterManager) watchDB(key string, opaque interface{},
 	kvp *kvdb.KVPair, watchErr error) error {
 
-	db, version, err := readClusterInfo()
+	db, kvdbVersion, err := readClusterInfo()
+
 	if err != nil {
 		dlog.Warnln("Failed to read database after update ", err)
 		// Exit since an update may be missed here.
@@ -361,7 +362,8 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 	}
 
 	c.size = db.Size
-
+	//Check and update logging url changes
+	updateLoggingUrlListeners(c, db)
 	// Update the peers. A node might have been removed or added
 	peers := c.getNonDecommisionedPeers(db)
 	c.gossip.UpdateCluster(peers)
@@ -377,7 +379,7 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 	if watchErr != nil && c.selfNode.Status != api.Status_STATUS_DECOMMISSION {
 		dlog.Errorf("ClusterManager watch stopped, restarting (err: %v)",
 			watchErr)
-		c.startClusterDBWatch(version, kvdb.Instance())
+		c.startClusterDBWatch(kvdbVersion, kvdb.Instance())
 	}
 	return watchErr
 }
@@ -421,6 +423,7 @@ func (c *ClusterManager) initNode(db *ClusterInfo) (*api.Node, bool) {
 	dlog.Infof("Cluster ID: %s", c.config.ClusterId)
 	dlog.Infof("Node Mgmt IP: %s", c.selfNode.MgmtIp)
 	dlog.Infof("Node Data IP: %s", c.selfNode.DataIp)
+	dlog.Infof("Cluster Logging URL : %s", c.config.LoggingURL)
 
 	return &c.selfNode, exists
 }
@@ -784,6 +787,43 @@ func (c *ClusterManager) EnableUpdates() error {
 	return nil
 }
 
+// Persists the new logging url on to the database
+func (c *ClusterManager) SetLoggingURL(loggingURL string) error {
+	dlog.Infoln("Updating logging url ", loggingURL)
+	kvdb := kvdb.Instance()
+	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
+	if err != nil {
+		dlog.Warnln("Unable to obtain cluster lock for updating logging url into cluster config", err)
+		return nil
+	}
+	defer kvdb.Unlock(kvlock)
+
+	db, _, err := readClusterInfo()
+	if err != nil {
+		return err
+	}
+
+	db.LoggingURL = loggingURL
+
+	_, err = writeClusterInfo(&db)
+
+	return nil
+}
+
+// Iterates all listeners, which in turn will restart stats with the new logging url
+func updateLoggingUrlListeners(c *ClusterManager, db ClusterInfo) {
+	if c.config.LoggingURL != db.LoggingURL {
+		dlog.Infoln("Logging URL changed in the KVDB from ", c.config.LoggingURL, "to", db.LoggingURL)
+		for e := c.listeners.Front(); e != nil; e = e.Next() {
+			err := e.Value.(ClusterListener).UpdateCluster(&c.selfNode, &db)
+			if err != nil {
+				dlog.Warnln("Failed to notify ", e.Value.(ClusterListener).String())
+			}
+		}
+		c.config.LoggingURL = db.LoggingURL
+	}
+}
+
 // GetGossipState returns current gossip state
 func (c *ClusterManager) GetGossipState() *ClusterState {
 	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
@@ -865,6 +905,9 @@ func (c *ClusterManager) initializeCluster(db kvdb.Kvdb) (
 	}
 	// Set the clusterID in db
 	clusterInfo.Id = c.config.ClusterId
+	clusterInfo.LoggingURL = c.config.LoggingURL
+
+	dlog.Infoln("LoggingURL during initializing a new cluster.%s ", clusterInfo.LoggingURL)
 
 	if clusterInfo.Status == api.Status_STATUS_INIT {
 		randomIDStr := strconv.FormatInt(rand.New(rand.NewSource(time.Now().UnixNano())).Int63(), 10)
@@ -1208,6 +1251,7 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 		Status: c.status,
 		UID:    c.uid,
 		NodeId: c.selfNode.Id,
+		LoggingURL: c.config.LoggingURL,
 	}
 
 	if c.selfNode.Status == api.Status_STATUS_NOT_IN_QUORUM ||

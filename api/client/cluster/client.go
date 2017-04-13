@@ -11,6 +11,7 @@ import (
 
 const (
 	clusterPath = "/cluster"
+	loggingurl = "/loggingurl"
 )
 
 type clusterClient struct {
@@ -136,6 +137,24 @@ func (c *clusterClient) DisableUpdates() error {
 func (c *clusterClient) EnableUpdates() error {
 	c.c.Put().Resource(clusterPath + "/enablegossip").Do()
 	return nil
+}
+
+func (c *clusterClient) SetLoggingURL(loggingURL string) error {
+
+	resp := api.ClusterResponse{}
+
+	request := c.c.Put().Resource(clusterPath + loggingurl)
+	request.QueryOption("url", loggingURL)
+	if err := request.Do().Unmarshal(&resp); err != nil {
+		return err
+	}
+
+	if resp.Error != "" {
+		return errors.New(resp.Error)
+	}
+
+	return nil
+
 }
 
 func (c *clusterClient) GetGossipState() *cluster.ClusterState {

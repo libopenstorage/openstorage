@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
+	"strings"
 )
 
 type clusterApi struct {
@@ -29,6 +30,7 @@ func (c *clusterApi) Routes() []*Route {
 		{verb: "PUT", path: clusterPath("/disablegossip", cluster.APIVersion), fn: c.disableGossip},
 		{verb: "PUT", path: clusterPath("/shutdown", cluster.APIVersion), fn: c.shutdown},
 		{verb: "PUT", path: clusterPath("/shutdown/{id}", cluster.APIVersion), fn: c.shutdown},
+		{verb: "PUT", path: clusterPath("/loggingurl", cluster.APIVersion), fn: c.setLoggingURL},
 	}
 }
 func newClusterAPI() restServer {
@@ -114,6 +116,33 @@ func (c *clusterApi) enableGossip(w http.ResponseWriter, r *http.Request) {
 
 	clusterResponse := &api.ClusterResponse{}
 	json.NewEncoder(w).Encode(clusterResponse)
+}
+
+func (c *clusterApi) setLoggingURL(w http.ResponseWriter, r *http.Request) {
+	method := "set Logging URL"
+
+	inst, err := cluster.Inst()
+
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	params := r.URL.Query()
+	loggingURL := params["url"]
+	if len(loggingURL) == 0 {
+		c.sendError(c.name, method, w, "Missing url param - url", http.StatusBadRequest)
+		return
+	}
+
+	err = inst.SetLoggingURL(strings.TrimSpace(loggingURL[0]))
+
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(&api.ClusterResponse{})
 }
 
 func (c *clusterApi) disableGossip(w http.ResponseWriter, r *http.Request) {
