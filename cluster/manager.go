@@ -8,9 +8,11 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -51,6 +53,7 @@ type ClusterManager struct {
 	config        config.ClusterConfig
 	kv            kvdb.Kvdb
 	status        api.Status
+	uid           string
 	nodeCache     map[string]api.Node // Cached info on the nodes in the cluster.
 	nodeCacheLock sync.Mutex
 	nodeStatuses  map[string]api.Status // Set of nodes currently marked down.
@@ -864,10 +867,11 @@ func (c *ClusterManager) initializeCluster(db kvdb.Kvdb) (
 	clusterInfo.Id = c.config.ClusterId
 
 	if clusterInfo.Status == api.Status_STATUS_INIT {
-		dlog.Infoln("Initializing a new cluster.")
+		randomIDStr := strconv.FormatInt(rand.New(rand.NewSource(time.Now().UnixNano())).Int63(), 10)
+		clusterInfo.UID = randomIDStr
+		dlog.Infoln("Initializing a new cluster with uid", randomIDStr)
 		// Initialize self node
 		clusterInfo.Status = api.Status_STATUS_OK
-
 		err = c.initClusterForListeners(&c.selfNode)
 		if err != nil {
 			dlog.Errorln("Failed to initialize the cluster.", err)
@@ -888,6 +892,7 @@ func (c *ClusterManager) initializeCluster(db kvdb.Kvdb) (
 	// Cluster database max size... 0 if unlimited.
 	c.size = clusterInfo.Size
 	c.status = api.Status_STATUS_OK
+	c.uid = clusterInfo.UID
 	return &clusterInfo, nil
 }
 
@@ -1195,6 +1200,7 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 	cluster := api.Cluster{
 		Id:     c.config.ClusterId,
 		Status: c.status,
+		UID:    c.uid,
 		NodeId: c.selfNode.Id,
 	}
 

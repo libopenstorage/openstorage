@@ -45,6 +45,7 @@ type ClusterInfo struct {
 	Size        int
 	Status      api.Status
 	Id          string
+	UID         string
 	NodeEntries map[string]NodeEntry
 }
 
