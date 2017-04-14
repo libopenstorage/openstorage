@@ -374,7 +374,7 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 		}
 	}
 
-	if watchErr != nil {
+	if watchErr != nil && c.selfNode.Status != api.Status_STATUS_DECOMMISSION {
 		dlog.Errorf("ClusterManager watch stopped, restarting (err: %v)",
 			watchErr)
 		c.startClusterDBWatch(version, kvdb.Instance())
