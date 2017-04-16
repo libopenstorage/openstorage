@@ -897,6 +897,12 @@ func (c *ClusterManager) initializeCluster(db kvdb.Kvdb) (
 }
 
 func (c *ClusterManager) quorumMember() bool {
+	if c.listeners.Len() == 0 {
+		// If there are no listeners registered by the driver, assume
+		// this node is a quorum member, so this becomes the default behavior
+		// for drivers which do not implement the ClusterListener interface.
+		return true
+	}
 	quorumRequired := false
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		quorumRequired = quorumRequired ||
