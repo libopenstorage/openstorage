@@ -8,6 +8,7 @@ import (
 	"path"
 	"strings"
 	"syscall"
+	"time"
 
 	"go.pedge.io/dlog"
 
@@ -37,7 +38,10 @@ type driver struct {
 	volume.StatsDriver
 	volume.AlertsDriver
 	buseDevices map[string]*buseDev
+	cl cluster.ClusterListener
 }
+
+type clusterListener struct {}
 
 // Implements the Device interface.
 type buseDev struct {
@@ -111,12 +115,13 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		dlog.Println("Could not enumerate Volumes, ", err)
 	}
 
+	inst.cl = &clusterListener{}
 	c, err := cluster.Inst()
 	if err != nil {
 		dlog.Println("BUSE initializing in single node mode")
 	} else {
 		dlog.Println("BUSE initializing in clustered mode")
-		c.AddEventListener(inst)
+		c.AddEventListener(inst.cl)
 	}
 
 	dlog.Println("BUSE initialized and driver mounted at: ", BuseMountPath)
@@ -142,22 +147,6 @@ func (d *driver) Type() api.DriverType {
 // Status diagnostic information
 func (d *driver) Status() [][2]string {
 	return [][2]string{}
-}
-
-func (d *driver) ListenerStatus() api.Status {
-	return api.Status_STATUS_NONE
-}
-
-func (d *driver) ListenerData() map[string]interface{} {
-	return nil
-}
-
-func (d *driver) ListenerPeerStatus() map[string]api.Status {
-	return nil
-}
-
-func (d *driver) QuorumMember(node *api.Node) bool {
-	return true
 }
 
 func (d *driver) Create(
@@ -352,22 +341,22 @@ func (d *driver) Shutdown() {
 	syscall.Unmount(BuseMountPath, 0)
 }
 
-func (d *driver) ClusterInit(self *api.Node) error {
+func (cl *clusterListener) ClusterInit(self *api.Node) error {
 	return nil
 }
 
-func (d *driver) Init(
+func (cl *clusterListener) Init(
 	self *api.Node,
 	clusterInfo *cluster.ClusterInfo,
 ) (cluster.FinalizeInitCb, error) {
 	return nil, nil
 }
 
-func (d *driver) CleanupInit(self *api.Node, db *cluster.ClusterInfo) error {
+func (cl *clusterListener) CleanupInit(self *api.Node, db *cluster.ClusterInfo) error {
 	return nil
 }
 
-func (d *driver) Join(
+func (cl *clusterListener) Join(
 	self *api.Node,
 	initState *cluster.ClusterInitState,
 	handleNotifications cluster.ClusterNotify,
@@ -375,34 +364,70 @@ func (d *driver) Join(
 	return nil
 }
 
-func (d *driver) Add(self *api.Node) error {
+func (cl *clusterListener) Add(self *api.Node) error {
 	return nil
 }
 
-func (d *driver) Remove(self *api.Node, forceRemove bool) error {
+func (cl *clusterListener) Remove(self *api.Node, forceRemove bool) error {
 	return nil
 }
 
-func (d *driver) CanNodeRemove(self *api.Node) error {
+func (cl *clusterListener) CanNodeRemove(self *api.Node) error {
 	return nil
 }
 
-func (d *driver) MarkNodeDown(self *api.Node) error {
+func (cl *clusterListener) MarkNodeDown(self *api.Node) error {
 	return nil
 }
 
-func (d *driver) Update(self *api.Node) error {
+func (cl *clusterListener) Update(self *api.Node) error {
 	return nil
 }
 
-func (d *driver) Leave(self *api.Node) error {
+func (cl *clusterListener) Leave(self *api.Node) error {
 	return nil
 }
 
-func (d *driver) Halt(self *api.Node, db *cluster.ClusterInfo) error {
+func (cl *clusterListener) Halt(self *api.Node, db *cluster.ClusterInfo) error {
+	return nil
+}
+
+func (cl *clusterListener) ClearAlert(resource api.ResourceType, alertID int64) error {
+	return nil
+}
+
+func (cl *clusterListener) EraseAlert(resource api.ResourceType, alertID int64) error {
+	return nil
+}
+
+func (cl *clusterListener) EnumerateAlerts(resource api.ResourceType) (*api.Alerts, error) {
+	return nil, nil
+}
+
+func (cl *clusterListener) EnumerateAlertsWithinTimeRange(ts, te time.Time, resource api.ResourceType) (*api.Alerts, error) {
+	return nil, nil
+}
+
+func (cl *clusterListener) ListenerStatus() api.Status {
+	return api.Status_STATUS_NONE
+}
+
+func (cl *clusterListener) ListenerData() map[string]interface{} {
+	return nil
+}
+
+func (cl *clusterListener) ListenerPeerStatus() map[string]api.Status {
 	return nil
 }
 
 func (d *driver) UpdateCluster(self *api.Node, db *cluster.ClusterInfo) error {
 	return nil
+}
+
+func (cl *clusterListener) QuorumMember(node *api.Node) bool {
+	return true
+}
+
+func (cl *clusterListener) String() string {
+	return Name
 }
