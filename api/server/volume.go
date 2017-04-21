@@ -33,7 +33,7 @@ func (vd *volApi) String() string {
 	return vd.name
 }
 
-func (vd *volApi) parseVolumeID(r *http.Request) (string, error) {
+func (vd *volApi) parseID(r *http.Request) (string, error) {
 	vars := mux.Vars(r)
 	if id, ok := vars["id"]; ok {
 		return string(id), nil
@@ -80,7 +80,7 @@ func (vd *volApi) volumeSet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if volumeID, err = vd.parseVolumeID(r); err != nil {
+	if volumeID, err = vd.parseID(r); err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -157,7 +157,7 @@ func (vd *volApi) inspect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if volumeID, err = vd.parseVolumeID(r); err != nil {
+	if volumeID, err = vd.parseID(r); err != nil {
 		e := fmt.Errorf("Failed to parse parse volumeID: %s", err.Error())
 		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
 		return
@@ -179,7 +179,7 @@ func (vd *volApi) delete(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	method := "delete"
-	if volumeID, err = vd.parseVolumeID(r); err != nil {
+	if volumeID, err = vd.parseID(r); err != nil {
 		e := fmt.Errorf("Failed to parse parse volumeID: %s", err.Error())
 		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
 		return
@@ -340,7 +340,7 @@ func (vd *volApi) stats(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	method := "stats"
-	if volumeID, err = vd.parseVolumeID(r); err != nil {
+	if volumeID, err = vd.parseID(r); err != nil {
 		e := fmt.Errorf("Failed to parse volumeID: %s", err.Error())
 		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
 		return
@@ -380,7 +380,7 @@ func (vd *volApi) usedsize(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	method := "newVolumeDriver"
-	if volumeID, err = vd.parseVolumeID(r); err != nil {
+	if volumeID, err = vd.parseID(r); err != nil {
 		e := fmt.Errorf("Failed to parse volumeID: %s", err.Error())
 		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
 		return
@@ -402,12 +402,31 @@ func (vd *volApi) usedsize(w http.ResponseWriter, r *http.Request) {
 }
 
 func (vd *volApi) alerts(w http.ResponseWriter, r *http.Request) {
-	var volumeID string
 	var err error
 
 	method := "alerts"
-	if volumeID, err = vd.parseVolumeID(r); err != nil {
-		e := fmt.Errorf("Failed to parse parse volumeID: %s", err.Error())
+	d, err := volumedrivers.Get(vd.name)
+	if err != nil {
+		notFound(w, r)
+		return
+	}
+
+	alerts, err := d.Alerts()
+	if err != nil {
+		e := fmt.Errorf("Failed to get alerts: %s", err.Error())
+		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	json.NewEncoder(w).Encode(alerts)
+}
+
+func (vd *volApi) clearAlert(w http.ResponseWriter, r *http.Request) {
+	var alertID string
+	var err error
+
+	method := "clearAlert"
+	if alertID, err = vd.parseID(r); err != nil {
+		e := fmt.Errorf("Failed to parse alertID: %s", err.Error())
 		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
 		return
 	}
@@ -418,14 +437,54 @@ func (vd *volApi) alerts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	alerts, err := d.Alerts(volumeID)
+	id, err := strconv.ParseInt(alertID, 10, 64)
 	if err != nil {
-		e := fmt.Errorf("Failed to get alerts: %s", err.Error())
+		vd.sendError(vd.name, method, w, "Invalid alertId param", http.StatusBadRequest)
+		return
+	}
+	err = d.ClearAlert(id)
+	if err != nil {
+		e := fmt.Errorf("Failed to clear alert: %s", err.Error())
 		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
 		return
 	}
-	json.NewEncoder(w).Encode(alerts)
+	msg := "Successfully cleared alert: " + alertID
+	json.NewEncoder(w).Encode(msg)
 }
+
+func (vd *volApi) eraseAlert(w http.ResponseWriter, r *http.Request) {
+	var alertID string
+	var err error
+
+	method := "eraseAlert"
+	if alertID, err = vd.parseID(r); err != nil {
+		e := fmt.Errorf("Failed to parse alertID: %s", err.Error())
+		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+		return
+	}
+
+	d, err := volumedrivers.Get(vd.name)
+	if err != nil {
+		notFound(w, r)
+		return
+	}
+
+	id, err := strconv.ParseInt(alertID, 10, 64)
+	if err != nil {
+		vd.sendError(vd.name, method, w, "Invalid alertId param", http.StatusBadRequest)
+		return
+	}
+
+	err = d.EraseAlert(id)
+	if err != nil {
+		e := fmt.Errorf("Failed to erase alert: %s", err.Error())
+		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	msg := "Successfully erased alert: " + alertID
+	json.NewEncoder(w).Encode(msg)
+}
+
 
 func (vd *volApi) requests(w http.ResponseWriter, r *http.Request) {
 	var err error
@@ -483,11 +542,12 @@ func (vd *volApi) Routes() []*Route {
 		{verb: "GET", path: volPath("/stats/{id}", volume.APIVersion), fn: vd.stats},
 		{verb: "GET", path: volPath("/usedsize", volume.APIVersion), fn: vd.usedsize},
 		{verb: "GET", path: volPath("/usedsize/{id}", volume.APIVersion), fn: vd.usedsize},
-		{verb: "GET", path: volPath("/alerts", volume.APIVersion), fn: vd.alerts},
-		{verb: "GET", path: volPath("/alerts/{id}", volume.APIVersion), fn: vd.alerts},
 		{verb: "GET", path: volPath("/requests", volume.APIVersion), fn: vd.requests},
 		{verb: "GET", path: volPath("/requests/{id}", volume.APIVersion), fn: vd.requests},
 		{verb: "POST", path: snapPath("", volume.APIVersion), fn: vd.snap},
 		{verb: "GET", path: snapPath("", volume.APIVersion), fn: vd.snapEnumerate},
+		{verb: "GET", path: volPath("/alerts", volume.APIVersion), fn: vd.alerts},
+		{verb: "PUT", path: volPath("/alerts/{id}", volume.APIVersion), fn: vd.clearAlert},
+		{verb: "DELETE", path: volPath("/alerts/{id}", volume.APIVersion), fn: vd.eraseAlert},
 	}
 }
