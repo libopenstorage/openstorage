@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/libopenstorage/openstorage/api"
@@ -31,6 +33,9 @@ func (c *clusterApi) Routes() []*Route {
 		{verb: "PUT", path: clusterPath("/shutdown", cluster.APIVersion), fn: c.shutdown},
 		{verb: "PUT", path: clusterPath("/shutdown/{id}", cluster.APIVersion), fn: c.shutdown},
 		{verb: "PUT", path: clusterPath("/loggingurl", cluster.APIVersion), fn: c.setLoggingURL},
+		{verb: "GET", path: clusterPath("/alerts/{resource}", cluster.APIVersion), fn: c.enumerateAlerts},
+		{verb: "PUT", path: clusterPath("/alerts/{resource}/{id}", cluster.APIVersion), fn: c.clearAlert},
+		{verb: "DELETE", path: clusterPath("/alerts/{resource}/{id}", cluster.APIVersion), fn: c.eraseAlert},
 	}
 }
 func newClusterAPI() restServer {
@@ -277,6 +282,148 @@ func (c *clusterApi) versions(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(versions)
 }
 
+func (c *clusterApi) enumerateAlerts(w http.ResponseWriter, r *http.Request) {
+	method := "enumerateAlerts"
+
+	params := r.URL.Query()
+
+	var (
+		resourceType api.ResourceType
+		err          error
+		tS, tE       time.Time
+	)
+	resource := params["resource"]
+	if resource != nil {
+		resourceType, err = handleResourceType(resource[0])
+		if err != nil {
+			c.sendError(c.name, method, w, "Invalid resource param", http.StatusBadRequest)
+			return
+		}
+	} else {
+		resourceType = api.ResourceType_RESOURCE_TYPE_NONE
+	}
+
+	timeStart := params["timestart"]
+	if timeStart != nil {
+		tS, err = time.Parse(api.TimeLayout, timeStart[0])
+		if err != nil {
+			c.sendError(c.name, method, w, "Invalid timestart param", http.StatusBadRequest)
+			return
+		}
+	}
+
+	timeEnd := params["timeend"]
+	if timeEnd != nil {
+		tS, err = time.Parse(api.TimeLayout, timeEnd[0])
+		if err != nil {
+			c.sendError(c.name, method, w, "Invalid timeend param", http.StatusBadRequest)
+			return
+		}
+	}
+
+	inst, err := cluster.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if !tS.IsZero() && !tE.IsZero() {
+		alerts, err := inst.EnumerateAlertsWithinTimeRange(tS, tE, resourceType)
+		if err != nil {
+			c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(alerts)
+		return
+	}
+	alerts, err := inst.EnumerateAlerts(resourceType)
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(alerts)
+}
+
+func (c *clusterApi) clearAlert(w http.ResponseWriter, r *http.Request) {
+	method := "clearAlert"
+
+	resourceType, alertId, err := c.getAlertParams(w, r, method)
+	if err != nil {
+		return
+	}
+
+	inst, err := cluster.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = inst.ClearAlert(resourceType, alertId)
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	msg := "Successfully cleared Alert "
+	json.NewEncoder(w).Encode(msg)
+}
+
+func (c *clusterApi) eraseAlert(w http.ResponseWriter, r *http.Request) {
+	method := "eraseAlert"
+
+	resourceType, alertId, err := c.getAlertParams(w, r, method)
+	if err != nil {
+		return
+	}
+
+	inst, err := cluster.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = inst.EraseAlert(resourceType, alertId)
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	msg := "Successfully erased Alert "
+	json.NewEncoder(w).Encode(msg)
+}
+
+func (c *clusterApi) getAlertParams(w http.ResponseWriter, r *http.Request, method string) (api.ResourceType, int64, error) {
+	var (
+		resourceType api.ResourceType
+		err          error
+	)
+	returnErr := fmt.Errorf("Invalid param")
+	params := r.URL.Query()
+	resource := params["resource"]
+	if resource == nil || resource[0] == "" {
+		c.sendError(c.name, method, w, "Missing resource param", http.StatusBadRequest)
+		return api.ResourceType_RESOURCE_TYPE_NONE, 0, returnErr
+
+	}
+	resourceType, err = handleResourceType(resource[0])
+	if err != nil {
+		c.sendError(c.name, method, w, "Invalid resource param", http.StatusBadRequest)
+		return api.ResourceType_RESOURCE_TYPE_NONE, 0, returnErr
+	}
+
+	id := params["id"]
+	if id == nil || id[0] == "" {
+		c.sendError(c.name, method, w, "Missing id param", http.StatusBadRequest)
+		return api.ResourceType_RESOURCE_TYPE_NONE, 0, returnErr
+
+	}
+
+	alertId, err := strconv.ParseInt(id[0], 10, 64)
+	if err != nil {
+		c.sendError(c.name, method, w, "Invalid id param", http.StatusBadRequest)
+		return api.ResourceType_RESOURCE_TYPE_NONE, 0, returnErr
+	}
+	return resourceType, alertId, nil
+}
+
 func (c *clusterApi) sendNotImplemented(w http.ResponseWriter, method string) {
 	c.sendError(c.name, method, w, "Not implemented.", http.StatusNotImplemented)
 }
@@ -287,4 +434,25 @@ func clusterVersion(route, version string) string {
 
 func clusterPath(route, version string) string {
 	return clusterVersion("cluster"+route, version)
+}
+
+func handleResourceType(resource string) (api.ResourceType, error) {
+	resourceType, ok := api.ResourceType_value[resource]
+	if ok {
+		return api.ResourceType(resourceType), nil
+	} else {
+		resource = strings.ToLower(resource)
+		switch resource {
+		case "volume":
+			return api.ResourceType_RESOURCE_TYPE_VOLUME, nil
+		case "node":
+			return api.ResourceType_RESOURCE_TYPE_NODE, nil
+		case "cluster":
+			return api.ResourceType_RESOURCE_TYPE_CLUSTER, nil
+		case "drive":
+			return api.ResourceType_RESOURCE_TYPE_DRIVE, nil
+		default:
+			return api.ResourceType_RESOURCE_TYPE_NONE, fmt.Errorf("Invalid resource type")
+		}
+	}
 }

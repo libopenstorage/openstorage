@@ -1586,6 +1586,64 @@ func (c *ClusterManager) HandleNotifications(culpritNodeId string, notification 
 	}
 }
 
+func (c *ClusterManager) EnumerateAlerts(resource api.ResourceType) (*api.Alerts, error) {
+	a := api.Alerts{}
+
+	for e := c.listeners.Front(); e != nil; e = e.Next() {
+		listenerAlerts, err := e.Value.(ClusterListener).EnumerateAlerts(resource)
+		if err != nil {
+			dlog.Warnf("Failed to enumerate alerts from (%v): %v",
+				e.Value.(ClusterListener).String(), err)
+			continue
+		}
+		a.Alert = append(a.Alert, listenerAlerts.Alert...)
+	}
+	return &a, nil
+}
+
+func (c *ClusterManager) EnumerateAlertsWithinTimeRange(ts, te time.Time, resource api.ResourceType) (*api.Alerts, error) {
+	a := api.Alerts{}
+
+	for e := c.listeners.Front(); e != nil; e = e.Next() {
+		listenerAlerts, err := e.Value.(ClusterListener).EnumerateAlertsWithinTimeRange(ts, te, resource)
+		if err != nil {
+			dlog.Warnf("Failed to enumerate alerts from (%v): %v",
+				e.Value.(ClusterListener).String(), err)
+			continue
+		}
+		a.Alert = append(a.Alert, listenerAlerts.Alert...)
+	}
+	return &a, nil
+}
+
+func (c *ClusterManager) ClearAlert(resource api.ResourceType, alertID int64) error {
+	cleared := false
+	for e := c.listeners.Front(); e != nil; e = e.Next() {
+		if err := e.Value.(ClusterListener).ClearAlert(resource, alertID); err != nil {
+			continue
+		}
+		cleared = true
+	}
+	if !cleared {
+		return fmt.Errorf("Unable to clear alert (%v)", alertID)
+	}
+	return nil
+}
+
+func (c *ClusterManager) EraseAlert(resource api.ResourceType, alertID int64) error {
+	erased := false
+	for e := c.listeners.Front(); e != nil; e = e.Next() {
+		if err := e.Value.(ClusterListener).EraseAlert(resource, alertID); err != nil {
+			continue
+		}
+		erased = true
+	}
+	if !erased {
+		return fmt.Errorf("Unable to erase alert (%v)", alertID)
+	}
+	return nil
+}
+
 func (c *ClusterManager) getNodeCacheEntry(nodeId string) (api.Node, bool) {
 	c.nodeCacheLock.Lock()
 	defer c.nodeCacheLock.Unlock()

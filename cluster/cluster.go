@@ -122,6 +122,7 @@ type ClusterListener interface {
 	// UpdateClusterInfo is called when there is an update to the cluster.
 	UpdateCluster(self *api.Node, clusterInfo *ClusterInfo) error
 
+	ClusterAlerts
 }
 
 // ClusterState is the gossip state of all nodes in the cluster
@@ -175,6 +176,18 @@ type ClusterRemove interface {
 	NodeRemoveDone(nodeID string, result error)
 }
 
+type ClusterAlerts interface {
+	// Enumerate enumerates alerts on this cluster for the given resource
+	EnumerateAlerts(resource api.ResourceType) (*api.Alerts, error)
+	// EnumerateWithinTimeRange enumerates alerts on this cluster for the given resource
+	// within a specific time range
+	EnumerateAlertsWithinTimeRange(timeStart, timeEnd time.Time, resource api.ResourceType) (*api.Alerts, error)
+	// ClearAlert clears an alert for the given resource
+	ClearAlert(resource api.ResourceType, alertID int64) error
+	// EraseAlert erases an alert for the given resource
+	EraseAlert(resource api.ResourceType, alertID int64) error
+}
+
 // Cluster is the API that a cluster provider will implement.
 type Cluster interface {
 	// Inspect the node given a UUID.
@@ -201,6 +214,7 @@ type Cluster interface {
 	ClusterData
 	ClusterRemove
 	ClusterStatus
+	ClusterAlerts
 }
 
 // ClusterNotify is the callback function listeners can use to notify cluster manager
