@@ -234,12 +234,8 @@ func (v *volDriver) volumeStats(context *cli.Context) {
 func (v *volDriver) volumeAlerts(context *cli.Context) {
 	v.volumeOptions(context)
 	fn := "alerts"
-	if len(context.Args()) != 1 {
-		missingParameter(context, fn, "volumeID", "Invalid number of arguments")
-		return
-	}
 
-	alerts, err := v.volDriver.Alerts(string(context.Args()[0]))
+	alerts, err := v.volDriver.Alerts()
 	if err != nil {
 		cmdError(context, fn, err)
 		return

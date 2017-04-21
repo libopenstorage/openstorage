@@ -17,6 +17,9 @@ var (
 	// StatsNotSupported is a null stats driver implementation. This can be used
 	// by drivers that do not want to implement the stats interface.
 	StatsNotSupported = &statsNotSupported{}
+	// AlertsNotSupported is a null alerts driver implementation. This can be used
+	// by drivers that do not want to implement the alerts interface.
+	AlertsNotSupported = &alertsNotSupported{}
 )
 
 type blockNotSupported struct{}
@@ -64,12 +67,24 @@ func (s *statsNotSupported) UsedSize(volumeID string) (uint64, error) {
 	return 0, ErrNotSupported
 }
 
-// Alerts returns active alerts
-func (s *statsNotSupported) Alerts(volumeID string) (*api.Alerts, error) {
-	return nil, ErrNotSupported
-}
-
 // GetActiveRequests gets active requests
 func (s *statsNotSupported) GetActiveRequests() (*api.ActiveRequests, error) {
 	return nil, nil
+}
+
+type alertsNotSupported struct {}
+
+// Alerts returns active alerts
+func (s *alertsNotSupported) Alerts() (*api.Alerts, error) {
+	return nil, ErrNotSupported
+}
+
+// ClearAlert clears an active alert
+func (a *alertsNotSupported) ClearAlert(alertId int64) error {
+	return ErrNotSupported
+}
+
+// EraseAlert erases an alert
+func (a *alertsNotSupported) EraseAlert(alertId int64) error {
+	return ErrNotSupported
 }
