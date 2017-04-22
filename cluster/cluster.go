@@ -178,10 +178,8 @@ type ClusterRemove interface {
 
 type ClusterAlerts interface {
 	// Enumerate enumerates alerts on this cluster for the given resource
-	EnumerateAlerts(resource api.ResourceType) (*api.Alerts, error)
-	// EnumerateWithinTimeRange enumerates alerts on this cluster for the given resource
-	// within a specific time range
-	EnumerateAlertsWithinTimeRange(timeStart, timeEnd time.Time, resource api.ResourceType) (*api.Alerts, error)
+	// within a specific time range.
+	EnumerateAlerts(timeStart, timeEnd time.Time, resource api.ResourceType) (*api.Alerts, error)
 	// ClearAlert clears an alert for the given resource
 	ClearAlert(resource api.ResourceType, alertID int64) error
 	// EraseAlert erases an alert for the given resource

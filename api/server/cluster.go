@@ -327,16 +327,7 @@ func (c *clusterApi) enumerateAlerts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !tS.IsZero() && !tE.IsZero() {
-		alerts, err := inst.EnumerateAlertsWithinTimeRange(tS, tE, resourceType)
-		if err != nil {
-			c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		json.NewEncoder(w).Encode(alerts)
-		return
-	}
-	alerts, err := inst.EnumerateAlerts(resourceType)
+	alerts, err := inst.EnumerateAlerts(tS, tE, resourceType)
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return

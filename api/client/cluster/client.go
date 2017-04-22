@@ -167,26 +167,18 @@ func (c *clusterClient) GetGossipState() *cluster.ClusterState {
 	return status
 }
 
-func (c *clusterClient) EnumerateAlerts(resource api.ResourceType) (*api.Alerts, error) {
+func (c *clusterClient) EnumerateAlerts(ts, te time.Time, resource api.ResourceType) (*api.Alerts, error) {
 	a := api.Alerts{}
 	request := c.c.Get().Resource(clusterPath+"/alerts/" + strconv.FormatInt(int64(resource), 10))
+	if !te.IsZero() {
+		request.QueryOption("timestart", ts.Format(api.TimeLayout))
+		request.QueryOption("timeend", te.Format(api.TimeLayout))
+	}
 	if err := request.Do().Unmarshal(&a); err != nil {
 		return nil, err
 	}
 	return &a, nil
 }
-
-func (c *clusterClient) EnumerateAlertsWithinTimeRange(ts, te time.Time, resource api.ResourceType) (*api.Alerts, error) {
-	a := api.Alerts{}
-	request := c.c.Get().Resource(clusterPath+"/alerts/" + strconv.FormatInt(int64(resource), 10))
-	request.QueryOption("timestart", ts.Format(api.TimeLayout))
-	request.QueryOption("timeend", te.Format(api.TimeLayout))
-	if err := request.Do().Unmarshal(&a); err != nil {
-		return nil, err
-	}
-	return &a, nil
-}
-
 
 func (c *clusterClient) ClearAlert(resource api.ResourceType, alertID int64) error {
 	path := clusterPath + "/alerts/" + strconv.FormatInt(int64(resource), 10) + "/" + strconv.FormatInt(alertID, 10)
