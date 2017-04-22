@@ -1586,26 +1586,11 @@ func (c *ClusterManager) HandleNotifications(culpritNodeId string, notification 
 	}
 }
 
-func (c *ClusterManager) EnumerateAlerts(resource api.ResourceType) (*api.Alerts, error) {
+func (c *ClusterManager) EnumerateAlerts(ts, te time.Time, resource api.ResourceType) (*api.Alerts, error) {
 	a := api.Alerts{}
 
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		listenerAlerts, err := e.Value.(ClusterListener).EnumerateAlerts(resource)
-		if err != nil {
-			dlog.Warnf("Failed to enumerate alerts from (%v): %v",
-				e.Value.(ClusterListener).String(), err)
-			continue
-		}
-		a.Alert = append(a.Alert, listenerAlerts.Alert...)
-	}
-	return &a, nil
-}
-
-func (c *ClusterManager) EnumerateAlertsWithinTimeRange(ts, te time.Time, resource api.ResourceType) (*api.Alerts, error) {
-	a := api.Alerts{}
-
-	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		listenerAlerts, err := e.Value.(ClusterListener).EnumerateAlertsWithinTimeRange(ts, te, resource)
+		listenerAlerts, err := e.Value.(ClusterListener).EnumerateAlerts(ts, te, resource)
 		if err != nil {
 			dlog.Warnf("Failed to enumerate alerts from (%v): %v",
 				e.Value.(ClusterListener).String(), err)

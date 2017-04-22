@@ -398,11 +398,7 @@ func (cl *clusterListener) EraseAlert(resource api.ResourceType, alertID int64) 
 	return nil
 }
 
-func (cl *clusterListener) EnumerateAlerts(resource api.ResourceType) (*api.Alerts, error) {
-	return nil, nil
-}
-
-func (cl *clusterListener) EnumerateAlertsWithinTimeRange(ts, te time.Time, resource api.ResourceType) (*api.Alerts, error) {
+func (cl *clusterListener) EnumerateAlerts(ts, te time.Time, resource api.ResourceType) (*api.Alerts, error) {
 	return nil, nil
 }
 
