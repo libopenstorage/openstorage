@@ -50,7 +50,6 @@ type Metadata struct {
 
 // Driver implements VolumeDriver interface
 type Driver struct {
-	volume.AlertsDriver
 	volume.StatsDriver
 	volume.StoreEnumerator
 	volume.IODriver
@@ -86,7 +85,6 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 	)
 	d := &Driver{
 		StatsDriver:  volume.StatsNotSupported,
-		AlertsDriver: volume.AlertsNotSupported,
 		ops:          NewEc2Storage(instance, ec2),
 		md: &Metadata{
 			zone:     zone,

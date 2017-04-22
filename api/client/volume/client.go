@@ -221,38 +221,6 @@ func (v *volumeClient) UsedSize(
 	return usedSize, err
 }
 
-// Alerts enumerates volume alerts.
-// Errors ErrEnoEnt may be returned
-func (v *volumeClient) Alerts() (*api.Alerts, error) {
-	alerts := &api.Alerts{}
-	if err := v.c.Get().Resource(volumePath + "/alerts").Do().Unmarshal(alerts); err != nil {
-		return nil, err
-	}
-	return alerts, nil
-}
-
-// ClearAlert clears an alert
-// Errors ErrEnoEnt may be returned
-func (v *volumeClient) ClearAlert(alertID int64) error {
-	resp := v.c.Put().Resource(volumePath + "/alerts").Instance(strconv.FormatInt(alertID, 10)).Do()
-
-	if resp.Error() != nil {
-		return resp.FormatError()
-	}
-	return nil
-}
-
-// EraseAlert erases an alert
-// Errors ErrEnoEnt may be returned
-func (v *volumeClient) EraseAlert(alertID int64) error {
-	resp := v.c.Delete().Resource(volumePath + "/alerts").Instance(strconv.FormatInt(alertID, 10)).Do()
-
-	if resp.Error() != nil {
-		return resp.FormatError()
-	}
-	return nil
-}
-
 // Active Requests on all volume.
 func (v *volumeClient) GetActiveRequests() (*api.ActiveRequests, error) {
 

@@ -61,7 +61,6 @@ type driver struct {
 	volume.IODriver
 	volume.StoreEnumerator
 	volume.StatsDriver
-	volume.AlertsDriver
 	consistencyGroup string
 	project          string
 	varray           string
@@ -112,7 +111,6 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		IODriver:         volume.IONotSupported,
 		StoreEnumerator:  common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
 		StatsDriver:      volume.StatsNotSupported,
-		AlertsDriver:     volume.AlertsNotSupported,
 		consistencyGroup: consistencyGroup,
 		project:          project,
 		varray:           varray,

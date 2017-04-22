@@ -231,19 +231,6 @@ func (v *volDriver) volumeStats(context *cli.Context) {
 	cmdOutputProto(stats, context.GlobalBool("raw"))
 }
 
-func (v *volDriver) volumeAlerts(context *cli.Context) {
-	v.volumeOptions(context)
-	fn := "alerts"
-
-	alerts, err := v.volDriver.Alerts()
-	if err != nil {
-		cmdError(context, fn, err)
-		return
-	}
-
-	cmdOutputProto(alerts, context.GlobalBool("raw"))
-}
-
 func (v *volDriver) volumeEnumerate(context *cli.Context) {
 	locator := &api.VolumeLocator{}
 	var err error
@@ -445,11 +432,6 @@ func baseVolumeCommand(v *volDriver) []cli.Command {
 			Aliases: []string{"i"},
 			Usage:   "Inspect volume",
 			Action:  v.volumeInspect,
-		},
-		{
-			Name:   "alerts",
-			Usage:  "volume alerts",
-			Action: v.volumeAlerts,
 		},
 		{
 			Name:   "stats",

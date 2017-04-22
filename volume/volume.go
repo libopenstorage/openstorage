@@ -124,23 +124,11 @@ type StatsDriver interface {
 	GetActiveRequests() (*api.ActiveRequests, error)
 }
 
-// AlertsDriver interface alert features
-type AlertsDriver interface {
-	// Alerts enumerates volume related alerts.
-	// Errors ErrEnoEnt may be returned
-	Alerts() (*api.Alerts, error)
-	// ClearAlert clears an alert of a given id
-	ClearAlert(id int64) error
-	//EraseAlert erases an alert of a given id
-	EraseAlert(id int64) error
-}
-
 // ProtoDriver must be implemented by all volume drivers.  It specifies the
 // most basic functionality, such as creating and deleting volumes.
 type ProtoDriver interface {
 	SnapshotDriver
 	StatsDriver
-	AlertsDriver
 	// Name returns the name of the driver.
 	Name() string
 	// Type of this driver
