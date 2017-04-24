@@ -47,6 +47,7 @@ type ClusterInfo struct {
 	Id          string
 	UID         string
 	NodeEntries map[string]NodeEntry
+	LoggingURL string
 }
 
 // ClusterInitState is the snapshot state which should be used to initialize
@@ -117,6 +118,10 @@ type ClusterListener interface {
 	// QuorumMember returns true if the listener wants this node to
 	// participate in quorum decisions.
 	QuorumMember(node *api.Node) bool
+
+	// UpdateClusterInfo is called when there is an update to the cluster.
+	UpdateCluster(self *api.Node, clusterInfo *ClusterInfo) error
+
 }
 
 // ClusterState is the gossip state of all nodes in the cluster
@@ -143,6 +148,8 @@ type ClusterData interface {
 
 	// GetGossipState returns the state of nodes according to gossip
 	GetGossipState() *ClusterState
+
+	SetLoggingURL(loggingURL string) error
 }
 
 // ClusterStatus interface provides apis for cluster and node status

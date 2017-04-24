@@ -400,3 +400,7 @@ func (d *driver) Leave(self *api.Node) error {
 func (d *driver) Halt(self *api.Node, db *cluster.ClusterInfo) error {
 	return nil
 }
+
+func (d *driver) UpdateCluster(self *api.Node, db *cluster.ClusterInfo) error {
+	return nil
+}

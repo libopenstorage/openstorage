@@ -95,6 +95,9 @@ type Cluster struct {
 
 	// Nodes is an array of all the nodes in the cluster.
 	Nodes []Node
+
+	// Logging url for the cluster.
+	LoggingURL string
 }
 
 // StatPoint represents the basic structure of a single Stat reported
