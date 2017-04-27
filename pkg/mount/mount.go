@@ -60,6 +60,9 @@ const (
 	DeviceMount MountType = 1 << iota
 	// NFSMount indicates a NFS mount point
 	NFSMount
+	// CustomMount indicates a custom mount type with its
+	// own defined way of handling mount table
+	CustomMount
 )
 
 var (
@@ -126,6 +129,18 @@ func (m *DefaultMounter) Unmount(target string, flags int, timeout int) error {
 
 // Refcnt for PathInfo
 func (p *PathInfo) Refcnt() int {
+	return p.ref
+}
+
+// IncRefCnt for PathInfo
+func (p *PathInfo) IncRefCnt() int {
+	p.ref++
+	return p.ref
+}
+
+// DecRefCnt for PathInfo
+func (p *PathInfo) DecRefCnt() int {
+	p.ref--
 	return p.ref
 }
 
@@ -320,7 +335,7 @@ func (m *Mounter) Mount(
 	// Try to find the mountpoint. If it already exists, then increment refcnt
 	for _, p := range info.Mountpoint {
 		if p.Path == path {
-			p.ref++
+			p.IncRefCnt()
 			return nil
 		}
 	}
@@ -353,14 +368,14 @@ func (m *Mounter) Unmount(device, path string, timeout int) error {
 		if p.Path != path {
 			continue
 		}
-		p.ref--
+		p.DecRefCnt()
 		// Unmount only if refcnt is 0
 		if p.ref != 0 {
 			return nil
 		}
 		err := m.mountImpl.Unmount(path, syscall.MNT_DETACH, timeout)
 		if err != nil {
-			p.ref++
+			p.IncRefCnt()
 			return err
 		}
 		if pathExists := m.deletePath(path); !pathExists {
@@ -377,9 +392,11 @@ func (m *Mounter) Unmount(device, path string, timeout int) error {
 }
 
 // New returns a new Mount Manager
-func New(mounterType MountType,
+func New(
+	mounterType MountType,
 	mountImpl MountImpl,
 	identifiers []string,
+	customMounter CustomMounter,
 ) (Manager, error) {
 
 	if mountImpl == nil {
@@ -394,6 +411,8 @@ func New(mounterType MountType,
 			return nil, fmt.Errorf("Multiple server addresses provided.")
 		}
 		return NewNFSMounter(identifiers[0], mountImpl)
+	case CustomMount:
+		return NewCustomMounter(identifiers, mountImpl, customMounter)
 	}
 	return nil, ErrUnsupported
 }
