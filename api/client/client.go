@@ -25,10 +25,14 @@ func NewClient(host string, version string) (*Client, error) {
 		baseURL.Path = "/"
 	}
 	unix2HTTP(baseURL)
+	hClient := getHTTPClient(host)
+	if hClient == nil {
+		return nil, fmt.Errorf("Unable to parse provided url: %v", host)
+	}
 	c := &Client{
 		base:       baseURL,
 		version:    version,
-		httpClient: getHTTPClient(host),
+		httpClient: hClient,
 	}
 	return c, nil
 }
@@ -119,24 +123,20 @@ func newHTTPClient(u *url.URL, tlsConfig *tls.Config, timeout time.Duration) *ht
 }
 
 func getHTTPClient(host string) *http.Client {
+	cacheLock.Lock()
+	defer cacheLock.Unlock()
 	c, ok := httpCache[host]
 	if !ok {
-		cacheLock.Lock()
-		defer cacheLock.Unlock()
-		c, ok = httpCache[host]
-		if !ok {
-			u, err := url.Parse(host)
-			if err != nil {
-				// TODO(pedge): clean up
-				fmt.Println("Failed to parse into url", host)
-				return nil
-			}
-			if u.Path == "" {
-				u.Path = "/"
-			}
-			c = newHTTPClient(u, nil, 10*time.Second)
-			httpCache[host] = c
+		u, err := url.Parse(host)
+		if err != nil {
+			return nil
 		}
+		if u.Path == "" {
+			u.Path = "/"
+		}
+		c = newHTTPClient(u, nil, 10*time.Second)
+		httpCache[host] = c
 	}
+
 	return c
 }
