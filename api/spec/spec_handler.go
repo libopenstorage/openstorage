@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/units"
@@ -58,16 +59,17 @@ func NewSpecHandler() SpecHandler {
 	return &specHandler{}
 }
 
-func (d *specHandler) cosLevel(cos string) (uint32, error) {
+func (d *specHandler) cosLevel(cos string) (api.CosType, error) {
+	cos = strings.ToLower(cos)
 	switch cos {
 	case "high", "3":
-		return uint32(api.CosType_HIGH), nil
+		return api.CosType_HIGH, nil
 	case "medium", "2":
-		return uint32(api.CosType_MEDIUM), nil
+		return api.CosType_MEDIUM, nil
 	case "low", "1", "":
-		return uint32(api.CosType_LOW), nil
+		return api.CosType_LOW, nil
 	}
-	return uint32(api.CosType_LOW),
+	return api.CosType_NONE,
 		fmt.Errorf("Cos must be one of %q | %q | %q", "high", "medium", "low")
 }
 
@@ -134,7 +136,7 @@ func (d *specHandler) SpecFromOpts(
 			haLevel, _ := strconv.ParseInt(v, 10, 64)
 			spec.HaLevel = haLevel
 		case api.SpecPriority:
-			cos, err := api.CosTypeSimpleValueOf(v)
+			cos, err := d.cosLevel(v)
 			if err != nil {
 				return nil, nil, err
 			}
