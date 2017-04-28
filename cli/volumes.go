@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/codegangsta/cli"
 	"github.com/libopenstorage/openstorage/api"
 	volumeclient "github.com/libopenstorage/openstorage/api/client/volume"
 	"github.com/libopenstorage/openstorage/volume"
+	clusterclient "github.com/libopenstorage/openstorage/api/client/cluster"
+	"github.com/libopenstorage/openstorage/cluster"
 )
 
 // VolumeSzUnits number representing size units.
@@ -330,6 +333,24 @@ func (v *volDriver) snapEnumerate(context *cli.Context) {
 	cmdOutputVolumes(snaps, context.GlobalBool("raw"))
 }
 
+func (v *volDriver) volumeAlerts(context *cli.Context) {
+	v.volumeOptions(context)
+
+	clnt, err := clusterclient.NewClusterClient("", cluster.APIVersion)
+	if err != nil {
+		fmt.Printf("Failed to initialize client library: %v\n", err)
+		return
+	}
+	manager := clusterclient.ClusterManager(clnt)
+	alerts, err := manager.EnumerateAlerts(time.Time{}, time.Time{}, api.ResourceType_RESOURCE_TYPE_VOLUME)
+	if err != nil {
+		fmt.Printf("Unable to enumerate alerts: %v\n", err)
+		return
+	}
+
+	cmdOutputProto(alerts, context.GlobalBool("raw"))
+}
+
 // baseVolumeCommand exports commands common to block and file volume drivers.
 func baseVolumeCommand(v *volDriver) []cli.Command {
 
@@ -432,6 +453,11 @@ func baseVolumeCommand(v *volDriver) []cli.Command {
 			Aliases: []string{"i"},
 			Usage:   "Inspect volume",
 			Action:  v.volumeInspect,
+		},
+		{
+			Name:   "alerts",
+			Usage:  "Enumerate volume alerts",
+			Action: v.volumeAlerts,
 		},
 		{
 			Name:   "stats",

@@ -11,7 +11,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
-	"strings"
 )
 
 type clusterApi struct {
@@ -354,8 +353,7 @@ func (c *clusterApi) clearAlert(w http.ResponseWriter, r *http.Request) {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	msg := "Successfully cleared Alert "
-	json.NewEncoder(w).Encode(msg)
+	json.NewEncoder(w).Encode("Successfully cleared Alert")
 }
 
 func (c *clusterApi) eraseAlert(w http.ResponseWriter, r *http.Request) {
@@ -377,8 +375,7 @@ func (c *clusterApi) eraseAlert(w http.ResponseWriter, r *http.Request) {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	msg := "Successfully erased Alert "
-	json.NewEncoder(w).Encode(msg)
+	json.NewEncoder(w).Encode("Successfully erased Alert")
 }
 
 func (c *clusterApi) getAlertParams(w http.ResponseWriter, r *http.Request, method string) (api.ResourceType, int64, error) {
