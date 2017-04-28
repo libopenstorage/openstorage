@@ -414,7 +414,7 @@ func (cl *clusterListener) ListenerPeerStatus() map[string]api.Status {
 	return nil
 }
 
-func (d *driver) UpdateCluster(self *api.Node, db *cluster.ClusterInfo) error {
+func (cl *clusterListener) UpdateCluster(self *api.Node, db *cluster.ClusterInfo) error {
 	return nil
 }
 
