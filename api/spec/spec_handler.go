@@ -134,7 +134,10 @@ func (d *specHandler) SpecFromOpts(
 			haLevel, _ := strconv.ParseInt(v, 10, 64)
 			spec.HaLevel = haLevel
 		case api.SpecPriority:
-			cos, _ := api.CosTypeSimpleValueOf(v)
+			cos, err := api.CosTypeSimpleValueOf(v)
+			if err != nil {
+				return nil, nil, err
+			}
 			spec.Cos = cos
 		case api.SpecDedupe:
 			spec.Dedupe, _ = strconv.ParseBool(v)
