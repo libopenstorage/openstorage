@@ -291,9 +291,10 @@ func (c *clusterApi) enumerateAlerts(w http.ResponseWriter, r *http.Request) {
 		err          error
 		tS, tE       time.Time
 	)
-	resource := params["resource"]
-	if resource != nil {
-		resourceType, err = handleResourceType(resource[0])
+	vars := mux.Vars(r)
+	resource, ok := vars["resource"]
+	if ok {
+		resourceType, err = handleResourceType(resource)
 		if err != nil {
 			c.sendError(c.name, method, w, "Invalid resource param", http.StatusBadRequest)
 			return
@@ -381,32 +382,31 @@ func (c *clusterApi) eraseAlert(w http.ResponseWriter, r *http.Request) {
 func (c *clusterApi) getAlertParams(w http.ResponseWriter, r *http.Request, method string) (api.ResourceType, int64, error) {
 	var (
 		resourceType api.ResourceType
+		alertId      int64
 		err          error
 	)
 	returnErr := fmt.Errorf("Invalid param")
-	params := r.URL.Query()
-	resource := params["resource"]
-	if resource == nil || resource[0] == "" {
-		c.sendError(c.name, method, w, "Missing resource param", http.StatusBadRequest)
-		return api.ResourceType_RESOURCE_TYPE_NONE, 0, returnErr
 
-	}
-	resourceType, err = handleResourceType(resource[0])
-	if err != nil {
-		c.sendError(c.name, method, w, "Invalid resource param", http.StatusBadRequest)
-		return api.ResourceType_RESOURCE_TYPE_NONE, 0, returnErr
+	vars := mux.Vars(r)
+	resource, ok := vars["resource"]
+	if ok {
+		resourceType, err = handleResourceType(resource)
 	}
 
-	id := params["id"]
-	if id == nil || id[0] == "" {
-		c.sendError(c.name, method, w, "Missing id param", http.StatusBadRequest)
+	if err != nil || !ok {
+		c.sendError(c.name, method, w, "Missing/Invalid resource param", http.StatusBadRequest)
 		return api.ResourceType_RESOURCE_TYPE_NONE, 0, returnErr
 
 	}
 
-	alertId, err := strconv.ParseInt(id[0], 10, 64)
-	if err != nil {
-		c.sendError(c.name, method, w, "Invalid id param", http.StatusBadRequest)
+	vars = mux.Vars(r)
+	id, ok := vars["id"]
+	if ok {
+		alertId, err = strconv.ParseInt(id, 10, 64)
+	}
+
+	if err != nil || !ok {
+		c.sendError(c.name, method, w, "Missing/Invalid id param", http.StatusBadRequest)
 		return api.ResourceType_RESOURCE_TYPE_NONE, 0, returnErr
 	}
 	return resourceType, alertId, nil
@@ -425,22 +425,23 @@ func clusterPath(route, version string) string {
 }
 
 func handleResourceType(resource string) (api.ResourceType, error) {
-	resourceType, ok := api.ResourceType_value[resource]
-	if ok {
-		return api.ResourceType(resourceType), nil
-	} else {
-		resource = strings.ToLower(resource)
-		switch resource {
-		case "volume":
-			return api.ResourceType_RESOURCE_TYPE_VOLUME, nil
-		case "node":
-			return api.ResourceType_RESOURCE_TYPE_NODE, nil
-		case "cluster":
-			return api.ResourceType_RESOURCE_TYPE_CLUSTER, nil
-		case "drive":
-			return api.ResourceType_RESOURCE_TYPE_DRIVE, nil
-		default:
-			return api.ResourceType_RESOURCE_TYPE_NONE, fmt.Errorf("Invalid resource type")
+	resource = strings.ToLower(resource)
+	switch resource {
+	case "volume":
+		return api.ResourceType_RESOURCE_TYPE_VOLUME, nil
+	case "node":
+		return api.ResourceType_RESOURCE_TYPE_NODE, nil
+	case "cluster":
+		return api.ResourceType_RESOURCE_TYPE_CLUSTER, nil
+	case "drive":
+		return api.ResourceType_RESOURCE_TYPE_DRIVE, nil
+	default:
+		resourceType, err := strconv.ParseInt(resource, 10, 64)
+		if err == nil {
+			if _, ok := api.ResourceType_name[int32(resourceType)]; ok {
+				return api.ResourceType(resourceType), nil
+			}
 		}
+		return api.ResourceType_RESOURCE_TYPE_NONE, fmt.Errorf("Invalid resource type")
 	}
 }
