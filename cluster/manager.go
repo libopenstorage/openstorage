@@ -1247,10 +1247,10 @@ func (c *ClusterManager) enumerateNodesFromCache() []api.Node {
 // Enumerate lists all the nodes in the cluster.
 func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 	cluster := api.Cluster{
-		Id:     c.config.ClusterId,
-		Status: c.status,
-		UID:    c.uid,
-		NodeId: c.selfNode.Id,
+		Id:         c.config.ClusterId,
+		Status:     c.status,
+		UID:        c.uid,
+		NodeId:     c.selfNode.Id,
 		LoggingURL: c.config.LoggingURL,
 	}
 
@@ -1596,7 +1596,9 @@ func (c *ClusterManager) EnumerateAlerts(ts, te time.Time, resource api.Resource
 				e.Value.(ClusterListener).String(), err)
 			continue
 		}
-		a.Alert = append(a.Alert, listenerAlerts.Alert...)
+		if listenerAlerts != nil {
+			a.Alert = append(a.Alert, listenerAlerts.Alert...)
+		}
 	}
 	return &a, nil
 }
