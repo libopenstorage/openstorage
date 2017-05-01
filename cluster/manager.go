@@ -1451,9 +1451,9 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 				n.Id, e.Value.(ClusterListener).String())
 			err, additionalMsg := e.Value.(ClusterListener).CanNodeRemove(&n)
 			if err != nil && !(err == ErrRemoveCausesDataLoss && forceRemove) {
-				msg := fmt.Sprintf("Cannot remove node ID %s: %s", n.Id, err)
+				msg := fmt.Sprintf("Cannot remove node ID %s: %s.", n.Id, err)
 				if additionalMsg != "" {
-					msg = msg + additionalMsg
+					msg = msg + " " + additionalMsg
 				}
 				dlog.Warnf(msg)
 				return errors.New(msg)
