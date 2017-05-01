@@ -37,10 +37,10 @@ type driver struct {
 	volume.StoreEnumerator
 	volume.StatsDriver
 	buseDevices map[string]*buseDev
-	cl cluster.ClusterListener
+	cl          cluster.ClusterListener
 }
 
-type clusterListener struct {}
+type clusterListener struct{}
 
 // Implements the Device interface.
 type buseDev struct {
@@ -92,7 +92,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		IODriver: volume.IONotSupported,
 		StoreEnumerator: common.NewDefaultStoreEnumerator(Name,
 			kvdb.Instance()),
-		StatsDriver:  volume.StatsNotSupported,
+		StatsDriver: volume.StatsNotSupported,
 	}
 	inst.buseDevices = make(map[string]*buseDev)
 	if err := os.MkdirAll(BuseMountPath, 0744); err != nil {
@@ -370,8 +370,8 @@ func (cl *clusterListener) Remove(self *api.Node, forceRemove bool) error {
 	return nil
 }
 
-func (cl *clusterListener) CanNodeRemove(self *api.Node) error {
-	return nil
+func (cl *clusterListener) CanNodeRemove(self *api.Node) (error, string) {
+	return nil, ""
 }
 
 func (cl *clusterListener) MarkNodeDown(self *api.Node) error {

@@ -47,7 +47,7 @@ type ClusterInfo struct {
 	Id          string
 	UID         string
 	NodeEntries map[string]NodeEntry
-	LoggingURL string
+	LoggingURL  string
 }
 
 // ClusterInitState is the snapshot state which should be used to initialize
@@ -93,7 +93,7 @@ type ClusterListener interface {
 	Remove(node *api.Node, forceRemove bool) error
 
 	// CanNodeRemove test to see if we can remove this node
-	CanNodeRemove(node *api.Node) error
+	CanNodeRemove(node *api.Node) (error, string)
 
 	// MarkNodeDown marks the given node's status as down
 	MarkNodeDown(node *api.Node) error
