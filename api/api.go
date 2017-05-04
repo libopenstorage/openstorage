@@ -88,8 +88,7 @@ type Cluster struct {
 
 	// Id is the ID of the cluster.
 	Id string
-	// UID is the unique ID of the cluster
-	UID string
+
 	// NodeId is the ID of the node on which this cluster object
 	// is initialized
 	NodeId string
