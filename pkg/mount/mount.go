@@ -43,7 +43,7 @@ type Manager interface {
 	// mountpoints left after this operation, it is removed from the matrix.
 	// ErrEnoent is returned if the device or mountpoint for the device
 	// is not found.
-	Unmount(source, path string, timeout int) error
+	Unmount(source, path string, flags int, timeout int) error
 }
 
 // MountImpl backend implementation for Mount/Unmount calls
@@ -352,7 +352,7 @@ func (m *Mounter) Mount(
 // Unmount device at mountpoint or decrement refcnt. If device has no
 // mountpoints left after this operation, it is removed from the matrix.
 // ErrEnoent is returned if the device or mountpoint for the device is not found.
-func (m *Mounter) Unmount(device, path string, timeout int) error {
+func (m *Mounter) Unmount(device, path string, flags int, timeout int) error {
 	m.Lock()
 
 	path = normalizeMountPath(path)
@@ -373,7 +373,7 @@ func (m *Mounter) Unmount(device, path string, timeout int) error {
 		if p.ref != 0 {
 			return nil
 		}
-		err := m.mountImpl.Unmount(path, syscall.MNT_DETACH, timeout)
+		err := m.mountImpl.Unmount(path, flags, timeout)
 		if err != nil {
 			p.IncRefCnt()
 			return err

@@ -219,7 +219,7 @@ func (d *driver) Mount(volumeID string, mountpath string) error {
 	srcPath := path.Join(":", d.nfsPath, volumeID)
 	mountExists, err := d.mounter.Exists(srcPath, mountpath)
 	if !mountExists {
-		d.mounter.Unmount(path.Join(nfsMountPath, volumeID), mountpath, 0)
+		d.mounter.Unmount(path.Join(nfsMountPath, volumeID), mountpath, syscall.MNT_DETACH, 0)
 		if err := d.mounter.Mount(
 			0, path.Join(nfsMountPath, volumeID),
 			mountpath,
@@ -248,7 +248,7 @@ func (d *driver) Unmount(volumeID string, mountpath string) error {
 	if len(v.AttachPath) == 0 {
 		return fmt.Errorf("Device %v not mounted", volumeID)
 	}
-	err = d.mounter.Unmount(path.Join(nfsMountPath, volumeID), mountpath, 0)
+	err = d.mounter.Unmount(path.Join(nfsMountPath, volumeID), mountpath, syscall.MNT_DETACH, 0)
 	if err != nil {
 		return err
 	}
