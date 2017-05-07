@@ -332,6 +332,7 @@ func (d *driver) attachScale(
 		name := fmt.Sprintf("%s_%03d", inVol.Locator.Name, len(allVols))
 		spec := inVol.Spec.Copy()
 		spec.ReplicaSet = &api.ReplicaSet{Nodes: []string{volume.LocalNode}}
+		spec.Scale = 1
 		id, err := vd.Create(&api.VolumeLocator{Name: name}, nil, spec)
 		if err != nil {
 			return d.scaleUp(method, vd, inVol, allVols, attachOptions)
