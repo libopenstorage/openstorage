@@ -9,6 +9,7 @@ import (
 	"go.pedge.io/dlog"
 	"go.pedge.io/proto/time"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 )
@@ -74,7 +75,9 @@ func raiseAndErase(t *testing.T) {
 	kv := kva.GetKvdbInstance()
 	var alert api.Alert
 
-	_, err = kv.GetVal(getResourceKey(api.ResourceType_RESOURCE_TYPE_VOLUME)+strconv.FormatInt(raiseAlert.Id, 10), &alert)
+	_, err = kv.GetVal(
+		getResourceKey(api.ResourceType_RESOURCE_TYPE_VOLUME)+
+			strconv.FormatInt(raiseAlert.Id, 10), &alert)
 	require.NoError(t, err, "Failed to retrieve alert from kvdb")
 	require.NotNil(t, alert, "api.Alert object null in kvdb")
 	require.Equal(t, raiseAlert.Id, alert.Id, "api.Alert Id mismatch")
@@ -92,6 +95,57 @@ func raiseAndErase(t *testing.T) {
 
 	_, err = kv.GetVal(getResourceKey(api.ResourceType_RESOURCE_TYPE_VOLUME)+"1", &alert)
 	require.Error(t, err, "api.Alert not erased from kvdb")
+}
+
+func raiseIfNotExistAndErase(t *testing.T) {
+	alerts := make([]*api.Alert, 0)
+	mtx := &sync.Mutex{}
+	alertFn := func() {
+		raiseAlert := &api.Alert{
+			Resource:   api.ResourceType_RESOURCE_TYPE_VOLUME,
+			Severity:   api.SeverityType_SEVERITY_TYPE_NOTIFY,
+			Message:    "Test Message",
+			ResourceId: "vol1",
+		}
+		err := kva.RaiseIfNotExist(raiseAlert)
+		require.NoError(t, err, "Failed in raising an alert")
+		mtx.Lock()
+		defer mtx.Unlock()
+		alerts = append(alerts, raiseAlert)
+	}
+
+	runs := 5
+	for i := 0; i < runs; i++ {
+		go alertFn()
+	}
+
+	require.Equal(t, len(alerts), runs, "alerts")
+	for _, a := range alerts {
+		require.Equal(t, a.Id, alerts[0].Id, "ids match")
+	}
+
+	// Raise an alert for same resource type but different id.
+	alerts[1].ResourceId = "vol2"
+	err := kva.RaiseIfNotExist(alerts[1])
+	require.NoError(t, err, "Failed in raising an alert")
+	require.NotEqual(t, alerts[1].Id, alerts[0].Id, "different resources")
+
+	err = kva.Erase(api.ResourceType_RESOURCE_TYPE_VOLUME, alerts[0].Id)
+	require.NoError(t, err, "Failed to erase an alert")
+
+	kv := kva.GetKvdbInstance()
+	_, err = kv.GetVal(getResourceKey(api.ResourceType_RESOURCE_TYPE_VOLUME)+
+		strconv.FormatInt(alerts[0].Id, 10), alerts[0])
+	require.Error(t, err, "api.Alert not erased from kvdb")
+
+	alerts[0].ResourceId = ""
+	err = kva.RaiseIfNotExist(alerts[0])
+	require.Error(t, err, "resource id missing check")
+
+	// cleanup
+	err = kva.Erase(api.ResourceType_RESOURCE_TYPE_VOLUME, alerts[1].Id)
+	require.NoError(t, err, "Failed to erase an alert")
+
 }
 
 func raiseWithTTL(t *testing.T) {

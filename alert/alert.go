@@ -55,6 +55,9 @@ type Alert interface {
 	// Raise raises an Alert.
 	Raise(alert *api.Alert) error
 
+	// Raise raises an Alert only if it doesnt exists already
+	RaiseIfNotExist(alert *api.Alert) error
+
 	// Subscribe allows a child (dependent) alert to subscribe to a parent alert
 	Subscribe(parentAlertType int64, childAlert *api.Alert) error
 

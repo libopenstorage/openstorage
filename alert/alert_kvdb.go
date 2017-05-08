@@ -3,15 +3,14 @@ package alert
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
-	"strings"
-	"sync"
-	"time"
-
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/portworx/kvdb"
 	"go.pedge.io/dlog"
 	"go.pedge.io/proto/time"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
 )
 
 const (
@@ -27,6 +26,7 @@ const (
 	volumeKey        = "volume/"
 	nodeKey          = "node/"
 	driveKey         = "drive/"
+	lockKey          = "lock/"
 	bootstrap        = "bootstrap"
 	watchRetries     = 5
 	watchSleep       = 100
@@ -99,6 +99,27 @@ func (kva *KvAlert) Raise(a *api.Alert) error {
 		}
 	}
 	return kva.raise(a)
+}
+
+// Raise raises an Alert if does not exists yet.
+func (kva *KvAlert) RaiseIfNotExist(a *api.Alert) error {
+	if strings.TrimSpace(a.ResourceId) == "" {
+		return ErrIllegal
+	}
+	var subscriptions []api.Alert
+	kv := kva.GetKvdbInstance()
+	if _, err := kv.GetVal(getSubscriptionsKey(a.AlertType), &subscriptions); err != nil {
+		if err != kvdb.ErrNotFound {
+			return err
+		}
+	} else {
+		for _, alert := range subscriptions {
+			if err := kva.RaiseIfNotExist(&alert); err != nil {
+				return ErrSubscribedRaise
+			}
+		}
+	}
+	return kva.raiseIfNotExist(a)
 }
 
 // Subscribe allows a child (dependent) alert to subscribe to a parent alert
@@ -266,6 +287,40 @@ func (kva *KvAlert) raise(a *api.Alert) error {
 	_, err = kv.Create(getResourceKey(a.Resource)+strconv.FormatInt(a.Id, 10), a, a.Ttl)
 	return err
 
+}
+
+func (kva *KvAlert) raiseIfNotExist(a *api.Alert) error {
+	kv := kva.GetKvdbInstance()
+	if a.Resource == api.ResourceType_RESOURCE_TYPE_NONE {
+		return ErrResourceNotFound
+	}
+
+	// Acquire resource lock: lockKey/resouceId.lock.
+	// This ensures only one raiseIfNotExists operation for a given resource
+	// is able to proceed.
+	kvp, err := kv.Lock(lockKey + a.ResourceId + ".lock")
+	if err != nil {
+		dlog.Errorf("Failed to get lock for resource %s, err: %s",
+			a.ResourceId, err.Error())
+		return err
+	}
+	defer kv.Unlock(kvp)
+
+	alerts, err := kva.getResourceSpecificAlerts(a.Resource, kv)
+	if err != nil {
+		dlog.Infof("Failed to get alerts of type %s, error: %s",
+			a.Resource, err.Error())
+		return err
+	}
+	for _, alert := range alerts {
+		if alert.ResourceId == a.ResourceId {
+			a.Id = alert.Id
+			return nil
+		}
+	}
+
+	// Alert does ot exist, raise a new one
+	return kva.raise(a)
 }
 
 func (kva *KvAlert) clear(resourceType api.ResourceType, alertID int64, ttl uint64) error {
