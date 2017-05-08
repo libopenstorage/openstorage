@@ -348,6 +348,8 @@ message Alert {
   bool cleared = 8;
   // TTL in seconds for this Alert
   uint64 ttl = 9;
+  // UniqueTag helps identify a unique alert for a given resouce
+  string unique_tag = 10;
 }
 
 message Alerts {

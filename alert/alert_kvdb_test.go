@@ -106,6 +106,7 @@ func raiseIfNotExistAndErase(t *testing.T) {
 			Severity:   api.SeverityType_SEVERITY_TYPE_NOTIFY,
 			Message:    "Test Message",
 			ResourceId: "vol1",
+			UniqueTag:  "alert_type_1",
 		}
 		err := kva.RaiseIfNotExist(raiseAlert)
 		require.NoError(t, err, "Failed in raising an alert")
@@ -125,7 +126,7 @@ func raiseIfNotExistAndErase(t *testing.T) {
 	}
 
 	// Raise an alert for same resource type but different id.
-	alerts[1].ResourceId = "vol2"
+	alerts[1].UniqueTag = "alert_type_2"
 	err := kva.RaiseIfNotExist(alerts[1])
 	require.NoError(t, err, "Failed in raising an alert")
 	require.NotEqual(t, alerts[1].Id, alerts[0].Id, "different resources")
@@ -139,6 +140,10 @@ func raiseIfNotExistAndErase(t *testing.T) {
 	require.Error(t, err, "api.Alert not erased from kvdb")
 
 	alerts[0].ResourceId = ""
+	err = kva.RaiseIfNotExist(alerts[0])
+	require.Error(t, err, "resource id missing check")
+
+	alerts[0].UniqueTag = ""
 	err = kva.RaiseIfNotExist(alerts[0])
 	require.Error(t, err, "resource id missing check")
 

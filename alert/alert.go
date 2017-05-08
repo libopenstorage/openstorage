@@ -55,7 +55,8 @@ type Alert interface {
 	// Raise raises an Alert.
 	Raise(alert *api.Alert) error
 
-	// Raise raises an Alert only if it doesnt exists already
+	// Raise raises an Alert only if another alert with given resource type,
+	// resource id, and unqiue_tage doesnt exists already.
 	RaiseIfNotExist(alert *api.Alert) error
 
 	// Subscribe allows a child (dependent) alert to subscribe to a parent alert
@@ -68,7 +69,11 @@ type Alert interface {
 	Enumerate(filter *api.Alert) ([]*api.Alert, error)
 
 	// EnumerateWithinTimeRange enumerates Alert between timeStart and timeEnd.
-	EnumerateWithinTimeRange(timeStart time.Time, timeEnd time.Time, resourceType api.ResourceType) ([]*api.Alert, error)
+	EnumerateWithinTimeRange(
+		timeStart time.Time,
+		timeEnd time.Time,
+		resourceType api.ResourceType,
+	) ([]*api.Alert, error)
 
 	// Erase erases an Alert.
 	Erase(resourceType api.ResourceType, alertID int64) error
@@ -76,8 +81,9 @@ type Alert interface {
 	// Clear an Alert.
 	Clear(resourceType api.ResourceType, alertID int64, ttl uint64) error
 
-	// Watch on all Alerts for the given clusterID. It uses the global
-	// kvdb options provided while creating the alertClient object to access this cluster
+	// Watch on all Alerts for the given clusterID. It uses the global kvdb
+	// options provided while creating the alertClient object to access this
+	// cluster
 	Watch(clusterID string, alertWatcher AlertWatcherFunc) error
 }
 

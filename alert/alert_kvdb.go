@@ -103,7 +103,8 @@ func (kva *KvAlert) Raise(a *api.Alert) error {
 
 // Raise raises an Alert if does not exists yet.
 func (kva *KvAlert) RaiseIfNotExist(a *api.Alert) error {
-	if strings.TrimSpace(a.ResourceId) == "" {
+	if strings.TrimSpace(a.ResourceId) == "" ||
+		strings.TrimSpace(a.UniqueTag) == "" {
 		return ErrIllegal
 	}
 	var subscriptions []api.Alert
@@ -295,10 +296,10 @@ func (kva *KvAlert) raiseIfNotExist(a *api.Alert) error {
 		return ErrResourceNotFound
 	}
 
-	// Acquire resource lock: lockKey/resouceId.lock.
+	// Acquire resource lock: lockKey/resouceId.uniqueTag.lock.
 	// This ensures only one raiseIfNotExists operation for a given resource
 	// is able to proceed.
-	kvp, err := kv.Lock(lockKey + a.ResourceId + ".lock")
+	kvp, err := kv.Lock(lockKey + a.ResourceId + "." + a.UniqueTag + ".lock")
 	if err != nil {
 		dlog.Errorf("Failed to get lock for resource %s, err: %s",
 			a.ResourceId, err.Error())
@@ -313,7 +314,7 @@ func (kva *KvAlert) raiseIfNotExist(a *api.Alert) error {
 		return err
 	}
 	for _, alert := range alerts {
-		if alert.ResourceId == a.ResourceId {
+		if alert.ResourceId == a.ResourceId && alert.UniqueTag == a.UniqueTag {
 			a.Id = alert.Id
 			return nil
 		}
