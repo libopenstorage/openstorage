@@ -66,6 +66,10 @@ type KvAlert struct {
 	clusterID string
 }
 
+func getLockId(resourceId, uniqueTag string) string {
+	return lockKey + resourceId + "." + uniqueTag + ".lock"
+}
+
 // GetKvdbInstance returns a kvdb instance associated with this alert client and clusterID combination.
 func (kva *KvAlert) GetKvdbInstance() kvdb.Kvdb {
 	kvdbLock.RLock()
@@ -299,7 +303,7 @@ func (kva *KvAlert) raiseIfNotExist(a *api.Alert) error {
 	// Acquire resource lock: lockKey/resouceId.uniqueTag.lock.
 	// This ensures only one raiseIfNotExists operation for a given resource
 	// is able to proceed.
-	kvp, err := kv.Lock(lockKey + a.ResourceId + "." + a.UniqueTag + ".lock")
+	kvp, err := kv.Lock(getLockId(a.ResourceId, a.UniqueTag))
 	if err != nil {
 		dlog.Errorf("Failed to get lock for resource %s, err: %s",
 			a.ResourceId, err.Error())
@@ -322,6 +326,44 @@ func (kva *KvAlert) raiseIfNotExist(a *api.Alert) error {
 
 	// Alert does ot exist, raise a new one
 	return kva.raise(a)
+}
+
+func (kva *KvAlert) ClearByUniqueTag(
+	resourceType api.ResourceType,
+	resourceId string,
+	uniqueTag string,
+	ttl uint64,
+) error {
+	kv := kva.GetKvdbInstance()
+	if resourceType == api.ResourceType_RESOURCE_TYPE_NONE {
+		return ErrResourceNotFound
+	}
+	if uniqueTag == "" || resourceId == "" {
+		return ErrIllegal
+	}
+
+	kvp, err := kv.Lock(getLockId(resourceId, uniqueTag))
+	if err != nil {
+		dlog.Errorf("Failed to get lock for resource %s, err: %s",
+			resourceId, err.Error())
+		return err
+	}
+	defer kv.Unlock(kvp)
+
+	alerts, err := kva.getResourceSpecificAlerts(resourceType, kv)
+	if err != nil {
+		dlog.Infof("Failed to get alerts of type %s, error: %s",
+			resourceType, err.Error())
+		return err
+	}
+	for _, alert := range alerts {
+		if resourceId == alert.ResourceId && uniqueTag == alert.UniqueTag {
+			return kva.clear(resourceType, alert.Id, ttl)
+		}
+	}
+
+	// Alert does ot exist, return
+	return nil
 }
 
 func (kva *KvAlert) clear(resourceType api.ResourceType, alertID int64, ttl uint64) error {

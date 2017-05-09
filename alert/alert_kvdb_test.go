@@ -131,10 +131,20 @@ func raiseIfNotExistAndErase(t *testing.T) {
 	require.NoError(t, err, "Failed in raising an alert")
 	require.NotEqual(t, alerts[1].Id, alerts[0].Id, "different resources")
 
-	err = kva.Erase(api.ResourceType_RESOURCE_TYPE_VOLUME, alerts[0].Id)
+	err = kva.ClearByUniqueTag(api.ResourceType_RESOURCE_TYPE_VOLUME,
+		alerts[0].ResourceId, alerts[0].UniqueTag, 2000)
 	require.NoError(t, err, "Failed to erase an alert")
 
 	kv := kva.GetKvdbInstance()
+	_, err = kv.GetVal(getResourceKey(api.ResourceType_RESOURCE_TYPE_VOLUME)+
+		strconv.FormatInt(alerts[0].Id, 10), alerts[0])
+	require.NoError(t, err, "api.Alert erased from kvdb")
+	require.True(t, alerts[0].Cleared, "api.Alert erased from kvdb")
+
+	err = kva.Erase(api.ResourceType_RESOURCE_TYPE_VOLUME, alerts[0].Id)
+	require.NoError(t, err, "Failed to erase an alert")
+
+	kv = kva.GetKvdbInstance()
 	_, err = kv.GetVal(getResourceKey(api.ResourceType_RESOURCE_TYPE_VOLUME)+
 		strconv.FormatInt(alerts[0].Id, 10), alerts[0])
 	require.Error(t, err, "api.Alert not erased from kvdb")

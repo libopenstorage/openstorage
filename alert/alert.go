@@ -81,6 +81,14 @@ type Alert interface {
 	// Clear an Alert.
 	Clear(resourceType api.ResourceType, alertID int64, ttl uint64) error
 
+	// Clear an Alert for a resource with unique tag.
+	ClearByUniqueTag(
+		resourceType api.ResourceType,
+		resourceId string,
+		uniqueTag string,
+		ttl uint64,
+	) error
+
 	// Watch on all Alerts for the given clusterID. It uses the global kvdb
 	// options provided while creating the alertClient object to access this
 	// cluster
