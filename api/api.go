@@ -29,7 +29,7 @@ const (
 	SpecPassphrase           = "secret_key"
 	SpecAutoAggregationValue = "auto"
 	SpecGroup                = "group"
-	SpecGroupEnforce         = "rg"
+	SpecGroupEnforce         = "fg"
 )
 
 // OptionKey specifies a set of recognized query params.
