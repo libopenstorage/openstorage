@@ -250,7 +250,6 @@ func (s *ec2Ops) addResource(
 func (s *ec2Ops) DeviceMappings() (map[string]string, error) {
 	instance, err := s.describe()
 	if err != nil {
-		fmt.Printf("loadDeviceMappings: %v: error %v", s.instance, err)
 		return nil, err
 	}
 	devPrefix := "/dev/sd"
