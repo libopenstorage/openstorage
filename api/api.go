@@ -17,6 +17,7 @@ const (
 	SpecEphemeral            = "ephemeral"
 	SpecShared               = "shared"
 	SpecSticky               = "sticky"
+	SpecSecure               = "secure"
 	SpecSize                 = "size"
 	SpecScale                = "scale"
 	SpecFilesystem           = "fs"
