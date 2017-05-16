@@ -321,6 +321,10 @@ func (s *ec2Ops) freeDevices() ([]string, error) {
 		if len(letter) != 1 {
 			return nil, fmt.Errorf("too many letters %q", devName)
 		}
+
+		// Reset devPrefix for next devices
+		devPrefix = "/dev/sd"
+
 		index := letter[0] - 'f'
 		if index > ('p' - 'f') {
 			continue
