@@ -22,7 +22,8 @@ func (c *clusterApi) Routes() []*Route {
 		{verb: "GET", path: "/cluster/versions", fn: c.versions},
 		{verb: "GET", path: clusterPath("/enumerate", cluster.APIVersion), fn: c.enumerate},
 		{verb: "GET", path: clusterPath("/gossipstate", cluster.APIVersion), fn: c.gossipState},
-		{verb: "GET", path: clusterPath("/status", cluster.APIVersion), fn: c.status},
+		{verb: "GET", path: clusterPath("/nodestatus", cluster.APIVersion), fn: c.nodestatus},
+		{verb: "GET", path: clusterPath("/status", cluster.APIVersion), fn: c.enumerate},
 		{verb: "GET", path: clusterPath("/peerstatus", cluster.APIVersion), fn: c.peerStatus},
 		{verb: "GET", path: clusterPath("/inspect/{id}", cluster.APIVersion), fn: c.inspect},
 		{verb: "DELETE", path: clusterPath("", cluster.APIVersion), fn: c.delete},
@@ -177,21 +178,15 @@ func (c *clusterApi) gossipState(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
-func (c *clusterApi) status(w http.ResponseWriter, r *http.Request) {
+func (c *clusterApi) nodestatus(w http.ResponseWriter, r *http.Request) {
 	method := "status"
 
-	params := r.URL.Query()
-	listenerName := params["name"]
-	if len(listenerName) == 0 || listenerName[0] == "" {
-		c.sendError(c.name, method, w, "Missing id param", http.StatusBadRequest)
-		return
-	}
 	inst, err := cluster.Inst()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	resp, err := inst.NodeStatus(listenerName[0])
+	resp, err := inst.NodeStatus()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return

@@ -159,7 +159,7 @@ type ClusterStatus interface {
 	// THIS node maintained by the Cluster Provider.
 	// At any time the status of the Cluster Provider takes precedence over
 	// the status of listener. Precedence is determined by the severity of the status.
-	NodeStatus(listenerName string) (api.Status, error)
+	NodeStatus() (api.Status, error)
 
 	// PeerStatus returns the statuses of all peer nodes as seen by the
 	// Cluster Provider for a given listener. If listenerName is empty is returns the

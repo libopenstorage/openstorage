@@ -78,10 +78,10 @@ func (c *clusterClient) GetData() (map[string]*api.Node, error) {
 	return nil, nil
 }
 
-func (c *clusterClient) NodeStatus(listenerName string) (api.Status, error) {
+func (c *clusterClient) NodeStatus() (api.Status, error) {
 	var resp api.Status
-	request := c.c.Get().Resource(clusterPath + "/status")
-	request.QueryOption("name", listenerName)
+	request := c.c.Get().Resource(clusterPath + "/nodestatus")
+	request.Do()
 	if err := request.Do().Unmarshal(&resp); err != nil {
 		return api.Status_STATUS_NONE, err
 	}

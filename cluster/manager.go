@@ -1126,7 +1126,7 @@ func (c *ClusterManager) Start(
 
 // NodeStatus returns the status of a node. It compares the status maintained by the
 // cluster manager and the provided listener and returns the appropriate one
-func (c *ClusterManager) NodeStatus(listenerName string) (api.Status, error) {
+func (c *ClusterManager) NodeStatus() (api.Status, error) {
 	clusterNodeStatus := c.selfNode.Status
 	if clusterNodeStatus != api.Status_STATUS_OK {
 		// Status of this node as seen by Cluster Manager is not OK
@@ -1134,21 +1134,20 @@ func (c *ClusterManager) NodeStatus(listenerName string) (api.Status, error) {
 		// Returning our status
 		return clusterNodeStatus, nil
 	}
-	if listenerName == "" {
-		return clusterNodeStatus, nil
-	}
 
-	listenerStatus := api.Status_STATUS_NONE
+	returnStatus := clusterNodeStatus
+
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		if e.Value.(ClusterListener).String() == listenerName {
-			listenerStatus = e.Value.(ClusterListener).ListenerStatus()
-			break
+		listenerStatus := e.Value.(ClusterListener).ListenerStatus()
+		if listenerStatus == api.Status_STATUS_NONE {
+			continue
+		}
+		if int(listenerStatus.StatusKind()) >= int(returnStatus.StatusKind()) {
+			returnStatus = listenerStatus
 		}
 	}
-	if int(listenerStatus.StatusKind()) >= int(clusterNodeStatus.StatusKind()) {
-		return listenerStatus, nil
-	}
-	return clusterNodeStatus, nil
+
+	return returnStatus, nil
 }
 
 // PeerStatus returns the status of a peer node as seen by us
