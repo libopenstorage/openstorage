@@ -19,20 +19,31 @@ type SpecHandler interface {
 	// "key=value;key=value;name=volname"
 	// source is populated if key parent=<volume_id> is specified.
 	// If the spec was parsed, it returns:
-	//  	(true, parsed_spec, source, parsed_name)
+	//  	(true, parsed_spec, locator, source, parsed_name)
 	// If the input string didn't contain the string, it returns:
-	// 	(false, DefaultSpec(), nil, inputString)
-	SpecFromString(inputString string) (bool, *api.VolumeSpec, *api.Source, string)
+	// 	(false, DefaultSpec(), nil, nil, inputString)
+	SpecFromString(inputString string) (
+		bool,
+		*api.VolumeSpec,
+		*api.VolumeLocator,
+		*api.Source,
+		string,
+	)
 
 	// SpecFromOpts parses in docker options passed in the the docker run
 	// command of the form --opt name=value
 	// source is populated if --opt parent=<volume_id> is specified.
 	// If the options are validated then it returns:
-	// 	(resultant_VolumeSpec, source, nil)
+	// 	(resultant_VolumeSpec, source, locator, nil)
 	// If the options have invalid values then it returns:
-	//	(nil, nil, error)
+	//	(nil, nil, nil, error)
 
-	SpecFromOpts(opts map[string]string) (*api.VolumeSpec, *api.Source, error)
+	SpecFromOpts(opts map[string]string) (
+		*api.VolumeSpec,
+		*api.VolumeLocator,
+		*api.Source,
+		error,
+	)
 	// Returns a default VolumeSpec if no docker options or string encoding
 	// was provided.
 	DefaultSpec() *api.VolumeSpec
@@ -50,6 +61,8 @@ var (
 	passphraseRegex = regexp.MustCompile(api.SpecPassphrase + "=([0-9A-Za-z_@./#&+-]+),?")
 	stickyRegex     = regexp.MustCompile(api.SpecSticky + "=([A-Za-z]+),?")
 	secureRegex     = regexp.MustCompile(api.SpecSecure + "=([A-Za-z]+),?")
+	zonesRegex      = regexp.MustCompile(api.SpecZones + "=([A-Za-z]+),?")
+	racksRegex      = regexp.MustCompile(api.SpecRacks + "=([A-Za-z]+),?")
 )
 
 type specHandler struct {
@@ -100,8 +113,9 @@ func (d *specHandler) DefaultSpec() *api.VolumeSpec {
 
 func (d *specHandler) SpecFromOpts(
 	opts map[string]string,
-) (*api.VolumeSpec, *api.Source, error) {
+) (*api.VolumeSpec, *api.VolumeLocator, *api.Source, error) {
 	var source *api.Source
+	var locator *api.VolumeLocator
 	spec := d.DefaultSpec()
 
 	for k, v := range opts {
@@ -112,7 +126,7 @@ func (d *specHandler) SpecFromOpts(
 			spec.Ephemeral, _ = strconv.ParseBool(v)
 		case api.SpecSize:
 			if size, err := units.Parse(v); err != nil {
-				return nil, nil, err
+				return nil, nil, nil, err
 			} else {
 				spec.Size = uint64(size)
 			}
@@ -123,13 +137,13 @@ func (d *specHandler) SpecFromOpts(
 
 		case api.SpecFilesystem:
 			if value, err := api.FSTypeSimpleValueOf(v); err != nil {
-				return nil, nil, err
+				return nil, nil, nil, err
 			} else {
 				spec.Format = value
 			}
 		case api.SpecBlockSize:
 			if blockSize, err := units.Parse(v); err != nil {
-				return nil, nil, err
+				return nil, nil, nil, err
 			} else {
 				spec.BlockSize = blockSize
 			}
@@ -139,7 +153,7 @@ func (d *specHandler) SpecFromOpts(
 		case api.SpecPriority:
 			cos, err := d.cosLevel(v)
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, nil, err
 			}
 			spec.Cos = cos
 		case api.SpecDedupe:
@@ -156,19 +170,19 @@ func (d *specHandler) SpecFromOpts(
 			}
 		case api.SpecShared:
 			if shared, err := strconv.ParseBool(v); err != nil {
-				return nil, nil, err
+				return nil, nil, nil, err
 			} else {
 				spec.Shared = shared
 			}
 		case api.SpecSticky:
 			if sticky, err := strconv.ParseBool(v); err != nil {
-				return nil, nil, err
+				return nil, nil, nil, err
 			} else {
 				spec.Sticky = sticky
 			}
 		case api.SpecSecure:
 			if secure, err := strconv.ParseBool(v); err != nil {
-				return nil, nil, err
+				return nil, nil, nil, err
 			} else {
 				spec.Encrypted = secure
 			}
@@ -179,24 +193,31 @@ func (d *specHandler) SpecFromOpts(
 			spec.Group = &api.Group{Id: v}
 		case api.SpecGroupEnforce:
 			if groupEnforced, err := strconv.ParseBool(v); err != nil {
-				return nil, nil, err
+				return nil, nil, nil, err
 			} else {
 				spec.GroupEnforced = groupEnforced
 			}
+		case api.SpecZones, api.SpecRacks:
+			if locator == nil {
+				locator = &api.VolumeLocator{
+					VolumeLabels: make(map[string]string),
+				}
+			}
+			locator.VolumeLabels[k] = v
 		default:
 			spec.VolumeLabels[k] = v
 		}
 	}
-	return spec, source, nil
+	return spec, locator, source, nil
 }
 
 func (d *specHandler) SpecFromString(
 	str string,
-) (bool, *api.VolumeSpec, *api.Source, string) {
+) (bool, *api.VolumeSpec, *api.VolumeLocator, *api.Source, string) {
 	// If we can't parse the name, the rest of the spec is invalid.
 	ok, name := d.getVal(nameRegex, str)
 	if !ok {
-		return false, d.DefaultSpec(), nil, str
+		return false, d.DefaultSpec(), nil, nil, str
 	}
 
 	opts := make(map[string]string)
@@ -231,10 +252,16 @@ func (d *specHandler) SpecFromString(
 	if ok, passphrase := d.getVal(passphraseRegex, str); ok {
 		opts[api.SpecPassphrase] = passphrase
 	}
-
-	spec, source, err := d.SpecFromOpts(opts)
-	if err != nil {
-		return false, d.DefaultSpec(), nil, name
+	if ok, zones := d.getVal(zonesRegex, str); ok {
+		opts[api.SpecZones] = zones
 	}
-	return true, spec, source, name
+	if ok, racks := d.getVal(racksRegex, str); ok {
+		opts[api.SpecRacks] = racks
+	}
+
+	spec, locator, source, err := d.SpecFromOpts(opts)
+	if err != nil {
+		return false, d.DefaultSpec(), nil, nil, name
+	}
+	return true, spec, locator, source, name
 }

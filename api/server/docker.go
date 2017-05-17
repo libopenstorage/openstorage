@@ -174,7 +174,7 @@ func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	specParsed, spec, source, name := d.SpecFromString(request.Name)
+	specParsed, spec, locator, source, name := d.SpecFromString(request.Name)
 	d.logRequest(method, name).Infoln("")
 	// If we fail to find the volume, create it.
 	if _, err = d.volFromName(name); err != nil {
@@ -184,12 +184,16 @@ func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if !specParsed {
-			spec, source, err = d.SpecFromOpts(request.Opts)
+			spec, locator, source, err = d.SpecFromOpts(request.Opts)
 			if err != nil {
 				d.errorResponse(w, err)
 				return
 			}
 		}
+		if locator == nil {
+			locator = &api.VolumeLocator{}
+		}
+		locator.Name = name
 		if source != nil && len(source.Parent) != 0 {
 			vol, err := d.volFromName(source.Parent)
 			if err != nil {
@@ -204,7 +208,7 @@ func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		} else if _, err := v.Create(
-			&api.VolumeLocator{Name: name},
+			locator,
 			nil,
 			spec,
 		); err != nil && err != volume.ErrExist {
@@ -229,7 +233,7 @@ func (d *driver) remove(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, _, _, name := d.SpecFromString(request.Name)
+	_, _, _, _, name := d.SpecFromString(request.Name)
 
 	if err = v.Delete(name); err != nil {
 		d.errorResponse(w, err)
@@ -399,7 +403,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 		d.errorResponse(w, err)
 		return
 	}
-	_, spec, _, name := d.SpecFromString(request.Name)
+	_, spec, _, _, name := d.SpecFromString(request.Name)
 	attachOptions := d.attachOptionsFromSpec(spec)
 	vol, err := d.volFromName(name)
 	if err != nil {
@@ -460,7 +464,7 @@ func (d *driver) path(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, _, _, name := d.SpecFromString(request.Name)
+	_, _, _, _, name := d.SpecFromString(request.Name)
 	vol, err := d.volFromName(name)
 	if err != nil {
 		e := d.volNotFound(method, request.Name, err, w)
@@ -513,7 +517,7 @@ func (d *driver) get(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	parsed, _, _, name := d.SpecFromString(request.Name)
+	parsed, _, _, _, name := d.SpecFromString(request.Name)
 	returnName := ""
 	if parsed {
 		returnName = request.Name
@@ -552,7 +556,7 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, _, _, name := d.SpecFromString(request.Name)
+	_, _, _, _, name := d.SpecFromString(request.Name)
 	vol, err := d.volFromName(name)
 	if err != nil {
 		e := d.volNotFound(method, name, err, w)

@@ -31,6 +31,9 @@ const (
 	SpecAutoAggregationValue = "auto"
 	SpecGroup                = "group"
 	SpecGroupEnforce         = "fg"
+	SpecZones                = "zones"
+	SpecRacks                = "racks"
+	SpecRegions              = "regions"
 )
 
 // OptionKey specifies a set of recognized query params.
