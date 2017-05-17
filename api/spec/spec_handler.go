@@ -63,6 +63,8 @@ var (
 	secureRegex     = regexp.MustCompile(api.SpecSecure + "=([A-Za-z]+),?")
 	zonesRegex      = regexp.MustCompile(api.SpecZones + "=([A-Za-z]+),?")
 	racksRegex      = regexp.MustCompile(api.SpecRacks + "=([A-Za-z]+),?")
+	aggrRegex       = regexp.MustCompile(api.SpecAggregationLevel + "=([0-9]+|" +
+		api.SpecAutoAggregationValue + "),?")
 )
 
 type specHandler struct {
@@ -257,6 +259,9 @@ func (d *specHandler) SpecFromString(
 	}
 	if ok, racks := d.getVal(racksRegex, str); ok {
 		opts[api.SpecRacks] = racks
+	}
+	if ok, aggregationLvl := d.getVal(aggrRegex, str); ok {
+		opts[api.SpecAggregationLevel] = aggregationLvl
 	}
 
 	spec, locator, source, err := d.SpecFromOpts(opts)
