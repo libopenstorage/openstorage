@@ -252,13 +252,6 @@ func (d *driver) scaleUp(
 	outVol *api.Volume,
 	err error,
 ) {
-	// Try to attach existing volumes.
-	for _, outVol := range allVols {
-		if _, err = vd.Attach(outVol.Id, attachOptions); err == nil {
-			return outVol, nil
-		}
-	}
-
 	// Create new volume if existing volumes are not available.
 	spec := inVol.Spec.Copy()
 	spec.Scale = 1
@@ -328,6 +321,14 @@ func (d *driver) attachScale(
 		},
 		nil,
 	)
+
+	// Try to attach existing volumes.
+	for _, outVol := range allVols {
+		if _, err = vd.Attach(outVol.Id, attachOptions); err == nil {
+			return outVol, nil
+		}
+	}
+
 	if len(allVols) < int(inVol.Spec.Scale) {
 		name := fmt.Sprintf("%s_%03d", inVol.Locator.Name, len(allVols))
 		spec := inVol.Spec.Copy()
@@ -412,16 +413,15 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// If a scaled volume is already mounted, then use that volume's id.
+	// If a scaled volume is already mounted, return an errors.
 	mountpoint := d.mountpath(name)
 	if vol.Spec.Scale > 1 {
 		id := v.MountedAt(mountpoint)
 		if len(id) != 0 {
-			name = id
-			if vol, err = d.volFromName(name); err != nil {
-				d.errorResponse(w, err)
-				return
-			}
+			err = fmt.Errorf("Cannot remount scaled volume")
+			d.logRequest(method, "").Warnf(err.Error())
+			d.errorResponse(w, err)
+			return
 		}
 	}
 
