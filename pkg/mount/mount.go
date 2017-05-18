@@ -388,7 +388,8 @@ func (m *Mounter) Unmount(device, path string, flags int, timeout int) error {
 		m.maybeRemoveDevice(device)
 		return nil
 	}
-	return ErrEnoent
+	dlog.Warnf("Device %q is not mounted at path %q", path, device)
+	return nil
 }
 
 // New returns a new Mount Manager
