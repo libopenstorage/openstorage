@@ -1128,6 +1128,7 @@ func (c *ClusterManager) Start(
 // cluster manager and the provided listener and returns the appropriate one
 func (c *ClusterManager) NodeStatus() (api.Status, error) {
 	clusterNodeStatus := c.selfNode.Status
+
 	if clusterNodeStatus != api.Status_STATUS_OK {
 		// Status of this node as seen by Cluster Manager is not OK
 		// This takes highest precedence over other listener statuses.
@@ -1135,19 +1136,17 @@ func (c *ClusterManager) NodeStatus() (api.Status, error) {
 		return clusterNodeStatus, nil
 	}
 
-	returnStatus := clusterNodeStatus
-
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		listenerStatus := e.Value.(ClusterListener).ListenerStatus()
 		if listenerStatus == api.Status_STATUS_NONE {
 			continue
 		}
-		if int(listenerStatus.StatusKind()) >= int(returnStatus.StatusKind()) {
-			returnStatus = listenerStatus
+		if int(listenerStatus.StatusKind()) >= int(clusterNodeStatus.StatusKind()) {
+			clusterNodeStatus = listenerStatus
 		}
 	}
 
-	return returnStatus, nil
+	return clusterNodeStatus, nil
 }
 
 // PeerStatus returns the status of a peer node as seen by us
