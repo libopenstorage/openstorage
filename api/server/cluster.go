@@ -23,7 +23,7 @@ func (c *clusterApi) Routes() []*Route {
 		{verb: "GET", path: clusterPath("/enumerate", cluster.APIVersion), fn: c.enumerate},
 		{verb: "GET", path: clusterPath("/gossipstate", cluster.APIVersion), fn: c.gossipState},
 		{verb: "GET", path: clusterPath("/nodestatus", cluster.APIVersion), fn: c.nodestatus},
-		{verb: "GET", path: clusterPath("/status", cluster.APIVersion), fn: c.enumerate},
+		{verb: "GET", path: clusterPath("/status", cluster.APIVersion), fn: c.status},
 		{verb: "GET", path: clusterPath("/peerstatus", cluster.APIVersion), fn: c.peerStatus},
 		{verb: "GET", path: clusterPath("/inspect/{id}", cluster.APIVersion), fn: c.inspect},
 		{verb: "DELETE", path: clusterPath("", cluster.APIVersion), fn: c.delete},
@@ -178,8 +178,28 @@ func (c *clusterApi) gossipState(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
-func (c *clusterApi) nodestatus(w http.ResponseWriter, r *http.Request) {
+func (c *clusterApi) status(w http.ResponseWriter, r *http.Request) {
 	method := "status"
+
+	inst, err := cluster.Inst()
+
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	cluster, err := inst.Enumerate()
+
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(cluster.Status)
+}
+
+func (c *clusterApi) nodestatus(w http.ResponseWriter, r *http.Request) {
+	method := "nodestatus"
 
 	inst, err := cluster.Inst()
 	if err != nil {
