@@ -51,6 +51,7 @@ type SpecHandler interface {
 
 var (
 	nameRegex       = regexp.MustCompile(api.Name + "=([0-9A-Za-z_-]+),?")
+	nodesRegex      = regexp.MustCompile(api.SpecNodes + "=([0-9A-Za-z_-]+),?")
 	sizeRegex       = regexp.MustCompile(api.SpecSize + "=([0-9A-Za-z]+),?")
 	scaleRegex      = regexp.MustCompile(api.SpecScale + "=([0-9]+),?")
 	fsRegex         = regexp.MustCompile(api.SpecFilesystem + "=([0-9A-Za-z]+),?")
@@ -121,8 +122,18 @@ func (d *specHandler) SpecFromOpts(
 	var locator *api.VolumeLocator
 	spec := d.DefaultSpec()
 
+	nodeList := make([]string, 0)
+
 	for k, v := range opts {
 		switch k {
+		case api.SpecNodes:
+			inputNodes := strings.Split(v, ",")
+			for _, node := range inputNodes {
+				if len(node) != 0 {
+					nodeList = append(nodeList, node)
+				}
+			}
+			spec.ReplicaSet = &api.ReplicaSet{Nodes: nodeList}
 		case api.SpecParent:
 			source = &api.Source{Parent: v}
 		case api.SpecEphemeral:
@@ -233,6 +244,9 @@ func (d *specHandler) SpecFromString(
 
 	if ok, sz := d.getVal(sizeRegex, str); ok {
 		opts[api.SpecSize] = sz
+	}
+	if ok, nodes := d.getVal(nodesRegex, str); ok {
+		opts[api.SpecNodes] = nodes
 	}
 	if ok, scale := d.getVal(scaleRegex, str); ok {
 		opts[api.SpecScale] = scale
