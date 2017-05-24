@@ -250,8 +250,10 @@ message VolumeSpec {
   bool sticky = 18;
   // Group identifies a consistency group
   Group group = 21;
-  // GroupEnforced is true if consistency group creation is enforced
+  // GroupEnforced is true if consistency group creation is enforced.
   bool group_enforced = 22;
+  // Compressed is true if this volume is to be compressed.
+  bool compressed = 23;
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure coded - for clustered storage arrays

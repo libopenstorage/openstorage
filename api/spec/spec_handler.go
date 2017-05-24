@@ -65,6 +65,7 @@ var (
 	racksRegex      = regexp.MustCompile(api.SpecRacks + "=([A-Za-z]+),?")
 	aggrRegex       = regexp.MustCompile(api.SpecAggregationLevel + "=([0-9]+|" +
 		api.SpecAutoAggregationValue + "),?")
+	compressedRegex = regexp.MustCompile(api.SpecCompressed + "=([A-Za-z]+),?")
 )
 
 type specHandler struct {
@@ -206,6 +207,12 @@ func (d *specHandler) SpecFromOpts(
 				}
 			}
 			locator.VolumeLabels[k] = v
+		case api.SpecCompressed:
+			if compressed, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.Compressed = compressed
+			}
 		default:
 			spec.VolumeLabels[k] = v
 		}
@@ -262,6 +269,9 @@ func (d *specHandler) SpecFromString(
 	}
 	if ok, aggregationLvl := d.getVal(aggrRegex, str); ok {
 		opts[api.SpecAggregationLevel] = aggregationLvl
+	}
+	if ok, compressed := d.getVal(compressedRegex, str); ok {
+		opts[api.SpecCompressed] = compressed
 	}
 
 	spec, locator, source, err := d.SpecFromOpts(opts)

@@ -18,6 +18,7 @@ const (
 	SpecShared               = "shared"
 	SpecSticky               = "sticky"
 	SpecSecure               = "secure"
+	SpecCompressed           = "compressed"
 	SpecSize                 = "size"
 	SpecScale                = "scale"
 	SpecFilesystem           = "fs"
