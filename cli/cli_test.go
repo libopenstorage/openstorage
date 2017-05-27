@@ -32,7 +32,8 @@ func TestCmdMarshalProto(t *testing.T) {
  "snapshot_schedule": "",
  "scale": 0,
  "sticky": false,
- "group_enforced": false
+ "group_enforced": false,
+ "compressed": false
 }`,
 		data,
 	)
