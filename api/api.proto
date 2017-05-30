@@ -256,16 +256,24 @@ message VolumeSpec {
   bool compressed = 23;
 }
 
-// ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure coded - for clustered storage arrays
+// ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure 
+// coded - for clustered storage arrays
 message ReplicaSet {
   repeated string nodes = 1;
 }
 
- // RuntimeStateMap is  List of name value mapping of driver specific runtime information.
+// RuntimeStateMap is a list of name value mapping of driver specific runtime 
+// information.
 message RuntimeStateMap {
   map<string, string> runtime_state = 1;
 }
 
+// AttachInfo is a list of name value mappings that provide attach information.
+message AttachInfo {
+  map<string, string> runtime_state = 1;
+}
+
+// Volume represents an abstract storage volume.
 // Volume represents an abstract storage volume.
 message Volume {
   // Self referential volume ID.
@@ -294,20 +302,23 @@ message Volume {
   VolumeState state = 12;
   // AttachedOn is the node instance identifier for clustered systems.
   string attached_on = 13;
-  // DevicePath is the device exported by block device implementations.
-  string device_path = 14;
-  // AttachPath is the mounted path in the host namespace.
-  repeated string attach_path = 15;
-  // ReplicatSets storage for this volumefor clustered storage arrays.
-  repeated ReplicaSet  replica_sets = 16;
-  // Error is the Last recorded error.
-  string error = 17;
-  // RuntimeState is a lst of name value mapping of driver specific runtime information.
-  repeated RuntimeStateMap runtime_state = 18;
-  // SecureDevicePath is the device path for an encrypted volume.
-  string secure_device_path = 19;
   // BackgroundProcessing is true if volume is attached but not by the user.
-  bool background_processing = 20;
+  bool background_processing = 14;
+  // DevicePath is the device exported by block device implementations.
+  string device_path = 15;
+  // SecureDevicePath is the device path for an encrypted volume.
+  string secure_device_path = 16;
+  // AttachPath is the mounted path in the host namespace.
+  repeated string attach_path = 17;
+  // AttachInfo is a list of name value mappings that provides attach information.
+  repeated AttachInfo attach_info = 18;
+  // ReplicatSets storage for this volumefor clustered storage arrays.
+  repeated ReplicaSet  replica_sets = 19;
+  // RuntimeState is a lst of name value mapping of driver specific runtime 
+  // information.
+  repeated RuntimeStateMap runtime_state = 20;
+  // Error is the Last recorded error.
+  string error = 21;
 }
 
 message Stats {
