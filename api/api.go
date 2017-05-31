@@ -304,3 +304,20 @@ func (s *Node) Copy() *Node {
 	nodeCopy := localCopy.(Node)
 	return &nodeCopy
 }
+
+func (v Volume) IsClone() bool {
+	return v.Source != nil && len(v.Source.Parent) != 0 && !v.Readonly
+}
+
+func (v Volume) IsSnapshot() bool {
+	return v.Source != nil && len(v.Source.Parent) != 0 && v.Readonly
+}
+
+func (v Volume) DisplayId() string {
+	if v.Locator != nil {
+		return fmt.Sprintf("%s (%s)", v.Locator.Name, v.Id)
+	} else {
+		return v.Id
+	}
+	return ""
+}
