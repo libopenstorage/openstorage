@@ -84,8 +84,8 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		),
 	)
 	d := &Driver{
-		StatsDriver:  volume.StatsNotSupported,
-		ops:          NewEc2Storage(instance, ec2),
+		StatsDriver: volume.StatsNotSupported,
+		ops:         NewEc2Storage(instance, ec2),
 		md: &Metadata{
 			zone:     zone,
 			instance: instance,
@@ -223,7 +223,7 @@ func (d *Driver) Create(
 	if err := d.Format(volume.Id); err != nil {
 		return "", err
 	}
-	if err := d.Detach(volume.Id); err != nil {
+	if err := d.Detach(volume.Id, true); err != nil {
 		return "", err
 	}
 
@@ -396,7 +396,7 @@ func (d *Driver) Format(volumeID string) error {
 	return d.UpdateVol(volume)
 }
 
-func (d *Driver) Detach(volumeID string) error {
+func (d *Driver) Detach(volumeID string, abortOnError bool) error {
 	if err := d.ops.Detach(volumeID); err != nil {
 		return err
 	}

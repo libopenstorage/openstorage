@@ -34,6 +34,8 @@ var (
 	ErrVolHasSnaps = errors.New("Volume has snapshots associated")
 	// ErrNotSupported returned when the operation is not supported
 	ErrNotSupported = errors.New("Operation not supported")
+	// ErrVolBusy returned when volume is in busy state
+	ErrVolBusy = errors.New("Volume is busy")
 )
 
 // Constants used by the VolumeDriver
@@ -184,7 +186,7 @@ type BlockDriver interface {
 	Attach(volumeID string, attachOptions map[string]string) (string, error)
 	// Detach device from the host.
 	// Errors ErrEnoEnt, ErrVolDetached may be returned.
-	Detach(volumeID string) error
+	Detach(volumeID string, abortOnError bool) error
 }
 
 // VolumeDriverProvider provides VolumeDrivers.

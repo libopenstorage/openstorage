@@ -65,7 +65,7 @@ func (c *flexVolumeClient) Detach(mountDevice string) error {
 	if err != nil {
 		return err
 	}
-	if err := driver.Detach(mountDevice); err != nil {
+	if err := driver.Detach(mountDevice, false); err != nil {
 		return err
 	}
 	return nil

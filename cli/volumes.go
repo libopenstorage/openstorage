@@ -8,10 +8,10 @@ import (
 
 	"github.com/codegangsta/cli"
 	"github.com/libopenstorage/openstorage/api"
-	volumeclient "github.com/libopenstorage/openstorage/api/client/volume"
-	"github.com/libopenstorage/openstorage/volume"
 	clusterclient "github.com/libopenstorage/openstorage/api/client/cluster"
+	volumeclient "github.com/libopenstorage/openstorage/api/client/volume"
 	"github.com/libopenstorage/openstorage/cluster"
+	"github.com/libopenstorage/openstorage/volume"
 )
 
 // VolumeSzUnits number representing size units.
@@ -186,7 +186,7 @@ func (v *volDriver) volumeDetach(context *cli.Context) {
 	}
 	volumeID := context.Args()[0]
 	v.volumeOptions(context)
-	err := v.volDriver.Detach(string(volumeID))
+	err := v.volDriver.Detach(string(volumeID), false)
 	if err != nil {
 		cmdError(context, fn, err)
 		return

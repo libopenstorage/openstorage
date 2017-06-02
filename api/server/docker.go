@@ -589,7 +589,7 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if v.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-		_ = v.Detach(id)
+		_ = v.Detach(id, false)
 	}
 	d.emptyResponse(w)
 }

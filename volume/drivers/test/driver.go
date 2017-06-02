@@ -208,7 +208,7 @@ func attach(t *testing.T, ctx *Context) {
 
 func detach(t *testing.T, ctx *Context) {
 	fmt.Println("detach")
-	err := ctx.Detach(ctx.volID)
+	err := ctx.Detach(ctx.volID, false)
 	if err != nil {
 		require.Equal(t, ctx.devicePath, "", "Error on detach %s: %v", ctx.devicePath, err)
 	}
@@ -281,7 +281,7 @@ func io(t *testing.T, ctx *Context) {
 }
 
 func detachBad(t *testing.T, ctx *Context) {
-	err := ctx.Detach(ctx.volID)
+	err := ctx.Detach(ctx.volID, false)
 	require.True(t, (err == nil || err == volume.ErrNotSupported),
 		"Detach on mounted device should fail")
 }

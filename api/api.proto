@@ -114,6 +114,8 @@ enum VolumeState {
   // Volume is deleted, it will remain in this state
   // while resources are asynchronously reclaimed
   VOLUME_STATE_DELETED = 7;
+  // Volume is trying to be detached
+  VOLUME_STATE_TRY_DETACHING = 8;
 }
 
 // VolumeStatus represents a health status for a volume.
@@ -392,6 +394,8 @@ message VolumeStateAction {
   string mount_path = 3;
   // Device path returned in attach
   string device_path = 4;
+  // Abort action on failure
+  bool abort_on_error = 5;
 }
 
 message VolumeSetRequest {
