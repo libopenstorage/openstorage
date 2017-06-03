@@ -786,7 +786,6 @@ func (c *ClusterManager) EnableUpdates() error {
 
 // Persists the new logging url on to the database
 func (c *ClusterManager) SetLoggingURL(loggingURL string) error {
-	dlog.Infoln("Updating logging url ", loggingURL)
 	kvdb := kvdb.Instance()
 	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
 	if err != nil {
@@ -810,7 +809,6 @@ func (c *ClusterManager) SetLoggingURL(loggingURL string) error {
 // Iterates all listeners, which in turn will restart stats with the new logging url
 func updateLoggingUrlListeners(c *ClusterManager, db ClusterInfo) {
 	if c.config.LoggingURL != db.LoggingURL {
-		dlog.Infoln("Logging URL changed in the KVDB from ", c.config.LoggingURL, "to", db.LoggingURL)
 		for e := c.listeners.Front(); e != nil; e = e.Next() {
 			err := e.Value.(ClusterListener).UpdateCluster(&c.selfNode, &db)
 			if err != nil {
