@@ -8,7 +8,6 @@ import (
 	"path"
 	"strings"
 	"syscall"
-	"time"
 
 	"go.pedge.io/dlog"
 
@@ -40,7 +39,9 @@ type driver struct {
 	cl          cluster.ClusterListener
 }
 
-type clusterListener struct{}
+type clusterListener struct {
+	cluster.NullClusterListener
+}
 
 // Implements the Device interface.
 type buseDev struct {
@@ -339,19 +340,11 @@ func (d *driver) Shutdown() {
 	syscall.Unmount(BuseMountPath, 0)
 }
 
-func (cl *clusterListener) ClusterInit(self *api.Node) error {
-	return nil
-}
-
 func (cl *clusterListener) Init(
 	self *api.Node,
 	clusterInfo *cluster.ClusterInfo,
 ) (cluster.FinalizeInitCb, error) {
 	return nil, nil
-}
-
-func (cl *clusterListener) CleanupInit(self *api.Node, db *cluster.ClusterInfo) error {
-	return nil
 }
 
 func (cl *clusterListener) Join(
@@ -360,66 +353,6 @@ func (cl *clusterListener) Join(
 	handleNotifications cluster.ClusterNotify,
 ) error {
 	return nil
-}
-
-func (cl *clusterListener) Add(self *api.Node) error {
-	return nil
-}
-
-func (cl *clusterListener) Remove(self *api.Node, forceRemove bool) error {
-	return nil
-}
-
-func (cl *clusterListener) CanNodeRemove(self *api.Node) (error, string) {
-	return nil, ""
-}
-
-func (cl *clusterListener) MarkNodeDown(self *api.Node) error {
-	return nil
-}
-
-func (cl *clusterListener) Update(self *api.Node) error {
-	return nil
-}
-
-func (cl *clusterListener) Leave(self *api.Node) error {
-	return nil
-}
-
-func (cl *clusterListener) Halt(self *api.Node, db *cluster.ClusterInfo) error {
-	return nil
-}
-
-func (cl *clusterListener) ClearAlert(resource api.ResourceType, alertID int64) error {
-	return nil
-}
-
-func (cl *clusterListener) EraseAlert(resource api.ResourceType, alertID int64) error {
-	return nil
-}
-
-func (cl *clusterListener) EnumerateAlerts(ts, te time.Time, resource api.ResourceType) (*api.Alerts, error) {
-	return nil, nil
-}
-
-func (cl *clusterListener) ListenerStatus() api.Status {
-	return api.Status_STATUS_NONE
-}
-
-func (cl *clusterListener) ListenerData() map[string]interface{} {
-	return nil
-}
-
-func (cl *clusterListener) ListenerPeerStatus() map[string]api.Status {
-	return nil
-}
-
-func (cl *clusterListener) UpdateCluster(self *api.Node, db *cluster.ClusterInfo) error {
-	return nil
-}
-
-func (cl *clusterListener) QuorumMember(node *api.Node) bool {
-	return true
 }
 
 func (cl *clusterListener) String() string {
