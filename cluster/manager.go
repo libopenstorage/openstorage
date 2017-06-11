@@ -505,14 +505,14 @@ func (c *ClusterManager) joinCluster(
 	}
 	initState, err := snapAndReadClusterInfo()
 	kvdb.Unlock(kvlock)
+	if err != nil {
+		return err
+	}
 	defer func() {
 		if initState.Collector != nil {
 			initState.Collector.Stop()
 		}
 	}()
-	if err != nil {
-		return err
-	}
 
 	// Alert all listeners that we are joining the cluster.
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
