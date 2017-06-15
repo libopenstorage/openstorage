@@ -297,6 +297,40 @@ func (vd *volApi) snap(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(&snapRes)
 }
 
+func (vd *volApi) restore(w http.ResponseWriter, r *http.Request) {
+	var volumeID, snapID string
+	var err error
+	method := "restore"
+
+	if volumeID, err = vd.parseID(r); err != nil {
+		e := fmt.Errorf("Failed to parse parse volumeID: %s", err.Error())
+		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+		return
+	}
+
+	d, err := volumedrivers.Get(vd.name)
+	if err != nil {
+		notFound(w, r)
+		return
+	}
+
+	params := r.URL.Query()
+	v := params[api.OptSnapID]
+	if v != nil {
+		snapID = v[0]
+	} else {
+		vd.sendError(vd.name, method, w, "Missing "+api.OptSnapID+" param",
+			http.StatusBadRequest)
+		return
+	}
+
+	volumeResponse := &api.VolumeResponse{}
+	if err := d.Restore(volumeID, snapID); err != nil {
+		volumeResponse.Error = responseStatus(err)
+	}
+	json.NewEncoder(w).Encode(volumeResponse)
+}
+
 func (vd *volApi) snapEnumerate(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var labels map[string]string
@@ -461,5 +495,6 @@ func (vd *volApi) Routes() []*Route {
 		{verb: "GET", path: volPath("/requests/{id}", volume.APIVersion), fn: vd.requests},
 		{verb: "POST", path: snapPath("", volume.APIVersion), fn: vd.snap},
 		{verb: "GET", path: snapPath("", volume.APIVersion), fn: vd.snapEnumerate},
+		{verb: "POST", path: snapPath("/restore/{id}", volume.APIVersion), fn: vd.restore},
 	}
 }

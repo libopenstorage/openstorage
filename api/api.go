@@ -44,6 +44,8 @@ const (
 	OptName = "Name"
 	// OptVolumeID query parameter used to lookup volume by ID.
 	OptVolumeID = "VolumeID"
+	// OptSnapID query parameter used to lookup snapshot by ID.
+	OptSnapID = "SnapID"
 	// OptLabel query parameter used to lookup volume by set of labels.
 	OptLabel = "Label"
 	// OptConfigLabel query parameter used to lookup volume by set of labels.

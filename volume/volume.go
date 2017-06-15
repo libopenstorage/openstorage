@@ -110,6 +110,8 @@ type SnapshotDriver interface {
 	// Snapshot create volume snapshot.
 	// Errors ErrEnoEnt may be returned
 	Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator) (string, error)
+	// Restore restores volume to specified snapshot.
+	Restore(volumeID string, snapshotID string) error
 }
 
 // StatsDriver interface provides stats features

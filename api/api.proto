@@ -116,6 +116,8 @@ enum VolumeState {
   VOLUME_STATE_DELETED = 7;
   // Volume is trying to be detached
   VOLUME_STATE_TRY_DETACHING = 8;
+  // Volume is undergoing restore
+  VOLUME_STATE_RESTORE = 9;
 }
 
 // VolumeStatus represents a health status for a volume.

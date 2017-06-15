@@ -331,6 +331,12 @@ func (d *Driver) Snapshot(
 	return vols[0].Id, nil
 }
 
+func (d *Driver) Restore(volumeID string, snapID string) error {
+	// New volumes can be created from snapshot but existing volumes
+	// cannot be restored to same volumeID.
+	return volume.ErrNotSupported
+}
+
 func (d *Driver) Attach(
 	volumeID string,
 	attachOptions map[string]string,

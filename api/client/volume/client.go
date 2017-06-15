@@ -195,6 +195,21 @@ func (v *volumeClient) Snapshot(volumeID string, readonly bool,
 	return "", nil
 }
 
+// Restore specified volume to given snapshot state
+func (v *volumeClient) Restore(volumeID string, snapID string) error {
+	response := &api.VolumeResponse{}
+	req := v.c.Post().Resource(snapPath + "/restore").Instance(volumeID)
+	req.QueryOption(api.OptSnapID, snapID)
+
+	if err := req.Do().Unmarshal(response); err != nil {
+		return err
+	}
+	if response.Error != "" {
+		return errors.New(response.Error)
+	}
+	return nil
+}
+
 // Stats for specified volume.
 // Errors ErrEnoEnt may be returned
 func (v *volumeClient) Stats(

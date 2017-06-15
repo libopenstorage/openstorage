@@ -276,6 +276,18 @@ func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 	return newVolumeID, nil
 }
 
+func (d *driver) Restore(volumeID string, snapID string) error {
+	if _, err := d.Inspect([]string{volumeID, snapID}); err != nil {
+		return err
+	}
+
+	// NFS does not support restore, so just copy the files.
+	if err := copyDir(nfsMountPath+snapID, nfsMountPath+volumeID); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (d *driver) Attach(volumeID string, attachOptions map[string]string) (string, error) {
 	return path.Join(nfsMountPath, volumeID+nfsBlockFile), nil
 }

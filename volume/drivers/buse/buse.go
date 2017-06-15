@@ -311,6 +311,15 @@ func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 	return newVolumeID, nil
 }
 
+func (d *driver) Restore(volumeID string, snapID string) error {
+	if _, err := d.Inspect([]string{volumeID, snapID}); err != nil {
+		return err
+	}
+
+	// BUSE does not support restore, so just copy the block files.
+	return copyFile(BuseMountPath+snapID, BuseMountPath+volumeID)
+}
+
 func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
 	if spec != nil {
 		return volume.ErrNotSupported

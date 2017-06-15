@@ -35,6 +35,10 @@ func (s *snapshotNotSupported) Snapshot(volumeID string, readonly bool, locator 
 	return "", ErrNotSupported
 }
 
+func (s *snapshotNotSupported) Restore(volumeID, snapshotID string) error {
+	return ErrNotSupported
+}
+
 type ioNotSupported struct{}
 
 func (i *ioNotSupported) Read(volumeID string, buffer []byte, size uint64, offset int64) (int64, error) {
