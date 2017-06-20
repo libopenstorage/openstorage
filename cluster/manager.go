@@ -902,7 +902,7 @@ func (c *ClusterManager) initializeCluster(db kvdb.Kvdb) (
 	clusterInfo.Id = c.config.ClusterId
 	clusterInfo.LoggingURL = c.config.LoggingURL
 
-	dlog.Infoln("LoggingURL during initializing a new cluster.%s ", clusterInfo.LoggingURL)
+	dlog.Infof("LoggingURL during initializing a new cluster: %s ", clusterInfo.LoggingURL)
 
 	if clusterInfo.Status == api.Status_STATUS_INIT {
 		dlog.Infoln("Initializing a new cluster.")
