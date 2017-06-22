@@ -99,7 +99,12 @@ func unix2HTTP(u *url.URL) {
 	}
 }
 
-func newHTTPClient(u *url.URL, tlsConfig *tls.Config, timeout time.Duration) *http.Client {
+func newHTTPClient(
+	u *url.URL,
+	tlsConfig *tls.Config,
+	timeout time.Duration,
+	responseTimeout time.Duration,
+) *http.Client {
 	httpTransport := &http.Transport{
 		TLSClientConfig: tlsConfig,
 	}
@@ -119,7 +124,7 @@ func newHTTPClient(u *url.URL, tlsConfig *tls.Config, timeout time.Duration) *ht
 		}
 	}
 
-	return &http.Client{Transport: httpTransport}
+	return &http.Client{Transport: httpTransport, Timeout: responseTimeout}
 }
 
 func getHTTPClient(host string) *http.Client {
@@ -134,7 +139,7 @@ func getHTTPClient(host string) *http.Client {
 		if u.Path == "" {
 			u.Path = "/"
 		}
-		c = newHTTPClient(u, nil, 10*time.Second)
+		c = newHTTPClient(u, nil, 10*time.Second, time.Minute)
 		httpCache[host] = c
 	}
 
