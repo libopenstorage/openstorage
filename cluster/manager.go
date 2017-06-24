@@ -506,6 +506,7 @@ func (c *ClusterManager) joinCluster(
 	initState, err := snapAndReadClusterInfo()
 	kvdb.Unlock(kvlock)
 	if err != nil {
+		dlog.Panicf("Fatal, Unable to create snapshot: %v", err)
 		return err
 	}
 	defer func() {
