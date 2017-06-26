@@ -33,7 +33,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 	if !ok {
 		version = volume.APIVersion
 	}
-	c, err := client.NewClient(url, version)
+	c, err := client.NewClient(url, version, "")
 	if err != nil {
 		return nil, err
 	}

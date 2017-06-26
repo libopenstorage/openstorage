@@ -54,7 +54,7 @@ func processLabels(s string) (map[string]string, error) {
 
 func (v *volDriver) volumeOptions(context *cli.Context) {
 	// Currently we choose the default version
-	clnt, err := volumeclient.NewDriverClient("", v.name, volume.APIVersion)
+	clnt, err := volumeclient.NewDriverClient("", v.name, volume.APIVersion, "")
 	if err != nil {
 		fmt.Printf("Failed to initialize client library: %v\n", err)
 		os.Exit(1)

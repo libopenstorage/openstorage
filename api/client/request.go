@@ -51,8 +51,8 @@ type Status struct {
 }
 
 // NewRequest instance
-func NewRequest(client *http.Client, base *url.URL, verb string, version string, authstring string) *Request {
-	return &Request{
+func NewRequest(client *http.Client, base *url.URL, verb string, version string, authstring, userAgent string) *Request {
+	r := &Request{
 		client:  client,
 		verb:    verb,
 		base:    base,
@@ -60,6 +60,8 @@ func NewRequest(client *http.Client, base *url.URL, verb string, version string,
 		version: version,
 		authstring: authstring,
 	}
+	r.SetHeader("User-Agent", userAgent)
+	return r
 }
 
 func checkExists(mustExist string, before string) error {

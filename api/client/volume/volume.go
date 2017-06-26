@@ -12,10 +12,10 @@ func VolumeDriver(c *client.Client) volume.VolumeDriver {
 	return newVolumeClient(c)
 }
 
-// NewDriverClient returns a new REST client of the supplied version for specified driver.
+// NewAuthDriverClient returns a new REST client of the supplied version for specified driver.
 // host: REST endpoint [http://<ip>:<port> OR unix://<path-to-unix-socket>]. default: [unix:///var/lib/osd/<driverName>.sock]
 // version: Volume API version
-func NewAuthDriverClient(host, driverName, version string, authstring string, accesstoken string) (*client.Client, error) {
+func NewAuthDriverClient(host, driverName, version, authstring, accesstoken, userAgent string) (*client.Client, error) {
 	if driverName == "" {
 		return nil, fmt.Errorf("Driver Name cannot be empty")
 	}
@@ -26,13 +26,13 @@ func NewAuthDriverClient(host, driverName, version string, authstring string, ac
 		// Set the default version
 		version = volume.APIVersion
 	}
-	return client.NewAuthClient(host, version, authstring, accesstoken)
+	return client.NewAuthClient(host, version, authstring, accesstoken, userAgent)
 }
 
 // NewDriverClient returns a new REST client of the supplied version for specified driver.
 // host: REST endpoint [http://<ip>:<port> OR unix://<path-to-unix-socket>]. default: [unix:///var/lib/osd/<driverName>.sock]
 // version: Volume API version
-func NewDriverClient(host, driverName, version string) (*client.Client, error) {
+func NewDriverClient(host, driverName, version, userAgent string) (*client.Client, error) {
 	if driverName == "" {
 		return nil, fmt.Errorf("Driver Name cannot be empty")
 	}
@@ -43,7 +43,7 @@ func NewDriverClient(host, driverName, version string) (*client.Client, error) {
 		// Set the default version
 		version = volume.APIVersion
 	}
-	return client.NewClient(host, version)
+	return client.NewClient(host, version, userAgent)
 }
 
 // GetSupportedDriverVersions returns a list of supported versions
@@ -55,7 +55,7 @@ func GetSupportedDriverVersions(driverName, host string) ([]string, error) {
 		host = client.GetUnixServerPath(driverName, volume.DriverAPIBase)
 	}
 
-	client, err := client.NewClient(host, "")
+	client, err := client.NewClient(host, "", "")
 	if err != nil {
 		return []string{}, err
 	}
