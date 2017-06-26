@@ -18,6 +18,22 @@ func ClusterManager(c *client.Client) cluster.Cluster {
 // NewClusterClient returns a new REST client.
 // host: REST endpoint [http://<ip>:<port> OR unix://<path-to-unix-socket>]. default: [unix://var/lib/osd/cluster/osd.sock]
 // version: Cluster API version
+func NewAuthClusterClient(host, version string, authstring string, accesstoken string) (*client.Client, error) {
+	if host == "" {
+		host = client.GetUnixServerPath(OsdSocket, cluster.APIBase)
+	}
+
+	if version == "" {
+		// Set the default version
+		version = cluster.APIVersion
+	}
+
+	return client.NewAuthClient(host, version, authstring, accesstoken)
+}
+
+// NewClusterClient returns a new REST client.
+// host: REST endpoint [http://<ip>:<port> OR unix://<path-to-unix-socket>]. default: [unix://var/lib/osd/cluster/osd.sock]
+// version: Cluster API version
 func NewClusterClient(host, version string) (*client.Client, error) {
 	if host == "" {
 		host = client.GetUnixServerPath(OsdSocket, cluster.APIBase)

@@ -33,6 +33,32 @@ func NewClient(host string, version string) (*Client, error) {
 		base:       baseURL,
 		version:    version,
 		httpClient: hClient,
+		authstring: "",
+		accesstoken: "",
+	}
+	return c, nil
+}
+
+// NewClient returns a new REST client for specified server.
+func NewAuthClient(host string, version string, authstring string, accesstoken string) (*Client, error) {
+	baseURL, err := url.Parse(host)
+	if err != nil {
+		return nil, err
+	}
+	if baseURL.Path == "" {
+		baseURL.Path = "/"
+	}
+	unix2HTTP(baseURL)
+	hClient := getHTTPClient(host)
+	if hClient == nil {
+		return nil, fmt.Errorf("Unable to parse provided url: %v", host)
+	}
+	c := &Client{
+		base:       baseURL,
+		version:    version,
+		httpClient: hClient,
+		authstring: authstring,
+		accesstoken: accesstoken,
 	}
 	return c, nil
 }
@@ -54,6 +80,8 @@ type Client struct {
 	base       *url.URL
 	version    string
 	httpClient *http.Client
+	authstring string
+	accesstoken string
 }
 
 // Status sends a Status request at the /status REST endpoint.
@@ -72,22 +100,22 @@ func (c *Client) Versions(endpoint string) ([]string, error) {
 
 // Get returns a Request object setup for GET call.
 func (c *Client) Get() *Request {
-	return NewRequest(c.httpClient, c.base, "GET", c.version)
+	return NewRequest(c.httpClient, c.base, "GET", c.version, c.authstring)
 }
 
 // Post returns a Request object setup for POST call.
 func (c *Client) Post() *Request {
-	return NewRequest(c.httpClient, c.base, "POST", c.version)
+	return NewRequest(c.httpClient, c.base, "POST", c.version, c.authstring)
 }
 
 // Put returns a Request object setup for PUT call.
 func (c *Client) Put() *Request {
-	return NewRequest(c.httpClient, c.base, "PUT", c.version)
+	return NewRequest(c.httpClient, c.base, "PUT", c.version, c.authstring)
 }
 
 // Delete returns a Request object setup for DELETE call.
 func (c *Client) Delete() *Request {
-	return NewRequest(c.httpClient, c.base, "DELETE", c.version)
+	return NewRequest(c.httpClient, c.base, "DELETE", c.version, c.authstring)
 }
 
 func unix2HTTP(u *url.URL) {

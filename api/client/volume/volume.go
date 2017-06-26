@@ -15,6 +15,23 @@ func VolumeDriver(c *client.Client) volume.VolumeDriver {
 // NewDriverClient returns a new REST client of the supplied version for specified driver.
 // host: REST endpoint [http://<ip>:<port> OR unix://<path-to-unix-socket>]. default: [unix:///var/lib/osd/<driverName>.sock]
 // version: Volume API version
+func NewAuthDriverClient(host, driverName, version string, authstring string, accesstoken string) (*client.Client, error) {
+	if driverName == "" {
+		return nil, fmt.Errorf("Driver Name cannot be empty")
+	}
+	if host == "" {
+		host = client.GetUnixServerPath(driverName, volume.DriverAPIBase)
+	}
+	if version == "" {
+		// Set the default version
+		version = volume.APIVersion
+	}
+	return client.NewAuthClient(host, version, authstring, accesstoken)
+}
+
+// NewDriverClient returns a new REST client of the supplied version for specified driver.
+// host: REST endpoint [http://<ip>:<port> OR unix://<path-to-unix-socket>]. default: [unix:///var/lib/osd/<driverName>.sock]
+// version: Volume API version
 func NewDriverClient(host, driverName, version string) (*client.Client, error) {
 	if driverName == "" {
 		return nil, fmt.Errorf("Driver Name cannot be empty")
