@@ -19,16 +19,35 @@ const (
 func snapAndReadClusterInfo() (*ClusterInitState, error) {
 	kv := kvdb.Instance()
 
-	// Start the watch before the snapshot
-	collector, err := kvdb.NewUpdatesCollector(kv, "", 0)
-	if err != nil {
-		dlog.Errorf("Failed to start collector for cluster db: %v", err)
-		return nil, err
+	// To work-around a kvdb issue with watches, try snapshot in a loop
+	var (
+		collector kvdb.UpdatesCollector
+		err       error
+		version   uint64
+		snap      kvdb.Kvdb
+	)
+	for i := 0; i < 3; i++ {
+		if i > 0 {
+			dlog.Infof("Retrying snapshot")
+		}
+		// Start the watch before the snapshot
+		collector, err = kvdb.NewUpdatesCollector(kv, "", 0)
+		if err != nil {
+			dlog.Errorf("Failed to start collector for cluster db: %v", err)
+			collector = nil
+			continue
+		}
+		// Create the snapshot
+		snap, version, err = kv.Snapshot("")
+		if err != nil {
+			dlog.Errorf("Snapshot failed for cluster db: %v", err)
+			collector.Stop()
+			collector = nil
+		} else {
+			break
+		}
 	}
-	// Create the snapshot
-	snap, version, err := kv.Snapshot("")
 	if err != nil {
-		dlog.Errorf("Snapshot failed for cluster db: %v", err)
 		return nil, err
 	}
 	dlog.Infof("Cluster db snapshot at: %v", version)
