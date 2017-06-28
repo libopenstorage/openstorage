@@ -76,7 +76,7 @@ func TestAll(t *testing.T) {
 	if len(versions) == 0 {
 		t.Fatalf("Versions array is empty")
 	}
-	c, err := volumeclient.NewDriverClient("", nfs.Name, versions[0])
+	c, err := volumeclient.NewDriverClient("", nfs.Name, versions[0], "")
 	if err != nil {
 		t.Fatalf("Failed to initialize Driver: %v", err)
 	}
