@@ -7,7 +7,7 @@ go:
   - 1.6
 before_install:  
   - sudo apt-get update -yq
-  - sudo apt-get -o Dpkg::Options::="--force-confnew" install -yq docker-engine
+  - sudo apt-get -o Dpkg::Options::="--force-confnew" install -yq docker-ce
 script:
   - make docker-test
   - if [ "${TRAVIS_BRANCH}" == "master" ] && [ "${TRAVIS_PULL_REQUEST}" == "false" ]; then
