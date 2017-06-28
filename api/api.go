@@ -27,6 +27,7 @@ const (
 	SpecHaLevel              = "repl"
 	SpecPriority             = "io_priority"
 	SpecSnapshotInterval     = "snap_interval"
+	SpecSnapshotSchedule     = "snap_schedule"
 	SpecAggregationLevel     = "aggregation_level"
 	SpecDedupe               = "dedupe"
 	SpecPassphrase           = "secret_key"
