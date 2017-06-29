@@ -68,7 +68,7 @@ var (
 		api.SpecAutoAggregationValue + "),?")
 	compressedRegex   = regexp.MustCompile(api.SpecCompressed + "=([A-Za-z]+),?")
 	snapScheduleRegex = regexp.MustCompile(api.SpecSnapshotSchedule +
-		`=\-([A-Za-z0-9,:;@=]+)\-,?`)
+		`=([A-Za-z0-9:;@=#]+),?`)
 )
 
 type specHandler struct {
@@ -292,7 +292,7 @@ func (d *specHandler) SpecFromString(
 		opts[api.SpecCompressed] = compressed
 	}
 	if ok, sched := d.getVal(snapScheduleRegex, str); ok {
-		opts[api.SpecSnapshotSchedule] = sched
+		opts[api.SpecSnapshotSchedule] = strings.Replace(sched, "#", ",", -1)
 	}
 
 	spec, locator, source, err := d.SpecFromOpts(opts)
