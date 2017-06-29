@@ -30,12 +30,12 @@ func NewClient(host, version, userAgent string) (*Client, error) {
 		return nil, fmt.Errorf("Unable to parse provided url: %v", host)
 	}
 	c := &Client{
-		base:       baseURL,
-		version:    version,
-		httpClient: hClient,
-		authstring: "",
+		base:        baseURL,
+		version:     version,
+		httpClient:  hClient,
+		authstring:  "",
 		accesstoken: "",
-		userAgent: fmt.Sprintf("%v/%v", userAgent, version),
+		userAgent:   fmt.Sprintf("%v/%v", userAgent, version),
 	}
 	return c, nil
 }
@@ -55,12 +55,12 @@ func NewAuthClient(host, version, authstring, accesstoken, userAgent string) (*C
 		return nil, fmt.Errorf("Unable to parse provided url: %v", host)
 	}
 	c := &Client{
-		base:       baseURL,
-		version:    version,
-		httpClient: hClient,
-		authstring: authstring,
+		base:        baseURL,
+		version:     version,
+		httpClient:  hClient,
+		authstring:  authstring,
 		accesstoken: accesstoken,
-		userAgent: fmt.Sprintf("%v/%v", userAgent, version),
+		userAgent:   fmt.Sprintf("%v/%v", userAgent, version),
 	}
 	return c, nil
 }
@@ -79,12 +79,12 @@ func GetUnixServerPath(socketName string, paths ...string) string {
 // Client is an HTTP REST wrapper. Use one of Get/Post/Put/Delete to get a request
 // object.
 type Client struct {
-	base       *url.URL
-	version    string
-	httpClient *http.Client
-	authstring string
+	base        *url.URL
+	version     string
+	httpClient  *http.Client
+	authstring  string
 	accesstoken string
-	userAgent string
+	userAgent   string
 }
 
 // Status sends a Status request at the /status REST endpoint.
@@ -103,7 +103,7 @@ func (c *Client) Versions(endpoint string) ([]string, error) {
 
 // Get returns a Request object setup for GET call.
 func (c *Client) Get() *Request {
-	return NewRequest(c.httpClient, c.base, "GET", c.version, c.authstring,  c.userAgent)
+	return NewRequest(c.httpClient, c.base, "GET", c.version, c.authstring, c.userAgent)
 }
 
 // Post returns a Request object setup for POST call.
@@ -170,7 +170,7 @@ func getHTTPClient(host string) *http.Client {
 		if u.Path == "" {
 			u.Path = "/"
 		}
-		c = newHTTPClient(u, nil, 10*time.Second, time.Minute)
+		c = newHTTPClient(u, nil, 10*time.Second, 5*time.Minute)
 		httpCache[host] = c
 	}
 
