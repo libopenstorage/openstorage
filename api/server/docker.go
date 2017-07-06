@@ -370,7 +370,7 @@ func (d *driver) attachVol(
 	case volume.ErrVolAttachedOnRemoteNode:
 		d.logRequest(method, vol.Locator.Name).Infof(
 			"Mount volume attached on remote node.")
-		return vol, nil
+		return vol, err
 	default:
 		d.logRequest(method, vol.Locator.Name).Warnf(
 			"Cannot attach volume: %v", err.Error())
