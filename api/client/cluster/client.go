@@ -13,6 +13,8 @@ import (
 const (
 	clusterPath = "/cluster"
 	loggingurl = "/loggingurl"
+	managementurl = "/managementurl"
+	tunnelconfigurl = "/tunnelconfig"
 )
 
 type clusterClient struct {
@@ -156,6 +158,52 @@ func (c *clusterClient) SetLoggingURL(loggingURL string) error {
 	return nil
 
 }
+
+func (c *clusterClient) SetManagementURL(managementURL string) error {
+
+	resp := api.ClusterResponse{}
+
+	request := c.c.Put().Resource(clusterPath + managementurl)
+	request.QueryOption("url", managementURL)
+	if err := request.Do().Unmarshal(&resp); err != nil {
+		return err
+	}
+
+	if resp.Error != "" {
+		return errors.New(resp.Error)
+	}
+
+	return nil
+
+}
+
+func (c *clusterClient) SetTunnelConfig(tunnelConfig api.TunnelConfig) error {
+	resp := api.ClusterResponse{}
+
+	request := c.c.Put().Resource(clusterPath + tunnelconfigurl)
+	request.Body(&tunnelConfig)
+	if err := request.Do().Unmarshal(&resp); err != nil {
+		return err
+	}
+
+	if resp.Error != "" {
+		return errors.New(resp.Error)
+	}
+
+	return nil
+}
+
+func (c *clusterClient) GetTunnelConfig() api.TunnelConfig {
+	tc := api.TunnelConfig{}
+
+	if err := c.c.Get().Resource(clusterPath + tunnelconfigurl).Do().Unmarshal(&tc); err != nil {
+		return api.TunnelConfig{}
+	}
+
+	return tc
+}
+
+
 
 func (c *clusterClient) GetGossipState() *cluster.ClusterState {
 	var status *cluster.ClusterState

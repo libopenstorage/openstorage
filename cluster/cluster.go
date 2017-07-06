@@ -47,6 +47,8 @@ type ClusterInfo struct {
 	Id          string
 	NodeEntries map[string]NodeEntry
 	LoggingURL  string
+	ManagementURL string
+	TunnelConfig api.TunnelConfig
 }
 
 // ClusterInitState is the snapshot state which should be used to initialize
@@ -149,6 +151,12 @@ type ClusterData interface {
 	GetGossipState() *ClusterState
 
 	SetLoggingURL(loggingURL string) error
+
+	SetManagementURL(managementURL string) error
+
+	SetTunnelConfig(tunnelConfig api.TunnelConfig) error
+
+	GetTunnelConfig() api.TunnelConfig
 }
 
 // ClusterStatus interface provides apis for cluster and node status

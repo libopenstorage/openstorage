@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"io/ioutil"
 
 	"github.com/gorilla/mux"
 	"github.com/libopenstorage/openstorage/api"
@@ -33,6 +34,8 @@ func (c *clusterApi) Routes() []*Route {
 		{verb: "PUT", path: clusterPath("/shutdown", cluster.APIVersion), fn: c.shutdown},
 		{verb: "PUT", path: clusterPath("/shutdown/{id}", cluster.APIVersion), fn: c.shutdown},
 		{verb: "PUT", path: clusterPath("/loggingurl", cluster.APIVersion), fn: c.setLoggingURL},
+		{verb: "PUT", path: clusterPath("/managementurl", cluster.APIVersion), fn: c.setManagementURL},
+		{verb: "PUT", path: clusterPath("/tunnelconfig", cluster.APIVersion), fn: c.setTunnelConfig},
 		{verb: "GET", path: clusterPath("/alerts/{resource}", cluster.APIVersion), fn: c.enumerateAlerts},
 		{verb: "PUT", path: clusterPath("/alerts/{resource}/{id}", cluster.APIVersion), fn: c.clearAlert},
 		{verb: "DELETE", path: clusterPath("/alerts/{resource}/{id}", cluster.APIVersion), fn: c.eraseAlert},
@@ -141,6 +144,62 @@ func (c *clusterApi) setLoggingURL(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = inst.SetLoggingURL(strings.TrimSpace(loggingURL[0]))
+
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(&api.ClusterResponse{})
+}
+
+func (c *clusterApi) setManagementURL(w http.ResponseWriter, r *http.Request) {
+	method := "set Management URL"
+
+	inst, err := cluster.Inst()
+
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	params := r.URL.Query()
+	managementURL := params["url"]
+	if len(managementURL) == 0 {
+		c.sendError(c.name, method, w, "Missing url param - url", http.StatusBadRequest)
+		return
+	}
+
+	err = inst.SetManagementURL(strings.TrimSpace(managementURL[0]))
+
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(&api.ClusterResponse{})
+}
+
+func (c *clusterApi) setTunnelConfig(w http.ResponseWriter, r *http.Request) {
+	method := "set TunnelConfig"
+
+	inst, err := cluster.Inst()
+
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var tc api.TunnelConfig
+	contents, _ := ioutil.ReadAll(r.Body)
+	err = json.Unmarshal(contents, &tc)
+
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = inst.SetTunnelConfig(tc)
 
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)

@@ -91,6 +91,12 @@ type Node struct {
 	NodeLabels map[string]string
 }
 
+type TunnelConfig struct {
+	Key string
+	Cert string
+	Endpoint string
+}
+
 // Cluster represents the state of the cluster.
 type Cluster struct {
 	Status Status
@@ -107,6 +113,12 @@ type Cluster struct {
 
 	// Logging url for the cluster.
 	LoggingURL string
+
+	// Management url for the cluster
+	ManagementURL string
+
+	// TunnelConfig for the cluster [key, cert, endpoint]
+	TunnelConfig TunnelConfig
 }
 
 // StatPoint represents the basic structure of a single Stat reported
