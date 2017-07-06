@@ -38,6 +38,7 @@ type ClusterConfig struct {
 	MgmtIp        string
 	DataIp        string
 	LoggingURL    string
+	ManagementURL string
 }
 
 type Config struct {
