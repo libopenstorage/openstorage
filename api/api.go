@@ -92,9 +92,9 @@ type Node struct {
 }
 
 type TunnelConfig struct {
-	Key string
-	Cert string
-	Endpoint string
+	Key string `json:"key"`
+	Cert string `json:"cert"`
+	Endpoint string `json:"tunnel_endpoint"`
 }
 
 // Cluster represents the state of the cluster.
