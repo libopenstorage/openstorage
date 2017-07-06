@@ -9,12 +9,14 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/api/errors"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
 )
 
-const schedDriverPostFix  = "-sched"
+const schedDriverPostFix = "-sched"
 
 type volAPI struct {
 	restBase
@@ -90,6 +92,31 @@ func (vd *volAPI) create(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(&dcRes)
 }
 
+func processErrorForVolSetResponse(action *api.VolumeStateAction, err error, resp api.VolumeSetResponse) {
+	if err == nil {
+		return
+	}
+
+	if action.Mount == api.VolumeActionParam_VOLUME_ACTION_PARAM_OFF ||
+		action.Attach == api.VolumeActionParam_VOLUME_ACTION_PARAM_OFF {
+		switch err.(type) {
+		case *errors.ErrNotFound:
+			logrus.Warnf("Ignoring volumeSet on non-existent volume. Err: %v. Actions are Mount=%v Attach=%v",
+				err, action.Mount, action.Attach)
+			resp.VolumeResponse = &api.VolumeResponse{}
+			resp.Volume = &api.Volume{}
+		default:
+			resp.VolumeResponse = &api.VolumeResponse{
+				Error: err.Error(),
+			}
+		}
+	} else {
+		resp.VolumeResponse = &api.VolumeResponse{
+			Error: err.Error(),
+		}
+	}
+}
+
 func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 	var (
 		volumeID string
@@ -133,6 +160,7 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 		}
+
 		if req.Action.Mount != api.VolumeActionParam_VOLUME_ACTION_PARAM_NONE {
 			if req.Action.Mount == api.VolumeActionParam_VOLUME_ACTION_PARAM_ON {
 				if req.Action.MountPath == "" {
@@ -151,24 +179,21 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		resp.VolumeResponse = &api.VolumeResponse{
-			Error: err.Error(),
-		}
+		processErrorForVolSetResponse(req.Action, err, resp)
 	} else {
 		v, err := d.Inspect([]string{volumeID})
-		if err != nil || v == nil || len(v) != 1 {
-			if err == nil {
-				err = fmt.Errorf("Failed to inspect volume")
-			}
-			resp.VolumeResponse = &api.VolumeResponse{
-				Error: err.Error(),
-			}
+		if err != nil {
+			processErrorForVolSetResponse(req.Action, err, resp)
+		} else if v == nil || len(v) != 1 {
+			processErrorForVolSetResponse(req.Action, &errors.ErrNotFound{Type: "Volume", ID: volumeID}, resp)
 		} else {
 			v0 := v[0]
 			resp.Volume = v0
 		}
 	}
+
 	json.NewEncoder(w).Encode(resp)
+
 }
 
 func (vd *volAPI) inspect(w http.ResponseWriter, r *http.Request) {
