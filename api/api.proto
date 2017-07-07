@@ -191,6 +191,8 @@ message StoragePool {
   uint64 TotalSize = 7;
   // Used size of the pool
   uint64 Used = 8;
+  // Labels is a list of user defined name-value pairs
+  map<string, string> labels = 9;
 }
 
 // VolumeLocator is a structure that is attached to a volume
