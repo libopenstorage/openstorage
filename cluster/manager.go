@@ -858,7 +858,7 @@ func updateManagementUrlListeners(c *ClusterManager, db ClusterInfo) {
 	}
 }
 
-func (c *ClusterManager) SetTunnelConfig(tunnelConfig api.TunnelConfig)  error {
+func (c *ClusterManager) SetTunnelConfig(tunnelConfig api.TunnelConfig) error {
 	kvdb := kvdb.Instance()
 	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
 	if err != nil {
@@ -951,6 +951,15 @@ func (c *ClusterManager) waitForQuorum(exist bool) error {
 			quorumRetries++
 		}
 	}
+	// Update the listeners that we have joined the cluster and
+	// and our quorum status
+	for e := c.listeners.Front(); e != nil; e = e.Next() {
+		err := e.Value.(ClusterListener).JoinComplete(&c.selfNode)
+		if err != nil {
+			dlog.Warnln("Failed to notify ", e.Value.(ClusterListener).String())
+		}
+	}
+
 	return nil
 }
 
@@ -1318,10 +1327,10 @@ func (c *ClusterManager) enumerateNodesFromCache() []api.Node {
 // Enumerate lists all the nodes in the cluster.
 func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 	cluster := api.Cluster{
-		Id:         c.config.ClusterId,
-		Status:     c.status,
-		NodeId:     c.selfNode.Id,
-		LoggingURL: c.config.LoggingURL,
+		Id:            c.config.ClusterId,
+		Status:        c.status,
+		NodeId:        c.selfNode.Id,
+		LoggingURL:    c.config.LoggingURL,
 		ManagementURL: c.config.ManagementURL,
 	}
 
