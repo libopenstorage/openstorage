@@ -1343,6 +1343,14 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 		cluster.Nodes = c.enumerateNodesFromCache()
 	}
 
+	// Allow listeners to add/modify data
+	for e := c.listeners.Front(); e != nil; e = e.Next() {
+		if err := e.Value.(ClusterListener).Enumerate(cluster); err != nil {
+			dlog.Warnf("listener %s enumerate failed: %v",
+				e.Value.(ClusterListener).String(), err)
+			continue
+		}
+	}
 	return cluster, nil
 }
 

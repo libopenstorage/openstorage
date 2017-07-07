@@ -121,6 +121,9 @@ type ClusterListenerGenericOps interface {
 	// UpdateClusterInfo is called when there is an update to the cluster.
 	// XXX: Remove ClusterInfo from this API
 	UpdateCluster(self *api.Node, clusterInfo *ClusterInfo) error
+
+	// Enumerate updates listener specific data in Enumerate.
+	Enumerate(cluster api.Cluster) error
 }
 
 // ClusterListenerStatusOps defines APIs that a listener needs to implement
@@ -307,6 +310,10 @@ func (nc *NullClusterListener) CleanupInit(
 	self *api.Node,
 	clusterInfo *ClusterInfo,
 ) error {
+	return nil
+}
+
+func (nc *NullClusterListener) Enumerate(cluster api.Cluster) error {
 	return nil
 }
 
