@@ -93,7 +93,7 @@ func (vd *volAPI) create(w http.ResponseWriter, r *http.Request) {
 }
 
 func processErrorForVolSetResponse(action *api.VolumeStateAction, err error, resp api.VolumeSetResponse) {
-	if err == nil {
+	if err == nil || action == nil {
 		return
 	}
 
