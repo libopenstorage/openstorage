@@ -93,12 +93,12 @@ func (vd *volAPI) create(w http.ResponseWriter, r *http.Request) {
 }
 
 func processErrorForVolSetResponse(action *api.VolumeStateAction, err error, resp *api.VolumeSetResponse) {
-	if err == nil || action == nil || resp == nil {
+	if err == nil || resp == nil {
 		return
 	}
 
-	if action.Mount == api.VolumeActionParam_VOLUME_ACTION_PARAM_OFF ||
-		action.Attach == api.VolumeActionParam_VOLUME_ACTION_PARAM_OFF {
+	if action != nil && (action.Mount == api.VolumeActionParam_VOLUME_ACTION_PARAM_OFF ||
+							action.Attach == api.VolumeActionParam_VOLUME_ACTION_PARAM_OFF) {
 		switch err.(type) {
 		case *errors.ErrNotFound:
 			logrus.Warnf("Ignoring volumeSet on non-existent volume. Err: %v. Actions are Mount=%v Attach=%v",
@@ -110,7 +110,7 @@ func processErrorForVolSetResponse(action *api.VolumeStateAction, err error, res
 				Error: err.Error(),
 			}
 		}
-	} else {
+	} else if err != nil {
 		resp.VolumeResponse = &api.VolumeResponse{
 			Error: err.Error(),
 		}
