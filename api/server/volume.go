@@ -92,8 +92,8 @@ func (vd *volAPI) create(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(&dcRes)
 }
 
-func processErrorForVolSetResponse(action *api.VolumeStateAction, err error, resp api.VolumeSetResponse) {
-	if err == nil || action == nil {
+func processErrorForVolSetResponse(action *api.VolumeStateAction, err error, resp *api.VolumeSetResponse) {
+	if err == nil || action == nil || resp == nil {
 		return
 	}
 
@@ -179,13 +179,13 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		processErrorForVolSetResponse(req.Action, err, resp)
+		processErrorForVolSetResponse(req.Action, err, &resp)
 	} else {
 		v, err := d.Inspect([]string{volumeID})
 		if err != nil {
-			processErrorForVolSetResponse(req.Action, err, resp)
+			processErrorForVolSetResponse(req.Action, err, &resp)
 		} else if v == nil || len(v) != 1 {
-			processErrorForVolSetResponse(req.Action, &errors.ErrNotFound{Type: "Volume", ID: volumeID}, resp)
+			processErrorForVolSetResponse(req.Action, &errors.ErrNotFound{Type: "Volume", ID: volumeID}, &resp)
 		} else {
 			v0 := v[0]
 			resp.Volume = v0
