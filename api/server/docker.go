@@ -418,7 +418,8 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 	if vol.Spec.Scale > 1 {
 		id := v.MountedAt(mountpoint)
 		if len(id) != 0 {
-			err = fmt.Errorf("Cannot remount scaled volume")
+			err = fmt.Errorf("Cannot remount scaled volume(%v)."+
+				" Volume %v is mounted at %v", id, mountpoint)
 			d.logRequest(method, "").Warnf(err.Error())
 			d.errorResponse(w, err)
 			return
