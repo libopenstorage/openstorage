@@ -137,7 +137,12 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	vd.logRequest(method, string(volumeID)).Infoln("")
+	setActions := ""
+	if req.Action != nil {
+		setActions = fmt.Sprintf("Mount=%v Attach=%v", req.Action.Mount, req.Action.Attach)
+	}
+
+	vd.logRequest(method, string(volumeID)).Infoln(setActions)
 
 	d, err := vd.getVolDriver(r)
 	if err != nil {
