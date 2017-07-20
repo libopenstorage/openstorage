@@ -127,10 +127,12 @@ func (d *driver) volFromName(name string) (*api.Volume, error) {
 		return vols[0], nil
 	}
 	vols, err = v.Enumerate(&api.VolumeLocator{Name: name}, nil)
-	if err == nil && len(vols) == 1 {
-		return vols[0], nil
+	if err != nil {
+		return nil, fmt.Errorf("Failed to locate volume %s. Error: %s", name, err.Error())
+	} else if err == nil && len(vols) == 1 {
+			return vols[0], nil
 	}
-	return nil, fmt.Errorf("Cannot locate volume %s: %s", name, err.Error())
+	return nil, fmt.Errorf("Cannot locate volume with name %s", name)
 }
 
 func (d *driver) decode(method string, w http.ResponseWriter, r *http.Request) (*volumeRequest, error) {
