@@ -29,7 +29,7 @@ func TestAll(t *testing.T) {
 
 func setup(t *testing.T) {
 	var err error
-	m, err = New(NFSMount, nil, []string{""}, nil)
+	m, err = New(NFSMount, nil, []string{""}, nil, []string{})
 	if err != nil {
 		t.Fatalf("Failed to setup test %v", err)
 	}

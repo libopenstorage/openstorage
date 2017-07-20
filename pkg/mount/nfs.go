@@ -15,13 +15,14 @@ type NFSMounter struct {
 }
 
 // NewNFSMounter instance
-func NewNFSMounter(server string, mountImpl MountImpl) (Manager, error) {
+func NewNFSMounter(server string, mountImpl MountImpl, allowedDirs []string) (Manager, error) {
 	m := &NFSMounter{
 		server: server,
 		Mounter: Mounter{
 			mountImpl: mountImpl,
 			mounts:    make(DeviceMap),
 			paths:     make(PathMap),
+			allowedDirs: allowedDirs,
 		},
 	}
 	err := m.Load([]string{""})

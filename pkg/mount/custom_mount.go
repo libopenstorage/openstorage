@@ -19,6 +19,7 @@ func NewCustomMounter(
 	devPrefixes []string,
 	mountImpl MountImpl,
 	customMounter CustomMounter,
+	allowedDirs []string,
 ) (*CustomMounterHandler, error) {
 
 	m := &CustomMounterHandler{
@@ -26,6 +27,7 @@ func NewCustomMounter(
 			mountImpl: mountImpl,
 			mounts:    make(DeviceMap),
 			paths:     make(PathMap),
+			allowedDirs: allowedDirs,
 		},
 	}
 	cl, cr := customMounter()

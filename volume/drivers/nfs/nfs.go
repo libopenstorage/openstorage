@@ -49,7 +49,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		dlog.Printf("NFS driver initializing with %s:%s ", server, path)
 	}
 	// Create a mount manager for this NFS server. Blank sever is OK.
-	mounter, err := mount.New(mount.NFSMount, nil, []string{server}, nil)
+	mounter, err := mount.New(mount.NFSMount, nil, []string{server}, nil, []string{})
 	if err != nil {
 		dlog.Warnf("Failed to create mount manager for server: %v (%v)", server, err)
 		return nil, err

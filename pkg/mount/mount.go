@@ -75,6 +75,9 @@ var (
 	ErrEinval = errors.New("Invalid arguments for mount entry")
 	// ErrUnsupported is returned for an unsupported operation or a mount type.
 	ErrUnsupported = errors.New("Not supported")
+	// ErrMountpathNotAllowed is returned when the requested mountpath is not
+	// a part of the provided allowed mount paths
+	ErrMountpathNotAllowed = errors.New("Mountpath is not allowed")
 )
 
 // DeviceMap map device name to Info
@@ -101,9 +104,10 @@ type Info struct {
 // Mounter implements Ops and keeps track of active mounts for volume drivers.
 type Mounter struct {
 	sync.Mutex
-	mountImpl MountImpl
-	mounts    DeviceMap
-	paths     PathMap
+	mountImpl   MountImpl
+	mounts      DeviceMap
+	paths       PathMap
+	allowedDirs []string
 }
 
 // DefaultMounter defaults to syscall implementation.
@@ -303,8 +307,19 @@ func (m *Mounter) Mount(
 	data string,
 	timeout int,
 ) error {
-
 	path = normalizeMountPath(path)
+	if len(m.allowedDirs) > 0 {
+		foundPrefix := false
+		for _, allowedDir := range m.allowedDirs {
+			if strings.Contains(path, allowedDir) {
+				foundPrefix = true
+				break
+			}
+		}
+		if !foundPrefix {
+			return ErrMountpathNotAllowed
+		}
+	}
 	dev, ok := m.hasPath(path)
 	if ok && dev != device {
 		dlog.Warnf("cannot mount %q,  device %q is mounted at %q", device, dev, path)
@@ -398,6 +413,7 @@ func New(
 	mountImpl MountImpl,
 	identifiers []string,
 	customMounter CustomMounter,
+	allowedDirs []string,
 ) (Manager, error) {
 
 	if mountImpl == nil {
@@ -406,14 +422,14 @@ func New(
 
 	switch mounterType {
 	case DeviceMount:
-		return NewDeviceMounter(identifiers, mountImpl)
+		return NewDeviceMounter(identifiers, mountImpl, allowedDirs)
 	case NFSMount:
 		if len(identifiers) > 1 {
 			return nil, fmt.Errorf("Multiple server addresses provided.")
 		}
-		return NewNFSMounter(identifiers[0], mountImpl)
+		return NewNFSMounter(identifiers[0], mountImpl, allowedDirs)
 	case CustomMount:
-		return NewCustomMounter(identifiers, mountImpl, customMounter)
+		return NewCustomMounter(identifiers, mountImpl, customMounter, allowedDirs)
 	}
 	return nil, ErrUnsupported
 }

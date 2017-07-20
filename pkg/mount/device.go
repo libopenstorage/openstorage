@@ -17,6 +17,7 @@ type DeviceMounter struct {
 func NewDeviceMounter(
 	devPrefixes []string,
 	mountImpl MountImpl,
+	allowedDirs []string,
 ) (*DeviceMounter, error) {
 
 	m := &DeviceMounter{
@@ -24,6 +25,7 @@ func NewDeviceMounter(
 			mountImpl: mountImpl,
 			mounts:    make(DeviceMap),
 			paths:     make(PathMap),
+			allowedDirs: allowedDirs,
 		},
 	}
 	err := m.Load(devPrefixes)
@@ -35,7 +37,7 @@ func NewDeviceMounter(
 
 // Reload reloads the mount table
 func (m *DeviceMounter) Reload(device string) error {
-	newDm, err := NewDeviceMounter([]string{device}, m.mountImpl)
+	newDm, err := NewDeviceMounter([]string{device}, m.mountImpl, m.Mounter.allowedDirs)
 	if err != nil {
 		return err
 	}
