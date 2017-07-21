@@ -38,6 +38,8 @@ const (
 	SpecRacks                = "racks"
 	SpecRegions              = "regions"
 	SpecLabels               = "labels"
+	SpecPriorityAlias        = "priority_io"
+	SpecIoProfile            = "io_profile"
 )
 
 // OptionKey specifies a set of recognized query params.

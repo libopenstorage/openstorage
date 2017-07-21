@@ -8,6 +8,7 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/units"
+	 "github.com/portworx/porx/pkg/parser"
 )
 
 // SpecHandler provides conversion function from what gets passed in over the
@@ -194,6 +195,12 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				return nil, nil, nil, err
 			}
 			spec.Cos = cos
+		case api.SpecPriorityAlias:
+			cos, err := d.cosLevel(v)
+			if err != nil {
+				return nil, nil, nil, err
+			}
+			spec.Cos = cos
 		case api.SpecDedupe:
 			spec.Dedupe, _ = strconv.ParseBool(v)
 		case api.SpecSnapshotInterval:
@@ -246,9 +253,18 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				spec.Compressed = compressed
 			}
 		case api.SpecLabels:
-			labels := parseCsvLabels(v)
-			for k, v := range labels {
-				locator.VolumeLabels[k] = v
+			if labels, err := parser.LabelsFromString(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				for k, v := range labels {
+					locator.VolumeLabels[k] = v
+				}
+			}
+		case api.SpecIoProfile:
+			if ioProfile, err := api.IoProfileSimpleValueOf(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.IoProfile = ioProfile
 			}
 		default:
 			spec.VolumeLabels[k] = v
@@ -334,20 +350,4 @@ func (d *specHandler) SpecFromString(
 		return false, d.DefaultSpec(), nil, nil, name
 	}
 	return true, spec, locator, source, name
-}
-
-func parseCsvLabels(csv string) map[string]string {
-	labels := make(map[string]string)
-	if len(csv) == 0 {
-		return labels
-	}
-
-	for _, entry := range strings.Split(csv, ",") {
-		label := strings.Split(entry, "=")
-		if len(label) == 2 {
-			labels[label[0]] = label[1]
-		}
-	}
-
-	return labels
 }
