@@ -37,6 +37,7 @@ const (
 	SpecZones                = "zones"
 	SpecRacks                = "racks"
 	SpecRegions              = "regions"
+	SpecLabels               = "labels"
 )
 
 // OptionKey specifies a set of recognized query params.

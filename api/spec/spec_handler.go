@@ -44,6 +44,19 @@ type SpecHandler interface {
 		*api.Source,
 		error,
 	)
+
+	// UpdateSpecFromOpts parses in volume options passed through the opts map and updates given spec, locator & source
+	// If the options are validated then it returns:
+	// 	(resultant_VolumeSpec, source, locator, nil)
+	// If the options have invalid values then it returns:
+	//	(nil, nil, nil, error)
+	UpdateSpecFromOpts(opts map[string]string, spec *api.VolumeSpec, locator *api.VolumeLocator, source *api.Source) (
+		*api.VolumeSpec,
+		*api.VolumeLocator,
+		*api.Source,
+		error,
+	)
+
 	// Returns a default VolumeSpec if no docker options or string encoding
 	// was provided.
 	DefaultSpec() *api.VolumeSpec
@@ -117,14 +130,23 @@ func (d *specHandler) DefaultSpec() *api.VolumeSpec {
 	}
 }
 
-func (d *specHandler) SpecFromOpts(
-	opts map[string]string,
-) (*api.VolumeSpec, *api.VolumeLocator, *api.Source, error) {
-	var source *api.Source
-	var locator *api.VolumeLocator
-	spec := d.DefaultSpec()
-
+func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.VolumeSpec, locator *api.VolumeLocator,
+	source *api.Source) (*api.VolumeSpec, *api.VolumeLocator, *api.Source, error) {
 	nodeList := make([]string, 0)
+
+	if spec == nil {
+		spec = d.DefaultSpec()
+	}
+
+	if source == nil {
+		source = &api.Source{}
+	}
+
+	if locator == nil {
+		locator = &api.VolumeLocator{
+			VolumeLabels: make(map[string]string),
+		}
+	}
 
 	for k, v := range opts {
 		switch k {
@@ -137,7 +159,7 @@ func (d *specHandler) SpecFromOpts(
 			}
 			spec.ReplicaSet = &api.ReplicaSet{Nodes: nodeList}
 		case api.SpecParent:
-			source = &api.Source{Parent: v}
+			source.Parent = v
 		case api.SpecEphemeral:
 			spec.Ephemeral, _ = strconv.ParseBool(v)
 		case api.SpecSize:
@@ -216,11 +238,6 @@ func (d *specHandler) SpecFromOpts(
 				spec.GroupEnforced = groupEnforced
 			}
 		case api.SpecZones, api.SpecRacks:
-			if locator == nil {
-				locator = &api.VolumeLocator{
-					VolumeLabels: make(map[string]string),
-				}
-			}
 			locator.VolumeLabels[k] = v
 		case api.SpecCompressed:
 			if compressed, err := strconv.ParseBool(v); err != nil {
@@ -228,11 +245,28 @@ func (d *specHandler) SpecFromOpts(
 			} else {
 				spec.Compressed = compressed
 			}
+		case api.SpecLabels:
+			labels := parseCsvLabels(v)
+			for k, v := range labels {
+				locator.VolumeLabels[k] = v
+			}
 		default:
 			spec.VolumeLabels[k] = v
 		}
 	}
 	return spec, locator, source, nil
+}
+
+func (d *specHandler) SpecFromOpts(
+	opts map[string]string,
+) (*api.VolumeSpec, *api.VolumeLocator, *api.Source, error) {
+	source := &api.Source{}
+	locator := &api.VolumeLocator{
+		VolumeLabels: make(map[string]string),
+	}
+
+	spec := d.DefaultSpec()
+	return d.UpdateSpecFromOpts(opts, spec, locator, source)
 }
 
 func (d *specHandler) SpecFromString(
@@ -300,4 +334,20 @@ func (d *specHandler) SpecFromString(
 		return false, d.DefaultSpec(), nil, nil, name
 	}
 	return true, spec, locator, source, name
+}
+
+func parseCsvLabels(csv string) map[string]string {
+	labels := make(map[string]string)
+	if len(csv) == 0 {
+		return labels
+	}
+
+	for _, entry := range strings.Split(csv, ",") {
+		label := strings.Split(entry, "=")
+		if len(label) == 2 {
+			labels[label[0]] = label[1]
+		}
+	}
+
+	return labels
 }
