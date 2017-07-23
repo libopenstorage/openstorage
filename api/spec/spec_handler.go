@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/pkg/parser"
 	"github.com/libopenstorage/openstorage/pkg/units"
-	 "github.com/portworx/porx/pkg/parser"
 )
 
 // SpecHandler provides conversion function from what gets passed in over the
