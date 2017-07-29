@@ -130,7 +130,7 @@ func (d *driver) volFromName(name string) (*api.Volume, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Failed to locate volume %s. Error: %s", name, err.Error())
 	} else if err == nil && len(vols) == 1 {
-			return vols[0], nil
+		return vols[0], nil
 	}
 	return nil, fmt.Errorf("Cannot locate volume with name %s", name)
 }
@@ -423,16 +423,36 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// If a scaled volume is already mounted, return an errors.
+	// If a scaled volume is already mounted, check if it can be unmounted and
+	// detached. If not return an error.
 	mountpoint := d.mountpath(name)
 	if vol.Spec.Scale > 1 {
 		id := v.MountedAt(mountpoint)
 		if len(id) != 0 {
-			err = fmt.Errorf("Cannot remount scaled volume(%v)."+
-				" Volume %v is mounted at %v", id, mountpoint)
-			d.logRequest(method, "").Warnf(err.Error())
-			d.errorResponse(method, w, err)
-			return
+			err = v.Unmount(id, mountpoint)
+			if err != nil {
+				d.logRequest(method, "").Warnf("Error unmounting scaled volume: %v", err)
+				err = fmt.Errorf("Cannot remount scaled volume(%v)."+
+					" Volume %v is mounted at %v", name, id, mountpoint)
+				d.errorResponse(method, w, err)
+				return
+			}
+
+			if v.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
+				err = v.Detach(id, true)
+				if err != nil {
+					d.logRequest(method, "").Warnf("Error detaching scaled volume: %v", err)
+					mountErr := v.Mount(id, mountpoint)
+					if mountErr != nil {
+						d.logRequest(method, "").Warnf("Error remounting scaled volume: %v", mountErr.Error())
+					}
+					err = fmt.Errorf("Cannot remount scaled volume(%v)."+
+						" Volume %v is mounted at %v", name, id, mountpoint)
+					d.logRequest(method, "").Warnf(err.Error())
+					d.errorResponse(method, w, err)
+					return
+				}
+			}
 		}
 	}
 
