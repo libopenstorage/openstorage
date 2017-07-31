@@ -292,7 +292,7 @@ func (d *driver) Attach(volumeID string, attachOptions map[string]string) (strin
 	return path.Join(nfsMountPath, volumeID+nfsBlockFile), nil
 }
 
-func (d *driver) Detach(volumeID string, abortOnError bool) error {
+func (d *driver) Detach(volumeID string) error {
 	return nil
 }
 

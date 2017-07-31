@@ -339,7 +339,7 @@ func (d *driver) Attach(volumeID string, attachOptions map[string]string) (strin
 	return path.Join(BuseMountPath, volumeID), nil
 }
 
-func (d *driver) Detach(volumeID string, abortOnError bool) error {
+func (d *driver) Detach(volumeID string) error {
 	// Nothing to do on detach.
 	return nil
 }

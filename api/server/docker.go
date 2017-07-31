@@ -439,7 +439,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if v.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-				err = v.Detach(id, true)
+				err = v.Detach(id)
 				if err != nil {
 					d.logRequest(method, "").Warnf("Error detaching scaled volume: %v", err)
 					mountErr := v.Mount(id, mountpoint)
@@ -620,7 +620,7 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if v.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-		_ = v.Detach(id, false)
+		_ = v.Detach(id)
 	}
 	d.emptyResponse(w)
 }

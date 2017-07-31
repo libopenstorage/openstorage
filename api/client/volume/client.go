@@ -328,13 +328,12 @@ func (v *volumeClient) Attach(volumeID string, attachOptions map[string]string) 
 
 // Detach device from the host.
 // Errors ErrEnoEnt, ErrVolDetached may be returned.
-func (v *volumeClient) Detach(volumeID string, abortOnError bool) error {
+func (v *volumeClient) Detach(volumeID string) error {
 	return v.doVolumeSet(
 		volumeID,
 		&api.VolumeSetRequest{
 			Action: &api.VolumeStateAction{
-				Attach:       api.VolumeActionParam_VOLUME_ACTION_PARAM_OFF,
-				AbortOnError: abortOnError,
+				Attach: api.VolumeActionParam_VOLUME_ACTION_PARAM_OFF,
 			},
 		},
 	)

@@ -223,7 +223,7 @@ func (d *Driver) Create(
 	if err := d.Format(volume.Id); err != nil {
 		return "", err
 	}
-	if err := d.Detach(volume.Id, true); err != nil {
+	if err := d.Detach(volume.Id); err != nil {
 		return "", err
 	}
 
@@ -402,7 +402,7 @@ func (d *Driver) Format(volumeID string) error {
 	return d.UpdateVol(volume)
 }
 
-func (d *Driver) Detach(volumeID string, abortOnError bool) error {
+func (d *Driver) Detach(volumeID string) error {
 	if err := d.ops.Detach(volumeID); err != nil {
 		return err
 	}
