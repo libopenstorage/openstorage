@@ -701,19 +701,19 @@ func (c *ClusterManager) updateClusterStatus() {
 				if !ok {
 					// This node was probably added recently into gossip node
 					// map through cluster database and is yet to reach out to us.
-					// No need of updating the listeners.
-					c.nodeStatuses[string(id)] = peerNodeInCache.Status
-					break
+					// Mark this node down.
+					dlog.Warnln("Detected new node with ", id,
+						" to be offline due to inactivity.")
+
 				} else {
 					if lastStatus == peerNodeInCache.Status {
 						break
 					}
+					dlog.Warnln("Detected node ", id,
+						" to be offline due to inactivity.")
 				}
 
 				c.nodeStatuses[string(id)] = peerNodeInCache.Status
-
-				dlog.Warnln("Detected node ", id,
-					" to be offline due to inactivity.")
 
 				for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
 					err := e.Value.(ClusterListener).Update(&peerNodeInCache)
