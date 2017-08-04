@@ -22,9 +22,9 @@ func NewDeviceMounter(
 
 	m := &DeviceMounter{
 		Mounter: Mounter{
-			mountImpl: mountImpl,
-			mounts:    make(DeviceMap),
-			paths:     make(PathMap),
+			mountImpl:   mountImpl,
+			mounts:      make(DeviceMap),
+			paths:       make(PathMap),
 			allowedDirs: allowedDirs,
 		},
 	}
@@ -107,12 +107,10 @@ DeviceLoop:
 				continue DeviceLoop
 			}
 		}
-		// XXX Reconstruct refs.
 		mount.Mountpoint = append(
 			mount.Mountpoint,
 			&PathInfo{
 				Path: normalizeMountPath(v.Mountpoint),
-				ref:  1,
 			},
 		)
 		m.paths[v.Mountpoint] = v.Source

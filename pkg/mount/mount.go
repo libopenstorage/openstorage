@@ -36,11 +36,9 @@ type Manager interface {
 	GetSourcePath(mountPath string) (string, error)
 	// GetSourcePaths returns all source paths from the mount table
 	GetSourcePaths() []string
-	// Mount device at mountpoint or increment refcnt if device is already
-	//  mounted at specified mountpoint.
+	// Mount device at mountpoint
 	Mount(minor int, device, path, fs string, flags uintptr, data string, timeout int) error
-	// Unmount device at mountpoint or decrement refcnt. If device has no
-	// mountpoints left after this operation, it is removed from the matrix.
+	// Unmount device at mountpoint and remove from the matrix.
 	// ErrEnoent is returned if the device or mountpoint for the device
 	// is not found.
 	Unmount(source, path string, flags int, timeout int) error
@@ -89,7 +87,6 @@ type PathMap map[string]string
 // PathInfo is a reference counted path
 type PathInfo struct {
 	Path string
-	ref  int
 }
 
 // Info per device
@@ -129,23 +126,6 @@ func (m *DefaultMounter) Mount(
 // Unmount default unmount implementation is syscall.
 func (m *DefaultMounter) Unmount(target string, flags int, timeout int) error {
 	return syscall.Unmount(target, flags)
-}
-
-// Refcnt for PathInfo
-func (p *PathInfo) Refcnt() int {
-	return p.ref
-}
-
-// IncRefCnt for PathInfo
-func (p *PathInfo) IncRefCnt() int {
-	p.ref++
-	return p.ref
-}
-
-// DecRefCnt for PathInfo
-func (p *PathInfo) DecRefCnt() int {
-	p.ref--
-	return p.ref
 }
 
 // String representation of Mounter
@@ -347,10 +327,9 @@ func (m *Mounter) Mount(
 		return ErrEinval
 	}
 
-	// Try to find the mountpoint. If it already exists, then increment refcnt
+	// Try to find the mountpoint. If it already exists, do nothing
 	for _, p := range info.Mountpoint {
 		if p.Path == path {
-			p.IncRefCnt()
 			return nil
 		}
 	}
@@ -359,13 +338,12 @@ func (m *Mounter) Mount(
 	if err != nil {
 		return err
 	}
-	info.Mountpoint = append(info.Mountpoint, &PathInfo{Path: path, ref: 1})
+	info.Mountpoint = append(info.Mountpoint, &PathInfo{Path: path})
 	m.addPath(path, device)
 	return nil
 }
 
-// Unmount device at mountpoint or decrement refcnt. If device has no
-// mountpoints left after this operation, it is removed from the matrix.
+// Unmount device at mountpoint and from the matrix.
 // ErrEnoent is returned if the device or mountpoint for the device is not found.
 func (m *Mounter) Unmount(device, path string, flags int, timeout int) error {
 	m.Lock()
@@ -383,14 +361,8 @@ func (m *Mounter) Unmount(device, path string, flags int, timeout int) error {
 		if p.Path != path {
 			continue
 		}
-		p.DecRefCnt()
-		// Unmount only if refcnt is 0
-		if p.ref != 0 {
-			return nil
-		}
 		err := m.mountImpl.Unmount(path, flags, timeout)
 		if err != nil {
-			p.IncRefCnt()
 			return err
 		}
 		if pathExists := m.deletePath(path); !pathExists {

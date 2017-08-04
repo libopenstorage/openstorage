@@ -19,9 +19,9 @@ func NewNFSMounter(server string, mountImpl MountImpl, allowedDirs []string) (Ma
 	m := &NFSMounter{
 		server: server,
 		Mounter: Mounter{
-			mountImpl: mountImpl,
-			mounts:    make(DeviceMap),
-			paths:     make(PathMap),
+			mountImpl:   mountImpl,
+			mounts:      make(DeviceMap),
+			paths:       make(PathMap),
 			allowedDirs: allowedDirs,
 		},
 	}
@@ -74,11 +74,9 @@ MountLoop:
 				continue MountLoop
 			}
 		}
-		// XXX Reconstruct refs.
 		mount.Mountpoint = append(mount.Mountpoint,
 			&PathInfo{
 				Path: normalizeMountPath(v.Mountpoint),
-				ref:  1,
 			},
 		)
 	}
