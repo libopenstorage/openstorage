@@ -1383,13 +1383,21 @@ func (c *ClusterManager) enumerateNodesFromCache() []api.Node {
 // Enumerate lists all the nodes in the cluster.
 func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 	splits := strings.Split(c.config.FluentDHost, ":")
+
+	config := api.FluentDConfig{}
+
+	if len(splits) > 0 {
+		config.IP = splits[0]
+		config.Port = splits[1]
+	}
+
 	cluster := api.Cluster{
 		Id:            c.config.ClusterId,
 		Status:        c.status,
 		NodeId:        c.selfNode.Id,
 		LoggingURL:    c.config.LoggingURL,
 		ManagementURL: c.config.ManagementURL,
-		FluentDConfig: api.FluentDConfig { IP: splits[0], Port: splits[1]},
+		FluentDConfig: config,
 	}
 
 	if c.selfNode.Status == api.Status_STATUS_NOT_IN_QUORUM ||
