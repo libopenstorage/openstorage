@@ -292,7 +292,7 @@ func (c *ClusterManager) getCurrentState() *api.Node {
 }
 
 func (c *ClusterManager) getNonDecommisionedPeers(
-	db ClusterInfo,
+db ClusterInfo,
 ) map[types.NodeId]types.NodeUpdate {
 	peers := make(map[types.NodeId]types.NodeUpdate)
 	for _, nodeEntry := range db.NodeEntries {
@@ -309,7 +309,7 @@ func (c *ClusterManager) getNonDecommisionedPeers(
 
 // Get the latest config.
 func (c *ClusterManager) watchDB(key string, opaque interface{},
-	kvp *kvdb.KVPair, watchErr error) error {
+kvp *kvdb.KVPair, watchErr error) error {
 
 	db, kvdbVersion, err := readClusterInfo()
 
@@ -363,6 +363,8 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 	updateLoggingUrlListeners(c, db)
 	//Check and update mgmt url changes
 	updateManagementUrlListeners(c, db)
+	// check and update fluentd host changes
+	updateFluentDHostListeners(c, db)
 	// Update the peers. A node might have been removed or added
 	peers := c.getNonDecommisionedPeers(db)
 	c.gossip.UpdateCluster(peers)
@@ -452,10 +454,10 @@ func (c *ClusterManager) cleanupInit(db *ClusterInfo, self *api.Node) error {
 
 // Initialize node and alert listeners that we are initializing a node in the cluster.
 func (c *ClusterManager) initNodeInCluster(
-	clusterInfo *ClusterInfo,
-	self *api.Node,
-	exist bool,
-	nodeInitialized bool,
+clusterInfo *ClusterInfo,
+self *api.Node,
+exist bool,
+nodeInitialized bool,
 ) ([]FinalizeInitCb, error) {
 	// If I am already in the cluster map, don't add me again.
 	if exist {
@@ -490,8 +492,8 @@ func (c *ClusterManager) initNodeInCluster(
 
 // Alert all listeners that we are joining the cluster
 func (c *ClusterManager) joinCluster(
-	self *api.Node,
-	exist bool,
+self *api.Node,
+exist bool,
 ) error {
 	// Listeners may update initial state, so snap again.
 	// The cluster db may have diverged since we waited for quorum
@@ -548,7 +550,7 @@ func (c *ClusterManager) joinCluster(
 }
 
 func (c *ClusterManager) initClusterForListeners(
-	self *api.Node,
+self *api.Node,
 ) error {
 	err := error(nil)
 
@@ -564,12 +566,12 @@ func (c *ClusterManager) initClusterForListeners(
 			goto done
 		}
 	}
-done:
+	done:
 	return err
 }
 
 func (c *ClusterManager) startClusterDBWatch(lastIndex uint64,
-	kv kvdb.Kvdb) error {
+kv kvdb.Kvdb) error {
 	dlog.Infof("Cluster manager starting watch at version %d", lastIndex)
 	go kv.WatchKey(ClusterDBKey, lastIndex, nil, c.watchDB)
 	return nil
@@ -845,6 +847,47 @@ func (c *ClusterManager) SetManagementURL(host string) error {
 	return nil
 }
 
+// Persists the new fluentd host on to the database
+func (c *ClusterManager) SetFluentDConfig(fluentDConfig api.FluentDConfig) error {
+	kvdb := kvdb.Instance()
+	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
+	if err != nil {
+		dlog.Warnln("Unable to obtain cluster lock for updating FluentD Host into cluster config", err)
+		return nil
+	}
+	defer kvdb.Unlock(kvlock)
+
+	db, _, err := readClusterInfo()
+	if err != nil {
+		return err
+	}
+
+
+	db.FluentDConfig = fluentDConfig
+
+	_, err = writeClusterInfo(&db)
+
+	return nil
+}
+
+func (c *ClusterManager) GetFluentDConfig() api.FluentDConfig {
+	kvdb := kvdb.Instance()
+	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
+	if err != nil {
+		dlog.Warnln("Unable to obtain cluster lock for updating TunnelConfig into cluster config", err)
+		return api.FluentDConfig{}
+	}
+	defer kvdb.Unlock(kvlock)
+
+	db, _, err := readClusterInfo()
+
+	if err != nil {
+		return api.FluentDConfig{}
+	}
+
+	return db.FluentDConfig
+}
+
 // Iterates all listeners, which in turn will restart stats with the new mgmt url
 func updateManagementUrlListeners(c *ClusterManager, db ClusterInfo) {
 	if c.config.ManagementURL != db.ManagementURL {
@@ -855,6 +898,19 @@ func updateManagementUrlListeners(c *ClusterManager, db ClusterInfo) {
 			}
 		}
 		c.config.ManagementURL = db.ManagementURL
+	}
+}
+
+// Iterates all listeners, which in turn will restart stats with the new mgmt url
+func updateFluentDHostListeners(c *ClusterManager, db ClusterInfo) {
+	if c.config.FluentDHost != db.FluentDConfig.IP + ":" + db.FluentDConfig.Port {
+		for e := c.listeners.Front(); e != nil; e = e.Next() {
+			err := e.Value.(ClusterListener).UpdateCluster(&c.selfNode, &db)
+			if err != nil {
+				dlog.Warnln("Failed to notify ", e.Value.(ClusterListener).String())
+			}
+		}
+		c.config.FluentDHost = db.FluentDConfig.IP + ":" + db.FluentDConfig.Port
 	}
 }
 
@@ -964,8 +1020,8 @@ func (c *ClusterManager) waitForQuorum(exist bool) error {
 }
 
 func (c *ClusterManager) initializeCluster(db kvdb.Kvdb) (
-	*ClusterInfo,
-	error,
+*ClusterInfo,
+error,
 ) {
 	kvlock, err := db.LockWithID(clusterLockKey, c.config.NodeId)
 	if err != nil {
@@ -1037,10 +1093,10 @@ func (c *ClusterManager) quorumMember() bool {
 }
 
 func (c *ClusterManager) initListeners(
-	db kvdb.Kvdb,
-	clusterMaxSize int,
-	nodeExists *bool,
-	nodeInitialized bool,
+db kvdb.Kvdb,
+clusterMaxSize int,
+nodeExists *bool,
+nodeInitialized bool,
 ) (uint64, *ClusterInfo, error) {
 	// Initialize the cluster if required
 	clusterInfo, err := c.initializeCluster(db)
@@ -1115,10 +1171,10 @@ func (c *ClusterManager) initListeners(
 }
 
 func (c *ClusterManager) initializeAndStartHeartbeat(
-	kvdb kvdb.Kvdb,
-	clusterMaxSize int,
-	exist *bool,
-	nodeInitialized bool,
+kvdb kvdb.Kvdb,
+clusterMaxSize int,
+exist *bool,
+nodeInitialized bool,
 ) (uint64, error) {
 	lastIndex, clusterInfo, err := c.initListeners(
 		kvdb,
@@ -1141,8 +1197,8 @@ func (c *ClusterManager) initializeAndStartHeartbeat(
 
 // Start initiates the cluster manager and the cluster state machine
 func (c *ClusterManager) Start(
-	clusterMaxSize int,
-	nodeInitialized bool,
+clusterMaxSize int,
+nodeInitialized bool,
 ) error {
 	var err error
 
@@ -1326,12 +1382,14 @@ func (c *ClusterManager) enumerateNodesFromCache() []api.Node {
 
 // Enumerate lists all the nodes in the cluster.
 func (c *ClusterManager) Enumerate() (api.Cluster, error) {
+	splits := strings.Split(c.config.FluentDHost, ":")
 	cluster := api.Cluster{
 		Id:            c.config.ClusterId,
 		Status:        c.status,
 		NodeId:        c.selfNode.Id,
 		LoggingURL:    c.config.LoggingURL,
 		ManagementURL: c.config.ManagementURL,
+		FluentDConfig: api.FluentDConfig { IP: splits[0], Port: splits[1]},
 	}
 
 	if c.selfNode.Status == api.Status_STATUS_NOT_IN_QUORUM ||
@@ -1355,8 +1413,8 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 }
 
 func (c *ClusterManager) updateNodeEntryDB(
-	nodeEntry NodeEntry,
-	checkCbBeforeUpdate checkFunc,
+nodeEntry NodeEntry,
+checkCbBeforeUpdate checkFunc,
 ) (*kvdb.KVPair, *ClusterInfo, error) {
 	kvdb := kvdb.Instance()
 	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)

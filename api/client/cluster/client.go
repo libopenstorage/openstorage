@@ -14,6 +14,7 @@ const (
 	clusterPath = "/cluster"
 	loggingurl = "/loggingurl"
 	managementurl = "/managementurl"
+	fluentdhost = "/fluentdconfig"
 	tunnelconfigurl = "/tunnelconfig"
 )
 
@@ -177,6 +178,32 @@ func (c *clusterClient) SetManagementURL(managementURL string) error {
 
 }
 
+func (c *clusterClient) SetFluentDConfig(fluentDConfig api.FluentDConfig) error {
+	resp := api.ClusterResponse{}
+	request := c.c.Put().Resource(clusterPath + fluentdhost)
+	request.Body(&fluentDConfig)
+
+	if err := request.Do().Unmarshal(&resp); err != nil {
+		return err
+	}
+
+	if resp.Error != "" {
+		return errors.New(resp.Error)
+	}
+
+	return nil
+}
+
+func (c *clusterClient) GetFluentDConfig() api.FluentDConfig {
+	tc := api.FluentDConfig{}
+
+	if err := c.c.Get().Resource(clusterPath + fluentdhost).Do().Unmarshal(&tc); err != nil {
+		return api.FluentDConfig{}
+	}
+
+	return tc
+}
+
 func (c *clusterClient) SetTunnelConfig(tunnelConfig api.TunnelConfig) error {
 	resp := api.ClusterResponse{}
 
@@ -202,8 +229,6 @@ func (c *clusterClient) GetTunnelConfig() api.TunnelConfig {
 
 	return tc
 }
-
-
 
 func (c *clusterClient) GetGossipState() *cluster.ClusterState {
 	var status *cluster.ClusterState

@@ -36,6 +36,8 @@ func (c *clusterApi) Routes() []*Route {
 		{verb: "PUT", path: clusterPath("/loggingurl", cluster.APIVersion), fn: c.setLoggingURL},
 		{verb: "PUT", path: clusterPath("/managementurl", cluster.APIVersion), fn: c.setManagementURL},
 		{verb: "PUT", path: clusterPath("/tunnelconfig", cluster.APIVersion), fn: c.setTunnelConfig},
+		{verb: "PUT", path: clusterPath("/fluentdconfig", cluster.APIVersion), fn: c.setFluentDConfig},
+		{verb: "DELETE", path: clusterPath("/fluentdconfig", cluster.APIVersion), fn: c.deleteFluentDConfig},
 		{verb: "GET", path: clusterPath("/alerts/{resource}", cluster.APIVersion), fn: c.enumerateAlerts},
 		{verb: "PUT", path: clusterPath("/alerts/{resource}/{id}", cluster.APIVersion), fn: c.clearAlert},
 		{verb: "DELETE", path: clusterPath("/alerts/{resource}/{id}", cluster.APIVersion), fn: c.eraseAlert},
@@ -178,6 +180,43 @@ func (c *clusterApi) setManagementURL(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(&api.ClusterResponse{})
+}
+
+func (c *clusterApi) setFluentDConfig(w http.ResponseWriter, r *http.Request) {
+	method := "set FluentDConfig"
+
+	inst, err := cluster.Inst()
+
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var config api.FluentDConfig
+	contents, _ := ioutil.ReadAll(r.Body)
+	err = json.Unmarshal(contents, &config)
+
+	err = inst.SetFluentDConfig(config)
+
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(&api.ClusterResponse{})
+}
+
+func(c *clusterApi) deleteFluentDConfig(w http.ResponseWriter, r *http.Request) {
+	method := "delete FluentDConfig"
+
+	inst, err := cluster.Inst()
+
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	inst.SetFluentDConfig(api.FluentDConfig{})
 }
 
 func (c *clusterApi) setTunnelConfig(w http.ResponseWriter, r *http.Request) {

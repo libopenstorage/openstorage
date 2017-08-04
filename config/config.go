@@ -39,6 +39,7 @@ type ClusterConfig struct {
 	DataIp        string
 	LoggingURL    string
 	ManagementURL string
+	FluentDHost   string
 }
 
 type Config struct {

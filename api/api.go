@@ -94,6 +94,11 @@ type Node struct {
 	NodeLabels map[string]string
 }
 
+type FluentDConfig struct {
+	IP string `json:"ip"`
+	Port string `json:"port"`
+}
+
 type TunnelConfig struct {
 	Key string `json:"key"`
 	Cert string `json:"cert"`
@@ -119,6 +124,9 @@ type Cluster struct {
 
 	// Management url for the cluster
 	ManagementURL string
+
+	// FluentD Host for the cluster
+	FluentDConfig FluentDConfig
 
 	// TunnelConfig for the cluster [key, cert, endpoint]
 	TunnelConfig TunnelConfig
