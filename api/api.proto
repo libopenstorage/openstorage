@@ -149,6 +149,15 @@ enum ClusterNotify {
  CLUSTER_NOTIFY_DOWN = 0;
 }
 
+enum AttachState {
+    // Attached and available externally
+    ATTACH_STATE_EXTERNAL = 0;
+    // Attached but only available internally
+    ATTACH_STATE_INTERNAL = 1;
+    // Switching from External to Internal
+    ATTACH_STATE_INTERNAL_SWITCH = 2;
+}
+
 // StorageResource groups properties of a storage device.
 message StorageResource {
   // Id is the LUN identifier.
@@ -304,8 +313,8 @@ message Volume {
   VolumeState state = 12;
   // AttachedOn is the node instance identifier for clustered systems.
   string attached_on = 13;
-  // BackgroundProcessing is true if volume is attached but not by the user.
-  bool background_processing = 14;
+  // AttachedState shows whether the device is attached for internal or external use.
+  AttachState attached_state = 14;
   // DevicePath is the device exported by block device implementations.
   string device_path = 15;
   // SecureDevicePath is the device path for an encrypted volume.
