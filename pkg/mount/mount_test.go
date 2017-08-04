@@ -108,16 +108,15 @@ func refcounts(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		err := m.Mount(0, source, dest, "", syscall.MS_BIND, "", 0)
 		require.NoError(t, err, "Failed in mount")
-		require.True(t, m.HasMounts(source) > 0, "Refcnt must be greater than zero")
+		require.Equal(t, m.HasMounts(source), 1, "Refcnt must be one")
 	}
-	for i := 9; i > 0; i-- {
-		err := m.Unmount(source, dest, 0, 0)
-		require.NoError(t, err, "Failed in unmount")
-		require.True(t, m.HasMounts(source) > 0, "Refcnt must be greater than zero")
-	}
+
 	err := m.Unmount(source, dest, 0, 0)
 	require.NoError(t, err, "Failed in unmount")
 	require.Equal(t, m.HasMounts(source), 0, "Refcnt must go down to zero")
+
+	err = m.Unmount(source, dest, 0, 0)
+	require.Error(t, err, "Unmount should fail")
 }
 
 func exists(t *testing.T) {
