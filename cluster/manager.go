@@ -1386,7 +1386,7 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 
 	config := api.FluentDConfig{}
 
-	if len(splits) > 0 {
+	if len(splits) > 1 {
 		config.IP = splits[0]
 		config.Port = splits[1]
 	}
