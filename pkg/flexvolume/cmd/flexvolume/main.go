@@ -56,7 +56,7 @@ func do(appEnvObj interface{}) error {
 			if err != nil {
 				return err
 			}
-			return client.Detach(args[0])
+			return client.Detach(args[0], false)
 		}),
 	}
 

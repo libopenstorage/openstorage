@@ -186,7 +186,7 @@ func (v *volDriver) volumeDetach(context *cli.Context) {
 	}
 	volumeID := context.Args()[0]
 	v.volumeOptions(context)
-	err := v.volDriver.Detach(string(volumeID))
+	err := v.volDriver.Detach(string(volumeID), false)
 	if err != nil {
 		cmdError(context, fn, err)
 		return

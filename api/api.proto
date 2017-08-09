@@ -408,8 +408,8 @@ message VolumeStateAction {
   string mount_path = 3;
   // Device path returned in attach
   string device_path = 4;
-  // Abort action on failure
-  bool abort_on_error = 5;
+  // Issue an unmount before detaching
+  bool unmount_before_detach = 5;
 }
 
 message VolumeSetRequest {

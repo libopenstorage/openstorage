@@ -48,7 +48,7 @@ func (c *client) Attach(jsonOptions map[string]string) error {
 	return err
 }
 
-func (c *client) Detach(mountDevice string) error {
+func (c *client) Detach(mountDevice string, unmountBeforeDetach bool) error {
 	_, err := c.apiClient.Detach(
 		context.Background(),
 		&DetachRequest{

@@ -159,7 +159,7 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 			if req.Action.Attach == api.VolumeActionParam_VOLUME_ACTION_PARAM_ON {
 				_, err = d.Attach(volumeID, req.Options)
 			} else {
-				err = d.Detach(volumeID)
+				err = d.Detach(volumeID, req.Action.UnmountBeforeDetach)
 			}
 			if err != nil {
 				break

@@ -253,7 +253,7 @@ func (l *Layer0) Remove(id string) error {
 			l.Driver.Remove(l.realID(id))
 			err = l.volDriver.Unmount(v.volumeID, v.path)
 			if l.volDriver.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-				_ = l.volDriver.Detach(v.volumeID)
+				_ = l.volDriver.Detach(v.volumeID, false)
 			}
 			err = os.RemoveAll(v.path)
 			delete(l.volumes, v.id)

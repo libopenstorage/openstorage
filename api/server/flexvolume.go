@@ -55,7 +55,7 @@ func (c *flexVolumeClient) Attach(jsonOptions map[string]string) error {
 	return nil
 }
 
-func (c *flexVolumeClient) Detach(mountDevice string) error {
+func (c *flexVolumeClient) Detach(mountDevice string, unmountBeforeDetach bool) error {
 	driverName, ok := deviceDriverMap[mountDevice]
 	if !ok {
 		dlog.Infof("Could not find driver for (%v). Resorting to default driver ", mountDevice)
@@ -65,7 +65,7 @@ func (c *flexVolumeClient) Detach(mountDevice string) error {
 	if err != nil {
 		return err
 	}
-	if err := driver.Detach(mountDevice); err != nil {
+	if err := driver.Detach(mountDevice, unmountBeforeDetach); err != nil {
 		return err
 	}
 	return nil

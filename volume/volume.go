@@ -188,7 +188,7 @@ type BlockDriver interface {
 	Attach(volumeID string, attachOptions map[string]string) (string, error)
 	// Detach device from the host.
 	// Errors ErrEnoEnt, ErrVolDetached may be returned.
-	Detach(volumeID string) error
+	Detach(volumeID string, unmountBeforeDetach bool) error
 }
 
 // VolumeDriverProvider provides VolumeDrivers.

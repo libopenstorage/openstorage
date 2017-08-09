@@ -25,7 +25,7 @@ func (b *blockNotSupported) Attach(volumeID string, attachOptions map[string]str
 	return "", ErrNotSupported
 }
 
-func (b *blockNotSupported) Detach(volumeID string) error {
+func (b *blockNotSupported) Detach(volumeID string, unmountBeforeDetach bool) error {
 	return ErrNotSupported
 }
 

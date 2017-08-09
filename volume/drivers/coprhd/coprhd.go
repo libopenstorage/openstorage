@@ -188,7 +188,7 @@ func (d *driver) MountedAt(mountpath string) string {
 	return ""
 }
 
-func (d *driver) Detach(volumeID string) error {
+func (d *driver) Detach(volumeID string, unmountBeforeDetach bool) error {
 	return nil
 }
 

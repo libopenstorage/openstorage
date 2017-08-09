@@ -29,7 +29,7 @@ func (a *apiServer) Attach(_ context.Context, request *AttachRequest) (_ *google
 
 func (a *apiServer) Detach(_ context.Context, request *DetachRequest) (_ *google_protobuf.Empty, err error) {
 	defer func(start time.Time) { a.Log(request, nil, err, time.Since(start)) }(time.Now())
-	return checkClientError(a.client.Detach(request.MountDevice))
+	return checkClientError(a.client.Detach(request.MountDevice, false))
 }
 
 func (a *apiServer) Mount(_ context.Context, request *MountRequest) (_ *google_protobuf.Empty, err error) {
