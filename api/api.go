@@ -95,13 +95,13 @@ type Node struct {
 }
 
 type FluentDConfig struct {
-	IP string `json:"ip"`
+	IP   string `json:"ip"`
 	Port string `json:"port"`
 }
 
 type TunnelConfig struct {
-	Key string `json:"key"`
-	Cert string `json:"cert"`
+	Key      string `json:"key"`
+	Cert     string `json:"cert"`
 	Endpoint string `json:"tunnel_endpoint"`
 }
 
@@ -279,7 +279,23 @@ func (v *Stats) Latency() uint64 {
 	if ops == 0 {
 		return 0
 	}
-	return (uint64)((v.IoMs * 1000) / (v.Writes + v.Reads))
+	return (uint64)((v.IoMs * 1000) / ops)
+}
+
+// Read latency returns avg. time required for read operation to complete
+func (v *Stats) ReadLatency() uint64 {
+	if v.Reads == 0 {
+		return 0
+	}
+	return (uint64)((v.ReadMs * 1000) / v.Reads)
+}
+
+// Write latency returns avg. time required for write operation to complete
+func (v *Stats) WriteLatency() uint64 {
+	if v.Writes == 0 {
+		return 0
+	}
+	return (uint64)((v.WriteMs * 1000) / v.Writes)
 }
 
 // Iops returns iops
