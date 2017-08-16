@@ -42,6 +42,10 @@ type Manager interface {
 	// ErrEnoent is returned if the device or mountpoint for the device
 	// is not found.
 	Unmount(source, path string, flags int, timeout int) error
+	// MakeMountUnbindable marks a mount path as unbindable
+	MakeMountUnbindable(device string, path string) error
+	// MakeMountShared marks a mount path as shared
+	MakeMountShared(device string, path string) error
 }
 
 // MountImpl backend implementation for Mount/Unmount calls
@@ -327,9 +331,10 @@ func (m *Mounter) Mount(
 		return ErrEinval
 	}
 
-	// Try to find the mountpoint. If it already exists, do nothing
+	// Try to find the mountpoint. If it already exists, mark it shared
 	for _, p := range info.Mountpoint {
 		if p.Path == path {
+			m.makeMountShared(device, path)
 			return nil
 		}
 	}
@@ -338,6 +343,11 @@ func (m *Mounter) Mount(
 	if err != nil {
 		return err
 	}
+	err = m.makeMountShared(device, path)
+	if err != nil {
+		return err
+	}
+
 	info.Mountpoint = append(info.Mountpoint, &PathInfo{Path: path})
 	m.addPath(path, device)
 	return nil
@@ -361,7 +371,12 @@ func (m *Mounter) Unmount(device, path string, flags int, timeout int) error {
 		if p.Path != path {
 			continue
 		}
-		err := m.mountImpl.Unmount(path, flags, timeout)
+		err := m.makeMountUnbindable(device, path)
+		if err != nil {
+			return err
+		}
+
+		err = m.mountImpl.Unmount(path, flags, timeout)
 		if err != nil {
 			return err
 		}
@@ -375,6 +390,72 @@ func (m *Mounter) Unmount(device, path string, flags int, timeout int) error {
 		m.maybeRemoveDevice(device)
 		return nil
 	}
+	dlog.Warnf("Device %q is not mounted at path %q", path, device)
+	return nil
+}
+
+func (m *Mounter) makeMountUnbindable(
+	device string,
+	path string,
+) error {
+	return m.mountImpl.Mount(device, path, "", syscall.MS_UNBINDABLE, "", 0)
+}
+
+func (m *Mounter) MakeMountUnbindable(
+	device string,
+	path string,
+) error {
+	m.Lock()
+
+	path = normalizeMountPath(path)
+	info, ok := m.mounts[device]
+	if !ok {
+		m.Unlock()
+		return ErrEnoent
+	}
+	m.Unlock()
+	info.Lock()
+	defer info.Unlock()
+	for _, p := range info.Mountpoint {
+		if p.Path != path {
+			continue
+		}
+		return m.makeMountUnbindable(device, path)
+	}
+
+	dlog.Warnf("Device %q is not mounted at path %q", path, device)
+	return nil
+}
+
+func (m *Mounter) makeMountShared(
+	device string,
+	path string,
+) error {
+	return m.mountImpl.Mount(device, path, "", syscall.MS_SHARED, "", 0)
+}
+
+func (m *Mounter) MakeMountShared(
+	device string,
+	path string,
+) error {
+	m.Lock()
+
+	path = normalizeMountPath(path)
+	info, ok := m.mounts[device]
+	if !ok {
+		m.Unlock()
+		return ErrEnoent
+	}
+	m.Unlock()
+	info.Lock()
+	defer info.Unlock()
+	for _, p := range info.Mountpoint {
+		if p.Path != path {
+			continue
+		}
+		return m.makeMountShared(device, path)
+	}
+
 	dlog.Warnf("Device %q is not mounted at path %q", path, device)
 	return nil
 }
