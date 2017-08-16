@@ -1492,11 +1492,13 @@ type VolumeStateAction struct {
 	// Attach or Detach volume
 	Attach VolumeActionParam `protobuf:"varint,1,opt,name=attach,enum=openstorage.api.VolumeActionParam" json:"attach,omitempty"`
 	// Mount or unmount volume
-	Mount     VolumeActionParam `protobuf:"varint,2,opt,name=mount,enum=openstorage.api.VolumeActionParam" json:"mount,omitempty"`
-	MountPath string            `protobuf:"bytes,3,opt,name=mount_path,json=mountPath" json:"mount_path,omitempty"`
-	// Device path returned in attach
+	Mount VolumeActionParam `protobuf:"varint,2,opt,name=mount,enum=openstorage.api.VolumeActionParam" json:"mount,omitempty"`
+	// MountPath Path where the device is mounted
+	MountPath string `protobuf:"bytes,3,opt,name=mount_path,json=mountPath" json:"mount_path,omitempty"`
+	// DevicePath Path returned in attach
 	DevicePath string `protobuf:"bytes,4,opt,name=device_path,json=devicePath" json:"device_path,omitempty"`
-	// Issue an unmount before detaching
+	// UnmountBeforeDetach is used to check whether unmount should be done before
+	// a detach
 	UnmountBeforeDetach bool `protobuf:"varint,5,opt,name=unmount_before_detach,json=unmountBeforeDetach" json:"unmount_before_detach,omitempty"`
 }
 

@@ -405,10 +405,12 @@ message VolumeStateAction {
   VolumeActionParam attach = 1;
   // Mount or unmount volume
   VolumeActionParam mount = 2;
+  // MountPath Path where the device is mounted
   string mount_path = 3;
-  // Device path returned in attach
+  // DevicePath Path returned in attach
   string device_path = 4;
-  // Issue an unmount before detaching
+  // UnmountBeforeDetach is used to check whether unmount should be done before
+  // a detach
   bool unmount_before_detach = 5;
 }
 
