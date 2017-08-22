@@ -428,10 +428,9 @@ func (vd *volAPI) stats(w http.ResponseWriter, r *http.Request) {
 	var volumeID string
 	var err error
 
-	method := "stats"
 	if volumeID, err = vd.parseID(r); err != nil {
 		e := fmt.Errorf("Failed to parse volumeID: %s", err.Error())
-		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+		http.Error(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -442,7 +441,7 @@ func (vd *volAPI) stats(w http.ResponseWriter, r *http.Request) {
 		if boolValue, err := strconv.ParseBool(strings.Join(opt[:], "")); !ok {
 			e := fmt.Errorf("Failed to parse %s option: %s",
 				api.OptCumulative, err.Error())
-			vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+			http.Error(w, e.Error(), http.StatusBadRequest)
 			return
 		} else {
 			cumulative = boolValue
@@ -458,7 +457,7 @@ func (vd *volAPI) stats(w http.ResponseWriter, r *http.Request) {
 	stats, err := d.Stats(volumeID, cumulative)
 	if err != nil {
 		e := fmt.Errorf("Failed to get stats: %s", err.Error())
-		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+		http.Error(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 	json.NewEncoder(w).Encode(stats)
@@ -468,10 +467,9 @@ func (vd *volAPI) usedsize(w http.ResponseWriter, r *http.Request) {
 	var volumeID string
 	var err error
 
-	method := "newVolumeDriver"
 	if volumeID, err = vd.parseID(r); err != nil {
 		e := fmt.Errorf("Failed to parse volumeID: %s", err.Error())
-		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+		http.Error(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -484,7 +482,7 @@ func (vd *volAPI) usedsize(w http.ResponseWriter, r *http.Request) {
 	used, err := d.UsedSize(volumeID)
 	if err != nil {
 		e := fmt.Errorf("Failed to get used size: %s", err.Error())
-		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+		http.Error(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 	json.NewEncoder(w).Encode(used)
