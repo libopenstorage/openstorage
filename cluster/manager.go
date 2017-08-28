@@ -814,15 +814,13 @@ func (c *ClusterManager) SetLoggingURL(loggingURL string) error {
 
 // Iterates all listeners, which in turn will restart stats with the new logging url
 func updateLoggingUrlListeners(c *ClusterManager, db ClusterInfo) {
-	if c.config.LoggingURL != db.LoggingURL {
-		for e := c.listeners.Front(); e != nil; e = e.Next() {
-			err := e.Value.(ClusterListener).UpdateCluster(&c.selfNode, &db)
-			if err != nil {
-				dlog.Warnln("Failed to notify ", e.Value.(ClusterListener).String())
-			}
+	for e := c.listeners.Front(); e != nil; e = e.Next() {
+		err := e.Value.(ClusterListener).UpdateCluster(&c.selfNode, &db)
+		if err != nil {
+			dlog.Warnln("Failed to notify ", e.Value.(ClusterListener).String())
 		}
-		c.config.LoggingURL = db.LoggingURL
 	}
+	c.config.LoggingURL = db.LoggingURL
 }
 
 // Persists the new logging url on to the database
