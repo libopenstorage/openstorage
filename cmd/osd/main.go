@@ -13,6 +13,7 @@ import (
 	"github.com/docker/docker/pkg/reexec"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/server"
+	"github.com/libopenstorage/openstorage/api/flexvolume"
 	osdcli "github.com/libopenstorage/openstorage/cli"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/config"
@@ -214,7 +215,7 @@ func start(c *cli.Context) error {
 		return fmt.Errorf("Invalid OSD config file: Default Driver specified but driver not initialized")
 	}
 
-	if err := server.StartFlexVolumeAPI(config.FlexVolumePort, cfg.Osd.ClusterConfig.DefaultDriver); err != nil {
+	if err := flexvolume.StartFlexVolumeAPI(config.FlexVolumePort, cfg.Osd.ClusterConfig.DefaultDriver); err != nil {
 		return fmt.Errorf("Unable to start flexvolume API: %v", err)
 	}
 
