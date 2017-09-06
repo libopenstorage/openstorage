@@ -116,7 +116,12 @@ func (l *logger) WithField(key string, value interface{}) Logger {
 func (l *logger) WithFields(fields map[string]interface{}) Logger {
 	contextFields := make(map[string]string, len(l.fields)+len(fields))
 	for key, value := range fields {
-		contextFields[key] = fmt.Sprintf("%v", value)
+		switch value.(type) {
+		case string:
+			contextFields[key] = value.(string)
+		default:
+			contextFields[key] = fmt.Sprintf("%v", value)
+		}
 	}
 	for key, value := range l.fields {
 		contextFields[key] = value
