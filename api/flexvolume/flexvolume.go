@@ -1,13 +1,18 @@
-package server
+package flexvolume
 
 import (
 	"errors"
 	"fmt"
+	"math"
+	"net"
+	
+	"google.golang.org/grpc"
 
 	"github.com/libopenstorage/openstorage/pkg/mount"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
-
+	"github.com/libopenstorage/openstorage/pkg/flexvolume"
+	
 	"go.pedge.io/dlog"
 )
 
@@ -135,4 +140,21 @@ func newFlexVolumeClient(defaultDriver string) *flexVolumeClient {
 
 func (c *flexVolumeClient) getVolumeDriver(driverName string) (volume.VolumeDriver, error) {
 	return volumedrivers.Get(driverName)
+}
+
+
+// StartFlexVolumeAPI starts the flexvolume API on the given port.
+func StartFlexVolumeAPI(port uint16, defaultDriver string) error {
+	grpcServer := grpc.NewServer(grpc.MaxConcurrentStreams(math.MaxUint32))
+	flexvolume.RegisterAPIServer(grpcServer, flexvolume.NewAPIServer(newFlexVolumeClient(defaultDriver)))
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	if err != nil {
+		return err
+	}
+	go func() {
+		if err := grpcServer.Serve(listener); err != nil {
+			dlog.Errorln(err.Error())
+		}
+	}()
+	return nil
 }
