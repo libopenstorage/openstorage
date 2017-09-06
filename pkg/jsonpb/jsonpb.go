@@ -49,9 +49,10 @@ import (
 	"strings"
 	"time"
 
-	"go.pedge.io/pb/go/google/protobuf"
-
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/golang/protobuf/proto"
+
+	"github.com/libopenstorage/openstorage/pkg/proto/time"
 )
 
 var (
@@ -116,9 +117,9 @@ func (s int32Slice) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 // marshalObject writes a struct to the Writer.
 func (m *Marshaler) marshalObject(out *errWriter, v proto.Message, indent string) error {
 	if v != nil {
-		if timestamp, ok := v.(*google_protobuf.Timestamp); ok {
+		if timestamp, ok := v.(*timestamp.Timestamp); ok {
 			out.write(`"`)
-			out.write(timestamp.GoTime().Format(time.RFC3339))
+			out.write(prototime.TimestampToTime(timestamp).Format(time.RFC3339))
 			out.write(`"`)
 			return out.err
 		}
@@ -391,7 +392,7 @@ func UnmarshalString(str string, pb proto.Message) error {
 	return Unmarshal(strings.NewReader(str), pb)
 }
 
-var timestampTargetType = reflect.TypeOf(google_protobuf.Timestamp{})
+var timestampTargetType = reflect.TypeOf(timestamp.Timestamp{})
 
 // unmarshalValue converts/copies a value into the target.
 func unmarshalValue(target reflect.Value, inputValue json.RawMessage) error {
@@ -412,7 +413,7 @@ func unmarshalValue(target reflect.Value, inputValue json.RawMessage) error {
 		if err != nil {
 			return err
 		}
-		tpb := google_protobuf.TimeToProto(t)
+		tpb := prototime.TimeToTimestamp(t)
 		target.Set(reflect.ValueOf(tpb).Elem())
 		return nil
 	}

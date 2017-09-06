@@ -6,7 +6,7 @@ import (
 
 	"github.com/libopenstorage/openstorage/pkg/jsonpb"
 
-	"go.pedge.io/pb/go/google/protobuf"
+	"github.com/golang/protobuf"
 )
 
 func TestTimestamp(t *testing.T) {

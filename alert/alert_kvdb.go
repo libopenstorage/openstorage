@@ -6,7 +6,7 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/portworx/kvdb"
 	"go.pedge.io/dlog"
-	"go.pedge.io/proto/time"
+	"github.com/libopenstorage/openstorage/pkg/proto/time"
 	"strconv"
 	"strings"
 	"sync"
