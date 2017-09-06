@@ -3,19 +3,22 @@ package testing
 import (
 	"bytes"
 	"testing"
+	"time"
 
+	protobuf_timestamp"github.com/golang/protobuf/ptypes/timestamp"
+
+	"github.com/libopenstorage/openstorage/pkg/proto/time"
 	"github.com/libopenstorage/openstorage/pkg/jsonpb"
 
-	"github.com/golang/protobuf"
 )
 
 func TestTimestamp(t *testing.T) {
-	timestamp := google_protobuf.Now()
+	timestamp := prototime.TimeToTimestamp(time.Now())
 	buffer := bytes.NewBuffer(nil)
 	if err := (&jsonpb.Marshaler{}).Marshal(buffer, timestamp); err != nil {
 		t.Fatal(err)
 	}
-	timestamp2 := &google_protobuf.Timestamp{}
+	timestamp2 := &protobuf_timestamp.Timestamp{}
 	if err := jsonpb.Unmarshal(buffer, timestamp2); err != nil {
 		t.Fatal(err)
 	}
@@ -25,7 +28,7 @@ func TestTimestamp(t *testing.T) {
 }
 
 func TestFoo(t *testing.T) {
-	timestamp := google_protobuf.Now()
+	timestamp := prototime.TimeToTimestamp(time.Now())
 	status := Status_STATUS_OK
 	foo := &Foo{
 		Timestamp: timestamp,
