@@ -23,7 +23,11 @@ PROTOC = protoc
 endif
 
 ifndef PROTOS_PATH
-PROTOS_PATH = /root/git/go/src
+PROTOS_PATH = $(GOPATH)/src
+endif
+
+ifndef PROTOSRC_PATH
+PROTOSRC_PATH = $(PROTOS_PATH)/github.com/libopenstorage/openstorage
 endif
 
 export GO15VENDOREXPERIMENT=1
@@ -63,10 +67,14 @@ install:
 	go install -tags "$(TAGS)" $(PKGS)
 
 proto:
-	go get -v go.pedge.io/protoeasy/cmd/protoeasy
-	go get -v go.pedge.io/pkg/cmd/strip-package-comments
-	protoeasy --exclude vendor --go --go-import-path github.com/libopenstorage/openstorage --grpc --grpc-gateway .
-	find . -name *\.pb\*\.go | grep -v '^\./vendor/' | xargs strip-package-comments
+	go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+	@echo "Generating protobuf definitions from api/api.proto"
+	$(PROTOC) -I $(PROTOSRC_PATH) $(PROTOSRC_PATH)/api/api.proto --go_out=plugins=grpc:.
+	@echo "Generating grpc protobuf definitions from pkg/flexvolume/flexvolume.proto"
+	$(PROTOC) -I/usr/local/include -I$(PROTOSRC_PATH) -I$(PROTOS_PATH)/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis --go_out=plugins=grpc:. $(PROTOSRC_PATH)/pkg/flexvolume/flexvolume.proto
+	$(PROTOC) -I/usr/local/include -I$(PROTOSRC_PATH) -I$(PROTOS_PATH)/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis --grpc-gateway_out=logtostderr=true:. $(PROTOSRC_PATH)/pkg/flexvolume/flexvolume.proto
+	@echo "Generating protobuf definitions from pkg/jsonpb/testing/testing.proto"
+	$(PROTOC) -I $(PROTOSRC_PATH) $(PROTOSRC_PATH)/pkg/jsonpb/testing/testing.proto --go_out=plugins=grpc:.
 
 lint:
 	go get -v github.com/golang/lint/golint
