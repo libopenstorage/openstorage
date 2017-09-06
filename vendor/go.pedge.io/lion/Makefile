@@ -39,7 +39,7 @@ prototest: testdeps
 thrifttest: testdeps
 	go test -v ./thrift/testing
 
-test: pretest prototest thrifttest
+test: prototest thrifttest
 
 clean:
 	go clean -i ./...
