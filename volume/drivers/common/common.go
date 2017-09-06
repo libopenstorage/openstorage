@@ -1,8 +1,7 @@
 package common
 
 import (
-	"go.pedge.io/proto/time"
-
+	"github.com/libopenstorage/openstorage/pkg/proto/time"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/portworx/kvdb"

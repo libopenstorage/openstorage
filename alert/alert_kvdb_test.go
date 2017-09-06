@@ -7,7 +7,7 @@ import (
 	"github.com/portworx/kvdb/mem"
 	"github.com/stretchr/testify/require"
 	"go.pedge.io/dlog"
-	"go.pedge.io/proto/time"
+	"github.com/libopenstorage/openstorage/pkg/proto/time"
 	"strconv"
 	"sync"
 	"testing"
