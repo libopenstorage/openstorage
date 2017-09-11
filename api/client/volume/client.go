@@ -328,14 +328,14 @@ func (v *volumeClient) Attach(volumeID string, attachOptions map[string]string) 
 
 // Detach device from the host.
 // Errors ErrEnoEnt, ErrVolDetached may be returned.
-func (v *volumeClient) Detach(volumeID string, unmountBeforeDetach bool) error {
+func (v *volumeClient) Detach(volumeID string, options map[string]string) error {
 	return v.doVolumeSet(
 		volumeID,
 		&api.VolumeSetRequest{
 			Action: &api.VolumeStateAction{
-				Attach:              api.VolumeActionParam_VOLUME_ACTION_PARAM_OFF,
-				UnmountBeforeDetach: unmountBeforeDetach,
+				Attach: api.VolumeActionParam_VOLUME_ACTION_PARAM_OFF,
 			},
+			Options: options,
 		},
 	)
 }
@@ -346,7 +346,7 @@ func (v *volumeClient) MountedAt(mountPath string) string {
 
 // Mount volume at specified path
 // Errors ErrEnoEnt, ErrVolDetached may be returned.
-func (v *volumeClient) Mount(volumeID string, mountPath string) error {
+func (v *volumeClient) Mount(volumeID string, mountPath string, options map[string]string) error {
 	return v.doVolumeSet(
 		volumeID,
 		&api.VolumeSetRequest{
@@ -354,13 +354,14 @@ func (v *volumeClient) Mount(volumeID string, mountPath string) error {
 				Mount:     api.VolumeActionParam_VOLUME_ACTION_PARAM_ON,
 				MountPath: mountPath,
 			},
+			Options: options,
 		},
 	)
 }
 
 // Unmount volume at specified path
 // Errors ErrEnoEnt, ErrVolDetached may be returned.
-func (v *volumeClient) Unmount(volumeID string, mountPath string) error {
+func (v *volumeClient) Unmount(volumeID string, mountPath string, options map[string]string) error {
 	return v.doVolumeSet(
 		volumeID,
 		&api.VolumeSetRequest{
@@ -368,6 +369,7 @@ func (v *volumeClient) Unmount(volumeID string, mountPath string) error {
 				Mount:     api.VolumeActionParam_VOLUME_ACTION_PARAM_OFF,
 				MountPath: mountPath,
 			},
+			Options: options,
 		},
 	)
 }

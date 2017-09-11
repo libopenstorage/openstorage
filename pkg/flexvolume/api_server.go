@@ -2,7 +2,7 @@ package flexvolume
 
 import (
 	"time"
-	
+
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/empty"
 	"go.pedge.io/dlog"
@@ -29,7 +29,7 @@ func (a *apiServer) Attach(_ context.Context, request *AttachRequest) (_ *empty.
 
 func (a *apiServer) Detach(_ context.Context, request *DetachRequest) (_ *empty.Empty, err error) {
 	defer func(start time.Time) { log("Detach", request, nil, err, time.Since(start)) }(time.Now())
-	return checkClientError(a.client.Detach(request.MountDevice, false))
+	return checkClientError(a.client.Detach(request.MountDevice, nil))
 }
 
 func (a *apiServer) Mount(_ context.Context, request *MountRequest) (_ *empty.Empty, err error) {
@@ -39,7 +39,7 @@ func (a *apiServer) Mount(_ context.Context, request *MountRequest) (_ *empty.Em
 
 func (a *apiServer) Unmount(_ context.Context, request *UnmountRequest) (_ *empty.Empty, err error) {
 	defer func(start time.Time) { log("Unmount", request, nil, err, time.Since(start)) }(time.Now())
-	return checkClientError(a.client.Unmount(request.MountDir))
+	return checkClientError(a.client.Unmount(request.MountDir, nil))
 }
 
 func checkClientError(err error) (*empty.Empty, error) {

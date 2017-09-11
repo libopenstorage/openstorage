@@ -88,7 +88,7 @@ func (d *driver) MountedAt(mountpath string) string {
 
 // Mount volume at specified path
 // Errors ErrEnoEnt, ErrVolDetached may be returned.
-func (d *driver) Mount(volumeID string, mountpath string) error {
+func (d *driver) Mount(volumeID string, mountpath string, options map[string]string) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
 		dlog.Println(err)
@@ -120,7 +120,7 @@ func (d *driver) Mount(volumeID string, mountpath string) error {
 
 // Unmount volume at specified path
 // Errors ErrEnoEnt, ErrVolDetached may be returned.
-func (d *driver) Unmount(volumeID string, mountpath string) error {
+func (d *driver) Unmount(volumeID string, mountpath string, options map[string]string) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
 		return err

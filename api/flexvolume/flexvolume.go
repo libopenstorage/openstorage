@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"math"
 	"net"
-	
+
 	"google.golang.org/grpc"
 
+	"github.com/libopenstorage/openstorage/pkg/flexvolume"
 	"github.com/libopenstorage/openstorage/pkg/mount"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
-	"github.com/libopenstorage/openstorage/pkg/flexvolume"
-	
+
 	"go.pedge.io/dlog"
 )
 
@@ -60,7 +60,7 @@ func (c *flexVolumeClient) Attach(jsonOptions map[string]string) error {
 	return nil
 }
 
-func (c *flexVolumeClient) Detach(mountDevice string, unmountBeforeDetach bool) error {
+func (c *flexVolumeClient) Detach(mountDevice string, options map[string]string) error {
 	driverName, ok := deviceDriverMap[mountDevice]
 	if !ok {
 		dlog.Infof("Could not find driver for (%v). Resorting to default driver ", mountDevice)
@@ -70,7 +70,7 @@ func (c *flexVolumeClient) Detach(mountDevice string, unmountBeforeDetach bool) 
 	if err != nil {
 		return err
 	}
-	if err := driver.Detach(mountDevice, unmountBeforeDetach); err != nil {
+	if err := driver.Detach(mountDevice, options); err != nil {
 		return err
 	}
 	return nil
@@ -90,7 +90,7 @@ func (c *flexVolumeClient) Mount(targetMountDir string, mountDevice string,
 	if targetMountDir == "" {
 		return ErrMissingMountPath
 	}
-	if err := driver.Mount(mountDevice, targetMountDir); err != nil {
+	if err := driver.Mount(mountDevice, targetMountDir, jsonOptions); err != nil {
 		return err
 	}
 	// Update the deviceDriverMap
@@ -107,7 +107,7 @@ func (c *flexVolumeClient) Mount(targetMountDir string, mountDevice string,
 	return nil
 }
 
-func (c *flexVolumeClient) Unmount(mountDir string) error {
+func (c *flexVolumeClient) Unmount(mountDir string, options map[string]string) error {
 	// Get the mountDevice from mount manager
 	mountManager, err := mount.New(mount.DeviceMount, nil, []string{""}, nil, []string{})
 	if err != nil {
@@ -126,7 +126,7 @@ func (c *flexVolumeClient) Unmount(mountDir string) error {
 	if err != nil {
 		return err
 	}
-	if err := driver.Unmount(mountDevice, mountDir); err != nil {
+	if err := driver.Unmount(mountDevice, mountDir, options); err != nil {
 		return err
 	}
 	return nil
@@ -141,7 +141,6 @@ func newFlexVolumeClient(defaultDriver string) *flexVolumeClient {
 func (c *flexVolumeClient) getVolumeDriver(driverName string) (volume.VolumeDriver, error) {
 	return volumedrivers.Get(driverName)
 }
-
 
 // StartFlexVolumeAPI starts the flexvolume API on the given port.
 func StartFlexVolumeAPI(port uint16, defaultDriver string) error {

@@ -96,7 +96,7 @@ func (v *volumeDriver) MountedAt(mountpath string) string {
 	return ""
 }
 
-func (v *volumeDriver) Mount(volumeID string, mountpath string) error {
+func (v *volumeDriver) Mount(volumeID string, mountpath string, options map[string]string) error {
 	volume, err := v.GetVol(volumeID)
 	if err != nil {
 		return err
@@ -131,7 +131,7 @@ func (v *volumeDriver) Mount(volumeID string, mountpath string) error {
 	return conn.MountError
 }
 
-func (v *volumeDriver) Unmount(volumeID string, mountpath string) error {
+func (v *volumeDriver) Unmount(volumeID string, mountpath string, options map[string]string) error {
 	volume, err := v.GetVol(volumeID)
 	if err != nil {
 		return err

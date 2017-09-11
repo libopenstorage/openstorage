@@ -14,9 +14,9 @@ import "encoding/json"
 type Client interface {
 	Init() error
 	Attach(jsonOptions map[string]string) error
-	Detach(mountDevice string, unmountBeforeDetach bool) error
+	Detach(mountDevice string, options map[string]string) error
 	Mount(targetMountDir string, mountDevice string, jsonOptions map[string]string) error
-	Unmount(mountDir string) error
+	Unmount(mountDir string, options map[string]string) error
 }
 
 // NewClient returns a new Client for the given APIClient.

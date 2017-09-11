@@ -393,7 +393,7 @@ func (d *driver) attachOptionsFromSpec(
 ) map[string]string {
 	if spec.Passphrase != "" {
 		opts := make(map[string]string)
-		opts[string(volume.AttachOptionsSecret)] = spec.Passphrase
+		opts[string(volume.OptionsSecret)] = spec.Passphrase
 		return opts
 	}
 	return nil
@@ -429,7 +429,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 	if vol.Spec.Scale > 1 {
 		id := v.MountedAt(mountpoint)
 		if len(id) != 0 {
-			err = v.Unmount(id, mountpoint)
+			err = v.Unmount(id, mountpoint, nil)
 			if err != nil {
 				d.logRequest(method, "").Warnf("Error unmounting scaled volume: %v", err)
 				err = fmt.Errorf("Cannot remount scaled volume(%v)."+
@@ -439,10 +439,10 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if v.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-				err = v.Detach(id, false)
+				err = v.Detach(id, nil)
 				if err != nil {
 					d.logRequest(method, "").Warnf("Error detaching scaled volume: %v", err)
-					mountErr := v.Mount(id, mountpoint)
+					mountErr := v.Mount(id, mountpoint, nil)
 					if mountErr != nil {
 						d.logRequest(method, "").Warnf("Error remounting scaled volume: %v", mountErr.Error())
 					}
@@ -475,7 +475,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 	// result of scale up.
 	response.Mountpoint = mountpoint
 	os.MkdirAll(mountpoint, 0755)
-	err = v.Mount(vol.Id, response.Mountpoint)
+	err = v.Mount(vol.Id, response.Mountpoint, nil)
 	if err != nil {
 		d.logRequest(method, request.Name).Warnf(
 			"Cannot mount volume %v, %v",
@@ -610,7 +610,11 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	err = v.Unmount(id, mountpoint)
+
+	options := make(map[string]string)
+	options[string(volume.OptionsDeleteAfterUnmount)] = "true"
+
+	err = v.Unmount(id, mountpoint, options)
 	if err != nil {
 		d.logRequest(method, request.Name).Warnf(
 			"Cannot unmount volume %v, %v",
@@ -620,7 +624,7 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if v.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-		_ = v.Detach(id, false)
+		_ = v.Detach(id, nil)
 	}
 	d.emptyResponse(w)
 }

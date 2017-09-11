@@ -130,7 +130,7 @@ func (v *volDriver) volumeMount(context *cli.Context) {
 		return
 	}
 
-	err := v.volDriver.Mount(string(volumeID), path)
+	err := v.volDriver.Mount(string(volumeID), path, nil)
 	if err != nil {
 		cmdError(context, fn, err)
 		return
@@ -151,7 +151,10 @@ func (v *volDriver) volumeUnmount(context *cli.Context) {
 
 	path := context.String("path")
 
-	err := v.volDriver.Unmount(string(volumeID), path)
+	options := make(map[string]string)
+	options[string(volume.OptionsDeleteAfterUnmount)] = "true"
+
+	err := v.volDriver.Unmount(string(volumeID), path, options)
 	if err != nil {
 		cmdError(context, fn, err)
 		return
@@ -186,7 +189,7 @@ func (v *volDriver) volumeDetach(context *cli.Context) {
 	}
 	volumeID := context.Args()[0]
 	v.volumeOptions(context)
-	err := v.volDriver.Detach(string(volumeID), false)
+	err := v.volDriver.Detach(string(volumeID), nil)
 	if err != nil {
 		cmdError(context, fn, err)
 		return

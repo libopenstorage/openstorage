@@ -208,7 +208,7 @@ func attach(t *testing.T, ctx *Context) {
 
 func detach(t *testing.T, ctx *Context) {
 	fmt.Println("detach")
-	err := ctx.Detach(ctx.volID, false)
+	err := ctx.Detach(ctx.volID, nil)
 	if err != nil {
 		require.Equal(t, ctx.devicePath, "", "Error on detach %s: %v", ctx.devicePath, err)
 	}
@@ -220,7 +220,7 @@ func mount(t *testing.T, ctx *Context) {
 
 	err := os.MkdirAll(ctx.testPath, 0755)
 
-	err = ctx.Mount(ctx.volID, ctx.testPath)
+	err = ctx.Mount(ctx.volID, ctx.testPath, nil)
 	require.NoError(t, err, "Failed in mount %v", ctx.testPath)
 
 	ctx.mountPath = ctx.testPath
@@ -235,7 +235,7 @@ func multiMount(t *testing.T, ctx *Context) {
 	create(t, &ctx2)
 	attach(t, &ctx2)
 
-	err := ctx2.Mount(ctx2.volID, ctx2.testPath)
+	err := ctx2.Mount(ctx2.volID, ctx2.testPath, nil)
 	require.Error(t, err, "Mount of different devices to same path must fail")
 
 	unmount(t, ctx)
@@ -251,7 +251,7 @@ func unmount(t *testing.T, ctx *Context) {
 
 	require.NotEqual(t, ctx.mountPath, "", "Device is not mounted")
 
-	err := ctx.Unmount(ctx.volID, ctx.mountPath)
+	err := ctx.Unmount(ctx.volID, ctx.mountPath, nil)
 	require.NoError(t, err, "Failed in unmount %v", ctx.mountPath)
 
 	ctx.mountPath = ""
@@ -281,7 +281,7 @@ func io(t *testing.T, ctx *Context) {
 }
 
 func detachBad(t *testing.T, ctx *Context) {
-	err := ctx.Detach(ctx.volID, false)
+	err := ctx.Detach(ctx.volID, nil)
 	require.True(t, (err == nil || err == volume.ErrNotSupported),
 		"Detach on mounted device should fail")
 }

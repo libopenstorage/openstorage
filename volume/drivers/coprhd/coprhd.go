@@ -188,15 +188,15 @@ func (d *driver) MountedAt(mountpath string) string {
 	return ""
 }
 
-func (d *driver) Detach(volumeID string, unmountBeforeDetach bool) error {
+func (d *driver) Detach(volumeID string, options map[string]string) error {
 	return nil
 }
 
-func (d *driver) Mount(volumeID string, mountpath string) error {
+func (d *driver) Mount(volumeID string, mountpath string, options map[string]string) error {
 	return nil
 }
 
-func (d *driver) Unmount(volumeID string, mountpath string) error {
+func (d *driver) Unmount(volumeID string, mountpath string, options map[string]string) error {
 
 	return nil
 }

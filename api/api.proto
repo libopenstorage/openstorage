@@ -409,9 +409,6 @@ message VolumeStateAction {
   string mount_path = 3;
   // DevicePath Path returned in attach
   string device_path = 4;
-  // UnmountBeforeDetach is used to check whether unmount should be done before
-  // a detach
-  bool unmount_before_detach = 5;
 }
 
 message VolumeSetRequest {

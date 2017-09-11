@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"go.pedge.io/dlog"
 	"github.com/golang/protobuf/ptypes/empty"
+	"go.pedge.io/dlog"
 	"golang.org/x/net/context"
 )
 
@@ -48,7 +48,7 @@ func (c *client) Attach(jsonOptions map[string]string) error {
 	return err
 }
 
-func (c *client) Detach(mountDevice string, unmountBeforeDetach bool) error {
+func (c *client) Detach(mountDevice string, options map[string]string) error {
 	_, err := c.apiClient.Detach(
 		context.Background(),
 		&DetachRequest{
@@ -76,7 +76,7 @@ func (c *client) Mount(targetMountDir string, mountDevice string, jsonOptions ma
 	return err
 }
 
-func (c *client) Unmount(mountDir string) error {
+func (c *client) Unmount(mountDir string, options map[string]string) error {
 	_, err := c.apiClient.Unmount(
 		context.Background(),
 		&UnmountRequest{

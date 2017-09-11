@@ -251,7 +251,7 @@ func (d *driver) MountedAt(mountpath string) string {
 	return ""
 }
 
-func (d *driver) Mount(volumeID string, mountpath string) error {
+func (d *driver) Mount(volumeID string, mountpath string, options map[string]string) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
 		return fmt.Errorf("Failed to locate volume %q", volumeID)
@@ -272,7 +272,7 @@ func (d *driver) Mount(volumeID string, mountpath string) error {
 	return d.UpdateVol(v)
 }
 
-func (d *driver) Unmount(volumeID string, mountpath string) error {
+func (d *driver) Unmount(volumeID string, mountpath string, options map[string]string) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
 		return err
@@ -339,7 +339,7 @@ func (d *driver) Attach(volumeID string, attachOptions map[string]string) (strin
 	return path.Join(BuseMountPath, volumeID), nil
 }
 
-func (d *driver) Detach(volumeID string, unmountBeforeDetach bool) error {
+func (d *driver) Detach(volumeID string, options map[string]string) error {
 	// Nothing to do on detach.
 	return nil
 }
