@@ -33,8 +33,7 @@ const (
 )
 
 const (
-	watchBootstrap watcherStatus = iota
-	watchReady
+	watchReady = iota
 	watchError
 )
 
@@ -53,11 +52,12 @@ func init() {
 type watcherStatus int
 
 type watcher struct {
-	kvcb      kvdb.WatchCB
-	status    watcherStatus
-	cb        AlertWatcherFunc
-	clusterID string
-	kvdb      kvdb.Kvdb
+	kvcb        kvdb.WatchCB
+	status      int
+	cb          AlertWatcherFunc
+	clusterID   string
+	kvdb        kvdb.Kvdb
+	watchErrors int
 }
 
 // KvAlert is used for managing the alerts and its kvdb instance
@@ -215,7 +215,7 @@ func (kva *KvAlert) Watch(clusterID string, alertWatcherFunc AlertWatcherFunc) e
 		return err
 	}
 
-	alertWatcher := &watcher{status: watchBootstrap, cb: alertWatcherFunc, kvcb: kvdbWatch, kvdb: kv}
+	alertWatcher := &watcher{status: watchReady, cb: alertWatcherFunc, kvcb: kvdbWatch, kvdb: kv}
 	watcherKey := clusterID
 	watcherMap[watcherKey] = alertWatcher
 
@@ -223,26 +223,6 @@ func (kva *KvAlert) Watch(clusterID string, alertWatcherFunc AlertWatcherFunc) e
 		return err
 	}
 
-	// Subscribe for a watch can be in a goroutine. Bootstrap by writing to the key and waiting for an update
-	retries := 0
-
-	for alertWatcher.status == watchBootstrap {
-		if _, err := kv.Put(alertKey+bootstrap, time.Now(), 0); err != nil {
-			return err
-		}
-		if alertWatcher.status == watchBootstrap {
-			retries++
-			// TODO(pedge): constant, maybe configurable
-			time.Sleep(time.Millisecond * watchSleep)
-		}
-		// TODO(pedge): constant, maybe configurable
-		if retries == watchRetries {
-			return fmt.Errorf("Failed to bootstrap watch on %s", clusterID)
-		}
-	}
-	if alertWatcher.status != watchReady {
-		return fmt.Errorf("Failed to watch on %s", clusterID)
-	}
 	return nil
 }
 
@@ -488,35 +468,31 @@ func (kva *KvAlert) getKvdbForCluster(clusterID string) (kvdb.Kvdb, error) {
 	return kv, nil
 }
 
+func processWatchError(err error, watcherKey string, prefix string) error {
+	dlog.Errorf("Alert Watch error for key %v: %v", watcherKey, err)
+	w := watcherMap[watcherKey]
+	w.status = watchError
+	if w.watchErrors == 5 {
+		dlog.Warnf("Too many watch errors for key (%v). Error: %s. Stopping the watch!!", watcherKey, err.Error())
+		w.cb(nil, api.AlertActionType_ALERT_ACTION_TYPE_NONE, prefix, "")
+		// Too many watch errors. Stop the watch
+		return err
+	}
+	w.watchErrors++
+	if err := subscribeWatch(watcherKey); err != nil {
+		dlog.Warnf("Failed to resubscribe alert watch for key: %v: %v", )
+	}
+	return err
+}
+
 func kvdbWatch(prefix string, opaque interface{}, kvp *kvdb.KVPair, err error) error {
 	lock.Lock()
 	defer lock.Unlock()
 
 	watcherKey := strings.Split(prefix, "/")[1]
 
-	if err == nil && strings.HasSuffix(kvp.Key, bootstrap) {
-		w := watcherMap[watcherKey]
-		w.status = watchReady
-		return nil
-	}
-
 	if err != nil {
-		if w := watcherMap[watcherKey]; w.status == watchBootstrap {
-			w.status = watchError
-			return err
-		}
-		if watchErrors == 5 {
-			w := watcherMap[watcherKey]
-			dlog.Warnf("Too many watch errors for key (%v). Error: %s. Stopping the watch!!", watcherKey, err.Error())
-			w.cb(nil, api.AlertActionType_ALERT_ACTION_TYPE_NONE, prefix, "")
-			// Too many watch errors. Stop the watch
-			return err
-		}
-		watchErrors++
-		if err := subscribeWatch(watcherKey); err != nil {
-			dlog.Warnf("Failed to resubscribe : %s", err.Error())
-		}
-		return err
+		return processWatchError(err, watcherKey, prefix)
 	}
 
 	if strings.HasSuffix(kvp.Key, nextAlertIDKey) || strings.Contains(kvp.Key, subscriptionsKey) {
@@ -524,9 +500,8 @@ func kvdbWatch(prefix string, opaque interface{}, kvp *kvdb.KVPair, err error) e
 		// Todo : Add a map of ignore keys
 		return nil
 	}
-	watchErrors = 0
-
 	w := watcherMap[watcherKey]
+	w.watchErrors = 0
 
 	if kvp.Action == kvdb.KVDelete {
 		err = w.cb(nil, api.AlertActionType_ALERT_ACTION_TYPE_DELETE, prefix, kvp.Key)
