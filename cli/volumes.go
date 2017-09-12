@@ -152,7 +152,7 @@ func (v *volDriver) volumeUnmount(context *cli.Context) {
 	path := context.String("path")
 
 	options := make(map[string]string)
-	options[string(volume.OptionsDeleteAfterUnmount)] = "true"
+	options[volume.OptionsDeleteAfterUnmount] = "true"
 
 	err := v.volDriver.Unmount(string(volumeID), path, options)
 	if err != nil {

@@ -393,7 +393,7 @@ func (d *driver) attachOptionsFromSpec(
 ) map[string]string {
 	if spec.Passphrase != "" {
 		opts := make(map[string]string)
-		opts[string(volume.OptionsSecret)] = spec.Passphrase
+		opts[volume.OptionsSecret] = spec.Passphrase
 		return opts
 	}
 	return nil
@@ -612,7 +612,7 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	options := make(map[string]string)
-	options[string(volume.OptionsDeleteAfterUnmount)] = "true"
+	options[volume.OptionsDeleteAfterUnmount] = "true"
 
 	err = v.Unmount(id, mountpoint, options)
 	if err != nil {

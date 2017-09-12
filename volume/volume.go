@@ -59,14 +59,12 @@ const (
 	LocalNode = "LocalNode"
 )
 
-// OptionsKey specifies a key type from a key-value pair
-// that will be passed in to the apis
-type OptionsKey string
-
+// Options specifies keys from a key-value pair
+// that can be passed in to the APIS
 const (
-	OptionsSecret              = OptionsKey("SECRET_KEY")
-	OptionsUnmountBeforeDetach = OptionsKey("UNMOUNT_BEFORE_DETACH")
-	OptionsDeleteAfterUnmount  = OptionsKey("DELETE_AFTER_UNMOUNT")
+	OptionsSecret              = "SECRET_KEY"
+	OptionsUnmountBeforeDetach = "UNMOUNT_BEFORE_DETACH"
+	OptionsDeleteAfterUnmount  = "DELETE_AFTER_UNMOUNT"
 )
 
 // Store defines the interface for basic volume store operations

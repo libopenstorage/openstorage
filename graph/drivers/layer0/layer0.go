@@ -253,7 +253,7 @@ func (l *Layer0) Remove(id string) error {
 			l.Driver.Remove(l.realID(id))
 
 			options := make(map[string]string)
-			options[string(volume.OptionsDeleteAfterUnmount)] = "true"
+			options[volume.OptionsDeleteAfterUnmount] = "true"
 
 			err = l.volDriver.Unmount(v.volumeID, v.path, options)
 			if l.volDriver.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
