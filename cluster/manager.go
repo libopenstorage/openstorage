@@ -292,7 +292,7 @@ func (c *ClusterManager) getCurrentState() *api.Node {
 }
 
 func (c *ClusterManager) getNonDecommisionedPeers(
-db ClusterInfo,
+	db ClusterInfo,
 ) map[types.NodeId]types.NodeUpdate {
 	peers := make(map[types.NodeId]types.NodeUpdate)
 	for _, nodeEntry := range db.NodeEntries {
@@ -309,7 +309,7 @@ db ClusterInfo,
 
 // Get the latest config.
 func (c *ClusterManager) watchDB(key string, opaque interface{},
-kvp *kvdb.KVPair, watchErr error) error {
+	kvp *kvdb.KVPair, watchErr error) error {
 
 	db, kvdbVersion, err := readClusterInfo()
 
@@ -454,10 +454,10 @@ func (c *ClusterManager) cleanupInit(db *ClusterInfo, self *api.Node) error {
 
 // Initialize node and alert listeners that we are initializing a node in the cluster.
 func (c *ClusterManager) initNodeInCluster(
-clusterInfo *ClusterInfo,
-self *api.Node,
-exist bool,
-nodeInitialized bool,
+	clusterInfo *ClusterInfo,
+	self *api.Node,
+	exist bool,
+	nodeInitialized bool,
 ) ([]FinalizeInitCb, error) {
 	// If I am already in the cluster map, don't add me again.
 	if exist {
@@ -492,8 +492,8 @@ nodeInitialized bool,
 
 // Alert all listeners that we are joining the cluster
 func (c *ClusterManager) joinCluster(
-self *api.Node,
-exist bool,
+	self *api.Node,
+	exist bool,
 ) error {
 	// Listeners may update initial state, so snap again.
 	// The cluster db may have diverged since we waited for quorum
@@ -550,7 +550,7 @@ exist bool,
 }
 
 func (c *ClusterManager) initClusterForListeners(
-self *api.Node,
+	self *api.Node,
 ) error {
 	err := error(nil)
 
@@ -566,12 +566,12 @@ self *api.Node,
 			goto done
 		}
 	}
-	done:
+done:
 	return err
 }
 
 func (c *ClusterManager) startClusterDBWatch(lastIndex uint64,
-kv kvdb.Kvdb) error {
+	kv kvdb.Kvdb) error {
 	dlog.Infof("Cluster manager starting watch at version %d", lastIndex)
 	go kv.WatchKey(ClusterDBKey, lastIndex, nil, c.watchDB)
 	return nil
@@ -860,7 +860,6 @@ func (c *ClusterManager) SetFluentDConfig(fluentDConfig api.FluentDConfig) error
 		return err
 	}
 
-
 	db.FluentDConfig = fluentDConfig
 
 	_, err = writeClusterInfo(&db)
@@ -901,7 +900,7 @@ func updateManagementUrlListeners(c *ClusterManager, db ClusterInfo) {
 
 // Iterates all listeners, which in turn will restart stats with the new mgmt url
 func updateFluentDHostListeners(c *ClusterManager, db ClusterInfo) {
-	if c.config.FluentDHost != db.FluentDConfig.IP + ":" + db.FluentDConfig.Port {
+	if c.config.FluentDHost != db.FluentDConfig.IP+":"+db.FluentDConfig.Port {
 		for e := c.listeners.Front(); e != nil; e = e.Next() {
 			err := e.Value.(ClusterListener).UpdateCluster(&c.selfNode, &db)
 			if err != nil {
@@ -1018,8 +1017,8 @@ func (c *ClusterManager) waitForQuorum(exist bool) error {
 }
 
 func (c *ClusterManager) initializeCluster(db kvdb.Kvdb) (
-*ClusterInfo,
-error,
+	*ClusterInfo,
+	error,
 ) {
 	kvlock, err := db.LockWithID(clusterLockKey, c.config.NodeId)
 	if err != nil {
@@ -1091,10 +1090,10 @@ func (c *ClusterManager) quorumMember() bool {
 }
 
 func (c *ClusterManager) initListeners(
-db kvdb.Kvdb,
-clusterMaxSize int,
-nodeExists *bool,
-nodeInitialized bool,
+	db kvdb.Kvdb,
+	clusterMaxSize int,
+	nodeExists *bool,
+	nodeInitialized bool,
 ) (uint64, *ClusterInfo, error) {
 	// Initialize the cluster if required
 	clusterInfo, err := c.initializeCluster(db)
@@ -1169,10 +1168,10 @@ nodeInitialized bool,
 }
 
 func (c *ClusterManager) initializeAndStartHeartbeat(
-kvdb kvdb.Kvdb,
-clusterMaxSize int,
-exist *bool,
-nodeInitialized bool,
+	kvdb kvdb.Kvdb,
+	clusterMaxSize int,
+	exist *bool,
+	nodeInitialized bool,
 ) (uint64, error) {
 	lastIndex, clusterInfo, err := c.initListeners(
 		kvdb,
@@ -1195,8 +1194,8 @@ nodeInitialized bool,
 
 // Start initiates the cluster manager and the cluster state machine
 func (c *ClusterManager) Start(
-clusterMaxSize int,
-nodeInitialized bool,
+	clusterMaxSize int,
+	nodeInitialized bool,
 ) error {
 	var err error
 
@@ -1419,8 +1418,8 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 }
 
 func (c *ClusterManager) updateNodeEntryDB(
-nodeEntry NodeEntry,
-checkCbBeforeUpdate checkFunc,
+	nodeEntry NodeEntry,
+	checkCbBeforeUpdate checkFunc,
 ) (*kvdb.KVPair, *ClusterInfo, error) {
 	kvdb := kvdb.Instance()
 	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
@@ -1596,6 +1595,20 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 			}
 		}
 
+		if forceRemove {
+			// Mark the other node down so that it can be decommissioned.
+			for e := c.listeners.Front(); e != nil; e = e.Next() {
+				dlog.Infof("Remove node: ask cluster listener %s "+
+					"to mark node %s down ",
+					e.Value.(ClusterListener).String(), n.Id)
+				err := e.Value.(ClusterListener).MarkNodeDown(&n)
+				if err != nil {
+					dlog.Warnf("Node mark down error: %v", err)
+					return err
+				}
+			}
+		}
+
 		// Ask listeners, can we remove this node?
 		for e := c.listeners.Front(); e != nil; e = e.Next() {
 			dlog.Infof("Remove node: ask cluster listener: "+
@@ -1609,21 +1622,6 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 				}
 				dlog.Warnf(msg)
 				return errors.New(msg)
-			}
-		}
-
-		if !inQuorum {
-			// If we are not in quorum, we mark the other node down so that
-			// it can be decommissioned.
-			for e := c.listeners.Front(); e != nil; e = e.Next() {
-				dlog.Infof("Remove node: ask cluster listener %s "+
-					"to mark node %s down ",
-					e.Value.(ClusterListener).String(), n.Id)
-				err := e.Value.(ClusterListener).MarkNodeDown(&n)
-				if err != nil {
-					dlog.Warnf("Node mark down error: %v", err)
-					return err
-				}
 			}
 		}
 
