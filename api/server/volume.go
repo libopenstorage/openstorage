@@ -218,8 +218,6 @@ func (vd *volAPI) inspect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	vd.logRequest(method, string(volumeID)).Infoln("")
-
 	dk, err := d.Inspect([]string{volumeID})
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusNotFound)
