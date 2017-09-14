@@ -3,6 +3,7 @@
 package mount
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
@@ -114,7 +115,7 @@ type Mounter struct {
 	mounts      DeviceMap
 	paths       PathMap
 	allowedDirs []string
-	kl        keylock.KeyLock
+	kl          keylock.KeyLock
 }
 
 // DefaultMounter defaults to syscall implementation.
@@ -432,8 +433,12 @@ func (m *Mounter) RemoveMountPath(path string) error {
 
 func (m *Mounter) makeMountpathReadOnly(mountpath string) error {
 	if _, err := os.Stat(mountpath); err == nil {
-		if stdout, err := exec.Command("/usr/bin/chattr", "+i", mountpath).Output(); err != nil {
-			dlog.Errorf("chattr cmd failed: %v", stdout)
+		cmd := exec.Command("/usr/bin/chattr", "+i", mountpath)
+		var stderr bytes.Buffer
+		cmd.Stderr = &stderr
+
+		if err := cmd.Run(); err != nil {
+			dlog.Errorf("chattr +i failed: %s. Err: %v", stderr.String(), err)
 			return err
 		}
 	}
@@ -443,10 +448,14 @@ func (m *Mounter) makeMountpathReadOnly(mountpath string) error {
 func (m *Mounter) makeMountpathWriteable(mountpath string) error {
 	if devicePath, mounted := m.HasTarget(mountpath); !mounted {
 		if _, err := os.Stat(mountpath); err == nil {
-			if stdout, err := exec.Command("/usr/bin/chattr", "-i", mountpath).Output(); err != nil {
-				dlog.Errorf("chattr cmd failed: %v", stdout)
+			cmd := exec.Command("/usr/bin/chattr", "-i", mountpath)
+			var stderr bytes.Buffer
+			cmd.Stderr = &stderr
+
+			if err := cmd.Run(); err != nil {
+				dlog.Errorf("chattr -i failed: %s. Err: %v", stderr.String(), err)
+				return err
 			}
-			return err
 		}
 	} else {
 		dlog.Infof("Not removing chattr attribute from %v as %v is mounted on it", mountpath, devicePath)

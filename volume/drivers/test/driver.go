@@ -51,7 +51,7 @@ func NewContext(d volume.VolumeDriver) *Context {
 		volID:        "",
 		snapID:       "",
 		Filesystem:   api.FSType_FS_TYPE_NONE,
-		testPath:     path.Join("/tmp/openstorage/mount/", d.Name()),
+		testPath:     path.Join("/mnt/openstorage/mount/", d.Name()),
 		testFile:     path.Join("/tmp/", d.Name()),
 	}
 }

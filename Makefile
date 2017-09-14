@@ -116,6 +116,7 @@ docker-test: docker-build-osd-dev
 	docker run \
 		--privileged \
 		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v /mnt:/mnt \
 		-e AWS_ACCESS_KEY_ID \
 		-e AWS_SECRET_ACCESS_KEY \
 		-e "TAGS=$(TAGS)" \
