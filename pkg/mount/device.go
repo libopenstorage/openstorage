@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/docker/docker/pkg/mount"
+	"github.com/libopenstorage/openstorage/pkg/keylock"
 )
 
 // DeviceMounter implements Ops and tracks active mounts for volume drivers.
@@ -26,6 +27,7 @@ func NewDeviceMounter(
 			mounts:      make(DeviceMap),
 			paths:       make(PathMap),
 			allowedDirs: allowedDirs,
+			kl: keylock.New(),
 		},
 	}
 	err := m.Load(devPrefixes)

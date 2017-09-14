@@ -9,7 +9,6 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/errors"
 	"github.com/libopenstorage/openstorage/volume"
@@ -101,8 +100,6 @@ func processErrorForVolSetResponse(action *api.VolumeStateAction, err error, res
 		action.Attach == api.VolumeActionParam_VOLUME_ACTION_PARAM_OFF) {
 		switch err.(type) {
 		case *errors.ErrNotFound:
-			logrus.Warnf("Ignoring volumeSet on non-existent volume. Err: %v. Actions are Mount=%v Attach=%v",
-				err, action.Mount, action.Attach)
 			resp.VolumeResponse = &api.VolumeResponse{}
 			resp.Volume = &api.Volume{}
 		default:

@@ -1,5 +1,7 @@
 package mount
 
+import "github.com/libopenstorage/openstorage/pkg/keylock"
+
 // CustomLoad defines the mounter.Load callback function for customer mounters
 type CustomLoad func([]string, DeviceMap, PathMap) error
 // CustomReload defines the mounter.Reload callback function for customer mounters
@@ -28,6 +30,7 @@ func NewCustomMounter(
 			mounts:    make(DeviceMap),
 			paths:     make(PathMap),
 			allowedDirs: allowedDirs,
+			kl: keylock.New(),
 		},
 	}
 	cl, cr := customMounter()

@@ -6,6 +6,7 @@ import (
 	"regexp"
 
 	"github.com/docker/docker/pkg/mount"
+	"github.com/libopenstorage/openstorage/pkg/keylock"
 )
 
 // NFSMounter implements Manager and keeps track of active mounts for volume drivers.
@@ -23,6 +24,7 @@ func NewNFSMounter(server string, mountImpl MountImpl, allowedDirs []string) (Ma
 			mounts:      make(DeviceMap),
 			paths:       make(PathMap),
 			allowedDirs: allowedDirs,
+			kl: keylock.New(),
 		},
 	}
 	err := m.Load([]string{""})

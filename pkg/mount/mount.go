@@ -5,10 +5,15 @@ package mount
 import (
 	"errors"
 	"fmt"
+	"os"
+	"os/exec"
 	"strings"
 	"sync"
 	"syscall"
+	"time"
 
+	"github.com/libopenstorage/openstorage/pkg/keylock"
+	"github.com/libopenstorage/openstorage/pkg/sched"
 	"go.pedge.io/dlog"
 )
 
@@ -41,11 +46,9 @@ type Manager interface {
 	// Unmount device at mountpoint and remove from the matrix.
 	// ErrEnoent is returned if the device or mountpoint for the device
 	// is not found.
-	Unmount(source, path string, flags int, timeout int) error
-	// MakeMountUnbindable marks a mount path as unbindable
-	MakeMountUnbindable(device string, path string) error
-	// MakeMountShared marks a mount path as shared
-	MakeMountShared(device string, path string) error
+	Unmount(source, path string, flags int, timeout int, removePath bool) error
+	// RemoveMountPath removes the given path
+	RemoveMountPath(path string) error
 }
 
 // MountImpl backend implementation for Mount/Unmount calls
@@ -66,6 +69,8 @@ const (
 	// own defined way of handling mount table
 	CustomMount
 )
+
+const MountPathRemoveDelay = 30 * time.Second
 
 var (
 	// ErrExist is returned if path is already mounted to a different device.
@@ -109,6 +114,7 @@ type Mounter struct {
 	mounts      DeviceMap
 	paths       PathMap
 	allowedDirs []string
+	kl        keylock.KeyLock
 }
 
 // DefaultMounter defaults to syscall implementation.
@@ -331,23 +337,24 @@ func (m *Mounter) Mount(
 		return ErrEinval
 	}
 
-	// Try to find the mountpoint. If it already exists, mark it shared
+	// Try to find the mountpoint. If it already exists, do nothing
 	for _, p := range info.Mountpoint {
 		if p.Path == path {
-			m.makeMountShared(device, path)
 			return nil
 		}
 	}
-	// The device is not mounted at path, mount it and add to its mountpoints.
-	err := m.mountImpl.Mount(device, path, fs, flags, data, timeout)
-	if err != nil {
-		return err
-	}
-	err = m.makeMountShared(device, path)
-	if err != nil {
-		return err
+
+	h := m.kl.Acquire(path)
+	defer m.kl.Release(&h)
+
+	if err := m.makeMountpathReadOnly(path); err != nil {
+		return fmt.Errorf("Making mountpath readonly failed: %v", err)
 	}
 
+	// The device is not mounted at path, mount it and add to its mountpoints.
+	if err := m.mountImpl.Mount(device, path, fs, flags, data, timeout); err != nil {
+		return err
+	}
 	info.Mountpoint = append(info.Mountpoint, &PathInfo{Path: path})
 	m.addPath(path, device)
 	return nil
@@ -355,7 +362,7 @@ func (m *Mounter) Mount(
 
 // Unmount device at mountpoint and from the matrix.
 // ErrEnoent is returned if the device or mountpoint for the device is not found.
-func (m *Mounter) Unmount(device, path string, flags int, timeout int) error {
+func (m *Mounter) Unmount(device, path string, flags int, timeout int, removePath bool) error {
 	m.Lock()
 
 	path = normalizeMountPath(path)
@@ -371,12 +378,7 @@ func (m *Mounter) Unmount(device, path string, flags int, timeout int) error {
 		if p.Path != path {
 			continue
 		}
-		err := m.makeMountUnbindable(device, path)
-		if err != nil {
-			return err
-		}
-
-		err = m.mountImpl.Unmount(path, flags, timeout)
+		err := m.mountImpl.Unmount(path, flags, timeout)
 		if err != nil {
 			return err
 		}
@@ -388,75 +390,68 @@ func (m *Mounter) Unmount(device, path string, flags int, timeout int) error {
 		info.Mountpoint[i] = info.Mountpoint[len(info.Mountpoint)-1]
 		info.Mountpoint = info.Mountpoint[0 : len(info.Mountpoint)-1]
 		m.maybeRemoveDevice(device)
+		if removePath {
+			m.RemoveMountPath(path)
+		}
+
 		return nil
 	}
 	dlog.Warnf("Device %q is not mounted at path %q", path, device)
 	return nil
 }
 
-func (m *Mounter) makeMountUnbindable(
-	device string,
-	path string,
-) error {
-	return m.mountImpl.Mount(device, path, "", syscall.MS_UNBINDABLE, "", 0)
-}
+// RemoveMountPath makes the path writeable and removes it after a fixed delay
+func (m *Mounter) RemoveMountPath(path string) error {
+	if _, err := os.Stat(path); err == nil {
+		if _, err := sched.Instance().Schedule(
+			func(sched.Interval) {
+				h := m.kl.Acquire(path)
+				defer m.kl.Release(&h)
 
-func (m *Mounter) MakeMountUnbindable(
-	device string,
-	path string,
-) error {
-	m.Lock()
+				if err := m.makeMountpathWriteable(path); err != nil {
+					dlog.Warnf("Failed to make path: %v writeable. Err: %v", path, err)
+					return
+				}
 
-	path = normalizeMountPath(path)
-	info, ok := m.mounts[device]
-	if !ok {
-		m.Unlock()
-		return ErrEnoent
-	}
-	m.Unlock()
-	info.Lock()
-	defer info.Unlock()
-	for _, p := range info.Mountpoint {
-		if p.Path != path {
-			continue
+				dlog.Infof("Removing mount path directory: %v", path)
+				if err = os.Remove(path); err != nil {
+					dlog.Warnf("Failed to remove path: %v Err: %v", path, err)
+					return
+				}
+			},
+			sched.Periodic(time.Second),
+			time.Now().Add(MountPathRemoveDelay),
+			true /* run only once */); err != nil {
+			dlog.Errorf("Failed to schedule task to remove path:%v. Err: %v", path, err)
+			return err
 		}
-		return m.makeMountUnbindable(device, path)
 	}
 
-	dlog.Warnf("Device %q is not mounted at path %q", path, device)
 	return nil
 }
 
-func (m *Mounter) makeMountShared(
-	device string,
-	path string,
-) error {
-	return m.mountImpl.Mount(device, path, "", syscall.MS_SHARED, "", 0)
+func (m *Mounter) makeMountpathReadOnly(mountpath string) error {
+	if _, err := os.Stat(mountpath); err == nil {
+		if stdout, err := exec.Command("/usr/bin/chattr", "+i", mountpath).Output(); err != nil {
+			dlog.Errorf("chattr cmd failed: %v", stdout)
+			return err
+		}
+	}
+	return nil
 }
 
-func (m *Mounter) MakeMountShared(
-	device string,
-	path string,
-) error {
-	m.Lock()
-
-	path = normalizeMountPath(path)
-	info, ok := m.mounts[device]
-	if !ok {
-		m.Unlock()
-		return ErrEnoent
-	}
-	m.Unlock()
-	info.Lock()
-	defer info.Unlock()
-	for _, p := range info.Mountpoint {
-		if p.Path != path {
-			continue
+func (m *Mounter) makeMountpathWriteable(mountpath string) error {
+	if devicePath, mounted := m.HasTarget(mountpath); !mounted {
+		if _, err := os.Stat(mountpath); err == nil {
+			if stdout, err := exec.Command("/usr/bin/chattr", "-i", mountpath).Output(); err != nil {
+				dlog.Errorf("chattr cmd failed: %v", stdout)
+			}
+			return err
 		}
-		return m.makeMountShared(device, path)
+	} else {
+		dlog.Infof("Not removing chattr attribute from %v as %v is mounted on it", mountpath, devicePath)
 	}
 
-	dlog.Warnf("Device %q is not mounted at path %q", path, device)
 	return nil
 }
 
