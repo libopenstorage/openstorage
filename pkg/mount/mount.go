@@ -348,7 +348,7 @@ func (m *Mounter) Mount(
 	h := m.kl.Acquire(path)
 	defer m.kl.Release(&h)
 
-	if err := m.makeMountpathReadOnly(path); err != nil {
+	if err := MakeMountpathReadOnly(path); err != nil {
 		return fmt.Errorf("Making mountpath readonly failed: %v", err)
 	}
 
@@ -409,15 +409,22 @@ func (m *Mounter) RemoveMountPath(path string) error {
 				h := m.kl.Acquire(path)
 				defer m.kl.Release(&h)
 
-				if err := m.makeMountpathWriteable(path); err != nil {
-					dlog.Warnf("Failed to make path: %v writeable. Err: %v", path, err)
+				if devicePath, mounted := m.HasTarget(path); !mounted {
+					if err := MakeMountpathWriteable(path); err != nil {
+						dlog.Warnf("Failed to make path: %v writeable. Err: %v", path, err)
+						return
+					}
+				} else {
+					dlog.Infof("Not making %v writeable as %v is mounted on it", path, devicePath)
 					return
 				}
 
-				dlog.Infof("Removing mount path directory: %v", path)
-				if err = os.Remove(path); err != nil {
-					dlog.Warnf("Failed to remove path: %v Err: %v", path, err)
-					return
+				if _, err := os.Stat(path); err == nil {
+					dlog.Infof("Removing mount path directory: %v", path)
+					if err = os.Remove(path); err != nil {
+						dlog.Warnf("Failed to remove path: %v Err: %v", path, err)
+						return
+					}
 				}
 			},
 			sched.Periodic(time.Second),
@@ -431,7 +438,8 @@ func (m *Mounter) RemoveMountPath(path string) error {
 	return nil
 }
 
-func (m *Mounter) makeMountpathReadOnly(mountpath string) error {
+// MakeMountpathWriteable makes given mountpath read-only
+func MakeMountpathReadOnly(mountpath string) error {
 	if _, err := os.Stat(mountpath); err == nil {
 		cmd := exec.Command("/usr/bin/chattr", "+i", mountpath)
 		var stderr bytes.Buffer
@@ -445,20 +453,17 @@ func (m *Mounter) makeMountpathReadOnly(mountpath string) error {
 	return nil
 }
 
-func (m *Mounter) makeMountpathWriteable(mountpath string) error {
-	if devicePath, mounted := m.HasTarget(mountpath); !mounted {
-		if _, err := os.Stat(mountpath); err == nil {
-			cmd := exec.Command("/usr/bin/chattr", "-i", mountpath)
-			var stderr bytes.Buffer
-			cmd.Stderr = &stderr
+// MakeMountpathWriteable makes given mountpath writeable
+func MakeMountpathWriteable(mountpath string) error {
+	if _, err := os.Stat(mountpath); err == nil {
+		cmd := exec.Command("/usr/bin/chattr", "-i", mountpath)
+		var stderr bytes.Buffer
+		cmd.Stderr = &stderr
 
-			if err := cmd.Run(); err != nil {
-				dlog.Errorf("chattr -i failed: %s. Err: %v", stderr.String(), err)
-				return err
-			}
+		if err := cmd.Run(); err != nil {
+			dlog.Errorf("chattr -i failed: %s. Err: %v", stderr.String(), err)
+			return err
 		}
-	} else {
-		dlog.Infof("Not removing chattr attribute from %v as %v is mounted on it", mountpath, devicePath)
 	}
 
 	return nil
