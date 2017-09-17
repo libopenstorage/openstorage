@@ -438,7 +438,7 @@ func (m *Mounter) RemoveMountPath(path string) error {
 	return nil
 }
 
-// MakeMountpathWriteable makes given mountpath read-only
+// MakeMountpathReadOnly makes given mountpath read-only
 func MakeMountpathReadOnly(mountpath string) error {
 	if _, err := os.Stat(mountpath); err == nil {
 		cmd := exec.Command("/usr/bin/chattr", "+i", mountpath)
