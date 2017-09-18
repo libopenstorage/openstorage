@@ -348,14 +348,21 @@ func (m *Mounter) Mount(
 	h := m.kl.Acquire(path)
 	defer m.kl.Release(&h)
 
-	if err := MakeMountpathReadOnly(path); err != nil {
-		return fmt.Errorf("Making mountpath readonly failed: %v", err)
+	if err := m.makeMountpathReadOnly(path); err != nil {
+		return fmt.Errorf("making mountpath readonly failed: %v", err)
 	}
 
 	// The device is not mounted at path, mount it and add to its mountpoints.
 	if err := m.mountImpl.Mount(device, path, fs, flags, data, timeout); err != nil {
+		// Rollback
+		if e := m.makeMountpathWriteable(path); e != nil {
+			return fmt.Errorf("failed to make %v writeable during rollback. Err: %v Mount err: %v",
+				path, e, err)
+		}
+
 		return err
 	}
+
 	info.Mountpoint = append(info.Mountpoint, &PathInfo{Path: path})
 	m.addPath(path, device)
 	return nil
@@ -410,7 +417,7 @@ func (m *Mounter) RemoveMountPath(path string) error {
 				defer m.kl.Release(&h)
 
 				if devicePath, mounted := m.HasTarget(path); !mounted {
-					if err := MakeMountpathWriteable(path); err != nil {
+					if err := m.makeMountpathWriteable(path); err != nil {
 						dlog.Warnf("Failed to make path: %v writeable. Err: %v", path, err)
 						return
 					}
@@ -438,8 +445,8 @@ func (m *Mounter) RemoveMountPath(path string) error {
 	return nil
 }
 
-// MakeMountpathReadOnly makes given mountpath read-only
-func MakeMountpathReadOnly(mountpath string) error {
+// makeMountpathReadOnly makes given mountpath read-only
+func (m *Mounter) makeMountpathReadOnly(mountpath string) error {
 	if _, err := os.Stat(mountpath); err == nil {
 		cmd := exec.Command("/usr/bin/chattr", "+i", mountpath)
 		var stderr bytes.Buffer
@@ -453,8 +460,8 @@ func MakeMountpathReadOnly(mountpath string) error {
 	return nil
 }
 
-// MakeMountpathWriteable makes given mountpath writeable
-func MakeMountpathWriteable(mountpath string) error {
+// makeMountpathWriteable makes given mountpath writeable
+func  (m *Mounter) makeMountpathWriteable(mountpath string) error {
 	if _, err := os.Stat(mountpath); err == nil {
 		cmd := exec.Command("/usr/bin/chattr", "-i", mountpath)
 		var stderr bytes.Buffer
