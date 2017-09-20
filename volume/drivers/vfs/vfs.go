@@ -29,16 +29,22 @@ type driver struct {
 	volume.SnapshotDriver
 	volume.StoreEnumerator
 	volume.StatsDriver
+	basePath   string
 }
 
 // Init Driver intialization.
 func Init(params map[string]string) (volume.VolumeDriver, error) {
+	basePath, ok := params["path"]
+	if !ok {
+		basePath = volume.VolumeBase
+	}
 	return &driver{
 		volume.IONotSupported,
 		volume.BlockNotSupported,
 		volume.SnapshotNotSupported,
 		common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
 		volume.StatsNotSupported,
+		basePath,
 	}, nil
 }
 
@@ -53,7 +59,7 @@ func (d *driver) Type() api.DriverType {
 func (d *driver) Create(locator *api.VolumeLocator, source *api.Source, spec *api.VolumeSpec) (string, error) {
 	volumeID := strings.TrimSuffix(uuid.New(), "\n")
 	// Create a directory on the Local machine with this UUID.
-	if err := os.MkdirAll(filepath.Join(volume.VolumeBase, string(volumeID)), 0744); err != nil {
+	if err := os.MkdirAll(filepath.Join(d.basePath, string(volumeID)), 0744); err != nil {
 		return "", err
 	}
 	v := common.NewVolume(
@@ -63,7 +69,7 @@ func (d *driver) Create(locator *api.VolumeLocator, source *api.Source, spec *ap
 		source,
 		spec,
 	)
-	v.DevicePath = filepath.Join(volume.VolumeBase, volumeID)
+	v.DevicePath = filepath.Join(d.basePath, volumeID)
 	if err := d.CreateVol(v); err != nil {
 		return "", err
 	}
@@ -74,7 +80,7 @@ func (d *driver) Delete(volumeID string) error {
 	if _, err := d.GetVol(volumeID); err != nil {
 		return err
 	}
-	os.RemoveAll(filepath.Join(volume.VolumeBase, string(volumeID)))
+	os.RemoveAll(filepath.Join(d.basePath, string(volumeID)))
 	if err := d.DeleteVol(volumeID); err != nil {
 		return err
 	}
@@ -99,13 +105,13 @@ func (d *driver) Mount(volumeID string, mountpath string, options map[string]str
 	}
 	syscall.Unmount(mountpath, 0)
 	if err := syscall.Mount(
-		filepath.Join(volume.VolumeBase, string(volumeID)),
+		filepath.Join(d.basePath, string(volumeID)),
 		mountpath,
 		string(v.Spec.Format),
 		syscall.MS_BIND, "",
 	); err != nil {
 		dlog.Printf("Cannot mount %s at %s because %+v",
-			filepath.Join(volume.VolumeBase, string(volumeID)),
+			filepath.Join(d.basePath, string(volumeID)),
 			mountpath,
 			err,
 		)

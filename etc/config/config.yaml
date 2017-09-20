@@ -5,6 +5,7 @@ osd:
     clusterid: "deadbeeef"
   drivers:
 #   vfs:
+#     path: "/var/lib/osd"
 #   pwx:
 #     mgmtPort: "2376"
 #     pluginPort: "2377"
