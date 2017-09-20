@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/libopenstorage/openstorage/pkg/keylock"
+	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/pkg/sched"
 	"go.pedge.io/dlog"
 )
@@ -43,13 +44,21 @@ type Manager interface {
 	// GetSourcePaths returns all source paths from the mount table
 	GetSourcePaths() []string
 	// Mount device at mountpoint
-	Mount(minor int, device, path, fs string, flags uintptr, data string, timeout int) error
+	Mount(
+		minor int,
+		device string,
+		path string,
+		fs string,
+		flags uintptr,
+		data string,
+		timeout int,
+		opts map[string]string) error
 	// Unmount device at mountpoint and remove from the matrix.
 	// ErrEnoent is returned if the device or mountpoint for the device
 	// is not found.
-	Unmount(source, path string, flags int, timeout int, removePath bool) error
+	Unmount(source, path string, flags int, timeout int, opts map[string]string) error
 	// RemoveMountPath removes the given path
-	RemoveMountPath(path string) error
+	RemoveMountPath(path string, opts map[string]string) error
 }
 
 // MountImpl backend implementation for Mount/Unmount calls
@@ -297,6 +306,7 @@ func (m *Mounter) Mount(
 	flags uintptr,
 	data string,
 	timeout int,
+	opts map[string]string,
 ) error {
 	path = normalizeMountPath(path)
 	if len(m.allowedDirs) > 0 {
@@ -370,7 +380,13 @@ func (m *Mounter) Mount(
 
 // Unmount device at mountpoint and from the matrix.
 // ErrEnoent is returned if the device or mountpoint for the device is not found.
-func (m *Mounter) Unmount(device, path string, flags int, timeout int, removePath bool) error {
+func (m *Mounter) Unmount(
+	device string,
+	path string,
+	flags int,
+	timeout int,
+	opts map[string]string,
+) error {
 	m.Lock()
 
 	path = normalizeMountPath(path)
@@ -398,8 +414,8 @@ func (m *Mounter) Unmount(device, path string, flags int, timeout int, removePat
 		info.Mountpoint[i] = info.Mountpoint[len(info.Mountpoint)-1]
 		info.Mountpoint = info.Mountpoint[0 : len(info.Mountpoint)-1]
 		m.maybeRemoveDevice(device)
-		if removePath {
-			m.RemoveMountPath(path)
+		if options.IsBoolOptionSet(opts, options.OptionsDeleteAfterUnmount) {
+			m.RemoveMountPath(path, opts)
 		}
 
 		return nil
@@ -408,37 +424,48 @@ func (m *Mounter) Unmount(device, path string, flags int, timeout int, removePat
 	return nil
 }
 
-// RemoveMountPath makes the path writeable and removes it after a fixed delay
-func (m *Mounter) RemoveMountPath(path string) error {
-	if _, err := os.Stat(path); err == nil {
-		if _, err := sched.Instance().Schedule(
-			func(sched.Interval) {
-				h := m.kl.Acquire(path)
-				defer m.kl.Release(&h)
+func (m *Mounter) removeMountPath(path string) error {
 
-				if devicePath, mounted := m.HasTarget(path); !mounted {
-					if err := m.makeMountpathWriteable(path); err != nil {
-						dlog.Warnf("Failed to make path: %v writeable. Err: %v", path, err)
-						return
-					}
-				} else {
-					dlog.Infof("Not making %v writeable as %v is mounted on it", path, devicePath)
-					return
-				}
+	h := m.kl.Acquire(path)
+	defer m.kl.Release(&h)
 
-				if _, err := os.Stat(path); err == nil {
-					dlog.Infof("Removing mount path directory: %v", path)
-					if err = os.Remove(path); err != nil {
-						dlog.Warnf("Failed to remove path: %v Err: %v", path, err)
-						return
-					}
-				}
-			},
-			sched.Periodic(time.Second),
-			time.Now().Add(MountPathRemoveDelay),
-			true /* run only once */); err != nil {
-			dlog.Errorf("Failed to schedule task to remove path:%v. Err: %v", path, err)
+	if devicePath, mounted := m.HasTarget(path); !mounted {
+		if err := m.makeMountpathWriteable(path); err != nil {
+			dlog.Warnf("Failed to make path: %v writeable. Err: %v", path, err)
 			return err
+		}
+	} else {
+		dlog.Infof("Not making %v writeable as %v is mounted on it", path, devicePath)
+		return nil
+	}
+
+	if _, err := os.Stat(path); err == nil {
+		dlog.Infof("Removing mount path directory: %v", path)
+		if err = os.Remove(path); err != nil {
+			dlog.Warnf("Failed to remove path: %v Err: %v", path, err)
+			return err
+		}
+	}
+	return nil
+}
+
+// RemoveMountPath makes the path writeable and removes it after a fixed delay
+func (m *Mounter) RemoveMountPath(path string, opts map[string]string) error {
+	if _, err := os.Stat(path); err == nil {
+		if options.IsBoolOptionSet(opts, options.OptionsWaitBeforeDelete) {
+			if _, err := sched.Instance().Schedule(
+				func(sched.Interval) {
+					m.removeMountPath(path)
+				},
+				sched.Periodic(time.Second),
+				time.Now().Add(MountPathRemoveDelay),
+				true /* run only once */); err != nil {
+				dlog.Errorf("Failed to schedule task to remove path:%v. Err: %v",
+					path, err)
+				return err
+			}
+		} else {
+			return m.removeMountPath(path)
 		}
 	}
 
@@ -461,7 +488,7 @@ func (m *Mounter) makeMountpathReadOnly(mountpath string) error {
 }
 
 // makeMountpathWriteable makes given mountpath writeable
-func  (m *Mounter) makeMountpathWriteable(mountpath string) error {
+func (m *Mounter) makeMountpathWriteable(mountpath string) error {
 	if _, err := os.Stat(mountpath); err == nil {
 		cmd := exec.Command("/usr/bin/chattr", "-i", mountpath)
 		var stderr bytes.Buffer

@@ -11,6 +11,7 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/spec"
 	"github.com/libopenstorage/openstorage/config"
+	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
 )
@@ -393,7 +394,7 @@ func (d *driver) attachOptionsFromSpec(
 ) map[string]string {
 	if spec.Passphrase != "" {
 		opts := make(map[string]string)
-		opts[volume.OptionsSecret] = spec.Passphrase
+		opts[options.OptionsSecret] = spec.Passphrase
 		return opts
 	}
 	return nil
@@ -611,10 +612,10 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	options := make(map[string]string)
-	options[volume.OptionsDeleteAfterUnmount] = "true"
+	opts := make(map[string]string)
+	opts[options.OptionsDeleteAfterUnmount] = "true"
 
-	err = v.Unmount(id, mountpoint, options)
+	err = v.Unmount(id, mountpoint, opts)
 	if err != nil {
 		d.logRequest(method, request.Name).Warnf(
 			"Cannot unmount volume %v, %v",

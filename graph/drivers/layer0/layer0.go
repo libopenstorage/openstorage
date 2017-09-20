@@ -17,6 +17,7 @@ import (
 	"github.com/docker/docker/pkg/parsers"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/graph"
+	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
 )
@@ -252,10 +253,10 @@ func (l *Layer0) Remove(id string) error {
 			}
 			l.Driver.Remove(l.realID(id))
 
-			options := make(map[string]string)
-			options[volume.OptionsDeleteAfterUnmount] = "true"
+			opts := make(map[string]string)
+			opts[options.OptionsDeleteAfterUnmount] = "true"
 
-			err = l.volDriver.Unmount(v.volumeID, v.path, options)
+			err = l.volDriver.Unmount(v.volumeID, v.path, opts)
 			if l.volDriver.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
 				_ = l.volDriver.Detach(v.volumeID, nil)
 			}
