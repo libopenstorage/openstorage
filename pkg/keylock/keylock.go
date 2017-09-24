@@ -48,13 +48,32 @@ type LockHandle struct {
 }
 
 type keyLock struct {
-	sync.RWMutex
+	sync.Mutex
 	lockMap map[string]*LockHandle
 }
+
+var (
+	klLock sync.Mutex
+	klMap  = make(map[string]KeyLock)
+)
 
 // New returns a new instance of a KeyLock.
 func New() KeyLock {
 	return &keyLock{lockMap: make(map[string]*LockHandle)}
+}
+
+// ByName creates a new instance or returns an existing instance
+// if found in the map.
+func ByName(klName string) KeyLock {
+	klLock.Lock()
+	defer klLock.Unlock()
+
+	kl, ok := klMap[klName]
+	if !ok {
+		kl = New()
+		klMap[klName] = kl
+	}
+	return kl
 }
 
 func (kl *keyLock) Acquire(id string) LockHandle {
@@ -69,8 +88,8 @@ func (kl *keyLock) Release(h *LockHandle) error {
 		return &ErrInvalidHandle{}
 	}
 
-	kl.RLock()
-	defer kl.RUnlock()
+	kl.Lock()
+	defer kl.Unlock()
 	lockedH, exists := kl.lockMap[h.id]
 	if !exists {
 		return &ErrKeyLockNotFound{ID: h.id}

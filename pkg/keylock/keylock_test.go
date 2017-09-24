@@ -20,7 +20,7 @@ func TestLock(t *testing.T) {
 }
 
 func TestLockRelease(t *testing.T) {
-	kl := New()
+	kl := ByName("test")
 
 	cb := make(chan *LockHandle)
 	go lock(t, kl, "foo", cb)
@@ -32,11 +32,12 @@ func TestLockRelease(t *testing.T) {
 }
 
 func TestDoubleLock(t *testing.T) {
-	kl := New()
+	kl := ByName("test")
 
 	cb1 := make(chan *LockHandle)
 	go lock(t, kl, "foo", cb1)
 	h1, err := wait(t, kl, cb1)
+	require.NoError(t, err, "wait")
 
 	cb2 := make(chan *LockHandle)
 	go lock(t, kl, "foo", cb2)
@@ -53,11 +54,12 @@ func TestDoubleLock(t *testing.T) {
 }
 
 func TestBadRelease(t *testing.T) {
-	kl := New()
+	kl := ByName("test")
 
 	cb1 := make(chan *LockHandle)
 	go lock(t, kl, "foo", cb1)
 	h1, err := wait(t, kl, cb1)
+	require.NoError(t, err, "wait")
 
 	cb2 := make(chan *LockHandle)
 	go lock(t, kl, "foo", cb2)
@@ -71,6 +73,35 @@ func TestBadRelease(t *testing.T) {
 	require.NoError(t, kl.Release(h2), "unlock")
 
 	endState(t, kl, 0)
+}
+
+func TestLottaLocks(t *testing.T) {
+	kl := ByName("test")
+
+	cb := make(chan int)
+	for i := 0; i < 100; i++ {
+		go lockAndSleep(t, kl, "foo", cb)
+	}
+	for i := 0; i != 100; {
+		i += <-cb
+		fmt.Printf("+")
+	}
+	fmt.Println("+")
+	endState(t, kl, 0)
+}
+
+func lockAndSleep(t *testing.T, kl KeyLock, key string, doneCb chan<- int) {
+	cb := make(chan *LockHandle)
+	go lock(t, kl, key, cb)
+
+	fmt.Printf("-")
+	h, err := wait(t, kl, cb)
+	for err != nil {
+		h, err = wait(t, kl, cb)
+	}
+	time.Sleep(2)
+	require.NoError(t, kl.Release(h), "unlock")
+	doneCb <- 1
 }
 
 func lock(t *testing.T, kl KeyLock, key string, cb chan<- *LockHandle) {
