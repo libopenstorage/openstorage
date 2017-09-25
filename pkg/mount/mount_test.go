@@ -12,6 +12,7 @@ import (
 const (
 	source = "/mnt/ost/mount_test_src"
 	dest   = "/mnt/ost/mount_test_dest"
+	trashLocation = "/tmp/.trash"
 )
 
 var m Manager
@@ -29,7 +30,7 @@ func TestAll(t *testing.T) {
 
 func setup(t *testing.T) {
 	var err error
-	m, err = New(NFSMount, nil, []string{""}, nil, []string{})
+	m, err = New(NFSMount, nil, []string{""}, nil, []string{}, trashLocation)
 	if err != nil {
 		t.Fatalf("Failed to setup test %v", err)
 	}

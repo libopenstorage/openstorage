@@ -24,7 +24,7 @@ func NewNFSMounter(server string, mountImpl MountImpl, allowedDirs []string) (Ma
 			mounts:      make(DeviceMap),
 			paths:       make(PathMap),
 			allowedDirs: allowedDirs,
-			kl: keylock.New(),
+			kl:          keylock.New(),
 		},
 	}
 	err := m.Load([]string{""})
