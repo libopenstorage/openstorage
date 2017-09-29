@@ -36,6 +36,7 @@ const (
 	SpecGroupEnforce         = "fg"
 	SpecZones                = "zones"
 	SpecRacks                = "racks"
+	SpecRack                 = "rack"
 	SpecRegions              = "regions"
 	SpecLabels               = "labels"
 	SpecPriorityAlias        = "priority_io"

@@ -78,6 +78,7 @@ var (
 	secureRegex     = regexp.MustCompile(api.SpecSecure + "=([A-Za-z]+),?")
 	zonesRegex      = regexp.MustCompile(api.SpecZones + "=([A-Za-z]+),?")
 	racksRegex      = regexp.MustCompile(api.SpecRacks + "=([A-Za-z]+),?")
+	rackRegex       = regexp.MustCompile(api.SpecRack + "=([A-Za-z]+),?")
 	aggrRegex       = regexp.MustCompile(api.SpecAggregationLevel + "=([0-9]+|" +
 		api.SpecAutoAggregationValue + "),?")
 	compressedRegex   = regexp.MustCompile(api.SpecCompressed + "=([A-Za-z]+),?")
@@ -246,6 +247,8 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			}
 		case api.SpecZones, api.SpecRacks:
 			locator.VolumeLabels[k] = v
+		case api.SpecRack:
+			locator.VolumeLabels[api.SpecRacks] = v
 		case api.SpecCompressed:
 			if compressed, err := strconv.ParseBool(v); err != nil {
 				return nil, nil, nil, err
@@ -334,6 +337,10 @@ func (d *specHandler) SpecFromString(
 	}
 	if ok, racks := d.getVal(racksRegex, str); ok {
 		opts[api.SpecRacks] = racks
+	} else {
+		if ok, rack := d.getVal(rackRegex, str); ok {
+			opts[api.SpecRack] = rack
+		}
 	}
 	if ok, aggregationLvl := d.getVal(aggrRegex, str); ok {
 		opts[api.SpecAggregationLevel] = aggregationLvl
