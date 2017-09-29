@@ -469,7 +469,6 @@ func (m *Mounter) RemoveMountPath(mountPath string, opts map[string]string) erro
 			if err = os.Symlink(mountPath, symlinkPath); err != nil {
 				if !os.IsExist(err) {
 					dlog.Errorf("Error creating sym link %s => %s. Err: %v", symlinkPath, mountPath, err)
-					return err
 				}
 			}
 
