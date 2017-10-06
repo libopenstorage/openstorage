@@ -88,6 +88,7 @@ const (
 
 const mountPathRemoveDelay = 30 * time.Second
 const chattrBin = "/usr/bin/chattr"
+const lsattrBin = "/usr/bin/lsattr"
 
 var (
 	// ErrExist is returned if path is already mounted to a different device.
@@ -366,16 +367,20 @@ func (m *Mounter) Mount(
 	h := m.kl.Acquire(path)
 	defer m.kl.Release(&h)
 
+	// Record previous state of the path
+	pathWasReadOnly := m.isPathSetImmutable(path)
 	if err := m.makeMountpathReadOnly(path); err != nil {
 		return fmt.Errorf("failed to make %s readonly Err: %v", path, err)
 	}
 
 	// The device is not mounted at path, mount it and add to its mountpoints.
 	if err := m.mountImpl.Mount(device, path, fs, flags, data, timeout); err != nil {
-		// Rollback
-		if e := m.makeMountpathWriteable(path); e != nil {
-			return fmt.Errorf("failed to make %v writeable during rollback. Err: %v Mount err: %v",
-				path, e, err)
+		// Rollback only if was writeable
+		if !pathWasReadOnly {
+			if e := m.makeMountpathWriteable(path); e != nil {
+				return fmt.Errorf("failed to make %v writeable during rollback. Err: %v Mount err: %v",
+					path, e, err)
+			}
 		}
 
 		return err
@@ -541,6 +546,37 @@ func (m *Mounter) removeSoftlinkAndTarget(link string) error {
 	}
 
 	return nil
+}
+
+// isPathSetImmutable returns true on error in getting path info or if path
+// is immutable .
+func (m *Mounter) isPathSetImmutable(mountpath string) bool {
+	if _, err := os.Stat(mountpath); err != nil {
+		dlog.Errorf("Failed to stat mount path:%v", err)
+		return true
+	}
+	op, err := exec.Command(lsattrBin, "-d", mountpath).CombinedOutput()
+	if err != nil {
+		// Cannot get path status, return true so that immutable bit is not reverted
+		dlog.Errorf("Error listing attrs for %v err:%v", mountpath, string(op))
+		return true
+	}
+	// 'lsattr -d' output is a single line with 2 fields separated by space; 1st one
+	// is list of applicable attrs and 2nd field is the path itself.Sample output below.
+	// lsattr -d /mnt/vol2
+	// ----i--------e-- /mnt/vol2
+	attrs := strings.Split(string(op), " ")
+	if len(attrs) != 2 {
+		// Cannot get path status, return true so that immutable bit is not reverted
+		dlog.Errorf("Invalid lsattr output %v", string(op))
+		return true
+	}
+	if strings.Contains(attrs[0], "i") {
+		dlog.Errorf("Mount Path already set to Immutable")
+		return true
+	}
+
+	return false
 }
 
 // makeMountpathReadOnly makes given mountpath read-only
