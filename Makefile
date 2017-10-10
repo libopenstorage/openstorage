@@ -194,3 +194,43 @@ clean:
 	launch-local-btrfs \
 	install-flexvolume-plugin \
 	clean
+
+$(GOPATH)/bin/cover:
+	go get golang.org/x/tools/cmd/cover
+
+$(GOPATH)/bin/gocovmerge:
+	go get github.com/wadey/gocovmerge
+
+# Generate test-coverage HTML report
+# - note: the 'go test -coverprofile...' does append results, so we're merging individual pkgs in for-loop
+coverage: $(GOPATH)/bin/cover $(GOPATH)/bin/gocovmerge
+	rm -f coverage.* c.tmp co.tmp
+	for p in $(PKGS) ; do   \
+	    go test -coverprofile=c.tmp -tags "$(TAGS)" $(TESTFLAGS) $$p ; \
+	    if [ -f c.tmp ]; then \
+	        if [ -s coverage.out ]; then \
+	            mv coverage.out co.tmp ; \
+	            $(GOPATH)/bin/gocovmerge co.tmp c.tmp >> coverage.out ; \
+	            rm -f co.tmp c.tmp ; \
+	        else \
+	            mv c.tmp coverage.out ; \
+	        fi ; \
+	    fi ; \
+	done
+	go tool cover -html=coverage.out -o coverage.html
+	@cp coverage.out coverage.html /mnt/ && \
+	echo "INFO: libopenstorage coverage saved at /mnt/coverage.{html,out}"
+
+docker-coverage: docker-build-osd-dev
+	docker run \
+		--privileged \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v /mnt:/mnt \
+		-e AWS_ACCESS_KEY_ID \
+		-e AWS_SECRET_ACCESS_KEY \
+		-e "TAGS=$(TAGS)" \
+		-e "PKGS=$(PKGS)" \
+		-e "BUILDFLAGS=$(BUILDFLAGS)" \
+		-e "TESTFLAGS=$(TESTFLAGS)" \
+		openstorage/osd-dev \
+			make coverage
