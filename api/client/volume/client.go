@@ -403,3 +403,35 @@ func (v *volumeClient) doVolumeSetGetResponse(volumeID string,
 	}
 	return response, nil
 }
+
+// Quiesce quiesces volume i/o
+func (v *volumeClient) Quiesce(
+	volumeID string,
+	timeoutSec uint64,
+	quiesceID string,
+) error {
+	response := &api.VolumeResponse{}
+	req := v.c.Post().Resource(volumePath + "/quiesce").Instance(volumeID)
+	req.QueryOption(api.OptTimeoutSec, strconv.FormatUint(timeoutSec, 10))
+	req.QueryOption(api.OptQuiesceID, quiesceID)
+	if err := req.Do().Unmarshal(response); err != nil {
+		return err
+	}
+	if response.Error != "" {
+		return errors.New(response.Error)
+	}
+	return nil
+}
+
+// Unquiesce un-quiesces volume i/o
+func (v *volumeClient) Unquiesce(volumeID string) error {
+	response := &api.VolumeResponse{}
+	req := v.c.Post().Resource(volumePath + "/unquiesce").Instance(volumeID)
+	if err := req.Do().Unmarshal(response); err != nil {
+		return err
+	}
+	if response.Error != "" {
+		return errors.New(response.Error)
+	}
+	return nil
+}

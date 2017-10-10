@@ -32,6 +32,7 @@ type driver struct {
 	volume.IODriver
 	volume.StoreEnumerator
 	volume.StatsDriver
+	volume.QuiesceDriver
 	nfsServer string
 	nfsPath   string
 	mounter   mount.Manager
@@ -58,6 +59,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		IODriver:        volume.IONotSupported,
 		StoreEnumerator: common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
 		StatsDriver:     volume.StatsNotSupported,
+		QuiesceDriver:   volume.QuiesceNotSupported,
 		nfsServer:       server,
 		nfsPath:         path,
 		mounter:         mounter,

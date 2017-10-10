@@ -17,6 +17,9 @@ var (
 	// StatsNotSupported is a null stats driver implementation. This can be used
 	// by drivers that do not want to implement the stats interface.
 	StatsNotSupported = &statsNotSupported{}
+	// QuiesceNotSupported implements quiesce/unquiesce by returning not
+	// supported error.
+	QuiesceNotSupported = &quiesceNotSupported{}
 )
 
 type blockNotSupported struct{}
@@ -71,4 +74,18 @@ func (s *statsNotSupported) UsedSize(volumeID string) (uint64, error) {
 // GetActiveRequests gets active requests
 func (s *statsNotSupported) GetActiveRequests() (*api.ActiveRequests, error) {
 	return nil, nil
+}
+
+type quiesceNotSupported struct{}
+
+func (s *quiesceNotSupported) Quiesce(
+	volumeID string,
+	timeoutSeconds uint64,
+	quiesceID string,
+) error {
+	return ErrNotSupported
+}
+
+func (s *quiesceNotSupported) Unquiesce(volumeID string) error {
+	return ErrNotSupported
 }

@@ -120,11 +120,22 @@ type StatsDriver interface {
 	GetActiveRequests() (*api.ActiveRequests, error)
 }
 
+type QuiesceDriver interface {
+	// Freezes mounted filesystem resulting in a quiesced volume state.
+	// Only one freeze operation may be active at any given time per volume.
+	// Unfreezes after timeout seconds if it is non-zero.
+	// An optional quiesceID can be passed for driver-specific use.
+	Quiesce(volumeID string, timeoutSeconds uint64, quiesceID string) error
+	// Unfreezes mounted filesystem if it was frozen.
+	Unquiesce(volumeID string) error
+}
+
 // ProtoDriver must be implemented by all volume drivers.  It specifies the
 // most basic functionality, such as creating and deleting volumes.
 type ProtoDriver interface {
 	SnapshotDriver
 	StatsDriver
+	QuiesceDriver
 	// Name returns the name of the driver.
 	Name() string
 	// Type of this driver

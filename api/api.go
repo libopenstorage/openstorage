@@ -57,6 +57,10 @@ const (
 	OptConfigLabel = "ConfigLabel"
 	// OptCumulative query parameter used to request cumulative stats.
 	OptCumulative = "Cumulative"
+	// OptTimeout query parameter used to indicate timeout seconds
+	OptTimeoutSec = "TimeoutSec"
+	// OptQuiesceID query parameter use for quiesce
+	OptQuiesceID = "QuiesceID"
 )
 
 // Api client-server Constants

@@ -35,6 +35,7 @@ type driver struct {
 	volume.IODriver
 	volume.StoreEnumerator
 	volume.StatsDriver
+	volume.QuiesceDriver
 	buseDevices map[string]*buseDev
 	cl          cluster.ClusterListener
 }
@@ -93,7 +94,8 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		IODriver: volume.IONotSupported,
 		StoreEnumerator: common.NewDefaultStoreEnumerator(Name,
 			kvdb.Instance()),
-		StatsDriver: volume.StatsNotSupported,
+		StatsDriver:   volume.StatsNotSupported,
+		QuiesceDriver: volume.QuiesceNotSupported,
 	}
 	inst.buseDevices = make(map[string]*buseDev)
 	if err := os.MkdirAll(BuseMountPath, 0744); err != nil {
