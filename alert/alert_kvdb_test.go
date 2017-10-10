@@ -1,7 +1,6 @@
 package alert
 
 import (
-	"fmt"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
@@ -249,7 +248,7 @@ func retrieve(t *testing.T) {
 		Severity: api.SeverityType_SEVERITY_TYPE_ALARM,
 	}
 	err := kva.Raise(&raiseAlert)
-	fmt.Printf("Raise err : %s, Raise Id : %d \n", err, raiseAlert.Id)
+	//fmt.Printf("Raise err : %s, Raise Id : %d \n", err, raiseAlert.Id)
 
 	alert, err = kva.Retrieve(api.ResourceType_RESOURCE_TYPE_NODE, raiseAlert.Id)
 	require.NoError(t, err, "Failed to retrieve alert")
@@ -366,6 +365,12 @@ func enumerate(t *testing.T) {
 	err = kva.Erase(api.ResourceType_RESOURCE_TYPE_VOLUME, raiseAlert3.Id)
 	err = kva.Erase(api.ResourceType_RESOURCE_TYPE_NODE, raiseAlert4.Id)
 	err = kva.Erase(api.ResourceType_RESOURCE_TYPE_VOLUME, fakeAlertId)
+
+	// let's sleep a bit, and validate alerts erasures have been flushed
+	time.Sleep(time.Second)
+	err = kva.Erase(api.ResourceType_RESOURCE_TYPE_VOLUME, fakeAlertId)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "not found", "Expecting cleanup completed successfully")
 }
 
 func testAlertWatcher(alert *api.Alert, action api.AlertActionType, prefix string, key string) error {
