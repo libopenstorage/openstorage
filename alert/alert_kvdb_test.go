@@ -1,16 +1,17 @@
 package alert
 
 import (
-	"github.com/libopenstorage/openstorage/api"
-	"github.com/portworx/kvdb"
-	"github.com/portworx/kvdb/mem"
-	"github.com/stretchr/testify/require"
-	"go.pedge.io/dlog"
-	"github.com/libopenstorage/openstorage/pkg/proto/time"
 	"strconv"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/pkg/proto/time"
+	"github.com/portworx/kvdb"
+	"github.com/portworx/kvdb/mem"
+	"github.com/stretchr/testify/require"
+	"go.pedge.io/dlog"
 )
 
 var (
@@ -402,7 +403,7 @@ func watch(t *testing.T) {
 	err = kva.Raise(&raiseAlert1)
 
 	// Sleep for sometime so that we pass on some previous watch callbacks
-	time.Sleep(time.Millisecond * 100)
+	time.Sleep(time.Second * 1)
 
 	require.Equal(t, 1, isWatcherCalled, "Callback function not called")
 	require.Equal(t, api.AlertActionType_ALERT_ACTION_TYPE_CREATE, watcherAction, "action mismatch for create")
