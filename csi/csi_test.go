@@ -18,42 +18,85 @@ package csi
 
 import (
 	"net"
+	"reflect"
 	"testing"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
+	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-
-	"github.com/libopenstorage/openstorage/tests"
 )
 
-func TestNewCSIServerListener(t *testing.T) {
+// csiTestService is a simple struct used abstract
+// the creation and setup of the gRPC CSI service
+type csiTestService struct {
+	listener     net.Listener
+	conn         *grpc.ClientConn
+	osdCsiServer *OsdCsiServer
+}
+
+func newCsiTestService(t *testing.T) *csiTestService {
+	tester := &csiTestService{}
 
 	// Listen on port
 	l, err := net.Listen("tcp", "127.0.0.1:0")
-	tests.Assert(t, err == nil)
+	assert.Nil(t, err)
+	tester.listener = l
 
 	// Setup simple driver
-	s := NewOsdCsiServer(&OsdCsiServerConfig{
-		Listener: l,
+	tester.osdCsiServer = NewOsdCsiServer(&OsdCsiServerConfig{
+		Listener: tester.listener,
 	})
-	err = s.Start()
-	tests.Assert(t, err == nil)
-	defer s.Stop()
+	err = tester.osdCsiServer.Start()
+	assert.Nil(t, err)
 
 	// Setup a connection to the driver
-	conn, err := grpc.Dial(s.Address(), grpc.WithInsecure())
-	tests.Assert(t, err == nil)
-	defer conn.Close()
+	tester.conn, err = grpc.Dial(tester.osdCsiServer.Address(), grpc.WithInsecure())
+	assert.Nil(t, err)
+
+	return tester
+}
+
+func (s *csiTestService) Stop() {
+	s.conn.Close()
+	s.osdCsiServer.Stop()
+}
+
+func (s *csiTestService) Conn() *grpc.ClientConn {
+	return s.conn
+}
+
+func TestNewCSIServerGetPluginInfo(t *testing.T) {
+
+	// Create server and client connection
+	s := newCsiTestService(t)
+	defer s.Stop()
 
 	// Make a call
-	c := csi.NewIdentityClient(conn)
+	c := csi.NewIdentityClient(s.Conn())
 	r, err := c.GetPluginInfo(context.Background(), &csi.GetPluginInfoRequest{})
-	tests.Assert(t, err == nil)
+	assert.Nil(t, err)
 
 	// Verify
 	name := r.GetResult().GetName()
 	version := r.GetResult().GetVendorVersion()
-	tests.Assert(t, name == csiDriverName)
-	tests.Assert(t, version == csiDriverVersion)
+	assert.Equal(t, name, csiDriverName)
+	assert.Equal(t, version, csiDriverVersion)
+}
+
+func TestNewCSIServerGetSupportedVersions(t *testing.T) {
+
+	// Create server and client connection
+	s := newCsiTestService(t)
+	defer s.Stop()
+
+	// Make a call
+	c := csi.NewIdentityClient(s.Conn())
+	r, err := c.GetSupportedVersions(context.Background(), &csi.GetSupportedVersionsRequest{})
+	assert.Nil(t, err)
+
+	// Verify
+	versions := r.GetResult().GetSupportedVersions()
+	assert.Equal(t, len(versions), 1)
+	assert.True(t, reflect.DeepEqual(versions[0], csiVersion))
 }

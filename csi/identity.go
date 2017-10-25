@@ -26,6 +26,14 @@ const (
 	csiDriverName    = "csi-osd"
 )
 
+var (
+	csiVersion = &csi.Version{
+		Major: 0,
+		Minor: 0,
+		Patch: 0,
+	}
+)
+
 func (s *OsdCsiServer) GetSupportedVersions(
 	context.Context,
 	*csi.GetSupportedVersionsRequest) (*csi.GetSupportedVersionsResponse, error) {
@@ -33,11 +41,7 @@ func (s *OsdCsiServer) GetSupportedVersions(
 		Reply: &csi.GetSupportedVersionsResponse_Result_{
 			Result: &csi.GetSupportedVersionsResponse_Result{
 				SupportedVersions: []*csi.Version{
-					&csi.Version{
-						Major: 0,
-						Minor: 0,
-						Patch: 0,
-					},
+					csiVersion,
 				},
 			},
 		},
