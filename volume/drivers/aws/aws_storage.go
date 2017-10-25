@@ -192,13 +192,12 @@ func (s *ec2Ops) waitAttachmentStatus(
 		outVol = awsVols.Volumes[0]
 		awsAttachment := awsVols.Volumes[0].Attachments
 		if awsAttachment == nil || len(awsAttachment) == 0 {
+			// We have encountered scenarios where AWS returns a nil attachment state
+			// for a volume transitioning from detaching -> attaching.
 			actual = ec2.VolumeAttachmentStateDetached
-			if actual == desired {
-				break
-			}
-			return nil, fmt.Errorf("Nil attachment state for %v", volumeID)
+		} else {
+			actual = *awsAttachment[0].State
 		}
-		actual = *awsAttachment[0].State
 		if actual == desired {
 			break
 		}
