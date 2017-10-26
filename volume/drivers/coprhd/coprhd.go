@@ -161,7 +161,7 @@ func (d *driver) Create(
 		1,                         // Count
 		locator.Name,              // Name
 		d.project,                 // Project
-		fmt.Sprintf("%.6fGB", sz), // Volume Size
+		fmt.Sprintf("%.6dGB", sz), // Volume Size
 		d.varray,                  // Virtual Block Array
 		d.vpool,                   // Virtual Block Pool
 	}
@@ -172,7 +172,7 @@ func (d *driver) Create(
 
 	if resp.Status() != http.StatusAccepted {
 
-		return "", fmt.Errorf("Failed to create volume: %s", resp.Status())
+		return "", fmt.Errorf("Failed to create volume: %d", resp.Status())
 	}
 
 	return res.Task[0].Resource.Id, err

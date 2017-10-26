@@ -49,8 +49,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes/timestamp"
 
 	"github.com/libopenstorage/openstorage/pkg/proto/time"
 )

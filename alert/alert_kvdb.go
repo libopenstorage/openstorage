@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/pkg/proto/time"
 	"github.com/portworx/kvdb"
 	"go.pedge.io/dlog"
-	"github.com/libopenstorage/openstorage/pkg/proto/time"
 	"strconv"
 	"strings"
 	"sync"
@@ -480,7 +480,7 @@ func processWatchError(err error, watcherKey string, prefix string) error {
 	}
 	w.watchErrors++
 	if err := subscribeWatch(watcherKey); err != nil {
-		dlog.Warnf("Failed to resubscribe alert watch for key: %v: %v", )
+		dlog.Warnf("Failed to resubscribe alert watch for key: %s: %s", watcherKey, err.Error())
 	}
 	return err
 }

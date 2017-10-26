@@ -11,10 +11,10 @@ import (
 )
 
 const (
-	clusterPath = "/cluster"
-	loggingurl = "/loggingurl"
-	managementurl = "/managementurl"
-	fluentdhost = "/fluentdconfig"
+	clusterPath     = "/cluster"
+	loggingurl      = "/loggingurl"
+	managementurl   = "/managementurl"
+	fluentdhost     = "/fluentdconfig"
 	tunnelconfigurl = "/tunnelconfig"
 )
 
@@ -241,7 +241,7 @@ func (c *clusterClient) GetGossipState() *cluster.ClusterState {
 
 func (c *clusterClient) EnumerateAlerts(ts, te time.Time, resource api.ResourceType) (*api.Alerts, error) {
 	a := api.Alerts{}
-	request := c.c.Get().Resource(clusterPath+"/alerts/" + strconv.FormatInt(int64(resource), 10))
+	request := c.c.Get().Resource(clusterPath + "/alerts/" + strconv.FormatInt(int64(resource), 10))
 	if !te.IsZero() {
 		request.QueryOption("timestart", ts.Format(api.TimeLayout))
 		request.QueryOption("timeend", te.Format(api.TimeLayout))

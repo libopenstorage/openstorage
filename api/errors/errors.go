@@ -5,7 +5,7 @@ import "fmt"
 // ErrNotFound error type for objects not found
 type ErrNotFound struct {
 	// ID unique object identifier.
-	ID   string
+	ID string
 	// Type of the object which wasn't found
 	Type string
 }

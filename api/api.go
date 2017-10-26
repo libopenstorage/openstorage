@@ -366,5 +366,4 @@ func (v Volume) DisplayId() string {
 	} else {
 		return v.Id
 	}
-	return ""
 }
