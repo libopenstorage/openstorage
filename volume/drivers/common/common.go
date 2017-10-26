@@ -1,8 +1,8 @@
 package common
 
 import (
-	"github.com/libopenstorage/openstorage/pkg/proto/time"
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/pkg/proto/time"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/portworx/kvdb"
 )

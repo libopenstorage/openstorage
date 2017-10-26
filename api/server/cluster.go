@@ -3,11 +3,11 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
-	"io/ioutil"
 
 	"github.com/gorilla/mux"
 	"github.com/libopenstorage/openstorage/api"
@@ -206,7 +206,7 @@ func (c *clusterApi) setFluentDConfig(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(&api.ClusterResponse{})
 }
 
-func(c *clusterApi) deleteFluentDConfig(w http.ResponseWriter, r *http.Request) {
+func (c *clusterApi) deleteFluentDConfig(w http.ResponseWriter, r *http.Request) {
 	method := "delete FluentDConfig"
 
 	inst, err := cluster.Inst()

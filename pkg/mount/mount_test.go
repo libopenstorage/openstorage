@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	source = "/mnt/ost/mount_test_src"
-	dest   = "/mnt/ost/mount_test_dest"
+	source        = "/mnt/ost/mount_test_src"
+	dest          = "/mnt/ost/mount_test_dest"
 	trashLocation = "/tmp/.trash"
 )
 

@@ -159,7 +159,19 @@ func (m *DefaultMounter) Unmount(target string, flags int, timeout int) error {
 
 // String representation of Mounter
 func (m *Mounter) String() string {
-	return fmt.Sprintf("%#v", *m)
+	s := struct {
+		mounts        DeviceMap
+		paths         PathMap
+		allowedDirs   []string
+		trashLocation string
+	}{
+		mounts:        m.mounts,
+		paths:         m.paths,
+		allowedDirs:   m.allowedDirs,
+		trashLocation: m.trashLocation,
+	}
+
+	return fmt.Sprintf("%#v", s)
 }
 
 // Inspect mount table for device

@@ -5,11 +5,10 @@ import (
 	"testing"
 	"time"
 
-	protobuf_timestamp"github.com/golang/protobuf/ptypes/timestamp"
+	protobuf_timestamp "github.com/golang/protobuf/ptypes/timestamp"
 
-	"github.com/libopenstorage/openstorage/pkg/proto/time"
 	"github.com/libopenstorage/openstorage/pkg/jsonpb"
-
+	"github.com/libopenstorage/openstorage/pkg/proto/time"
 )
 
 func TestTimestamp(t *testing.T) {

@@ -48,7 +48,7 @@ type ClusterInfo struct {
 	NodeEntries   map[string]NodeEntry
 	LoggingURL    string
 	ManagementURL string
-	FluentDConfig  api.FluentDConfig
+	FluentDConfig api.FluentDConfig
 	TunnelConfig  api.TunnelConfig
 }
 
@@ -310,8 +310,8 @@ func (nc *NullClusterListener) Init(self *api.Node, state *ClusterInfo) (Finaliz
 }
 
 func (nc *NullClusterListener) CleanupInit(
-self *api.Node,
-clusterInfo *ClusterInfo,
+	self *api.Node,
+	clusterInfo *ClusterInfo,
 ) error {
 	return nil
 }
@@ -321,21 +321,21 @@ func (nc *NullClusterListener) Enumerate(cluster api.Cluster) error {
 }
 
 func (nc *NullClusterListener) Halt(
-self *api.Node,
-clusterInfo *ClusterInfo) error {
+	self *api.Node,
+	clusterInfo *ClusterInfo) error {
 	return nil
 }
 
 func (nc *NullClusterListener) Join(
-self *api.Node,
-state *ClusterInitState,
-clusterNotify ClusterNotify,
+	self *api.Node,
+	state *ClusterInitState,
+	clusterNotify ClusterNotify,
 ) error {
 	return nil
 }
 
 func (nc *NullClusterListener) JoinComplete(
-self *api.Node,
+	self *api.Node,
 ) error {
 	return nil
 }
@@ -381,26 +381,26 @@ func (nc *NullClusterListener) QuorumMember(node *api.Node) bool {
 }
 
 func (nc *NullClusterListener) UpdateCluster(self *api.Node,
-clusterInfo *ClusterInfo,
+	clusterInfo *ClusterInfo,
 ) error {
 	return nil
 }
 
 func (nc *NullClusterListener) EnumerateAlerts(
-timeStart, timeEnd time.Time,
-resource api.ResourceType,
+	timeStart, timeEnd time.Time,
+	resource api.ResourceType,
 ) (*api.Alerts, error) {
 	return nil, nil
 }
 func (nc *NullClusterListener) ClearAlert(
-resource api.ResourceType,
-alertID int64,
+	resource api.ResourceType,
+	alertID int64,
 ) error {
 	return nil
 }
 func (nc *NullClusterListener) EraseAlert(
-resource api.ResourceType,
-alertID int64,
+	resource api.ResourceType,
+	alertID int64,
 ) error {
 	return nil
 }

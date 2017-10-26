@@ -3,8 +3,8 @@ package prototime
 import (
 	"time"
 
-	google_protobuf "github.com/golang/protobuf/ptypes/timestamp"
 	google_duration "github.com/golang/protobuf/ptypes/duration"
+	google_protobuf "github.com/golang/protobuf/ptypes/timestamp"
 )
 
 // TimeToTimestamp converts a go Time to a protobuf Timestamp.
