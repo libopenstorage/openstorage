@@ -78,15 +78,10 @@ proto:
 
 lint:
 	go get -v github.com/golang/lint/golint
-	for file in $$(find . -name '*.go' | grep -v vendor | grep -v '\.pb\.go' | grep -v '\.pb\.gw\.go'); do \
-		golint $${file}; \
-		if [ -n "$$(golint $${file})" ]; then \
-			exit 1; \
-		fi; \
-	done
+	golint $(shell go list ./... | grep -v vendor)
 
 vet:
-	go vet $(PKGS)
+	go vet $(shell go list ./... | grep -v vendor)
 
 errcheck:
 	go get -v github.com/kisielk/errcheck
@@ -95,7 +90,7 @@ errcheck:
 pretest: lint vet errcheck
 
 test:
-	go test -tags "$(TAGS)" $(TESTFLAGS) $(PKGS)
+	go test -tags "$(TAGS)" $(TESTFLAGS) $(shell go list ./... | grep -v vendor)
 
 docker-build-osd-dev:
 	docker build -t openstorage/osd-dev -f Dockerfile.osd-dev .
