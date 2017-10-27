@@ -517,6 +517,7 @@ func (c *ClusterManager) joinCluster(
 	defer func() {
 		if initState.Collector != nil {
 			initState.Collector.Stop()
+			initState.Collector = nil
 		}
 	}()
 
