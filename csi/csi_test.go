@@ -27,16 +27,16 @@ import (
 	"google.golang.org/grpc"
 )
 
-// csiTestService is a simple struct used abstract
+// testServer is a simple struct used abstract
 // the creation and setup of the gRPC CSI service
-type csiTestService struct {
+type testServer struct {
 	listener     net.Listener
 	conn         *grpc.ClientConn
 	osdCsiServer *OsdCsiServer
 }
 
-func newCsiTestService(t *testing.T) *csiTestService {
-	tester := &csiTestService{}
+func newTestServer(t *testing.T) *testServer {
+	tester := &testServer{}
 
 	// Listen on port
 	l, err := net.Listen("tcp", "127.0.0.1:0")
@@ -57,19 +57,19 @@ func newCsiTestService(t *testing.T) *csiTestService {
 	return tester
 }
 
-func (s *csiTestService) Stop() {
+func (s *testServer) Stop() {
 	s.conn.Close()
 	s.osdCsiServer.Stop()
 }
 
-func (s *csiTestService) Conn() *grpc.ClientConn {
+func (s *testServer) Conn() *grpc.ClientConn {
 	return s.conn
 }
 
 func TestNewCSIServerGetPluginInfo(t *testing.T) {
 
 	// Create server and client connection
-	s := newCsiTestService(t)
+	s := newTestServer(t)
 	defer s.Stop()
 
 	// Make a call
@@ -87,7 +87,7 @@ func TestNewCSIServerGetPluginInfo(t *testing.T) {
 func TestNewCSIServerGetSupportedVersions(t *testing.T) {
 
 	// Create server and client connection
-	s := newCsiTestService(t)
+	s := newTestServer(t)
 	defer s.Stop()
 
 	// Make a call

@@ -67,6 +67,9 @@ func (s *OsdCsiServer) goServe() {
 	s.wg.Add(1)
 	go func() {
 		defer s.wg.Done()
-		s.server.Serve(s.listener)
+		err := s.server.Serve(s.listener)
+		if err != nil {
+			dlog.Fatalf("ERROR: Unable to start gRPC server: %s\n", err.Error())
+		}
 	}()
 }
