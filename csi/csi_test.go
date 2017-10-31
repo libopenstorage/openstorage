@@ -17,32 +17,46 @@ limitations under the License.
 package csi
 
 import (
-	"net"
-	"reflect"
 	"testing"
 
-	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+
+	"github.com/container-storage-interface/spec/lib/go/csi"
+	"github.com/golang/mock/gomock"
+	"github.com/kubernetes-csi/csi-test/utils"
+	"golang.org/x/net/context"
+
+	"github.com/libopenstorage/openstorage/volume"
+	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
+	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
 )
 
 // testServer is a simple struct used abstract
 // the creation and setup of the gRPC CSI service
 type testServer struct {
-	listener net.Listener
-	conn     *grpc.ClientConn
-	server   Server
+	conn   *grpc.ClientConn
+	server Server
+	m      *mockdriver.MockVolumeDriver
+	mc     *gomock.Controller
 }
 
 func newTestServer(t *testing.T) *testServer {
 	tester := &testServer{}
 
+	// Add driver to registry
+	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
+	tester.m = mockdriver.NewMockVolumeDriver(tester.mc)
+	volumedrivers.Add("mock", func(map[string]string) (volume.VolumeDriver, error) {
+		return tester.m, nil
+	})
+
 	// Setup simple driver
 	var err error
 	tester.server, err = NewOsdCsiServer(&OsdCsiServerConfig{
-		Net:     "tcp",
-		Address: "127.0.0.1:0",
+		DriverName: "mock",
+		Net:        "tcp",
+		Address:    "127.0.0.1:0",
 	})
 	assert.Nil(t, err)
 	err = tester.server.Start()
@@ -55,9 +69,20 @@ func newTestServer(t *testing.T) *testServer {
 	return tester
 }
 
+func (s *testServer) MockDriver() *mockdriver.MockVolumeDriver {
+	return s.m
+}
+
 func (s *testServer) Stop() {
+	// Remove from registry
+	volumedrivers.Remove("mock")
+
+	// Shutdown servers
 	s.conn.Close()
 	s.server.Stop()
+
+	// Check mocks
+	s.mc.Finish()
 }
 
 func (s *testServer) Conn() *grpc.ClientConn {
@@ -86,6 +111,7 @@ func TestCSIServerStart(t *testing.T) {
 	assert.NotNil(t, err)
 
 	// Make a call
+	s.MockDriver().EXPECT().Name().Return("mock").Times(1)
 	c := csi.NewIdentityClient(s.Conn())
 	r, err := c.GetPluginInfo(context.Background(), &csi.GetPluginInfoRequest{})
 	assert.Nil(t, err)
@@ -113,37 +139,54 @@ func TestCSIServerStop(t *testing.T) {
 	assert.False(t, s.Server().IsRunning())
 }
 
-func TestNewCSIServerGetPluginInfo(t *testing.T) {
+func TestNewCSIServerBadParameters(t *testing.T) {
+	s, err := NewOsdCsiServer(nil)
+	assert.Nil(t, s)
+	assert.NotNil(t, err)
 
-	// Create server and client connection
-	s := newTestServer(t)
-	defer s.Stop()
+	s, err = NewOsdCsiServer(&OsdCsiServerConfig{})
+	assert.Nil(t, s)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "must be provided")
 
-	// Make a call
-	c := csi.NewIdentityClient(s.Conn())
-	r, err := c.GetPluginInfo(context.Background(), &csi.GetPluginInfoRequest{})
-	assert.Nil(t, err)
+	s, err = NewOsdCsiServer(&OsdCsiServerConfig{
+		Net: "test",
+	})
+	assert.Nil(t, s)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "must be provided")
 
-	// Verify
-	name := r.GetResult().GetName()
-	version := r.GetResult().GetVendorVersion()
-	assert.Equal(t, name, csiDriverName)
-	assert.Equal(t, version, csiDriverVersion)
-}
+	s, err = NewOsdCsiServer(&OsdCsiServerConfig{
+		Net:     "test",
+		Address: "blah",
+	})
+	assert.Nil(t, s)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "must be provided")
 
-func TestNewCSIServerGetSupportedVersions(t *testing.T) {
+	s, err = NewOsdCsiServer(&OsdCsiServerConfig{
+		Net:        "test",
+		Address:    "blah",
+		DriverName: "name",
+	})
+	assert.Nil(t, s)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "Unable to setup driver name")
 
-	// Create server and client connection
-	s := newTestServer(t)
-	defer s.Stop()
-
-	// Make a call
-	c := csi.NewIdentityClient(s.Conn())
-	r, err := c.GetSupportedVersions(context.Background(), &csi.GetSupportedVersionsRequest{})
-	assert.Nil(t, err)
-
-	// Verify
-	versions := r.GetResult().GetSupportedVersions()
-	assert.Equal(t, len(versions), 1)
-	assert.True(t, reflect.DeepEqual(versions[0], csiVersion))
+	// Add driver to registry
+	mc := gomock.NewController(t)
+	defer mc.Finish()
+	m := mockdriver.NewMockVolumeDriver(mc)
+	volumedrivers.Add("mock", func(map[string]string) (volume.VolumeDriver, error) {
+		return m, nil
+	})
+	defer volumedrivers.Remove("mock")
+	s, err = NewOsdCsiServer(&OsdCsiServerConfig{
+		Net:        "test",
+		Address:    "blah",
+		DriverName: "mock",
+	})
+	assert.Nil(t, s)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "Unable to setup server")
 }

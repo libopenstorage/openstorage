@@ -212,6 +212,9 @@ type VolumeDriverRegistry interface {
 
 	// Add inserts a new VolumeDriver provider with a well known name.
 	Add(name string, init func(map[string]string) (VolumeDriver, error)) error
+
+	// Removes driver from registry. Does nothing if driver name does not exist.
+	Remove(name string)
 }
 
 // NewVolumeDriverRegistry constructs a new VolumeDriverRegistry.
