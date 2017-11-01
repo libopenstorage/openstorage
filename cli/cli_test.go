@@ -26,7 +26,6 @@ func TestCmdMarshalProto(t *testing.T) {
  "dedupe": false,
  "snapshot_interval": 0,
  "shared": false,
- "cascaded": false,
  "aggregation_level": 0,
  "encrypted": false,
  "passphrase": "",
@@ -34,7 +33,8 @@ func TestCmdMarshalProto(t *testing.T) {
  "scale": 0,
  "sticky": false,
  "group_enforced": false,
- "compressed": false
+ "compressed": false,
+ "cascaded": false
 }`,
 		data,
 	)
