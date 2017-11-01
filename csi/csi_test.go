@@ -38,15 +38,13 @@ type testServer struct {
 func newTestServer(t *testing.T) *testServer {
 	tester := &testServer{}
 
-	// Listen on port
-	l, err := net.Listen("tcp", "127.0.0.1:0")
-	assert.Nil(t, err)
-	tester.listener = l
-
 	// Setup simple driver
-	tester.osdCsiServer = NewOsdCsiServer(&OsdCsiServerConfig{
-		Listener: tester.listener,
+	var err error
+	tester.osdCsiServer, err = NewOsdCsiServer(&OsdCsiServerConfig{
+		Net:     "tcp",
+		Address: "127.0.0.1:0",
 	})
+	assert.Nil(t, err)
 	err = tester.osdCsiServer.Start()
 	assert.Nil(t, err)
 
@@ -64,6 +62,55 @@ func (s *testServer) Stop() {
 
 func (s *testServer) Conn() *grpc.ClientConn {
 	return s.conn
+}
+
+func (s *testServer) OsdCsiServer() *OsdCsiServer {
+	return s.osdCsiServer
+}
+
+func TestCSIServerStart(t *testing.T) {
+	s := newTestServer(t)
+	assert.True(t, s.OsdCsiServer().running)
+	defer s.Stop()
+
+	// Check if we can still talk to the server
+	// after starting multiple times.
+	err := s.OsdCsiServer().Start()
+	assert.True(t, s.OsdCsiServer().running)
+	assert.NotNil(t, err)
+	err = s.OsdCsiServer().Start()
+	assert.True(t, s.OsdCsiServer().running)
+	assert.NotNil(t, err)
+	err = s.OsdCsiServer().Start()
+	assert.True(t, s.OsdCsiServer().running)
+	assert.NotNil(t, err)
+
+	// Make a call
+	c := csi.NewIdentityClient(s.Conn())
+	r, err := c.GetPluginInfo(context.Background(), &csi.GetPluginInfoRequest{})
+	assert.Nil(t, err)
+
+	// Verify
+	name := r.GetResult().GetName()
+	version := r.GetResult().GetVendorVersion()
+	assert.Equal(t, name, csiDriverName)
+	assert.Equal(t, version, csiDriverVersion)
+}
+
+func TestCSIServerStop(t *testing.T) {
+	s := newTestServer(t)
+	assert.True(t, s.OsdCsiServer().running)
+	s.Stop()
+	assert.False(t, s.OsdCsiServer().running)
+
+	assert.NotPanics(t, s.Stop)
+	assert.False(t, s.OsdCsiServer().running)
+	assert.NotPanics(t, s.Stop)
+	assert.False(t, s.OsdCsiServer().running)
+	assert.NotPanics(t, s.Stop)
+	assert.False(t, s.OsdCsiServer().running)
+	assert.NotPanics(t, s.Stop)
+	assert.False(t, s.OsdCsiServer().running)
 }
 
 func TestNewCSIServerGetPluginInfo(t *testing.T) {

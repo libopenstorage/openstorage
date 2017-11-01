@@ -17,6 +17,7 @@ limitations under the License.
 package csi
 
 import (
+	"fmt"
 	"net"
 	"sync"
 
@@ -27,22 +28,47 @@ import (
 )
 
 type OsdCsiServerConfig struct {
-	Listener net.Listener
+	Net     string
+	Address string
 }
 
 type OsdCsiServer struct {
 	listener net.Listener
 	server   *grpc.Server
 	wg       sync.WaitGroup
+	running  bool
+	lock     sync.Mutex
 }
 
-func NewOsdCsiServer(config *OsdCsiServerConfig) *OsdCsiServer {
-	return &OsdCsiServer{
-		listener: config.Listener,
+func NewOsdCsiServer(config *OsdCsiServerConfig) (*OsdCsiServer, error) {
+	if nil == config {
+		return nil, fmt.Errorf("Configuration must be provided")
 	}
+	if len(config.Address) == 0 {
+		return nil, fmt.Errorf("Address must be provided")
+	}
+	if len(config.Net) == 0 {
+		return nil, fmt.Errorf("Net must be provided")
+	}
+
+	l, err := net.Listen(config.Net, config.Address)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to setup server: %s", err.Error())
+	}
+
+	return &OsdCsiServer{
+		listener: l,
+	}, nil
 }
 
 func (s *OsdCsiServer) Start() error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	if s.running {
+		return fmt.Errorf("Server already running")
+	}
+
 	s.server = grpc.NewServer()
 
 	csi.RegisterIdentityServer(s.server, s)
@@ -50,23 +76,36 @@ func (s *OsdCsiServer) Start() error {
 
 	// Start listening for requests
 	dlog.Infof("CSI Server ready on %s", s.Address())
-	s.goServe()
+	waitForServer := make(chan bool)
+	s.goServe(waitForServer)
+	<-waitForServer
+
+	s.running = true
 	return nil
 }
 
 func (s *OsdCsiServer) Stop() {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	if !s.running {
+		return
+	}
+
 	s.server.Stop()
 	s.wg.Wait()
+	s.running = false
 }
 
 func (s *OsdCsiServer) Address() string {
 	return s.listener.Addr().String()
 }
 
-func (s *OsdCsiServer) goServe() {
+func (s *OsdCsiServer) goServe(started chan<- bool) {
 	s.wg.Add(1)
 	go func() {
 		defer s.wg.Done()
+		started <- true
 		err := s.server.Serve(s.listener)
 		if err != nil {
 			dlog.Fatalf("ERROR: Unable to start gRPC server: %s\n", err.Error())
