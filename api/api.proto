@@ -270,6 +270,8 @@ message VolumeSpec {
   bool group_enforced = 22;
   // Compressed is true if this volume is to be compressed.
   bool compressed = 23;
+  // Cascaded is true if this volume can be populated on any node from an external source.
+  bool cascaded = 24;
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure 

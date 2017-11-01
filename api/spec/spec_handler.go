@@ -66,6 +66,7 @@ type SpecHandler interface {
 var (
 	nameRegex       = regexp.MustCompile(api.Name + "=([0-9A-Za-z_-]+),?")
 	nodesRegex      = regexp.MustCompile(api.SpecNodes + "=([0-9A-Za-z_-]+),?")
+	parentRegex     = regexp.MustCompile(api.SpecParent + "=([A-Za-z]+),?")
 	sizeRegex       = regexp.MustCompile(api.SpecSize + "=([0-9A-Za-z]+),?")
 	scaleRegex      = regexp.MustCompile(api.SpecScale + "=([0-9]+),?")
 	fsRegex         = regexp.MustCompile(api.SpecFilesystem + "=([0-9A-Za-z]+),?")
@@ -73,6 +74,7 @@ var (
 	haRegex         = regexp.MustCompile(api.SpecHaLevel + "=([0-9]+),?")
 	cosRegex        = regexp.MustCompile(api.SpecPriority + "=([A-Za-z]+),?")
 	sharedRegex     = regexp.MustCompile(api.SpecShared + "=([A-Za-z]+),?")
+	cascadedRegex   = regexp.MustCompile(api.SpecCascaded + "=([A-Za-z]+),?")
 	passphraseRegex = regexp.MustCompile(api.SpecPassphrase + "=([0-9A-Za-z_@./#&+-]+),?")
 	stickyRegex     = regexp.MustCompile(api.SpecSticky + "=([A-Za-z]+),?")
 	secureRegex     = regexp.MustCompile(api.SpecSecure + "=([A-Za-z]+),?")
@@ -222,6 +224,12 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			} else {
 				spec.Shared = shared
 			}
+		case api.SpecCascaded:
+			if cascaded, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.Cascaded = cascaded
+			}
 		case api.SpecSticky:
 			if sticky, err := strconv.ParseBool(v); err != nil {
 				return nil, nil, nil, err
@@ -305,6 +313,9 @@ func (d *specHandler) SpecFromString(
 	if ok, nodes := d.getVal(nodesRegex, str); ok {
 		opts[api.SpecNodes] = nodes
 	}
+	if ok, parent := d.getVal(parentRegex, str); ok {
+		opts[api.SpecParent] = parent
+	}
 	if ok, scale := d.getVal(scaleRegex, str); ok {
 		opts[api.SpecScale] = scale
 	}
@@ -322,6 +333,9 @@ func (d *specHandler) SpecFromString(
 	}
 	if ok, shared := d.getVal(sharedRegex, str); ok {
 		opts[api.SpecShared] = shared
+	}
+	if ok, cascaded := d.getVal(cascadedRegex, str); ok {
+		opts[api.SpecCascaded] = cascaded
 	}
 	if ok, sticky := d.getVal(stickyRegex, str); ok {
 		opts[api.SpecSticky] = sticky
