@@ -30,9 +30,9 @@ import (
 // testServer is a simple struct used abstract
 // the creation and setup of the gRPC CSI service
 type testServer struct {
-	listener     net.Listener
-	conn         *grpc.ClientConn
-	osdCsiServer *OsdCsiServer
+	listener net.Listener
+	conn     *grpc.ClientConn
+	server   Server
 }
 
 func newTestServer(t *testing.T) *testServer {
@@ -40,16 +40,16 @@ func newTestServer(t *testing.T) *testServer {
 
 	// Setup simple driver
 	var err error
-	tester.osdCsiServer, err = NewOsdCsiServer(&OsdCsiServerConfig{
+	tester.server, err = NewOsdCsiServer(&OsdCsiServerConfig{
 		Net:     "tcp",
 		Address: "127.0.0.1:0",
 	})
 	assert.Nil(t, err)
-	err = tester.osdCsiServer.Start()
+	err = tester.server.Start()
 	assert.Nil(t, err)
 
 	// Setup a connection to the driver
-	tester.conn, err = grpc.Dial(tester.osdCsiServer.Address(), grpc.WithInsecure())
+	tester.conn, err = grpc.Dial(tester.server.Address(), grpc.WithInsecure())
 	assert.Nil(t, err)
 
 	return tester
@@ -57,32 +57,32 @@ func newTestServer(t *testing.T) *testServer {
 
 func (s *testServer) Stop() {
 	s.conn.Close()
-	s.osdCsiServer.Stop()
+	s.server.Stop()
 }
 
 func (s *testServer) Conn() *grpc.ClientConn {
 	return s.conn
 }
 
-func (s *testServer) OsdCsiServer() *OsdCsiServer {
-	return s.osdCsiServer
+func (s *testServer) Server() Server {
+	return s.server
 }
 
 func TestCSIServerStart(t *testing.T) {
 	s := newTestServer(t)
-	assert.True(t, s.OsdCsiServer().running)
+	assert.True(t, s.Server().IsRunning())
 	defer s.Stop()
 
 	// Check if we can still talk to the server
 	// after starting multiple times.
-	err := s.OsdCsiServer().Start()
-	assert.True(t, s.OsdCsiServer().running)
+	err := s.Server().Start()
+	assert.True(t, s.Server().IsRunning())
 	assert.NotNil(t, err)
-	err = s.OsdCsiServer().Start()
-	assert.True(t, s.OsdCsiServer().running)
+	err = s.Server().Start()
+	assert.True(t, s.Server().IsRunning())
 	assert.NotNil(t, err)
-	err = s.OsdCsiServer().Start()
-	assert.True(t, s.OsdCsiServer().running)
+	err = s.Server().Start()
+	assert.True(t, s.Server().IsRunning())
 	assert.NotNil(t, err)
 
 	// Make a call
@@ -99,18 +99,18 @@ func TestCSIServerStart(t *testing.T) {
 
 func TestCSIServerStop(t *testing.T) {
 	s := newTestServer(t)
-	assert.True(t, s.OsdCsiServer().running)
+	assert.True(t, s.Server().IsRunning())
 	s.Stop()
-	assert.False(t, s.OsdCsiServer().running)
+	assert.False(t, s.Server().IsRunning())
 
 	assert.NotPanics(t, s.Stop)
-	assert.False(t, s.OsdCsiServer().running)
+	assert.False(t, s.Server().IsRunning())
 	assert.NotPanics(t, s.Stop)
-	assert.False(t, s.OsdCsiServer().running)
+	assert.False(t, s.Server().IsRunning())
 	assert.NotPanics(t, s.Stop)
-	assert.False(t, s.OsdCsiServer().running)
+	assert.False(t, s.Server().IsRunning())
 	assert.NotPanics(t, s.Stop)
-	assert.False(t, s.OsdCsiServer().running)
+	assert.False(t, s.Server().IsRunning())
 }
 
 func TestNewCSIServerGetPluginInfo(t *testing.T) {
