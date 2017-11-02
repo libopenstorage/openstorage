@@ -87,7 +87,7 @@ type Client struct {
 	userAgent   string
 }
 
-func (c * Client) SetTLS(tlsConfig *tls.Config) {
+func (c *Client) SetTLS(tlsConfig *tls.Config) {
 	c.httpClient = &http.Client{
 		Transport: &http.Transport{TLSClientConfig: tlsConfig},
 	}
