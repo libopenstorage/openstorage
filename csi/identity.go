@@ -1,5 +1,5 @@
 /*
-CSI Interface for OSD
+Package csi is CSI driver interface for OSD
 Copyright 2017 Portworx
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,6 +34,7 @@ var (
 	}
 )
 
+// GetSupportedVersions is a CSI API which returns the supported CSI version
 func (s *OsdCsiServer) GetSupportedVersions(
 	context.Context,
 	*csi.GetSupportedVersionsRequest) (*csi.GetSupportedVersionsResponse, error) {
@@ -48,6 +49,8 @@ func (s *OsdCsiServer) GetSupportedVersions(
 	}, nil
 }
 
+// GetPluginInfo is a CSI API which returns the information about the plugin.
+// This includes name, version, and any other OSD specific information
 func (s *OsdCsiServer) GetPluginInfo(
 	context.Context,
 	*csi.GetPluginInfoRequest) (*csi.GetPluginInfoResponse, error) {

@@ -14,6 +14,7 @@ install:
 script:
   - go fmt $(go list ./... | grep -v vendor) | wc -l | grep 0
   - make vet
+  - make lint
   - make docker-test
   - make docker-coverage
   - goveralls -coverprofile=/mnt/coverage.out -service=travis-ci -repotoken "${COVERALLS_TOKEN}"

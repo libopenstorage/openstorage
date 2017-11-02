@@ -1,5 +1,5 @@
 /*
-CSI Interface for OSD
+Package csi is CSI driver interface for OSD
 Copyright 2017 Portworx
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,11 +27,15 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
+// OsdCsiServerConfig provides the configuration to the
+// the gRPC CSI server created by NewOsdCsiServer()
 type OsdCsiServerConfig struct {
 	Net     string
 	Address string
 }
 
+// OsdCsiServer is a OSD CSI compliant server which
+// proxies CSI requests for a single specific driver
 type OsdCsiServer struct {
 	listener net.Listener
 	server   *grpc.Server
@@ -40,6 +44,8 @@ type OsdCsiServer struct {
 	lock     sync.Mutex
 }
 
+// NewOsdCsiServer creates a gRPC CSI complient server on the
+// specified port and transport.
 func NewOsdCsiServer(config *OsdCsiServerConfig) (*OsdCsiServer, error) {
 	if nil == config {
 		return nil, fmt.Errorf("Configuration must be provided")
@@ -61,6 +67,8 @@ func NewOsdCsiServer(config *OsdCsiServerConfig) (*OsdCsiServer, error) {
 	}, nil
 }
 
+// Start is used to start the server.
+// It will return an error if the server is already running.
 func (s *OsdCsiServer) Start() error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -84,6 +92,9 @@ func (s *OsdCsiServer) Start() error {
 	return nil
 }
 
+// Stop is used to stop the gRPC CSI complient server.
+// It can be called multiple times. It does nothing if the server
+// has already been stopped.
 func (s *OsdCsiServer) Stop() {
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -97,6 +108,8 @@ func (s *OsdCsiServer) Stop() {
 	s.running = false
 }
 
+// Address returns the address of the server which can be
+// used by clients to connect.
 func (s *OsdCsiServer) Address() string {
 	return s.listener.Addr().String()
 }
