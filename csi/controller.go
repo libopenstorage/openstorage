@@ -19,6 +19,8 @@ package csi
 import (
 	"fmt"
 
+	"github.com/libopenstorage/openstorage/api"
+
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"go.pedge.io/dlog"
 	"golang.org/x/net/context"
@@ -40,7 +42,7 @@ func (s *OsdCsiServer) ControllerGetCapabilities(
 	req *csi.ControllerGetCapabilitiesRequest,
 ) (*csi.ControllerGetCapabilitiesResponse, error) {
 
-	// Volume capabilities
+	// Creating and deleting volumes supported
 	capCreateDeleteVolume := &csi.ControllerServiceCapability{
 		Type: &csi.ControllerServiceCapability_Rpc{
 			Rpc: &csi.ControllerServiceCapability_RPC{
@@ -49,17 +51,21 @@ func (s *OsdCsiServer) ControllerGetCapabilities(
 		},
 	}
 
-	//
-	// Here we will be adding the following in future patches:
-	// List Volumes Capabability
-	// Get Storage Capacity
-	//
+	// ListVolumes supported
+	capListVolumes := &csi.ControllerServiceCapability{
+		Type: &csi.ControllerServiceCapability_Rpc{
+			Rpc: &csi.ControllerServiceCapability_RPC{
+				Type: csi.ControllerServiceCapability_RPC_LIST_VOLUMES,
+			},
+		},
+	}
 
 	return &csi.ControllerGetCapabilitiesResponse{
 		Reply: &csi.ControllerGetCapabilitiesResponse_Result_{
 			Result: &csi.ControllerGetCapabilitiesResponse_Result{
 				Capabilities: []*csi.ControllerServiceCapability{
 					capCreateDeleteVolume,
+					capListVolumes,
 				},
 			},
 		},
@@ -230,12 +236,90 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 	return resp, nil
 }
 
+// ListVolumes is a CSI API which returns to the caller all volume ids
+// on this cluster. This includes ids created by CSI and ids created
+// using other interfaces. This is important because the user could
+// be requesting to mount a OSD volume created using non-CSI interfaces.
+//
+// This call does not yet implement tokens to due to the following
+// issue: https://github.com/container-storage-interface/spec/issues/138
+func (s *OsdCsiServer) ListVolumes(
+	ctx context.Context,
+	req *csi.ListVolumesRequest,
+) (*csi.ListVolumesResponse, error) {
+
+	// Future: Once CSI is released, check version
+	// for now, just log it.
+	dlog.Debugf("ListVolumes req[%#v]", req)
+
+	// Check arguments
+	if req.GetVersion() == nil {
+		return nil, status.Error(codes.InvalidArgument, "Version must be provided")
+	}
+
+	// Until the issue #138 on the CSI spec is resolved we will not support
+	// tokenization
+	if req.GetMaxEntries() != 0 {
+		return nil, status.Error(
+			codes.Unimplemented,
+			"Driver does not support tokenization. Please see "+
+				"https://github.com/container-storage-interface/spec/issues/138")
+	}
+
+	volumes, err := s.driver.Enumerate(&api.VolumeLocator{}, nil)
+	if err != nil {
+		errs := fmt.Sprintf("Unable to get list of volumes: %s", err.Error())
+		dlog.Errorln(errs)
+		return nil, status.Error(codes.Internal, errs)
+	}
+	entries := make([]*csi.ListVolumesResponse_Result_Entry, len(volumes))
+	for i, v := range volumes {
+		// Initialize entry
+		entries[i] = &csi.ListVolumesResponse_Result_Entry{
+			VolumeInfo: &csi.VolumeInfo{},
+		}
+
+		// Required
+		entries[i].VolumeInfo.Id = v.Id
+
+		// This entry is optional in the API, but OSD has
+		// the information available to provide it
+		entries[i].VolumeInfo.CapacityBytes = v.Spec.Size
+
+		// Attributes. We can add or remove as needed since they
+		// are optional and opaque to the Container Orchestrator(CO)
+		// but could be used for debugging using a csi complient client.
+		entries[i].VolumeInfo.Attributes = osdVolumeAttributes(v)
+	}
+
+	return &csi.ListVolumesResponse{
+		Reply: &csi.ListVolumesResponse_Result_{
+			Result: &csi.ListVolumesResponse_Result{
+				Entries: entries,
+			},
+		},
+	}, nil
+}
+
+// osdVolumeAttributes returns the attributes of a volume as a map
+// to be returned to the CSI API caller
+func osdVolumeAttributes(v *api.Volume) map[string]string {
+	return map[string]string{
+		api.SpecParent: v.GetSource().GetParent(),
+		api.SpecSecure: fmt.Sprintf("%v", v.GetSpec().GetEncrypted()),
+		api.SpecShared: fmt.Sprintf("%v", v.GetSpec().GetShared()),
+		"readonly":     fmt.Sprintf("%v", v.GetReadonly()),
+		"attached":     v.AttachedState.String(),
+		"state":        v.State.String(),
+		"error":        v.GetError(),
+	}
+}
+
 /*
 For next patches what still needs to be worked on in the Conroller server:
 
 	CreateVolume(context.Context, *CreateVolumeRequest) (*CreateVolumeResponse, error)
 	DeleteVolume(context.Context, *DeleteVolumeRequest) (*DeleteVolumeResponse, error)
-	ListVolumes(context.Context, *ListVolumesRequest) (*ListVolumesResponse, error)
 	GetCapacity(context.Context, *GetCapacityRequest) (*GetCapacityResponse, error)
 	ControllerGetCapabilities(context.Context, *ControllerGetCapabilitiesRequest) (*ControllerGetCapabilitiesResponse, error)
 */

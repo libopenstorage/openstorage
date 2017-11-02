@@ -42,11 +42,22 @@ func TestControllerGetCapabilities(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Verify
-	caps := r.GetResult().GetCapabilities()
-	assert.Len(t, caps, 1)
-	assert.Equal(t,
+	expectedValues := []csi.ControllerServiceCapability_RPC_Type{
+		csi.ControllerServiceCapability_RPC_LIST_VOLUMES,
 		csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME,
-		caps[0].GetRpc().GetType())
+	}
+	caps := r.GetResult().GetCapabilities()
+	assert.Len(t, caps, len(expectedValues))
+	found := 0
+	for _, expectedCap := range expectedValues {
+		for _, cap := range caps {
+			if cap.GetRpc().GetType() == expectedCap {
+				found++
+				break
+			}
+		}
+	}
+	assert.Equal(t, found, len(expectedValues))
 }
 
 func TestControllerPublishVolume(t *testing.T) {
@@ -754,4 +765,149 @@ func TestControllerValidateVolumeAccessModeUnknown(t *testing.T) {
 	c := csi.NewControllerClient(s.Conn())
 	_, err := c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.NotNil(t, err)
+}
+
+func TestControllerListVolumesInvalidArguments(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	// Setup request
+	req := &csi.ListVolumesRequest{}
+
+	// Expect error without version
+	_, err := c.ListVolumes(context.Background(), req)
+	assert.NotNil(t, err)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "Version")
+
+	// Expect error with maxentries set
+	// To be removed once CSI Spec issue #138 is resolved
+	req.Version = &csi.Version{}
+	req.MaxEntries = 1
+	_, err = c.ListVolumes(context.Background(), req)
+	assert.NotNil(t, err)
+	serverError, ok = status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.Unimplemented)
+	assert.Contains(t, serverError.Message(), "token")
+}
+
+func TestControllerListVolumesEnumerateError(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	// Setup mock
+	s.MockDriver().
+		EXPECT().
+		Enumerate(gomock.Any(), gomock.Any()).
+		Return(nil, fmt.Errorf("TEST")).
+		Times(1)
+
+	// Setup request
+	req := &csi.ListVolumesRequest{
+		Version: &csi.Version{},
+	}
+
+	// Expect that the Enumerate call failed
+	_, err := c.ListVolumes(context.Background(), req)
+	assert.NotNil(t, err)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.Internal)
+	assert.Contains(t, serverError.Message(), "TEST")
+}
+
+func TestControllerListVolumes(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	// Setup mock
+	mockVolumeList := []*api.Volume{
+		&api.Volume{
+			Id:            "one",
+			AttachedState: api.AttachState_ATTACH_STATE_INTERNAL,
+			Readonly:      false,
+			State:         api.VolumeState_VOLUME_STATE_ERROR,
+			Spec: &api.VolumeSpec{
+				Shared: true,
+				Size:   uint64(11),
+			},
+			Error: "TEST",
+		},
+		&api.Volume{
+			Id:            "two",
+			AttachedState: api.AttachState_ATTACH_STATE_EXTERNAL,
+			Readonly:      true,
+			State:         api.VolumeState_VOLUME_STATE_ATTACHED,
+			Spec: &api.VolumeSpec{
+				Encrypted: true,
+				Shared:    true,
+				Size:      uint64(22),
+			},
+			Source: &api.Source{
+				Parent: "myparentid",
+			},
+		},
+		&api.Volume{
+			Id:            "three",
+			AttachedState: api.AttachState_ATTACH_STATE_INTERNAL_SWITCH,
+			Readonly:      true,
+			State:         api.VolumeState_VOLUME_STATE_TRY_DETACHING,
+			Spec: &api.VolumeSpec{
+				Shared: false,
+				Size:   uint64(33),
+			},
+		},
+	}
+	s.MockDriver().
+		EXPECT().
+		Enumerate(gomock.Any(), gomock.Any()).
+		Return(mockVolumeList, nil).
+		Times(1)
+
+	// Setup request
+	req := &csi.ListVolumesRequest{
+		Version: &csi.Version{},
+	}
+
+	// Expect error without version
+	r, err := c.ListVolumes(context.Background(), req)
+	assert.Nil(t, err)
+	assert.NotNil(t, r)
+
+	volumes := r.GetResult().GetEntries()
+	assert.Equal(t, len(mockVolumeList), len(volumes))
+	assert.Equal(t, len(r.GetResult().GetNextToken()), 0)
+
+	found := 0
+	for _, mv := range mockVolumeList {
+		for _, v := range volumes {
+			info := v.GetVolumeInfo()
+			assert.NotNil(t, info)
+
+			if mv.GetId() == info.GetId() {
+				found++
+				assert.Equal(t, info.GetCapacityBytes(), mv.GetSpec().GetSize())
+
+				attributes := info.GetAttributes()
+				assert.Equal(t, attributes["readonly"], fmt.Sprintf("%v", mv.GetReadonly()))
+				assert.Equal(t, attributes[api.SpecShared], fmt.Sprintf("%v", mv.GetSpec().GetShared()))
+				assert.Equal(t, attributes["state"], mv.GetState().String())
+				assert.Equal(t, attributes["attached"], mv.GetAttachedState().String())
+				assert.Equal(t, attributes["error"], mv.GetError())
+				assert.Equal(t, attributes[api.SpecParent], mv.GetSource().GetParent())
+				assert.Equal(t, attributes[api.SpecSecure], fmt.Sprintf("%v", mv.GetSpec().GetEncrypted()))
+				break
+			}
+		}
+	}
+	assert.Equal(t, found, len(mockVolumeList))
 }
