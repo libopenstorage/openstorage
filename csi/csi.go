@@ -37,6 +37,7 @@ type OsdCsiServerConfig struct {
 // OsdCsiServer is a OSD CSI compliant server which
 // proxies CSI requests for a single specific driver
 type OsdCsiServer struct {
+	Server
 	listener net.Listener
 	server   *grpc.Server
 	wg       sync.WaitGroup
@@ -46,7 +47,7 @@ type OsdCsiServer struct {
 
 // NewOsdCsiServer creates a gRPC CSI complient server on the
 // specified port and transport.
-func NewOsdCsiServer(config *OsdCsiServerConfig) (*OsdCsiServer, error) {
+func NewOsdCsiServer(config *OsdCsiServerConfig) (Server, error) {
 	if nil == config {
 		return nil, fmt.Errorf("Configuration must be provided")
 	}
@@ -112,6 +113,14 @@ func (s *OsdCsiServer) Stop() {
 // used by clients to connect.
 func (s *OsdCsiServer) Address() string {
 	return s.listener.Addr().String()
+}
+
+// IsRunning returns true if the server is currently running
+func (s *OsdCsiServer) IsRunning() bool {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	return s.running
 }
 
 func (s *OsdCsiServer) goServe(started chan<- bool) {
