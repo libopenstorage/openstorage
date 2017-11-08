@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/pkg/util"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"go.pedge.io/dlog"
@@ -313,6 +314,116 @@ func osdVolumeAttributes(v *api.Volume) map[string]string {
 		"state":        v.State.String(),
 		"error":        v.GetError(),
 	}
+}
+
+// CreateVolume is a CSI API which creates a volume on OSD
+// This function supports snapshots if the parent volume id is supplied
+// in the parameters.
+func (s *OsdCsiServer) CreateVolume(
+	ctx context.Context,
+	req *csi.CreateVolumeRequest,
+) (*csi.CreateVolumeResponse, error) {
+
+	// Log request
+	dlog.Debugf("CreateVolume req[%#v]", *req)
+
+	// Check arguments
+	if req.GetVersion() == nil {
+		return nil, status.Error(codes.InvalidArgument, "Version must be provided")
+	}
+	if len(req.GetName()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Name must be provided")
+	}
+	if req.GetVolumeCapabilities() == nil || len(req.GetVolumeCapabilities()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Volume capabilities must be provided")
+	}
+	if req.GetCapacityRange() == nil {
+		return nil, status.Error(codes.InvalidArgument, "CapacityRange must be specified")
+	}
+	if req.GetCapacityRange().GetRequiredBytes() == 0 {
+		return nil, status.Error(codes.Internal, "Capacity range required bytes cannot be zero")
+	}
+
+	// Create response
+	volume := &csi.VolumeInfo{}
+	resp := &csi.CreateVolumeResponse{
+		Reply: &csi.CreateVolumeResponse_Result_{
+			Result: &csi.CreateVolumeResponse_Result{
+				VolumeInfo: volume,
+			},
+		},
+	}
+
+	// Check if the volume has already been created or is in process of creation
+	v, err := util.VolumeFromName(s.driver, req.GetName())
+	if err == nil {
+		osdToCsiVolumeInfo(volume, v)
+		return resp, nil
+	}
+
+	// Get parameters
+	spec, locator, source, err := s.specHandler.SpecFromOpts(req.GetParameters())
+	if err != nil {
+		e := fmt.Sprintf("Unable to get parameters: %s\n", err.Error())
+		dlog.Errorln(e)
+		return nil, status.Error(codes.Internal, e)
+	}
+
+	// Check if the caller is asking to create a snapshot or for a new volume
+	var id string
+	if source != nil && len(source.GetParent()) != 0 {
+		// Get parent volume information
+		parent, err := util.VolumeFromName(s.driver, source.Parent)
+		if err != nil {
+			e := fmt.Sprintf("unable to get parent volume information: %s\n", err.Error())
+			dlog.Errorln(e)
+			return nil, status.Error(codes.InvalidArgument, e)
+		}
+
+		// Create a snapshot from the parent
+		id, err = s.driver.Snapshot(parent.GetId(), false, &api.VolumeLocator{
+			Name: req.GetName(),
+		})
+		if err != nil {
+			e := fmt.Sprintf("unable to create snapshot: %s\n", err.Error())
+			dlog.Errorln(e)
+			return nil, status.Error(codes.Internal, e)
+		}
+	} else {
+		// Get Capabilities and Size
+		spec.Size = req.GetCapacityRange().GetRequiredBytes()
+		for _, cap := range req.GetVolumeCapabilities() {
+			// Check access mode is setup correctly
+			mode := cap.GetAccessMode().GetMode()
+			if mode == csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER ||
+				mode == csi.VolumeCapability_AccessMode_MULTI_NODE_SINGLE_WRITER {
+				spec.Shared = true
+			}
+		}
+
+		// Create the volume
+		locator.Name = req.GetName()
+		id, err = s.driver.Create(locator, source, spec)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+	}
+
+	// id must have been set
+	v, err = util.VolumeFromName(s.driver, id)
+	if err != nil {
+		e := fmt.Sprintf("Unable to find newly created volume: %s", err.Error())
+		dlog.Errorln(e)
+		return nil, status.Error(codes.Internal, e)
+	}
+	osdToCsiVolumeInfo(volume, v)
+	return resp, nil
+
+}
+
+func osdToCsiVolumeInfo(dest *csi.VolumeInfo, src *api.Volume) {
+	dest.Id = src.GetId()
+	dest.CapacityBytes = src.Spec.GetSize()
 }
 
 /*
