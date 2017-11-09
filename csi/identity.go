@@ -60,8 +60,7 @@ func (s *OsdCsiServer) GetPluginInfo(
 				Name:          csiDriverName,
 				VendorVersion: csiDriverVersion,
 				Manifest: map[string]string{
-					"hello":                  "world",
-					"place-here-driver-type": "of-something",
+					"driver": s.driver.Name(),
 				},
 			},
 		},

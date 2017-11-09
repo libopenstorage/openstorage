@@ -25,13 +25,18 @@ import (
 	"go.pedge.io/dlog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+
+	"github.com/libopenstorage/openstorage/volume"
+	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 )
 
 // OsdCsiServerConfig provides the configuration to the
 // the gRPC CSI server created by NewOsdCsiServer()
 type OsdCsiServerConfig struct {
-	Net     string
-	Address string
+	Net          string
+	Address      string
+	DriverName   string
+	DriverParams map[string]string
 }
 
 // OsdCsiServer is a OSD CSI compliant server which
@@ -40,6 +45,7 @@ type OsdCsiServer struct {
 	Server
 	listener net.Listener
 	server   *grpc.Server
+	driver   volume.VolumeDriver
 	wg       sync.WaitGroup
 	running  bool
 	lock     sync.Mutex
@@ -57,6 +63,21 @@ func NewOsdCsiServer(config *OsdCsiServerConfig) (Server, error) {
 	if len(config.Net) == 0 {
 		return nil, fmt.Errorf("Net must be provided")
 	}
+	if len(config.DriverName) == 0 {
+		return nil, fmt.Errorf("OSD Driver name must be provided")
+	}
+
+	// Register driver name and initialize it using the parameters provided
+	err := volumedrivers.Register(config.DriverName, config.DriverParams)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to setup driver %s: %s", config.DriverName, err.Error())
+	}
+
+	// Save the driver for future calls
+	d, err := volumedrivers.Get(config.DriverName)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to get driver %s info: %s", config.DriverName, err.Error())
+	}
 
 	l, err := net.Listen(config.Net, config.Address)
 	if err != nil {
@@ -65,6 +86,7 @@ func NewOsdCsiServer(config *OsdCsiServerConfig) (Server, error) {
 
 	return &OsdCsiServer{
 		listener: l,
+		driver:   d,
 	}, nil
 }
 
@@ -81,6 +103,7 @@ func (s *OsdCsiServer) Start() error {
 	s.server = grpc.NewServer()
 
 	csi.RegisterIdentityServer(s.server, s)
+	csi.RegisterControllerServer(s.server, s)
 	reflection.Register(s.server)
 
 	// Start listening for requests
