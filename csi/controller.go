@@ -26,11 +26,19 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+const (
+	volumeCapabilityMessageMultinodeVolume    = "Volume is a multinode volume"
+	volumeCapabilityMessageNotMultinodeVolume = "Volume is not a multinode volume"
+	volumeCapabilityMessageReadOnlyVolume     = "Volume is read only"
+	volumeCapabilityMessageNotReadOnlyVolume  = "Volume is not read only"
+)
+
 // ControllerGetCapabilities is a CSI API functions which returns to the caller
 // the capabilities of the OSD CSI driver.
 func (s *OsdCsiServer) ControllerGetCapabilities(
 	ctx context.Context,
-	req *csi.ControllerGetCapabilitiesRequest) (*csi.ControllerGetCapabilitiesResponse, error) {
+	req *csi.ControllerGetCapabilitiesRequest,
+) (*csi.ControllerGetCapabilitiesResponse, error) {
 
 	// Volume capabilities
 	capCreateDeleteVolume := &csi.ControllerServiceCapability{
@@ -63,7 +71,8 @@ func (s *OsdCsiServer) ControllerGetCapabilities(
 // on to a node.
 func (s *OsdCsiServer) ControllerPublishVolume(
 	context.Context,
-	*csi.ControllerPublishVolumeRequest) (*csi.ControllerPublishVolumeResponse, error) {
+	*csi.ControllerPublishVolumeRequest,
+) (*csi.ControllerPublishVolumeResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "This request is not supported")
 
 }
@@ -72,7 +81,8 @@ func (s *OsdCsiServer) ControllerPublishVolume(
 // onto a node.
 func (s *OsdCsiServer) ControllerUnpublishVolume(
 	context.Context,
-	*csi.ControllerUnpublishVolumeRequest) (*csi.ControllerUnpublishVolumeResponse, error) {
+	*csi.ControllerUnpublishVolumeRequest,
+) (*csi.ControllerUnpublishVolumeResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "This request is not supported")
 }
 
@@ -84,7 +94,8 @@ func (s *OsdCsiServer) ControllerUnpublishVolume(
 //
 func (s *OsdCsiServer) ValidateVolumeCapabilities(
 	ctx context.Context,
-	req *csi.ValidateVolumeCapabilitiesRequest) (*csi.ValidateVolumeCapabilitiesResponse, error) {
+	req *csi.ValidateVolumeCapabilitiesRequest,
+) (*csi.ValidateVolumeCapabilitiesResponse, error) {
 
 	// Probably we may use version in the future, but for now, let's just log it
 	version := req.GetVersion()
@@ -160,46 +171,46 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 		case mode.Mode == csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER:
 			if v.Spec.Shared {
 				result.Supported = false
-				result.Message = "Volume is a multi node volume"
+				result.Message = volumeCapabilityMessageMultinodeVolume
 				break
 			}
 			if v.Readonly {
 				result.Supported = false
-				result.Message = "Volume is read only"
+				result.Message = volumeCapabilityMessageReadOnlyVolume
 				break
 			}
 		case mode.Mode == csi.VolumeCapability_AccessMode_SINGLE_NODE_READER_ONLY:
 			if v.Spec.Shared {
 				result.Supported = false
-				result.Message = "Volume is a multi node volume"
+				result.Message = volumeCapabilityMessageMultinodeVolume
 				break
 			}
 			if !v.Readonly {
 				result.Supported = false
-				result.Message = "Volume is not read only"
+				result.Message = volumeCapabilityMessageNotReadOnlyVolume
 				break
 			}
 		case mode.Mode == csi.VolumeCapability_AccessMode_MULTI_NODE_READER_ONLY:
 			if !v.Spec.Shared {
 				result.Supported = false
-				result.Message = "Volume is not a multi node volume"
+				result.Message = volumeCapabilityMessageNotMultinodeVolume
 				break
 			}
 			if !v.Readonly {
 				result.Supported = false
-				result.Message = "Volume is not read only"
+				result.Message = volumeCapabilityMessageNotReadOnlyVolume
 				break
 			}
 		case mode.Mode == csi.VolumeCapability_AccessMode_MULTI_NODE_SINGLE_WRITER ||
 			mode.Mode == csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER:
 			if !v.Spec.Shared {
 				result.Supported = false
-				result.Message = "Volume is not a multi node volume"
+				result.Message = volumeCapabilityMessageNotMultinodeVolume
 				break
 			}
 			if v.Readonly {
 				result.Supported = false
-				result.Message = "Volume is read only"
+				result.Message = volumeCapabilityMessageReadOnlyVolume
 				break
 			}
 		default:
