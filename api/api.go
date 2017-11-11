@@ -265,18 +265,20 @@ func toSec(ms uint64) uint64 {
 
 // WriteThroughput returns the write throughput
 func (v *Stats) WriteThroughput() uint64 {
-	if v.IntervalMs == 0 {
+	intv := toSec(v.IntervalMs)
+	if intv == 0 {
 		return 0
 	}
-	return (v.WriteBytes) / toSec(v.IntervalMs)
+	return (v.WriteBytes) / intv
 }
 
 // ReadThroughput returns the read throughput
 func (v *Stats) ReadThroughput() uint64 {
-	if v.IntervalMs == 0 {
+	intv := toSec(v.IntervalMs)
+	if intv == 0 {
 		return 0
 	}
-	return (v.ReadBytes) / toSec(v.IntervalMs)
+	return (v.ReadBytes) / intv
 }
 
 // Latency returns latency
@@ -306,10 +308,11 @@ func (v *Stats) WriteLatency() uint64 {
 
 // Iops returns iops
 func (v *Stats) Iops() uint64 {
-	if v.IntervalMs == 0 {
+	intv := toSec(v.IntervalMs)
+	if intv == 0 {
 		return 0
 	}
-	return (v.Writes + v.Reads) / toSec(v.IntervalMs)
+	return (v.Writes + v.Reads) / intv
 }
 
 // Scaled returns true if the volume is scaled.
