@@ -421,6 +421,39 @@ func (s *OsdCsiServer) CreateVolume(
 
 }
 
+// DeleteVolume is a CSI API which deletes a volume
+func (s *OsdCsiServer) DeleteVolume(
+	ctx context.Context,
+	req *csi.DeleteVolumeRequest,
+) (*csi.DeleteVolumeResponse, error) {
+
+	// Log request
+	dlog.Debugf("DeleteVolume req[%#v]", *req)
+
+	// Check arguments
+	if req.GetVersion() == nil {
+		return nil, status.Error(codes.InvalidArgument, "Version must be provided")
+	}
+	if len(req.GetVolumeId()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Volume id must be provided")
+	}
+
+	err := s.driver.Delete(req.GetVolumeId())
+	if err != nil {
+		e := fmt.Sprintf("Unable to delete volume with id %s: %s",
+			req.GetVolumeId(),
+			err.Error())
+		dlog.Errorln(e)
+		return nil, status.Error(codes.Internal, e)
+	}
+
+	return &csi.DeleteVolumeResponse{
+		Reply: &csi.DeleteVolumeResponse_Result_{
+			Result: &csi.DeleteVolumeResponse_Result{},
+		},
+	}, nil
+}
+
 func osdToCsiVolumeInfo(dest *csi.VolumeInfo, src *api.Volume) {
 	dest.Id = src.GetId()
 	dest.CapacityBytes = src.Spec.GetSize()
@@ -429,8 +462,6 @@ func osdToCsiVolumeInfo(dest *csi.VolumeInfo, src *api.Volume) {
 /*
 For next patches what still needs to be worked on in the Conroller server:
 
-	CreateVolume(context.Context, *CreateVolumeRequest) (*CreateVolumeResponse, error)
-	DeleteVolume(context.Context, *DeleteVolumeRequest) (*DeleteVolumeResponse, error)
 	GetCapacity(context.Context, *GetCapacityRequest) (*GetCapacityResponse, error)
 	ControllerGetCapabilities(context.Context, *ControllerGetCapabilitiesRequest) (*ControllerGetCapabilitiesResponse, error)
 */

@@ -1061,3 +1061,72 @@ func TestControllerCreateVolumeSnapshot(t *testing.T) {
 	assert.Equal(t, id, volumeInfo.GetId())
 	assert.Equal(t, size, volumeInfo.GetCapacityBytes())
 }
+
+func TestControllerDeleteVolumeInvalidArguments(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	// No version
+	req := &csi.DeleteVolumeRequest{}
+	_, err := c.DeleteVolume(context.Background(), req)
+	assert.NotNil(t, err)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "Version")
+
+	// No id
+	req.Version = &csi.Version{}
+	_, err = c.DeleteVolume(context.Background(), req)
+	assert.NotNil(t, err)
+	serverError, ok = status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "Volume id")
+}
+
+func TestControllerDeleteVolumeError(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	// No version
+	myid := "myid"
+	req := &csi.DeleteVolumeRequest{
+		Version:  &csi.Version{},
+		VolumeId: myid,
+	}
+
+	// Setup mock
+	s.MockDriver().EXPECT().Delete(myid).Return(fmt.Errorf("TEST")).Times(1)
+
+	_, err := c.DeleteVolume(context.Background(), req)
+	assert.NotNil(t, err)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.Internal)
+	assert.Contains(t, serverError.Message(), "Unable to delete")
+}
+
+func TestControllerDeleteVolume(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	// No version
+	myid := "myid"
+	req := &csi.DeleteVolumeRequest{
+		Version:  &csi.Version{},
+		VolumeId: myid,
+	}
+
+	// Setup mock
+	s.MockDriver().EXPECT().Delete(myid).Return(nil).Times(1)
+
+	_, err := c.DeleteVolume(context.Background(), req)
+	assert.Nil(t, err)
+}
