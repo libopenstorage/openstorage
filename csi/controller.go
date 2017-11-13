@@ -62,13 +62,9 @@ func (s *OsdCsiServer) ControllerGetCapabilities(
 	}
 
 	return &csi.ControllerGetCapabilitiesResponse{
-		Reply: &csi.ControllerGetCapabilitiesResponse_Result_{
-			Result: &csi.ControllerGetCapabilitiesResponse_Result{
-				Capabilities: []*csi.ControllerServiceCapability{
-					capCreateDeleteVolume,
-					capListVolumes,
-				},
-			},
+		Capabilities: []*csi.ControllerServiceCapability{
+			capCreateDeleteVolume,
+			capListVolumes,
 		},
 	}, nil
 
@@ -152,13 +148,8 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 	}
 
 	// Setup uninitialized response object
-	result := &csi.ValidateVolumeCapabilitiesResponse_Result{
+	result := &csi.ValidateVolumeCapabilitiesResponse{
 		Supported: true,
-	}
-	resp := &csi.ValidateVolumeCapabilitiesResponse{
-		Reply: &csi.ValidateVolumeCapabilitiesResponse_Result_{
-			Result: result,
-		},
 	}
 
 	// Check capability
@@ -228,13 +219,13 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 		}
 
 		if !result.Supported {
-			return resp, nil
+			return result, nil
 		}
 	}
 
 	// If we passed all the checks, then it is valid
 	result.Message = "Volume is supported"
-	return resp, nil
+	return result, nil
 }
 
 // ListVolumes is a CSI API which returns to the caller all volume ids
@@ -273,10 +264,10 @@ func (s *OsdCsiServer) ListVolumes(
 		dlog.Errorln(errs)
 		return nil, status.Error(codes.Internal, errs)
 	}
-	entries := make([]*csi.ListVolumesResponse_Result_Entry, len(volumes))
+	entries := make([]*csi.ListVolumesResponse_Entry, len(volumes))
 	for i, v := range volumes {
 		// Initialize entry
-		entries[i] = &csi.ListVolumesResponse_Result_Entry{
+		entries[i] = &csi.ListVolumesResponse_Entry{
 			VolumeInfo: &csi.VolumeInfo{},
 		}
 
@@ -294,11 +285,7 @@ func (s *OsdCsiServer) ListVolumes(
 	}
 
 	return &csi.ListVolumesResponse{
-		Reply: &csi.ListVolumesResponse_Result_{
-			Result: &csi.ListVolumesResponse_Result{
-				Entries: entries,
-			},
-		},
+		Entries: entries,
 	}, nil
 }
 
@@ -347,11 +334,7 @@ func (s *OsdCsiServer) CreateVolume(
 	// Create response
 	volume := &csi.VolumeInfo{}
 	resp := &csi.CreateVolumeResponse{
-		Reply: &csi.CreateVolumeResponse_Result_{
-			Result: &csi.CreateVolumeResponse_Result{
-				VolumeInfo: volume,
-			},
-		},
+		VolumeInfo: volume,
 	}
 
 	// Check if the volume has already been created or is in process of creation
@@ -448,11 +431,7 @@ func (s *OsdCsiServer) DeleteVolume(
 		return nil, status.Error(codes.Internal, e)
 	}
 
-	return &csi.DeleteVolumeResponse{
-		Reply: &csi.DeleteVolumeResponse_Result_{
-			Result: &csi.DeleteVolumeResponse_Result{},
-		},
-	}, nil
+	return &csi.DeleteVolumeResponse{}, nil
 }
 
 func osdToCsiVolumeInfo(dest *csi.VolumeInfo, src *api.Volume) {

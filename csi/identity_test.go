@@ -40,11 +40,11 @@ func TestNewCSIServerGetPluginInfo(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Verify
-	name := r.GetResult().GetName()
-	version := r.GetResult().GetVendorVersion()
+	name := r.GetName()
+	version := r.GetVendorVersion()
 	assert.Equal(t, name, csiDriverName)
 	assert.Equal(t, version, csiDriverVersion)
-	manifest := r.GetResult().GetManifest()
+	manifest := r.GetManifest()
 	assert.Len(t, manifest, 1)
 	assert.Equal(t, manifest["driver"], "mock")
 }
@@ -61,7 +61,7 @@ func TestNewCSIServerGetSupportedVersions(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Verify
-	versions := r.GetResult().GetSupportedVersions()
+	versions := r.GetSupportedVersions()
 	assert.Equal(t, len(versions), 1)
 	assert.True(t, reflect.DeepEqual(versions[0], csiVersion))
 }
