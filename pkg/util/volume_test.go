@@ -37,11 +37,47 @@ func TestVolumeFromNameFailedToLocateDueToTooManyVolumes(t *testing.T) {
 	// Setup calls
 	name := "myvolume"
 	gomock.InOrder(
+		// Too many
+		driver.
+			EXPECT().
+			Inspect([]string{name}).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id: name,
+					Locator: &api.VolumeLocator{
+						Name: name,
+					},
+				},
+				&api.Volume{
+					Id: "two",
+					Locator: &api.VolumeLocator{
+						Name: name,
+					},
+				},
+			}, nil).
+			Times(1),
+		driver.
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return([]*api.Volume{}, nil).
+			Times(1),
+	)
+
+	// Expect not found
+	_, err := VolumeFromName(driver, name)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "Cannot locate")
+
+	// Setup calls
+	gomock.InOrder(
+		// Return that it was not found
 		driver.
 			EXPECT().
 			Inspect([]string{name}).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
+
+		// Return too many volumes
 		driver.
 			EXPECT().
 			Enumerate(&api.VolumeLocator{Name: name}, nil).
@@ -63,8 +99,29 @@ func TestVolumeFromNameFailedToLocateDueToTooManyVolumes(t *testing.T) {
 	)
 
 	// Expect not found
-	_, err := VolumeFromName(driver, name)
+	_, err = VolumeFromName(driver, name)
 	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "Cannot locate")
+
+	// Setup calls
+	gomock.InOrder(
+		driver.
+			EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		driver.
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return(nil, fmt.Errorf("Error")).
+			Times(1),
+	)
+
+	// Expect not found
+	_, err = VolumeFromName(driver, name)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "Failed to locate")
 }
 
 func TestVolumeFromNameFailedToLocate(t *testing.T) {

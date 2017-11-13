@@ -341,7 +341,7 @@ func (s *OsdCsiServer) CreateVolume(
 		return nil, status.Error(codes.InvalidArgument, "CapacityRange must be specified")
 	}
 	if req.GetCapacityRange().GetRequiredBytes() == 0 {
-		return nil, status.Error(codes.Internal, "Capacity range required bytes cannot be zero")
+		return nil, status.Error(codes.InvalidArgument, "Capacity range required bytes cannot be zero")
 	}
 
 	// Create response
@@ -366,7 +366,7 @@ func (s *OsdCsiServer) CreateVolume(
 	if err != nil {
 		e := fmt.Sprintf("Unable to get parameters: %s\n", err.Error())
 		dlog.Errorln(e)
-		return nil, status.Error(codes.Internal, e)
+		return nil, status.Error(codes.InvalidArgument, e)
 	}
 
 	// Check if the caller is asking to create a snapshot or for a new volume
@@ -398,6 +398,7 @@ func (s *OsdCsiServer) CreateVolume(
 			if mode == csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER ||
 				mode == csi.VolumeCapability_AccessMode_MULTI_NODE_SINGLE_WRITER {
 				spec.Shared = true
+				break
 			}
 		}
 
@@ -457,6 +458,7 @@ func (s *OsdCsiServer) DeleteVolume(
 func osdToCsiVolumeInfo(dest *csi.VolumeInfo, src *api.Volume) {
 	dest.Id = src.GetId()
 	dest.CapacityBytes = src.Spec.GetSize()
+	dest.Attributes = osdVolumeAttributes(src)
 }
 
 /*
