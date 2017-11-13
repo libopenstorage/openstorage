@@ -201,10 +201,10 @@
 			"revisionTime": "2016-03-26T22:39:47Z"
 		},
 		{
-			"checksumSHA1": "V96DhXHWX7t6tZgodtYi39uHLpE=",
+			"checksumSHA1": "4VD349aRZUxczxE7uOygg6YDXGo=",
 			"path": "github.com/container-storage-interface/spec/lib/go/csi",
-			"revision": "e6a9c334bd355359b129e02b25040d2aae564c94",
-			"revisionTime": "2017-11-01T09:52:06Z"
+			"revision": "28cea9f679367fee3d01bd25ae54933864cb8017",
+			"revisionTime": "2017-11-09T20:03:04Z"
 		},
 		{
 			"checksumSHA1": "sFGNqtSE3WlMiyT+JkVaW2OzstM=",
@@ -851,8 +851,8 @@
 		{
 			"checksumSHA1": "rPWrzbO5s9QFUG5pERhAWnPRIC8=",
 			"path": "github.com/kubernetes-csi/csi-test/utils",
-			"revision": "3b78567d8ab0777981385a1337760095d21ba07f",
-			"revisionTime": "2017-10-24T15:25:05Z"
+			"revision": "fdd7859858f9f4db4f64563e45996382d39b58f4",
+			"revisionTime": "2017-11-14T15:52:15Z"
 		},
 		{
 			"checksumSHA1": "XxSculDWJ8paPj2VbSbbxPDSb7Q=",
