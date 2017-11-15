@@ -69,6 +69,8 @@ type StorageOps interface {
 	Snapshot(volumeID string, readonly bool) (*ec2.Snapshot, error)
 	// ApplyTags
 	ApplyTags(v *ec2.Volume, labels map[string]string) error
+	// RemoveTags removes labels from the volume
+	RemoveTags(v *ec2.Volume, labels map[string]string) error
 	// Tags
 	Tags(v *ec2.Volume) map[string]string
 }
@@ -223,6 +225,18 @@ func (s *ec2Ops) ApplyTags(
 		Tags:      s.tags(labels),
 	}
 	_, err := s.ec2.CreateTags(req)
+	return err
+}
+
+func (s *ec2Ops) RemoveTags(
+	v *ec2.Volume,
+	labels map[string]string,
+) error {
+	req := &ec2.DeleteTagsInput{
+		Resources: []*string{v.VolumeId},
+		Tags:      s.tags(labels),
+	}
+	_, err := s.ec2.DeleteTags(req)
 	return err
 }
 
