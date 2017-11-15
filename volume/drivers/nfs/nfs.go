@@ -17,6 +17,8 @@ import (
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers/common"
 	"github.com/portworx/kvdb"
+	"strings"
+	"math/rand"
 )
 
 const (
@@ -33,7 +35,7 @@ type driver struct {
 	volume.StoreEnumerator
 	volume.StatsDriver
 	volume.QuiesceDriver
-	nfsServer string
+	nfsServers []string
 	nfsPath   string
 	mounter   mount.Manager
 }
@@ -49,8 +51,13 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 	} else {
 		dlog.Printf("NFS driver initializing with %s:%s ", server, path)
 	}
+
+	//support more than one server using CSV
+	//TB-FIXME: modify driver params flow to support map[string]struct/array
+	servers := strings.Split(server, ",")
+
 	// Create a mount manager for this NFS server. Blank sever is OK.
-	mounter, err := mount.New(mount.NFSMount, nil, []string{server}, nil, []string{}, "")
+	mounter, err := mount.New(mount.NFSMount, nil, servers, nil, []string{}, "")
 	if err != nil {
 		dlog.Warnf("Failed to create mount manager for server: %v (%v)", server, err)
 		return nil, err
@@ -60,39 +67,49 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		StoreEnumerator: common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
 		StatsDriver:     volume.StatsNotSupported,
 		QuiesceDriver:   volume.QuiesceNotSupported,
-		nfsServer:       server,
+		nfsServers:      servers,
 		nfsPath:         path,
 		mounter:         mounter,
 	}
-	if err := os.MkdirAll(nfsMountPath, 0744); err != nil {
-		return nil, err
+
+	//make directory for each nfs server
+	for _, v := range servers {
+		dlog.Infof("Calling mkdirAll: %s", nfsMountPath+v)
+		if err := os.MkdirAll(nfsMountPath+v, 0744); err != nil {
+			return nil, err
+		}
 	}
 	src := inst.nfsPath
 	if server != "" {
 		src = ":" + inst.nfsPath
 	}
-	// If src is already mounted at dest, leave it be.
-	mountExists, err := mounter.Exists(src, nfsMountPath)
-	if !mountExists {
-		// Mount the nfs server locally on a unique path.
-		syscall.Unmount(nfsMountPath, 0)
-		if server != "" {
-			err = syscall.Mount(
-				src,
-				nfsMountPath,
-				"nfs",
-				0,
-				"nolock,addr="+inst.nfsServer,
-			)
-		} else {
-			err = syscall.Mount(src, nfsMountPath, "", syscall.MS_BIND, "")
-		}
-		if err != nil {
-			dlog.Printf("Unable to mount %s:%s at %s (%+v)",
-				inst.nfsServer, inst.nfsPath, nfsMountPath, err)
-			return nil, err
+
+	//mount each nfs server
+	for _, v := range inst.nfsServers {
+		// If src is already mounted at dest, leave it be.
+		mountExists, err := mounter.Exists(src, nfsMountPath+v)
+		if !mountExists {
+			// Mount the nfs server locally on a unique path.
+			syscall.Unmount(nfsMountPath+v, 0)
+			if server != "" {
+				err = syscall.Mount(
+					src,
+					nfsMountPath+v,
+					"nfs",
+					0,
+					"nolock,addr="+v,
+				)
+			} else {
+				err = syscall.Mount(src, nfsMountPath+v, "", syscall.MS_BIND, "")
+			}
+			if err != nil {
+				dlog.Printf("Unable to mount %s:%s at %s (%+v)",
+					v, inst.nfsPath, nfsMountPath+v, err)
+				return nil, err
+			}
 		}
 	}
+
 	volumeInfo, err := inst.StoreEnumerator.Enumerate(&api.VolumeLocator{}, nil)
 	if err == nil {
 		for _, info := range volumeInfo {
@@ -120,6 +137,28 @@ func (d *driver) Status() [][2]string {
 	return [][2]string{}
 }
 
+
+//
+//Utility functions
+//
+func (d *driver) getNewVolumeServer() (string) {
+	//randomly select one
+	return d.nfsServers[rand.Intn(len(d.nfsServers))]
+}
+
+//get nfsPath for specified volume
+func (d *driver) getNFSPath(v *api.Volume) (string, error) {
+	locator := v.GetLocator()
+	server, ok := locator.VolumeLabels["server"]
+	if !ok {
+		dlog.Warnf("No server label found on volume")
+		return "", errors.New("No server label found on volume: "+v.Id)
+	}
+
+	return path.Join(nfsMountPath, server), nil
+}
+
+
 //
 // These functions below implement the volume driver interface.
 //
@@ -134,8 +173,18 @@ func (d *driver) Create(
 		return "", errors.New("Volume with that name already exists")
 	}
 
+	//check if user passed server as option
+	labels := locator.GetVolumeLabels()
+	server, ok := labels["server"]
+	if !ok {
+		server = d.getNewVolumeServer()
+		labels["server"]  = server
+	}
+
 	// Create a directory on the NFS server with this UUID.
-	volPath := path.Join(nfsMountPath, volumeID)
+	volPathParent := path.Join(nfsMountPath, server)
+	dlog.Infof("Using volume server path: %s",volPathParent)
+	volPath := path.Join(volPathParent, volumeID)
 	err := os.MkdirAll(volPath, 0744)
 	if err != nil {
 		dlog.Println(err)
@@ -152,13 +201,13 @@ func (d *driver) Create(
 			err = seed.Load(path.Join(volPath, config.DataDir))
 			if err != nil {
 				dlog.Warnf("Failed to  seed from %q to %q: %v",
-					source.Seed, nfsMountPath, err)
+					source.Seed, volPathParent, err)
 				return "", err
 			}
 		}
 	}
 
-	f, err := os.Create(path.Join(nfsMountPath, volumeID+nfsBlockFile))
+	f, err := os.Create(path.Join(volPathParent, volumeID+nfsBlockFile))
 	if err != nil {
 		dlog.Println(err)
 		return "", err
@@ -170,6 +219,7 @@ func (d *driver) Create(
 		return "", err
 	}
 
+
 	v := common.NewVolume(
 		volumeID,
 		api.FSType_FS_TYPE_NFS,
@@ -177,7 +227,8 @@ func (d *driver) Create(
 		source,
 		spec,
 	)
-	v.DevicePath = path.Join(nfsMountPath, volumeID+nfsBlockFile)
+	v.DevicePath = path.Join(volPathParent, volumeID+nfsBlockFile)
+
 
 	if err := d.CreateVol(v); err != nil {
 		return "", err
@@ -218,13 +269,20 @@ func (d *driver) Mount(volumeID string, mountpath string, options map[string]str
 		return err
 	}
 
-	srcPath := path.Join(":", d.nfsPath, volumeID)
+
+	nfsPath, err := d.getNFSPath(v)
+	if err != nil {
+		dlog.Printf("Could not find server for volume: %s", volumeID)
+		return err
+	}
+
+	srcPath := path.Join(":", nfsPath, volumeID)
 	mountExists, err := d.mounter.Exists(srcPath, mountpath)
 	if !mountExists {
-		d.mounter.Unmount(path.Join(nfsMountPath, volumeID), mountpath,
+		d.mounter.Unmount(path.Join(nfsPath, volumeID), mountpath,
 			syscall.MNT_DETACH, 0, nil)
 		if err := d.mounter.Mount(
-			0, path.Join(nfsMountPath, volumeID),
+			0, path.Join(nfsPath, volumeID),
 			mountpath,
 			string(v.Spec.Format),
 			syscall.MS_BIND,
@@ -233,7 +291,7 @@ func (d *driver) Mount(volumeID string, mountpath string, options map[string]str
 			nil,
 		); err != nil {
 			dlog.Printf("Cannot mount %s at %s because %+v",
-				path.Join(nfsMountPath, volumeID), mountpath, err)
+				path.Join(nfsPath, volumeID), mountpath, err)
 			return err
 		}
 	}
