@@ -117,8 +117,8 @@ func TestCSIServerStart(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Verify
-	name := r.GetResult().GetName()
-	version := r.GetResult().GetVendorVersion()
+	name := r.GetName()
+	version := r.GetVendorVersion()
 	assert.Equal(t, name, csiDriverName)
 	assert.Equal(t, version, csiDriverVersion)
 }

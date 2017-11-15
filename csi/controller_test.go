@@ -46,7 +46,7 @@ func TestControllerGetCapabilities(t *testing.T) {
 		csi.ControllerServiceCapability_RPC_LIST_VOLUMES,
 		csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME,
 	}
-	caps := r.GetResult().GetCapabilities()
+	caps := r.GetCapabilities()
 	assert.Len(t, caps, len(expectedValues))
 	found := 0
 	for _, expectedCap := range expectedValues {
@@ -379,22 +379,22 @@ func TestControllerValidateVolumeAccessModeSNWR(t *testing.T) {
 	c := csi.NewControllerClient(s.Conn())
 	r, err := c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.True(t, r.GetResult().Supported)
+	assert.True(t, r.Supported)
 
 	// Expect RO and non-SH
 	r, err = c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.False(t, r.GetResult().Supported)
+	assert.False(t, r.Supported)
 
 	// Expect non-RO and SH
 	r, err = c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.False(t, r.GetResult().Supported)
+	assert.False(t, r.Supported)
 
 	// Expect RO and SH
 	r, err = c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.False(t, r.GetResult().Supported)
+	assert.False(t, r.Supported)
 }
 
 func TestControllerValidateVolumeAccessModeSNRO(t *testing.T) {
@@ -488,22 +488,22 @@ func TestControllerValidateVolumeAccessModeSNRO(t *testing.T) {
 	c := csi.NewControllerClient(s.Conn())
 	r, err := c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.False(t, r.GetResult().Supported)
+	assert.False(t, r.Supported)
 
 	// Expect RO and non-SH
 	r, err = c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.True(t, r.GetResult().Supported)
+	assert.True(t, r.Supported)
 
 	// Expect non-RO and SH
 	r, err = c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.False(t, r.GetResult().Supported)
+	assert.False(t, r.Supported)
 
 	// Expect RO and SH
 	r, err = c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.False(t, r.GetResult().Supported)
+	assert.False(t, r.Supported)
 }
 
 func TestControllerValidateVolumeAccessModeMNRO(t *testing.T) {
@@ -597,22 +597,22 @@ func TestControllerValidateVolumeAccessModeMNRO(t *testing.T) {
 	c := csi.NewControllerClient(s.Conn())
 	r, err := c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.False(t, r.GetResult().Supported)
+	assert.False(t, r.Supported)
 
 	// Expect RO and non-SH
 	r, err = c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.False(t, r.GetResult().Supported)
+	assert.False(t, r.Supported)
 
 	// Expect non-RO and SH
 	r, err = c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.False(t, r.GetResult().Supported)
+	assert.False(t, r.Supported)
 
 	// Expect RO and SH
 	r, err = c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.True(t, r.GetResult().Supported)
+	assert.True(t, r.Supported)
 }
 
 func TestControllerValidateVolumeAccessModeMNWR(t *testing.T) {
@@ -706,22 +706,22 @@ func TestControllerValidateVolumeAccessModeMNWR(t *testing.T) {
 	c := csi.NewControllerClient(s.Conn())
 	r, err := c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.False(t, r.GetResult().Supported)
+	assert.False(t, r.Supported)
 
 	// Expect RO and non-SH
 	r, err = c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.False(t, r.GetResult().Supported)
+	assert.False(t, r.Supported)
 
 	// Expect non-RO and SH
 	r, err = c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.True(t, r.GetResult().Supported)
+	assert.True(t, r.Supported)
 
 	// Expect RO and SH
 	r, err = c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.False(t, r.GetResult().Supported)
+	assert.False(t, r.Supported)
 }
 
 func TestControllerValidateVolumeAccessModeUnknown(t *testing.T) {
@@ -883,9 +883,9 @@ func TestControllerListVolumes(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, r)
 
-	volumes := r.GetResult().GetEntries()
+	volumes := r.GetEntries()
 	assert.Equal(t, len(mockVolumeList), len(volumes))
-	assert.Equal(t, len(r.GetResult().GetNextToken()), 0)
+	assert.Equal(t, len(r.GetNextToken()), 0)
 
 	found := 0
 	for _, mv := range mockVolumeList {
@@ -1028,7 +1028,7 @@ func TestControllerCreateVolumeFoundByVolumeFromName(t *testing.T) {
 	r, err := c.CreateVolume(context.Background(), req)
 	assert.Nil(t, err)
 	assert.NotNil(t, r)
-	volumeInfo := r.GetResult().GetVolumeInfo()
+	volumeInfo := r.GetVolumeInfo()
 
 	assert.Equal(t, name, volumeInfo.GetId())
 	assert.Equal(t, size, volumeInfo.GetCapacityBytes())
@@ -1291,7 +1291,7 @@ func TestControllerCreateVolumeWithSharedVolume(t *testing.T) {
 		r, err := c.CreateVolume(context.Background(), req)
 		assert.Nil(t, err)
 		assert.NotNil(t, r)
-		volumeInfo := r.GetResult().GetVolumeInfo()
+		volumeInfo := r.GetVolumeInfo()
 
 		assert.Equal(t, id, volumeInfo.GetId())
 		assert.Equal(t, size, volumeInfo.GetCapacityBytes())
@@ -1471,7 +1471,7 @@ func TestControllerCreateVolume(t *testing.T) {
 	r, err := c.CreateVolume(context.Background(), req)
 	assert.Nil(t, err)
 	assert.NotNil(t, r)
-	volumeInfo := r.GetResult().GetVolumeInfo()
+	volumeInfo := r.GetVolumeInfo()
 
 	assert.Equal(t, id, volumeInfo.GetId())
 	assert.Equal(t, size, volumeInfo.GetCapacityBytes())
@@ -1558,7 +1558,7 @@ func TestControllerCreateVolumeSnapshot(t *testing.T) {
 	r, err := c.CreateVolume(context.Background(), req)
 	assert.Nil(t, err)
 	assert.NotNil(t, r)
-	volumeInfo := r.GetResult().GetVolumeInfo()
+	volumeInfo := r.GetVolumeInfo()
 
 	assert.Equal(t, id, volumeInfo.GetId())
 	assert.Equal(t, size, volumeInfo.GetCapacityBytes())
