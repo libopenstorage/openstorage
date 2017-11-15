@@ -14,6 +14,11 @@ import (
 	"github.com/libopenstorage/openstorage/cluster"
 )
 
+const (
+	nodeOkMsg    = "Node status OK"
+	nodeNotOkMsg = "Node status not OK"
+)
+
 type clusterApi struct {
 	restBase
 }
@@ -333,12 +338,12 @@ func (c *clusterApi) nodeHealth(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if st != api.Status_STATUS_OK {
-		err = fmt.Errorf("Node status not OK (%s)", api.Status_name[int32(st)])
+		err = fmt.Errorf("%s (%s)", nodeNotOkMsg, api.Status_name[int32(st)])
 		c.sendError(c.name, method, w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
 
-	w.Write([]byte("Node status OK\n"))
+	w.Write([]byte(nodeOkMsg + "\n"))
 }
 
 func (c *clusterApi) peerStatus(w http.ResponseWriter, r *http.Request) {
