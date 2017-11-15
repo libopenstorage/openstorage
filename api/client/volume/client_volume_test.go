@@ -2,15 +2,14 @@ package volume
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/libopenstorage/openstorage/api"
-	"encoding/json"
+	"github.com/stretchr/testify/require"
 )
-
 
 func TestClientTLS(t *testing.T) {
 	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
