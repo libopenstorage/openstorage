@@ -26,6 +26,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
+	"github.com/libopenstorage/openstorage/api/spec"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 )
@@ -43,12 +44,13 @@ type OsdCsiServerConfig struct {
 // proxies CSI requests for a single specific driver
 type OsdCsiServer struct {
 	Server
-	listener net.Listener
-	server   *grpc.Server
-	driver   volume.VolumeDriver
-	wg       sync.WaitGroup
-	running  bool
-	lock     sync.Mutex
+	listener    net.Listener
+	server      *grpc.Server
+	driver      volume.VolumeDriver
+	wg          sync.WaitGroup
+	running     bool
+	lock        sync.Mutex
+	specHandler spec.SpecHandler
 }
 
 // NewOsdCsiServer creates a gRPC CSI complient server on the
@@ -85,8 +87,9 @@ func NewOsdCsiServer(config *OsdCsiServerConfig) (Server, error) {
 	}
 
 	return &OsdCsiServer{
-		listener: l,
-		driver:   d,
+		listener:    l,
+		driver:      d,
+		specHandler: spec.NewSpecHandler(),
 	}, nil
 }
 

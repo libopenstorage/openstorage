@@ -911,3 +911,727 @@ func TestControllerListVolumes(t *testing.T) {
 	}
 	assert.Equal(t, found, len(mockVolumeList))
 }
+
+func TestControllerCreateVolumeInvalidArguments(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	// Setup request
+	req := &csi.CreateVolumeRequest{}
+
+	// No version
+	_, err := c.CreateVolume(context.Background(), req)
+	assert.NotNil(t, err)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "Version")
+
+	// No name
+	req.Version = &csi.Version{}
+	_, err = c.CreateVolume(context.Background(), req)
+	assert.NotNil(t, err)
+	serverError, ok = status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "Name")
+
+	// No volume capabilities
+	name := "myname"
+	req.Name = name
+	_, err = c.CreateVolume(context.Background(), req)
+	assert.NotNil(t, err)
+	serverError, ok = status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "Volume capabilities")
+
+	// Zero volume capabilities
+	req.VolumeCapabilities = []*csi.VolumeCapability{}
+	_, err = c.CreateVolume(context.Background(), req)
+	assert.NotNil(t, err)
+	serverError, ok = status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "Volume capabilities")
+
+	// No CapacityRange
+	req.VolumeCapabilities = []*csi.VolumeCapability{
+		&csi.VolumeCapability{
+		// purposely do not define anything to check if it panics accessing nil
+		},
+	}
+	_, err = c.CreateVolume(context.Background(), req)
+	assert.NotNil(t, err)
+	serverError, ok = status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "CapacityRange")
+
+	// RequiredBytes is zero
+	req.CapacityRange = &csi.CapacityRange{}
+	_, err = c.CreateVolume(context.Background(), req)
+	assert.NotNil(t, err)
+	serverError, ok = status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "cannot be zero")
+}
+
+func TestControllerCreateVolumeFoundByVolumeFromName(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	// Setup request
+	name := "myvol"
+	size := uint64(1234)
+	req := &csi.CreateVolumeRequest{
+		Version: &csi.Version{},
+		Name:    name,
+		VolumeCapabilities: []*csi.VolumeCapability{
+			&csi.VolumeCapability{},
+		},
+		CapacityRange: &csi.CapacityRange{
+			RequiredBytes: size,
+		},
+	}
+
+	// Volume is already being created and found by calling VolumeFromName
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id: name,
+					Locator: &api.VolumeLocator{
+						Name: name,
+					},
+					Spec: &api.VolumeSpec{
+						Size: size,
+					},
+				},
+			}, nil).
+			Times(1),
+	)
+
+	r, err := c.CreateVolume(context.Background(), req)
+	assert.Nil(t, err)
+	assert.NotNil(t, r)
+	volumeInfo := r.GetResult().GetVolumeInfo()
+
+	assert.Equal(t, name, volumeInfo.GetId())
+	assert.Equal(t, size, volumeInfo.GetCapacityBytes())
+}
+
+func TestControllerCreateVolumeBadParameters(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	// Setup request
+	name := "myvol"
+	size := uint64(1234)
+	req := &csi.CreateVolumeRequest{
+		Version: &csi.Version{},
+		Name:    name,
+		VolumeCapabilities: []*csi.VolumeCapability{
+			&csi.VolumeCapability{},
+		},
+		CapacityRange: &csi.CapacityRange{
+			RequiredBytes: size,
+		},
+		Parameters: map[string]string{
+			api.SpecFilesystem: "whatkindoffsisthis?",
+		},
+	}
+
+	// Volume is already being created and found by calling VolumeFromName
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+	)
+
+	_, err := c.CreateVolume(context.Background(), req)
+	assert.NotNil(t, err)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "get parameters")
+}
+
+func TestControllerCreateVolumeBadParentId(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	// Setup request
+	name := "myvol"
+	size := uint64(1234)
+	parent := "badid"
+	req := &csi.CreateVolumeRequest{
+		Version: &csi.Version{},
+		Name:    name,
+		VolumeCapabilities: []*csi.VolumeCapability{
+			&csi.VolumeCapability{},
+		},
+		CapacityRange: &csi.CapacityRange{
+			RequiredBytes: size,
+		},
+		Parameters: map[string]string{
+			api.SpecParent: parent,
+		},
+	}
+
+	// Volume is already being created and found by calling VolumeFromName
+	gomock.InOrder(
+		// Getting volume information
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		// Getting parent information
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{parent}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: parent}, nil).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+	)
+
+	_, err := c.CreateVolume(context.Background(), req)
+	assert.NotNil(t, err)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "get parent volume")
+}
+
+func TestControllerCreateVolumeBadSnapshot(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	// Setup request
+	name := "myvol"
+	size := uint64(1234)
+	parent := "parent"
+	req := &csi.CreateVolumeRequest{
+		Version: &csi.Version{},
+		Name:    name,
+		VolumeCapabilities: []*csi.VolumeCapability{
+			&csi.VolumeCapability{},
+		},
+		CapacityRange: &csi.CapacityRange{
+			RequiredBytes: size,
+		},
+		Parameters: map[string]string{
+			api.SpecParent: parent,
+		},
+	}
+
+	// Volume is already being created and found by calling VolumeFromName
+	gomock.InOrder(
+		// Getting volume information
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		// Getting parent information
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{parent}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: parent}, nil).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id: parent,
+					Locator: &api.VolumeLocator{
+						Name: parent,
+					},
+					Spec: &api.VolumeSpec{
+						Size: uint64(1234),
+					},
+				},
+			}, nil).
+			Times(1),
+
+		// Return an error from snapshot
+		s.MockDriver().
+			EXPECT().
+			Snapshot(parent, false, &api.VolumeLocator{Name: name}).
+			Return("", fmt.Errorf("snapshoterr")).
+			Times(1),
+	)
+
+	_, err := c.CreateVolume(context.Background(), req)
+	assert.NotNil(t, err)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.Internal)
+	assert.Contains(t, serverError.Message(), "snapshoterr")
+}
+
+func TestControllerCreateVolumeWithSharedVolume(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	modes := []csi.VolumeCapability_AccessMode_Mode{
+		csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER,
+		csi.VolumeCapability_AccessMode_MULTI_NODE_SINGLE_WRITER,
+	}
+
+	for _, mode := range modes {
+		// Setup request
+		name := "myvol"
+		size := uint64(1234)
+		req := &csi.CreateVolumeRequest{
+			Version: &csi.Version{},
+			Name:    name,
+			VolumeCapabilities: []*csi.VolumeCapability{
+				&csi.VolumeCapability{
+					AccessMode: &csi.VolumeCapability_AccessMode{
+						Mode: mode,
+					},
+				},
+			},
+			CapacityRange: &csi.CapacityRange{
+				RequiredBytes: size,
+			},
+		}
+
+		// Setup mock functions
+		id := "myid"
+		gomock.InOrder(
+			s.MockDriver().
+				EXPECT().
+				Inspect([]string{name}).
+				Return(nil, fmt.Errorf("not found")).
+				Times(1),
+
+			s.MockDriver().
+				EXPECT().
+				Enumerate(&api.VolumeLocator{Name: name}, nil).
+				Return(nil, fmt.Errorf("not found")).
+				Times(1),
+
+			s.MockDriver().
+				EXPECT().
+				Create(gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(id, nil).
+				Times(1),
+
+			s.MockDriver().
+				EXPECT().
+				Inspect([]string{id}).
+				Return([]*api.Volume{
+					&api.Volume{
+						Id: id,
+						Locator: &api.VolumeLocator{
+							Name: name,
+						},
+						Spec: &api.VolumeSpec{
+							Size:   size,
+							Shared: true,
+						},
+					},
+				}, nil).
+				Times(1),
+		)
+
+		r, err := c.CreateVolume(context.Background(), req)
+		assert.Nil(t, err)
+		assert.NotNil(t, r)
+		volumeInfo := r.GetResult().GetVolumeInfo()
+
+		assert.Equal(t, id, volumeInfo.GetId())
+		assert.Equal(t, size, volumeInfo.GetCapacityBytes())
+		assert.Equal(t, "true", volumeInfo.GetAttributes()[api.SpecShared])
+	}
+}
+
+func TestControllerCreateVolumeFails(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	// Setup request
+	name := "myvol"
+	size := uint64(1234)
+	req := &csi.CreateVolumeRequest{
+		Version: &csi.Version{},
+		Name:    name,
+		VolumeCapabilities: []*csi.VolumeCapability{
+			&csi.VolumeCapability{},
+		},
+		CapacityRange: &csi.CapacityRange{
+			RequiredBytes: size,
+		},
+	}
+
+	// Setup mock functions
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Create(gomock.Any(), gomock.Any(), gomock.Any()).
+			Return("", fmt.Errorf("createerror")).
+			Times(1),
+	)
+
+	_, err := c.CreateVolume(context.Background(), req)
+	assert.NotNil(t, err)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.Internal)
+	assert.Contains(t, serverError.Message(), "createerror")
+}
+
+func TestControllerCreateVolumeNoNewVolumeInfo(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	// Setup request
+	name := "myvol"
+	size := uint64(1234)
+	req := &csi.CreateVolumeRequest{
+		Version: &csi.Version{},
+		Name:    name,
+		VolumeCapabilities: []*csi.VolumeCapability{
+			&csi.VolumeCapability{},
+		},
+		CapacityRange: &csi.CapacityRange{
+			RequiredBytes: size,
+		},
+	}
+
+	// Setup mock functions
+	id := "myid"
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Create(gomock.Any(), gomock.Any(), gomock.Any()).
+			Return(id, nil).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{id}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: id}, nil).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+	)
+
+	_, err := c.CreateVolume(context.Background(), req)
+	assert.NotNil(t, err)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.Internal)
+	assert.Contains(t, serverError.Message(), "not found")
+}
+
+func TestControllerCreateVolume(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	// Setup request
+	name := "myvol"
+	size := uint64(1234)
+	req := &csi.CreateVolumeRequest{
+		Version: &csi.Version{},
+		Name:    name,
+		VolumeCapabilities: []*csi.VolumeCapability{
+			&csi.VolumeCapability{},
+		},
+		CapacityRange: &csi.CapacityRange{
+			RequiredBytes: size,
+		},
+	}
+
+	// Setup mock functions
+	id := "myid"
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Create(gomock.Any(), gomock.Any(), gomock.Any()).
+			Return(id, nil).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{id}).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id: id,
+					Locator: &api.VolumeLocator{
+						Name: name,
+					},
+					Spec: &api.VolumeSpec{
+						Size: size,
+					},
+				},
+			}, nil).
+			Times(1),
+	)
+
+	r, err := c.CreateVolume(context.Background(), req)
+	assert.Nil(t, err)
+	assert.NotNil(t, r)
+	volumeInfo := r.GetResult().GetVolumeInfo()
+
+	assert.Equal(t, id, volumeInfo.GetId())
+	assert.Equal(t, size, volumeInfo.GetCapacityBytes())
+	assert.NotEqual(t, "true", volumeInfo.GetAttributes()[api.SpecShared])
+}
+
+func TestControllerCreateVolumeSnapshot(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	// Setup request
+	mockParentID := "parendId"
+	name := "myvol"
+	size := uint64(1234)
+	req := &csi.CreateVolumeRequest{
+		Version: &csi.Version{},
+		Name:    name,
+		VolumeCapabilities: []*csi.VolumeCapability{
+			&csi.VolumeCapability{},
+		},
+		CapacityRange: &csi.CapacityRange{
+			RequiredBytes: size,
+		},
+		Parameters: map[string]string{
+			api.SpecParent: mockParentID,
+		},
+	}
+
+	// Setup mock functions
+	id := "myid"
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{mockParentID}).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id: mockParentID,
+				},
+			}, nil).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Snapshot(mockParentID, false, &api.VolumeLocator{
+				Name: name,
+			}).
+			Return(id, nil).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{id}).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id: id,
+					Locator: &api.VolumeLocator{
+						Name: name,
+					},
+					Spec: &api.VolumeSpec{
+						Size: size,
+					},
+					Source: &api.Source{
+						Parent: mockParentID,
+					},
+				},
+			}, nil).
+			Times(1),
+	)
+
+	r, err := c.CreateVolume(context.Background(), req)
+	assert.Nil(t, err)
+	assert.NotNil(t, r)
+	volumeInfo := r.GetResult().GetVolumeInfo()
+
+	assert.Equal(t, id, volumeInfo.GetId())
+	assert.Equal(t, size, volumeInfo.GetCapacityBytes())
+	assert.NotEqual(t, "true", volumeInfo.GetAttributes()[api.SpecShared])
+	assert.Equal(t, mockParentID, volumeInfo.GetAttributes()[api.SpecParent])
+}
+
+func TestControllerDeleteVolumeInvalidArguments(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	// No version
+	req := &csi.DeleteVolumeRequest{}
+	_, err := c.DeleteVolume(context.Background(), req)
+	assert.NotNil(t, err)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "Version")
+
+	// No id
+	req.Version = &csi.Version{}
+	_, err = c.DeleteVolume(context.Background(), req)
+	assert.NotNil(t, err)
+	serverError, ok = status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "Volume id")
+}
+
+func TestControllerDeleteVolumeError(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	// No version
+	myid := "myid"
+	req := &csi.DeleteVolumeRequest{
+		Version:  &csi.Version{},
+		VolumeId: myid,
+	}
+
+	// Setup mock
+	s.MockDriver().EXPECT().Delete(myid).Return(fmt.Errorf("MOCKERRORTEST")).Times(1)
+
+	_, err := c.DeleteVolume(context.Background(), req)
+	assert.NotNil(t, err)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.Internal)
+	assert.Contains(t, serverError.Message(), "Unable to delete")
+	assert.Contains(t, serverError.Message(), "MOCKERRORTEST")
+}
+
+func TestControllerDeleteVolume(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	// No version
+	myid := "myid"
+	req := &csi.DeleteVolumeRequest{
+		Version:  &csi.Version{},
+		VolumeId: myid,
+	}
+
+	// Setup mock
+	s.MockDriver().EXPECT().Delete(myid).Return(nil).Times(1)
+
+	_, err := c.DeleteVolume(context.Background(), req)
+	assert.Nil(t, err)
+}
