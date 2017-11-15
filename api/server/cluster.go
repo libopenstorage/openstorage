@@ -23,7 +23,8 @@ func (c *clusterApi) Routes() []*Route {
 		{verb: "GET", path: "/cluster/versions", fn: c.versions},
 		{verb: "GET", path: clusterPath("/enumerate", cluster.APIVersion), fn: c.enumerate},
 		{verb: "GET", path: clusterPath("/gossipstate", cluster.APIVersion), fn: c.gossipState},
-		{verb: "GET", path: clusterPath("/nodestatus", cluster.APIVersion), fn: c.nodestatus},
+		{verb: "GET", path: clusterPath("/nodestatus", cluster.APIVersion), fn: c.nodeStatus},
+		{verb: "GET", path: clusterPath("/nodehealth", cluster.APIVersion), fn: c.nodeHealth},
 		{verb: "GET", path: clusterPath("/status", cluster.APIVersion), fn: c.status},
 		{verb: "GET", path: clusterPath("/peerstatus", cluster.APIVersion), fn: c.peerStatus},
 		{verb: "GET", path: clusterPath("/inspect/{id}", cluster.APIVersion), fn: c.inspect},
@@ -296,22 +297,48 @@ func (c *clusterApi) status(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(cluster.Status)
 }
 
-func (c *clusterApi) nodestatus(w http.ResponseWriter, r *http.Request) {
-	method := "nodestatus"
-
+func nodeStatusIntl() (api.Status, error) {
 	inst, err := cluster.Inst()
 	if err != nil {
-		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
-		return
+		return api.Status_STATUS_NONE, err
 	}
+
 	resp, err := inst.NodeStatus()
+	if err != nil {
+		return api.Status_STATUS_NONE, err
+	}
+
+	return resp, nil
+}
+
+func (c *clusterApi) nodeStatus(w http.ResponseWriter, r *http.Request) {
+	method := "nodeStatus"
+
+	st, err := nodeStatusIntl()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	json.NewEncoder(w).Encode(resp)
+	json.NewEncoder(w).Encode(st)
+}
 
+func (c *clusterApi) nodeHealth(w http.ResponseWriter, r *http.Request) {
+	method := "nodeHealth"
+
+	st, err := nodeStatusIntl()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusServiceUnavailable)
+		return
+	}
+
+	if st != api.Status_STATUS_OK {
+		err = fmt.Errorf("Node status not OK (%s)", api.Status_name[int32(st)])
+		c.sendError(c.name, method, w, err.Error(), http.StatusServiceUnavailable)
+		return
+	}
+
+	w.Write([]byte("Node status OK\n"))
 }
 
 func (c *clusterApi) peerStatus(w http.ResponseWriter, r *http.Request) {
