@@ -7,6 +7,8 @@ import (
 	"os"
 	"path"
 	"syscall"
+	"time"
+	"strconv"
 
 	"go.pedge.io/dlog"
 
@@ -141,9 +143,13 @@ func (d *driver) Status() [][2]string {
 //
 //Utility functions
 //
-func (d *driver) getNewVolumeServer() (string) {
+func (d *driver) getNewVolumeServer() (string,error) {
 	//randomly select one
-	return d.nfsServers[rand.Intn(len(d.nfsServers))]
+	if d.nfsServers != nil && len(d.nfsServers) > 0 {
+		return d.nfsServers[rand.Intn(len(d.nfsServers))], nil
+	}
+
+	return "", errors.New("No NFS servers found")
 }
 
 //get nfsPath for specified volume
@@ -158,6 +164,41 @@ func (d *driver) getNFSPath(v *api.Volume) (string, error) {
 	return path.Join(nfsMountPath, server), nil
 }
 
+//get nfsPath for specified volume
+func (d *driver) getNFSPathById(volumeID string) (string, error) {
+	v, err := d.GetVol(volumeID)
+	if err != nil {
+		return "",err
+	}
+
+	return d.getNFSPath(v)
+}
+
+//get nfsPath plus volume name for specified volume
+func (d *driver) getNFSVolumePath(v *api.Volume) (string, error) {
+	parentPath, err := d.getNFSPath(v)
+	if err != nil {
+		return "", err
+	}
+
+	return path.Join(parentPath, v.Id), nil
+}
+
+//get nfsPath plus volume name for specified volume
+func (d *driver) getNFSVolumePathById(volumeID string) (string, error){
+	v, err := d.GetVol(volumeID)
+	if err != nil {
+		return "",err
+	}
+
+	return d.getNFSVolumePath(v)
+}
+
+//append unix time to volumeID
+func (d *driver) getNewSnapVolID(volumeID string) (string) {
+	return volumeID+"-"+strconv.FormatUint(uint64(time.Now().Unix()),10)
+}
+
 
 //
 // These functions below implement the volume driver interface.
@@ -169,21 +210,37 @@ func (d *driver) Create(
 	spec *api.VolumeSpec) (string, error) {
 
 	volumeID := locator.Name
+	if volumeID == "" && source.Parent != "" {
+		volumeID = d.getNewSnapVolID(source.Parent)
+		dlog.Infof("Creating snap vol id: %s", volumeID)
+	}
+
 	if _, err := d.GetVol(volumeID); err == nil {
 		return "", errors.New("Volume with that name already exists")
 	}
 
+	//snapshot passes nil volumelabels
+	if locator.VolumeLabels == nil {
+		locator.VolumeLabels = make(map[string]string)
+	}
+
 	//check if user passed server as option
 	labels := locator.GetVolumeLabels()
-	server, ok := labels["server"]
+	_, ok := labels["server"]
 	if !ok {
-		server = d.getNewVolumeServer()
+		server, err := d.getNewVolumeServer()
+		if err != nil {
+			dlog.Infof("no nfs servers found...")
+			return "", err
+		}else{
+			dlog.Infof("Assigning random nfs server: %s to volume: %s",server, volumeID)
+		}
+
 		labels["server"]  = server
 	}
 
 	// Create a directory on the NFS server with this UUID.
-	volPathParent := path.Join(nfsMountPath, server)
-	dlog.Infof("Using volume server path: %s",volPathParent)
+	volPathParent := path.Join(nfsMountPath, labels["server"])
 	volPath := path.Join(volPathParent, volumeID)
 	err := os.MkdirAll(volPath, 0744)
 	if err != nil {
@@ -246,8 +303,13 @@ func (d *driver) Delete(volumeID string) error {
 	// Delete the simulated block volume
 	os.Remove(v.DevicePath)
 
+	nfsVolPath, err := d.getNFSVolumePath(v)
+	if err != nil {
+		return err
+	}
+
 	// Delete the directory on the nfs server.
-	os.RemoveAll(path.Join(nfsMountPath, volumeID))
+	os.RemoveAll(nfsVolPath)
 
 	err = d.DeleteVol(volumeID)
 	if err != nil {
@@ -268,7 +330,6 @@ func (d *driver) Mount(volumeID string, mountpath string, options map[string]str
 		dlog.Println(err)
 		return err
 	}
-
 
 	nfsPath, err := d.getNFSPath(v)
 	if err != nil {
@@ -310,12 +371,18 @@ func (d *driver) Unmount(volumeID string, mountpath string, options map[string]s
 	if len(v.AttachPath) == 0 {
 		return fmt.Errorf("Device %v not mounted", volumeID)
 	}
-	err = d.mounter.Unmount(path.Join(nfsMountPath, volumeID), mountpath,
+
+	nfsVolPath, err := d.getNFSVolumePath(v)
+	if err != nil {
+		return err
+	}
+
+	err = d.mounter.Unmount(nfsVolPath, mountpath,
 		syscall.MNT_DETACH, 0, nil)
 	if err != nil {
 		return err
 	}
-	v.AttachPath = d.mounter.Mounts(path.Join(nfsMountPath, volumeID))
+	v.AttachPath = d.mounter.Mounts(nfsVolPath)
 	return d.UpdateVol(v)
 }
 
@@ -331,8 +398,18 @@ func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 		return "", nil
 	}
 
+	nfsVolPath, err := d.getNFSVolumePathById(volumeID)
+	if err != nil {
+		return "",err
+	}
+
+	newNfsVolPath, err := d.getNFSVolumePathById(newVolumeID)
+	if err != nil {
+		return "", err
+	}
+
 	// NFS does not support snapshots, so just copy the files.
-	if err := copyDir(nfsMountPath+volumeID, nfsMountPath+newVolumeID); err != nil {
+	if err := copyDir(nfsVolPath, newNfsVolPath); err != nil {
 		d.Delete(newVolumeID)
 		return "", nil
 	}
@@ -344,15 +421,31 @@ func (d *driver) Restore(volumeID string, snapID string) error {
 		return err
 	}
 
+	nfsVolPath, err := d.getNFSVolumePathById(volumeID)
+	if err != nil {
+		return err
+	}
+
+	snapNfsVolPath, err := d.getNFSVolumePathById(snapID)
+	if err != nil {
+		return err
+	}
+
 	// NFS does not support restore, so just copy the files.
-	if err := copyDir(nfsMountPath+snapID, nfsMountPath+volumeID); err != nil {
+	if err := copyDir(snapNfsVolPath, nfsVolPath); err != nil {
 		return err
 	}
 	return nil
 }
 
 func (d *driver) Attach(volumeID string, attachOptions map[string]string) (string, error) {
-	return path.Join(nfsMountPath, volumeID+nfsBlockFile), nil
+
+	nfsPath, err := d.getNFSPathById(volumeID)
+	if err != nil {
+		return "", err
+	}
+
+	return path.Join(nfsPath, volumeID+nfsBlockFile), nil
 }
 
 func (d *driver) Detach(volumeID string, options map[string]string) error {
@@ -375,7 +468,11 @@ func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.Volu
 
 func (d *driver) Shutdown() {
 	dlog.Printf("%s Shutting down", Name)
-	syscall.Unmount(nfsMountPath, 0)
+
+	for _, v := range d.nfsServers {
+		dlog.Infof("Umounting: %s", nfsMountPath+v)
+		syscall.Unmount(path.Join(nfsMountPath, v), 0)
+	}
 }
 
 func copyFile(source string, dest string) (err error) {
