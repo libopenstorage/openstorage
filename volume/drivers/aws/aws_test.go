@@ -46,5 +46,6 @@ func TestAll(t *testing.T) {
 	ctx := test.NewContext(driver)
 	ctx.Filesystem = api.FSType_FS_TYPE_EXT4
 	test.RunShort(t, ctx)
+	testRemoveTags(t, driver)
 
 }
