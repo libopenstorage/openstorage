@@ -35,9 +35,35 @@ func testRemoveTags(t *testing.T, driver volume.VolumeDriver) {
 	require.True(t, len(d.ops.Tags(vol)) == 0, "RemoveTags failed")
 }
 
+func testFreeDevices(t *testing.T) {
+	deviceNames := []string{"/dev/sda1", "/dev/sdb", "/dev/xvda", "/dev/xvdf", "/dev/xvdg", "/dev/xvdcg"}
+	blockDeviceMappings := []*ec2.InstanceBlockDeviceMapping{}
+	for i, _ := range deviceNames {
+		b := &ec2.InstanceBlockDeviceMapping{
+			DeviceName: &deviceNames[i],
+		}
+		blockDeviceMappings = append(blockDeviceMappings, b)
+	}
+	freeDeviceNames, err := freeDevices(blockDeviceMappings)
+	require.NoError(t, err, "Expected no error")
+	// Free devices : h -> p
+	require.Equal(t, len(freeDeviceNames), 9, "No. of free devices do not match")
+	badDeviceName := "/dev/xvdcgh"
+	b := &ec2.InstanceBlockDeviceMapping{
+		DeviceName: &badDeviceName,
+	}
+
+	blockDeviceMappings = append(blockDeviceMappings, b)
+	freeDeviceNames, err = freeDevices(blockDeviceMappings)
+	require.Error(t, err, "Expected an error")
+}
+
 func TestAll(t *testing.T) {
+	// Run AWS environment agnostic tests
+	testFreeDevices(t)
+	// Run AWS environment dependent tests
 	if _, err := credentials.NewEnvCredentials().Get(); err != nil {
-		t.Skip("No AWS credentials, skipping AWS driver test: ", err)
+		t.Skip("No AWS credentials, skipping AWS dependent driver tests: ", err)
 	}
 	driver, err := Init(map[string]string{})
 	if err != nil {
@@ -47,5 +73,4 @@ func TestAll(t *testing.T) {
 	ctx.Filesystem = api.FSType_FS_TYPE_EXT4
 	test.RunShort(t, ctx)
 	testRemoveTags(t, driver)
-
 }
