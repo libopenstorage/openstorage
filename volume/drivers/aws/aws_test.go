@@ -36,7 +36,7 @@ func testRemoveTags(t *testing.T, driver volume.VolumeDriver) {
 }
 
 func testFreeDevices(t *testing.T) {
-	deviceNames := []string{"/dev/sda1", "/dev/sdb", "/dev/xvda", "/dev/xvdf", "/dev/xvdg", "/dev/xvdcg"}
+	deviceNames := []string{"/dev/sda1", "/dev/sdb", "/dev/xvdf", "/dev/xvdg", "/dev/xvdcg"}
 	blockDeviceMappings := []*ec2.InstanceBlockDeviceMapping{}
 	for i, _ := range deviceNames {
 		b := &ec2.InstanceBlockDeviceMapping{
@@ -44,7 +44,7 @@ func testFreeDevices(t *testing.T) {
 		}
 		blockDeviceMappings = append(blockDeviceMappings, b)
 	}
-	freeDeviceNames, err := freeDevices(blockDeviceMappings)
+	freeDeviceNames, err := freeDevices(blockDeviceMappings, "/dev/sda1")
 	require.NoError(t, err, "Expected no error")
 	// Free devices : h -> p
 	require.Equal(t, len(freeDeviceNames), 9, "No. of free devices do not match")
@@ -54,7 +54,7 @@ func testFreeDevices(t *testing.T) {
 	}
 
 	blockDeviceMappings = append(blockDeviceMappings, b)
-	freeDeviceNames, err = freeDevices(blockDeviceMappings)
+	freeDeviceNames, err = freeDevices(blockDeviceMappings, "/dev/sda1")
 	require.Error(t, err, "Expected an error")
 }
 

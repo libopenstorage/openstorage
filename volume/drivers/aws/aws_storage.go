@@ -270,9 +270,8 @@ func (s *ec2Ops) DeviceMappings() (map[string]string, error) {
 	for _, d := range instance.BlockDeviceMappings {
 		if d.DeviceName != nil && d.Ebs != nil && d.Ebs.VolumeId != nil {
 			devName := *d.DeviceName
-			// Per AWS docs EC instances have the root mounted at
-			// /dev/sda1, /dev/xvda this label should be skipped
-			if devName == "/dev/sda1" || devName == "/dev/xvda" {
+			// Skip the root device
+			if devName == *instance.RootDeviceName {
 				continue
 			}
 			// AWS EBS volumes get mapped from /dev/sdN -->/dev/xvdN
@@ -306,7 +305,10 @@ func (s *ec2Ops) describe() (*ec2.Instance, error) {
 }
 
 // freeDevices returns list of available device IDs.
-func freeDevices(blockDeviceMappings []*ec2.InstanceBlockDeviceMapping) ([]string, error) {
+func freeDevices(
+	blockDeviceMappings []*ec2.InstanceBlockDeviceMapping,
+	rootDeviceName string,
+) ([]string, error) {
 	initial := []byte("fghijklmnop")
 	devPrefix := "/dev/sd"
 	for _, dev := range blockDeviceMappings {
@@ -315,9 +317,7 @@ func freeDevices(blockDeviceMappings []*ec2.InstanceBlockDeviceMapping) ([]strin
 		}
 		devName := *dev.DeviceName
 
-		// per AWS docs EC instances have the root mounted at /dev/sda1,
-		// OR /dev/xvda, this label should be skipped
-		if devName == "/dev/sda1" || devName == "/dev/xvda" {
+		if devName == rootDeviceName {
 			continue
 		}
 		if !strings.HasPrefix(devName, devPrefix) {
@@ -486,7 +486,7 @@ func (s *ec2Ops) Attach(volumeID string) (string, error) {
 		return "", err
 	}
 
-	devices, err := freeDevices(self.BlockDeviceMappings)
+	devices, err := freeDevices(self.BlockDeviceMappings, *self.RootDeviceName)
 	if err != nil {
 		return "", err
 	}
