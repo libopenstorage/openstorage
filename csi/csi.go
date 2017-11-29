@@ -27,6 +27,7 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"github.com/libopenstorage/openstorage/api/spec"
+	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 )
@@ -38,6 +39,7 @@ type OsdCsiServerConfig struct {
 	Address      string
 	DriverName   string
 	DriverParams map[string]string
+	Cluster      cluster.Cluster
 }
 
 // OsdCsiServer is a OSD CSI compliant server which
@@ -47,6 +49,7 @@ type OsdCsiServer struct {
 	listener    net.Listener
 	server      *grpc.Server
 	driver      volume.VolumeDriver
+	cluster     cluster.Cluster
 	wg          sync.WaitGroup
 	running     bool
 	lock        sync.Mutex
@@ -89,6 +92,7 @@ func NewOsdCsiServer(config *OsdCsiServerConfig) (Server, error) {
 	return &OsdCsiServer{
 		listener:    l,
 		driver:      d,
+		cluster:     config.Cluster,
 		specHandler: spec.NewSpecHandler(),
 	}, nil
 }
@@ -107,6 +111,7 @@ func (s *OsdCsiServer) Start() error {
 
 	csi.RegisterIdentityServer(s.server, s)
 	csi.RegisterControllerServer(s.server, s)
+	csi.RegisterNodeServer(s.server, s)
 	reflection.Register(s.server)
 
 	// Start listening for requests

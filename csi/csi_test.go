@@ -27,6 +27,7 @@ import (
 	"github.com/kubernetes-csi/csi-test/utils"
 	"golang.org/x/net/context"
 
+	mockcluster "github.com/libopenstorage/openstorage/cluster/mock"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
@@ -38,6 +39,7 @@ type testServer struct {
 	conn   *grpc.ClientConn
 	server Server
 	m      *mockdriver.MockVolumeDriver
+	c      *mockcluster.MockCluster
 	mc     *gomock.Controller
 }
 
@@ -47,6 +49,8 @@ func newTestServer(t *testing.T) *testServer {
 	// Add driver to registry
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
 	tester.m = mockdriver.NewMockVolumeDriver(tester.mc)
+	tester.c = mockcluster.NewMockCluster(tester.mc)
+
 	volumedrivers.Add("mock", func(map[string]string) (volume.VolumeDriver, error) {
 		return tester.m, nil
 	})
@@ -57,6 +61,7 @@ func newTestServer(t *testing.T) *testServer {
 		DriverName: "mock",
 		Net:        "tcp",
 		Address:    "127.0.0.1:0",
+		Cluster:    tester.c,
 	})
 	assert.Nil(t, err)
 	err = tester.server.Start()
@@ -71,6 +76,10 @@ func newTestServer(t *testing.T) *testServer {
 
 func (s *testServer) MockDriver() *mockdriver.MockVolumeDriver {
 	return s.m
+}
+
+func (s *testServer) MockCluster() *mockcluster.MockCluster {
+	return s.c
 }
 
 func (s *testServer) Stop() {

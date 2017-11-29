@@ -1046,7 +1046,7 @@ func TestControllerCreateVolumeBadParameters(t *testing.T) {
 	req := &csi.CreateVolumeRequest{
 		Version: &csi.Version{},
 		Name:    name,
-		VolumeCapabilities: []*csi.VolumeCapability{
+		VolumeCapabilities: []*csi. VolumeCapability{
 			&csi.VolumeCapability{},
 		},
 		CapacityRange: &csi.CapacityRange{
