@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// Get PX Node id for local node.
 func (s *OsdCsiServer) GetNodeID(ctx context.Context, req *csi.GetNodeIDRequest) (*csi.GetNodeIDResponse, error) {
 	dlog.Debugf("GetNodeID req[%#v]", req)
 
