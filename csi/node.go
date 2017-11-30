@@ -128,7 +128,7 @@ func (s *OsdCsiServer) NodePublishVolume(
 		// Detach on error
 		detachErr := s.driver.Detach(v.GetId(), opts)
 		if detachErr != nil {
-			dlog.Errorf("Unable to deatch volume %s: %s",
+			dlog.Errorf("Unable to detach volume %s: %s",
 				v.GetId(),
 				detachErr.Error())
 		}
@@ -140,11 +140,68 @@ func (s *OsdCsiServer) NodePublishVolume(
 			err.Error())
 	}
 
-	dlog.Infof("Voume %s mounted on %s",
+	dlog.Infof("Volume %s mounted on %s",
 		req.GetVolumeId(),
 		req.GetTargetPath())
 
 	return &csi.NodePublishVolumeResponse{}, nil
+}
+
+// NodeUnpublishVolume is a CSI API call which unmounts the volume.
+func (s *OsdCsiServer) NodeUnpublishVolume(
+	ctx context.Context,
+	req *csi.NodeUnpublishVolumeRequest,
+) (*csi.NodeUnpublishVolumeResponse, error) {
+
+	dlog.Debugf("NodeUnPublishVolume req[%#v]", req)
+
+	// Check arguments
+	if req.GetVersion() == nil {
+		return nil, status.Error(codes.InvalidArgument, "Version must be provided")
+	}
+	if len(req.GetVolumeId()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Volume id must be provided")
+	}
+	if len(req.GetTargetPath()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Target path must be provided")
+	}
+
+	// Get volume information
+	_, err := util.VolumeFromName(s.driver, req.GetVolumeId())
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "Volume id %s not found: %s",
+			req.GetVolumeId(),
+			err.Error())
+	}
+
+	// Verify target location is an existing directory
+	// See: https://github.com/container-storage-interface/spec/issues/60
+	if err = verifyTargetLocation(req.GetTargetPath()); err != nil {
+		return nil, status.Error(codes.NotFound, err.Error())
+	}
+
+	// Mount volume onto the path
+	if err = s.driver.Unmount(req.GetVolumeId(), req.GetTargetPath(), nil); err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"Unable to unmount volume %s onto %s: %s",
+			req.GetVolumeId(),
+			req.GetTargetPath(),
+			err.Error())
+	}
+
+	if s.driver.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
+		if err = s.driver.Detach(req.GetVolumeId(), nil); err != nil {
+			return nil, status.Errorf(
+				codes.Internal,
+				"Unable to detach volume: %s",
+				err.Error())
+		}
+	}
+
+	dlog.Infof("Volume %s unmounted", req.GetVolumeId())
+
+	return &csi.NodeUnpublishVolumeResponse{}, nil
 }
 
 func verifyTargetLocation(targetPath string) error {
