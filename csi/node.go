@@ -166,14 +166,6 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 		return nil, status.Error(codes.InvalidArgument, "Target path must be provided")
 	}
 
-	// Get volume information
-	v, err := util.VolumeFromName(s.driver, req.GetVolumeId())
-	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "Volume id %s not found: %s",
-			req.GetVolumeId(),
-			err.Error())
-	}
-
 	// Verify target location is an existing directory
 	// See: https://github.com/container-storage-interface/spec/issues/60
 	if err = verifyTargetLocation(req.GetTargetPath()); err != nil {
@@ -181,7 +173,7 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 	}
 
 	// Mount volume onto the path
-	if err = s.driver.Unmount(v.GetId(), req.GetTargetPath(), nil); err != nil {
+	if err = s.driver.Unmount(req.GetVolumeId(), req.GetTargetPath(), nil); err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
 			"Unable to unmount volume %s onto %s: %s",
