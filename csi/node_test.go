@@ -660,6 +660,11 @@ func TestNodeUnpublishVolumeFailedDetach(t *testing.T) {
 			Times(1),
 		s.MockDriver().
 			EXPECT().
+			Type().
+			Return(api.DriverType_DRIVER_TYPE_BLOCK).
+			Times(1),
+		s.MockDriver().
+			EXPECT().
 			Detach(name, gomock.Any()).
 			Return(fmt.Errorf("DETACH ERROR")).
 			Times(1),
@@ -711,6 +716,11 @@ func TestNodeUnpublishVolumeUnmount(t *testing.T) {
 			EXPECT().
 			Unmount(name, targetPath, nil).
 			Return(nil).
+			Times(1),
+		s.MockDriver().
+			EXPECT().
+			Type().
+			Return(api.DriverType_DRIVER_TYPE_BLOCK).
 			Times(1),
 		s.MockDriver().
 			EXPECT().

@@ -148,9 +148,6 @@ func (s *OsdCsiServer) NodePublishVolume(
 }
 
 // NodeUnpublishVolume is a CSI API call which unmounts the volume.
-//
-// TODO: Support READ ONLY Mounts
-//
 func (s *OsdCsiServer) NodeUnpublishVolume(
 	ctx context.Context,
 	req *csi.NodeUnpublishVolumeRequest,
@@ -193,11 +190,13 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 			err.Error())
 	}
 
-	if err = s.driver.Detach(req.GetVolumeId(), nil); err != nil {
-		return nil, status.Errorf(
-			codes.Internal,
-			"Unable to detach volume: %s",
-			err.Error())
+	if s.driver.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
+		if err = s.driver.Detach(req.GetVolumeId(), nil); err != nil {
+			return nil, status.Errorf(
+				codes.Internal,
+				"Unable to detach volume: %s",
+				err.Error())
+		}
 	}
 
 	dlog.Infof("Volume %s unmounted", req.GetVolumeId())
