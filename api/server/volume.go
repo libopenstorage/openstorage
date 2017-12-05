@@ -66,6 +66,30 @@ func (vd *volAPI) parseID(r *http.Request) (string, error) {
 	return "", fmt.Errorf("could not parse snap ID")
 }
 
+// swagger:operation POST /osd-volumes volume create createVolume
+//
+// Creates a single volume with given spec.
+//
+// ---
+// produces:
+// - application/json
+// parameters:
+// - name: spec
+//   in: body
+//   description: spec to create volume with
+//   required: true
+//   schema:
+//         "$ref": "#/definitions/VolumeCreateRequest"
+// responses:
+//   '200':
+//     description: volume create response
+//     schema:
+//         "$ref": "#/definitions/VolumeCreateResponse"
+//   default:
+//     description: unexpected error
+//     schema:
+//       "$ref": "#/definitions/VolumeCreateResponse"
+
 func (vd *volAPI) create(w http.ResponseWriter, r *http.Request) {
 	var dcRes api.VolumeCreateResponse
 	var dcReq api.VolumeCreateRequest
@@ -113,6 +137,33 @@ func processErrorForVolSetResponse(action *api.VolumeStateAction, err error, res
 	}
 }
 
+// swagger:operation PUT /osd-volumes/{id} volume update setVolume
+//
+// Updates a single volume with given spec.
+//
+// ---
+// produces:
+// - application/json
+// parameters:
+// - name: id
+//   in: query
+//   description: id to get volume with
+//   required: true
+// - name: spec
+//   in: body
+//   description: spec to set volume with
+//   required: true
+//   schema:
+//         "$ref": "#/definitions/VolumeSetRequest"
+// responses:
+//   '200':
+//     description: volume set response
+//     schema:
+//         "$ref": "#/definitions/VolumeSetResponse"
+//   default:
+//     description: unexpected error
+//     schema:
+//       "$ref": "#/definitions/VolumeSetResponse"
 func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 	var (
 		volumeID string
@@ -197,6 +248,23 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// swagger:operation GET /osd-volumes/{id} volume inspect inspectVolume
+//
+// Inspect volume with specified id.
+//
+// ---
+// produces:
+// - application/json
+// parameters:
+// - name: id
+//   in: query
+//   description: id to get volume with
+//   required: true
+// responses:
+//   '200':
+//     description: volume get response
+//     schema:
+//         "$ref": "#/definitions/Volume"
 func (vd *volAPI) inspect(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var volumeID string
@@ -223,6 +291,27 @@ func (vd *volAPI) inspect(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(dk)
 }
 
+// swagger:operation DELETE /osd-volumes/{id} volume delete deleteVolume
+//
+// Delete volume with specified id.
+//
+// ---
+// produces:
+// - application/json
+// parameters:
+// - name: id
+//   in: path
+//   description: id to get volume with
+//   required: true
+// responses:
+//   '200':
+//     description: volume set response
+//     schema:
+//         "$ref": "#/definitions/VolumeResponse"
+//   default:
+//     description: unexpected error
+//     schema:
+//       "$ref": "#/definitions/VolumeResponse"
 func (vd *volAPI) delete(w http.ResponseWriter, r *http.Request) {
 	var volumeID string
 	var err error
@@ -250,6 +339,46 @@ func (vd *volAPI) delete(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(volumeResponse)
 }
 
+// swagger:operation GET /osd-volumes volume enumerate enumerateVolumes
+//
+// Enumerate all volumes
+//
+// ---
+// produces:
+// - application/json
+// parameters:
+// - name: Name
+//   in: query
+//   description: User specified volume name (Case Sensitive)
+//   required: false
+//   type: string
+// - name: Label
+//   in: formData
+//   description: Comma separated name value pairs
+//   required: false
+//   schema:
+//    type: object
+//	  example: {"label1","label2"} # Example value
+// - name: ConfigLabel
+//   in: formData
+//   description: Comma separated name value pairs
+//   required: false
+//   schema:
+//    type: object
+//	  example: {"label1","label2"} # Example value
+// - name: VolumeID
+//   in: query
+//   description: Volume UUID
+//   required: false
+//   type: string
+//   format: uuid
+// responses:
+//   '200':
+//      description: an array of volumes
+//      schema:
+//         type: array
+//         items:
+//            $ref: '#/definitions/Volume'
 func (vd *volAPI) enumerate(w http.ResponseWriter, r *http.Request) {
 	var locator api.VolumeLocator
 	var configLabels map[string]string
@@ -304,6 +433,33 @@ func (vd *volAPI) enumerate(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(vols)
 }
 
+// swagger:operation POST /osd-snapshots snapshot create createSnap
+//
+// Take a snapshot of volume in SnapCreateRequest
+//
+// ---
+// produces:
+// - application/json
+// parameters:
+// - name: id
+//   in: query
+//   description: id to get volume with
+//   required: true
+// - name: spec
+//   in: body
+//   description: spec to create snap with
+//   required: true
+//   schema:
+//    "$ref": "#/definitions/SnapCreateRequest"
+// responses:
+//    '200':
+//      description: an array of volumes
+//      schema:
+//       "$ref": '#/definitions/SnapCreateResponse'
+//    default:
+//     description: unexpected error
+//     schema:
+//      "$ref": "#/definitions/SnapCreateResponse"
 func (vd *volAPI) snap(w http.ResponseWriter, r *http.Request) {
 	var snapReq api.SnapCreateRequest
 	var snapRes api.SnapCreateResponse
@@ -331,6 +487,27 @@ func (vd *volAPI) snap(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(&snapRes)
 }
 
+// swagger:operation POST /osd-snapshots/restore/{id} snapshot restore restoreSnap
+//
+// Restore snapshot with specified id.
+//
+// ---
+// produces:
+// - application/json
+// parameters:
+// - name: id
+//   in: path
+//   description: id of snapshot to restore
+//   required: true
+// responses:
+//  '200':
+//    description: Restored volume
+//    schema:
+//     "$ref": '#/definitions/VolumeResponse'
+//  default:
+//   description: unexpected error
+//   schema:
+//    "$ref": "#/definitions/VolumeResponse"
 func (vd *volAPI) restore(w http.ResponseWriter, r *http.Request) {
 	var volumeID, snapID string
 	var err error
@@ -365,6 +542,46 @@ func (vd *volAPI) restore(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(volumeResponse)
 }
 
+// swagger:operation GET /osd-snapshots snapshot enumerate enumerateSnaps
+//
+// Enumerate snapshots.
+//
+// ---
+// produces:
+// - application/json
+// parameters:
+// - name: name
+//   in: query
+//   description: Volume name that maps to this snap
+//   required: false
+//   type: string
+// - name: VolumeLabels
+//   in: formData
+//   description: Comma separated volume labels
+//   required: false
+//   schema:
+//    type: object
+//	  example: {"label1","label2"} # Example value
+// - name: SnapLabels
+//   in: formData
+//   description: Comma separated snap labels
+//   required: false
+//   schema:
+//    type: object
+//	  example: {"label1","label2"} # Example value
+// - name: uuid
+//   in: query
+//   description: Snap UUID
+//   required: false
+//   type: string
+//   format: uuid
+// responses:
+//  '200':
+//   description: an array of snapshots
+//   schema:
+//    type: array
+//    items:
+//     $ref: '#/definitions/Volume'
 func (vd *volAPI) snapEnumerate(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var labels map[string]string
@@ -403,6 +620,23 @@ func (vd *volAPI) snapEnumerate(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(snaps)
 }
 
+// swagger:operation GET /osd-volumes/stats/{id} volume stats statsVolume
+//
+// Get stats for volume with specified id.
+//
+// ---
+// produces:
+// - application/json
+// parameters:
+// - name: id
+//   in: path
+//   description: id to get volume with
+//   required: true
+// responses:
+//  '200':
+//   description: volume set response
+//   schema:
+//    "$ref": "#/definitions/Stats"
 func (vd *volAPI) stats(w http.ResponseWriter, r *http.Request) {
 	var volumeID string
 	var err error
@@ -442,6 +676,23 @@ func (vd *volAPI) stats(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(stats)
 }
 
+// swagger:operation GET /osd-volumes/usedsize/{id} volume usedsize usedSizeVolume
+//
+// Get Used size of volume with specified id.
+//
+// ---
+// produces:
+// - application/json
+// parameters:
+// - name: id
+//   in: path
+//   description: id to get volume with
+//   required: true
+// responses:
+//  '200':
+//   description: volume set response
+//   type: integer
+//   format: int64
 func (vd *volAPI) usedsize(w http.ResponseWriter, r *http.Request) {
 	var volumeID string
 	var err error
@@ -467,6 +718,23 @@ func (vd *volAPI) usedsize(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(used)
 }
 
+// swagger:operation POST /osd-volumes/requests/{id} volume requests requestsVolume
+//
+// Get Requests for volume with specified id.
+//
+// ---
+// produces:
+// - application/json
+// parameters:
+// - name: id
+//   in: path
+//   description: id to get volume with
+//   required: true
+// responses:
+//   '200':
+//     description: volume set response
+//     schema:
+//         "$ref": "#/definitions/ActiveRequests"
 func (vd *volAPI) requests(w http.ResponseWriter, r *http.Request) {
 	var err error
 
@@ -487,6 +755,27 @@ func (vd *volAPI) requests(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(requests)
 }
 
+// swagger:operation GET /osd-volumes/quiesce/{id} volume quiesce quiesceVolume
+//
+// Quiesce volume with specified id.
+//
+// ---
+// produces:
+// - application/json
+// parameters:
+// - name: id
+//   in: path
+//   description: id to get volume with
+//   required: true
+// responses:
+//   '200':
+//     description: volume set response
+//     schema:
+//         "$ref": "#/definitions/VolumeResponse"
+//   default:
+//     description: unexpected error
+//     schema:
+//       "$ref": "#/definitions/VolumeResponse"
 func (vd *volAPI) quiesce(w http.ResponseWriter, r *http.Request) {
 	var volumeID string
 	var err error
@@ -530,6 +819,27 @@ func (vd *volAPI) quiesce(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(volumeResponse)
 }
 
+// swagger:operation POST /osd-volumes/unquiesce/{id} volume unquiesce unquiesceVolume
+//
+// Unquiesce volume with specified id.
+//
+// ---
+// produces:
+// - application/json
+// parameters:
+// - name: id
+//   in: path
+//   description: id to get volume with
+//   required: true
+// responses:
+//   '200':
+//     description: volume set response
+//     schema:
+//         "$ref": "#/definitions/VolumeResponse"
+//   default:
+//     description: unexpected error
+//     schema:
+//       "$ref": "#/definitions/VolumeResponse"
 func (vd *volAPI) unquiesce(w http.ResponseWriter, r *http.Request) {
 	var volumeID string
 	var err error
@@ -554,6 +864,25 @@ func (vd *volAPI) unquiesce(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(volumeResponse)
 }
 
+// swagger:route GET /osd-volumes/versions volume versions listVersions
+//
+// Lists API versions supported by this volumeDriver.
+//
+// This will show all supported versions of the API for this volumeDriver.
+//
+// ---
+// produces:
+// - application/json
+// parameters:
+// - name: id
+//   in: query
+//   description: id to get volume with
+//   required: true
+// responses:
+//   '200':
+//     description: volume set response
+//	   type: array
+//      items: string
 func (vd *volAPI) versions(w http.ResponseWriter, r *http.Request) {
 	versions := []string{
 		volume.APIVersion,

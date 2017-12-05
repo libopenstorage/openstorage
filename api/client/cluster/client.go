@@ -142,6 +142,7 @@ func (c *clusterClient) EnableUpdates() error {
 	return nil
 }
 
+// Deprecated
 func (c *clusterClient) SetLoggingURL(loggingURL string) error {
 
 	resp := api.ClusterResponse{}
@@ -160,6 +161,7 @@ func (c *clusterClient) SetLoggingURL(loggingURL string) error {
 
 }
 
+// Deprecated
 func (c *clusterClient) SetManagementURL(managementURL string) error {
 
 	resp := api.ClusterResponse{}
@@ -178,6 +180,7 @@ func (c *clusterClient) SetManagementURL(managementURL string) error {
 
 }
 
+// Deprecated
 func (c *clusterClient) SetFluentDConfig(fluentDConfig api.FluentDConfig) error {
 	resp := api.ClusterResponse{}
 	request := c.c.Put().Resource(clusterPath + fluentdhost)
@@ -194,6 +197,7 @@ func (c *clusterClient) SetFluentDConfig(fluentDConfig api.FluentDConfig) error 
 	return nil
 }
 
+// Deprecated
 func (c *clusterClient) GetFluentDConfig() api.FluentDConfig {
 	tc := api.FluentDConfig{}
 
@@ -204,6 +208,7 @@ func (c *clusterClient) GetFluentDConfig() api.FluentDConfig {
 	return tc
 }
 
+// Deprecated
 func (c *clusterClient) SetTunnelConfig(tunnelConfig api.TunnelConfig) error {
 	resp := api.ClusterResponse{}
 
@@ -220,6 +225,7 @@ func (c *clusterClient) SetTunnelConfig(tunnelConfig api.TunnelConfig) error {
 	return nil
 }
 
+// Deprecated
 func (c *clusterClient) GetTunnelConfig() api.TunnelConfig {
 	tc := api.TunnelConfig{}
 

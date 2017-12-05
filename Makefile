@@ -35,6 +35,10 @@ ifndef PROTOSRC_PATH
 PROTOSRC_PATH = $(PROTOS_PATH)/github.com/libopenstorage/openstorage
 endif
 
+ifndef SWAGGERV
+SWAGGERV = $(shell curl -s https://api.github.com/repos/go-swagger/go-swagger/releases/latest | jq -r .tag_name)
+endif
+
 export GO15VENDOREXPERIMENT=1
 
 all: build
@@ -96,6 +100,11 @@ pretest: lint vet errcheck
 
 test:
 	go test -tags "$(TAGS)" $(TESTFLAGS) $(shell go list ./... | grep -v vendor)
+
+docs:
+	curl -o /usr/local/bin/swagger -L "https://github.com/go-swagger/go-swagger/releases/download/$(SWAGGERV)/swagger_$(shell echo `uname`|tr '[:upper:]' '[:lower:]')_amd64"
+	chmod +x /usr/local/bin/swagger
+	go generate ./cmd/osd/main.go
 
 docker-build-osd-dev:
 	docker build -t openstorage/osd-dev -f Dockerfile.osd-dev .
@@ -192,6 +201,7 @@ clean:
 	errcheck \
 	pretest \
 	test \
+	docs \
 	docker-build-osd-dev \
 	docker-build \
 	docker-test \
