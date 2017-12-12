@@ -4,19 +4,19 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"strconv"
-
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/client"
 	"github.com/libopenstorage/openstorage/volume"
+	"io"
+	"io/ioutil"
+	"strconv"
 )
 
 const (
 	graphPath  = "/graph"
 	volumePath = "/osd-volumes"
 	snapPath   = "/osd-snapshot"
+	credsPath  = "/osd-creds"
 )
 
 type volumeClient struct {
@@ -428,6 +428,54 @@ func (v *volumeClient) Unquiesce(volumeID string) error {
 	response := &api.VolumeResponse{}
 	req := v.c.Post().Resource(volumePath + "/unquiesce").Instance(volumeID)
 	if err := req.Do().Unmarshal(response); err != nil {
+		return err
+	}
+	if response.Error != "" {
+		return errors.New(response.Error)
+	}
+	return nil
+}
+
+func (v *volumeClient) CredsList() (map[string]interface{}, error) {
+	creds := make(map[string]interface{}, 0)
+	err := v.c.Get().Resource(credsPath + "/credslist").Do().Unmarshal(&creds)
+	return creds, err
+}
+
+func (v *volumeClient) CredsCreate(params map[string]string) (string, error) {
+	response := api.CredCreateResponse{}
+	request := &api.CredCreateRequest{
+		InputParams: params,
+	}
+	err := v.c.Post().Resource(credsPath + "/credscreate").Body(request).Do().Unmarshal(&response)
+	if err == nil {
+		if response.CredErr != nil {
+			err = response.CredErr
+		}
+	}
+	return response.UUID, err
+}
+
+func (v *volumeClient) CredsDelete(uuid string) error {
+	response := &api.VolumeResponse{}
+	req := v.c.Delete().Resource(credsPath + "/credsdelete")
+	req.QueryOption(api.OptCredUUID, uuid)
+	err := req.Do().Unmarshal(&response)
+	if err != nil {
+		return err
+	}
+	if response.Error != "" {
+		return errors.New(response.Error)
+	}
+	return nil
+}
+
+func (v *volumeClient) CredsValidate(uuid string) error {
+	response := &api.VolumeResponse{}
+	req := v.c.Post().Resource(credsPath + "/credsvalidate")
+	req.QueryOption(api.OptCredUUID, uuid)
+	err := req.Do().Unmarshal(&response)
+	if err != nil {
 		return err
 	}
 	if response.Error != "" {

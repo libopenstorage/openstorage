@@ -62,6 +62,7 @@ type driver struct {
 	volume.StoreEnumerator
 	volume.StatsDriver
 	volume.QuiesceDriver
+	volume.CredsDriver
 	consistencyGroup string
 	project          string
 	varray           string
@@ -113,6 +114,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		StoreEnumerator:  common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
 		StatsDriver:      volume.StatsNotSupported,
 		QuiesceDriver:    volume.QuiesceNotSupported,
+		CredsDriver:      volume.CredsNotSupported,
 		consistencyGroup: consistencyGroup,
 		project:          project,
 		varray:           varray,

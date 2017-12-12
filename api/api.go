@@ -62,12 +62,37 @@ const (
 	OptTimeoutSec = "TimeoutSec"
 	// OptQuiesceID query parameter use for quiesce
 	OptQuiesceID = "QuiesceID"
+	// OptCredUUID is the UUID of the credential
+	OptCredUUID = "CredUUID"
+	// OptCredType  indicates type of credential
+	OptCredType = "CredType"
+	// OptCredEncrKey indicates if the key is encrypted
+	OptCredEncrKey = "CredEncrypt"
+	// OptCredRegion indicates the region
+	OptCredRegion = "CredRegion"
+	// OptCredDisableSSL indicated if SSL should be disabled
+	OptCredDisableSSL = "CredDisableSSL"
+	// OptCredEndpoint indicate the cloud endpoint
+	OptCredEndpoint = "CredEndpoint"
+	// OptCredAccKey for s3
+	OptCredAccessKey = "CredAccessKey"
+	// OptCredSecretKey
+	OptCredSecretKey = "CredSecretKey"
+	// OptCredGoogleProjectID
+	OptCredGoogleProjectID = "CredProjectID"
+	// OptCredGoogleJsonKey
+	OptCredGoogleJsonKey = "CredJsonKey"
+	// OptCredAzureAccountName
+	OptCredAzureAccountName = "CredAccountName"
+	// OptOptCredAzureAccountKey
+	OptCredAzureAccountKey = "CredAccountKey"
 )
 
 // Api client-server Constants
 const (
 	OsdVolumePath   = "osd-volumes"
 	OsdSnapshotPath = "osd-snapshot"
+	OsdCredsPath    = "osd-creds"
 	TimeLayout      = "Jan 2 15:04:05 UTC 2006"
 )
 
@@ -150,6 +175,20 @@ type StatPoint struct {
 	Fields map[string]interface{}
 	// Timestamp in Unix format
 	Timestamp int64
+}
+
+// CredCreateRequest is the input for CredCreate command
+type CredCreateRequest struct {
+	// InputParams is map describing cloud provide
+	InputParams map[string]string
+}
+
+// CredCreateResponse is returned for CredCreate command
+type CredCreateResponse struct {
+	// UUID of the credential that was just created
+	UUID string
+	// CredErr indicates reasonfor failed CredCreate
+	CredErr error
 }
 
 // DriverTypeSimpleValueOf returns the string format of DriverType

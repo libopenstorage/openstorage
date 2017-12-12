@@ -555,6 +555,101 @@ func (vd *volAPI) unquiesce(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(volumeResponse)
 }
 
+func (vd *volAPI) credsList(w http.ResponseWriter, r *http.Request) {
+	var err error
+	method := "credsList"
+
+	d, err := vd.getVolDriver(r)
+	if err != nil {
+		notFound(w, r)
+		return
+	}
+
+	creds, err := d.CredsList()
+	if err != nil {
+		e := fmt.Errorf("Failed to get credential list: %s", err.Error())
+		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	json.NewEncoder(w).Encode(creds)
+}
+
+func (vd *volAPI) credsCreate(w http.ResponseWriter, r *http.Request) {
+	var err error
+	var input api.CredCreateRequest
+	Response := &api.CredCreateResponse{}
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		Response.CredErr = err
+		json.NewEncoder(w).Encode(Response)
+		return
+	}
+	d, err := vd.getVolDriver(r)
+	if err != nil {
+		notFound(w, r)
+		return
+	}
+
+	Response.UUID, Response.CredErr = d.CredsCreate(input.InputParams)
+	json.NewEncoder(w).Encode(Response)
+}
+
+func (vd *volAPI) credsDelete(w http.ResponseWriter, r *http.Request) {
+	var err error
+	volumeResponse := &api.VolumeResponse{}
+
+	err = r.ParseForm()
+	if err != nil {
+		volumeResponse.Error = err.Error()
+		json.NewEncoder(w).Encode(volumeResponse)
+		return
+	}
+	uuid := r.Form.Get(api.OptCredUUID)
+	if uuid == "" {
+		volumeResponse.Error = fmt.Sprintf("Missing uuid param")
+		json.NewEncoder(w).Encode(volumeResponse)
+		return
+	}
+
+	d, err := vd.getVolDriver(r)
+	if err != nil {
+		notFound(w, r)
+		return
+	}
+	if err := d.CredsDelete(uuid); err != nil {
+		volumeResponse.Error = err.Error()
+	}
+	json.NewEncoder(w).Encode(volumeResponse)
+}
+
+func (vd *volAPI) credsValidate(w http.ResponseWriter, r *http.Request) {
+	var err error
+	volumeResponse := &api.VolumeResponse{}
+	err = r.ParseForm()
+	if err != nil {
+		volumeResponse.Error = err.Error()
+		json.NewEncoder(w).Encode(volumeResponse)
+		return
+	}
+	uuid := r.Form.Get(api.OptCredUUID)
+	if uuid == "" {
+		volumeResponse.Error = fmt.Sprintf("Missing uuid param")
+		json.NewEncoder(w).Encode(volumeResponse)
+		return
+	}
+
+	d, err := vd.getVolDriver(r)
+	if err != nil {
+		notFound(w, r)
+		return
+	}
+
+	if err := d.CredsValidate(uuid); err != nil {
+		volumeResponse.Error = err.Error()
+	}
+	json.NewEncoder(w).Encode(volumeResponse)
+}
+
 func (vd *volAPI) versions(w http.ResponseWriter, r *http.Request) {
 	versions := []string{
 		volume.APIVersion,
@@ -579,6 +674,10 @@ func snapPath(route, version string) string {
 	return volVersion(api.OsdSnapshotPath+route, version)
 }
 
+func credsPath(route, version string) string {
+	return volVersion(api.OsdCredsPath+route, version)
+}
+
 func (vd *volAPI) Routes() []*Route {
 	return []*Route{
 		{verb: "GET", path: "/" + api.OsdVolumePath + "/versions", fn: vd.versions},
@@ -598,5 +697,9 @@ func (vd *volAPI) Routes() []*Route {
 		{verb: "POST", path: snapPath("", volume.APIVersion), fn: vd.snap},
 		{verb: "GET", path: snapPath("", volume.APIVersion), fn: vd.snapEnumerate},
 		{verb: "POST", path: snapPath("/restore/{id}", volume.APIVersion), fn: vd.restore},
+		{verb: "GET", path: credsPath("/credslist", volume.APIVersion), fn: vd.credsList},
+		{verb: "POST", path: credsPath("/credscreate", volume.APIVersion), fn: vd.credsCreate},
+		{verb: "DELETE", path: credsPath("/credsdelete", volume.APIVersion), fn: vd.credsDelete},
+		{verb: "POST", path: credsPath("/credsvalidate", volume.APIVersion), fn: vd.credsValidate},
 	}
 }
