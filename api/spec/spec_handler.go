@@ -14,6 +14,19 @@ import (
 // SpecHandler provides conversion function from what gets passed in over the
 // plugin API to an api.VolumeSpec object.
 type SpecHandler interface {
+	// SpecOptsFromString parses options from the name and returns in a map.
+	// The input string should have known keys in the following format:
+	// "scale=value;size=value;name=volname"
+	// If the spec was parsed, it returns:
+	//   (true, options_map, parsed_name)
+	// If the input string didn't contain the name, it returns:
+	//   (false, nil, inputString)
+	SpecOptsFromString(inputString string) (
+		bool,
+		map[string]string,
+		string,
+	)
+
 	// SpecFromString parses options from the name.
 	// If the scheduler was unable to pass in the volume spec via the API,
 	// the spec can be passed in via the name in the format:
@@ -296,13 +309,13 @@ func (d *specHandler) SpecFromOpts(
 	return d.UpdateSpecFromOpts(opts, spec, locator, source)
 }
 
-func (d *specHandler) SpecFromString(
+func (d *specHandler) SpecOptsFromString(
 	str string,
-) (bool, *api.VolumeSpec, *api.VolumeLocator, *api.Source, string) {
+) (bool, map[string]string, string) {
 	// If we can't parse the name, the rest of the spec is invalid.
 	ok, name := d.getVal(nameRegex, str)
 	if !ok {
-		return false, d.DefaultSpec(), nil, nil, str
+		return false, nil, str
 	}
 
 	opts := make(map[string]string)
@@ -364,6 +377,17 @@ func (d *specHandler) SpecFromString(
 	}
 	if ok, sched := d.getVal(snapScheduleRegex, str); ok {
 		opts[api.SpecSnapshotSchedule] = strings.Replace(sched, "#", ",", -1)
+	}
+
+	return true, opts, name
+}
+
+func (d *specHandler) SpecFromString(
+	str string,
+) (bool, *api.VolumeSpec, *api.VolumeLocator, *api.Source, string) {
+	ok, opts, name := d.SpecOptsFromString(str)
+	if !ok {
+		return false, d.DefaultSpec(), nil, nil, name
 	}
 
 	spec, locator, source, err := d.SpecFromOpts(opts)

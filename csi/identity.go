@@ -39,12 +39,8 @@ func (s *OsdCsiServer) GetSupportedVersions(
 	context.Context,
 	*csi.GetSupportedVersionsRequest) (*csi.GetSupportedVersionsResponse, error) {
 	return &csi.GetSupportedVersionsResponse{
-		Reply: &csi.GetSupportedVersionsResponse_Result_{
-			Result: &csi.GetSupportedVersionsResponse_Result{
-				SupportedVersions: []*csi.Version{
-					csiVersion,
-				},
-			},
+		SupportedVersions: []*csi.Version{
+			csiVersion,
 		},
 	}, nil
 }
@@ -55,15 +51,10 @@ func (s *OsdCsiServer) GetPluginInfo(
 	context.Context,
 	*csi.GetPluginInfoRequest) (*csi.GetPluginInfoResponse, error) {
 	return &csi.GetPluginInfoResponse{
-		Reply: &csi.GetPluginInfoResponse_Result_{
-			Result: &csi.GetPluginInfoResponse_Result{
-				Name:          csiDriverName,
-				VendorVersion: csiDriverVersion,
-				Manifest: map[string]string{
-					"hello":                  "world",
-					"place-here-driver-type": "of-something",
-				},
-			},
+		Name:          csiDriverName,
+		VendorVersion: csiDriverVersion,
+		Manifest: map[string]string{
+			"driver": s.driver.Name(),
 		},
 	}, nil
 }

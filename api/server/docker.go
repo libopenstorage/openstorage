@@ -12,6 +12,7 @@ import (
 	"github.com/libopenstorage/openstorage/api/spec"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/pkg/options"
+	"github.com/libopenstorage/openstorage/pkg/util"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
 )
@@ -123,17 +124,7 @@ func (d *driver) volFromName(name string) (*api.Volume, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Cannot locate volume driver for %s: %s", d.name, err.Error())
 	}
-	vols, err := v.Inspect([]string{name})
-	if err == nil && len(vols) == 1 {
-		return vols[0], nil
-	}
-	vols, err = v.Enumerate(&api.VolumeLocator{Name: name}, nil)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to locate volume %s. Error: %s", name, err.Error())
-	} else if err == nil && len(vols) == 1 {
-		return vols[0], nil
-	}
-	return nil, fmt.Errorf("Cannot locate volume with name %s", name)
+	return util.VolumeFromName(v, name)
 }
 
 func (d *driver) decode(method string, w http.ResponseWriter, r *http.Request) (*volumeRequest, error) {

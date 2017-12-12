@@ -69,6 +69,8 @@ type StorageOps interface {
 	Snapshot(volumeID string, readonly bool) (*ec2.Snapshot, error)
 	// ApplyTags
 	ApplyTags(v *ec2.Volume, labels map[string]string) error
+	// RemoveTags removes labels from the volume
+	RemoveTags(v *ec2.Volume, labels map[string]string) error
 	// Tags
 	Tags(v *ec2.Volume) map[string]string
 }
@@ -226,6 +228,18 @@ func (s *ec2Ops) ApplyTags(
 	return err
 }
 
+func (s *ec2Ops) RemoveTags(
+	v *ec2.Volume,
+	labels map[string]string,
+) error {
+	req := &ec2.DeleteTagsInput{
+		Resources: []*string{v.VolumeId},
+		Tags:      s.tags(labels),
+	}
+	_, err := s.ec2.DeleteTags(req)
+	return err
+}
+
 func (s *ec2Ops) matchTag(tag *ec2.Tag, match string) bool {
 	return tag.Key != nil &&
 		tag.Value != nil &&
@@ -256,9 +270,8 @@ func (s *ec2Ops) DeviceMappings() (map[string]string, error) {
 	for _, d := range instance.BlockDeviceMappings {
 		if d.DeviceName != nil && d.Ebs != nil && d.Ebs.VolumeId != nil {
 			devName := *d.DeviceName
-			// Per AWS docs EC instances have the root mounted at
-			// /dev/sda1, this label should be skipped
-			if devName == "/dev/sda1" {
+			// Skip the root device
+			if devName == *instance.RootDeviceName {
 				continue
 			}
 			// AWS EBS volumes get mapped from /dev/sdN -->/dev/xvdN
@@ -292,22 +305,19 @@ func (s *ec2Ops) describe() (*ec2.Instance, error) {
 }
 
 // freeDevices returns list of available device IDs.
-func (s *ec2Ops) freeDevices() ([]string, error) {
+func freeDevices(
+	blockDeviceMappings []*ec2.InstanceBlockDeviceMapping,
+	rootDeviceName string,
+) ([]string, error) {
 	initial := []byte("fghijklmnop")
-	self, err := s.describe()
-	if err != nil {
-		return nil, err
-	}
 	devPrefix := "/dev/sd"
-	for _, dev := range self.BlockDeviceMappings {
+	for _, dev := range blockDeviceMappings {
 		if dev.DeviceName == nil {
 			return nil, fmt.Errorf("Nil device name")
 		}
 		devName := *dev.DeviceName
 
-		// per AWS docs EC instances have the root mounted at /dev/sda1,
-		// this label should be skipped
-		if devName == "/dev/sda1" {
+		if devName == rootDeviceName {
 			continue
 		}
 		if !strings.HasPrefix(devName, devPrefix) {
@@ -317,18 +327,23 @@ func (s *ec2Ops) freeDevices() ([]string, error) {
 			}
 		}
 		letter := devName[len(devPrefix):]
-		if len(letter) != 1 {
-			return nil, fmt.Errorf("too many letters %q", devName)
-		}
-
 		// Reset devPrefix for next devices
 		devPrefix = "/dev/sd"
 
-		index := letter[0] - 'f'
-		if index > ('p' - 'f') {
+		// AWS instances can have the following device names
+		// /dev/xvd[b-c][a-z]
+		if len(letter) == 1 {
+			index := letter[0] - 'f'
+			if index > ('p' - 'f') {
+				continue
+			}
+			initial[index] = '0'
+		} else if len(letter) == 2 {
+			// We do not attach EBS volumes with "/dev/xvdc[a-z]" formats
 			continue
+		} else {
+			return nil, fmt.Errorf("cannot parse device name %q", devName)
 		}
-		initial[index] = '0'
 	}
 	free := make([]string, len(initial))
 	count := 0
@@ -466,7 +481,12 @@ func (s *ec2Ops) Attach(volumeID string) (string, error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	devices, err := s.freeDevices()
+	self, err := s.describe()
+	if err != nil {
+		return "", err
+	}
+
+	devices, err := freeDevices(self.BlockDeviceMappings, *self.RootDeviceName)
 	if err != nil {
 		return "", err
 	}
