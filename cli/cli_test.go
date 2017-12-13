@@ -34,7 +34,9 @@ func TestCmdMarshalProto(t *testing.T) {
  "sticky": false,
  "group_enforced": false,
  "compressed": false,
- "cascaded": false
+ "cascaded": false,
+ "loopdev": false,
+ "ramdisk": false
 }`,
 		data,
 	)
