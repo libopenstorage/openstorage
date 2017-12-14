@@ -197,13 +197,14 @@ type BlockDriver interface {
 
 // CredsDriver provides methods to handle credentials
 type CredsDriver interface {
+	// CredsCreate creates credential for a given cloud provider
 	CredsCreate(params map[string]string) (string, error)
-
+	// CredsList lists the configured credentials in the cluster
 	CredsList() (map[string]interface{}, error)
-
-	CredsDelete(string) error
-
-	CredsValidate(string) error
+	// CredsDelete deletes the credential associated schedUUID
+	CredsDelete(schedUUID string) error
+	// CredsValidate validates the credential associated schedUUID
+	CredsValidate(schedUUID string) error
 }
 
 // VolumeDriverProvider provides VolumeDrivers.

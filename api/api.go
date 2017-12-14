@@ -66,9 +66,9 @@ const (
 	OptCredUUID = "CredUUID"
 	// OptCredType  indicates type of credential
 	OptCredType = "CredType"
-	// OptCredEncrKey indicates if the key is encrypted
+	// OptCredEncrKey is the key used to encrypt data
 	OptCredEncrKey = "CredEncrypt"
-	// OptCredRegion indicates the region
+	// OptCredRegion indicates the region for s3
 	OptCredRegion = "CredRegion"
 	// OptCredDisableSSL indicated if SSL should be disabled
 	OptCredDisableSSL = "CredDisableSSL"
@@ -76,15 +76,17 @@ const (
 	OptCredEndpoint = "CredEndpoint"
 	// OptCredAccKey for s3
 	OptCredAccessKey = "CredAccessKey"
-	// OptCredSecretKey
+	// OptCredSecretKey for s3
 	OptCredSecretKey = "CredSecretKey"
-	// OptCredGoogleProjectID
+	// OptCredGoogleProjectID projectID for google cloud
 	OptCredGoogleProjectID = "CredProjectID"
-	// OptCredGoogleJsonKey
+	// OptCredGoogleJsonKey for google cloud
 	OptCredGoogleJsonKey = "CredJsonKey"
-	// OptCredAzureAccountName
+	// OptCredAzureAccountName is the account name for
+	// azure as the cloud provider
 	OptCredAzureAccountName = "CredAccountName"
-	// OptOptCredAzureAccountKey
+	// OptOptCredAzureAccountKey is the accountkey for
+	// azure as the cloud provider
 	OptCredAzureAccountKey = "CredAccountKey"
 )
 
