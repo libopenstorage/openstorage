@@ -105,7 +105,7 @@ func (c *credsNotSupported) CredsDelete(
 	return ErrNotSupported
 }
 
-func (c *credsNotSupported) CredsList() (map[string]interface{}, error) {
+func (c *credsNotSupported) CredsEnumerate() (map[string]interface{}, error) {
 	creds := make(map[string]interface{}, 0)
 	return creds, ErrNotSupported
 }

@@ -436,9 +436,9 @@ func (v *volumeClient) Unquiesce(volumeID string) error {
 	return nil
 }
 
-func (v *volumeClient) CredsList() (map[string]interface{}, error) {
+func (v *volumeClient) CredsEnumerate() (map[string]interface{}, error) {
 	creds := make(map[string]interface{}, 0)
-	err := v.c.Get().Resource(credsPath + "/credslist").Do().Unmarshal(&creds)
+	err := v.c.Get().Resource(credsPath).Do().Unmarshal(&creds)
 	return creds, err
 }
 
@@ -447,7 +447,7 @@ func (v *volumeClient) CredsCreate(params map[string]string) (string, error) {
 	request := &api.CredCreateRequest{
 		InputParams: params,
 	}
-	err := v.c.Post().Resource(credsPath + "/credscreate").Body(request).Do().Unmarshal(&response)
+	err := v.c.Post().Resource(credsPath).Body(request).Do().Unmarshal(&response)
 	if err == nil {
 		if response.CredErr != nil {
 			err = response.CredErr
@@ -458,7 +458,7 @@ func (v *volumeClient) CredsCreate(params map[string]string) (string, error) {
 
 func (v *volumeClient) CredsDelete(uuid string) error {
 	response := &api.VolumeResponse{}
-	req := v.c.Delete().Resource(credsPath + "/credsdelete")
+	req := v.c.Delete().Resource(credsPath)
 	req.QueryOption(api.OptCredUUID, uuid)
 	err := req.Do().Unmarshal(&response)
 	if err != nil {

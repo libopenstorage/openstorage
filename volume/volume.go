@@ -200,11 +200,11 @@ type CredsDriver interface {
 	// CredsCreate creates credential for a given cloud provider
 	CredsCreate(params map[string]string) (string, error)
 	// CredsList lists the configured credentials in the cluster
-	CredsList() (map[string]interface{}, error)
-	// CredsDelete deletes the credential associated schedUUID
-	CredsDelete(schedUUID string) error
-	// CredsValidate validates the credential associated schedUUID
-	CredsValidate(schedUUID string) error
+	CredsEnumerate() (map[string]interface{}, error)
+	// CredsDelete deletes the credential associated credUUID
+	CredsDelete(credUUID string) error
+	// CredsValidate validates the credential associated credUUID
+	CredsValidate(credUUID string) error
 }
 
 // VolumeDriverProvider provides VolumeDrivers.
