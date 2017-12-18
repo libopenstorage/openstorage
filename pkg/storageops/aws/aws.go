@@ -345,7 +345,7 @@ func (s *ec2Ops) refreshVol(id *string) (*ec2.Volume, error) {
 
 	if len(vols) != 1 {
 		return nil, fmt.Errorf("failed to get vol: %s."+
-			"Found: %d volumes on inspecting", id, len(vols))
+			"Found: %d volumes on inspecting", *id, len(vols))
 	}
 
 	return vols[0].(*ec2.Volume), nil
