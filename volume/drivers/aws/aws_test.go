@@ -27,24 +27,32 @@ func testRemoveTags(t *testing.T, driver volume.VolumeDriver) {
 	for _, name := range labelNames {
 		labels[name] = name
 	}
-	vol, err := d.ops.Create(ec2Vol, labels)
+	resp, err := d.ops.Create(ec2Vol, labels)
 	require.Nil(t, err, "Failed in CreateVolumeRequest :%v", err)
+	vol := resp.(*ec2.Volume)
 	defer d.ops.Delete(*vol.VolumeId)
-	require.True(t, len(d.ops.Tags(vol)) == len(labelNames), "ApplyTags failed")
+
+	tags, err := d.ops.Tags(vol)
+	require.Nil(t, err, "Failed to apply tags :%v", err)
+	require.True(t, len(tags) == len(labelNames), "ApplyTags failed")
 	require.Nil(t, d.ops.RemoveTags(vol, labels), "RemoveTags error")
-	require.True(t, len(d.ops.Tags(vol)) == 0, "RemoveTags failed")
+	tags, err = d.ops.Tags(vol)
+	require.Nil(t, err, "Failed to fetch tags :%v", err)
+	require.True(t, len(tags) == 0, "RemoveTags failed")
 }
 
-func testFreeDevices(t *testing.T) {
+func testFreeDevices(t *testing.T, driver volume.VolumeDriver) {
+	d := driver.(*Driver)
+
 	deviceNames := []string{"/dev/sda1", "/dev/sdb", "/dev/xvdf", "/dev/xvdg", "/dev/xvdcg"}
-	blockDeviceMappings := []*ec2.InstanceBlockDeviceMapping{}
+	var blockDeviceMappings []interface{}
 	for i, _ := range deviceNames {
 		b := &ec2.InstanceBlockDeviceMapping{
 			DeviceName: &deviceNames[i],
 		}
 		blockDeviceMappings = append(blockDeviceMappings, b)
 	}
-	freeDeviceNames, err := freeDevices(blockDeviceMappings, "/dev/sda1")
+	freeDeviceNames, err := d.ops.FreeDevices(blockDeviceMappings, "/dev/sda1")
 	require.NoError(t, err, "Expected no error")
 	// Free devices : h -> p
 	require.Equal(t, len(freeDeviceNames), 9, "No. of free devices do not match")
@@ -54,14 +62,11 @@ func testFreeDevices(t *testing.T) {
 	}
 
 	blockDeviceMappings = append(blockDeviceMappings, b)
-	freeDeviceNames, err = freeDevices(blockDeviceMappings, "/dev/sda1")
+	freeDeviceNames, err = d.ops.FreeDevices(blockDeviceMappings, "/dev/sda1")
 	require.Error(t, err, "Expected an error")
 }
 
 func TestAll(t *testing.T) {
-	// Run AWS environment agnostic tests
-	testFreeDevices(t)
-	// Run AWS environment dependent tests
 	if _, err := credentials.NewEnvCredentials().Get(); err != nil {
 		t.Skip("No AWS credentials, skipping AWS dependent driver tests: ", err)
 	}
@@ -69,6 +74,8 @@ func TestAll(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to initialize Volume Driver: %v", err)
 	}
+
+	testFreeDevices(t, driver)
 	ctx := test.NewContext(driver)
 	ctx.Filesystem = api.FSType_FS_TYPE_EXT4
 	test.RunShort(t, ctx)
