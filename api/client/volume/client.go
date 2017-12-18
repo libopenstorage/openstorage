@@ -472,7 +472,7 @@ func (v *volumeClient) CredsDelete(uuid string) error {
 
 func (v *volumeClient) CredsValidate(uuid string) error {
 	response := &api.VolumeResponse{}
-	req := v.c.Post().Resource(credsPath + "/credsvalidate")
+	req := v.c.Post().Resource(credsPath + "/validate").Instance(uuid)
 	req.QueryOption(api.OptCredUUID, uuid)
 	err := req.Do().Unmarshal(&response)
 	if err != nil {
