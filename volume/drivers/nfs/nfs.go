@@ -6,9 +6,9 @@ import (
 	"io"
 	"os"
 	"path"
+	"strconv"
 	"syscall"
 	"time"
-	"strconv"
 
 	"go.pedge.io/dlog"
 
@@ -19,8 +19,8 @@ import (
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers/common"
 	"github.com/portworx/kvdb"
-	"strings"
 	"math/rand"
+	"strings"
 )
 
 const (
@@ -38,8 +38,8 @@ type driver struct {
 	volume.StatsDriver
 	volume.QuiesceDriver
 	nfsServers []string
-	nfsPath   string
-	mounter   mount.Manager
+	nfsPath    string
+	mounter    mount.Manager
 }
 
 func Init(params map[string]string) (volume.VolumeDriver, error) {
@@ -139,11 +139,10 @@ func (d *driver) Status() [][2]string {
 	return [][2]string{}
 }
 
-
 //
 //Utility functions
 //
-func (d *driver) getNewVolumeServer() (string,error) {
+func (d *driver) getNewVolumeServer() (string, error) {
 	//randomly select one
 	if d.nfsServers != nil && len(d.nfsServers) > 0 {
 		return d.nfsServers[rand.Intn(len(d.nfsServers))], nil
@@ -158,7 +157,7 @@ func (d *driver) getNFSPath(v *api.Volume) (string, error) {
 	server, ok := locator.VolumeLabels["server"]
 	if !ok {
 		dlog.Warnf("No server label found on volume")
-		return "", errors.New("No server label found on volume: "+v.Id)
+		return "", errors.New("No server label found on volume: " + v.Id)
 	}
 
 	return path.Join(nfsMountPath, server), nil
@@ -168,7 +167,7 @@ func (d *driver) getNFSPath(v *api.Volume) (string, error) {
 func (d *driver) getNFSPathById(volumeID string) (string, error) {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
-		return "",err
+		return "", err
 	}
 
 	return d.getNFSPath(v)
@@ -185,20 +184,19 @@ func (d *driver) getNFSVolumePath(v *api.Volume) (string, error) {
 }
 
 //get nfsPath plus volume name for specified volume
-func (d *driver) getNFSVolumePathById(volumeID string) (string, error){
+func (d *driver) getNFSVolumePathById(volumeID string) (string, error) {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
-		return "",err
+		return "", err
 	}
 
 	return d.getNFSVolumePath(v)
 }
 
 //append unix time to volumeID
-func (d *driver) getNewSnapVolID(volumeID string) (string) {
-	return volumeID+"-"+strconv.FormatUint(uint64(time.Now().Unix()),10)
+func (d *driver) getNewSnapVolID(volumeID string) string {
+	return volumeID + "-" + strconv.FormatUint(uint64(time.Now().Unix()), 10)
 }
-
 
 //
 // These functions below implement the volume driver interface.
@@ -232,11 +230,11 @@ func (d *driver) Create(
 		if err != nil {
 			dlog.Infof("no nfs servers found...")
 			return "", err
-		}else{
-			dlog.Infof("Assigning random nfs server: %s to volume: %s",server, volumeID)
+		} else {
+			dlog.Infof("Assigning random nfs server: %s to volume: %s", server, volumeID)
 		}
 
-		labels["server"]  = server
+		labels["server"] = server
 	}
 
 	// Create a directory on the NFS server with this UUID.
@@ -276,7 +274,6 @@ func (d *driver) Create(
 		return "", err
 	}
 
-
 	v := common.NewVolume(
 		volumeID,
 		api.FSType_FS_TYPE_NFS,
@@ -285,7 +282,6 @@ func (d *driver) Create(
 		spec,
 	)
 	v.DevicePath = path.Join(volPathParent, volumeID+nfsBlockFile)
-
 
 	if err := d.CreateVol(v); err != nil {
 		return "", err
@@ -400,7 +396,7 @@ func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 
 	nfsVolPath, err := d.getNFSVolumePathById(volumeID)
 	if err != nil {
-		return "",err
+		return "", err
 	}
 
 	newNfsVolPath, err := d.getNFSVolumePathById(newVolumeID)

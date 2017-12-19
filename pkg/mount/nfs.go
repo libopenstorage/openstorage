@@ -42,7 +42,7 @@ func (m *NFSMounter) Reload(device string) error {
 //utility function to test if a server is part of driver config
 func (m *NFSMounter) serverExists(server string) bool {
 	for _, v := range m.servers {
-		if( v == server ){
+		if v == server {
 			return true
 		}
 	}
@@ -67,7 +67,7 @@ MountLoop:
 				continue
 			}
 
-			if exists := m.serverExists(matches[1]) ; !exists {
+			if exists := m.serverExists(matches[1]); !exists {
 				continue
 			}
 		}
