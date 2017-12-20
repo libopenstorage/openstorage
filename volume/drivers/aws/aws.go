@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/libopenstorage/openstorage/pkg/proto/time"
+	"github.com/libopenstorage/openstorage/pkg/storageops"
 	"go.pedge.io/dlog"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -19,6 +20,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/chaos"
+	aws_ops "github.com/libopenstorage/openstorage/pkg/storageops/aws"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers/common"
 	"github.com/portworx/kvdb"
@@ -55,7 +57,7 @@ type Driver struct {
 	volume.IODriver
 	volume.QuiesceDriver
 	volume.CredsDriver
-	ops StorageOps
+	ops storageops.Ops
 	md  *Metadata
 }
 
@@ -87,7 +89,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 	)
 	d := &Driver{
 		StatsDriver: volume.StatsNotSupported,
-		ops:         NewEc2Storage(instance, ec2),
+		ops:         aws_ops.NewEc2Storage(instance, ec2),
 		md: &Metadata{
 			zone:     zone,
 			instance: instance,
@@ -203,11 +205,13 @@ func (d *Driver) Create(
 	if *volType != opsworks.VolumeTypeGp2 {
 		ec2Vol.Iops = iops
 	}
-	vol, err := d.ops.Create(ec2Vol, locator.VolumeLabels)
+	resp, err := d.ops.Create(ec2Vol, locator.VolumeLabels)
 	if err != nil {
 		dlog.Warnf("Failed in CreateVolumeRequest :%v", err)
 		return "", err
 	}
+
+	vol := resp.(*ec2.Volume)
 	volume := common.NewVolume(
 		*vol.VolumeId,
 		api.FSType_FS_TYPE_EXT4,
@@ -291,8 +295,9 @@ func (d *Driver) Inspect(volumeIDs []string) ([]*api.Volume, error) {
 			return nil, fmt.Errorf("Inspect volume count mismatch")
 		}
 		for i, v := range awsVols {
-			if string(vols[i].Id) != *v.VolumeId {
-				d.merge(vols[i], v)
+			vol := v.(*ec2.Volume)
+			if string(vols[i].Id) != *vol.VolumeId {
+				d.merge(vols[i], vol)
 			}
 		}
 	}
@@ -318,10 +323,12 @@ func (d *Driver) Snapshot(
 	if len(vols) != 1 {
 		return "", fmt.Errorf("Failed to inspect %v len %v", volumeID, len(vols))
 	}
-	snap, err := d.ops.Snapshot(volumeID, readonly)
+	resp, err := d.ops.Snapshot(volumeID, readonly)
 	if err != nil {
 		return "", err
 	}
+
+	snap := resp.(*ec2.Snapshot)
 	chaos.Now(koStrayCreate)
 	vols[0].Id = *snap.SnapshotId
 	vols[0].Source = &api.Source{Parent: volumeID}

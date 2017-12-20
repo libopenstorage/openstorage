@@ -2,14 +2,18 @@ package aws
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/pkg/storageops"
 )
 
 type ec2Ops struct {
@@ -18,88 +22,44 @@ type ec2Ops struct {
 	mutex    sync.Mutex
 }
 
-const (
-	SetIdentifierNone = "None"
-)
+// ErrAWSEnvNotAvailable is the error type when aws credentails are not set
+var ErrAWSEnvNotAvailable = fmt.Errorf("AWS credentials are not set in environment")
 
-// Custom AWS volume error codes.
-const (
-	_ = iota + 5000
-	ErrVolDetached
-	ErrVolInval
-	ErrVolAttachedOnRemoteNode
-)
+// NewEnvClient creates a new AWS storage ops instance using environment vars
+func NewEnvClient() (storageops.Ops, error) {
+	region := os.Getenv("AWS_REGION")
+	if len(region) == 0 {
+		return nil, ErrAWSEnvNotAvailable
+	}
 
-// StorageError error returned for AWS volumes
-type StorageError struct {
-	// Code is one of AWS volume error codes.
-	Code int
-	// Msg is human understandable error message.
-	Msg string
-	// Instance provides more information on the error.
-	Instance string
+	instance := os.Getenv("AWS_INSTANCE_NAME")
+	if len(instance) == 0 {
+		return nil, ErrAWSEnvNotAvailable
+	}
+
+	_, err := credentials.NewEnvCredentials().Get()
+	if err != nil {
+		return nil, ErrAWSEnvNotAvailable
+	}
+
+	ec2 := ec2.New(
+		session.New(
+			&aws.Config{
+				Region:      &region,
+				Credentials: credentials.NewEnvCredentials(),
+			},
+		),
+	)
+
+	return NewEc2Storage(instance, ec2), nil
 }
 
-// StorageOps interface to perform basic operations on aws.
-type StorageOps interface {
-	// Create volume based on input template volume.
-	// Apply labels as tags on EBS volumes
-	Create(template *ec2.Volume, labels map[string]string) (*ec2.Volume, error)
-	// Attach volumeID.
-	// Return attach path.
-	Attach(volumeID string) (string, error)
-	// Detach volumeID.
-	Detach(volumeID string) error
-	// Delete volumeID.
-	Delete(volumeID string) error
-	// Inspect volumes specified by volumeID
-	Inspect(volumeIds []*string) ([]*ec2.Volume, error)
-	// DeviceMappings returns map[local_volume_path]->aws volume ID
-	DeviceMappings() (map[string]string, error)
-	// Enumerate EBS volumes that match given filters.  Organize them into
-	// sets identified by setIdentifier.
-	// labels can be nil, setIdentifier can be empty string.
-	Enumerate(volumeIds []*string,
-		labels map[string]string,
-		setIdentifier string,
-	) (map[string][]*ec2.Volume, error)
-	// DevicePath for attached EBS volume.
-	DevicePath(volume *ec2.Volume) (string, error)
-	// Snapshot EBS volume
-	Snapshot(volumeID string, readonly bool) (*ec2.Snapshot, error)
-	// ApplyTags
-	ApplyTags(v *ec2.Volume, labels map[string]string) error
-	// RemoveTags removes labels from the volume
-	RemoveTags(v *ec2.Volume, labels map[string]string) error
-	// Tags
-	Tags(v *ec2.Volume) map[string]string
-}
-
-func NewStorageError(code int, msg string, instance string) error {
-	return &StorageError{Code: code, Msg: msg, Instance: instance}
-}
-
-func (e *StorageError) Error() string {
-	return e.Msg
-}
-
-func NewEc2Storage(instance string, ec2 *ec2.EC2) StorageOps {
+// NewEc2Storage creates a new aws storage ops instance
+func NewEc2Storage(instance string, ec2 *ec2.EC2) storageops.Ops {
 	return &ec2Ops{
 		instance: instance,
 		ec2:      ec2,
 	}
-}
-
-func (s *ec2Ops) mapVolumeType(awsVol *ec2.Volume) api.StorageMedium {
-	switch *awsVol.VolumeType {
-	case opsworks.VolumeTypeGp2:
-		return api.StorageMedium_STORAGE_MEDIUM_SSD
-	case opsworks.VolumeTypeIo1:
-		return api.StorageMedium_STORAGE_MEDIUM_NVME
-	case opsworks.VolumeTypeStandard:
-		return api.StorageMedium_STORAGE_MEDIUM_MAGNETIC
-	}
-	return api.StorageMedium_STORAGE_MEDIUM_MAGNETIC
 }
 
 func (s *ec2Ops) filters(
@@ -216,12 +176,17 @@ func (s *ec2Ops) waitAttachmentStatus(
 	return outVol, nil
 }
 
+func (s *ec2Ops) Name() string { return "aws" }
+
 func (s *ec2Ops) ApplyTags(
-	v *ec2.Volume,
+	v interface{},
 	labels map[string]string,
 ) error {
+
+	vol := v.(*ec2.Volume)
+
 	req := &ec2.CreateTagsInput{
-		Resources: []*string{v.VolumeId},
+		Resources: []*string{vol.VolumeId},
 		Tags:      s.tags(labels),
 	}
 	_, err := s.ec2.CreateTags(req)
@@ -229,11 +194,13 @@ func (s *ec2Ops) ApplyTags(
 }
 
 func (s *ec2Ops) RemoveTags(
-	v *ec2.Volume,
+	v interface{},
 	labels map[string]string,
 ) error {
+	vol := v.(*ec2.Volume)
+
 	req := &ec2.DeleteTagsInput{
-		Resources: []*string{v.VolumeId},
+		Resources: []*string{vol.VolumeId},
 		Tags:      s.tags(labels),
 	}
 	_, err := s.ec2.DeleteTags(req)
@@ -249,14 +216,15 @@ func (s *ec2Ops) matchTag(tag *ec2.Tag, match string) bool {
 }
 
 func (s *ec2Ops) addResource(
-	sets map[string][]*ec2.Volume,
+	sets map[string][]interface{},
 	vol *ec2.Volume,
 	key string,
 ) {
 	if s, ok := sets[key]; ok {
 		sets[key] = append(s, vol)
 	} else {
-		sets[key] = []*ec2.Volume{vol}
+		sets[key] = make([]interface{}, 0)
+		sets[key] = append(sets[key], vol)
 	}
 }
 
@@ -304,14 +272,15 @@ func (s *ec2Ops) describe() (*ec2.Instance, error) {
 	return out.Reservations[0].Instances[0], nil
 }
 
-// freeDevices returns list of available device IDs.
-func freeDevices(
-	blockDeviceMappings []*ec2.InstanceBlockDeviceMapping,
+func (s *ec2Ops) FreeDevices(
+	blockDeviceMappings []interface{},
 	rootDeviceName string,
 ) ([]string, error) {
 	initial := []byte("fghijklmnop")
 	devPrefix := "/dev/sd"
-	for _, dev := range blockDeviceMappings {
+	for _, d := range blockDeviceMappings {
+		dev := d.(*ec2.InstanceBlockDeviceMapping)
+
 		if dev.DeviceName == nil {
 			return nil, fmt.Errorf("Nil device name")
 		}
@@ -368,6 +337,20 @@ func (s *ec2Ops) rollbackCreate(id string, createErr error) error {
 	return createErr
 }
 
+func (s *ec2Ops) refreshVol(id *string) (*ec2.Volume, error) {
+	vols, err := s.Inspect([]*string{id})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(vols) != 1 {
+		return nil, fmt.Errorf("failed to get vol: %s."+
+			"Found: %d volumes on inspecting", *id, len(vols))
+	}
+
+	return vols[0].(*ec2.Volume), nil
+}
+
 func (s *ec2Ops) deleted(v *ec2.Volume) bool {
 	return *v.State == ec2.VolumeStateDeleting ||
 		*v.State == ec2.VolumeStateDeleted
@@ -377,30 +360,47 @@ func (s *ec2Ops) available(v *ec2.Volume) bool {
 	return *v.State == ec2.VolumeStateAvailable
 }
 
-func (s *ec2Ops) Inspect(volumeIds []*string) ([]*ec2.Volume, error) {
+func (s *ec2Ops) GetDeviceID(vol interface{}) string {
+	v := vol.(*ec2.Volume)
+	return *v.VolumeId
+}
+
+func (s *ec2Ops) Inspect(volumeIds []*string) ([]interface{}, error) {
 	req := &ec2.DescribeVolumesInput{VolumeIds: volumeIds}
-	awsVols, err := s.ec2.DescribeVolumes(req)
+	resp, err := s.ec2.DescribeVolumes(req)
 	if err != nil {
 		return nil, err
 	}
-	return awsVols.Volumes, nil
+
+	var awsVols = make([]interface{}, len(resp.Volumes))
+	for i, v := range resp.Volumes {
+		awsVols[i] = v
+	}
+
+	return awsVols, nil
 }
 
-func (s *ec2Ops) Tags(v *ec2.Volume) map[string]string {
+func (s *ec2Ops) Tags(v interface{}) (map[string]string, error) {
+	vol := v.(*ec2.Volume)
+
+	vol, err := s.refreshVol(vol.VolumeId)
+	if err != nil {
+		return nil, err
+	}
+
 	labels := make(map[string]string)
-	for _, tag := range v.Tags {
+	for _, tag := range vol.Tags {
 		labels[*tag.Key] = *tag.Value
 	}
-	return labels
+	return labels, nil
 }
 
 func (s *ec2Ops) Enumerate(
 	volumeIds []*string,
 	labels map[string]string,
 	setIdentifier string,
-) (map[string][]*ec2.Volume, error) {
-
-	sets := make(map[string][]*ec2.Volume)
+) (map[string][]interface{}, error) {
+	sets := make(map[string][]interface{})
 
 	// Enumerate all volumes that have same labels.
 	f := s.filters(labels, nil)
@@ -417,7 +417,7 @@ func (s *ec2Ops) Enumerate(
 			continue
 		}
 		if len(setIdentifier) == 0 {
-			s.addResource(sets, vol, SetIdentifierNone)
+			s.addResource(sets, vol, storageops.SetIdentifierNone)
 		} else {
 			found = false
 			for _, tag := range vol.Tags {
@@ -428,47 +428,49 @@ func (s *ec2Ops) Enumerate(
 				}
 			}
 			if !found {
-				s.addResource(sets, vol, SetIdentifierNone)
+				s.addResource(sets, vol, storageops.SetIdentifierNone)
 			}
 		}
 	}
+
 	return sets, nil
 }
 
 func (s *ec2Ops) Create(
-	v *ec2.Volume,
+	v interface{},
 	labels map[string]string,
-) (*ec2.Volume, error) {
+) (interface{}, error) {
+	vol := v.(*ec2.Volume)
 
 	req := &ec2.CreateVolumeInput{
-		AvailabilityZone: v.AvailabilityZone,
-		Encrypted:        v.Encrypted,
-		KmsKeyId:         v.KmsKeyId,
-		Size:             v.Size,
-		VolumeType:       v.VolumeType,
-		SnapshotId:       v.SnapshotId,
+		AvailabilityZone: vol.AvailabilityZone,
+		Encrypted:        vol.Encrypted,
+		KmsKeyId:         vol.KmsKeyId,
+		Size:             vol.Size,
+		VolumeType:       vol.VolumeType,
+		SnapshotId:       vol.SnapshotId,
 	}
-	if *v.VolumeType == opsworks.VolumeTypeIo1 {
-		req.Iops = v.Iops
+	if *vol.VolumeType == opsworks.VolumeTypeIo1 {
+		req.Iops = vol.Iops
 	}
 
-	newVol, err := s.ec2.CreateVolume(req)
+	resp, err := s.ec2.CreateVolume(req)
 	if err != nil {
 		return nil, err
 	}
 	if err = s.waitStatus(
-		*newVol.VolumeId,
+		*resp.VolumeId,
 		ec2.VolumeStateAvailable,
 	); err != nil {
-		return nil, s.rollbackCreate(*newVol.VolumeId, err)
+		return nil, s.rollbackCreate(*resp.VolumeId, err)
 	}
 	if len(labels) > 0 {
-		if err = s.ApplyTags(newVol, labels); err != nil {
-			return nil, s.rollbackCreate(*newVol.VolumeId, err)
+		if err = s.ApplyTags(resp, labels); err != nil {
+			return nil, s.rollbackCreate(*resp.VolumeId, err)
 		}
 	}
 
-	return newVol, nil
+	return s.refreshVol(resp.VolumeId)
 }
 
 func (s *ec2Ops) Delete(id string) error {
@@ -486,7 +488,12 @@ func (s *ec2Ops) Attach(volumeID string) (string, error) {
 		return "", err
 	}
 
-	devices, err := freeDevices(self.BlockDeviceMappings, *self.RootDeviceName)
+	var blockDeviceMappings = make([]interface{}, len(self.BlockDeviceMappings))
+	for i, b := range self.BlockDeviceMappings {
+		blockDeviceMappings[i] = b
+	}
+
+	devices, err := s.FreeDevices(blockDeviceMappings, *self.RootDeviceName)
 	if err != nil {
 		return "", err
 	}
@@ -529,40 +536,46 @@ func (s *ec2Ops) Detach(volumeID string) error {
 func (s *ec2Ops) Snapshot(
 	volumeID string,
 	readonly bool,
-) (*ec2.Snapshot, error) {
+) (interface{}, error) {
 	request := &ec2.CreateSnapshotInput{
 		VolumeId: &volumeID,
 	}
 	return s.ec2.CreateSnapshot(request)
 }
 
-func (s *ec2Ops) DevicePath(vol *ec2.Volume) (string, error) {
+func (s *ec2Ops) DevicePath(v interface{}) (string, error) {
+	vol := v.(*ec2.Volume)
+	vol, err := s.refreshVol(vol.VolumeId)
+	if err != nil {
+		return "", err
+	}
+
 	if vol.Attachments == nil || len(vol.Attachments) == 0 {
-		return "", NewStorageError(ErrVolDetached,
+		return "", storageops.NewStorageError(storageops.ErrVolDetached,
 			"Volume is detached", *vol.VolumeId)
 	}
 	if vol.Attachments[0].InstanceId == nil {
-		return "", NewStorageError(ErrVolInval,
+		return "", storageops.NewStorageError(storageops.ErrVolInval,
 			"Unable to determine volume instance attachment", "")
 	}
 	if s.instance != *vol.Attachments[0].InstanceId {
-		return "", NewStorageError(ErrVolAttachedOnRemoteNode,
+		return "", storageops.NewStorageError(storageops.ErrVolAttachedOnRemoteNode,
 			fmt.Sprintf("Volume attached on %q current instance %q",
 				*vol.Attachments[0].InstanceId, s.instance),
 			*vol.Attachments[0].InstanceId)
 
 	}
 	if vol.Attachments[0].State == nil {
-		return "", NewStorageError(ErrVolInval,
+		return "", storageops.NewStorageError(storageops.ErrVolInval,
 			"Unable to determine volume attachment state", "")
 	}
 	if *vol.Attachments[0].State != ec2.VolumeAttachmentStateAttached {
-		return "", NewStorageError(ErrVolInval,
+		return "", storageops.NewStorageError(storageops.ErrVolInval,
 			fmt.Sprintf("Invalid state %q, volume is not attached",
 				*vol.Attachments[0].State), "")
 	}
 	if vol.Attachments[0].Device == nil {
-		return "", NewStorageError(ErrVolInval,
+		return "", storageops.NewStorageError(storageops.ErrVolInval,
 			"Unable to determine volume attachment path", "")
 	}
 	dev := strings.TrimPrefix(*vol.Attachments[0].Device, "/dev/sd")
