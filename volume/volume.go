@@ -136,6 +136,7 @@ type ProtoDriver interface {
 	SnapshotDriver
 	StatsDriver
 	QuiesceDriver
+	CredsDriver
 	// Name returns the name of the driver.
 	Name() string
 	// Type of this driver
@@ -192,6 +193,18 @@ type BlockDriver interface {
 	// Detach device from the host.
 	// Errors ErrEnoEnt, ErrVolDetached may be returned.
 	Detach(volumeID string, options map[string]string) error
+}
+
+// CredsDriver provides methods to handle credentials
+type CredsDriver interface {
+	// CredsCreate creates credential for a given cloud provider
+	CredsCreate(params map[string]string) (string, error)
+	// CredsList lists the configured credentials in the cluster
+	CredsEnumerate() (map[string]interface{}, error)
+	// CredsDelete deletes the credential associated credUUID
+	CredsDelete(credUUID string) error
+	// CredsValidate validates the credential associated credUUID
+	CredsValidate(credUUID string) error
 }
 
 // VolumeDriverProvider provides VolumeDrivers.
