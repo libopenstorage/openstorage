@@ -3,6 +3,7 @@ package testing
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/libopenstorage/openstorage/api"
 	client "github.com/libopenstorage/openstorage/api/client"
@@ -29,8 +30,6 @@ type testServer struct {
 	mc     *gomock.Controller
 }
 
-var ts = &testServer{}
-
 const (
 	host       string = "http://127.0.0.1:2376"
 	mgmtPort   uint16 = 2376
@@ -40,22 +39,29 @@ const (
 )
 
 // Init function to setup the http server
+
 func init() {
-	startTestServer()
+	startServer()
 }
 
-func TestServerStart(t *testing.T) {
+func startServer() {
+	err := server.StartVolumeMgmtAPI(
+		driver,
+		volume.DriverAPIBase,
+		mgmtPort,
+	)
 
-	defer ts.Stop()
+	if err != nil {
+		dlog.Errorf("Error starting the server")
+	}
 
-	var err error
-	ts.client, err = volumeclient.NewDriverClient(host, driver, version, "")
-
-	assert.Nil(t, err)
-	assert.NotNil(t, ts.client)
+	// adding sleep to avoid race condition of connection refused.
+	time.Sleep(1 * time.Second)
 }
 
-func startTestServer() {
+func setupMocks() *testServer {
+
+	var ts = &testServer{}
 
 	// Add driver to registry
 	ts.mc = gomock.NewController(&utils.SafeGoroutineTester{})
@@ -73,17 +79,25 @@ func startTestServer() {
 	// Register the mock driver
 	err = volumedrivers.Register(driver, nil)
 
-	err = server.StartVolumeMgmtAPI(
-		driver,
-		volume.DriverAPIBase,
-		mgmtPort,
-	)
+	return ts
+}
+
+func TestServerStart(t *testing.T) {
+
+	ts := setupMocks()
+	defer ts.Stop()
+
+	var err error
+	ts.client, err = volumeclient.NewDriverClient(host, driver, version, "")
+
+	assert.Nil(t, err)
+	assert.NotNil(t, ts.client)
 }
 
 func TestVolumeCreateSuccess(t *testing.T) {
 
 	var err error
-
+	ts := setupMocks()
 	defer ts.Stop()
 
 	// create a request
@@ -121,9 +135,9 @@ func TestVolumeCreateSuccess(t *testing.T) {
 }
 
 func TestVolumeCreateFailed(t *testing.T) {
-
 	var err error
 
+	ts := setupMocks()
 	defer ts.Stop()
 
 	// create a request
@@ -152,6 +166,7 @@ func TestVolumeCreateFailed(t *testing.T) {
 }
 
 func TestVolumeDeleteSuccess(t *testing.T) {
+	ts := setupMocks()
 
 	defer ts.Stop()
 
@@ -177,6 +192,8 @@ func TestVolumeDeleteSuccess(t *testing.T) {
 
 func TestVolumeDeleteFailed(t *testing.T) {
 
+	ts := setupMocks()
+
 	defer ts.Stop()
 
 	var err error
@@ -201,6 +218,8 @@ func TestVolumeDeleteFailed(t *testing.T) {
 }
 
 func TestSnapshotCreateSuccess(t *testing.T) {
+
+	ts := setupMocks()
 
 	defer ts.Stop()
 
@@ -237,6 +256,8 @@ func TestSnapshotCreateSuccess(t *testing.T) {
 }
 
 func TestVolumeInspectSuccess(t *testing.T) {
+
+	ts := setupMocks()
 
 	defer ts.Stop()
 
@@ -279,6 +300,8 @@ func TestVolumeInspectSuccess(t *testing.T) {
 }
 
 func TestVolumeSetSuccess(t *testing.T) {
+
+	ts := setupMocks()
 
 	defer ts.Stop()
 
@@ -335,6 +358,8 @@ func TestVolumeSetSuccess(t *testing.T) {
 
 func TestVolumeAttachSuccess(t *testing.T) {
 
+	ts := setupMocks()
+
 	defer ts.Stop()
 
 	var err error
@@ -388,6 +413,8 @@ func TestVolumeAttachSuccess(t *testing.T) {
 
 func TestVolumeAttachFailed(t *testing.T) {
 
+	ts := setupMocks()
+
 	defer ts.Stop()
 
 	var err error
@@ -426,6 +453,8 @@ func TestVolumeAttachFailed(t *testing.T) {
 }
 
 func TestVolumeDetachSuccess(t *testing.T) {
+
+	ts := setupMocks()
 
 	defer ts.Stop()
 
@@ -478,6 +507,8 @@ func TestVolumeDetachSuccess(t *testing.T) {
 
 func TestVolumeDetachFailed(t *testing.T) {
 
+	ts := setupMocks()
+
 	defer ts.Stop()
 
 	var err error
@@ -514,6 +545,8 @@ func TestVolumeDetachFailed(t *testing.T) {
 }
 
 func TestVolumeMountSuccess(t *testing.T) {
+
+	ts := setupMocks()
 
 	defer ts.Stop()
 
@@ -569,6 +602,8 @@ func TestVolumeMountSuccess(t *testing.T) {
 
 func TestVolumeMountFailedNoMountPath(t *testing.T) {
 
+	ts := setupMocks()
+
 	defer ts.Stop()
 
 	var err error
@@ -600,6 +635,8 @@ func TestVolumeMountFailedNoMountPath(t *testing.T) {
 }
 
 func TestVolumeStatsSuccess(t *testing.T) {
+
+	ts := setupMocks()
 	defer ts.Stop()
 
 	var err error
@@ -625,21 +662,25 @@ func TestVolumeStatsSuccess(t *testing.T) {
 
 	res, err := driverclient.Stats(id, true)
 
-	fmt.Println("aaya ... ", err)
 	assert.Nil(t, err)
 	assert.Equal(t, bytesUsed, res.BytesUsed)
 
 }
 
+// MockDriver helper method.
 func (s *testServer) MockDriver() *mockdriver.MockVolumeDriver {
 	return s.m
 }
 
+// MockCluster helper method.
 func (s *testServer) MockCluster() *mockcluster.MockCluster {
 	return s.c
 }
 
+// Stop method to to remove the driver and check mocks.
 func (s *testServer) Stop() {
+	// Remove from registry
+	volumedrivers.Remove("mock")
 	// Check mocks
 	s.mc.Finish()
 }
