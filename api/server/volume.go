@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/errors"
 	"github.com/libopenstorage/openstorage/volume"
@@ -579,6 +578,10 @@ func snapPath(route, version string) string {
 	return volVersion(api.OsdSnapshotPath+route, version)
 }
 
+func credsPath(route, version string) string {
+	return volVersion(api.OsdCredsPath+route, version)
+}
+
 func (vd *volAPI) Routes() []*Route {
 	return []*Route{
 		{verb: "GET", path: "/" + api.OsdVolumePath + "/versions", fn: vd.versions},
@@ -598,5 +601,9 @@ func (vd *volAPI) Routes() []*Route {
 		{verb: "POST", path: snapPath("", volume.APIVersion), fn: vd.snap},
 		{verb: "GET", path: snapPath("", volume.APIVersion), fn: vd.snapEnumerate},
 		{verb: "POST", path: snapPath("/restore/{id}", volume.APIVersion), fn: vd.restore},
+		{verb: "GET", path: credsPath("", volume.APIVersion), fn: vd.credsEnumerate},
+		{verb: "POST", path: credsPath("", volume.APIVersion), fn: vd.credsCreate},
+		{verb: "DELETE", path: credsPath("/{uuid}", volume.APIVersion), fn: vd.credsDelete},
+		{verb: "POST", path: credsPath("/validate/{uuid}", volume.APIVersion), fn: vd.credsValidate},
 	}
 }

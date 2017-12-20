@@ -37,6 +37,7 @@ type driver struct {
 	volume.StoreEnumerator
 	volume.StatsDriver
 	volume.QuiesceDriver
+  volume.CredsDriver
 	nfsServers []string
 	nfsPath    string
 	mounter    mount.Manager
@@ -70,6 +71,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		StatsDriver:     volume.StatsNotSupported,
 		QuiesceDriver:   volume.QuiesceNotSupported,
 		nfsServers:      servers,
+		CredsDriver:     volume.CredsNotSupported,
 		nfsPath:         path,
 		mounter:         mounter,
 	}

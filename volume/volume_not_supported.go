@@ -20,6 +20,7 @@ var (
 	// QuiesceNotSupported implements quiesce/unquiesce by returning not
 	// supported error.
 	QuiesceNotSupported = &quiesceNotSupported{}
+	CredsNotSupported   = &credsNotSupported{}
 )
 
 type blockNotSupported struct{}
@@ -87,5 +88,30 @@ func (s *quiesceNotSupported) Quiesce(
 }
 
 func (s *quiesceNotSupported) Unquiesce(volumeID string) error {
+	return ErrNotSupported
+}
+
+type credsNotSupported struct{}
+
+func (c *credsNotSupported) CredsCreate(
+	params map[string]string,
+) (string, error) {
+	return "", ErrNotSupported
+}
+
+func (c *credsNotSupported) CredsDelete(
+	uuid string,
+) error {
+	return ErrNotSupported
+}
+
+func (c *credsNotSupported) CredsEnumerate() (map[string]interface{}, error) {
+	creds := make(map[string]interface{}, 0)
+	return creds, ErrNotSupported
+}
+
+func (c *credsNotSupported) CredsValidate(
+	uuid string,
+) error {
 	return ErrNotSupported
 }

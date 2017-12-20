@@ -17,6 +17,7 @@ const (
 	SpecParent               = "parent"
 	SpecEphemeral            = "ephemeral"
 	SpecShared               = "shared"
+	SpecNfs                  = "nfs"
 	SpecCascaded             = "cascaded"
 	SpecSticky               = "sticky"
 	SpecSecure               = "secure"
@@ -62,12 +63,39 @@ const (
 	OptTimeoutSec = "TimeoutSec"
 	// OptQuiesceID query parameter use for quiesce
 	OptQuiesceID = "QuiesceID"
+	// OptCredUUID is the UUID of the credential
+	OptCredUUID = "CredUUID"
+	// OptCredType  indicates type of credential
+	OptCredType = "CredType"
+	// OptCredEncrKey is the key used to encrypt data
+	OptCredEncrKey = "CredEncrypt"
+	// OptCredRegion indicates the region for s3
+	OptCredRegion = "CredRegion"
+	// OptCredDisableSSL indicated if SSL should be disabled
+	OptCredDisableSSL = "CredDisableSSL"
+	// OptCredEndpoint indicate the cloud endpoint
+	OptCredEndpoint = "CredEndpoint"
+	// OptCredAccKey for s3
+	OptCredAccessKey = "CredAccessKey"
+	// OptCredSecretKey for s3
+	OptCredSecretKey = "CredSecretKey"
+	// OptCredGoogleProjectID projectID for google cloud
+	OptCredGoogleProjectID = "CredProjectID"
+	// OptCredGoogleJsonKey for google cloud
+	OptCredGoogleJsonKey = "CredJsonKey"
+	// OptCredAzureAccountName is the account name for
+	// azure as the cloud provider
+	OptCredAzureAccountName = "CredAccountName"
+	// OptOptCredAzureAccountKey is the accountkey for
+	// azure as the cloud provider
+	OptCredAzureAccountKey = "CredAccountKey"
 )
 
 // Api client-server Constants
 const (
 	OsdVolumePath   = "osd-volumes"
 	OsdSnapshotPath = "osd-snapshot"
+	OsdCredsPath    = "osd-creds"
 	TimeLayout      = "Jan 2 15:04:05 UTC 2006"
 )
 
@@ -150,6 +178,20 @@ type StatPoint struct {
 	Fields map[string]interface{}
 	// Timestamp in Unix format
 	Timestamp int64
+}
+
+// CredCreateRequest is the input for CredCreate command
+type CredCreateRequest struct {
+	// InputParams is map describing cloud provide
+	InputParams map[string]string
+}
+
+// CredCreateResponse is returned for CredCreate command
+type CredCreateResponse struct {
+	// UUID of the credential that was just created
+	UUID string
+	// CredErr indicates reasonfor failed CredCreate
+	CredErr string
 }
 
 // DriverTypeSimpleValueOf returns the string format of DriverType
