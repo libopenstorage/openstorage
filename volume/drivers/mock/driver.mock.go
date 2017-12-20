@@ -59,6 +59,56 @@ func (mr *MockVolumeDriverMockRecorder) Create(arg0, arg1, arg2 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockVolumeDriver)(nil).Create), arg0, arg1, arg2)
 }
 
+// CredsCreate mocks base method
+func (m *MockVolumeDriver) CredsCreate(arg0 map[string]string) (string, error) {
+	ret := m.ctrl.Call(m, "CredsCreate", arg0)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CredsCreate indicates an expected call of CredsCreate
+func (mr *MockVolumeDriverMockRecorder) CredsCreate(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CredsCreate", reflect.TypeOf((*MockVolumeDriver)(nil).CredsCreate), arg0)
+}
+
+// CredsDelete mocks base method
+func (m *MockVolumeDriver) CredsDelete(arg0 string) error {
+	ret := m.ctrl.Call(m, "CredsDelete", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CredsDelete indicates an expected call of CredsDelete
+func (mr *MockVolumeDriverMockRecorder) CredsDelete(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CredsDelete", reflect.TypeOf((*MockVolumeDriver)(nil).CredsDelete), arg0)
+}
+
+// CredsEnumerate mocks base method
+func (m *MockVolumeDriver) CredsEnumerate() (map[string]interface{}, error) {
+	ret := m.ctrl.Call(m, "CredsEnumerate")
+	ret0, _ := ret[0].(map[string]interface{})
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CredsEnumerate indicates an expected call of CredsEnumerate
+func (mr *MockVolumeDriverMockRecorder) CredsEnumerate() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CredsEnumerate", reflect.TypeOf((*MockVolumeDriver)(nil).CredsEnumerate))
+}
+
+// CredsValidate mocks base method
+func (m *MockVolumeDriver) CredsValidate(arg0 string) error {
+	ret := m.ctrl.Call(m, "CredsValidate", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CredsValidate indicates an expected call of CredsValidate
+func (mr *MockVolumeDriverMockRecorder) CredsValidate(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CredsValidate", reflect.TypeOf((*MockVolumeDriver)(nil).CredsValidate), arg0)
+}
+
 // Delete mocks base method
 func (m *MockVolumeDriver) Delete(arg0 string) error {
 	ret := m.ctrl.Call(m, "Delete", arg0)

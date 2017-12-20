@@ -87,6 +87,7 @@ var (
 	haRegex         = regexp.MustCompile(api.SpecHaLevel + "=([0-9]+),?")
 	cosRegex        = regexp.MustCompile(api.SpecPriority + "=([A-Za-z]+),?")
 	sharedRegex     = regexp.MustCompile(api.SpecShared + "=([A-Za-z]+),?")
+	nfsRegex        = regexp.MustCompile(api.SpecNfs + "=([A-Za-z]+),?")
 	cascadedRegex   = regexp.MustCompile(api.SpecCascaded + "=([A-Za-z]+),?")
 	passphraseRegex = regexp.MustCompile(api.SpecPassphrase + "=([0-9A-Za-z_@./#&+-]+),?")
 	stickyRegex     = regexp.MustCompile(api.SpecSticky + "=([A-Za-z]+),?")
@@ -237,6 +238,12 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			} else {
 				spec.Shared = shared
 			}
+		case api.SpecNfs:
+			if nfs, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.Nfs = nfs
+			}
 		case api.SpecCascaded:
 			if cascaded, err := strconv.ParseBool(v); err != nil {
 				return nil, nil, nil, err
@@ -346,6 +353,9 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, shared := d.getVal(sharedRegex, str); ok {
 		opts[api.SpecShared] = shared
+	}
+	if ok, nfs := d.getVal(nfsRegex, str); ok {
+		opts[api.SpecNfs] = nfs
 	}
 	if ok, cascaded := d.getVal(cascadedRegex, str); ok {
 		opts[api.SpecCascaded] = cascaded
