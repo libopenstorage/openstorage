@@ -1,16 +1,20 @@
 package storageops
 
 const (
-	// SetIdentifierNone is an default identifier to group all disks managed by
-	// storage ops
+	// SetIdentifierNone is a default identifier to group all disks from a
+	// particular set
 	SetIdentifierNone = "None"
 )
 
 // Custom storage operation error codes.
 const (
 	_ = iota + 5000
+	// ErrVolDetached is code for a volume is detached on the instance
 	ErrVolDetached
+	// ErrVolInval is the code for a invalid volume
 	ErrVolInval
+	// ErrVolAttachedOnRemoteNode is code when a volume is not attached locally
+	// but attached on a remote node
 	ErrVolAttachedOnRemoteNode
 )
 
@@ -39,7 +43,9 @@ type Ops interface {
 	Detach(volumeID string) error
 	// Delete volumeID.
 	Delete(volumeID string) error
-	// FreeDevices returns free block devices on the instance
+	// FreeDevices returns free block devices on the instance.
+	// blockDeviceMappings is a data structure that contains all block devices on
+	// the instance and where they are mapped to
 	FreeDevices(blockDeviceMappings []interface{}, rootDeviceName string) ([]string, error)
 	// Inspect volumes specified by volumeID
 	Inspect(volumeIds []*string) ([]interface{}, error)
