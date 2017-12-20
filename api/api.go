@@ -190,7 +190,7 @@ type CredCreateResponse struct {
 	// UUID of the credential that was just created
 	UUID string
 	// CredErr indicates reasonfor failed CredCreate
-	CredErr error
+	CredErr string
 }
 
 // DriverTypeSimpleValueOf returns the string format of DriverType

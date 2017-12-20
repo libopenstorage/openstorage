@@ -29,11 +29,11 @@ func (vd *volAPI) credsEnumerate(w http.ResponseWriter, r *http.Request) {
 func (vd *volAPI) credsCreate(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var input api.CredCreateRequest
-	Response := &api.CredCreateResponse{}
+	response := &api.CredCreateResponse{}
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		Response.CredErr = err
-		json.NewEncoder(w).Encode(Response)
+		response.CredErr = err.Error()
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 	d, err := vd.getVolDriver(r)
@@ -42,8 +42,11 @@ func (vd *volAPI) credsCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Response.UUID, Response.CredErr = d.CredsCreate(input.InputParams)
-	json.NewEncoder(w).Encode(Response)
+	response.UUID, err = d.CredsCreate(input.InputParams)
+	if err != nil {
+		response.CredErr = err.Error()
+	}
+	json.NewEncoder(w).Encode(response)
 }
 
 func (vd *volAPI) credsDelete(w http.ResponseWriter, r *http.Request) {

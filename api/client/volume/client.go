@@ -449,8 +449,8 @@ func (v *volumeClient) CredsCreate(params map[string]string) (string, error) {
 	}
 	err := v.c.Post().Resource(credsPath).Body(request).Do().Unmarshal(&response)
 	if err == nil {
-		if response.CredErr != nil {
-			err = response.CredErr
+		if response.CredErr != "" {
+			err = errors.New(response.CredErr)
 		}
 	}
 	return response.UUID, err
