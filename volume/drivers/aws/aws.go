@@ -9,10 +9,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/libopenstorage/openstorage/pkg/proto/time"
-	"github.com/libopenstorage/openstorage/pkg/storageops"
-	"go.pedge.io/dlog"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -20,10 +16,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/chaos"
+	"github.com/libopenstorage/openstorage/pkg/proto/time"
+	"github.com/libopenstorage/openstorage/pkg/storageops"
 	aws_ops "github.com/libopenstorage/openstorage/pkg/storageops/aws"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers/common"
 	"github.com/portworx/kvdb"
+	"go.pedge.io/dlog"
 )
 
 const (
@@ -211,7 +210,13 @@ func (d *Driver) Create(
 		return "", err
 	}
 
-	vol := resp.(*ec2.Volume)
+	vol, ok := resp.(*ec2.Volume)
+	if !ok {
+		return "", storageops.NewStorageError(storageops.ErrVolInval,
+			"Invalid volume returned by create API",
+			fmt.Sprintf("template snapshot: %s", snapID))
+	}
+
 	volume := common.NewVolume(
 		*vol.VolumeId,
 		api.FSType_FS_TYPE_EXT4,
@@ -392,14 +397,22 @@ func (d *Driver) Format(volumeID string) error {
 	}
 
 	// XXX: determine mount state
-	awsVol, err := d.ops.Inspect([]*string{&volumeID})
+	awsVols, err := d.ops.Inspect([]*string{&volumeID})
 	if err != nil {
 		return err
 	}
-	if len(awsVol) != 1 {
+	if len(awsVols) != 1 {
 		return fmt.Errorf("Failed to inspect volume %v", volumeID)
 	}
-	devicePath, err := d.ops.DevicePath(awsVol[0])
+
+	awsVol, ok := awsVols[0].(*ec2.Volume)
+	if !ok {
+		return storageops.NewStorageError(storageops.ErrVolInval,
+			"Invalid volume returned by inspect API",
+			fmt.Sprintf("volume to inspect: %s", volumeID))
+	}
+
+	devicePath, err := d.ops.DevicePath(*awsVol.VolumeId)
 	if err != nil {
 		return err
 	}
@@ -438,14 +451,22 @@ func (d *Driver) Mount(volumeID string, mountpath string, options map[string]str
 	if err != nil {
 		return fmt.Errorf("Failed to locate volume %q", volumeID)
 	}
-	awsVol, err := d.ops.Inspect([]*string{&volumeID})
+	awsVols, err := d.ops.Inspect([]*string{&volumeID})
 	if err != nil {
 		return err
 	}
-	if len(awsVol) != 1 {
+	if len(awsVols) != 1 {
 		return fmt.Errorf("Failed to inspect volume %v", volumeID)
 	}
-	devicePath, err := d.ops.DevicePath(awsVol[0])
+
+	awsVol, ok := awsVols[0].(*ec2.Volume)
+	if !ok {
+		return storageops.NewStorageError(storageops.ErrVolInval,
+			"Invalid volume returned by inspect API",
+			fmt.Sprintf("volume to inspect: %s", volumeID))
+	}
+
+	devicePath, err := d.ops.DevicePath(*awsVol.VolumeId)
 	if err != nil {
 		return err
 	}

@@ -426,7 +426,11 @@ func (s *ec2Ops) Create(
 	v interface{},
 	labels map[string]string,
 ) (interface{}, error) {
-	vol := v.(*ec2.Volume)
+	vol, ok := v.(*ec2.Volume)
+	if !ok {
+		return nil, storageops.NewStorageError(storageops.ErrVolInval,
+			"Invalid volume template given", "")
+	}
 
 	req := &ec2.CreateVolumeInput{
 		AvailabilityZone: vol.AvailabilityZone,

@@ -32,11 +32,11 @@ func testRemoveTags(t *testing.T, driver volume.VolumeDriver) {
 	vol := resp.(*ec2.Volume)
 	defer d.ops.Delete(*vol.VolumeId)
 
-	tags, err := d.ops.Tags(vol)
+	tags, err := d.ops.Tags(*vol.VolumeId)
 	require.Nil(t, err, "Failed to apply tags :%v", err)
 	require.True(t, len(tags) == len(labelNames), "ApplyTags failed")
-	require.Nil(t, d.ops.RemoveTags(vol, labels), "RemoveTags error")
-	tags, err = d.ops.Tags(vol)
+	require.Nil(t, d.ops.RemoveTags(*vol.VolumeId, labels), "RemoveTags error")
+	tags, err = d.ops.Tags(*vol.VolumeId)
 	require.Nil(t, err, "Failed to fetch tags :%v", err)
 	require.True(t, len(tags) == 0, "RemoveTags failed")
 }
