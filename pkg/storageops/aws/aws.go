@@ -336,7 +336,14 @@ func (s *ec2Ops) refreshVol(id *string) (*ec2.Volume, error) {
 			"Found: %d volumes on inspecting", *id, len(vols))
 	}
 
-	return vols[0].(*ec2.Volume), nil
+	resp, ok := vols[0].(*ec2.Volume)
+	if !ok {
+		return nil, storageops.NewStorageError(storageops.ErrVolInval,
+			fmt.Sprintf("Invalid volume returned by inspect API for vol: %s", *id),
+			"")
+	}
+
+	return resp, nil
 }
 
 func (s *ec2Ops) deleted(v *ec2.Volume) bool {
@@ -349,7 +356,12 @@ func (s *ec2Ops) available(v *ec2.Volume) bool {
 }
 
 func (s *ec2Ops) GetDeviceID(vol interface{}) string {
-	v := vol.(*ec2.Volume)
+	v, ok := vol.(*ec2.Volume)
+	if !ok {
+		logrus.Errorf("Invalid volume given to GetDeviceID API")
+		return ""
+	}
+
 	return *v.VolumeId
 }
 

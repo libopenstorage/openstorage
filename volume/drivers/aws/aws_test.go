@@ -29,7 +29,8 @@ func testRemoveTags(t *testing.T, driver volume.VolumeDriver) {
 	}
 	resp, err := d.ops.Create(ec2Vol, labels)
 	require.Nil(t, err, "Failed in CreateVolumeRequest :%v", err)
-	vol := resp.(*ec2.Volume)
+	vol, ok := resp.(*ec2.Volume)
+	require.True(t, ok, "invalid volume returned by create API")
 	defer d.ops.Delete(*vol.VolumeId)
 
 	tags, err := d.ops.Tags(*vol.VolumeId)

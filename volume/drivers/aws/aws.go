@@ -214,7 +214,7 @@ func (d *Driver) Create(
 	if !ok {
 		return "", storageops.NewStorageError(storageops.ErrVolInval,
 			"Invalid volume returned by create API",
-			fmt.Sprintf("template snapshot: %s", snapID))
+			fmt.Sprintf("template snapshot: %s", *snapID))
 	}
 
 	volume := common.NewVolume(
@@ -300,7 +300,12 @@ func (d *Driver) Inspect(volumeIDs []string) ([]*api.Volume, error) {
 			return nil, fmt.Errorf("Inspect volume count mismatch")
 		}
 		for i, v := range awsVols {
-			vol := v.(*ec2.Volume)
+			vol, ok := v.(*ec2.Volume)
+			if !ok {
+				return nil, storageops.NewStorageError(storageops.ErrVolInval,
+					"Invalid volume returned by inspect API", "")
+			}
+
 			if string(vols[i].Id) != *vol.VolumeId {
 				d.merge(vols[i], vol)
 			}
