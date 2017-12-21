@@ -59,15 +59,15 @@ type Ops interface {
 		setIdentifier string,
 	) (map[string][]interface{}, error)
 	// DevicePath for the given volume i.e path where it's attached
-	DevicePath(volume interface{}) (string, error)
+	DevicePath(volumeID string) (string, error)
 	// Snapshot the volume with given volumeID
 	Snapshot(volumeID string, readonly bool) (interface{}, error)
 	// ApplyTags will apply given labels/tags on the given volume
-	ApplyTags(v interface{}, labels map[string]string) error
+	ApplyTags(volumeID string, labels map[string]string) error
 	// RemoveTags removes labels/tags from the given volume
-	RemoveTags(v interface{}, labels map[string]string) error
+	RemoveTags(volumeID string, labels map[string]string) error
 	// Tags will list the existing labels/tags on the given volume
-	Tags(v interface{}) (map[string]string, error)
+	Tags(volumeID string) (map[string]string, error)
 }
 
 // NewStorageError creates a new custom storage error instance
