@@ -1,74 +1,30 @@
-package storageops_test
+package test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/libopenstorage/openstorage/pkg/storageops"
-	"github.com/libopenstorage/openstorage/pkg/storageops/aws"
-	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/require"
 )
 
-const (
-	newDiskPrefix      = "openstorage-test"
-	newDiskDescription = "Disk created by Openstorage tests"
-	newDiskSizeInGB    = 10
-)
-
-var drivers map[string]storageops.Ops
-var diskTemplates map[string]map[string]interface{}
-var diskName = fmt.Sprintf("%s-%s", newDiskPrefix, uuid.NewV4())
-
-func initDrivers(t *testing.T) {
-	drivers = make(map[string]storageops.Ops)
-	diskTemplates = make(map[string]map[string]interface{})
-
-	// AWS
-	if d, err := aws.NewEnvClient(); err != aws.ErrAWSEnvNotAvailable {
-		volType := opsworks.VolumeTypeGp2
-		volSize := int64(newDiskSizeInGB)
-		zone := os.Getenv("AWS_ZONE")
-		ebsVol := &ec2.Volume{
-			AvailabilityZone: &zone,
-			VolumeType:       &volType,
-			Size:             &volSize,
-		}
-		drivers[d.Name()] = d
-		diskTemplates[d.Name()] = map[string]interface{}{
-			diskName: ebsVol,
-		}
-	} else {
-		fmt.Printf("skipping AWS tests as environment is not set...\n")
-	}
-}
-
-func TestAll(t *testing.T) {
-	initDrivers(t)
-
+func RunTest(drivers map[string]storageops.Ops,
+	diskTemplates map[string]map[string]interface{},
+	t *testing.T) {
 	for _, d := range drivers {
-		doAll(t, d)
-	}
+		name(t, d)
 
-}
-
-func doAll(t *testing.T, driver storageops.Ops) {
-	name(t, driver)
-
-	for _, template := range diskTemplates[driver.Name()] {
-		d := create(t, driver, template)
-		tags(t, driver, d)
-
-		diskName := id(t, driver, d)
-		enumerate(t, driver, diskName)
-		inspect(t, driver, diskName)
-		attach(t, driver, diskName)
-		devicePath(t, driver, d)
-		teardown(t, driver, diskName)
+		for _, template := range diskTemplates[d.Name()] {
+			disk := create(t, d, template)
+			diskName := id(t, d, disk)
+			tags(t, d, diskName)
+			enumerate(t, d, diskName)
+			inspect(t, d, diskName)
+			attach(t, d, diskName)
+			devicePath(t, d, diskName)
+			teardown(t, d, diskName)
+		}
 	}
 }
 
@@ -91,24 +47,24 @@ func id(t *testing.T, driver storageops.Ops, disk interface{}) string {
 	return id
 }
 
-func tags(t *testing.T, driver storageops.Ops, disk interface{}) {
+func tags(t *testing.T, driver storageops.Ops, diskName string) {
 	labels := map[string]string{
 		"source": "openstorage-test",
 		"foo":    "bar",
 	}
 
-	err := driver.ApplyTags(disk, labels)
+	err := driver.ApplyTags(diskName, labels)
 	require.NoError(t, err, "failed to apply tags to disk")
 
-	tags, err := driver.Tags(disk)
+	tags, err := driver.Tags(diskName)
 	require.NoError(t, err, "failed to get tags for disk")
 	require.Len(t, tags, 2, "invalid number of labels found on disk")
 
 	labelsToRemove := map[string]string{"foo": "bar"}
-	err = driver.RemoveTags(disk, labelsToRemove)
+	err = driver.RemoveTags(diskName, labelsToRemove)
 	require.NoError(t, err, "failed to remove tags from disk")
 
-	tags, err = driver.Tags(disk)
+	tags, err = driver.Tags(diskName)
 	require.NoError(t, err, "failed to get tags for disk")
 	require.Len(t, tags, 1, "invalid number of labels found on disk")
 }
@@ -135,8 +91,8 @@ func attach(t *testing.T, driver storageops.Ops, diskName string) {
 	require.NotEmpty(t, mappings, "received empty device mappings")
 }
 
-func devicePath(t *testing.T, driver storageops.Ops, d interface{}) {
-	devPath, err := driver.DevicePath(d)
+func devicePath(t *testing.T, driver storageops.Ops, diskName string) {
+	devPath, err := driver.DevicePath(diskName)
 	require.NoError(t, err, "get device path returned error")
 	require.NotEmpty(t, devPath, "received empty devicePath")
 }

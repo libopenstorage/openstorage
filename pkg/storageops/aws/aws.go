@@ -37,8 +37,7 @@ func NewEnvClient() (storageops.Ops, error) {
 		return nil, ErrAWSEnvNotAvailable
 	}
 
-	_, err := credentials.NewEnvCredentials().Get()
-	if err != nil {
+	if _, err := credentials.NewEnvCredentials().Get(); err != nil {
 		return nil, ErrAWSEnvNotAvailable
 	}
 
@@ -178,29 +177,18 @@ func (s *ec2Ops) waitAttachmentStatus(
 
 func (s *ec2Ops) Name() string { return "aws" }
 
-func (s *ec2Ops) ApplyTags(
-	v interface{},
-	labels map[string]string,
-) error {
-
-	vol := v.(*ec2.Volume)
-
+func (s *ec2Ops) ApplyTags(volumeID string, labels map[string]string) error {
 	req := &ec2.CreateTagsInput{
-		Resources: []*string{vol.VolumeId},
+		Resources: []*string{&volumeID},
 		Tags:      s.tags(labels),
 	}
 	_, err := s.ec2.CreateTags(req)
 	return err
 }
 
-func (s *ec2Ops) RemoveTags(
-	v interface{},
-	labels map[string]string,
-) error {
-	vol := v.(*ec2.Volume)
-
+func (s *ec2Ops) RemoveTags(volumeID string, labels map[string]string) error {
 	req := &ec2.DeleteTagsInput{
-		Resources: []*string{vol.VolumeId},
+		Resources: []*string{&volumeID},
 		Tags:      s.tags(labels),
 	}
 	_, err := s.ec2.DeleteTags(req)
@@ -380,10 +368,8 @@ func (s *ec2Ops) Inspect(volumeIds []*string) ([]interface{}, error) {
 	return awsVols, nil
 }
 
-func (s *ec2Ops) Tags(v interface{}) (map[string]string, error) {
-	vol := v.(*ec2.Volume)
-
-	vol, err := s.refreshVol(vol.VolumeId)
+func (s *ec2Ops) Tags(volumeID string) (map[string]string, error) {
+	vol, err := s.refreshVol(&volumeID)
 	if err != nil {
 		return nil, err
 	}
@@ -465,7 +451,7 @@ func (s *ec2Ops) Create(
 		return nil, s.rollbackCreate(*resp.VolumeId, err)
 	}
 	if len(labels) > 0 {
-		if err = s.ApplyTags(resp, labels); err != nil {
+		if err = s.ApplyTags(*resp.VolumeId, labels); err != nil {
 			return nil, s.rollbackCreate(*resp.VolumeId, err)
 		}
 	}
@@ -513,7 +499,7 @@ func (s *ec2Ops) Attach(volumeID string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return s.DevicePath(vol)
+	return s.DevicePath(*vol.VolumeId)
 }
 
 func (s *ec2Ops) Detach(volumeID string) error {
@@ -543,9 +529,8 @@ func (s *ec2Ops) Snapshot(
 	return s.ec2.CreateSnapshot(request)
 }
 
-func (s *ec2Ops) DevicePath(v interface{}) (string, error) {
-	vol := v.(*ec2.Volume)
-	vol, err := s.refreshVol(vol.VolumeId)
+func (s *ec2Ops) DevicePath(volumeID string) (string, error) {
+	vol, err := s.refreshVol(&volumeID)
 	if err != nil {
 		return "", err
 	}
