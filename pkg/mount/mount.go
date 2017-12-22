@@ -364,7 +364,7 @@ func (m *Mounter) Mount(
 
 	// Validate input params
 	if fs != info.Fs {
-		dlog.Warnf("%s Existing mountpoint has fs %q cannot change to %q",
+		dlog.Warnf("%s existing mountpoint has fs %q cannot change to %q",
 			device, info.Fs, fs)
 		return ErrEinval
 	}
@@ -584,7 +584,7 @@ func (m *Mounter) isPathSetImmutable(mountpath string) bool {
 		return true
 	}
 	if strings.Contains(attrs[0], "i") {
-		dlog.Errorf("Mount Path already set to Immutable")
+		dlog.Warnf("Mount path %v already set to immutable", mountpath)
 		return true
 	}
 
