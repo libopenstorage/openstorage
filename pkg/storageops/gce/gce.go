@@ -22,13 +22,13 @@ var notFoundRegex = regexp.MustCompile(`.*notFound`)
 const googleDiskPrefix = "/dev/disk/by-id/google-"
 
 type gceOps struct {
-	inst    *Instance
+	inst    *instance
 	service *compute.Service
 	mutex   sync.Mutex
 }
 
-// Instance stores the metadata of the running GCE instance
-type Instance struct {
+// instance stores the metadata of the running GCE instance
+type instance struct {
 	ID         string
 	Name       string
 	Hostname   string
@@ -68,43 +68,43 @@ func getEnvValueStrict(key string) (val string, err error) {
 }
 
 // gceInfo fetches the GCE instance metadata from the metadata server
-func gceInfo(instance *Instance) {
+func gceInfo(inst *instance) {
 	a := &assigner{}
-	instance.ID = a.assign(metadata.InstanceID)
-	instance.Zone = a.assign(metadata.Zone)
-	instance.Name = a.assign(metadata.InstanceName)
-	instance.Hostname = a.assign(metadata.Hostname)
-	instance.Project = a.assign(metadata.ProjectID)
-	instance.InternalIP = a.assign(metadata.InternalIP)
-	instance.ExternalIP = a.assign(metadata.ExternalIP)
+	inst.ID = a.assign(metadata.InstanceID)
+	inst.Zone = a.assign(metadata.Zone)
+	inst.Name = a.assign(metadata.InstanceName)
+	inst.Hostname = a.assign(metadata.Hostname)
+	inst.Project = a.assign(metadata.ProjectID)
+	inst.InternalIP = a.assign(metadata.InternalIP)
+	inst.ExternalIP = a.assign(metadata.ExternalIP)
 
 	if a.err != nil {
-		instance.Error = a.err.Error()
+		inst.Error = a.err.Error()
 	}
 }
 
-func gceInfoFromEnv(instance *Instance) {
+func gceInfoFromEnv(inst *instance) {
 	a := &assigner{}
-	instance.Name = a.assign(func() (string, error) { return getEnvValueStrict("GCE_INSTANCE_NAME") })
-	instance.Zone = a.assign(func() (string, error) { return getEnvValueStrict("GCE_INSTANCE_ZONE") })
-	instance.Project = a.assign(func() (string, error) { return getEnvValueStrict("GCE_INSTANCE_PROJECT") })
+	inst.Name = a.assign(func() (string, error) { return getEnvValueStrict("GCE_INSTANCE_NAME") })
+	inst.Zone = a.assign(func() (string, error) { return getEnvValueStrict("GCE_INSTANCE_ZONE") })
+	inst.Project = a.assign(func() (string, error) { return getEnvValueStrict("GCE_INSTANCE_PROJECT") })
 
 	if a.err != nil {
-		instance.Error = a.err.Error()
+		inst.Error = a.err.Error()
 	}
 }
 
 // IsDevMode checks if the pkg is invoked in developer mode where GCE credentials
 // are set as env variables
 func IsDevMode() bool {
-	var i = new(Instance)
+	var i = new(instance)
 	gceInfoFromEnv(i)
 	return len(i.Error) == 0
 }
 
 // NewClient creates a new GCE operations client
 func NewClient() (storageops.Ops, error) {
-	var i = new(Instance)
+	var i = new(instance)
 	if metadata.OnGCE() {
 		gceInfo(i)
 	} else if ok := IsDevMode(); ok {
@@ -135,11 +135,11 @@ func NewClient() (storageops.Ops, error) {
 
 func (s *gceOps) waitStatus(id string, desired string) error {
 	actual := ""
-	for retries, maxRetries := 0, 10; actual != desired && retries < maxRetries; retries++ {
+	for retries, maxRetries := 0, storageops.ProviderOpsMaxRetries; actual != desired && retries < maxRetries; retries++ {
 		d, err := s.service.Disks.Get(s.inst.Project, s.inst.Zone, id).Do()
 		if err != nil {
 			if ignore := notFoundRegex.MatchString(err.Error()); ignore {
-				time.Sleep(3 * time.Second)
+				time.Sleep(storageops.ProviderOpsRetryInterval)
 				continue
 			}
 
@@ -159,7 +159,7 @@ func (s *gceOps) waitStatus(id string, desired string) error {
 			break
 		}
 
-		time.Sleep(3 * time.Second)
+		time.Sleep(storageops.ProviderOpsRetryInterval)
 	}
 
 	if actual != desired {
@@ -178,7 +178,7 @@ func (s *gceOps) waitForDetach(
 
 	interval := 5 * time.Second
 	for elapsed := 0 * time.Second; elapsed < timeout; elapsed += interval {
-		inst, err = s.describe()
+		inst, err = s.describeinstance()
 		if err != nil {
 			return
 		}
@@ -224,7 +224,7 @@ func (s *gceOps) waitForAttach(
 
 func (s *gceOps) Name() string { return "gce" }
 
-func (s *gceOps) describe() (*compute.Instance, error) {
+func (s *gceOps) describeinstance() (*compute.Instance, error) {
 	return s.service.Instances.Get(s.inst.Project, s.inst.Zone, s.inst.Name).Do()
 }
 
@@ -241,20 +241,8 @@ func (s *gceOps) available(v *compute.Disk) bool {
 	return v.Status == "READY"
 }
 
-func (s *gceOps) addResource(
-	sets map[string][]interface{},
-	disk *compute.Disk,
-	key string,
-) {
-	if s, ok := sets[key]; ok {
-		sets[key] = append(s, disk)
-	} else {
-		sets[key] = make([]interface{}, 0)
-		sets[key] = append(sets[key], disk)
-	}
-}
-
-func (s *gceOps) ApplyTags(diskName string,
+func (s *gceOps) ApplyTags(
+	diskName string,
 	labels map[string]string) (err error) {
 	d, err := s.service.Disks.Get(s.inst.Project, s.inst.Zone, diskName).Do()
 	if err != nil {
@@ -387,7 +375,7 @@ func (s *gceOps) Detach(devicePath string) (err error) {
 }
 
 func (s *gceOps) DeviceMappings() (map[string]string, error) {
-	instance, err := s.describe()
+	instance, err := s.describeinstance()
 	if err != nil {
 		return nil, err
 	}
@@ -416,7 +404,7 @@ func (s *gceOps) DevicePath(diskName string) (devicePath string, err error) {
 	}
 
 	var inst *compute.Instance
-	inst, err = s.describe()
+	inst, err = s.describeinstance()
 	if err != nil {
 		return
 	}
@@ -448,19 +436,19 @@ func (s *gceOps) Enumerate(
 	if err := req.Pages(ctx, func(page *compute.DiskList) error {
 		for _, disk := range page.Items {
 			if len(setIdentifier) == 0 {
-				s.addResource(sets, disk, storageops.SetIdentifierNone)
+				storageops.AddElementToMap(sets, disk, storageops.SetIdentifierNone)
 			} else {
 				found = false
 				for key := range disk.Labels {
 					if key == setIdentifier {
-						s.addResource(sets, disk, key)
+						storageops.AddElementToMap(sets, disk, key)
 						found = true
 						break
 					}
 				}
 
 				if !found {
-					s.addResource(sets, disk, storageops.SetIdentifierNone)
+					storageops.AddElementToMap(sets, disk, storageops.SetIdentifierNone)
 				}
 			}
 		}

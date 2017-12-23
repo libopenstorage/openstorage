@@ -103,7 +103,7 @@ func (s *ec2Ops) waitStatus(id string, desired string) error {
 	request := &ec2.DescribeVolumesInput{VolumeIds: []*string{&id}}
 	actual := ""
 
-	for retries, maxRetries := 0, 10; actual != desired && retries < maxRetries; retries++ {
+	for retries, maxRetries := 0, storageops.ProviderOpsMaxRetries; actual != desired && retries < maxRetries; retries++ {
 		awsVols, err := s.ec2.DescribeVolumes(request)
 		if err != nil {
 			return err
@@ -119,7 +119,7 @@ func (s *ec2Ops) waitStatus(id string, desired string) error {
 		if actual == desired {
 			break
 		}
-		time.Sleep(3 * time.Second)
+		time.Sleep(storageops.ProviderOpsRetryInterval)
 	}
 	if actual != desired {
 		return fmt.Errorf(
@@ -201,19 +201,6 @@ func (s *ec2Ops) matchTag(tag *ec2.Tag, match string) bool {
 		len(*tag.Key) != 0 &&
 		len(*tag.Value) != 0 &&
 		*tag.Key == match
-}
-
-func (s *ec2Ops) addResource(
-	sets map[string][]interface{},
-	vol *ec2.Volume,
-	key string,
-) {
-	if s, ok := sets[key]; ok {
-		sets[key] = append(s, vol)
-	} else {
-		sets[key] = make([]interface{}, 0)
-		sets[key] = append(sets[key], vol)
-	}
 }
 
 func (s *ec2Ops) DeviceMappings() (map[string]string, error) {
@@ -415,18 +402,18 @@ func (s *ec2Ops) Enumerate(
 			continue
 		}
 		if len(setIdentifier) == 0 {
-			s.addResource(sets, vol, storageops.SetIdentifierNone)
+			storageops.AddElementToMap(sets, vol, storageops.SetIdentifierNone)
 		} else {
 			found = false
 			for _, tag := range vol.Tags {
 				if s.matchTag(tag, setIdentifier) {
-					s.addResource(sets, vol, *tag.Value)
+					storageops.AddElementToMap(sets, vol, *tag.Value)
 					found = true
 					break
 				}
 			}
 			if !found {
-				s.addResource(sets, vol, storageops.SetIdentifierNone)
+				storageops.AddElementToMap(sets, vol, storageops.SetIdentifierNone)
 			}
 		}
 	}
