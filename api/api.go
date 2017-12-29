@@ -17,6 +17,7 @@ const (
 	SpecParent               = "parent"
 	SpecEphemeral            = "ephemeral"
 	SpecShared               = "shared"
+	SpecJournal              = "journal"
 	SpecNfs                  = "nfs"
 	SpecCascaded             = "cascaded"
 	SpecSticky               = "sticky"
