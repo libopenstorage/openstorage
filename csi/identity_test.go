@@ -32,7 +32,7 @@ func TestNewCSIServerGetPluginInfo(t *testing.T) {
 	defer s.Stop()
 
 	// Setup mock
-	s.MockDriver().EXPECT().Name().Return("mock").Times(1)
+	s.MockDriver().EXPECT().Name().Return("mock").Times(2)
 
 	// Make a call
 	c := csi.NewIdentityClient(s.Conn())
@@ -42,8 +42,9 @@ func TestNewCSIServerGetPluginInfo(t *testing.T) {
 	// Verify
 	name := r.GetName()
 	version := r.GetVendorVersion()
-	assert.Equal(t, name, csiDriverName)
+	assert.Equal(t, name, csiDriverNamePrefix+"mock")
 	assert.Equal(t, version, csiDriverVersion)
+
 	manifest := r.GetManifest()
 	assert.Len(t, manifest, 1)
 	assert.Equal(t, manifest["driver"], "mock")
