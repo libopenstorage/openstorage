@@ -1,12 +1,12 @@
-package testing
+package volume
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
 	"github.com/libopenstorage/openstorage/api"
-	client "github.com/libopenstorage/openstorage/api/client"
 	volumeclient "github.com/libopenstorage/openstorage/api/client/volume"
 	"github.com/libopenstorage/openstorage/api/server"
 	"github.com/libopenstorage/openstorage/volume"
@@ -21,21 +21,12 @@ import (
 	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
 )
 
-// testServer is a simple struct used abstract
-// the creation and setup of mock server
-type testServer struct {
-	client *client.Client
-	m      *mockdriver.MockVolumeDriver
-	c      *mockcluster.MockCluster
-	mc     *gomock.Controller
-}
-
 const (
-	host       string = "http://127.0.0.1:2376"
-	mgmtPort   uint16 = 2376
-	pluginPort uint16 = 2377
-	driver     string = "mock"
-	version    string = "v1"
+	host       = "http://127.0.0.1"
+	mgmtPort   = 2376
+	pluginPort = 2377
+	driver     = "mock"
+	version    = "v1"
 )
 
 // Init function to setup the http server
@@ -44,14 +35,18 @@ func init() {
 	startServer()
 }
 
+// contructs the base url with host and port
+func getBaseURL() string {
+	return host + ":" + strconv.Itoa(mgmtPort)
+}
+
 func startServer() {
-	err := server.StartVolumeMgmtAPI(
+
+	if err := server.StartVolumeMgmtAPI(
 		driver,
 		volume.DriverAPIBase,
 		mgmtPort,
-	)
-
-	if err != nil {
+	); err != nil {
 		dlog.Errorf("Error starting the server")
 	}
 
@@ -59,7 +54,7 @@ func startServer() {
 	time.Sleep(1 * time.Second)
 }
 
-func setupMocks() *testServer {
+func newMocks() *testServer {
 
 	var ts = &testServer{}
 
@@ -82,26 +77,15 @@ func setupMocks() *testServer {
 	return ts
 }
 
-func TestServerStart(t *testing.T) {
-
-	ts := setupMocks()
-	defer ts.Stop()
-
-	var err error
-	ts.client, err = volumeclient.NewDriverClient(host, driver, version, "")
-
-	assert.Nil(t, err)
-	assert.NotNil(t, ts.client)
-}
-
 func TestVolumeCreateSuccess(t *testing.T) {
 
+	baseURL := getBaseURL()
 	var err error
-	ts := setupMocks()
+	ts := newMocks()
 	defer ts.Stop()
 
 	// create a request
-	ts.client, err = volumeclient.NewDriverClient(host, driver, version, "")
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
 
 	assert.Nil(t, err)
 	assert.NotNil(t, ts.client)
@@ -118,12 +102,10 @@ func TestVolumeCreateSuccess(t *testing.T) {
 
 	// Setup mock functions
 	id := "myid"
-	gomock.InOrder(
-		ts.MockDriver().
-			EXPECT().
-			Create(gomock.Any(), gomock.Any(), gomock.Any()).
-			Return(id, nil),
-	)
+	ts.MockDriver().
+		EXPECT().
+		Create(req.GetLocator(), req.GetSource(), req.GetSpec()).
+		Return(id, nil)
 
 	// create a volume client
 	driverclient := volumeclient.VolumeDriver(ts.client)
@@ -137,24 +119,23 @@ func TestVolumeCreateSuccess(t *testing.T) {
 func TestVolumeCreateFailed(t *testing.T) {
 	var err error
 
-	ts := setupMocks()
+	ts := newMocks()
+
 	defer ts.Stop()
 
-	// create a request
-	ts.client, err = volumeclient.NewDriverClient(host, driver, version, "")
+	baseURL := getBaseURL()
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
 
 	assert.Nil(t, err)
 	assert.NotNil(t, ts.client)
 
-	// Setup mock functions
-	gomock.InOrder(
-		ts.MockDriver().
-			EXPECT().
-			Create(gomock.Any(), gomock.Any(), gomock.Any()).
-			Return("", fmt.Errorf("error in create")),
-	)
-
 	req := &api.VolumeCreateRequest{}
+
+	// Setup mock functions
+	ts.MockDriver().
+		EXPECT().
+		Create(req.GetLocator(), req.GetSource(), req.GetSpec()).
+		Return("", fmt.Errorf("error in create"))
 
 	// create a volume client
 	driverclient := volumeclient.VolumeDriver(ts.client)
@@ -162,28 +143,28 @@ func TestVolumeCreateFailed(t *testing.T) {
 	res, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
 
 	assert.NotNil(t, err)
-	assert.Empty(t, res)
+	assert.EqualValues(t, "", res)
+	assert.Contains(t, err.Error(), "error in create")
 }
 
 func TestVolumeDeleteSuccess(t *testing.T) {
-	ts := setupMocks()
+	ts := newMocks()
 
 	defer ts.Stop()
 
 	var err error
-	ts.client, err = volumeclient.NewDriverClient(host, driver, version, "")
+	baseURL := getBaseURL()
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
 
 	// Setup mock
 	id := "myid"
 
-	gomock.InOrder(
-		ts.MockDriver().
-			EXPECT().
-			Delete(id).
-			Return(nil).
-			Times(1),
-	)
+	ts.MockDriver().
+		EXPECT().
+		Delete(id).
+		Return(nil)
 
+	// create client
 	driverclient := volumeclient.VolumeDriver(ts.client)
 
 	err = driverclient.Delete(id)
@@ -192,34 +173,34 @@ func TestVolumeDeleteSuccess(t *testing.T) {
 
 func TestVolumeDeleteFailed(t *testing.T) {
 
-	ts := setupMocks()
+	ts := newMocks()
 
 	defer ts.Stop()
 
 	var err error
-	ts.client, err = volumeclient.NewDriverClient(host, driver, version, "")
+	baseURL := getBaseURL()
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
 
 	// Setup mock
 
 	id := "myid"
 
-	gomock.InOrder(
-		ts.MockDriver().
-			EXPECT().
-			Delete(gomock.Any()).
-			Return(fmt.Errorf("error in delete")).
-			Times(1),
-	)
+	ts.MockDriver().
+		EXPECT().
+		Delete(id).
+		Return(fmt.Errorf("error in delete"))
 
+	// create client
 	driverclient := volumeclient.VolumeDriver(ts.client)
 
 	err = driverclient.Delete(id)
 	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "error in delete")
 }
 
-func TestSnapshotCreateSuccess(t *testing.T) {
+func TestVolumeSnapshotCreateSuccess(t *testing.T) {
 
-	ts := setupMocks()
+	ts := newMocks()
 
 	defer ts.Stop()
 
@@ -227,7 +208,8 @@ func TestSnapshotCreateSuccess(t *testing.T) {
 	name := "snapName"
 
 	var err error
-	ts.client, err = volumeclient.NewDriverClient(host, driver, version, "")
+	baseURL := getBaseURL()
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
 
 	assert.Nil(t, err)
 
@@ -237,32 +219,67 @@ func TestSnapshotCreateSuccess(t *testing.T) {
 	}
 
 	//mock Snapshot call
-	gomock.InOrder(
-		ts.MockDriver().
-			EXPECT().
-			Snapshot(gomock.Any(), gomock.Any(), gomock.Any()).
-			Return(id, nil).
-			Times(1),
-	)
+	ts.MockDriver().
+		EXPECT().
+		Snapshot(req.GetId(), req.GetReadonly(), req.GetLocator()).
+		Return(id, nil)
 
-	//make the call
+	// create client
 	driverclient := volumeclient.VolumeDriver(ts.client)
 
 	res, err := driverclient.Snapshot(req.GetId(), req.GetReadonly(), req.GetLocator())
 
 	assert.Nil(t, err)
-	assert.Equal(t, id, res)
+	assert.EqualValues(t, id, res)
+
+}
+
+func TestVolumeSnapshotCreateFailed(t *testing.T) {
+
+	ts := newMocks()
+
+	defer ts.Stop()
+
+	id := "myid"
+	name := "snapName"
+
+	var err error
+	baseURL := getBaseURL()
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
+
+	assert.Nil(t, err)
+
+	req := &api.SnapCreateRequest{Id: id,
+		Locator:  &api.VolumeLocator{Name: name},
+		Readonly: true,
+	}
+
+	//mock Snapshot call
+	ts.MockDriver().
+		EXPECT().
+		Snapshot(req.GetId(), req.GetReadonly(), req.GetLocator()).
+		Return("", fmt.Errorf("error in snapshot create"))
+
+	// create client
+	driverclient := volumeclient.VolumeDriver(ts.client)
+
+	res, err := driverclient.Snapshot(req.GetId(), req.GetReadonly(), req.GetLocator())
+
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "error in snapshot create")
+	assert.EqualValues(t, "", res)
 
 }
 
 func TestVolumeInspectSuccess(t *testing.T) {
 
-	ts := setupMocks()
+	ts := newMocks()
 
 	defer ts.Stop()
 
 	var err error
-	ts.client, err = volumeclient.NewDriverClient(host, driver, version, "")
+	baseURL := getBaseURL()
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
 
 	assert.Nil(t, err)
 
@@ -270,24 +287,26 @@ func TestVolumeInspectSuccess(t *testing.T) {
 	var size uint64 = 1234
 	name := "inspectVol"
 
-	gomock.InOrder(
-		ts.MockDriver().
-			EXPECT().
-			Inspect([]string{id}).
-			Return([]*api.Volume{
-				&api.Volume{
-					Id: id,
-					Locator: &api.VolumeLocator{
-						Name: name,
-					},
-					Spec: &api.VolumeSpec{
-						Size: size,
-					},
+	ts.MockDriver().
+		EXPECT().
+		Inspect([]string{id}).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id: id,
+				Locator: &api.VolumeLocator{
+					Name: name,
 				},
-			}, nil).
-			Times(1),
-	)
+				Spec: &api.VolumeSpec{
+					Size:      size,
+					Encrypted: true,
+					Shared:    false,
+					Format:    api.FSType_FS_TYPE_EXT4,
+					HaLevel:   3,
+				},
+			},
+		}, nil)
 
+	// create client
 	driverclient := volumeclient.VolumeDriver(ts.client)
 
 	res, err := driverclient.Inspect([]string{id})
@@ -295,18 +314,49 @@ func TestVolumeInspectSuccess(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, res)
 	assert.NotEmpty(t, res)
-	assert.Equal(t, res[0].GetId(), id)
+	assert.EqualValues(t, res[0].GetId(), id)
+	assert.EqualValues(t, false, res[0].GetSpec().GetShared())
+	assert.EqualValues(t, 3, res[0].GetSpec().GetHaLevel())
 
 }
 
-func TestVolumeSetSuccess(t *testing.T) {
-
-	ts := setupMocks()
+func TestVolumeInspectFailed(t *testing.T) {
+	ts := newMocks()
 
 	defer ts.Stop()
 
 	var err error
-	ts.client, err = volumeclient.NewDriverClient(host, driver, version, "")
+	baseURL := getBaseURL()
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
+
+	assert.Nil(t, err)
+
+	id := "myid"
+
+	ts.MockDriver().
+		EXPECT().
+		Inspect([]string{id}).
+		Return([]*api.Volume{},
+			fmt.Errorf("error in inspect"))
+
+	// create client
+	driverclient := volumeclient.VolumeDriver(ts.client)
+
+	res, err := driverclient.Inspect([]string{id})
+
+	assert.NotNil(t, err)
+	assert.Nil(t, res)
+}
+
+func TestVolumeSetSuccess(t *testing.T) {
+
+	ts := newMocks()
+
+	defer ts.Stop()
+
+	var err error
+	baseURL := getBaseURL()
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
 
 	assert.Nil(t, err)
 
@@ -320,7 +370,8 @@ func TestVolumeSetSuccess(t *testing.T) {
 		Options: map[string]string{},
 		Action: &api.VolumeStateAction{
 			Attach: api.VolumeActionParam_VOLUME_ACTION_PARAM_ON,
-			Mount:  api.VolumeActionParam_VOLUME_ACTION_PARAM_ON},
+			Mount:  api.VolumeActionParam_VOLUME_ACTION_PARAM_ON,
+		},
 		Locator: &api.VolumeLocator{Name: name},
 		Spec:    &api.VolumeSpec{Size: size},
 	}
@@ -348,7 +399,6 @@ func TestVolumeSetSuccess(t *testing.T) {
 	)
 
 	// create driver client
-
 	driverclient := volumeclient.VolumeDriver(ts.client)
 
 	res := driverclient.Set(id, req.GetLocator(), req.GetSpec())
@@ -356,14 +406,57 @@ func TestVolumeSetSuccess(t *testing.T) {
 
 }
 
-func TestVolumeAttachSuccess(t *testing.T) {
+func TestVolumeSetFailed(t *testing.T) {
 
-	ts := setupMocks()
+	ts := newMocks()
 
 	defer ts.Stop()
 
 	var err error
-	ts.client, err = volumeclient.NewDriverClient(host, driver, version, "")
+	baseURL := getBaseURL()
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
+
+	assert.Nil(t, err)
+
+	// create a volume request
+
+	name := "myvol"
+	id := "myid"
+	size := uint64(10)
+
+	req := &api.VolumeSetRequest{
+		Options: map[string]string{},
+		Action: &api.VolumeStateAction{
+			Attach: api.VolumeActionParam_VOLUME_ACTION_PARAM_ON,
+			Mount:  api.VolumeActionParam_VOLUME_ACTION_PARAM_ON,
+		},
+		Locator: &api.VolumeLocator{Name: name},
+		Spec:    &api.VolumeSpec{Size: size},
+	}
+
+	ts.MockDriver().
+		EXPECT().
+		Set(id, req.GetLocator(), req.GetSpec()).
+		Return(fmt.Errorf("error in set"))
+
+	// create driver client
+	driverclient := volumeclient.VolumeDriver(ts.client)
+
+	res := driverclient.Set(id, req.GetLocator(), req.GetSpec())
+
+	assert.NotNil(t, res)
+	assert.Contains(t, res.Error(), "error in set")
+}
+
+func TestVolumeAttachSuccess(t *testing.T) {
+
+	ts := newMocks()
+
+	defer ts.Stop()
+
+	var err error
+	baseURL := getBaseURL()
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
 
 	assert.Nil(t, err)
 
@@ -374,7 +467,8 @@ func TestVolumeAttachSuccess(t *testing.T) {
 	req := &api.VolumeSetRequest{
 		Options: map[string]string{},
 		Action: &api.VolumeStateAction{
-			Attach: api.VolumeActionParam_VOLUME_ACTION_PARAM_ON},
+			Attach: api.VolumeActionParam_VOLUME_ACTION_PARAM_ON,
+		},
 		Locator: &api.VolumeLocator{Name: name},
 		Spec:    &api.VolumeSpec{Size: size},
 	}
@@ -402,7 +496,6 @@ func TestVolumeAttachSuccess(t *testing.T) {
 	)
 
 	// create driver client
-
 	driverclient := volumeclient.VolumeDriver(ts.client)
 
 	_, err = driverclient.Attach(id, req.GetOptions())
@@ -413,12 +506,13 @@ func TestVolumeAttachSuccess(t *testing.T) {
 
 func TestVolumeAttachFailed(t *testing.T) {
 
-	ts := setupMocks()
+	ts := newMocks()
 
 	defer ts.Stop()
 
 	var err error
-	ts.client, err = volumeclient.NewDriverClient(host, driver, version, "")
+	baseURL := getBaseURL()
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
 
 	assert.Nil(t, err)
 
@@ -429,20 +523,18 @@ func TestVolumeAttachFailed(t *testing.T) {
 	req := &api.VolumeSetRequest{
 		Options: map[string]string{},
 		Action: &api.VolumeStateAction{
-			Attach: api.VolumeActionParam_VOLUME_ACTION_PARAM_ON},
+			Attach: api.VolumeActionParam_VOLUME_ACTION_PARAM_ON,
+		},
 		Locator: &api.VolumeLocator{Name: name},
 		Spec:    &api.VolumeSpec{Size: size},
 	}
 
-	gomock.InOrder(
-		ts.MockDriver().
-			EXPECT().
-			Attach(id, gomock.Any()).
-			Return("", fmt.Errorf("some error")),
-	)
+	ts.MockDriver().
+		EXPECT().
+		Attach(id, gomock.Any()).
+		Return("", fmt.Errorf("some error"))
 
 	// create driver client
-
 	driverclient := volumeclient.VolumeDriver(ts.client)
 
 	_, err = driverclient.Attach(id, req.GetOptions())
@@ -454,12 +546,13 @@ func TestVolumeAttachFailed(t *testing.T) {
 
 func TestVolumeDetachSuccess(t *testing.T) {
 
-	ts := setupMocks()
+	ts := newMocks()
 
 	defer ts.Stop()
 
 	var err error
-	ts.client, err = volumeclient.NewDriverClient(host, driver, version, "")
+	baseURL := getBaseURL()
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
 
 	assert.Nil(t, err)
 
@@ -470,7 +563,8 @@ func TestVolumeDetachSuccess(t *testing.T) {
 	req := &api.VolumeSetRequest{
 		Options: map[string]string{},
 		Action: &api.VolumeStateAction{
-			Attach: api.VolumeActionParam_VOLUME_ACTION_PARAM_OFF},
+			Attach: api.VolumeActionParam_VOLUME_ACTION_PARAM_OFF,
+		},
 		Locator: &api.VolumeLocator{Name: name},
 		Spec:    &api.VolumeSpec{Size: size},
 	}
@@ -498,7 +592,6 @@ func TestVolumeDetachSuccess(t *testing.T) {
 	)
 
 	// create client
-
 	driverclient := volumeclient.VolumeDriver(ts.client)
 	res := driverclient.Detach(id, req.GetOptions())
 
@@ -507,12 +600,13 @@ func TestVolumeDetachSuccess(t *testing.T) {
 
 func TestVolumeDetachFailed(t *testing.T) {
 
-	ts := setupMocks()
+	ts := newMocks()
 
 	defer ts.Stop()
 
 	var err error
-	ts.client, err = volumeclient.NewDriverClient(host, driver, version, "")
+	baseURL := getBaseURL()
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
 
 	assert.Nil(t, err)
 
@@ -523,20 +617,18 @@ func TestVolumeDetachFailed(t *testing.T) {
 	req := &api.VolumeSetRequest{
 		Options: map[string]string{},
 		Action: &api.VolumeStateAction{
-			Attach: api.VolumeActionParam_VOLUME_ACTION_PARAM_OFF},
+			Attach: api.VolumeActionParam_VOLUME_ACTION_PARAM_OFF,
+		},
 		Locator: &api.VolumeLocator{Name: name},
 		Spec:    &api.VolumeSpec{Size: size},
 	}
 
-	gomock.InOrder(
-		ts.MockDriver().
-			EXPECT().
-			Detach(id, gomock.Any()).
-			Return(fmt.Errorf("Error in detaching")),
-	)
+	ts.MockDriver().
+		EXPECT().
+		Detach(id, gomock.Any()).
+		Return(fmt.Errorf("Error in detaching"))
 
 	// create client
-
 	driverclient := volumeclient.VolumeDriver(ts.client)
 	res := driverclient.Detach(id, req.GetOptions())
 
@@ -546,13 +638,14 @@ func TestVolumeDetachFailed(t *testing.T) {
 
 func TestVolumeMountSuccess(t *testing.T) {
 
-	ts := setupMocks()
+	ts := newMocks()
 
 	defer ts.Stop()
 
 	var err error
+	baseURL := getBaseURL()
 
-	ts.client, err = volumeclient.NewDriverClient(host, driver, version, "")
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
 	assert.Nil(t, err)
 
 	name := "myvol"
@@ -565,7 +658,8 @@ func TestVolumeMountSuccess(t *testing.T) {
 		Action: &api.VolumeStateAction{
 			Attach:    api.VolumeActionParam_VOLUME_ACTION_PARAM_ON,
 			Mount:     api.VolumeActionParam_VOLUME_ACTION_PARAM_ON,
-			MountPath: "/mnt"},
+			MountPath: "/mnt",
+		},
 		Locator: &api.VolumeLocator{Name: name},
 		Spec:    &api.VolumeSpec{Size: size},
 	}
@@ -594,7 +688,6 @@ func TestVolumeMountSuccess(t *testing.T) {
 	)
 
 	//create driverclient
-
 	driverclient := volumeclient.VolumeDriver(ts.client)
 	res := driverclient.Mount(id, req.GetAction().GetMountPath(), req.GetOptions())
 	assert.Nil(t, res)
@@ -602,13 +695,14 @@ func TestVolumeMountSuccess(t *testing.T) {
 
 func TestVolumeMountFailedNoMountPath(t *testing.T) {
 
-	ts := setupMocks()
+	ts := newMocks()
 
 	defer ts.Stop()
 
 	var err error
+	baseURL := getBaseURL()
 
-	ts.client, err = volumeclient.NewDriverClient(host, driver, version, "")
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
 	assert.Nil(t, err)
 
 	name := "myvol"
@@ -621,13 +715,13 @@ func TestVolumeMountFailedNoMountPath(t *testing.T) {
 		Action: &api.VolumeStateAction{
 			Attach:    api.VolumeActionParam_VOLUME_ACTION_PARAM_ON,
 			Mount:     api.VolumeActionParam_VOLUME_ACTION_PARAM_ON,
-			MountPath: ""},
+			MountPath: "",
+		},
 		Locator: &api.VolumeLocator{Name: name},
 		Spec:    &api.VolumeSpec{Size: size},
 	}
 
 	//create driverclient
-
 	driverclient := volumeclient.VolumeDriver(ts.client)
 	res := driverclient.Mount(id, req.GetAction().GetMountPath(), req.GetOptions())
 	assert.NotNil(t, res)
@@ -636,11 +730,13 @@ func TestVolumeMountFailedNoMountPath(t *testing.T) {
 
 func TestVolumeStatsSuccess(t *testing.T) {
 
-	ts := setupMocks()
+	ts := newMocks()
 	defer ts.Stop()
 
 	var err error
-	ts.client, err = volumeclient.NewDriverClient(host, driver, version, "")
+	baseURL := getBaseURL()
+
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
 	assert.Nil(t, err)
 
 	bytesUsed := uint64(1234)
@@ -655,9 +751,11 @@ func TestVolumeStatsSuccess(t *testing.T) {
 		Return(
 			&api.Stats{
 				BytesUsed:  bytesUsed,
-				WriteBytes: writeBytes},
+				WriteBytes: writeBytes,
+			},
 			nil)
 
+	// create client
 	driverclient := volumeclient.VolumeDriver(ts.client)
 
 	res, err := driverclient.Stats(id, true)
@@ -667,20 +765,838 @@ func TestVolumeStatsSuccess(t *testing.T) {
 
 }
 
-// MockDriver helper method.
-func (s *testServer) MockDriver() *mockdriver.MockVolumeDriver {
-	return s.m
+func TestVolumeStatsFailed(t *testing.T) {
+
+	ts := newMocks()
+	defer ts.Stop()
+
+	var err error
+	baseURL := getBaseURL()
+
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
+	assert.Nil(t, err)
+
+	id := "myid"
+
+	stats := &api.Stats{}
+
+	ts.MockDriver().
+		EXPECT().
+		Stats(id, true).
+		Return(stats,
+			fmt.Errorf("Failed to get stats"))
+
+	// create client
+	driverclient := volumeclient.VolumeDriver(ts.client)
+
+	res, err := driverclient.Stats(id, true)
+
+	assert.NotNil(t, err)
+	assert.ObjectsAreEqualValues(stats, res)
+	//assert.Contains(t, err.Error(), "Failed to get stats")
 }
 
-// MockCluster helper method.
-func (s *testServer) MockCluster() *mockcluster.MockCluster {
-	return s.c
+func TestVolumeUnmountSuccess(t *testing.T) {
+	ts := newMocks()
+	defer ts.Stop()
+
+	var err error
+	baseURL := getBaseURL()
+
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
+	assert.Nil(t, err)
+
+	name := "myvol"
+	id := "myid"
+	size := uint64(1000)
+
+	//create request
+	req := &api.VolumeSetRequest{
+		Options: map[string]string{},
+		Action: &api.VolumeStateAction{
+			Mount:     api.VolumeActionParam_VOLUME_ACTION_PARAM_OFF,
+			MountPath: "/mnt",
+		},
+		Locator: &api.VolumeLocator{Name: name},
+		Spec:    &api.VolumeSpec{Size: size},
+	}
+
+	gomock.InOrder(
+
+		ts.MockDriver().
+			EXPECT().
+			Unmount(id, gomock.Any(), gomock.Any()).
+			Return(nil),
+
+		ts.MockDriver().
+			EXPECT().
+			Inspect([]string{id}).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id: id,
+					Locator: &api.VolumeLocator{
+						Name: name,
+					},
+					Spec: &api.VolumeSpec{
+						Size: size,
+					},
+				},
+			}, nil),
+	)
+
+	// setup client
+	driverclient := volumeclient.VolumeDriver(ts.client)
+	res := driverclient.Unmount(id, req.GetAction().GetMountPath(), req.GetOptions())
+
+	assert.Nil(t, res)
+
 }
 
-// Stop method to to remove the driver and check mocks.
-func (s *testServer) Stop() {
-	// Remove from registry
-	volumedrivers.Remove("mock")
-	// Check mocks
-	s.mc.Finish()
+func TestVolumeUnmountFail(t *testing.T) {
+	ts := newMocks()
+	defer ts.Stop()
+
+	var err error
+	baseURL := getBaseURL()
+
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
+	assert.Nil(t, err)
+
+	name := "myvol"
+	id := "myid"
+	size := uint64(1000)
+
+	//create request
+	req := &api.VolumeSetRequest{
+		Options: map[string]string{},
+		Action: &api.VolumeStateAction{
+			Mount:     api.VolumeActionParam_VOLUME_ACTION_PARAM_OFF,
+			MountPath: "/mnt",
+		},
+		Locator: &api.VolumeLocator{Name: name},
+		Spec:    &api.VolumeSpec{Size: size},
+	}
+
+	ts.MockDriver().
+		EXPECT().
+		Unmount(id, gomock.Any(), gomock.Any()).
+		Return(fmt.Errorf("error in unmount"))
+
+	// setup client
+	driverclient := volumeclient.VolumeDriver(ts.client)
+	res := driverclient.Unmount(id, req.GetAction().GetMountPath(), req.GetOptions())
+
+	assert.NotNil(t, res)
+	assert.Contains(t, res.Error(), "error in unmount")
 }
+
+func TestVolumeQuiesceSuccess(t *testing.T) {
+
+	ts := newMocks()
+	defer ts.Stop()
+
+	var err error
+	baseURL := getBaseURL()
+
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
+	assert.Nil(t, err)
+
+	// volume instance
+	id := "myid"
+	//	name := "name"
+	//	size := uint64(1234)
+	quiesceid := "qid"
+	timeout := uint64(5)
+
+	ts.MockDriver().
+		EXPECT().
+		Quiesce(id, timeout, quiesceid).
+		Return(nil)
+
+	// create client
+	driverclient := volumeclient.VolumeDriver(ts.client)
+	res := driverclient.Quiesce(id, timeout, quiesceid)
+
+	assert.Nil(t, res)
+
+}
+
+func TestVolumeQuiesceFailed(t *testing.T) {
+
+	ts := newMocks()
+	defer ts.Stop()
+
+	var err error
+	baseURL := getBaseURL()
+
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
+	assert.Nil(t, err)
+
+	// volume instance
+	id := "myid"
+	quiesceid := "qid"
+	timeout := uint64(5)
+
+	ts.MockDriver().
+		EXPECT().
+		Quiesce(id, timeout, quiesceid).
+		Return(fmt.Errorf("error in quiesce"))
+
+	// create client
+	driverclient := volumeclient.VolumeDriver(ts.client)
+	res := driverclient.Quiesce(id, timeout, quiesceid)
+
+	assert.NotNil(t, res)
+	assert.Contains(t, res.Error(), "error in quiesce")
+
+}
+
+func TestVolumeUnquiesceSuccess(t *testing.T) {
+
+	ts := newMocks()
+	defer ts.Stop()
+
+	var err error
+	baseURL := getBaseURL()
+
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
+	assert.Nil(t, err)
+
+	id := "myid"
+
+	ts.MockDriver().
+		EXPECT().
+		Unquiesce(id).
+		Return(nil)
+
+	// create client
+	driverclient := volumeclient.VolumeDriver(ts.client)
+	res := driverclient.Unquiesce(id)
+
+	assert.Nil(t, res)
+}
+
+func TestVolumeUnquiesceFailed(t *testing.T) {
+
+	ts := newMocks()
+	defer ts.Stop()
+
+	var err error
+	baseURL := getBaseURL()
+
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
+	assert.Nil(t, err)
+
+	id := "myid"
+
+	ts.MockDriver().
+		EXPECT().
+		Unquiesce(id).
+		Return(fmt.Errorf("error in unquiesce"))
+
+	// create client
+	driverclient := volumeclient.VolumeDriver(ts.client)
+	res := driverclient.Unquiesce(id)
+
+	assert.NotNil(t, res)
+	assert.Contains(t, res.Error(), "error in unquiesce")
+}
+
+func TestVolumeRestoreSuccess(t *testing.T) {
+	ts := newMocks()
+	defer ts.Stop()
+
+	var err error
+	baseURL := getBaseURL()
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
+	assert.Nil(t, err)
+
+	snapID := "snapid"
+	volID := "volid"
+
+	ts.MockDriver().
+		EXPECT().
+		Restore(volID, snapID).
+		Return(nil)
+
+	// create client
+	driverclient := volumeclient.VolumeDriver(ts.client)
+	res := driverclient.Restore(volID, snapID)
+
+	assert.Nil(t, res)
+}
+
+func TestVolumeRestoreFailed(t *testing.T) {
+	ts := newMocks()
+	defer ts.Stop()
+
+	var err error
+	baseURL := getBaseURL()
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
+	assert.Nil(t, err)
+
+	snapID := "snapid"
+	volID := "volid"
+
+	ts.MockDriver().
+		EXPECT().
+		Restore(volID, snapID).
+		Return(fmt.Errorf("error in restore"))
+
+	// create client
+	driverclient := volumeclient.VolumeDriver(ts.client)
+	res := driverclient.Restore(volID, snapID)
+
+	assert.NotNil(t, res)
+	assert.Contains(t, res.Error(), "error in restore")
+}
+
+func TestVolumeUsedSizeSuccess(t *testing.T) {
+	ts := newMocks()
+	defer ts.Stop()
+
+	var err error
+	baseURL := getBaseURL()
+
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
+	assert.Nil(t, err)
+
+	volID := "myid"
+	usedSize := uint64(1234)
+
+	ts.MockDriver().
+		EXPECT().
+		UsedSize(volID).
+		Return(usedSize, nil)
+
+	// create client
+	driverclient := volumeclient.VolumeDriver(ts.client)
+	res, err := driverclient.UsedSize(volID)
+
+	assert.Nil(t, err)
+	assert.Equal(t, usedSize, res)
+
+}
+
+func TestVolumeUsedSizeFailed(t *testing.T) {
+	ts := newMocks()
+	defer ts.Stop()
+
+	var err error
+	baseURL := getBaseURL()
+
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
+	assert.Nil(t, err)
+
+	volID := "volid"
+	usedSize := uint64(1234)
+
+	ts.MockDriver().
+		EXPECT().
+		UsedSize(volID).
+		Return(usedSize, fmt.Errorf("Failed to get used size"))
+
+	// create client
+	driverclient := volumeclient.VolumeDriver(ts.client)
+	res, err := driverclient.UsedSize(volID)
+
+	assert.NotNil(t, err)
+	assert.Equal(t, uint64(0), res)
+	//	assert.Contains(t, err.Error(), "Failed to get used size")
+
+}
+
+func TestVolumeEnumerateSuccess(t *testing.T) {
+
+	ts := newMocks()
+	defer ts.Stop()
+
+	var err error
+	baseURL := getBaseURL()
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
+	assert.Nil(t, err)
+
+	// create volume locator
+
+	configLabel := make(map[string]string)
+	configLabel["config1"] = "c1"
+
+	name := "loc"
+	vl := &api.VolumeLocator{
+		Name: name,
+		VolumeLabels: map[string]string{
+			"dept": "auto",
+			"sub":  "geo",
+		},
+	}
+
+	id := "myid"
+	size := uint64(1234)
+
+	ts.MockDriver().
+		EXPECT().
+		Enumerate(vl, configLabel).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id:      id,
+				Locator: vl,
+				Spec: &api.VolumeSpec{
+					Size: size,
+				},
+			},
+		}, nil)
+
+	// create client
+	driverclient := volumeclient.VolumeDriver(ts.client)
+	res, err := driverclient.Enumerate(vl, configLabel)
+
+	assert.Nil(t, err)
+	assert.NotNil(t, res)
+
+	if res != nil {
+		assert.EqualValues(t, id, res[0].GetId())
+	}
+}
+
+func TestVolumeEnumerateFailed(t *testing.T) {
+
+	ts := newMocks()
+	defer ts.Stop()
+
+	var err error
+	baseURL := getBaseURL()
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
+	assert.Nil(t, err)
+
+	// create volume locator
+
+	configLabel := make(map[string]string)
+	configLabel["config1"] = "cnfig1"
+
+	name := "vol"
+	vl := &api.VolumeLocator{
+		Name: name,
+		VolumeLabels: map[string]string{
+			"class": "f9",
+		},
+	}
+
+	ts.MockDriver().
+		EXPECT().
+		Enumerate(vl, configLabel).
+		Return([]*api.Volume{},
+			fmt.Errorf("error in enumerate"))
+
+	// create client
+	driverclient := volumeclient.VolumeDriver(ts.client)
+	res, err := driverclient.Enumerate(vl, configLabel)
+
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "error in enumerate")
+	assert.Empty(t, res)
+
+}
+
+func TestVolumeSnapshotEnumerateSuccess(t *testing.T) {
+	ts := newMocks()
+	defer ts.Stop()
+
+	var err error
+	baseURL := getBaseURL()
+
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
+	assert.Nil(t, err)
+
+	ids := []string{
+		"snapid1",
+		"snapid2",
+	}
+
+	snapLabels := map[string]string{
+		"dept": "auto",
+		"sub":  "geo",
+	}
+
+	ts.MockDriver().
+		EXPECT().
+		SnapEnumerate(ids, snapLabels).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id: ids[0],
+				Locator: &api.VolumeLocator{
+					Name: "snap1",
+				},
+			},
+			&api.Volume{
+				Id: ids[1],
+				Locator: &api.VolumeLocator{
+					Name: "snap2",
+				},
+			},
+		}, nil)
+
+	// create client
+	driverclient := volumeclient.VolumeDriver(ts.client)
+	res, err := driverclient.SnapEnumerate(ids, snapLabels)
+
+	assert.Nil(t, err)
+	assert.NotNil(t, res)
+	assert.Len(t, res, 2)
+
+}
+
+func TestVolumeSnapshotEnumerateFailed(t *testing.T) {
+	ts := newMocks()
+	defer ts.Stop()
+
+	var err error
+	baseURL := getBaseURL()
+
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
+	assert.Nil(t, err)
+
+	ids := []string{
+		"snapid1",
+		"snapid2",
+	}
+
+	snapLabels := map[string]string{
+		"dept": "auto",
+		"sub":  "geo",
+	}
+
+	ts.MockDriver().
+		EXPECT().
+		SnapEnumerate(ids, snapLabels).
+		Return([]*api.Volume{},
+			fmt.Errorf("error in snap enumerate"))
+
+	// create client
+	driverclient := volumeclient.VolumeDriver(ts.client)
+	res, err := driverclient.SnapEnumerate(ids, snapLabels)
+
+	assert.NotNil(t, err)
+	assert.Empty(t, res)
+
+}
+func TestVolumeGetActiveRequestsSuccess(t *testing.T) {
+
+	ts := newMocks()
+	defer ts.Stop()
+
+	var err error
+	baseURL := getBaseURL()
+
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
+	assert.Nil(t, err)
+
+	acreqs := &api.ActiveRequests{
+		ActiveRequest: []*api.ActiveRequest{
+			&api.ActiveRequest{
+				ReqestKV: map[int64]string{
+					1: "vol1",
+				},
+			},
+			&api.ActiveRequest{
+				ReqestKV: map[int64]string{
+					2: "vol2",
+				},
+			},
+		},
+		RequestCount: 2,
+	}
+
+	ts.MockDriver().
+		EXPECT().
+		GetActiveRequests().
+		Return(acreqs, nil)
+
+	// create client
+	driverclient := volumeclient.VolumeDriver(ts.client)
+	res, err := driverclient.GetActiveRequests()
+
+	assert.Nil(t, err)
+	assert.EqualValues(t, 2, res.GetRequestCount())
+}
+
+func TestVolumeGetActiveRequestsFailed(t *testing.T) {
+
+	ts := newMocks()
+	defer ts.Stop()
+
+	var err error
+	baseURL := getBaseURL()
+
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
+	assert.Nil(t, err)
+
+	ts.MockDriver().
+		EXPECT().
+		GetActiveRequests().
+		Return(nil, fmt.Errorf("error in active requests"))
+
+	// create client
+	driverclient := volumeclient.VolumeDriver(ts.client)
+	res, err := driverclient.GetActiveRequests()
+
+	assert.NotNil(t, err)
+	assert.Nil(t, res)
+	assert.Contains(t, err.Error(), "error in active requests")
+}
+
+func TestCredsCreateSuccess(t *testing.T) {
+
+	ts := newMocks()
+	defer ts.Stop()
+
+	var err error
+	baseURL := getBaseURL()
+
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
+	assert.Nil(t, err)
+
+	// create a Creds request
+	credsmap := map[string]string{
+		"c1": "cred1",
+		"c2": "cred2",
+	}
+
+	// Creata cred request
+	cred := &api.CredCreateRequest{
+		InputParams: credsmap,
+	}
+
+	ts.MockDriver().
+		EXPECT().
+		CredsCreate(cred.InputParams).
+		Return("dummy-uuid", nil)
+
+	// create client
+	driverclient := volumeclient.VolumeDriver(ts.client)
+	res, err := driverclient.CredsCreate(credsmap)
+
+	assert.Nil(t, err)
+	assert.EqualValues(t, "dummy-uuid", res)
+}
+
+func TestCredsCreateFailed(t *testing.T) {
+
+	ts := newMocks()
+	defer ts.Stop()
+
+	var err error
+	baseURL := getBaseURL()
+
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
+	assert.Nil(t, err)
+
+	// create a Creds request
+	credsmap := map[string]string{
+		"c1": "cred1",
+		"c2": "cred2",
+	}
+
+	// Creata cred request
+	cred := &api.CredCreateRequest{
+		InputParams: credsmap,
+	}
+
+	ts.MockDriver().
+		EXPECT().
+		CredsCreate(cred.InputParams).
+		Return("", fmt.Errorf("error in creds create"))
+
+	// create client
+	driverclient := volumeclient.VolumeDriver(ts.client)
+	res, err := driverclient.CredsCreate(credsmap)
+
+	assert.NotNil(t, err)
+	assert.EqualValues(t, "", res)
+	assert.Contains(t, err.Error(), "error in creds create")
+}
+
+func TestCredsEnumerateSuccess(t *testing.T) {
+
+	ts := newMocks()
+	defer ts.Stop()
+
+	var err error
+	baseURL := getBaseURL()
+
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
+	assert.Nil(t, err)
+
+	// create a Creds request
+	credsmap := map[string]interface{}{
+		"c1": "cred1",
+		"c2": "cred2",
+	}
+
+	ts.MockDriver().
+		EXPECT().
+		CredsEnumerate().
+		Return(credsmap, nil)
+
+	// create client
+	driverclient := volumeclient.VolumeDriver(ts.client)
+	res, err := driverclient.CredsEnumerate()
+
+	assert.Nil(t, err)
+	assert.NotEmpty(t, res)
+	assert.EqualValues(t, "cred1", res["c1"])
+}
+
+func TestCredsEnumerateFailed(t *testing.T) {
+
+	ts := newMocks()
+	defer ts.Stop()
+
+	var err error
+	baseURL := getBaseURL()
+
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
+	assert.Nil(t, err)
+
+	// create a Creds request
+	credsmap := map[string]interface{}{}
+
+	ts.MockDriver().
+		EXPECT().
+		CredsEnumerate().
+		Return(credsmap, fmt.Errorf("error in creds enumerate"))
+
+	// create client
+	driverclient := volumeclient.VolumeDriver(ts.client)
+	res, err := driverclient.CredsEnumerate()
+
+	assert.NotNil(t, err)
+	assert.Empty(t, res)
+	//assert.Contains(t, err.Error(), "error in creds enumerate")
+}
+
+func TestCredsValidateSuccess(t *testing.T) {
+
+	ts := newMocks()
+	defer ts.Stop()
+
+	var err error
+	baseURL := getBaseURL()
+
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
+	assert.Nil(t, err)
+
+	// cred uuid
+	uuid := "dummy-validate-1101-uuid"
+
+	ts.MockDriver().
+		EXPECT().
+		CredsValidate(uuid).
+		Return(nil)
+
+	// create client
+	driverclient := volumeclient.VolumeDriver(ts.client)
+	err = driverclient.CredsValidate(uuid)
+
+	assert.Nil(t, err)
+}
+
+func TestCredsValidateFailed(t *testing.T) {
+
+	ts := newMocks()
+	defer ts.Stop()
+
+	var err error
+	baseURL := getBaseURL()
+
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
+	assert.Nil(t, err)
+
+	// cred uuid
+	uuid := "dummy-validate-1101-uuid"
+
+	ts.MockDriver().
+		EXPECT().
+		CredsValidate(uuid).
+		Return(fmt.Errorf("error in creds validate"))
+
+	// create client
+	driverclient := volumeclient.VolumeDriver(ts.client)
+	err = driverclient.CredsValidate(uuid)
+
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "error in creds validate")
+}
+
+/*
+func TestCredsDeleteSuccess(t *testing.T) {
+
+	ts := newMocks()
+	defer ts.Stop()
+
+	var err error
+	baseURL := getBaseURL()
+
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
+	assert.Nil(t, err)
+
+	uuid := "dummy-uuid"
+
+	ts.MockDriver().
+		EXPECT().
+		CredsDelete(uuid).
+		Return(nil)
+
+	// create client
+	driverclient := volumeclient.VolumeDriver(ts.client)
+	res := driverclient.CredsDelete(uuid)
+
+	assert.Nil(t, res)
+}
+
+func TestCredsDeleteFailedNoUUID(t *testing.T) {
+
+	ts := newMocks()
+	defer ts.Stop()
+
+	var err error
+	baseURL := getBaseURL()
+
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
+	assert.Nil(t, err)
+
+	uuid := ""
+
+	driverclient := volumeclient.VolumeDriver(ts.client)
+	res := driverclient.CredsDelete(uuid)
+
+	assert.NotNil(t, res)
+	assert.Contains(t, res.Error(), "Missing uuid param")
+}
+
+func TestCredsDeleteFailed(t *testing.T) {
+
+	ts := newMocks()
+	defer ts.Stop()
+
+	var err error
+	baseURL := getBaseURL()
+
+	ts.client, err = volumeclient.NewDriverClient(baseURL, driver, version, "")
+	assert.Nil(t, err)
+
+	uuid := "dummy-uuid"
+
+	ts.MockDriver().
+		EXPECT().
+		CredsDelete(uuid).
+		Return(fmt.Errorf("error in creds delete"))
+
+	// create client
+	driverclient := volumeclient.VolumeDriver(ts.client)
+	res := driverclient.CredsDelete(uuid)
+
+	assert.NotNil(t, res)
+	assert.Contains(t, "error in creds delete", res.Error())
+}
+
+*/
