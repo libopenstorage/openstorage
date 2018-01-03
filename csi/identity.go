@@ -22,8 +22,8 @@ import (
 )
 
 const (
-	csiDriverVersion = "0.1.0"
-	csiDriverName    = "csi-osd"
+	csiDriverVersion    = "0.1.0"
+	csiDriverNamePrefix = "com.openstorage."
 )
 
 var (
@@ -51,7 +51,7 @@ func (s *OsdCsiServer) GetPluginInfo(
 	context.Context,
 	*csi.GetPluginInfoRequest) (*csi.GetPluginInfoResponse, error) {
 	return &csi.GetPluginInfoResponse{
-		Name:          csiDriverName,
+		Name:          csiDriverNamePrefix + s.driver.Name(),
 		VendorVersion: csiDriverVersion,
 		Manifest: map[string]string{
 			"driver": s.driver.Name(),
