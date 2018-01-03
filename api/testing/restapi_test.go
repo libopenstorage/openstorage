@@ -1,4 +1,4 @@
-package volume
+package testing
 
 import (
 	"fmt"
@@ -852,7 +852,7 @@ func TestVolumeUnmountSuccess(t *testing.T) {
 
 }
 
-func TestVolumeUnmountFail(t *testing.T) {
+func TestVolumeUnmountFailed(t *testing.T) {
 	ts := newMocks()
 	defer ts.Stop()
 
@@ -1527,7 +1527,10 @@ func TestCredsValidateFailed(t *testing.T) {
 	assert.Contains(t, err.Error(), "error in creds validate")
 }
 
-/*
+// TODO
+
+// TestCases related to issues : #259 ,
+
 func TestCredsDeleteSuccess(t *testing.T) {
 
 	ts := newMocks()
@@ -1598,5 +1601,3 @@ func TestCredsDeleteFailed(t *testing.T) {
 	assert.NotNil(t, res)
 	assert.Contains(t, "error in creds delete", res.Error())
 }
-
-*/
