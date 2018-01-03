@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/libopenstorage/openstorage/pkg/storageops"
+	"github.com/portworx/sched-ops/task"
 )
 
 type ec2Ops struct {
@@ -103,30 +104,37 @@ func (s *ec2Ops) waitStatus(id string, desired string) error {
 	request := &ec2.DescribeVolumesInput{VolumeIds: []*string{&id}}
 	actual := ""
 
-	for retries, maxRetries := 0, storageops.ProviderOpsMaxRetries; actual != desired && retries < maxRetries; retries++ {
-		awsVols, err := s.ec2.DescribeVolumes(request)
-		if err != nil {
-			return err
-		}
-		if len(awsVols.Volumes) != 1 {
-			return fmt.Errorf("expected one volume %v got %v",
-				id, len(awsVols.Volumes))
-		}
-		if awsVols.Volumes[0].State == nil {
-			return fmt.Errorf("Nil volume state for %v", id)
-		}
-		actual = *awsVols.Volumes[0].State
-		if actual == desired {
-			break
-		}
-		time.Sleep(storageops.ProviderOpsRetryInterval)
-	}
-	if actual != desired {
-		return fmt.Errorf(
-			"Volume %v did not transition to %v current state %v",
-			id, desired, actual)
-	}
-	return nil
+	_, err := task.DoRetryWithTimeout(
+		func() (interface{}, bool, error) {
+			awsVols, err := s.ec2.DescribeVolumes(request)
+			if err != nil {
+				return nil, true, err
+			}
+
+			if len(awsVols.Volumes) != 1 {
+				return nil, true, fmt.Errorf("expected one volume %v got %v",
+					id, len(awsVols.Volumes))
+			}
+
+			if awsVols.Volumes[0].State == nil {
+				return nil, true, fmt.Errorf("Nil volume state for %v", id)
+			}
+
+			actual = *awsVols.Volumes[0].State
+			if actual == desired {
+				return nil, false, nil
+			}
+
+			return nil, true, fmt.Errorf(
+				"Volume %v did not transition to %v current state %v",
+				id, desired, actual)
+
+		},
+		storageops.ProviderOpsTimeout,
+		storageops.ProviderOpsRetryInterval)
+
+	return err
+
 }
 
 func (s *ec2Ops) waitAttachmentStatus(
@@ -342,14 +350,14 @@ func (s *ec2Ops) available(v *ec2.Volume) bool {
 	return *v.State == ec2.VolumeStateAvailable
 }
 
-func (s *ec2Ops) GetDeviceID(vol interface{}) string {
-	v, ok := vol.(*ec2.Volume)
-	if !ok {
-		logrus.Errorf("Invalid volume given to GetDeviceID API")
-		return ""
+func (s *ec2Ops) GetDeviceID(vol interface{}) (string, error) {
+	if d, ok := vol.(*ec2.Volume); ok {
+		return *d.VolumeId, nil
+	} else if d, ok := vol.(*ec2.Snapshot); ok {
+		return *d.SnapshotId, nil
+	} else {
+		return "", fmt.Errorf("invalid type: %v given to GetDeviceID", vol)
 	}
-
-	return *v.VolumeId
 }
 
 func (s *ec2Ops) Inspect(volumeIds []*string) ([]interface{}, error) {
@@ -530,6 +538,15 @@ func (s *ec2Ops) Snapshot(
 		VolumeId: &volumeID,
 	}
 	return s.ec2.CreateSnapshot(request)
+}
+
+func (s *ec2Ops) SnapshotDelete(snapID string) error {
+	request := &ec2.DeleteSnapshotInput{
+		SnapshotId: &snapID,
+	}
+
+	_, err := s.ec2.DeleteSnapshot(request)
+	return err
 }
 
 func (s *ec2Ops) DevicePath(volumeID string) (string, error) {

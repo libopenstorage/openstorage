@@ -8,6 +8,9 @@ const ProviderOpsMaxRetries = 10
 // ProviderOpsRetryInterval is the time to wait before each retry of provider ops
 const ProviderOpsRetryInterval = 3 * time.Second
 
+// ProviderOpsTimeout is the default timeout of storage provider ops
+const ProviderOpsTimeout = time.Minute
+
 // AddElementToMap adds to the given 'elem' to the 'sets' map with given 'key'
 func AddElementToMap(
 	sets map[string][]interface{},

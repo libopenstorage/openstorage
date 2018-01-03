@@ -18,6 +18,7 @@ func RunTest(drivers map[string]storageops.Ops,
 		for _, template := range diskTemplates[d.Name()] {
 			disk := create(t, d, template)
 			diskName := id(t, d, disk)
+			snapshot(t, d, diskName)
 			tags(t, d, diskName)
 			enumerate(t, d, diskName)
 			inspect(t, d, diskName)
@@ -42,9 +43,23 @@ func create(t *testing.T, driver storageops.Ops, template interface{}) interface
 }
 
 func id(t *testing.T, driver storageops.Ops, disk interface{}) string {
-	id := driver.GetDeviceID(disk)
+	id, err := driver.GetDeviceID(disk)
+	require.NoError(t, err, "failed to get disk ID")
 	require.NotEmpty(t, id, "got empty disk name/ID")
 	return id
+}
+
+func snapshot(t *testing.T, driver storageops.Ops, diskName string) {
+	snap, err := driver.Snapshot(diskName, true)
+	require.NoError(t, err, "failed to create snapshot")
+	require.NotEmpty(t, snap, "got empty snapshot from create API")
+
+	snapID, err := driver.GetDeviceID(snap)
+	require.NoError(t, err, "failed to get snapshot ID")
+	require.NotEmpty(t, snapID, "got empty snapshot name/ID")
+
+	err = driver.SnapshotDelete(snapID)
+	require.NoError(t, err, "failed to delete snapshot")
 }
 
 func tags(t *testing.T, driver storageops.Ops, diskName string) {
