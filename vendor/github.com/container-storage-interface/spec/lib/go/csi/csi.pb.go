@@ -73,9 +73,11 @@ type VolumeCapability_AccessMode_Mode int32
 
 const (
 	VolumeCapability_AccessMode_UNKNOWN VolumeCapability_AccessMode_Mode = 0
-	// Can be published as read/write at one node at a time.
+	// Can only be published once as read/write on a single node, at
+	// any given time.
 	VolumeCapability_AccessMode_SINGLE_NODE_WRITER VolumeCapability_AccessMode_Mode = 1
-	// Can be published as readonly at one node at a time.
+	// Can only be published once as readonly on a single node, at
+	// any given time.
 	VolumeCapability_AccessMode_SINGLE_NODE_READER_ONLY VolumeCapability_AccessMode_Mode = 2
 	// Can be published as readonly at multiple nodes simultaneously.
 	VolumeCapability_AccessMode_MULTI_NODE_READER_ONLY VolumeCapability_AccessMode_Mode = 3
@@ -245,7 +247,13 @@ func (m *GetPluginInfoRequest) GetVersion() *Version {
 }
 
 type GetPluginInfoResponse struct {
-	// This field is REQUIRED.
+	// The name MUST follow reverse domain name notation format
+	// (https://en.wikipedia.org/wiki/Reverse_domain_name_notation).
+	// It SHOULD include the plugin's host company name and the plugin
+	// name, to minimize the possibility of collisions. It MUST be 63
+	// characters or less, beginning and ending with an alphanumeric
+	// character ([a-z0-9A-Z]) with dashes (-), underscores (_),
+	// dots (.), and alphanumerics between. This field is REQUIRED.
 	Name string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
 	// This field is REQUIRED. Value of this field is opaque to the CO.
 	VendorVersion string `protobuf:"bytes,2,opt,name=vendor_version,json=vendorVersion" json:"vendor_version,omitempty"`
@@ -732,10 +740,8 @@ type ControllerPublishVolumeRequest struct {
 	// The ID of the volume to be used on a node.
 	// This field is REQUIRED.
 	VolumeId string `protobuf:"bytes,2,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
-	// The ID of the node. This field is OPTIONAL. The CO SHALL set (or
-	// clear) this field to match the node ID returned by `GetNodeID`.
-	// `GetNodeID` is allowed to omit node ID from a successful response;
-	// in such cases the CO SHALL NOT specify this field.
+	// The ID of the node. This field is REQUIRED. The CO SHALL set this
+	// field to match the node ID returned by `GetNodeID`.
 	NodeId string `protobuf:"bytes,3,opt,name=node_id,json=nodeId" json:"node_id,omitempty"`
 	// The capability of the volume the CO expects the volume to have.
 	// This is a REQUIRED field.
@@ -843,15 +849,11 @@ type ControllerUnpublishVolumeRequest struct {
 	Version *Version `protobuf:"bytes,1,opt,name=version" json:"version,omitempty"`
 	// The ID of the volume. This field is REQUIRED.
 	VolumeId string `protobuf:"bytes,2,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
-	// The ID of the node. This field is OPTIONAL. The CO SHALL set (or
-	// clear) this field to match the node ID returned by `GetNodeID`.
-	// `GetNodeID` is allowed to omit node ID from a successful response;
-	// in such cases the CO SHALL NOT specify this field.
-	//
-	// If `GetNodeID` does not omit node ID from a successful response,
-	// the CO MAY omit this field as well, indicating that it does not
-	// know which node the volume was previously used. The Plugin SHOULD
-	// return an Error if this is not supported.
+	// The ID of the node. This field is OPTIONAL. The CO SHOULD set this
+	// field to match the node ID returned by `GetNodeID` or leave it
+	// unset. If the value is set, the SP MUST unpublish the volume from
+	// the specified node. If the value is unset, the SP MUST unpublish
+	// the volume from all nodes it is published to.
 	NodeId string `protobuf:"bytes,3,opt,name=node_id,json=nodeId" json:"node_id,omitempty"`
 	// End user credentials used to authenticate/authorize controller
 	// unpublish request.
@@ -1344,6 +1346,8 @@ type NodePublishVolumeRequest struct {
 	// The path to which the volume will be published. It MUST be an
 	// absolute path in the root filesystem of the process serving this
 	// request. The CO SHALL ensure uniqueness of target_path per volume.
+	// The CO SHALL ensure that the path exists, and that the process
+	// serving the request has `read` and `write` permissions to the path.
 	// This is a REQUIRED field.
 	TargetPath string `protobuf:"bytes,4,opt,name=target_path,json=targetPath" json:"target_path,omitempty"`
 	// The capability of the volume the CO expects the volume to have.
@@ -1525,10 +1529,9 @@ func (m *GetNodeIDRequest) GetVersion() *Version {
 }
 
 type GetNodeIDResponse struct {
-	// The ID of the node which SHALL be used by CO in
-	// `ControllerPublishVolume`. This is an OPTIONAL field. If unset,
-	// the CO SHALL leave the `node_id` field unset in
-	// `ControllerPublishVolume`.
+	// The ID of the node as understood by the SP which SHALL be used by
+	// CO in subsequent `ControllerPublishVolume`.
+	// This is a REQUIRED field.
 	NodeId string `protobuf:"bytes,1,opt,name=node_id,json=nodeId" json:"node_id,omitempty"`
 }
 
