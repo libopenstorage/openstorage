@@ -204,6 +204,54 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 	return &csi.NodeUnpublishVolumeResponse{}, nil
 }
 
+// NodeProbe is a CSI API function which asks the driver to check if the
+// node has all the necessary components to run successfully.
+func (s *OsdCsiServer) NodeProbe(
+	ctx context.Context,
+	req *csi.NodeProbeRequest,
+) (*csi.NodeProbeResponse, error) {
+
+	dlog.Debugf("NodeProbe req[%#v]", req)
+
+	// Check arguments
+	if req.GetVersion() == nil {
+		return nil, status.Error(codes.InvalidArgument, "Version must be provided")
+	}
+
+	// TBD(lpabon) Here we can add support
+	// to scan th system in a future patch.
+
+	// For now return 'ok'.
+	return &csi.NodeProbeResponse{}, nil
+}
+
+// NodeGetCapabilities is a CSI API function which seems to be setup for
+// future patches
+func (s *OsdCsiServer) NodeGetCapabilities(
+	ctx context.Context,
+	req *csi.NodeGetCapabilitiesRequest,
+) (*csi.NodeGetCapabilitiesResponse, error) {
+
+	dlog.Debugf("NodeGetCapabilities req[%#v]", req)
+
+	// Check arguments
+	if req.GetVersion() == nil {
+		return nil, status.Error(codes.InvalidArgument, "Version must be provided")
+	}
+
+	return &csi.NodeGetCapabilitiesResponse{
+		Capabilities: []*csi.NodeServiceCapability{
+			{
+				Type: &csi.NodeServiceCapability_Rpc{
+					Rpc: &csi.NodeServiceCapability_RPC{
+						Type: csi.NodeServiceCapability_RPC_UNKNOWN,
+					},
+				},
+			},
+		},
+	}, nil
+}
+
 func verifyTargetLocation(targetPath string) error {
 	fileInfo, err := os.Stat(targetPath)
 	if err != nil && os.IsNotExist(err) {
@@ -220,12 +268,3 @@ func verifyTargetLocation(targetPath string) error {
 
 	return nil
 }
-
-/*
-type NodeServer interface {
-	NodePublishVolume(context.Context, *NodePublishVolumeRequest) (*NodePublishVolumeResponse, error)
-	NodeUnpublishVolume(context.Context, *NodeUnpublishVolumeRequest) (*NodeUnpublishVolumeResponse, error)
-	NodeProbe(context.Context, *NodeProbeRequest) (*NodeProbeResponse, error)
-	NodeGetCapabilities(context.Context, *NodeGetCapabilitiesRequest) (*NodeGetCapabilitiesResponse, error)
-}
-*/
