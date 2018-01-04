@@ -34,8 +34,8 @@ type Ops interface {
 	Name() string
 	// Create volume based on input template volume and also apply given labels.
 	Create(template interface{}, labels map[string]string) (interface{}, error)
-	// GetDeviceID returns ID/Name of the given device/disk
-	GetDeviceID(template interface{}) string
+	// GetDeviceID returns ID/Name of the given device/disk or snapshot
+	GetDeviceID(template interface{}) (string, error)
 	// Attach volumeID.
 	// Return attach path.
 	Attach(volumeID string) (string, error)
@@ -62,6 +62,8 @@ type Ops interface {
 	DevicePath(volumeID string) (string, error)
 	// Snapshot the volume with given volumeID
 	Snapshot(volumeID string, readonly bool) (interface{}, error)
+	// SnapshotDelete deletes the snapshot with given ID
+	SnapshotDelete(snapID string) error
 	// ApplyTags will apply given labels/tags on the given volume
 	ApplyTags(volumeID string, labels map[string]string) error
 	// RemoveTags removes labels/tags from the given volume

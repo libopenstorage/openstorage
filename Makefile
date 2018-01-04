@@ -122,6 +122,10 @@ docker-test: docker-build-osd-dev
 		-e AWS_INSTANCE_NAME \
 		-e AWS_ACCESS_KEY_ID \
 		-e AWS_SECRET_ACCESS_KEY \
+		-e GOOGLE_APPLICATION_CREDENTIALS \
+		-e GCE_INSTANCE_NAME \
+		-e GCE_INSTANCE_ZONE \
+		-e GCE_INSTANCE_PROJECT \
 		-e "TAGS=$(TAGS)" \
 		-e "PKGS=$(PKGS)" \
 		-e "BUILDFLAGS=$(BUILDFLAGS)" \
