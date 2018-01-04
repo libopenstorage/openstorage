@@ -39,34 +39,30 @@ type instance struct {
 	ExternalIP string
 	LBRequest  string
 	ClientIP   string
-	Error      string
-}
-
-type assigner struct {
-	err error
 }
 
 // IsDevMode checks if the pkg is invoked in developer mode where GCE credentials
 // are set as env variables
 func IsDevMode() bool {
 	var i = new(instance)
-	gceInfoFromEnv(i)
-	return len(i.Error) == 0
+	err := gceInfoFromEnv(i)
+	return err == nil
 }
 
 // NewClient creates a new GCE operations client
 func NewClient() (storageops.Ops, error) {
 	var i = new(instance)
+	var err error
 	if metadata.OnGCE() {
-		gceInfo(i)
+		err = gceInfo(i)
 	} else if ok := IsDevMode(); ok {
-		gceInfoFromEnv(i)
+		err = gceInfoFromEnv(i)
 	} else {
 		return nil, fmt.Errorf("instance is not running on GCE")
 	}
 
-	if len(i.Error) != 0 {
-		return nil, fmt.Errorf("error while fetching instance information. Err: %v", i.Error)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching instance info. Err: %v", err)
 	}
 
 	c, err := google.DefaultClient(context.Background(), compute.ComputeScope)
@@ -465,44 +461,65 @@ func (s *gceOps) describeinstance() (*compute.Instance, error) {
 	return s.service.Instances.Get(s.inst.Project, s.inst.Zone, s.inst.Name).Do()
 }
 
-func (a *assigner) assign(getVal func() (string, error)) string {
-	if a.err != nil {
-		return ""
-	}
-
-	s, err := getVal()
-	if err != nil {
-		a.err = err
-	}
-
-	return s
-}
-
 // gceInfo fetches the GCE instance metadata from the metadata server
-func gceInfo(inst *instance) {
-	a := &assigner{}
-	inst.ID = a.assign(metadata.InstanceID)
-	inst.Zone = a.assign(metadata.Zone)
-	inst.Name = a.assign(metadata.InstanceName)
-	inst.Hostname = a.assign(metadata.Hostname)
-	inst.Project = a.assign(metadata.ProjectID)
-	inst.InternalIP = a.assign(metadata.InternalIP)
-	inst.ExternalIP = a.assign(metadata.ExternalIP)
-
-	if a.err != nil {
-		inst.Error = a.err.Error()
+func gceInfo(inst *instance) error {
+	var err error
+	inst.ID, err = metadata.InstanceID()
+	if err != nil {
+		return err
 	}
+
+	inst.Zone, err = metadata.Zone()
+	if err != nil {
+		return err
+	}
+
+	inst.Name, err = metadata.InstanceName()
+	if err != nil {
+		return err
+	}
+
+	inst.Hostname, err = metadata.Hostname()
+	if err != nil {
+		return err
+	}
+
+	inst.Project, err = metadata.ProjectID()
+	if err != nil {
+		return err
+	}
+
+	inst.InternalIP, err = metadata.InternalIP()
+	if err != nil {
+		return err
+	}
+
+	inst.ExternalIP, err = metadata.ExternalIP()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func gceInfoFromEnv(inst *instance) {
-	a := &assigner{}
-	inst.Name = a.assign(func() (string, error) { return getEnvValueStrict("GCE_INSTANCE_NAME") })
-	inst.Zone = a.assign(func() (string, error) { return getEnvValueStrict("GCE_INSTANCE_ZONE") })
-	inst.Project = a.assign(func() (string, error) { return getEnvValueStrict("GCE_INSTANCE_PROJECT") })
-
-	if a.err != nil {
-		inst.Error = a.err.Error()
+func gceInfoFromEnv(inst *instance) error {
+	var err error
+	inst.Name, err = getEnvValueStrict("GCE_INSTANCE_NAME")
+	if err != nil {
+		return err
 	}
+
+	inst.Zone, err = getEnvValueStrict("GCE_INSTANCE_ZONE")
+	if err != nil {
+		return err
+	}
+
+	inst.Project, err = getEnvValueStrict("GCE_INSTANCE_PROJECT")
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func getEnvValueStrict(key string) (string, error) {
