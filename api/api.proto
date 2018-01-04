@@ -273,8 +273,10 @@ message VolumeSpec {
   bool compressed = 23;
   // Cascaded is true if this volume can be populated on any node from an external source.
   bool cascaded = 24;
+  // Journal is true if data for the volume goes into the journal.
+  bool journal = 25;
   // Nfs is true if this volume can be accessed via nfs.
-  bool nfs = 25;
+  bool nfs = 26;
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure 

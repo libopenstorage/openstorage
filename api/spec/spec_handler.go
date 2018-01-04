@@ -51,7 +51,6 @@ type SpecHandler interface {
 	// 	(resultant_VolumeSpec, source, locator, nil)
 	// If the options have invalid values then it returns:
 	//	(nil, nil, nil, error)
-
 	SpecFromOpts(opts map[string]string) (
 		*api.VolumeSpec,
 		*api.VolumeLocator,
@@ -87,6 +86,7 @@ var (
 	haRegex         = regexp.MustCompile(api.SpecHaLevel + "=([0-9]+),?")
 	cosRegex        = regexp.MustCompile(api.SpecPriority + "=([A-Za-z]+),?")
 	sharedRegex     = regexp.MustCompile(api.SpecShared + "=([A-Za-z]+),?")
+	journalRegex    = regexp.MustCompile(api.SpecJournal + "=([A-Za-z]+),?")
 	nfsRegex        = regexp.MustCompile(api.SpecNfs + "=([A-Za-z]+),?")
 	cascadedRegex   = regexp.MustCompile(api.SpecCascaded + "=([A-Za-z]+),?")
 	passphraseRegex = regexp.MustCompile(api.SpecPassphrase + "=([0-9A-Za-z_@./#&+-]+),?")
@@ -238,6 +238,12 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			} else {
 				spec.Shared = shared
 			}
+		case api.SpecJournal:
+			if journal, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.Journal = journal
+			}
 		case api.SpecNfs:
 			if nfs, err := strconv.ParseBool(v); err != nil {
 				return nil, nil, nil, err
@@ -353,6 +359,9 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, shared := d.getVal(sharedRegex, str); ok {
 		opts[api.SpecShared] = shared
+	}
+	if ok, journal := d.getVal(journalRegex, str); ok {
+		opts[api.SpecJournal] = journal
 	}
 	if ok, nfs := d.getVal(nfsRegex, str); ok {
 		opts[api.SpecNfs] = nfs
