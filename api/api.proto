@@ -95,6 +95,7 @@ enum IoProfile {
   IO_PROFILE_RANDOM= 1;
   IO_PROFILE_DB = 2;
   IO_PROFILE_DB_REMOTE = 3;
+  IO_PROFILE_CMS = 4;
 }
 
 // VolumeState represents the state of a volume.
