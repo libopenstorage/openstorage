@@ -1203,6 +1203,12 @@
 			"revisionTime": "2017-03-16T21:40:37Z"
 		},
 		{
+			"checksumSHA1": "XDeteytxpf2kmvacQSYeE3DP40M=",
+			"path": "github.com/portworx/sched-ops/task",
+			"revision": "c094460d48400feee828bc2eea5e535d0cd33d40",
+			"revisionTime": "2018-01-04T01:57:43Z"
+		},
+		{
 			"checksumSHA1": "hu0MsbTdFzZxNRyAxe2HmTFFFak=",
 			"path": "github.com/prometheus/client_golang/prometheus",
 			"revision": "5cec1d0429b02e4323e042eb04dafdb079ddf568",
