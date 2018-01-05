@@ -980,6 +980,127 @@ func TestControllerCreateVolumeInvalidArguments(t *testing.T) {
 	assert.Contains(t, serverError.Message(), "cannot be zero")
 }
 
+func TestControllerCreateVolumeFoundByVolumeFromNameConflict(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	// Setup request
+	tests := []struct {
+		name string
+		req  *csi.CreateVolumeRequest
+		ret  *api.Volume
+	}{
+		{
+			name: "size",
+			req: &csi.CreateVolumeRequest{
+				Version: &csi.Version{},
+				Name:    "size",
+				VolumeCapabilities: []*csi.VolumeCapability{
+					&csi.VolumeCapability{},
+				},
+				CapacityRange: &csi.CapacityRange{
+
+					// Requested size does not match volume size
+					RequiredBytes: 1000,
+				},
+			},
+			ret: &api.Volume{
+				Id: "size",
+				Locator: &api.VolumeLocator{
+					Name: "size",
+				},
+				Spec: &api.VolumeSpec{
+
+					// Size is different
+					Size: 10,
+				},
+			},
+		},
+		{
+			name: "shared",
+			req: &csi.CreateVolumeRequest{
+				Version: &csi.Version{},
+				Name:    "shared",
+				VolumeCapabilities: []*csi.VolumeCapability{
+					&csi.VolumeCapability{
+						AccessMode: &csi.VolumeCapability_AccessMode{
+
+							// Set as a shared volume
+							Mode: csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER,
+						},
+					},
+				},
+				CapacityRange: &csi.CapacityRange{
+					RequiredBytes: 10,
+				},
+			},
+			ret: &api.Volume{
+				Id: "shared",
+				Locator: &api.VolumeLocator{
+					Name: "shared",
+				},
+				Spec: &api.VolumeSpec{
+					Size: 10,
+
+					// Set as non-shared.
+					Shared: false,
+				},
+			},
+		},
+		{
+			name: "parent",
+			req: &csi.CreateVolumeRequest{
+				Version: &csi.Version{},
+				Name:    "parent",
+				VolumeCapabilities: []*csi.VolumeCapability{
+					&csi.VolumeCapability{},
+				},
+				CapacityRange: &csi.CapacityRange{
+					RequiredBytes: 10,
+				},
+				Parameters: map[string]string{
+					"parent": "notmyparent",
+				},
+			},
+			ret: &api.Volume{
+				Id: "parent",
+				Locator: &api.VolumeLocator{
+					Name: "parent",
+				},
+				Spec: &api.VolumeSpec{
+					Size: 10,
+				},
+				Source: &api.Source{
+					Parent: "myparent",
+				},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		gomock.InOrder(
+			s.MockDriver().
+				EXPECT().
+				Inspect([]string{test.name}).
+				Return(nil, fmt.Errorf("not found")).
+				Times(1),
+
+			s.MockDriver().
+				EXPECT().
+				Enumerate(&api.VolumeLocator{Name: test.name}, nil).
+				Return([]*api.Volume{test.ret}, nil).
+				Times(1),
+		)
+		_, err := c.CreateVolume(context.Background(), test.req)
+		assert.Error(t, err)
+		serverError, ok := status.FromError(err)
+		assert.True(t, ok)
+		assert.Equal(t, serverError.Code(), codes.AlreadyExists)
+	}
+}
+
 func TestControllerCreateVolumeFoundByVolumeFromName(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
@@ -1056,21 +1177,6 @@ func TestControllerCreateVolumeBadParameters(t *testing.T) {
 			api.SpecFilesystem: "whatkindoffsisthis?",
 		},
 	}
-
-	// Volume is already being created and found by calling VolumeFromName
-	gomock.InOrder(
-		s.MockDriver().
-			EXPECT().
-			Inspect([]string{name}).
-			Return(nil, fmt.Errorf("not found")).
-			Times(1),
-
-		s.MockDriver().
-			EXPECT().
-			Enumerate(&api.VolumeLocator{Name: name}, nil).
-			Return(nil, fmt.Errorf("not found")).
-			Times(1),
-	)
 
 	_, err := c.CreateVolume(context.Background(), req)
 	assert.NotNil(t, err)
