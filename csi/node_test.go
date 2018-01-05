@@ -739,3 +739,52 @@ func TestNodeUnpublishVolumeUnmount(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, r)
 }
+
+func TestNodeProbe(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	// Make a call
+	c := csi.NewNodeClient(s.Conn())
+
+	// No version
+	_, err := c.NodeProbe(context.Background(), &csi.NodeProbeRequest{})
+	assert.Error(t, err)
+
+	// Get Capabilities
+	_, err = c.NodeProbe(
+		context.Background(),
+		&csi.NodeProbeRequest{
+			Version: &csi.Version{},
+		})
+	assert.NoError(t, err)
+}
+
+func TestNodeGetCapabilities(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	// Make a call
+	c := csi.NewNodeClient(s.Conn())
+
+	// No version
+	_, err := c.NodeGetCapabilities(
+		context.Background(),
+		&csi.NodeGetCapabilitiesRequest{})
+	assert.Error(t, err)
+
+	// Get Capabilities
+	r, err := c.NodeGetCapabilities(
+		context.Background(),
+		&csi.NodeGetCapabilitiesRequest{
+			Version: &csi.Version{},
+		})
+	assert.NoError(t, err)
+	assert.Len(t, r.GetCapabilities(), 1)
+	assert.Equal(
+		t,
+		csi.NodeServiceCapability_RPC_UNKNOWN,
+		r.GetCapabilities()[0].GetRpc().GetType())
+}
