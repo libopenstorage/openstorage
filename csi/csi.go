@@ -35,11 +35,10 @@ import (
 // OsdCsiServerConfig provides the configuration to the
 // the gRPC CSI server created by NewOsdCsiServer()
 type OsdCsiServerConfig struct {
-	Net          string
-	Address      string
-	DriverName   string
-	DriverParams map[string]string
-	Cluster      cluster.Cluster
+	Net        string
+	Address    string
+	DriverName string
+	Cluster    cluster.Cluster
 }
 
 // OsdCsiServer is a OSD CSI compliant server which
@@ -70,12 +69,6 @@ func NewOsdCsiServer(config *OsdCsiServerConfig) (Server, error) {
 	}
 	if len(config.DriverName) == 0 {
 		return nil, fmt.Errorf("OSD Driver name must be provided")
-	}
-
-	// Register driver name and initialize it using the parameters provided
-	err := volumedrivers.Register(config.DriverName, config.DriverParams)
-	if err != nil {
-		return nil, fmt.Errorf("Unable to setup driver %s: %s", config.DriverName, err.Error())
 	}
 
 	// Save the driver for future calls
