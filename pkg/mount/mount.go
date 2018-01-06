@@ -8,6 +8,10 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/libopenstorage/openstorage/pkg/keylock"
+	"github.com/libopenstorage/openstorage/pkg/options"
+	"github.com/libopenstorage/openstorage/pkg/sched"
+	"go.pedge.io/dlog"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -16,11 +20,6 @@ import (
 	"sync"
 	"syscall"
 	"time"
-
-	"github.com/libopenstorage/openstorage/pkg/keylock"
-	"github.com/libopenstorage/openstorage/pkg/options"
-	"github.com/libopenstorage/openstorage/pkg/sched"
-	"go.pedge.io/dlog"
 )
 
 // Manager defines the interface for keep track of volume driver mounts.
@@ -323,12 +322,17 @@ func (m *Mounter) deletePath(path string) bool {
 // Mount new mountpoint for specified device.
 func (m *Mounter) Mount(
 	minor int,
-	device, path, fs string,
+	devPath, path, fs string,
 	flags uintptr,
 	data string,
 	timeout int,
 	opts map[string]string,
 ) error {
+	device := devPath
+	if value, ok := opts[options.OptionsDeviceFuseMount]; ok {
+		device = value
+	}
+
 	path = normalizeMountPath(path)
 	if len(m.allowedDirs) > 0 {
 		foundPrefix := false
@@ -364,7 +368,7 @@ func (m *Mounter) Mount(
 
 	// Validate input params
 	if fs != info.Fs {
-		dlog.Warnf("%s existing mountpoint has fs %q cannot change to %q",
+		dlog.Warnf("%s Existing mountpoint has fs %q cannot change to %q",
 			device, info.Fs, fs)
 		return ErrEinval
 	}
@@ -386,7 +390,7 @@ func (m *Mounter) Mount(
 	}
 
 	// The device is not mounted at path, mount it and add to its mountpoints.
-	if err := m.mountImpl.Mount(device, path, fs, flags, data, timeout); err != nil {
+	if err := m.mountImpl.Mount(devPath, path, fs, flags, data, timeout); err != nil {
 		// Rollback only if was writeable
 		if !pathWasReadOnly {
 			if e := m.makeMountpathWriteable(path); e != nil {
@@ -407,15 +411,18 @@ func (m *Mounter) Mount(
 // Unmount device at mountpoint and from the matrix.
 // ErrEnoent is returned if the device or mountpoint for the device is not found.
 func (m *Mounter) Unmount(
-	device string,
+	devPath string,
 	path string,
 	flags int,
 	timeout int,
 	opts map[string]string,
 ) error {
 	m.Lock()
-
+	device := devPath
 	path = normalizeMountPath(path)
+	if value, ok := opts[options.OptionsDeviceFuseMount]; ok {
+		device = value
+	}
 	info, ok := m.mounts[device]
 	if !ok {
 		m.Unlock()
