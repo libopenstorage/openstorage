@@ -331,6 +331,14 @@ func (s *OsdCsiServer) CreateVolume(
 		return nil, status.Error(codes.InvalidArgument, "Capacity range required bytes cannot be zero")
 	}
 
+	// Get parameters
+	spec, locator, source, err := s.specHandler.SpecFromOpts(req.GetParameters())
+	if err != nil {
+		e := fmt.Sprintf("Unable to get parameters: %s\n", err.Error())
+		dlog.Errorln(e)
+		return nil, status.Error(codes.InvalidArgument, e)
+	}
+
 	// Create response
 	volume := &csi.VolumeInfo{}
 	resp := &csi.CreateVolumeResponse{
@@ -340,16 +348,28 @@ func (s *OsdCsiServer) CreateVolume(
 	// Check if the volume has already been created or is in process of creation
 	v, err := util.VolumeFromName(s.driver, req.GetName())
 	if err == nil {
+		// Check the requested arguments match that of the existing volume
+		if v.GetSpec().GetSize() != req.GetCapacityRange().GetRequiredBytes() {
+			return nil, status.Errorf(
+				codes.AlreadyExists,
+				"Existing volume has a size of %v which differs from requested size of %v",
+				v.GetSpec().GetSize(),
+				req.GetCapacityRange().GetRequiredBytes())
+		}
+		if v.GetSpec().GetShared() != csiRequestsSharedVolume(req) {
+			return nil, status.Errorf(
+				codes.AlreadyExists,
+				"Existing volume has shared=%v while request is asking for shared=%v",
+				v.GetSpec().GetShared(),
+				csiRequestsSharedVolume(req))
+		}
+		if v.GetSource().GetParent() != source.GetParent() {
+			return nil, status.Error(codes.AlreadyExists, "Existing volume has conflicting parent value")
+		}
+
+		// Return information on existing volume
 		osdToCsiVolumeInfo(volume, v)
 		return resp, nil
-	}
-
-	// Get parameters
-	spec, locator, source, err := s.specHandler.SpecFromOpts(req.GetParameters())
-	if err != nil {
-		e := fmt.Sprintf("Unable to get parameters: %s\n", err.Error())
-		dlog.Errorln(e)
-		return nil, status.Error(codes.InvalidArgument, e)
 	}
 
 	// Check if the caller is asking to create a snapshot or for a new volume
@@ -375,15 +395,7 @@ func (s *OsdCsiServer) CreateVolume(
 	} else {
 		// Get Capabilities and Size
 		spec.Size = req.GetCapacityRange().GetRequiredBytes()
-		for _, cap := range req.GetVolumeCapabilities() {
-			// Check access mode is setup correctly
-			mode := cap.GetAccessMode().GetMode()
-			if mode == csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER ||
-				mode == csi.VolumeCapability_AccessMode_MULTI_NODE_SINGLE_WRITER {
-				spec.Shared = true
-				break
-			}
-		}
+		spec.Shared = csiRequestsSharedVolume(req)
 
 		// Create the volume
 		locator.Name = req.GetName()
@@ -402,7 +414,6 @@ func (s *OsdCsiServer) CreateVolume(
 	}
 	osdToCsiVolumeInfo(volume, v)
 	return resp, nil
-
 }
 
 // DeleteVolume is a CSI API which deletes a volume
@@ -438,6 +449,18 @@ func osdToCsiVolumeInfo(dest *csi.VolumeInfo, src *api.Volume) {
 	dest.Id = src.GetId()
 	dest.CapacityBytes = src.Spec.GetSize()
 	dest.Attributes = osdVolumeAttributes(src)
+}
+
+func csiRequestsSharedVolume(req *csi.CreateVolumeRequest) bool {
+	for _, cap := range req.GetVolumeCapabilities() {
+		// Check access mode is setup correctly
+		mode := cap.GetAccessMode().GetMode()
+		if mode == csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER ||
+			mode == csi.VolumeCapability_AccessMode_MULTI_NODE_SINGLE_WRITER {
+			return true
+		}
+	}
+	return false
 }
 
 /*

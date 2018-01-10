@@ -18,7 +18,10 @@ package csi
 
 import (
 	"github.com/container-storage-interface/spec/lib/go/csi"
+	"go.pedge.io/dlog"
 	"golang.org/x/net/context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const (
@@ -29,7 +32,7 @@ const (
 var (
 	csiVersion = &csi.Version{
 		Major: 0,
-		Minor: 0,
+		Minor: 1,
 		Patch: 0,
 	}
 )
@@ -48,11 +51,21 @@ func (s *OsdCsiServer) GetSupportedVersions(
 // GetPluginInfo is a CSI API which returns the information about the plugin.
 // This includes name, version, and any other OSD specific information
 func (s *OsdCsiServer) GetPluginInfo(
-	context.Context,
-	*csi.GetPluginInfoRequest) (*csi.GetPluginInfoResponse, error) {
+	ctx context.Context,
+	req *csi.GetPluginInfoRequest) (*csi.GetPluginInfoResponse, error) {
+
+	dlog.Debugf("GetPluginInfo req[%#v]", req)
+
+	// Check arguments
+	if req.GetVersion() == nil {
+		return nil, status.Error(codes.InvalidArgument, "Version must be provided")
+	}
+
 	return &csi.GetPluginInfoResponse{
 		Name:          csiDriverNamePrefix + s.driver.Name(),
 		VendorVersion: csiDriverVersion,
+
+		// As OSD CSI Driver matures, add here more information
 		Manifest: map[string]string{
 			"driver": s.driver.Name(),
 		},

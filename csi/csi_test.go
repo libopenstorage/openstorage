@@ -136,7 +136,9 @@ func TestCSIServerStart(t *testing.T) {
 	// Make a call
 	s.MockDriver().EXPECT().Name().Return("mock").Times(2)
 	c := csi.NewIdentityClient(s.Conn())
-	r, err := c.GetPluginInfo(context.Background(), &csi.GetPluginInfoRequest{})
+	r, err := c.GetPluginInfo(context.Background(), &csi.GetPluginInfoRequest{
+		Version: &csi.Version{},
+	})
 	assert.Nil(t, err)
 
 	// Verify
