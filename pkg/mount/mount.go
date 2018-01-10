@@ -8,10 +8,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/libopenstorage/openstorage/pkg/keylock"
-	"github.com/libopenstorage/openstorage/pkg/options"
-	"github.com/libopenstorage/openstorage/pkg/sched"
-	"go.pedge.io/dlog"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -20,6 +16,11 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/libopenstorage/openstorage/pkg/keylock"
+	"github.com/libopenstorage/openstorage/pkg/options"
+	"github.com/libopenstorage/openstorage/pkg/sched"
+	"go.pedge.io/dlog"
 )
 
 // Manager defines the interface for keep track of volume driver mounts.
@@ -328,8 +329,11 @@ func (m *Mounter) Mount(
 	timeout int,
 	opts map[string]string,
 ) error {
+	// device gets overwritten if opts specifies fuse mount with
+	// options.OptionsDeviceFuseMount.
 	device := devPath
 	if value, ok := opts[options.OptionsDeviceFuseMount]; ok {
+		// fuse mounts show-up with this key as device.
 		device = value
 	}
 
@@ -418,9 +422,12 @@ func (m *Mounter) Unmount(
 	opts map[string]string,
 ) error {
 	m.Lock()
+	// device gets overwritten if opts specifies fuse mount with
+	// options.OptionsDeviceFuseMount.
 	device := devPath
 	path = normalizeMountPath(path)
 	if value, ok := opts[options.OptionsDeviceFuseMount]; ok {
+		// fuse mounts show-up with this key as device.
 		device = value
 	}
 	info, ok := m.mounts[device]
