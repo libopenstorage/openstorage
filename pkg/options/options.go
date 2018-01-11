@@ -17,6 +17,8 @@ const (
 	OptionsWaitBeforeDelete = "WAIT_BEFORE_DELETE"
 	// OptionsRedirectDetach Redirect detach to the node where volume is attached
 	OptionsRedirectDetach = "REDIRECT_DETACH"
+	// OptionsDeviceFuseMount name of fuse mount device
+	OptionsDeviceFuseMount = "DEV_FUSE_MOUNT"
 )
 
 func IsBoolOptionSet(options map[string]string, key string) bool {
