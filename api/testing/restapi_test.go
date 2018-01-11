@@ -14,11 +14,6 @@ import (
 	"go.pedge.io/dlog"
 
 	"github.com/golang/mock/gomock"
-	"github.com/kubernetes-csi/csi-test/utils"
-
-	mockcluster "github.com/libopenstorage/openstorage/cluster/mock"
-	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
-	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
 )
 
 const (
@@ -54,34 +49,11 @@ func startServer() {
 	time.Sleep(1 * time.Second)
 }
 
-func newMocks() *testServer {
-
-	var ts = &testServer{}
-
-	// Add driver to registry
-	ts.mc = gomock.NewController(&utils.SafeGoroutineTester{})
-	ts.m = mockdriver.NewMockVolumeDriver(ts.mc)
-	ts.c = mockcluster.NewMockCluster(ts.mc)
-
-	err := volumedrivers.Add(driver, func(map[string]string) (volume.VolumeDriver, error) {
-		return ts.m, nil
-	})
-
-	if err != nil {
-		dlog.Errorf("Failed to add the driver [%s] for tests", driver)
-	}
-
-	// Register the mock driver
-	err = volumedrivers.Register(driver, nil)
-
-	return ts
-}
-
 func TestVolumeCreateSuccess(t *testing.T) {
 
 	baseURL := getBaseURL()
 	var err error
-	ts := newMocks()
+	ts := newTestServer(driver)
 	defer ts.Stop()
 
 	// create a request
@@ -119,7 +91,7 @@ func TestVolumeCreateSuccess(t *testing.T) {
 func TestVolumeCreateFailed(t *testing.T) {
 	var err error
 
-	ts := newMocks()
+	ts := newTestServer(driver)
 
 	defer ts.Stop()
 
@@ -148,7 +120,7 @@ func TestVolumeCreateFailed(t *testing.T) {
 }
 
 func TestVolumeDeleteSuccess(t *testing.T) {
-	ts := newMocks()
+	ts := newTestServer(driver)
 
 	defer ts.Stop()
 
@@ -173,7 +145,7 @@ func TestVolumeDeleteSuccess(t *testing.T) {
 
 func TestVolumeDeleteFailed(t *testing.T) {
 
-	ts := newMocks()
+	ts := newTestServer(driver)
 
 	defer ts.Stop()
 
@@ -200,7 +172,7 @@ func TestVolumeDeleteFailed(t *testing.T) {
 
 func TestVolumeSnapshotCreateSuccess(t *testing.T) {
 
-	ts := newMocks()
+	ts := newTestServer(driver)
 
 	defer ts.Stop()
 
@@ -236,7 +208,7 @@ func TestVolumeSnapshotCreateSuccess(t *testing.T) {
 
 func TestVolumeSnapshotCreateFailed(t *testing.T) {
 
-	ts := newMocks()
+	ts := newTestServer(driver)
 
 	defer ts.Stop()
 
@@ -273,7 +245,7 @@ func TestVolumeSnapshotCreateFailed(t *testing.T) {
 
 func TestVolumeInspectSuccess(t *testing.T) {
 
-	ts := newMocks()
+	ts := newTestServer(driver)
 
 	defer ts.Stop()
 
@@ -321,7 +293,7 @@ func TestVolumeInspectSuccess(t *testing.T) {
 }
 
 func TestVolumeInspectFailed(t *testing.T) {
-	ts := newMocks()
+	ts := newTestServer(driver)
 
 	defer ts.Stop()
 
@@ -350,7 +322,7 @@ func TestVolumeInspectFailed(t *testing.T) {
 
 func TestVolumeSetSuccess(t *testing.T) {
 
-	ts := newMocks()
+	ts := newTestServer(driver)
 
 	defer ts.Stop()
 
@@ -408,7 +380,7 @@ func TestVolumeSetSuccess(t *testing.T) {
 
 func TestVolumeSetFailed(t *testing.T) {
 
-	ts := newMocks()
+	ts := newTestServer(driver)
 
 	defer ts.Stop()
 
@@ -450,7 +422,7 @@ func TestVolumeSetFailed(t *testing.T) {
 
 func TestVolumeAttachSuccess(t *testing.T) {
 
-	ts := newMocks()
+	ts := newTestServer(driver)
 
 	defer ts.Stop()
 
@@ -506,7 +478,7 @@ func TestVolumeAttachSuccess(t *testing.T) {
 
 func TestVolumeAttachFailed(t *testing.T) {
 
-	ts := newMocks()
+	ts := newTestServer(driver)
 
 	defer ts.Stop()
 
@@ -546,7 +518,7 @@ func TestVolumeAttachFailed(t *testing.T) {
 
 func TestVolumeDetachSuccess(t *testing.T) {
 
-	ts := newMocks()
+	ts := newTestServer(driver)
 
 	defer ts.Stop()
 
@@ -600,7 +572,7 @@ func TestVolumeDetachSuccess(t *testing.T) {
 
 func TestVolumeDetachFailed(t *testing.T) {
 
-	ts := newMocks()
+	ts := newTestServer(driver)
 
 	defer ts.Stop()
 
@@ -638,7 +610,7 @@ func TestVolumeDetachFailed(t *testing.T) {
 
 func TestVolumeMountSuccess(t *testing.T) {
 
-	ts := newMocks()
+	ts := newTestServer(driver)
 
 	defer ts.Stop()
 
@@ -695,7 +667,7 @@ func TestVolumeMountSuccess(t *testing.T) {
 
 func TestVolumeMountFailedNoMountPath(t *testing.T) {
 
-	ts := newMocks()
+	ts := newTestServer(driver)
 
 	defer ts.Stop()
 
@@ -730,7 +702,7 @@ func TestVolumeMountFailedNoMountPath(t *testing.T) {
 
 func TestVolumeStatsSuccess(t *testing.T) {
 
-	ts := newMocks()
+	ts := newTestServer(driver)
 	defer ts.Stop()
 
 	var err error
@@ -767,7 +739,7 @@ func TestVolumeStatsSuccess(t *testing.T) {
 
 func TestVolumeStatsFailed(t *testing.T) {
 
-	ts := newMocks()
+	ts := newTestServer(driver)
 	defer ts.Stop()
 
 	var err error
@@ -797,7 +769,7 @@ func TestVolumeStatsFailed(t *testing.T) {
 }
 
 func TestVolumeUnmountSuccess(t *testing.T) {
-	ts := newMocks()
+	ts := newTestServer(driver)
 	defer ts.Stop()
 
 	var err error
@@ -853,7 +825,7 @@ func TestVolumeUnmountSuccess(t *testing.T) {
 }
 
 func TestVolumeUnmountFailed(t *testing.T) {
-	ts := newMocks()
+	ts := newTestServer(driver)
 	defer ts.Stop()
 
 	var err error
@@ -892,7 +864,7 @@ func TestVolumeUnmountFailed(t *testing.T) {
 
 func TestVolumeQuiesceSuccess(t *testing.T) {
 
-	ts := newMocks()
+	ts := newTestServer(driver)
 	defer ts.Stop()
 
 	var err error
@@ -923,7 +895,7 @@ func TestVolumeQuiesceSuccess(t *testing.T) {
 
 func TestVolumeQuiesceFailed(t *testing.T) {
 
-	ts := newMocks()
+	ts := newTestServer(driver)
 	defer ts.Stop()
 
 	var err error
@@ -953,7 +925,7 @@ func TestVolumeQuiesceFailed(t *testing.T) {
 
 func TestVolumeUnquiesceSuccess(t *testing.T) {
 
-	ts := newMocks()
+	ts := newTestServer(driver)
 	defer ts.Stop()
 
 	var err error
@@ -978,7 +950,7 @@ func TestVolumeUnquiesceSuccess(t *testing.T) {
 
 func TestVolumeUnquiesceFailed(t *testing.T) {
 
-	ts := newMocks()
+	ts := newTestServer(driver)
 	defer ts.Stop()
 
 	var err error
@@ -1003,7 +975,7 @@ func TestVolumeUnquiesceFailed(t *testing.T) {
 }
 
 func TestVolumeRestoreSuccess(t *testing.T) {
-	ts := newMocks()
+	ts := newTestServer(driver)
 	defer ts.Stop()
 
 	var err error
@@ -1027,7 +999,7 @@ func TestVolumeRestoreSuccess(t *testing.T) {
 }
 
 func TestVolumeRestoreFailed(t *testing.T) {
-	ts := newMocks()
+	ts := newTestServer(driver)
 	defer ts.Stop()
 
 	var err error
@@ -1052,7 +1024,7 @@ func TestVolumeRestoreFailed(t *testing.T) {
 }
 
 func TestVolumeUsedSizeSuccess(t *testing.T) {
-	ts := newMocks()
+	ts := newTestServer(driver)
 	defer ts.Stop()
 
 	var err error
@@ -1079,7 +1051,7 @@ func TestVolumeUsedSizeSuccess(t *testing.T) {
 }
 
 func TestVolumeUsedSizeFailed(t *testing.T) {
-	ts := newMocks()
+	ts := newTestServer(driver)
 	defer ts.Stop()
 
 	var err error
@@ -1108,7 +1080,7 @@ func TestVolumeUsedSizeFailed(t *testing.T) {
 
 func TestVolumeEnumerateSuccess(t *testing.T) {
 
-	ts := newMocks()
+	ts := newTestServer(driver)
 	defer ts.Stop()
 
 	var err error
@@ -1160,7 +1132,7 @@ func TestVolumeEnumerateSuccess(t *testing.T) {
 
 func TestVolumeEnumerateFailed(t *testing.T) {
 
-	ts := newMocks()
+	ts := newTestServer(driver)
 	defer ts.Stop()
 
 	var err error
@@ -1198,7 +1170,7 @@ func TestVolumeEnumerateFailed(t *testing.T) {
 }
 
 func TestVolumeSnapshotEnumerateSuccess(t *testing.T) {
-	ts := newMocks()
+	ts := newTestServer(driver)
 	defer ts.Stop()
 
 	var err error
@@ -1246,7 +1218,7 @@ func TestVolumeSnapshotEnumerateSuccess(t *testing.T) {
 }
 
 func TestVolumeSnapshotEnumerateFailed(t *testing.T) {
-	ts := newMocks()
+	ts := newTestServer(driver)
 	defer ts.Stop()
 
 	var err error
@@ -1281,7 +1253,7 @@ func TestVolumeSnapshotEnumerateFailed(t *testing.T) {
 }
 func TestVolumeGetActiveRequestsSuccess(t *testing.T) {
 
-	ts := newMocks()
+	ts := newTestServer(driver)
 	defer ts.Stop()
 
 	var err error
@@ -1321,7 +1293,7 @@ func TestVolumeGetActiveRequestsSuccess(t *testing.T) {
 
 func TestVolumeGetActiveRequestsFailed(t *testing.T) {
 
-	ts := newMocks()
+	ts := newTestServer(driver)
 	defer ts.Stop()
 
 	var err error
@@ -1346,7 +1318,7 @@ func TestVolumeGetActiveRequestsFailed(t *testing.T) {
 
 func TestCredsCreateSuccess(t *testing.T) {
 
-	ts := newMocks()
+	ts := newTestServer(driver)
 	defer ts.Stop()
 
 	var err error
@@ -1381,7 +1353,7 @@ func TestCredsCreateSuccess(t *testing.T) {
 
 func TestCredsCreateFailed(t *testing.T) {
 
-	ts := newMocks()
+	ts := newTestServer(driver)
 	defer ts.Stop()
 
 	var err error
@@ -1417,7 +1389,7 @@ func TestCredsCreateFailed(t *testing.T) {
 
 func TestCredsEnumerateSuccess(t *testing.T) {
 
-	ts := newMocks()
+	ts := newTestServer(driver)
 	defer ts.Stop()
 
 	var err error
@@ -1448,7 +1420,7 @@ func TestCredsEnumerateSuccess(t *testing.T) {
 
 func TestCredsEnumerateFailed(t *testing.T) {
 
-	ts := newMocks()
+	ts := newTestServer(driver)
 	defer ts.Stop()
 
 	var err error
@@ -1476,7 +1448,7 @@ func TestCredsEnumerateFailed(t *testing.T) {
 
 func TestCredsValidateSuccess(t *testing.T) {
 
-	ts := newMocks()
+	ts := newTestServer(driver)
 	defer ts.Stop()
 
 	var err error
@@ -1502,7 +1474,7 @@ func TestCredsValidateSuccess(t *testing.T) {
 
 func TestCredsValidateFailed(t *testing.T) {
 
-	ts := newMocks()
+	ts := newTestServer(driver)
 	defer ts.Stop()
 
 	var err error
