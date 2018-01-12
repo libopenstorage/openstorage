@@ -1807,6 +1807,7 @@ func (c *ClusterManager) Pair(
 	// Pair with remote server
 	dlog.Infof("Attempting to pair with cluster at IP %v", t.Ip)
 
+	// Issue a remote pair request
 	if t, err := remote.RemotePairRequest(t); err != nil {
 		dlog.Warnln("Unable to pair with %v", t.Ip, err)
 		return t, err

@@ -2,7 +2,6 @@ package cluster
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -32,15 +31,18 @@ func (c *clusterClient) Name() string {
 	return "ClusterManager"
 }
 
-// Pair is an internal call for two clusters to communicate with each other.
-// This should not be called by the API user.
+// remote is ignored in this local implementation.
 func (c *clusterClient) Pair(
 	remote cluster.Cluster,
 	token cluster.ClusterToken,
 ) (cluster.ClusterToken, error) {
 	resp := cluster.ClusterToken{}
+	path := clusterPath + "/pair/" + token.Ip + "/" + token.Token
+	if err := c.c.Put().Resource(path).Do().Unmarshal(&resp); err != nil {
+		return resp, err
+	}
 
-	return resp, fmt.Errorf("Invalid request.  Client API cannot service a remote pair request.")
+	return resp, nil
 }
 
 func (c *clusterClient) RemotePairRequest(
