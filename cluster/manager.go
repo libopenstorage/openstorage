@@ -1861,7 +1861,7 @@ func (c *ClusterManager) RemotePairRequest(
 
 	t.Id = db.Id
 
-	return t, err
+	return t, nil
 }
 
 func (c *ClusterManager) GetPairToken() (ClusterToken, error) {

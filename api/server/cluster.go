@@ -50,7 +50,7 @@ func (c *clusterApi) Routes() []*Route {
 		{verb: "PUT", path: clusterPath("/alerts/{resource}/{id}", cluster.APIVersion), fn: c.clearAlert},
 		{verb: "DELETE", path: clusterPath("/alerts/{resource}/{id}", cluster.APIVersion), fn: c.eraseAlert},
 		{verb: "PUT", path: clusterPath("/pair/{ip}/{token}", cluster.APIVersion), fn: c.pair},
-		{verb: "GET", path: clusterPath("/remotepairrequest", cluster.APIVersion), fn: c.remotePairRequest},
+		{verb: "PUT", path: clusterPath("/remotepairrequest", cluster.APIVersion), fn: c.remotePairRequest},
 		{verb: "PUT", path: clusterPath("/resetpairtoken", cluster.APIVersion), fn: c.resetPairToken},
 		{verb: "GET", path: clusterPath("/getpairtoken", cluster.APIVersion), fn: c.getPairToken},
 	}
