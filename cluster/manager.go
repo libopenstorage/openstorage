@@ -5,6 +5,7 @@ package cluster
 
 import (
 	"container/list"
+	"crypto/rand"
 	"encoding/gob"
 	"errors"
 	"fmt"
@@ -1796,4 +1797,118 @@ func (c *ClusterManager) putNodeCacheEntry(nodeId string, node api.Node) {
 	c.nodeCacheLock.Lock()
 	defer c.nodeCacheLock.Unlock()
 	c.nodeCache[nodeId] = node
+}
+
+// Pair remote pairs this cluster with a remote cluster.
+func (c *ClusterManager) Pair(
+	remote Cluster,
+	t ClusterToken,
+) (ClusterToken, error) {
+	// Pair with remote server
+	dlog.Infof("Attempting to pair with cluster at IP %v", t.Ip)
+
+	if t, err := remote.RemotePairRequest(t); err != nil {
+		dlog.Warnln("Unable to pair with %v", t.Ip, err)
+		return t, err
+	}
+
+	// Update our KVDB
+	kvdb := kvdb.Instance()
+	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
+	if err != nil {
+		dlog.Warnln("Unable to obtain cluster lock for updating logging url into cluster config", err)
+		return t, err
+	}
+	defer kvdb.Unlock(kvlock)
+
+	db, _, err := readClusterInfo()
+	if err != nil {
+		return t, err
+	}
+
+	db.RemotePairIp = t.Ip
+	db.RemotePairId = t.Id
+	db.RemotePairToken = t.Token
+
+	_, err = writeClusterInfo(&db)
+
+	dlog.Infof("Successfully paired with cluster ID %v", t.Id)
+
+	return t, nil
+}
+
+// RemotePairPair handles a remote cluster's pair request
+func (c *ClusterManager) RemotePairRequest(
+	t ClusterToken,
+) (ClusterToken, error) {
+	kvdb := kvdb.Instance()
+	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
+	if err != nil {
+		dlog.Warnln("Unable to obtain cluster lock for updating logging url into cluster config", err)
+		return t, err
+	}
+	defer kvdb.Unlock(kvlock)
+
+	db, _, err := readClusterInfo()
+	if err != nil {
+		return t, err
+	}
+
+	if t.Token != db.LocalPairToken {
+		return t, fmt.Errorf("Pair request contains an invalid authentication token")
+	}
+
+	t.Id = db.Id
+
+	return t, err
+}
+
+func (c *ClusterManager) GetPairToken() (ClusterToken, error) {
+	t := ClusterToken{}
+
+	kvdb := kvdb.Instance()
+	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
+	if err != nil {
+		dlog.Warnln("Unable to obtain cluster lock for updating logging url into cluster config", err)
+		return t, err
+	}
+	defer kvdb.Unlock(kvlock)
+
+	db, _, err := readClusterInfo()
+	if err != nil {
+		return t, err
+	}
+
+	t.Token = db.LocalPairToken
+	t.Id = db.Id
+
+	return t, err
+}
+
+func (c *ClusterManager) ResetPairToken() (ClusterToken, error) {
+	t := ClusterToken{}
+
+	kvdb := kvdb.Instance()
+	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
+	if err != nil {
+		dlog.Warnln("Unable to obtain cluster lock for updating logging url into cluster config", err)
+		return t, err
+	}
+	defer kvdb.Unlock(kvlock)
+
+	db, _, err := readClusterInfo()
+	if err != nil {
+		return t, err
+	}
+
+	b := make([]byte, 64)
+	rand.Read(b)
+	db.LocalPairToken = fmt.Sprintf("%x", b)
+
+	_, err = writeClusterInfo(&db)
+
+	t.Token = db.LocalPairToken
+	t.Id = db.Id
+
+	return t, err
 }

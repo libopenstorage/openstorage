@@ -43,14 +43,18 @@ type NodeEntry struct {
 
 // ClusterInfo is the basic info about the cluster and its nodes
 type ClusterInfo struct {
-	Size          int
-	Status        api.Status
-	Id            string
-	NodeEntries   map[string]NodeEntry
-	LoggingURL    string
-	ManagementURL string
-	FluentDConfig api.FluentDConfig
-	TunnelConfig  api.TunnelConfig
+	Size            int
+	Status          api.Status
+	Id              string
+	NodeEntries     map[string]NodeEntry
+	LocalPairToken  string
+	RemotePairIp    string
+	RemotePairId    string
+	RemotePairToken string
+	LoggingURL      string
+	ManagementURL   string
+	FluentDConfig   api.FluentDConfig
+	TunnelConfig    api.TunnelConfig
 }
 
 // ClusterInitState is the snapshot state which should be used to initialize
@@ -230,6 +234,20 @@ type ClusterAlerts interface {
 	EraseAlert(resource api.ResourceType, alertID int64) error
 }
 
+type ClusterToken struct {
+	// Id of the cluster
+	Id string
+
+	// Ip of the cluster
+	Ip string
+
+	// Token used for authentication
+	Token string
+
+	// Remote if true if this is a remote API request
+	Remote bool
+}
+
 // Cluster is the API that a cluster provider will implement.
 type Cluster interface {
 	// Inspect the node given a UUID.
@@ -240,6 +258,18 @@ type Cluster interface {
 
 	// Enumerate lists all the nodes in the cluster.
 	Enumerate() (api.Cluster, error)
+
+	// Pair with a remote cluster.
+	Pair(Cluster, ClusterToken) (ClusterToken, error)
+
+	// RemotePairRequest handles an incoming pair request from a remote cluster.
+	RemotePairRequest(ClusterToken) (ClusterToken, error)
+
+	// ResetPairToken resets the authentication token.
+	ResetPairToken() (ClusterToken, error)
+
+	// GetPairToken gets the authentication token for this cluster.
+	GetPairToken() (ClusterToken, error)
 
 	// SetSize sets the maximum number of nodes in a cluster.
 	SetSize(size int) error

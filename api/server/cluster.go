@@ -10,7 +10,9 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+
 	"github.com/libopenstorage/openstorage/api"
+	clusterclient "github.com/libopenstorage/openstorage/api/client/cluster"
 	"github.com/libopenstorage/openstorage/cluster"
 )
 
@@ -47,8 +49,13 @@ func (c *clusterApi) Routes() []*Route {
 		{verb: "GET", path: clusterPath("/alerts/{resource}", cluster.APIVersion), fn: c.enumerateAlerts},
 		{verb: "PUT", path: clusterPath("/alerts/{resource}/{id}", cluster.APIVersion), fn: c.clearAlert},
 		{verb: "DELETE", path: clusterPath("/alerts/{resource}/{id}", cluster.APIVersion), fn: c.eraseAlert},
+		{verb: "PUT", path: clusterPath("/pair/{ip}/{token}", cluster.APIVersion), fn: c.pair},
+		{verb: "GET", path: clusterPath("/remotepairrequest", cluster.APIVersion), fn: c.remotePairRequest},
+		{verb: "PUT", path: clusterPath("/resetpairtoken", cluster.APIVersion), fn: c.resetPairToken},
+		{verb: "GET", path: clusterPath("/getpairtoken", cluster.APIVersion), fn: c.getPairToken},
 	}
 }
+
 func newClusterAPI() restServer {
 	return &clusterApi{restBase{version: cluster.APIVersion, name: "Cluster API"}}
 }
@@ -589,4 +596,124 @@ func handleResourceType(resource string) (api.ResourceType, error) {
 		}
 		return api.ResourceType_RESOURCE_TYPE_NONE, fmt.Errorf("Invalid resource type")
 	}
+}
+
+func (c *clusterApi) getPairParams(w http.ResponseWriter, r *http.Request, method string) (string, string, error) {
+	returnErr := fmt.Errorf("Invalid param")
+	vars := mux.Vars(r)
+	ip, ok := vars["ip"]
+	if !ok {
+		c.sendError(c.name, method, w, "Missing/Invalid IP param", http.StatusBadRequest)
+		return "", "", returnErr
+	}
+
+	vars = mux.Vars(r)
+	token, ok := vars["token"]
+	if !ok {
+		c.sendError(c.name, method, w, "Missing/Invalid token param", http.StatusBadRequest)
+		return "", "", returnErr
+	}
+
+	return ip, token, nil
+}
+
+func (c *clusterApi) pair(w http.ResponseWriter, r *http.Request) {
+	method := "pair"
+
+	ip, token, err := c.getPairParams(w, r, method)
+	if err != nil {
+		return
+	}
+
+	inst, err := cluster.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	t := cluster.ClusterToken{
+		Ip:    ip,
+		Token: token,
+	}
+
+	// Create a remote cluster client.
+	clnt, err := clusterclient.NewClusterClient(ip, cluster.APIVersion)
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	remote := clusterclient.ClusterManager(clnt)
+
+	resp, err := inst.Pair(remote, t)
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(resp)
+}
+
+func (c *clusterApi) remotePairRequest(w http.ResponseWriter, r *http.Request) {
+	method := "pair"
+
+	vars := mux.Vars(r)
+	token, ok := vars["token"]
+	if !ok {
+		c.sendError(c.name, method, w, "Missing/Invalid auth token param", http.StatusBadRequest)
+		return
+	}
+
+	inst, err := cluster.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	resp, err := inst.RemotePairRequest(
+		cluster.ClusterToken{
+			Token: token,
+		},
+	)
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(resp)
+}
+
+func (c *clusterApi) resetPairToken(w http.ResponseWriter, r *http.Request) {
+	method := "reset pair token"
+
+	inst, err := cluster.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	resp, err := inst.ResetPairToken()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(resp)
+}
+
+func (c *clusterApi) getPairToken(w http.ResponseWriter, r *http.Request) {
+	method := "get pair token"
+
+	inst, err := cluster.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	resp, err := inst.GetPairToken()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(resp)
 }
