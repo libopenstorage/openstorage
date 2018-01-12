@@ -146,6 +146,19 @@ func (mr *MockClusterMockRecorder) GetGossipState() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGossipState", reflect.TypeOf((*MockCluster)(nil).GetGossipState))
 }
 
+// GetPairToken mocks base method
+func (m *MockCluster) GetPairToken() (cluster.ClusterToken, error) {
+	ret := m.ctrl.Call(m, "GetPairToken")
+	ret0, _ := ret[0].(cluster.ClusterToken)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPairToken indicates an expected call of GetPairToken
+func (mr *MockClusterMockRecorder) GetPairToken() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPairToken", reflect.TypeOf((*MockCluster)(nil).GetPairToken))
+}
+
 // GetTunnelConfig mocks base method
 func (m *MockCluster) GetTunnelConfig() api.TunnelConfig {
 	ret := m.ctrl.Call(m, "GetTunnelConfig")
@@ -194,6 +207,19 @@ func (mr *MockClusterMockRecorder) NodeStatus() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NodeStatus", reflect.TypeOf((*MockCluster)(nil).NodeStatus))
 }
 
+// Pair mocks base method
+func (m *MockCluster) Pair(arg0 cluster.Cluster, arg1 cluster.ClusterToken) (cluster.ClusterToken, error) {
+	ret := m.ctrl.Call(m, "Pair", arg0, arg1)
+	ret0, _ := ret[0].(cluster.ClusterToken)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Pair indicates an expected call of Pair
+func (mr *MockClusterMockRecorder) Pair(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Pair", reflect.TypeOf((*MockCluster)(nil).Pair), arg0, arg1)
+}
+
 // PeerStatus mocks base method
 func (m *MockCluster) PeerStatus(arg0 string) (map[string]api.Status, error) {
 	ret := m.ctrl.Call(m, "PeerStatus", arg0)
@@ -207,6 +233,19 @@ func (mr *MockClusterMockRecorder) PeerStatus(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PeerStatus", reflect.TypeOf((*MockCluster)(nil).PeerStatus), arg0)
 }
 
+// RemotePairRequest mocks base method
+func (m *MockCluster) RemotePairRequest(arg0 cluster.ClusterToken) (cluster.ClusterToken, error) {
+	ret := m.ctrl.Call(m, "RemotePairRequest", arg0)
+	ret0, _ := ret[0].(cluster.ClusterToken)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RemotePairRequest indicates an expected call of RemotePairRequest
+func (mr *MockClusterMockRecorder) RemotePairRequest(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemotePairRequest", reflect.TypeOf((*MockCluster)(nil).RemotePairRequest), arg0)
+}
+
 // Remove mocks base method
 func (m *MockCluster) Remove(arg0 []api.Node, arg1 bool) error {
 	ret := m.ctrl.Call(m, "Remove", arg0, arg1)
@@ -217,6 +256,19 @@ func (m *MockCluster) Remove(arg0 []api.Node, arg1 bool) error {
 // Remove indicates an expected call of Remove
 func (mr *MockClusterMockRecorder) Remove(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Remove", reflect.TypeOf((*MockCluster)(nil).Remove), arg0, arg1)
+}
+
+// ResetPairToken mocks base method
+func (m *MockCluster) ResetPairToken() (cluster.ClusterToken, error) {
+	ret := m.ctrl.Call(m, "ResetPairToken")
+	ret0, _ := ret[0].(cluster.ClusterToken)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ResetPairToken indicates an expected call of ResetPairToken
+func (mr *MockClusterMockRecorder) ResetPairToken() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResetPairToken", reflect.TypeOf((*MockCluster)(nil).ResetPairToken))
 }
 
 // SetFluentDConfig mocks base method
