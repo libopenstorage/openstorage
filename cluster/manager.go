@@ -1855,6 +1855,10 @@ func (c *ClusterManager) RemotePairRequest(
 		return t, err
 	}
 
+	if db.LocalPairToken == "" {
+		return t, fmt.Errorf("This cluster has not yet created an authentication token")
+	}
+
 	if t.Token != db.LocalPairToken {
 		return t, fmt.Errorf("Pair request contains an invalid authentication token")
 	}
