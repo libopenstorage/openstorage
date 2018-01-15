@@ -1807,6 +1807,8 @@ func (c *ClusterManager) Pair(
 	// Pair with remote server
 	dlog.Infof("Attempting to pair with cluster at IP %v", t.Ip)
 
+	t.Opts = make(map[string]string)
+
 	// Record our cluster ID in the request
 	t.Id = c.selfNode.Id
 
