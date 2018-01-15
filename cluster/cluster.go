@@ -63,6 +63,18 @@ type ClusterInfo struct {
 	TunnelConfig    api.TunnelConfig
 }
 
+// ClusterToken is used to authenticate two clusters during pair operations.
+type ClusterToken struct {
+	// Id of the cluster being paired with.
+	Id string
+	// Ip of the cluster being paired with.
+	Ip string
+	// Token used for authentication.
+	Token string
+	// Opts are opaque options
+	Opts map[string]string
+}
+
 // ClusterInitState is the snapshot state which should be used to initialize
 type ClusterInitState struct {
 	ClusterInfo *ClusterInfo
@@ -244,17 +256,6 @@ type ClusterAlerts interface {
 	ClearAlert(resource api.ResourceType, alertID int64) error
 	// EraseAlert erases an alert for the given resource
 	EraseAlert(resource api.ResourceType, alertID int64) error
-}
-
-type ClusterToken struct {
-	// Id of the cluster being paired with.
-	Id string
-
-	// Ip of the cluster being paired with.
-	Ip string
-
-	// Token used for authentication.
-	Token string
 }
 
 // Cluster is the API that a cluster provider will implement.
