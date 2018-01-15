@@ -107,6 +107,12 @@ type ClusterListener interface {
 	// Halt is called when a node is gracefully shutting down.
 	Halt(self *api.Node, clusterInfo *ClusterInfo) error
 
+	// Pair is called when we are pairing with another cluster.
+	Pair(self *api.Node, token ClusterToken) error
+
+	// RemotePairRequest is called when we get a pair request from another cluster
+	RemotePairRequest(self *api.Node, token ClusterToken) error
+
 	ClusterListenerNodeOps
 	ClusterListenerStatusOps
 	ClusterListenerGenericOps
@@ -241,17 +247,14 @@ type ClusterAlerts interface {
 }
 
 type ClusterToken struct {
-	// Id of the cluster
+	// Id of the cluster being paired with.
 	Id string
 
-	// Ip of the cluster
+	// Ip of the cluster being paired with.
 	Ip string
 
-	// Token used for authentication
+	// Token used for authentication.
 	Token string
-
-	// Remote if true if this is a remote API request
-	Remote bool
 }
 
 // Cluster is the API that a cluster provider will implement.

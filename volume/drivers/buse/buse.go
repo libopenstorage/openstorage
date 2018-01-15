@@ -368,6 +368,20 @@ func (cl *clusterListener) Join(
 	return nil
 }
 
+func (cl *clusterListener) Pair(
+	self *api.Node,
+	token cluster.ClusterToken,
+) error {
+	return nil
+}
+
+func (cl *clusterListener) RemotePairRequest(
+	self *api.Node,
+	token cluster.ClusterToken,
+) error {
+	return nil
+}
+
 func (cl *clusterListener) String() string {
 	return Name
 }

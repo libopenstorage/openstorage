@@ -1807,6 +1807,9 @@ func (c *ClusterManager) Pair(
 	// Pair with remote server
 	dlog.Infof("Attempting to pair with cluster at IP %v", t.Ip)
 
+	// Record our cluster ID in the request
+	t.Id = c.selfNode.Id
+
 	// Issue a remote pair request
 	if t, err := remote.RemotePairRequest(t); err != nil {
 		dlog.Warnln("Unable to pair with %v", t.Ip, err)
@@ -1833,6 +1836,21 @@ func (c *ClusterManager) Pair(
 
 	_, err = writeClusterInfo(&db)
 
+	// Alert all listeners that we are pairing with a cluster.
+	for e := c.listeners.Front(); e != nil; e = e.Next() {
+		err = e.Value.(ClusterListener).Pair(
+			&c.selfNode,
+			t,
+		)
+		if err != nil {
+			dlog.Errorf("Unable to notify %v on a a cluster pair event: %v",
+				e.Value.(ClusterListener).String(),
+				err,
+			)
+			return t, err
+		}
+	}
+
 	dlog.Infof("Successfully paired with cluster ID %v", t.Id)
 
 	return t, nil
@@ -1850,6 +1868,9 @@ func (c *ClusterManager) RemotePairRequest(
 	}
 	defer kvdb.Unlock(kvlock)
 
+	remoteId := t.Id
+	dlog.Infof("Processing an remote pair request from cluster %v", remoteId)
+
 	db, _, err := readClusterInfo()
 	if err != nil {
 		return t, err
@@ -1864,6 +1885,24 @@ func (c *ClusterManager) RemotePairRequest(
 	}
 
 	t.Id = db.Id
+
+	// Alert all listeners that we are pairing with a cluster.
+	for e := c.listeners.Front(); e != nil; e = e.Next() {
+		err = e.Value.(ClusterListener).RemotePairRequest(
+			&c.selfNode,
+			t,
+		)
+		if err != nil {
+			dlog.Errorf("Unable to notify %v on a a cluster remote pair request: %v",
+				e.Value.(ClusterListener).String(),
+				err,
+			)
+
+			return t, err
+		}
+	}
+
+	dlog.Infof("Successfully paired with remote cluster %v", remoteId)
 
 	return t, nil
 }
