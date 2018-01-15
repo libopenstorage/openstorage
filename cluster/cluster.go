@@ -443,3 +443,17 @@ func (nc *NullClusterListener) EraseAlert(
 ) error {
 	return nil
 }
+
+func (nc *NullClusterListener) Pair(
+	self *api.Node,
+	token ClusterToken,
+) error {
+	return nil
+}
+
+func (nc *NullClusterListener) RemotePairRequest(
+	self *api.Node,
+	token ClusterToken,
+) error {
+	return nil
+}
