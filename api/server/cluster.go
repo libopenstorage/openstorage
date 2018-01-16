@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"go.pedge.io/dlog"
+
 	"github.com/gorilla/mux"
 
 	"github.com/libopenstorage/openstorage/api"
@@ -49,7 +51,7 @@ func (c *clusterApi) Routes() []*Route {
 		{verb: "GET", path: clusterPath("/alerts/{resource}", cluster.APIVersion), fn: c.enumerateAlerts},
 		{verb: "PUT", path: clusterPath("/alerts/{resource}/{id}", cluster.APIVersion), fn: c.clearAlert},
 		{verb: "DELETE", path: clusterPath("/alerts/{resource}/{id}", cluster.APIVersion), fn: c.eraseAlert},
-		{verb: "PUT", path: clusterPath("/pair/{ip}/{token}", cluster.APIVersion), fn: c.pair},
+		{verb: "PUT", path: clusterPath("/pair/{ip}/{port}/{token}", cluster.APIVersion), fn: c.pair},
 		{verb: "PUT", path: clusterPath("/remotepairrequest", cluster.APIVersion), fn: c.remotePairRequest},
 		{verb: "PUT", path: clusterPath("/resetpairtoken", cluster.APIVersion), fn: c.resetPairToken},
 		{verb: "GET", path: clusterPath("/getpairtoken", cluster.APIVersion), fn: c.getPairToken},
@@ -598,32 +600,42 @@ func handleResourceType(resource string) (api.ResourceType, error) {
 	}
 }
 
-func (c *clusterApi) getPairParams(w http.ResponseWriter, r *http.Request, method string) (string, string, error) {
+func (c *clusterApi) getPairParams(w http.ResponseWriter, r *http.Request, method string) (string, string, string, error) {
 	returnErr := fmt.Errorf("Invalid param")
+
 	vars := mux.Vars(r)
 	ip, ok := vars["ip"]
 	if !ok {
 		c.sendError(c.name, method, w, "Missing/Invalid IP param", http.StatusBadRequest)
-		return "", "", returnErr
+		return "", "", "", returnErr
+	}
+
+	vars = mux.Vars(r)
+	port, ok := vars["port"]
+	if !ok {
+		c.sendError(c.name, method, w, "Missing/Invalid port param", http.StatusBadRequest)
+		return "", "", "", returnErr
 	}
 
 	vars = mux.Vars(r)
 	token, ok := vars["token"]
 	if !ok {
 		c.sendError(c.name, method, w, "Missing/Invalid token param", http.StatusBadRequest)
-		return "", "", returnErr
+		return "", "", "", returnErr
 	}
 
-	return ip, token, nil
+	return ip, port, token, nil
 }
 
 func (c *clusterApi) pair(w http.ResponseWriter, r *http.Request) {
 	method := "pair"
 
-	ip, token, err := c.getPairParams(w, r, method)
+	ip, port, token, err := c.getPairParams(w, r, method)
 	if err != nil {
 		return
 	}
+
+	apiserver := "http://" + ip + ":" + port
 
 	inst, err := cluster.Inst()
 	if err != nil {
@@ -637,7 +649,8 @@ func (c *clusterApi) pair(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create a remote cluster client.
-	clnt, err := clusterclient.NewClusterClient(ip, cluster.APIVersion)
+	dlog.Infof("Creating a remote API object for a pair request at %v", apiserver)
+	clnt, err := clusterclient.NewClusterClient(apiserver, cluster.APIVersion)
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -656,10 +669,12 @@ func (c *clusterApi) pair(w http.ResponseWriter, r *http.Request) {
 func (c *clusterApi) remotePairRequest(w http.ResponseWriter, r *http.Request) {
 	method := "pair"
 
-	vars := mux.Vars(r)
-	token, ok := vars["token"]
-	if !ok {
-		c.sendError(c.name, method, w, "Missing/Invalid auth token param", http.StatusBadRequest)
+	t := cluster.ClusterToken{}
+	contents, _ := ioutil.ReadAll(r.Body)
+	err := json.Unmarshal(contents, &t)
+	if err != nil {
+		dlog.Warnf("Unable to parse cluster token on remote pair request: %v", err)
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -669,12 +684,9 @@ func (c *clusterApi) remotePairRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := inst.RemotePairRequest(
-		cluster.ClusterToken{
-			Token: token,
-		},
-	)
+	resp, err := inst.RemotePairRequest(t)
 	if err != nil {
+		dlog.Warnf("Unable to complete remote pair request for %v: %v", t, err)
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
 	}

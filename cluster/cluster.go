@@ -69,9 +69,13 @@ type ClusterToken struct {
 	Id string
 	// Ip of the cluster being paired with.
 	Ip string
+	// Port on which the API server is listening.
+	Port uint64
+	// Secure is on if the API server is listening on a secure port.
+	Secure bool
 	// Token used for authentication.
 	Token string
-	// Opts are opaque options
+	// Opts are opaque options.
 	Opts map[string]string
 }
 

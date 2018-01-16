@@ -1804,8 +1804,10 @@ func (c *ClusterManager) Pair(
 	remote Cluster,
 	t ClusterToken,
 ) (ClusterToken, error) {
+	remoteIp := t.Ip
+
 	// Pair with remote server
-	dlog.Infof("Attempting to pair with cluster at IP %v", t.Ip)
+	dlog.Infof("Attempting to pair with cluster at IP %v", remoteIp)
 
 	t.Opts = make(map[string]string)
 
@@ -1814,7 +1816,7 @@ func (c *ClusterManager) Pair(
 
 	// Issue a remote pair request
 	if t, err := remote.RemotePairRequest(t); err != nil {
-		dlog.Warnln("Unable to pair with %v", t.Ip, err)
+		dlog.Warnf("Unable to pair with %v: %v", remoteIp, err)
 		return t, err
 	}
 

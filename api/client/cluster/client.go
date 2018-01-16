@@ -37,7 +37,9 @@ func (c *clusterClient) Pair(
 	token cluster.ClusterToken,
 ) (cluster.ClusterToken, error) {
 	resp := cluster.ClusterToken{}
-	path := clusterPath + "/pair/" + token.Ip + "/" + token.Token
+
+	path := clusterPath + "/pair/" + token.Ip + "/" +
+		strconv.FormatUint(token.Port, 10) + "/" + token.Token
 	if err := c.c.Put().Resource(path).Do().Unmarshal(&resp); err != nil {
 		return resp, err
 	}
@@ -50,8 +52,11 @@ func (c *clusterClient) RemotePairRequest(
 ) (cluster.ClusterToken, error) {
 	resp := cluster.ClusterToken{}
 
-	path := clusterPath + "/remotepairrequest/" + token.Token
-	if err := c.c.Put().Resource(path).Do().Unmarshal(&resp); err != nil {
+	path := clusterPath + "/remotepairrequest/"
+	request := c.c.Put().Resource(path)
+	request.Body(&token)
+
+	if err := request.Do().Unmarshal(&resp); err != nil {
 		return resp, err
 	}
 
