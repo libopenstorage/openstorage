@@ -691,8 +691,6 @@ func (c *clusterApi) remotePairRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dlog.Infof("*** ENCODING %v\n", resp)
-
 	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
 		dlog.Warnf("Error while encoding pair response: %v", err)

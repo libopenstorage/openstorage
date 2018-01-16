@@ -1848,7 +1848,7 @@ func (c *ClusterManager) Pair(
 			&resp,
 		)
 		if err != nil {
-			dlog.Errorf("Unable to notify %v on a a cluster pair event: %v",
+			dlog.Errorf("Unable to notify %v on a cluster pair event: %v",
 				e.Value.(ClusterListener).String(),
 				err,
 			)
@@ -1906,8 +1906,6 @@ func (c *ClusterManager) RemotePairRequest(
 			return t, err
 		}
 	}
-
-	dlog.Infof("*** GOT THIS FROM LISTENERS %v ****\n", t)
 
 	dlog.Infof("Successfully paired with remote cluster %v", remoteId)
 
