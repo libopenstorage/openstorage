@@ -97,6 +97,9 @@ pretest: lint vet errcheck
 test:
 	go test -tags "$(TAGS)" $(TESTFLAGS) $(shell go list ./... | grep -v vendor)
 
+docs:
+	go generate ./cmd/osd/main.go
+
 docker-build-osd-dev:
 	docker build -t openstorage/osd-dev -f Dockerfile.osd-dev .
 
@@ -192,6 +195,7 @@ clean:
 	errcheck \
 	pretest \
 	test \
+	docs \
 	docker-build-osd-dev \
 	docker-build \
 	docker-test \
