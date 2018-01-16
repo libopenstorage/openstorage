@@ -124,10 +124,10 @@ type ClusterListener interface {
 	Halt(self *api.Node, clusterInfo *ClusterInfo) error
 
 	// Pair is called when we are pairing with another cluster.
-	Pair(self *api.Node, token ClusterToken) error
+	Pair(self *api.Node, token *ClusterToken) error
 
 	// RemotePairRequest is called when we get a pair request from another cluster
-	RemotePairRequest(self *api.Node, token ClusterToken) error
+	RemotePairRequest(self *api.Node, token *ClusterToken) error
 
 	ClusterListenerNodeOps
 	ClusterListenerStatusOps
@@ -451,14 +451,14 @@ func (nc *NullClusterListener) EraseAlert(
 
 func (nc *NullClusterListener) Pair(
 	self *api.Node,
-	token ClusterToken,
+	token *ClusterToken,
 ) error {
 	return nil
 }
 
 func (nc *NullClusterListener) RemotePairRequest(
 	self *api.Node,
-	token ClusterToken,
+	token *ClusterToken,
 ) error {
 	return nil
 }

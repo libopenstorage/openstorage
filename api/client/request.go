@@ -304,6 +304,7 @@ func (r Response) Unmarshal(v interface{}) error {
 	if r.err != nil {
 		return r.err
 	}
+
 	return json.Unmarshal(r.body, v)
 }
 

@@ -1815,7 +1815,8 @@ func (c *ClusterManager) Pair(
 	t.Id = c.selfNode.Id
 
 	// Issue a remote pair request
-	if t, err := remote.RemotePairRequest(t); err != nil {
+	resp, err := remote.RemotePairRequest(t)
+	if err != nil {
 		dlog.Warnf("Unable to pair with %v: %v", remoteIp, err)
 		return t, err
 	}
@@ -1825,18 +1826,18 @@ func (c *ClusterManager) Pair(
 	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
 	if err != nil {
 		dlog.Warnln("Unable to obtain cluster lock for updating logging url into cluster config", err)
-		return t, err
+		return resp, err
 	}
 	defer kvdb.Unlock(kvlock)
 
 	db, _, err := readClusterInfo()
 	if err != nil {
-		return t, err
+		return resp, err
 	}
 
-	db.RemotePairIp = t.Ip
-	db.RemotePairId = t.Id
-	db.RemotePairToken = t.Token
+	db.RemotePairIp = resp.Ip
+	db.RemotePairId = resp.Id
+	db.RemotePairToken = resp.Token
 
 	_, err = writeClusterInfo(&db)
 
@@ -1844,20 +1845,20 @@ func (c *ClusterManager) Pair(
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err = e.Value.(ClusterListener).Pair(
 			&c.selfNode,
-			t,
+			&resp,
 		)
 		if err != nil {
 			dlog.Errorf("Unable to notify %v on a a cluster pair event: %v",
 				e.Value.(ClusterListener).String(),
 				err,
 			)
-			return t, err
+			return resp, err
 		}
 	}
 
-	dlog.Infof("Successfully paired with cluster ID %v", t.Id)
+	dlog.Infof("Successfully paired with cluster ID %v", resp.Id)
 
-	return t, nil
+	return resp, nil
 }
 
 // RemotePairPair handles a remote cluster's pair request
@@ -1894,7 +1895,7 @@ func (c *ClusterManager) RemotePairRequest(
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err = e.Value.(ClusterListener).RemotePairRequest(
 			&c.selfNode,
-			t,
+			&t,
 		)
 		if err != nil {
 			dlog.Errorf("Unable to notify %v on a a cluster remote pair request: %v",
@@ -1905,6 +1906,8 @@ func (c *ClusterManager) RemotePairRequest(
 			return t, err
 		}
 	}
+
+	dlog.Infof("*** GOT THIS FROM LISTENERS %v ****\n", t)
 
 	dlog.Infof("Successfully paired with remote cluster %v", remoteId)
 

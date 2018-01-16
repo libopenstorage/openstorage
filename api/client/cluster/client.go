@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -51,6 +52,7 @@ func (c *clusterClient) RemotePairRequest(
 	token cluster.ClusterToken,
 ) (cluster.ClusterToken, error) {
 	resp := cluster.ClusterToken{}
+	resp.Opts = make(map[string]string)
 
 	path := clusterPath + "/remotepairrequest/"
 	request := c.c.Put().Resource(path)
