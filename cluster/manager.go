@@ -1,6 +1,6 @@
 // Package cluster implements a cluster state machine.  It relies on a cluster
-// wide key-value store for coordinating the state of the cluster.
-// It also stores the state of the cluster in this key-value store.
+// wide keyvalue store for coordinating the state of the cluster.
+// It also stores the state of the cluster in this keyvalue store.
 package cluster
 
 import (
@@ -359,13 +359,14 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 	}
 
 	c.size = db.Size
+
 	//Check and update logging url changes
 	updateLoggingUrlListeners(c, db)
 	//Check and update mgmt url changes
 	updateManagementUrlListeners(c, db)
 	// check and update fluentd host changes
 	updateFluentDHostListeners(c, db)
-	// Update the peers. A node might have been removed or added
+
 	peers := c.getNonDecommisionedPeers(db)
 	c.gossip.UpdateCluster(peers)
 	c.nodeCacheLock.Lock()
@@ -1041,6 +1042,7 @@ func (c *ClusterManager) initializeCluster(db kvdb.Kvdb) (
 	}
 	// Set the clusterID in db
 	clusterInfo.Id = c.config.ClusterId
+
 	clusterInfo.LoggingURL = c.config.LoggingURL
 	dlog.Infof("LoggingURL during initializing a new cluster: %s ", clusterInfo.LoggingURL)
 

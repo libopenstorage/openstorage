@@ -192,6 +192,8 @@ type ClusterData interface {
 	// GetGossipState returns the state of nodes according to gossip
 	GetGossipState() *ClusterState
 
+	// SetLoggingURL sets the loggingurl for the stats
+	// Deprecated
 	SetLoggingURL(loggingURL string) error
 
 	SetManagementURL(managementURL string) error
