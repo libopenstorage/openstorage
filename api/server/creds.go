@@ -3,8 +3,10 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/libopenstorage/openstorage/api"
 	"net/http"
+
+	"github.com/gorilla/mux"
+	"github.com/libopenstorage/openstorage/api"
 )
 
 func (vd *volAPI) credsEnumerate(w http.ResponseWriter, r *http.Request) {
@@ -53,15 +55,10 @@ func (vd *volAPI) credsDelete(w http.ResponseWriter, r *http.Request) {
 	var err error
 	volumeResponse := &api.VolumeResponse{}
 
-	err = r.ParseForm()
-	if err != nil {
-		volumeResponse.Error = err.Error()
-		json.NewEncoder(w).Encode(volumeResponse)
-		return
-	}
-	uuid := r.Form.Get(api.OptCredUUID)
-	if uuid == "" {
-		volumeResponse.Error = fmt.Sprintf("Missing uuid param")
+	vars := mux.Vars(r)
+	uuid, ok := vars["uuid"]
+	if !ok {
+		volumeResponse.Error = "Could not parse form for uuid"
 		json.NewEncoder(w).Encode(volumeResponse)
 		return
 	}
@@ -80,19 +77,13 @@ func (vd *volAPI) credsDelete(w http.ResponseWriter, r *http.Request) {
 func (vd *volAPI) credsValidate(w http.ResponseWriter, r *http.Request) {
 	var err error
 	volumeResponse := &api.VolumeResponse{}
-	err = r.ParseForm()
-	if err != nil {
-		volumeResponse.Error = err.Error()
+	vars := mux.Vars(r)
+	uuid, ok := vars["uuid"]
+	if !ok {
+		volumeResponse.Error = "Could not parse form for uuid"
 		json.NewEncoder(w).Encode(volumeResponse)
 		return
 	}
-	uuid := r.Form.Get(api.OptCredUUID)
-	if uuid == "" {
-		volumeResponse.Error = fmt.Sprintf("Missing uuid param")
-		json.NewEncoder(w).Encode(volumeResponse)
-		return
-	}
-
 	d, err := vd.getVolDriver(r)
 	if err != nil {
 		notFound(w, r)
