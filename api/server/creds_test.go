@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -63,7 +64,7 @@ func (s *testServer) Stop() {
 	s.mc.Finish()
 }
 
-func TestClientCredsDelete(t *testing.T) {
+func TestClientCredsValidateAndDelete(t *testing.T) {
 	vapi := &volAPI{}
 	router := mux.NewRouter()
 	// Register all routes from the App
@@ -75,14 +76,36 @@ func TestClientCredsDelete(t *testing.T) {
 	}
 
 	ts := httptest.NewServer(router)
-	cl, err := client.NewDriverClient(ts.URL, mockDriverName, "", "")
+	defer ts.Close()
+	cl, err := client.NewDriverClient(ts.URL, mockDriverName, "", mockDriverName)
 	require.NoError(t, err)
 
 	testVolDriver := newTestServer(t)
-	testVolDriver.MockDriver().EXPECT().CredsDelete("gooduuid").Return(nil).Times(1)
 	defer testVolDriver.Stop()
 
+	testVolDriver.MockDriver().EXPECT().CredsDelete("gooduuid").Return(nil).Times(1)
+	testVolDriver.MockDriver().EXPECT().CredsDelete("baduuid").Return(fmt.Errorf("Invalid UUID")).Times(1)
+
+	testVolDriver.MockDriver().EXPECT().CredsValidate("gooduuid").Return(nil).Times(1)
+	testVolDriver.MockDriver().EXPECT().CredsValidate("baduuid").Return(fmt.Errorf("Invalid UUID")).Times(1)
+
+	// Delete creds
 	err = client.VolumeDriver(cl).CredsDelete("gooduuid")
 	require.NoError(t, err)
+	err = client.VolumeDriver(cl).CredsDelete("baduuid")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "Invalid UUID")
+	err = client.VolumeDriver(cl).CredsDelete("")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "404")
+	//Validate creds
+	err = client.VolumeDriver(cl).CredsValidate("gooduuid")
+	require.NoError(t, err)
+	err = client.VolumeDriver(cl).CredsValidate("baduuid")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "Invalid UUID")
+	err = client.VolumeDriver(cl).CredsValidate("")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "404")
 
 }
