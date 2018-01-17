@@ -1,3 +1,29 @@
+//go:generate swagger generate spec -m -o ../../api/swagger/swagger.json
+
+// Package classification OSD API.
+//
+// OpenStorage is a clustered implementation of the Open Storage specification and relies on the Docker runtime.
+// It allows you to run stateful services in Docker in a multi-host environment.
+// It plugs into Docker volumes to provide storage to a container and plugs into Swarm to operate in a clustered environment.
+//
+// Terms Of Service:
+//
+// there are no TOS at this moment, use at your own risk we take no responsibility
+//
+//     Schemes: http, https
+//     Host: localhost
+//     BasePath: /v1
+//     Version: 1.0.0
+//     License: APACHE2 https://opensource.org/licenses/Apache-2.0
+//     Contact: Luis Pabon<luis@portworx.com>
+//
+//     Consumes:
+//     - application/json
+//
+//     Produces:
+//     - application/json
+//
+// swagger:meta
 package main
 
 import (

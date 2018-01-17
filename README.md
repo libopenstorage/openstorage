@@ -46,6 +46,11 @@ After setting up Go, you should be able to `go get` libopenstorage as expected (
 $ GO15VENDOREXPERIMENT=1 go get -d github.com/libopenstorage/openstorage/...
 ```
 
+## Documentation Dependencies
+
+The documentation autogeneration depends on [go-swagger](https://github.com/go-swagger/go-swagger). If you have not installed this, please follow [these instructions](https://github.com/go-swagger/go-swagger#static-binary) to install `go-swagger`. The install also requires `jq` so depending on your distro you'll have to install that too.
+
+
 ## Building from Source
 
 At this point you can build openstorage from the source folder:

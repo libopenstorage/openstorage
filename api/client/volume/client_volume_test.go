@@ -118,39 +118,6 @@ func TestClientCredCreate(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestClientCredsValidateAndDelete(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		err := r.ParseForm()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		uuid := r.Form.Get(api.OptCredUUID)
-		if uuid == "" {
-			http.Error(w, "Missing uuid param", http.StatusBadRequest)
-			return
-		}
-		response := &api.VolumeResponse{}
-		json.NewEncoder(w).Encode(response)
-
-	}))
-	defer ts.Close()
-
-	clnt, err := NewDriverClient(ts.URL, "pxd", "", "")
-	require.NoError(t, err)
-
-	err = VolumeDriver(clnt).CredsValidate("")
-	require.Error(t, err)
-	err = VolumeDriver(clnt).CredsValidate("adcs23-345678-2345qwe-kupl5890")
-	require.NoError(t, err)
-
-	err = VolumeDriver(clnt).CredsDelete("")
-	require.Error(t, err)
-	err = VolumeDriver(clnt).CredsDelete("adcs23-345678-2345qwe-kupl5890")
-	require.NoError(t, err)
-
-}
-
 func TestClientCredsList(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		response := make(map[string]interface{}, 0)

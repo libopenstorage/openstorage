@@ -97,6 +97,9 @@ pretest: lint vet errcheck
 test:
 	go test -tags "$(TAGS)" $(TESTFLAGS) $(shell go list ./... | grep -v vendor)
 
+docs:
+	go generate ./cmd/osd/main.go
+
 docker-build-osd-dev:
 	docker build -t openstorage/osd-dev -f Dockerfile.osd-dev .
 
@@ -117,8 +120,15 @@ docker-test: docker-build-osd-dev
 		--privileged \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v /mnt:/mnt \
+		-e AWS_REGION \
+		-e AWS_ZONE \
+		-e AWS_INSTANCE_NAME \
 		-e AWS_ACCESS_KEY_ID \
 		-e AWS_SECRET_ACCESS_KEY \
+		-e GOOGLE_APPLICATION_CREDENTIALS \
+		-e GCE_INSTANCE_NAME \
+		-e GCE_INSTANCE_ZONE \
+		-e GCE_INSTANCE_PROJECT \
 		-e "TAGS=$(TAGS)" \
 		-e "PKGS=$(PKGS)" \
 		-e "BUILDFLAGS=$(BUILDFLAGS)" \
@@ -185,6 +195,7 @@ clean:
 	errcheck \
 	pretest \
 	test \
+	docs \
 	docker-build-osd-dev \
 	docker-build \
 	docker-test \

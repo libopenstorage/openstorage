@@ -17,6 +17,12 @@ var (
 
 	errClusterInitialized    = errors.New("openstorage.cluster: already initialized")
 	errClusterNotInitialized = errors.New("openstorage.cluster: not initialized")
+
+	// Inst returns an instance of an already instantiated cluster manager.
+	// This function can be overridden for testing purposes
+	Inst = func() (Cluster, error) {
+		return clusterInst()
+	}
 )
 
 const (
@@ -186,6 +192,8 @@ type ClusterData interface {
 	// GetGossipState returns the state of nodes according to gossip
 	GetGossipState() *ClusterState
 
+	// SetLoggingURL sets the loggingurl for the stats
+	// Deprecated
 	SetLoggingURL(loggingURL string) error
 
 	SetManagementURL(managementURL string) error
@@ -285,8 +293,7 @@ func Init(cfg config.ClusterConfig) error {
 	return nil
 }
 
-// Inst returns an instance of an already instantiated cluster manager.
-func Inst() (Cluster, error) {
+func clusterInst() (Cluster, error) {
 	if inst == nil {
 		return nil, errClusterNotInitialized
 	}

@@ -323,12 +323,20 @@ func (m *Mounter) deletePath(path string) bool {
 // Mount new mountpoint for specified device.
 func (m *Mounter) Mount(
 	minor int,
-	device, path, fs string,
+	devPath, path, fs string,
 	flags uintptr,
 	data string,
 	timeout int,
 	opts map[string]string,
 ) error {
+	// device gets overwritten if opts specifies fuse mount with
+	// options.OptionsDeviceFuseMount.
+	device := devPath
+	if value, ok := opts[options.OptionsDeviceFuseMount]; ok {
+		// fuse mounts show-up with this key as device.
+		device = value
+	}
+
 	path = normalizeMountPath(path)
 	if len(m.allowedDirs) > 0 {
 		foundPrefix := false
@@ -386,7 +394,7 @@ func (m *Mounter) Mount(
 	}
 
 	// The device is not mounted at path, mount it and add to its mountpoints.
-	if err := m.mountImpl.Mount(device, path, fs, flags, data, timeout); err != nil {
+	if err := m.mountImpl.Mount(devPath, path, fs, flags, data, timeout); err != nil {
 		// Rollback only if was writeable
 		if !pathWasReadOnly {
 			if e := m.makeMountpathWriteable(path); e != nil {
@@ -407,15 +415,21 @@ func (m *Mounter) Mount(
 // Unmount device at mountpoint and from the matrix.
 // ErrEnoent is returned if the device or mountpoint for the device is not found.
 func (m *Mounter) Unmount(
-	device string,
+	devPath string,
 	path string,
 	flags int,
 	timeout int,
 	opts map[string]string,
 ) error {
 	m.Lock()
-
+	// device gets overwritten if opts specifies fuse mount with
+	// options.OptionsDeviceFuseMount.
+	device := devPath
 	path = normalizeMountPath(path)
+	if value, ok := opts[options.OptionsDeviceFuseMount]; ok {
+		// fuse mounts show-up with this key as device.
+		device = value
+	}
 	info, ok := m.mounts[device]
 	if !ok {
 		m.Unlock()
@@ -584,7 +598,7 @@ func (m *Mounter) isPathSetImmutable(mountpath string) bool {
 		return true
 	}
 	if strings.Contains(attrs[0], "i") {
-		dlog.Errorf("Mount Path already set to Immutable")
+		dlog.Warnf("Mount path %v already set to immutable", mountpath)
 		return true
 	}
 

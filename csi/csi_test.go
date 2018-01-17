@@ -33,6 +33,10 @@ import (
 	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
 )
 
+const (
+	mockDriverName = "mock"
+)
+
 // testServer is a simple struct used abstract
 // the creation and setup of the gRPC CSI service
 type testServer struct {
@@ -43,6 +47,18 @@ type testServer struct {
 	mc     *gomock.Controller
 }
 
+func setupMockDriver(tester *testServer, t *testing.T) {
+	volumedrivers.Add(mockDriverName, func(map[string]string) (volume.VolumeDriver, error) {
+		return tester.m, nil
+	})
+
+	var err error
+
+	// Register mock driver
+	err = volumedrivers.Register(mockDriverName, nil)
+	assert.Nil(t, err)
+}
+
 func newTestServer(t *testing.T) *testServer {
 	tester := &testServer{}
 
@@ -51,14 +67,12 @@ func newTestServer(t *testing.T) *testServer {
 	tester.m = mockdriver.NewMockVolumeDriver(tester.mc)
 	tester.c = mockcluster.NewMockCluster(tester.mc)
 
-	volumedrivers.Add("mock", func(map[string]string) (volume.VolumeDriver, error) {
-		return tester.m, nil
-	})
+	setupMockDriver(tester, t)
 
-	// Setup simple driver
 	var err error
+	// Setup simple driver
 	tester.server, err = NewOsdCsiServer(&OsdCsiServerConfig{
-		DriverName: "mock",
+		DriverName: mockDriverName,
 		Net:        "tcp",
 		Address:    "127.0.0.1:0",
 		Cluster:    tester.c,
@@ -120,15 +134,17 @@ func TestCSIServerStart(t *testing.T) {
 	assert.NotNil(t, err)
 
 	// Make a call
-	s.MockDriver().EXPECT().Name().Return("mock").Times(1)
+	s.MockDriver().EXPECT().Name().Return("mock").Times(2)
 	c := csi.NewIdentityClient(s.Conn())
-	r, err := c.GetPluginInfo(context.Background(), &csi.GetPluginInfoRequest{})
+	r, err := c.GetPluginInfo(context.Background(), &csi.GetPluginInfoRequest{
+		Version: &csi.Version{},
+	})
 	assert.Nil(t, err)
 
 	// Verify
 	name := r.GetName()
 	version := r.GetVendorVersion()
-	assert.Equal(t, name, csiDriverName)
+	assert.Equal(t, name, csiDriverNamePrefix+"mock")
 	assert.Equal(t, version, csiDriverVersion)
 }
 
@@ -149,6 +165,7 @@ func TestCSIServerStop(t *testing.T) {
 }
 
 func TestNewCSIServerBadParameters(t *testing.T) {
+	setupMockDriver(&testServer{}, t)
 	s, err := NewOsdCsiServer(nil)
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
@@ -180,7 +197,7 @@ func TestNewCSIServerBadParameters(t *testing.T) {
 	})
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "Unable to setup driver name")
+	assert.Contains(t, err.Error(), "Unable to get driver")
 
 	// Add driver to registry
 	mc := gomock.NewController(t)

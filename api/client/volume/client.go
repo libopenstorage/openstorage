@@ -458,8 +458,7 @@ func (v *volumeClient) CredsCreate(params map[string]string) (string, error) {
 
 func (v *volumeClient) CredsDelete(uuid string) error {
 	response := &api.VolumeResponse{}
-	req := v.c.Delete().Resource(credsPath)
-	req.QueryOption(api.OptCredUUID, uuid)
+	req := v.c.Delete().Resource(credsPath).Instance(uuid)
 	err := req.Do().Unmarshal(&response)
 	if err != nil {
 		return err
@@ -473,7 +472,6 @@ func (v *volumeClient) CredsDelete(uuid string) error {
 func (v *volumeClient) CredsValidate(uuid string) error {
 	response := &api.VolumeResponse{}
 	req := v.c.Post().Resource(credsPath + "/validate").Instance(uuid)
-	req.QueryOption(api.OptCredUUID, uuid)
 	err := req.Do().Unmarshal(&response)
 	if err != nil {
 		return err

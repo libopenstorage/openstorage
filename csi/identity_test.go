@@ -23,6 +23,8 @@ import (
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func TestNewCSIServerGetPluginInfo(t *testing.T) {
@@ -32,18 +34,31 @@ func TestNewCSIServerGetPluginInfo(t *testing.T) {
 	defer s.Stop()
 
 	// Setup mock
-	s.MockDriver().EXPECT().Name().Return("mock").Times(1)
+	s.MockDriver().EXPECT().Name().Return("mock").Times(2)
 
-	// Make a call
+	// Setup client
 	c := csi.NewIdentityClient(s.Conn())
-	r, err := c.GetPluginInfo(context.Background(), &csi.GetPluginInfoRequest{})
-	assert.Nil(t, err)
+
+	// No version added
+	_, err := c.GetPluginInfo(context.Background(), &csi.GetPluginInfoRequest{})
+	assert.Error(t, err)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "Version")
+
+	// No version added
+	r, err := c.GetPluginInfo(context.Background(), &csi.GetPluginInfoRequest{
+		Version: &csi.Version{},
+	})
+	assert.NoError(t, err)
 
 	// Verify
 	name := r.GetName()
 	version := r.GetVendorVersion()
-	assert.Equal(t, name, csiDriverName)
+	assert.Equal(t, name, csiDriverNamePrefix+"mock")
 	assert.Equal(t, version, csiDriverVersion)
+
 	manifest := r.GetManifest()
 	assert.Len(t, manifest, 1)
 	assert.Equal(t, manifest["driver"], "mock")

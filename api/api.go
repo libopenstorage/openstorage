@@ -17,6 +17,7 @@ const (
 	SpecParent               = "parent"
 	SpecEphemeral            = "ephemeral"
 	SpecShared               = "shared"
+	SpecJournal              = "journal"
 	SpecNfs                  = "nfs"
 	SpecCascaded             = "cascaded"
 	SpecSticky               = "sticky"
@@ -91,7 +92,7 @@ const (
 	OptCredAzureAccountKey = "CredAccountKey"
 )
 
-// Api client-server Constants
+// Api clientserver Constants
 const (
 	OsdVolumePath   = "osd-volumes"
 	OsdSnapshotPath = "osd-snapshot"
@@ -107,32 +108,58 @@ const (
 // Node describes the state of a node.
 // It includes the current physical state (CPU, memory, storage, network usage) as
 // well as the containers running on the system.
+//
+// swagger:model
 type Node struct {
-	Id        string
-	Cpu       float64 // percentage.
-	MemTotal  uint64
-	MemUsed   uint64
-	MemFree   uint64
-	Avgload   int
-	Status    Status
+	// Id of the node.
+	Id string
+	// Cpu usage of the node.
+	Cpu float64 // percentage.
+	// Total Memory of the node
+	MemTotal uint64
+	// Used Memory of the node
+	MemUsed uint64
+	// Free Memory of the node
+	MemFree uint64
+	// Average load (percentage)
+	Avgload int
+	// Node Status see (Status object)
+	Status Status
+	// GenNumber of the node
 	GenNumber uint64
-	Disks     map[string]StorageResource
-	Pools     []StoragePool
-	MgmtIp    string
-	DataIp    string
+	// List of disks on this node.
+	Disks map[string]StorageResource
+	// List of storage pools this node supports
+	Pools []StoragePool
+	// Management IP
+	MgmtIp string
+	// Data IP
+	DataIp string
+	// Timestamp
 	Timestamp time.Time
+	// Start time of this node
 	StartTime time.Time
-	Hostname  string
-	NodeData  map[string]interface{}
+	// Hostname of this node
+	Hostname string
+	// Node data for this node (EX: Public IP, Provider, City..)
+	NodeData map[string]interface{}
 	// User defined labels for node. Key Value pairs
 	NodeLabels map[string]string
 }
 
+// FluentDConfig describes ip and port of a fluentdhost.
+// DEPRECATED
+//
+// swagger:model
 type FluentDConfig struct {
 	IP   string `json:"ip"`
 	Port string `json:"port"`
 }
 
+// TunnelConfig describes key, cert and endpoint of a reverse proxy tunnel
+// DEPRECATED
+//
+// swagger:model
 type TunnelConfig struct {
 	Key      string `json:"key"`
 	Cert     string `json:"cert"`
@@ -140,17 +167,20 @@ type TunnelConfig struct {
 }
 
 // Cluster represents the state of the cluster.
+//
+// swagger:model
 type Cluster struct {
 	Status Status
 
-	// Id is the ID of the cluster.
+	// Id of the cluster.
+	//
+	// required: true
 	Id string
 
-	// NodeId is the ID of the node on which this cluster object
-	// is initialized
+	// Id of the node on which this cluster object is initialized
 	NodeId string
 
-	// Nodes is an array of all the nodes in the cluster.
+	// array of all the nodes in the cluster.
 	Nodes []Node
 
 	// Logging url for the cluster.
@@ -166,20 +196,6 @@ type Cluster struct {
 	TunnelConfig TunnelConfig
 }
 
-// StatPoint represents the basic structure of a single Stat reported
-// TODO: This is the first step to introduce stats in openstorage.
-//       Follow up task is to introduce an API for logging stats
-type StatPoint struct {
-	// Name of the Stat
-	Name string
-	// Tags for the Stat
-	Tags map[string]string
-	// Fields and values of the stat
-	Fields map[string]interface{}
-	// Timestamp in Unix format
-	Timestamp int64
-}
-
 // CredCreateRequest is the input for CredCreate command
 type CredCreateRequest struct {
 	// InputParams is map describing cloud provide
@@ -192,6 +208,20 @@ type CredCreateResponse struct {
 	UUID string
 	// CredErr indicates reasonfor failed CredCreate
 	CredErr string
+}
+
+// StatPoint represents the basic structure of a single Stat reported
+// TODO: This is the first step to introduce stats in openstorage.
+//       Follow up task is to introduce an API for logging stats
+type StatPoint struct {
+	// Name of the Stat
+	Name string
+	// Tags for the Stat
+	Tags map[string]string
+	// Fields and values of the stat
+	Fields map[string]interface{}
+	// Timestamp in Unix format
+	Timestamp int64
 }
 
 // DriverTypeSimpleValueOf returns the string format of DriverType
