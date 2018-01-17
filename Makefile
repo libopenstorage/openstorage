@@ -3,7 +3,7 @@ TAGS := daemon
 endif
 
 ifndef PKGS
-PKGS := $(shell go list ./... 2>&1 | grep -v 'github.com/libopenstorage/openstorage/vendor')
+PKGS := $(shell go list ./... 2>&1 | grep -v 'vendor' | grep -v 'sanity')
 endif
 
 ifndef LINT_PKGS
@@ -35,9 +35,11 @@ ifndef PROTOSRC_PATH
 PROTOSRC_PATH = $(PROTOS_PATH)/github.com/libopenstorage/openstorage
 endif
 
+OSDSANITY:=cmd/osd-sanity/osd-sanity
+
 export GO15VENDOREXPERIMENT=1
 
-all: build
+all: build $(OSDSANITY)
 
 deps:
 	GO15VENDOREXPERIMENT=0 go get -d -v $(PKGS)
@@ -52,7 +54,7 @@ update-test-deps:
 	GO15VENDOREXPERIMENT=0 go get -tags "$(TAGS)" -d -v -t -u -f $(PKGS)
 
 vendor-update:
-	GO15VENDOREXPERIMENT=0 GOOS=linux GOARCH=amd64 go get -tags "daemon btrfs_noversion have_btrfs have_chainfs" -d -v -t -u -f $(shell go list ./... 2>&1 | grep -v 'github.com/libopenstorage/openstorage/vendor')
+	GO15VENDOREXPERIMENT=0 GOOS=linux GOARCH=amd64 go get -tags "daemon btrfs_noversion have_btrfs have_chainfs" -d -v -t -u -f $(PKGS)
 
 vendor-without-update:
 	go get -v github.com/kardianos/govendor
@@ -68,8 +70,17 @@ vendor: vendor-update vendor-without-update
 build:
 	go build -tags "$(TAGS)" $(BUILDFLAGS) $(PKGS)
 
-install:
+install: $(OSDSANITY)-install
 	go install -tags "$(TAGS)" $(PKGS)
+
+$(OSDSANITY):
+	@$(MAKE) -C cmd/osd-sanity
+
+$(OSDSANITY)-install:
+	@$(MAKE) -C cmd/osd-sanity install
+
+$(OSDSANITY)-clean:
+	@$(MAKE) -C cmd/osd-sanity clean
 
 proto:
 	go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
@@ -86,7 +97,7 @@ lint:
 	golint -set_exit_status $(LINT_PKGS)
 
 vet:
-	go vet $(shell go list ./... | grep -v vendor)
+	go vet $(PKGS)
 
 errcheck:
 	go get -v github.com/kisielk/errcheck
@@ -95,7 +106,7 @@ errcheck:
 pretest: lint vet errcheck
 
 test:
-	go test -tags "$(TAGS)" $(TESTFLAGS) $(shell go list ./... | grep -v vendor)
+	go test -tags "$(TAGS)" $(TESTFLAGS) $(PKGS)
 
 docs:
 	go generate ./cmd/osd/main.go
@@ -175,7 +186,7 @@ install-flexvolume-plugin: install-flexvolume
 	sudo chmod 777 /usr/libexec/kubernetes/kubelet/volume/exec-plugins/openstorage~openstorage
 	cp $(GOPATH)/bin/flexvolume /usr/libexec/kubernetes/kubelet/volume/exec-plugins/openstorage~openstorage/openstorage
 
-clean:
+clean: $(OSDSANITY)-clean
 	go clean -i $(PKGS)
 
 .PHONY: \
@@ -204,6 +215,8 @@ clean:
 	launch \
 	launch-local-btrfs \
 	install-flexvolume-plugin \
+	$(OSDSANITY)-install \
+	$(OSDSANITY)-clean \
 	clean
 
 $(GOPATH)/bin/cover:
@@ -215,7 +228,7 @@ $(GOPATH)/bin/gotestcover:
 # Generate test-coverage HTML report
 # - note: the 'go test -coverprofile...' does append results, so we're merging individual pkgs in for-loop
 coverage: $(GOPATH)/bin/cover $(GOPATH)/bin/gotestcover
-	gotestcover -coverprofile=coverage.out $(shell go list ./... | grep -v vendor)
+	gotestcover -coverprofile=coverage.out $(PKGS)
 	go tool cover -html=coverage.out -o coverage.html
 	@echo "INFO: Summary of coverage"
 	go tool cover -func=coverage.out
