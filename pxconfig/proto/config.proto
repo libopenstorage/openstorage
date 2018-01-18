@@ -96,13 +96,13 @@ message AWSConfig {
 
 message StorageConfig {
     repeated string devices_md = 1;
-	int32 max_count = 2;
-	int32 max_drive_set_count = 3;
-	repeated string devices = 4;
-	string raid_level = 5;
-	string raid_level_md = 6;
-	bool async_io = 7;
-	int32 num_threads = 8;
+    int32 max_count = 2;
+    int32 max_drive_set_count = 3;
+    repeated string devices = 4;
+    string raid_level = 5;
+    string raid_level_md = 6;
+    bool async_io = 7;
+    int32 num_threads = 8;
 }
 
 
