@@ -1,10 +1,10 @@
-package pxconfig
+package osdconfig
 
 import (
 	"os"
 
-	"github.com/sdeoras/openstorage/pxconfig/client"
-	"github.com/sdeoras/openstorage/pxconfig/proto"
+	"github.com/sdeoras/openstorage/osdconfig/client"
+	"github.com/sdeoras/openstorage/osdconfig/proto"
 	"golang.org/x/net/context"
 )
 

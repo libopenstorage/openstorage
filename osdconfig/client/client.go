@@ -5,7 +5,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/portworx/kvdb"
-	"github.com/sdeoras/openstorage/pxconfig/proto"
+	"github.com/sdeoras/openstorage/osdconfig/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )

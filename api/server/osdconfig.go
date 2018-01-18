@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/sdeoras/openstorage/pxconfig"
+	"github.com/sdeoras/openstorage/osdconfig"
 )
 
 type pxconfigAPI struct {
@@ -23,7 +23,7 @@ func (p *pxconfigAPI) set(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *pxconfigAPI) get(w http.ResponseWriter, r *http.Request) {
-	if config, err := pxconfig.Get(); err != nil {
+	if config, err := osdconfig.Get(); err != nil {
 		// todo
 	} else {
 		json.NewEncoder(w).Encode(config)

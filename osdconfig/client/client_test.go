@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/sdeoras/openstorage/pxconfig/proto"
+	"github.com/sdeoras/openstorage/osdconfig/proto"
 	"golang.org/x/net/context"
 )
 
