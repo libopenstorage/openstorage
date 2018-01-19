@@ -911,6 +911,10 @@ func credsPath(route, version string) string {
 	return volVersion(api.OsdCredsPath+route, version)
 }
 
+func backupPath(route, version string) string {
+	return volVersion(api.OsdBackupPath+route, version)
+}
+
 func (vd *volAPI) Routes() []*Route {
 	return []*Route{
 		{verb: "GET", path: "/" + api.OsdVolumePath + "/versions", fn: vd.versions},
@@ -934,5 +938,16 @@ func (vd *volAPI) Routes() []*Route {
 		{verb: "POST", path: credsPath("", volume.APIVersion), fn: vd.credsCreate},
 		{verb: "DELETE", path: credsPath("/{uuid}", volume.APIVersion), fn: vd.credsDelete},
 		{verb: "POST", path: credsPath("/validate/{uuid}", volume.APIVersion), fn: vd.credsValidate},
+		{verb: "POST", path: backupPath("", volume.APIVersion), fn: vd.backup},
+		{verb: "POST", path: backupPath("/restore", volume.APIVersion), fn: vd.backuprestore},
+		{verb: "GET", path: backupPath("", volume.APIVersion), fn: vd.backupenumerate},
+		{verb: "DELETE", path: backupPath("", volume.APIVersion), fn: vd.backupdelete},
+		{verb: "POST", path: backupPath("/status", volume.APIVersion), fn: vd.backupstatus},
+		{verb: "GET", path: backupPath("/catalogue", volume.APIVersion), fn: vd.backupcatalogue},
+		{verb: "GET", path: backupPath("/history", volume.APIVersion), fn: vd.backuphistory},
+		{verb: "POST", path: backupPath("/statechange", volume.APIVersion), fn: vd.backupstatechange},
+		{verb: "POST", path: backupPath("/schedcreate", volume.APIVersion), fn: vd.backupschedcreate},
+		{verb: "POST", path: backupPath("/scheddelete", volume.APIVersion), fn: vd.backupscheddelete},
+		{verb: "GET", path: backupPath("/schedenumerate", volume.APIVersion), fn: vd.backupschedenumerate},
 	}
 }
