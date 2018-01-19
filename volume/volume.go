@@ -130,6 +130,32 @@ type QuiesceDriver interface {
 	Unquiesce(volumeID string) error
 }
 
+// CloudBackupDriver interface provides Cloud backup features
+type CloudBackupDriver interface {
+	// Backup uploads snapshot of a volume to cloud
+	Backup(input *api.BackupRequest) error
+	// BackupRestore downloads a cloud back and restores it to a volume
+	BackupRestore(input *api.BackupRestoreRequest) *api.BackupRestoreResponse
+	// BackupEnumerate enumerates the backups for a given cluster/credential/volumeID
+	BackupEnumerate(input *api.BackupGenericRequest) *api.BackupEnumerateResponse
+	// BackupDelete deletes the backups in cloud
+	BackupDelete(input *api.BackupGenericRequest) error
+	// BackupStatus indicates the most recent status of backup/restores
+	BackupStatus(input *api.BackupStsRequest) *api.BackupStsResponse
+	// BackupCatalogue displays listing of backup content
+	BackupCatalogue(input *api.BackupCatalogueRequest) *api.BackupCatalogueResponse
+	// History displays past backup/restore operations on a volume
+	BackupHistory(*api.BackupHistoryRequest) *api.BackupHistoryResponse
+	// ChangeBackupState allows a current backup state transisions(pause/resume/stop)
+	BackupStateChange(input *api.BackupStateChangeRequest) error
+	// BackupSchedCreate creates a schedule backup volume to cloud
+	BackupSchedCreate(input *api.BackupScheduleInfo) *api.BackupSchedResponse
+	// BackupSchedDelete delete a volume backup schedule to cloud
+	BackupSchedDelete(input *api.BackupSchedDeleteRequest) error
+	// BackupSchedEnumerate enumerates the configured backup schedules in the cluster
+	BackupSchedEnumerate() *api.BackupSchedEnumerateResponse
+}
+
 // ProtoDriver must be implemented by all volume drivers.  It specifies the
 // most basic functionality, such as creating and deleting volumes.
 type ProtoDriver interface {
@@ -137,6 +163,7 @@ type ProtoDriver interface {
 	StatsDriver
 	QuiesceDriver
 	CredsDriver
+	CloudBackupDriver
 	// Name returns the name of the driver.
 	Name() string
 	// Type of this driver
