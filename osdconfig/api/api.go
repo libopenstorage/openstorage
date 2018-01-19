@@ -1,4 +1,4 @@
-package osdconfigapi
+package api
 
 import (
 	"io"

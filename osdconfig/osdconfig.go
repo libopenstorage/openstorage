@@ -4,7 +4,7 @@ import (
 	"io"
 
 	"github.com/portworx/kvdb"
-	"github.com/sdeoras/openstorage/osdconfig/osdconfigapi"
+	"github.com/sdeoras/openstorage/osdconfig/api"
 	"github.com/sdeoras/openstorage/osdconfig/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -39,7 +39,7 @@ func NewGrpcConnection(conn OsdConfigGrpcConnector) *OsdConfig {
 }
 
 func (c *OsdConfig) Get(ctx context.Context, options ...interface{}) (*proto.Config, error) {
-	if pcc, err := osdconfigapi.NewInterface(c.cc); err != nil {
+	if pcc, err := api.NewInterface(c.cc); err != nil {
 		return nil, err
 	} else {
 		return pcc.Get(ctx, &proto.Empty{})
@@ -47,7 +47,7 @@ func (c *OsdConfig) Get(ctx context.Context, options ...interface{}) (*proto.Con
 }
 
 func (c *OsdConfig) Set(ctx context.Context, config *proto.Config, options ...interface{}) (*proto.Ack, error) {
-	if pcc, err := osdconfigapi.NewInterface(c.cc); err != nil {
+	if pcc, err := api.NewInterface(c.cc); err != nil {
 		return nil, err
 	} else {
 		return pcc.Set(ctx, config)
