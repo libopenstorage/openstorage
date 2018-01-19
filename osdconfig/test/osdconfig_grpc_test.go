@@ -90,7 +90,9 @@ func TestGrpc(t *testing.T) {
 
 	select {
 	case err := <-cerr:
-		t.Fatal(err)
+		if err != nil {
+			t.Fatal(err)
+		}
 	case <-time.After(time.Second * 2): // wait 2 seconds for grpc server to kick in
 		t.Log("grpc server probably up and running")
 	}
@@ -101,42 +103,58 @@ func TestGrpc(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	done := make(chan struct{})
-	go func(c chan struct{}) {
+	done := make(chan error)
+	go func(c chan error) {
 		client := osdconfig.NewGrpcConnection(&MyGrpcObj{conn})
 
 		ack, err := client.SetClusterSpec(context.Background(), config)
 		if err != nil {
-			t.Fatal(err)
+			c <- err
+			return
 		}
 
 		t.Log("Bytes written:", ack.N)
 
-		c <- struct{}{}
+		c <- nil
 	}(done)
-	<-done
 
-	go func(c chan struct{}) {
-		file, err := os.Open(ConfigFile)
+	select {
+	case err := <-done:
 		if err != nil {
 			t.Fatal(err)
+		}
+	case <-time.After(time.Second * 5):
+		t.Fatal("test timeout of 5 second")
+	}
+
+	go func(c chan error) {
+		file, err := os.Open(ConfigFile)
+		if err != nil {
+			c <- err
 		}
 		defer file.Close()
 
 		client := osdconfig.NewGrpcConnection(&MyGrpcObj{conn})
 		config, err := client.GetClusterSpec(context.Background(), &proto.Empty{})
 		if err != nil {
-			t.Fatal(err)
+			c <- err
 		}
 
 		jb, err := json.MarshalIndent(config, "", "  ")
 		if err != nil {
-			t.Fatal(err)
+			c <- err
 		}
 
 		t.Log(string(jb))
-		c <- struct{}{}
+		c <- nil
 	}(done)
-	<-done
 
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(time.Second * 5):
+		t.Fatal("test timeout of 5 second")
+	}
 }

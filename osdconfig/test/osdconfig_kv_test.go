@@ -5,6 +5,8 @@ import (
 	"os"
 	"testing"
 
+	"time"
+
 	"github.com/portworx/kvdb"
 	"github.com/sdeoras/openstorage/osdconfig"
 	"github.com/sdeoras/openstorage/osdconfig/proto"
@@ -31,42 +33,57 @@ func TestKV(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	done := make(chan struct{})
-	go func(c chan struct{}) {
+	done := make(chan error)
+	go func(c chan error) {
 		client := osdconfig.NewKVDBConnection(&MyKVObj{kv})
 
 		ack, err := client.SetClusterSpec(context.Background(), config)
 		if err != nil {
-			t.Fatal(err)
+			c <- err
 		}
 
 		t.Log("Bytes written:", ack.N)
 
-		c <- struct{}{}
+		c <- nil
 	}(done)
-	<-done
 
-	go func(c chan struct{}) {
-		file, err := os.Open(ConfigFile)
+	select {
+	case err := <-done:
 		if err != nil {
 			t.Fatal(err)
+		}
+	case <-time.After(time.Second * 2): // wait 2 seconds for grpc server to kick in
+		t.Log("grpc server probably up and running")
+	}
+
+	go func(c chan error) {
+		file, err := os.Open(ConfigFile)
+		if err != nil {
+			c <- err
 		}
 		defer file.Close()
 
 		client := osdconfig.NewKVDBConnection(&MyKVObj{kv})
 		config, err := client.GetClusterSpec(context.Background(), &proto.Empty{})
 		if err != nil {
-			t.Fatal(err)
+			c <- err
 		}
 
 		jb, err := json.MarshalIndent(config, "", "  ")
 		if err != nil {
-			t.Fatal(err)
+			c <- err
 		}
 
 		t.Log(string(jb))
-		c <- struct{}{}
+		c <- nil
 	}(done)
-	<-done
 
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(time.Second * 2): // wait 2 seconds for grpc server to kick in
+		t.Log("grpc server probably up and running")
+	}
 }
