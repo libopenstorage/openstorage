@@ -1,4 +1,4 @@
-package client
+package osdconfigapi
 
 import (
 	"io"
@@ -14,16 +14,16 @@ const (
 	INVALID_INPUT_TYPE_ERROR_MESG = "client I/O not defined for input type"
 )
 
-type PxConfigClient interface {
-	Get(ctx context.Context, in *proto.Empty) (*proto.Config, error)
-	Set(ctx context.Context, in *proto.Config) (*proto.Ack, error)
+type OsdConfigInterface interface {
+	Get(ctx context.Context, in *proto.Empty, options ...interface{}) (*proto.Config, error)
+	Set(ctx context.Context, in *proto.Config, options ...interface{}) (*proto.Ack, error)
 }
 
 type pxConfigClient struct {
 	cc interface{}
 }
 
-func New(c interface{}) (PxConfigClient, error) {
+func NewInterface(c interface{}) (OsdConfigInterface, error) {
 	switch v := c.(type) {
 	case *grpc.ClientConn:
 		return &pxConfigClient{v}, nil
@@ -36,10 +36,14 @@ func New(c interface{}) (PxConfigClient, error) {
 	}
 }
 
-func (c *pxConfigClient) Get(ctx context.Context, in *proto.Empty) (*proto.Config, error) {
+func (c *pxConfigClient) Get(ctx context.Context, in *proto.Empty, options ...interface{}) (*proto.Config, error) {
 	switch v := c.cc.(type) {
 	case *grpc.ClientConn:
-		return proto.NewClusterSpecClient(v).Get(ctx, in)
+		callOptions := make([]grpc.CallOption, len(options))
+		for i, v := range options {
+			callOptions[i] = v.(grpc.CallOption)
+		}
+		return proto.NewClusterSpecClient(v).Get(ctx, in, callOptions...)
 	case io.ReadWriter:
 		return proto.NewClusterSpecClientIO(v).Get(ctx, in)
 	case kvdb.Kvdb:
@@ -49,10 +53,14 @@ func (c *pxConfigClient) Get(ctx context.Context, in *proto.Empty) (*proto.Confi
 	}
 }
 
-func (c *pxConfigClient) Set(ctx context.Context, in *proto.Config) (*proto.Ack, error) {
+func (c *pxConfigClient) Set(ctx context.Context, in *proto.Config, options ...interface{}) (*proto.Ack, error) {
 	switch v := c.cc.(type) {
 	case *grpc.ClientConn:
-		return proto.NewClusterSpecClient(v).Set(ctx, in)
+		callOptions := make([]grpc.CallOption, len(options))
+		for i, v := range options {
+			callOptions[i] = v.(grpc.CallOption)
+		}
+		return proto.NewClusterSpecClient(v).Set(ctx, in, callOptions...)
 	case io.ReadWriter:
 		return proto.NewClusterSpecClientIO(v).Set(ctx, in)
 	case kvdb.Kvdb:

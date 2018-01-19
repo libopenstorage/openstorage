@@ -1,10 +1,13 @@
-package client
+package main
 
 import (
 	"encoding/json"
 	"os"
 	"testing"
 
+	"io"
+
+	"github.com/sdeoras/openstorage/osdconfig"
 	"github.com/sdeoras/openstorage/osdconfig/proto"
 	"golang.org/x/net/context"
 )
@@ -13,7 +16,15 @@ const (
 	ConfigFile = "/tmp/config.pb"
 )
 
-func TestNewClient(t *testing.T) {
+type MyIOObj struct {
+	file *os.File
+}
+
+func (m *MyIOObj) Handler() io.ReadWriter {
+	return m.file
+}
+
+func TestFileIO(t *testing.T) {
 	config := new(proto.Config)
 	config.Description = "this is description text"
 	config.Global = new(proto.GlobalConfig)
@@ -27,11 +38,7 @@ func TestNewClient(t *testing.T) {
 		}
 		defer file.Close()
 
-		client, err := New(file)
-		if err != nil {
-			t.Fatal(err)
-		}
-
+		client := osdconfig.NewIOConnection(&MyIOObj{file})
 		ack, err := client.Set(context.Background(), config)
 		if err != nil {
 			t.Fatal(err)
@@ -50,7 +57,7 @@ func TestNewClient(t *testing.T) {
 		}
 		defer file.Close()
 
-		client := proto.NewClusterSpecClientIO(file)
+		client := osdconfig.NewIOConnection(&MyIOObj{file})
 		config, err := client.Get(context.Background(), &proto.Empty{})
 		if err != nil {
 			t.Fatal(err)
