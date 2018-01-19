@@ -13,14 +13,6 @@ import (
 	"golang.org/x/net/context"
 )
 
-type MyKVObj struct {
-	kv kvdb.Kvdb
-}
-
-func (m *MyKVObj) Handler() kvdb.Kvdb {
-	return m.kv
-}
-
 func TestKV(t *testing.T) {
 	config := new(proto.ClusterConfig)
 	config.Description = "this is description text"
@@ -35,7 +27,7 @@ func TestKV(t *testing.T) {
 
 	done := make(chan error)
 	go func(c chan error) {
-		client := osdconfig.NewKVDBConnection(&MyKVObj{kv})
+		client := osdconfig.NewKVDBConnection(kv)
 
 		ack, err := client.SetClusterSpec(context.Background(), config)
 		if err != nil {
@@ -63,7 +55,7 @@ func TestKV(t *testing.T) {
 		}
 		defer file.Close()
 
-		client := osdconfig.NewKVDBConnection(&MyKVObj{kv})
+		client := osdconfig.NewKVDBConnection(kv)
 		config, err := client.GetClusterSpec(context.Background(), &proto.Empty{})
 		if err != nil {
 			c <- err

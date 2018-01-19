@@ -11,19 +11,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-// connector interfaces for clients of this library to implement
-type KVDBConnector interface {
-	Handler() kvdb.Kvdb
-}
-
-type IOConnector interface {
-	Handler() io.ReadWriter
-}
-
-type GrpcConnector interface {
-	Handler() *grpc.ClientConn
-}
-
 // top level obj to perform I/O on this package
 type OsdConfig struct {
 	cc interface{}
@@ -31,20 +18,20 @@ type OsdConfig struct {
 
 // constructors returning a handle to do I/O on osd config data
 // that exist in KVDB
-func NewKVDBConnection(conn KVDBConnector) *OsdConfig {
-	return &OsdConfig{conn.Handler()}
+func NewKVDBConnection(conn kvdb.Kvdb) *OsdConfig {
+	return &OsdConfig{conn}
 }
 
 // constructors returning a handle to do I/O on osd config data
 // that exist in, say, a local file
-func NewIOConnection(conn IOConnector) *OsdConfig {
-	return &OsdConfig{conn.Handler()}
+func NewIOConnection(conn io.ReadWriter) *OsdConfig {
+	return &OsdConfig{conn}
 }
 
 // constructors returning a handle to do I/O on osd config data
 // over grpc connection
-func NewGrpcConnection(conn GrpcConnector) *OsdConfig {
-	return &OsdConfig{conn.Handler()}
+func NewGrpcConnection(conn *grpc.ClientConn) *OsdConfig {
+	return &OsdConfig{conn}
 }
 
 func (c *OsdConfig) GetClusterSpec(ctx context.Context, options ...interface{}) (*proto.ClusterConfig, error) {

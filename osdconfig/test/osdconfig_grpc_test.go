@@ -18,14 +18,6 @@ const (
 	GRPC_ADDR = "127.0.0.1:7555"
 )
 
-type MyGrpcObj struct {
-	conn *grpc.ClientConn
-}
-
-func (m *MyGrpcObj) Handler() *grpc.ClientConn {
-	return m.conn
-}
-
 // implement a grpc server first
 type server struct{}
 
@@ -36,7 +28,7 @@ func (s *server) GetClusterSpec(ctx context.Context, in *proto.Empty) (*proto.Cl
 	}
 	defer file.Close()
 
-	client := osdconfig.NewIOConnection(&MyIOObj{file})
+	client := osdconfig.NewIOConnection(file)
 	return client.GetClusterSpec(context.Background(), &proto.Empty{})
 }
 func (s *server) SetClusterSpec(ctx context.Context, in *proto.ClusterConfig) (*proto.Ack, error) {
@@ -46,7 +38,7 @@ func (s *server) SetClusterSpec(ctx context.Context, in *proto.ClusterConfig) (*
 	}
 	defer file.Close()
 
-	client := osdconfig.NewIOConnection(&MyIOObj{file})
+	client := osdconfig.NewIOConnection(file)
 	return client.SetClusterSpec(context.Background(), in)
 }
 func (s *server) GetNodeSpec(ctx context.Context, in *proto.NodeID) (*proto.NodeConfig, error) {
@@ -56,7 +48,7 @@ func (s *server) GetNodeSpec(ctx context.Context, in *proto.NodeID) (*proto.Node
 	}
 	defer file.Close()
 
-	client := osdconfig.NewIOConnection(&MyIOObj{file})
+	client := osdconfig.NewIOConnection(file)
 	return client.GetNodeSpec(context.Background(), in)
 }
 func (s *server) SetNodeSpec(ctx context.Context, in *proto.NodeConfig) (*proto.Ack, error) {
@@ -66,7 +58,7 @@ func (s *server) SetNodeSpec(ctx context.Context, in *proto.NodeConfig) (*proto.
 	}
 	defer file.Close()
 
-	client := osdconfig.NewIOConnection(&MyIOObj{file})
+	client := osdconfig.NewIOConnection(file)
 	return client.SetNodeSpec(context.Background(), in)
 }
 
@@ -105,7 +97,7 @@ func TestGrpc(t *testing.T) {
 
 	done := make(chan error)
 	go func(c chan error) {
-		client := osdconfig.NewGrpcConnection(&MyGrpcObj{conn})
+		client := osdconfig.NewGrpcConnection(conn)
 
 		ack, err := client.SetClusterSpec(context.Background(), config)
 		if err != nil {
@@ -134,7 +126,7 @@ func TestGrpc(t *testing.T) {
 		}
 		defer file.Close()
 
-		client := osdconfig.NewGrpcConnection(&MyGrpcObj{conn})
+		client := osdconfig.NewGrpcConnection(conn)
 		config, err := client.GetClusterSpec(context.Background(), &proto.Empty{})
 		if err != nil {
 			c <- err

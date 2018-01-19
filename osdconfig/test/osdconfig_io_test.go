@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"io"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -16,14 +15,6 @@ import (
 const (
 	ConfigFile = "/tmp/config.pb"
 )
-
-type MyIOObj struct {
-	file *os.File
-}
-
-func (m *MyIOObj) Handler() io.ReadWriter {
-	return m.file
-}
 
 func TestFileIO(t *testing.T) {
 	config := new(proto.ClusterConfig)
@@ -42,7 +33,7 @@ func TestFileIO(t *testing.T) {
 		}
 		defer file.Close()
 
-		client := osdconfig.NewIOConnection(&MyIOObj{file})
+		client := osdconfig.NewIOConnection(file)
 		ack, err := client.SetClusterSpec(context.Background(), config)
 		if err != nil {
 			c <- err
@@ -69,7 +60,7 @@ func TestFileIO(t *testing.T) {
 		}
 		defer file.Close()
 
-		client := osdconfig.NewIOConnection(&MyIOObj{file})
+		client := osdconfig.NewIOConnection(file)
 		config, err := client.GetClusterSpec(context.Background(), &proto.Empty{})
 		if err != nil {
 			c <- err
