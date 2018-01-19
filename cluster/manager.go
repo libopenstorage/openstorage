@@ -1929,7 +1929,8 @@ func (c *ClusterManager) GetPairToken() (ClusterToken, error) {
 	}
 
 	t.Token = db.LocalPairToken
-	t.Id = db.Id
+	t.Id = db.RemotePairIp
+	t.Ip = db.RemotePairIp
 
 	return t, err
 }
