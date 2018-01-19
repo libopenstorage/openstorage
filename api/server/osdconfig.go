@@ -9,7 +9,6 @@ import (
 	"github.com/portworx/kvdb"
 	"github.com/sdeoras/openstorage/osdconfig"
 	"github.com/sdeoras/openstorage/osdconfig/proto"
-	"golang.org/x/net/context"
 )
 
 type osdconfigAPI struct {
@@ -59,7 +58,7 @@ func (p *osdconfigAPI) setClusterSpec(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if ack, err := client.SetClusterSpec(context.Background(), config); err != nil {
+	if ack, err := client.SetClusterSpec(r.Context(), config); err != nil {
 		p.sendError(p.name, method, w, err.Error(), http.StatusServiceUnavailable)
 		return
 	} else {
@@ -75,7 +74,7 @@ func (p *osdconfigAPI) getClusterSpec(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	config, err := client.GetClusterSpec(context.Background())
+	config, err := client.GetClusterSpec(r.Context())
 	if err != nil {
 		p.sendError(p.name, method, w, err.Error(), http.StatusBadRequest)
 		return
@@ -99,7 +98,7 @@ func (p *osdconfigAPI) getNodeSpec(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	config, err := client.GetNodeSpec(context.Background(), &proto.NodeID{ID: nodeID})
+	config, err := client.GetNodeSpec(r.Context(), &proto.NodeID{ID: nodeID})
 	if err != nil {
 		p.sendError(p.name, method, w, err.Error(), http.StatusServiceUnavailable)
 		return
@@ -122,7 +121,7 @@ func (p *osdconfigAPI) setNodeSpec(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if ack, err := client.SetNodeSpec(context.Background(), config); err != nil {
+	if ack, err := client.SetNodeSpec(r.Context(), config); err != nil {
 		p.sendError(p.name, method, w, err.Error(), http.StatusServiceUnavailable)
 		return
 	} else {
