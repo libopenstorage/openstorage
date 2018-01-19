@@ -91,4 +91,14 @@ var _ = Describe("Cluster [Cluster Tests]", func() {
 			}
 		})
 	})
+
+	Describe("Cluster SetSize", func() {
+		It("should accept a good size", func() {
+			Skip("SetSize is currently not exposed by the client")
+
+			By("Setting size to 100")
+			err := manager.SetSize(10)
+			Expect(err).NotTo(HaveOccurred())
+		})
+	})
 })
