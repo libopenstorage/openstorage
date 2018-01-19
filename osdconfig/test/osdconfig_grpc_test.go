@@ -2,10 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"net"
 	"os"
 	"testing"
-
-	"net"
 	"time"
 
 	"github.com/sdeoras/openstorage/osdconfig"

@@ -2,12 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"io"
+	"io/ioutil"
 	"os"
 	"testing"
-
-	"io"
-
-	"io/ioutil"
 	"time"
 
 	"github.com/sdeoras/openstorage/osdconfig"
