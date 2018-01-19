@@ -1,0 +1,110 @@
+syntax = "proto3";
+
+package proto;
+
+service ClusterSpec {
+    rpc Get(Empty) returns (Config) {};
+    rpc Set(Config) returns (Ack) {};
+}
+
+service NodeSpec {
+    rpc Get(Empty) returns (Config) {};
+    rpc Set(Config) returns (Ack) {};
+}
+
+message Empty {}
+message Ack {
+    int64 n = 1;
+}
+
+message Config {
+    string description = 1;
+    GlobalConfig global = 2;
+}
+
+message NodeConfig {
+    NetworkConfig network = 1;
+    SecretsConfig secrets = 2;
+    StorageConfig storage = 3;
+}
+
+message KVDBConfig {
+    string username = 1;
+    string password = 2;
+    string ca_file = 3;
+    string cert_file = 4;
+    string trusted_ca_file = 5;
+    string client_cert_auth = 6;
+    string acl_token = 7;
+    repeated string kvdb_addr = 8;
+}
+
+message GlobalConfig {
+    string mode = 1;
+    string version = 2;
+    string created = 3;
+    string cluster_id = 4;
+    string logging_url = 5;
+    string alerting_url = 6;
+    string scheduler = 7;
+    bool multicontainer = 8;
+    bool nolh = 9;
+    bool callhome = 10;
+    bool bootstrap = 11;
+    string tunnel_end_point = 12;
+    repeated string tunnel_certs = 13;
+    string driver = 14;
+    string debug_level = 15;
+    string domain = 16;
+    string mgmtip = 17;
+    string dataip = 18;
+    repeated NodeConfig nodes = 19;
+    KVDBConfig kvdb = 20;
+}
+
+message NetworkConfig {
+    string mgt_iface = 1;
+    string data_iface = 2;
+}
+
+message SecretsConfig {
+    string secret_type = 1;
+    string cluster_secret_key = 2;
+    VaultConfig vault = 3;
+    AWSConfig aws = 4;
+}
+
+message VaultConfig {
+    string vault_token = 1;
+    string vault_addr = 2;
+    string vault_cacert = 3;
+    string vault_capath = 4;
+    string vault_client_cert = 5;
+    string vault_client_key = 6;
+    string vault_skip_verify = 7;
+    string vault_tls_server_name = 8;
+    string vault_base_path = 9;
+}
+
+message AWSConfig {
+    string aws_access_key_id = 1;
+    string aws_secret_access_key = 2;
+    string aws_secret_token_key = 3;
+    string aws_cmk = 4;
+    string aws_region = 5;
+}
+
+message StorageConfig {
+    repeated string devices_md = 1;
+    int32 max_count = 2;
+    int32 max_drive_set_count = 3;
+    repeated string devices = 4;
+    string raid_level = 5;
+    string raid_level_md = 6;
+    bool async_io = 7;
+    int32 num_threads = 8;
+}
+
+
+
+
