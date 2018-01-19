@@ -5,24 +5,27 @@ import (
 	"io/ioutil"
 
 	"github.com/gogo/protobuf/proto"
+	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
 
-type ClusterSpecClientIO interface {
-	Get(ctx context.Context, in *Empty) (*Config, error)
-	Set(ctx context.Context, in *Config) (*Ack, error)
+type SpecClientIO interface {
+	GetClusterSpec(ctx context.Context, in *Empty) (*ClusterConfig, error)
+	SetClusterSpec(ctx context.Context, in *ClusterConfig) (*Ack, error)
+	GetNodeSpec(ctx context.Context, in *NodeID) (*NodeConfig, error)
+	SetNodeSpec(ctx context.Context, in *NodeConfig) (*Ack, error)
 }
 
-type clusterSpecClientIO struct {
+type specClientIO struct {
 	cc io.ReadWriter
 }
 
-func NewClusterSpecClientIO(cc io.ReadWriter) ClusterSpecClientIO {
-	return &clusterSpecClientIO{cc}
+func NewSpecClientIO(cc io.ReadWriter) SpecClientIO {
+	return &specClientIO{cc}
 }
 
-func (c *clusterSpecClientIO) Get(ctx context.Context, in *Empty) (*Config, error) {
-	out := new(Config)
+func (c *specClientIO) GetClusterSpec(ctx context.Context, in *Empty) (*ClusterConfig, error) {
+	out := new(ClusterConfig)
 	b, err := ioutil.ReadAll(c.cc)
 	if err != nil {
 		return nil, err
@@ -34,8 +37,58 @@ func (c *clusterSpecClientIO) Get(ctx context.Context, in *Empty) (*Config, erro
 	}
 }
 
-func (c *clusterSpecClientIO) Set(ctx context.Context, in *Config) (*Ack, error) {
+func (c *specClientIO) SetClusterSpec(ctx context.Context, in *ClusterConfig) (*Ack, error) {
 	b, err := proto.Marshal(in)
+	if err != nil {
+		return nil, err
+	}
+
+	if n, err := c.cc.Write(b); err != nil {
+		return nil, err
+	} else {
+		return &Ack{N: int64(n)}, nil
+	}
+}
+
+func (c *specClientIO) GetNodeSpec(ctx context.Context, in *NodeID) (*NodeConfig, error) {
+	if in == nil {
+		return nil, errors.New("NodeID was a nil pointer")
+	}
+
+	clusterConfig := new(ClusterConfig)
+	b, err := ioutil.ReadAll(c.cc)
+	if err != nil {
+		return nil, err
+	}
+	if err := proto.Unmarshal(b, clusterConfig); err != nil {
+		return nil, err
+	} else {
+		nodeConfig, present := clusterConfig.Nodes[in.ID]
+		if !present {
+			return nil, errors.New("NodeID not found")
+		} else {
+			return nodeConfig, nil
+		}
+	}
+}
+
+func (c *specClientIO) SetNodeSpec(ctx context.Context, in *NodeConfig) (*Ack, error) {
+	if in == nil {
+		return nil, errors.New("NodeConfig was a nil pointer")
+	}
+
+	clusterConfig := new(ClusterConfig)
+	b, err := ioutil.ReadAll(c.cc)
+	if err != nil {
+		return nil, err
+	}
+	if err := proto.Unmarshal(b, clusterConfig); err != nil {
+		return nil, err
+	} else {
+		clusterConfig.Nodes[in.NodeId] = in
+	}
+
+	b, err = proto.Marshal(clusterConfig)
 	if err != nil {
 		return nil, err
 	}

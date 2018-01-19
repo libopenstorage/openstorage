@@ -20,10 +20,9 @@ func (m *MyKVObj) Handler() kvdb.Kvdb {
 }
 
 func TestKV(t *testing.T) {
-	config := new(proto.Config)
+	config := new(proto.ClusterConfig)
 	config.Description = "this is description text"
-	config.Global = new(proto.GlobalConfig)
-	config.Global.AlertingUrl = "this is alerting url"
+	config.AlertingUrl = "this is alerting url"
 
 	options := make(map[string]string)
 	options["KvUseInterface"] = ""
@@ -34,9 +33,9 @@ func TestKV(t *testing.T) {
 
 	done := make(chan struct{})
 	go func(c chan struct{}) {
-		client := osdconfig.NewKVConnection(&MyKVObj{kv})
+		client := osdconfig.NewKVDBConnection(&MyKVObj{kv})
 
-		ack, err := client.Set(context.Background(), config)
+		ack, err := client.SetClusterSpec(context.Background(), config)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -54,8 +53,8 @@ func TestKV(t *testing.T) {
 		}
 		defer file.Close()
 
-		client := osdconfig.NewKVConnection(&MyKVObj{kv})
-		config, err := client.Get(context.Background(), &proto.Empty{})
+		client := osdconfig.NewKVDBConnection(&MyKVObj{kv})
+		config, err := client.GetClusterSpec(context.Background(), &proto.Empty{})
 		if err != nil {
 			t.Fatal(err)
 		}

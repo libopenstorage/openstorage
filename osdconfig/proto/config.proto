@@ -2,30 +2,26 @@ syntax = "proto3";
 
 package proto;
 
-service ClusterSpec {
-    rpc Get(Empty) returns (Config) {};
-    rpc Set(Config) returns (Ack) {};
-}
-
-service NodeSpec {
-    rpc Get(Empty) returns (Config) {};
-    rpc Set(Config) returns (Ack) {};
+service Spec {
+    rpc GetClusterSpec(Empty) returns (ClusterConfig) {};
+    rpc SetClusterSpec(ClusterConfig) returns (Ack) {};
+    rpc GetNodeSpec(NodeID) returns (NodeConfig) {};
+    rpc SetNodeSpec(NodeConfig) returns (Ack) {};
 }
 
 message Empty {}
 message Ack {
     int64 n = 1;
 }
-
-message Config {
-    string description = 1;
-    GlobalConfig global = 2;
+message NodeID {
+    string i_d = 1;
 }
 
 message NodeConfig {
-    NetworkConfig network = 1;
-    SecretsConfig secrets = 2;
-    StorageConfig storage = 3;
+    string node_id = 1;
+    NetworkConfig network = 2;
+    SecretsConfig secrets = 3;
+    StorageConfig storage = 4;
 }
 
 message KVDBConfig {
@@ -39,27 +35,28 @@ message KVDBConfig {
     repeated string kvdb_addr = 8;
 }
 
-message GlobalConfig {
-    string mode = 1;
-    string version = 2;
-    string created = 3;
-    string cluster_id = 4;
-    string logging_url = 5;
-    string alerting_url = 6;
-    string scheduler = 7;
-    bool multicontainer = 8;
-    bool nolh = 9;
-    bool callhome = 10;
-    bool bootstrap = 11;
-    string tunnel_end_point = 12;
-    repeated string tunnel_certs = 13;
-    string driver = 14;
-    string debug_level = 15;
-    string domain = 16;
-    string mgmtip = 17;
-    string dataip = 18;
-    repeated NodeConfig nodes = 19;
-    KVDBConfig kvdb = 20;
+message ClusterConfig {
+    string description = 1;
+    string mode = 2;
+    string version = 3;
+    string created = 4;
+    string cluster_id = 5;
+    string logging_url = 6;
+    string alerting_url = 7;
+    string scheduler = 8;
+    bool multicontainer = 9;
+    bool nolh = 10;
+    bool callhome = 11;
+    bool bootstrap = 12;
+    string tunnel_end_point = 13;
+    repeated string tunnel_certs = 14;
+    string driver = 15;
+    string debug_level = 16;
+    string domain = 17;
+    string mgmtip = 18;
+    string dataip = 19;
+    map<string, NodeConfig> nodes = 20;
+    KVDBConfig kvdb = 21;
 }
 
 message NetworkConfig {

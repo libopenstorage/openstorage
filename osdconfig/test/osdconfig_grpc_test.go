@@ -30,7 +30,7 @@ func (m *MyGrpcObj) Handler() *grpc.ClientConn {
 // implement a grpc server first
 type server struct{}
 
-func (s *server) Get(ctx context.Context, in *proto.Empty) (*proto.Config, error) {
+func (s *server) GetClusterSpec(ctx context.Context, in *proto.Empty) (*proto.ClusterConfig, error) {
 	file, err := os.Open(ConfigFile)
 	if err != nil {
 		return nil, err
@@ -38,9 +38,9 @@ func (s *server) Get(ctx context.Context, in *proto.Empty) (*proto.Config, error
 	defer file.Close()
 
 	client := osdconfig.NewIOConnection(&MyIOObj{file})
-	return client.Get(context.Background(), &proto.Empty{})
+	return client.GetClusterSpec(context.Background(), &proto.Empty{})
 }
-func (s *server) Set(ctx context.Context, in *proto.Config) (*proto.Ack, error) {
+func (s *server) SetClusterSpec(ctx context.Context, in *proto.ClusterConfig) (*proto.Ack, error) {
 	file, err := os.OpenFile(ConfigFile, os.O_WRONLY, 0644)
 	if err != nil {
 		return nil, err
@@ -48,14 +48,33 @@ func (s *server) Set(ctx context.Context, in *proto.Config) (*proto.Ack, error) 
 	defer file.Close()
 
 	client := osdconfig.NewIOConnection(&MyIOObj{file})
-	return client.Set(context.Background(), in)
+	return client.SetClusterSpec(context.Background(), in)
+}
+func (s *server) GetNodeSpec(ctx context.Context, in *proto.NodeID) (*proto.NodeConfig, error) {
+	file, err := os.Open(ConfigFile)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	client := osdconfig.NewIOConnection(&MyIOObj{file})
+	return client.GetNodeSpec(context.Background(), in)
+}
+func (s *server) SetNodeSpec(ctx context.Context, in *proto.NodeConfig) (*proto.Ack, error) {
+	file, err := os.OpenFile(ConfigFile, os.O_WRONLY, 0644)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	client := osdconfig.NewIOConnection(&MyIOObj{file})
+	return client.SetNodeSpec(context.Background(), in)
 }
 
 func TestGrpc(t *testing.T) {
-	config := new(proto.Config)
+	config := new(proto.ClusterConfig)
 	config.Description = "this is description text"
-	config.Global = new(proto.GlobalConfig)
-	config.Global.AlertingUrl = "this is alerting url"
+	config.AlertingUrl = "this is alerting url"
 
 	//start grpc server on localhost
 	lis, err := net.Listen("tcp", GRPC_ADDR)
@@ -63,7 +82,7 @@ func TestGrpc(t *testing.T) {
 		t.Fatal(err)
 	}
 	s := grpc.NewServer()
-	proto.RegisterClusterSpecServer(s, &server{})
+	proto.RegisterSpecServer(s, &server{})
 	reflection.Register(s)
 	cerr := make(chan error)
 	go func(c chan error) {
@@ -87,7 +106,7 @@ func TestGrpc(t *testing.T) {
 	go func(c chan struct{}) {
 		client := osdconfig.NewGrpcConnection(&MyGrpcObj{conn})
 
-		ack, err := client.Set(context.Background(), config)
+		ack, err := client.SetClusterSpec(context.Background(), config)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -106,7 +125,7 @@ func TestGrpc(t *testing.T) {
 		defer file.Close()
 
 		client := osdconfig.NewGrpcConnection(&MyGrpcObj{conn})
-		config, err := client.Get(context.Background(), &proto.Empty{})
+		config, err := client.GetClusterSpec(context.Background(), &proto.Empty{})
 		if err != nil {
 			t.Fatal(err)
 		}

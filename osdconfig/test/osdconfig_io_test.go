@@ -7,6 +7,9 @@ import (
 
 	"io"
 
+	"io/ioutil"
+	"time"
+
 	"github.com/sdeoras/openstorage/osdconfig"
 	"github.com/sdeoras/openstorage/osdconfig/proto"
 	"golang.org/x/net/context"
@@ -25,52 +28,70 @@ func (m *MyIOObj) Handler() io.ReadWriter {
 }
 
 func TestFileIO(t *testing.T) {
-	config := new(proto.Config)
+	config := new(proto.ClusterConfig)
 	config.Description = "this is description text"
-	config.Global = new(proto.GlobalConfig)
-	config.Global.AlertingUrl = "this is alerting url"
+	config.AlertingUrl = "this is alerting url"
 
-	done := make(chan struct{})
-	go func(c chan struct{}) {
+	done := make(chan error)
+	go func(c chan error) {
+		if err := ioutil.WriteFile(ConfigFile, []byte{}, 0644); err != nil {
+			c <- err
+		}
+
 		file, err := os.OpenFile(ConfigFile, os.O_WRONLY, 0644)
 		if err != nil {
-			t.Fatal(err)
+			c <- err
 		}
 		defer file.Close()
 
 		client := osdconfig.NewIOConnection(&MyIOObj{file})
-		ack, err := client.Set(context.Background(), config)
+		ack, err := client.SetClusterSpec(context.Background(), config)
 		if err != nil {
-			t.Fatal(err)
+			c <- err
 		}
 
 		t.Log("Bytes written:", ack.N)
 
-		c <- struct{}{}
+		c <- nil
 	}(done)
-	<-done
 
-	go func(c chan struct{}) {
-		file, err := os.Open(ConfigFile)
+	select {
+	case err := <-done:
 		if err != nil {
 			t.Fatal(err)
+		}
+	case <-time.After(time.Second * 5):
+		t.Fatal("test 5 second timeout")
+	}
+
+	go func(c chan error) {
+		file, err := os.Open(ConfigFile)
+		if err != nil {
+			c <- err
 		}
 		defer file.Close()
 
 		client := osdconfig.NewIOConnection(&MyIOObj{file})
-		config, err := client.Get(context.Background(), &proto.Empty{})
+		config, err := client.GetClusterSpec(context.Background(), &proto.Empty{})
 		if err != nil {
-			t.Fatal(err)
+			c <- err
 		}
 
 		jb, err := json.MarshalIndent(config, "", "  ")
 		if err != nil {
-			t.Fatal(err)
+			c <- err
 		}
 
 		t.Log(string(jb))
-		c <- struct{}{}
+		c <- nil
 	}(done)
-	<-done
 
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(time.Second * 5):
+		t.Fatal("test 5 second timeout")
+	}
 }
