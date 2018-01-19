@@ -7,7 +7,8 @@ import (
 
 const (
 	// OsdSocket is the unix socket for cluster apis
-	OsdSocket = "osd"
+	OsdSocket  = "osd"
+	APIVersion = cluster.APIVersion
 )
 
 // ClusterManager returns a REST wrapper for the Cluster interface.
