@@ -100,6 +100,7 @@ var (
 	compressedRegex   = regexp.MustCompile(api.SpecCompressed + "=([A-Za-z]+),?")
 	snapScheduleRegex = regexp.MustCompile(api.SpecSnapshotSchedule +
 		`=([A-Za-z0-9:;@=#]+),?`)
+	ioProfileRegex = regexp.MustCompile(api.SpecIoProfile + "=([0-9A-Za-z_-]+),?")
 )
 
 type specHandler struct {
@@ -397,6 +398,9 @@ func (d *specHandler) SpecOptsFromString(
 	if ok, sched := d.getVal(snapScheduleRegex, str); ok {
 		opts[api.SpecSnapshotSchedule] = strings.Replace(sched, "#", ",", -1)
 	}
+	if ok, ioProfile := d.getVal(ioProfileRegex, str); ok {
+		opts[api.SpecIoProfile] = ioProfile
+	}
 
 	return true, opts, name
 }
@@ -408,7 +412,6 @@ func (d *specHandler) SpecFromString(
 	if !ok {
 		return false, d.DefaultSpec(), nil, nil, name
 	}
-
 	spec, locator, source, err := d.SpecFromOpts(opts)
 	if err != nil {
 		return false, d.DefaultSpec(), nil, nil, name
