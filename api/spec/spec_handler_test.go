@@ -24,6 +24,12 @@ func testSpecFromString(t *testing.T, opt string, val string) *api.VolumeSpec {
 	return spec
 }
 
+func testSpecFromStringErr(t *testing.T, opt string, errVal string) {
+	s := NewSpecHandler()
+	parsed, _, _, _, _ := s.SpecFromString(fmt.Sprintf("name=volname,foo=bar,%s=%s", opt, errVal))
+	require.False(t, parsed, "Failed to parse spec string")
+}
+
 func TestOptJournal(t *testing.T) {
 	testSpecOptString(t, api.SpecJournal, "true")
 
@@ -35,4 +41,16 @@ func TestOptJournal(t *testing.T) {
 
 	spec = testSpecFromString(t, api.SpecSize, "100")
 	require.False(t, spec.Journal, "Default journal option spec")
+}
+
+func TestOptIoProfile(t *testing.T) {
+	testSpecOptString(t, api.SpecIoProfile, "DB")
+
+	spec := testSpecFromString(t, api.SpecIoProfile, "DB")
+	require.Equal(t, spec.IoProfile, api.IoProfile(2), "Unexpected io_profile value")
+
+	spec = testSpecFromString(t, api.SpecIoProfile, "db")
+	require.Equal(t, spec.IoProfile, api.IoProfile(2), "Unexpected io_profile value")
+
+	testSpecFromStringErr(t, api.SpecIoProfile, "2")
 }
