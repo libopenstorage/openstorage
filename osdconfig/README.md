@@ -34,12 +34,12 @@ var bb bytes.Buffer
 bw := bufio.NewWriter(&bb)
 
 // create a new read writer
-brw := bufio.NewReadWriter(br, bw)
+rw := bufio.NewReadWriter(br, bw)
 ```
 
 A client connection can then be obtained as follows:
 ```go
-client := osdconfig.NewConnection(brw)
+client := osdconfig.NewConnection(rw)
 ```
 
 ## reading and writing against kvdb connection
