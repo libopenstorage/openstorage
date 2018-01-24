@@ -37,7 +37,7 @@ type driver struct {
 	volume.StoreEnumerator
 	volume.StatsDriver
 	volume.QuiesceDriver
-  volume.CredsDriver
+	volume.CredsDriver
 	nfsServers []string
 	nfsPath    string
 	mounter    mount.Manager
