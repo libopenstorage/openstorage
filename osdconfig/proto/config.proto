@@ -1,0 +1,120 @@
+syntax = "proto3";
+
+// this package defines the configuration parameters and interfaces
+// requires to run portwork services
+package proto;
+
+service Spec {
+    rpc GetGlobalSpec(Empty) returns (GlobalConfig) {}
+    rpc SetGlobalSpec(GlobalConfig) returns (Ack) {}
+    rpc GetClusterSpec(Empty) returns (ClusterConfig) {};
+    rpc SetClusterSpec(ClusterConfig) returns (Ack) {};
+    rpc GetNodeSpec(NodeID) returns (NodeConfig) {};
+    rpc SetNodeSpec(NodeConfig) returns (Ack) {};
+}
+
+message Empty {}
+message Ack {
+    int64 n = 1;
+}
+message NodeID {
+    string i_d = 1;
+}
+
+// Global Conf contains all the configuration data
+message GlobalConfig {
+    ClusterConfig cluster_conf = 1;
+    NodesConfig nodes_conf = 2;
+}
+
+message NodesConfig {
+    map<string, NodeConfig> node_conf = 1;
+}
+
+message NodeConfig {
+    string node_id = 1;
+    NetworkConfig network = 2;
+    SecretsConfig secrets = 3;
+    StorageConfig storage = 4;
+}
+
+message KVDBConfig {
+    string username = 1;
+    string password = 2;
+    string ca_file = 3;
+    string cert_file = 4;
+    string trusted_ca_file = 5;
+    string client_cert_auth = 6;
+    string acl_token = 7;
+    repeated string kvdb_addr = 8;
+}
+
+message ClusterConfig {
+    string description = 1;
+    string mode = 2;
+    string version = 3;
+    string created = 4;
+    string cluster_id = 5;
+    string logging_url = 6;
+    string alerting_url = 7;
+    string scheduler = 8;
+    bool multicontainer = 9;
+    bool nolh = 10;
+    bool callhome = 11;
+    bool bootstrap = 12;
+    string tunnel_end_point = 13;
+    repeated string tunnel_certs = 14;
+    string driver = 15;
+    string debug_level = 16;
+    string domain = 17;
+    string mgmtip = 18;
+    string dataip = 19;
+    KVDBConfig kvdb = 20;
+}
+
+message NetworkConfig {
+    string mgt_iface = 1;
+    string data_iface = 2;
+}
+
+message SecretsConfig {
+    string secret_type = 1;
+    string cluster_secret_key = 2;
+    VaultConfig vault = 3;
+    AWSConfig aws = 4;
+}
+
+message VaultConfig {
+    string vault_token = 1;
+    string vault_addr = 2;
+    string vault_cacert = 3;
+    string vault_capath = 4;
+    string vault_client_cert = 5;
+    string vault_client_key = 6;
+    string vault_skip_verify = 7;
+    string vault_tls_server_name = 8;
+    string vault_base_path = 9;
+}
+
+message AWSConfig {
+    string aws_access_key_id = 1;
+    string aws_secret_access_key = 2;
+    string aws_secret_token_key = 3;
+    string aws_cmk = 4;
+    string aws_region = 5;
+}
+
+message StorageConfig {
+    repeated string devices_md = 1;
+    int32 max_count = 2;
+    int32 max_drive_set_count = 3;
+    repeated string devices = 4;
+    string raid_level = 5;
+    string raid_level_md = 6;
+    bool async_io = 7;
+    int32 num_threads = 8;
+}
+
+
+
+
