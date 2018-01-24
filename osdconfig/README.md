@@ -22,24 +22,24 @@ Below are some examples
 Assuming that the configuration parameters are in a file, a read-writer can be
 created on that file as follows:
 ```go
-        // read from file and create a new reader
-		bf, err := ioutil.ReadFile(fileName)
-		if err != nil {
-			// do something
-		}
-		br := bufio.NewReader(bytes.NewReader(bf))
+// read from file and create a new reader
+bf, err := ioutil.ReadFile(fileName)
+if err != nil {
+	// do something
+}
+br := bufio.NewReader(bytes.NewReader(bf))
 
-		// create a new writer to bytes
-		var bb bytes.Buffer
-		bw := bufio.NewWriter(&bb)
+// create a new writer to bytes
+var bb bytes.Buffer
+bw := bufio.NewWriter(&bb)
 
-		// create a new read writer
-		brw := bufio.NewReadWriter(br, bw)
+// create a new read writer
+brw := bufio.NewReadWriter(br, bw)
 ```
 
 A client connection can then be obtained as follows:
 ```go
-        client := osdconfig.NewConnection(brw)
+client := osdconfig.NewConnection(brw)
 ```
 
 ## reading and writing against kvdb connection
@@ -47,64 +47,64 @@ Assuming that the configuration parameters are in a kvdb database, a connection 
 kvdb database can be obtained as follows:
 
 ```go
-        options := make(map[string]string)
-        options["KvUseInterface"] = ""
-        kv, err := kvdb.New("pwx/test", "", nil, options, nil)
-        if err != nil {
-        	// do something
-        }
+options := make(map[string]string)
+options["KvUseInterface"] = ""
+kv, err := kvdb.New("pwx/test", "", nil, options, nil)
+if err != nil {
+	// do something
+}
 ```
 
 A client connection can then be obtained as follows:
 ```go
-        client := osdconfig.NewConnection(kv)
+client := osdconfig.NewConnection(kv)
 ```
 
 ## reading and writing against a grpc endpoint
 Assuming that the configuration parameters are served via grpc server, a connection
 to the server can be established as follows:
 ```go
-        //dial to grpc server
-	    conn, err := grpc.Dial(GRPC_ADDR, grpc.WithInsecure())
-	    if err != nil {
-		    t.Fatal(err)
-	    }
+//dial to grpc server
+conn, err := grpc.Dial(GRPC_ADDR, grpc.WithInsecure())
+if err != nil {
+    t.Fatal(err)
+}
 ```
 
 A client connection can then be obtained as follows:
 ```go
-        client := osdconfig.NewConnection(conn)
+client := osdconfig.NewConnection(conn)
 ```
 
 # osdconfig interface
 The protocol buffer definition serves as a "contract" and defines following
 services on the configuration parameters:
 ```proto
-    service Spec {
-        rpc GetGlobalSpec(Empty) returns (GlobalConfig) {}
-        rpc SetGlobalSpec(GlobalConfig) returns (Ack) {}
-        rpc GetClusterSpec(Empty) returns (ClusterConfig) {};
-        rpc SetClusterSpec(ClusterConfig) returns (Ack) {};
-        rpc GetNodeSpec(NodeID) returns (NodeConfig) {};
-        rpc SetNodeSpec(NodeConfig) returns (Ack) {};
-    }
+service Spec {
+    rpc GetGlobalSpec(Empty) returns (GlobalConfig) {}
+    rpc SetGlobalSpec(GlobalConfig) returns (Ack) {}
+    rpc GetClusterSpec(Empty) returns (ClusterConfig) {};
+    rpc SetClusterSpec(ClusterConfig) returns (Ack) {};
+    rpc GetNodeSpec(NodeID) returns (NodeConfig) {};
+    rpc SetNodeSpec(NodeConfig) returns (Ack) {};
+}
 ```
 
 Correspondingly, the `conn` object created previously can be used to access
 these methods as follows:
 
 ```go
-        ack, err = client.SetClusterSpec(ctx, globalConf.ClusterConf)
-		if err != nil {
-			// do something
-		}
+ack, err = client.SetClusterSpec(ctx, globalConf.ClusterConf)
+if err != nil {
+	// do something
+}
 		
-		ack, err = client.GetNodeSpec(ctx, nodeID)
-		if err != nil {
-			// do something 
-		}
+ack, err = client.GetNodeSpec(ctx, nodeID)
+if err != nil {
+	// do something 
+}
 		
-		// and so on
+// and so on
 ```
 
 # package structure
