@@ -9,11 +9,22 @@ import (
 	"github.com/sdeoras/openstorage/osdconfig/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"github.com/pkg/errors"
 )
 
 // top level obj to perform I/O on this package
 type OsdConfig struct {
 	cc interface{}
+}
+
+// constructors returning a handle to do I/O on osd config data
+func NewConnection(in interface{}) (*OsdConfig, error) {
+	switch v := in.(type) {
+	case *grpc.ClientConn, io.ReadWriter, kvdb.Kvdb:
+		return &OsdConfig{v}, nil
+	default:
+		return nil, errors.Errorf("OSD interface not implemented. %s %T:", api.INVALID_INPUT_TYPE_ERROR_MESG, in)
+	}
 }
 
 // constructors returning a handle to do I/O on osd config data
@@ -24,8 +35,8 @@ func NewKVDBConnection(conn kvdb.Kvdb) *OsdConfig {
 
 // constructors returning a handle to do I/O on osd config data
 // that exist in, say, a local file
-func NewIOConnection(conn io.ReadWriter) *OsdConfig {
-	return &OsdConfig{conn}
+func NewIOConnection(rw io.ReadWriter) *OsdConfig {
+	return &OsdConfig{rw}
 }
 
 // constructors returning a handle to do I/O on osd config data
