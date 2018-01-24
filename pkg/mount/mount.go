@@ -605,10 +605,7 @@ func New(
 	case DeviceMount:
 		return NewDeviceMounter(identifiers, mountImpl, allowedDirs, trashLocation)
 	case NFSMount:
-		if len(identifiers) > 1 {
-			return nil, fmt.Errorf("Multiple server addresses provided.")
-		}
-		return NewNFSMounter(identifiers[0], mountImpl, allowedDirs)
+		return NewNFSMounter(identifiers, mountImpl, allowedDirs)
 	case CustomMount:
 		return NewCustomMounter(identifiers, mountImpl, customMounter, allowedDirs)
 	}

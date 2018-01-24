@@ -11,14 +11,14 @@ import (
 
 // NFSMounter implements Manager and keeps track of active mounts for volume drivers.
 type NFSMounter struct {
-	server string
+	servers []string
 	Mounter
 }
 
 // NewNFSMounter instance
-func NewNFSMounter(server string, mountImpl MountImpl, allowedDirs []string) (Manager, error) {
+func NewNFSMounter(servers []string, mountImpl MountImpl, allowedDirs []string) (Manager, error) {
 	m := &NFSMounter{
-		server: server,
+		servers: servers,
 		Mounter: Mounter{
 			mountImpl:   mountImpl,
 			mounts:      make(DeviceMap),
@@ -39,6 +39,16 @@ func (m *NFSMounter) Reload(device string) error {
 	return ErrUnsupported
 }
 
+//utility function to test if a server is part of driver config
+func (m *NFSMounter) serverExists(server string) bool {
+	for _, v := range m.servers {
+		if v == server {
+			return true
+		}
+	}
+	return false
+}
+
 // Load mount table
 func (m *NFSMounter) Load(source []string) error {
 	info, err := mount.GetMounts()
@@ -48,7 +58,7 @@ func (m *NFSMounter) Load(source []string) error {
 	re := regexp.MustCompile(`,addr=(.*)`)
 MountLoop:
 	for _, v := range info {
-		if m.server != "" {
+		if len(m.servers) != 0 {
 			if v.Fstype != "nfs" {
 				continue
 			}
@@ -56,7 +66,8 @@ MountLoop:
 			if len(matches) != 2 {
 				continue
 			}
-			if matches[1] != m.server {
+
+			if exists := m.serverExists(matches[1]); !exists {
 				continue
 			}
 		}
