@@ -1,8 +1,12 @@
 syntax = "proto3";
 
+// this package defines the configuration parameters and interfaces
+// requires to run portwork services
 package proto;
 
 service Spec {
+    rpc GetGlobalSpec(Empty) returns (GlobalConfig) {}
+    rpc SetGlobalSpec(GlobalConfig) returns (Ack) {}
     rpc GetClusterSpec(Empty) returns (ClusterConfig) {};
     rpc SetClusterSpec(ClusterConfig) returns (Ack) {};
     rpc GetNodeSpec(NodeID) returns (NodeConfig) {};
@@ -15,6 +19,16 @@ message Ack {
 }
 message NodeID {
     string i_d = 1;
+}
+
+// Global Conf contains all the configuration data
+message GlobalConfig {
+    ClusterConfig cluster_conf = 1;
+    NodesConfig nodes_conf = 2;
+}
+
+message NodesConfig {
+    map<string, NodeConfig> node_conf = 1;
 }
 
 message NodeConfig {
@@ -55,8 +69,7 @@ message ClusterConfig {
     string domain = 17;
     string mgmtip = 18;
     string dataip = 19;
-    map<string, NodeConfig> nodes = 20;
-    KVDBConfig kvdb = 21;
+    KVDBConfig kvdb = 20;
 }
 
 message NetworkConfig {

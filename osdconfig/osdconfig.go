@@ -34,6 +34,22 @@ func NewGrpcConnection(conn *grpc.ClientConn) *OsdConfig {
 	return &OsdConfig{conn}
 }
 
+func (c *OsdConfig) GetGlobalSpec(ctx context.Context, options ...interface{}) (*proto.GlobalConfig, error) {
+	if osd, err := api.NewInterface(c.cc); err != nil {
+		return nil, err
+	} else {
+		return osd.GetGlobalSpec(ctx, &proto.Empty{})
+	}
+}
+
+func (c *OsdConfig) SetGlobalSpec(ctx context.Context, in *proto.GlobalConfig, options ...interface{}) (*proto.Ack, error) {
+	if osd, err := api.NewInterface(c.cc); err != nil {
+		return nil, err
+	} else {
+		return osd.SetGlobalSpec(ctx, in)
+	}
+}
+
 func (c *OsdConfig) GetClusterSpec(ctx context.Context, options ...interface{}) (*proto.ClusterConfig, error) {
 	if osd, err := api.NewInterface(c.cc); err != nil {
 		return nil, err

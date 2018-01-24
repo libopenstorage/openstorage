@@ -2,10 +2,13 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
+
+	"bufio"
+	"bytes"
+	"io/ioutil"
 
 	"github.com/sdeoras/openstorage/osdconfig"
 	"github.com/sdeoras/openstorage/osdconfig/proto"
@@ -17,29 +20,60 @@ const (
 )
 
 func TestFileIO(t *testing.T) {
-	config := new(proto.ClusterConfig)
-	config.Description = "this is description text"
-	config.AlertingUrl = "this is alerting url"
+	globalConf := proto.NewGlobalConfig()
+	globalConf.ClusterConf.Description = "this is description text"
+	globalConf.ClusterConf.AlertingUrl = "this is alerting url"
+	nodeConf := proto.NewNodeConfig()
+	nodeConf.NodeId = "Node1"
+	if err := globalConf.SetNode(nodeConf); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := context.Background()
 
 	done := make(chan error)
 	go func(c chan error) {
-		if err := ioutil.WriteFile(ConfigFile, []byte{}, 0644); err != nil {
+		if err := ioutil.WriteFile(ConfigFile, []byte{}, os.ModeAppend); err != nil {
 			c <- err
 		}
 
-		file, err := os.OpenFile(ConfigFile, os.O_WRONLY, 0644)
+		// read from file and create a new reader
+		bf, err := ioutil.ReadFile(ConfigFile)
 		if err != nil {
 			c <- err
 		}
-		defer file.Close()
+		br := bufio.NewReader(bytes.NewReader(bf))
 
-		client := osdconfig.NewIOConnection(file)
-		ack, err := client.SetClusterSpec(context.Background(), config)
+		// create a new writer to bytes
+		var bb bytes.Buffer
+		bw := bufio.NewWriter(&bb)
+
+		// create a new read writer
+		brw := bufio.NewReadWriter(br, bw)
+
+		// get a new client connection to osdconfig library using read writer
+		client := osdconfig.NewIOConnection(brw)
+
+		ack, err := client.SetGlobalSpec(ctx, globalConf)
 		if err != nil {
 			c <- err
 		}
 
-		t.Log("Bytes written:", ack.N)
+		ack, err = client.SetClusterSpec(ctx, globalConf.ClusterConf)
+		if err != nil {
+			c <- err
+		}
+
+		if ack != nil {
+			t.Log("Bytes written:", ack.N)
+		}
+
+		if err := brw.Flush(); err != nil {
+			c <- err
+		}
+		if err := ioutil.WriteFile(ConfigFile, bb.Bytes(), os.ModeAppend); err != nil {
+			c <- err
+		}
 
 		c <- nil
 	}(done)
@@ -54,13 +88,23 @@ func TestFileIO(t *testing.T) {
 	}
 
 	go func(c chan error) {
-		file, err := os.Open(ConfigFile)
+		// read from file and create a new reader
+		bf, err := ioutil.ReadFile(ConfigFile)
 		if err != nil {
 			c <- err
 		}
-		defer file.Close()
+		br := bufio.NewReader(bytes.NewReader(bf))
 
-		client := osdconfig.NewIOConnection(file)
+		// create a new writer to bytes
+		var bb bytes.Buffer
+		bw := bufio.NewWriter(&bb)
+
+		// create a new read writer
+		brw := bufio.NewReadWriter(br, bw)
+
+		// get a new client connection to osdconfig library using read writer
+		client := osdconfig.NewIOConnection(brw)
+
 		config, err := client.GetClusterSpec(context.Background(), &proto.Empty{})
 		if err != nil {
 			c <- err

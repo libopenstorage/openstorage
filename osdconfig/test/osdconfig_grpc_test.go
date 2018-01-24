@@ -7,6 +7,10 @@ import (
 	"testing"
 	"time"
 
+	"bufio"
+	"bytes"
+	"io/ioutil"
+
 	"github.com/sdeoras/openstorage/osdconfig"
 	"github.com/sdeoras/openstorage/osdconfig/proto"
 	"golang.org/x/net/context"
@@ -21,45 +25,164 @@ const (
 // implement a grpc server first
 type server struct{}
 
-func (s *server) GetClusterSpec(ctx context.Context, in *proto.Empty) (*proto.ClusterConfig, error) {
-	file, err := os.Open(ConfigFile)
+func (s *server) GetGlobalSpec(ctx context.Context, in *proto.Empty) (*proto.GlobalConfig, error) {
+	// read from file and create a new reader
+	bf, err := ioutil.ReadFile(ConfigFile)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	br := bufio.NewReader(bytes.NewReader(bf))
 
-	client := osdconfig.NewIOConnection(file)
+	// create a new writer to bytes
+	var bb bytes.Buffer
+	bw := bufio.NewWriter(&bb)
+
+	// create a new read writer
+	brw := bufio.NewReadWriter(br, bw)
+
+	// get a new client connection to osdconfig library using read writer
+	client := osdconfig.NewIOConnection(brw)
+
+	return client.GetGlobalSpec(context.Background(), &proto.Empty{})
+}
+func (s *server) SetGlobalSpec(ctx context.Context, in *proto.GlobalConfig) (*proto.Ack, error) {
+	// read from file and create a new reader
+	bf, err := ioutil.ReadFile(ConfigFile)
+	if err != nil {
+		return nil, err
+	}
+	br := bufio.NewReader(bytes.NewReader(bf))
+
+	// create a new writer to bytes
+	var bb bytes.Buffer
+	bw := bufio.NewWriter(&bb)
+
+	// create a new read writer
+	brw := bufio.NewReadWriter(br, bw)
+
+	// get a new client connection to osdconfig library using read writer
+	client := osdconfig.NewIOConnection(brw)
+
+	ack, err := client.SetGlobalSpec(context.Background(), in)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := brw.Flush(); err != nil {
+		return nil, err
+	}
+
+	if err := ioutil.WriteFile(ConfigFile, bb.Bytes(), os.ModeAppend); err != nil {
+		return nil, err
+	}
+
+	return ack, nil
+}
+func (s *server) GetClusterSpec(ctx context.Context, in *proto.Empty) (*proto.ClusterConfig, error) {
+	// read from file and create a new reader
+	bf, err := ioutil.ReadFile(ConfigFile)
+	if err != nil {
+		return nil, err
+	}
+	br := bufio.NewReader(bytes.NewReader(bf))
+
+	// create a new writer to bytes
+	var bb bytes.Buffer
+	bw := bufio.NewWriter(&bb)
+
+	// create a new read writer
+	brw := bufio.NewReadWriter(br, bw)
+
+	// get a new client connection to osdconfig library using read writer
+	client := osdconfig.NewIOConnection(brw)
+
 	return client.GetClusterSpec(context.Background(), &proto.Empty{})
 }
 func (s *server) SetClusterSpec(ctx context.Context, in *proto.ClusterConfig) (*proto.Ack, error) {
-	file, err := os.OpenFile(ConfigFile, os.O_WRONLY, 0644)
+	// read from file and create a new reader
+	bf, err := ioutil.ReadFile(ConfigFile)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	br := bufio.NewReader(bytes.NewReader(bf))
 
-	client := osdconfig.NewIOConnection(file)
-	return client.SetClusterSpec(context.Background(), in)
+	// create a new writer to bytes
+	var bb bytes.Buffer
+	bw := bufio.NewWriter(&bb)
+
+	// create a new read writer
+	brw := bufio.NewReadWriter(br, bw)
+
+	// get a new client connection to osdconfig library using read writer
+	client := osdconfig.NewIOConnection(brw)
+
+	ack, err := client.SetClusterSpec(context.Background(), in)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := brw.Flush(); err != nil {
+		return nil, err
+	}
+
+	if err := ioutil.WriteFile(ConfigFile, bb.Bytes(), os.ModeAppend); err != nil {
+		return nil, err
+	}
+
+	return ack, nil
 }
 func (s *server) GetNodeSpec(ctx context.Context, in *proto.NodeID) (*proto.NodeConfig, error) {
-	file, err := os.Open(ConfigFile)
+	// read from file and create a new reader
+	bf, err := ioutil.ReadFile(ConfigFile)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	br := bufio.NewReader(bytes.NewReader(bf))
 
-	client := osdconfig.NewIOConnection(file)
+	// create a new writer to bytes
+	var bb bytes.Buffer
+	bw := bufio.NewWriter(&bb)
+
+	// create a new read writer
+	brw := bufio.NewReadWriter(br, bw)
+
+	// get a new client connection to osdconfig library using read writer
+	client := osdconfig.NewIOConnection(brw)
+
 	return client.GetNodeSpec(context.Background(), in)
 }
 func (s *server) SetNodeSpec(ctx context.Context, in *proto.NodeConfig) (*proto.Ack, error) {
-	file, err := os.OpenFile(ConfigFile, os.O_WRONLY, 0644)
+	// read from file and create a new reader
+	bf, err := ioutil.ReadFile(ConfigFile)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	br := bufio.NewReader(bytes.NewReader(bf))
 
-	client := osdconfig.NewIOConnection(file)
-	return client.SetNodeSpec(context.Background(), in)
+	// create a new writer to bytes
+	var bb bytes.Buffer
+	bw := bufio.NewWriter(&bb)
+
+	// create a new read writer
+	brw := bufio.NewReadWriter(br, bw)
+
+	// get a new client connection to osdconfig library using read writer
+	client := osdconfig.NewIOConnection(brw)
+
+	ack, err := client.SetNodeSpec(context.Background(), in)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := brw.Flush(); err != nil {
+		return nil, err
+	}
+
+	if err := ioutil.WriteFile(ConfigFile, bb.Bytes(), os.ModeAppend); err != nil {
+		return nil, err
+	}
+
+	return ack, nil
 }
 
 func TestGrpc(t *testing.T) {

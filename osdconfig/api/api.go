@@ -15,6 +15,8 @@ const (
 )
 
 type OsdConfigInterface interface {
+	GetGlobalSpec(ctx context.Context, in *proto.Empty, options ...interface{}) (*proto.GlobalConfig, error)
+	SetGlobalSpec(ctx context.Context, in *proto.GlobalConfig, options ...interface{}) (*proto.Ack, error)
 	GetClusterSpec(ctx context.Context, in *proto.Empty, options ...interface{}) (*proto.ClusterConfig, error)
 	SetClusterSpec(ctx context.Context, in *proto.ClusterConfig, options ...interface{}) (*proto.Ack, error)
 	GetNodeSpec(ctx context.Context, in *proto.NodeID, options ...interface{}) (*proto.NodeConfig, error)
@@ -31,6 +33,50 @@ func NewInterface(c interface{}) (OsdConfigInterface, error) {
 		return &osdConfig{v}, nil
 	default:
 		return nil, errors.Errorf("OSD interface not implemented. %s %T:", INVALID_INPUT_TYPE_ERROR_MESG, c)
+	}
+}
+
+func (c *osdConfig) GetGlobalSpec(ctx context.Context, in *proto.Empty, options ...interface{}) (*proto.GlobalConfig, error) {
+	switch v := c.cc.(type) {
+	case *grpc.ClientConn:
+		callOptions := make([]grpc.CallOption, len(options))
+		for i, option := range options {
+			switch v := option.(type) {
+			case grpc.CallOption:
+				callOptions[i] = v.(grpc.CallOption)
+			default:
+				return nil, errors.Errorf("GRPC call option error, %s %T:", INVALID_INPUT_TYPE_ERROR_MESG, option)
+			}
+		}
+		return proto.NewSpecClient(v).GetGlobalSpec(ctx, in, callOptions...)
+	case io.ReadWriter:
+		return proto.NewSpecClientIO(v).GetGlobalSpec(ctx, in)
+	case kvdb.Kvdb:
+		return proto.NewSpecClientKV(v).GetGlobalSpec(ctx, in)
+	default:
+		return nil, errors.Errorf("%s %T:", INVALID_INPUT_TYPE_ERROR_MESG, c)
+	}
+}
+
+func (c *osdConfig) SetGlobalSpec(ctx context.Context, in *proto.GlobalConfig, options ...interface{}) (*proto.Ack, error) {
+	switch v := c.cc.(type) {
+	case *grpc.ClientConn:
+		callOptions := make([]grpc.CallOption, len(options))
+		for i, option := range options {
+			switch v := option.(type) {
+			case grpc.CallOption:
+				callOptions[i] = v.(grpc.CallOption)
+			default:
+				return nil, errors.Errorf("GRPC call option error, %s %T:", INVALID_INPUT_TYPE_ERROR_MESG, option)
+			}
+		}
+		return proto.NewSpecClient(v).SetGlobalSpec(ctx, in, callOptions...)
+	case io.ReadWriter:
+		return proto.NewSpecClientIO(v).SetGlobalSpec(ctx, in)
+	case kvdb.Kvdb:
+		return proto.NewSpecClientKV(v).SetGlobalSpec(ctx, in)
+	default:
+		return nil, errors.Errorf("%s %T:", INVALID_INPUT_TYPE_ERROR_MESG, c)
 	}
 }
 
