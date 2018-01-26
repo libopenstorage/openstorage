@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/portworx/kvdb"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/golang/mock/gomock"
@@ -38,7 +39,11 @@ func TestControllerGetCapabilities(t *testing.T) {
 
 	// Make a call
 	c := csi.NewControllerClient(s.Conn())
-	r, err := c.ControllerGetCapabilities(context.Background(), &csi.ControllerGetCapabilitiesRequest{})
+	r, err := c.ControllerGetCapabilities(
+		context.Background(),
+		&csi.ControllerGetCapabilitiesRequest{
+			Version: &csi.Version{},
+		})
 	assert.Nil(t, err)
 
 	// Verify
@@ -957,27 +962,6 @@ func TestControllerCreateVolumeInvalidArguments(t *testing.T) {
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
 	assert.Contains(t, serverError.Message(), "Volume capabilities")
 
-	// No CapacityRange
-	req.VolumeCapabilities = []*csi.VolumeCapability{
-		&csi.VolumeCapability{
-		// purposely do not define anything to check if it panics accessing nil
-		},
-	}
-	_, err = c.CreateVolume(context.Background(), req)
-	assert.NotNil(t, err)
-	serverError, ok = status.FromError(err)
-	assert.True(t, ok)
-	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "CapacityRange")
-
-	// RequiredBytes is zero
-	req.CapacityRange = &csi.CapacityRange{}
-	_, err = c.CreateVolume(context.Background(), req)
-	assert.NotNil(t, err)
-	serverError, ok = status.FromError(err)
-	assert.True(t, ok)
-	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "cannot be zero")
 }
 
 func TestControllerCreateVolumeFoundByVolumeFromNameConflict(t *testing.T) {
@@ -1099,6 +1083,77 @@ func TestControllerCreateVolumeFoundByVolumeFromNameConflict(t *testing.T) {
 		assert.True(t, ok)
 		assert.Equal(t, serverError.Code(), codes.AlreadyExists)
 	}
+}
+
+func TestControllerCreateVolumeNoCapacity(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	// Setup request
+	name := "myvol"
+	req := &csi.CreateVolumeRequest{
+		Version: &csi.Version{},
+		Name:    name,
+		VolumeCapabilities: []*csi.VolumeCapability{
+			&csi.VolumeCapability{},
+		},
+	}
+
+	id := "myid"
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Create(gomock.Any(), gomock.Any(), gomock.Any()).
+			Do(func(
+				locator *api.VolumeLocator,
+				Source *api.Source,
+				spec *api.VolumeSpec,
+			) (string, error) {
+				assert.Equal(t, spec.Size, defaultCSIVolumeSize)
+				return id, nil
+			}).
+			Return(id, nil).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{id}).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id: id,
+					Locator: &api.VolumeLocator{
+						Name: name,
+					},
+					Spec: &api.VolumeSpec{
+						Size:   defaultCSIVolumeSize,
+						Shared: true,
+					},
+				},
+			}, nil).
+			Times(1),
+	)
+
+	r, err := c.CreateVolume(context.Background(), req)
+	assert.Nil(t, err)
+	assert.NotNil(t, r)
+	volumeInfo := r.GetVolumeInfo()
+
+	assert.Equal(t, id, volumeInfo.GetId())
+	assert.Equal(t, defaultCSIVolumeSize, volumeInfo.GetCapacityBytes())
 }
 
 func TestControllerCreateVolumeFoundByVolumeFromName(t *testing.T) {
@@ -1711,7 +1766,22 @@ func TestControllerDeleteVolumeError(t *testing.T) {
 	}
 
 	// Setup mock
-	s.MockDriver().EXPECT().Delete(myid).Return(fmt.Errorf("MOCKERRORTEST")).Times(1)
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{myid}).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id: myid,
+				},
+			}, nil).
+			Times(1),
+		s.MockDriver().
+			EXPECT().
+			Delete(myid).
+			Return(fmt.Errorf("MOCKERRORTEST")).
+			Times(1),
+	)
 
 	_, err := c.DeleteVolume(context.Background(), req)
 	assert.NotNil(t, err)
@@ -1736,8 +1806,45 @@ func TestControllerDeleteVolume(t *testing.T) {
 	}
 
 	// Setup mock
-	s.MockDriver().EXPECT().Delete(myid).Return(nil).Times(1)
+	// According to CSI spec, if the ID is not found, it must return OK
+	s.MockDriver().
+		EXPECT().
+		Inspect([]string{myid}).
+		Return(nil, kvdb.ErrNotFound).
+		Times(1)
 
 	_, err := c.DeleteVolume(context.Background(), req)
+	assert.Nil(t, err)
+
+	// According to CSI spec, if the ID is not found, it must return OK
+	// Now return no error, but empty list
+	s.MockDriver().
+		EXPECT().
+		Inspect([]string{myid}).
+		Return([]*api.Volume{}, nil).
+		Times(1)
+
+	_, err = c.DeleteVolume(context.Background(), req)
+	assert.Nil(t, err)
+
+	// Setup mock
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{myid}).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id: myid,
+				},
+			}, nil).
+			Times(1),
+		s.MockDriver().
+			EXPECT().
+			Delete(myid).
+			Return(nil).
+			Times(1),
+	)
+
+	_, err = c.DeleteVolume(context.Background(), req)
 	assert.Nil(t, err)
 }

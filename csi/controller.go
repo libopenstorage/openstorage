@@ -19,6 +19,8 @@ package csi
 import (
 	"fmt"
 
+	"github.com/portworx/kvdb"
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/util"
 
@@ -34,6 +36,7 @@ const (
 	volumeCapabilityMessageNotMultinodeVolume = "Volume is not a multinode volume"
 	volumeCapabilityMessageReadOnlyVolume     = "Volume is read only"
 	volumeCapabilityMessageNotReadOnlyVolume  = "Volume is not read only"
+	defaultCSIVolumeSize                      = uint64(1024 * 1024 * 1024)
 )
 
 // ControllerGetCapabilities is a CSI API functions which returns to the caller
@@ -42,6 +45,11 @@ func (s *OsdCsiServer) ControllerGetCapabilities(
 	ctx context.Context,
 	req *csi.ControllerGetCapabilitiesRequest,
 ) (*csi.ControllerGetCapabilitiesResponse, error) {
+
+	version := req.GetVersion()
+	if version == nil {
+		return nil, status.Error(codes.InvalidArgument, "Version must be specified")
+	}
 
 	// Creating and deleting volumes supported
 	capCreateDeleteVolume := &csi.ControllerServiceCapability{
@@ -324,12 +332,6 @@ func (s *OsdCsiServer) CreateVolume(
 	if req.GetVolumeCapabilities() == nil || len(req.GetVolumeCapabilities()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Volume capabilities must be provided")
 	}
-	if req.GetCapacityRange() == nil {
-		return nil, status.Error(codes.InvalidArgument, "CapacityRange must be specified")
-	}
-	if req.GetCapacityRange().GetRequiredBytes() == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Capacity range required bytes cannot be zero")
-	}
 
 	// Get parameters
 	spec, locator, source, err := s.specHandler.SpecFromOpts(req.GetParameters())
@@ -337,6 +339,13 @@ func (s *OsdCsiServer) CreateVolume(
 		e := fmt.Sprintf("Unable to get parameters: %s\n", err.Error())
 		dlog.Errorln(e)
 		return nil, status.Error(codes.InvalidArgument, e)
+	}
+
+	// Get Size
+	if req.GetCapacityRange() != nil && req.GetCapacityRange().GetRequiredBytes() != 0 {
+		spec.Size = req.GetCapacityRange().GetRequiredBytes()
+	} else {
+		spec.Size = defaultCSIVolumeSize
 	}
 
 	// Create response
@@ -349,12 +358,12 @@ func (s *OsdCsiServer) CreateVolume(
 	v, err := util.VolumeFromName(s.driver, req.GetName())
 	if err == nil {
 		// Check the requested arguments match that of the existing volume
-		if v.GetSpec().GetSize() != req.GetCapacityRange().GetRequiredBytes() {
+		if spec.Size != v.GetSpec().GetSize() {
 			return nil, status.Errorf(
 				codes.AlreadyExists,
 				"Existing volume has a size of %v which differs from requested size of %v",
 				v.GetSpec().GetSize(),
-				req.GetCapacityRange().GetRequiredBytes())
+				spec.Size)
 		}
 		if v.GetSpec().GetShared() != csiRequestsSharedVolume(req) {
 			return nil, status.Errorf(
@@ -394,7 +403,6 @@ func (s *OsdCsiServer) CreateVolume(
 		}
 	} else {
 		// Get Capabilities and Size
-		spec.Size = req.GetCapacityRange().GetRequiredBytes()
 		spec.Shared = csiRequestsSharedVolume(req)
 
 		// Create the volume
@@ -433,7 +441,17 @@ func (s *OsdCsiServer) DeleteVolume(
 		return nil, status.Error(codes.InvalidArgument, "Volume id must be provided")
 	}
 
-	err := s.driver.Delete(req.GetVolumeId())
+	// If the volume is not found, then we can return OK
+	volumes, err := s.driver.Inspect([]string{req.GetVolumeId()})
+	if (err == nil && len(volumes) == 0) ||
+		(err != nil && err == kvdb.ErrNotFound) {
+		return &csi.DeleteVolumeResponse{}, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	// Delete volume
+	err = s.driver.Delete(req.GetVolumeId())
 	if err != nil {
 		e := fmt.Sprintf("Unable to delete volume with id %s: %s",
 			req.GetVolumeId(),
