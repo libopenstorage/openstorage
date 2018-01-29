@@ -76,9 +76,6 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		nfsServers:        servers,
 		nfsPath:           path,
 		mounter:           mounter,
-		nfsServer:         server,
-		nfsPath:           path,
-		mounter:           mounter,
 	}
 
 	//make directory for each nfs server
