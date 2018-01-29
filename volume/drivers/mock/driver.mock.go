@@ -71,7 +71,7 @@ func (mr *MockVolumeDriverMockRecorder) BackupCatalogue(arg0 interface{}) *gomoc
 }
 
 // BackupDelete mocks base method
-func (m *MockVolumeDriver) BackupDelete(arg0 *api.BackupGenericRequest) error {
+func (m *MockVolumeDriver) BackupDelete(arg0 *api.BackupDeleteRequest) error {
 	ret := m.ctrl.Call(m, "BackupDelete", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -83,7 +83,7 @@ func (mr *MockVolumeDriverMockRecorder) BackupDelete(arg0 interface{}) *gomock.C
 }
 
 // BackupEnumerate mocks base method
-func (m *MockVolumeDriver) BackupEnumerate(arg0 *api.BackupGenericRequest) *api.BackupEnumerateResponse {
+func (m *MockVolumeDriver) BackupEnumerate(arg0 *api.BackupEnumerateRequest) *api.BackupEnumerateResponse {
 	ret := m.ctrl.Call(m, "BackupEnumerate", arg0)
 	ret0, _ := ret[0].(*api.BackupEnumerateResponse)
 	return ret0

@@ -138,7 +138,7 @@ func (cl *cloudBackupNotSupported) BackupRestore(
 }
 
 func (cl *cloudBackupNotSupported) BackupEnumerate(
-	input *api.BackupGenericRequest,
+	input *api.BackupEnumerateRequest,
 ) *api.BackupEnumerateResponse {
 	response := api.BackupEnumerateResponse{
 		EnumerateErr: ErrNotSupported.Error(),
@@ -147,7 +147,7 @@ func (cl *cloudBackupNotSupported) BackupEnumerate(
 }
 
 func (cl *cloudBackupNotSupported) BackupDelete(
-	input *api.BackupGenericRequest,
+	input *api.BackupDeleteRequest,
 ) error {
 	return ErrNotSupported
 }

@@ -80,24 +80,23 @@ func TestClientBackupDelete(t *testing.T) {
 	cl, err := client.NewDriverClient(ts.URL, mockDriverName, "", mockDriverName)
 	require.NoError(t, err)
 
-	testVolDriver.MockDriver().EXPECT().BackupDelete(&api.BackupGenericRequest{
-		SrcVolumeID:    "goodsrc",
-		CredentialUUID: ""}).
+	goodInput := &api.BackupDeleteRequest{}
+	goodInput.SrcVolumeID = "goodsrc"
+	goodInput.CredentialUUID = ""
+
+	badInput := &api.BackupDeleteRequest{}
+	badInput.SrcVolumeID = "badsrc"
+	badInput.CredentialUUID = ""
+	testVolDriver.MockDriver().EXPECT().BackupDelete(goodInput).
 		Return(nil).Times(1)
-	testVolDriver.MockDriver().EXPECT().BackupDelete(&api.BackupGenericRequest{
-		SrcVolumeID:    "badsrc",
-		CredentialUUID: ""}).
+	testVolDriver.MockDriver().EXPECT().BackupDelete(badInput).
 		Return(fmt.Errorf("Src volume not found")).Times(1)
 	//Invoke restore
 	err = client.VolumeDriver(cl).
-		BackupDelete(&api.BackupGenericRequest{
-			SrcVolumeID:    "goodsrc",
-			CredentialUUID: ""})
+		BackupDelete(goodInput)
 	require.NoError(t, err)
 	err = client.VolumeDriver(cl).
-		BackupDelete(&api.BackupGenericRequest{
-			SrcVolumeID:    "badsrc",
-			CredentialUUID: ""})
+		BackupDelete(badInput)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "Src volume not found")
 }
@@ -109,26 +108,23 @@ func TestClientBackupEnumerate(t *testing.T) {
 
 	cl, err := client.NewDriverClient(ts.URL, mockDriverName, "", mockDriverName)
 	require.NoError(t, err)
-
-	testVolDriver.MockDriver().EXPECT().BackupEnumerate(&api.BackupGenericRequest{
-		SrcVolumeID:    "",
-		CredentialUUID: ""}).
+	goodInput := &api.BackupEnumerateRequest{}
+	goodInput.SrcVolumeID = ""
+	goodInput.CredentialUUID = ""
+	testVolDriver.MockDriver().EXPECT().BackupEnumerate(goodInput).
 		Return(&api.BackupEnumerateResponse{EnumerateErr: ""}).Times(1)
-	testVolDriver.MockDriver().EXPECT().BackupEnumerate(&api.BackupGenericRequest{
-		SrcVolumeID:    "",
-		CredentialUUID: "badcred"}).
+	badInput := &api.BackupEnumerateRequest{}
+	badInput.SrcVolumeID = ""
+	badInput.CredentialUUID = ""
+	testVolDriver.MockDriver().EXPECT().BackupEnumerate(badInput).
 		Return(&api.BackupEnumerateResponse{EnumerateErr: "Credential invalid"}).Times(1)
 
 	//Invoke Enumerate
 	response := client.VolumeDriver(cl).
-		BackupEnumerate(&api.BackupGenericRequest{
-			SrcVolumeID:    "",
-			CredentialUUID: ""})
+		BackupEnumerate(goodInput)
 	require.Equal(t, response.EnumerateErr, "")
 	response = client.VolumeDriver(cl).
-		BackupEnumerate(&api.BackupGenericRequest{
-			SrcVolumeID:    "",
-			CredentialUUID: "badcred"})
+		BackupEnumerate(badInput)
 	require.Contains(t, response.EnumerateErr, "Credential invalid")
 }
 

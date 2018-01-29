@@ -134,12 +134,12 @@ type QuiesceDriver interface {
 type CloudBackupDriver interface {
 	// Backup uploads snapshot of a volume to cloud
 	Backup(input *api.BackupRequest) error
-	// BackupRestore downloads a cloud back and restores it to a volume
+	// BackupRestore downloads a cloud backup and restores it to a volume
 	BackupRestore(input *api.BackupRestoreRequest) *api.BackupRestoreResponse
 	// BackupEnumerate enumerates the backups for a given cluster/credential/volumeID
-	BackupEnumerate(input *api.BackupGenericRequest) *api.BackupEnumerateResponse
+	BackupEnumerate(input *api.BackupEnumerateRequest) *api.BackupEnumerateResponse
 	// BackupDelete deletes the backups in cloud
-	BackupDelete(input *api.BackupGenericRequest) error
+	BackupDelete(input *api.BackupDeleteRequest) error
 	// BackupStatus indicates the most recent status of backup/restores
 	BackupStatus(input *api.BackupStsRequest) *api.BackupStsResponse
 	// BackupCatalogue displays listing of backup content

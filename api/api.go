@@ -273,6 +273,14 @@ type BackupGenericRequest struct {
 	CredentialUUID string
 }
 
+type BackupEnumerateRequest struct {
+	BackupGenericRequest
+}
+
+type BackupDeleteRequest struct {
+	BackupGenericRequest
+}
+
 type BackupInfo struct {
 	// SrcVolumeID  is Source volumeID of the backup
 	SrcVolumeID string

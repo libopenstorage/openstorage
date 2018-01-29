@@ -517,7 +517,7 @@ func (v *volumeClient) BackupRestore(
 
 // BackupEnumerate lists the backups for a given cluster/credential/volumeID
 func (v *volumeClient) BackupEnumerate(
-	input *api.BackupGenericRequest,
+	input *api.BackupEnumerateRequest,
 ) *api.BackupEnumerateResponse {
 	response := &api.BackupEnumerateResponse{}
 	req := v.c.Get().Resource(backupPath).Body(input)
@@ -530,7 +530,7 @@ func (v *volumeClient) BackupEnumerate(
 
 // BackupDelete deletes the backups in cloud
 func (v *volumeClient) BackupDelete(
-	input *api.BackupGenericRequest,
+	input *api.BackupDeleteRequest,
 ) error {
 	response := &api.VolumeResponse{}
 	req := v.c.Delete().Resource(backupPath).Body(input)

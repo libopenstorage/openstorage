@@ -49,7 +49,7 @@ func (vd *volAPI) backuprestore(w http.ResponseWriter, r *http.Request) {
 
 func (vd *volAPI) backupdelete(w http.ResponseWriter, r *http.Request) {
 	var err error
-	backupReq := &api.BackupGenericRequest{}
+	backupReq := &api.BackupDeleteRequest{}
 	method := "backupdelete"
 
 	if err := json.NewDecoder(r.Body).Decode(backupReq); err != nil {
@@ -72,7 +72,7 @@ func (vd *volAPI) backupdelete(w http.ResponseWriter, r *http.Request) {
 
 func (vd *volAPI) backupenumerate(w http.ResponseWriter, r *http.Request) {
 	var err error
-	enumerateReq := &api.BackupGenericRequest{}
+	enumerateReq := &api.BackupEnumerateRequest{}
 	enumerateResp := &api.BackupEnumerateResponse{}
 
 	if err := json.NewDecoder(r.Body).Decode(enumerateReq); err != nil {
