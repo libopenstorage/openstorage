@@ -41,6 +41,7 @@ type driver struct {
 	nfsServers []string
 	nfsPath    string
 	mounter    mount.Manager
+	volume.CloudBackupDriver
 }
 
 func Init(params map[string]string) (volume.VolumeDriver, error) {
@@ -66,14 +67,15 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		return nil, err
 	}
 	inst := &driver{
-		IODriver:        volume.IONotSupported,
-		StoreEnumerator: common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
-		StatsDriver:     volume.StatsNotSupported,
-		QuiesceDriver:   volume.QuiesceNotSupported,
-		nfsServers:      servers,
-		CredsDriver:     volume.CredsNotSupported,
-		nfsPath:         path,
-		mounter:         mounter,
+		IODriver:          volume.IONotSupported,
+		StoreEnumerator:   common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
+		StatsDriver:       volume.StatsNotSupported,
+		QuiesceDriver:     volume.QuiesceNotSupported,
+		CredsDriver:       volume.CredsNotSupported,
+		CloudBackupDriver: volume.CloudBackupNotSupported,
+		nfsServers:        servers,
+		nfsPath:           path,
+		mounter:           mounter,
 	}
 
 	//make directory for each nfs server

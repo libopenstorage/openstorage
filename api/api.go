@@ -90,6 +90,15 @@ const (
 	// OptOptCredAzureAccountKey is the accountkey for
 	// azure as the cloud provider
 	OptCredAzureAccountKey = "CredAccountKey"
+	// OptCloudBackupID is the backID in the cloud
+	OptCloudBackupID = "CloudBackID"
+	// OptSrcVolID is the source volume ID of the backup
+	OptSrcVolID = "SrcVolID"
+	// OptBkupOpState is the desired operational state
+	// (stop/pause/resume) of backup/restore
+	OptBkupOpState = "OpState"
+	// OptBackupSchedUUID is the UUID of the backup-schedule
+	OptBackupSchedUUID = "BkupSchedUUID"
 )
 
 // Api clientserver Constants
@@ -97,6 +106,7 @@ const (
 	OsdVolumePath   = "osd-volumes"
 	OsdSnapshotPath = "osd-snapshot"
 	OsdCredsPath    = "osd-creds"
+	OsdBackupPath   = "osd-backup"
 	TimeLayout      = "Jan 2 15:04:05 UTC 2006"
 )
 
@@ -222,6 +232,182 @@ type StatPoint struct {
 	Fields map[string]interface{}
 	// Timestamp in Unix format
 	Timestamp int64
+}
+
+type BackupRequest struct {
+	// VolumeID of the volume for which cloudbackup is requested
+	VolumeID string
+	// CredentialUUID is cloud credential to be used for backup
+	CredentialUUID string
+	// Full indicates if full backup is desired eventhough incremental is possible
+	Full bool
+}
+
+type BackupRestoreRequest struct {
+	// CloudBackupID is the backup ID being restored
+	CloudBackupID string
+	// RestoreVolumeName is optional volume Name of the new volume to be created
+	// in the cluster for restoring the cloudbackup
+	RestoreVolumeName string
+	// CredentialUUID is the credential to be used for restore operation
+	CredentialUUID string
+	// NodeID is the optional NodeID for provisionging restore volume(ResoreVolumeID should not be specified)
+	NodeID string
+}
+
+type BackupRestoreResponse struct {
+	// RestoreVolumeID is the volumeID to which the backup is being restored
+	RestoreVolumeID string
+	// RestoreErr indicates the reason for failure of restore operation
+	RestoreErr string
+}
+
+type BackupGenericRequest struct {
+	// SrcVolumeID is optional Source VolumeID to list backups for
+	SrcVolumeID string
+	// ClusterID is the optional clusterID to list backups for
+	ClusterID string
+	// All if set to true, backups for all clusters in the cloud are returned
+	All bool
+	// CredentialUUID is the credential for cloud
+	CredentialUUID string
+}
+
+type BackupEnumerateRequest struct {
+	BackupGenericRequest
+}
+
+type BackupDeleteRequest struct {
+	BackupGenericRequest
+}
+
+type BackupInfo struct {
+	// SrcVolumeID  is Source volumeID of the backup
+	SrcVolumeID string
+	// SrcvolumeName is name of the sourceVolume of the backup
+	SrcVolumeName string
+	// BackupID is cloud backup ID for the above source volume
+	BackupID string
+	// Timestamp is the timestamp at which the source volume
+	// was backed up to cloud
+	Timestamp time.Time
+	// Status indicates if this backup was successful
+	Status string
+}
+
+type BackupEnumerateResponse struct {
+	// Backups is list of backups in cloud for given volume/cluster/s
+	Backups []BackupInfo
+	// EnumerateErr indicates any error encountered while enumerating backups
+	EnumerateErr string
+}
+
+type BackupStsRequest struct {
+	// SrcVolumeID optional volumeID to list status of backup/restore
+	SrcVolumeID string
+	// Local indicates if only those backups/restores that are
+	// active on current node must be returned
+	Local bool
+}
+
+type BackupStatus struct {
+	// OpType indicates if this is a backup or restore
+	OpType string
+	// State indicates if the op is currently active/done/failed
+	Status string
+	// BytesDone indicates total Bytes uploaded/downloaded
+	BytesDone uint64
+	// StartTime indicates Op's start time
+	StartTime time.Time
+	// CompletedTime indicates Op's completed time
+	CompletedTime time.Time
+	//BackupID is the Backup ID for the Op
+	BackupID string
+	// NodeID is the ID of the node where this Op is active
+	NodeID string
+}
+
+type BackupStsResponse struct {
+	// statuses is list of currently active/failed/done backup/restores
+	Statuses map[string]BackupStatus
+	// StsErr indicates any error in obtaining the status
+	StsErr string
+}
+
+type BackupCatalogueRequest struct {
+	// CloudBackupID is Backup ID in the cloud
+	CloudBackupID string
+	// CredentialUUID is the credential for cloud
+	CredentialUUID string
+}
+
+type BackupCatalogueResponse struct {
+	// Contents is listing of backup contents
+	Contents []string
+	// CatalogueErr indicates any error in obtaining cataolgue
+	CatalogueErr string
+}
+
+type BackupHistoryRequest struct {
+	//SrcVolumeID is volumeID for which history of backup/restore
+	// is being requested
+	SrcVolumeID string
+}
+
+type BackupHistoryItem struct {
+	// SrcVolumeID is volume ID which was backedup
+	SrcVolumeID string
+	// TimeStamp is the time at which either backup completed/failed
+	Timestamp time.Time
+	// Status indicates whether backup was completed/failed
+	Status string
+}
+
+type BackupHistoryResponse struct {
+	//HistoryList is list of past backup/restores in the cluster
+	HistoryList []BackupHistoryItem
+	//HistoryErr indicates any error in obtaining history
+	HistoryErr string
+}
+
+type BackupStateChangeRequest struct {
+	// SrcVolumeID is volume ID on which backup/restore
+	// state change is being requested
+	SrcVolumeID string
+	// RequestedState is desired state of the op
+	// can be pause/resume/stop
+	RequestedState string
+}
+
+type BackupScheduleInfo struct {
+	// SrcVolumeID is the i schedule's source volume
+	SrcVolumeID string
+	// CredentialUUID is the cloud credential used with this schedule
+	CredentialUUID string
+	// BackupSchedule is the frequence of backup
+	BackupSchedule string
+	// MaxBackups are the maximum number of backups retained
+	// in cloud.Older backups are deleted
+	MaxBackups uint
+}
+
+type BackupSchedDeleteRequest struct {
+	// SchedUUID is UUID of the schedule to be deleted
+	SchedUUID string
+}
+
+type BackupSchedResponse struct {
+	// SchedUUID is the UUID of the newly created schedule
+	SchedUUID string
+	//SchedCreateErr indicates any error while creating backupschedule
+	SchedCreateErr string
+}
+
+type BackupSchedEnumerateResponse struct {
+	// BackupSchedule is map of schedule uuid to scheduleInfo
+	BackupSchedules map[string]BackupScheduleInfo
+	// SchedEnumerateErr is error encountered while enumerating schedules
+	SchedEnumerateErr string
 }
 
 // DriverTypeSimpleValueOf returns the string format of DriverType
