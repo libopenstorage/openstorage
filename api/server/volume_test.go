@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/libopenstorage/openstorage/api"
@@ -15,10 +14,12 @@ const (
 	version = "v1"
 )
 
-func TestJunk(t *testing.T) {
+func TestVolumeCreateSuccess(t *testing.T) {
 
 	var err error
+
 	ts, testVolDriver := Setup(t)
+
 	defer ts.Close()
 	defer testVolDriver.Stop()
 
@@ -44,10 +45,9 @@ func TestJunk(t *testing.T) {
 
 	// create a volume client
 	driverclient := volumeclient.VolumeDriver(cl)
+
 	res, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
 
 	assert.Nil(t, err)
 	assert.Equal(t, id, res)
-
-	fmt.Println("Yay -0---- ", ts.URL, " --- ", res)
 }
