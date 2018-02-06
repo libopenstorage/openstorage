@@ -1,3 +1,4 @@
+// osdconfig is a package to work with distributed config parameters
 package osdconfig
 
 import "context"
