@@ -31,17 +31,15 @@ func TestExecCB(t *testing.T) {
 	names := []string{"f0", "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9"}
 	for i, name := range names {
 		name := name
-		if err := manager.Register(name, i, newCallback(name, 0, 5000)); err != nil {
+		if err := manager.Register(name, ClusterWatcher, i, newCallback(name, 0, 5000)); err != nil {
 			t.Fatal(err)
 		}
 	}
 
 	// execute callbacks manually
-	manager.Run(new(DataToCallback))
-
-	select {
-	case <-manager.GetContext().Done():
-	}
+	wd := new(DataWrite)
+	wd.Type = ClusterWatcher // only trigger cluster watcher callbacks
+	manager.Run(wd)
 
 Loop1:
 	for i := 0; i < 10; i++ {

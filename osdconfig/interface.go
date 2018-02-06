@@ -23,23 +23,20 @@ type ConfigManager interface {
 	SetNodeConf(config *NodeConfig) error
 
 	// Register callback functions that will get triggered on a change to either
-	// cluster configuration of node configuration data in the backend.
+	// cluster configuration or node configuration data in the backend.
 	// The callback function returns two channels: A channel to write to and a
 	// channel to read on. Context is provided to the callback function in order
 	// to manage cleanup during context cancellations
-	Register(name string,
+	Register(name string, watcherType Watcher,
 		opt interface{},
-		cb func(ctx context.Context, opt interface{}) (chan<- *DataToCallback,
-			<-chan *DataFromCallback)) error
+		cb func(ctx context.Context, opt interface{}) (chan<- *DataWrite,
+			<-chan *DataRead)) error
 
 	// Run executes callback functions, however, it is expected that users never
 	// call this function directly. Run is called behind the scenes using scheduler
-	Run(wd *DataToCallback)
+	Run(wd *DataWrite)
 
-	// GetContext returns the context during execution of callback functions
-	// Please note that the context is renewed prior to new callback execution cycle
-	// A good practice is to call this function directly in select statements
-	// e.g.: case <- manager.GetContext().Done():
+	// GetContext returns the global osdconfig context for any related processes to use
 	GetContext() context.Context
 
 	// GetStatus returns execution status

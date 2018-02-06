@@ -159,6 +159,13 @@ enum AttachState {
     ATTACH_STATE_INTERNAL_SWITCH = 2;
 }
 
+enum OperationFlags {                                                           
+	OP_FLAGS_UNKNOWN = 0;
+	OP_FLAGS_NONE = 1;                                                          
+	// Perform a force_detach during detach operation
+	OP_FLAGS_DETACH_FORCE = 2;                                                  
+}
+
 // StorageResource groups properties of a storage device.
 // swagger:model
 message StorageResource {

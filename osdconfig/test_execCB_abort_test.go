@@ -17,8 +17,6 @@ func TestExecCBAbort(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	timeout := time.Second * 2
-
 	// get new config manager using handle to kvdb
 	ctx := context.Background()
 	manager, err := NewManager(ctx, kv)
@@ -27,37 +25,36 @@ func TestExecCBAbort(t *testing.T) {
 	}
 	defer manager.Close()
 
-	// register a few callback functions
-	names := []string{"f0", "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9"}
+	// register a few callback functions that sleep for less than 3 seconds
+	names := []string{"f0", "f1", "f2", "f3", "f4"}
 	for i, name := range names {
 		name := name
-		if err := manager.Register(name, i, newCallback(name, 1000, 5000)); err != nil {
+		if err := manager.Register(name, ClusterWatcher, i, newCallback(name, 0, 3000)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// register a few callback functions that sleep for more than 5 seconds
+	names = []string{"f5", "f6", "f7", "f8", "f9"}
+	for i, name := range names {
+		name := name
+		if err := manager.Register(name, ClusterWatcher, i, newCallback(name, 5000, 8000)); err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	// execute callbacks manually
-	manager.Run(new(DataToCallback))
-
 	t0 := time.Now()
-	select {
-	case <-manager.GetContext().Done():
-		if time.Since(t0) > timeout {
-			t.Fatal("timeout did not occur")
-		}
-	case <-time.After(time.Second * 3):
-		manager.Abort() // send abort signal
-	}
 
-Loop1:
-	for i := 0; i < 10; i++ {
-		t := time.Now()
-		select {
-		case <-time.After(time.Millisecond * 100):
-			manager.Wait()
-			if time.Since(t) > time.Second { // done waiting for callback execution
-				break Loop1
-			}
-		}
+	// execute callbacks manually
+	wd := new(DataWrite)
+	wd.Type = ClusterWatcher // only trigger cluster watcher callbacks
+	manager.Run(wd)
+	// abort after 3 second
+	go func() { time.Sleep(time.Second * 3); manager.Abort() }()
+	// wait for execution completion
+	time.Sleep(time.Second)
+	manager.Wait()
+
+	if time.Since(t0) > time.Second*4 {
+		t.Fatal("3 second abort did not work")
 	}
 }

@@ -56,6 +56,7 @@ type Driver struct {
 	volume.IODriver
 	volume.QuiesceDriver
 	volume.CredsDriver
+	volume.CloudBackupDriver
 	ops storageops.Ops
 	md  *Metadata
 }
@@ -93,10 +94,11 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 			zone:     zone,
 			instance: instance,
 		},
-		IODriver:        volume.IONotSupported,
-		QuiesceDriver:   volume.QuiesceNotSupported,
-		CredsDriver:     volume.CredsNotSupported,
-		StoreEnumerator: common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
+		IODriver:          volume.IONotSupported,
+		QuiesceDriver:     volume.QuiesceNotSupported,
+		CredsDriver:       volume.CredsNotSupported,
+		CloudBackupDriver: volume.CloudBackupNotSupported,
+		StoreEnumerator:   common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
 	}
 	return d, nil
 }

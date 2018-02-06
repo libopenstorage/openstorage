@@ -25,7 +25,7 @@ func TestSetGetCallbackMulti(t *testing.T) {
 	names := []string{"f0", "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9"}
 	for i, name := range names {
 		name := name
-		if err := manager.Register(name, i, newCallback(name, 0, 5000)); err != nil {
+		if err := manager.Register(name, ClusterWatcher, i, newCallback(name, 0, 5000)); err != nil {
 			t.Fatal(err)
 		}
 	}

@@ -43,6 +43,7 @@ import (
 	osdcli "github.com/libopenstorage/openstorage/cli"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/config"
+	"github.com/libopenstorage/openstorage/csi"
 	"github.com/libopenstorage/openstorage/graph/drivers"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
@@ -235,6 +236,22 @@ func start(c *cli.Context) error {
 		if d != "" && cfg.Osd.ClusterConfig.DefaultDriver == d {
 			isDefaultSet = true
 		}
+
+		// Start CSI Server for this driver
+		cm, err := cluster.Inst()
+		if err != nil {
+			return fmt.Errorf("Unable to find cluster instance: %v", err)
+		}
+		csiServer, err := csi.NewOsdCsiServer(&csi.OsdCsiServerConfig{
+			Net:        "unix",
+			Address:    fmt.Sprintf("/var/lib/osd/driver/%s-csi.sock", d),
+			DriverName: d,
+			Cluster:    cm,
+		})
+		if err != nil {
+			return fmt.Errorf("Failed to start CSI server for driver %s: %v", d, err)
+		}
+		csiServer.Start()
 	}
 
 	if cfg.Osd.ClusterConfig.DefaultDriver != "" && !isDefaultSet {

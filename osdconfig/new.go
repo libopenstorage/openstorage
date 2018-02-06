@@ -18,7 +18,7 @@ func NewManager(ctx context.Context, kv kvdb.Kvdb) (ConfigManager, error) {
 	manager := new(configManager)
 	manager.cb = make(map[string]*callbackData)
 	manager.status = make(map[string]*Status)
-	manager.dataToCallback = make(chan *DataToCallback)
+	manager.dataToCallback = make(chan *DataWrite)
 
 	// placeholder for external pointers
 	manager.cc = kv
@@ -31,13 +31,27 @@ func NewManager(ctx context.Context, kv kvdb.Kvdb) (ConfigManager, error) {
 	manager.ctx, manager.cancel = context.WithCancel(ctx)
 	manager.runCtx, manager.runCancel = context.WithCancel(manager.ctx)
 
-	// register function with kvdb
-	dataToKvdb := new(DataToKvdb)
-	dataToKvdb.ctx = manager.ctx
-	dataToKvdb.wd = manager.dataToCallback
-	if err := kv.WatchTree(base_key, 0, dataToKvdb, cb); err != nil {
-		logrus.Error(err)
-		return nil, err
+	// register function with kvdb to watch cluster level changes
+	watcherTypes := []Watcher{ClusterWatcher, NodesWatcher}
+	for _, watcherType := range watcherTypes {
+		dataToKvdb := new(DataToKvdb)
+		dataToKvdb.ctx = manager.ctx
+		dataToKvdb.wd = manager.dataToCallback
+		dataToKvdb.Type = watcherType
+
+		// register function with different metadata but same channel to watch on
+		switch watcherType {
+		case ClusterWatcher:
+			if err := kv.WatchTree(filepath.Join(baseKey, clusterKey), 0, dataToKvdb, cb); err != nil {
+				logrus.Error(err)
+				return nil, err
+			}
+		case NodesWatcher:
+			if err := kv.WatchTree(filepath.Join(baseKey, nodesKey), 0, dataToKvdb, cb); err != nil {
+				logrus.Error(err)
+				return nil, err
+			}
+		}
 	}
 
 	// start a watch on kvdb
@@ -48,10 +62,10 @@ func NewManager(ctx context.Context, kv kvdb.Kvdb) (ConfigManager, error) {
 
 // helper function to get a new callback function that can be registered
 func newCallback(name string, minSleep, maxSleep int) func(ctx context.Context,
-	opt interface{}) (chan<- *DataToCallback, <-chan *DataFromCallback) {
-	f := func(ctx context.Context, opt interface{}) (chan<- *DataToCallback, <-chan *DataFromCallback) {
-		send := make(chan *DataToCallback)
-		recv := make(chan *DataFromCallback)
+	opt interface{}) (chan<- *DataWrite, <-chan *DataRead) {
+	f := func(ctx context.Context, opt interface{}) (chan<- *DataWrite, <-chan *DataRead) {
+		send := make(chan *DataWrite)
+		recv := make(chan *DataRead)
 		go func() {
 			select {
 			case msg := <-send:
@@ -72,7 +86,7 @@ func newCallback(name string, minSleep, maxSleep int) func(ctx context.Context,
 				return
 			}
 
-			d := new(DataFromCallback)
+			d := new(DataRead)
 			d.Name = name
 
 			select {
@@ -101,5 +115,5 @@ func newInMemKvdb() (kvdb.Kvdb, error) {
 // helper function to obtain kvdb key for node based on nodeID
 // the check for empty nodeID needs to be done elsewhere
 func getNodeKeyFromNodeID(nodeID string) string {
-	return filepath.Join(base_key, nodes_key, nodeID)
+	return filepath.Join(baseKey, nodesKey, nodeID)
 }

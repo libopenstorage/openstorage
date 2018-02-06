@@ -14,11 +14,12 @@ func cb(prefix string, opaque interface{}, kvp *kvdb.KVPair, err error) error {
 		return errors.New("opaque value type is incorrect")
 	}
 
-	wd := new(DataToCallback)
+	wd := new(DataWrite)
 	if kvp != nil {
 		wd.Key = kvp.Key
 		wd.Value = kvp.Value
 	}
+	wd.Type = c.Type
 	wd.Err = err
 	select {
 	case c.wd <- wd:
