@@ -32,7 +32,7 @@ func NewManager(ctx context.Context, kv kvdb.Kvdb) (ConfigManager, error) {
 	manager.runCtx, manager.runCancel = context.WithCancel(manager.ctx)
 
 	// register function with kvdb to watch cluster level changes
-	watcherTypes := []Watcher{ClusterWatcher, NodesWatcher}
+	watcherTypes := []Watcher{ClusterWatcher, NodeWatcher}
 	for _, watcherType := range watcherTypes {
 		dataToKvdb := new(DataToKvdb)
 		dataToKvdb.ctx = manager.ctx
@@ -46,7 +46,7 @@ func NewManager(ctx context.Context, kv kvdb.Kvdb) (ConfigManager, error) {
 				logrus.Error(err)
 				return nil, err
 			}
-		case NodesWatcher:
+		case NodeWatcher:
 			if err := kv.WatchTree(filepath.Join(baseKey, nodesKey), 0, dataToKvdb, cb); err != nil {
 				logrus.Error(err)
 				return nil, err

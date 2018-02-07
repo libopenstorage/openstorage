@@ -19,5 +19,5 @@ const (
 // these const indicates which type of kvdb changes callback is watching on
 const (
 	ClusterWatcher Watcher = baseKey + "/" + clusterKey
-	NodesWatcher   Watcher = baseKey + "/" + nodesKey
+	NodeWatcher    Watcher = baseKey + "/" + nodesKey
 )

@@ -25,12 +25,12 @@ func TestWatchCluster(t *testing.T) {
 	}
 
 	// register cluster watcher callback
-	if err := WatchCluster(manager, clusterWatcher); err != nil {
+	if err := WatchCluster(manager, "clusterWatcher", clusterWatcher); err != nil {
 		t.Fatal(err)
 	}
 
 	// register node watcher callback
-	if err := WatchNode(manager, nodeWatcher); err != nil {
+	if err := WatchNode(manager, "nodeWatcher", nodeWatcher); err != nil {
 		t.Fatal(err)
 	}
 
