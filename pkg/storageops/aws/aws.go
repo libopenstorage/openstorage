@@ -259,6 +259,18 @@ func (s *ec2Ops) describe() (*ec2.Instance, error) {
 	return out.Reservations[0].Instances[0], nil
 }
 
+func (s *ec2Ops) getPrefixFromRootDeviceName(rootDeviceName string) (string, error) {
+	devPrefix := "/dev/sd"
+	if !strings.HasPrefix(rootDeviceName, devPrefix) {
+		devPrefix = "/dev/xvd"
+		if !strings.HasPrefix(rootDeviceName, devPrefix) {
+			return "", fmt.Errorf("unknown prefix type on root device: %s",
+				rootDeviceName)
+		}
+	}
+	return devPrefix, nil
+}
+
 func (s *ec2Ops) FreeDevices(
 	blockDeviceMappings []interface{},
 	rootDeviceName string,
@@ -301,6 +313,13 @@ func (s *ec2Ops) FreeDevices(
 			return nil, fmt.Errorf("cannot parse device name %q", devName)
 		}
 	}
+
+	// Set the prefix to the same one used as the root drive
+	devPrefix, err := s.getPrefixFromRootDeviceName(rootDeviceName)
+	if err != nil {
+		return nil, err
+	}
+
 	free := make([]string, len(initial))
 	count := 0
 	for _, b := range initial {
@@ -587,9 +606,5 @@ func (s *ec2Ops) DevicePath(volumeID string) (string, error) {
 		return "", storageops.NewStorageError(storageops.ErrVolInval,
 			"Unable to determine volume attachment path", "")
 	}
-	dev := strings.TrimPrefix(*vol.Attachments[0].Device, "/dev/sd")
-	if dev != *vol.Attachments[0].Device {
-		dev = "/dev/xvd" + dev
-	}
-	return dev, nil
+	return *vol.Attachments[0].Device, nil
 }
