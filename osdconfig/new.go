@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/libopenstorage/openstorage/pkg/dbg"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
 )
@@ -115,5 +116,6 @@ func newInMemKvdb() (kvdb.Kvdb, error) {
 // helper function to obtain kvdb key for node based on nodeID
 // the check for empty nodeID needs to be done elsewhere
 func getNodeKeyFromNodeID(nodeID string) string {
+	dbg.Assert(len(nodeID) > 0, "%s", "nodeID string can not be empty")
 	return filepath.Join(baseKey, nodesKey, nodeID)
 }

@@ -152,10 +152,7 @@ func (manager *configManager) SetClusterConf(config *ClusterConfig) error {
 
 	// push into kvdb
 	_, err := manager.cc.Put(filepath.Join(baseKey, clusterKey), config, 0)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // GetNodeConf retrieves node config data using nodeID
