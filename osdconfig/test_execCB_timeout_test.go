@@ -23,7 +23,7 @@ func TestExecCBTimeout(t *testing.T) {
 	ctx := context.Background()
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
-	manager, err := NewManager(ctx, kv)
+	manager, err := newManager(ctx, kv)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -33,7 +33,7 @@ func TestExecCBTimeout(t *testing.T) {
 	names := []string{"f0", "f1", "f2", "f3", "f4"}
 	for i, name := range names {
 		name := name
-		if err := manager.Register(name, ClusterWatcher, i, newCallback(name, 0, 3000)); err != nil {
+		if err := manager.register(name, ClusterWatcher, i, newCallback(name, 0, 3000)); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -41,7 +41,7 @@ func TestExecCBTimeout(t *testing.T) {
 	names = []string{"f5", "f6", "f7", "f8", "f9"}
 	for i, name := range names {
 		name := name
-		if err := manager.Register(name, ClusterWatcher, i, newCallback(name, 5000, 8000)); err != nil {
+		if err := manager.register(name, ClusterWatcher, i, newCallback(name, 5000, 8000)); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -51,10 +51,10 @@ func TestExecCBTimeout(t *testing.T) {
 	// execute callbacks manually
 	wd := new(DataWrite)
 	wd.Type = ClusterWatcher // only trigger cluster watcher callbacks
-	manager.Run(wd)
+	manager.run(wd)
 
 	time.Sleep(time.Second)
-	manager.Wait()
+	manager.wait()
 
 	if time.Since(t0) > time.Second*4 {
 		t.Fatal("3 second timeout did not work")

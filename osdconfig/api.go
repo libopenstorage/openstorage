@@ -31,10 +31,10 @@ func (manager *configManager) watch(c <-chan *DataWrite) {
 				logrus.Error("error during callback execution at kvdb")
 			} else {
 				// execute callbacks
-				manager.Run(wd)
+				manager.run(wd)
 
 				// wait for callbacks to complete
-				manager.Wait()
+				manager.wait()
 
 				// print execution status
 				manager.printStatus()
@@ -58,12 +58,12 @@ func (manager *configManager) printStatus() {
 }
 
 // GetContext returns global context for any associated processes to use
-func (manager *configManager) GetContext() context.Context {
+func (manager *configManager) getContext() context.Context {
 	return manager.ctx
 }
 
 // GetStatus returns execution status
-func (manager *configManager) GetStatus() map[string]*Status {
+func (manager *configManager) getStatus() map[string]*Status {
 	manager.Lock()
 	M := make(map[string]*Status)
 	for key, val := range manager.status {
@@ -77,7 +77,7 @@ func (manager *configManager) GetStatus() map[string]*Status {
 }
 
 // Error returns error status of callback execution
-func (manager *configManager) Error() error {
+func (manager *configManager) error() error {
 	manager.Lock()
 	defer manager.Unlock()
 	if manager.status == nil {
@@ -98,7 +98,7 @@ func (manager *configManager) Close() {
 	// cancel contexts and wait for any pending tasks to complete
 	manager.runCancel()
 	manager.cancel()
-	manager.Wait()
+	manager.wait()
 
 	// clean up resources
 	manager.cc = nil
@@ -107,7 +107,7 @@ func (manager *configManager) Close() {
 }
 
 // Abort sends context cancellation to running callbacks if any
-func (manager *configManager) Abort() {
+func (manager *configManager) abort() {
 	logrus.Info("aborting via context cancellation")
 	manager.runCancel()
 	manager.Lock()
@@ -116,7 +116,7 @@ func (manager *configManager) Abort() {
 }
 
 // Wait waits for running callbacks to finish
-func (manager *configManager) Wait() {
+func (manager *configManager) wait() {
 	manager.Lock()
 	manager.Unlock()
 }
@@ -199,9 +199,23 @@ func (manager *configManager) SetNodeConf(config *NodeConfig) error {
 	return nil
 }
 
+// WatchCluster registers user defined function as callback and sets a watch for changes
+// to cluster configuration
+func (manager *configManager) WatchCluster(name string, cb func(config *ClusterConfig) error) error {
+	f, _ := getCallback(name, cb)
+	return manager.register(name, ClusterWatcher, nil, f)
+}
+
+// WatchNode registers user defined function as callback and sets a watch for changes
+// to node configuration
+func (manager *configManager) WatchNode(name string, cb func(config *NodeConfig) error) error {
+	f, _ := getCallback(name, cb)
+	return manager.register(name, NodeWatcher, nil, f)
+}
+
 // Register registers callback functions
 // callback to be registered is expected to be a service delivering a channel to write on
-func (manager *configManager) Register(name string, watcherType Watcher, opt interface{},
+func (manager *configManager) register(name string, watcherType Watcher, opt interface{},
 	cb func(ctx context.Context,
 		opt interface{}) (chan<- *DataWrite, <-chan *DataRead)) error {
 
@@ -224,7 +238,7 @@ func (manager *configManager) Register(name string, watcherType Watcher, opt int
 }
 
 // Run loops over all registered callbacks and executes them.
-func (manager *configManager) Run(wd *DataWrite) {
+func (manager *configManager) run(wd *DataWrite) {
 	go func(dataToCallback *DataWrite) {
 		manager.Lock()
 		defer manager.Unlock()

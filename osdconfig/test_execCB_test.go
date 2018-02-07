@@ -21,7 +21,7 @@ func TestExecCB(t *testing.T) {
 	ctx := context.Background()
 	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
-	manager, err := NewManager(ctx, kv)
+	manager, err := newManager(ctx, kv)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,7 +31,7 @@ func TestExecCB(t *testing.T) {
 	names := []string{"f0", "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9"}
 	for i, name := range names {
 		name := name
-		if err := manager.Register(name, ClusterWatcher, i, newCallback(name, 0, 5000)); err != nil {
+		if err := manager.register(name, ClusterWatcher, i, newCallback(name, 0, 5000)); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -39,14 +39,14 @@ func TestExecCB(t *testing.T) {
 	// execute callbacks manually
 	wd := new(DataWrite)
 	wd.Type = ClusterWatcher // only trigger cluster watcher callbacks
-	manager.Run(wd)
+	manager.run(wd)
 
 Loop1:
 	for i := 0; i < 10; i++ {
 		t := time.Now()
 		select {
 		case <-time.After(time.Millisecond * 100):
-			manager.Wait()
+			manager.wait()
 			if time.Since(t) > time.Second { // done waiting for callback execution
 				break Loop1
 			}

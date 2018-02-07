@@ -15,7 +15,7 @@ func TestSetGetCallbackMulti(t *testing.T) {
 
 	// get new config manager using handle to kvdb
 	ctx := context.Background()
-	manager, err := NewManager(ctx, kv)
+	manager, err := newManager(ctx, kv)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -25,7 +25,7 @@ func TestSetGetCallbackMulti(t *testing.T) {
 	names := []string{"f0", "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9"}
 	for i, name := range names {
 		name := name
-		if err := manager.Register(name, ClusterWatcher, i, newCallback(name, 0, 5000)); err != nil {
+		if err := manager.register(name, ClusterWatcher, i, newCallback(name, 0, 5000)); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -45,7 +45,7 @@ Loop1:
 		t := time.Now()
 		select {
 		case <-time.After(time.Millisecond * 100):
-			manager.Wait()
+			manager.wait()
 			if time.Since(t) > time.Second { // done waiting for callback execution
 				break Loop1
 			}
@@ -62,7 +62,7 @@ Loop2:
 		t := time.Now()
 		select {
 		case <-time.After(time.Millisecond * 100):
-			manager.Wait()
+			manager.wait()
 			if time.Since(t) > time.Second { // done waiting for callback execution
 				break Loop2
 			}

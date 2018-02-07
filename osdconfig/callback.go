@@ -33,10 +33,10 @@ func cb(prefix string, opaque interface{}, kvp *kvdb.KVPair, err error) error {
 	}
 }
 
-// GetCallback build a function literal that can be registered.
+// getCallback build a function literal that can be registered.
 // This is a helper util function for users of this library who wish to register callbacks of following forms:
 // func(config *ClusterConfig) error and func(config *NodeConfig) error
-func GetCallback(name string, funcLiteral interface{}) (func(ctx context.Context, opt interface{}) (chan<- *DataWrite, <-chan *DataRead), error) {
+func getCallback(name string, funcLiteral interface{}) (func(ctx context.Context, opt interface{}) (chan<- *DataWrite, <-chan *DataRead), error) {
 	var watcherType Watcher
 
 	// determine the watcher type based on funcLiteral type

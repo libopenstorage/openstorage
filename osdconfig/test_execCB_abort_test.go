@@ -19,7 +19,7 @@ func TestExecCBAbort(t *testing.T) {
 
 	// get new config manager using handle to kvdb
 	ctx := context.Background()
-	manager, err := NewManager(ctx, kv)
+	manager, err := newManager(ctx, kv)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -29,7 +29,7 @@ func TestExecCBAbort(t *testing.T) {
 	names := []string{"f0", "f1", "f2", "f3", "f4"}
 	for i, name := range names {
 		name := name
-		if err := manager.Register(name, ClusterWatcher, i, newCallback(name, 0, 3000)); err != nil {
+		if err := manager.register(name, ClusterWatcher, i, newCallback(name, 0, 3000)); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -37,7 +37,7 @@ func TestExecCBAbort(t *testing.T) {
 	names = []string{"f5", "f6", "f7", "f8", "f9"}
 	for i, name := range names {
 		name := name
-		if err := manager.Register(name, ClusterWatcher, i, newCallback(name, 5000, 8000)); err != nil {
+		if err := manager.register(name, ClusterWatcher, i, newCallback(name, 5000, 8000)); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -47,12 +47,12 @@ func TestExecCBAbort(t *testing.T) {
 	// execute callbacks manually
 	wd := new(DataWrite)
 	wd.Type = ClusterWatcher // only trigger cluster watcher callbacks
-	manager.Run(wd)
+	manager.run(wd)
 	// abort after 3 second
-	go func() { time.Sleep(time.Second * 3); manager.Abort() }()
+	go func() { time.Sleep(time.Second * 3); manager.abort() }()
 	// wait for execution completion
 	time.Sleep(time.Second)
-	manager.Wait()
+	manager.wait()
 
 	if time.Since(t0) > time.Second*4 {
 		t.Fatal("3 second abort did not work")

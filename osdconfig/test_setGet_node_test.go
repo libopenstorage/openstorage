@@ -18,7 +18,7 @@ func TestSetGetNode(t *testing.T) {
 	ctx := context.Background()
 	ctx, cancel := context.WithTimeout(ctx, time.Minute)
 	defer cancel()
-	manager, err := NewManager(ctx, kv)
+	manager, err := newManager(ctx, kv)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,7 +51,7 @@ Loop1:
 		t := time.Now()
 		select {
 		case <-time.After(time.Millisecond * 100):
-			manager.Wait()
+			manager.wait()
 			if time.Since(t) > time.Second { // done waiting for callback execution
 				break Loop1
 			}

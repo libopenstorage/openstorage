@@ -1,17 +1,16 @@
-package configutil
+package osdconfig
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/libopenstorage/openstorage/osdconfig"
-	"github.com/portworx/kvdb"
-	"github.com/portworx/kvdb/mem"
+	"github.com/pkg/errors"
 )
 
-func TestWatchCluster(t *testing.T) {
+func TestWatch(t *testing.T) {
 	// create in memory kvdb
 	kv, err := newInMemKvdb()
 	if err != nil {
@@ -19,18 +18,19 @@ func TestWatchCluster(t *testing.T) {
 	}
 
 	// create new manager
-	manager, err := NewManager(kv)
+	manager, err := NewManager(context.Background(), kv)
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer manager.Close()
 
 	// register cluster watcher callback
-	if err := WatchCluster(manager, "clusterWatcher", clusterWatcher); err != nil {
+	if err := manager.WatchCluster("clusterWatcher", clusterWatcher); err != nil {
 		t.Fatal(err)
 	}
 
 	// register node watcher callback
-	if err := WatchNode(manager, "nodeWatcher", nodeWatcher); err != nil {
+	if err := manager.WatchNode("nodeWatcher", nodeWatcher); err != nil {
 		t.Fatal(err)
 	}
 
@@ -46,38 +46,44 @@ func TestWatchCluster(t *testing.T) {
 
 	time.Sleep(time.Second)
 
-	for i := 0; i < 10; i++ {
-		// wait for processes to be over
-		manager.Wait()
-		time.Sleep(time.Millisecond * 100)
-	}
-
 }
 
 // clusterWatcher is an example callback function to watch on cluster config changes
-func clusterWatcher(config *osdconfig.ClusterConfig) error {
+func clusterWatcher(config *ClusterConfig) error {
 	if jb, err := json.MarshalIndent(config, "", "  "); err != nil {
 		return err
 	} else {
 		fmt.Println(string(jb))
+		if config.ClusterId != "myClusterID" {
+			return errors.New("expected myClusterID, received " + config.ClusterId)
+			panic(DataErr)
+		}
+		if config.Driver != "myDriver" {
+			return errors.New("expected myDriver, receive " + config.Driver)
+			panic(DataErr)
+		}
 	}
 	return nil
 }
 
 // nodeWatcher is an example callback function to watch on node config changes
-func nodeWatcher(config *osdconfig.NodeConfig) error {
+func nodeWatcher(config *NodeConfig) error {
 	if jb, err := json.MarshalIndent(config, "", "  "); err != nil {
 		return err
 	} else {
 		fmt.Println(string(jb))
+		if config.Network.DataIface != "dataIface" {
+			return errors.New("expected dataIface, received " + config.Network.DataIface)
+			panic(DataErr)
+		}
 	}
 	return nil
 }
 
 // setSomeClusterValues is a helper function to set cluster config values in kvdb
-func setSomeClusterValues(manager osdconfig.ConfigManager) error {
+func setSomeClusterValues(manager ConfigManager) error {
 	// prepare expected cluster config
-	conf := new(osdconfig.ClusterConfig)
+	conf := new(ClusterConfig)
 	conf.ClusterId = "myClusterID"
 	conf.Driver = "myDriver"
 
@@ -89,18 +95,18 @@ func setSomeClusterValues(manager osdconfig.ConfigManager) error {
 }
 
 // setSomeNodeValues is a helper function to set some node config values in kvdb
-func setSomeNodeValues(manager osdconfig.ConfigManager) error {
+func setSomeNodeValues(manager ConfigManager) error {
 	// prepare expected cluster config
-	conf := new(osdconfig.NodesConfig)
-	conf.NodeConf = make(map[string]*osdconfig.NodeConfig)
-	conf.NodeConf["node1"] = new(osdconfig.NodeConfig)
-	conf.NodeConf["node2"] = new(osdconfig.NodeConfig)
-	conf.NodeConf["node3"] = new(osdconfig.NodeConfig)
+	conf := new(NodesConfig)
+	conf.NodeConf = make(map[string]*NodeConfig)
+	conf.NodeConf["node1"] = new(NodeConfig)
+	conf.NodeConf["node2"] = new(NodeConfig)
+	conf.NodeConf["node3"] = new(NodeConfig)
 
 	for key, val := range conf.NodeConf {
 		key, val := key, val
 		val.NodeId = key
-		val.Network = new(osdconfig.NetworkConfig)
+		val.Network = new(NetworkConfig)
 		val.Network.DataIface = "dataIface"
 		if err := manager.SetNodeConf(val); err != nil {
 			return err
@@ -108,14 +114,4 @@ func setSomeNodeValues(manager osdconfig.ConfigManager) error {
 	}
 
 	return nil
-}
-
-// newInMemKvdb is a helper function go get a new kvdb instance
-func newInMemKvdb() (kvdb.Kvdb, error) {
-	// create in memory kvdb
-	if kv, err := kvdb.New(mem.Name, "", []string{}, nil, nil); err != nil {
-		return nil, err
-	} else {
-		return kv, nil
-	}
 }
