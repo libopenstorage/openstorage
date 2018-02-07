@@ -56,11 +56,11 @@ func clusterWatcher(config *ClusterConfig) error {
 		fmt.Println(string(jb))
 		if config.ClusterId != "myClusterID" {
 			return errors.New("expected myClusterID, received " + config.ClusterId)
-			panic(DataErr)
+			//panic(DataErr)
 		}
 		if config.Driver != "myDriver" {
 			return errors.New("expected myDriver, receive " + config.Driver)
-			panic(DataErr)
+			//panic(DataErr)
 		}
 	}
 	return nil
