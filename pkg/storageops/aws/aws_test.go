@@ -1,4 +1,4 @@
-package aws_test
+package aws
 
 import (
 	"fmt"
@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/libopenstorage/openstorage/pkg/storageops"
-	"github.com/libopenstorage/openstorage/pkg/storageops/aws"
 	"github.com/libopenstorage/openstorage/pkg/storageops/test"
 	uuid "github.com/satori/go.uuid"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -24,7 +24,7 @@ func TestAll(t *testing.T) {
 	drivers := make(map[string]storageops.Ops)
 	diskTemplates := make(map[string]map[string]interface{})
 
-	if d, err := aws.NewEnvClient(); err != aws.ErrAWSEnvNotAvailable {
+	if d, err := NewEnvClient(); err != ErrAWSEnvNotAvailable {
 		volType := opsworks.VolumeTypeGp2
 		volSize := int64(newDiskSizeInGB)
 		zone := os.Getenv("AWS_ZONE")
@@ -38,8 +38,54 @@ func TestAll(t *testing.T) {
 			diskName: ebsVol,
 		}
 	} else {
-		fmt.Printf("skipping AWS tests as environment is not set...\n")
+		t.Skipf("skipping AWS tests as environment is not set...\n")
 	}
 
 	test.RunTest(drivers, diskTemplates, t)
+}
+
+func TestAwsGetPrefixFromRootDeviceName(t *testing.T) {
+	a := &ec2Ops{}
+	tests := []struct {
+		deviceName     string
+		expectedPrefix string
+		expectError    bool
+	}{
+		{
+			deviceName:     "/dev/sdb",
+			expectedPrefix: "/dev/sd",
+			expectError:    false,
+		},
+		{
+			deviceName:     "/dev/xvdd",
+			expectedPrefix: "/dev/xvd",
+			expectError:    false,
+		},
+		{
+			deviceName:     "/dev/xvdda",
+			expectedPrefix: "/dev/xvd",
+			expectError:    false,
+		},
+		{
+			deviceName:     "/dev/dda",
+			expectedPrefix: "",
+			expectError:    true,
+		},
+		{
+			deviceName:     "/dev/sys/dev/asdfasdfasdf",
+			expectedPrefix: "",
+			expectError:    true,
+		},
+		{
+			deviceName:     "",
+			expectedPrefix: "",
+			expectError:    true,
+		},
+	}
+
+	for _, test := range tests {
+		prefix, err := a.getPrefixFromRootDeviceName(test.deviceName)
+		assert.Equal(t, err != nil, test.expectError)
+		assert.Equal(t, test.expectedPrefix, prefix)
+	}
 }
