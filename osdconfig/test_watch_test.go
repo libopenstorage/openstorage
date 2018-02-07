@@ -74,7 +74,7 @@ func nodeWatcher(config *NodeConfig) error {
 		fmt.Println(string(jb))
 		if config.Network.DataIface != "dataIface" {
 			return errors.New("expected dataIface, received " + config.Network.DataIface)
-			panic(DataErr)
+			//panic(DataErr)
 		}
 	}
 	return nil
