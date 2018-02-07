@@ -235,7 +235,11 @@ func (s *ec2Ops) DeviceMappings() (map[string]string, error) {
 	return m, nil
 }
 
-// describe current instance.
+// Describe current instance.
+func (s *ec2Ops) Describe() (interface{}, error) {
+	return s.describe()
+}
+
 func (s *ec2Ops) describe() (*ec2.Instance, error) {
 	request := &ec2.DescribeInstancesInput{
 		InstanceIds: []*string{&s.instance},

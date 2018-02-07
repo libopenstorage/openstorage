@@ -457,6 +457,12 @@ func (s *gceOps) checkSnapStatus(id string, desired string) error {
 
 	return err
 }
+
+// Describe current instance.
+func (s *gceOps) Describe() (interface{}, error) {
+	return s.describeinstance()
+}
+
 func (s *gceOps) describeinstance() (*compute.Instance, error) {
 	return s.service.Instances.Get(s.inst.Project, s.inst.Zone, s.inst.Name).Do()
 }

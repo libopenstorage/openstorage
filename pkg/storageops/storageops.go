@@ -43,6 +43,8 @@ type Ops interface {
 	Detach(volumeID string) error
 	// Delete volumeID.
 	Delete(volumeID string) error
+	// Desribe an instance
+	Describe() (interface{}, error)
 	// FreeDevices returns free block devices on the instance.
 	// blockDeviceMappings is a data structure that contains all block devices on
 	// the instance and where they are mapped to
