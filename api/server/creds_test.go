@@ -76,7 +76,6 @@ func Setup(t *testing.T) (*httptest.Server, *testServer) {
 	}
 
 	ts := httptest.NewServer(router)
-
 	testVolDriver := newTestServer(t)
 	return ts, testVolDriver
 }
