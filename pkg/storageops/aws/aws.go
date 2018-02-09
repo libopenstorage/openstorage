@@ -146,10 +146,10 @@ func (s *ec2Ops) waitAttachmentStatus(
 	request := &ec2.DescribeVolumesInput{VolumeIds: []*string{&id}}
 	actual := ""
 	interval := 2 * time.Second
-	fmt.Printf("Waiting for state transition to %q", desired)
+	logrus.Infof("Waiting for state transition to %q", desired)
 
 	var outVol *ec2.Volume
-	for elapsed, runs := 0*time.Second, 0; actual != desired && elapsed < timeout; elapsed += interval {
+	for elapsed, runs := 0*time.Second, 0; actual != desired && elapsed < timeout; elapsed, runs = elapsed+interval, runs+1 {
 		awsVols, err := s.ec2.DescribeVolumes(request)
 		if err != nil {
 			return nil, err
@@ -172,10 +172,9 @@ func (s *ec2Ops) waitAttachmentStatus(
 		}
 		time.Sleep(interval)
 		if (runs % 10) == 0 {
-			fmt.Print(".")
+			logrus.Infof("Tried %d times", runs)
 		}
 	}
-	fmt.Printf("\n")
 	if actual != desired {
 		return nil, fmt.Errorf("Volume %v failed to transition to  %v current state %v",
 			volumeID, desired, actual)
