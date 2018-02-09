@@ -10,59 +10,32 @@ import (
 	"github.com/Sirupsen/logrus"
 )
 
-// watch starts a watch on kvdb.
-// it listens on a channel forever as long as context is alive
-func (manager *configManager) watch(c <-chan *DataWrite) {
-	// watch lock guarantees only one watcher is spawned
-	manager.watchLock.Lock()
-	defer manager.watchLock.Unlock()
-
-	// loop forever until watch context is alive
-	for {
-		select {
-		case <-manager.ctx.Done():
-			logrus.Info("context cancellation received in: kvdb watch")
-			logrus.Info("no longer watching for kvdb updates")
-			return
-		case wd := <-c:
-			logrus.Info("callback execution trigger received from kvdb. exec type: ", wd.Type)
-
-			if wd.Err != nil {
-				logrus.Error("error during callback execution at kvdb")
-			} else {
-				// execute callbacks
-				manager.run(wd)
-
-				// wait for callbacks to complete
-				manager.wait()
-
-				// print execution status
-				manager.printStatus()
-			}
-		}
-	}
-}
-
 // printStatus will print existing status
 func (manager *configManager) printStatus() {
 	for key, val := range manager.status {
 		key := key
 		if val != nil {
 			if val.Err != nil {
-				logrus.Error("callback ", key, " executed with errors. Last status: ", val.Err)
+				logrus.WithField("source", sourceManagerPrintStatus).
+					WithField("callback", key).
+					WithField("lastStatus", val.Err).
+					Warn(msgExecError)
 			} else {
-				logrus.Info("callback ", key, " executed successfully in ", val.Duration)
+				logrus.WithField("source", sourceManagerPrintStatus).
+					WithField("duration", val.Duration).
+					WithField("callback", key).
+					Debug(msgExecSuccess)
 			}
 		}
 	}
 }
 
-// GetContext returns global context for any associated processes to use
+// getContext returns global context for any associated processes to use
 func (manager *configManager) getContext() context.Context {
 	return manager.ctx
 }
 
-// GetStatus returns execution status
+// getStatus returns execution status
 func (manager *configManager) getStatus() map[string]*Status {
 	manager.Lock()
 	M := make(map[string]*Status)
@@ -76,7 +49,7 @@ func (manager *configManager) getStatus() map[string]*Status {
 	return M
 }
 
-// Error returns error status of callback execution
+// error returns error status of callback execution
 func (manager *configManager) error() error {
 	manager.Lock()
 	defer manager.Unlock()
@@ -86,7 +59,7 @@ func (manager *configManager) error() error {
 	for _, val := range manager.status {
 		if val != nil {
 			if val.Err != nil {
-				return ExecErr
+				return ErrorExec
 			}
 		}
 	}
@@ -96,26 +69,37 @@ func (manager *configManager) error() error {
 // Close closes the contexts and releases bookkeeping memory
 func (manager *configManager) Close() {
 	// cancel contexts and wait for any pending tasks to complete
+	logrus.WithField("source", sourceManagerClose).
+		Info(msgCtxCancelled)
 	manager.runCancel()
 	manager.cancel()
 	manager.wait()
 
+	// introduce small delay to allow associated processes linked via
+	// contexts to respond to context cancellations
+	time.Sleep(time.Second)
+
 	// clean up resources
+	logrus.WithField("source", sourceManagerClose).
+		Info(msgMemRelease)
 	manager.cc = nil
 	manager.cb = nil
-	manager.opt = nil
+	logrus.WithField("source", sourceManagerClose).
+		Info(msgCleanup)
 }
 
-// Abort sends context cancellation to running callbacks if any
+// abort sends context cancellation to running callbacks if any
 func (manager *configManager) abort() {
-	logrus.Info("aborting via context cancellation")
+	logrus.WithField("source", sourceManagerAbort).
+		Warn(msgAborting)
 	manager.runCancel()
 	manager.Lock()
-	logrus.Info("abort successful")
+	logrus.WithField("source", sourceManagerAbort).
+		Info(msgAbortSuccess)
 	manager.Unlock()
 }
 
-// Wait waits for running callbacks to finish
+// wait waits for running callbacks to finish
 func (manager *configManager) wait() {
 	manager.Lock()
 	manager.Unlock()
@@ -124,13 +108,13 @@ func (manager *configManager) wait() {
 // GetClusterConf retrieves cluster level data from kvdb
 func (manager *configManager) GetClusterConf() (*ClusterConfig, error) {
 	// get json from kvdb and unmarshal into config
-	kvPair, err := manager.cc.Get(filepath.Join(baseKey, clusterKey))
+	kvPair, err := manager.cc.Get(filepath.Join(rootKey, clusterKey))
 	if err != nil {
 		return nil, err
 	}
 
 	if kvPair == nil {
-		return nil, DataErr
+		return nil, ErrorData
 	}
 
 	config := new(ClusterConfig)
@@ -147,18 +131,18 @@ func (manager *configManager) SetClusterConf(config *ClusterConfig) error {
 	defer manager.Unlock()
 
 	if config == nil {
-		return InputErr
+		return ErrorInput
 	}
 
 	// push into kvdb
-	_, err := manager.cc.Put(filepath.Join(baseKey, clusterKey), config, 0)
+	_, err := manager.cc.Put(filepath.Join(rootKey, clusterKey), config, 0)
 	return err
 }
 
 // GetNodeConf retrieves node config data using nodeID
 func (manager *configManager) GetNodeConf(nodeID string) (*NodeConfig, error) {
 	if len(nodeID) == 0 {
-		return nil, InputErr
+		return nil, ErrorInput
 	}
 
 	// get json from kvdb and unmarshal into config
@@ -168,7 +152,7 @@ func (manager *configManager) GetNodeConf(nodeID string) (*NodeConfig, error) {
 	}
 
 	if kvPair == nil {
-		return nil, DataErr
+		return nil, ErrorData
 	}
 
 	config := new(NodeConfig)
@@ -185,11 +169,11 @@ func (manager *configManager) SetNodeConf(config *NodeConfig) error {
 	defer manager.Unlock()
 
 	if config == nil {
-		return InputErr
+		return ErrorInput
 	}
 
 	if len(config.NodeId) == 0 {
-		return InputErr
+		return ErrorInput
 	}
 
 	// push into kvdb
@@ -199,25 +183,25 @@ func (manager *configManager) SetNodeConf(config *NodeConfig) error {
 	return nil
 }
 
-// WatchCluster registers user defined function as callback and sets a watch for changes
+// TuneCluster registers user defined function as callback and sets a watch for changes
 // to cluster configuration
 func (manager *configManager) WatchCluster(name string, cb func(config *ClusterConfig) error) error {
 	f, _ := getCallback(name, cb)
-	return manager.register(name, ClusterWatcher, nil, f)
+	return manager.register(name, TuneCluster, nil, f)
 }
 
-// WatchNode registers user defined function as callback and sets a watch for changes
+// TuneNode registers user defined function as callback and sets a watch for changes
 // to node configuration
 func (manager *configManager) WatchNode(name string, cb func(config *NodeConfig) error) error {
 	f, _ := getCallback(name, cb)
-	return manager.register(name, NodeWatcher, nil, f)
+	return manager.register(name, TuneNode, nil, f)
 }
 
-// Register registers callback functions
+// register registers callback functions
 // callback to be registered is expected to be a service delivering a channel to write on
-func (manager *configManager) register(name string, watcherType Watcher, opt interface{},
+func (manager *configManager) register(name string, watcherType Band, opt interface{},
 	cb func(ctx context.Context,
-		opt interface{}) (chan<- *DataWrite, <-chan *DataRead)) error {
+		opt interface{}) (chan<- *dataWrite, <-chan *dataRead)) error {
 
 	// obtain lock since registering a callback changes the state of manager object
 	manager.Lock()
@@ -231,15 +215,15 @@ func (manager *configManager) register(name string, watcherType Watcher, opt int
 		cbi.Type = watcherType
 		manager.cb[name] = cbi
 	} else {
-		return RegErr
+		return ErrorRegister
 	}
 
 	return nil
 }
 
-// Run loops over all registered callbacks and executes them.
-func (manager *configManager) run(wd *DataWrite) {
-	go func(dataToCallback *DataWrite) {
+// run loops over all registered callbacks and executes them.
+func (manager *configManager) run(wd *dataWrite) {
+	go func(dataToCallback *dataWrite) {
 		manager.Lock()
 		defer manager.Unlock()
 
@@ -259,8 +243,8 @@ func (manager *configManager) run(wd *DataWrite) {
 		}
 
 		// create a channel to communicate with callbacks
-		writeFanOut := make(chan *DataWrite)
-		readFanIn := make(chan *DataRead)
+		writeFanOut := make(chan *dataWrite)
+		readFanIn := make(chan *dataRead)
 
 		// start clock
 		t := time.Now()
@@ -274,16 +258,19 @@ func (manager *configManager) run(wd *DataWrite) {
 
 				// update status
 				dur := time.Since(t)
-				manager.status[name].Err = errors.New("spawned")
+				manager.status[name].Err = errors.New(msgSpawned)
 				manager.status[name].Duration = dur
 
-				logrus.Info("callback: ", name, " spawned in ", dur)
+				logrus.WithField("source", sourceManagerRun).
+					WithField("callback", name).
+					WithField("duration", dur).
+					Debug(msgSpawned)
 
 				// wire up writeChannel and receive channels for communicating with spawned routines
-				go func(s chan *DataWrite, data chan<- *DataWrite) {
+				go func(s chan *dataWrite, data chan<- *dataWrite) {
 					data <- <-s
 				}(writeFanOut, writeChannel)
-				go func(r chan *DataRead, err <-chan *DataRead) {
+				go func(r chan *dataRead, err <-chan *dataRead) {
 					r <- <-err
 				}(readFanIn, readChannel)
 			}
@@ -292,13 +279,18 @@ func (manager *configManager) run(wd *DataWrite) {
 		// feed callbacks
 		for _, val := range manager.cb {
 			if val.Type == wd.Type {
-				go func(c chan<- *DataWrite) {
+				go func(c chan<- *dataWrite) {
 					select {
 					case <-manager.runCtx.Done():
-						logrus.Info("context cancellation received in: callback scheduler")
-						logrus.Error("not all callbacks received data")
+						logrus.WithField("source", sourceManagerRun).
+							Warn(msgCtxCancelled)
+						logrus.WithField("source", sourceManagerRun).
+							Warn(msgDataError)
 					case c <- copyData(dataToCallback):
-						logrus.Info("a callback received data in ", time.Since(t))
+						logrus.WithField("source", sourceManagerRun).
+							WithField("callback", "unknown").
+							WithField("duration", time.Since(t)).
+							Debug(msgDataSuccess)
 					}
 				}(writeFanOut)
 			}
@@ -310,15 +302,23 @@ func (manager *configManager) run(wd *DataWrite) {
 			if val.Type == wd.Type {
 				select {
 				case <-manager.runCtx.Done():
-					logrus.Info("context cancellation received in: callback scheduler")
-					logrus.Error("not all callbacks delivered completion status")
+					logrus.WithField("source", sourceManagerRun).
+						Warn(msgCtxCancelled)
+					logrus.WithField("source", sourceManagerRun).
+						Warn(msgStatusError)
 					break Loop
 				case mesg := <-readFanIn:
 					name, err, dur := mesg.Name, mesg.Err, time.Since(t)
 					if err != nil {
-						logrus.Error(mesg.Name, " callback completed w/  errors: ", dur)
+						logrus.WithField("source", sourceManagerRun).
+							WithField("callback", mesg.Name).
+							WithField("duration", dur).
+							Warn(msgExecError)
 					} else {
-						logrus.Info(mesg.Name, " callback completed w/o errors:", dur)
+						logrus.WithField("source", sourceManagerRun).
+							WithField("callback", mesg.Name).
+							WithField("duration", dur).
+							Debug(msgExecSuccess)
 					}
 					// update status
 					manager.status[name].Err = err
@@ -336,8 +336,8 @@ func (manager *configManager) run(wd *DataWrite) {
 }
 
 // copyData is a helper function to copy data to be fed to each callback
-func copyData(wd *DataWrite) *DataWrite {
-	wd2 := new(DataWrite)
+func copyData(wd *dataWrite) *dataWrite {
+	wd2 := new(dataWrite)
 	wd2.Key = wd.Key
 	if wd.Err != nil {
 		wd2.Err = errors.New(wd.Err.Error())

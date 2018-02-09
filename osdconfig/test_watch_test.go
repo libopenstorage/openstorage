@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"testing"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 func TestWatch(t *testing.T) {
@@ -55,12 +53,12 @@ func clusterWatcher(config *ClusterConfig) error {
 	} else {
 		fmt.Println(string(jb))
 		if config.ClusterId != "myClusterID" {
-			return errors.New("expected myClusterID, received " + config.ClusterId)
-			//panic(DataErr)
+			//return errors.New("expected myClusterID, received " + config.ClusterId)
+			panic(ErrorData)
 		}
 		if config.Driver != "myDriver" {
-			return errors.New("expected myDriver, receive " + config.Driver)
-			//panic(DataErr)
+			//return errors.New("expected myDriver, receive " + config.Driver)
+			panic(ErrorData)
 		}
 	}
 	return nil
@@ -73,8 +71,8 @@ func nodeWatcher(config *NodeConfig) error {
 	} else {
 		fmt.Println(string(jb))
 		if config.Network.DataIface != "dataIface" {
-			return errors.New("expected dataIface, received " + config.Network.DataIface)
-			//panic(DataErr)
+			//return errors.New("expected dataIface, received " + config.Network.DataIface)
+			panic(ErrorData)
 		}
 	}
 	return nil
