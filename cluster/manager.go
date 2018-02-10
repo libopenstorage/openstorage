@@ -15,7 +15,7 @@ import (
 	"sync"
 	"time"
 
-	"go.pedge.io/dlog"
+	"go.uber.org/zap"
 
 	"github.com/libopenstorage/gossip"
 	"github.com/libopenstorage/gossip/types"
@@ -171,7 +171,7 @@ func ExternalIp(config *config.ClusterConfig) (string, string, error) {
 
 		mgmtIp, err = ifaceToIp(&iface)
 		if err != nil {
-			dlog.Printf("Skipping interface without IP: %v: %v",
+			zap.S().Infof("Skipping interface without IP: %v: %v",
 				iface, err)
 			continue
 		}
@@ -209,7 +209,7 @@ func (c *ClusterManager) getNodeEntry(nodeID string, clustDBRef *ClusterInfo) (a
 			n.Hostname = v.Hostname
 			n.NodeLabels = v.NodeLabels
 		} else {
-			dlog.Warnf("Could not query NodeID %v", nodeID)
+			zap.S().Warnf("Could not query NodeID %v", nodeID)
 			// Node entry won't be refreshed form DB, will use the "offline" original
 		}
 	}
@@ -225,7 +225,7 @@ func (c *ClusterManager) Inspect(nodeID string) (api.Node, error) {
 
 // AddEventListener adds a new listener
 func (c *ClusterManager) AddEventListener(listener ClusterListener) error {
-	dlog.Printf("Adding cluster event listener: %s", listener.String())
+	zap.S().Infof("Adding cluster event listener: %s", listener.String())
 	c.listeners.PushBack(listener)
 	return nil
 }
@@ -314,34 +314,34 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 	db, kvdbVersion, err := readClusterInfo()
 
 	if err != nil {
-		dlog.Warnln("Failed to read database after update ", err)
+		zap.S().Warn("Failed to read database after update ", err)
 		// Exit since an update may be missed here.
 		os.Exit(1)
 	}
 
 	for _, nodeEntry := range db.NodeEntries {
 		if nodeEntry.Status == api.Status_STATUS_DECOMMISSION {
-			dlog.Infof("ClusterManager watchDB, node ID "+
+			zap.S().Infof("ClusterManager watchDB, node ID "+
 				"%s state is Decommission.",
 				nodeEntry.Id)
 
 			n, found := c.getNodeCacheEntry(nodeEntry.Id)
 			if !found {
-				dlog.Errorf("ClusterManager watchDB, "+
+				zap.S().Errorf("ClusterManager watchDB, "+
 					"node ID %s not in node cache",
 					nodeEntry.Id)
 				continue
 			}
 
 			if n.Status == api.Status_STATUS_DECOMMISSION {
-				dlog.Infof("ClusterManager watchDB, "+
+				zap.S().Infof("ClusterManager watchDB, "+
 					"node ID %s is already decommission "+
 					"on this node",
 					nodeEntry.Id)
 				continue
 			}
 
-			dlog.Infof("ClusterManager watchDB, "+
+			zap.S().Infof("ClusterManager watchDB, "+
 				"decommsission node ID %s on this node",
 				nodeEntry.Id)
 
@@ -379,7 +379,7 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 	}
 
 	if watchErr != nil && c.selfNode.Status != api.Status_STATUS_DECOMMISSION {
-		dlog.Errorf("ClusterManager watch stopped, restarting (err: %v)",
+		zap.S().Errorf("ClusterManager watch stopped, restarting (err: %v)",
 			watchErr)
 		c.startClusterDBWatch(kvdbVersion, kvdb.Instance())
 	}
@@ -389,13 +389,13 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 func (c *ClusterManager) getLatestNodeConfig(nodeId string) *NodeEntry {
 	db, _, err := readClusterInfo()
 	if err != nil {
-		dlog.Warnln("Failed to read the database for updating config")
+		zap.S().Warn("Failed to read the database for updating config")
 		return nil
 	}
 
 	ne, exists := db.NodeEntries[nodeId]
 	if !exists {
-		dlog.Warnln("Could not find info for node with id ", nodeId)
+		zap.S().Warn("Could not find info for node with id ", nodeId)
 		return nil
 	}
 
@@ -421,12 +421,12 @@ func (c *ClusterManager) initNode(db *ClusterInfo) (*api.Node, bool) {
 
 	db.NodeEntries[c.config.NodeId] = nodeEntry
 
-	dlog.Infof("Node %s joining cluster...", c.config.NodeId)
-	dlog.Infof("Cluster ID: %s", c.config.ClusterId)
-	dlog.Infof("Node Mgmt IP: %s", c.selfNode.MgmtIp)
-	dlog.Infof("Node Data IP: %s", c.selfNode.DataIp)
-	dlog.Infof("Cluster Logging URL : %s", c.config.LoggingURL)
-	dlog.Infof("Management Logging URL : %s", c.config.ManagementURL)
+	zap.S().Infof("Node %s joining cluster...", c.config.NodeId)
+	zap.S().Infof("Cluster ID: %s", c.config.ClusterId)
+	zap.S().Infof("Node Mgmt IP: %s", c.selfNode.MgmtIp)
+	zap.S().Infof("Node Data IP: %s", c.selfNode.DataIp)
+	zap.S().Infof("Cluster Logging URL : %s", c.config.LoggingURL)
+	zap.S().Infof("Management Logging URL : %s", c.config.ManagementURL)
 
 	return &c.selfNode, exists
 }
@@ -435,15 +435,15 @@ func (c *ClusterManager) cleanupInit(db *ClusterInfo, self *api.Node) error {
 	var resErr error
 	var err error
 
-	dlog.Infof("Cleanup Init services")
+	zap.S().Infof("Cleanup Init services")
 
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		dlog.Warnf("Cleanup Init for service %s.",
+		zap.S().Warnf("Cleanup Init for service %s.",
 			e.Value.(ClusterListener).String())
 
 		err = e.Value.(ClusterListener).CleanupInit(self, db)
 		if err != nil {
-			dlog.Warnf("Failed to Cleanup Init %s: %v",
+			zap.S().Warnf("Failed to Cleanup Init %s: %v",
 				e.Value.(ClusterListener).String(), err)
 			resErr = err
 		}
@@ -466,7 +466,7 @@ func (c *ClusterManager) initNodeInCluster(
 	}
 
 	if nodeInitialized {
-		dlog.Errorf(ErrInitNodeNotFound.Error())
+		zap.S().Errorf(ErrInitNodeNotFound.Error())
 		return nil, ErrInitNodeNotFound
 	}
 
@@ -478,7 +478,7 @@ func (c *ClusterManager) initNodeInCluster(
 			if self.Status != api.Status_STATUS_MAINTENANCE {
 				self.Status = api.Status_STATUS_ERROR
 			}
-			dlog.Warnf("Failed to initialize Init %s: %v",
+			zap.S().Warnf("Failed to initialize Init %s: %v",
 				e.Value.(ClusterListener).String(), err)
 			c.cleanupInit(clusterInfo, self)
 			return nil, err
@@ -505,14 +505,14 @@ func (c *ClusterManager) joinCluster(
 	kvdb := kvdb.Instance()
 	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
 	if err != nil {
-		dlog.Warnln("Unable to obtain cluster lock before creating snapshot: ",
+		zap.S().Warn("Unable to obtain cluster lock before creating snapshot: ",
 			err)
 		return err
 	}
 	initState, err := snapAndReadClusterInfo()
 	kvdb.Unlock(kvlock)
 	if err != nil {
-		dlog.Panicf("Fatal, Unable to create snapshot: %v", err)
+		zap.S().Panicf("Fatal, Unable to create snapshot: %v", err)
 		return err
 	}
 	defer func() {
@@ -529,19 +529,19 @@ func (c *ClusterManager) joinCluster(
 			if self.Status != api.Status_STATUS_MAINTENANCE {
 				self.Status = api.Status_STATUS_ERROR
 			}
-			dlog.Warnf("Failed to initialize Join %s: %v",
+			zap.S().Warnf("Failed to initialize Join %s: %v",
 				e.Value.(ClusterListener).String(), err)
 
 			if exist == false {
 				c.cleanupInit(initState.ClusterInfo, self)
 			}
-			dlog.Errorln("Failed to join cluster.", err)
+			zap.S().Error("Failed to join cluster.", err)
 			return err
 		}
 	}
 	selfNodeEntry, ok := initState.ClusterInfo.NodeEntries[c.config.NodeId]
 	if !ok {
-		dlog.Panicln("Fatal, Unable to find self node entry in local cache")
+		zap.S().Panic("Fatal, Unable to find self node entry in local cache")
 	}
 
 	_, _, err = c.updateNodeEntryDB(selfNodeEntry, nil)
@@ -563,7 +563,7 @@ func (c *ClusterManager) initClusterForListeners(
 			if self.Status != api.Status_STATUS_MAINTENANCE {
 				self.Status = api.Status_STATUS_ERROR
 			}
-			dlog.Printf("Failed to initialize %s",
+			zap.S().Infof("Failed to initialize %s",
 				e.Value.(ClusterListener).String())
 			goto done
 		}
@@ -574,7 +574,7 @@ done:
 
 func (c *ClusterManager) startClusterDBWatch(lastIndex uint64,
 	kv kvdb.Kvdb) error {
-	dlog.Infof("Cluster manager starting watch at version %d", lastIndex)
+	zap.S().Infof("Cluster manager starting watch at version %d", lastIndex)
 	go kv.WatchKey(ClusterDBKey, lastIndex, nil, c.watchDB)
 	return nil
 }
@@ -600,9 +600,9 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *ClusterInfo) {
 		nodeIps = append(nodeIps, nodeEntry.DataIp+":9002")
 	}
 	if len(nodeIps) > 0 {
-		dlog.Infof("Starting Gossip... Gossiping to these nodes : %v", nodeIps)
+		zap.S().Infof("Starting Gossip... Gossiping to these nodes : %v", nodeIps)
 	} else {
-		dlog.Infof("Starting Gossip...")
+		zap.S().Infof("Starting Gossip...")
 	}
 	c.gossip.Start(nodeIps)
 	c.gossip.UpdateCluster(c.getNonDecommisionedPeers(*clusterInfo))
@@ -618,7 +618,7 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *ClusterInfo) {
 			currTime := time.Now()
 			diffTime := currTime.Sub(lastUpdateTs)
 			if diffTime > 10*time.Second {
-				dlog.Warnln("No gossip update for ", diffTime.Seconds(), "s")
+				zap.S().Warn("No gossip update for ", diffTime.Seconds(), "s")
 			}
 			c.gossip.UpdateSelf(gossipStoreKey, *node)
 			lastUpdateTs = currTime
@@ -642,7 +642,7 @@ func (c *ClusterManager) updateClusterStatus() {
 
 			// Check to make sure we are not exceeding the size of the cluster.
 			if c.size > 0 && numNodes > c.size {
-				dlog.Fatalf("Fatal, number of nodes in the cluster has"+
+				zap.S().Fatalf("Fatal, number of nodes in the cluster has"+
 					"exceeded the cluster size: %d > %d", numNodes, c.size)
 				os.Exit(1)
 			}
@@ -658,7 +658,7 @@ func (c *ClusterManager) updateClusterStatus() {
 					// New:
 					// Cluster Manager: Not in Quorum
 					// Cluster Manager does not have a Suspect in Quorum status
-					dlog.Warnf("Can't reach quorum no. of nodes. Suspecting out of quorum...")
+					zap.S().Warnf("Can't reach quorum no. of nodes. Suspecting out of quorum...")
 					c.selfNode.Status = api.Status_STATUS_NOT_IN_QUORUM
 					c.status = api.Status_STATUS_NOT_IN_QUORUM
 				} else if (c.selfNode.Status == api.Status_STATUS_NOT_IN_QUORUM ||
@@ -671,7 +671,7 @@ func (c *ClusterManager) updateClusterStatus() {
 					// New:
 					// Cluster Manager: DOWN
 					// Gossip waited for quorumTimeout and indicates we are Not in Quorum and should go Down
-					dlog.Warnf("Not in quorum. Gracefully shutting down...")
+					zap.S().Warnf("Not in quorum. Gracefully shutting down...")
 					c.gossip.UpdateSelfStatus(types.NODE_STATUS_DOWN)
 					c.selfNode.Status = api.Status_STATUS_OFFLINE
 					c.status = api.Status_STATUS_NOT_IN_QUORUM
@@ -706,14 +706,14 @@ func (c *ClusterManager) updateClusterStatus() {
 					// This node was probably added recently into gossip node
 					// map through cluster database and is yet to reach out to us.
 					// Mark this node down.
-					dlog.Warnln("Detected new node with ", id,
+					zap.S().Warn("Detected new node with ", id,
 						" to be offline due to inactivity.")
 
 				} else {
 					if lastStatus == peerNodeInCache.Status {
 						break
 					}
-					dlog.Warnln("Detected node ", id,
+					zap.S().Warn("Detected node ", id,
 						" to be offline due to inactivity.")
 				}
 
@@ -722,7 +722,7 @@ func (c *ClusterManager) updateClusterStatus() {
 				for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
 					err := e.Value.(ClusterListener).Update(&peerNodeInCache)
 					if err != nil {
-						dlog.Warnln("Failed to notify ",
+						zap.S().Warn("Failed to notify ",
 							e.Value.(ClusterListener).String())
 					}
 				}
@@ -736,13 +736,13 @@ func (c *ClusterManager) updateClusterStatus() {
 				c.nodeStatuses[string(id)] = peerNodeInCache.Status
 
 				// A node discovered in the cluster.
-				dlog.Infoln("Detected node", peerNodeInCache.Id,
+				zap.S().Info("Detected node", peerNodeInCache.Id,
 					" to be in the cluster.")
 
 				for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
 					err := e.Value.(ClusterListener).Add(&peerNodeInCache)
 					if err != nil {
-						dlog.Warnln("Failed to notify ",
+						zap.S().Warn("Failed to notify ",
 							e.Value.(ClusterListener).String())
 					}
 				}
@@ -765,7 +765,7 @@ func (c *ClusterManager) updateClusterStatus() {
 					}
 					c.putNodeCacheEntry(peerNodeInGossip.Id, peerNodeInGossip)
 				} else {
-					dlog.Errorln("Unable to get node info from gossip")
+					zap.S().Error("Unable to get node info from gossip")
 					c.putNodeCacheEntry(peerNodeInCache.Id, peerNodeInCache)
 				}
 			} else {
@@ -778,7 +778,7 @@ func (c *ClusterManager) updateClusterStatus() {
 
 // DisableUpdates disables gossip updates
 func (c *ClusterManager) DisableUpdates() error {
-	dlog.Warnln("Disabling gossip updates")
+	zap.S().Warn("Disabling gossip updates")
 	c.gEnabled = false
 
 	return nil
@@ -786,7 +786,7 @@ func (c *ClusterManager) DisableUpdates() error {
 
 // EnableUpdates enables gossip updates
 func (c *ClusterManager) EnableUpdates() error {
-	dlog.Warnln("Enabling gossip updates")
+	zap.S().Warn("Enabling gossip updates")
 	c.gEnabled = true
 
 	return nil
@@ -797,7 +797,7 @@ func (c *ClusterManager) SetLoggingURL(loggingURL string) error {
 	kvdb := kvdb.Instance()
 	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
 	if err != nil {
-		dlog.Warnln("Unable to obtain cluster lock for updating logging url into cluster config", err)
+		zap.S().Warn("Unable to obtain cluster lock for updating logging url into cluster config", err)
 		return nil
 	}
 	defer kvdb.Unlock(kvlock)
@@ -819,7 +819,7 @@ func updateLoggingUrlListeners(c *ClusterManager, db ClusterInfo) {
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err := e.Value.(ClusterListener).UpdateCluster(&c.selfNode, &db)
 		if err != nil {
-			dlog.Warnln("Failed to notify ", e.Value.(ClusterListener).String())
+			zap.S().Warn("Failed to notify ", e.Value.(ClusterListener).String())
 		}
 	}
 	c.config.LoggingURL = db.LoggingURL
@@ -830,7 +830,7 @@ func (c *ClusterManager) SetManagementURL(host string) error {
 	kvdb := kvdb.Instance()
 	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
 	if err != nil {
-		dlog.Warnln("Unable to obtain cluster lock for updating Management Url into cluster config", err)
+		zap.S().Warn("Unable to obtain cluster lock for updating Management Url into cluster config", err)
 		return nil
 	}
 	defer kvdb.Unlock(kvlock)
@@ -852,7 +852,7 @@ func (c *ClusterManager) SetFluentDConfig(fluentDConfig api.FluentDConfig) error
 	kvdb := kvdb.Instance()
 	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
 	if err != nil {
-		dlog.Warnln("Unable to obtain cluster lock for updating FluentD Host into cluster config", err)
+		zap.S().Warn("Unable to obtain cluster lock for updating FluentD Host into cluster config", err)
 		return nil
 	}
 	defer kvdb.Unlock(kvlock)
@@ -873,7 +873,7 @@ func (c *ClusterManager) GetFluentDConfig() api.FluentDConfig {
 	kvdb := kvdb.Instance()
 	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
 	if err != nil {
-		dlog.Warnln("Unable to obtain cluster lock for updating TunnelConfig into cluster config", err)
+		zap.S().Warn("Unable to obtain cluster lock for updating TunnelConfig into cluster config", err)
 		return api.FluentDConfig{}
 	}
 	defer kvdb.Unlock(kvlock)
@@ -893,7 +893,7 @@ func updateManagementUrlListeners(c *ClusterManager, db ClusterInfo) {
 		for e := c.listeners.Front(); e != nil; e = e.Next() {
 			err := e.Value.(ClusterListener).UpdateCluster(&c.selfNode, &db)
 			if err != nil {
-				dlog.Warnln("Failed to notify ", e.Value.(ClusterListener).String())
+				zap.S().Warn("Failed to notify ", e.Value.(ClusterListener).String())
 			}
 		}
 		c.config.ManagementURL = db.ManagementURL
@@ -906,7 +906,7 @@ func updateFluentDHostListeners(c *ClusterManager, db ClusterInfo) {
 		for e := c.listeners.Front(); e != nil; e = e.Next() {
 			err := e.Value.(ClusterListener).UpdateCluster(&c.selfNode, &db)
 			if err != nil {
-				dlog.Warnln("Failed to notify ", e.Value.(ClusterListener).String())
+				zap.S().Warn("Failed to notify ", e.Value.(ClusterListener).String())
 			}
 		}
 		c.config.FluentDHost = db.FluentDConfig.IP + ":" + db.FluentDConfig.Port
@@ -917,7 +917,7 @@ func (c *ClusterManager) SetTunnelConfig(tunnelConfig api.TunnelConfig) error {
 	kvdb := kvdb.Instance()
 	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
 	if err != nil {
-		dlog.Warnln("Unable to obtain cluster lock for updating TunnelConfig into cluster config", err)
+		zap.S().Warn("Unable to obtain cluster lock for updating TunnelConfig into cluster config", err)
 		return nil
 	}
 	defer kvdb.Unlock(kvlock)
@@ -938,7 +938,7 @@ func (c *ClusterManager) GetTunnelConfig() api.TunnelConfig {
 	kvdb := kvdb.Instance()
 	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
 	if err != nil {
-		dlog.Warnln("Unable to obtain cluster lock for updating TunnelConfig into cluster config", err)
+		zap.S().Warn("Unable to obtain cluster lock for updating TunnelConfig into cluster config", err)
 		return api.TunnelConfig{}
 	}
 	defer kvdb.Unlock(kvlock)
@@ -993,14 +993,14 @@ func (c *ClusterManager) waitForQuorum(exist bool) error {
 			if quorumRetries == 600 {
 				err := fmt.Errorf("Unable to achieve Quorum." +
 					" Timeout 20 minutes exceeded.")
-				dlog.Warnln("Failed to join cluster: ", err)
+				zap.S().Warn("Failed to join cluster: ", err)
 				c.status = api.Status_STATUS_NOT_IN_QUORUM
 				c.selfNode.Status = api.Status_STATUS_OFFLINE
 				c.gossip.UpdateSelfStatus(types.NODE_STATUS_DOWN)
 				return err
 			}
 			if quorumRetries == 0 {
-				dlog.Infof("Waiting for the cluster to reach quorum...")
+				zap.S().Infof("Waiting for the cluster to reach quorum...")
 			}
 			time.Sleep(types.DEFAULT_GOSSIP_INTERVAL)
 			quorumRetries++
@@ -1011,7 +1011,7 @@ func (c *ClusterManager) waitForQuorum(exist bool) error {
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err := e.Value.(ClusterListener).JoinComplete(&c.selfNode)
 		if err != nil {
-			dlog.Warnln("Failed to notify ", e.Value.(ClusterListener).String())
+			zap.S().Warn("Failed to notify ", e.Value.(ClusterListener).String())
 		}
 	}
 
@@ -1024,50 +1024,50 @@ func (c *ClusterManager) initializeCluster(db kvdb.Kvdb) (
 ) {
 	kvlock, err := db.LockWithID(clusterLockKey, c.config.NodeId)
 	if err != nil {
-		dlog.Panicln("Fatal, Unable to obtain cluster lock.", err)
+		zap.S().Panic("Fatal, Unable to obtain cluster lock.", err)
 	}
 	defer db.Unlock(kvlock)
 
 	clusterInfo, _, err := readClusterInfo()
 	if err != nil {
-		dlog.Panicln(err)
+		zap.S().Panic(err)
 	}
 
 	selfNodeEntry, ok := clusterInfo.NodeEntries[c.config.NodeId]
 	if ok && selfNodeEntry.Status == api.Status_STATUS_DECOMMISSION {
 		msg := fmt.Sprintf("Node is in decommision state, Node ID %s.",
 			c.selfNode.Id)
-		dlog.Errorln(msg)
+		zap.S().Error(msg)
 		return nil, ErrNodeDecommissioned
 	}
 	// Set the clusterID in db
 	clusterInfo.Id = c.config.ClusterId
 
 	clusterInfo.LoggingURL = c.config.LoggingURL
-	dlog.Infof("LoggingURL during initializing a new cluster: %s ", clusterInfo.LoggingURL)
+	zap.S().Infof("LoggingURL during initializing a new cluster: %s ", clusterInfo.LoggingURL)
 
 	clusterInfo.ManagementURL = c.config.ManagementURL
-	dlog.Infof("ManagementURL during initializing a new cluster: %s ", clusterInfo.ManagementURL)
+	zap.S().Infof("ManagementURL during initializing a new cluster: %s ", clusterInfo.ManagementURL)
 
 	if clusterInfo.Status == api.Status_STATUS_INIT {
-		dlog.Infoln("Initializing a new cluster.")
+		zap.S().Info("Initializing a new cluster.")
 		// Initialize self node
 		clusterInfo.Status = api.Status_STATUS_OK
 
 		err = c.initClusterForListeners(&c.selfNode)
 		if err != nil {
-			dlog.Errorln("Failed to initialize the cluster.", err)
+			zap.S().Error("Failed to initialize the cluster.", err)
 			return nil, err
 		}
 		// While we hold the lock write the cluster info
 		// to kvdb.
 		_, err := writeClusterInfo(&clusterInfo)
 		if err != nil {
-			dlog.Errorln("Failed to initialize the cluster.", err)
+			zap.S().Error("Failed to initialize the cluster.", err)
 			return nil, err
 		}
 	} else if clusterInfo.Status&api.Status_STATUS_OK > 0 {
-		dlog.Infoln("Cluster state is OK... Joining the cluster.")
+		zap.S().Info("Cluster state is OK... Joining the cluster.")
 	} else {
 		return nil, errors.New("Fatal, Cluster is in an unexpected state.")
 	}
@@ -1114,13 +1114,13 @@ func (c *ClusterManager) initListeners(
 		nodeInitialized,
 	)
 	if err != nil {
-		dlog.Errorln("Failed to initialize node in cluster.", err)
+		zap.S().Error("Failed to initialize node in cluster.", err)
 		return 0, nil, err
 	}
 
 	selfNodeEntry, ok := clusterInfo.NodeEntries[c.config.NodeId]
 	if !ok {
-		dlog.Panicln("Fatal, Unable to find self node entry in local cache")
+		zap.S().Panic("Fatal, Unable to find self node entry in local cache")
 	}
 
 	// the inverse value is to handle upgrades.
@@ -1130,9 +1130,9 @@ func (c *ClusterManager) initListeners(
 		selfNodeEntry.Status == api.Status_STATUS_DECOMMISSION ||
 			!c.quorumMember()
 	if !selfNodeEntry.NonQuorumMember {
-		dlog.Infof("This node participates in quorum decisions")
+		zap.S().Infof("This node participates in quorum decisions")
 	} else {
-		dlog.Infof("This node does not participates in quorum decisions")
+		zap.S().Infof("This node does not participates in quorum decisions")
 	}
 
 	initFunc := func(clusterInfo ClusterInfo) error {
@@ -1151,7 +1151,7 @@ func (c *ClusterManager) initListeners(
 		// Finalize inits from subsystems under cluster db lock.
 		for _, finalizeCb := range finalizeCbs {
 			if err := finalizeCb(); err != nil {
-				dlog.Errorf("Failed finalizing init: %s", err.Error())
+				zap.S().Errorf("Failed finalizing init: %s", err.Error())
 				return err
 			}
 		}
@@ -1161,11 +1161,11 @@ func (c *ClusterManager) initListeners(
 	kvp, kvClusterInfo, err := c.updateNodeEntryDB(selfNodeEntry,
 		initFunc)
 	if err != nil {
-		dlog.Errorln("Failed to save the database.", err)
+		zap.S().Error("Failed to save the database.", err)
 		return 0, nil, err
 	}
 	if kvClusterInfo.Status == api.Status_STATUS_INIT {
-		dlog.Panicln("Cluster in an unexpected state: ", kvClusterInfo.Status)
+		zap.S().Panic("Cluster in an unexpected state: ", kvClusterInfo.Status)
 	}
 	return kvp.ModifiedIndex, kvClusterInfo, nil
 }
@@ -1202,7 +1202,7 @@ func (c *ClusterManager) Start(
 ) error {
 	var err error
 
-	dlog.Infoln("Cluster manager starting...")
+	zap.S().Info("Cluster manager starting...")
 
 	c.gEnabled = true
 	c.selfNode = api.Node{}
@@ -1213,7 +1213,7 @@ func (c *ClusterManager) Start(
 	c.selfNode.StartTime = time.Now()
 	c.selfNode.Hostname, _ = os.Hostname()
 	if err != nil {
-		dlog.Errorf("Failed to get external IP address for mgt/data interfaces: %s.",
+		zap.S().Errorf("Failed to get external IP address for mgt/data interfaces: %s.",
 			err)
 		return err
 	}
@@ -1342,7 +1342,7 @@ func (c *ClusterManager) PeerStatus(listenerName string) (map[string]api.Status,
 func (c *ClusterManager) enumerateNodesFromClusterDB() []api.Node {
 	clusterDB, _, err := readClusterInfo()
 	if err != nil {
-		dlog.Errorf("enumerateNodesFromClusterDB failed with error: %v", err)
+		zap.S().Errorf("enumerateNodesFromClusterDB failed with error: %v", err)
 		return make([]api.Node, 0)
 	}
 	nodes := []api.Node{}
@@ -1412,7 +1412,7 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 	// Allow listeners to add/modify data
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		if err := e.Value.(ClusterListener).Enumerate(cluster); err != nil {
-			dlog.Warnf("listener %s enumerate failed: %v",
+			zap.S().Warnf("listener %s enumerate failed: %v",
 				e.Value.(ClusterListener).String(), err)
 			continue
 		}
@@ -1427,7 +1427,7 @@ func (c *ClusterManager) updateNodeEntryDB(
 	kvdb := kvdb.Instance()
 	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
 	if err != nil {
-		dlog.Warnln("Unable to obtain cluster lock for updating cluster DB.",
+		zap.S().Warn("Unable to obtain cluster lock for updating cluster DB.",
 			err)
 		return nil, nil, err
 	}
@@ -1449,7 +1449,7 @@ func (c *ClusterManager) updateNodeEntryDB(
 
 	kvp, err := writeClusterInfo(&currentState)
 	if err != nil {
-		dlog.Errorln("Failed to save the database.", err)
+		zap.S().Error("Failed to save the database.", err)
 	}
 	return kvp, &currentState, err
 }
@@ -1459,7 +1459,7 @@ func (c *ClusterManager) SetSize(size int) error {
 	kvdb := kvdb.Instance()
 	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
 	if err != nil {
-		dlog.Warnln("Unable to obtain cluster lock for updating config", err)
+		zap.S().Warn("Unable to obtain cluster lock for updating config", err)
 		return nil
 	}
 	defer kvdb.Unlock(kvlock)
@@ -1481,7 +1481,7 @@ func (c *ClusterManager) getNodeInfoFromClusterDb(id string) (api.Node, error) {
 	kvdb := kvdb.Instance()
 	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
 	if err != nil {
-		dlog.Warnln("Unable to obtain cluster lock for marking "+
+		zap.S().Warn("Unable to obtain cluster lock for marking "+
 			"node decommission", err)
 		return node, err
 	}
@@ -1505,7 +1505,7 @@ func (c *ClusterManager) markNodeDecommission(node api.Node) error {
 	kvdb := kvdb.Instance()
 	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
 	if err != nil {
-		dlog.Warnln("Unable to obtain cluster lock for marking "+
+		zap.S().Warn("Unable to obtain cluster lock for marking "+
 			"node decommission",
 			err)
 		return err
@@ -1540,13 +1540,13 @@ func (c *ClusterManager) deleteNodeFromDB(nodeID string) error {
 	kvdb := kvdb.Instance()
 	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
 	if err != nil {
-		dlog.Panicln("fatal, unable to obtain cluster lock. ", err)
+		zap.S().Panic("fatal, unable to obtain cluster lock. ", err)
 	}
 	defer kvdb.Unlock(kvlock)
 
 	currentState, _, err := readClusterInfo()
 	if err != nil {
-		dlog.Errorln("Failed to read cluster info. ", err)
+		zap.S().Error("Failed to read cluster info. ", err)
 		return err
 	}
 
@@ -1554,14 +1554,14 @@ func (c *ClusterManager) deleteNodeFromDB(nodeID string) error {
 
 	_, err = writeClusterInfo(&currentState)
 	if err != nil {
-		dlog.Errorln("Failed to save the database.", err)
+		zap.S().Error("Failed to save the database.", err)
 	}
 	return err
 }
 
 // Remove node(s) from the cluster permanently.
 func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
-	dlog.Infof("ClusterManager Remove node.")
+	zap.S().Infof("ClusterManager Remove node.")
 
 	var resultErr error
 
@@ -1572,7 +1572,7 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 		if !exist {
 			node, resultErr = c.getNodeInfoFromClusterDb(n.Id)
 			if resultErr != nil {
-				dlog.Errorf("Error getting node info for id %s : %v", n.Id,
+				zap.S().Errorf("Error getting node info for id %s : %v", n.Id,
 					resultErr)
 				return fmt.Errorf("Node %s does not exist", n.Id)
 			}
@@ -1583,7 +1583,7 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 		if n.Id == c.selfNode.Id &&
 			c.selfNode.Status != api.Status_STATUS_MAINTENANCE {
 			msg := fmt.Sprintf(decommissionErrMsg, n.Id)
-			dlog.Errorf(msg)
+			zap.S().Errorf(msg)
 			return errors.New(msg)
 		} else if n.Id != c.selfNode.Id && inQuorum {
 			nodeCacheStatus := node.Status
@@ -1593,7 +1593,7 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 				nodeCacheStatus != api.Status_STATUS_DECOMMISSION {
 
 				msg := fmt.Sprintf(decommissionErrMsg, n.Id)
-				dlog.Errorf(msg+", node status: %s", nodeCacheStatus)
+				zap.S().Errorf(msg+", node status: %s", nodeCacheStatus)
 				return errors.New(msg)
 			}
 		}
@@ -1601,12 +1601,12 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 		if forceRemove {
 			// Mark the other node down so that it can be decommissioned.
 			for e := c.listeners.Front(); e != nil; e = e.Next() {
-				dlog.Infof("Remove node: ask cluster listener %s "+
+				zap.S().Infof("Remove node: ask cluster listener %s "+
 					"to mark node %s down ",
 					e.Value.(ClusterListener).String(), n.Id)
 				err := e.Value.(ClusterListener).MarkNodeDown(&n)
 				if err != nil {
-					dlog.Warnf("Node mark down error: %v", err)
+					zap.S().Warnf("Node mark down error: %v", err)
 					return err
 				}
 			}
@@ -1614,7 +1614,7 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 
 		// Ask listeners, can we remove this node?
 		for e := c.listeners.Front(); e != nil; e = e.Next() {
-			dlog.Infof("Remove node: ask cluster listener: "+
+			zap.S().Infof("Remove node: ask cluster listener: "+
 				"can we remove node ID %s, %s",
 				n.Id, e.Value.(ClusterListener).String())
 			additionalMsg, err := e.Value.(ClusterListener).CanNodeRemove(&n)
@@ -1623,7 +1623,7 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 				if additionalMsg != "" {
 					msg = msg + " " + additionalMsg
 				}
-				dlog.Warnf(msg)
+				zap.S().Warnf(msg)
 				return errors.New(msg)
 			}
 		}
@@ -1633,7 +1633,7 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 			msg := fmt.Sprintf("Failed to mark node as "+
 				"decommision, error %s",
 				err)
-			dlog.Errorf(msg)
+			zap.S().Errorf(msg)
 			return errors.New(msg)
 		}
 
@@ -1645,12 +1645,12 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 
 		// Alert all listeners that we are removing this node.
 		for e := c.listeners.Front(); e != nil; e = e.Next() {
-			dlog.Infof("Remove node: notify cluster listener: %s",
+			zap.S().Infof("Remove node: notify cluster listener: %s",
 				e.Value.(ClusterListener).String())
 			err := e.Value.(ClusterListener).Remove(&n, forceRemove)
 			if err != nil {
 				if err != ErrNodeRemovePending {
-					dlog.Warnf("Cluster listener failed to "+
+					zap.S().Warnf("Cluster listener failed to "+
 						"remove node: %s: %s",
 						e.Value.(ClusterListener).String(),
 						err)
@@ -1673,31 +1673,31 @@ func (c *ClusterManager) NodeRemoveDone(nodeID string, result error) {
 			"error %s",
 			nodeID,
 			result)
-		dlog.Errorf(msg)
+		zap.S().Errorf(msg)
 		return
 	}
 
-	dlog.Infof("Cluster manager node remove done: node ID %s", nodeID)
+	zap.S().Infof("Cluster manager node remove done: node ID %s", nodeID)
 
 	err := c.deleteNodeFromDB(nodeID)
 	if err != nil {
 		msg := fmt.Sprintf("Failed to delete node %s "+
 			"from cluster database, error %s",
 			nodeID, err)
-		dlog.Errorf(msg)
+		zap.S().Errorf(msg)
 	}
 }
 
 func (c *ClusterManager) replayNodeDecommission() {
 	currentState, _, err := readClusterInfo()
 	if err != nil {
-		dlog.Infof("Failed to read cluster db for node decommissions: %v", err)
+		zap.S().Infof("Failed to read cluster db for node decommissions: %v", err)
 		return
 	}
 
 	for _, nodeEntry := range currentState.NodeEntries {
 		if nodeEntry.Status == api.Status_STATUS_DECOMMISSION {
-			dlog.Infof("Replay Node Remove for node ID %s", nodeEntry.Id)
+			zap.S().Infof("Replay Node Remove for node ID %s", nodeEntry.Id)
 
 			var n api.Node
 			n.Id = nodeEntry.Id
@@ -1705,7 +1705,7 @@ func (c *ClusterManager) replayNodeDecommission() {
 			nodes = append(nodes, n)
 			err := c.Remove(nodes, false)
 			if err != nil {
-				dlog.Warnf("Failed to replay node remove: "+
+				zap.S().Warnf("Failed to replay node remove: "+
 					"node ID %s, error %s",
 					nodeEntry.Id, err)
 			}
@@ -1717,15 +1717,15 @@ func (c *ClusterManager) replayNodeDecommission() {
 func (c *ClusterManager) Shutdown() error {
 	db, _, err := readClusterInfo()
 	if err != nil {
-		dlog.Warnf("Could not read cluster database (%v).", err)
+		zap.S().Warnf("Could not read cluster database (%v).", err)
 		return err
 	}
 
 	// Alert all listeners that we are shutting this node down.
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		dlog.Infof("Shutting down %s", e.Value.(ClusterListener).String())
+		zap.S().Infof("Shutting down %s", e.Value.(ClusterListener).String())
 		if err := e.Value.(ClusterListener).Halt(&c.selfNode, &db); err != nil {
-			dlog.Warnf("Failed to shutdown %s",
+			zap.S().Warnf("Failed to shutdown %s",
 				e.Value.(ClusterListener).String())
 		}
 	}
@@ -1748,7 +1748,7 @@ func (c *ClusterManager) EnumerateAlerts(ts, te time.Time, resource api.Resource
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		listenerAlerts, err := e.Value.(ClusterListener).EnumerateAlerts(ts, te, resource)
 		if err != nil {
-			dlog.Warnf("Failed to enumerate alerts from (%v): %v",
+			zap.S().Warnf("Failed to enumerate alerts from (%v): %v",
 				e.Value.(ClusterListener).String(), err)
 			continue
 		}

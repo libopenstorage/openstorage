@@ -20,12 +20,13 @@ import (
 	"fmt"
 	"os"
 
+	"go.uber.org/zap"
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/pkg/util"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
-	"go.pedge.io/dlog"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -33,7 +34,7 @@ import (
 
 // GetNodeID is a CSI API which gets the PX NodeId for the local node
 func (s *OsdCsiServer) GetNodeID(ctx context.Context, req *csi.GetNodeIDRequest) (*csi.GetNodeIDResponse, error) {
-	dlog.Debugf("GetNodeID req[%#v]", req)
+	zap.S().Debugf("GetNodeID req[%#v]", req)
 
 	// Check arguments
 	if req.GetVersion() == nil {
@@ -49,7 +50,7 @@ func (s *OsdCsiServer) GetNodeID(ctx context.Context, req *csi.GetNodeIDRequest)
 		NodeId: clus.NodeId,
 	}
 
-	dlog.Infof("NodeId is %s", result.NodeId)
+	zap.S().Infof("NodeId is %s", result.NodeId)
 
 	return result, nil
 }
@@ -64,7 +65,7 @@ func (s *OsdCsiServer) NodePublishVolume(
 	req *csi.NodePublishVolumeRequest,
 ) (*csi.NodePublishVolumeResponse, error) {
 
-	dlog.Debugf("NodePublishVolume req[%#v]", req)
+	zap.S().Debugf("NodePublishVolume req[%#v]", req)
 
 	// Check arguments
 	if req.GetVersion() == nil {
@@ -128,7 +129,7 @@ func (s *OsdCsiServer) NodePublishVolume(
 		// Detach on error
 		detachErr := s.driver.Detach(v.GetId(), opts)
 		if detachErr != nil {
-			dlog.Errorf("Unable to detach volume %s: %s",
+			zap.S().Errorf("Unable to detach volume %s: %s",
 				v.GetId(),
 				detachErr.Error())
 		}
@@ -140,7 +141,7 @@ func (s *OsdCsiServer) NodePublishVolume(
 			err.Error())
 	}
 
-	dlog.Infof("Volume %s mounted on %s",
+	zap.S().Infof("Volume %s mounted on %s",
 		req.GetVolumeId(),
 		req.GetTargetPath())
 
@@ -153,7 +154,7 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 	req *csi.NodeUnpublishVolumeRequest,
 ) (*csi.NodeUnpublishVolumeResponse, error) {
 
-	dlog.Debugf("NodeUnPublishVolume req[%#v]", req)
+	zap.S().Debugf("NodeUnPublishVolume req[%#v]", req)
 
 	// Check arguments
 	if req.GetVersion() == nil {
@@ -199,7 +200,7 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 		}
 	}
 
-	dlog.Infof("Volume %s unmounted", req.GetVolumeId())
+	zap.S().Infof("Volume %s unmounted", req.GetVolumeId())
 
 	return &csi.NodeUnpublishVolumeResponse{}, nil
 }
@@ -211,7 +212,7 @@ func (s *OsdCsiServer) NodeProbe(
 	req *csi.NodeProbeRequest,
 ) (*csi.NodeProbeResponse, error) {
 
-	dlog.Debugf("NodeProbe req[%#v]", req)
+	zap.S().Debugf("NodeProbe req[%#v]", req)
 
 	// Check arguments
 	if req.GetVersion() == nil {
@@ -232,7 +233,7 @@ func (s *OsdCsiServer) NodeGetCapabilities(
 	req *csi.NodeGetCapabilitiesRequest,
 ) (*csi.NodeGetCapabilitiesResponse, error) {
 
-	dlog.Debugf("NodeGetCapabilities req[%#v]", req)
+	zap.S().Debugf("NodeGetCapabilities req[%#v]", req)
 
 	// Check arguments
 	if req.GetVersion() == nil {

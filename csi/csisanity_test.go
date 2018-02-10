@@ -22,13 +22,14 @@ import (
 	"os"
 	"testing"
 
+	"go.uber.org/zap"
+
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
 
 	"github.com/kubernetes-csi/csi-test/pkg/sanity"
-	"go.pedge.io/dlog"
 
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
@@ -45,7 +46,7 @@ var (
 
 func TestCSISanity(t *testing.T) {
 
-	kv, err := kvdb.New(mem.Name, "driver_test", []string{}, nil, dlog.Panicf)
+	kv, err := kvdb.New(mem.Name, "driver_test", []string{}, nil, zap.S().Panicf)
 	if err != nil {
 		t.Fatalf("Failed to initialize KVDB")
 	}

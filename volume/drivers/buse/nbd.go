@@ -15,7 +15,7 @@ import (
 	"sync"
 	"syscall"
 
-	"go.pedge.io/dlog"
+	"go.uber.org/zap"
 )
 
 const (
@@ -101,7 +101,7 @@ var (
 // Create creates a NBD type interface
 func Create(device Device, id string, size int64) *NBD {
 	if shuttingDown {
-		dlog.Warnf("Cannot create NBD device during shutdown")
+		zap.S().Warnf("Cannot create NBD device during shutdown")
 		return nil
 	}
 
@@ -171,7 +171,7 @@ func (nbd *NBD) Connect() (dev string, err error) {
 			continue // Busy.
 		}
 
-		dlog.Infof("Attempting to open device %v", dev)
+		zap.S().Infof("Attempting to open device %v", dev)
 		if nbd.deviceFile, err = os.Open(dev); err == nil {
 			// Possible candidate.
 			ioctl(nbd.deviceFile.Fd(), BLKROSET, 0)
@@ -206,28 +206,28 @@ func (nbd *NBD) Disconnect() {
 	nbd.mutex.Lock()
 	defer nbd.mutex.Unlock()
 
-	dlog.Infof("Disconnecting device %v...", nbd.devicePath)
+	zap.S().Infof("Disconnecting device %v...", nbd.devicePath)
 
 	syscall.Unmount(nbd.devicePath, 0)
 	if nbd.IsConnected() {
-		dlog.Infof("Issuing a disconnect on %v", nbd.devicePath)
+		zap.S().Infof("Issuing a disconnect on %v", nbd.devicePath)
 		ioctl(nbd.deviceFile.Fd(), NBD_DISCONNECT, 0)
-		dlog.Infof("Clearing NBD queue %v", nbd.devicePath)
+		zap.S().Infof("Clearing NBD queue %v", nbd.devicePath)
 		ioctl(nbd.deviceFile.Fd(), NBD_CLEAR_QUE, 0)
-		dlog.Infof("Clearing NBD socket %v", nbd.devicePath)
+		zap.S().Infof("Clearing NBD socket %v", nbd.devicePath)
 		ioctl(nbd.deviceFile.Fd(), NBD_CLEAR_SOCK, 0)
-		dlog.Infof("Closing NBD device file %v", nbd.devicePath)
+		zap.S().Infof("Closing NBD device file %v", nbd.devicePath)
 		nbd.deviceFile.Close()
 		nbd.deviceFile = nil
 
 		dummy := make([]byte, 1)
-		dlog.Infof("Waking up control socket for %v", nbd.devicePath)
+		zap.S().Infof("Waking up control socket for %v", nbd.devicePath)
 		syscall.Write(nbd.socket, dummy)
-		dlog.Infof("Closing control socket for %v", nbd.devicePath)
+		zap.S().Infof("Closing control socket for %v", nbd.devicePath)
 		syscall.Close(nbd.socket)
 		nbd.socket = 0
 	}
-	dlog.Infof("Disconnected device %v", nbd.devicePath)
+	zap.S().Infof("Disconnected device %v", nbd.devicePath)
 }
 
 func (nbd *NBD) connect() {
@@ -237,7 +237,7 @@ func (nbd *NBD) connect() {
 	// NBD_CONNECT does not return until disconnect.
 	ioctl(nbd.deviceFile.Fd(), NBD_CONNECT, 0)
 
-	dlog.Infof("Closing device file %s", nbd.devicePath)
+	zap.S().Infof("Closing device file %s", nbd.devicePath)
 }
 
 // Handle block requests.
@@ -248,12 +248,12 @@ func (nbd *NBD) handle() {
 	for {
 		bytes, err := syscall.Read(nbd.socket, buf[0:28])
 		if nbd.deviceFile == nil {
-			dlog.Infof("Disconnecting device %s", nbd.devicePath)
+			zap.S().Infof("Disconnecting device %s", nbd.devicePath)
 			return
 		}
 
 		if bytes < 0 || err != nil {
-			dlog.Errorf("Error reading from device %s", nbd.devicePath)
+			zap.S().Errorf("Error reading from device %s", nbd.devicePath)
 			nbd.Disconnect()
 			return
 		}
@@ -285,7 +285,7 @@ func (nbd *NBD) handle() {
 				binary.BigEndian.PutUint32(buf[4:8], 0)
 				syscall.Write(nbd.socket, buf[0:16])
 			case NBD_CMD_DISC:
-				dlog.Infof("Disconnecting device %s", nbd.devicePath)
+				zap.S().Infof("Disconnecting device %s", nbd.devicePath)
 				nbd.Disconnect()
 				return
 			case NBD_CMD_FLUSH:
@@ -295,12 +295,12 @@ func (nbd *NBD) handle() {
 				binary.BigEndian.PutUint32(buf[4:8], 1)
 				syscall.Write(nbd.socket, buf[0:16])
 			default:
-				dlog.Errorf("Unknown command received on device %s", nbd.devicePath)
+				zap.S().Errorf("Unknown command received on device %s", nbd.devicePath)
 				nbd.Disconnect()
 				return
 			}
 		default:
-			dlog.Errorf("Invalid packet command received on device %s", nbd.devicePath)
+			zap.S().Errorf("Invalid packet command received on device %s", nbd.devicePath)
 			nbd.Disconnect()
 			return
 		}
@@ -340,16 +340,16 @@ done:
 		signal.Notify(c, os.Interrupt)
 		<-c
 
-		dlog.Infof("NBD shutting down due to SIGINT")
+		zap.S().Infof("NBD shutting down due to SIGINT")
 		shuttingDown = true
 		globalMutex.Lock()
 		defer globalMutex.Unlock()
 
 		for id, d := range nbdDevices {
-			dlog.Infof("Disconnecting device %v", id)
+			zap.S().Infof("Disconnecting device %v", id)
 			d.Disconnect()
 		}
-		dlog.Infof("Done cleaning up NBD devices")
+		zap.S().Infof("Done cleaning up NBD devices")
 		os.Exit(0)
 	}()
 }
