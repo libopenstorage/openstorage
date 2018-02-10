@@ -5,9 +5,9 @@ package chainfs
 import (
 	"errors"
 
-	"github.com/docker/docker/daemon/graphdriver"
 	"github.com/docker/docker/pkg/idtools"
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/moby/moby/daemon/graphdriver"
 )
 
 const (

@@ -31,7 +31,6 @@ import (
 	"go.pedge.io/dlog"
 
 	"github.com/codegangsta/cli"
-	"github.com/docker/docker/pkg/reexec"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/flexvolume"
 	"github.com/libopenstorage/openstorage/api/server"
@@ -42,6 +41,7 @@ import (
 	"github.com/libopenstorage/openstorage/graph/drivers"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
+	"github.com/moby/moby/pkg/reexec"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/consul"
 	etcd "github.com/portworx/kvdb/etcd/v2"

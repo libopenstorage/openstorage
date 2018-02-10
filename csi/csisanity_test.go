@@ -44,7 +44,6 @@ var (
 )
 
 func TestCSISanity(t *testing.T) {
-
 	kv, err := kvdb.New(mem.Name, "driver_test", []string{}, nil, dlog.Panicf)
 	if err != nil {
 		t.Fatalf("Failed to initialize KVDB")

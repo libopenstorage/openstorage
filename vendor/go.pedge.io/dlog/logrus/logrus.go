@@ -1,14 +1,14 @@
 /*
 Package dlog_logrus provides logrus functionality for dlog.
 
-https://github.com/Sirupsen/logrus
+https://github.com/sirupsen/logrus
 */
 package dlog_logrus // import "go.pedge.io/dlog/logrus"
 
 import (
 	"go.pedge.io/dlog"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 var (

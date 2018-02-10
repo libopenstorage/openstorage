@@ -2,6 +2,8 @@ ifndef PKGS
 PKGS := $(shell go list ./... 2>&1 | grep -v 'github.com/libopenstorage/gossip/vendor')
 endif
 
+.PHONY: dep
+
 export GO15VENDOREXPERIMENT=1
 
 deps:
@@ -16,19 +18,10 @@ test-deps:
 update-test-deps:
 	GO15VENDOREXPERIMENT=0 go get -tags "$(TAGS)" -d -v -t -u -f $(PKGS)
 
-vendor-update:
-	GO15VENDOREXPERIMENT=0 GOOS=linux GOARCH=amd64 go get -d -v -t -u -f $(shell go list ./... 2>&1 | grep -v 'github.com/portworx/arturo/vendor')
-
-vendor-without-update:
-	go get -v github.com/kardianos/govendor
-	rm -rf vendor
-	govendor init
-	GOOS=linux GOARCH=amd64 govendor add +external
-	GOOS=linux GOARCH=amd64 govendor update +vendor
-	GOOS=linux GOARCH=amd64 govendor add +external
-	GOOS=linux GOARCH=amd64 govendor update +vendor
-
-vendor: vendor-update vendor-without-update
+dep:
+	curl -s -L https://github.com/golang/dep/releases/download/v0.4.1/dep-linux-amd64 -o $(GOPATH)/bin/dep
+	chmod +x $(GOPATH)/bin/dep
+	$(GOPATH)/bin/dep ensure
 
 all: test
 

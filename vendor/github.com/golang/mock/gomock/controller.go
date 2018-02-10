@@ -57,9 +57,7 @@ package gomock
 
 import (
 	"fmt"
-	"golang.org/x/net/context"
 	"reflect"
-	"runtime"
 	"sync"
 )
 
@@ -86,29 +84,7 @@ func NewController(t TestReporter) *Controller {
 	}
 }
 
-type cancelReporter struct {
-	t      TestReporter
-	cancel func()
-}
-
-func (r *cancelReporter) Errorf(format string, args ...interface{}) { r.t.Errorf(format, args...) }
-func (r *cancelReporter) Fatalf(format string, args ...interface{}) {
-	defer r.cancel()
-	r.t.Fatalf(format, args...)
-}
-
-// WithContext returns a new Controller and a Context, which is cancelled on any
-// fatal failure.
-func WithContext(ctx context.Context, t TestReporter) (*Controller, context.Context) {
-	ctx, cancel := context.WithCancel(ctx)
-	return NewController(&cancelReporter{t, cancel}), ctx
-}
-
 func (ctrl *Controller) RecordCall(receiver interface{}, method string, args ...interface{}) *Call {
-	if h, ok := ctrl.t.(testHelper); ok {
-		h.Helper()
-	}
-
 	recv := reflect.ValueOf(receiver)
 	for i := 0; i < recv.Type().NumMethod(); i++ {
 		if recv.Type().Method(i).Name == method {
@@ -138,25 +114,19 @@ func (ctrl *Controller) RecordCallWithMethodType(receiver interface{}, method st
 	ctrl.mu.Lock()
 	defer ctrl.mu.Unlock()
 
-	origin := callerInfo(2)
-	call := &Call{t: ctrl.t, receiver: receiver, method: method, methodType: methodType, args: margs, origin: origin, minCalls: 1, maxCalls: 1}
+	call := &Call{t: ctrl.t, receiver: receiver, method: method, methodType: methodType, args: margs, minCalls: 1, maxCalls: 1}
 
 	ctrl.expectedCalls.Add(call)
 	return call
 }
 
 func (ctrl *Controller) Call(receiver interface{}, method string, args ...interface{}) []interface{} {
-	if h, ok := ctrl.t.(testHelper); ok {
-		h.Helper()
-	}
-
 	ctrl.mu.Lock()
 	defer ctrl.mu.Unlock()
 
-	expected, err := ctrl.expectedCalls.FindMatch(receiver, method, args)
-	if err != nil {
-		origin := callerInfo(2)
-		ctrl.t.Fatalf("Unexpected call to %T.%v(%v) at %s because: %s", receiver, method, args, origin, err)
+	expected := ctrl.expectedCalls.FindMatch(receiver, method, args)
+	if expected == nil {
+		ctrl.t.Fatalf("no matching expected call: %T.%v(%v)", receiver, method, args)
 	}
 
 	// Two things happen here:
@@ -186,10 +156,6 @@ func (ctrl *Controller) Call(receiver interface{}, method string, args ...interf
 }
 
 func (ctrl *Controller) Finish() {
-	if h, ok := ctrl.t.(testHelper); ok {
-		h.Helper()
-	}
-
 	ctrl.mu.Lock()
 	defer ctrl.mu.Unlock()
 
@@ -214,16 +180,4 @@ func (ctrl *Controller) Finish() {
 	if failures {
 		ctrl.t.Fatalf("aborting test due to missing call(s)")
 	}
-}
-
-func callerInfo(skip int) string {
-	if _, file, line, ok := runtime.Caller(skip + 1); ok {
-		return fmt.Sprintf("%s:%d", file, line)
-	}
-	return "unknown file"
-}
-
-type testHelper interface {
-	TestReporter
-	Helper()
 }

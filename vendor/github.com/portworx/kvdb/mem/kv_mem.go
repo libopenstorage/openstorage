@@ -10,7 +10,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/common"
 )
@@ -598,21 +598,12 @@ func (kv *memKV) LockWithID(
 	key string,
 	lockerID string,
 ) (*kvdb.KVPair, error) {
-	return kv.LockWithTimeout(key, lockerID, kvdb.DefaultLockTryDuration, kv.GetLockTimeout())
-}
-
-func (kv *memKV) LockWithTimeout(
-	key string,
-	lockerID string,
-	lockTryDuration time.Duration,
-	lockHoldDuration time.Duration,
-) (*kvdb.KVPair, error) {
 	key = kv.domain + key
 	duration := time.Second
 
 	result, err := kv.Create(key, lockerID, uint64(duration*3))
-	startTime := time.Now()
-	for count := 0; err != nil; count++ {
+	count := 0
+	for err != nil {
 		time.Sleep(duration)
 		result, err = kv.Create(key, lockerID, uint64(duration*3))
 		if err != nil && count > 0 && count%15 == 0 {
@@ -621,9 +612,6 @@ func (kv *memKV) LockWithTimeout(
 				logrus.Infof("Lock %v locked for %v seconds, tag: %v",
 					key, count, currLockerID)
 			}
-		}
-		if err != nil && time.Since(startTime) > lockTryDuration {
-			return nil, err
 		}
 	}
 
@@ -635,9 +623,9 @@ func (kv *memKV) LockWithTimeout(
 	kv.mutex.Lock()
 	kv.locks[key] = lockChan
 	kv.mutex.Unlock()
-	if lockHoldDuration > 0 {
+	if kv.GetLockTimeout() > 0 {
 		go func() {
-			timeout := time.After(lockHoldDuration)
+			timeout := time.After(kv.GetLockTimeout())
 			for {
 				select {
 				case <-timeout:

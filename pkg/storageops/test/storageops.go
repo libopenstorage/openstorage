@@ -94,7 +94,10 @@ func enumerate(t *testing.T, driver storageops.Ops, diskName string) {
 	require.Len(t, disks, 1, "enumerate returned invalid length")
 
 	// enumerate with invalid labels
-	randomStr := uuid.NewV4().String()
+	val, err := uuid.NewV4()
+	require.NoError(t, err, "failed to get uuid")
+	randomStr := val.String()
+
 	randomStr = strings.Replace(randomStr, "-", "", -1)
 	invalidLabels := map[string]string{
 		fmt.Sprintf("key%s", randomStr): fmt.Sprintf("val%s", randomStr),

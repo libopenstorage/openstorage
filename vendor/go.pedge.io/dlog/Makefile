@@ -1,4 +1,4 @@
-all: test
+all: updatetestdeps test
 
 deps:
 	go get -d -v ./...

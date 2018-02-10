@@ -2,6 +2,7 @@ package layer0
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"strings"
@@ -12,14 +13,13 @@ import (
 
 	"github.com/docker/docker/daemon/graphdriver"
 	"github.com/docker/docker/daemon/graphdriver/overlay"
-	"github.com/docker/docker/pkg/archive"
 	"github.com/docker/docker/pkg/idtools"
-	"github.com/docker/docker/pkg/parsers"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/graph"
 	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
+	"github.com/moby/moby/pkg/parsers"
 )
 
 // Layer0 implemenation piggy backs on existing overlay graphdriver implementation
@@ -211,12 +211,13 @@ func (l *Layer0) create(id, parent string) (string, *Layer0Vol, error) {
 }
 
 // Create creates a new and empty filesystem layer
-func (l *Layer0) Create(id string, parent string, mountLabel string, storageOpts map[string]string) error {
+func (l *Layer0) Create(id string, parent string, createOpts *graphdriver.CreateOpts) error {
 	id, vol, err := l.create(id, parent)
 	if err != nil {
 		return err
 	}
-	err = l.Driver.Create(id, parent, mountLabel, storageOpts)
+
+	err = l.Driver.Create(id, parent, createOpts)
 	if err != nil || vol == nil {
 		return err
 	}
@@ -282,7 +283,7 @@ func (l *Layer0) Put(id string) error {
 }
 
 // ApplyDiff extracts the changeset between the specified layer and its parent
-func (l *Layer0) ApplyDiff(id string, parent string, diff archive.Reader) (size int64, err error) {
+func (l *Layer0) ApplyDiff(id string, parent string, diff io.Reader) (size int64, err error) {
 	id = l.realID(id)
 	return l.Driver.ApplyDiff(id, parent, diff)
 }

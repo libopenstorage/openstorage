@@ -34,7 +34,7 @@ Or, do something more custom:
 	  "go.pedge.io/dlog"
 	  "go.pedge.io/dlog/logrus"
 
-	  "github.com/Sirupsen/logrus"
+	  "github.com/sirupsen/logrus"
 	)
 
 	func init() { // or anywhere

@@ -18,7 +18,9 @@ const (
 	newDiskDescription = "Disk created by Openstorage tests"
 )
 
-var diskName = fmt.Sprintf("%s-%s", newDiskPrefix, uuid.NewV4())
+var uid string
+
+var diskName = fmt.Sprintf("%s-%s", newDiskPrefix, uid)
 
 func initGCE(t *testing.T) (storageops.Ops, map[string]interface{}) {
 	driver, err := gce.NewClient()
@@ -50,4 +52,9 @@ func TestAll(t *testing.T) {
 		t.Skip("skipping GCE tests as environment is not set...")
 	}
 
+}
+
+func init() {
+	val, _ := uuid.NewV4()
+	uid = val.String()
 }

@@ -17,6 +17,7 @@ extern int release_cache(void);
 import "C"
 
 import (
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -26,11 +27,11 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/graph"
 
-	"github.com/docker/docker/daemon/graphdriver"
-	"github.com/docker/docker/pkg/archive"
-	"github.com/docker/docker/pkg/chrootarchive"
-	"github.com/docker/docker/pkg/directory"
 	"github.com/docker/docker/pkg/idtools"
+	"github.com/moby/moby/daemon/graphdriver"
+	"github.com/moby/moby/pkg/archive"
+	"github.com/moby/moby/pkg/chrootarchive"
+	"github.com/moby/moby/pkg/directory"
 )
 
 const (
@@ -164,8 +165,8 @@ func (d *Driver) Exists(id string) bool {
 // ApplyDiff extracts the changeset from the given diff into the
 // layer with the specified id and parent, returning the size of the
 // new layer in bytes.
-// The archive.Reader must be an uncompressed stream.
-func (d *Driver) ApplyDiff(id string, parent string, diff archive.Reader) (size int64, err error) {
+// The diff must be an uncompressed stream.
+func (d *Driver) ApplyDiff(id string, parent string, diff io.Reader) (size int64, err error) {
 	dir := path.Join(virtPath, id)
 	// dir := path.Join("/tmp/chainfs/", id)
 

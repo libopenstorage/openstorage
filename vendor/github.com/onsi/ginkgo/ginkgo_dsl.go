@@ -202,7 +202,7 @@ func RunSpecs(t GinkgoTestingT, description string) bool {
 //To run your tests with Ginkgo's default reporter and your custom reporter(s), replace
 //RunSpecs() with this method.
 func RunSpecsWithDefaultAndCustomReporters(t GinkgoTestingT, description string, specReporters []Reporter) bool {
-	specReporters = append(specReporters, buildDefaultReporter())
+	specReporters = append([]Reporter{buildDefaultReporter()}, specReporters...)
 	return RunSpecsWithCustomReporters(t, description, specReporters)
 }
 
@@ -216,7 +216,7 @@ func RunSpecsWithCustomReporters(t GinkgoTestingT, description string, specRepor
 		reporters[i] = reporter
 	}
 	passed, hasFocusedTests := globalSuite.Run(t, description, reporters, writer, config.GinkgoConfig)
-	if passed && hasFocusedTests && strings.TrimSpace(os.Getenv("GINKGO_EDITOR_INTEGRATION")) == "" {
+	if passed && hasFocusedTests {
 		fmt.Println("PASS | FOCUSED")
 		os.Exit(types.GINKGO_FOCUS_EXIT_CODE)
 	}
@@ -233,7 +233,7 @@ func buildDefaultReporter() Reporter {
 	}
 }
 
-//Skip notifies Ginkgo that the current spec was skipped.
+//Skip notifies Ginkgo that the current spec should be skipped.
 func Skip(message string, callerSkip ...int) {
 	skip := 0
 	if len(callerSkip) > 0 {
@@ -362,26 +362,22 @@ func XIt(text string, _ ...interface{}) bool {
 //which "It" does not fit into a natural sentence flow. All the same protocols apply for Specify blocks
 //which apply to It blocks.
 func Specify(text string, body interface{}, timeout ...float64) bool {
-	globalSuite.PushItNode(text, body, types.FlagTypeNone, codelocation.New(1), parseTimeout(timeout...))
-	return true
+	return It(text, body, timeout...)
 }
 
 //You can focus individual Specifys using FSpecify
 func FSpecify(text string, body interface{}, timeout ...float64) bool {
-	globalSuite.PushItNode(text, body, types.FlagTypeFocused, codelocation.New(1), parseTimeout(timeout...))
-	return true
+	return FIt(text, body, timeout...)
 }
 
 //You can mark Specifys as pending using PSpecify
 func PSpecify(text string, is ...interface{}) bool {
-	globalSuite.PushItNode(text, func() {}, types.FlagTypePending, codelocation.New(1), 0)
-	return true
+	return PIt(text, is...)
 }
 
 //You can mark Specifys as pending using XSpecify
 func XSpecify(text string, is ...interface{}) bool {
-	globalSuite.PushItNode(text, func() {}, types.FlagTypePending, codelocation.New(1), 0)
-	return true
+	return XIt(text, is...)
 }
 
 //By allows you to better document large Its.

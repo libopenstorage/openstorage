@@ -1,8 +1,11 @@
 package sigar
 
 import (
+	"errors"
 	"time"
 )
+
+var ErrNotImplemented = errors.New("gosigar: not implemented")
 
 type Sigar interface {
 	CollectCpuStats(collectionInterval time.Duration) (<-chan Cpu, chan<- struct{})
@@ -128,6 +131,13 @@ type ProcTime struct {
 	User      uint64
 	Sys       uint64
 	Total     uint64
+}
+
+type ProcCpu struct {
+	ProcTime
+	LastTime uint64
+	Percent  float64
+	cache    map[int]ProcCpu
 }
 
 type ProcArgs struct {

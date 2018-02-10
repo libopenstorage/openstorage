@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/portworx/kvdb"
 )
 
@@ -51,14 +51,10 @@ func (b *BaseKvdb) SetLockTimeout(timeout time.Duration) {
 	b.LockTimeout = timeout
 }
 
-func (b *BaseKvdb) CheckLockTimeout(
-	key string,
-	startTime time.Time,
-	lockTimeout time.Duration,
-) {
+func (b *BaseKvdb) CheckLockTimeout(key string, startTime time.Time) {
 	b.lock.Lock()
 	defer b.lock.Unlock()
-	if b.LockTimeout > 0 && time.Since(startTime) > lockTimeout {
+	if b.LockTimeout > 0 && time.Since(startTime) > b.LockTimeout {
 		b.lockTimedout(key)
 	}
 }

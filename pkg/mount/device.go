@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/docker/docker/pkg/mount"
 	"github.com/libopenstorage/openstorage/pkg/keylock"
+	"github.com/moby/moby/pkg/mount"
 )
 
 // DeviceMounter implements Ops and tracks active mounts for volume drivers.

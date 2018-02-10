@@ -5,12 +5,14 @@ import (
 	"io/ioutil"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/cloudfoundry/gosigar"
 )
 
 type system struct {
+	sync.Mutex
 	cpuUsage   float64
 	totalTicks float64
 	ticks      float64
@@ -24,9 +26,15 @@ func (s *system) start() {
 			idle1, total1 := getCPUSample()
 
 			idleTicks := float64(idle1 - idle0)
+			s.Lock()
 			s.totalTicks = float64(total1 - total0)
 			s.ticks = s.totalTicks - idleTicks
-			s.cpuUsage = 100 * s.ticks / s.totalTicks
+			if s.totalTicks > 0 {
+				s.cpuUsage = 100 * s.ticks / s.totalTicks
+			} else {
+				s.cpuUsage = 0
+			}
+			s.Unlock()
 		}
 	}()
 }
@@ -39,7 +47,7 @@ func getCPUSample() (idle, total uint64) {
 	lines := strings.Split(string(contents), "\n")
 	for _, line := range lines {
 		fields := strings.Fields(line)
-		if fields[0] == "cpu" {
+		if len(fields) > 0 && fields[0] == "cpu" {
 			numFields := len(fields)
 			for i := 1; i < numFields; i++ {
 				val, err := strconv.ParseUint(fields[i], 10, 64)
@@ -58,6 +66,8 @@ func getCPUSample() (idle, total uint64) {
 }
 
 func (s *system) CpuUsage() (usage float64, total float64, ticks float64) {
+	s.Lock()
+	defer s.Unlock()
 	return s.cpuUsage, s.ticks, s.totalTicks
 }
 

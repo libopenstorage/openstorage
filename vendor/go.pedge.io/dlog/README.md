@@ -24,6 +24,7 @@ import (
   "go.pedge.io/dlog/lion"
   "go.pedge.io/dlog/log15"
   "go.pedge.io/dlog/logrus"
+  "go.pedge.io/dlog/zap"
 )
 
 func registrationFunctions() {
@@ -31,6 +32,7 @@ func registrationFunctions() {
   dlog_lion.Register() // set lion as the global logger with default settings
   dlog_log15.Register() // set log15 as the global logger with default settings
   dlog_logrus.Register() // set logrus as the global logger with default settings
+  dlog_zap.Register() // set zap as the global logger with default settings
 }
 ```
 
@@ -43,7 +45,7 @@ import (
   "go.pedge.io/dlog"
   "go.pedge.io/dlog/logrus"
 
-  "github.com/Sirupsen/logrus"
+  "github.com/sirupsen/logrus"
 )
 
 func init() { // or anywhere
