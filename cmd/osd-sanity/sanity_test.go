@@ -30,11 +30,13 @@ const (
 var (
 	VERSION  = "(dev)"
 	endpoint string
+	driver   string
 	version  bool
 )
 
 func init() {
 	flag.StringVar(&endpoint, prefix+"endpoint", "", "OSD endpoint")
+	flag.StringVar(&driver, prefix+"driver", "", "Volume Driver")
 	flag.BoolVar(&version, prefix+"version", false, "Version of this program")
 	flag.Parse()
 }
@@ -47,5 +49,8 @@ func TestSanity(t *testing.T) {
 	if len(endpoint) == 0 {
 		t.Fatalf("--%s.endpoint must be provided with an OSD endpoint", prefix)
 	}
-	sanity.Test(t, endpoint)
+	if len(driver) == 0 {
+		t.Fatalf("--%s.driver must be provided with a Volume driver", prefix)
+	}
+	sanity.Test(t, endpoint, driver)
 }
