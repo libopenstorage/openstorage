@@ -1,6 +1,8 @@
 // osdconfig is a package to work with distributed config parameters
 package osdconfig
 
+import "net/http"
+
 // A config manager interface allows management of osdconfig parameters
 // It defines setters, getters and callback management functions
 type ConfigManager interface {
@@ -27,6 +29,9 @@ type ConfigManager interface {
 	// TuneNode registers a user defined function as callback watching for changes
 	// in the node configuration
 	WatchNode(name string, cb func(config *NodeConfig) error) error
+
+	// GetHTTPFunc generates an http handler
+	GetHTTPFunc(state interface{}, fn interface{}) (func(w http.ResponseWriter, r *http.Request), error)
 
 	// Close performs internal cleanup
 	Close()
