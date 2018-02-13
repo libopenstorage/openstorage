@@ -427,15 +427,23 @@ message VolumeCreateRequest {
 }
 
 // VolumeResponse is a structure that wraps an error.
-// swagger:response
+// swagger:response volumeResponse
 message VolumeResponse {
+  // Error message
+  //
+  // in: body
   string error = 1;
 }
 
 // swagger:response
 message VolumeCreateResponse {
   // ID of the newly created volume
+  //
+  // in: body
   string id = 1;
+  // Volume Response
+  //
+  // in: body
   VolumeResponse volume_response = 2;
 }
 
@@ -466,9 +474,16 @@ message VolumeSetRequest {
   map<string, string> options = 4;
 }
 
-// swagger:response
+// VolumeSetResponse
+// swagger:response volumeSetResponse
 message VolumeSetResponse {
+  // Volume
+  //
+  // in: body
   Volume volume = 1;
+  //VolumeResponse
+  //
+  // in: body
   VolumeResponse volume_response = 2;
 }
 
@@ -481,11 +496,16 @@ message SnapCreateRequest {
   bool readonly = 3;
 }
 
-// swagger:response
+// SnapCreateRequest specifies a response that get's returned when creating a snapshot.
+// swagger:response snapCreateResponse
 message SnapCreateResponse {
+  // VolumeCreateResponse
+  //
+  // in: body
   VolumeCreateResponse volume_create_response = 1;
 }
 
+// VolumeInfo 
 // swagger:model
 message VolumeInfo {
   string volume_id = 1;
@@ -503,16 +523,22 @@ message GraphDriverChanges {
   GraphDriverChangeType kind = 2;
 }
 
-// swagger:response
+// ClusterResponse specifies a response that gets returned when requesting the cluster
+// swagger:response clusterResponse
 message ClusterResponse {
+  // Error code
+  // 
+  // in: body
   string error = 1;
 }
 
+// Active Request
 // swagger:model
 message ActiveRequest {
   map<int64, string> ReqestKV = 1;
 }
 
+// Active Requests
 // swagger:model
 message ActiveRequests {
   int64 RequestCount = 1;

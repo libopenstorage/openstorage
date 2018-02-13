@@ -1558,8 +1558,12 @@ func (m *VolumeCreateRequest) GetSpec() *VolumeSpec {
 }
 
 // VolumeResponse is a structure that wraps an error.
-// swagger:response
+// swagger:response volumeResponse
 type VolumeResponse struct {
+	// Error message
+	//
+	// in: body
+	// Required: true
 	Error string `protobuf:"bytes,1,opt,name=error" json:"error,omitempty"`
 }
 
@@ -1575,10 +1579,18 @@ func (m *VolumeResponse) GetError() string {
 	return ""
 }
 
-// swagger:response
+// VolumeCreateResponse
+// swagger:response volumeCreateResponse
 type VolumeCreateResponse struct {
 	// ID of the newly created volume
-	Id             string          `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
+	//
+	// in: body
+	// Required: true
+	Id string `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
+	// Volume Response
+	//
+	// in: body
+	// Required: true
 	VolumeResponse *VolumeResponse `protobuf:"bytes,2,opt,name=volume_response,json=volumeResponse" json:"volume_response,omitempty"`
 }
 
@@ -1694,9 +1706,18 @@ func (m *VolumeSetRequest) GetOptions() map[string]string {
 	return nil
 }
 
-// swagger:response
+// VolumeSetResponse
+// swagger:response volumeSetResponse
 type VolumeSetResponse struct {
-	Volume         *Volume         `protobuf:"bytes,1,opt,name=volume" json:"volume,omitempty"`
+	// Volume
+	//
+	// in:body
+	// Required: true
+	Volume *Volume `protobuf:"bytes,1,opt,name=volume" json:"volume,omitempty"`
+	// Volume Response
+	//
+	// in: body
+	// Required: true
 	VolumeResponse *VolumeResponse `protobuf:"bytes,2,opt,name=volume_response,json=volumeResponse" json:"volume_response,omitempty"`
 }
 
@@ -1754,8 +1775,10 @@ func (m *SnapCreateRequest) GetReadonly() bool {
 	return false
 }
 
-// swagger:response
+// SnapCreateResponse
+// swagger:response snapCreateResponse
 type SnapCreateResponse struct {
+	// in: body
 	VolumeCreateResponse *VolumeCreateResponse `protobuf:"bytes,1,opt,name=volume_create_response,json=volumeCreateResponse" json:"volume_create_response,omitempty"`
 }
 
@@ -1771,6 +1794,7 @@ func (m *SnapCreateResponse) GetVolumeCreateResponse() *VolumeCreateResponse {
 	return nil
 }
 
+// Volume Info
 // swagger:model
 type VolumeInfo struct {
 	VolumeId string      `protobuf:"bytes,1,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
@@ -1833,7 +1857,8 @@ func (m *GraphDriverChanges) GetKind() GraphDriverChangeType {
 	return GraphDriverChangeType_GRAPH_DRIVER_CHANGE_TYPE_NONE
 }
 
-// swagger:response
+// ClusterResponse
+// swagger:response clusterResponse
 type ClusterResponse struct {
 	Error string `protobuf:"bytes,1,opt,name=error" json:"error,omitempty"`
 }
