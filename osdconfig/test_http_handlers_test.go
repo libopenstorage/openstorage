@@ -42,10 +42,10 @@ func TestHttpHandlers(t *testing.T) {
 	done := make(chan error)
 	http.Handle("/", r)
 	go func(c chan error) {
-		c <- http.ListenAndServe(":8080", nil)
+		c <- http.ListenAndServe(":8085", nil)
 	}(done)
 
-	url := "http://127.0.0.1:8080"
+	url := "http://localhost:8085"
 
 	conf := new(ClusterConfig)
 	conf.ClusterId = "cluster_id_1"
@@ -56,7 +56,7 @@ func TestHttpHandlers(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req, err := http.NewRequest("POST", url+"/cluster", bytes.NewBuffer(jb))
+	req, err := http.NewRequest("PUT", url+"/cluster", bytes.NewBuffer(jb))
 	req.Header.Set("X-Custom-Header", "myvalue")
 	req.Header.Set("Content-Type", "application/json")
 
@@ -78,7 +78,7 @@ func TestHttpHandlers(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req, err = http.NewRequest("POST", url+"/node", bytes.NewBuffer(jb))
+	req, err = http.NewRequest("PUT", url+"/node", bytes.NewBuffer(jb))
 	req.Header.Set("X-Custom-Header", "myvalue")
 	req.Header.Set("Content-Type", "application/json")
 

@@ -5,6 +5,7 @@ const (
 	rootKey    = "osdconfig"   // root of the tree in kvdb
 	clusterKey = "clusterConf" // cluster data is managed behind this key
 	nodeKey    = "nodeConf"    // all nodeID's exist behind this key and all node data behind respective node ID
+	indexKey   = "nodeIndex"   // list of all nodeID's
 )
 
 // error constants
@@ -60,8 +61,11 @@ const (
 const (
 	Get      = "GET"
 	Post     = "POST"
+	Put      = "PUT"
+	Del      = "DELETE"
 	BasePath = "/"
 	Cluster  = "cluster"
 	Node     = "node"
+	List     = "list"
 	Id       = "id"
 )

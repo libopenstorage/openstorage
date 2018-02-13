@@ -125,6 +125,26 @@ func (manager *configManager) GetClusterConf() (*ClusterConfig, error) {
 	return config, nil
 }
 
+// GetNodeList fetches list of node id's
+func (manager *configManager) GetNodeList() ([]string, error) {
+	// get json from kvdb and unmarshal into list of strings
+	kvPair, err := manager.cc.Get(filepath.Join(rootKey, indexKey))
+	if err != nil {
+		return nil, err
+	}
+
+	if kvPair == nil {
+		return nil, ErrorData
+	}
+
+	var list []string
+	if err := json.Unmarshal(kvPair.Value, &list); err != nil {
+		return nil, err
+	}
+
+	return list, nil
+}
+
 // SetClusterConf sets cluster config in kvdb
 func (manager *configManager) SetClusterConf(config *ClusterConfig) error {
 	manager.Lock()
@@ -176,11 +196,46 @@ func (manager *configManager) SetNodeConf(config *NodeConfig) error {
 		return ErrorInput
 	}
 
-	// push into kvdb
+	// push node data into kvdb
 	if _, err := manager.cc.Put(getNodeKeyFromNodeID(config.NodeId), config, 0); err != nil {
 		return err
 	}
+
+	// update node index
+	list, err := manager.GetNodeList()
+	if err != nil {
+		list = make([]string, 0, 0)
+	}
+	list = append(list, config.NodeId)
+	list = dedupe(list)
+	if _, err := manager.cc.Put(filepath.Join(rootKey, indexKey), list, 0); err != nil {
+		return err
+	}
 	return nil
+}
+
+// DeleteNodeConf deletes node configuration data
+func (manager *configManager) DeleteNodeConf(nodeID string) error {
+	_, err := manager.cc.Delete(getNodeKeyFromNodeID(nodeID))
+	if err != nil {
+		return err
+	}
+
+	list, err := manager.GetNodeList()
+	if err != nil {
+		return err
+	}
+
+	newList := make([]string, 0, 0)
+	for _, l := range list {
+		if l != nodeID {
+			newList = append(newList, l)
+		}
+	}
+	newList = dedupe(newList)
+
+	_, err = manager.cc.Put(filepath.Join(rootKey, indexKey), newList, 0)
+	return err
 }
 
 // WatchCluster registers user defined function as callback and sets a watch for changes

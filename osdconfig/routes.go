@@ -8,26 +8,50 @@ func (manager *configManager) GetRoutes() []*Routes {
 
 	r := new(Routes)
 	r.Method = Get
+	r.Path = filepath.Join(BasePath, List)
+	r.Fn, _ = manager.httpFunc(r.Method, manager.GetNodeList)
+	R = append(R, r)
+
+	r = new(Routes)
+	r.Method = Get
 	r.Path = filepath.Join(BasePath, Cluster)
-	r.Fn, _ = manager.httpFunc(manager.GetClusterConf)
+	r.Fn, _ = manager.httpFunc(r.Method, manager.GetClusterConf)
 	R = append(R, r)
 
 	r = new(Routes)
 	r.Method = Get
 	r.Path = filepath.Join(BasePath, Node, string2tag(Id))
-	r.Fn, _ = manager.httpFunc(manager.GetNodeConf)
+	r.Fn, _ = manager.httpFunc(r.Method, manager.GetNodeConf)
+	R = append(R, r)
+
+	r = new(Routes)
+	r.Method = Put
+	r.Path = filepath.Join(BasePath, Cluster)
+	r.Fn, _ = manager.httpFunc(r.Method, manager.SetClusterConf)
+	R = append(R, r)
+
+	r = new(Routes)
+	r.Method = Put
+	r.Path = filepath.Join(BasePath, Node)
+	r.Fn, _ = manager.httpFunc(r.Method, manager.SetNodeConf)
 	R = append(R, r)
 
 	r = new(Routes)
 	r.Method = Post
 	r.Path = filepath.Join(BasePath, Cluster)
-	r.Fn, _ = manager.httpFunc(manager.SetClusterConf)
+	r.Fn, _ = manager.httpFunc(r.Method, manager.SetClusterConf)
 	R = append(R, r)
 
 	r = new(Routes)
 	r.Method = Post
 	r.Path = filepath.Join(BasePath, Node)
-	r.Fn, _ = manager.httpFunc(manager.SetNodeConf)
+	r.Fn, _ = manager.httpFunc(r.Method, manager.SetNodeConf)
+	R = append(R, r)
+
+	r = new(Routes)
+	r.Method = Del
+	r.Path = filepath.Join(BasePath, Node, string2tag(Id))
+	r.Fn, _ = manager.httpFunc(r.Method, manager.DeleteNodeConf)
 	R = append(R, r)
 
 	return R
