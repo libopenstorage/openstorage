@@ -183,14 +183,14 @@ func (manager *configManager) SetNodeConf(config *NodeConfig) error {
 	return nil
 }
 
-// TuneCluster registers user defined function as callback and sets a watch for changes
+// WatchCluster registers user defined function as callback and sets a watch for changes
 // to cluster configuration
 func (manager *configManager) WatchCluster(name string, cb func(config *ClusterConfig) error) error {
 	f, _ := getCallback(name, cb)
 	return manager.register(name, TuneCluster, nil, f)
 }
 
-// TuneNode registers user defined function as callback and sets a watch for changes
+// WatchNode registers user defined function as callback and sets a watch for changes
 // to node configuration
 func (manager *configManager) WatchNode(name string, cb func(config *NodeConfig) error) error {
 	f, _ := getCallback(name, cb)

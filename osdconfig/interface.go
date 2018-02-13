@@ -20,11 +20,11 @@ type ConfigManager interface {
 	// when a change is triggered
 	SetNodeConf(config *NodeConfig) error
 
-	// TuneCluster registers a user defined function as callback watching for changes
+	// WatchCluster registers a user defined function as callback watching for changes
 	// in the cluster configuration
 	WatchCluster(name string, cb func(config *ClusterConfig) error) error
 
-	// TuneNode registers a user defined function as callback watching for changes
+	// WatchNode registers a user defined function as callback watching for changes
 	// in the node configuration
 	WatchNode(name string, cb func(config *NodeConfig) error) error
 
