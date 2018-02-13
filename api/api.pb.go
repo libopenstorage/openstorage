@@ -55,21 +55,22 @@ const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 type Status int32
 
 const (
-	Status_STATUS_NONE                  Status = 0
-	Status_STATUS_INIT                  Status = 1
-	Status_STATUS_OK                    Status = 2
-	Status_STATUS_OFFLINE               Status = 3
-	Status_STATUS_ERROR                 Status = 4
-	Status_STATUS_NOT_IN_QUORUM         Status = 5
-	Status_STATUS_DECOMMISSION          Status = 6
-	Status_STATUS_MAINTENANCE           Status = 7
-	Status_STATUS_STORAGE_DOWN          Status = 8
-	Status_STATUS_STORAGE_DEGRADED      Status = 9
-	Status_STATUS_NEEDS_REBOOT          Status = 10
-	Status_STATUS_STORAGE_REBALANCE     Status = 11
-	Status_STATUS_STORAGE_DRIVE_REPLACE Status = 12
+	Status_STATUS_NONE                     Status = 0
+	Status_STATUS_INIT                     Status = 1
+	Status_STATUS_OK                       Status = 2
+	Status_STATUS_OFFLINE                  Status = 3
+	Status_STATUS_ERROR                    Status = 4
+	Status_STATUS_NOT_IN_QUORUM            Status = 5
+	Status_STATUS_DECOMMISSION             Status = 6
+	Status_STATUS_MAINTENANCE              Status = 7
+	Status_STATUS_STORAGE_DOWN             Status = 8
+	Status_STATUS_STORAGE_DEGRADED         Status = 9
+	Status_STATUS_NEEDS_REBOOT             Status = 10
+	Status_STATUS_STORAGE_REBALANCE        Status = 11
+	Status_STATUS_STORAGE_DRIVE_REPLACE    Status = 12
+	Status_STATUS_NOT_IN_QUORUM_NO_STORAGE Status = 13
 	// Add statuses before MAX and update the number for MAX
-	Status_STATUS_MAX Status = 13
+	Status_STATUS_MAX Status = 14
 )
 
 var Status_name = map[int32]string{
@@ -86,23 +87,25 @@ var Status_name = map[int32]string{
 	10: "STATUS_NEEDS_REBOOT",
 	11: "STATUS_STORAGE_REBALANCE",
 	12: "STATUS_STORAGE_DRIVE_REPLACE",
-	13: "STATUS_MAX",
+	13: "STATUS_NOT_IN_QUORUM_NO_STORAGE",
+	14: "STATUS_MAX",
 }
 var Status_value = map[string]int32{
-	"STATUS_NONE":                  0,
-	"STATUS_INIT":                  1,
-	"STATUS_OK":                    2,
-	"STATUS_OFFLINE":               3,
-	"STATUS_ERROR":                 4,
-	"STATUS_NOT_IN_QUORUM":         5,
-	"STATUS_DECOMMISSION":          6,
-	"STATUS_MAINTENANCE":           7,
-	"STATUS_STORAGE_DOWN":          8,
-	"STATUS_STORAGE_DEGRADED":      9,
-	"STATUS_NEEDS_REBOOT":          10,
-	"STATUS_STORAGE_REBALANCE":     11,
-	"STATUS_STORAGE_DRIVE_REPLACE": 12,
-	"STATUS_MAX":                   13,
+	"STATUS_NONE":                     0,
+	"STATUS_INIT":                     1,
+	"STATUS_OK":                       2,
+	"STATUS_OFFLINE":                  3,
+	"STATUS_ERROR":                    4,
+	"STATUS_NOT_IN_QUORUM":            5,
+	"STATUS_DECOMMISSION":             6,
+	"STATUS_MAINTENANCE":              7,
+	"STATUS_STORAGE_DOWN":             8,
+	"STATUS_STORAGE_DEGRADED":         9,
+	"STATUS_NEEDS_REBOOT":             10,
+	"STATUS_STORAGE_REBALANCE":        11,
+	"STATUS_STORAGE_DRIVE_REPLACE":    12,
+	"STATUS_NOT_IN_QUORUM_NO_STORAGE": 13,
+	"STATUS_MAX":                      14,
 }
 
 func (x Status) String() string {

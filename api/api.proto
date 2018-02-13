@@ -22,8 +22,9 @@ enum Status {
   STATUS_NEEDS_REBOOT = 10;
   STATUS_STORAGE_REBALANCE = 11;
   STATUS_STORAGE_DRIVE_REPLACE = 12;
+  STATUS_NOT_IN_QUORUM_NO_STORAGE = 13;
   // Add statuses before MAX and update the number for MAX
-  STATUS_MAX = 13;
+  STATUS_MAX = 14;
 }
 
 enum DriverType {
