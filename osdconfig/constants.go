@@ -55,3 +55,13 @@ const (
 	msgTrigOnChan   = "triggered on channel"  // when execution of callback function container triggered on channel
 	msgTrigOnPoll   = "triggered on poll"     // when execution of callback function container triggered on timed poll
 )
+
+// http REST endpoint
+const (
+	Get      = "GET"
+	Post     = "POST"
+	BasePath = "/"
+	Cluster  = "cluster"
+	Node     = "node"
+	Id       = "id"
+)

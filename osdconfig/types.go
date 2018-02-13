@@ -5,6 +5,8 @@ import (
 	"sync"
 	"time"
 
+	"net/http"
+
 	"github.com/portworx/kvdb"
 )
 
@@ -122,4 +124,11 @@ type callbackData struct {
 type callbackHeap struct {
 	jobHeap
 	sync.Mutex
+}
+
+// RESTEndPoint is a struct containing REST endpoint details
+type Routes struct {
+	Method string
+	Path   string
+	Fn     func(w http.ResponseWriter, r *http.Request)
 }

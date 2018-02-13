@@ -29,7 +29,7 @@ func (manager *configManager) watch(c <-chan struct{}) {
 			manager.execQueue()
 		case <-time.After(time.Second):
 			logrus.WithField("source", sourceManagerWatch).
-				Info(msgTrigOnPoll)
+				Debug(msgTrigOnPoll)
 			manager.execQueue()
 		}
 	}
