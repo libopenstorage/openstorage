@@ -3,9 +3,10 @@ package flexvolume
 import (
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/empty"
-	"go.pedge.io/dlog"
 	"golang.org/x/net/context"
 )
 
@@ -51,10 +52,10 @@ func checkClientError(err error) (*empty.Empty, error) {
 
 func log(methodName string, request proto.Message, response proto.Message, err error, duration time.Duration) {
 	if err != nil {
-		dlog.Errorf("Method: %v Request: %v Response: %v Error: %v Duration: %v",
+		zap.S().Errorf("Method: %v Request: %v Response: %v Error: %v Duration: %v",
 			methodName, request.String(), response.String(), err.Error(), duration.String())
 	} else {
-		dlog.Infof("Method: %v Request: %v Response: %v Error: %v Duration: %v",
+		zap.S().Infof("Method: %v Request: %v Response: %v Error: %v Duration: %v",
 			methodName, request.String(), response.String(), err.Error(), duration.String())
 	}
 }

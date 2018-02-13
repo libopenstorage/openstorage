@@ -7,7 +7,7 @@ import (
 	"os"
 	"path"
 
-	"go.pedge.io/dlog"
+	"go.uber.org/zap"
 
 	"github.com/gorilla/mux"
 )
@@ -141,15 +141,15 @@ func startServer(name string, sockBase string, port uint16, routes []*Route) err
 	os.Remove(socket)
 	os.MkdirAll(path.Dir(socket), 0755)
 
-	dlog.Printf("Starting REST service on socket : %+v", socket)
+	zap.S().Infof("Starting REST service on socket : %+v", socket)
 	listener, err = net.Listen("unix", socket)
 	if err != nil {
-		dlog.Warnln("Cannot listen on UNIX socket: ", err)
+		zap.S().Warn("Cannot listen on UNIX socket: ", err)
 		return err
 	}
 	go http.Serve(listener, router)
 	if port != 0 {
-		dlog.Printf("Starting REST service on port : %v", port)
+		zap.S().Infof("Starting REST service on port : %v", port)
 		go http.ListenAndServe(fmt.Sprintf(":%d", port), router)
 	}
 	return nil
@@ -158,7 +158,7 @@ func startServer(name string, sockBase string, port uint16, routes []*Route) err
 type restServer interface {
 	Routes() []*Route
 	String() string
-	logRequest(request string, id string) dlog.Logger
+	logRequest(request string, id string) *zap.SugaredLogger
 	sendError(request string, id string, w http.ResponseWriter, msg string, code int)
 }
 
@@ -168,12 +168,12 @@ type restBase struct {
 	name    string
 }
 
-func (rest *restBase) logRequest(request string, id string) dlog.Logger {
-	return dlog.WithFields(map[string]interface{}{
-		"Driver":  rest.name,
-		"Request": request,
-		"ID":      id,
-	})
+func (rest *restBase) logRequest(request string, id string) *zap.SugaredLogger {
+	return zap.S().With(
+		"Driver", rest.name,
+		"Request", request,
+		"ID", id,
+	)
 }
 func (rest *restBase) sendError(request string, id string, w http.ResponseWriter, msg string, code int) {
 	rest.logRequest(request, id).Warnln(code, " ", msg)
@@ -181,6 +181,6 @@ func (rest *restBase) sendError(request string, id string, w http.ResponseWriter
 }
 
 func notFound(w http.ResponseWriter, r *http.Request) {
-	dlog.Warnf("Not found: %+v ", r.URL)
+	zap.S().Warnf("Not found: %+v ", r.URL)
 	http.NotFound(w, r)
 }

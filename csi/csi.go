@@ -21,8 +21,9 @@ import (
 	"net"
 	"sync"
 
+	"go.uber.org/zap"
+
 	"github.com/container-storage-interface/spec/lib/go/csi"
-	"go.pedge.io/dlog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
@@ -108,7 +109,7 @@ func (s *OsdCsiServer) Start() error {
 	reflection.Register(s.server)
 
 	// Start listening for requests
-	dlog.Infof("CSI Server ready on %s", s.Address())
+	zap.S().Infof("CSI Server ready on %s", s.Address())
 	waitForServer := make(chan bool)
 	s.goServe(waitForServer)
 	<-waitForServer
@@ -154,7 +155,7 @@ func (s *OsdCsiServer) goServe(started chan<- bool) {
 		started <- true
 		err := s.server.Serve(s.listener)
 		if err != nil {
-			dlog.Fatalf("ERROR: Unable to start gRPC server: %s\n", err.Error())
+			zap.S().Fatalf("ERROR: Unable to start gRPC server: %s\n", err.Error())
 		}
 	}()
 }

@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"os"
 
+	"go.uber.org/zap"
+
 	"github.com/golang/protobuf/ptypes/empty"
-	"go.pedge.io/dlog"
 	"golang.org/x/net/context"
 )
 
@@ -104,6 +105,6 @@ func newAttachSuccessOutput(deviceID string) []byte {
 
 func writeOutput(output []byte) {
 	if _, err := os.Stdout.Write(output); err != nil {
-		dlog.Warnf("Unable to write output to stdout : %s", err.Error())
+		zap.S().Warnf("Unable to write output to stdout : %s", err.Error())
 	}
 }

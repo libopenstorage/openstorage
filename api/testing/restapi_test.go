@@ -6,12 +6,13 @@ import (
 	"testing"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/libopenstorage/openstorage/api"
 	volumeclient "github.com/libopenstorage/openstorage/api/client/volume"
 	"github.com/libopenstorage/openstorage/api/server"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/stretchr/testify/assert"
-	"go.pedge.io/dlog"
 
 	"github.com/golang/mock/gomock"
 )
@@ -42,7 +43,7 @@ func startServer() {
 		volume.DriverAPIBase,
 		mgmtPort,
 	); err != nil {
-		dlog.Errorf("Error starting the server")
+		zap.S().Errorf("Error starting the server")
 	}
 
 	// adding sleep to avoid race condition of connection refused.

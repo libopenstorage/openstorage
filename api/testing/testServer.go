@@ -3,7 +3,7 @@ package testing
 import (
 	"github.com/golang/mock/gomock"
 	"github.com/kubernetes-csi/csi-test/utils"
-	"go.pedge.io/dlog"
+	"go.uber.org/zap"
 
 	client "github.com/libopenstorage/openstorage/api/client"
 	mockcluster "github.com/libopenstorage/openstorage/cluster/mock"
@@ -35,7 +35,7 @@ func newTestServer(driver string) *testServer {
 	})
 
 	if err != nil {
-		dlog.Errorf("Failed to add the driver [%s] for tests", driver)
+		zap.S().Errorf("Failed to add the driver [%s] for tests", driver)
 	}
 
 	// Register the mock driver

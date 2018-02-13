@@ -20,7 +20,7 @@ IF YOU CODE ON OPENSTORAGE, YOU ARE EXPECTED TO KNOW THIS. Just take the 20 minu
 
 ### Items
 
-* Use [dlog](https://go.pedge.io/dlog) for logging.
+* Use [zap](https://github.com/uber-go/zap) for logging.
 
 * File order:
 
@@ -92,7 +92,7 @@ func (r *runner) hello(i int) {
   return r.something.Hello(i)
 }
 ```
-              
+
 * Most structs that have functions attached have a separate file with the private struct definition, private constructor, and public functions, then private functions. The runner struct above is an example.
 
 * Use struct pointers in general instead of structs. It's a debate, but not for now.
@@ -144,7 +144,7 @@ type Volume struct {
 
 //yes
 type Volume struct {
-  VolumeID string  
+  VolumeID string
 }
 ```
 
@@ -177,7 +177,7 @@ if err := foo(); err != nil {
   return nil, err
 }
 ```
-    
+
 * Empty structs:
 
 ```go

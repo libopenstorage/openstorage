@@ -5,8 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"go.pedge.io/dlog"
-
 	"github.com/libopenstorage/openstorage/api"
 	volumeclient "github.com/libopenstorage/openstorage/api/client/volume"
 	"github.com/libopenstorage/openstorage/api/server"
@@ -19,10 +17,6 @@ import (
 var (
 	testPath = string("/tmp/openstorage_client_test")
 )
-
-func init() {
-	dlog.SetLevel(dlog.LevelDebug)
-}
 
 func makeRequest(t *testing.T) {
 	versions, err := volumeclient.GetSupportedDriverVersions(nfs.Name, "")

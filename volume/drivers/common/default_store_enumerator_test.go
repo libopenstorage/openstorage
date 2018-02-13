@@ -3,7 +3,7 @@ package common
 import (
 	"testing"
 
-	"go.pedge.io/dlog"
+	"go.uber.org/zap"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
@@ -18,12 +18,12 @@ var (
 )
 
 func init() {
-	kv, err := kvdb.New(mem.Name, "driver_test", []string{}, nil, dlog.Panicf)
+	kv, err := kvdb.New(mem.Name, "driver_test", []string{}, nil, zap.S().Panicf)
 	if err != nil {
-		dlog.Panicf("Failed to initialize KVDB")
+		zap.S().Panicf("Failed to initialize KVDB")
 	}
 	if err := kvdb.SetInstance(kv); err != nil {
-		dlog.Panicf("Failed to set KVDB instance")
+		zap.S().Panicf("Failed to set KVDB instance")
 	}
 	testEnumerator = NewDefaultStoreEnumerator("enumerator_test", kv)
 }

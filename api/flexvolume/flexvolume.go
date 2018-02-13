@@ -6,14 +6,14 @@ import (
 	"math"
 	"net"
 
+	"go.uber.org/zap"
+
 	"google.golang.org/grpc"
 
 	"github.com/libopenstorage/openstorage/pkg/flexvolume"
 	"github.com/libopenstorage/openstorage/pkg/mount"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
-
-	"go.pedge.io/dlog"
 )
 
 const (
@@ -63,7 +63,7 @@ func (c *flexVolumeClient) Attach(jsonOptions map[string]string) error {
 func (c *flexVolumeClient) Detach(mountDevice string, options map[string]string) error {
 	driverName, ok := deviceDriverMap[mountDevice]
 	if !ok {
-		dlog.Infof("Could not find driver for (%v). Resorting to default driver ", mountDevice)
+		zap.S().Infof("Could not find driver for (%v). Resorting to default driver ", mountDevice)
 		driverName = c.defaultDriver
 	}
 	driver, err := c.getVolumeDriver(driverName)
@@ -96,7 +96,7 @@ func (c *flexVolumeClient) Mount(targetMountDir string, mountDevice string,
 	// Update the deviceDriverMap
 	mountManager, err := mount.New(mount.DeviceMount, nil, []string{""}, nil, []string{}, "")
 	if err != nil {
-		dlog.Infof("Could not read mountpoints from /proc/self/mountinfo. Device - Driver mapping not saved!")
+		zap.S().Infof("Could not read mountpoints from /proc/self/mountinfo. Device - Driver mapping not saved!")
 		return nil
 	}
 	sourcePath, err := mountManager.GetSourcePath(targetMountDir)
@@ -119,7 +119,7 @@ func (c *flexVolumeClient) Unmount(mountDir string, options map[string]string) e
 	}
 	driverName, ok := deviceDriverMap[mountDevice]
 	if !ok {
-		dlog.Infof("Could not find driver for (%v). Resorting to default driver. ", mountDevice)
+		zap.S().Infof("Could not find driver for (%v). Resorting to default driver. ", mountDevice)
 		driverName = c.defaultDriver
 	}
 	driver, err := c.getVolumeDriver(driverName)
@@ -152,7 +152,7 @@ func StartFlexVolumeAPI(port uint16, defaultDriver string) error {
 	}
 	go func() {
 		if err := grpcServer.Serve(listener); err != nil {
-			dlog.Errorln(err.Error())
+			zap.S().Error(err.Error())
 		}
 	}()
 	return nil

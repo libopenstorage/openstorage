@@ -4,8 +4,8 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/flexvolume"
 	"github.com/spf13/cobra"
 	"go.pedge.io/env"
-	"go.pedge.io/lion/env"
 	"go.pedge.io/pkg/cobra"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
 
@@ -19,9 +19,12 @@ func main() {
 
 func do(appEnvObj interface{}) error {
 	appEnv := appEnvObj.(*appEnv)
-	if err := envlion.Setup(); err != nil {
-		return err
+
+	logger, err := zap.NewProduction()
+	if err != nil {
+		panic(err.Error())
 	}
+	zap.ReplaceGlobals(logger)
 
 	initCmd := &cobra.Command{
 		Use: "init",
