@@ -18,7 +18,7 @@ func TestSetGetNode(t *testing.T) {
 	ctx := context.Background()
 	ctx, cancel := context.WithTimeout(ctx, time.Minute)
 	defer cancel()
-	manager, err := newManager(ctx, kv)
+	manager, err := NewManager(ctx, kv)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -44,17 +44,5 @@ func TestSetGetNode(t *testing.T) {
 	// compare expected and received
 	if !reflect.DeepEqual(expectedConf, receivedConf) {
 		t.Fatal("expected and received values are not deep equal")
-	}
-
-Loop1:
-	for i := 0; i < 10; i++ {
-		t := time.Now()
-		select {
-		case <-time.After(time.Millisecond * 100):
-			manager.wait()
-			if time.Since(t) > time.Second { // done waiting for callback execution
-				break Loop1
-			}
-		}
 	}
 }
