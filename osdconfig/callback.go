@@ -1,10 +1,11 @@
 package osdconfig
 
 import (
-	"errors"
-
+	"container/heap"
 	"context"
 	"encoding/json"
+	"errors"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/portworx/kvdb"
@@ -13,53 +14,75 @@ import (
 // cb is a callback to be registered with kvdb.
 // this callback simply receives data from kvdb and reflects it on a channel it receives in opaque
 func cb(prefix string, opaque interface{}, kvp *kvdb.KVPair, err error) error {
-	c, ok := opaque.(*DataToKvdb)
+	t := time.Now().UnixNano()
+	c, ok := opaque.(*dataToKvdb)
 	if !ok {
 		return errors.New("opaque value type is incorrect")
 	}
 
-	wd := new(DataWrite)
+	wd := new(dataWrite)
 	if kvp != nil {
 		wd.Key = kvp.Key
 		wd.Value = kvp.Value
 	}
 	wd.Type = c.Type
 	wd.Err = err
+	wd.Time = t
+
+	// push all updates into a heap and never block
+	c.cbh.Lock()
+	heap.Push(c.cbh, wd)
+	n := c.cbh.Len()
+	c.cbh.Unlock()
+
+	// debug log
+	logrus.WithField("source", sourceKV).
+		WithField("len", n).
+		Debug(msgHeapStatus)
+
+	// select statement below is never supposed to block, however,
+	// it is required that it prioritizes trigger, when both writer
+	//, i.e., this function, and the reader on the other end are in
+	// lock step ensuring that jobs are served right away if they can.
+	// However, if jobs are currently being processed and none can be
+	// served right away, this function simply moves on by putting job
+	// in the heap
 	select {
-	case c.wd <- wd:
-		return nil
 	case <-c.ctx.Done():
-		return errors.New("context done")
+	case c.trigger <- struct{}{}:
+	default:
 	}
+
+	return nil
 }
 
 // getCallback build a function literal that can be registered.
 // This is a helper util function for users of this library who wish to register callbacks of following forms:
 // func(config *ClusterConfig) error and func(config *NodeConfig) error
-func getCallback(name string, funcLiteral interface{}) (func(ctx context.Context, opt interface{}) (chan<- *DataWrite, <-chan *DataRead), error) {
-	var watcherType Watcher
+func getCallback(name string, funcLiteral interface{}) (func(ctx context.Context, opt interface{}) (chan<- *dataWrite, <-chan *dataRead), error) {
+	var watcherType Band
 
 	// determine the watcher type based on funcLiteral type
 	// and error out if funcLiteral type is not acceptable
 	switch funcLiteral.(type) {
 	case func(conifg *ClusterConfig) error:
-		watcherType = ClusterWatcher
+		watcherType = TuneCluster
 	case func(config *NodeConfig) error:
-		watcherType = NodeWatcher
+		watcherType = TuneNode
 	default:
 		return nil, errors.New("invalid funcLiteral signature")
 	}
 
 	// define the behavior of native callback that can be registered with osdconfig
-	f := func(ctx context.Context, opt interface{}) (chan<- *DataWrite, <-chan *DataRead) {
-		writeChan := make(chan *DataWrite)
-		readChan := make(chan *DataRead)
+	f := func(ctx context.Context, opt interface{}) (chan<- *dataWrite, <-chan *dataRead) {
+		writeChan := make(chan *dataWrite)
+		readChan := make(chan *dataRead)
 
 		var D interface{}
 		switch watcherType {
-		case ClusterWatcher:
+		case TuneCluster:
 			D = new(ClusterConfig)
-		case NodeWatcher:
+		case TuneNode:
 			D = new(NodeConfig)
 		}
 
@@ -73,7 +96,9 @@ func getCallback(name string, funcLiteral interface{}) (func(ctx context.Context
 					b = msg.Value
 				}
 			case <-ctx.Done():
-				logrus.Info("context cancellation received in: ", name)
+				logrus.WithField("source", sourceCallback).
+					WithField("callback", name).
+					Warn(msgCtxCancelled)
 				return
 			}
 
@@ -87,21 +112,21 @@ func getCallback(name string, funcLiteral interface{}) (func(ctx context.Context
 				}
 
 				if D == nil {
-					c <- errors.New("invalid data received")
+					c <- errors.New(msgDataError)
 					return
 				}
 
 				switch watcherType {
-				case ClusterWatcher:
+				case TuneCluster:
 					c <- funcLiteral.(func(conifg *ClusterConfig) error)(D.(*ClusterConfig))
-				case NodeWatcher:
+				case TuneNode:
 					c <- funcLiteral.(func(conifg *NodeConfig) error)(D.(*NodeConfig))
 				}
 
 			}(err_ch)
 
 			// prepare data to be send back
-			d := new(DataRead)
+			d := new(dataRead)
 			d.Name = name
 
 			// wait for user function to complete or context to be done
@@ -112,7 +137,9 @@ func getCallback(name string, funcLiteral interface{}) (func(ctx context.Context
 					logrus.Error(err)
 				}
 			case <-ctx.Done():
-				logrus.Info("context cancellation received in: ", name)
+				logrus.WithField("source", sourceCallback).
+					WithField("callback", name).
+					Warn(msgCtxCancelled)
 				return
 			}
 
@@ -121,7 +148,9 @@ func getCallback(name string, funcLiteral interface{}) (func(ctx context.Context
 			case readChan <- d:
 				return
 			case <-ctx.Done():
-				logrus.Info("context cancellation received in: ", name)
+				logrus.WithField("source", sourceCallback).
+					WithField("callback", name).
+					Warn(msgCtxCancelled)
 				return
 			}
 		}()

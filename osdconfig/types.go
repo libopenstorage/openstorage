@@ -3,8 +3,9 @@ package osdconfig
 import (
 	"context"
 	"sync"
-
 	"time"
+
+	"net/http"
 
 	"github.com/portworx/kvdb"
 )
@@ -17,17 +18,17 @@ type configManager struct {
 	// hashmap for callback bookkeeping
 	cb map[string]*callbackData
 
-	// value to be passed to callback
-	opt interface{}
-
 	// execution status
 	status map[string]*Status
 
-	//
-	dataToCallback chan *DataWrite
+	// timestamp of last update
+	lu *lastUpdate
 
-	// placeholder for parent context
-	parentContext context.Context
+	// trigger between kvdb callback and listener
+	trigger chan struct{}
+
+	// heap for storing job queue
+	jobs *callbackHeap
 
 	// global context (derived from parent context)
 	ctx    context.Context
@@ -44,6 +45,13 @@ type configManager struct {
 	sync.Mutex
 }
 
+// last update stores timestamp of last update based on a key
+// and has a mutex to lock
+type lastUpdate struct {
+	Time map[string]int64
+	sync.Mutex
+}
+
 // osdconfigError is for declaring error strings
 type osdconfigError string
 
@@ -52,8 +60,8 @@ func (err osdconfigError) Error() string {
 	return string(err)
 }
 
-// Watcher is a classifier for registering function
-type Watcher string
+// Band is a classifier for registering function
+type Band string
 
 // Status stores status of execution
 type Status struct {
@@ -61,17 +69,22 @@ type Status struct {
 	Duration time.Duration
 }
 
-// DataToKvdb is data to be sent to kvdb as a state to run on
-type DataToKvdb struct {
-	ctx  context.Context
-	Type Watcher
-	wd   chan *DataWrite
+// dataToKvdb is data to be sent to kvdb as a state to run on
+type dataToKvdb struct {
+	ctx     context.Context
+	Type    Band
+	trigger chan struct{}
+	cbh     *callbackHeap
+	sync.Mutex
 }
 
-// DataWrite is data to be sent to callbacks
+// dataWrite is data to be sent to callbacks
 // The contents here are populated based on what is received from kvdb
 // Callback sends an instance of this on a channel that others can only write on
-type DataWrite struct {
+type dataWrite struct {
+	// time.UninxNano() timestamp
+	Time int64
+
 	// kvdb key received in kvdb.KvPair
 	Key string
 
@@ -79,15 +92,15 @@ type DataWrite struct {
 	Value []byte
 
 	// Type
-	Type Watcher
+	Type Band
 
 	// kvdb error received in callback executed by kvdb
 	Err error
 }
 
-// DataRead is data to be received from callback at callback completion
+// dataRead is data to be received from callback at callback completion
 // Callback sends an instance of this on a channel that can others can only read from
-type DataRead struct {
+type dataRead struct {
 	// name of the callback
 	Name string
 
@@ -98,11 +111,24 @@ type DataRead struct {
 // callbackData is callback metadata required for callback management
 type callbackData struct {
 	// functional literal that is registered
-	f func(ctx context.Context, opt interface{}) (chan<- *DataWrite, <-chan *DataRead)
+	f func(ctx context.Context, opt interface{}) (chan<- *dataWrite, <-chan *dataRead)
 
 	// value to be passed to the function during execution
 	opt interface{}
 
 	// type of watcher
-	Type Watcher
+	Type Band
+}
+
+// callbackHeap is a heap for storing data from kvdb callback executions
+type callbackHeap struct {
+	jobHeap
+	sync.Mutex
+}
+
+// RESTEndPoint is a struct containing REST endpoint details
+type Routes struct {
+	Method string
+	Path   string
+	Fn     func(w http.ResponseWriter, r *http.Request)
 }

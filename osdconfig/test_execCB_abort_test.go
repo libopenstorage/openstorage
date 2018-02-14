@@ -29,7 +29,7 @@ func TestExecCBAbort(t *testing.T) {
 	names := []string{"f0", "f1", "f2", "f3", "f4"}
 	for i, name := range names {
 		name := name
-		if err := manager.register(name, ClusterWatcher, i, newCallback(name, 0, 3000)); err != nil {
+		if err := manager.register(name, TuneCluster, i, newCallback(name, 0, 3000)); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -37,7 +37,7 @@ func TestExecCBAbort(t *testing.T) {
 	names = []string{"f5", "f6", "f7", "f8", "f9"}
 	for i, name := range names {
 		name := name
-		if err := manager.register(name, ClusterWatcher, i, newCallback(name, 5000, 8000)); err != nil {
+		if err := manager.register(name, TuneCluster, i, newCallback(name, 5000, 8000)); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -45,8 +45,8 @@ func TestExecCBAbort(t *testing.T) {
 	t0 := time.Now()
 
 	// execute callbacks manually
-	wd := new(DataWrite)
-	wd.Type = ClusterWatcher // only trigger cluster watcher callbacks
+	wd := new(dataWrite)
+	wd.Type = TuneCluster // only trigger cluster watcher callbacks
 	manager.run(wd)
 	// abort after 3 second
 	go func() { time.Sleep(time.Second * 3); manager.abort() }()
