@@ -10,48 +10,9 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	clusterclient "github.com/libopenstorage/openstorage/api/client/cluster"
 	"github.com/libopenstorage/openstorage/cluster"
-	mockcluster "github.com/libopenstorage/openstorage/cluster/mock"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/golang/mock/gomock"
-	"github.com/kubernetes-csi/csi-test/utils"
 )
 
-type testCluster struct {
-	c       *mockcluster.MockCluster
-	mc      *gomock.Controller
-	oldInst func() (cluster.Cluster, error)
-}
-
-func newTestClutser(t *testing.T) *testCluster {
-	tester := &testCluster{}
-
-	// Save already set value of cluster.Inst to set it back
-	// when we finish the tests by the defer()
-	tester.oldInst = cluster.Inst
-
-	// Create mock controller
-	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
-
-	// Create a new mock cluster
-	tester.c = mockcluster.NewMockCluster(tester.mc)
-
-	// Override cluster.Inst to return our mock cluster
-	cluster.Inst = func() (cluster.Cluster, error) {
-		return tester.c, nil
-	}
-
-	return tester
-}
-
-func (c *testCluster) MockCluster() *mockcluster.MockCluster {
-	return c.c
-}
-
-func (c *testCluster) Finish() {
-	cluster.Inst = c.oldInst
-	c.mc.Finish()
-}
 func TestClusterEnumerateSuccess(t *testing.T) {
 
 	// Create a new global test cluster

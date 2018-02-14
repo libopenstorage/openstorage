@@ -12,15 +12,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const (
-	version = "v1"
-)
-
 func TestVolumeCreateSuccess(t *testing.T) {
 
 	var err error
 
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -58,7 +54,7 @@ func TestVolumeCreateFailed(t *testing.T) {
 
 	var err error
 
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -90,7 +86,7 @@ func TestVolumeDeleteSuccess(t *testing.T) {
 
 	var err error
 
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -115,7 +111,7 @@ func TestVolumeDeleteSuccess(t *testing.T) {
 func TestVolumeDeleteFailed(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -141,7 +137,7 @@ func TestVolumeDeleteFailed(t *testing.T) {
 func TestVolumeSnapshotCreateSuccess(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -173,10 +169,10 @@ func TestVolumeSnapshotCreateSuccess(t *testing.T) {
 	assert.EqualValues(t, id, res)
 }
 
-func TestVolumeSnapshotCreateFailed(testObj *testing.T) {
+func TestVolumeSnapshotCreateFailed(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(testObj)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -186,7 +182,7 @@ func TestVolumeSnapshotCreateFailed(testObj *testing.T) {
 
 	client, err := volumeclient.NewDriverClient(ts.URL, mockDriverName, version, mockDriverName)
 
-	assert.Nil(testObj, err)
+	assert.Nil(t, err)
 
 	req := &api.SnapCreateRequest{Id: id,
 		Locator:  &api.VolumeLocator{Name: name},
@@ -204,15 +200,15 @@ func TestVolumeSnapshotCreateFailed(testObj *testing.T) {
 
 	res, err := driverclient.Snapshot(req.GetId(), req.GetReadonly(), req.GetLocator())
 
-	assert.NotNil(testObj, err)
-	assert.Contains(testObj, err.Error(), "error in snapshot create")
-	assert.EqualValues(testObj, "", res)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "error in snapshot create")
+	assert.EqualValues(t, "", res)
 }
 
 func TestVolumeInspectSuccess(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -259,7 +255,7 @@ func TestVolumeInspectSuccess(t *testing.T) {
 func TestVolumeInspectFailed(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -288,7 +284,7 @@ func TestVolumeInspectFailed(t *testing.T) {
 func TestVolumeSetSuccess(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -344,7 +340,7 @@ func TestVolumeSetSuccess(t *testing.T) {
 func TestVolumeSetFailed(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -385,7 +381,7 @@ func TestVolumeSetFailed(t *testing.T) {
 func TestVolumeAttachSuccess(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -439,7 +435,7 @@ func TestVolumeAttachSuccess(t *testing.T) {
 func TestVolumeAttachFailed(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -478,7 +474,7 @@ func TestVolumeAttachFailed(t *testing.T) {
 func TestVolumeDetachSuccess(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -532,7 +528,7 @@ func TestVolumeDetachSuccess(t *testing.T) {
 func TestVolumeDetachFailed(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -570,7 +566,7 @@ func TestVolumeDetachFailed(t *testing.T) {
 func TestVolumeMountSuccess(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -626,7 +622,7 @@ func TestVolumeMountSuccess(t *testing.T) {
 func TestVolumeMountFailedNoMountPath(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -660,7 +656,7 @@ func TestVolumeMountFailedNoMountPath(t *testing.T) {
 func TestVolumeStatsSuccess(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -694,7 +690,7 @@ func TestVolumeStatsSuccess(t *testing.T) {
 func TestVolumeStatsFailed(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -723,7 +719,7 @@ func TestVolumeStatsFailed(t *testing.T) {
 func TestVolumeUnmountSuccess(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -779,7 +775,7 @@ func TestVolumeUnmountSuccess(t *testing.T) {
 func TestVolumeUnmountFailed(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -818,7 +814,7 @@ func TestVolumeUnmountFailed(t *testing.T) {
 func TestVolumeQuiesceSuccess(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -845,7 +841,7 @@ func TestVolumeQuiesceSuccess(t *testing.T) {
 func TestVolumeQuiesceFailed(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -874,7 +870,7 @@ func TestVolumeQuiesceFailed(t *testing.T) {
 /* TODO(ram-infrac) : Test case is failing, recheck
 func TestVolumeUnquiesceSuccess(t *testing.T) {
 
-        ts, testVolDriver := Setup(t)
+        ts, testVolDriver := testRestServer(t)
 
 	ts.Close()
 	testVolDriver.Stop()
@@ -901,7 +897,7 @@ func TestVolumeUnquiesceSuccess(t *testing.T) {
 func TestVolumeUnquiesceFailed(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -927,7 +923,7 @@ func TestVolumeUnquiesceFailed(t *testing.T) {
 func TestVolumeRestoreSuccess(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -954,7 +950,7 @@ func TestVolumeRestoreSuccess(t *testing.T) {
 func TestVolumeRestoreFailed(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -981,7 +977,7 @@ func TestVolumeRestoreFailed(t *testing.T) {
 func TestVolumeUsedSizeSuccess(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -1008,7 +1004,7 @@ func TestVolumeUsedSizeSuccess(t *testing.T) {
 func TestVolumeUsedSizeFailed(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -1035,7 +1031,7 @@ func TestVolumeUsedSizeFailed(t *testing.T) {
 func TestVolumeEnumerateSuccess(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -1087,7 +1083,7 @@ func TestVolumeEnumerateSuccess(t *testing.T) {
 func TestVolumeEnumerateFailed(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -1125,7 +1121,7 @@ func TestVolumeEnumerateFailed(t *testing.T) {
 func TestVolumeSnapshotEnumerateSuccess(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -1173,7 +1169,7 @@ func TestVolumeSnapshotEnumerateSuccess(t *testing.T) {
 func TestVolumeSnapshotEnumerateFailed(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -1208,7 +1204,7 @@ func TestVolumeSnapshotEnumerateFailed(t *testing.T) {
 func TestVolumeGetActiveRequestsSuccess(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -1248,7 +1244,7 @@ func TestVolumeGetActiveRequestsSuccess(t *testing.T) {
 func TestVolumeGetActiveRequestsFailed(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -1273,7 +1269,7 @@ func TestVolumeGetActiveRequestsFailed(t *testing.T) {
 func TestCredsCreateSuccess(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -1308,7 +1304,7 @@ func TestCredsCreateSuccess(t *testing.T) {
 func TestCredsCreateFailed(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -1344,7 +1340,7 @@ func TestCredsCreateFailed(t *testing.T) {
 func TestCredsEnumerateSuccess(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -1375,7 +1371,7 @@ func TestCredsEnumerateSuccess(t *testing.T) {
 func TestCredsEnumerateFailed(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -1402,7 +1398,7 @@ func TestCredsEnumerateFailed(t *testing.T) {
 func TestCredsValidateSuccess(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -1428,7 +1424,7 @@ func TestCredsValidateSuccess(t *testing.T) {
 func TestCredsValidateFailed(t *testing.T) {
 
 	var err error
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 
 	defer ts.Close()
 	defer testVolDriver.Stop()

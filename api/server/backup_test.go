@@ -2,15 +2,16 @@ package server
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/libopenstorage/openstorage/api"
 	client "github.com/libopenstorage/openstorage/api/client/volume"
 )
 
 func TestClientBackup(t *testing.T) {
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 	defer ts.Close()
 	defer testVolDriver.Stop()
 
@@ -43,7 +44,7 @@ func TestClientBackup(t *testing.T) {
 }
 
 func TestClientBackupRestore(t *testing.T) {
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 	defer ts.Close()
 	defer testVolDriver.Stop()
 
@@ -73,7 +74,7 @@ func TestClientBackupRestore(t *testing.T) {
 }
 
 func TestClientBackupDelete(t *testing.T) {
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 	defer ts.Close()
 	defer testVolDriver.Stop()
 
@@ -102,7 +103,7 @@ func TestClientBackupDelete(t *testing.T) {
 }
 
 func TestClientBackupEnumerate(t *testing.T) {
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 	defer ts.Close()
 	defer testVolDriver.Stop()
 
@@ -129,7 +130,7 @@ func TestClientBackupEnumerate(t *testing.T) {
 }
 
 func TestClientBackupStatus(t *testing.T) {
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 	defer ts.Close()
 	defer testVolDriver.Stop()
 
@@ -155,7 +156,7 @@ func TestClientBackupStatus(t *testing.T) {
 }
 
 func TestClientBackupCatalogue(t *testing.T) {
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 	defer ts.Close()
 	defer testVolDriver.Stop()
 
@@ -185,7 +186,7 @@ func TestClientBackupCatalogue(t *testing.T) {
 }
 
 func TestClientBackupHistory(t *testing.T) {
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 	defer ts.Close()
 	defer testVolDriver.Stop()
 
@@ -211,7 +212,7 @@ func TestClientBackupHistory(t *testing.T) {
 }
 
 func TestClientBackupStateChange(t *testing.T) {
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 	defer ts.Close()
 	defer testVolDriver.Stop()
 
@@ -242,7 +243,7 @@ func TestClientBackupStateChange(t *testing.T) {
 }
 
 func TestClientBackupSchedCreate(t *testing.T) {
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 	defer ts.Close()
 	defer testVolDriver.Stop()
 
@@ -277,7 +278,7 @@ func TestClientBackupSchedCreate(t *testing.T) {
 }
 
 func TestClientBackupSchedDelete(t *testing.T) {
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 	defer ts.Close()
 	defer testVolDriver.Stop()
 
@@ -304,7 +305,7 @@ func TestClientBackupSchedDelete(t *testing.T) {
 }
 
 func TestClientBackupSchedEnumerate(t *testing.T) {
-	ts, testVolDriver := Setup(t)
+	ts, testVolDriver := testRestServer(t)
 	defer ts.Close()
 	defer testVolDriver.Stop()
 
