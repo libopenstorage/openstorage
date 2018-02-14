@@ -146,9 +146,10 @@ func processErrorForVolSetResponse(action *api.VolumeStateAction, err error, res
 // - application/json
 // parameters:
 // - name: id
-//   in: query
+//   in: path
 //   description: id to get volume with
 //   required: true
+//   type: integer
 // - name: spec
 //   in: body
 //   description: spec to set volume with
@@ -257,9 +258,10 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 // - application/json
 // parameters:
 // - name: id
-//   in: query
+//   in: path
 //   description: id to get volume with
 //   required: true
+//   type: integer
 // responses:
 //   '200':
 //     description: volume get response
@@ -303,6 +305,7 @@ func (vd *volAPI) inspect(w http.ResponseWriter, r *http.Request) {
 //   in: path
 //   description: id to get volume with
 //   required: true
+//   type: integer
 // responses:
 //   '200':
 //     description: volume set response
@@ -344,6 +347,8 @@ func (vd *volAPI) delete(w http.ResponseWriter, r *http.Request) {
 // Enumerate all volumes
 //
 // ---
+// consumes:
+// - multipart/form-data
 // produces:
 // - application/json
 // parameters:
@@ -354,18 +359,18 @@ func (vd *volAPI) delete(w http.ResponseWriter, r *http.Request) {
 //   type: string
 // - name: Label
 //   in: formData
-//   description: Comma separated name value pairs
+//   description: |
+//    Comma separated name value pairs
+//    example: {"label1","label2"}
 //   required: false
-//   schema:
-//    type: object
-//	  example: {"label1","label2"} # Example value
+//   type: string
 // - name: ConfigLabel
 //   in: formData
-//   description: Comma separated name value pairs
+//   description: |
+//    Comma separated name value pairs
+//    example: {"label1","label2"}
 //   required: false
-//   schema:
-//    type: object
-//	  example: {"label1","label2"} # Example value
+//   type: string
 // - name: VolumeID
 //   in: query
 //   description: Volume UUID
@@ -445,6 +450,7 @@ func (vd *volAPI) enumerate(w http.ResponseWriter, r *http.Request) {
 //   in: query
 //   description: id to get volume with
 //   required: true
+//   type: integer
 // - name: spec
 //   in: body
 //   description: spec to create snap with
@@ -499,6 +505,7 @@ func (vd *volAPI) snap(w http.ResponseWriter, r *http.Request) {
 //   in: path
 //   description: id of snapshot to restore
 //   required: true
+//   type: integer
 // responses:
 //  '200':
 //    description: Restored volume
@@ -547,6 +554,8 @@ func (vd *volAPI) restore(w http.ResponseWriter, r *http.Request) {
 // Enumerate snapshots.
 //
 // ---
+// consumes:
+// - multipart/form-data
 // produces:
 // - application/json
 // parameters:
@@ -557,18 +566,18 @@ func (vd *volAPI) restore(w http.ResponseWriter, r *http.Request) {
 //   type: string
 // - name: VolumeLabels
 //   in: formData
-//   description: Comma separated volume labels
+//   description: |
+//    Comma separated volume labels
+//    example: {"label1","label2"}
 //   required: false
-//   schema:
-//    type: object
-//	  example: {"label1","label2"} # Example value
+//   type: string
 // - name: SnapLabels
 //   in: formData
-//   description: Comma separated snap labels
+//   description: |
+//    Comma separated snap labels
+//    example: {"label1","label2"}
 //   required: false
-//   schema:
-//    type: object
-//	  example: {"label1","label2"} # Example value
+//   type: string
 // - name: uuid
 //   in: query
 //   description: Snap UUID
@@ -632,6 +641,7 @@ func (vd *volAPI) snapEnumerate(w http.ResponseWriter, r *http.Request) {
 //   in: path
 //   description: id to get volume with
 //   required: true
+//   type: integer
 // responses:
 //  '200':
 //   description: volume set response
@@ -688,6 +698,7 @@ func (vd *volAPI) stats(w http.ResponseWriter, r *http.Request) {
 //   in: path
 //   description: id to get volume with
 //   required: true
+//   type: integer
 // responses:
 //  '200':
 //   description: volume set response
@@ -730,6 +741,7 @@ func (vd *volAPI) usedsize(w http.ResponseWriter, r *http.Request) {
 //   in: path
 //   description: id to get volume with
 //   required: true
+//   type: integer
 // responses:
 //   '200':
 //     description: volume set response
@@ -767,6 +779,7 @@ func (vd *volAPI) requests(w http.ResponseWriter, r *http.Request) {
 //   in: path
 //   description: id to get volume with
 //   required: true
+//   type: integer
 // responses:
 //   '200':
 //     description: volume set response
@@ -831,6 +844,7 @@ func (vd *volAPI) quiesce(w http.ResponseWriter, r *http.Request) {
 //   in: path
 //   description: id to get volume with
 //   required: true
+//   type: integer
 // responses:
 //   '200':
 //     description: volume set response
@@ -864,25 +878,20 @@ func (vd *volAPI) unquiesce(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(volumeResponse)
 }
 
-// swagger:route GET /osd-volumes/versions volume versions listVersions
+// swagger:operation GET /osd-volumes/versions volume versions listVersions
 //
 // Lists API versions supported by this volumeDriver.
-//
-// This will show all supported versions of the API for this volumeDriver.
 //
 // ---
 // produces:
 // - application/json
-// parameters:
-// - name: id
-//   in: query
-//   description: id to get volume with
-//   required: true
 // responses:
 //   '200':
-//     description: volume set response
-//	   type: array
-//      items: string
+//      description: Supported versions
+//      schema:
+//         type: array
+//         items:
+//            type: string
 func (vd *volAPI) versions(w http.ResponseWriter, r *http.Request) {
 	versions := []string{
 		volume.APIVersion,

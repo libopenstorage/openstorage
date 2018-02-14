@@ -121,6 +121,7 @@ func (c *clusterApi) setSize(w http.ResponseWriter, r *http.Request) {
 //   in: path
 //   description: id to get node with
 //   required: true
+//   type: integer
 // responses:
 //   '200':
 //      description: a node
@@ -161,6 +162,7 @@ func (c *clusterApi) inspect(w http.ResponseWriter, r *http.Request) {
 //   in: query
 //   description: url to set loggingurl with
 //   required: true
+//   type: string
 // responses:
 //  '200':
 //    description: cluster response
@@ -348,6 +350,7 @@ func (c *clusterApi) nodeHealth(w http.ResponseWriter, r *http.Request) {
 //   in: path
 //   description: id of the node we want to check.
 //   required: true
+//   type: integer
 // responses:
 //   '200':
 //      description: node status of requested node
@@ -389,10 +392,12 @@ func (c *clusterApi) peerStatus(w http.ResponseWriter, r *http.Request) {
 //   in: path
 //   description: id to get node with
 //   required: true
+//   type: integer
 // - name: forceRemove
 //   in: query
 //   description: forceRemove node
 //   required: false
+//   type: boolean
 // responses:
 //   '200':
 //      description: delete node success
@@ -453,6 +458,7 @@ func (c *clusterApi) delete(w http.ResponseWriter, r *http.Request) {
 //   in: path
 //   description: id to get node with
 //   required: true
+//   type: integer
 // responses:
 //   '200':
 //      description: shutdown success
@@ -472,7 +478,7 @@ func (c *clusterApi) shutdown(w http.ResponseWriter, r *http.Request) {
 // - application/json
 // responses:
 //   '200':
-//      description: anode
+//      description: Supported versions
 //      schema:
 //         type: array
 //         items:
@@ -495,10 +501,15 @@ func (c *clusterApi) versions(w http.ResponseWriter, r *http.Request) {
 // parameters:
 // - name: resource
 //   in: path
-//   description: resourcetype to get alerts with
+//   description: |
+//    Resourcetype to get alerts with.
+//    0: All
+//    1: Volume
+//    2: Node
+//    3: Cluster
+//    4: Drive
 //   required: true
-//   schema:
-//    "$ref": "#/definitions/ResourceType"
+//   type: integer
 // responses:
 //   '200':
 //      description: Alerts object
@@ -568,14 +579,20 @@ func (c *clusterApi) enumerateAlerts(w http.ResponseWriter, r *http.Request) {
 // parameters:
 // - name: resource
 //   in: path
-//   description: resourcetype to get alerts with
+//   description: |
+//    resourcetype to get alerts with.
+//    0: All
+//    1: Volume
+//    2: Node
+//    3: Cluster
+//    4: Drive
 //   required: true
-//   schema:
-//    "$ref": "#/definitions/ResourceType"
+//   type: integer
 // - name: id
 //   in: path
 //   description: id to get alerts with
 //   required: true
+//   type: integer
 // responses:
 //   '200':
 //      description: Alerts object
@@ -613,14 +630,20 @@ func (c *clusterApi) clearAlert(w http.ResponseWriter, r *http.Request) {
 // parameters:
 // - name: resource
 //   in: path
-//   description: resourcetype to get alerts with
+//   description: |
+//    resourcetype to get alerts with.
+//    0: All
+//    1: Volume
+//    2: Node
+//    3: Cluster
+//    4: Drive
 //   required: true
-//   schema:
-//    "$ref": "#/definitions/ResourceType"
+//   type: integer
 // - name: id
 //   in: path
 //   description: id to get alerts with
 //   required: true
+//   type: integer
 // responses:
 //   '200':
 //      description: Alerts object
