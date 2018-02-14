@@ -2,12 +2,8 @@ package osdconfig
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"testing"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 func TestWatch(t *testing.T) {
@@ -44,38 +40,26 @@ func TestWatch(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// wait for exec to complete
 	time.Sleep(time.Second)
 
 }
 
 // clusterWatcher is an example callback function to watch on cluster config changes
 func clusterWatcher(config *ClusterConfig) error {
-	if jb, err := json.MarshalIndent(config, "", "  "); err != nil {
-		return err
-	} else {
-		fmt.Println(string(jb))
-		if config.ClusterId != "myClusterID" {
-			return errors.New("expected myClusterID, received " + config.ClusterId)
-			//panic(DataErr)
-		}
-		if config.Driver != "myDriver" {
-			return errors.New("expected myDriver, receive " + config.Driver)
-			//panic(DataErr)
-		}
+	if config.ClusterId != "myClusterID" {
+		panic(ErrorData)
+	}
+	if config.Driver != "myDriver" {
+		panic(ErrorData)
 	}
 	return nil
 }
 
 // nodeWatcher is an example callback function to watch on node config changes
 func nodeWatcher(config *NodeConfig) error {
-	if jb, err := json.MarshalIndent(config, "", "  "); err != nil {
-		return err
-	} else {
-		fmt.Println(string(jb))
-		if config.Network.DataIface != "dataIface" {
-			return errors.New("expected dataIface, received " + config.Network.DataIface)
-			//panic(DataErr)
-		}
+	if config.Network.DataIface != "dataIface" {
+		panic(ErrorData)
 	}
 	return nil
 }
