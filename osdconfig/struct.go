@@ -26,6 +26,7 @@ type KvdbConfig struct {
 }
 
 // ClusterConfig is a cluster level config parameter struct
+// swagger:model
 type ClusterConfig struct {
 	Description    string         `json:"description,omitempty"`
 	Mode           string         `json:"mode,omitempty"`
