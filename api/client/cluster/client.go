@@ -324,7 +324,7 @@ func (c *clusterClient) SetNodeConf(config *osdconfig.NodeConfig) error {
 	return nil
 }
 
-func(c *clusterClient) WatchCluster(name string, cb func(config *osdconfig.ClusterConfig) error) error {
+func (c *clusterClient) WatchCluster(name string, cb func(config *osdconfig.ClusterConfig) error) error {
 	return nil
 }
 
