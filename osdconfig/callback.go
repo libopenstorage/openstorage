@@ -1,132 +1,67 @@
 package osdconfig
 
 import (
-	"errors"
-
-	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/portworx/kvdb"
 )
 
-// cb is a callback to be registered with kvdb.
-// this callback simply receives data from kvdb and reflects it on a channel it receives in opaque
-func cb(prefix string, opaque interface{}, kvp *kvdb.KVPair, err error) error {
-	c, ok := opaque.(*DataToKvdb)
-	if !ok {
-		return errors.New("opaque value type is incorrect")
+// execClusterCallbacks executes a registered cluster watcher
+func (manager *configManager) execClusterCallbacks(f CallbackClusterConfigFunc, data *data) {
+	config := new(ClusterConfig)
+	if err := json.Unmarshal(data.Value, config); err != nil {
+		logrus.Error(err)
+		return
 	}
 
-	wd := new(DataWrite)
-	if kvp != nil {
-		wd.Key = kvp.Key
-		wd.Value = kvp.Value
-	}
-	wd.Type = c.Type
-	wd.Err = err
-	select {
-	case c.wd <- wd:
-		return nil
-	case <-c.ctx.Done():
-		return errors.New("context done")
-	}
+	f(config)
 }
 
-// getCallback build a function literal that can be registered.
-// This is a helper util function for users of this library who wish to register callbacks of following forms:
-// func(config *ClusterConfig) error and func(config *NodeConfig) error
-func getCallback(name string, funcLiteral interface{}) (func(ctx context.Context, opt interface{}) (chan<- *DataWrite, <-chan *DataRead), error) {
-	var watcherType Watcher
-
-	// determine the watcher type based on funcLiteral type
-	// and error out if funcLiteral type is not acceptable
-	switch funcLiteral.(type) {
-	case func(conifg *ClusterConfig) error:
-		watcherType = ClusterWatcher
-	case func(config *NodeConfig) error:
-		watcherType = NodeWatcher
-	default:
-		return nil, errors.New("invalid funcLiteral signature")
+// execNodeCallbacks executes a registered node watcher
+func (manager *configManager) execNodeCallbacks(f CallbackNodeConfigFunc, data *data) {
+	config := new(NodeConfig)
+	if err := json.Unmarshal(data.Value, config); err != nil {
+		logrus.Error(err)
+		return
 	}
 
-	// define the behavior of native callback that can be registered with osdconfig
-	f := func(ctx context.Context, opt interface{}) (chan<- *DataWrite, <-chan *DataRead) {
-		writeChan := make(chan *DataWrite)
-		readChan := make(chan *DataRead)
+	f(config)
+}
 
-		var D interface{}
-		switch watcherType {
-		case ClusterWatcher:
-			D = new(ClusterConfig)
-		case NodeWatcher:
-			D = new(NodeConfig)
+// kvdbCallback is a callback to be registered with kvdb.
+// this callback simply receives data from kvdb and reflects it on a channel it receives in opaque
+func (manager *configManager) kvdbCallback(prefix string,
+	opaque interface{}, kvp *kvdb.KVPair, err error) error {
+	manager.Lock()
+	defer manager.Unlock()
+
+	c, ok := opaque.(*dataToKvdb)
+	if !ok {
+		return fmt.Errorf("opaque value type is incorrect")
+	}
+
+	x := new(data)
+	if kvp != nil {
+		x.Key = kvp.Key
+		x.Value = kvp.Value
+	}
+	x.Type = c.Type
+	switch c.Type {
+	case clusterWatcher:
+		for _, f := range manager.cbCluster {
+			go func(f1 CallbackClusterConfigFunc, wd *data) {
+				manager.execClusterCallbacks(f1, wd)
+			}(f, copyData(x))
 		}
-
-		var b []byte
-		go func() {
-			select {
-			case msg := <-writeChan:
-				if msg.Err != nil {
-					logrus.Error(msg.Err)
-				} else {
-					b = msg.Value
-				}
-			case <-ctx.Done():
-				logrus.Info("context cancellation received in: ", name)
-				return
-			}
-
-			// process data and execute user function in a goroutine
-			// receiving error in a channel
-			err_ch := make(chan error)
-			go func(c chan error) {
-				if err := json.Unmarshal(b, D); err != nil {
-					c <- err
-					return
-				}
-
-				if D == nil {
-					c <- errors.New("invalid data received")
-					return
-				}
-
-				switch watcherType {
-				case ClusterWatcher:
-					c <- funcLiteral.(func(conifg *ClusterConfig) error)(D.(*ClusterConfig))
-				case NodeWatcher:
-					c <- funcLiteral.(func(conifg *NodeConfig) error)(D.(*NodeConfig))
-				}
-
-			}(err_ch)
-
-			// prepare data to be send back
-			d := new(DataRead)
-			d.Name = name
-
-			// wait for user function to complete or context to be done
-			select {
-			case err := <-err_ch:
-				d.Err = err
-				if err != nil {
-					logrus.Error(err)
-				}
-			case <-ctx.Done():
-				logrus.Info("context cancellation received in: ", name)
-				return
-			}
-
-			// send data or exit on context cancellation
-			select {
-			case readChan <- d:
-				return
-			case <-ctx.Done():
-				logrus.Info("context cancellation received in: ", name)
-				return
-			}
-		}()
-		return writeChan, readChan
+	case nodeWatcher:
+		for _, f := range manager.cbNode {
+			go func(f1 CallbackNodeConfigFunc, wd *data) {
+				manager.execNodeCallbacks(f1, wd)
+			}(f, copyData(x))
+		}
 	}
 
-	return f, nil
+	return nil
 }
