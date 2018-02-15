@@ -15,8 +15,6 @@ import (
 	"sync"
 	"time"
 
-	"go.pedge.io/dlog"
-
 	"github.com/libopenstorage/gossip"
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
@@ -24,6 +22,7 @@ import (
 	"github.com/libopenstorage/openstorage/osdconfig"
 	"github.com/libopenstorage/systemutils"
 	"github.com/portworx/kvdb"
+	"go.pedge.io/dlog"
 )
 
 const (
@@ -1807,7 +1806,7 @@ func (c *ClusterManager) putNodeCacheEntry(nodeId string, node api.Node) {
 	c.nodeCache[nodeId] = node
 }
 
-// ClusterManager implements osdconfig.ClusterConfig
+// osdconfig.ConfigCaller compliance
 func (c *ClusterManager) GetClusterConf() (*osdconfig.ClusterConfig, error) {
 	return c.configManager.GetClusterConf()
 }
@@ -1822,12 +1821,4 @@ func (c *ClusterManager) SetClusterConf(config *osdconfig.ClusterConfig) error {
 
 func (c *ClusterManager) SetNodeConf(config *osdconfig.NodeConfig) error {
 	return c.configManager.SetNodeConf(config)
-}
-
-func (c *ClusterManager) WatchCluster(name string, cb func(config *osdconfig.ClusterConfig) error) error {
-	return c.configManager.WatchCluster(name, cb)
-}
-
-func (c *ClusterManager) WatchNode(name string, cb func(config *osdconfig.NodeConfig) error) error {
-	return c.configManager.WatchNode(name, cb)
 }

@@ -7,13 +7,12 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
 	"io/ioutil"
-
 	"github.com/gorilla/mux"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/osdconfig"
+	client "github.com/libopenstorage/openstorage/api/client/cluster"
 )
 
 const (
@@ -44,10 +43,10 @@ func (c *clusterApi) Routes() []*Route {
 		{verb: "GET", path: clusterPath("/alerts/{resource}", cluster.APIVersion), fn: c.enumerateAlerts},
 		{verb: "PUT", path: clusterPath("/alerts/{resource}/{id}", cluster.APIVersion), fn: c.clearAlert},
 		{verb: "DELETE", path: clusterPath("/alerts/{resource}/{id}", cluster.APIVersion), fn: c.eraseAlert},
-		{verb: "GET", path: clusterPath("/config/cluster", cluster.APIVersion), fn: c.getClusterConf},
-		{verb: "GET", path: clusterPath("/config/node/{id}", cluster.APIVersion), fn: c.getNodeConf},
-		{verb: "POST", path: clusterPath("/config/cluster", cluster.APIVersion), fn: c.setClusterConf},
-		{verb: "POST", path: clusterPath("/config/node", cluster.APIVersion), fn: c.setNodeConf},
+		{verb: "GET", path: clusterPath(client.UriCluster, cluster.APIVersion), fn: c.getClusterConf},
+		{verb: "GET", path: clusterPath(client.UriNode + "/{id}", cluster.APIVersion), fn: c.getNodeConf},
+		{verb: "POST", path: clusterPath(client.UriCluster, cluster.APIVersion), fn: c.setClusterConf},
+		{verb: "POST", path: clusterPath(client.UriNode, cluster.APIVersion), fn: c.setNodeConf},
 	}
 }
 

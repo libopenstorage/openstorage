@@ -1,11 +1,10 @@
 package cluster
 
 import (
+	"encoding/json"
 	"errors"
 	"strconv"
 	"time"
-
-	"encoding/json"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/client"
@@ -19,6 +18,8 @@ const (
 	managementurl   = "/managementurl"
 	fluentdhost     = "/fluentdconfig"
 	tunnelconfigurl = "/tunnelconfig"
+	UriCluster      = "/config/cluster"
+	UriNode         = "/config/node"
 )
 
 type clusterClient struct {
@@ -281,10 +282,10 @@ func (c *clusterClient) EraseAlert(resource api.ResourceType, alertID int64) err
 	return nil
 }
 
-// osdconfig interface compliance
+// osdconfig.ConfigCaller interface compliance
 func (c *clusterClient) GetClusterConf() (*osdconfig.ClusterConfig, error) {
 	config := new(osdconfig.ClusterConfig)
-	request := c.c.Get().Resource(clusterPath + "/config/cluster")
+	request := c.c.Get().Resource(clusterPath + UriCluster)
 	if err := request.Do().Unmarshal(config); err != nil {
 		return nil, err
 	}
@@ -293,7 +294,7 @@ func (c *clusterClient) GetClusterConf() (*osdconfig.ClusterConfig, error) {
 
 func (c *clusterClient) GetNodeConf(nodeID string) (*osdconfig.NodeConfig, error) {
 	config := new(osdconfig.NodeConfig)
-	request := c.c.Get().Resource(clusterPath + "/config/node/" + nodeID)
+	request := c.c.Get().Resource(clusterPath + UriNode + "/" + nodeID)
 	if err := request.Do().Unmarshal(config); err != nil {
 		return nil, err
 	}
@@ -305,7 +306,7 @@ func (c *clusterClient) SetClusterConf(config *osdconfig.ClusterConfig) error {
 	if err != nil {
 		return err
 	}
-	request := c.c.Post().Body(data).Resource(clusterPath + "/config/cluster")
+	request := c.c.Post().Body(data).Resource(clusterPath + UriCluster)
 	if err := request.Do().Error(); err != nil {
 		return err
 	}
@@ -317,17 +318,9 @@ func (c *clusterClient) SetNodeConf(config *osdconfig.NodeConfig) error {
 	if err != nil {
 		return err
 	}
-	request := c.c.Post().Body(data).Resource(clusterPath + "/config/node")
+	request := c.c.Post().Body(data).Resource(clusterPath + UriNode)
 	if err := request.Do().Error(); err != nil {
 		return err
 	}
-	return nil
-}
-
-func (c *clusterClient) WatchCluster(name string, cb func(config *osdconfig.ClusterConfig) error) error {
-	return nil
-}
-
-func (c *clusterClient) WatchNode(name string, cb func(config *osdconfig.NodeConfig) error) error {
 	return nil
 }

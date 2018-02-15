@@ -1,9 +1,14 @@
 // osdconfig is a package to work with distributed config parameters
 package osdconfig
 
-// A config manager interface allows management of osdconfig parameters
-// It defines setters, getters and callback management functions
+// ConfigManager is the overall osdconfig interface including callers and watchers
 type ConfigManager interface {
+	ConfigCaller
+	ConfigWatcher
+}
+
+// ConfigCaller interface defines the setters/getters for osdconfig
+type ConfigCaller interface {
 	// GetClusterConf fetches cluster configuration data from a backend such as kvdb
 	GetClusterConf() (*ClusterConfig, error)
 
@@ -19,7 +24,10 @@ type ConfigManager interface {
 	// It is assumed that the backend will notify the implementor of this interface
 	// when a change is triggered
 	SetNodeConf(config *NodeConfig) error
+}
 
+// ConfigWatcher defines watches on cluster and nodes
+type ConfigWatcher interface {
 	// WatchCluster registers a user defined function as callback watching for changes
 	// in the cluster configuration
 	WatchCluster(name string, cb func(config *ClusterConfig) error) error

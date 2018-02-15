@@ -377,27 +377,3 @@ func (m *MockCluster) UpdateLabels(arg0 map[string]string) error {
 func (mr *MockClusterMockRecorder) UpdateLabels(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateLabels", reflect.TypeOf((*MockCluster)(nil).UpdateLabels), arg0)
 }
-
-// WatchCluster mocks base method
-func (m *MockCluster) WatchCluster(arg0 string, arg1 func(*osdconfig.ClusterConfig) error) error {
-	ret := m.ctrl.Call(m, "WatchCluster", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// WatchCluster indicates an expected call of WatchCluster
-func (mr *MockClusterMockRecorder) WatchCluster(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WatchCluster", reflect.TypeOf((*MockCluster)(nil).WatchCluster), arg0, arg1)
-}
-
-// WatchNode mocks base method
-func (m *MockCluster) WatchNode(arg0 string, arg1 func(*osdconfig.NodeConfig) error) error {
-	ret := m.ctrl.Call(m, "WatchNode", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// WatchNode indicates an expected call of WatchNode
-func (mr *MockClusterMockRecorder) WatchNode(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WatchNode", reflect.TypeOf((*MockCluster)(nil).WatchNode), arg0, arg1)
-}
