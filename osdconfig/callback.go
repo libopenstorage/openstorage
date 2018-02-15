@@ -34,6 +34,9 @@ func (manager *configManager) execNodeCallbacks(f CallbackNodeConfigFunc, data *
 // this callback simply receives data from kvdb and reflects it on a channel it receives in opaque
 func (manager *configManager) kvdbCallback(prefix string,
 	opaque interface{}, kvp *kvdb.KVPair, err error) error {
+	manager.Lock()
+	defer manager.Unlock()
+
 	c, ok := opaque.(*dataToKvdb)
 	if !ok {
 		return fmt.Errorf("opaque value type is incorrect")
