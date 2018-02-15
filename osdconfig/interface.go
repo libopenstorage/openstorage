@@ -7,7 +7,7 @@ type ConfigManager interface {
 	// GetClusterConf fetches cluster configuration data from a backend such as kvdb
 	GetClusterConf() (*ClusterConfig, error)
 
-	// Fetch node configuration data using node id
+	// GetNodeConf fetches node configuration data using node id
 	GetNodeConf(nodeID string) (*NodeConfig, error)
 
 	// SetClusterConf pushes cluster configuration data to the backend
@@ -27,7 +27,4 @@ type ConfigManager interface {
 	// WatchNode registers a user defined function as callback watching for changes
 	// in the node configuration
 	WatchNode(name string, cb func(config *NodeConfig) error) error
-
-	// Close performs internal cleanup
-	Close()
 }
