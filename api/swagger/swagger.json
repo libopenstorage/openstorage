@@ -371,6 +371,102 @@
         }
       }
     },
+    "/config/cluster": {
+      "get": {
+        "description": "This will return the requested cluster configuration object",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "config"
+        ],
+        "summary": "Get cluster configuration.",
+        "operationId": "cluster",
+        "responses": {
+          "200": {
+            "description": "a cluster config",
+            "schema": {
+              "$ref": "#/definitions/ClusterConfig"
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "This will set the requested cluster configuration",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "config"
+        ],
+        "summary": "Set cluster configuration.",
+        "operationId": "cluster",
+        "parameters": [
+          {
+            "description": "cluster config json",
+            "name": "config",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ClusterConfig"
+            }
+          }
+        ]
+      }
+    },
+    "/config/node": {
+      "post": {
+        "description": "This will set the requested node configuration",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "config"
+        ],
+        "summary": "Set node configuration.",
+        "operationId": "node",
+        "parameters": [
+          {
+            "description": "node config json",
+            "name": "config",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/NodeConfig"
+            }
+          }
+        ]
+      }
+    },
+    "/config/node/{id}": {
+      "get": {
+        "description": "This will return the requested node configuration object",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "config"
+        ],
+        "summary": "Get node configuration.",
+        "operationId": "node",
+        "parameters": [
+          {
+            "description": "id to get node with",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "a node",
+            "schema": {
+              "$ref": "#/definitions/NodeConfig"
+            }
+          }
+        }
+      }
+    },
     "/loggingurl": {
       "put": {
         "description": "Set Logging url",
@@ -917,6 +1013,33 @@
     }
   },
   "definitions": {
+    "AWSConfig": {
+      "description": "AWS configuration parameters struct",
+      "type": "object",
+      "properties": {
+        "aws_access_key_id": {
+          "type": "string",
+          "x-go-name": "AwsAccessKeyId"
+        },
+        "aws_cmk": {
+          "type": "string",
+          "x-go-name": "AwsCmk"
+        },
+        "aws_region": {
+          "type": "string",
+          "x-go-name": "AwsRegion"
+        },
+        "aws_secret_access_key": {
+          "type": "string",
+          "x-go-name": "AwsSecretAccessKey"
+        },
+        "aws_secret_token_key": {
+          "type": "string",
+          "x-go-name": "AwsSecretTokenKey"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
+    },
     "ActiveRequest": {
       "type": "object",
       "properties": {
@@ -1447,6 +1570,94 @@
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
+    "ClusterConfig": {
+      "description": "ClusterConfig is a cluster level config parameter struct",
+      "type": "object",
+      "properties": {
+        "alerting_url": {
+          "type": "string",
+          "x-go-name": "AlertingUrl"
+        },
+        "bootstrap": {
+          "type": "boolean",
+          "x-go-name": "Bootstrap"
+        },
+        "callhome": {
+          "type": "boolean",
+          "x-go-name": "Callhome"
+        },
+        "cluster_id": {
+          "type": "string",
+          "x-go-name": "ClusterId"
+        },
+        "created": {
+          "type": "string",
+          "x-go-name": "Created"
+        },
+        "debug_level": {
+          "type": "string",
+          "x-go-name": "DebugLevel"
+        },
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
+        },
+        "domain": {
+          "type": "string",
+          "x-go-name": "Domain"
+        },
+        "driver": {
+          "type": "string",
+          "x-go-name": "Driver"
+        },
+        "generic": {
+          "type": "object",
+          "x-go-name": "Private"
+        },
+        "kvdb": {
+          "$ref": "#/definitions/KvdbConfig"
+        },
+        "logging_url": {
+          "type": "string",
+          "x-go-name": "LoggingUrl"
+        },
+        "mode": {
+          "type": "string",
+          "x-go-name": "Mode"
+        },
+        "multicontainer": {
+          "type": "boolean",
+          "x-go-name": "Multicontainer"
+        },
+        "nolh": {
+          "type": "boolean",
+          "x-go-name": "Nolh"
+        },
+        "scheduler": {
+          "type": "string",
+          "x-go-name": "Scheduler"
+        },
+        "secrets": {
+          "$ref": "#/definitions/SecretsConfig"
+        },
+        "tunnel_certs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "TunnelCerts"
+        },
+        "tunnel_end_point": {
+          "type": "string",
+          "x-go-name": "TunnelEndPoint"
+        },
+        "version": {
+          "type": "string",
+          "x-go-name": "Version"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
+    },
     "ClusterNotify": {
       "type": "integer",
       "format": "int32",
@@ -1559,6 +1770,63 @@
       "format": "int32",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
+    "KvdbConfig": {
+      "description": "KvdbConfig stores parameters defining kvdb configuration",
+      "type": "object",
+      "properties": {
+        "acl_token": {
+          "type": "string",
+          "x-go-name": "AclToken"
+        },
+        "ca_file": {
+          "type": "string",
+          "x-go-name": "CaFile"
+        },
+        "cert_file": {
+          "type": "string",
+          "x-go-name": "CertFile"
+        },
+        "client_cert_auth": {
+          "type": "string",
+          "x-go-name": "ClientCertAuth"
+        },
+        "kvdb_addr": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "KvdbAddr"
+        },
+        "password": {
+          "type": "string",
+          "x-go-name": "Password"
+        },
+        "trusted_ca_file": {
+          "type": "string",
+          "x-go-name": "TrustedCaFile"
+        },
+        "username": {
+          "type": "string",
+          "x-go-name": "Username"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
+    },
+    "NetworkConfig": {
+      "description": "NetworkConfig is a network configuration parameters struct",
+      "type": "object",
+      "properties": {
+        "data_iface": {
+          "type": "string",
+          "x-go-name": "DataIface"
+        },
+        "mgt_iface": {
+          "type": "string",
+          "x-go-name": "MgtIface"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
+    },
     "Node": {
       "description": "It includes the current physical state (CPU, memory, storage, network usage) as\nwell as the containers running on the system.",
       "type": "object",
@@ -1654,6 +1922,41 @@
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
+    "NodeConfig": {
+      "description": "NodeConfig is a node level config data",
+      "type": "object",
+      "properties": {
+        "generic": {
+          "type": "object",
+          "x-go-name": "Private"
+        },
+        "network": {
+          "$ref": "#/definitions/NetworkConfig"
+        },
+        "node_id": {
+          "type": "string",
+          "x-go-name": "NodeId"
+        },
+        "storage": {
+          "$ref": "#/definitions/StorageConfig"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
+    },
+    "NodesConfig": {
+      "description": "NodesConfig contains all of node level data in the form of a map with node ID's as keys",
+      "type": "object",
+      "properties": {
+        "node_conf": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/NodeConfig"
+          },
+          "x-go-name": "NodeConf"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
+    },
     "OperationFlags": {
       "type": "integer",
       "format": "int32",
@@ -1691,6 +1994,27 @@
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "SecretsConfig": {
+      "description": "SecretsConfig is a secrets configuration parameters struct",
+      "type": "object",
+      "properties": {
+        "aws": {
+          "$ref": "#/definitions/AWSConfig"
+        },
+        "cluster_secret_key": {
+          "type": "string",
+          "x-go-name": "ClusterSecretKey"
+        },
+        "secret_type": {
+          "type": "string",
+          "x-go-name": "SecretType"
+        },
+        "vault": {
+          "$ref": "#/definitions/VaultConfig"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
     },
     "SeverityType": {
       "type": "integer",
@@ -1842,6 +2166,54 @@
       "type": "integer",
       "format": "int32",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "StorageConfig": {
+      "description": "StorageConfig is a storage configuration parameters struct",
+      "type": "object",
+      "properties": {
+        "async_io": {
+          "type": "boolean",
+          "x-go-name": "AsyncIo"
+        },
+        "devices": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "Devices"
+        },
+        "devices_md": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "DevicesMd"
+        },
+        "max_count": {
+          "type": "integer",
+          "format": "int32",
+          "x-go-name": "MaxCount"
+        },
+        "max_drive_set_count": {
+          "type": "integer",
+          "format": "int32",
+          "x-go-name": "MaxDriveSetCount"
+        },
+        "num_threads": {
+          "type": "integer",
+          "format": "int32",
+          "x-go-name": "NumThreads"
+        },
+        "raid_level": {
+          "type": "string",
+          "x-go-name": "RaidLevel"
+        },
+        "raid_level_md": {
+          "type": "string",
+          "x-go-name": "RaidLevelMd"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
     },
     "StorageMedium": {
       "type": "integer",
@@ -1995,6 +2367,49 @@
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VaultConfig": {
+      "description": "VaultConfig is a vault configuration parameters struct",
+      "type": "object",
+      "properties": {
+        "vault_addr": {
+          "type": "string",
+          "x-go-name": "VaultAddr"
+        },
+        "vault_base_path": {
+          "type": "string",
+          "x-go-name": "VaultBasePath"
+        },
+        "vault_cacert": {
+          "type": "string",
+          "x-go-name": "VaultCacert"
+        },
+        "vault_capath": {
+          "type": "string",
+          "x-go-name": "VaultCapath"
+        },
+        "vault_client_cert": {
+          "type": "string",
+          "x-go-name": "VaultClientCert"
+        },
+        "vault_client_key": {
+          "type": "string",
+          "x-go-name": "VaultClientKey"
+        },
+        "vault_skip_verify": {
+          "type": "string",
+          "x-go-name": "VaultSkipVerify"
+        },
+        "vault_tls_server_name": {
+          "type": "string",
+          "x-go-name": "VaultTlsServerName"
+        },
+        "vault_token": {
+          "type": "string",
+          "x-go-name": "VaultToken"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
     },
     "Volume": {
       "description": "Volume represents an abstract storage volume.",
