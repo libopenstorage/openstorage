@@ -8,6 +8,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	api "github.com/libopenstorage/openstorage/api"
 	cluster "github.com/libopenstorage/openstorage/cluster"
+	osdconfig "github.com/libopenstorage/openstorage/osdconfig"
 	reflect "reflect"
 	time "time"
 )
@@ -121,6 +122,19 @@ func (mr *MockClusterMockRecorder) EraseAlert(arg0, arg1 interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EraseAlert", reflect.TypeOf((*MockCluster)(nil).EraseAlert), arg0, arg1)
 }
 
+// GetClusterConf mocks base method
+func (m *MockCluster) GetClusterConf() (*osdconfig.ClusterConfig, error) {
+	ret := m.ctrl.Call(m, "GetClusterConf")
+	ret0, _ := ret[0].(*osdconfig.ClusterConfig)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetClusterConf indicates an expected call of GetClusterConf
+func (mr *MockClusterMockRecorder) GetClusterConf() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetClusterConf", reflect.TypeOf((*MockCluster)(nil).GetClusterConf))
+}
+
 // GetData mocks base method
 func (m *MockCluster) GetData() (map[string]*api.Node, error) {
 	ret := m.ctrl.Call(m, "GetData")
@@ -144,6 +158,19 @@ func (m *MockCluster) GetGossipState() *cluster.ClusterState {
 // GetGossipState indicates an expected call of GetGossipState
 func (mr *MockClusterMockRecorder) GetGossipState() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGossipState", reflect.TypeOf((*MockCluster)(nil).GetGossipState))
+}
+
+// GetNodeConf mocks base method
+func (m *MockCluster) GetNodeConf(arg0 string) (*osdconfig.NodeConfig, error) {
+	ret := m.ctrl.Call(m, "GetNodeConf", arg0)
+	ret0, _ := ret[0].(*osdconfig.NodeConfig)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetNodeConf indicates an expected call of GetNodeConf
+func (mr *MockClusterMockRecorder) GetNodeConf(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodeConf", reflect.TypeOf((*MockCluster)(nil).GetNodeConf), arg0)
 }
 
 // GetTunnelConfig mocks base method
@@ -219,6 +246,18 @@ func (mr *MockClusterMockRecorder) Remove(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Remove", reflect.TypeOf((*MockCluster)(nil).Remove), arg0, arg1)
 }
 
+// SetClusterConf mocks base method
+func (m *MockCluster) SetClusterConf(arg0 *osdconfig.ClusterConfig) error {
+	ret := m.ctrl.Call(m, "SetClusterConf", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetClusterConf indicates an expected call of SetClusterConf
+func (mr *MockClusterMockRecorder) SetClusterConf(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetClusterConf", reflect.TypeOf((*MockCluster)(nil).SetClusterConf), arg0)
+}
+
 // SetFluentDConfig mocks base method
 func (m *MockCluster) SetFluentDConfig(arg0 api.FluentDConfig) error {
 	ret := m.ctrl.Call(m, "SetFluentDConfig", arg0)
@@ -253,6 +292,18 @@ func (m *MockCluster) SetManagementURL(arg0 string) error {
 // SetManagementURL indicates an expected call of SetManagementURL
 func (mr *MockClusterMockRecorder) SetManagementURL(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetManagementURL", reflect.TypeOf((*MockCluster)(nil).SetManagementURL), arg0)
+}
+
+// SetNodeConf mocks base method
+func (m *MockCluster) SetNodeConf(arg0 *osdconfig.NodeConfig) error {
+	ret := m.ctrl.Call(m, "SetNodeConf", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetNodeConf indicates an expected call of SetNodeConf
+func (mr *MockClusterMockRecorder) SetNodeConf(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetNodeConf", reflect.TypeOf((*MockCluster)(nil).SetNodeConf), arg0)
 }
 
 // SetSize mocks base method

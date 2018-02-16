@@ -3,14 +3,16 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/mux"
+	"github.com/libopenstorage/openstorage/api"
+	client "github.com/libopenstorage/openstorage/api/client/cluster"
+	"github.com/libopenstorage/openstorage/cluster"
+	"github.com/libopenstorage/openstorage/osdconfig"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/gorilla/mux"
-	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/cluster"
 )
 
 const (
@@ -41,7 +43,159 @@ func (c *clusterApi) Routes() []*Route {
 		{verb: "GET", path: clusterPath("/alerts/{resource}", cluster.APIVersion), fn: c.enumerateAlerts},
 		{verb: "PUT", path: clusterPath("/alerts/{resource}/{id}", cluster.APIVersion), fn: c.clearAlert},
 		{verb: "DELETE", path: clusterPath("/alerts/{resource}/{id}", cluster.APIVersion), fn: c.eraseAlert},
+		{verb: "GET", path: clusterPath(client.UriCluster, cluster.APIVersion), fn: c.getClusterConf},
+		{verb: "GET", path: clusterPath(client.UriNode+"/{id}", cluster.APIVersion), fn: c.getNodeConf},
+		{verb: "POST", path: clusterPath(client.UriCluster, cluster.APIVersion), fn: c.setClusterConf},
+		{verb: "POST", path: clusterPath(client.UriNode, cluster.APIVersion), fn: c.setNodeConf},
 	}
+}
+
+// swagger:operation GET /config/cluster config cluster
+//
+// Get cluster configuration.
+//
+// This will return the requested cluster configuration object
+//
+// ---
+// produces:
+// - application/json
+// responses:
+//   '200':
+//      description: a cluster config
+//      schema:
+//       $ref: '#/definitions/ClusterConfig'
+func (c *clusterApi) getClusterConf(w http.ResponseWriter, r *http.Request) {
+	method := "getClusterConf"
+	inst, err := cluster.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	config, err := inst.GetClusterConf()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(config)
+}
+
+// swagger:operation GET /config/node/{id} config node
+//
+// Get node configuration.
+//
+// This will return the requested node configuration object
+//
+// ---
+// produces:
+// - application/json
+// parameters:
+// - name: id
+//   in: path
+//   description: id to get node with
+//   required: true
+// responses:
+//   '200':
+//      description: a node
+//      schema:
+//       $ref: '#/definitions/NodeConfig'
+func (c *clusterApi) getNodeConf(w http.ResponseWriter, r *http.Request) {
+	method := "getNodeConf"
+	inst, err := cluster.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	vars := mux.Vars(r)
+	config, err := inst.GetNodeConf(vars["id"])
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(config)
+}
+
+// swagger:operation POST /config/cluster config cluster
+//
+// Set cluster configuration.
+//
+// This will set the requested cluster configuration
+//
+// ---
+// produces:
+// - application/json
+// parameters:
+// - name: config
+//   in: body
+//   description: cluster config json
+//   required: true
+//   schema:
+//     $ref: '#/definitions/ClusterConfig'
+func (c *clusterApi) setClusterConf(w http.ResponseWriter, r *http.Request) {
+	method := "setClusterConf"
+	inst, err := cluster.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	config := new(osdconfig.ClusterConfig)
+	if err := json.Unmarshal(data, config); err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if err := inst.SetClusterConf(config); err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(config)
+}
+
+// swagger:operation POST /config/node config node
+//
+// Set node configuration.
+//
+// This will set the requested node configuration
+//
+// ---
+// produces:
+// - application/json
+// parameters:
+// - name: config
+//   in: body
+//   description: node config json
+//   required: true
+//   schema:
+//     $ref: '#/definitions/NodeConfig'
+func (c *clusterApi) setNodeConf(w http.ResponseWriter, r *http.Request) {
+	method := "setNodeConf"
+	inst, err := cluster.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	config := new(osdconfig.NodeConfig)
+	if err := json.Unmarshal(data, config); err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if err := inst.SetNodeConf(config); err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(config)
 }
 
 func newClusterAPI() restServer {

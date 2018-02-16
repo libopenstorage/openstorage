@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"encoding/json"
 	"errors"
 	"strconv"
 	"time"
@@ -8,6 +9,7 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/client"
 	"github.com/libopenstorage/openstorage/cluster"
+	"github.com/libopenstorage/openstorage/osdconfig"
 )
 
 const (
@@ -16,6 +18,8 @@ const (
 	managementurl   = "/managementurl"
 	fluentdhost     = "/fluentdconfig"
 	tunnelconfigurl = "/tunnelconfig"
+	UriCluster      = "/config/cluster"
+	UriNode         = "/config/node"
 )
 
 type clusterClient struct {
@@ -274,6 +278,49 @@ func (c *clusterClient) EraseAlert(resource api.ResourceType, alertID int64) err
 	resp := request.Do()
 	if resp.Error() != nil {
 		return resp.FormatError()
+	}
+	return nil
+}
+
+// osdconfig.ConfigCaller interface compliance
+func (c *clusterClient) GetClusterConf() (*osdconfig.ClusterConfig, error) {
+	config := new(osdconfig.ClusterConfig)
+	request := c.c.Get().Resource(clusterPath + UriCluster)
+	if err := request.Do().Unmarshal(config); err != nil {
+		return nil, err
+	}
+	return config, nil
+}
+
+func (c *clusterClient) GetNodeConf(nodeID string) (*osdconfig.NodeConfig, error) {
+	config := new(osdconfig.NodeConfig)
+	request := c.c.Get().Resource(clusterPath + UriNode + "/" + nodeID)
+	if err := request.Do().Unmarshal(config); err != nil {
+		return nil, err
+	}
+	return config, nil
+}
+
+func (c *clusterClient) SetClusterConf(config *osdconfig.ClusterConfig) error {
+	data, err := json.Marshal(config)
+	if err != nil {
+		return err
+	}
+	request := c.c.Post().Body(data).Resource(clusterPath + UriCluster)
+	if err := request.Do().Error(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *clusterClient) SetNodeConf(config *osdconfig.NodeConfig) error {
+	data, err := json.Marshal(config)
+	if err != nil {
+		return err
+	}
+	request := c.c.Post().Body(data).Resource(clusterPath + UriNode)
+	if err := request.Do().Error(); err != nil {
+		return err
 	}
 	return nil
 }

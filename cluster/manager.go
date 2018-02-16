@@ -15,14 +15,14 @@ import (
 	"sync"
 	"time"
 
-	"go.pedge.io/dlog"
-
 	"github.com/libopenstorage/gossip"
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
+	"github.com/libopenstorage/openstorage/osdconfig"
 	"github.com/libopenstorage/systemutils"
 	"github.com/portworx/kvdb"
+	"go.pedge.io/dlog"
 )
 
 const (
@@ -60,6 +60,7 @@ type ClusterManager struct {
 	selfNode      api.Node
 	selfNodeLock  sync.Mutex // Lock that guards data and label of selfNode
 	system        systemutils.System
+	configManager osdconfig.ConfigManager
 }
 
 type checkFunc func(ClusterInfo) error
@@ -1261,6 +1262,11 @@ func (c *ClusterManager) Start(
 		return err
 	}
 
+	c.configManager, err = osdconfig.NewManager(c.kv)
+	if err != nil {
+		return err
+	}
+
 	go c.updateClusterStatus()
 	go c.replayNodeDecommission()
 
@@ -1798,4 +1804,21 @@ func (c *ClusterManager) putNodeCacheEntry(nodeId string, node api.Node) {
 	c.nodeCacheLock.Lock()
 	defer c.nodeCacheLock.Unlock()
 	c.nodeCache[nodeId] = node
+}
+
+// osdconfig.ConfigCaller compliance
+func (c *ClusterManager) GetClusterConf() (*osdconfig.ClusterConfig, error) {
+	return c.configManager.GetClusterConf()
+}
+
+func (c *ClusterManager) GetNodeConf(nodeID string) (*osdconfig.NodeConfig, error) {
+	return c.configManager.GetNodeConf(nodeID)
+}
+
+func (c *ClusterManager) SetClusterConf(config *osdconfig.ClusterConfig) error {
+	return c.configManager.SetClusterConf(config)
+}
+
+func (c *ClusterManager) SetNodeConf(config *osdconfig.NodeConfig) error {
+	return c.configManager.SetNodeConf(config)
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
+	"github.com/libopenstorage/openstorage/osdconfig"
 	"github.com/portworx/kvdb"
 )
 
@@ -265,6 +266,7 @@ type Cluster interface {
 	ClusterRemove
 	ClusterStatus
 	ClusterAlerts
+	osdconfig.ConfigCaller
 }
 
 // ClusterNotify is the callback function listeners can use to notify cluster manager
