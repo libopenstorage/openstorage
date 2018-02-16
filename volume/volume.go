@@ -132,28 +132,28 @@ type QuiesceDriver interface {
 
 // CloudBackupDriver interface provides Cloud backup features
 type CloudBackupDriver interface {
-	// Backup uploads snapshot of a volume to cloud
-	Backup(input *api.BackupRequest) error
-	// BackupRestore downloads a cloud backup and restores it to a volume
-	BackupRestore(input *api.BackupRestoreRequest) *api.BackupRestoreResponse
-	// BackupEnumerate enumerates the backups for a given cluster/credential/volumeID
-	BackupEnumerate(input *api.BackupEnumerateRequest) *api.BackupEnumerateResponse
-	// BackupDelete deletes the backups in cloud
-	BackupDelete(input *api.BackupDeleteRequest) error
-	// BackupStatus indicates the most recent status of backup/restores
-	BackupStatus(input *api.BackupStsRequest) *api.BackupStsResponse
-	// BackupCatalogue displays listing of backup content
-	BackupCatalogue(input *api.BackupCatalogueRequest) *api.BackupCatalogueResponse
-	// History displays past backup/restore operations on a volume
-	BackupHistory(*api.BackupHistoryRequest) *api.BackupHistoryResponse
-	// ChangeBackupState allows a current backup state transisions(pause/resume/stop)
-	BackupStateChange(input *api.BackupStateChangeRequest) error
-	// BackupSchedCreate creates a schedule backup volume to cloud
-	BackupSchedCreate(input *api.BackupScheduleInfo) *api.BackupSchedResponse
-	// BackupSchedDelete delete a volume backup schedule to cloud
-	BackupSchedDelete(input *api.BackupSchedDeleteRequest) error
-	// BackupSchedEnumerate enumerates the configured backup schedules in the cluster
-	BackupSchedEnumerate() *api.BackupSchedEnumerateResponse
+	// CloudBackupCreate uploads snapshot of a volume to the cloud
+	CloudBackupCreate(input *api.CloudBackupCreateRequest) error
+	// CloudBackupRestore downloads a cloud backup and restores it to a volume
+	CloudBackupRestore(input *api.CloudBackupRestoreRequest) (*api.CloudBackupRestoreResponse, error)
+	// CloudBackupEnumerate enumerates the backups for a given cluster/credential/volumeID
+	CloudBackupEnumerate(input *api.CloudBackupEnumerateRequest) (*api.CloudBackupEnumerateResponse, error)
+	// CloudBackupDelete deletes the backups in cloud
+	CloudBackupDelete(input *api.CloudBackupDeleteRequest) error
+	// CloudBackupStatus indicates the most recent status of backup/restores
+	CloudBackupStatus(input *api.CloudBackupStatusRequest) (*api.CloudBackupStatusResponse, error)
+	// CloudBackupCatalog displays listing of backup content
+	CloudBackupCatalog(input *api.CloudBackupCatalogRequest) (*api.CloudBackupCatalogResponse, error)
+	// CloudBackupHistory displays past backup/restore operations on a volume
+	CloudBackupHistory(input *api.CloudBackupHistoryRequest) (*api.CloudBackupHistoryResponse, error)
+	// CloudBackupStateChange allows a current backup state transisions(pause/resume/stop)
+	CloudBackupStateChange(input *api.CloudBackupStateChangeRequest) error
+	// CloudBackupSchedCreate creates a schedule backup volume to cloud
+	CloudBackupSchedCreate(input *api.CloudBackupSchedCreateRequest) (*api.CloudBackupSchedCreateResponse, error)
+	// CloudBackupSchedDelete delete a volume backup schedule to cloud
+	CloudBackupSchedDelete(input *api.CloudBackupSchedDeleteRequest) error
+	// CloudBackupSchedEnumerate enumerates the configured backup schedules in the cluster
+	CloudBackupSchedEnumerate() (*api.CloudBackupSchedEnumerateResponse, error)
 }
 
 // ProtoDriver must be implemented by all volume drivers.  It specifies the
