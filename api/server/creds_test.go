@@ -67,7 +67,7 @@ func TestClientCredCreate(t *testing.T) {
 		Return("", fmt.Errorf("Missing google project/json key")).
 		Times(1)
 
-		//Invoke CredsCreate for S3
+	// Invoke CredsCreate for S3
 	uuid, err = client.VolumeDriver(cl).CredsCreate(map[string]string{api.OptCredType: "s3",
 		api.OptCredRegion:    "east",
 		api.OptCredEndpoint:  "s3.url.com",
