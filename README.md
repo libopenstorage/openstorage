@@ -12,9 +12,12 @@ When you install openstorage on a Linux host, you will automatically get a state
 
 ### Scheduler integration
 
-OSD will work with any distributed scheduler that is compatible with the [Docker remote API](https://docs.docker.com/engine/reference/api/docker_remote_api/).
+OSD will work with any distributed scheduler that is compatible with the [CSI](https://github.com/container-storage-interface/spec) or [Docker remote API](https://docs.docker.com/engine/reference/api/docker_remote_api/)
 
 ![OSD with schedulers](http://i.imgur.com/K7rsETa.jpg)
+
+### CSI
+Container Storage Interface is the standard way for a container orchestrator such as Kubernetes or Mesosphere to communicate with a storage provider.  OSD provides a CSI implementation to provision storage volumes to a container on behalf of any third party OSD driver and ensures the volumes are available in a multi host environment.
 
 ### Docker Volumes
 
