@@ -14,26 +14,20 @@ When you install openstorage on a Linux host, you will automatically get a state
 
 OSD will work with any distributed scheduler that is compatible with the [CSI](https://github.com/container-storage-interface/spec) or [Docker remote API](https://docs.docker.com/engine/reference/api/docker_remote_api/)
 
-![OSD with schedulers](http://i.imgur.com/K7rsETa.jpg)
+![OSD with schedulers](https://i.imgur.com/3dd09QZ.jpg)
 
-### CSI
+#### CSI
 Container Storage Interface is the standard way for a container orchestrator such as Kubernetes or Mesosphere to communicate with a storage provider.  OSD provides a CSI implementation to provision storage volumes to a container on behalf of any third party OSD driver and ensures the volumes are available in a multi host environment.
 
-### Docker Volumes
+#### Docker Volumes
 
 OSD integrates with [Docker Volumes](https://docs.docker.com/engine/extend/plugins_volume/) and provisions storage to a container on behalf of any third party OSD driver and ensures the volumes are available in a multi host environment. 
 
-### Graph Driver
+### An Example Usage
 
-OpenStorage provides support for the [Graph Driver](https://godoc.org/github.com/docker/docker/daemon/graphdriver) in addition to `Docker Volumes`.  When used as a graph driver, the container's layers will be stored on a volume provided by the OSD.
+The diagram below shows OSD integrated with Docker and Kubernetes to allow for provisioning of storage to containers in a multi node environment using CSI.
 
-![OSD - Graph Driver and Docker Volumes](http://i.imgur.com/jdBPFqG.jpg)
-
-### An example usage
-
-The diagram below shows OSD integrated with Docker and Swarm to allow for provisioning of storage to containers in a multi node environment.
-
-![OSD - Docker - Swarm integration](http://i.imgur.com/UaHdQje.jpg)
+![OSD - Kubernetes integration](https://i.imgur.com/Ty0jDMU.jpg)
 
 There are default drivers built-in for NFS, AWS and BTRFS.  By using openstorage, you can get container granular, stateful storage provisioning to Linux containers with the backends supported by openstorage.  We are working with the storage ecosystem to add more drivers for various storage providers.
 
