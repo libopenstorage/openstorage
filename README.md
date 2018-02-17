@@ -4,11 +4,11 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/openstorage/osd.svg)](https://hub.docker.com/r/openstorage/osd)
 [![Go Report Card](https://goreportcard.com/badge/github.com/libopenstorage/openstorage)](https://goreportcard.com/report/github.com/libopenstorage/openstorage)
 
-OpenStorage is a clustered implementation of the [Open Storage](https://github.com/libopenstorage/specs) specification and relies on the Docker runtime.  It allows you to run stateful services in Docker in a multi-host environment.  It plugs into Docker volumes to provide storage to a container and plugs into Swarm to operate in a clustered environment. 
+OpenStorage is a clustered implementation of the [Open Storage](https://github.com/libopenstorage/specs) specification and relies on the Docker runtime.  It allows you to run stateful services in Linux Containers in a multi-host environment.  It plugs into CSI and Docker volumes to provide storage to a container and plugs into Kubernetes and Mesosphere to operate in a clustered environment. 
 
 # What you get from using Open Storage
 
-When you install openstorage on a Linux host, you will automatically get a stateful storage layer that integrates with the Docker runtime and operates in a multi host environment.  It starts an Open Storage Daemon - `OSD` that currently supports Docker and will support any Linux container runtime that conforms to the [OCI](https://www.opencontainers.org/).  
+When you install openstorage on a Linux host, you will automatically get a stateful storage layer that integrates with CSI or the Docker runtime and operates in a multi host environment.  It starts an Open Storage Daemon - `OSD` that currently supports CSI and DVDI and will support any Linux container runtime that conforms to the [OCI](https://www.opencontainers.org/).  
 
 ### Scheduler integration
 
