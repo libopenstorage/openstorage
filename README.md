@@ -14,7 +14,7 @@ When you install openstorage on a Linux host, you will automatically get a state
 
 OSD will work with any distributed scheduler that is compatible with the [CSI](https://github.com/container-storage-interface/spec) or [Docker remote API](https://docs.docker.com/engine/reference/api/docker_remote_api/)
 
-![OSD with schedulers](https://i.imgur.com/3dd09QZ.jpg)
+![OSD with schedulers](https://i.imgur.com/YNCqiwY.png)
 
 #### CSI
 [Container Storage Interface](https://github.com/container-storage-interface/spec) is the standard way for a container orchestrator such as Kubernetes or Mesosphere to communicate with a storage provider.  OSD provides a CSI implementation to provision storage volumes to a container on behalf of any third party OSD driver and ensures the volumes are available in a multi host environment.
@@ -27,7 +27,7 @@ OSD integrates with [Docker Volumes](https://docs.docker.com/engine/extend/plugi
 
 The diagram below shows OSD integrated with Docker and Kubernetes to allow for provisioning of storage to containers in a multi node environment using CSI.
 
-![OSD - Kubernetes integration](https://i.imgur.com/Ty0jDMU.jpg)
+![OSD - Kubernetes integration](https://i.imgur.com/ktcVm10.png)
 
 There are default drivers built-in for NFS, AWS and BTRFS.  By using openstorage, you can get container granular, stateful storage provisioning to Linux containers with the backends supported by openstorage.  We are working with the storage ecosystem to add more drivers for various storage providers.
 
