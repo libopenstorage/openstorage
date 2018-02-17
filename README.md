@@ -17,7 +17,7 @@ OSD will work with any distributed scheduler that is compatible with the [CSI](h
 ![OSD with schedulers](https://i.imgur.com/3dd09QZ.jpg)
 
 #### CSI
-[Container Storage Interface] (https://github.com/container-storage-interface/spec) is the standard way for a container orchestrator such as Kubernetes or Mesosphere to communicate with a storage provider.  OSD provides a CSI implementation to provision storage volumes to a container on behalf of any third party OSD driver and ensures the volumes are available in a multi host environment.
+[Container Storage Interface](https://github.com/container-storage-interface/spec) is the standard way for a container orchestrator such as Kubernetes or Mesosphere to communicate with a storage provider.  OSD provides a CSI implementation to provision storage volumes to a container on behalf of any third party OSD driver and ensures the volumes are available in a multi host environment.
 
 #### Docker Volumes
 
