@@ -64,12 +64,14 @@ var _ = Describe("Volume [Volume Tests]", func() {
 
 		AfterEach(func() {
 			var err error
-			err = volumedriver.Delete(volumeID)
-			Expect(err).ToNot(HaveOccurred())
+			if volumeID != "" {
+				err = volumedriver.Delete(volumeID)
+				Expect(err).ToNot(HaveOccurred())
 
-			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
-			Expect(err).ToNot(HaveOccurred())
-			numVolumesAfter = len(volumes)
+				volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+				Expect(err).ToNot(HaveOccurred())
+				numVolumesAfter = len(volumes)
+			}
 		})
 
 		It("Should create a volume successfully", func() {
@@ -77,6 +79,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			By("Creating the volume")
 			var err error
 
+			var size uint64 = 3
 			vr := &api.VolumeCreateRequest{
 				Locator: &api.VolumeLocator{
 					Name: "vol-osd-sanity-cd",
@@ -86,8 +89,10 @@ var _ = Describe("Volume [Volume Tests]", func() {
 				},
 				Source: &api.Source{},
 				Spec: &api.VolumeSpec{
-					Size:    1,
-					HaLevel: 1,
+					Size:      size,
+					HaLevel:   1,
+					BlockSize: 256,
+					Format:    api.FSType_FS_TYPE_EXT4,
 				},
 			}
 
@@ -95,25 +100,152 @@ var _ = Describe("Volume [Volume Tests]", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(volumeID).ToNot(BeNil())
+			Expect(volumeID).ToNot(BeEmpty())
 
 			By("Checking if no of volumes present in cluster increases by 1")
-
-			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, make(map[string]string))
-			Expect(err).NotTo(HaveOccurred())
-
-			numVolumesAfter = len(volumes)
-
-			Expect(numVolumesAfter).To(Equal(numVolumesBefore + 1))
-
-			By("Inspecting the created volume")
-
-			inspectVolumes := []string{volumeID}
-			volumesList, err := volumedriver.Inspect(inspectVolumes)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(volumesList).NotTo(BeEmpty())
-			Expect(len(volumesList)).Should(BeEquivalentTo(1))
-			Expect(volumesList[0].GetId()).Should(BeEquivalentTo(volumeID))
+			testIfVolumeCreatedSuccessfully(volumedriver, volumeID, numVolumesBefore, vr)
 		})
+
+		It("Should create a shared volume successfully", func() {
+
+			By("Creating the volume")
+			var err error
+			var size uint64 = 3
+			vr := &api.VolumeCreateRequest{
+				Locator: &api.VolumeLocator{
+					Name: "vol-osd-sanity-shared",
+					VolumeLabels: map[string]string{
+						"class": "sanity-class",
+					},
+				},
+				Source: &api.Source{},
+				Spec: &api.VolumeSpec{
+					Size:    size,
+					HaLevel: 1,
+					Format:  api.FSType_FS_TYPE_EXT4,
+					Shared:  true,
+				},
+			}
+
+			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(volumeID).ToNot(BeNil())
+			Expect(volumeID).ToNot(BeEmpty())
+
+			By("Checking if no of volumes present in cluster increases by 1")
+			testIfVolumeCreatedSuccessfully(volumedriver, volumeID, numVolumesBefore, vr)
+		})
+
+		// Has Issue with NFS driver
+		// It allows to create a volume with blank name or double-spaces or n-spaces
+		// Issue no #321
+		if volumeDriver != "nfs" {
+
+			It("Should fail to create volume with blank name", func() {
+
+				By("Creating a volume blank name")
+				var err error
+
+				vr := &api.VolumeCreateRequest{
+					Locator: &api.VolumeLocator{
+						Name: "",
+						VolumeLabels: map[string]string{
+							"class": "sanity-test-class",
+						},
+					},
+					Source: &api.Source{},
+					Spec: &api.VolumeSpec{
+						Size:    1,
+						HaLevel: 1,
+					},
+				}
+
+				volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("empty volume name"))
+			})
+		}
+	})
+
+	Describe("Volume Inspect", func() {
+
+		var (
+			volumeID         string
+			volumeIDs        []string
+			numVolumesBefore int
+			numVolumesAfter  int
+			volumesToCreate  int
+		)
+		AfterEach(func() {
+			var err error
+
+			if volumesToCreate != 0 {
+				for i := 0; i < len(volumeIDs); i++ {
+					err = volumedriver.Delete(volumeIDs[i])
+					Expect(err).ToNot(HaveOccurred())
+				}
+
+				volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+				Expect(err).ToNot(HaveOccurred())
+				numVolumesAfter = len(volumes)
+			}
+		})
+
+		It("Should create two volumes successfully", func() {
+
+			By("Creating the volumes")
+			var size uint64 = 2
+			name := "inspect-vol-"
+
+			volumesToCreate = 2
+			for i := 0; i < volumesToCreate; i++ {
+
+				By("Querying the number of volumes before create")
+
+				volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, make(map[string]string))
+				numVolumesBefore = len(volumes)
+				Expect(err).NotTo(HaveOccurred())
+
+				vr := &api.VolumeCreateRequest{
+					Locator: &api.VolumeLocator{
+						Name: name + strconv.Itoa(i),
+						VolumeLabels: map[string]string{
+							"class": "sanity-test-class",
+						},
+					},
+					Source: &api.Source{},
+					Spec: &api.VolumeSpec{
+						Size:      size,
+						HaLevel:   1,
+						BlockSize: 256,
+						Format:    api.FSType_FS_TYPE_EXT4,
+					},
+				}
+
+				volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+				Expect(err).NotTo(HaveOccurred())
+				Expect(volumeID).ToNot(BeNil())
+
+				volumeIDs = append(volumeIDs, volumeID)
+
+				By("Checking if volume created successfully with the provided params")
+				testIfVolumeCreatedSuccessfully(volumedriver, volumeIDs[i], numVolumesBefore, vr)
+			}
+		})
+
+		It("Should fail to inspect a volume", func() {
+
+			// REST endpoint doesn't throw any error where cli throws an error
+			By("Inspecting a volume that doesn't exist")
+			volumesToCreate = 0
+			volumes, err := volumedriver.Inspect([]string{"volume-id-doesnt-exist"})
+
+			Expect(err).To(BeNil())
+			Expect(volumes).To(BeEmpty())
+		})
+
 	})
 
 	Describe("Volume Delete ", func() {
@@ -179,17 +311,9 @@ var _ = Describe("Volume [Volume Tests]", func() {
 
 		var (
 			numVolumesBefore int
-			numVolumesAfter  int
 			volumeIDs        []string
 			volumesToCreate  = 3
 		)
-
-		BeforeEach(func() {
-			var err error
-			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, make(map[string]string))
-			numVolumesBefore = len(volumes)
-			Expect(err).NotTo(HaveOccurred())
-		})
 
 		AfterEach(func() {
 
@@ -204,11 +328,17 @@ var _ = Describe("Volume [Volume Tests]", func() {
 
 			By("Creating a list of volumes")
 
+			size := 3
 			for i := 0; i < volumesToCreate; i++ {
+
+				By("Querying the number of volumes before create")
+				volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, make(map[string]string))
+				numVolumesBefore = len(volumes)
+				Expect(err).NotTo(HaveOccurred())
 
 				vr := &api.VolumeCreateRequest{
 					Locator: &api.VolumeLocator{
-						Name: "classA-enumerate-" + strconv.Itoa(i),
+						Name: "class-enumerate-" + strconv.Itoa(i),
 						VolumeLabels: map[string]string{
 							"class": "Class-A",
 						},
@@ -216,6 +346,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 					Source: &api.Source{},
 					Spec: &api.VolumeSpec{
 						HaLevel: 1,
+						Size:    uint64(size),
 					},
 				}
 
@@ -224,149 +355,26 @@ var _ = Describe("Volume [Volume Tests]", func() {
 				Expect(volumeID).ToNot(BeNil())
 
 				volumeIDs = append(volumeIDs, volumeID)
+
+				By("Checking if volume created successfully with the provided params")
+				testIfVolumeCreatedSuccessfully(volumedriver, volumeIDs[i], numVolumesBefore, vr)
 			}
 
-			for i := 0; i < volumesToCreate; i++ {
-
-				vr := &api.VolumeCreateRequest{
-					Locator: &api.VolumeLocator{
-						Name: "classB-enumerate-" + strconv.Itoa(i),
-						VolumeLabels: map[string]string{
-							"class": "Class-B",
-						},
-					},
-					Source: &api.Source{},
-					Spec: &api.VolumeSpec{
-						HaLevel: 1,
-					},
-				}
-
-				volumeID, err := volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
-				Expect(err).NotTo(HaveOccurred())
-				Expect(volumeID).ToNot(BeNil())
-
-				volumeIDs = append(volumeIDs, volumeID)
-			}
-
-			By("Enumerating Class A volumes")
+			By("Enumerating Class-A volumes")
 
 			volumes, err := volumedriver.Enumerate(
-				&api.VolumeLocator{},
-				map[string]string{
-					"class": "Class-A",
-				})
-
-			Expect(err).NotTo(HaveOccurred())
-			//Expect(len(volumes)).To(BeEquivalentTo(3))
-
-			volumes, err = volumedriver.Enumerate(&api.VolumeLocator{}, map[string]string{
-				"class": "Class-A",
-			})
-			numVolumesAfter = len(volumes)
-
-			Expect(err).NotTo(HaveOccurred())
-			//Expect(len(volumes)).To(BeEquivalentTo(0))
-			//Expect(len(volumes)).To(BeEquivalentTo(numVolumesBefore + 6))
-
-		})
-	})
-
-	Describe("Volume Mount", func() {
-
-		var (
-			numVolumesBefore int
-			numVolumesAfter  int
-			volumeID         string
-		)
-
-		BeforeEach(func() {
-			var err error
-			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, make(map[string]string))
-			numVolumesBefore = len(volumes)
-			Expect(err).NotTo(HaveOccurred())
-		})
-
-		AfterEach(func() {
-			var err error
-
-			err = volumedriver.Unmount(volumeID, "/mnt", nil)
-			Expect(err).ToNot(HaveOccurred())
-
-			err = volumedriver.Detach(volumeID, nil)
-			Expect(err).ToNot(HaveOccurred())
-
-			err = volumedriver.Delete(volumeID)
-			Expect(err).ToNot(HaveOccurred())
-
-			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
-			Expect(err).ToNot(HaveOccurred())
-			numVolumesAfter = len(volumes)
-		})
-
-		It("Should mount successfully", func() {
-
-			By("Creating the volume")
-
-			var err error
-
-			vr := &api.VolumeCreateRequest{
-				Locator: &api.VolumeLocator{
-					Name: "create-to-mount",
+				&api.VolumeLocator{
 					VolumeLabels: map[string]string{
-						"class": "mount-class",
+						"class": "Class-A",
 					},
-				},
-				Source: &api.Source{},
-				Spec: &api.VolumeSpec{
-					Size:    1,
-					HaLevel: 1,
-					Format:  api.FSType_FS_TYPE_EXT4,
-				},
-			}
-
-			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+				}, nil)
 
 			Expect(err).NotTo(HaveOccurred())
-			Expect(volumeID).ToNot(BeNil())
-
-			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
-			numVolumesAfter = len(volumes)
-
-			Expect(numVolumesAfter).To(Equal(numVolumesBefore + 1))
-
-			By("Doing a Volume Set to mount the volume")
-
-			// req := &api.VolumeSetRequest{
-			// 	Options: map[string]string{},
-			// 	Action: &api.VolumeStateAction{
-			// 		Attach:    api.VolumeActionParam_VOLUME_ACTION_PARAM_ON,
-			// 		Mount:     api.VolumeActionParam_VOLUME_ACTION_PARAM_ON,
-			// 		MountPath: "/mnt/testmountvolume",
-			// 	},
-			// 	Locator: &api.VolumeLocator{Name: vr.GetLocator().GetName()},
-			// 	Spec:    &api.VolumeSpec{Size: vr.GetSpec().GetSize()},
-			// }
-
-			_, err = volumedriver.Attach(volumeID, nil)
-			Expect(err).NotTo(HaveOccurred())
-			err = volumedriver.Mount(volumeID, "/mnt", nil)
-
-			//err = volumedriver.Set(volumeID, req.GetLocator(), req.GetSpec())
-
-			Expect(err).NotTo(HaveOccurred())
-
-			By("Inspecting the volume and checking attached_on field ")
-
-			volumes, err = volumedriver.Inspect([]string{volumeID})
-
-			Expect(err).NotTo(HaveOccurred())
-			//Expect(volumes[0].GetAttachedOn()).To(BeEquivalentTo("/mnt"))
-
+			Expect(len(volumes)).To(BeEquivalentTo(volumesToCreate))
 		})
 	})
 
-	Describe("Volume Attach", func() {
-
+	Describe("Volume Attach Detach", func() {
 		var (
 			numVolumesBefore int
 			numVolumesAfter  int
@@ -383,9 +391,6 @@ var _ = Describe("Volume [Volume Tests]", func() {
 		AfterEach(func() {
 			var err error
 
-			err = volumedriver.Detach(volumeID, nil)
-			Expect(err).ToNot(HaveOccurred())
-
 			err = volumedriver.Delete(volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
@@ -394,12 +399,12 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			numVolumesAfter = len(volumes)
 		})
 
-		It("Should attach successfully", func() {
+		It("Should attach and detach successfully", func() {
 
 			By("Creating the volume")
 
 			var err error
-
+			var size uint64 = 5
 			vr := &api.VolumeCreateRequest{
 				Locator: &api.VolumeLocator{
 					Name: "create-to-attach",
@@ -409,7 +414,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 				},
 				Source: &api.Source{},
 				Spec: &api.VolumeSpec{
-					Size:    1,
+					Size:    size,
 					HaLevel: 1,
 					Format:  api.FSType_FS_TYPE_EXT4,
 				},
@@ -420,41 +425,112 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(volumeID).ToNot(BeNil())
 
-			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
-			numVolumesAfter = len(volumes)
+			By("Checking if volume created successfully with the provided params")
+			testIfVolumeCreatedSuccessfully(volumedriver, volumeID, numVolumesBefore, vr)
 
-			Expect(numVolumesAfter).To(Equal(numVolumesBefore + 1))
-
-			By("Doing a Volume Set to attach the volume to a node")
-
-			// req := &api.VolumeSetRequest{
-			// 	Options: map[string]string{},
-			// 	Action: &api.VolumeStateAction{
-			// 		Attach: api.VolumeActionParam_VOLUME_ACTION_PARAM_ON,
-			// 		Mount:  api.VolumeActionParam_VOLUME_ACTION_PARAM_OFF,
-			// 	},
-			// 	Locator: &api.VolumeLocator{Name: vr.GetLocator().GetName()},
-			// 	Spec:    &api.VolumeSpec{Size: vr.GetSpec().GetSize()},
-			// }
-
-			//err = volumedriver.Set(volumeID, req.GetLocator(), req.GetSpec())
+			By("Attaching the volume to a node")
 
 			str, err := volumedriver.Attach(volumeID, nil)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(str).NotTo(BeNil())
 
-			By("Inspecting the volume and checking attached_on field ")
+			By("Inspecting the volume and checking attached_on field is not empty ")
 
-			volumes, err = volumedriver.Inspect([]string{volumeID})
+			volumes, err := volumedriver.Inspect([]string{volumeID})
 
 			Expect(err).NotTo(HaveOccurred())
-			//Expect(volumes[0].GetAttachedOn()).To(BeEquivalentTo(""))
+			Expect(volumes[0].GetAttachedOn()).ToNot(BeEquivalentTo(""))
+			Expect(volumes[0].GetAttachedState()).To(BeEquivalentTo(api.AttachState_ATTACH_STATE_EXTERNAL))
+
+			By("Detaching the volume successfully")
+			err = volumedriver.Detach(volumeID, nil)
+			Expect(err).ToNot(HaveOccurred())
 
 		})
 	})
 
-	Describe("Volume Update [Has issue]", func() {
+	Describe("Volume Mount Unmount", func() {
+
+		var (
+			numVolumesBefore int
+			numVolumesAfter  int
+			volumeID         string
+			mountPath        string
+			volumesToCreate  int
+		)
+
+		BeforeEach(func() {
+			var err error
+			mountPath = "/mnt"
+			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, make(map[string]string))
+			numVolumesBefore = len(volumes)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			var err error
+
+			err = volumedriver.Detach(volumeID, nil)
+			Expect(err).ToNot(HaveOccurred())
+
+			err = volumedriver.Delete(volumeID)
+			Expect(err).ToNot(HaveOccurred())
+
+			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+			Expect(err).ToNot(HaveOccurred())
+			numVolumesAfter = len(volumes)
+		})
+
+		It("Should mount and unmount successfully", func() {
+
+			By("Creating the volume")
+
+			var err error
+
+			volumesToCreate = 1
+			var size uint64 = 5
+			vr := &api.VolumeCreateRequest{
+				Locator: &api.VolumeLocator{
+					Name: "create-to-mount",
+					VolumeLabels: map[string]string{
+						"class": "mount-class",
+					},
+				},
+				Source: &api.Source{},
+				Spec: &api.VolumeSpec{
+					Size:    size,
+					HaLevel: 1,
+					Format:  api.FSType_FS_TYPE_EXT4,
+				},
+			}
+
+			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(volumeID).ToNot(BeNil())
+
+			By("Checking if volume created successfully with the provided params")
+			testIfVolumeCreatedSuccessfully(volumedriver, volumeID, numVolumesBefore, vr)
+
+			By("Attaching a volume before mounting")
+
+			str, err := volumedriver.Attach(volumeID, nil)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(str).NotTo(BeEmpty())
+
+			By("Attaching mounting the volume to mount Path")
+
+			err = volumedriver.Mount(volumeID, mountPath, nil)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Unmounting the volume successfully")
+			err = volumedriver.Unmount(volumeID, mountPath, nil)
+			Expect(err).ToNot(HaveOccurred())
+		})
+	})
+
+	Describe("Volume Update", func() {
 
 		var (
 			numVolumesBefore int
@@ -485,6 +561,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 
 			var err error
 
+			var size uint64 = 5
 			vr := &api.VolumeCreateRequest{
 				Locator: &api.VolumeLocator{
 					Name: "create-to-attach",
@@ -494,7 +571,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 				},
 				Source: &api.Source{},
 				Spec: &api.VolumeSpec{
-					Size:    1,
+					Size:    size,
 					HaLevel: 1,
 					Format:  api.FSType_FS_TYPE_EXT4,
 				},
@@ -505,10 +582,8 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(volumeID).ToNot(BeNil())
 
-			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
-			numVolumesAfter = len(volumes)
-
-			Expect(numVolumesAfter).To(Equal(numVolumesBefore + 1))
+			By("Checking if volume created successfully with the provided params")
+			testIfVolumeCreatedSuccessfully(volumedriver, volumeID, numVolumesBefore, vr)
 
 			By("Updating the volume spec. ")
 			newSize := 5
@@ -526,12 +601,284 @@ var _ = Describe("Volume [Volume Tests]", func() {
 
 			By("Inspecting the volume for new updates")
 
-			volumes, err = volumedriver.Inspect([]string{volumeID})
+			volumes, err := volumedriver.Inspect([]string{volumeID})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(volumes[0].GetSpec().GetSize()).To(BeEquivalentTo(newSize))
+		})
+	})
+
+	Describe("Volume Stats [Stats]", func() {
+
+		var (
+			numVolumesBefore int
+			numVolumesAfter  int
+			volumeID         string
+		)
+
+		BeforeEach(func() {
+			var err error
+			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, make(map[string]string))
+			numVolumesBefore = len(volumes)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			var err error
+
+			err = volumedriver.Delete(volumeID)
+			Expect(err).ToNot(HaveOccurred())
+
+			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+			Expect(err).ToNot(HaveOccurred())
+			numVolumesAfter = len(volumes)
+		})
+
+		It("Should retrieve volume stats successfully", func() {
+
+			By("Creating the volume")
+
+			var err error
+			var size uint64 = 5
+			vr := &api.VolumeCreateRequest{
+				Locator: &api.VolumeLocator{
+					Name: "get-stats",
+					VolumeLabels: map[string]string{
+						"class": "stat-class",
+					},
+				},
+				Source: &api.Source{},
+				Spec: &api.VolumeSpec{
+					Size:      size,
+					HaLevel:   2,
+					Format:    api.FSType_FS_TYPE_EXT4,
+					BlockSize: 128,
+					Cos:       api.CosType_LOW,
+					Shared:    true,
+				},
+			}
+
+			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(volumeID).ToNot(BeNil())
+
+			By("Checking if volume created successfully with the provided params")
+			testIfVolumeCreatedSuccessfully(volumedriver, volumeID, numVolumesBefore, vr)
+
+			By("Getting the stats")
+
+			stats, err := volumedriver.Stats(volumeID, true)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(volumes[0].GetSpec().GetSize()).To(BeEquivalentTo(newSize))
-			Expect(volumes[0].GetSpec().GetShared()).To(BeTrue())
+			Expect(stats.String()).To(Not(BeNil()))
+		})
+	})
 
+	Describe("Volume ActiveRequests", func() {
+
+		var (
+			numVolumesBefore int
+			numVolumesAfter  int
+			volumeID         string
+		)
+
+		BeforeEach(func() {
+			var err error
+			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, make(map[string]string))
+			numVolumesBefore = len(volumes)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			var err error
+
+			err = volumedriver.Delete(volumeID)
+			Expect(err).ToNot(HaveOccurred())
+
+			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+			Expect(err).ToNot(HaveOccurred())
+			numVolumesAfter = len(volumes)
+		})
+
+		It("Should get ActiveRequests successfully", func() {
+
+			By("Creating the volume")
+
+			var err error
+			var size uint64 = 5
+			vr := &api.VolumeCreateRequest{
+				Locator: &api.VolumeLocator{
+					Name: "get-active-requests",
+					VolumeLabels: map[string]string{
+						"class": "active-class",
+					},
+				},
+				Source: &api.Source{},
+				Spec: &api.VolumeSpec{
+					Size:      size,
+					HaLevel:   2,
+					Format:    api.FSType_FS_TYPE_EXT4,
+					BlockSize: 128,
+					Cos:       api.CosType_LOW,
+				},
+			}
+
+			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(volumeID).ToNot(BeNil())
+
+			By("Checking if volume created successfully with the provided params")
+			testIfVolumeCreatedSuccessfully(volumedriver, volumeID, numVolumesBefore, vr)
+
+			By("Getting the Active Requests")
+
+			activeRequests, err := volumedriver.GetActiveRequests()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(activeRequests).To(Not(BeNil()))
+		})
+	})
+
+	Describe("Volume UsedSize", func() {
+
+		var (
+			numVolumesBefore int
+			numVolumesAfter  int
+			volumeID         string
+		)
+
+		BeforeEach(func() {
+			var err error
+			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, make(map[string]string))
+			numVolumesBefore = len(volumes)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			var err error
+
+			err = volumedriver.Delete(volumeID)
+			Expect(err).ToNot(HaveOccurred())
+
+			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+			Expect(err).ToNot(HaveOccurred())
+			numVolumesAfter = len(volumes)
+		})
+
+		It("Should get volume used size successfully", func() {
+
+			By("Creating the volume")
+
+			var err error
+			var size uint64 = 2
+			vr := &api.VolumeCreateRequest{
+				Locator: &api.VolumeLocator{
+					Name: "get-used-size",
+					VolumeLabels: map[string]string{
+						"class": "usedSize-class",
+					},
+				},
+				Source: &api.Source{},
+				Spec: &api.VolumeSpec{
+					Size:      size,
+					HaLevel:   2,
+					Format:    api.FSType_FS_TYPE_EXT4,
+					BlockSize: 128,
+					Cos:       api.CosType_LOW,
+				},
+			}
+
+			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(volumeID).ToNot(BeNil())
+
+			By("Checking if volume created successfully with the provided params")
+			testIfVolumeCreatedSuccessfully(volumedriver, volumeID, numVolumesBefore, vr)
+
+			By("Getting the used size of the created volume")
+
+			usedSize, err := volumedriver.UsedSize(volumeID)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(usedSize).To(Not(BeNil()))
+		})
+	})
+
+	Describe("Volume Quiesce Unquiesce", func() {
+
+		var (
+			numVolumesBefore int
+			numVolumesAfter  int
+			volumeID         string
+		)
+
+		BeforeEach(func() {
+			var err error
+			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, make(map[string]string))
+			numVolumesBefore = len(volumes)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			var err error
+
+			err = volumedriver.Detach(volumeID, nil)
+			Expect(err).ToNot(HaveOccurred())
+
+			err = volumedriver.Delete(volumeID)
+			Expect(err).ToNot(HaveOccurred())
+
+			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+			Expect(err).ToNot(HaveOccurred())
+			numVolumesAfter = len(volumes)
+		})
+
+		It("Should quiesce unquiesce volume successfully", func() {
+
+			By("Creating the volume")
+
+			var err error
+			var size uint64 = 3
+			vr := &api.VolumeCreateRequest{
+				Locator: &api.VolumeLocator{
+					Name: "volume-quiesce",
+					VolumeLabels: map[string]string{
+						"class": "quiesce-class",
+					},
+				},
+				Source: &api.Source{},
+				Spec: &api.VolumeSpec{
+					Size:      size,
+					HaLevel:   2,
+					Format:    api.FSType_FS_TYPE_EXT4,
+					BlockSize: 128,
+					Cos:       api.CosType_LOW,
+				},
+			}
+
+			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Checking if volume created successfully with the provided params")
+			testIfVolumeCreatedSuccessfully(volumedriver, volumeID, numVolumesBefore, vr)
+
+			By("Queiscing the volume without Attaching")
+			err = volumedriver.Quiesce(volumeID, 0, "")
+			Expect(err).To(HaveOccurred())
+
+			By("Now Attaching the volume")
+			str, err := volumedriver.Attach(volumeID, nil)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(str).NotTo(BeNil())
+
+			By("Quiescing the volume")
+			err = volumedriver.Quiesce(volumeID, 0, "")
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Unquescing the quiesced volume")
+
+			err = volumedriver.Unquiesce(volumeID)
+			Expect(err).NotTo(HaveOccurred())
 		})
 	})
 })
