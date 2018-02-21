@@ -25,16 +25,18 @@ import (
 )
 
 var (
-	osdAddress string
-	lock       sync.Mutex
+	osdAddress   string
+	volumeDriver string
+	lock         sync.Mutex
 )
 
 // Test will test the CSI driver at the specified address
-func Test(t *testing.T, address string) {
+func Test(t *testing.T, address, driver string) {
 	lock.Lock()
 	defer lock.Unlock()
 
 	osdAddress = address
+	volumeDriver = driver
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "OSD API Test Suite")
 }
