@@ -18,6 +18,7 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/seed"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers/common"
+	"github.com/pborman/uuid"
 	"github.com/portworx/kvdb"
 	"math/rand"
 	"strings"
@@ -198,7 +199,7 @@ func (d *driver) getNFSVolumePathById(volumeID string) (string, error) {
 }
 
 //append unix time to volumeID
-func (d *driver) getNewSnapVolID(volumeID string) string {
+func (d *driver) getNewSnapVolName(volumeID string) string {
 	return volumeID + "-" + strconv.FormatUint(uint64(time.Now().Unix()), 10)
 }
 
@@ -211,14 +212,18 @@ func (d *driver) Create(
 	source *api.Source,
 	spec *api.VolumeSpec) (string, error) {
 
-	volumeID := locator.Name
-	if volumeID == "" && source.Parent != "" {
-		volumeID = d.getNewSnapVolID(source.Parent)
-		dlog.Infof("Creating snap vol id: %s", volumeID)
+	if locator.Name == "" {
+		return "", errors.New("volume name cannot be empty")
 	}
 
+	if hasSpaces := strings.Contains(locator.Name, " "); hasSpaces {
+		return "", errors.New("volume name cannot contain space characters")
+	}
+
+	volumeID := strings.TrimSuffix(uuid.New(), "\n")
+
 	if _, err := d.GetVol(volumeID); err == nil {
-		return "", errors.New("Volume with that name already exists")
+		return "", errors.New("volume with that id already exists")
 	}
 
 	//snapshot passes nil volumelabels
@@ -393,6 +398,9 @@ func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 		return "", nil
 	}
 	source := &api.Source{Parent: volumeID}
+	locator.Name = d.getNewSnapVolName(source.Parent)
+
+	dlog.Infof("Creating snap vol name: %s", locator.Name)
 	newVolumeID, err := d.Create(locator, source, vols[0].Spec)
 	if err != nil {
 		return "", nil
