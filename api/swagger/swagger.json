@@ -11,14 +11,9 @@
   ],
   "swagger": "2.0",
   "info": {
-    "description": "OpenStorage is a clustered implementation of the Open Storage specification and relies on the Docker runtime.\nIt allows you to run stateful services in Docker in a multi-host environment.\nIt plugs into Docker volumes to provide storage to a container and plugs into Swarm to operate in a clustered environment.",
+    "description": "OpenStorage is a clustered implementation of the Open Storage specification and relies on the OCI runtime.\nIt allows you to run stateful services in containers in a multi-host clustered environment.",
     "title": "OSD API.",
-    "termsOfService": "there are no TOS at this moment, use at your own risk we take no responsibility",
-    "contact": {
-      "name": "Openstorage",
-      "url": "https://github.com/libopenstorage/openstorage",
-      "email": "github@openstorage.org"
-    },
+    "termsOfService": "There are is no TOS at this moment, use at your own risk we take no responsibility",
     "license": {
       "name": "APACHE2",
       "url": "https://opensource.org/licenses/Apache-2.0"
