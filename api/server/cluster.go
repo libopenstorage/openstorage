@@ -509,7 +509,7 @@ func (c *clusterApi) nodeHealth(w http.ResponseWriter, r *http.Request) {
 // - application/json
 // parameters:
 // - name: name
-//   in: path
+//   in: query
 //   description: id of the node we want to check.
 //   required: true
 //   type: integer

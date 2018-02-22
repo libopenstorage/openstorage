@@ -236,7 +236,7 @@
             "type": "integer",
             "description": "id of the node we want to check.",
             "name": "name",
-            "in": "path",
+            "in": "query",
             "required": true
           }
         ],
