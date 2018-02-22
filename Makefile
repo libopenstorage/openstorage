@@ -110,6 +110,7 @@ test:
 
 docs:
 	go generate ./cmd/osd/main.go
+	swagger validate api/swagger/swagger.json
 
 docker-build-osd-dev:
 	docker build -t openstorage/osd-dev -f Dockerfile.osd-dev .

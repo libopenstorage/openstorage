@@ -29,6 +29,7 @@ func init() {
 	dlog_logrus.Register()
 }
 
+// swagger:model
 type ClusterConfig struct {
 	ClusterId     string
 	NodeId        string
@@ -42,6 +43,7 @@ type ClusterConfig struct {
 	FluentDHost   string
 }
 
+// swagger:model
 type Config struct {
 	Osd struct {
 		ClusterConfig ClusterConfig `yaml:"cluster"`
