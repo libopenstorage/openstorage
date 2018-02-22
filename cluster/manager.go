@@ -56,6 +56,7 @@ type ClusterManager struct {
 	nodeStatuses  map[string]api.Status // Set of nodes currently marked down.
 	gossip        gossip.Gossiper
 	gossipVersion string
+	gossipPort    string
 	gEnabled      bool
 	selfNode      api.Node
 	selfNodeLock  sync.Mutex // Lock that guards data and label of selfNode
@@ -301,7 +302,7 @@ func (c *ClusterManager) getNonDecommisionedPeers(
 			continue
 		}
 		peers[types.NodeId(nodeEntry.Id)] = types.NodeUpdate{
-			Addr:         nodeEntry.DataIp + ":9002",
+			Addr:         nodeEntry.DataIp + ":" + c.gossipPort,
 			QuorumMember: !nodeEntry.NonQuorumMember,
 		}
 	}
@@ -598,7 +599,7 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *ClusterInfo) {
 			continue
 		}
 
-		nodeIps = append(nodeIps, nodeEntry.DataIp+":9002")
+		nodeIps = append(nodeIps, nodeEntry.DataIp+":"+c.gossipPort)
 	}
 	if len(nodeIps) > 0 {
 		dlog.Infof("Starting Gossip... Gossiping to these nodes : %v", nodeIps)
@@ -1200,6 +1201,7 @@ func (c *ClusterManager) initializeAndStartHeartbeat(
 func (c *ClusterManager) Start(
 	clusterMaxSize int,
 	nodeInitialized bool,
+	gossipPort string,
 ) error {
 	var err error
 
@@ -1213,6 +1215,7 @@ func (c *ClusterManager) Start(
 	c.selfNode.MgmtIp, c.selfNode.DataIp, err = ExternalIp(&c.config)
 	c.selfNode.StartTime = time.Now()
 	c.selfNode.Hostname, _ = os.Hostname()
+	c.gossipPort = gossipPort
 	if err != nil {
 		dlog.Errorf("Failed to get external IP address for mgt/data interfaces: %s.",
 			err)
@@ -1233,7 +1236,7 @@ func (c *ClusterManager) Start(
 		QuorumTimeout:    types.DEFAULT_QUORUM_TIMEOUT,
 	}
 	c.gossip = gossip.New(
-		c.selfNode.DataIp+":9002",
+		c.selfNode.DataIp+":"+c.gossipPort,
 		types.NodeId(c.config.NodeId),
 		c.selfNode.GenNumber,
 		gossipIntervals,

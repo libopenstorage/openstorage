@@ -132,7 +132,7 @@ func (c *clusterClient) Shutdown() error {
 	return nil
 }
 
-func (c *clusterClient) Start(int, bool) error {
+func (c *clusterClient) Start(int, bool, string) error {
 	return nil
 }
 

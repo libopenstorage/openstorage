@@ -343,15 +343,15 @@ func (mr *MockClusterMockRecorder) Shutdown() *gomock.Call {
 }
 
 // Start mocks base method
-func (m *MockCluster) Start(arg0 int, arg1 bool) error {
-	ret := m.ctrl.Call(m, "Start", arg0, arg1)
+func (m *MockCluster) Start(arg0 int, arg1 bool, arg2 string) error {
+	ret := m.ctrl.Call(m, "Start", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Start indicates an expected call of Start
-func (mr *MockClusterMockRecorder) Start(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockCluster)(nil).Start), arg0, arg1)
+func (mr *MockClusterMockRecorder) Start(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockCluster)(nil).Start), arg0, arg1, arg2)
 }
 
 // UpdateData mocks base method
