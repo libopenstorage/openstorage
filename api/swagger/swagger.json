@@ -11,13 +11,10 @@
   ],
   "swagger": "2.0",
   "info": {
-    "description": "OpenStorage is a clustered implementation of the Open Storage specification and relies on the Docker runtime.\nIt allows you to run stateful services in Docker in a multi-host environment.\nIt plugs into Docker volumes to provide storage to a container and plugs into Swarm to operate in a clustered environment.",
+    "description": "OpenStorage is a clustered implementation of the Open Storage specification and relies on the OCI runtime.\nIt allows you to run stateful services in containers in a multi-host clustered environment.",
     "title": "OSD API.",
-    "termsOfService": "there are no TOS at this moment, use at your own risk we take no responsibility",
     "contact": {
-      "name": "Openstorage",
-      "url": "https://github.com/libopenstorage/openstorage",
-      "email": "github@openstorage.org"
+      "url": "https://github.com/libopenstorage/openstorage"
     },
     "license": {
       "name": "APACHE2",
@@ -1551,40 +1548,92 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "ClusterConfig": {
+      "description": "ClusterConfig is a cluster level config parameter struct",
       "type": "object",
       "properties": {
-        "ClusterId": {
-          "type": "string"
+        "alerting_url": {
+          "type": "string",
+          "x-go-name": "AlertingUrl"
         },
-        "DataIface": {
-          "type": "string"
+        "bootstrap": {
+          "type": "boolean",
+          "x-go-name": "Bootstrap"
         },
-        "DataIp": {
-          "type": "string"
+        "callhome": {
+          "type": "boolean",
+          "x-go-name": "Callhome"
         },
-        "DefaultDriver": {
-          "type": "string"
+        "cluster_id": {
+          "type": "string",
+          "x-go-name": "ClusterId"
         },
-        "FluentDHost": {
-          "type": "string"
+        "created": {
+          "type": "string",
+          "x-go-name": "Created"
         },
-        "LoggingURL": {
-          "type": "string"
+        "debug_level": {
+          "type": "string",
+          "x-go-name": "DebugLevel"
         },
-        "ManagementURL": {
-          "type": "string"
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
         },
-        "MgmtIp": {
-          "type": "string"
+        "domain": {
+          "type": "string",
+          "x-go-name": "Domain"
         },
-        "MgtIface": {
-          "type": "string"
+        "driver": {
+          "type": "string",
+          "x-go-name": "Driver"
         },
-        "NodeId": {
-          "type": "string"
+        "generic": {
+          "type": "object",
+          "x-go-name": "Private"
+        },
+        "kvdb": {
+          "$ref": "#/definitions/KvdbConfig"
+        },
+        "logging_url": {
+          "type": "string",
+          "x-go-name": "LoggingUrl"
+        },
+        "mode": {
+          "type": "string",
+          "x-go-name": "Mode"
+        },
+        "multicontainer": {
+          "type": "boolean",
+          "x-go-name": "Multicontainer"
+        },
+        "nolh": {
+          "type": "boolean",
+          "x-go-name": "Nolh"
+        },
+        "scheduler": {
+          "type": "string",
+          "x-go-name": "Scheduler"
+        },
+        "secrets": {
+          "$ref": "#/definitions/SecretsConfig"
+        },
+        "tunnel_certs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "TunnelCerts"
+        },
+        "tunnel_end_point": {
+          "type": "string",
+          "x-go-name": "TunnelEndPoint"
+        },
+        "version": {
+          "type": "string",
+          "x-go-name": "Version"
         }
       },
-      "x-go-package": "github.com/libopenstorage/openstorage/config"
+      "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
     },
     "ClusterNotify": {
       "type": "integer",
