@@ -15,8 +15,9 @@
     "title": "OSD API.",
     "termsOfService": "there are no TOS at this moment, use at your own risk we take no responsibility",
     "contact": {
-      "name": "Luis Pabon",
-      "email": "luis@portworx.com"
+      "name": "Openstorage",
+      "url": "https://github.com/libopenstorage/openstorage",
+      "email": "github@openstorage.org"
     },
     "license": {
       "name": "APACHE2",
@@ -34,9 +35,7 @@
           "application/json"
         ],
         "tags": [
-          "cluster",
-          "alerts",
-          "enumerate"
+          "cluster"
         ],
         "operationId": "enumerateAlerts",
         "parameters": [
@@ -65,9 +64,7 @@
           "application/json"
         ],
         "tags": [
-          "cluster",
-          "alerts",
-          "clear"
+          "cluster"
         ],
         "operationId": "clearAlert",
         "parameters": [
@@ -101,9 +98,7 @@
           "application/json"
         ],
         "tags": [
-          "cluster",
-          "alerts",
-          "delete"
+          "cluster"
         ],
         "operationId": "deleteAlert",
         "parameters": [
@@ -139,8 +134,7 @@
           "application/json"
         ],
         "tags": [
-          "cluster",
-          "enumerate"
+          "cluster"
         ],
         "summary": "Lists cluster Nodes.",
         "operationId": "enumerateCluster",
@@ -164,8 +158,7 @@
           "application/json"
         ],
         "tags": [
-          "cluster",
-          "inspect"
+          "cluster"
         ],
         "summary": "Inspect cluster Nodes.",
         "operationId": "inspectNode",
@@ -194,8 +187,7 @@
           "application/json"
         ],
         "tags": [
-          "node",
-          "health"
+          "node"
         ],
         "summary": "This will return node health.",
         "operationId": "nodeHealth",
@@ -215,8 +207,7 @@
           "application/json"
         ],
         "tags": [
-          "node",
-          "status"
+          "node"
         ],
         "summary": "This will return the node status .",
         "operationId": "nodeStatus",
@@ -237,8 +228,7 @@
           "application/json"
         ],
         "tags": [
-          "node",
-          "peerstatus"
+          "node"
         ],
         "operationId": "peerStatus",
         "parameters": [
@@ -266,8 +256,7 @@
           "application/json"
         ],
         "tags": [
-          "cluster",
-          "status"
+          "cluster"
         ],
         "summary": "this will return the cluster status.",
         "operationId": "status",
@@ -288,8 +277,7 @@
           "application/json"
         ],
         "tags": [
-          "cluster",
-          "versions"
+          "cluster"
         ],
         "operationId": "enumerateVersions",
         "responses": {
@@ -312,9 +300,7 @@
           "application/json"
         ],
         "tags": [
-          "cluster",
-          "node",
-          "shutdown"
+          "cluster"
         ],
         "operationId": "shutdownNode",
         "parameters": [
@@ -341,9 +327,7 @@
           "application/json"
         ],
         "tags": [
-          "cluster",
-          "node",
-          "delete"
+          "cluster"
         ],
         "operationId": "deleteNode",
         "parameters": [
@@ -381,7 +365,7 @@
           "config"
         ],
         "summary": "Get cluster configuration.",
-        "operationId": "cluster",
+        "operationId": "getClusterConfig",
         "responses": {
           "200": {
             "description": "a cluster config",
@@ -400,7 +384,7 @@
           "config"
         ],
         "summary": "Set cluster configuration.",
-        "operationId": "cluster",
+        "operationId": "setClusterConfig",
         "parameters": [
           {
             "description": "cluster config json",
@@ -411,7 +395,12 @@
               "$ref": "#/definitions/ClusterConfig"
             }
           }
-        ]
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
       }
     },
     "/config/node": {
@@ -424,7 +413,7 @@
           "config"
         ],
         "summary": "Set node configuration.",
-        "operationId": "node",
+        "operationId": "setNodeConfig",
         "parameters": [
           {
             "description": "node config json",
@@ -435,7 +424,12 @@
               "$ref": "#/definitions/NodeConfig"
             }
           }
-        ]
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
       }
     },
     "/config/node/{id}": {
@@ -448,9 +442,10 @@
           "config"
         ],
         "summary": "Get node configuration.",
-        "operationId": "node",
+        "operationId": "getNodeConfig",
         "parameters": [
           {
+            "type": "integer",
             "description": "id to get node with",
             "name": "id",
             "in": "path",
@@ -474,8 +469,7 @@
           "application/json"
         ],
         "tags": [
-          "cluster",
-          "loggingurl"
+          "cluster"
         ],
         "operationId": "setLoggingUrl",
         "deprecated": true,
@@ -507,8 +501,7 @@
           "application/json"
         ],
         "tags": [
-          "snapshot",
-          "enumerate"
+          "snapshot"
         ],
         "summary": "Enumerate snapshots.",
         "operationId": "enumerateSnaps",
@@ -557,8 +550,7 @@
           "application/json"
         ],
         "tags": [
-          "snapshot",
-          "create"
+          "snapshot"
         ],
         "operationId": "createSnap",
         "parameters": [
@@ -601,8 +593,7 @@
           "application/json"
         ],
         "tags": [
-          "snapshot",
-          "restore"
+          "snapshot"
         ],
         "summary": "Restore snapshot with specified id.",
         "operationId": "restoreSnap",
@@ -641,8 +632,7 @@
           "application/json"
         ],
         "tags": [
-          "volume",
-          "enumerate"
+          "volume"
         ],
         "operationId": "enumerateVolumes",
         "parameters": [
@@ -689,8 +679,7 @@
           "application/json"
         ],
         "tags": [
-          "volume",
-          "create"
+          "volume"
         ],
         "summary": "Creates a single volume with given spec.",
         "operationId": "createVolume",
@@ -727,8 +716,7 @@
           "application/json"
         ],
         "tags": [
-          "volume",
-          "quiesce"
+          "volume"
         ],
         "summary": "Quiesce volume with specified id.",
         "operationId": "quiesceVolume",
@@ -763,8 +751,7 @@
           "application/json"
         ],
         "tags": [
-          "volume",
-          "requests"
+          "volume"
         ],
         "summary": "Get Requests for volume with specified id.",
         "operationId": "requestsVolume",
@@ -793,8 +780,7 @@
           "application/json"
         ],
         "tags": [
-          "volume",
-          "stats"
+          "volume"
         ],
         "summary": "Get stats for volume with specified id.",
         "operationId": "statsVolume",
@@ -823,8 +809,7 @@
           "application/json"
         ],
         "tags": [
-          "volume",
-          "unquiesce"
+          "volume"
         ],
         "summary": "Unquiesce volume with specified id.",
         "operationId": "unquiesceVolume",
@@ -859,8 +844,7 @@
           "application/json"
         ],
         "tags": [
-          "volume",
-          "usedsize"
+          "volume"
         ],
         "summary": "Get Used size of volume with specified id.",
         "operationId": "usedSizeVolume",
@@ -886,8 +870,7 @@
           "application/json"
         ],
         "tags": [
-          "volume",
-          "versions"
+          "volume"
         ],
         "summary": "Lists API versions supported by this volumeDriver.",
         "operationId": "listVersions",
@@ -910,8 +893,7 @@
           "application/json"
         ],
         "tags": [
-          "volume",
-          "inspect"
+          "volume"
         ],
         "summary": "Inspect volume with specified id.",
         "operationId": "inspectVolume",
@@ -938,8 +920,7 @@
           "application/json"
         ],
         "tags": [
-          "volume",
-          "update"
+          "volume"
         ],
         "summary": "Updates a single volume with given spec.",
         "operationId": "setVolume",
@@ -981,8 +962,7 @@
           "application/json"
         ],
         "tags": [
-          "volume",
-          "delete"
+          "volume"
         ],
         "summary": "Delete volume with specified id.",
         "operationId": "deleteVolume",
@@ -1571,92 +1551,40 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "ClusterConfig": {
-      "description": "ClusterConfig is a cluster level config parameter struct",
       "type": "object",
       "properties": {
-        "alerting_url": {
-          "type": "string",
-          "x-go-name": "AlertingUrl"
+        "ClusterId": {
+          "type": "string"
         },
-        "bootstrap": {
-          "type": "boolean",
-          "x-go-name": "Bootstrap"
+        "DataIface": {
+          "type": "string"
         },
-        "callhome": {
-          "type": "boolean",
-          "x-go-name": "Callhome"
+        "DataIp": {
+          "type": "string"
         },
-        "cluster_id": {
-          "type": "string",
-          "x-go-name": "ClusterId"
+        "DefaultDriver": {
+          "type": "string"
         },
-        "created": {
-          "type": "string",
-          "x-go-name": "Created"
+        "FluentDHost": {
+          "type": "string"
         },
-        "debug_level": {
-          "type": "string",
-          "x-go-name": "DebugLevel"
+        "LoggingURL": {
+          "type": "string"
         },
-        "description": {
-          "type": "string",
-          "x-go-name": "Description"
+        "ManagementURL": {
+          "type": "string"
         },
-        "domain": {
-          "type": "string",
-          "x-go-name": "Domain"
+        "MgmtIp": {
+          "type": "string"
         },
-        "driver": {
-          "type": "string",
-          "x-go-name": "Driver"
+        "MgtIface": {
+          "type": "string"
         },
-        "generic": {
-          "type": "object",
-          "x-go-name": "Private"
-        },
-        "kvdb": {
-          "$ref": "#/definitions/KvdbConfig"
-        },
-        "logging_url": {
-          "type": "string",
-          "x-go-name": "LoggingUrl"
-        },
-        "mode": {
-          "type": "string",
-          "x-go-name": "Mode"
-        },
-        "multicontainer": {
-          "type": "boolean",
-          "x-go-name": "Multicontainer"
-        },
-        "nolh": {
-          "type": "boolean",
-          "x-go-name": "Nolh"
-        },
-        "scheduler": {
-          "type": "string",
-          "x-go-name": "Scheduler"
-        },
-        "secrets": {
-          "$ref": "#/definitions/SecretsConfig"
-        },
-        "tunnel_certs": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "x-go-name": "TunnelCerts"
-        },
-        "tunnel_end_point": {
-          "type": "string",
-          "x-go-name": "TunnelEndPoint"
-        },
-        "version": {
-          "type": "string",
-          "x-go-name": "Version"
+        "NodeId": {
+          "type": "string"
         }
       },
-      "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
+      "x-go-package": "github.com/libopenstorage/openstorage/config"
     },
     "ClusterNotify": {
       "type": "integer",
@@ -1673,6 +1601,40 @@
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "Config": {
+      "type": "object",
+      "properties": {
+        "Osd": {
+          "type": "object",
+          "properties": {
+            "ClusterConfig": {
+              "$ref": "#/definitions/ClusterConfig"
+            },
+            "Drivers": {
+              "description": "map[string]string is volume.VolumeParams equivalent",
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            },
+            "GraphDrivers": {
+              "description": "map[string]string is volume.VolumeParams equivalent",
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/config"
     },
     "CosType": {
       "type": "integer",

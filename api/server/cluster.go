@@ -3,16 +3,17 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/libopenstorage/openstorage/api"
-	client "github.com/libopenstorage/openstorage/api/client/cluster"
-	"github.com/libopenstorage/openstorage/cluster"
-	"github.com/libopenstorage/openstorage/osdconfig"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gorilla/mux"
+	"github.com/libopenstorage/openstorage/api"
+	client "github.com/libopenstorage/openstorage/api/client/cluster"
+	"github.com/libopenstorage/openstorage/cluster"
+	"github.com/libopenstorage/openstorage/osdconfig"
 )
 
 const (
@@ -50,7 +51,7 @@ func (c *clusterApi) Routes() []*Route {
 	}
 }
 
-// swagger:operation GET /config/cluster config cluster
+// swagger:operation GET /config/cluster config getClusterConfig
 //
 // Get cluster configuration.
 //
@@ -79,7 +80,7 @@ func (c *clusterApi) getClusterConf(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(config)
 }
 
-// swagger:operation GET /config/node/{id} config node
+// swagger:operation GET /config/node/{id} config getNodeConfig
 //
 // Get node configuration.
 //
@@ -93,6 +94,7 @@ func (c *clusterApi) getClusterConf(w http.ResponseWriter, r *http.Request) {
 //   in: path
 //   description: id to get node with
 //   required: true
+//   type: integer
 // responses:
 //   '200':
 //      description: a node
@@ -114,7 +116,7 @@ func (c *clusterApi) getNodeConf(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(config)
 }
 
-// swagger:operation POST /config/cluster config cluster
+// swagger:operation POST /config/cluster config setClusterConfig
 //
 // Set cluster configuration.
 //
@@ -130,6 +132,9 @@ func (c *clusterApi) getNodeConf(w http.ResponseWriter, r *http.Request) {
 //   required: true
 //   schema:
 //     $ref: '#/definitions/ClusterConfig'
+// responses:
+//   200:
+//     description: success
 func (c *clusterApi) setClusterConf(w http.ResponseWriter, r *http.Request) {
 	method := "setClusterConf"
 	inst, err := cluster.Inst()
@@ -156,7 +161,7 @@ func (c *clusterApi) setClusterConf(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(config)
 }
 
-// swagger:operation POST /config/node config node
+// swagger:operation POST /config/node config setNodeConfig
 //
 // Set node configuration.
 //
@@ -172,6 +177,9 @@ func (c *clusterApi) setClusterConf(w http.ResponseWriter, r *http.Request) {
 //   required: true
 //   schema:
 //     $ref: '#/definitions/NodeConfig'
+// responses:
+//   200:
+//     description: success
 func (c *clusterApi) setNodeConf(w http.ResponseWriter, r *http.Request) {
 	method := "setNodeConf"
 	inst, err := cluster.Inst()
@@ -206,7 +214,7 @@ func (c *clusterApi) String() string {
 	return c.name
 }
 
-// swagger:operation GET /cluster/enumerate cluster enumerate enumerateCluster
+// swagger:operation GET /cluster/enumerate cluster enumerateCluster
 //
 // Lists cluster Nodes.
 //
@@ -261,7 +269,7 @@ func (c *clusterApi) setSize(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(clusterResponse)
 }
 
-// swagger:operation GET /cluster/inspect/{id} cluster inspect inspectNode
+// swagger:operation GET /cluster/inspect/{id} cluster inspectNode
 //
 // Inspect cluster Nodes.
 //
@@ -304,7 +312,7 @@ func (c *clusterApi) inspect(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// swagger:operation PUT /loggingurl cluster loggingurl setLoggingUrl
+// swagger:operation PUT /loggingurl cluster setLoggingUrl
 //
 // Set Logging url
 // ---
@@ -392,7 +400,7 @@ func (c *clusterApi) gossipState(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
-// swagger:operation GET /cluster/status cluster status status
+// swagger:operation GET /cluster/status cluster status
 //
 // this will return the cluster status.
 //
@@ -438,7 +446,7 @@ func nodeStatusIntl() (api.Status, error) {
 	return resp, nil
 }
 
-// swagger:operation GET /cluster/nodestatus node status nodeStatus
+// swagger:operation GET /cluster/nodestatus node nodeStatus
 //
 // This will return the node status .
 //
@@ -462,7 +470,7 @@ func (c *clusterApi) nodeStatus(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(st)
 }
 
-// swagger:operation GET /cluster/nodehealth node health nodeHealth
+// swagger:operation GET /cluster/nodehealth node nodeHealth
 //
 // This will return node health.
 //
@@ -492,7 +500,7 @@ func (c *clusterApi) nodeHealth(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(nodeOkMsg + "\n"))
 }
 
-// swagger:operation GET /cluster/peerstatus node peerstatus peerStatus
+// swagger:operation GET /cluster/peerstatus node peerStatus
 //
 // This will return the peer node status
 //
@@ -534,7 +542,7 @@ func (c *clusterApi) peerStatus(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// swagger:operation DELETE /cluster/{id} cluster node delete deleteNode
+// swagger:operation DELETE /cluster/{id} cluster deleteNode
 //
 // This will delete a node from the cluster
 //
@@ -600,7 +608,7 @@ func (c *clusterApi) delete(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(clusterResponse)
 }
 
-// swagger:operation PUT /cluster/{id} cluster node shutdown shutdownNode
+// swagger:operation PUT /cluster/{id} cluster shutdownNode
 //
 // This will shutdown a node (Not Implemented)
 //
@@ -623,7 +631,7 @@ func (c *clusterApi) shutdown(w http.ResponseWriter, r *http.Request) {
 	c.sendNotImplemented(w, method)
 }
 
-// swagger:operation GET /cluster/versions cluster versions enumerateVersions
+// swagger:operation GET /cluster/versions cluster enumerateVersions
 //
 // Lists API Versions supported by this cluster
 //
@@ -645,7 +653,7 @@ func (c *clusterApi) versions(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(versions)
 }
 
-// swagger:operation GET /cluster/alerts/{resource} cluster alerts enumerate enumerateAlerts
+// swagger:operation GET /cluster/alerts/{resource} cluster enumerateAlerts
 //
 // This will return a list of alerts for the requested resource
 //
@@ -723,7 +731,7 @@ func (c *clusterApi) enumerateAlerts(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(alerts)
 }
 
-// swagger:operation PUT /cluster/alerts/{resource}/{id} cluster alerts clear clearAlert
+// swagger:operation PUT /cluster/alerts/{resource}/{id} cluster clearAlert
 //
 // This will clear alert {id} with resourcetype {resource}
 //
@@ -774,7 +782,7 @@ func (c *clusterApi) clearAlert(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode("Successfully cleared Alert")
 }
 
-// swagger:operation DELETE /cluster/alerts/{resource}/{id} cluster alerts delete deleteAlert
+// swagger:operation DELETE /cluster/alerts/{resource}/{id} cluster deleteAlert
 //
 // This delete clear alert {id} with resourcetype {resource}
 //

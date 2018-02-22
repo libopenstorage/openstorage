@@ -66,7 +66,7 @@ func (vd *volAPI) parseID(r *http.Request) (string, error) {
 	return "", fmt.Errorf("could not parse snap ID")
 }
 
-// swagger:operation POST /osd-volumes volume create createVolume
+// swagger:operation POST /osd-volumes volume createVolume
 //
 // Creates a single volume with given spec.
 //
@@ -137,7 +137,7 @@ func processErrorForVolSetResponse(action *api.VolumeStateAction, err error, res
 	}
 }
 
-// swagger:operation PUT /osd-volumes/{id} volume update setVolume
+// swagger:operation PUT /osd-volumes/{id} volume setVolume
 //
 // Updates a single volume with given spec.
 //
@@ -249,7 +249,7 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// swagger:operation GET /osd-volumes/{id} volume inspect inspectVolume
+// swagger:operation GET /osd-volumes/{id} volume inspectVolume
 //
 // Inspect volume with specified id.
 //
@@ -293,7 +293,7 @@ func (vd *volAPI) inspect(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(dk)
 }
 
-// swagger:operation DELETE /osd-volumes/{id} volume delete deleteVolume
+// swagger:operation DELETE /osd-volumes/{id} volume deleteVolume
 //
 // Delete volume with specified id.
 //
@@ -342,7 +342,7 @@ func (vd *volAPI) delete(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(volumeResponse)
 }
 
-// swagger:operation GET /osd-volumes volume enumerate enumerateVolumes
+// swagger:operation GET /osd-volumes volume enumerateVolumes
 //
 // Enumerate all volumes
 //
@@ -438,7 +438,7 @@ func (vd *volAPI) enumerate(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(vols)
 }
 
-// swagger:operation POST /osd-snapshots snapshot create createSnap
+// swagger:operation POST /osd-snapshots snapshot createSnap
 //
 // Take a snapshot of volume in SnapCreateRequest
 //
@@ -493,7 +493,7 @@ func (vd *volAPI) snap(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(&snapRes)
 }
 
-// swagger:operation POST /osd-snapshots/restore/{id} snapshot restore restoreSnap
+// swagger:operation POST /osd-snapshots/restore/{id} snapshot restoreSnap
 //
 // Restore snapshot with specified id.
 //
@@ -549,7 +549,7 @@ func (vd *volAPI) restore(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(volumeResponse)
 }
 
-// swagger:operation GET /osd-snapshots snapshot enumerate enumerateSnaps
+// swagger:operation GET /osd-snapshots snapshot enumerateSnaps
 //
 // Enumerate snapshots.
 //
@@ -629,7 +629,7 @@ func (vd *volAPI) snapEnumerate(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(snaps)
 }
 
-// swagger:operation GET /osd-volumes/stats/{id} volume stats statsVolume
+// swagger:operation GET /osd-volumes/stats/{id} volume statsVolume
 //
 // Get stats for volume with specified id.
 //
@@ -686,7 +686,7 @@ func (vd *volAPI) stats(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(stats)
 }
 
-// swagger:operation GET /osd-volumes/usedsize/{id} volume usedsize usedSizeVolume
+// swagger:operation GET /osd-volumes/usedsize/{id} volume usedSizeVolume
 //
 // Get Used size of volume with specified id.
 //
@@ -729,7 +729,7 @@ func (vd *volAPI) usedsize(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(used)
 }
 
-// swagger:operation POST /osd-volumes/requests/{id} volume requests requestsVolume
+// swagger:operation POST /osd-volumes/requests/{id} volume requestsVolume
 //
 // Get Requests for volume with specified id.
 //
@@ -767,7 +767,7 @@ func (vd *volAPI) requests(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(requests)
 }
 
-// swagger:operation GET /osd-volumes/quiesce/{id} volume quiesce quiesceVolume
+// swagger:operation GET /osd-volumes/quiesce/{id} volume quiesceVolume
 //
 // Quiesce volume with specified id.
 //
@@ -832,7 +832,7 @@ func (vd *volAPI) quiesce(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(volumeResponse)
 }
 
-// swagger:operation POST /osd-volumes/unquiesce/{id} volume unquiesce unquiesceVolume
+// swagger:operation POST /osd-volumes/unquiesce/{id} volume unquiesceVolume
 //
 // Unquiesce volume with specified id.
 //
@@ -878,7 +878,7 @@ func (vd *volAPI) unquiesce(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(volumeResponse)
 }
 
-// swagger:operation GET /osd-volumes/versions volume versions listVersions
+// swagger:operation GET /osd-volumes/versions volume listVersions
 //
 // Lists API versions supported by this volumeDriver.
 //

@@ -15,7 +15,7 @@
 //     BasePath: /v1
 //     Version: 1.0.0
 //     License: APACHE2 https://opensource.org/licenses/Apache-2.0
-//     Contact: Luis Pabon<luis@portworx.com>
+//     Contact: Openstorage<github@openstorage.org> https://github.com/libopenstorage/openstorage
 //
 //     Consumes:
 //     - application/json
