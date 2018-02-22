@@ -5,15 +5,12 @@
 // OpenStorage is a clustered implementation of the Open Storage specification and relies on the OCI runtime.
 // It allows you to run stateful services in containers in a multi-host clustered environment.
 //
-// Terms Of Service:
-//
-// There are is no TOS at this moment, use at your own risk we take no responsibility
-//
 //     Schemes: http, https
 //     Host: localhost
 //     BasePath: /v1
 //     Version: 1.0.0
 //     License: APACHE2 https://opensource.org/licenses/Apache-2.0
+//     Contact: https://github.com/libopenstorage/openstorage
 //
 //     Consumes:
 //     - application/json
