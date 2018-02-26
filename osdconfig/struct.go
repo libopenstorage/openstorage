@@ -44,6 +44,7 @@ type ClusterConfig struct {
 	Version        string         `json:"version,omitempty" enable:"true" hidden:"false" usage:"Version info for cluster"`
 	Created        string         `json:"created,omitempty" enable:"true" hidden:"false" usage:"Creation info for cluster"`
 	ClusterId      string         `json:"cluster_id,omitempty" enable:"true" hidden:"false" usage:"Cluster ID info"`
+	NodeId         []string       `json:"node_id,omitempty" enable:"true" hidden:"false" usage:"Node ID info"`
 	LoggingUrl     string         `json:"logging_url,omitempty" enable:"true" hidden:"false" usage:"URL for logging"`
 	AlertingUrl    string         `json:"alerting_url,omitempty" enable:"true" hidden:"false" usage:"URL for altering"`
 	Scheduler      string         `json:"scheduler,omitempty" enable:"true" hidden:"false" usage:"Cluster scheduler"`
@@ -63,6 +64,7 @@ type ClusterConfig struct {
 
 func (conf *ClusterConfig) Init() *ClusterConfig {
 	conf.TunnelCerts = make([]string, 0, 0)
+	conf.NodeId = make([]string, 0, 0)
 	conf.Secrets = new(SecretsConfig).Init()
 	conf.Kvdb = new(KvdbConfig).Init()
 	return conf
