@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -148,6 +149,18 @@ func (c *clusterApi) setClusterConf(w http.ResponseWriter, r *http.Request) {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	if len(data) > 2 {
+		data = data[1 : len(data)-1]
+	} else {
+		c.sendError(c.name, method, w, "incorrect form input", http.StatusInternalServerError)
+		return
+	}
+
+	data, err = base64.StdEncoding.DecodeString(string(data))
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	config := new(osdconfig.ClusterConfig)
 	if err := json.Unmarshal(data, config); err != nil {
@@ -189,6 +202,18 @@ func (c *clusterApi) setNodeConf(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if len(data) > 2 {
+		data = data[1 : len(data)-1]
+	} else {
+		c.sendError(c.name, method, w, "incorrect form input", http.StatusInternalServerError)
+		return
+	}
+
+	data, err = base64.StdEncoding.DecodeString(string(data))
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
