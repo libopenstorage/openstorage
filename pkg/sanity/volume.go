@@ -17,7 +17,9 @@ limitations under the License.
 package sanity
 
 import (
+	"math"
 	"strconv"
+	"time"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/client"
@@ -79,7 +81,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			By("Creating the volume")
 			var err error
 
-			var size uint64 = 3
+			var size = 3
 			vr := &api.VolumeCreateRequest{
 				Locator: &api.VolumeLocator{
 					Name: "vol-osd-sanity-cd",
@@ -89,7 +91,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 				},
 				Source: &api.Source{},
 				Spec: &api.VolumeSpec{
-					Size:      size,
+					Size:      uint64(size * GIGABYTE),
 					HaLevel:   1,
 					BlockSize: 256,
 					Format:    api.FSType_FS_TYPE_EXT4,
@@ -110,7 +112,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 
 			By("Creating the volume")
 			var err error
-			var size uint64 = 3
+			var size = 3
 			vr := &api.VolumeCreateRequest{
 				Locator: &api.VolumeLocator{
 					Name: "vol-osd-sanity-shared",
@@ -120,7 +122,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 				},
 				Source: &api.Source{},
 				Spec: &api.VolumeSpec{
-					Size:    size,
+					Size:    uint64(size * GIGABYTE),
 					HaLevel: 1,
 					Format:  api.FSType_FS_TYPE_EXT4,
 					Shared:  true,
@@ -147,6 +149,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 				By("Creating a volume blank name")
 				var err error
 
+				var size = 1
 				vr := &api.VolumeCreateRequest{
 					Locator: &api.VolumeLocator{
 						Name: "",
@@ -156,7 +159,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 					},
 					Source: &api.Source{},
 					Spec: &api.VolumeSpec{
-						Size:    1,
+						Size:    uint64(size * GIGABYTE),
 						HaLevel: 1,
 					},
 				}
@@ -196,7 +199,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 		It("Should create two volumes successfully", func() {
 
 			By("Creating the volumes")
-			var size uint64 = 2
+			var size = 2
 			name := "inspect-vol-"
 
 			volumesToCreate = 2
@@ -217,7 +220,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 					},
 					Source: &api.Source{},
 					Spec: &api.VolumeSpec{
-						Size:      size,
+						Size:      uint64(size * GIGABYTE),
 						HaLevel:   1,
 						BlockSize: 256,
 						Format:    api.FSType_FS_TYPE_EXT4,
@@ -271,6 +274,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			By("Creating the volume")
 			var err error
 
+			var size = 1
 			vr := &api.VolumeCreateRequest{
 				Locator: &api.VolumeLocator{
 					Name: "create-to-delete",
@@ -280,7 +284,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 				},
 				Source: &api.Source{},
 				Spec: &api.VolumeSpec{
-					Size:    1,
+					Size:    uint64(size * GIGABYTE),
 					HaLevel: 1,
 				},
 			}
@@ -346,7 +350,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 					Source: &api.Source{},
 					Spec: &api.VolumeSpec{
 						HaLevel: 1,
-						Size:    uint64(size),
+						Size:    uint64(size * GIGABYTE),
 					},
 				}
 
@@ -414,7 +418,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 				},
 				Source: &api.Source{},
 				Spec: &api.VolumeSpec{
-					Size:    size,
+					Size:    uint64(size * GIGABYTE),
 					HaLevel: 1,
 					Format:  api.FSType_FS_TYPE_EXT4,
 				},
@@ -489,7 +493,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			var err error
 
 			volumesToCreate = 1
-			var size uint64 = 5
+			var size = 5
 			vr := &api.VolumeCreateRequest{
 				Locator: &api.VolumeLocator{
 					Name: "create-to-mount",
@@ -499,7 +503,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 				},
 				Source: &api.Source{},
 				Spec: &api.VolumeSpec{
-					Size:    size,
+					Size:    uint64(size * GIGABYTE),
 					HaLevel: 1,
 					Format:  api.FSType_FS_TYPE_EXT4,
 				},
@@ -547,6 +551,9 @@ var _ = Describe("Volume [Volume Tests]", func() {
 
 		AfterEach(func() {
 			var err error
+
+			By("Deleting the volume successfully")
+
 			err = volumedriver.Delete(volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
@@ -555,23 +562,23 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			numVolumesAfter = len(volumes)
 		})
 
-		It("Should update successfully", func() {
+		It("Should update successfully with the new volume size.", func() {
 
 			By("Creating the volume")
 
 			var err error
 
-			var size uint64 = 5
+			var size = 5
 			vr := &api.VolumeCreateRequest{
 				Locator: &api.VolumeLocator{
-					Name: "create-to-attach",
+					Name: "create-to-update-size",
 					VolumeLabels: map[string]string{
-						"class": "attach-class",
+						"class": "update-size-class",
 					},
 				},
 				Source: &api.Source{},
 				Spec: &api.VolumeSpec{
-					Size:    size,
+					Size:    uint64(size * GIGABYTE),
 					HaLevel: 1,
 					Format:  api.FSType_FS_TYPE_EXT4,
 				},
@@ -585,14 +592,24 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			By("Checking if volume created successfully with the provided params")
 			testIfVolumeCreatedSuccessfully(volumedriver, volumeID, numVolumesBefore, vr)
 
-			By("Updating the volume spec. ")
-			newSize := 5
+			By("First attaching and mounting the volume to a node")
+
+			str, err := volumedriver.Attach(volumeID, nil)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(str).NotTo(BeNil())
+
+			err = volumedriver.Mount(volumeID, "/mnt", nil)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(str).NotTo(BeNil())
+
+			By("Updating the volume spec with new random size.")
+			newSize := random(size+1, 100)
 
 			set := &api.VolumeSetRequest{
 				Locator: vr.GetLocator(),
 				Spec: &api.VolumeSpec{
-					Size:   uint64(newSize),
-					Shared: true,
+					Size:             uint64(newSize * GIGABYTE),
+					SnapshotInterval: math.MaxUint32,
 				},
 			}
 
@@ -603,8 +620,72 @@ var _ = Describe("Volume [Volume Tests]", func() {
 
 			volumes, err := volumedriver.Inspect([]string{volumeID})
 			Expect(err).NotTo(HaveOccurred())
-			Expect(volumes[0].GetSpec().GetSize()).To(BeEquivalentTo(newSize))
+			Expect(volumes[0].GetSpec().GetSize()).To(BeEquivalentTo(set.GetSpec().GetSize()))
+
+			By("Detaching the volume and unmount successfully")
+
+			err = volumedriver.Unmount(volumeID, "/mnt", nil)
+			Expect(err).ToNot(HaveOccurred())
+
+			err = volumedriver.Detach(volumeID, nil)
+			Expect(err).ToNot(HaveOccurred())
 		})
+
+		It("Should update volume successfully with new HA level", func() {
+
+			By("Creating the volume")
+
+			var err error
+			var haLevel = 1
+
+			var size = 5
+			vr := &api.VolumeCreateRequest{
+				Locator: &api.VolumeLocator{
+					Name: "vol-update-ha",
+					VolumeLabels: map[string]string{
+						"class": "update-ha-class",
+					},
+				},
+				Source: &api.Source{},
+				Spec: &api.VolumeSpec{
+					Size:    uint64(size * GIGABYTE),
+					HaLevel: int64(haLevel),
+					Format:  api.FSType_FS_TYPE_EXT4,
+				},
+			}
+
+			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(volumeID).ToNot(BeNil())
+
+			By("Checking if volume created successfully with the provided params")
+			testIfVolumeCreatedSuccessfully(volumedriver, volumeID, numVolumesBefore, vr)
+
+			newHALevel := vr.Spec.HaLevel + 1
+			By("Updating the volume HA level ")
+			set := &api.VolumeSetRequest{
+				Locator: vr.GetLocator(),
+				Spec: &api.VolumeSpec{
+					HaLevel: int64(newHALevel),
+					ReplicaSet: &api.ReplicaSet{
+						Nodes: []string{""},
+					},
+					SnapshotInterval: math.MaxUint32,
+				},
+			}
+
+			err = volumedriver.Set(volumeID, set.Locator, set.Spec)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Inspecting the volume for new updates")
+			time.Sleep(time.Second * 10)
+
+			volumes, err := volumedriver.Inspect([]string{volumeID})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(volumes[0].Spec.HaLevel).To(BeEquivalentTo(newHALevel))
+		})
+
 	})
 
 	Describe("Volume Stats [Stats]", func() {
@@ -638,7 +719,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			By("Creating the volume")
 
 			var err error
-			var size uint64 = 5
+			var size = 5
 			vr := &api.VolumeCreateRequest{
 				Locator: &api.VolumeLocator{
 					Name: "get-stats",
@@ -648,7 +729,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 				},
 				Source: &api.Source{},
 				Spec: &api.VolumeSpec{
-					Size:      size,
+					Size:      uint64(size * GIGABYTE),
 					HaLevel:   2,
 					Format:    api.FSType_FS_TYPE_EXT4,
 					BlockSize: 128,
@@ -705,7 +786,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			By("Creating the volume")
 
 			var err error
-			var size uint64 = 5
+			var size = 5
 			vr := &api.VolumeCreateRequest{
 				Locator: &api.VolumeLocator{
 					Name: "get-active-requests",
@@ -715,7 +796,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 				},
 				Source: &api.Source{},
 				Spec: &api.VolumeSpec{
-					Size:      size,
+					Size:      uint64(size * GIGABYTE),
 					HaLevel:   2,
 					Format:    api.FSType_FS_TYPE_EXT4,
 					BlockSize: 128,
@@ -770,7 +851,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			By("Creating the volume")
 
 			var err error
-			var size uint64 = 2
+			var size = 2
 			vr := &api.VolumeCreateRequest{
 				Locator: &api.VolumeLocator{
 					Name: "get-used-size",
@@ -780,7 +861,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 				},
 				Source: &api.Source{},
 				Spec: &api.VolumeSpec{
-					Size:      size,
+					Size:      uint64(size * GIGABYTE),
 					HaLevel:   2,
 					Format:    api.FSType_FS_TYPE_EXT4,
 					BlockSize: 128,
@@ -838,7 +919,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			By("Creating the volume")
 
 			var err error
-			var size uint64 = 3
+			var size = 3
 			vr := &api.VolumeCreateRequest{
 				Locator: &api.VolumeLocator{
 					Name: "volume-quiesce",
@@ -848,7 +929,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 				},
 				Source: &api.Source{},
 				Spec: &api.VolumeSpec{
-					Size:      size,
+					Size:      uint64(size * GIGABYTE),
 					HaLevel:   2,
 					Format:    api.FSType_FS_TYPE_EXT4,
 					BlockSize: 128,
