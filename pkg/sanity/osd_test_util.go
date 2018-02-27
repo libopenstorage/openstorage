@@ -93,12 +93,3 @@ func random(min, max int) int {
 	rand.Seed(time.Now().Unix())
 	return rand.Intn(max-min) + min
 }
-
-func getNewHALevel(currentHA int64) (newHALevel int) {
-	if currentHA == 1 || currentHA == 3 {
-		newHALevel = 2
-	} else {
-		newHALevel = []int{1, 3}[random(0, 2)]
-	}
-	return
-}

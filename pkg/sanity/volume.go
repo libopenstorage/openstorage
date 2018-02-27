@@ -662,7 +662,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			By("Checking if volume created successfully with the provided params")
 			testIfVolumeCreatedSuccessfully(volumedriver, volumeID, numVolumesBefore, vr)
 
-			newHALevel := getNewHALevel(vr.Spec.HaLevel)
+			newHALevel := vr.Spec.HaLevel + 1
 			By("Updating the volume HA level ")
 			set := &api.VolumeSetRequest{
 				Locator: vr.GetLocator(),
