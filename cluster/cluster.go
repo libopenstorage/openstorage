@@ -260,7 +260,7 @@ type Cluster interface {
 	// It also causes this node to join the cluster.
 	// nodeInitialized indicates if the caller of this method expects the node
 	// to have been in an already-initialized state.
-	Start(clusterSize int, nodeInitialized bool) error
+	Start(clusterSize int, nodeInitialized bool, gossipPort string) error
 
 	ClusterData
 	ClusterRemove

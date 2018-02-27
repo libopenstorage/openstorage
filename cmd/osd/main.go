@@ -270,7 +270,7 @@ func start(c *cli.Context) error {
 		if err != nil {
 			return fmt.Errorf("Unable to find cluster instance: %v", err)
 		}
-		if err := cm.Start(0, false); err != nil {
+		if err := cm.Start(0, false, "9002"); err != nil {
 			return fmt.Errorf("Unable to start cluster manager: %v", err)
 		}
 	}

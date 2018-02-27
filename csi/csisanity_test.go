@@ -76,7 +76,7 @@ func TestCSISanity(t *testing.T) {
 		t.Fatalf("Unable to find cluster instance: %v", err)
 	}
 	go func() {
-		cm.Start(0, false)
+		cm.Start(0, false, "9002")
 	}()
 
 	// Start CSI Server
