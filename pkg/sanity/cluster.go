@@ -17,10 +17,15 @@ limitations under the License.
 package sanity
 
 import (
+	"time"
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/client"
 	clusterclient "github.com/libopenstorage/openstorage/api/client/cluster"
+	volumeclient "github.com/libopenstorage/openstorage/api/client/volume"
+
 	"github.com/libopenstorage/openstorage/cluster"
+	"github.com/libopenstorage/openstorage/volume"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -68,7 +73,7 @@ var _ = Describe("Cluster [Cluster Tests]", func() {
 				Expect(n.Cpu).To(BeNumerically(">", 0))
 				Expect(n.MemTotal).To(BeNumerically(">", 0))
 				Expect(n.MemUsed).To(BeNumerically(">", 0))
-				Expect(n.MemUsed).To(BeNumerically(">", 0))
+				Expect(n.MemFree).To(BeNumerically(">", 0))
 			}
 		})
 	})
@@ -89,6 +94,246 @@ var _ = Describe("Cluster [Cluster Tests]", func() {
 				Expect(node.DataIp).To(Equal(n.DataIp))
 				Expect(node.Hostname).To(Equal(n.Hostname))
 			}
+		})
+	})
+
+	Describe("Node Status", func() {
+		It("Should have an ok status for the node", func() {
+
+			By("Checking the status of the node")
+			nodeStatus, err := manager.NodeStatus()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(nodeStatus).To(BeEquivalentTo(api.Status_STATUS_OK))
+		})
+	})
+
+	Describe("Gossip State", func() {
+		It("Should get Gossip state", func() {
+
+			By("Querying for gossip state")
+			gossipState := manager.GetGossipState()
+			Expect(len(gossipState.NodeStatus)).ToNot(BeZero())
+			Expect(gossipState).NotTo(BeNil())
+		})
+	})
+
+	Describe("Enumerate Alerts", func() {
+
+		var (
+			err              error
+			volumeID         string
+			numVolumesBefore int
+			volumedriver     volume.VolumeDriver
+			restClient       *client.Client
+		)
+
+		BeforeEach(func() {
+
+			restClient, err = volumeclient.NewDriverClient(osdAddress, volumeDriver, volume.APIVersion, "")
+			Expect(err).ToNot(HaveOccurred())
+			volumedriver = volumeclient.VolumeDriver(restClient)
+
+			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+			numVolumesBefore = len(volumes)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("Should Enumerate Alerts for volume created / deleted", func() {
+			By("Creating the volume first")
+
+			var size = 3
+			vr := &api.VolumeCreateRequest{
+				Locator: &api.VolumeLocator{
+					Name: "volume-to-enumerate-alerts",
+					VolumeLabels: map[string]string{
+						"class": "enumerate-alerts-class",
+					},
+				},
+				Source: &api.Source{},
+				Spec: &api.VolumeSpec{
+					Size:      uint64(size * GIGABYTE),
+					HaLevel:   1,
+					BlockSize: 256,
+					Format:    api.FSType_FS_TYPE_EXT4,
+				},
+			}
+
+			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Checking if no of volumes present in cluster increases by 1")
+			testIfVolumeCreatedSuccessfully(volumedriver, volumeID, numVolumesBefore, vr)
+
+			By("Deleting the created volume")
+
+			err = volumedriver.Delete(volumeID)
+			Expect(err).NotTo(HaveOccurred())
+
+			endTime := time.Now()
+			// 30 seconds  before
+			startTime := endTime.Add(-30 * time.Second)
+			alerts, err := manager.EnumerateAlerts(startTime, endTime, api.ResourceType_RESOURCE_TYPE_VOLUME)
+			Expect(err).NotTo(HaveOccurred())
+
+			noOfOccurence := 0
+			for _, alert := range alerts.Alert {
+				if alert.ResourceId == volumeID {
+					noOfOccurence++
+				}
+			}
+			// No of occurence should be 2  [one for create and one for delete]
+			Expect(noOfOccurence).To(BeEquivalentTo(2))
+		})
+
+		It("Should enumerate alerts for all resource types ", func() {
+
+			By("Enumeraing alerts")
+
+			endTime := time.Now()
+			startTime := endTime.Add(-5 * time.Hour)
+
+			for _, v := range api.ResourceType_value {
+				alerts, err := manager.EnumerateAlerts(startTime, endTime, api.ResourceType(v))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(alerts).NotTo(BeNil())
+			}
+		})
+	})
+
+	Describe("Clear and Erase Alerts", func() {
+
+		var (
+			startTime time.Time
+			endTime   time.Time
+		)
+		It("Should clear and erase alerts", func() {
+
+			By("Taking a random alertID from volume resource type")
+
+			endTime = time.Now()
+			startTime = endTime.Add(-5 * time.Hour)
+
+			alerts, err := manager.EnumerateAlerts(startTime, endTime, api.ResourceType_RESOURCE_TYPE_VOLUME)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(alerts.Alert).NotTo(BeEmpty())
+
+			randomVolumeAlertID := alerts.Alert[random(0, len(alerts.Alert))].Id
+
+			By("Clear alerts")
+			err = manager.ClearAlert(api.ResourceType_RESOURCE_TYPE_NODE, randomVolumeAlertID)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Enumerating the alerts again and checking if the alert cleared")
+
+			alerts, err = manager.EnumerateAlerts(startTime, endTime, api.ResourceType_RESOURCE_TYPE_VOLUME)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(alerts).NotTo(BeNil())
+
+			for _, alert := range alerts.Alert {
+				if alert.Id == randomVolumeAlertID {
+					Expect(alert.Cleared).To(BeTrue())
+					break
+				}
+			}
+
+			By("Erasing alerts")
+			err = manager.EraseAlert(api.ResourceType_RESOURCE_TYPE_NODE, randomVolumeAlertID)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Enumerating the alerts again and checking if the alert cleared")
+
+			alerts, err = manager.EnumerateAlerts(startTime, endTime, api.ResourceType_RESOURCE_TYPE_VOLUME)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(alerts).NotTo(BeNil())
+
+			noOfOccurence := 0
+			for _, alert := range alerts.Alert {
+				if alert.Id == randomVolumeAlertID {
+					noOfOccurence++
+				}
+			}
+			// Alert should not present
+			Expect(noOfOccurence).To(BeEquivalentTo(0))
+
+		})
+
+	})
+
+	Describe("Cluster Peer Status", func() {
+
+		var (
+			numOfNodes int
+		)
+		BeforeEach(func() {
+
+			By("Enumerating cluster first and getting the no of nodes.")
+			cluster, err := manager.Enumerate()
+			Expect(err).NotTo(HaveOccurred())
+
+			numOfNodes = len(cluster.Nodes)
+		})
+		It("should get peer status each node", func() {
+			By("Querying Peer status")
+			statusMap, err := manager.PeerStatus("PX Storage Service")
+			Expect(err).NotTo(HaveOccurred())
+
+			// if listener name is provided , PeerStatus
+			// returns the status of all peer nodes which would one less than the num of nodes.
+			Expect(len(statusMap)).To(BeEquivalentTo(numOfNodes - 1))
+		})
+
+		It("should get peer status of all node , if listener name is empty", func() {
+			By("Querying Peer status")
+			statusMap, err := manager.PeerStatus("")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(len(statusMap)).To(BeEquivalentTo(numOfNodes - 1))
+		})
+	})
+
+	Describe("Cluster Enable Gossip", func() {
+		It("Should Enable Gossip ", func() {
+
+			By("enabling updates")
+			err := manager.EnableUpdates()
+			Expect(err).NotTo(HaveOccurred())
+		})
+	})
+
+	Describe("Cluster Disable Gossip", func() {
+		It("Should Enable Gossip ", func() {
+
+			By("disabling updates")
+
+			err := manager.DisableUpdates()
+			Expect(err).NotTo(HaveOccurred())
+		})
+	})
+
+	Describe("Cluster Conf", func() {
+		It("Should get cluster conf ", func() {
+
+			By("getting cluster conf")
+
+			clusterConfig, err := manager.GetClusterConf()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(clusterConfig).NotTo(BeNil())
+		})
+	})
+
+	Describe("Cluster Node Conf", func() {
+		It("Should get node configuration ", func() {
+
+			By("First enumerating the cluster and getting node id")
+			cluster, err := manager.Enumerate()
+			Expect(err).NotTo(HaveOccurred())
+			nodeID := cluster.NodeId
+
+			By("getting node configuration")
+			nodeConfig, err := manager.GetNodeConf(nodeID)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(nodeConfig).NotTo(BeNil())
 		})
 	})
 })
