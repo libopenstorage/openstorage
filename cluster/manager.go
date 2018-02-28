@@ -1383,7 +1383,7 @@ func (c *ClusterManager) enumerateNodesFromCache() []api.Node {
 	i := 0
 	for _, n := range c.nodeCache {
 		n, _ := c.getNodeEntry(n.Id, &clusterDB)
-		nodes[i] = n
+		nodes[i] = *n.Copy()
 		i++
 	}
 	return nodes
