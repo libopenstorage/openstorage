@@ -291,6 +291,8 @@ type BackupInfo struct {
 	// Timestamp is the timestamp at which the source volume
 	// was backed up to cloud
 	Timestamp time.Time
+	// Metadata associated with the backup
+	Metadata map[string]string
 	// Status indicates if this backup was successful
 	Status string
 }
