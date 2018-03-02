@@ -26,7 +26,7 @@ func DumpGoMemoryTrace() {
 
 // DumpGoProfile output goroutines to file.
 func DumpGoProfile() error {
-	trace := make([]byte, 1024*1024)
+	trace := make([]byte, 5120*1024)
 	len := runtime.Stack(trace, true)
 	return ioutil.WriteFile(path+time.Now().String()+".stack", trace[:len], 0644)
 }
