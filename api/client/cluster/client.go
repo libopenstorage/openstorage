@@ -324,3 +324,11 @@ func (c *clusterClient) SetNodeConf(config *osdconfig.NodeConfig) error {
 	}
 	return nil
 }
+
+func (c *clusterClient) UnsetNodeConf(nodeID string) error {
+	request := c.c.Delete().Resource(clusterPath + UriNode + "/" + nodeID)
+	if err := request.Do().Error(); err != nil {
+		return err
+	}
+	return nil
+}

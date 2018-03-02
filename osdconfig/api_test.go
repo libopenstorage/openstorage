@@ -75,6 +75,17 @@ func TestSetGetNode(t *testing.T) {
 	if !reflect.DeepEqual(expectedConf, receivedConf) {
 		t.Fatal("expected and received values are not deep equal")
 	}
+
+	// now delete the node
+	if err := manager.UnsetNodeConf(expectedConf.NodeId); err != nil {
+		t.Fatal("error in deleting node config")
+	}
+
+	// get the cluster config value
+	_, err = manager.GetNodeConf(expectedConf.NodeId)
+	if err == nil {
+		t.Fatal("node does not exist, so this should error out")
+	}
 }
 
 func TestCallback(t *testing.T) {

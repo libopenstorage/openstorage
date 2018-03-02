@@ -74,6 +74,20 @@ func (manager *configManager) SetNodeConf(config *NodeConfig) error {
 	return err
 }
 
+// UnsetNodeConf deletes node config data in kvdb
+func (manager *configManager) UnsetNodeConf(nodeID string) error {
+	manager.Lock()
+	defer manager.Unlock()
+
+	if len(nodeID) == 0 {
+		return fmt.Errorf("node id cannot be nil")
+	}
+
+	// remove dode data from kvdb
+	_, err := manager.cc.Delete(getNodeKeyFromNodeID(nodeID))
+	return err
+}
+
 // WatchCluster registers user defined function as callback and sets a watch for changes
 // to cluster configuration
 func (manager *configManager) WatchCluster(name string, cb func(config *ClusterConfig) error) error {

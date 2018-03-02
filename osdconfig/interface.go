@@ -24,6 +24,9 @@ type ConfigCaller interface {
 	// It is assumed that the backend will notify the implementor of this interface
 	// when a change is triggered
 	SetNodeConf(config *NodeConfig) error
+
+	// UnsetNodeConf removes node config for a particular node
+	UnsetNodeConf(nodeID string) error
 }
 
 // ConfigWatcher defines watches on cluster and nodes
