@@ -60,18 +60,6 @@ func (mr *MockClusterMockRecorder) ClearAlert(arg0, arg1 interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearAlert", reflect.TypeOf((*MockCluster)(nil).ClearAlert), arg0, arg1)
 }
 
-// DelNodeConf mocks base method
-func (m *MockCluster) DelNodeConf(arg0 string) error {
-	ret := m.ctrl.Call(m, "DelNodeConf", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DelNodeConf indicates an expected call of DelNodeConf
-func (mr *MockClusterMockRecorder) DelNodeConf(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DelNodeConf", reflect.TypeOf((*MockCluster)(nil).DelNodeConf), arg0)
-}
-
 // DisableUpdates mocks base method
 func (m *MockCluster) DisableUpdates() error {
 	ret := m.ctrl.Call(m, "DisableUpdates")
@@ -364,6 +352,18 @@ func (m *MockCluster) Start(arg0 int, arg1 bool, arg2 string) error {
 // Start indicates an expected call of Start
 func (mr *MockClusterMockRecorder) Start(arg0, arg1, arg2 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockCluster)(nil).Start), arg0, arg1, arg2)
+}
+
+// UnsetNodeConf mocks base method
+func (m *MockCluster) UnsetNodeConf(arg0 string) error {
+	ret := m.ctrl.Call(m, "UnsetNodeConf", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UnsetNodeConf indicates an expected call of UnsetNodeConf
+func (mr *MockClusterMockRecorder) UnsetNodeConf(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnsetNodeConf", reflect.TypeOf((*MockCluster)(nil).UnsetNodeConf), arg0)
 }
 
 // UpdateData mocks base method
