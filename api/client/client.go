@@ -143,7 +143,8 @@ func newHTTPClient(
 	responseTimeout time.Duration,
 ) *http.Client {
 	httpTransport := &http.Transport{
-		TLSClientConfig: tlsConfig,
+		DisableKeepAlives: true,
+		TLSClientConfig:   tlsConfig,
 	}
 
 	switch u.Scheme {
