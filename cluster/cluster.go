@@ -50,14 +50,16 @@ type NodeEntry struct {
 
 // ClusterInfo is the basic info about the cluster and its nodes
 type ClusterInfo struct {
-	Size          int
-	Status        api.Status
-	Id            string
-	NodeEntries   map[string]NodeEntry
-	LoggingURL    string
+	Size        int
+	Status      api.Status
+	Id          string
+	NodeEntries map[string]NodeEntry
+	// LoggingURL - Deprecated
+	LoggingURL string
+	// ManagementURL - Deprecated
 	ManagementURL string
+	// FluentDConfig - Deprecated
 	FluentDConfig api.FluentDConfig
-	TunnelConfig  api.TunnelConfig
 }
 
 // ClusterInitState is the snapshot state which should be used to initialize
@@ -192,18 +194,6 @@ type ClusterData interface {
 
 	// GetGossipState returns the state of nodes according to gossip
 	GetGossipState() *ClusterState
-
-	// SetLoggingURL sets the loggingurl for the stats
-	// Deprecated
-	SetLoggingURL(loggingURL string) error
-
-	SetManagementURL(managementURL string) error
-
-	SetFluentDConfig(fluentdConfig api.FluentDConfig) error
-
-	SetTunnelConfig(tunnelConfig api.TunnelConfig) error
-
-	GetTunnelConfig() api.TunnelConfig
 }
 
 // ClusterStatus interface provides apis for cluster and node status

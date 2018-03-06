@@ -321,6 +321,14 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 		os.Exit(1)
 	}
 
+	// Update all the listeners with the new db
+	for e := c.listeners.Front(); e != nil; e = e.Next() {
+		err := e.Value.(ClusterListener).UpdateCluster(&c.selfNode, &db)
+		if err != nil {
+			dlog.Warnln("Failed to notify ", e.Value.(ClusterListener).String())
+		}
+	}
+
 	for _, nodeEntry := range db.NodeEntries {
 		if nodeEntry.Status == api.Status_STATUS_DECOMMISSION {
 			dlog.Infof("ClusterManager watchDB, node ID "+
@@ -361,13 +369,6 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 	}
 
 	c.size = db.Size
-
-	//Check and update logging url changes
-	updateLoggingUrlListeners(c, db)
-	//Check and update mgmt url changes
-	updateManagementUrlListeners(c, db)
-	// check and update fluentd host changes
-	updateFluentDHostListeners(c, db)
 
 	peers := c.getNonDecommisionedPeers(db)
 	c.gossip.UpdateCluster(peers)
@@ -427,8 +428,6 @@ func (c *ClusterManager) initNode(db *ClusterInfo) (*api.Node, bool) {
 	dlog.Infof("Cluster ID: %s", c.config.ClusterId)
 	dlog.Infof("Node Mgmt IP: %s", c.selfNode.MgmtIp)
 	dlog.Infof("Node Data IP: %s", c.selfNode.DataIp)
-	dlog.Infof("Cluster Logging URL : %s", c.config.LoggingURL)
-	dlog.Infof("Management Logging URL : %s", c.config.ManagementURL)
 
 	return &c.selfNode, exists
 }
@@ -794,166 +793,6 @@ func (c *ClusterManager) EnableUpdates() error {
 	return nil
 }
 
-// Persists the new logging url on to the database
-func (c *ClusterManager) SetLoggingURL(loggingURL string) error {
-	kvdb := kvdb.Instance()
-	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
-	if err != nil {
-		dlog.Warnln("Unable to obtain cluster lock for updating logging url into cluster config", err)
-		return nil
-	}
-	defer kvdb.Unlock(kvlock)
-
-	db, _, err := readClusterInfo()
-	if err != nil {
-		return err
-	}
-
-	db.LoggingURL = loggingURL
-
-	_, err = writeClusterInfo(&db)
-
-	return nil
-}
-
-// Iterates all listeners, which in turn will restart stats with the new logging url
-func updateLoggingUrlListeners(c *ClusterManager, db ClusterInfo) {
-	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		err := e.Value.(ClusterListener).UpdateCluster(&c.selfNode, &db)
-		if err != nil {
-			dlog.Warnln("Failed to notify ", e.Value.(ClusterListener).String())
-		}
-	}
-	c.config.LoggingURL = db.LoggingURL
-}
-
-// Persists the new logging url on to the database
-func (c *ClusterManager) SetManagementURL(host string) error {
-	kvdb := kvdb.Instance()
-	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
-	if err != nil {
-		dlog.Warnln("Unable to obtain cluster lock for updating Management Url into cluster config", err)
-		return nil
-	}
-	defer kvdb.Unlock(kvlock)
-
-	db, _, err := readClusterInfo()
-	if err != nil {
-		return err
-	}
-
-	db.ManagementURL = host
-
-	_, err = writeClusterInfo(&db)
-
-	return nil
-}
-
-// Persists the new fluentd host on to the database
-func (c *ClusterManager) SetFluentDConfig(fluentDConfig api.FluentDConfig) error {
-	kvdb := kvdb.Instance()
-	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
-	if err != nil {
-		dlog.Warnln("Unable to obtain cluster lock for updating FluentD Host into cluster config", err)
-		return nil
-	}
-	defer kvdb.Unlock(kvlock)
-
-	db, _, err := readClusterInfo()
-	if err != nil {
-		return err
-	}
-
-	db.FluentDConfig = fluentDConfig
-
-	_, err = writeClusterInfo(&db)
-
-	return nil
-}
-
-func (c *ClusterManager) GetFluentDConfig() api.FluentDConfig {
-	kvdb := kvdb.Instance()
-	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
-	if err != nil {
-		dlog.Warnln("Unable to obtain cluster lock for updating TunnelConfig into cluster config", err)
-		return api.FluentDConfig{}
-	}
-	defer kvdb.Unlock(kvlock)
-
-	db, _, err := readClusterInfo()
-
-	if err != nil {
-		return api.FluentDConfig{}
-	}
-
-	return db.FluentDConfig
-}
-
-// Iterates all listeners, which in turn will restart stats with the new mgmt url
-func updateManagementUrlListeners(c *ClusterManager, db ClusterInfo) {
-	if c.config.ManagementURL != db.ManagementURL {
-		for e := c.listeners.Front(); e != nil; e = e.Next() {
-			err := e.Value.(ClusterListener).UpdateCluster(&c.selfNode, &db)
-			if err != nil {
-				dlog.Warnln("Failed to notify ", e.Value.(ClusterListener).String())
-			}
-		}
-		c.config.ManagementURL = db.ManagementURL
-	}
-}
-
-// Iterates all listeners, which in turn will restart stats with the new mgmt url
-func updateFluentDHostListeners(c *ClusterManager, db ClusterInfo) {
-	if c.config.FluentDHost != db.FluentDConfig.IP+":"+db.FluentDConfig.Port {
-		for e := c.listeners.Front(); e != nil; e = e.Next() {
-			err := e.Value.(ClusterListener).UpdateCluster(&c.selfNode, &db)
-			if err != nil {
-				dlog.Warnln("Failed to notify ", e.Value.(ClusterListener).String())
-			}
-		}
-		c.config.FluentDHost = db.FluentDConfig.IP + ":" + db.FluentDConfig.Port
-	}
-}
-
-func (c *ClusterManager) SetTunnelConfig(tunnelConfig api.TunnelConfig) error {
-	kvdb := kvdb.Instance()
-	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
-	if err != nil {
-		dlog.Warnln("Unable to obtain cluster lock for updating TunnelConfig into cluster config", err)
-		return nil
-	}
-	defer kvdb.Unlock(kvlock)
-
-	db, _, err := readClusterInfo()
-	if err != nil {
-		return err
-	}
-
-	db.TunnelConfig = tunnelConfig
-
-	_, err = writeClusterInfo(&db)
-
-	return nil
-}
-
-func (c *ClusterManager) GetTunnelConfig() api.TunnelConfig {
-	kvdb := kvdb.Instance()
-	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
-	if err != nil {
-		dlog.Warnln("Unable to obtain cluster lock for updating TunnelConfig into cluster config", err)
-		return api.TunnelConfig{}
-	}
-	defer kvdb.Unlock(kvlock)
-
-	db, _, err := readClusterInfo()
-
-	if err != nil {
-		return api.TunnelConfig{}
-	}
-
-	return db.TunnelConfig
-}
-
 // GetGossipState returns current gossip state
 func (c *ClusterManager) GetGossipState() *ClusterState {
 	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
@@ -1044,12 +883,6 @@ func (c *ClusterManager) initializeCluster(db kvdb.Kvdb) (
 	}
 	// Set the clusterID in db
 	clusterInfo.Id = c.config.ClusterId
-
-	clusterInfo.LoggingURL = c.config.LoggingURL
-	dlog.Infof("LoggingURL during initializing a new cluster: %s ", clusterInfo.LoggingURL)
-
-	clusterInfo.ManagementURL = c.config.ManagementURL
-	dlog.Infof("ManagementURL during initializing a new cluster: %s ", clusterInfo.ManagementURL)
 
 	if clusterInfo.Status == api.Status_STATUS_INIT {
 		dlog.Infoln("Initializing a new cluster.")
@@ -1391,22 +1224,10 @@ func (c *ClusterManager) enumerateNodesFromCache() []api.Node {
 
 // Enumerate lists all the nodes in the cluster.
 func (c *ClusterManager) Enumerate() (api.Cluster, error) {
-	splits := strings.Split(c.config.FluentDHost, ":")
-
-	config := api.FluentDConfig{}
-
-	if len(splits) > 1 {
-		config.IP = splits[0]
-		config.Port = splits[1]
-	}
-
 	cluster := api.Cluster{
-		Id:            c.config.ClusterId,
-		Status:        c.status,
-		NodeId:        c.selfNode.Id,
-		LoggingURL:    c.config.LoggingURL,
-		ManagementURL: c.config.ManagementURL,
-		FluentDConfig: config,
+		Id:     c.config.ClusterId,
+		Status: c.status,
+		NodeId: c.selfNode.Id,
 	}
 
 	if c.selfNode.Status == api.Status_STATUS_NOT_IN_QUORUM ||

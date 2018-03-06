@@ -337,51 +337,6 @@ func (c *clusterApi) inspect(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// swagger:operation PUT /loggingurl cluster setLoggingUrl
-//
-// Set Logging url
-// ---
-// produces:
-// - application/json
-// deprecated: true
-// parameters:
-// - name: url
-//   in: query
-//   description: url to set loggingurl with
-//   required: true
-//   type: string
-// responses:
-//  '200':
-//    description: cluster response
-//    schema:
-//     $ref: '#/definitions/ClusterResponse'
-func (c *clusterApi) setLoggingURL(w http.ResponseWriter, r *http.Request) {
-	method := "set Logging URL"
-
-	inst, err := cluster.Inst()
-
-	if err != nil {
-		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	params := r.URL.Query()
-	loggingURL := params["url"]
-	if len(loggingURL) == 0 {
-		c.sendError(c.name, method, w, "Missing url param  url", http.StatusBadRequest)
-		return
-	}
-
-	err = inst.SetLoggingURL(strings.TrimSpace(loggingURL[0]))
-
-	if err != nil {
-		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	json.NewEncoder(w).Encode(&api.ClusterResponse{})
-}
-
 func (c *clusterApi) enableGossip(w http.ResponseWriter, r *http.Request) {
 	method := "enablegossip"
 
