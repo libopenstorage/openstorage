@@ -1576,99 +1576,40 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "ClusterConfig": {
-      "description": "ClusterConfig is a cluster level config parameter struct",
       "type": "object",
       "properties": {
-        "alerting_url": {
-          "type": "string",
-          "x-go-name": "AlertingUrl"
+        "ClusterId": {
+          "type": "string"
         },
-        "bootstrap": {
-          "type": "boolean",
-          "x-go-name": "Bootstrap"
+        "DataIface": {
+          "type": "string"
         },
-        "callhome": {
-          "type": "boolean",
-          "x-go-name": "Callhome"
+        "DataIp": {
+          "type": "string"
         },
-        "cluster_id": {
-          "type": "string",
-          "x-go-name": "ClusterId"
+        "DefaultDriver": {
+          "type": "string"
         },
-        "created": {
-          "type": "string",
-          "x-go-name": "Created"
+        "FluentDHost": {
+          "type": "string"
         },
-        "debug_level": {
-          "type": "string",
-          "x-go-name": "DebugLevel"
+        "LoggingURL": {
+          "type": "string"
         },
-        "description": {
-          "type": "string",
-          "x-go-name": "Description"
+        "ManagementURL": {
+          "type": "string"
         },
-        "domain": {
-          "type": "string",
-          "x-go-name": "Domain"
+        "MgmtIp": {
+          "type": "string"
         },
-        "driver": {
-          "type": "string",
-          "x-go-name": "Driver"
+        "MgtIface": {
+          "type": "string"
         },
-        "generic": {
-          "type": "object",
-          "x-go-name": "Private"
-        },
-        "kvdb": {
-          "$ref": "#/definitions/KvdbConfig"
-        },
-        "logging_url": {
-          "type": "string",
-          "x-go-name": "LoggingUrl"
-        },
-        "mode": {
-          "type": "string",
-          "x-go-name": "Mode"
-        },
-        "multicontainer": {
-          "type": "boolean",
-          "x-go-name": "Multicontainer"
-        },
-        "node_id": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "x-go-name": "NodeId"
-        },
-        "nolh": {
-          "type": "boolean",
-          "x-go-name": "Nolh"
-        },
-        "scheduler": {
-          "type": "string",
-          "x-go-name": "Scheduler"
-        },
-        "secrets": {
-          "$ref": "#/definitions/SecretsConfig"
-        },
-        "tunnel_certs": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "x-go-name": "TunnelCerts"
-        },
-        "tunnel_end_point": {
-          "type": "string",
-          "x-go-name": "TunnelEndPoint"
-        },
-        "version": {
-          "type": "string",
-          "x-go-name": "Version"
+        "NodeId": {
+          "type": "string"
         }
       },
-      "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
+      "x-go-package": "github.com/libopenstorage/openstorage/config"
     },
     "ClusterNotify": {
       "type": "integer",
@@ -1832,16 +1773,24 @@
           "type": "string",
           "x-go-name": "CertFile"
         },
+        "cert_key_file": {
+          "type": "string",
+          "x-go-name": "CertKeyFile"
+        },
         "client_cert_auth": {
           "type": "string",
           "x-go-name": "ClientCertAuth"
         },
-        "kvdb_addr": {
+        "discovery": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "x-go-name": "KvdbAddr"
+          "x-go-name": "Discovery"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
         },
         "password": {
           "type": "string",
@@ -1866,9 +1815,17 @@
           "type": "string",
           "x-go-name": "DataIface"
         },
+        "data_iface_ip": {
+          "type": "string",
+          "x-go-name": "DataIfaceIP"
+        },
         "mgt_iface": {
           "type": "string",
           "x-go-name": "MgtIface"
+        },
+        "mgt_iface_ip": {
+          "type": "string",
+          "x-go-name": "MgtIfaceIP"
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
@@ -1982,6 +1939,11 @@
         "node_id": {
           "type": "string",
           "x-go-name": "NodeId"
+        },
+        "node_index": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "NodeIndex"
         },
         "storage": {
           "$ref": "#/definitions/StorageConfig"
@@ -2221,6 +2183,10 @@
           "type": "boolean",
           "x-go-name": "AsyncIo"
         },
+        "debug_level": {
+          "type": "string",
+          "x-go-name": "DebugLevel"
+        },
         "devices": {
           "type": "array",
           "items": {
@@ -2235,20 +2201,37 @@
           },
           "x-go-name": "DevicesMd"
         },
+        "driver": {
+          "type": "string",
+          "x-go-name": "Driver"
+        },
+        "journal_dev": {
+          "type": "string",
+          "x-go-name": "JournalDev"
+        },
         "max_count": {
           "type": "integer",
-          "format": "int32",
+          "format": "uint32",
           "x-go-name": "MaxCount"
         },
         "max_drive_set_count": {
           "type": "integer",
-          "format": "int32",
+          "format": "uint32",
           "x-go-name": "MaxDriveSetCount"
+        },
+        "max_num_threads": {
+          "type": "integer",
+          "format": "uint32",
+          "x-go-name": "MaxNumThreads"
         },
         "num_threads": {
           "type": "integer",
-          "format": "int32",
+          "format": "uint32",
           "x-go-name": "NumThreads"
+        },
+        "private": {
+          "type": "object",
+          "x-go-name": "Private"
         },
         "raid_level": {
           "type": "string",
@@ -2418,41 +2401,41 @@
       "description": "VaultConfig is a vault configuration parameters struct",
       "type": "object",
       "properties": {
-        "vault_addr": {
+        "addr": {
           "type": "string",
-          "x-go-name": "VaultAddr"
+          "x-go-name": "Addr"
         },
-        "vault_base_path": {
+        "base_path": {
           "type": "string",
-          "x-go-name": "VaultBasePath"
+          "x-go-name": "BasePath"
         },
-        "vault_cacert": {
+        "cacert": {
           "type": "string",
-          "x-go-name": "VaultCacert"
+          "x-go-name": "Cacert"
         },
-        "vault_capath": {
+        "capath": {
           "type": "string",
-          "x-go-name": "VaultCapath"
+          "x-go-name": "Capath"
         },
-        "vault_client_cert": {
+        "client_cert": {
           "type": "string",
-          "x-go-name": "VaultClientCert"
+          "x-go-name": "ClientCert"
         },
-        "vault_client_key": {
+        "client_key": {
           "type": "string",
-          "x-go-name": "VaultClientKey"
+          "x-go-name": "ClientKey"
         },
-        "vault_skip_verify": {
+        "skip_verify": {
           "type": "string",
-          "x-go-name": "VaultSkipVerify"
+          "x-go-name": "SkipVerify"
         },
-        "vault_tls_server_name": {
+        "tls_server_name": {
           "type": "string",
-          "x-go-name": "VaultTlsServerName"
+          "x-go-name": "TlsServerName"
         },
-        "vault_token": {
+        "token": {
           "type": "string",
-          "x-go-name": "VaultToken"
+          "x-go-name": "Token"
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
