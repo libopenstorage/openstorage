@@ -54,12 +54,6 @@ type ClusterInfo struct {
 	Status      api.Status
 	Id          string
 	NodeEntries map[string]NodeEntry
-	// LoggingURL - Deprecated
-	LoggingURL string
-	// ManagementURL - Deprecated
-	ManagementURL string
-	// FluentDConfig - Deprecated
-	FluentDConfig api.FluentDConfig
 }
 
 // ClusterInitState is the snapshot state which should be used to initialize
