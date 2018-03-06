@@ -1576,40 +1576,128 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "ClusterConfig": {
+      "description": "ClusterConfig is a cluster level config parameter struct",
       "type": "object",
       "properties": {
-        "ClusterId": {
-          "type": "string"
+        "alerting_url": {
+          "type": "string",
+          "x-go-name": "AlertingUrl"
         },
-        "DataIface": {
-          "type": "string"
+        "api_cert": {
+          "type": "string",
+          "x-go-name": "APICert"
         },
-        "DataIp": {
-          "type": "string"
+        "api_key": {
+          "type": "string",
+          "x-go-name": "APIKey"
         },
-        "DefaultDriver": {
-          "type": "string"
+        "api_root_ca": {
+          "type": "string",
+          "x-go-name": "APIRootCA"
         },
-        "FluentDHost": {
-          "type": "string"
+        "bootstrap": {
+          "type": "boolean",
+          "x-go-name": "Bootstrap"
         },
-        "LoggingURL": {
-          "type": "string"
+        "bootstrap_type": {
+          "type": "string",
+          "x-go-name": "BootstrapType"
         },
-        "ManagementURL": {
-          "type": "string"
+        "callhome": {
+          "type": "boolean",
+          "x-go-name": "Callhome"
         },
-        "MgmtIp": {
-          "type": "string"
+        "cluster_id": {
+          "type": "string",
+          "x-go-name": "ClusterId"
         },
-        "MgtIface": {
-          "type": "string"
+        "cluster_uuid": {
+          "type": "string",
+          "x-go-name": "ClusterUUId"
         },
-        "NodeId": {
-          "type": "string"
+        "created": {
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "Created"
+        },
+        "csi_endpoint": {
+          "type": "string",
+          "x-go-name": "CSIEndpoint"
+        },
+        "debug_level": {
+          "type": "string",
+          "x-go-name": "DebugLevel"
+        },
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
+        },
+        "domain": {
+          "type": "string",
+          "x-go-name": "Domain"
+        },
+        "driver": {
+          "type": "string",
+          "x-go-name": "Driver"
+        },
+        "generic": {
+          "type": "object",
+          "x-go-name": "Private"
+        },
+        "kvdb": {
+          "$ref": "#/definitions/KvdbConfig"
+        },
+        "lic_server_url": {
+          "type": "string",
+          "x-go-name": "LicServerUrl"
+        },
+        "logging_url": {
+          "type": "string",
+          "x-go-name": "LoggingUrl"
+        },
+        "mode": {
+          "type": "string",
+          "x-go-name": "Mode"
+        },
+        "multicontainer": {
+          "type": "boolean",
+          "x-go-name": "Multicontainer"
+        },
+        "node_id": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "NodeId"
+        },
+        "nolh": {
+          "type": "boolean",
+          "x-go-name": "Nolh"
+        },
+        "scheduler": {
+          "type": "string",
+          "x-go-name": "Scheduler"
+        },
+        "secrets": {
+          "$ref": "#/definitions/SecretsConfig"
+        },
+        "tunnel_certs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "TunnelCerts"
+        },
+        "tunnel_end_point": {
+          "type": "string",
+          "x-go-name": "TunnelEndPoint"
+        },
+        "version": {
+          "type": "string",
+          "x-go-name": "Version"
         }
       },
-      "x-go-package": "github.com/libopenstorage/openstorage/config"
+      "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
     },
     "ClusterNotify": {
       "type": "integer",
