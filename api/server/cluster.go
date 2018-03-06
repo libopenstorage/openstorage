@@ -49,6 +49,7 @@ func (c *clusterApi) Routes() []*Route {
 		{verb: "GET", path: clusterPath(client.UriNode+"/{id}", cluster.APIVersion), fn: c.getNodeConf},
 		{verb: "POST", path: clusterPath(client.UriCluster, cluster.APIVersion), fn: c.setClusterConf},
 		{verb: "POST", path: clusterPath(client.UriNode, cluster.APIVersion), fn: c.setNodeConf},
+		{verb: "DELETE", path: clusterPath(client.UriNode+"/{id}", cluster.APIVersion), fn: c.delNodeConf},
 	}
 }
 
@@ -95,7 +96,7 @@ func (c *clusterApi) getClusterConf(w http.ResponseWriter, r *http.Request) {
 //   in: path
 //   description: id to get node with
 //   required: true
-//   type: integer
+//   type: string
 // responses:
 //   '200':
 //      description: a node
@@ -115,6 +116,37 @@ func (c *clusterApi) getNodeConf(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	json.NewEncoder(w).Encode(config)
+}
+
+// swagger:operation DELETE /config/node/{id} config getNodeConfig
+//
+// Get node configuration.
+//
+// This will delete the requested node configuration object
+//
+// ---
+// produces:
+// - application/json
+// parameters:
+// - name: id
+//   in: path
+//   description: id to reference node
+//   required: true
+//   type: string
+// responses:
+//   '200'
+func (c *clusterApi) delNodeConf(w http.ResponseWriter, r *http.Request) {
+	method := "delNodeConf"
+	inst, err := cluster.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	vars := mux.Vars(r)
+	if err := inst.UnsetNodeConf(vars["id"]); err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 // swagger:operation POST /config/cluster config setClusterConfig

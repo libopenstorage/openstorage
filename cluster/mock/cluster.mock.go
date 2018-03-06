@@ -354,6 +354,18 @@ func (mr *MockClusterMockRecorder) Start(arg0, arg1, arg2 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockCluster)(nil).Start), arg0, arg1, arg2)
 }
 
+// UnsetNodeConf mocks base method
+func (m *MockCluster) UnsetNodeConf(arg0 string) error {
+	ret := m.ctrl.Call(m, "UnsetNodeConf", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UnsetNodeConf indicates an expected call of UnsetNodeConf
+func (mr *MockClusterMockRecorder) UnsetNodeConf(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnsetNodeConf", reflect.TypeOf((*MockCluster)(nil).UnsetNodeConf), arg0)
+}
+
 // UpdateData mocks base method
 func (m *MockCluster) UpdateData(arg0 map[string]interface{}) error {
 	ret := m.ctrl.Call(m, "UpdateData", arg0)
