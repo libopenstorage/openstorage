@@ -395,7 +395,10 @@
         ],
         "responses": {
           "200": {
-            "description": "success"
+            "description": "success",
+            "schema": {
+              "type": "string"
+            }
           }
         }
       }
@@ -442,7 +445,7 @@
         "operationId": "getNodeConfig",
         "parameters": [
           {
-            "type": "integer",
+            "type": "string",
             "description": "id to get node with",
             "name": "id",
             "in": "path",
@@ -455,6 +458,31 @@
             "schema": {
               "$ref": "#/definitions/NodeConfig"
             }
+          }
+        }
+      },
+      "delete": {
+        "description": "This will delete the requested node configuration object",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "config"
+        ],
+        "summary": "Delete node configuration.",
+        "operationId": "deleteNodeConfig",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "id to reference node",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
           }
         }
       }
@@ -1605,6 +1633,13 @@
         "multicontainer": {
           "type": "boolean",
           "x-go-name": "Multicontainer"
+        },
+        "node_id": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "NodeId"
         },
         "nolh": {
           "type": "boolean",

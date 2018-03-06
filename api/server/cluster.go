@@ -118,9 +118,9 @@ func (c *clusterApi) getNodeConf(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(config)
 }
 
-// swagger:operation DELETE /config/node/{id} config getNodeConfig
+// swagger:operation DELETE /config/node/{id} config deleteNodeConfig
 //
-// Get node configuration.
+// Delete node configuration.
 //
 // This will delete the requested node configuration object
 //
@@ -134,7 +134,8 @@ func (c *clusterApi) getNodeConf(w http.ResponseWriter, r *http.Request) {
 //   required: true
 //   type: string
 // responses:
-//   '200'
+//   '200':
+//      description: success
 func (c *clusterApi) delNodeConf(w http.ResponseWriter, r *http.Request) {
 	method := "delNodeConf"
 	inst, err := cluster.Inst()
@@ -164,10 +165,12 @@ func (c *clusterApi) delNodeConf(w http.ResponseWriter, r *http.Request) {
 //   description: cluster config json
 //   required: true
 //   schema:
-//     $ref: '#/definitions/ClusterConfig'
+//    $ref: '#/definitions/ClusterConfig'
 // responses:
-//   200:
+//   '200':
 //     description: success
+//     schema:
+//       type: string
 func (c *clusterApi) setClusterConf(w http.ResponseWriter, r *http.Request) {
 	method := "setClusterConf"
 	inst, err := cluster.Inst()
@@ -223,8 +226,8 @@ func (c *clusterApi) setClusterConf(w http.ResponseWriter, r *http.Request) {
 //   schema:
 //     $ref: '#/definitions/NodeConfig'
 // responses:
-//   200:
-//     description: success
+//   '200':
+//      description: success
 func (c *clusterApi) setNodeConf(w http.ResponseWriter, r *http.Request) {
 	method := "setNodeConf"
 	inst, err := cluster.Inst()
