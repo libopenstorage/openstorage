@@ -6,6 +6,7 @@ type NodesConfig struct {
 }
 
 // NodeConfig is a node level config data
+// swagger:model
 type NodeConfig struct {
 	NodeId  string         `json:"node_id,omitempty" enable:"true" hidden:"false" usage:"ID for the node"`
 	Network *NetworkConfig `json:"network,omitempty" enable:"true" hidden:"false" usage:"Network configuration" description:"Configure network values for a node"`
@@ -20,6 +21,7 @@ func (conf *NodeConfig) Init() *NodeConfig {
 }
 
 // KvdbConfig stores parameters defining kvdb configuration
+// swagger:model
 type KvdbConfig struct {
 	Username       string   `json:"username,omitempty" enable:"true" hidden:"false" usage:"Username for kvdb"`
 	Password       string   `json:"password,omitempty" enable:"true" hidden:"false" usage:"Passwd for kvdb"`
@@ -71,6 +73,7 @@ func (conf *ClusterConfig) Init() *ClusterConfig {
 }
 
 // NetworkConfig is a network configuration parameters struct
+// swagger:model
 type NetworkConfig struct {
 	MgtIface  string `json:"mgt_iface,omitempty" enable:"true" hidden:"false" usage:"Management interface"`
 	DataIface string `json:"data_iface,omitempty" enable:"true" hidden:"false" usage:"Data interface"`
@@ -81,6 +84,7 @@ func (conf *NetworkConfig) Init() *NetworkConfig {
 }
 
 // SecretsConfig is a secrets configuration parameters struct
+// swagger:model
 type SecretsConfig struct {
 	SecretType       string       `json:"secret_type,omitempty" enable:"true" hidden:"false" usage:"Secret type"`
 	ClusterSecretKey string       `json:"cluster_secret_key,omitempty" enable:"true" hidden:"false" usage:"Secret key"`
@@ -95,6 +99,7 @@ func (conf *SecretsConfig) Init() *SecretsConfig {
 }
 
 // VaultConfig is a vault configuration parameters struct
+// swagger:model
 type VaultConfig struct {
 	VaultToken         string `json:"vault_token,omitempty" enable:"true" hidden:"false" usage:"Vault token"`
 	VaultAddr          string `json:"vault_addr,omitempty" enable:"true" hidden:"false" usage:"Vault address"`
@@ -112,6 +117,7 @@ func (conf *VaultConfig) Init() *VaultConfig {
 }
 
 // AWS configuration parameters struct
+// swagger:model
 type AWSConfig struct {
 	AwsAccessKeyId     string `json:"aws_access_key_id,omitempty" enable:"true" hidden:"false" usage:"AWS access key ID"`
 	AwsSecretAccessKey string `json:"aws_secret_access_key,omitempty" enable:"true" hidden:"false" usage:"AWS secret access key"`
@@ -125,6 +131,7 @@ func (conf *AWSConfig) Init() *AWSConfig {
 }
 
 // StorageConfig is a storage configuration parameters struct
+// swagger:model
 type StorageConfig struct {
 	DevicesMd        []string `json:"devices_md,omitempty" enable:"true" hidden:"false" usage:"Devices MD"`
 	MaxCount         int32    `json:"max_count,omitempty" enable:"true" hidden:"false" usage:"Maximum count"`
