@@ -535,8 +535,8 @@ func TestGetClusterConfSuccess(t *testing.T) {
 		Version:        "x.y.z",
 		Kvdb: &osdconfig.KvdbConfig{
 			Discovery: []string{"2.2.2.2"},
-			Password: "kvdb-pass",
-			Username: "kvdb",
+			Password:  "kvdb-pass",
+			Username:  "kvdb",
 		},
 	}
 	// mock the cluster response
@@ -593,8 +593,8 @@ func TestSetClusterConfSuccess(t *testing.T) {
 		Version:        "x.y.z",
 		Kvdb: &osdconfig.KvdbConfig{
 			Discovery: []string{"2.2.2.2"},
-			Password: "kvdb-pass",
-			Username: "kvdb",
+			Password:  "kvdb-pass",
+			Username:  "kvdb",
 		},
 	}
 
