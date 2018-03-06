@@ -46,13 +46,16 @@ func Test(t *testing.T, address, driver, cloudBackupConfigPath string) {
 	lock.Lock()
 	defer lock.Unlock()
 
-	cfg, err := CloudProviderConfigParse(cloudBackupConfigPath)
-	if err != nil {
-		t.Logf("Error in Cloud Backup Config , skipping the tests related to cloud backup and restore")
+	if len(cloudBackupConfigPath) != 0 {
+		cfg, err := CloudProviderConfigParse(cloudBackupConfigPath)
+		if err != nil {
+			t.Logf("Error in Cloud Backup Config , skipping the tests related to cloud backup and restore")
+		}
+		cloudBackupConfig = cfg
 	}
+
 	osdAddress = address
 	volumeDriver = driver
-	cloudBackupConfig = cfg
 
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "OSD API Test Suite")

@@ -36,9 +36,12 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 		volumedriver volume.VolumeDriver
 		credentials  *api.CredCreateRequest
 		credUUID     string
+		credsUUIDMap map[string]string
 	)
 
 	BeforeEach(func() {
+
+		credsUUIDMap = make(map[string]string)
 
 		if cloudBackupConfig == nil {
 			Skip("Skipping cloud backup/restore tests")
@@ -49,22 +52,34 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 		Expect(err).ToNot(HaveOccurred())
 		volumedriver = volumeclient.VolumeDriver(restClient)
 
-		By("Creating Credentials first")
+		for provider, providerParams := range cloudBackupConfig.CloudProviders {
 
-		if cloudBackupConfig != nil {
-			cloudParamsMap := cloudBackupConfig.CloudProviders["azure"]
-			credentials = &api.CredCreateRequest{InputParams: cloudParamsMap}
+			By("Creating Credentials first")
+
+			credentials = &api.CredCreateRequest{InputParams: providerParams}
+			credUUID, err = volumedriver.CredsCreate(credentials.InputParams)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Validating credentials for the provider - " + provider)
+			err = volumedriver.CredsValidate(credUUID)
+			Expect(err).NotTo(HaveOccurred())
+
+			if err == nil {
+				credsUUIDMap[provider] = credUUID
+			}
 		}
 
-		credUUID, err = volumedriver.CredsCreate(credentials.InputParams)
-		Expect(err).NotTo(HaveOccurred())
+		if len(credsUUIDMap) == 0 {
+			Skip("Skipping cloud backup/restore tests as none of the credentials provided could be validated.")
+		}
 	})
 
 	AfterEach(func() {
 
-		err := volumedriver.CredsDelete(credUUID)
-		Expect(err).NotTo(HaveOccurred())
-
+		for _, creduuid := range credsUUIDMap {
+			err := volumedriver.CredsDelete(creduuid)
+			Expect(err).NotTo(HaveOccurred())
+		}
 	})
 
 	Describe("Volume Backup", func() {
@@ -87,6 +102,9 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 
 		AfterEach(func() {
 			var err error
+
+			err = volumedriver.Detach(volumeID, nil)
+			Expect(err).ToNot(HaveOccurred())
 
 			err = volumedriver.Delete(volumeID)
 			Expect(err).ToNot(HaveOccurred())
@@ -120,48 +138,55 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			}
 
 			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			Expect(err).NotTo(HaveOccurred())
 
 			By("Checking if volume created successfully with the provided params")
 			testIfVolumeCreatedSuccessfully(volumedriver, volumeID, numVolumesBefore, vr)
 
-			By("Doing Backup")
+			for provider, uuid := range credsUUIDMap {
+				credUUID = uuid
+				By("Doing Backup on " + provider)
 
-			bkpReq := &api.BackupRequest{
-				CredentialUUID: credUUID,
-				Full:           false,
-				VolumeID:       volumeID,
+				bkpReq := &api.BackupRequest{
+					CredentialUUID: credUUID,
+					Full:           false,
+					VolumeID:       volumeID,
+				}
+
+				// Attaching the volume first
+				str, err := volumedriver.Attach(volumeID, nil)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(str).NotTo(BeNil())
+
+				err = volumedriver.Backup(bkpReq)
+				Expect(err).To((BeNil()))
+
+				By("Checking backup status")
+
+				// timeout after 5 mins
+				timeout := 300
+				timespent := 0
+				for timespent < timeout {
+					bkpStatusReq = &api.BackupStsRequest{
+						SrcVolumeID: volumeID,
+					}
+					bkpStatusResp = volumedriver.BackupStatus(bkpStatusReq)
+					Expect(bkpStatusResp.StsErr).To(BeEmpty())
+
+					bkpStatus = bkpStatusResp.Statuses[volumeID]
+					if strings.Contains(bkpStatus.Status, "Done") {
+						break
+					}
+					if strings.Contains(bkpStatus.Status, "Active") {
+						time.Sleep(time.Second * 10)
+						timeout += 10
+					}
+					if strings.Contains(bkpStatus.Status, "Failed") {
+						break
+					}
+				}
+				Expect(bkpStatus.Status).To(BeEquivalentTo("Done"))
 			}
-
-			err = volumedriver.Backup(bkpReq)
-			Expect(err).To((BeNil()))
-
-			time.Sleep(time.Second * 10)
-			By("Checking backup status")
-
-			// timeout after 5 mins
-			timeout := 300
-			timespent := 0
-			for timespent < timeout {
-				bkpStatusReq = &api.BackupStsRequest{
-					SrcVolumeID: volumeID,
-				}
-				bkpStatusResp = volumedriver.BackupStatus(bkpStatusReq)
-				Expect(bkpStatusResp.StsErr).To(BeNil())
-
-				bkpStatus = bkpStatusResp.Statuses[volumeID]
-				if strings.Contains(bkpStatus.Status, "Done") {
-					break
-				}
-				if strings.Contains(bkpStatus.Status, "Active") {
-					time.Sleep(time.Second * 10)
-					timeout += 10
-				}
-				if strings.Contains(bkpStatus.Status, "Failed") {
-					break
-				}
-			}
-
-			Expect(bkpStatus.Status).To(BeEquivalentTo("Done"))
 		})
 	})
 
@@ -186,6 +211,9 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 		AfterEach(func() {
 			var err error
 
+			err = volumedriver.Detach(volumeID, nil)
+			Expect(err).ToNot(HaveOccurred())
+
 			err = volumedriver.Delete(volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
@@ -197,7 +225,6 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 		It("Should create enumerate backup volumes", func() {
 
 			By("Creating the volume")
-
 			var err error
 			var size = 1
 			vr := &api.VolumeCreateRequest{
@@ -218,65 +245,69 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			}
 
 			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			Expect(err).NotTo(HaveOccurred())
 
 			By("Checking if volume created successfully with the provided params")
 			testIfVolumeCreatedSuccessfully(volumedriver, volumeID, numVolumesBefore, vr)
 
-			By("Doing Backup")
-
-			bkpReq := &api.BackupRequest{
-				CredentialUUID: credUUID,
-				Full:           false,
-				VolumeID:       volumeID,
-			}
-
-			err = volumedriver.Backup(bkpReq)
-			Expect(err).To(BeNil())
-
-			time.Sleep(time.Second * 10)
-
-			By("Checking backup status")
-
-			maxRetries := 3
-			retries := 0
-
-			for retries < maxRetries {
-				bkpStatusReq = &api.BackupStsRequest{
-					SrcVolumeID: volumeID,
-				}
-				bkpStatusResp = volumedriver.BackupStatus(bkpStatusReq)
-				Expect(bkpStatusResp.StsErr).To(BeNil())
-
-				bkpStatus = bkpStatusResp.Statuses[volumeID]
-				if strings.Contains(bkpStatus.Status, "Done") {
-					break
-				}
-				if strings.Contains(bkpStatus.Status, "Active") {
-					time.Sleep(time.Second * 10)
-				}
-				if strings.Contains(bkpStatus.Status, "failed") {
-					// give 3 attempts for backup to be successfull before declaring failed
-					time.Sleep(time.Second * 10)
-					retries++
-				}
-			}
-
-			Expect(bkpStatus.Status).To(BeEquivalentTo("Done"))
-
-			By("Backup enumerate")
-
-			bkpEnumReq := &api.BackupEnumerateRequest{
-				BackupGenericRequest: api.BackupGenericRequest{
-					All:            false,
+			for provider, uuid := range credsUUIDMap {
+				credUUID = uuid
+				By("Doing Backup on " + provider)
+				bkpReq := &api.BackupRequest{
 					CredentialUUID: credUUID,
-					SrcVolumeID:    volumeID,
-				},
-			}
+					Full:           false,
+					VolumeID:       volumeID,
+				}
 
-			enumResp := volumedriver.BackupEnumerate(bkpEnumReq)
-			Expect(enumResp.EnumerateErr).To(BeNil())
-			Expect(len(enumResp.Backups)).ToNot(BeNil())
-			Expect(enumResp.Backups[0].SrcVolumeID).To(BeEquivalentTo(volumeID))
+				// Attaching the volume first
+				str, err := volumedriver.Attach(volumeID, nil)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(str).NotTo(BeNil())
+
+				err = volumedriver.Backup(bkpReq)
+				Expect(err).To(BeNil()) // give 3 attempts for backup to be successfull before declaring failed
+
+				By("Checking backup status")
+
+				// timeout after 5 mins
+				timeout := 300
+				timespent := 0
+				for timespent < timeout {
+					bkpStatusReq = &api.BackupStsRequest{
+						SrcVolumeID: volumeID,
+					}
+					bkpStatusResp = volumedriver.BackupStatus(bkpStatusReq)
+					Expect(bkpStatusResp.StsErr).To(BeEmpty())
+
+					bkpStatus = bkpStatusResp.Statuses[volumeID]
+					if strings.Contains(bkpStatus.Status, "Done") {
+						break
+					}
+					if strings.Contains(bkpStatus.Status, "Active") {
+						time.Sleep(time.Second * 10)
+						timeout += 10
+					}
+					if strings.Contains(bkpStatus.Status, "Failed") {
+						break
+					}
+				}
+				Expect(bkpStatus.Status).To(BeEquivalentTo("Done"))
+
+				By("Backup enumerate")
+
+				bkpEnumReq := &api.BackupEnumerateRequest{
+					BackupGenericRequest: api.BackupGenericRequest{
+						All:            false,
+						CredentialUUID: credUUID,
+						SrcVolumeID:    volumeID,
+					},
+				}
+
+				enumResp := volumedriver.BackupEnumerate(bkpEnumReq)
+				Expect(enumResp.EnumerateErr).To(BeEmpty())
+				Expect(len(enumResp.Backups)).ToNot(BeNil())
+				Expect(enumResp.Backups[0].SrcVolumeID).To(BeEquivalentTo(volumeID))
+			}
 		})
 	})
 
@@ -302,6 +333,9 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 
 		AfterEach(func() {
 			var err error
+
+			err = volumedriver.Detach(volumeID, nil)
+			Expect(err).ToNot(HaveOccurred())
 
 			err = volumedriver.Delete(volumeID)
 			Expect(err).ToNot(HaveOccurred())
@@ -338,86 +372,490 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			}
 
 			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			Expect(err).NotTo(HaveOccurred())
 
 			By("Checking if volume created successfully with the provided params")
 			testIfVolumeCreatedSuccessfully(volumedriver, volumeID, numVolumesBefore, vr)
 
-			By("Doing Backup")
+			for provider, uuid := range credsUUIDMap {
+				credUUID = uuid
+				By("Doing Backup on " + provider)
 
-			bkpReq := &api.BackupRequest{
-				CredentialUUID: credUUID,
-				Full:           false,
-				VolumeID:       volumeID,
-			}
-
-			time.Sleep(time.Second * 10)
-			err = volumedriver.Backup(bkpReq)
-			Expect(err).NotTo(HaveOccurred())
-
-			By("Checking backup status")
-
-			time.Sleep(time.Second * 10)
-			maxRetries := 3
-			retries := 0
-
-			for retries < maxRetries {
-				bkpStatusReq = &api.BackupStsRequest{
-					SrcVolumeID: volumeID,
-				}
-				bkpStatusResp = volumedriver.BackupStatus(bkpStatusReq)
-
-				//	Expect(bkpStatusResp.StsErr).To(BeNil())
-
-				bkpStatus = bkpStatusResp.Statuses[volumeID]
-				if strings.Contains(bkpStatus.Status, "Done") {
-					break
-				}
-				if strings.Contains(bkpStatus.Status, "Active") {
-					time.Sleep(time.Second * 10)
-				}
-				if strings.Contains(bkpStatus.Status, "Failed") {
-					// give 3 attempts for backup to be successfull before declaring failed
-					time.Sleep(time.Second * 10)
-					retries++
-				}
-			}
-
-			Expect(bkpStatus.Status).To(BeEquivalentTo("Done"))
-
-			By("Backup enumerate")
-
-			bkpEnumReq := &api.BackupEnumerateRequest{
-				BackupGenericRequest: api.BackupGenericRequest{
-					All:            false,
+				bkpReq := &api.BackupRequest{
 					CredentialUUID: credUUID,
-					SrcVolumeID:    volumeID,
+					Full:           false,
+					VolumeID:       volumeID,
+				}
+
+				// Attaching the volume first
+				str, err := volumedriver.Attach(volumeID, nil)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(str).NotTo(BeNil())
+
+				err = volumedriver.Backup(bkpReq)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Checking backup status")
+
+				// timeout after 5 mins
+				timeout := 300
+				timespent := 0
+				for timespent < timeout {
+					bkpStatusReq = &api.BackupStsRequest{
+						SrcVolumeID: volumeID,
+					}
+					bkpStatusResp = volumedriver.BackupStatus(bkpStatusReq)
+					Expect(bkpStatusResp.StsErr).To(BeEmpty())
+
+					bkpStatus = bkpStatusResp.Statuses[volumeID]
+					if strings.Contains(bkpStatus.Status, "Done") {
+						break
+					}
+					if strings.Contains(bkpStatus.Status, "Active") {
+						time.Sleep(time.Second * 10)
+						timeout += 10
+					}
+					if strings.Contains(bkpStatus.Status, "Failed") {
+						break
+					}
+				}
+				Expect(bkpStatus.Status).To(BeEquivalentTo("Done"))
+
+				By("Backup enumerate")
+				bkpEnumReq := &api.BackupEnumerateRequest{
+					BackupGenericRequest: api.BackupGenericRequest{
+						All:            false,
+						CredentialUUID: credUUID,
+						SrcVolumeID:    volumeID,
+					},
+				}
+				enumResp := volumedriver.BackupEnumerate(bkpEnumReq)
+				Expect(enumResp.EnumerateErr).To(BeEmpty())
+				Expect(len(enumResp.Backups)).ToNot(BeNil())
+				Expect(enumResp.Backups[0].SrcVolumeID).To(BeEquivalentTo(volumeID))
+
+				By("Backup restore")
+
+				// Get the backup cloud backupid from backupEnumerate
+				bkpID := enumResp.Backups[0].BackupID
+
+				bkpRestoreReq := &api.BackupRestoreRequest{
+					CloudBackupID:     bkpID,
+					CredentialUUID:    credUUID,
+					RestoreVolumeName: restoredVolume,
+				}
+				bkpRestoreResp := volumedriver.BackupRestore(bkpRestoreReq)
+				Expect(bkpRestoreResp.RestoreErr).To(BeEmpty())
+
+				By("Inspecting the restored volume")
+
+				volumes, err := volumedriver.Inspect([]string{bkpRestoreResp.RestoreVolumeID})
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(volumes)).To(BeEquivalentTo(1))
+				Expect(volumes[0].Locator.Name).To(BeEquivalentTo(restoredVolume))
+			}
+		})
+	})
+
+	Describe("Volume Backup Schedule Create", func() {
+
+		var (
+			numVolumesBefore int
+			numVolumesAfter  int
+			volumeID         string
+		)
+
+		BeforeEach(func() {
+			var err error
+			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, make(map[string]string))
+			numVolumesBefore = len(volumes)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			var err error
+
+			err = volumedriver.Detach(volumeID, nil)
+			Expect(err).ToNot(HaveOccurred())
+
+			err = volumedriver.Delete(volumeID)
+			Expect(err).ToNot(HaveOccurred())
+
+			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+			Expect(err).ToNot(HaveOccurred())
+			numVolumesAfter = len(volumes)
+		})
+
+		It("Should create a backup schedule ", func() {
+
+			By("Creating the volume")
+
+			var err error
+			var size = 1
+			vr := &api.VolumeCreateRequest{
+				Locator: &api.VolumeLocator{
+					Name: "schedule-create",
+					VolumeLabels: map[string]string{
+						"class": "schedule-class",
+					},
+				},
+				Source: &api.Source{},
+				Spec: &api.VolumeSpec{
+					Size:      uint64(size * GIGABYTE),
+					HaLevel:   1,
+					Format:    api.FSType_FS_TYPE_EXT4,
+					BlockSize: 128,
+					Cos:       api.CosType_LOW,
 				},
 			}
 
-			enumResp := volumedriver.BackupEnumerate(bkpEnumReq)
-			Expect(enumResp.EnumerateErr).To(BeEmpty())
-			Expect(len(enumResp.Backups)).ToNot(BeNil())
-			Expect(enumResp.Backups[0].SrcVolumeID).To(BeEquivalentTo(volumeID))
+			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			Expect(err).NotTo(HaveOccurred())
 
-			By("Backup restore")
+			By("Checking if volume created successfully with the provided params")
+			testIfVolumeCreatedSuccessfully(volumedriver, volumeID, numVolumesBefore, vr)
 
-			// Get the backup cloud backupid from backupEnumerate
-			bkpID := enumResp.Backups[0].BackupID
+			for _, uuid := range credsUUIDMap {
+				credUUID = uuid
+				By("Creating a backup schedule")
 
-			bkpRestoreReq := &api.BackupRestoreRequest{
-				CloudBackupID:     bkpID,
-				CredentialUUID:    credUUID,
-				RestoreVolumeName: restoredVolume,
+				bkpScheduleInfo := &api.BackupScheduleInfo{
+					BackupSchedule: "- freq: daily\n  hour: 23\n  minute: 00",
+					CredentialUUID: credUUID,
+					MaxBackups:     1,
+					SrcVolumeID:    volumeID,
+				}
+				bkpScheduleResponse := volumedriver.BackupSchedCreate(bkpScheduleInfo)
+				Expect(bkpScheduleResponse.SchedCreateErr).To(BeEmpty())
+				Expect(bkpScheduleResponse.SchedUUID).NotTo(BeNil())
 			}
-			bkpRestoreResp := volumedriver.BackupRestore(bkpRestoreReq)
-			Expect(bkpRestoreResp.RestoreErr).To(BeEmpty())
+		})
+	})
 
-			By("Inspecting the restored volume")
+	Describe("Volume Backup Schedule Delete", func() {
 
-			volumes, err := volumedriver.Inspect([]string{restoredVolume})
+		var (
+			numVolumesBefore int
+			numVolumesAfter  int
+			volumeID         string
+			schedules        []string
+		)
 
-			Expect(len(volumes)).To(BeEquivalentTo(1))
-			Expect(volumes[0].Locator.Name).To(BeEquivalentTo(restoredVolume))
+		BeforeEach(func() {
+			var err error
+			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, make(map[string]string))
+			numVolumesBefore = len(volumes)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			var err error
+
+			err = volumedriver.Detach(volumeID, nil)
+			Expect(err).ToNot(HaveOccurred())
+
+			err = volumedriver.Delete(volumeID)
+			Expect(err).ToNot(HaveOccurred())
+
+			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+			Expect(err).ToNot(HaveOccurred())
+			numVolumesAfter = len(volumes)
+		})
+
+		It("Should delete a backup schedule ", func() {
+
+			By("Creating the volume")
+
+			var err error
+			var size = 1
+			vr := &api.VolumeCreateRequest{
+				Locator: &api.VolumeLocator{
+					Name: "schedule-delete",
+					VolumeLabels: map[string]string{
+						"class": "schedule-class",
+					},
+				},
+				Source: &api.Source{},
+				Spec: &api.VolumeSpec{
+					Size:      uint64(size * GIGABYTE),
+					HaLevel:   1,
+					Format:    api.FSType_FS_TYPE_EXT4,
+					BlockSize: 128,
+					Cos:       api.CosType_LOW,
+				},
+			}
+
+			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Checking if volume created successfully with the provided params")
+			testIfVolumeCreatedSuccessfully(volumedriver, volumeID, numVolumesBefore, vr)
+
+			for _, uuid := range credsUUIDMap {
+				credUUID = uuid
+				By("Creating a backup schedule")
+
+				bkpScheduleInfo := &api.BackupScheduleInfo{
+					BackupSchedule: "- freq: daily\n  hour: 23\n  minute: 00",
+					CredentialUUID: credUUID,
+					MaxBackups:     1,
+					SrcVolumeID:    volumeID,
+				}
+				bkpScheduleResponse := volumedriver.BackupSchedCreate(bkpScheduleInfo)
+				Expect(bkpScheduleResponse.SchedCreateErr).To(BeEmpty())
+				Expect(bkpScheduleResponse.SchedUUID).NotTo(BeNil())
+
+				schedules = append(schedules, bkpScheduleResponse.SchedUUID)
+			}
+
+			By("Deleting the created schedules")
+
+			for _, schedUUID := range schedules {
+
+				bkpScheduleDeleteReq := &api.BackupSchedDeleteRequest{
+					SchedUUID: schedUUID,
+				}
+				err = volumedriver.BackupSchedDelete(bkpScheduleDeleteReq)
+				Expect(err).NotTo(HaveOccurred())
+			}
+		})
+	})
+
+	Describe("Volume Backup Schedule Enumerate", func() {
+
+		var (
+			numVolumesBefore int
+			numVolumesAfter  int
+			volumeID         string
+			schedules        []string
+		)
+
+		BeforeEach(func() {
+			var err error
+			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, make(map[string]string))
+			numVolumesBefore = len(volumes)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			var err error
+
+			err = volumedriver.Detach(volumeID, nil)
+			Expect(err).ToNot(HaveOccurred())
+
+			err = volumedriver.Delete(volumeID)
+			Expect(err).ToNot(HaveOccurred())
+
+			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+			Expect(err).ToNot(HaveOccurred())
+			numVolumesAfter = len(volumes)
+		})
+
+		It("Should enumerate a backup schedule ", func() {
+
+			By("Creating the volume")
+
+			var err error
+			var size = 1
+			vr := &api.VolumeCreateRequest{
+				Locator: &api.VolumeLocator{
+					Name: "schedule-enumerate",
+					VolumeLabels: map[string]string{
+						"class": "schedule-class",
+					},
+				},
+				Source: &api.Source{},
+				Spec: &api.VolumeSpec{
+					Size:      uint64(size * GIGABYTE),
+					HaLevel:   1,
+					Format:    api.FSType_FS_TYPE_EXT4,
+					BlockSize: 128,
+					Cos:       api.CosType_LOW,
+				},
+			}
+
+			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Checking if volume created successfully with the provided params")
+			testIfVolumeCreatedSuccessfully(volumedriver, volumeID, numVolumesBefore, vr)
+
+			for _, uuid := range credsUUIDMap {
+				credUUID = uuid
+				By("Creating a backup schedule")
+
+				bkpScheduleInfo := &api.BackupScheduleInfo{
+					BackupSchedule: "- freq: daily\n  hour: 23\n  minute: 00",
+					CredentialUUID: credUUID,
+					MaxBackups:     1,
+					SrcVolumeID:    volumeID,
+				}
+				bkpScheduleResponse := volumedriver.BackupSchedCreate(bkpScheduleInfo)
+				Expect(bkpScheduleResponse.SchedCreateErr).To(BeEmpty())
+				Expect(bkpScheduleResponse.SchedUUID).NotTo(BeNil())
+
+				schedules = append(schedules, bkpScheduleResponse.SchedUUID)
+			}
+
+			By("Enumerating the created schedules")
+
+			bkpScheduleEnumerateResp := volumedriver.BackupSchedEnumerate()
+			Expect(bkpScheduleEnumerateResp.SchedEnumerateErr).To(BeEmpty())
+			Expect(len(bkpScheduleEnumerateResp.BackupSchedules)).NotTo(BeZero())
+		})
+	})
+
+	Describe("Volume Backup History & Catalogue", func() {
+
+		var (
+			numVolumesBefore int
+			numVolumesAfter  int
+			volumeID         string
+			bkpStatusReq     *api.BackupStsRequest
+			bkpStatusResp    *api.BackupStsResponse
+			bkpStatus        api.BackupStatus
+		)
+
+		BeforeEach(func() {
+			var err error
+			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, make(map[string]string))
+			numVolumesBefore = len(volumes)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			var err error
+
+			err = volumedriver.Detach(volumeID, nil)
+			Expect(err).ToNot(HaveOccurred())
+
+			err = volumedriver.Delete(volumeID)
+			Expect(err).ToNot(HaveOccurred())
+
+			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+			Expect(err).ToNot(HaveOccurred())
+			numVolumesAfter = len(volumes)
+		})
+
+		It("Should create Volume successfully for backup", func() {
+
+			By("Creating the volume")
+
+			var err error
+			var size = 1
+			vr := &api.VolumeCreateRequest{
+				Locator: &api.VolumeLocator{
+					Name: "create-for-backup",
+					VolumeLabels: map[string]string{
+						"class": "backup-class",
+					},
+				},
+				Source: &api.Source{},
+				Spec: &api.VolumeSpec{
+					Size:      uint64(size * GIGABYTE),
+					HaLevel:   1,
+					Format:    api.FSType_FS_TYPE_EXT4,
+					BlockSize: 128,
+					Cos:       api.CosType_LOW,
+				},
+			}
+
+			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Checking if volume created successfully with the provided params")
+			testIfVolumeCreatedSuccessfully(volumedriver, volumeID, numVolumesBefore, vr)
+
+			for provider, uuid := range credsUUIDMap {
+				credUUID = uuid
+				By("Doing Backup on " + provider)
+
+				bkpReq := &api.BackupRequest{
+					CredentialUUID: credUUID,
+					Full:           false,
+					VolumeID:       volumeID,
+				}
+
+				// Attaching the volume first
+				str, err := volumedriver.Attach(volumeID, nil)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(str).NotTo(BeNil())
+
+				err = volumedriver.Backup(bkpReq)
+				Expect(err).To((BeNil()))
+
+				By("Checking backup status")
+
+				// timeout after 5 mins
+				timeout := 300
+				timespent := 0
+				for timespent < timeout {
+					bkpStatusReq = &api.BackupStsRequest{
+						SrcVolumeID: volumeID,
+					}
+					bkpStatusResp = volumedriver.BackupStatus(bkpStatusReq)
+					Expect(bkpStatusResp.StsErr).To(BeEmpty())
+
+					bkpStatus = bkpStatusResp.Statuses[volumeID]
+					if strings.Contains(bkpStatus.Status, "Done") {
+						break
+					}
+					if strings.Contains(bkpStatus.Status, "Active") {
+						time.Sleep(time.Second * 10)
+						timeout += 10
+					}
+					if strings.Contains(bkpStatus.Status, "Failed") {
+						break
+					}
+				}
+				Expect(bkpStatus.Status).To(BeEquivalentTo("Done"))
+
+				By("Backup enumerate")
+				bkpEnumReq := &api.BackupEnumerateRequest{
+					BackupGenericRequest: api.BackupGenericRequest{
+						All:            false,
+						CredentialUUID: credUUID,
+						SrcVolumeID:    volumeID,
+					},
+				}
+				enumResp := volumedriver.BackupEnumerate(bkpEnumReq)
+				Expect(enumResp.EnumerateErr).To(BeEmpty())
+				Expect(len(enumResp.Backups)).ToNot(BeNil())
+				Expect(enumResp.Backups[0].SrcVolumeID).To(BeEquivalentTo(volumeID))
+
+				// Get the backup cloud backupid from backupEnumerate
+				bkpID := enumResp.Backups[0].BackupID
+
+				By("Getting backup catalogue")
+
+				bkpCatalogReq := &api.BackupCatalogueRequest{
+					CloudBackupID:  bkpID,
+					CredentialUUID: credUUID,
+				}
+
+				bkpCatalogResp := volumedriver.BackupCatalogue(bkpCatalogReq)
+				Expect(bkpCatalogResp.CatalogueErr).To(BeEmpty())
+				Expect(bkpCatalogResp.Contents).To(Not(BeEmpty()))
+			}
+
+			By("Getting the Backup history")
+
+			bkpHistory := &api.BackupHistoryRequest{
+				SrcVolumeID: volumeID,
+			}
+
+			bkpHistoryResp := volumedriver.BackupHistory(bkpHistory)
+			Expect(bkpHistoryResp.HistoryErr).To(BeEmpty())
+
+			// Expect the created backup to have an entry in the backup history
+			isPresent := false
+			for _, historyItem := range bkpHistoryResp.HistoryList {
+				if historyItem.SrcVolumeID == volumeID {
+					Expect(historyItem.Status).To(ContainSubstring("Cloudsnap Backup completed successfully"))
+					isPresent = true
+				}
+			}
+			Expect(isPresent).To(BeTrue())
 		})
 	})
 })
