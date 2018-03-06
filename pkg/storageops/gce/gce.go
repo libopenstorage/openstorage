@@ -272,7 +272,8 @@ func (s *gceOps) Enumerate(
 	ctx := context.Background()
 	found := false
 
-	req := s.service.Disks.List(s.inst.Project, s.inst.Zone)
+	filter := generateListFilterFromLabels(labels)
+	req := s.service.Disks.List(s.inst.Project, s.inst.Zone).Filter(filter)
 	if err := req.Pages(ctx, func(page *compute.DiskList) error {
 		for _, disk := range page.Items {
 			if len(setIdentifier) == 0 {
@@ -596,4 +597,15 @@ func (s *gceOps) waitForAttach(
 	}
 
 	return devicePath.(string), nil
+}
+
+// generateListFilterFromLabels create a filter string based off --filter documentation at
+// https://cloud.google.com/sdk/gcloud/reference/compute/disks/list
+func generateListFilterFromLabels(labels map[string]string) string {
+	var filter string
+	for k, v := range labels {
+		filter = fmt.Sprintf("%s(labels.%s eq %s)", filter, k, v)
+	}
+
+	return filter
 }
