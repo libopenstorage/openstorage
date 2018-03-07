@@ -600,7 +600,6 @@ var _ = Describe("Volume [Volume Tests]", func() {
 
 			err = volumedriver.Mount(volumeID, "/mnt", nil)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(str).NotTo(BeNil())
 
 			By("Updating the volume spec with new random size.")
 			newSize := random(size+1, 100)
@@ -903,6 +902,9 @@ var _ = Describe("Volume [Volume Tests]", func() {
 		AfterEach(func() {
 			var err error
 
+			err = volumedriver.Unmount(volumeID, "/mnt", nil)
+			Expect(err).NotTo(HaveOccurred())
+
 			err = volumedriver.Detach(volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
@@ -947,10 +949,13 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			err = volumedriver.Quiesce(volumeID, 0, "")
 			Expect(err).To(HaveOccurred())
 
-			By("Now Attaching the volume")
+			By("Now Attaching and mounting the volume")
 			str, err := volumedriver.Attach(volumeID, nil)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(str).NotTo(BeNil())
+
+			err = volumedriver.Mount(volumeID, "/mnt", nil)
+			Expect(err).NotTo(HaveOccurred())
 
 			By("Quiescing the volume")
 			err = volumedriver.Quiesce(volumeID, 0, "")
