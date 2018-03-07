@@ -514,11 +514,11 @@ func TestGetClusterConfSuccess(t *testing.T) {
 		ClusterSecretKey: "cluster-secret-key",
 		SecretType:       "vault",
 		Vault: &osdconfig.VaultConfig{
-			VaultAddr:       "/vault/addr",
-			VaultBasePath:   "1.1.1.1",
-			VaultCacert:     "vault-ca-cert",
-			VaultClientCert: "vault-client-cert",
-			VaultToken:      "vault--dummy-token",
+			Addr:       "/vault/addr",
+			BasePath:   "1.1.1.1",
+			Cacert:     "vault-ca-cert",
+			ClientCert: "vault-client-cert",
+			Token:      "vault--dummy-token",
 		},
 	}
 
@@ -526,7 +526,7 @@ func TestGetClusterConfSuccess(t *testing.T) {
 		NodeId:         []string{"node-id-1", "node-id-2", "node-id-3"},
 		Nolh:           true,
 		ClusterId:      "dummy-cluster-id",
-		Created:        time.Now().String(),
+		Created:        time.Now(),
 		Callhome:       true,
 		AlertingUrl:    "http://dummy.alerting.url",
 		DebugLevel:     "level-0",
@@ -534,9 +534,9 @@ func TestGetClusterConfSuccess(t *testing.T) {
 		Secrets:        secretsConfig,
 		Version:        "x.y.z",
 		Kvdb: &osdconfig.KvdbConfig{
-			KvdbAddr: []string{"2.2.2.2"},
-			Password: "kvdb-pass",
-			Username: "kvdb",
+			Discovery: []string{"2.2.2.2"},
+			Password:  "kvdb-pass",
+			Username:  "kvdb",
 		},
 	}
 	// mock the cluster response
@@ -572,11 +572,11 @@ func TestSetClusterConfSuccess(t *testing.T) {
 		ClusterSecretKey: "cluster-secret-key",
 		SecretType:       "vault",
 		Vault: &osdconfig.VaultConfig{
-			VaultAddr:       "/vault/addr",
-			VaultBasePath:   "1.1.1.1",
-			VaultCacert:     "vault-ca-cert",
-			VaultClientCert: "vault-client-cert",
-			VaultToken:      "vault--dummy-token",
+			Addr:       "/vault/addr",
+			BasePath:   "1.1.1.1",
+			Cacert:     "vault-ca-cert",
+			ClientCert: "vault-client-cert",
+			Token:      "vault--dummy-token",
 		},
 	}
 
@@ -584,7 +584,7 @@ func TestSetClusterConfSuccess(t *testing.T) {
 		NodeId:         []string{"node-id-1,node-id-2,node-id-3"},
 		Nolh:           true,
 		ClusterId:      "dummy-cluster-id",
-		Created:        time.Now().String(),
+		Created:        time.Now(),
 		Callhome:       true,
 		AlertingUrl:    "http://dummy.alerting.url",
 		DebugLevel:     "level-0",
@@ -592,9 +592,9 @@ func TestSetClusterConfSuccess(t *testing.T) {
 		Secrets:        secretsConfig,
 		Version:        "x.y.z",
 		Kvdb: &osdconfig.KvdbConfig{
-			KvdbAddr: []string{"2.2.2.2"},
-			Password: "kvdb-pass",
-			Username: "kvdb",
+			Discovery: []string{"2.2.2.2"},
+			Password:  "kvdb-pass",
+			Username:  "kvdb",
 		},
 	}
 
