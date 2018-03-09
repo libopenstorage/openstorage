@@ -207,7 +207,7 @@ func (s *gceOps) Delete(id string) error {
 	}
 
 	if !found {
-		return fmt.Errorf("disk: %s as it wasn't found", id)
+		return fmt.Errorf("failed to delete disk: %s as it wasn't found", id)
 	}
 
 	return nil
