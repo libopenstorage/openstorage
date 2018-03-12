@@ -6,10 +6,9 @@ import (
 	"net/http"
 )
 
-func (vd *volAPI) backup(w http.ResponseWriter, r *http.Request) {
-	var err error
-	backupReq := &api.BackupRequest{}
-	method := "backup"
+func (vd *volAPI) cloudBackupCreate(w http.ResponseWriter, r *http.Request) {
+	backupReq := &api.CloudBackupCreateRequest{}
+	method := "cloudBackupCreate"
 
 	if err := json.NewDecoder(r.Body).Decode(backupReq); err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
@@ -21,21 +20,21 @@ func (vd *volAPI) backup(w http.ResponseWriter, r *http.Request) {
 		notFound(w, r)
 		return
 	}
-	volumeResponse := &api.VolumeResponse{}
-	err = d.Backup(backupReq)
+
+	err = d.CloudBackupCreate(backupReq)
 	if err != nil {
-		volumeResponse.Error = responseStatus(err)
+		vd.sendError(method, backupReq.VolumeID, w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-	json.NewEncoder(w).Encode(volumeResponse)
+	w.WriteHeader(http.StatusOK)
 }
 
-func (vd *volAPI) backuprestore(w http.ResponseWriter, r *http.Request) {
-	restoreReq := &api.BackupRestoreRequest{}
-	restoreResp := &api.BackupRestoreResponse{}
+func (vd *volAPI) cloudBackupRestore(w http.ResponseWriter, r *http.Request) {
+	restoreReq := &api.CloudBackupRestoreRequest{}
+	method := "cloudBackupRestore"
 
 	if err := json.NewDecoder(r.Body).Decode(restoreReq); err != nil {
-		restoreResp.RestoreErr = err.Error()
-		json.NewEncoder(w).Encode(restoreResp)
+		vd.sendError(method, "", w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	d, err := vd.getVolDriver(r)
@@ -43,17 +42,20 @@ func (vd *volAPI) backuprestore(w http.ResponseWriter, r *http.Request) {
 		notFound(w, r)
 		return
 	}
-	restoreResp = d.BackupRestore(restoreReq)
+	restoreResp, err := d.CloudBackupRestore(restoreReq)
+	if err != nil {
+		vd.sendError(method, restoreReq.ID, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	json.NewEncoder(w).Encode(restoreResp)
 }
 
-func (vd *volAPI) backupdelete(w http.ResponseWriter, r *http.Request) {
-	var err error
-	backupReq := &api.BackupDeleteRequest{}
-	method := "backupdelete"
+func (vd *volAPI) cloudBackupDelete(w http.ResponseWriter, r *http.Request) {
+	backupReq := &api.CloudBackupDeleteRequest{}
+	method := "cloudBackupDelete"
 
 	if err := json.NewDecoder(r.Body).Decode(backupReq); err != nil {
-		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+		vd.sendError(method, "", w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -62,164 +64,184 @@ func (vd *volAPI) backupdelete(w http.ResponseWriter, r *http.Request) {
 		notFound(w, r)
 		return
 	}
-	volumeResponse := &api.VolumeResponse{}
-	err = d.BackupDelete(backupReq)
+	err = d.CloudBackupDelete(backupReq)
 	if err != nil {
-		volumeResponse.Error = responseStatus(err)
+		vd.sendError(method, backupReq.SrcVolumeID, w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-	json.NewEncoder(w).Encode(volumeResponse)
+	w.WriteHeader(http.StatusOK)
 }
 
-func (vd *volAPI) backupenumerate(w http.ResponseWriter, r *http.Request) {
-	var err error
-	enumerateReq := &api.BackupEnumerateRequest{}
-	enumerateResp := &api.BackupEnumerateResponse{}
+func (vd *volAPI) cloudBackupEnumerate(w http.ResponseWriter, r *http.Request) {
+	method := "cloudBackupEnumerate"
+	enumerateReq := &api.CloudBackupEnumerateRequest{}
 
 	if err := json.NewDecoder(r.Body).Decode(enumerateReq); err != nil {
-		enumerateResp.EnumerateErr = err.Error()
-		json.NewEncoder(w).Encode(enumerateResp)
+		vd.sendError(method, "", w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	d, err := vd.getVolDriver(r)
 
+	d, err := vd.getVolDriver(r)
 	if err != nil {
 		notFound(w, r)
 		return
 	}
-	enumerateResp = d.BackupEnumerate(enumerateReq)
+
+	enumerateResp, err := d.CloudBackupEnumerate(enumerateReq)
+	if err != nil {
+		vd.sendError(method, "", w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	json.NewEncoder(w).Encode(enumerateResp)
 }
 
-func (vd *volAPI) backupstatus(w http.ResponseWriter, r *http.Request) {
-	var err error
-	backupSts := &api.BackupStsRequest{}
-	backupStsResp := &api.BackupStsResponse{}
+func (vd *volAPI) cloudBackupStatus(w http.ResponseWriter, r *http.Request) {
+	method := "cloudBackupStatus"
+	backupStatus := &api.CloudBackupStatusRequest{}
 
-	if err := json.NewDecoder(r.Body).Decode(backupSts); err != nil {
-		backupStsResp.StsErr = err.Error()
-		json.NewEncoder(w).Encode(backupStsResp)
+	if err := json.NewDecoder(r.Body).Decode(backupStatus); err != nil {
+		vd.sendError(method, "", w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
 	d, err := vd.getVolDriver(r)
 	if err != nil {
 		notFound(w, r)
 		return
 	}
-	backupStsResp = d.BackupStatus(backupSts)
+
+	backupStatusResp, err := d.CloudBackupStatus(backupStatus)
 	if err != nil {
-		backupStsResp.StsErr = err.Error()
-	}
-	json.NewEncoder(w).Encode(backupStsResp)
-}
-
-func (vd *volAPI) backupcatalogue(w http.ResponseWriter, r *http.Request) {
-	var err error
-	catalogueReq := &api.BackupCatalogueRequest{}
-	catalogue := &api.BackupCatalogueResponse{}
-
-	if err := json.NewDecoder(r.Body).Decode(catalogueReq); err != nil {
-		catalogue.CatalogueErr = err.Error()
-		json.NewEncoder(w).Encode(catalogue)
+		vd.sendError(method, "", w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	json.NewEncoder(w).Encode(backupStatusResp)
+}
+
+func (vd *volAPI) cloudBackupCatalog(w http.ResponseWriter, r *http.Request) {
+	method := "cloudBackupCatalog"
+	catalogReq := &api.CloudBackupCatalogRequest{}
+
+	if err := json.NewDecoder(r.Body).Decode(catalogReq); err != nil {
+		vd.sendError(method, "", w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	d, err := vd.getVolDriver(r)
 	if err != nil {
 		notFound(w, r)
 		return
 	}
-	catalogue = d.BackupCatalogue(catalogueReq)
-	json.NewEncoder(w).Encode(catalogue)
+
+	catalog, err := d.CloudBackupCatalog(catalogReq)
+	if err != nil {
+		vd.sendError(method, catalogReq.ID, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(catalog)
 
 }
-func (vd *volAPI) backuphistory(w http.ResponseWriter, r *http.Request) {
-	var err error
-	historyReq := &api.BackupHistoryRequest{}
-	history := &api.BackupHistoryResponse{}
+func (vd *volAPI) cloudBackupHistory(w http.ResponseWriter, r *http.Request) {
+	method := "cloudBackupHistory"
+	historyReq := &api.CloudBackupHistoryRequest{}
 
 	if err := json.NewDecoder(r.Body).Decode(historyReq); err != nil {
-		history.HistoryErr = err.Error()
-		json.NewEncoder(w).Encode(history)
+		vd.sendError(method, "", w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
 	d, err := vd.getVolDriver(r)
 	if err != nil {
 		notFound(w, r)
 		return
 	}
-	history = d.BackupHistory(historyReq)
+
+	history, err := d.CloudBackupHistory(historyReq)
+	if err != nil {
+		vd.sendError(method, historyReq.SrcVolumeID, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	json.NewEncoder(w).Encode(history)
 }
 
-func (vd *volAPI) backupstatechange(w http.ResponseWriter, r *http.Request) {
-	var err error
-	stateChangeReq := &api.BackupStateChangeRequest{}
-	volumeResponse := &api.VolumeResponse{}
+func (vd *volAPI) cloudBackupStateChange(w http.ResponseWriter, r *http.Request) {
+	method := "cloudBackupStatusChange"
+	stateChangeReq := &api.CloudBackupStateChangeRequest{}
 	if err := json.NewDecoder(r.Body).Decode(stateChangeReq); err != nil {
-		volumeResponse.Error = responseStatus(err)
-		json.NewEncoder(w).Encode(volumeResponse)
+		vd.sendError(method, "", w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
 	d, err := vd.getVolDriver(r)
 	if err != nil {
 		notFound(w, r)
 		return
 	}
-	err = d.BackupStateChange(stateChangeReq)
+
+	err = d.CloudBackupStateChange(stateChangeReq)
 	if err != nil {
-		volumeResponse.Error = responseStatus(err)
+		vd.sendError(method, stateChangeReq.SrcVolumeID, w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-	json.NewEncoder(w).Encode(volumeResponse)
+	w.WriteHeader(http.StatusOK)
 }
 
-func (vd *volAPI) backupschedcreate(w http.ResponseWriter, r *http.Request) {
-	var err error
-	backupSchedReq := &api.BackupScheduleInfo{}
-	backupSchedResp := &api.BackupSchedResponse{}
+func (vd *volAPI) cloudBackupSchedCreate(w http.ResponseWriter, r *http.Request) {
+	method := "cloudBackupSchedCreate"
+	backupSchedReq := &api.CloudBackupSchedCreateRequest{}
 	if err := json.NewDecoder(r.Body).Decode(backupSchedReq); err != nil {
-		backupSchedResp.SchedCreateErr = err.Error()
-		json.NewEncoder(w).Encode(backupSchedResp)
+		vd.sendError(method, "", w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
 	d, err := vd.getVolDriver(r)
 	if err != nil {
 		notFound(w, r)
 		return
 	}
-	backupSchedResp = d.BackupSchedCreate(backupSchedReq)
+
+	backupSchedResp, err := d.CloudBackupSchedCreate(backupSchedReq)
+	if err != nil {
+		vd.sendError(method, backupSchedReq.SrcVolumeID, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	json.NewEncoder(w).Encode(backupSchedResp)
 }
 
-func (vd *volAPI) backupscheddelete(w http.ResponseWriter, r *http.Request) {
-	var err error
-	deleteReq := &api.BackupSchedDeleteRequest{}
-	volumeResponse := &api.VolumeResponse{}
+func (vd *volAPI) cloudBackupSchedDelete(w http.ResponseWriter, r *http.Request) {
+	method := "cloudBackupSchedDelete"
+	deleteReq := &api.CloudBackupSchedDeleteRequest{}
 	if err := json.NewDecoder(r.Body).Decode(deleteReq); err != nil {
-		volumeResponse.Error = err.Error()
-		json.NewEncoder(w).Encode(volumeResponse)
+		vd.sendError(method, "", w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
 	d, err := vd.getVolDriver(r)
 	if err != nil {
 		notFound(w, r)
 		return
 	}
 
-	err = d.BackupSchedDelete(deleteReq)
+	err = d.CloudBackupSchedDelete(deleteReq)
 	if err != nil {
-		volumeResponse.Error = err.Error()
+		vd.sendError(method, deleteReq.UUID, w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-	json.NewEncoder(w).Encode(volumeResponse)
+	w.WriteHeader(http.StatusOK)
 }
 
-func (vd *volAPI) backupschedenumerate(w http.ResponseWriter, r *http.Request) {
-	var err error
-	schedules := &api.BackupSchedEnumerateResponse{}
+func (vd *volAPI) cloudBackupSchedEnumerate(w http.ResponseWriter, r *http.Request) {
+	method := "cloudBackupSchedEnumerate"
 	d, err := vd.getVolDriver(r)
 	if err != nil {
 		notFound(w, r)
 		return
 	}
-	schedules = d.BackupSchedEnumerate()
+	schedules, err := d.CloudBackupSchedEnumerate()
+	if err != nil {
+		vd.sendError(method, "", w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	json.NewEncoder(w).Encode(schedules)
 }

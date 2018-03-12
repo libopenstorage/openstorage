@@ -216,8 +216,6 @@ type CredCreateRequest struct {
 type CredCreateResponse struct {
 	// UUID of the credential that was just created
 	UUID string
-	// CredErr indicates reasonfor failed CredCreate
-	CredErr string
 }
 
 // StatPoint represents the basic structure of a single Stat reported
@@ -234,77 +232,74 @@ type StatPoint struct {
 	Timestamp int64
 }
 
-type BackupRequest struct {
+type CloudBackupCreateRequest struct {
 	// VolumeID of the volume for which cloudbackup is requested
 	VolumeID string
 	// CredentialUUID is cloud credential to be used for backup
 	CredentialUUID string
-	// Full indicates if full backup is desired eventhough incremental is possible
+	// Full indicates if full backup is desired even though incremental is possible
 	Full bool
 }
 
-type BackupRestoreRequest struct {
-	// CloudBackupID is the backup ID being restored
-	CloudBackupID string
+type CloudBackupRestoreRequest struct {
+	// ID is the backup ID being restored
+	ID string
 	// RestoreVolumeName is optional volume Name of the new volume to be created
 	// in the cluster for restoring the cloudbackup
 	RestoreVolumeName string
 	// CredentialUUID is the credential to be used for restore operation
 	CredentialUUID string
-	// NodeID is the optional NodeID for provisionging restore volume(ResoreVolumeID should not be specified)
+	// NodeID is the optional NodeID for provisioning restore
+	// volume (ResoreVolumeName should not be specified)
 	NodeID string
 }
 
-type BackupRestoreResponse struct {
+type CloudBackupRestoreResponse struct {
 	// RestoreVolumeID is the volumeID to which the backup is being restored
 	RestoreVolumeID string
-	// RestoreErr indicates the reason for failure of restore operation
-	RestoreErr string
 }
 
-type BackupGenericRequest struct {
-	// SrcVolumeID is optional Source VolumeID to list backups for
+type CloudBackupGenericRequest struct {
+	// SrcVolumeID is optional Source VolumeID for the request
 	SrcVolumeID string
-	// ClusterID is the optional clusterID to list backups for
+	// ClusterID is the optional clusterID for the request
 	ClusterID string
-	// All if set to true, backups for all clusters in the cloud are returned
-	All bool
-	// CredentialUUID is the credential for cloud
+	// CredentialUUID is the credential for cloud to be used for the request
 	CredentialUUID string
+	// All if set to true, backups for all clusters in the cloud are processed
+	All bool
 }
 
-type BackupEnumerateRequest struct {
-	BackupGenericRequest
-}
-
-type BackupDeleteRequest struct {
-	BackupGenericRequest
-}
-
-type BackupInfo struct {
-	// SrcVolumeID  is Source volumeID of the backup
+type CloudBackupInfo struct {
+	// ID is the ID of the cloud backup
+	ID string
+	// SrcVolumeID is Source volumeID of the backup
 	SrcVolumeID string
 	// SrcvolumeName is name of the sourceVolume of the backup
 	SrcVolumeName string
-	// BackupID is cloud backup ID for the above source volume
-	BackupID string
 	// Timestamp is the timestamp at which the source volume
 	// was backed up to cloud
 	Timestamp time.Time
 	// Metadata associated with the backup
 	Metadata map[string]string
-	// Status indicates if this backup was successful
+	// Status indicates the status of the backup
 	Status string
 }
 
-type BackupEnumerateResponse struct {
-	// Backups is list of backups in cloud for given volume/cluster/s
-	Backups []BackupInfo
-	// EnumerateErr indicates any error encountered while enumerating backups
-	EnumerateErr string
+type CloudBackupEnumerateRequest struct {
+	CloudBackupGenericRequest
 }
 
-type BackupStsRequest struct {
+type CloudBackupEnumerateResponse struct {
+	// Backups is list of backups in cloud for given volume/cluster/s
+	Backups []CloudBackupInfo
+}
+
+type CloudBackupDeleteRequest struct {
+	CloudBackupGenericRequest
+}
+
+type CloudBackupStatusRequest struct {
 	// SrcVolumeID optional volumeID to list status of backup/restore
 	SrcVolumeID string
 	// Local indicates if only those backups/restores that are
@@ -312,7 +307,9 @@ type BackupStsRequest struct {
 	Local bool
 }
 
-type BackupStatus struct {
+type CloudBackupStatus struct {
+	// ID is the ID for the operation
+	ID string
 	// OpType indicates if this is a backup or restore
 	OpType string
 	// State indicates if the op is currently active/done/failed
@@ -323,40 +320,34 @@ type BackupStatus struct {
 	StartTime time.Time
 	// CompletedTime indicates Op's completed time
 	CompletedTime time.Time
-	//BackupID is the Backup ID for the Op
-	BackupID string
 	// NodeID is the ID of the node where this Op is active
 	NodeID string
 }
 
-type BackupStsResponse struct {
+type CloudBackupStatusResponse struct {
 	// statuses is list of currently active/failed/done backup/restores
-	Statuses map[string]BackupStatus
-	// StsErr indicates any error in obtaining the status
-	StsErr string
+	Statuses map[string]CloudBackupStatus
 }
 
-type BackupCatalogueRequest struct {
-	// CloudBackupID is Backup ID in the cloud
-	CloudBackupID string
+type CloudBackupCatalogRequest struct {
+	// ID is Backup ID in the cloud
+	ID string
 	// CredentialUUID is the credential for cloud
 	CredentialUUID string
 }
 
-type BackupCatalogueResponse struct {
+type CloudBackupCatalogResponse struct {
 	// Contents is listing of backup contents
 	Contents []string
-	// CatalogueErr indicates any error in obtaining cataolgue
-	CatalogueErr string
 }
 
-type BackupHistoryRequest struct {
-	//SrcVolumeID is volumeID for which history of backup/restore
+type CloudBackupHistoryRequest struct {
+	// SrcVolumeID is volumeID for which history of backup/restore
 	// is being requested
 	SrcVolumeID string
 }
 
-type BackupHistoryItem struct {
+type CloudBackupHistoryItem struct {
 	// SrcVolumeID is volume ID which was backedup
 	SrcVolumeID string
 	// TimeStamp is the time at which either backup completed/failed
@@ -365,14 +356,12 @@ type BackupHistoryItem struct {
 	Status string
 }
 
-type BackupHistoryResponse struct {
-	//HistoryList is list of past backup/restores in the cluster
-	HistoryList []BackupHistoryItem
-	//HistoryErr indicates any error in obtaining history
-	HistoryErr string
+type CloudBackupHistoryResponse struct {
+	// HistoryList is list of past backup/restores in the cluster
+	HistoryList []CloudBackupHistoryItem
 }
 
-type BackupStateChangeRequest struct {
+type CloudBackupStateChangeRequest struct {
 	// SrcVolumeID is volume ID on which backup/restore
 	// state change is being requested
 	SrcVolumeID string
@@ -381,35 +370,35 @@ type BackupStateChangeRequest struct {
 	RequestedState string
 }
 
-type BackupScheduleInfo struct {
-	// SrcVolumeID is the i schedule's source volume
+type CloudBackupScheduleInfo struct {
+	// SrcVolumeID is the schedule's source volume
 	SrcVolumeID string
 	// CredentialUUID is the cloud credential used with this schedule
 	CredentialUUID string
-	// BackupSchedule is the frequence of backup
-	BackupSchedule string
+	// Schedule is the frequence of backup
+	Schedule string
 	// MaxBackups are the maximum number of backups retained
 	// in cloud.Older backups are deleted
 	MaxBackups uint
 }
 
-type BackupSchedDeleteRequest struct {
-	// SchedUUID is UUID of the schedule to be deleted
-	SchedUUID string
+type CloudBackupSchedCreateRequest struct {
+	CloudBackupScheduleInfo
 }
 
-type BackupSchedResponse struct {
-	// SchedUUID is the UUID of the newly created schedule
-	SchedUUID string
-	//SchedCreateErr indicates any error while creating backupschedule
-	SchedCreateErr string
+type CloudBackupSchedCreateResponse struct {
+	// UUID is the UUID of the newly created schedule
+	UUID string
 }
 
-type BackupSchedEnumerateResponse struct {
-	// BackupSchedule is map of schedule uuid to scheduleInfo
-	BackupSchedules map[string]BackupScheduleInfo
-	// SchedEnumerateErr is error encountered while enumerating schedules
-	SchedEnumerateErr string
+type CloudBackupSchedDeleteRequest struct {
+	// UUID is UUID of the schedule to be deleted
+	UUID string
+}
+
+type CloudBackupSchedEnumerateResponse struct {
+	// Schedule is map of schedule uuid to scheduleInfo
+	Schedules map[string]CloudBackupScheduleInfo
 }
 
 // DriverTypeSimpleValueOf returns the string format of DriverType
