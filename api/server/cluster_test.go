@@ -576,7 +576,6 @@ func TestSetClusterConfSuccess(t *testing.T) {
 	clusterConfig := &osdconfig.ClusterConfig{
 		NodeId:    []string{"node-id-1,node-id-2,node-id-3"},
 		ClusterId: "dummy-cluster-id",
-		Created:   time.Now(),
 		Secrets:   secretsConfig,
 		Version:   "x.y.z",
 		Kvdb: &osdconfig.KvdbConfig{
