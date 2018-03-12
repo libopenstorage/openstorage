@@ -88,9 +88,8 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			numVolumesBefore int
 			numVolumesAfter  int
 			volumeID         string
-			bkpStatusReq     *api.BackupStsRequest
-			bkpStatusResp    *api.BackupStsResponse
-			bkpStatus        api.BackupStatus
+			bkpStatusReq     *api.CloudBackupStatusRequest
+			bkpStatus        api.CloudBackupStatus
 		)
 
 		BeforeEach(func() {
@@ -147,7 +146,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				credUUID = uuid
 				By("Doing Backup on " + provider)
 
-				bkpReq := &api.BackupRequest{
+				bkpReq := &api.CloudBackupCreateRequest{
 					CredentialUUID: credUUID,
 					Full:           false,
 					VolumeID:       volumeID,
@@ -158,7 +157,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(str).NotTo(BeNil())
 
-				err = volumedriver.Backup(bkpReq)
+				err = volumedriver.CloudBackupCreate(bkpReq)
 				Expect(err).To((BeNil()))
 
 				By("Checking backup status")
@@ -167,11 +166,11 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				timeout := 300
 				timespent := 0
 				for timespent < timeout {
-					bkpStatusReq = &api.BackupStsRequest{
+					bkpStatusReq = &api.CloudBackupStatusRequest{
 						SrcVolumeID: volumeID,
 					}
-					bkpStatusResp = volumedriver.BackupStatus(bkpStatusReq)
-					Expect(bkpStatusResp.StsErr).To(BeEmpty())
+					bkpStatusResp, err := volumedriver.CloudBackupStatus(bkpStatusReq)
+					Expect(err).To(BeNil())
 
 					bkpStatus = bkpStatusResp.Statuses[volumeID]
 					if strings.Contains(bkpStatus.Status, "Done") {
@@ -196,9 +195,8 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			numVolumesBefore int
 			numVolumesAfter  int
 			volumeID         string
-			bkpStatusReq     *api.BackupStsRequest
-			bkpStatusResp    *api.BackupStsResponse
-			bkpStatus        api.BackupStatus
+			bkpStatusReq     *api.CloudBackupStatusRequest
+			bkpStatus        api.CloudBackupStatus
 		)
 
 		BeforeEach(func() {
@@ -253,7 +251,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			for provider, uuid := range credsUUIDMap {
 				credUUID = uuid
 				By("Doing Backup on " + provider)
-				bkpReq := &api.BackupRequest{
+				bkpReq := &api.CloudBackupCreateRequest{
 					CredentialUUID: credUUID,
 					Full:           false,
 					VolumeID:       volumeID,
@@ -264,7 +262,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(str).NotTo(BeNil())
 
-				err = volumedriver.Backup(bkpReq)
+				err = volumedriver.CloudBackupCreate(bkpReq)
 				Expect(err).To(BeNil()) // give 3 attempts for backup to be successfull before declaring failed
 
 				By("Checking backup status")
@@ -273,11 +271,11 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				timeout := 300
 				timespent := 0
 				for timespent < timeout {
-					bkpStatusReq = &api.BackupStsRequest{
+					bkpStatusReq = &api.CloudBackupStatusRequest{
 						SrcVolumeID: volumeID,
 					}
-					bkpStatusResp = volumedriver.BackupStatus(bkpStatusReq)
-					Expect(bkpStatusResp.StsErr).To(BeEmpty())
+					bkpStatusResp, err := volumedriver.CloudBackupStatus(bkpStatusReq)
+					Expect(err).To(BeNil())
 
 					bkpStatus = bkpStatusResp.Statuses[volumeID]
 					if strings.Contains(bkpStatus.Status, "Done") {
@@ -295,16 +293,16 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 
 				By("Backup enumerate")
 
-				bkpEnumReq := &api.BackupEnumerateRequest{
-					BackupGenericRequest: api.BackupGenericRequest{
+				bkpEnumReq := &api.CloudBackupEnumerateRequest{
+					CloudBackupGenericRequest: api.CloudBackupGenericRequest{
 						All:            false,
 						CredentialUUID: credUUID,
 						SrcVolumeID:    volumeID,
 					},
 				}
 
-				enumResp := volumedriver.BackupEnumerate(bkpEnumReq)
-				Expect(enumResp.EnumerateErr).To(BeEmpty())
+				enumResp, err := volumedriver.CloudBackupEnumerate(bkpEnumReq)
+				Expect(err).To(BeNil())
 				Expect(len(enumResp.Backups)).ToNot(BeNil())
 				Expect(enumResp.Backups[0].SrcVolumeID).To(BeEquivalentTo(volumeID))
 			}
@@ -317,9 +315,8 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			numVolumesBefore int
 			numVolumesAfter  int
 			volumeID         string
-			bkpStatusReq     *api.BackupStsRequest
-			bkpStatusResp    *api.BackupStsResponse
-			bkpStatus        api.BackupStatus
+			bkpStatusReq     *api.CloudBackupStatusRequest
+			bkpStatus        api.CloudBackupStatus
 			restoredVolume   string
 		)
 
@@ -381,7 +378,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				credUUID = uuid
 				By("Doing Backup on " + provider)
 
-				bkpReq := &api.BackupRequest{
+				bkpReq := &api.CloudBackupCreateRequest{
 					CredentialUUID: credUUID,
 					Full:           false,
 					VolumeID:       volumeID,
@@ -392,7 +389,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(str).NotTo(BeNil())
 
-				err = volumedriver.Backup(bkpReq)
+				err = volumedriver.CloudBackupCreate(bkpReq)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Checking backup status")
@@ -401,11 +398,11 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				timeout := 300
 				timespent := 0
 				for timespent < timeout {
-					bkpStatusReq = &api.BackupStsRequest{
+					bkpStatusReq = &api.CloudBackupStatusRequest{
 						SrcVolumeID: volumeID,
 					}
-					bkpStatusResp = volumedriver.BackupStatus(bkpStatusReq)
-					Expect(bkpStatusResp.StsErr).To(BeEmpty())
+					bkpStatusResp, err := volumedriver.CloudBackupStatus(bkpStatusReq)
+					Expect(err).To(BeNil())
 
 					bkpStatus = bkpStatusResp.Statuses[volumeID]
 					if strings.Contains(bkpStatus.Status, "Done") {
@@ -422,30 +419,30 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				Expect(bkpStatus.Status).To(BeEquivalentTo("Done"))
 
 				By("Backup enumerate")
-				bkpEnumReq := &api.BackupEnumerateRequest{
-					BackupGenericRequest: api.BackupGenericRequest{
+				bkpEnumReq := &api.CloudBackupEnumerateRequest{
+					CloudBackupGenericRequest: api.CloudBackupGenericRequest{
 						All:            false,
 						CredentialUUID: credUUID,
 						SrcVolumeID:    volumeID,
 					},
 				}
-				enumResp := volumedriver.BackupEnumerate(bkpEnumReq)
-				Expect(enumResp.EnumerateErr).To(BeEmpty())
+				enumResp, err := volumedriver.CloudBackupEnumerate(bkpEnumReq)
+				Expect(err).To(BeNil())
 				Expect(len(enumResp.Backups)).ToNot(BeNil())
 				Expect(enumResp.Backups[0].SrcVolumeID).To(BeEquivalentTo(volumeID))
 
 				By("Backup restore")
 
 				// Get the backup cloud backupid from backupEnumerate
-				bkpID := enumResp.Backups[0].BackupID
+				bkpID := enumResp.Backups[0].ID
 
-				bkpRestoreReq := &api.BackupRestoreRequest{
-					CloudBackupID:     bkpID,
+				bkpRestoreReq := &api.CloudBackupRestoreRequest{
+					ID:                bkpID,
 					CredentialUUID:    credUUID,
 					RestoreVolumeName: restoredVolume,
 				}
-				bkpRestoreResp := volumedriver.BackupRestore(bkpRestoreReq)
-				Expect(bkpRestoreResp.RestoreErr).To(BeEmpty())
+				bkpRestoreResp, err := volumedriver.CloudBackupRestore(bkpRestoreReq)
+				Expect(err).To(BeNil())
 
 				By("Inspecting the restored volume")
 
@@ -519,15 +516,16 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				credUUID = uuid
 				By("Creating a backup schedule")
 
-				bkpScheduleInfo := &api.BackupScheduleInfo{
-					BackupSchedule: "- freq: daily\n  hour: 23\n  minute: 00",
-					CredentialUUID: credUUID,
-					MaxBackups:     1,
-					SrcVolumeID:    volumeID,
+				bkpScheduleInfo := &api.CloudBackupSchedCreateRequest{
+					CloudBackupScheduleInfo: api.CloudBackupScheduleInfo{Schedule: "- freq: daily\n  hour: 23\n  minute: 00",
+						CredentialUUID: credUUID,
+						MaxBackups:     1,
+						SrcVolumeID:    volumeID,
+					},
 				}
-				bkpScheduleResponse := volumedriver.BackupSchedCreate(bkpScheduleInfo)
-				Expect(bkpScheduleResponse.SchedCreateErr).To(BeEmpty())
-				Expect(bkpScheduleResponse.SchedUUID).NotTo(BeNil())
+				bkpScheduleResponse, err := volumedriver.CloudBackupSchedCreate(bkpScheduleInfo)
+				Expect(err).To(BeNil())
+				Expect(bkpScheduleResponse.UUID).NotTo(BeNil())
 			}
 		})
 	})
@@ -595,27 +593,29 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				credUUID = uuid
 				By("Creating a backup schedule")
 
-				bkpScheduleInfo := &api.BackupScheduleInfo{
-					BackupSchedule: "- freq: daily\n  hour: 23\n  minute: 00",
-					CredentialUUID: credUUID,
-					MaxBackups:     1,
-					SrcVolumeID:    volumeID,
+				bkpScheduleInfo := &api.CloudBackupSchedCreateRequest{
+					CloudBackupScheduleInfo: api.CloudBackupScheduleInfo{
+						Schedule:       "- freq: daily\n  hour: 23\n  minute: 00",
+						CredentialUUID: credUUID,
+						MaxBackups:     1,
+						SrcVolumeID:    volumeID,
+					},
 				}
-				bkpScheduleResponse := volumedriver.BackupSchedCreate(bkpScheduleInfo)
-				Expect(bkpScheduleResponse.SchedCreateErr).To(BeEmpty())
-				Expect(bkpScheduleResponse.SchedUUID).NotTo(BeNil())
+				bkpScheduleResponse, err := volumedriver.CloudBackupSchedCreate(bkpScheduleInfo)
+				Expect(err).To(BeEmpty())
+				Expect(bkpScheduleResponse.UUID).NotTo(BeNil())
 
-				schedules = append(schedules, bkpScheduleResponse.SchedUUID)
+				schedules = append(schedules, bkpScheduleResponse.UUID)
 			}
 
 			By("Deleting the created schedules")
 
 			for _, schedUUID := range schedules {
 
-				bkpScheduleDeleteReq := &api.BackupSchedDeleteRequest{
-					SchedUUID: schedUUID,
+				bkpScheduleDeleteReq := &api.CloudBackupSchedDeleteRequest{
+					UUID: schedUUID,
 				}
-				err = volumedriver.BackupSchedDelete(bkpScheduleDeleteReq)
+				err = volumedriver.CloudBackupSchedDelete(bkpScheduleDeleteReq)
 				Expect(err).NotTo(HaveOccurred())
 			}
 		})
@@ -684,24 +684,26 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				credUUID = uuid
 				By("Creating a backup schedule")
 
-				bkpScheduleInfo := &api.BackupScheduleInfo{
-					BackupSchedule: "- freq: daily\n  hour: 23\n  minute: 00",
-					CredentialUUID: credUUID,
-					MaxBackups:     1,
-					SrcVolumeID:    volumeID,
+				bkpScheduleInfo := &api.CloudBackupSchedCreateRequest{
+					CloudBackupScheduleInfo: api.CloudBackupScheduleInfo{
+						Schedule:       "- freq: daily\n  hour: 23\n  minute: 00",
+						CredentialUUID: credUUID,
+						MaxBackups:     1,
+						SrcVolumeID:    volumeID,
+					},
 				}
-				bkpScheduleResponse := volumedriver.BackupSchedCreate(bkpScheduleInfo)
-				Expect(bkpScheduleResponse.SchedCreateErr).To(BeEmpty())
-				Expect(bkpScheduleResponse.SchedUUID).NotTo(BeNil())
+				bkpScheduleResponse, err := volumedriver.CloudBackupSchedCreate(bkpScheduleInfo)
+				Expect(err).To(BeNil())
+				Expect(bkpScheduleResponse.UUID).NotTo(BeNil())
 
-				schedules = append(schedules, bkpScheduleResponse.SchedUUID)
+				schedules = append(schedules, bkpScheduleResponse.UUID)
 			}
 
 			By("Enumerating the created schedules")
 
-			bkpScheduleEnumerateResp := volumedriver.BackupSchedEnumerate()
-			Expect(bkpScheduleEnumerateResp.SchedEnumerateErr).To(BeEmpty())
-			Expect(len(bkpScheduleEnumerateResp.BackupSchedules)).NotTo(BeZero())
+			bkpScheduleEnumerateResp, err := volumedriver.CloudBackupSchedEnumerate()
+			Expect(err).To(BeNil())
+			Expect(len(bkpScheduleEnumerateResp.Schedules)).NotTo(BeZero())
 		})
 	})
 
@@ -711,9 +713,9 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			numVolumesBefore int
 			numVolumesAfter  int
 			volumeID         string
-			bkpStatusReq     *api.BackupStsRequest
-			bkpStatusResp    *api.BackupStsResponse
-			bkpStatus        api.BackupStatus
+			bkpStatusReq     *api.CloudBackupStatusRequest
+			bkpStatusResp    *api.CloudBackupStatusResponse
+			bkpStatus        api.CloudBackupStatus
 		)
 
 		BeforeEach(func() {
@@ -770,7 +772,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				credUUID = uuid
 				By("Doing Backup on " + provider)
 
-				bkpReq := &api.BackupRequest{
+				bkpReq := &api.CloudBackupCreateRequest{
 					CredentialUUID: credUUID,
 					Full:           false,
 					VolumeID:       volumeID,
@@ -781,7 +783,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(str).NotTo(BeNil())
 
-				err = volumedriver.Backup(bkpReq)
+				err = volumedriver.CloudBackupCreate(bkpReq)
 				Expect(err).To((BeNil()))
 
 				By("Checking backup status")
@@ -790,11 +792,11 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				timeout := 300
 				timespent := 0
 				for timespent < timeout {
-					bkpStatusReq = &api.BackupStsRequest{
+					bkpStatusReq = &api.CloudBackupStatusRequest{
 						SrcVolumeID: volumeID,
 					}
-					bkpStatusResp = volumedriver.BackupStatus(bkpStatusReq)
-					Expect(bkpStatusResp.StsErr).To(BeEmpty())
+					bkpStatusResp, err = volumedriver.CloudBackupStatus(bkpStatusReq)
+					Expect(err).To(BeNil())
 
 					bkpStatus = bkpStatusResp.Statuses[volumeID]
 					if strings.Contains(bkpStatus.Status, "Done") {
@@ -811,41 +813,41 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				Expect(bkpStatus.Status).To(BeEquivalentTo("Done"))
 
 				By("Backup enumerate")
-				bkpEnumReq := &api.BackupEnumerateRequest{
-					BackupGenericRequest: api.BackupGenericRequest{
+				bkpEnumReq := &api.CloudBackupEnumerateRequest{
+					CloudBackupGenericRequest: api.CloudBackupGenericRequest{
 						All:            false,
 						CredentialUUID: credUUID,
 						SrcVolumeID:    volumeID,
 					},
 				}
-				enumResp := volumedriver.BackupEnumerate(bkpEnumReq)
-				Expect(enumResp.EnumerateErr).To(BeEmpty())
+				enumResp, err := volumedriver.CloudBackupEnumerate(bkpEnumReq)
+				Expect(err).To(BeNil())
 				Expect(len(enumResp.Backups)).ToNot(BeNil())
 				Expect(enumResp.Backups[0].SrcVolumeID).To(BeEquivalentTo(volumeID))
 
 				// Get the backup cloud backupid from backupEnumerate
-				bkpID := enumResp.Backups[0].BackupID
+				bkpID := enumResp.Backups[0].ID
 
 				By("Getting backup catalogue")
 
-				bkpCatalogReq := &api.BackupCatalogueRequest{
-					CloudBackupID:  bkpID,
+				bkpCatalogReq := &api.CloudBackupCatalogRequest{
+					ID:             bkpID,
 					CredentialUUID: credUUID,
 				}
 
-				bkpCatalogResp := volumedriver.BackupCatalogue(bkpCatalogReq)
-				Expect(bkpCatalogResp.CatalogueErr).To(BeEmpty())
+				bkpCatalogResp, err := volumedriver.CloudBackupCatalog(bkpCatalogReq)
+				Expect(err).To(BeNil())
 				Expect(bkpCatalogResp.Contents).To(Not(BeEmpty()))
 			}
 
 			By("Getting the Backup history")
 
-			bkpHistory := &api.BackupHistoryRequest{
+			bkpHistory := &api.CloudBackupHistoryRequest{
 				SrcVolumeID: volumeID,
 			}
 
-			bkpHistoryResp := volumedriver.BackupHistory(bkpHistory)
-			Expect(bkpHistoryResp.HistoryErr).To(BeEmpty())
+			bkpHistoryResp, err := volumedriver.CloudBackupHistory(bkpHistory)
+			Expect(err).To(BeNil())
 
 			// Expect the created backup to have an entry in the backup history
 			isPresent := false
