@@ -5,13 +5,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/libopenstorage/openstorage/osdconfig"
-
 	"github.com/golang/mock/gomock"
 	types "github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
 	clusterclient "github.com/libopenstorage/openstorage/api/client/cluster"
 	"github.com/libopenstorage/openstorage/cluster"
+	"github.com/libopenstorage/openstorage/osdconfig"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -514,29 +513,24 @@ func TestGetClusterConfSuccess(t *testing.T) {
 		ClusterSecretKey: "cluster-secret-key",
 		SecretType:       "vault",
 		Vault: &osdconfig.VaultConfig{
-			VaultAddr:       "/vault/addr",
-			VaultBasePath:   "1.1.1.1",
-			VaultCacert:     "vault-ca-cert",
-			VaultClientCert: "vault-client-cert",
-			VaultToken:      "vault--dummy-token",
+			Address:    "/vault/addr",
+			BasePath:   "1.1.1.1",
+			CACert:     "vault-ca-cert",
+			ClientCert: "vault-client-cert",
+			Token:      "vault--dummy-token",
 		},
 	}
 
 	clusterConfig := &osdconfig.ClusterConfig{
-		NodeId:         []string{"node-id-1", "node-id-2", "node-id-3"},
-		Nolh:           true,
-		ClusterId:      "dummy-cluster-id",
-		Created:        time.Now().String(),
-		Callhome:       true,
-		AlertingUrl:    "http://dummy.alerting.url",
-		DebugLevel:     "level-0",
-		Multicontainer: true,
-		Secrets:        secretsConfig,
-		Version:        "x.y.z",
+		NodeId:    []string{"node-id-1", "node-id-2", "node-id-3"},
+		ClusterId: "dummy-cluster-id",
+		Created:   time.Now(),
+		Secrets:   secretsConfig,
+		Version:   "x.y.z",
 		Kvdb: &osdconfig.KvdbConfig{
-			KvdbAddr: []string{"2.2.2.2"},
-			Password: "kvdb-pass",
-			Username: "kvdb",
+			Discovery: []string{"2.2.2.2"},
+			Password:  "kvdb-pass",
+			Username:  "kvdb",
 		},
 	}
 	// mock the cluster response
@@ -558,7 +552,6 @@ func TestGetClusterConfSuccess(t *testing.T) {
 	assert.Equal(t, resp.Version, clusterConfig.Version)
 	assert.Equal(t, resp.Kvdb.Password, clusterConfig.Kvdb.Password)
 	assert.Equal(t, len(resp.NodeId), 3)
-	assert.Equal(t, resp.AlertingUrl, clusterConfig.AlertingUrl)
 }
 
 func TestSetClusterConfSuccess(t *testing.T) {
@@ -572,29 +565,24 @@ func TestSetClusterConfSuccess(t *testing.T) {
 		ClusterSecretKey: "cluster-secret-key",
 		SecretType:       "vault",
 		Vault: &osdconfig.VaultConfig{
-			VaultAddr:       "/vault/addr",
-			VaultBasePath:   "1.1.1.1",
-			VaultCacert:     "vault-ca-cert",
-			VaultClientCert: "vault-client-cert",
-			VaultToken:      "vault--dummy-token",
+			Address:    "/vault/addr",
+			BasePath:   "1.1.1.1",
+			CACert:     "vault-ca-cert",
+			ClientCert: "vault-client-cert",
+			Token:      "vault--dummy-token",
 		},
 	}
 
 	clusterConfig := &osdconfig.ClusterConfig{
-		NodeId:         []string{"node-id-1,node-id-2,node-id-3"},
-		Nolh:           true,
-		ClusterId:      "dummy-cluster-id",
-		Created:        time.Now().String(),
-		Callhome:       true,
-		AlertingUrl:    "http://dummy.alerting.url",
-		DebugLevel:     "level-0",
-		Multicontainer: true,
-		Secrets:        secretsConfig,
-		Version:        "x.y.z",
+		NodeId:    []string{"node-id-1,node-id-2,node-id-3"},
+		ClusterId: "dummy-cluster-id",
+		Created:   time.Now(),
+		Secrets:   secretsConfig,
+		Version:   "x.y.z",
 		Kvdb: &osdconfig.KvdbConfig{
-			KvdbAddr: []string{"2.2.2.2"},
-			Password: "kvdb-pass",
-			Username: "kvdb",
+			Discovery: []string{"2.2.2.2"},
+			Password:  "kvdb-pass",
+			Username:  "kvdb",
 		},
 	}
 
@@ -625,7 +613,6 @@ func TestGetNodeConfSuccess(t *testing.T) {
 	nodeConfig := &osdconfig.NodeConfig{
 		NodeId: nodeID,
 		Storage: &osdconfig.StorageConfig{
-			AsyncIo:          true,
 			Devices:          []string{"/dev/sdb", "/dev/sdc"},
 			MaxDriveSetCount: 5,
 			MaxCount:         5,
@@ -693,7 +680,6 @@ func TestSetNodeConfSuccess(t *testing.T) {
 	nodeConfig := &osdconfig.NodeConfig{
 		NodeId: nodeID,
 		Storage: &osdconfig.StorageConfig{
-			AsyncIo:          true,
 			Devices:          []string{"/dev/sdb", "/dev/sdc"},
 			MaxDriveSetCount: 5,
 			MaxCount:         5,

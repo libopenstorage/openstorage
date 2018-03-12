@@ -22,7 +22,7 @@ func TestSetGetCluster(t *testing.T) {
 	// prepare expected cluster config
 	expectedConf := new(ClusterConfig)
 	expectedConf.ClusterId = "myClusterID"
-	expectedConf.Driver = "myDriver"
+	expectedConf.Description = "myDescription"
 
 	// set the expected cluster config value
 	if err := manager.SetClusterConf(expectedConf); err != nil {
@@ -108,7 +108,7 @@ func TestCallback(t *testing.T) {
 			err = fmt.Errorf("data not as expected")
 
 		}
-		if config.Driver != "myDriver" {
+		if config.Description != "myDescription" {
 			err = fmt.Errorf("data not as expected")
 		}
 		ch <- err
@@ -150,7 +150,7 @@ func setSomeClusterValues(ch chan error, manager ConfigManager) error {
 	// prepare expected cluster config
 	conf := new(ClusterConfig)
 	conf.ClusterId = "myClusterID"
-	conf.Driver = "myDriver"
+	conf.Description = "myDescription"
 
 	if err := manager.SetClusterConf(conf); err != nil {
 		return err
