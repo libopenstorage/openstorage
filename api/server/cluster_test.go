@@ -719,3 +719,258 @@ func TestSetNodeConfSuccess(t *testing.T) {
 	resp := restClient.SetNodeConf(nodeConfig)
 	assert.NoError(t, resp)
 }
+
+func TestInspectNodeFailed(t *testing.T) {
+
+	// Create a new global test cluster
+	ts, tc := testClusterServer(t)
+	defer ts.Close()
+	defer tc.Finish()
+
+	// create a cluster client to make the REST call
+	c, err := clusterclient.NewClusterClient(ts.URL, "v1")
+	assert.NoError(t, err)
+
+	nodeID := "nodeid-doesnt-exist"
+
+	// mock the cluster response
+	tc.MockCluster().
+		EXPECT().
+		Inspect(nodeID).
+		Return(api.Node{}, fmt.Errorf("there is an error called apple"))
+
+	// make the REST call
+	restClient := clusterclient.ClusterManager(c)
+	resp, err := restClient.Inspect(nodeID)
+
+	fmt.Println("What have we here in error --- ", err)
+	assert.NotNil(t, resp)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "apple")
+}
+
+func TestClusterEnumerateFailed(t *testing.T) {
+
+	// Create a new global test cluster
+	ts, tc := testClusterServer(t)
+	defer ts.Close()
+	defer tc.Finish()
+
+	// create a cluster client to make the REST call
+	c, err := clusterclient.NewClusterClient(ts.URL, "v1")
+	assert.NoError(t, err)
+
+	// mock the cluster response
+	tc.MockCluster().
+		EXPECT().
+		Enumerate().
+		Return(api.Cluster{}, fmt.Errorf("Error in cluster enumerate"))
+	// make the REST call
+	restClient := clusterclient.ClusterManager(c)
+	resp, err := restClient.Enumerate()
+
+	assert.Error(t, err)
+	assert.EqualValues(t, api.Status_STATUS_NONE, resp.Status)
+	assert.Contains(t, err.Error(), "Error in cluster enumerate")
+
+}
+
+func TestClusterNodeStatusFailed(t *testing.T) {
+
+	// Create a new global test cluster
+	ts, tc := testClusterServer(t)
+	defer ts.Close()
+	defer tc.Finish()
+
+	restClient, err := clusterclient.NewClusterClient(ts.URL, "v1")
+	assert.NoError(t, err)
+
+	// Set expections
+	tc.MockCluster().
+		EXPECT().
+		NodeStatus().
+		Return(api.Status_STATUS_NONE, fmt.Errorf("error in node status")).
+		Times(1)
+
+	// Check status
+	status, err := clusterclient.ClusterManager(restClient).NodeStatus()
+	assert.Error(t, err)
+	assert.Equal(t, api.Status_STATUS_NONE, status)
+	assert.Contains(t, err.Error(), "error in node status")
+}
+
+func TestEnumerateAlertsFailed(t *testing.T) {
+
+	// Create a new global test cluster
+	ts, tc := testClusterServer(t)
+	defer ts.Close()
+	defer tc.Finish()
+
+	// time frame is exactly 24 hrs from current time.
+	endTime := time.Now()
+	startTime := endTime.Add(-24 * time.Hour)
+
+	// mock the cluster response
+	tc.MockCluster().
+		EXPECT().
+		EnumerateAlerts(gomock.Any(), gomock.Any(), gomock.Any()).
+		Return(&api.Alerts{}, fmt.Errorf("error in enumerate alerts"))
+
+	// create a cluster client to make the REST call
+	c, err := clusterclient.NewClusterClient(ts.URL, "v1")
+	assert.NoError(t, err)
+
+	// make the REST call
+	restClient := clusterclient.ClusterManager(c)
+	resp, err := restClient.EnumerateAlerts(startTime, endTime, api.ResourceType_RESOURCE_TYPE_NODE)
+
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+
+	assert.Contains(t, err.Error(), "error in enumerate alerts")
+}
+
+func TestGetClusterConfFailed(t *testing.T) {
+
+	// Create a new global test cluster
+	ts, tc := testClusterServer(t)
+	defer ts.Close()
+	defer tc.Finish()
+
+	// mock the cluster response
+	tc.MockCluster().
+		EXPECT().
+		GetClusterConf().
+		Return(nil, fmt.Errorf("error in getting cluster config"))
+
+	// create a cluster client to make the REST call
+	c, err := clusterclient.NewClusterClient(ts.URL, "v1")
+	assert.NoError(t, err)
+
+	// make the REST call
+	restClient := clusterclient.ClusterManager(c)
+	resp, err := restClient.GetClusterConf()
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.Contains(t, err.Error(), "error in getting cluster config")
+}
+
+func TestPeerStatusFailed(t *testing.T) {
+
+	// Create a new global test cluster
+	ts, tc := testClusterServer(t)
+	defer ts.Close()
+	defer tc.Finish()
+
+	// create a cluster client to make the REST call
+	c, err := clusterclient.NewClusterClient(ts.URL, "v1")
+	assert.NoError(t, err)
+
+	listenerName := "pxd"
+	// mock the cluster response
+	tc.MockCluster().
+		EXPECT().
+		PeerStatus(listenerName).
+		Return(nil, fmt.Errorf("error in peer status"))
+
+		// make the REST call
+	restClient := clusterclient.ClusterManager(c)
+
+	statusMap, err := restClient.PeerStatus(listenerName)
+	assert.Error(t, err)
+	assert.Nil(t, statusMap)
+	assert.Contains(t, err.Error(), "error in peer status")
+}
+
+func TestSetClusterConfFailed(t *testing.T) {
+
+	// Create a new global test cluster
+	ts, tc := testClusterServer(t)
+	defer ts.Close()
+	defer tc.Finish()
+
+	secretsConfig := &osdconfig.SecretsConfig{
+		ClusterSecretKey: "cluster-secret-key",
+		SecretType:       "vault",
+		Vault: &osdconfig.VaultConfig{
+			VaultAddr:       "/vault/addr",
+			VaultBasePath:   "1.1.1.1",
+			VaultCacert:     "vault-ca-cert",
+			VaultClientCert: "vault-client-cert",
+			VaultToken:      "vault--dummy-token",
+		},
+	}
+
+	clusterConfig := &osdconfig.ClusterConfig{
+		NodeId:         []string{"node-id-1,node-id-2,node-id-3"},
+		Nolh:           true,
+		ClusterId:      "dummy-cluster-id",
+		Created:        time.Now().String(),
+		Callhome:       true,
+		AlertingUrl:    "http://dummy.alerting.url",
+		DebugLevel:     "level-0",
+		Multicontainer: true,
+		Secrets:        secretsConfig,
+		Version:        "x.y.z",
+		Kvdb: &osdconfig.KvdbConfig{
+			KvdbAddr: []string{"2.2.2.2"},
+			Password: "kvdb-pass",
+			Username: "kvdb",
+		},
+	}
+
+	// mock the cluster response
+	tc.MockCluster().
+		EXPECT().
+		SetClusterConf(clusterConfig).
+		Return(fmt.Errorf("error in setting cluster config"))
+
+	// create a cluster client to make the REST call
+	c, err := clusterclient.NewClusterClient(ts.URL, "v1")
+	assert.NoError(t, err)
+
+	// make the REST call
+	restClient := clusterclient.ClusterManager(c)
+	resp := restClient.SetClusterConf(clusterConfig)
+	assert.Error(t, resp)
+	assert.Contains(t, resp.Error(), "error in setting cluster config")
+}
+
+func TestSetNodeConfFailed(t *testing.T) {
+
+	// Create a new global test cluster
+	ts, tc := testClusterServer(t)
+	defer ts.Close()
+	defer tc.Finish()
+
+	nodeID := "dummy-node-id"
+	nodeConfig := &osdconfig.NodeConfig{
+		NodeId: nodeID,
+		Storage: &osdconfig.StorageConfig{
+			AsyncIo:          true,
+			Devices:          []string{"/dev/sdb", "/dev/sdc"},
+			MaxDriveSetCount: 5,
+			MaxCount:         5,
+		},
+		Network: &osdconfig.NetworkConfig{
+			DataIface: "eth0",
+			MgtIface:  "dummy",
+		},
+	}
+
+	// mock the cluster response
+	tc.MockCluster().
+		EXPECT().
+		SetNodeConf(nodeConfig).
+		Return(fmt.Errorf("Error in setting node conf"))
+
+	// create a cluster client to make the REST call
+	c, err := clusterclient.NewClusterClient(ts.URL, "v1")
+	assert.NoError(t, err)
+
+	// make the REST call
+	restClient := clusterclient.ClusterManager(c)
+	resp := restClient.SetNodeConf(nodeConfig)
+	assert.Error(t, resp)
+	assert.Contains(t, resp.Error(), "Error in setting node conf")
+}
