@@ -173,18 +173,6 @@ func (mr *MockClusterMockRecorder) GetNodeConf(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodeConf", reflect.TypeOf((*MockCluster)(nil).GetNodeConf), arg0)
 }
 
-// GetTunnelConfig mocks base method
-func (m *MockCluster) GetTunnelConfig() api.TunnelConfig {
-	ret := m.ctrl.Call(m, "GetTunnelConfig")
-	ret0, _ := ret[0].(api.TunnelConfig)
-	return ret0
-}
-
-// GetTunnelConfig indicates an expected call of GetTunnelConfig
-func (mr *MockClusterMockRecorder) GetTunnelConfig() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTunnelConfig", reflect.TypeOf((*MockCluster)(nil).GetTunnelConfig))
-}
-
 // Inspect mocks base method
 func (m *MockCluster) Inspect(arg0 string) (api.Node, error) {
 	ret := m.ctrl.Call(m, "Inspect", arg0)
@@ -258,42 +246,6 @@ func (mr *MockClusterMockRecorder) SetClusterConf(arg0 interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetClusterConf", reflect.TypeOf((*MockCluster)(nil).SetClusterConf), arg0)
 }
 
-// SetFluentDConfig mocks base method
-func (m *MockCluster) SetFluentDConfig(arg0 api.FluentDConfig) error {
-	ret := m.ctrl.Call(m, "SetFluentDConfig", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetFluentDConfig indicates an expected call of SetFluentDConfig
-func (mr *MockClusterMockRecorder) SetFluentDConfig(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetFluentDConfig", reflect.TypeOf((*MockCluster)(nil).SetFluentDConfig), arg0)
-}
-
-// SetLoggingURL mocks base method
-func (m *MockCluster) SetLoggingURL(arg0 string) error {
-	ret := m.ctrl.Call(m, "SetLoggingURL", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetLoggingURL indicates an expected call of SetLoggingURL
-func (mr *MockClusterMockRecorder) SetLoggingURL(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLoggingURL", reflect.TypeOf((*MockCluster)(nil).SetLoggingURL), arg0)
-}
-
-// SetManagementURL mocks base method
-func (m *MockCluster) SetManagementURL(arg0 string) error {
-	ret := m.ctrl.Call(m, "SetManagementURL", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetManagementURL indicates an expected call of SetManagementURL
-func (mr *MockClusterMockRecorder) SetManagementURL(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetManagementURL", reflect.TypeOf((*MockCluster)(nil).SetManagementURL), arg0)
-}
-
 // SetNodeConf mocks base method
 func (m *MockCluster) SetNodeConf(arg0 *osdconfig.NodeConfig) error {
 	ret := m.ctrl.Call(m, "SetNodeConf", arg0)
@@ -316,18 +268,6 @@ func (m *MockCluster) SetSize(arg0 int) error {
 // SetSize indicates an expected call of SetSize
 func (mr *MockClusterMockRecorder) SetSize(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSize", reflect.TypeOf((*MockCluster)(nil).SetSize), arg0)
-}
-
-// SetTunnelConfig mocks base method
-func (m *MockCluster) SetTunnelConfig(arg0 api.TunnelConfig) error {
-	ret := m.ctrl.Call(m, "SetTunnelConfig", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetTunnelConfig indicates an expected call of SetTunnelConfig
-func (mr *MockClusterMockRecorder) SetTunnelConfig(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTunnelConfig", reflect.TypeOf((*MockCluster)(nil).SetTunnelConfig), arg0)
 }
 
 // Shutdown mocks base method
