@@ -1798,7 +1798,7 @@
         },
         "trusted_ca_file": {
           "type": "string",
-          "x-go-name": "TrustedCaFile"
+          "x-go-name": "TrustedCAFile"
         },
         "username": {
           "type": "string",

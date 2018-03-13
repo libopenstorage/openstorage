@@ -34,7 +34,7 @@ type KvdbConfig struct {
 	CAFile         string   `json:"ca_file,omitempty" enable:"true" hidden:"false" usage:"CA file for kvdb"`
 	CertFile       string   `json:"cert_file,omitempty" enable:"true" hidden:"false" usage:"Cert file for kvdb"`
 	CertKeyFile    string   `json:"cert_key_file,omitempty" enable:"true" hidden:"false" usage:"Cert key file for kvdb"`
-	TrustedCaFile  string   `json:"trusted_ca_file,omitempty" enable:"true" hidden:"false" usage:"Trusted CA file for kvdb"`
+	TrustedCAFile  string   `json:"trusted_ca_file,omitempty" enable:"true" hidden:"false" usage:"Trusted CA file for kvdb"`
 	ClientCertAuth string   `json:"client_cert_auth,omitempty" enable:"true" hidden:"false" usage:"Client cert auth"`
 	AclToken       string   `json:"acl_token,omitempty" enable:"true" hidden:"false" usage:"ACL token"`
 	Discovery      []string `json:"discovery,omitempty" enable:"true" hidden:"false" usage:"List of etcd endpoints"`
