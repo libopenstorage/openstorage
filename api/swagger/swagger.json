@@ -1016,6 +1016,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
     },
     "ActiveRequest": {
+      "description": "Active Request",
       "type": "object",
       "properties": {
         "ReqestKV": {}
@@ -1023,6 +1024,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "ActiveRequests": {
+      "description": "Active Requests",
       "type": "object",
       "properties": {
         "ActiveRequest": {
@@ -1602,10 +1604,11 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "ClusterResponse": {
-      "description": "ClusterResponse",
+      "description": "ClusterResponse specifies a response that gets returned when requesting the cluster",
       "type": "object",
       "properties": {
         "error": {
+          "description": "Error code\n\nin: body",
           "type": "string",
           "x-go-name": "Error"
         }
@@ -2043,8 +2046,11 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SnapCreateResponse": {
-      "description": "SnapCreateResponse",
       "type": "object",
+      "title": "SnapCreateRequest specifies a response that get's returned when creating a snapshot.",
+      "required": [
+        "volume_create_response"
+      ],
       "properties": {
         "volume_create_response": {
           "$ref": "#/definitions/VolumeCreateResponse"
@@ -2551,7 +2557,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "VolumeInfo": {
-      "description": "Volume Info",
+      "description": "VolumeInfo",
       "type": "object",
       "properties": {
         "path": {
@@ -2808,15 +2814,10 @@
   },
   "responses": {
     "clusterResponse": {
-      "description": "ClusterResponse",
-      "headers": {
-        "error": {
-          "type": "string"
-        }
-      }
+      "description": "ClusterResponse specifies a response that gets returned when requesting the cluster"
     },
     "snapCreateResponse": {
-      "description": "SnapCreateResponse",
+      "description": "SnapCreateRequest specifies a response that get's returned when creating a snapshot.",
       "schema": {
         "$ref": "#/definitions/VolumeCreateResponse"
       }
