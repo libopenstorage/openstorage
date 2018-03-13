@@ -15,7 +15,7 @@ type NodeConfig struct {
 	Network     *NetworkConfig `json:"network,omitempty" enable:"true" hidden:"false" usage:"Network configuration" description:"Configure network values for a node"`
 	Storage     *StorageConfig `json:"storage,omitempty" enable:"true" hidden:"false" usage:"Storage configuration" description:"Configure storage values for a node"`
 	Geo         *GeoConfig     `json:"geo,omitempty" enable:"true" hidden:"false" usage:"Geographic configuration" description:"Stores geo info for node"`
-	Private     interface{}    `json:"generic,omitempty" enable:"false" hidden:"false" usage:"Private node data"`
+	Private     interface{}    `json:"private,omitempty" enable:"false" hidden:"false" usage:"Private node data"`
 }
 
 func (conf *NodeConfig) Init() *NodeConfig {
@@ -28,15 +28,16 @@ func (conf *NodeConfig) Init() *NodeConfig {
 // KvdbConfig stores parameters defining kvdb configuration
 // swagger:model
 type KvdbConfig struct {
-	KvdbName       string   `json:"kvdbname" yaml:"kvdbname"`
+	Name           string   `json:"name,omitempty" enable:"true" hidden:"false" usage:"Name for kvdb"`
 	Username       string   `json:"username,omitempty" enable:"true" hidden:"false" usage:"Username for kvdb"`
 	Password       string   `json:"password,omitempty" enable:"true" hidden:"false" usage:"Passwd for kvdb"`
-	CaFile         string   `json:"ca_file,omitempty" enable:"true" hidden:"false" usage:"CA file for kvdb"`
+	CAFile         string   `json:"ca_file,omitempty" enable:"true" hidden:"false" usage:"CA file for kvdb"`
 	CertFile       string   `json:"cert_file,omitempty" enable:"true" hidden:"false" usage:"Cert file for kvdb"`
-	TrustedCaFile  string   `json:"trusted_ca_file,omitempty" enable:"true" hidden:"false" usage:"Trusted CA file for kvdb"`
+	CertKeyFile    string   `json:"cert_key_file,omitempty" enable:"true" hidden:"false" usage:"Cert key file for kvdb"`
+	TrustedCAFile  string   `json:"trusted_ca_file,omitempty" enable:"true" hidden:"false" usage:"Trusted CA file for kvdb"`
 	ClientCertAuth string   `json:"client_cert_auth,omitempty" enable:"true" hidden:"false" usage:"Client cert auth"`
 	AclToken       string   `json:"acl_token,omitempty" enable:"true" hidden:"false" usage:"ACL token"`
-	Discovery      []string `json:"kvdb" enable:"true" hidden:"false" usage:"List of etcd endpoints"`
+	Discovery      []string `json:"discovery,omitempty" enable:"true" hidden:"false" usage:"List of etcd endpoints"`
 }
 
 func (conf *KvdbConfig) Init() *KvdbConfig {
@@ -56,7 +57,7 @@ type ClusterConfig struct {
 	Domain      string         `json:"domain,omitempty" enable:"true" hidden:"false" usage:"usage to be added"`
 	Secrets     *SecretsConfig `json:"secrets,omitempty" enable:"true" hidden:"false" usage:"usage to be added" description:"description to be added"`
 	Kvdb        *KvdbConfig    `json:"kvdb,omitempty" enable:"false" hidden:"false" usage:"usage to be added" description:"description to be added"`
-	Private     interface{}    `json:"generic,omitempty" enable:"true" hidden:"false" usage:"usage to be added"`
+	Private     interface{}    `json:"private,omitempty" enable:"true" hidden:"false" usage:"usage to be added"`
 }
 
 func (conf *ClusterConfig) Init() *ClusterConfig {
@@ -69,8 +70,8 @@ func (conf *ClusterConfig) Init() *ClusterConfig {
 // NetworkConfig is a network configuration parameters struct
 // swagger:model
 type NetworkConfig struct {
-	MgtIface  string `json:"mgt_iface,omitempty" enable:"true" hidden:"false" usage:"Management interface"`
-	DataIface string `json:"data_iface,omitempty" enable:"true" hidden:"false" usage:"Data interface"`
+	MgtIface  string `json:"mgt_interface,omitempty" enable:"true" hidden:"false" usage:"Management interface"`
+	DataIface string `json:"data_interface,omitempty" enable:"true" hidden:"false" usage:"Data interface"`
 }
 
 func (conf *NetworkConfig) Init() *NetworkConfig {
@@ -106,15 +107,15 @@ func (conf *SecretsConfig) Init() *SecretsConfig {
 // VaultConfig is a vault configuration parameters struct
 // swagger:model
 type VaultConfig struct {
-	Token         string `json:"vault_token,omitempty" enable:"true" hidden:"false" usage:"Vault token"`
-	Address       string `json:"vault_addr,omitempty" enable:"true" hidden:"false" usage:"Vault address"`
-	CACert        string `json:"vault_cacert,omitempty" enable:"true" hidden:"false" usage:"Vault CA certificate"`
-	CAPath        string `json:"vault_capath,omitempty" enable:"true" hidden:"false" usage:"Vault CA path"`
-	ClientCert    string `json:"vault_client_cert,omitempty" enable:"true" hidden:"false" usage:"Vault client certificate"`
-	ClientKey     string `json:"vault_client_key,omitempty" enable:"true" hidden:"false" usage:"Vault client key"`
-	TLSSkipVerify string `json:"vault_skip_verify,omitempty" enable:"true" hidden:"false" usage:"Vault skip verification"`
-	TLSServerName string `json:"vault_tls_server_name,omitempty" enable:"true" hidden:"false" usage:"Vault TLS server name"`
-	BasePath      string `json:"vault_base_path,omitempty" enable:"true" hidden:"false" usage:"Vault base path"`
+	Token         string `json:"token,omitempty" enable:"true" hidden:"false" usage:"Vault token"`
+	Address       string `json:"address,omitempty" enable:"true" hidden:"false" usage:"Vault address"`
+	CACert        string `json:"ca_cert,omitempty" enable:"true" hidden:"false" usage:"Vault CA certificate"`
+	CAPath        string `json:"ca_path,omitempty" enable:"true" hidden:"false" usage:"Vault CA path"`
+	ClientCert    string `json:"client_cert,omitempty" enable:"true" hidden:"false" usage:"Vault client certificate"`
+	ClientKey     string `json:"client_key,omitempty" enable:"true" hidden:"false" usage:"Vault client key"`
+	TLSSkipVerify string `json:"skip_verify,omitempty" enable:"true" hidden:"false" usage:"Vault skip verification"`
+	TLSServerName string `json:"tls_server_name,omitempty" enable:"true" hidden:"false" usage:"Vault TLS server name"`
+	BasePath      string `json:"base_path,omitempty" enable:"true" hidden:"false" usage:"Vault base path"`
 }
 
 func (conf *VaultConfig) Init() *VaultConfig {
@@ -140,8 +141,8 @@ func (conf *AWSConfig) Init() *AWSConfig {
 type StorageConfig struct {
 	DevicesMd        []string `json:"devices_md,omitempty" enable:"true" hidden:"false" usage:"Devices MD"`
 	Devices          []string `json:"devices,omitempty" enable:"true" hidden:"false" usage:"Devices list"`
-	MaxCount         int32    `json:"max_count,omitempty" enable:"true" hidden:"false" usage:"Maximum count"`
-	MaxDriveSetCount int32    `json:"max_drive_set_count,omitempty" enable:"true" hidden:"false" usage:"Max drive set count"`
+	MaxCount         uint32   `json:"max_count,omitempty" enable:"true" hidden:"false" usage:"Maximum count"`
+	MaxDriveSetCount uint32   `json:"max_drive_set_count,omitempty" enable:"true" hidden:"false" usage:"Max drive set count"`
 	RaidLevel        string   `json:"raid_level,omitempty" enable:"true" hidden:"false" usage:"RAID level info"`
 	RaidLevelMd      string   `json:"raid_level_md,omitempty" enable:"true" hidden:"false" usage:"RAID level MD"`
 }
