@@ -2,10 +2,9 @@ package osdconfig
 
 import "time"
 
-// NodesConfig contains all of node level data in the form of a map with node ID's as keys
-type NodesConfig struct {
-	NodeConf map[string]*NodeConfig `json:"node_conf,omitempty" enable:"true" hidden:"false" usage:"usage to be added"`
-}
+// NodesConfig contains all of node level data
+// swagger:model
+type NodesConfig []*NodeConfig
 
 // NodeConfig is a node level config data
 // swagger:model
@@ -53,7 +52,6 @@ type ClusterConfig struct {
 	Version     string         `json:"version,omitempty" enable:"true" hidden:"false" usage:"Version info for cluster"`
 	Created     time.Time      `json:"created,omitempty" enable:"true" hidden:"false" usage:"Creation info for cluster"`
 	ClusterId   string         `json:"cluster_id,omitempty" enable:"true" hidden:"false" usage:"Cluster ID info"`
-	NodeId      []string       `json:"node_id,omitempty" enable:"true" hidden:"false" usage:"Node ID info"`
 	Domain      string         `json:"domain,omitempty" enable:"true" hidden:"false" usage:"usage to be added"`
 	Secrets     *SecretsConfig `json:"secrets,omitempty" enable:"true" hidden:"false" usage:"usage to be added" description:"description to be added"`
 	Kvdb        *KvdbConfig    `json:"kvdb,omitempty" enable:"false" hidden:"false" usage:"usage to be added" description:"description to be added"`
@@ -61,7 +59,6 @@ type ClusterConfig struct {
 }
 
 func (conf *ClusterConfig) Init() *ClusterConfig {
-	conf.NodeId = make([]string, 0, 0)
 	conf.Secrets = new(SecretsConfig).Init()
 	conf.Kvdb = new(KvdbConfig).Init()
 	return conf

@@ -24,7 +24,7 @@ func newManager(kv kvdb.Kvdb) (*configManager, error) {
 	manager.cbNode = make(map[string]CallbackNodeConfigFunc)
 
 	// kvdb pointer
-	manager.cc = kv
+	manager.kv = kv
 
 	// register function with kvdb to watch cluster level changes
 	if err := kv.WatchTree(filepath.Join(baseKey, clusterKey), 0,

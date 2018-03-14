@@ -43,6 +43,7 @@ type etcdKV struct {
 	authRole e.AuthRoleAPI
 	domain   string
 	ec.EtcdCommon
+	kvdb.Controller
 }
 
 // New constructs a new kvdb.Kvdb.
@@ -87,6 +88,7 @@ func New(
 		e.NewAuthRoleAPI(c),
 		domain,
 		etcdCommon,
+		kvdb.ControllerNotSupported,
 	}, nil
 }
 
@@ -186,12 +188,14 @@ func (kv *etcdKV) Enumerate(prefix string) (kvdb.KVPairs, error) {
 		case *e.ClusterError:
 			logrus.Errorf("kvdb set error: %v, retry count: %v\n", err, i)
 			time.Sleep(ec.DefaultIntervalBetweenRetries)
-		default:
+		case e.Error:
 			etcdErr := err.(e.Error)
 			if etcdErr.Code == e.ErrorCodeKeyNotFound {
 				// Return an empty array
 				return kvdb.KVPairs{}, nil
 			}
+			return nil, err
+		default:
 			return nil, err
 		}
 	}
@@ -207,7 +211,17 @@ func (kv *etcdKV) Delete(key string) (*kvdb.KVPair, error) {
 	if err == nil {
 		return kv.resultToKv(result), err
 	}
-	return nil, err
+
+	switch err.(type) {
+	case e.Error:
+		etcdErr := err.(e.Error)
+		if etcdErr.Code == e.ErrorCodeKeyNotFound {
+			return nil, kvdb.ErrNotFound
+		}
+		return nil, err
+	default:
+		return nil, err
+	}
 }
 
 func (kv *etcdKV) DeleteTree(prefix string) error {
@@ -219,8 +233,57 @@ func (kv *etcdKV) DeleteTree(prefix string) error {
 	return err
 }
 
-func (kv *etcdKV) Keys(prefix, key string) ([]string, error) {
-	return nil, kvdb.ErrNotSupported
+func (kv *etcdKV) Keys(prefix, sep string) ([]string, error) {
+	// etcd-v2 supports only '/' separator
+	sep = "/"
+	prefix = kv.domain + prefix
+	lenPrefix := len(prefix)
+	if prefix[0:1] != sep {
+		prefix = sep + prefix
+		lenPrefix++
+	}
+	if prefix[lenPrefix-1:] != sep {
+		prefix += sep
+		lenPrefix++
+	}
+	var err error
+	for i := 0; i < kv.GetRetryCount(); i++ {
+		result, err := kv.client.Get(context.Background(), prefix, &e.GetOptions{
+			Recursive: false,
+			Sort:      true,
+			Quorum:    true,
+		})
+		if err == nil {
+			num := len(result.Node.Nodes)
+			var keys []string
+			if result.Node.Dir && num > 0 {
+				keys = make([]string, num)
+				for j := range result.Node.Nodes {
+					key := result.Node.Nodes[j].Key
+					if strings.HasPrefix(key, prefix) {
+						key = key[lenPrefix:]
+					}
+					keys[j] = key
+				}
+			}
+			return keys, nil
+		}
+		switch err.(type) {
+		case *e.ClusterError:
+			logrus.Errorf("kvdb set error: %v, retry count: %v\n", err, i)
+			time.Sleep(ec.DefaultIntervalBetweenRetries)
+		case e.Error:
+			etcdErr := err.(e.Error)
+			if etcdErr.Code == e.ErrorCodeKeyNotFound {
+				// Return an empty array
+				return []string{}, nil
+			}
+			return nil, err
+		default:
+			return nil, err
+		}
+	}
+	return nil, err
 }
 
 func (kv *etcdKV) CompareAndSet(
@@ -300,14 +363,23 @@ func (kv *etcdKV) LockWithID(key string, lockerID string) (
 	*kvdb.KVPair,
 	error,
 ) {
+	return kv.LockWithTimeout(key, lockerID, kvdb.DefaultLockTryDuration, kv.GetLockTimeout())
+}
+
+func (kv *etcdKV) LockWithTimeout(
+	key string,
+	lockerID string,
+	lockTryDuration time.Duration,
+	lockHoldDuration time.Duration,
+) (*kvdb.KVPair, error) {
 	key = kv.domain + key
 	duration := time.Second
 	ttl := uint64(ec.DefaultLockTTL)
-	count := 0
 	lock := &ec.EtcdLock{Done: make(chan struct{}), Tag: lockerID}
 	lockTag := ec.LockerIDInfo{LockerID: fmt.Sprintf("%p:%s", lock, lockerID)}
 	kvPair, err := kv.Create(key, lockTag, ttl)
-	for maxCount := 300; err != nil && count < maxCount; count++ {
+	startTime := time.Now()
+	for count := 0; err != nil; count++ {
 		time.Sleep(duration)
 		kvPair, err = kv.Create(key, lockTag, ttl)
 		if count > 0 && count%15 == 0 && err != nil {
@@ -317,16 +389,16 @@ func (kv *etcdKV) LockWithID(key string, lockerID string) (
 					key, count, currLockerTag)
 			}
 		}
+		if err != nil && time.Since(startTime) > lockTryDuration {
+			return nil, err
+		}
 	}
 	if err != nil {
 		return nil, err
 	}
 	kvPair.TTL = int64(time.Duration(ttl) * time.Second)
 	kvPair.Lock = lock
-	go kv.refreshLock(kvPair)
-	if count >= 10 {
-		logrus.Warnf("ETCD: spent %v iterations locking %v\n", count, key)
-	}
+	go kv.refreshLock(kvPair, lockerID, lockHoldDuration)
 
 	return kvPair, err
 }
@@ -343,7 +415,6 @@ func (kv *etcdKV) Unlock(kvp *kvdb.KVPair) error {
 		l.Unlocked = true
 		l.Unlock()
 		l.Done <- struct{}{}
-		logrus.Infof("Unlocked %p", l)
 		return nil
 	}
 	l.Unlock()
@@ -459,6 +530,9 @@ func (kv *etcdKV) setWithRetry(ctx context.Context, key, value string,
 
 out:
 	outErr := err
+	if outErr != nil && strings.Contains(outErr.Error(), kvdb.ErrExist.Error()) {
+		outErr = kvdb.ErrExist
+	}
 	// It's possible that update succeeded but the re-update failed.
 	// Check only if the original error was a cluster error.
 	if i > 0 && i < kv.GetRetryCount() && err != nil {
@@ -476,7 +550,11 @@ out:
 	return nil, outErr
 }
 
-func (kv *etcdKV) refreshLock(kvPair *kvdb.KVPair) {
+func (kv *etcdKV) refreshLock(
+	kvPair *kvdb.KVPair,
+	tag string,
+	lockHoldDuration time.Duration,
+) {
 	l := kvPair.Lock.(*ec.EtcdLock)
 	ttl := kvPair.TTL
 	refresh := time.NewTicker(ec.DefaultLockRefreshDuration)
@@ -484,16 +562,20 @@ func (kv *etcdKV) refreshLock(kvPair *kvdb.KVPair) {
 		keyString      string
 		currentRefresh time.Time
 		prevRefresh    time.Time
+		startTime      time.Time
 	)
+	startTime = time.Now()
 	if kvPair != nil {
 		keyString = kvPair.Key
 	}
+	lockMsgString := keyString + ",tag=" + tag
 	defer refresh.Stop()
 	for {
 		select {
 		case <-refresh.C:
 			l.Lock()
 			for !l.Unlocked {
+				kv.CheckLockTimeout(lockMsgString, startTime, lockHoldDuration)
 				kvPair.TTL = ttl
 				kvp, err := kv.CompareAndSet(
 					kvPair,
@@ -565,7 +647,7 @@ func (kv *etcdKV) watchStart(
 
 func (kv *etcdKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 
-	updates := make([]*kvdb.KVPair, 0)
+	var updates []*kvdb.KVPair
 	done := make(chan error)
 	mutex := &sync.Mutex{}
 	finalPutDone := false
@@ -665,7 +747,19 @@ func (kv *etcdKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 			if err != nil {
 				return nil, 0, fmt.Errorf("Failed to get child keys: %v", err)
 			}
-			if len(newKvPairs) > 0 {
+			if len(newKvPairs) == 0 {
+				// empty value for this key
+				_, err := snapDb.SnapPut(kvPair)
+				if err != nil {
+					return nil, 0, fmt.Errorf("Failed creating snap: %v", err)
+				}
+			} else if len(newKvPairs) == 1 {
+				// empty value for this key
+				_, err := snapDb.SnapPut(newKvPairs[0])
+				if err != nil {
+					return nil, 0, fmt.Errorf("Failed creating snap: %v", err)
+				}
+			} else {
 				kvPairs = append(kvPairs, newKvPairs...)
 			}
 		}
@@ -692,7 +786,16 @@ func (kv *etcdKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 	for _, kvPair := range updates {
 		if kvPair.ModifiedIndex < highestKvdbIndex &&
 			kvPair.ModifiedIndex > lowestKvdbIndex {
-			_, err = snapDb.SnapPut(kvPair)
+			if kvPair.Action == kvdb.KVDelete {
+				_, err = snapDb.Delete(kvPair.Key)
+				// A Delete key was issued between our first lowestKvdbIndex Put
+				// and Enumerate APIs in this function
+				if err == kvdb.ErrNotFound {
+					err = nil
+				}
+			} else {
+				_, err = snapDb.SnapPut(kvPair)
+			}
 			if err != nil {
 				return nil, 0, fmt.Errorf("Failed to apply update to snap: %v", err)
 			}
@@ -700,6 +803,21 @@ func (kv *etcdKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 	}
 
 	return snapDb, highestKvdbIndex, nil
+}
+
+func (kv *etcdKV) EnumerateWithSelect(
+	prefix string,
+	enumerateSelect kvdb.EnumerateSelect,
+	copySelect kvdb.CopySelect,
+) ([]interface{}, error) {
+	return nil, kvdb.ErrNotSupported
+}
+
+func (kv *etcdKV) GetWithCopy(
+	key string,
+	copySelect kvdb.CopySelect,
+) (interface{}, error) {
+	return nil, kvdb.ErrNotSupported
 }
 
 func (kv *etcdKV) SnapPut(snapKvp *kvdb.KVPair) (*kvdb.KVPair, error) {
@@ -775,6 +893,37 @@ func (kv *etcdKV) RevokeUsersAccess(username string, permType kvdb.PermissionTyp
 	// Revoke the specfied permission for that subtree
 	_, err = kv.authRole.RevokeRoleKV(context.Background(), roleName, []string{subtree}, etcdPermType)
 	return err
+}
+
+func (kv *etcdKV) Serialize() ([]byte, error) {
+	var allKvps kvdb.KVPairs
+	kvps, err := kv.Enumerate("")
+	if err != nil {
+		return nil, err
+	}
+	for i := 0; i < len(kvps); i++ {
+		kvPair := kvps[i]
+		if len(kvPair.Value) > 0 {
+			allKvps = append(allKvps, kvPair)
+		} else {
+			newKvps, err := kv.Enumerate(kvPair.Key)
+			if err != nil {
+				return nil, err
+			}
+			if len(newKvps) == 0 {
+				allKvps = append(allKvps, kvPair)
+			} else if len(newKvps) == 1 {
+				allKvps = append(allKvps, newKvps[0])
+			} else {
+				kvps = append(kvps, newKvps...)
+			}
+		}
+	}
+	return kv.SerializeAll(allKvps)
+}
+
+func (kv *etcdKV) Deserialize(b []byte) (kvdb.KVPairs, error) {
+	return kv.DeserializeAll(b)
 }
 
 func getEtcdPermType(permType kvdb.PermissionType) (e.PermissionType, error) {

@@ -1,6 +1,3 @@
-ETCD := $(shell pgrep etcd)
-CONSUL := $(shell pgrep consul)
-
 all: test
 
 deps:
@@ -45,20 +42,19 @@ errcheck: testdeps
 
 pretest: errcheck lint vet
 
-testcheck:
-ifndef ETCD
-	@echo "etcd not running. Unable to run tests."
-	exit 1
-endif
-ifndef CONSUL
-	@echo "consul not running. Unable to run tests."
-	exit 1
-endif
-
-gotest: testdeps testcheck
+gotest: testdeps
 	go test -v ./...
 
 test: pretest gotest
+
+docker-build-kvdb-dev:
+	docker build -t adityadani/kvdb:dev -f $(GOPATH)/src/github.com/portworx/kvdb/Dockerfile.kvdb .
+
+docker-test:
+	docker run \
+		-v $(GOPATH)/src/github.com/portworx/kvdb:/go/src/github.com/portworx/kvdb \
+		adityadani/kvdb:dev \
+			go test -v --timeout 1h ./...
 
 clean:
 	go clean -i ./...
