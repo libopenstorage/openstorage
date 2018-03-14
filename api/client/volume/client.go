@@ -540,6 +540,18 @@ func (v *volumeClient) CloudBackupDelete(
 	return nil
 }
 
+// CloudBackupDeleteAll deletes all the backups for a volume in cloud
+func (v *volumeClient) CloudBackupDeleteAll(
+	input *api.CloudBackupDeleteAllRequest,
+) error {
+	req := v.c.Delete().Resource(backupPath + "/all").Body(input)
+	response := req.Do()
+	if response.Error() != nil {
+		return response.FormatError()
+	}
+	return nil
+}
+
 // CloudBackupStatus gets the most recent status of backup/restores
 func (v *volumeClient) CloudBackupStatus(
 	input *api.CloudBackupStatusRequest,

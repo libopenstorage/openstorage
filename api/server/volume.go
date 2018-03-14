@@ -1009,6 +1009,7 @@ func (vd *volAPI) Routes() []*Route {
 		{verb: "POST", path: backupPath("/restore", volume.APIVersion), fn: vd.cloudBackupRestore},
 		{verb: "GET", path: backupPath("", volume.APIVersion), fn: vd.cloudBackupEnumerate},
 		{verb: "DELETE", path: backupPath("", volume.APIVersion), fn: vd.cloudBackupDelete},
+		{verb: "DELETE", path: backupPath("/all", volume.APIVersion), fn: vd.cloudBackupDeleteAll},
 		{verb: "GET", path: backupPath("/status", volume.APIVersion), fn: vd.cloudBackupStatus},
 		{verb: "GET", path: backupPath("/catalog", volume.APIVersion), fn: vd.cloudBackupCatalog},
 		{verb: "GET", path: backupPath("/history", volume.APIVersion), fn: vd.cloudBackupHistory},

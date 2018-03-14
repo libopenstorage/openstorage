@@ -134,21 +134,49 @@ func TestClientBackupDelete(t *testing.T) {
 	require.NoError(t, err)
 
 	goodInput := &api.CloudBackupDeleteRequest{}
-	goodInput.SrcVolumeID = "goodsrc"
+	goodInput.ID = "goodID"
 	goodInput.CredentialUUID = ""
 
 	badInput := &api.CloudBackupDeleteRequest{}
-	badInput.SrcVolumeID = "badsrc"
+	badInput.ID = "badID"
 	badInput.CredentialUUID = ""
 	testVolDriver.MockDriver().EXPECT().CloudBackupDelete(goodInput).
 		Return(nil).Times(1)
 	testVolDriver.MockDriver().EXPECT().CloudBackupDelete(badInput).
-		Return(fmt.Errorf("Src volume not found")).Times(1)
+		Return(fmt.Errorf("BackupID not found")).Times(1)
 
-	// Invoke restore
+	// Invoke Delete
 	err = client.VolumeDriver(cl).CloudBackupDelete(goodInput)
 	require.NoError(t, err)
 	err = client.VolumeDriver(cl).CloudBackupDelete(badInput)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "BackupID not found")
+}
+
+func TestClientBackupDeleteAll(t *testing.T) {
+	ts, testVolDriver := testRestServer(t)
+	defer ts.Close()
+	defer testVolDriver.Stop()
+
+	cl, err := client.NewDriverClient(ts.URL, mockDriverName, "", mockDriverName)
+	require.NoError(t, err)
+
+	goodInput := &api.CloudBackupDeleteAllRequest{}
+	goodInput.SrcVolumeID = "goodsrc"
+	goodInput.CredentialUUID = ""
+
+	badInput := &api.CloudBackupDeleteAllRequest{}
+	badInput.SrcVolumeID = "badsrc"
+	badInput.CredentialUUID = ""
+	testVolDriver.MockDriver().EXPECT().CloudBackupDeleteAll(goodInput).
+		Return(nil).Times(1)
+	testVolDriver.MockDriver().EXPECT().CloudBackupDeleteAll(badInput).
+		Return(fmt.Errorf("Src volume not found")).Times(1)
+
+	// Invoke DeleteAll
+	err = client.VolumeDriver(cl).CloudBackupDeleteAll(goodInput)
+	require.NoError(t, err)
+	err = client.VolumeDriver(cl).CloudBackupDeleteAll(badInput)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "Src volume not found")
 }
