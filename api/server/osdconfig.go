@@ -97,7 +97,7 @@ func (c *clusterApi) enumerateConf(w http.ResponseWriter, r *http.Request) {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	config, err := inst.EnumerateConf()
+	config, err := inst.EnumerateNodeConf()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -131,7 +131,7 @@ func (c *clusterApi) delNodeConf(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	vars := mux.Vars(r)
-	if err := inst.UnsetNodeConf(vars["id"]); err != nil {
+	if err := inst.DeleteNodeConf(vars["id"]); err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
 	}

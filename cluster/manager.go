@@ -1647,10 +1647,10 @@ func (c *ClusterManager) SetNodeConf(config *osdconfig.NodeConfig) error {
 	return c.configManager.SetNodeConf(config)
 }
 
-func (c *ClusterManager) UnsetNodeConf(nodeID string) error {
-	return c.configManager.UnsetNodeConf(nodeID)
+func (c *ClusterManager) DeleteNodeConf(nodeID string) error {
+	return c.configManager.DeleteNodeConf(nodeID)
 }
 
-func (c *ClusterManager) EnumerateConf() (*osdconfig.NodesConfig, error) {
-	return c.configManager.EnumerateConf()
+func (c *ClusterManager) EnumerateNodeConf() (*osdconfig.NodesConfig, error) {
+	return c.configManager.EnumerateNodeConf()
 }

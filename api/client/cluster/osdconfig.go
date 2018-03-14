@@ -31,7 +31,7 @@ func (c *clusterClient) GetNodeConf(nodeID string) (*osdconfig.NodeConfig, error
 	return config, nil
 }
 
-func (c *clusterClient) EnumerateConf() (*osdconfig.NodesConfig, error) {
+func (c *clusterClient) EnumerateNodeConf() (*osdconfig.NodesConfig, error) {
 	config := new(osdconfig.NodesConfig)
 	request := c.c.Get().Resource(clusterPath + UriEnumerate)
 	if err := request.Do().Unmarshal(config); err != nil {
@@ -64,7 +64,7 @@ func (c *clusterClient) SetNodeConf(config *osdconfig.NodeConfig) error {
 	return nil
 }
 
-func (c *clusterClient) UnsetNodeConf(nodeID string) error {
+func (c *clusterClient) DeleteNodeConf(nodeID string) error {
 	request := c.c.Delete().Resource(clusterPath + UriNode + "/" + nodeID)
 	if err := request.Do().Error(); err != nil {
 		return err

@@ -11,7 +11,7 @@ import (
 // GetClusterConf retrieves cluster level data from kvdb
 func (manager *configManager) GetClusterConf() (*ClusterConfig, error) {
 	// get json from kvdb and unmarshal into config
-	kvPair, err := manager.cc.Get(filepath.Join(baseKey, clusterKey))
+	kvPair, err := manager.kv.Get(filepath.Join(baseKey, clusterKey))
 	if err != nil {
 		return nil, err
 	}
@@ -33,17 +33,8 @@ func (manager *configManager) SetClusterConf(config *ClusterConfig) error {
 	manager.Lock()
 	defer manager.Unlock()
 
-	key, err := manager.cc.Lock(baseKey)
-	if err != nil {
-		return err
-	}
-
 	// push into kvdb
-	if _, err := manager.cc.Put(filepath.Join(baseKey, clusterKey), config, 0); err != nil {
-		return err
-	}
-
-	if err := manager.cc.Unlock(key); err != nil {
+	if _, err := manager.kv.Put(filepath.Join(baseKey, clusterKey), config, 0); err != nil {
 		return err
 	}
 
@@ -57,7 +48,7 @@ func (manager *configManager) GetNodeConf(nodeID string) (*NodeConfig, error) {
 	}
 
 	// get json from kvdb and unmarshal into config
-	kvPair, err := manager.cc.Get(getNodeKeyFromNodeID(nodeID))
+	kvPair, err := manager.kv.Get(getNodeKeyFromNodeID(nodeID))
 	if err != nil {
 		return nil, err
 	}
@@ -83,25 +74,16 @@ func (manager *configManager) SetNodeConf(config *NodeConfig) error {
 	manager.Lock()
 	defer manager.Unlock()
 
-	key, err := manager.cc.Lock(baseKey)
-	if err != nil {
-		return err
-	}
-
 	// push node data into kvdb
-	if _, err := manager.cc.Put(getNodeKeyFromNodeID(config.NodeId), config, 0); err != nil {
-		return err
-	}
-
-	if err := manager.cc.Unlock(key); err != nil {
+	if _, err := manager.kv.Put(getNodeKeyFromNodeID(config.NodeId), config, 0); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// UnsetNodeConf deletes node config data in kvdb
-func (manager *configManager) UnsetNodeConf(nodeID string) error {
+// DeleteNodeConf deletes node config data in kvdb
+func (manager *configManager) DeleteNodeConf(nodeID string) error {
 	if len(nodeID) == 0 {
 		return fmt.Errorf("node id cannot be nil")
 	}
@@ -109,26 +91,17 @@ func (manager *configManager) UnsetNodeConf(nodeID string) error {
 	manager.Lock()
 	defer manager.Unlock()
 
-	key, err := manager.cc.Lock(baseKey)
-	if err != nil {
-		return err
-	}
-
 	// remove dode data from kvdb
-	if _, err := manager.cc.Delete(getNodeKeyFromNodeID(nodeID)); err != nil {
-		return err
-	}
-
-	if err := manager.cc.Unlock(key); err != nil {
+	if _, err := manager.kv.Delete(getNodeKeyFromNodeID(nodeID)); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// EnumerateConf fetches data for all nodes
-func (manager *configManager) EnumerateConf() (*NodesConfig, error) {
-	keys, err := manager.cc.Keys(baseKey, nodeKey)
+// EnumerateNodeConf fetches data for all nodes
+func (manager *configManager) EnumerateNodeConf() (*NodesConfig, error) {
+	keys, err := manager.kv.Keys(baseKey, nodeKey)
 	if err != nil {
 		return nil, errors.New("kvdb.Keys() returned error: " + err.Error())
 	}

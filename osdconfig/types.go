@@ -9,7 +9,7 @@ import (
 // configManager implements ConfigManager
 type configManager struct {
 	// wrap a handle to kvdb
-	cc kvdb.Kvdb
+	kv kvdb.Kvdb
 
 	// hashmap for callback bookkeeping
 	cbCluster map[string]CallbackClusterConfigFunc

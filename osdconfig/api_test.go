@@ -78,7 +78,7 @@ func TestSetGetNode(t *testing.T) {
 	}
 
 	// now delete the node
-	if err := manager.UnsetNodeConf(expectedConf.NodeId); err != nil {
+	if err := manager.DeleteNodeConf(expectedConf.NodeId); err != nil {
 		t.Fatal("error in deleting node config")
 	}
 
@@ -89,7 +89,7 @@ func TestSetGetNode(t *testing.T) {
 	}
 }
 
-func TestConfigManager_EnumerateConf(t *testing.T) {
+func TestConfigManager_EnumerateNodeConf(t *testing.T) {
 	// create in memory kvdb
 	kv, err := newInMemKvdb()
 	if err != nil {
@@ -118,7 +118,7 @@ func TestConfigManager_EnumerateConf(t *testing.T) {
 		}
 	}
 
-	confs, err := manager.EnumerateConf()
+	confs, err := manager.EnumerateNodeConf()
 	if err != nil {
 		t.Fatal(err)
 	} else {
