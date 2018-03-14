@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
-
-	"github.com/pkg/errors"
 )
 
 // GetClusterConf retrieves cluster level data from kvdb
@@ -103,7 +101,7 @@ func (manager *configManager) DeleteNodeConf(nodeID string) error {
 func (manager *configManager) EnumerateNodeConf() (*NodesConfig, error) {
 	keys, err := manager.kv.Keys(baseKey, nodeKey)
 	if err != nil {
-		return nil, errors.New("kvdb.Keys() returned error: " + err.Error())
+		return nil, fmt.Errorf("kvdb.Keys() returned error: " + err.Error())
 	}
 
 	nodesConfig := new(NodesConfig)
