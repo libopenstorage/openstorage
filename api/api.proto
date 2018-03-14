@@ -432,18 +432,22 @@ message VolumeResponse {
   // Error message
   //
   // in: body
+  // Required: true
   string error = 1;
 }
 
-// swagger:response
+// VolumeCreateResponse
+// swagger:response volumeCreateResponse
 message VolumeCreateResponse {
   // ID of the newly created volume
   //
   // in: body
+  // Required: true
   string id = 1;
   // Volume Response
   //
   // in: body
+  // Required: true
   VolumeResponse volume_response = 2;
 }
 
@@ -480,10 +484,12 @@ message VolumeSetResponse {
   // Volume
   //
   // in: body
+  // Required: true
   Volume volume = 1;
   //VolumeResponse
   //
   // in: body
+  // Required: true
   VolumeResponse volume_response = 2;
 }
 
@@ -502,6 +508,7 @@ message SnapCreateResponse {
   // VolumeCreateResponse
   //
   // in: body
+  // Required: true
   VolumeCreateResponse volume_create_response = 1;
 }
 
