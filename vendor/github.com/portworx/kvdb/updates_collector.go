@@ -34,7 +34,7 @@ func (c *updatesCollectorImpl) watchCb(
 	err error,
 ) error {
 	if c.stopped {
-		return fmt.Errorf("Stop watch")
+		return fmt.Errorf("Stopped watch")
 	}
 	if err != nil {
 		c.stopped = true
@@ -48,6 +48,7 @@ func (c *updatesCollectorImpl) watchCb(
 }
 
 func (c *updatesCollectorImpl) Stop() {
+	logrus.Info("Stopping updates collector")
 	c.stopped = true
 }
 

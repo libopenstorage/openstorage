@@ -110,6 +110,19 @@ func (mr *MockClusterMockRecorder) EnumerateAlerts(arg0, arg1, arg2 interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnumerateAlerts", reflect.TypeOf((*MockCluster)(nil).EnumerateAlerts), arg0, arg1, arg2)
 }
 
+// EnumerateConf mocks base method
+func (m *MockCluster) EnumerateConf() (*osdconfig.NodesConfig, error) {
+	ret := m.ctrl.Call(m, "EnumerateConf")
+	ret0, _ := ret[0].(*osdconfig.NodesConfig)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// EnumerateConf indicates an expected call of EnumerateConf
+func (mr *MockClusterMockRecorder) EnumerateConf() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnumerateConf", reflect.TypeOf((*MockCluster)(nil).EnumerateConf))
+}
+
 // EraseAlert mocks base method
 func (m *MockCluster) EraseAlert(arg0 api.ResourceType, arg1 int64) error {
 	ret := m.ctrl.Call(m, "EraseAlert", arg0, arg1)

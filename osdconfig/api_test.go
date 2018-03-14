@@ -3,6 +3,7 @@ package osdconfig
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"testing"
 )
 
@@ -88,6 +89,47 @@ func TestSetGetNode(t *testing.T) {
 	}
 }
 
+func TestConfigManager_EnumerateConf(t *testing.T) {
+	// create in memory kvdb
+	kv, err := newInMemKvdb()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// get new config manager using handle to kvdb
+	manager, err := NewManager(kv)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// set some node conf
+	nodeIds := make(map[string]bool)
+	for i := 0; i < 3; i++ {
+		nodeId := "node_" + strconv.FormatInt(int64(i), 10)
+		nodeIds[nodeId] = true
+		conf := new(NodeConfig)
+		conf.NodeId = nodeId
+		conf.Storage = new(StorageConfig)
+		conf.Storage.Devices = []string{"dev1", "dev2"}
+
+		// set the expected cluster config value
+		if err := manager.SetNodeConf(conf); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	confs, err := manager.EnumerateConf()
+	if err != nil {
+		t.Fatal(err)
+	} else {
+		for _, conf := range *confs {
+			if !nodeIds[conf.NodeId] {
+				t.Fatal("expected node id: ", conf.NodeId, " but not found")
+			}
+		}
+	}
+}
+
 func TestCallback(t *testing.T) {
 	// create in memory kvdb
 	kv, err := newInMemKvdb()
@@ -163,15 +205,12 @@ func setSomeClusterValues(ch chan error, manager ConfigManager) error {
 func setSomeNodeValues(ch chan error, manager ConfigManager) error {
 	// prepare expected cluster config
 	conf := new(NodesConfig)
-	conf.NodeConf = make(map[string]*NodeConfig)
-	conf.NodeConf["node1"] = new(NodeConfig)
-	conf.NodeConf["node2"] = new(NodeConfig)
-	conf.NodeConf["node3"] = new(NodeConfig)
+	*conf = make([]*NodeConfig, 3)
 
-	for key, val := range conf.NodeConf {
-		key, val := key, val
-		val.NodeId = key
+	for i, val := range *conf {
+		val = new(NodeConfig)
 		val.Network = new(NetworkConfig)
+		val.NodeId = "node_" + strconv.FormatInt(int64(i), 10)
 		val.Network.DataIface = "dataIface"
 		if err := manager.SetNodeConf(val); err != nil {
 			return err

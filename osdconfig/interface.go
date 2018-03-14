@@ -15,6 +15,9 @@ type ConfigCaller interface {
 	// GetNodeConf fetches node configuration data using node id
 	GetNodeConf(nodeID string) (*NodeConfig, error)
 
+	// EnumerateConf fetches data for all nodes
+	EnumerateConf() (*NodesConfig, error)
+
 	// SetClusterConf pushes cluster configuration data to the backend
 	// It is assumed that the backend will notify the implementor of this interface
 	// when a change is triggered

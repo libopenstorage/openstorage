@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os/exec"
 	"strconv"
 	"sync"
 	"time"
@@ -59,6 +60,10 @@ type LockerIDInfo struct {
 type etcdCommon struct {
 	options map[string]string
 }
+
+var (
+	cmd *exec.Cmd
+)
 
 // NewEtcdCommon returns the EtcdCommon interface
 func NewEtcdCommon(options map[string]string) EtcdCommon {
@@ -198,4 +203,13 @@ func Version(url string, options map[string]string) (string, error) {
 	} else {
 		return "", fmt.Errorf("Unsupported etcd version: %v", version.Server)
 	}
+}
+
+func TestStart() error {
+	cmd = exec.Command("etcd", "--advertise-client-urls", "http://127.0.0.1:2379")
+	return cmd.Start()
+}
+
+func TestStop() error {
+	return cmd.Process.Kill()
 }

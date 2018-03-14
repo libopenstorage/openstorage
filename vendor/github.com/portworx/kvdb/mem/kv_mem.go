@@ -5,26 +5,37 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Sirupsen/logrus"
-	"github.com/portworx/kvdb"
-	"github.com/portworx/kvdb/common"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/Sirupsen/logrus"
+	"github.com/portworx/kvdb"
+	"github.com/portworx/kvdb/common"
 )
 
 const (
 	// Name is the name of this kvdb implementation.
 	Name = "kv-mem"
 	// KvSnap is an option passed to designate this kvdb as a snap.
-	KvSnap       = "KvSnap"
-	bootstrapKey = "bootstrap"
+	KvSnap = "KvSnap"
+	// KvUseInterface is an option passed that configures the mem to store
+	// the values as interfaces instead of bytes. It will not create a
+	// copy of the interface that is passed in. USE WITH CAUTION
+	KvUseInterface = "KvUseInterface"
+	bootstrapKey   = "bootstrap"
 )
 
 var (
 	// ErrSnap is returned if an operation is not supported on a snap.
 	ErrSnap = errors.New("operation not supported on snap")
+	// ErrSnapWithInterfaceNotSupported is returned when a snap kv-mem is
+	// created with KvUseInterface flag on
+	ErrSnapWithInterfaceNotSupported = errors.New("snap kvdb not supported with interfaces")
+	// ErrIllegalSelect is returned when an incorrect select function
+	// implementation is detected.
+	ErrIllegalSelect = errors.New("Illegal Select implementation")
 )
 
 func init() {
@@ -35,16 +46,159 @@ func init() {
 
 type memKV struct {
 	common.BaseKvdb
-	m      map[string]*kvdb.KVPair
-	w      map[string]*watchData
-	wt     map[string]*watchData
-	mutex  sync.Mutex
+	// m is the key value database
+	m map[string]*memKVPair
+	// updates is the list of latest few updates
+	dist WatchDistributor
+	// mutex protects m, w, wt
+	mutex sync.Mutex
+	// index current kvdb index
 	index  uint64
 	domain string
+	// locks is the map of currently held locks
+	locks map[string]chan int
+	// noByte will store all the values as interface
+	noByte bool
+	kvdb.Controller
+}
+
+type memKVPair struct {
+	kvdb.KVPair
+	// ivalue is the value for this kv pair stored as an interface
+	ivalue interface{}
+}
+
+func (mkvp *memKVPair) copy() *kvdb.KVPair {
+	copyKvp := mkvp.KVPair
+	if mkvp.Value == nil && mkvp.ivalue != nil {
+		copyKvp.Value, _ = common.ToBytes(mkvp.ivalue)
+	}
+	return &copyKvp
 }
 
 type snapMem struct {
 	*memKV
+}
+
+// watchUpdate refers to an update to this kvdb
+type watchUpdate struct {
+	// key is the key that was updated
+	key string
+	// kvp is the key-value that was updated
+	kvp memKVPair
+	// err is any error on update
+	err error
+}
+
+// WatchUpdateQueue is a producer consumer queue.
+type WatchUpdateQueue interface {
+	// Enqueue will enqueue an update. It is non-blocking.
+	Enqueue(update *watchUpdate)
+	// Dequeue will either return an element from front of the queue or
+	// will block until element becomes available
+	Dequeue() *watchUpdate
+}
+
+// WatchDistributor distributes updates to the watchers
+type WatchDistributor interface {
+	// Add creates a new watch queue to send updates
+	Add() WatchUpdateQueue
+	// Remove removes an existing watch queue
+	Remove(WatchUpdateQueue)
+	// NewUpdate is invoked to distribute a new update
+	NewUpdate(w *watchUpdate)
+}
+
+// distributor implements WatchDistributor interface
+type distributor struct {
+	sync.Mutex
+	// updates is the list of latest few updates
+	updates []*watchUpdate
+	// watchers watch for updates
+	watchers []WatchUpdateQueue
+}
+
+// NewWatchDistributor returns a new instance of
+// the WatchDistrubtor interface
+func NewWatchDistributor() WatchDistributor {
+	return &distributor{}
+}
+
+func (d *distributor) Add() WatchUpdateQueue {
+	d.Lock()
+	defer d.Unlock()
+	q := NewWatchUpdateQueue()
+	for _, u := range d.updates {
+		q.Enqueue(u)
+	}
+	d.watchers = append(d.watchers, q)
+	return q
+}
+
+func (d *distributor) Remove(r WatchUpdateQueue) {
+	d.Lock()
+	defer d.Unlock()
+	for i, q := range d.watchers {
+		if q == r {
+			copy(d.watchers[i:], d.watchers[i+1:])
+			d.watchers[len(d.watchers)-1] = nil
+			d.watchers = d.watchers[:len(d.watchers)-1]
+		}
+	}
+}
+
+func (d *distributor) NewUpdate(u *watchUpdate) {
+	d.Lock()
+	defer d.Unlock()
+	// collect update
+	d.updates = append(d.updates, u)
+	if len(d.updates) > 100 {
+		d.updates = d.updates[100:]
+	}
+	// send update to watchers
+	for _, q := range d.watchers {
+		q.Enqueue(u)
+	}
+}
+
+// watchQueue implements WatchUpdateQueue interface for watchUpdates
+type watchQueue struct {
+	// updates is the list of updates
+	updates []*watchUpdate
+	// m is the mutex to protect updates
+	m *sync.Mutex
+	// cv is used to coordinate the producer-consumer threads
+	cv *sync.Cond
+}
+
+// NewWatchUpdateQueue returns an instance of WatchUpdateQueue
+func NewWatchUpdateQueue() WatchUpdateQueue {
+	mtx := &sync.Mutex{}
+	return &watchQueue{
+		m:       mtx,
+		cv:      sync.NewCond(mtx),
+		updates: make([]*watchUpdate, 0)}
+}
+
+func (w *watchQueue) Dequeue() *watchUpdate {
+	w.m.Lock()
+	for {
+		if len(w.updates) > 0 {
+			update := w.updates[0]
+			w.updates = w.updates[1:]
+			w.m.Unlock()
+			return update
+		}
+		w.cv.Wait()
+	}
+}
+
+// Enqueue enqueues and never blocks
+func (w *watchQueue) Enqueue(update *watchUpdate) {
+	w.m.Lock()
+	w.updates = append(w.updates, update)
+	w.cv.Signal()
+	w.m.Unlock()
 }
 
 type watchData struct {
@@ -65,18 +219,24 @@ func New(
 	}
 
 	mem := &memKV{
-		BaseKvdb: common.BaseKvdb{FatalCb: fatalErrorCb},
-		m:        make(map[string]*kvdb.KVPair),
-		w:        make(map[string]*watchData),
-		wt:       make(map[string]*watchData),
-		domain:   domain,
+		BaseKvdb:   common.BaseKvdb{FatalCb: fatalErrorCb},
+		m:          make(map[string]*memKVPair),
+		dist:       NewWatchDistributor(),
+		domain:     domain,
+		Controller: kvdb.ControllerNotSupported,
+		locks:      make(map[string]chan int),
 	}
 
-	if _, ok := options[KvSnap]; ok {
+	var noByte bool
+	if _, noByte = options[KvUseInterface]; noByte {
+		mem.noByte = true
+	}
+	if _, ok := options[KvSnap]; ok && !noByte {
 		return &snapMem{memKV: mem}, nil
+	} else if ok && noByte {
+		return nil, ErrSnapWithInterfaceNotSupported
 	}
 	return mem, nil
-
 }
 
 // Version returns the supported version of the mem implementation
@@ -92,7 +252,7 @@ func (kv *memKV) Capabilities() int {
 	return kvdb.KVCapabilityOrderedUpdates
 }
 
-func (kv *memKV) get(key string) (*kvdb.KVPair, error) {
+func (kv *memKV) get(key string) (*memKVPair, error) {
 	key = kv.domain + key
 	v, ok := kv.m[key]
 	if !ok {
@@ -101,10 +261,18 @@ func (kv *memKV) get(key string) (*kvdb.KVPair, error) {
 	return v, nil
 }
 
+func (kv *memKV) exists(key string) (*memKVPair, error) {
+	return kv.get(key)
+}
+
 func (kv *memKV) Get(key string) (*kvdb.KVPair, error) {
 	kv.mutex.Lock()
 	defer kv.mutex.Unlock()
-	return kv.get(key)
+	v, err := kv.get(key)
+	if err != nil {
+		return nil, err
+	}
+	return v.copy(), nil
 }
 
 func (kv *memKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
@@ -114,23 +282,22 @@ func (kv *memKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to create snap bootstrap key: %v", err)
 	}
-	data := make(map[string]*kvdb.KVPair)
+	data := make(map[string]*memKVPair)
 	for key, value := range kv.m {
 		if !strings.HasPrefix(key, prefix) && strings.Contains(key, "/_") {
 			continue
 		}
-		snap := &kvdb.KVPair{}
-		*snap = *value
-		snap.Value = make([]byte, len(value.Value))
-		copy(snap.Value, value.Value)
+		snap := &memKVPair{}
+		snap.KVPair = value.KVPair
+		cpy := value.copy()
+		snap.Value = make([]byte, len(cpy.Value))
+		copy(snap.Value, cpy.Value)
 		data[key] = snap
 	}
 	highestKvPair, _ := kv.delete(bootstrapKey)
 	// Snapshot only data, watches are not copied.
 	return &memKV{
 		m:      data,
-		w:      make(map[string]*watchData),
-		wt:     make(map[string]*watchData),
 		domain: kv.domain,
 	}, highestKvPair.ModifiedIndex, nil
 }
@@ -141,44 +308,62 @@ func (kv *memKV) put(
 	ttl uint64,
 ) (*kvdb.KVPair, error) {
 
-	var kvp *kvdb.KVPair
+	var (
+		kvp  *memKVPair
+		b    []byte
+		err  error
+		ival interface{}
+	)
 
 	suffix := key
 	key = kv.domain + suffix
 	index := atomic.AddUint64(&kv.index, 1)
-	if ttl != 0 {
-		time.AfterFunc(time.Second*time.Duration(ttl), func() {
-			// TODO: handle error
-			_, _ = kv.delete(suffix)
-		})
-	}
-	b, err := common.ToBytes(value)
-	if err != nil {
-		return nil, err
+
+	// Either set bytes or interface value
+	if !kv.noByte {
+		b, err = common.ToBytes(value)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		ival = value
 	}
 	if old, ok := kv.m[key]; ok {
 		old.Value = b
+		old.ivalue = ival
 		old.Action = kvdb.KVSet
 		old.ModifiedIndex = index
 		old.KVDBIndex = index
 		kvp = old
-
 	} else {
-		kvp = &kvdb.KVPair{
-			Key:           key,
-			Value:         b,
-			TTL:           int64(ttl),
-			KVDBIndex:     index,
-			ModifiedIndex: index,
-			CreatedIndex:  index,
-			Action:        kvdb.KVCreate,
+		kvp = &memKVPair{
+			KVPair: kvdb.KVPair{
+				Key:           key,
+				Value:         b,
+				TTL:           int64(ttl),
+				KVDBIndex:     index,
+				ModifiedIndex: index,
+				CreatedIndex:  index,
+				Action:        kvdb.KVCreate,
+			},
+			ivalue: ival,
 		}
 		kv.m[key] = kvp
 	}
 
-	kv.normalize(kvp)
-	go kv.fireCB(key, *kvp, nil)
-	return kvp, nil
+	kv.normalize(&kvp.KVPair)
+	kv.dist.NewUpdate(&watchUpdate{key, *kvp, nil})
+
+	if ttl != 0 {
+		time.AfterFunc(time.Second*time.Duration(ttl), func() {
+			// TODO: handle error
+			kv.mutex.Lock()
+			defer kv.mutex.Unlock()
+			_, _ = kv.delete(suffix)
+		})
+	}
+
+	return kvp.copy(), nil
 }
 
 func (kv *memKV) Put(
@@ -193,13 +378,16 @@ func (kv *memKV) Put(
 }
 
 func (kv *memKV) GetVal(key string, v interface{}) (*kvdb.KVPair, error) {
-	kvp, err := kv.Get(key)
+	kv.mutex.Lock()
+	defer kv.mutex.Unlock()
+	kvp, err := kv.get(key)
 	if err != nil {
 		return nil, err
 	}
 
-	err = json.Unmarshal(kvp.Value, v)
-	return kvp, err
+	cpy := kvp.copy()
+	err = json.Unmarshal(cpy.Value, v)
+	return cpy, err
 }
 
 func (kv *memKV) Create(
@@ -210,11 +398,11 @@ func (kv *memKV) Create(
 	kv.mutex.Lock()
 	defer kv.mutex.Unlock()
 
-	result, err := kv.get(key)
+	result, err := kv.exists(key)
 	if err != nil {
 		return kv.put(key, value, ttl)
 	}
-	return result, kvdb.ErrExist
+	return &result.KVPair, kvdb.ErrExist
 }
 
 func (kv *memKV) Update(
@@ -225,21 +413,28 @@ func (kv *memKV) Update(
 	kv.mutex.Lock()
 	defer kv.mutex.Unlock()
 
-	if _, err := kv.get(key); err != nil {
+	if _, err := kv.exists(key); err != nil {
 		return nil, kvdb.ErrNotFound
 	}
 	return kv.put(key, value, ttl)
 }
 
 func (kv *memKV) Enumerate(prefix string) (kvdb.KVPairs, error) {
+	kv.mutex.Lock()
+	defer kv.mutex.Unlock()
+	return kv.enumerate(prefix)
+}
+
+// enumerate returns a list of values and creates a copy if specified
+func (kv *memKV) enumerate(prefix string) (kvdb.KVPairs, error) {
 	var kvp = make(kvdb.KVPairs, 0, 100)
 	prefix = kv.domain + prefix
 
 	for k, v := range kv.m {
 		if strings.HasPrefix(k, prefix) && !strings.Contains(k, "/_") {
-			kvpLocal := *v
-			kv.normalize(&kvpLocal)
-			kvp = append(kvp, &kvpLocal)
+			kvpLocal := v.copy()
+			kv.normalize(kvpLocal)
+			kvp = append(kvp, kvpLocal)
 		}
 	}
 
@@ -254,9 +449,9 @@ func (kv *memKV) delete(key string) (*kvdb.KVPair, error) {
 	kvp.KVDBIndex = atomic.AddUint64(&kv.index, 1)
 	kvp.ModifiedIndex = kvp.KVDBIndex
 	kvp.Action = kvdb.KVDelete
-	go kv.fireCB(kv.domain+key, *kvp, nil)
 	delete(kv.m, kv.domain+key)
-	return kvp, nil
+	kv.dist.NewUpdate(&watchUpdate{kv.domain + key, *kvp, nil})
+	return &kvp.KVPair, nil
 }
 
 func (kv *memKV) Delete(key string) (*kvdb.KVPair, error) {
@@ -270,7 +465,7 @@ func (kv *memKV) DeleteTree(prefix string) error {
 	kv.mutex.Lock()
 	defer kv.mutex.Unlock()
 
-	kvp, err := kv.Enumerate(prefix)
+	kvp, err := kv.enumerate(prefix)
 	if err != nil {
 		return err
 	}
@@ -283,8 +478,38 @@ func (kv *memKV) DeleteTree(prefix string) error {
 	return err
 }
 
-func (kv *memKV) Keys(prefix, key string) ([]string, error) {
-	return nil, kvdb.ErrNotSupported
+func (kv *memKV) Keys(prefix, sep string) ([]string, error) {
+	if "" == sep {
+		sep = "/"
+	}
+	prefix = kv.domain + prefix
+	lenPrefix := len(prefix)
+	lenSep := len(sep)
+	if prefix[lenPrefix-lenSep:] != sep {
+		prefix += sep
+		lenPrefix += lenSep
+	}
+	seen := make(map[string]bool)
+	kv.mutex.Lock()
+	defer kv.mutex.Unlock()
+
+	for k := range kv.m {
+		if strings.HasPrefix(k, prefix) && !strings.Contains(k, "/_") {
+			key := k[lenPrefix:]
+			if idx := strings.Index(key, sep); idx > 0 {
+				key = key[:idx]
+			}
+			seen[key] = true
+		}
+	}
+	retList := make([]string, len(seen))
+	i := 0
+	for k := range seen {
+		retList[i] = k
+		i++
+	}
+
+	return retList, nil
 }
 
 func (kv *memKV) CompareAndSet(
@@ -296,12 +521,13 @@ func (kv *memKV) CompareAndSet(
 	kv.mutex.Lock()
 	defer kv.mutex.Unlock()
 
-	result, err := kv.get(kvp.Key)
+	result, err := kv.exists(kvp.Key)
 	if err != nil {
 		return nil, err
 	}
 	if prevValue != nil {
-		if !bytes.Equal(result.Value, prevValue) {
+		cpy := result.copy()
+		if !bytes.Equal(cpy.Value, prevValue) {
 			return nil, kvdb.ErrValueMismatch
 		}
 	}
@@ -323,9 +549,12 @@ func (kv *memKV) CompareAndDelete(
 	if flags != kvdb.KVFlags(0) {
 		return nil, kvdb.ErrNotSupported
 	}
-	if result, err := kv.get(kvp.Key); err != nil {
+	result, err := kv.exists(kvp.Key)
+	if err != nil {
 		return nil, err
-	} else if !bytes.Equal(result.Value, kvp.Value) {
+	}
+	cpy := result.copy()
+	if !bytes.Equal(cpy.Value, kvp.Value) {
 		return nil, kvdb.ErrNotFound
 	}
 	return kv.delete(kvp.Key)
@@ -340,10 +569,9 @@ func (kv *memKV) WatchKey(
 	kv.mutex.Lock()
 	defer kv.mutex.Unlock()
 	key = kv.domain + key
-	if _, ok := kv.w[key]; ok {
-		return kvdb.ErrExist
-	}
-	kv.w[key] = &watchData{cb: cb, waitIndex: waitIndex, opaque: opaque}
+	go kv.watchCb(kv.dist.Add(), key,
+		&watchData{cb: cb, waitIndex: waitIndex, opaque: opaque},
+		false)
 	return nil
 }
 
@@ -353,14 +581,12 @@ func (kv *memKV) WatchTree(
 	opaque interface{},
 	cb kvdb.WatchCB,
 ) error {
-
 	kv.mutex.Lock()
 	defer kv.mutex.Unlock()
 	prefix = kv.domain + prefix
-	if _, ok := kv.wt[prefix]; ok {
-		return kvdb.ErrExist
-	}
-	kv.wt[prefix] = &watchData{cb: cb, waitIndex: waitIndex, opaque: opaque}
+	go kv.watchCb(kv.dist.Add(), prefix,
+		&watchData{cb: cb, waitIndex: waitIndex, opaque: opaque},
+		true)
 	return nil
 }
 
@@ -372,12 +598,21 @@ func (kv *memKV) LockWithID(
 	key string,
 	lockerID string,
 ) (*kvdb.KVPair, error) {
+	return kv.LockWithTimeout(key, lockerID, kvdb.DefaultLockTryDuration, kv.GetLockTimeout())
+}
+
+func (kv *memKV) LockWithTimeout(
+	key string,
+	lockerID string,
+	lockTryDuration time.Duration,
+	lockHoldDuration time.Duration,
+) (*kvdb.KVPair, error) {
 	key = kv.domain + key
 	duration := time.Second
 
 	result, err := kv.Create(key, lockerID, uint64(duration*3))
-	count := 0
-	for err != nil {
+	startTime := time.Now()
+	for count := 0; err != nil; count++ {
 		time.Sleep(duration)
 		result, err = kv.Create(key, lockerID, uint64(duration*3))
 		if err != nil && count > 0 && count%15 == 0 {
@@ -387,17 +622,90 @@ func (kv *memKV) LockWithID(
 					key, count, currLockerID)
 			}
 		}
+		if err != nil && time.Since(startTime) > lockTryDuration {
+			return nil, err
+		}
 	}
 
 	if err != nil {
 		return nil, err
 	}
+
+	lockChan := make(chan int)
+	kv.mutex.Lock()
+	kv.locks[key] = lockChan
+	kv.mutex.Unlock()
+	if lockHoldDuration > 0 {
+		go func() {
+			timeout := time.After(lockHoldDuration)
+			for {
+				select {
+				case <-timeout:
+					kv.LockTimedout(key)
+				case <-lockChan:
+					return
+				}
+			}
+		}()
+	}
+
 	return result, err
 }
 
 func (kv *memKV) Unlock(kvp *kvdb.KVPair) error {
+	kv.mutex.Lock()
+	lockChan, ok := kv.locks[kvp.Key]
+	if ok {
+		delete(kv.locks, kvp.Key)
+	}
+	kv.mutex.Unlock()
+	if lockChan != nil {
+		close(lockChan)
+	}
 	_, err := kv.CompareAndDelete(kvp, kvdb.KVFlags(0))
 	return err
+}
+
+func (kv *memKV) EnumerateWithSelect(
+	prefix string,
+	enumerateSelect kvdb.EnumerateSelect,
+	copySelect kvdb.CopySelect,
+) ([]interface{}, error) {
+	if enumerateSelect == nil || copySelect == nil {
+		return nil, ErrIllegalSelect
+	}
+	kv.mutex.Lock()
+	defer kv.mutex.Unlock()
+	var kvi []interface{}
+	prefix = kv.domain + prefix
+	for k, v := range kv.m {
+		if strings.HasPrefix(k, prefix) && !strings.Contains(k, "/_") {
+			if enumerateSelect(v.ivalue) {
+				cpy := copySelect(v.ivalue)
+				if cpy == nil {
+					return nil, ErrIllegalSelect
+				}
+				kvi = append(kvi, cpy)
+			}
+		}
+	}
+	return kvi, nil
+}
+
+func (kv *memKV) GetWithCopy(
+	key string,
+	copySelect kvdb.CopySelect,
+) (interface{}, error) {
+	if copySelect == nil {
+		return nil, ErrIllegalSelect
+	}
+	kv.mutex.Lock()
+	defer kv.mutex.Unlock()
+	kvp, err := kv.get(key)
+	if err != nil {
+		return nil, err
+	}
+	return copySelect(kvp.ivalue), nil
 }
 
 func (kv *memKV) TxNew() (kvdb.Tx, error) {
@@ -408,31 +716,33 @@ func (kv *memKV) normalize(kvp *kvdb.KVPair) {
 	kvp.Key = strings.TrimPrefix(kvp.Key, kv.domain)
 }
 
-func (kv *memKV) fireCB(key string, kvp kvdb.KVPair, err error) {
-	for k, v := range kv.w {
-		if k == key && (v.waitIndex == 0 || v.waitIndex < kvp.ModifiedIndex) {
-			err := v.cb(key, v.opaque, &kvp, err)
-			if err != nil {
-				// TODO: handle error
-				_ = v.cb("", v.opaque, nil, kvdb.ErrWatchStopped)
-				kv.mutex.Lock()
-				delete(kv.w, key)
-				kv.mutex.Unlock()
-
-			}
-			return
-		}
+func copyWatchKeys(w map[string]*watchData) []string {
+	keys := make([]string, len(w))
+	i := 0
+	for key := range w {
+		keys[i] = key
+		i++
 	}
-	for k, v := range kv.wt {
-		if strings.HasPrefix(key, k) &&
-			(v.waitIndex == 0 || v.waitIndex < kvp.ModifiedIndex) {
-			err := v.cb(key, v.opaque, &kvp, err)
+	return keys
+}
+
+func (kv *memKV) watchCb(
+	q WatchUpdateQueue,
+	prefix string,
+	v *watchData,
+	treeWatch bool,
+) {
+	for {
+		update := q.Dequeue()
+		if ((treeWatch && strings.HasPrefix(update.key, prefix)) ||
+			(!treeWatch && update.key == prefix)) &&
+			(v.waitIndex == 0 || v.waitIndex < update.kvp.ModifiedIndex) {
+			kvpCopy := update.kvp.copy()
+			err := v.cb(update.key, v.opaque, kvpCopy, update.err)
 			if err != nil {
-				// TODO: handle error
 				_ = v.cb("", v.opaque, nil, kvdb.ErrWatchStopped)
-				kv.mutex.Lock()
-				delete(kv.wt, key)
-				kv.mutex.Unlock()
+				kv.dist.Remove(q)
+				return
 			}
 		}
 	}
@@ -443,7 +753,7 @@ func (kv *memKV) SnapPut(snapKvp *kvdb.KVPair) (*kvdb.KVPair, error) {
 }
 
 func (kv *snapMem) SnapPut(snapKvp *kvdb.KVPair) (*kvdb.KVPair, error) {
-	var kvp *kvdb.KVPair
+	var kvp *memKVPair
 
 	key := kv.domain + snapKvp.Key
 	kv.mutex.Lock()
@@ -457,20 +767,22 @@ func (kv *snapMem) SnapPut(snapKvp *kvdb.KVPair) (*kvdb.KVPair, error) {
 		kvp = old
 
 	} else {
-		kvp = &kvdb.KVPair{
-			Key:           key,
-			Value:         snapKvp.Value,
-			TTL:           0,
-			KVDBIndex:     snapKvp.KVDBIndex,
-			ModifiedIndex: snapKvp.ModifiedIndex,
-			CreatedIndex:  snapKvp.CreatedIndex,
-			Action:        kvdb.KVCreate,
+		kvp = &memKVPair{
+			KVPair: kvdb.KVPair{
+				Key:           key,
+				Value:         snapKvp.Value,
+				TTL:           0,
+				KVDBIndex:     snapKvp.KVDBIndex,
+				ModifiedIndex: snapKvp.ModifiedIndex,
+				CreatedIndex:  snapKvp.CreatedIndex,
+				Action:        kvdb.KVCreate,
+			},
 		}
 		kv.m[key] = kvp
 	}
 
-	kv.normalize(kvp)
-	return kvp, nil
+	kv.normalize(&kvp.KVPair)
+	return &kvp.KVPair, nil
 }
 
 func (kv *snapMem) Put(
@@ -497,8 +809,17 @@ func (kv *snapMem) Update(
 	return nil, ErrSnap
 }
 
-func (kv *snapMem) Delete(key string) (*kvdb.KVPair, error) {
-	return nil, ErrSnap
+func (kv *snapMem) Delete(snapKey string) (*kvdb.KVPair, error) {
+	key := kv.domain + snapKey
+	kv.mutex.Lock()
+	defer kv.mutex.Unlock()
+	kvp, ok := kv.m[key]
+	if !ok {
+		return nil, kvdb.ErrNotFound
+	}
+	kvPair := kvp.KVPair
+	delete(kv.m, key)
+	return &kvPair, nil
 }
 
 func (kv *snapMem) DeleteTree(prefix string) error {
@@ -560,4 +881,17 @@ func (kv *memKV) RevokeUsersAccess(
 	subtree string,
 ) error {
 	return kvdb.ErrNotSupported
+}
+
+func (kv *memKV) Serialize() ([]byte, error) {
+
+	kvps, err := kv.Enumerate("")
+	if err != nil {
+		return nil, err
+	}
+	return kv.SerializeAll(kvps)
+}
+
+func (kv *memKV) Deserialize(b []byte) (kvdb.KVPairs, error) {
+	return kv.DeserializeAll(b)
 }
