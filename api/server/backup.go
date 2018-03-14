@@ -67,10 +67,10 @@ func (vd *volAPI) cloudBackupRestore(w http.ResponseWriter, r *http.Request) {
 }
 
 func (vd *volAPI) cloudBackupDelete(w http.ResponseWriter, r *http.Request) {
-	backupReq := &api.CloudBackupDeleteRequest{}
+	deleteReq := &api.CloudBackupDeleteRequest{}
 	method := "cloudBackupDelete"
 
-	if err := json.NewDecoder(r.Body).Decode(backupReq); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(deleteReq); err != nil {
 		vd.sendError(method, "", w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -80,9 +80,31 @@ func (vd *volAPI) cloudBackupDelete(w http.ResponseWriter, r *http.Request) {
 		notFound(w, r)
 		return
 	}
-	err = d.CloudBackupDelete(backupReq)
+	err = d.CloudBackupDelete(deleteReq)
 	if err != nil {
-		vd.sendError(method, backupReq.SrcVolumeID, w, err.Error(), http.StatusInternalServerError)
+		vd.sendError(method, deleteReq.ID, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (vd *volAPI) cloudBackupDeleteAll(w http.ResponseWriter, r *http.Request) {
+	deleteAllReq := &api.CloudBackupDeleteAllRequest{}
+	method := "cloudBackupDeleteAll"
+
+	if err := json.NewDecoder(r.Body).Decode(deleteAllReq); err != nil {
+		vd.sendError(method, "", w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	d, err := vd.getVolDriver(r)
+	if err != nil {
+		notFound(w, r)
+		return
+	}
+	err = d.CloudBackupDeleteAll(deleteAllReq)
+	if err != nil {
+		vd.sendError(method, deleteAllReq.SrcVolumeID, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)

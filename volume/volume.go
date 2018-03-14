@@ -138,8 +138,10 @@ type CloudBackupDriver interface {
 	CloudBackupRestore(input *api.CloudBackupRestoreRequest) (*api.CloudBackupRestoreResponse, error)
 	// CloudBackupEnumerate enumerates the backups for a given cluster/credential/volumeID
 	CloudBackupEnumerate(input *api.CloudBackupEnumerateRequest) (*api.CloudBackupEnumerateResponse, error)
-	// CloudBackupDelete deletes the backups in cloud
+	// CloudBackupDelete deletes the specified backup in cloud
 	CloudBackupDelete(input *api.CloudBackupDeleteRequest) error
+	// CloudBackupDelete deletes all the backups for a given volume in cloud
+	CloudBackupDeleteAll(input *api.CloudBackupDeleteAllRequest) error
 	// CloudBackupStatus indicates the most recent status of backup/restores
 	CloudBackupStatus(input *api.CloudBackupStatusRequest) (*api.CloudBackupStatusResponse, error)
 	// CloudBackupCatalog displays listing of backup content

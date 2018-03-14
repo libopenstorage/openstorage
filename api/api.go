@@ -296,6 +296,15 @@ type CloudBackupEnumerateResponse struct {
 }
 
 type CloudBackupDeleteRequest struct {
+	// ID is the ID of the cloud backup
+	ID string
+	// CredentialUUID is the credential for cloud to be used for the request
+	CredentialUUID string
+	// Force Delete cloudbackup even if there are dependencies
+	Force bool
+}
+
+type CloudBackupDeleteAllRequest struct {
 	CloudBackupGenericRequest
 }
 

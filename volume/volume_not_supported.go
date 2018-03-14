@@ -146,6 +146,12 @@ func (cl *cloudBackupNotSupported) CloudBackupDelete(
 	return ErrNotSupported
 }
 
+func (cl *cloudBackupNotSupported) CloudBackupDeleteAll(
+	input *api.CloudBackupDeleteAllRequest,
+) error {
+	return ErrNotSupported
+}
+
 func (cl *cloudBackupNotSupported) CloudBackupStatus(
 	input *api.CloudBackupStatusRequest,
 ) (*api.CloudBackupStatusResponse, error) {
