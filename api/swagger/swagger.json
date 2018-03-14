@@ -403,6 +403,24 @@
         }
       }
     },
+    "/config/enumerate": {
+      "get": {
+        "description": "This will return the node configuration for all nodes",
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Get configuration for all nodes.",
+        "operationId": "config",
+        "responses": {
+          "200": {
+            "description": "node config enumeration",
+            "schema": {
+              "$ref": "#/definitions/NodesConfig"
+            }
+          }
+        }
+      }
+    },
     "/config/node": {
       "post": {
         "description": "This will set the requested node configuration",
@@ -1575,13 +1593,6 @@
           "type": "string",
           "x-go-name": "Mode"
         },
-        "node_id": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "x-go-name": "NodeId"
-        },
         "private": {
           "type": "object",
           "x-go-name": "Private"
@@ -1946,16 +1957,10 @@
       "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
     },
     "NodesConfig": {
-      "description": "NodesConfig contains all of node level data in the form of a map with node ID's as keys",
-      "type": "object",
-      "properties": {
-        "node_conf": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/NodeConfig"
-          },
-          "x-go-name": "NodeConf"
-        }
+      "description": "NodesConfig contains all of node level data",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/NodeConfig"
       },
       "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
     },
