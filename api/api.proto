@@ -194,6 +194,8 @@ message StorageResource {
   string rotation_speed = 11;
   // Timestamp of last time this device was scanned.
   google.protobuf.Timestamp last_scan = 12;
+  // True if dedicated for metadata.
+  bool metadata = 13;
 }
 
 // StoragePool groups different storage devices based on their CosType
