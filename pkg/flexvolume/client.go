@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"go.pedge.io/dlog"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 )
 
@@ -104,6 +104,6 @@ func newAttachSuccessOutput(deviceID string) []byte {
 
 func writeOutput(output []byte) {
 	if _, err := os.Stdout.Write(output); err != nil {
-		dlog.Warnf("Unable to write output to stdout : %s", err.Error())
+		logrus.Warnf("Unable to write output to stdout : %s", err.Error())
 	}
 }

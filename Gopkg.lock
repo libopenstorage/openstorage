@@ -492,7 +492,7 @@
     "etcd/v2",
     "mem"
   ]
-  revision = "d6ab05eb4a6d2e5132c0046d4e23f09775d0a738"
+  revision = "fb8ec703caad98c89d77a619c18eedf98bd1a242"
 
 [[projects]]
   branch = "master"
@@ -542,15 +542,6 @@
   packages = ["tar/storage"]
   revision = "38ec4ddb06dedbea0a895c4848b248eb38af221b"
   version = "v0.10.2"
-
-[[projects]]
-  branch = "master"
-  name = "go.pedge.io/dlog"
-  packages = [
-    ".",
-    "logrus"
-  ]
-  revision = "259758e801e1eab2626d1c1f1767994f8e40e55a"
 
 [[projects]]
   branch = "master"
@@ -752,6 +743,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ecee2c75902e5c097b0ffc7ac6b1a274ecdc8539d8d59de1c80cd1b3ed2aa5d9"
+  inputs-digest = "3d28abc2a0819b77aed4a91afeb25efac6e5ec239d35e8d645f707eaa9056c92"
   solver-name = "gps-cdcl"
   solver-version = 1

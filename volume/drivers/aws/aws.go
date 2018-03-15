@@ -22,7 +22,7 @@ import (
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers/common"
 	"github.com/portworx/kvdb"
-	"go.pedge.io/dlog"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -71,7 +71,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 	if err != nil {
 		return nil, err
 	}
-	dlog.Infof("AWS instance %v zone %v", instance, zone)
+	logrus.Infof("AWS instance %v zone %v", instance, zone)
 
 	accessKey, secretKey, err := authKeys(params)
 	if err != nil {
@@ -208,7 +208,7 @@ func (d *Driver) Create(
 	}
 	resp, err := d.ops.Create(ec2Vol, locator.VolumeLabels)
 	if err != nil {
-		dlog.Warnf("Failed in CreateVolumeRequest :%v", err)
+		logrus.Warnf("Failed in CreateVolumeRequest :%v", err)
 		return "", err
 	}
 
@@ -234,7 +234,7 @@ func (d *Driver) Create(
 		return "", err
 	}
 
-	dlog.Infof("aws preparing volume %s...", *vol.VolumeId)
+	logrus.Infof("aws preparing volume %s...", *vol.VolumeId)
 	if err := d.Format(volume.Id); err != nil {
 		return "", err
 	}
@@ -392,7 +392,7 @@ func (d *Driver) volumeState(ec2VolState *string) api.VolumeState {
 	case ec2.VolumeAttachmentStateAttaching, ec2.VolumeAttachmentStateDetaching:
 		return api.VolumeState_VOLUME_STATE_PENDING
 	default:
-		dlog.Warnf("Failed to translate EC2 volume status %v", ec2VolState)
+		logrus.Warnf("Failed to translate EC2 volume status %v", ec2VolState)
 	}
 	return api.VolumeState_VOLUME_STATE_ERROR
 }
@@ -426,7 +426,7 @@ func (d *Driver) Format(volumeID string) error {
 	cmd := "/sbin/mkfs." + volume.Spec.Format.SimpleString()
 	o, err := exec.Command(cmd, devicePath).Output()
 	if err != nil {
-		dlog.Warnf("Failed to run command %v %v: %v", cmd, devicePath, o)
+		logrus.Warnf("Failed to run command %v %v: %v", cmd, devicePath, o)
 		return err
 	}
 	volume.Format = volume.Spec.Format
@@ -439,11 +439,11 @@ func (d *Driver) Detach(volumeID string, options map[string]string) error {
 	}
 	volume, err := d.GetVol(volumeID)
 	if err != nil {
-		dlog.Warnf("Volume %s could not be located, attempting to detach anyway", volumeID)
+		logrus.Warnf("Volume %s could not be located, attempting to detach anyway", volumeID)
 	} else {
 		volume.DevicePath = ""
 		if err := d.UpdateVol(volume); err != nil {
-			dlog.Warnf("Failed to update volume", volumeID)
+			logrus.Warnf("Failed to update volume", volumeID)
 		}
 	}
 	return nil
@@ -491,7 +491,7 @@ func (d *Driver) Unmount(volumeID string, mountpath string, options map[string]s
 }
 
 func (d *Driver) Shutdown() {
-	dlog.Printf("%s Shutting down", Name)
+	logrus.Printf("%s Shutting down", Name)
 }
 
 func (d *Driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {

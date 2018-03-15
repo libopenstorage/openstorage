@@ -28,7 +28,7 @@ import (
 	"runtime"
 	"strconv"
 
-	"go.pedge.io/dlog"
+	"github.com/sirupsen/logrus"
 
 	"github.com/codegangsta/cli"
 	"github.com/libopenstorage/openstorage/api"
@@ -171,7 +171,7 @@ func start(c *cli.Context) error {
 	scheme := u.Scheme
 	u.Scheme = "http"
 
-	kv, err := kvdb.New(scheme, "openstorage", []string{u.String()}, nil, dlog.Panicf)
+	kv, err := kvdb.New(scheme, "openstorage", []string{u.String()}, nil, logrus.Panicf)
 	if err != nil {
 		return fmt.Errorf("Failed to initialize KVDB: %v (%v)\nSupported datastores: %v", scheme, err, datastores)
 	}
@@ -182,7 +182,7 @@ func start(c *cli.Context) error {
 	// Start the cluster state machine, if enabled.
 	clusterInit := false
 	if cfg.Osd.ClusterConfig.NodeId != "" && cfg.Osd.ClusterConfig.ClusterId != "" {
-		dlog.Infof("OSD enabling cluster mode.")
+		logrus.Infof("OSD enabling cluster mode.")
 		if err := cluster.Init(cfg.Osd.ClusterConfig); err != nil {
 			return fmt.Errorf("Unable to init cluster server: %v", err)
 		}
@@ -195,7 +195,7 @@ func start(c *cli.Context) error {
 	isDefaultSet := false
 	// Start the volume drivers.
 	for d, v := range cfg.Osd.Drivers {
-		dlog.Infof("Starting volume driver: %v", d)
+		logrus.Infof("Starting volume driver: %v", d)
 		if err := volumedrivers.Register(d, v); err != nil {
 			return fmt.Errorf("Unable to start volume driver: %v, %v", d, err)
 		}
@@ -259,7 +259,7 @@ func start(c *cli.Context) error {
 
 	// Start the graph drivers.
 	for d := range cfg.Osd.GraphDrivers {
-		dlog.Infof("Starting graph driver: %v", d)
+		logrus.Infof("Starting graph driver: %v", d)
 		if err := server.StartGraphAPI(d, volume.PluginAPIBase); err != nil {
 			return fmt.Errorf("Unable to start graph plugin: %v", err)
 		}
@@ -290,7 +290,7 @@ func showVersion(c *cli.Context) error {
 func wrapAction(f func(*cli.Context) error) func(*cli.Context) {
 	return func(c *cli.Context) {
 		if err := f(c); err != nil {
-			dlog.Warnln(err.Error())
+			logrus.Warnln(err.Error())
 			os.Exit(1)
 		}
 	}

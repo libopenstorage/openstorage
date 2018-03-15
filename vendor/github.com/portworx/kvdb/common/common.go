@@ -51,10 +51,14 @@ func (b *BaseKvdb) SetLockTimeout(timeout time.Duration) {
 	b.LockTimeout = timeout
 }
 
-func (b *BaseKvdb) CheckLockTimeout(key string, startTime time.Time) {
+func (b *BaseKvdb) CheckLockTimeout(
+	key string,
+	startTime time.Time,
+	lockTimeout time.Duration,
+) {
 	b.lock.Lock()
 	defer b.lock.Unlock()
-	if b.LockTimeout > 0 && time.Since(startTime) > b.LockTimeout {
+	if b.LockTimeout > 0 && time.Since(startTime) > lockTimeout {
 		b.lockTimedout(key)
 	}
 }

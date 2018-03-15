@@ -363,14 +363,23 @@ func (kv *etcdKV) LockWithID(key string, lockerID string) (
 	*kvdb.KVPair,
 	error,
 ) {
+	return kv.LockWithTimeout(key, lockerID, kvdb.DefaultLockTryDuration, kv.GetLockTimeout())
+}
+
+func (kv *etcdKV) LockWithTimeout(
+	key string,
+	lockerID string,
+	lockTryDuration time.Duration,
+	lockHoldDuration time.Duration,
+) (*kvdb.KVPair, error) {
 	key = kv.domain + key
 	duration := time.Second
 	ttl := uint64(ec.DefaultLockTTL)
-	count := 0
 	lock := &ec.EtcdLock{Done: make(chan struct{}), Tag: lockerID}
 	lockTag := ec.LockerIDInfo{LockerID: fmt.Sprintf("%p:%s", lock, lockerID)}
 	kvPair, err := kv.Create(key, lockTag, ttl)
-	for maxCount := 300; err != nil && count < maxCount; count++ {
+	startTime := time.Now()
+	for count := 0; err != nil; count++ {
 		time.Sleep(duration)
 		kvPair, err = kv.Create(key, lockTag, ttl)
 		if count > 0 && count%15 == 0 && err != nil {
@@ -380,16 +389,16 @@ func (kv *etcdKV) LockWithID(key string, lockerID string) (
 					key, count, currLockerTag)
 			}
 		}
+		if err != nil && time.Since(startTime) > lockTryDuration {
+			return nil, err
+		}
 	}
 	if err != nil {
 		return nil, err
 	}
 	kvPair.TTL = int64(time.Duration(ttl) * time.Second)
 	kvPair.Lock = lock
-	go kv.refreshLock(kvPair, lockerID)
-	if count >= 10 {
-		logrus.Warnf("ETCD: spent %v iterations locking %v\n", count, key)
-	}
+	go kv.refreshLock(kvPair, lockerID, lockHoldDuration)
 
 	return kvPair, err
 }
@@ -541,7 +550,11 @@ out:
 	return nil, outErr
 }
 
-func (kv *etcdKV) refreshLock(kvPair *kvdb.KVPair, tag string) {
+func (kv *etcdKV) refreshLock(
+	kvPair *kvdb.KVPair,
+	tag string,
+	lockHoldDuration time.Duration,
+) {
 	l := kvPair.Lock.(*ec.EtcdLock)
 	ttl := kvPair.TTL
 	refresh := time.NewTicker(ec.DefaultLockRefreshDuration)
@@ -562,7 +575,7 @@ func (kv *etcdKV) refreshLock(kvPair *kvdb.KVPair, tag string) {
 		case <-refresh.C:
 			l.Lock()
 			for !l.Unlocked {
-				kv.CheckLockTimeout(lockMsgString, startTime)
+				kv.CheckLockTimeout(lockMsgString, startTime, lockHoldDuration)
 				kvPair.TTL = ttl
 				kvp, err := kv.CompareAndSet(
 					kvPair,

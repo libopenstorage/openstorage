@@ -598,12 +598,21 @@ func (kv *memKV) LockWithID(
 	key string,
 	lockerID string,
 ) (*kvdb.KVPair, error) {
+	return kv.LockWithTimeout(key, lockerID, kvdb.DefaultLockTryDuration, kv.GetLockTimeout())
+}
+
+func (kv *memKV) LockWithTimeout(
+	key string,
+	lockerID string,
+	lockTryDuration time.Duration,
+	lockHoldDuration time.Duration,
+) (*kvdb.KVPair, error) {
 	key = kv.domain + key
 	duration := time.Second
 
 	result, err := kv.Create(key, lockerID, uint64(duration*3))
-	count := 0
-	for err != nil {
+	startTime := time.Now()
+	for count := 0; err != nil; count++ {
 		time.Sleep(duration)
 		result, err = kv.Create(key, lockerID, uint64(duration*3))
 		if err != nil && count > 0 && count%15 == 0 {
@@ -612,6 +621,9 @@ func (kv *memKV) LockWithID(
 				logrus.Infof("Lock %v locked for %v seconds, tag: %v",
 					key, count, currLockerID)
 			}
+		}
+		if err != nil && time.Since(startTime) > lockTryDuration {
+			return nil, err
 		}
 	}
 
@@ -623,9 +635,9 @@ func (kv *memKV) LockWithID(
 	kv.mutex.Lock()
 	kv.locks[key] = lockChan
 	kv.mutex.Unlock()
-	if kv.GetLockTimeout() > 0 {
+	if lockHoldDuration > 0 {
 		go func() {
-			timeout := time.After(kv.GetLockTimeout())
+			timeout := time.After(lockHoldDuration)
 			for {
 				select {
 				case <-timeout:

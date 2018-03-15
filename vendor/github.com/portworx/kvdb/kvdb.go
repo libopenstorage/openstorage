@@ -80,6 +80,11 @@ const (
 	MemVersion1 = "memv1"
 )
 
+const (
+	// DefaultLockTryDuration is the maximum time spent trying to acquire lock
+	DefaultLockTryDuration = 300 * time.Second
+)
+
 var (
 	// ErrNotSupported implemenation of a specific function is not supported.
 	ErrNotSupported = errors.New("implementation not supported")
@@ -250,6 +255,14 @@ type Kvdb interface {
 	LockWithID(key string, lockerID string) (*KVPair, error)
 	// Lock specfied key. The KVPair returned should be used to unlock.
 	Lock(key string) (*KVPair, error)
+	// Lock with specified key and associate a lockerID with it.
+	// lockTryDuration is the maximum time that can be spent trying to acquire
+	// lock, else return error.
+	// lockHoldDuration is the maximum time the lock can be held, after which
+	// FatalCb is invoked.
+	// The KVPair returned should be used to unlock if successful.
+	LockWithTimeout(key string, lockerID string, lockTryDuration time.Duration,
+		lockHoldDuration time.Duration) (*KVPair, error)
 	// Unlock kvp previously acquired through a call to lock.
 	Unlock(kvp *KVPair) error
 	// TxNew returns a new Tx coordinator object or ErrNotSupported
@@ -266,6 +279,8 @@ type Kvdb interface {
 	SetFatalCb(f FatalErrorCB)
 	// SetLockTimeout sets maximum time a lock may be held
 	SetLockTimeout(timeout time.Duration)
+	// GetLockTimeout gets the currently set lock timeout
+	GetLockTimeout() time.Duration
 	// Serialize serializes all the keys under the domain and returns a byte array
 	Serialize() ([]byte, error)
 	// Deserialize deserializes the given byte array into a list of kv pairs
