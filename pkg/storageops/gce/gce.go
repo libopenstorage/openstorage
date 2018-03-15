@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"cloud.google.com/go/compute/metadata"
-	"github.com/Sirupsen/logrus"
 	"github.com/libopenstorage/openstorage/pkg/storageops"
 	"github.com/portworx/sched-ops/task"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2/google"
 	compute "google.golang.org/api/compute/v1"
 )

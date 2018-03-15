@@ -19,7 +19,7 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/keylock"
 	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/pkg/sched"
-	"go.pedge.io/dlog"
+	"github.com/sirupsen/logrus"
 )
 
 // Manager defines the interface for keep track of volume driver mounts.
@@ -349,7 +349,7 @@ func (m *Mounter) Mount(
 	}
 	dev, ok := m.hasPath(path)
 	if ok && dev != device {
-		dlog.Warnf("cannot mount %q,  device %q is mounted at %q", device, dev, path)
+		logrus.Warnf("cannot mount %q,  device %q is mounted at %q", device, dev, path)
 		return ErrExist
 	}
 	m.Lock()
@@ -369,7 +369,7 @@ func (m *Mounter) Mount(
 
 	// Validate input params
 	if fs != info.Fs {
-		dlog.Warnf("%s Existing mountpoint has fs %q cannot change to %q",
+		logrus.Warnf("%s Existing mountpoint has fs %q cannot change to %q",
 			device, info.Fs, fs)
 		return ErrEinval
 	}
@@ -444,7 +444,7 @@ func (m *Mounter) Unmount(
 			return err
 		}
 		if pathExists := m.deletePath(path); !pathExists {
-			dlog.Warnf("Path %q for device %q does not exist in pathMap",
+			logrus.Warnf("Path %q for device %q does not exist in pathMap",
 				path, device)
 		}
 		// Blow away this mountpoint.
@@ -457,7 +457,7 @@ func (m *Mounter) Unmount(
 
 		return nil
 	}
-	dlog.Warnf("Device %q is not mounted at path %q", path, device)
+	logrus.Warnf("Device %q is not mounted at path %q", path, device)
 	return nil
 }
 
@@ -467,18 +467,18 @@ func (m *Mounter) removeMountPath(path string) error {
 
 	if devicePath, mounted := m.HasTarget(path); !mounted {
 		if err := m.makeMountpathWriteable(path); err != nil {
-			dlog.Warnf("Failed to make path: %v writeable. Err: %v", path, err)
+			logrus.Warnf("Failed to make path: %v writeable. Err: %v", path, err)
 			return err
 		}
 	} else {
-		dlog.Infof("Not making %v writeable as %v is mounted on it", path, devicePath)
+		logrus.Infof("Not making %v writeable as %v is mounted on it", path, devicePath)
 		return nil
 	}
 
 	if _, err := os.Stat(path); err == nil {
-		dlog.Infof("Removing mount path directory: %v", path)
+		logrus.Infof("Removing mount path directory: %v", path)
 		if err = os.Remove(path); err != nil {
-			dlog.Warnf("Failed to remove path: %v Err: %v", path, err)
+			logrus.Warnf("Failed to remove path: %v Err: %v", path, err)
 			return err
 		}
 	}
@@ -496,7 +496,7 @@ func (m *Mounter) RemoveMountPath(mountPath string, opts map[string]string) erro
 
 			if err = os.Symlink(mountPath, symlinkPath); err != nil {
 				if !os.IsExist(err) {
-					dlog.Errorf("Error creating sym link %s => %s. Err: %v", symlinkPath, mountPath, err)
+					logrus.Errorf("Error creating sym link %s => %s. Err: %v", symlinkPath, mountPath, err)
 				}
 			}
 
@@ -513,7 +513,7 @@ func (m *Mounter) RemoveMountPath(mountPath string, opts map[string]string) erro
 				sched.Periodic(time.Second),
 				time.Now().Add(mountPathRemoveDelay),
 				true /* run only once */); err != nil {
-				dlog.Errorf("Failed to schedule task to remove path:%v. Err: %v", mountPath, err)
+				logrus.Errorf("Failed to schedule task to remove path:%v. Err: %v", mountPath, err)
 				return err
 			}
 		} else {
@@ -527,7 +527,7 @@ func (m *Mounter) RemoveMountPath(mountPath string, opts map[string]string) erro
 func (m *Mounter) EmptyTrashDir() error {
 	files, err := ioutil.ReadDir(m.trashLocation)
 	if err != nil {
-		dlog.Errorf("failed to read trash dir: %s. Err: %v", m.trashLocation, err)
+		logrus.Errorf("failed to read trash dir: %s. Err: %v", m.trashLocation, err)
 		return err
 	}
 
@@ -536,7 +536,7 @@ func (m *Mounter) EmptyTrashDir() error {
 			func(sched.Interval) {
 				e := m.removeSoftlinkAndTarget(path.Join(m.trashLocation, file.Name()))
 				if e != nil {
-					dlog.Errorf("failed to remove link: %s. Err: %v", path.Join(m.trashLocation, file.Name()), e)
+					logrus.Errorf("failed to remove link: %s. Err: %v", path.Join(m.trashLocation, file.Name()), e)
 					err = e
 					// continue with other directories
 				}
@@ -544,7 +544,7 @@ func (m *Mounter) EmptyTrashDir() error {
 			sched.Periodic(time.Second),
 			time.Now().Add(mountPathRemoveDelay),
 			true /* run only once */); err != nil {
-			dlog.Errorf("Failed to cleanup of trash dir. Err: %v", err)
+			logrus.Errorf("Failed to cleanup of trash dir. Err: %v", err)
 			return err
 		}
 	}

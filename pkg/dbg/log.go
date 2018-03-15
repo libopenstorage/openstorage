@@ -3,7 +3,7 @@ package dbg
 import (
 	"os"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 // Panicf outputs error message, dumps threads and exits.

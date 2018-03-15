@@ -21,7 +21,7 @@ import (
 	"os"
 	"path"
 
-	"go.pedge.io/dlog"
+	"github.com/sirupsen/logrus"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/graph"
@@ -44,7 +44,7 @@ type Driver struct {
 }
 
 func Init(home string, options []string, uidMaps, gidMaps []idtools.IDMap) (graphdriver.Driver, error) {
-	dlog.Infof("Initializing libchainfs at home: %s and storage: %v...", home, virtPath)
+	logrus.Infof("Initializing libchainfs at home: %s and storage: %v...", home, virtPath)
 
 	cVirtPath := C.CString(virtPath)
 	go C.start_chainfs(1, cVirtPath)
@@ -62,7 +62,7 @@ func (d *Driver) String() string {
 // held by the driver, e.g., unmounting all layered filesystems
 // known to this driver.
 func (d *Driver) Cleanup() error {
-	dlog.Infof("Stopping libchainfs at %s", virtPath)
+	logrus.Infof("Stopping libchainfs at %s", virtPath)
 	C.stop_chainfs()
 	return nil
 }
@@ -79,9 +79,9 @@ func (d *Driver) Status() [][2]string {
 // specified id and parent and mountLabel. Parent and mountLabel may be "".
 func (d *Driver) Create(id string, parent string, ml string, storageOpts map[string]string) error {
 	if parent != "" {
-		dlog.Infof("Creating layer %s with parent %s", id, parent)
+		logrus.Infof("Creating layer %s with parent %s", id, parent)
 	} else {
-		dlog.Infof("Creating parent layer %s", id)
+		logrus.Infof("Creating parent layer %s", id)
 	}
 
 	cID := C.CString(id)
@@ -89,7 +89,7 @@ func (d *Driver) Create(id string, parent string, ml string, storageOpts map[str
 
 	ret, err := C.create_layer(cID, cParent)
 	if int(ret) != 0 {
-		dlog.Warnf("Error while creating layer %s", id)
+		logrus.Warnf("Error while creating layer %s", id)
 		return err
 	}
 
@@ -98,12 +98,12 @@ func (d *Driver) Create(id string, parent string, ml string, storageOpts map[str
 
 // Remove attempts to remove the filesystem layer with this id.
 func (d *Driver) Remove(id string) error {
-	dlog.Infof("Removing layer %s", id)
+	logrus.Infof("Removing layer %s", id)
 
 	cID := C.CString(id)
 	ret, err := C.remove_layer(cID)
 	if int(ret) != 0 {
-		dlog.Warnf("Error while removing layer %s", id)
+		logrus.Warnf("Error while removing layer %s", id)
 		return err
 	}
 
@@ -124,10 +124,10 @@ func (d *Driver) Get(id, mountLabel string) (string, error) {
 
 	ret, err := C.alloc_chainfs(cID)
 	if int(ret) != 0 {
-		dlog.Warnf("Error while creating a chain FS for %s", id)
+		logrus.Warnf("Error while creating a chain FS for %s", id)
 		return "", err
 	} else {
-		dlog.Debugf("Created a chain FS for %s", id)
+		logrus.Debugf("Created a chain FS for %s", id)
 		chainPath := path.Join(virtPath, id)
 		return chainPath, err
 	}
@@ -136,7 +136,7 @@ func (d *Driver) Get(id, mountLabel string) (string, error) {
 // Put releases the system resources for the specified id,
 // e.g, unmounting layered filesystem.
 func (d *Driver) Put(id string) error {
-	dlog.Debugf("Releasing chain FS for %s", id)
+	logrus.Debugf("Releasing chain FS for %s", id)
 
 	cID := C.CString(id)
 	_, err := C.release_chainfs(cID)
@@ -169,17 +169,17 @@ func (d *Driver) ApplyDiff(id string, parent string, diff archive.Reader) (size 
 	dir := path.Join(virtPath, id)
 	// dir := path.Join("/tmp/chainfs/", id)
 
-	dlog.Infof("Applying diff at path %s\n", dir)
+	logrus.Infof("Applying diff at path %s\n", dir)
 
 	if err := chrootarchive.UntarUncompressed(diff, dir, nil); err != nil {
-		dlog.Warnf("Error while applying diff to %s: %v", id, err)
+		logrus.Warnf("Error while applying diff to %s: %v", id, err)
 		return 0, err
 	}
 
 	// show invalid whiteouts warning.
 	files, err := ioutil.ReadDir(path.Join(dir, archive.WhiteoutLinkDir))
 	if err == nil && len(files) > 0 {
-		dlog.Warnf("Archive contains aufs hardlink references that are not supported.")
+		logrus.Warnf("Archive contains aufs hardlink references that are not supported.")
 	}
 
 	return d.DiffSize(id, parent)
