@@ -5,8 +5,8 @@ package mount
 import (
 	"regexp"
 
-	"github.com/docker/docker/pkg/mount"
 	"github.com/libopenstorage/openstorage/pkg/keylock"
+	"github.com/moby/moby/pkg/mount"
 )
 
 // NFSMounter implements Manager and keeps track of active mounts for volume drivers.

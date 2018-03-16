@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"time"
 
-	"go.pedge.io/dlog"
+	"github.com/sirupsen/logrus"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
@@ -99,7 +99,7 @@ func (d *driver) MountedAt(mountpath string) string {
 func (d *driver) Mount(volumeID string, mountpath string, options map[string]string) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
-		dlog.Println(err)
+		logrus.Println(err)
 		return err
 	}
 	if len(v.AttachPath) > 0 && len(v.AttachPath) > 0 {
@@ -112,7 +112,7 @@ func (d *driver) Mount(volumeID string, mountpath string, options map[string]str
 		string(v.Spec.Format),
 		syscall.MS_BIND, "",
 	); err != nil {
-		dlog.Printf("Cannot mount %s at %s because %+v",
+		logrus.Printf("Cannot mount %s at %s because %+v",
 			filepath.Join(volume.VolumeBase, string(volumeID)),
 			mountpath,
 			err,
@@ -166,7 +166,7 @@ func (d *driver) Shutdown() {}
 func (d *driver) fsFreeze(volumeID string, freeze bool) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
-		dlog.Println(err)
+		logrus.Println(err)
 		return err
 	}
 	if len(v.AttachPath) == 0 {

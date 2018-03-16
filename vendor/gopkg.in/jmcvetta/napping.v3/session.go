@@ -23,6 +23,7 @@ import (
 	"time"
 )
 
+// Session defines the napping session structure
 type Session struct {
 	Client *http.Client
 	Log    bool // Log request and response
@@ -87,7 +88,7 @@ func (s *Session) Send(r *Request) (response *Response, err error) {
 	//
 	header := http.Header{}
 	if s.Header != nil {
-		for k, _ := range *s.Header {
+		for k := range *s.Header {
 			v := s.Header.Get(k)
 			header.Set(k, v)
 		}
@@ -104,6 +105,8 @@ func (s *Session) Send(r *Request) (response *Response, err error) {
 				err = errors.New("Payload must be of type *bytes.Buffer if RawPayload is set to true")
 				return
 			}
+
+			// do not overwrite the content type with raw payload
 		} else {
 			var b []byte
 			b, err = json.Marshal(&r.Payload)
@@ -112,6 +115,9 @@ func (s *Session) Send(r *Request) (response *Response, err error) {
 				return
 			}
 			buf = bytes.NewBuffer(b)
+
+			// Overwrite the content type to json since we're pushing the payload as json
+			header.Set("Content-Type", "application/json")
 		}
 		if buf != nil {
 			req, err = http.NewRequest(r.Method, u.String(), buf)
@@ -122,15 +128,12 @@ func (s *Session) Send(r *Request) (response *Response, err error) {
 			s.log(err)
 			return
 		}
-		// Overwrite the content type to json since we're pushing the payload as json
-		header.Set("Content-Type", "application/json")
 	} else { // no data to encode
 		req, err = http.NewRequest(r.Method, u.String(), nil)
 		if err != nil {
 			s.log(err)
 			return
 		}
-
 	}
 	//
 	// Merge Session and Request options
@@ -170,25 +173,32 @@ func (s *Session) Send(r *Request) (response *Response, err error) {
 	//
 
 	// Debug log request
-	s.log("--------------------------------------------------------------------------------")
-	s.log("REQUEST")
-	s.log("--------------------------------------------------------------------------------")
-	s.log("Method:", req.Method)
-	s.log("URL:", req.URL)
-	s.log("Header:", req.Header)
-	s.log("Form:", req.Form)
-	s.log("Payload:")
-	if r.RawPayload && s.Log && buf != nil {
-		s.log(base64.StdEncoding.EncodeToString(buf.Bytes()))
-	} else {
-		s.log(pretty(r.Payload))
+	if s.Log {
+		s.log("--------------------------------------------------------------------------------")
+		s.log("REQUEST")
+		s.log("--------------------------------------------------------------------------------")
+		s.log("Method:", req.Method)
+		s.log("URL:", req.URL)
+		s.log("Header:", req.Header)
+		s.log("Form:", req.Form)
+		s.log("Payload:")
+		if r.RawPayload && s.Log && buf != nil {
+			s.log(base64.StdEncoding.EncodeToString(buf.Bytes()))
+		} else {
+			s.log(pretty(r.Payload))
+		}
 	}
+
 	r.timestamp = time.Now()
 	var client *http.Client
 	if s.Client != nil {
 		client = s.Client
 	} else {
 		client = &http.Client{}
+		if r.Transport != nil {
+			client.Transport = r.Transport
+		}
+
 		s.Client = client
 	}
 	resp, err := client.Do(req)
@@ -213,7 +223,7 @@ func (s *Session) Send(r *Request) (response *Response, err error) {
 			err = json.Unmarshal(r.body, r.Result)
 		}
 		if resp.StatusCode >= 400 && r.Error != nil {
-			json.Unmarshal(r.body, r.Error) // Should we ignore unmarshall error?
+			json.Unmarshal(r.body, r.Error) // Should we ignore unmarshal error?
 		}
 	}
 	if r.CaptureResponseBody {
@@ -223,23 +233,25 @@ func (s *Session) Send(r *Request) (response *Response, err error) {
 	response = &rsp
 
 	// Debug log response
-	s.log("--------------------------------------------------------------------------------")
-	s.log("RESPONSE")
-	s.log("--------------------------------------------------------------------------------")
-	s.log("Status: ", response.status)
-	s.log("Header:")
-	s.log(pretty(response.HttpResponse().Header))
-	s.log("Body:")
+	if s.Log {
+		s.log("--------------------------------------------------------------------------------")
+		s.log("RESPONSE")
+		s.log("--------------------------------------------------------------------------------")
+		s.log("Status: ", response.status)
+		s.log("Header:")
+		s.log(pretty(response.HttpResponse().Header))
+		s.log("Body:")
 
-	if response.body != nil {
-		raw := json.RawMessage{}
-		if json.Unmarshal(response.body, &raw) == nil {
-			s.log(pretty(&raw))
+		if response.body != nil {
+			raw := json.RawMessage{}
+			if json.Unmarshal(response.body, &raw) == nil {
+				s.log(pretty(&raw))
+			} else {
+				s.log(pretty(response.RawText()))
+			}
 		} else {
-			s.log(pretty(response.RawText()))
+			s.log("Empty response body")
 		}
-	} else {
-		s.log("Empty response body")
 	}
 
 	return

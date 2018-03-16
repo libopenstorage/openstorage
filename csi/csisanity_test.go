@@ -28,7 +28,7 @@ import (
 	"github.com/libopenstorage/openstorage/volume/drivers"
 
 	"github.com/kubernetes-csi/csi-test/pkg/sanity"
-	"go.pedge.io/dlog"
+	"github.com/sirupsen/logrus"
 
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
@@ -44,8 +44,7 @@ var (
 )
 
 func TestCSISanity(t *testing.T) {
-
-	kv, err := kvdb.New(mem.Name, "driver_test", []string{}, nil, dlog.Panicf)
+	kv, err := kvdb.New(mem.Name, "driver_test", []string{}, nil, logrus.Panicf)
 	if err != nil {
 		t.Fatalf("Failed to initialize KVDB")
 	}

@@ -7,7 +7,7 @@ import (
 	"os"
 	"path"
 
-	"go.pedge.io/dlog"
+	"github.com/sirupsen/logrus"
 
 	"github.com/gorilla/mux"
 )
@@ -141,15 +141,15 @@ func startServer(name string, sockBase string, port uint16, routes []*Route) err
 	os.Remove(socket)
 	os.MkdirAll(path.Dir(socket), 0755)
 
-	dlog.Printf("Starting REST service on socket : %+v", socket)
+	logrus.Printf("Starting REST service on socket : %+v", socket)
 	listener, err = net.Listen("unix", socket)
 	if err != nil {
-		dlog.Warnln("Cannot listen on UNIX socket: ", err)
+		logrus.Warnln("Cannot listen on UNIX socket: ", err)
 		return err
 	}
 	go http.Serve(listener, router)
 	if port != 0 {
-		dlog.Printf("Starting REST service on port : %v", port)
+		logrus.Printf("Starting REST service on port : %v", port)
 		go http.ListenAndServe(fmt.Sprintf(":%d", port), router)
 	}
 	return nil
@@ -158,7 +158,7 @@ func startServer(name string, sockBase string, port uint16, routes []*Route) err
 type restServer interface {
 	Routes() []*Route
 	String() string
-	logRequest(request string, id string) dlog.Logger
+	logRequest(request string, id string) *logrus.Entry
 	sendError(request string, id string, w http.ResponseWriter, msg string, code int)
 }
 
@@ -168,8 +168,8 @@ type restBase struct {
 	name    string
 }
 
-func (rest *restBase) logRequest(request string, id string) dlog.Logger {
-	return dlog.WithFields(map[string]interface{}{
+func (rest *restBase) logRequest(request string, id string) *logrus.Entry {
+	return logrus.WithFields(map[string]interface{}{
 		"Driver":  rest.name,
 		"Request": request,
 		"ID":      id,
@@ -181,6 +181,6 @@ func (rest *restBase) sendError(request string, id string, w http.ResponseWriter
 }
 
 func notFound(w http.ResponseWriter, r *http.Request) {
-	dlog.Warnf("Not found: %+v ", r.URL)
+	logrus.Warnf("Not found: %+v ", r.URL)
 	http.NotFound(w, r)
 }

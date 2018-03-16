@@ -10,8 +10,8 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/proto/time"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
-	"go.pedge.io/dlog"
 )
 
 var (
@@ -45,7 +45,7 @@ func TestAll(t *testing.T) {
 func setup(t *testing.T) {
 	kv := kvdb.Instance()
 	if kv == nil {
-		kv, err := kvdb.New(mem.Name, kvdbDomain+"/"+clusterName, []string{}, nil, dlog.Panicf)
+		kv, err := kvdb.New(mem.Name, kvdbDomain+"/"+clusterName, []string{}, nil, logrus.Panicf)
 		if err != nil {
 			t.Fatalf("Failed to set default KV store : (%v): %v", mem.Name, err)
 		}

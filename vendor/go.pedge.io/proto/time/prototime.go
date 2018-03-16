@@ -5,19 +5,20 @@ package prototime // import "go.pedge.io/proto/time"
 import (
 	"time"
 
-	"go.pedge.io/pb/go/google/protobuf"
+	"github.com/golang/protobuf/ptypes/duration"
+	"github.com/golang/protobuf/ptypes/timestamp"
 )
 
 // TimeToTimestamp converts a go Time to a protobuf Timestamp.
-func TimeToTimestamp(t time.Time) *google_protobuf.Timestamp {
-	return &google_protobuf.Timestamp{
+func TimeToTimestamp(t time.Time) *timestamp.Timestamp {
+	return &timestamp.Timestamp{
 		Seconds: t.UnixNano() / int64(time.Second),
 		Nanos:   int32(t.UnixNano() % int64(time.Second)),
 	}
 }
 
 // TimestampToTime converts a protobuf Timestamp to a go Time.
-func TimestampToTime(timestamp *google_protobuf.Timestamp) time.Time {
+func TimestampToTime(timestamp *timestamp.Timestamp) time.Time {
 	if timestamp == nil {
 		return time.Unix(0, 0).UTC()
 	}
@@ -28,7 +29,7 @@ func TimestampToTime(timestamp *google_protobuf.Timestamp) time.Time {
 }
 
 // TimestampLess returns true if i is before j.
-func TimestampLess(i *google_protobuf.Timestamp, j *google_protobuf.Timestamp) bool {
+func TimestampLess(i *timestamp.Timestamp, j *timestamp.Timestamp) bool {
 	if j == nil {
 		return false
 	}
@@ -45,22 +46,22 @@ func TimestampLess(i *google_protobuf.Timestamp, j *google_protobuf.Timestamp) b
 }
 
 // Now returns the current time as a protobuf Timestamp.
-func Now() *google_protobuf.Timestamp {
+func Now() *timestamp.Timestamp {
 	return TimeToTimestamp(time.Now().UTC())
 }
 
 // DurationToProto converts a go Duration to a protobuf Duration.
-func DurationToProto(d time.Duration) *google_protobuf.Duration {
-	return &google_protobuf.Duration{
+func DurationToProto(d time.Duration) *duration.Duration {
+	return &duration.Duration{
 		Seconds: int64(d) / int64(time.Second),
 		Nanos:   int32(int64(d) % int64(time.Second)),
 	}
 }
 
 // DurationFromProto converts a protobuf Duration to a go Duration.
-func DurationFromProto(duration *google_protobuf.Duration) time.Duration {
-	if duration == nil {
+func DurationFromProto(d *duration.Duration) time.Duration {
+	if d == nil {
 		return 0
 	}
-	return time.Duration((duration.Seconds * int64(time.Second)) + int64(duration.Nanos))
+	return time.Duration((d.Seconds * int64(time.Second)) + int64(d.Nanos))
 }

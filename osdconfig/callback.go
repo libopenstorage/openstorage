@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/portworx/kvdb"
+	"github.com/sirupsen/logrus"
 )
 
 // execClusterCallbacks executes a registered cluster watcher

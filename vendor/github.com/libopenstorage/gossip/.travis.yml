@@ -1,0 +1,16 @@
+sudo: required
+dist: trusty
+language: go
+go:
+  - 1.6
+before_install:
+  - sudo apt-get update -yq
+script:
+  - make test
+notifications:
+  email:
+    recipients:
+      - aditya@portworx.com
+      - eng@portworx.com
+    on_success: always
+    on_failure: always

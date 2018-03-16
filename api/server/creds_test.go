@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/libopenstorage/openstorage/api"
@@ -129,11 +130,14 @@ func TestClientCredsValidateAndDelete(t *testing.T) {
 	cl, err := client.NewDriverClient(ts.URL, mockDriverName, "", mockDriverName)
 	require.NoError(t, err)
 
-	testVolDriver.MockDriver().EXPECT().CredsDelete("gooduuid").Return(nil).Times(1)
-	testVolDriver.MockDriver().EXPECT().CredsDelete("baduuid").Return(fmt.Errorf("Invalid UUID")).Times(1)
+	gomock.InOrder(
 
-	testVolDriver.MockDriver().EXPECT().CredsValidate("gooduuid").Return(nil).Times(1)
-	testVolDriver.MockDriver().EXPECT().CredsValidate("baduuid").Return(fmt.Errorf("Invalid UUID")).Times(1)
+		testVolDriver.MockDriver().EXPECT().CredsDelete("gooduuid").Return(nil).Times(1),
+		testVolDriver.MockDriver().EXPECT().CredsDelete("baduuid").Return(fmt.Errorf("Invalid UUID")).Times(1),
+
+		testVolDriver.MockDriver().EXPECT().CredsValidate("gooduuid").Return(nil).Times(1),
+		testVolDriver.MockDriver().EXPECT().CredsValidate("baduuid").Return(fmt.Errorf("Invalid UUID")).Times(1),
+	)
 
 	// Delete creds
 	err = client.VolumeDriver(cl).CredsDelete("gooduuid")
@@ -143,7 +147,8 @@ func TestClientCredsValidateAndDelete(t *testing.T) {
 	require.Contains(t, err.Error(), "Invalid UUID")
 	err = client.VolumeDriver(cl).CredsDelete("")
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "404")
+	require.Contains(t, err.Error(), "405")
+
 	//Validate creds
 	err = client.VolumeDriver(cl).CredsValidate("gooduuid")
 	require.NoError(t, err)
@@ -152,7 +157,7 @@ func TestClientCredsValidateAndDelete(t *testing.T) {
 	require.Contains(t, err.Error(), "Invalid UUID")
 	err = client.VolumeDriver(cl).CredsValidate("")
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "404")
+	require.Contains(t, err.Error(), "405")
 
 }
 

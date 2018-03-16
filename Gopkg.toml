@@ -1,0 +1,57 @@
+# Gopkg.toml example
+#
+# Refer to https://github.com/golang/dep/blob/master/docs/Gopkg.toml.md
+# for detailed Gopkg.toml documentation.
+#
+# required = ["github.com/user/thing/cmd/thing"]
+# ignored = ["github.com/user/project/pkgX", "bitbucket.org/user/project/pkgA/pkgY"]
+#
+# [[constraint]]
+#   name = "github.com/user/project"
+#   version = "1.0.0"
+#
+# [[constraint]]
+#   name = "github.com/user/project2"
+#   branch = "dev"
+#   source = "github.com/myfork/project2"
+#
+# [[override]]
+#   name = "github.com/x/y"
+#   version = "2.4.0"
+#
+# [prune]
+#   non-go = false
+#   go-tests = true
+#   unused-packages = true
+
+[[constraint]]
+  name = "github.com/portworx/kvdb"
+  branch = "logrus-lowercase"
+
+[[constraint]]
+  name = "github.com/libopenstorage/gossip"
+  branch = "logrus"
+
+[[constraint]]
+  name = "github.com/kubernetes-csi/csi-test"
+  branch = "v0.1.0"
+
+[[override]]
+  name = "github.com/opencontainers/runtime-spec"
+  revision = "d42f1eb741e6361e858d83fc75aa6893b66292c4"
+
+[[constraint]]
+  name = "github.com/moby/moby"
+  revision = "8af4db6f002ac907b6ef8610b237879dfcaa5b7a"
+
+[[override]]
+  name = "github.com/docker/docker"
+  revision = "8af4db6f002ac907b6ef8610b237879dfcaa5b7a"
+
+[[override]]
+  name = "github.com/satori/go.uuid"
+  revision = "36e9d2ebbde5e3f13ab2e25625fd453271d6522e"
+
+[prune]
+  go-tests = true
+  unused-packages = true

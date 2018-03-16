@@ -53,19 +53,10 @@ test-deps:
 update-test-deps:
 	GO15VENDOREXPERIMENT=0 go get -tags "$(TAGS)" -d -v -t -u -f $(PKGS)
 
-vendor-update:
-	GO15VENDOREXPERIMENT=0 GOOS=linux GOARCH=amd64 go get -tags "daemon btrfs_noversion have_btrfs have_chainfs" -d -v -t -u -f $(PKGS)
-
-vendor-without-update:
-	go get -v github.com/kardianos/govendor
-	rm -rf vendor
-	govendor init
-	GOOS=linux GOARCH=amd64 govendor add +external
-	GOOS=linux GOARCH=amd64 govendor update +vendor
-	GOOS=linux GOARCH=amd64 govendor add +external
-	GOOS=linux GOARCH=amd64 govendor update +vendor
-
-vendor: vendor-update vendor-without-update
+vendor:
+	curl -s -L https://github.com/golang/dep/releases/download/v0.4.1/dep-linux-amd64 -o $(GOPATH)/bin/dep
+	chmod +x $(GOPATH)/bin/dep
+	dep ensure
 
 build:
 	go build -tags "$(TAGS)" $(BUILDFLAGS) $(PKGS)
@@ -196,8 +187,6 @@ clean: $(OSDSANITY)-clean
 	update-deps \
 	test-deps \
 	update-test-deps \
-	vendor-update \
-	vendor-without-update \
 	vendor \
 	build \
 	install \

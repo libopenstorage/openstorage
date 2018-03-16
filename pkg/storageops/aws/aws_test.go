@@ -18,7 +18,8 @@ const (
 	newDiskPrefix   = "openstorage-test"
 )
 
-var diskName = fmt.Sprintf("%s-%s", newDiskPrefix, uuid.NewV4())
+var uid string
+var diskName = fmt.Sprintf("%s-%s", newDiskPrefix, uid)
 
 func TestAll(t *testing.T) {
 	drivers := make(map[string]storageops.Ops)
@@ -88,4 +89,9 @@ func TestAwsGetPrefixFromRootDeviceName(t *testing.T) {
 		assert.Equal(t, err != nil, test.expectError)
 		assert.Equal(t, test.expectedPrefix, prefix)
 	}
+}
+
+func init() {
+	val, _ := uuid.NewV4()
+	uid = val.String()
 }

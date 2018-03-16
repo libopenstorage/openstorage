@@ -5,6 +5,7 @@ package dns
 import (
 	"bytes"
 	"crypto/tls"
+	"encoding/binary"
 	"io"
 	"net"
 	"sync"
@@ -146,7 +147,7 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 				b[i] |= ('a' - 'A')
 			}
 		}
-		if h, ok := mux.z[string(b[:l])]; ok { // 'causes garbage, might want to change the map key
+		if h, ok := mux.z[string(b[:l])]; ok { // causes garbage, might want to change the map key
 			if t != TypeDS {
 				return h
 			}
@@ -284,7 +285,7 @@ type Server struct {
 	WriteTimeout time.Duration
 	// TCP idle timeout for multiple queries, if nil, defaults to 8 * time.Second (RFC 5966).
 	IdleTimeout func() time.Duration
-	// Secret(s) for Tsig map[<zonename>]<base64 secret>.
+	// Secret(s) for Tsig map[<zonename>]<base64 secret>. The zonename must be in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2).
 	TsigSecret map[string]string
 	// Unsafe instructs the server to disregard any sanity checks and directly hand the message to
 	// the handler. It will specifically not check if the query has the QR bit not set.
@@ -296,10 +297,7 @@ type Server struct {
 	// DecorateWriter is optional, allows customization of the process that writes raw DNS messages.
 	DecorateWriter DecorateWriter
 
-	// Graceful shutdown handling
-
-	inFlight sync.WaitGroup
-
+	// Shutdown handling
 	lock    sync.RWMutex
 	started bool
 }
@@ -320,46 +318,46 @@ func (srv *Server) ListenAndServe() error {
 	}
 	switch srv.Net {
 	case "tcp", "tcp4", "tcp6":
-		a, e := net.ResolveTCPAddr(srv.Net, addr)
-		if e != nil {
-			return e
+		a, err := net.ResolveTCPAddr(srv.Net, addr)
+		if err != nil {
+			return err
 		}
-		l, e := net.ListenTCP(srv.Net, a)
-		if e != nil {
-			return e
+		l, err := net.ListenTCP(srv.Net, a)
+		if err != nil {
+			return err
 		}
 		srv.Listener = l
 		srv.started = true
 		srv.lock.Unlock()
-		e = srv.serveTCP(l)
+		err = srv.serveTCP(l)
 		srv.lock.Lock() // to satisfy the defer at the top
-		return e
+		return err
 	case "tcp-tls", "tcp4-tls", "tcp6-tls":
 		network := "tcp"
 		if srv.Net == "tcp4-tls" {
 			network = "tcp4"
-		} else if srv.Net == "tcp6" {
+		} else if srv.Net == "tcp6-tls" {
 			network = "tcp6"
 		}
 
-		l, e := tls.Listen(network, addr, srv.TLSConfig)
-		if e != nil {
-			return e
+		l, err := tls.Listen(network, addr, srv.TLSConfig)
+		if err != nil {
+			return err
 		}
 		srv.Listener = l
 		srv.started = true
 		srv.lock.Unlock()
-		e = srv.serveTCP(l)
+		err = srv.serveTCP(l)
 		srv.lock.Lock() // to satisfy the defer at the top
-		return e
+		return err
 	case "udp", "udp4", "udp6":
-		a, e := net.ResolveUDPAddr(srv.Net, addr)
-		if e != nil {
-			return e
+		a, err := net.ResolveUDPAddr(srv.Net, addr)
+		if err != nil {
+			return err
 		}
-		l, e := net.ListenUDP(srv.Net, a)
-		if e != nil {
-			return e
+		l, err := net.ListenUDP(srv.Net, a)
+		if err != nil {
+			return err
 		}
 		if e := setUDPSocketOptions(l); e != nil {
 			return e
@@ -367,9 +365,9 @@ func (srv *Server) ListenAndServe() error {
 		srv.PacketConn = l
 		srv.started = true
 		srv.lock.Unlock()
-		e = srv.serveUDP(l)
+		err = srv.serveUDP(l)
 		srv.lock.Lock() // to satisfy the defer at the top
-		return e
+		return err
 	}
 	return &Error{err: "bad network"}
 }
@@ -388,7 +386,9 @@ func (srv *Server) ActivateAndServe() error {
 		if srv.UDPSize == 0 {
 			srv.UDPSize = MinMsgSize
 		}
-		if t, ok := pConn.(*net.UDPConn); ok {
+		// Check PacketConn interface's type is valid and value
+		// is not nil
+		if t, ok := pConn.(*net.UDPConn); ok && t != nil {
 			if e := setUDPSocketOptions(t); e != nil {
 				return e
 			}
@@ -409,10 +409,8 @@ func (srv *Server) ActivateAndServe() error {
 	return &Error{err: "bad listeners"}
 }
 
-// Shutdown gracefully shuts down a server. After a call to Shutdown, ListenAndServe and
-// ActivateAndServe will return. All in progress queries are completed before the server
-// is taken down. If the Shutdown is taking longer than the reading timeout an error
-// is returned.
+// Shutdown shuts down a server. After a call to Shutdown, ListenAndServe and
+// ActivateAndServe will return.
 func (srv *Server) Shutdown() error {
 	srv.lock.Lock()
 	if !srv.started {
@@ -428,19 +426,7 @@ func (srv *Server) Shutdown() error {
 	if srv.Listener != nil {
 		srv.Listener.Close()
 	}
-
-	fin := make(chan bool)
-	go func() {
-		srv.inFlight.Wait()
-		fin <- true
-	}()
-
-	select {
-	case <-time.After(srv.getReadTimeout()):
-		return &Error{err: "server shutdown is pending"}
-	case <-fin:
-		return nil
-	}
+	return nil
 }
 
 // getReadTimeout is a helper func to use system timeout if server did not intend to change it.
@@ -473,25 +459,27 @@ func (srv *Server) serveTCP(l net.Listener) error {
 	rtimeout := srv.getReadTimeout()
 	// deadline is not used here
 	for {
-		rw, e := l.Accept()
-		if e != nil {
-			if neterr, ok := e.(net.Error); ok && neterr.Temporary() {
-				continue
-			}
-			return e
-		}
-		m, e := reader.ReadTCP(rw, rtimeout)
+		rw, err := l.Accept()
 		srv.lock.RLock()
 		if !srv.started {
 			srv.lock.RUnlock()
 			return nil
 		}
 		srv.lock.RUnlock()
-		if e != nil {
-			continue
+		if err != nil {
+			if neterr, ok := err.(net.Error); ok && neterr.Temporary() {
+				continue
+			}
+			return err
 		}
-		srv.inFlight.Add(1)
-		go srv.serve(rw.RemoteAddr(), handler, m, nil, nil, rw)
+		go func() {
+			m, err := reader.ReadTCP(rw, rtimeout)
+			if err != nil {
+				rw.Close()
+				return
+			}
+			srv.serve(rw.RemoteAddr(), handler, m, nil, nil, rw)
+		}()
 	}
 }
 
@@ -516,25 +504,28 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 	rtimeout := srv.getReadTimeout()
 	// deadline is not used here
 	for {
-		m, s, e := reader.ReadUDP(l, rtimeout)
+		m, s, err := reader.ReadUDP(l, rtimeout)
 		srv.lock.RLock()
 		if !srv.started {
 			srv.lock.RUnlock()
 			return nil
 		}
 		srv.lock.RUnlock()
-		if e != nil {
+		if err != nil {
+			if netErr, ok := err.(net.Error); ok && netErr.Temporary() {
+				continue
+			}
+			return err
+		}
+		if len(m) < headerSize {
 			continue
 		}
-		srv.inFlight.Add(1)
 		go srv.serve(s.RemoteAddr(), handler, m, l, s, nil)
 	}
 }
 
 // Serve a new connection.
 func (srv *Server) serve(a net.Addr, h Handler, m []byte, u *net.UDPConn, s *SessionUDP, t net.Conn) {
-	defer srv.inFlight.Done()
-
 	w := &response{tsigSecret: srv.TsigSecret, udp: u, tcp: t, remoteAddr: a, udpSession: s}
 	if srv.DecorateWriter != nil {
 		w.writer = srv.DecorateWriter(w)
@@ -596,8 +587,8 @@ Exit:
 	if srv.IdleTimeout != nil {
 		idleTimeout = srv.IdleTimeout()
 	}
-	m, e := reader.ReadTCP(w.tcp, idleTimeout)
-	if e == nil {
+	m, err = reader.ReadTCP(w.tcp, idleTimeout)
+	if err == nil {
 		q++
 		goto Redo
 	}
@@ -615,7 +606,7 @@ func (srv *Server) readTCP(conn net.Conn, timeout time.Duration) ([]byte, error)
 		}
 		return nil, ErrShortRead
 	}
-	length, _ := unpackUint16(l, 0)
+	length := binary.BigEndian.Uint16(l)
 	if length == 0 {
 		return nil, ErrShortRead
 	}
@@ -643,12 +634,9 @@ func (srv *Server) readTCP(conn net.Conn, timeout time.Duration) ([]byte, error)
 func (srv *Server) readUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *SessionUDP, error) {
 	conn.SetReadDeadline(time.Now().Add(timeout))
 	m := make([]byte, srv.UDPSize)
-	n, s, e := ReadFromSessionUDP(conn, m)
-	if e != nil || n == 0 {
-		if e != nil {
-			return nil, nil, e
-		}
-		return nil, nil, ErrShortRead
+	n, s, err := ReadFromSessionUDP(conn, m)
+	if err != nil {
+		return nil, nil, err
 	}
 	m = m[:n]
 	return m, s, nil
@@ -690,7 +678,7 @@ func (w *response) Write(m []byte) (int, error) {
 			return 0, &Error{err: "message too large"}
 		}
 		l := make([]byte, 2, 2+lm)
-		l[0], l[1] = packUint16(uint16(lm))
+		binary.BigEndian.PutUint16(l, uint16(lm))
 		m = append(l, m...)
 
 		n, err := io.Copy(w.tcp, bytes.NewReader(m))
