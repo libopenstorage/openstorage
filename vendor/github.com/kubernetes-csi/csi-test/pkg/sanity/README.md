@@ -17,7 +17,7 @@ func TestMyDriver(t *testing.T) {
     ... setup driver ...
 
     // Now call the test suite
-    sanity.Test(t, driverEndpointAddress)
+    sanity.Test(t, driverEndpointAddress, "/mnt")
 }
 ```
 

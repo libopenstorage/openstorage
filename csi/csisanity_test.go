@@ -93,5 +93,8 @@ func TestCSISanity(t *testing.T) {
 	defer server.Stop()
 
 	// Start CSI Sanity test
-	sanity.Test(t, server.Address(), "/mnt/openstorage/mount/nfs")
+	sanity.Test(t, &sanity.Config{
+		Address:    server.Address(),
+		TargetPath: "/mnt/openstorage/mount/nfs",
+	})
 }
