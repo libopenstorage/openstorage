@@ -22,28 +22,26 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/container-storage-interface/spec/lib/go/csi"
+	csi "github.com/container-storage-interface/spec/lib/go/csi/v0"
 	context "golang.org/x/net/context"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-func verifyVolumeInfo(v *csi.VolumeInfo) {
+func verifyVolumeInfo(v *csi.Volume) {
 	Expect(v).NotTo(BeNil())
 	Expect(v.GetId()).NotTo(BeEmpty())
 }
 
-func isCapabilitySupported(
+func isControllerCapabilitySupported(
 	c csi.ControllerClient,
 	capType csi.ControllerServiceCapability_RPC_Type,
 ) bool {
 
 	caps, err := c.ControllerGetCapabilities(
 		context.Background(),
-		&csi.ControllerGetCapabilitiesRequest{
-			Version: csiClientVersion,
-		})
+		&csi.ControllerGetCapabilitiesRequest{})
 	Expect(err).NotTo(HaveOccurred())
 	Expect(caps).NotTo(BeNil())
 	Expect(caps.GetCapabilities()).NotTo(BeNil())
@@ -66,23 +64,10 @@ var _ = Describe("ControllerGetCapabilities [Controller Server]", func() {
 		c = csi.NewControllerClient(conn)
 	})
 
-	It("should fail when no version is provided", func() {
-		_, err := c.ControllerGetCapabilities(
-			context.Background(),
-			&csi.ControllerGetCapabilitiesRequest{})
-		Expect(err).To(HaveOccurred())
-
-		serverError, ok := status.FromError(err)
-		Expect(ok).To(BeTrue())
-		Expect(serverError.Code()).To(Equal(codes.InvalidArgument))
-	})
-
 	It("should return appropriate capabilities", func() {
 		caps, err := c.ControllerGetCapabilities(
 			context.Background(),
-			&csi.ControllerGetCapabilitiesRequest{
-				Version: csiClientVersion,
-			})
+			&csi.ControllerGetCapabilitiesRequest{})
 
 		By("checking successful response")
 		Expect(err).NotTo(HaveOccurred())
@@ -112,33 +97,18 @@ var _ = Describe("GetCapacity [Controller Server]", func() {
 	BeforeEach(func() {
 		c = csi.NewControllerClient(conn)
 
-		if !isCapabilitySupported(c, csi.ControllerServiceCapability_RPC_GET_CAPACITY) {
+		if !isControllerCapabilitySupported(c, csi.ControllerServiceCapability_RPC_GET_CAPACITY) {
 			Skip("GetCapacity not supported")
 		}
-	})
-
-	It("should fail when no version is provided", func() {
-
-		By("failing when there is no version")
-		_, err := c.GetCapacity(
-			context.Background(),
-			&csi.GetCapacityRequest{})
-		Expect(err).To(HaveOccurred())
-
-		serverError, ok := status.FromError(err)
-		Expect(ok).To(BeTrue())
-		Expect(serverError.Code()).To(Equal(codes.InvalidArgument))
 	})
 
 	It("should return capacity (no optional values added)", func() {
 		_, err := c.GetCapacity(
 			context.Background(),
-			&csi.GetCapacityRequest{
-				Version: csiClientVersion,
-			})
+			&csi.GetCapacityRequest{})
 		Expect(err).NotTo(HaveOccurred())
 
-		// Since capacity is uint64 we will not be checking it
+		// Since capacity is int64 we will not be checking it
 		// The value of zero is a possible value.
 	})
 })
@@ -151,35 +121,20 @@ var _ = Describe("ListVolumes [Controller Server]", func() {
 	BeforeEach(func() {
 		c = csi.NewControllerClient(conn)
 
-		if !isCapabilitySupported(c, csi.ControllerServiceCapability_RPC_LIST_VOLUMES) {
+		if !isControllerCapabilitySupported(c, csi.ControllerServiceCapability_RPC_LIST_VOLUMES) {
 			Skip("ListVolumes not supported")
 		}
-	})
-
-	It("should fail when no version is provided", func() {
-
-		By("failing when there is no version")
-		_, err := c.ListVolumes(
-			context.Background(),
-			&csi.ListVolumesRequest{})
-		Expect(err).To(HaveOccurred())
-
-		serverError, ok := status.FromError(err)
-		Expect(ok).To(BeTrue())
-		Expect(serverError.Code()).To(Equal(codes.InvalidArgument))
 	})
 
 	It("should return appropriate values (no optional values added)", func() {
 		vols, err := c.ListVolumes(
 			context.Background(),
-			&csi.ListVolumesRequest{
-				Version: csiClientVersion,
-			})
+			&csi.ListVolumesRequest{})
 		Expect(err).NotTo(HaveOccurred())
 		Expect(vols).NotTo(BeNil())
 
 		for _, vol := range vols.GetEntries() {
-			verifyVolumeInfo(vol.GetVolumeInfo())
+			verifyVolumeInfo(vol.GetVolume())
 		}
 	})
 
@@ -197,30 +152,16 @@ var _ = Describe("CreateVolume [Controller Server]", func() {
 	BeforeEach(func() {
 		c = csi.NewControllerClient(conn)
 
-		if !isCapabilitySupported(c, csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME) {
+		if !isControllerCapabilitySupported(c, csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME) {
 			Skip("CreateVolume not supported")
 		}
-	})
-
-	It("should fail when no version is provided", func() {
-
-		_, err := c.CreateVolume(
-			context.Background(),
-			&csi.CreateVolumeRequest{})
-		Expect(err).To(HaveOccurred())
-
-		serverError, ok := status.FromError(err)
-		Expect(ok).To(BeTrue())
-		Expect(serverError.Code()).To(Equal(codes.InvalidArgument))
 	})
 
 	It("should fail when no name is provided", func() {
 
 		_, err := c.CreateVolume(
 			context.Background(),
-			&csi.CreateVolumeRequest{
-				Version: csiClientVersion,
-			})
+			&csi.CreateVolumeRequest{})
 		Expect(err).To(HaveOccurred())
 
 		serverError, ok := status.FromError(err)
@@ -233,8 +174,7 @@ var _ = Describe("CreateVolume [Controller Server]", func() {
 		_, err := c.CreateVolume(
 			context.Background(),
 			&csi.CreateVolumeRequest{
-				Version: csiClientVersion,
-				Name:    "name",
+				Name: "name",
 			})
 		Expect(err).To(HaveOccurred())
 
@@ -250,10 +190,9 @@ var _ = Describe("CreateVolume [Controller Server]", func() {
 		vol, err := c.CreateVolume(
 			context.Background(),
 			&csi.CreateVolumeRequest{
-				Version: csiClientVersion,
-				Name:    name,
+				Name: name,
 				VolumeCapabilities: []*csi.VolumeCapability{
-					&csi.VolumeCapability{
+					{
 						AccessType: &csi.VolumeCapability_Mount{
 							Mount: &csi.VolumeCapability_MountVolume{},
 						},
@@ -265,32 +204,74 @@ var _ = Describe("CreateVolume [Controller Server]", func() {
 			})
 		Expect(err).NotTo(HaveOccurred())
 		Expect(vol).NotTo(BeNil())
-		Expect(vol.GetVolumeInfo()).NotTo(BeNil())
-		Expect(vol.GetVolumeInfo().GetId()).NotTo(BeEmpty())
+		Expect(vol.GetVolume()).NotTo(BeNil())
+		Expect(vol.GetVolume().GetId()).NotTo(BeEmpty())
 
 		By("cleaning up deleting the volume")
 		_, err = c.DeleteVolume(
 			context.Background(),
 			&csi.DeleteVolumeRequest{
-				Version:  csiClientVersion,
-				VolumeId: vol.GetVolumeInfo().GetId(),
+				VolumeId: vol.GetVolume().GetId(),
 			})
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	// Pending fix in mock file
 	It("should return appropriate values SingleNodeWriter WithCapacity 1Gi Type:Mount", func() {
 
 		By("creating a volume")
 		name := "sanity"
-		size := uint64(1 * 1024 * 1024 * 1024)
+		size := int64(1 * 1024 * 1024 * 1024)
 		vol, err := c.CreateVolume(
 			context.Background(),
 			&csi.CreateVolumeRequest{
-				Version: csiClientVersion,
-				Name:    name,
+				Name: name,
 				VolumeCapabilities: []*csi.VolumeCapability{
-					&csi.VolumeCapability{
+					{
+						AccessType: &csi.VolumeCapability_Mount{
+							Mount: &csi.VolumeCapability_MountVolume{},
+						},
+						AccessMode: &csi.VolumeCapability_AccessMode{
+							Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+						},
+					},
+				},
+				CapacityRange: &csi.CapacityRange{
+					RequiredBytes: size,
+				},
+			})
+		if serverError, ok := status.FromError(err); ok {
+			if serverError.Code() == codes.OutOfRange || serverError.Code() == codes.Unimplemented {
+				Skip("Required bytes not supported")
+			} else {
+				Expect(err).NotTo(HaveOccurred())
+			}
+		} else {
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(vol).NotTo(BeNil())
+			Expect(vol.GetVolume()).NotTo(BeNil())
+			Expect(vol.GetVolume().GetId()).NotTo(BeEmpty())
+			Expect(vol.GetVolume().GetCapacityBytes()).To(Equal(size))
+		}
+		By("cleaning up deleting the volume")
+		_, err = c.DeleteVolume(
+			context.Background(),
+			&csi.DeleteVolumeRequest{
+				VolumeId: vol.GetVolume().GetId(),
+			})
+		Expect(err).NotTo(HaveOccurred())
+	})
+	It("should not fail when requesting to create a volume with already exisiting name and same capacity.", func() {
+
+		By("creating a volume")
+		name := "sanity"
+		size := int64(1 * 1024 * 1024 * 1024)
+		vol1, err := c.CreateVolume(
+			context.Background(),
+			&csi.CreateVolumeRequest{
+				Name: name,
+				VolumeCapabilities: []*csi.VolumeCapability{
+					{
 						AccessType: &csi.VolumeCapability_Mount{
 							Mount: &csi.VolumeCapability_MountVolume{},
 						},
@@ -304,17 +285,99 @@ var _ = Describe("CreateVolume [Controller Server]", func() {
 				},
 			})
 		Expect(err).NotTo(HaveOccurred())
-		Expect(vol).NotTo(BeNil())
-		Expect(vol.GetVolumeInfo()).NotTo(BeNil())
-		Expect(vol.GetVolumeInfo().GetId()).NotTo(BeEmpty())
-		Expect(vol.GetVolumeInfo().GetCapacityBytes()).To(Equal(size))
+		Expect(vol1).NotTo(BeNil())
+		Expect(vol1.GetVolume()).NotTo(BeNil())
+		Expect(vol1.GetVolume().GetId()).NotTo(BeEmpty())
+		Expect(vol1.GetVolume().GetCapacityBytes()).To(Equal(size))
+		vol2, err := c.CreateVolume(
+			context.Background(),
+			&csi.CreateVolumeRequest{
+				Name: name,
+				VolumeCapabilities: []*csi.VolumeCapability{
+					{
+						AccessType: &csi.VolumeCapability_Mount{
+							Mount: &csi.VolumeCapability_MountVolume{},
+						},
+						AccessMode: &csi.VolumeCapability_AccessMode{
+							Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+						},
+					},
+				},
+				CapacityRange: &csi.CapacityRange{
+					RequiredBytes: size,
+				},
+			})
+		Expect(err).NotTo(HaveOccurred())
+		Expect(vol2).NotTo(BeNil())
+		Expect(vol2.GetVolume()).NotTo(BeNil())
+		Expect(vol2.GetVolume().GetId()).NotTo(BeEmpty())
+		Expect(vol2.GetVolume().GetCapacityBytes()).To(Equal(size))
+		Expect(vol1.GetVolume().GetId()).To(Equal(vol2.GetVolume().GetId()))
 
 		By("cleaning up deleting the volume")
 		_, err = c.DeleteVolume(
 			context.Background(),
 			&csi.DeleteVolumeRequest{
-				Version:  csiClientVersion,
-				VolumeId: vol.GetVolumeInfo().GetId(),
+				VolumeId: vol1.GetVolume().GetId(),
+			})
+		Expect(err).NotTo(HaveOccurred())
+	})
+	It("should fail when requesting to create a volume with already exisiting name and different capacity.", func() {
+
+		By("creating a volume")
+		name := "sanity"
+		size1 := int64(1 * 1024 * 1024 * 1024)
+		vol1, err := c.CreateVolume(
+			context.Background(),
+			&csi.CreateVolumeRequest{
+				Name: name,
+				VolumeCapabilities: []*csi.VolumeCapability{
+					{
+						AccessType: &csi.VolumeCapability_Mount{
+							Mount: &csi.VolumeCapability_MountVolume{},
+						},
+						AccessMode: &csi.VolumeCapability_AccessMode{
+							Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+						},
+					},
+				},
+				CapacityRange: &csi.CapacityRange{
+					RequiredBytes: size1,
+				},
+			})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(vol1).NotTo(BeNil())
+		Expect(vol1.GetVolume()).NotTo(BeNil())
+		Expect(vol1.GetVolume().GetId()).NotTo(BeEmpty())
+		size2 := int64(2 * 1024 * 1024 * 1024)
+		_, err = c.CreateVolume(
+			context.Background(),
+			&csi.CreateVolumeRequest{
+				Name: name,
+				VolumeCapabilities: []*csi.VolumeCapability{
+					{
+						AccessType: &csi.VolumeCapability_Mount{
+							Mount: &csi.VolumeCapability_MountVolume{},
+						},
+						AccessMode: &csi.VolumeCapability_AccessMode{
+							Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+						},
+					},
+				},
+				CapacityRange: &csi.CapacityRange{
+					RequiredBytes: size2,
+				},
+			})
+		Expect(err).To(HaveOccurred())
+		serverError, ok := status.FromError(err)
+		Expect(ok).To(BeTrue())
+		Expect(serverError.Code()).To(Equal(codes.AlreadyExists))
+
+		By("cleaning up deleting the volume")
+		_, err = c.DeleteVolume(
+			context.Background(),
+			&csi.DeleteVolumeRequest{
+				VolumeId: vol1.GetVolume().GetId(),
 			})
 		Expect(err).NotTo(HaveOccurred())
 	})
@@ -328,30 +391,16 @@ var _ = Describe("DeleteVolume [Controller Server]", func() {
 	BeforeEach(func() {
 		c = csi.NewControllerClient(conn)
 
-		if !isCapabilitySupported(c, csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME) {
+		if !isControllerCapabilitySupported(c, csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME) {
 			Skip("DeleteVolume not supported")
 		}
-	})
-
-	It("should fail when no version is provided", func() {
-
-		_, err := c.DeleteVolume(
-			context.Background(),
-			&csi.DeleteVolumeRequest{})
-		Expect(err).To(HaveOccurred())
-
-		serverError, ok := status.FromError(err)
-		Expect(ok).To(BeTrue())
-		Expect(serverError.Code()).To(Equal(codes.InvalidArgument))
 	})
 
 	It("should fail when no volume id is provided", func() {
 
 		_, err := c.DeleteVolume(
 			context.Background(),
-			&csi.DeleteVolumeRequest{
-				Version: csiClientVersion,
-			})
+			&csi.DeleteVolumeRequest{})
 		Expect(err).To(HaveOccurred())
 
 		serverError, ok := status.FromError(err)
@@ -364,7 +413,6 @@ var _ = Describe("DeleteVolume [Controller Server]", func() {
 		_, err := c.DeleteVolume(
 			context.Background(),
 			&csi.DeleteVolumeRequest{
-				Version:  csiClientVersion,
 				VolumeId: "reallyfakevolumeid",
 			})
 		Expect(err).NotTo(HaveOccurred())
@@ -378,10 +426,9 @@ var _ = Describe("DeleteVolume [Controller Server]", func() {
 		vol, err := c.CreateVolume(
 			context.Background(),
 			&csi.CreateVolumeRequest{
-				Version: csiClientVersion,
-				Name:    name,
+				Name: name,
 				VolumeCapabilities: []*csi.VolumeCapability{
-					&csi.VolumeCapability{
+					{
 						AccessType: &csi.VolumeCapability_Mount{
 							Mount: &csi.VolumeCapability_MountVolume{},
 						},
@@ -394,16 +441,15 @@ var _ = Describe("DeleteVolume [Controller Server]", func() {
 
 		Expect(err).NotTo(HaveOccurred())
 		Expect(vol).NotTo(BeNil())
-		Expect(vol.GetVolumeInfo()).NotTo(BeNil())
-		Expect(vol.GetVolumeInfo().GetId()).NotTo(BeEmpty())
+		Expect(vol.GetVolume()).NotTo(BeNil())
+		Expect(vol.GetVolume().GetId()).NotTo(BeEmpty())
 
 		// Delete Volume
 		By("deleting a volume")
 		_, err = c.DeleteVolume(
 			context.Background(),
 			&csi.DeleteVolumeRequest{
-				Version:  csiClientVersion,
-				VolumeId: vol.GetVolumeInfo().GetId(),
+				VolumeId: vol.GetVolume().GetId(),
 			})
 		Expect(err).NotTo(HaveOccurred())
 	})
@@ -418,25 +464,11 @@ var _ = Describe("ValidateVolumeCapabilities [Controller Server]", func() {
 		c = csi.NewControllerClient(conn)
 	})
 
-	It("should fail when no version is provided", func() {
-
-		_, err := c.ValidateVolumeCapabilities(
-			context.Background(),
-			&csi.ValidateVolumeCapabilitiesRequest{})
-		Expect(err).To(HaveOccurred())
-
-		serverError, ok := status.FromError(err)
-		Expect(ok).To(BeTrue())
-		Expect(serverError.Code()).To(Equal(codes.InvalidArgument))
-	})
-
 	It("should fail when no volume id is provided", func() {
 
 		_, err := c.ValidateVolumeCapabilities(
 			context.Background(),
-			&csi.ValidateVolumeCapabilitiesRequest{
-				Version: csiClientVersion,
-			})
+			&csi.ValidateVolumeCapabilitiesRequest{})
 		Expect(err).To(HaveOccurred())
 
 		serverError, ok := status.FromError(err)
@@ -449,7 +481,6 @@ var _ = Describe("ValidateVolumeCapabilities [Controller Server]", func() {
 		_, err := c.ValidateVolumeCapabilities(
 			context.Background(),
 			&csi.ValidateVolumeCapabilitiesRequest{
-				Version:  csiClientVersion,
 				VolumeId: "id",
 			})
 		Expect(err).To(HaveOccurred())
@@ -467,10 +498,9 @@ var _ = Describe("ValidateVolumeCapabilities [Controller Server]", func() {
 		vol, err := c.CreateVolume(
 			context.Background(),
 			&csi.CreateVolumeRequest{
-				Version: csiClientVersion,
-				Name:    name,
+				Name: name,
 				VolumeCapabilities: []*csi.VolumeCapability{
-					&csi.VolumeCapability{
+					{
 						AccessType: &csi.VolumeCapability_Mount{
 							Mount: &csi.VolumeCapability_MountVolume{},
 						},
@@ -483,18 +513,17 @@ var _ = Describe("ValidateVolumeCapabilities [Controller Server]", func() {
 
 		Expect(err).NotTo(HaveOccurred())
 		Expect(vol).NotTo(BeNil())
-		Expect(vol.GetVolumeInfo()).NotTo(BeNil())
-		Expect(vol.GetVolumeInfo().GetId()).NotTo(BeEmpty())
+		Expect(vol.GetVolume()).NotTo(BeNil())
+		Expect(vol.GetVolume().GetId()).NotTo(BeEmpty())
 
 		// ValidateVolumeCapabilities
 		By("validating volume capabilities")
 		valivolcap, err := c.ValidateVolumeCapabilities(
 			context.Background(),
 			&csi.ValidateVolumeCapabilitiesRequest{
-				Version:  csiClientVersion,
-				VolumeId: vol.GetVolumeInfo().GetId(),
+				VolumeId: vol.GetVolume().GetId(),
 				VolumeCapabilities: []*csi.VolumeCapability{
-					&csi.VolumeCapability{
+					{
 						AccessType: &csi.VolumeCapability_Mount{
 							Mount: &csi.VolumeCapability_MountVolume{},
 						},
@@ -512,8 +541,7 @@ var _ = Describe("ValidateVolumeCapabilities [Controller Server]", func() {
 		_, err = c.DeleteVolume(
 			context.Background(),
 			&csi.DeleteVolumeRequest{
-				Version:  csiClientVersion,
-				VolumeId: vol.GetVolumeInfo().GetId(),
+				VolumeId: vol.GetVolume().GetId(),
 			})
 		Expect(err).NotTo(HaveOccurred())
 	})
@@ -529,30 +557,16 @@ var _ = Describe("ControllerPublishVolume [Controller Server]", func() {
 		c = csi.NewControllerClient(conn)
 		n = csi.NewNodeClient(conn)
 
-		if !isCapabilitySupported(c, csi.ControllerServiceCapability_RPC_PUBLISH_UNPUBLISH_VOLUME) {
+		if !isControllerCapabilitySupported(c, csi.ControllerServiceCapability_RPC_PUBLISH_UNPUBLISH_VOLUME) {
 			Skip("ControllerPublishVolume not supported")
 		}
-	})
-
-	It("should fail when no version is provided", func() {
-
-		_, err := c.ControllerPublishVolume(
-			context.Background(),
-			&csi.ControllerPublishVolumeRequest{})
-		Expect(err).To(HaveOccurred())
-
-		serverError, ok := status.FromError(err)
-		Expect(ok).To(BeTrue())
-		Expect(serverError.Code()).To(Equal(codes.InvalidArgument))
 	})
 
 	It("should fail when no volume id is provided", func() {
 
 		_, err := c.ControllerPublishVolume(
 			context.Background(),
-			&csi.ControllerPublishVolumeRequest{
-				Version: csiClientVersion,
-			})
+			&csi.ControllerPublishVolumeRequest{})
 		Expect(err).To(HaveOccurred())
 
 		serverError, ok := status.FromError(err)
@@ -565,7 +579,6 @@ var _ = Describe("ControllerPublishVolume [Controller Server]", func() {
 		_, err := c.ControllerPublishVolume(
 			context.Background(),
 			&csi.ControllerPublishVolumeRequest{
-				Version:  csiClientVersion,
 				VolumeId: "id",
 			})
 		Expect(err).To(HaveOccurred())
@@ -580,7 +593,6 @@ var _ = Describe("ControllerPublishVolume [Controller Server]", func() {
 		_, err := c.ControllerPublishVolume(
 			context.Background(),
 			&csi.ControllerPublishVolumeRequest{
-				Version:  csiClientVersion,
 				VolumeId: "id",
 				NodeId:   "fakenode",
 			})
@@ -599,10 +611,9 @@ var _ = Describe("ControllerPublishVolume [Controller Server]", func() {
 		vol, err := c.CreateVolume(
 			context.Background(),
 			&csi.CreateVolumeRequest{
-				Version: csiClientVersion,
-				Name:    name,
+				Name: name,
 				VolumeCapabilities: []*csi.VolumeCapability{
-					&csi.VolumeCapability{
+					{
 						AccessType: &csi.VolumeCapability_Mount{
 							Mount: &csi.VolumeCapability_MountVolume{},
 						},
@@ -614,15 +625,13 @@ var _ = Describe("ControllerPublishVolume [Controller Server]", func() {
 			})
 		Expect(err).NotTo(HaveOccurred())
 		Expect(vol).NotTo(BeNil())
-		Expect(vol.GetVolumeInfo()).NotTo(BeNil())
-		Expect(vol.GetVolumeInfo().GetId()).NotTo(BeEmpty())
+		Expect(vol.GetVolume()).NotTo(BeNil())
+		Expect(vol.GetVolume().GetId()).NotTo(BeEmpty())
 
 		By("getting a node id")
-		nid, err := n.GetNodeID(
+		nid, err := n.NodeGetId(
 			context.Background(),
-			&csi.GetNodeIDRequest{
-				Version: csiClientVersion,
-			})
+			&csi.NodeGetIdRequest{})
 		Expect(err).NotTo(HaveOccurred())
 		Expect(nid).NotTo(BeNil())
 		Expect(nid.GetNodeId()).NotTo(BeEmpty())
@@ -632,8 +641,7 @@ var _ = Describe("ControllerPublishVolume [Controller Server]", func() {
 		conpubvol, err := c.ControllerPublishVolume(
 			context.Background(),
 			&csi.ControllerPublishVolumeRequest{
-				Version:  csiClientVersion,
-				VolumeId: vol.GetVolumeInfo().GetId(),
+				VolumeId: vol.GetVolume().GetId(),
 				NodeId:   nid.GetNodeId(),
 				VolumeCapability: &csi.VolumeCapability{
 					AccessType: &csi.VolumeCapability_Mount{
@@ -652,8 +660,7 @@ var _ = Describe("ControllerPublishVolume [Controller Server]", func() {
 		conunpubvol, err := c.ControllerUnpublishVolume(
 			context.Background(),
 			&csi.ControllerUnpublishVolumeRequest{
-				Version:  csiClientVersion,
-				VolumeId: vol.GetVolumeInfo().GetId(),
+				VolumeId: vol.GetVolume().GetId(),
 				// NodeID is optional in ControllerUnpublishVolume
 				NodeId: nid.GetNodeId(),
 			})
@@ -664,8 +671,7 @@ var _ = Describe("ControllerPublishVolume [Controller Server]", func() {
 		_, err = c.DeleteVolume(
 			context.Background(),
 			&csi.DeleteVolumeRequest{
-				Version:  csiClientVersion,
-				VolumeId: vol.GetVolumeInfo().GetId(),
+				VolumeId: vol.GetVolume().GetId(),
 			})
 		Expect(err).NotTo(HaveOccurred())
 	})
@@ -681,30 +687,16 @@ var _ = Describe("ControllerUnpublishVolume [Controller Server]", func() {
 		c = csi.NewControllerClient(conn)
 		n = csi.NewNodeClient(conn)
 
-		if !isCapabilitySupported(c, csi.ControllerServiceCapability_RPC_PUBLISH_UNPUBLISH_VOLUME) {
+		if !isControllerCapabilitySupported(c, csi.ControllerServiceCapability_RPC_PUBLISH_UNPUBLISH_VOLUME) {
 			Skip("ControllerUnpublishVolume not supported")
 		}
-	})
-
-	It("should fail when no version is provided", func() {
-
-		_, err := c.ControllerUnpublishVolume(
-			context.Background(),
-			&csi.ControllerUnpublishVolumeRequest{})
-		Expect(err).To(HaveOccurred())
-
-		serverError, ok := status.FromError(err)
-		Expect(ok).To(BeTrue())
-		Expect(serverError.Code()).To(Equal(codes.InvalidArgument))
 	})
 
 	It("should fail when no volume id is provided", func() {
 
 		_, err := c.ControllerUnpublishVolume(
 			context.Background(),
-			&csi.ControllerUnpublishVolumeRequest{
-				Version: csiClientVersion,
-			})
+			&csi.ControllerUnpublishVolumeRequest{})
 		Expect(err).To(HaveOccurred())
 
 		serverError, ok := status.FromError(err)
@@ -720,10 +712,9 @@ var _ = Describe("ControllerUnpublishVolume [Controller Server]", func() {
 		vol, err := c.CreateVolume(
 			context.Background(),
 			&csi.CreateVolumeRequest{
-				Version: csiClientVersion,
-				Name:    name,
+				Name: name,
 				VolumeCapabilities: []*csi.VolumeCapability{
-					&csi.VolumeCapability{
+					{
 						AccessType: &csi.VolumeCapability_Mount{
 							Mount: &csi.VolumeCapability_MountVolume{},
 						},
@@ -735,15 +726,13 @@ var _ = Describe("ControllerUnpublishVolume [Controller Server]", func() {
 			})
 		Expect(err).NotTo(HaveOccurred())
 		Expect(vol).NotTo(BeNil())
-		Expect(vol.GetVolumeInfo()).NotTo(BeNil())
-		Expect(vol.GetVolumeInfo().GetId()).NotTo(BeEmpty())
+		Expect(vol.GetVolume()).NotTo(BeNil())
+		Expect(vol.GetVolume().GetId()).NotTo(BeEmpty())
 
 		By("getting a node id")
-		nid, err := n.GetNodeID(
+		nid, err := n.NodeGetId(
 			context.Background(),
-			&csi.GetNodeIDRequest{
-				Version: csiClientVersion,
-			})
+			&csi.NodeGetIdRequest{})
 		Expect(err).NotTo(HaveOccurred())
 		Expect(nid).NotTo(BeNil())
 		Expect(nid.GetNodeId()).NotTo(BeEmpty())
@@ -753,8 +742,7 @@ var _ = Describe("ControllerUnpublishVolume [Controller Server]", func() {
 		conpubvol, err := c.ControllerPublishVolume(
 			context.Background(),
 			&csi.ControllerPublishVolumeRequest{
-				Version:  csiClientVersion,
-				VolumeId: vol.GetVolumeInfo().GetId(),
+				VolumeId: vol.GetVolume().GetId(),
 				NodeId:   nid.GetNodeId(),
 				VolumeCapability: &csi.VolumeCapability{
 					AccessType: &csi.VolumeCapability_Mount{
@@ -774,8 +762,7 @@ var _ = Describe("ControllerUnpublishVolume [Controller Server]", func() {
 		conunpubvol, err := c.ControllerUnpublishVolume(
 			context.Background(),
 			&csi.ControllerUnpublishVolumeRequest{
-				Version:  csiClientVersion,
-				VolumeId: vol.GetVolumeInfo().GetId(),
+				VolumeId: vol.GetVolume().GetId(),
 				// NodeID is optional in ControllerUnpublishVolume
 				NodeId: nid.GetNodeId(),
 			})
@@ -786,8 +773,7 @@ var _ = Describe("ControllerUnpublishVolume [Controller Server]", func() {
 		_, err = c.DeleteVolume(
 			context.Background(),
 			&csi.DeleteVolumeRequest{
-				Version:  csiClientVersion,
-				VolumeId: vol.GetVolumeInfo().GetId(),
+				VolumeId: vol.GetVolume().GetId(),
 			})
 		Expect(err).NotTo(HaveOccurred())
 	})

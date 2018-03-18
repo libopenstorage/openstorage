@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/container-storage-interface/spec/lib/go/csi"
+	csi "github.com/container-storage-interface/spec/lib/go/csi/v0"
 	"github.com/golang/mock/gomock"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/stretchr/testify/assert"
@@ -49,39 +49,15 @@ func TestNewCSIServerGetNodeId(t *testing.T) {
 		Times(1)
 
 	// Setup request
-	req := &csi.GetNodeIDRequest{
-		Version: &csi.Version{},
-	}
+	req := &csi.NodeGetIdRequest{}
 
-	r, err := c.GetNodeID(context.Background(), req)
+	r, err := c.NodeGetId(context.Background(), req)
 	assert.Nil(t, err)
 	assert.NotNil(t, r)
 
 	// Verify
 	nodeid := r.GetNodeId()
 	assert.Equal(t, nodeid, "pwx-testnodeid")
-}
-
-func TestNewCSIServerGetNodeIdNoVersion(t *testing.T) {
-
-	// Create server and client connection
-	s := newTestServer(t)
-	defer s.Stop()
-
-	// Make a call
-	c := csi.NewNodeClient(s.Conn())
-
-	// Setup request
-	req := &csi.GetNodeIDRequest{}
-
-	// Expect error without version
-	_, err := c.GetNodeID(context.Background(), req)
-
-	assert.NotNil(t, err)
-	serverError, ok := status.FromError(err)
-	assert.True(t, ok)
-	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "Version")
 }
 
 func TestNewCSIServerGetNodeIdEnumerateError(t *testing.T) {
@@ -100,12 +76,10 @@ func TestNewCSIServerGetNodeIdEnumerateError(t *testing.T) {
 		Times(1)
 
 	// Setup request
-	req := &csi.GetNodeIDRequest{
-		Version: &csi.Version{},
-	}
+	req := &csi.NodeGetIdRequest{}
 
 	// Expect error without version
-	_, err := c.GetNodeID(context.Background(), req)
+	_, err := c.NodeGetId(context.Background(), req)
 
 	assert.NotNil(t, err)
 	serverError, ok := status.FromError(err)
@@ -127,26 +101,18 @@ func TestNodePublishVolumeBadArguments(t *testing.T) {
 		req                   *csi.NodePublishVolumeRequest
 	}{
 		{
-			expectedErrorContains: "Version",
-			req: &csi.NodePublishVolumeRequest{},
-		},
-		{
 			expectedErrorContains: "Volume id",
-			req: &csi.NodePublishVolumeRequest{
-				Version: &csi.Version{},
-			},
+			req: &csi.NodePublishVolumeRequest{},
 		},
 		{
 			expectedErrorContains: "Target path",
 			req: &csi.NodePublishVolumeRequest{
-				Version:  &csi.Version{},
 				VolumeId: "abc",
 			},
 		},
 		{
 			expectedErrorContains: "Volume access mode",
 			req: &csi.NodePublishVolumeRequest{
-				Version:    &csi.Version{},
 				VolumeId:   "abc",
 				TargetPath: "mypath",
 			},
@@ -154,7 +120,6 @@ func TestNodePublishVolumeBadArguments(t *testing.T) {
 		{
 			expectedErrorContains: "Volume access mode",
 			req: &csi.NodePublishVolumeRequest{
-				Version:          &csi.Version{},
 				VolumeId:         "abc",
 				TargetPath:       "mypath",
 				VolumeCapability: &csi.VolumeCapability{},
@@ -197,7 +162,6 @@ func TestNodePublishVolumeVolumeNotFound(t *testing.T) {
 	)
 
 	req := &csi.NodePublishVolumeRequest{
-		Version:    &csi.Version{},
 		VolumeId:   name,
 		TargetPath: "mypath",
 		VolumeCapability: &csi.VolumeCapability{
@@ -240,7 +204,6 @@ func TestNodePublishVolumeBadAttribute(t *testing.T) {
 		Times(1)
 
 	req := &csi.NodePublishVolumeRequest{
-		Version:    &csi.Version{},
 		VolumeId:   name,
 		TargetPath: "mypath",
 		VolumeCapability: &csi.VolumeCapability{
@@ -293,7 +256,6 @@ func TestNodePublishVolumeInvalidTargetLocation(t *testing.T) {
 		Times(len(testargs))
 
 	req := &csi.NodePublishVolumeRequest{
-		Version:  &csi.Version{},
 		VolumeId: name,
 		VolumeCapability: &csi.VolumeCapability{
 			AccessMode: &csi.VolumeCapability_AccessMode{},
@@ -350,7 +312,6 @@ func TestNodePublishVolumeFailedToAttach(t *testing.T) {
 	)
 
 	req := &csi.NodePublishVolumeRequest{
-		Version:    &csi.Version{},
 		VolumeId:   name,
 		TargetPath: "/mnt",
 		VolumeCapability: &csi.VolumeCapability{
@@ -417,7 +378,6 @@ func TestNodePublishVolumeFailedMount(t *testing.T) {
 	)
 
 	req := &csi.NodePublishVolumeRequest{
-		Version:    &csi.Version{},
 		VolumeId:   name,
 		TargetPath: targetPath,
 		VolumeCapability: &csi.VolumeCapability{
@@ -479,7 +439,6 @@ func TestNodePublishVolumeMount(t *testing.T) {
 	)
 
 	req := &csi.NodePublishVolumeRequest{
-		Version:    &csi.Version{},
 		VolumeId:   name,
 		TargetPath: targetPath,
 		VolumeCapability: &csi.VolumeCapability{
@@ -517,7 +476,6 @@ func TestNodeUnpublishVolumeVolumeNotFound(t *testing.T) {
 	)
 
 	req := &csi.NodeUnpublishVolumeRequest{
-		Version:    &csi.Version{},
 		VolumeId:   name,
 		TargetPath: "mypath",
 	}
@@ -562,7 +520,6 @@ func TestNodeUnpublishVolumeInvalidTargetLocation(t *testing.T) {
 		Times(len(testargs))
 
 	req := &csi.NodeUnpublishVolumeRequest{
-		Version:  &csi.Version{},
 		VolumeId: name,
 	}
 
@@ -612,7 +569,6 @@ func TestNodeUnpublishVolumeFailedToUnmount(t *testing.T) {
 	)
 
 	req := &csi.NodeUnpublishVolumeRequest{
-		Version:    &csi.Version{},
 		VolumeId:   name,
 		TargetPath: "/mnt",
 	}
@@ -671,7 +627,6 @@ func TestNodeUnpublishVolumeFailedDetach(t *testing.T) {
 	)
 
 	req := &csi.NodeUnpublishVolumeRequest{
-		Version:    &csi.Version{},
 		VolumeId:   name,
 		TargetPath: targetPath,
 	}
@@ -730,7 +685,6 @@ func TestNodeUnpublishVolumeUnmount(t *testing.T) {
 	)
 
 	req := &csi.NodeUnpublishVolumeRequest{
-		Version:    &csi.Version{},
 		VolumeId:   name,
 		TargetPath: targetPath,
 	}
@@ -738,27 +692,6 @@ func TestNodeUnpublishVolumeUnmount(t *testing.T) {
 	r, err := c.NodeUnpublishVolume(context.Background(), req)
 	assert.Nil(t, err)
 	assert.NotNil(t, r)
-}
-
-func TestNodeProbe(t *testing.T) {
-	// Create server and client connection
-	s := newTestServer(t)
-	defer s.Stop()
-
-	// Make a call
-	c := csi.NewNodeClient(s.Conn())
-
-	// No version
-	_, err := c.NodeProbe(context.Background(), &csi.NodeProbeRequest{})
-	assert.Error(t, err)
-
-	// Get Capabilities
-	_, err = c.NodeProbe(
-		context.Background(),
-		&csi.NodeProbeRequest{
-			Version: &csi.Version{},
-		})
-	assert.NoError(t, err)
 }
 
 func TestNodeGetCapabilities(t *testing.T) {
@@ -769,18 +702,10 @@ func TestNodeGetCapabilities(t *testing.T) {
 	// Make a call
 	c := csi.NewNodeClient(s.Conn())
 
-	// No version
-	_, err := c.NodeGetCapabilities(
-		context.Background(),
-		&csi.NodeGetCapabilitiesRequest{})
-	assert.Error(t, err)
-
 	// Get Capabilities
 	r, err := c.NodeGetCapabilities(
 		context.Background(),
-		&csi.NodeGetCapabilitiesRequest{
-			Version: &csi.Version{},
-		})
+		&csi.NodeGetCapabilitiesRequest{})
 	assert.NoError(t, err)
 	assert.Len(t, r.GetCapabilities(), 1)
 	assert.Equal(

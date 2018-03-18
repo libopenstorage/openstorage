@@ -19,52 +19,16 @@ package sanity
 import (
 	"regexp"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
-	"github.com/container-storage-interface/spec/lib/go/csi"
+	csi "github.com/container-storage-interface/spec/lib/go/csi/v0"
 	context "golang.org/x/net/context"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var (
-	csiClientVersion = &csi.Version{
-		Major: 0,
-		Minor: 1,
-		Patch: 0,
-	}
-)
+// TODO: Tests for GetPluginCapabilities
 
-var _ = Describe("GetSupportedVersions [Identity Server]", func() {
-	var (
-		c csi.IdentityClient
-	)
-
-	BeforeEach(func() {
-		c = csi.NewIdentityClient(conn)
-	})
-
-	It("should return an array of supported versions", func() {
-		res, err := c.GetSupportedVersions(
-			context.Background(),
-			&csi.GetSupportedVersionsRequest{})
-
-		By("checking response to have supported versions list")
-		Expect(err).NotTo(HaveOccurred())
-		Expect(res.GetSupportedVersions()).NotTo(BeNil())
-		Expect(len(res.GetSupportedVersions()) >= 1).To(BeTrue())
-
-		By("checking each version")
-		for _, version := range res.GetSupportedVersions() {
-			Expect(version).NotTo(BeNil())
-			Expect(version.GetMajor()).To(BeNumerically("<", 100))
-			Expect(version.GetMinor()).To(BeNumerically("<", 100))
-			Expect(version.GetPatch()).To(BeNumerically("<", 100))
-		}
-	})
-})
+// TODO: Tests for Probe
 
 var _ = Describe("GetPluginInfo [Identity Server]", func() {
 	var (
@@ -75,19 +39,8 @@ var _ = Describe("GetPluginInfo [Identity Server]", func() {
 		c = csi.NewIdentityClient(conn)
 	})
 
-	It("should fail when no version is provided", func() {
-		_, err := c.GetPluginInfo(context.Background(), &csi.GetPluginInfoRequest{})
-		Expect(err).To(HaveOccurred())
-
-		serverError, ok := status.FromError(err)
-		Expect(ok).To(BeTrue())
-		Expect(serverError.Code()).To(Equal(codes.InvalidArgument))
-	})
-
 	It("should return appropriate information", func() {
-		req := &csi.GetPluginInfoRequest{
-			Version: csiClientVersion,
-		}
+		req := &csi.GetPluginInfoRequest{}
 		res, err := c.GetPluginInfo(context.Background(), req)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(res).NotTo(BeNil())
