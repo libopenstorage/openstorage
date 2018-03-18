@@ -198,6 +198,19 @@ func (mr *MockClusterMockRecorder) GetNodeConf(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodeConf", reflect.TypeOf((*MockCluster)(nil).GetNodeConf), arg0)
 }
 
+// GetNodeIdFromIp mocks base method
+func (m *MockCluster) GetNodeIdFromIp(arg0 string) (string, error) {
+	ret := m.ctrl.Call(m, "GetNodeIdFromIp", arg0)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetNodeIdFromIp indicates an expected call of GetNodeIdFromIp
+func (mr *MockClusterMockRecorder) GetNodeIdFromIp(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodeIdFromIp", reflect.TypeOf((*MockCluster)(nil).GetNodeIdFromIp), arg0)
+}
+
 // Inspect mocks base method
 func (m *MockCluster) Inspect(arg0 string) (api.Node, error) {
 	ret := m.ctrl.Call(m, "Inspect", arg0)

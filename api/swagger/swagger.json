@@ -148,6 +148,35 @@
         }
       }
     },
+    "/cluster/getnodeidfromip/{id}": {
+      "get": {
+        "description": "this will return the node ID for the given node IP",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "cluster"
+        ],
+        "operationId": "GetNodeIdFromIp",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "cluster node ip or id",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "cluster node ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/cluster/inspect/{id}": {
       "get": {
         "description": "This will return the requested node object",
@@ -1570,40 +1599,35 @@
     "ClusterConfig": {
       "type": "object",
       "properties": {
-        "cluster_id": {
-          "type": "string",
-          "x-go-name": "ClusterId"
+        "ClusterId": {
+          "type": "string"
         },
-        "created": {
-          "type": "string",
-          "format": "date-time",
-          "x-go-name": "Created"
+        "DataIface": {
+          "type": "string"
         },
-        "description": {
-          "type": "string",
-          "x-go-name": "Description"
+        "DataIp": {
+          "type": "string"
         },
-        "domain": {
-          "type": "string",
-          "x-go-name": "Domain"
+        "DefaultDriver": {
+          "type": "string"
         },
-        "kvdb": {
-          "$ref": "#/definitions/KvdbConfig"
+        "FluentDHost": {
+          "type": "string"
         },
-        "mode": {
-          "type": "string",
-          "x-go-name": "Mode"
-        },
-        "private": {
-          "type": "object",
-          "x-go-name": "Private"
+        "LoggingURL": {
+          "type": "string"
         },
         "ManagementURL": {
           "type": "string"
         },
-        "version": {
-          "type": "string",
-          "x-go-name": "Version"
+        "MgmtIp": {
+          "type": "string"
+        },
+        "MgtIface": {
+          "type": "string"
+        },
+        "NodeId": {
+          "type": "string"
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/config"
@@ -2283,6 +2307,11 @@
         },
         "medium": {
           "$ref": "#/definitions/StorageMedium"
+        },
+        "metadata": {
+          "description": "True if dedicated for metadata.",
+          "type": "boolean",
+          "x-go-name": "Metadata"
         },
         "online": {
           "description": "True if this device is online.",

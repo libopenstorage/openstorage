@@ -30,5 +30,6 @@ func (c *clusterApi) Routes() []*Route {
 		{verb: "POST", path: clusterPath(client.UriCluster, cluster.APIVersion), fn: c.setClusterConf},
 		{verb: "POST", path: clusterPath(client.UriNode, cluster.APIVersion), fn: c.setNodeConf},
 		{verb: "DELETE", path: clusterPath(client.UriNode+"/{id}", cluster.APIVersion), fn: c.delNodeConf},
+		{verb: "GET", path: clusterPath("/getnodeidfromip/{idip}", cluster.APIVersion), fn: c.getnodeidfromip},
 	}
 }

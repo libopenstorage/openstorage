@@ -190,6 +190,8 @@ func (c *ClusterManager) getNodeEntry(nodeID string, clustDBRef *ClusterInfo) (a
 	var n api.Node
 	var ok bool
 
+	nodeID, _ = c.nodeIdFromIp(nodeID)
+
 	if nodeID == c.selfNode.Id {
 		n = *c.getCurrentState()
 	} else if n, ok = c.nodeCache[nodeID]; !ok {
@@ -264,6 +266,30 @@ func (c *ClusterManager) GetData() (map[string]*api.Node, error) {
 		nodes[value.Id] = copyValue
 	}
 	return nodes, nil
+}
+
+func (c *ClusterManager) nodeIdFromIp(idIp string) (string, error) {
+	// Caller's responsibility to lock the access to the NodeCache.
+	for _, n := range c.nodeCache {
+		if n.DataIp == idIp || n.MgmtIp == idIp {
+			logrus.Infof("Node IP: " + idIp + " maps to ID: " + n.Id)
+			return n.Id, nil // return Id
+		}
+	}
+
+	return idIp, errors.New("Failed to locate IP in this cluster.") // return input value
+}
+
+// GetNodeIdFromIp returns a Node Id given an IP.
+func (c *ClusterManager) GetNodeIdFromIp(idIp string) (string, error) {
+	addr := net.ParseIP(idIp)
+	if addr != nil { // Is an IP, lookup Id
+		c.nodeCacheLock.Lock()
+		defer c.nodeCacheLock.Unlock()
+		return c.nodeIdFromIp(idIp)
+	}
+
+	return idIp, nil // return input, assume its an Id
 }
 
 // getCurrentState always returns the copy of selfNode that
@@ -1398,6 +1424,13 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 	inQuorum := !(c.selfNode.Status == api.Status_STATUS_NOT_IN_QUORUM)
 
 	for _, n := range nodes {
+
+		if id, cerr := c.GetNodeIdFromIp(n.Id); cerr == nil {
+			if n.Id != id {
+				n.Id = id
+			}
+		}
+
 		node, exist := c.getNodeCacheEntry(n.Id)
 		if !exist {
 			node, resultErr = c.getNodeInfoFromClusterDb(n.Id)

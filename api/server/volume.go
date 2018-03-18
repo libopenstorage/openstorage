@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/errors"
+	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
 )
@@ -66,6 +67,47 @@ func (vd *volAPI) parseID(r *http.Request) (string, error) {
 	return "", fmt.Errorf("could not parse snap ID")
 }
 
+func (vd *volAPI) nodeIPtoIds(nodes []string) ([]string, error) {
+	nodeIds := make([]string, 0)
+
+	// Get cluster instance
+	c, err := cluster.Inst()
+	if err != nil {
+		return nodeIds, err
+	}
+
+	if c == nil {
+		return nodeIds, fmt.Errorf("failed to get cluster instance.")
+	}
+
+	for _, idIp := range nodes {
+		if idIp != "" {
+			id, err := c.GetNodeIdFromIp(idIp)
+			if err != nil {
+				return nodeIds, err
+			}
+			nodeIds = append(nodeIds, id)
+		}
+	}
+
+	return nodeIds, err
+}
+
+func (vd *volAPI) replicaSpecIPtoIds(rspecRef *api.ReplicaSet) error {
+	if rspecRef != nil && len(rspecRef.Nodes) > 0 {
+		nodeIds, err := vd.nodeIPtoIds(rspecRef.Nodes)
+		if err != nil {
+			return err
+		}
+
+		if len(nodeIds) > 0 {
+			rspecRef.Nodes = nodeIds
+		}
+	}
+
+	return nil
+}
+
 // swagger:operation POST /osd-volumes volume createVolume
 //
 // Creates a single volume with given spec.
@@ -105,6 +147,14 @@ func (vd *volAPI) create(w http.ResponseWriter, r *http.Request) {
 		notFound(w, r)
 		return
 	}
+
+	if dcReq.Spec != nil {
+		if err = vd.replicaSpecIPtoIds(dcReq.Spec.ReplicaSet); err != nil {
+			vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	}
+
 	id, err := d.Create(dcReq.Locator, dcReq.Source, dcReq.Spec)
 	dcRes.VolumeResponse = &api.VolumeResponse{Error: responseStatus(err)}
 	dcRes.Id = id
@@ -199,6 +249,12 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if req.Locator != nil || req.Spec != nil {
+		if req.Spec != nil {
+			if err = vd.replicaSpecIPtoIds(req.Spec.ReplicaSet); err != nil {
+				vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+				return
+			}
+		}
 		err = d.Set(volumeID, req.Locator, req.Spec)
 	}
 
