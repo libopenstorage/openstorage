@@ -12,6 +12,7 @@ before_install:
 install:
   - go get github.com/mattn/goveralls
   - go get -u github.com/vbatts/git-validation
+  - go get -u github.com/go-swagger/go-swagger/cmd/swagger
 script:
   - git-validation -run DCO,short-subject
   - go fmt $(go list ./... | grep -v vendor) | wc -l | grep 0
@@ -19,6 +20,7 @@ script:
   - make vet
   - make lint
   - make docker-test
+  - make docs
   - make docker-coverage
   - goveralls -coverprofile=/mnt/coverage.out -service=travis-ci -repotoken "${COVERALLS_TOKEN}"
   - if [ "${TRAVIS_BRANCH}" == "master" ] && [ "${TRAVIS_PULL_REQUEST}" == "false" ]; then

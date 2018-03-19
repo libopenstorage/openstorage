@@ -4,11 +4,13 @@
 //
 // OpenStorage is a clustered implementation of the Open Storage specification and relies on the OCI runtime.
 // It allows you to run stateful services in containers in a multi-host clustered environment.
+// This document represents the API documentaton of Openstorage, for the GO client please visit:
+// https://github.com/libopenstorage/openstorage
 //
 //     Schemes: http, https
 //     Host: localhost
 //     BasePath: /v1
-//     Version: 1.0.0
+//     Version: 2.0.0
 //     License: APACHE2 https://opensource.org/licenses/Apache-2.0
 //     Contact: https://github.com/libopenstorage/openstorage
 //
