@@ -60,6 +60,18 @@ func (mr *MockClusterMockRecorder) ClearAlert(arg0, arg1 interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearAlert", reflect.TypeOf((*MockCluster)(nil).ClearAlert), arg0, arg1)
 }
 
+// DeleteNodeConf mocks base method
+func (m *MockCluster) DeleteNodeConf(arg0 string) error {
+	ret := m.ctrl.Call(m, "DeleteNodeConf", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteNodeConf indicates an expected call of DeleteNodeConf
+func (mr *MockClusterMockRecorder) DeleteNodeConf(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteNodeConf", reflect.TypeOf((*MockCluster)(nil).DeleteNodeConf), arg0)
+}
+
 // DisableUpdates mocks base method
 func (m *MockCluster) DisableUpdates() error {
 	ret := m.ctrl.Call(m, "DisableUpdates")
@@ -108,6 +120,19 @@ func (m *MockCluster) EnumerateAlerts(arg0, arg1 time.Time, arg2 api.ResourceTyp
 // EnumerateAlerts indicates an expected call of EnumerateAlerts
 func (mr *MockClusterMockRecorder) EnumerateAlerts(arg0, arg1, arg2 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnumerateAlerts", reflect.TypeOf((*MockCluster)(nil).EnumerateAlerts), arg0, arg1, arg2)
+}
+
+// EnumerateNodeConf mocks base method
+func (m *MockCluster) EnumerateNodeConf() (*osdconfig.NodesConfig, error) {
+	ret := m.ctrl.Call(m, "EnumerateNodeConf")
+	ret0, _ := ret[0].(*osdconfig.NodesConfig)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// EnumerateNodeConf indicates an expected call of EnumerateNodeConf
+func (mr *MockClusterMockRecorder) EnumerateNodeConf() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnumerateNodeConf", reflect.TypeOf((*MockCluster)(nil).EnumerateNodeConf))
 }
 
 // EraseAlert mocks base method
@@ -171,18 +196,6 @@ func (m *MockCluster) GetNodeConf(arg0 string) (*osdconfig.NodeConfig, error) {
 // GetNodeConf indicates an expected call of GetNodeConf
 func (mr *MockClusterMockRecorder) GetNodeConf(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodeConf", reflect.TypeOf((*MockCluster)(nil).GetNodeConf), arg0)
-}
-
-// GetTunnelConfig mocks base method
-func (m *MockCluster) GetTunnelConfig() api.TunnelConfig {
-	ret := m.ctrl.Call(m, "GetTunnelConfig")
-	ret0, _ := ret[0].(api.TunnelConfig)
-	return ret0
-}
-
-// GetTunnelConfig indicates an expected call of GetTunnelConfig
-func (mr *MockClusterMockRecorder) GetTunnelConfig() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTunnelConfig", reflect.TypeOf((*MockCluster)(nil).GetTunnelConfig))
 }
 
 // Inspect mocks base method
@@ -258,42 +271,6 @@ func (mr *MockClusterMockRecorder) SetClusterConf(arg0 interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetClusterConf", reflect.TypeOf((*MockCluster)(nil).SetClusterConf), arg0)
 }
 
-// SetFluentDConfig mocks base method
-func (m *MockCluster) SetFluentDConfig(arg0 api.FluentDConfig) error {
-	ret := m.ctrl.Call(m, "SetFluentDConfig", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetFluentDConfig indicates an expected call of SetFluentDConfig
-func (mr *MockClusterMockRecorder) SetFluentDConfig(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetFluentDConfig", reflect.TypeOf((*MockCluster)(nil).SetFluentDConfig), arg0)
-}
-
-// SetLoggingURL mocks base method
-func (m *MockCluster) SetLoggingURL(arg0 string) error {
-	ret := m.ctrl.Call(m, "SetLoggingURL", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetLoggingURL indicates an expected call of SetLoggingURL
-func (mr *MockClusterMockRecorder) SetLoggingURL(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLoggingURL", reflect.TypeOf((*MockCluster)(nil).SetLoggingURL), arg0)
-}
-
-// SetManagementURL mocks base method
-func (m *MockCluster) SetManagementURL(arg0 string) error {
-	ret := m.ctrl.Call(m, "SetManagementURL", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetManagementURL indicates an expected call of SetManagementURL
-func (mr *MockClusterMockRecorder) SetManagementURL(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetManagementURL", reflect.TypeOf((*MockCluster)(nil).SetManagementURL), arg0)
-}
-
 // SetNodeConf mocks base method
 func (m *MockCluster) SetNodeConf(arg0 *osdconfig.NodeConfig) error {
 	ret := m.ctrl.Call(m, "SetNodeConf", arg0)
@@ -318,18 +295,6 @@ func (mr *MockClusterMockRecorder) SetSize(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSize", reflect.TypeOf((*MockCluster)(nil).SetSize), arg0)
 }
 
-// SetTunnelConfig mocks base method
-func (m *MockCluster) SetTunnelConfig(arg0 api.TunnelConfig) error {
-	ret := m.ctrl.Call(m, "SetTunnelConfig", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetTunnelConfig indicates an expected call of SetTunnelConfig
-func (mr *MockClusterMockRecorder) SetTunnelConfig(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTunnelConfig", reflect.TypeOf((*MockCluster)(nil).SetTunnelConfig), arg0)
-}
-
 // Shutdown mocks base method
 func (m *MockCluster) Shutdown() error {
 	ret := m.ctrl.Call(m, "Shutdown")
@@ -343,15 +308,15 @@ func (mr *MockClusterMockRecorder) Shutdown() *gomock.Call {
 }
 
 // Start mocks base method
-func (m *MockCluster) Start(arg0 int, arg1 bool) error {
-	ret := m.ctrl.Call(m, "Start", arg0, arg1)
+func (m *MockCluster) Start(arg0 int, arg1 bool, arg2 string) error {
+	ret := m.ctrl.Call(m, "Start", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Start indicates an expected call of Start
-func (mr *MockClusterMockRecorder) Start(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockCluster)(nil).Start), arg0, arg1)
+func (mr *MockClusterMockRecorder) Start(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockCluster)(nil).Start), arg0, arg1, arg2)
 }
 
 // UpdateData mocks base method

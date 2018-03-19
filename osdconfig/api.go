@@ -9,7 +9,7 @@ import (
 // GetClusterConf retrieves cluster level data from kvdb
 func (manager *configManager) GetClusterConf() (*ClusterConfig, error) {
 	// get json from kvdb and unmarshal into config
-	kvPair, err := manager.cc.Get(filepath.Join(baseKey, clusterKey))
+	kvPair, err := manager.kv.Get(filepath.Join(baseKey, clusterKey))
 	if err != nil {
 		return nil, err
 	}
@@ -24,16 +24,19 @@ func (manager *configManager) GetClusterConf() (*ClusterConfig, error) {
 
 // SetClusterConf sets cluster config in kvdb
 func (manager *configManager) SetClusterConf(config *ClusterConfig) error {
-	manager.Lock()
-	defer manager.Unlock()
-
 	if config == nil {
 		return fmt.Errorf("input cannot be nil")
 	}
 
+	manager.Lock()
+	defer manager.Unlock()
+
 	// push into kvdb
-	_, err := manager.cc.Put(filepath.Join(baseKey, clusterKey), config, 0)
-	return err
+	if _, err := manager.kv.Put(filepath.Join(baseKey, clusterKey), config, 0); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // GetNodeConf retrieves node config data using nodeID
@@ -43,7 +46,7 @@ func (manager *configManager) GetNodeConf(nodeID string) (*NodeConfig, error) {
 	}
 
 	// get json from kvdb and unmarshal into config
-	kvPair, err := manager.cc.Get(getNodeKeyFromNodeID(nodeID))
+	kvPair, err := manager.kv.Get(getNodeKeyFromNodeID(nodeID))
 	if err != nil {
 		return nil, err
 	}
@@ -58,9 +61,6 @@ func (manager *configManager) GetNodeConf(nodeID string) (*NodeConfig, error) {
 
 // SetNodeConf sets node config data in kvdb
 func (manager *configManager) SetNodeConf(config *NodeConfig) error {
-	manager.Lock()
-	defer manager.Unlock()
-
 	if config == nil {
 		return fmt.Errorf("input cannot be nil")
 	}
@@ -69,9 +69,53 @@ func (manager *configManager) SetNodeConf(config *NodeConfig) error {
 		return fmt.Errorf("node id cannot be nil")
 	}
 
+	manager.Lock()
+	defer manager.Unlock()
+
 	// push node data into kvdb
-	_, err := manager.cc.Put(getNodeKeyFromNodeID(config.NodeId), config, 0)
-	return err
+	if _, err := manager.kv.Put(getNodeKeyFromNodeID(config.NodeId), config, 0); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DeleteNodeConf deletes node config data in kvdb
+func (manager *configManager) DeleteNodeConf(nodeID string) error {
+	if len(nodeID) == 0 {
+		return fmt.Errorf("node id cannot be nil")
+	}
+
+	manager.Lock()
+	defer manager.Unlock()
+
+	// remove dode data from kvdb
+	if _, err := manager.kv.Delete(getNodeKeyFromNodeID(nodeID)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// EnumerateNodeConf fetches data for all nodes
+func (manager *configManager) EnumerateNodeConf() (*NodesConfig, error) {
+	keys, err := manager.kv.Keys(baseKey, nodeKey)
+	if err != nil {
+		return nil, fmt.Errorf("kvdb.Keys() returned error: " + err.Error())
+	}
+
+	nodesConfig := new(NodesConfig)
+	*nodesConfig = make([]*NodeConfig, len(keys))
+	for i, key := range keys {
+		key := key
+		nodeConfig, err := manager.GetNodeConf(key)
+		if err != nil {
+			return nil, err
+		}
+		(*nodesConfig)[i] = nodeConfig
+	}
+
+	return nodesConfig, nil
 }
 
 // WatchCluster registers user defined function as callback and sets a watch for changes

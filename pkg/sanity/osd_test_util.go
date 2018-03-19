@@ -17,11 +17,22 @@ limitations under the License.
 package sanity
 
 import (
+	"math/rand"
+	"time"
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+)
+
+const (
+	BYTE = 1.0 << (10 * iota)
+	KILOBYTE
+	MEGABYTE
+	GIGABYTE
+	TERABYTE
 )
 
 func testIfVolumeCreatedSuccessfully(
@@ -65,11 +76,20 @@ func testIfVolumeCreatedSuccessfully(
 	Expect(volumesList[0].GetSpec().GetJournal()).To(BeEquivalentTo(vr.GetSpec().GetJournal()))
 	Expect(volumesList[0].GetSpec().GetNfs()).To(BeEquivalentTo(vr.GetSpec().GetNfs()))
 	Expect(volumesList[0].GetSpec().GetPassphrase()).To(BeEquivalentTo(vr.GetSpec().GetPassphrase()))
-	//Expect(volumesList[0].GetSpec().GetReplicaSet()).To(BeEquivalentTo(vr.GetSpec().GetNfs()))
+	Expect(volumesList[0].GetSpec().GetReplicaSet()).To(BeEquivalentTo(vr.GetSpec().GetReplicaSet()))
 	Expect(volumesList[0].GetSpec().GetScale()).To(BeEquivalentTo(vr.GetSpec().GetScale()))
 	Expect(volumesList[0].GetSpec().GetShared()).To(BeEquivalentTo(vr.GetSpec().GetShared()))
-	//Expect(volumesList[0].GetSpec().GetSize()).To(BeEquivalentTo(vr.GetSpec().GetSize()))
+	Expect(volumesList[0].GetSpec().GetSize()).To(BeEquivalentTo(vr.GetSpec().GetSize()))
 	Expect(volumesList[0].GetSpec().GetSnapshotInterval()).To(BeEquivalentTo(vr.GetSpec().GetSnapshotInterval()))
 	Expect(volumesList[0].GetSpec().GetSnapshotSchedule()).To(BeEquivalentTo(vr.GetSpec().GetSnapshotSchedule()))
 	Expect(volumesList[0].GetSpec().GetSticky()).To(BeEquivalentTo(vr.GetSpec().GetSticky()))
+}
+
+//Returns an in between min and max. Min - included, Max excluded. So mathematically [min, max)
+func random(min, max int) int {
+	if max == min {
+		return max
+	}
+	rand.Seed(time.Now().Unix())
+	return rand.Intn(max-min) + min
 }

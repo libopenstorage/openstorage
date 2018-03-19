@@ -38,7 +38,7 @@ type testCluster struct {
 	oldInst func() (cluster.Cluster, error)
 }
 
-func newTestClutser(t *testing.T) *testCluster {
+func newTestCluster(t *testing.T) *testCluster {
 	tester := &testCluster{}
 
 	// Save already set value of cluster.Inst to set it back
@@ -100,6 +100,22 @@ func testRestServer(t *testing.T) (*httptest.Server, *testServer) {
 	ts := httptest.NewServer(router)
 	testVolDriver := newTestServer(t)
 	return ts, testVolDriver
+}
+
+func testClusterServer(t *testing.T) (*httptest.Server, *testCluster) {
+	capi := newClusterAPI()
+	router := mux.NewRouter()
+	// Register all routes from the App
+	for _, route := range capi.Routes() {
+		router.Methods(route.verb).
+			Path(route.path).
+			Name(mockDriverName).
+			Handler(http.HandlerFunc(route.fn))
+	}
+
+	ts := httptest.NewServer(router)
+	tc := newTestCluster(t)
+	return ts, tc
 }
 
 func (c *testCluster) MockCluster() *mockcluster.MockCluster {

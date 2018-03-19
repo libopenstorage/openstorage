@@ -2,6 +2,8 @@ package kvdb
 
 import (
 	"errors"
+	"time"
+
 	"github.com/Sirupsen/logrus"
 )
 
@@ -78,6 +80,11 @@ const (
 	MemVersion1 = "memv1"
 )
 
+const (
+	// DefaultLockTryDuration is the maximum time spent trying to acquire lock
+	DefaultLockTryDuration = 300 * time.Second
+)
+
 var (
 	// ErrNotSupported implemenation of a specific function is not supported.
 	ErrNotSupported = errors.New("implementation not supported")
@@ -109,6 +116,9 @@ var (
 	ErrNoCertificate = errors.New("Certificate File Path not provided")
 	// ErrUnknownPermission raised if unknown permission type
 	ErrUnknownPermission = errors.New("Unknown Permission Type")
+	// ErrMemberDoesNotExist returned when an operation fails for a member
+	// which does not exist
+	ErrMemberDoesNotExist = errors.New("Kvdb member does not exist")
 )
 
 // KVAction specifies the action on a KV pair. This is useful to make decisions
@@ -135,6 +145,15 @@ type DatastoreInit func(domain string, machines []string, options map[string]str
 
 // DatastoreVersion is called to get the version of a backend KV store
 type DatastoreVersion func(url string, kvdbOptions map[string]string) (string, error)
+
+// EnumerateSelect function is a callback function provided to EnumerateWithSelect API
+// This fn is executed over all the keys and only those values are returned by Enumerate for which
+// this function return true.
+type EnumerateSelect func(val interface{}) bool
+
+// CopySelect function is a callback function provided to EnumerateWithSelect API
+// This fn should perform a deep copy of the input interface and return the copy
+type CopySelect func(val interface{}) interface{}
 
 // KVPair represents the results of an operation on KVDB.
 type KVPair struct {
@@ -180,6 +199,7 @@ type Tx interface {
 
 // Kvdb interface implemented by backing datastores.
 type Kvdb interface {
+	Controller
 	// String representation of backend datastore.
 	String() string
 	// Capbilities - see KVCapabilityXXX
@@ -189,6 +209,8 @@ type Kvdb interface {
 	// Get returns KVPair that maps to specified key or ErrNotFound. If found
 	// value contains the unmarshalled result or error is ErrUnmarshal
 	GetVal(key string, value interface{}) (*KVPair, error)
+	// GetWithCopy returns a copy of the value as an interface for the specified key
+	GetWithCopy(key string, copySelect CopySelect) (interface{}, error)
 	// Put inserts value at key in kvdb. If value is a runtime.Object, it is
 	// marshalled. If Value is []byte it is set directly. If Value is a string,
 	// its byte representation is stored.
@@ -200,14 +222,18 @@ type Kvdb interface {
 	Update(key string, value interface{}, ttl uint64) (*KVPair, error)
 	// Enumerate returns a list of KVPair for all keys that share the specified prefix.
 	Enumerate(prefix string) (KVPairs, error)
+	// EnumerateWithSelect returns a copy of all values under the prefix that satisfy the select
+	// function in the provided output array of interfaces
+	EnumerateWithSelect(prefix string, enumerateSelect EnumerateSelect, copySelect CopySelect) ([]interface{}, error)
 	// Delete deletes the KVPair specified by the key. ErrNotFound is returned
 	// if the key is not found. The old KVPair is returned if successful.
 	Delete(key string) (*KVPair, error)
 	// DeleteTree same as Delete execpt that all keys sharing the prefix are
 	// deleted.
 	DeleteTree(prefix string) error
-	// Keys returns an array of keys that share specified prefix.
-	Keys(prefix, key string) ([]string, error)
+	// Keys returns an array of keys that share specified prefix (ie. "1st level directory").
+	// sep parameter defines a key-separator, and if not provided the "/" is assumed.
+	Keys(prefix, sep string) ([]string, error)
 	// CompareAndSet updates value at kvp.Key if the previous resident
 	// satisfies conditions set in flags and optional prevValue.
 	CompareAndSet(kvp *KVPair, flags KVFlags, prevValue []byte) (*KVPair, error)
@@ -229,6 +255,14 @@ type Kvdb interface {
 	LockWithID(key string, lockerID string) (*KVPair, error)
 	// Lock specfied key. The KVPair returned should be used to unlock.
 	Lock(key string) (*KVPair, error)
+	// Lock with specified key and associate a lockerID with it.
+	// lockTryDuration is the maximum time that can be spent trying to acquire
+	// lock, else return error.
+	// lockHoldDuration is the maximum time the lock can be held, after which
+	// FatalCb is invoked.
+	// The KVPair returned should be used to unlock if successful.
+	LockWithTimeout(key string, lockerID string, lockTryDuration time.Duration,
+		lockHoldDuration time.Duration) (*KVPair, error)
 	// Unlock kvp previously acquired through a call to lock.
 	Unlock(kvp *KVPair) error
 	// TxNew returns a new Tx coordinator object or ErrNotSupported
@@ -241,6 +275,16 @@ type Kvdb interface {
 	GrantUserAccess(username string, permType PermissionType, subtree string) error
 	// RevokeUsersAccess revokes user's access to a subtree/prefix based on the permission
 	RevokeUsersAccess(username string, permType PermissionType, subtree string) error
+	// SetFatalCb sets the function to be called in case of fatal errors
+	SetFatalCb(f FatalErrorCB)
+	// SetLockTimeout sets maximum time a lock may be held
+	SetLockTimeout(timeout time.Duration)
+	// GetLockTimeout gets the currently set lock timeout
+	GetLockTimeout() time.Duration
+	// Serialize serializes all the keys under the domain and returns a byte array
+	Serialize() ([]byte, error)
+	// Deserialize deserializes the given byte array into a list of kv pairs
+	Deserialize([]byte) (KVPairs, error)
 }
 
 // ReplayCb provides info required for replay
@@ -279,4 +323,44 @@ func NewUpdatesCollector(
 		return nil, err
 	}
 	return collector, nil
+}
+
+// List of kvdb controller ports
+const (
+	// PeerPort is the port on which peers identify themselves
+	PeerPort = "2380"
+	// ClientPort is the port on which clients send requests to kvdb.
+	ClientPort = "2379"
+)
+
+// MemberInfo represents a member of the kvdb cluster
+type MemberInfo struct {
+	PeerUrls   []string
+	ClientUrls []string
+	Leader     bool
+	DbSize     int64
+	IsHealthy  bool
+}
+
+// Controller interface provides APIs to manage Kvdb Cluster and Kvdb Clients.
+type Controller interface {
+	// AddMember adds a new member to an existing kvdb cluster. Add should be
+	// called on a kvdb node where kvdb is already running. It should be
+	// followed by a Setup call on the actual node
+	// Returns: map of nodeID to peerUrls of all members in the initial cluster or error
+	AddMember(nodeIP, nodePeerPort, nodeName string) (map[string][]string, error)
+
+	// RemoveMember removes a member from an existing kvdb cluster
+	// Returns: error if it fails to remove a member
+	RemoveMember(nodeID string) error
+
+	// ListMembers enumerates the members of the kvdb cluster
+	// Returns: the nodeID  to memberInfo mappings of all the members
+	ListMembers() (map[string]*MemberInfo, error)
+
+	// SetEndpoints set the kvdb endpoints for the client
+	SetEndpoints(endpoints []string) error
+
+	// GetEndpoints returns the kvdb endpoints for the client
+	GetEndpoints() []string
 }

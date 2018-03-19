@@ -67,6 +67,7 @@ type consulKV struct {
 	client *api.Client
 	config *api.Config
 	domain string
+	kvdb.Controller
 }
 
 type consulLock struct {
@@ -136,6 +137,7 @@ func New(
 		client,
 		config,
 		domain,
+		kvdb.ControllerNotSupported,
 	}, nil
 }
 
@@ -178,7 +180,12 @@ func (kv *consulKV) GetVal(key string, val interface{}) (*kvdb.KVPair, error) {
 	return kvp, json.Unmarshal(kvp.Value, val)
 }
 
-func (kv *consulKV) Put(key string, val interface{}, ttl uint64) (*kvdb.KVPair, error) {
+func (kv *consulKV) createTTLSession(
+	key string,
+	val interface{},
+	ttl uint64,
+	noCreate bool,
+) (*api.KVPair, error) {
 	pathKey := kv.domain + key
 	pathKey = stripConsecutiveForwardslash(pathKey)
 	b, err := common.ToBytes(val)
@@ -199,8 +206,9 @@ func (kv *consulKV) Put(key string, val interface{}, ttl uint64) (*kvdb.KVPair, 
 			// Consul doubles the ttl value. Hence we divide it by 2
 			// Consul does not support ttl values less than 10.
 			// Hence we set our lower limit to 20
-			err := kv.renewSession(pair, ttl/2)
+			session, err := kv.renewSession(pair, ttl/2, noCreate)
 			if err == nil {
+				pair.Session = session
 				break
 			}
 			if retries == MaxRenewRetries {
@@ -208,9 +216,32 @@ func (kv *consulKV) Put(key string, val interface{}, ttl uint64) (*kvdb.KVPair, 
 			}
 		}
 	}
+	return pair, nil
+}
 
-	if _, err := kv.client.KV().Put(pair, nil); err != nil {
+func (kv *consulKV) Put(
+	key string,
+	val interface{},
+	ttl uint64,
+) (*kvdb.KVPair, error) {
+	pair, err := kv.createTTLSession(key, val, ttl, false)
+	if err != nil {
 		return nil, err
+	}
+	if ttl == 0 {
+		if _, err := kv.client.KV().Put(pair, nil); err != nil {
+			return nil, err
+		}
+	} else {
+		// It is unclear why err == nil but ok == false. We always
+		// delete any existing sessions on Put, so this should work fine.
+		ok, _, err := kv.client.KV().Acquire(pair, nil)
+		if err != nil {
+			return nil, err
+		}
+		if !ok {
+			return nil, fmt.Errorf("Acquire failed")
+		}
 	}
 
 	kvPair, err := kv.Get(key)
@@ -221,20 +252,47 @@ func (kv *consulKV) Put(key string, val interface{}, ttl uint64) (*kvdb.KVPair, 
 	return kvPair, nil
 }
 
-func (kv *consulKV) Create(key string, val interface{}, ttl uint64) (*kvdb.KVPair, error) {
-	if _, err := kv.Get(key); err == nil {
-		return nil, kvdb.ErrExist
-	}
-
-	kvPair, err := kv.Put(key, val, ttl)
+func (kv *consulKV) Create(
+	key string,
+	val interface{},
+	ttl uint64,
+) (*kvdb.KVPair, error) {
+	sessionPair, err := kv.createTTLSession(key, val, ttl, true)
 	if err != nil {
 		return nil, err
 	}
-	kvPair.Action = kvdb.KVCreate
-	return kvPair, nil
+	kvPair := &kvdb.KVPair{Key: key, Value: sessionPair.Value}
+	kvPair, err = kv.CompareAndSet(kvPair, kvdb.KVModifiedIndex, nil)
+	if err == nil {
+		kvPair.Action = kvdb.KVCreate
+		if ttl > 0 {
+			var ok bool
+			ok, _, err = kv.client.KV().Acquire(sessionPair, nil)
+			if ok && err == nil {
+				return kvPair, err
+			}
+			kv.client.Session().Destroy(sessionPair.Session, nil)
+			kv.Delete(key)
+			if err != nil {
+				return nil, err
+			}
+			if !ok {
+				return nil, fmt.Errorf("Failed to set ttl")
+			}
+		}
+	}
+	if err == kvdb.ErrModified {
+		// key already exists since compare and set with index 0 failed.
+		err = kvdb.ErrExist
+	}
+	return kvPair, err
 }
 
-func (kv *consulKV) Update(key string, val interface{}, ttl uint64) (*kvdb.KVPair, error) {
+func (kv *consulKV) Update(
+	key string,
+	val interface{},
+	ttl uint64,
+) (*kvdb.KVPair, error) {
 	if _, err := kv.Get(key); err != nil {
 		return nil, err
 	}
@@ -279,11 +337,43 @@ func (kv *consulKV) DeleteTree(key string) error {
 	return nil
 }
 
-func (kv *consulKV) Keys(prefix, key string) ([]string, error) {
-	return nil, kvdb.ErrNotSupported
+func (kv *consulKV) Keys(prefix, sep string) ([]string, error) {
+	if "" == sep {
+		sep = "/"
+	}
+	prefix = kv.domain + prefix
+	prefix = stripConsecutiveForwardslash(prefix)
+	lenPrefix := len(prefix)
+	lenSep := len(sep)
+	if prefix[lenPrefix-lenSep:] != sep {
+		prefix += sep
+		lenPrefix += lenSep
+	}
+	list, _, err := kv.client.KV().Keys(prefix, sep, nil)
+	if err != nil {
+		return nil, err
+	}
+	var retList []string
+	if len(list) > 0 {
+		retList = make([]string, len(list))
+		for i, key := range list {
+			if strings.HasPrefix(key, prefix) {
+				key = key[lenPrefix:]
+			}
+			if lky := len(key); lky > lenSep && key[lky-lenSep:] == sep {
+				key = key[0 : lky-lenSep]
+			}
+			retList[i] = key
+		}
+	}
+	return retList, nil
 }
 
-func (kv *consulKV) CompareAndSet(kvp *kvdb.KVPair, flags kvdb.KVFlags, prevValue []byte) (*kvdb.KVPair, error) {
+func (kv *consulKV) CompareAndSet(
+	kvp *kvdb.KVPair,
+	flags kvdb.KVFlags,
+	prevValue []byte,
+) (*kvdb.KVPair, error) {
 	key := kv.domain + kvp.Key
 	key = stripConsecutiveForwardslash(key)
 	pair := &api.KVPair{
@@ -327,7 +417,10 @@ func (kv *consulKV) CompareAndSet(kvp *kvdb.KVPair, flags kvdb.KVFlags, prevValu
 	return kvPair, nil
 }
 
-func (kv *consulKV) CompareAndDelete(kvp *kvdb.KVPair, flags kvdb.KVFlags) (*kvdb.KVPair, error) {
+func (kv *consulKV) CompareAndDelete(
+	kvp *kvdb.KVPair,
+	flags kvdb.KVFlags,
+) (*kvdb.KVPair, error) {
 	key := kv.domain + kvp.Key
 	key = stripConsecutiveForwardslash(key)
 	pair := &api.KVPair{
@@ -352,7 +445,12 @@ func (kv *consulKV) CompareAndDelete(kvp *kvdb.KVPair, flags kvdb.KVFlags) (*kvd
 	return kvp, nil
 }
 
-func (kv *consulKV) WatchKey(key string, waitIndex uint64, opaque interface{}, cb kvdb.WatchCB) error {
+func (kv *consulKV) WatchKey(
+	key string,
+	waitIndex uint64,
+	opaque interface{},
+	cb kvdb.WatchCB,
+) error {
 	var keyExist bool
 	kvp, err := kv.Get(key)
 	if err == kvdb.ErrNotFound {
@@ -400,18 +498,37 @@ func (kv *consulKV) LockWithID(key string, lockerID string) (
 	*kvdb.KVPair,
 	error,
 ) {
+	return kv.LockWithTimeout(key, lockerID, kvdb.DefaultLockTryDuration, kv.GetLockTimeout())
+}
+
+func (kv *consulKV) LockWithTimeout(
+	key string,
+	lockerID string,
+	lockTryDuration time.Duration,
+	lockHoldDuration time.Duration,
+) (*kvdb.KVPair, error) {
 	key = stripConsecutiveForwardslash(key)
 	// Strip of the leading slash or else consul throws error
 	if key[0] == '/' {
 		key = key[1:]
 	}
 
-	l, err := kv.getLock(key, lockerID, 20*time.Second)
-	if err != nil {
-		return nil, err
-	}
-	if _, err := l.lock.Lock(nil); err != nil {
-		return nil, err
+	timeout := time.After(lockTryDuration)
+	var l *consulLock
+	err := fmt.Errorf("Timeout acquiring lock")
+	done := false
+	for !done {
+		select {
+		case <-timeout:
+			return nil, err
+		default:
+			l, err = kv.getLock(key, lockerID, lockHoldDuration)
+			if err == nil {
+				done = true
+			} else {
+				time.Sleep(time.Second)
+			}
+		}
 	}
 	return &kvdb.KVPair{
 		Key:  key,
@@ -558,7 +675,17 @@ func (kv *consulKV) Snapshot(prefix string) (kvdb.Kvdb, uint64, error) {
 				}
 				goto errordone
 			} else {
-				_, err = snapDb.SnapPut(kvp)
+				if kvp.Action == kvdb.KVDelete {
+					_, err = snapDb.Delete(kvp.Key)
+					// A Delete key was issued between our first lowestKvdbIndex Put
+					// and Enumerate APIs in this function
+					if err == kvdb.ErrNotFound {
+						err = nil
+					}
+
+				} else {
+					_, err = snapDb.SnapPut(kvp)
+				}
 				if err != nil {
 					watchErr = fmt.Errorf("Failed to apply update to snap: %v", err)
 					sendErr = watchErr
@@ -611,6 +738,21 @@ func (kv *consulKV) createKv(pair *api.KVPair) *kvdb.KVPair {
 	return kvp
 }
 
+func (kv *consulKV) EnumerateWithSelect(
+	prefix string,
+	enumerateSelect kvdb.EnumerateSelect,
+	copySelect kvdb.CopySelect,
+) ([]interface{}, error) {
+	return nil, kvdb.ErrNotSupported
+}
+
+func (kv *consulKV) GetWithCopy(
+	key string,
+	copySelect kvdb.CopySelect,
+) (interface{}, error) {
+	return nil, kvdb.ErrNotSupported
+}
+
 func (kv *consulKV) pairToKv(action string, pair *api.KVPair, meta *api.QueryMeta) *kvdb.KVPair {
 	kvp := kv.createKv(pair)
 	switch action {
@@ -637,7 +779,11 @@ func isHidden(key string) bool {
 	return keySuffix != "" && keySuffix[0] == '_'
 }
 
-func (kv *consulKV) pairToKvs(action string, pairs []*api.KVPair, meta *api.QueryMeta) kvdb.KVPairs {
+func (kv *consulKV) pairToKvs(
+	action string,
+	pairs []*api.KVPair,
+	meta *api.QueryMeta,
+) kvdb.KVPairs {
 	kvs := []*kvdb.KVPair{}
 	for _, pair := range pairs {
 		// Ignore hidden keys.
@@ -649,55 +795,91 @@ func (kv *consulKV) pairToKvs(action string, pairs []*api.KVPair, meta *api.Quer
 	return kvs
 }
 
-func (kv *consulKV) renewLockSession(initialTTL string, session string, doneCh chan struct{}) {
+func (kv *consulKV) renewLockSession(
+	key string,
+	initialTTL string,
+	lockTimeout time.Duration,
+	session string,
+	doneCh chan struct{},
+	tag interface{},
+) {
 	go func() {
 		_ = kv.client.Session().RenewPeriodic(initialTTL, session, nil, doneCh)
 	}()
+	if lockTimeout > 0 {
+		go func() {
+			timeout := time.After(lockTimeout)
+			for {
+				select {
+				case <-timeout:
+					kv.LockTimedout(fmt.Sprintf("Key:%s,Tag:%v", key, tag))
+				case <-doneCh:
+					return
+				}
+			}
+		}()
+	}
 }
 
-func (kv *consulKV) getLock(key string, tag interface{}, ttl time.Duration) (
-	*consulLock,
-	error,
-) {
+func (kv *consulKV) getLock(
+	key string,
+	tag interface{},
+	lockHoldDuration time.Duration,
+) (*consulLock, error) {
 	key = kv.domain + key
 	tagValue, err := common.ToBytes(tag)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to convert tag: %v, error: %v", tag,
 			err)
 	}
-	lockOpts := &api.LockOptions{
-		Key:   key,
-		Value: tagValue,
-	}
-	lock := &consulLock{}
+	// Since we need to extend lock hold time, we create a session
+	// which is refreshed every so often until we hit lockHoldDuration,
+	// when we run the FatalCb. Set the TTL to a smaller value so that
+	// the lock is released in case the locking process exits.
 	entry := &api.SessionEntry{
-		Behavior:  api.SessionBehaviorRelease, // Release the lock when the session expires
-		TTL:       (ttl / 2).String(),         // Consul multiplies the TTL by 2x
-		LockDelay: 1 * time.Millisecond,       // Virtually disable lock delay
+		Behavior:  api.SessionBehaviorRelease,  // Release the lock when the session expires
+		TTL:       (10 * time.Second).String(), // Consul multiplies the TTL by 2x
+		LockDelay: 0,                           // Virtually disable lock delay
 	}
-
-	// Create the key session
 	session, _, err := kv.client.Session().Create(entry, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	// Place the session on lock
-	lockOpts.Session = session
-	lock.doneCh = make(chan struct{})
-	lock.tag = tag
-
+	// create a lock handle
+	lockOpts := &api.LockOptions{
+		Key:          key,
+		Value:        tagValue,
+		LockTryOnce:  true, // give up if lock already exists
+		Session:      session,
+		LockWaitTime: time.Microsecond, // zero means default, so give a very small value
+	}
 	l, err := kv.client.LockOpts(lockOpts)
 	if err != nil {
 		return nil, err
 	}
+	if lockChan, err := l.Lock(nil); err != nil || lockChan == nil {
+		_, _ = kv.client.Session().Destroy(session, nil)
+		return nil, kvdb.ErrExist
+	}
 
-	kv.renewLockSession(entry.TTL, session, lock.doneCh)
-	lock.lock = l
+	lock := &consulLock{
+		doneCh: make(chan struct{}),
+		tag:    tag,
+		lock:   l,
+	}
+
+	kv.renewLockSession(key, entry.TTL, lockHoldDuration, session, lock.doneCh, tag)
 	return lock, nil
 }
 
-func (kv *consulKV) watchTreeStart(prefix string, prefixExisted bool, waitIndex uint64, opaque interface{}, cb kvdb.WatchCB) {
+func (kv *consulKV) watchTreeStart(
+	prefix string,
+	prefixExisted bool,
+	waitIndex uint64,
+	opaque interface{},
+	cb kvdb.WatchCB,
+) {
 	prefix = stripConsecutiveForwardslash(prefix)
 	opts := &api.QueryOptions{
 		WaitIndex:         waitIndex,
@@ -811,7 +993,13 @@ func (kv *consulKV) watchTreeStart(prefix string, prefixExisted bool, waitIndex 
 	}
 }
 
-func (kv *consulKV) watchKeyStart(key string, keyExisted bool, waitIndex uint64, opaque interface{}, cb kvdb.WatchCB) {
+func (kv *consulKV) watchKeyStart(
+	key string,
+	keyExisted bool,
+	waitIndex uint64,
+	opaque interface{},
+	cb kvdb.WatchCB,
+) {
 	key = stripConsecutiveForwardslash(key)
 	opts := &api.QueryOptions{
 		WaitIndex: waitIndex,
@@ -879,19 +1067,27 @@ func (kv *consulKV) watchKeyStart(key string, keyExisted bool, waitIndex uint64,
 }
 
 // Future Use : Support for ttl values in create/update/put
-
-func (kv *consulKV) renewSession(pair *api.KVPair, ttl uint64) error {
+func (kv *consulKV) renewSession(
+	pair *api.KVPair,
+	ttl uint64,
+	noCreate bool,
+) (string, error) {
 	// Check if there is any previous session with an active TTL
 	session, err := kv.getActiveSession(pair.Key)
 	if err != nil {
-		return err
+		logrus.Infof("Failed to find session: %v", err)
+		return "", err
 	}
 
 	if session != "" {
+		if noCreate {
+			// Do not create new session for the key
+			return "", kvdb.ErrModified
+		}
 		// Destroy the existing session associated with the key
 		_, err := kv.client.Session().Destroy(session, nil)
 		if err != nil {
-			return err
+			return "", err
 		}
 	}
 
@@ -900,30 +1096,18 @@ func (kv *consulKV) renewSession(pair *api.KVPair, ttl uint64) error {
 	entry := &api.SessionEntry{
 		Behavior:  api.SessionBehaviorDelete, // Delete the key when the session expires
 		TTL:       durationTTL.String(),
-		LockDelay: 1 * time.Millisecond, // Virtually disable lock delay
+		LockDelay: 0, // Virtually disable lock delay
 	}
 
 	// Create the key session
 	session, _, err = kv.client.Session().Create(entry, nil)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	lockOpts := &api.LockOptions{
-		Key:     pair.Key,
-		Session: session,
-	}
-
-	// Lock and ignore if lock is held
-	// It's just a placeholder for the
-	// ephemeral behavior
-	lock, _ := kv.client.LockOpts(lockOpts)
-	if lock != nil {
-		_, _ = lock.Lock(nil)
-	}
-
+	// Session timer is started after a call to "Renew"
 	_, _, err = kv.client.Session().Renew(session, nil)
-	return err
+	return session, err
 }
 
 // getActiveSession checks if the key already has
@@ -951,10 +1135,31 @@ func (kv *consulKV) RemoveUser(username string) error {
 	return kvdb.ErrNotSupported
 }
 
-func (kv *consulKV) GrantUserAccess(username string, permType kvdb.PermissionType, subtree string) error {
+func (kv *consulKV) GrantUserAccess(
+	username string,
+	permType kvdb.PermissionType,
+	subtree string,
+) error {
 	return kvdb.ErrNotSupported
 }
 
-func (kv *consulKV) RevokeUsersAccess(username string, permType kvdb.PermissionType, subtree string) error {
+func (kv *consulKV) RevokeUsersAccess(
+	username string,
+	permType kvdb.PermissionType,
+	subtree string,
+) error {
 	return kvdb.ErrNotSupported
+}
+
+func (kv *consulKV) Serialize() ([]byte, error) {
+
+	kvps, err := kv.Enumerate("")
+	if err != nil {
+		return nil, err
+	}
+	return kv.SerializeAll(kvps)
+}
+
+func (kv *consulKV) Deserialize(b []byte) (kvdb.KVPairs, error) {
+	return kv.DeserializeAll(b)
 }

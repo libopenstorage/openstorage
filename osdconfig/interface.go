@@ -15,6 +15,9 @@ type ConfigCaller interface {
 	// GetNodeConf fetches node configuration data using node id
 	GetNodeConf(nodeID string) (*NodeConfig, error)
 
+	// EnumerateNodeConf fetches data for all nodes
+	EnumerateNodeConf() (*NodesConfig, error)
+
 	// SetClusterConf pushes cluster configuration data to the backend
 	// It is assumed that the backend will notify the implementor of this interface
 	// when a change is triggered
@@ -24,6 +27,9 @@ type ConfigCaller interface {
 	// It is assumed that the backend will notify the implementor of this interface
 	// when a change is triggered
 	SetNodeConf(config *NodeConfig) error
+
+	// DeleteNodeConf removes node config for a particular node
+	DeleteNodeConf(nodeID string) error
 }
 
 // ConfigWatcher defines watches on cluster and nodes

@@ -3,7 +3,6 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
@@ -11,9 +10,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/libopenstorage/openstorage/api"
-	client "github.com/libopenstorage/openstorage/api/client/cluster"
 	"github.com/libopenstorage/openstorage/cluster"
-	"github.com/libopenstorage/openstorage/osdconfig"
 )
 
 const (
@@ -23,187 +20,6 @@ const (
 
 type clusterApi struct {
 	restBase
-}
-
-func (c *clusterApi) Routes() []*Route {
-	return []*Route{
-		{verb: "GET", path: "/cluster/versions", fn: c.versions},
-		{verb: "GET", path: clusterPath("/enumerate", cluster.APIVersion), fn: c.enumerate},
-		{verb: "GET", path: clusterPath("/gossipstate", cluster.APIVersion), fn: c.gossipState},
-		{verb: "GET", path: clusterPath("/nodestatus", cluster.APIVersion), fn: c.nodeStatus},
-		{verb: "GET", path: clusterPath("/nodehealth", cluster.APIVersion), fn: c.nodeHealth},
-		{verb: "GET", path: clusterPath("/status", cluster.APIVersion), fn: c.status},
-		{verb: "GET", path: clusterPath("/peerstatus", cluster.APIVersion), fn: c.peerStatus},
-		{verb: "GET", path: clusterPath("/inspect/{id}", cluster.APIVersion), fn: c.inspect},
-		{verb: "DELETE", path: clusterPath("", cluster.APIVersion), fn: c.delete},
-		{verb: "DELETE", path: clusterPath("/{id}", cluster.APIVersion), fn: c.delete},
-		{verb: "PUT", path: clusterPath("/enablegossip", cluster.APIVersion), fn: c.enableGossip},
-		{verb: "PUT", path: clusterPath("/disablegossip", cluster.APIVersion), fn: c.disableGossip},
-		{verb: "PUT", path: clusterPath("/shutdown", cluster.APIVersion), fn: c.shutdown},
-		{verb: "PUT", path: clusterPath("/shutdown/{id}", cluster.APIVersion), fn: c.shutdown},
-		{verb: "GET", path: clusterPath("/alerts/{resource}", cluster.APIVersion), fn: c.enumerateAlerts},
-		{verb: "PUT", path: clusterPath("/alerts/{resource}/{id}", cluster.APIVersion), fn: c.clearAlert},
-		{verb: "DELETE", path: clusterPath("/alerts/{resource}/{id}", cluster.APIVersion), fn: c.eraseAlert},
-		{verb: "GET", path: clusterPath(client.UriCluster, cluster.APIVersion), fn: c.getClusterConf},
-		{verb: "GET", path: clusterPath(client.UriNode+"/{id}", cluster.APIVersion), fn: c.getNodeConf},
-		{verb: "POST", path: clusterPath(client.UriCluster, cluster.APIVersion), fn: c.setClusterConf},
-		{verb: "POST", path: clusterPath(client.UriNode, cluster.APIVersion), fn: c.setNodeConf},
-	}
-}
-
-// swagger:operation GET /config/cluster config getClusterConfig
-//
-// Get cluster configuration.
-//
-// This will return the requested cluster configuration object
-//
-// ---
-// produces:
-// - application/json
-// responses:
-//   '200':
-//      description: a cluster config
-//      schema:
-//       $ref: '#/definitions/ClusterConfig'
-func (c *clusterApi) getClusterConf(w http.ResponseWriter, r *http.Request) {
-	method := "getClusterConf"
-	inst, err := cluster.Inst()
-	if err != nil {
-		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	config, err := inst.GetClusterConf()
-	if err != nil {
-		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	json.NewEncoder(w).Encode(config)
-}
-
-// swagger:operation GET /config/node/{id} config getNodeConfig
-//
-// Get node configuration.
-//
-// This will return the requested node configuration object
-//
-// ---
-// produces:
-// - application/json
-// parameters:
-// - name: id
-//   in: path
-//   description: id to get node with
-//   required: true
-//   type: integer
-// responses:
-//   '200':
-//      description: a node
-//      schema:
-//       $ref: '#/definitions/NodeConfig'
-func (c *clusterApi) getNodeConf(w http.ResponseWriter, r *http.Request) {
-	method := "getNodeConf"
-	inst, err := cluster.Inst()
-	if err != nil {
-		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	vars := mux.Vars(r)
-	config, err := inst.GetNodeConf(vars["id"])
-	if err != nil {
-		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	json.NewEncoder(w).Encode(config)
-}
-
-// swagger:operation POST /config/cluster config setClusterConfig
-//
-// Set cluster configuration.
-//
-// This will set the requested cluster configuration
-//
-// ---
-// produces:
-// - application/json
-// parameters:
-// - name: config
-//   in: body
-//   description: cluster config json
-//   required: true
-//   schema:
-//     $ref: '#/definitions/ClusterConfig'
-// responses:
-//   200:
-//     description: success
-func (c *clusterApi) setClusterConf(w http.ResponseWriter, r *http.Request) {
-	method := "setClusterConf"
-	inst, err := cluster.Inst()
-	if err != nil {
-		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	config := new(osdconfig.ClusterConfig)
-	if err := json.Unmarshal(data, config); err != nil {
-		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	if err := inst.SetClusterConf(config); err != nil {
-		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	json.NewEncoder(w).Encode(config)
-}
-
-// swagger:operation POST /config/node config setNodeConfig
-//
-// Set node configuration.
-//
-// This will set the requested node configuration
-//
-// ---
-// produces:
-// - application/json
-// parameters:
-// - name: config
-//   in: body
-//   description: node config json
-//   required: true
-//   schema:
-//     $ref: '#/definitions/NodeConfig'
-// responses:
-//   200:
-//     description: success
-func (c *clusterApi) setNodeConf(w http.ResponseWriter, r *http.Request) {
-	method := "setNodeConf"
-	inst, err := cluster.Inst()
-	if err != nil {
-		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	config := new(osdconfig.NodeConfig)
-	if err := json.Unmarshal(data, config); err != nil {
-		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	if err := inst.SetNodeConf(config); err != nil {
-		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	json.NewEncoder(w).Encode(config)
 }
 
 func newClusterAPI() restServer {
@@ -310,51 +126,6 @@ func (c *clusterApi) inspect(w http.ResponseWriter, r *http.Request) {
 	} else {
 		json.NewEncoder(w).Encode(nodeStats)
 	}
-}
-
-// swagger:operation PUT /loggingurl cluster setLoggingUrl
-//
-// Set Logging url
-// ---
-// produces:
-// - application/json
-// deprecated: true
-// parameters:
-// - name: url
-//   in: query
-//   description: url to set loggingurl with
-//   required: true
-//   type: string
-// responses:
-//  '200':
-//    description: cluster response
-//    schema:
-//     $ref: '#/definitions/ClusterResponse'
-func (c *clusterApi) setLoggingURL(w http.ResponseWriter, r *http.Request) {
-	method := "set Logging URL"
-
-	inst, err := cluster.Inst()
-
-	if err != nil {
-		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	params := r.URL.Query()
-	loggingURL := params["url"]
-	if len(loggingURL) == 0 {
-		c.sendError(c.name, method, w, "Missing url param  url", http.StatusBadRequest)
-		return
-	}
-
-	err = inst.SetLoggingURL(strings.TrimSpace(loggingURL[0]))
-
-	if err != nil {
-		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	json.NewEncoder(w).Encode(&api.ClusterResponse{})
 }
 
 func (c *clusterApi) enableGossip(w http.ResponseWriter, r *http.Request) {

@@ -3,6 +3,7 @@ package osdconfig
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"testing"
 )
 
@@ -22,7 +23,7 @@ func TestSetGetCluster(t *testing.T) {
 	// prepare expected cluster config
 	expectedConf := new(ClusterConfig)
 	expectedConf.ClusterId = "myClusterID"
-	expectedConf.Driver = "myDriver"
+	expectedConf.Description = "myDescription"
 
 	// set the expected cluster config value
 	if err := manager.SetClusterConf(expectedConf); err != nil {
@@ -75,6 +76,58 @@ func TestSetGetNode(t *testing.T) {
 	if !reflect.DeepEqual(expectedConf, receivedConf) {
 		t.Fatal("expected and received values are not deep equal")
 	}
+
+	// now delete the node
+	if err := manager.DeleteNodeConf(expectedConf.NodeId); err != nil {
+		t.Fatal("error in deleting node config")
+	}
+
+	// get the cluster config value
+	_, err = manager.GetNodeConf(expectedConf.NodeId)
+	if err == nil {
+		t.Fatal("node does not exist, so this should error out")
+	}
+}
+
+func TestConfigManager_EnumerateNodeConf(t *testing.T) {
+	// create in memory kvdb
+	kv, err := newInMemKvdb()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// get new config manager using handle to kvdb
+	manager, err := NewManager(kv)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// set some node conf
+	nodeIds := make(map[string]bool)
+	for i := 0; i < 3; i++ {
+		nodeId := "node_" + strconv.FormatInt(int64(i), 10)
+		nodeIds[nodeId] = true
+		conf := new(NodeConfig)
+		conf.NodeId = nodeId
+		conf.Storage = new(StorageConfig)
+		conf.Storage.Devices = []string{"dev1", "dev2"}
+
+		// set the expected cluster config value
+		if err := manager.SetNodeConf(conf); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	confs, err := manager.EnumerateNodeConf()
+	if err != nil {
+		t.Fatal(err)
+	} else {
+		for _, conf := range *confs {
+			if !nodeIds[conf.NodeId] {
+				t.Fatal("expected node id: ", conf.NodeId, " but not found")
+			}
+		}
+	}
 }
 
 func TestCallback(t *testing.T) {
@@ -97,7 +150,7 @@ func TestCallback(t *testing.T) {
 			err = fmt.Errorf("data not as expected")
 
 		}
-		if config.Driver != "myDriver" {
+		if config.Description != "myDescription" {
 			err = fmt.Errorf("data not as expected")
 		}
 		ch <- err
@@ -139,7 +192,7 @@ func setSomeClusterValues(ch chan error, manager ConfigManager) error {
 	// prepare expected cluster config
 	conf := new(ClusterConfig)
 	conf.ClusterId = "myClusterID"
-	conf.Driver = "myDriver"
+	conf.Description = "myDescription"
 
 	if err := manager.SetClusterConf(conf); err != nil {
 		return err
@@ -152,15 +205,12 @@ func setSomeClusterValues(ch chan error, manager ConfigManager) error {
 func setSomeNodeValues(ch chan error, manager ConfigManager) error {
 	// prepare expected cluster config
 	conf := new(NodesConfig)
-	conf.NodeConf = make(map[string]*NodeConfig)
-	conf.NodeConf["node1"] = new(NodeConfig)
-	conf.NodeConf["node2"] = new(NodeConfig)
-	conf.NodeConf["node3"] = new(NodeConfig)
+	*conf = make([]*NodeConfig, 3)
 
-	for key, val := range conf.NodeConf {
-		key, val := key, val
-		val.NodeId = key
+	for i, val := range *conf {
+		val = new(NodeConfig)
 		val.Network = new(NetworkConfig)
+		val.NodeId = "node_" + strconv.FormatInt(int64(i), 10)
 		val.Network.DataIface = "dataIface"
 		if err := manager.SetNodeConf(val); err != nil {
 			return err

@@ -1,7 +1,6 @@
 package cluster
 
 import (
-	"encoding/json"
 	"errors"
 	"strconv"
 	"time"
@@ -9,7 +8,6 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/client"
 	"github.com/libopenstorage/openstorage/cluster"
-	"github.com/libopenstorage/openstorage/osdconfig"
 )
 
 const (
@@ -18,8 +16,6 @@ const (
 	managementurl   = "/managementurl"
 	fluentdhost     = "/fluentdconfig"
 	tunnelconfigurl = "/tunnelconfig"
-	UriCluster      = "/config/cluster"
-	UriNode         = "/config/node"
 )
 
 type clusterClient struct {
@@ -36,12 +32,12 @@ func (c *clusterClient) Name() string {
 }
 
 func (c *clusterClient) Enumerate() (api.Cluster, error) {
-	cluster := api.Cluster{}
+	clusterInfo := api.Cluster{}
 
-	if err := c.c.Get().Resource(clusterPath + "/enumerate").Do().Unmarshal(&cluster); err != nil {
-		return cluster, err
+	if err := c.c.Get().Resource(clusterPath + "/enumerate").Do().Unmarshal(&clusterInfo); err != nil {
+		return clusterInfo, err
 	}
-	return cluster, nil
+	return clusterInfo, nil
 }
 
 func (c *clusterClient) SetSize(size int) error {
@@ -132,7 +128,7 @@ func (c *clusterClient) Shutdown() error {
 	return nil
 }
 
-func (c *clusterClient) Start(int, bool) error {
+func (c *clusterClient) Start(int, bool, string) error {
 	return nil
 }
 
@@ -144,100 +140,6 @@ func (c *clusterClient) DisableUpdates() error {
 func (c *clusterClient) EnableUpdates() error {
 	c.c.Put().Resource(clusterPath + "/enablegossip").Do()
 	return nil
-}
-
-// Deprecated
-func (c *clusterClient) SetLoggingURL(loggingURL string) error {
-
-	resp := api.ClusterResponse{}
-
-	request := c.c.Put().Resource(clusterPath + loggingurl)
-	request.QueryOption("url", loggingURL)
-	if err := request.Do().Unmarshal(&resp); err != nil {
-		return err
-	}
-
-	if resp.Error != "" {
-		return errors.New(resp.Error)
-	}
-
-	return nil
-
-}
-
-// Deprecated
-func (c *clusterClient) SetManagementURL(managementURL string) error {
-
-	resp := api.ClusterResponse{}
-
-	request := c.c.Put().Resource(clusterPath + managementurl)
-	request.QueryOption("url", managementURL)
-	if err := request.Do().Unmarshal(&resp); err != nil {
-		return err
-	}
-
-	if resp.Error != "" {
-		return errors.New(resp.Error)
-	}
-
-	return nil
-
-}
-
-// Deprecated
-func (c *clusterClient) SetFluentDConfig(fluentDConfig api.FluentDConfig) error {
-	resp := api.ClusterResponse{}
-	request := c.c.Put().Resource(clusterPath + fluentdhost)
-	request.Body(&fluentDConfig)
-
-	if err := request.Do().Unmarshal(&resp); err != nil {
-		return err
-	}
-
-	if resp.Error != "" {
-		return errors.New(resp.Error)
-	}
-
-	return nil
-}
-
-// Deprecated
-func (c *clusterClient) GetFluentDConfig() api.FluentDConfig {
-	tc := api.FluentDConfig{}
-
-	if err := c.c.Get().Resource(clusterPath + fluentdhost).Do().Unmarshal(&tc); err != nil {
-		return api.FluentDConfig{}
-	}
-
-	return tc
-}
-
-// Deprecated
-func (c *clusterClient) SetTunnelConfig(tunnelConfig api.TunnelConfig) error {
-	resp := api.ClusterResponse{}
-
-	request := c.c.Put().Resource(clusterPath + tunnelconfigurl)
-	request.Body(&tunnelConfig)
-	if err := request.Do().Unmarshal(&resp); err != nil {
-		return err
-	}
-
-	if resp.Error != "" {
-		return errors.New(resp.Error)
-	}
-
-	return nil
-}
-
-// Deprecated
-func (c *clusterClient) GetTunnelConfig() api.TunnelConfig {
-	tc := api.TunnelConfig{}
-
-	if err := c.c.Get().Resource(clusterPath + tunnelconfigurl).Do().Unmarshal(&tc); err != nil {
-		return api.TunnelConfig{}
-	}
-
-	return tc
 }
 
 func (c *clusterClient) GetGossipState() *cluster.ClusterState {
@@ -278,49 +180,6 @@ func (c *clusterClient) EraseAlert(resource api.ResourceType, alertID int64) err
 	resp := request.Do()
 	if resp.Error() != nil {
 		return resp.FormatError()
-	}
-	return nil
-}
-
-// osdconfig.ConfigCaller interface compliance
-func (c *clusterClient) GetClusterConf() (*osdconfig.ClusterConfig, error) {
-	config := new(osdconfig.ClusterConfig)
-	request := c.c.Get().Resource(clusterPath + UriCluster)
-	if err := request.Do().Unmarshal(config); err != nil {
-		return nil, err
-	}
-	return config, nil
-}
-
-func (c *clusterClient) GetNodeConf(nodeID string) (*osdconfig.NodeConfig, error) {
-	config := new(osdconfig.NodeConfig)
-	request := c.c.Get().Resource(clusterPath + UriNode + "/" + nodeID)
-	if err := request.Do().Unmarshal(config); err != nil {
-		return nil, err
-	}
-	return config, nil
-}
-
-func (c *clusterClient) SetClusterConf(config *osdconfig.ClusterConfig) error {
-	data, err := json.Marshal(config)
-	if err != nil {
-		return err
-	}
-	request := c.c.Post().Body(data).Resource(clusterPath + UriCluster)
-	if err := request.Do().Error(); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (c *clusterClient) SetNodeConf(config *osdconfig.NodeConfig) error {
-	data, err := json.Marshal(config)
-	if err != nil {
-		return err
-	}
-	request := c.c.Post().Body(data).Resource(clusterPath + UriNode)
-	if err := request.Do().Error(); err != nil {
-		return err
 	}
 	return nil
 }
