@@ -1,8 +1,0 @@
-dependencies:
-  override:
-    - mkdir -p "$(echo $GOPATH | cut -f 1 -d :)/src/go.pedge.io/dlog"
-    - rsync -azC --delete ./ "$(echo $GOPATH | cut -f 1 -d :)/src/go.pedge.io/dlog/"
-    - make -C "$(echo $GOPATH | cut -f 1 -d :)/src/go.pedge.io/dlog" testdeps
-test:
-  override:
-    - make -C "$(echo $GOPATH | cut -f 1 -d :)/src/go.pedge.io/dlog" test

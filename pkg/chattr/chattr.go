@@ -8,7 +8,7 @@ import (
 	"path"
 	"strings"
 
-	"go.pedge.io/dlog"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -49,13 +49,13 @@ func RemoveImmutable(path string) error {
 func IsImmutable(path string) bool {
 	lsattrBin := which(lsattrCmd)
 	if _, err := os.Stat(path); err != nil {
-		dlog.Errorf("Failed to stat mount path:%v", err)
+		logrus.Errorf("Failed to stat mount path:%v", err)
 		return true
 	}
 	op, err := exec.Command(lsattrBin, "-d", path).CombinedOutput()
 	if err != nil {
 		// Cannot get path status, return true so that immutable bit is not reverted
-		dlog.Errorf("Error listing attrs for %v err:%v", path, string(op))
+		logrus.Errorf("Error listing attrs for %v err:%v", path, string(op))
 		return true
 	}
 	// 'lsattr -d' output is a single line with 2 fields separated by space; 1st one
@@ -65,11 +65,11 @@ func IsImmutable(path string) bool {
 	attrs := strings.Split(string(op), " ")
 	if len(attrs) != 2 {
 		// Cannot get path status, return true so that immutable bit is not reverted
-		dlog.Errorf("Invalid lsattr output %v", string(op))
+		logrus.Errorf("Invalid lsattr output %v", string(op))
 		return true
 	}
 	if strings.Contains(attrs[0], "i") {
-		dlog.Warnf("Path %v already set to immutable", path)
+		logrus.Warnf("Path %v already set to immutable", path)
 		return true
 	}
 

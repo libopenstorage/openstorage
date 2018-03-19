@@ -8,7 +8,7 @@ import (
 
 	"gopkg.in/jmcvetta/napping.v3"
 
-	"go.pedge.io/dlog"
+	"github.com/sirupsen/logrus"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
@@ -150,7 +150,7 @@ func (d *driver) Create(
 	s, err := d.getAuthSession()
 
 	if err != nil {
-		dlog.Errorf("Failed to create session: %s", err.Error())
+		logrus.Errorf("Failed to create session: %s", err.Error())
 		return "", err
 	}
 
@@ -215,7 +215,7 @@ func (d *driver) Set(
 }
 
 func (d *driver) Shutdown() {
-	dlog.Infof("%s Shutting down", Name)
+	logrus.Infof("%s Shutting down", Name)
 }
 
 func (d *driver) Snapshot(
