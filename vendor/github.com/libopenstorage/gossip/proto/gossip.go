@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/hashicorp/logutils"
 	ml "github.com/hashicorp/memberlist"
 	"github.com/libopenstorage/gossip/types"

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"syscall"
 
-	"go.pedge.io/dlog"
+	"github.com/sirupsen/logrus"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
@@ -117,19 +117,19 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 			}
 		}
 	} else {
-		dlog.Println("Could not enumerate Volumes, ", err)
+		logrus.Println("Could not enumerate Volumes, ", err)
 	}
 
 	inst.cl = &clusterListener{}
 	c, err := cluster.Inst()
 	if err != nil {
-		dlog.Println("BUSE initializing in single node mode")
+		logrus.Println("BUSE initializing in single node mode")
 	} else {
-		dlog.Println("BUSE initializing in clustered mode")
+		logrus.Println("BUSE initializing in clustered mode")
 		c.AddEventListener(inst.cl)
 	}
 
-	dlog.Println("BUSE initialized and driver mounted at: ", BuseMountPath)
+	logrus.Println("BUSE initialized and driver mounted at: ", BuseMountPath)
 	return inst, nil
 }
 
@@ -171,12 +171,12 @@ func (d *driver) Create(
 	buseFile := path.Join(BuseMountPath, volumeID)
 	f, err := os.Create(buseFile)
 	if err != nil {
-		dlog.Println(err)
+		logrus.Println(err)
 		return "", err
 	}
 
 	if err := f.Truncate(int64(spec.Size)); err != nil {
-		dlog.Println(err)
+		logrus.Println(err)
 		return "", err
 	}
 
@@ -187,22 +187,22 @@ func (d *driver) Create(
 	nbd := Create(bd, volumeID, int64(spec.Size))
 	bd.nbd = nbd
 
-	dlog.Infof("Connecting to NBD...")
+	logrus.Infof("Connecting to NBD...")
 	dev, err := bd.nbd.Connect()
 	if err != nil {
-		dlog.Println(err)
+		logrus.Println(err)
 		return "", err
 	}
 
-	dlog.Infof("Formatting %s with %v", dev, spec.Format)
+	logrus.Infof("Formatting %s with %v", dev, spec.Format)
 	cmd := "/sbin/mkfs." + spec.Format.SimpleString()
 	o, err := exec.Command(cmd, dev).Output()
 	if err != nil {
-		dlog.Warnf("Failed to run command %v %v: %v", cmd, dev, o)
+		logrus.Warnf("Failed to run command %v %v: %v", cmd, dev, o)
 		return "", err
 	}
 
-	dlog.Infof("BUSE mapped NBD device %s (size=%v) to block file %s", dev,
+	logrus.Infof("BUSE mapped NBD device %s (size=%v) to block file %s", dev,
 		spec.Size, buseFile)
 
 	v := common.NewVolume(
@@ -226,14 +226,14 @@ func (d *driver) Create(
 func (d *driver) Delete(volumeID string) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
-		dlog.Println(err)
+		logrus.Println(err)
 		return err
 	}
 
 	bd, ok := d.buseDevices[v.DevicePath]
 	if !ok {
 		err = fmt.Errorf("Cannot locate a BUSE device for %s", v.DevicePath)
-		dlog.Println(err)
+		logrus.Println(err)
 		return err
 	}
 
@@ -242,11 +242,11 @@ func (d *driver) Delete(volumeID string) error {
 	bd.f.Close()
 	bd.nbd.Disconnect()
 
-	dlog.Infof("BUSE deleted volume %v at NBD device %s", volumeID,
+	logrus.Infof("BUSE deleted volume %v at NBD device %s", volumeID,
 		v.DevicePath)
 
 	if err := d.DeleteVol(volumeID); err != nil {
-		dlog.Println(err)
+		logrus.Println(err)
 		return err
 	}
 
@@ -269,7 +269,7 @@ func (d *driver) Mount(volumeID string, mountpath string, options map[string]str
 		return fmt.Errorf("Failed to mount %v at %v: %v", v.DevicePath, mountpath, err)
 	}
 
-	dlog.Infof("BUSE mounted NBD device %s at %s", v.DevicePath, mountpath)
+	logrus.Infof("BUSE mounted NBD device %s at %s", v.DevicePath, mountpath)
 
 	if v.AttachPath == nil {
 		v.AttachPath = make([]string, 1)
@@ -351,7 +351,7 @@ func (d *driver) Detach(volumeID string, options map[string]string) error {
 }
 
 func (d *driver) Shutdown() {
-	dlog.Printf("%s Shutting down", Name)
+	logrus.Printf("%s Shutting down", Name)
 	syscall.Unmount(BuseMountPath, 0)
 }
 

@@ -3,14 +3,15 @@ package alert
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/pkg/proto/time"
-	"github.com/portworx/kvdb"
-	"go.pedge.io/dlog"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/pkg/proto/time"
+	"github.com/portworx/kvdb"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -285,7 +286,7 @@ func (kva *KvAlert) raiseIfNotExist(a *api.Alert) error {
 	// is able to proceed.
 	kvp, err := kv.Lock(getLockId(a.ResourceId, a.UniqueTag))
 	if err != nil {
-		dlog.Errorf("Failed to get lock for resource %s, err: %s",
+		logrus.Errorf("Failed to get lock for resource %s, err: %s",
 			a.ResourceId, err.Error())
 		return err
 	}
@@ -293,7 +294,7 @@ func (kva *KvAlert) raiseIfNotExist(a *api.Alert) error {
 
 	alerts, err := kva.getResourceSpecificAlerts(a.Resource, kv)
 	if err != nil {
-		dlog.Infof("Failed to get alerts of type %s, error: %s",
+		logrus.Infof("Failed to get alerts of type %s, error: %s",
 			a.Resource, err.Error())
 		return err
 	}
@@ -324,7 +325,7 @@ func (kva *KvAlert) ClearByUniqueTag(
 
 	kvp, err := kv.Lock(getLockId(resourceId, uniqueTag))
 	if err != nil {
-		dlog.Errorf("Failed to get lock for resource %s, err: %s",
+		logrus.Errorf("Failed to get lock for resource %s, err: %s",
 			resourceId, err.Error())
 		return err
 	}
@@ -332,7 +333,7 @@ func (kva *KvAlert) ClearByUniqueTag(
 
 	alerts, err := kva.getResourceSpecificAlerts(resourceType, kv)
 	if err != nil {
-		dlog.Infof("Failed to get alerts of type %s, error: %s",
+		logrus.Infof("Failed to get alerts of type %s, error: %s",
 			resourceType, err.Error())
 		return err
 	}
@@ -469,18 +470,18 @@ func (kva *KvAlert) getKvdbForCluster(clusterID string) (kvdb.Kvdb, error) {
 }
 
 func processWatchError(err error, watcherKey string, prefix string) error {
-	dlog.Errorf("Alert Watch error for key %v: %v", watcherKey, err)
+	logrus.Errorf("Alert Watch error for key %v: %v", watcherKey, err)
 	w := watcherMap[watcherKey]
 	w.status = watchError
 	if w.watchErrors == 5 {
-		dlog.Warnf("Too many watch errors for key (%v). Error: %s. Stopping the watch!!", watcherKey, err.Error())
+		logrus.Warnf("Too many watch errors for key (%v). Error: %s. Stopping the watch!!", watcherKey, err.Error())
 		w.cb(nil, api.AlertActionType_ALERT_ACTION_TYPE_NONE, prefix, "")
 		// Too many watch errors. Stop the watch
 		return err
 	}
 	w.watchErrors++
 	if err := subscribeWatch(watcherKey); err != nil {
-		dlog.Warnf("Failed to resubscribe alert watch for key: %s: %s", watcherKey, err.Error())
+		logrus.Warnf("Failed to resubscribe alert watch for key: %s: %s", watcherKey, err.Error())
 	}
 	return err
 }

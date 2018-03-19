@@ -20,7 +20,7 @@ IF YOU CODE ON OPENSTORAGE, YOU ARE EXPECTED TO KNOW THIS. Just take the 20 minu
 
 ### Items
 
-* Use [dlog](https://go.pedge.io/dlog) for logging.
+* Use [logrus](https://github.com/sirupsen/logrus) for logging.
 
 * File order:
 

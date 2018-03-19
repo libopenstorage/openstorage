@@ -3,20 +3,20 @@ package osdconfig
 import (
 	"path/filepath"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/portworx/kvdb"
+	"github.com/sirupsen/logrus"
 )
 
 // NewManager can be used to instantiate ConfigManager
 // Users of this function are expected to manage the execution via context
-// github.com/Sirupsen/logrus package is used for logging internally
+// github.com/sirupsen/logrus package is used for logging internally
 func NewManager(kv kvdb.Kvdb) (ConfigManager, error) {
 	return newManager(kv)
 }
 
 // newManager can be used to instantiate configManager
 // Users of this function are expected to manage the execution via context
-// github.com/Sirupsen/logrus package is used for logging internally
+// github.com/sirupsen/logrus package is used for logging internally
 func newManager(kv kvdb.Kvdb) (*configManager, error) {
 	manager := new(configManager)
 

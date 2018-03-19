@@ -18,7 +18,7 @@ package csi
 
 import (
 	"github.com/container-storage-interface/spec/lib/go/csi"
-	"go.pedge.io/dlog"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -54,7 +54,7 @@ func (s *OsdCsiServer) GetPluginInfo(
 	ctx context.Context,
 	req *csi.GetPluginInfoRequest) (*csi.GetPluginInfoResponse, error) {
 
-	dlog.Debugf("GetPluginInfo req[%#v]", req)
+	logrus.Debugf("GetPluginInfo req[%#v]", req)
 
 	// Check arguments
 	if req.GetVersion() == nil {

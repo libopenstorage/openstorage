@@ -11,7 +11,7 @@
   ],
   "swagger": "2.0",
   "info": {
-    "description": "OpenStorage is a clustered implementation of the Open Storage specification and relies on the OCI runtime.\nIt allows you to run stateful services in containers in a multi-host clustered environment.",
+    "description": "OpenStorage is a clustered implementation of the Open Storage specification and relies on the OCI runtime.\nIt allows you to run stateful services in containers in a multi-host clustered environment.\nThis document represents the API documentaton of Openstorage, for the GO client please visit:\nhttps://github.com/libopenstorage/openstorage",
     "title": "OSD API.",
     "contact": {
       "url": "https://github.com/libopenstorage/openstorage"
@@ -20,7 +20,7 @@
       "name": "APACHE2",
       "url": "https://opensource.org/licenses/Apache-2.0"
     },
-    "version": "1.0.0"
+    "version": "2.0.0"
   },
   "host": "localhost",
   "basePath": "/v1",
@@ -1568,7 +1568,6 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "ClusterConfig": {
-      "description": "ClusterConfig is a cluster level config parameter struct",
       "type": "object",
       "properties": {
         "cluster_id": {
@@ -1599,15 +1598,15 @@
           "type": "object",
           "x-go-name": "Private"
         },
-        "secrets": {
-          "$ref": "#/definitions/SecretsConfig"
+        "ManagementURL": {
+          "type": "string"
         },
         "version": {
           "type": "string",
           "x-go-name": "Version"
         }
       },
-      "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
+      "x-go-package": "github.com/libopenstorage/openstorage/config"
     },
     "ClusterNotify": {
       "type": "integer",
