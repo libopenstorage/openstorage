@@ -317,6 +317,39 @@ func (m *Mounter) deletePath(path string) bool {
 	return false
 }
 
+// reload from newM
+func (m *Mounter) reload(device string, newM *Info) error {
+	m.Lock()
+	defer m.Unlock()
+
+	// New mountable has no mounts, delete old mounts.
+	if newM == nil {
+		delete(m.mounts, device)
+		return nil
+	}
+
+	// Old mountable had no mounts, copy over new mounts.
+	oldM, ok := m.mounts[device]
+	if !ok {
+		m.mounts[device] = newM
+		return nil
+	}
+
+	// Overwrite old mount entries into new mount table, preserving refcnt.
+	for _, oldP := range oldM.Mountpoint {
+		for j, newP := range newM.Mountpoint {
+			if newP.Path == oldP.Path {
+				newM.Mountpoint[j] = oldP
+				break
+			}
+		}
+	}
+
+	// Purge old mounts.
+	m.mounts[device] = newM
+	return nil
+}
+
 // Mount new mountpoint for specified device.
 func (m *Mounter) Mount(
 	minor int,
@@ -457,7 +490,7 @@ func (m *Mounter) Unmount(
 
 		return nil
 	}
-	dlog.Warnf("Device %q is not mounted at path %q", path, device)
+	dlog.Warnf("Device %q is not mounted at path %q", device, path)
 	return nil
 }
 
