@@ -10,20 +10,20 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/keylock"
 )
 
-// DeviceMounter implements Ops and tracks active mounts for volume drivers.
-type DeviceMounter struct {
+// deviceMounter implements Ops and tracks active mounts for volume drivers.
+type deviceMounter struct {
 	Mounter
 }
 
-// NewDeviceMounter returns a new DeviceMounter
+// NewDeviceMounter returns a new deviceMounter
 func NewDeviceMounter(
 	devPrefixes []string,
 	mountImpl MountImpl,
 	allowedDirs []string,
 	trashLocation string,
-) (*DeviceMounter, error) {
+) (*deviceMounter, error) {
 
-	m := &DeviceMounter{
+	m := &deviceMounter{
 		Mounter: Mounter{
 			mountImpl:     mountImpl,
 			mounts:        make(DeviceMap),
@@ -48,45 +48,20 @@ func NewDeviceMounter(
 }
 
 // Reload reloads the mount table
-func (m *DeviceMounter) Reload(device string) error {
-	newDm, err := NewDeviceMounter([]string{device}, m.mountImpl, m.Mounter.allowedDirs, m.trashLocation)
+func (m *deviceMounter) Reload(device string) error {
+	newDm, err := NewDeviceMounter([]string{device},
+		m.mountImpl,
+		m.Mounter.allowedDirs,
+		m.trashLocation,
+	)
 	if err != nil {
 		return err
 	}
-	m.Lock()
-	defer m.Unlock()
-
-	// New mountable has no mounts, delete old mounts.
-	newM, ok := newDm.mounts[device]
-	if !ok {
-		delete(m.mounts, device)
-		return nil
-	}
-
-	// Old mountable had no mounts, copy over new mounts.
-	oldM, ok := m.mounts[device]
-	if !ok {
-		m.mounts[device] = newM
-		return nil
-	}
-
-	// Overwrite old mount entries into new mount table, preserving refcnt.
-	for _, oldP := range oldM.Mountpoint {
-		for j, newP := range newM.Mountpoint {
-			if newP.Path == oldP.Path {
-				newM.Mountpoint[j] = oldP
-				break
-			}
-		}
-	}
-
-	// Purge old mounts.
-	m.mounts[device] = newM
-	return nil
+	return m.reload(device, newDm.mounts[device])
 }
 
 // Load mount table
-func (m *DeviceMounter) Load(devPrefixes []string) error {
+func (m *deviceMounter) Load(devPrefixes []string) error {
 	info, err := mount.GetMounts()
 	if err != nil {
 		return err
