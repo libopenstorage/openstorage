@@ -6,11 +6,6 @@ ifndef PKGS
 PKGS := $(shell go list ./... 2>&1 | grep -v 'vendor' | grep -v 'sanity')
 endif
 
-ifndef LINT_PKGS
-LINT_DIRS := "./csi"
-LINT_PKGS := $(shell go list $(LINT_DIRS) | grep -v vendor)
-endif
-
 ifeq ($(BUILD_TYPE),debug)
 BUILDFLAGS := -gcflags "-N -l"
 endif
@@ -94,7 +89,7 @@ proto:
 
 lint:
 	go get -v github.com/golang/lint/golint
-	golint -set_exit_status $(LINT_PKGS)
+	golint $(PKGS)
 
 vet:
 	go vet $(PKGS)
