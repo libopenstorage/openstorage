@@ -192,3 +192,15 @@ func (c *clusterClient) EraseAlert(resource api.ResourceType, alertID int64) err
 	}
 	return nil
 }
+
+//SetClusterSecretKey api client wrapper over /setclustersecretkey endpoints
+func (c *clusterClient) SetClusterKey(secretKey string, override bool) error {
+	request := &api.ClusterSecretKeyRequest{
+		Clustersecretkey: secretKey,
+		Override:         override,
+	}
+	if err := c.c.Post().Resource(clusterPath + "/setclustersecretkey").Body(request).Do().Error(); err != nil {
+		return err
+	}
+	return nil
+}

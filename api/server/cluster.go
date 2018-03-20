@@ -14,14 +14,64 @@ import (
 )
 
 const (
-	nodeOkMsg    = "Node status OK"
-	nodeNotOkMsg = "Node status not OK"
+	nodeOkMsg      = "Node status OK"
+	nodeNotOkMsg   = "Node status not OK"
+	secretKeyOkMsg = "Cluster Secret Key successfully set."
 )
 
 type clusterApi struct {
 	restBase
 }
 
+func (c *clusterApi) Routes() []*Route {
+	return []*Route{
+		{verb: "GET", path: "/cluster/versions", fn: c.versions},
+		{verb: "GET", path: clusterPath("/enumerate", cluster.APIVersion), fn: c.enumerate},
+		{verb: "GET", path: clusterPath("/gossipstate", cluster.APIVersion), fn: c.gossipState},
+		{verb: "GET", path: clusterPath("/nodestatus", cluster.APIVersion), fn: c.nodeStatus},
+		{verb: "GET", path: clusterPath("/nodehealth", cluster.APIVersion), fn: c.nodeHealth},
+		{verb: "GET", path: clusterPath("/status", cluster.APIVersion), fn: c.status},
+		{verb: "GET", path: clusterPath("/peerstatus", cluster.APIVersion), fn: c.peerStatus},
+		{verb: "GET", path: clusterPath("/inspect/{id}", cluster.APIVersion), fn: c.inspect},
+		{verb: "DELETE", path: clusterPath("", cluster.APIVersion), fn: c.delete},
+		{verb: "DELETE", path: clusterPath("/{id}", cluster.APIVersion), fn: c.delete},
+		{verb: "PUT", path: clusterPath("/enablegossip", cluster.APIVersion), fn: c.enableGossip},
+		{verb: "PUT", path: clusterPath("/disablegossip", cluster.APIVersion), fn: c.disableGossip},
+		{verb: "PUT", path: clusterPath("/shutdown", cluster.APIVersion), fn: c.shutdown},
+		{verb: "PUT", path: clusterPath("/shutdown/{id}", cluster.APIVersion), fn: c.shutdown},
+		{verb: "GET", path: clusterPath("/alerts/{resource}", cluster.APIVersion), fn: c.enumerateAlerts},
+		{verb: "PUT", path: clusterPath("/alerts/{resource}/{id}", cluster.APIVersion), fn: c.clearAlert},
+		{verb: "POST", path: clusterPath("/setclustersecretkey", cluster.APIVersion), fn: c.setClusterSecretKey},
+		{verb: "DELETE", path: clusterPath("/alerts/{resource}/{id}", cluster.APIVersion), fn: c.eraseAlert},
+	}
+}
+
+func newClusterAPI() restServer {
+	return &clusterApi{restBase{version: cluster.APIVersion, name: "Cluster API"}}
+}
+
+func (c *clusterApi) String() string {
+	return c.name
+}
+
+// swagger:operation GET /cluster/enumerate cluster enumerate enumerateCluster
+//
+// Lists cluster Nodes.
+//
+// This will return the entire cluster object and it's nodes.
+//
+// ---
+// produces:
+// - application/json
+// responses:
+//   '200':
+//      description: current cluster state
+//      schema:
+//         type: array
+//         items:
+//            $ref: '#/definitions/Cluster'
+func (c *clusterApi) enumerate(w http.ResponseWriter, r *http.Request) {
+	method := "enumerate"
 func newClusterAPI() restServer {
 	return &clusterApi{restBase{version: cluster.APIVersion, name: "Cluster API"}}
 }
@@ -643,6 +693,23 @@ func (c *clusterApi) eraseAlert(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	json.NewEncoder(w).Encode("Successfully erased Alert")
+}
+
+//TODO(ram-infrac): add swagger yaml here
+//This function does nothing right now just dump recieved api params and
+//return success when called
+func (c *clusterApi) setClusterSecretKey(w http.ResponseWriter, r *http.Request) {
+	var dcReq api.ClusterSecretKeyRequest
+	method := "setClustersecretKey"
+	if err := json.NewDecoder(r.Body).Decode(&dcReq); err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	//Logged recived paramss for now
+	fmt.Println("clusterkey", dcReq.Clustersecretkey, "override", dcReq.Override)
+
+	w.Write([]byte(secretKeyOkMsg + "\n"))
 }
 
 func (c *clusterApi) getAlertParams(w http.ResponseWriter, r *http.Request, method string) (api.ResourceType, int64, error) {
