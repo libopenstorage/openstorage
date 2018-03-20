@@ -107,6 +107,11 @@ docs:
 	go generate ./cmd/osd/main.go
 	swagger validate api/swagger/swagger.json
 
+generate-mockfiles:
+	go generate $(PKGS)
+
+generate: docs generate-mockfiles
+
 docker-build-osd-dev:
 	docker build -t openstorage/osd-dev -f Dockerfile.osd-dev .
 
@@ -213,7 +218,9 @@ clean: $(OSDSANITY)-clean
 	install-flexvolume-plugin \
 	$(OSDSANITY)-install \
 	$(OSDSANITY)-clean \
-	clean
+	clean \
+	generate \
+	generate-mockfiles
 
 $(GOPATH)/bin/cover:
 	go get golang.org/x/tools/cmd/cover
