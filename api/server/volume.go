@@ -93,7 +93,9 @@ func (vd *volAPI) nodeIPtoIds(nodes []string) ([]string, error) {
 	return nodeIds, err
 }
 
-func (vd *volAPI) replicaSpecIPtoIds(rspecRef *api.ReplicaSet) error {
+// Convert any replica set node values which are IPs to the corresponding Node ID.
+// Update the replica set node list.
+func (vd *volAPI) updateReplicaSpecNodeIPstoIds(rspecRef *api.ReplicaSet) error {
 	if rspecRef != nil && len(rspecRef.Nodes) > 0 {
 		nodeIds, err := vd.nodeIPtoIds(rspecRef.Nodes)
 		if err != nil {
@@ -149,7 +151,7 @@ func (vd *volAPI) create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if dcReq.Spec != nil {
-		if err = vd.replicaSpecIPtoIds(dcReq.Spec.ReplicaSet); err != nil {
+		if err = vd.updateReplicaSpecNodeIPstoIds(dcReq.Spec.ReplicaSet); err != nil {
 			vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -250,7 +252,7 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 
 	if req.Locator != nil || req.Spec != nil {
 		if req.Spec != nil {
-			if err = vd.replicaSpecIPtoIds(req.Spec.ReplicaSet); err != nil {
+			if err = vd.updateReplicaSpecNodeIPstoIds(req.Spec.ReplicaSet); err != nil {
 				vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 				return
 			}
