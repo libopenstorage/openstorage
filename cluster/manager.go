@@ -1509,17 +1509,16 @@ func (c *ClusterManager) NodeRemoveDone(nodeID string, result error) {
 
 	logrus.Infof("Cluster manager node remove done: node ID %s", nodeID)
 
-	err := c.deleteNodeFromDB(nodeID)
-	if err != nil {
+	// Remove osdconfig data from etcd
+	if err := c.configManager.DeleteNodeConf(nodeID); err != nil {
+		logrus.Warn("error removing node from osdconfig:", err)
+	}
+
+	if err := c.deleteNodeFromDB(nodeID); err != nil {
 		msg := fmt.Sprintf("Failed to delete node %s "+
 			"from cluster database, error %s",
 			nodeID, err)
 		logrus.Errorf(msg)
-	}
-
-	// Remove osdconfig data from etcd
-	if err := c.configManager.DeleteNodeConf(nodeID); err != nil {
-		logrus.Warn("error removing node from osdconfig:", err)
 	}
 }
 
