@@ -1490,11 +1490,6 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 				}
 			}
 		}
-
-		// Remove osdconfig data from etcd
-		if err := c.configManager.DeleteNodeConf(n.Id); err != nil {
-			logrus.Warn("error removing node from osdconfig:", err)
-		}
 	}
 
 	return resultErr
@@ -1520,6 +1515,11 @@ func (c *ClusterManager) NodeRemoveDone(nodeID string, result error) {
 			"from cluster database, error %s",
 			nodeID, err)
 		logrus.Errorf(msg)
+	}
+
+	// Remove osdconfig data from etcd
+	if err := c.configManager.DeleteNodeConf(nodeID); err != nil {
+		logrus.Warn("error removing node from osdconfig:", err)
 	}
 }
 
