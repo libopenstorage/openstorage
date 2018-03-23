@@ -24,28 +24,24 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/pkg/util"
 
-	"github.com/container-storage-interface/spec/lib/go/csi"
+	csi "github.com/container-storage-interface/spec/lib/go/csi/v0"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-// GetNodeID is a CSI API which gets the PX NodeId for the local node
-func (s *OsdCsiServer) GetNodeID(ctx context.Context, req *csi.GetNodeIDRequest) (*csi.GetNodeIDResponse, error) {
-	logrus.Debugf("GetNodeID req[%#v]", req)
-
-	// Check arguments
-	if req.GetVersion() == nil {
-		return nil, status.Error(codes.InvalidArgument, "Version must be provided")
-	}
-
+// NodeGetId is a CSI API which gets the PX NodeId for the local node
+func (s *OsdCsiServer) NodeGetId(
+	ctx context.Context,
+	req *csi.NodeGetIdRequest,
+) (*csi.NodeGetIdResponse, error) {
 	clus, err := s.cluster.Enumerate()
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Unable to Enumerate cluster: %s", err)
 	}
 
-	result := &csi.GetNodeIDResponse{
+	result := &csi.NodeGetIdResponse{
 		NodeId: clus.NodeId,
 	}
 
@@ -67,9 +63,6 @@ func (s *OsdCsiServer) NodePublishVolume(
 	logrus.Debugf("NodePublishVolume req[%#v]", req)
 
 	// Check arguments
-	if req.GetVersion() == nil {
-		return nil, status.Error(codes.InvalidArgument, "Version must be provided")
-	}
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Volume id must be provided")
 	}
@@ -104,7 +97,6 @@ func (s *OsdCsiServer) NodePublishVolume(
 	}
 
 	// Verify target location is an existing directory
-	// See: https://github.com/container-storage-interface/spec/issues/60
 	if err := verifyTargetLocation(req.GetTargetPath()); err != nil {
 		return nil, status.Errorf(
 			codes.Aborted,
@@ -156,9 +148,6 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 	logrus.Debugf("NodeUnPublishVolume req[%#v]", req)
 
 	// Check arguments
-	if req.GetVersion() == nil {
-		return nil, status.Error(codes.InvalidArgument, "Version must be provided")
-	}
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Volume id must be provided")
 	}
@@ -204,27 +193,6 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 	return &csi.NodeUnpublishVolumeResponse{}, nil
 }
 
-// NodeProbe is a CSI API function which asks the driver to check if the
-// node has all the necessary components to run successfully.
-func (s *OsdCsiServer) NodeProbe(
-	ctx context.Context,
-	req *csi.NodeProbeRequest,
-) (*csi.NodeProbeResponse, error) {
-
-	logrus.Debugf("NodeProbe req[%#v]", req)
-
-	// Check arguments
-	if req.GetVersion() == nil {
-		return nil, status.Error(codes.InvalidArgument, "Version must be provided")
-	}
-
-	// TBD(lpabon) Here we can add support
-	// to scan th system in a future patch.
-
-	// For now return 'ok'.
-	return &csi.NodeProbeResponse{}, nil
-}
-
 // NodeGetCapabilities is a CSI API function which seems to be setup for
 // future patches
 func (s *OsdCsiServer) NodeGetCapabilities(
@@ -233,11 +201,6 @@ func (s *OsdCsiServer) NodeGetCapabilities(
 ) (*csi.NodeGetCapabilitiesResponse, error) {
 
 	logrus.Debugf("NodeGetCapabilities req[%#v]", req)
-
-	// Check arguments
-	if req.GetVersion() == nil {
-		return nil, status.Error(codes.InvalidArgument, "Version must be provided")
-	}
 
 	return &csi.NodeGetCapabilitiesResponse{
 		Capabilities: []*csi.NodeServiceCapability{

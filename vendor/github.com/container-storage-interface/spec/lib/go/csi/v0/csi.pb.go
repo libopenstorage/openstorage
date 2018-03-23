@@ -8,16 +8,18 @@ It is generated from these files:
 	csi.proto
 
 It has these top-level messages:
-	GetSupportedVersionsRequest
-	GetSupportedVersionsResponse
-	Version
 	GetPluginInfoRequest
 	GetPluginInfoResponse
+	GetPluginCapabilitiesRequest
+	GetPluginCapabilitiesResponse
+	PluginCapability
+	ProbeRequest
+	ProbeResponse
 	CreateVolumeRequest
 	CreateVolumeResponse
 	VolumeCapability
 	CapacityRange
-	VolumeInfo
+	Volume
 	DeleteVolumeRequest
 	DeleteVolumeResponse
 	ControllerPublishVolumeRequest
@@ -30,19 +32,19 @@ It has these top-level messages:
 	ListVolumesResponse
 	GetCapacityRequest
 	GetCapacityResponse
-	ControllerProbeRequest
-	ControllerProbeResponse
 	ControllerGetCapabilitiesRequest
 	ControllerGetCapabilitiesResponse
 	ControllerServiceCapability
+	NodeStageVolumeRequest
+	NodeStageVolumeResponse
+	NodeUnstageVolumeRequest
+	NodeUnstageVolumeResponse
 	NodePublishVolumeRequest
 	NodePublishVolumeResponse
 	NodeUnpublishVolumeRequest
 	NodeUnpublishVolumeResponse
-	GetNodeIDRequest
-	GetNodeIDResponse
-	NodeProbeRequest
-	NodeProbeResponse
+	NodeGetIdRequest
+	NodeGetIdResponse
 	NodeGetCapabilitiesRequest
 	NodeGetCapabilitiesResponse
 	NodeServiceCapability
@@ -68,6 +70,37 @@ var _ = math.Inf
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+
+type PluginCapability_Service_Type int32
+
+const (
+	PluginCapability_Service_UNKNOWN PluginCapability_Service_Type = 0
+	// CONTROLLER_SERVICE indicates that the Plugin provides RPCs for
+	// the ControllerService. Plugins SHOULD provide this capability.
+	// In rare cases certain plugins may wish to omit the
+	// ControllerService entirely from their implementation, but such
+	// SHOULD NOT be the common case.
+	// The presence of this capability determines whether the CO will
+	// attempt to invoke the REQUIRED ControllerService RPCs, as well
+	// as specific RPCs as indicated by ControllerGetCapabilities.
+	PluginCapability_Service_CONTROLLER_SERVICE PluginCapability_Service_Type = 1
+)
+
+var PluginCapability_Service_Type_name = map[int32]string{
+	0: "UNKNOWN",
+	1: "CONTROLLER_SERVICE",
+}
+var PluginCapability_Service_Type_value = map[string]int32{
+	"UNKNOWN":            0,
+	"CONTROLLER_SERVICE": 1,
+}
+
+func (x PluginCapability_Service_Type) String() string {
+	return proto.EnumName(PluginCapability_Service_Type_name, int32(x))
+}
+func (PluginCapability_Service_Type) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{4, 0, 0}
+}
 
 type VolumeCapability_AccessMode_Mode int32
 
@@ -110,7 +143,7 @@ func (x VolumeCapability_AccessMode_Mode) String() string {
 	return proto.EnumName(VolumeCapability_AccessMode_Mode_name, int32(x))
 }
 func (VolumeCapability_AccessMode_Mode) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{7, 2, 0}
+	return fileDescriptor0, []int{9, 2, 0}
 }
 
 type ControllerServiceCapability_RPC_Type int32
@@ -148,103 +181,33 @@ func (ControllerServiceCapability_RPC_Type) EnumDescriptor() ([]byte, []int) {
 type NodeServiceCapability_RPC_Type int32
 
 const (
-	NodeServiceCapability_RPC_UNKNOWN NodeServiceCapability_RPC_Type = 0
+	NodeServiceCapability_RPC_UNKNOWN              NodeServiceCapability_RPC_Type = 0
+	NodeServiceCapability_RPC_STAGE_UNSTAGE_VOLUME NodeServiceCapability_RPC_Type = 1
 )
 
 var NodeServiceCapability_RPC_Type_name = map[int32]string{
 	0: "UNKNOWN",
+	1: "STAGE_UNSTAGE_VOLUME",
 }
 var NodeServiceCapability_RPC_Type_value = map[string]int32{
-	"UNKNOWN": 0,
+	"UNKNOWN":              0,
+	"STAGE_UNSTAGE_VOLUME": 1,
 }
 
 func (x NodeServiceCapability_RPC_Type) String() string {
 	return proto.EnumName(NodeServiceCapability_RPC_Type_name, int32(x))
 }
 func (NodeServiceCapability_RPC_Type) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{37, 0, 0}
+	return fileDescriptor0, []int{39, 0, 0}
 }
 
-// //////
-// //////
-type GetSupportedVersionsRequest struct {
-}
-
-func (m *GetSupportedVersionsRequest) Reset()                    { *m = GetSupportedVersionsRequest{} }
-func (m *GetSupportedVersionsRequest) String() string            { return proto.CompactTextString(m) }
-func (*GetSupportedVersionsRequest) ProtoMessage()               {}
-func (*GetSupportedVersionsRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
-
-type GetSupportedVersionsResponse struct {
-	// All the CSI versions that the Plugin supports. This field is
-	// REQUIRED.
-	SupportedVersions []*Version `protobuf:"bytes,1,rep,name=supported_versions,json=supportedVersions" json:"supported_versions,omitempty"`
-}
-
-func (m *GetSupportedVersionsResponse) Reset()                    { *m = GetSupportedVersionsResponse{} }
-func (m *GetSupportedVersionsResponse) String() string            { return proto.CompactTextString(m) }
-func (*GetSupportedVersionsResponse) ProtoMessage()               {}
-func (*GetSupportedVersionsResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
-
-func (m *GetSupportedVersionsResponse) GetSupportedVersions() []*Version {
-	if m != nil {
-		return m.SupportedVersions
-	}
-	return nil
-}
-
-// Specifies a version in Semantic Version 2.0 format.
-// (http://semver.org/spec/v2.0.0.html)
-type Version struct {
-	Major uint32 `protobuf:"varint,1,opt,name=major" json:"major,omitempty"`
-	Minor uint32 `protobuf:"varint,2,opt,name=minor" json:"minor,omitempty"`
-	Patch uint32 `protobuf:"varint,3,opt,name=patch" json:"patch,omitempty"`
-}
-
-func (m *Version) Reset()                    { *m = Version{} }
-func (m *Version) String() string            { return proto.CompactTextString(m) }
-func (*Version) ProtoMessage()               {}
-func (*Version) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
-
-func (m *Version) GetMajor() uint32 {
-	if m != nil {
-		return m.Major
-	}
-	return 0
-}
-
-func (m *Version) GetMinor() uint32 {
-	if m != nil {
-		return m.Minor
-	}
-	return 0
-}
-
-func (m *Version) GetPatch() uint32 {
-	if m != nil {
-		return m.Patch
-	}
-	return 0
-}
-
-// //////
-// //////
 type GetPluginInfoRequest struct {
-	// The API version assumed by the CO. This is a REQUIRED field.
-	Version *Version `protobuf:"bytes,1,opt,name=version" json:"version,omitempty"`
 }
 
 func (m *GetPluginInfoRequest) Reset()                    { *m = GetPluginInfoRequest{} }
 func (m *GetPluginInfoRequest) String() string            { return proto.CompactTextString(m) }
 func (*GetPluginInfoRequest) ProtoMessage()               {}
-func (*GetPluginInfoRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
-
-func (m *GetPluginInfoRequest) GetVersion() *Version {
-	if m != nil {
-		return m.Version
-	}
-	return nil
-}
+func (*GetPluginInfoRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
 type GetPluginInfoResponse struct {
 	// The name MUST follow reverse domain name notation format
@@ -264,7 +227,7 @@ type GetPluginInfoResponse struct {
 func (m *GetPluginInfoResponse) Reset()                    { *m = GetPluginInfoResponse{} }
 func (m *GetPluginInfoResponse) String() string            { return proto.CompactTextString(m) }
 func (*GetPluginInfoResponse) ProtoMessage()               {}
-func (*GetPluginInfoResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
+func (*GetPluginInfoResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
 
 func (m *GetPluginInfoResponse) GetName() string {
 	if m != nil {
@@ -287,11 +250,156 @@ func (m *GetPluginInfoResponse) GetManifest() map[string]string {
 	return nil
 }
 
-// //////
-// //////
+type GetPluginCapabilitiesRequest struct {
+}
+
+func (m *GetPluginCapabilitiesRequest) Reset()                    { *m = GetPluginCapabilitiesRequest{} }
+func (m *GetPluginCapabilitiesRequest) String() string            { return proto.CompactTextString(m) }
+func (*GetPluginCapabilitiesRequest) ProtoMessage()               {}
+func (*GetPluginCapabilitiesRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+
+type GetPluginCapabilitiesResponse struct {
+	// All the capabilities that the controller service supports. This
+	// field is OPTIONAL.
+	Capabilities []*PluginCapability `protobuf:"bytes,2,rep,name=capabilities" json:"capabilities,omitempty"`
+}
+
+func (m *GetPluginCapabilitiesResponse) Reset()                    { *m = GetPluginCapabilitiesResponse{} }
+func (m *GetPluginCapabilitiesResponse) String() string            { return proto.CompactTextString(m) }
+func (*GetPluginCapabilitiesResponse) ProtoMessage()               {}
+func (*GetPluginCapabilitiesResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+
+func (m *GetPluginCapabilitiesResponse) GetCapabilities() []*PluginCapability {
+	if m != nil {
+		return m.Capabilities
+	}
+	return nil
+}
+
+// Specifies a capability of the plugin.
+type PluginCapability struct {
+	// Types that are valid to be assigned to Type:
+	//	*PluginCapability_Service_
+	Type isPluginCapability_Type `protobuf_oneof:"type"`
+}
+
+func (m *PluginCapability) Reset()                    { *m = PluginCapability{} }
+func (m *PluginCapability) String() string            { return proto.CompactTextString(m) }
+func (*PluginCapability) ProtoMessage()               {}
+func (*PluginCapability) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
+
+type isPluginCapability_Type interface {
+	isPluginCapability_Type()
+}
+
+type PluginCapability_Service_ struct {
+	Service *PluginCapability_Service `protobuf:"bytes,1,opt,name=service,oneof"`
+}
+
+func (*PluginCapability_Service_) isPluginCapability_Type() {}
+
+func (m *PluginCapability) GetType() isPluginCapability_Type {
+	if m != nil {
+		return m.Type
+	}
+	return nil
+}
+
+func (m *PluginCapability) GetService() *PluginCapability_Service {
+	if x, ok := m.GetType().(*PluginCapability_Service_); ok {
+		return x.Service
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*PluginCapability) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _PluginCapability_OneofMarshaler, _PluginCapability_OneofUnmarshaler, _PluginCapability_OneofSizer, []interface{}{
+		(*PluginCapability_Service_)(nil),
+	}
+}
+
+func _PluginCapability_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*PluginCapability)
+	// type
+	switch x := m.Type.(type) {
+	case *PluginCapability_Service_:
+		b.EncodeVarint(1<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.Service); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("PluginCapability.Type has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _PluginCapability_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*PluginCapability)
+	switch tag {
+	case 1: // type.service
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(PluginCapability_Service)
+		err := b.DecodeMessage(msg)
+		m.Type = &PluginCapability_Service_{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _PluginCapability_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*PluginCapability)
+	// type
+	switch x := m.Type.(type) {
+	case *PluginCapability_Service_:
+		s := proto.Size(x.Service)
+		n += proto.SizeVarint(1<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+type PluginCapability_Service struct {
+	Type PluginCapability_Service_Type `protobuf:"varint,1,opt,name=type,enum=csi.v0.PluginCapability_Service_Type" json:"type,omitempty"`
+}
+
+func (m *PluginCapability_Service) Reset()                    { *m = PluginCapability_Service{} }
+func (m *PluginCapability_Service) String() string            { return proto.CompactTextString(m) }
+func (*PluginCapability_Service) ProtoMessage()               {}
+func (*PluginCapability_Service) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4, 0} }
+
+func (m *PluginCapability_Service) GetType() PluginCapability_Service_Type {
+	if m != nil {
+		return m.Type
+	}
+	return PluginCapability_Service_UNKNOWN
+}
+
+type ProbeRequest struct {
+}
+
+func (m *ProbeRequest) Reset()                    { *m = ProbeRequest{} }
+func (m *ProbeRequest) String() string            { return proto.CompactTextString(m) }
+func (*ProbeRequest) ProtoMessage()               {}
+func (*ProbeRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
+
+type ProbeResponse struct {
+}
+
+func (m *ProbeResponse) Reset()                    { *m = ProbeResponse{} }
+func (m *ProbeResponse) String() string            { return proto.CompactTextString(m) }
+func (*ProbeResponse) ProtoMessage()               {}
+func (*ProbeResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
+
 type CreateVolumeRequest struct {
-	// The API version assumed by the CO. This field is REQUIRED.
-	Version *Version `protobuf:"bytes,1,opt,name=version" json:"version,omitempty"`
 	// The suggested name for the storage space. This field is REQUIRED.
 	// It serves two purposes:
 	// 1) Idempotency - This name is generated by the CO to achieve
@@ -307,11 +415,11 @@ type CreateVolumeRequest struct {
 	//    an identifier by which to refer to the newly provisioned
 	//    storage. If a storage system supports this, it can optionally
 	//    use this name as the identifier for the new volume.
-	Name string `protobuf:"bytes,2,opt,name=name" json:"name,omitempty"`
+	Name string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
 	// This field is OPTIONAL. This allows the CO to specify the capacity
 	// requirement of the volume to be provisioned. If not specified, the
 	// Plugin MAY choose an implementation-defined capacity range.
-	CapacityRange *CapacityRange `protobuf:"bytes,3,opt,name=capacity_range,json=capacityRange" json:"capacity_range,omitempty"`
+	CapacityRange *CapacityRange `protobuf:"bytes,2,opt,name=capacity_range,json=capacityRange" json:"capacity_range,omitempty"`
 	// The capabilities that the provisioned volume MUST have: the Plugin
 	// MUST provision a volume that could satisfy ALL of the
 	// capabilities specified in this list. The Plugin MUST assume that
@@ -320,36 +428,35 @@ type CreateVolumeRequest struct {
 	// early validation: if ANY of the specified volume capabilities are
 	// not supported by the Plugin, the call SHALL fail. This field is
 	// REQUIRED.
-	VolumeCapabilities []*VolumeCapability `protobuf:"bytes,4,rep,name=volume_capabilities,json=volumeCapabilities" json:"volume_capabilities,omitempty"`
+	VolumeCapabilities []*VolumeCapability `protobuf:"bytes,3,rep,name=volume_capabilities,json=volumeCapabilities" json:"volume_capabilities,omitempty"`
 	// Plugin specific parameters passed in as opaque key-value pairs.
 	// This field is OPTIONAL. The Plugin is responsible for parsing and
 	// validating these parameters. COs will treat these as opaque.
-	Parameters map[string]string `protobuf:"bytes,5,rep,name=parameters" json:"parameters,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	// End user credentials used to authenticate/authorize volume creation
-	// request.
-	// This field contains credential data, for example username and
-	// password. Each key must consist of alphanumeric characters, '-',
-	// '_' or '.'. Each value MUST contain a valid string. An SP MAY
-	// choose to accept binary (non-string) data by using a binary-to-text
-	// encoding scheme, like base64. An SP SHALL advertise the
-	// requirements for credentials in documentation. COs SHALL permit
-	// users to pass through the required credentials. This information is
-	// sensitive and MUST be treated as such (not logged, etc.) by the CO.
+	Parameters map[string]string `protobuf:"bytes,4,rep,name=parameters" json:"parameters,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// Secrets required by plugin to complete volume creation request.
+	// A secret is a string to string map where the key identifies the
+	// name of the secret (e.g. "username" or "password"), and the value
+	// contains the secret data (e.g. "bob" or "abc123").
+	// Each key MUST consist of alphanumeric characters, '-', '_' or '.'.
+	// Each value MUST contain a valid string. An SP MAY choose to accept
+	// binary (non-string) data by using a binary-to-text encoding scheme,
+	// like base64.
+	// An SP SHALL advertise the requirements for required secret keys and
+	// values in documentation.
+	// CO SHALL permit passing through the required secrets.
+	// A CO MAY pass the same secrets to all RPCs, therefore the keys for
+	// all unique secrets that an SP expects must be unique across all CSI
+	// operations.
+	// This information is sensitive and MUST be treated as such (not
+	// logged, etc.) by the CO.
 	// This field is OPTIONAL.
-	UserCredentials map[string]string `protobuf:"bytes,6,rep,name=user_credentials,json=userCredentials" json:"user_credentials,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	ControllerCreateSecrets map[string]string `protobuf:"bytes,5,rep,name=controller_create_secrets,json=controllerCreateSecrets" json:"controller_create_secrets,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
 
 func (m *CreateVolumeRequest) Reset()                    { *m = CreateVolumeRequest{} }
 func (m *CreateVolumeRequest) String() string            { return proto.CompactTextString(m) }
 func (*CreateVolumeRequest) ProtoMessage()               {}
-func (*CreateVolumeRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
-
-func (m *CreateVolumeRequest) GetVersion() *Version {
-	if m != nil {
-		return m.Version
-	}
-	return nil
-}
+func (*CreateVolumeRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
 
 func (m *CreateVolumeRequest) GetName() string {
 	if m != nil {
@@ -379,9 +486,9 @@ func (m *CreateVolumeRequest) GetParameters() map[string]string {
 	return nil
 }
 
-func (m *CreateVolumeRequest) GetUserCredentials() map[string]string {
+func (m *CreateVolumeRequest) GetControllerCreateSecrets() map[string]string {
 	if m != nil {
-		return m.UserCredentials
+		return m.ControllerCreateSecrets
 	}
 	return nil
 }
@@ -390,17 +497,17 @@ type CreateVolumeResponse struct {
 	// Contains all attributes of the newly created volume that are
 	// relevant to the CO along with information required by the Plugin
 	// to uniquely identify the volume. This field is REQUIRED.
-	VolumeInfo *VolumeInfo `protobuf:"bytes,1,opt,name=volume_info,json=volumeInfo" json:"volume_info,omitempty"`
+	Volume *Volume `protobuf:"bytes,1,opt,name=volume" json:"volume,omitempty"`
 }
 
 func (m *CreateVolumeResponse) Reset()                    { *m = CreateVolumeResponse{} }
 func (m *CreateVolumeResponse) String() string            { return proto.CompactTextString(m) }
 func (*CreateVolumeResponse) ProtoMessage()               {}
-func (*CreateVolumeResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
+func (*CreateVolumeResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
 
-func (m *CreateVolumeResponse) GetVolumeInfo() *VolumeInfo {
+func (m *CreateVolumeResponse) GetVolume() *Volume {
 	if m != nil {
-		return m.VolumeInfo
+		return m.Volume
 	}
 	return nil
 }
@@ -421,7 +528,7 @@ type VolumeCapability struct {
 func (m *VolumeCapability) Reset()                    { *m = VolumeCapability{} }
 func (m *VolumeCapability) String() string            { return proto.CompactTextString(m) }
 func (*VolumeCapability) ProtoMessage()               {}
-func (*VolumeCapability) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
+func (*VolumeCapability) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
 
 type isVolumeCapability_AccessType interface {
 	isVolumeCapability_AccessType()
@@ -546,7 +653,7 @@ type VolumeCapability_BlockVolume struct {
 func (m *VolumeCapability_BlockVolume) Reset()                    { *m = VolumeCapability_BlockVolume{} }
 func (m *VolumeCapability_BlockVolume) String() string            { return proto.CompactTextString(m) }
 func (*VolumeCapability_BlockVolume) ProtoMessage()               {}
-func (*VolumeCapability_BlockVolume) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7, 0} }
+func (*VolumeCapability_BlockVolume) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9, 0} }
 
 // Indicate that the volume will be accessed via the filesystem API.
 type VolumeCapability_MountVolume struct {
@@ -564,7 +671,7 @@ type VolumeCapability_MountVolume struct {
 func (m *VolumeCapability_MountVolume) Reset()                    { *m = VolumeCapability_MountVolume{} }
 func (m *VolumeCapability_MountVolume) String() string            { return proto.CompactTextString(m) }
 func (*VolumeCapability_MountVolume) ProtoMessage()               {}
-func (*VolumeCapability_MountVolume) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7, 1} }
+func (*VolumeCapability_MountVolume) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9, 1} }
 
 func (m *VolumeCapability_MountVolume) GetFsType() string {
 	if m != nil {
@@ -583,13 +690,13 @@ func (m *VolumeCapability_MountVolume) GetMountFlags() []string {
 // Specify how a volume can be accessed.
 type VolumeCapability_AccessMode struct {
 	// This field is REQUIRED.
-	Mode VolumeCapability_AccessMode_Mode `protobuf:"varint,1,opt,name=mode,enum=csi.VolumeCapability_AccessMode_Mode" json:"mode,omitempty"`
+	Mode VolumeCapability_AccessMode_Mode `protobuf:"varint,1,opt,name=mode,enum=csi.v0.VolumeCapability_AccessMode_Mode" json:"mode,omitempty"`
 }
 
 func (m *VolumeCapability_AccessMode) Reset()                    { *m = VolumeCapability_AccessMode{} }
 func (m *VolumeCapability_AccessMode) String() string            { return proto.CompactTextString(m) }
 func (*VolumeCapability_AccessMode) ProtoMessage()               {}
-func (*VolumeCapability_AccessMode) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7, 2} }
+func (*VolumeCapability_AccessMode) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9, 2} }
 
 func (m *VolumeCapability_AccessMode) GetMode() VolumeCapability_AccessMode_Mode {
 	if m != nil {
@@ -604,25 +711,27 @@ func (m *VolumeCapability_AccessMode) GetMode() VolumeCapability_AccessMode_Mode
 type CapacityRange struct {
 	// Volume must be at least this big. This field is OPTIONAL.
 	// A value of 0 is equal to an unspecified field value.
-	RequiredBytes uint64 `protobuf:"varint,1,opt,name=required_bytes,json=requiredBytes" json:"required_bytes,omitempty"`
+	// The value of this field MUST NOT be negative.
+	RequiredBytes int64 `protobuf:"varint,1,opt,name=required_bytes,json=requiredBytes" json:"required_bytes,omitempty"`
 	// Volume must not be bigger than this. This field is OPTIONAL.
 	// A value of 0 is equal to an unspecified field value.
-	LimitBytes uint64 `protobuf:"varint,2,opt,name=limit_bytes,json=limitBytes" json:"limit_bytes,omitempty"`
+	// The value of this field MUST NOT be negative.
+	LimitBytes int64 `protobuf:"varint,2,opt,name=limit_bytes,json=limitBytes" json:"limit_bytes,omitempty"`
 }
 
 func (m *CapacityRange) Reset()                    { *m = CapacityRange{} }
 func (m *CapacityRange) String() string            { return proto.CompactTextString(m) }
 func (*CapacityRange) ProtoMessage()               {}
-func (*CapacityRange) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
+func (*CapacityRange) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
 
-func (m *CapacityRange) GetRequiredBytes() uint64 {
+func (m *CapacityRange) GetRequiredBytes() int64 {
 	if m != nil {
 		return m.RequiredBytes
 	}
 	return 0
 }
 
-func (m *CapacityRange) GetLimitBytes() uint64 {
+func (m *CapacityRange) GetLimitBytes() int64 {
 	if m != nil {
 		return m.LimitBytes
 	}
@@ -630,11 +739,12 @@ func (m *CapacityRange) GetLimitBytes() uint64 {
 }
 
 // The information about a provisioned volume.
-type VolumeInfo struct {
+type Volume struct {
 	// The capacity of the volume in bytes. This field is OPTIONAL. If not
 	// set (value of 0), it indicates that the capacity of the volume is
 	// unknown (e.g., NFS share).
-	CapacityBytes uint64 `protobuf:"varint,1,opt,name=capacity_bytes,json=capacityBytes" json:"capacity_bytes,omitempty"`
+	// The value of this field MUST NOT be negative.
+	CapacityBytes int64 `protobuf:"varint,1,opt,name=capacity_bytes,json=capacityBytes" json:"capacity_bytes,omitempty"`
 	// Contains identity information for the created volume. This field is
 	// REQUIRED. The identity information will be used by the CO in
 	// subsequent calls to refer to the provisioned volume.
@@ -650,65 +760,60 @@ type VolumeInfo struct {
 	Attributes map[string]string `protobuf:"bytes,3,rep,name=attributes" json:"attributes,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
 
-func (m *VolumeInfo) Reset()                    { *m = VolumeInfo{} }
-func (m *VolumeInfo) String() string            { return proto.CompactTextString(m) }
-func (*VolumeInfo) ProtoMessage()               {}
-func (*VolumeInfo) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
+func (m *Volume) Reset()                    { *m = Volume{} }
+func (m *Volume) String() string            { return proto.CompactTextString(m) }
+func (*Volume) ProtoMessage()               {}
+func (*Volume) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
 
-func (m *VolumeInfo) GetCapacityBytes() uint64 {
+func (m *Volume) GetCapacityBytes() int64 {
 	if m != nil {
 		return m.CapacityBytes
 	}
 	return 0
 }
 
-func (m *VolumeInfo) GetId() string {
+func (m *Volume) GetId() string {
 	if m != nil {
 		return m.Id
 	}
 	return ""
 }
 
-func (m *VolumeInfo) GetAttributes() map[string]string {
+func (m *Volume) GetAttributes() map[string]string {
 	if m != nil {
 		return m.Attributes
 	}
 	return nil
 }
 
-// //////
-// //////
 type DeleteVolumeRequest struct {
-	// The API version assumed by the CO. This field is REQUIRED.
-	Version *Version `protobuf:"bytes,1,opt,name=version" json:"version,omitempty"`
 	// The ID of the volume to be deprovisioned.
 	// This field is REQUIRED.
-	VolumeId string `protobuf:"bytes,2,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
-	// End user credentials used to authenticate/authorize volume deletion
-	// request.
-	// This field contains credential data, for example username and
-	// password. Each key must consist of alphanumeric characters, '-',
-	// '_' or '.'. Each value MUST contain a valid string. An SP MAY
-	// choose to accept binary (non-string) data by using a binary-to-text
-	// encoding scheme, like base64. An SP SHALL advertise the
-	// requirements for credentials in documentation. COs SHALL permit
-	// users to pass through the required credentials. This information is
-	// sensitive and MUST be treated as such (not logged, etc.) by the CO.
+	VolumeId string `protobuf:"bytes,1,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
+	// Secrets required by plugin to complete volume deletion request.
+	// A secret is a string to string map where the key identifies the
+	// name of the secret (e.g. "username" or "password"), and the value
+	// contains the secret data (e.g. "bob" or "abc123").
+	// Each key MUST consist of alphanumeric characters, '-', '_' or '.'.
+	// Each value MUST contain a valid string. An SP MAY choose to accept
+	// binary (non-string) data by using a binary-to-text encoding scheme,
+	// like base64.
+	// An SP SHALL advertise the requirements for required secret keys and
+	// values in documentation.
+	// CO SHALL permit passing through the required secrets.
+	// A CO MAY pass the same secrets to all RPCs, therefore the keys for
+	// all unique secrets that an SP expects must be unique across all CSI
+	// operations.
+	// This information is sensitive and MUST be treated as such (not
+	// logged, etc.) by the CO.
 	// This field is OPTIONAL.
-	UserCredentials map[string]string `protobuf:"bytes,3,rep,name=user_credentials,json=userCredentials" json:"user_credentials,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	ControllerDeleteSecrets map[string]string `protobuf:"bytes,2,rep,name=controller_delete_secrets,json=controllerDeleteSecrets" json:"controller_delete_secrets,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
 
 func (m *DeleteVolumeRequest) Reset()                    { *m = DeleteVolumeRequest{} }
 func (m *DeleteVolumeRequest) String() string            { return proto.CompactTextString(m) }
 func (*DeleteVolumeRequest) ProtoMessage()               {}
-func (*DeleteVolumeRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
-
-func (m *DeleteVolumeRequest) GetVersion() *Version {
-	if m != nil {
-		return m.Version
-	}
-	return nil
-}
+func (*DeleteVolumeRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{12} }
 
 func (m *DeleteVolumeRequest) GetVolumeId() string {
 	if m != nil {
@@ -717,9 +822,9 @@ func (m *DeleteVolumeRequest) GetVolumeId() string {
 	return ""
 }
 
-func (m *DeleteVolumeRequest) GetUserCredentials() map[string]string {
+func (m *DeleteVolumeRequest) GetControllerDeleteSecrets() map[string]string {
 	if m != nil {
-		return m.UserCredentials
+		return m.ControllerDeleteSecrets
 	}
 	return nil
 }
@@ -730,54 +835,50 @@ type DeleteVolumeResponse struct {
 func (m *DeleteVolumeResponse) Reset()                    { *m = DeleteVolumeResponse{} }
 func (m *DeleteVolumeResponse) String() string            { return proto.CompactTextString(m) }
 func (*DeleteVolumeResponse) ProtoMessage()               {}
-func (*DeleteVolumeResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
+func (*DeleteVolumeResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{13} }
 
-// //////
-// //////
 type ControllerPublishVolumeRequest struct {
-	// The API version assumed by the CO. This field is REQUIRED.
-	Version *Version `protobuf:"bytes,1,opt,name=version" json:"version,omitempty"`
 	// The ID of the volume to be used on a node.
 	// This field is REQUIRED.
-	VolumeId string `protobuf:"bytes,2,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
+	VolumeId string `protobuf:"bytes,1,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
 	// The ID of the node. This field is REQUIRED. The CO SHALL set this
-	// field to match the node ID returned by `GetNodeID`.
-	NodeId string `protobuf:"bytes,3,opt,name=node_id,json=nodeId" json:"node_id,omitempty"`
+	// field to match the node ID returned by `NodeGetId`.
+	NodeId string `protobuf:"bytes,2,opt,name=node_id,json=nodeId" json:"node_id,omitempty"`
 	// The capability of the volume the CO expects the volume to have.
 	// This is a REQUIRED field.
-	VolumeCapability *VolumeCapability `protobuf:"bytes,4,opt,name=volume_capability,json=volumeCapability" json:"volume_capability,omitempty"`
+	VolumeCapability *VolumeCapability `protobuf:"bytes,3,opt,name=volume_capability,json=volumeCapability" json:"volume_capability,omitempty"`
 	// Whether to publish the volume in readonly mode. This field is
 	// REQUIRED.
-	Readonly bool `protobuf:"varint,5,opt,name=readonly" json:"readonly,omitempty"`
-	// End user credentials used to authenticate/authorize controller
-	// publish request.
-	// This field contains credential data, for example username and
-	// password. Each key must consist of alphanumeric characters, '-',
-	// '_' or '.'. Each value MUST contain a valid string. An SP MAY
-	// choose to accept binary (non-string) data by using a binary-to-text
-	// encoding scheme, like base64. An SP SHALL advertise the
-	// requirements for credentials in documentation. COs SHALL permit
-	// users to pass through the required credentials. This information is
-	// sensitive and MUST be treated as such (not logged, etc.) by the CO.
+	Readonly bool `protobuf:"varint,4,opt,name=readonly" json:"readonly,omitempty"`
+	// Secrets required by plugin to complete controller publish volume
+	// request.
+	// A secret is a string to string map where the key identifies the
+	// name of the secret (e.g. "username" or "password"), and the value
+	// contains the secret data (e.g. "bob" or "abc123").
+	// Each key MUST consist of alphanumeric characters, '-', '_' or '.'.
+	// Each value MUST contain a valid string. An SP MAY choose to accept
+	// binary (non-string) data by using a binary-to-text encoding scheme,
+	// like base64.
+	// An SP SHALL advertise the requirements for required secret keys and
+	// values in documentation.
+	// CO SHALL permit passing through the required secrets.
+	// A CO MAY pass the same secrets to all RPCs, therefore the keys for
+	// all unique secrets that an SP expects must be unique across all CSI
+	// operations.
+	// This information is sensitive and MUST be treated as such (not
+	// logged, etc.) by the CO.
 	// This field is OPTIONAL.
-	UserCredentials map[string]string `protobuf:"bytes,6,rep,name=user_credentials,json=userCredentials" json:"user_credentials,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	ControllerPublishSecrets map[string]string `protobuf:"bytes,5,rep,name=controller_publish_secrets,json=controllerPublishSecrets" json:"controller_publish_secrets,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// Attributes of the volume to be used on a node. This field is
-	// OPTIONAL and MUST match the attributes of the VolumeInfo identified
+	// OPTIONAL and MUST match the attributes of the Volume identified
 	// by `volume_id`.
-	VolumeAttributes map[string]string `protobuf:"bytes,7,rep,name=volume_attributes,json=volumeAttributes" json:"volume_attributes,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	VolumeAttributes map[string]string `protobuf:"bytes,6,rep,name=volume_attributes,json=volumeAttributes" json:"volume_attributes,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
 
 func (m *ControllerPublishVolumeRequest) Reset()                    { *m = ControllerPublishVolumeRequest{} }
 func (m *ControllerPublishVolumeRequest) String() string            { return proto.CompactTextString(m) }
 func (*ControllerPublishVolumeRequest) ProtoMessage()               {}
-func (*ControllerPublishVolumeRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{12} }
-
-func (m *ControllerPublishVolumeRequest) GetVersion() *Version {
-	if m != nil {
-		return m.Version
-	}
-	return nil
-}
+func (*ControllerPublishVolumeRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{14} }
 
 func (m *ControllerPublishVolumeRequest) GetVolumeId() string {
 	if m != nil {
@@ -807,9 +908,9 @@ func (m *ControllerPublishVolumeRequest) GetReadonly() bool {
 	return false
 }
 
-func (m *ControllerPublishVolumeRequest) GetUserCredentials() map[string]string {
+func (m *ControllerPublishVolumeRequest) GetControllerPublishSecrets() map[string]string {
 	if m != nil {
-		return m.UserCredentials
+		return m.ControllerPublishSecrets
 	}
 	return nil
 }
@@ -823,64 +924,63 @@ func (m *ControllerPublishVolumeRequest) GetVolumeAttributes() map[string]string
 
 type ControllerPublishVolumeResponse struct {
 	// The SP specific information that will be passed to the Plugin in
-	// the subsequent `NodePublishVolume` call for the given volume.
+	// the subsequent `NodeStageVolume` or `NodePublishVolume` calls
+	// for the given volume.
 	// This information is opaque to the CO. This field is OPTIONAL.
-	PublishVolumeInfo map[string]string `protobuf:"bytes,1,rep,name=publish_volume_info,json=publishVolumeInfo" json:"publish_volume_info,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	PublishInfo map[string]string `protobuf:"bytes,1,rep,name=publish_info,json=publishInfo" json:"publish_info,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
 
 func (m *ControllerPublishVolumeResponse) Reset()         { *m = ControllerPublishVolumeResponse{} }
 func (m *ControllerPublishVolumeResponse) String() string { return proto.CompactTextString(m) }
 func (*ControllerPublishVolumeResponse) ProtoMessage()    {}
 func (*ControllerPublishVolumeResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{13}
+	return fileDescriptor0, []int{15}
 }
 
-func (m *ControllerPublishVolumeResponse) GetPublishVolumeInfo() map[string]string {
+func (m *ControllerPublishVolumeResponse) GetPublishInfo() map[string]string {
 	if m != nil {
-		return m.PublishVolumeInfo
+		return m.PublishInfo
 	}
 	return nil
 }
 
-// //////
-// //////
 type ControllerUnpublishVolumeRequest struct {
-	// The API version assumed by the CO. This field is REQUIRED.
-	Version *Version `protobuf:"bytes,1,opt,name=version" json:"version,omitempty"`
 	// The ID of the volume. This field is REQUIRED.
-	VolumeId string `protobuf:"bytes,2,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
+	VolumeId string `protobuf:"bytes,1,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
 	// The ID of the node. This field is OPTIONAL. The CO SHOULD set this
-	// field to match the node ID returned by `GetNodeID` or leave it
+	// field to match the node ID returned by `NodeGetId` or leave it
 	// unset. If the value is set, the SP MUST unpublish the volume from
 	// the specified node. If the value is unset, the SP MUST unpublish
 	// the volume from all nodes it is published to.
-	NodeId string `protobuf:"bytes,3,opt,name=node_id,json=nodeId" json:"node_id,omitempty"`
-	// End user credentials used to authenticate/authorize controller
-	// unpublish request.
-	// This field contains credential data, for example username and
-	// password. Each key must consist of alphanumeric characters, '-',
-	// '_' or '.'. Each value MUST contain a valid string. An SP MAY
-	// choose to accept binary (non-string) data by using a binary-to-text
-	// encoding scheme, like base64. An SP SHALL advertise the
-	// requirements for credentials in documentation. COs SHALL permit
-	// users to pass through the required credentials. This information is
-	// sensitive and MUST be treated as such (not logged, etc.) by the CO.
+	NodeId string `protobuf:"bytes,2,opt,name=node_id,json=nodeId" json:"node_id,omitempty"`
+	// Secrets required by plugin to complete controller unpublish volume
+	// request. This SHOULD be the same secrets passed to the
+	// ControllerPublishVolume.
+	// call for the specified volume.
+	// A secret is a string to string map where the key identifies the
+	// name of the secret (e.g. "username" or "password"), and the value
+	// contains the secret data (e.g. "bob" or "abc123").
+	// Each key MUST consist of alphanumeric characters, '-', '_' or '.'.
+	// Each value MUST contain a valid string. An SP MAY choose to accept
+	// binary (non-string) data by using a binary-to-text encoding scheme,
+	// like base64.
+	// An SP SHALL advertise the requirements for required secret keys and
+	// values in documentation.
+	// CO SHALL permit passing through the required secrets.
+	// A CO MAY pass the same secrets to all RPCs, therefore the keys for
+	// all unique secrets that an SP expects must be unique across all CSI
+	// operations.
+	// This information is sensitive and MUST be treated as such (not
+	// logged, etc.) by the CO.
 	// This field is OPTIONAL.
-	UserCredentials map[string]string `protobuf:"bytes,4,rep,name=user_credentials,json=userCredentials" json:"user_credentials,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	ControllerUnpublishSecrets map[string]string `protobuf:"bytes,3,rep,name=controller_unpublish_secrets,json=controllerUnpublishSecrets" json:"controller_unpublish_secrets,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
 
 func (m *ControllerUnpublishVolumeRequest) Reset()         { *m = ControllerUnpublishVolumeRequest{} }
 func (m *ControllerUnpublishVolumeRequest) String() string { return proto.CompactTextString(m) }
 func (*ControllerUnpublishVolumeRequest) ProtoMessage()    {}
 func (*ControllerUnpublishVolumeRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{14}
-}
-
-func (m *ControllerUnpublishVolumeRequest) GetVersion() *Version {
-	if m != nil {
-		return m.Version
-	}
-	return nil
+	return fileDescriptor0, []int{16}
 }
 
 func (m *ControllerUnpublishVolumeRequest) GetVolumeId() string {
@@ -897,9 +997,9 @@ func (m *ControllerUnpublishVolumeRequest) GetNodeId() string {
 	return ""
 }
 
-func (m *ControllerUnpublishVolumeRequest) GetUserCredentials() map[string]string {
+func (m *ControllerUnpublishVolumeRequest) GetControllerUnpublishSecrets() map[string]string {
 	if m != nil {
-		return m.UserCredentials
+		return m.ControllerUnpublishSecrets
 	}
 	return nil
 }
@@ -911,37 +1011,26 @@ func (m *ControllerUnpublishVolumeResponse) Reset()         { *m = ControllerUnp
 func (m *ControllerUnpublishVolumeResponse) String() string { return proto.CompactTextString(m) }
 func (*ControllerUnpublishVolumeResponse) ProtoMessage()    {}
 func (*ControllerUnpublishVolumeResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{15}
+	return fileDescriptor0, []int{17}
 }
 
-// //////
-// //////
 type ValidateVolumeCapabilitiesRequest struct {
-	// The API version assumed by the CO. This is a REQUIRED field.
-	Version *Version `protobuf:"bytes,1,opt,name=version" json:"version,omitempty"`
 	// The ID of the volume to check. This field is REQUIRED.
-	VolumeId string `protobuf:"bytes,2,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
+	VolumeId string `protobuf:"bytes,1,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
 	// The capabilities that the CO wants to check for the volume. This
 	// call SHALL return "supported" only if all the volume capabilities
 	// specified below are supported. This field is REQUIRED.
-	VolumeCapabilities []*VolumeCapability `protobuf:"bytes,3,rep,name=volume_capabilities,json=volumeCapabilities" json:"volume_capabilities,omitempty"`
+	VolumeCapabilities []*VolumeCapability `protobuf:"bytes,2,rep,name=volume_capabilities,json=volumeCapabilities" json:"volume_capabilities,omitempty"`
 	// Attributes of the volume to check. This field is OPTIONAL and MUST
-	// match the attributes of the VolumeInfo identified by `volume_id`.
-	VolumeAttributes map[string]string `protobuf:"bytes,4,rep,name=volume_attributes,json=volumeAttributes" json:"volume_attributes,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// match the attributes of the Volume identified by `volume_id`.
+	VolumeAttributes map[string]string `protobuf:"bytes,3,rep,name=volume_attributes,json=volumeAttributes" json:"volume_attributes,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
 
 func (m *ValidateVolumeCapabilitiesRequest) Reset()         { *m = ValidateVolumeCapabilitiesRequest{} }
 func (m *ValidateVolumeCapabilitiesRequest) String() string { return proto.CompactTextString(m) }
 func (*ValidateVolumeCapabilitiesRequest) ProtoMessage()    {}
 func (*ValidateVolumeCapabilitiesRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{16}
-}
-
-func (m *ValidateVolumeCapabilitiesRequest) GetVersion() *Version {
-	if m != nil {
-		return m.Version
-	}
-	return nil
+	return fileDescriptor0, []int{18}
 }
 
 func (m *ValidateVolumeCapabilitiesRequest) GetVolumeId() string {
@@ -979,7 +1068,7 @@ func (m *ValidateVolumeCapabilitiesResponse) Reset()         { *m = ValidateVolu
 func (m *ValidateVolumeCapabilitiesResponse) String() string { return proto.CompactTextString(m) }
 func (*ValidateVolumeCapabilitiesResponse) ProtoMessage()    {}
 func (*ValidateVolumeCapabilitiesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{17}
+	return fileDescriptor0, []int{19}
 }
 
 func (m *ValidateVolumeCapabilitiesResponse) GetSupported() bool {
@@ -996,11 +1085,7 @@ func (m *ValidateVolumeCapabilitiesResponse) GetMessage() string {
 	return ""
 }
 
-// //////
-// //////
 type ListVolumesRequest struct {
-	// The API version assumed by the CO. This field is REQUIRED.
-	Version *Version `protobuf:"bytes,1,opt,name=version" json:"version,omitempty"`
 	// If specified (non-zero value), the Plugin MUST NOT return more
 	// entries than this number in the response. If the actual number of
 	// entries is more than this number, the Plugin MUST set `next_token`
@@ -1008,27 +1093,21 @@ type ListVolumesRequest struct {
 	// in the subsequent `ListVolumes` call. This field is OPTIONAL. If
 	// not specified (zero value), it means there is no restriction on the
 	// number of entries that can be returned.
-	MaxEntries uint32 `protobuf:"varint,2,opt,name=max_entries,json=maxEntries" json:"max_entries,omitempty"`
+	// The value of this field MUST NOT be negative.
+	MaxEntries int32 `protobuf:"varint,1,opt,name=max_entries,json=maxEntries" json:"max_entries,omitempty"`
 	// A token to specify where to start paginating. Set this field to
 	// `next_token` returned by a previous `ListVolumes` call to get the
 	// next page of entries. This field is OPTIONAL.
 	// An empty string is equal to an unspecified field value.
-	StartingToken string `protobuf:"bytes,3,opt,name=starting_token,json=startingToken" json:"starting_token,omitempty"`
+	StartingToken string `protobuf:"bytes,2,opt,name=starting_token,json=startingToken" json:"starting_token,omitempty"`
 }
 
 func (m *ListVolumesRequest) Reset()                    { *m = ListVolumesRequest{} }
 func (m *ListVolumesRequest) String() string            { return proto.CompactTextString(m) }
 func (*ListVolumesRequest) ProtoMessage()               {}
-func (*ListVolumesRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{18} }
+func (*ListVolumesRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{20} }
 
-func (m *ListVolumesRequest) GetVersion() *Version {
-	if m != nil {
-		return m.Version
-	}
-	return nil
-}
-
-func (m *ListVolumesRequest) GetMaxEntries() uint32 {
+func (m *ListVolumesRequest) GetMaxEntries() int32 {
 	if m != nil {
 		return m.MaxEntries
 	}
@@ -1056,7 +1135,7 @@ type ListVolumesResponse struct {
 func (m *ListVolumesResponse) Reset()                    { *m = ListVolumesResponse{} }
 func (m *ListVolumesResponse) String() string            { return proto.CompactTextString(m) }
 func (*ListVolumesResponse) ProtoMessage()               {}
-func (*ListVolumesResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{19} }
+func (*ListVolumesResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{21} }
 
 func (m *ListVolumesResponse) GetEntries() []*ListVolumesResponse_Entry {
 	if m != nil {
@@ -1073,50 +1152,39 @@ func (m *ListVolumesResponse) GetNextToken() string {
 }
 
 type ListVolumesResponse_Entry struct {
-	VolumeInfo *VolumeInfo `protobuf:"bytes,1,opt,name=volume_info,json=volumeInfo" json:"volume_info,omitempty"`
+	Volume *Volume `protobuf:"bytes,1,opt,name=volume" json:"volume,omitempty"`
 }
 
 func (m *ListVolumesResponse_Entry) Reset()                    { *m = ListVolumesResponse_Entry{} }
 func (m *ListVolumesResponse_Entry) String() string            { return proto.CompactTextString(m) }
 func (*ListVolumesResponse_Entry) ProtoMessage()               {}
-func (*ListVolumesResponse_Entry) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{19, 0} }
+func (*ListVolumesResponse_Entry) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{21, 0} }
 
-func (m *ListVolumesResponse_Entry) GetVolumeInfo() *VolumeInfo {
+func (m *ListVolumesResponse_Entry) GetVolume() *Volume {
 	if m != nil {
-		return m.VolumeInfo
+		return m.Volume
 	}
 	return nil
 }
 
-// //////
-// //////
 type GetCapacityRequest struct {
-	// The API version assumed by the CO. This is a REQUIRED field.
-	Version *Version `protobuf:"bytes,1,opt,name=version" json:"version,omitempty"`
 	// If specified, the Plugin SHALL report the capacity of the storage
 	// that can be used to provision volumes that satisfy ALL of the
 	// specified `volume_capabilities`. These are the same
 	// `volume_capabilities` the CO will use in `CreateVolumeRequest`.
 	// This field is OPTIONAL.
-	VolumeCapabilities []*VolumeCapability `protobuf:"bytes,2,rep,name=volume_capabilities,json=volumeCapabilities" json:"volume_capabilities,omitempty"`
+	VolumeCapabilities []*VolumeCapability `protobuf:"bytes,1,rep,name=volume_capabilities,json=volumeCapabilities" json:"volume_capabilities,omitempty"`
 	// If specified, the Plugin SHALL report the capacity of the storage
 	// that can be used to provision volumes with the given Plugin
 	// specific `parameters`. These are the same `parameters` the CO will
 	// use in `CreateVolumeRequest`. This field is OPTIONAL.
-	Parameters map[string]string `protobuf:"bytes,3,rep,name=parameters" json:"parameters,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Parameters map[string]string `protobuf:"bytes,2,rep,name=parameters" json:"parameters,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
 
 func (m *GetCapacityRequest) Reset()                    { *m = GetCapacityRequest{} }
 func (m *GetCapacityRequest) String() string            { return proto.CompactTextString(m) }
 func (*GetCapacityRequest) ProtoMessage()               {}
-func (*GetCapacityRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{20} }
-
-func (m *GetCapacityRequest) GetVersion() *Version {
-	if m != nil {
-		return m.Version
-	}
-	return nil
-}
+func (*GetCapacityRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{22} }
 
 func (m *GetCapacityRequest) GetVolumeCapabilities() []*VolumeCapability {
 	if m != nil {
@@ -1138,53 +1206,23 @@ type GetCapacityResponse struct {
 	// specified in the request, the Plugin SHALL take those into
 	// consideration when calculating the available capacity of the
 	// storage. This field is REQUIRED.
-	AvailableCapacity uint64 `protobuf:"varint,1,opt,name=available_capacity,json=availableCapacity" json:"available_capacity,omitempty"`
+	// The value of this field MUST NOT be negative.
+	AvailableCapacity int64 `protobuf:"varint,1,opt,name=available_capacity,json=availableCapacity" json:"available_capacity,omitempty"`
 }
 
 func (m *GetCapacityResponse) Reset()                    { *m = GetCapacityResponse{} }
 func (m *GetCapacityResponse) String() string            { return proto.CompactTextString(m) }
 func (*GetCapacityResponse) ProtoMessage()               {}
-func (*GetCapacityResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{21} }
+func (*GetCapacityResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{23} }
 
-func (m *GetCapacityResponse) GetAvailableCapacity() uint64 {
+func (m *GetCapacityResponse) GetAvailableCapacity() int64 {
 	if m != nil {
 		return m.AvailableCapacity
 	}
 	return 0
 }
 
-// //////
-// //////
-type ControllerProbeRequest struct {
-	// The API version assumed by the CO. This is a REQUIRED field.
-	Version *Version `protobuf:"bytes,1,opt,name=version" json:"version,omitempty"`
-}
-
-func (m *ControllerProbeRequest) Reset()                    { *m = ControllerProbeRequest{} }
-func (m *ControllerProbeRequest) String() string            { return proto.CompactTextString(m) }
-func (*ControllerProbeRequest) ProtoMessage()               {}
-func (*ControllerProbeRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{22} }
-
-func (m *ControllerProbeRequest) GetVersion() *Version {
-	if m != nil {
-		return m.Version
-	}
-	return nil
-}
-
-type ControllerProbeResponse struct {
-}
-
-func (m *ControllerProbeResponse) Reset()                    { *m = ControllerProbeResponse{} }
-func (m *ControllerProbeResponse) String() string            { return proto.CompactTextString(m) }
-func (*ControllerProbeResponse) ProtoMessage()               {}
-func (*ControllerProbeResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{23} }
-
-// //////
-// //////
 type ControllerGetCapabilitiesRequest struct {
-	// The API version assumed by the CO. This is a REQUIRED field.
-	Version *Version `protobuf:"bytes,1,opt,name=version" json:"version,omitempty"`
 }
 
 func (m *ControllerGetCapabilitiesRequest) Reset()         { *m = ControllerGetCapabilitiesRequest{} }
@@ -1192,13 +1230,6 @@ func (m *ControllerGetCapabilitiesRequest) String() string { return proto.Compac
 func (*ControllerGetCapabilitiesRequest) ProtoMessage()    {}
 func (*ControllerGetCapabilitiesRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor0, []int{24}
-}
-
-func (m *ControllerGetCapabilitiesRequest) GetVersion() *Version {
-	if m != nil {
-		return m.Version
-	}
-	return nil
 }
 
 type ControllerGetCapabilitiesResponse struct {
@@ -1313,7 +1344,7 @@ func _ControllerServiceCapability_OneofSizer(msg proto.Message) (n int) {
 }
 
 type ControllerServiceCapability_RPC struct {
-	Type ControllerServiceCapability_RPC_Type `protobuf:"varint,1,opt,name=type,enum=csi.ControllerServiceCapability_RPC_Type" json:"type,omitempty"`
+	Type ControllerServiceCapability_RPC_Type `protobuf:"varint,1,opt,name=type,enum=csi.v0.ControllerServiceCapability_RPC_Type" json:"type,omitempty"`
 }
 
 func (m *ControllerServiceCapability_RPC) Reset()         { *m = ControllerServiceCapability_RPC{} }
@@ -1330,19 +1361,155 @@ func (m *ControllerServiceCapability_RPC) GetType() ControllerServiceCapability_
 	return ControllerServiceCapability_RPC_UNKNOWN
 }
 
-// //////
-// //////
-type NodePublishVolumeRequest struct {
-	// The API version assumed by the CO. This is a REQUIRED field.
-	Version *Version `protobuf:"bytes,1,opt,name=version" json:"version,omitempty"`
+type NodeStageVolumeRequest struct {
 	// The ID of the volume to publish. This field is REQUIRED.
-	VolumeId string `protobuf:"bytes,2,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
+	VolumeId string `protobuf:"bytes,1,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
 	// The CO SHALL set this field to the value returned by
 	// `ControllerPublishVolume` if the corresponding Controller Plugin
 	// has `PUBLISH_UNPUBLISH_VOLUME` controller capability, and SHALL be
 	// left unset if the corresponding Controller Plugin does not have
 	// this capability. This is an OPTIONAL field.
-	PublishVolumeInfo map[string]string `protobuf:"bytes,3,rep,name=publish_volume_info,json=publishVolumeInfo" json:"publish_volume_info,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	PublishInfo map[string]string `protobuf:"bytes,2,rep,name=publish_info,json=publishInfo" json:"publish_info,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// The path to which the volume will be published. It MUST be an
+	// absolute path in the root filesystem of the process serving this
+	// request. The CO SHALL ensure that there is only one
+	// staging_target_path per volume.
+	// This is a REQUIRED field.
+	StagingTargetPath string `protobuf:"bytes,3,opt,name=staging_target_path,json=stagingTargetPath" json:"staging_target_path,omitempty"`
+	// The capability of the volume the CO expects the volume to have.
+	// This is a REQUIRED field.
+	VolumeCapability *VolumeCapability `protobuf:"bytes,4,opt,name=volume_capability,json=volumeCapability" json:"volume_capability,omitempty"`
+	// Secrets required by plugin to complete node stage volume request.
+	// A secret is a string to string map where the key identifies the
+	// name of the secret (e.g. "username" or "password"), and the value
+	// contains the secret data (e.g. "bob" or "abc123").
+	// Each key MUST consist of alphanumeric characters, '-', '_' or '.'.
+	// Each value MUST contain a valid string. An SP MAY choose to accept
+	// binary (non-string) data by using a binary-to-text encoding scheme,
+	// like base64.
+	// An SP SHALL advertise the requirements for required secret keys and
+	// values in documentation.
+	// CO SHALL permit passing through the required secrets.
+	// A CO MAY pass the same secrets to all RPCs, therefore the keys for
+	// all unique secrets that an SP expects must be unique across all CSI
+	// operations.
+	// This information is sensitive and MUST be treated as such (not
+	// logged, etc.) by the CO.
+	// This field is OPTIONAL.
+	NodeStageSecrets map[string]string `protobuf:"bytes,5,rep,name=node_stage_secrets,json=nodeStageSecrets" json:"node_stage_secrets,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// Attributes of the volume to publish. This field is OPTIONAL and
+	// MUST match the attributes of the VolumeInfo identified by
+	// `volume_id`.
+	VolumeAttributes map[string]string `protobuf:"bytes,6,rep,name=volume_attributes,json=volumeAttributes" json:"volume_attributes,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+}
+
+func (m *NodeStageVolumeRequest) Reset()                    { *m = NodeStageVolumeRequest{} }
+func (m *NodeStageVolumeRequest) String() string            { return proto.CompactTextString(m) }
+func (*NodeStageVolumeRequest) ProtoMessage()               {}
+func (*NodeStageVolumeRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{27} }
+
+func (m *NodeStageVolumeRequest) GetVolumeId() string {
+	if m != nil {
+		return m.VolumeId
+	}
+	return ""
+}
+
+func (m *NodeStageVolumeRequest) GetPublishInfo() map[string]string {
+	if m != nil {
+		return m.PublishInfo
+	}
+	return nil
+}
+
+func (m *NodeStageVolumeRequest) GetStagingTargetPath() string {
+	if m != nil {
+		return m.StagingTargetPath
+	}
+	return ""
+}
+
+func (m *NodeStageVolumeRequest) GetVolumeCapability() *VolumeCapability {
+	if m != nil {
+		return m.VolumeCapability
+	}
+	return nil
+}
+
+func (m *NodeStageVolumeRequest) GetNodeStageSecrets() map[string]string {
+	if m != nil {
+		return m.NodeStageSecrets
+	}
+	return nil
+}
+
+func (m *NodeStageVolumeRequest) GetVolumeAttributes() map[string]string {
+	if m != nil {
+		return m.VolumeAttributes
+	}
+	return nil
+}
+
+type NodeStageVolumeResponse struct {
+}
+
+func (m *NodeStageVolumeResponse) Reset()                    { *m = NodeStageVolumeResponse{} }
+func (m *NodeStageVolumeResponse) String() string            { return proto.CompactTextString(m) }
+func (*NodeStageVolumeResponse) ProtoMessage()               {}
+func (*NodeStageVolumeResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{28} }
+
+type NodeUnstageVolumeRequest struct {
+	// The ID of the volume. This field is REQUIRED.
+	VolumeId string `protobuf:"bytes,1,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
+	// The path at which the volume was published. It MUST be an absolute
+	// path in the root filesystem of the process serving this request.
+	// This is a REQUIRED field.
+	StagingTargetPath string `protobuf:"bytes,2,opt,name=staging_target_path,json=stagingTargetPath" json:"staging_target_path,omitempty"`
+}
+
+func (m *NodeUnstageVolumeRequest) Reset()                    { *m = NodeUnstageVolumeRequest{} }
+func (m *NodeUnstageVolumeRequest) String() string            { return proto.CompactTextString(m) }
+func (*NodeUnstageVolumeRequest) ProtoMessage()               {}
+func (*NodeUnstageVolumeRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{29} }
+
+func (m *NodeUnstageVolumeRequest) GetVolumeId() string {
+	if m != nil {
+		return m.VolumeId
+	}
+	return ""
+}
+
+func (m *NodeUnstageVolumeRequest) GetStagingTargetPath() string {
+	if m != nil {
+		return m.StagingTargetPath
+	}
+	return ""
+}
+
+type NodeUnstageVolumeResponse struct {
+}
+
+func (m *NodeUnstageVolumeResponse) Reset()                    { *m = NodeUnstageVolumeResponse{} }
+func (m *NodeUnstageVolumeResponse) String() string            { return proto.CompactTextString(m) }
+func (*NodeUnstageVolumeResponse) ProtoMessage()               {}
+func (*NodeUnstageVolumeResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{30} }
+
+type NodePublishVolumeRequest struct {
+	// The ID of the volume to publish. This field is REQUIRED.
+	VolumeId string `protobuf:"bytes,1,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
+	// The CO SHALL set this field to the value returned by
+	// `ControllerPublishVolume` if the corresponding Controller Plugin
+	// has `PUBLISH_UNPUBLISH_VOLUME` controller capability, and SHALL be
+	// left unset if the corresponding Controller Plugin does not have
+	// this capability. This is an OPTIONAL field.
+	PublishInfo map[string]string `protobuf:"bytes,2,rep,name=publish_info,json=publishInfo" json:"publish_info,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// The path to which the device was mounted by `NodeStageVolume`.
+	// It MUST be an absolute path in the root filesystem of the process
+	// serving this request.
+	// It MUST be set if the Node Plugin implements the
+	// `STAGE_UNSTAGE_VOLUME` node capability.
+	// This is an OPTIONAL field.
+	StagingTargetPath string `protobuf:"bytes,3,opt,name=staging_target_path,json=stagingTargetPath" json:"staging_target_path,omitempty"`
 	// The path to which the volume will be published. It MUST be an
 	// absolute path in the root filesystem of the process serving this
 	// request. The CO SHALL ensure uniqueness of target_path per volume.
@@ -1356,20 +1523,26 @@ type NodePublishVolumeRequest struct {
 	// Whether to publish the volume in readonly mode. This field is
 	// REQUIRED.
 	Readonly bool `protobuf:"varint,6,opt,name=readonly" json:"readonly,omitempty"`
-	// End user credentials used to authenticate/authorize node
-	// publish request.
-	// This field contains credential data, for example username and
-	// password. Each key must consist of alphanumeric characters, '-',
-	// '_' or '.'. Each value MUST contain a valid string. An SP MAY
-	// choose to accept binary (non-string) data by using a binary-to-text
-	// encoding scheme, like base64. An SP SHALL advertise the
-	// requirements for credentials in documentation. COs SHALL permit
-	// users to pass through the required credentials. This information is
-	// sensitive and MUST be treated as such (not logged, etc.) by the CO.
+	// Secrets required by plugin to complete node publish volume request.
+	// A secret is a string to string map where the key identifies the
+	// name of the secret (e.g. "username" or "password"), and the value
+	// contains the secret data (e.g. "bob" or "abc123").
+	// Each key MUST consist of alphanumeric characters, '-', '_' or '.'.
+	// Each value MUST contain a valid string. An SP MAY choose to accept
+	// binary (non-string) data by using a binary-to-text encoding scheme,
+	// like base64.
+	// An SP SHALL advertise the requirements for required secret keys and
+	// values in documentation.
+	// CO SHALL permit passing through the required secrets.
+	// A CO MAY pass the same secrets to all RPCs, therefore the keys for
+	// all unique secrets that an SP expects must be unique across all CSI
+	// operations.
+	// This information is sensitive and MUST be treated as such (not
+	// logged, etc.) by the CO.
 	// This field is OPTIONAL.
-	UserCredentials map[string]string `protobuf:"bytes,7,rep,name=user_credentials,json=userCredentials" json:"user_credentials,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	NodePublishSecrets map[string]string `protobuf:"bytes,7,rep,name=node_publish_secrets,json=nodePublishSecrets" json:"node_publish_secrets,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// Attributes of the volume to publish. This field is OPTIONAL and
-	// MUST match the attributes of the VolumeInfo identified by
+	// MUST match the attributes of the Volume identified by
 	// `volume_id`.
 	VolumeAttributes map[string]string `protobuf:"bytes,8,rep,name=volume_attributes,json=volumeAttributes" json:"volume_attributes,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
@@ -1377,14 +1550,7 @@ type NodePublishVolumeRequest struct {
 func (m *NodePublishVolumeRequest) Reset()                    { *m = NodePublishVolumeRequest{} }
 func (m *NodePublishVolumeRequest) String() string            { return proto.CompactTextString(m) }
 func (*NodePublishVolumeRequest) ProtoMessage()               {}
-func (*NodePublishVolumeRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{27} }
-
-func (m *NodePublishVolumeRequest) GetVersion() *Version {
-	if m != nil {
-		return m.Version
-	}
-	return nil
-}
+func (*NodePublishVolumeRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{31} }
 
 func (m *NodePublishVolumeRequest) GetVolumeId() string {
 	if m != nil {
@@ -1393,11 +1559,18 @@ func (m *NodePublishVolumeRequest) GetVolumeId() string {
 	return ""
 }
 
-func (m *NodePublishVolumeRequest) GetPublishVolumeInfo() map[string]string {
+func (m *NodePublishVolumeRequest) GetPublishInfo() map[string]string {
 	if m != nil {
-		return m.PublishVolumeInfo
+		return m.PublishInfo
 	}
 	return nil
+}
+
+func (m *NodePublishVolumeRequest) GetStagingTargetPath() string {
+	if m != nil {
+		return m.StagingTargetPath
+	}
+	return ""
 }
 
 func (m *NodePublishVolumeRequest) GetTargetPath() string {
@@ -1421,9 +1594,9 @@ func (m *NodePublishVolumeRequest) GetReadonly() bool {
 	return false
 }
 
-func (m *NodePublishVolumeRequest) GetUserCredentials() map[string]string {
+func (m *NodePublishVolumeRequest) GetNodePublishSecrets() map[string]string {
 	if m != nil {
-		return m.UserCredentials
+		return m.NodePublishSecrets
 	}
 	return nil
 }
@@ -1441,44 +1614,21 @@ type NodePublishVolumeResponse struct {
 func (m *NodePublishVolumeResponse) Reset()                    { *m = NodePublishVolumeResponse{} }
 func (m *NodePublishVolumeResponse) String() string            { return proto.CompactTextString(m) }
 func (*NodePublishVolumeResponse) ProtoMessage()               {}
-func (*NodePublishVolumeResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{28} }
+func (*NodePublishVolumeResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{32} }
 
-// //////
-// //////
 type NodeUnpublishVolumeRequest struct {
-	// The API version assumed by the CO. This is a REQUIRED field.
-	Version *Version `protobuf:"bytes,1,opt,name=version" json:"version,omitempty"`
 	// The ID of the volume. This field is REQUIRED.
-	VolumeId string `protobuf:"bytes,2,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
+	VolumeId string `protobuf:"bytes,1,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
 	// The path at which the volume was published. It MUST be an absolute
 	// path in the root filesystem of the process serving this request.
 	// This is a REQUIRED field.
-	TargetPath string `protobuf:"bytes,3,opt,name=target_path,json=targetPath" json:"target_path,omitempty"`
-	// End user credentials used to authenticate/authorize node
-	// unpublish request.
-	// This field contains credential data, for example username and
-	// password. Each key must consist of alphanumeric characters, '-',
-	// '_' or '.'. Each value MUST contain a valid string. An SP MAY
-	// choose to accept binary (non-string) data by using a binary-to-text
-	// encoding scheme, like base64. An SP SHALL advertise the
-	// requirements for credentials in documentation. COs SHALL permit
-	// users to pass through the required credentials. This information is
-	// sensitive and MUST be treated as such (not logged, etc.) by the CO.
-	// This field is OPTIONAL.
-	UserCredentials map[string]string `protobuf:"bytes,4,rep,name=user_credentials,json=userCredentials" json:"user_credentials,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	TargetPath string `protobuf:"bytes,2,opt,name=target_path,json=targetPath" json:"target_path,omitempty"`
 }
 
 func (m *NodeUnpublishVolumeRequest) Reset()                    { *m = NodeUnpublishVolumeRequest{} }
 func (m *NodeUnpublishVolumeRequest) String() string            { return proto.CompactTextString(m) }
 func (*NodeUnpublishVolumeRequest) ProtoMessage()               {}
-func (*NodeUnpublishVolumeRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{29} }
-
-func (m *NodeUnpublishVolumeRequest) GetVersion() *Version {
-	if m != nil {
-		return m.Version
-	}
-	return nil
-}
+func (*NodeUnpublishVolumeRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{33} }
 
 func (m *NodeUnpublishVolumeRequest) GetVolumeId() string {
 	if m != nil {
@@ -1494,104 +1644,48 @@ func (m *NodeUnpublishVolumeRequest) GetTargetPath() string {
 	return ""
 }
 
-func (m *NodeUnpublishVolumeRequest) GetUserCredentials() map[string]string {
-	if m != nil {
-		return m.UserCredentials
-	}
-	return nil
-}
-
 type NodeUnpublishVolumeResponse struct {
 }
 
 func (m *NodeUnpublishVolumeResponse) Reset()                    { *m = NodeUnpublishVolumeResponse{} }
 func (m *NodeUnpublishVolumeResponse) String() string            { return proto.CompactTextString(m) }
 func (*NodeUnpublishVolumeResponse) ProtoMessage()               {}
-func (*NodeUnpublishVolumeResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{30} }
+func (*NodeUnpublishVolumeResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{34} }
 
-// //////
-// //////
-type GetNodeIDRequest struct {
-	// The API version assumed by the CO. This is a REQUIRED field.
-	Version *Version `protobuf:"bytes,1,opt,name=version" json:"version,omitempty"`
+type NodeGetIdRequest struct {
 }
 
-func (m *GetNodeIDRequest) Reset()                    { *m = GetNodeIDRequest{} }
-func (m *GetNodeIDRequest) String() string            { return proto.CompactTextString(m) }
-func (*GetNodeIDRequest) ProtoMessage()               {}
-func (*GetNodeIDRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{31} }
+func (m *NodeGetIdRequest) Reset()                    { *m = NodeGetIdRequest{} }
+func (m *NodeGetIdRequest) String() string            { return proto.CompactTextString(m) }
+func (*NodeGetIdRequest) ProtoMessage()               {}
+func (*NodeGetIdRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{35} }
 
-func (m *GetNodeIDRequest) GetVersion() *Version {
-	if m != nil {
-		return m.Version
-	}
-	return nil
-}
-
-type GetNodeIDResponse struct {
+type NodeGetIdResponse struct {
 	// The ID of the node as understood by the SP which SHALL be used by
 	// CO in subsequent `ControllerPublishVolume`.
 	// This is a REQUIRED field.
 	NodeId string `protobuf:"bytes,1,opt,name=node_id,json=nodeId" json:"node_id,omitempty"`
 }
 
-func (m *GetNodeIDResponse) Reset()                    { *m = GetNodeIDResponse{} }
-func (m *GetNodeIDResponse) String() string            { return proto.CompactTextString(m) }
-func (*GetNodeIDResponse) ProtoMessage()               {}
-func (*GetNodeIDResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{32} }
+func (m *NodeGetIdResponse) Reset()                    { *m = NodeGetIdResponse{} }
+func (m *NodeGetIdResponse) String() string            { return proto.CompactTextString(m) }
+func (*NodeGetIdResponse) ProtoMessage()               {}
+func (*NodeGetIdResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{36} }
 
-func (m *GetNodeIDResponse) GetNodeId() string {
+func (m *NodeGetIdResponse) GetNodeId() string {
 	if m != nil {
 		return m.NodeId
 	}
 	return ""
 }
 
-// //////
-// //////
-type NodeProbeRequest struct {
-	// The API version assumed by the CO. This is a REQUIRED field.
-	Version *Version `protobuf:"bytes,1,opt,name=version" json:"version,omitempty"`
-}
-
-func (m *NodeProbeRequest) Reset()                    { *m = NodeProbeRequest{} }
-func (m *NodeProbeRequest) String() string            { return proto.CompactTextString(m) }
-func (*NodeProbeRequest) ProtoMessage()               {}
-func (*NodeProbeRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{33} }
-
-func (m *NodeProbeRequest) GetVersion() *Version {
-	if m != nil {
-		return m.Version
-	}
-	return nil
-}
-
-type NodeProbeResponse struct {
-}
-
-func (m *NodeProbeResponse) Reset()                    { *m = NodeProbeResponse{} }
-func (m *NodeProbeResponse) String() string            { return proto.CompactTextString(m) }
-func (*NodeProbeResponse) ProtoMessage()               {}
-func (*NodeProbeResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{34} }
-
-// //////
-// //////
 type NodeGetCapabilitiesRequest struct {
-	// The API version assumed by the CO. This is a REQUIRED field.
-	Version *Version `protobuf:"bytes,1,opt,name=version" json:"version,omitempty"`
 }
 
 func (m *NodeGetCapabilitiesRequest) Reset()                    { *m = NodeGetCapabilitiesRequest{} }
 func (m *NodeGetCapabilitiesRequest) String() string            { return proto.CompactTextString(m) }
 func (*NodeGetCapabilitiesRequest) ProtoMessage()               {}
-func (*NodeGetCapabilitiesRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{35} }
-
-func (m *NodeGetCapabilitiesRequest) GetVersion() *Version {
-	if m != nil {
-		return m.Version
-	}
-	return nil
-}
+func (*NodeGetCapabilitiesRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{37} }
 
 type NodeGetCapabilitiesResponse struct {
 	// All the capabilities that the node service supports. This field
@@ -1602,7 +1696,7 @@ type NodeGetCapabilitiesResponse struct {
 func (m *NodeGetCapabilitiesResponse) Reset()                    { *m = NodeGetCapabilitiesResponse{} }
 func (m *NodeGetCapabilitiesResponse) String() string            { return proto.CompactTextString(m) }
 func (*NodeGetCapabilitiesResponse) ProtoMessage()               {}
-func (*NodeGetCapabilitiesResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{36} }
+func (*NodeGetCapabilitiesResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{38} }
 
 func (m *NodeGetCapabilitiesResponse) GetCapabilities() []*NodeServiceCapability {
 	if m != nil {
@@ -1621,7 +1715,7 @@ type NodeServiceCapability struct {
 func (m *NodeServiceCapability) Reset()                    { *m = NodeServiceCapability{} }
 func (m *NodeServiceCapability) String() string            { return proto.CompactTextString(m) }
 func (*NodeServiceCapability) ProtoMessage()               {}
-func (*NodeServiceCapability) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{37} }
+func (*NodeServiceCapability) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{39} }
 
 type isNodeServiceCapability_Type interface {
 	isNodeServiceCapability_Type()
@@ -1703,13 +1797,13 @@ func _NodeServiceCapability_OneofSizer(msg proto.Message) (n int) {
 }
 
 type NodeServiceCapability_RPC struct {
-	Type NodeServiceCapability_RPC_Type `protobuf:"varint,1,opt,name=type,enum=csi.NodeServiceCapability_RPC_Type" json:"type,omitempty"`
+	Type NodeServiceCapability_RPC_Type `protobuf:"varint,1,opt,name=type,enum=csi.v0.NodeServiceCapability_RPC_Type" json:"type,omitempty"`
 }
 
 func (m *NodeServiceCapability_RPC) Reset()                    { *m = NodeServiceCapability_RPC{} }
 func (m *NodeServiceCapability_RPC) String() string            { return proto.CompactTextString(m) }
 func (*NodeServiceCapability_RPC) ProtoMessage()               {}
-func (*NodeServiceCapability_RPC) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{37, 0} }
+func (*NodeServiceCapability_RPC) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{39, 0} }
 
 func (m *NodeServiceCapability_RPC) GetType() NodeServiceCapability_RPC_Type {
 	if m != nil {
@@ -1719,53 +1813,57 @@ func (m *NodeServiceCapability_RPC) GetType() NodeServiceCapability_RPC_Type {
 }
 
 func init() {
-	proto.RegisterType((*GetSupportedVersionsRequest)(nil), "csi.GetSupportedVersionsRequest")
-	proto.RegisterType((*GetSupportedVersionsResponse)(nil), "csi.GetSupportedVersionsResponse")
-	proto.RegisterType((*Version)(nil), "csi.Version")
-	proto.RegisterType((*GetPluginInfoRequest)(nil), "csi.GetPluginInfoRequest")
-	proto.RegisterType((*GetPluginInfoResponse)(nil), "csi.GetPluginInfoResponse")
-	proto.RegisterType((*CreateVolumeRequest)(nil), "csi.CreateVolumeRequest")
-	proto.RegisterType((*CreateVolumeResponse)(nil), "csi.CreateVolumeResponse")
-	proto.RegisterType((*VolumeCapability)(nil), "csi.VolumeCapability")
-	proto.RegisterType((*VolumeCapability_BlockVolume)(nil), "csi.VolumeCapability.BlockVolume")
-	proto.RegisterType((*VolumeCapability_MountVolume)(nil), "csi.VolumeCapability.MountVolume")
-	proto.RegisterType((*VolumeCapability_AccessMode)(nil), "csi.VolumeCapability.AccessMode")
-	proto.RegisterType((*CapacityRange)(nil), "csi.CapacityRange")
-	proto.RegisterType((*VolumeInfo)(nil), "csi.VolumeInfo")
-	proto.RegisterType((*DeleteVolumeRequest)(nil), "csi.DeleteVolumeRequest")
-	proto.RegisterType((*DeleteVolumeResponse)(nil), "csi.DeleteVolumeResponse")
-	proto.RegisterType((*ControllerPublishVolumeRequest)(nil), "csi.ControllerPublishVolumeRequest")
-	proto.RegisterType((*ControllerPublishVolumeResponse)(nil), "csi.ControllerPublishVolumeResponse")
-	proto.RegisterType((*ControllerUnpublishVolumeRequest)(nil), "csi.ControllerUnpublishVolumeRequest")
-	proto.RegisterType((*ControllerUnpublishVolumeResponse)(nil), "csi.ControllerUnpublishVolumeResponse")
-	proto.RegisterType((*ValidateVolumeCapabilitiesRequest)(nil), "csi.ValidateVolumeCapabilitiesRequest")
-	proto.RegisterType((*ValidateVolumeCapabilitiesResponse)(nil), "csi.ValidateVolumeCapabilitiesResponse")
-	proto.RegisterType((*ListVolumesRequest)(nil), "csi.ListVolumesRequest")
-	proto.RegisterType((*ListVolumesResponse)(nil), "csi.ListVolumesResponse")
-	proto.RegisterType((*ListVolumesResponse_Entry)(nil), "csi.ListVolumesResponse.Entry")
-	proto.RegisterType((*GetCapacityRequest)(nil), "csi.GetCapacityRequest")
-	proto.RegisterType((*GetCapacityResponse)(nil), "csi.GetCapacityResponse")
-	proto.RegisterType((*ControllerProbeRequest)(nil), "csi.ControllerProbeRequest")
-	proto.RegisterType((*ControllerProbeResponse)(nil), "csi.ControllerProbeResponse")
-	proto.RegisterType((*ControllerGetCapabilitiesRequest)(nil), "csi.ControllerGetCapabilitiesRequest")
-	proto.RegisterType((*ControllerGetCapabilitiesResponse)(nil), "csi.ControllerGetCapabilitiesResponse")
-	proto.RegisterType((*ControllerServiceCapability)(nil), "csi.ControllerServiceCapability")
-	proto.RegisterType((*ControllerServiceCapability_RPC)(nil), "csi.ControllerServiceCapability.RPC")
-	proto.RegisterType((*NodePublishVolumeRequest)(nil), "csi.NodePublishVolumeRequest")
-	proto.RegisterType((*NodePublishVolumeResponse)(nil), "csi.NodePublishVolumeResponse")
-	proto.RegisterType((*NodeUnpublishVolumeRequest)(nil), "csi.NodeUnpublishVolumeRequest")
-	proto.RegisterType((*NodeUnpublishVolumeResponse)(nil), "csi.NodeUnpublishVolumeResponse")
-	proto.RegisterType((*GetNodeIDRequest)(nil), "csi.GetNodeIDRequest")
-	proto.RegisterType((*GetNodeIDResponse)(nil), "csi.GetNodeIDResponse")
-	proto.RegisterType((*NodeProbeRequest)(nil), "csi.NodeProbeRequest")
-	proto.RegisterType((*NodeProbeResponse)(nil), "csi.NodeProbeResponse")
-	proto.RegisterType((*NodeGetCapabilitiesRequest)(nil), "csi.NodeGetCapabilitiesRequest")
-	proto.RegisterType((*NodeGetCapabilitiesResponse)(nil), "csi.NodeGetCapabilitiesResponse")
-	proto.RegisterType((*NodeServiceCapability)(nil), "csi.NodeServiceCapability")
-	proto.RegisterType((*NodeServiceCapability_RPC)(nil), "csi.NodeServiceCapability.RPC")
-	proto.RegisterEnum("csi.VolumeCapability_AccessMode_Mode", VolumeCapability_AccessMode_Mode_name, VolumeCapability_AccessMode_Mode_value)
-	proto.RegisterEnum("csi.ControllerServiceCapability_RPC_Type", ControllerServiceCapability_RPC_Type_name, ControllerServiceCapability_RPC_Type_value)
-	proto.RegisterEnum("csi.NodeServiceCapability_RPC_Type", NodeServiceCapability_RPC_Type_name, NodeServiceCapability_RPC_Type_value)
+	proto.RegisterType((*GetPluginInfoRequest)(nil), "csi.v0.GetPluginInfoRequest")
+	proto.RegisterType((*GetPluginInfoResponse)(nil), "csi.v0.GetPluginInfoResponse")
+	proto.RegisterType((*GetPluginCapabilitiesRequest)(nil), "csi.v0.GetPluginCapabilitiesRequest")
+	proto.RegisterType((*GetPluginCapabilitiesResponse)(nil), "csi.v0.GetPluginCapabilitiesResponse")
+	proto.RegisterType((*PluginCapability)(nil), "csi.v0.PluginCapability")
+	proto.RegisterType((*PluginCapability_Service)(nil), "csi.v0.PluginCapability.Service")
+	proto.RegisterType((*ProbeRequest)(nil), "csi.v0.ProbeRequest")
+	proto.RegisterType((*ProbeResponse)(nil), "csi.v0.ProbeResponse")
+	proto.RegisterType((*CreateVolumeRequest)(nil), "csi.v0.CreateVolumeRequest")
+	proto.RegisterType((*CreateVolumeResponse)(nil), "csi.v0.CreateVolumeResponse")
+	proto.RegisterType((*VolumeCapability)(nil), "csi.v0.VolumeCapability")
+	proto.RegisterType((*VolumeCapability_BlockVolume)(nil), "csi.v0.VolumeCapability.BlockVolume")
+	proto.RegisterType((*VolumeCapability_MountVolume)(nil), "csi.v0.VolumeCapability.MountVolume")
+	proto.RegisterType((*VolumeCapability_AccessMode)(nil), "csi.v0.VolumeCapability.AccessMode")
+	proto.RegisterType((*CapacityRange)(nil), "csi.v0.CapacityRange")
+	proto.RegisterType((*Volume)(nil), "csi.v0.Volume")
+	proto.RegisterType((*DeleteVolumeRequest)(nil), "csi.v0.DeleteVolumeRequest")
+	proto.RegisterType((*DeleteVolumeResponse)(nil), "csi.v0.DeleteVolumeResponse")
+	proto.RegisterType((*ControllerPublishVolumeRequest)(nil), "csi.v0.ControllerPublishVolumeRequest")
+	proto.RegisterType((*ControllerPublishVolumeResponse)(nil), "csi.v0.ControllerPublishVolumeResponse")
+	proto.RegisterType((*ControllerUnpublishVolumeRequest)(nil), "csi.v0.ControllerUnpublishVolumeRequest")
+	proto.RegisterType((*ControllerUnpublishVolumeResponse)(nil), "csi.v0.ControllerUnpublishVolumeResponse")
+	proto.RegisterType((*ValidateVolumeCapabilitiesRequest)(nil), "csi.v0.ValidateVolumeCapabilitiesRequest")
+	proto.RegisterType((*ValidateVolumeCapabilitiesResponse)(nil), "csi.v0.ValidateVolumeCapabilitiesResponse")
+	proto.RegisterType((*ListVolumesRequest)(nil), "csi.v0.ListVolumesRequest")
+	proto.RegisterType((*ListVolumesResponse)(nil), "csi.v0.ListVolumesResponse")
+	proto.RegisterType((*ListVolumesResponse_Entry)(nil), "csi.v0.ListVolumesResponse.Entry")
+	proto.RegisterType((*GetCapacityRequest)(nil), "csi.v0.GetCapacityRequest")
+	proto.RegisterType((*GetCapacityResponse)(nil), "csi.v0.GetCapacityResponse")
+	proto.RegisterType((*ControllerGetCapabilitiesRequest)(nil), "csi.v0.ControllerGetCapabilitiesRequest")
+	proto.RegisterType((*ControllerGetCapabilitiesResponse)(nil), "csi.v0.ControllerGetCapabilitiesResponse")
+	proto.RegisterType((*ControllerServiceCapability)(nil), "csi.v0.ControllerServiceCapability")
+	proto.RegisterType((*ControllerServiceCapability_RPC)(nil), "csi.v0.ControllerServiceCapability.RPC")
+	proto.RegisterType((*NodeStageVolumeRequest)(nil), "csi.v0.NodeStageVolumeRequest")
+	proto.RegisterType((*NodeStageVolumeResponse)(nil), "csi.v0.NodeStageVolumeResponse")
+	proto.RegisterType((*NodeUnstageVolumeRequest)(nil), "csi.v0.NodeUnstageVolumeRequest")
+	proto.RegisterType((*NodeUnstageVolumeResponse)(nil), "csi.v0.NodeUnstageVolumeResponse")
+	proto.RegisterType((*NodePublishVolumeRequest)(nil), "csi.v0.NodePublishVolumeRequest")
+	proto.RegisterType((*NodePublishVolumeResponse)(nil), "csi.v0.NodePublishVolumeResponse")
+	proto.RegisterType((*NodeUnpublishVolumeRequest)(nil), "csi.v0.NodeUnpublishVolumeRequest")
+	proto.RegisterType((*NodeUnpublishVolumeResponse)(nil), "csi.v0.NodeUnpublishVolumeResponse")
+	proto.RegisterType((*NodeGetIdRequest)(nil), "csi.v0.NodeGetIdRequest")
+	proto.RegisterType((*NodeGetIdResponse)(nil), "csi.v0.NodeGetIdResponse")
+	proto.RegisterType((*NodeGetCapabilitiesRequest)(nil), "csi.v0.NodeGetCapabilitiesRequest")
+	proto.RegisterType((*NodeGetCapabilitiesResponse)(nil), "csi.v0.NodeGetCapabilitiesResponse")
+	proto.RegisterType((*NodeServiceCapability)(nil), "csi.v0.NodeServiceCapability")
+	proto.RegisterType((*NodeServiceCapability_RPC)(nil), "csi.v0.NodeServiceCapability.RPC")
+	proto.RegisterEnum("csi.v0.PluginCapability_Service_Type", PluginCapability_Service_Type_name, PluginCapability_Service_Type_value)
+	proto.RegisterEnum("csi.v0.VolumeCapability_AccessMode_Mode", VolumeCapability_AccessMode_Mode_name, VolumeCapability_AccessMode_Mode_value)
+	proto.RegisterEnum("csi.v0.ControllerServiceCapability_RPC_Type", ControllerServiceCapability_RPC_Type_name, ControllerServiceCapability_RPC_Type_value)
+	proto.RegisterEnum("csi.v0.NodeServiceCapability_RPC_Type", NodeServiceCapability_RPC_Type_name, NodeServiceCapability_RPC_Type_value)
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1779,8 +1877,9 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for Identity service
 
 type IdentityClient interface {
-	GetSupportedVersions(ctx context.Context, in *GetSupportedVersionsRequest, opts ...grpc.CallOption) (*GetSupportedVersionsResponse, error)
 	GetPluginInfo(ctx context.Context, in *GetPluginInfoRequest, opts ...grpc.CallOption) (*GetPluginInfoResponse, error)
+	GetPluginCapabilities(ctx context.Context, in *GetPluginCapabilitiesRequest, opts ...grpc.CallOption) (*GetPluginCapabilitiesResponse, error)
+	Probe(ctx context.Context, in *ProbeRequest, opts ...grpc.CallOption) (*ProbeResponse, error)
 }
 
 type identityClient struct {
@@ -1791,18 +1890,27 @@ func NewIdentityClient(cc *grpc.ClientConn) IdentityClient {
 	return &identityClient{cc}
 }
 
-func (c *identityClient) GetSupportedVersions(ctx context.Context, in *GetSupportedVersionsRequest, opts ...grpc.CallOption) (*GetSupportedVersionsResponse, error) {
-	out := new(GetSupportedVersionsResponse)
-	err := grpc.Invoke(ctx, "/csi.Identity/GetSupportedVersions", in, out, c.cc, opts...)
+func (c *identityClient) GetPluginInfo(ctx context.Context, in *GetPluginInfoRequest, opts ...grpc.CallOption) (*GetPluginInfoResponse, error) {
+	out := new(GetPluginInfoResponse)
+	err := grpc.Invoke(ctx, "/csi.v0.Identity/GetPluginInfo", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *identityClient) GetPluginInfo(ctx context.Context, in *GetPluginInfoRequest, opts ...grpc.CallOption) (*GetPluginInfoResponse, error) {
-	out := new(GetPluginInfoResponse)
-	err := grpc.Invoke(ctx, "/csi.Identity/GetPluginInfo", in, out, c.cc, opts...)
+func (c *identityClient) GetPluginCapabilities(ctx context.Context, in *GetPluginCapabilitiesRequest, opts ...grpc.CallOption) (*GetPluginCapabilitiesResponse, error) {
+	out := new(GetPluginCapabilitiesResponse)
+	err := grpc.Invoke(ctx, "/csi.v0.Identity/GetPluginCapabilities", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *identityClient) Probe(ctx context.Context, in *ProbeRequest, opts ...grpc.CallOption) (*ProbeResponse, error) {
+	out := new(ProbeResponse)
+	err := grpc.Invoke(ctx, "/csi.v0.Identity/Probe", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1812,30 +1920,13 @@ func (c *identityClient) GetPluginInfo(ctx context.Context, in *GetPluginInfoReq
 // Server API for Identity service
 
 type IdentityServer interface {
-	GetSupportedVersions(context.Context, *GetSupportedVersionsRequest) (*GetSupportedVersionsResponse, error)
 	GetPluginInfo(context.Context, *GetPluginInfoRequest) (*GetPluginInfoResponse, error)
+	GetPluginCapabilities(context.Context, *GetPluginCapabilitiesRequest) (*GetPluginCapabilitiesResponse, error)
+	Probe(context.Context, *ProbeRequest) (*ProbeResponse, error)
 }
 
 func RegisterIdentityServer(s *grpc.Server, srv IdentityServer) {
 	s.RegisterService(&_Identity_serviceDesc, srv)
-}
-
-func _Identity_GetSupportedVersions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetSupportedVersionsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(IdentityServer).GetSupportedVersions(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/csi.Identity/GetSupportedVersions",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(IdentityServer).GetSupportedVersions(ctx, req.(*GetSupportedVersionsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _Identity_GetPluginInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -1848,7 +1939,7 @@ func _Identity_GetPluginInfo_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/csi.Identity/GetPluginInfo",
+		FullMethod: "/csi.v0.Identity/GetPluginInfo",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(IdentityServer).GetPluginInfo(ctx, req.(*GetPluginInfoRequest))
@@ -1856,17 +1947,57 @@ func _Identity_GetPluginInfo_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Identity_GetPluginCapabilities_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPluginCapabilitiesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IdentityServer).GetPluginCapabilities(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/csi.v0.Identity/GetPluginCapabilities",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IdentityServer).GetPluginCapabilities(ctx, req.(*GetPluginCapabilitiesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Identity_Probe_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ProbeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IdentityServer).Probe(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/csi.v0.Identity/Probe",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IdentityServer).Probe(ctx, req.(*ProbeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Identity_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "csi.Identity",
+	ServiceName: "csi.v0.Identity",
 	HandlerType: (*IdentityServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetSupportedVersions",
-			Handler:    _Identity_GetSupportedVersions_Handler,
-		},
-		{
 			MethodName: "GetPluginInfo",
 			Handler:    _Identity_GetPluginInfo_Handler,
+		},
+		{
+			MethodName: "GetPluginCapabilities",
+			Handler:    _Identity_GetPluginCapabilities_Handler,
+		},
+		{
+			MethodName: "Probe",
+			Handler:    _Identity_Probe_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1883,7 +2014,6 @@ type ControllerClient interface {
 	ValidateVolumeCapabilities(ctx context.Context, in *ValidateVolumeCapabilitiesRequest, opts ...grpc.CallOption) (*ValidateVolumeCapabilitiesResponse, error)
 	ListVolumes(ctx context.Context, in *ListVolumesRequest, opts ...grpc.CallOption) (*ListVolumesResponse, error)
 	GetCapacity(ctx context.Context, in *GetCapacityRequest, opts ...grpc.CallOption) (*GetCapacityResponse, error)
-	ControllerProbe(ctx context.Context, in *ControllerProbeRequest, opts ...grpc.CallOption) (*ControllerProbeResponse, error)
 	ControllerGetCapabilities(ctx context.Context, in *ControllerGetCapabilitiesRequest, opts ...grpc.CallOption) (*ControllerGetCapabilitiesResponse, error)
 }
 
@@ -1897,7 +2027,7 @@ func NewControllerClient(cc *grpc.ClientConn) ControllerClient {
 
 func (c *controllerClient) CreateVolume(ctx context.Context, in *CreateVolumeRequest, opts ...grpc.CallOption) (*CreateVolumeResponse, error) {
 	out := new(CreateVolumeResponse)
-	err := grpc.Invoke(ctx, "/csi.Controller/CreateVolume", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/csi.v0.Controller/CreateVolume", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1906,7 +2036,7 @@ func (c *controllerClient) CreateVolume(ctx context.Context, in *CreateVolumeReq
 
 func (c *controllerClient) DeleteVolume(ctx context.Context, in *DeleteVolumeRequest, opts ...grpc.CallOption) (*DeleteVolumeResponse, error) {
 	out := new(DeleteVolumeResponse)
-	err := grpc.Invoke(ctx, "/csi.Controller/DeleteVolume", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/csi.v0.Controller/DeleteVolume", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1915,7 +2045,7 @@ func (c *controllerClient) DeleteVolume(ctx context.Context, in *DeleteVolumeReq
 
 func (c *controllerClient) ControllerPublishVolume(ctx context.Context, in *ControllerPublishVolumeRequest, opts ...grpc.CallOption) (*ControllerPublishVolumeResponse, error) {
 	out := new(ControllerPublishVolumeResponse)
-	err := grpc.Invoke(ctx, "/csi.Controller/ControllerPublishVolume", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/csi.v0.Controller/ControllerPublishVolume", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1924,7 +2054,7 @@ func (c *controllerClient) ControllerPublishVolume(ctx context.Context, in *Cont
 
 func (c *controllerClient) ControllerUnpublishVolume(ctx context.Context, in *ControllerUnpublishVolumeRequest, opts ...grpc.CallOption) (*ControllerUnpublishVolumeResponse, error) {
 	out := new(ControllerUnpublishVolumeResponse)
-	err := grpc.Invoke(ctx, "/csi.Controller/ControllerUnpublishVolume", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/csi.v0.Controller/ControllerUnpublishVolume", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1933,7 +2063,7 @@ func (c *controllerClient) ControllerUnpublishVolume(ctx context.Context, in *Co
 
 func (c *controllerClient) ValidateVolumeCapabilities(ctx context.Context, in *ValidateVolumeCapabilitiesRequest, opts ...grpc.CallOption) (*ValidateVolumeCapabilitiesResponse, error) {
 	out := new(ValidateVolumeCapabilitiesResponse)
-	err := grpc.Invoke(ctx, "/csi.Controller/ValidateVolumeCapabilities", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/csi.v0.Controller/ValidateVolumeCapabilities", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1942,7 +2072,7 @@ func (c *controllerClient) ValidateVolumeCapabilities(ctx context.Context, in *V
 
 func (c *controllerClient) ListVolumes(ctx context.Context, in *ListVolumesRequest, opts ...grpc.CallOption) (*ListVolumesResponse, error) {
 	out := new(ListVolumesResponse)
-	err := grpc.Invoke(ctx, "/csi.Controller/ListVolumes", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/csi.v0.Controller/ListVolumes", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1951,16 +2081,7 @@ func (c *controllerClient) ListVolumes(ctx context.Context, in *ListVolumesReque
 
 func (c *controllerClient) GetCapacity(ctx context.Context, in *GetCapacityRequest, opts ...grpc.CallOption) (*GetCapacityResponse, error) {
 	out := new(GetCapacityResponse)
-	err := grpc.Invoke(ctx, "/csi.Controller/GetCapacity", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *controllerClient) ControllerProbe(ctx context.Context, in *ControllerProbeRequest, opts ...grpc.CallOption) (*ControllerProbeResponse, error) {
-	out := new(ControllerProbeResponse)
-	err := grpc.Invoke(ctx, "/csi.Controller/ControllerProbe", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/csi.v0.Controller/GetCapacity", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1969,7 +2090,7 @@ func (c *controllerClient) ControllerProbe(ctx context.Context, in *ControllerPr
 
 func (c *controllerClient) ControllerGetCapabilities(ctx context.Context, in *ControllerGetCapabilitiesRequest, opts ...grpc.CallOption) (*ControllerGetCapabilitiesResponse, error) {
 	out := new(ControllerGetCapabilitiesResponse)
-	err := grpc.Invoke(ctx, "/csi.Controller/ControllerGetCapabilities", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/csi.v0.Controller/ControllerGetCapabilities", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1986,7 +2107,6 @@ type ControllerServer interface {
 	ValidateVolumeCapabilities(context.Context, *ValidateVolumeCapabilitiesRequest) (*ValidateVolumeCapabilitiesResponse, error)
 	ListVolumes(context.Context, *ListVolumesRequest) (*ListVolumesResponse, error)
 	GetCapacity(context.Context, *GetCapacityRequest) (*GetCapacityResponse, error)
-	ControllerProbe(context.Context, *ControllerProbeRequest) (*ControllerProbeResponse, error)
 	ControllerGetCapabilities(context.Context, *ControllerGetCapabilitiesRequest) (*ControllerGetCapabilitiesResponse, error)
 }
 
@@ -2004,7 +2124,7 @@ func _Controller_CreateVolume_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/csi.Controller/CreateVolume",
+		FullMethod: "/csi.v0.Controller/CreateVolume",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ControllerServer).CreateVolume(ctx, req.(*CreateVolumeRequest))
@@ -2022,7 +2142,7 @@ func _Controller_DeleteVolume_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/csi.Controller/DeleteVolume",
+		FullMethod: "/csi.v0.Controller/DeleteVolume",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ControllerServer).DeleteVolume(ctx, req.(*DeleteVolumeRequest))
@@ -2040,7 +2160,7 @@ func _Controller_ControllerPublishVolume_Handler(srv interface{}, ctx context.Co
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/csi.Controller/ControllerPublishVolume",
+		FullMethod: "/csi.v0.Controller/ControllerPublishVolume",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ControllerServer).ControllerPublishVolume(ctx, req.(*ControllerPublishVolumeRequest))
@@ -2058,7 +2178,7 @@ func _Controller_ControllerUnpublishVolume_Handler(srv interface{}, ctx context.
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/csi.Controller/ControllerUnpublishVolume",
+		FullMethod: "/csi.v0.Controller/ControllerUnpublishVolume",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ControllerServer).ControllerUnpublishVolume(ctx, req.(*ControllerUnpublishVolumeRequest))
@@ -2076,7 +2196,7 @@ func _Controller_ValidateVolumeCapabilities_Handler(srv interface{}, ctx context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/csi.Controller/ValidateVolumeCapabilities",
+		FullMethod: "/csi.v0.Controller/ValidateVolumeCapabilities",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ControllerServer).ValidateVolumeCapabilities(ctx, req.(*ValidateVolumeCapabilitiesRequest))
@@ -2094,7 +2214,7 @@ func _Controller_ListVolumes_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/csi.Controller/ListVolumes",
+		FullMethod: "/csi.v0.Controller/ListVolumes",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ControllerServer).ListVolumes(ctx, req.(*ListVolumesRequest))
@@ -2112,28 +2232,10 @@ func _Controller_GetCapacity_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/csi.Controller/GetCapacity",
+		FullMethod: "/csi.v0.Controller/GetCapacity",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ControllerServer).GetCapacity(ctx, req.(*GetCapacityRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Controller_ControllerProbe_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ControllerProbeRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ControllerServer).ControllerProbe(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/csi.Controller/ControllerProbe",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ControllerServer).ControllerProbe(ctx, req.(*ControllerProbeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2148,7 +2250,7 @@ func _Controller_ControllerGetCapabilities_Handler(srv interface{}, ctx context.
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/csi.Controller/ControllerGetCapabilities",
+		FullMethod: "/csi.v0.Controller/ControllerGetCapabilities",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ControllerServer).ControllerGetCapabilities(ctx, req.(*ControllerGetCapabilitiesRequest))
@@ -2157,7 +2259,7 @@ func _Controller_ControllerGetCapabilities_Handler(srv interface{}, ctx context.
 }
 
 var _Controller_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "csi.Controller",
+	ServiceName: "csi.v0.Controller",
 	HandlerType: (*ControllerServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -2189,10 +2291,6 @@ var _Controller_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Controller_GetCapacity_Handler,
 		},
 		{
-			MethodName: "ControllerProbe",
-			Handler:    _Controller_ControllerProbe_Handler,
-		},
-		{
 			MethodName: "ControllerGetCapabilities",
 			Handler:    _Controller_ControllerGetCapabilities_Handler,
 		},
@@ -2204,10 +2302,11 @@ var _Controller_serviceDesc = grpc.ServiceDesc{
 // Client API for Node service
 
 type NodeClient interface {
+	NodeStageVolume(ctx context.Context, in *NodeStageVolumeRequest, opts ...grpc.CallOption) (*NodeStageVolumeResponse, error)
+	NodeUnstageVolume(ctx context.Context, in *NodeUnstageVolumeRequest, opts ...grpc.CallOption) (*NodeUnstageVolumeResponse, error)
 	NodePublishVolume(ctx context.Context, in *NodePublishVolumeRequest, opts ...grpc.CallOption) (*NodePublishVolumeResponse, error)
 	NodeUnpublishVolume(ctx context.Context, in *NodeUnpublishVolumeRequest, opts ...grpc.CallOption) (*NodeUnpublishVolumeResponse, error)
-	GetNodeID(ctx context.Context, in *GetNodeIDRequest, opts ...grpc.CallOption) (*GetNodeIDResponse, error)
-	NodeProbe(ctx context.Context, in *NodeProbeRequest, opts ...grpc.CallOption) (*NodeProbeResponse, error)
+	NodeGetId(ctx context.Context, in *NodeGetIdRequest, opts ...grpc.CallOption) (*NodeGetIdResponse, error)
 	NodeGetCapabilities(ctx context.Context, in *NodeGetCapabilitiesRequest, opts ...grpc.CallOption) (*NodeGetCapabilitiesResponse, error)
 }
 
@@ -2219,9 +2318,27 @@ func NewNodeClient(cc *grpc.ClientConn) NodeClient {
 	return &nodeClient{cc}
 }
 
+func (c *nodeClient) NodeStageVolume(ctx context.Context, in *NodeStageVolumeRequest, opts ...grpc.CallOption) (*NodeStageVolumeResponse, error) {
+	out := new(NodeStageVolumeResponse)
+	err := grpc.Invoke(ctx, "/csi.v0.Node/NodeStageVolume", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nodeClient) NodeUnstageVolume(ctx context.Context, in *NodeUnstageVolumeRequest, opts ...grpc.CallOption) (*NodeUnstageVolumeResponse, error) {
+	out := new(NodeUnstageVolumeResponse)
+	err := grpc.Invoke(ctx, "/csi.v0.Node/NodeUnstageVolume", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *nodeClient) NodePublishVolume(ctx context.Context, in *NodePublishVolumeRequest, opts ...grpc.CallOption) (*NodePublishVolumeResponse, error) {
 	out := new(NodePublishVolumeResponse)
-	err := grpc.Invoke(ctx, "/csi.Node/NodePublishVolume", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/csi.v0.Node/NodePublishVolume", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -2230,25 +2347,16 @@ func (c *nodeClient) NodePublishVolume(ctx context.Context, in *NodePublishVolum
 
 func (c *nodeClient) NodeUnpublishVolume(ctx context.Context, in *NodeUnpublishVolumeRequest, opts ...grpc.CallOption) (*NodeUnpublishVolumeResponse, error) {
 	out := new(NodeUnpublishVolumeResponse)
-	err := grpc.Invoke(ctx, "/csi.Node/NodeUnpublishVolume", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/csi.v0.Node/NodeUnpublishVolume", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *nodeClient) GetNodeID(ctx context.Context, in *GetNodeIDRequest, opts ...grpc.CallOption) (*GetNodeIDResponse, error) {
-	out := new(GetNodeIDResponse)
-	err := grpc.Invoke(ctx, "/csi.Node/GetNodeID", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *nodeClient) NodeProbe(ctx context.Context, in *NodeProbeRequest, opts ...grpc.CallOption) (*NodeProbeResponse, error) {
-	out := new(NodeProbeResponse)
-	err := grpc.Invoke(ctx, "/csi.Node/NodeProbe", in, out, c.cc, opts...)
+func (c *nodeClient) NodeGetId(ctx context.Context, in *NodeGetIdRequest, opts ...grpc.CallOption) (*NodeGetIdResponse, error) {
+	out := new(NodeGetIdResponse)
+	err := grpc.Invoke(ctx, "/csi.v0.Node/NodeGetId", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -2257,7 +2365,7 @@ func (c *nodeClient) NodeProbe(ctx context.Context, in *NodeProbeRequest, opts .
 
 func (c *nodeClient) NodeGetCapabilities(ctx context.Context, in *NodeGetCapabilitiesRequest, opts ...grpc.CallOption) (*NodeGetCapabilitiesResponse, error) {
 	out := new(NodeGetCapabilitiesResponse)
-	err := grpc.Invoke(ctx, "/csi.Node/NodeGetCapabilities", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/csi.v0.Node/NodeGetCapabilities", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -2267,15 +2375,52 @@ func (c *nodeClient) NodeGetCapabilities(ctx context.Context, in *NodeGetCapabil
 // Server API for Node service
 
 type NodeServer interface {
+	NodeStageVolume(context.Context, *NodeStageVolumeRequest) (*NodeStageVolumeResponse, error)
+	NodeUnstageVolume(context.Context, *NodeUnstageVolumeRequest) (*NodeUnstageVolumeResponse, error)
 	NodePublishVolume(context.Context, *NodePublishVolumeRequest) (*NodePublishVolumeResponse, error)
 	NodeUnpublishVolume(context.Context, *NodeUnpublishVolumeRequest) (*NodeUnpublishVolumeResponse, error)
-	GetNodeID(context.Context, *GetNodeIDRequest) (*GetNodeIDResponse, error)
-	NodeProbe(context.Context, *NodeProbeRequest) (*NodeProbeResponse, error)
+	NodeGetId(context.Context, *NodeGetIdRequest) (*NodeGetIdResponse, error)
 	NodeGetCapabilities(context.Context, *NodeGetCapabilitiesRequest) (*NodeGetCapabilitiesResponse, error)
 }
 
 func RegisterNodeServer(s *grpc.Server, srv NodeServer) {
 	s.RegisterService(&_Node_serviceDesc, srv)
+}
+
+func _Node_NodeStageVolume_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NodeStageVolumeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeServer).NodeStageVolume(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/csi.v0.Node/NodeStageVolume",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeServer).NodeStageVolume(ctx, req.(*NodeStageVolumeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Node_NodeUnstageVolume_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NodeUnstageVolumeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeServer).NodeUnstageVolume(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/csi.v0.Node/NodeUnstageVolume",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeServer).NodeUnstageVolume(ctx, req.(*NodeUnstageVolumeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Node_NodePublishVolume_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -2288,7 +2433,7 @@ func _Node_NodePublishVolume_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/csi.Node/NodePublishVolume",
+		FullMethod: "/csi.v0.Node/NodePublishVolume",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(NodeServer).NodePublishVolume(ctx, req.(*NodePublishVolumeRequest))
@@ -2306,7 +2451,7 @@ func _Node_NodeUnpublishVolume_Handler(srv interface{}, ctx context.Context, dec
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/csi.Node/NodeUnpublishVolume",
+		FullMethod: "/csi.v0.Node/NodeUnpublishVolume",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(NodeServer).NodeUnpublishVolume(ctx, req.(*NodeUnpublishVolumeRequest))
@@ -2314,38 +2459,20 @@ func _Node_NodeUnpublishVolume_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Node_GetNodeID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetNodeIDRequest)
+func _Node_NodeGetId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NodeGetIdRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(NodeServer).GetNodeID(ctx, in)
+		return srv.(NodeServer).NodeGetId(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/csi.Node/GetNodeID",
+		FullMethod: "/csi.v0.Node/NodeGetId",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NodeServer).GetNodeID(ctx, req.(*GetNodeIDRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Node_NodeProbe_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NodeProbeRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(NodeServer).NodeProbe(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/csi.Node/NodeProbe",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NodeServer).NodeProbe(ctx, req.(*NodeProbeRequest))
+		return srv.(NodeServer).NodeGetId(ctx, req.(*NodeGetIdRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2360,7 +2487,7 @@ func _Node_NodeGetCapabilities_Handler(srv interface{}, ctx context.Context, dec
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/csi.Node/NodeGetCapabilities",
+		FullMethod: "/csi.v0.Node/NodeGetCapabilities",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(NodeServer).NodeGetCapabilities(ctx, req.(*NodeGetCapabilitiesRequest))
@@ -2369,9 +2496,17 @@ func _Node_NodeGetCapabilities_Handler(srv interface{}, ctx context.Context, dec
 }
 
 var _Node_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "csi.Node",
+	ServiceName: "csi.v0.Node",
 	HandlerType: (*NodeServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "NodeStageVolume",
+			Handler:    _Node_NodeStageVolume_Handler,
+		},
+		{
+			MethodName: "NodeUnstageVolume",
+			Handler:    _Node_NodeUnstageVolume_Handler,
+		},
 		{
 			MethodName: "NodePublishVolume",
 			Handler:    _Node_NodePublishVolume_Handler,
@@ -2381,12 +2516,8 @@ var _Node_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Node_NodeUnpublishVolume_Handler,
 		},
 		{
-			MethodName: "GetNodeID",
-			Handler:    _Node_GetNodeID_Handler,
-		},
-		{
-			MethodName: "NodeProbe",
-			Handler:    _Node_NodeProbe_Handler,
+			MethodName: "NodeGetId",
+			Handler:    _Node_NodeGetId_Handler,
 		},
 		{
 			MethodName: "NodeGetCapabilities",
@@ -2400,130 +2531,141 @@ var _Node_serviceDesc = grpc.ServiceDesc{
 func init() { proto.RegisterFile("csi.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 1993 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x59, 0x4b, 0x73, 0xe3, 0x58,
-	0x15, 0xb6, 0x6c, 0xe7, 0xe1, 0xe3, 0x38, 0xed, 0x5c, 0xe7, 0xa1, 0x28, 0xfd, 0x70, 0xab, 0xa7,
-	0x7b, 0x42, 0x15, 0xe3, 0xa2, 0x3c, 0x54, 0xd1, 0xe9, 0x9e, 0x19, 0x48, 0x6c, 0x4f, 0x62, 0x26,
-	0x71, 0xa7, 0x14, 0xa7, 0x9b, 0x01, 0xa6, 0x84, 0x62, 0xdf, 0xa4, 0x45, 0xcb, 0x92, 0x47, 0x92,
-	0x5d, 0xed, 0x3d, 0x4b, 0x16, 0xec, 0xd8, 0xc1, 0x72, 0xa0, 0x58, 0x02, 0xbf, 0x80, 0xbf, 0x00,
-	0xac, 0xd9, 0xf2, 0x0f, 0xa8, 0x62, 0x43, 0xdd, 0x87, 0x64, 0x49, 0x96, 0x1c, 0x3b, 0x93, 0x1e,
-	0x66, 0x27, 0x9d, 0xc7, 0x77, 0xcf, 0xe3, 0xde, 0x73, 0xce, 0x95, 0x20, 0xd7, 0x71, 0xf4, 0x4a,
-	0xdf, 0xb6, 0x5c, 0x0b, 0x65, 0x3a, 0x8e, 0x2e, 0xdf, 0x83, 0x9d, 0x43, 0xec, 0x9e, 0x0d, 0xfa,
-	0x7d, 0xcb, 0x76, 0x71, 0xf7, 0x25, 0xb6, 0x1d, 0xdd, 0x32, 0x1d, 0x05, 0x7f, 0x39, 0xc0, 0x8e,
-	0x2b, 0xff, 0x0c, 0xee, 0xc6, 0xb3, 0x9d, 0xbe, 0x65, 0x3a, 0x18, 0x3d, 0x07, 0xe4, 0x78, 0x4c,
-	0x75, 0xc8, 0xb9, 0xa2, 0x50, 0xce, 0xec, 0xe6, 0xab, 0x2b, 0x15, 0xb2, 0x16, 0x57, 0x51, 0xd6,
-	0x9c, 0x28, 0x88, 0xfc, 0x19, 0x2c, 0xf1, 0x67, 0xb4, 0x0e, 0x0b, 0x3d, 0xed, 0x97, 0x96, 0x2d,
-	0x0a, 0x65, 0x61, 0xb7, 0xa0, 0xb0, 0x17, 0x4a, 0xd5, 0x4d, 0xcb, 0x16, 0xd3, 0x9c, 0x4a, 0x5e,
-	0x08, 0xb5, 0xaf, 0xb9, 0x9d, 0xd7, 0x62, 0x86, 0x51, 0xe9, 0x8b, 0xfc, 0x09, 0xac, 0x1f, 0x62,
-	0xf7, 0xd4, 0x18, 0x5c, 0xe9, 0x66, 0xd3, 0xbc, 0xb4, 0xb8, 0x07, 0xe8, 0x09, 0x2c, 0x71, 0xbb,
-	0x28, 0x76, 0xd4, 0x2c, 0x8f, 0x29, 0xff, 0x43, 0x80, 0x8d, 0x08, 0x00, 0xf7, 0x11, 0x41, 0xd6,
-	0xd4, 0x7a, 0x98, 0xaa, 0xe7, 0x14, 0xfa, 0x8c, 0x1e, 0xc3, 0xea, 0x10, 0x9b, 0x5d, 0xcb, 0xf6,
-	0x9c, 0xa6, 0x26, 0xe6, 0x94, 0x02, 0xa3, 0x7a, 0x6e, 0xd5, 0x61, 0xb9, 0xa7, 0x99, 0xfa, 0x25,
-	0x76, 0x5c, 0x31, 0x43, 0x83, 0xb2, 0x4b, 0x57, 0x8f, 0x5d, 0xa8, 0x72, 0xc2, 0x45, 0x1b, 0xa6,
-	0x6b, 0x8f, 0x14, 0x5f, 0x53, 0x7a, 0x0e, 0x85, 0x10, 0x0b, 0x15, 0x21, 0xf3, 0x06, 0x8f, 0xb8,
-	0x41, 0xe4, 0x91, 0xc4, 0x64, 0xa8, 0x19, 0x03, 0xcc, 0xcd, 0x60, 0x2f, 0xcf, 0xd2, 0x4f, 0x05,
-	0xf9, 0xbf, 0x19, 0x28, 0xd5, 0x6c, 0xac, 0xb9, 0xf8, 0xa5, 0x65, 0x0c, 0x7a, 0x78, 0xce, 0xb8,
-	0xf8, 0xde, 0xa7, 0x03, 0xde, 0xef, 0xc1, 0x6a, 0x47, 0xeb, 0x6b, 0x1d, 0xdd, 0x1d, 0xa9, 0xb6,
-	0x66, 0x5e, 0x61, 0x9a, 0x8a, 0x7c, 0x15, 0x51, 0x88, 0x1a, 0x67, 0x29, 0x84, 0xa3, 0x14, 0x3a,
-	0xc1, 0x57, 0xf4, 0x29, 0x94, 0x86, 0xd4, 0x0e, 0x95, 0xd0, 0x2f, 0x74, 0x43, 0x77, 0x75, 0xec,
-	0x88, 0x59, 0x1a, 0x9c, 0x0d, 0x66, 0x02, 0xe5, 0xd7, 0x3c, 0xf6, 0x48, 0x41, 0xc3, 0x30, 0x45,
-	0xc7, 0x0e, 0x3a, 0x02, 0xe8, 0x6b, 0xb6, 0xd6, 0xc3, 0x2e, 0xb6, 0x1d, 0x71, 0x21, 0x10, 0xdb,
-	0x18, 0x67, 0x2b, 0xa7, 0xbe, 0x28, 0x8b, 0x6d, 0x40, 0x17, 0xfd, 0x04, 0x8a, 0x03, 0x07, 0xdb,
-	0x6a, 0xc7, 0xc6, 0x5d, 0x6c, 0xba, 0xba, 0x66, 0x38, 0xe2, 0x22, 0xc5, 0xfb, 0x20, 0x11, 0xef,
-	0xdc, 0xc1, 0x76, 0x6d, 0x2c, 0xcf, 0x40, 0xef, 0x0c, 0xc2, 0x54, 0xe9, 0x63, 0xb8, 0x13, 0x59,
-	0x78, 0x9e, 0xcc, 0x49, 0x07, 0xb0, 0x1e, 0xb7, 0xce, 0x5c, 0xd9, 0x3f, 0x82, 0xf5, 0xb0, 0xfd,
-	0x7c, 0x4f, 0x7f, 0x0f, 0xf2, 0x3c, 0x0d, 0xba, 0x79, 0x69, 0xf1, 0x1d, 0x70, 0x27, 0x10, 0x7e,
-	0xba, 0x31, 0x61, 0xe8, 0x3f, 0xcb, 0xbf, 0xcb, 0x42, 0x31, 0x9a, 0x19, 0xb4, 0x07, 0x0b, 0x17,
-	0x86, 0xd5, 0x79, 0xc3, 0x01, 0x1e, 0xc6, 0xe6, 0xaf, 0x72, 0x40, 0x44, 0x18, 0xf5, 0x28, 0xa5,
-	0x30, 0x0d, 0xa2, 0xda, 0xb3, 0x06, 0xa6, 0x4b, 0x6d, 0x4e, 0x54, 0x3d, 0x21, 0x22, 0x63, 0x55,
-	0xaa, 0x81, 0xf6, 0x21, 0xaf, 0x75, 0x3a, 0xd8, 0x71, 0xd4, 0x9e, 0xd5, 0xf5, 0xf6, 0x5e, 0x39,
-	0x1e, 0x60, 0x9f, 0x0a, 0x9e, 0x58, 0x5d, 0xac, 0x80, 0xe6, 0x3f, 0x4b, 0x05, 0xc8, 0x07, 0xac,
-	0x92, 0x0e, 0x21, 0x1f, 0x58, 0x09, 0x6d, 0xc1, 0xd2, 0xa5, 0xa3, 0xba, 0xa3, 0xbe, 0x77, 0xe8,
-	0x17, 0x2f, 0x9d, 0xf6, 0xa8, 0x8f, 0xd1, 0x03, 0xc8, 0x53, 0x13, 0xd4, 0x4b, 0x43, 0xbb, 0x72,
-	0xc4, 0x74, 0x39, 0xb3, 0x9b, 0x53, 0x80, 0x92, 0x3e, 0x25, 0x14, 0xe9, 0xdf, 0x02, 0xc0, 0x78,
-	0x49, 0xb4, 0x07, 0x59, 0x6a, 0x22, 0x41, 0x59, 0xad, 0x3e, 0xbe, 0xce, 0xc4, 0x0a, 0xb5, 0x93,
-	0xaa, 0xc8, 0xbf, 0x17, 0x20, 0x4b, 0x31, 0xf2, 0xb0, 0x74, 0xde, 0xfa, 0xac, 0xf5, 0xe2, 0x55,
-	0xab, 0x98, 0x42, 0x9b, 0x80, 0xce, 0x9a, 0xad, 0xc3, 0xe3, 0x86, 0xda, 0x7a, 0x51, 0x6f, 0xa8,
-	0xaf, 0x94, 0x66, 0xbb, 0xa1, 0x14, 0x05, 0xb4, 0x03, 0x5b, 0x41, 0xba, 0xd2, 0xd8, 0xaf, 0x37,
-	0x14, 0xf5, 0x45, 0xeb, 0xf8, 0xf3, 0x62, 0x1a, 0x49, 0xb0, 0x79, 0x72, 0x7e, 0xdc, 0x6e, 0x4e,
-	0xf2, 0x32, 0xe8, 0x2e, 0x88, 0x01, 0x1e, 0xc7, 0xe0, 0xb0, 0x59, 0x02, 0x1b, 0xe0, 0xb2, 0x47,
-	0xce, 0x5c, 0x38, 0x28, 0xf8, 0x69, 0x20, 0x91, 0x92, 0x5f, 0x41, 0x21, 0x74, 0xf2, 0x49, 0x8d,
-	0xb4, 0xf1, 0x97, 0x03, 0xdd, 0xc6, 0x5d, 0xf5, 0x62, 0xe4, 0x62, 0x87, 0x86, 0x21, 0xab, 0x14,
-	0x3c, 0xea, 0x01, 0x21, 0x92, 0x98, 0x1a, 0x7a, 0x4f, 0x77, 0xb9, 0x4c, 0x9a, 0xca, 0x00, 0x25,
-	0x51, 0x01, 0xf9, 0x6f, 0x02, 0xc0, 0x78, 0x53, 0x12, 0x58, 0xbf, 0xf8, 0x84, 0x60, 0x3d, 0x2a,
-	0x83, 0x5d, 0x85, 0xb4, 0xde, 0xe5, 0x07, 0x22, 0xad, 0x77, 0xd1, 0x0f, 0x01, 0x34, 0xd7, 0xb5,
-	0xf5, 0x8b, 0x01, 0x51, 0x61, 0xc5, 0xf8, 0x41, 0x64, 0xc3, 0x57, 0xf6, 0x7d, 0x09, 0x5e, 0x27,
-	0xc6, 0x2a, 0xe4, 0x34, 0x47, 0xd8, 0x73, 0x9d, 0xc4, 0xff, 0x08, 0x50, 0xaa, 0x63, 0x03, 0xdf,
-	0xb4, 0x0e, 0xef, 0x40, 0xce, 0x3b, 0xb1, 0x9e, 0x5b, 0xcb, 0xfc, 0x78, 0x76, 0x63, 0x6b, 0x58,
-	0x26, 0x50, 0xc3, 0x62, 0x16, 0x9e, 0xb1, 0x86, 0xdd, 0x46, 0x11, 0xda, 0x84, 0xf5, 0xb0, 0x01,
-	0xac, 0x08, 0xc9, 0x7f, 0xc9, 0xc2, 0xfd, 0x9a, 0x65, 0xba, 0xb6, 0x65, 0x18, 0xd8, 0x3e, 0x1d,
-	0x5c, 0x18, 0xba, 0xf3, 0xfa, 0x1d, 0x44, 0x67, 0x0b, 0x96, 0x4c, 0xab, 0x4b, 0x59, 0x19, 0x76,
-	0x9c, 0xc9, 0x6b, 0xb3, 0x8b, 0x0e, 0x60, 0x2d, 0xda, 0x8c, 0x46, 0x62, 0x96, 0xae, 0x93, 0xd0,
-	0x8a, 0x8a, 0xc3, 0x68, 0x09, 0x94, 0x60, 0xd9, 0xc6, 0x5a, 0xd7, 0x32, 0x8d, 0x91, 0xb8, 0x50,
-	0x16, 0x76, 0x97, 0x15, 0xff, 0x1d, 0x75, 0x12, 0x5b, 0xcb, 0x53, 0xd6, 0x5a, 0xa6, 0x3a, 0x3f,
-	0x5b, 0x86, 0xd0, 0xa5, 0xef, 0x44, 0x60, 0x7f, 0x2f, 0xd1, 0x55, 0xf6, 0x66, 0x59, 0x85, 0xbd,
-	0x45, 0x77, 0x3e, 0x77, 0x74, 0x4c, 0xbe, 0x8d, 0x9d, 0x20, 0xd5, 0x60, 0x23, 0x76, 0xb9, 0xb9,
-	0xb6, 0xd3, 0xdf, 0x05, 0x78, 0x90, 0xe8, 0x13, 0xef, 0x6f, 0x6f, 0xa0, 0xd4, 0x67, 0x0c, 0x35,
-	0xdc, 0xe7, 0x48, 0x58, 0x9e, 0x4f, 0x0f, 0x0b, 0x9f, 0xc6, 0x42, 0x54, 0x52, 0x1d, 0x58, 0x60,
-	0xd6, 0xfa, 0x51, 0xba, 0x54, 0x87, 0xcd, 0x78, 0xe1, 0xb9, 0xdc, 0xfa, 0x53, 0x1a, 0xca, 0x63,
-	0x9b, 0xce, 0xcd, 0xfe, 0x37, 0x7f, 0x1e, 0x70, 0xcc, 0x7e, 0x65, 0x93, 0xd9, 0xb3, 0x48, 0xc8,
-	0xe2, 0xcd, 0xfb, 0x06, 0x6b, 0xca, 0x23, 0x78, 0x38, 0xc5, 0x1a, 0x5e, 0x60, 0xfe, 0x95, 0x86,
-	0x87, 0x2f, 0x35, 0x43, 0xef, 0xfa, 0x03, 0x50, 0x70, 0x86, 0xbc, 0xd5, 0x98, 0x26, 0xcc, 0xb5,
-	0x99, 0x79, 0xe7, 0x5a, 0x3d, 0xee, 0x34, 0xb3, 0x1c, 0x7c, 0xc4, 0x50, 0xae, 0xf3, 0x67, 0xe6,
-	0x03, 0x7d, 0x2b, 0x87, 0xf1, 0xe7, 0x20, 0x4f, 0xb3, 0x88, 0x1f, 0xc7, 0xbb, 0x90, 0xf3, 0xaf,
-	0x7f, 0x14, 0x77, 0x59, 0x19, 0x13, 0x90, 0x08, 0x4b, 0x3d, 0xec, 0x38, 0xda, 0x95, 0x87, 0xef,
-	0xbd, 0xca, 0xbf, 0x12, 0x00, 0x1d, 0xeb, 0x0e, 0x9f, 0xcb, 0xe6, 0xce, 0x18, 0x19, 0xd7, 0xb4,
-	0xb7, 0x2a, 0x36, 0x5d, 0x5b, 0xe7, 0xa3, 0x45, 0x41, 0x81, 0x9e, 0xf6, 0xb6, 0xc1, 0x28, 0x64,
-	0x96, 0x70, 0x5c, 0xcd, 0x76, 0x75, 0xf3, 0x4a, 0x75, 0xad, 0x37, 0xd8, 0xe4, 0x07, 0xa2, 0xe0,
-	0x51, 0xdb, 0x84, 0x28, 0xff, 0x51, 0x80, 0x52, 0xc8, 0x0c, 0xee, 0xd6, 0x53, 0x58, 0xf2, 0xb0,
-	0x59, 0x65, 0xb9, 0x4f, 0xed, 0x88, 0x11, 0xad, 0xb0, 0x24, 0x78, 0xe2, 0xe8, 0x1e, 0x80, 0x89,
-	0xdf, 0xba, 0x7c, 0x51, 0xe6, 0x75, 0x8e, 0x50, 0xe8, 0x82, 0xd2, 0x1e, 0x2c, 0xb0, 0x54, 0xcc,
-	0x3f, 0xa7, 0xff, 0x3a, 0x0d, 0xe8, 0x10, 0xbb, 0xfe, 0x28, 0x36, 0x67, 0xc8, 0x12, 0xf6, 0x71,
-	0x7a, 0xde, 0x7d, 0x7c, 0x18, 0xba, 0x9f, 0xb1, 0x63, 0xf0, 0xbe, 0x77, 0xf7, 0x8d, 0x18, 0x37,
-	0xed, 0x7a, 0xf6, 0x35, 0x2f, 0x51, 0x72, 0x1d, 0x4a, 0xa1, 0x05, 0x79, 0xe6, 0x3e, 0x00, 0xa4,
-	0x0d, 0x35, 0xdd, 0xd0, 0x2e, 0x0c, 0xe6, 0x29, 0xe1, 0xf2, 0x41, 0x72, 0xcd, 0xe7, 0x78, 0x6a,
-	0xf2, 0x8f, 0x60, 0x33, 0xd0, 0x2e, 0x6c, 0xeb, 0x62, 0xde, 0x82, 0x2c, 0x6f, 0xc3, 0xd6, 0x04,
-	0x02, 0xaf, 0x52, 0x3f, 0x0e, 0xd6, 0x7d, 0x6e, 0xec, 0x0d, 0x6b, 0x94, 0xac, 0x07, 0xcb, 0xe2,
-	0x04, 0x16, 0x77, 0xbe, 0x0e, 0x2b, 0x31, 0xc9, 0x2d, 0x47, 0x4a, 0xfc, 0x19, 0xb6, 0x87, 0x7a,
-	0x27, 0x98, 0xe7, 0x90, 0x96, 0xfc, 0xdb, 0x34, 0xec, 0x4c, 0x91, 0x46, 0x4f, 0x21, 0x63, 0xf7,
-	0x3b, 0xdc, 0xdc, 0xf7, 0xae, 0x03, 0xaf, 0x28, 0xa7, 0xb5, 0xa3, 0x94, 0x42, 0x54, 0xa4, 0xbf,
-	0x0a, 0x90, 0x51, 0x4e, 0x6b, 0xe8, 0x63, 0xc8, 0xfa, 0x77, 0xb0, 0xd5, 0xea, 0x77, 0x66, 0x81,
-	0xa8, 0x90, 0x6b, 0x9a, 0x42, 0xd5, 0x64, 0x0b, 0xb2, 0xf4, 0xd2, 0x16, 0xba, 0x40, 0x89, 0xb0,
-	0x5e, 0x53, 0x1a, 0xfb, 0xed, 0x86, 0x5a, 0x6f, 0x1c, 0x37, 0xda, 0x0d, 0xf5, 0xe5, 0x8b, 0xe3,
-	0xf3, 0x93, 0x46, 0x51, 0x20, 0x37, 0xa1, 0xd3, 0xf3, 0x83, 0xe3, 0xe6, 0xd9, 0x91, 0x7a, 0xde,
-	0xf2, 0x9e, 0x38, 0x37, 0x8d, 0x8a, 0xb0, 0x72, 0xdc, 0x3c, 0x6b, 0x73, 0xc2, 0x59, 0x31, 0x43,
-	0x28, 0x87, 0x8d, 0xb6, 0x5a, 0xdb, 0x3f, 0xdd, 0xaf, 0x35, 0xdb, 0x9f, 0x17, 0xb3, 0x07, 0x8b,
-	0xcc, 0x5e, 0xf9, 0x9f, 0x0b, 0x20, 0xb6, 0xac, 0x2e, 0x7e, 0x77, 0x13, 0x6d, 0x37, 0x7e, 0xbc,
-	0x61, 0xc7, 0xec, 0xfb, 0x14, 0x30, 0xc9, 0x80, 0xd9, 0xe7, 0x1a, 0x52, 0x3e, 0x5d, 0xcd, 0xbe,
-	0xc2, 0xae, 0xda, 0xd7, 0xdc, 0xd7, 0x74, 0x30, 0xce, 0x29, 0xc0, 0x48, 0xa7, 0x9a, 0xfb, 0x3a,
-	0x7e, 0x7e, 0x5e, 0xb8, 0xf9, 0xfc, 0xbc, 0x18, 0x99, 0x9f, 0xbf, 0x88, 0x99, 0x47, 0xd8, 0x64,
-	0x5b, 0x9d, 0xee, 0xe3, 0x6c, 0x93, 0xf3, 0x2f, 0xe2, 0x7a, 0xed, 0x32, 0xc5, 0xff, 0x70, 0x3a,
-	0xfe, 0xac, 0x2d, 0xf6, 0x56, 0x26, 0xc3, 0x6f, 0xcf, 0xe4, 0xbd, 0x03, 0xdb, 0x31, 0x21, 0xe1,
-	0x65, 0xec, 0xab, 0x34, 0x48, 0x84, 0xfb, 0x2e, 0x27, 0xd7, 0xc8, 0x8e, 0xcc, 0x4c, 0xec, 0x48,
-	0x35, 0x71, 0x82, 0x1d, 0x9f, 0x8a, 0xff, 0xfb, 0xec, 0x7a, 0x0f, 0x76, 0x62, 0xed, 0xe0, 0x81,
-	0x7c, 0x06, 0xc5, 0x43, 0xec, 0x12, 0x89, 0x66, 0x7d, 0xde, 0xfa, 0xff, 0x5d, 0x58, 0x0b, 0xe8,
-	0xf2, 0x7a, 0x1f, 0x98, 0xf7, 0x85, 0xe0, 0xbc, 0x4f, 0x56, 0xa2, 0xf9, 0xbc, 0x49, 0x43, 0x2b,
-	0xc1, 0x5a, 0x40, 0x97, 0x9b, 0x5e, 0x67, 0x5b, 0xe0, 0x6b, 0x36, 0xb1, 0x2f, 0x58, 0x7c, 0x92,
-	0xda, 0xd7, 0x27, 0x91, 0xf6, 0xc5, 0x46, 0x2f, 0xc9, 0xcf, 0xef, 0x75, 0x8d, 0xeb, 0x0f, 0x02,
-	0x6c, 0xc4, 0xca, 0xa1, 0x6a, 0xb0, 0x65, 0xdd, 0x4f, 0x06, 0x0c, 0x36, 0xab, 0x33, 0xd6, 0xab,
-	0x7e, 0x10, 0xea, 0x55, 0x8f, 0xa6, 0xeb, 0x06, 0xbb, 0x54, 0x29, 0xa6, 0x4b, 0x79, 0x9d, 0xa4,
-	0xfa, 0x67, 0x01, 0x96, 0x9b, 0x74, 0xa3, 0xb9, 0xa4, 0x1a, 0xae, 0xc7, 0xfd, 0x8b, 0x41, 0x65,
-	0x6f, 0xac, 0x4a, 0xfa, 0x8b, 0x23, 0x3d, 0x9c, 0x22, 0xc1, 0x33, 0x97, 0x42, 0x47, 0x50, 0x08,
-	0xfd, 0x96, 0x40, 0xdb, 0x71, 0xbf, 0x2a, 0x18, 0xa0, 0x94, 0xfc, 0x17, 0x43, 0x4e, 0x55, 0xbf,
-	0x5a, 0x04, 0x18, 0xf7, 0x69, 0xd4, 0x80, 0x95, 0xe0, 0x37, 0x68, 0x24, 0x26, 0x7d, 0x56, 0x97,
-	0xb6, 0x63, 0x38, 0xbe, 0x7d, 0x0d, 0x58, 0x09, 0x7e, 0x45, 0xe2, 0x30, 0x31, 0x5f, 0xb6, 0x38,
-	0x4c, 0xec, 0x27, 0xa7, 0x14, 0xba, 0x0c, 0x0d, 0x62, 0xc1, 0x03, 0x88, 0x1e, 0xcd, 0xf0, 0xb9,
-	0x44, 0x7a, 0x6f, 0x96, 0x8f, 0x07, 0x72, 0x0a, 0x19, 0xb0, 0x9d, 0x78, 0x41, 0x45, 0x8f, 0x67,
-	0xba, 0x4e, 0x4b, 0x4f, 0xae, 0x13, 0xf3, 0x57, 0xb3, 0x40, 0x4a, 0xbe, 0x86, 0xa1, 0x27, 0xb3,
-	0xdd, 0x1c, 0xa5, 0xf7, 0xaf, 0x95, 0xf3, 0x17, 0x3c, 0x80, 0x7c, 0xe0, 0x9a, 0x83, 0xb6, 0x26,
-	0x2f, 0x3e, 0x0c, 0x52, 0x4c, 0xba, 0x11, 0x31, 0x8c, 0xc0, 0x6c, 0xce, 0x31, 0x26, 0xaf, 0x07,
-	0x1c, 0x23, 0x66, 0x8c, 0x97, 0x53, 0xa8, 0x05, 0x77, 0x22, 0x73, 0x35, 0xda, 0x89, 0x66, 0x28,
-	0x50, 0xde, 0xa4, 0xbb, 0xf1, 0xcc, 0xf8, 0xb4, 0x45, 0x2a, 0xd0, 0x44, 0xda, 0xe2, 0xeb, 0xdc,
-	0x44, 0xda, 0x12, 0x0a, 0x99, 0x9c, 0xaa, 0xfe, 0x26, 0x03, 0x59, 0x52, 0x25, 0x50, 0x9b, 0x57,
-	0xd3, 0xd0, 0x2e, 0xb9, 0x37, 0x75, 0x08, 0x91, 0xee, 0x27, 0xb1, 0x7d, 0x67, 0x7e, 0x0a, 0xa5,
-	0x98, 0x46, 0x83, 0x1e, 0x5c, 0xd3, 0x0a, 0xa5, 0x72, 0xb2, 0x80, 0x8f, 0xfd, 0x11, 0xe4, 0xfc,
-	0x4e, 0x83, 0x36, 0xbc, 0x0c, 0x85, 0xba, 0x96, 0xb4, 0x19, 0x25, 0x07, 0xb5, 0xfd, 0xee, 0xc1,
-	0xb5, 0xa3, 0x9d, 0x88, 0x6b, 0x4f, 0x36, 0x19, 0xdf, 0xaf, 0x68, 0x7a, 0xc6, 0x7e, 0x25, 0x24,
-	0xa6, 0x9c, 0x2c, 0xe0, 0x61, 0x5f, 0x2c, 0xd2, 0x9f, 0xe3, 0x1f, 0xfe, 0x2f, 0x00, 0x00, 0xff,
-	0xff, 0x17, 0x25, 0x65, 0xbe, 0x29, 0x1f, 0x00, 0x00,
+	// 2173 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x1a, 0x4d, 0x53, 0xe3, 0xc8,
+	0x15, 0xf9, 0x0b, 0x78, 0x06, 0xd6, 0xd3, 0x30, 0x83, 0x11, 0x30, 0x03, 0x62, 0x67, 0x96, 0xfd,
+	0xf2, 0x26, 0x24, 0xd9, 0xda, 0xec, 0x90, 0x49, 0xc0, 0x28, 0xe0, 0xc5, 0x18, 0x4a, 0x18, 0xa6,
+	0x76, 0xb2, 0x29, 0xad, 0xb0, 0x1b, 0x46, 0x19, 0x23, 0x79, 0x24, 0x99, 0x1a, 0x6e, 0xa9, 0x5c,
+	0x52, 0x95, 0x5b, 0xee, 0x49, 0xa5, 0x2a, 0xc7, 0x9c, 0x73, 0x48, 0x55, 0xaa, 0xe6, 0x9c, 0xaa,
+	0xfc, 0x81, 0x9c, 0xf2, 0x03, 0x52, 0x39, 0xe6, 0x94, 0x53, 0x4a, 0xdd, 0x2d, 0xb9, 0x25, 0xb7,
+	0x64, 0x7b, 0x67, 0x6a, 0x2b, 0x27, 0xac, 0xf7, 0xdd, 0xaf, 0xdf, 0x7b, 0xfd, 0x5e, 0x37, 0x30,
+	0xdd, 0x72, 0xcd, 0x4a, 0xd7, 0xb1, 0x3d, 0x1b, 0x15, 0xfc, 0x9f, 0x37, 0xdf, 0x51, 0xee, 0xc1,
+	0xc2, 0x3e, 0xf6, 0x4e, 0x3a, 0xbd, 0x2b, 0xd3, 0xaa, 0x59, 0x97, 0xb6, 0x86, 0x5f, 0xf6, 0xb0,
+	0xeb, 0x29, 0xff, 0x90, 0xe0, 0x6e, 0x0c, 0xe1, 0x76, 0x6d, 0xcb, 0xc5, 0x08, 0x41, 0xce, 0x32,
+	0xae, 0x71, 0x59, 0x5a, 0x93, 0x36, 0xa7, 0x35, 0xf2, 0x1b, 0x3d, 0x84, 0xb9, 0x1b, 0x6c, 0xb5,
+	0x6d, 0x47, 0xbf, 0xc1, 0x8e, 0x6b, 0xda, 0x56, 0x39, 0x43, 0xb0, 0xb3, 0x14, 0x7a, 0x4e, 0x81,
+	0x68, 0x1f, 0xa6, 0xae, 0x0d, 0xcb, 0xbc, 0xc4, 0xae, 0x57, 0xce, 0xae, 0x65, 0x37, 0x8b, 0x5b,
+	0x1f, 0x56, 0xa8, 0x1d, 0x15, 0xa1, 0xae, 0xca, 0x11, 0xa3, 0x56, 0x2d, 0xcf, 0xb9, 0xd5, 0x42,
+	0x66, 0xf9, 0x31, 0xcc, 0x46, 0x50, 0xa8, 0x04, 0xd9, 0x17, 0xf8, 0x96, 0xd9, 0xe4, 0xff, 0x44,
+	0x0b, 0x90, 0xbf, 0x31, 0x3a, 0x3d, 0xcc, 0x2c, 0xa1, 0x1f, 0x9f, 0x67, 0x3e, 0x93, 0x94, 0xfb,
+	0xb0, 0x12, 0x6a, 0xab, 0x1a, 0x5d, 0xe3, 0xc2, 0xec, 0x98, 0x9e, 0x89, 0xdd, 0x60, 0xe9, 0x3f,
+	0x87, 0xd5, 0x04, 0x3c, 0xf3, 0xc0, 0x36, 0xcc, 0xb4, 0x38, 0x78, 0x39, 0x43, 0x96, 0x52, 0x0e,
+	0x96, 0x12, 0xe3, 0xbc, 0xd5, 0x22, 0xd4, 0xca, 0xdf, 0x25, 0x28, 0xc5, 0x49, 0xd0, 0x36, 0x4c,
+	0xba, 0xd8, 0xb9, 0x31, 0x5b, 0xd4, 0xaf, 0xc5, 0xad, 0xb5, 0x24, 0x69, 0x95, 0x53, 0x4a, 0x77,
+	0x30, 0xa1, 0x05, 0x2c, 0xf2, 0x4b, 0x98, 0x64, 0x50, 0xf4, 0x43, 0xc8, 0x79, 0xb7, 0x5d, 0x2a,
+	0x65, 0x6e, 0xeb, 0xe1, 0x30, 0x29, 0x95, 0xe6, 0x6d, 0x17, 0x6b, 0x84, 0x45, 0xf9, 0x10, 0x72,
+	0xfe, 0x17, 0x2a, 0xc2, 0xe4, 0x59, 0xe3, 0xb0, 0x71, 0xfc, 0xb4, 0x51, 0x9a, 0x40, 0xf7, 0x00,
+	0x55, 0x8f, 0x1b, 0x4d, 0xed, 0xb8, 0x5e, 0x57, 0x35, 0xfd, 0x54, 0xd5, 0xce, 0x6b, 0x55, 0xb5,
+	0x24, 0xed, 0x16, 0xa8, 0x1e, 0x65, 0x0e, 0x66, 0x4e, 0x1c, 0xfb, 0x02, 0x07, 0xce, 0x7b, 0x07,
+	0x66, 0xd9, 0x37, 0x75, 0x96, 0xf2, 0xcb, 0x1c, 0xcc, 0x57, 0x1d, 0x6c, 0x78, 0xf8, 0xdc, 0xee,
+	0xf4, 0xae, 0x03, 0x42, 0x61, 0x18, 0x6d, 0xc3, 0x9c, 0xef, 0xaa, 0x96, 0xe9, 0xdd, 0xea, 0x8e,
+	0x61, 0x5d, 0xd1, 0xcd, 0x2b, 0x6e, 0xdd, 0x0d, 0x96, 0x51, 0x65, 0x58, 0xcd, 0x47, 0x6a, 0xb3,
+	0x2d, 0xfe, 0x13, 0xd5, 0x60, 0xfe, 0x86, 0xa8, 0xd0, 0x23, 0xbb, 0x93, 0x8d, 0xee, 0x0e, 0xb5,
+	0x82, 0xdb, 0x1d, 0x74, 0x13, 0x85, 0x98, 0xd8, 0x45, 0x87, 0x00, 0x5d, 0xc3, 0x31, 0xae, 0xb1,
+	0x87, 0x1d, 0xb7, 0x9c, 0x8b, 0x86, 0xaa, 0x60, 0x35, 0x95, 0x93, 0x90, 0x9a, 0x86, 0x2a, 0xc7,
+	0x8e, 0x3c, 0x58, 0x6a, 0xd9, 0x96, 0xe7, 0xd8, 0x9d, 0x0e, 0x76, 0xf4, 0x16, 0xe1, 0xd6, 0x5d,
+	0xdc, 0x72, 0xb0, 0xe7, 0x96, 0xf3, 0x44, 0xf6, 0x67, 0x69, 0xb2, 0xab, 0x21, 0x33, 0xc5, 0x9e,
+	0x52, 0x56, 0xaa, 0x68, 0xb1, 0x25, 0xc6, 0xca, 0x3f, 0x82, 0x77, 0x62, 0x46, 0x8d, 0x93, 0x24,
+	0xf2, 0x17, 0xb0, 0x92, 0xa6, 0x77, 0xac, 0x84, 0x7b, 0x02, 0x0b, 0xd1, 0x75, 0xb1, 0x3c, 0x7a,
+	0x04, 0x05, 0xea, 0x7b, 0x16, 0xf3, 0x73, 0xd1, 0x3d, 0xd2, 0x18, 0x56, 0xf9, 0x53, 0x0e, 0x4a,
+	0xf1, 0x6d, 0x43, 0xdb, 0x90, 0xbf, 0xe8, 0xd8, 0xad, 0x17, 0x8c, 0xf7, 0xdd, 0xa4, 0xfd, 0xad,
+	0xec, 0xfa, 0x54, 0x14, 0x7a, 0x30, 0xa1, 0x51, 0x26, 0x9f, 0xfb, 0xda, 0xee, 0x59, 0x1e, 0x0b,
+	0xb0, 0x64, 0xee, 0x23, 0x9f, 0xaa, 0xcf, 0x4d, 0x98, 0xd0, 0x1e, 0x14, 0x8d, 0x56, 0x0b, 0xbb,
+	0xae, 0x7e, 0x6d, 0xb7, 0x71, 0x39, 0x4b, 0x64, 0x6c, 0x24, 0xca, 0xd8, 0x21, 0xb4, 0x47, 0x76,
+	0x1b, 0x6b, 0x60, 0x84, 0xbf, 0xe5, 0x59, 0x28, 0x72, 0xb6, 0xc9, 0xfb, 0x50, 0xe4, 0x94, 0xa1,
+	0x45, 0x98, 0xbc, 0x74, 0xf5, 0x30, 0x97, 0xa7, 0xb5, 0xc2, 0xa5, 0x4b, 0xd2, 0xf3, 0x01, 0x14,
+	0x89, 0x15, 0xfa, 0x65, 0xc7, 0xb8, 0xa2, 0xc5, 0x67, 0x5a, 0x03, 0x02, 0xfa, 0xa9, 0x0f, 0x91,
+	0xff, 0x2d, 0x01, 0xf4, 0x55, 0xa2, 0x6d, 0xc8, 0x11, 0x2b, 0x69, 0x45, 0xd8, 0x1c, 0xc1, 0xca,
+	0x0a, 0x31, 0x95, 0x70, 0x29, 0x7f, 0x90, 0x20, 0x47, 0xc4, 0xc4, 0xab, 0xc2, 0x69, 0xad, 0xb1,
+	0x5f, 0x57, 0xf5, 0xc6, 0xf1, 0x9e, 0xaa, 0x3f, 0xd5, 0x6a, 0x4d, 0x55, 0x2b, 0x49, 0x68, 0x19,
+	0x16, 0x79, 0xb8, 0xa6, 0xee, 0xec, 0xa9, 0x9a, 0x7e, 0xdc, 0xa8, 0x7f, 0x59, 0xca, 0x20, 0x19,
+	0xee, 0x1d, 0x9d, 0xd5, 0x9b, 0xb5, 0x41, 0x5c, 0x16, 0xad, 0x40, 0x99, 0xc3, 0x31, 0x19, 0x4c,
+	0x6c, 0xce, 0x17, 0xcb, 0x61, 0xe9, 0x4f, 0x86, 0xcc, 0xef, 0xce, 0x86, 0x9b, 0x41, 0x0a, 0xd2,
+	0x53, 0x98, 0x8d, 0x54, 0x09, 0xff, 0x6c, 0x72, 0xf0, 0xcb, 0x9e, 0xe9, 0xe0, 0xb6, 0x7e, 0x71,
+	0xeb, 0x61, 0x97, 0x78, 0x22, 0xab, 0xcd, 0x06, 0xd0, 0x5d, 0x1f, 0xe8, 0xbb, 0xb5, 0x63, 0x5e,
+	0x9b, 0x1e, 0xa3, 0xc9, 0x10, 0x1a, 0x20, 0x20, 0x42, 0xa0, 0xbc, 0x96, 0xa0, 0xc0, 0xf6, 0xe6,
+	0x21, 0x57, 0xa7, 0x22, 0x22, 0x03, 0x28, 0x15, 0x39, 0x07, 0x19, 0xb3, 0xcd, 0xd2, 0x21, 0x63,
+	0xb6, 0xd1, 0x13, 0x00, 0xc3, 0xf3, 0x1c, 0xf3, 0xa2, 0xe7, 0x85, 0x75, 0xe9, 0x7e, 0x74, 0x3f,
+	0x2a, 0x3b, 0x21, 0x01, 0x2b, 0x24, 0x7d, 0x0e, 0x3f, 0xa5, 0x63, 0xe8, 0xb1, 0xd2, 0xf0, 0x3f,
+	0x12, 0xcc, 0xef, 0xe1, 0x0e, 0x8e, 0x57, 0xe2, 0x65, 0x98, 0x66, 0x75, 0xd3, 0x6c, 0x33, 0x49,
+	0x53, 0x14, 0x50, 0x6b, 0xc7, 0x8a, 0x57, 0x9b, 0xb0, 0x87, 0xc5, 0x2b, 0x13, 0x2d, 0x5e, 0x02,
+	0xe1, 0x5c, 0xf1, 0xa2, 0xd8, 0xa4, 0xe2, 0x15, 0xc1, 0x46, 0xab, 0xcf, 0x20, 0xe3, 0x58, 0xcb,
+	0xbe, 0x07, 0x0b, 0x51, 0xc3, 0xd8, 0xc1, 0xf4, 0xd7, 0x1c, 0xdc, 0xef, 0x2b, 0x39, 0xe9, 0x5d,
+	0x74, 0x4c, 0xf7, 0xf9, 0x18, 0x9e, 0x59, 0x84, 0x49, 0xcb, 0x6e, 0x13, 0x14, 0xd5, 0x59, 0xf0,
+	0x3f, 0x6b, 0x6d, 0xa4, 0xc2, 0x9d, 0xf8, 0x39, 0x74, 0xcb, 0x6a, 0x44, 0xf2, 0x29, 0x54, 0xba,
+	0x89, 0x17, 0x38, 0x19, 0xa6, 0x1c, 0x6c, 0xb4, 0x6d, 0xab, 0x73, 0x5b, 0xce, 0xad, 0x49, 0x9b,
+	0x53, 0x5a, 0xf8, 0x8d, 0x7e, 0x25, 0x81, 0xcc, 0x6d, 0x4b, 0x97, 0x1a, 0x1f, 0x3b, 0x54, 0xf6,
+	0xc2, 0x43, 0x25, 0x75, 0x95, 0x83, 0xe8, 0xc8, 0x1e, 0x95, 0x5b, 0x09, 0x68, 0x64, 0x86, 0xeb,
+	0xe4, 0xa2, 0xba, 0x40, 0x54, 0x6f, 0x8f, 0xa8, 0x9a, 0x7e, 0xc5, 0x63, 0x9e, 0xf9, 0xa2, 0x0f,
+	0x96, 0x0f, 0x61, 0x35, 0xd5, 0xca, 0xb1, 0x8e, 0xb6, 0x2a, 0xdc, 0x15, 0xea, 0x1d, 0x2b, 0xaa,
+	0x5e, 0x4b, 0xf0, 0x20, 0x71, 0x71, 0xec, 0x7c, 0xfb, 0x19, 0xcc, 0x04, 0x3b, 0x63, 0x5a, 0x97,
+	0x76, 0x59, 0x8a, 0x9d, 0xf5, 0xe9, 0xec, 0x15, 0x06, 0xf5, 0x1b, 0x62, 0xea, 0x97, 0x62, 0xb7,
+	0x0f, 0x91, 0x9f, 0x40, 0x29, 0x4e, 0x30, 0xd6, 0x02, 0xfe, 0x9c, 0x81, 0xb5, 0xbe, 0x05, 0x67,
+	0x56, 0xf7, 0xed, 0x25, 0xc0, 0x6f, 0x24, 0x58, 0xe1, 0xa2, 0xb3, 0x67, 0xc5, 0xe3, 0x93, 0x96,
+	0xbe, 0x83, 0x41, 0x47, 0x88, 0xcd, 0x10, 0x11, 0x44, 0x62, 0x94, 0xcb, 0x85, 0x38, 0x81, 0x7c,
+	0xc4, 0xef, 0x93, 0x90, 0x7d, 0x2c, 0xb7, 0x6d, 0xc0, 0x7a, 0x8a, 0xb9, 0xac, 0xb4, 0xbc, 0xce,
+	0xc0, 0xfa, 0xb9, 0xd1, 0x31, 0xdb, 0x61, 0xcf, 0x23, 0x98, 0x33, 0xd2, 0x9d, 0x9b, 0xd0, 0xcc,
+	0x66, 0xbe, 0x41, 0x33, 0xdb, 0x11, 0xe5, 0x29, 0xdd, 0x82, 0x1f, 0x87, 0x82, 0x86, 0x59, 0x3b,
+	0x72, 0xaa, 0xbe, 0x95, 0xec, 0xfa, 0x0a, 0x94, 0x34, 0x8b, 0x58, 0x7e, 0xad, 0xc0, 0xb4, 0xdb,
+	0xeb, 0x76, 0x6d, 0xc7, 0xc3, 0xd4, 0x81, 0x53, 0x5a, 0x1f, 0x80, 0xca, 0x30, 0x79, 0x8d, 0x5d,
+	0xd7, 0xb8, 0x0a, 0xe4, 0x07, 0x9f, 0xca, 0x57, 0x80, 0xea, 0xa6, 0xcb, 0x1a, 0xad, 0x70, 0x3b,
+	0xfc, 0xbe, 0xca, 0x78, 0xa5, 0x63, 0xcb, 0x73, 0x4c, 0x76, 0xa2, 0xe7, 0x35, 0xb8, 0x36, 0x5e,
+	0xa9, 0x14, 0xe2, 0x9f, 0xfa, 0xae, 0x67, 0x38, 0x9e, 0x69, 0x5d, 0xe9, 0x9e, 0xfd, 0x02, 0x87,
+	0x43, 0x6e, 0x00, 0x6d, 0xfa, 0x40, 0xe5, 0x8f, 0x12, 0xcc, 0x47, 0xc4, 0x33, 0x6b, 0x1f, 0xc3,
+	0x64, 0x5f, 0xb6, 0xef, 0xfc, 0xf5, 0xc0, 0xf9, 0x02, 0xea, 0x0a, 0x75, 0x6f, 0xc0, 0x81, 0x56,
+	0x01, 0x2c, 0xfc, 0xca, 0x8b, 0xe8, 0x9d, 0xf6, 0x21, 0x44, 0xa7, 0xfc, 0x09, 0xe4, 0xa9, 0x93,
+	0x47, 0x6d, 0xa9, 0xff, 0x25, 0x01, 0xda, 0xc7, 0x5e, 0xd8, 0x29, 0x31, 0x1f, 0x24, 0x44, 0x9d,
+	0xf4, 0x0d, 0xa2, 0xee, 0x8b, 0xc8, 0x08, 0x45, 0xe3, 0xf6, 0x03, 0x6e, 0xda, 0x8f, 0xa9, 0x4e,
+	0x9b, 0xa0, 0xde, 0x70, 0x96, 0x51, 0xf6, 0x60, 0x3e, 0xa2, 0x90, 0x6d, 0xc8, 0xc7, 0x80, 0x8c,
+	0x1b, 0xc3, 0xec, 0x18, 0x17, 0x1d, 0xba, 0x5e, 0x1f, 0xcb, 0x3a, 0xb9, 0x3b, 0x21, 0x26, 0x60,
+	0x53, 0x14, 0xbe, 0x5e, 0x32, 0x79, 0xf1, 0xab, 0x83, 0x0e, 0x5f, 0x1d, 0x06, 0x68, 0x98, 0xde,
+	0x7d, 0xe1, 0xf5, 0xc1, 0xc6, 0x60, 0x35, 0x64, 0x33, 0x7a, 0xe2, 0x4d, 0xc2, 0xef, 0x33, 0xb0,
+	0x9c, 0x42, 0x8d, 0x1e, 0x43, 0xd6, 0xe9, 0xb6, 0x58, 0x24, 0xbc, 0x37, 0x82, 0xfc, 0x8a, 0x76,
+	0x52, 0x3d, 0x98, 0xd0, 0x7c, 0x2e, 0xf9, 0x2f, 0x12, 0x64, 0xb5, 0x93, 0x2a, 0xfa, 0x49, 0xe4,
+	0x42, 0xe1, 0xa3, 0x11, 0xa5, 0xf0, 0xf7, 0x0a, 0xb6, 0xe8, 0x5e, 0xa1, 0x0c, 0x0b, 0x55, 0x4d,
+	0xdd, 0x69, 0xaa, 0xfa, 0x9e, 0x5a, 0x57, 0x9b, 0xaa, 0x7e, 0x7e, 0x5c, 0x3f, 0x3b, 0x52, 0x4b,
+	0x92, 0x3f, 0x0a, 0x9c, 0x9c, 0xed, 0xd6, 0x6b, 0xa7, 0x07, 0xfa, 0x59, 0x23, 0xf8, 0xc5, 0xb0,
+	0x19, 0x54, 0x82, 0x99, 0x7a, 0xed, 0xb4, 0xc9, 0x00, 0xa7, 0xa5, 0xac, 0x0f, 0xd9, 0x57, 0x9b,
+	0x7a, 0x75, 0xe7, 0x64, 0xa7, 0x5a, 0x6b, 0x7e, 0x59, 0xca, 0x85, 0x77, 0x13, 0xbf, 0xcd, 0xc3,
+	0xbd, 0x86, 0xdd, 0xc6, 0xa7, 0x9e, 0x71, 0x35, 0x4e, 0xcf, 0xab, 0xc5, 0xce, 0x6d, 0xba, 0x41,
+	0x9f, 0x04, 0x4b, 0x17, 0x8b, 0x4c, 0x3f, 0xae, 0x51, 0x05, 0xe6, 0x5d, 0xcf, 0xb8, 0x22, 0xb5,
+	0xc3, 0x70, 0xae, 0xb0, 0xa7, 0x77, 0x0d, 0xef, 0x39, 0x69, 0x0b, 0xa7, 0xb5, 0x3b, 0x0c, 0xd5,
+	0x24, 0x98, 0x13, 0xc3, 0x7b, 0x2e, 0x6e, 0x22, 0x73, 0x63, 0x37, 0x91, 0x17, 0x80, 0xc8, 0x19,
+	0xed, 0x2b, 0x88, 0x5f, 0x3a, 0x7c, 0x7f, 0xc8, 0x82, 0x42, 0x70, 0xe4, 0xac, 0x2d, 0x59, 0x31,
+	0x30, 0x32, 0x92, 0xfb, 0xc0, 0x61, 0x2a, 0x46, 0x3d, 0x54, 0xde, 0xb0, 0xd9, 0xf1, 0x0f, 0x25,
+	0xe1, 0x6a, 0xbe, 0xfd, 0xbe, 0x71, 0x09, 0x16, 0x07, 0x7c, 0xc1, 0xba, 0x86, 0x2b, 0x28, 0xfb,
+	0xa8, 0x33, 0xcb, 0x1d, 0x33, 0x5e, 0x13, 0x62, 0x2b, 0x93, 0x10, 0x5b, 0xca, 0x32, 0x2c, 0x09,
+	0x14, 0x31, 0x2b, 0xfe, 0x99, 0xa7, 0x66, 0x8c, 0x3f, 0x10, 0x35, 0x85, 0x69, 0xf3, 0x5d, 0x3e,
+	0x04, 0x84, 0x43, 0xc0, 0xdb, 0x4d, 0x9c, 0x07, 0x50, 0xe4, 0xe9, 0x72, 0x84, 0x0e, 0xbc, 0x21,
+	0x99, 0x95, 0x7f, 0xa3, 0xf1, 0xac, 0x10, 0x1b, 0xcf, 0x7e, 0x01, 0x0b, 0x24, 0xeb, 0xe2, 0x7d,
+	0xef, 0x64, 0x74, 0x00, 0x48, 0xf4, 0x08, 0x87, 0x88, 0xe4, 0x1e, 0xc9, 0xe5, 0xd8, 0x14, 0xd6,
+	0x12, 0x65, 0xdf, 0x14, 0x51, 0xf4, 0xe9, 0x50, 0x45, 0xdf, 0x56, 0xfe, 0xa9, 0x34, 0xea, 0xff,
+	0x2f, 0x26, 0x37, 0x16, 0xfd, 0xc2, 0x99, 0x4b, 0x79, 0x06, 0x32, 0x4d, 0x8d, 0xf1, 0xc7, 0xa1,
+	0x58, 0xe0, 0x65, 0xe2, 0x81, 0xa7, 0xac, 0xc2, 0xb2, 0x50, 0x36, 0x53, 0x8d, 0xa0, 0xe4, 0xa3,
+	0xf7, 0xb1, 0x57, 0x6b, 0x07, 0xfd, 0xc4, 0x47, 0x70, 0x87, 0x83, 0xb1, 0xfe, 0x81, 0x9b, 0xbb,
+	0x24, 0x7e, 0xee, 0x52, 0x56, 0xa8, 0xf1, 0x09, 0xbd, 0xc9, 0xd7, 0x54, 0x7d, 0x52, 0x57, 0xb2,
+	0x13, 0xeb, 0x4a, 0x68, 0xcf, 0xb7, 0x1a, 0x29, 0xe0, 0x43, 0xfa, 0x91, 0xbf, 0x49, 0xac, 0xcc,
+	0x0e, 0x74, 0x22, 0x3f, 0xe0, 0x3b, 0x91, 0xf5, 0x54, 0x99, 0x7c, 0x0f, 0xd2, 0xa5, 0x2d, 0xc8,
+	0xe7, 0x91, 0x16, 0xe4, 0xd1, 0x50, 0x76, 0xbe, 0xf9, 0xf8, 0x38, 0xa1, 0xf9, 0x38, 0x6d, 0xee,
+	0xec, 0xab, 0xfa, 0x59, 0x83, 0xfe, 0x0d, 0x9a, 0x8f, 0xa0, 0x75, 0xd8, 0xfa, 0xaf, 0x04, 0x53,
+	0xb5, 0x36, 0xb6, 0x3c, 0xdf, 0xfa, 0x06, 0xcc, 0x46, 0x9e, 0xa7, 0xd0, 0x4a, 0xc2, 0xab, 0x15,
+	0x71, 0xb4, 0xbc, 0x9a, 0xfa, 0xa6, 0xa5, 0x4c, 0xa0, 0x4b, 0xee, 0x69, 0x2d, 0xd2, 0x33, 0xbf,
+	0x3b, 0xc0, 0x29, 0xd8, 0x48, 0xf9, 0xe1, 0x10, 0xaa, 0x50, 0xcf, 0xa7, 0x90, 0x27, 0x6f, 0x31,
+	0x68, 0x21, 0x7c, 0x06, 0xe2, 0x9e, 0x6a, 0xe4, 0xbb, 0x31, 0x68, 0xc0, 0xb7, 0xf5, 0xeb, 0x02,
+	0x40, 0xbf, 0xbf, 0x43, 0x87, 0x30, 0xc3, 0x5f, 0xdf, 0xa3, 0xe5, 0x94, 0xc7, 0x0a, 0x79, 0x45,
+	0x8c, 0x0c, 0x6d, 0x3a, 0x84, 0x19, 0xfe, 0x36, 0xae, 0x2f, 0x4c, 0x70, 0x79, 0xd8, 0x17, 0x26,
+	0xbc, 0xc0, 0x9b, 0x40, 0x1d, 0x58, 0x4c, 0xb8, 0x44, 0x41, 0x8f, 0x46, 0xbb, 0x81, 0x92, 0xdf,
+	0x1b, 0xf1, 0x36, 0x46, 0x99, 0x40, 0x0e, 0x2c, 0x25, 0x8e, 0xfe, 0x68, 0x73, 0xd4, 0xcb, 0x0c,
+	0xf9, 0xfd, 0x11, 0x28, 0x43, 0x9d, 0x3d, 0x90, 0x93, 0x07, 0x61, 0xf4, 0xfe, 0xc8, 0xe3, 0xbb,
+	0xfc, 0xc1, 0x28, 0xa4, 0xa1, 0xda, 0x03, 0x28, 0x72, 0x43, 0x29, 0x92, 0x85, 0x93, 0x2a, 0x15,
+	0xbc, 0x9c, 0x32, 0xc5, 0x52, 0x49, 0xdc, 0xec, 0xd5, 0x97, 0x34, 0x38, 0x01, 0xf6, 0x25, 0x09,
+	0x86, 0xb5, 0xb8, 0xfb, 0x63, 0x55, 0x4c, 0xe4, 0x7e, 0x71, 0x19, 0x14, 0xb9, 0x3f, 0xa1, 0x24,
+	0x2a, 0x13, 0x5b, 0xbf, 0xcb, 0x41, 0xce, 0x2f, 0x33, 0xa8, 0x09, 0xef, 0xc4, 0xda, 0x36, 0x74,
+	0x3f, 0xbd, 0xb7, 0x95, 0x1f, 0x24, 0xe2, 0xc3, 0x25, 0x3d, 0xa3, 0xe5, 0x3d, 0xd2, 0x88, 0xa1,
+	0x35, 0x9e, 0x4f, 0xd4, 0x0c, 0xca, 0xeb, 0x29, 0x14, 0x71, 0xd9, 0xd1, 0xac, 0x58, 0x1b, 0xd6,
+	0x11, 0x44, 0x65, 0x27, 0x65, 0xc2, 0xd7, 0x30, 0x2f, 0x38, 0xc9, 0x90, 0x12, 0xb5, 0x4b, 0x18,
+	0xfd, 0x1b, 0xa9, 0x34, 0xa1, 0x86, 0x5d, 0x98, 0x0e, 0x0f, 0x3e, 0x54, 0xe6, 0x79, 0xf8, 0xf3,
+	0x51, 0x5e, 0x12, 0x60, 0xe2, 0x56, 0xc6, 0x43, 0x45, 0x89, 0xf1, 0x88, 0x82, 0x64, 0x23, 0x95,
+	0x26, 0xd0, 0xb0, 0x9b, 0x7f, 0x96, 0x6d, 0xb9, 0xe6, 0x45, 0x81, 0xfc, 0x4b, 0xc5, 0xf7, 0xfe,
+	0x17, 0x00, 0x00, 0xff, 0xff, 0x69, 0xaa, 0xdb, 0x41, 0x5f, 0x21, 0x00, 0x00,
 }

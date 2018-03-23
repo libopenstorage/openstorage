@@ -31,19 +31,24 @@ import (
 )
 
 var (
-	driverAddress string
-	csiTargetPath string
-	conn          *grpc.ClientConn
-	lock          sync.Mutex
+	config *Config
+	conn   *grpc.ClientConn
+	lock   sync.Mutex
 )
 
+// Config provides the configuration for the sanity tests
+type Config struct {
+	TargetPath  string
+	StagingPath string
+	Address     string
+}
+
 // Test will test the CSI driver at the specified address
-func Test(t *testing.T, address, mountPoint string) {
+func Test(t *testing.T, reqConfig *Config) {
 	lock.Lock()
 	defer lock.Unlock()
 
-	driverAddress = address
-	csiTargetPath = mountPoint
+	config = reqConfig
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "CSI Driver Test Suite")
 }
@@ -52,17 +57,16 @@ var _ = BeforeSuite(func() {
 	var err error
 
 	By("connecting to CSI driver")
-	conn, err = utils.Connect(driverAddress)
+	conn, err = utils.Connect(config.Address)
 	Expect(err).NotTo(HaveOccurred())
 
-	By("creating mount directory")
-	err = createMountTargetLocation(csiTargetPath)
+	By("creating mount and staging directories")
+	err = createMountTargetLocation(config.TargetPath)
 	Expect(err).NotTo(HaveOccurred())
 })
 
 var _ = AfterSuite(func() {
 	conn.Close()
-	os.Remove(csiTargetPath)
 })
 
 func createMountTargetLocation(targetPath string) error {

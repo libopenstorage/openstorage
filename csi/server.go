@@ -17,7 +17,7 @@ limitations under the License.
 package csi
 
 import (
-	"github.com/container-storage-interface/spec/lib/go/csi"
+	csi "github.com/container-storage-interface/spec/lib/go/csi/v0"
 )
 
 // Server is an interface to a CSI Compatible gRPC server
