@@ -171,7 +171,7 @@ func (c *clusterApi) gossipState(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
-// swagger:operation GET /cluster/getnodeidfromip/{id} cluster GetNodeIdFromIp
+// swagger:operation GET /cluster/getnodeidfromip/{idip} cluster GetNodeIdFromIp
 //
 // this will return the node ID for the given node IP
 //
@@ -179,7 +179,7 @@ func (c *clusterApi) gossipState(w http.ResponseWriter, r *http.Request) {
 // produces:
 // - application/json
 // parameters:
-// - name: id
+// - name: idip
 //   in: path
 //   description: cluster node ip or id
 //   required: true
@@ -189,7 +189,7 @@ func (c *clusterApi) gossipState(w http.ResponseWriter, r *http.Request) {
 //      description: cluster node ID
 //      schema:
 //         type: string
-func (c *clusterApi) getnodeidfromip(w http.ResponseWriter, r *http.Request) {
+func (c *clusterApi) getNodeIdFromIp(w http.ResponseWriter, r *http.Request) {
 	method := "getnodeidfromip"
 	inst, err := cluster.Inst()
 	if err != nil {
