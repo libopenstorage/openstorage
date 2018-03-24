@@ -99,7 +99,7 @@ func (manager *configManager) DeleteNodeConf(nodeID string) error {
 
 // EnumerateNodeConf fetches data for all nodes
 func (manager *configManager) EnumerateNodeConf() (*NodesConfig, error) {
-	keys, err := manager.kv.Keys(baseKey, nodeKey)
+	keys, err := manager.kv.Keys(filepath.Join(baseKey, nodeKey), "/")
 	if err != nil {
 		return nil, fmt.Errorf("kvdb.Keys() returned error: " + err.Error())
 	}
