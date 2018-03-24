@@ -20,7 +20,7 @@ type deletedMounter struct {
 
 // NewDeletedMounter returns a new deletedMounter
 func NewDeletedMounter(
-	rootPrefix string,
+	rootSubstring string,
 	mountImpl MountImpl,
 ) (*deletedMounter, error) {
 
@@ -30,11 +30,11 @@ func NewDeletedMounter(
 	}
 	deletedMounts := make(DeviceMap)
 	for k, v := range devMounter.mounts {
-		if matchDeleted(rootPrefix, k) {
+		if matchDeleted(rootSubstring, k) {
 			deletedMounts[k] = v
 		} else {
 			for _, p := range v.Mountpoint {
-				if matchDeleted(rootPrefix, p.Root) {
+				if matchDeleted(rootSubstring, p.Root) {
 					addMountpoint(deletedMounts, k, p)
 				}
 			}
@@ -44,9 +44,9 @@ func NewDeletedMounter(
 	return &deletedMounter{deviceMounter: devMounter}, nil
 }
 
-func matchDeleted(rootPrefix, source string) bool {
+func matchDeleted(rootSubstring, source string) bool {
 	return strings.Contains(source, "deleted") &&
-		(len(rootPrefix) == 0 || strings.HasPrefix(source, rootPrefix))
+		(len(rootSubstring) == 0 || strings.Contains(source, rootSubstring))
 }
 
 func addMountpoint(dm DeviceMap, root string, mp *PathInfo) {
