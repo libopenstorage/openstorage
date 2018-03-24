@@ -180,6 +180,9 @@ type ClusterData interface {
 	// Key is the node id
 	GetData() (map[string]*api.Node, error)
 
+	// GetNodeIdFromIp returns a Node Id given an IP.
+	GetNodeIdFromIp(idIp string) (string, error)
+
 	// EnableUpdate cluster data updates to be sent to listeners
 	EnableUpdates() error
 

@@ -2,8 +2,9 @@ package server
 
 import (
 	"encoding/json"
-	"github.com/libopenstorage/openstorage/api"
 	"net/http"
+
+	"github.com/libopenstorage/openstorage/api"
 )
 
 func (vd *volAPI) cloudBackupCreate(w http.ResponseWriter, r *http.Request) {
@@ -42,6 +43,21 @@ func (vd *volAPI) cloudBackupRestore(w http.ResponseWriter, r *http.Request) {
 		notFound(w, r)
 		return
 	}
+
+	if restoreReq.NodeID != "" {
+		nodeIds, err := vd.nodeIPtoIds([]string{restoreReq.NodeID})
+		if err != nil {
+			vd.sendError(method, restoreReq.ID, w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if len(nodeIds) > 0 {
+			if nodeIds[0] != restoreReq.NodeID {
+				restoreReq.NodeID = nodeIds[0]
+			}
+		}
+	}
+
 	restoreResp, err := d.CloudBackupRestore(restoreReq)
 	if err != nil {
 		vd.sendError(method, restoreReq.ID, w, err.Error(), http.StatusInternalServerError)

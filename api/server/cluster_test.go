@@ -86,6 +86,26 @@ func TestInspectNodeSuccess(t *testing.T) {
 	assert.NoError(t, err)
 	assert.EqualValues(t, nodeID, resp.Id)
 	assert.EqualValues(t, api.Status_STATUS_OK, resp.Status)
+
+	// mock the cluster response with IP
+	nodeIP := "192.168.1.1"
+
+	tc.MockCluster().
+		EXPECT().
+		Inspect(nodeIP).
+		Return(api.Node{
+			Id:       nodeID,
+			Hostname: "dummy-hostname",
+			Status:   api.Status_STATUS_OK,
+		}, nil)
+
+	// make the REST call
+	restClient = clusterclient.ClusterManager(c)
+	resp, err = restClient.Inspect(nodeIP)
+
+	assert.NoError(t, err)
+	assert.EqualValues(t, nodeID, resp.Id)
+	assert.EqualValues(t, api.Status_STATUS_OK, resp.Status)
 }
 
 func TestGossipStateSuccess(t *testing.T) {
@@ -499,4 +519,59 @@ func TestEraseAlertFailed(t *testing.T) {
 	resp := restClient.EraseAlert(api.ResourceType_RESOURCE_TYPE_NODE, alertID)
 	assert.Error(t, resp)
 	assert.Contains(t, resp.Error(), "Error in Erasing alert")
+}
+
+func TestGetNodeIdFromIpSuccess(t *testing.T) {
+
+	// Create a new global test cluster
+	ts, tc := testClusterServer(t)
+	defer ts.Close()
+	defer tc.Finish()
+
+	// create a cluster client to make the REST call
+	c, err := clusterclient.NewClusterClient(ts.URL, "v1")
+	assert.NoError(t, err)
+
+	nodeIP := "192.168.1.10"
+	nodeID := "dummy-node-id-ip"
+
+	// mock the cluster response
+	tc.MockCluster().
+		EXPECT().
+		GetNodeIdFromIp(nodeIP).
+		Return(nodeID, nil)
+
+	// make the REST call
+	restClient := clusterclient.ClusterManager(c)
+	id, err := restClient.GetNodeIdFromIp(nodeIP)
+
+	assert.NoError(t, err)
+	assert.EqualValues(t, nodeID, id)
+}
+
+func TestGetNodeIdFromIpFailed(t *testing.T) {
+
+	// Create a new global test cluster
+	ts, tc := testClusterServer(t)
+	defer ts.Close()
+	defer tc.Finish()
+
+	// create a cluster client to make the REST call
+	c, err := clusterclient.NewClusterClient(ts.URL, "v1")
+	assert.NoError(t, err)
+
+	nodeIP := "192.168.1.10"
+	// mock the cluster response
+	tc.MockCluster().
+		EXPECT().
+		GetNodeIdFromIp(nodeIP).
+		Return(nodeIP, fmt.Errorf("Failed to locate IP in this cluster."))
+
+	// make the REST call
+	restClient := clusterclient.ClusterManager(c)
+	id, err := restClient.GetNodeIdFromIp(nodeIP)
+
+	assert.EqualValues(t, nodeIP, id)
+	// Client code fix should be able to error respons: todo
+	assert.Contains(t, err.Error(), "error 500")
 }
