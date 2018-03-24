@@ -110,6 +110,7 @@ type PathMap map[string]string
 
 // PathInfo is a reference counted path
 type PathInfo struct {
+	Root string
 	Path string
 }
 

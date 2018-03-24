@@ -97,6 +97,7 @@ DeviceLoop:
 		mount.Mountpoint = append(
 			mount.Mountpoint,
 			&PathInfo{
+				Root: normalizeMountPath(v.Root),
 				Path: normalizeMountPath(v.Mountpoint),
 			},
 		)
