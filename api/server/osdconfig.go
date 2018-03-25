@@ -76,7 +76,7 @@ func (c *clusterApi) getNodeConf(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(config)
 }
 
-// swagger:operation GET /config/enumerate config
+// swagger:operation GET /config/enumerate config enumerate
 //
 // Get configuration for all nodes.
 //
