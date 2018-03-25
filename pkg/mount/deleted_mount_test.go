@@ -40,7 +40,7 @@ func cleanup(srcBase, dstBase string, srcCount, dstCount int) {
 func testLoadUnmount(t *testing.T, srcBase, dstBase string, srcCount, dstCount int) {
 	cleanup(srcBase, dstBase, srcCount, dstCount)
 	makeMounts(t, srcBase, dstBase, srcCount, dstCount)
-	dm, err := NewDeletedMounter("/tmp", &DefaultMounter{})
+	dm, err := NewDeletedMounter("/mnt", &DefaultMounter{})
 	require.NoError(t, err, "NewDeletedMount")
 	mounts := len(dm.Mounts(AllDevices))
 	require.Equal(t, srcCount*dstCount, mounts,
@@ -52,7 +52,7 @@ func testLoadUnmount(t *testing.T, srcBase, dstBase string, srcCount, dstCount i
 func failUnmount(t *testing.T, srcBase, dstBase string, srcCount, dstCount int) {
 	cleanup(srcBase, dstBase, srcCount, dstCount)
 	makeMounts(t, srcBase, dstBase, srcCount, dstCount)
-	dm, err := NewDeletedMounter("/tmp/", &DefaultMounter{})
+	dm, err := NewDeletedMounter("/mnt/", &DefaultMounter{})
 	require.NoError(t, err, "NewDeletedMount")
 	mounts := dm.Mounts(AllDevices)
 	for i, m := range mounts {
@@ -73,8 +73,8 @@ func testUnmount(t *testing.T, dm *deletedMounter) {
 }
 
 func TestLoadUnmount(t *testing.T) {
-	srcBase := "/tmp/test_mount_deleted"
-	dstBase := "/tmp/dest_bind_mount"
+	srcBase := "/mnt/test_mount_deleted"
+	dstBase := "/mnt/dest_bind_mount"
 
 	cleanup(srcBase, dstBase, 10, 10)
 
@@ -88,8 +88,8 @@ func TestLoadUnmount(t *testing.T) {
 }
 
 func TestFailUnmount(t *testing.T) {
-	srcBase := "/tmp/test_mount_deleted"
-	dstBase := "/tmp/dest_bind_mount"
+	srcBase := "/mnt/test_mount_deleted"
+	dstBase := "/mnt/dest_bind_mount"
 
 	cleanup(srcBase, dstBase, 10, 10)
 
