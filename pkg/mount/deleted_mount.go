@@ -10,6 +10,7 @@ import (
 )
 
 const (
+	// AllDevices designates all devices that show up as source.
 	AllDevices = "AllDevices"
 )
 
@@ -122,7 +123,8 @@ func (m *deletedMounter) Mount(
 	flags uintptr,
 	data string,
 	timeout int,
-	opts map[string]string) error {
+	opts map[string]string,
+) error {
 
 	return fmt.Errorf("deletedMounter.Mount is not supported")
 }
