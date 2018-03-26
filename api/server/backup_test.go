@@ -6,6 +6,7 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	client "github.com/libopenstorage/openstorage/api/client/volume"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -71,6 +72,57 @@ func TestClientBackupRestore(t *testing.T) {
 			CredentialUUID: ""})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "Backup not found")
+}
+
+func TestClientBackupRestoreGetNodeIdFromIp(t *testing.T) {
+	ts, testVolDriver := testRestServer(t)
+	defer ts.Close()
+	defer testVolDriver.Stop()
+
+	cl, err := client.NewDriverClient(ts.URL, mockDriverName, "", mockDriverName)
+	require.NoError(t, err)
+
+	// Create a new global test cluster
+	tc := newTestCluster(t)
+	defer tc.Finish()
+
+	// Mock cluster
+	nodeIp := "192.168.1.1"
+	nodeId := "nodeid"
+	tc.MockCluster().
+		EXPECT().
+		GetNodeIdFromIp(nodeIp).
+		Return(nodeId, nil).Times(1)
+
+	testVolDriver.MockDriver().EXPECT().CloudBackupRestore(&api.CloudBackupRestoreRequest{
+		ID:             "goodBackupid",
+		CredentialUUID: "",
+		NodeID:         "nodeid"}).
+		Return(&api.CloudBackupRestoreResponse{}, nil)
+
+	// Invoke restore with IP Success
+	_, err = client.VolumeDriver(cl).
+		CloudBackupRestore(&api.CloudBackupRestoreRequest{
+			ID:             "goodBackupid",
+			CredentialUUID: "",
+			NodeID:         nodeIp})
+	require.NoError(t, err)
+
+	// Mock cluster
+	tc.MockCluster().
+		EXPECT().
+		GetNodeIdFromIp(nodeIp).
+		Return(nodeIp, fmt.Errorf("Failed to locate IP in this cluster."))
+
+	// Invoke restore with IP Failure
+	_, err = client.VolumeDriver(cl).
+		CloudBackupRestore(&api.CloudBackupRestoreRequest{
+			ID:             "goodBackupid",
+			CredentialUUID: "",
+			NodeID:         nodeIp})
+
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "Failed to locate IP in this cluster.")
 }
 
 func TestClientBackupDelete(t *testing.T) {

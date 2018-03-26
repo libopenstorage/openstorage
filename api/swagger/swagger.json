@@ -148,6 +148,35 @@
         }
       }
     },
+    "/cluster/getnodeidfromip/{idip}": {
+      "get": {
+        "description": "this will return the node ID for the given node IP",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "cluster"
+        ],
+        "operationId": "GetNodeIdFromIp",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "cluster node ip or id",
+            "name": "idip",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "cluster node ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/cluster/inspect/{id}": {
       "get": {
         "description": "This will return the requested node object",
@@ -409,8 +438,11 @@
         "produces": [
           "application/json"
         ],
+        "tags": [
+          "config"
+        ],
         "summary": "Get configuration for all nodes.",
-        "operationId": "config",
+        "operationId": "enumerate",
         "responses": {
           "200": {
             "description": "node config enumeration",
@@ -1568,6 +1600,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "ClusterConfig": {
+      "description": "ClusterConfig is a cluster level config parameter struct",
       "type": "object",
       "properties": {
         "cluster_id": {
@@ -1598,15 +1631,15 @@
           "type": "object",
           "x-go-name": "Private"
         },
-        "ManagementURL": {
-          "type": "string"
+        "secrets": {
+          "$ref": "#/definitions/SecretsConfig"
         },
         "version": {
           "type": "string",
           "x-go-name": "Version"
         }
       },
-      "x-go-package": "github.com/libopenstorage/openstorage/config"
+      "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
     },
     "ClusterNotify": {
       "type": "integer",
@@ -2283,6 +2316,11 @@
         },
         "medium": {
           "$ref": "#/definitions/StorageMedium"
+        },
+        "metadata": {
+          "description": "True if dedicated for metadata.",
+          "type": "boolean",
+          "x-go-name": "Metadata"
         },
         "online": {
           "description": "True if this device is online.",

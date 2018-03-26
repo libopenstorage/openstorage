@@ -190,6 +190,8 @@ func (c *ClusterManager) getNodeEntry(nodeID string, clustDBRef *ClusterInfo) (a
 	var n api.Node
 	var ok bool
 
+	nodeID, _ = c.nodeIdFromIp(nodeID)
+
 	if nodeID == c.selfNode.Id {
 		n = *c.getCurrentState()
 	} else if n, ok = c.nodeCache[nodeID]; !ok {
@@ -264,6 +266,30 @@ func (c *ClusterManager) GetData() (map[string]*api.Node, error) {
 		nodes[value.Id] = copyValue
 	}
 	return nodes, nil
+}
+
+func (c *ClusterManager) nodeIdFromIp(idIp string) (string, error) {
+	// Caller's responsibility to lock the access to the NodeCache.
+	for _, n := range c.nodeCache {
+		if n.DataIp == idIp || n.MgmtIp == idIp {
+			logrus.Infof("Node IP: " + idIp + " maps to ID: " + n.Id)
+			return n.Id, nil // return Id
+		}
+	}
+
+	return idIp, errors.New("Failed to locate IP in this cluster.") // return input value
+}
+
+// GetNodeIdFromIp returns a Node Id given an IP.
+func (c *ClusterManager) GetNodeIdFromIp(idIp string) (string, error) {
+	addr := net.ParseIP(idIp)
+	if addr != nil { // Is an IP, lookup Id
+		c.nodeCacheLock.Lock()
+		defer c.nodeCacheLock.Unlock()
+		return c.nodeIdFromIp(idIp)
+	}
+
+	return idIp, nil // return input, assume its an Id
 }
 
 // getCurrentState always returns the copy of selfNode that
@@ -1397,32 +1423,39 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 
 	inQuorum := !(c.selfNode.Status == api.Status_STATUS_NOT_IN_QUORUM)
 
-	for _, n := range nodes {
-		node, exist := c.getNodeCacheEntry(n.Id)
+	for i, _ := range nodes {
+
+		if id, cerr := c.GetNodeIdFromIp(nodes[i].Id); cerr == nil {
+			if nodes[i].Id != id {
+				nodes[i].Id = id
+			}
+		}
+
+		node, exist := c.getNodeCacheEntry(nodes[i].Id)
 		if !exist {
-			node, resultErr = c.getNodeInfoFromClusterDb(n.Id)
+			node, resultErr = c.getNodeInfoFromClusterDb(nodes[i].Id)
 			if resultErr != nil {
-				logrus.Errorf("Error getting node info for id %s : %v", n.Id,
+				logrus.Errorf("Error getting node info for id %s : %v", nodes[i].Id,
 					resultErr)
-				return fmt.Errorf("Node %s does not exist", n.Id)
+				return fmt.Errorf("Node %s does not exist", nodes[i].Id)
 			}
 		}
 
 		// If removing node is self and node is not in maintenance mode,
 		// disallow node remove.
-		if n.Id == c.selfNode.Id &&
+		if nodes[i].Id == c.selfNode.Id &&
 			c.selfNode.Status != api.Status_STATUS_MAINTENANCE {
-			msg := fmt.Sprintf(decommissionErrMsg, n.Id)
+			msg := fmt.Sprintf(decommissionErrMsg, nodes[i].Id)
 			logrus.Errorf(msg)
 			return errors.New(msg)
-		} else if n.Id != c.selfNode.Id && inQuorum {
+		} else if nodes[i].Id != c.selfNode.Id && inQuorum {
 			nodeCacheStatus := node.Status
 			// If node is not down, do not remove it
 			if nodeCacheStatus != api.Status_STATUS_OFFLINE &&
 				nodeCacheStatus != api.Status_STATUS_MAINTENANCE &&
 				nodeCacheStatus != api.Status_STATUS_DECOMMISSION {
 
-				msg := fmt.Sprintf(decommissionErrMsg, n.Id)
+				msg := fmt.Sprintf(decommissionErrMsg, nodes[i].Id)
 				logrus.Errorf(msg+", node status: %s", nodeCacheStatus)
 				return errors.New(msg)
 			}
@@ -1433,8 +1466,8 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 			for e := c.listeners.Front(); e != nil; e = e.Next() {
 				logrus.Infof("Remove node: ask cluster listener %s "+
 					"to mark node %s down ",
-					e.Value.(ClusterListener).String(), n.Id)
-				err := e.Value.(ClusterListener).MarkNodeDown(&n)
+					e.Value.(ClusterListener).String(), nodes[i].Id)
+				err := e.Value.(ClusterListener).MarkNodeDown(&nodes[i])
 				if err != nil {
 					logrus.Warnf("Node mark down error: %v", err)
 					return err
@@ -1446,10 +1479,10 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 		for e := c.listeners.Front(); e != nil; e = e.Next() {
 			logrus.Infof("Remove node: ask cluster listener: "+
 				"can we remove node ID %s, %s",
-				n.Id, e.Value.(ClusterListener).String())
-			additionalMsg, err := e.Value.(ClusterListener).CanNodeRemove(&n)
+				nodes[i].Id, e.Value.(ClusterListener).String())
+			additionalMsg, err := e.Value.(ClusterListener).CanNodeRemove(&nodes[i])
 			if err != nil && !(err == ErrRemoveCausesDataLoss && forceRemove) {
-				msg := fmt.Sprintf("Cannot remove node ID %s: %s.", n.Id, err)
+				msg := fmt.Sprintf("Cannot remove node ID %s: %s.", nodes[i].Id, err)
 				if additionalMsg != "" {
 					msg = msg + " " + additionalMsg
 				}
@@ -1458,7 +1491,7 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 			}
 		}
 
-		err := c.markNodeDecommission(n)
+		err := c.markNodeDecommission(nodes[i])
 		if err != nil {
 			msg := fmt.Sprintf("Failed to mark node as "+
 				"decommision, error %s",
@@ -1477,7 +1510,7 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 		for e := c.listeners.Front(); e != nil; e = e.Next() {
 			logrus.Infof("Remove node: notify cluster listener: %s",
 				e.Value.(ClusterListener).String())
-			err := e.Value.(ClusterListener).Remove(&n, forceRemove)
+			err := e.Value.(ClusterListener).Remove(&nodes[i], forceRemove)
 			if err != nil {
 				if err != ErrNodeRemovePending {
 					logrus.Warnf("Cluster listener failed to "+

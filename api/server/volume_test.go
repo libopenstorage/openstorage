@@ -16,8 +16,8 @@ func TestVolumeCreateSuccess(t *testing.T) {
 
 	var err error
 
+	// Setup volume rest functions server
 	ts, testVolDriver := testRestServer(t)
-
 	defer ts.Close()
 	defer testVolDriver.Stop()
 
@@ -27,7 +27,6 @@ func TestVolumeCreateSuccess(t *testing.T) {
 	// Setup request
 	name := "myvol"
 	size := uint64(1234)
-
 	req := &api.VolumeCreateRequest{
 		Locator: &api.VolumeLocator{Name: name},
 		Source:  &api.Source{},
@@ -43,9 +42,33 @@ func TestVolumeCreateSuccess(t *testing.T) {
 
 	// create a volume client
 	driverclient := volumeclient.VolumeDriver(cl)
-
 	res, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	assert.Nil(t, err)
+	assert.Equal(t, id, res)
 
+	// Create a new global test cluster
+	tc := newTestCluster(t)
+	defer tc.Finish()
+
+	// Mock cluster
+	nodeId := "nodeid"
+	tc.MockCluster().
+		EXPECT().
+		GetNodeIdFromIp("192.168.1.1").
+		Return(nodeId, nil).Times(1)
+
+	// create a volume client with Replica IPs
+	rset := &api.ReplicaSet{Nodes: []string{"192.168.1.1"}}
+	req.Spec.ReplicaSet = rset
+	expectedSpec := req.Spec.Copy()
+	expectedSpec.ReplicaSet.Nodes = []string{nodeId}
+
+	testVolDriver.MockDriver().
+		EXPECT().
+		Create(req.GetLocator(), req.GetSource(), expectedSpec).
+		Return(id, nil)
+
+	res, err = driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.Equal(t, id, res)
 }
@@ -80,6 +103,49 @@ func TestVolumeCreateFailed(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.EqualValues(t, "", res)
 	assert.Contains(t, err.Error(), "error in create")
+}
+
+func TestVolumeCreateGetNodeIdFromIpFailed(t *testing.T) {
+
+	var err error
+
+	ts, testVolDriver := testRestServer(t)
+
+	defer ts.Close()
+	defer testVolDriver.Stop()
+
+	client, err := volumeclient.NewDriverClient(ts.URL, mockDriverName, version, mockDriverName)
+	assert.Nil(t, err)
+	assert.NotNil(t, client)
+
+	nodeIp := "192.168.1.1"
+
+	// Create a new global test cluster
+	tc := newTestCluster(t)
+	defer tc.Finish()
+
+	// Mock cluster
+	tc.MockCluster().
+		EXPECT().
+		GetNodeIdFromIp(nodeIp).
+		Return(nodeIp, fmt.Errorf("Failed to locate IP in this cluster."))
+
+	// create a volume client with Replica IPs
+	name := "myvol"
+	size := uint64(1234)
+	req := &api.VolumeCreateRequest{
+		Locator: &api.VolumeLocator{Name: name},
+		Source:  &api.Source{},
+		Spec:    &api.VolumeSpec{Size: size, ReplicaSet: &api.ReplicaSet{Nodes: []string{nodeIp}}},
+	}
+
+	// create a volume client
+	driverclient := volumeclient.VolumeDriver(client)
+
+	res, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	assert.NotNil(t, err)
+	assert.EqualValues(t, "", res)
+	assert.Contains(t, err.Error(), "error 400")
 }
 
 func TestVolumeDeleteSuccess(t *testing.T) {

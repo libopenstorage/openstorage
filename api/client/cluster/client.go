@@ -81,6 +81,15 @@ func (c *clusterClient) GetData() (map[string]*api.Node, error) {
 	return nil, nil
 }
 
+func (c *clusterClient) GetNodeIdFromIp(idIp string) (string, error) {
+	var resp string
+	request := c.c.Get().Resource(clusterPath + "/getnodeidfromip/" + idIp)
+	if err := request.Do().Unmarshal(&resp); err != nil {
+		return idIp, err
+	}
+	return resp, nil
+}
+
 func (c *clusterClient) NodeStatus() (api.Status, error) {
 	var resp api.Status
 	request := c.c.Get().Resource(clusterPath + "/nodestatus")

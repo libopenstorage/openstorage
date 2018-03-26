@@ -171,6 +171,47 @@ func (c *clusterApi) gossipState(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
+// swagger:operation GET /cluster/getnodeidfromip/{idip} cluster GetNodeIdFromIp
+//
+// this will return the node ID for the given node IP
+//
+// ---
+// produces:
+// - application/json
+// parameters:
+// - name: idip
+//   in: path
+//   description: cluster node ip or id
+//   required: true
+//   type: string
+// responses:
+//   '200':
+//      description: cluster node ID
+//      schema:
+//         type: string
+func (c *clusterApi) getNodeIdFromIp(w http.ResponseWriter, r *http.Request) {
+	method := "getnodeidfromip"
+	inst, err := cluster.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	vars := mux.Vars(r)
+	nodeIP, ok := vars["idip"]
+
+	if !ok || nodeIP == "" {
+		c.sendError(c.name, method, w, "Missing id param", http.StatusBadRequest)
+		return
+	}
+
+	if nodeID, err := inst.GetNodeIdFromIp(nodeIP); err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+	} else {
+		json.NewEncoder(w).Encode(nodeID)
+	}
+}
+
 // swagger:operation GET /cluster/status cluster status
 //
 // this will return the cluster status.
