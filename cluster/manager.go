@@ -1066,6 +1066,9 @@ func (c *ClusterManager) Start(
 
 	logrus.Infoln("Cluster manager starting...")
 
+	kvdb := kvdb.Instance()
+	c.kv = kvdb
+
 	// osdconfig manager should be instantiated as soon as kvdb is ready
 	logrus.Info("initializing osdconfig manager")
 	c.configManager, err = osdconfig.NewManager(c.kv)
@@ -1112,8 +1115,6 @@ func (c *ClusterManager) Start(
 	c.gossipVersion = types.GOSSIP_VERSION_2
 
 	var exist bool
-	kvdb := kvdb.Instance()
-
 	lastIndex, err := c.initializeAndStartHeartbeat(
 		kvdb,
 		clusterMaxSize,
