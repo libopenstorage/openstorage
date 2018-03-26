@@ -1066,6 +1066,13 @@ func (c *ClusterManager) Start(
 
 	logrus.Infoln("Cluster manager starting...")
 
+	// osdconfig manager should be instantiated as soon as kvdb is ready
+	logrus.Info("initializing osdconfig manager")
+	c.configManager, err = osdconfig.NewManager(c.kv)
+	if err != nil {
+		return err
+	}
+
 	c.gEnabled = true
 	c.selfNode = api.Node{}
 	c.selfNode.GenNumber = uint64(time.Now().UnixNano())
@@ -1106,12 +1113,6 @@ func (c *ClusterManager) Start(
 
 	var exist bool
 	kvdb := kvdb.Instance()
-
-	// osdconfig manager should be instantiated as soon as kvdb is ready
-	c.configManager, err = osdconfig.NewManager(c.kv)
-	if err != nil {
-		return err
-	}
 
 	lastIndex, err := c.initializeAndStartHeartbeat(
 		kvdb,
