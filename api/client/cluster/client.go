@@ -8,6 +8,7 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/client"
 	"github.com/libopenstorage/openstorage/cluster"
+	"github.com/libopenstorage/openstorage/secrets"
 )
 
 const (
@@ -193,14 +194,67 @@ func (c *clusterClient) EraseAlert(resource api.ResourceType, alertID int64) err
 	return nil
 }
 
-//SetClusterSecretKey api client wrapper over /setclustersecretkey endpoints
-func (c *clusterClient) SetClusterKey(secretKey string, override bool) error {
-	request := &api.ClusterSecretKeyRequest{
-		Clustersecretkey: secretKey,
-		Override:         override,
+func (c *clusterClient) SetClusterSecretKey(secretKey string, override bool) error {
+	request := c.c.Post().Resource("/setclustersecretkey")
+	request.QueryOption(secrets.ClusterSecretKey, secretKey)
+
+	stOverride := "false"
+	if override {
+		stOverride = "true"
 	}
-	if err := c.c.Post().Resource(clusterPath + "/setclustersecretkey").Body(request).Do().Error(); err != nil {
-		return err
+	request.QueryOption(secrets.OverrideSecrets, stOverride)
+	resp := request.Do()
+	if resp.Error() != nil {
+		return resp.FormatError()
+	}
+	return nil
+}
+
+func (c *clusterClient) SetSecret(secretid string, secretvalue string) error {
+	request := c.c.Post().Resource("/setsecret")
+	request.QueryOption(secrets.SecretKey, secretid)
+	request.QueryOption(secrets.SecretValue, secretvalue)
+
+	resp := request.Do()
+
+	if resp.Error() != nil {
+		return resp.FormatError()
+	}
+	return nil
+}
+
+func (c *clusterClient) GetSecret(secretid string) (secrets.GetSecretResponse, error) {
+	request := c.c.Get().Resource("/getsecret")
+	request.QueryOption(secrets.SecretKey, secretid)
+	secResp := secrets.GetSecretResponse{}
+	if err := request.Do().Unmarshal(&secResp); err != nil {
+		return secResp, err
+	}
+	return secResp, nil
+}
+
+//Check whether session is still authenticated
+func (c *clusterClient) CheckSecretLogin() error {
+	request := c.c.Get().Resource("/checksecretlogin")
+	//should we expect error if not authenticated
+	//find better way to do it
+	if err := request.Do(); err != nil {
+		return err.FormatError()
+	}
+	return nil
+}
+
+func (c *clusterClient) SecretLogin(secret string, secretConfig map[string]string) error {
+	reqBody := &secrets.SecretLoginRequest{
+		SecretConfig: secretConfig,
+	}
+	request := c.c.Post().Resource("/secretlogin").Body(reqBody)
+	request.QueryOption(secrets.SecretType, secret)
+
+	resp := request.Do()
+
+	if resp.Error() != nil {
+		return resp.FormatError()
 	}
 	return nil
 }
