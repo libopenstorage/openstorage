@@ -553,3 +553,11 @@ message ActiveRequests {
   int64 RequestCount = 1;
   repeated ActiveRequest ActiveRequest = 2;
 }
+
+// ClusterSecretKeyRequest  specify request to set cluster secret key
+// swagger: parameters clusterSecretKey
+message ClusterSecretKeyRequest {
+	string clustersecretkey = 1;
+	bool override = 2;
+}
+

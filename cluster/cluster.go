@@ -256,6 +256,16 @@ type Cluster interface {
 	osdconfig.ConfigCaller
 }
 
+//Secrets generic secret store operations
+type Secrets interface {
+	// Login create session with secret store
+	SecretLogin(secretType int, secretConfig map[string]string) error
+	// SetClusterSecretKey sets the cluster wide secret key
+	SetClusterSecretKey(secretKey string, override bool) error
+	//CheckSecretLogin validates session with secret store
+	CheckSecretLogin() error
+}
+
 // ClusterNotify is the callback function listeners can use to notify cluster manager
 type ClusterNotify func(string, api.ClusterNotify) (string, error)
 
