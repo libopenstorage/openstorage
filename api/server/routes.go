@@ -31,5 +31,10 @@ func (c *clusterApi) Routes() []*Route {
 		{verb: "POST", path: clusterPath(client.UriNode, cluster.APIVersion), fn: c.setNodeConf},
 		{verb: "DELETE", path: clusterPath(client.UriNode+"/{id}", cluster.APIVersion), fn: c.delNodeConf},
 		{verb: "GET", path: clusterPath("/getnodeidfromip/{idip}", cluster.APIVersion), fn: c.getNodeIdFromIp},
+		{verb: "GET", path: clusterVersion("checksecretlogin", cluster.APIVersion), fn: c.secretLoginCheck},
+		{verb: "GET", path: clusterVersion("getsecret", cluster.APIVersion), fn: c.getSecret},
+		{verb: "PUT", path: clusterVersion("setsecret", cluster.APIVersion), fn: c.setSecret},
+		{verb: "POST", path: clusterVersion("setclustersecretkey", cluster.APIVersion), fn: c.setClusterSecretKey},
+		{verb: "POST", path: clusterVersion("secretslogin", cluster.APIVersion), fn: c.secretsLogin},
 	}
 }

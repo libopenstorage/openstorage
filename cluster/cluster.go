@@ -10,6 +10,7 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/osdconfig"
+	"github.com/libopenstorage/openstorage/secrets"
 	"github.com/portworx/kvdb"
 )
 

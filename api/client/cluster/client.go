@@ -8,6 +8,7 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/client"
 	"github.com/libopenstorage/openstorage/cluster"
+	"github.com/libopenstorage/openstorage/secrets"
 )
 
 const (
@@ -187,6 +188,71 @@ func (c *clusterClient) EraseAlert(resource api.ResourceType, alertID int64) err
 	path := clusterPath + "/alerts/" + strconv.FormatInt(int64(resource), 10) + "/" + strconv.FormatInt(alertID, 10)
 	request := c.c.Delete().Resource(path)
 	resp := request.Do()
+	if resp.Error() != nil {
+		return resp.FormatError()
+	}
+	return nil
+}
+
+func (c *clusterClient) SetClusterSecretKey(secretKey string, override bool) error {
+	request := c.c.Post().Resource("/setclustersecretkey")
+	request.QueryOption(secrets.ClusterSecretKey, secretKey)
+
+	stOverride := "false"
+	if override {
+		stOverride = "true"
+	}
+	request.QueryOption(secrets.OverrideSecrets, stOverride)
+	resp := request.Do()
+	if resp.Error() != nil {
+		return resp.FormatError()
+	}
+	return nil
+}
+
+func (c *clusterClient) SetSecret(secretID string, secretValue string) error {
+	request := c.c.Put().Resource("/setsecret")
+	request.QueryOption(secrets.SecretKey, secretID)
+	request.QueryOption(secrets.SecretValue, secretValue)
+
+	resp := request.Do()
+
+	if resp.Error() != nil {
+		return resp.FormatError()
+	}
+	return nil
+}
+
+func (c *clusterClient) GetSecret(secretID string) (string, error) {
+	var secResp string
+	request := c.c.Get().Resource("/getsecret")
+	request.QueryOption(secrets.SecretKey, secretID)
+	if err := request.Do().Unmarshal(&secResp); err != nil {
+		return secResp, err
+	}
+	return secResp, nil
+}
+
+//Check whether session is still authenticated
+func (c *clusterClient) CheckSecretLogin() error {
+	request := c.c.Get().Resource("/checksecretlogin")
+	//should we expect error if not authenticated
+	//find better way to do it
+	if err := request.Do(); err != nil {
+		return err.FormatError()
+	}
+	return nil
+}
+
+func (c *clusterClient) SecretLogin(secret int, secretConfig map[string]string) error {
+	reqBody := &secrets.SecretLoginRequest{
+		SecretConfig: secretConfig,
+	}
+	request := c.c.Post().Resource("/secretslogin").Body(reqBody)
+	request.QueryOption(secrets.SecretType, string(secret))
+
+	resp := request.Do()
+
 	if resp.Error() != nil {
 		return resp.FormatError()
 	}

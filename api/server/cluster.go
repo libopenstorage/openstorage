@@ -11,6 +11,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
+	"github.com/libopenstorage/openstorage/secrets"
 )
 
 const (
@@ -20,10 +21,18 @@ const (
 
 type clusterApi struct {
 	restBase
+	SecretManager *secrets.Manager
 }
 
-func newClusterAPI() restServer {
-	return &clusterApi{restBase{version: cluster.APIVersion, name: "Cluster API"}}
+type ClusterServerConfiguration struct {
+	ConfigSecretManager *secrets.Manager
+}
+
+func newClusterAPI(config ClusterServerConfiguration) restServer {
+	return &clusterApi{restBase: restBase{version: cluster.APIVersion,
+		name: "Cluster API"},
+		SecretManager: config.ConfigSecretManager,
+	}
 }
 
 func (c *clusterApi) String() string {
