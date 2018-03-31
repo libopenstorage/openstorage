@@ -18,7 +18,7 @@ const (
 	SpecEphemeral            = "ephemeral"
 	SpecShared               = "shared"
 	SpecJournal              = "journal"
-	SpecNfs                  = "nfs"
+	SpecSharedV4             = "sharedv4"
 	SpecCascaded             = "cascaded"
 	SpecSticky               = "sticky"
 	SpecSecure               = "secure"
