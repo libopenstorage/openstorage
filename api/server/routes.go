@@ -41,5 +41,11 @@ func (c *clusterApi) Routes() []*Route {
 		{verb: "POST", path: clusterPath(client.SchedPath, cluster.APIVersion), fn: c.schedPolicyCreate},
 		{verb: "PUT", path: clusterPath(client.SchedPath, cluster.APIVersion), fn: c.schedPolicyUpdate},
 		{verb: "DELETE", path: clusterPath(client.SchedPath+"/{name}", cluster.APIVersion), fn: c.schedPolicyDelete},
+		{verb: "PUT", path: clusterPath(client.PairPath, cluster.APIVersion), fn: c.createPair},
+		{verb: "POST", path: clusterPath(client.PairPath, cluster.APIVersion), fn: c.processPair},
+		{verb: "GET", path: clusterPath(client.PairPath, cluster.APIVersion), fn: c.enumeratePairs},
+		{verb: "GET", path: clusterPath(client.PairPath+"/{id}", cluster.APIVersion), fn: c.getPair},
+		{verb: "DELETE", path: clusterPath(client.PairPath+"/{id}", cluster.APIVersion), fn: c.deletePair},
+		{verb: "GET", path: clusterPath(client.PairTokenPath, cluster.APIVersion), fn: c.getPairToken},
 	}
 }

@@ -13,6 +13,7 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
+	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers/common"
 	"github.com/pborman/uuid"
@@ -121,7 +122,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 	}
 
 	inst.cl = &clusterListener{}
-	c, err := cluster.Inst()
+	c, err := clustermanager.Inst()
 	if err != nil {
 		logrus.Println("BUSE initializing in single node mode")
 	} else {

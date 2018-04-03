@@ -11,14 +11,14 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/libopenstorage/openstorage/cluster"
+	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	mockcluster "github.com/libopenstorage/openstorage/cluster/mock"
 	mocksched "github.com/libopenstorage/openstorage/schedpolicy/mock"
 	mocksecrets "github.com/libopenstorage/openstorage/secrets/mock"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
-
-	"github.com/libopenstorage/openstorage/cluster"
 )
 
 const (
@@ -49,7 +49,7 @@ func newTestCluster(t *testing.T) *testCluster {
 
 	// Save already set value of cluster.Inst to set it back
 	// when we finish the tests by the defer()
-	tester.oldInst = cluster.Inst
+	tester.oldInst = clustermanager.Inst
 
 	// Create mock controller
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
@@ -64,7 +64,7 @@ func newTestCluster(t *testing.T) *testCluster {
 	tester.sp = mocksched.NewMockSchedulePolicy(tester.mc)
 
 	// Override cluster.Inst to return our mock cluster
-	cluster.Inst = func() (cluster.Cluster, error) {
+	clustermanager.Inst = func() (cluster.Cluster, error) {
 		return tester.c, nil
 	}
 
@@ -147,7 +147,7 @@ func (c *testCluster) MockClusterSchedPolicy() *mocksched.MockSchedulePolicy {
 }
 
 func (c *testCluster) Finish() {
-	cluster.Inst = c.oldInst
+	clustermanager.Inst = c.oldInst
 	c.mc.Finish()
 }
 

@@ -286,7 +286,7 @@
           "schedpolicy"
         ],
         "summary": "List schedule policies",
-        "operationId": "enumerateShedPolicy",
+        "operationId": "schedPolicyEnumerate",
         "responses": {
           "200": {
             "description": "success",
@@ -308,7 +308,7 @@
           "schedpolicy"
         ],
         "summary": "Update schedule policy",
-        "operationId": "updateShedPolicy",
+        "operationId": "schedPolicyUpdate",
         "parameters": [
           {
             "description": "policy name and schedule to update",
@@ -335,7 +335,7 @@
           "schedpolicy"
         ],
         "summary": "Create schedule policy",
-        "operationId": "createShedPolicy",
+        "operationId": "schedPolicyCreate",
         "parameters": [
           {
             "description": "policy name and schedule to create",
@@ -364,7 +364,7 @@
           "schedpolicy"
         ],
         "summary": "Delete schedule policy",
-        "operationId": "deleteShedPolicy",
+        "operationId": "shedPolicyDelete",
         "parameters": [
           {
             "type": "string",
@@ -1879,6 +1879,85 @@
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
+    "CloudMigrateCancelRequest": {
+      "type": "object",
+      "properties": {
+        "Operation": {
+          "$ref": "#/definitions/Operation"
+        },
+        "TargetId": {
+          "description": "Depending on Operation type this can be VolumeID or VolumeGroupID",
+          "type": "string"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "CloudMigrateInfo": {
+      "type": "object",
+      "properties": {
+        "CloudSnapId": {
+          "type": "string"
+        },
+        "ClusterId": {
+          "type": "string"
+        },
+        "CurrentStage": {
+          "$ref": "#/definitions/MigrateStage"
+        },
+        "LastSuccess": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "LastUpdate": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "LocalVolumeId": {
+          "type": "string"
+        },
+        "LocalVolumeName": {
+          "type": "string"
+        },
+        "RemoteVolumeId": {
+          "type": "string"
+        },
+        "Status": {
+          "$ref": "#/definitions/MigrateStatus"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "CloudMigrateStartRequest": {
+      "type": "object",
+      "properties": {
+        "ClusterId": {
+          "type": "string"
+        },
+        "Operation": {
+          "$ref": "#/definitions/Operation"
+        },
+        "TargetId": {
+          "description": "Depending on Operation type this can be VolumeID or VolumeGroupID",
+          "type": "string"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "CloudMigrateStatusResponse": {
+      "type": "object",
+      "properties": {
+        "Info": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/CloudMigrateInfo"
+            }
+          }
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
     "Cluster": {
       "type": "object",
       "title": "Cluster represents the state of the cluster.",
@@ -1984,40 +2063,46 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "ClusterConfig": {
+      "description": "ClusterConfig is a cluster level config parameter struct",
       "type": "object",
       "properties": {
-        "ClusterId": {
-          "type": "string"
+        "cluster_id": {
+          "type": "string",
+          "x-go-name": "ClusterId"
         },
-        "DataIface": {
-          "type": "string"
+        "created": {
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "Created"
         },
-        "DataIp": {
-          "type": "string"
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
         },
-        "DefaultDriver": {
-          "type": "string"
+        "domain": {
+          "type": "string",
+          "x-go-name": "Domain"
         },
-        "FluentDHost": {
-          "type": "string"
+        "kvdb": {
+          "$ref": "#/definitions/KvdbConfig"
         },
-        "LoggingURL": {
-          "type": "string"
+        "mode": {
+          "type": "string",
+          "x-go-name": "Mode"
         },
-        "ManagementURL": {
-          "type": "string"
+        "private": {
+          "type": "object",
+          "x-go-name": "Private"
         },
-        "MgmtIp": {
-          "type": "string"
+        "secrets": {
+          "$ref": "#/definitions/SecretsConfig"
         },
-        "MgtIface": {
-          "type": "string"
-        },
-        "NodeId": {
-          "type": "string"
+        "version": {
+          "type": "string",
+          "x-go-name": "Version"
         }
       },
-      "x-go-package": "github.com/libopenstorage/openstorage/config"
+      "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
     },
     "ClusterEnumerateRequest": {
       "type": "object",
@@ -2055,6 +2140,52 @@
     "ClusterNotify": {
       "type": "integer",
       "format": "int32",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "ClusterPairInfo": {
+      "description": "ClusterPairInfo",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "ID of the cluster",
+          "type": "string",
+          "x-go-name": "Id"
+        },
+        "ip": {
+          "description": "IP of the cluster",
+          "type": "string",
+          "x-go-name": "Ip"
+        },
+        "name": {
+          "description": "Name of the cluster",
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "options": {
+          "description": "Key/value pair of options associated with the cluster",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "x-go-name": "Options"
+        },
+        "port": {
+          "description": "Port for the cluster",
+          "type": "integer",
+          "format": "uint32",
+          "x-go-name": "Port"
+        },
+        "secure": {
+          "description": "Flag used to determine if communication is over a secure channel",
+          "type": "boolean",
+          "x-go-name": "Secure"
+        },
+        "token": {
+          "description": "Token associated with cluster",
+          "type": "string",
+          "x-go-name": "Token"
+        }
+      },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "ClusterResponse": {
@@ -2108,6 +2239,51 @@
       "format": "int32",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
+    "CreateClusterPairRequest": {
+      "description": "CreateClusterPairRequest",
+      "type": "object",
+      "properties": {
+        "remote_cluster_ip": {
+          "description": "IP of the remote cluster",
+          "type": "string",
+          "x-go-name": "RemoteClusterIp"
+        },
+        "remote_cluster_port": {
+          "description": "Port for the remote cluster",
+          "type": "integer",
+          "format": "uint32",
+          "x-go-name": "RemoteClusterPort"
+        },
+        "remote_cluster_token": {
+          "description": "Token used to authenticate with the remote cluster",
+          "type": "string",
+          "x-go-name": "RemoteClusterToken"
+        },
+        "set_default": {
+          "description": "Set the new pair as the default",
+          "type": "boolean",
+          "x-go-name": "SetDefault"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "CreateClusterPairResponse": {
+      "description": "CreateClusterPairResponse",
+      "type": "object",
+      "properties": {
+        "remote_cluster_id": {
+          "description": "ID of the remote cluster",
+          "type": "string",
+          "x-go-name": "RemoteClusterId"
+        },
+        "remote_cluster_name": {
+          "description": "Name of the remote cluster",
+          "type": "string",
+          "x-go-name": "RemoteClusterName"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
     "CredCreateRequest": {
       "description": "CredCreateRequest is the input for CredCreate command",
       "type": "object",
@@ -2146,9 +2322,41 @@
       },
       "x-go-package": "github.com/libopenstorage/openstorage/secrets"
     },
+    "DeleteClusterPairRequest": {
+      "description": "DeleteClusterPairRequest",
+      "type": "object",
+      "properties": {
+        "cluster_id": {
+          "description": "ID of the cluster pair to be deleted",
+          "type": "string",
+          "x-go-name": "ClusterId"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
     "DriverType": {
       "type": "integer",
       "format": "int32",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "EnumerateClusterPairsResponse": {
+      "description": "EnumerateClusterPairsResponse",
+      "type": "object",
+      "properties": {
+        "default_id": {
+          "description": "ID of the default cluster pair\n\nin: body",
+          "type": "string",
+          "x-go-name": "DefaultId"
+        },
+        "pairs": {
+          "description": "Pairs Info about the cluster pairs\n\nin: body",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ClusterPairInfo"
+          },
+          "x-go-name": "Pairs"
+        }
+      },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "FSType": {
@@ -2190,6 +2398,52 @@
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
+    },
+    "GetClusterPairRequest": {
+      "description": "GetClusterPairRequest",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "ID of the cluster, if empty gets the default pair",
+          "type": "string",
+          "x-go-name": "Id"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "GetClusterPairResponse": {
+      "description": "GetClusterPairResponse",
+      "type": "object",
+      "properties": {
+        "pair_info": {
+          "$ref": "#/definitions/ClusterPairInfo"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "GetClusterPairTokenRequest": {
+      "description": "GetClusterPairTokenRequest",
+      "type": "object",
+      "properties": {
+        "reset_token": {
+          "description": "Reset token if already preset",
+          "type": "boolean",
+          "x-go-name": "ResetToken"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "GetClusterPairTokenResponse": {
+      "description": "GetClusterPairTokenResponse",
+      "type": "object",
+      "properties": {
+        "token": {
+          "description": "Token used to authenticate clusters",
+          "type": "string",
+          "x-go-name": "Token"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "GetSecretResponse": {
       "description": "GetSecretResponse gets secret value for given key",
@@ -2482,9 +2736,84 @@
       "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
+    "OpenStorageVolumeClient": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "OpenStorageVolumeCreateRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Unique name of the volume. This will be used for idempotency.",
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "spec": {
+          "$ref": "#/definitions/VolumeSpec"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "OpenStorageVolumeCreateResponse": {
+      "type": "object",
+      "properties": {
+        "volume_id": {
+          "description": "Id of new volume",
+          "type": "string",
+          "x-go-name": "VolumeId"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "OpenStorageVolumeServer": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
     "OperationFlags": {
       "type": "integer",
       "format": "int32",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "ProcessClusterPairRequest": {
+      "description": "ProcessClusterPairRequest",
+      "type": "object",
+      "properties": {
+        "remote_cluster_token": {
+          "description": "Token used to authenticate with the remote cluster",
+          "type": "string",
+          "x-go-name": "RemoteClusterToken"
+        },
+        "source_cluster_id": {
+          "description": "ID of the cluster requesting the pairing",
+          "type": "string",
+          "x-go-name": "SourceClusterId"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "ProcessClusterPairResponse": {
+      "description": "ProcessClusterPairResponse",
+      "type": "object",
+      "properties": {
+        "options": {
+          "description": "Key/value pair of options returned on successful pairing\n\nin: body",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "x-go-name": "Options"
+        },
+        "remote_cluster_id": {
+          "description": "in: body\nID of the cluster which processed the pair request",
+          "type": "string",
+          "x-go-name": "RemoteClusterId"
+        },
+        "remote_cluster_name": {
+          "description": "Name of the cluster which processed the pair request\n\nin: body",
+          "type": "string",
+          "x-go-name": "RemoteClusterName"
+        }
+      },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "ReplicaSet": {
@@ -3005,7 +3334,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "Timestamp": {
-      "description": "# Examples\n\nExample 1: Compute Timestamp from POSIX `time()`.\n\nTimestamp timestamp;\ntimestamp.set_seconds(time(NULL));\ntimestamp.set_nanos(0);\n\nExample 2: Compute Timestamp from POSIX `gettimeofday()`.\n\nstruct timeval tv;\ngettimeofday(\u0026tv, NULL);\n\nTimestamp timestamp;\ntimestamp.set_seconds(tv.tv_sec);\ntimestamp.set_nanos(tv.tv_usec * 1000);\n\nExample 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.\n\nFILETIME ft;\nGetSystemTimeAsFileTime(\u0026ft);\nUINT64 ticks = (((UINT64)ft.dwHighDateTime) \u003c\u003c 32) | ft.dwLowDateTime;\n\nA Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z\nis 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.\nTimestamp timestamp;\ntimestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));\ntimestamp.set_nanos((INT32) ((ticks % 10000000) * 100));\n\nExample 4: Compute Timestamp from Java `System.currentTimeMillis()`.\n\nlong millis = System.currentTimeMillis();\n\nTimestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)\n.setNanos((int) ((millis % 1000) * 1000000)).build();\n\n\nExample 5: Compute Timestamp from current time in Python.\n\ntimestamp = Timestamp()\ntimestamp.GetCurrentTime()\n\n# JSON Mapping\n\nIn JSON format, the Timestamp type is encoded as a string in the\n[RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the\nformat is \"{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z\"\nwhere {year} is always expressed using four digits while {month}, {day},\n{hour}, {min}, and {sec} are zero-padded to two digits each. The fractional\nseconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),\nare optional. The \"Z\" suffix indicates the timezone (\"UTC\"); the timezone\nis required, though only UTC (as indicated by \"Z\") is presently supported.\n\nFor example, \"2017-01-15T01:30:15.01Z\" encodes 15.01 seconds past\n01:30 UTC on January 15, 2017.\n\nIn JavaScript, one can convert a Date object to this format using the\nstandard [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString]\nmethod. In Python, a standard `datetime.datetime` object can be converted\nto this format using [`strftime`](https://docs.python.org/2/library/time.html#time.strftime)\nwith the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one\ncan use the Joda Time's [`ISODateTimeFormat.dateTime()`](\nhttp://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime())\nto obtain a formatter capable of generating timestamps in this format.",
+      "description": "# Examples\n\nExample 1: Compute Timestamp from POSIX `time()`.\n\nTimestamp timestamp;\ntimestamp.set_seconds(time(NULL));\ntimestamp.set_nanos(0);\n\nExample 2: Compute Timestamp from POSIX `gettimeofday()`.\n\nstruct timeval tv;\ngettimeofday(\u0026tv, NULL);\n\nTimestamp timestamp;\ntimestamp.set_seconds(tv.tv_sec);\ntimestamp.set_nanos(tv.tv_usec * 1000);\n\nExample 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.\n\nFILETIME ft;\nGetSystemTimeAsFileTime(\u0026ft);\nUINT64 ticks = (((UINT64)ft.dwHighDateTime) \u003c\u003c 32) | ft.dwLowDateTime;\n\nA Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z\nis 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.\nTimestamp timestamp;\ntimestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));\ntimestamp.set_nanos((INT32) ((ticks % 10000000) * 100));\n\nExample 4: Compute Timestamp from Java `System.currentTimeMillis()`.\n\nlong millis = System.currentTimeMillis();\n\nTimestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)\n.setNanos((int) ((millis % 1000) * 1000000)).build();\n\n\nExample 5: Compute Timestamp from current time in Python.\n\ntimestamp = Timestamp()\ntimestamp.GetCurrentTime()\n\n# JSON Mapping\n\nIn JSON format, the Timestamp type is encoded as a string in the\n[RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the\nformat is \"{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z\"\nwhere {year} is always expressed using four digits while {month}, {day},\n{hour}, {min}, and {sec} are zero-padded to two digits each. The fractional\nseconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),\nare optional. The \"Z\" suffix indicates the timezone (\"UTC\"); the timezone\nis required, though only UTC (as indicated by \"Z\") is presently supported.\n\nFor example, \"2017-01-15T01:30:15.01Z\" encodes 15.01 seconds past\n01:30 UTC on January 15, 2017.\n\nIn JavaScript, one can convert a Date object to this format using the\nstandard [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString]\nmethod. In Python, a standard `datetime.datetime` object can be converted\nto this format using [`strftime`](https://docs.python.org/2/library/time.html#time.strftime)\nwith the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one\ncan use the Joda Time's [`ISODateTimeFormat.dateTime()`](\nhttp://www.joda.org/joda-time/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime--)\nto obtain a formatter capable of generating timestamps in this format.",
       "type": "object",
       "title": "A Timestamp represents a point in time independent of any time zone\nor calendar, represented as seconds and fractions of seconds at\nnanosecond resolution in UTC Epoch time. It is encoded using the\nProleptic Gregorian Calendar which extends the Gregorian calendar\nbackwards to year one. It is encoded assuming all minutes are 60\nseconds long, i.e. leap seconds are \"smeared\" so that no leap second\ntable is needed for interpretation. Range is from\n0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z.\nBy restricting to that range, we ensure that we can convert to\nand from  RFC 3339 date strings.\nSee [https://www.ietf.org/rfc/rfc3339.txt](https://www.ietf.org/rfc/rfc3339.txt).",
       "properties": {
@@ -3242,6 +3571,36 @@
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
+    "VolumeCreateFromVolumeIDRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Unique name of the volume. This will be used for idempotency.",
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "parent_id": {
+          "description": "Parent volume id, if specified will create a new volume as a clone of the parent.",
+          "type": "string",
+          "x-go-name": "ParentId"
+        },
+        "spec": {
+          "$ref": "#/definitions/VolumeSpec"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VolumeCreateFromVolumeIDResponse": {
+      "type": "object",
+      "properties": {
+        "volume_id": {
+          "description": "Id of new volume",
+          "type": "string",
+          "x-go-name": "VolumeId"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
     "VolumeCreateRequest": {
       "description": "VolumeCreateRequest is a structure that has the locator, source and spec\nto create a volume",
       "type": "object",
@@ -3277,6 +3636,44 @@
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
+    "VolumeDeleteRequest": {
+      "type": "object",
+      "properties": {
+        "volume_id": {
+          "description": "Id of volume to delete",
+          "type": "string",
+          "x-go-name": "VolumeId"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VolumeDeleteResponse": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VolumeEnumerateRequest": {
+      "type": "object",
+      "properties": {
+        "locator": {
+          "$ref": "#/definitions/VolumeLocator"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VolumeEnumerateResponse": {
+      "type": "object",
+      "properties": {
+        "volumes": {
+          "description": "List of volumes matching label",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Volume"
+          },
+          "x-go-name": "Volumes"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
     "VolumeInfo": {
       "description": "VolumeInfo",
       "type": "object",
@@ -3291,6 +3688,26 @@
         "volume_id": {
           "type": "string",
           "x-go-name": "VolumeId"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VolumeInspectRequest": {
+      "type": "object",
+      "properties": {
+        "volume_id": {
+          "description": "Id of volume to inspect",
+          "type": "string",
+          "x-go-name": "VolumeId"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VolumeInspectResponse": {
+      "type": "object",
+      "properties": {
+        "volume": {
+          "$ref": "#/definitions/Volume"
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
@@ -3535,9 +3952,50 @@
     "openStorageClusterClient": {
       "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "openStorageVolumeClient": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
     }
   },
   "responses": {
+    "CreateClusterPairResponse": {
+      "description": "CreateClusterPairResponse",
+      "headers": {
+        "remote_cluster_id": {
+          "type": "string",
+          "description": "ID of the remote cluster"
+        },
+        "remote_cluster_name": {
+          "type": "string",
+          "description": "Name of the remote cluster"
+        }
+      }
+    },
+    "EnumerateClusterPairsResponse": {
+      "description": "EnumerateClusterPairsResponse",
+      "schema": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "#/definitions/ClusterPairInfo"
+        }
+      }
+    },
+    "GetClusterPairResponse": {
+      "description": "GetClusterPairResponse",
+      "schema": {
+        "$ref": "#/definitions/ClusterPairInfo"
+      }
+    },
+    "ProcessClusterPairResponse": {
+      "description": "ProcessClusterPairResponse",
+      "schema": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string"
+        }
+      }
+    },
     "clusterResponse": {
       "description": "ClusterResponse specifies a response that gets returned when requesting the cluster"
     },
