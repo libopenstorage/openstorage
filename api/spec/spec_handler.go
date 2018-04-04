@@ -76,9 +76,8 @@ type SpecHandler interface {
 }
 
 var (
-	nameRegex = regexp.MustCompile(api.Name + "=([0-9A-Za-z_-]+),?")
-	//nodesRegex      = regexp.MustCompile(api.SpecNodes + "=([0-9A-Za-z_-]+),*")
-	nodesRegex      = regexp.MustCompile(api.SpecNodes + "=('[0-9A-Za-z,_-]+'),*|" + api.SpecNodes + "=([0-9A-Za-z_-]+),*")
+	nameRegex       = regexp.MustCompile(api.Name + "=([0-9A-Za-z_-]+),?")
+	nodesRegex      = regexp.MustCompile(api.SpecNodes + "=('[0-9A-Za-z,_-]+'|[0-9A-Za-z_-]+),*")
 	parentRegex     = regexp.MustCompile(api.SpecParent + "=([A-Za-z]+),?")
 	sizeRegex       = regexp.MustCompile(api.SpecSize + "=([0-9A-Za-z]+),?")
 	scaleRegex      = regexp.MustCompile(api.SpecScale + "=([0-9]+),?")
