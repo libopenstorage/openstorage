@@ -93,13 +93,6 @@ func (c *Client) SetTLS(tlsConfig *tls.Config) {
 	}
 }
 
-// Status sends a Status request at the /status REST endpoint.
-func (c *Client) Status() (*Status, error) {
-	status := &Status{}
-	err := c.Get().UsePath("/status").Do().Unmarshal(status)
-	return status, err
-}
-
 // Versions send a request at the /versions REST endpoint.
 func (c *Client) Versions(endpoint string) ([]string, error) {
 	versions := []string{}
