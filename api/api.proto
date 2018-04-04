@@ -160,11 +160,11 @@ enum AttachState {
     ATTACH_STATE_INTERNAL_SWITCH = 2;
 }
 
-enum OperationFlags {
+enum OperationFlags {                                                           
 	OP_FLAGS_UNKNOWN = 0;
-	OP_FLAGS_NONE = 1;
+	OP_FLAGS_NONE = 1;                                                          
 	// Perform a force_detach during detach operation
-	OP_FLAGS_DETACH_FORCE = 2;
+	OP_FLAGS_DETACH_FORCE = 2;                                                  
 }
 
 // StorageResource groups properties of a storage device.
@@ -278,7 +278,7 @@ message VolumeSpec {
   bool encrypted = 14;
   // Passphrase for an encrypted volume
   string passphrase = 15;
-  // SnapshotSchedule a well known string that specifies when snapshots should be taken.
+  // SnapshotSchedule a well known string that specifies when snapshots should be taken. 
   string snapshot_schedule = 16;
   // Scale allows autocreation of volumes.
   uint32 scale = 17;
@@ -294,18 +294,18 @@ message VolumeSpec {
   bool cascaded = 24;
   // Journal is true if data for the volume goes into the journal.
   bool journal = 25;
-  // Sharedv4 is true if this volume can be accessed via sharedv4.
-  bool sharedv4 = 26;
+  // Nfs is true if this volume can be accessed via nfs.
+  bool nfs = 26;
 }
 
-// ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
+// ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure 
 // coded - for clustered storage arrays
 // swagger:model
 message ReplicaSet {
   repeated string nodes = 1;
 }
 
-// RuntimeStateMap is a list of name value mapping of driver specific runtime
+// RuntimeStateMap is a list of name value mapping of driver specific runtime 
 // information.
 // swagger:model
 message RuntimeStateMap {
@@ -354,7 +354,7 @@ message Volume {
   map<string, string> attach_info = 18;
   // ReplicatSets storage for this volumefor clustered storage arrays.
   repeated ReplicaSet replica_sets = 19;
-  // RuntimeState is a lst of name value mapping of driver specific runtime
+  // RuntimeState is a lst of name value mapping of driver specific runtime 
   // information.
   repeated RuntimeStateMap runtime_state = 20;
   // Error is the Last recorded error.
@@ -397,7 +397,7 @@ message Alert {
   // Message describing the Alert
   string message = 4;
   //Timestamp when Alert occured
-  google.protobuf.Timestamp timestamp = 5;
+  google.protobuf.Timestamp timestamp = 5;	
   // ResourceId where Alert occured
   string resource_id = 6;
   // Resource where Alert occured
@@ -514,7 +514,7 @@ message SnapCreateResponse {
   VolumeCreateResponse volume_create_response = 1;
 }
 
-// VolumeInfo
+// VolumeInfo 
 // swagger:model
 message VolumeInfo {
   string volume_id = 1;
@@ -536,7 +536,7 @@ message GraphDriverChanges {
 // swagger:response clusterResponse
 message ClusterResponse {
   // Error code
-  //
+  // 
   // in: body
   string error = 1;
 }
