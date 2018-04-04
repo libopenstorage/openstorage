@@ -11,7 +11,7 @@ import (
 
 func testSpecOptString(t *testing.T, opt string, val string) {
 	s := NewSpecHandler()
-	parsed, m, _ := s.SpecOptsFromString(fmt.Sprintf("name=volname,foo=bar,%s=%s", opt, val))
+	parsed, m, _ := s.SpecOptsFromString(fmt.Sprintf("name=volname,foo=bar,%s=%s,u=nix", opt, val))
 	require.True(t, parsed, "Failed to parse spec string")
 	parsedVal, ok := m[opt]
 	require.True(t, ok, fmt.Sprintf("Failed to set %q string", opt))

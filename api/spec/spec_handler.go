@@ -136,11 +136,7 @@ func (d *specHandler) getVal(r *regexp.Regexp, str string) (bool, string) {
 		return false, ""
 	}
 
-	if len(submatches[1]) > 0 {
-		return true, submatches[1]
-	} else {
-		return true, submatches[2]
-	}
+	return true, submatches[1]
 }
 
 func (d *specHandler) DefaultSpec() *api.VolumeSpec {
