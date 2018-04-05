@@ -168,7 +168,7 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 	for k, v := range opts {
 		switch k {
 		case api.SpecNodes:
-			inputNodes := strings.Split(v, ",")
+			inputNodes := strings.Split(strings.Replace(v, ";", ",", -1), ",")
 			for _, node := range inputNodes {
 				if len(node) != 0 {
 					nodeList = append(nodeList, node)
