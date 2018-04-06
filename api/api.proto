@@ -531,10 +531,12 @@ message VolumeConsumer {
   string name = 1;
   // Namespace is the namespace of the volume consumer
   string namespace = 2;
+  // Node is the node on which the consumer is running
+  string node = 3;
   // OwnerName is the name of the entity who owns this volume consumer
-  string owner_name = 3;
+  string owner_name = 4;
   // OwnerName is the type of the entity who owns this volume consumer
-  string owner_type = 4;
+  string owner_type = 5;
 }
 
 // GraphDriverChanges represent a list of changes between the filesystem layers
