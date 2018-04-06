@@ -77,7 +77,7 @@ type SpecHandler interface {
 
 var (
 	nameRegex       = regexp.MustCompile(api.Name + "=([0-9A-Za-z_-]+),?")
-	nodesRegex      = regexp.MustCompile(api.SpecNodes + "=('[0-9A-Za-z,_-]+'|[0-9A-Za-z_-]+),?")
+	nodesRegex      = regexp.MustCompile(api.SpecNodes + "=([A-Za-z0-9-_;]+),?")
 	parentRegex     = regexp.MustCompile(api.SpecParent + "=([A-Za-z]+),?")
 	sizeRegex       = regexp.MustCompile(api.SpecSize + "=([0-9A-Za-z]+),?")
 	scaleRegex      = regexp.MustCompile(api.SpecScale + "=([0-9]+),?")
@@ -168,8 +168,7 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 	for k, v := range opts {
 		switch k {
 		case api.SpecNodes:
-			v = strings.Trim(v, "'")
-			inputNodes := strings.Split(v, ",")
+			inputNodes := strings.Split(strings.Replace(v, ";", ",", -1), ",")
 			for _, node := range inputNodes {
 				if len(node) != 0 {
 					nodeList = append(nodeList, node)
@@ -338,8 +337,9 @@ func (d *specHandler) SpecOptsFromString(
 	}
 
 	if ok, nodes := d.getVal(nodesRegex, str); ok {
-		opts[api.SpecNodes] = nodes
+		opts[api.SpecNodes] = strings.Replace(nodes, ";", ",", -1)
 	}
+
 	if ok, parent := d.getVal(parentRegex, str); ok {
 		opts[api.SpecParent] = parent
 	}
