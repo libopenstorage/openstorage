@@ -167,11 +167,11 @@ launch: docker-build-osd
 	docker run \
 		--privileged \
 		-d \
-		-v $(shell pwd):/etc \
+		-v $(shell pwd)/etc:/etc \
 		-v /run/docker/plugins:/run/docker/plugins \
 		-v /var/lib/osd/:/var/lib/osd/ \
 		-p 9005:9005 \
-		openstorage/osd -d -f /etc/config.yaml
+		openstorage/osd -d -f /etc/config/config.yaml
 
 # must set HAVE_BTRFS
 launch-local-btrfs: install
