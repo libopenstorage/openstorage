@@ -1,39 +1,53 @@
 package secrets
 
-import "net/http"
+const (
+	DefaultSecretKey = "defaultsecretkey"
+	OverrideSecrets  = "override"
+	SecretKey        = "id"
+	SecretValue      = "secretvalue"
+	SecretType       = "type"
+	APIVersion       = "v1"
+)
 
 const (
-	ClusterSecretKey = "clustersecretkey"
-	OverrideSecrets  = "override"
-	SecretKey        = "secretid"
-	SecretValue      = "secretvalue"
-	SecretType       = "secret"
-	APIVersion       = "v1"
+	TypeNone   = "none"
+	TypeKvdb   = "kvdb"
+	TypeVault  = "vault"
+	TypeAWS    = "aws-kms"
+	TypeDocker = "docker"
+	TypeK8s    = "k8s"
+	TypeDCOS   = "dcos"
 )
 
 // SecretLoginRequest specify secret store and config to initiate
 // secret store session
-// swagger: parameters secret
 type SecretLoginRequest struct {
+	SecretType   string
 	SecretConfig map[string]string
 }
 
-type Route struct {
-	Verb string
-	Path string
-	Fn   func(http.ResponseWriter, *http.Request)
+// SecretResponse whether login is successful or not
+type SecretResponse struct {
+	Status string
 }
 
-// ClusterSecretKeyRequest  specify request to set cluster secret key
-// swagger: parameters clusterKey
-type ClusterSecretKeyRequest struct {
-	ClusterSecretKey string
+// DefaultSecretKeyRequest specify request to set cluster secret key
+type DefaultSecretKeyRequest struct {
+	DefaultSecretKey string
 	Override         bool
 }
 
-// SetsecretsLogin setsecrets
-// swagger: parameters secret
-type SetSecretsRequest struct {
-	SecretID    string
-	SecretValue string
+// SetSecretRequest stores the given value/data against the key
+type SetSecretRequest struct {
+	SecretValue interface{}
+}
+
+// GetSecretResponse gets secret value for given key
+type GetSecretResponse struct {
+	SecretValue interface{}
+}
+
+// GetDefaultSecretResponse gets default secret value for given key
+type GetDefaultSecretKeyResponse struct {
+	SecretValue interface{}
 }

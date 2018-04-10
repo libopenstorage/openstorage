@@ -17,6 +17,7 @@ import (
 	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
 
 	"github.com/libopenstorage/openstorage/cluster"
+	"github.com/libopenstorage/openstorage/secrets"
 )
 
 const (
@@ -103,7 +104,9 @@ func testRestServer(t *testing.T) (*httptest.Server, *testServer) {
 }
 
 func testClusterServer(t *testing.T) (*httptest.Server, *testCluster) {
-	capi := newClusterAPI()
+	capi := newClusterAPI(ClusterServerConfiguration{
+		ConfigSecretManager: secrets.NewSecretManager(secrets.New()),
+	})
 	router := mux.NewRouter()
 	// Register all routes from the App
 	for _, route := range capi.Routes() {

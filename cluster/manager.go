@@ -1694,30 +1694,37 @@ func (c *ClusterManager) EnumerateNodeConf() (*osdconfig.NodesConfig, error) {
 	return c.configManager.EnumerateNodeConf()
 }
 
-//This needs to be added since clusterclient is REST wrapper over ClusterManager
-//We can create custom secretclient i.e Rest wrapper over SecretManager
-//may be related to issue :  #382 (https://github.com/libopenstorage/openstorage/issues/382)
-//TODO : Find cleaner way for this
-func (c *ClusterManager) SecretLogin(secretType int, secretConfig map[string]string) error {
+// This needs to be added since clusterclient is REST wrapper over ClusterManager
+// We also can create custom secretclient i.e Rest wrapper over SecretManager
+// may be related to issue :  #382 (https://github.com/libopenstorage/openstorage/issues/382)
+// TODO : Find cleaner way for this
+
+// Login create session with secret store
+func (c *ClusterManager) Login(secretType string, secretConfig map[string]string) error {
 	return nil
 }
 
-// SetClusterSecretKey sets the cluster wide secret key
-func (c *ClusterManager) SetClusterSecretKey(secretKey string, override bool) error {
+// SetDefaultSecretKey sets the cluster wide secret key
+func (c *ClusterManager) SetDefaultSecretKey(secretKey string, override bool) error {
 	return nil
 }
 
-//CheckSecretLogin validates session with secret store
-func (c *ClusterManager) CheckSecretLogin() error {
+// CheckLogin validates session with secret store
+func (c *ClusterManager) CheckLogin() error {
 	return nil
 }
 
-//SetSecret sets secret key against data
-func (c *ClusterManager) SetSecret(key string, value string) error {
+// Set stores the given value/data against the key
+func (c *ClusterManager) Set(key string, value interface{}) error {
 	return nil
 }
 
-// GetSecret retrieves the data for the given feature and key
-func (c *ClusterManager) GetSecret(key string) (string, error) {
+// Get retrieves the data for the given key
+func (c *ClusterManager) Get(string) (interface{}, error) {
 	return "", nil
+}
+
+// GetDefaultSecretKey return cluster wide secret key
+func (c *ClusterManager) GetDefaultSecretKey() (interface{}, error) {
+	return nil, nil
 }

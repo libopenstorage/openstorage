@@ -29,8 +29,11 @@ type ClusterServerConfiguration struct {
 }
 
 func newClusterAPI(config ClusterServerConfiguration) restServer {
-	return &clusterApi{restBase: restBase{version: cluster.APIVersion,
-		name: "Cluster API"},
+	return &clusterApi{
+		restBase: restBase{
+			version: cluster.APIVersion,
+			name:    "Cluster API",
+		},
 		SecretManager: config.ConfigSecretManager,
 	}
 }
@@ -693,6 +696,10 @@ func (c *clusterApi) sendNotImplemented(w http.ResponseWriter, method string) {
 
 func clusterVersion(route, version string) string {
 	return "/" + version + "/" + route
+}
+
+func clusterSecretPath(route, version string) string {
+	return clusterPath("/secrets"+route, version)
 }
 
 func clusterPath(route, version string) string {

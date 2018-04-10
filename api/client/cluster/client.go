@@ -13,6 +13,7 @@ import (
 
 const (
 	clusterPath     = "/cluster"
+	secretPath      = "/secrets"
 	loggingurl      = "/loggingurl"
 	managementurl   = "/managementurl"
 	fluentdhost     = "/fluentdconfig"
@@ -194,15 +195,13 @@ func (c *clusterClient) EraseAlert(resource api.ResourceType, alertID int64) err
 	return nil
 }
 
-func (c *clusterClient) SetClusterSecretKey(secretKey string, override bool) error {
-	request := c.c.Post().Resource("/setclustersecretkey")
-	request.QueryOption(secrets.ClusterSecretKey, secretKey)
-
-	stOverride := "false"
-	if override {
-		stOverride = "true"
+func (c *ClusterClient) SetDefaultSecretKey(secretKey string, override bool) error {
+	reqBody := &secrets.DefaultSecretKeyRequest{
+		DefaultSecretKey: secretKey,
+		Override:         override,
 	}
-	request.QueryOption(secrets.OverrideSecrets, stOverride)
+	path := clusterPath + secretPath + "/defaultsecretkey"
+	request := c.c.Put().Resource(path).Body(reqBody)
 	resp := request.Do()
 	if resp.Error() != nil {
 		return resp.FormatError()
@@ -210,22 +209,35 @@ func (c *clusterClient) SetClusterSecretKey(secretKey string, override bool) err
 	return nil
 }
 
-func (c *clusterClient) SetSecret(secretID string, secretValue string) error {
-	request := c.c.Put().Resource("/setsecret")
+func (c *ClusterClient) GetDefaultSecretKey() (interface{}, error) {
+	var defaultKeyResp interface{}
+	path := clusterPath + secretPath + "/defaultsecretkey"
+	request := c.c.Get().Resource(path)
+	err := request.Do().Unmarshal(defaultKeyResp)
+	if err != nil {
+		return defaultKeyResp, err
+	}
+	return defaultKeyResp, nil
+}
+
+func (c *ClusterClient) Set(secretID string, secretValue interface{}) error {
+	reqBody := &secrets.SetSecretRequest{
+		SecretValue: secretValue,
+	}
+	path := clusterPath + secretPath
+	request := c.c.Put().Resource(path).Body(reqBody)
 	request.QueryOption(secrets.SecretKey, secretID)
-	request.QueryOption(secrets.SecretValue, secretValue)
-
 	resp := request.Do()
-
 	if resp.Error() != nil {
 		return resp.FormatError()
 	}
 	return nil
 }
 
-func (c *clusterClient) GetSecret(secretID string) (string, error) {
-	var secResp string
-	request := c.c.Get().Resource("/getsecret")
+func (c *ClusterClient) Get(secretID string) (interface{}, error) {
+	var secResp interface{}
+	path := clusterPath + secretPath
+	request := c.c.Get().Resource(path)
 	request.QueryOption(secrets.SecretKey, secretID)
 	if err := request.Do().Unmarshal(&secResp); err != nil {
 		return secResp, err
@@ -233,26 +245,25 @@ func (c *clusterClient) GetSecret(secretID string) (string, error) {
 	return secResp, nil
 }
 
-//Check whether session is still authenticated
-func (c *clusterClient) CheckSecretLogin() error {
-	request := c.c.Get().Resource("/checksecretlogin")
-	//should we expect error if not authenticated
-	//find better way to do it
-	if err := request.Do(); err != nil {
-		return err.FormatError()
+// Check whether session is still authenticated
+func (c *ClusterClient) CheckLogin() error {
+	var loginResp secrets.SecretResponse
+	path := clusterPath + secretPath + "/verify"
+	request := c.c.Get().Resource(path)
+	if err := request.Do().Unmarshal(&loginResp); err != nil {
+		return err
 	}
 	return nil
 }
 
-func (c *clusterClient) SecretLogin(secret int, secretConfig map[string]string) error {
+func (c *ClusterClient) Login(secretType string, secretConfig map[string]string) error {
 	reqBody := &secrets.SecretLoginRequest{
+		SecretType:   secretType,
 		SecretConfig: secretConfig,
 	}
-	request := c.c.Post().Resource("/secretslogin").Body(reqBody)
-	request.QueryOption(secrets.SecretType, string(secret))
-
+	path := clusterPath + secretPath + "/login"
+	request := c.c.Post().Resource(path).Body(reqBody)
 	resp := request.Do()
-
 	if resp.Error() != nil {
 		return resp.FormatError()
 	}

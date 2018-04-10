@@ -11,7 +11,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/libopenstorage/openstorage/secrets"
-	"github.com/libopenstorage/openstorage/secrets/fake"
 )
 
 // Route is a specification and  handler for a REST endpoint.
@@ -119,8 +118,9 @@ func StartClusterApiWithConfiguration(
 	clusterPort uint16,
 ) error {
 
-	// newClusterAPI now must take a ClusterServerConfiguration. This makes it so that it does not have
-	// to create the fake server by default. The caller is the one who creates the manager and passes it in.
+	// newClusterAPI now must take a ClusterServerConfiguration.
+	// This makes it so that it does not have to create the fake server by default.
+	// The caller is the one who creates the manager and passes it in.
 	//
 	// newClusterAPI now calls RegisterManager according to the config.
 	clusterApi := newClusterAPI(config)
@@ -136,15 +136,19 @@ func StartClusterApiWithConfiguration(
 // StartClusterAPI starts a REST server to receive driver configuration commands
 // from the CLI/UX to control the OSD cluster.
 func StartClusterAPI(clusterApiBase string, clusterPort uint16) error {
-	return StartClusterApiWithConfiguration(ClusterServerConfiguration{
-		ConfigSecretManager: secrets.NewSecretManager(fake.New()),
-	}, clusterApiBase, clusterPort)
+	return StartClusterApiWithConfiguration(
+		ClusterServerConfiguration{
+			ConfigSecretManager: secrets.NewSecretManager(secrets.New()),
+		},
+		clusterApiBase,
+		clusterPort,
+	)
 }
 
 //old version compatible
 func GetClusterAPIRoutes() []*Route {
 	return GetClusterAPIRoutesWithConfiguration(ClusterServerConfiguration{
-		ConfigSecretManager: secrets.NewSecretManager(fake.New())})
+		ConfigSecretManager: secrets.NewSecretManager(secrets.New())})
 }
 
 func GetClusterAPIRoutesWithConfiguration(config ClusterServerConfiguration) []*Route {

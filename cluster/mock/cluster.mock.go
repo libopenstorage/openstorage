@@ -48,16 +48,16 @@ func (mr *MockClusterMockRecorder) AddEventListener(arg0 interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddEventListener", reflect.TypeOf((*MockCluster)(nil).AddEventListener), arg0)
 }
 
-// CheckSecretLogin mocks base method
-func (m *MockCluster) CheckSecretLogin() error {
-	ret := m.ctrl.Call(m, "CheckSecretLogin")
+// CheckLogin mocks base method
+func (m *MockCluster) CheckLogin() error {
+	ret := m.ctrl.Call(m, "CheckLogin")
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// CheckSecretLogin indicates an expected call of CheckSecretLogin
-func (mr *MockClusterMockRecorder) CheckSecretLogin() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckSecretLogin", reflect.TypeOf((*MockCluster)(nil).CheckSecretLogin))
+// CheckLogin indicates an expected call of CheckLogin
+func (mr *MockClusterMockRecorder) CheckLogin() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckLogin", reflect.TypeOf((*MockCluster)(nil).CheckLogin))
 }
 
 // ClearAlert mocks base method
@@ -159,6 +159,19 @@ func (mr *MockClusterMockRecorder) EraseAlert(arg0, arg1 interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EraseAlert", reflect.TypeOf((*MockCluster)(nil).EraseAlert), arg0, arg1)
 }
 
+// Get mocks base method
+func (m *MockCluster) Get(arg0 string) (interface{}, error) {
+	ret := m.ctrl.Call(m, "Get", arg0)
+	ret0, _ := ret[0].(interface{})
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get
+func (mr *MockClusterMockRecorder) Get(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockCluster)(nil).Get), arg0)
+}
+
 // GetClusterConf mocks base method
 func (m *MockCluster) GetClusterConf() (*osdconfig.ClusterConfig, error) {
 	ret := m.ctrl.Call(m, "GetClusterConf")
@@ -183,6 +196,19 @@ func (m *MockCluster) GetData() (map[string]*api.Node, error) {
 // GetData indicates an expected call of GetData
 func (mr *MockClusterMockRecorder) GetData() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetData", reflect.TypeOf((*MockCluster)(nil).GetData))
+}
+
+// GetDefaultSecretKey mocks base method
+func (m *MockCluster) GetDefaultSecretKey() (interface{}, error) {
+	ret := m.ctrl.Call(m, "GetDefaultSecretKey")
+	ret0, _ := ret[0].(interface{})
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDefaultSecretKey indicates an expected call of GetDefaultSecretKey
+func (mr *MockClusterMockRecorder) GetDefaultSecretKey() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDefaultSecretKey", reflect.TypeOf((*MockCluster)(nil).GetDefaultSecretKey))
 }
 
 // GetGossipState mocks base method
@@ -223,19 +249,6 @@ func (mr *MockClusterMockRecorder) GetNodeIdFromIp(arg0 interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodeIdFromIp", reflect.TypeOf((*MockCluster)(nil).GetNodeIdFromIp), arg0)
 }
 
-// GetSecret mocks base method
-func (m *MockCluster) GetSecret(arg0 string) (string, error) {
-	ret := m.ctrl.Call(m, "GetSecret", arg0)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetSecret indicates an expected call of GetSecret
-func (mr *MockClusterMockRecorder) GetSecret(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSecret", reflect.TypeOf((*MockCluster)(nil).GetSecret), arg0)
-}
-
 // Inspect mocks base method
 func (m *MockCluster) Inspect(arg0 string) (api.Node, error) {
 	ret := m.ctrl.Call(m, "Inspect", arg0)
@@ -247,6 +260,18 @@ func (m *MockCluster) Inspect(arg0 string) (api.Node, error) {
 // Inspect indicates an expected call of Inspect
 func (mr *MockClusterMockRecorder) Inspect(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Inspect", reflect.TypeOf((*MockCluster)(nil).Inspect), arg0)
+}
+
+// Login mocks base method
+func (m *MockCluster) Login(arg0 string, arg1 map[string]string) error {
+	ret := m.ctrl.Call(m, "Login", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Login indicates an expected call of Login
+func (mr *MockClusterMockRecorder) Login(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockCluster)(nil).Login), arg0, arg1)
 }
 
 // NodeRemoveDone mocks base method
@@ -297,16 +322,16 @@ func (mr *MockClusterMockRecorder) Remove(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Remove", reflect.TypeOf((*MockCluster)(nil).Remove), arg0, arg1)
 }
 
-// SecretLogin mocks base method
-func (m *MockCluster) SecretLogin(arg0 int, arg1 map[string]string) error {
-	ret := m.ctrl.Call(m, "SecretLogin", arg0, arg1)
+// Set mocks base method
+func (m *MockCluster) Set(arg0 string, arg1 interface{}) error {
+	ret := m.ctrl.Call(m, "Set", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// SecretLogin indicates an expected call of SecretLogin
-func (mr *MockClusterMockRecorder) SecretLogin(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SecretLogin", reflect.TypeOf((*MockCluster)(nil).SecretLogin), arg0, arg1)
+// Set indicates an expected call of Set
+func (mr *MockClusterMockRecorder) Set(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockCluster)(nil).Set), arg0, arg1)
 }
 
 // SetClusterConf mocks base method
@@ -321,16 +346,16 @@ func (mr *MockClusterMockRecorder) SetClusterConf(arg0 interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetClusterConf", reflect.TypeOf((*MockCluster)(nil).SetClusterConf), arg0)
 }
 
-// SetClusterSecretKey mocks base method
-func (m *MockCluster) SetClusterSecretKey(arg0 string, arg1 bool) error {
-	ret := m.ctrl.Call(m, "SetClusterSecretKey", arg0, arg1)
+// SetDefaultSecretKey mocks base method
+func (m *MockCluster) SetDefaultSecretKey(arg0 string, arg1 bool) error {
+	ret := m.ctrl.Call(m, "SetDefaultSecretKey", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// SetClusterSecretKey indicates an expected call of SetClusterSecretKey
-func (mr *MockClusterMockRecorder) SetClusterSecretKey(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetClusterSecretKey", reflect.TypeOf((*MockCluster)(nil).SetClusterSecretKey), arg0, arg1)
+// SetDefaultSecretKey indicates an expected call of SetDefaultSecretKey
+func (mr *MockClusterMockRecorder) SetDefaultSecretKey(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDefaultSecretKey", reflect.TypeOf((*MockCluster)(nil).SetDefaultSecretKey), arg0, arg1)
 }
 
 // SetNodeConf mocks base method
@@ -343,18 +368,6 @@ func (m *MockCluster) SetNodeConf(arg0 *osdconfig.NodeConfig) error {
 // SetNodeConf indicates an expected call of SetNodeConf
 func (mr *MockClusterMockRecorder) SetNodeConf(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetNodeConf", reflect.TypeOf((*MockCluster)(nil).SetNodeConf), arg0)
-}
-
-// SetSecret mocks base method
-func (m *MockCluster) SetSecret(arg0, arg1 string) error {
-	ret := m.ctrl.Call(m, "SetSecret", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetSecret indicates an expected call of SetSecret
-func (mr *MockClusterMockRecorder) SetSecret(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSecret", reflect.TypeOf((*MockCluster)(nil).SetSecret), arg0, arg1)
 }
 
 // SetSize mocks base method
