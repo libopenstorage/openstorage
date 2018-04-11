@@ -294,8 +294,8 @@ message VolumeSpec {
   bool cascaded = 24;
   // Journal is true if data for the volume goes into the journal.
   bool journal = 25;
-  // Sharedv4 is true if this volume can be accessed via sharedv4.
-  bool sharedv4 = 26;
+  // Nfs is true if this volume can be accessed via nfs.
+  bool nfs = 26;
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
@@ -359,6 +359,8 @@ message Volume {
   repeated RuntimeStateMap runtime_state = 20;
   // Error is the Last recorded error.
   string error = 21;
+  // VolumeConsumers are entities that consume this volume
+  repeated VolumeConsumer volume_consumers = 22;
 }
 
 // Stats is a structure that represents last collected stats for a volume
@@ -520,6 +522,30 @@ message VolumeInfo {
   string volume_id = 1;
   string path = 2;
   VolumeSpec storage = 3;
+}
+
+// VolumeConsumer identifies a consumer for a Volume. An example of a VolumeConsumer
+// would be a Pod in Kubernetes who has mounted the PersistentVolumeClaim for the
+// Volume
+// swagger: model
+message VolumeConsumer {
+  // Name is the name of the volume consumer
+  string name = 1;
+  // Namespace is the namespace of the volume consumer
+  string namespace = 2;
+  // Type is the type of the consumer. E.g a Kubernetes pod
+  string type = 3;
+  // NodeID is the identifier of the node on which the consumer is running. This
+  // identifier would be from the perspective of the container runtime or
+  // orchestrator under which the volume consumer resides. For example, NodeID
+  //  can be name of a minion in Kubernetes.
+  string node_id = 4;
+  // OwnerName is the name of the entity who owns this volume consumer
+  string owner_name = 5;
+  // OwnerType is the type of the entity who owns this volume consumer. The type would
+  // be from the perspective of the container runtime or the orchestrator under which
+  // the volume consumer resides. For e.g OwnerType can be a Deployment in Kubernetes.
+  string owner_type = 6;
 }
 
 // GraphDriverChanges represent a list of changes between the filesystem layers
