@@ -389,6 +389,8 @@ func (m *Mounter) Mount(
 	// Try to find the mountpoint. If it already exists, do nothing
 	for _, p := range info.Mountpoint {
 		if p.Path == path {
+			logrus.Warnf("%q mountpoint for device %q already exists",
+				device, path)
 			return nil
 		}
 	}
@@ -441,6 +443,8 @@ func (m *Mounter) Unmount(
 	info, ok := m.mounts[device]
 	if !ok {
 		m.Unlock()
+		logrus.Warnf("Unable to unmount device %q path %q: %v",
+			devPath, path, ErrEnoent.Error())
 		return ErrEnoent
 	}
 	m.Unlock()
