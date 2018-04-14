@@ -171,6 +171,25 @@ type ClusterState struct {
 
 // ClusterData interface provides apis to handle data of the cluster
 type ClusterData interface {
+	ClusterServerData
+	ClusterClientData
+}
+
+// ClusterServerData interface provides non-exported apis to handle data of the cluster
+type ClusterServerData interface {
+	// UpdateData updates node data associated with this node
+	UpdateData(nodeData map[string]interface{}) error
+
+	// UpdateLabels updates node labels associated with this node
+	UpdateLabels(nodeLabels map[string]string) error
+
+	// GetData get sdata associated with all nodes.
+	// Key is the node id
+	GetData() (map[string]*api.Node, error)
+}
+
+// ClusterClientData interface provides exported apis to handle data of the cluster
+type ClusterClientData interface {
 	// GetNodeIdFromIp returns a Node Id given an IP.
 	GetNodeIdFromIp(idIp string) (string, error)
 
@@ -199,6 +218,24 @@ type ClusterStatus interface {
 	PeerStatus(listenerName string) (map[string]api.Status, error)
 }
 
+// ClusterRemove interface provides apis for removing nodes from a cluster
+type ClusterRemove interface {
+	ClusterClientRemove
+	ClusterServerRemove
+}
+
+// ClusterClientRemove interface provides exported apis for removing nodes from a cluster
+type ClusterClientRemove interface {
+	// Remove node(s) from the cluster permanently.
+	Remove(nodes []api.Node, forceRemove bool) error
+}
+
+// ClusterServerRemove interface provides non-exported apis for removing nodes from a cluster
+type ClusterServerRemove interface {
+	// NodeRemoveDone notify cluster manager NodeRemove is done.
+	NodeRemoveDone(nodeID string, result error)
+}
+
 type ClusterAlerts interface {
 	// Enumerate enumerates alerts on this cluster for the given resource
 	// within a specific time range.
@@ -221,12 +258,10 @@ type ClusterClient interface {
 	// SetSize sets the maximum number of nodes in a cluster.
 	SetSize(size int) error
 
-	// Remove node(s) from the cluster permanently.
-	Remove(nodes []api.Node, forceRemove bool) error
-
 	ClusterStatus
 	ClusterAlerts
-	ClusterData
+	ClusterClientData
+	ClusterClientRemove
 
 	// This may be removed from being exposed over REST: See #383
 	osdconfig.ConfigCaller
@@ -246,20 +281,9 @@ type Cluster interface {
 	// to have been in an already-initialized state.
 	Start(clusterSize int, nodeInitialized bool, gossipPort string) error
 
-	// NodeRemoveDone notify cluster manager NodeRemove is done.
-	NodeRemoveDone(nodeID string, result error)
-
-	// UpdateData updates node data associated with this node
-	UpdateData(nodeData map[string]interface{}) error
-
-	// UpdateLabels updates node labels associated with this node
-	UpdateLabels(nodeLabels map[string]string) error
-
-	// GetData get sdata associated with all nodes.
-	// Key is the node id
-	GetData() (map[string]*api.Node, error)
-
 	ClusterClient
+	ClusterServerRemove
+	ClusterServerData
 }
 
 // ClusterNotify is the callback function listeners can use to notify cluster manager
