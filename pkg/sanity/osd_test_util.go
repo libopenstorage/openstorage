@@ -36,7 +36,7 @@ const (
 )
 
 func testIfVolumeCreatedSuccessfully(
-	volumedriver volume.VolumeDriver,
+	volumedriver volume.VolumeClient,
 	volumeID string,
 	numVolumesBefore int,
 	vr *api.VolumeCreateRequest) {

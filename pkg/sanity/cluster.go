@@ -123,7 +123,7 @@ var _ = Describe("Cluster [Cluster Tests]", func() {
 			err              error
 			volumeID         string
 			numVolumesBefore int
-			volumedriver     volume.VolumeDriver
+			volumedriver     volume.VolumeClient
 			restClient       *client.Client
 		)
 
