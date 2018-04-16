@@ -294,8 +294,8 @@ message VolumeSpec {
   bool cascaded = 24;
   // Journal is true if data for the volume goes into the journal.
   bool journal = 25;
-  // Nfs is true if this volume can be accessed via nfs.
-  bool nfs = 26;
+  // Sharedv4 is true if this volume can be accessed via sharedv4.
+  bool sharedv4 = 26;
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
