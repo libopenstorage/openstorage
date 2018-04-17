@@ -579,3 +579,26 @@ message ActiveRequests {
   int64 RequestCount = 1;
   repeated ActiveRequest ActiveRequest = 2;
 }
+
+// GroupSnapCreateRequest specifies a request to create a snapshot of given group.
+// swagger:parameters snapVolumeGroup
+message GroupSnapCreateRequest {
+  // group id
+  string id = 1;
+  map<string, string> Labels = 2;
+}
+
+// GroupSnapCreateRequest specifies a response that get's returned when creating a group snapshot.
+// swagger:response groupSnapCreateResponse
+message GroupSnapCreateResponse {
+  // Created snapshots
+  //
+  // in: body
+  // Required: true
+  repeated SnapCreateResponse snapshots = 1;
+  // Error message
+  //
+  // in: body
+  // Required: true
+  string error = 2;
+}
