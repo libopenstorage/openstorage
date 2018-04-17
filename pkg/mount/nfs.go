@@ -97,7 +97,7 @@ MountLoop:
 	for _, v := range info {
 		host := "localhost"
 		if len(m.servers) != 0 {
-			if v.Fstype != "nfs" {
+			if !strings.HasPrefix(v.Fstype, "nfs") {
 				continue
 			}
 			matches := re.FindStringSubmatch(v.VfsOpts)

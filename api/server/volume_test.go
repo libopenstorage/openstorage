@@ -145,7 +145,7 @@ func TestVolumeCreateGetNodeIdFromIpFailed(t *testing.T) {
 	res, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.NotNil(t, err)
 	assert.EqualValues(t, "", res)
-	assert.Contains(t, err.Error(), "error 400")
+	assert.Contains(t, err.Error(), "Failed to locate IP")
 }
 
 func TestVolumeDeleteSuccess(t *testing.T) {
