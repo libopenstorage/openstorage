@@ -936,6 +936,48 @@ func (vd *volAPI) unquiesce(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(volumeResponse)
 }
 
+// swagger:operation POST /osd-snapshots/groupsnap volumegroup snapVolumeGroup
+//
+// Take a snapshot of volumegroup
+//
+// ---
+// produces:
+// - application/json
+// parameters:
+// - name: groupspec
+//   in: body
+//   description: GroupSnap create request
+//   required: true
+//   schema:
+//    "$ref": "#/definitions/GroupSnapCreateRequest"
+// responses:
+//   '200':
+//     description: group snap create response
+//     schema:
+//      "$ref": "#/definitions/GroupSnapCreateResponse"
+//   default:
+//     description: unexpected error
+//     schema:
+//      "$ref": "#/definitions/GroupSnapCreateResponse"
+func (vd *volAPI) snapGroup(w http.ResponseWriter, r *http.Request) {
+	var snapReq api.GroupSnapCreateRequest
+	var snapRes *api.GroupSnapCreateResponse
+	method := "snapGroup"
+
+	if err := json.NewDecoder(r.Body).Decode(&snapReq); err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	d, err := vd.getVolDriver(r)
+	if err != nil {
+		notFound(w, r)
+		return
+	}
+
+	snapRes, _ = d.SnapshotGroup(snapReq.Id, snapReq.Labels)
+	json.NewEncoder(w).Encode(&snapRes)
+}
+
 // swagger:operation GET /osd-volumes/versions volume listVersions
 //
 // Lists API versions supported by this volumeDriver.
@@ -1001,6 +1043,7 @@ func (vd *volAPI) Routes() []*Route {
 		{verb: "POST", path: snapPath("", volume.APIVersion), fn: vd.snap},
 		{verb: "GET", path: snapPath("", volume.APIVersion), fn: vd.snapEnumerate},
 		{verb: "POST", path: snapPath("/restore/{id}", volume.APIVersion), fn: vd.restore},
+		{verb: "POST", path: snapPath("/snapshotgroup", volume.APIVersion), fn: vd.snapGroup},
 		{verb: "GET", path: credsPath("", volume.APIVersion), fn: vd.credsEnumerate},
 		{verb: "POST", path: credsPath("", volume.APIVersion), fn: vd.credsCreate},
 		{verb: "DELETE", path: credsPath("/{uuid}", volume.APIVersion), fn: vd.credsDelete},

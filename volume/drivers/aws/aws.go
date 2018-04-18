@@ -360,6 +360,10 @@ func (d *Driver) Restore(volumeID string, snapID string) error {
 	return volume.ErrNotSupported
 }
 
+func (d *Driver) SnapshotGroup(groupID string, labels map[string]string) (*api.GroupSnapCreateResponse, error) {
+	return nil, volume.ErrNotSupported
+}
+
 func (d *Driver) Attach(
 	volumeID string,
 	attachOptions map[string]string,

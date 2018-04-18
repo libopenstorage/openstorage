@@ -229,6 +229,11 @@ func (d *driver) Restore(volumeID string, snapID string) error {
 	return volume.ErrNotSupported
 }
 
+func (d *driver) SnapshotGroup(groupID string, labels map[string]string) (*api.GroupSnapCreateResponse, error) {
+
+	return nil, volume.ErrNotSupported
+}
+
 func (d *driver) Status() [][2]string {
 	return [][2]string{}
 }
