@@ -668,7 +668,7 @@ func (v *volumeClient) SnapshotGroup(groupID string, labels map[string]string) (
 		Labels: labels,
 	}
 
-	req := v.c.Post().Resource(snapPath + "/groupsnap").Body(request)
+	req := v.c.Post().Resource(snapPath + "/snapshotgroup").Body(request)
 	res := req.Do()
 	if res.Error() != nil {
 		return nil, res.FormatError()
