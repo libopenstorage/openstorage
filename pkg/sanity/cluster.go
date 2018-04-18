@@ -34,7 +34,7 @@ import (
 var _ = Describe("Cluster [Cluster Tests]", func() {
 	var (
 		restClient *client.Client
-		manager    cluster.Cluster
+		manager    cluster.ClusterClient
 	)
 
 	BeforeEach(func() {

@@ -18,20 +18,21 @@ const (
 	tunnelconfigurl = "/tunnelconfig"
 )
 
-type clusterClient struct {
+// Interface check
+var _ cluster.ClusterClient = &ClusterClient{}
+
+// ClusterClient a REST of implementation of cluster.ClusterClient
+type ClusterClient struct {
 	c *client.Client
 }
 
-func newClusterClient(c *client.Client) cluster.Cluster {
-	return &clusterClient{c: c}
+// New returns a golang client to an OpenStorage REST server
+func New(c *client.Client) *ClusterClient {
+	return &ClusterClient{c: c}
 }
 
-// String description of this driver.
-func (c *clusterClient) Name() string {
-	return "ClusterManager"
-}
-
-func (c *clusterClient) Enumerate() (api.Cluster, error) {
+// Enumerate returns information about the cluster and its nodes
+func (c *ClusterClient) Enumerate() (api.Cluster, error) {
 	clusterInfo := api.Cluster{}
 
 	if err := c.c.Get().Resource(clusterPath + "/enumerate").Do().Unmarshal(&clusterInfo); err != nil {
@@ -40,7 +41,8 @@ func (c *clusterClient) Enumerate() (api.Cluster, error) {
 	return clusterInfo, nil
 }
 
-func (c *clusterClient) SetSize(size int) error {
+// SetSize sets the maximum number of nodes in a cluster.
+func (c *ClusterClient) SetSize(size int) error {
 	resp := api.ClusterResponse{}
 
 	request := c.c.Get().Resource(clusterPath + "/setsize")
@@ -56,7 +58,8 @@ func (c *clusterClient) SetSize(size int) error {
 	return nil
 }
 
-func (c *clusterClient) Inspect(nodeID string) (api.Node, error) {
+// Inspect the node given a UUID
+func (c *ClusterClient) Inspect(nodeID string) (api.Node, error) {
 	var resp api.Node
 	request := c.c.Get().Resource(clusterPath + "/inspect/" + nodeID)
 	if err := request.Do().Unmarshal(&resp); err != nil {
@@ -65,23 +68,8 @@ func (c *clusterClient) Inspect(nodeID string) (api.Node, error) {
 	return resp, nil
 }
 
-func (c *clusterClient) AddEventListener(cluster.ClusterListener) error {
-	return nil
-}
-
-func (c *clusterClient) UpdateData(nodeData map[string]interface{}) error {
-	return nil
-}
-
-func (c *clusterClient) UpdateLabels(nodeLabels map[string]string) error {
-	return nil
-}
-
-func (c *clusterClient) GetData() (map[string]*api.Node, error) {
-	return nil, nil
-}
-
-func (c *clusterClient) GetNodeIdFromIp(idIp string) (string, error) {
+// GetNodeIdFromIp returns a Node Id given an IP.
+func (c *ClusterClient) GetNodeIdFromIp(idIp string) (string, error) {
 	var resp string
 	request := c.c.Get().Resource(clusterPath + "/getnodeidfromip/" + idIp)
 	if err := request.Do().Unmarshal(&resp); err != nil {
@@ -90,7 +78,12 @@ func (c *clusterClient) GetNodeIdFromIp(idIp string) (string, error) {
 	return resp, nil
 }
 
-func (c *clusterClient) NodeStatus() (api.Status, error) {
+// NodeStatus returns the status of THIS node as seen by the Cluster Provider
+// for a given listener. If listenerName is empty it returns the status of
+// THIS node maintained by the Cluster Provider.
+// At any time the status of the Cluster Provider takes precedence over
+// the status of listener. Precedence is determined by the severity of the status.
+func (c *ClusterClient) NodeStatus() (api.Status, error) {
 	var resp api.Status
 	request := c.c.Get().Resource(clusterPath + "/nodestatus")
 	if err := request.Do().Unmarshal(&resp); err != nil {
@@ -99,7 +92,10 @@ func (c *clusterClient) NodeStatus() (api.Status, error) {
 	return resp, nil
 }
 
-func (c *clusterClient) PeerStatus(listenerName string) (map[string]api.Status, error) {
+// PeerStatus returns the statuses of all peer nodes as seen by the
+// Cluster Provider for a given listener. If listenerName is empty is returns the
+// statuses of all peer nodes as maintained by the ClusterProvider (gossip)
+func (c *ClusterClient) PeerStatus(listenerName string) (map[string]api.Status, error) {
 	var resp map[string]api.Status
 	request := c.c.Get().Resource(clusterPath + "/peerstatus")
 	request.QueryOption("name", listenerName)
@@ -109,7 +105,8 @@ func (c *clusterClient) PeerStatus(listenerName string) (map[string]api.Status, 
 	return resp, nil
 }
 
-func (c *clusterClient) Remove(nodes []api.Node, forceRemove bool) error {
+// Remove node(s) from the cluster permanently.
+func (c *ClusterClient) Remove(nodes []api.Node, forceRemove bool) error {
 	resp := api.ClusterResponse{}
 
 	request := c.c.Delete().Resource(clusterPath + "/")
@@ -130,28 +127,20 @@ func (c *clusterClient) Remove(nodes []api.Node, forceRemove bool) error {
 	return nil
 }
 
-func (c *clusterClient) NodeRemoveDone(nodeID string, result error) {
-}
-
-func (c *clusterClient) Shutdown() error {
-	return nil
-}
-
-func (c *clusterClient) Start(int, bool, string) error {
-	return nil
-}
-
-func (c *clusterClient) DisableUpdates() error {
+// DisableUpdates disables cluster data updates to be sent to listeners
+func (c *ClusterClient) DisableUpdates() error {
 	c.c.Put().Resource(clusterPath + "/disablegossip").Do()
 	return nil
 }
 
-func (c *clusterClient) EnableUpdates() error {
+// EnableUpdates cluster data updates to be sent to listeners
+func (c *ClusterClient) EnableUpdates() error {
 	c.c.Put().Resource(clusterPath + "/enablegossip").Do()
 	return nil
 }
 
-func (c *clusterClient) GetGossipState() *cluster.ClusterState {
+// GetGossipState returns the state of nodes according to gossip
+func (c *ClusterClient) GetGossipState() *cluster.ClusterState {
 	var status *cluster.ClusterState
 
 	if err := c.c.Get().Resource(clusterPath + "/gossipstate").Do().Unmarshal(&status); err != nil {
@@ -160,7 +149,8 @@ func (c *clusterClient) GetGossipState() *cluster.ClusterState {
 	return status
 }
 
-func (c *clusterClient) EnumerateAlerts(ts, te time.Time, resource api.ResourceType) (*api.Alerts, error) {
+// EnumerateAlerts enumerates alerts on this cluster for the given resource within a specific time range.
+func (c *ClusterClient) EnumerateAlerts(ts, te time.Time, resource api.ResourceType) (*api.Alerts, error) {
 	a := api.Alerts{}
 	request := c.c.Get().Resource(clusterPath + "/alerts/" + strconv.FormatInt(int64(resource), 10))
 	if !te.IsZero() {
@@ -173,7 +163,8 @@ func (c *clusterClient) EnumerateAlerts(ts, te time.Time, resource api.ResourceT
 	return &a, nil
 }
 
-func (c *clusterClient) ClearAlert(resource api.ResourceType, alertID int64) error {
+// ClearAlert clears an alert for the given resource
+func (c *ClusterClient) ClearAlert(resource api.ResourceType, alertID int64) error {
 	path := clusterPath + "/alerts/" + strconv.FormatInt(int64(resource), 10) + "/" + strconv.FormatInt(alertID, 10)
 	request := c.c.Put().Resource(path)
 	resp := request.Do()
@@ -183,7 +174,8 @@ func (c *clusterClient) ClearAlert(resource api.ResourceType, alertID int64) err
 	return nil
 }
 
-func (c *clusterClient) EraseAlert(resource api.ResourceType, alertID int64) error {
+// EraseAlert erases an alert for the given resource
+func (c *ClusterClient) EraseAlert(resource api.ResourceType, alertID int64) error {
 	path := clusterPath + "/alerts/" + strconv.FormatInt(int64(resource), 10) + "/" + strconv.FormatInt(alertID, 10)
 	request := c.c.Delete().Resource(path)
 	resp := request.Do()
