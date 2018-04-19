@@ -34,7 +34,7 @@ import (
 var _ = Describe("Volume [Volume Tests]", func() {
 	var (
 		restClient   *client.Client
-		volumedriver volume.VolumeClient
+		volumedriver volume.VolumeDriver
 	)
 
 	BeforeEach(func() {

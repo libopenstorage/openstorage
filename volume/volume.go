@@ -84,18 +84,6 @@ type VolumeDriver interface {
 	Enumerator
 }
 
-// VolumeClient contains the exported functions to external clients.
-type VolumeClient interface {
-	StatsDriver
-	BlockDriver
-	Enumerator
-	SnapshotDriver
-	QuiesceDriver
-	CredsDriver
-	CloudBackupDriver
-	ProtoDriverClient
-}
-
 // IODriver interfaces applicable to object store interfaces.
 type IODriver interface {
 	// Read sz bytes from specified volume at specified offset.
@@ -172,23 +160,18 @@ type CloudBackupDriver interface {
 	CloudBackupSchedEnumerate() (*api.CloudBackupSchedEnumerateResponse, error)
 }
 
-// ProtoDriverServer contains the non-exported functions
-type ProtoDriverServer interface {
+// ProtoDriver must be implemented by all volume drivers.  It specifies the
+// most basic functionality, such as creating and deleting volumes.
+type ProtoDriver interface {
+	SnapshotDriver
+	StatsDriver
+	QuiesceDriver
+	CredsDriver
+	CloudBackupDriver
 	// Name returns the name of the driver.
 	Name() string
 	// Type of this driver
 	Type() api.DriverType
-	// MountedAt return volume mounted at specified mountpath.
-	MountedAt(mountPath string) string
-	// Status returns a set of key-value pairs which give low
-	// level diagnostic status about this driver.
-	Status() [][2]string
-	// Shutdown and cleanup.
-	Shutdown()
-}
-
-// ProtoDriverClient contains the interfaces to functions which are exported to clients
-type ProtoDriverClient interface {
 	// Create a new Vol for the specific volume spec.
 	// It returns a system generated VolumeID that uniquely identifies the volume
 	Create(locator *api.VolumeLocator, Source *api.Source, spec *api.VolumeSpec) (string, error)
@@ -198,24 +181,19 @@ type ProtoDriverClient interface {
 	// Mount volume at specified path
 	// Errors ErrEnoEnt, ErrVolDetached may be returned.
 	Mount(volumeID string, mountPath string, options map[string]string) error
+	// MountedAt return volume mounted at specified mountpath.
+	MountedAt(mountPath string) string
 	// Unmount volume at specified path
 	// Errors ErrEnoEnt, ErrVolDetached may be returned.
 	Unmount(volumeID string, mountPath string, options map[string]string) error
 	// Update not all fields of the spec are supported, ErrNotSupported will be thrown for unsupported
 	// updates.
 	Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error
-}
-
-// ProtoDriver must be implemented by all volume drivers.  It specifies the
-// most basic functionality, such as creating and deleting volumes.
-type ProtoDriver interface {
-	SnapshotDriver
-	StatsDriver
-	QuiesceDriver
-	CredsDriver
-	CloudBackupDriver
-	ProtoDriverClient
-	ProtoDriverServer
+	// Status returns a set of key-value pairs which give low
+	// level diagnostic status about this driver.
+	Status() [][2]string
+	// Shutdown and cleanup.
+	Shutdown()
 }
 
 // Enumerator provides a set of interfaces to get details on a set of volumes.

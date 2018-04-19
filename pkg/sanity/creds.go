@@ -30,7 +30,7 @@ import (
 var _ = Describe("Credentials Tests", func() {
 	var (
 		restClient   *client.Client
-		volumedriver volume.VolumeClient
+		volumedriver volume.VolumeDriver
 		credentials  *api.CredCreateRequest
 	)
 
