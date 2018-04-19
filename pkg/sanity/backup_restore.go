@@ -33,7 +33,7 @@ import (
 var _ = Describe("Volume [Backup Restore Tests]", func() {
 	var (
 		restClient   *client.Client
-		volumedriver volume.VolumeDriver
+		volumedriver volume.VolumeClient
 		credentials  *api.CredCreateRequest
 		credUUID     string
 		credsUUIDMap map[string]string
