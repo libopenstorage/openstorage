@@ -103,11 +103,15 @@ const (
 
 // Api clientserver Constants
 const (
-	OsdVolumePath   = "osd-volumes"
-	OsdSnapshotPath = "osd-snapshot"
-	OsdCredsPath    = "osd-creds"
-	OsdBackupPath   = "osd-backup"
-	TimeLayout      = "Jan 2 15:04:05 UTC 2006"
+	OsdVolumePath        = "osd-volumes"
+	OsdSnapshotPath      = "osd-snapshot"
+	OsdCredsPath         = "osd-creds"
+	OsdBackupPath        = "osd-backup"
+	OsdMigratePath       = "osd-migrate"
+	OsdMigrateStartPath  = OsdMigratePath + "/start"
+	OsdMigrateCancelPath = OsdMigratePath + "/cancel"
+	OsdMigrateStatusPath = OsdMigratePath + "/status"
+	TimeLayout           = "Jan 2 15:04:05 UTC 2006"
 )
 
 const (
@@ -415,6 +419,62 @@ type CloudBackupSchedDeleteRequest struct {
 type CloudBackupSchedEnumerateResponse struct {
 	// Schedule is map of schedule uuid to scheduleInfo
 	Schedules map[string]CloudBackupScheduleInfo
+}
+
+type Operation string
+
+const (
+	MigrateCluster     = Operation("MigrateCluster")
+	MigrateVolume      = Operation("MigrateVolume")
+	MigrateVolumeGroup = Operation("MigrateVolumeGroup")
+)
+
+type MigrateStatus string
+
+const (
+	MigrateStatusQueued       = MigrateStatus("Queued")
+	MigrateStatusInitializing = MigrateStatus("Initializing")
+	MigrateStatusInProgress   = MigrateStatus("InProgress")
+	MigrateStatusFailed       = MigrateStatus("Failed")
+	MigrateStatusComplete     = MigrateStatus("Complete")
+)
+
+type MigrateStage string
+
+const (
+	MigrateStageBackup       = MigrateStage("Backup")
+	MigrateStageRestore      = MigrateStage("Restore")
+	MigrateStageVolumeUpdate = MigrateStage("VolumeUpdate")
+	MigrateStageDone         = MigrateStage("Done")
+)
+
+type CloudMigrateInfo struct {
+	ClusterId       string
+	LocalVolumeId   string
+	LocalVolumeName string
+	RemoteVolumeId  string
+	CloudSnapId     string
+	CurrentStage    MigrateStage
+	Status          MigrateStatus
+	LastUpdate      time.Time
+	LastSuccess     time.Time
+}
+
+type CloudMigrateStartRequest struct {
+	Operation Operation
+	ClusterId string
+	// Depending on Operation type this can be VolumeID or VolumeGroupID
+	TargetId string
+}
+
+type CloudMigrateCancelRequest struct {
+	Operation Operation
+	// Depending on Operation type this can be VolumeID or VolumeGroupID
+	TargetId string
+}
+
+type CloudMigrateStatusResponse struct {
+	Info map[string][]*CloudMigrateInfo
 }
 
 // DriverTypeSimpleValueOf returns the string format of DriverType

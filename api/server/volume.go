@@ -1028,6 +1028,10 @@ func backupPath(route, version string) string {
 	return volVersion(api.OsdBackupPath+route, version)
 }
 
+func migratePath(route, version string) string {
+	return volVersion(route, version)
+}
+
 func (vd *volAPI) Routes() []*Route {
 	return []*Route{
 		{verb: "GET", path: "/" + api.OsdVolumePath + "/versions", fn: vd.versions},
@@ -1064,5 +1068,8 @@ func (vd *volAPI) Routes() []*Route {
 		{verb: "POST", path: backupPath("/sched", volume.APIVersion), fn: vd.cloudBackupSchedCreate},
 		{verb: "DELETE", path: backupPath("/sched", volume.APIVersion), fn: vd.cloudBackupSchedDelete},
 		{verb: "GET", path: backupPath("/sched", volume.APIVersion), fn: vd.cloudBackupSchedEnumerate},
+		{verb: "POST", path: migratePath(api.OsdMigrateStartPath, volume.APIVersion), fn: vd.cloudMigrateStart},
+		{verb: "POST", path: migratePath(api.OsdMigrateCancelPath, volume.APIVersion), fn: vd.cloudMigrateCancel},
+		{verb: "GET", path: migratePath(api.OsdMigrateStatusPath, volume.APIVersion), fn: vd.cloudMigrateStatus},
 	}
 }

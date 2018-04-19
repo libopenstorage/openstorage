@@ -25,6 +25,9 @@ var (
 	// CloudBackupNotSupported implements cloudBackupDriver by returning
 	// Not supported error
 	CloudBackupNotSupported = &cloudBackupNotSupported{}
+	// CloudMigrateNotSupported implements cloudMigrateDriver by returning
+	// Not supported error
+	CloudMigrateNotSupported = &cloudMigrateNotSupported{}
 )
 
 type blockNotSupported struct{}
@@ -193,5 +196,18 @@ func (cl *cloudBackupNotSupported) CloudBackupSchedDelete(
 }
 
 func (cl *cloudBackupNotSupported) CloudBackupSchedEnumerate() (*api.CloudBackupSchedEnumerateResponse, error) {
+	return nil, ErrNotSupported
+}
+
+type cloudMigrateNotSupported struct{}
+
+func (cl *cloudMigrateNotSupported) CloudMigrateStart(request *api.CloudMigrateStartRequest) error {
+	return ErrNotSupported
+}
+
+func (cl *cloudMigrateNotSupported) CloudMigrateCancel(request *api.CloudMigrateCancelRequest) error {
+	return ErrNotSupported
+}
+func (cl *cloudMigrateNotSupported) CloudMigrateStatus() (*api.CloudMigrateStatusResponse, error) {
 	return nil, ErrNotSupported
 }

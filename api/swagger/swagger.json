@@ -2582,6 +2582,14 @@
       },
       "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
     },
+    "MigrateStage": {
+      "type": "string",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "MigrateStatus": {
+      "type": "string",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
     "NetworkConfig": {
       "description": "NetworkConfig is a network configuration parameters struct",
       "type": "object",
@@ -2767,6 +2775,10 @@
     },
     "OpenStorageVolumeServer": {
       "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "Operation": {
+      "type": "string",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "OperationFlags": {

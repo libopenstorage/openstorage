@@ -43,16 +43,18 @@ type driver struct {
 	volume.QuiesceDriver
 	volume.CredsDriver
 	volume.CloudBackupDriver
+	volume.CloudMigrateDriver
 }
 
 func Init(params map[string]string) (volume.VolumeDriver, error) {
 	inst := &driver{
-		IODriver:          volume.IONotSupported,
-		StoreEnumerator:   common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
-		StatsDriver:       volume.StatsNotSupported,
-		QuiesceDriver:     volume.QuiesceNotSupported,
-		CredsDriver:       volume.CredsNotSupported,
-		CloudBackupDriver: volume.CloudBackupNotSupported,
+		IODriver:           volume.IONotSupported,
+		StoreEnumerator:    common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
+		StatsDriver:        volume.StatsNotSupported,
+		QuiesceDriver:      volume.QuiesceNotSupported,
+		CredsDriver:        volume.CredsNotSupported,
+		CloudBackupDriver:  volume.CloudBackupNotSupported,
+		CloudMigrateDriver: volume.CloudMigrateNotSupported,
 	}
 
 	volumeInfo, err := inst.StoreEnumerator.Enumerate(&api.VolumeLocator{}, nil)
