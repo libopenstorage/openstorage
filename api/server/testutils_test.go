@@ -106,7 +106,8 @@ func testRestServer(t *testing.T) (*httptest.Server, *testServer) {
 func testClusterServer(t *testing.T) (*httptest.Server, *testCluster) {
 	capi := newClusterAPI(ClusterServerConfiguration{
 		ConfigSecretManager: secrets.NewSecretManager(secrets.New()),
-	})
+	},
+	)
 	router := mux.NewRouter()
 	// Register all routes from the App
 	for _, route := range capi.Routes() {

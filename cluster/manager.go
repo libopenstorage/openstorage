@@ -1695,36 +1695,36 @@ func (c *ClusterManager) EnumerateNodeConf() (*osdconfig.NodesConfig, error) {
 }
 
 // This needs to be added since clusterclient is REST wrapper over ClusterManager
-// We also can create custom secretclient i.e Rest wrapper over SecretManager
+// we can also create custom secretclient i.e Rest wrapper over SecretManager
 // may be related to issue :  #382 (https://github.com/libopenstorage/openstorage/issues/382)
 // TODO : Find cleaner way for this
 
-// Login create session with secret store
-func (c *ClusterManager) Login(secretType string, secretConfig map[string]string) error {
+// SecretLogin create session with secret store
+func (c *ClusterManager) SecretLogin(secretType string, secretConfig map[string]string) error {
 	return nil
 }
 
-// SetDefaultSecretKey sets the cluster wide secret key
-func (c *ClusterManager) SetDefaultSecretKey(secretKey string, override bool) error {
+// SecretSetDefaultSecretKey sets the cluster wide secret key
+func (c *ClusterManager) SecretSetDefaultSecretKey(secretKey string, override bool) error {
 	return nil
 }
 
-// CheckLogin validates session with secret store
-func (c *ClusterManager) CheckLogin() error {
+// SecretCheckLogin validates session with secret store
+func (c *ClusterManager) SecretCheckLogin() error {
 	return nil
 }
 
-// Set stores the given value/data against the key
-func (c *ClusterManager) Set(key string, value interface{}) error {
+// SecretSet stores the given value/data against the key
+func (c *ClusterManager) SecretSet(key string, value interface{}) error {
 	return nil
 }
 
-// Get retrieves the data for the given key
-func (c *ClusterManager) Get(string) (interface{}, error) {
+// SecretGet retrieves the data for the given key
+func (c *ClusterManager) SecretGet(string) (interface{}, error) {
 	return "", nil
 }
 
-// GetDefaultSecretKey return cluster wide secret key
-func (c *ClusterManager) GetDefaultSecretKey() (interface{}, error) {
+// SecretGetDefaultSecretKey return cluster wide secret key
+func (c *ClusterManager) SecretGetDefaultSecretKey() (interface{}, error) {
 	return nil, nil
 }

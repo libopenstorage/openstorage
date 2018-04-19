@@ -147,8 +147,11 @@ func StartClusterAPI(clusterApiBase string, clusterPort uint16) error {
 
 //old version compatible
 func GetClusterAPIRoutes() []*Route {
-	return GetClusterAPIRoutesWithConfiguration(ClusterServerConfiguration{
-		ConfigSecretManager: secrets.NewSecretManager(secrets.New())})
+	return GetClusterAPIRoutesWithConfiguration(
+		ClusterServerConfiguration{
+			ConfigSecretManager: secrets.NewSecretManager(secrets.New()),
+		},
+	)
 }
 
 func GetClusterAPIRoutesWithConfiguration(config ClusterServerConfiguration) []*Route {

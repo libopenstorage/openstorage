@@ -255,6 +255,7 @@ type Cluster interface {
 	ClusterStatus
 	ClusterAlerts
 	osdconfig.ConfigCaller
+	secrets.Secrets
 }
 
 // ClusterNotify is the callback function listeners can use to notify cluster manager

@@ -7,25 +7,18 @@ import (
 	"github.com/libopenstorage/openstorage/secrets"
 )
 
-const (
-	secretKeyOkMsg   = "Secret Key set successfully"
-	secretLoginOkMsg = "Secrets Login Succeeded"
-	secretLoginCheck = "Secrets Login Check Succeeded"
-)
-
 // TODO: Add swagger yaml
 func (c *clusterApi) setDefaultSecretKey(w http.ResponseWriter, r *http.Request) {
 
 	method := "setDefaultSecretKey"
 	var secReq secrets.DefaultSecretKeyRequest
-	var secResp secrets.SecretResponse
 
 	if err := json.NewDecoder(r.Body).Decode(&secReq); err != nil {
-		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		c.sendError(c.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	err := c.SecretManager.SetDefaultSecretKey(
+	err := c.SecretManager.SecretSetDefaultSecretKey(
 		secReq.DefaultSecretKey,
 		secReq.Override,
 	)
@@ -35,8 +28,7 @@ func (c *clusterApi) setDefaultSecretKey(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	secResp.Status = "Default " + secretKeyOkMsg
-	json.NewEncoder(w).Encode(secResp)
+	w.WriteHeader(http.StatusOK)
 }
 
 // TODO: Add swagger yaml
@@ -44,37 +36,39 @@ func (c *clusterApi) getDefaultSecretKey(w http.ResponseWriter, r *http.Request)
 
 	method := "getDefaultSecretKey"
 
-	secretValue, err := c.SecretManager.GetDefaultSecretKey()
+	secretValue, err := c.SecretManager.SecretGetDefaultSecretKey()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	secResp := &secrets.GetSecretResponse{
 		SecretValue: secretValue,
 	}
 	json.NewEncoder(w).Encode(secResp)
-
 }
 
 // TODO: Add swagger yaml
 func (c *clusterApi) secretsLogin(w http.ResponseWriter, r *http.Request) {
 	var secReq secrets.SecretLoginRequest
-	var secResp secrets.SecretResponse
 	method := "secretsLogin"
 
 	if err := json.NewDecoder(r.Body).Decode(&secReq); err != nil {
-		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		c.sendError(c.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	err := c.SecretManager.Login(secReq.SecretType, secReq.SecretConfig)
+	err := c.SecretManager.SecretLogin(secReq.SecretType, secReq.SecretConfig)
 	if err != nil {
+		if err == secrets.ErrNotAuthenticated {
+			c.sendError(c.name, method, w, err.Error(), http.StatusUnauthorized)
+			return
+		}
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	secResp.Status = secretLoginOkMsg
-	json.NewEncoder(w).Encode(secResp)
+	w.WriteHeader(http.StatusOK)
 }
 
 // TODO: Add swagger yaml
@@ -82,28 +76,26 @@ func (c *clusterApi) setSecret(w http.ResponseWriter, r *http.Request) {
 
 	method := "setSecret"
 	var secReq secrets.SetSecretRequest
-	var secResp secrets.SecretResponse
 	params := r.URL.Query()
 	secretID := params[secrets.SecretKey]
 
 	if len(secretID) == 0 || secretID[0] == "" {
-		c.sendError(c.name, method, w, "Missing secret ID", http.StatusInternalServerError)
+		c.sendError(c.name, method, w, "Missing secret ID", http.StatusBadRequest)
 		return
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&secReq); err != nil {
-		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		c.sendError(c.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	err := c.SecretManager.Set(secretID[0], secReq.SecretValue)
+	err := c.SecretManager.SecretSet(secretID[0], secReq.SecretValue)
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	secResp.Status = secretKeyOkMsg
-	json.NewEncoder(w).Encode(secResp)
+	w.WriteHeader(http.StatusOK)
 }
 
 // TODO: Add swagger yaml
@@ -114,11 +106,11 @@ func (c *clusterApi) getSecret(w http.ResponseWriter, r *http.Request) {
 	secretID := params[secrets.SecretKey]
 
 	if len(secretID) == 0 || secretID[0] == "" {
-		c.sendError(c.name, method, w, "Missing secret ID", http.StatusInternalServerError)
+		c.sendError(c.name, method, w, "Missing secret ID", http.StatusBadRequest)
 		return
 	}
 
-	secretValue, err := c.SecretManager.Get(secretID[0])
+	secretValue, err := c.SecretManager.SecretGet(secretID[0])
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -134,15 +126,13 @@ func (c *clusterApi) getSecret(w http.ResponseWriter, r *http.Request) {
 // TODO: Add swagger yaml
 func (c *clusterApi) secretLoginCheck(w http.ResponseWriter, r *http.Request) {
 
-	var secResp secrets.SecretResponse
 	method := "secretLoginCheck"
-	err := c.SecretManager.CheckLogin()
+	err := c.SecretManager.SecretCheckLogin()
 
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	secResp.Status = secretLoginCheck
-	json.NewEncoder(w).Encode(secResp)
+	w.WriteHeader(http.StatusOK)
 }

@@ -26,11 +26,6 @@ type SecretLoginRequest struct {
 	SecretConfig map[string]string
 }
 
-// SecretResponse whether login is successful or not
-type SecretResponse struct {
-	Status string
-}
-
 // DefaultSecretKeyRequest specify request to set cluster secret key
 type DefaultSecretKeyRequest struct {
 	DefaultSecretKey string
@@ -44,10 +39,5 @@ type SetSecretRequest struct {
 
 // GetSecretResponse gets secret value for given key
 type GetSecretResponse struct {
-	SecretValue interface{}
-}
-
-// GetDefaultSecretResponse gets default secret value for given key
-type GetDefaultSecretKeyResponse struct {
 	SecretValue interface{}
 }

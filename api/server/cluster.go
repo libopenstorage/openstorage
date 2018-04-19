@@ -24,7 +24,11 @@ type clusterApi struct {
 	SecretManager *secrets.Manager
 }
 
+// ClusterServerConfiguration holds manager implementation
+// Caller has to create the manager and passes it in
+// StartClusterAPIWithConfiguration() to override with his own implementation
 type ClusterServerConfiguration struct {
+	// holds implementation to Secrets interface
 	ConfigSecretManager *secrets.Manager
 }
 

@@ -195,7 +195,8 @@ func (c *clusterClient) EraseAlert(resource api.ResourceType, alertID int64) err
 	return nil
 }
 
-func (c *ClusterClient) SetDefaultSecretKey(secretKey string, override bool) error {
+// SecretSetDefaultSecretKey sets the cluster wide secret key
+func (c *clusterClient) SecretSetDefaultSecretKey(secretKey string, override bool) error {
 	reqBody := &secrets.DefaultSecretKeyRequest{
 		DefaultSecretKey: secretKey,
 		Override:         override,
@@ -209,7 +210,8 @@ func (c *ClusterClient) SetDefaultSecretKey(secretKey string, override bool) err
 	return nil
 }
 
-func (c *ClusterClient) GetDefaultSecretKey() (interface{}, error) {
+// SecretGetDefaultSecretKey returns cluster wide secret key's value
+func (c *clusterClient) SecretGetDefaultSecretKey() (interface{}, error) {
 	var defaultKeyResp interface{}
 	path := clusterPath + secretPath + "/defaultsecretkey"
 	request := c.c.Get().Resource(path)
@@ -220,7 +222,8 @@ func (c *ClusterClient) GetDefaultSecretKey() (interface{}, error) {
 	return defaultKeyResp, nil
 }
 
-func (c *ClusterClient) Set(secretID string, secretValue interface{}) error {
+// SecretSet the given value/data against the key
+func (c *clusterClient) SecretSet(secretID string, secretValue interface{}) error {
 	reqBody := &secrets.SetSecretRequest{
 		SecretValue: secretValue,
 	}
@@ -234,7 +237,8 @@ func (c *ClusterClient) Set(secretID string, secretValue interface{}) error {
 	return nil
 }
 
-func (c *ClusterClient) Get(secretID string) (interface{}, error) {
+// SecretGet retrieves the value/data for given key
+func (c *clusterClient) SecretGet(secretID string) (interface{}, error) {
 	var secResp interface{}
 	path := clusterPath + secretPath
 	request := c.c.Get().Resource(path)
@@ -245,18 +249,19 @@ func (c *ClusterClient) Get(secretID string) (interface{}, error) {
 	return secResp, nil
 }
 
-// Check whether session is still authenticated
-func (c *ClusterClient) CheckLogin() error {
-	var loginResp secrets.SecretResponse
+// SecretCheckLogin validates session with secret store
+func (c *clusterClient) SecretCheckLogin() error {
 	path := clusterPath + secretPath + "/verify"
 	request := c.c.Get().Resource(path)
-	if err := request.Do().Unmarshal(&loginResp); err != nil {
-		return err
+	resp := request.Do()
+	if resp.Error() != nil {
+		return resp.FormatError()
 	}
 	return nil
 }
 
-func (c *ClusterClient) Login(secretType string, secretConfig map[string]string) error {
+// SecretLogin create session with secret store
+func (c *clusterClient) SecretLogin(secretType string, secretConfig map[string]string) error {
 	reqBody := &secrets.SecretLoginRequest{
 		SecretType:   secretType,
 		SecretConfig: secretConfig,
