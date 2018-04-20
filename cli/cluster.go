@@ -16,7 +16,7 @@ import (
 )
 
 type clusterClient struct {
-	manager cluster.ClusterClient
+	manager cluster.Cluster
 }
 
 func (c *clusterClient) clusterOptions(context *cli.Context) {
