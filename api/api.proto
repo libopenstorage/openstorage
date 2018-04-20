@@ -594,7 +594,7 @@ message GroupSnapCreateResponse {
   //
   // in: body
   // Required: true
-  repeated SnapCreateResponse snapshots = 1;
+  map<string, SnapCreateResponse> snapshots = 1;
   // Error message
   //
   // in: body
