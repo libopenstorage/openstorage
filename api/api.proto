@@ -581,7 +581,7 @@ message ActiveRequests {
 }
 
 // GroupSnapCreateRequest specifies a request to create a snapshot of given group.
-// swagger:parameters snapVolumeGroup
+// swagger:model snapVolumeGroup
 message GroupSnapCreateRequest {
   // group id
   string id = 1;

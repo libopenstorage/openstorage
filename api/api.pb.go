@@ -2018,7 +2018,7 @@ func (m *ActiveRequests) GetActiveRequest() []*ActiveRequest {
 }
 
 // GroupSnapCreateRequest specifies a request to create a snapshot of given group.
-// swagger:model
+// swagger:model snapVolumeGroup
 type GroupSnapCreateRequest struct {
 	// group id
 	Id     string            `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
