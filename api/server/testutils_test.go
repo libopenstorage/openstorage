@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	mockcluster "github.com/libopenstorage/openstorage/cluster/mock"
+	mocksecrets "github.com/libopenstorage/openstorage/secrets/mock"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
@@ -37,6 +38,8 @@ type testCluster struct {
 	c       *mockcluster.MockCluster
 	mc      *gomock.Controller
 	oldInst func() (cluster.Cluster, error)
+	// Since Secrets are not called by MockCluster, have to add MockSecrets
+	sm *mocksecrets.MockSecrets
 }
 
 func newTestCluster(t *testing.T) *testCluster {
@@ -52,6 +55,11 @@ func newTestCluster(t *testing.T) *testCluster {
 	// Create a new mock cluster
 	tester.c = mockcluster.NewMockCluster(tester.mc)
 
+	// Create a new mock Serets
+	// This doesn't set *mocksecrets.Mocksecrets, thats why needed to
+	// write newTestClusterSecrets() and newTestServerSecrets()
+	//tester.sm = mocksecrets.NewMockSecrets(tester.mc)
+
 	// Override cluster.Inst to return our mock cluster
 	cluster.Inst = func() (cluster.Cluster, error) {
 		return tester.c, nil
@@ -60,6 +68,35 @@ func newTestCluster(t *testing.T) *testCluster {
 	return tester
 }
 
+func newTestClusterSecret(t *testing.T) *testCluster {
+	tester := &testCluster{}
+
+	// Create mock controller
+	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
+
+	// Create a new mock Serets
+	tester.sm = mocksecrets.NewMockSecrets(tester.mc)
+
+	return tester
+}
+
+func testClusterServerSecrets(t *testing.T) (*httptest.Server, *testCluster) {
+	tc := newTestClusterSecret(t)
+	capi := newClusterAPI(ClusterServerConfiguration{
+		ConfigSecretManager: secrets.NewSecretManager(tc.sm),
+	})
+	router := mux.NewRouter()
+	// Register all routes from the App
+	for _, route := range capi.Routes() {
+		router.Methods(route.verb).
+			Path(route.path).
+			Name(mockDriverName).
+			Handler(http.HandlerFunc(route.fn))
+	}
+
+	ts := httptest.NewServer(router)
+	return ts, tc
+}
 func newTestServer(t *testing.T) *testServer {
 	tester := &testServer{}
 
@@ -124,6 +161,10 @@ func testClusterServer(t *testing.T) (*httptest.Server, *testCluster) {
 
 func (c *testCluster) MockCluster() *mockcluster.MockCluster {
 	return c.c
+}
+
+func (c *testCluster) MockClusterSecrets() *mocksecrets.MockSecrets {
+	return c.sm
 }
 
 func (c *testCluster) Finish() {

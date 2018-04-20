@@ -215,7 +215,7 @@ func (c *clusterClient) SecretGetDefaultSecretKey() (interface{}, error) {
 	var defaultKeyResp interface{}
 	path := clusterPath + secretPath + "/defaultsecretkey"
 	request := c.c.Get().Resource(path)
-	err := request.Do().Unmarshal(defaultKeyResp)
+	err := request.Do().Unmarshal(&defaultKeyResp)
 	if err != nil {
 		return defaultKeyResp, err
 	}

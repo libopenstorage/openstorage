@@ -1,3 +1,4 @@
+//go:generate mockgen -package=mock -destination=mock/secrets.mock.go github.com/libopenstorage/openstorage/secrets Secrets
 package secrets
 
 import (
