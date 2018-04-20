@@ -1536,26 +1536,28 @@ func TestGroupSnapshotCreateSuccess(t *testing.T) {
 		Labels: labels,
 	}
 
-	response := &api.GroupSnapCreateResponse{
-		Snapshots: []*api.SnapCreateResponse{
-			&api.SnapCreateResponse{
-				VolumeCreateResponse: &api.VolumeCreateResponse{
-					Id: id,
-					VolumeResponse: &api.VolumeResponse{
-						Error: responseStatus(err),
-					},
-				},
-			},
-			&api.SnapCreateResponse{
-				VolumeCreateResponse: &api.VolumeCreateResponse{
-					Id: id,
-					VolumeResponse: &api.VolumeResponse{
-						Error: responseStatus(err),
-					},
+	snapshots := map[string]*api.SnapCreateResponse{
+		"vol1": &api.SnapCreateResponse{
+			VolumeCreateResponse: &api.VolumeCreateResponse{
+				Id: id,
+				VolumeResponse: &api.VolumeResponse{
+					Error: responseStatus(err),
 				},
 			},
 		},
-		Error: responseStatus(err),
+		"vol2": &api.SnapCreateResponse{
+			VolumeCreateResponse: &api.VolumeCreateResponse{
+				Id: id,
+				VolumeResponse: &api.VolumeResponse{
+					Error: responseStatus(err),
+				},
+			},
+		},
+	}
+
+	response := &api.GroupSnapCreateResponse{
+		Snapshots: snapshots,
+		Error:     responseStatus(err),
 	}
 
 	//mock Snapshot call
