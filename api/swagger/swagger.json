@@ -276,6 +276,165 @@
         }
       }
     },
+    "/cluster/secrets/": {
+      "get": {
+        "description": "This will return the value/data for given secret key",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "secrets"
+        ],
+        "summary": "Get the seceret value/data for given key",
+        "operationId": "getSecret",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "secret id/key whose value to be retrived",
+            "name": "id",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "returns the value/data for given key",
+            "schema": {
+              "$ref": "#/definitions/GetSecretResponse"
+            }
+          }
+        }
+      },
+      "put": {
+        "description": "This will set secrets data/value against given key",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "secrets"
+        ],
+        "summary": "Set Secret Value",
+        "operationId": "setSeceret",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "key/id for secrets",
+            "name": "id",
+            "in": "query",
+            "required": true
+          },
+          {
+            "description": "value/data for secrets",
+            "name": "secretvalue",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/SetSecretRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
+    "/cluster/secrets/defaultsecretkey": {
+      "get": {
+        "description": "This will return the cluster wide secret key",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "secrets"
+        ],
+        "summary": "Get cluster secret key",
+        "operationId": "getDefaultSecretKey",
+        "responses": {
+          "200": {
+            "description": "returns cluster wide secret key",
+            "schema": {
+              "$ref": "#/definitions/GetSecretResponse"
+            }
+          }
+        }
+      },
+      "put": {
+        "description": "This will set the cluster wide default secret key",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "secrets"
+        ],
+        "summary": "Set cluster secret key",
+        "operationId": "setDefaultSecretKey",
+        "parameters": [
+          {
+            "description": "default secret key",
+            "name": "defaultkey",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/DefaultSecretKeyRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
+    "/cluster/secrets/login": {
+      "post": {
+        "description": "This will initiate session with secret store",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "secrets"
+        ],
+        "summary": "Start session with secret store",
+        "operationId": "secretsLogin",
+        "parameters": [
+          {
+            "description": "config for login to secret store",
+            "name": "SecretLoginConfig",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/SecretLoginRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
+    "/cluster/secrets/verify": {
+      "get": {
+        "description": "This will return error if session is not estabilished with secrets store",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "secrets"
+        ],
+        "summary": "Validates session with secret store",
+        "operationId": "secretLoginCheck",
+        "responses": {
+          "200": {
+            "description": "validates session with secret store"
+          }
+        }
+      }
+    },
     "/cluster/status": {
       "get": {
         "produces": [
@@ -1777,6 +1936,19 @@
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
+    "DefaultSecretKeyRequest": {
+      "description": "DefaultSecretKeyRequest specify request to set cluster secret key",
+      "type": "object",
+      "properties": {
+        "DefaultSecretKey": {
+          "type": "string"
+        },
+        "Override": {
+          "type": "boolean"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/secrets"
+    },
     "DriverType": {
       "type": "integer",
       "format": "int32",
@@ -1821,6 +1993,16 @@
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
+    },
+    "GetSecretResponse": {
+      "description": "GetSecretResponse gets secret value for given key",
+      "type": "object",
+      "properties": {
+        "SecretValue": {
+          "type": "object"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/secrets"
     },
     "GraphDriverChangeType": {
       "type": "integer",
@@ -2133,6 +2315,22 @@
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
+    "SecretLoginRequest": {
+      "description": "SecretLoginRequest specify secret store and config to initiate\nsecret store session",
+      "type": "object",
+      "properties": {
+        "SecretConfig": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "SecretType": {
+          "type": "string"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/secrets"
+    },
     "SecretsConfig": {
       "description": "SecretsConfig is a secrets configuration parameters struct",
       "type": "object",
@@ -2153,6 +2351,16 @@
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
+    },
+    "SetSecretRequest": {
+      "description": "SetSecretRequest stores the given value/data against the key",
+      "type": "object",
+      "properties": {
+        "SecretValue": {
+          "type": "object"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/secrets"
     },
     "SeverityType": {
       "type": "integer",

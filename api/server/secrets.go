@@ -7,7 +7,25 @@ import (
 	"github.com/libopenstorage/openstorage/secrets"
 )
 
-// TODO: Add swagger yaml
+// swagger:operation PUT /cluster/secrets/defaultsecretkey secrets setDefaultSecretKey
+//
+// Set cluster secret key
+//
+// This will set the cluster wide default secret key
+//
+// ---
+// produces:
+// - application/json
+// parameters:
+// - name: defaultkey
+//   in: body
+//   description: default secret key
+//   required: true
+//   schema:
+//    $ref: '#/definitions/DefaultSecretKeyRequest'
+// responses:
+//   '200':
+//     description: success
 func (c *clusterApi) setDefaultSecretKey(w http.ResponseWriter, r *http.Request) {
 
 	method := "setDefaultSecretKey"
@@ -31,7 +49,20 @@ func (c *clusterApi) setDefaultSecretKey(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(http.StatusOK)
 }
 
-// TODO: Add swagger yaml
+// swagger:operation GET /cluster/secrets/defaultsecretkey secrets getDefaultSecretKey
+//
+// Get cluster secret key
+//
+// This will return the cluster wide secret key
+//
+// ---
+// produces:
+// - application/json
+// responses:
+//   '200':
+//      description: returns cluster wide secret key
+//      schema:
+//       $ref: '#/definitions/GetSecretResponse'
 func (c *clusterApi) getDefaultSecretKey(w http.ResponseWriter, r *http.Request) {
 
 	method := "getDefaultSecretKey"
@@ -48,7 +79,25 @@ func (c *clusterApi) getDefaultSecretKey(w http.ResponseWriter, r *http.Request)
 	json.NewEncoder(w).Encode(secResp)
 }
 
-// TODO: Add swagger yaml
+// swagger:operation POST /cluster/secrets/login secrets secretsLogin
+//
+// Start session with secret store
+//
+// This will initiate session with secret store
+//
+// ---
+// produces:
+// - application/json
+// parameters:
+// - name: SecretLoginConfig
+//   in: body
+//   description: config for login to secret store
+//   required: true
+//   schema:
+//    $ref: '#/definitions/SecretLoginRequest'
+// responses:
+//   '200':
+//     description: success
 func (c *clusterApi) secretsLogin(w http.ResponseWriter, r *http.Request) {
 	var secReq secrets.SecretLoginRequest
 	method := "secretsLogin"
@@ -71,7 +120,30 @@ func (c *clusterApi) secretsLogin(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// TODO: Add swagger yaml
+// swagger:operation PUT /cluster/secrets/ secrets setSeceret
+//
+// Set Secret Value
+//
+// This will set secrets data/value against given key
+//
+// ---
+// produces:
+// - application/json
+// parameters:
+// - name: id
+//   in: query
+//   description: key/id for secrets
+//   required: true
+//   type: string
+// - name: secretvalue
+//   in : body
+//   description:  value/data for secrets
+//   required: true
+//   schema:
+//    $ref: '#/definitions/SetSecretRequest'
+// responses:
+//   '200':
+//     description: success
 func (c *clusterApi) setSecret(w http.ResponseWriter, r *http.Request) {
 
 	method := "setSecret"
@@ -98,7 +170,26 @@ func (c *clusterApi) setSecret(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// TODO: Add swagger yaml
+// swagger:operation GET /cluster/secrets/ secrets getSecret
+//
+// Get the seceret value/data for given key
+//
+// This will return the value/data for given secret key
+//
+// ---
+// produces:
+// - application/json
+// parameters:
+// - name: id
+//   in: query
+//   description: secret id/key whose value to be retrived
+//   type: string
+//   required: true
+// responses:
+//   '200':
+//      description: returns the value/data for given key
+//      schema:
+//       $ref: '#/definitions/GetSecretResponse'
 func (c *clusterApi) getSecret(w http.ResponseWriter, r *http.Request) {
 
 	method := "getSecret"
@@ -123,7 +214,18 @@ func (c *clusterApi) getSecret(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(secResp)
 }
 
-// TODO: Add swagger yaml
+// swagger:operation GET /cluster/secrets/verify secrets secretLoginCheck
+//
+// Validates session with secret store
+//
+// This will return error if session is not estabilished with secrets store
+//
+// ---
+// produces:
+// - application/json
+// responses:
+//   '200':
+//      description: validates session with secret store
 func (c *clusterApi) secretLoginCheck(w http.ResponseWriter, r *http.Request) {
 
 	method := "secretLoginCheck"
