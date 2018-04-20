@@ -1655,40 +1655,46 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "ClusterConfig": {
+      "description": "ClusterConfig is a cluster level config parameter struct",
       "type": "object",
       "properties": {
-        "ClusterId": {
-          "type": "string"
+        "cluster_id": {
+          "type": "string",
+          "x-go-name": "ClusterId"
         },
-        "DataIface": {
-          "type": "string"
+        "created": {
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "Created"
         },
-        "DataIp": {
-          "type": "string"
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
         },
-        "DefaultDriver": {
-          "type": "string"
+        "domain": {
+          "type": "string",
+          "x-go-name": "Domain"
         },
-        "FluentDHost": {
-          "type": "string"
+        "kvdb": {
+          "$ref": "#/definitions/KvdbConfig"
         },
-        "LoggingURL": {
-          "type": "string"
+        "mode": {
+          "type": "string",
+          "x-go-name": "Mode"
         },
-        "ManagementURL": {
-          "type": "string"
+        "private": {
+          "type": "object",
+          "x-go-name": "Private"
         },
-        "MgmtIp": {
-          "type": "string"
+        "secrets": {
+          "$ref": "#/definitions/SecretsConfig"
         },
-        "MgtIface": {
-          "type": "string"
-        },
-        "NodeId": {
-          "type": "string"
+        "version": {
+          "type": "string",
+          "x-go-name": "Version"
         }
       },
-      "x-go-package": "github.com/libopenstorage/openstorage/config"
+      "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
     },
     "ClusterNotify": {
       "type": "integer",
@@ -1879,8 +1885,8 @@
         },
         "snapshots": {
           "description": "Created snapshots\n\nin: body",
-          "type": "array",
-          "items": {
+          "type": "object",
+          "additionalProperties": {
             "$ref": "#/definitions/SnapCreateResponse"
           },
           "x-go-name": "Snapshots"
@@ -2996,8 +3002,8 @@
     "groupSnapCreateResponse": {
       "description": "GroupSnapCreateRequest specifies a response that get's returned when creating a group snapshot.",
       "schema": {
-        "type": "array",
-        "items": {
+        "type": "object",
+        "additionalProperties": {
           "$ref": "#/definitions/SnapCreateResponse"
         }
       }
