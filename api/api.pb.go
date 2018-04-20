@@ -2020,7 +2020,6 @@ func (m *ActiveRequests) GetActiveRequest() []*ActiveRequest {
 // GroupSnapCreateRequest specifies a request to create a snapshot of given group.
 // swagger:model
 type GroupSnapCreateRequest struct {
-	// group id
 	Id     string            `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
 	Labels map[string]string `protobuf:"bytes,2,rep,name=Labels" json:"Labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
