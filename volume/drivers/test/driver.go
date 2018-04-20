@@ -31,7 +31,7 @@ func init() {
 // Context maintains current device state. It gets passed into tests
 // so that tests can build on other tests' work
 type Context struct {
-	volume.VolumeClient
+	volume.VolumeDriver
 	volID         string
 	snapID        string
 	mountPath     string
@@ -45,14 +45,14 @@ type Context struct {
 }
 
 // NewContext returns a new Context
-func NewContext(d volume.VolumeClient) *Context {
+func NewContext(d volume.VolumeDriver) *Context {
 	return &Context{
-		VolumeClient: d,
+		VolumeDriver: d,
 		volID:        "",
 		snapID:       "",
 		Filesystem:   api.FSType_FS_TYPE_NONE,
-		testPath:     path.Join("/mnt/openstorage/mount/volumeDriver"),
-		testFile:     path.Join("/tmp/volumeDriver"),
+		testPath:     path.Join("/mnt/openstorage/mount/", d.Name()),
+		testFile:     path.Join("/tmp/", d.Name()),
 	}
 }
 
@@ -82,6 +82,7 @@ func runEnd(t *testing.T, ctx *Context) {
 	time.Sleep(time.Second * 2)
 	os.RemoveAll(ctx.testPath)
 	os.Remove(ctx.testFile)
+	shutdown(t, ctx)
 }
 
 // RunSnap runs only the snap related tests
@@ -254,6 +255,11 @@ func unmount(t *testing.T, ctx *Context) {
 	require.NoError(t, err, "Failed in unmount %v", ctx.mountPath)
 
 	ctx.mountPath = ""
+}
+
+func shutdown(t *testing.T, ctx *Context) {
+	fmt.Println("shutdown")
+	ctx.Shutdown()
 }
 
 func io(t *testing.T, ctx *Context) {

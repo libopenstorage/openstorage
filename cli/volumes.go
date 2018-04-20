@@ -32,8 +32,8 @@ const (
 	PiB
 )
 
-type volClient struct {
-	volClient volume.VolumeClient
+type volDriver struct {
+	volDriver volume.VolumeDriver
 	name      string
 }
 
@@ -53,17 +53,17 @@ func processLabels(s string) (map[string]string, error) {
 	return m, nil
 }
 
-func (v *volClient) volumeOptions(context *cli.Context) {
+func (v *volDriver) volumeOptions(context *cli.Context) {
 	// Currently we choose the default version
 	clnt, err := volumeclient.NewDriverClient("", v.name, volume.APIVersion, "")
 	if err != nil {
 		fmt.Printf("Failed to initialize client library: %v\n", err)
 		os.Exit(1)
 	}
-	v.volClient = volumeclient.New(clnt)
+	v.volDriver = volumeclient.VolumeDriver(clnt)
 }
 
-func (v *volClient) volumeCreate(context *cli.Context) {
+func (v *volDriver) volumeCreate(context *cli.Context) {
 	var err error
 	var labels map[string]string
 	locator := &api.VolumeLocator{}
@@ -107,7 +107,7 @@ func (v *volClient) volumeCreate(context *cli.Context) {
 	source := &api.Source{
 		Seed: context.String("seed"),
 	}
-	if id, err = v.volClient.Create(locator, source, spec); err != nil {
+	if id, err = v.volDriver.Create(locator, source, spec); err != nil {
 		cmdError(context, fn, err)
 		return
 	}
@@ -115,7 +115,7 @@ func (v *volClient) volumeCreate(context *cli.Context) {
 	fmtOutput(context, &Format{UUID: []string{string(id)}})
 }
 
-func (v *volClient) volumeMount(context *cli.Context) {
+func (v *volDriver) volumeMount(context *cli.Context) {
 	v.volumeOptions(context)
 	fn := "mount"
 
@@ -131,7 +131,7 @@ func (v *volClient) volumeMount(context *cli.Context) {
 		return
 	}
 
-	err := v.volClient.Mount(string(volumeID), path, nil)
+	err := v.volDriver.Mount(string(volumeID), path, nil)
 	if err != nil {
 		cmdError(context, fn, err)
 		return
@@ -140,7 +140,7 @@ func (v *volClient) volumeMount(context *cli.Context) {
 	fmtOutput(context, &Format{UUID: []string{volumeID}})
 }
 
-func (v *volClient) volumeUnmount(context *cli.Context) {
+func (v *volDriver) volumeUnmount(context *cli.Context) {
 	v.volumeOptions(context)
 	fn := "unmount"
 
@@ -155,7 +155,7 @@ func (v *volClient) volumeUnmount(context *cli.Context) {
 	opts := make(map[string]string)
 	opts[options.OptionsDeleteAfterUnmount] = "true"
 
-	err := v.volClient.Unmount(string(volumeID), path, opts)
+	err := v.volDriver.Unmount(string(volumeID), path, opts)
 	if err != nil {
 		cmdError(context, fn, err)
 		return
@@ -164,7 +164,7 @@ func (v *volClient) volumeUnmount(context *cli.Context) {
 	fmtOutput(context, &Format{UUID: []string{volumeID}})
 }
 
-func (v *volClient) volumeAttach(context *cli.Context) {
+func (v *volDriver) volumeAttach(context *cli.Context) {
 	fn := "attach"
 	if len(context.Args()) < 1 {
 		missingParameter(context, fn, "volumeID", "Invalid number of arguments")
@@ -173,7 +173,7 @@ func (v *volClient) volumeAttach(context *cli.Context) {
 	v.volumeOptions(context)
 	volumeID := context.Args()[0]
 
-	devicePath, err := v.volClient.Attach(string(volumeID), nil)
+	devicePath, err := v.volDriver.Attach(string(volumeID), nil)
 	if err != nil {
 		cmdError(context, fn, err)
 		return
@@ -182,7 +182,7 @@ func (v *volClient) volumeAttach(context *cli.Context) {
 	fmtOutput(context, &Format{Result: devicePath})
 }
 
-func (v *volClient) volumeDetach(context *cli.Context) {
+func (v *volDriver) volumeDetach(context *cli.Context) {
 	fn := "detach"
 	if len(context.Args()) < 1 {
 		missingParameter(context, fn, "volumeID", "Invalid number of arguments")
@@ -190,7 +190,7 @@ func (v *volClient) volumeDetach(context *cli.Context) {
 	}
 	volumeID := context.Args()[0]
 	v.volumeOptions(context)
-	err := v.volClient.Detach(string(volumeID), nil)
+	err := v.volDriver.Detach(string(volumeID), nil)
 	if err != nil {
 		cmdError(context, fn, err)
 		return
@@ -199,7 +199,7 @@ func (v *volClient) volumeDetach(context *cli.Context) {
 	fmtOutput(context, &Format{UUID: []string{context.Args()[0]}})
 }
 
-func (v *volClient) volumeInspect(context *cli.Context) {
+func (v *volDriver) volumeInspect(context *cli.Context) {
 	v.volumeOptions(context)
 	fn := "inspect"
 	if len(context.Args()) < 1 {
@@ -212,7 +212,7 @@ func (v *volClient) volumeInspect(context *cli.Context) {
 		d[i] = string(v)
 	}
 
-	volumes, err := v.volClient.Inspect(d)
+	volumes, err := v.volDriver.Inspect(d)
 	if err != nil {
 		cmdError(context, fn, err)
 		return
@@ -221,7 +221,7 @@ func (v *volClient) volumeInspect(context *cli.Context) {
 	cmdOutputVolumes(volumes, context.GlobalBool("raw"))
 }
 
-func (v *volClient) volumeStats(context *cli.Context) {
+func (v *volDriver) volumeStats(context *cli.Context) {
 	v.volumeOptions(context)
 	fn := "stats"
 	if len(context.Args()) != 1 {
@@ -229,7 +229,7 @@ func (v *volClient) volumeStats(context *cli.Context) {
 		return
 	}
 
-	stats, err := v.volClient.Stats(string(context.Args()[0]), true)
+	stats, err := v.volDriver.Stats(string(context.Args()[0]), true)
 	if err != nil {
 		cmdError(context, fn, err)
 		return
@@ -238,7 +238,7 @@ func (v *volClient) volumeStats(context *cli.Context) {
 	cmdOutputProto(stats, context.GlobalBool("raw"))
 }
 
-func (v *volClient) volumeEnumerate(context *cli.Context) {
+func (v *volDriver) volumeEnumerate(context *cli.Context) {
 	locator := &api.VolumeLocator{}
 	var err error
 
@@ -253,7 +253,7 @@ func (v *volClient) volumeEnumerate(context *cli.Context) {
 	}
 
 	v.volumeOptions(context)
-	volumes, err := v.volClient.Enumerate(locator, nil)
+	volumes, err := v.volDriver.Enumerate(locator, nil)
 	if err != nil {
 		cmdError(context, fn, err)
 		return
@@ -261,7 +261,7 @@ func (v *volClient) volumeEnumerate(context *cli.Context) {
 	cmdOutputVolumes(volumes, context.GlobalBool("raw"))
 }
 
-func (v *volClient) volumeDelete(context *cli.Context) {
+func (v *volDriver) volumeDelete(context *cli.Context) {
 	fn := "delete"
 	if len(context.Args()) < 1 {
 		missingParameter(context, fn, "volumeID", "Invalid number of arguments")
@@ -269,7 +269,7 @@ func (v *volClient) volumeDelete(context *cli.Context) {
 	}
 	volumeID := context.Args()[0]
 	v.volumeOptions(context)
-	err := v.volClient.Delete(volumeID)
+	err := v.volDriver.Delete(volumeID)
 	if err != nil {
 		cmdError(context, fn, err)
 		return
@@ -278,7 +278,7 @@ func (v *volClient) volumeDelete(context *cli.Context) {
 	fmtOutput(context, &Format{UUID: []string{context.Args()[0]}})
 }
 
-func (v *volClient) snapCreate(context *cli.Context) {
+func (v *volDriver) snapCreate(context *cli.Context) {
 	var err error
 	var labels map[string]string
 	fn := "snapCreate"
@@ -301,7 +301,7 @@ func (v *volClient) snapCreate(context *cli.Context) {
 		VolumeLabels: labels,
 	}
 	readonly := context.Bool("readonly")
-	id, err := v.volClient.Snapshot(volumeID, readonly, locator)
+	id, err := v.volDriver.Snapshot(volumeID, readonly, locator)
 	if err != nil {
 		cmdError(context, fn, err)
 		return
@@ -310,7 +310,7 @@ func (v *volClient) snapCreate(context *cli.Context) {
 	fmtOutput(context, &Format{UUID: []string{string(id)}})
 }
 
-func (v *volClient) snapEnumerate(context *cli.Context) {
+func (v *volDriver) snapEnumerate(context *cli.Context) {
 	locator := &api.VolumeLocator{}
 	var err error
 
@@ -325,7 +325,7 @@ func (v *volClient) snapEnumerate(context *cli.Context) {
 	}
 
 	v.volumeOptions(context)
-	snaps, err := v.volClient.Enumerate(locator, nil)
+	snaps, err := v.volDriver.Enumerate(locator, nil)
 	if err != nil {
 		cmdError(context, fn, err)
 		return
@@ -337,7 +337,7 @@ func (v *volClient) snapEnumerate(context *cli.Context) {
 	cmdOutputVolumes(snaps, context.GlobalBool("raw"))
 }
 
-func (v *volClient) volumeAlerts(context *cli.Context) {
+func (v *volDriver) volumeAlerts(context *cli.Context) {
 	v.volumeOptions(context)
 
 	clnt, err := clusterclient.NewClusterClient("", cluster.APIVersion)
@@ -356,7 +356,7 @@ func (v *volClient) volumeAlerts(context *cli.Context) {
 }
 
 // baseVolumeCommand exports commands common to block and file volume drivers.
-func baseVolumeCommand(v *volClient) []cli.Command {
+func baseVolumeCommand(v *volDriver) []cli.Command {
 
 	commands := []cli.Command{
 		{
@@ -510,7 +510,7 @@ func baseVolumeCommand(v *volClient) []cli.Command {
 
 // BlockVolumeCommands exports CLI comamnds for a Block VolumeDriver.
 func BlockVolumeCommands(name string) []cli.Command {
-	v := &volClient{name: name}
+	v := &volDriver{name: name}
 
 	blockCommands := []cli.Command{
 		{
@@ -540,7 +540,7 @@ func BlockVolumeCommands(name string) []cli.Command {
 
 // FileVolumeCommands exports CLI comamnds for File VolumeDriver
 func FileVolumeCommands(name string) []cli.Command {
-	v := &volClient{name: name}
+	v := &volDriver{name: name}
 
 	return baseVolumeCommand(v)
 }
