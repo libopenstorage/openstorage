@@ -1655,46 +1655,40 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "ClusterConfig": {
-      "description": "ClusterConfig is a cluster level config parameter struct",
       "type": "object",
       "properties": {
-        "cluster_id": {
-          "type": "string",
-          "x-go-name": "ClusterId"
+        "ClusterId": {
+          "type": "string"
         },
-        "created": {
-          "type": "string",
-          "format": "date-time",
-          "x-go-name": "Created"
+        "DataIface": {
+          "type": "string"
         },
-        "description": {
-          "type": "string",
-          "x-go-name": "Description"
+        "DataIp": {
+          "type": "string"
         },
-        "domain": {
-          "type": "string",
-          "x-go-name": "Domain"
+        "DefaultDriver": {
+          "type": "string"
         },
-        "kvdb": {
-          "$ref": "#/definitions/KvdbConfig"
+        "FluentDHost": {
+          "type": "string"
         },
-        "mode": {
-          "type": "string",
-          "x-go-name": "Mode"
+        "LoggingURL": {
+          "type": "string"
         },
-        "private": {
-          "type": "object",
-          "x-go-name": "Private"
+        "ManagementURL": {
+          "type": "string"
         },
-        "secrets": {
-          "$ref": "#/definitions/SecretsConfig"
+        "MgmtIp": {
+          "type": "string"
         },
-        "version": {
-          "type": "string",
-          "x-go-name": "Version"
+        "MgtIface": {
+          "type": "string"
+        },
+        "NodeId": {
+          "type": "string"
         }
       },
-      "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
+      "x-go-package": "github.com/libopenstorage/openstorage/config"
     },
     "ClusterNotify": {
       "type": "integer",
@@ -1864,7 +1858,6 @@
           }
         },
         "id": {
-          "description": "group id",
           "type": "string",
           "x-go-name": "Id"
         }
