@@ -10,6 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/gorilla/mux"
+	sched "github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
 )
 
@@ -112,12 +113,26 @@ func StartVolumePluginAPI(
 	return nil
 }
 
+func CheckNullClusterServerConfiguration(config ClusterServerConfiguration) {
+
+	// Set config managers to null/generic implementation if passed as null
+	if config.ConfigSecretManager == nil {
+		config.ConfigSecretManager = secrets.NewSecretManager(secrets.New())
+	}
+
+	if config.ConfigSchedManager == nil {
+		config.ConfigSchedManager = sched.NewSchedulePolicyManager(sched.New())
+	}
+
+}
+
 func StartClusterApiWithConfiguration(
 	config ClusterServerConfiguration,
 	clusterApiBase string,
 	clusterPort uint16,
 ) error {
 
+	CheckNullClusterServerConfiguration(config)
 	// newClusterAPI now must take a ClusterServerConfiguration.
 	// This makes it so that it does not have to create the fake server by default.
 	// The caller is the one who creates the manager and passes it in.
@@ -137,9 +152,7 @@ func StartClusterApiWithConfiguration(
 // from the CLI/UX to control the OSD cluster.
 func StartClusterAPI(clusterApiBase string, clusterPort uint16) error {
 	return StartClusterApiWithConfiguration(
-		ClusterServerConfiguration{
-			ConfigSecretManager: secrets.NewSecretManager(secrets.New()),
-		},
+		ClusterServerConfiguration{},
 		clusterApiBase,
 		clusterPort,
 	)

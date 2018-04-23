@@ -276,6 +276,111 @@
         }
       }
     },
+    "/cluster/schedpolicy": {
+      "get": {
+        "description": "This will list all of schedule policy",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "schedpolicy"
+        ],
+        "summary": "List schedule policies",
+        "operationId": "listShedPolicy",
+        "responses": {
+          "200": {
+            "description": "success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/SchedPolicy"
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "description": "This will update specified schedule policy",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "schedpolicy"
+        ],
+        "summary": "Update schedule policy",
+        "operationId": "updateShedPolicy",
+        "parameters": [
+          {
+            "description": "policy name and schedule to create",
+            "name": "schedpolicy",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/SchedPolicy"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      },
+      "post": {
+        "description": "This creates scheudle policy which will allow user to create snapshot schedule policy",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "schedpolicy"
+        ],
+        "summary": "Create schedule policy",
+        "operationId": "createShedPolicy",
+        "parameters": [
+          {
+            "description": "policy name and schedule to create",
+            "name": "schedpolicy",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/SchedPolicy"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
+    "/cluster/schedpolicy/{name}": {
+      "delete": {
+        "description": "This will delete specified schedule policy",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "schedpolicy"
+        ],
+        "summary": "Delete schedule policy",
+        "operationId": "deleteShedPolicy",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "policy name and schedule to delete",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
     "/cluster/secrets/": {
       "get": {
         "description": "This will return the value/data for given secret key",
@@ -1582,6 +1687,10 @@
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
+    "CloudBackupOpType": {
+      "type": "string",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
     "CloudBackupRestoreRequest": {
       "type": "object",
       "properties": {
@@ -1729,8 +1838,7 @@
           "type": "string"
         },
         "OpType": {
-          "description": "OpType indicates if this is a backup or restore",
-          "type": "string"
+          "$ref": "#/definitions/CloudBackupOpType"
         },
         "StartTime": {
           "description": "StartTime indicates Op's start time",
@@ -1813,47 +1921,136 @@
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
-    "ClusterConfig": {
-      "description": "ClusterConfig is a cluster level config parameter struct",
+    "ClusterAlertClearRequest": {
       "type": "object",
       "properties": {
-        "cluster_id": {
-          "type": "string",
-          "x-go-name": "ClusterId"
+        "alert_id": {
+          "description": "Id of alert as returned by ClusterEnumerateAlertResponse (required)",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "AlertId"
         },
-        "created": {
-          "type": "string",
-          "format": "date-time",
-          "x-go-name": "Created"
-        },
-        "description": {
-          "type": "string",
-          "x-go-name": "Description"
-        },
-        "domain": {
-          "type": "string",
-          "x-go-name": "Domain"
-        },
-        "kvdb": {
-          "$ref": "#/definitions/KvdbConfig"
-        },
-        "mode": {
-          "type": "string",
-          "x-go-name": "Mode"
-        },
-        "private": {
-          "type": "object",
-          "x-go-name": "Private"
-        },
-        "secrets": {
-          "$ref": "#/definitions/SecretsConfig"
-        },
-        "version": {
-          "type": "string",
-          "x-go-name": "Version"
+        "resource": {
+          "$ref": "#/definitions/ResourceType"
         }
       },
-      "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "ClusterAlertClearResponse": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "ClusterAlertEnumerateRequest": {
+      "type": "object",
+      "properties": {
+        "resource": {
+          "$ref": "#/definitions/ResourceType"
+        },
+        "time_end": {
+          "$ref": "#/definitions/Timestamp"
+        },
+        "time_start": {
+          "$ref": "#/definitions/Timestamp"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "ClusterAlertEnumerateResponse": {
+      "type": "object",
+      "properties": {
+        "alerts": {
+          "$ref": "#/definitions/Alerts"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "ClusterAlertEraseRequest": {
+      "type": "object",
+      "properties": {
+        "alert_id": {
+          "description": "Id of alert as returned by ClusterEnumerateAlertResponse (required)",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "AlertId"
+        },
+        "resource": {
+          "$ref": "#/definitions/ResourceType"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "ClusterAlertEraseResponse": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "ClusterConfig": {
+      "type": "object",
+      "properties": {
+        "ClusterId": {
+          "type": "string"
+        },
+        "DataIface": {
+          "type": "string"
+        },
+        "DataIp": {
+          "type": "string"
+        },
+        "DefaultDriver": {
+          "type": "string"
+        },
+        "FluentDHost": {
+          "type": "string"
+        },
+        "LoggingURL": {
+          "type": "string"
+        },
+        "ManagementURL": {
+          "type": "string"
+        },
+        "MgmtIp": {
+          "type": "string"
+        },
+        "MgtIface": {
+          "type": "string"
+        },
+        "NodeId": {
+          "type": "string"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/config"
+    },
+    "ClusterEnumerateRequest": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "ClusterEnumerateResponse": {
+      "type": "object",
+      "properties": {
+        "cluster": {
+          "$ref": "#/definitions/StorageCluster"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "ClusterInspectRequest": {
+      "type": "object",
+      "properties": {
+        "node_id": {
+          "description": "Id of node to inspect (required)",
+          "type": "string",
+          "x-go-name": "NodeId"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "ClusterInspectResponse": {
+      "type": "object",
+      "properties": {
+        "node": {
+          "$ref": "#/definitions/StorageNode"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "ClusterNotify": {
       "type": "integer",
@@ -2277,6 +2474,14 @@
       },
       "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
     },
+    "OpenStorageClusterClient": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "OpenStorageClusterServer": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
     "OperationFlags": {
       "type": "integer",
       "format": "int32",
@@ -2314,6 +2519,18 @@
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "SchedPolicy": {
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string"
+        },
+        "Schedule": {
+          "type": "string"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/schedpolicy"
     },
     "SecretLoginRequest": {
       "description": "SecretLoginRequest specify secret store and config to initiate\nsecret store session",
@@ -2516,6 +2733,34 @@
       "format": "int32",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
+    "StorageCluster": {
+      "description": "StorageCluster represents the state of the cluster",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Id of the cluster",
+          "type": "string",
+          "x-go-name": "Id"
+        },
+        "node_id": {
+          "description": "NodeId is the id of the node servicing these requests",
+          "type": "string",
+          "x-go-name": "NodeId"
+        },
+        "nodes": {
+          "description": "Nodes are a list of all the nodes on the cluster",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/StorageNode"
+          },
+          "x-go-name": "Nodes"
+        },
+        "status": {
+          "$ref": "#/definitions/Status"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
     "StorageConfig": {
       "description": "StorageConfig is a storage configuration parameters struct",
       "type": "object",
@@ -2558,6 +2803,90 @@
     "StorageMedium": {
       "type": "integer",
       "format": "int32",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "StorageNode": {
+      "description": "StorageNode describes the state of the node",
+      "type": "object",
+      "properties": {
+        "avg_load": {
+          "description": "Average load (percentage)",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "AvgLoad"
+        },
+        "cpu": {
+          "description": "Cpu usage of the node",
+          "type": "number",
+          "format": "double",
+          "x-go-name": "Cpu"
+        },
+        "data_ip": {
+          "description": "Data IP",
+          "type": "string",
+          "x-go-name": "DataIp"
+        },
+        "disks": {
+          "description": "List of disks on the node",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/StorageResource"
+          },
+          "x-go-name": "Disks"
+        },
+        "hostname": {
+          "description": "Hostname of the node",
+          "type": "string",
+          "x-go-name": "Hostname"
+        },
+        "id": {
+          "description": "Id of the node",
+          "type": "string",
+          "x-go-name": "Id"
+        },
+        "mem_free": {
+          "description": "Free memory of the node",
+          "type": "integer",
+          "format": "uint64",
+          "x-go-name": "MemFree"
+        },
+        "mem_total": {
+          "description": "Total memory of the node",
+          "type": "integer",
+          "format": "uint64",
+          "x-go-name": "MemTotal"
+        },
+        "mem_used": {
+          "description": "Used memory of the node",
+          "type": "integer",
+          "format": "uint64",
+          "x-go-name": "MemUsed"
+        },
+        "mgmt_ip": {
+          "description": "Management IP",
+          "type": "string",
+          "x-go-name": "MgmtIp"
+        },
+        "node_labels": {
+          "description": "User defined labels for the node",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "x-go-name": "NodeLabels"
+        },
+        "pools": {
+          "description": "List of storage pools this node supports",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/StoragePool"
+          },
+          "x-go-name": "Pools"
+        },
+        "status": {
+          "$ref": "#/definitions/Status"
+        }
+      },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "StoragePool": {
@@ -3200,6 +3529,10 @@
       "type": "integer",
       "format": "int32",
       "title": "VolumeStatus represents a health status for a volume.",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "openStorageClusterClient": {
+      "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     }
   },

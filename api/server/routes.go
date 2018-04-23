@@ -37,5 +37,9 @@ func (c *clusterApi) Routes() []*Route {
 		{verb: "GET", path: clusterSecretPath("/defaultsecretkey", cluster.APIVersion), fn: c.getDefaultSecretKey},
 		{verb: "PUT", path: clusterSecretPath("/defaultsecretkey", cluster.APIVersion), fn: c.setDefaultSecretKey},
 		{verb: "POST", path: clusterSecretPath("/login", cluster.APIVersion), fn: c.secretsLogin},
+		{verb: "GET", path: clusterPath("/schedpolicy", cluster.APIVersion), fn: c.listSchedPolicy},
+		{verb: "POST", path: clusterPath("/schedpolicy", cluster.APIVersion), fn: c.createSchedPolicy},
+		{verb: "PUT", path: clusterPath("/schedpolicy", cluster.APIVersion), fn: c.updateSchedPolicy},
+		{verb: "DELETE", path: clusterPath("/schedpolicy/{name}", cluster.APIVersion), fn: c.deleteSchedPolicy},
 	}
 }

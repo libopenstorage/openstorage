@@ -8,6 +8,7 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/client"
 	"github.com/libopenstorage/openstorage/cluster"
+	sched "github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
 )
 
@@ -272,5 +273,61 @@ func (c *clusterClient) SecretLogin(secretType string, secretConfig map[string]s
 	if resp.Error() != nil {
 		return resp.FormatError()
 	}
+	return nil
+}
+
+// SchedPolicyEnumerate enumerates all configured policies
+func (c *clusterClient) SchedPolicyEnumerate([]string) ([]*sched.SchedPolicy, error) {
+	var schedPolicies []*sched.SchedPolicy
+	req := c.c.Get().Resource(clusterPath + "/schedPolicy")
+
+	if err := req.Do().Unmarshal(&schedPolicies); err != nil {
+		return nil, err
+	}
+
+	return schedPolicies, nil
+}
+
+// SchedPolicyCreate creates a policy with given name and schedule
+func (c *clusterClient) SchedPolicyCreate(name, schedule string) error {
+	request := &sched.SchedPolicy{
+		Name:     name,
+		Schedule: schedule,
+	}
+
+	req := c.c.Post().Resource(clusterPath + "/schedPolicy").Body(request)
+	res := req.Do()
+	if res.Error() != nil {
+		return res.FormatError()
+	}
+
+	return nil
+}
+
+// SchedPolicyUpdate updates a policy with given name and schedule
+func (c *clusterClient) SchedPolicyUpdate(name, schedule string) error {
+	request := &sched.SchedPolicy{
+		Name:     name,
+		Schedule: schedule,
+	}
+
+	req := c.c.Put().Resource(clusterPath + "/schedPolicy").Body(request)
+	res := req.Do()
+	if res.Error() != nil {
+		return res.FormatError()
+	}
+
+	return nil
+}
+
+// SchedPolicyDelete deletes a policy with given name
+func (c *clusterClient) SchedPolicyDelete(name string) error {
+	req := c.c.Delete().Resource(clusterPath + "/schedPolicy/" + name)
+	res := req.Do()
+
+	if res.Error() != nil {
+		return res.FormatError()
+	}
+
 	return nil
 }

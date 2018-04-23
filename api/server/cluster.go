@@ -11,6 +11,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
+	sched "github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
 )
 
@@ -21,7 +22,8 @@ const (
 
 type clusterApi struct {
 	restBase
-	SecretManager *secrets.Manager
+	SecretManager      *secrets.Manager
+	SchedPolicyManager *sched.Manager
 }
 
 // ClusterServerConfiguration holds manager implementation
@@ -30,6 +32,8 @@ type clusterApi struct {
 type ClusterServerConfiguration struct {
 	// holds implementation to Secrets interface
 	ConfigSecretManager *secrets.Manager
+	// holds implementeation to SchedulePolicy interface
+	ConfigSchedManager *sched.Manager
 }
 
 func newClusterAPI(config ClusterServerConfiguration) restServer {
@@ -38,7 +42,8 @@ func newClusterAPI(config ClusterServerConfiguration) restServer {
 			version: cluster.APIVersion,
 			name:    "Cluster API",
 		},
-		SecretManager: config.ConfigSecretManager,
+		SecretManager:      config.ConfigSecretManager,
+		SchedPolicyManager: config.ConfigSchedManager,
 	}
 }
 
