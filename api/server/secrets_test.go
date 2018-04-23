@@ -11,7 +11,7 @@ import (
 func TestSecretSetDefaultSecretKeySuccess(t *testing.T) {
 
 	// Create a new global test cluster
-	ts, tc := testClusterServerSecrets(t)
+	ts, tc := testClusterServer(t)
 	defer ts.Close()
 	defer tc.Finish()
 
@@ -37,7 +37,7 @@ func TestSecretSetDefaultSecretKeySuccess(t *testing.T) {
 func TestSecretSetDefaultSecretKeyFailed(t *testing.T) {
 
 	// Create a new global test cluster
-	ts, tc := testClusterServerSecrets(t)
+	ts, tc := testClusterServer(t)
 	defer ts.Close()
 	defer tc.Finish()
 
@@ -64,7 +64,7 @@ func TestSecretSetDefaultSecretKeyFailed(t *testing.T) {
 func TestSecretGetDefaultSecretKeySuccess(t *testing.T) {
 
 	// Create a new global test cluster
-	ts, tc := testClusterServerSecrets(t)
+	ts, tc := testClusterServer(t)
 	defer ts.Close()
 	defer tc.Finish()
 
@@ -90,7 +90,7 @@ func TestSecretGetDefaultSecretKeySuccess(t *testing.T) {
 func TestSecretGetDefaultSecretKeyFailed(t *testing.T) {
 
 	// Create a new global test cluster
-	ts, tc := testClusterServerSecrets(t)
+	ts, tc := testClusterServer(t)
 	defer ts.Close()
 	defer tc.Finish()
 
@@ -116,7 +116,7 @@ func TestSecretGetDefaultSecretKeyFailed(t *testing.T) {
 func TestGetSuccess(t *testing.T) {
 
 	// Create a new global test cluster
-	ts, tc := testClusterServerSecrets(t)
+	ts, tc := testClusterServer(t)
 	defer ts.Close()
 	defer tc.Finish()
 
@@ -143,7 +143,7 @@ func TestGetSuccess(t *testing.T) {
 func TestSecretGetFailed(t *testing.T) {
 
 	// Create a new global test cluster
-	ts, tc := testClusterServerSecrets(t)
+	ts, tc := testClusterServer(t)
 	defer ts.Close()
 	defer tc.Finish()
 
@@ -170,7 +170,7 @@ func TestSecretGetFailed(t *testing.T) {
 func TestSetSuccess(t *testing.T) {
 
 	// Create a new global test cluster
-	ts, tc := testClusterServerSecrets(t)
+	ts, tc := testClusterServer(t)
 	defer ts.Close()
 	defer tc.Finish()
 
@@ -195,7 +195,7 @@ func TestSetSuccess(t *testing.T) {
 func TestSetFailed(t *testing.T) {
 
 	// Create a new global test cluster
-	ts, tc := testClusterServerSecrets(t)
+	ts, tc := testClusterServer(t)
 	defer ts.Close()
 	defer tc.Finish()
 
@@ -223,7 +223,7 @@ func TestSetFailed(t *testing.T) {
 func TestVerifySuccess(t *testing.T) {
 
 	// Create a new global test cluster
-	ts, tc := testClusterServerSecrets(t)
+	ts, tc := testClusterServer(t)
 	defer ts.Close()
 	defer tc.Finish()
 
@@ -247,7 +247,7 @@ func TestVerifySuccess(t *testing.T) {
 func TestVerifyFailed(t *testing.T) {
 
 	// Create a new global test cluster
-	ts, tc := testClusterServerSecrets(t)
+	ts, tc := testClusterServer(t)
 	defer ts.Close()
 	defer tc.Finish()
 
@@ -272,7 +272,7 @@ func TestVerifyFailed(t *testing.T) {
 func TestSecretLoginSuccess(t *testing.T) {
 
 	// Create a new global test cluster
-	ts, tc := testClusterServerSecrets(t)
+	ts, tc := testClusterServer(t)
 	defer ts.Close()
 	defer tc.Finish()
 
@@ -300,7 +300,7 @@ func TestSecretLoginSuccess(t *testing.T) {
 func TestSecretLoginFailed(t *testing.T) {
 
 	// Create a new global test cluster
-	ts, tc := testClusterServerSecrets(t)
+	ts, tc := testClusterServer(t)
 	defer ts.Close()
 	defer tc.Finish()
 
@@ -326,7 +326,7 @@ func TestSecretLoginFailed(t *testing.T) {
 func TestSecretLoginAccessDenied(t *testing.T) {
 
 	// Create a new global test cluster
-	ts, tc := testClusterServerSecrets(t)
+	ts, tc := testClusterServer(t)
 	defer ts.Close()
 	defer tc.Finish()
 
