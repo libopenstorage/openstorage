@@ -275,7 +275,11 @@ func (s *ec2Ops) getPrefixFromRootDeviceName(rootDeviceName string) (string, err
 	return devPrefix, nil
 }
 
-func (s *ec2Ops) checkDevicePath(devicePath string) (string, error) {
+// getActualDevicePath does an os.Stat on the provided devicePath.
+// If not found it will try all the different devicePrefixes provided by AWS
+// such as /dev/sd and /dev/xvd and return the devicePath which is found
+// or return an error
+func (s *ec2Ops) getActualDevicePath(devicePath string) (string, error) {
 	letter := devicePath[len(devicePath)-1:]
 	devicePath = awsDevicePrefix + letter
 	if _, err := os.Stat(devicePath); err != nil {
@@ -625,7 +629,7 @@ func (s *ec2Ops) DevicePath(volumeID string) (string, error) {
 		return "", storageops.NewStorageError(storageops.ErrVolInval,
 			"Unable to determine volume attachment path", "")
 	}
-	devicePath, err := s.checkDevicePath(*vol.Attachments[0].Device)
+	devicePath, err := s.getActualDevicePath(*vol.Attachments[0].Device)
 	if err != nil {
 		return "", storageops.NewStorageError(storageops.ErrVolInval,
 			err.Error(), "")
