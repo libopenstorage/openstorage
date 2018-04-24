@@ -974,7 +974,12 @@ func (vd *volAPI) snapGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	snapRes, _ = d.SnapshotGroup(snapReq.Id, snapReq.Labels)
+	snapRes, err = d.SnapshotGroup(snapReq.Id, snapReq.Labels)
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	json.NewEncoder(w).Encode(&snapRes)
 }
 
