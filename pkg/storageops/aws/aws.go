@@ -17,6 +17,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const (
+	awsDevicePrefix      = "/dev/sd"
+	awsDevicePrefixWithX = "/dev/xvd"
+)
+
 type ec2Ops struct {
 	instance string
 	ec2      *ec2.EC2
@@ -215,7 +220,7 @@ func (s *ec2Ops) DeviceMappings() (map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	devPrefix := "/dev/sd"
+	devPrefix := awsDevicePrefix
 	m := make(map[string]string)
 	for _, d := range instance.BlockDeviceMappings {
 		if d.DeviceName != nil && d.Ebs != nil && d.Ebs.VolumeId != nil {
@@ -226,7 +231,7 @@ func (s *ec2Ops) DeviceMappings() (map[string]string, error) {
 			}
 			// AWS EBS volumes get mapped from /dev/sdN -->/dev/xvdN
 			if strings.HasPrefix(devName, devPrefix) {
-				devName = "/dev/xvd" + devName[len(devPrefix):]
+				devName = awsDevicePrefixWithX + devName[len(devPrefix):]
 			}
 			m[devName] = *d.Ebs.VolumeId
 		}
@@ -259,9 +264,9 @@ func (s *ec2Ops) describe() (*ec2.Instance, error) {
 }
 
 func (s *ec2Ops) getPrefixFromRootDeviceName(rootDeviceName string) (string, error) {
-	devPrefix := "/dev/sd"
+	devPrefix := awsDevicePrefix
 	if !strings.HasPrefix(rootDeviceName, devPrefix) {
-		devPrefix = "/dev/xvd"
+		devPrefix = awsDevicePrefixWithX
 		if !strings.HasPrefix(rootDeviceName, devPrefix) {
 			return "", fmt.Errorf("unknown prefix type on root device: %s",
 				rootDeviceName)
@@ -270,12 +275,28 @@ func (s *ec2Ops) getPrefixFromRootDeviceName(rootDeviceName string) (string, err
 	return devPrefix, nil
 }
 
+// getActualDevicePath does an os.Stat on the provided devicePath.
+// If not found it will try all the different devicePrefixes provided by AWS
+// such as /dev/sd and /dev/xvd and return the devicePath which is found
+// or return an error
+func (s *ec2Ops) getActualDevicePath(devicePath string) (string, error) {
+	letter := devicePath[len(devicePath)-1:]
+	devicePath = awsDevicePrefix + letter
+	if _, err := os.Stat(devicePath); err != nil {
+		devicePath = awsDevicePrefixWithX + letter
+		if _, err := os.Stat(devicePath); err != nil {
+			return "", err
+		}
+	}
+	return devicePath, nil
+}
+
 func (s *ec2Ops) FreeDevices(
 	blockDeviceMappings []interface{},
 	rootDeviceName string,
 ) ([]string, error) {
 	initial := []byte("fghijklmnop")
-	devPrefix := "/dev/sd"
+	devPrefix := awsDevicePrefix
 	for _, d := range blockDeviceMappings {
 		dev := d.(*ec2.InstanceBlockDeviceMapping)
 
@@ -288,14 +309,14 @@ func (s *ec2Ops) FreeDevices(
 			continue
 		}
 		if !strings.HasPrefix(devName, devPrefix) {
-			devPrefix = "/dev/xvd"
+			devPrefix = awsDevicePrefixWithX
 			if !strings.HasPrefix(devName, devPrefix) {
 				return nil, fmt.Errorf("bad device name %q", devName)
 			}
 		}
 		letter := devName[len(devPrefix):]
 		// Reset devPrefix for next devices
-		devPrefix = "/dev/sd"
+		devPrefix = awsDevicePrefix
 
 		// AWS instances can have the following device names
 		// /dev/xvd[b-c][a-z]
@@ -314,6 +335,9 @@ func (s *ec2Ops) FreeDevices(
 	}
 
 	// Set the prefix to the same one used as the root drive
+	// The reason we do this is based on the virtualization type AWS might attach
+	// the device "sda" at /dev/sda OR /dev/xvda. So we look at how the root device
+	// is attached and use that prefix
 	devPrefix, err := s.getPrefixFromRootDeviceName(rootDeviceName)
 	if err != nil {
 		return nil, err
@@ -605,5 +629,10 @@ func (s *ec2Ops) DevicePath(volumeID string) (string, error) {
 		return "", storageops.NewStorageError(storageops.ErrVolInval,
 			"Unable to determine volume attachment path", "")
 	}
-	return *vol.Attachments[0].Device, nil
+	devicePath, err := s.getActualDevicePath(*vol.Attachments[0].Device)
+	if err != nil {
+		return "", storageops.NewStorageError(storageops.ErrVolInval,
+			err.Error(), "")
+	}
+	return devicePath, nil
 }

@@ -2,6 +2,7 @@ package test
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -124,6 +125,8 @@ func devicePath(t *testing.T, driver storageops.Ops, diskName string) {
 	devPath, err := driver.DevicePath(diskName)
 	require.NoError(t, err, "get device path returned error")
 	require.NotEmpty(t, devPath, "received empty devicePath")
+	_, err = os.Stat(devPath)
+	require.NoError(t, err, "expected device path to exist")
 }
 
 func teardown(t *testing.T, driver storageops.Ops, diskName string) {
