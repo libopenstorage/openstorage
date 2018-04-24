@@ -595,9 +595,4 @@ message GroupSnapCreateResponse {
   // in: body
   // Required: true
   map<string, SnapCreateResponse> snapshots = 1;
-  // Error message
-  //
-  // in: body
-  // Required: true
-  string error = 2;
 }
