@@ -213,7 +213,7 @@ var _ = Describe("Cluster [Cluster Tests]", func() {
 			endTime = time.Now()
 			startTime = endTime.Add(-5 * time.Hour)
 
-			alerts, err := manager.EnumerateAlerts(startTime, endTime, api.ResourceType_RESOURCE_TYPE_VOLUME)
+			alerts, err := manager.EnumerateAlerts(startTime, endTime, api.ResourceType_RESOURCE_TYPE_NODE)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(alerts.Alert).NotTo(BeEmpty())
 
@@ -225,7 +225,8 @@ var _ = Describe("Cluster [Cluster Tests]", func() {
 
 			By("Enumerating the alerts again and checking if the alert cleared")
 
-			alerts, err = manager.EnumerateAlerts(startTime, endTime, api.ResourceType_RESOURCE_TYPE_VOLUME)
+			alerts, err = manager.EnumerateAlerts(startTime, endTime, api.ResourceType_RESOURCE_TYPE_NODE)
+
 			Expect(err).NotTo(HaveOccurred())
 			Expect(alerts).NotTo(BeNil())
 
@@ -242,7 +243,7 @@ var _ = Describe("Cluster [Cluster Tests]", func() {
 
 			By("Enumerating the alerts again and checking if the alert cleared")
 
-			alerts, err = manager.EnumerateAlerts(startTime, endTime, api.ResourceType_RESOURCE_TYPE_VOLUME)
+			alerts, err = manager.EnumerateAlerts(startTime, endTime, api.ResourceType_RESOURCE_TYPE_NODE)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(alerts).NotTo(BeNil())
 
@@ -257,38 +258,6 @@ var _ = Describe("Cluster [Cluster Tests]", func() {
 
 		})
 
-	})
-
-	Describe("Cluster Peer Status", func() {
-
-		var (
-			numOfNodes int
-		)
-		BeforeEach(func() {
-
-			By("Enumerating cluster first and getting the no of nodes.")
-			cluster, err := manager.Enumerate()
-			Expect(err).NotTo(HaveOccurred())
-
-			numOfNodes = len(cluster.Nodes)
-		})
-		It("should get peer status each node", func() {
-			By("Querying Peer status")
-			statusMap, err := manager.PeerStatus("PX Storage Service")
-			Expect(err).NotTo(HaveOccurred())
-
-			// if listener name is provided , PeerStatus
-			// returns the status of all peer nodes which would one less than the num of nodes.
-			Expect(len(statusMap)).To(BeEquivalentTo(numOfNodes - 1))
-		})
-
-		It("should get peer status of all node , if listener name is empty", func() {
-			By("Querying Peer status")
-			statusMap, err := manager.PeerStatus("")
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(len(statusMap)).To(BeEquivalentTo(numOfNodes - 1))
-		})
 	})
 
 	Describe("Cluster Enable Gossip", func() {
@@ -307,33 +276,6 @@ var _ = Describe("Cluster [Cluster Tests]", func() {
 
 			err := manager.DisableUpdates()
 			Expect(err).NotTo(HaveOccurred())
-		})
-	})
-
-	Describe("Cluster Conf", func() {
-		It("Should get cluster conf ", func() {
-
-			By("getting cluster conf")
-
-			clusterConfig, err := manager.GetClusterConf()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(clusterConfig).NotTo(BeNil())
-		})
-	})
-
-	Describe("Cluster Node Conf", func() {
-		It("Should get node configuration ", func() {
-
-			By("First enumerating the cluster and getting node id")
-			cluster, err := manager.Enumerate()
-			Expect(err).NotTo(HaveOccurred())
-			nodeID := cluster.NodeId
-
-			By("getting node configuration")
-			nodeConfig, err := manager.GetNodeConf(nodeID)
-
-			Expect(err).NotTo(HaveOccurred())
-			Expect(nodeConfig).NotTo(BeNil())
 		})
 	})
 })

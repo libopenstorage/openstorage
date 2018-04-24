@@ -1513,3 +1513,64 @@ func TestCredsValidateFailed(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "error in creds validate")
 }
+
+func TestGroupSnapshotCreateSuccess(t *testing.T) {
+
+	var err error
+	ts, testVolDriver := testRestServer(t)
+
+	defer ts.Close()
+	defer testVolDriver.Stop()
+
+	id := "mygroupid"
+	labels := map[string]string{
+		"app":    "app1",
+		"region": "region1",
+	}
+
+	client, err := volumeclient.NewDriverClient(ts.URL, mockDriverName, version, mockDriverName)
+
+	assert.Nil(t, err)
+
+	req := &api.GroupSnapCreateRequest{Id: id,
+		Labels: labels,
+	}
+
+	snapshots := map[string]*api.SnapCreateResponse{
+		"vol1": &api.SnapCreateResponse{
+			VolumeCreateResponse: &api.VolumeCreateResponse{
+				Id: id,
+				VolumeResponse: &api.VolumeResponse{
+					Error: responseStatus(err),
+				},
+			},
+		},
+		"vol2": &api.SnapCreateResponse{
+			VolumeCreateResponse: &api.VolumeCreateResponse{
+				Id: id,
+				VolumeResponse: &api.VolumeResponse{
+					Error: responseStatus(err),
+				},
+			},
+		},
+	}
+
+	response := &api.GroupSnapCreateResponse{
+		Snapshots: snapshots,
+		Error:     responseStatus(err),
+	}
+
+	//mock Snapshot call
+	testVolDriver.MockDriver().
+		EXPECT().
+		SnapshotGroup(req.GetId(), req.GetLabels()).
+		Return(response, nil)
+
+	// create client
+	driverclient := volumeclient.VolumeDriver(client)
+
+	res, err := driverclient.SnapshotGroup(req.GetId(), req.GetLabels())
+
+	assert.Nil(t, err)
+	assert.Equal(t, len(response.Snapshots), len(res.Snapshots))
+}

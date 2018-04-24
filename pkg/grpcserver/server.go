@@ -1,6 +1,6 @@
 /*
-Package csi is CSI driver interface for OSD
-Copyright 2017 Portworx
+Package grpcserver is a generic gRPC server manager
+Copyright 2018 Portworx
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,20 +14,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package csi
+package grpcserver
 
-import (
-	csi "github.com/container-storage-interface/spec/lib/go/csi/v0"
-)
-
-// Server is an interface to a CSI Compatible gRPC server
-// which implements not only the CSI spec APIs but also
-// server management APIs.
+// Server is an interface to a gRPC server which provides an implementation
+// of an exported gRPC interface
 type Server interface {
-	csi.ControllerServer
-	csi.IdentityServer
-	csi.NodeServer
-
 	// Start the server. If called on a running server it will return an error.
 	Start() error
 

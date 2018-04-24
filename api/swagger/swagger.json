@@ -632,6 +632,43 @@
         }
       }
     },
+    "/osd-snapshots/groupsnap": {
+      "post": {
+        "description": "Take a snapshot of volumegroup",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "volumegroup"
+        ],
+        "operationId": "snapVolumeGroup",
+        "parameters": [
+          {
+            "description": "GroupSnap create request",
+            "name": "groupspec",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GroupSnapCreateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "group snap create response",
+            "schema": {
+              "$ref": "#/definitions/GroupSnapCreateResponse"
+            }
+          },
+          "default": {
+            "description": "unexpected error",
+            "schema": {
+              "$ref": "#/definitions/GroupSnapCreateResponse"
+            }
+          }
+        }
+      }
+    },
     "/osd-snapshots/restore/{id}": {
       "post": {
         "produces": [
@@ -1213,7 +1250,7 @@
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
-    "CloudBackupDeleteRequest": {
+    "CloudBackupDeleteAllRequest": {
       "type": "object",
       "properties": {
         "All": {
@@ -1230,6 +1267,24 @@
         },
         "SrcVolumeID": {
           "description": "SrcVolumeID is optional Source VolumeID for the request",
+          "type": "string"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "CloudBackupDeleteRequest": {
+      "type": "object",
+      "properties": {
+        "CredentialUUID": {
+          "description": "CredentialUUID is the credential for cloud to be used for the request",
+          "type": "string"
+        },
+        "Force": {
+          "description": "Force Delete cloudbackup even if there are dependencies",
+          "type": "boolean"
+        },
+        "ID": {
+          "description": "ID is the ID of the cloud backup",
           "type": "string"
         }
       },
@@ -1794,6 +1849,47 @@
           "description": "Id common identifier across volumes that have the same group.",
           "type": "string",
           "x-go-name": "Id"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "GroupSnapCreateRequest": {
+      "type": "object",
+      "title": "GroupSnapCreateRequest specifies a request to create a snapshot of given group.",
+      "properties": {
+        "Labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string",
+          "x-go-name": "Id"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "GroupSnapCreateResponse": {
+      "type": "object",
+      "title": "GroupSnapCreateRequest specifies a response that get's returned when creating a group snapshot.",
+      "required": [
+        "snapshots",
+        "error"
+      ],
+      "properties": {
+        "error": {
+          "description": "Error message\n\nin: body",
+          "type": "string",
+          "x-go-name": "Error"
+        },
+        "snapshots": {
+          "description": "Created snapshots\n\nin: body",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/SnapCreateResponse"
+          },
+          "x-go-name": "Snapshots"
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
@@ -2554,6 +2650,14 @@
           "type": "integer",
           "format": "uint64",
           "x-go-name": "Usage"
+        },
+        "volume_consumers": {
+          "description": "VolumeConsumers are entities that consume this volume",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VolumeConsumer"
+          },
+          "x-go-name": "VolumeConsumers"
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
@@ -2561,6 +2665,43 @@
     "VolumeActionParam": {
       "type": "integer",
       "format": "int32",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VolumeConsumer": {
+      "description": "VolumeConsumer identifies a consumer for a Volume. An example of a VolumeConsumer\nwould be a Pod in Kubernetes who has mounted the PersistentVolumeClaim for the\nVolume\nswagger: model",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Name is the name of the volume consumer",
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "namespace": {
+          "description": "Namespace is the namespace of the volume consumer",
+          "type": "string",
+          "x-go-name": "Namespace"
+        },
+        "node_id": {
+          "description": "NodeID is the identifier of the node on which the consumer is running. This\nidentifier would be from the perspective of the container runtime or\norchestrator under which the volume consumer resides. For example, NodeID\ncan be name of a minion in Kubernetes.",
+          "type": "string",
+          "x-go-name": "NodeId"
+        },
+        "owner_name": {
+          "description": "OwnerName is the name of the entity who owns this volume consumer",
+          "type": "string",
+          "x-go-name": "OwnerName"
+        },
+        "owner_type": {
+          "description": "OwnerType is the type of the entity who owns this volume consumer. The type would\nbe from the perspective of the container runtime or the orchestrator under which\nthe volume consumer resides. For e.g OwnerType can be a Deployment in Kubernetes.",
+          "type": "string",
+          "x-go-name": "OwnerType"
+        },
+        "type": {
+          "description": "Type is the type of the consumer. E.g a Kubernetes pod",
+          "type": "string",
+          "x-go-name": "Type"
+        }
+      },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "VolumeCreateRequest": {
@@ -2761,11 +2902,6 @@
           "type": "boolean",
           "x-go-name": "Journal"
         },
-        "nfs": {
-          "description": "Nfs is true if this volume can be accessed via nfs.",
-          "type": "boolean",
-          "x-go-name": "Nfs"
-        },
         "passphrase": {
           "description": "Passphrase for an encrypted volume",
           "type": "string",
@@ -2784,6 +2920,11 @@
           "description": "Shared is true if this volume can be remotely accessed.",
           "type": "boolean",
           "x-go-name": "Shared"
+        },
+        "sharedv4": {
+          "description": "Sharedv4 is true if this volume can be accessed via sharedv4.",
+          "type": "boolean",
+          "x-go-name": "Sharedv4"
         },
         "size": {
           "description": "Size specifies the thin provisioned volume size.",
@@ -2857,6 +2998,15 @@
   "responses": {
     "clusterResponse": {
       "description": "ClusterResponse specifies a response that gets returned when requesting the cluster"
+    },
+    "groupSnapCreateResponse": {
+      "description": "GroupSnapCreateRequest specifies a response that get's returned when creating a group snapshot.",
+      "schema": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "#/definitions/SnapCreateResponse"
+        }
+      }
     },
     "snapCreateResponse": {
       "description": "SnapCreateRequest specifies a response that get's returned when creating a snapshot.",

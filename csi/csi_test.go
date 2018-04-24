@@ -28,6 +28,7 @@ import (
 	"golang.org/x/net/context"
 
 	mockcluster "github.com/libopenstorage/openstorage/cluster/mock"
+	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
@@ -41,7 +42,7 @@ const (
 // the creation and setup of the gRPC CSI service
 type testServer struct {
 	conn   *grpc.ClientConn
-	server Server
+	server grpcserver.Server
 	m      *mockdriver.MockVolumeDriver
 	c      *mockcluster.MockCluster
 	mc     *gomock.Controller
@@ -112,7 +113,7 @@ func (s *testServer) Conn() *grpc.ClientConn {
 	return s.conn
 }
 
-func (s *testServer) Server() Server {
+func (s *testServer) Server() grpcserver.Server {
 	return s.server
 }
 

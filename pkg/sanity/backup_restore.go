@@ -602,8 +602,8 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 					},
 				}
 				bkpScheduleResponse, err := volumedriver.CloudBackupSchedCreate(bkpScheduleInfo)
-				Expect(err).To(BeEmpty())
-				Expect(bkpScheduleResponse.UUID).NotTo(BeNil())
+				Expect(err).To(BeNil())
+				Expect(bkpScheduleResponse.UUID).NotTo(BeEmpty())
 
 				schedules = append(schedules, bkpScheduleResponse.UUID)
 			}

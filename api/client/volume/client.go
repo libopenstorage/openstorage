@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/api/client"
-	"github.com/libopenstorage/openstorage/volume"
 	"io"
 	"io/ioutil"
 	"strconv"
+
+	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/api/client"
+	"github.com/libopenstorage/openstorage/volume"
 )
 
 const (
@@ -657,4 +658,24 @@ func (v *volumeClient) CloudBackupSchedEnumerate() (*api.CloudBackupSchedEnumera
 		return nil, err
 	}
 	return enumerateResponse, nil
+}
+
+func (v *volumeClient) SnapshotGroup(groupID string, labels map[string]string) (*api.GroupSnapCreateResponse, error) {
+
+	response := &api.GroupSnapCreateResponse{}
+	request := &api.GroupSnapCreateRequest{
+		Id:     groupID,
+		Labels: labels,
+	}
+
+	req := v.c.Post().Resource(snapPath + "/snapshotgroup").Body(request)
+	res := req.Do()
+	if res.Error() != nil {
+		return nil, res.FormatError()
+	}
+
+	if err := res.Unmarshal(&response); err != nil {
+		return nil, err
+	}
+	return response, nil
 }
