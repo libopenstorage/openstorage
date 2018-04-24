@@ -1557,14 +1557,13 @@ func TestGroupSnapshotCreateSuccess(t *testing.T) {
 
 	response := &api.GroupSnapCreateResponse{
 		Snapshots: snapshots,
-		Error:     responseStatus(err),
 	}
 
 	//mock Snapshot call
 	testVolDriver.MockDriver().
 		EXPECT().
 		SnapshotGroup(req.GetId(), req.GetLabels()).
-		Return(response, nil)
+		Return(response, err)
 
 	// create client
 	driverclient := volumeclient.VolumeDriver(client)
