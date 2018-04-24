@@ -47,8 +47,10 @@ func (s *snapshotNotSupported) Restore(volumeID, snapshotID string) error {
 	return ErrNotSupported
 }
 
-func (s *snapshotNotSupported) SnapshotGroup(groupID string, labels map[string]string) (*api.GroupSnapCreateResponse, error) {
-	return nil, ErrNotSupported
+func (s *snapshotNotSupported) SnapshotGroup(groupID string, labels map[string]string) *api.GroupSnapCreateResponse {
+	return &api.GroupSnapCreateResponse{
+		Error: ErrNotSupported.Error(),
+	}
 }
 
 type ioNotSupported struct{}

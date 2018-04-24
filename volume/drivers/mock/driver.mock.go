@@ -457,11 +457,10 @@ func (mr *MockVolumeDriverMockRecorder) Snapshot(arg0, arg1, arg2 interface{}) *
 }
 
 // SnapshotGroup mocks base method
-func (m *MockVolumeDriver) SnapshotGroup(arg0 string, arg1 map[string]string) (*api.GroupSnapCreateResponse, error) {
+func (m *MockVolumeDriver) SnapshotGroup(arg0 string, arg1 map[string]string) *api.GroupSnapCreateResponse {
 	ret := m.ctrl.Call(m, "SnapshotGroup", arg0, arg1)
 	ret0, _ := ret[0].(*api.GroupSnapCreateResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	return ret0
 }
 
 // SnapshotGroup indicates an expected call of SnapshotGroup

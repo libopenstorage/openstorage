@@ -326,9 +326,10 @@ func (d *driver) Restore(volumeID string, snapID string) error {
 	return copyFile(BuseMountPath+snapID, BuseMountPath+volumeID)
 }
 
-func (d *driver) SnapshotGroup(groupID string, labels map[string]string) (*api.GroupSnapCreateResponse, error) {
-
-	return nil, volume.ErrNotSupported
+func (d *driver) SnapshotGroup(groupID string, labels map[string]string) *api.GroupSnapCreateResponse {
+	return &api.GroupSnapCreateResponse{
+		Error: volume.ErrNotSupported.Error(),
+	}
 }
 
 func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
