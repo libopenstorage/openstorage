@@ -1,0 +1,19 @@
+HAS_VIRTUALENV := $(shell command -v virtualenv 2> /dev/null)
+APIDIR := "../../../../api"
+VEDIR := "build"
+all: grpc
+
+grpc:
+ifndef HAS_VIRTUALENV
+	$(error "Please install virtualenv for python: pip install virtualenv")
+endif
+	virtualenv $(VEDIR)
+	bash -c "source $(VEDIR)/bin/activate && \
+	pip install grpcio grpcio-tools && \
+	python -m grpc_tools.protoc \
+		-I$(APIDIR) \
+		--python_out=. \
+		--grpc_python_out=. \
+		$(APIDIR)/api.proto"
+
+.PHONY: all grpc
