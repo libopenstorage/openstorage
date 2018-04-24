@@ -660,7 +660,7 @@ func (v *volumeClient) CloudBackupSchedEnumerate() (*api.CloudBackupSchedEnumera
 	return enumerateResponse, nil
 }
 
-func (v *volumeClient) SnapshotGroup(groupID string, labels map[string]string) (*api.GroupSnapCreateResponse, error) {
+func (v *volumeClient) SnapshotGroup(groupID string, labels map[string]string) *api.GroupSnapCreateResponse {
 
 	response := &api.GroupSnapCreateResponse{}
 	request := &api.GroupSnapCreateRequest{
@@ -670,12 +670,10 @@ func (v *volumeClient) SnapshotGroup(groupID string, labels map[string]string) (
 
 	req := v.c.Post().Resource(snapPath + "/snapshotgroup").Body(request)
 	res := req.Do()
-	if res.Error() != nil {
-		return nil, res.FormatError()
-	}
 
 	if err := res.Unmarshal(&response); err != nil {
-		return nil, err
+		response.Error = err.Error()
 	}
-	return response, nil
+
+	return response
 }
