@@ -316,11 +316,18 @@ type CloudBackupStatusRequest struct {
 	Local bool
 }
 
+type CloudBackupOpType string
+
+const (
+	CloudBackupOp  = CloudBackupOpType("Backup")
+	CloudRestoreOp = CloudBackupOpType("Restore")
+)
+
 type CloudBackupStatus struct {
 	// ID is the ID for the operation
 	ID string
 	// OpType indicates if this is a backup or restore
-	OpType string
+	OpType CloudBackupOpType
 	// State indicates if the op is currently active/done/failed
 	Status string
 	// BytesDone indicates total Bytes uploaded/downloaded
