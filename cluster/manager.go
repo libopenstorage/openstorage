@@ -1693,3 +1693,38 @@ func (c *ClusterManager) DeleteNodeConf(nodeID string) error {
 func (c *ClusterManager) EnumerateNodeConf() (*osdconfig.NodesConfig, error) {
 	return c.configManager.EnumerateNodeConf()
 }
+
+// This needs to be added since clusterclient is REST wrapper over ClusterManager
+// we can also create custom secretclient i.e Rest wrapper over SecretManager
+// may be related to issue :  #382 (https://github.com/libopenstorage/openstorage/issues/382)
+// TODO : Find cleaner way for this
+
+// SecretLogin create session with secret store
+func (c *ClusterManager) SecretLogin(secretType string, secretConfig map[string]string) error {
+	return nil
+}
+
+// SecretSetDefaultSecretKey sets the cluster wide secret key
+func (c *ClusterManager) SecretSetDefaultSecretKey(secretKey string, override bool) error {
+	return nil
+}
+
+// SecretCheckLogin validates session with secret store
+func (c *ClusterManager) SecretCheckLogin() error {
+	return nil
+}
+
+// SecretSet stores the given value/data against the key
+func (c *ClusterManager) SecretSet(key string, value interface{}) error {
+	return nil
+}
+
+// SecretGet retrieves the data for the given key
+func (c *ClusterManager) SecretGet(string) (interface{}, error) {
+	return "", nil
+}
+
+// SecretGetDefaultSecretKey return cluster wide secret key
+func (c *ClusterManager) SecretGetDefaultSecretKey() (interface{}, error) {
+	return nil, nil
+}
