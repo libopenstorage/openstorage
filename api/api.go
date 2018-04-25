@@ -636,3 +636,52 @@ func (v Volume) DisplayId() string {
 		return v.Id
 	}
 }
+
+// ToStorageNode converts a Node structure to an exported gRPC StorageNode struct
+func (s *Node) ToStorageNode() *StorageNode {
+	node := &StorageNode{
+		Id:       s.Id,
+		Cpu:      s.Cpu,
+		MemTotal: s.MemTotal,
+		MemUsed:  s.MemUsed,
+		MemFree:  s.MemFree,
+		AvgLoad:  int64(s.Avgload),
+		Status:   s.Status,
+		MgmtIp:   s.MgmtIp,
+		DataIp:   s.DataIp,
+		Hostname: s.Hostname,
+	}
+
+	node.Disks = make(map[string]*StorageResource)
+	for k, v := range s.Disks {
+		node.Disks[k] = &v
+	}
+
+	node.NodeLabels = make(map[string]string)
+	for k, v := range s.NodeLabels {
+		node.NodeLabels[k] = v
+	}
+
+	node.Pools = make([]*StoragePool, len(s.Pools))
+	for i, v := range s.Pools {
+		node.Pools[i] = &v
+	}
+
+	return node
+}
+
+// ToStorageCluster converts a Cluster structure to an exported gRPC StorageCluster struct
+func (c *Cluster) ToStorageCluster() *StorageCluster {
+	cluster := &StorageCluster{
+		Status: c.Status,
+		Id:     c.Id,
+		NodeId: c.NodeId,
+	}
+
+	cluster.Nodes = make([]*StorageNode, len(c.Nodes))
+	for i, v := range c.Nodes {
+		cluster.Nodes[i] = v.ToStorageNode()
+	}
+
+	return cluster
+}

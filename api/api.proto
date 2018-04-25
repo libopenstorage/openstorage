@@ -601,3 +601,72 @@ message GroupSnapCreateResponse {
   // Required: true
   string error = 2;
 }
+
+service OpenStorageCluster {
+	// Enumerate lists all the nodes in the cluster.
+	rpc Enumerate(ClusterEnumerateRequest)
+		returns (ClusterEnumerateResponse) {}
+
+	// Inspect the node given a UUID.
+	rpc Inspect(ClusterInspectRequest)
+		returns (ClusterInspectResponse) {}
+}
+
+// StorageNode describes the state of the node
+message StorageNode {
+  // Id of the node
+  string id = 1;
+  // Cpu usage of the node
+  double cpu = 2;
+  // Total memory of the node
+  uint64 mem_total = 3;
+  // Used memory of the node
+  uint64 mem_used = 4;
+  // Free memory of the node
+  uint64 mem_free = 5;
+  // Average load (percentage)
+  int64 avg_load = 6;
+  // Node status
+  Status status = 7;
+  // List of disks on the node
+  map<string, StorageResource> disks = 9;
+  // List of storage pools this node supports
+  repeated StoragePool pools = 10;
+  // Management IP
+  string mgmt_ip = 11;
+  // Data IP
+  string data_ip = 12;
+  // Hostname of the node
+  string hostname = 15;
+  // User defined labels for the node
+  map<string, string> node_labels = 16;
+}
+
+// StorageCluster represents the state of the cluster
+message StorageCluster {
+  // Status of the cluster
+  Status status = 1;
+  // Id of the cluster
+  string id = 2;
+  // NodeId is the id of the node servicing these requests
+  string node_id = 3;
+  // Nodes are a list of all the nodes on the cluster
+  repeated StorageNode nodes = 4;
+}
+
+// Enumerate
+message ClusterEnumerateRequest {
+}
+
+message ClusterEnumerateResponse {
+	StorageCluster cluster = 1;
+}
+
+// Inspect
+message ClusterInspectRequest {
+	string node_id = 1;
+}
+
+message ClusterInspectResponse {
+	StorageNode node = 1;
+}
