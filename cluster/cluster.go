@@ -10,6 +10,7 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/osdconfig"
+	"github.com/libopenstorage/openstorage/secrets"
 	"github.com/portworx/kvdb"
 )
 
@@ -254,6 +255,7 @@ type Cluster interface {
 	ClusterStatus
 	ClusterAlerts
 	osdconfig.ConfigCaller
+	secrets.Secrets
 }
 
 // ClusterNotify is the callback function listeners can use to notify cluster manager
