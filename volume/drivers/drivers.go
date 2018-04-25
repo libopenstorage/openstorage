@@ -9,6 +9,7 @@ import (
 	"github.com/libopenstorage/openstorage/volume/drivers/btrfs"
 	"github.com/libopenstorage/openstorage/volume/drivers/buse"
 	"github.com/libopenstorage/openstorage/volume/drivers/coprhd"
+	"github.com/libopenstorage/openstorage/volume/drivers/fake"
 	"github.com/libopenstorage/openstorage/volume/drivers/nfs"
 	"github.com/libopenstorage/openstorage/volume/drivers/pwx"
 	"github.com/libopenstorage/openstorage/volume/drivers/vfs"
@@ -38,6 +39,8 @@ var (
 		{DriverType: pwx.Type, Name: pwx.Name},
 		// VFS driver provisions storage from local filesystem
 		{DriverType: vfs.Type, Name: vfs.Name},
+		// Fake driver is used to develop and test the API
+		{DriverType: fake.Type, Name: fake.Name},
 	}
 
 	volumeDriverRegistry = volume.NewVolumeDriverRegistry(
@@ -49,6 +52,7 @@ var (
 			nfs.Name:    nfs.Init,
 			pwx.Name:    pwx.Init,
 			vfs.Name:    vfs.Init,
+			fake.Name:   fake.Init,
 		},
 	)
 )
