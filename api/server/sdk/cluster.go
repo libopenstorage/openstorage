@@ -22,6 +22,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/golang/protobuf/ptypes"
+
 	"github.com/libopenstorage/openstorage/api"
 )
 
@@ -51,4 +53,78 @@ func (s *Server) Inspect(ctx context.Context, req *api.ClusterInspectRequest) (*
 	return &api.ClusterInspectResponse{
 		Node: node.ToStorageNode(),
 	}, nil
+}
+
+// AlertEnumerate returns a list of alerts from the storage cluster
+func (s *Server) AlertEnumerate(
+	ctx context.Context,
+	req *api.ClusterAlertEnumerateRequest,
+) (*api.ClusterAlertEnumerateResponse, error) {
+
+	ts, err := ptypes.Timestamp(req.GetTimeStart())
+	if err != nil {
+		return nil, status.Errorf(
+			codes.InvalidArgument,
+			"Unable to get start time from request: %v",
+			err.Error())
+	}
+
+	te, err := ptypes.Timestamp(req.GetTimeEnd())
+	if err != nil {
+		return nil, status.Errorf(
+			codes.InvalidArgument,
+			"Unable to get start time from request: %v",
+			err.Error())
+	}
+
+	alerts, err := s.cluster.EnumerateAlerts(ts, te, req.GetResource())
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"Failed to enumerate alerts for type %v: %v",
+			req.GetResource(),
+			err.Error())
+	}
+
+	return &api.ClusterAlertEnumerateResponse{
+		Alerts: alerts,
+	}, nil
+}
+
+// AlertClear clears the alert for a given resource
+func (s *Server) AlertClear(
+	ctx context.Context,
+	req *api.ClusterAlertClearRequest,
+) (*api.ClusterAlertClearResponse, error) {
+
+	err := s.cluster.ClearAlert(req.GetResource(), req.GetAlertId())
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"Failed to clear alert %d for type %v: %v",
+			req.GetAlertId(),
+			req.GetResource(),
+			err.Error())
+	}
+
+	return &api.ClusterAlertClearResponse{}, nil
+}
+
+// AlertErase erases an alert for a given resource
+func (s *Server) AlertErase(
+	ctx context.Context,
+	req *api.ClusterAlertEraseRequest,
+) (*api.ClusterAlertEraseResponse, error) {
+
+	err := s.cluster.EraseAlert(req.GetResource(), req.GetAlertId())
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"Failed to erase alert %d for type %v: %v",
+			req.GetAlertId(),
+			req.GetResource(),
+			err.Error())
+	}
+
+	return &api.ClusterAlertEraseResponse{}, nil
 }
