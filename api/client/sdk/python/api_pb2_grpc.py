@@ -24,6 +24,21 @@ class OpenStorageClusterStub(object):
         request_serializer=api__pb2.ClusterInspectRequest.SerializeToString,
         response_deserializer=api__pb2.ClusterInspectResponse.FromString,
         )
+    self.AlertEnumerate = channel.unary_unary(
+        '/openstorage.api.OpenStorageCluster/AlertEnumerate',
+        request_serializer=api__pb2.ClusterAlertEnumerateRequest.SerializeToString,
+        response_deserializer=api__pb2.ClusterAlertEnumerateResponse.FromString,
+        )
+    self.AlertClear = channel.unary_unary(
+        '/openstorage.api.OpenStorageCluster/AlertClear',
+        request_serializer=api__pb2.ClusterAlertClearRequest.SerializeToString,
+        response_deserializer=api__pb2.ClusterAlertClearResponse.FromString,
+        )
+    self.AlertErase = channel.unary_unary(
+        '/openstorage.api.OpenStorageCluster/AlertErase',
+        request_serializer=api__pb2.ClusterAlertEraseRequest.SerializeToString,
+        response_deserializer=api__pb2.ClusterAlertEraseResponse.FromString,
+        )
 
 
 class OpenStorageClusterServicer(object):
@@ -44,6 +59,27 @@ class OpenStorageClusterServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
+  def AlertEnumerate(self, request, context):
+    """Get a list of alerts from the storage cluster
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def AlertClear(self, request, context):
+    """Clear the alert for a given resource
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def AlertErase(self, request, context):
+    """Erases an alert for a given resource
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
 
 def add_OpenStorageClusterServicer_to_server(servicer, server):
   rpc_method_handlers = {
@@ -57,7 +93,132 @@ def add_OpenStorageClusterServicer_to_server(servicer, server):
           request_deserializer=api__pb2.ClusterInspectRequest.FromString,
           response_serializer=api__pb2.ClusterInspectResponse.SerializeToString,
       ),
+      'AlertEnumerate': grpc.unary_unary_rpc_method_handler(
+          servicer.AlertEnumerate,
+          request_deserializer=api__pb2.ClusterAlertEnumerateRequest.FromString,
+          response_serializer=api__pb2.ClusterAlertEnumerateResponse.SerializeToString,
+      ),
+      'AlertClear': grpc.unary_unary_rpc_method_handler(
+          servicer.AlertClear,
+          request_deserializer=api__pb2.ClusterAlertClearRequest.FromString,
+          response_serializer=api__pb2.ClusterAlertClearResponse.SerializeToString,
+      ),
+      'AlertErase': grpc.unary_unary_rpc_method_handler(
+          servicer.AlertErase,
+          request_deserializer=api__pb2.ClusterAlertEraseRequest.FromString,
+          response_serializer=api__pb2.ClusterAlertEraseResponse.SerializeToString,
+      ),
   }
   generic_handler = grpc.method_handlers_generic_handler(
       'openstorage.api.OpenStorageCluster', rpc_method_handlers)
+  server.add_generic_rpc_handlers((generic_handler,))
+
+
+class OpenStorageVolumeStub(object):
+  # missing associated documentation comment in .proto file
+  pass
+
+  def __init__(self, channel):
+    """Constructor.
+
+    Args:
+      channel: A grpc.Channel.
+    """
+    self.Create = channel.unary_unary(
+        '/openstorage.api.OpenStorageVolume/Create',
+        request_serializer=api__pb2.OpenStorageVolumeCreateRequest.SerializeToString,
+        response_deserializer=api__pb2.OpenStorageVolumeCreateResponse.FromString,
+        )
+    self.CreateFromVolumeID = channel.unary_unary(
+        '/openstorage.api.OpenStorageVolume/CreateFromVolumeID',
+        request_serializer=api__pb2.VolumeCreateFromVolumeIDRequest.SerializeToString,
+        response_deserializer=api__pb2.VolumeCreateFromVolumeIDResponse.FromString,
+        )
+    self.Delete = channel.unary_unary(
+        '/openstorage.api.OpenStorageVolume/Delete',
+        request_serializer=api__pb2.VolumeDeleteRequest.SerializeToString,
+        response_deserializer=api__pb2.VolumeDeleteResponse.FromString,
+        )
+    self.Inspect = channel.unary_unary(
+        '/openstorage.api.OpenStorageVolume/Inspect',
+        request_serializer=api__pb2.VolumeInspectRequest.SerializeToString,
+        response_deserializer=api__pb2.VolumeInspectResponse.FromString,
+        )
+    self.Enumerate = channel.unary_unary(
+        '/openstorage.api.OpenStorageVolume/Enumerate',
+        request_serializer=api__pb2.VolumeEnumerateRequest.SerializeToString,
+        response_deserializer=api__pb2.VolumeEnumerateResponse.FromString,
+        )
+
+
+class OpenStorageVolumeServicer(object):
+  # missing associated documentation comment in .proto file
+  pass
+
+  def Create(self, request, context):
+    """Creates a new volume
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def CreateFromVolumeID(self, request, context):
+    """CreateFromVolumeID creates a new volume cloned from an existing volume
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def Delete(self, request, context):
+    """Delete a volume
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def Inspect(self, request, context):
+    """Get information on a volume
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def Enumerate(self, request, context):
+    """Get a list of volumes
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+
+def add_OpenStorageVolumeServicer_to_server(servicer, server):
+  rpc_method_handlers = {
+      'Create': grpc.unary_unary_rpc_method_handler(
+          servicer.Create,
+          request_deserializer=api__pb2.OpenStorageVolumeCreateRequest.FromString,
+          response_serializer=api__pb2.OpenStorageVolumeCreateResponse.SerializeToString,
+      ),
+      'CreateFromVolumeID': grpc.unary_unary_rpc_method_handler(
+          servicer.CreateFromVolumeID,
+          request_deserializer=api__pb2.VolumeCreateFromVolumeIDRequest.FromString,
+          response_serializer=api__pb2.VolumeCreateFromVolumeIDResponse.SerializeToString,
+      ),
+      'Delete': grpc.unary_unary_rpc_method_handler(
+          servicer.Delete,
+          request_deserializer=api__pb2.VolumeDeleteRequest.FromString,
+          response_serializer=api__pb2.VolumeDeleteResponse.SerializeToString,
+      ),
+      'Inspect': grpc.unary_unary_rpc_method_handler(
+          servicer.Inspect,
+          request_deserializer=api__pb2.VolumeInspectRequest.FromString,
+          response_serializer=api__pb2.VolumeInspectResponse.SerializeToString,
+      ),
+      'Enumerate': grpc.unary_unary_rpc_method_handler(
+          servicer.Enumerate,
+          request_deserializer=api__pb2.VolumeEnumerateRequest.FromString,
+          response_serializer=api__pb2.VolumeEnumerateResponse.SerializeToString,
+      ),
+  }
+  generic_handler = grpc.method_handlers_generic_handler(
+      'openstorage.api.OpenStorageVolume', rpc_method_handlers)
   server.add_generic_rpc_handlers((generic_handler,))
