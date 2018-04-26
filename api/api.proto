@@ -602,16 +602,6 @@ message GroupSnapCreateResponse {
   string error = 2;
 }
 
-service OpenStorageCluster {
-	// Enumerate lists all the nodes in the cluster.
-	rpc Enumerate(ClusterEnumerateRequest)
-		returns (ClusterEnumerateResponse) {}
-
-	// Inspect the node given a UUID.
-	rpc Inspect(ClusterInspectRequest)
-		returns (ClusterInspectResponse) {}
-}
-
 // StorageNode describes the state of the node
 message StorageNode {
   // Id of the node
@@ -654,19 +644,76 @@ message StorageCluster {
   repeated StorageNode nodes = 4;
 }
 
-// Enumerate
+service OpenStorageCluster {
+	// Enumerate lists all the nodes in the cluster.
+	rpc Enumerate(ClusterEnumerateRequest)
+		returns (ClusterEnumerateResponse) {}
+
+	// Inspect the node given a UUID.
+	rpc Inspect(ClusterInspectRequest)
+    returns (ClusterInspectResponse) {}
+    
+  // Get a list of alerts from the storage cluster
+  rpc AlertEnumerate(ClusterAlertEnumerateRequest)
+    returns (ClusterAlertEnumerateResponse) {}
+    
+  // Clear the alert for a given resource
+  rpc AlertClear(ClusterAlertClearRequest)
+    returns (ClusterAlertClearResponse) {}
+  
+  // Erases an alert for a given resource
+  rpc AlertErase(ClusterAlertEraseRequest)
+    returns (ClusterAlertEraseResponse) {}
+}
+
 message ClusterEnumerateRequest {
 }
 
 message ClusterEnumerateResponse {
+  // Cluster information
 	StorageCluster cluster = 1;
 }
 
-// Inspect
 message ClusterInspectRequest {
+  // Id of node to inspect (required)
 	string node_id = 1;
 }
 
 message ClusterInspectResponse {
+  // Node information
 	StorageNode node = 1;
+}
+
+message ClusterAlertEnumerateRequest {
+  // Start time of alerts (required)
+  google.protobuf.Timestamp time_start = 1;
+  // End time of alerts (required) 
+  google.protobuf.Timestamp time_end = 2;
+  // Type of resource (required)
+	ResourceType resource = 3;
+}
+
+message ClusterAlertEnumerateResponse {
+  // Information on the alerts requested 
+	Alerts alerts = 1;
+}
+
+message ClusterAlertClearRequest {
+  // Type of resource (required)
+  ResourceType resource = 1;
+  // Id of alert as returned by ClusterEnumerateAlertResponse (required) 
+	int64 alert_id = 2;
+}
+
+message ClusterAlertClearResponse {
+}
+
+message ClusterAlertEraseRequest {
+  // Type of resource (required)
+  ResourceType resource = 1;
+  // Id of alert as returned by ClusterEnumerateAlertResponse (required) 
+	int64 alert_id = 2;
+}
+
+message ClusterAlertEraseResponse {
 }
