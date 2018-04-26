@@ -10,3 +10,6 @@ _tmp
 .starscope.db
 cscope.out
 cmd/osd-sanity/osd-sanity
+api/client/sdk/python/build
+api/client/sdk/js/node_modules
+api/client/sdk/js/package-lock.json
