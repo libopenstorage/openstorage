@@ -17,8 +17,16 @@ const (
 
 var m Manager
 
-func TestAll(t *testing.T) {
-	setup(t)
+func TestNFSMounter(t *testing.T) {
+	setupNFS(t)
+	allTests(t)
+}
+
+func TestBindMounter(t *testing.T) {
+	setupBindMounter(t)
+	allTests(t)
+}
+func allTests(t *testing.T) {
 	load(t)
 	mountTest(t)
 	inspect(t)
@@ -29,9 +37,19 @@ func TestAll(t *testing.T) {
 	shutdown(t)
 }
 
-func setup(t *testing.T) {
+func setupNFS(t *testing.T) {
 	var err error
 	m, err = New(NFSMount, nil, []string{""}, nil, []string{}, trashLocation)
+	if err != nil {
+		t.Fatalf("Failed to setup test %v", err)
+	}
+	cleandir(source)
+	cleandir(dest)
+}
+
+func setupBindMounter(t *testing.T) {
+	var err error
+	m, err = New(BindMount, nil, []string{""}, nil, []string{}, trashLocation)
 	if err != nil {
 		t.Fatalf("Failed to setup test %v", err)
 	}

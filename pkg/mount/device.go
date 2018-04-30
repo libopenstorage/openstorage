@@ -62,46 +62,12 @@ func (m *deviceMounter) Reload(device string) error {
 
 // Load mount table
 func (m *deviceMounter) Load(devPrefixes []string) error {
-	info, err := mount.GetMounts()
-	if err != nil {
-		return err
+	return m.load(devPrefixes, deviceFindMountPoint)
+}
+
+func deviceFindMountPoint(info *mount.Info, destination string, infos []*mount.Info) (bool, string, string) {
+	if strings.HasPrefix(info.Source, destination) {
+		return true, info.Source, info.Source
 	}
-DeviceLoop:
-	for _, v := range info {
-		foundPrefix := false
-		for _, devPrefix := range devPrefixes {
-			if strings.HasPrefix(v.Source, devPrefix) {
-				foundPrefix = true
-				break
-			}
-		}
-		if !foundPrefix {
-			continue
-		}
-		mount, ok := m.mounts[v.Source]
-		if !ok {
-			mount = &Info{
-				Device:     v.Source,
-				Fs:         v.Fstype,
-				Minor:      v.Minor,
-				Mountpoint: make([]*PathInfo, 0),
-			}
-			m.mounts[v.Source] = mount
-		}
-		// Allow Load to be called multiple times.
-		for _, p := range mount.Mountpoint {
-			if p.Path == v.Mountpoint {
-				continue DeviceLoop
-			}
-		}
-		mount.Mountpoint = append(
-			mount.Mountpoint,
-			&PathInfo{
-				Root: normalizeMountPath(v.Root),
-				Path: normalizeMountPath(v.Mountpoint),
-			},
-		)
-		m.paths[v.Mountpoint] = v.Source
-	}
-	return nil
+	return false, "", ""
 }
