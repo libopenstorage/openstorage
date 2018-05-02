@@ -12,6 +12,7 @@ var goog = jspb;
 var global = Function('return this')();
 
 var google_protobuf_timestamp_pb = require('google-protobuf/google/protobuf/timestamp_pb.js');
+var google_api_annotations_pb = require('./google/api/annotations_pb.js');
 goog.exportSymbol('proto.openstorage.api.ActiveRequest', null, global);
 goog.exportSymbol('proto.openstorage.api.ActiveRequests', null, global);
 goog.exportSymbol('proto.openstorage.api.Alert', null, global);

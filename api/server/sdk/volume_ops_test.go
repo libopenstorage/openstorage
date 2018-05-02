@@ -108,7 +108,7 @@ func TestSdkVolumeCreate(t *testing.T) {
 			EXPECT().
 			Create(&api.VolumeLocator{
 				Name: name,
-			}, &api.Source{}, req.GetSpec()).
+			}, &api.Source{}, &api.VolumeSpec{Size: size}).
 			Return(id, nil).
 			Times(1),
 	)

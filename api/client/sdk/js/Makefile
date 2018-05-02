@@ -13,6 +13,7 @@ endif
 		--grpc_out=. \
 		--plugin=proto-gen-grpc=./node_modules/grpc-tools/bin/grpc_tools_node_protoc_plugin \
 		-I$(APIDIR) \
+		-I$(GOPATH)/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
 		api.proto
 
 .PHONY: all grpc

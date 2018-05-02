@@ -1,0 +1,1205 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "api/api.proto",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/cluster/alert/clear": {
+      "post": {
+        "summary": "Clear the alert for a given resource",
+        "operationId": "AlertClear",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiClusterAlertClearResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiClusterAlertClearRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageCluster"
+        ]
+      }
+    },
+    "/v1/cluster/alert/enumerate": {
+      "post": {
+        "summary": "Get a list of alerts from the storage cluster",
+        "operationId": "AlertEnumerate",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiClusterAlertEnumerateResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiClusterAlertEnumerateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageCluster"
+        ]
+      }
+    },
+    "/v1/cluster/alert/erase": {
+      "post": {
+        "summary": "Erases an alert for a given resource",
+        "operationId": "AlertErase",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiClusterAlertEraseResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiClusterAlertEraseRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageCluster"
+        ]
+      }
+    },
+    "/v1/cluster/enumerate": {
+      "post": {
+        "summary": "Enumerate lists all the nodes in the cluster.",
+        "operationId": "Enumerate",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiClusterEnumerateResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiClusterEnumerateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageCluster"
+        ]
+      }
+    },
+    "/v1/cluster/inspect": {
+      "post": {
+        "summary": "Inspect the node given a UUID.",
+        "operationId": "Inspect",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiClusterInspectResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiClusterInspectRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageCluster"
+        ]
+      }
+    },
+    "/v1/volume/create": {
+      "post": {
+        "summary": "Creates a new volume",
+        "operationId": "Create",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiOpenStorageVolumeCreateResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiOpenStorageVolumeCreateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/volume/createfromid": {
+      "post": {
+        "summary": "CreateFromVolumeID creates a new volume cloned from an existing volume",
+        "operationId": "CreateFromVolumeID",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiVolumeCreateFromVolumeIDResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiVolumeCreateFromVolumeIDRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/volume/delete": {
+      "post": {
+        "summary": "Delete a volume",
+        "operationId": "Delete",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiVolumeDeleteResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiVolumeDeleteRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/volume/enumerate": {
+      "post": {
+        "summary": "Get a list of volumes",
+        "operationId": "Enumerate",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiVolumeEnumerateResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiVolumeEnumerateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/volume/inspect": {
+      "post": {
+        "summary": "Get information on a volume",
+        "operationId": "Inspect",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiVolumeInspectResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiVolumeInspectRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "apiAlert": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64",
+          "title": "Id for Alert"
+        },
+        "severity": {
+          "$ref": "#/definitions/apiSeverityType",
+          "title": "Severity of the Alert"
+        },
+        "alert_type": {
+          "type": "string",
+          "format": "int64",
+          "title": "AlertType user defined alert type"
+        },
+        "message": {
+          "type": "string",
+          "title": "Message describing the Alert"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Timestamp when Alert occured"
+        },
+        "resource_id": {
+          "type": "string",
+          "title": "ResourceId where Alert occured"
+        },
+        "resource": {
+          "$ref": "#/definitions/apiResourceType",
+          "title": "Resource where Alert occured"
+        },
+        "cleared": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "Cleared Flag"
+        },
+        "ttl": {
+          "type": "string",
+          "format": "uint64",
+          "title": "TTL in seconds for this Alert"
+        },
+        "unique_tag": {
+          "type": "string",
+          "title": "UniqueTag helps identify a unique alert for a given resouce"
+        }
+      },
+      "title": "Alert is a structure that represents an alert object\nswagger:model"
+    },
+    "apiAlerts": {
+      "type": "object",
+      "properties": {
+        "alert": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiAlert"
+          }
+        }
+      },
+      "title": "Alerts is an array of Alert objects\nswagger:model"
+    },
+    "apiAttachState": {
+      "type": "string",
+      "enum": [
+        "ATTACH_STATE_EXTERNAL",
+        "ATTACH_STATE_INTERNAL",
+        "ATTACH_STATE_INTERNAL_SWITCH"
+      ],
+      "default": "ATTACH_STATE_EXTERNAL",
+      "title": "- ATTACH_STATE_EXTERNAL: Attached and available externally\n - ATTACH_STATE_INTERNAL: Attached but only available internally\n - ATTACH_STATE_INTERNAL_SWITCH: Switching from External to Internal"
+    },
+    "apiClusterAlertClearRequest": {
+      "type": "object",
+      "properties": {
+        "resource": {
+          "$ref": "#/definitions/apiResourceType",
+          "title": "Type of resource (required)"
+        },
+        "alert_id": {
+          "type": "string",
+          "format": "int64",
+          "title": "Id of alert as returned by ClusterEnumerateAlertResponse (required)"
+        }
+      }
+    },
+    "apiClusterAlertClearResponse": {
+      "type": "object"
+    },
+    "apiClusterAlertEnumerateRequest": {
+      "type": "object",
+      "properties": {
+        "time_start": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Start time of alerts (required)"
+        },
+        "time_end": {
+          "type": "string",
+          "format": "date-time",
+          "title": "End time of alerts (required)"
+        },
+        "resource": {
+          "$ref": "#/definitions/apiResourceType",
+          "title": "Type of resource (required)"
+        }
+      }
+    },
+    "apiClusterAlertEnumerateResponse": {
+      "type": "object",
+      "properties": {
+        "alerts": {
+          "$ref": "#/definitions/apiAlerts",
+          "title": "Information on the alerts requested"
+        }
+      }
+    },
+    "apiClusterAlertEraseRequest": {
+      "type": "object",
+      "properties": {
+        "resource": {
+          "$ref": "#/definitions/apiResourceType",
+          "title": "Type of resource (required)"
+        },
+        "alert_id": {
+          "type": "string",
+          "format": "int64",
+          "title": "Id of alert as returned by ClusterEnumerateAlertResponse (required)"
+        }
+      }
+    },
+    "apiClusterAlertEraseResponse": {
+      "type": "object"
+    },
+    "apiClusterEnumerateRequest": {
+      "type": "object"
+    },
+    "apiClusterEnumerateResponse": {
+      "type": "object",
+      "properties": {
+        "cluster": {
+          "$ref": "#/definitions/apiStorageCluster",
+          "title": "Cluster information"
+        }
+      }
+    },
+    "apiClusterInspectRequest": {
+      "type": "object",
+      "properties": {
+        "node_id": {
+          "type": "string",
+          "title": "Id of node to inspect (required)"
+        }
+      }
+    },
+    "apiClusterInspectResponse": {
+      "type": "object",
+      "properties": {
+        "node": {
+          "$ref": "#/definitions/apiStorageNode",
+          "title": "Node information"
+        }
+      }
+    },
+    "apiCosType": {
+      "type": "string",
+      "enum": [
+        "NONE",
+        "LOW",
+        "MEDIUM",
+        "HIGH"
+      ],
+      "default": "NONE"
+    },
+    "apiFSType": {
+      "type": "string",
+      "enum": [
+        "FS_TYPE_NONE",
+        "FS_TYPE_BTRFS",
+        "FS_TYPE_EXT4",
+        "FS_TYPE_FUSE",
+        "FS_TYPE_NFS",
+        "FS_TYPE_VFS",
+        "FS_TYPE_XFS",
+        "FS_TYPE_ZFS"
+      ],
+      "default": "FS_TYPE_NONE"
+    },
+    "apiGroup": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Id common identifier across volumes that have the same group."
+        }
+      },
+      "title": "Group represents VolumeGroup / namespace\nAll volumes in the same group share this object.\nswagger:model"
+    },
+    "apiIoProfile": {
+      "type": "string",
+      "enum": [
+        "IO_PROFILE_SEQUENTIAL",
+        "IO_PROFILE_RANDOM",
+        "IO_PROFILE_DB",
+        "IO_PROFILE_DB_REMOTE",
+        "IO_PROFILE_CMS"
+      ],
+      "default": "IO_PROFILE_SEQUENTIAL"
+    },
+    "apiOpenStorageVolumeCreateRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique name of the volume. This will be used for idempotency."
+        },
+        "spec": {
+          "$ref": "#/definitions/apiVolumeSpec",
+          "title": "Volume specification"
+        }
+      }
+    },
+    "apiOpenStorageVolumeCreateResponse": {
+      "type": "object",
+      "properties": {
+        "volume_id": {
+          "type": "string",
+          "title": "Id of new volume"
+        }
+      }
+    },
+    "apiReplicaSet": {
+      "type": "object",
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure\ncoded - for clustered storage arrays\nswagger:model"
+    },
+    "apiResourceType": {
+      "type": "string",
+      "enum": [
+        "RESOURCE_TYPE_NONE",
+        "RESOURCE_TYPE_VOLUME",
+        "RESOURCE_TYPE_NODE",
+        "RESOURCE_TYPE_CLUSTER",
+        "RESOURCE_TYPE_DRIVE"
+      ],
+      "default": "RESOURCE_TYPE_NONE"
+    },
+    "apiRuntimeStateMap": {
+      "type": "object",
+      "properties": {
+        "runtime_state": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "RuntimeStateMap is a list of name value mapping of driver specific runtime\ninformation.\nswagger:model"
+    },
+    "apiSeverityType": {
+      "type": "string",
+      "enum": [
+        "SEVERITY_TYPE_NONE",
+        "SEVERITY_TYPE_ALARM",
+        "SEVERITY_TYPE_WARNING",
+        "SEVERITY_TYPE_NOTIFY"
+      ],
+      "default": "SEVERITY_TYPE_NONE"
+    },
+    "apiSource": {
+      "type": "object",
+      "properties": {
+        "parent": {
+          "type": "string",
+          "description": "A volume id, if specified will create a clone of the parent."
+        },
+        "seed": {
+          "type": "string",
+          "title": "Seed will seed the volume from the specified URI\nAny additional config for the source comes from the labels in the spec"
+        }
+      },
+      "title": "Source is a structure that can be given to a volume\nto seed the volume with data.\nswagger:model"
+    },
+    "apiStatus": {
+      "type": "string",
+      "enum": [
+        "STATUS_NONE",
+        "STATUS_INIT",
+        "STATUS_OK",
+        "STATUS_OFFLINE",
+        "STATUS_ERROR",
+        "STATUS_NOT_IN_QUORUM",
+        "STATUS_DECOMMISSION",
+        "STATUS_MAINTENANCE",
+        "STATUS_STORAGE_DOWN",
+        "STATUS_STORAGE_DEGRADED",
+        "STATUS_NEEDS_REBOOT",
+        "STATUS_STORAGE_REBALANCE",
+        "STATUS_STORAGE_DRIVE_REPLACE",
+        "STATUS_NOT_IN_QUORUM_NO_STORAGE",
+        "STATUS_MAX"
+      ],
+      "default": "STATUS_NONE",
+      "title": "- STATUS_MAX: Add statuses before MAX and update the number for MAX"
+    },
+    "apiStorageCluster": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/apiStatus",
+          "title": "Status of the cluster"
+        },
+        "id": {
+          "type": "string",
+          "title": "Id of the cluster"
+        },
+        "node_id": {
+          "type": "string",
+          "title": "NodeId is the id of the node servicing these requests"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiStorageNode"
+          },
+          "title": "Nodes are a list of all the nodes on the cluster"
+        }
+      },
+      "title": "StorageCluster represents the state of the cluster"
+    },
+    "apiStorageMedium": {
+      "type": "string",
+      "enum": [
+        "STORAGE_MEDIUM_MAGNETIC",
+        "STORAGE_MEDIUM_SSD",
+        "STORAGE_MEDIUM_NVME"
+      ],
+      "default": "STORAGE_MEDIUM_MAGNETIC",
+      "title": "- STORAGE_MEDIUM_MAGNETIC: Magnetic spinning disk.\n - STORAGE_MEDIUM_SSD: SSD disk\n - STORAGE_MEDIUM_NVME: NVME disk"
+    },
+    "apiStorageNode": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "Id of the node"
+        },
+        "cpu": {
+          "type": "number",
+          "format": "double",
+          "title": "Cpu usage of the node"
+        },
+        "mem_total": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Total memory of the node"
+        },
+        "mem_used": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Used memory of the node"
+        },
+        "mem_free": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Free memory of the node"
+        },
+        "avg_load": {
+          "type": "string",
+          "format": "int64",
+          "title": "Average load (percentage)"
+        },
+        "status": {
+          "$ref": "#/definitions/apiStatus",
+          "title": "Node status"
+        },
+        "disks": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/apiStorageResource"
+          },
+          "title": "List of disks on the node"
+        },
+        "pools": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiStoragePool"
+          },
+          "title": "List of storage pools this node supports"
+        },
+        "mgmt_ip": {
+          "type": "string",
+          "title": "Management IP"
+        },
+        "data_ip": {
+          "type": "string",
+          "title": "Data IP"
+        },
+        "hostname": {
+          "type": "string",
+          "title": "Hostname of the node"
+        },
+        "node_labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "User defined labels for the node"
+        }
+      },
+      "title": "StorageNode describes the state of the node"
+    },
+    "apiStoragePool": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "integer",
+          "format": "int32",
+          "title": "ID pool ID"
+        },
+        "Cos": {
+          "$ref": "#/definitions/apiCosType",
+          "title": "Cos reflects the capabilities of this drive pool"
+        },
+        "Medium": {
+          "$ref": "#/definitions/apiStorageMedium",
+          "title": "Medium underlying storage type"
+        },
+        "RaidLevel": {
+          "type": "string",
+          "title": "RaidLevel storage raid level"
+        },
+        "TotalSize": {
+          "type": "string",
+          "format": "uint64",
+          "title": "TotalSize of the pool"
+        },
+        "Used": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Used size of the pool"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Labels is a list of user defined name-value pairs"
+        }
+      },
+      "title": "StoragePool groups different storage devices based on their CosType"
+    },
+    "apiStorageResource": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Id is the LUN identifier."
+        },
+        "path": {
+          "type": "string",
+          "description": "Path device path for this storage resource."
+        },
+        "medium": {
+          "$ref": "#/definitions/apiStorageMedium",
+          "description": "Storage medium."
+        },
+        "online": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "True if this device is online."
+        },
+        "iops": {
+          "type": "string",
+          "format": "uint64",
+          "title": "IOPS"
+        },
+        "seq_write": {
+          "type": "number",
+          "format": "double",
+          "title": "SeqWrite"
+        },
+        "seq_read": {
+          "type": "number",
+          "format": "double",
+          "title": "SeqRead"
+        },
+        "randRW": {
+          "type": "number",
+          "format": "double",
+          "title": "RandRW"
+        },
+        "size": {
+          "type": "string",
+          "format": "uint64",
+          "description": "Total size in bytes."
+        },
+        "used": {
+          "type": "string",
+          "format": "uint64",
+          "description": "Physical Bytes used."
+        },
+        "rotation_speed": {
+          "type": "string",
+          "description": "True if this device is rotational."
+        },
+        "last_scan": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of last time this device was scanned."
+        },
+        "metadata": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "True if dedicated for metadata."
+        }
+      },
+      "title": "StorageResource groups properties of a storage device.\nswagger:model"
+    },
+    "apiVolume": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Self referential volume ID."
+        },
+        "source": {
+          "$ref": "#/definitions/apiSource",
+          "description": "Source specified seed data for the volume."
+        },
+        "group": {
+          "$ref": "#/definitions/apiGroup",
+          "description": "Group volumes in the same group have the same group id."
+        },
+        "readonly": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "Readonly is true if this volume is to be mounted with readonly access."
+        },
+        "locator": {
+          "$ref": "#/definitions/apiVolumeLocator",
+          "title": "User specified locator"
+        },
+        "ctime": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Volume creation time"
+        },
+        "spec": {
+          "$ref": "#/definitions/apiVolumeSpec",
+          "title": "User specified VolumeSpec"
+        },
+        "usage": {
+          "type": "string",
+          "format": "uint64",
+          "description": "Usage is bytes consumed by vtheis volume."
+        },
+        "last_scan": {
+          "type": "string",
+          "format": "date-time",
+          "description": "LastScan is the time when an integrity check was run."
+        },
+        "format": {
+          "$ref": "#/definitions/apiFSType",
+          "description": "Format specifies the filesytem for this volume."
+        },
+        "status": {
+          "$ref": "#/definitions/apiVolumeStatus",
+          "description": "Status is the availability status of this volume."
+        },
+        "state": {
+          "$ref": "#/definitions/apiVolumeState",
+          "description": "State is the current runtime state of this volume."
+        },
+        "attached_on": {
+          "type": "string",
+          "description": "AttachedOn is the node instance identifier for clustered systems."
+        },
+        "attached_state": {
+          "$ref": "#/definitions/apiAttachState",
+          "description": "AttachedState shows whether the device is attached for internal or external use."
+        },
+        "device_path": {
+          "type": "string",
+          "description": "DevicePath is the device exported by block device implementations."
+        },
+        "secure_device_path": {
+          "type": "string",
+          "description": "SecureDevicePath is the device path for an encrypted volume."
+        },
+        "attach_path": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "AttachPath is the mounted path in the host namespace."
+        },
+        "attach_info": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "AttachInfo is a list of name value mappings that provides attach information."
+        },
+        "replica_sets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiReplicaSet"
+          },
+          "description": "ReplicatSets storage for this volumefor clustered storage arrays."
+        },
+        "runtime_state": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiRuntimeStateMap"
+          },
+          "description": "RuntimeState is a lst of name value mapping of driver specific runtime\ninformation."
+        },
+        "error": {
+          "type": "string",
+          "description": "Error is the Last recorded error."
+        },
+        "volume_consumers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiVolumeConsumer"
+          },
+          "title": "VolumeConsumers are entities that consume this volume"
+        }
+      },
+      "title": "Volume represents an abstract storage volume.\nVolume represents an abstract storage volume.\nswagger:model"
+    },
+    "apiVolumeConsumer": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Name is the name of the volume consumer"
+        },
+        "namespace": {
+          "type": "string",
+          "title": "Namespace is the namespace of the volume consumer"
+        },
+        "type": {
+          "type": "string",
+          "title": "Type is the type of the consumer. E.g a Kubernetes pod"
+        },
+        "node_id": {
+          "type": "string",
+          "description": "NodeID is the identifier of the node on which the consumer is running. This\nidentifier would be from the perspective of the container runtime or\norchestrator under which the volume consumer resides. For example, NodeID\n can be name of a minion in Kubernetes."
+        },
+        "owner_name": {
+          "type": "string",
+          "title": "OwnerName is the name of the entity who owns this volume consumer"
+        },
+        "owner_type": {
+          "type": "string",
+          "description": "OwnerType is the type of the entity who owns this volume consumer. The type would\nbe from the perspective of the container runtime or the orchestrator under which\nthe volume consumer resides. For e.g OwnerType can be a Deployment in Kubernetes."
+        }
+      },
+      "title": "VolumeConsumer identifies a consumer for a Volume. An example of a VolumeConsumer\nwould be a Pod in Kubernetes who has mounted the PersistentVolumeClaim for the\nVolume\nswagger: model"
+    },
+    "apiVolumeCreateFromVolumeIDRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique name of the volume. This will be used for idempotency."
+        },
+        "parent_id": {
+          "type": "string",
+          "description": "Parent volume id, if specified will create a new volume as a clone of the parent."
+        },
+        "spec": {
+          "$ref": "#/definitions/apiVolumeSpec",
+          "title": "Volume specification"
+        }
+      }
+    },
+    "apiVolumeCreateFromVolumeIDResponse": {
+      "type": "object",
+      "properties": {
+        "volume_id": {
+          "type": "string",
+          "title": "Id of new volume"
+        }
+      }
+    },
+    "apiVolumeDeleteRequest": {
+      "type": "object",
+      "properties": {
+        "volume_id": {
+          "type": "string",
+          "title": "Id of volume to delete"
+        }
+      }
+    },
+    "apiVolumeDeleteResponse": {
+      "type": "object"
+    },
+    "apiVolumeEnumerateRequest": {
+      "type": "object",
+      "properties": {
+        "locator": {
+          "$ref": "#/definitions/apiVolumeLocator",
+          "description": "Volumes to match to this locator.\nIf not provided, all volumes will be returned."
+        }
+      }
+    },
+    "apiVolumeEnumerateResponse": {
+      "type": "object",
+      "properties": {
+        "volumes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiVolume"
+          },
+          "title": "List of volumes matching label"
+        }
+      }
+    },
+    "apiVolumeInspectRequest": {
+      "type": "object",
+      "properties": {
+        "volume_id": {
+          "type": "string",
+          "title": "Id of volume to inspect"
+        }
+      }
+    },
+    "apiVolumeInspectResponse": {
+      "type": "object",
+      "properties": {
+        "volume": {
+          "$ref": "#/definitions/apiVolume",
+          "title": "Information about the volume"
+        }
+      }
+    },
+    "apiVolumeLocator": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "User friendly identifier"
+        },
+        "volume_labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "A set of name-value pairs that acts as search filters"
+        }
+      },
+      "title": "VolumeLocator is a structure that is attached to a volume\nand is used to carry opaque metadata.\nswagger:model"
+    },
+    "apiVolumeSpec": {
+      "type": "object",
+      "properties": {
+        "ephemeral": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "Ephemeral storage"
+        },
+        "size": {
+          "type": "string",
+          "format": "uint64",
+          "description": "Size specifies the thin provisioned volume size."
+        },
+        "format": {
+          "$ref": "#/definitions/apiFSType",
+          "description": "Format specifies the filesystem for this volume."
+        },
+        "block_size": {
+          "type": "string",
+          "format": "int64",
+          "description": "BlockSize for the filesystem."
+        },
+        "ha_level": {
+          "type": "string",
+          "format": "int64",
+          "description": "HaLevel specifies the number of copies of data."
+        },
+        "cos": {
+          "$ref": "#/definitions/apiCosType",
+          "description": "Cos specifies the relative class of service."
+        },
+        "io_profile": {
+          "$ref": "#/definitions/apiIoProfile",
+          "description": "IoProfile provides a hint about application using this volume."
+        },
+        "dedupe": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "Dedupe specifies if the volume data is to be de-duplicated."
+        },
+        "snapshot_interval": {
+          "type": "integer",
+          "format": "int64",
+          "title": "SnapshotInterval in minutes, set to 0 to disable snapshots"
+        },
+        "volume_labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "VolumeLabels configuration labels"
+        },
+        "shared": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "Shared is true if this volume can be remotely accessed."
+        },
+        "replica_set": {
+          "$ref": "#/definitions/apiReplicaSet",
+          "description": "ReplicaSet is the desired set of nodes for the volume data."
+        },
+        "aggregation_level": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Aggregatiokn level Specifies the number of parts the volume can be aggregated from."
+        },
+        "encrypted": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "Encrypted is true if this volume will be cryptographically secured."
+        },
+        "passphrase": {
+          "type": "string",
+          "title": "Passphrase for an encrypted volume"
+        },
+        "snapshot_schedule": {
+          "type": "string",
+          "description": "SnapshotSchedule a well known string that specifies when snapshots should be taken."
+        },
+        "scale": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Scale allows autocreation of volumes."
+        },
+        "sticky": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "Sticky volumes cannot be deleted until the flag is removed."
+        },
+        "group": {
+          "$ref": "#/definitions/apiGroup",
+          "title": "Group identifies a consistency group"
+        },
+        "group_enforced": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "GroupEnforced is true if consistency group creation is enforced."
+        },
+        "compressed": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "Compressed is true if this volume is to be compressed."
+        },
+        "cascaded": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "Cascaded is true if this volume can be populated on any node from an external source."
+        },
+        "journal": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "Journal is true if data for the volume goes into the journal."
+        },
+        "sharedv4": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "Sharedv4 is true if this volume can be accessed via sharedv4."
+        }
+      },
+      "title": "VolumeSpec has the properties needed to create a volume.\nswagger:model"
+    },
+    "apiVolumeState": {
+      "type": "string",
+      "enum": [
+        "VOLUME_STATE_NONE",
+        "VOLUME_STATE_PENDING",
+        "VOLUME_STATE_AVAILABLE",
+        "VOLUME_STATE_ATTACHED",
+        "VOLUME_STATE_DETACHED",
+        "VOLUME_STATE_DETATCHING",
+        "VOLUME_STATE_ERROR",
+        "VOLUME_STATE_DELETED",
+        "VOLUME_STATE_TRY_DETACHING",
+        "VOLUME_STATE_RESTORE"
+      ],
+      "default": "VOLUME_STATE_NONE",
+      "description": "VolumeState represents the state of a volume.\n\n - VOLUME_STATE_PENDING: Volume is transitioning to new state\n - VOLUME_STATE_AVAILABLE: Volume is ready to be assigned to a container\n - VOLUME_STATE_ATTACHED: Volume is attached to container\n - VOLUME_STATE_DETACHED: Volume is detached but associated with a container\n - VOLUME_STATE_DETATCHING: Volume detach is in progress\n - VOLUME_STATE_ERROR: Volume is in error state\n - VOLUME_STATE_DELETED: Volume is deleted, it will remain in this state\nwhile resources are asynchronously reclaimed\n - VOLUME_STATE_TRY_DETACHING: Volume is trying to be detached\n - VOLUME_STATE_RESTORE: Volume is undergoing restore"
+    },
+    "apiVolumeStatus": {
+      "type": "string",
+      "enum": [
+        "VOLUME_STATUS_NONE",
+        "VOLUME_STATUS_NOT_PRESENT",
+        "VOLUME_STATUS_UP",
+        "VOLUME_STATUS_DOWN",
+        "VOLUME_STATUS_DEGRADED"
+      ],
+      "default": "VOLUME_STATUS_NONE",
+      "description": "VolumeStatus represents a health status for a volume.\n\n - VOLUME_STATUS_NOT_PRESENT: Volume is not present\n - VOLUME_STATUS_UP: Volume is healthy\n - VOLUME_STATUS_DOWN: Volume is in fail mode\n - VOLUME_STATUS_DEGRADED: Volume is up but with degraded performance\nIn a RAID group, this may indicate a problem with one or more drives"
+    }
+  }
+}

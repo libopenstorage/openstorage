@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
 
 package openstorage.api;
 
@@ -647,45 +648,95 @@ message StorageCluster {
 service OpenStorageCluster {
   // Enumerate lists all the nodes in the cluster.
   rpc Enumerate(ClusterEnumerateRequest)
-    returns (ClusterEnumerateResponse) {}
+    returns (ClusterEnumerateResponse) {
+      option(google.api.http) = {
+        post: "/v1/cluster/enumerate"
+        body: "*"
+      };
+    }
 
   // Inspect the node given a UUID.
   rpc Inspect(ClusterInspectRequest)
-    returns (ClusterInspectResponse) {}
+    returns (ClusterInspectResponse) {
+      option(google.api.http) = {
+        post: "/v1/cluster/inspect"
+        body: "*"
+      };
+    }
 
   // Get a list of alerts from the storage cluster
   rpc AlertEnumerate(ClusterAlertEnumerateRequest)
-    returns (ClusterAlertEnumerateResponse) {}
+    returns (ClusterAlertEnumerateResponse) {
+      option(google.api.http) = {
+        post: "/v1/cluster/alert/enumerate"
+        body: "*"
+      };
+    }
 
   // Clear the alert for a given resource
   rpc AlertClear(ClusterAlertClearRequest)
-    returns (ClusterAlertClearResponse) {}
+    returns (ClusterAlertClearResponse) {
+      option(google.api.http) = {
+        post: "/v1/cluster/alert/clear"
+        body: "*"
+      };
+    }
 
   // Erases an alert for a given resource
   rpc AlertErase(ClusterAlertEraseRequest)
-    returns (ClusterAlertEraseResponse) {}
+    returns (ClusterAlertEraseResponse) {
+      option(google.api.http) = {
+        post: "/v1/cluster/alert/erase"
+        body: "*"
+      };
+    }
 }
 
 service OpenStorageVolume {
   // Creates a new volume
   rpc Create(OpenStorageVolumeCreateRequest)
-    returns (OpenStorageVolumeCreateResponse) {}
+    returns (OpenStorageVolumeCreateResponse) {
+      option(google.api.http) = {
+        post: "/v1/volume/create"
+        body: "*"
+      };
+    }
 
   // CreateFromVolumeID creates a new volume cloned from an existing volume
   rpc CreateFromVolumeID(VolumeCreateFromVolumeIDRequest)
-    returns (VolumeCreateFromVolumeIDResponse) {}
+    returns (VolumeCreateFromVolumeIDResponse) {
+      option(google.api.http) = {
+        post: "/v1/volume/createfromid"
+        body: "*"
+      };
+    }
 
   // Delete a volume
   rpc Delete(VolumeDeleteRequest)
-    returns (VolumeDeleteResponse) {}
+    returns (VolumeDeleteResponse) {
+      option(google.api.http) = {
+        post: "/v1/volume/delete"
+        body: "*"
+      };
+    }
 
   // Get information on a volume
   rpc Inspect(VolumeInspectRequest)
-    returns (VolumeInspectResponse) {}
+    returns (VolumeInspectResponse) {
+      option(google.api.http) = {
+        post: "/v1/volume/inspect"
+        body: "*"
+      };
+    }
 
   // Get a list of volumes
   rpc Enumerate(VolumeEnumerateRequest)
-    returns (VolumeEnumerateResponse) {}
+    returns (VolumeEnumerateResponse) {
+      option(google.api.http) = {
+        post: "/v1/volume/enumerate"
+        body: "*"
+      };
+    }
 }
 
 message OpenStorageVolumeCreateRequest {

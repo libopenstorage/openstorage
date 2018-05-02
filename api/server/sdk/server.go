@@ -17,8 +17,15 @@ limitations under the License.
 package sdk
 
 import (
+	"context"
 	"fmt"
+	"mime"
+	"net/http"
 
+	"github.com/gobuffalo/packr"
+
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 
 	"github.com/libopenstorage/openstorage/api"
@@ -30,16 +37,26 @@ import (
 
 // ServerConfig provides the configuration to the SDK server
 type ServerConfig struct {
-	Net        string
-	Address    string
+	// Net is the transport for gRPC: unix, tcp, etc.
+	// For the gRPC Server. This value goes together with `Address`.
+	Net string
+	// Address is the port number or the unix domain socket path.
+	// For the gRPC Server. This value goes together with `Net`.
+	Address string
+	// RestAdress is the port number. Example: 9110
+	// For the gRPC REST Gateway.
+	RestPort string
+	// The OpenStorage driver to use
 	DriverName string
-	Cluster    cluster.Cluster
+	// Cluster interface
+	Cluster cluster.Cluster
 }
 
 // Server is an implementation of the gRPC SDK interface
 type Server struct {
 	*grpcserver.GrpcServer
 
+	restPort      string
 	clusterServer *ClusterServer
 	volumeServer  *VolumeServer
 }
@@ -74,6 +91,7 @@ func New(config *ServerConfig) (*Server, error) {
 
 	return &Server{
 		GrpcServer: gServer,
+		restPort:   config.RestPort,
 		clusterServer: &ClusterServer{
 			config.Cluster,
 		},
@@ -88,8 +106,89 @@ func New(config *ServerConfig) (*Server, error) {
 // Start is used to start the server.
 // It will return an error if the server is already running.
 func (s *Server) Start() error {
-	return s.GrpcServer.Start(func(grpcServer *grpc.Server) {
+
+	// Start the gRPC Server
+	err := s.GrpcServer.Start(func(grpcServer *grpc.Server) {
 		api.RegisterOpenStorageClusterServer(grpcServer, s.clusterServer)
 		api.RegisterOpenStorageVolumeServer(grpcServer, s.volumeServer)
 	})
+	if err != nil {
+		return err
+	}
+	if len(s.restPort) != 0 {
+		return s.startRestServer()
+	}
+	return nil
+}
+
+// startRestServer starts the HTTP/REST gRPC gateway.
+func (s *Server) startRestServer() error {
+
+	mux, err := s.restServerSetupHandlers()
+	if err != nil {
+		return err
+	}
+
+	ready := make(chan bool)
+	go func() {
+		ready <- true
+		err := http.ListenAndServe(":"+s.restPort, mux)
+		if err != nil {
+			logrus.Fatalf("Unable to start SDK REST gRPC Gateway: %s\n",
+				err.Error())
+		}
+	}()
+	<-ready
+	logrus.Infof("SDK gRPC REST Gateway started on port :%s", s.restPort)
+
+	return nil
+}
+
+// restServerSetupHandlers sets up the handlers to the swagger ui and
+// to the gRPC REST Gateway.
+func (s *Server) restServerSetupHandlers() (*http.ServeMux, error) {
+
+	// Create an HTTP server router
+	mux := http.NewServeMux()
+
+	// Swagger files using packr
+	swaggerUIBox := packr.NewBox("./swagger-ui")
+	swaggerJSONBox := packr.NewBox("./api")
+	mime.AddExtensionType(".svg", "image/svg+xml")
+
+	// Handler to return swagger.json
+	mux.HandleFunc("/swagger.json", func(w http.ResponseWriter, r *http.Request) {
+		w.Write(swaggerJSONBox.Bytes("api.swagger.json"))
+	})
+
+	// Handler to access the swagger ui. The UI pulls the swagger
+	// json file from /swagger.json
+	// The link below MUST have th last '/'. It is really important.
+	prefix := "/swagger-ui/"
+	mux.Handle(prefix,
+		http.StripPrefix(prefix, http.FileServer(swaggerUIBox)))
+
+	// Create a router just for HTTP REST gRPC Server Gateway
+	gmux := runtime.NewServeMux()
+	err := api.RegisterOpenStorageClusterHandlerFromEndpoint(
+		context.Background(),
+		gmux,
+		s.Address(),
+		[]grpc.DialOption{grpc.WithInsecure()})
+	if err != nil {
+		return nil, err
+	}
+	err = api.RegisterOpenStorageVolumeHandlerFromEndpoint(
+		context.Background(),
+		gmux,
+		s.Address(),
+		[]grpc.DialOption{grpc.WithInsecure()})
+	if err != nil {
+		return nil, err
+	}
+
+	// Pass all other unhandled paths to the gRPC gateway
+	mux.Handle("/", gmux)
+
+	return mux, nil
 }

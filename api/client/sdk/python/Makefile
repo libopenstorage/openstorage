@@ -12,6 +12,7 @@ endif
 	pip install grpcio grpcio-tools && \
 	python -m grpc_tools.protoc \
 		-I$(APIDIR) \
+		-I$(GOPATH)/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
 		--python_out=. \
 		--grpc_python_out=. \
 		$(APIDIR)/api.proto"
