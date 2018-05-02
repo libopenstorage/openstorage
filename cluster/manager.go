@@ -272,7 +272,6 @@ func (c *ClusterManager) nodeIdFromIp(idIp string) (string, error) {
 	// Caller's responsibility to lock the access to the NodeCache.
 	for _, n := range c.nodeCache {
 		if n.DataIp == idIp || n.MgmtIp == idIp {
-			logrus.Infof("Node IP: " + idIp + " maps to ID: " + n.Id)
 			return n.Id, nil // return Id
 		}
 	}
@@ -1270,8 +1269,6 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 	// Allow listeners to add/modify data
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		if err := e.Value.(ClusterListener).Enumerate(cluster); err != nil {
-			logrus.Warnf("listener %s enumerate failed: %v",
-				e.Value.(ClusterListener).String(), err)
 			continue
 		}
 	}
@@ -1617,8 +1614,6 @@ func (c *ClusterManager) EnumerateAlerts(ts, te time.Time, resource api.Resource
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		listenerAlerts, err := e.Value.(ClusterListener).EnumerateAlerts(ts, te, resource)
 		if err != nil {
-			logrus.Warnf("Failed to enumerate alerts from (%v): %v",
-				e.Value.(ClusterListener).String(), err)
 			continue
 		}
 		if listenerAlerts != nil {
