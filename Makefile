@@ -114,6 +114,8 @@ generate-mockfiles:
 
 generate: docs generate-mockfiles
 
+sdk: proto docker-build-mock-sdk-server
+
 docker-build-mock-sdk-server:
 	rm -rf _tmp
 	mkdir -p _tmp

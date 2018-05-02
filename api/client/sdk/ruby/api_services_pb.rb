@@ -19,6 +19,35 @@ module Openstorage
         rpc :Enumerate, ClusterEnumerateRequest, ClusterEnumerateResponse
         # Inspect the node given a UUID.
         rpc :Inspect, ClusterInspectRequest, ClusterInspectResponse
+        # Get a list of alerts from the storage cluster
+        rpc :AlertEnumerate, ClusterAlertEnumerateRequest, ClusterAlertEnumerateResponse
+        # Clear the alert for a given resource
+        rpc :AlertClear, ClusterAlertClearRequest, ClusterAlertClearResponse
+        # Erases an alert for a given resource
+        rpc :AlertErase, ClusterAlertEraseRequest, ClusterAlertEraseResponse
+      end
+
+      Stub = Service.rpc_stub_class
+    end
+    module OpenStorageVolume
+      class Service
+
+        include GRPC::GenericService
+
+        self.marshal_class_method = :encode
+        self.unmarshal_class_method = :decode
+        self.service_name = 'openstorage.api.OpenStorageVolume'
+
+        # Creates a new volume
+        rpc :Create, OpenStorageVolumeCreateRequest, OpenStorageVolumeCreateResponse
+        # CreateFromVolumeID creates a new volume cloned from an existing volume
+        rpc :CreateFromVolumeID, VolumeCreateFromVolumeIDRequest, VolumeCreateFromVolumeIDResponse
+        # Delete a volume
+        rpc :Delete, VolumeDeleteRequest, VolumeDeleteResponse
+        # Get information on a volume
+        rpc :Inspect, VolumeInspectRequest, VolumeInspectResponse
+        # Get a list of volumes
+        rpc :Enumerate, VolumeEnumerateRequest, VolumeEnumerateResponse
       end
 
       Stub = Service.rpc_stub_class

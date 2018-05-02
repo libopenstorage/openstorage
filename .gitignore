@@ -1,4 +1,5 @@
 _tmp
+*.pyc
 *.o
 *.ko
 *.swp

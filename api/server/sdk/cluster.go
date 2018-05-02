@@ -25,10 +25,16 @@ import (
 	"github.com/golang/protobuf/ptypes"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/cluster"
 )
 
+// ClusterServer is an implementation of the gRPC OpenStorageCluster interface
+type ClusterServer struct {
+	cluster cluster.Cluster
+}
+
 // Enumerate returns information about the cluster
-func (s *Server) Enumerate(ctx context.Context, req *api.ClusterEnumerateRequest) (*api.ClusterEnumerateResponse, error) {
+func (s *ClusterServer) Enumerate(ctx context.Context, req *api.ClusterEnumerateRequest) (*api.ClusterEnumerateResponse, error) {
 	c, err := s.cluster.Enumerate()
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -40,7 +46,7 @@ func (s *Server) Enumerate(ctx context.Context, req *api.ClusterEnumerateRequest
 }
 
 // Inspect returns information about a specific node
-func (s *Server) Inspect(ctx context.Context, req *api.ClusterInspectRequest) (*api.ClusterInspectResponse, error) {
+func (s *ClusterServer) Inspect(ctx context.Context, req *api.ClusterInspectRequest) (*api.ClusterInspectResponse, error) {
 	if len(req.GetNodeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Node id must be provided")
 	}
@@ -56,7 +62,7 @@ func (s *Server) Inspect(ctx context.Context, req *api.ClusterInspectRequest) (*
 }
 
 // AlertEnumerate returns a list of alerts from the storage cluster
-func (s *Server) AlertEnumerate(
+func (s *ClusterServer) AlertEnumerate(
 	ctx context.Context,
 	req *api.ClusterAlertEnumerateRequest,
 ) (*api.ClusterAlertEnumerateResponse, error) {
@@ -92,7 +98,7 @@ func (s *Server) AlertEnumerate(
 }
 
 // AlertClear clears the alert for a given resource
-func (s *Server) AlertClear(
+func (s *ClusterServer) AlertClear(
 	ctx context.Context,
 	req *api.ClusterAlertClearRequest,
 ) (*api.ClusterAlertClearResponse, error) {
@@ -111,7 +117,7 @@ func (s *Server) AlertClear(
 }
 
 // AlertErase erases an alert for a given resource
-func (s *Server) AlertErase(
+func (s *ClusterServer) AlertErase(
 	ctx context.Context,
 	req *api.ClusterAlertEraseRequest,
 ) (*api.ClusterAlertEraseResponse, error) {

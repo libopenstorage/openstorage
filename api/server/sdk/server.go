@@ -25,7 +25,6 @@ import (
 	"github.com/libopenstorage/openstorage/api/spec"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
-	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 )
 
@@ -41,9 +40,8 @@ type ServerConfig struct {
 type Server struct {
 	*grpcserver.GrpcServer
 
-	specHandler spec.SpecHandler
-	driver      volume.VolumeDriver
-	cluster     cluster.Cluster
+	clusterServer *ClusterServer
+	volumeServer  *VolumeServer
 }
 
 // Interface check
@@ -75,10 +73,15 @@ func New(config *ServerConfig) (*Server, error) {
 	}
 
 	return &Server{
-		GrpcServer:  gServer,
-		driver:      d,
-		cluster:     config.Cluster,
-		specHandler: spec.NewSpecHandler(),
+		GrpcServer: gServer,
+		clusterServer: &ClusterServer{
+			config.Cluster,
+		},
+		volumeServer: &VolumeServer{
+			driver:      d,
+			cluster:     config.Cluster,
+			specHandler: spec.NewSpecHandler(),
+		},
 	}, nil
 }
 
@@ -86,6 +89,7 @@ func New(config *ServerConfig) (*Server, error) {
 // It will return an error if the server is already running.
 func (s *Server) Start() error {
 	return s.GrpcServer.Start(func(grpcServer *grpc.Server) {
-		api.RegisterOpenStorageClusterServer(grpcServer, s)
+		api.RegisterOpenStorageClusterServer(grpcServer, s.clusterServer)
+		api.RegisterOpenStorageVolumeServer(grpcServer, s.volumeServer)
 	})
 }

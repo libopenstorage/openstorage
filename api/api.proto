@@ -645,25 +645,102 @@ message StorageCluster {
 }
 
 service OpenStorageCluster {
-	// Enumerate lists all the nodes in the cluster.
-	rpc Enumerate(ClusterEnumerateRequest)
-		returns (ClusterEnumerateResponse) {}
+  // Enumerate lists all the nodes in the cluster.
+  rpc Enumerate(ClusterEnumerateRequest)
+    returns (ClusterEnumerateResponse) {}
 
-	// Inspect the node given a UUID.
-	rpc Inspect(ClusterInspectRequest)
+  // Inspect the node given a UUID.
+  rpc Inspect(ClusterInspectRequest)
     returns (ClusterInspectResponse) {}
-    
+
   // Get a list of alerts from the storage cluster
   rpc AlertEnumerate(ClusterAlertEnumerateRequest)
     returns (ClusterAlertEnumerateResponse) {}
-    
+
   // Clear the alert for a given resource
   rpc AlertClear(ClusterAlertClearRequest)
     returns (ClusterAlertClearResponse) {}
-  
+
   // Erases an alert for a given resource
   rpc AlertErase(ClusterAlertEraseRequest)
     returns (ClusterAlertEraseResponse) {}
+}
+
+service OpenStorageVolume {
+  // Creates a new volume
+  rpc Create(OpenStorageVolumeCreateRequest)
+    returns (OpenStorageVolumeCreateResponse) {}
+
+  // CreateFromVolumeID creates a new volume cloned from an existing volume
+  rpc CreateFromVolumeID(VolumeCreateFromVolumeIDRequest)
+    returns (VolumeCreateFromVolumeIDResponse) {}
+
+  // Delete a volume
+  rpc Delete(VolumeDeleteRequest)
+    returns (VolumeDeleteResponse) {}
+
+  // Get information on a volume
+  rpc Inspect(VolumeInspectRequest)
+    returns (VolumeInspectResponse) {}
+
+  // Get a list of volumes
+  rpc Enumerate(VolumeEnumerateRequest)
+    returns (VolumeEnumerateResponse) {}
+}
+
+message OpenStorageVolumeCreateRequest {
+  // Unique name of the volume. This will be used for idempotency.
+  string name = 1;
+  // Volume specification
+  VolumeSpec spec = 2;
+}
+
+message OpenStorageVolumeCreateResponse {
+  // Id of new volume
+  string volume_id = 1;
+}
+
+message VolumeCreateFromVolumeIDRequest {
+  // Unique name of the volume. This will be used for idempotency.
+  string name = 1;
+  // Parent volume id, if specified will create a new volume as a clone of the parent.
+  string parent_id = 2;
+  // Volume specification
+  VolumeSpec spec = 3;
+}
+
+message VolumeCreateFromVolumeIDResponse {
+  // Id of new volume
+  string volume_id = 1;
+}
+
+message VolumeDeleteRequest {
+  // Id of volume to delete
+  string volume_id = 1;
+}
+
+message VolumeDeleteResponse {
+}
+
+message VolumeInspectRequest {
+  // Id of volume to inspect
+  string volume_id = 1;
+}
+
+message VolumeInspectResponse {
+  // Information about the volume
+  Volume volume = 1;
+}
+
+message VolumeEnumerateRequest {
+  // Volumes to match to this locator.
+  // If not provided, all volumes will be returned.
+  VolumeLocator locator = 1;
+}
+
+message VolumeEnumerateResponse {
+  // List of volumes matching label
+  repeated Volume volumes = 1;
 }
 
 message ClusterEnumerateRequest {
