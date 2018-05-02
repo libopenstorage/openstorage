@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	mockcluster "github.com/libopenstorage/openstorage/cluster/mock"
+	mocksched "github.com/libopenstorage/openstorage/schedpolicy/mock"
 	mocksecrets "github.com/libopenstorage/openstorage/secrets/mock"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
@@ -40,6 +41,8 @@ type testCluster struct {
 	oldInst func() (cluster.Cluster, error)
 	// Secrets are not called by MockCluster, have to add MockSecrets
 	sm *mocksecrets.MockSecrets
+	// SchedulePolicy  not called by MockCluster, have to add MockSchedulePolicy
+	sp *mocksched.MockSchedulePolicy
 }
 
 func newTestCluster(t *testing.T) *testCluster {
@@ -57,6 +60,9 @@ func newTestCluster(t *testing.T) *testCluster {
 
 	// Create a new mock Secrets
 	tester.sm = mocksecrets.NewMockSecrets(tester.mc)
+
+	// Create a new mock SchedPolicy
+	tester.sp = mocksched.NewMockSchedulePolicy(tester.mc)
 
 	// Override cluster.Inst to return our mock cluster
 	cluster.Inst = func() (cluster.Cluster, error) {
@@ -113,6 +119,7 @@ func testClusterServer(t *testing.T) (*httptest.Server, *testCluster) {
 	tc := newTestCluster(t)
 	capi := newClusterAPI(ClusterServerConfiguration{
 		ConfigSecretManager: secrets.NewSecretManager(tc.sm),
+		ConfigSchedManager:  tc.sp,
 	},
 	)
 	router := mux.NewRouter()
@@ -134,6 +141,10 @@ func (c *testCluster) MockCluster() *mockcluster.MockCluster {
 
 func (c *testCluster) MockClusterSecrets() *mocksecrets.MockSecrets {
 	return c.sm
+}
+
+func (c *testCluster) MockClusterSchedPolicy() *mocksched.MockSchedulePolicy {
+	return c.sp
 }
 
 func (c *testCluster) Finish() {

@@ -20,6 +20,7 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/osdconfig"
+	sched "github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/systemutils"
 	"github.com/portworx/kvdb"
 	"github.com/sirupsen/logrus"
@@ -1721,5 +1722,21 @@ func (c *ClusterManager) SecretGet(string) (interface{}, error) {
 
 // SecretGetDefaultSecretKey return cluster wide secret key
 func (c *ClusterManager) SecretGetDefaultSecretKey() (interface{}, error) {
+	return nil, nil
+}
+
+func (c *ClusterManager) SchedPolicyCreate(name, sched string) error {
+	return nil
+}
+
+func (c *ClusterManager) SchedPolicyUpdate(name, sched string) error {
+	return nil
+}
+
+func (c *ClusterManager) SchedPolicyDelete(name string) error {
+	return nil
+}
+
+func (c *ClusterManager) SchedPolicyEnumerate() ([]*sched.SchedPolicy, error) {
 	return nil, nil
 }
