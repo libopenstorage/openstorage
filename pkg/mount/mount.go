@@ -15,6 +15,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/docker/docker/pkg/mount"
 	"github.com/libopenstorage/openstorage/pkg/chattr"
 	"github.com/libopenstorage/openstorage/pkg/keylock"
 	"github.com/libopenstorage/openstorage/pkg/options"
@@ -83,6 +84,8 @@ const (
 	// CustomMount indicates a custom mount type with its
 	// own defined way of handling mount table
 	CustomMount
+	// BindMount indicates a bind mount point
+	BindMount
 )
 
 const mountPathRemoveDelay = 30 * time.Second
@@ -133,6 +136,8 @@ type Mounter struct {
 	kl            keylock.KeyLock
 	trashLocation string
 }
+
+type findMountPoint func(source *mount.Info, destination string, mountInfo []*mount.Info) (bool, string, string)
 
 // DefaultMounter defaults to syscall implementation.
 type DefaultMounter struct {
@@ -325,6 +330,54 @@ func (m *Mounter) reload(device string, newM *Info) error {
 
 	// Purge old mounts.
 	m.mounts[device] = newM
+	return nil
+}
+
+func (m *Mounter) load(prefixes []string, fmp findMountPoint) error {
+	info, err := mount.GetMounts()
+	if err != nil {
+		return err
+	}
+DeviceLoop:
+	for _, v := range info {
+		var (
+			sourcePath, devicePath string
+			foundPrefix            bool
+		)
+		for _, devPrefix := range prefixes {
+			foundPrefix, sourcePath, devicePath = fmp(v, devPrefix, info)
+			if foundPrefix {
+				break
+			}
+		}
+		if !foundPrefix {
+			continue
+		}
+		mount, ok := m.mounts[sourcePath]
+		if !ok {
+			mount = &Info{
+				Device:     devicePath,
+				Fs:         v.Fstype,
+				Minor:      v.Minor,
+				Mountpoint: make([]*PathInfo, 0),
+			}
+			m.mounts[sourcePath] = mount
+		}
+		// Allow Load to be called multiple times.
+		for _, p := range mount.Mountpoint {
+			if p.Path == v.Mountpoint {
+				continue DeviceLoop
+			}
+		}
+		mount.Mountpoint = append(
+			mount.Mountpoint,
+			&PathInfo{
+				Root: normalizeMountPath(v.Root),
+				Path: normalizeMountPath(v.Mountpoint),
+			},
+		)
+		m.paths[v.Mountpoint] = sourcePath
+	}
 	return nil
 }
 
@@ -617,6 +670,8 @@ func New(
 		return NewDeviceMounter(identifiers, mountImpl, allowedDirs, trashLocation)
 	case NFSMount:
 		return NewNFSMounter(identifiers, mountImpl, allowedDirs)
+	case BindMount:
+		return NewBindMounter(identifiers, mountImpl, allowedDirs, trashLocation)
 	case CustomMount:
 		return NewCustomMounter(identifiers, mountImpl, customMounter, allowedDirs)
 	}
