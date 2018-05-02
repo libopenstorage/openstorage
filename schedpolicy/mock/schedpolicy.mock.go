@@ -58,16 +58,16 @@ func (mr *MockSchedulePolicyMockRecorder) SchedPolicyDelete(arg0 interface{}) *g
 }
 
 // SchedPolicyEnumerate mocks base method
-func (m *MockSchedulePolicy) SchedPolicyEnumerate(arg0 []string) ([]*schedpolicy.SchedPolicy, error) {
-	ret := m.ctrl.Call(m, "SchedPolicyEnumerate", arg0)
+func (m *MockSchedulePolicy) SchedPolicyEnumerate() ([]*schedpolicy.SchedPolicy, error) {
+	ret := m.ctrl.Call(m, "SchedPolicyEnumerate")
 	ret0, _ := ret[0].([]*schedpolicy.SchedPolicy)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // SchedPolicyEnumerate indicates an expected call of SchedPolicyEnumerate
-func (mr *MockSchedulePolicyMockRecorder) SchedPolicyEnumerate(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SchedPolicyEnumerate", reflect.TypeOf((*MockSchedulePolicy)(nil).SchedPolicyEnumerate), arg0)
+func (mr *MockSchedulePolicyMockRecorder) SchedPolicyEnumerate() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SchedPolicyEnumerate", reflect.TypeOf((*MockSchedulePolicy)(nil).SchedPolicyEnumerate))
 }
 
 // SchedPolicyUpdate mocks base method

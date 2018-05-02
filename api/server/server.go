@@ -121,7 +121,7 @@ func CheckNullClusterServerConfiguration(config ClusterServerConfiguration) {
 	}
 
 	if config.ConfigSchedManager == nil {
-		config.ConfigSchedManager = sched.NewSchedulePolicyManager(sched.New())
+		config.ConfigSchedManager = sched.NewDefaultSchedulePolicy()
 	}
 
 }

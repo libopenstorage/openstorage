@@ -23,7 +23,7 @@ const (
 type clusterApi struct {
 	restBase
 	SecretManager      *secrets.Manager
-	SchedPolicyManager *sched.Manager
+	SchedPolicyManager sched.SchedulePolicy
 }
 
 // ClusterServerConfiguration holds manager implementation
@@ -33,7 +33,7 @@ type ClusterServerConfiguration struct {
 	// holds implementation to Secrets interface
 	ConfigSecretManager *secrets.Manager
 	// holds implementeation to SchedulePolicy interface
-	ConfigSchedManager *sched.Manager
+	ConfigSchedManager sched.SchedulePolicy
 }
 
 func newClusterAPI(config ClusterServerConfiguration) restServer {

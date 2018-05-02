@@ -1742,6 +1742,6 @@ func (c *ClusterManager) SchedPolicyDelete(name string) error {
 	return nil
 }
 
-func (c *ClusterManager) SchedPolicyEnumerate([]string) ([]*sched.SchedPolicy, error) {
+func (c *ClusterManager) SchedPolicyEnumerate() ([]*sched.SchedPolicy, error) {
 	return nil, nil
 }

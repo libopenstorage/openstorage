@@ -177,7 +177,7 @@ func TestSchedPolicyEnumerateSuccess(t *testing.T) {
 	// mock the cluster schedulePolicy response
 	tc.MockClusterSchedPolicy().
 		EXPECT().
-		SchedPolicyEnumerate(nil).
+		SchedPolicyEnumerate().
 		Return([]*sched.SchedPolicy{
 			&sched.SchedPolicy{
 				Name:     name,
@@ -191,7 +191,7 @@ func TestSchedPolicyEnumerateSuccess(t *testing.T) {
 
 	// make the REST call
 	restClient := clusterclient.ClusterManager(c)
-	schedPolicy, err := restClient.SchedPolicyEnumerate(nil)
+	schedPolicy, err := restClient.SchedPolicyEnumerate()
 
 	assert.NotNil(t, schedPolicy)
 	assert.EqualValues(t, schedPolicy[0].Name, name)
@@ -208,7 +208,7 @@ func TestSchedPolicyEnumerateFailed(t *testing.T) {
 	// mock the cluster schedulePolicy response
 	tc.MockClusterSchedPolicy().
 		EXPECT().
-		SchedPolicyEnumerate(nil).
+		SchedPolicyEnumerate().
 		Return(nil, fmt.Errorf("Not Implemented"))
 
 	// create a cluster client to make the REST call
@@ -217,7 +217,7 @@ func TestSchedPolicyEnumerateFailed(t *testing.T) {
 
 	// make the REST call
 	restClient := clusterclient.ClusterManager(c)
-	schedPolicy, err := restClient.SchedPolicyEnumerate(nil)
+	schedPolicy, err := restClient.SchedPolicyEnumerate()
 
 	assert.Error(t, err)
 	assert.Nil(t, schedPolicy)

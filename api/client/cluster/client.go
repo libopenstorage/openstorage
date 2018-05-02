@@ -15,6 +15,7 @@ import (
 const (
 	clusterPath     = "/cluster"
 	secretPath      = "/secrets"
+	SchedPath       = "/schedpolicy"
 	loggingurl      = "/loggingurl"
 	managementurl   = "/managementurl"
 	fluentdhost     = "/fluentdconfig"
@@ -277,9 +278,9 @@ func (c *clusterClient) SecretLogin(secretType string, secretConfig map[string]s
 }
 
 // SchedPolicyEnumerate enumerates all configured policies
-func (c *clusterClient) SchedPolicyEnumerate([]string) ([]*sched.SchedPolicy, error) {
+func (c *clusterClient) SchedPolicyEnumerate() ([]*sched.SchedPolicy, error) {
 	var schedPolicies []*sched.SchedPolicy
-	req := c.c.Get().Resource(clusterPath + "/schedPolicy")
+	req := c.c.Get().Resource(clusterPath + SchedPath)
 
 	if err := req.Do().Unmarshal(&schedPolicies); err != nil {
 		return nil, err
@@ -295,7 +296,7 @@ func (c *clusterClient) SchedPolicyCreate(name, schedule string) error {
 		Schedule: schedule,
 	}
 
-	req := c.c.Post().Resource(clusterPath + "/schedPolicy").Body(request)
+	req := c.c.Post().Resource(clusterPath + SchedPath).Body(request)
 	res := req.Do()
 	if res.Error() != nil {
 		return res.FormatError()
@@ -311,7 +312,7 @@ func (c *clusterClient) SchedPolicyUpdate(name, schedule string) error {
 		Schedule: schedule,
 	}
 
-	req := c.c.Put().Resource(clusterPath + "/schedPolicy").Body(request)
+	req := c.c.Put().Resource(clusterPath + SchedPath).Body(request)
 	res := req.Do()
 	if res.Error() != nil {
 		return res.FormatError()
@@ -322,7 +323,7 @@ func (c *clusterClient) SchedPolicyUpdate(name, schedule string) error {
 
 // SchedPolicyDelete deletes a policy with given name
 func (c *clusterClient) SchedPolicyDelete(name string) error {
-	req := c.c.Delete().Resource(clusterPath + "/schedPolicy/" + name)
+	req := c.c.Delete().Resource(clusterPath + SchedPath + "/" + name)
 	res := req.Do()
 
 	if res.Error() != nil {

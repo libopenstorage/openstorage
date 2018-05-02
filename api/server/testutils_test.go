@@ -19,7 +19,6 @@ import (
 	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
 
 	"github.com/libopenstorage/openstorage/cluster"
-	sched "github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
 )
 
@@ -120,7 +119,7 @@ func testClusterServer(t *testing.T) (*httptest.Server, *testCluster) {
 	tc := newTestCluster(t)
 	capi := newClusterAPI(ClusterServerConfiguration{
 		ConfigSecretManager: secrets.NewSecretManager(tc.sm),
-		ConfigSchedManager:  sched.NewSchedulePolicyManager(tc.sp),
+		ConfigSchedManager:  tc.sp,
 	},
 	)
 	router := mux.NewRouter()

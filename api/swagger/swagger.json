@@ -286,7 +286,7 @@
           "schedpolicy"
         ],
         "summary": "List schedule policies",
-        "operationId": "listShedPolicy",
+        "operationId": "enumerateShedPolicy",
         "responses": {
           "200": {
             "description": "success",
@@ -311,7 +311,7 @@
         "operationId": "updateShedPolicy",
         "parameters": [
           {
-            "description": "policy name and schedule to create",
+            "description": "policy name and schedule to update",
             "name": "schedpolicy",
             "in": "body",
             "required": true,
@@ -327,7 +327,7 @@
         }
       },
       "post": {
-        "description": "This creates scheudle policy which will allow user to create snapshot schedule policy",
+        "description": "This creates scheudle policy which will allow user to create snapshot schedule",
         "produces": [
           "application/json"
         ],
@@ -2521,6 +2521,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SchedPolicy": {
+      "description": "SchedPolicy specify name and schedule to create/update/list schedule policy",
       "type": "object",
       "properties": {
         "Name": {

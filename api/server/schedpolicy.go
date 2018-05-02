@@ -8,7 +8,7 @@ import (
 	sched "github.com/libopenstorage/openstorage/schedpolicy"
 )
 
-// swagger:operation GET /cluster/schedpolicy schedpolicy listShedPolicy
+// swagger:operation GET /cluster/schedpolicy schedpolicy schedPolicyEnumerate
 //
 // List schedule policies
 //
@@ -24,9 +24,9 @@ import (
 //        type: array
 //        items:
 //           $ref: '#/definitions/SchedPolicy'
-func (c *clusterApi) listSchedPolicy(w http.ResponseWriter, r *http.Request) {
-	method := "listSchedPolicy"
-	schedPolicies, err := c.SchedPolicyManager.SchedPolicyEnumerate(nil)
+func (c *clusterApi) schedPolicyEnumerate(w http.ResponseWriter, r *http.Request) {
+	method := "schedPolicyEnumerate"
+	schedPolicies, err := c.SchedPolicyManager.SchedPolicyEnumerate()
 
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
@@ -36,7 +36,7 @@ func (c *clusterApi) listSchedPolicy(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(schedPolicies)
 }
 
-// swagger:operation POST /cluster/schedpolicy schedpolicy createShedPolicy
+// swagger:operation POST /cluster/schedpolicy schedpolicy schedPolicyCreate
 //
 // Create schedule policy
 //
@@ -55,9 +55,9 @@ func (c *clusterApi) listSchedPolicy(w http.ResponseWriter, r *http.Request) {
 // responses:
 //   '200':
 //     description: success
-func (c *clusterApi) createSchedPolicy(w http.ResponseWriter, r *http.Request) {
+func (c *clusterApi) schedPolicyCreate(w http.ResponseWriter, r *http.Request) {
 
-	method := "createSchedPolicy"
+	method := "schedPolicyCreate"
 	var schedReq sched.SchedPolicy
 
 	if err := json.NewDecoder(r.Body).Decode(&schedReq); err != nil {
@@ -74,7 +74,7 @@ func (c *clusterApi) createSchedPolicy(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// swagger:operation PUT /cluster/schedpolicy schedpolicy updateShedPolicy
+// swagger:operation PUT /cluster/schedpolicy schedpolicy schedPolicyUpdate
 //
 // Update schedule policy
 //
@@ -93,9 +93,9 @@ func (c *clusterApi) createSchedPolicy(w http.ResponseWriter, r *http.Request) {
 // responses:
 //   '200':
 //     description: success
-func (c *clusterApi) updateSchedPolicy(w http.ResponseWriter, r *http.Request) {
+func (c *clusterApi) schedPolicyUpdate(w http.ResponseWriter, r *http.Request) {
 
-	method := "updateSchedPolicy"
+	method := "schedPolicyUpdate"
 	var schedReq sched.SchedPolicy
 
 	if err := json.NewDecoder(r.Body).Decode(&schedReq); err != nil {
@@ -112,7 +112,7 @@ func (c *clusterApi) updateSchedPolicy(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// swagger:operation DELETE /cluster/schedpolicy/{name} schedpolicy deleteShedPolicy
+// swagger:operation DELETE /cluster/schedpolicy/{name} schedpolicy shedPolicyDelete
 //
 // Delete schedule policy
 //
@@ -130,9 +130,9 @@ func (c *clusterApi) updateSchedPolicy(w http.ResponseWriter, r *http.Request) {
 // responses:
 //   '200':
 //     description: success
-func (c *clusterApi) deleteSchedPolicy(w http.ResponseWriter, r *http.Request) {
+func (c *clusterApi) schedPolicyDelete(w http.ResponseWriter, r *http.Request) {
 
-	method := "deleteSchedPolicy"
+	method := "schedPolicyDelete"
 
 	vars := mux.Vars(r)
 	schedName, ok := vars[sched.SchedName]

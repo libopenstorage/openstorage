@@ -15,24 +15,14 @@ type SchedulePolicy interface {
 	// SchedPolicyDelete deletes a policy with given name.
 	SchedPolicyDelete(name string) error
 	// SchedPolicyEnumerate enumerates all configured policies or the ones specified.
-	SchedPolicyEnumerate([]string) ([]*SchedPolicy, error)
+	SchedPolicyEnumerate() ([]*SchedPolicy, error)
 }
 
-type Manager struct {
-	SchedulePolicy
-}
-
-func NewSchedulePolicyManager(sched SchedulePolicy) *Manager {
-	return &Manager{
-		SchedulePolicy: sched,
-	}
+func NewDefaultSchedulePolicy() SchedulePolicy {
+	return &nullSchedMgr{}
 }
 
 type nullSchedMgr struct {
-}
-
-func New() *nullSchedMgr {
-	return &nullSchedMgr{}
 }
 
 func (sp *nullSchedMgr) SchedPolicyCreate(name, sched string) error {
@@ -47,6 +37,6 @@ func (sp *nullSchedMgr) SchedPolicyDelete(name string) error {
 	return ErrNotImplemented
 }
 
-func (sp *nullSchedMgr) SchedPolicyEnumerate([]string) ([]*SchedPolicy, error) {
+func (sp *nullSchedMgr) SchedPolicyEnumerate() ([]*SchedPolicy, error) {
 	return nil, ErrNotImplemented
 }
