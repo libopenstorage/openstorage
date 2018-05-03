@@ -226,6 +226,72 @@ function deserialize_openstorage_api_VolumeInspectResponse(buffer_arg) {
   return api_pb.VolumeInspectResponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_openstorage_api_VolumeSnapshotCreateRequest(arg) {
+  if (!(arg instanceof api_pb.VolumeSnapshotCreateRequest)) {
+    throw new Error('Expected argument of type openstorage.api.VolumeSnapshotCreateRequest');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_VolumeSnapshotCreateRequest(buffer_arg) {
+  return api_pb.VolumeSnapshotCreateRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_VolumeSnapshotCreateResponse(arg) {
+  if (!(arg instanceof api_pb.VolumeSnapshotCreateResponse)) {
+    throw new Error('Expected argument of type openstorage.api.VolumeSnapshotCreateResponse');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_VolumeSnapshotCreateResponse(buffer_arg) {
+  return api_pb.VolumeSnapshotCreateResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_VolumeSnapshotEnumerateRequest(arg) {
+  if (!(arg instanceof api_pb.VolumeSnapshotEnumerateRequest)) {
+    throw new Error('Expected argument of type openstorage.api.VolumeSnapshotEnumerateRequest');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_VolumeSnapshotEnumerateRequest(buffer_arg) {
+  return api_pb.VolumeSnapshotEnumerateRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_VolumeSnapshotEnumerateResponse(arg) {
+  if (!(arg instanceof api_pb.VolumeSnapshotEnumerateResponse)) {
+    throw new Error('Expected argument of type openstorage.api.VolumeSnapshotEnumerateResponse');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_VolumeSnapshotEnumerateResponse(buffer_arg) {
+  return api_pb.VolumeSnapshotEnumerateResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_VolumeSnapshotRestoreRequest(arg) {
+  if (!(arg instanceof api_pb.VolumeSnapshotRestoreRequest)) {
+    throw new Error('Expected argument of type openstorage.api.VolumeSnapshotRestoreRequest');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_VolumeSnapshotRestoreRequest(buffer_arg) {
+  return api_pb.VolumeSnapshotRestoreRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_VolumeSnapshotRestoreResponse(arg) {
+  if (!(arg instanceof api_pb.VolumeSnapshotRestoreResponse)) {
+    throw new Error('Expected argument of type openstorage.api.VolumeSnapshotRestoreResponse');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_VolumeSnapshotRestoreResponse(buffer_arg) {
+  return api_pb.VolumeSnapshotRestoreResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 
 var OpenStorageClusterService = exports.OpenStorageClusterService = {
   // Enumerate lists all the nodes in the cluster.
@@ -351,6 +417,43 @@ var OpenStorageVolumeService = exports.OpenStorageVolumeService = {
     requestDeserialize: deserialize_openstorage_api_VolumeEnumerateRequest,
     responseSerialize: serialize_openstorage_api_VolumeEnumerateResponse,
     responseDeserialize: deserialize_openstorage_api_VolumeEnumerateResponse,
+  },
+  // Create a snapshot of a volume. This creates an immutable (read-only),
+  // point-in-time snapshot of a volume.
+  snapshotCreate: {
+    path: '/openstorage.api.OpenStorageVolume/SnapshotCreate',
+    requestStream: false,
+    responseStream: false,
+    requestType: api_pb.VolumeSnapshotCreateRequest,
+    responseType: api_pb.VolumeSnapshotCreateResponse,
+    requestSerialize: serialize_openstorage_api_VolumeSnapshotCreateRequest,
+    requestDeserialize: deserialize_openstorage_api_VolumeSnapshotCreateRequest,
+    responseSerialize: serialize_openstorage_api_VolumeSnapshotCreateResponse,
+    responseDeserialize: deserialize_openstorage_api_VolumeSnapshotCreateResponse,
+  },
+  // Restores a volume to a specified snapshot
+  snapshotRestore: {
+    path: '/openstorage.api.OpenStorageVolume/SnapshotRestore',
+    requestStream: false,
+    responseStream: false,
+    requestType: api_pb.VolumeSnapshotRestoreRequest,
+    responseType: api_pb.VolumeSnapshotRestoreResponse,
+    requestSerialize: serialize_openstorage_api_VolumeSnapshotRestoreRequest,
+    requestDeserialize: deserialize_openstorage_api_VolumeSnapshotRestoreRequest,
+    responseSerialize: serialize_openstorage_api_VolumeSnapshotRestoreResponse,
+    responseDeserialize: deserialize_openstorage_api_VolumeSnapshotRestoreResponse,
+  },
+  // List the number of snapshots for a specific volume
+  snapshotEnumerate: {
+    path: '/openstorage.api.OpenStorageVolume/SnapshotEnumerate',
+    requestStream: false,
+    responseStream: false,
+    requestType: api_pb.VolumeSnapshotEnumerateRequest,
+    responseType: api_pb.VolumeSnapshotEnumerateResponse,
+    requestSerialize: serialize_openstorage_api_VolumeSnapshotEnumerateRequest,
+    requestDeserialize: deserialize_openstorage_api_VolumeSnapshotEnumerateRequest,
+    responseSerialize: serialize_openstorage_api_VolumeSnapshotEnumerateResponse,
+    responseDeserialize: deserialize_openstorage_api_VolumeSnapshotEnumerateResponse,
   },
 };
 

@@ -48,6 +48,13 @@ module Openstorage
         rpc :Inspect, VolumeInspectRequest, VolumeInspectResponse
         # Get a list of volumes
         rpc :Enumerate, VolumeEnumerateRequest, VolumeEnumerateResponse
+        # Create a snapshot of a volume. This creates an immutable (read-only),
+        # point-in-time snapshot of a volume.
+        rpc :SnapshotCreate, VolumeSnapshotCreateRequest, VolumeSnapshotCreateResponse
+        # Restores a volume to a specified snapshot
+        rpc :SnapshotRestore, VolumeSnapshotRestoreRequest, VolumeSnapshotRestoreResponse
+        # List the number of snapshots for a specific volume
+        rpc :SnapshotEnumerate, VolumeSnapshotEnumerateRequest, VolumeSnapshotEnumerateResponse
       end
 
       Stub = Service.rpc_stub_class

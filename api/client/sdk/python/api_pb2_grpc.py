@@ -149,6 +149,21 @@ class OpenStorageVolumeStub(object):
         request_serializer=api__pb2.VolumeEnumerateRequest.SerializeToString,
         response_deserializer=api__pb2.VolumeEnumerateResponse.FromString,
         )
+    self.SnapshotCreate = channel.unary_unary(
+        '/openstorage.api.OpenStorageVolume/SnapshotCreate',
+        request_serializer=api__pb2.VolumeSnapshotCreateRequest.SerializeToString,
+        response_deserializer=api__pb2.VolumeSnapshotCreateResponse.FromString,
+        )
+    self.SnapshotRestore = channel.unary_unary(
+        '/openstorage.api.OpenStorageVolume/SnapshotRestore',
+        request_serializer=api__pb2.VolumeSnapshotRestoreRequest.SerializeToString,
+        response_deserializer=api__pb2.VolumeSnapshotRestoreResponse.FromString,
+        )
+    self.SnapshotEnumerate = channel.unary_unary(
+        '/openstorage.api.OpenStorageVolume/SnapshotEnumerate',
+        request_serializer=api__pb2.VolumeSnapshotEnumerateRequest.SerializeToString,
+        response_deserializer=api__pb2.VolumeSnapshotEnumerateResponse.FromString,
+        )
 
 
 class OpenStorageVolumeServicer(object):
@@ -190,6 +205,28 @@ class OpenStorageVolumeServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
+  def SnapshotCreate(self, request, context):
+    """Create a snapshot of a volume. This creates an immutable (read-only),
+    point-in-time snapshot of a volume.
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def SnapshotRestore(self, request, context):
+    """Restores a volume to a specified snapshot
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def SnapshotEnumerate(self, request, context):
+    """List the number of snapshots for a specific volume
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
 
 def add_OpenStorageVolumeServicer_to_server(servicer, server):
   rpc_method_handlers = {
@@ -217,6 +254,21 @@ def add_OpenStorageVolumeServicer_to_server(servicer, server):
           servicer.Enumerate,
           request_deserializer=api__pb2.VolumeEnumerateRequest.FromString,
           response_serializer=api__pb2.VolumeEnumerateResponse.SerializeToString,
+      ),
+      'SnapshotCreate': grpc.unary_unary_rpc_method_handler(
+          servicer.SnapshotCreate,
+          request_deserializer=api__pb2.VolumeSnapshotCreateRequest.FromString,
+          response_serializer=api__pb2.VolumeSnapshotCreateResponse.SerializeToString,
+      ),
+      'SnapshotRestore': grpc.unary_unary_rpc_method_handler(
+          servicer.SnapshotRestore,
+          request_deserializer=api__pb2.VolumeSnapshotRestoreRequest.FromString,
+          response_serializer=api__pb2.VolumeSnapshotRestoreResponse.SerializeToString,
+      ),
+      'SnapshotEnumerate': grpc.unary_unary_rpc_method_handler(
+          servicer.SnapshotEnumerate,
+          request_deserializer=api__pb2.VolumeSnapshotEnumerateRequest.FromString,
+          response_serializer=api__pb2.VolumeSnapshotEnumerateResponse.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(

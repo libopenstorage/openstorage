@@ -737,6 +737,34 @@ service OpenStorageVolume {
         body: "*"
       };
     }
+
+  // Create a snapshot of a volume. This creates an immutable (read-only),
+  // point-in-time snapshot of a volume.
+  rpc SnapshotCreate(VolumeSnapshotCreateRequest)
+    returns (VolumeSnapshotCreateResponse) {
+      option(google.api.http) = {
+        post: "/v1/volume/snapshot/create"
+        body: "*"
+      };
+    }
+
+  // Restores a volume to a specified snapshot
+  rpc SnapshotRestore(VolumeSnapshotRestoreRequest)
+    returns (VolumeSnapshotRestoreResponse) {
+      option(google.api.http) = {
+        post: "/v1/volume/snapshot/restore"
+        body: "*"
+      };
+    }
+
+  // List the number of snapshots for a specific volume
+  rpc SnapshotEnumerate(VolumeSnapshotEnumerateRequest)
+    returns (VolumeSnapshotEnumerateResponse) {
+      option(google.api.http) = {
+        post: "/v1/volume/snapshot/enumerate"
+        body: "*"
+      };
+    }
 }
 
 message OpenStorageVolumeCreateRequest {
@@ -792,6 +820,40 @@ message VolumeEnumerateRequest {
 message VolumeEnumerateResponse {
   // List of volumes matching label
   repeated Volume volumes = 1;
+}
+
+message VolumeSnapshotCreateRequest{
+  // Id of volume to take the snapshot from
+  string volume_id = 1;
+  // Labels to apply to snapshot
+  map<string, string> labels = 2;
+}
+
+message VolumeSnapshotCreateResponse {
+  // Id of immutable snapshot
+  string snapshot_id = 1;
+}
+
+message VolumeSnapshotRestoreRequest {
+  // Id of volume
+  string volume_id = 1;
+  // Snapshot id to apply to `volume_id`
+  string snapshot_id = 2;
+}
+
+message VolumeSnapshotRestoreResponse {
+}
+
+message VolumeSnapshotEnumerateRequest {
+  // Id of volume
+  string volume_id = 1;
+  // Labels from snapshot
+  map<string, string> labels = 2;
+}
+
+message VolumeSnapshotEnumerateResponse {
+  // List of immutable snapshots
+  repeated Volume snapshots = 1;
 }
 
 message ClusterEnumerateRequest {
