@@ -4,6 +4,7 @@
 var grpc = require('grpc');
 var api_pb = require('./api_pb.js');
 var google_protobuf_timestamp_pb = require('google-protobuf/google/protobuf/timestamp_pb.js');
+var google_api_annotations_pb = require('./google/api/annotations_pb.js');
 
 function serialize_openstorage_api_ClusterAlertClearRequest(arg) {
   if (!(arg instanceof api_pb.ClusterAlertClearRequest)) {

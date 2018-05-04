@@ -1,3 +1,8 @@
+HAS_PACKR := $(shell command -v packr 2> /dev/null)
+HAS_PROTOC_GEN_GRPC_GATEWAY := $(shell command -v protoc-gen-grpc-gateway 2> /dev/null)
+HAS_PROTOC_GEN_SWAGGER := $(shell command -v protoc-gen-swagger 2> /dev/null)
+HAS_PROTOC_GEN_GO := $(shell command -v protoc-gen-go 2> /dev/null)
+
 ifndef TAGS
 TAGS := daemon
 endif
@@ -62,10 +67,10 @@ vendor-without-update:
 
 vendor: vendor-update vendor-without-update
 
-build:
+build: packr
 	go build -tags "$(TAGS)" $(BUILDFLAGS) $(PKGS)
 
-install: $(OSDSANITY)-install
+install: packr $(OSDSANITY)-install
 	go install -tags "$(TAGS)" $(PKGS)
 
 $(OSDSANITY):
@@ -78,9 +83,37 @@ $(OSDSANITY)-clean:
 	@$(MAKE) -C cmd/osd-sanity clean
 
 proto:
+ifndef HAS_PROTOC_GEN_GO
+	@echo "Installing protoc-gen-go"
+	go get -u github.com/golang/protobuf/protoc-gen-go
+endif
+
+ifndef HAS_PROTOC_GEN_GRPC_GATEWAY
+	@echo "Installing protoc-gen-grpc-gateway"
 	go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+endif
+
+ifndef HAS_PROTOC_GEN_SWAGGER
+	@echo "Installing protoc-gen-swagger"
+	go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
+endif
+
 	@echo "Generating protobuf definitions from api/api.proto"
-	$(PROTOC) -I $(PROTOSRC_PATH) $(PROTOSRC_PATH)/api/api.proto --go_out=plugins=grpc:.
+	$(PROTOC) -I $(PROTOSRC_PATH) \
+		-I /usr/local/include \
+		-I $(PROTOS_PATH)/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+		--go_out=plugins=grpc:. \
+		$(PROTOSRC_PATH)/api/api.proto
+	$(PROTOC) -I $(PROTOSRC_PATH) \
+		-I /usr/local/include \
+		-I $(PROTOS_PATH)/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+		--grpc-gateway_out=logtostderr=true:. \
+		$(PROTOSRC_PATH)/api/api.proto
+	$(PROTOC) -I $(PROTOSRC_PATH) \
+		-I /usr/local/include \
+		-I $(PROTOS_PATH)/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+		--swagger_out=logtostderr=true:$(PROTOSRC_PATH)/api/server/sdk \
+		$(PROTOSRC_PATH)/api/api.proto
 	@echo "Generating grpc protobuf definitions from pkg/flexvolume/flexvolume.proto"
 	$(PROTOC) -I/usr/local/include -I$(PROTOSRC_PATH) -I$(PROTOS_PATH)/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis --go_out=plugins=grpc:. $(PROTOSRC_PATH)/pkg/flexvolume/flexvolume.proto
 	$(PROTOC) -I/usr/local/include -I$(PROTOSRC_PATH) -I$(PROTOS_PATH)/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis --grpc-gateway_out=logtostderr=true:. $(PROTOSRC_PATH)/pkg/flexvolume/flexvolume.proto
@@ -102,12 +135,19 @@ errcheck:
 
 pretest: lint vet errcheck
 
-test:
+test: packr
 	go test -tags "$(TAGS)" $(TESTFLAGS) $(PKGS)
 
 docs:
 	go generate ./cmd/osd/main.go
 	swagger validate api/swagger/swagger.json
+
+packr:
+ifndef HAS_PACKR
+	@echo "Installing packr to embed websites in golang"
+	go get -u github.com/gobuffalo/packr/...
+endif
+	packr
 
 generate-mockfiles:
 	go generate $(PKGS)
@@ -116,7 +156,7 @@ generate: docs generate-mockfiles
 
 sdk: proto docker-build-mock-sdk-server
 
-docker-build-mock-sdk-server:
+docker-build-mock-sdk-server: packr
 	rm -rf _tmp
 	mkdir -p _tmp
 	CGO_ENABLED=0 GOOS=linux go build \
@@ -178,6 +218,11 @@ docker-build-osd: docker-build-osd-dev
 		openstorage/osd-dev \
 			make docker-build-osd-internal
 
+launch-sdk: sdk
+	docker run \
+		-d -p 9110:9110 -p 9100:9100 \
+		openstorage/mock-sdk-server
+
 launch: docker-build-osd
 	docker run \
 		--privileged \
@@ -186,6 +231,8 @@ launch: docker-build-osd
 		-v /run/docker/plugins:/run/docker/plugins \
 		-v /var/lib/osd/:/var/lib/osd/ \
 		-p 9005:9005 \
+		-p 9100:9100 \
+		-p 9110:9110 \
 		openstorage/osd -d -f /etc/config/config.yaml
 
 # must set HAVE_BTRFS
@@ -204,6 +251,7 @@ install-flexvolume-plugin: install-flexvolume
 
 clean: $(OSDSANITY)-clean
 	go clean -i $(PKGS)
+	packr clean
 
 .PHONY: \
 	all \
@@ -245,7 +293,7 @@ $(GOPATH)/bin/gotestcover:
 
 # Generate test-coverage HTML report
 # - note: the 'go test -coverprofile...' does append results, so we're merging individual pkgs in for-loop
-coverage: $(GOPATH)/bin/cover $(GOPATH)/bin/gotestcover
+coverage: packr $(GOPATH)/bin/cover $(GOPATH)/bin/gotestcover
 	gotestcover -coverprofile=coverage.out $(PKGS)
 	go tool cover -html=coverage.out -o coverage.html
 	@echo "INFO: Summary of coverage"

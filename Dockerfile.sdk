@@ -1,7 +1,7 @@
 FROM alpine
 MAINTAINER luis@portworx.com
 
-EXPOSE 9100
+EXPOSE 9100 9110
 ADD ./etc/config/config-fake.yaml /config-fake.yaml
 ADD ./_tmp/osd /
 ENTRYPOINT ["/osd"]

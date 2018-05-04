@@ -92,6 +92,11 @@ func main() {
 			Usage: "gRPC port for SDK. Example: 9100",
 			Value: "9100",
 		},
+		cli.StringFlag{
+			Name:  "sdkrestport",
+			Usage: "gRPC REST Gateway port for SDK. Example: 9110",
+			Value: "9110",
+		},
 	}
 	app.Action = wrapAction(start)
 	app.Commands = []cli.Command{
@@ -262,6 +267,7 @@ func start(c *cli.Context) error {
 		sdkServer, err := sdk.New(&sdk.ServerConfig{
 			Net:        "tcp",
 			Address:    ":" + c.String("sdkport"),
+			RestPort:   c.String("sdkrestport"),
 			DriverName: d,
 			Cluster:    cm,
 		})

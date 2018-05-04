@@ -17,6 +17,9 @@ limitations under the License.
 package sdk
 
 import (
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -25,6 +28,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/kubernetes-csi/csi-test/utils"
 
+	"github.com/libopenstorage/openstorage/api"
 	mockcluster "github.com/libopenstorage/openstorage/cluster/mock"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 	"github.com/libopenstorage/openstorage/volume"
@@ -40,10 +44,11 @@ const (
 // the creation and setup of the gRPC CSI service
 type testServer struct {
 	conn   *grpc.ClientConn
-	server grpcserver.Server
+	server *Server
 	m      *mockdriver.MockVolumeDriver
 	c      *mockcluster.MockCluster
 	mc     *gomock.Controller
+	gw     *httptest.Server
 }
 
 func setupMockDriver(tester *testServer, t *testing.T) {
@@ -84,6 +89,12 @@ func newTestServer(t *testing.T) *testServer {
 	tester.conn, err = grpc.Dial(tester.server.Address(), grpc.WithInsecure())
 	assert.Nil(t, err)
 
+	// Setup REST gateway
+	mux, err := tester.server.restServerSetupHandlers()
+	assert.NoError(t, err)
+	assert.NotNil(t, mux)
+	tester.gw = httptest.NewServer(mux)
+
 	return tester
 }
 
@@ -102,6 +113,7 @@ func (s *testServer) Stop() {
 	// Shutdown servers
 	s.conn.Close()
 	s.server.Stop()
+	s.gw.Close()
 
 	// Check mocks
 	s.mc.Finish()
@@ -113,4 +125,45 @@ func (s *testServer) Conn() *grpc.ClientConn {
 
 func (s *testServer) Server() grpcserver.Server {
 	return s.server
+}
+
+func (s *testServer) GatewayURL() string {
+	return s.gw.URL
+}
+
+func TestSdkGateway(t *testing.T) {
+	s := newTestServer(t)
+	defer s.Stop()
+
+	// Check we can get the swagger.json file
+	res, err := http.Get(s.GatewayURL() + "/swagger.json")
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, res.StatusCode)
+
+	// Check we get the swagger-ui
+	res, err = http.Get(s.GatewayURL() + "/swagger-ui")
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, res.StatusCode)
+
+	// Check unhandled address
+	res, err = http.Get(s.GatewayURL() + "/this-should-not-work")
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusNotFound, res.StatusCode)
+
+	// Check the gateway works
+	// First setup the mock
+	cluster := api.Cluster{
+		Id:     "someid",
+		NodeId: "somenodeid",
+		Status: api.Status_STATUS_NOT_IN_QUORUM,
+	}
+	s.MockCluster().EXPECT().Enumerate().Return(cluster, nil).Times(1)
+
+	// Then send the request
+	res, err = http.Post(
+		s.GatewayURL()+"/v1/cluster/enumerate",
+		"application/json",
+		strings.NewReader("{}"))
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, res.StatusCode)
 }

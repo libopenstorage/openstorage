@@ -1,4 +1,5 @@
 _tmp
+*-packr.go
 *.pyc
 *.o
 *.ko
