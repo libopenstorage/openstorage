@@ -248,6 +248,26 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "openstorage.api.VolumeEnumerateResponse" do
     repeated :volumes, :message, 1, "openstorage.api.Volume"
   end
+  add_message "openstorage.api.VolumeSnapshotCreateRequest" do
+    optional :volume_id, :string, 1
+    map :labels, :string, :string, 2
+  end
+  add_message "openstorage.api.VolumeSnapshotCreateResponse" do
+    optional :snapshot_id, :string, 1
+  end
+  add_message "openstorage.api.VolumeSnapshotRestoreRequest" do
+    optional :volume_id, :string, 1
+    optional :snapshot_id, :string, 2
+  end
+  add_message "openstorage.api.VolumeSnapshotRestoreResponse" do
+  end
+  add_message "openstorage.api.VolumeSnapshotEnumerateRequest" do
+    optional :volume_id, :string, 1
+    map :labels, :string, :string, 2
+  end
+  add_message "openstorage.api.VolumeSnapshotEnumerateResponse" do
+    repeated :snapshots, :message, 1, "openstorage.api.Volume"
+  end
   add_message "openstorage.api.ClusterEnumerateRequest" do
   end
   add_message "openstorage.api.ClusterEnumerateResponse" do
@@ -438,6 +458,12 @@ module Openstorage
     VolumeInspectResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.VolumeInspectResponse").msgclass
     VolumeEnumerateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.VolumeEnumerateRequest").msgclass
     VolumeEnumerateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.VolumeEnumerateResponse").msgclass
+    VolumeSnapshotCreateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.VolumeSnapshotCreateRequest").msgclass
+    VolumeSnapshotCreateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.VolumeSnapshotCreateResponse").msgclass
+    VolumeSnapshotRestoreRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.VolumeSnapshotRestoreRequest").msgclass
+    VolumeSnapshotRestoreResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.VolumeSnapshotRestoreResponse").msgclass
+    VolumeSnapshotEnumerateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.VolumeSnapshotEnumerateRequest").msgclass
+    VolumeSnapshotEnumerateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.VolumeSnapshotEnumerateResponse").msgclass
     ClusterEnumerateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.ClusterEnumerateRequest").msgclass
     ClusterEnumerateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.ClusterEnumerateResponse").msgclass
     ClusterInspectRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.ClusterInspectRequest").msgclass

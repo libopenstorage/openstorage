@@ -284,6 +284,87 @@
           "OpenStorageVolume"
         ]
       }
+    },
+    "/v1/volume/snapshot/create": {
+      "post": {
+        "summary": "Create a snapshot of a volume. This creates an immutable (read-only),\npoint-in-time snapshot of a volume.",
+        "operationId": "SnapshotCreate",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiVolumeSnapshotCreateResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiVolumeSnapshotCreateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/volume/snapshot/enumerate": {
+      "post": {
+        "summary": "List the number of snapshots for a specific volume",
+        "operationId": "SnapshotEnumerate",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiVolumeSnapshotEnumerateResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiVolumeSnapshotEnumerateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/volume/snapshot/restore": {
+      "post": {
+        "summary": "Restores a volume to a specified snapshot",
+        "operationId": "SnapshotRestore",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiVolumeSnapshotRestoreResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiVolumeSnapshotRestoreRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
     }
   },
   "definitions": {
@@ -1050,6 +1131,75 @@
         }
       },
       "title": "VolumeLocator is a structure that is attached to a volume\nand is used to carry opaque metadata.\nswagger:model"
+    },
+    "apiVolumeSnapshotCreateRequest": {
+      "type": "object",
+      "properties": {
+        "volume_id": {
+          "type": "string",
+          "title": "Id of volume to take the snapshot from"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Labels to apply to snapshot"
+        }
+      }
+    },
+    "apiVolumeSnapshotCreateResponse": {
+      "type": "object",
+      "properties": {
+        "snapshot_id": {
+          "type": "string",
+          "title": "Id of immutable snapshot"
+        }
+      }
+    },
+    "apiVolumeSnapshotEnumerateRequest": {
+      "type": "object",
+      "properties": {
+        "volume_id": {
+          "type": "string",
+          "title": "Id of volume"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Labels from snapshot"
+        }
+      }
+    },
+    "apiVolumeSnapshotEnumerateResponse": {
+      "type": "object",
+      "properties": {
+        "snapshots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiVolume"
+          },
+          "title": "List of immutable snapshots"
+        }
+      }
+    },
+    "apiVolumeSnapshotRestoreRequest": {
+      "type": "object",
+      "properties": {
+        "volume_id": {
+          "type": "string",
+          "title": "Id of volume"
+        },
+        "snapshot_id": {
+          "type": "string",
+          "title": "Snapshot id to apply to `volume_id`"
+        }
+      }
+    },
+    "apiVolumeSnapshotRestoreResponse": {
+      "type": "object"
     },
     "apiVolumeSpec": {
       "type": "object",
