@@ -22,7 +22,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='api.proto',
   package='openstorage.api',
   syntax='proto3',
-  serialized_pb=_b('\n\tapi.proto\x12\x0fopenstorage.api\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1cgoogle/api/annotations.proto\"\xa3\x02\n\x0fStorageResource\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x04path\x18\x02 \x01(\t\x12.\n\x06medium\x18\x03 \x01(\x0e\x32\x1e.openstorage.api.StorageMedium\x12\x0e\n\x06online\x18\x04 \x01(\x08\x12\x0c\n\x04iops\x18\x05 \x01(\x04\x12\x11\n\tseq_write\x18\x06 \x01(\x01\x12\x10\n\x08seq_read\x18\x07 \x01(\x01\x12\x0e\n\x06randRW\x18\x08 \x01(\x01\x12\x0c\n\x04size\x18\t \x01(\x04\x12\x0c\n\x04used\x18\n \x01(\x04\x12\x16\n\x0erotation_speed\x18\x0b \x01(\t\x12-\n\tlast_scan\x18\x0c \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x10\n\x08metadata\x18\r \x01(\x08\"\x8d\x02\n\x0bStoragePool\x12\n\n\x02ID\x18\x01 \x01(\x05\x12%\n\x03\x43os\x18\x02 \x01(\x0e\x32\x18.openstorage.api.CosType\x12.\n\x06Medium\x18\x03 \x01(\x0e\x32\x1e.openstorage.api.StorageMedium\x12\x11\n\tRaidLevel\x18\x04 \x01(\t\x12\x11\n\tTotalSize\x18\x07 \x01(\x04\x12\x0c\n\x04Used\x18\x08 \x01(\x04\x12\x38\n\x06labels\x18\t \x03(\x0b\x32(.openstorage.api.StoragePool.LabelsEntry\x1a-\n\x0bLabelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x9b\x01\n\rVolumeLocator\x12\x0c\n\x04name\x18\x01 \x01(\t\x12G\n\rvolume_labels\x18\x02 \x03(\x0b\x32\x30.openstorage.api.VolumeLocator.VolumeLabelsEntry\x1a\x33\n\x11VolumeLabelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"&\n\x06Source\x12\x0e\n\x06parent\x18\x01 \x01(\t\x12\x0c\n\x04seed\x18\x02 \x01(\t\"\x13\n\x05Group\x12\n\n\x02id\x18\x01 \x01(\t\"\xbf\x05\n\nVolumeSpec\x12\x11\n\tephemeral\x18\x01 \x01(\x08\x12\x0c\n\x04size\x18\x02 \x01(\x04\x12\'\n\x06\x66ormat\x18\x03 \x01(\x0e\x32\x17.openstorage.api.FSType\x12\x12\n\nblock_size\x18\x04 \x01(\x03\x12\x10\n\x08ha_level\x18\x05 \x01(\x03\x12%\n\x03\x63os\x18\x06 \x01(\x0e\x32\x18.openstorage.api.CosType\x12.\n\nio_profile\x18\x07 \x01(\x0e\x32\x1a.openstorage.api.IoProfile\x12\x0e\n\x06\x64\x65\x64upe\x18\x08 \x01(\x08\x12\x19\n\x11snapshot_interval\x18\t \x01(\r\x12\x44\n\rvolume_labels\x18\n \x03(\x0b\x32-.openstorage.api.VolumeSpec.VolumeLabelsEntry\x12\x0e\n\x06shared\x18\x0b \x01(\x08\x12\x30\n\x0breplica_set\x18\x0c \x01(\x0b\x32\x1b.openstorage.api.ReplicaSet\x12\x19\n\x11\x61ggregation_level\x18\r \x01(\r\x12\x11\n\tencrypted\x18\x0e \x01(\x08\x12\x12\n\npassphrase\x18\x0f \x01(\t\x12\x19\n\x11snapshot_schedule\x18\x10 \x01(\t\x12\r\n\x05scale\x18\x11 \x01(\r\x12\x0e\n\x06sticky\x18\x12 \x01(\x08\x12%\n\x05group\x18\x15 \x01(\x0b\x32\x16.openstorage.api.Group\x12\x16\n\x0egroup_enforced\x18\x16 \x01(\x08\x12\x12\n\ncompressed\x18\x17 \x01(\x08\x12\x10\n\x08\x63\x61scaded\x18\x18 \x01(\x08\x12\x0f\n\x07journal\x18\x19 \x01(\x08\x12\x10\n\x08sharedv4\x18\x1a \x01(\x08\x1a\x33\n\x11VolumeLabelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x1b\n\nReplicaSet\x12\r\n\x05nodes\x18\x01 \x03(\t\"\x91\x01\n\x0fRuntimeStateMap\x12I\n\rruntime_state\x18\x01 \x03(\x0b\x32\x32.openstorage.api.RuntimeStateMap.RuntimeStateEntry\x1a\x33\n\x11RuntimeStateEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xf8\x06\n\x06Volume\x12\n\n\x02id\x18\x01 \x01(\t\x12\'\n\x06source\x18\x02 \x01(\x0b\x32\x17.openstorage.api.Source\x12%\n\x05group\x18\x03 \x01(\x0b\x32\x16.openstorage.api.Group\x12\x10\n\x08readonly\x18\x04 \x01(\x08\x12/\n\x07locator\x18\x05 \x01(\x0b\x32\x1e.openstorage.api.VolumeLocator\x12)\n\x05\x63time\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12)\n\x04spec\x18\x07 \x01(\x0b\x32\x1b.openstorage.api.VolumeSpec\x12\r\n\x05usage\x18\x08 \x01(\x04\x12-\n\tlast_scan\x18\t \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\'\n\x06\x66ormat\x18\n \x01(\x0e\x32\x17.openstorage.api.FSType\x12-\n\x06status\x18\x0b \x01(\x0e\x32\x1d.openstorage.api.VolumeStatus\x12+\n\x05state\x18\x0c \x01(\x0e\x32\x1c.openstorage.api.VolumeState\x12\x13\n\x0b\x61ttached_on\x18\r \x01(\t\x12\x34\n\x0e\x61ttached_state\x18\x0e \x01(\x0e\x32\x1c.openstorage.api.AttachState\x12\x13\n\x0b\x64\x65vice_path\x18\x0f \x01(\t\x12\x1a\n\x12secure_device_path\x18\x10 \x01(\t\x12\x13\n\x0b\x61ttach_path\x18\x11 \x03(\t\x12<\n\x0b\x61ttach_info\x18\x12 \x03(\x0b\x32\'.openstorage.api.Volume.AttachInfoEntry\x12\x31\n\x0creplica_sets\x18\x13 \x03(\x0b\x32\x1b.openstorage.api.ReplicaSet\x12\x37\n\rruntime_state\x18\x14 \x03(\x0b\x32 .openstorage.api.RuntimeStateMap\x12\r\n\x05\x65rror\x18\x15 \x01(\t\x12\x39\n\x10volume_consumers\x18\x16 \x03(\x0b\x32\x1f.openstorage.api.VolumeConsumer\x1a\x31\n\x0f\x41ttachInfoEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xbf\x01\n\x05Stats\x12\r\n\x05reads\x18\x01 \x01(\x04\x12\x0f\n\x07read_ms\x18\x02 \x01(\x04\x12\x12\n\nread_bytes\x18\x03 \x01(\x04\x12\x0e\n\x06writes\x18\x04 \x01(\x04\x12\x10\n\x08write_ms\x18\x05 \x01(\x04\x12\x13\n\x0bwrite_bytes\x18\x06 \x01(\x04\x12\x13\n\x0bio_progress\x18\x07 \x01(\x04\x12\r\n\x05io_ms\x18\x08 \x01(\x04\x12\x12\n\nbytes_used\x18\t \x01(\x04\x12\x13\n\x0binterval_ms\x18\n \x01(\x04\"\x90\x02\n\x05\x41lert\x12\n\n\x02id\x18\x01 \x01(\x03\x12/\n\x08severity\x18\x02 \x01(\x0e\x32\x1d.openstorage.api.SeverityType\x12\x12\n\nalert_type\x18\x03 \x01(\x03\x12\x0f\n\x07message\x18\x04 \x01(\t\x12-\n\ttimestamp\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x13\n\x0bresource_id\x18\x06 \x01(\t\x12/\n\x08resource\x18\x07 \x01(\x0e\x32\x1d.openstorage.api.ResourceType\x12\x0f\n\x07\x63leared\x18\x08 \x01(\x08\x12\x0b\n\x03ttl\x18\t \x01(\x04\x12\x12\n\nunique_tag\x18\n \x01(\t\"/\n\x06\x41lerts\x12%\n\x05\x61lert\x18\x01 \x03(\x0b\x32\x16.openstorage.api.Alert\"\x9a\x01\n\x13VolumeCreateRequest\x12/\n\x07locator\x18\x01 \x01(\x0b\x32\x1e.openstorage.api.VolumeLocator\x12\'\n\x06source\x18\x02 \x01(\x0b\x32\x17.openstorage.api.Source\x12)\n\x04spec\x18\x03 \x01(\x0b\x32\x1b.openstorage.api.VolumeSpec\"\x1f\n\x0eVolumeResponse\x12\r\n\x05\x65rror\x18\x01 \x01(\t\"\\\n\x14VolumeCreateResponse\x12\n\n\x02id\x18\x01 \x01(\t\x12\x38\n\x0fvolume_response\x18\x02 \x01(\x0b\x32\x1f.openstorage.api.VolumeResponse\"\xa3\x01\n\x11VolumeStateAction\x12\x32\n\x06\x61ttach\x18\x01 \x01(\x0e\x32\".openstorage.api.VolumeActionParam\x12\x31\n\x05mount\x18\x02 \x01(\x0e\x32\".openstorage.api.VolumeActionParam\x12\x12\n\nmount_path\x18\x03 \x01(\t\x12\x13\n\x0b\x64\x65vice_path\x18\x04 \x01(\t\"\x93\x02\n\x10VolumeSetRequest\x12/\n\x07locator\x18\x01 \x01(\x0b\x32\x1e.openstorage.api.VolumeLocator\x12)\n\x04spec\x18\x02 \x01(\x0b\x32\x1b.openstorage.api.VolumeSpec\x12\x32\n\x06\x61\x63tion\x18\x03 \x01(\x0b\x32\".openstorage.api.VolumeStateAction\x12?\n\x07options\x18\x04 \x03(\x0b\x32..openstorage.api.VolumeSetRequest.OptionsEntry\x1a.\n\x0cOptionsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"v\n\x11VolumeSetResponse\x12\'\n\x06volume\x18\x01 \x01(\x0b\x32\x17.openstorage.api.Volume\x12\x38\n\x0fvolume_response\x18\x02 \x01(\x0b\x32\x1f.openstorage.api.VolumeResponse\"b\n\x11SnapCreateRequest\x12\n\n\x02id\x18\x01 \x01(\t\x12/\n\x07locator\x18\x02 \x01(\x0b\x32\x1e.openstorage.api.VolumeLocator\x12\x10\n\x08readonly\x18\x03 \x01(\x08\"[\n\x12SnapCreateResponse\x12\x45\n\x16volume_create_response\x18\x01 \x01(\x0b\x32%.openstorage.api.VolumeCreateResponse\"[\n\nVolumeInfo\x12\x11\n\tvolume_id\x18\x01 \x01(\t\x12\x0c\n\x04path\x18\x02 \x01(\t\x12,\n\x07storage\x18\x03 \x01(\x0b\x32\x1b.openstorage.api.VolumeSpec\"x\n\x0eVolumeConsumer\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x11\n\tnamespace\x18\x02 \x01(\t\x12\x0c\n\x04type\x18\x03 \x01(\t\x12\x0f\n\x07node_id\x18\x04 \x01(\t\x12\x12\n\nowner_name\x18\x05 \x01(\t\x12\x12\n\nowner_type\x18\x06 \x01(\t\"X\n\x12GraphDriverChanges\x12\x0c\n\x04path\x18\x01 \x01(\t\x12\x34\n\x04kind\x18\x02 \x01(\x0e\x32&.openstorage.api.GraphDriverChangeType\" \n\x0f\x43lusterResponse\x12\r\n\x05\x65rror\x18\x01 \x01(\t\"\x80\x01\n\rActiveRequest\x12>\n\x08ReqestKV\x18\x01 \x03(\x0b\x32,.openstorage.api.ActiveRequest.ReqestKVEntry\x1a/\n\rReqestKVEntry\x12\x0b\n\x03key\x18\x01 \x01(\x03\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"]\n\x0e\x41\x63tiveRequests\x12\x14\n\x0cRequestCount\x18\x01 \x01(\x03\x12\x35\n\rActiveRequest\x18\x02 \x03(\x0b\x32\x1e.openstorage.api.ActiveRequest\"\x98\x01\n\x16GroupSnapCreateRequest\x12\n\n\x02id\x18\x01 \x01(\t\x12\x43\n\x06Labels\x18\x02 \x03(\x0b\x32\x33.openstorage.api.GroupSnapCreateRequest.LabelsEntry\x1a-\n\x0bLabelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xcb\x01\n\x17GroupSnapCreateResponse\x12J\n\tsnapshots\x18\x01 \x03(\x0b\x32\x37.openstorage.api.GroupSnapCreateResponse.SnapshotsEntry\x12\r\n\x05\x65rror\x18\x02 \x01(\t\x1aU\n\x0eSnapshotsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x32\n\x05value\x18\x02 \x01(\x0b\x32#.openstorage.api.SnapCreateResponse:\x02\x38\x01\"\xf7\x03\n\x0bStorageNode\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0b\n\x03\x63pu\x18\x02 \x01(\x01\x12\x11\n\tmem_total\x18\x03 \x01(\x04\x12\x10\n\x08mem_used\x18\x04 \x01(\x04\x12\x10\n\x08mem_free\x18\x05 \x01(\x04\x12\x10\n\x08\x61vg_load\x18\x06 \x01(\x03\x12\'\n\x06status\x18\x07 \x01(\x0e\x32\x17.openstorage.api.Status\x12\x36\n\x05\x64isks\x18\t \x03(\x0b\x32\'.openstorage.api.StorageNode.DisksEntry\x12+\n\x05pools\x18\n \x03(\x0b\x32\x1c.openstorage.api.StoragePool\x12\x0f\n\x07mgmt_ip\x18\x0b \x01(\t\x12\x0f\n\x07\x64\x61ta_ip\x18\x0c \x01(\t\x12\x10\n\x08hostname\x18\x0f \x01(\t\x12\x41\n\x0bnode_labels\x18\x10 \x03(\x0b\x32,.openstorage.api.StorageNode.NodeLabelsEntry\x1aN\n\nDisksEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12/\n\x05value\x18\x02 \x01(\x0b\x32 .openstorage.api.StorageResource:\x02\x38\x01\x1a\x31\n\x0fNodeLabelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x83\x01\n\x0eStorageCluster\x12\'\n\x06status\x18\x01 \x01(\x0e\x32\x17.openstorage.api.Status\x12\n\n\x02id\x18\x02 \x01(\t\x12\x0f\n\x07node_id\x18\x03 \x01(\t\x12+\n\x05nodes\x18\x04 \x03(\x0b\x32\x1c.openstorage.api.StorageNode\"Y\n\x1eOpenStorageVolumeCreateRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12)\n\x04spec\x18\x02 \x01(\x0b\x32\x1b.openstorage.api.VolumeSpec\"4\n\x1fOpenStorageVolumeCreateResponse\x12\x11\n\tvolume_id\x18\x01 \x01(\t\"m\n\x1fVolumeCreateFromVolumeIDRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x11\n\tparent_id\x18\x02 \x01(\t\x12)\n\x04spec\x18\x03 \x01(\x0b\x32\x1b.openstorage.api.VolumeSpec\"5\n VolumeCreateFromVolumeIDResponse\x12\x11\n\tvolume_id\x18\x01 \x01(\t\"(\n\x13VolumeDeleteRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\"\x16\n\x14VolumeDeleteResponse\")\n\x14VolumeInspectRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\"@\n\x15VolumeInspectResponse\x12\'\n\x06volume\x18\x01 \x01(\x0b\x32\x17.openstorage.api.Volume\"I\n\x16VolumeEnumerateRequest\x12/\n\x07locator\x18\x01 \x01(\x0b\x32\x1e.openstorage.api.VolumeLocator\"C\n\x17VolumeEnumerateResponse\x12(\n\x07volumes\x18\x01 \x03(\x0b\x32\x17.openstorage.api.Volume\"\xa9\x01\n\x1bVolumeSnapshotCreateRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\x12H\n\x06labels\x18\x02 \x03(\x0b\x32\x38.openstorage.api.VolumeSnapshotCreateRequest.LabelsEntry\x1a-\n\x0bLabelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"3\n\x1cVolumeSnapshotCreateResponse\x12\x13\n\x0bsnapshot_id\x18\x01 \x01(\t\"F\n\x1cVolumeSnapshotRestoreRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\x12\x13\n\x0bsnapshot_id\x18\x02 \x01(\t\"\x1f\n\x1dVolumeSnapshotRestoreResponse\"\xaf\x01\n\x1eVolumeSnapshotEnumerateRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\x12K\n\x06labels\x18\x02 \x03(\x0b\x32;.openstorage.api.VolumeSnapshotEnumerateRequest.LabelsEntry\x1a-\n\x0bLabelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"M\n\x1fVolumeSnapshotEnumerateResponse\x12*\n\tsnapshots\x18\x01 \x03(\x0b\x32\x17.openstorage.api.Volume\"\x19\n\x17\x43lusterEnumerateRequest\"L\n\x18\x43lusterEnumerateResponse\x12\x30\n\x07\x63luster\x18\x01 \x01(\x0b\x32\x1f.openstorage.api.StorageCluster\"(\n\x15\x43lusterInspectRequest\x12\x0f\n\x07node_id\x18\x01 \x01(\t\"D\n\x16\x43lusterInspectResponse\x12*\n\x04node\x18\x01 \x01(\x0b\x32\x1c.openstorage.api.StorageNode\"\xad\x01\n\x1c\x43lusterAlertEnumerateRequest\x12.\n\ntime_start\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12,\n\x08time_end\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12/\n\x08resource\x18\x03 \x01(\x0e\x32\x1d.openstorage.api.ResourceType\"H\n\x1d\x43lusterAlertEnumerateResponse\x12\'\n\x06\x61lerts\x18\x01 \x01(\x0b\x32\x17.openstorage.api.Alerts\"]\n\x18\x43lusterAlertClearRequest\x12/\n\x08resource\x18\x01 \x01(\x0e\x32\x1d.openstorage.api.ResourceType\x12\x10\n\x08\x61lert_id\x18\x02 \x01(\x03\"\x1b\n\x19\x43lusterAlertClearResponse\"]\n\x18\x43lusterAlertEraseRequest\x12/\n\x08resource\x18\x01 \x01(\x0e\x32\x1d.openstorage.api.ResourceType\x12\x10\n\x08\x61lert_id\x18\x02 \x01(\x03\"\x1b\n\x19\x43lusterAlertEraseResponse*\xee\x02\n\x06Status\x12\x0f\n\x0bSTATUS_NONE\x10\x00\x12\x0f\n\x0bSTATUS_INIT\x10\x01\x12\r\n\tSTATUS_OK\x10\x02\x12\x12\n\x0eSTATUS_OFFLINE\x10\x03\x12\x10\n\x0cSTATUS_ERROR\x10\x04\x12\x18\n\x14STATUS_NOT_IN_QUORUM\x10\x05\x12\x17\n\x13STATUS_DECOMMISSION\x10\x06\x12\x16\n\x12STATUS_MAINTENANCE\x10\x07\x12\x17\n\x13STATUS_STORAGE_DOWN\x10\x08\x12\x1b\n\x17STATUS_STORAGE_DEGRADED\x10\t\x12\x17\n\x13STATUS_NEEDS_REBOOT\x10\n\x12\x1c\n\x18STATUS_STORAGE_REBALANCE\x10\x0b\x12 \n\x1cSTATUS_STORAGE_DRIVE_REPLACE\x10\x0c\x12#\n\x1fSTATUS_NOT_IN_QUORUM_NO_STORAGE\x10\r\x12\x0e\n\nSTATUS_MAX\x10\x0e*\x99\x01\n\nDriverType\x12\x14\n\x10\x44RIVER_TYPE_NONE\x10\x00\x12\x14\n\x10\x44RIVER_TYPE_FILE\x10\x01\x12\x15\n\x11\x44RIVER_TYPE_BLOCK\x10\x02\x12\x16\n\x12\x44RIVER_TYPE_OBJECT\x10\x03\x12\x19\n\x15\x44RIVER_TYPE_CLUSTERED\x10\x04\x12\x15\n\x11\x44RIVER_TYPE_GRAPH\x10\x05*\x95\x01\n\x06\x46SType\x12\x10\n\x0c\x46S_TYPE_NONE\x10\x00\x12\x11\n\rFS_TYPE_BTRFS\x10\x01\x12\x10\n\x0c\x46S_TYPE_EXT4\x10\x02\x12\x10\n\x0c\x46S_TYPE_FUSE\x10\x03\x12\x0f\n\x0b\x46S_TYPE_NFS\x10\x04\x12\x0f\n\x0b\x46S_TYPE_VFS\x10\x05\x12\x0f\n\x0b\x46S_TYPE_XFS\x10\x06\x12\x0f\n\x0b\x46S_TYPE_ZFS\x10\x07*\xab\x01\n\x15GraphDriverChangeType\x12!\n\x1dGRAPH_DRIVER_CHANGE_TYPE_NONE\x10\x00\x12%\n!GRAPH_DRIVER_CHANGE_TYPE_MODIFIED\x10\x01\x12\"\n\x1eGRAPH_DRIVER_CHANGE_TYPE_ADDED\x10\x02\x12$\n GRAPH_DRIVER_CHANGE_TYPE_DELETED\x10\x03*t\n\x0cSeverityType\x12\x16\n\x12SEVERITY_TYPE_NONE\x10\x00\x12\x17\n\x13SEVERITY_TYPE_ALARM\x10\x01\x12\x19\n\x15SEVERITY_TYPE_WARNING\x10\x02\x12\x18\n\x14SEVERITY_TYPE_NOTIFY\x10\x03*\x8c\x01\n\x0cResourceType\x12\x16\n\x12RESOURCE_TYPE_NONE\x10\x00\x12\x18\n\x14RESOURCE_TYPE_VOLUME\x10\x01\x12\x16\n\x12RESOURCE_TYPE_NODE\x10\x02\x12\x19\n\x15RESOURCE_TYPE_CLUSTER\x10\x03\x12\x17\n\x13RESOURCE_TYPE_DRIVE\x10\x04*\x87\x01\n\x0f\x41lertActionType\x12\x1a\n\x16\x41LERT_ACTION_TYPE_NONE\x10\x00\x12\x1c\n\x18\x41LERT_ACTION_TYPE_DELETE\x10\x01\x12\x1c\n\x18\x41LERT_ACTION_TYPE_CREATE\x10\x02\x12\x1c\n\x18\x41LERT_ACTION_TYPE_UPDATE\x10\x03*j\n\x11VolumeActionParam\x12\x1c\n\x18VOLUME_ACTION_PARAM_NONE\x10\x00\x12\x1b\n\x17VOLUME_ACTION_PARAM_OFF\x10\x01\x12\x1a\n\x16VOLUME_ACTION_PARAM_ON\x10\x02*2\n\x07\x43osType\x12\x08\n\x04NONE\x10\x00\x12\x07\n\x03LOW\x10\x01\x12\n\n\x06MEDIUM\x10\x02\x12\x08\n\x04HIGH\x10\x03*~\n\tIoProfile\x12\x19\n\x15IO_PROFILE_SEQUENTIAL\x10\x00\x12\x15\n\x11IO_PROFILE_RANDOM\x10\x01\x12\x11\n\rIO_PROFILE_DB\x10\x02\x12\x18\n\x14IO_PROFILE_DB_REMOTE\x10\x03\x12\x12\n\x0eIO_PROFILE_CMS\x10\x04*\x99\x02\n\x0bVolumeState\x12\x15\n\x11VOLUME_STATE_NONE\x10\x00\x12\x18\n\x14VOLUME_STATE_PENDING\x10\x01\x12\x1a\n\x16VOLUME_STATE_AVAILABLE\x10\x02\x12\x19\n\x15VOLUME_STATE_ATTACHED\x10\x03\x12\x19\n\x15VOLUME_STATE_DETACHED\x10\x04\x12\x1b\n\x17VOLUME_STATE_DETATCHING\x10\x05\x12\x16\n\x12VOLUME_STATE_ERROR\x10\x06\x12\x18\n\x14VOLUME_STATE_DELETED\x10\x07\x12\x1e\n\x1aVOLUME_STATE_TRY_DETACHING\x10\x08\x12\x18\n\x14VOLUME_STATE_RESTORE\x10\t*\x8f\x01\n\x0cVolumeStatus\x12\x16\n\x12VOLUME_STATUS_NONE\x10\x00\x12\x1d\n\x19VOLUME_STATUS_NOT_PRESENT\x10\x01\x12\x14\n\x10VOLUME_STATUS_UP\x10\x02\x12\x16\n\x12VOLUME_STATUS_DOWN\x10\x03\x12\x1a\n\x16VOLUME_STATUS_DEGRADED\x10\x04*]\n\rStorageMedium\x12\x1b\n\x17STORAGE_MEDIUM_MAGNETIC\x10\x00\x12\x16\n\x12STORAGE_MEDIUM_SSD\x10\x01\x12\x17\n\x13STORAGE_MEDIUM_NVME\x10\x02*(\n\rClusterNotify\x12\x17\n\x13\x43LUSTER_NOTIFY_DOWN\x10\x00*e\n\x0b\x41ttachState\x12\x19\n\x15\x41TTACH_STATE_EXTERNAL\x10\x00\x12\x19\n\x15\x41TTACH_STATE_INTERNAL\x10\x01\x12 \n\x1c\x41TTACH_STATE_INTERNAL_SWITCH\x10\x02*T\n\x0eOperationFlags\x12\x14\n\x10OP_FLAGS_UNKNOWN\x10\x00\x12\x11\n\rOP_FLAGS_NONE\x10\x01\x12\x19\n\x15OP_FLAGS_DETACH_FORCE\x10\x02\x32\xc3\x05\n\x12OpenStorageCluster\x12\x82\x01\n\tEnumerate\x12(.openstorage.api.ClusterEnumerateRequest\x1a).openstorage.api.ClusterEnumerateResponse\" \x82\xd3\xe4\x93\x02\x1a\"\x15/v1/cluster/enumerate:\x01*\x12z\n\x07Inspect\x12&.openstorage.api.ClusterInspectRequest\x1a\'.openstorage.api.ClusterInspectResponse\"\x1e\x82\xd3\xe4\x93\x02\x18\"\x13/v1/cluster/inspect:\x01*\x12\x97\x01\n\x0e\x41lertEnumerate\x12-.openstorage.api.ClusterAlertEnumerateRequest\x1a..openstorage.api.ClusterAlertEnumerateResponse\"&\x82\xd3\xe4\x93\x02 \"\x1b/v1/cluster/alert/enumerate:\x01*\x12\x87\x01\n\nAlertClear\x12).openstorage.api.ClusterAlertClearRequest\x1a*.openstorage.api.ClusterAlertClearResponse\"\"\x82\xd3\xe4\x93\x02\x1c\"\x17/v1/cluster/alert/clear:\x01*\x12\x87\x01\n\nAlertErase\x12).openstorage.api.ClusterAlertEraseRequest\x1a*.openstorage.api.ClusterAlertEraseResponse\"\"\x82\xd3\xe4\x93\x02\x1c\"\x17/v1/cluster/alert/erase:\x01*2\x83\t\n\x11OpenStorageVolume\x12\x89\x01\n\x06\x43reate\x12/.openstorage.api.OpenStorageVolumeCreateRequest\x1a\x30.openstorage.api.OpenStorageVolumeCreateResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\"\x11/v1/volume/create:\x01*\x12\x9d\x01\n\x12\x43reateFromVolumeID\x12\x30.openstorage.api.VolumeCreateFromVolumeIDRequest\x1a\x31.openstorage.api.VolumeCreateFromVolumeIDResponse\"\"\x82\xd3\xe4\x93\x02\x1c\"\x17/v1/volume/createfromid:\x01*\x12s\n\x06\x44\x65lete\x12$.openstorage.api.VolumeDeleteRequest\x1a%.openstorage.api.VolumeDeleteResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\"\x11/v1/volume/delete:\x01*\x12w\n\x07Inspect\x12%.openstorage.api.VolumeInspectRequest\x1a&.openstorage.api.VolumeInspectResponse\"\x1d\x82\xd3\xe4\x93\x02\x17\"\x12/v1/volume/inspect:\x01*\x12\x7f\n\tEnumerate\x12\'.openstorage.api.VolumeEnumerateRequest\x1a(.openstorage.api.VolumeEnumerateResponse\"\x1f\x82\xd3\xe4\x93\x02\x19\"\x14/v1/volume/enumerate:\x01*\x12\x94\x01\n\x0eSnapshotCreate\x12,.openstorage.api.VolumeSnapshotCreateRequest\x1a-.openstorage.api.VolumeSnapshotCreateResponse\"%\x82\xd3\xe4\x93\x02\x1f\"\x1a/v1/volume/snapshot/create:\x01*\x12\x98\x01\n\x0fSnapshotRestore\x12-.openstorage.api.VolumeSnapshotRestoreRequest\x1a..openstorage.api.VolumeSnapshotRestoreResponse\"&\x82\xd3\xe4\x93\x02 \"\x1b/v1/volume/snapshot/restore:\x01*\x12\xa0\x01\n\x11SnapshotEnumerate\x12/.openstorage.api.VolumeSnapshotEnumerateRequest\x1a\x30.openstorage.api.VolumeSnapshotEnumerateResponse\"(\x82\xd3\xe4\x93\x02\"\"\x1d/v1/volume/snapshot/enumerate:\x01*B\x1c\n\x13\x63om.openstorage.apiP\x01Z\x03\x61pib\x06proto3')
+  serialized_pb=_b('\n\tapi.proto\x12\x0fopenstorage.api\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1cgoogle/api/annotations.proto\"\xa3\x02\n\x0fStorageResource\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x04path\x18\x02 \x01(\t\x12.\n\x06medium\x18\x03 \x01(\x0e\x32\x1e.openstorage.api.StorageMedium\x12\x0e\n\x06online\x18\x04 \x01(\x08\x12\x0c\n\x04iops\x18\x05 \x01(\x04\x12\x11\n\tseq_write\x18\x06 \x01(\x01\x12\x10\n\x08seq_read\x18\x07 \x01(\x01\x12\x0e\n\x06randRW\x18\x08 \x01(\x01\x12\x0c\n\x04size\x18\t \x01(\x04\x12\x0c\n\x04used\x18\n \x01(\x04\x12\x16\n\x0erotation_speed\x18\x0b \x01(\t\x12-\n\tlast_scan\x18\x0c \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x10\n\x08metadata\x18\r \x01(\x08\"\x8d\x02\n\x0bStoragePool\x12\n\n\x02ID\x18\x01 \x01(\x05\x12%\n\x03\x43os\x18\x02 \x01(\x0e\x32\x18.openstorage.api.CosType\x12.\n\x06Medium\x18\x03 \x01(\x0e\x32\x1e.openstorage.api.StorageMedium\x12\x11\n\tRaidLevel\x18\x04 \x01(\t\x12\x11\n\tTotalSize\x18\x07 \x01(\x04\x12\x0c\n\x04Used\x18\x08 \x01(\x04\x12\x38\n\x06labels\x18\t \x03(\x0b\x32(.openstorage.api.StoragePool.LabelsEntry\x1a-\n\x0bLabelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x9b\x01\n\rVolumeLocator\x12\x0c\n\x04name\x18\x01 \x01(\t\x12G\n\rvolume_labels\x18\x02 \x03(\x0b\x32\x30.openstorage.api.VolumeLocator.VolumeLabelsEntry\x1a\x33\n\x11VolumeLabelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"&\n\x06Source\x12\x0e\n\x06parent\x18\x01 \x01(\t\x12\x0c\n\x04seed\x18\x02 \x01(\t\"\x13\n\x05Group\x12\n\n\x02id\x18\x01 \x01(\t\"\xbf\x05\n\nVolumeSpec\x12\x11\n\tephemeral\x18\x01 \x01(\x08\x12\x0c\n\x04size\x18\x02 \x01(\x04\x12\'\n\x06\x66ormat\x18\x03 \x01(\x0e\x32\x17.openstorage.api.FSType\x12\x12\n\nblock_size\x18\x04 \x01(\x03\x12\x10\n\x08ha_level\x18\x05 \x01(\x03\x12%\n\x03\x63os\x18\x06 \x01(\x0e\x32\x18.openstorage.api.CosType\x12.\n\nio_profile\x18\x07 \x01(\x0e\x32\x1a.openstorage.api.IoProfile\x12\x0e\n\x06\x64\x65\x64upe\x18\x08 \x01(\x08\x12\x19\n\x11snapshot_interval\x18\t \x01(\r\x12\x44\n\rvolume_labels\x18\n \x03(\x0b\x32-.openstorage.api.VolumeSpec.VolumeLabelsEntry\x12\x0e\n\x06shared\x18\x0b \x01(\x08\x12\x30\n\x0breplica_set\x18\x0c \x01(\x0b\x32\x1b.openstorage.api.ReplicaSet\x12\x19\n\x11\x61ggregation_level\x18\r \x01(\r\x12\x11\n\tencrypted\x18\x0e \x01(\x08\x12\x12\n\npassphrase\x18\x0f \x01(\t\x12\x19\n\x11snapshot_schedule\x18\x10 \x01(\t\x12\r\n\x05scale\x18\x11 \x01(\r\x12\x0e\n\x06sticky\x18\x12 \x01(\x08\x12%\n\x05group\x18\x15 \x01(\x0b\x32\x16.openstorage.api.Group\x12\x16\n\x0egroup_enforced\x18\x16 \x01(\x08\x12\x12\n\ncompressed\x18\x17 \x01(\x08\x12\x10\n\x08\x63\x61scaded\x18\x18 \x01(\x08\x12\x0f\n\x07journal\x18\x19 \x01(\x08\x12\x10\n\x08sharedv4\x18\x1a \x01(\x08\x1a\x33\n\x11VolumeLabelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x1b\n\nReplicaSet\x12\r\n\x05nodes\x18\x01 \x03(\t\"\x91\x01\n\x0fRuntimeStateMap\x12I\n\rruntime_state\x18\x01 \x03(\x0b\x32\x32.openstorage.api.RuntimeStateMap.RuntimeStateEntry\x1a\x33\n\x11RuntimeStateEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xf8\x06\n\x06Volume\x12\n\n\x02id\x18\x01 \x01(\t\x12\'\n\x06source\x18\x02 \x01(\x0b\x32\x17.openstorage.api.Source\x12%\n\x05group\x18\x03 \x01(\x0b\x32\x16.openstorage.api.Group\x12\x10\n\x08readonly\x18\x04 \x01(\x08\x12/\n\x07locator\x18\x05 \x01(\x0b\x32\x1e.openstorage.api.VolumeLocator\x12)\n\x05\x63time\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12)\n\x04spec\x18\x07 \x01(\x0b\x32\x1b.openstorage.api.VolumeSpec\x12\r\n\x05usage\x18\x08 \x01(\x04\x12-\n\tlast_scan\x18\t \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\'\n\x06\x66ormat\x18\n \x01(\x0e\x32\x17.openstorage.api.FSType\x12-\n\x06status\x18\x0b \x01(\x0e\x32\x1d.openstorage.api.VolumeStatus\x12+\n\x05state\x18\x0c \x01(\x0e\x32\x1c.openstorage.api.VolumeState\x12\x13\n\x0b\x61ttached_on\x18\r \x01(\t\x12\x34\n\x0e\x61ttached_state\x18\x0e \x01(\x0e\x32\x1c.openstorage.api.AttachState\x12\x13\n\x0b\x64\x65vice_path\x18\x0f \x01(\t\x12\x1a\n\x12secure_device_path\x18\x10 \x01(\t\x12\x13\n\x0b\x61ttach_path\x18\x11 \x03(\t\x12<\n\x0b\x61ttach_info\x18\x12 \x03(\x0b\x32\'.openstorage.api.Volume.AttachInfoEntry\x12\x31\n\x0creplica_sets\x18\x13 \x03(\x0b\x32\x1b.openstorage.api.ReplicaSet\x12\x37\n\rruntime_state\x18\x14 \x03(\x0b\x32 .openstorage.api.RuntimeStateMap\x12\r\n\x05\x65rror\x18\x15 \x01(\t\x12\x39\n\x10volume_consumers\x18\x16 \x03(\x0b\x32\x1f.openstorage.api.VolumeConsumer\x1a\x31\n\x0f\x41ttachInfoEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xbf\x01\n\x05Stats\x12\r\n\x05reads\x18\x01 \x01(\x04\x12\x0f\n\x07read_ms\x18\x02 \x01(\x04\x12\x12\n\nread_bytes\x18\x03 \x01(\x04\x12\x0e\n\x06writes\x18\x04 \x01(\x04\x12\x10\n\x08write_ms\x18\x05 \x01(\x04\x12\x13\n\x0bwrite_bytes\x18\x06 \x01(\x04\x12\x13\n\x0bio_progress\x18\x07 \x01(\x04\x12\r\n\x05io_ms\x18\x08 \x01(\x04\x12\x12\n\nbytes_used\x18\t \x01(\x04\x12\x13\n\x0binterval_ms\x18\n \x01(\x04\"\x90\x02\n\x05\x41lert\x12\n\n\x02id\x18\x01 \x01(\x03\x12/\n\x08severity\x18\x02 \x01(\x0e\x32\x1d.openstorage.api.SeverityType\x12\x12\n\nalert_type\x18\x03 \x01(\x03\x12\x0f\n\x07message\x18\x04 \x01(\t\x12-\n\ttimestamp\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x13\n\x0bresource_id\x18\x06 \x01(\t\x12/\n\x08resource\x18\x07 \x01(\x0e\x32\x1d.openstorage.api.ResourceType\x12\x0f\n\x07\x63leared\x18\x08 \x01(\x08\x12\x0b\n\x03ttl\x18\t \x01(\x04\x12\x12\n\nunique_tag\x18\n \x01(\t\"/\n\x06\x41lerts\x12%\n\x05\x61lert\x18\x01 \x03(\x0b\x32\x16.openstorage.api.Alert\"\x9a\x01\n\x13VolumeCreateRequest\x12/\n\x07locator\x18\x01 \x01(\x0b\x32\x1e.openstorage.api.VolumeLocator\x12\'\n\x06source\x18\x02 \x01(\x0b\x32\x17.openstorage.api.Source\x12)\n\x04spec\x18\x03 \x01(\x0b\x32\x1b.openstorage.api.VolumeSpec\"\x1f\n\x0eVolumeResponse\x12\r\n\x05\x65rror\x18\x01 \x01(\t\"\\\n\x14VolumeCreateResponse\x12\n\n\x02id\x18\x01 \x01(\t\x12\x38\n\x0fvolume_response\x18\x02 \x01(\x0b\x32\x1f.openstorage.api.VolumeResponse\"\xa3\x01\n\x11VolumeStateAction\x12\x32\n\x06\x61ttach\x18\x01 \x01(\x0e\x32\".openstorage.api.VolumeActionParam\x12\x31\n\x05mount\x18\x02 \x01(\x0e\x32\".openstorage.api.VolumeActionParam\x12\x12\n\nmount_path\x18\x03 \x01(\t\x12\x13\n\x0b\x64\x65vice_path\x18\x04 \x01(\t\"\x93\x02\n\x10VolumeSetRequest\x12/\n\x07locator\x18\x01 \x01(\x0b\x32\x1e.openstorage.api.VolumeLocator\x12)\n\x04spec\x18\x02 \x01(\x0b\x32\x1b.openstorage.api.VolumeSpec\x12\x32\n\x06\x61\x63tion\x18\x03 \x01(\x0b\x32\".openstorage.api.VolumeStateAction\x12?\n\x07options\x18\x04 \x03(\x0b\x32..openstorage.api.VolumeSetRequest.OptionsEntry\x1a.\n\x0cOptionsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"v\n\x11VolumeSetResponse\x12\'\n\x06volume\x18\x01 \x01(\x0b\x32\x17.openstorage.api.Volume\x12\x38\n\x0fvolume_response\x18\x02 \x01(\x0b\x32\x1f.openstorage.api.VolumeResponse\"b\n\x11SnapCreateRequest\x12\n\n\x02id\x18\x01 \x01(\t\x12/\n\x07locator\x18\x02 \x01(\x0b\x32\x1e.openstorage.api.VolumeLocator\x12\x10\n\x08readonly\x18\x03 \x01(\x08\"[\n\x12SnapCreateResponse\x12\x45\n\x16volume_create_response\x18\x01 \x01(\x0b\x32%.openstorage.api.VolumeCreateResponse\"[\n\nVolumeInfo\x12\x11\n\tvolume_id\x18\x01 \x01(\t\x12\x0c\n\x04path\x18\x02 \x01(\t\x12,\n\x07storage\x18\x03 \x01(\x0b\x32\x1b.openstorage.api.VolumeSpec\"x\n\x0eVolumeConsumer\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x11\n\tnamespace\x18\x02 \x01(\t\x12\x0c\n\x04type\x18\x03 \x01(\t\x12\x0f\n\x07node_id\x18\x04 \x01(\t\x12\x12\n\nowner_name\x18\x05 \x01(\t\x12\x12\n\nowner_type\x18\x06 \x01(\t\"X\n\x12GraphDriverChanges\x12\x0c\n\x04path\x18\x01 \x01(\t\x12\x34\n\x04kind\x18\x02 \x01(\x0e\x32&.openstorage.api.GraphDriverChangeType\" \n\x0f\x43lusterResponse\x12\r\n\x05\x65rror\x18\x01 \x01(\t\"\x80\x01\n\rActiveRequest\x12>\n\x08ReqestKV\x18\x01 \x03(\x0b\x32,.openstorage.api.ActiveRequest.ReqestKVEntry\x1a/\n\rReqestKVEntry\x12\x0b\n\x03key\x18\x01 \x01(\x03\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"]\n\x0e\x41\x63tiveRequests\x12\x14\n\x0cRequestCount\x18\x01 \x01(\x03\x12\x35\n\rActiveRequest\x18\x02 \x03(\x0b\x32\x1e.openstorage.api.ActiveRequest\"\x98\x01\n\x16GroupSnapCreateRequest\x12\n\n\x02id\x18\x01 \x01(\t\x12\x43\n\x06Labels\x18\x02 \x03(\x0b\x32\x33.openstorage.api.GroupSnapCreateRequest.LabelsEntry\x1a-\n\x0bLabelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xcb\x01\n\x17GroupSnapCreateResponse\x12J\n\tsnapshots\x18\x01 \x03(\x0b\x32\x37.openstorage.api.GroupSnapCreateResponse.SnapshotsEntry\x12\r\n\x05\x65rror\x18\x02 \x01(\t\x1aU\n\x0eSnapshotsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x32\n\x05value\x18\x02 \x01(\x0b\x32#.openstorage.api.SnapCreateResponse:\x02\x38\x01\"\xf7\x03\n\x0bStorageNode\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0b\n\x03\x63pu\x18\x02 \x01(\x01\x12\x11\n\tmem_total\x18\x03 \x01(\x04\x12\x10\n\x08mem_used\x18\x04 \x01(\x04\x12\x10\n\x08mem_free\x18\x05 \x01(\x04\x12\x10\n\x08\x61vg_load\x18\x06 \x01(\x03\x12\'\n\x06status\x18\x07 \x01(\x0e\x32\x17.openstorage.api.Status\x12\x36\n\x05\x64isks\x18\t \x03(\x0b\x32\'.openstorage.api.StorageNode.DisksEntry\x12+\n\x05pools\x18\n \x03(\x0b\x32\x1c.openstorage.api.StoragePool\x12\x0f\n\x07mgmt_ip\x18\x0b \x01(\t\x12\x0f\n\x07\x64\x61ta_ip\x18\x0c \x01(\t\x12\x10\n\x08hostname\x18\x0f \x01(\t\x12\x41\n\x0bnode_labels\x18\x10 \x03(\x0b\x32,.openstorage.api.StorageNode.NodeLabelsEntry\x1aN\n\nDisksEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12/\n\x05value\x18\x02 \x01(\x0b\x32 .openstorage.api.StorageResource:\x02\x38\x01\x1a\x31\n\x0fNodeLabelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x83\x01\n\x0eStorageCluster\x12\'\n\x06status\x18\x01 \x01(\x0e\x32\x17.openstorage.api.Status\x12\n\n\x02id\x18\x02 \x01(\t\x12\x0f\n\x07node_id\x18\x03 \x01(\t\x12+\n\x05nodes\x18\x04 \x03(\x0b\x32\x1c.openstorage.api.StorageNode\"\xae\x01\n\x12VolumeMountRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\x12\x12\n\nmount_path\x18\x02 \x01(\t\x12\x41\n\x07options\x18\x03 \x03(\x0b\x32\x30.openstorage.api.VolumeMountRequest.OptionsEntry\x1a.\n\x0cOptionsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x15\n\x13VolumeMountResponse\"\xb2\x01\n\x14VolumeUnmountRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\x12\x12\n\nmount_path\x18\x02 \x01(\t\x12\x43\n\x07options\x18\x03 \x03(\x0b\x32\x32.openstorage.api.VolumeUnmountRequest.OptionsEntry\x1a.\n\x0cOptionsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x17\n\x15VolumeUnmountResponse\"\x9c\x01\n\x13VolumeAttachRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\x12\x42\n\x07options\x18\x02 \x03(\x0b\x32\x31.openstorage.api.VolumeAttachRequest.OptionsEntry\x1a.\n\x0cOptionsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"+\n\x14VolumeAttachResponse\x12\x13\n\x0b\x64\x65vice_path\x18\x01 \x01(\t\"(\n\x13VolumeDetachRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\"\x16\n\x14VolumeDetachResponse\"Y\n\x1eOpenStorageVolumeCreateRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12)\n\x04spec\x18\x02 \x01(\x0b\x32\x1b.openstorage.api.VolumeSpec\"4\n\x1fOpenStorageVolumeCreateResponse\x12\x11\n\tvolume_id\x18\x01 \x01(\t\"m\n\x1fVolumeCreateFromVolumeIDRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x11\n\tparent_id\x18\x02 \x01(\t\x12)\n\x04spec\x18\x03 \x01(\x0b\x32\x1b.openstorage.api.VolumeSpec\"5\n VolumeCreateFromVolumeIDResponse\x12\x11\n\tvolume_id\x18\x01 \x01(\t\"(\n\x13VolumeDeleteRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\"\x16\n\x14VolumeDeleteResponse\")\n\x14VolumeInspectRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\"@\n\x15VolumeInspectResponse\x12\'\n\x06volume\x18\x01 \x01(\x0b\x32\x17.openstorage.api.Volume\"I\n\x16VolumeEnumerateRequest\x12/\n\x07locator\x18\x01 \x01(\x0b\x32\x1e.openstorage.api.VolumeLocator\"C\n\x17VolumeEnumerateResponse\x12(\n\x07volumes\x18\x01 \x03(\x0b\x32\x17.openstorage.api.Volume\"\xa9\x01\n\x1bVolumeSnapshotCreateRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\x12H\n\x06labels\x18\x02 \x03(\x0b\x32\x38.openstorage.api.VolumeSnapshotCreateRequest.LabelsEntry\x1a-\n\x0bLabelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"3\n\x1cVolumeSnapshotCreateResponse\x12\x13\n\x0bsnapshot_id\x18\x01 \x01(\t\"F\n\x1cVolumeSnapshotRestoreRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\x12\x13\n\x0bsnapshot_id\x18\x02 \x01(\t\"\x1f\n\x1dVolumeSnapshotRestoreResponse\"\xaf\x01\n\x1eVolumeSnapshotEnumerateRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\x12K\n\x06labels\x18\x02 \x03(\x0b\x32;.openstorage.api.VolumeSnapshotEnumerateRequest.LabelsEntry\x1a-\n\x0bLabelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"M\n\x1fVolumeSnapshotEnumerateResponse\x12*\n\tsnapshots\x18\x01 \x03(\x0b\x32\x17.openstorage.api.Volume\"\x19\n\x17\x43lusterEnumerateRequest\"L\n\x18\x43lusterEnumerateResponse\x12\x30\n\x07\x63luster\x18\x01 \x01(\x0b\x32\x1f.openstorage.api.StorageCluster\"(\n\x15\x43lusterInspectRequest\x12\x0f\n\x07node_id\x18\x01 \x01(\t\"D\n\x16\x43lusterInspectResponse\x12*\n\x04node\x18\x01 \x01(\x0b\x32\x1c.openstorage.api.StorageNode\"\xad\x01\n\x1c\x43lusterAlertEnumerateRequest\x12.\n\ntime_start\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12,\n\x08time_end\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12/\n\x08resource\x18\x03 \x01(\x0e\x32\x1d.openstorage.api.ResourceType\"H\n\x1d\x43lusterAlertEnumerateResponse\x12\'\n\x06\x61lerts\x18\x01 \x01(\x0b\x32\x17.openstorage.api.Alerts\"]\n\x18\x43lusterAlertClearRequest\x12/\n\x08resource\x18\x01 \x01(\x0e\x32\x1d.openstorage.api.ResourceType\x12\x10\n\x08\x61lert_id\x18\x02 \x01(\x03\"\x1b\n\x19\x43lusterAlertClearResponse\"]\n\x18\x43lusterAlertEraseRequest\x12/\n\x08resource\x18\x01 \x01(\x0e\x32\x1d.openstorage.api.ResourceType\x12\x10\n\x08\x61lert_id\x18\x02 \x01(\x03\"\x1b\n\x19\x43lusterAlertEraseResponse*\xee\x02\n\x06Status\x12\x0f\n\x0bSTATUS_NONE\x10\x00\x12\x0f\n\x0bSTATUS_INIT\x10\x01\x12\r\n\tSTATUS_OK\x10\x02\x12\x12\n\x0eSTATUS_OFFLINE\x10\x03\x12\x10\n\x0cSTATUS_ERROR\x10\x04\x12\x18\n\x14STATUS_NOT_IN_QUORUM\x10\x05\x12\x17\n\x13STATUS_DECOMMISSION\x10\x06\x12\x16\n\x12STATUS_MAINTENANCE\x10\x07\x12\x17\n\x13STATUS_STORAGE_DOWN\x10\x08\x12\x1b\n\x17STATUS_STORAGE_DEGRADED\x10\t\x12\x17\n\x13STATUS_NEEDS_REBOOT\x10\n\x12\x1c\n\x18STATUS_STORAGE_REBALANCE\x10\x0b\x12 \n\x1cSTATUS_STORAGE_DRIVE_REPLACE\x10\x0c\x12#\n\x1fSTATUS_NOT_IN_QUORUM_NO_STORAGE\x10\r\x12\x0e\n\nSTATUS_MAX\x10\x0e*\x99\x01\n\nDriverType\x12\x14\n\x10\x44RIVER_TYPE_NONE\x10\x00\x12\x14\n\x10\x44RIVER_TYPE_FILE\x10\x01\x12\x15\n\x11\x44RIVER_TYPE_BLOCK\x10\x02\x12\x16\n\x12\x44RIVER_TYPE_OBJECT\x10\x03\x12\x19\n\x15\x44RIVER_TYPE_CLUSTERED\x10\x04\x12\x15\n\x11\x44RIVER_TYPE_GRAPH\x10\x05*\x95\x01\n\x06\x46SType\x12\x10\n\x0c\x46S_TYPE_NONE\x10\x00\x12\x11\n\rFS_TYPE_BTRFS\x10\x01\x12\x10\n\x0c\x46S_TYPE_EXT4\x10\x02\x12\x10\n\x0c\x46S_TYPE_FUSE\x10\x03\x12\x0f\n\x0b\x46S_TYPE_NFS\x10\x04\x12\x0f\n\x0b\x46S_TYPE_VFS\x10\x05\x12\x0f\n\x0b\x46S_TYPE_XFS\x10\x06\x12\x0f\n\x0b\x46S_TYPE_ZFS\x10\x07*\xab\x01\n\x15GraphDriverChangeType\x12!\n\x1dGRAPH_DRIVER_CHANGE_TYPE_NONE\x10\x00\x12%\n!GRAPH_DRIVER_CHANGE_TYPE_MODIFIED\x10\x01\x12\"\n\x1eGRAPH_DRIVER_CHANGE_TYPE_ADDED\x10\x02\x12$\n GRAPH_DRIVER_CHANGE_TYPE_DELETED\x10\x03*t\n\x0cSeverityType\x12\x16\n\x12SEVERITY_TYPE_NONE\x10\x00\x12\x17\n\x13SEVERITY_TYPE_ALARM\x10\x01\x12\x19\n\x15SEVERITY_TYPE_WARNING\x10\x02\x12\x18\n\x14SEVERITY_TYPE_NOTIFY\x10\x03*\x8c\x01\n\x0cResourceType\x12\x16\n\x12RESOURCE_TYPE_NONE\x10\x00\x12\x18\n\x14RESOURCE_TYPE_VOLUME\x10\x01\x12\x16\n\x12RESOURCE_TYPE_NODE\x10\x02\x12\x19\n\x15RESOURCE_TYPE_CLUSTER\x10\x03\x12\x17\n\x13RESOURCE_TYPE_DRIVE\x10\x04*\x87\x01\n\x0f\x41lertActionType\x12\x1a\n\x16\x41LERT_ACTION_TYPE_NONE\x10\x00\x12\x1c\n\x18\x41LERT_ACTION_TYPE_DELETE\x10\x01\x12\x1c\n\x18\x41LERT_ACTION_TYPE_CREATE\x10\x02\x12\x1c\n\x18\x41LERT_ACTION_TYPE_UPDATE\x10\x03*j\n\x11VolumeActionParam\x12\x1c\n\x18VOLUME_ACTION_PARAM_NONE\x10\x00\x12\x1b\n\x17VOLUME_ACTION_PARAM_OFF\x10\x01\x12\x1a\n\x16VOLUME_ACTION_PARAM_ON\x10\x02*2\n\x07\x43osType\x12\x08\n\x04NONE\x10\x00\x12\x07\n\x03LOW\x10\x01\x12\n\n\x06MEDIUM\x10\x02\x12\x08\n\x04HIGH\x10\x03*~\n\tIoProfile\x12\x19\n\x15IO_PROFILE_SEQUENTIAL\x10\x00\x12\x15\n\x11IO_PROFILE_RANDOM\x10\x01\x12\x11\n\rIO_PROFILE_DB\x10\x02\x12\x18\n\x14IO_PROFILE_DB_REMOTE\x10\x03\x12\x12\n\x0eIO_PROFILE_CMS\x10\x04*\x99\x02\n\x0bVolumeState\x12\x15\n\x11VOLUME_STATE_NONE\x10\x00\x12\x18\n\x14VOLUME_STATE_PENDING\x10\x01\x12\x1a\n\x16VOLUME_STATE_AVAILABLE\x10\x02\x12\x19\n\x15VOLUME_STATE_ATTACHED\x10\x03\x12\x19\n\x15VOLUME_STATE_DETACHED\x10\x04\x12\x1b\n\x17VOLUME_STATE_DETATCHING\x10\x05\x12\x16\n\x12VOLUME_STATE_ERROR\x10\x06\x12\x18\n\x14VOLUME_STATE_DELETED\x10\x07\x12\x1e\n\x1aVOLUME_STATE_TRY_DETACHING\x10\x08\x12\x18\n\x14VOLUME_STATE_RESTORE\x10\t*\x8f\x01\n\x0cVolumeStatus\x12\x16\n\x12VOLUME_STATUS_NONE\x10\x00\x12\x1d\n\x19VOLUME_STATUS_NOT_PRESENT\x10\x01\x12\x14\n\x10VOLUME_STATUS_UP\x10\x02\x12\x16\n\x12VOLUME_STATUS_DOWN\x10\x03\x12\x1a\n\x16VOLUME_STATUS_DEGRADED\x10\x04*]\n\rStorageMedium\x12\x1b\n\x17STORAGE_MEDIUM_MAGNETIC\x10\x00\x12\x16\n\x12STORAGE_MEDIUM_SSD\x10\x01\x12\x17\n\x13STORAGE_MEDIUM_NVME\x10\x02*(\n\rClusterNotify\x12\x17\n\x13\x43LUSTER_NOTIFY_DOWN\x10\x00*e\n\x0b\x41ttachState\x12\x19\n\x15\x41TTACH_STATE_EXTERNAL\x10\x00\x12\x19\n\x15\x41TTACH_STATE_INTERNAL\x10\x01\x12 \n\x1c\x41TTACH_STATE_INTERNAL_SWITCH\x10\x02*T\n\x0eOperationFlags\x12\x14\n\x10OP_FLAGS_UNKNOWN\x10\x00\x12\x11\n\rOP_FLAGS_NONE\x10\x01\x12\x19\n\x15OP_FLAGS_DETACH_FORCE\x10\x02\x32\xc3\x05\n\x12OpenStorageCluster\x12\x82\x01\n\tEnumerate\x12(.openstorage.api.ClusterEnumerateRequest\x1a).openstorage.api.ClusterEnumerateResponse\" \x82\xd3\xe4\x93\x02\x1a\"\x15/v1/cluster/enumerate:\x01*\x12z\n\x07Inspect\x12&.openstorage.api.ClusterInspectRequest\x1a\'.openstorage.api.ClusterInspectResponse\"\x1e\x82\xd3\xe4\x93\x02\x18\"\x13/v1/cluster/inspect:\x01*\x12\x97\x01\n\x0e\x41lertEnumerate\x12-.openstorage.api.ClusterAlertEnumerateRequest\x1a..openstorage.api.ClusterAlertEnumerateResponse\"&\x82\xd3\xe4\x93\x02 \"\x1b/v1/cluster/alert/enumerate:\x01*\x12\x87\x01\n\nAlertClear\x12).openstorage.api.ClusterAlertClearRequest\x1a*.openstorage.api.ClusterAlertClearResponse\"\"\x82\xd3\xe4\x93\x02\x1c\"\x17/v1/cluster/alert/clear:\x01*\x12\x87\x01\n\nAlertErase\x12).openstorage.api.ClusterAlertEraseRequest\x1a*.openstorage.api.ClusterAlertEraseResponse\"\"\x82\xd3\xe4\x93\x02\x1c\"\x17/v1/cluster/alert/erase:\x01*2\xd7\x0c\n\x11OpenStorageVolume\x12\x89\x01\n\x06\x43reate\x12/.openstorage.api.OpenStorageVolumeCreateRequest\x1a\x30.openstorage.api.OpenStorageVolumeCreateResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\"\x11/v1/volume/create:\x01*\x12\x9d\x01\n\x12\x43reateFromVolumeID\x12\x30.openstorage.api.VolumeCreateFromVolumeIDRequest\x1a\x31.openstorage.api.VolumeCreateFromVolumeIDResponse\"\"\x82\xd3\xe4\x93\x02\x1c\"\x17/v1/volume/createfromid:\x01*\x12s\n\x06\x44\x65lete\x12$.openstorage.api.VolumeDeleteRequest\x1a%.openstorage.api.VolumeDeleteResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\"\x11/v1/volume/delete:\x01*\x12w\n\x07Inspect\x12%.openstorage.api.VolumeInspectRequest\x1a&.openstorage.api.VolumeInspectResponse\"\x1d\x82\xd3\xe4\x93\x02\x17\"\x12/v1/volume/inspect:\x01*\x12\x7f\n\tEnumerate\x12\'.openstorage.api.VolumeEnumerateRequest\x1a(.openstorage.api.VolumeEnumerateResponse\"\x1f\x82\xd3\xe4\x93\x02\x19\"\x14/v1/volume/enumerate:\x01*\x12\x94\x01\n\x0eSnapshotCreate\x12,.openstorage.api.VolumeSnapshotCreateRequest\x1a-.openstorage.api.VolumeSnapshotCreateResponse\"%\x82\xd3\xe4\x93\x02\x1f\"\x1a/v1/volume/snapshot/create:\x01*\x12\x98\x01\n\x0fSnapshotRestore\x12-.openstorage.api.VolumeSnapshotRestoreRequest\x1a..openstorage.api.VolumeSnapshotRestoreResponse\"&\x82\xd3\xe4\x93\x02 \"\x1b/v1/volume/snapshot/restore:\x01*\x12\xa0\x01\n\x11SnapshotEnumerate\x12/.openstorage.api.VolumeSnapshotEnumerateRequest\x1a\x30.openstorage.api.VolumeSnapshotEnumerateResponse\"(\x82\xd3\xe4\x93\x02\"\"\x1d/v1/volume/snapshot/enumerate:\x01*\x12s\n\x06\x41ttach\x12$.openstorage.api.VolumeAttachRequest\x1a%.openstorage.api.VolumeAttachResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\"\x11/v1/volume/attach:\x01*\x12s\n\x06\x44\x65tach\x12$.openstorage.api.VolumeDetachRequest\x1a%.openstorage.api.VolumeDetachResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\"\x11/v1/volume/detach:\x01*\x12o\n\x05Mount\x12#.openstorage.api.VolumeMountRequest\x1a$.openstorage.api.VolumeMountResponse\"\x1b\x82\xd3\xe4\x93\x02\x15\"\x10/v1/volume/mount:\x01*\x12w\n\x07Unmount\x12%.openstorage.api.VolumeUnmountRequest\x1a&.openstorage.api.VolumeUnmountResponse\"\x1d\x82\xd3\xe4\x93\x02\x17\"\x12/v1/volume/unmount:\x01*B\x1c\n\x13\x63om.openstorage.apiP\x01Z\x03\x61pib\x06proto3')
   ,
   dependencies=[google_dot_protobuf_dot_timestamp__pb2.DESCRIPTOR,google_dot_api_dot_annotations__pb2.DESCRIPTOR,])
 
@@ -95,8 +95,8 @@ _STATUS = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=7710,
-  serialized_end=8076,
+  serialized_start=8386,
+  serialized_end=8752,
 )
 _sym_db.RegisterEnumDescriptor(_STATUS)
 
@@ -134,8 +134,8 @@ _DRIVERTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=8079,
-  serialized_end=8232,
+  serialized_start=8755,
+  serialized_end=8908,
 )
 _sym_db.RegisterEnumDescriptor(_DRIVERTYPE)
 
@@ -181,8 +181,8 @@ _FSTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=8235,
-  serialized_end=8384,
+  serialized_start=8911,
+  serialized_end=9060,
 )
 _sym_db.RegisterEnumDescriptor(_FSTYPE)
 
@@ -212,8 +212,8 @@ _GRAPHDRIVERCHANGETYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=8387,
-  serialized_end=8558,
+  serialized_start=9063,
+  serialized_end=9234,
 )
 _sym_db.RegisterEnumDescriptor(_GRAPHDRIVERCHANGETYPE)
 
@@ -243,8 +243,8 @@ _SEVERITYTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=8560,
-  serialized_end=8676,
+  serialized_start=9236,
+  serialized_end=9352,
 )
 _sym_db.RegisterEnumDescriptor(_SEVERITYTYPE)
 
@@ -278,8 +278,8 @@ _RESOURCETYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=8679,
-  serialized_end=8819,
+  serialized_start=9355,
+  serialized_end=9495,
 )
 _sym_db.RegisterEnumDescriptor(_RESOURCETYPE)
 
@@ -309,8 +309,8 @@ _ALERTACTIONTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=8822,
-  serialized_end=8957,
+  serialized_start=9498,
+  serialized_end=9633,
 )
 _sym_db.RegisterEnumDescriptor(_ALERTACTIONTYPE)
 
@@ -336,8 +336,8 @@ _VOLUMEACTIONPARAM = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=8959,
-  serialized_end=9065,
+  serialized_start=9635,
+  serialized_end=9741,
 )
 _sym_db.RegisterEnumDescriptor(_VOLUMEACTIONPARAM)
 
@@ -367,8 +367,8 @@ _COSTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=9067,
-  serialized_end=9117,
+  serialized_start=9743,
+  serialized_end=9793,
 )
 _sym_db.RegisterEnumDescriptor(_COSTYPE)
 
@@ -402,8 +402,8 @@ _IOPROFILE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=9119,
-  serialized_end=9245,
+  serialized_start=9795,
+  serialized_end=9921,
 )
 _sym_db.RegisterEnumDescriptor(_IOPROFILE)
 
@@ -457,8 +457,8 @@ _VOLUMESTATE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=9248,
-  serialized_end=9529,
+  serialized_start=9924,
+  serialized_end=10205,
 )
 _sym_db.RegisterEnumDescriptor(_VOLUMESTATE)
 
@@ -492,8 +492,8 @@ _VOLUMESTATUS = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=9532,
-  serialized_end=9675,
+  serialized_start=10208,
+  serialized_end=10351,
 )
 _sym_db.RegisterEnumDescriptor(_VOLUMESTATUS)
 
@@ -519,8 +519,8 @@ _STORAGEMEDIUM = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=9677,
-  serialized_end=9770,
+  serialized_start=10353,
+  serialized_end=10446,
 )
 _sym_db.RegisterEnumDescriptor(_STORAGEMEDIUM)
 
@@ -538,8 +538,8 @@ _CLUSTERNOTIFY = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=9772,
-  serialized_end=9812,
+  serialized_start=10448,
+  serialized_end=10488,
 )
 _sym_db.RegisterEnumDescriptor(_CLUSTERNOTIFY)
 
@@ -565,8 +565,8 @@ _ATTACHSTATE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=9814,
-  serialized_end=9915,
+  serialized_start=10490,
+  serialized_end=10591,
 )
 _sym_db.RegisterEnumDescriptor(_ATTACHSTATE)
 
@@ -592,8 +592,8 @@ _OPERATIONFLAGS = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=9917,
-  serialized_end=10001,
+  serialized_start=10593,
+  serialized_end=10677,
 )
 _sym_db.RegisterEnumDescriptor(_OPERATIONFLAGS)
 
@@ -2861,6 +2861,379 @@ _STORAGECLUSTER = _descriptor.Descriptor(
 )
 
 
+_VOLUMEMOUNTREQUEST_OPTIONSENTRY = _descriptor.Descriptor(
+  name='OptionsEntry',
+  full_name='openstorage.api.VolumeMountRequest.OptionsEntry',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='key', full_name='openstorage.api.VolumeMountRequest.OptionsEntry.key', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='value', full_name='openstorage.api.VolumeMountRequest.OptionsEntry.value', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=_descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('8\001')),
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=3850,
+  serialized_end=3896,
+)
+
+_VOLUMEMOUNTREQUEST = _descriptor.Descriptor(
+  name='VolumeMountRequest',
+  full_name='openstorage.api.VolumeMountRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='volume_id', full_name='openstorage.api.VolumeMountRequest.volume_id', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='mount_path', full_name='openstorage.api.VolumeMountRequest.mount_path', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='options', full_name='openstorage.api.VolumeMountRequest.options', index=2,
+      number=3, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[_VOLUMEMOUNTREQUEST_OPTIONSENTRY, ],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=5778,
+  serialized_end=5952,
+)
+
+
+_VOLUMEMOUNTRESPONSE = _descriptor.Descriptor(
+  name='VolumeMountResponse',
+  full_name='openstorage.api.VolumeMountResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=5954,
+  serialized_end=5975,
+)
+
+
+_VOLUMEUNMOUNTREQUEST_OPTIONSENTRY = _descriptor.Descriptor(
+  name='OptionsEntry',
+  full_name='openstorage.api.VolumeUnmountRequest.OptionsEntry',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='key', full_name='openstorage.api.VolumeUnmountRequest.OptionsEntry.key', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='value', full_name='openstorage.api.VolumeUnmountRequest.OptionsEntry.value', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=_descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('8\001')),
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=3850,
+  serialized_end=3896,
+)
+
+_VOLUMEUNMOUNTREQUEST = _descriptor.Descriptor(
+  name='VolumeUnmountRequest',
+  full_name='openstorage.api.VolumeUnmountRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='volume_id', full_name='openstorage.api.VolumeUnmountRequest.volume_id', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='mount_path', full_name='openstorage.api.VolumeUnmountRequest.mount_path', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='options', full_name='openstorage.api.VolumeUnmountRequest.options', index=2,
+      number=3, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[_VOLUMEUNMOUNTREQUEST_OPTIONSENTRY, ],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=5978,
+  serialized_end=6156,
+)
+
+
+_VOLUMEUNMOUNTRESPONSE = _descriptor.Descriptor(
+  name='VolumeUnmountResponse',
+  full_name='openstorage.api.VolumeUnmountResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=6158,
+  serialized_end=6181,
+)
+
+
+_VOLUMEATTACHREQUEST_OPTIONSENTRY = _descriptor.Descriptor(
+  name='OptionsEntry',
+  full_name='openstorage.api.VolumeAttachRequest.OptionsEntry',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='key', full_name='openstorage.api.VolumeAttachRequest.OptionsEntry.key', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='value', full_name='openstorage.api.VolumeAttachRequest.OptionsEntry.value', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=_descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('8\001')),
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=3850,
+  serialized_end=3896,
+)
+
+_VOLUMEATTACHREQUEST = _descriptor.Descriptor(
+  name='VolumeAttachRequest',
+  full_name='openstorage.api.VolumeAttachRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='volume_id', full_name='openstorage.api.VolumeAttachRequest.volume_id', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='options', full_name='openstorage.api.VolumeAttachRequest.options', index=1,
+      number=2, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[_VOLUMEATTACHREQUEST_OPTIONSENTRY, ],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=6184,
+  serialized_end=6340,
+)
+
+
+_VOLUMEATTACHRESPONSE = _descriptor.Descriptor(
+  name='VolumeAttachResponse',
+  full_name='openstorage.api.VolumeAttachResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='device_path', full_name='openstorage.api.VolumeAttachResponse.device_path', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=6342,
+  serialized_end=6385,
+)
+
+
+_VOLUMEDETACHREQUEST = _descriptor.Descriptor(
+  name='VolumeDetachRequest',
+  full_name='openstorage.api.VolumeDetachRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='volume_id', full_name='openstorage.api.VolumeDetachRequest.volume_id', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=6387,
+  serialized_end=6427,
+)
+
+
+_VOLUMEDETACHRESPONSE = _descriptor.Descriptor(
+  name='VolumeDetachResponse',
+  full_name='openstorage.api.VolumeDetachResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=6429,
+  serialized_end=6451,
+)
+
+
 _OPENSTORAGEVOLUMECREATEREQUEST = _descriptor.Descriptor(
   name='OpenStorageVolumeCreateRequest',
   full_name='openstorage.api.OpenStorageVolumeCreateRequest',
@@ -2894,8 +3267,8 @@ _OPENSTORAGEVOLUMECREATEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=5777,
-  serialized_end=5866,
+  serialized_start=6453,
+  serialized_end=6542,
 )
 
 
@@ -2925,8 +3298,8 @@ _OPENSTORAGEVOLUMECREATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=5868,
-  serialized_end=5920,
+  serialized_start=6544,
+  serialized_end=6596,
 )
 
 
@@ -2970,8 +3343,8 @@ _VOLUMECREATEFROMVOLUMEIDREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=5922,
-  serialized_end=6031,
+  serialized_start=6598,
+  serialized_end=6707,
 )
 
 
@@ -3001,8 +3374,8 @@ _VOLUMECREATEFROMVOLUMEIDRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6033,
-  serialized_end=6086,
+  serialized_start=6709,
+  serialized_end=6762,
 )
 
 
@@ -3032,8 +3405,8 @@ _VOLUMEDELETEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6088,
-  serialized_end=6128,
+  serialized_start=6764,
+  serialized_end=6804,
 )
 
 
@@ -3056,8 +3429,8 @@ _VOLUMEDELETERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6130,
-  serialized_end=6152,
+  serialized_start=6806,
+  serialized_end=6828,
 )
 
 
@@ -3087,8 +3460,8 @@ _VOLUMEINSPECTREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6154,
-  serialized_end=6195,
+  serialized_start=6830,
+  serialized_end=6871,
 )
 
 
@@ -3118,8 +3491,8 @@ _VOLUMEINSPECTRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6197,
-  serialized_end=6261,
+  serialized_start=6873,
+  serialized_end=6937,
 )
 
 
@@ -3149,8 +3522,8 @@ _VOLUMEENUMERATEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6263,
-  serialized_end=6336,
+  serialized_start=6939,
+  serialized_end=7012,
 )
 
 
@@ -3180,8 +3553,8 @@ _VOLUMEENUMERATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6338,
-  serialized_end=6405,
+  serialized_start=7014,
+  serialized_end=7081,
 )
 
 
@@ -3255,8 +3628,8 @@ _VOLUMESNAPSHOTCREATEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6408,
-  serialized_end=6577,
+  serialized_start=7084,
+  serialized_end=7253,
 )
 
 
@@ -3286,8 +3659,8 @@ _VOLUMESNAPSHOTCREATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6579,
-  serialized_end=6630,
+  serialized_start=7255,
+  serialized_end=7306,
 )
 
 
@@ -3324,8 +3697,8 @@ _VOLUMESNAPSHOTRESTOREREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6632,
-  serialized_end=6702,
+  serialized_start=7308,
+  serialized_end=7378,
 )
 
 
@@ -3348,8 +3721,8 @@ _VOLUMESNAPSHOTRESTORERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6704,
-  serialized_end=6735,
+  serialized_start=7380,
+  serialized_end=7411,
 )
 
 
@@ -3423,8 +3796,8 @@ _VOLUMESNAPSHOTENUMERATEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6738,
-  serialized_end=6913,
+  serialized_start=7414,
+  serialized_end=7589,
 )
 
 
@@ -3454,8 +3827,8 @@ _VOLUMESNAPSHOTENUMERATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6915,
-  serialized_end=6992,
+  serialized_start=7591,
+  serialized_end=7668,
 )
 
 
@@ -3478,8 +3851,8 @@ _CLUSTERENUMERATEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6994,
-  serialized_end=7019,
+  serialized_start=7670,
+  serialized_end=7695,
 )
 
 
@@ -3509,8 +3882,8 @@ _CLUSTERENUMERATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=7021,
-  serialized_end=7097,
+  serialized_start=7697,
+  serialized_end=7773,
 )
 
 
@@ -3540,8 +3913,8 @@ _CLUSTERINSPECTREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=7099,
-  serialized_end=7139,
+  serialized_start=7775,
+  serialized_end=7815,
 )
 
 
@@ -3571,8 +3944,8 @@ _CLUSTERINSPECTRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=7141,
-  serialized_end=7209,
+  serialized_start=7817,
+  serialized_end=7885,
 )
 
 
@@ -3616,8 +3989,8 @@ _CLUSTERALERTENUMERATEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=7212,
-  serialized_end=7385,
+  serialized_start=7888,
+  serialized_end=8061,
 )
 
 
@@ -3647,8 +4020,8 @@ _CLUSTERALERTENUMERATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=7387,
-  serialized_end=7459,
+  serialized_start=8063,
+  serialized_end=8135,
 )
 
 
@@ -3685,8 +4058,8 @@ _CLUSTERALERTCLEARREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=7461,
-  serialized_end=7554,
+  serialized_start=8137,
+  serialized_end=8230,
 )
 
 
@@ -3709,8 +4082,8 @@ _CLUSTERALERTCLEARRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=7556,
-  serialized_end=7583,
+  serialized_start=8232,
+  serialized_end=8259,
 )
 
 
@@ -3747,8 +4120,8 @@ _CLUSTERALERTERASEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=7585,
-  serialized_end=7678,
+  serialized_start=8261,
+  serialized_end=8354,
 )
 
 
@@ -3771,8 +4144,8 @@ _CLUSTERALERTERASERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=7680,
-  serialized_end=7707,
+  serialized_start=8356,
+  serialized_end=8383,
 )
 
 _STORAGERESOURCE.fields_by_name['medium'].enum_type = _STORAGEMEDIUM
@@ -3845,6 +4218,12 @@ _STORAGENODE.fields_by_name['pools'].message_type = _STORAGEPOOL
 _STORAGENODE.fields_by_name['node_labels'].message_type = _STORAGENODE_NODELABELSENTRY
 _STORAGECLUSTER.fields_by_name['status'].enum_type = _STATUS
 _STORAGECLUSTER.fields_by_name['nodes'].message_type = _STORAGENODE
+_VOLUMEMOUNTREQUEST_OPTIONSENTRY.containing_type = _VOLUMEMOUNTREQUEST
+_VOLUMEMOUNTREQUEST.fields_by_name['options'].message_type = _VOLUMEMOUNTREQUEST_OPTIONSENTRY
+_VOLUMEUNMOUNTREQUEST_OPTIONSENTRY.containing_type = _VOLUMEUNMOUNTREQUEST
+_VOLUMEUNMOUNTREQUEST.fields_by_name['options'].message_type = _VOLUMEUNMOUNTREQUEST_OPTIONSENTRY
+_VOLUMEATTACHREQUEST_OPTIONSENTRY.containing_type = _VOLUMEATTACHREQUEST
+_VOLUMEATTACHREQUEST.fields_by_name['options'].message_type = _VOLUMEATTACHREQUEST_OPTIONSENTRY
 _OPENSTORAGEVOLUMECREATEREQUEST.fields_by_name['spec'].message_type = _VOLUMESPEC
 _VOLUMECREATEFROMVOLUMEIDREQUEST.fields_by_name['spec'].message_type = _VOLUMESPEC
 _VOLUMEINSPECTRESPONSE.fields_by_name['volume'].message_type = _VOLUME
@@ -3893,6 +4272,14 @@ DESCRIPTOR.message_types_by_name['GroupSnapCreateRequest'] = _GROUPSNAPCREATEREQ
 DESCRIPTOR.message_types_by_name['GroupSnapCreateResponse'] = _GROUPSNAPCREATERESPONSE
 DESCRIPTOR.message_types_by_name['StorageNode'] = _STORAGENODE
 DESCRIPTOR.message_types_by_name['StorageCluster'] = _STORAGECLUSTER
+DESCRIPTOR.message_types_by_name['VolumeMountRequest'] = _VOLUMEMOUNTREQUEST
+DESCRIPTOR.message_types_by_name['VolumeMountResponse'] = _VOLUMEMOUNTRESPONSE
+DESCRIPTOR.message_types_by_name['VolumeUnmountRequest'] = _VOLUMEUNMOUNTREQUEST
+DESCRIPTOR.message_types_by_name['VolumeUnmountResponse'] = _VOLUMEUNMOUNTRESPONSE
+DESCRIPTOR.message_types_by_name['VolumeAttachRequest'] = _VOLUMEATTACHREQUEST
+DESCRIPTOR.message_types_by_name['VolumeAttachResponse'] = _VOLUMEATTACHRESPONSE
+DESCRIPTOR.message_types_by_name['VolumeDetachRequest'] = _VOLUMEDETACHREQUEST
+DESCRIPTOR.message_types_by_name['VolumeDetachResponse'] = _VOLUMEDETACHRESPONSE
 DESCRIPTOR.message_types_by_name['OpenStorageVolumeCreateRequest'] = _OPENSTORAGEVOLUMECREATEREQUEST
 DESCRIPTOR.message_types_by_name['OpenStorageVolumeCreateResponse'] = _OPENSTORAGEVOLUMECREATERESPONSE
 DESCRIPTOR.message_types_by_name['VolumeCreateFromVolumeIDRequest'] = _VOLUMECREATEFROMVOLUMEIDREQUEST
@@ -4235,6 +4622,86 @@ StorageCluster = _reflection.GeneratedProtocolMessageType('StorageCluster', (_me
   ))
 _sym_db.RegisterMessage(StorageCluster)
 
+VolumeMountRequest = _reflection.GeneratedProtocolMessageType('VolumeMountRequest', (_message.Message,), dict(
+
+  OptionsEntry = _reflection.GeneratedProtocolMessageType('OptionsEntry', (_message.Message,), dict(
+    DESCRIPTOR = _VOLUMEMOUNTREQUEST_OPTIONSENTRY,
+    __module__ = 'api_pb2'
+    # @@protoc_insertion_point(class_scope:openstorage.api.VolumeMountRequest.OptionsEntry)
+    ))
+  ,
+  DESCRIPTOR = _VOLUMEMOUNTREQUEST,
+  __module__ = 'api_pb2'
+  # @@protoc_insertion_point(class_scope:openstorage.api.VolumeMountRequest)
+  ))
+_sym_db.RegisterMessage(VolumeMountRequest)
+_sym_db.RegisterMessage(VolumeMountRequest.OptionsEntry)
+
+VolumeMountResponse = _reflection.GeneratedProtocolMessageType('VolumeMountResponse', (_message.Message,), dict(
+  DESCRIPTOR = _VOLUMEMOUNTRESPONSE,
+  __module__ = 'api_pb2'
+  # @@protoc_insertion_point(class_scope:openstorage.api.VolumeMountResponse)
+  ))
+_sym_db.RegisterMessage(VolumeMountResponse)
+
+VolumeUnmountRequest = _reflection.GeneratedProtocolMessageType('VolumeUnmountRequest', (_message.Message,), dict(
+
+  OptionsEntry = _reflection.GeneratedProtocolMessageType('OptionsEntry', (_message.Message,), dict(
+    DESCRIPTOR = _VOLUMEUNMOUNTREQUEST_OPTIONSENTRY,
+    __module__ = 'api_pb2'
+    # @@protoc_insertion_point(class_scope:openstorage.api.VolumeUnmountRequest.OptionsEntry)
+    ))
+  ,
+  DESCRIPTOR = _VOLUMEUNMOUNTREQUEST,
+  __module__ = 'api_pb2'
+  # @@protoc_insertion_point(class_scope:openstorage.api.VolumeUnmountRequest)
+  ))
+_sym_db.RegisterMessage(VolumeUnmountRequest)
+_sym_db.RegisterMessage(VolumeUnmountRequest.OptionsEntry)
+
+VolumeUnmountResponse = _reflection.GeneratedProtocolMessageType('VolumeUnmountResponse', (_message.Message,), dict(
+  DESCRIPTOR = _VOLUMEUNMOUNTRESPONSE,
+  __module__ = 'api_pb2'
+  # @@protoc_insertion_point(class_scope:openstorage.api.VolumeUnmountResponse)
+  ))
+_sym_db.RegisterMessage(VolumeUnmountResponse)
+
+VolumeAttachRequest = _reflection.GeneratedProtocolMessageType('VolumeAttachRequest', (_message.Message,), dict(
+
+  OptionsEntry = _reflection.GeneratedProtocolMessageType('OptionsEntry', (_message.Message,), dict(
+    DESCRIPTOR = _VOLUMEATTACHREQUEST_OPTIONSENTRY,
+    __module__ = 'api_pb2'
+    # @@protoc_insertion_point(class_scope:openstorage.api.VolumeAttachRequest.OptionsEntry)
+    ))
+  ,
+  DESCRIPTOR = _VOLUMEATTACHREQUEST,
+  __module__ = 'api_pb2'
+  # @@protoc_insertion_point(class_scope:openstorage.api.VolumeAttachRequest)
+  ))
+_sym_db.RegisterMessage(VolumeAttachRequest)
+_sym_db.RegisterMessage(VolumeAttachRequest.OptionsEntry)
+
+VolumeAttachResponse = _reflection.GeneratedProtocolMessageType('VolumeAttachResponse', (_message.Message,), dict(
+  DESCRIPTOR = _VOLUMEATTACHRESPONSE,
+  __module__ = 'api_pb2'
+  # @@protoc_insertion_point(class_scope:openstorage.api.VolumeAttachResponse)
+  ))
+_sym_db.RegisterMessage(VolumeAttachResponse)
+
+VolumeDetachRequest = _reflection.GeneratedProtocolMessageType('VolumeDetachRequest', (_message.Message,), dict(
+  DESCRIPTOR = _VOLUMEDETACHREQUEST,
+  __module__ = 'api_pb2'
+  # @@protoc_insertion_point(class_scope:openstorage.api.VolumeDetachRequest)
+  ))
+_sym_db.RegisterMessage(VolumeDetachRequest)
+
+VolumeDetachResponse = _reflection.GeneratedProtocolMessageType('VolumeDetachResponse', (_message.Message,), dict(
+  DESCRIPTOR = _VOLUMEDETACHRESPONSE,
+  __module__ = 'api_pb2'
+  # @@protoc_insertion_point(class_scope:openstorage.api.VolumeDetachResponse)
+  ))
+_sym_db.RegisterMessage(VolumeDetachResponse)
+
 OpenStorageVolumeCreateRequest = _reflection.GeneratedProtocolMessageType('OpenStorageVolumeCreateRequest', (_message.Message,), dict(
   DESCRIPTOR = _OPENSTORAGEVOLUMECREATEREQUEST,
   __module__ = 'api_pb2'
@@ -4458,6 +4925,12 @@ _STORAGENODE_DISKSENTRY.has_options = True
 _STORAGENODE_DISKSENTRY._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('8\001'))
 _STORAGENODE_NODELABELSENTRY.has_options = True
 _STORAGENODE_NODELABELSENTRY._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('8\001'))
+_VOLUMEMOUNTREQUEST_OPTIONSENTRY.has_options = True
+_VOLUMEMOUNTREQUEST_OPTIONSENTRY._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('8\001'))
+_VOLUMEUNMOUNTREQUEST_OPTIONSENTRY.has_options = True
+_VOLUMEUNMOUNTREQUEST_OPTIONSENTRY._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('8\001'))
+_VOLUMEATTACHREQUEST_OPTIONSENTRY.has_options = True
+_VOLUMEATTACHREQUEST_OPTIONSENTRY._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('8\001'))
 _VOLUMESNAPSHOTCREATEREQUEST_LABELSENTRY.has_options = True
 _VOLUMESNAPSHOTCREATEREQUEST_LABELSENTRY._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('8\001'))
 _VOLUMESNAPSHOTENUMERATEREQUEST_LABELSENTRY.has_options = True
@@ -4469,8 +4942,8 @@ _OPENSTORAGECLUSTER = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   options=None,
-  serialized_start=10004,
-  serialized_end=10711,
+  serialized_start=10680,
+  serialized_end=11387,
   methods=[
   _descriptor.MethodDescriptor(
     name='Enumerate',
@@ -4529,8 +5002,8 @@ _OPENSTORAGEVOLUME = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=1,
   options=None,
-  serialized_start=10714,
-  serialized_end=11869,
+  serialized_start=11390,
+  serialized_end=13013,
   methods=[
   _descriptor.MethodDescriptor(
     name='Create',
@@ -4603,6 +5076,42 @@ _OPENSTORAGEVOLUME = _descriptor.ServiceDescriptor(
     input_type=_VOLUMESNAPSHOTENUMERATEREQUEST,
     output_type=_VOLUMESNAPSHOTENUMERATERESPONSE,
     options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\"\"\035/v1/volume/snapshot/enumerate:\001*')),
+  ),
+  _descriptor.MethodDescriptor(
+    name='Attach',
+    full_name='openstorage.api.OpenStorageVolume.Attach',
+    index=8,
+    containing_service=None,
+    input_type=_VOLUMEATTACHREQUEST,
+    output_type=_VOLUMEATTACHRESPONSE,
+    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\026\"\021/v1/volume/attach:\001*')),
+  ),
+  _descriptor.MethodDescriptor(
+    name='Detach',
+    full_name='openstorage.api.OpenStorageVolume.Detach',
+    index=9,
+    containing_service=None,
+    input_type=_VOLUMEDETACHREQUEST,
+    output_type=_VOLUMEDETACHRESPONSE,
+    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\026\"\021/v1/volume/detach:\001*')),
+  ),
+  _descriptor.MethodDescriptor(
+    name='Mount',
+    full_name='openstorage.api.OpenStorageVolume.Mount',
+    index=10,
+    containing_service=None,
+    input_type=_VOLUMEMOUNTREQUEST,
+    output_type=_VOLUMEMOUNTRESPONSE,
+    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\025\"\020/v1/volume/mount:\001*')),
+  ),
+  _descriptor.MethodDescriptor(
+    name='Unmount',
+    full_name='openstorage.api.OpenStorageVolume.Unmount',
+    index=11,
+    containing_service=None,
+    input_type=_VOLUMEUNMOUNTREQUEST,
+    output_type=_VOLUMEUNMOUNTRESPONSE,
+    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\027\"\022/v1/volume/unmount:\001*')),
   ),
 ])
 _sym_db.RegisterServiceDescriptor(_OPENSTORAGEVOLUME)

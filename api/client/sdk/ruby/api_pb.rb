@@ -216,6 +216,32 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :node_id, :string, 3
     repeated :nodes, :message, 4, "openstorage.api.StorageNode"
   end
+  add_message "openstorage.api.VolumeMountRequest" do
+    optional :volume_id, :string, 1
+    optional :mount_path, :string, 2
+    map :options, :string, :string, 3
+  end
+  add_message "openstorage.api.VolumeMountResponse" do
+  end
+  add_message "openstorage.api.VolumeUnmountRequest" do
+    optional :volume_id, :string, 1
+    optional :mount_path, :string, 2
+    map :options, :string, :string, 3
+  end
+  add_message "openstorage.api.VolumeUnmountResponse" do
+  end
+  add_message "openstorage.api.VolumeAttachRequest" do
+    optional :volume_id, :string, 1
+    map :options, :string, :string, 2
+  end
+  add_message "openstorage.api.VolumeAttachResponse" do
+    optional :device_path, :string, 1
+  end
+  add_message "openstorage.api.VolumeDetachRequest" do
+    optional :volume_id, :string, 1
+  end
+  add_message "openstorage.api.VolumeDetachResponse" do
+  end
   add_message "openstorage.api.OpenStorageVolumeCreateRequest" do
     optional :name, :string, 1
     optional :spec, :message, 2, "openstorage.api.VolumeSpec"
@@ -448,6 +474,14 @@ module Openstorage
     GroupSnapCreateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.GroupSnapCreateResponse").msgclass
     StorageNode = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.StorageNode").msgclass
     StorageCluster = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.StorageCluster").msgclass
+    VolumeMountRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.VolumeMountRequest").msgclass
+    VolumeMountResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.VolumeMountResponse").msgclass
+    VolumeUnmountRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.VolumeUnmountRequest").msgclass
+    VolumeUnmountResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.VolumeUnmountResponse").msgclass
+    VolumeAttachRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.VolumeAttachRequest").msgclass
+    VolumeAttachResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.VolumeAttachResponse").msgclass
+    VolumeDetachRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.VolumeDetachRequest").msgclass
+    VolumeDetachResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.VolumeDetachResponse").msgclass
     OpenStorageVolumeCreateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.OpenStorageVolumeCreateRequest").msgclass
     OpenStorageVolumeCreateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.OpenStorageVolumeCreateResponse").msgclass
     VolumeCreateFromVolumeIDRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.VolumeCreateFromVolumeIDRequest").msgclass
