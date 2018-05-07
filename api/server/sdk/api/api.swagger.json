@@ -231,6 +231,33 @@
         ]
       }
     },
+    "/v1/volume/detach": {
+      "post": {
+        "summary": "Detaches the volume from the node.",
+        "operationId": "Detach",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiVolumeDetachResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiVolumeDetachRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
     "/v1/volume/enumerate": {
       "post": {
         "summary": "Get a list of volumes",
@@ -277,6 +304,33 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/apiVolumeInspectRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/volume/mount": {
+      "post": {
+        "summary": "Attaches the volume to a node.",
+        "operationId": "Mount",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiVolumeMountResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiVolumeMountRequest"
             }
           }
         ],
@@ -1076,6 +1130,18 @@
     "apiVolumeDeleteResponse": {
       "type": "object"
     },
+    "apiVolumeDetachRequest": {
+      "type": "object",
+      "properties": {
+        "volume_id": {
+          "type": "string",
+          "title": "Id of the volume"
+        }
+      }
+    },
+    "apiVolumeDetachResponse": {
+      "type": "object"
+    },
     "apiVolumeEnumerateRequest": {
       "type": "object",
       "properties": {
@@ -1131,6 +1197,29 @@
         }
       },
       "title": "VolumeLocator is a structure that is attached to a volume\nand is used to carry opaque metadata.\nswagger:model"
+    },
+    "apiVolumeMountRequest": {
+      "type": "object",
+      "properties": {
+        "volume_id": {
+          "type": "string",
+          "title": "Id of the volume"
+        },
+        "mount_path": {
+          "type": "string",
+          "description": "Mount path for mounting the volume."
+        },
+        "options": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Additional options"
+        }
+      }
+    },
+    "apiVolumeMountResponse": {
+      "type": "object"
     },
     "apiVolumeSnapshotCreateRequest": {
       "type": "object",

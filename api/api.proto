@@ -765,6 +765,44 @@ service OpenStorageVolume {
         body: "*"
       };
     }
+
+  // Detaches the volume from the node.
+  rpc Detach(VolumeDetachRequest)
+    returns (VolumeDetachResponse) {
+      option(google.api.http) = {
+        post: "/v1/volume/detach"
+        body: "*"
+      };
+    }
+
+  // Attaches the volume to a node.
+  rpc Mount(VolumeMountRequest)
+    returns(VolumeMountResponse) {
+      option(google.api.http) = {
+        post: "/v1/volume/mount"
+        body: "*"
+      };
+    }
+}
+
+message VolumeMountRequest {
+  // Id of the volume
+  string volume_id = 1;
+  // Mount path for mounting the volume.
+  string mount_path = 2;
+  // Additional options
+  map<string, string> options = 3;  
+}
+
+message VolumeMountResponse {
+}
+
+message VolumeDetachRequest {
+  // Id of the volume
+  string volume_id = 1;
+}
+
+message VolumeDetachResponse {
 }
 
 message OpenStorageVolumeCreateRequest {
