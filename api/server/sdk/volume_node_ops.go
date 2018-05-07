@@ -24,7 +24,28 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-//Detach function for volume node detach
+// Attach volume to given node
+func (s *VolumeServer) Attach(
+	ctx context.Context,
+	req *api.VolumeAttachRequest,
+) (*api.VolumeAttachResponse, error) {
+
+	if len(req.GetVolumeId()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
+	}
+
+	devPath, err := s.driver.Attach(req.GetVolumeId(), req.GetOptions())
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"failed  to attach volume: %v",
+			err.Error())
+	}
+
+	return &api.VolumeAttachResponse{DevicePath: devPath}, nil
+}
+
+// Detach function for volume node detach
 func (s *VolumeServer) Detach(
 	ctx context.Context,
 	req *api.VolumeDetachRequest,
@@ -39,7 +60,7 @@ func (s *VolumeServer) Detach(
 	return &api.VolumeDetachResponse{}, err
 }
 
-//Mount function for volume node detach
+// Mount function for volume node detach
 func (s *VolumeServer) Mount(
 	ctx context.Context,
 	req *api.VolumeMountRequest,
@@ -56,4 +77,29 @@ func (s *VolumeServer) Mount(
 	err := s.driver.Mount(req.GetVolumeId(), req.GetMountPath(), req.GetOptions())
 
 	return &api.VolumeMountResponse{}, err
+}
+
+// Unmount volume from given node
+func (s *VolumeServer) Unmount(
+	ctx context.Context,
+	req *api.VolumeUnmountRequest,
+) (*api.VolumeUnmountResponse, error) {
+
+	if len(req.GetVolumeId()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
+	}
+
+	if len(req.GetMountPath()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Invalid Mount Path")
+	}
+
+	err := s.driver.Unmount(req.GetVolumeId(), req.GetMountPath(), req.GetOptions())
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"failed  to attach volume: %v",
+			err.Error())
+	}
+
+	return &api.VolumeUnmountResponse{}, nil
 }

@@ -766,6 +766,15 @@ service OpenStorageVolume {
       };
     }
 
+  // Attach device to host                                                      
+  rpc Attach(VolumeAttachRequest)                                               
+    returns (VolumeAttachResponse) {                                            
+      option(google.api.http) = {                                               
+        post: "/v1/volume/attach"                                               
+        body: "*"                                                               
+      };                                                                        
+    }  
+
   // Detaches the volume from the node.
   rpc Detach(VolumeDetachRequest)
     returns (VolumeDetachResponse) {
@@ -783,6 +792,15 @@ service OpenStorageVolume {
         body: "*"
       };
     }
+
+  // Unmount volume at specified path                                           
+  rpc Unmount(VolumeUnmountRequest)                                             
+      returns (VolumeUnmountResponse) {                                         
+      option(google.api.http) = {                                               
+        post: "/v1/volume/unmount"                                              
+        body: "*"                                                               
+      };                                                                        
+    }
 }
 
 message VolumeMountRequest {
@@ -797,6 +815,30 @@ message VolumeMountRequest {
 message VolumeMountResponse {
 }
 
+message VolumeUnmountRequest {                                                  
+  // Id of volume                                                             
+  string volume_id = 1;                                                       
+  // MountPath for device                                                     
+  string mount_path = 2;                                                      
+  // Options to unmount device                                                
+  map<string, string> options = 3;                                            
+}
+     
+message VolumeUnmountResponse {                                                 
+}
+
+message VolumeAttachRequest {                                                   
+  // Id of volume                                                             
+  string volume_id = 1;                                                       
+  // Options for attaching volume, right now only passphrase options is supported
+  map<string, string>  options = 2;                                           
+}                                                                               
+                                                                                
+message VolumeAttachResponse {                                                  
+  // Device path where device is exported                                     
+  string device_path = 1;                                                     
+}
+          
 message VolumeDetachRequest {
   // Id of the volume
   string volume_id = 1;

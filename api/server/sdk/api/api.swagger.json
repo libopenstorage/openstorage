@@ -150,6 +150,33 @@
         ]
       }
     },
+    "/v1/volume/attach": {
+      "post": {
+        "summary": "Attach device to host",
+        "operationId": "Attach",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiVolumeAttachResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiVolumeAttachRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
     "/v1/volume/create": {
       "post": {
         "summary": "Creates a new volume",
@@ -412,6 +439,33 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/apiVolumeSnapshotRestoreRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/volume/unmount": {
+      "post": {
+        "summary": "Unmount volume at specified path",
+        "operationId": "Unmount",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiVolumeUnmountResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiVolumeUnmountRequest"
             }
           }
         ],
@@ -1062,6 +1116,31 @@
       },
       "title": "Volume represents an abstract storage volume.\nVolume represents an abstract storage volume.\nswagger:model"
     },
+    "apiVolumeAttachRequest": {
+      "type": "object",
+      "properties": {
+        "volume_id": {
+          "type": "string",
+          "title": "Id of volume"
+        },
+        "options": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Options for attaching volume, right now only passphrase options is supported"
+        }
+      }
+    },
+    "apiVolumeAttachResponse": {
+      "type": "object",
+      "properties": {
+        "device_path": {
+          "type": "string",
+          "title": "Device path where device is exported"
+        }
+      }
+    },
     "apiVolumeConsumer": {
       "type": "object",
       "properties": {
@@ -1439,6 +1518,29 @@
       ],
       "default": "VOLUME_STATUS_NONE",
       "description": "VolumeStatus represents a health status for a volume.\n\n - VOLUME_STATUS_NOT_PRESENT: Volume is not present\n - VOLUME_STATUS_UP: Volume is healthy\n - VOLUME_STATUS_DOWN: Volume is in fail mode\n - VOLUME_STATUS_DEGRADED: Volume is up but with degraded performance\nIn a RAID group, this may indicate a problem with one or more drives"
+    },
+    "apiVolumeUnmountRequest": {
+      "type": "object",
+      "properties": {
+        "volume_id": {
+          "type": "string",
+          "title": "Id of volume"
+        },
+        "mount_path": {
+          "type": "string",
+          "title": "MountPath for device"
+        },
+        "options": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Options to unmount device"
+        }
+      }
+    },
+    "apiVolumeUnmountResponse": {
+      "type": "object"
     }
   }
 }
