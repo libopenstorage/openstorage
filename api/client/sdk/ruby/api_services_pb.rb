@@ -55,6 +55,14 @@ module Openstorage
         rpc :SnapshotRestore, VolumeSnapshotRestoreRequest, VolumeSnapshotRestoreResponse
         # List the number of snapshots for a specific volume
         rpc :SnapshotEnumerate, VolumeSnapshotEnumerateRequest, VolumeSnapshotEnumerateResponse
+        # Attach device to host                                                      
+        rpc :Attach, VolumeAttachRequest, VolumeAttachResponse
+        # Detaches the volume from the node.
+        rpc :Detach, VolumeDetachRequest, VolumeDetachResponse
+        # Attaches the volume to a node.
+        rpc :Mount, VolumeMountRequest, VolumeMountResponse
+        # Unmount volume at specified path                                           
+        rpc :Unmount, VolumeUnmountRequest, VolumeUnmountResponse
       end
 
       Stub = Service.rpc_stub_class

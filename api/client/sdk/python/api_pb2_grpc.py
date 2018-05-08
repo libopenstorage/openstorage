@@ -164,6 +164,26 @@ class OpenStorageVolumeStub(object):
         request_serializer=api__pb2.VolumeSnapshotEnumerateRequest.SerializeToString,
         response_deserializer=api__pb2.VolumeSnapshotEnumerateResponse.FromString,
         )
+    self.Attach = channel.unary_unary(
+        '/openstorage.api.OpenStorageVolume/Attach',
+        request_serializer=api__pb2.VolumeAttachRequest.SerializeToString,
+        response_deserializer=api__pb2.VolumeAttachResponse.FromString,
+        )
+    self.Detach = channel.unary_unary(
+        '/openstorage.api.OpenStorageVolume/Detach',
+        request_serializer=api__pb2.VolumeDetachRequest.SerializeToString,
+        response_deserializer=api__pb2.VolumeDetachResponse.FromString,
+        )
+    self.Mount = channel.unary_unary(
+        '/openstorage.api.OpenStorageVolume/Mount',
+        request_serializer=api__pb2.VolumeMountRequest.SerializeToString,
+        response_deserializer=api__pb2.VolumeMountResponse.FromString,
+        )
+    self.Unmount = channel.unary_unary(
+        '/openstorage.api.OpenStorageVolume/Unmount',
+        request_serializer=api__pb2.VolumeUnmountRequest.SerializeToString,
+        response_deserializer=api__pb2.VolumeUnmountResponse.FromString,
+        )
 
 
 class OpenStorageVolumeServicer(object):
@@ -227,6 +247,34 @@ class OpenStorageVolumeServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
+  def Attach(self, request, context):
+    """Attach device to host                                                      
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def Detach(self, request, context):
+    """Detaches the volume from the node.
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def Mount(self, request, context):
+    """Attaches the volume to a node.
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def Unmount(self, request, context):
+    """Unmount volume at specified path                                           
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
 
 def add_OpenStorageVolumeServicer_to_server(servicer, server):
   rpc_method_handlers = {
@@ -269,6 +317,26 @@ def add_OpenStorageVolumeServicer_to_server(servicer, server):
           servicer.SnapshotEnumerate,
           request_deserializer=api__pb2.VolumeSnapshotEnumerateRequest.FromString,
           response_serializer=api__pb2.VolumeSnapshotEnumerateResponse.SerializeToString,
+      ),
+      'Attach': grpc.unary_unary_rpc_method_handler(
+          servicer.Attach,
+          request_deserializer=api__pb2.VolumeAttachRequest.FromString,
+          response_serializer=api__pb2.VolumeAttachResponse.SerializeToString,
+      ),
+      'Detach': grpc.unary_unary_rpc_method_handler(
+          servicer.Detach,
+          request_deserializer=api__pb2.VolumeDetachRequest.FromString,
+          response_serializer=api__pb2.VolumeDetachResponse.SerializeToString,
+      ),
+      'Mount': grpc.unary_unary_rpc_method_handler(
+          servicer.Mount,
+          request_deserializer=api__pb2.VolumeMountRequest.FromString,
+          response_serializer=api__pb2.VolumeMountResponse.SerializeToString,
+      ),
+      'Unmount': grpc.unary_unary_rpc_method_handler(
+          servicer.Unmount,
+          request_deserializer=api__pb2.VolumeUnmountRequest.FromString,
+          response_serializer=api__pb2.VolumeUnmountResponse.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(

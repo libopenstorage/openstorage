@@ -138,6 +138,28 @@ function deserialize_openstorage_api_OpenStorageVolumeCreateResponse(buffer_arg)
   return api_pb.OpenStorageVolumeCreateResponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_openstorage_api_VolumeAttachRequest(arg) {
+  if (!(arg instanceof api_pb.VolumeAttachRequest)) {
+    throw new Error('Expected argument of type openstorage.api.VolumeAttachRequest');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_VolumeAttachRequest(buffer_arg) {
+  return api_pb.VolumeAttachRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_VolumeAttachResponse(arg) {
+  if (!(arg instanceof api_pb.VolumeAttachResponse)) {
+    throw new Error('Expected argument of type openstorage.api.VolumeAttachResponse');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_VolumeAttachResponse(buffer_arg) {
+  return api_pb.VolumeAttachResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_openstorage_api_VolumeCreateFromVolumeIDRequest(arg) {
   if (!(arg instanceof api_pb.VolumeCreateFromVolumeIDRequest)) {
     throw new Error('Expected argument of type openstorage.api.VolumeCreateFromVolumeIDRequest');
@@ -182,6 +204,28 @@ function deserialize_openstorage_api_VolumeDeleteResponse(buffer_arg) {
   return api_pb.VolumeDeleteResponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_openstorage_api_VolumeDetachRequest(arg) {
+  if (!(arg instanceof api_pb.VolumeDetachRequest)) {
+    throw new Error('Expected argument of type openstorage.api.VolumeDetachRequest');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_VolumeDetachRequest(buffer_arg) {
+  return api_pb.VolumeDetachRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_VolumeDetachResponse(arg) {
+  if (!(arg instanceof api_pb.VolumeDetachResponse)) {
+    throw new Error('Expected argument of type openstorage.api.VolumeDetachResponse');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_VolumeDetachResponse(buffer_arg) {
+  return api_pb.VolumeDetachResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_openstorage_api_VolumeEnumerateRequest(arg) {
   if (!(arg instanceof api_pb.VolumeEnumerateRequest)) {
     throw new Error('Expected argument of type openstorage.api.VolumeEnumerateRequest');
@@ -224,6 +268,28 @@ function serialize_openstorage_api_VolumeInspectResponse(arg) {
 
 function deserialize_openstorage_api_VolumeInspectResponse(buffer_arg) {
   return api_pb.VolumeInspectResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_VolumeMountRequest(arg) {
+  if (!(arg instanceof api_pb.VolumeMountRequest)) {
+    throw new Error('Expected argument of type openstorage.api.VolumeMountRequest');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_VolumeMountRequest(buffer_arg) {
+  return api_pb.VolumeMountRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_VolumeMountResponse(arg) {
+  if (!(arg instanceof api_pb.VolumeMountResponse)) {
+    throw new Error('Expected argument of type openstorage.api.VolumeMountResponse');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_VolumeMountResponse(buffer_arg) {
+  return api_pb.VolumeMountResponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
 function serialize_openstorage_api_VolumeSnapshotCreateRequest(arg) {
@@ -290,6 +356,28 @@ function serialize_openstorage_api_VolumeSnapshotRestoreResponse(arg) {
 
 function deserialize_openstorage_api_VolumeSnapshotRestoreResponse(buffer_arg) {
   return api_pb.VolumeSnapshotRestoreResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_VolumeUnmountRequest(arg) {
+  if (!(arg instanceof api_pb.VolumeUnmountRequest)) {
+    throw new Error('Expected argument of type openstorage.api.VolumeUnmountRequest');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_VolumeUnmountRequest(buffer_arg) {
+  return api_pb.VolumeUnmountRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_VolumeUnmountResponse(arg) {
+  if (!(arg instanceof api_pb.VolumeUnmountResponse)) {
+    throw new Error('Expected argument of type openstorage.api.VolumeUnmountResponse');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_VolumeUnmountResponse(buffer_arg) {
+  return api_pb.VolumeUnmountResponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
 
@@ -454,6 +542,54 @@ var OpenStorageVolumeService = exports.OpenStorageVolumeService = {
     requestDeserialize: deserialize_openstorage_api_VolumeSnapshotEnumerateRequest,
     responseSerialize: serialize_openstorage_api_VolumeSnapshotEnumerateResponse,
     responseDeserialize: deserialize_openstorage_api_VolumeSnapshotEnumerateResponse,
+  },
+  // Attach device to host                                                      
+  attach: {
+    path: '/openstorage.api.OpenStorageVolume/Attach',
+    requestStream: false,
+    responseStream: false,
+    requestType: api_pb.VolumeAttachRequest,
+    responseType: api_pb.VolumeAttachResponse,
+    requestSerialize: serialize_openstorage_api_VolumeAttachRequest,
+    requestDeserialize: deserialize_openstorage_api_VolumeAttachRequest,
+    responseSerialize: serialize_openstorage_api_VolumeAttachResponse,
+    responseDeserialize: deserialize_openstorage_api_VolumeAttachResponse,
+  },
+  // Detaches the volume from the node.
+  detach: {
+    path: '/openstorage.api.OpenStorageVolume/Detach',
+    requestStream: false,
+    responseStream: false,
+    requestType: api_pb.VolumeDetachRequest,
+    responseType: api_pb.VolumeDetachResponse,
+    requestSerialize: serialize_openstorage_api_VolumeDetachRequest,
+    requestDeserialize: deserialize_openstorage_api_VolumeDetachRequest,
+    responseSerialize: serialize_openstorage_api_VolumeDetachResponse,
+    responseDeserialize: deserialize_openstorage_api_VolumeDetachResponse,
+  },
+  // Attaches the volume to a node.
+  mount: {
+    path: '/openstorage.api.OpenStorageVolume/Mount',
+    requestStream: false,
+    responseStream: false,
+    requestType: api_pb.VolumeMountRequest,
+    responseType: api_pb.VolumeMountResponse,
+    requestSerialize: serialize_openstorage_api_VolumeMountRequest,
+    requestDeserialize: deserialize_openstorage_api_VolumeMountRequest,
+    responseSerialize: serialize_openstorage_api_VolumeMountResponse,
+    responseDeserialize: deserialize_openstorage_api_VolumeMountResponse,
+  },
+  // Unmount volume at specified path                                           
+  unmount: {
+    path: '/openstorage.api.OpenStorageVolume/Unmount',
+    requestStream: false,
+    responseStream: false,
+    requestType: api_pb.VolumeUnmountRequest,
+    responseType: api_pb.VolumeUnmountResponse,
+    requestSerialize: serialize_openstorage_api_VolumeUnmountRequest,
+    requestDeserialize: deserialize_openstorage_api_VolumeUnmountRequest,
+    responseSerialize: serialize_openstorage_api_VolumeUnmountResponse,
+    responseDeserialize: deserialize_openstorage_api_VolumeUnmountResponse,
   },
 };
 
