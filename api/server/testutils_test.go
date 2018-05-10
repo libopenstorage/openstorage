@@ -19,7 +19,6 @@ import (
 	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
 
 	"github.com/libopenstorage/openstorage/cluster"
-	"github.com/libopenstorage/openstorage/secrets"
 )
 
 const (
@@ -118,7 +117,7 @@ func testRestServer(t *testing.T) (*httptest.Server, *testServer) {
 func testClusterServer(t *testing.T) (*httptest.Server, *testCluster) {
 	tc := newTestCluster(t)
 	capi := newClusterAPI(ClusterServerConfiguration{
-		ConfigSecretManager: secrets.NewSecretManager(tc.sm),
+		ConfigSecretManager: tc.sm,
 		ConfigSchedManager:  tc.sp,
 	},
 	)

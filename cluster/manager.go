@@ -21,6 +21,7 @@ import (
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/osdconfig"
 	sched "github.com/libopenstorage/openstorage/schedpolicy"
+	"github.com/libopenstorage/openstorage/secrets"
 	"github.com/libopenstorage/systemutils"
 	"github.com/portworx/kvdb"
 	"github.com/sirupsen/logrus"
@@ -47,6 +48,9 @@ var (
 
 // ClusterManager implements the cluster interface
 type ClusterManager struct {
+	secrets.Secrets
+	sched.SchedulePolicy
+
 	size          int
 	listeners     *list.List
 	config        config.ClusterConfig
@@ -1688,55 +1692,4 @@ func (c *ClusterManager) DeleteNodeConf(nodeID string) error {
 
 func (c *ClusterManager) EnumerateNodeConf() (*osdconfig.NodesConfig, error) {
 	return c.configManager.EnumerateNodeConf()
-}
-
-// This needs to be added since clusterclient is REST wrapper over ClusterManager
-// we can also create custom secretclient i.e Rest wrapper over SecretManager
-// may be related to issue :  #382 (https://github.com/libopenstorage/openstorage/issues/382)
-// TODO : Find cleaner way for this
-
-// SecretLogin create session with secret store
-func (c *ClusterManager) SecretLogin(secretType string, secretConfig map[string]string) error {
-	return nil
-}
-
-// SecretSetDefaultSecretKey sets the cluster wide secret key
-func (c *ClusterManager) SecretSetDefaultSecretKey(secretKey string, override bool) error {
-	return nil
-}
-
-// SecretCheckLogin validates session with secret store
-func (c *ClusterManager) SecretCheckLogin() error {
-	return nil
-}
-
-// SecretSet stores the given value/data against the key
-func (c *ClusterManager) SecretSet(key string, value interface{}) error {
-	return nil
-}
-
-// SecretGet retrieves the data for the given key
-func (c *ClusterManager) SecretGet(string) (interface{}, error) {
-	return "", nil
-}
-
-// SecretGetDefaultSecretKey return cluster wide secret key
-func (c *ClusterManager) SecretGetDefaultSecretKey() (interface{}, error) {
-	return nil, nil
-}
-
-func (c *ClusterManager) SchedPolicyCreate(name, sched string) error {
-	return nil
-}
-
-func (c *ClusterManager) SchedPolicyUpdate(name, sched string) error {
-	return nil
-}
-
-func (c *ClusterManager) SchedPolicyDelete(name string) error {
-	return nil
-}
-
-func (c *ClusterManager) SchedPolicyEnumerate() ([]*sched.SchedPolicy, error) {
-	return nil, nil
 }
