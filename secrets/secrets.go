@@ -3,7 +3,6 @@ package secrets
 
 import (
 	"errors"
-	"sync"
 )
 
 var (
@@ -36,22 +35,11 @@ type Secrets interface {
 	SecretGet(key string) (interface{}, error)
 }
 
-type Manager struct {
-	Secrets
-	lock sync.Mutex
-}
-
-func NewSecretManager(sec Secrets) *Manager {
-	return &Manager{
-		Secrets: sec,
-	}
-}
-
 type nullSecrets struct {
 }
 
 // New returns null secrets implementation
-func New() Secrets {
+func NewDefaultSecrets() Secrets {
 	return &nullSecrets{}
 }
 

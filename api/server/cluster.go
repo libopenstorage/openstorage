@@ -22,7 +22,7 @@ const (
 
 type clusterApi struct {
 	restBase
-	SecretManager      *secrets.Manager
+	SecretManager      secrets.Secrets
 	SchedPolicyManager sched.SchedulePolicy
 }
 
@@ -31,7 +31,7 @@ type clusterApi struct {
 // StartClusterAPIWithConfiguration() to override with his own implementation
 type ClusterServerConfiguration struct {
 	// holds implementation to Secrets interface
-	ConfigSecretManager *secrets.Manager
+	ConfigSecretManager secrets.Secrets
 	// holds implementeation to SchedulePolicy interface
 	ConfigSchedManager sched.SchedulePolicy
 }
