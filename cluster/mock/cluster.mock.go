@@ -536,6 +536,69 @@ func (mr *MockClusterMockRecorder) SecretSetDefaultSecretKey(arg0, arg1 interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SecretSetDefaultSecretKey", reflect.TypeOf((*MockCluster)(nil).SecretSetDefaultSecretKey), arg0, arg1)
 }
 
+// ServiceAddDrive mocks base method
+func (m *MockCluster) ServiceAddDrive(arg0, arg1 string, arg2 bool) (string, error) {
+	ret := m.ctrl.Call(m, "ServiceAddDrive", arg0, arg1, arg2)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ServiceAddDrive indicates an expected call of ServiceAddDrive
+func (mr *MockClusterMockRecorder) ServiceAddDrive(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ServiceAddDrive", reflect.TypeOf((*MockCluster)(nil).ServiceAddDrive), arg0, arg1, arg2)
+}
+
+// ServiceEnterMaintenanceMode mocks base method
+func (m *MockCluster) ServiceEnterMaintenanceMode(arg0 bool) error {
+	ret := m.ctrl.Call(m, "ServiceEnterMaintenanceMode", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ServiceEnterMaintenanceMode indicates an expected call of ServiceEnterMaintenanceMode
+func (mr *MockClusterMockRecorder) ServiceEnterMaintenanceMode(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ServiceEnterMaintenanceMode", reflect.TypeOf((*MockCluster)(nil).ServiceEnterMaintenanceMode), arg0)
+}
+
+// ServiceExitMaintenanceMode mocks base method
+func (m *MockCluster) ServiceExitMaintenanceMode() error {
+	ret := m.ctrl.Call(m, "ServiceExitMaintenanceMode")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ServiceExitMaintenanceMode indicates an expected call of ServiceExitMaintenanceMode
+func (mr *MockClusterMockRecorder) ServiceExitMaintenanceMode() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ServiceExitMaintenanceMode", reflect.TypeOf((*MockCluster)(nil).ServiceExitMaintenanceMode))
+}
+
+// ServiceRebalancePool mocks base method
+func (m *MockCluster) ServiceRebalancePool(arg0 string, arg1 int) (string, error) {
+	ret := m.ctrl.Call(m, "ServiceRebalancePool", arg0, arg1)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ServiceRebalancePool indicates an expected call of ServiceRebalancePool
+func (mr *MockClusterMockRecorder) ServiceRebalancePool(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ServiceRebalancePool", reflect.TypeOf((*MockCluster)(nil).ServiceRebalancePool), arg0, arg1)
+}
+
+// ServiceReplaceDrive mocks base method
+func (m *MockCluster) ServiceReplaceDrive(arg0, arg1, arg2 string) (string, error) {
+	ret := m.ctrl.Call(m, "ServiceReplaceDrive", arg0, arg1, arg2)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ServiceReplaceDrive indicates an expected call of ServiceReplaceDrive
+func (mr *MockClusterMockRecorder) ServiceReplaceDrive(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ServiceReplaceDrive", reflect.TypeOf((*MockCluster)(nil).ServiceReplaceDrive), arg0, arg1, arg2)
+}
+
 // SetClusterConf mocks base method
 func (m *MockCluster) SetClusterConf(arg0 *osdconfig.ClusterConfig) error {
 	ret := m.ctrl.Call(m, "SetClusterConf", arg0)

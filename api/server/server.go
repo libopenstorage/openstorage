@@ -10,6 +10,9 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/gorilla/mux"
+	sched "github.com/libopenstorage/openstorage/schedpolicy"
+	"github.com/libopenstorage/openstorage/secrets"
+	"github.com/libopenstorage/openstorage/services"
 )
 
 // Route is a specification and  handler for a REST endpoint.
@@ -111,10 +114,36 @@ func StartVolumePluginAPI(
 	return nil
 }
 
-// StartClusterAPI starts a REST server to receive driver configuration commands
-// from the CLI/UX to control the OSD cluster.
-func StartClusterAPI(clusterApiBase string, clusterPort uint16) error {
-	clusterApi := newClusterAPI()
+func CheckNullClusterServerConfiguration(config *ClusterServerConfiguration) {
+
+	// Set config managers to null/generic implementation if passed as null
+	if config.ConfigSecretManager == nil {
+		config.ConfigSecretManager = secrets.NewDefaultSecrets()
+	}
+
+	if config.ConfigSchedManager == nil {
+		config.ConfigSchedManager = sched.NewDefaultSchedulePolicy()
+	}
+
+	if config.ConfigServiceManager == nil {
+		config.ConfigServiceManager = services.NewDefaultService()
+	}
+
+}
+
+func StartClusterApiWithConfiguration(
+	config ClusterServerConfiguration,
+	clusterApiBase string,
+	clusterPort uint16,
+) error {
+
+	CheckNullClusterServerConfiguration(&config)
+	// newClusterAPI now must take a ClusterServerConfiguration.
+	// This makes it so that it does not have to create the fake server by default.
+	// The caller is the one who creates the manager and passes it in.
+	//
+	// newClusterAPI now calls RegisterManager according to the config.
+	clusterApi := newClusterAPI(config)
 
 	// start server as before
 	if err := startServer("osd", clusterApiBase, clusterPort, clusterApi.Routes()); err != nil {

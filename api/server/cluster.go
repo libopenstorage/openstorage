@@ -11,7 +11,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
-	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
+	sched "github.com/libopenstorage/openstorage/schedpolicy"
+	"github.com/libopenstorage/openstorage/secrets"
+	"github.com/libopenstorage/openstorage/services"
 )
 
 const (
@@ -21,14 +23,32 @@ const (
 
 type clusterApi struct {
 	restBase
+	SecretManager      secrets.Secrets
+	SchedPolicyManager sched.SchedulePolicy
+	ServiceManager     services.Service
 }
 
-func newClusterAPI() restServer {
+// ClusterServerConfiguration holds manager implementation
+// Caller has to create the manager and passes it in
+// StartClusterAPIWithConfiguration() to override with his own implementation
+type ClusterServerConfiguration struct {
+	// holds implementation to Secrets interface
+	ConfigSecretManager secrets.Secrets
+	// holds implementeation to SchedulePolicy interface
+	ConfigSchedManager sched.SchedulePolicy
+	// holds implementation to service interface
+	ConfigServiceManager services.Service
+}
+
+func newClusterAPI(config ClusterServerConfiguration) restServer {
 	return &clusterApi{
 		restBase: restBase{
 			version: cluster.APIVersion,
 			name:    "Cluster API",
 		},
+		SecretManager:      config.ConfigSecretManager,
+		SchedPolicyManager: config.ConfigSchedManager,
+		ServiceManager:     config.ConfigServiceManager,
 	}
 }
 
@@ -694,6 +714,10 @@ func clusterVersion(route, version string) string {
 
 func clusterSecretPath(route, version string) string {
 	return clusterPath("/secrets"+route, version)
+}
+
+func clusterServicePath(route, version string) string {
+	return clusterPath("/service"+route, version)
 }
 
 func clusterPath(route, version string) string {

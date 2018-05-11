@@ -24,6 +24,7 @@ import (
 	"github.com/libopenstorage/openstorage/osdconfig"
 	sched "github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
+	"github.com/libopenstorage/openstorage/services"
 	"github.com/libopenstorage/systemutils"
 	"github.com/portworx/kvdb"
 	"github.com/sirupsen/logrus"
@@ -52,58 +53,29 @@ var (
 
 // ClusterManager implements the cluster interface
 type ClusterManager struct {
-	size            int
-	listeners       *list.List
-	config          config.ClusterConfig
-	kv              kvdb.Kvdb
-	status          api.Status
-	nodeCache       map[string]api.Node // Cached info on the nodes in the cluster.
-	nodeCacheLock   sync.Mutex
-	nodeStatuses    map[string]api.Status // Set of nodes currently marked down.
-	gossip          gossip.Gossiper
-	gossipVersion   string
-	gossipPort      string
-	gEnabled        bool
-	selfNode        api.Node
-	selfNodeLock    sync.Mutex // Lock that guards data and label of selfNode
-	system          systemutils.System
-	configManager   osdconfig.ConfigManager
-	schedManager    sched.SchedulePolicyProvider
-	objstoreManager objectstore.ObjectStore
-	secretsManager  secrets.Secrets
+	secrets.Secrets
+	sched.SchedulePolicy
+	services.Service
+
+	size          int
+	listeners     *list.List
+	config        config.ClusterConfig
+	kv            kvdb.Kvdb
+	status        api.Status
+	nodeCache     map[string]api.Node // Cached info on the nodes in the cluster.
+	nodeCacheLock sync.Mutex
+	nodeStatuses  map[string]api.Status // Set of nodes currently marked down.
+	gossip        gossip.Gossiper
+	gossipVersion string
+	gossipPort    string
+	gEnabled      bool
+	selfNode      api.Node
+	selfNodeLock  sync.Mutex // Lock that guards data and label of selfNode
+	system        systemutils.System
+	configManager osdconfig.ConfigManager
 }
 
-// Init instantiates a new cluster manager.
-func Init(cfg config.ClusterConfig) error {
-	if inst != nil {
-		return errClusterInitialized
-	}
-
-	kv := kvdb.Instance()
-	if kv == nil {
-		return errors.New("KVDB is not yet initialized.  " +
-			"A valid KVDB instance required for the cluster to start.")
-	}
-
-	inst = &ClusterManager{
-		listeners:    list.New(),
-		config:       cfg,
-		kv:           kv,
-		nodeCache:    make(map[string]api.Node),
-		nodeStatuses: make(map[string]api.Status),
-	}
-
-	return nil
-}
-
-func clusterInst() (cluster.Cluster, error) {
-	if inst == nil {
-		return nil, errClusterNotInitialized
-	}
-	return inst, nil
-}
-
-type checkFunc func(cluster.ClusterInfo) error
+type checkFunc func(ClusterInfo) error
 
 func ifaceToIp(iface *net.Interface) (string, error) {
 	addrs, err := iface.Addrs()
