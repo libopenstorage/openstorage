@@ -11,5 +11,15 @@ endif
 		--ruby_out=. \
 		--grpc_out=. \
 		$(APIDIR)/api.proto
+	grpc_tools_ruby_protoc -I$(APIDIR) \
+		-I$(GOPATH)/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+		--ruby_out=. \
+		--grpc_out=. \
+		$(GOPATH)/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis/google/api/annotations.proto
+	grpc_tools_ruby_protoc -I$(APIDIR) \
+		-I$(GOPATH)/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+		--ruby_out=. \
+		--grpc_out=. \
+		$(GOPATH)/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis/google/api/http.proto
 
 .PHONY: all grpc
