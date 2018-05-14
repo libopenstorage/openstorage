@@ -37,3 +37,7 @@ n_resp = client.Inspect(api_pb2.ClusterInspectRequest(node_id=en_resp.cluster.no
 print n_resp
 ```
 
+## Using
+
+Copy `api*.py` and the `google` directory to your project.
+
