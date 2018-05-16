@@ -106,6 +106,18 @@ func (kva *KvAlert) Raise(a *api.Alert) error {
 	return kva.raise(a)
 }
 
+// RaiseSingleton raises a singleton alert.
+func (kva *KvAlert) RaiseSingleton(a *api.Alert) error {
+	kv := kva.GetKvdbInstance()
+
+	key := fmt.Sprintf("%s_%d", a.ResourceId, a.AlertType)
+	if _, err := kv.Put(key, a, 0); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Raise raises an Alert if does not exists yet.
 func (kva *KvAlert) RaiseIfNotExist(a *api.Alert) error {
 	if strings.TrimSpace(a.ResourceId) == "" ||

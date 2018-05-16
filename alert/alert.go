@@ -52,6 +52,9 @@ type Alert interface {
 	// GetKvdbInstance.
 	GetKvdbInstance() kvdb.Kvdb
 
+	// RaiseSingleton raises a singleton alert.
+	RaiseSingleton(alert *api.Alert) error
+
 	// Raise raises an Alert.
 	Raise(alert *api.Alert) error
 
