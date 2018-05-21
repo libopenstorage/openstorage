@@ -117,7 +117,7 @@ func CheckNullClusterServerConfiguration(config ClusterServerConfiguration) {
 
 	// Set config managers to null/generic implementation if passed as null
 	if config.ConfigSecretManager == nil {
-		config.ConfigSecretManager = secrets.NewSecretManager(secrets.New())
+		config.ConfigSecretManager = secrets.NewDefaultSecrets()
 	}
 
 	if config.ConfigSchedManager == nil {
@@ -162,7 +162,7 @@ func StartClusterAPI(clusterApiBase string, clusterPort uint16) error {
 func GetClusterAPIRoutes() []*Route {
 	return GetClusterAPIRoutesWithConfiguration(
 		ClusterServerConfiguration{
-			ConfigSecretManager: secrets.NewSecretManager(secrets.New()),
+			ConfigSecretManager: secrets.NewDefaultSecrets(),
 		},
 	)
 }
