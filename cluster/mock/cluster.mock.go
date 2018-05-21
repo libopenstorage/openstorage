@@ -8,6 +8,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	api "github.com/libopenstorage/openstorage/api"
 	cluster "github.com/libopenstorage/openstorage/cluster"
+	objectstore "github.com/libopenstorage/openstorage/objectstore"
 	osdconfig "github.com/libopenstorage/openstorage/osdconfig"
 	schedpolicy "github.com/libopenstorage/openstorage/schedpolicy"
 	reflect "reflect"
@@ -246,6 +247,55 @@ func (m *MockCluster) NodeStatus() (api.Status, error) {
 // NodeStatus indicates an expected call of NodeStatus
 func (mr *MockClusterMockRecorder) NodeStatus() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NodeStatus", reflect.TypeOf((*MockCluster)(nil).NodeStatus))
+}
+
+// ObjectStoreCreate mocks base method
+func (m *MockCluster) ObjectStoreCreate(arg0 string) error {
+	ret := m.ctrl.Call(m, "ObjectStoreCreate", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ObjectStoreCreate indicates an expected call of ObjectStoreCreate
+func (mr *MockClusterMockRecorder) ObjectStoreCreate(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectStoreCreate", reflect.TypeOf((*MockCluster)(nil).ObjectStoreCreate), arg0)
+}
+
+// ObjectStoreDelete mocks base method
+func (m *MockCluster) ObjectStoreDelete() error {
+	ret := m.ctrl.Call(m, "ObjectStoreDelete")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ObjectStoreDelete indicates an expected call of ObjectStoreDelete
+func (mr *MockClusterMockRecorder) ObjectStoreDelete() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectStoreDelete", reflect.TypeOf((*MockCluster)(nil).ObjectStoreDelete))
+}
+
+// ObjectStoreInspect mocks base method
+func (m *MockCluster) ObjectStoreInspect() (*objectstore.ObjectstoreInfo, error) {
+	ret := m.ctrl.Call(m, "ObjectStoreInspect")
+	ret0, _ := ret[0].(*objectstore.ObjectstoreInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ObjectStoreInspect indicates an expected call of ObjectStoreInspect
+func (mr *MockClusterMockRecorder) ObjectStoreInspect() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectStoreInspect", reflect.TypeOf((*MockCluster)(nil).ObjectStoreInspect))
+}
+
+// ObjectStoreUpdate mocks base method
+func (m *MockCluster) ObjectStoreUpdate(arg0 bool) error {
+	ret := m.ctrl.Call(m, "ObjectStoreUpdate", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ObjectStoreUpdate indicates an expected call of ObjectStoreUpdate
+func (mr *MockClusterMockRecorder) ObjectStoreUpdate(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectStoreUpdate", reflect.TypeOf((*MockCluster)(nil).ObjectStoreUpdate), arg0)
 }
 
 // PeerStatus mocks base method

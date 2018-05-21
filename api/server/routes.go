@@ -41,5 +41,9 @@ func (c *clusterApi) Routes() []*Route {
 		{verb: "POST", path: clusterPath(client.SchedPath, cluster.APIVersion), fn: c.schedPolicyCreate},
 		{verb: "PUT", path: clusterPath(client.SchedPath, cluster.APIVersion), fn: c.schedPolicyUpdate},
 		{verb: "DELETE", path: clusterPath(client.SchedPath+"/{name}", cluster.APIVersion), fn: c.schedPolicyDelete},
+		{verb: "GET", path: clusterPath(client.ObjectStorePath, cluster.APIVersion), fn: c.objectStoreInspect},
+		{verb: "POST", path: clusterPath(client.ObjectStorePath, cluster.APIVersion), fn: c.objectStoreCreate},
+		{verb: "PUT", path: clusterPath(client.ObjectStorePath, cluster.APIVersion), fn: c.objectStoreUpdate},
+		{verb: "DELETE", path: clusterPath(client.ObjectStorePath+"/delete", cluster.APIVersion), fn: c.objectStoreDelete},
 	}
 }

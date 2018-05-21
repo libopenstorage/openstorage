@@ -19,6 +19,7 @@ import (
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
+	"github.com/libopenstorage/openstorage/objectstore"
 	"github.com/libopenstorage/openstorage/osdconfig"
 	sched "github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
@@ -50,6 +51,7 @@ var (
 type ClusterManager struct {
 	secrets.Secrets
 	sched.SchedulePolicy
+	objectstore.ObjectStore
 
 	size          int
 	listeners     *list.List
