@@ -1,6 +1,9 @@
 package alert
 
-import "time"
+import (
+	"io"
+	"time"
+)
 
 const (
 	NoAlertFound Error = "no alert found for the input key"
@@ -14,13 +17,16 @@ func (e Error) Error() string {
 	return string(e)
 }
 
-// Altertable defines an interface that can be managed using Alerter interface.
+// AlertType uniquely identifies type of an alert using a number
+type AlertType int64
+
+// Altertable defines an interface that can be managed using Manager interface.
 // An instance of Alertable is an alert object
 type Alertable interface {
-	// Type indicates alert type
-	Type() int64
-	// ID is the resource ID of alert generator
-	ID() string
+	// AlertType fetches alert type
+	AlertType() AlertType
+	// ResourceID fetches resource ID of alert generator
+	ResourceID() string
 	// Reason reports a brief comment on why alert was raised
 	Reason() string
 	// FirstSeen is the time stamp of first alert of this type and ID
@@ -31,14 +37,17 @@ type Alertable interface {
 	Marshal() ([]byte, error)
 	// Unmarshal defines deserialization of implementing object
 	Unmarshal(b []byte) error
+	// Print prints the alert info to input writer
+	Print(w io.Writer) error
 }
 
-// Alerter defines an interface to manage alerts
-type Alerter interface {
+// Manager defines an interface to manage alerts
+type Manager interface {
 	// Raise takes an input of Alertable type, serializes it and stores it in a backend service such as etcd
 	Raise(alertable Alertable) error
-	// Retrieve takes a key and returns an instance of Alertable object. It returns NoAlertFound if no entry is found
-	Retrieve(key string) (Alertable, error)
+	// Retrieve takes alertType and resourceID as inputs
+	// and returns an instance of Alertable object. It returns NoAlertFound if no entry is found
+	Retrieve(alertType AlertType, resourceID string) (Alertable, error)
 	// Enumerate lists all alerts that have been raised so far
 	Enumerate() ([]Alertable, error)
 	// Count retrieves number of alerts raised for a particular key
