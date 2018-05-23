@@ -16,6 +16,8 @@ type SchedulePolicy interface {
 	SchedPolicyDelete(name string) error
 	// SchedPolicyEnumerate enumerates all configured policies or the ones specified.
 	SchedPolicyEnumerate() ([]*SchedPolicy, error)
+	// SchedPolicyGet returns schedule policy matching given name.
+	SchedPolicyGet(name string) (*SchedPolicy, error)
 }
 
 func NewDefaultSchedulePolicy() SchedulePolicy {
@@ -38,5 +40,9 @@ func (sp *nullSchedMgr) SchedPolicyDelete(name string) error {
 }
 
 func (sp *nullSchedMgr) SchedPolicyEnumerate() ([]*SchedPolicy, error) {
+	return nil, ErrNotImplemented
+}
+
+func (sp *nullSchedMgr) SchedPolicyGet(name string) (*SchedPolicy, error) {
 	return nil, ErrNotImplemented
 }

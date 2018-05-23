@@ -223,3 +223,60 @@ func TestSchedPolicyEnumerateFailed(t *testing.T) {
 	assert.Nil(t, schedPolicy)
 	assert.Contains(t, err.Error(), "Not Implemented")
 }
+
+func TestSchedPolicyGetSuccess(t *testing.T) {
+
+	// Create a new global test cluster
+	ts, tc := testClusterServer(t)
+	defer ts.Close()
+	defer tc.Finish()
+
+	name := "testsp1"
+	// mock the cluster schedulePolicy response
+	tc.MockClusterSchedPolicy().
+		EXPECT().
+		SchedPolicyGet(name).
+		Return(&sched.SchedPolicy{
+			Name:     name,
+			Schedule: "testsched:test",
+		}, nil)
+
+	// create a cluster client to make the REST call
+	c, err := clusterclient.NewClusterClient(ts.URL, "v1")
+	assert.NoError(t, err)
+
+	// make the REST call
+	restClient := clusterclient.ClusterManager(c)
+	schedPolicy, err := restClient.SchedPolicyGet(name)
+
+	assert.NotNil(t, schedPolicy)
+	assert.EqualValues(t, schedPolicy.Name, name)
+	assert.NoError(t, err)
+}
+
+func TestSchedPolicyGetFailed(t *testing.T) {
+
+	// Create a new global test cluster
+	ts, tc := testClusterServer(t)
+	defer ts.Close()
+	defer tc.Finish()
+
+	name := "testsp"
+	// mock the cluster schedulePolicy response
+	tc.MockClusterSchedPolicy().
+		EXPECT().
+		SchedPolicyGet(name).
+		Return(nil, fmt.Errorf("Not Implemented"))
+
+	// create a cluster client to make the REST call
+	c, err := clusterclient.NewClusterClient(ts.URL, "v1")
+	assert.NoError(t, err)
+
+	// make the REST call
+	restClient := clusterclient.ClusterManager(c)
+	schedPolicy, err := restClient.SchedPolicyGet(name)
+
+	assert.Error(t, err)
+	assert.Nil(t, schedPolicy)
+	assert.Contains(t, err.Error(), "Not Implemented")
+}

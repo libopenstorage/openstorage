@@ -36,6 +36,46 @@ func (c *clusterApi) schedPolicyEnumerate(w http.ResponseWriter, r *http.Request
 	json.NewEncoder(w).Encode(schedPolicies)
 }
 
+// swagger:operation GET /cluster/schedpolicy/{name} schedpolicy schedPolicyGet
+//
+// Get policy details
+//
+// This will return the requested schedule policy details
+//
+// ---
+// produces:
+// - application/json
+// parameters:
+// - name: name
+//   in: path
+//   description: Retrive details of given policy name
+//   required: true
+//   type: string
+// responses:
+//   '200':
+//     description: success
+//     schema:
+//      $ref: '#/definitions/SchedPolicy'
+func (c *clusterApi) schedPolicyGet(w http.ResponseWriter, r *http.Request) {
+	method := "schedPolicyGet"
+	vars := mux.Vars(r)
+	schedName, ok := vars[sched.SchedName]
+
+	if !ok || schedName == "" {
+		c.sendError(c.name, method, w, "Missing Schedule Policy Name", http.StatusBadRequest)
+		return
+	}
+
+	schedPolicy, err := c.SchedPolicyManager.SchedPolicyGet(schedName)
+
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(schedPolicy)
+}
+
 // swagger:operation POST /cluster/schedpolicy schedpolicy schedPolicyCreate
 //
 // Create schedule policy
