@@ -34,10 +34,11 @@ func (m *MockObjectStore) EXPECT() *MockObjectStoreMockRecorder {
 }
 
 // ObjectStoreCreate mocks base method
-func (m *MockObjectStore) ObjectStoreCreate(arg0 string) error {
+func (m *MockObjectStore) ObjectStoreCreate(arg0 string) (*objectstore.ObjectstoreInfo, error) {
 	ret := m.ctrl.Call(m, "ObjectStoreCreate", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(*objectstore.ObjectstoreInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // ObjectStoreCreate indicates an expected call of ObjectStoreCreate

@@ -62,13 +62,13 @@ func (c *clusterApi) objectStoreCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := c.ObjectStoreManager.ObjectStoreCreate(volumeName[0])
+	objInfo, err := c.ObjectStoreManager.ObjectStoreCreate(volumeName[0])
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(objInfo)
 }
 
 // swagger:operation PUT /cluster/objectstore objectstore objectStoreUpdate

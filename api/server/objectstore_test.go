@@ -72,11 +72,16 @@ func TestObjectStoreCreateSuccess(t *testing.T) {
 	defer tc.Finish()
 
 	name := "testvol1"
+	objInfo := &objectstore.ObjectstoreInfo{
+		UUID:     "test-uuid",
+		VolumeID: "test-vol-id",
+		Enabled:  false,
+	}
 	// mock the cluster objectstore response
 	tc.MockClusterObjectStore().
 		EXPECT().
 		ObjectStoreCreate(name).
-		Return(nil)
+		Return(objInfo, nil)
 
 	// create a cluster client to make the REST call
 	c, err := clusterclient.NewClusterClient(ts.URL, "v1")
@@ -84,9 +89,10 @@ func TestObjectStoreCreateSuccess(t *testing.T) {
 
 	// make the REST call
 	restClient := clusterclient.ClusterManager(c)
-	err = restClient.ObjectStoreCreate(name)
+	resp, err := restClient.ObjectStoreCreate(name)
 
 	assert.NoError(t, err)
+	assert.Equal(t, resp.VolumeID, objInfo.VolumeID)
 }
 
 func TestObjectStoreCreateFailed(t *testing.T) {
@@ -101,7 +107,7 @@ func TestObjectStoreCreateFailed(t *testing.T) {
 	tc.MockClusterObjectStore().
 		EXPECT().
 		ObjectStoreCreate(name).
-		Return(fmt.Errorf("Not Implemented"))
+		Return(nil, fmt.Errorf("Not Implemented"))
 
 	// create a cluster client to make the REST call
 	c, err := clusterclient.NewClusterClient(ts.URL, "v1")
@@ -109,9 +115,10 @@ func TestObjectStoreCreateFailed(t *testing.T) {
 
 	// make the REST call
 	restClient := clusterclient.ClusterManager(c)
-	err = restClient.ObjectStoreCreate(name)
+	resp, err := restClient.ObjectStoreCreate(name)
 
 	assert.Error(t, err)
+	assert.Nil(t, resp)
 	assert.Contains(t, err.Error(), "Not Implemented")
 }
 
