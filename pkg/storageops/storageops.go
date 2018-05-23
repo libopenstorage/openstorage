@@ -1,5 +1,7 @@
 package storageops
 
+import "fmt"
+
 const (
 	// SetIdentifierNone is a default identifier to group all disks from a
 	// particular set
@@ -17,6 +19,9 @@ const (
 	// but attached on a remote node
 	ErrVolAttachedOnRemoteNode
 )
+
+// ErrNotSupported is returned when a particular operation is not supported
+var ErrNotSupported = fmt.Errorf("operation not supported")
 
 // StorageError error returned for storage operations
 type StorageError struct {
