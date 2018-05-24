@@ -9,9 +9,10 @@ const (
 	ObjectStorePath = "/objectstore"
 )
 
-func (c *clusterClient) ObjectStoreInspect() (*objectstore.ObjectstoreInfo, error) {
+func (c *clusterClient) ObjectStoreInspect(objectStoreID string) (*objectstore.ObjectstoreInfo, error) {
 	objectstoreInfo := &objectstore.ObjectstoreInfo{}
 	request := c.c.Get().Resource(clusterPath + ObjectStorePath)
+	request.QueryOption(objectstore.ObjectStoreID, objectStoreID)
 	if err := request.Do().Unmarshal(objectstoreInfo); err != nil {
 		return nil, err
 	}
@@ -32,9 +33,10 @@ func (c *clusterClient) ObjectStoreCreate(volume string) (*objectstore.Objectsto
 	return objectstoreInfo, nil
 }
 
-func (c *clusterClient) ObjectStoreUpdate(enable bool) error {
+func (c *clusterClient) ObjectStoreUpdate(objectStoreID string, enable bool) error {
 	req := c.c.Put().Resource(clusterPath + ObjectStorePath)
 	req.QueryOption(objectstore.Enable, strconv.FormatBool(enable))
+	req.QueryOption(objectstore.ObjectStoreID, objectStoreID)
 	res := req.Do()
 	if res.Error() != nil {
 		return res.FormatError()
@@ -43,8 +45,9 @@ func (c *clusterClient) ObjectStoreUpdate(enable bool) error {
 	return nil
 }
 
-func (c *clusterClient) ObjectStoreDelete() error {
+func (c *clusterClient) ObjectStoreDelete(objectStoreID string) error {
 	req := c.c.Delete().Resource(clusterPath + ObjectStorePath + "/delete")
+	req.QueryOption(objectstore.ObjectStoreID, objectStoreID)
 	res := req.Do()
 	if res.Error() != nil {
 		return res.FormatError()

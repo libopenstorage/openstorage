@@ -9,13 +9,13 @@ var (
 
 type ObjectStore interface {
 	// ObjectStoreInspect returns status of objectstore
-	ObjectStoreInspect() (*ObjectstoreInfo, error)
+	ObjectStoreInspect(objectstoreID string) (*ObjectstoreInfo, error)
 	// ObjectStoreCreate objectstore on specified volume
 	ObjectStoreCreate(volume string) (*ObjectstoreInfo, error)
 	// ObjectStoreDelete objectstore from cluster
-	ObjectStoreDelete() error
+	ObjectStoreDelete(objectstoreID string) error
 	// ObjectStoreUpdate enable/disable objectstore
-	ObjectStoreUpdate(enable bool) error
+	ObjectStoreUpdate(objectstoreID string, enable bool) error
 }
 
 func NewDefaultObjectStore() ObjectStore {
@@ -25,7 +25,7 @@ func NewDefaultObjectStore() ObjectStore {
 type nullObjectStoreMgr struct {
 }
 
-func (n *nullObjectStoreMgr) ObjectStoreInspect() (*ObjectstoreInfo, error) {
+func (n *nullObjectStoreMgr) ObjectStoreInspect(objectstoreID string) (*ObjectstoreInfo, error) {
 	return nil, ErrNotImplemented
 }
 
@@ -33,10 +33,10 @@ func (n *nullObjectStoreMgr) ObjectStoreCreate(volume string) (*ObjectstoreInfo,
 	return nil, ErrNotImplemented
 }
 
-func (n *nullObjectStoreMgr) ObjectStoreUpdate(enable bool) error {
+func (n *nullObjectStoreMgr) ObjectStoreUpdate(objectstoreID string, enable bool) error {
 	return ErrNotImplemented
 }
 
-func (n *nullObjectStoreMgr) ObjectStoreDelete() error {
+func (n *nullObjectStoreMgr) ObjectStoreDelete(objectstoreID string) error {
 	return ErrNotImplemented
 }

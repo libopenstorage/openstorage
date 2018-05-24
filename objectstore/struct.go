@@ -1,8 +1,9 @@
 package objectstore
 
 const (
-	Enable     = "enable"
-	VolumeName = "name"
+	Enable        = "enable"
+	VolumeName    = "name"
+	ObjectStoreID = "id"
 )
 
 // Objectstoreinfo returns current objectstore details

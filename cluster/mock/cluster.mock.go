@@ -263,40 +263,40 @@ func (mr *MockClusterMockRecorder) ObjectStoreCreate(arg0 interface{}) *gomock.C
 }
 
 // ObjectStoreDelete mocks base method
-func (m *MockCluster) ObjectStoreDelete() error {
-	ret := m.ctrl.Call(m, "ObjectStoreDelete")
+func (m *MockCluster) ObjectStoreDelete(arg0 string) error {
+	ret := m.ctrl.Call(m, "ObjectStoreDelete", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ObjectStoreDelete indicates an expected call of ObjectStoreDelete
-func (mr *MockClusterMockRecorder) ObjectStoreDelete() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectStoreDelete", reflect.TypeOf((*MockCluster)(nil).ObjectStoreDelete))
+func (mr *MockClusterMockRecorder) ObjectStoreDelete(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectStoreDelete", reflect.TypeOf((*MockCluster)(nil).ObjectStoreDelete), arg0)
 }
 
 // ObjectStoreInspect mocks base method
-func (m *MockCluster) ObjectStoreInspect() (*objectstore.ObjectstoreInfo, error) {
-	ret := m.ctrl.Call(m, "ObjectStoreInspect")
+func (m *MockCluster) ObjectStoreInspect(arg0 string) (*objectstore.ObjectstoreInfo, error) {
+	ret := m.ctrl.Call(m, "ObjectStoreInspect", arg0)
 	ret0, _ := ret[0].(*objectstore.ObjectstoreInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ObjectStoreInspect indicates an expected call of ObjectStoreInspect
-func (mr *MockClusterMockRecorder) ObjectStoreInspect() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectStoreInspect", reflect.TypeOf((*MockCluster)(nil).ObjectStoreInspect))
+func (mr *MockClusterMockRecorder) ObjectStoreInspect(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectStoreInspect", reflect.TypeOf((*MockCluster)(nil).ObjectStoreInspect), arg0)
 }
 
 // ObjectStoreUpdate mocks base method
-func (m *MockCluster) ObjectStoreUpdate(arg0 bool) error {
-	ret := m.ctrl.Call(m, "ObjectStoreUpdate", arg0)
+func (m *MockCluster) ObjectStoreUpdate(arg0 string, arg1 bool) error {
+	ret := m.ctrl.Call(m, "ObjectStoreUpdate", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ObjectStoreUpdate indicates an expected call of ObjectStoreUpdate
-func (mr *MockClusterMockRecorder) ObjectStoreUpdate(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectStoreUpdate", reflect.TypeOf((*MockCluster)(nil).ObjectStoreUpdate), arg0)
+func (mr *MockClusterMockRecorder) ObjectStoreUpdate(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectStoreUpdate", reflect.TypeOf((*MockCluster)(nil).ObjectStoreUpdate), arg0, arg1)
 }
 
 // PeerStatus mocks base method

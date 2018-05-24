@@ -47,38 +47,38 @@ func (mr *MockObjectStoreMockRecorder) ObjectStoreCreate(arg0 interface{}) *gomo
 }
 
 // ObjectStoreDelete mocks base method
-func (m *MockObjectStore) ObjectStoreDelete() error {
-	ret := m.ctrl.Call(m, "ObjectStoreDelete")
+func (m *MockObjectStore) ObjectStoreDelete(arg0 string) error {
+	ret := m.ctrl.Call(m, "ObjectStoreDelete", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ObjectStoreDelete indicates an expected call of ObjectStoreDelete
-func (mr *MockObjectStoreMockRecorder) ObjectStoreDelete() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectStoreDelete", reflect.TypeOf((*MockObjectStore)(nil).ObjectStoreDelete))
+func (mr *MockObjectStoreMockRecorder) ObjectStoreDelete(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectStoreDelete", reflect.TypeOf((*MockObjectStore)(nil).ObjectStoreDelete), arg0)
 }
 
 // ObjectStoreInspect mocks base method
-func (m *MockObjectStore) ObjectStoreInspect() (*objectstore.ObjectstoreInfo, error) {
-	ret := m.ctrl.Call(m, "ObjectStoreInspect")
+func (m *MockObjectStore) ObjectStoreInspect(arg0 string) (*objectstore.ObjectstoreInfo, error) {
+	ret := m.ctrl.Call(m, "ObjectStoreInspect", arg0)
 	ret0, _ := ret[0].(*objectstore.ObjectstoreInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ObjectStoreInspect indicates an expected call of ObjectStoreInspect
-func (mr *MockObjectStoreMockRecorder) ObjectStoreInspect() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectStoreInspect", reflect.TypeOf((*MockObjectStore)(nil).ObjectStoreInspect))
+func (mr *MockObjectStoreMockRecorder) ObjectStoreInspect(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectStoreInspect", reflect.TypeOf((*MockObjectStore)(nil).ObjectStoreInspect), arg0)
 }
 
 // ObjectStoreUpdate mocks base method
-func (m *MockObjectStore) ObjectStoreUpdate(arg0 bool) error {
-	ret := m.ctrl.Call(m, "ObjectStoreUpdate", arg0)
+func (m *MockObjectStore) ObjectStoreUpdate(arg0 string, arg1 bool) error {
+	ret := m.ctrl.Call(m, "ObjectStoreUpdate", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ObjectStoreUpdate indicates an expected call of ObjectStoreUpdate
-func (mr *MockObjectStoreMockRecorder) ObjectStoreUpdate(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectStoreUpdate", reflect.TypeOf((*MockObjectStore)(nil).ObjectStoreUpdate), arg0)
+func (mr *MockObjectStoreMockRecorder) ObjectStoreUpdate(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectStoreUpdate", reflect.TypeOf((*MockObjectStore)(nil).ObjectStoreUpdate), arg0, arg1)
 }
