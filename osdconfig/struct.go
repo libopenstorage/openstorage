@@ -113,6 +113,7 @@ type VaultConfig struct {
 	TLSSkipVerify string `json:"skip_verify,omitempty" enable:"true" hidden:"false" usage:"Vault skip verification"`
 	TLSServerName string `json:"tls_server_name,omitempty" enable:"true" hidden:"false" usage:"Vault TLS server name"`
 	BasePath      string `json:"base_path,omitempty" enable:"true" hidden:"false" usage:"Vault base path"`
+	BackendPath   string `json:"backend_path,omitempty" enable:"true" hidden:"false" usage:"Vault secrets backend mount path"`
 }
 
 func (conf *VaultConfig) Init() *VaultConfig {
