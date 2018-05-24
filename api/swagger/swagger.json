@@ -3051,6 +3051,10 @@
           "type": "string",
           "x-go-name": "Address"
         },
+        "backend_path": {
+          "type": "string",
+          "x-go-name": "BackendPath"
+        },
         "base_path": {
           "type": "string",
           "x-go-name": "BasePath"
