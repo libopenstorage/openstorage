@@ -21,7 +21,6 @@ import (
 // - name: ID
 //   in: query
 //   description: ID of objectstore to inspect
-//   required: true
 //   type: string
 // responses:
 //   '200':
@@ -30,15 +29,15 @@ import (
 //      $ref: '#/definitions/ObjectstoreInfo'
 func (c *clusterApi) objectStoreInspect(w http.ResponseWriter, r *http.Request) {
 	method := "objectStoreInspect"
+	var objstoreID string
 	params := r.URL.Query()
-	objstoreID := params[objectstore.ObjectStoreID]
+	v := params[objectstore.ObjectStoreID]
 
-	if len(objstoreID) == 0 || objstoreID[0] == "" {
-		c.sendError(c.name, method, w, "Missing Objectstore ID", http.StatusBadRequest)
-		return
+	if v != nil {
+		objstoreID = v[0]
 	}
 
-	objInfo, err := c.ObjectStoreManager.ObjectStoreInspect(objstoreID[0])
+	objInfo, err := c.ObjectStoreManager.ObjectStoreInspect(objstoreID)
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -99,7 +98,6 @@ func (c *clusterApi) objectStoreCreate(w http.ResponseWriter, r *http.Request) {
 // - name: enable
 //   in: query
 //   description: enable/disable flag for object store
-//   required: true
 //   type: boolean
 // - name: id
 //   in: query
@@ -110,13 +108,13 @@ func (c *clusterApi) objectStoreCreate(w http.ResponseWriter, r *http.Request) {
 //     description: success
 func (c *clusterApi) objectStoreUpdate(w http.ResponseWriter, r *http.Request) {
 	method := "objectStoreUpdate"
+	var objstoreID string
 	params := r.URL.Query()
 	strEnable := params[objectstore.Enable]
-	objstoreID := params[objectstore.ObjectStoreID]
+	v := params[objectstore.ObjectStoreID]
 
-	if len(objstoreID) == 0 || objstoreID[0] == "" {
-		c.sendError(c.name, method, w, "Missing Objectstore ID", http.StatusBadRequest)
-		return
+	if v != nil {
+		objstoreID = v[0]
 	}
 
 	if len(strEnable) == 0 && strEnable[0] == "" {
@@ -130,7 +128,7 @@ func (c *clusterApi) objectStoreUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = c.ObjectStoreManager.ObjectStoreUpdate(objstoreID[0], enable)
+	err = c.ObjectStoreManager.ObjectStoreUpdate(objstoreID, enable)
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -158,14 +156,15 @@ func (c *clusterApi) objectStoreUpdate(w http.ResponseWriter, r *http.Request) {
 //     description: success
 func (c *clusterApi) objectStoreDelete(w http.ResponseWriter, r *http.Request) {
 	method := "objectStoreDelete"
+	var objstoreID string
 	params := r.URL.Query()
-	objstoreID := params[objectstore.ObjectStoreID]
+	v := params[objectstore.ObjectStoreID]
 
-	if len(objstoreID) == 0 || objstoreID[0] == "" {
-		c.sendError(c.name, method, w, "Missing Objectstore ID", http.StatusBadRequest)
-		return
+	if v != nil {
+		objstoreID = v[0]
 	}
-	err := c.ObjectStoreManager.ObjectStoreDelete(objstoreID[0])
+
+	err := c.ObjectStoreManager.ObjectStoreDelete(objstoreID)
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return

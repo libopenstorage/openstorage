@@ -40,6 +40,39 @@ func TestObjectStoreInspectSuccess(t *testing.T) {
 	assert.Equal(t, resp.VolumeID, objInfo.VolumeID)
 }
 
+func TestObjectStoreInspectWithEmptyObjectstoreIDSuccess(t *testing.T) {
+
+	// Create a new global test cluster
+	ts, tc := testClusterServer(t)
+	defer ts.Close()
+	defer tc.Finish()
+
+	objInfo := &objectstore.ObjectstoreInfo{
+		UUID:     "bbf89474-053b-45c1-b24f-d1dbac52638ic",
+		VolumeID: "328808731955060606",
+		Enabled:  false,
+	}
+
+	objID := ""
+	// mock the cluster objectstore response
+	tc.MockClusterObjectStore().
+		EXPECT().
+		ObjectStoreInspect(objID).
+		Return(objInfo, nil)
+
+	// create a cluster client to make the REST call
+	c, err := clusterclient.NewClusterClient(ts.URL, "v1")
+	assert.NoError(t, err)
+
+	// make the REST call
+	restClient := clusterclient.ClusterManager(c)
+	resp, err := restClient.ObjectStoreInspect(objID)
+
+	assert.NoError(t, err)
+	assert.Equal(t, resp.UUID, objInfo.UUID)
+	assert.Equal(t, resp.VolumeID, objInfo.VolumeID)
+}
+
 func TestObjectStoreInspectFailed(t *testing.T) {
 
 	// Create a new global test cluster
@@ -149,6 +182,32 @@ func TestObjectStoreUpdateSuccess(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestObjectStoreUpdateWithEmptyObjectstoreIDSuccess(t *testing.T) {
+
+	// Create a new global test cluster
+	ts, tc := testClusterServer(t)
+	defer ts.Close()
+	defer tc.Finish()
+
+	enable := true
+	objID := ""
+	// mock the cluster objectstore response
+	tc.MockClusterObjectStore().
+		EXPECT().
+		ObjectStoreUpdate(objID, enable).
+		Return(nil)
+
+	// create a cluster client to make the REST call
+	c, err := clusterclient.NewClusterClient(ts.URL, "v1")
+	assert.NoError(t, err)
+
+	// make the REST call
+	restClient := clusterclient.ClusterManager(c)
+	err = restClient.ObjectStoreUpdate(objID, enable)
+
+	assert.NoError(t, err)
+}
+
 func TestObjectStoreUpdateFailed(t *testing.T) {
 
 	// Create a new global test cluster
@@ -201,6 +260,30 @@ func TestObjectStoreDeleteSuccess(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestObjectStoreDeleteWithEmptyObjectstoreIDSuccess(t *testing.T) {
+
+	// Create a new global test cluster
+	ts, tc := testClusterServer(t)
+	defer ts.Close()
+	defer tc.Finish()
+
+	objID := ""
+	// mock the cluster objectstore response
+	tc.MockClusterObjectStore().
+		EXPECT().
+		ObjectStoreDelete(objID).
+		Return(nil)
+
+	// create a cluster client to make the REST call
+	c, err := clusterclient.NewClusterClient(ts.URL, "v1")
+	assert.NoError(t, err)
+
+	// make the REST call
+	restClient := clusterclient.ClusterManager(c)
+	err = restClient.ObjectStoreDelete(objID)
+
+	assert.NoError(t, err)
+}
 func TestObjectStoreDeleteFailed(t *testing.T) {
 
 	// Create a new global test cluster
