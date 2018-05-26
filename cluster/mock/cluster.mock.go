@@ -8,7 +8,6 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	api "github.com/libopenstorage/openstorage/api"
 	cluster "github.com/libopenstorage/openstorage/cluster"
-	objectstore "github.com/libopenstorage/openstorage/objectstore"
 	osdconfig "github.com/libopenstorage/openstorage/osdconfig"
 	schedpolicy "github.com/libopenstorage/openstorage/schedpolicy"
 	reflect "reflect"
@@ -250,9 +249,9 @@ func (mr *MockClusterMockRecorder) NodeStatus() *gomock.Call {
 }
 
 // ObjectStoreCreate mocks base method
-func (m *MockCluster) ObjectStoreCreate(arg0 string) (*objectstore.ObjectstoreInfo, error) {
+func (m *MockCluster) ObjectStoreCreate(arg0 string) (*api.ObjectstoreInfo, error) {
 	ret := m.ctrl.Call(m, "ObjectStoreCreate", arg0)
-	ret0, _ := ret[0].(*objectstore.ObjectstoreInfo)
+	ret0, _ := ret[0].(*api.ObjectstoreInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -275,9 +274,9 @@ func (mr *MockClusterMockRecorder) ObjectStoreDelete(arg0 interface{}) *gomock.C
 }
 
 // ObjectStoreInspect mocks base method
-func (m *MockCluster) ObjectStoreInspect(arg0 string) (*objectstore.ObjectstoreInfo, error) {
+func (m *MockCluster) ObjectStoreInspect(arg0 string) (*api.ObjectstoreInfo, error) {
 	ret := m.ctrl.Call(m, "ObjectStoreInspect", arg0)
-	ret0, _ := ret[0].(*objectstore.ObjectstoreInfo)
+	ret0, _ := ret[0].(*api.ObjectstoreInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

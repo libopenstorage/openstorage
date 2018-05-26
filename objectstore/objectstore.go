@@ -1,7 +1,16 @@
 //go:generate mockgen -package=mock -destination=mock/objectstore.mock.go github.com/libopenstorage/openstorage/objectstore ObjectStore
 package objectstore
 
-import "errors"
+import (
+	"errors"
+	"github.com/libopenstorage/openstorage/api"
+)
+
+const (
+	Enable        = "enable"
+	VolumeName    = "name"
+	ObjectStoreID = "id"
+)
 
 var (
 	ErrNotImplemented = errors.New("Not Implemented")
@@ -9,9 +18,9 @@ var (
 
 type ObjectStore interface {
 	// ObjectStoreInspect returns status of objectstore
-	ObjectStoreInspect(objectstoreID string) (*ObjectstoreInfo, error)
+	ObjectStoreInspect(objectstoreID string) (*api.ObjectstoreInfo, error)
 	// ObjectStoreCreate objectstore on specified volume
-	ObjectStoreCreate(volume string) (*ObjectstoreInfo, error)
+	ObjectStoreCreate(volume string) (*api.ObjectstoreInfo, error)
 	// ObjectStoreDelete objectstore from cluster
 	ObjectStoreDelete(objectstoreID string) error
 	// ObjectStoreUpdate enable/disable objectstore
@@ -25,11 +34,11 @@ func NewDefaultObjectStore() ObjectStore {
 type nullObjectStoreMgr struct {
 }
 
-func (n *nullObjectStoreMgr) ObjectStoreInspect(objectstoreID string) (*ObjectstoreInfo, error) {
+func (n *nullObjectStoreMgr) ObjectStoreInspect(objectstoreID string) (*api.ObjectstoreInfo, error) {
 	return nil, ErrNotImplemented
 }
 
-func (n *nullObjectStoreMgr) ObjectStoreCreate(volume string) (*ObjectstoreInfo, error) {
+func (n *nullObjectStoreMgr) ObjectStoreCreate(volume string) (*api.ObjectstoreInfo, error) {
 	return nil, ErrNotImplemented
 }
 

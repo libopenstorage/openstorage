@@ -6,7 +6,7 @@ package mock
 
 import (
 	gomock "github.com/golang/mock/gomock"
-	objectstore "github.com/libopenstorage/openstorage/objectstore"
+	api "github.com/libopenstorage/openstorage/api"
 	reflect "reflect"
 )
 
@@ -34,9 +34,9 @@ func (m *MockObjectStore) EXPECT() *MockObjectStoreMockRecorder {
 }
 
 // ObjectStoreCreate mocks base method
-func (m *MockObjectStore) ObjectStoreCreate(arg0 string) (*objectstore.ObjectstoreInfo, error) {
+func (m *MockObjectStore) ObjectStoreCreate(arg0 string) (*api.ObjectstoreInfo, error) {
 	ret := m.ctrl.Call(m, "ObjectStoreCreate", arg0)
-	ret0, _ := ret[0].(*objectstore.ObjectstoreInfo)
+	ret0, _ := ret[0].(*api.ObjectstoreInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -59,9 +59,9 @@ func (mr *MockObjectStoreMockRecorder) ObjectStoreDelete(arg0 interface{}) *gomo
 }
 
 // ObjectStoreInspect mocks base method
-func (m *MockObjectStore) ObjectStoreInspect(arg0 string) (*objectstore.ObjectstoreInfo, error) {
+func (m *MockObjectStore) ObjectStoreInspect(arg0 string) (*api.ObjectstoreInfo, error) {
 	ret := m.ctrl.Call(m, "ObjectStoreInspect", arg0)
-	ret0, _ := ret[0].(*objectstore.ObjectstoreInfo)
+	ret0, _ := ret[0].(*api.ObjectstoreInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

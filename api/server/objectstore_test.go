@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/libopenstorage/openstorage/api"
 	clusterclient "github.com/libopenstorage/openstorage/api/client/cluster"
-	"github.com/libopenstorage/openstorage/objectstore"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,15 +16,15 @@ func TestObjectStoreInspectSuccess(t *testing.T) {
 	defer ts.Close()
 	defer tc.Finish()
 
-	objInfo := &objectstore.ObjectstoreInfo{
-		UUID:     "bbf89474-053b-45c1-b24f-d1dbac52638c",
-		VolumeID: "328808731955060606",
+	objInfo := &api.ObjectstoreInfo{
+		Uuid:     "bbf89474-053b-45c1-b24f-d1dbac52638c",
+		VolumeId: "328808731955060606",
 		Enabled:  false,
 	}
 	// mock the cluster objectstore response
 	tc.MockClusterObjectStore().
 		EXPECT().
-		ObjectStoreInspect(objInfo.UUID).
+		ObjectStoreInspect(objInfo.Uuid).
 		Return(objInfo, nil)
 
 	// create a cluster client to make the REST call
@@ -33,11 +33,11 @@ func TestObjectStoreInspectSuccess(t *testing.T) {
 
 	// make the REST call
 	restClient := clusterclient.ClusterManager(c)
-	resp, err := restClient.ObjectStoreInspect(objInfo.UUID)
+	resp, err := restClient.ObjectStoreInspect(objInfo.Uuid)
 
 	assert.NoError(t, err)
-	assert.Equal(t, resp.UUID, objInfo.UUID)
-	assert.Equal(t, resp.VolumeID, objInfo.VolumeID)
+	assert.Equal(t, resp.Uuid, objInfo.Uuid)
+	assert.Equal(t, resp.VolumeId, objInfo.VolumeId)
 }
 
 func TestObjectStoreInspectWithEmptyObjectstoreIDSuccess(t *testing.T) {
@@ -47,9 +47,9 @@ func TestObjectStoreInspectWithEmptyObjectstoreIDSuccess(t *testing.T) {
 	defer ts.Close()
 	defer tc.Finish()
 
-	objInfo := &objectstore.ObjectstoreInfo{
-		UUID:     "bbf89474-053b-45c1-b24f-d1dbac52638ic",
-		VolumeID: "328808731955060606",
+	objInfo := &api.ObjectstoreInfo{
+		Uuid:     "bbf89474-053b-45c1-b24f-d1dbac52638ic",
+		VolumeId: "328808731955060606",
 		Enabled:  false,
 	}
 
@@ -69,8 +69,8 @@ func TestObjectStoreInspectWithEmptyObjectstoreIDSuccess(t *testing.T) {
 	resp, err := restClient.ObjectStoreInspect(objID)
 
 	assert.NoError(t, err)
-	assert.Equal(t, resp.UUID, objInfo.UUID)
-	assert.Equal(t, resp.VolumeID, objInfo.VolumeID)
+	assert.Equal(t, resp.Uuid, objInfo.Uuid)
+	assert.Equal(t, resp.VolumeId, objInfo.VolumeId)
 }
 
 func TestObjectStoreInspectFailed(t *testing.T) {
@@ -106,9 +106,9 @@ func TestObjectStoreCreateSuccess(t *testing.T) {
 	defer tc.Finish()
 
 	name := "testvol1"
-	objInfo := &objectstore.ObjectstoreInfo{
-		UUID:     "test-uuid",
-		VolumeID: "test-vol-id",
+	objInfo := &api.ObjectstoreInfo{
+		Uuid:     "test-uuid",
+		VolumeId: "test-vol-id",
 		Enabled:  false,
 	}
 	// mock the cluster objectstore response
@@ -126,7 +126,7 @@ func TestObjectStoreCreateSuccess(t *testing.T) {
 	resp, err := restClient.ObjectStoreCreate(name)
 
 	assert.NoError(t, err)
-	assert.Equal(t, resp.VolumeID, objInfo.VolumeID)
+	assert.Equal(t, resp.VolumeId, objInfo.VolumeId)
 }
 
 func TestObjectStoreCreateFailed(t *testing.T) {

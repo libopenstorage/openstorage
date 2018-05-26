@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/objectstore"
 	"strconv"
 )
@@ -9,8 +10,8 @@ const (
 	ObjectStorePath = "/objectstore"
 )
 
-func (c *clusterClient) ObjectStoreInspect(objectStoreID string) (*objectstore.ObjectstoreInfo, error) {
-	objectstoreInfo := &objectstore.ObjectstoreInfo{}
+func (c *clusterClient) ObjectStoreInspect(objectStoreID string) (*api.ObjectstoreInfo, error) {
+	objectstoreInfo := &api.ObjectstoreInfo{}
 	request := c.c.Get().Resource(clusterPath + ObjectStorePath)
 	request.QueryOption(objectstore.ObjectStoreID, objectStoreID)
 	if err := request.Do().Unmarshal(objectstoreInfo); err != nil {
@@ -19,8 +20,8 @@ func (c *clusterClient) ObjectStoreInspect(objectStoreID string) (*objectstore.O
 	return objectstoreInfo, nil
 }
 
-func (c *clusterClient) ObjectStoreCreate(volume string) (*objectstore.ObjectstoreInfo, error) {
-	objectstoreInfo := &objectstore.ObjectstoreInfo{}
+func (c *clusterClient) ObjectStoreCreate(volume string) (*api.ObjectstoreInfo, error) {
+	objectstoreInfo := &api.ObjectstoreInfo{}
 	req := c.c.Post().Resource(clusterPath + ObjectStorePath)
 	// Since volume name can be case sensitive adding it as
 	// query param instead of path variable,
