@@ -280,3 +280,25 @@ func TestSchedPolicyGetFailed(t *testing.T) {
 	assert.Nil(t, schedPolicy)
 	assert.Contains(t, err.Error(), "Not Implemented")
 }
+
+func TestSchedPolicyGetFailedBadParam(t *testing.T) {
+
+	// Create a new global test cluster
+	ts, tc := testClusterServer(t)
+	defer ts.Close()
+	defer tc.Finish()
+
+	name := ""
+
+	// create a cluster client to make the REST call
+	c, err := clusterclient.NewClusterClient(ts.URL, "v1")
+	assert.NoError(t, err)
+
+	// make the REST call
+	restClient := clusterclient.ClusterManager(c)
+	schedPolicy, err := restClient.SchedPolicyGet(name)
+
+	assert.Error(t, err)
+	assert.Nil(t, schedPolicy)
+	assert.Contains(t, err.Error(), "Missing policy name")
+}
