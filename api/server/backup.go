@@ -24,7 +24,7 @@ func (vd *volAPI) cloudBackupCreate(w http.ResponseWriter, r *http.Request) {
 
 	err = d.CloudBackupCreate(backupReq)
 	if err != nil {
-		vd.sendError(method, backupReq.VolumeID, w, err.Error(), http.StatusInternalServerError)
+		vd.sendError(method, backupReq.VolumeId, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -44,23 +44,23 @@ func (vd *volAPI) cloudBackupRestore(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if restoreReq.NodeID != "" {
-		nodeIds, err := vd.nodeIPtoIds([]string{restoreReq.NodeID})
+	if restoreReq.NodeId != "" {
+		nodeIds, err := vd.nodeIPtoIds([]string{restoreReq.NodeId})
 		if err != nil {
-			vd.sendError(method, restoreReq.ID, w, err.Error(), http.StatusInternalServerError)
+			vd.sendError(method, restoreReq.Id, w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		if len(nodeIds) > 0 {
-			if nodeIds[0] != restoreReq.NodeID {
-				restoreReq.NodeID = nodeIds[0]
+			if nodeIds[0] != restoreReq.NodeId {
+				restoreReq.NodeId = nodeIds[0]
 			}
 		}
 	}
 
 	restoreResp, err := d.CloudBackupRestore(restoreReq)
 	if err != nil {
-		vd.sendError(method, restoreReq.ID, w, err.Error(), http.StatusInternalServerError)
+		vd.sendError(method, restoreReq.Id, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	json.NewEncoder(w).Encode(restoreResp)
@@ -82,7 +82,7 @@ func (vd *volAPI) cloudBackupDelete(w http.ResponseWriter, r *http.Request) {
 	}
 	err = d.CloudBackupDelete(deleteReq)
 	if err != nil {
-		vd.sendError(method, deleteReq.ID, w, err.Error(), http.StatusInternalServerError)
+		vd.sendError(method, deleteReq.Id, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -104,7 +104,7 @@ func (vd *volAPI) cloudBackupDeleteAll(w http.ResponseWriter, r *http.Request) {
 	}
 	err = d.CloudBackupDeleteAll(deleteAllReq)
 	if err != nil {
-		vd.sendError(method, deleteAllReq.SrcVolumeID, w, err.Error(), http.StatusInternalServerError)
+		vd.sendError(method, deleteAllReq.SrcVolumeId, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -174,7 +174,7 @@ func (vd *volAPI) cloudBackupCatalog(w http.ResponseWriter, r *http.Request) {
 
 	catalog, err := d.CloudBackupCatalog(catalogReq)
 	if err != nil {
-		vd.sendError(method, catalogReq.ID, w, err.Error(), http.StatusInternalServerError)
+		vd.sendError(method, catalogReq.Id, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	json.NewEncoder(w).Encode(catalog)
@@ -197,7 +197,7 @@ func (vd *volAPI) cloudBackupHistory(w http.ResponseWriter, r *http.Request) {
 
 	history, err := d.CloudBackupHistory(historyReq)
 	if err != nil {
-		vd.sendError(method, historyReq.SrcVolumeID, w, err.Error(), http.StatusInternalServerError)
+		vd.sendError(method, historyReq.SrcVolumeId, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	json.NewEncoder(w).Encode(history)
@@ -219,7 +219,7 @@ func (vd *volAPI) cloudBackupStateChange(w http.ResponseWriter, r *http.Request)
 
 	err = d.CloudBackupStateChange(stateChangeReq)
 	if err != nil {
-		vd.sendError(method, stateChangeReq.SrcVolumeID, w, err.Error(), http.StatusInternalServerError)
+		vd.sendError(method, stateChangeReq.SrcVolumeId, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -241,7 +241,7 @@ func (vd *volAPI) cloudBackupSchedCreate(w http.ResponseWriter, r *http.Request)
 
 	backupSchedResp, err := d.CloudBackupSchedCreate(backupSchedReq)
 	if err != nil {
-		vd.sendError(method, backupSchedReq.SrcVolumeID, w, err.Error(), http.StatusInternalServerError)
+		vd.sendError(method, backupSchedReq.SrcVolumeId, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	json.NewEncoder(w).Encode(backupSchedResp)
@@ -263,7 +263,7 @@ func (vd *volAPI) cloudBackupSchedDelete(w http.ResponseWriter, r *http.Request)
 
 	err = d.CloudBackupSchedDelete(deleteReq)
 	if err != nil {
-		vd.sendError(method, deleteReq.UUID, w, err.Error(), http.StatusInternalServerError)
+		vd.sendError(method, deleteReq.Uuid, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)

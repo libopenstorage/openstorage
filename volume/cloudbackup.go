@@ -30,7 +30,7 @@ func CloudBackupWaitForCompletion(
 	var opError error
 	err := backoff.Retry(func() error {
 		response, err := cl.CloudBackupStatus(&api.CloudBackupStatusRequest{
-			SrcVolumeID: id,
+			SrcVolumeId: id,
 		})
 		if err != nil {
 			return err
@@ -43,13 +43,17 @@ func CloudBackupWaitForCompletion(
 
 		err = fmt.Errorf("CloudBackup operation %v for %v in state %v", opType, id, csStatus.Status)
 		switch csStatus.Status {
-		case api.CloudBackupStatusFailed, api.CloudBackupStatusAborted, api.CloudBackupStatusStopped:
+		case api.CloudBackupStatusType_CloudBackupStatusFailed,
+			api.CloudBackupStatusType_CloudBackupStatusAborted,
+			api.CloudBackupStatusType_CloudBackupStatusStopped:
 			opError = err
 			return nil
-		case api.CloudBackupStatusDone:
+		case api.CloudBackupStatusType_CloudBackupStatusDone:
 			opError = nil
 			return nil
-		case api.CloudBackupStatusNotStarted, api.CloudBackupStatusActive, api.CloudBackupStatusPaused:
+		case api.CloudBackupStatusType_CloudBackupStatusNotStarted,
+			api.CloudBackupStatusType_CloudBackupStatusActive,
+			api.CloudBackupStatusType_CloudBackupStatusPaused:
 			return err
 		default:
 			opError = err

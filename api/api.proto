@@ -1014,3 +1014,222 @@ message ClusterAlertEraseRequest {
 
 message ClusterAlertEraseResponse {
 }
+
+message CloudBackupCreateRequest {
+  // VolumeID of the volume for which cloudbackup is requested
+  string volume_id = 1;
+  // CredentialUUID is cloud credential to be used for backup
+  string credential_uuid = 2;
+  // Full indicates if full backup is desired even though incremental is possible
+  bool full = 3;
+}
+
+message CloudBackupCreateResponse {
+}
+
+message CloudBackupRestoreRequest {
+  // Backup ID being restored
+  string id = 1;
+  // Optional volume Name of the new volume to be created
+  // in the cluster for restoring the cloudbackup
+  string restore_volume_name = 2;
+  // The credential to be used for restore operation
+  string credential_uuid = 3;
+  // Optional for provisioning restore
+  // volume (ResoreVolumeName should not be specified)
+  string node_id = 4;
+}
+
+message CloudBackupRestoreResponse {
+  // VolumeID to which the backup is being restored
+  string restore_volume_id = 1;
+}
+
+message CloudBackupGenericRequest {
+  // Optional source id of the volume for the request
+  string src_volume_id = 1;
+  // ClusterID is the optional clusterID for the request
+  string cluster_id = 2;
+  // CredentialUUID is the credential for cloud to be used for the request
+  string credential_uuid = 3;
+  // All if set to true, backups for all clusters in the cloud are processed
+  bool all = 4;
+}
+
+message CloudBackupInfo {
+  // ID is the ID of the cloud backup
+  string id = 1;
+  // SrcVolumeID is Source volumeID of the backup
+  string src_volume_id = 2;
+  // SrcvolumeName is name of the sourceVolume of the backup
+  string src_volume_name = 3;
+  // Timestamp is the timestamp at which the source volume
+  // was backed up to cloud
+  google.protobuf.Timestamp timestamp = 4;
+  // Metadata associated with the backup
+  map<string, string> metadata = 5;
+  // Status indicates the status of the backup
+  string status = 6;
+}
+
+message CloudBackupEnumerateRequest {
+  // Optional source id of the volume for the request
+  string src_volume_id = 1;
+  // ClusterID is the optional clusterID for the request
+  string cluster_id = 2;
+  // CredentialUUID is the credential for cloud to be used for the request
+  string credential_uuid = 3;
+  // All if set to true, backups for all clusters in the cloud are processed
+  bool all = 4;
+}
+
+message CloudBackupEnumerateResponse {
+  // Backups is list of backups in cloud for given volume/cluster/s
+  repeated CloudBackupInfo backups = 1;
+}
+
+message CloudBackupDeleteRequest {
+  // ID is the ID of the cloud backup
+  string id = 1;
+  // CredentialUUID is the credential for cloud to be used for the request
+  string credential_uuid = 2;
+  // Force Delete cloudbackup even if there are dependencies
+  bool force = 3;
+}
+
+message CloudBackupDeleteAllRequest {
+  // Optional source id of the volume for the request
+  string src_volume_id = 1;
+  // ClusterID is the optional clusterID for the request
+  string cluster_id = 2;
+  // CredentialUUID is the credential for cloud to be used for the request
+  string credential_uuid = 3;
+  // All if set to true, backups for all clusters in the cloud are processed
+  bool all = 4;
+}
+
+message CloudBackupStatusRequest {
+  // SrcVolumeID optional volumeID to list status of backup/restore
+  string src_volume_id = 1;
+  // Local indicates if only those backups/restores that are
+  // active on current node must be returned
+  bool local = 2;
+}
+
+enum CloudBackupOpType {
+  CloudBackupOp = 0;
+  CloudRestoreOp = 1;
+}
+
+enum CloudBackupStatusType {
+  CloudBackupStatusNotStarted = 0;
+  CloudBackupStatusDone = 1;
+  CloudBackupStatusAborted = 2;
+  CloudBackupStatusPaused = 3;
+  CloudBackupStatusStopped = 4;
+  CloudBackupStatusActive = 5;
+  CloudBackupStatusFailed = 6;
+}
+
+message CloudBackupStatus {
+  // ID is the ID for the operation
+  string id = 1;
+  // OpType indicates if this is a backup or restore
+  CloudBackupOpType optype = 2;
+  // State indicates if the op is currently active/done/failed
+  CloudBackupStatusType status = 3;
+  // BytesDone indicates total Bytes uploaded/downloaded
+  uint64 bytes_done = 4;
+  // StartTime indicates Op's start time
+  google.protobuf.Timestamp start_time = 5;
+  // CompletedTime indicates Op's completed time
+  google.protobuf.Timestamp comleted_time = 6;
+  // NodeID is the ID of the node where this Op is active
+  string node_id = 7;
+}
+
+message CloudBackupStatusResponse {
+  // statuses is list of currently active/failed/done backup/restores
+  map<string, CloudBackupStatus> statuses = 1;
+}
+
+message CloudBackupCatalogRequest {
+  // ID is Backup ID in the cloud
+  string id = 1;
+  // is the credential for cloud
+  string credential_uuid = 2;
+}
+
+message CloudBackupCatalogResponse {
+  // Contents is listing of backup contents
+  repeated string contents = 1;
+}
+
+message CloudBackupHistoryRequest {
+  // SrcVolumeID is volumeID for which history of backup/restore
+  // is being requested
+  string src_volume_id = 1;
+}
+
+message CloudBackupHistoryItem {
+  // SrcVolumeID is volume ID which was backedup
+  string src_volume_id = 1;
+  // TimeStamp is the time at which either backup completed/failed
+  google.protobuf.Timestamp timestamp = 2;
+  // Status indicates whether backup was completed/failed
+  string status = 3;
+}
+
+message CloudBackupHistoryResponse {
+  // HistoryList is list of past backup/restores in the cluster
+  repeated CloudBackupHistoryItem history_list = 1;
+}
+
+message CloudBackupStateChangeRequest {
+  // SrcVolumeID is volume ID on which backup/restore
+  // state change is being requested
+  string src_volume_id = 1;
+  // RequestedState is desired state of the op
+  // can be pause/resume/stop
+  string requested_state = 2;
+}
+
+message CloudBackupScheduleInfo {
+  // SrcVolumeID is the schedule's source volume
+  string src_volume_id = 1;
+  // CredentialUUID is the cloud credential used with this schedule
+  string credential_uuid = 2;
+  // Schedule is the frequence of backup
+  string schedule = 3;
+  // MaxBackups are the maximum number of backups retained
+  // in cloud.Older backups are deleted
+  uint32 max_backups = 4;
+}
+
+message CloudBackupSchedCreateRequest {
+  // SrcVolumeID is the schedule's source volume
+  string src_volume_id = 1;
+  // CredentialUUID is the cloud credential used with this schedule
+  string credential_uuid = 2;
+  // Schedule is the frequence of backup
+  string schedule = 3;
+  // MaxBackups are the maximum number of backups retained
+  // in cloud.Older backups are deleted
+  uint32 max_backups = 4;
+}
+
+message CloudBackupSchedCreateResponse {
+  // UUID is the UUID of the newly created schedule
+  string uuid = 1;
+}
+
+message CloudBackupSchedDeleteRequest {
+  // UUID is UUID of the schedule to be deleted
+  string uuid = 1;
+}
+
+message CloudBackupSchedEnumerateResponse {
+  // Schedule is map of schedule uuid to scheduleInfo
+  map<string, CloudBackupScheduleInfo> schedules = 1;
+}
+
