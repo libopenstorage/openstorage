@@ -124,6 +124,19 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "openstorage.api.Alerts" do
     repeated :alert, :message, 1, "openstorage.api.Alert"
   end
+  add_message "openstorage.api.ObjectstoreInfo" do
+    optional :uuid, :string, 1
+    optional :volume_id, :string, 2
+    optional :enabled, :bool, 3
+    optional :status, :string, 4
+    optional :action, :int64, 5
+    optional :access_key, :string, 6
+    optional :secret_key, :string, 7
+    repeated :endpoints, :string, 8
+    optional :current_endPoint, :string, 9
+    optional :access_port, :int64, 10
+    optional :region, :string, 11
+  end
   add_message "openstorage.api.VolumeCreateRequest" do
     optional :locator, :message, 1, "openstorage.api.VolumeLocator"
     optional :source, :message, 2, "openstorage.api.Source"
@@ -325,6 +338,115 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   end
   add_message "openstorage.api.ClusterAlertEraseResponse" do
   end
+  add_message "openstorage.api.CloudBackupCreateRequest" do
+    optional :volume_id, :string, 1
+    optional :credential_uuid, :string, 2
+    optional :full, :bool, 3
+  end
+  add_message "openstorage.api.CloudBackupCreateResponse" do
+  end
+  add_message "openstorage.api.CloudBackupRestoreRequest" do
+    optional :id, :string, 1
+    optional :restore_volume_name, :string, 2
+    optional :credential_uuid, :string, 3
+    optional :node_id, :string, 4
+  end
+  add_message "openstorage.api.CloudBackupRestoreResponse" do
+    optional :restore_volume_id, :string, 1
+  end
+  add_message "openstorage.api.CloudBackupGenericRequest" do
+    optional :src_volume_id, :string, 1
+    optional :cluster_id, :string, 2
+    optional :credential_uuid, :string, 3
+    optional :all, :bool, 4
+  end
+  add_message "openstorage.api.CloudBackupInfo" do
+    optional :id, :string, 1
+    optional :src_volume_id, :string, 2
+    optional :src_volume_name, :string, 3
+    optional :timestamp, :message, 4, "google.protobuf.Timestamp"
+    map :metadata, :string, :string, 5
+    optional :status, :string, 6
+  end
+  add_message "openstorage.api.CloudBackupEnumerateRequest" do
+    optional :src_volume_id, :string, 1
+    optional :cluster_id, :string, 2
+    optional :credential_uuid, :string, 3
+    optional :all, :bool, 4
+  end
+  add_message "openstorage.api.CloudBackupEnumerateResponse" do
+    repeated :backups, :message, 1, "openstorage.api.CloudBackupInfo"
+  end
+  add_message "openstorage.api.CloudBackupDeleteRequest" do
+    optional :id, :string, 1
+    optional :credential_uuid, :string, 2
+    optional :force, :bool, 3
+  end
+  add_message "openstorage.api.CloudBackupDeleteAllRequest" do
+    optional :src_volume_id, :string, 1
+    optional :cluster_id, :string, 2
+    optional :credential_uuid, :string, 3
+    optional :all, :bool, 4
+  end
+  add_message "openstorage.api.CloudBackupStatusRequest" do
+    optional :src_volume_id, :string, 1
+    optional :local, :bool, 2
+  end
+  add_message "openstorage.api.CloudBackupStatus" do
+    optional :id, :string, 1
+    optional :optype, :enum, 2, "openstorage.api.CloudBackupOpType"
+    optional :status, :enum, 3, "openstorage.api.CloudBackupStatusType"
+    optional :bytes_done, :uint64, 4
+    optional :start_time, :message, 5, "google.protobuf.Timestamp"
+    optional :comleted_time, :message, 6, "google.protobuf.Timestamp"
+    optional :node_id, :string, 7
+  end
+  add_message "openstorage.api.CloudBackupStatusResponse" do
+    map :statuses, :string, :message, 1, "openstorage.api.CloudBackupStatus"
+  end
+  add_message "openstorage.api.CloudBackupCatalogRequest" do
+    optional :id, :string, 1
+    optional :credential_uuid, :string, 2
+  end
+  add_message "openstorage.api.CloudBackupCatalogResponse" do
+    repeated :contents, :string, 1
+  end
+  add_message "openstorage.api.CloudBackupHistoryRequest" do
+    optional :src_volume_id, :string, 1
+  end
+  add_message "openstorage.api.CloudBackupHistoryItem" do
+    optional :src_volume_id, :string, 1
+    optional :timestamp, :message, 2, "google.protobuf.Timestamp"
+    optional :status, :string, 3
+  end
+  add_message "openstorage.api.CloudBackupHistoryResponse" do
+    repeated :history_list, :message, 1, "openstorage.api.CloudBackupHistoryItem"
+  end
+  add_message "openstorage.api.CloudBackupStateChangeRequest" do
+    optional :src_volume_id, :string, 1
+    optional :requested_state, :string, 2
+  end
+  add_message "openstorage.api.CloudBackupScheduleInfo" do
+    optional :src_volume_id, :string, 1
+    optional :credential_uuid, :string, 2
+    optional :schedule, :string, 3
+    optional :max_backups, :uint32, 4
+  end
+  add_message "openstorage.api.CloudBackupSchedCreateRequest" do
+    optional :src_volume_id, :string, 1
+    optional :credential_uuid, :string, 2
+    optional :schedule, :string, 3
+    optional :max_backups, :uint32, 4
+  end
+  add_message "openstorage.api.CloudBackupSchedCreateResponse" do
+    optional :uuid, :string, 1
+  end
+  add_message "openstorage.api.CloudBackupSchedDeleteRequest" do
+    optional :uuid, :string, 1
+  end
+  add_message "openstorage.api.CloudBackupSchedEnumerateResponse" do
+    map :schedules, :string, :message, 1, "openstorage.api.CloudBackupScheduleInfo"
+  end
   add_enum "openstorage.api.Status" do
     value :STATUS_NONE, 0
     value :STATUS_INIT, 1
@@ -440,6 +562,19 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     value :OP_FLAGS_NONE, 1
     value :OP_FLAGS_DETACH_FORCE, 2
   end
+  add_enum "openstorage.api.CloudBackupOpType" do
+    value :CloudBackupOp, 0
+    value :CloudRestoreOp, 1
+  end
+  add_enum "openstorage.api.CloudBackupStatusType" do
+    value :CloudBackupStatusNotStarted, 0
+    value :CloudBackupStatusDone, 1
+    value :CloudBackupStatusAborted, 2
+    value :CloudBackupStatusPaused, 3
+    value :CloudBackupStatusStopped, 4
+    value :CloudBackupStatusActive, 5
+    value :CloudBackupStatusFailed, 6
+  end
 end
 
 module Openstorage
@@ -456,6 +591,7 @@ module Openstorage
     Stats = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.Stats").msgclass
     Alert = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.Alert").msgclass
     Alerts = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.Alerts").msgclass
+    ObjectstoreInfo = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.ObjectstoreInfo").msgclass
     VolumeCreateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.VolumeCreateRequest").msgclass
     VolumeResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.VolumeResponse").msgclass
     VolumeCreateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.VolumeCreateResponse").msgclass
@@ -508,6 +644,30 @@ module Openstorage
     ClusterAlertClearResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.ClusterAlertClearResponse").msgclass
     ClusterAlertEraseRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.ClusterAlertEraseRequest").msgclass
     ClusterAlertEraseResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.ClusterAlertEraseResponse").msgclass
+    CloudBackupCreateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudBackupCreateRequest").msgclass
+    CloudBackupCreateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudBackupCreateResponse").msgclass
+    CloudBackupRestoreRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudBackupRestoreRequest").msgclass
+    CloudBackupRestoreResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudBackupRestoreResponse").msgclass
+    CloudBackupGenericRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudBackupGenericRequest").msgclass
+    CloudBackupInfo = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudBackupInfo").msgclass
+    CloudBackupEnumerateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudBackupEnumerateRequest").msgclass
+    CloudBackupEnumerateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudBackupEnumerateResponse").msgclass
+    CloudBackupDeleteRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudBackupDeleteRequest").msgclass
+    CloudBackupDeleteAllRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudBackupDeleteAllRequest").msgclass
+    CloudBackupStatusRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudBackupStatusRequest").msgclass
+    CloudBackupStatus = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudBackupStatus").msgclass
+    CloudBackupStatusResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudBackupStatusResponse").msgclass
+    CloudBackupCatalogRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudBackupCatalogRequest").msgclass
+    CloudBackupCatalogResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudBackupCatalogResponse").msgclass
+    CloudBackupHistoryRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudBackupHistoryRequest").msgclass
+    CloudBackupHistoryItem = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudBackupHistoryItem").msgclass
+    CloudBackupHistoryResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudBackupHistoryResponse").msgclass
+    CloudBackupStateChangeRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudBackupStateChangeRequest").msgclass
+    CloudBackupScheduleInfo = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudBackupScheduleInfo").msgclass
+    CloudBackupSchedCreateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudBackupSchedCreateRequest").msgclass
+    CloudBackupSchedCreateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudBackupSchedCreateResponse").msgclass
+    CloudBackupSchedDeleteRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudBackupSchedDeleteRequest").msgclass
+    CloudBackupSchedEnumerateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudBackupSchedEnumerateResponse").msgclass
     Status = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.Status").enummodule
     DriverType = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.DriverType").enummodule
     FSType = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.FSType").enummodule
@@ -524,5 +684,7 @@ module Openstorage
     ClusterNotify = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.ClusterNotify").enummodule
     AttachState = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.AttachState").enummodule
     OperationFlags = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.OperationFlags").enummodule
+    CloudBackupOpType = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudBackupOpType").enummodule
+    CloudBackupStatusType = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudBackupStatusType").enummodule
   end
 end
