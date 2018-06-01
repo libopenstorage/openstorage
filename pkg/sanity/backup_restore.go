@@ -17,7 +17,6 @@ limitations under the License.
 package sanity
 
 import (
-	"strings"
 	"time"
 
 	"github.com/libopenstorage/openstorage/api"
@@ -173,18 +172,18 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 					Expect(err).To(BeNil())
 
 					bkpStatus = bkpStatusResp.Statuses[volumeID]
-					if strings.Contains(bkpStatus.Status, "Done") {
+					if bkpStatus.Status == api.CloudBackupStatusDone {
 						break
 					}
-					if strings.Contains(bkpStatus.Status, "Active") {
+					if bkpStatus.Status == api.CloudBackupStatusActive {
 						time.Sleep(time.Second * 10)
 						timeout += 10
 					}
-					if strings.Contains(bkpStatus.Status, "Failed") {
+					if bkpStatus.Status == api.CloudBackupStatusFailed {
 						break
 					}
 				}
-				Expect(bkpStatus.Status).To(BeEquivalentTo("Done"))
+				Expect(bkpStatus.Status).To(BeEquivalentTo(api.CloudBackupStatusDone))
 			}
 		})
 	})
@@ -278,18 +277,18 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 					Expect(err).To(BeNil())
 
 					bkpStatus = bkpStatusResp.Statuses[volumeID]
-					if strings.Contains(bkpStatus.Status, "Done") {
+					if bkpStatus.Status == api.CloudBackupStatusDone {
 						break
 					}
-					if strings.Contains(bkpStatus.Status, "Active") {
+					if bkpStatus.Status == api.CloudBackupStatusActive {
 						time.Sleep(time.Second * 10)
 						timeout += 10
 					}
-					if strings.Contains(bkpStatus.Status, "Failed") {
+					if bkpStatus.Status == api.CloudBackupStatusFailed {
 						break
 					}
 				}
-				Expect(bkpStatus.Status).To(BeEquivalentTo("Done"))
+				Expect(bkpStatus.Status).To(BeEquivalentTo(api.CloudBackupStatusDone))
 
 				By("Backup enumerate")
 
@@ -405,18 +404,18 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 					Expect(err).To(BeNil())
 
 					bkpStatus = bkpStatusResp.Statuses[volumeID]
-					if strings.Contains(bkpStatus.Status, "Done") {
+					if bkpStatus.Status == api.CloudBackupStatusDone {
 						break
 					}
-					if strings.Contains(bkpStatus.Status, "Active") {
+					if bkpStatus.Status == api.CloudBackupStatusActive {
 						time.Sleep(time.Second * 10)
 						timeout += 10
 					}
-					if strings.Contains(bkpStatus.Status, "Failed") {
+					if bkpStatus.Status == api.CloudBackupStatusFailed {
 						break
 					}
 				}
-				Expect(bkpStatus.Status).To(BeEquivalentTo("Done"))
+				Expect(bkpStatus.Status).To(BeEquivalentTo(api.CloudBackupStatusDone))
 
 				By("Backup enumerate")
 				bkpEnumReq := &api.CloudBackupEnumerateRequest{
@@ -799,18 +798,18 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 					Expect(err).To(BeNil())
 
 					bkpStatus = bkpStatusResp.Statuses[volumeID]
-					if strings.Contains(bkpStatus.Status, "Done") {
+					if bkpStatus.Status == api.CloudBackupStatusDone {
 						break
 					}
-					if strings.Contains(bkpStatus.Status, "Active") {
+					if bkpStatus.Status == api.CloudBackupStatusActive {
 						time.Sleep(time.Second * 10)
 						timeout += 10
 					}
-					if strings.Contains(bkpStatus.Status, "Failed") {
+					if bkpStatus.Status == api.CloudBackupStatusFailed {
 						break
 					}
 				}
-				Expect(bkpStatus.Status).To(BeEquivalentTo("Done"))
+				Expect(bkpStatus.Status).To(BeEquivalentTo(api.CloudBackupStatusDone))
 
 				By("Backup enumerate")
 				bkpEnumReq := &api.CloudBackupEnumerateRequest{
