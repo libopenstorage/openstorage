@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/cluster"
+	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
@@ -39,7 +39,7 @@ func init() {
 		logrus.Panicf("Failed to set KVDB instance")
 	}
 
-	cluster.Init(config.ClusterConfig{
+	clustermanager.Init(config.ClusterConfig{
 		ClusterId: "fakecluster",
 		NodeId:    "fakeNode",
 	})

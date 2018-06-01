@@ -10,7 +10,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/errors"
-	"github.com/libopenstorage/openstorage/cluster"
+	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
 )
@@ -71,7 +71,7 @@ func (vd *volAPI) nodeIPtoIds(nodes []string) ([]string, error) {
 	nodeIds := make([]string, 0)
 
 	// Get cluster instance
-	c, err := cluster.Inst()
+	c, err := clustermanager.Inst()
 	if err != nil {
 		return nodeIds, err
 	}

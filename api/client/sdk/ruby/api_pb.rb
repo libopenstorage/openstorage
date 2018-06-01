@@ -720,6 +720,53 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "openstorage.api.CloudMigrateStatusResponse" do
     map :info, :string, :message, 1, "openstorage.api.CloudMigrateInfoList"
   end
+  add_message "openstorage.api.ClusterPairCreateRequest" do
+    optional :remote_cluster_ip, :string, 1
+    optional :remote_cluster_port, :uint32, 2
+    optional :remote_cluster_token, :string, 3
+    optional :set_default, :bool, 4
+  end
+  add_message "openstorage.api.ClusterPairCreateResponse" do
+    optional :remote_cluster_id, :string, 1
+    optional :remote_cluster_name, :string, 2
+  end
+  add_message "openstorage.api.ClusterPairProcessRequest" do
+    optional :source_cluster_id, :string, 1
+    optional :remote_cluster_token, :string, 2
+  end
+  add_message "openstorage.api.ClusterPairProcessResponse" do
+    optional :remote_cluster_id, :string, 1
+    optional :remote_cluster_name, :string, 2
+    map :options, :string, :string, 3
+  end
+  add_message "openstorage.api.ClusterPairDeleteRequest" do
+    optional :cluster_id, :string, 1
+  end
+  add_message "openstorage.api.ClusterPairTokenGetRequest" do
+    optional :reset_token, :bool, 1
+  end
+  add_message "openstorage.api.ClusterPairTokenGetResponse" do
+    optional :token, :string, 1
+  end
+  add_message "openstorage.api.ClusterPairInfo" do
+    optional :id, :string, 1
+    optional :name, :string, 2
+    optional :ip, :string, 3
+    optional :port, :uint32, 4
+    optional :secure, :bool, 5
+    optional :token, :string, 6
+    map :options, :string, :string, 7
+  end
+  add_message "openstorage.api.ClusterPairGetRequest" do
+    optional :id, :string, 1
+  end
+  add_message "openstorage.api.ClusterPairGetResponse" do
+    optional :pair_info, :message, 1, "openstorage.api.ClusterPairInfo"
+  end
+  add_message "openstorage.api.ClusterPairsEnumerateResponse" do
+    optional :default_id, :string, 1
+    map :pairs, :string, :message, 2, "openstorage.api.ClusterPairInfo"
+  end
   add_enum "openstorage.api.Status" do
     value :STATUS_NONE, 0
     value :STATUS_INIT, 1
@@ -1017,6 +1064,17 @@ module Openstorage
     CloudMigrateInfo = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudMigrateInfo").msgclass
     CloudMigrateInfoList = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudMigrateInfoList").msgclass
     CloudMigrateStatusResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudMigrateStatusResponse").msgclass
+    ClusterPairCreateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.ClusterPairCreateRequest").msgclass
+    ClusterPairCreateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.ClusterPairCreateResponse").msgclass
+    ClusterPairProcessRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.ClusterPairProcessRequest").msgclass
+    ClusterPairProcessResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.ClusterPairProcessResponse").msgclass
+    ClusterPairDeleteRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.ClusterPairDeleteRequest").msgclass
+    ClusterPairTokenGetRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.ClusterPairTokenGetRequest").msgclass
+    ClusterPairTokenGetResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.ClusterPairTokenGetResponse").msgclass
+    ClusterPairInfo = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.ClusterPairInfo").msgclass
+    ClusterPairGetRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.ClusterPairGetRequest").msgclass
+    ClusterPairGetResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.ClusterPairGetResponse").msgclass
+    ClusterPairsEnumerateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.ClusterPairsEnumerateResponse").msgclass
     Status = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.Status").enummodule
     DriverType = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.DriverType").enummodule
     FSType = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.FSType").enummodule

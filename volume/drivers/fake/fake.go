@@ -27,6 +27,7 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
+	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers/common"
 	"github.com/pborman/uuid"
@@ -93,7 +94,7 @@ func newFakeDriver(params map[string]string) (*driver, error) {
 		kv:                 kv,
 	}
 
-	inst.thisCluster, err = cluster.Inst()
+	inst.thisCluster, err = clustermanager.Inst()
 	if err != nil {
 		return nil, err
 	}

@@ -2,13 +2,11 @@
 package cluster
 
 import (
-	"container/list"
 	"errors"
 	"time"
 
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/objectstore"
 	"github.com/libopenstorage/openstorage/osdconfig"
 	sched "github.com/libopenstorage/openstorage/schedpolicy"
@@ -16,24 +14,21 @@ import (
 	"github.com/portworx/kvdb"
 )
 
-var (
-	inst *ClusterManager
-
-	errClusterInitialized    = errors.New("openstorage.cluster: already initialized")
-	errClusterNotInitialized = errors.New("openstorage.cluster: not initialized")
-
-	// Inst returns an instance of an already instantiated cluster manager.
-	// This function can be overridden for testing purposes
-	Inst = func() (Cluster, error) {
-		return clusterInst()
-	}
-)
-
 const (
 	// APIVersion for cluster APIs
 	APIVersion = "v1"
 	// APIBase url for cluster APIs
 	APIBase = "/var/lib/osd/cluster/"
+)
+
+var (
+	// ErrNodeRemovePending is returned when Node remove does not succeed and is
+	// kept in pending state
+	ErrNodeRemovePending = errors.New("Node remove is pending")
+	ErrInitNodeNotFound  = errors.New("This node is already initialized but " +
+		"could not be found in the cluster map.")
+	ErrNodeDecommissioned   = errors.New("Node is decomissioned.")
+	ErrRemoveCausesDataLoss = errors.New("Cannot remove node without data loss")
 )
 
 // ClusterServerConfiguration holds manager implementation
@@ -68,6 +63,7 @@ type ClusterInfo struct {
 	Status      api.Status
 	Id          string
 	NodeEntries map[string]NodeEntry
+	PairToken   string
 }
 
 // ClusterInitState is the snapshot state which should be used to initialize
@@ -118,6 +114,18 @@ type ClusterListener interface {
 	ClusterListenerStatusOps
 	ClusterListenerGenericOps
 	ClusterListenerAlertOps
+	ClusterListenerPairOps
+}
+
+// ClusterListenerPairOps is an interface that must be implemented to support
+// pairing of multiple clusters. It will be used at the destination cluster to
+// listen for incoming pairing requests.
+type ClusterListenerPairOps interface {
+	// CreatePair is called when we are pairing with another cluster
+	CreatePair(self *api.Node, response *api.ClusterPairProcessResponse) error
+
+	// ProcessPairRequest is called when we get a pair request from another cluster
+	ProcessPairRequest(self *api.Node, response *api.ClusterPairProcessResponse) error
 }
 
 // ClusterListenerAlertOps is a wrapper over ClusterAlerts interface
@@ -240,6 +248,26 @@ type ClusterAlerts interface {
 	EraseAlert(resource api.ResourceType, alertID int64) error
 }
 
+type ClusterPair interface {
+	// PairCreate with a remote cluster
+	CreatePair(*api.ClusterPairCreateRequest) (*api.ClusterPairCreateResponse, error)
+
+	// PairProcess handles an incoming pair request from a remote cluster
+	ProcessPairRequest(*api.ClusterPairProcessRequest) (*api.ClusterPairProcessResponse, error)
+
+	// GetPair returns pair information for a cluster
+	GetPair(string) (*api.ClusterPairGetResponse, error)
+
+	// EnumeratePairs returns list of cluster pairs
+	EnumeratePairs() (*api.ClusterPairsEnumerateResponse, error)
+
+	// DeletePair Delete a cluster pairing
+	DeletePair(string) error
+
+	// GetPairToken gets the authentication token for this cluster
+	GetPairToken(bool) (*api.ClusterPairTokenGetResponse, error)
+}
+
 // Cluster is the API that a cluster provider will implement.
 type Cluster interface {
 	// Inspect the node given a UUID.
@@ -271,6 +299,7 @@ type Cluster interface {
 	ClusterRemove
 	ClusterStatus
 	ClusterAlerts
+	ClusterPair
 	osdconfig.ConfigCaller
 	secrets.Secrets
 	sched.SchedulePolicyProvider
@@ -279,36 +308,6 @@ type Cluster interface {
 
 // ClusterNotify is the callback function listeners can use to notify cluster manager
 type ClusterNotify func(string, api.ClusterNotify) (string, error)
-
-// Init instantiates a new cluster manager.
-func Init(cfg config.ClusterConfig) error {
-	if inst != nil {
-		return errClusterInitialized
-	}
-
-	kv := kvdb.Instance()
-	if kv == nil {
-		return errors.New("KVDB is not yet initialized.  " +
-			"A valid KVDB instance required for the cluster to start.")
-	}
-
-	inst = &ClusterManager{
-		listeners:    list.New(),
-		config:       cfg,
-		kv:           kv,
-		nodeCache:    make(map[string]api.Node),
-		nodeStatuses: make(map[string]api.Status),
-	}
-
-	return nil
-}
-
-func clusterInst() (Cluster, error) {
-	if inst == nil {
-		return nil, errClusterNotInitialized
-	}
-	return inst, nil
-}
 
 // NullClusterListener is a NULL implementation of ClusterListener functions
 // ClusterListeners should use this as the base override functions they
@@ -419,6 +418,20 @@ func (nc *NullClusterListener) ClearAlert(
 func (nc *NullClusterListener) EraseAlert(
 	resource api.ResourceType,
 	alertID int64,
+) error {
+	return nil
+}
+
+func (nc *NullClusterListener) CreatePair(
+	self *api.Node,
+	response *api.ClusterPairProcessResponse,
+) error {
+	return nil
+}
+
+func (nc *NullClusterListener) ProcessPairRequest(
+	self *api.Node,
+	response *api.ClusterPairProcessResponse,
 ) error {
 	return nil
 }
