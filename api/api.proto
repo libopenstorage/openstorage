@@ -419,6 +419,33 @@ message Alerts {
   repeated Alert alert = 1;
 }
 
+// ObjectstoreInfo is a structure that has current objectstore info
+// swagger:model
+message ObjectstoreInfo {
+    // UUID of objectstore                                                      
+    string uuid = 1;                                                               
+    // VolumeID of volume used by object store                                  
+    string volume_id = 2;                                                      
+    // Enable/Disable created objectstore                                       
+    bool enabled = 3;                                                                
+    // Status of objectstore running/failed                                     
+    string status = 4;                                                              
+    // Action being taken on this objectstore                                   
+    int64 action = 5;                                                                 
+    // AccessKey for login into objectstore                                     
+    string access_key = 6;                                                            
+    // SecretKey for login into objectstore                                     
+    string secret_key = 7;                                                           
+    // Endpoints for accessing objectstore                                      
+    repeated string endpoints = 8;                                                         
+    // CurrentEndpoint on which objectstore server is accessible                
+    string current_endPoint = 9;                                                     
+    // AccessPort is objectstore server port                                    
+    int64 access_port = 10;                                                             
+    // Region for this objectstore                                              
+    string region = 11;
+}
+
 // VolumeCreateRequest is a structure that has the locator, source and spec
 // to create a volume
 // swagger:model

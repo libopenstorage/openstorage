@@ -9,6 +9,7 @@ import (
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
+	"github.com/libopenstorage/openstorage/objectstore"
 	"github.com/libopenstorage/openstorage/osdconfig"
 	sched "github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
@@ -258,6 +259,7 @@ type Cluster interface {
 	osdconfig.ConfigCaller
 	secrets.Secrets
 	sched.SchedulePolicy
+	objectstore.ObjectStore
 }
 
 // ClusterNotify is the callback function listeners can use to notify cluster manager

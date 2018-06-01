@@ -10,6 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/gorilla/mux"
+	"github.com/libopenstorage/openstorage/objectstore"
 	sched "github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
 )
@@ -113,7 +114,7 @@ func StartVolumePluginAPI(
 	return nil
 }
 
-func CheckNullClusterServerConfiguration(config ClusterServerConfiguration) {
+func CheckNullClusterServerConfiguration(config *ClusterServerConfiguration) {
 
 	// Set config managers to null/generic implementation if passed as null
 	if config.ConfigSecretManager == nil {
@@ -124,6 +125,10 @@ func CheckNullClusterServerConfiguration(config ClusterServerConfiguration) {
 		config.ConfigSchedManager = sched.NewDefaultSchedulePolicy()
 	}
 
+	if config.ConfigObjectStoreManager == nil {
+		config.ConfigObjectStoreManager = objectstore.NewDefaultObjectStore()
+	}
+
 }
 
 func StartClusterApiWithConfiguration(
@@ -132,7 +137,7 @@ func StartClusterApiWithConfiguration(
 	clusterPort uint16,
 ) error {
 
-	CheckNullClusterServerConfiguration(config)
+	CheckNullClusterServerConfiguration(&config)
 	// newClusterAPI now must take a ClusterServerConfiguration.
 	// This makes it so that it does not have to create the fake server by default.
 	// The caller is the one who creates the manager and passes it in.
@@ -161,13 +166,12 @@ func StartClusterAPI(clusterApiBase string, clusterPort uint16) error {
 //old version compatible
 func GetClusterAPIRoutes() []*Route {
 	return GetClusterAPIRoutesWithConfiguration(
-		ClusterServerConfiguration{
-			ConfigSecretManager: secrets.NewDefaultSecrets(),
-		},
+		ClusterServerConfiguration{},
 	)
 }
 
 func GetClusterAPIRoutesWithConfiguration(config ClusterServerConfiguration) []*Route {
+	CheckNullClusterServerConfiguration(&config)
 	clusterApi := newClusterAPI(config)
 	return clusterApi.Routes()
 }
