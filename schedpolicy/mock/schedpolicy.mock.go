@@ -70,6 +70,19 @@ func (mr *MockSchedulePolicyMockRecorder) SchedPolicyEnumerate() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SchedPolicyEnumerate", reflect.TypeOf((*MockSchedulePolicy)(nil).SchedPolicyEnumerate))
 }
 
+// SchedPolicyGet mocks base method
+func (m *MockSchedulePolicy) SchedPolicyGet(arg0 string) (*schedpolicy.SchedPolicy, error) {
+	ret := m.ctrl.Call(m, "SchedPolicyGet", arg0)
+	ret0, _ := ret[0].(*schedpolicy.SchedPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SchedPolicyGet indicates an expected call of SchedPolicyGet
+func (mr *MockSchedulePolicyMockRecorder) SchedPolicyGet(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SchedPolicyGet", reflect.TypeOf((*MockSchedulePolicy)(nil).SchedPolicyGet), arg0)
+}
+
 // SchedPolicyUpdate mocks base method
 func (m *MockSchedulePolicy) SchedPolicyUpdate(arg0, arg1 string) error {
 	ret := m.ctrl.Call(m, "SchedPolicyUpdate", arg0, arg1)

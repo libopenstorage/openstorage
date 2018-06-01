@@ -332,3 +332,19 @@ func (c *clusterClient) SchedPolicyDelete(name string) error {
 
 	return nil
 }
+
+// SchedPolicyGet returns schedule policy matching given name.
+func (c *clusterClient) SchedPolicyGet(name string) (*sched.SchedPolicy, error) {
+	policy := new(sched.SchedPolicy)
+	if name == "" {
+		return nil, errors.New("Missing policy name")
+	}
+
+	req := c.c.Get().Resource(clusterPath + SchedPath + "/" + name)
+
+	if err := req.Do().Unmarshal(policy); err != nil {
+		return nil, err
+	}
+
+	return policy, nil
+}
