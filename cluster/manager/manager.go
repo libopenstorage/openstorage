@@ -1,7 +1,7 @@
 // Package cluster implements a cluster state machine.  It relies on a cluster
 // wide keyvalue store for coordinating the state of the cluster.
 // It also stores the state of the cluster in this keyvalue store.
-package cluster
+package manager
 
 import (
 	"container/list"
@@ -18,6 +18,7 @@ import (
 	"github.com/libopenstorage/gossip"
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/objectstore"
 	"github.com/libopenstorage/openstorage/osdconfig"
@@ -37,14 +38,16 @@ const (
 )
 
 var (
-	// ErrNodeRemovePending is returned when Node remove does not succeed and is
-	// kept in pending state
-	ErrNodeRemovePending = errors.New("Node remove is pending")
-	ErrInitNodeNotFound  = errors.New("This node is already initialized but " +
-		"could not be found in the cluster map.")
-	ErrNodeDecommissioned   = errors.New("Node is decomissioned.")
-	stopHeartbeat           = make(chan bool)
-	ErrRemoveCausesDataLoss = errors.New("Cannot remove node without data loss")
+	stopHeartbeat            = make(chan bool)
+	errClusterInitialized    = errors.New("openstorage.cluster: already initialized")
+	errClusterNotInitialized = errors.New("openstorage.cluster: not initialized")
+
+	inst *ClusterManager
+	// Inst returns an instance of an already instantiated cluster manager.
+	// This function can be overridden for testing purposes
+	Inst = func() (cluster.Cluster, error) {
+		return clusterInst()
+	}
 )
 
 // ClusterManager implements the cluster interface
@@ -71,7 +74,37 @@ type ClusterManager struct {
 	objstoreManager objectstore.ObjectStore
 }
 
-type checkFunc func(ClusterInfo) error
+// Init instantiates a new cluster manager.
+func Init(cfg config.ClusterConfig) error {
+	if inst != nil {
+		return errClusterInitialized
+	}
+
+	kv := kvdb.Instance()
+	if kv == nil {
+		return errors.New("KVDB is not yet initialized.  " +
+			"A valid KVDB instance required for the cluster to start.")
+	}
+
+	inst = &ClusterManager{
+		listeners:    list.New(),
+		config:       cfg,
+		kv:           kv,
+		nodeCache:    make(map[string]api.Node),
+		nodeStatuses: make(map[string]api.Status),
+	}
+
+	return nil
+}
+
+func clusterInst() (cluster.Cluster, error) {
+	if inst == nil {
+		return nil, errClusterNotInitialized
+	}
+	return inst, nil
+}
+
+type checkFunc func(cluster.ClusterInfo) error
 
 func ifaceToIp(iface *net.Interface) (string, error) {
 	addrs, err := iface.Addrs()
@@ -193,7 +226,7 @@ func ExternalIp(config *config.ClusterConfig) (string, string, error) {
 // getNodeEntry is internal helper method, shared between Inspect() and enumerateNodesFromCache()
 // Parameter 'clustDBRef' may be a pointer to "empty" struct, in which case it'll be populated, but it must not be NULL.
 // Also, it's caller's responsibility to lock the access to the NodeCache.
-func (c *ClusterManager) getNodeEntry(nodeID string, clustDBRef *ClusterInfo) (api.Node, error) {
+func (c *ClusterManager) getNodeEntry(nodeID string, clustDBRef *cluster.ClusterInfo) (api.Node, error) {
 	var n api.Node
 	var ok bool
 
@@ -231,11 +264,11 @@ func (c *ClusterManager) getNodeEntry(nodeID string, clustDBRef *ClusterInfo) (a
 func (c *ClusterManager) Inspect(nodeID string) (api.Node, error) {
 	c.nodeCacheLock.Lock()
 	defer c.nodeCacheLock.Unlock()
-	return c.getNodeEntry(nodeID, &ClusterInfo{})
+	return c.getNodeEntry(nodeID, &cluster.ClusterInfo{})
 }
 
 // AddEventListener adds a new listener
-func (c *ClusterManager) AddEventListener(listener ClusterListener) error {
+func (c *ClusterManager) AddEventListener(listener cluster.ClusterListener) error {
 	logrus.Printf("Adding cluster event listener: %s", listener.String())
 	c.listeners.PushBack(listener)
 	return nil
@@ -312,7 +345,7 @@ func (c *ClusterManager) getCurrentState() *api.Node {
 	c.selfNode.Timestamp = time.Now()
 
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		listenerDataMap := e.Value.(ClusterListener).ListenerData()
+		listenerDataMap := e.Value.(cluster.ClusterListener).ListenerData()
 		if listenerDataMap == nil {
 			continue
 		}
@@ -326,7 +359,7 @@ func (c *ClusterManager) getCurrentState() *api.Node {
 }
 
 func (c *ClusterManager) getNonDecommisionedPeers(
-	db ClusterInfo,
+	db cluster.ClusterInfo,
 ) map[types.NodeId]types.NodeUpdate {
 	peers := make(map[types.NodeId]types.NodeUpdate)
 	for _, nodeEntry := range db.NodeEntries {
@@ -355,9 +388,9 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 
 	// Update all the listeners with the new db
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		err := e.Value.(ClusterListener).UpdateCluster(&c.selfNode, &db)
+		err := e.Value.(cluster.ClusterListener).UpdateCluster(&c.selfNode, &db)
 		if err != nil {
-			logrus.Warnln("Failed to notify ", e.Value.(ClusterListener).String())
+			logrus.Warnln("Failed to notify ", e.Value.(cluster.ClusterListener).String())
 		}
 	}
 
@@ -421,7 +454,7 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 	return watchErr
 }
 
-func (c *ClusterManager) getLatestNodeConfig(nodeId string) *NodeEntry {
+func (c *ClusterManager) getLatestNodeConfig(nodeId string) *cluster.NodeEntry {
 	db, _, err := readClusterInfo()
 	if err != nil {
 		logrus.Warnln("Failed to read the database for updating config")
@@ -437,13 +470,13 @@ func (c *ClusterManager) getLatestNodeConfig(nodeId string) *NodeEntry {
 	return &ne
 }
 
-func (c *ClusterManager) initNode(db *ClusterInfo) (*api.Node, bool) {
+func (c *ClusterManager) initNode(db *cluster.ClusterInfo) (*api.Node, bool) {
 	_, exists := db.NodeEntries[c.selfNode.Id]
 
 	// Add us into the database.
 	labels := make(map[string]string)
 	labels[gossipVersionKey] = c.gossipVersion
-	nodeEntry := NodeEntry{
+	nodeEntry := cluster.NodeEntry{
 		Id:         c.selfNode.Id,
 		MgmtIp:     c.selfNode.MgmtIp,
 		DataIp:     c.selfNode.DataIp,
@@ -464,7 +497,7 @@ func (c *ClusterManager) initNode(db *ClusterInfo) (*api.Node, bool) {
 	return &c.selfNode, exists
 }
 
-func (c *ClusterManager) cleanupInit(db *ClusterInfo, self *api.Node) error {
+func (c *ClusterManager) cleanupInit(db *cluster.ClusterInfo, self *api.Node) error {
 	var resErr error
 	var err error
 
@@ -472,12 +505,12 @@ func (c *ClusterManager) cleanupInit(db *ClusterInfo, self *api.Node) error {
 
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		logrus.Warnf("Cleanup Init for service %s.",
-			e.Value.(ClusterListener).String())
+			e.Value.(cluster.ClusterListener).String())
 
-		err = e.Value.(ClusterListener).CleanupInit(self, db)
+		err = e.Value.(cluster.ClusterListener).CleanupInit(self, db)
 		if err != nil {
 			logrus.Warnf("Failed to Cleanup Init %s: %v",
-				e.Value.(ClusterListener).String(), err)
+				e.Value.(cluster.ClusterListener).String(), err)
 			resErr = err
 		}
 
@@ -488,31 +521,31 @@ func (c *ClusterManager) cleanupInit(db *ClusterInfo, self *api.Node) error {
 
 // Initialize node and alert listeners that we are initializing a node in the cluster.
 func (c *ClusterManager) initNodeInCluster(
-	clusterInfo *ClusterInfo,
+	clusterInfo *cluster.ClusterInfo,
 	self *api.Node,
 	exist bool,
 	nodeInitialized bool,
-) ([]FinalizeInitCb, error) {
+) ([]cluster.FinalizeInitCb, error) {
 	// If I am already in the cluster map, don't add me again.
 	if exist {
 		return nil, nil
 	}
 
 	if nodeInitialized {
-		logrus.Errorf(ErrInitNodeNotFound.Error())
-		return nil, ErrInitNodeNotFound
+		logrus.Errorf(cluster.ErrInitNodeNotFound.Error())
+		return nil, cluster.ErrInitNodeNotFound
 	}
 
 	// Alert all listeners that we are a new node and we are initializing.
-	finalizeCbs := make([]FinalizeInitCb, 0)
+	finalizeCbs := make([]cluster.FinalizeInitCb, 0)
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		finalizeCb, err := e.Value.(ClusterListener).Init(self, clusterInfo)
+		finalizeCb, err := e.Value.(cluster.ClusterListener).Init(self, clusterInfo)
 		if err != nil {
 			if self.Status != api.Status_STATUS_MAINTENANCE {
 				self.Status = api.Status_STATUS_ERROR
 			}
 			logrus.Warnf("Failed to initialize Init %s: %v",
-				e.Value.(ClusterListener).String(), err)
+				e.Value.(cluster.ClusterListener).String(), err)
 			c.cleanupInit(clusterInfo, self)
 			return nil, err
 		}
@@ -557,13 +590,13 @@ func (c *ClusterManager) joinCluster(
 
 	// Alert all listeners that we are joining the cluster.
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		err := e.Value.(ClusterListener).Join(self, initState, c.HandleNotifications)
+		err := e.Value.(cluster.ClusterListener).Join(self, initState, c.HandleNotifications)
 		if err != nil {
 			if self.Status != api.Status_STATUS_MAINTENANCE {
 				self.Status = api.Status_STATUS_ERROR
 			}
 			logrus.Warnf("Failed to initialize Join %s: %v",
-				e.Value.(ClusterListener).String(), err)
+				e.Value.(cluster.ClusterListener).String(), err)
 
 			if exist == false {
 				c.cleanupInit(initState.ClusterInfo, self)
@@ -591,13 +624,13 @@ func (c *ClusterManager) initClusterForListeners(
 
 	// Alert all listeners that we are initializing a new cluster.
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		err = e.Value.(ClusterListener).ClusterInit(self)
+		err = e.Value.(cluster.ClusterListener).ClusterInit(self)
 		if err != nil {
 			if self.Status != api.Status_STATUS_MAINTENANCE {
 				self.Status = api.Status_STATUS_ERROR
 			}
 			logrus.Printf("Failed to initialize %s",
-				e.Value.(ClusterListener).String())
+				e.Value.(cluster.ClusterListener).String())
 			goto done
 		}
 	}
@@ -612,7 +645,7 @@ func (c *ClusterManager) startClusterDBWatch(lastIndex uint64,
 	return nil
 }
 
-func (c *ClusterManager) startHeartBeat(clusterInfo *ClusterInfo) {
+func (c *ClusterManager) startHeartBeat(clusterInfo *cluster.ClusterInfo) {
 	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
 
 	node := c.getCurrentState()
@@ -753,10 +786,10 @@ func (c *ClusterManager) updateClusterStatus() {
 				c.nodeStatuses[string(id)] = peerNodeInCache.Status
 
 				for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
-					err := e.Value.(ClusterListener).Update(&peerNodeInCache)
+					err := e.Value.(cluster.ClusterListener).Update(&peerNodeInCache)
 					if err != nil {
 						logrus.Warnln("Failed to notify ",
-							e.Value.(ClusterListener).String())
+							e.Value.(cluster.ClusterListener).String())
 					}
 				}
 
@@ -773,10 +806,10 @@ func (c *ClusterManager) updateClusterStatus() {
 					" to be in the cluster.")
 
 				for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
-					err := e.Value.(ClusterListener).Add(&peerNodeInCache)
+					err := e.Value.(cluster.ClusterListener).Add(&peerNodeInCache)
 					if err != nil {
 						logrus.Warnln("Failed to notify ",
-							e.Value.(ClusterListener).String())
+							e.Value.(cluster.ClusterListener).String())
 					}
 				}
 			}
@@ -826,7 +859,7 @@ func (c *ClusterManager) EnableUpdates() error {
 }
 
 // GetGossipState returns current gossip state
-func (c *ClusterManager) GetGossipState() *ClusterState {
+func (c *ClusterManager) GetGossipState() *cluster.ClusterState {
 	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
 	nodeValue := c.gossip.GetStoreKeyValue(gossipStoreKey)
 	nodes := make([]types.NodeValue, len(nodeValue), len(nodeValue))
@@ -836,7 +869,7 @@ func (c *ClusterManager) GetGossipState() *ClusterState {
 		i++
 	}
 
-	return &ClusterState{NodeStatus: nodes}
+	return &cluster.ClusterState{NodeStatus: nodes}
 }
 
 func (c *ClusterManager) waitForQuorum(exist bool) error {
@@ -882,9 +915,9 @@ func (c *ClusterManager) waitForQuorum(exist bool) error {
 	// Update the listeners that we have joined the cluster and
 	// and our quorum status
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		err := e.Value.(ClusterListener).JoinComplete(&c.selfNode)
+		err := e.Value.(cluster.ClusterListener).JoinComplete(&c.selfNode)
 		if err != nil {
-			logrus.Warnln("Failed to notify ", e.Value.(ClusterListener).String())
+			logrus.Warnln("Failed to notify ", e.Value.(cluster.ClusterListener).String())
 		}
 	}
 
@@ -892,7 +925,7 @@ func (c *ClusterManager) waitForQuorum(exist bool) error {
 }
 
 func (c *ClusterManager) initializeCluster(db kvdb.Kvdb) (
-	*ClusterInfo,
+	*cluster.ClusterInfo,
 	error,
 ) {
 	kvlock, err := db.LockWithID(clusterLockKey, c.config.NodeId)
@@ -911,7 +944,7 @@ func (c *ClusterManager) initializeCluster(db kvdb.Kvdb) (
 		msg := fmt.Sprintf("Node is in decommision state, Node ID %s.",
 			c.selfNode.Id)
 		logrus.Errorln(msg)
-		return nil, ErrNodeDecommissioned
+		return nil, cluster.ErrNodeDecommissioned
 	}
 	// Set the clusterID in db
 	clusterInfo.Id = c.config.ClusterId
@@ -954,7 +987,7 @@ func (c *ClusterManager) quorumMember() bool {
 	quorumRequired := false
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		quorumRequired = quorumRequired ||
-			e.Value.(ClusterListener).QuorumMember(&c.selfNode)
+			e.Value.(cluster.ClusterListener).QuorumMember(&c.selfNode)
 	}
 	return quorumRequired
 }
@@ -964,7 +997,7 @@ func (c *ClusterManager) initListeners(
 	clusterMaxSize int,
 	nodeExists *bool,
 	nodeInitialized bool,
-) (uint64, *ClusterInfo, error) {
+) (uint64, *cluster.ClusterInfo, error) {
 	// Initialize the cluster if required
 	clusterInfo, err := c.initializeCluster(db)
 	if err != nil {
@@ -1002,7 +1035,7 @@ func (c *ClusterManager) initListeners(
 		logrus.Infof("This node does not participates in quorum decisions")
 	}
 
-	initFunc := func(clusterInfo ClusterInfo) error {
+	initFunc := func(clusterInfo cluster.ClusterInfo) error {
 		numNodes := 0
 		for _, node := range clusterInfo.NodeEntries {
 			if node.Status != api.Status_STATUS_DECOMMISSION {
@@ -1062,7 +1095,7 @@ func (c *ClusterManager) initializeAndStartHeartbeat(
 	return lastIndex, nil
 }
 
-func (c *ClusterManager) setupManagers(config *ClusterServerConfiguration) {
+func (c *ClusterManager) setupManagers(config *cluster.ClusterServerConfiguration) {
 	if config.ConfigSchedManager == nil {
 		c.schedManager = sched.NewDefaultSchedulePolicy()
 	} else {
@@ -1087,14 +1120,14 @@ func (c *ClusterManager) Start(
 		clusterMaxSize,
 		nodeInitialized,
 		gossipPort,
-		&ClusterServerConfiguration{})
+		&cluster.ClusterServerConfiguration{})
 }
 
 func (c *ClusterManager) StartWithConfiguration(
 	clusterMaxSize int,
 	nodeInitialized bool,
 	gossipPort string,
-	config *ClusterServerConfiguration,
+	config *cluster.ClusterServerConfiguration,
 ) error {
 	var err error
 
@@ -1187,7 +1220,7 @@ func (c *ClusterManager) NodeStatus() (api.Status, error) {
 	}
 
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		listenerStatus := e.Value.(ClusterListener).ListenerStatus()
+		listenerStatus := e.Value.(cluster.ClusterListener).ListenerStatus()
 		if listenerStatus == api.Status_STATUS_NONE {
 			continue
 		}
@@ -1204,8 +1237,8 @@ func (c *ClusterManager) PeerStatus(listenerName string) (map[string]api.Status,
 	statusMap := make(map[string]api.Status)
 	var listenerStatusMap map[string]api.Status
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		if e.Value.(ClusterListener).String() == listenerName {
-			listenerStatusMap = e.Value.(ClusterListener).ListenerPeerStatus()
+		if e.Value.(cluster.ClusterListener).String() == listenerName {
+			listenerStatusMap = e.Value.(cluster.ClusterListener).ListenerPeerStatus()
 			break
 		}
 	}
@@ -1274,7 +1307,7 @@ func (c *ClusterManager) enumerateNodesFromClusterDB() []api.Node {
 }
 
 func (c *ClusterManager) enumerateNodesFromCache() []api.Node {
-	var clusterDB ClusterInfo
+	var clusterDB cluster.ClusterInfo
 	c.nodeCacheLock.Lock()
 	defer c.nodeCacheLock.Unlock()
 	nodes := make([]api.Node, len(c.nodeCache))
@@ -1289,7 +1322,7 @@ func (c *ClusterManager) enumerateNodesFromCache() []api.Node {
 
 // Enumerate lists all the nodes in the cluster.
 func (c *ClusterManager) Enumerate() (api.Cluster, error) {
-	cluster := api.Cluster{
+	clusterState := api.Cluster{
 		Id:     c.config.ClusterId,
 		Status: c.status,
 		NodeId: c.selfNode.Id,
@@ -1299,24 +1332,26 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 		c.selfNode.Status == api.Status_STATUS_MAINTENANCE {
 		// If the node is not yet ready, query the cluster db
 		// for node members since gossip is not ready yet.
-		cluster.Nodes = c.enumerateNodesFromClusterDB()
+		clusterState.Nodes = c.enumerateNodesFromClusterDB()
 	} else {
-		cluster.Nodes = c.enumerateNodesFromCache()
+		clusterState.Nodes = c.enumerateNodesFromCache()
 	}
 
 	// Allow listeners to add/modify data
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		if err := e.Value.(ClusterListener).Enumerate(cluster); err != nil {
+		if err := e.Value.(cluster.ClusterListener).Enumerate(clusterState); err != nil {
+			logrus.Warnf("listener %s enumerate failed: %v",
+				e.Value.(cluster.ClusterListener).String(), err)
 			continue
 		}
 	}
-	return cluster, nil
+	return clusterState, nil
 }
 
 func (c *ClusterManager) updateNodeEntryDB(
-	nodeEntry NodeEntry,
+	nodeEntry cluster.NodeEntry,
 	checkCbBeforeUpdate checkFunc,
-) (*kvdb.KVPair, *ClusterInfo, error) {
+) (*kvdb.KVPair, *cluster.ClusterInfo, error) {
 	kvdb := kvdb.Instance()
 	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
 	if err != nil {
@@ -1503,8 +1538,8 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 			for e := c.listeners.Front(); e != nil; e = e.Next() {
 				logrus.Infof("Remove node: ask cluster listener %s "+
 					"to mark node %s down ",
-					e.Value.(ClusterListener).String(), nodes[i].Id)
-				err := e.Value.(ClusterListener).MarkNodeDown(&nodes[i])
+					e.Value.(cluster.ClusterListener).String(), nodes[i].Id)
+				err := e.Value.(cluster.ClusterListener).MarkNodeDown(&nodes[i])
 				if err != nil {
 					logrus.Warnf("Node mark down error: %v", err)
 					return err
@@ -1516,9 +1551,9 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 		for e := c.listeners.Front(); e != nil; e = e.Next() {
 			logrus.Infof("Remove node: ask cluster listener: "+
 				"can we remove node ID %s, %s",
-				nodes[i].Id, e.Value.(ClusterListener).String())
-			additionalMsg, err := e.Value.(ClusterListener).CanNodeRemove(&nodes[i])
-			if err != nil && !(err == ErrRemoveCausesDataLoss && forceRemove) {
+				nodes[i].Id, e.Value.(cluster.ClusterListener).String())
+			additionalMsg, err := e.Value.(cluster.ClusterListener).CanNodeRemove(&nodes[i])
+			if err != nil && !(err == cluster.ErrRemoveCausesDataLoss && forceRemove) {
 				msg := fmt.Sprintf("Cannot remove node ID %s: %s.", nodes[i].Id, err)
 				if additionalMsg != "" {
 					msg = msg + " " + additionalMsg
@@ -1546,13 +1581,13 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 		// Alert all listeners that we are removing this node.
 		for e := c.listeners.Front(); e != nil; e = e.Next() {
 			logrus.Infof("Remove node: notify cluster listener: %s",
-				e.Value.(ClusterListener).String())
-			err := e.Value.(ClusterListener).Remove(&nodes[i], forceRemove)
+				e.Value.(cluster.ClusterListener).String())
+			err := e.Value.(cluster.ClusterListener).Remove(&nodes[i], forceRemove)
 			if err != nil {
-				if err != ErrNodeRemovePending {
+				if err != cluster.ErrNodeRemovePending {
 					logrus.Warnf("Cluster listener failed to "+
 						"remove node: %s: %s",
-						e.Value.(ClusterListener).String(),
+						e.Value.(cluster.ClusterListener).String(),
 						err)
 					return err
 				} else {
@@ -1627,10 +1662,10 @@ func (c *ClusterManager) Shutdown() error {
 
 	// Alert all listeners that we are shutting this node down.
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		logrus.Infof("Shutting down %s", e.Value.(ClusterListener).String())
-		if err := e.Value.(ClusterListener).Halt(&c.selfNode, &db); err != nil {
+		logrus.Infof("Shutting down %s", e.Value.(cluster.ClusterListener).String())
+		if err := e.Value.(cluster.ClusterListener).Halt(&c.selfNode, &db); err != nil {
 			logrus.Warnf("Failed to shutdown %s",
-				e.Value.(ClusterListener).String())
+				e.Value.(cluster.ClusterListener).String())
 		}
 	}
 	return nil
@@ -1650,7 +1685,7 @@ func (c *ClusterManager) EnumerateAlerts(ts, te time.Time, resource api.Resource
 	a := api.Alerts{}
 
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		listenerAlerts, err := e.Value.(ClusterListener).EnumerateAlerts(ts, te, resource)
+		listenerAlerts, err := e.Value.(cluster.ClusterListener).EnumerateAlerts(ts, te, resource)
 		if err != nil {
 			continue
 		}
@@ -1664,7 +1699,7 @@ func (c *ClusterManager) EnumerateAlerts(ts, te time.Time, resource api.Resource
 func (c *ClusterManager) ClearAlert(resource api.ResourceType, alertID int64) error {
 	cleared := false
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		if err := e.Value.(ClusterListener).ClearAlert(resource, alertID); err != nil {
+		if err := e.Value.(cluster.ClusterListener).ClearAlert(resource, alertID); err != nil {
 			continue
 		}
 		cleared = true
@@ -1678,7 +1713,7 @@ func (c *ClusterManager) ClearAlert(resource api.ResourceType, alertID int64) er
 func (c *ClusterManager) EraseAlert(resource api.ResourceType, alertID int64) error {
 	erased := false
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		if err := e.Value.(ClusterListener).EraseAlert(resource, alertID); err != nil {
+		if err := e.Value.(cluster.ClusterListener).EraseAlert(resource, alertID); err != nil {
 			continue
 		}
 		erased = true

@@ -2243,6 +2243,217 @@
       "format": "int32",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
+    "ClusterPairCreateRequest": {
+      "description": "Used to send a request to create a cluster pair",
+      "type": "object",
+      "properties": {
+        "remote_cluster_ip": {
+          "description": "IP of the remote cluster",
+          "type": "string",
+          "x-go-name": "RemoteClusterIp"
+        },
+        "remote_cluster_port": {
+          "description": "Port for the remote cluster",
+          "type": "integer",
+          "format": "uint32",
+          "x-go-name": "RemoteClusterPort"
+        },
+        "remote_cluster_token": {
+          "description": "Token used to authenticate with the remote cluster",
+          "type": "string",
+          "x-go-name": "RemoteClusterToken"
+        },
+        "set_default": {
+          "description": "Set the new pair as the default",
+          "type": "boolean",
+          "x-go-name": "SetDefault"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "ClusterPairCreateResponse": {
+      "description": "Response for a pair request",
+      "type": "object",
+      "properties": {
+        "remote_cluster_id": {
+          "description": "ID of the remote cluster",
+          "type": "string",
+          "x-go-name": "RemoteClusterId"
+        },
+        "remote_cluster_name": {
+          "description": "Name of the remote cluster",
+          "type": "string",
+          "x-go-name": "RemoteClusterName"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "ClusterPairDeleteRequest": {
+      "description": "Request to to delete a cluster pair",
+      "type": "object",
+      "properties": {
+        "cluster_id": {
+          "description": "ID of the cluster pair to be deleted",
+          "type": "string",
+          "x-go-name": "ClusterId"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "ClusterPairGetRequest": {
+      "description": "Request to get a cluster pair",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "ID of the cluster, if empty gets the default pair",
+          "type": "string",
+          "x-go-name": "Id"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "ClusterPairGetResponse": {
+      "description": "Reponse to get a cluster pair",
+      "type": "object",
+      "properties": {
+        "pair_info": {
+          "$ref": "#/definitions/ClusterPairInfo"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "ClusterPairInfo": {
+      "description": "Information about a cluster pair",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "ID of the cluster",
+          "type": "string",
+          "x-go-name": "Id"
+        },
+        "ip": {
+          "description": "IP of the cluster",
+          "type": "string",
+          "x-go-name": "Ip"
+        },
+        "name": {
+          "description": "Name of the cluster",
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "options": {
+          "description": "Key/value pair of options associated with the cluster\nOpaque to openstorage and interpreted by the drivers",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "x-go-name": "Options"
+        },
+        "port": {
+          "description": "Port for the cluster",
+          "type": "integer",
+          "format": "uint32",
+          "x-go-name": "Port"
+        },
+        "secure": {
+          "description": "Flag used to determine if communication is over a secure channel",
+          "type": "boolean",
+          "x-go-name": "Secure"
+        },
+        "token": {
+          "description": "Token associated with cluster",
+          "type": "string",
+          "x-go-name": "Token"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "ClusterPairProcessRequest": {
+      "description": "Used to process a pair request from a remote cluster",
+      "type": "object",
+      "properties": {
+        "remote_cluster_token": {
+          "description": "Token used to authenticate with the remote cluster",
+          "type": "string",
+          "x-go-name": "RemoteClusterToken"
+        },
+        "source_cluster_id": {
+          "description": "ID of the cluster requesting the pairing",
+          "type": "string",
+          "x-go-name": "SourceClusterId"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "ClusterPairProcessResponse": {
+      "description": "Response after a pairing has been processed",
+      "type": "object",
+      "properties": {
+        "options": {
+          "description": "Key/value pair of options returned on successful pairing\nOpaque to openstorage and interpreted by the drivers\n\nin: body",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "x-go-name": "Options"
+        },
+        "remote_cluster_id": {
+          "description": "in: body\nID of the cluster which processed the pair request",
+          "type": "string",
+          "x-go-name": "RemoteClusterId"
+        },
+        "remote_cluster_name": {
+          "description": "Name of the cluster which processed the pair request\n\nin: body",
+          "type": "string",
+          "x-go-name": "RemoteClusterName"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "ClusterPairTokenGetRequest": {
+      "description": "Request to get the token for a cluster",
+      "type": "object",
+      "properties": {
+        "reset_token": {
+          "description": "Reset token if already preset",
+          "type": "boolean",
+          "x-go-name": "ResetToken"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "ClusterPairTokenGetResponse": {
+      "description": "Response to get the cluster token",
+      "type": "object",
+      "properties": {
+        "token": {
+          "description": "Token used to authenticate clusters",
+          "type": "string",
+          "x-go-name": "Token"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "ClusterPairsEnumerateResponse": {
+      "description": "Response to enumerate all the cluster pairs",
+      "type": "object",
+      "properties": {
+        "default_id": {
+          "description": "ID of the default cluster pair\n\nin: body",
+          "type": "string",
+          "x-go-name": "DefaultId"
+        },
+        "pairs": {
+          "description": "Pairs Info about the cluster pairs\n\nin: body",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ClusterPairInfo"
+          },
+          "x-go-name": "Pairs"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
     "ClusterResponse": {
       "description": "ClusterResponse specifies a response that gets returned when requesting the cluster",
       "type": "object",
@@ -5156,6 +5367,43 @@
     }
   },
   "responses": {
+    "ClusterPairCreateResponse": {
+      "description": "Response for a pair request",
+      "headers": {
+        "remote_cluster_id": {
+          "type": "string",
+          "description": "ID of the remote cluster"
+        },
+        "remote_cluster_name": {
+          "type": "string",
+          "description": "Name of the remote cluster"
+        }
+      }
+    },
+    "ClusterPairGetResponse": {
+      "description": "Reponse to get a cluster pair",
+      "schema": {
+        "$ref": "#/definitions/ClusterPairInfo"
+      }
+    },
+    "ClusterPairProcessResponse": {
+      "description": "Response after a pairing has been processed",
+      "schema": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string"
+        }
+      }
+    },
+    "ClusterPairsEnumerateResponse": {
+      "description": "Response to enumerate all the cluster pairs",
+      "schema": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "#/definitions/ClusterPairInfo"
+        }
+      }
+    },
     "clusterResponse": {
       "description": "ClusterResponse specifies a response that gets returned when requesting the cluster"
     },

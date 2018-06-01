@@ -2138,5 +2138,122 @@ message CloudMigrateStatusResponse {
     map<string, CloudMigrateInfoList> info = 1;
 }
 
+// Used to send a request to create a cluster pair
+// swagger:model
+message ClusterPairCreateRequest {
+    // IP of the remote cluster
+    string remote_cluster_ip = 1;
+    // Port for the remote cluster
+    uint32 remote_cluster_port = 2;
+    // Token used to authenticate with the remote cluster
+    string remote_cluster_token = 3;
+    // Set the new pair as the default
+    bool set_default = 4;
+}
 
+// Response for a pair request
+// swagger:response
+message ClusterPairCreateResponse {
+    // ID of the remote cluster
+    string remote_cluster_id = 1;
+    // Name of the remote cluster
+    string remote_cluster_name = 2;
+}
 
+// Used to process a pair request from a remote cluster
+// swagger:model
+message ClusterPairProcessRequest {
+    // ID of the cluster requesting the pairing
+    string source_cluster_id = 1;
+    // Token used to authenticate with the remote cluster
+    string remote_cluster_token = 2;
+}
+
+// Response after a pairing has been processed
+// swagger:response
+message ClusterPairProcessResponse {
+    //
+    // in: body
+    // ID of the cluster which processed the pair request
+    string remote_cluster_id = 1;
+    // Name of the cluster which processed the pair request
+    //
+    // in: body
+    string remote_cluster_name = 2;
+    // Key/value pair of options returned on successful pairing
+    // Opaque to openstorage and interpreted by the drivers
+    //
+    // in: body
+    map<string, string> options = 3;
+}
+
+// Request to to delete a cluster pair
+// swagger:model
+message ClusterPairDeleteRequest {
+    // ID of the cluster pair to be deleted
+    string cluster_id = 1;
+}
+
+// Request to get the token for a cluster
+// swagger:model
+message ClusterPairTokenGetRequest {
+    // Reset token if already preset
+    bool reset_token = 1;
+}
+
+// Response to get the cluster token
+// swagger:model
+message ClusterPairTokenGetResponse {
+    // Token used to authenticate clusters
+    string token = 1;
+}
+
+// Information about a cluster pair
+// swagger:model
+message ClusterPairInfo {
+    // ID of the cluster
+    string id = 1;
+    // Name of the cluster
+    string name = 2;
+    // IP of the cluster
+    string ip = 3;
+    // Port for the cluster
+    uint32 port = 4;
+    // Flag used to determine if communication is over a secure channel
+    bool secure = 5;
+    // Token associated with cluster
+    string token = 6;
+    // Key/value pair of options associated with the cluster
+    // Opaque to openstorage and interpreted by the drivers
+    map<string, string> options = 7;
+}
+
+// Request to get a cluster pair
+// swagger:model
+message ClusterPairGetRequest {
+    // ID of the cluster, if empty gets the default pair
+    string id = 1;
+}
+
+// Reponse to get a cluster pair
+// swagger:response
+message ClusterPairGetResponse {
+    // Info about the cluster pair
+    //
+    // in: body
+    ClusterPairInfo pair_info = 1;
+}
+
+// Response to enumerate all the cluster pairs
+// swagger:response
+message ClusterPairsEnumerateResponse {
+    // ID of the default cluster pair
+    //
+    // in: body
+    string default_id = 1;
+    // Pairs Info about the cluster pairs
+    //
+    // in: body
+    // required: false
+    map<string, ClusterPairInfo> pairs = 2;
+}

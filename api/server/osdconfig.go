@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/libopenstorage/openstorage/cluster"
+	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/osdconfig"
 )
 
@@ -27,7 +27,7 @@ import (
 //       $ref: '#/definitions/ClusterConfig'
 func (c *clusterApi) getClusterConf(w http.ResponseWriter, r *http.Request) {
 	method := "getClusterConf"
-	inst, err := cluster.Inst()
+	inst, err := clustermanager.Inst()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -62,7 +62,7 @@ func (c *clusterApi) getClusterConf(w http.ResponseWriter, r *http.Request) {
 //       $ref: '#/definitions/NodeConfig'
 func (c *clusterApi) getNodeConf(w http.ResponseWriter, r *http.Request) {
 	method := "getNodeConf"
-	inst, err := cluster.Inst()
+	inst, err := clustermanager.Inst()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -92,7 +92,7 @@ func (c *clusterApi) getNodeConf(w http.ResponseWriter, r *http.Request) {
 //       $ref: '#/definitions/NodesConfig'
 func (c *clusterApi) enumerateConf(w http.ResponseWriter, r *http.Request) {
 	method := "enumerateConf"
-	inst, err := cluster.Inst()
+	inst, err := clustermanager.Inst()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -125,7 +125,7 @@ func (c *clusterApi) enumerateConf(w http.ResponseWriter, r *http.Request) {
 //      description: success
 func (c *clusterApi) delNodeConf(w http.ResponseWriter, r *http.Request) {
 	method := "delNodeConf"
-	inst, err := cluster.Inst()
+	inst, err := clustermanager.Inst()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -160,7 +160,7 @@ func (c *clusterApi) delNodeConf(w http.ResponseWriter, r *http.Request) {
 //       type: string
 func (c *clusterApi) setClusterConf(w http.ResponseWriter, r *http.Request) {
 	method := "setClusterConf"
-	inst, err := cluster.Inst()
+	inst, err := clustermanager.Inst()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -217,7 +217,7 @@ func (c *clusterApi) setClusterConf(w http.ResponseWriter, r *http.Request) {
 //      description: success
 func (c *clusterApi) setNodeConf(w http.ResponseWriter, r *http.Request) {
 	method := "setNodeConf"
-	inst, err := cluster.Inst()
+	inst, err := clustermanager.Inst()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return

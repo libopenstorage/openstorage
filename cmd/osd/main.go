@@ -40,6 +40,7 @@ import (
 	"github.com/libopenstorage/openstorage/api/server/sdk"
 	osdcli "github.com/libopenstorage/openstorage/cli"
 	"github.com/libopenstorage/openstorage/cluster"
+	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/csi"
 	"github.com/libopenstorage/openstorage/graph/drivers"
@@ -198,7 +199,7 @@ func start(c *cli.Context) error {
 	clusterInit := false
 	if cfg.Osd.ClusterConfig.NodeId != "" && cfg.Osd.ClusterConfig.ClusterId != "" {
 		logrus.Infof("OSD enabling cluster mode.")
-		if err := cluster.Init(cfg.Osd.ClusterConfig); err != nil {
+		if err := clustermanager.Init(cfg.Osd.ClusterConfig); err != nil {
 			return fmt.Errorf("Unable to init cluster server: %v", err)
 		}
 		if err := server.StartClusterAPI(cluster.APIBase, 0); err != nil {
@@ -250,7 +251,7 @@ func start(c *cli.Context) error {
 		// Start CSI Server for this driver
 		csisock := fmt.Sprintf("/var/lib/osd/driver/%s-csi.sock", d)
 		os.Remove(csisock)
-		cm, err := cluster.Inst()
+		cm, err := clustermanager.Inst()
 		if err != nil {
 			return fmt.Errorf("Unable to find cluster instance: %v", err)
 		}
@@ -296,7 +297,7 @@ func start(c *cli.Context) error {
 	}
 
 	if clusterInit {
-		cm, err := cluster.Inst()
+		cm, err := clustermanager.Inst()
 		if err != nil {
 			return fmt.Errorf("Unable to find cluster instance: %v", err)
 		}

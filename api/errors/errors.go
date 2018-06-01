@@ -13,3 +13,10 @@ type ErrNotFound struct {
 func (e *ErrNotFound) Error() string {
 	return fmt.Sprintf("%v with ID: %v not found", e.Type, e.ID)
 }
+
+// ErrNotSupported error type for APIs that are not supported
+type ErrNotSupported struct{}
+
+func (e *ErrNotSupported) Error() string {
+	return fmt.Sprintf("Not Supported")
+}

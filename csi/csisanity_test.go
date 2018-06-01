@@ -22,7 +22,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/libopenstorage/openstorage/cluster"
+	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
@@ -63,7 +63,7 @@ func TestCSISanity(t *testing.T) {
 	}
 
 	// Initialize the cluster
-	if err := cluster.Init(config.ClusterConfig{
+	if err := clustermanager.Init(config.ClusterConfig{
 		ClusterId:     "cluster",
 		NodeId:        "node1",
 		DefaultDriver: "nfs",
@@ -71,7 +71,7 @@ func TestCSISanity(t *testing.T) {
 		t.Fatalf("Unable to init cluster server: %v", err)
 	}
 
-	cm, err := cluster.Inst()
+	cm, err := clustermanager.Inst()
 	if err != nil {
 		t.Fatalf("Unable to find cluster instance: %v", err)
 	}

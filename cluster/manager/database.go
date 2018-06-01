@@ -1,4 +1,4 @@
-package cluster
+package manager
 
 import (
 	"bytes"
@@ -8,6 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/portworx/kvdb"
 )
 
@@ -16,7 +17,7 @@ const (
 	ClusterDBKey = "cluster/database"
 )
 
-func snapAndReadClusterInfo() (*ClusterInitState, error) {
+func snapAndReadClusterInfo() (*cluster.ClusterInitState, error) {
 	kv := kvdb.Instance()
 
 	// To work-around a kvdb issue with watches, try snapshot in a loop
@@ -58,11 +59,11 @@ func snapAndReadClusterInfo() (*ClusterInitState, error) {
 		return nil, err
 	}
 
-	db := ClusterInfo{
+	db := cluster.ClusterInfo{
 		Status:      api.Status_STATUS_INIT,
-		NodeEntries: make(map[string]NodeEntry),
+		NodeEntries: make(map[string]cluster.NodeEntry),
 	}
-	state := &ClusterInitState{
+	state := &cluster.ClusterInitState{
 		ClusterInfo: &db,
 		InitDb:      snap,
 		Version:     version,
@@ -81,12 +82,12 @@ func snapAndReadClusterInfo() (*ClusterInitState, error) {
 	return state, nil
 }
 
-func readClusterInfo() (ClusterInfo, uint64, error) {
+func readClusterInfo() (cluster.ClusterInfo, uint64, error) {
 	kvdb := kvdb.Instance()
 
-	db := ClusterInfo{
+	db := cluster.ClusterInfo{
 		Status:      api.Status_STATUS_INIT,
-		NodeEntries: make(map[string]NodeEntry),
+		NodeEntries: make(map[string]cluster.NodeEntry),
 	}
 	kv, err := kvdb.Get(ClusterDBKey)
 
@@ -107,7 +108,7 @@ func readClusterInfo() (ClusterInfo, uint64, error) {
 	return db, kv.KVDBIndex, nil
 }
 
-func writeClusterInfo(db *ClusterInfo) (*kvdb.KVPair, error) {
+func writeClusterInfo(db *cluster.ClusterInfo) (*kvdb.KVPair, error) {
 	kvdb := kvdb.Instance()
 	b, err := json.Marshal(db)
 	if err != nil {
