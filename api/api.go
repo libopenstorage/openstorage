@@ -323,13 +323,25 @@ const (
 	CloudRestoreOp = CloudBackupOpType("Restore")
 )
 
+type CloudBackupStatusType string
+
+const (
+	CloudBackupStatusNotStarted = CloudBackupStatusType("NotStarted")
+	CloudBackupStatusDone       = CloudBackupStatusType("Done")
+	CloudBackupStatusAborted    = CloudBackupStatusType("Aborted")
+	CloudBackupStatusPaused     = CloudBackupStatusType("Paused")
+	CloudBackupStatusStopped    = CloudBackupStatusType("Stopped")
+	CloudBackupStatusActive     = CloudBackupStatusType("Active")
+	CloudBackupStatusFailed     = CloudBackupStatusType("Failed")
+)
+
 type CloudBackupStatus struct {
 	// ID is the ID for the operation
 	ID string
 	// OpType indicates if this is a backup or restore
 	OpType CloudBackupOpType
 	// State indicates if the op is currently active/done/failed
-	Status string
+	Status CloudBackupStatusType
 	// BytesDone indicates total Bytes uploaded/downloaded
 	BytesDone uint64
 	// StartTime indicates Op's start time
