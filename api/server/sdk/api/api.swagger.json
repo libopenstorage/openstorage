@@ -23,7 +23,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiClusterAlertClearResponse"
+              "$ref": "#/definitions/apiSdkClusterAlertClearResponse"
             }
           }
         },
@@ -33,7 +33,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/apiClusterAlertClearRequest"
+              "$ref": "#/definitions/apiSdkClusterAlertClearRequest"
             }
           }
         ],
@@ -50,7 +50,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiClusterAlertEnumerateResponse"
+              "$ref": "#/definitions/apiSdkClusterAlertEnumerateResponse"
             }
           }
         },
@@ -60,7 +60,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/apiClusterAlertEnumerateRequest"
+              "$ref": "#/definitions/apiSdkClusterAlertEnumerateRequest"
             }
           }
         ],
@@ -77,7 +77,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiClusterAlertEraseResponse"
+              "$ref": "#/definitions/apiSdkClusterAlertEraseResponse"
             }
           }
         },
@@ -87,7 +87,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/apiClusterAlertEraseRequest"
+              "$ref": "#/definitions/apiSdkClusterAlertEraseRequest"
             }
           }
         ],
@@ -104,7 +104,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiClusterEnumerateResponse"
+              "$ref": "#/definitions/apiSdkClusterEnumerateResponse"
             }
           }
         },
@@ -114,7 +114,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/apiClusterEnumerateRequest"
+              "$ref": "#/definitions/apiSdkClusterEnumerateRequest"
             }
           }
         ],
@@ -131,7 +131,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiClusterInspectResponse"
+              "$ref": "#/definitions/apiSdkClusterInspectResponse"
             }
           }
         },
@@ -141,7 +141,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/apiClusterInspectRequest"
+              "$ref": "#/definitions/apiSdkClusterInspectRequest"
             }
           }
         ],
@@ -158,7 +158,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiCredentialCreateAWSResponse"
+              "$ref": "#/definitions/apiSdkCredentialCreateAWSResponse"
             }
           }
         },
@@ -168,7 +168,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/apiCredentialCreateAWSRequest"
+              "$ref": "#/definitions/apiSdkCredentialCreateAWSRequest"
             }
           }
         ],
@@ -185,7 +185,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiCredentialCreateAzureResponse"
+              "$ref": "#/definitions/apiSdkCredentialCreateAzureResponse"
             }
           }
         },
@@ -195,7 +195,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/apiCredentialCreateAzureRequest"
+              "$ref": "#/definitions/apiSdkCredentialCreateAzureRequest"
             }
           }
         ],
@@ -212,7 +212,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiCredentialCreateGoogleResponse"
+              "$ref": "#/definitions/apiSdkCredentialCreateGoogleResponse"
             }
           }
         },
@@ -222,7 +222,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/apiCredentialCreateGoogleRequest"
+              "$ref": "#/definitions/apiSdkCredentialCreateGoogleRequest"
             }
           }
         ],
@@ -239,7 +239,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiCredentialDeleteResponse"
+              "$ref": "#/definitions/apiSdkCredentialDeleteResponse"
             }
           }
         },
@@ -249,7 +249,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/apiCredentialDeleteRequest"
+              "$ref": "#/definitions/apiSdkCredentialDeleteRequest"
             }
           }
         ],
@@ -266,7 +266,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiCredentialEnumerateAWSResponse"
+              "$ref": "#/definitions/apiSdkCredentialEnumerateAWSResponse"
             }
           }
         },
@@ -276,7 +276,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/apiCredentialEnumerateAWSRequest"
+              "$ref": "#/definitions/apiSdkCredentialEnumerateAWSRequest"
             }
           }
         ],
@@ -293,7 +293,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiCredentialEnumerateAzureResponse"
+              "$ref": "#/definitions/apiSdkCredentialEnumerateAzureResponse"
             }
           }
         },
@@ -303,7 +303,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/apiCredentialEnumerateAzureRequest"
+              "$ref": "#/definitions/apiSdkCredentialEnumerateAzureRequest"
             }
           }
         ],
@@ -320,7 +320,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiCredentialEnumerateGoogleResponse"
+              "$ref": "#/definitions/apiSdkCredentialEnumerateGoogleResponse"
             }
           }
         },
@@ -330,7 +330,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/apiCredentialEnumerateGoogleRequest"
+              "$ref": "#/definitions/apiSdkCredentialEnumerateGoogleRequest"
             }
           }
         ],
@@ -347,7 +347,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiCredentialValidateResponse"
+              "$ref": "#/definitions/apiSdkCredentialValidateResponse"
             }
           }
         },
@@ -357,7 +357,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/apiCredentialValidateRequest"
+              "$ref": "#/definitions/apiSdkCredentialValidateRequest"
             }
           }
         ],
@@ -374,7 +374,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiVolumeAttachResponse"
+              "$ref": "#/definitions/apiSdkVolumeAttachResponse"
             }
           }
         },
@@ -384,7 +384,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/apiVolumeAttachRequest"
+              "$ref": "#/definitions/apiSdkVolumeAttachRequest"
             }
           }
         ],
@@ -401,7 +401,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiOpenStorageVolumeCreateResponse"
+              "$ref": "#/definitions/apiSdkVolumeCreateResponse"
             }
           }
         },
@@ -411,7 +411,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/apiOpenStorageVolumeCreateRequest"
+              "$ref": "#/definitions/apiSdkVolumeCreateRequest"
             }
           }
         ],
@@ -422,13 +422,13 @@
     },
     "/v1/volume/createfromid": {
       "post": {
-        "summary": "CreateFromVolumeID creates a new volume cloned from an existing volume",
-        "operationId": "CreateFromVolumeID",
+        "summary": "CreateFromVolumeId creates a new volume cloned from an existing volume",
+        "operationId": "CreateFromVolumeId",
         "responses": {
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiVolumeCreateFromVolumeIDResponse"
+              "$ref": "#/definitions/apiSdkVolumeCreateFromVolumeIdResponse"
             }
           }
         },
@@ -438,7 +438,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/apiVolumeCreateFromVolumeIDRequest"
+              "$ref": "#/definitions/apiSdkVolumeCreateFromVolumeIdRequest"
             }
           }
         ],
@@ -455,7 +455,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiVolumeDeleteResponse"
+              "$ref": "#/definitions/apiSdkVolumeDeleteResponse"
             }
           }
         },
@@ -465,7 +465,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/apiVolumeDeleteRequest"
+              "$ref": "#/definitions/apiSdkVolumeDeleteRequest"
             }
           }
         ],
@@ -482,7 +482,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiVolumeDetachResponse"
+              "$ref": "#/definitions/apiSdkVolumeDetachResponse"
             }
           }
         },
@@ -492,7 +492,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/apiVolumeDetachRequest"
+              "$ref": "#/definitions/apiSdkVolumeDetachRequest"
             }
           }
         ],
@@ -509,7 +509,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiVolumeEnumerateResponse"
+              "$ref": "#/definitions/apiSdkVolumeEnumerateResponse"
             }
           }
         },
@@ -519,7 +519,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/apiVolumeEnumerateRequest"
+              "$ref": "#/definitions/apiSdkVolumeEnumerateRequest"
             }
           }
         ],
@@ -536,7 +536,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiVolumeInspectResponse"
+              "$ref": "#/definitions/apiSdkVolumeInspectResponse"
             }
           }
         },
@@ -546,7 +546,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/apiVolumeInspectRequest"
+              "$ref": "#/definitions/apiSdkVolumeInspectRequest"
             }
           }
         ],
@@ -563,7 +563,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiVolumeMountResponse"
+              "$ref": "#/definitions/apiSdkVolumeMountResponse"
             }
           }
         },
@@ -573,7 +573,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/apiVolumeMountRequest"
+              "$ref": "#/definitions/apiSdkVolumeMountRequest"
             }
           }
         ],
@@ -590,7 +590,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiVolumeSnapshotCreateResponse"
+              "$ref": "#/definitions/apiSdkVolumeSnapshotCreateResponse"
             }
           }
         },
@@ -600,7 +600,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/apiVolumeSnapshotCreateRequest"
+              "$ref": "#/definitions/apiSdkVolumeSnapshotCreateRequest"
             }
           }
         ],
@@ -617,7 +617,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiVolumeSnapshotEnumerateResponse"
+              "$ref": "#/definitions/apiSdkVolumeSnapshotEnumerateResponse"
             }
           }
         },
@@ -627,7 +627,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/apiVolumeSnapshotEnumerateRequest"
+              "$ref": "#/definitions/apiSdkVolumeSnapshotEnumerateRequest"
             }
           }
         ],
@@ -644,7 +644,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiVolumeSnapshotRestoreResponse"
+              "$ref": "#/definitions/apiSdkVolumeSnapshotRestoreResponse"
             }
           }
         },
@@ -654,7 +654,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/apiVolumeSnapshotRestoreRequest"
+              "$ref": "#/definitions/apiSdkVolumeSnapshotRestoreRequest"
             }
           }
         ],
@@ -671,7 +671,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiVolumeUnmountResponse"
+              "$ref": "#/definitions/apiSdkVolumeUnmountResponse"
             }
           }
         },
@@ -681,7 +681,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/apiVolumeUnmountRequest"
+              "$ref": "#/definitions/apiSdkVolumeUnmountRequest"
             }
           }
         ],
@@ -782,98 +782,6 @@
         }
       }
     },
-    "apiClusterAlertClearRequest": {
-      "type": "object",
-      "properties": {
-        "resource": {
-          "$ref": "#/definitions/apiResourceType",
-          "title": "Type of resource (required)"
-        },
-        "alert_id": {
-          "type": "string",
-          "format": "int64",
-          "title": "Id of alert as returned by ClusterEnumerateAlertResponse (required)"
-        }
-      }
-    },
-    "apiClusterAlertClearResponse": {
-      "type": "object"
-    },
-    "apiClusterAlertEnumerateRequest": {
-      "type": "object",
-      "properties": {
-        "time_start": {
-          "type": "string",
-          "format": "date-time",
-          "title": "Start time of alerts (required)"
-        },
-        "time_end": {
-          "type": "string",
-          "format": "date-time",
-          "title": "End time of alerts (required)"
-        },
-        "resource": {
-          "$ref": "#/definitions/apiResourceType",
-          "title": "Type of resource (required)"
-        }
-      }
-    },
-    "apiClusterAlertEnumerateResponse": {
-      "type": "object",
-      "properties": {
-        "alerts": {
-          "$ref": "#/definitions/apiAlerts",
-          "title": "Information on the alerts requested"
-        }
-      }
-    },
-    "apiClusterAlertEraseRequest": {
-      "type": "object",
-      "properties": {
-        "resource": {
-          "$ref": "#/definitions/apiResourceType",
-          "title": "Type of resource (required)"
-        },
-        "alert_id": {
-          "type": "string",
-          "format": "int64",
-          "title": "Id of alert as returned by ClusterEnumerateAlertResponse (required)"
-        }
-      }
-    },
-    "apiClusterAlertEraseResponse": {
-      "type": "object"
-    },
-    "apiClusterEnumerateRequest": {
-      "type": "object"
-    },
-    "apiClusterEnumerateResponse": {
-      "type": "object",
-      "properties": {
-        "cluster": {
-          "$ref": "#/definitions/apiStorageCluster",
-          "title": "Cluster information"
-        }
-      }
-    },
-    "apiClusterInspectRequest": {
-      "type": "object",
-      "properties": {
-        "node_id": {
-          "type": "string",
-          "title": "Id of node to inspect (required)"
-        }
-      }
-    },
-    "apiClusterInspectResponse": {
-      "type": "object",
-      "properties": {
-        "node": {
-          "$ref": "#/definitions/apiStorageNode",
-          "title": "Node information"
-        }
-      }
-    },
     "apiCosType": {
       "type": "string",
       "enum": [
@@ -883,146 +791,6 @@
         "HIGH"
       ],
       "default": "NONE"
-    },
-    "apiCredentialCreateAWSRequest": {
-      "type": "object",
-      "properties": {
-        "credential": {
-          "$ref": "#/definitions/apiS3Credential",
-          "title": "AWS S3 Credential"
-        }
-      }
-    },
-    "apiCredentialCreateAWSResponse": {
-      "type": "object",
-      "properties": {
-        "credential_id": {
-          "type": "string",
-          "title": "Id of the credentials"
-        }
-      }
-    },
-    "apiCredentialCreateAzureRequest": {
-      "type": "object",
-      "properties": {
-        "credential": {
-          "$ref": "#/definitions/apiAzureCredential",
-          "title": "Azure Credential"
-        }
-      }
-    },
-    "apiCredentialCreateAzureResponse": {
-      "type": "object",
-      "properties": {
-        "credential_id": {
-          "type": "string",
-          "title": "Id of the credentials"
-        }
-      }
-    },
-    "apiCredentialCreateGoogleRequest": {
-      "type": "object",
-      "properties": {
-        "credential": {
-          "$ref": "#/definitions/apiGoogleCredential",
-          "title": "Google Credential"
-        }
-      }
-    },
-    "apiCredentialCreateGoogleResponse": {
-      "type": "object",
-      "properties": {
-        "credential_id": {
-          "type": "string",
-          "title": "Id of the credentials"
-        }
-      }
-    },
-    "apiCredentialDeleteRequest": {
-      "type": "object",
-      "properties": {
-        "credential_id": {
-          "type": "string",
-          "title": "ID for credentials"
-        }
-      }
-    },
-    "apiCredentialDeleteResponse": {
-      "type": "object"
-    },
-    "apiCredentialEnumerateAWSRequest": {
-      "type": "object",
-      "properties": {
-        "credential_id": {
-          "type": "string",
-          "title": "Id of the credentials"
-        }
-      },
-      "title": "should enumerate accept anything?"
-    },
-    "apiCredentialEnumerateAWSResponse": {
-      "type": "object",
-      "properties": {
-        "credential": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/apiS3Credential"
-          },
-          "title": "Array of Credentials for AWS"
-        }
-      }
-    },
-    "apiCredentialEnumerateAzureRequest": {
-      "type": "object",
-      "properties": {
-        "credential_id": {
-          "type": "string"
-        }
-      }
-    },
-    "apiCredentialEnumerateAzureResponse": {
-      "type": "object",
-      "properties": {
-        "credential": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/apiAzureCredential"
-          },
-          "title": "List of Credentials for Azure"
-        }
-      }
-    },
-    "apiCredentialEnumerateGoogleRequest": {
-      "type": "object",
-      "properties": {
-        "credential_id": {
-          "type": "string"
-        }
-      }
-    },
-    "apiCredentialEnumerateGoogleResponse": {
-      "type": "object",
-      "properties": {
-        "credential": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/apiGoogleCredential"
-          },
-          "title": "List of Credentials for Google"
-        }
-      }
-    },
-    "apiCredentialValidateRequest": {
-      "type": "object",
-      "properties": {
-        "credential_id": {
-          "type": "string",
-          "title": "Id of the credentials"
-        }
-      }
-    },
-    "apiCredentialValidateResponse": {
-      "type": "object"
     },
     "apiFSType": {
       "type": "string",
@@ -1074,28 +842,6 @@
         "IO_PROFILE_CMS"
       ],
       "default": "IO_PROFILE_SEQUENTIAL"
-    },
-    "apiOpenStorageVolumeCreateRequest": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Unique name of the volume. This will be used for idempotency."
-        },
-        "spec": {
-          "$ref": "#/definitions/apiVolumeSpec",
-          "title": "Volume specification"
-        }
-      }
-    },
-    "apiOpenStorageVolumeCreateResponse": {
-      "type": "object",
-      "properties": {
-        "volume_id": {
-          "type": "string",
-          "title": "Id of new volume"
-        }
-      }
     },
     "apiReplicaSet": {
       "type": "object",
@@ -1156,6 +902,489 @@
           "title": "Region"
         }
       }
+    },
+    "apiSdkClusterAlertClearRequest": {
+      "type": "object",
+      "properties": {
+        "resource": {
+          "$ref": "#/definitions/apiResourceType",
+          "title": "Type of resource (required)"
+        },
+        "alert_id": {
+          "type": "string",
+          "format": "int64",
+          "title": "Id of alert as returned by ClusterEnumerateAlertResponse (required)"
+        }
+      }
+    },
+    "apiSdkClusterAlertClearResponse": {
+      "type": "object"
+    },
+    "apiSdkClusterAlertEnumerateRequest": {
+      "type": "object",
+      "properties": {
+        "time_start": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Start time of alerts (required)"
+        },
+        "time_end": {
+          "type": "string",
+          "format": "date-time",
+          "title": "End time of alerts (required)"
+        },
+        "resource": {
+          "$ref": "#/definitions/apiResourceType",
+          "title": "Type of resource (required)"
+        }
+      }
+    },
+    "apiSdkClusterAlertEnumerateResponse": {
+      "type": "object",
+      "properties": {
+        "alerts": {
+          "$ref": "#/definitions/apiAlerts",
+          "title": "Information on the alerts requested"
+        }
+      }
+    },
+    "apiSdkClusterAlertEraseRequest": {
+      "type": "object",
+      "properties": {
+        "resource": {
+          "$ref": "#/definitions/apiResourceType",
+          "title": "Type of resource (required)"
+        },
+        "alert_id": {
+          "type": "string",
+          "format": "int64",
+          "title": "Id of alert as returned by ClusterEnumerateAlertResponse (required)"
+        }
+      }
+    },
+    "apiSdkClusterAlertEraseResponse": {
+      "type": "object"
+    },
+    "apiSdkClusterEnumerateRequest": {
+      "type": "object"
+    },
+    "apiSdkClusterEnumerateResponse": {
+      "type": "object",
+      "properties": {
+        "cluster": {
+          "$ref": "#/definitions/apiStorageCluster",
+          "title": "Cluster information"
+        }
+      }
+    },
+    "apiSdkClusterInspectRequest": {
+      "type": "object",
+      "properties": {
+        "node_id": {
+          "type": "string",
+          "title": "Id of node to inspect (required)"
+        }
+      }
+    },
+    "apiSdkClusterInspectResponse": {
+      "type": "object",
+      "properties": {
+        "node": {
+          "$ref": "#/definitions/apiStorageNode",
+          "title": "Node information"
+        }
+      }
+    },
+    "apiSdkCredentialCreateAWSRequest": {
+      "type": "object",
+      "properties": {
+        "credential": {
+          "$ref": "#/definitions/apiS3Credential",
+          "title": "AWS S3 Credential"
+        }
+      }
+    },
+    "apiSdkCredentialCreateAWSResponse": {
+      "type": "object",
+      "properties": {
+        "credential_id": {
+          "type": "string",
+          "title": "Id of the credentials"
+        }
+      }
+    },
+    "apiSdkCredentialCreateAzureRequest": {
+      "type": "object",
+      "properties": {
+        "credential": {
+          "$ref": "#/definitions/apiAzureCredential",
+          "title": "Azure Credential"
+        }
+      }
+    },
+    "apiSdkCredentialCreateAzureResponse": {
+      "type": "object",
+      "properties": {
+        "credential_id": {
+          "type": "string",
+          "title": "Id of the credentials"
+        }
+      }
+    },
+    "apiSdkCredentialCreateGoogleRequest": {
+      "type": "object",
+      "properties": {
+        "credential": {
+          "$ref": "#/definitions/apiGoogleCredential",
+          "title": "Google Credential"
+        }
+      }
+    },
+    "apiSdkCredentialCreateGoogleResponse": {
+      "type": "object",
+      "properties": {
+        "credential_id": {
+          "type": "string",
+          "title": "Id of the credentials"
+        }
+      }
+    },
+    "apiSdkCredentialDeleteRequest": {
+      "type": "object",
+      "properties": {
+        "credential_id": {
+          "type": "string",
+          "title": "ID for credentials"
+        }
+      }
+    },
+    "apiSdkCredentialDeleteResponse": {
+      "type": "object"
+    },
+    "apiSdkCredentialEnumerateAWSRequest": {
+      "type": "object",
+      "properties": {
+        "credential_id": {
+          "type": "string",
+          "title": "Id of the credentials"
+        }
+      },
+      "title": "should enumerate accept anything?"
+    },
+    "apiSdkCredentialEnumerateAWSResponse": {
+      "type": "object",
+      "properties": {
+        "credential": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiS3Credential"
+          },
+          "title": "Array of Credentials for AWS"
+        }
+      }
+    },
+    "apiSdkCredentialEnumerateAzureRequest": {
+      "type": "object",
+      "properties": {
+        "credential_id": {
+          "type": "string"
+        }
+      }
+    },
+    "apiSdkCredentialEnumerateAzureResponse": {
+      "type": "object",
+      "properties": {
+        "credential": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiAzureCredential"
+          },
+          "title": "List of Credentials for Azure"
+        }
+      }
+    },
+    "apiSdkCredentialEnumerateGoogleRequest": {
+      "type": "object",
+      "properties": {
+        "credential_id": {
+          "type": "string"
+        }
+      }
+    },
+    "apiSdkCredentialEnumerateGoogleResponse": {
+      "type": "object",
+      "properties": {
+        "credential": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiGoogleCredential"
+          },
+          "title": "List of Credentials for Google"
+        }
+      }
+    },
+    "apiSdkCredentialValidateRequest": {
+      "type": "object",
+      "properties": {
+        "credential_id": {
+          "type": "string",
+          "title": "Id of the credentials"
+        }
+      }
+    },
+    "apiSdkCredentialValidateResponse": {
+      "type": "object"
+    },
+    "apiSdkVolumeAttachRequest": {
+      "type": "object",
+      "properties": {
+        "volume_id": {
+          "type": "string",
+          "title": "Id of volume"
+        },
+        "options": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Options for attaching volume, right now only passphrase options is supported"
+        }
+      }
+    },
+    "apiSdkVolumeAttachResponse": {
+      "type": "object",
+      "properties": {
+        "device_path": {
+          "type": "string",
+          "title": "Device path where device is exported"
+        }
+      }
+    },
+    "apiSdkVolumeCreateFromVolumeIdRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique name of the volume. This will be used for idempotency."
+        },
+        "parent_id": {
+          "type": "string",
+          "description": "Parent volume id, if specified will create a new volume as a clone of the parent."
+        },
+        "spec": {
+          "$ref": "#/definitions/apiVolumeSpec",
+          "title": "Volume specification"
+        }
+      }
+    },
+    "apiSdkVolumeCreateFromVolumeIdResponse": {
+      "type": "object",
+      "properties": {
+        "volume_id": {
+          "type": "string",
+          "title": "Id of new volume"
+        }
+      }
+    },
+    "apiSdkVolumeCreateRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique name of the volume. This will be used for idempotency."
+        },
+        "spec": {
+          "$ref": "#/definitions/apiVolumeSpec",
+          "title": "Volume specification"
+        }
+      }
+    },
+    "apiSdkVolumeCreateResponse": {
+      "type": "object",
+      "properties": {
+        "volume_id": {
+          "type": "string",
+          "title": "Id of new volume"
+        }
+      }
+    },
+    "apiSdkVolumeDeleteRequest": {
+      "type": "object",
+      "properties": {
+        "volume_id": {
+          "type": "string",
+          "title": "Id of volume to delete"
+        }
+      }
+    },
+    "apiSdkVolumeDeleteResponse": {
+      "type": "object"
+    },
+    "apiSdkVolumeDetachRequest": {
+      "type": "object",
+      "properties": {
+        "volume_id": {
+          "type": "string",
+          "title": "Id of the volume"
+        }
+      }
+    },
+    "apiSdkVolumeDetachResponse": {
+      "type": "object"
+    },
+    "apiSdkVolumeEnumerateRequest": {
+      "type": "object",
+      "properties": {
+        "locator": {
+          "$ref": "#/definitions/apiVolumeLocator",
+          "description": "Volumes to match to this locator.\nIf not provided, all volumes will be returned."
+        }
+      }
+    },
+    "apiSdkVolumeEnumerateResponse": {
+      "type": "object",
+      "properties": {
+        "volumes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiVolume"
+          },
+          "title": "List of volumes matching label"
+        }
+      }
+    },
+    "apiSdkVolumeInspectRequest": {
+      "type": "object",
+      "properties": {
+        "volume_id": {
+          "type": "string",
+          "title": "Id of volume to inspect"
+        }
+      }
+    },
+    "apiSdkVolumeInspectResponse": {
+      "type": "object",
+      "properties": {
+        "volume": {
+          "$ref": "#/definitions/apiVolume",
+          "title": "Information about the volume"
+        }
+      }
+    },
+    "apiSdkVolumeMountRequest": {
+      "type": "object",
+      "properties": {
+        "volume_id": {
+          "type": "string",
+          "title": "Id of the volume"
+        },
+        "mount_path": {
+          "type": "string",
+          "description": "Mount path for mounting the volume."
+        },
+        "options": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Additional options"
+        }
+      }
+    },
+    "apiSdkVolumeMountResponse": {
+      "type": "object"
+    },
+    "apiSdkVolumeSnapshotCreateRequest": {
+      "type": "object",
+      "properties": {
+        "volume_id": {
+          "type": "string",
+          "title": "Id of volume to take the snapshot from"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Labels to apply to snapshot"
+        }
+      }
+    },
+    "apiSdkVolumeSnapshotCreateResponse": {
+      "type": "object",
+      "properties": {
+        "snapshot_id": {
+          "type": "string",
+          "title": "Id of immutable snapshot"
+        }
+      }
+    },
+    "apiSdkVolumeSnapshotEnumerateRequest": {
+      "type": "object",
+      "properties": {
+        "volume_id": {
+          "type": "string",
+          "title": "Id of volume"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Labels from snapshot"
+        }
+      }
+    },
+    "apiSdkVolumeSnapshotEnumerateResponse": {
+      "type": "object",
+      "properties": {
+        "snapshots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiVolume"
+          },
+          "title": "List of immutable snapshots"
+        }
+      }
+    },
+    "apiSdkVolumeSnapshotRestoreRequest": {
+      "type": "object",
+      "properties": {
+        "volume_id": {
+          "type": "string",
+          "title": "Id of volume"
+        },
+        "snapshot_id": {
+          "type": "string",
+          "title": "Snapshot id to apply to `volume_id`"
+        }
+      }
+    },
+    "apiSdkVolumeSnapshotRestoreResponse": {
+      "type": "object"
+    },
+    "apiSdkVolumeUnmountRequest": {
+      "type": "object",
+      "properties": {
+        "volume_id": {
+          "type": "string",
+          "title": "Id of volume"
+        },
+        "mount_path": {
+          "type": "string",
+          "title": "MountPath for device"
+        },
+        "options": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Options to unmount device"
+        }
+      }
+    },
+    "apiSdkVolumeUnmountResponse": {
+      "type": "object"
     },
     "apiSeverityType": {
       "type": "string",
@@ -1530,31 +1759,6 @@
       },
       "title": "Volume represents an abstract storage volume.\nVolume represents an abstract storage volume.\nswagger:model"
     },
-    "apiVolumeAttachRequest": {
-      "type": "object",
-      "properties": {
-        "volume_id": {
-          "type": "string",
-          "title": "Id of volume"
-        },
-        "options": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "title": "Options for attaching volume, right now only passphrase options is supported"
-        }
-      }
-    },
-    "apiVolumeAttachResponse": {
-      "type": "object",
-      "properties": {
-        "device_path": {
-          "type": "string",
-          "title": "Device path where device is exported"
-        }
-      }
-    },
     "apiVolumeConsumer": {
       "type": "object",
       "properties": {
@@ -1585,95 +1789,6 @@
       },
       "title": "VolumeConsumer identifies a consumer for a Volume. An example of a VolumeConsumer\nwould be a Pod in Kubernetes who has mounted the PersistentVolumeClaim for the\nVolume\nswagger: model"
     },
-    "apiVolumeCreateFromVolumeIDRequest": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Unique name of the volume. This will be used for idempotency."
-        },
-        "parent_id": {
-          "type": "string",
-          "description": "Parent volume id, if specified will create a new volume as a clone of the parent."
-        },
-        "spec": {
-          "$ref": "#/definitions/apiVolumeSpec",
-          "title": "Volume specification"
-        }
-      }
-    },
-    "apiVolumeCreateFromVolumeIDResponse": {
-      "type": "object",
-      "properties": {
-        "volume_id": {
-          "type": "string",
-          "title": "Id of new volume"
-        }
-      }
-    },
-    "apiVolumeDeleteRequest": {
-      "type": "object",
-      "properties": {
-        "volume_id": {
-          "type": "string",
-          "title": "Id of volume to delete"
-        }
-      }
-    },
-    "apiVolumeDeleteResponse": {
-      "type": "object"
-    },
-    "apiVolumeDetachRequest": {
-      "type": "object",
-      "properties": {
-        "volume_id": {
-          "type": "string",
-          "title": "Id of the volume"
-        }
-      }
-    },
-    "apiVolumeDetachResponse": {
-      "type": "object"
-    },
-    "apiVolumeEnumerateRequest": {
-      "type": "object",
-      "properties": {
-        "locator": {
-          "$ref": "#/definitions/apiVolumeLocator",
-          "description": "Volumes to match to this locator.\nIf not provided, all volumes will be returned."
-        }
-      }
-    },
-    "apiVolumeEnumerateResponse": {
-      "type": "object",
-      "properties": {
-        "volumes": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/apiVolume"
-          },
-          "title": "List of volumes matching label"
-        }
-      }
-    },
-    "apiVolumeInspectRequest": {
-      "type": "object",
-      "properties": {
-        "volume_id": {
-          "type": "string",
-          "title": "Id of volume to inspect"
-        }
-      }
-    },
-    "apiVolumeInspectResponse": {
-      "type": "object",
-      "properties": {
-        "volume": {
-          "$ref": "#/definitions/apiVolume",
-          "title": "Information about the volume"
-        }
-      }
-    },
     "apiVolumeLocator": {
       "type": "object",
       "properties": {
@@ -1690,98 +1805,6 @@
         }
       },
       "title": "VolumeLocator is a structure that is attached to a volume\nand is used to carry opaque metadata.\nswagger:model"
-    },
-    "apiVolumeMountRequest": {
-      "type": "object",
-      "properties": {
-        "volume_id": {
-          "type": "string",
-          "title": "Id of the volume"
-        },
-        "mount_path": {
-          "type": "string",
-          "description": "Mount path for mounting the volume."
-        },
-        "options": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "title": "Additional options"
-        }
-      }
-    },
-    "apiVolumeMountResponse": {
-      "type": "object"
-    },
-    "apiVolumeSnapshotCreateRequest": {
-      "type": "object",
-      "properties": {
-        "volume_id": {
-          "type": "string",
-          "title": "Id of volume to take the snapshot from"
-        },
-        "labels": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "title": "Labels to apply to snapshot"
-        }
-      }
-    },
-    "apiVolumeSnapshotCreateResponse": {
-      "type": "object",
-      "properties": {
-        "snapshot_id": {
-          "type": "string",
-          "title": "Id of immutable snapshot"
-        }
-      }
-    },
-    "apiVolumeSnapshotEnumerateRequest": {
-      "type": "object",
-      "properties": {
-        "volume_id": {
-          "type": "string",
-          "title": "Id of volume"
-        },
-        "labels": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "title": "Labels from snapshot"
-        }
-      }
-    },
-    "apiVolumeSnapshotEnumerateResponse": {
-      "type": "object",
-      "properties": {
-        "snapshots": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/apiVolume"
-          },
-          "title": "List of immutable snapshots"
-        }
-      }
-    },
-    "apiVolumeSnapshotRestoreRequest": {
-      "type": "object",
-      "properties": {
-        "volume_id": {
-          "type": "string",
-          "title": "Id of volume"
-        },
-        "snapshot_id": {
-          "type": "string",
-          "title": "Snapshot id to apply to `volume_id`"
-        }
-      }
-    },
-    "apiVolumeSnapshotRestoreResponse": {
-      "type": "object"
     },
     "apiVolumeSpec": {
       "type": "object",
@@ -1932,29 +1955,6 @@
       ],
       "default": "VOLUME_STATUS_NONE",
       "description": "VolumeStatus represents a health status for a volume.\n\n - VOLUME_STATUS_NOT_PRESENT: Volume is not present\n - VOLUME_STATUS_UP: Volume is healthy\n - VOLUME_STATUS_DOWN: Volume is in fail mode\n - VOLUME_STATUS_DEGRADED: Volume is up but with degraded performance\nIn a RAID group, this may indicate a problem with one or more drives"
-    },
-    "apiVolumeUnmountRequest": {
-      "type": "object",
-      "properties": {
-        "volume_id": {
-          "type": "string",
-          "title": "Id of volume"
-        },
-        "mount_path": {
-          "type": "string",
-          "title": "MountPath for device"
-        },
-        "options": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "title": "Options to unmount device"
-        }
-      }
-    },
-    "apiVolumeUnmountResponse": {
-      "type": "object"
     }
   }
 }

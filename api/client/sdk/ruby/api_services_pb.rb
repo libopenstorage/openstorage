@@ -16,15 +16,15 @@ module Openstorage
         self.service_name = 'openstorage.api.OpenStorageCluster'
 
         # Enumerate lists all the nodes in the cluster.
-        rpc :Enumerate, ClusterEnumerateRequest, ClusterEnumerateResponse
+        rpc :Enumerate, SdkClusterEnumerateRequest, SdkClusterEnumerateResponse
         # Inspect the node given a UUID.
-        rpc :Inspect, ClusterInspectRequest, ClusterInspectResponse
+        rpc :Inspect, SdkClusterInspectRequest, SdkClusterInspectResponse
         # Get a list of alerts from the storage cluster
-        rpc :AlertEnumerate, ClusterAlertEnumerateRequest, ClusterAlertEnumerateResponse
+        rpc :AlertEnumerate, SdkClusterAlertEnumerateRequest, SdkClusterAlertEnumerateResponse
         # Clear the alert for a given resource
-        rpc :AlertClear, ClusterAlertClearRequest, ClusterAlertClearResponse
+        rpc :AlertClear, SdkClusterAlertClearRequest, SdkClusterAlertClearResponse
         # Erases an alert for a given resource
-        rpc :AlertErase, ClusterAlertEraseRequest, ClusterAlertEraseResponse
+        rpc :AlertErase, SdkClusterAlertEraseRequest, SdkClusterAlertEraseResponse
       end
 
       Stub = Service.rpc_stub_class
@@ -39,30 +39,65 @@ module Openstorage
         self.service_name = 'openstorage.api.OpenStorageVolume'
 
         # Creates a new volume
-        rpc :Create, OpenStorageVolumeCreateRequest, OpenStorageVolumeCreateResponse
-        # CreateFromVolumeID creates a new volume cloned from an existing volume
-        rpc :CreateFromVolumeID, VolumeCreateFromVolumeIDRequest, VolumeCreateFromVolumeIDResponse
+        rpc :Create, SdkVolumeCreateRequest, SdkVolumeCreateResponse
+        # CreateFromVolumeId creates a new volume cloned from an existing volume
+        rpc :CreateFromVolumeId, SdkVolumeCreateFromVolumeIdRequest, SdkVolumeCreateFromVolumeIdResponse
         # Delete a volume
-        rpc :Delete, VolumeDeleteRequest, VolumeDeleteResponse
+        rpc :Delete, SdkVolumeDeleteRequest, SdkVolumeDeleteResponse
         # Get information on a volume
-        rpc :Inspect, VolumeInspectRequest, VolumeInspectResponse
+        rpc :Inspect, SdkVolumeInspectRequest, SdkVolumeInspectResponse
         # Get a list of volumes
-        rpc :Enumerate, VolumeEnumerateRequest, VolumeEnumerateResponse
+        rpc :Enumerate, SdkVolumeEnumerateRequest, SdkVolumeEnumerateResponse
         # Create a snapshot of a volume. This creates an immutable (read-only),
         # point-in-time snapshot of a volume.
-        rpc :SnapshotCreate, VolumeSnapshotCreateRequest, VolumeSnapshotCreateResponse
+        rpc :SnapshotCreate, SdkVolumeSnapshotCreateRequest, SdkVolumeSnapshotCreateResponse
         # Restores a volume to a specified snapshot
-        rpc :SnapshotRestore, VolumeSnapshotRestoreRequest, VolumeSnapshotRestoreResponse
+        rpc :SnapshotRestore, SdkVolumeSnapshotRestoreRequest, SdkVolumeSnapshotRestoreResponse
         # List the number of snapshots for a specific volume
-        rpc :SnapshotEnumerate, VolumeSnapshotEnumerateRequest, VolumeSnapshotEnumerateResponse
+        rpc :SnapshotEnumerate, SdkVolumeSnapshotEnumerateRequest, SdkVolumeSnapshotEnumerateResponse
         # Attach device to host                                                      
-        rpc :Attach, VolumeAttachRequest, VolumeAttachResponse
+        rpc :Attach, SdkVolumeAttachRequest, SdkVolumeAttachResponse
         # Detaches the volume from the node.
-        rpc :Detach, VolumeDetachRequest, VolumeDetachResponse
+        rpc :Detach, SdkVolumeDetachRequest, SdkVolumeDetachResponse
         # Attaches the volume to a node.
-        rpc :Mount, VolumeMountRequest, VolumeMountResponse
+        rpc :Mount, SdkVolumeMountRequest, SdkVolumeMountResponse
         # Unmount volume at specified path                                           
-        rpc :Unmount, VolumeUnmountRequest, VolumeUnmountResponse
+        rpc :Unmount, SdkVolumeUnmountRequest, SdkVolumeUnmountResponse
+      end
+
+      Stub = Service.rpc_stub_class
+    end
+    module OpenStorageCredentials
+      class Service
+
+        include GRPC::GenericService
+
+        self.marshal_class_method = :encode
+        self.unmarshal_class_method = :decode
+        self.service_name = 'openstorage.api.OpenStorageCredentials'
+
+        # Provide credentials to OpenStorage and if valid,
+        # it will return an identifier to the credentials
+        #
+        # Create credential for AWS S3 and if valid ,
+        # returns a unique identifier
+        rpc :CreateForAWS, SdkCredentialCreateAWSRequest, SdkCredentialCreateAWSResponse
+        # Create credential for Azure and if valid ,
+        # returns a unique identifier
+        rpc :CreateForAzure, SdkCredentialCreateAzureRequest, SdkCredentialCreateAzureResponse
+        # Create credential for Google and if valid ,
+        # returns a unique identifier
+        rpc :CreateForGoogle, SdkCredentialCreateGoogleRequest, SdkCredentialCreateGoogleResponse
+        # EnumerateForAWS lists the configured AWS credentials                      
+        rpc :EnumerateForAWS, SdkCredentialEnumerateAWSRequest, SdkCredentialEnumerateAWSResponse
+        # EnumerateForAzure lists the configured Azure credentials                  
+        rpc :EnumerateForAzure, SdkCredentialEnumerateAzureRequest, SdkCredentialEnumerateAzureResponse
+        # EnumerateForGoogle lists the configured Google credentials                
+        rpc :EnumerateForGoogle, SdkCredentialEnumerateGoogleRequest, SdkCredentialEnumerateGoogleResponse
+        # Delete a specified credential                                                 
+        rpc :CredentialDelete, SdkCredentialDeleteRequest, SdkCredentialDeleteResponse
+        # Validate a specified credential
+        rpc :CredentialValidate, SdkCredentialValidateRequest, SdkCredentialValidateResponse
       end
 
       Stub = Service.rpc_stub_class
