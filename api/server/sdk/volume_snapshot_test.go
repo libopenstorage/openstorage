@@ -33,7 +33,7 @@ func TestSdkVolumeSnapshotCreateBadArguments(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.VolumeSnapshotCreateRequest{}
+	req := &api.SdkVolumeSnapshotCreateRequest{}
 
 	// Setup client
 	c := api.NewOpenStorageVolumeClient(s.Conn())
@@ -57,7 +57,7 @@ func TestSdkVolumeSnapshotCreate(t *testing.T) {
 
 	volid := "volid"
 	snapid := "snapid"
-	req := &api.VolumeSnapshotCreateRequest{
+	req := &api.SdkVolumeSnapshotCreateRequest{
 		VolumeId: volid,
 	}
 
@@ -83,7 +83,7 @@ func TestSdkVolumeSnapshotRestoreBadArguments(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.VolumeSnapshotRestoreRequest{}
+	req := &api.SdkVolumeSnapshotRestoreRequest{}
 
 	// Setup client
 	c := api.NewOpenStorageVolumeClient(s.Conn())
@@ -99,7 +99,7 @@ func TestSdkVolumeSnapshotRestoreBadArguments(t *testing.T) {
 	assert.Contains(t, serverError.Message(), "volume id")
 
 	// Now only provide the volume id
-	req = &api.VolumeSnapshotRestoreRequest{
+	req = &api.SdkVolumeSnapshotRestoreRequest{
 		VolumeId: "volid",
 	}
 
@@ -125,7 +125,7 @@ func TestSdkVolumeSnapshotRestore(t *testing.T) {
 
 	volid := "volid"
 	snapid := "snapid"
-	req := &api.VolumeSnapshotRestoreRequest{
+	req := &api.SdkVolumeSnapshotRestoreRequest{
 		VolumeId:   volid,
 		SnapshotId: snapid,
 	}
@@ -151,7 +151,7 @@ func TestSdkVolumeSnapshotEnumerateBadArguments(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.VolumeSnapshotEnumerateRequest{}
+	req := &api.SdkVolumeSnapshotEnumerateRequest{}
 
 	// Setup client
 	c := api.NewOpenStorageVolumeClient(s.Conn())
@@ -175,7 +175,7 @@ func TestSdkVolumeSnapshotEnumerate(t *testing.T) {
 
 	volid := "volid"
 	snapid := "snapid"
-	req := &api.VolumeSnapshotEnumerateRequest{
+	req := &api.SdkVolumeSnapshotEnumerateRequest{
 		VolumeId: volid,
 	}
 

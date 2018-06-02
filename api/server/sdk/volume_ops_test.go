@@ -38,7 +38,7 @@ func TestSdkVolumeCreateCheckIdempotency(t *testing.T) {
 
 	name := "myvol"
 	size := uint64(1234)
-	req := &api.OpenStorageVolumeCreateRequest{
+	req := &api.SdkVolumeCreateRequest{
 		Name: name,
 		Spec: &api.VolumeSpec{
 			Size: size,
@@ -82,7 +82,7 @@ func TestSdkVolumeCreate(t *testing.T) {
 
 	name := "myvol"
 	size := uint64(1234)
-	req := &api.OpenStorageVolumeCreateRequest{
+	req := &api.SdkVolumeCreateRequest{
 		Name: name,
 		Spec: &api.VolumeSpec{
 			Size: size,
@@ -131,7 +131,7 @@ func TestSdkVolumeCreateFromVolumeID(t *testing.T) {
 	name := "myvol"
 	parentid := "myparent"
 	size := uint64(1234)
-	req := &api.VolumeCreateFromVolumeIDRequest{
+	req := &api.SdkVolumeCreateFromVolumeIdRequest{
 		Name:     name,
 		ParentId: parentid,
 		Spec: &api.VolumeSpec{
@@ -175,7 +175,7 @@ func TestSdkVolumeCreateFromVolumeID(t *testing.T) {
 	c := api.NewOpenStorageVolumeClient(s.Conn())
 
 	// Get info
-	r, err := c.CreateFromVolumeID(context.Background(), req)
+	r, err := c.CreateFromVolumeId(context.Background(), req)
 	assert.NoError(t, err)
 	assert.Equal(t, r.GetVolumeId(), "myid")
 }
@@ -186,7 +186,7 @@ func TestSdkVolumeDelete(t *testing.T) {
 	defer s.Stop()
 
 	id := "myvol"
-	req := &api.VolumeDeleteRequest{
+	req := &api.SdkVolumeDeleteRequest{
 		VolumeId: id,
 	}
 
@@ -222,7 +222,7 @@ func TestSdkVolumeDeleteReturnOkWhenVolumeNotFound(t *testing.T) {
 	defer s.Stop()
 
 	id := "myvol"
-	req := &api.VolumeDeleteRequest{
+	req := &api.SdkVolumeDeleteRequest{
 		VolumeId: id,
 	}
 
@@ -247,7 +247,7 @@ func TestSdkVolumeDeleteBadArguments(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.VolumeDeleteRequest{}
+	req := &api.SdkVolumeDeleteRequest{}
 
 	// Setup client
 	c := api.NewOpenStorageVolumeClient(s.Conn())
@@ -269,7 +269,7 @@ func TestSdkVolumeInspect(t *testing.T) {
 	defer s.Stop()
 
 	id := "myid"
-	req := &api.VolumeInspectRequest{
+	req := &api.SdkVolumeInspectRequest{
 		VolumeId: id,
 	}
 
@@ -314,7 +314,7 @@ func TestSdkVolumeEnumerate(t *testing.T) {
 	c := api.NewOpenStorageVolumeClient(s.Conn())
 
 	// Get info
-	r, err := c.Enumerate(context.Background(), &api.VolumeEnumerateRequest{})
+	r, err := c.Enumerate(context.Background(), &api.SdkVolumeEnumerateRequest{})
 	assert.NoError(t, err)
 	assert.NotNil(t, r.GetVolumes())
 	assert.Len(t, r.GetVolumes(), 1)

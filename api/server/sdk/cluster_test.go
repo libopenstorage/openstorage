@@ -107,7 +107,7 @@ func TestSdkEnumerateNoNodes(t *testing.T) {
 	c := api.NewOpenStorageClusterClient(s.Conn())
 
 	// Get info
-	r, err := c.Enumerate(context.Background(), &api.ClusterEnumerateRequest{})
+	r, err := c.Enumerate(context.Background(), &api.SdkClusterEnumerateRequest{})
 	assert.NoError(t, err)
 	assert.NotNil(t, r.GetCluster())
 
@@ -145,7 +145,7 @@ func TestSdkEnumerate(t *testing.T) {
 	c := api.NewOpenStorageClusterClient(s.Conn())
 
 	// Get info
-	r, err := c.Enumerate(context.Background(), &api.ClusterEnumerateRequest{})
+	r, err := c.Enumerate(context.Background(), &api.SdkClusterEnumerateRequest{})
 	assert.NoError(t, err)
 	assert.NotNil(t, r.GetCluster())
 
@@ -178,7 +178,7 @@ func TestSdkEnumerateFail(t *testing.T) {
 	c := api.NewOpenStorageClusterClient(s.Conn())
 
 	// Get info
-	r, err := c.Enumerate(context.Background(), &api.ClusterEnumerateRequest{})
+	r, err := c.Enumerate(context.Background(), &api.SdkClusterEnumerateRequest{})
 	assert.Error(t, err)
 	assert.Nil(t, r.GetCluster())
 
@@ -224,7 +224,7 @@ func TestSdkInspect(t *testing.T) {
 	c := api.NewOpenStorageClusterClient(s.Conn())
 
 	// Get info
-	r, err := c.Inspect(context.Background(), &api.ClusterInspectRequest{
+	r, err := c.Inspect(context.Background(), &api.SdkClusterInspectRequest{
 		NodeId: nodeid,
 	})
 	assert.NoError(t, err)
@@ -262,7 +262,7 @@ func TestSdkInspectFail(t *testing.T) {
 	c := api.NewOpenStorageClusterClient(s.Conn())
 
 	// Get info
-	r, err := c.Inspect(context.Background(), &api.ClusterInspectRequest{
+	r, err := c.Inspect(context.Background(), &api.SdkClusterInspectRequest{
 		NodeId: "mynode",
 	})
 	assert.Error(t, err)
@@ -284,7 +284,7 @@ func TestSdkInspectIdNotPassed(t *testing.T) {
 	c := api.NewOpenStorageClusterClient(s.Conn())
 
 	// Get info
-	r, err := c.Inspect(context.Background(), &api.ClusterInspectRequest{})
+	r, err := c.Inspect(context.Background(), &api.SdkClusterInspectRequest{})
 	assert.Error(t, err)
 	assert.Nil(t, r.GetNode())
 
@@ -304,7 +304,7 @@ func TestSdkAlertEnumerate(t *testing.T) {
 	c := api.NewOpenStorageClusterClient(s.Conn())
 
 	// Create request
-	req := &api.ClusterAlertEnumerateRequest{
+	req := &api.SdkClusterAlertEnumerateRequest{
 		TimeStart: ptypes.TimestampNow(),
 		TimeEnd:   ptypes.TimestampNow(),
 		Resource:  api.ResourceType_RESOURCE_TYPE_DRIVE,
@@ -352,7 +352,7 @@ func TestSdkAlertClear(t *testing.T) {
 	c := api.NewOpenStorageClusterClient(s.Conn())
 
 	// Create request
-	req := &api.ClusterAlertClearRequest{
+	req := &api.SdkClusterAlertClearRequest{
 		AlertId:  1234,
 		Resource: api.ResourceType_RESOURCE_TYPE_DRIVE,
 	}
@@ -379,7 +379,7 @@ func TestSdkAlertErase(t *testing.T) {
 	c := api.NewOpenStorageClusterClient(s.Conn())
 
 	// Create request
-	req := &api.ClusterAlertEraseRequest{
+	req := &api.SdkClusterAlertEraseRequest{
 		AlertId:  1234,
 		Resource: api.ResourceType_RESOURCE_TYPE_DRIVE,
 	}

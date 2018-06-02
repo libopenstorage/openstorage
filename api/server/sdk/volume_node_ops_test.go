@@ -39,7 +39,7 @@ func TestSdkVolumeAttachSuccess(t *testing.T) {
 		"SECRET_NAME": "value1",
 	}
 
-	req := &api.VolumeAttachRequest{
+	req := &api.SdkVolumeAttachRequest{
 		VolumeId: id,
 		Options:  options,
 	}
@@ -67,7 +67,7 @@ func TestSdkVolumeAttachFailed(t *testing.T) {
 		"passphrase": "testval",
 	}
 
-	req := &api.VolumeAttachRequest{
+	req := &api.SdkVolumeAttachRequest{
 		VolumeId: id,
 		Options:  options,
 	}
@@ -101,7 +101,7 @@ func TestSdkVolumeAttachBadArgument(t *testing.T) {
 		"passphrase": "testval",
 	}
 
-	req := &api.VolumeAttachRequest{
+	req := &api.SdkVolumeAttachRequest{
 		VolumeId: id,
 		Options:  options,
 	}
@@ -126,7 +126,7 @@ func TestSdkVolumeDetachSuccess(t *testing.T) {
 	defer s.Stop()
 
 	id := "dummy-volume-id"
-	req := &api.VolumeDetachRequest{
+	req := &api.SdkVolumeDetachRequest{
 		VolumeId: id,
 	}
 	s.MockDriver().
@@ -149,7 +149,7 @@ func TestSdkVolumeDetachFailed(t *testing.T) {
 	defer s.Stop()
 
 	id := "dummy-volume-id"
-	req := &api.VolumeDetachRequest{
+	req := &api.SdkVolumeDetachRequest{
 		VolumeId: id,
 	}
 	s.MockDriver().
@@ -177,7 +177,7 @@ func TestSdkVolumeDetachBadArgument(t *testing.T) {
 	defer s.Stop()
 
 	id := ""
-	req := &api.VolumeDetachRequest{
+	req := &api.SdkVolumeDetachRequest{
 		VolumeId: id,
 	}
 
@@ -207,7 +207,7 @@ func TestSdkVolumeMountSuccess(t *testing.T) {
 	}
 	mountPath := "/dev/real/path"
 
-	req := &api.VolumeMountRequest{
+	req := &api.SdkVolumeMountRequest{
 		VolumeId:  id,
 		MountPath: mountPath,
 		Options:   options,
@@ -237,7 +237,7 @@ func TestSdkVolumeMountFailed(t *testing.T) {
 	}
 	mountPath := "/dev/fake/path"
 
-	req := &api.VolumeMountRequest{
+	req := &api.SdkVolumeMountRequest{
 		VolumeId:  id,
 		MountPath: mountPath,
 		Options:   options,
@@ -273,7 +273,7 @@ func TestSdkVolumeMountBadArgument(t *testing.T) {
 	}
 	mountPath := ""
 
-	req := &api.VolumeMountRequest{
+	req := &api.SdkVolumeMountRequest{
 		VolumeId:  id,
 		MountPath: mountPath,
 		Options:   options,
@@ -305,7 +305,7 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 		"option2": "value2",
 	}
 	mountPath := "/mnt/testmount"
-	req := &api.VolumeUnmountRequest{
+	req := &api.SdkVolumeUnmountRequest{
 		VolumeId:  id,
 		MountPath: mountPath,
 		Options:   options,
@@ -337,7 +337,7 @@ func TestSdkVolumeUnmountFailed(t *testing.T) {
 	}
 	mountPath := "/dev/fake/path"
 
-	req := &api.VolumeUnmountRequest{
+	req := &api.SdkVolumeUnmountRequest{
 		VolumeId:  id,
 		MountPath: mountPath,
 		Options:   options,
@@ -373,7 +373,7 @@ func TestSdkVolumeUnountBadArgument(t *testing.T) {
 	}
 	mountPath := "/mnt/mounttest"
 
-	req := &api.VolumeUnmountRequest{
+	req := &api.SdkVolumeUnmountRequest{
 		VolumeId:  id,
 		MountPath: mountPath,
 		Options:   options,
