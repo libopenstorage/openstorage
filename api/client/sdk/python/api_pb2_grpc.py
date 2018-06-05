@@ -16,28 +16,28 @@ class OpenStorageClusterStub(object):
     """
     self.Enumerate = channel.unary_unary(
         '/openstorage.api.OpenStorageCluster/Enumerate',
-        request_serializer=api__pb2.ClusterEnumerateRequest.SerializeToString,
-        response_deserializer=api__pb2.ClusterEnumerateResponse.FromString,
+        request_serializer=api__pb2.SdkClusterEnumerateRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkClusterEnumerateResponse.FromString,
         )
     self.Inspect = channel.unary_unary(
         '/openstorage.api.OpenStorageCluster/Inspect',
-        request_serializer=api__pb2.ClusterInspectRequest.SerializeToString,
-        response_deserializer=api__pb2.ClusterInspectResponse.FromString,
+        request_serializer=api__pb2.SdkClusterInspectRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkClusterInspectResponse.FromString,
         )
     self.AlertEnumerate = channel.unary_unary(
         '/openstorage.api.OpenStorageCluster/AlertEnumerate',
-        request_serializer=api__pb2.ClusterAlertEnumerateRequest.SerializeToString,
-        response_deserializer=api__pb2.ClusterAlertEnumerateResponse.FromString,
+        request_serializer=api__pb2.SdkClusterAlertEnumerateRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkClusterAlertEnumerateResponse.FromString,
         )
     self.AlertClear = channel.unary_unary(
         '/openstorage.api.OpenStorageCluster/AlertClear',
-        request_serializer=api__pb2.ClusterAlertClearRequest.SerializeToString,
-        response_deserializer=api__pb2.ClusterAlertClearResponse.FromString,
+        request_serializer=api__pb2.SdkClusterAlertClearRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkClusterAlertClearResponse.FromString,
         )
     self.AlertErase = channel.unary_unary(
         '/openstorage.api.OpenStorageCluster/AlertErase',
-        request_serializer=api__pb2.ClusterAlertEraseRequest.SerializeToString,
-        response_deserializer=api__pb2.ClusterAlertEraseResponse.FromString,
+        request_serializer=api__pb2.SdkClusterAlertEraseRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkClusterAlertEraseResponse.FromString,
         )
 
 
@@ -85,28 +85,28 @@ def add_OpenStorageClusterServicer_to_server(servicer, server):
   rpc_method_handlers = {
       'Enumerate': grpc.unary_unary_rpc_method_handler(
           servicer.Enumerate,
-          request_deserializer=api__pb2.ClusterEnumerateRequest.FromString,
-          response_serializer=api__pb2.ClusterEnumerateResponse.SerializeToString,
+          request_deserializer=api__pb2.SdkClusterEnumerateRequest.FromString,
+          response_serializer=api__pb2.SdkClusterEnumerateResponse.SerializeToString,
       ),
       'Inspect': grpc.unary_unary_rpc_method_handler(
           servicer.Inspect,
-          request_deserializer=api__pb2.ClusterInspectRequest.FromString,
-          response_serializer=api__pb2.ClusterInspectResponse.SerializeToString,
+          request_deserializer=api__pb2.SdkClusterInspectRequest.FromString,
+          response_serializer=api__pb2.SdkClusterInspectResponse.SerializeToString,
       ),
       'AlertEnumerate': grpc.unary_unary_rpc_method_handler(
           servicer.AlertEnumerate,
-          request_deserializer=api__pb2.ClusterAlertEnumerateRequest.FromString,
-          response_serializer=api__pb2.ClusterAlertEnumerateResponse.SerializeToString,
+          request_deserializer=api__pb2.SdkClusterAlertEnumerateRequest.FromString,
+          response_serializer=api__pb2.SdkClusterAlertEnumerateResponse.SerializeToString,
       ),
       'AlertClear': grpc.unary_unary_rpc_method_handler(
           servicer.AlertClear,
-          request_deserializer=api__pb2.ClusterAlertClearRequest.FromString,
-          response_serializer=api__pb2.ClusterAlertClearResponse.SerializeToString,
+          request_deserializer=api__pb2.SdkClusterAlertClearRequest.FromString,
+          response_serializer=api__pb2.SdkClusterAlertClearResponse.SerializeToString,
       ),
       'AlertErase': grpc.unary_unary_rpc_method_handler(
           servicer.AlertErase,
-          request_deserializer=api__pb2.ClusterAlertEraseRequest.FromString,
-          response_serializer=api__pb2.ClusterAlertEraseResponse.SerializeToString,
+          request_deserializer=api__pb2.SdkClusterAlertEraseRequest.FromString,
+          response_serializer=api__pb2.SdkClusterAlertEraseResponse.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(
@@ -126,63 +126,63 @@ class OpenStorageVolumeStub(object):
     """
     self.Create = channel.unary_unary(
         '/openstorage.api.OpenStorageVolume/Create',
-        request_serializer=api__pb2.OpenStorageVolumeCreateRequest.SerializeToString,
-        response_deserializer=api__pb2.OpenStorageVolumeCreateResponse.FromString,
+        request_serializer=api__pb2.SdkVolumeCreateRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkVolumeCreateResponse.FromString,
         )
-    self.CreateFromVolumeID = channel.unary_unary(
-        '/openstorage.api.OpenStorageVolume/CreateFromVolumeID',
-        request_serializer=api__pb2.VolumeCreateFromVolumeIDRequest.SerializeToString,
-        response_deserializer=api__pb2.VolumeCreateFromVolumeIDResponse.FromString,
+    self.CreateFromVolumeId = channel.unary_unary(
+        '/openstorage.api.OpenStorageVolume/CreateFromVolumeId',
+        request_serializer=api__pb2.SdkVolumeCreateFromVolumeIdRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkVolumeCreateFromVolumeIdResponse.FromString,
         )
     self.Delete = channel.unary_unary(
         '/openstorage.api.OpenStorageVolume/Delete',
-        request_serializer=api__pb2.VolumeDeleteRequest.SerializeToString,
-        response_deserializer=api__pb2.VolumeDeleteResponse.FromString,
+        request_serializer=api__pb2.SdkVolumeDeleteRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkVolumeDeleteResponse.FromString,
         )
     self.Inspect = channel.unary_unary(
         '/openstorage.api.OpenStorageVolume/Inspect',
-        request_serializer=api__pb2.VolumeInspectRequest.SerializeToString,
-        response_deserializer=api__pb2.VolumeInspectResponse.FromString,
+        request_serializer=api__pb2.SdkVolumeInspectRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkVolumeInspectResponse.FromString,
         )
     self.Enumerate = channel.unary_unary(
         '/openstorage.api.OpenStorageVolume/Enumerate',
-        request_serializer=api__pb2.VolumeEnumerateRequest.SerializeToString,
-        response_deserializer=api__pb2.VolumeEnumerateResponse.FromString,
+        request_serializer=api__pb2.SdkVolumeEnumerateRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkVolumeEnumerateResponse.FromString,
         )
     self.SnapshotCreate = channel.unary_unary(
         '/openstorage.api.OpenStorageVolume/SnapshotCreate',
-        request_serializer=api__pb2.VolumeSnapshotCreateRequest.SerializeToString,
-        response_deserializer=api__pb2.VolumeSnapshotCreateResponse.FromString,
+        request_serializer=api__pb2.SdkVolumeSnapshotCreateRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkVolumeSnapshotCreateResponse.FromString,
         )
     self.SnapshotRestore = channel.unary_unary(
         '/openstorage.api.OpenStorageVolume/SnapshotRestore',
-        request_serializer=api__pb2.VolumeSnapshotRestoreRequest.SerializeToString,
-        response_deserializer=api__pb2.VolumeSnapshotRestoreResponse.FromString,
+        request_serializer=api__pb2.SdkVolumeSnapshotRestoreRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkVolumeSnapshotRestoreResponse.FromString,
         )
     self.SnapshotEnumerate = channel.unary_unary(
         '/openstorage.api.OpenStorageVolume/SnapshotEnumerate',
-        request_serializer=api__pb2.VolumeSnapshotEnumerateRequest.SerializeToString,
-        response_deserializer=api__pb2.VolumeSnapshotEnumerateResponse.FromString,
+        request_serializer=api__pb2.SdkVolumeSnapshotEnumerateRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkVolumeSnapshotEnumerateResponse.FromString,
         )
     self.Attach = channel.unary_unary(
         '/openstorage.api.OpenStorageVolume/Attach',
-        request_serializer=api__pb2.VolumeAttachRequest.SerializeToString,
-        response_deserializer=api__pb2.VolumeAttachResponse.FromString,
+        request_serializer=api__pb2.SdkVolumeAttachRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkVolumeAttachResponse.FromString,
         )
     self.Detach = channel.unary_unary(
         '/openstorage.api.OpenStorageVolume/Detach',
-        request_serializer=api__pb2.VolumeDetachRequest.SerializeToString,
-        response_deserializer=api__pb2.VolumeDetachResponse.FromString,
+        request_serializer=api__pb2.SdkVolumeDetachRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkVolumeDetachResponse.FromString,
         )
     self.Mount = channel.unary_unary(
         '/openstorage.api.OpenStorageVolume/Mount',
-        request_serializer=api__pb2.VolumeMountRequest.SerializeToString,
-        response_deserializer=api__pb2.VolumeMountResponse.FromString,
+        request_serializer=api__pb2.SdkVolumeMountRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkVolumeMountResponse.FromString,
         )
     self.Unmount = channel.unary_unary(
         '/openstorage.api.OpenStorageVolume/Unmount',
-        request_serializer=api__pb2.VolumeUnmountRequest.SerializeToString,
-        response_deserializer=api__pb2.VolumeUnmountResponse.FromString,
+        request_serializer=api__pb2.SdkVolumeUnmountRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkVolumeUnmountResponse.FromString,
         )
 
 
@@ -197,8 +197,8 @@ class OpenStorageVolumeServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def CreateFromVolumeID(self, request, context):
-    """CreateFromVolumeID creates a new volume cloned from an existing volume
+  def CreateFromVolumeId(self, request, context):
+    """CreateFromVolumeId creates a new volume cloned from an existing volume
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -280,65 +280,232 @@ def add_OpenStorageVolumeServicer_to_server(servicer, server):
   rpc_method_handlers = {
       'Create': grpc.unary_unary_rpc_method_handler(
           servicer.Create,
-          request_deserializer=api__pb2.OpenStorageVolumeCreateRequest.FromString,
-          response_serializer=api__pb2.OpenStorageVolumeCreateResponse.SerializeToString,
+          request_deserializer=api__pb2.SdkVolumeCreateRequest.FromString,
+          response_serializer=api__pb2.SdkVolumeCreateResponse.SerializeToString,
       ),
-      'CreateFromVolumeID': grpc.unary_unary_rpc_method_handler(
-          servicer.CreateFromVolumeID,
-          request_deserializer=api__pb2.VolumeCreateFromVolumeIDRequest.FromString,
-          response_serializer=api__pb2.VolumeCreateFromVolumeIDResponse.SerializeToString,
+      'CreateFromVolumeId': grpc.unary_unary_rpc_method_handler(
+          servicer.CreateFromVolumeId,
+          request_deserializer=api__pb2.SdkVolumeCreateFromVolumeIdRequest.FromString,
+          response_serializer=api__pb2.SdkVolumeCreateFromVolumeIdResponse.SerializeToString,
       ),
       'Delete': grpc.unary_unary_rpc_method_handler(
           servicer.Delete,
-          request_deserializer=api__pb2.VolumeDeleteRequest.FromString,
-          response_serializer=api__pb2.VolumeDeleteResponse.SerializeToString,
+          request_deserializer=api__pb2.SdkVolumeDeleteRequest.FromString,
+          response_serializer=api__pb2.SdkVolumeDeleteResponse.SerializeToString,
       ),
       'Inspect': grpc.unary_unary_rpc_method_handler(
           servicer.Inspect,
-          request_deserializer=api__pb2.VolumeInspectRequest.FromString,
-          response_serializer=api__pb2.VolumeInspectResponse.SerializeToString,
+          request_deserializer=api__pb2.SdkVolumeInspectRequest.FromString,
+          response_serializer=api__pb2.SdkVolumeInspectResponse.SerializeToString,
       ),
       'Enumerate': grpc.unary_unary_rpc_method_handler(
           servicer.Enumerate,
-          request_deserializer=api__pb2.VolumeEnumerateRequest.FromString,
-          response_serializer=api__pb2.VolumeEnumerateResponse.SerializeToString,
+          request_deserializer=api__pb2.SdkVolumeEnumerateRequest.FromString,
+          response_serializer=api__pb2.SdkVolumeEnumerateResponse.SerializeToString,
       ),
       'SnapshotCreate': grpc.unary_unary_rpc_method_handler(
           servicer.SnapshotCreate,
-          request_deserializer=api__pb2.VolumeSnapshotCreateRequest.FromString,
-          response_serializer=api__pb2.VolumeSnapshotCreateResponse.SerializeToString,
+          request_deserializer=api__pb2.SdkVolumeSnapshotCreateRequest.FromString,
+          response_serializer=api__pb2.SdkVolumeSnapshotCreateResponse.SerializeToString,
       ),
       'SnapshotRestore': grpc.unary_unary_rpc_method_handler(
           servicer.SnapshotRestore,
-          request_deserializer=api__pb2.VolumeSnapshotRestoreRequest.FromString,
-          response_serializer=api__pb2.VolumeSnapshotRestoreResponse.SerializeToString,
+          request_deserializer=api__pb2.SdkVolumeSnapshotRestoreRequest.FromString,
+          response_serializer=api__pb2.SdkVolumeSnapshotRestoreResponse.SerializeToString,
       ),
       'SnapshotEnumerate': grpc.unary_unary_rpc_method_handler(
           servicer.SnapshotEnumerate,
-          request_deserializer=api__pb2.VolumeSnapshotEnumerateRequest.FromString,
-          response_serializer=api__pb2.VolumeSnapshotEnumerateResponse.SerializeToString,
+          request_deserializer=api__pb2.SdkVolumeSnapshotEnumerateRequest.FromString,
+          response_serializer=api__pb2.SdkVolumeSnapshotEnumerateResponse.SerializeToString,
       ),
       'Attach': grpc.unary_unary_rpc_method_handler(
           servicer.Attach,
-          request_deserializer=api__pb2.VolumeAttachRequest.FromString,
-          response_serializer=api__pb2.VolumeAttachResponse.SerializeToString,
+          request_deserializer=api__pb2.SdkVolumeAttachRequest.FromString,
+          response_serializer=api__pb2.SdkVolumeAttachResponse.SerializeToString,
       ),
       'Detach': grpc.unary_unary_rpc_method_handler(
           servicer.Detach,
-          request_deserializer=api__pb2.VolumeDetachRequest.FromString,
-          response_serializer=api__pb2.VolumeDetachResponse.SerializeToString,
+          request_deserializer=api__pb2.SdkVolumeDetachRequest.FromString,
+          response_serializer=api__pb2.SdkVolumeDetachResponse.SerializeToString,
       ),
       'Mount': grpc.unary_unary_rpc_method_handler(
           servicer.Mount,
-          request_deserializer=api__pb2.VolumeMountRequest.FromString,
-          response_serializer=api__pb2.VolumeMountResponse.SerializeToString,
+          request_deserializer=api__pb2.SdkVolumeMountRequest.FromString,
+          response_serializer=api__pb2.SdkVolumeMountResponse.SerializeToString,
       ),
       'Unmount': grpc.unary_unary_rpc_method_handler(
           servicer.Unmount,
-          request_deserializer=api__pb2.VolumeUnmountRequest.FromString,
-          response_serializer=api__pb2.VolumeUnmountResponse.SerializeToString,
+          request_deserializer=api__pb2.SdkVolumeUnmountRequest.FromString,
+          response_serializer=api__pb2.SdkVolumeUnmountResponse.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(
       'openstorage.api.OpenStorageVolume', rpc_method_handlers)
+  server.add_generic_rpc_handlers((generic_handler,))
+
+
+class OpenStorageCredentialsStub(object):
+  # missing associated documentation comment in .proto file
+  pass
+
+  def __init__(self, channel):
+    """Constructor.
+
+    Args:
+      channel: A grpc.Channel.
+    """
+    self.CreateForAWS = channel.unary_unary(
+        '/openstorage.api.OpenStorageCredentials/CreateForAWS',
+        request_serializer=api__pb2.SdkCredentialCreateAWSRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkCredentialCreateAWSResponse.FromString,
+        )
+    self.CreateForAzure = channel.unary_unary(
+        '/openstorage.api.OpenStorageCredentials/CreateForAzure',
+        request_serializer=api__pb2.SdkCredentialCreateAzureRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkCredentialCreateAzureResponse.FromString,
+        )
+    self.CreateForGoogle = channel.unary_unary(
+        '/openstorage.api.OpenStorageCredentials/CreateForGoogle',
+        request_serializer=api__pb2.SdkCredentialCreateGoogleRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkCredentialCreateGoogleResponse.FromString,
+        )
+    self.EnumerateForAWS = channel.unary_unary(
+        '/openstorage.api.OpenStorageCredentials/EnumerateForAWS',
+        request_serializer=api__pb2.SdkCredentialEnumerateAWSRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkCredentialEnumerateAWSResponse.FromString,
+        )
+    self.EnumerateForAzure = channel.unary_unary(
+        '/openstorage.api.OpenStorageCredentials/EnumerateForAzure',
+        request_serializer=api__pb2.SdkCredentialEnumerateAzureRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkCredentialEnumerateAzureResponse.FromString,
+        )
+    self.EnumerateForGoogle = channel.unary_unary(
+        '/openstorage.api.OpenStorageCredentials/EnumerateForGoogle',
+        request_serializer=api__pb2.SdkCredentialEnumerateGoogleRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkCredentialEnumerateGoogleResponse.FromString,
+        )
+    self.CredentialDelete = channel.unary_unary(
+        '/openstorage.api.OpenStorageCredentials/CredentialDelete',
+        request_serializer=api__pb2.SdkCredentialDeleteRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkCredentialDeleteResponse.FromString,
+        )
+    self.CredentialValidate = channel.unary_unary(
+        '/openstorage.api.OpenStorageCredentials/CredentialValidate',
+        request_serializer=api__pb2.SdkCredentialValidateRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkCredentialValidateResponse.FromString,
+        )
+
+
+class OpenStorageCredentialsServicer(object):
+  # missing associated documentation comment in .proto file
+  pass
+
+  def CreateForAWS(self, request, context):
+    """Provide credentials to OpenStorage and if valid,
+    it will return an identifier to the credentials
+
+    Create credential for AWS S3 and if valid ,
+    returns a unique identifier
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def CreateForAzure(self, request, context):
+    """Create credential for Azure and if valid ,
+    returns a unique identifier
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def CreateForGoogle(self, request, context):
+    """Create credential for Google and if valid ,
+    returns a unique identifier
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def EnumerateForAWS(self, request, context):
+    """EnumerateForAWS lists the configured AWS credentials                      
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def EnumerateForAzure(self, request, context):
+    """EnumerateForAzure lists the configured Azure credentials                  
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def EnumerateForGoogle(self, request, context):
+    """EnumerateForGoogle lists the configured Google credentials                
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def CredentialDelete(self, request, context):
+    """Delete a specified credential                                                 
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def CredentialValidate(self, request, context):
+    """Validate a specified credential
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+
+def add_OpenStorageCredentialsServicer_to_server(servicer, server):
+  rpc_method_handlers = {
+      'CreateForAWS': grpc.unary_unary_rpc_method_handler(
+          servicer.CreateForAWS,
+          request_deserializer=api__pb2.SdkCredentialCreateAWSRequest.FromString,
+          response_serializer=api__pb2.SdkCredentialCreateAWSResponse.SerializeToString,
+      ),
+      'CreateForAzure': grpc.unary_unary_rpc_method_handler(
+          servicer.CreateForAzure,
+          request_deserializer=api__pb2.SdkCredentialCreateAzureRequest.FromString,
+          response_serializer=api__pb2.SdkCredentialCreateAzureResponse.SerializeToString,
+      ),
+      'CreateForGoogle': grpc.unary_unary_rpc_method_handler(
+          servicer.CreateForGoogle,
+          request_deserializer=api__pb2.SdkCredentialCreateGoogleRequest.FromString,
+          response_serializer=api__pb2.SdkCredentialCreateGoogleResponse.SerializeToString,
+      ),
+      'EnumerateForAWS': grpc.unary_unary_rpc_method_handler(
+          servicer.EnumerateForAWS,
+          request_deserializer=api__pb2.SdkCredentialEnumerateAWSRequest.FromString,
+          response_serializer=api__pb2.SdkCredentialEnumerateAWSResponse.SerializeToString,
+      ),
+      'EnumerateForAzure': grpc.unary_unary_rpc_method_handler(
+          servicer.EnumerateForAzure,
+          request_deserializer=api__pb2.SdkCredentialEnumerateAzureRequest.FromString,
+          response_serializer=api__pb2.SdkCredentialEnumerateAzureResponse.SerializeToString,
+      ),
+      'EnumerateForGoogle': grpc.unary_unary_rpc_method_handler(
+          servicer.EnumerateForGoogle,
+          request_deserializer=api__pb2.SdkCredentialEnumerateGoogleRequest.FromString,
+          response_serializer=api__pb2.SdkCredentialEnumerateGoogleResponse.SerializeToString,
+      ),
+      'CredentialDelete': grpc.unary_unary_rpc_method_handler(
+          servicer.CredentialDelete,
+          request_deserializer=api__pb2.SdkCredentialDeleteRequest.FromString,
+          response_serializer=api__pb2.SdkCredentialDeleteResponse.SerializeToString,
+      ),
+      'CredentialValidate': grpc.unary_unary_rpc_method_handler(
+          servicer.CredentialValidate,
+          request_deserializer=api__pb2.SdkCredentialValidateRequest.FromString,
+          response_serializer=api__pb2.SdkCredentialValidateResponse.SerializeToString,
+      ),
+  }
+  generic_handler = grpc.method_handlers_generic_handler(
+      'openstorage.api.OpenStorageCredentials', rpc_method_handlers)
   server.add_generic_rpc_handlers((generic_handler,))

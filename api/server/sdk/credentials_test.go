@@ -34,7 +34,7 @@ func TestSdkAWSCredentialCreateSuccess(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.CredentialCreateAWSRequest{
+	req := &api.SdkCredentialCreateAWSRequest{
 		Credential: &api.S3Credential{
 			AccessKey: "dummy-access",
 			SecretKey: "dummy-secret",
@@ -75,7 +75,7 @@ func TestSdkAWSCredentialCreateFailed(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.CredentialCreateAWSRequest{
+	req := &api.SdkCredentialCreateAWSRequest{
 		Credential: &api.S3Credential{
 			AccessKey: "dummy-access",
 			SecretKey: "dummy-secret",
@@ -127,7 +127,7 @@ func TestSdkAWSCredentialCreateBadArgument(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.CredentialCreateAWSRequest{}
+	req := &api.SdkCredentialCreateAWSRequest{}
 
 	params := make(map[string]string)
 
@@ -156,7 +156,7 @@ func TestSdkAzureCredentialCreateSuccess(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.CredentialCreateAzureRequest{
+	req := &api.SdkCredentialCreateAzureRequest{
 		Credential: &api.AzureCredential{
 			AccountKey:  "dummy-account-key",
 			AccountName: "dummy-account-name",
@@ -193,7 +193,7 @@ func TestSdkAzureCredentialCreateFailed(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.CredentialCreateAzureRequest{
+	req := &api.SdkCredentialCreateAzureRequest{
 		Credential: &api.AzureCredential{
 			AccountKey:  "dummy-account-key",
 			AccountName: "dummy-account-name",
@@ -241,7 +241,7 @@ func TestSdkAzureCredentialCreateBadArgument(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.CredentialCreateAzureRequest{}
+	req := &api.SdkCredentialCreateAzureRequest{}
 
 	params := make(map[string]string)
 
@@ -267,7 +267,7 @@ func TestSdkGoogleCredentialCreateSuccess(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.CredentialCreateGoogleRequest{
+	req := &api.SdkCredentialCreateGoogleRequest{
 		Credential: &api.GoogleCredential{
 			ProjectId: "dummy-project-id",
 			JsonKey:   "dummy-json-key",
@@ -304,7 +304,7 @@ func TestSdkGoogleCredentialCreateFailed(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.CredentialCreateGoogleRequest{
+	req := &api.SdkCredentialCreateGoogleRequest{
 		Credential: &api.GoogleCredential{
 			ProjectId: "dummy-project-id",
 			JsonKey:   "dummy-json-key",
@@ -352,7 +352,7 @@ func TestSdkGoogleCredentialCreateBadArgument(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.CredentialCreateGoogleRequest{}
+	req := &api.SdkCredentialCreateGoogleRequest{}
 
 	params := make(map[string]string)
 
@@ -381,7 +381,7 @@ func TestSdkCredentialValidateSuccess(t *testing.T) {
 
 	uuid := "good-uuid"
 
-	req := &api.CredentialValidateRequest{CredentialId: uuid}
+	req := &api.SdkCredentialValidateRequest{CredentialId: uuid}
 
 	s.MockDriver().
 		EXPECT().
@@ -404,7 +404,7 @@ func TestSdkCredentialValidateFailed(t *testing.T) {
 
 	uuid := "bad-uuid"
 
-	req := &api.CredentialValidateRequest{CredentialId: uuid}
+	req := &api.SdkCredentialValidateRequest{CredentialId: uuid}
 
 	s.MockDriver().
 		EXPECT().
@@ -432,7 +432,7 @@ func TestSdkCredentialValidateBadArgument(t *testing.T) {
 
 	uuid := ""
 
-	req := &api.CredentialValidateRequest{CredentialId: uuid}
+	req := &api.SdkCredentialValidateRequest{CredentialId: uuid}
 
 	// Setup client
 	c := api.NewOpenStorageCredentialsClient(s.Conn())
@@ -454,7 +454,7 @@ func TestSdkCredentialEnumerateAWSSuccess(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.CredentialEnumerateAWSRequest{CredentialId: "test"}
+	req := &api.SdkCredentialEnumerateAWSRequest{CredentialId: "test"}
 
 	enumS3test1 := map[string]interface{}{
 		api.OptCredType:      "s3",
@@ -504,7 +504,7 @@ func TestSdkCredentialEnumerateAWSWithMultipleCredResponseSuccess(t *testing.T) 
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.CredentialEnumerateAWSRequest{CredentialId: "test"}
+	req := &api.SdkCredentialEnumerateAWSRequest{CredentialId: "test"}
 
 	enumS3 := map[string]interface{}{
 		api.OptCredType:      "s3",
@@ -555,7 +555,7 @@ func TestSdkCredentialEnumerateAWSFailed(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.CredentialEnumerateAWSRequest{CredentialId: "test"}
+	req := &api.SdkCredentialEnumerateAWSRequest{CredentialId: "test"}
 
 	s.MockDriver().
 		EXPECT().
@@ -579,7 +579,7 @@ func TestSdkCredentialEnumerateAzureSuccess(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.CredentialEnumerateAzureRequest{CredentialId: "test"}
+	req := &api.SdkCredentialEnumerateAzureRequest{CredentialId: "test"}
 
 	enumAzure := map[string]interface{}{
 		api.OptCredType:             "azure",
@@ -613,7 +613,7 @@ func TestSdkCredentialEnumerateAzureFailed(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.CredentialEnumerateAzureRequest{CredentialId: "test"}
+	req := &api.SdkCredentialEnumerateAzureRequest{CredentialId: "test"}
 
 	s.MockDriver().
 		EXPECT().
@@ -636,7 +636,7 @@ func TestSdkCredentialEnumerateGoogleSuccess(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.CredentialEnumerateGoogleRequest{CredentialId: "test"}
+	req := &api.SdkCredentialEnumerateGoogleRequest{CredentialId: "test"}
 
 	enumGoogle := map[string]interface{}{
 		api.OptCredType:            "google",
@@ -667,7 +667,7 @@ func TestSdkCredentialEnumerateGoogleFailed(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.CredentialEnumerateGoogleRequest{CredentialId: "test"}
+	req := &api.SdkCredentialEnumerateGoogleRequest{CredentialId: "test"}
 
 	s.MockDriver().
 		EXPECT().
@@ -691,7 +691,7 @@ func TestSdkCredentialDeleteSuccess(t *testing.T) {
 	defer s.Stop()
 
 	cred_id := "myid"
-	req := &api.CredentialDeleteRequest{
+	req := &api.SdkCredentialDeleteRequest{
 		CredentialId: cred_id,
 	}
 	s.MockDriver().
@@ -714,7 +714,7 @@ func TestSdkCredentialDeleteBadArgument(t *testing.T) {
 	defer s.Stop()
 
 	cred_id := ""
-	req := &api.CredentialDeleteRequest{
+	req := &api.SdkCredentialDeleteRequest{
 		CredentialId: cred_id,
 	}
 
@@ -735,7 +735,7 @@ func TestSdkCredentialDeleteFailed(t *testing.T) {
 	defer s.Stop()
 
 	cred_id := "myid"
-	req := &api.CredentialDeleteRequest{
+	req := &api.SdkCredentialDeleteRequest{
 		CredentialId: cred_id,
 	}
 	s.MockDriver().

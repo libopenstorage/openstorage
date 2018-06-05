@@ -29,7 +29,7 @@ var _ = runtime.String
 var _ = utilities.NewDoubleArray
 
 func request_OpenStorageCluster_Enumerate_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageClusterClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ClusterEnumerateRequest
+	var protoReq SdkClusterEnumerateRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -42,7 +42,7 @@ func request_OpenStorageCluster_Enumerate_0(ctx context.Context, marshaler runti
 }
 
 func request_OpenStorageCluster_Inspect_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageClusterClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ClusterInspectRequest
+	var protoReq SdkClusterInspectRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -55,7 +55,7 @@ func request_OpenStorageCluster_Inspect_0(ctx context.Context, marshaler runtime
 }
 
 func request_OpenStorageCluster_AlertEnumerate_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageClusterClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ClusterAlertEnumerateRequest
+	var protoReq SdkClusterAlertEnumerateRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -68,7 +68,7 @@ func request_OpenStorageCluster_AlertEnumerate_0(ctx context.Context, marshaler 
 }
 
 func request_OpenStorageCluster_AlertClear_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageClusterClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ClusterAlertClearRequest
+	var protoReq SdkClusterAlertClearRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -81,7 +81,7 @@ func request_OpenStorageCluster_AlertClear_0(ctx context.Context, marshaler runt
 }
 
 func request_OpenStorageCluster_AlertErase_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageClusterClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ClusterAlertEraseRequest
+	var protoReq SdkClusterAlertEraseRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -94,7 +94,7 @@ func request_OpenStorageCluster_AlertErase_0(ctx context.Context, marshaler runt
 }
 
 func request_OpenStorageVolume_Create_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageVolumeClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq OpenStorageVolumeCreateRequest
+	var protoReq SdkVolumeCreateRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -106,21 +106,21 @@ func request_OpenStorageVolume_Create_0(ctx context.Context, marshaler runtime.M
 
 }
 
-func request_OpenStorageVolume_CreateFromVolumeID_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageVolumeClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq VolumeCreateFromVolumeIDRequest
+func request_OpenStorageVolume_CreateFromVolumeId_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageVolumeClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SdkVolumeCreateFromVolumeIdRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.CreateFromVolumeID(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.CreateFromVolumeId(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
 func request_OpenStorageVolume_Delete_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageVolumeClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq VolumeDeleteRequest
+	var protoReq SdkVolumeDeleteRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -133,7 +133,7 @@ func request_OpenStorageVolume_Delete_0(ctx context.Context, marshaler runtime.M
 }
 
 func request_OpenStorageVolume_Inspect_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageVolumeClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq VolumeInspectRequest
+	var protoReq SdkVolumeInspectRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -146,7 +146,7 @@ func request_OpenStorageVolume_Inspect_0(ctx context.Context, marshaler runtime.
 }
 
 func request_OpenStorageVolume_Enumerate_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageVolumeClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq VolumeEnumerateRequest
+	var protoReq SdkVolumeEnumerateRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -159,7 +159,7 @@ func request_OpenStorageVolume_Enumerate_0(ctx context.Context, marshaler runtim
 }
 
 func request_OpenStorageVolume_SnapshotCreate_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageVolumeClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq VolumeSnapshotCreateRequest
+	var protoReq SdkVolumeSnapshotCreateRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -172,7 +172,7 @@ func request_OpenStorageVolume_SnapshotCreate_0(ctx context.Context, marshaler r
 }
 
 func request_OpenStorageVolume_SnapshotRestore_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageVolumeClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq VolumeSnapshotRestoreRequest
+	var protoReq SdkVolumeSnapshotRestoreRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -185,7 +185,7 @@ func request_OpenStorageVolume_SnapshotRestore_0(ctx context.Context, marshaler 
 }
 
 func request_OpenStorageVolume_SnapshotEnumerate_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageVolumeClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq VolumeSnapshotEnumerateRequest
+	var protoReq SdkVolumeSnapshotEnumerateRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -198,7 +198,7 @@ func request_OpenStorageVolume_SnapshotEnumerate_0(ctx context.Context, marshale
 }
 
 func request_OpenStorageVolume_Attach_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageVolumeClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq VolumeAttachRequest
+	var protoReq SdkVolumeAttachRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -211,7 +211,7 @@ func request_OpenStorageVolume_Attach_0(ctx context.Context, marshaler runtime.M
 }
 
 func request_OpenStorageVolume_Detach_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageVolumeClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq VolumeDetachRequest
+	var protoReq SdkVolumeDetachRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -224,7 +224,7 @@ func request_OpenStorageVolume_Detach_0(ctx context.Context, marshaler runtime.M
 }
 
 func request_OpenStorageVolume_Mount_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageVolumeClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq VolumeMountRequest
+	var protoReq SdkVolumeMountRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -237,7 +237,7 @@ func request_OpenStorageVolume_Mount_0(ctx context.Context, marshaler runtime.Ma
 }
 
 func request_OpenStorageVolume_Unmount_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageVolumeClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq VolumeUnmountRequest
+	var protoReq SdkVolumeUnmountRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -250,7 +250,7 @@ func request_OpenStorageVolume_Unmount_0(ctx context.Context, marshaler runtime.
 }
 
 func request_OpenStorageCredentials_CreateForAWS_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageCredentialsClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq CredentialCreateAWSRequest
+	var protoReq SdkCredentialCreateAWSRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -263,7 +263,7 @@ func request_OpenStorageCredentials_CreateForAWS_0(ctx context.Context, marshale
 }
 
 func request_OpenStorageCredentials_CreateForAzure_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageCredentialsClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq CredentialCreateAzureRequest
+	var protoReq SdkCredentialCreateAzureRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -276,7 +276,7 @@ func request_OpenStorageCredentials_CreateForAzure_0(ctx context.Context, marsha
 }
 
 func request_OpenStorageCredentials_CreateForGoogle_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageCredentialsClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq CredentialCreateGoogleRequest
+	var protoReq SdkCredentialCreateGoogleRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -289,7 +289,7 @@ func request_OpenStorageCredentials_CreateForGoogle_0(ctx context.Context, marsh
 }
 
 func request_OpenStorageCredentials_EnumerateForAWS_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageCredentialsClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq CredentialEnumerateAWSRequest
+	var protoReq SdkCredentialEnumerateAWSRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -302,7 +302,7 @@ func request_OpenStorageCredentials_EnumerateForAWS_0(ctx context.Context, marsh
 }
 
 func request_OpenStorageCredentials_EnumerateForAzure_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageCredentialsClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq CredentialEnumerateAzureRequest
+	var protoReq SdkCredentialEnumerateAzureRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -315,7 +315,7 @@ func request_OpenStorageCredentials_EnumerateForAzure_0(ctx context.Context, mar
 }
 
 func request_OpenStorageCredentials_EnumerateForGoogle_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageCredentialsClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq CredentialEnumerateGoogleRequest
+	var protoReq SdkCredentialEnumerateGoogleRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -328,7 +328,7 @@ func request_OpenStorageCredentials_EnumerateForGoogle_0(ctx context.Context, ma
 }
 
 func request_OpenStorageCredentials_CredentialDelete_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageCredentialsClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq CredentialDeleteRequest
+	var protoReq SdkCredentialDeleteRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -341,7 +341,7 @@ func request_OpenStorageCredentials_CredentialDelete_0(ctx context.Context, mars
 }
 
 func request_OpenStorageCredentials_CredentialValidate_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageCredentialsClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq CredentialValidateRequest
+	var protoReq SdkCredentialValidateRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -630,7 +630,7 @@ func RegisterOpenStorageVolumeHandlerClient(ctx context.Context, mux *runtime.Se
 
 	})
 
-	mux.Handle("POST", pattern_OpenStorageVolume_CreateFromVolumeID_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_OpenStorageVolume_CreateFromVolumeId_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -648,14 +648,14 @@ func RegisterOpenStorageVolumeHandlerClient(ctx context.Context, mux *runtime.Se
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_OpenStorageVolume_CreateFromVolumeID_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_OpenStorageVolume_CreateFromVolumeId_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_OpenStorageVolume_CreateFromVolumeID_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_OpenStorageVolume_CreateFromVolumeId_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -955,7 +955,7 @@ func RegisterOpenStorageVolumeHandlerClient(ctx context.Context, mux *runtime.Se
 var (
 	pattern_OpenStorageVolume_Create_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "volume", "create"}, ""))
 
-	pattern_OpenStorageVolume_CreateFromVolumeID_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "volume", "createfromid"}, ""))
+	pattern_OpenStorageVolume_CreateFromVolumeId_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "volume", "createfromid"}, ""))
 
 	pattern_OpenStorageVolume_Delete_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "volume", "delete"}, ""))
 
@@ -981,7 +981,7 @@ var (
 var (
 	forward_OpenStorageVolume_Create_0 = runtime.ForwardResponseMessage
 
-	forward_OpenStorageVolume_CreateFromVolumeID_0 = runtime.ForwardResponseMessage
+	forward_OpenStorageVolume_CreateFromVolumeId_0 = runtime.ForwardResponseMessage
 
 	forward_OpenStorageVolume_Delete_0 = runtime.ForwardResponseMessage
 

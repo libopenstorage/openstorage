@@ -99,8 +99,8 @@ func (s *VolumeServer) create(
 // Create creates a new volume
 func (s *VolumeServer) Create(
 	ctx context.Context,
-	req *api.OpenStorageVolumeCreateRequest,
-) (*api.OpenStorageVolumeCreateResponse, error) {
+	req *api.SdkVolumeCreateRequest,
+) (*api.SdkVolumeCreateResponse, error) {
 
 	if len(req.GetName()) == 0 {
 		return nil, status.Error(
@@ -123,16 +123,16 @@ func (s *VolumeServer) Create(
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &api.OpenStorageVolumeCreateResponse{
+	return &api.SdkVolumeCreateResponse{
 		VolumeId: id,
 	}, nil
 }
 
 // CreateFromVolumeID creates a new volume from an existing volume
-func (s *VolumeServer) CreateFromVolumeID(
+func (s *VolumeServer) CreateFromVolumeId(
 	ctx context.Context,
-	req *api.VolumeCreateFromVolumeIDRequest,
-) (*api.VolumeCreateFromVolumeIDResponse, error) {
+	req *api.SdkVolumeCreateFromVolumeIdRequest,
+) (*api.SdkVolumeCreateFromVolumeIdResponse, error) {
 
 	if len(req.GetName()) == 0 {
 		return nil, status.Error(
@@ -161,7 +161,7 @@ func (s *VolumeServer) CreateFromVolumeID(
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &api.VolumeCreateFromVolumeIDResponse{
+	return &api.SdkVolumeCreateFromVolumeIdResponse{
 		VolumeId: id,
 	}, nil
 }
@@ -169,8 +169,8 @@ func (s *VolumeServer) CreateFromVolumeID(
 // Delete deletes a volume
 func (s *VolumeServer) Delete(
 	ctx context.Context,
-	req *api.VolumeDeleteRequest,
-) (*api.VolumeDeleteResponse, error) {
+	req *api.SdkVolumeDeleteRequest,
+) (*api.SdkVolumeDeleteResponse, error) {
 
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
@@ -180,7 +180,7 @@ func (s *VolumeServer) Delete(
 	volumes, err := s.driver.Inspect([]string{req.GetVolumeId()})
 	if (err == nil && len(volumes) == 0) ||
 		(err != nil && err == volume.ErrEnoEnt) {
-		return &api.VolumeDeleteResponse{}, nil
+		return &api.SdkVolumeDeleteResponse{}, nil
 	} else if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -198,14 +198,14 @@ func (s *VolumeServer) Delete(
 			err.Error())
 	}
 
-	return &api.VolumeDeleteResponse{}, nil
+	return &api.SdkVolumeDeleteResponse{}, nil
 }
 
 // Inspect returns information about a volume
 func (s *VolumeServer) Inspect(
 	ctx context.Context,
-	req *api.VolumeInspectRequest,
-) (*api.VolumeInspectResponse, error) {
+	req *api.SdkVolumeInspectRequest,
+) (*api.SdkVolumeInspectResponse, error) {
 
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
@@ -220,7 +220,7 @@ func (s *VolumeServer) Inspect(
 			err.Error())
 	}
 
-	return &api.VolumeInspectResponse{
+	return &api.SdkVolumeInspectResponse{
 		Volume: vols[0],
 	}, nil
 }
@@ -228,8 +228,8 @@ func (s *VolumeServer) Inspect(
 // Enumerate returns a list of volumes
 func (s *VolumeServer) Enumerate(
 	ctx context.Context,
-	req *api.VolumeEnumerateRequest,
-) (*api.VolumeEnumerateResponse, error) {
+	req *api.SdkVolumeEnumerateRequest,
+) (*api.SdkVolumeEnumerateResponse, error) {
 
 	vols, err := s.driver.Enumerate(req.GetLocator(), nil)
 	if err != nil {
@@ -239,7 +239,7 @@ func (s *VolumeServer) Enumerate(
 			err.Error())
 	}
 
-	return &api.VolumeEnumerateResponse{
+	return &api.SdkVolumeEnumerateResponse{
 		Volumes: vols,
 	}, nil
 }

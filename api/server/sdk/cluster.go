@@ -34,19 +34,19 @@ type ClusterServer struct {
 }
 
 // Enumerate returns information about the cluster
-func (s *ClusterServer) Enumerate(ctx context.Context, req *api.ClusterEnumerateRequest) (*api.ClusterEnumerateResponse, error) {
+func (s *ClusterServer) Enumerate(ctx context.Context, req *api.SdkClusterEnumerateRequest) (*api.SdkClusterEnumerateResponse, error) {
 	c, err := s.cluster.Enumerate()
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &api.ClusterEnumerateResponse{
+	return &api.SdkClusterEnumerateResponse{
 		Cluster: c.ToStorageCluster(),
 	}, nil
 }
 
 // Inspect returns information about a specific node
-func (s *ClusterServer) Inspect(ctx context.Context, req *api.ClusterInspectRequest) (*api.ClusterInspectResponse, error) {
+func (s *ClusterServer) Inspect(ctx context.Context, req *api.SdkClusterInspectRequest) (*api.SdkClusterInspectResponse, error) {
 	if len(req.GetNodeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Node id must be provided")
 	}
@@ -56,7 +56,7 @@ func (s *ClusterServer) Inspect(ctx context.Context, req *api.ClusterInspectRequ
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &api.ClusterInspectResponse{
+	return &api.SdkClusterInspectResponse{
 		Node: node.ToStorageNode(),
 	}, nil
 }
@@ -64,8 +64,8 @@ func (s *ClusterServer) Inspect(ctx context.Context, req *api.ClusterInspectRequ
 // AlertEnumerate returns a list of alerts from the storage cluster
 func (s *ClusterServer) AlertEnumerate(
 	ctx context.Context,
-	req *api.ClusterAlertEnumerateRequest,
-) (*api.ClusterAlertEnumerateResponse, error) {
+	req *api.SdkClusterAlertEnumerateRequest,
+) (*api.SdkClusterAlertEnumerateResponse, error) {
 
 	ts, err := ptypes.Timestamp(req.GetTimeStart())
 	if err != nil {
@@ -92,7 +92,7 @@ func (s *ClusterServer) AlertEnumerate(
 			err.Error())
 	}
 
-	return &api.ClusterAlertEnumerateResponse{
+	return &api.SdkClusterAlertEnumerateResponse{
 		Alerts: alerts,
 	}, nil
 }
@@ -100,8 +100,8 @@ func (s *ClusterServer) AlertEnumerate(
 // AlertClear clears the alert for a given resource
 func (s *ClusterServer) AlertClear(
 	ctx context.Context,
-	req *api.ClusterAlertClearRequest,
-) (*api.ClusterAlertClearResponse, error) {
+	req *api.SdkClusterAlertClearRequest,
+) (*api.SdkClusterAlertClearResponse, error) {
 
 	err := s.cluster.ClearAlert(req.GetResource(), req.GetAlertId())
 	if err != nil {
@@ -113,14 +113,14 @@ func (s *ClusterServer) AlertClear(
 			err.Error())
 	}
 
-	return &api.ClusterAlertClearResponse{}, nil
+	return &api.SdkClusterAlertClearResponse{}, nil
 }
 
 // AlertErase erases an alert for a given resource
 func (s *ClusterServer) AlertErase(
 	ctx context.Context,
-	req *api.ClusterAlertEraseRequest,
-) (*api.ClusterAlertEraseResponse, error) {
+	req *api.SdkClusterAlertEraseRequest,
+) (*api.SdkClusterAlertEraseResponse, error) {
 
 	err := s.cluster.EraseAlert(req.GetResource(), req.GetAlertId())
 	if err != nil {
@@ -132,5 +132,5 @@ func (s *ClusterServer) AlertErase(
 			err.Error())
 	}
 
-	return &api.ClusterAlertEraseResponse{}, nil
+	return &api.SdkClusterAlertEraseResponse{}, nil
 }

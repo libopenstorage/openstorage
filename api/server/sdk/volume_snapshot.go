@@ -28,8 +28,8 @@ import (
 // SnapshotCreate creates a read-only snapshot of a volume
 func (s *VolumeServer) SnapshotCreate(
 	ctx context.Context,
-	req *api.VolumeSnapshotCreateRequest,
-) (*api.VolumeSnapshotCreateResponse, error) {
+	req *api.SdkVolumeSnapshotCreateRequest,
+) (*api.SdkVolumeSnapshotCreateResponse, error) {
 
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
@@ -43,7 +43,7 @@ func (s *VolumeServer) SnapshotCreate(
 		return nil, status.Errorf(codes.Internal, "Failed to create snapshot: %v", err.Error())
 	}
 
-	return &api.VolumeSnapshotCreateResponse{
+	return &api.SdkVolumeSnapshotCreateResponse{
 		SnapshotId: snapshotID,
 	}, nil
 }
@@ -51,8 +51,8 @@ func (s *VolumeServer) SnapshotCreate(
 // SnapshotRestore restores a volume to the specified snapshot id
 func (s *VolumeServer) SnapshotRestore(
 	ctx context.Context,
-	req *api.VolumeSnapshotRestoreRequest,
-) (*api.VolumeSnapshotRestoreResponse, error) {
+	req *api.SdkVolumeSnapshotRestoreRequest,
+) (*api.SdkVolumeSnapshotRestoreResponse, error) {
 
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
@@ -70,14 +70,14 @@ func (s *VolumeServer) SnapshotRestore(
 			err.Error())
 	}
 
-	return &api.VolumeSnapshotRestoreResponse{}, nil
+	return &api.SdkVolumeSnapshotRestoreResponse{}, nil
 }
 
 // SnapshotEnumerate returns a list of snapshots for the specified volume
 func (s *VolumeServer) SnapshotEnumerate(
 	ctx context.Context,
-	req *api.VolumeSnapshotEnumerateRequest,
-) (*api.VolumeSnapshotEnumerateResponse, error) {
+	req *api.SdkVolumeSnapshotEnumerateRequest,
+) (*api.SdkVolumeSnapshotEnumerateResponse, error) {
 
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
@@ -92,7 +92,7 @@ func (s *VolumeServer) SnapshotEnumerate(
 			err.Error())
 	}
 
-	return &api.VolumeSnapshotEnumerateResponse{
+	return &api.SdkVolumeSnapshotEnumerateResponse{
 		Snapshots: snapshots,
 	}, nil
 }

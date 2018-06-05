@@ -27,8 +27,8 @@ import (
 // Attach volume to given node
 func (s *VolumeServer) Attach(
 	ctx context.Context,
-	req *api.VolumeAttachRequest,
-) (*api.VolumeAttachResponse, error) {
+	req *api.SdkVolumeAttachRequest,
+) (*api.SdkVolumeAttachResponse, error) {
 
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
@@ -42,14 +42,14 @@ func (s *VolumeServer) Attach(
 			err.Error())
 	}
 
-	return &api.VolumeAttachResponse{DevicePath: devPath}, nil
+	return &api.SdkVolumeAttachResponse{DevicePath: devPath}, nil
 }
 
 // Detach function for volume node detach
 func (s *VolumeServer) Detach(
 	ctx context.Context,
-	req *api.VolumeDetachRequest,
-) (*api.VolumeDetachResponse, error) {
+	req *api.SdkVolumeDetachRequest,
+) (*api.SdkVolumeDetachResponse, error) {
 
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
@@ -57,14 +57,14 @@ func (s *VolumeServer) Detach(
 
 	err := s.driver.Detach(req.GetVolumeId(), nil)
 
-	return &api.VolumeDetachResponse{}, err
+	return &api.SdkVolumeDetachResponse{}, err
 }
 
 // Mount function for volume node detach
 func (s *VolumeServer) Mount(
 	ctx context.Context,
-	req *api.VolumeMountRequest,
-) (*api.VolumeMountResponse, error) {
+	req *api.SdkVolumeMountRequest,
+) (*api.SdkVolumeMountResponse, error) {
 
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
@@ -76,14 +76,14 @@ func (s *VolumeServer) Mount(
 
 	err := s.driver.Mount(req.GetVolumeId(), req.GetMountPath(), req.GetOptions())
 
-	return &api.VolumeMountResponse{}, err
+	return &api.SdkVolumeMountResponse{}, err
 }
 
 // Unmount volume from given node
 func (s *VolumeServer) Unmount(
 	ctx context.Context,
-	req *api.VolumeUnmountRequest,
-) (*api.VolumeUnmountResponse, error) {
+	req *api.SdkVolumeUnmountRequest,
+) (*api.SdkVolumeUnmountResponse, error) {
 
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
@@ -101,5 +101,5 @@ func (s *VolumeServer) Unmount(
 			err.Error())
 	}
 
-	return &api.VolumeUnmountResponse{}, nil
+	return &api.SdkVolumeUnmountResponse{}, nil
 }

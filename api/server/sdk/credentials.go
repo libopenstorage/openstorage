@@ -30,8 +30,8 @@ import (
 // CreateForAWS method creates credential for AWS S3.
 func (s *VolumeServer) CreateForAWS(
 	ctx context.Context,
-	req *api.CredentialCreateAWSRequest,
-) (*api.CredentialCreateAWSResponse, error) {
+	req *api.SdkCredentialCreateAWSRequest,
+) (*api.SdkCredentialCreateAWSResponse, error) {
 
 	if len(req.GetCredential().GetAccessKey()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply Access Key")
@@ -71,15 +71,15 @@ func (s *VolumeServer) CreateForAWS(
 	if err != nil {
 		return nil, err
 	}
-	return &api.CredentialCreateAWSResponse{CredentialId: uuid}, nil
+	return &api.SdkCredentialCreateAWSResponse{CredentialId: uuid}, nil
 
 }
 
 // CreateForAzure method creates credential for Azure.
 func (s *VolumeServer) CreateForAzure(
 	ctx context.Context,
-	req *api.CredentialCreateAzureRequest,
-) (*api.CredentialCreateAzureResponse, error) {
+	req *api.SdkCredentialCreateAzureRequest,
+) (*api.SdkCredentialCreateAzureResponse, error) {
 
 	if len(req.GetCredential().GetAccountKey()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply Account Key")
@@ -109,14 +109,14 @@ func (s *VolumeServer) CreateForAzure(
 	if err != nil {
 		return nil, err
 	}
-	return &api.CredentialCreateAzureResponse{CredentialId: uuid}, nil
+	return &api.SdkCredentialCreateAzureResponse{CredentialId: uuid}, nil
 }
 
 // CreateForGoogle method creates credential for Google.
 func (s *VolumeServer) CreateForGoogle(
 	ctx context.Context,
-	req *api.CredentialCreateGoogleRequest,
-) (*api.CredentialCreateGoogleResponse, error) {
+	req *api.SdkCredentialCreateGoogleRequest,
+) (*api.SdkCredentialCreateGoogleResponse, error) {
 
 	if len(req.GetCredential().GetJsonKey()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply JSON Key")
@@ -147,20 +147,20 @@ func (s *VolumeServer) CreateForGoogle(
 		return nil, err
 	}
 
-	return &api.CredentialCreateGoogleResponse{CredentialId: uuid}, nil
+	return &api.SdkCredentialCreateGoogleResponse{CredentialId: uuid}, nil
 }
 
 // CredentialValidate deletes a specified Credential.
 func (s *VolumeServer) CredentialValidate(
 	ctx context.Context,
-	req *api.CredentialValidateRequest,
-) (*api.CredentialValidateResponse, error) {
+	req *api.SdkCredentialValidateRequest,
+) (*api.SdkCredentialValidateResponse, error) {
 
 	if len(req.GetCredentialId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must provide credentials uuid")
 	}
 
-	validateReq := &api.CredentialValidateRequest{CredentialId: req.GetCredentialId()}
+	validateReq := &api.SdkCredentialValidateRequest{CredentialId: req.GetCredentialId()}
 
 	err := s.driver.CredsValidate(validateReq.GetCredentialId())
 
@@ -170,15 +170,15 @@ func (s *VolumeServer) CredentialValidate(
 			"failed to validate credentials: %v",
 			err.Error())
 	}
-	return &api.CredentialValidateResponse{}, nil
+	return &api.SdkCredentialValidateResponse{}, nil
 
 }
 
 // CredentialDelete delete a specified credential
 func (s *VolumeServer) CredentialDelete(
 	ctx context.Context,
-	req *api.CredentialDeleteRequest,
-) (*api.CredentialDeleteResponse, error) {
+	req *api.SdkCredentialDeleteRequest,
+) (*api.SdkCredentialDeleteResponse, error) {
 
 	if len(req.GetCredentialId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must provide credentials uuid")
@@ -192,14 +192,14 @@ func (s *VolumeServer) CredentialDelete(
 			err.Error())
 	}
 
-	return &api.CredentialDeleteResponse{}, nil
+	return &api.SdkCredentialDeleteResponse{}, nil
 }
 
 // EnumerateForAWS list credentials for AWS
 func (s *VolumeServer) EnumerateForAWS(
 	ctx context.Context,
-	req *api.CredentialEnumerateAWSRequest,
-) (*api.CredentialEnumerateAWSResponse, error) {
+	req *api.SdkCredentialEnumerateAWSRequest,
+) (*api.SdkCredentialEnumerateAWSResponse, error) {
 
 	credList, err := s.driver.CredsEnumerate()
 	if err != nil {
@@ -241,14 +241,14 @@ func (s *VolumeServer) EnumerateForAWS(
 		creds = append(creds, credResp)
 	}
 
-	return &api.CredentialEnumerateAWSResponse{Credential: creds}, nil
+	return &api.SdkCredentialEnumerateAWSResponse{Credential: creds}, nil
 }
 
 // EnumerateForAzure list credentials for AWS
 func (s *VolumeServer) EnumerateForAzure(
 	ctx context.Context,
-	req *api.CredentialEnumerateAzureRequest,
-) (*api.CredentialEnumerateAzureResponse, error) {
+	req *api.SdkCredentialEnumerateAzureRequest,
+) (*api.SdkCredentialEnumerateAzureResponse, error) {
 	credList, err := s.driver.CredsEnumerate()
 	if err != nil {
 		return nil, status.Errorf(
@@ -287,14 +287,14 @@ func (s *VolumeServer) EnumerateForAzure(
 		}
 		creds = append(creds, credResp)
 	}
-	return &api.CredentialEnumerateAzureResponse{Credential: creds}, nil
+	return &api.SdkCredentialEnumerateAzureResponse{Credential: creds}, nil
 }
 
 // EnumerateForGoogle list credentials for Google
 func (s *VolumeServer) EnumerateForGoogle(
 	ctx context.Context,
-	req *api.CredentialEnumerateGoogleRequest,
-) (*api.CredentialEnumerateGoogleResponse, error) {
+	req *api.SdkCredentialEnumerateGoogleRequest,
+) (*api.SdkCredentialEnumerateGoogleResponse, error) {
 	credList, err := s.driver.CredsEnumerate()
 	if err != nil {
 		return nil, status.Errorf(
@@ -333,17 +333,17 @@ func (s *VolumeServer) EnumerateForGoogle(
 		creds = append(creds, credResp)
 	}
 
-	return &api.CredentialEnumerateGoogleResponse{Credential: creds}, nil
+	return &api.SdkCredentialEnumerateGoogleResponse{Credential: creds}, nil
 }
 
 func validateAndDeleteIfInvalid(s *VolumeServer, uuid string) error {
 	// Validate if the credentials provided were correct or not
-	req := &api.CredentialValidateRequest{CredentialId: uuid}
+	req := &api.SdkCredentialValidateRequest{CredentialId: uuid}
 
 	validateErr := s.driver.CredsValidate(req.GetCredentialId())
 
 	if validateErr != nil {
-		deleteCred := &api.CredentialDeleteRequest{CredentialId: uuid}
+		deleteCred := &api.SdkCredentialDeleteRequest{CredentialId: uuid}
 		err := s.driver.CredsDelete(deleteCred.GetCredentialId())
 
 		if err != nil {
