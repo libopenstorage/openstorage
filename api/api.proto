@@ -822,12 +822,197 @@ service OpenStorageVolume {
 
   // Unmount volume at specified path                                           
   rpc Unmount(VolumeUnmountRequest)                                             
-      returns (VolumeUnmountResponse) {                                         
+    returns (VolumeUnmountResponse) {                                         
       option(google.api.http) = {                                               
         post: "/v1/volume/unmount"                                              
         body: "*"                                                               
       };                                                                        
     }
+}
+
+service OpenStorageCredentials {
+
+  // Provide credentials to OpenStorage and if valid,
+  // it will return an identifier to the credentials
+
+  // Create credential for AWS S3 and if valid ,
+  // returns a unique identifier
+  rpc CreateForAWS(CredentialCreateAWSRequest)
+    returns (CredentialCreateAWSResponse) {
+      option(google.api.http) = {
+        post: "/v1/credentials/create/aws"
+        body: "*"
+      };
+    }
+
+  // Create credential for Azure and if valid ,
+  // returns a unique identifier
+  rpc CreateForAzure(CredentialCreateAzureRequest)
+    returns (CredentialCreateAzureResponse) {
+      option(google.api.http) = {
+        post: "/v1/credentials/create/azure"
+        body: "*"
+      };
+    }
+
+  // Create credential for Google and if valid ,
+  // returns a unique identifier
+  rpc CreateForGoogle(CredentialCreateGoogleRequest)
+    returns (CredentialCreateGoogleResponse) {
+      option(google.api.http) = {
+        post: "/v1/credentials/create/google"
+        body: "*"
+      };
+    }
+
+  // EnumerateForAWS lists the configured AWS credentials                      
+  rpc EnumerateForAWS(CredentialEnumerateAWSRequest)                       
+    returns (CredentialEnumerateAWSResponse) {                             
+      option(google.api.http) = {                                                
+        post: "/v1/credentials/enumerate/aws"                                    
+        body: "*"                                                                
+      };                                                                         
+    }                                                                            
+                                                                                
+  // EnumerateForAzure lists the configured Azure credentials                  
+  rpc EnumerateForAzure(CredentialEnumerateAzureRequest)                   
+    returns (CredentialEnumerateAzureResponse) {                           
+      option(google.api.http) = {                                                
+        post: "/v1/credentials/enumerate/azure"                                  
+        body: "*"                                                                
+      };                                                                         
+    }                                                                            
+
+  // EnumerateForGoogle lists the configured Google credentials                
+  rpc EnumerateForGoogle(CredentialEnumerateGoogleRequest)                 
+    returns (CredentialEnumerateGoogleResponse) {                        
+      option(google.api.http) = {                                              
+        post: "/v1/credentials/enumerate/google"                               
+        body: "*"                                                              
+      };                                                                       
+    }                                                                          
+                                                                                
+  // Delete a specified credential                                                 
+  rpc CredentialDelete(CredentialDeleteRequest)                                         
+    returns (CredentialDeleteResponse){                                             
+      option(google.api.http) = {                                               
+        post: "/v1/credentials/delete"                                       
+        body: "*"                                                              
+      };                                                                       
+    }                                               
+
+  // Validate a specified credential
+  rpc CredentialValidate(CredentialValidateRequest)
+    returns (CredentialValidateResponse) {
+      option(google.api.http) = {
+        post: "/v1/credentials/validate"
+        body: "*"
+      };
+    }
+}
+
+message CredentialCreateAzureRequest {
+  // Azure Credential
+  AzureCredential credential = 1;
+}
+
+message CredentialCreateAzureResponse {
+  // Id of the credentials
+  string credential_id = 1;
+}
+
+message CredentialCreateGoogleRequest {
+  // Google Credential
+  GoogleCredential credential = 1;
+}
+
+message CredentialCreateGoogleResponse {
+  // Id of the credentials
+  string credential_id = 1;
+}
+
+message CredentialCreateAWSRequest {
+  // AWS S3 Credential
+  S3Credential credential = 1;
+}
+
+message CredentialCreateAWSResponse {
+  // Id of the credentials
+  string credential_id = 1;
+}
+
+message S3Credential{
+  // Id of the credentials                                                     
+  string credential_id = 1;                                                    
+  // Access key                                                                
+  string access_key = 2;                                                       
+  // Secret key                                                                
+  string secret_key = 3;                                                       
+  // Endpoint                                                                  
+  string endpoint = 4;                                                         
+  // Region                                                                    
+  string region = 5;                                                           
+}
+
+message AzureCredential {
+	// Cred Type                                                                  
+  string credential_id = 1;                                                         
+  // Account name                                                               
+  string account_name = 2;                                                      
+  // Account key                                                                
+  string account_key = 3; 
+} 
+                            
+message GoogleCredential {
+  string credential_id = 1;                                                     
+  // Project ID                                                                 
+  string project_id = 2;                                                        
+  // JSON Key                                                                   
+  string json_key = 3;                                                          
+}
+
+// should enumerate accept anything?                                            
+message CredentialEnumerateAWSRequest {                                     
+  // Id of the credentials                                                     
+  string credential_id = 1;                                                    
+}                  
+
+message CredentialEnumerateAWSResponse {                                   
+	// Array of Credentials for AWS
+	repeated S3Credential credential = 1;
+}                                                                               
+                                                                                
+message CredentialEnumerateAzureRequest {                                   
+  string credential_id = 1;                                                   
+}                                                                               
+                                                                                
+message CredentialEnumerateAzureResponse {                                  
+	// List of Credentials for Azure
+	repeated AzureCredential credential = 1;
+}                                                                               
+                                                                                
+message CredentialEnumerateGoogleRequest {                                  
+  string credential_id = 1;                                                   
+}                                                                               
+                                                                                
+message CredentialEnumerateGoogleResponse {                               
+	// List of Credentials for Google 
+	repeated GoogleCredential credential = 1; 
+}                            
+message CredentialDeleteRequest {                                                   
+  // ID for credentials                                                       
+  string credential_id = 1;                                                   
+}  
+
+message CredentialDeleteResponse {                                                  
+}                                                                               
+      
+message CredentialValidateRequest {
+  // Id of the credentials
+  string credential_id = 1;
+}
+
+message CredentialValidateResponse {
 }
 
 message VolumeMountRequest {
