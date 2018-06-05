@@ -111,6 +111,7 @@ func (s *Server) Start() error {
 	err := s.GrpcServer.Start(func(grpcServer *grpc.Server) {
 		api.RegisterOpenStorageClusterServer(grpcServer, s.clusterServer)
 		api.RegisterOpenStorageVolumeServer(grpcServer, s.volumeServer)
+		api.RegisterOpenStorageCredentialsServer(grpcServer, s.volumeServer)
 	})
 	if err != nil {
 		return err
