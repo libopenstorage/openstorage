@@ -162,10 +162,10 @@ enum AttachState {
 }
 
 enum OperationFlags {
-	OP_FLAGS_UNKNOWN = 0;
-	OP_FLAGS_NONE = 1;
-	// Perform a force_detach during detach operation
-	OP_FLAGS_DETACH_FORCE = 2;
+  OP_FLAGS_UNKNOWN = 0;
+  OP_FLAGS_NONE = 1;
+  // Perform a force_detach during detach operation
+  OP_FLAGS_DETACH_FORCE = 2;
 }
 
 // StorageResource groups properties of a storage device.
@@ -422,27 +422,27 @@ message Alerts {
 // ObjectstoreInfo is a structure that has current objectstore info
 // swagger:model
 message ObjectstoreInfo {
-    // UUID of objectstore                                                      
-    string uuid = 1;                                                               
-    // VolumeID of volume used by object store                                  
-    string volume_id = 2;                                                      
-    // Enable/Disable created objectstore                                       
-    bool enabled = 3;                                                                
-    // Status of objectstore running/failed                                     
-    string status = 4;                                                              
-    // Action being taken on this objectstore                                   
-    int64 action = 5;                                                                 
-    // AccessKey for login into objectstore                                     
-    string access_key = 6;                                                            
-    // SecretKey for login into objectstore                                     
-    string secret_key = 7;                                                           
-    // Endpoints for accessing objectstore                                      
-    repeated string endpoints = 8;                                                         
-    // CurrentEndpoint on which objectstore server is accessible                
-    string current_endPoint = 9;                                                     
-    // AccessPort is objectstore server port                                    
-    int64 access_port = 10;                                                             
-    // Region for this objectstore                                              
+    // UUID of objectstore
+    string uuid = 1;
+    // VolumeID of volume used by object store
+    string volume_id = 2;
+    // Enable/Disable created objectstore
+    bool enabled = 3;
+    // Status of objectstore running/failed
+    string status = 4;
+    // Action being taken on this objectstore
+    int64 action = 5;
+    // AccessKey for login into objectstore
+    string access_key = 6;
+    // SecretKey for login into objectstore
+    string secret_key = 7;
+    // Endpoints for accessing objectstore
+    repeated string endpoints = 8;
+    // CurrentEndpoint on which objectstore server is accessible
+    string current_endPoint = 9;
+    // AccessPort is objectstore server port
+    int64 access_port = 10;
+    // Region for this objectstore
     string region = 11;
 }
 
@@ -793,14 +793,14 @@ service OpenStorageVolume {
       };
     }
 
-  // Attach device to host                                                      
-  rpc Attach(SdkVolumeAttachRequest)                                               
-    returns (SdkVolumeAttachResponse) {                                            
-      option(google.api.http) = {                                               
-        post: "/v1/volume/attach"                                               
-        body: "*"                                                               
-      };                                                                        
-    }  
+  // Attach device to host
+  rpc Attach(SdkVolumeAttachRequest)
+    returns (SdkVolumeAttachResponse) {
+      option(google.api.http) = {
+        post: "/v1/volume/attach"
+        body: "*"
+      };
+    }
 
   // Detaches the volume from the node.
   rpc Detach(SdkVolumeDetachRequest)
@@ -820,13 +820,13 @@ service OpenStorageVolume {
       };
     }
 
-  // Unmount volume at specified path                                           
-  rpc Unmount(SdkVolumeUnmountRequest)                                             
-      returns(SdkVolumeUnmountResponse) {                                         
-      option(google.api.http) = {                                               
-        post: "/v1/volume/unmount"                                              
-        body: "*"                                                               
-      };                                                                        
+  // Unmount volume at specified path
+  rpc Unmount(SdkVolumeUnmountRequest)
+      returns(SdkVolumeUnmountResponse) {
+      option(google.api.http) = {
+        post: "/v1/volume/unmount"
+        body: "*"
+      };
     }
 }
 
@@ -865,41 +865,41 @@ service OpenStorageCredentials {
       };
     }
 
-  // EnumerateForAWS lists the configured AWS credentials                      
-  rpc EnumerateForAWS(SdkCredentialEnumerateAWSRequest)                       
-    returns (SdkCredentialEnumerateAWSResponse) {                             
-      option(google.api.http) = {                                                
-        post: "/v1/credentials/enumerate/aws"                                    
-        body: "*"                                                                
-      };                                                                         
-    }                                                                            
-                                                                                
-  // EnumerateForAzure lists the configured Azure credentials                  
-  rpc EnumerateForAzure(SdkCredentialEnumerateAzureRequest)                   
-    returns (SdkCredentialEnumerateAzureResponse) {                           
-      option(google.api.http) = {                                                
-        post: "/v1/credentials/enumerate/azure"                                  
-        body: "*"                                                                
-      };                                                                         
-    }                                                                            
+  // EnumerateForAWS lists the configured AWS credentials
+  rpc EnumerateForAWS(SdkCredentialEnumerateAWSRequest)
+    returns (SdkCredentialEnumerateAWSResponse) {
+      option(google.api.http) = {
+        post: "/v1/credentials/enumerate/aws"
+        body: "*"
+      };
+    }
 
-  // EnumerateForGoogle lists the configured Google credentials                
-  rpc EnumerateForGoogle(SdkCredentialEnumerateGoogleRequest)                 
-    returns (SdkCredentialEnumerateGoogleResponse) {                        
-      option(google.api.http) = {                                              
-        post: "/v1/credentials/enumerate/google"                               
-        body: "*"                                                              
-      };                                                                       
-    }                                                                          
-                                                                                
-  // Delete a specified credential                                                 
-  rpc CredentialDelete(SdkCredentialDeleteRequest)                                         
-    returns (SdkCredentialDeleteResponse){                                             
-      option(google.api.http) = {                                               
-        post: "/v1/credentials/delete"                                       
-        body: "*"                                                              
-      };                                                                       
-    }                                               
+  // EnumerateForAzure lists the configured Azure credentials
+  rpc EnumerateForAzure(SdkCredentialEnumerateAzureRequest)
+    returns (SdkCredentialEnumerateAzureResponse) {
+      option(google.api.http) = {
+        post: "/v1/credentials/enumerate/azure"
+        body: "*"
+      };
+    }
+
+  // EnumerateForGoogle lists the configured Google credentials
+  rpc EnumerateForGoogle(SdkCredentialEnumerateGoogleRequest)
+    returns (SdkCredentialEnumerateGoogleResponse) {
+      option(google.api.http) = {
+        post: "/v1/credentials/enumerate/google"
+        body: "*"
+      };
+    }
+
+  // Delete a specified credential
+  rpc CredentialDelete(SdkCredentialDeleteRequest)
+    returns (SdkCredentialDeleteResponse){
+      option(google.api.http) = {
+        post: "/v1/credentials/delete"
+        body: "*"
+      };
+    }
 
   // Validate a specified credential
   rpc CredentialValidate(SdkCredentialValidateRequest)
@@ -942,71 +942,71 @@ message SdkCredentialCreateAWSResponse {
 }
 
 message S3Credential{
-  // Id of the credentials                                                     
-  string credential_id = 1;                                                    
-  // Access key                                                                
-  string access_key = 2;                                                       
-  // Secret key                                                                
-  string secret_key = 3;                                                       
-  // Endpoint                                                                  
-  string endpoint = 4;                                                         
-  // Region                                                                    
-  string region = 5;                                                           
+  // Id of the credentials
+  string credential_id = 1;
+  // Access key
+  string access_key = 2;
+  // Secret key
+  string secret_key = 3;
+  // Endpoint
+  string endpoint = 4;
+  // Region
+  string region = 5;
 }
 
 message AzureCredential {
-	// Cred Type                                                                  
-  string credential_id = 1;                                                         
-  // Account name                                                               
-  string account_name = 2;                                                      
-  // Account key                                                                
-  string account_key = 3; 
-} 
-                            
-message GoogleCredential {
-  string credential_id = 1;                                                     
-  // Project ID                                                                 
-  string project_id = 2;                                                        
-  // JSON Key                                                                   
-  string json_key = 3;                                                          
+  // Cred Type
+  string credential_id = 1;
+  // Account name
+  string account_name = 2;
+  // Account key
+  string account_key = 3;
 }
 
-// should enumerate accept anything?                                            
-message SdkCredentialEnumerateAWSRequest {                                     
-  // Id of the credentials                                                     
-  string credential_id = 1;                                                    
-}                  
+message GoogleCredential {
+  string credential_id = 1;
+  // Project ID
+  string project_id = 2;
+  // JSON Key
+  string json_key = 3;
+}
 
-message SdkCredentialEnumerateAWSResponse {                                   
-	// Array of Credentials for AWS
-	repeated S3Credential credential = 1;
-}                                                                               
-                                                                                
-message SdkCredentialEnumerateAzureRequest {                                   
-  string credential_id = 1;                                                   
-}                                                                               
-                                                                                
-message SdkCredentialEnumerateAzureResponse {                                  
-	// List of Credentials for Azure
-	repeated AzureCredential credential = 1;
-}                                                                               
-                                                                                
-message SdkCredentialEnumerateGoogleRequest {                                  
-  string credential_id = 1;                                                   
-}                                                                               
-                                                                                
-message SdkCredentialEnumerateGoogleResponse {                               
-	// List of Credentials for Google 
-	repeated GoogleCredential credential = 1; 
-}                            
-message SdkCredentialDeleteRequest {                                                   
-  // ID for credentials                                                       
-  string credential_id = 1;                                                   
-}  
+// should enumerate accept anything?
+message SdkCredentialEnumerateAWSRequest {
+  // Id of the credentials
+  string credential_id = 1;
+}
 
-message SdkCredentialDeleteResponse {                                                  
-}                                                                               
-      
+message SdkCredentialEnumerateAWSResponse {
+  // Array of Credentials for AWS
+  repeated S3Credential credential = 1;
+}
+
+message SdkCredentialEnumerateAzureRequest {
+  string credential_id = 1;
+}
+
+message SdkCredentialEnumerateAzureResponse {
+  // List of Credentials for Azure
+  repeated AzureCredential credential = 1;
+}
+
+message SdkCredentialEnumerateGoogleRequest {
+  string credential_id = 1;
+}
+
+message SdkCredentialEnumerateGoogleResponse {
+  // List of Credentials for Google
+  repeated GoogleCredential credential = 1;
+}
+message SdkCredentialDeleteRequest {
+  // ID for credentials
+  string credential_id = 1;
+}
+
+message SdkCredentialDeleteResponse {
+}
+
 message SdkCredentialValidateRequest {
   // Id of the credentials
   string credential_id = 1;
@@ -1021,36 +1021,36 @@ message SdkVolumeMountRequest {
   // Mount path for mounting the volume.
   string mount_path = 2;
   // Additional options
-  map<string, string> options = 3;  
+  map<string, string> options = 3;
 }
 
 message SdkVolumeMountResponse {
 }
 
-message SdkVolumeUnmountRequest {                                                  
-  // Id of volume                                                             
-  string volume_id = 1;                                                       
-  // MountPath for device                                                     
-  string mount_path = 2;                                                      
-  // Options to unmount device                                                
-  map<string, string> options = 3;                                            
-}
-     
-message SdkVolumeUnmountResponse {                                                 
+message SdkVolumeUnmountRequest {
+  // Id of volume
+  string volume_id = 1;
+  // MountPath for device
+  string mount_path = 2;
+  // Options to unmount device
+  map<string, string> options = 3;
 }
 
-message SdkVolumeAttachRequest {                                                   
-  // Id of volume                                                             
-  string volume_id = 1;                                                       
-  // Options for attaching volume, right now only passphrase options is supported
-  map<string, string>  options = 2;                                           
-}                                                                               
-                                                                                
-message SdkVolumeAttachResponse {                                                  
-  // Device path where device is exported                                     
-  string device_path = 1;                                                     
+message SdkVolumeUnmountResponse {
 }
-          
+
+message SdkVolumeAttachRequest {
+  // Id of volume
+  string volume_id = 1;
+  // Options for attaching volume, right now only passphrase options is supported
+  map<string, string>  options = 2;
+}
+
+message SdkVolumeAttachResponse {
+  // Device path where device is exported
+  string device_path = 1;
+}
+
 message SdkVolumeDetachRequest {
   // Id of the volume
   string volume_id = 1;
@@ -1153,38 +1153,38 @@ message SdkClusterEnumerateRequest {
 
 message SdkClusterEnumerateResponse {
   // Cluster information
-	StorageCluster cluster = 1;
+  StorageCluster cluster = 1;
 }
 
 message SdkClusterInspectRequest {
   // Id of node to inspect (required)
-	string node_id = 1;
+  string node_id = 1;
 }
 
 message SdkClusterInspectResponse {
   // Node information
-	StorageNode node = 1;
+  StorageNode node = 1;
 }
 
 message SdkClusterAlertEnumerateRequest {
   // Start time of alerts (required)
   google.protobuf.Timestamp time_start = 1;
-  // End time of alerts (required) 
+  // End time of alerts (required)
   google.protobuf.Timestamp time_end = 2;
   // Type of resource (required)
-	ResourceType resource = 3;
+  ResourceType resource = 3;
 }
 
 message SdkClusterAlertEnumerateResponse {
-  // Information on the alerts requested 
-	Alerts alerts = 1;
+  // Information on the alerts requested
+  Alerts alerts = 1;
 }
 
 message SdkClusterAlertClearRequest {
   // Type of resource (required)
   ResourceType resource = 1;
-  // Id of alert as returned by ClusterEnumerateAlertResponse (required) 
-	int64 alert_id = 2;
+  // Id of alert as returned by ClusterEnumerateAlertResponse (required)
+  int64 alert_id = 2;
 }
 
 message SdkClusterAlertClearResponse {
@@ -1193,8 +1193,8 @@ message SdkClusterAlertClearResponse {
 message SdkClusterAlertEraseRequest {
   // Type of resource (required)
   ResourceType resource = 1;
-  // Id of alert as returned by ClusterEnumerateAlertResponse (required) 
-	int64 alert_id = 2;
+  // Id of alert as returned by ClusterEnumerateAlertResponse (required)
+  int64 alert_id = 2;
 }
 
 message SdkClusterAlertEraseResponse {

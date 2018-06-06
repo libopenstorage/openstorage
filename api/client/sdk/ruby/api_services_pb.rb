@@ -55,13 +55,13 @@ module Openstorage
         rpc :SnapshotRestore, SdkVolumeSnapshotRestoreRequest, SdkVolumeSnapshotRestoreResponse
         # List the number of snapshots for a specific volume
         rpc :SnapshotEnumerate, SdkVolumeSnapshotEnumerateRequest, SdkVolumeSnapshotEnumerateResponse
-        # Attach device to host                                                      
+        # Attach device to host
         rpc :Attach, SdkVolumeAttachRequest, SdkVolumeAttachResponse
         # Detaches the volume from the node.
         rpc :Detach, SdkVolumeDetachRequest, SdkVolumeDetachResponse
         # Attaches the volume to a node.
         rpc :Mount, SdkVolumeMountRequest, SdkVolumeMountResponse
-        # Unmount volume at specified path                                           
+        # Unmount volume at specified path
         rpc :Unmount, SdkVolumeUnmountRequest, SdkVolumeUnmountResponse
       end
 
@@ -88,13 +88,13 @@ module Openstorage
         # Create credential for Google and if valid ,
         # returns a unique identifier
         rpc :CreateForGoogle, SdkCredentialCreateGoogleRequest, SdkCredentialCreateGoogleResponse
-        # EnumerateForAWS lists the configured AWS credentials                      
+        # EnumerateForAWS lists the configured AWS credentials
         rpc :EnumerateForAWS, SdkCredentialEnumerateAWSRequest, SdkCredentialEnumerateAWSResponse
-        # EnumerateForAzure lists the configured Azure credentials                  
+        # EnumerateForAzure lists the configured Azure credentials
         rpc :EnumerateForAzure, SdkCredentialEnumerateAzureRequest, SdkCredentialEnumerateAzureResponse
-        # EnumerateForGoogle lists the configured Google credentials                
+        # EnumerateForGoogle lists the configured Google credentials
         rpc :EnumerateForGoogle, SdkCredentialEnumerateGoogleRequest, SdkCredentialEnumerateGoogleResponse
-        # Delete a specified credential                                                 
+        # Delete a specified credential
         rpc :CredentialDelete, SdkCredentialDeleteRequest, SdkCredentialDeleteResponse
         # Validate a specified credential
         rpc :CredentialValidate, SdkCredentialValidateRequest, SdkCredentialValidateResponse
