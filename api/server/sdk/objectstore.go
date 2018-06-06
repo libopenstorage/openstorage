@@ -19,7 +19,7 @@ package sdk
 
 import (
 	"context"
-	//	"errors"
+
 	"github.com/libopenstorage/openstorage/api"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -68,6 +68,14 @@ func (s *ClusterServer) UpdateObjectstore(
 	req *api.SdkObjectstoreUpdateRequest,
 ) (*api.SdkObjectstoreUpdateResponse, error) {
 
+	err := s.cluster.ObjectStoreUpdate(req.GetObjectstoreId(), req.GetEnable())
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"Failed to update objectstore %v",
+			err.Error())
+	}
+
 	return &api.SdkObjectstoreUpdateResponse{}, nil
 }
 
@@ -76,6 +84,14 @@ func (s *ClusterServer) DeleteObjectstore(
 	ctx context.Context,
 	req *api.SdkObjectstoreDeleteRequest,
 ) (*api.SdkObjectstoreDeleteResponse, error) {
+
+	err := s.cluster.ObjectStoreDelete(req.GetObjectstoreId())
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"Failed to delete objectstore %v",
+			err.Error())
+	}
 
 	return &api.SdkObjectstoreDeleteResponse{}, nil
 }
