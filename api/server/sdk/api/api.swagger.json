@@ -366,6 +366,114 @@
         ]
       }
     },
+    "/v1/objectstore/create": {
+      "post": {
+        "summary": "CreateObjectstore creates on specified volume",
+        "operationId": "CreateObjectstore",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkObjectstoreCreateResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkObjectstoreCreateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageObjectstore"
+        ]
+      }
+    },
+    "/v1/objectstore/delete": {
+      "post": {
+        "summary": "DeleteObjectstore deletes objectstore by id",
+        "operationId": "DeleteObjectstore",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkObjectstoreDeleteResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkObjectstoreDeleteRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageObjectstore"
+        ]
+      }
+    },
+    "/v1/objectstore/enumerate": {
+      "post": {
+        "summary": "InspectObjectstore returns current status of objectstore",
+        "operationId": "InspectObjectstore",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkObjectstoreInspectResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkObjectstoreInspectRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageObjectstore"
+        ]
+      }
+    },
+    "/v1/objectstore/update": {
+      "post": {
+        "summary": "UpdateObjectstore updates provided objectstore status",
+        "operationId": "UpdateObjectstore",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkObjectstoreUpdateResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkObjectstoreUpdateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageObjectstore"
+        ]
+      }
+    },
     "/v1/volume/attach": {
       "post": {
         "summary": "Attach device to host",
@@ -843,6 +951,62 @@
       ],
       "default": "IO_PROFILE_SEQUENTIAL"
     },
+    "apiObjectstoreInfo": {
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "title": "UUID of objectstore"
+        },
+        "volume_id": {
+          "type": "string",
+          "title": "VolumeID of volume used by object store"
+        },
+        "enabled": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "Enable/Disable created objectstore"
+        },
+        "status": {
+          "type": "string",
+          "title": "Status of objectstore running/failed"
+        },
+        "action": {
+          "type": "string",
+          "format": "int64",
+          "title": "Action being taken on this objectstore"
+        },
+        "access_key": {
+          "type": "string",
+          "title": "AccessKey for login into objectstore"
+        },
+        "secret_key": {
+          "type": "string",
+          "title": "SecretKey for login into objectstore"
+        },
+        "endpoints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Endpoints for accessing objectstore"
+        },
+        "current_endPoint": {
+          "type": "string",
+          "title": "CurrentEndpoint on which objectstore server is accessible"
+        },
+        "access_port": {
+          "type": "string",
+          "format": "int64",
+          "title": "AccessPort is objectstore server port"
+        },
+        "region": {
+          "type": "string",
+          "title": "Region for this objectstore"
+        }
+      },
+      "title": "ObjectstoreInfo is a structure that has current objectstore info\nswagger:model"
+    },
     "apiReplicaSet": {
       "type": "object",
       "properties": {
@@ -1133,6 +1297,71 @@
       }
     },
     "apiSdkCredentialValidateResponse": {
+      "type": "object"
+    },
+    "apiSdkObjectstoreCreateRequest": {
+      "type": "object",
+      "properties": {
+        "volume_name": {
+          "type": "string",
+          "title": "Volume on which objectstore will be running"
+        }
+      }
+    },
+    "apiSdkObjectstoreCreateResponse": {
+      "type": "object",
+      "properties": {
+        "objectstore_status": {
+          "$ref": "#/definitions/apiObjectstoreInfo",
+          "title": "Created objecstore status"
+        }
+      }
+    },
+    "apiSdkObjectstoreDeleteRequest": {
+      "type": "object",
+      "properties": {
+        "objectstore_id": {
+          "type": "string",
+          "title": "Objectstore ID to delete"
+        }
+      }
+    },
+    "apiSdkObjectstoreDeleteResponse": {
+      "type": "object"
+    },
+    "apiSdkObjectstoreInspectRequest": {
+      "type": "object",
+      "properties": {
+        "objectstore_id": {
+          "type": "string",
+          "title": "ObjecstoreID to query objestore status"
+        }
+      }
+    },
+    "apiSdkObjectstoreInspectResponse": {
+      "type": "object",
+      "properties": {
+        "objectstore_status": {
+          "$ref": "#/definitions/apiObjectstoreInfo",
+          "title": "Objectstore status"
+        }
+      }
+    },
+    "apiSdkObjectstoreUpdateRequest": {
+      "type": "object",
+      "properties": {
+        "objectstore_id": {
+          "type": "string",
+          "title": "Objectstore Id to update"
+        },
+        "enable": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "enable/disable objectstore"
+        }
+      }
+    },
+    "apiSdkObjectstoreUpdateResponse": {
       "type": "object"
     },
     "apiSdkVolumeAttachRequest": {

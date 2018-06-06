@@ -292,6 +292,94 @@ function deserialize_openstorage_api_SdkCredentialValidateResponse(buffer_arg) {
   return api_pb.SdkCredentialValidateResponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_openstorage_api_SdkObjectstoreCreateRequest(arg) {
+  if (!(arg instanceof api_pb.SdkObjectstoreCreateRequest)) {
+    throw new Error('Expected argument of type openstorage.api.SdkObjectstoreCreateRequest');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkObjectstoreCreateRequest(buffer_arg) {
+  return api_pb.SdkObjectstoreCreateRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkObjectstoreCreateResponse(arg) {
+  if (!(arg instanceof api_pb.SdkObjectstoreCreateResponse)) {
+    throw new Error('Expected argument of type openstorage.api.SdkObjectstoreCreateResponse');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkObjectstoreCreateResponse(buffer_arg) {
+  return api_pb.SdkObjectstoreCreateResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkObjectstoreDeleteRequest(arg) {
+  if (!(arg instanceof api_pb.SdkObjectstoreDeleteRequest)) {
+    throw new Error('Expected argument of type openstorage.api.SdkObjectstoreDeleteRequest');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkObjectstoreDeleteRequest(buffer_arg) {
+  return api_pb.SdkObjectstoreDeleteRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkObjectstoreDeleteResponse(arg) {
+  if (!(arg instanceof api_pb.SdkObjectstoreDeleteResponse)) {
+    throw new Error('Expected argument of type openstorage.api.SdkObjectstoreDeleteResponse');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkObjectstoreDeleteResponse(buffer_arg) {
+  return api_pb.SdkObjectstoreDeleteResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkObjectstoreInspectRequest(arg) {
+  if (!(arg instanceof api_pb.SdkObjectstoreInspectRequest)) {
+    throw new Error('Expected argument of type openstorage.api.SdkObjectstoreInspectRequest');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkObjectstoreInspectRequest(buffer_arg) {
+  return api_pb.SdkObjectstoreInspectRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkObjectstoreInspectResponse(arg) {
+  if (!(arg instanceof api_pb.SdkObjectstoreInspectResponse)) {
+    throw new Error('Expected argument of type openstorage.api.SdkObjectstoreInspectResponse');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkObjectstoreInspectResponse(buffer_arg) {
+  return api_pb.SdkObjectstoreInspectResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkObjectstoreUpdateRequest(arg) {
+  if (!(arg instanceof api_pb.SdkObjectstoreUpdateRequest)) {
+    throw new Error('Expected argument of type openstorage.api.SdkObjectstoreUpdateRequest');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkObjectstoreUpdateRequest(buffer_arg) {
+  return api_pb.SdkObjectstoreUpdateRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkObjectstoreUpdateResponse(arg) {
+  if (!(arg instanceof api_pb.SdkObjectstoreUpdateResponse)) {
+    throw new Error('Expected argument of type openstorage.api.SdkObjectstoreUpdateResponse');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkObjectstoreUpdateResponse(buffer_arg) {
+  return api_pb.SdkObjectstoreUpdateResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_openstorage_api_SdkVolumeAttachRequest(arg) {
   if (!(arg instanceof api_pb.SdkVolumeAttachRequest)) {
     throw new Error('Expected argument of type openstorage.api.SdkVolumeAttachRequest');
@@ -770,6 +858,58 @@ var OpenStorageVolumeService = exports.OpenStorageVolumeService = {
 };
 
 exports.OpenStorageVolumeClient = grpc.makeGenericClientConstructor(OpenStorageVolumeService);
+var OpenStorageObjectstoreService = exports.OpenStorageObjectstoreService = {
+  // InspectObjectstore returns current status of objectstore 
+  inspectObjectstore: {
+    path: '/openstorage.api.OpenStorageObjectstore/InspectObjectstore',
+    requestStream: false,
+    responseStream: false,
+    requestType: api_pb.SdkObjectstoreInspectRequest,
+    responseType: api_pb.SdkObjectstoreInspectResponse,
+    requestSerialize: serialize_openstorage_api_SdkObjectstoreInspectRequest,
+    requestDeserialize: deserialize_openstorage_api_SdkObjectstoreInspectRequest,
+    responseSerialize: serialize_openstorage_api_SdkObjectstoreInspectResponse,
+    responseDeserialize: deserialize_openstorage_api_SdkObjectstoreInspectResponse,
+  },
+  // CreateObjectstore creates on specified volume
+  createObjectstore: {
+    path: '/openstorage.api.OpenStorageObjectstore/CreateObjectstore',
+    requestStream: false,
+    responseStream: false,
+    requestType: api_pb.SdkObjectstoreCreateRequest,
+    responseType: api_pb.SdkObjectstoreCreateResponse,
+    requestSerialize: serialize_openstorage_api_SdkObjectstoreCreateRequest,
+    requestDeserialize: deserialize_openstorage_api_SdkObjectstoreCreateRequest,
+    responseSerialize: serialize_openstorage_api_SdkObjectstoreCreateResponse,
+    responseDeserialize: deserialize_openstorage_api_SdkObjectstoreCreateResponse,
+  },
+  // DeleteObjectstore deletes objectstore by id
+  deleteObjectstore: {
+    path: '/openstorage.api.OpenStorageObjectstore/DeleteObjectstore',
+    requestStream: false,
+    responseStream: false,
+    requestType: api_pb.SdkObjectstoreDeleteRequest,
+    responseType: api_pb.SdkObjectstoreDeleteResponse,
+    requestSerialize: serialize_openstorage_api_SdkObjectstoreDeleteRequest,
+    requestDeserialize: deserialize_openstorage_api_SdkObjectstoreDeleteRequest,
+    responseSerialize: serialize_openstorage_api_SdkObjectstoreDeleteResponse,
+    responseDeserialize: deserialize_openstorage_api_SdkObjectstoreDeleteResponse,
+  },
+  // UpdateObjectstore updates provided objectstore status
+  updateObjectstore: {
+    path: '/openstorage.api.OpenStorageObjectstore/UpdateObjectstore',
+    requestStream: false,
+    responseStream: false,
+    requestType: api_pb.SdkObjectstoreUpdateRequest,
+    responseType: api_pb.SdkObjectstoreUpdateResponse,
+    requestSerialize: serialize_openstorage_api_SdkObjectstoreUpdateRequest,
+    requestDeserialize: deserialize_openstorage_api_SdkObjectstoreUpdateRequest,
+    responseSerialize: serialize_openstorage_api_SdkObjectstoreUpdateResponse,
+    responseDeserialize: deserialize_openstorage_api_SdkObjectstoreUpdateResponse,
+  },
+};
+
+exports.OpenStorageObjectstoreClient = grpc.makeGenericClientConstructor(OpenStorageObjectstoreService);
 var OpenStorageCredentialsService = exports.OpenStorageCredentialsService = {
   // Provide credentials to OpenStorage and if valid,
   // it will return an identifier to the credentials

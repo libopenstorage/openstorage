@@ -401,6 +401,29 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   end
   add_message "openstorage.api.SdkClusterAlertEraseResponse" do
   end
+  add_message "openstorage.api.SdkObjectstoreInspectRequest" do
+    optional :objectstore_id, :string, 1
+  end
+  add_message "openstorage.api.SdkObjectstoreInspectResponse" do
+    optional :objectstore_status, :message, 1, "openstorage.api.ObjectstoreInfo"
+  end
+  add_message "openstorage.api.SdkObjectstoreCreateRequest" do
+    optional :volume_name, :string, 1
+  end
+  add_message "openstorage.api.SdkObjectstoreCreateResponse" do
+    optional :objectstore_status, :message, 1, "openstorage.api.ObjectstoreInfo"
+  end
+  add_message "openstorage.api.SdkObjectstoreDeleteRequest" do
+    optional :objectstore_id, :string, 1
+  end
+  add_message "openstorage.api.SdkObjectstoreDeleteResponse" do
+  end
+  add_message "openstorage.api.SdkObjectstoreUpdateRequest" do
+    optional :objectstore_id, :string, 1
+    optional :enable, :bool, 2
+  end
+  add_message "openstorage.api.SdkObjectstoreUpdateResponse" do
+  end
   add_enum "openstorage.api.Status" do
     value :STATUS_NONE, 0
     value :STATUS_INIT, 1
@@ -604,6 +627,14 @@ module Openstorage
     SdkClusterAlertClearResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkClusterAlertClearResponse").msgclass
     SdkClusterAlertEraseRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkClusterAlertEraseRequest").msgclass
     SdkClusterAlertEraseResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkClusterAlertEraseResponse").msgclass
+    SdkObjectstoreInspectRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkObjectstoreInspectRequest").msgclass
+    SdkObjectstoreInspectResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkObjectstoreInspectResponse").msgclass
+    SdkObjectstoreCreateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkObjectstoreCreateRequest").msgclass
+    SdkObjectstoreCreateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkObjectstoreCreateResponse").msgclass
+    SdkObjectstoreDeleteRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkObjectstoreDeleteRequest").msgclass
+    SdkObjectstoreDeleteResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkObjectstoreDeleteResponse").msgclass
+    SdkObjectstoreUpdateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkObjectstoreUpdateRequest").msgclass
+    SdkObjectstoreUpdateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkObjectstoreUpdateResponse").msgclass
     Status = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.Status").enummodule
     DriverType = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.DriverType").enummodule
     FSType = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.FSType").enummodule

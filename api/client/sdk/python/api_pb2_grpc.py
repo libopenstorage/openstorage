@@ -344,6 +344,99 @@ def add_OpenStorageVolumeServicer_to_server(servicer, server):
   server.add_generic_rpc_handlers((generic_handler,))
 
 
+class OpenStorageObjectstoreStub(object):
+  # missing associated documentation comment in .proto file
+  pass
+
+  def __init__(self, channel):
+    """Constructor.
+
+    Args:
+      channel: A grpc.Channel.
+    """
+    self.InspectObjectstore = channel.unary_unary(
+        '/openstorage.api.OpenStorageObjectstore/InspectObjectstore',
+        request_serializer=api__pb2.SdkObjectstoreInspectRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkObjectstoreInspectResponse.FromString,
+        )
+    self.CreateObjectstore = channel.unary_unary(
+        '/openstorage.api.OpenStorageObjectstore/CreateObjectstore',
+        request_serializer=api__pb2.SdkObjectstoreCreateRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkObjectstoreCreateResponse.FromString,
+        )
+    self.DeleteObjectstore = channel.unary_unary(
+        '/openstorage.api.OpenStorageObjectstore/DeleteObjectstore',
+        request_serializer=api__pb2.SdkObjectstoreDeleteRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkObjectstoreDeleteResponse.FromString,
+        )
+    self.UpdateObjectstore = channel.unary_unary(
+        '/openstorage.api.OpenStorageObjectstore/UpdateObjectstore',
+        request_serializer=api__pb2.SdkObjectstoreUpdateRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkObjectstoreUpdateResponse.FromString,
+        )
+
+
+class OpenStorageObjectstoreServicer(object):
+  # missing associated documentation comment in .proto file
+  pass
+
+  def InspectObjectstore(self, request, context):
+    """InspectObjectstore returns current status of objectstore 
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def CreateObjectstore(self, request, context):
+    """CreateObjectstore creates on specified volume
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def DeleteObjectstore(self, request, context):
+    """DeleteObjectstore deletes objectstore by id
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def UpdateObjectstore(self, request, context):
+    """UpdateObjectstore updates provided objectstore status
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+
+def add_OpenStorageObjectstoreServicer_to_server(servicer, server):
+  rpc_method_handlers = {
+      'InspectObjectstore': grpc.unary_unary_rpc_method_handler(
+          servicer.InspectObjectstore,
+          request_deserializer=api__pb2.SdkObjectstoreInspectRequest.FromString,
+          response_serializer=api__pb2.SdkObjectstoreInspectResponse.SerializeToString,
+      ),
+      'CreateObjectstore': grpc.unary_unary_rpc_method_handler(
+          servicer.CreateObjectstore,
+          request_deserializer=api__pb2.SdkObjectstoreCreateRequest.FromString,
+          response_serializer=api__pb2.SdkObjectstoreCreateResponse.SerializeToString,
+      ),
+      'DeleteObjectstore': grpc.unary_unary_rpc_method_handler(
+          servicer.DeleteObjectstore,
+          request_deserializer=api__pb2.SdkObjectstoreDeleteRequest.FromString,
+          response_serializer=api__pb2.SdkObjectstoreDeleteResponse.SerializeToString,
+      ),
+      'UpdateObjectstore': grpc.unary_unary_rpc_method_handler(
+          servicer.UpdateObjectstore,
+          request_deserializer=api__pb2.SdkObjectstoreUpdateRequest.FromString,
+          response_serializer=api__pb2.SdkObjectstoreUpdateResponse.SerializeToString,
+      ),
+  }
+  generic_handler = grpc.method_handlers_generic_handler(
+      'openstorage.api.OpenStorageObjectstore', rpc_method_handlers)
+  server.add_generic_rpc_handlers((generic_handler,))
+
+
 class OpenStorageCredentialsStub(object):
   # missing associated documentation comment in .proto file
   pass
