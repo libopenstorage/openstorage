@@ -830,6 +830,45 @@ service OpenStorageVolume {
     }
 }
 
+service OpenStorageObjectstore {
+
+  // InspectObjectstore returns current status of objectstore 
+  rpc InspectObjectstore(SdkObjectstoreInspectRequest)
+    returns(SdkObjectstoreInspectResponse){
+      option(google.api.http) = {
+        post: "/v1/objectstore/enumerate"
+        body: "*"
+      };
+    }
+
+  // CreateObjectstore creates on specified volume
+  rpc CreateObjectstore(SdkObjectstoreCreateRequest)
+    returns(SdkObjectstoreCreateResponse){
+      option(google.api.http) = {
+        post: "/v1/objectstore/create"
+        body: "*"
+      };
+    }
+
+  // DeleteObjectstore deletes objectstore by id
+  rpc DeleteObjectstore(SdkObjectstoreDeleteRequest)
+    returns(SdkObjectstoreDeleteResponse){
+      option(google.api.http) = {
+        post: "/v1/objectstore/delete"
+        body: "*"
+      };
+    }
+
+  // UpdateObjectstore updates provided objectstore status
+  rpc UpdateObjectstore(SdkObjectstoreUpdateRequest)
+    returns(SdkObjectstoreUpdateResponse){
+      option(google.api.http) ={
+        post: "/v1/objectstore/update"
+        body: "*"
+      };
+  }
+}
+
 service OpenStorageCredentials {
 
   // Provide credentials to OpenStorage and if valid,
@@ -1199,3 +1238,40 @@ message SdkClusterAlertEraseRequest {
 
 message SdkClusterAlertEraseResponse {
 }
+
+message SdkObjectstoreInspectRequest {
+  //ObjecstoreID to query objestore status
+  string objectstore_id = 1;
+}
+
+message SdkObjectstoreInspectResponse {
+  // Objectstore status
+  ObjectstoreInfo objectstore_status = 1;
+}
+
+message SdkObjectstoreCreateRequest {
+  // Volume on which objectstore will be running
+  string volume_name= 1;
+}
+
+message SdkObjectstoreCreateResponse {
+  // Created objecstore status
+  ObjectstoreInfo objectstore_status = 1;
+}
+
+message SdkObjectstoreDeleteRequest {
+  // Objectstore ID to delete
+  string objectstore_id = 1;
+}
+
+message SdkObjectstoreDeleteResponse {
+}
+
+message SdkObjectstoreUpdateRequest {
+  // Objectstore Id to update
+  string objectstore_id = 1;
+}
+
+message SdkObjectstoreUpdateResponse {
+} 
+
