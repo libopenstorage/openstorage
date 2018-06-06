@@ -110,6 +110,7 @@ func (s *Server) Start() error {
 	// Start the gRPC Server
 	err := s.GrpcServer.Start(func(grpcServer *grpc.Server) {
 		api.RegisterOpenStorageClusterServer(grpcServer, s.clusterServer)
+		api.RegisterOpenStorageObjectstoreServer(grpcServer, s.clusterServer)
 		api.RegisterOpenStorageVolumeServer(grpcServer, s.volumeServer)
 		api.RegisterOpenStorageCredentialsServer(grpcServer, s.volumeServer)
 	})
