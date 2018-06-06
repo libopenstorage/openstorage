@@ -719,7 +719,7 @@ var OpenStorageVolumeService = exports.OpenStorageVolumeService = {
     responseSerialize: serialize_openstorage_api_SdkVolumeSnapshotEnumerateResponse,
     responseDeserialize: deserialize_openstorage_api_SdkVolumeSnapshotEnumerateResponse,
   },
-  // Attach device to host                                                      
+  // Attach device to host
   attach: {
     path: '/openstorage.api.OpenStorageVolume/Attach',
     requestStream: false,
@@ -755,7 +755,7 @@ var OpenStorageVolumeService = exports.OpenStorageVolumeService = {
     responseSerialize: serialize_openstorage_api_SdkVolumeMountResponse,
     responseDeserialize: deserialize_openstorage_api_SdkVolumeMountResponse,
   },
-  // Unmount volume at specified path                                           
+  // Unmount volume at specified path
   unmount: {
     path: '/openstorage.api.OpenStorageVolume/Unmount',
     requestStream: false,
@@ -813,7 +813,7 @@ var OpenStorageCredentialsService = exports.OpenStorageCredentialsService = {
     responseSerialize: serialize_openstorage_api_SdkCredentialCreateGoogleResponse,
     responseDeserialize: deserialize_openstorage_api_SdkCredentialCreateGoogleResponse,
   },
-  // EnumerateForAWS lists the configured AWS credentials                      
+  // EnumerateForAWS lists the configured AWS credentials
   enumerateForAWS: {
     path: '/openstorage.api.OpenStorageCredentials/EnumerateForAWS',
     requestStream: false,
@@ -825,7 +825,7 @@ var OpenStorageCredentialsService = exports.OpenStorageCredentialsService = {
     responseSerialize: serialize_openstorage_api_SdkCredentialEnumerateAWSResponse,
     responseDeserialize: deserialize_openstorage_api_SdkCredentialEnumerateAWSResponse,
   },
-  // EnumerateForAzure lists the configured Azure credentials                  
+  // EnumerateForAzure lists the configured Azure credentials
   enumerateForAzure: {
     path: '/openstorage.api.OpenStorageCredentials/EnumerateForAzure',
     requestStream: false,
@@ -837,7 +837,7 @@ var OpenStorageCredentialsService = exports.OpenStorageCredentialsService = {
     responseSerialize: serialize_openstorage_api_SdkCredentialEnumerateAzureResponse,
     responseDeserialize: deserialize_openstorage_api_SdkCredentialEnumerateAzureResponse,
   },
-  // EnumerateForGoogle lists the configured Google credentials                
+  // EnumerateForGoogle lists the configured Google credentials
   enumerateForGoogle: {
     path: '/openstorage.api.OpenStorageCredentials/EnumerateForGoogle',
     requestStream: false,
@@ -849,7 +849,7 @@ var OpenStorageCredentialsService = exports.OpenStorageCredentialsService = {
     responseSerialize: serialize_openstorage_api_SdkCredentialEnumerateGoogleResponse,
     responseDeserialize: deserialize_openstorage_api_SdkCredentialEnumerateGoogleResponse,
   },
-  // Delete a specified credential                                                 
+  // Delete a specified credential
   credentialDelete: {
     path: '/openstorage.api.OpenStorageCredentials/CredentialDelete',
     requestStream: false,

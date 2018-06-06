@@ -248,7 +248,7 @@ class OpenStorageVolumeServicer(object):
     raise NotImplementedError('Method not implemented!')
 
   def Attach(self, request, context):
-    """Attach device to host                                                      
+    """Attach device to host
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -269,7 +269,7 @@ class OpenStorageVolumeServicer(object):
     raise NotImplementedError('Method not implemented!')
 
   def Unmount(self, request, context):
-    """Unmount volume at specified path                                           
+    """Unmount volume at specified path
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -428,28 +428,28 @@ class OpenStorageCredentialsServicer(object):
     raise NotImplementedError('Method not implemented!')
 
   def EnumerateForAWS(self, request, context):
-    """EnumerateForAWS lists the configured AWS credentials                      
+    """EnumerateForAWS lists the configured AWS credentials
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def EnumerateForAzure(self, request, context):
-    """EnumerateForAzure lists the configured Azure credentials                  
+    """EnumerateForAzure lists the configured Azure credentials
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def EnumerateForGoogle(self, request, context):
-    """EnumerateForGoogle lists the configured Google credentials                
+    """EnumerateForGoogle lists the configured Google credentials
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def CredentialDelete(self, request, context):
-    """Delete a specified credential                                                 
+    """Delete a specified credential
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
