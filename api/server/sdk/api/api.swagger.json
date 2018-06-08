@@ -15,6 +15,249 @@
     "application/json"
   ],
   "paths": {
+    "/v1/cloudbackup/catalog": {
+      "post": {
+        "summary": "Catalog",
+        "operationId": "Catalog",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupCatalogResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupCatalogRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      }
+    },
+    "/v1/cloudbackup/create": {
+      "post": {
+        "summary": "Create",
+        "operationId": "Create",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupCreateResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupCreateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      }
+    },
+    "/v1/cloudbackup/delete": {
+      "post": {
+        "summary": "Delete",
+        "operationId": "Delete",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupDeleteResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupDeleteRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      }
+    },
+    "/v1/cloudbackup/deleteall": {
+      "post": {
+        "summary": "DeleteAll",
+        "operationId": "DeleteAll",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupDeleteAllResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupDeleteAllRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      }
+    },
+    "/v1/cloudbackup/enumerate": {
+      "post": {
+        "summary": "Enumerate",
+        "operationId": "Enumerate",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupEnumerateResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupEnumerateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      }
+    },
+    "/v1/cloudbackup/history": {
+      "post": {
+        "summary": "History",
+        "operationId": "History",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupHistoryResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupHistoryRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      }
+    },
+    "/v1/cloudbackup/restore": {
+      "post": {
+        "summary": "Restore",
+        "operationId": "Restore",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupRestoreResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupRestoreRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      }
+    },
+    "/v1/cloudbackup/statechange": {
+      "post": {
+        "summary": "StateChange",
+        "operationId": "StateChange",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupStateChangeResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupStateChangeRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      }
+    },
+    "/v1/cloudbackup/status": {
+      "post": {
+        "summary": "Status",
+        "operationId": "Status",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupStatusResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupStatusRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      }
+    },
     "/v1/cluster/alert/clear": {
       "post": {
         "summary": "Clear the alert for a given resource",
@@ -530,7 +773,6 @@
     },
     "/v1/schedulepolicy/enumerate": {
       "post": {
-        "summary": "Enumerate Schedule Policy",
         "operationId": "Enumerate",
         "responses": {
           "200": {
@@ -1201,6 +1443,341 @@
           "title": "Region"
         }
       }
+    },
+    "apiSdkCloudBackupCatalogRequest": {
+      "type": "object",
+      "properties": {
+        "backup_id": {
+          "type": "string",
+          "title": "Id of the backup"
+        },
+        "credential_uuid": {
+          "type": "string",
+          "title": "is the credential for cloud"
+        }
+      }
+    },
+    "apiSdkCloudBackupCatalogResponse": {
+      "type": "object",
+      "properties": {
+        "contents": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Contents is listing of backup contents"
+        }
+      }
+    },
+    "apiSdkCloudBackupCreateRequest": {
+      "type": "object",
+      "properties": {
+        "volume_id": {
+          "type": "string",
+          "title": "VolumeID of the volume for which cloudbackup is requested"
+        },
+        "credential_uuid": {
+          "type": "string",
+          "title": "CredentialUUID is cloud credential to be used for backup"
+        },
+        "full": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "Full indicates if full backup is desired even though incremental is possible"
+        }
+      }
+    },
+    "apiSdkCloudBackupCreateResponse": {
+      "type": "object",
+      "properties": {
+        "backup_id": {
+          "type": "string",
+          "title": "Id of the backup created"
+        }
+      }
+    },
+    "apiSdkCloudBackupDeleteAllRequest": {
+      "type": "object",
+      "properties": {
+        "src_volume_id": {
+          "type": "string",
+          "title": "id of the volume for the request"
+        },
+        "credential_uuid": {
+          "type": "string",
+          "title": "CredentialUUID is the credential for cloud to be used for the request"
+        }
+      }
+    },
+    "apiSdkCloudBackupDeleteAllResponse": {
+      "type": "object"
+    },
+    "apiSdkCloudBackupDeleteRequest": {
+      "type": "object",
+      "properties": {
+        "backup_id": {
+          "type": "string",
+          "title": "ID is the ID of the cloud backup"
+        },
+        "credential_uuid": {
+          "type": "string",
+          "title": "CredentialUUID is the credential for cloud to be used for the request"
+        },
+        "force": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "Force Delete cloudbackup even if there are dependencies"
+        }
+      }
+    },
+    "apiSdkCloudBackupDeleteResponse": {
+      "type": "object"
+    },
+    "apiSdkCloudBackupEnumerateRequest": {
+      "type": "object",
+      "properties": {
+        "src_volume_id": {
+          "type": "string",
+          "title": "Optional source id of the volume for the request"
+        },
+        "cluster_id": {
+          "type": "string",
+          "title": "ClusterID is the optional clusterID for the request"
+        },
+        "credential_uuid": {
+          "type": "string",
+          "title": "CredentialUUID is the credential for cloud to be used for the request"
+        },
+        "all": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "All if set to true, backups for all clusters in the cloud are processed"
+        }
+      }
+    },
+    "apiSdkCloudBackupEnumerateResponse": {
+      "type": "object",
+      "properties": {
+        "backups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiSdkCloudBackupInfo"
+          }
+        }
+      }
+    },
+    "apiSdkCloudBackupHistoryItem": {
+      "type": "object",
+      "properties": {
+        "src_volume_id": {
+          "type": "string",
+          "title": "SrcVolumeID is volume ID which was backedup"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "title": "TimeStamp is the time at which either backup completed/failed"
+        },
+        "status": {
+          "$ref": "#/definitions/apiSdkCloudBackupStatusType",
+          "title": "Status indicates whether backup was completed/failed"
+        }
+      }
+    },
+    "apiSdkCloudBackupHistoryRequest": {
+      "type": "object",
+      "properties": {
+        "src_volume_id": {
+          "type": "string",
+          "description": "volumeID for which history of backup/restore is being requested\n(optional) If not provided, it will return the history for all volumes."
+        }
+      }
+    },
+    "apiSdkCloudBackupHistoryResponse": {
+      "type": "object",
+      "properties": {
+        "history_list": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiSdkCloudBackupHistoryItem"
+          },
+          "title": "HistoryList is list of past backup/restores in the cluster"
+        }
+      }
+    },
+    "apiSdkCloudBackupInfo": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "ID is the ID of the cloud backup"
+        },
+        "src_volume_id": {
+          "type": "string",
+          "title": "Source volumeID of the backup"
+        },
+        "src_volume_name": {
+          "type": "string",
+          "title": "Name of the sourceVolume of the backup"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Timestamp is the timestamp at which the source volume\nwas backed up to cloud"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Metadata associated with the backup"
+        },
+        "status": {
+          "$ref": "#/definitions/apiSdkCloudBackupStatusType",
+          "title": "Status indicates the status of the backup"
+        }
+      }
+    },
+    "apiSdkCloudBackupOpType": {
+      "type": "string",
+      "enum": [
+        "SdkCloudBackupOpTypeUnknown",
+        "SdkCloudBackupOpTypeBackupOp",
+        "SdkCloudBackupOpTypeRestoreOp"
+      ],
+      "default": "SdkCloudBackupOpTypeUnknown"
+    },
+    "apiSdkCloudBackupRequestedState": {
+      "type": "string",
+      "enum": [
+        "SdkCloudBackupRequestedStateUnknown",
+        "SdkCloudBackupRequestedStatePause",
+        "SdkCloudBackupRequestedStateResume",
+        "SdkCloudBackupRequestedStateStop"
+      ],
+      "default": "SdkCloudBackupRequestedStateUnknown"
+    },
+    "apiSdkCloudBackupRestoreRequest": {
+      "type": "object",
+      "properties": {
+        "backup_id": {
+          "type": "string",
+          "title": "Backup ID being restored"
+        },
+        "restore_volume_name": {
+          "type": "string",
+          "title": "Optional volume Name of the new volume to be created\nin the cluster for restoring the cloudbackup"
+        },
+        "credential_uuid": {
+          "type": "string",
+          "title": "The credential to be used for restore operation"
+        },
+        "node_id": {
+          "type": "string",
+          "title": "Optional for provisioning restore\nvolume (ResoreVolumeName should not be specified)"
+        }
+      }
+    },
+    "apiSdkCloudBackupRestoreResponse": {
+      "type": "object",
+      "properties": {
+        "restore_volume_id": {
+          "type": "string",
+          "title": "VolumeID to which the backup is being restored"
+        }
+      }
+    },
+    "apiSdkCloudBackupStateChangeRequest": {
+      "type": "object",
+      "properties": {
+        "src_volume_id": {
+          "type": "string",
+          "title": "SrcVolumeID is volume ID on which backup/restore\nstate change is being requested"
+        },
+        "requested_state": {
+          "$ref": "#/definitions/apiSdkCloudBackupRequestedState",
+          "title": "RequestedState is desired state of the op\ncan be pause/resume/stop"
+        }
+      }
+    },
+    "apiSdkCloudBackupStateChangeResponse": {
+      "type": "object"
+    },
+    "apiSdkCloudBackupStatus": {
+      "type": "object",
+      "properties": {
+        "backup_id": {
+          "type": "string",
+          "title": "ID is the ID for the operation"
+        },
+        "optype": {
+          "$ref": "#/definitions/apiSdkCloudBackupOpType",
+          "title": "OpType indicates if this is a backup or restore"
+        },
+        "status": {
+          "$ref": "#/definitions/apiSdkCloudBackupStatusType",
+          "title": "State indicates if the op is currently active/done/failed"
+        },
+        "bytes_done": {
+          "type": "string",
+          "format": "uint64",
+          "title": "BytesDone indicates total Bytes uploaded/downloaded"
+        },
+        "start_time": {
+          "type": "string",
+          "format": "date-time",
+          "title": "StartTime indicates Op's start time"
+        },
+        "completed_time": {
+          "type": "string",
+          "format": "date-time",
+          "title": "CompletedTime indicates Op's completed time"
+        },
+        "node_id": {
+          "type": "string",
+          "title": "NodeID is the ID of the node where this Op is active"
+        }
+      }
+    },
+    "apiSdkCloudBackupStatusRequest": {
+      "type": "object",
+      "properties": {
+        "src_volume_id": {
+          "type": "string",
+          "title": "SrcVolumeID optional volumeID to list status of backup/restore"
+        },
+        "local": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "Local indicates if only those backups/restores that are\nactive on current node must be returned"
+        }
+      }
+    },
+    "apiSdkCloudBackupStatusResponse": {
+      "type": "object",
+      "properties": {
+        "statuses": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/apiSdkCloudBackupStatus"
+          },
+          "title": "statuses is list of currently active/failed/done backup/restores"
+        }
+      }
+    },
+    "apiSdkCloudBackupStatusType": {
+      "type": "string",
+      "enum": [
+        "SdkCloudBackupStatusTypeUnknown",
+        "SdkCloudBackupStatusTypeNotStarted",
+        "SdkCloudBackupStatusTypeDone",
+        "SdkCloudBackupStatusTypeAborted",
+        "SdkCloudBackupStatusTypePaused",
+        "SdkCloudBackupStatusTypeStopped",
+        "SdkCloudBackupStatusTypeActive",
+        "SdkCloudBackupStatusTypeFailed"
+      ],
+      "default": "SdkCloudBackupStatusTypeUnknown"
     },
     "apiSdkClusterAlertClearRequest": {
       "type": "object",
