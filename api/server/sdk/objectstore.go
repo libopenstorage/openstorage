@@ -21,12 +21,19 @@ import (
 	"context"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/cluster"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
+// Objectstoreserver is an implementation of the gRPC OpenStorageObjectstore interface
+type ObjectstoreServer struct {
+	api.OpenStorageObjectstoreServer
+	cluster cluster.Cluster
+}
+
 // InspectObjectstore return status of provided objectstore
-func (s *ClusterServer) InspectObjectstore(
+func (s *ObjectstoreServer) Inspect(
 	ctx context.Context,
 	req *api.SdkObjectstoreInspectRequest,
 ) (*api.SdkObjectstoreInspectResponse, error) {
@@ -43,7 +50,7 @@ func (s *ClusterServer) InspectObjectstore(
 }
 
 // CreateObjectstore creates objectstore for given volume
-func (s *ClusterServer) CreateObjectstore(
+func (s *ObjectstoreServer) Create(
 	ctx context.Context,
 	req *api.SdkObjectstoreCreateRequest,
 ) (*api.SdkObjectstoreCreateResponse, error) {
@@ -63,7 +70,7 @@ func (s *ClusterServer) CreateObjectstore(
 }
 
 // UpdateObjectstore updates given objectstore state
-func (s *ClusterServer) UpdateObjectstore(
+func (s *ObjectstoreServer) Update(
 	ctx context.Context,
 	req *api.SdkObjectstoreUpdateRequest,
 ) (*api.SdkObjectstoreUpdateResponse, error) {
@@ -80,7 +87,7 @@ func (s *ClusterServer) UpdateObjectstore(
 }
 
 // DeleteObjectstore delete objectstore from cluster
-func (s *ClusterServer) DeleteObjectstore(
+func (s *ObjectstoreServer) Delete(
 	ctx context.Context,
 	req *api.SdkObjectstoreDeleteRequest,
 ) (*api.SdkObjectstoreDeleteResponse, error) {

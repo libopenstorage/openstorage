@@ -831,8 +831,8 @@ service OpenStorageVolume {
 }
 
 service OpenStorageObjectstore {
-  // InspectObjectstore returns current status of objectstore 
-  rpc InspectObjectstore(SdkObjectstoreInspectRequest)
+  // Inspect returns current status of objectstore 
+  rpc Inspect(SdkObjectstoreInspectRequest)
     returns(SdkObjectstoreInspectResponse){
       option(google.api.http) = {
         post: "/v1/objectstore/enumerate"
@@ -840,8 +840,8 @@ service OpenStorageObjectstore {
       };
     }
 
-  // CreateObjectstore creates on specified volume
-  rpc CreateObjectstore(SdkObjectstoreCreateRequest)
+  // Creates objectstore on specified volume
+  rpc Create(SdkObjectstoreCreateRequest)
     returns(SdkObjectstoreCreateResponse){
       option(google.api.http) = {
         post: "/v1/objectstore/create"
@@ -849,8 +849,8 @@ service OpenStorageObjectstore {
       };
     }
 
-  // DeleteObjectstore deletes objectstore by id
-  rpc DeleteObjectstore(SdkObjectstoreDeleteRequest)
+  // Deletes objectstore by id
+  rpc Delete(SdkObjectstoreDeleteRequest)
     returns(SdkObjectstoreDeleteResponse){
       option(google.api.http) = {
         post: "/v1/objectstore/delete"
@@ -858,8 +858,8 @@ service OpenStorageObjectstore {
       };
     }
 
-  // UpdateObjectstore updates provided objectstore status
-  rpc UpdateObjectstore(SdkObjectstoreUpdateRequest)
+  // Updates provided objectstore status
+  rpc Update(SdkObjectstoreUpdateRequest)
     returns(SdkObjectstoreUpdateResponse){
       option(google.api.http) ={
         post: "/v1/objectstore/update"

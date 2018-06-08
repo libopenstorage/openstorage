@@ -32,7 +32,7 @@ func TestObjectstoreInspectSuccess(t *testing.T) {
 	c := api.NewOpenStorageObjectstoreClient(s.Conn())
 
 	// Get info
-	resp, err := c.InspectObjectstore(context.Background(), &api.SdkObjectstoreInspectRequest{ObjectstoreId: objResp.Uuid})
+	resp, err := c.Inspect(context.Background(), &api.SdkObjectstoreInspectRequest{ObjectstoreId: objResp.Uuid})
 	assert.NoError(t, err)
 	assert.NotNil(t, resp.GetObjectstoreStatus())
 
@@ -61,7 +61,7 @@ func TestObjectstoreInspectFailed(t *testing.T) {
 	c := api.NewOpenStorageObjectstoreClient(s.Conn())
 
 	// Get info
-	resp, err := c.InspectObjectstore(context.Background(), &api.SdkObjectstoreInspectRequest{ObjectstoreId: objResp.Uuid})
+	resp, err := c.Inspect(context.Background(), &api.SdkObjectstoreInspectRequest{ObjectstoreId: objResp.Uuid})
 	assert.Error(t, err)
 	assert.Nil(t, resp)
 
@@ -92,7 +92,7 @@ func TestObjectstoreCreateSuccess(t *testing.T) {
 	c := api.NewOpenStorageObjectstoreClient(s.Conn())
 
 	// Get info
-	resp, err := c.CreateObjectstore(context.Background(), &api.SdkObjectstoreCreateRequest{VolumeName: volName})
+	resp, err := c.Create(context.Background(), &api.SdkObjectstoreCreateRequest{VolumeName: volName})
 	assert.NoError(t, err)
 	assert.NotNil(t, resp.GetObjectstoreStatus())
 
@@ -115,7 +115,7 @@ func TestObjectstoreCreateFailed(t *testing.T) {
 	c := api.NewOpenStorageObjectstoreClient(s.Conn())
 
 	// Get info
-	resp, err := c.CreateObjectstore(context.Background(), &api.SdkObjectstoreCreateRequest{VolumeName: volName})
+	resp, err := c.Create(context.Background(), &api.SdkObjectstoreCreateRequest{VolumeName: volName})
 	assert.Error(t, err)
 	assert.Nil(t, resp)
 
@@ -134,7 +134,7 @@ func TestObjectstoreCreateFailedBadArgument(t *testing.T) {
 	c := api.NewOpenStorageObjectstoreClient(s.Conn())
 
 	// Get info
-	_, err := c.CreateObjectstore(context.Background(), &api.SdkObjectstoreCreateRequest{VolumeName: volName})
+	_, err := c.Create(context.Background(), &api.SdkObjectstoreCreateRequest{VolumeName: volName})
 	assert.Error(t, err)
 
 	// Verify
@@ -164,7 +164,7 @@ func TestObjectstoreUpdateSuccess(t *testing.T) {
 	c := api.NewOpenStorageObjectstoreClient(s.Conn())
 
 	// Update objectstore state
-	_, err := c.UpdateObjectstore(context.Background(), req)
+	_, err := c.Update(context.Background(), req)
 
 	// Check result
 	assert.NoError(t, err)
@@ -188,7 +188,7 @@ func TestObjectstoreUpdateFailed(t *testing.T) {
 	c := api.NewOpenStorageObjectstoreClient(s.Conn())
 
 	// Update ObjectstoreState
-	resp, err := c.UpdateObjectstore(context.Background(), req)
+	resp, err := c.Update(context.Background(), req)
 
 	// Check response
 	assert.Error(t, err)
@@ -213,7 +213,7 @@ func TestObjectstoreDeleteSuccess(t *testing.T) {
 	c := api.NewOpenStorageObjectstoreClient(s.Conn())
 
 	// Delete object store
-	_, err := c.DeleteObjectstore(
+	_, err := c.Delete(
 		context.Background(),
 		&api.SdkObjectstoreDeleteRequest{ObjectstoreId: objID})
 
@@ -235,7 +235,7 @@ func TestObjectstoreDeleteFailed(t *testing.T) {
 	c := api.NewOpenStorageObjectstoreClient(s.Conn())
 
 	// Delete Object store
-	resp, err := c.DeleteObjectstore(
+	resp, err := c.Delete(
 		context.Background(),
 		&api.SdkObjectstoreDeleteRequest{ObjectstoreId: objID})
 
