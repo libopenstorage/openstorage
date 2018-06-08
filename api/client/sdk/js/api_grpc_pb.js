@@ -859,9 +859,9 @@ var OpenStorageVolumeService = exports.OpenStorageVolumeService = {
 
 exports.OpenStorageVolumeClient = grpc.makeGenericClientConstructor(OpenStorageVolumeService);
 var OpenStorageObjectstoreService = exports.OpenStorageObjectstoreService = {
-  // InspectObjectstore returns current status of objectstore 
-  inspectObjectstore: {
-    path: '/openstorage.api.OpenStorageObjectstore/InspectObjectstore',
+  // Inspect returns current status of objectstore 
+  inspect: {
+    path: '/openstorage.api.OpenStorageObjectstore/Inspect',
     requestStream: false,
     responseStream: false,
     requestType: api_pb.SdkObjectstoreInspectRequest,
@@ -871,9 +871,9 @@ var OpenStorageObjectstoreService = exports.OpenStorageObjectstoreService = {
     responseSerialize: serialize_openstorage_api_SdkObjectstoreInspectResponse,
     responseDeserialize: deserialize_openstorage_api_SdkObjectstoreInspectResponse,
   },
-  // CreateObjectstore creates on specified volume
-  createObjectstore: {
-    path: '/openstorage.api.OpenStorageObjectstore/CreateObjectstore',
+  // Creates objectstore on specified volume
+  create: {
+    path: '/openstorage.api.OpenStorageObjectstore/Create',
     requestStream: false,
     responseStream: false,
     requestType: api_pb.SdkObjectstoreCreateRequest,
@@ -883,9 +883,9 @@ var OpenStorageObjectstoreService = exports.OpenStorageObjectstoreService = {
     responseSerialize: serialize_openstorage_api_SdkObjectstoreCreateResponse,
     responseDeserialize: deserialize_openstorage_api_SdkObjectstoreCreateResponse,
   },
-  // DeleteObjectstore deletes objectstore by id
-  deleteObjectstore: {
-    path: '/openstorage.api.OpenStorageObjectstore/DeleteObjectstore',
+  // Deletes objectstore by id
+  delete: {
+    path: '/openstorage.api.OpenStorageObjectstore/Delete',
     requestStream: false,
     responseStream: false,
     requestType: api_pb.SdkObjectstoreDeleteRequest,
@@ -895,9 +895,9 @@ var OpenStorageObjectstoreService = exports.OpenStorageObjectstoreService = {
     responseSerialize: serialize_openstorage_api_SdkObjectstoreDeleteResponse,
     responseDeserialize: deserialize_openstorage_api_SdkObjectstoreDeleteResponse,
   },
-  // UpdateObjectstore updates provided objectstore status
-  updateObjectstore: {
-    path: '/openstorage.api.OpenStorageObjectstore/UpdateObjectstore',
+  // Updates provided objectstore status
+  update: {
+    path: '/openstorage.api.OpenStorageObjectstore/Update',
     requestStream: false,
     responseStream: false,
     requestType: api_pb.SdkObjectstoreUpdateRequest,

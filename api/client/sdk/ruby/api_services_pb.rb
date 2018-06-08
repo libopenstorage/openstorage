@@ -76,14 +76,14 @@ module Openstorage
         self.unmarshal_class_method = :decode
         self.service_name = 'openstorage.api.OpenStorageObjectstore'
 
-        # InspectObjectstore returns current status of objectstore 
-        rpc :InspectObjectstore, SdkObjectstoreInspectRequest, SdkObjectstoreInspectResponse
-        # CreateObjectstore creates on specified volume
-        rpc :CreateObjectstore, SdkObjectstoreCreateRequest, SdkObjectstoreCreateResponse
-        # DeleteObjectstore deletes objectstore by id
-        rpc :DeleteObjectstore, SdkObjectstoreDeleteRequest, SdkObjectstoreDeleteResponse
-        # UpdateObjectstore updates provided objectstore status
-        rpc :UpdateObjectstore, SdkObjectstoreUpdateRequest, SdkObjectstoreUpdateResponse
+        # Inspect returns current status of objectstore 
+        rpc :Inspect, SdkObjectstoreInspectRequest, SdkObjectstoreInspectResponse
+        # Creates objectstore on specified volume
+        rpc :Create, SdkObjectstoreCreateRequest, SdkObjectstoreCreateResponse
+        # Deletes objectstore by id
+        rpc :Delete, SdkObjectstoreDeleteRequest, SdkObjectstoreDeleteResponse
+        # Updates provided objectstore status
+        rpc :Update, SdkObjectstoreUpdateRequest, SdkObjectstoreUpdateResponse
       end
 
       Stub = Service.rpc_stub_class

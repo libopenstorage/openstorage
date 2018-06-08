@@ -368,8 +368,8 @@
     },
     "/v1/objectstore/create": {
       "post": {
-        "summary": "CreateObjectstore creates on specified volume",
-        "operationId": "CreateObjectstore",
+        "summary": "Creates objectstore on specified volume",
+        "operationId": "Create",
         "responses": {
           "200": {
             "description": "",
@@ -395,8 +395,8 @@
     },
     "/v1/objectstore/delete": {
       "post": {
-        "summary": "DeleteObjectstore deletes objectstore by id",
-        "operationId": "DeleteObjectstore",
+        "summary": "Deletes objectstore by id",
+        "operationId": "Delete",
         "responses": {
           "200": {
             "description": "",
@@ -422,8 +422,8 @@
     },
     "/v1/objectstore/enumerate": {
       "post": {
-        "summary": "InspectObjectstore returns current status of objectstore",
-        "operationId": "InspectObjectstore",
+        "summary": "Inspect returns current status of objectstore",
+        "operationId": "Inspect",
         "responses": {
           "200": {
             "description": "",
@@ -449,8 +449,8 @@
     },
     "/v1/objectstore/update": {
       "post": {
-        "summary": "UpdateObjectstore updates provided objectstore status",
-        "operationId": "UpdateObjectstore",
+        "summary": "Updates provided objectstore status",
+        "operationId": "Update",
         "responses": {
           "200": {
             "description": "",

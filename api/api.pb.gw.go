@@ -249,7 +249,7 @@ func request_OpenStorageVolume_Unmount_0(ctx context.Context, marshaler runtime.
 
 }
 
-func request_OpenStorageObjectstore_InspectObjectstore_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageObjectstoreClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_OpenStorageObjectstore_Inspect_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageObjectstoreClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq SdkObjectstoreInspectRequest
 	var metadata runtime.ServerMetadata
 
@@ -257,12 +257,12 @@ func request_OpenStorageObjectstore_InspectObjectstore_0(ctx context.Context, ma
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.InspectObjectstore(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.Inspect(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func request_OpenStorageObjectstore_CreateObjectstore_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageObjectstoreClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_OpenStorageObjectstore_Create_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageObjectstoreClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq SdkObjectstoreCreateRequest
 	var metadata runtime.ServerMetadata
 
@@ -270,12 +270,12 @@ func request_OpenStorageObjectstore_CreateObjectstore_0(ctx context.Context, mar
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.CreateObjectstore(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.Create(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func request_OpenStorageObjectstore_DeleteObjectstore_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageObjectstoreClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_OpenStorageObjectstore_Delete_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageObjectstoreClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq SdkObjectstoreDeleteRequest
 	var metadata runtime.ServerMetadata
 
@@ -283,12 +283,12 @@ func request_OpenStorageObjectstore_DeleteObjectstore_0(ctx context.Context, mar
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.DeleteObjectstore(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.Delete(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func request_OpenStorageObjectstore_UpdateObjectstore_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageObjectstoreClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_OpenStorageObjectstore_Update_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageObjectstoreClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq SdkObjectstoreUpdateRequest
 	var metadata runtime.ServerMetadata
 
@@ -296,7 +296,7 @@ func request_OpenStorageObjectstore_UpdateObjectstore_0(ctx context.Context, mar
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.UpdateObjectstore(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.Update(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
@@ -1094,7 +1094,7 @@ func RegisterOpenStorageObjectstoreHandler(ctx context.Context, mux *runtime.Ser
 // "OpenStorageObjectstoreClient" to call the correct interceptors.
 func RegisterOpenStorageObjectstoreHandlerClient(ctx context.Context, mux *runtime.ServeMux, client OpenStorageObjectstoreClient) error {
 
-	mux.Handle("POST", pattern_OpenStorageObjectstore_InspectObjectstore_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_OpenStorageObjectstore_Inspect_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -1112,18 +1112,18 @@ func RegisterOpenStorageObjectstoreHandlerClient(ctx context.Context, mux *runti
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_OpenStorageObjectstore_InspectObjectstore_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_OpenStorageObjectstore_Inspect_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_OpenStorageObjectstore_InspectObjectstore_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_OpenStorageObjectstore_Inspect_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_OpenStorageObjectstore_CreateObjectstore_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_OpenStorageObjectstore_Create_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -1141,18 +1141,18 @@ func RegisterOpenStorageObjectstoreHandlerClient(ctx context.Context, mux *runti
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_OpenStorageObjectstore_CreateObjectstore_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_OpenStorageObjectstore_Create_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_OpenStorageObjectstore_CreateObjectstore_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_OpenStorageObjectstore_Create_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_OpenStorageObjectstore_DeleteObjectstore_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_OpenStorageObjectstore_Delete_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -1170,18 +1170,18 @@ func RegisterOpenStorageObjectstoreHandlerClient(ctx context.Context, mux *runti
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_OpenStorageObjectstore_DeleteObjectstore_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_OpenStorageObjectstore_Delete_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_OpenStorageObjectstore_DeleteObjectstore_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_OpenStorageObjectstore_Delete_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_OpenStorageObjectstore_UpdateObjectstore_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_OpenStorageObjectstore_Update_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -1199,14 +1199,14 @@ func RegisterOpenStorageObjectstoreHandlerClient(ctx context.Context, mux *runti
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_OpenStorageObjectstore_UpdateObjectstore_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_OpenStorageObjectstore_Update_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_OpenStorageObjectstore_UpdateObjectstore_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_OpenStorageObjectstore_Update_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1214,23 +1214,23 @@ func RegisterOpenStorageObjectstoreHandlerClient(ctx context.Context, mux *runti
 }
 
 var (
-	pattern_OpenStorageObjectstore_InspectObjectstore_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "objectstore", "enumerate"}, ""))
+	pattern_OpenStorageObjectstore_Inspect_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "objectstore", "enumerate"}, ""))
 
-	pattern_OpenStorageObjectstore_CreateObjectstore_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "objectstore", "create"}, ""))
+	pattern_OpenStorageObjectstore_Create_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "objectstore", "create"}, ""))
 
-	pattern_OpenStorageObjectstore_DeleteObjectstore_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "objectstore", "delete"}, ""))
+	pattern_OpenStorageObjectstore_Delete_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "objectstore", "delete"}, ""))
 
-	pattern_OpenStorageObjectstore_UpdateObjectstore_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "objectstore", "update"}, ""))
+	pattern_OpenStorageObjectstore_Update_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "objectstore", "update"}, ""))
 )
 
 var (
-	forward_OpenStorageObjectstore_InspectObjectstore_0 = runtime.ForwardResponseMessage
+	forward_OpenStorageObjectstore_Inspect_0 = runtime.ForwardResponseMessage
 
-	forward_OpenStorageObjectstore_CreateObjectstore_0 = runtime.ForwardResponseMessage
+	forward_OpenStorageObjectstore_Create_0 = runtime.ForwardResponseMessage
 
-	forward_OpenStorageObjectstore_DeleteObjectstore_0 = runtime.ForwardResponseMessage
+	forward_OpenStorageObjectstore_Delete_0 = runtime.ForwardResponseMessage
 
-	forward_OpenStorageObjectstore_UpdateObjectstore_0 = runtime.ForwardResponseMessage
+	forward_OpenStorageObjectstore_Update_0 = runtime.ForwardResponseMessage
 )
 
 // RegisterOpenStorageCredentialsHandlerFromEndpoint is same as RegisterOpenStorageCredentialsHandler but
