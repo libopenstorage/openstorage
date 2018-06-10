@@ -56,10 +56,11 @@ type ServerConfig struct {
 type Server struct {
 	*grpcserver.GrpcServer
 
-	restPort          string
-	clusterServer     *ClusterServer
-	volumeServer      *VolumeServer
-	objectstoreServer *ObjectstoreServer
+	restPort             string
+	clusterServer        *ClusterServer
+	volumeServer         *VolumeServer
+	objectstoreServer    *ObjectstoreServer
+	schedulePolicyServer *SchedulePolicyServer
 }
 
 // Interface check
@@ -104,6 +105,9 @@ func New(config *ServerConfig) (*Server, error) {
 		objectstoreServer: &ObjectstoreServer{
 			cluster: config.Cluster,
 		},
+		schedulePolicyServer: &SchedulePolicyServer{
+			cluster: config.Cluster,
+		},
 	}, nil
 }
 
@@ -117,6 +121,8 @@ func (s *Server) Start() error {
 		api.RegisterOpenStorageObjectstoreServer(grpcServer, s.objectstoreServer)
 		api.RegisterOpenStorageVolumeServer(grpcServer, s.volumeServer)
 		api.RegisterOpenStorageCredentialsServer(grpcServer, s.volumeServer)
+		api.RegisterOpenStorageSchedulePolicyServer(grpcServer, s.schedulePolicyServer)
+
 	})
 	if err != nil {
 		return err
@@ -193,6 +199,14 @@ func (s *Server) restServerSetupHandlers() (*http.ServeMux, error) {
 		return nil, err
 	}
 	err = api.RegisterOpenStorageObjectstoreHandlerFromEndpoint(
+		context.Background(),
+		gmux,
+		s.Address(),
+		[]grpc.DialOption{grpc.WithInsecure()})
+	if err != nil {
+		return nil, err
+	}
+	err = api.RegisterOpenStorageSchedulePolicyHandlerFromEndpoint(
 		context.Background(),
 		gmux,
 		s.Address(),

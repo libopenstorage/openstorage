@@ -210,8 +210,9 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for API service
-
+// APIClient is the client API for API service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type APIClient interface {
 	Init(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error)
 	Attach(ctx context.Context, in *AttachRequest, opts ...grpc.CallOption) (*empty.Empty, error)
@@ -230,7 +231,7 @@ func NewAPIClient(cc *grpc.ClientConn) APIClient {
 
 func (c *aPIClient) Init(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error) {
 	out := new(empty.Empty)
-	err := grpc.Invoke(ctx, "/flexvolume.API/Init", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/flexvolume.API/Init", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -239,7 +240,7 @@ func (c *aPIClient) Init(ctx context.Context, in *empty.Empty, opts ...grpc.Call
 
 func (c *aPIClient) Attach(ctx context.Context, in *AttachRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
 	out := new(empty.Empty)
-	err := grpc.Invoke(ctx, "/flexvolume.API/Attach", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/flexvolume.API/Attach", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -248,7 +249,7 @@ func (c *aPIClient) Attach(ctx context.Context, in *AttachRequest, opts ...grpc.
 
 func (c *aPIClient) Detach(ctx context.Context, in *DetachRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
 	out := new(empty.Empty)
-	err := grpc.Invoke(ctx, "/flexvolume.API/Detach", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/flexvolume.API/Detach", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -257,7 +258,7 @@ func (c *aPIClient) Detach(ctx context.Context, in *DetachRequest, opts ...grpc.
 
 func (c *aPIClient) Mount(ctx context.Context, in *MountRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
 	out := new(empty.Empty)
-	err := grpc.Invoke(ctx, "/flexvolume.API/Mount", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/flexvolume.API/Mount", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -266,15 +267,14 @@ func (c *aPIClient) Mount(ctx context.Context, in *MountRequest, opts ...grpc.Ca
 
 func (c *aPIClient) Unmount(ctx context.Context, in *UnmountRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
 	out := new(empty.Empty)
-	err := grpc.Invoke(ctx, "/flexvolume.API/Unmount", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/flexvolume.API/Unmount", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// Server API for API service
-
+// APIServer is the server API for API service.
 type APIServer interface {
 	Init(context.Context, *empty.Empty) (*empty.Empty, error)
 	Attach(context.Context, *AttachRequest) (*empty.Empty, error)

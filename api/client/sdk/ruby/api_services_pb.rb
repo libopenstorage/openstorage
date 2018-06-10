@@ -76,7 +76,7 @@ module Openstorage
         self.unmarshal_class_method = :decode
         self.service_name = 'openstorage.api.OpenStorageObjectstore'
 
-        # Inspect returns current status of objectstore 
+        # Inspect returns current status of objectstore
         rpc :Inspect, SdkObjectstoreInspectRequest, SdkObjectstoreInspectResponse
         # Creates objectstore on specified volume
         rpc :Create, SdkObjectstoreCreateRequest, SdkObjectstoreCreateResponse
@@ -119,6 +119,29 @@ module Openstorage
         rpc :CredentialDelete, SdkCredentialDeleteRequest, SdkCredentialDeleteResponse
         # Validate a specified credential
         rpc :CredentialValidate, SdkCredentialValidateRequest, SdkCredentialValidateResponse
+      end
+
+      Stub = Service.rpc_stub_class
+    end
+    module OpenStorageSchedulePolicy
+      class Service
+
+        include GRPC::GenericService
+
+        self.marshal_class_method = :encode
+        self.unmarshal_class_method = :decode
+        self.service_name = 'openstorage.api.OpenStorageSchedulePolicy'
+
+        # Create Schedule Policy for snapshots
+        rpc :Create, SdkSchedulePolicyCreateRequest, SdkSchedulePolicyCreateResponse
+        # Update Schedule Policy
+        rpc :Update, SdkSchedulePolicyUpdateRequest, SdkSchedulePolicyUpdateResponse
+        # Enumerate Schedule Policy
+        rpc :Enumerate, SdkSchedulePolicyEnumerateRequest, SdkSchedulePolicyEnumerateResponse
+        # Inspect Schedule Policy
+        rpc :Inspect, SdkSchedulePolicyInspectRequest, SdkSchedulePolicyInspectResponse
+        # Delete Schedule Policy
+        rpc :Delete, SdkSchedulePolicyDeleteRequest, SdkSchedulePolicyDeleteResponse
       end
 
       Stub = Service.rpc_stub_class
