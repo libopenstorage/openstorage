@@ -67,6 +67,27 @@ module Openstorage
 
       Stub = Service.rpc_stub_class
     end
+    module OpenStorageObjectstore
+      class Service
+
+        include GRPC::GenericService
+
+        self.marshal_class_method = :encode
+        self.unmarshal_class_method = :decode
+        self.service_name = 'openstorage.api.OpenStorageObjectstore'
+
+        # Inspect returns current status of objectstore 
+        rpc :Inspect, SdkObjectstoreInspectRequest, SdkObjectstoreInspectResponse
+        # Creates objectstore on specified volume
+        rpc :Create, SdkObjectstoreCreateRequest, SdkObjectstoreCreateResponse
+        # Deletes objectstore by id
+        rpc :Delete, SdkObjectstoreDeleteRequest, SdkObjectstoreDeleteResponse
+        # Updates provided objectstore status
+        rpc :Update, SdkObjectstoreUpdateRequest, SdkObjectstoreUpdateResponse
+      end
+
+      Stub = Service.rpc_stub_class
+    end
     module OpenStorageCredentials
       class Service
 

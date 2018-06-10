@@ -344,6 +344,99 @@ def add_OpenStorageVolumeServicer_to_server(servicer, server):
   server.add_generic_rpc_handlers((generic_handler,))
 
 
+class OpenStorageObjectstoreStub(object):
+  # missing associated documentation comment in .proto file
+  pass
+
+  def __init__(self, channel):
+    """Constructor.
+
+    Args:
+      channel: A grpc.Channel.
+    """
+    self.Inspect = channel.unary_unary(
+        '/openstorage.api.OpenStorageObjectstore/Inspect',
+        request_serializer=api__pb2.SdkObjectstoreInspectRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkObjectstoreInspectResponse.FromString,
+        )
+    self.Create = channel.unary_unary(
+        '/openstorage.api.OpenStorageObjectstore/Create',
+        request_serializer=api__pb2.SdkObjectstoreCreateRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkObjectstoreCreateResponse.FromString,
+        )
+    self.Delete = channel.unary_unary(
+        '/openstorage.api.OpenStorageObjectstore/Delete',
+        request_serializer=api__pb2.SdkObjectstoreDeleteRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkObjectstoreDeleteResponse.FromString,
+        )
+    self.Update = channel.unary_unary(
+        '/openstorage.api.OpenStorageObjectstore/Update',
+        request_serializer=api__pb2.SdkObjectstoreUpdateRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkObjectstoreUpdateResponse.FromString,
+        )
+
+
+class OpenStorageObjectstoreServicer(object):
+  # missing associated documentation comment in .proto file
+  pass
+
+  def Inspect(self, request, context):
+    """Inspect returns current status of objectstore 
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def Create(self, request, context):
+    """Creates objectstore on specified volume
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def Delete(self, request, context):
+    """Deletes objectstore by id
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def Update(self, request, context):
+    """Updates provided objectstore status
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+
+def add_OpenStorageObjectstoreServicer_to_server(servicer, server):
+  rpc_method_handlers = {
+      'Inspect': grpc.unary_unary_rpc_method_handler(
+          servicer.Inspect,
+          request_deserializer=api__pb2.SdkObjectstoreInspectRequest.FromString,
+          response_serializer=api__pb2.SdkObjectstoreInspectResponse.SerializeToString,
+      ),
+      'Create': grpc.unary_unary_rpc_method_handler(
+          servicer.Create,
+          request_deserializer=api__pb2.SdkObjectstoreCreateRequest.FromString,
+          response_serializer=api__pb2.SdkObjectstoreCreateResponse.SerializeToString,
+      ),
+      'Delete': grpc.unary_unary_rpc_method_handler(
+          servicer.Delete,
+          request_deserializer=api__pb2.SdkObjectstoreDeleteRequest.FromString,
+          response_serializer=api__pb2.SdkObjectstoreDeleteResponse.SerializeToString,
+      ),
+      'Update': grpc.unary_unary_rpc_method_handler(
+          servicer.Update,
+          request_deserializer=api__pb2.SdkObjectstoreUpdateRequest.FromString,
+          response_serializer=api__pb2.SdkObjectstoreUpdateResponse.SerializeToString,
+      ),
+  }
+  generic_handler = grpc.method_handlers_generic_handler(
+      'openstorage.api.OpenStorageObjectstore', rpc_method_handlers)
+  server.add_generic_rpc_handlers((generic_handler,))
+
+
 class OpenStorageCredentialsStub(object):
   # missing associated documentation comment in .proto file
   pass
