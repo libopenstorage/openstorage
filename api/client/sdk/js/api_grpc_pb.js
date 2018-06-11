@@ -380,6 +380,116 @@ function deserialize_openstorage_api_SdkObjectstoreUpdateResponse(buffer_arg) {
   return api_pb.SdkObjectstoreUpdateResponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_openstorage_api_SdkSchedulePolicyCreateRequest(arg) {
+  if (!(arg instanceof api_pb.SdkSchedulePolicyCreateRequest)) {
+    throw new Error('Expected argument of type openstorage.api.SdkSchedulePolicyCreateRequest');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkSchedulePolicyCreateRequest(buffer_arg) {
+  return api_pb.SdkSchedulePolicyCreateRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkSchedulePolicyCreateResponse(arg) {
+  if (!(arg instanceof api_pb.SdkSchedulePolicyCreateResponse)) {
+    throw new Error('Expected argument of type openstorage.api.SdkSchedulePolicyCreateResponse');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkSchedulePolicyCreateResponse(buffer_arg) {
+  return api_pb.SdkSchedulePolicyCreateResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkSchedulePolicyDeleteRequest(arg) {
+  if (!(arg instanceof api_pb.SdkSchedulePolicyDeleteRequest)) {
+    throw new Error('Expected argument of type openstorage.api.SdkSchedulePolicyDeleteRequest');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkSchedulePolicyDeleteRequest(buffer_arg) {
+  return api_pb.SdkSchedulePolicyDeleteRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkSchedulePolicyDeleteResponse(arg) {
+  if (!(arg instanceof api_pb.SdkSchedulePolicyDeleteResponse)) {
+    throw new Error('Expected argument of type openstorage.api.SdkSchedulePolicyDeleteResponse');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkSchedulePolicyDeleteResponse(buffer_arg) {
+  return api_pb.SdkSchedulePolicyDeleteResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkSchedulePolicyEnumerateRequest(arg) {
+  if (!(arg instanceof api_pb.SdkSchedulePolicyEnumerateRequest)) {
+    throw new Error('Expected argument of type openstorage.api.SdkSchedulePolicyEnumerateRequest');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkSchedulePolicyEnumerateRequest(buffer_arg) {
+  return api_pb.SdkSchedulePolicyEnumerateRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkSchedulePolicyEnumerateResponse(arg) {
+  if (!(arg instanceof api_pb.SdkSchedulePolicyEnumerateResponse)) {
+    throw new Error('Expected argument of type openstorage.api.SdkSchedulePolicyEnumerateResponse');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkSchedulePolicyEnumerateResponse(buffer_arg) {
+  return api_pb.SdkSchedulePolicyEnumerateResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkSchedulePolicyInspectRequest(arg) {
+  if (!(arg instanceof api_pb.SdkSchedulePolicyInspectRequest)) {
+    throw new Error('Expected argument of type openstorage.api.SdkSchedulePolicyInspectRequest');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkSchedulePolicyInspectRequest(buffer_arg) {
+  return api_pb.SdkSchedulePolicyInspectRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkSchedulePolicyInspectResponse(arg) {
+  if (!(arg instanceof api_pb.SdkSchedulePolicyInspectResponse)) {
+    throw new Error('Expected argument of type openstorage.api.SdkSchedulePolicyInspectResponse');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkSchedulePolicyInspectResponse(buffer_arg) {
+  return api_pb.SdkSchedulePolicyInspectResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkSchedulePolicyUpdateRequest(arg) {
+  if (!(arg instanceof api_pb.SdkSchedulePolicyUpdateRequest)) {
+    throw new Error('Expected argument of type openstorage.api.SdkSchedulePolicyUpdateRequest');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkSchedulePolicyUpdateRequest(buffer_arg) {
+  return api_pb.SdkSchedulePolicyUpdateRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkSchedulePolicyUpdateResponse(arg) {
+  if (!(arg instanceof api_pb.SdkSchedulePolicyUpdateResponse)) {
+    throw new Error('Expected argument of type openstorage.api.SdkSchedulePolicyUpdateResponse');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkSchedulePolicyUpdateResponse(buffer_arg) {
+  return api_pb.SdkSchedulePolicyUpdateResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_openstorage_api_SdkVolumeAttachRequest(arg) {
   if (!(arg instanceof api_pb.SdkVolumeAttachRequest)) {
     throw new Error('Expected argument of type openstorage.api.SdkVolumeAttachRequest');
@@ -859,7 +969,7 @@ var OpenStorageVolumeService = exports.OpenStorageVolumeService = {
 
 exports.OpenStorageVolumeClient = grpc.makeGenericClientConstructor(OpenStorageVolumeService);
 var OpenStorageObjectstoreService = exports.OpenStorageObjectstoreService = {
-  // Inspect returns current status of objectstore 
+  // Inspect returns current status of objectstore
   inspect: {
     path: '/openstorage.api.OpenStorageObjectstore/Inspect',
     requestStream: false,
@@ -1016,3 +1126,67 @@ var OpenStorageCredentialsService = exports.OpenStorageCredentialsService = {
 };
 
 exports.OpenStorageCredentialsClient = grpc.makeGenericClientConstructor(OpenStorageCredentialsService);
+var OpenStorageSchedulePolicyService = exports.OpenStorageSchedulePolicyService = {
+  // Create Schedule Policy for snapshots
+  create: {
+    path: '/openstorage.api.OpenStorageSchedulePolicy/Create',
+    requestStream: false,
+    responseStream: false,
+    requestType: api_pb.SdkSchedulePolicyCreateRequest,
+    responseType: api_pb.SdkSchedulePolicyCreateResponse,
+    requestSerialize: serialize_openstorage_api_SdkSchedulePolicyCreateRequest,
+    requestDeserialize: deserialize_openstorage_api_SdkSchedulePolicyCreateRequest,
+    responseSerialize: serialize_openstorage_api_SdkSchedulePolicyCreateResponse,
+    responseDeserialize: deserialize_openstorage_api_SdkSchedulePolicyCreateResponse,
+  },
+  // Update Schedule Policy
+  update: {
+    path: '/openstorage.api.OpenStorageSchedulePolicy/Update',
+    requestStream: false,
+    responseStream: false,
+    requestType: api_pb.SdkSchedulePolicyUpdateRequest,
+    responseType: api_pb.SdkSchedulePolicyUpdateResponse,
+    requestSerialize: serialize_openstorage_api_SdkSchedulePolicyUpdateRequest,
+    requestDeserialize: deserialize_openstorage_api_SdkSchedulePolicyUpdateRequest,
+    responseSerialize: serialize_openstorage_api_SdkSchedulePolicyUpdateResponse,
+    responseDeserialize: deserialize_openstorage_api_SdkSchedulePolicyUpdateResponse,
+  },
+  // Enumerate Schedule Policy
+  enumerate: {
+    path: '/openstorage.api.OpenStorageSchedulePolicy/Enumerate',
+    requestStream: false,
+    responseStream: false,
+    requestType: api_pb.SdkSchedulePolicyEnumerateRequest,
+    responseType: api_pb.SdkSchedulePolicyEnumerateResponse,
+    requestSerialize: serialize_openstorage_api_SdkSchedulePolicyEnumerateRequest,
+    requestDeserialize: deserialize_openstorage_api_SdkSchedulePolicyEnumerateRequest,
+    responseSerialize: serialize_openstorage_api_SdkSchedulePolicyEnumerateResponse,
+    responseDeserialize: deserialize_openstorage_api_SdkSchedulePolicyEnumerateResponse,
+  },
+  // Inspect Schedule Policy
+  inspect: {
+    path: '/openstorage.api.OpenStorageSchedulePolicy/Inspect',
+    requestStream: false,
+    responseStream: false,
+    requestType: api_pb.SdkSchedulePolicyInspectRequest,
+    responseType: api_pb.SdkSchedulePolicyInspectResponse,
+    requestSerialize: serialize_openstorage_api_SdkSchedulePolicyInspectRequest,
+    requestDeserialize: deserialize_openstorage_api_SdkSchedulePolicyInspectRequest,
+    responseSerialize: serialize_openstorage_api_SdkSchedulePolicyInspectResponse,
+    responseDeserialize: deserialize_openstorage_api_SdkSchedulePolicyInspectResponse,
+  },
+  // Delete Schedule Policy
+  delete: {
+    path: '/openstorage.api.OpenStorageSchedulePolicy/Delete',
+    requestStream: false,
+    responseStream: false,
+    requestType: api_pb.SdkSchedulePolicyDeleteRequest,
+    responseType: api_pb.SdkSchedulePolicyDeleteResponse,
+    requestSerialize: serialize_openstorage_api_SdkSchedulePolicyDeleteRequest,
+    requestDeserialize: deserialize_openstorage_api_SdkSchedulePolicyDeleteRequest,
+    responseSerialize: serialize_openstorage_api_SdkSchedulePolicyDeleteResponse,
+    responseDeserialize: deserialize_openstorage_api_SdkSchedulePolicyDeleteResponse,
+  },
+};
+
+exports.OpenStorageSchedulePolicyClient = grpc.makeGenericClientConstructor(OpenStorageSchedulePolicyService);

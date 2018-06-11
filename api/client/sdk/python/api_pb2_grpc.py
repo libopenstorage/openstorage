@@ -381,7 +381,7 @@ class OpenStorageObjectstoreServicer(object):
   pass
 
   def Inspect(self, request, context):
-    """Inspect returns current status of objectstore 
+    """Inspect returns current status of objectstore
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -601,4 +601,114 @@ def add_OpenStorageCredentialsServicer_to_server(servicer, server):
   }
   generic_handler = grpc.method_handlers_generic_handler(
       'openstorage.api.OpenStorageCredentials', rpc_method_handlers)
+  server.add_generic_rpc_handlers((generic_handler,))
+
+
+class OpenStorageSchedulePolicyStub(object):
+  # missing associated documentation comment in .proto file
+  pass
+
+  def __init__(self, channel):
+    """Constructor.
+
+    Args:
+      channel: A grpc.Channel.
+    """
+    self.Create = channel.unary_unary(
+        '/openstorage.api.OpenStorageSchedulePolicy/Create',
+        request_serializer=api__pb2.SdkSchedulePolicyCreateRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkSchedulePolicyCreateResponse.FromString,
+        )
+    self.Update = channel.unary_unary(
+        '/openstorage.api.OpenStorageSchedulePolicy/Update',
+        request_serializer=api__pb2.SdkSchedulePolicyUpdateRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkSchedulePolicyUpdateResponse.FromString,
+        )
+    self.Enumerate = channel.unary_unary(
+        '/openstorage.api.OpenStorageSchedulePolicy/Enumerate',
+        request_serializer=api__pb2.SdkSchedulePolicyEnumerateRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkSchedulePolicyEnumerateResponse.FromString,
+        )
+    self.Inspect = channel.unary_unary(
+        '/openstorage.api.OpenStorageSchedulePolicy/Inspect',
+        request_serializer=api__pb2.SdkSchedulePolicyInspectRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkSchedulePolicyInspectResponse.FromString,
+        )
+    self.Delete = channel.unary_unary(
+        '/openstorage.api.OpenStorageSchedulePolicy/Delete',
+        request_serializer=api__pb2.SdkSchedulePolicyDeleteRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkSchedulePolicyDeleteResponse.FromString,
+        )
+
+
+class OpenStorageSchedulePolicyServicer(object):
+  # missing associated documentation comment in .proto file
+  pass
+
+  def Create(self, request, context):
+    """Create Schedule Policy for snapshots
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def Update(self, request, context):
+    """Update Schedule Policy
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def Enumerate(self, request, context):
+    """Enumerate Schedule Policy
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def Inspect(self, request, context):
+    """Inspect Schedule Policy
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def Delete(self, request, context):
+    """Delete Schedule Policy
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+
+def add_OpenStorageSchedulePolicyServicer_to_server(servicer, server):
+  rpc_method_handlers = {
+      'Create': grpc.unary_unary_rpc_method_handler(
+          servicer.Create,
+          request_deserializer=api__pb2.SdkSchedulePolicyCreateRequest.FromString,
+          response_serializer=api__pb2.SdkSchedulePolicyCreateResponse.SerializeToString,
+      ),
+      'Update': grpc.unary_unary_rpc_method_handler(
+          servicer.Update,
+          request_deserializer=api__pb2.SdkSchedulePolicyUpdateRequest.FromString,
+          response_serializer=api__pb2.SdkSchedulePolicyUpdateResponse.SerializeToString,
+      ),
+      'Enumerate': grpc.unary_unary_rpc_method_handler(
+          servicer.Enumerate,
+          request_deserializer=api__pb2.SdkSchedulePolicyEnumerateRequest.FromString,
+          response_serializer=api__pb2.SdkSchedulePolicyEnumerateResponse.SerializeToString,
+      ),
+      'Inspect': grpc.unary_unary_rpc_method_handler(
+          servicer.Inspect,
+          request_deserializer=api__pb2.SdkSchedulePolicyInspectRequest.FromString,
+          response_serializer=api__pb2.SdkSchedulePolicyInspectResponse.SerializeToString,
+      ),
+      'Delete': grpc.unary_unary_rpc_method_handler(
+          servicer.Delete,
+          request_deserializer=api__pb2.SdkSchedulePolicyDeleteRequest.FromString,
+          response_serializer=api__pb2.SdkSchedulePolicyDeleteResponse.SerializeToString,
+      ),
+  }
+  generic_handler = grpc.method_handlers_generic_handler(
+      'openstorage.api.OpenStorageSchedulePolicy', rpc_method_handlers)
   server.add_generic_rpc_handlers((generic_handler,))

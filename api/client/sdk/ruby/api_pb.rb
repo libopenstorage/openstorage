@@ -229,6 +229,36 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :node_id, :string, 3
     repeated :nodes, :message, 4, "openstorage.api.StorageNode"
   end
+  add_message "openstorage.api.SdkSchedulePolicyCreateRequest" do
+    optional :SchedulePolicy, :message, 1, "openstorage.api.SdkSchedulePolicy"
+  end
+  add_message "openstorage.api.SdkSchedulePolicyCreateResponse" do
+  end
+  add_message "openstorage.api.SdkSchedulePolicyUpdateRequest" do
+    optional :SchedulePolicy, :message, 1, "openstorage.api.SdkSchedulePolicy"
+  end
+  add_message "openstorage.api.SdkSchedulePolicyUpdateResponse" do
+  end
+  add_message "openstorage.api.SdkSchedulePolicyEnumerateRequest" do
+  end
+  add_message "openstorage.api.SdkSchedulePolicyEnumerateResponse" do
+    repeated :policies, :message, 1, "openstorage.api.SdkSchedulePolicy"
+  end
+  add_message "openstorage.api.SdkSchedulePolicyInspectRequest" do
+    optional :name, :string, 1
+  end
+  add_message "openstorage.api.SdkSchedulePolicyInspectResponse" do
+    optional :policy, :message, 1, "openstorage.api.SdkSchedulePolicy"
+  end
+  add_message "openstorage.api.SdkSchedulePolicyDeleteRequest" do
+    optional :name, :string, 1
+  end
+  add_message "openstorage.api.SdkSchedulePolicyDeleteResponse" do
+  end
+  add_message "openstorage.api.SdkSchedulePolicy" do
+    optional :name, :string, 1
+    optional :schedule, :string, 2
+  end
   add_message "openstorage.api.SdkCredentialCreateAzureRequest" do
     optional :credential, :message, 1, "openstorage.api.AzureCredential"
   end
@@ -574,6 +604,17 @@ module Openstorage
     GroupSnapCreateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.GroupSnapCreateResponse").msgclass
     StorageNode = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.StorageNode").msgclass
     StorageCluster = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.StorageCluster").msgclass
+    SdkSchedulePolicyCreateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkSchedulePolicyCreateRequest").msgclass
+    SdkSchedulePolicyCreateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkSchedulePolicyCreateResponse").msgclass
+    SdkSchedulePolicyUpdateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkSchedulePolicyUpdateRequest").msgclass
+    SdkSchedulePolicyUpdateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkSchedulePolicyUpdateResponse").msgclass
+    SdkSchedulePolicyEnumerateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkSchedulePolicyEnumerateRequest").msgclass
+    SdkSchedulePolicyEnumerateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkSchedulePolicyEnumerateResponse").msgclass
+    SdkSchedulePolicyInspectRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkSchedulePolicyInspectRequest").msgclass
+    SdkSchedulePolicyInspectResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkSchedulePolicyInspectResponse").msgclass
+    SdkSchedulePolicyDeleteRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkSchedulePolicyDeleteRequest").msgclass
+    SdkSchedulePolicyDeleteResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkSchedulePolicyDeleteResponse").msgclass
+    SdkSchedulePolicy = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkSchedulePolicy").msgclass
     SdkCredentialCreateAzureRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCredentialCreateAzureRequest").msgclass
     SdkCredentialCreateAzureResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCredentialCreateAzureResponse").msgclass
     SdkCredentialCreateGoogleRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCredentialCreateGoogleRequest").msgclass

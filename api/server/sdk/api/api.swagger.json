@@ -474,6 +474,141 @@
         ]
       }
     },
+    "/v1/schedulepolicy/create": {
+      "post": {
+        "summary": "Create Schedule Policy for snapshots",
+        "operationId": "Create",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkSchedulePolicyCreateResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkSchedulePolicyCreateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageSchedulePolicy"
+        ]
+      }
+    },
+    "/v1/schedulepolicy/delete": {
+      "post": {
+        "summary": "Delete Schedule Policy",
+        "operationId": "Delete",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkSchedulePolicyDeleteResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkSchedulePolicyDeleteRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageSchedulePolicy"
+        ]
+      }
+    },
+    "/v1/schedulepolicy/enumerate": {
+      "post": {
+        "summary": "Enumerate Schedule Policy",
+        "operationId": "Enumerate",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkSchedulePolicyEnumerateResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkSchedulePolicyEnumerateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageSchedulePolicy"
+        ]
+      }
+    },
+    "/v1/schedulepolicy/inspect": {
+      "post": {
+        "summary": "Inspect Schedule Policy",
+        "operationId": "Inspect",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkSchedulePolicyInspectResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkSchedulePolicyInspectRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageSchedulePolicy"
+        ]
+      }
+    },
+    "/v1/schedulepolicy/update": {
+      "post": {
+        "summary": "Update Schedule Policy",
+        "operationId": "Update",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkSchedulePolicyUpdateResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkSchedulePolicyUpdateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageSchedulePolicy"
+        ]
+      }
+    },
     "/v1/volume/attach": {
       "post": {
         "summary": "Attach device to host",
@@ -1362,6 +1497,88 @@
       }
     },
     "apiSdkObjectstoreUpdateResponse": {
+      "type": "object"
+    },
+    "apiSdkSchedulePolicy": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Name of the schedule policy"
+        },
+        "schedule": {
+          "type": "string",
+          "title": "Schedule string in yaml"
+        }
+      }
+    },
+    "apiSdkSchedulePolicyCreateRequest": {
+      "type": "object",
+      "properties": {
+        "SchedulePolicy": {
+          "$ref": "#/definitions/apiSdkSchedulePolicy",
+          "title": "Schedule Policy"
+        }
+      }
+    },
+    "apiSdkSchedulePolicyCreateResponse": {
+      "type": "object"
+    },
+    "apiSdkSchedulePolicyDeleteRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Name of the schedule policy"
+        }
+      }
+    },
+    "apiSdkSchedulePolicyDeleteResponse": {
+      "type": "object"
+    },
+    "apiSdkSchedulePolicyEnumerateRequest": {
+      "type": "object"
+    },
+    "apiSdkSchedulePolicyEnumerateResponse": {
+      "type": "object",
+      "properties": {
+        "policies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiSdkSchedulePolicy"
+          },
+          "title": "List of Schedule Policy"
+        }
+      }
+    },
+    "apiSdkSchedulePolicyInspectRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Name of the schedule Policy"
+        }
+      }
+    },
+    "apiSdkSchedulePolicyInspectResponse": {
+      "type": "object",
+      "properties": {
+        "policy": {
+          "$ref": "#/definitions/apiSdkSchedulePolicy",
+          "title": "List of Schedule Policy"
+        }
+      }
+    },
+    "apiSdkSchedulePolicyUpdateRequest": {
+      "type": "object",
+      "properties": {
+        "SchedulePolicy": {
+          "$ref": "#/definitions/apiSdkSchedulePolicy",
+          "title": "Schedule Policy"
+        }
+      }
+    },
+    "apiSdkSchedulePolicyUpdateResponse": {
       "type": "object"
     },
     "apiSdkVolumeAttachRequest": {

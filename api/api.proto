@@ -831,7 +831,7 @@ service OpenStorageVolume {
 }
 
 service OpenStorageObjectstore {
-  // Inspect returns current status of objectstore 
+  // Inspect returns current status of objectstore
   rpc Inspect(SdkObjectstoreInspectRequest)
     returns(SdkObjectstoreInspectResponse){
       option(google.api.http) = {
@@ -947,6 +947,103 @@ service OpenStorageCredentials {
         body: "*"
       };
     }
+}
+
+service OpenStorageSchedulePolicy {
+
+  // Create Schedule Policy for snapshots
+  rpc Create(SdkSchedulePolicyCreateRequest)
+    returns (SdkSchedulePolicyCreateResponse) {
+      option(google.api.http) = {
+        post: "/v1/schedulepolicy/create"
+        body: "*"
+      };
+    }
+
+  // Update Schedule Policy
+  rpc Update(SdkSchedulePolicyUpdateRequest)
+    returns (SdkSchedulePolicyUpdateResponse) {
+      option(google.api.http) = {
+        post: "/v1/schedulepolicy/update"
+        body: "*"
+      };
+    }
+
+  // Enumerate Schedule Policy
+  rpc Enumerate(SdkSchedulePolicyEnumerateRequest)
+    returns (SdkSchedulePolicyEnumerateResponse) {
+      option(google.api.http) = {
+        post: "/v1/schedulepolicy/enumerate"
+        body: "*"
+      };
+    }
+
+  // Inspect Schedule Policy
+  rpc Inspect(SdkSchedulePolicyInspectRequest)
+  returns (SdkSchedulePolicyInspectResponse) {
+    option(google.api.http) = {
+      post: "/v1/schedulepolicy/inspect"
+      body: "*"
+    };
+  }
+
+  // Delete Schedule Policy
+  rpc Delete(SdkSchedulePolicyDeleteRequest)
+    returns (SdkSchedulePolicyDeleteResponse) {
+      option(google.api.http) = {
+        post: "/v1/schedulepolicy/delete"
+        body: "*"
+      };
+    }
+}
+
+message SdkSchedulePolicyCreateRequest {
+  // Schedule Policy
+  SdkSchedulePolicy SchedulePolicy = 1;
+}
+
+message SdkSchedulePolicyCreateResponse {
+}
+
+message SdkSchedulePolicyUpdateRequest {
+  // Schedule Policy
+  SdkSchedulePolicy SchedulePolicy = 1;
+}
+
+message SdkSchedulePolicyUpdateResponse {
+}
+
+message SdkSchedulePolicyEnumerateRequest {
+}
+
+message SdkSchedulePolicyEnumerateResponse {
+  // List of Schedule Policy
+  repeated SdkSchedulePolicy policies = 1;
+}
+
+message SdkSchedulePolicyInspectRequest {
+  // Name of the schedule Policy
+  string name = 1;
+}
+
+message SdkSchedulePolicyInspectResponse {
+  // List of Schedule Policy
+  SdkSchedulePolicy policy = 1;
+}
+
+message SdkSchedulePolicyDeleteRequest {
+  // Name of the schedule policy
+  string name = 1;
+}
+
+message SdkSchedulePolicyDeleteResponse {
+}
+
+message SdkSchedulePolicy {
+  // Name of the schedule policy
+  string name = 1;
+  // Schedule string in yaml
+  string schedule = 2;
 }
 
 message SdkCredentialCreateAzureRequest {
@@ -1274,5 +1371,5 @@ message SdkObjectstoreUpdateRequest {
 }
 
 message SdkObjectstoreUpdateResponse {
-} 
+}
 
