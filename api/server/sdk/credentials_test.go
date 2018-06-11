@@ -456,7 +456,7 @@ func TestSdkCredentialEnumerateAWSSuccess(t *testing.T) {
 
 	req := &api.SdkCredentialEnumerateAWSRequest{CredentialId: "test"}
 
-	enumS3test1 := map[string]interface{}{
+	enumS3test1 := map[string]string{
 		api.OptCredType:      "s3",
 		api.OptCredAccessKey: "test-access",
 		api.OptCredSecretKey: "test-secret",
@@ -464,7 +464,7 @@ func TestSdkCredentialEnumerateAWSSuccess(t *testing.T) {
 		api.OptCredRegion:    "test-region",
 	}
 
-	enumS3test2 := map[string]interface{}{
+	enumS3test2 := map[string]string{
 		api.OptCredType:      "s3",
 		api.OptCredAccessKey: "test-access1",
 		api.OptCredSecretKey: "test-secret1",
@@ -472,7 +472,7 @@ func TestSdkCredentialEnumerateAWSSuccess(t *testing.T) {
 		api.OptCredRegion:    "test-region1",
 	}
 
-	enumAzure := map[string]interface{}{
+	enumAzure := map[string]string{
 		api.OptCredType:             "azure",
 		api.OptCredAzureAccountName: "test-azure-account",
 		api.OptCredAzureAccountKey:  "test-azure-account",
@@ -506,7 +506,7 @@ func TestSdkCredentialEnumerateAWSWithMultipleCredResponseSuccess(t *testing.T) 
 
 	req := &api.SdkCredentialEnumerateAWSRequest{CredentialId: "test"}
 
-	enumS3 := map[string]interface{}{
+	enumS3 := map[string]string{
 		api.OptCredType:      "s3",
 		api.OptCredAccessKey: "test-access",
 		api.OptCredSecretKey: "test-secret",
@@ -514,13 +514,13 @@ func TestSdkCredentialEnumerateAWSWithMultipleCredResponseSuccess(t *testing.T) 
 		api.OptCredRegion:    "test-region",
 	}
 
-	enumAzure := map[string]interface{}{
+	enumAzure := map[string]string{
 		api.OptCredType:             "azure",
 		api.OptCredAzureAccountName: "test-azure-account",
 		api.OptCredAzureAccountKey:  "test-azure-account",
 	}
 
-	enumGoogle := map[string]interface{}{
+	enumGoogle := map[string]string{
 		api.OptCredType:            "google",
 		api.OptCredGoogleProjectID: "test-google-project-id",
 	}
@@ -581,7 +581,7 @@ func TestSdkCredentialEnumerateAzureSuccess(t *testing.T) {
 
 	req := &api.SdkCredentialEnumerateAzureRequest{CredentialId: "test"}
 
-	enumAzure := map[string]interface{}{
+	enumAzure := map[string]string{
 		api.OptCredType:             "azure",
 		api.OptCredAzureAccountName: "test-azure-account",
 		api.OptCredAzureAccountKey:  "test-azure-account",
@@ -638,7 +638,7 @@ func TestSdkCredentialEnumerateGoogleSuccess(t *testing.T) {
 
 	req := &api.SdkCredentialEnumerateGoogleRequest{CredentialId: "test"}
 
-	enumGoogle := map[string]interface{}{
+	enumGoogle := map[string]string{
 		api.OptCredType:            "google",
 		api.OptCredGoogleProjectID: "test-google-project-id",
 	}

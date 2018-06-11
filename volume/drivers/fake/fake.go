@@ -17,6 +17,7 @@ limitations under the License.
 package fake
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/sirupsen/logrus"
@@ -31,8 +32,9 @@ import (
 )
 
 const (
-	Name = "fake"
-	Type = api.DriverType_DRIVER_TYPE_BLOCK
+	Name           = "fake"
+	credsKeyPrefix = "/fake/credentials"
+	Type           = api.DriverType_DRIVER_TYPE_BLOCK
 )
 
 // Implements the open storage volume interface.
@@ -43,6 +45,12 @@ type driver struct {
 	volume.QuiesceDriver
 	volume.CredsDriver
 	volume.CloudBackupDriver
+	kv kvdb.Kvdb
+}
+
+type fakeCred struct {
+	Id     string
+	Params map[string]string
 }
 
 func Init(params map[string]string) (volume.VolumeDriver, error) {
@@ -51,8 +59,8 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		StoreEnumerator:   common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
 		StatsDriver:       volume.StatsNotSupported,
 		QuiesceDriver:     volume.QuiesceNotSupported,
-		CredsDriver:       volume.CredsNotSupported,
 		CloudBackupDriver: volume.CloudBackupNotSupported,
+		kv:                kvdb.Instance(),
 	}
 
 	volumeInfo, err := inst.StoreEnumerator.Enumerate(&api.VolumeLocator{}, nil)
@@ -217,3 +225,50 @@ func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.Volu
 }
 
 func (d *driver) Shutdown() {}
+
+func (d *driver) CredsCreate(
+	params map[string]string,
+) (string, error) {
+
+	id := uuid.New()
+	_, err := d.kv.Put(credsKeyPrefix+"/"+id, &fakeCred{
+		Id:     id,
+		Params: params,
+	}, 0)
+	if err != nil {
+		return "", err
+	}
+
+	return id, nil
+}
+
+func (d *driver) CredsDelete(
+	uuid string,
+) error {
+	d.kv.Delete(credsKeyPrefix + "/" + uuid)
+	return nil
+}
+
+func (d *driver) CredsEnumerate() (map[string]interface{}, error) {
+
+	kvp, err := d.kv.Enumerate(credsKeyPrefix)
+	if err != nil {
+		return nil, err
+	}
+	creds := make(map[string]interface{}, len(kvp))
+	for _, v := range kvp {
+		elem := &fakeCred{}
+		if err := json.Unmarshal(v.Value, elem); err != nil {
+			return nil, err
+		}
+		creds[elem.Id] = elem.Params
+	}
+
+	return creds, nil
+}
+
+func (d *driver) CredsValidate(
+	uuid string,
+) error {
+	return nil
+}
