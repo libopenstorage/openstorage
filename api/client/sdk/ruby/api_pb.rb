@@ -454,6 +454,93 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   end
   add_message "openstorage.api.SdkObjectstoreUpdateResponse" do
   end
+  add_message "openstorage.api.SdkCloudBackupCreateRequest" do
+    optional :volume_id, :string, 1
+    optional :credential_uuid, :string, 2
+    optional :full, :bool, 3
+  end
+  add_message "openstorage.api.SdkCloudBackupCreateResponse" do
+    optional :backup_id, :string, 1
+  end
+  add_message "openstorage.api.SdkCloudBackupRestoreRequest" do
+    optional :backup_id, :string, 1
+    optional :restore_volume_name, :string, 2
+    optional :credential_uuid, :string, 3
+    optional :node_id, :string, 4
+  end
+  add_message "openstorage.api.SdkCloudBackupRestoreResponse" do
+    optional :restore_volume_id, :string, 1
+  end
+  add_message "openstorage.api.SdkCloudBackupDeleteRequest" do
+    optional :backup_id, :string, 1
+    optional :credential_uuid, :string, 2
+    optional :force, :bool, 3
+  end
+  add_message "openstorage.api.SdkCloudBackupDeleteResponse" do
+  end
+  add_message "openstorage.api.SdkCloudBackupDeleteAllRequest" do
+    optional :src_volume_id, :string, 1
+    optional :credential_uuid, :string, 2
+  end
+  add_message "openstorage.api.SdkCloudBackupDeleteAllResponse" do
+  end
+  add_message "openstorage.api.SdkCloudBackupEnumerateRequest" do
+    optional :src_volume_id, :string, 1
+    optional :cluster_id, :string, 2
+    optional :credential_uuid, :string, 3
+    optional :all, :bool, 4
+  end
+  add_message "openstorage.api.SdkCloudBackupInfo" do
+    optional :id, :string, 1
+    optional :src_volume_id, :string, 2
+    optional :src_volume_name, :string, 3
+    optional :timestamp, :message, 4, "google.protobuf.Timestamp"
+    map :metadata, :string, :string, 5
+    optional :status, :enum, 6, "openstorage.api.SdkCloudBackupStatusType"
+  end
+  add_message "openstorage.api.SdkCloudBackupEnumerateResponse" do
+    repeated :backups, :message, 1, "openstorage.api.SdkCloudBackupInfo"
+  end
+  add_message "openstorage.api.SdkCloudBackupStatus" do
+    optional :backup_id, :string, 1
+    optional :optype, :enum, 2, "openstorage.api.SdkCloudBackupOpType"
+    optional :status, :enum, 3, "openstorage.api.SdkCloudBackupStatusType"
+    optional :bytes_done, :uint64, 4
+    optional :start_time, :message, 5, "google.protobuf.Timestamp"
+    optional :completed_time, :message, 6, "google.protobuf.Timestamp"
+    optional :node_id, :string, 7
+  end
+  add_message "openstorage.api.SdkCloudBackupStatusRequest" do
+    optional :src_volume_id, :string, 1
+    optional :local, :bool, 2
+  end
+  add_message "openstorage.api.SdkCloudBackupStatusResponse" do
+    map :statuses, :string, :message, 1, "openstorage.api.SdkCloudBackupStatus"
+  end
+  add_message "openstorage.api.SdkCloudBackupCatalogRequest" do
+    optional :backup_id, :string, 1
+    optional :credential_uuid, :string, 2
+  end
+  add_message "openstorage.api.SdkCloudBackupCatalogResponse" do
+    repeated :contents, :string, 1
+  end
+  add_message "openstorage.api.SdkCloudBackupHistoryItem" do
+    optional :src_volume_id, :string, 1
+    optional :timestamp, :message, 2, "google.protobuf.Timestamp"
+    optional :status, :enum, 3, "openstorage.api.SdkCloudBackupStatusType"
+  end
+  add_message "openstorage.api.SdkCloudBackupHistoryRequest" do
+    optional :src_volume_id, :string, 1
+  end
+  add_message "openstorage.api.SdkCloudBackupHistoryResponse" do
+    repeated :history_list, :message, 1, "openstorage.api.SdkCloudBackupHistoryItem"
+  end
+  add_message "openstorage.api.SdkCloudBackupStateChangeRequest" do
+    optional :src_volume_id, :string, 1
+    optional :requested_state, :enum, 2, "openstorage.api.SdkCloudBackupRequestedState"
+  end
+  add_message "openstorage.api.SdkCloudBackupStateChangeResponse" do
+  end
   add_enum "openstorage.api.Status" do
     value :STATUS_NONE, 0
     value :STATUS_INIT, 1
@@ -569,6 +656,27 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     value :OP_FLAGS_NONE, 1
     value :OP_FLAGS_DETACH_FORCE, 2
   end
+  add_enum "openstorage.api.SdkCloudBackupOpType" do
+    value :SdkCloudBackupOpTypeUnknown, 0
+    value :SdkCloudBackupOpTypeBackupOp, 1
+    value :SdkCloudBackupOpTypeRestoreOp, 2
+  end
+  add_enum "openstorage.api.SdkCloudBackupStatusType" do
+    value :SdkCloudBackupStatusTypeUnknown, 0
+    value :SdkCloudBackupStatusTypeNotStarted, 1
+    value :SdkCloudBackupStatusTypeDone, 2
+    value :SdkCloudBackupStatusTypeAborted, 3
+    value :SdkCloudBackupStatusTypePaused, 4
+    value :SdkCloudBackupStatusTypeStopped, 5
+    value :SdkCloudBackupStatusTypeActive, 6
+    value :SdkCloudBackupStatusTypeFailed, 7
+  end
+  add_enum "openstorage.api.SdkCloudBackupRequestedState" do
+    value :SdkCloudBackupRequestedStateUnknown, 0
+    value :SdkCloudBackupRequestedStatePause, 1
+    value :SdkCloudBackupRequestedStateResume, 2
+    value :SdkCloudBackupRequestedStateStop, 3
+  end
 end
 
 module Openstorage
@@ -676,6 +784,27 @@ module Openstorage
     SdkObjectstoreDeleteResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkObjectstoreDeleteResponse").msgclass
     SdkObjectstoreUpdateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkObjectstoreUpdateRequest").msgclass
     SdkObjectstoreUpdateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkObjectstoreUpdateResponse").msgclass
+    SdkCloudBackupCreateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupCreateRequest").msgclass
+    SdkCloudBackupCreateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupCreateResponse").msgclass
+    SdkCloudBackupRestoreRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupRestoreRequest").msgclass
+    SdkCloudBackupRestoreResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupRestoreResponse").msgclass
+    SdkCloudBackupDeleteRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupDeleteRequest").msgclass
+    SdkCloudBackupDeleteResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupDeleteResponse").msgclass
+    SdkCloudBackupDeleteAllRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupDeleteAllRequest").msgclass
+    SdkCloudBackupDeleteAllResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupDeleteAllResponse").msgclass
+    SdkCloudBackupEnumerateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupEnumerateRequest").msgclass
+    SdkCloudBackupInfo = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupInfo").msgclass
+    SdkCloudBackupEnumerateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupEnumerateResponse").msgclass
+    SdkCloudBackupStatus = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupStatus").msgclass
+    SdkCloudBackupStatusRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupStatusRequest").msgclass
+    SdkCloudBackupStatusResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupStatusResponse").msgclass
+    SdkCloudBackupCatalogRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupCatalogRequest").msgclass
+    SdkCloudBackupCatalogResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupCatalogResponse").msgclass
+    SdkCloudBackupHistoryItem = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupHistoryItem").msgclass
+    SdkCloudBackupHistoryRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupHistoryRequest").msgclass
+    SdkCloudBackupHistoryResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupHistoryResponse").msgclass
+    SdkCloudBackupStateChangeRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupStateChangeRequest").msgclass
+    SdkCloudBackupStateChangeResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupStateChangeResponse").msgclass
     Status = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.Status").enummodule
     DriverType = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.DriverType").enummodule
     FSType = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.FSType").enummodule
@@ -692,5 +821,8 @@ module Openstorage
     ClusterNotify = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.ClusterNotify").enummodule
     AttachState = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.AttachState").enummodule
     OperationFlags = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.OperationFlags").enummodule
+    SdkCloudBackupOpType = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupOpType").enummodule
+    SdkCloudBackupStatusType = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupStatusType").enummodule
+    SdkCloudBackupRequestedState = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupRequestedState").enummodule
   end
 end

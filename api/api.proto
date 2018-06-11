@@ -969,7 +969,6 @@ service OpenStorageSchedulePolicy {
       };
     }
 
-  // Enumerate Schedule Policy
   rpc Enumerate(SdkSchedulePolicyEnumerateRequest)
     returns (SdkSchedulePolicyEnumerateResponse) {
       option(google.api.http) = {
@@ -992,6 +991,90 @@ service OpenStorageSchedulePolicy {
     returns (SdkSchedulePolicyDeleteResponse) {
       option(google.api.http) = {
         post: "/v1/schedulepolicy/delete"
+        body: "*"
+      };
+    }
+}
+
+service OpenStorageCloudBackup {
+
+  // Create
+  rpc Create(SdkCloudBackupCreateRequest)
+    returns (SdkCloudBackupCreateResponse) {
+      option(google.api.http) = {
+        post: "/v1/cloudbackup/create"
+        body: "*"
+      };
+    }
+
+  // Restore
+  rpc Restore(SdkCloudBackupRestoreRequest)
+    returns (SdkCloudBackupRestoreResponse) {
+      option(google.api.http) = {
+        post: "/v1/cloudbackup/restore"
+        body: "*"
+      };
+    }
+
+  // Delete
+  rpc Delete(SdkCloudBackupDeleteRequest)
+    returns (SdkCloudBackupDeleteResponse) {
+      option(google.api.http) = {
+        post: "/v1/cloudbackup/delete"
+        body: "*"
+      };
+    }
+
+  // DeleteAll
+  rpc DeleteAll(SdkCloudBackupDeleteAllRequest)
+    returns (SdkCloudBackupDeleteAllResponse) {
+      option(google.api.http) = {
+        post: "/v1/cloudbackup/deleteall"
+        body: "*"
+      };
+    }
+
+  // Enumerate
+  rpc Enumerate(SdkCloudBackupEnumerateRequest)
+    returns (SdkCloudBackupEnumerateResponse) {
+      option(google.api.http) = {
+        post: "/v1/cloudbackup/enumerate"
+        body: "*"
+      };
+    }
+
+  // Status
+  rpc Status(SdkCloudBackupStatusRequest)
+    returns (SdkCloudBackupStatusResponse) {
+      option(google.api.http) = {
+        post: "/v1/cloudbackup/status"
+        body: "*"
+      };
+    }
+
+  // Catalog
+  rpc Catalog(SdkCloudBackupCatalogRequest)
+    returns (SdkCloudBackupCatalogResponse) {
+      option(google.api.http) = {
+        post: "/v1/cloudbackup/catalog"
+        body: "*"
+      };
+    }
+
+  // History
+  rpc History(SdkCloudBackupHistoryRequest)
+    returns (SdkCloudBackupHistoryResponse) {
+      option(google.api.http) = {
+        post: "/v1/cloudbackup/history"
+        body: "*"
+      };
+    }
+
+  // StateChange
+  rpc StateChange(SdkCloudBackupStateChangeRequest)
+    returns (SdkCloudBackupStateChangeResponse) {
+      option(google.api.http) = {
+        post: "/v1/cloudbackup/statechange"
         body: "*"
       };
     }
@@ -1373,3 +1456,185 @@ message SdkObjectstoreUpdateRequest {
 message SdkObjectstoreUpdateResponse {
 }
 
+message SdkCloudBackupCreateRequest {
+  // VolumeID of the volume for which cloudbackup is requested
+  string volume_id = 1;
+  // CredentialUUID is cloud credential to be used for backup
+  string credential_uuid = 2;
+  // Full indicates if full backup is desired even though incremental is possible
+  bool full = 3;
+}
+
+message SdkCloudBackupCreateResponse {
+  // Id of the backup created
+  string backup_id = 1;
+}
+
+message SdkCloudBackupRestoreRequest {
+  // Backup ID being restored
+  string backup_id = 1;
+  // Optional volume Name of the new volume to be created
+  // in the cluster for restoring the cloudbackup
+  string restore_volume_name = 2;
+  // The credential to be used for restore operation
+  string credential_uuid = 3;
+  // Optional for provisioning restore
+  // volume (ResoreVolumeName should not be specified)
+  string node_id = 4;
+}
+
+message SdkCloudBackupRestoreResponse {
+  // VolumeID to which the backup is being restored
+  string restore_volume_id = 1;
+}
+
+message SdkCloudBackupDeleteRequest {
+  // ID is the ID of the cloud backup
+  string backup_id = 1;
+  // CredentialUUID is the credential for cloud to be used for the request
+  string credential_uuid = 2;
+  // Force Delete cloudbackup even if there are dependencies
+  bool force = 3;
+}
+
+message SdkCloudBackupDeleteResponse {
+}
+
+message SdkCloudBackupDeleteAllRequest {
+  // id of the volume for the request
+  string src_volume_id = 1;
+  // CredentialUUID is the credential for cloud to be used for the request
+  string credential_uuid = 2;
+}
+
+message SdkCloudBackupDeleteAllResponse {
+}
+
+message SdkCloudBackupEnumerateRequest {
+  // Optional source id of the volume for the request
+  string src_volume_id = 1;
+  // ClusterID is the optional clusterID for the request
+  string cluster_id = 2;
+  // CredentialUUID is the credential for cloud to be used for the request
+  string credential_uuid = 3;
+  // All if set to true, backups for all clusters in the cloud are processed
+  bool all = 4;
+}
+
+message SdkCloudBackupInfo {
+  // ID is the ID of the cloud backup
+  string id = 1;
+  // Source volumeID of the backup
+  string src_volume_id = 2;
+  // Name of the sourceVolume of the backup
+  string src_volume_name = 3;
+  // Timestamp is the timestamp at which the source volume
+  // was backed up to cloud
+  google.protobuf.Timestamp timestamp = 4;
+  // Metadata associated with the backup
+  map<string, string> metadata = 5;
+  // Status indicates the status of the backup
+  SdkCloudBackupStatusType status = 6;
+}
+
+message SdkCloudBackupEnumerateResponse {
+  repeated SdkCloudBackupInfo backups = 1;
+}
+
+enum SdkCloudBackupOpType {
+  SdkCloudBackupOpTypeUnknown = 0;
+  SdkCloudBackupOpTypeBackupOp = 1;
+  SdkCloudBackupOpTypeRestoreOp = 2;
+}
+
+enum SdkCloudBackupStatusType {
+  SdkCloudBackupStatusTypeUnknown = 0;
+  SdkCloudBackupStatusTypeNotStarted = 1;
+  SdkCloudBackupStatusTypeDone = 2;
+  SdkCloudBackupStatusTypeAborted = 3;
+  SdkCloudBackupStatusTypePaused = 4;
+  SdkCloudBackupStatusTypeStopped = 5;
+  SdkCloudBackupStatusTypeActive = 6;
+  SdkCloudBackupStatusTypeFailed = 7;
+}
+
+message SdkCloudBackupStatus {
+  // ID is the ID for the operation
+  string backup_id = 1;
+  // OpType indicates if this is a backup or restore
+  SdkCloudBackupOpType optype = 2;
+  // State indicates if the op is currently active/done/failed
+  SdkCloudBackupStatusType status = 3;
+  // BytesDone indicates total Bytes uploaded/downloaded
+  uint64 bytes_done = 4;
+  // StartTime indicates Op's start time
+  google.protobuf.Timestamp start_time = 5;
+  // CompletedTime indicates Op's completed time
+  google.protobuf.Timestamp completed_time = 6;
+  // NodeID is the ID of the node where this Op is active
+  string node_id = 7;
+}
+
+message SdkCloudBackupStatusRequest {
+  // SrcVolumeID optional volumeID to list status of backup/restore
+  string src_volume_id = 1;
+  // Local indicates if only those backups/restores that are
+  // active on current node must be returned
+  bool local = 2;
+}
+
+message SdkCloudBackupStatusResponse {
+  // statuses is list of currently active/failed/done backup/restores
+  map<string, SdkCloudBackupStatus> statuses = 1;
+}
+
+message SdkCloudBackupCatalogRequest {
+  // Id of the backup
+  string backup_id = 1;
+  // is the credential for cloud
+  string credential_uuid = 2;
+}
+
+message SdkCloudBackupCatalogResponse {
+  // Contents is listing of backup contents
+  repeated string contents = 1;
+}
+
+message SdkCloudBackupHistoryItem {
+  // SrcVolumeID is volume ID which was backedup
+  string src_volume_id = 1;
+  // TimeStamp is the time at which either backup completed/failed
+  google.protobuf.Timestamp timestamp = 2;
+  // Status indicates whether backup was completed/failed
+  SdkCloudBackupStatusType status = 3;
+}
+
+message SdkCloudBackupHistoryRequest {
+  // volumeID for which history of backup/restore is being requested
+  // (optional) If not provided, it will return the history for all volumes.
+  string src_volume_id = 1;
+}
+
+message SdkCloudBackupHistoryResponse {
+  // HistoryList is list of past backup/restores in the cluster
+  repeated SdkCloudBackupHistoryItem history_list = 1;
+}
+
+enum SdkCloudBackupRequestedState {
+  SdkCloudBackupRequestedStateUnknown = 0;
+  SdkCloudBackupRequestedStatePause = 1;
+  SdkCloudBackupRequestedStateResume = 2;
+  SdkCloudBackupRequestedStateStop = 3;
+}
+
+message SdkCloudBackupStateChangeRequest {
+  // SrcVolumeID is volume ID on which backup/restore
+  // state change is being requested
+  string src_volume_id = 1;
+  // RequestedState is desired state of the op
+  // can be pause/resume/stop
+  SdkCloudBackupRequestedState requested_state = 2;
+}
+
+message SdkCloudBackupStateChangeResponse {
+}

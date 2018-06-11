@@ -136,12 +136,42 @@ module Openstorage
         rpc :Create, SdkSchedulePolicyCreateRequest, SdkSchedulePolicyCreateResponse
         # Update Schedule Policy
         rpc :Update, SdkSchedulePolicyUpdateRequest, SdkSchedulePolicyUpdateResponse
-        # Enumerate Schedule Policy
         rpc :Enumerate, SdkSchedulePolicyEnumerateRequest, SdkSchedulePolicyEnumerateResponse
         # Inspect Schedule Policy
         rpc :Inspect, SdkSchedulePolicyInspectRequest, SdkSchedulePolicyInspectResponse
         # Delete Schedule Policy
         rpc :Delete, SdkSchedulePolicyDeleteRequest, SdkSchedulePolicyDeleteResponse
+      end
+
+      Stub = Service.rpc_stub_class
+    end
+    module OpenStorageCloudBackup
+      class Service
+
+        include GRPC::GenericService
+
+        self.marshal_class_method = :encode
+        self.unmarshal_class_method = :decode
+        self.service_name = 'openstorage.api.OpenStorageCloudBackup'
+
+        # Create
+        rpc :Create, SdkCloudBackupCreateRequest, SdkCloudBackupCreateResponse
+        # Restore
+        rpc :Restore, SdkCloudBackupRestoreRequest, SdkCloudBackupRestoreResponse
+        # Delete
+        rpc :Delete, SdkCloudBackupDeleteRequest, SdkCloudBackupDeleteResponse
+        # DeleteAll
+        rpc :DeleteAll, SdkCloudBackupDeleteAllRequest, SdkCloudBackupDeleteAllResponse
+        # Enumerate
+        rpc :Enumerate, SdkCloudBackupEnumerateRequest, SdkCloudBackupEnumerateResponse
+        # Status
+        rpc :Status, SdkCloudBackupStatusRequest, SdkCloudBackupStatusResponse
+        # Catalog
+        rpc :Catalog, SdkCloudBackupCatalogRequest, SdkCloudBackupCatalogResponse
+        # History
+        rpc :History, SdkCloudBackupHistoryRequest, SdkCloudBackupHistoryResponse
+        # StateChange
+        rpc :StateChange, SdkCloudBackupStateChangeRequest, SdkCloudBackupStateChangeResponse
       end
 
       Stub = Service.rpc_stub_class

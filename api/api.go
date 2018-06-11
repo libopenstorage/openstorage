@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang/protobuf/ptypes"
+
 	"github.com/mohae/deepcopy"
 )
 
@@ -333,6 +335,12 @@ const (
 	CloudBackupStatusStopped    = CloudBackupStatusType("Stopped")
 	CloudBackupStatusActive     = CloudBackupStatusType("Active")
 	CloudBackupStatusFailed     = CloudBackupStatusType("Failed")
+)
+
+const (
+	CloudBackupRequestedStatePause  = "pause"
+	CloudBackupRequestedStateResume = "resume"
+	CloudBackupRequestedStateStop   = "stop"
 )
 
 type CloudBackupStatus struct {
@@ -696,4 +704,121 @@ func (c *Cluster) ToStorageCluster() *StorageCluster {
 	}
 
 	return cluster
+}
+
+func CloudBackupStatusTypeToSdkCloudBackupStatusType(
+	t CloudBackupStatusType,
+) SdkCloudBackupStatusType {
+	switch t {
+	case CloudBackupStatusNotStarted:
+		return SdkCloudBackupStatusType_SdkCloudBackupStatusTypeNotStarted
+	case CloudBackupStatusDone:
+		return SdkCloudBackupStatusType_SdkCloudBackupStatusTypeDone
+	case CloudBackupStatusAborted:
+		return SdkCloudBackupStatusType_SdkCloudBackupStatusTypeAborted
+	case CloudBackupStatusPaused:
+		return SdkCloudBackupStatusType_SdkCloudBackupStatusTypePaused
+	case CloudBackupStatusStopped:
+		return SdkCloudBackupStatusType_SdkCloudBackupStatusTypeStopped
+	case CloudBackupStatusActive:
+		return SdkCloudBackupStatusType_SdkCloudBackupStatusTypeActive
+	case CloudBackupStatusFailed:
+		return SdkCloudBackupStatusType_SdkCloudBackupStatusTypeFailed
+	default:
+		return SdkCloudBackupStatusType_SdkCloudBackupStatusTypeUnknown
+	}
+}
+
+func StringToSdkCloudBackupStatusType(s string) SdkCloudBackupStatusType {
+	return CloudBackupStatusTypeToSdkCloudBackupStatusType(CloudBackupStatusType(s))
+}
+
+func (b *CloudBackupInfo) ToSdkCloudBackupInfo() *SdkCloudBackupInfo {
+	info := &SdkCloudBackupInfo{
+		Id:            b.ID,
+		SrcVolumeId:   b.SrcVolumeID,
+		SrcVolumeName: b.SrcVolumeName,
+		Metadata:      b.Metadata,
+	}
+
+	info.Timestamp, _ = ptypes.TimestampProto(b.Timestamp)
+	info.Status = StringToSdkCloudBackupStatusType(b.Status)
+
+	return info
+}
+
+func (r *CloudBackupEnumerateResponse) ToSdkCloudBackupEnumerateResponse() *SdkCloudBackupEnumerateResponse {
+	resp := &SdkCloudBackupEnumerateResponse{
+		Backups: make([]*SdkCloudBackupInfo, len(r.Backups)),
+	}
+
+	for i, v := range r.Backups {
+		resp.Backups[i] = v.ToSdkCloudBackupInfo()
+	}
+
+	return resp
+}
+
+func CloudBackupOpTypeToSdkCloudBackupOpType(t CloudBackupOpType) SdkCloudBackupOpType {
+	switch t {
+	case CloudBackupOp:
+		return SdkCloudBackupOpType_SdkCloudBackupOpTypeBackupOp
+	case CloudRestoreOp:
+		return SdkCloudBackupOpType_SdkCloudBackupOpTypeRestoreOp
+	default:
+		return SdkCloudBackupOpType_SdkCloudBackupOpTypeUnknown
+	}
+}
+
+func StringToSdkCloudBackupOpType(s string) SdkCloudBackupOpType {
+	return CloudBackupOpTypeToSdkCloudBackupOpType(CloudBackupOpType(s))
+}
+
+func (s CloudBackupStatus) ToSdkCloudBackupStatus() *SdkCloudBackupStatus {
+	status := &SdkCloudBackupStatus{
+		BackupId:  s.ID,
+		Optype:    CloudBackupOpTypeToSdkCloudBackupOpType(s.OpType),
+		Status:    CloudBackupStatusTypeToSdkCloudBackupStatusType(s.Status),
+		BytesDone: s.BytesDone,
+		NodeId:    s.NodeID,
+	}
+
+	status.StartTime, _ = ptypes.TimestampProto(s.StartTime)
+	status.CompletedTime, _ = ptypes.TimestampProto(s.CompletedTime)
+
+	return status
+}
+
+func (r *CloudBackupStatusResponse) ToSdkCloudBackupStatusResponse() *SdkCloudBackupStatusResponse {
+	resp := &SdkCloudBackupStatusResponse{
+		Statuses: make(map[string]*SdkCloudBackupStatus),
+	}
+
+	for k, v := range r.Statuses {
+		resp.Statuses[k] = v.ToSdkCloudBackupStatus()
+	}
+
+	return resp
+}
+
+func (h CloudBackupHistoryItem) ToSdkCloudBackupHistoryItem() *SdkCloudBackupHistoryItem {
+	item := &SdkCloudBackupHistoryItem{
+		SrcVolumeId: h.SrcVolumeID,
+		Status:      StringToSdkCloudBackupStatusType(h.Status),
+	}
+
+	item.Timestamp, _ = ptypes.TimestampProto(h.Timestamp)
+	return item
+}
+
+func (r *CloudBackupHistoryResponse) ToSdkCloudBackupHistoryResponse() *SdkCloudBackupHistoryResponse {
+	resp := &SdkCloudBackupHistoryResponse{
+		HistoryList: make([]*SdkCloudBackupHistoryItem, len(r.HistoryList)),
+	}
+
+	for i, v := range r.HistoryList {
+		resp.HistoryList[i] = v.ToSdkCloudBackupHistoryItem()
+	}
+
+	return resp
 }

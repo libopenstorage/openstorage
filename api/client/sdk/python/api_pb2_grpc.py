@@ -660,8 +660,8 @@ class OpenStorageSchedulePolicyServicer(object):
     raise NotImplementedError('Method not implemented!')
 
   def Enumerate(self, request, context):
-    """Enumerate Schedule Policy
-    """
+    # missing associated documentation comment in .proto file
+    pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
@@ -711,4 +711,182 @@ def add_OpenStorageSchedulePolicyServicer_to_server(servicer, server):
   }
   generic_handler = grpc.method_handlers_generic_handler(
       'openstorage.api.OpenStorageSchedulePolicy', rpc_method_handlers)
+  server.add_generic_rpc_handlers((generic_handler,))
+
+
+class OpenStorageCloudBackupStub(object):
+  # missing associated documentation comment in .proto file
+  pass
+
+  def __init__(self, channel):
+    """Constructor.
+
+    Args:
+      channel: A grpc.Channel.
+    """
+    self.Create = channel.unary_unary(
+        '/openstorage.api.OpenStorageCloudBackup/Create',
+        request_serializer=api__pb2.SdkCloudBackupCreateRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkCloudBackupCreateResponse.FromString,
+        )
+    self.Restore = channel.unary_unary(
+        '/openstorage.api.OpenStorageCloudBackup/Restore',
+        request_serializer=api__pb2.SdkCloudBackupRestoreRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkCloudBackupRestoreResponse.FromString,
+        )
+    self.Delete = channel.unary_unary(
+        '/openstorage.api.OpenStorageCloudBackup/Delete',
+        request_serializer=api__pb2.SdkCloudBackupDeleteRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkCloudBackupDeleteResponse.FromString,
+        )
+    self.DeleteAll = channel.unary_unary(
+        '/openstorage.api.OpenStorageCloudBackup/DeleteAll',
+        request_serializer=api__pb2.SdkCloudBackupDeleteAllRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkCloudBackupDeleteAllResponse.FromString,
+        )
+    self.Enumerate = channel.unary_unary(
+        '/openstorage.api.OpenStorageCloudBackup/Enumerate',
+        request_serializer=api__pb2.SdkCloudBackupEnumerateRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkCloudBackupEnumerateResponse.FromString,
+        )
+    self.Status = channel.unary_unary(
+        '/openstorage.api.OpenStorageCloudBackup/Status',
+        request_serializer=api__pb2.SdkCloudBackupStatusRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkCloudBackupStatusResponse.FromString,
+        )
+    self.Catalog = channel.unary_unary(
+        '/openstorage.api.OpenStorageCloudBackup/Catalog',
+        request_serializer=api__pb2.SdkCloudBackupCatalogRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkCloudBackupCatalogResponse.FromString,
+        )
+    self.History = channel.unary_unary(
+        '/openstorage.api.OpenStorageCloudBackup/History',
+        request_serializer=api__pb2.SdkCloudBackupHistoryRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkCloudBackupHistoryResponse.FromString,
+        )
+    self.StateChange = channel.unary_unary(
+        '/openstorage.api.OpenStorageCloudBackup/StateChange',
+        request_serializer=api__pb2.SdkCloudBackupStateChangeRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkCloudBackupStateChangeResponse.FromString,
+        )
+
+
+class OpenStorageCloudBackupServicer(object):
+  # missing associated documentation comment in .proto file
+  pass
+
+  def Create(self, request, context):
+    """Create
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def Restore(self, request, context):
+    """Restore
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def Delete(self, request, context):
+    """Delete
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def DeleteAll(self, request, context):
+    """DeleteAll
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def Enumerate(self, request, context):
+    """Enumerate
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def Status(self, request, context):
+    """Status
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def Catalog(self, request, context):
+    """Catalog
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def History(self, request, context):
+    """History
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def StateChange(self, request, context):
+    """StateChange
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+
+def add_OpenStorageCloudBackupServicer_to_server(servicer, server):
+  rpc_method_handlers = {
+      'Create': grpc.unary_unary_rpc_method_handler(
+          servicer.Create,
+          request_deserializer=api__pb2.SdkCloudBackupCreateRequest.FromString,
+          response_serializer=api__pb2.SdkCloudBackupCreateResponse.SerializeToString,
+      ),
+      'Restore': grpc.unary_unary_rpc_method_handler(
+          servicer.Restore,
+          request_deserializer=api__pb2.SdkCloudBackupRestoreRequest.FromString,
+          response_serializer=api__pb2.SdkCloudBackupRestoreResponse.SerializeToString,
+      ),
+      'Delete': grpc.unary_unary_rpc_method_handler(
+          servicer.Delete,
+          request_deserializer=api__pb2.SdkCloudBackupDeleteRequest.FromString,
+          response_serializer=api__pb2.SdkCloudBackupDeleteResponse.SerializeToString,
+      ),
+      'DeleteAll': grpc.unary_unary_rpc_method_handler(
+          servicer.DeleteAll,
+          request_deserializer=api__pb2.SdkCloudBackupDeleteAllRequest.FromString,
+          response_serializer=api__pb2.SdkCloudBackupDeleteAllResponse.SerializeToString,
+      ),
+      'Enumerate': grpc.unary_unary_rpc_method_handler(
+          servicer.Enumerate,
+          request_deserializer=api__pb2.SdkCloudBackupEnumerateRequest.FromString,
+          response_serializer=api__pb2.SdkCloudBackupEnumerateResponse.SerializeToString,
+      ),
+      'Status': grpc.unary_unary_rpc_method_handler(
+          servicer.Status,
+          request_deserializer=api__pb2.SdkCloudBackupStatusRequest.FromString,
+          response_serializer=api__pb2.SdkCloudBackupStatusResponse.SerializeToString,
+      ),
+      'Catalog': grpc.unary_unary_rpc_method_handler(
+          servicer.Catalog,
+          request_deserializer=api__pb2.SdkCloudBackupCatalogRequest.FromString,
+          response_serializer=api__pb2.SdkCloudBackupCatalogResponse.SerializeToString,
+      ),
+      'History': grpc.unary_unary_rpc_method_handler(
+          servicer.History,
+          request_deserializer=api__pb2.SdkCloudBackupHistoryRequest.FromString,
+          response_serializer=api__pb2.SdkCloudBackupHistoryResponse.SerializeToString,
+      ),
+      'StateChange': grpc.unary_unary_rpc_method_handler(
+          servicer.StateChange,
+          request_deserializer=api__pb2.SdkCloudBackupStateChangeRequest.FromString,
+          response_serializer=api__pb2.SdkCloudBackupStateChangeResponse.SerializeToString,
+      ),
+  }
+  generic_handler = grpc.method_handlers_generic_handler(
+      'openstorage.api.OpenStorageCloudBackup', rpc_method_handlers)
   server.add_generic_rpc_handlers((generic_handler,))
