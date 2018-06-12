@@ -19,7 +19,7 @@ package sdk
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"reflect"
 
 	"github.com/libopenstorage/openstorage/api"
@@ -229,20 +229,12 @@ func (s *CredentialServer) EnumerateForAWS(
 
 	// Fill up s3 credential resonse
 	creds := []*api.S3Credential{}
-	for k, v := range s3Creds {
-		cred, ok := v.(map[string]interface{})
-		if !ok {
-			return nil, status.Errorf(
-				codes.Internal,
-				"Unable to enumerate credentials AWS: %v",
-				reflect.TypeOf(v).String())
-		}
-
+	for id, cred := range s3Creds {
 		credResp := &api.S3Credential{
-			CredentialId: k,
-			AccessKey:    cred[api.OptCredAccessKey].(string),
-			Endpoint:     cred[api.OptCredEndpoint].(string),
-			Region:       cred[api.OptCredRegion].(string),
+			CredentialId: id,
+			AccessKey:    cred[api.OptCredAccessKey],
+			Endpoint:     cred[api.OptCredEndpoint],
+			Region:       cred[api.OptCredRegion],
 		}
 		creds = append(creds, credResp)
 	}
@@ -277,19 +269,11 @@ func (s *CredentialServer) EnumerateForAzure(
 
 	// Fill up azure credential resonse
 	creds := []*api.AzureCredential{}
-	for k, v := range azureCreds {
-		cred, ok := v.(map[string]interface{})
-		if !ok {
-			return nil, status.Errorf(
-				codes.Internal,
-				"Unable to enumerate credentials AWS: %v",
-				reflect.TypeOf(v).String())
-		}
-
+	for id, cred := range azureCreds {
 		credResp := &api.AzureCredential{
-			CredentialId: k,
-			AccountName:  cred[api.OptCredAzureAccountName].(string),
-			AccountKey:   cred[api.OptCredAzureAccountKey].(string),
+			CredentialId: id,
+			AccountName:  cred[api.OptCredAzureAccountName],
+			AccountKey:   cred[api.OptCredAzureAccountKey],
 		}
 		creds = append(creds, credResp)
 	}
@@ -323,18 +307,10 @@ func (s *CredentialServer) EnumerateForGoogle(
 
 	// Fill up google credential resonse
 	creds := []*api.GoogleCredential{}
-	for k, v := range googleCreds {
-		cred, ok := v.(map[string]interface{})
-		if !ok {
-			return nil, status.Errorf(
-				codes.Internal,
-				"Unable to enumerate credentials AWS: %v",
-				reflect.TypeOf(v).String())
-		}
-
+	for id, cred := range googleCreds {
 		credResp := &api.GoogleCredential{
-			CredentialId: k,
-			ProjectId:    cred[api.OptCredGoogleProjectID].(string),
+			CredentialId: id,
+			ProjectId:    cred[api.OptCredGoogleProjectID],
 		}
 		creds = append(creds, credResp)
 	}
@@ -368,22 +344,21 @@ func validateAndDeleteIfInvalid(s *CredentialServer, uuid string) error {
 	return nil
 }
 
-func getCredentialMap(credList map[string]interface{}, credType string) (map[string]interface{}, error) {
-	creds := make(map[string]interface{})
+func getCredentialMap(credList map[string]interface{}, credType string) (map[string]map[string]string, error) {
+	filtered := make(map[string]map[string]string)
 
 	for k, v := range credList {
-		c, ok := v.(map[string]interface{})
+		c, ok := v.(map[string]string)
 		if !ok {
-			return nil, errors.New("Error parsing credentials %v" +
+			return nil, fmt.Errorf("Error parsing credentials of type %v",
 				reflect.TypeOf(v).String())
 		}
 
 		// Look for only one type, fill up creds with same type array
-		switch c[api.OptCredType] {
-		case credType:
-			creds[k] = v
+		if c[api.OptCredType] == credType {
+			filtered[k] = c
 		}
 	}
 
-	return creds, nil
+	return filtered, nil
 }
