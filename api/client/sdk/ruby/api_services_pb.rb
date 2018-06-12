@@ -116,9 +116,9 @@ module Openstorage
         # EnumerateForGoogle lists the configured Google credentials
         rpc :EnumerateForGoogle, SdkCredentialEnumerateGoogleRequest, SdkCredentialEnumerateGoogleResponse
         # Delete a specified credential
-        rpc :CredentialDelete, SdkCredentialDeleteRequest, SdkCredentialDeleteResponse
+        rpc :Delete, SdkCredentialDeleteRequest, SdkCredentialDeleteResponse
         # Validate a specified credential
-        rpc :CredentialValidate, SdkCredentialValidateRequest, SdkCredentialValidateResponse
+        rpc :Validate, SdkCredentialValidateRequest, SdkCredentialValidateResponse
       end
 
       Stub = Service.rpc_stub_class

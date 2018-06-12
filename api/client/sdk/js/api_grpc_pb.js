@@ -1298,8 +1298,8 @@ var OpenStorageCredentialsService = exports.OpenStorageCredentialsService = {
     responseDeserialize: deserialize_openstorage_api_SdkCredentialEnumerateGoogleResponse,
   },
   // Delete a specified credential
-  credentialDelete: {
-    path: '/openstorage.api.OpenStorageCredentials/CredentialDelete',
+  delete: {
+    path: '/openstorage.api.OpenStorageCredentials/Delete',
     requestStream: false,
     responseStream: false,
     requestType: api_pb.SdkCredentialDeleteRequest,
@@ -1310,8 +1310,8 @@ var OpenStorageCredentialsService = exports.OpenStorageCredentialsService = {
     responseDeserialize: deserialize_openstorage_api_SdkCredentialDeleteResponse,
   },
   // Validate a specified credential
-  credentialValidate: {
-    path: '/openstorage.api.OpenStorageCredentials/CredentialValidate',
+  validate: {
+    path: '/openstorage.api.OpenStorageCredentials/Validate',
     requestStream: false,
     responseStream: false,
     requestType: api_pb.SdkCredentialValidateRequest,
