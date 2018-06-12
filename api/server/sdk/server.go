@@ -62,6 +62,7 @@ type Server struct {
 	objectstoreServer    *ObjectstoreServer
 	schedulePolicyServer *SchedulePolicyServer
 	cloudBackupServer    *CloudBackupServer
+	credentialServer     *CredentialServer
 }
 
 // Interface check
@@ -112,6 +113,9 @@ func New(config *ServerConfig) (*Server, error) {
 		cloudBackupServer: &CloudBackupServer{
 			driver: d,
 		},
+		credentialServer: &CredentialServer{
+			driver: d,
+		},
 	}, nil
 }
 
@@ -124,7 +128,7 @@ func (s *Server) Start() error {
 		api.RegisterOpenStorageClusterServer(grpcServer, s.clusterServer)
 		api.RegisterOpenStorageObjectstoreServer(grpcServer, s.objectstoreServer)
 		api.RegisterOpenStorageVolumeServer(grpcServer, s.volumeServer)
-		api.RegisterOpenStorageCredentialsServer(grpcServer, s.volumeServer)
+		api.RegisterOpenStorageCredentialsServer(grpcServer, s.credentialServer)
 		api.RegisterOpenStorageSchedulePolicyServer(grpcServer, s.schedulePolicyServer)
 		api.RegisterOpenStorageCloudBackupServer(grpcServer, s.cloudBackupServer)
 	})

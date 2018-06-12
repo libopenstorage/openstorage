@@ -23,12 +23,18 @@ import (
 	"reflect"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/volume"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
+// CredentialServer is an implementation of the gRPC OpenStorageCredential interface
+type CredentialServer struct {
+	driver volume.VolumeDriver
+}
+
 // CreateForAWS method creates credential for AWS S3.
-func (s *VolumeServer) CreateForAWS(
+func (s *CredentialServer) CreateForAWS(
 	ctx context.Context,
 	req *api.SdkCredentialCreateAWSRequest,
 ) (*api.SdkCredentialCreateAWSResponse, error) {
@@ -76,7 +82,7 @@ func (s *VolumeServer) CreateForAWS(
 }
 
 // CreateForAzure method creates credential for Azure.
-func (s *VolumeServer) CreateForAzure(
+func (s *CredentialServer) CreateForAzure(
 	ctx context.Context,
 	req *api.SdkCredentialCreateAzureRequest,
 ) (*api.SdkCredentialCreateAzureResponse, error) {
@@ -113,7 +119,7 @@ func (s *VolumeServer) CreateForAzure(
 }
 
 // CreateForGoogle method creates credential for Google.
-func (s *VolumeServer) CreateForGoogle(
+func (s *CredentialServer) CreateForGoogle(
 	ctx context.Context,
 	req *api.SdkCredentialCreateGoogleRequest,
 ) (*api.SdkCredentialCreateGoogleResponse, error) {
@@ -150,8 +156,8 @@ func (s *VolumeServer) CreateForGoogle(
 	return &api.SdkCredentialCreateGoogleResponse{CredentialId: uuid}, nil
 }
 
-// CredentialValidate deletes a specified Credential.
-func (s *VolumeServer) CredentialValidate(
+// Validate validates a specified Credential.
+func (s *CredentialServer) Validate(
 	ctx context.Context,
 	req *api.SdkCredentialValidateRequest,
 ) (*api.SdkCredentialValidateResponse, error) {
@@ -174,8 +180,8 @@ func (s *VolumeServer) CredentialValidate(
 
 }
 
-// CredentialDelete delete a specified credential
-func (s *VolumeServer) CredentialDelete(
+// Delete deletes a specified credential
+func (s *CredentialServer) Delete(
 	ctx context.Context,
 	req *api.SdkCredentialDeleteRequest,
 ) (*api.SdkCredentialDeleteResponse, error) {
@@ -196,7 +202,7 @@ func (s *VolumeServer) CredentialDelete(
 }
 
 // EnumerateForAWS list credentials for AWS
-func (s *VolumeServer) EnumerateForAWS(
+func (s *CredentialServer) EnumerateForAWS(
 	ctx context.Context,
 	req *api.SdkCredentialEnumerateAWSRequest,
 ) (*api.SdkCredentialEnumerateAWSResponse, error) {
@@ -245,7 +251,7 @@ func (s *VolumeServer) EnumerateForAWS(
 }
 
 // EnumerateForAzure list credentials for AWS
-func (s *VolumeServer) EnumerateForAzure(
+func (s *CredentialServer) EnumerateForAzure(
 	ctx context.Context,
 	req *api.SdkCredentialEnumerateAzureRequest,
 ) (*api.SdkCredentialEnumerateAzureResponse, error) {
@@ -291,7 +297,7 @@ func (s *VolumeServer) EnumerateForAzure(
 }
 
 // EnumerateForGoogle list credentials for Google
-func (s *VolumeServer) EnumerateForGoogle(
+func (s *CredentialServer) EnumerateForGoogle(
 	ctx context.Context,
 	req *api.SdkCredentialEnumerateGoogleRequest,
 ) (*api.SdkCredentialEnumerateGoogleResponse, error) {
@@ -336,7 +342,7 @@ func (s *VolumeServer) EnumerateForGoogle(
 	return &api.SdkCredentialEnumerateGoogleResponse{Credential: creds}, nil
 }
 
-func validateAndDeleteIfInvalid(s *VolumeServer, uuid string) error {
+func validateAndDeleteIfInvalid(s *CredentialServer, uuid string) error {
 	// Validate if the credentials provided were correct or not
 	req := &api.SdkCredentialValidateRequest{CredentialId: uuid}
 
