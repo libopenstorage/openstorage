@@ -477,13 +477,13 @@ class OpenStorageCredentialsStub(object):
         request_serializer=api__pb2.SdkCredentialEnumerateGoogleRequest.SerializeToString,
         response_deserializer=api__pb2.SdkCredentialEnumerateGoogleResponse.FromString,
         )
-    self.CredentialDelete = channel.unary_unary(
-        '/openstorage.api.OpenStorageCredentials/CredentialDelete',
+    self.Delete = channel.unary_unary(
+        '/openstorage.api.OpenStorageCredentials/Delete',
         request_serializer=api__pb2.SdkCredentialDeleteRequest.SerializeToString,
         response_deserializer=api__pb2.SdkCredentialDeleteResponse.FromString,
         )
-    self.CredentialValidate = channel.unary_unary(
-        '/openstorage.api.OpenStorageCredentials/CredentialValidate',
+    self.Validate = channel.unary_unary(
+        '/openstorage.api.OpenStorageCredentials/Validate',
         request_serializer=api__pb2.SdkCredentialValidateRequest.SerializeToString,
         response_deserializer=api__pb2.SdkCredentialValidateResponse.FromString,
         )
@@ -541,14 +541,14 @@ class OpenStorageCredentialsServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def CredentialDelete(self, request, context):
+  def Delete(self, request, context):
     """Delete a specified credential
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def CredentialValidate(self, request, context):
+  def Validate(self, request, context):
     """Validate a specified credential
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -588,13 +588,13 @@ def add_OpenStorageCredentialsServicer_to_server(servicer, server):
           request_deserializer=api__pb2.SdkCredentialEnumerateGoogleRequest.FromString,
           response_serializer=api__pb2.SdkCredentialEnumerateGoogleResponse.SerializeToString,
       ),
-      'CredentialDelete': grpc.unary_unary_rpc_method_handler(
-          servicer.CredentialDelete,
+      'Delete': grpc.unary_unary_rpc_method_handler(
+          servicer.Delete,
           request_deserializer=api__pb2.SdkCredentialDeleteRequest.FromString,
           response_serializer=api__pb2.SdkCredentialDeleteResponse.SerializeToString,
       ),
-      'CredentialValidate': grpc.unary_unary_rpc_method_handler(
-          servicer.CredentialValidate,
+      'Validate': grpc.unary_unary_rpc_method_handler(
+          servicer.Validate,
           request_deserializer=api__pb2.SdkCredentialValidateRequest.FromString,
           response_serializer=api__pb2.SdkCredentialValidateResponse.SerializeToString,
       ),

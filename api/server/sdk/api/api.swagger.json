@@ -477,7 +477,7 @@
     "/v1/credentials/delete": {
       "post": {
         "summary": "Delete a specified credential",
-        "operationId": "CredentialDelete",
+        "operationId": "Delete",
         "responses": {
           "200": {
             "description": "",
@@ -585,7 +585,7 @@
     "/v1/credentials/validate": {
       "post": {
         "summary": "Validate a specified credential",
-        "operationId": "CredentialValidate",
+        "operationId": "Validate",
         "responses": {
           "200": {
             "description": "",

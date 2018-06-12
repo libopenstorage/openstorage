@@ -931,7 +931,7 @@ service OpenStorageCredentials {
     }
 
   // Delete a specified credential
-  rpc CredentialDelete(SdkCredentialDeleteRequest)
+  rpc Delete(SdkCredentialDeleteRequest)
     returns (SdkCredentialDeleteResponse){
       option(google.api.http) = {
         post: "/v1/credentials/delete"
@@ -940,7 +940,7 @@ service OpenStorageCredentials {
     }
 
   // Validate a specified credential
-  rpc CredentialValidate(SdkCredentialValidateRequest)
+  rpc Validate(SdkCredentialValidateRequest)
     returns (SdkCredentialValidateResponse) {
       option(google.api.http) = {
         post: "/v1/credentials/validate"

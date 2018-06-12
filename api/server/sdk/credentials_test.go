@@ -392,7 +392,7 @@ func TestSdkCredentialValidateSuccess(t *testing.T) {
 	c := api.NewOpenStorageCredentialsClient(s.Conn())
 
 	// Validate Created Credentials
-	_, err := c.CredentialValidate(context.Background(), req)
+	_, err := c.Validate(context.Background(), req)
 	assert.NoError(t, err)
 }
 
@@ -415,7 +415,7 @@ func TestSdkCredentialValidateFailed(t *testing.T) {
 	c := api.NewOpenStorageCredentialsClient(s.Conn())
 
 	// Validate Created Credentials
-	_, err := c.CredentialValidate(context.Background(), req)
+	_, err := c.Validate(context.Background(), req)
 	assert.Error(t, err)
 
 	serverError, ok := status.FromError(err)
@@ -438,7 +438,7 @@ func TestSdkCredentialValidateBadArgument(t *testing.T) {
 	c := api.NewOpenStorageCredentialsClient(s.Conn())
 
 	// Validate Created Credentials
-	_, err := c.CredentialValidate(context.Background(), req)
+	_, err := c.Validate(context.Background(), req)
 	assert.Error(t, err)
 
 	serverError, ok := status.FromError(err)
@@ -703,7 +703,7 @@ func TestSdkCredentialDeleteSuccess(t *testing.T) {
 	c := api.NewOpenStorageCredentialsClient(s.Conn())
 
 	// Delete Credentials
-	_, err := c.CredentialDelete(context.Background(), req)
+	_, err := c.Delete(context.Background(), req)
 	assert.NoError(t, err)
 }
 
@@ -722,7 +722,7 @@ func TestSdkCredentialDeleteBadArgument(t *testing.T) {
 	c := api.NewOpenStorageCredentialsClient(s.Conn())
 
 	// Delete Credentials
-	_, err := c.CredentialDelete(context.Background(), req)
+	_, err := c.Delete(context.Background(), req)
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Must provide credentials uuid")
@@ -747,7 +747,7 @@ func TestSdkCredentialDeleteFailed(t *testing.T) {
 	c := api.NewOpenStorageCredentialsClient(s.Conn())
 
 	// Delete Credentials
-	_, err := c.CredentialDelete(context.Background(), req)
+	_, err := c.Delete(context.Background(), req)
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Error deleting credentials")
