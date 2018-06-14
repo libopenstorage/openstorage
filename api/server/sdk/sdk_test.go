@@ -19,7 +19,6 @@ package sdk
 import (
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -160,10 +159,7 @@ func TestSdkGateway(t *testing.T) {
 	s.MockCluster().EXPECT().Enumerate().Return(cluster, nil).Times(1)
 
 	// Then send the request
-	res, err = http.Post(
-		s.GatewayURL()+"/v1/cluster/enumerate",
-		"application/json",
-		strings.NewReader("{}"))
+	res, err = http.Get(s.GatewayURL() + "/v1/cluster")
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 }
