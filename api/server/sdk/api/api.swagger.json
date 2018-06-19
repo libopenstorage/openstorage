@@ -122,7 +122,7 @@
     },
     "/v1/cloudbackup/deleteall": {
       "post": {
-        "summary": "DeleteAll\nCan this call be combined with Delete by adding a boolean?",
+        "summary": "DeleteAll",
         "operationId": "DeleteAll",
         "responses": {
           "200": {
@@ -345,7 +345,7 @@
     },
     "/v1/cluster/alert/enumerate": {
       "post": {
-        "summary": "Get a list of alerts from the storage cluster\nMake Alerts a service?",
+        "summary": "Get a list of alerts from the storage cluster",
         "operationId": "AlertEnumerate",
         "responses": {
           "200": {
@@ -372,13 +372,13 @@
     },
     "/v1/cluster/alert/{alert_id}": {
       "delete": {
-        "summary": "Erases an alert for a given resource\nChange it to AlertDelete",
-        "operationId": "AlertErase",
+        "summary": "Erases an alert for a given resource",
+        "operationId": "AlertDelete",
         "responses": {
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiSdkClusterAlertEraseResponse"
+              "$ref": "#/definitions/apiSdkClusterAlertDeleteResponse"
             }
           }
         },
@@ -913,7 +913,7 @@
     },
     "/v1/volume/createfromid": {
       "post": {
-        "summary": "CreateFromVolumeId creates a new volume cloned from an existing volume\nChange to Clone",
+        "summary": "CreateFromVolumeId creates a new volume cloned from an existing volume",
         "operationId": "CreateFromVolumeId",
         "responses": {
           "200": {
@@ -1720,6 +1720,9 @@
     "apiSdkClusterAlertClearResponse": {
       "type": "object"
     },
+    "apiSdkClusterAlertDeleteResponse": {
+      "type": "object"
+    },
     "apiSdkClusterAlertEnumerateRequest": {
       "type": "object",
       "properties": {
@@ -1747,9 +1750,6 @@
           "title": "Information on the alerts requested"
         }
       }
-    },
-    "apiSdkClusterAlertEraseResponse": {
-      "type": "object"
     },
     "apiSdkClusterEnumerateResponse": {
       "type": "object",

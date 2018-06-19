@@ -34,10 +34,10 @@ class OpenStorageClusterStub(object):
         request_serializer=api__pb2.SdkClusterAlertClearRequest.SerializeToString,
         response_deserializer=api__pb2.SdkClusterAlertClearResponse.FromString,
         )
-    self.AlertErase = channel.unary_unary(
-        '/openstorage.api.OpenStorageCluster/AlertErase',
-        request_serializer=api__pb2.SdkClusterAlertEraseRequest.SerializeToString,
-        response_deserializer=api__pb2.SdkClusterAlertEraseResponse.FromString,
+    self.AlertDelete = channel.unary_unary(
+        '/openstorage.api.OpenStorageCluster/AlertDelete',
+        request_serializer=api__pb2.SdkClusterAlertDeleteRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkClusterAlertDeleteResponse.FromString,
         )
 
 
@@ -61,7 +61,6 @@ class OpenStorageClusterServicer(object):
 
   def AlertEnumerate(self, request, context):
     """Get a list of alerts from the storage cluster
-    Make Alerts a service?
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -74,9 +73,8 @@ class OpenStorageClusterServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def AlertErase(self, request, context):
+  def AlertDelete(self, request, context):
     """Erases an alert for a given resource
-    Change it to AlertDelete
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -105,10 +103,10 @@ def add_OpenStorageClusterServicer_to_server(servicer, server):
           request_deserializer=api__pb2.SdkClusterAlertClearRequest.FromString,
           response_serializer=api__pb2.SdkClusterAlertClearResponse.SerializeToString,
       ),
-      'AlertErase': grpc.unary_unary_rpc_method_handler(
-          servicer.AlertErase,
-          request_deserializer=api__pb2.SdkClusterAlertEraseRequest.FromString,
-          response_serializer=api__pb2.SdkClusterAlertEraseResponse.SerializeToString,
+      'AlertDelete': grpc.unary_unary_rpc_method_handler(
+          servicer.AlertDelete,
+          request_deserializer=api__pb2.SdkClusterAlertDeleteRequest.FromString,
+          response_serializer=api__pb2.SdkClusterAlertDeleteResponse.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(
@@ -201,7 +199,6 @@ class OpenStorageVolumeServicer(object):
 
   def CreateFromVolumeId(self, request, context):
     """CreateFromVolumeId creates a new volume cloned from an existing volume
-    Change to Clone
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -801,7 +798,6 @@ class OpenStorageCloudBackupServicer(object):
 
   def DeleteAll(self, request, context):
     """DeleteAll
-    Can this call be combined with Delete by adding a boolean?
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')

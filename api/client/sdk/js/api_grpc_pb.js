@@ -226,6 +226,28 @@ function deserialize_openstorage_api_SdkClusterAlertClearResponse(buffer_arg) {
   return api_pb.SdkClusterAlertClearResponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_openstorage_api_SdkClusterAlertDeleteRequest(arg) {
+  if (!(arg instanceof api_pb.SdkClusterAlertDeleteRequest)) {
+    throw new Error('Expected argument of type openstorage.api.SdkClusterAlertDeleteRequest');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkClusterAlertDeleteRequest(buffer_arg) {
+  return api_pb.SdkClusterAlertDeleteRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkClusterAlertDeleteResponse(arg) {
+  if (!(arg instanceof api_pb.SdkClusterAlertDeleteResponse)) {
+    throw new Error('Expected argument of type openstorage.api.SdkClusterAlertDeleteResponse');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkClusterAlertDeleteResponse(buffer_arg) {
+  return api_pb.SdkClusterAlertDeleteResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_openstorage_api_SdkClusterAlertEnumerateRequest(arg) {
   if (!(arg instanceof api_pb.SdkClusterAlertEnumerateRequest)) {
     throw new Error('Expected argument of type openstorage.api.SdkClusterAlertEnumerateRequest');
@@ -246,28 +268,6 @@ function serialize_openstorage_api_SdkClusterAlertEnumerateResponse(arg) {
 
 function deserialize_openstorage_api_SdkClusterAlertEnumerateResponse(buffer_arg) {
   return api_pb.SdkClusterAlertEnumerateResponse.deserializeBinary(new Uint8Array(buffer_arg));
-}
-
-function serialize_openstorage_api_SdkClusterAlertEraseRequest(arg) {
-  if (!(arg instanceof api_pb.SdkClusterAlertEraseRequest)) {
-    throw new Error('Expected argument of type openstorage.api.SdkClusterAlertEraseRequest');
-  }
-  return new Buffer(arg.serializeBinary());
-}
-
-function deserialize_openstorage_api_SdkClusterAlertEraseRequest(buffer_arg) {
-  return api_pb.SdkClusterAlertEraseRequest.deserializeBinary(new Uint8Array(buffer_arg));
-}
-
-function serialize_openstorage_api_SdkClusterAlertEraseResponse(arg) {
-  if (!(arg instanceof api_pb.SdkClusterAlertEraseResponse)) {
-    throw new Error('Expected argument of type openstorage.api.SdkClusterAlertEraseResponse');
-  }
-  return new Buffer(arg.serializeBinary());
-}
-
-function deserialize_openstorage_api_SdkClusterAlertEraseResponse(buffer_arg) {
-  return api_pb.SdkClusterAlertEraseResponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
 function serialize_openstorage_api_SdkClusterEnumerateRequest(arg) {
@@ -979,7 +979,6 @@ var OpenStorageClusterService = exports.OpenStorageClusterService = {
     responseDeserialize: deserialize_openstorage_api_SdkClusterInspectResponse,
   },
   // Get a list of alerts from the storage cluster
-  // Make Alerts a service?
   alertEnumerate: {
     path: '/openstorage.api.OpenStorageCluster/AlertEnumerate',
     requestStream: false,
@@ -1004,17 +1003,16 @@ var OpenStorageClusterService = exports.OpenStorageClusterService = {
     responseDeserialize: deserialize_openstorage_api_SdkClusterAlertClearResponse,
   },
   // Erases an alert for a given resource
-  // Change it to AlertDelete
-  alertErase: {
-    path: '/openstorage.api.OpenStorageCluster/AlertErase',
+  alertDelete: {
+    path: '/openstorage.api.OpenStorageCluster/AlertDelete',
     requestStream: false,
     responseStream: false,
-    requestType: api_pb.SdkClusterAlertEraseRequest,
-    responseType: api_pb.SdkClusterAlertEraseResponse,
-    requestSerialize: serialize_openstorage_api_SdkClusterAlertEraseRequest,
-    requestDeserialize: deserialize_openstorage_api_SdkClusterAlertEraseRequest,
-    responseSerialize: serialize_openstorage_api_SdkClusterAlertEraseResponse,
-    responseDeserialize: deserialize_openstorage_api_SdkClusterAlertEraseResponse,
+    requestType: api_pb.SdkClusterAlertDeleteRequest,
+    responseType: api_pb.SdkClusterAlertDeleteResponse,
+    requestSerialize: serialize_openstorage_api_SdkClusterAlertDeleteRequest,
+    requestDeserialize: deserialize_openstorage_api_SdkClusterAlertDeleteRequest,
+    responseSerialize: serialize_openstorage_api_SdkClusterAlertDeleteResponse,
+    responseDeserialize: deserialize_openstorage_api_SdkClusterAlertDeleteResponse,
   },
 };
 
@@ -1033,7 +1031,6 @@ var OpenStorageVolumeService = exports.OpenStorageVolumeService = {
     responseDeserialize: deserialize_openstorage_api_SdkVolumeCreateResponse,
   },
   // CreateFromVolumeId creates a new volume cloned from an existing volume
-  // Change to Clone
   createFromVolumeId: {
     path: '/openstorage.api.OpenStorageVolume/CreateFromVolumeId',
     requestStream: false,
@@ -1428,7 +1425,6 @@ var OpenStorageCloudBackupService = exports.OpenStorageCloudBackupService = {
     responseDeserialize: deserialize_openstorage_api_SdkCloudBackupDeleteResponse,
   },
   // DeleteAll
-  // Can this call be combined with Delete by adding a boolean?
   deleteAll: {
     path: '/openstorage.api.OpenStorageCloudBackup/DeleteAll',
     requestStream: false,
