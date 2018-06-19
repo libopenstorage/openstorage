@@ -20,10 +20,12 @@ module Openstorage
         # Inspect the node given a UUID.
         rpc :Inspect, SdkClusterInspectRequest, SdkClusterInspectResponse
         # Get a list of alerts from the storage cluster
+        # Make Alerts a service?
         rpc :AlertEnumerate, SdkClusterAlertEnumerateRequest, SdkClusterAlertEnumerateResponse
         # Clear the alert for a given resource
         rpc :AlertClear, SdkClusterAlertClearRequest, SdkClusterAlertClearResponse
         # Erases an alert for a given resource
+        # Change it to AlertDelete
         rpc :AlertErase, SdkClusterAlertEraseRequest, SdkClusterAlertEraseResponse
       end
 
@@ -41,6 +43,7 @@ module Openstorage
         # Creates a new volume
         rpc :Create, SdkVolumeCreateRequest, SdkVolumeCreateResponse
         # CreateFromVolumeId creates a new volume cloned from an existing volume
+        # Change to Clone
         rpc :CreateFromVolumeId, SdkVolumeCreateFromVolumeIdRequest, SdkVolumeCreateFromVolumeIdResponse
         # Delete a volume
         rpc :Delete, SdkVolumeDeleteRequest, SdkVolumeDeleteResponse
@@ -161,6 +164,7 @@ module Openstorage
         # Delete
         rpc :Delete, SdkCloudBackupDeleteRequest, SdkCloudBackupDeleteResponse
         # DeleteAll
+        # Can this call be combined with Delete by adding a boolean?
         rpc :DeleteAll, SdkCloudBackupDeleteAllRequest, SdkCloudBackupDeleteAllResponse
         # Enumerate
         rpc :Enumerate, SdkCloudBackupEnumerateRequest, SdkCloudBackupEnumerateResponse

@@ -61,6 +61,7 @@ class OpenStorageClusterServicer(object):
 
   def AlertEnumerate(self, request, context):
     """Get a list of alerts from the storage cluster
+    Make Alerts a service?
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -75,6 +76,7 @@ class OpenStorageClusterServicer(object):
 
   def AlertErase(self, request, context):
     """Erases an alert for a given resource
+    Change it to AlertDelete
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -199,6 +201,7 @@ class OpenStorageVolumeServicer(object):
 
   def CreateFromVolumeId(self, request, context):
     """CreateFromVolumeId creates a new volume cloned from an existing volume
+    Change to Clone
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -798,6 +801,7 @@ class OpenStorageCloudBackupServicer(object):
 
   def DeleteAll(self, request, context):
     """DeleteAll
+    Can this call be combined with Delete by adding a boolean?
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')

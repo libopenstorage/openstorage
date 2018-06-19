@@ -979,6 +979,7 @@ var OpenStorageClusterService = exports.OpenStorageClusterService = {
     responseDeserialize: deserialize_openstorage_api_SdkClusterInspectResponse,
   },
   // Get a list of alerts from the storage cluster
+  // Make Alerts a service?
   alertEnumerate: {
     path: '/openstorage.api.OpenStorageCluster/AlertEnumerate',
     requestStream: false,
@@ -1003,6 +1004,7 @@ var OpenStorageClusterService = exports.OpenStorageClusterService = {
     responseDeserialize: deserialize_openstorage_api_SdkClusterAlertClearResponse,
   },
   // Erases an alert for a given resource
+  // Change it to AlertDelete
   alertErase: {
     path: '/openstorage.api.OpenStorageCluster/AlertErase',
     requestStream: false,
@@ -1031,6 +1033,7 @@ var OpenStorageVolumeService = exports.OpenStorageVolumeService = {
     responseDeserialize: deserialize_openstorage_api_SdkVolumeCreateResponse,
   },
   // CreateFromVolumeId creates a new volume cloned from an existing volume
+  // Change to Clone
   createFromVolumeId: {
     path: '/openstorage.api.OpenStorageVolume/CreateFromVolumeId',
     requestStream: false,
@@ -1425,6 +1428,7 @@ var OpenStorageCloudBackupService = exports.OpenStorageCloudBackupService = {
     responseDeserialize: deserialize_openstorage_api_SdkCloudBackupDeleteResponse,
   },
   // DeleteAll
+  // Can this call be combined with Delete by adding a boolean?
   deleteAll: {
     path: '/openstorage.api.OpenStorageCloudBackup/DeleteAll',
     requestStream: false,
