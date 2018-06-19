@@ -698,9 +698,9 @@ func (c *Cluster) ToStorageCluster() *StorageCluster {
 		NodeId: c.NodeId,
 	}
 
-	cluster.Nodes = make([]*StorageNode, len(c.Nodes))
+	cluster.NodeIds = make([]string, len(c.Nodes))
 	for i, v := range c.Nodes {
-		cluster.Nodes[i] = v.ToStorageNode()
+		cluster.NodeIds[i] = v.Id
 	}
 
 	return cluster
@@ -748,15 +748,14 @@ func (b *CloudBackupInfo) ToSdkCloudBackupInfo() *SdkCloudBackupInfo {
 }
 
 func (r *CloudBackupEnumerateResponse) ToSdkCloudBackupEnumerateResponse() *SdkCloudBackupEnumerateResponse {
-	resp := &SdkCloudBackupEnumerateResponse{
-		Backups: make([]*SdkCloudBackupInfo, len(r.Backups)),
+	ids := make([]string, len(r.Backups))
+	for i, backup := range r.Backups {
+		ids[i] = backup.ID
 	}
 
-	for i, v := range r.Backups {
-		resp.Backups[i] = v.ToSdkCloudBackupInfo()
+	return &SdkCloudBackupEnumerateResponse{
+		BackupIds: ids,
 	}
-
-	return resp
 }
 
 func CloudBackupOpTypeToSdkCloudBackupOpType(t CloudBackupOpType) SdkCloudBackupOpType {

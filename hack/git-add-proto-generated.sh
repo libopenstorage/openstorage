@@ -4,4 +4,5 @@ git add api/api.pb.g* \
 	api/client/sdk/. \
 	api/server/sdk/api/api.swagger.json \
 	pkg/flexvolume/flexvolume.pb.go \
+	pkg/flexvolume/flexvolume.pb.gw.go \
 	pkg/jsonpb/testing/testing.pb.go

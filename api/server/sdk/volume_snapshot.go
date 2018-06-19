@@ -92,7 +92,12 @@ func (s *VolumeServer) SnapshotEnumerate(
 			err.Error())
 	}
 
+	ids := make([]string, len(snapshots))
+	for i, snapshot := range snapshots {
+		ids[i] = snapshot.GetId()
+	}
+
 	return &api.SdkVolumeSnapshotEnumerateResponse{
-		Snapshots: snapshots,
+		VolumeSnapshotIds: ids,
 	}, nil
 }

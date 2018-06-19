@@ -115,7 +115,7 @@ func TestSdkEnumerateNoNodes(t *testing.T) {
 	assert.Equal(t, r.GetCluster().GetId(), cluster.Id)
 	assert.Equal(t, r.GetCluster().GetNodeId(), cluster.NodeId)
 	assert.Equal(t, r.GetCluster().GetStatus(), cluster.Status)
-	assert.Len(t, r.GetCluster().GetNodes(), 0)
+	assert.Len(t, r.GetCluster().GetNodeIds(), 0)
 }
 
 func TestSdkEnumerate(t *testing.T) {
@@ -153,16 +153,12 @@ func TestSdkEnumerate(t *testing.T) {
 	assert.Equal(t, r.GetCluster().GetId(), cluster.Id)
 	assert.Equal(t, r.GetCluster().GetNodeId(), cluster.NodeId)
 	assert.Equal(t, r.GetCluster().GetStatus(), cluster.Status)
-	assert.Len(t, r.GetCluster().GetNodes(), 1)
+	assert.Len(t, r.GetCluster().GetNodeIds(), 1)
 
 	// Verify node
 	node := cluster.Nodes[0]
-	rn := r.GetCluster().GetNodes()[0]
-	assert.Equal(t, rn.GetId(), node.Id)
-	assert.Equal(t, rn.GetCpu(), node.Cpu)
-	assert.Equal(t, rn.GetMemFree(), node.MemFree)
-	assert.Equal(t, rn.GetMemTotal(), node.MemTotal)
-	assert.Equal(t, rn.GetMemUsed(), node.MemUsed)
+	id := r.GetCluster().GetNodeIds()[0]
+	assert.Equal(t, id, node.Id)
 }
 
 func TestSdkEnumerateFail(t *testing.T) {
@@ -337,9 +333,9 @@ func TestSdkAlertEnumerate(t *testing.T) {
 	r, err := c.AlertEnumerate(context.Background(), req)
 	assert.NoError(t, err)
 	assert.NotNil(t, r.GetAlerts())
-	assert.Len(t, r.GetAlerts().GetAlert(), 2)
-	assert.Equal(t, r.GetAlerts().GetAlert()[0].Id, out.Alert[0].Id)
-	assert.Equal(t, r.GetAlerts().GetAlert()[1].Id, out.Alert[1].Id)
+	assert.Len(t, r.GetAlerts(), 2)
+	assert.Equal(t, r.GetAlerts()[0].Id, out.Alert[0].Id)
+	assert.Equal(t, r.GetAlerts()[1].Id, out.Alert[1].Id)
 }
 
 func TestSdkAlertClear(t *testing.T) {
