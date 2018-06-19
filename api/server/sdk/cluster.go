@@ -116,21 +116,21 @@ func (s *ClusterServer) AlertClear(
 	return &api.SdkClusterAlertClearResponse{}, nil
 }
 
-// AlertErase erases an alert for a given resource
-func (s *ClusterServer) AlertErase(
+// AlertDelete deletes an alert for a given resource
+func (s *ClusterServer) AlertDelete(
 	ctx context.Context,
-	req *api.SdkClusterAlertEraseRequest,
-) (*api.SdkClusterAlertEraseResponse, error) {
+	req *api.SdkClusterAlertDeleteRequest,
+) (*api.SdkClusterAlertDeleteResponse, error) {
 
 	err := s.cluster.EraseAlert(req.GetResource(), req.GetAlertId())
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
-			"Failed to erase alert %d for type %v: %v",
+			"Failed to delete alert %d for type %v: %v",
 			req.GetAlertId(),
 			req.GetResource(),
 			err.Error())
 	}
 
-	return &api.SdkClusterAlertEraseResponse{}, nil
+	return &api.SdkClusterAlertDeleteResponse{}, nil
 }

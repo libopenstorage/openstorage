@@ -369,7 +369,7 @@ func TestSdkAlertClear(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestSdkAlertErase(t *testing.T) {
+func TestSdkAlertDelete(t *testing.T) {
 
 	// Create server and client connection
 	s := newTestServer(t)
@@ -379,7 +379,7 @@ func TestSdkAlertErase(t *testing.T) {
 	c := api.NewOpenStorageClusterClient(s.Conn())
 
 	// Create request
-	req := &api.SdkClusterAlertEraseRequest{
+	req := &api.SdkClusterAlertDeleteRequest{
 		AlertId:  1234,
 		Resource: api.ResourceType_RESOURCE_TYPE_DRIVE,
 	}
@@ -392,6 +392,6 @@ func TestSdkAlertErase(t *testing.T) {
 		Times(1)
 
 	// Get info
-	_, err := c.AlertErase(context.Background(), req)
+	_, err := c.AlertDelete(context.Background(), req)
 	assert.NoError(t, err)
 }
