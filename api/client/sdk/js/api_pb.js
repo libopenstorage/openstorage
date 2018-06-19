@@ -8528,8 +8528,7 @@ proto.openstorage.api.StorageCluster.toObject = function(includeInstance, msg) {
     status: jspb.Message.getFieldWithDefault(msg, 1, 0),
     id: jspb.Message.getFieldWithDefault(msg, 2, ""),
     nodeId: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    nodesList: jspb.Message.toObjectList(msg.getNodesList(),
-    proto.openstorage.api.StorageNode.toObject, includeInstance)
+    nodeIdsList: jspb.Message.getRepeatedField(msg, 4)
   };
 
   if (includeInstance) {
@@ -8579,9 +8578,8 @@ proto.openstorage.api.StorageCluster.deserializeBinaryFromReader = function(msg,
       msg.setNodeId(value);
       break;
     case 4:
-      var value = new proto.openstorage.api.StorageNode;
-      reader.readMessage(value,proto.openstorage.api.StorageNode.deserializeBinaryFromReader);
-      msg.addNodes(value);
+      var value = /** @type {string} */ (reader.readString());
+      msg.addNodeIds(value);
       break;
     default:
       reader.skipField();
@@ -8633,12 +8631,11 @@ proto.openstorage.api.StorageCluster.serializeBinaryToWriter = function(message,
       f
     );
   }
-  f = message.getNodesList();
+  f = message.getNodeIdsList();
   if (f.length > 0) {
-    writer.writeRepeatedMessage(
+    writer.writeRepeatedString(
       4,
-      f,
-      proto.openstorage.api.StorageNode.serializeBinaryToWriter
+      f
     );
   }
 };
@@ -8690,33 +8687,31 @@ proto.openstorage.api.StorageCluster.prototype.setNodeId = function(value) {
 
 
 /**
- * repeated StorageNode nodes = 4;
- * @return {!Array.<!proto.openstorage.api.StorageNode>}
+ * repeated string node_ids = 4;
+ * @return {!Array.<string>}
  */
-proto.openstorage.api.StorageCluster.prototype.getNodesList = function() {
-  return /** @type{!Array.<!proto.openstorage.api.StorageNode>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.openstorage.api.StorageNode, 4));
+proto.openstorage.api.StorageCluster.prototype.getNodeIdsList = function() {
+  return /** @type {!Array.<string>} */ (jspb.Message.getRepeatedField(this, 4));
 };
 
 
-/** @param {!Array.<!proto.openstorage.api.StorageNode>} value */
-proto.openstorage.api.StorageCluster.prototype.setNodesList = function(value) {
-  jspb.Message.setRepeatedWrapperField(this, 4, value);
+/** @param {!Array.<string>} value */
+proto.openstorage.api.StorageCluster.prototype.setNodeIdsList = function(value) {
+  jspb.Message.setField(this, 4, value || []);
 };
 
 
 /**
- * @param {!proto.openstorage.api.StorageNode=} opt_value
+ * @param {!string} value
  * @param {number=} opt_index
- * @return {!proto.openstorage.api.StorageNode}
  */
-proto.openstorage.api.StorageCluster.prototype.addNodes = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 4, opt_value, proto.openstorage.api.StorageNode, opt_index);
+proto.openstorage.api.StorageCluster.prototype.addNodeIds = function(value, opt_index) {
+  jspb.Message.addToRepeatedField(this, 4, value, opt_index);
 };
 
 
-proto.openstorage.api.StorageCluster.prototype.clearNodesList = function() {
-  this.setNodesList([]);
+proto.openstorage.api.StorageCluster.prototype.clearNodeIdsList = function() {
+  this.setNodeIdsList([]);
 };
 
 
@@ -15927,8 +15922,7 @@ proto.openstorage.api.SdkVolumeEnumerateResponse.prototype.toObject = function(o
  */
 proto.openstorage.api.SdkVolumeEnumerateResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    volumesList: jspb.Message.toObjectList(msg.getVolumesList(),
-    proto.openstorage.api.Volume.toObject, includeInstance)
+    volumeIdsList: jspb.Message.getRepeatedField(msg, 1)
   };
 
   if (includeInstance) {
@@ -15966,9 +15960,8 @@ proto.openstorage.api.SdkVolumeEnumerateResponse.deserializeBinaryFromReader = f
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
-      var value = new proto.openstorage.api.Volume;
-      reader.readMessage(value,proto.openstorage.api.Volume.deserializeBinaryFromReader);
-      msg.addVolumes(value);
+      var value = /** @type {string} */ (reader.readString());
+      msg.addVolumeIds(value);
       break;
     default:
       reader.skipField();
@@ -15999,45 +15992,42 @@ proto.openstorage.api.SdkVolumeEnumerateResponse.prototype.serializeBinary = fun
  */
 proto.openstorage.api.SdkVolumeEnumerateResponse.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getVolumesList();
+  f = message.getVolumeIdsList();
   if (f.length > 0) {
-    writer.writeRepeatedMessage(
+    writer.writeRepeatedString(
       1,
-      f,
-      proto.openstorage.api.Volume.serializeBinaryToWriter
+      f
     );
   }
 };
 
 
 /**
- * repeated Volume volumes = 1;
- * @return {!Array.<!proto.openstorage.api.Volume>}
+ * repeated string volume_ids = 1;
+ * @return {!Array.<string>}
  */
-proto.openstorage.api.SdkVolumeEnumerateResponse.prototype.getVolumesList = function() {
-  return /** @type{!Array.<!proto.openstorage.api.Volume>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.openstorage.api.Volume, 1));
+proto.openstorage.api.SdkVolumeEnumerateResponse.prototype.getVolumeIdsList = function() {
+  return /** @type {!Array.<string>} */ (jspb.Message.getRepeatedField(this, 1));
 };
 
 
-/** @param {!Array.<!proto.openstorage.api.Volume>} value */
-proto.openstorage.api.SdkVolumeEnumerateResponse.prototype.setVolumesList = function(value) {
-  jspb.Message.setRepeatedWrapperField(this, 1, value);
+/** @param {!Array.<string>} value */
+proto.openstorage.api.SdkVolumeEnumerateResponse.prototype.setVolumeIdsList = function(value) {
+  jspb.Message.setField(this, 1, value || []);
 };
 
 
 /**
- * @param {!proto.openstorage.api.Volume=} opt_value
+ * @param {!string} value
  * @param {number=} opt_index
- * @return {!proto.openstorage.api.Volume}
  */
-proto.openstorage.api.SdkVolumeEnumerateResponse.prototype.addVolumes = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 1, opt_value, proto.openstorage.api.Volume, opt_index);
+proto.openstorage.api.SdkVolumeEnumerateResponse.prototype.addVolumeIds = function(value, opt_index) {
+  jspb.Message.addToRepeatedField(this, 1, value, opt_index);
 };
 
 
-proto.openstorage.api.SdkVolumeEnumerateResponse.prototype.clearVolumesList = function() {
-  this.setVolumesList([]);
+proto.openstorage.api.SdkVolumeEnumerateResponse.prototype.clearVolumeIdsList = function() {
+  this.setVolumeIdsList([]);
 };
 
 
@@ -16864,8 +16854,7 @@ proto.openstorage.api.SdkVolumeSnapshotEnumerateResponse.prototype.toObject = fu
  */
 proto.openstorage.api.SdkVolumeSnapshotEnumerateResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    snapshotsList: jspb.Message.toObjectList(msg.getSnapshotsList(),
-    proto.openstorage.api.Volume.toObject, includeInstance)
+    volumeSnapshotIdsList: jspb.Message.getRepeatedField(msg, 1)
   };
 
   if (includeInstance) {
@@ -16903,9 +16892,8 @@ proto.openstorage.api.SdkVolumeSnapshotEnumerateResponse.deserializeBinaryFromRe
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
-      var value = new proto.openstorage.api.Volume;
-      reader.readMessage(value,proto.openstorage.api.Volume.deserializeBinaryFromReader);
-      msg.addSnapshots(value);
+      var value = /** @type {string} */ (reader.readString());
+      msg.addVolumeSnapshotIds(value);
       break;
     default:
       reader.skipField();
@@ -16936,45 +16924,42 @@ proto.openstorage.api.SdkVolumeSnapshotEnumerateResponse.prototype.serializeBina
  */
 proto.openstorage.api.SdkVolumeSnapshotEnumerateResponse.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getSnapshotsList();
+  f = message.getVolumeSnapshotIdsList();
   if (f.length > 0) {
-    writer.writeRepeatedMessage(
+    writer.writeRepeatedString(
       1,
-      f,
-      proto.openstorage.api.Volume.serializeBinaryToWriter
+      f
     );
   }
 };
 
 
 /**
- * repeated Volume snapshots = 1;
- * @return {!Array.<!proto.openstorage.api.Volume>}
+ * repeated string volume_snapshot_ids = 1;
+ * @return {!Array.<string>}
  */
-proto.openstorage.api.SdkVolumeSnapshotEnumerateResponse.prototype.getSnapshotsList = function() {
-  return /** @type{!Array.<!proto.openstorage.api.Volume>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.openstorage.api.Volume, 1));
+proto.openstorage.api.SdkVolumeSnapshotEnumerateResponse.prototype.getVolumeSnapshotIdsList = function() {
+  return /** @type {!Array.<string>} */ (jspb.Message.getRepeatedField(this, 1));
 };
 
 
-/** @param {!Array.<!proto.openstorage.api.Volume>} value */
-proto.openstorage.api.SdkVolumeSnapshotEnumerateResponse.prototype.setSnapshotsList = function(value) {
-  jspb.Message.setRepeatedWrapperField(this, 1, value);
+/** @param {!Array.<string>} value */
+proto.openstorage.api.SdkVolumeSnapshotEnumerateResponse.prototype.setVolumeSnapshotIdsList = function(value) {
+  jspb.Message.setField(this, 1, value || []);
 };
 
 
 /**
- * @param {!proto.openstorage.api.Volume=} opt_value
+ * @param {!string} value
  * @param {number=} opt_index
- * @return {!proto.openstorage.api.Volume}
  */
-proto.openstorage.api.SdkVolumeSnapshotEnumerateResponse.prototype.addSnapshots = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 1, opt_value, proto.openstorage.api.Volume, opt_index);
+proto.openstorage.api.SdkVolumeSnapshotEnumerateResponse.prototype.addVolumeSnapshotIds = function(value, opt_index) {
+  jspb.Message.addToRepeatedField(this, 1, value, opt_index);
 };
 
 
-proto.openstorage.api.SdkVolumeSnapshotEnumerateResponse.prototype.clearSnapshotsList = function() {
-  this.setSnapshotsList([]);
+proto.openstorage.api.SdkVolumeSnapshotEnumerateResponse.prototype.clearVolumeSnapshotIdsList = function() {
+  this.setVolumeSnapshotIdsList([]);
 };
 
 
@@ -17796,12 +17781,19 @@ proto.openstorage.api.SdkClusterAlertEnumerateRequest.prototype.setResource = fu
  * @constructor
  */
 proto.openstorage.api.SdkClusterAlertEnumerateResponse = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+  jspb.Message.initialize(this, opt_data, 0, -1, proto.openstorage.api.SdkClusterAlertEnumerateResponse.repeatedFields_, null);
 };
 goog.inherits(proto.openstorage.api.SdkClusterAlertEnumerateResponse, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
   proto.openstorage.api.SdkClusterAlertEnumerateResponse.displayName = 'proto.openstorage.api.SdkClusterAlertEnumerateResponse';
 }
+/**
+ * List of repeated fields within this message type.
+ * @private {!Array<number>}
+ * @const
+ */
+proto.openstorage.api.SdkClusterAlertEnumerateResponse.repeatedFields_ = [1];
+
 
 
 if (jspb.Message.GENERATE_TO_OBJECT) {
@@ -17831,7 +17823,8 @@ proto.openstorage.api.SdkClusterAlertEnumerateResponse.prototype.toObject = func
  */
 proto.openstorage.api.SdkClusterAlertEnumerateResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    alerts: (f = msg.getAlerts()) && proto.openstorage.api.Alerts.toObject(includeInstance, f)
+    alertsList: jspb.Message.toObjectList(msg.getAlertsList(),
+    proto.openstorage.api.Alert.toObject, includeInstance)
   };
 
   if (includeInstance) {
@@ -17869,9 +17862,9 @@ proto.openstorage.api.SdkClusterAlertEnumerateResponse.deserializeBinaryFromRead
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
-      var value = new proto.openstorage.api.Alerts;
-      reader.readMessage(value,proto.openstorage.api.Alerts.deserializeBinaryFromReader);
-      msg.setAlerts(value);
+      var value = new proto.openstorage.api.Alert;
+      reader.readMessage(value,proto.openstorage.api.Alert.deserializeBinaryFromReader);
+      msg.addAlerts(value);
       break;
     default:
       reader.skipField();
@@ -17902,44 +17895,45 @@ proto.openstorage.api.SdkClusterAlertEnumerateResponse.prototype.serializeBinary
  */
 proto.openstorage.api.SdkClusterAlertEnumerateResponse.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getAlerts();
-  if (f != null) {
-    writer.writeMessage(
+  f = message.getAlertsList();
+  if (f.length > 0) {
+    writer.writeRepeatedMessage(
       1,
       f,
-      proto.openstorage.api.Alerts.serializeBinaryToWriter
+      proto.openstorage.api.Alert.serializeBinaryToWriter
     );
   }
 };
 
 
 /**
- * optional Alerts alerts = 1;
- * @return {?proto.openstorage.api.Alerts}
+ * repeated Alert alerts = 1;
+ * @return {!Array.<!proto.openstorage.api.Alert>}
  */
-proto.openstorage.api.SdkClusterAlertEnumerateResponse.prototype.getAlerts = function() {
-  return /** @type{?proto.openstorage.api.Alerts} */ (
-    jspb.Message.getWrapperField(this, proto.openstorage.api.Alerts, 1));
+proto.openstorage.api.SdkClusterAlertEnumerateResponse.prototype.getAlertsList = function() {
+  return /** @type{!Array.<!proto.openstorage.api.Alert>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.openstorage.api.Alert, 1));
 };
 
 
-/** @param {?proto.openstorage.api.Alerts|undefined} value */
-proto.openstorage.api.SdkClusterAlertEnumerateResponse.prototype.setAlerts = function(value) {
-  jspb.Message.setWrapperField(this, 1, value);
-};
-
-
-proto.openstorage.api.SdkClusterAlertEnumerateResponse.prototype.clearAlerts = function() {
-  this.setAlerts(undefined);
+/** @param {!Array.<!proto.openstorage.api.Alert>} value */
+proto.openstorage.api.SdkClusterAlertEnumerateResponse.prototype.setAlertsList = function(value) {
+  jspb.Message.setRepeatedWrapperField(this, 1, value);
 };
 
 
 /**
- * Returns whether this field is set.
- * @return {!boolean}
+ * @param {!proto.openstorage.api.Alert=} opt_value
+ * @param {number=} opt_index
+ * @return {!proto.openstorage.api.Alert}
  */
-proto.openstorage.api.SdkClusterAlertEnumerateResponse.prototype.hasAlerts = function() {
-  return jspb.Message.getField(this, 1) != null;
+proto.openstorage.api.SdkClusterAlertEnumerateResponse.prototype.addAlerts = function(opt_value, opt_index) {
+  return jspb.Message.addToRepeatedWrapperField(this, 1, opt_value, proto.openstorage.api.Alert, opt_index);
+};
+
+
+proto.openstorage.api.SdkClusterAlertEnumerateResponse.prototype.clearAlertsList = function() {
+  this.setAlertsList([]);
 };
 
 
@@ -21539,8 +21533,7 @@ proto.openstorage.api.SdkCloudBackupEnumerateResponse.prototype.toObject = funct
  */
 proto.openstorage.api.SdkCloudBackupEnumerateResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    backupsList: jspb.Message.toObjectList(msg.getBackupsList(),
-    proto.openstorage.api.SdkCloudBackupInfo.toObject, includeInstance)
+    backupIdsList: jspb.Message.getRepeatedField(msg, 1)
   };
 
   if (includeInstance) {
@@ -21578,9 +21571,8 @@ proto.openstorage.api.SdkCloudBackupEnumerateResponse.deserializeBinaryFromReade
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
-      var value = new proto.openstorage.api.SdkCloudBackupInfo;
-      reader.readMessage(value,proto.openstorage.api.SdkCloudBackupInfo.deserializeBinaryFromReader);
-      msg.addBackups(value);
+      var value = /** @type {string} */ (reader.readString());
+      msg.addBackupIds(value);
       break;
     default:
       reader.skipField();
@@ -21611,45 +21603,42 @@ proto.openstorage.api.SdkCloudBackupEnumerateResponse.prototype.serializeBinary 
  */
 proto.openstorage.api.SdkCloudBackupEnumerateResponse.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getBackupsList();
+  f = message.getBackupIdsList();
   if (f.length > 0) {
-    writer.writeRepeatedMessage(
+    writer.writeRepeatedString(
       1,
-      f,
-      proto.openstorage.api.SdkCloudBackupInfo.serializeBinaryToWriter
+      f
     );
   }
 };
 
 
 /**
- * repeated SdkCloudBackupInfo backups = 1;
- * @return {!Array.<!proto.openstorage.api.SdkCloudBackupInfo>}
+ * repeated string backup_ids = 1;
+ * @return {!Array.<string>}
  */
-proto.openstorage.api.SdkCloudBackupEnumerateResponse.prototype.getBackupsList = function() {
-  return /** @type{!Array.<!proto.openstorage.api.SdkCloudBackupInfo>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.openstorage.api.SdkCloudBackupInfo, 1));
+proto.openstorage.api.SdkCloudBackupEnumerateResponse.prototype.getBackupIdsList = function() {
+  return /** @type {!Array.<string>} */ (jspb.Message.getRepeatedField(this, 1));
 };
 
 
-/** @param {!Array.<!proto.openstorage.api.SdkCloudBackupInfo>} value */
-proto.openstorage.api.SdkCloudBackupEnumerateResponse.prototype.setBackupsList = function(value) {
-  jspb.Message.setRepeatedWrapperField(this, 1, value);
+/** @param {!Array.<string>} value */
+proto.openstorage.api.SdkCloudBackupEnumerateResponse.prototype.setBackupIdsList = function(value) {
+  jspb.Message.setField(this, 1, value || []);
 };
 
 
 /**
- * @param {!proto.openstorage.api.SdkCloudBackupInfo=} opt_value
+ * @param {!string} value
  * @param {number=} opt_index
- * @return {!proto.openstorage.api.SdkCloudBackupInfo}
  */
-proto.openstorage.api.SdkCloudBackupEnumerateResponse.prototype.addBackups = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 1, opt_value, proto.openstorage.api.SdkCloudBackupInfo, opt_index);
+proto.openstorage.api.SdkCloudBackupEnumerateResponse.prototype.addBackupIds = function(value, opt_index) {
+  jspb.Message.addToRepeatedField(this, 1, value, opt_index);
 };
 
 
-proto.openstorage.api.SdkCloudBackupEnumerateResponse.prototype.clearBackupsList = function() {
-  this.setBackupsList([]);
+proto.openstorage.api.SdkCloudBackupEnumerateResponse.prototype.clearBackupIdsList = function() {
+  this.setBackupIdsList([]);
 };
 
 
