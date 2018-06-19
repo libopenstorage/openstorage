@@ -425,11 +425,11 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   end
   add_message "openstorage.api.SdkClusterAlertClearResponse" do
   end
-  add_message "openstorage.api.SdkClusterAlertEraseRequest" do
+  add_message "openstorage.api.SdkClusterAlertDeleteRequest" do
     optional :resource, :enum, 1, "openstorage.api.ResourceType"
     optional :alert_id, :int64, 2
   end
-  add_message "openstorage.api.SdkClusterAlertEraseResponse" do
+  add_message "openstorage.api.SdkClusterAlertDeleteResponse" do
   end
   add_message "openstorage.api.SdkObjectstoreInspectRequest" do
     optional :objectstore_id, :string, 1
@@ -774,8 +774,8 @@ module Openstorage
     SdkClusterAlertEnumerateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkClusterAlertEnumerateResponse").msgclass
     SdkClusterAlertClearRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkClusterAlertClearRequest").msgclass
     SdkClusterAlertClearResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkClusterAlertClearResponse").msgclass
-    SdkClusterAlertEraseRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkClusterAlertEraseRequest").msgclass
-    SdkClusterAlertEraseResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkClusterAlertEraseResponse").msgclass
+    SdkClusterAlertDeleteRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkClusterAlertDeleteRequest").msgclass
+    SdkClusterAlertDeleteResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkClusterAlertDeleteResponse").msgclass
     SdkObjectstoreInspectRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkObjectstoreInspectRequest").msgclass
     SdkObjectstoreInspectResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkObjectstoreInspectResponse").msgclass
     SdkObjectstoreCreateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkObjectstoreCreateRequest").msgclass

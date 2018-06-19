@@ -708,8 +708,8 @@ service OpenStorageCluster {
     }
 
   // Erases an alert for a given resource
-  rpc AlertErase(SdkClusterAlertEraseRequest)
-    returns (SdkClusterAlertEraseResponse) {
+  rpc AlertDelete(SdkClusterAlertDeleteRequest)
+    returns (SdkClusterAlertDeleteResponse) {
       option(google.api.http) = {
         delete: "/v1/cluster/alert/{alert_id}"
       };
@@ -1391,14 +1391,14 @@ message SdkClusterAlertClearRequest {
 message SdkClusterAlertClearResponse {
 }
 
-message SdkClusterAlertEraseRequest {
+message SdkClusterAlertDeleteRequest {
   // Type of resource (required)
   ResourceType resource = 1;
   // Id of alert as returned by ClusterEnumerateAlertResponse (required)
   int64 alert_id = 2;
 }
 
-message SdkClusterAlertEraseResponse {
+message SdkClusterAlertDeleteResponse {
 }
 
 message SdkObjectstoreInspectRequest {
