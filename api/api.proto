@@ -726,11 +726,11 @@ service OpenStorageVolume {
       };
     }
 
-  // CreateFromVolumeId creates a new volume cloned from an existing volume
-  rpc CreateFromVolumeId(SdkVolumeCreateFromVolumeIdRequest)
-    returns (SdkVolumeCreateFromVolumeIdResponse) {
+  // Clone creates a new volume cloned from an existing volume
+  rpc Clone(SdkVolumeCloneRequest)
+    returns (SdkVolumeCloneResponse) {
       option(google.api.http) = {
-        post: "/v1/volume/createfromid"
+        post: "/v1/volume/clone"
         body: "*"
       };
     }
@@ -1272,7 +1272,7 @@ message SdkVolumeCreateResponse {
   string volume_id = 1;
 }
 
-message SdkVolumeCreateFromVolumeIdRequest {
+message SdkVolumeCloneRequest {
   // Unique name of the volume. This will be used for idempotency.
   string name = 1;
   // Parent volume id, if specified will create a new volume as a clone of the parent.
@@ -1281,7 +1281,7 @@ message SdkVolumeCreateFromVolumeIdRequest {
   VolumeSpec spec = 3;
 }
 
-message SdkVolumeCreateFromVolumeIdResponse {
+message SdkVolumeCloneResponse {
   // Id of new volume
   string volume_id = 1;
 }

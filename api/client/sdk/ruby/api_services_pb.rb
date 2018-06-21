@@ -40,8 +40,8 @@ module Openstorage
 
         # Creates a new volume
         rpc :Create, SdkVolumeCreateRequest, SdkVolumeCreateResponse
-        # CreateFromVolumeId creates a new volume cloned from an existing volume
-        rpc :CreateFromVolumeId, SdkVolumeCreateFromVolumeIdRequest, SdkVolumeCreateFromVolumeIdResponse
+        # Clone creates a new volume cloned from an existing volume
+        rpc :Clone, SdkVolumeCloneRequest, SdkVolumeCloneResponse
         # Delete a volume
         rpc :Delete, SdkVolumeDeleteRequest, SdkVolumeDeleteResponse
         # Get information on a volume

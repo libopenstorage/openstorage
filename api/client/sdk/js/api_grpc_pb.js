@@ -710,26 +710,26 @@ function deserialize_openstorage_api_SdkVolumeAttachResponse(buffer_arg) {
   return api_pb.SdkVolumeAttachResponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
-function serialize_openstorage_api_SdkVolumeCreateFromVolumeIdRequest(arg) {
-  if (!(arg instanceof api_pb.SdkVolumeCreateFromVolumeIdRequest)) {
-    throw new Error('Expected argument of type openstorage.api.SdkVolumeCreateFromVolumeIdRequest');
+function serialize_openstorage_api_SdkVolumeCloneRequest(arg) {
+  if (!(arg instanceof api_pb.SdkVolumeCloneRequest)) {
+    throw new Error('Expected argument of type openstorage.api.SdkVolumeCloneRequest');
   }
   return new Buffer(arg.serializeBinary());
 }
 
-function deserialize_openstorage_api_SdkVolumeCreateFromVolumeIdRequest(buffer_arg) {
-  return api_pb.SdkVolumeCreateFromVolumeIdRequest.deserializeBinary(new Uint8Array(buffer_arg));
+function deserialize_openstorage_api_SdkVolumeCloneRequest(buffer_arg) {
+  return api_pb.SdkVolumeCloneRequest.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
-function serialize_openstorage_api_SdkVolumeCreateFromVolumeIdResponse(arg) {
-  if (!(arg instanceof api_pb.SdkVolumeCreateFromVolumeIdResponse)) {
-    throw new Error('Expected argument of type openstorage.api.SdkVolumeCreateFromVolumeIdResponse');
+function serialize_openstorage_api_SdkVolumeCloneResponse(arg) {
+  if (!(arg instanceof api_pb.SdkVolumeCloneResponse)) {
+    throw new Error('Expected argument of type openstorage.api.SdkVolumeCloneResponse');
   }
   return new Buffer(arg.serializeBinary());
 }
 
-function deserialize_openstorage_api_SdkVolumeCreateFromVolumeIdResponse(buffer_arg) {
-  return api_pb.SdkVolumeCreateFromVolumeIdResponse.deserializeBinary(new Uint8Array(buffer_arg));
+function deserialize_openstorage_api_SdkVolumeCloneResponse(buffer_arg) {
+  return api_pb.SdkVolumeCloneResponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
 function serialize_openstorage_api_SdkVolumeCreateRequest(arg) {
@@ -1030,17 +1030,17 @@ var OpenStorageVolumeService = exports.OpenStorageVolumeService = {
     responseSerialize: serialize_openstorage_api_SdkVolumeCreateResponse,
     responseDeserialize: deserialize_openstorage_api_SdkVolumeCreateResponse,
   },
-  // CreateFromVolumeId creates a new volume cloned from an existing volume
-  createFromVolumeId: {
-    path: '/openstorage.api.OpenStorageVolume/CreateFromVolumeId',
+  // Clone creates a new volume cloned from an existing volume
+  clone: {
+    path: '/openstorage.api.OpenStorageVolume/Clone',
     requestStream: false,
     responseStream: false,
-    requestType: api_pb.SdkVolumeCreateFromVolumeIdRequest,
-    responseType: api_pb.SdkVolumeCreateFromVolumeIdResponse,
-    requestSerialize: serialize_openstorage_api_SdkVolumeCreateFromVolumeIdRequest,
-    requestDeserialize: deserialize_openstorage_api_SdkVolumeCreateFromVolumeIdRequest,
-    responseSerialize: serialize_openstorage_api_SdkVolumeCreateFromVolumeIdResponse,
-    responseDeserialize: deserialize_openstorage_api_SdkVolumeCreateFromVolumeIdResponse,
+    requestType: api_pb.SdkVolumeCloneRequest,
+    responseType: api_pb.SdkVolumeCloneResponse,
+    requestSerialize: serialize_openstorage_api_SdkVolumeCloneRequest,
+    requestDeserialize: deserialize_openstorage_api_SdkVolumeCloneRequest,
+    responseSerialize: serialize_openstorage_api_SdkVolumeCloneResponse,
+    responseDeserialize: deserialize_openstorage_api_SdkVolumeCloneResponse,
   },
   // Delete a volume
   delete: {

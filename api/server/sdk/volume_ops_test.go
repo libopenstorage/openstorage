@@ -122,7 +122,7 @@ func TestSdkVolumeCreate(t *testing.T) {
 	assert.Equal(t, r.GetVolumeId(), "myid")
 }
 
-func TestSdkVolumeCreateFromVolumeID(t *testing.T) {
+func TestSdkVolumeClone(t *testing.T) {
 
 	// Create server and client connection
 	s := newTestServer(t)
@@ -131,7 +131,7 @@ func TestSdkVolumeCreateFromVolumeID(t *testing.T) {
 	name := "myvol"
 	parentid := "myparent"
 	size := uint64(1234)
-	req := &api.SdkVolumeCreateFromVolumeIdRequest{
+	req := &api.SdkVolumeCloneRequest{
 		Name:     name,
 		ParentId: parentid,
 		Spec: &api.VolumeSpec{
@@ -175,7 +175,7 @@ func TestSdkVolumeCreateFromVolumeID(t *testing.T) {
 	c := api.NewOpenStorageVolumeClient(s.Conn())
 
 	// Get info
-	r, err := c.CreateFromVolumeId(context.Background(), req)
+	r, err := c.Clone(context.Background(), req)
 	assert.NoError(t, err)
 	assert.Equal(t, r.GetVolumeId(), "myid")
 }

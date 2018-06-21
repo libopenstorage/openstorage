@@ -911,15 +911,15 @@
         ]
       }
     },
-    "/v1/volume/createfromid": {
+    "/v1/volume/clone": {
       "post": {
-        "summary": "CreateFromVolumeId creates a new volume cloned from an existing volume",
-        "operationId": "CreateFromVolumeId",
+        "summary": "Clone creates a new volume cloned from an existing volume",
+        "operationId": "Clone",
         "responses": {
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiSdkVolumeCreateFromVolumeIdResponse"
+              "$ref": "#/definitions/apiSdkVolumeCloneResponse"
             }
           }
         },
@@ -929,7 +929,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/apiSdkVolumeCreateFromVolumeIdRequest"
+              "$ref": "#/definitions/apiSdkVolumeCloneRequest"
             }
           }
         ],
@@ -2007,7 +2007,7 @@
         }
       }
     },
-    "apiSdkVolumeCreateFromVolumeIdRequest": {
+    "apiSdkVolumeCloneRequest": {
       "type": "object",
       "properties": {
         "name": {
@@ -2024,7 +2024,7 @@
         }
       }
     },
-    "apiSdkVolumeCreateFromVolumeIdResponse": {
+    "apiSdkVolumeCloneResponse": {
       "type": "object",
       "properties": {
         "volume_id": {
