@@ -355,12 +355,12 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "openstorage.api.SdkVolumeCreateResponse" do
     optional :volume_id, :string, 1
   end
-  add_message "openstorage.api.SdkVolumeCreateFromVolumeIdRequest" do
+  add_message "openstorage.api.SdkVolumeCloneRequest" do
     optional :name, :string, 1
     optional :parent_id, :string, 2
     optional :spec, :message, 3, "openstorage.api.VolumeSpec"
   end
-  add_message "openstorage.api.SdkVolumeCreateFromVolumeIdResponse" do
+  add_message "openstorage.api.SdkVolumeCloneResponse" do
     optional :volume_id, :string, 1
   end
   add_message "openstorage.api.SdkVolumeDeleteRequest" do
@@ -752,8 +752,8 @@ module Openstorage
     SdkVolumeDetachResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeDetachResponse").msgclass
     SdkVolumeCreateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeCreateRequest").msgclass
     SdkVolumeCreateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeCreateResponse").msgclass
-    SdkVolumeCreateFromVolumeIdRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeCreateFromVolumeIdRequest").msgclass
-    SdkVolumeCreateFromVolumeIdResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeCreateFromVolumeIdResponse").msgclass
+    SdkVolumeCloneRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeCloneRequest").msgclass
+    SdkVolumeCloneResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeCloneResponse").msgclass
     SdkVolumeDeleteRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeDeleteRequest").msgclass
     SdkVolumeDeleteResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeDeleteResponse").msgclass
     SdkVolumeInspectRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeInspectRequest").msgclass

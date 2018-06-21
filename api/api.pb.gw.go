@@ -138,15 +138,15 @@ func request_OpenStorageVolume_Create_0(ctx context.Context, marshaler runtime.M
 
 }
 
-func request_OpenStorageVolume_CreateFromVolumeId_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageVolumeClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq SdkVolumeCreateFromVolumeIdRequest
+func request_OpenStorageVolume_Clone_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageVolumeClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SdkVolumeCloneRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.CreateFromVolumeId(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.Clone(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
@@ -1086,7 +1086,7 @@ func RegisterOpenStorageVolumeHandlerClient(ctx context.Context, mux *runtime.Se
 
 	})
 
-	mux.Handle("POST", pattern_OpenStorageVolume_CreateFromVolumeId_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_OpenStorageVolume_Clone_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -1104,14 +1104,14 @@ func RegisterOpenStorageVolumeHandlerClient(ctx context.Context, mux *runtime.Se
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_OpenStorageVolume_CreateFromVolumeId_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_OpenStorageVolume_Clone_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_OpenStorageVolume_CreateFromVolumeId_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_OpenStorageVolume_Clone_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1411,7 +1411,7 @@ func RegisterOpenStorageVolumeHandlerClient(ctx context.Context, mux *runtime.Se
 var (
 	pattern_OpenStorageVolume_Create_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "volume"}, ""))
 
-	pattern_OpenStorageVolume_CreateFromVolumeId_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "volume", "createfromid"}, ""))
+	pattern_OpenStorageVolume_Clone_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "volume", "clone"}, ""))
 
 	pattern_OpenStorageVolume_Delete_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "volume", "volume_id"}, ""))
 
@@ -1437,7 +1437,7 @@ var (
 var (
 	forward_OpenStorageVolume_Create_0 = runtime.ForwardResponseMessage
 
-	forward_OpenStorageVolume_CreateFromVolumeId_0 = runtime.ForwardResponseMessage
+	forward_OpenStorageVolume_Clone_0 = runtime.ForwardResponseMessage
 
 	forward_OpenStorageVolume_Delete_0 = runtime.ForwardResponseMessage
 

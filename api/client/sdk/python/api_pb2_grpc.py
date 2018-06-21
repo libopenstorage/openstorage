@@ -129,10 +129,10 @@ class OpenStorageVolumeStub(object):
         request_serializer=api__pb2.SdkVolumeCreateRequest.SerializeToString,
         response_deserializer=api__pb2.SdkVolumeCreateResponse.FromString,
         )
-    self.CreateFromVolumeId = channel.unary_unary(
-        '/openstorage.api.OpenStorageVolume/CreateFromVolumeId',
-        request_serializer=api__pb2.SdkVolumeCreateFromVolumeIdRequest.SerializeToString,
-        response_deserializer=api__pb2.SdkVolumeCreateFromVolumeIdResponse.FromString,
+    self.Clone = channel.unary_unary(
+        '/openstorage.api.OpenStorageVolume/Clone',
+        request_serializer=api__pb2.SdkVolumeCloneRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkVolumeCloneResponse.FromString,
         )
     self.Delete = channel.unary_unary(
         '/openstorage.api.OpenStorageVolume/Delete',
@@ -197,8 +197,8 @@ class OpenStorageVolumeServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def CreateFromVolumeId(self, request, context):
-    """CreateFromVolumeId creates a new volume cloned from an existing volume
+  def Clone(self, request, context):
+    """Clone creates a new volume cloned from an existing volume
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -283,10 +283,10 @@ def add_OpenStorageVolumeServicer_to_server(servicer, server):
           request_deserializer=api__pb2.SdkVolumeCreateRequest.FromString,
           response_serializer=api__pb2.SdkVolumeCreateResponse.SerializeToString,
       ),
-      'CreateFromVolumeId': grpc.unary_unary_rpc_method_handler(
-          servicer.CreateFromVolumeId,
-          request_deserializer=api__pb2.SdkVolumeCreateFromVolumeIdRequest.FromString,
-          response_serializer=api__pb2.SdkVolumeCreateFromVolumeIdResponse.SerializeToString,
+      'Clone': grpc.unary_unary_rpc_method_handler(
+          servicer.Clone,
+          request_deserializer=api__pb2.SdkVolumeCloneRequest.FromString,
+          response_serializer=api__pb2.SdkVolumeCloneResponse.SerializeToString,
       ),
       'Delete': grpc.unary_unary_rpc_method_handler(
           servicer.Delete,
