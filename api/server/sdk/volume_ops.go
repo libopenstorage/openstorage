@@ -128,11 +128,11 @@ func (s *VolumeServer) Create(
 	}, nil
 }
 
-// CreateFromVolumeID creates a new volume from an existing volume
-func (s *VolumeServer) CreateFromVolumeId(
+// Clone creates a new volume from an existing volume
+func (s *VolumeServer) Clone(
 	ctx context.Context,
-	req *api.SdkVolumeCreateFromVolumeIdRequest,
-) (*api.SdkVolumeCreateFromVolumeIdResponse, error) {
+	req *api.SdkVolumeCloneRequest,
+) (*api.SdkVolumeCloneResponse, error) {
 
 	if len(req.GetName()) == 0 {
 		return nil, status.Error(
@@ -161,7 +161,7 @@ func (s *VolumeServer) CreateFromVolumeId(
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &api.SdkVolumeCreateFromVolumeIdResponse{
+	return &api.SdkVolumeCloneResponse{
 		VolumeId: id,
 	}, nil
 }
