@@ -866,57 +866,28 @@ service OpenStorageCredentials {
   // Provide credentials to OpenStorage and if valid,
   // it will return an identifier to the credentials
 
-  // Create credential for AWS S3 and if valid ,
-  // returns a unique identifier
-  rpc CreateForAWS(SdkCredentialCreateAWSRequest)
-    returns (SdkCredentialCreateAWSResponse) {
+  // Create cloud credentials
+  rpc Create(SdkCredentialCreateRequest)
+    returns (SdkCredentialCreateResponse) {
       option(google.api.http) = {
-        post: "/v1/credentials/aws"
+        post: "/v1/credentials"
         body: "*"
       };
     }
 
-  // Create credential for Azure and if valid ,
-  // returns a unique identifier
-  rpc CreateForAzure(SdkCredentialCreateAzureRequest)
-    returns (SdkCredentialCreateAzureResponse) {
+  // Enumerate returns a list of credential ids
+  rpc Enumerate(SdkCredentialEnumerateRequest)
+    returns (SdkCredentialEnumerateResponse) {
       option(google.api.http) = {
-        post: "/v1/credentials/azure"
-        body: "*"
+        get: "/v1/credentials"
       };
     }
 
-  // Create credential for Google and if valid ,
-  // returns a unique identifier
-  rpc CreateForGoogle(SdkCredentialCreateGoogleRequest)
-    returns (SdkCredentialCreateGoogleResponse) {
+  // Inspect returns the information about a credential
+  rpc Inspect(SdkCredentialInspectRequest)
+    returns (SdkCredentialInspectResponse) {
       option(google.api.http) = {
-        post: "/v1/credentials/google"
-        body: "*"
-      };
-    }
-
-  // EnumerateForAWS lists the configured AWS credentials
-  rpc EnumerateForAWS(SdkCredentialEnumerateAWSRequest)
-    returns (SdkCredentialEnumerateAWSResponse) {
-      option(google.api.http) = {
-        get: "/v1/credentials/aws"
-      };
-    }
-
-  // EnumerateForAzure lists the configured Azure credentials
-  rpc EnumerateForAzure(SdkCredentialEnumerateAzureRequest)
-    returns (SdkCredentialEnumerateAzureResponse) {
-      option(google.api.http) = {
-        get: "/v1/credentials/azure"
-      };
-    }
-
-  // EnumerateForGoogle lists the configured Google credentials
-  rpc EnumerateForGoogle(SdkCredentialEnumerateGoogleRequest)
-    returns (SdkCredentialEnumerateGoogleResponse) {
-      option(google.api.http) = {
-        get: "/v1/credentials/google"
+        get: "/v1/credentials/{credential_id}"
       };
     }
 
@@ -924,9 +895,7 @@ service OpenStorageCredentials {
   rpc Delete(SdkCredentialDeleteRequest)
     returns (SdkCredentialDeleteResponse){
       option(google.api.http) = {
-        // Use credentials/delete/{id} so that it does not have
-        // any collisions with azure, google, or aws.
-        delete: "/v1/credentials/delete/{credential_id}"
+        delete: "/v1/credentials/{credential_id}"
       };
     }
 
@@ -934,8 +903,7 @@ service OpenStorageCredentials {
   rpc Validate(SdkCredentialValidateRequest)
     returns (SdkCredentialValidateResponse) {
       option(google.api.http) = {
-        post: "/v1/credentials/validate"
-        body: "*"
+        get: "/v1/credentials/validate/{credential_id}"
       };
     }
 }
@@ -1112,94 +1080,90 @@ message SdkSchedulePolicy {
   string schedule = 2;
 }
 
-message SdkCredentialCreateAzureRequest {
-  // Azure Credential
-  AzureCredential credential = 1;
+message SdkCredentialCreateRequest {
+  oneof credential_type {
+    SdkAwsCredentialRequest aws_credential = 1;
+    SdkAzureCredentialRequest azure_credential = 2;
+    SdkGoogleCredentialRequest google_credential = 3;
+  }
 }
 
-message SdkCredentialCreateAzureResponse {
+message SdkCredentialCreateResponse {
   // Id of the credentials
   string credential_id = 1;
 }
 
-message SdkCredentialCreateGoogleRequest {
-  // Google Credential
-  GoogleCredential credential = 1;
+message SdkAwsCredentialRequest {
+  // Access key
+  string access_key = 1;
+  // Secret key
+  string secret_key = 2;
+  // Endpoint
+  string endpoint = 3;
+  // Region
+  string region = 4;
 }
 
-message SdkCredentialCreateGoogleResponse {
-  // Id of the credentials
-  string credential_id = 1;
+message SdkAzureCredentialRequest {
+  // Account name
+  string account_name = 1;
+  // Account key
+  string account_key = 2;
 }
 
-message SdkCredentialCreateAWSRequest {
-  // AWS S3 Credential
-  S3Credential credential = 1;
+message SdkGoogleCredentialRequest {
+  // Project ID
+  string project_id = 1;
+  // JSON Key
+  string json_key = 2;
 }
 
-message SdkCredentialCreateAWSResponse {
-  // Id of the credentials
-  string credential_id = 1;
-}
-
-message S3Credential{
-  // Id of the credentials
+message SdkAwsCredentialResponse {
+  // Credential Id
   string credential_id = 1;
   // Access key
   string access_key = 2;
-  // Secret key
-  string secret_key = 3;
   // Endpoint
-  string endpoint = 4;
+  string endpoint = 3;
   // Region
-  string region = 5;
+  string region = 4;
 }
 
-message AzureCredential {
-  // Cred Type
+message SdkAzureCredentialResponse {
+  // Credential Id
   string credential_id = 1;
   // Account name
   string account_name = 2;
-  // Account key
-  string account_key = 3;
 }
 
-message GoogleCredential {
+message SdkGoogleCredentialResponse {
+  // Credential Id
   string credential_id = 1;
   // Project ID
   string project_id = 2;
-  // JSON Key
-  string json_key = 3;
 }
 
-// should enumerate accept anything?
-message SdkCredentialEnumerateAWSRequest {
-  // Id of the credentials
+message SdkCredentialEnumerateRequest {
+}
+
+message SdkCredentialEnumerateResponse {
+  repeated string credential_ids = 1;
+}
+
+message SdkCredentialInspectRequest {
   string credential_id = 1;
 }
 
-message SdkCredentialEnumerateAWSResponse {
-  // Array of Credentials for AWS
-  repeated S3Credential credential = 1;
+// This response uses OneOf proto style. Depending on your programming language
+// you will need to check if the value of credential_type is one of the ones below.
+message SdkCredentialInspectResponse {
+  oneof credential_type {
+    SdkAwsCredentialResponse aws_credential = 1;
+    SdkAzureCredentialResponse azure_credential = 2;
+    SdkGoogleCredentialResponse google_credential = 3;
+  }
 }
 
-message SdkCredentialEnumerateAzureRequest {
-  string credential_id = 1;
-}
-
-message SdkCredentialEnumerateAzureResponse {
-  // List of Credentials for Azure
-  repeated AzureCredential credential = 1;
-}
-
-message SdkCredentialEnumerateGoogleRequest {
-  string credential_id = 1;
-}
-
-message SdkCredentialEnumerateGoogleResponse {
-  // List of Credentials for Google
-  repeated GoogleCredential credential = 1;
-}
 message SdkCredentialDeleteRequest {
   // ID for credentials
   string credential_id = 1;
