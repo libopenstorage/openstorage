@@ -259,58 +259,58 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :name, :string, 1
     optional :schedule, :string, 2
   end
-  add_message "openstorage.api.SdkCredentialCreateAzureRequest" do
-    optional :credential, :message, 1, "openstorage.api.AzureCredential"
+  add_message "openstorage.api.SdkCredentialCreateRequest" do
+    oneof :credential_type do
+      optional :aws_credential, :message, 1, "openstorage.api.SdkAwsCredentialRequest"
+      optional :azure_credential, :message, 2, "openstorage.api.SdkAzureCredentialRequest"
+      optional :google_credential, :message, 3, "openstorage.api.SdkGoogleCredentialRequest"
+    end
   end
-  add_message "openstorage.api.SdkCredentialCreateAzureResponse" do
+  add_message "openstorage.api.SdkCredentialCreateResponse" do
     optional :credential_id, :string, 1
   end
-  add_message "openstorage.api.SdkCredentialCreateGoogleRequest" do
-    optional :credential, :message, 1, "openstorage.api.GoogleCredential"
+  add_message "openstorage.api.SdkAwsCredentialRequest" do
+    optional :access_key, :string, 1
+    optional :secret_key, :string, 2
+    optional :endpoint, :string, 3
+    optional :region, :string, 4
   end
-  add_message "openstorage.api.SdkCredentialCreateGoogleResponse" do
-    optional :credential_id, :string, 1
+  add_message "openstorage.api.SdkAzureCredentialRequest" do
+    optional :account_name, :string, 1
+    optional :account_key, :string, 2
   end
-  add_message "openstorage.api.SdkCredentialCreateAWSRequest" do
-    optional :credential, :message, 1, "openstorage.api.S3Credential"
+  add_message "openstorage.api.SdkGoogleCredentialRequest" do
+    optional :project_id, :string, 1
+    optional :json_key, :string, 2
   end
-  add_message "openstorage.api.SdkCredentialCreateAWSResponse" do
-    optional :credential_id, :string, 1
-  end
-  add_message "openstorage.api.S3Credential" do
+  add_message "openstorage.api.SdkAwsCredentialResponse" do
     optional :credential_id, :string, 1
     optional :access_key, :string, 2
-    optional :secret_key, :string, 3
-    optional :endpoint, :string, 4
-    optional :region, :string, 5
+    optional :endpoint, :string, 3
+    optional :region, :string, 4
   end
-  add_message "openstorage.api.AzureCredential" do
+  add_message "openstorage.api.SdkAzureCredentialResponse" do
     optional :credential_id, :string, 1
     optional :account_name, :string, 2
-    optional :account_key, :string, 3
   end
-  add_message "openstorage.api.GoogleCredential" do
+  add_message "openstorage.api.SdkGoogleCredentialResponse" do
     optional :credential_id, :string, 1
     optional :project_id, :string, 2
-    optional :json_key, :string, 3
   end
-  add_message "openstorage.api.SdkCredentialEnumerateAWSRequest" do
+  add_message "openstorage.api.SdkCredentialEnumerateRequest" do
+  end
+  add_message "openstorage.api.SdkCredentialEnumerateResponse" do
+    repeated :credential_ids, :string, 1
+  end
+  add_message "openstorage.api.SdkCredentialInspectRequest" do
     optional :credential_id, :string, 1
   end
-  add_message "openstorage.api.SdkCredentialEnumerateAWSResponse" do
-    repeated :credential, :message, 1, "openstorage.api.S3Credential"
-  end
-  add_message "openstorage.api.SdkCredentialEnumerateAzureRequest" do
-    optional :credential_id, :string, 1
-  end
-  add_message "openstorage.api.SdkCredentialEnumerateAzureResponse" do
-    repeated :credential, :message, 1, "openstorage.api.AzureCredential"
-  end
-  add_message "openstorage.api.SdkCredentialEnumerateGoogleRequest" do
-    optional :credential_id, :string, 1
-  end
-  add_message "openstorage.api.SdkCredentialEnumerateGoogleResponse" do
-    repeated :credential, :message, 1, "openstorage.api.GoogleCredential"
+  add_message "openstorage.api.SdkCredentialInspectResponse" do
+    oneof :credential_type do
+      optional :aws_credential, :message, 1, "openstorage.api.SdkAwsCredentialResponse"
+      optional :azure_credential, :message, 2, "openstorage.api.SdkAzureCredentialResponse"
+      optional :google_credential, :message, 3, "openstorage.api.SdkGoogleCredentialResponse"
+    end
   end
   add_message "openstorage.api.SdkCredentialDeleteRequest" do
     optional :credential_id, :string, 1
@@ -723,21 +723,18 @@ module Openstorage
     SdkSchedulePolicyDeleteRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkSchedulePolicyDeleteRequest").msgclass
     SdkSchedulePolicyDeleteResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkSchedulePolicyDeleteResponse").msgclass
     SdkSchedulePolicy = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkSchedulePolicy").msgclass
-    SdkCredentialCreateAzureRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCredentialCreateAzureRequest").msgclass
-    SdkCredentialCreateAzureResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCredentialCreateAzureResponse").msgclass
-    SdkCredentialCreateGoogleRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCredentialCreateGoogleRequest").msgclass
-    SdkCredentialCreateGoogleResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCredentialCreateGoogleResponse").msgclass
-    SdkCredentialCreateAWSRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCredentialCreateAWSRequest").msgclass
-    SdkCredentialCreateAWSResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCredentialCreateAWSResponse").msgclass
-    S3Credential = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.S3Credential").msgclass
-    AzureCredential = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.AzureCredential").msgclass
-    GoogleCredential = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.GoogleCredential").msgclass
-    SdkCredentialEnumerateAWSRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCredentialEnumerateAWSRequest").msgclass
-    SdkCredentialEnumerateAWSResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCredentialEnumerateAWSResponse").msgclass
-    SdkCredentialEnumerateAzureRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCredentialEnumerateAzureRequest").msgclass
-    SdkCredentialEnumerateAzureResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCredentialEnumerateAzureResponse").msgclass
-    SdkCredentialEnumerateGoogleRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCredentialEnumerateGoogleRequest").msgclass
-    SdkCredentialEnumerateGoogleResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCredentialEnumerateGoogleResponse").msgclass
+    SdkCredentialCreateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCredentialCreateRequest").msgclass
+    SdkCredentialCreateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCredentialCreateResponse").msgclass
+    SdkAwsCredentialRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkAwsCredentialRequest").msgclass
+    SdkAzureCredentialRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkAzureCredentialRequest").msgclass
+    SdkGoogleCredentialRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkGoogleCredentialRequest").msgclass
+    SdkAwsCredentialResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkAwsCredentialResponse").msgclass
+    SdkAzureCredentialResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkAzureCredentialResponse").msgclass
+    SdkGoogleCredentialResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkGoogleCredentialResponse").msgclass
+    SdkCredentialEnumerateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCredentialEnumerateRequest").msgclass
+    SdkCredentialEnumerateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCredentialEnumerateResponse").msgclass
+    SdkCredentialInspectRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCredentialInspectRequest").msgclass
+    SdkCredentialInspectResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCredentialInspectResponse").msgclass
     SdkCredentialDeleteRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCredentialDeleteRequest").msgclass
     SdkCredentialDeleteResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCredentialDeleteResponse").msgclass
     SdkCredentialValidateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCredentialValidateRequest").msgclass
