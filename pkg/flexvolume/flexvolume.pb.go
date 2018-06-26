@@ -26,7 +26,7 @@ var _ = math.Inf
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type AttachRequest struct {
-	JsonOptions          map[string]string `protobuf:"bytes,1,rep,name=json_options,json=jsonOptions,proto3" json:"json_options,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	JsonOptions          map[string]string `protobuf:"bytes,1,rep,name=json_options,json=jsonOptions" json:"json_options,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -64,7 +64,7 @@ func (m *AttachRequest) GetJsonOptions() map[string]string {
 }
 
 type DetachRequest struct {
-	MountDevice          string   `protobuf:"bytes,1,opt,name=mount_device,json=mountDevice,proto3" json:"mount_device,omitempty"`
+	MountDevice          string   `protobuf:"bytes,1,opt,name=mount_device,json=mountDevice" json:"mount_device,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -102,9 +102,9 @@ func (m *DetachRequest) GetMountDevice() string {
 }
 
 type MountRequest struct {
-	TargetMountDir       string            `protobuf:"bytes,1,opt,name=target_mount_dir,json=targetMountDir,proto3" json:"target_mount_dir,omitempty"`
-	MountDevice          string            `protobuf:"bytes,2,opt,name=mount_device,json=mountDevice,proto3" json:"mount_device,omitempty"`
-	JsonOptions          map[string]string `protobuf:"bytes,3,rep,name=json_options,json=jsonOptions,proto3" json:"json_options,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	TargetMountDir       string            `protobuf:"bytes,1,opt,name=target_mount_dir,json=targetMountDir" json:"target_mount_dir,omitempty"`
+	MountDevice          string            `protobuf:"bytes,2,opt,name=mount_device,json=mountDevice" json:"mount_device,omitempty"`
+	JsonOptions          map[string]string `protobuf:"bytes,3,rep,name=json_options,json=jsonOptions" json:"json_options,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -156,7 +156,7 @@ func (m *MountRequest) GetJsonOptions() map[string]string {
 }
 
 type UnmountRequest struct {
-	MountDir             string   `protobuf:"bytes,1,opt,name=mount_dir,json=mountDir,proto3" json:"mount_dir,omitempty"`
+	MountDir             string   `protobuf:"bytes,1,opt,name=mount_dir,json=mountDir" json:"mount_dir,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -210,9 +210,8 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// APIClient is the client API for API service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+// Client API for API service
+
 type APIClient interface {
 	Init(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error)
 	Attach(ctx context.Context, in *AttachRequest, opts ...grpc.CallOption) (*empty.Empty, error)
@@ -231,7 +230,7 @@ func NewAPIClient(cc *grpc.ClientConn) APIClient {
 
 func (c *aPIClient) Init(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error) {
 	out := new(empty.Empty)
-	err := c.cc.Invoke(ctx, "/flexvolume.API/Init", in, out, opts...)
+	err := grpc.Invoke(ctx, "/flexvolume.API/Init", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -240,7 +239,7 @@ func (c *aPIClient) Init(ctx context.Context, in *empty.Empty, opts ...grpc.Call
 
 func (c *aPIClient) Attach(ctx context.Context, in *AttachRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
 	out := new(empty.Empty)
-	err := c.cc.Invoke(ctx, "/flexvolume.API/Attach", in, out, opts...)
+	err := grpc.Invoke(ctx, "/flexvolume.API/Attach", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -249,7 +248,7 @@ func (c *aPIClient) Attach(ctx context.Context, in *AttachRequest, opts ...grpc.
 
 func (c *aPIClient) Detach(ctx context.Context, in *DetachRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
 	out := new(empty.Empty)
-	err := c.cc.Invoke(ctx, "/flexvolume.API/Detach", in, out, opts...)
+	err := grpc.Invoke(ctx, "/flexvolume.API/Detach", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -258,7 +257,7 @@ func (c *aPIClient) Detach(ctx context.Context, in *DetachRequest, opts ...grpc.
 
 func (c *aPIClient) Mount(ctx context.Context, in *MountRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
 	out := new(empty.Empty)
-	err := c.cc.Invoke(ctx, "/flexvolume.API/Mount", in, out, opts...)
+	err := grpc.Invoke(ctx, "/flexvolume.API/Mount", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -267,14 +266,15 @@ func (c *aPIClient) Mount(ctx context.Context, in *MountRequest, opts ...grpc.Ca
 
 func (c *aPIClient) Unmount(ctx context.Context, in *UnmountRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
 	out := new(empty.Empty)
-	err := c.cc.Invoke(ctx, "/flexvolume.API/Unmount", in, out, opts...)
+	err := grpc.Invoke(ctx, "/flexvolume.API/Unmount", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// APIServer is the server API for API service.
+// Server API for API service
+
 type APIServer interface {
 	Init(context.Context, *empty.Empty) (*empty.Empty, error)
 	Attach(context.Context, *AttachRequest) (*empty.Empty, error)

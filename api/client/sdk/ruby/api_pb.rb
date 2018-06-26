@@ -227,7 +227,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :status, :enum, 1, "openstorage.api.Status"
     optional :id, :string, 2
     optional :node_id, :string, 3
-    repeated :nodes, :message, 4, "openstorage.api.StorageNode"
+    repeated :node_ids, :string, 4
   end
   add_message "openstorage.api.SdkSchedulePolicyCreateRequest" do
     optional :SchedulePolicy, :message, 1, "openstorage.api.SdkSchedulePolicy"
@@ -378,7 +378,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :locator, :message, 1, "openstorage.api.VolumeLocator"
   end
   add_message "openstorage.api.SdkVolumeEnumerateResponse" do
-    repeated :volumes, :message, 1, "openstorage.api.Volume"
+    repeated :volume_ids, :string, 1
   end
   add_message "openstorage.api.SdkVolumeSnapshotCreateRequest" do
     optional :volume_id, :string, 1
@@ -398,7 +398,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     map :labels, :string, :string, 2
   end
   add_message "openstorage.api.SdkVolumeSnapshotEnumerateResponse" do
-    repeated :snapshots, :message, 1, "openstorage.api.Volume"
+    repeated :volume_snapshot_ids, :string, 1
   end
   add_message "openstorage.api.SdkClusterEnumerateRequest" do
   end
@@ -417,7 +417,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :resource, :enum, 3, "openstorage.api.ResourceType"
   end
   add_message "openstorage.api.SdkClusterAlertEnumerateResponse" do
-    optional :alerts, :message, 1, "openstorage.api.Alerts"
+    repeated :alerts, :message, 1, "openstorage.api.Alert"
   end
   add_message "openstorage.api.SdkClusterAlertClearRequest" do
     optional :resource, :enum, 1, "openstorage.api.ResourceType"
@@ -499,7 +499,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :status, :enum, 6, "openstorage.api.SdkCloudBackupStatusType"
   end
   add_message "openstorage.api.SdkCloudBackupEnumerateResponse" do
-    repeated :backups, :message, 1, "openstorage.api.SdkCloudBackupInfo"
+    repeated :backup_ids, :string, 1
   end
   add_message "openstorage.api.SdkCloudBackupStatus" do
     optional :backup_id, :string, 1

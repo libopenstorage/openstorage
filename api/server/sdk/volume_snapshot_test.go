@@ -196,7 +196,7 @@ func TestSdkVolumeSnapshotEnumerate(t *testing.T) {
 	// Get info
 	r, err := c.SnapshotEnumerate(context.Background(), req)
 	assert.NoError(t, err)
-	assert.NotNil(t, r.GetSnapshots())
-	assert.Len(t, r.GetSnapshots(), 1)
-	assert.Equal(t, r.GetSnapshots()[0].Id, snapid)
+	assert.NotNil(t, r.GetVolumeSnapshotIds())
+	assert.Len(t, r.GetVolumeSnapshotIds(), 1)
+	assert.Equal(t, r.GetVolumeSnapshotIds()[0], snapid)
 }

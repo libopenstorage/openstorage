@@ -329,20 +329,11 @@ func TestSdkCloudBackupEnumerate(t *testing.T) {
 	// Get info
 	r, err := c.Enumerate(context.Background(), req)
 	assert.NoError(t, err)
-	assert.NotNil(t, r.GetBackups())
-	assert.Len(t, r.GetBackups(), 2)
+	assert.NotNil(t, r.GetBackupIds())
+	assert.Len(t, r.GetBackupIds(), 2)
 
-	for i, v := range list.Backups {
-		assert.Equal(t, r.Backups[i].GetId(), v.ID)
-		assert.Equal(t, r.Backups[i].GetSrcVolumeId(), v.SrcVolumeID)
-		assert.Equal(t, r.Backups[i].GetSrcVolumeName(), v.SrcVolumeName)
-		assert.Equal(t,
-			r.Backups[i].GetStatus(),
-			api.StringToSdkCloudBackupStatusType(v.Status))
-		assert.True(t, reflect.DeepEqual(r.Backups[i].GetMetadata(), v.Metadata))
-		ts, err := ptypes.TimestampProto(v.Timestamp)
-		assert.NoError(t, err)
-		assert.Equal(t, r.Backups[i].Timestamp, ts)
+	for i, backup := range list.Backups {
+		assert.Equal(t, r.BackupIds[i], backup.ID)
 	}
 }
 

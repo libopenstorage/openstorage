@@ -239,7 +239,12 @@ func (s *VolumeServer) Enumerate(
 			err.Error())
 	}
 
+	ids := make([]string, len(vols))
+	for i, vol := range vols {
+		ids[i] = vol.GetId()
+	}
+
 	return &api.SdkVolumeEnumerateResponse{
-		Volumes: vols,
+		VolumeIds: ids,
 	}, nil
 }

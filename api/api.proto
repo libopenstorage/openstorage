@@ -669,7 +669,7 @@ message StorageCluster {
   // NodeId is the id of the node servicing these requests
   string node_id = 3;
   // Nodes are a list of all the nodes on the cluster
-  repeated StorageNode nodes = 4;
+  repeated string node_ids = 4;
 }
 
 service OpenStorageCluster {
@@ -1312,7 +1312,7 @@ message SdkVolumeEnumerateRequest {
 
 message SdkVolumeEnumerateResponse {
   // List of volumes matching label
-  repeated Volume volumes = 1;
+  repeated string volume_ids = 1;
 }
 
 message SdkVolumeSnapshotCreateRequest{
@@ -1346,7 +1346,7 @@ message SdkVolumeSnapshotEnumerateRequest {
 
 message SdkVolumeSnapshotEnumerateResponse {
   // List of immutable snapshots
-  repeated Volume snapshots = 1;
+  repeated string volume_snapshot_ids = 1;
 }
 
 message SdkClusterEnumerateRequest {
@@ -1378,7 +1378,7 @@ message SdkClusterAlertEnumerateRequest {
 
 message SdkClusterAlertEnumerateResponse {
   // Information on the alerts requested
-  Alerts alerts = 1;
+  repeated Alert alerts = 1;
 }
 
 message SdkClusterAlertClearRequest {
@@ -1521,7 +1521,7 @@ message SdkCloudBackupInfo {
 }
 
 message SdkCloudBackupEnumerateResponse {
-  repeated SdkCloudBackupInfo backups = 1;
+  repeated string backup_ids = 1;
 }
 
 enum SdkCloudBackupOpType {

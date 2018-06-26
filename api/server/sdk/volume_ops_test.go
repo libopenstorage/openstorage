@@ -316,7 +316,7 @@ func TestSdkVolumeEnumerate(t *testing.T) {
 	// Get info
 	r, err := c.Enumerate(context.Background(), &api.SdkVolumeEnumerateRequest{})
 	assert.NoError(t, err)
-	assert.NotNil(t, r.GetVolumes())
-	assert.Len(t, r.GetVolumes(), 1)
-	assert.Equal(t, r.GetVolumes()[0].GetId(), id)
+	assert.NotNil(t, r.GetVolumeIds())
+	assert.Len(t, r.GetVolumeIds(), 1)
+	assert.Equal(t, r.GetVolumeIds()[0], id)
 }

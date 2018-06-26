@@ -93,7 +93,7 @@ func (s *ClusterServer) AlertEnumerate(
 	}
 
 	return &api.SdkClusterAlertEnumerateResponse{
-		Alerts: alerts,
+		Alerts: alerts.Alert,
 	}, nil
 }
 

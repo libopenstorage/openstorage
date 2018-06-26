@@ -1228,18 +1228,6 @@
       },
       "title": "Alert is a structure that represents an alert object\nswagger:model"
     },
-    "apiAlerts": {
-      "type": "object",
-      "properties": {
-        "alert": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/apiAlert"
-          }
-        }
-      },
-      "title": "Alerts is an array of Alert objects\nswagger:model"
-    },
     "apiAttachState": {
       "type": "string",
       "enum": [
@@ -1505,10 +1493,10 @@
     "apiSdkCloudBackupEnumerateResponse": {
       "type": "object",
       "properties": {
-        "backups": {
+        "backup_ids": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/apiSdkCloudBackupInfo"
+            "type": "string"
           }
         }
       }
@@ -1540,39 +1528,6 @@
             "$ref": "#/definitions/apiSdkCloudBackupHistoryItem"
           },
           "title": "HistoryList is list of past backup/restores in the cluster"
-        }
-      }
-    },
-    "apiSdkCloudBackupInfo": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string",
-          "title": "ID is the ID of the cloud backup"
-        },
-        "src_volume_id": {
-          "type": "string",
-          "title": "Source volumeID of the backup"
-        },
-        "src_volume_name": {
-          "type": "string",
-          "title": "Name of the sourceVolume of the backup"
-        },
-        "timestamp": {
-          "type": "string",
-          "format": "date-time",
-          "title": "Timestamp is the timestamp at which the source volume\nwas backed up to cloud"
-        },
-        "metadata": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "title": "Metadata associated with the backup"
-        },
-        "status": {
-          "$ref": "#/definitions/apiSdkCloudBackupStatusType",
-          "title": "Status indicates the status of the backup"
         }
       }
     },
@@ -1746,7 +1701,10 @@
       "type": "object",
       "properties": {
         "alerts": {
-          "$ref": "#/definitions/apiAlerts",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiAlert"
+          },
           "title": "Information on the alerts requested"
         }
       }
@@ -2082,10 +2040,10 @@
     "apiSdkVolumeEnumerateResponse": {
       "type": "object",
       "properties": {
-        "volumes": {
+        "volume_ids": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/apiVolume"
+            "type": "string"
           },
           "title": "List of volumes matching label"
         }
@@ -2167,10 +2125,10 @@
     "apiSdkVolumeSnapshotEnumerateResponse": {
       "type": "object",
       "properties": {
-        "snapshots": {
+        "volume_snapshot_ids": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/apiVolume"
+            "type": "string"
           },
           "title": "List of immutable snapshots"
         }
@@ -2276,10 +2234,10 @@
           "type": "string",
           "title": "NodeId is the id of the node servicing these requests"
         },
-        "nodes": {
+        "node_ids": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/apiStorageNode"
+            "type": "string"
           },
           "title": "Nodes are a list of all the nodes on the cluster"
         }
