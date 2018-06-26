@@ -121,7 +121,7 @@ func testRestServer(t *testing.T) (*httptest.Server, *testServer) {
 
 func testClusterServer(t *testing.T) (*httptest.Server, *testCluster) {
 	tc := newTestCluster(t)
-	capi := newClusterAPI(ClusterServerConfiguration{
+	capi := newClusterAPI(cluster.ClusterServerConfiguration{
 		ConfigSecretManager:      tc.sm,
 		ConfigSchedManager:       tc.sp,
 		ConfigObjectStoreManager: tc.os,
