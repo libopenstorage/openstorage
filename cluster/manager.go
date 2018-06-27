@@ -50,25 +50,25 @@ var (
 // ClusterManager implements the cluster interface
 type ClusterManager struct {
 	secrets.Secrets
-	objectstore.ObjectStore
 
-	size          int
-	listeners     *list.List
-	config        config.ClusterConfig
-	kv            kvdb.Kvdb
-	status        api.Status
-	nodeCache     map[string]api.Node // Cached info on the nodes in the cluster.
-	nodeCacheLock sync.Mutex
-	nodeStatuses  map[string]api.Status // Set of nodes currently marked down.
-	gossip        gossip.Gossiper
-	gossipVersion string
-	gossipPort    string
-	gEnabled      bool
-	selfNode      api.Node
-	selfNodeLock  sync.Mutex // Lock that guards data and label of selfNode
-	system        systemutils.System
-	configManager osdconfig.ConfigManager
-	schedManager  sched.SchedulePolicyProvider
+	size            int
+	listeners       *list.List
+	config          config.ClusterConfig
+	kv              kvdb.Kvdb
+	status          api.Status
+	nodeCache       map[string]api.Node // Cached info on the nodes in the cluster.
+	nodeCacheLock   sync.Mutex
+	nodeStatuses    map[string]api.Status // Set of nodes currently marked down.
+	gossip          gossip.Gossiper
+	gossipVersion   string
+	gossipPort      string
+	gEnabled        bool
+	selfNode        api.Node
+	selfNodeLock    sync.Mutex // Lock that guards data and label of selfNode
+	system          systemutils.System
+	configManager   osdconfig.ConfigManager
+	schedManager    sched.SchedulePolicyProvider
+	objstoreManager objectstore.ObjectStore
 }
 
 type checkFunc func(ClusterInfo) error
@@ -1738,4 +1738,20 @@ func (c *ClusterManager) SchedPolicyEnumerate() ([]*sched.SchedPolicy, error) {
 
 func (c *ClusterManager) SchedPolicyGet(name string) (*sched.SchedPolicy, error) {
 	return c.schedManager.SchedPolicyGet(name)
+}
+
+func (c *ClusterManager) ObjectStoreInspect(objectstoreID string) (*api.ObjectstoreInfo, error) {
+	return c.objstoreManager.ObjectStoreInspect(objectstoreID)
+}
+
+func (c *ClusterManager) ObjectStoreCreate(volumeID string) (*api.ObjectstoreInfo, error) {
+	return c.objstoreManager.ObjectStoreCreate(volumeID)
+}
+
+func (c *ClusterManager) ObjectStoreUpdate(objectstoreID string, enable bool) error {
+	return c.objstoreManager.ObjectStoreUpdate(objectstoreID, enable)
+}
+
+func (c *ClusterManager) ObjectStoreDelete(objectstoreID string) error {
+	return c.objstoreManager.ObjectStoreDelete(objectstoreID)
 }
