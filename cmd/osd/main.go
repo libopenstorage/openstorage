@@ -43,6 +43,7 @@ import (
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/csi"
 	"github.com/libopenstorage/openstorage/graph/drivers"
+	"github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
 	"github.com/portworx/kvdb"
@@ -298,7 +299,14 @@ func start(c *cli.Context) error {
 		if err != nil {
 			return fmt.Errorf("Unable to find cluster instance: %v", err)
 		}
-		if err := cm.Start(0, false, "9002"); err != nil {
+		if err := cm.StartWithConfiguration(
+			0,
+			false,
+			"9002",
+			&cluster.ClusterServerConfiguration{
+				ConfigSchedManager: schedpolicy.NewFakeScheduler(),
+			},
+		); err != nil {
 			return fmt.Errorf("Unable to start cluster manager: %v", err)
 		}
 	}

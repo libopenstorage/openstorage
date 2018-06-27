@@ -31,11 +31,7 @@ type fakeSchedMgr struct {
 	kv kvdb.Kvdb
 }
 
-func NewDefaultSchedulePolicy() SchedulePolicyProvider {
-	return newFakeSchedManager()
-}
-
-func newFakeSchedManager() *fakeSchedMgr {
+func NewFakeScheduler() *fakeSchedMgr {
 	// This instance of the KVDB is Always in memory and created for each instance of the fake driver
 	// It is not necessary to run a single instance, and it helps tests create a new kvdb on each test
 	kv, err := kvdb.New(mem.Name, "fake_sched", []string{}, nil, logrus.Panicf)

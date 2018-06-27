@@ -145,6 +145,10 @@ func (c *clusterClient) Start(int, bool, string) error {
 	return nil
 }
 
+func (c *clusterClient) StartWithConfiguration(int, bool, string, *cluster.ClusterServerConfiguration) error {
+	return nil
+}
+
 func (c *clusterClient) DisableUpdates() error {
 	c.c.Put().Resource(clusterPath + "/disablegossip").Do()
 	return nil
