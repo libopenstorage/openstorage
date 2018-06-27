@@ -1733,7 +1733,7 @@
     "apiSdkObjectstoreCreateRequest": {
       "type": "object",
       "properties": {
-        "volume_name": {
+        "volume_id": {
           "type": "string",
           "title": "Volume on which objectstore will be running"
         }
