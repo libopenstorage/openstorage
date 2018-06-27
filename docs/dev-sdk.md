@@ -57,4 +57,17 @@ To do a functional test using the `fake` driver, do the following:
     * Go to http://127.0.0.1:9110/swagger-ui then click on the command you want to try, then click on `Try it now`.
     * Change or adjust the input request as needed, then click on the `Execute` command.
     * Inspect the response from the server.
+    
+## Dealing with conflicts on generated files
+When rebasing files you may get conflicts on generated files. If you do, just accept the incoming generated files (referred by git as `--ours`) then once all the rebases are done, regenerate again, and commit.
+
+Here are the commands you may need:
+
+```
+$ git rebase master
+<-- Conflicts. For each conflict on a generated file, repeat: -->
+$ git checkout --ours <file with conflict>
+$ git add <file with conflict>
+$ git rebase --continue
+```
 
