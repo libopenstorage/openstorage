@@ -34,22 +34,24 @@ func TestSdkAWSCredentialCreateSuccess(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.SdkCredentialCreateAWSRequest{
-		Credential: &api.S3Credential{
-			AccessKey: "dummy-access",
-			SecretKey: "dummy-secret",
-			Endpoint:  "dummy-endpoint",
-			Region:    "dummy-region",
+	req := &api.SdkCredentialCreateRequest{
+		CredentialType: &api.SdkCredentialCreateRequest_AwsCredential{
+			AwsCredential: &api.SdkAwsCredentialRequest{
+				AccessKey: "dummy-access",
+				SecretKey: "dummy-secret",
+				Endpoint:  "dummy-endpoint",
+				Region:    "dummy-region",
+			},
 		},
 	}
 
 	params := make(map[string]string)
 
 	params[api.OptCredType] = "s3"
-	params[api.OptCredRegion] = req.GetCredential().GetRegion()
-	params[api.OptCredEndpoint] = req.GetCredential().GetEndpoint()
-	params[api.OptCredAccessKey] = req.GetCredential().GetAccessKey()
-	params[api.OptCredSecretKey] = req.GetCredential().GetSecretKey()
+	params[api.OptCredRegion] = req.GetAwsCredential().GetRegion()
+	params[api.OptCredEndpoint] = req.GetAwsCredential().GetEndpoint()
+	params[api.OptCredAccessKey] = req.GetAwsCredential().GetAccessKey()
+	params[api.OptCredSecretKey] = req.GetAwsCredential().GetSecretKey()
 
 	uuid := "good-uuid"
 	s.MockDriver().
@@ -62,35 +64,38 @@ func TestSdkAWSCredentialCreateSuccess(t *testing.T) {
 		CredsValidate(uuid).
 		Return(nil)
 
-		// Setup client
+	// Setup client
 	c := api.NewOpenStorageCredentialsClient(s.Conn())
 
 	// Create AWS Credentials
-	_, err := c.CreateForAWS(context.Background(), req)
+	_, err := c.Create(context.Background(), req)
 	assert.NoError(t, err)
 }
+
 func TestSdkAWSCredentialCreateFailed(t *testing.T) {
 
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.SdkCredentialCreateAWSRequest{
-		Credential: &api.S3Credential{
-			AccessKey: "dummy-access",
-			SecretKey: "dummy-secret",
-			Endpoint:  "dummy-endpoint",
-			Region:    "dummy-region",
+	req := &api.SdkCredentialCreateRequest{
+		CredentialType: &api.SdkCredentialCreateRequest_AwsCredential{
+			AwsCredential: &api.SdkAwsCredentialRequest{
+				AccessKey: "dummy-access",
+				SecretKey: "dummy-secret",
+				Endpoint:  "dummy-endpoint",
+				Region:    "dummy-region",
+			},
 		},
 	}
 
 	params := make(map[string]string)
 
 	params[api.OptCredType] = "s3"
-	params[api.OptCredRegion] = req.GetCredential().GetRegion()
-	params[api.OptCredEndpoint] = req.GetCredential().GetEndpoint()
-	params[api.OptCredAccessKey] = req.GetCredential().GetAccessKey()
-	params[api.OptCredSecretKey] = req.GetCredential().GetSecretKey()
+	params[api.OptCredRegion] = req.GetAwsCredential().GetRegion()
+	params[api.OptCredEndpoint] = req.GetAwsCredential().GetEndpoint()
+	params[api.OptCredAccessKey] = req.GetAwsCredential().GetAccessKey()
+	params[api.OptCredSecretKey] = req.GetAwsCredential().GetSecretKey()
 
 	uuid := "bad-uuid"
 	s.MockDriver().
@@ -108,11 +113,11 @@ func TestSdkAWSCredentialCreateFailed(t *testing.T) {
 		CredsDelete(uuid).
 		Return(nil)
 
-		// Setup client
+	// Setup client
 	c := api.NewOpenStorageCredentialsClient(s.Conn())
 
 	// Create Credentials
-	_, err := c.CreateForAWS(context.Background(), req)
+	_, err := c.Create(context.Background(), req)
 	assert.Error(t, err)
 
 	serverError, ok := status.FromError(err)
@@ -127,21 +132,20 @@ func TestSdkAWSCredentialCreateBadArgument(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.SdkCredentialCreateAWSRequest{}
-
-	params := make(map[string]string)
-
-	params[api.OptCredType] = "s3"
-	params[api.OptCredRegion] = req.GetCredential().GetRegion()
-	params[api.OptCredEndpoint] = req.GetCredential().GetEndpoint()
-	params[api.OptCredAccessKey] = req.GetCredential().GetAccessKey()
-	params[api.OptCredSecretKey] = req.GetCredential().GetSecretKey()
+	req := &api.SdkCredentialCreateRequest{
+		CredentialType: &api.SdkCredentialCreateRequest_AwsCredential{
+			AwsCredential: &api.SdkAwsCredentialRequest{
+				Endpoint: "dummy-endpoint",
+				Region:   "dummy-region",
+			},
+		},
+	}
 
 	// Setup client
 	c := api.NewOpenStorageCredentialsClient(s.Conn())
 
 	// Create Credentials
-	_, err := c.CreateForAWS(context.Background(), req)
+	_, err := c.Create(context.Background(), req)
 	assert.Error(t, err)
 
 	serverError, ok := status.FromError(err)
@@ -156,18 +160,20 @@ func TestSdkAzureCredentialCreateSuccess(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.SdkCredentialCreateAzureRequest{
-		Credential: &api.AzureCredential{
-			AccountKey:  "dummy-account-key",
-			AccountName: "dummy-account-name",
+	req := &api.SdkCredentialCreateRequest{
+		CredentialType: &api.SdkCredentialCreateRequest_AzureCredential{
+			AzureCredential: &api.SdkAzureCredentialRequest{
+				AccountKey:  "dummy-account-key",
+				AccountName: "dummy-account-name",
+			},
 		},
 	}
 
 	params := make(map[string]string)
 
 	params[api.OptCredType] = "azure"
-	params[api.OptCredAzureAccountKey] = req.GetCredential().GetAccountKey()
-	params[api.OptCredAzureAccountName] = req.GetCredential().GetAccountName()
+	params[api.OptCredAzureAccountKey] = req.GetAzureCredential().GetAccountKey()
+	params[api.OptCredAzureAccountName] = req.GetAzureCredential().GetAccountName()
 
 	uuid := "good-uuid"
 	s.MockDriver().
@@ -180,11 +186,11 @@ func TestSdkAzureCredentialCreateSuccess(t *testing.T) {
 		CredsValidate(uuid).
 		Return(nil)
 
-		// Setup client
+	// Setup client
 	c := api.NewOpenStorageCredentialsClient(s.Conn())
 
 	// Create Azure Creds
-	_, err := c.CreateForAzure(context.Background(), req)
+	_, err := c.Create(context.Background(), req)
 	assert.NoError(t, err)
 }
 func TestSdkAzureCredentialCreateFailed(t *testing.T) {
@@ -193,18 +199,20 @@ func TestSdkAzureCredentialCreateFailed(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.SdkCredentialCreateAzureRequest{
-		Credential: &api.AzureCredential{
-			AccountKey:  "dummy-account-key",
-			AccountName: "dummy-account-name",
+	req := &api.SdkCredentialCreateRequest{
+		CredentialType: &api.SdkCredentialCreateRequest_AzureCredential{
+			AzureCredential: &api.SdkAzureCredentialRequest{
+				AccountKey:  "dummy-account-key",
+				AccountName: "dummy-account-name",
+			},
 		},
 	}
 
 	params := make(map[string]string)
 
 	params[api.OptCredType] = "azure"
-	params[api.OptCredAzureAccountKey] = req.GetCredential().GetAccountKey()
-	params[api.OptCredAzureAccountName] = req.GetCredential().GetAccountName()
+	params[api.OptCredAzureAccountKey] = req.GetAzureCredential().GetAccountKey()
+	params[api.OptCredAzureAccountName] = req.GetAzureCredential().GetAccountName()
 
 	uuid := "bad-uuid"
 	s.MockDriver().
@@ -222,11 +230,11 @@ func TestSdkAzureCredentialCreateFailed(t *testing.T) {
 		CredsDelete(uuid).
 		Return(nil)
 
-		// Setup client
+	// Setup client
 	c := api.NewOpenStorageCredentialsClient(s.Conn())
 
 	// Create Credentials
-	_, err := c.CreateForAzure(context.Background(), req)
+	_, err := c.Create(context.Background(), req)
 	assert.Error(t, err)
 
 	serverError, ok := status.FromError(err)
@@ -241,19 +249,19 @@ func TestSdkAzureCredentialCreateBadArgument(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.SdkCredentialCreateAzureRequest{}
-
-	params := make(map[string]string)
-
-	params[api.OptCredType] = "azure"
-	params[api.OptCredAzureAccountKey] = req.GetCredential().GetAccountKey()
-	params[api.OptCredAzureAccountName] = req.GetCredential().GetAccountName()
+	req := &api.SdkCredentialCreateRequest{
+		CredentialType: &api.SdkCredentialCreateRequest_AzureCredential{
+			AzureCredential: &api.SdkAzureCredentialRequest{
+				AccountName: "dummy-account-name",
+			},
+		},
+	}
 
 	// Setup client
 	c := api.NewOpenStorageCredentialsClient(s.Conn())
 
 	// Create Credentials
-	_, err := c.CreateForAzure(context.Background(), req)
+	_, err := c.Create(context.Background(), req)
 	assert.Error(t, err)
 
 	serverError, ok := status.FromError(err)
@@ -267,18 +275,20 @@ func TestSdkGoogleCredentialCreateSuccess(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.SdkCredentialCreateGoogleRequest{
-		Credential: &api.GoogleCredential{
-			ProjectId: "dummy-project-id",
-			JsonKey:   "dummy-json-key",
+	req := &api.SdkCredentialCreateRequest{
+		CredentialType: &api.SdkCredentialCreateRequest_GoogleCredential{
+			GoogleCredential: &api.SdkGoogleCredentialRequest{
+				ProjectId: "dummy-project-id",
+				JsonKey:   "dummy-json-key",
+			},
 		},
 	}
 
 	params := make(map[string]string)
 
 	params[api.OptCredType] = "google"
-	params[api.OptCredGoogleJsonKey] = req.GetCredential().GetJsonKey()
-	params[api.OptCredGoogleProjectID] = req.GetCredential().GetProjectId()
+	params[api.OptCredGoogleJsonKey] = req.GetGoogleCredential().GetJsonKey()
+	params[api.OptCredGoogleProjectID] = req.GetGoogleCredential().GetProjectId()
 
 	uuid := "good-uuid"
 	s.MockDriver().
@@ -291,11 +301,11 @@ func TestSdkGoogleCredentialCreateSuccess(t *testing.T) {
 		CredsValidate(uuid).
 		Return(nil)
 
-		// Setup client
+	// Setup client
 	c := api.NewOpenStorageCredentialsClient(s.Conn())
 
 	// Create Google Credentials
-	_, err := c.CreateForGoogle(context.Background(), req)
+	_, err := c.Create(context.Background(), req)
 	assert.NoError(t, err)
 }
 func TestSdkGoogleCredentialCreateFailed(t *testing.T) {
@@ -304,18 +314,20 @@ func TestSdkGoogleCredentialCreateFailed(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.SdkCredentialCreateGoogleRequest{
-		Credential: &api.GoogleCredential{
-			ProjectId: "dummy-project-id",
-			JsonKey:   "dummy-json-key",
+	req := &api.SdkCredentialCreateRequest{
+		CredentialType: &api.SdkCredentialCreateRequest_GoogleCredential{
+			GoogleCredential: &api.SdkGoogleCredentialRequest{
+				ProjectId: "dummy-project-id",
+				JsonKey:   "dummy-json-key",
+			},
 		},
 	}
 
 	params := make(map[string]string)
 
 	params[api.OptCredType] = "google"
-	params[api.OptCredGoogleJsonKey] = req.GetCredential().GetJsonKey()
-	params[api.OptCredGoogleProjectID] = req.GetCredential().GetProjectId()
+	params[api.OptCredGoogleJsonKey] = req.GetGoogleCredential().GetJsonKey()
+	params[api.OptCredGoogleProjectID] = req.GetGoogleCredential().GetProjectId()
 
 	uuid := "bad-uuid"
 	s.MockDriver().
@@ -333,11 +345,11 @@ func TestSdkGoogleCredentialCreateFailed(t *testing.T) {
 		CredsDelete(uuid).
 		Return(nil)
 
-		// Setup client
+	// Setup client
 	c := api.NewOpenStorageCredentialsClient(s.Conn())
 
 	// Create Credentials
-	_, err := c.CreateForGoogle(context.Background(), req)
+	_, err := c.Create(context.Background(), req)
 	assert.Error(t, err)
 
 	serverError, ok := status.FromError(err)
@@ -352,19 +364,25 @@ func TestSdkGoogleCredentialCreateBadArgument(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.SdkCredentialCreateGoogleRequest{}
+	req := &api.SdkCredentialCreateRequest{
+		CredentialType: &api.SdkCredentialCreateRequest_GoogleCredential{
+			GoogleCredential: &api.SdkGoogleCredentialRequest{
+				ProjectId: "dummy-project-id",
+			},
+		},
+	}
 
 	params := make(map[string]string)
 
 	params[api.OptCredType] = "google"
-	params[api.OptCredGoogleJsonKey] = req.GetCredential().GetJsonKey()
-	params[api.OptCredGoogleProjectID] = req.GetCredential().GetProjectId()
+	params[api.OptCredGoogleJsonKey] = req.GetGoogleCredential().GetJsonKey()
+	params[api.OptCredGoogleProjectID] = req.GetGoogleCredential().GetProjectId()
 
 	// Setup client
 	c := api.NewOpenStorageCredentialsClient(s.Conn())
 
 	// Create Credentials
-	_, err := c.CreateForGoogle(context.Background(), req)
+	_, err := c.Create(context.Background(), req)
 	assert.Error(t, err)
 
 	serverError, ok := status.FromError(err)
@@ -388,7 +406,7 @@ func TestSdkCredentialValidateSuccess(t *testing.T) {
 		CredsValidate(req.GetCredentialId()).
 		Return(nil)
 
-		// Setup client
+	// Setup client
 	c := api.NewOpenStorageCredentialsClient(s.Conn())
 
 	// Validate Created Credentials
@@ -411,7 +429,7 @@ func TestSdkCredentialValidateFailed(t *testing.T) {
 		CredsValidate(req.GetCredentialId()).
 		Return(fmt.Errorf("Failed to Validate Credentials"))
 
-		// Setup client
+	// Setup client
 	c := api.NewOpenStorageCredentialsClient(s.Conn())
 
 	// Validate Created Credentials
@@ -448,13 +466,13 @@ func TestSdkCredentialValidateBadArgument(t *testing.T) {
 
 }
 
-func TestSdkCredentialEnumerateAWSSuccess(t *testing.T) {
+func TestSdkCredentialEnumerate(t *testing.T) {
 
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.SdkCredentialEnumerateAWSRequest{CredentialId: "test"}
+	req := &api.SdkCredentialEnumerateRequest{}
 
 	enumS3test1 := map[string]string{
 		api.OptCredType:      "s3",
@@ -479,8 +497,8 @@ func TestSdkCredentialEnumerateAWSSuccess(t *testing.T) {
 	}
 	enumerateData := map[string]interface{}{
 		"test-cred-uuid1": enumS3test1,
+		"test-cred-uuid2": enumS3test2,
 		"test-cred-uuid3": enumAzure,
-		"test-cred-uui2":  enumS3test2,
 	}
 
 	s.MockDriver().
@@ -488,23 +506,28 @@ func TestSdkCredentialEnumerateAWSSuccess(t *testing.T) {
 		CredsEnumerate().
 		Return(enumerateData, nil)
 
-		// Setup client
+	// Setup client
 	c := api.NewOpenStorageCredentialsClient(s.Conn())
 
 	// Enumerate AWS credentials
-	resp, err := c.EnumerateForAWS(context.Background(), req)
+	resp, err := c.Enumerate(context.Background(), req)
 	assert.NoError(t, err)
 
-	assert.Len(t, resp.GetCredential(), 2)
+	assert.Len(t, resp.GetCredentialIds(), 3)
+	assert.Contains(t, resp.GetCredentialIds(), "test-cred-uuid1")
+	assert.Contains(t, resp.GetCredentialIds(), "test-cred-uuid2")
+	assert.Contains(t, resp.GetCredentialIds(), "test-cred-uuid3")
 }
 
-func TestSdkCredentialEnumerateAWSWithMultipleCredResponseSuccess(t *testing.T) {
+func TestSdkCredentialInspectIdNotFound(t *testing.T) {
 
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.SdkCredentialEnumerateAWSRequest{CredentialId: "test"}
+	req := &api.SdkCredentialInspectRequest{
+		CredentialId: "test",
+	}
 
 	enumS3 := map[string]string{
 		api.OptCredType:      "s3",
@@ -536,50 +559,49 @@ func TestSdkCredentialEnumerateAWSWithMultipleCredResponseSuccess(t *testing.T) 
 		CredsEnumerate().
 		Return(enumerateData, nil)
 
-		// Setup client
+	// Setup client
 	c := api.NewOpenStorageCredentialsClient(s.Conn())
 
-	// Enumerate AWS credentials
-	resp, err := c.EnumerateForAWS(context.Background(), req)
-	assert.NoError(t, err)
-	assert.Len(t, resp.GetCredential(), 1)
+	// Inspect
+	_, err := c.Inspect(context.Background(), req)
+	assert.Error(t, err)
 
-	// Should Return only AWS creds
-	assert.Equal(t, resp.GetCredential()[0].AccessKey, enumS3[api.OptCredAccessKey])
-	assert.Equal(t, resp.GetCredential()[0].Endpoint, enumS3[api.OptCredEndpoint])
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.NotFound)
 }
 
-func TestSdkCredentialEnumerateAWSFailed(t *testing.T) {
+func TestSdkCredentialInspectFailed(t *testing.T) {
 
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.SdkCredentialEnumerateAWSRequest{CredentialId: "test"}
-
-	s.MockDriver().
-		EXPECT().
-		CredsEnumerate().
-		Return(nil, fmt.Errorf("Failed to get credenntials details"))
+	req := &api.SdkCredentialInspectRequest{}
 
 	// Setup client
 	c := api.NewOpenStorageCredentialsClient(s.Conn())
 
-	// EnumerateCredentials for AWS
-	resp, err := c.EnumerateForAWS(context.Background(), req)
-
-	assert.Nil(t, resp)
+	// Inpect
+	_, err := c.Inspect(context.Background(), req)
 	assert.Error(t, err)
 
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "credential id")
 }
 
-func TestSdkCredentialEnumerateAzureSuccess(t *testing.T) {
+func TestSdkCredentialInspect(t *testing.T) {
 
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.SdkCredentialEnumerateAzureRequest{CredentialId: "test"}
+	uuid := "test"
+	req := &api.SdkCredentialInspectRequest{
+		CredentialId: uuid,
+	}
 
 	enumAzure := map[string]string{
 		api.OptCredType:             "azure",
@@ -587,7 +609,7 @@ func TestSdkCredentialEnumerateAzureSuccess(t *testing.T) {
 		api.OptCredAzureAccountKey:  "test-azure-account",
 	}
 	enumerateData := map[string]interface{}{
-		api.OptCredUUID: enumAzure,
+		uuid: enumAzure,
 	}
 
 	s.MockDriver().
@@ -595,93 +617,14 @@ func TestSdkCredentialEnumerateAzureSuccess(t *testing.T) {
 		CredsEnumerate().
 		Return(enumerateData, nil)
 
-		// Setup client
-	c := api.NewOpenStorageCredentialsClient(s.Conn())
-
-	// Enumerate Azure Credentials
-	resp, err := c.EnumerateForAzure(context.Background(), req)
-	assert.NoError(t, err)
-
-	assert.Equal(t, resp.GetCredential()[0].AccountName, enumAzure[api.OptCredAzureAccountName])
-	assert.Equal(t, resp.GetCredential()[0].AccountKey, enumAzure[api.OptCredAzureAccountKey])
-
-}
-
-func TestSdkCredentialEnumerateAzureFailed(t *testing.T) {
-
-	// Create server and client connection
-	s := newTestServer(t)
-	defer s.Stop()
-
-	req := &api.SdkCredentialEnumerateAzureRequest{CredentialId: "test"}
-
-	s.MockDriver().
-		EXPECT().
-		CredsEnumerate().
-		Return(nil, fmt.Errorf("Failed to get credenntials details"))
-
 	// Setup client
 	c := api.NewOpenStorageCredentialsClient(s.Conn())
 
-	// EnumerateCredentials for AWS
-	resp, err := c.EnumerateForAzure(context.Background(), req)
-
-	assert.Nil(t, resp)
-	assert.Error(t, err)
-}
-
-func TestSdkCredentialEnumerateGoogleSuccess(t *testing.T) {
-
-	// Create server and client connection
-	s := newTestServer(t)
-	defer s.Stop()
-
-	req := &api.SdkCredentialEnumerateGoogleRequest{CredentialId: "test"}
-
-	enumGoogle := map[string]string{
-		api.OptCredType:            "google",
-		api.OptCredGoogleProjectID: "test-google-project-id",
-	}
-	enumerateData := map[string]interface{}{
-		api.OptCredUUID: enumGoogle,
-	}
-
-	s.MockDriver().
-		EXPECT().
-		CredsEnumerate().
-		Return(enumerateData, nil)
-
-		// Setup client
-	c := api.NewOpenStorageCredentialsClient(s.Conn())
-
-	// Enumerate Google credentials
-	resp, err := c.EnumerateForGoogle(context.Background(), req)
+	// Inspect
+	resp, err := c.Inspect(context.Background(), req)
 	assert.NoError(t, err)
-
-	assert.Equal(t, resp.GetCredential()[0].ProjectId, enumGoogle[api.OptCredGoogleProjectID])
-}
-
-func TestSdkCredentialEnumerateGoogleFailed(t *testing.T) {
-
-	// Create server and client connection
-	s := newTestServer(t)
-	defer s.Stop()
-
-	req := &api.SdkCredentialEnumerateGoogleRequest{CredentialId: "test"}
-
-	s.MockDriver().
-		EXPECT().
-		CredsEnumerate().
-		Return(nil, fmt.Errorf("Failed to get credenntials details"))
-
-	// Setup client
-	c := api.NewOpenStorageCredentialsClient(s.Conn())
-
-	// EnumerateCredentials for AWS
-	resp, err := c.EnumerateForGoogle(context.Background(), req)
-
-	assert.Nil(t, resp)
-	assert.Error(t, err)
+	assert.NotNil(t, resp.GetAzureCredential())
+	assert.Equal(t, resp.GetAzureCredential().GetAccountName(), enumAzure[api.OptCredAzureAccountName])
 }
 
 func TestSdkCredentialDeleteSuccess(t *testing.T) {

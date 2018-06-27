@@ -19,13 +19,11 @@ goog.exportSymbol('proto.openstorage.api.Alert', null, global);
 goog.exportSymbol('proto.openstorage.api.AlertActionType', null, global);
 goog.exportSymbol('proto.openstorage.api.Alerts', null, global);
 goog.exportSymbol('proto.openstorage.api.AttachState', null, global);
-goog.exportSymbol('proto.openstorage.api.AzureCredential', null, global);
 goog.exportSymbol('proto.openstorage.api.ClusterNotify', null, global);
 goog.exportSymbol('proto.openstorage.api.ClusterResponse', null, global);
 goog.exportSymbol('proto.openstorage.api.CosType', null, global);
 goog.exportSymbol('proto.openstorage.api.DriverType', null, global);
 goog.exportSymbol('proto.openstorage.api.FSType', null, global);
-goog.exportSymbol('proto.openstorage.api.GoogleCredential', null, global);
 goog.exportSymbol('proto.openstorage.api.GraphDriverChangeType', null, global);
 goog.exportSymbol('proto.openstorage.api.GraphDriverChanges', null, global);
 goog.exportSymbol('proto.openstorage.api.Group', null, global);
@@ -37,7 +35,10 @@ goog.exportSymbol('proto.openstorage.api.OperationFlags', null, global);
 goog.exportSymbol('proto.openstorage.api.ReplicaSet', null, global);
 goog.exportSymbol('proto.openstorage.api.ResourceType', null, global);
 goog.exportSymbol('proto.openstorage.api.RuntimeStateMap', null, global);
-goog.exportSymbol('proto.openstorage.api.S3Credential', null, global);
+goog.exportSymbol('proto.openstorage.api.SdkAwsCredentialRequest', null, global);
+goog.exportSymbol('proto.openstorage.api.SdkAwsCredentialResponse', null, global);
+goog.exportSymbol('proto.openstorage.api.SdkAzureCredentialRequest', null, global);
+goog.exportSymbol('proto.openstorage.api.SdkAzureCredentialResponse', null, global);
 goog.exportSymbol('proto.openstorage.api.SdkCloudBackupCatalogRequest', null, global);
 goog.exportSymbol('proto.openstorage.api.SdkCloudBackupCatalogResponse', null, global);
 goog.exportSymbol('proto.openstorage.api.SdkCloudBackupCreateRequest', null, global);
@@ -72,22 +73,18 @@ goog.exportSymbol('proto.openstorage.api.SdkClusterEnumerateRequest', null, glob
 goog.exportSymbol('proto.openstorage.api.SdkClusterEnumerateResponse', null, global);
 goog.exportSymbol('proto.openstorage.api.SdkClusterInspectRequest', null, global);
 goog.exportSymbol('proto.openstorage.api.SdkClusterInspectResponse', null, global);
-goog.exportSymbol('proto.openstorage.api.SdkCredentialCreateAWSRequest', null, global);
-goog.exportSymbol('proto.openstorage.api.SdkCredentialCreateAWSResponse', null, global);
-goog.exportSymbol('proto.openstorage.api.SdkCredentialCreateAzureRequest', null, global);
-goog.exportSymbol('proto.openstorage.api.SdkCredentialCreateAzureResponse', null, global);
-goog.exportSymbol('proto.openstorage.api.SdkCredentialCreateGoogleRequest', null, global);
-goog.exportSymbol('proto.openstorage.api.SdkCredentialCreateGoogleResponse', null, global);
+goog.exportSymbol('proto.openstorage.api.SdkCredentialCreateRequest', null, global);
+goog.exportSymbol('proto.openstorage.api.SdkCredentialCreateResponse', null, global);
 goog.exportSymbol('proto.openstorage.api.SdkCredentialDeleteRequest', null, global);
 goog.exportSymbol('proto.openstorage.api.SdkCredentialDeleteResponse', null, global);
-goog.exportSymbol('proto.openstorage.api.SdkCredentialEnumerateAWSRequest', null, global);
-goog.exportSymbol('proto.openstorage.api.SdkCredentialEnumerateAWSResponse', null, global);
-goog.exportSymbol('proto.openstorage.api.SdkCredentialEnumerateAzureRequest', null, global);
-goog.exportSymbol('proto.openstorage.api.SdkCredentialEnumerateAzureResponse', null, global);
-goog.exportSymbol('proto.openstorage.api.SdkCredentialEnumerateGoogleRequest', null, global);
-goog.exportSymbol('proto.openstorage.api.SdkCredentialEnumerateGoogleResponse', null, global);
+goog.exportSymbol('proto.openstorage.api.SdkCredentialEnumerateRequest', null, global);
+goog.exportSymbol('proto.openstorage.api.SdkCredentialEnumerateResponse', null, global);
+goog.exportSymbol('proto.openstorage.api.SdkCredentialInspectRequest', null, global);
+goog.exportSymbol('proto.openstorage.api.SdkCredentialInspectResponse', null, global);
 goog.exportSymbol('proto.openstorage.api.SdkCredentialValidateRequest', null, global);
 goog.exportSymbol('proto.openstorage.api.SdkCredentialValidateResponse', null, global);
+goog.exportSymbol('proto.openstorage.api.SdkGoogleCredentialRequest', null, global);
+goog.exportSymbol('proto.openstorage.api.SdkGoogleCredentialResponse', null, global);
 goog.exportSymbol('proto.openstorage.api.SdkObjectstoreCreateRequest', null, global);
 goog.exportSymbol('proto.openstorage.api.SdkObjectstoreCreateResponse', null, global);
 goog.exportSymbol('proto.openstorage.api.SdkObjectstoreDeleteRequest', null, global);
@@ -10288,13 +10285,40 @@ proto.openstorage.api.SdkSchedulePolicy.prototype.setSchedule = function(value) 
  * @extends {jspb.Message}
  * @constructor
  */
-proto.openstorage.api.SdkCredentialCreateAzureRequest = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+proto.openstorage.api.SdkCredentialCreateRequest = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, proto.openstorage.api.SdkCredentialCreateRequest.oneofGroups_);
 };
-goog.inherits(proto.openstorage.api.SdkCredentialCreateAzureRequest, jspb.Message);
+goog.inherits(proto.openstorage.api.SdkCredentialCreateRequest, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
-  proto.openstorage.api.SdkCredentialCreateAzureRequest.displayName = 'proto.openstorage.api.SdkCredentialCreateAzureRequest';
+  proto.openstorage.api.SdkCredentialCreateRequest.displayName = 'proto.openstorage.api.SdkCredentialCreateRequest';
 }
+/**
+ * Oneof group definitions for this message. Each group defines the field
+ * numbers belonging to that group. When of these fields' value is set, all
+ * other fields in the group are cleared. During deserialization, if multiple
+ * fields are encountered for a group, only the last value seen will be kept.
+ * @private {!Array<!Array<number>>}
+ * @const
+ */
+proto.openstorage.api.SdkCredentialCreateRequest.oneofGroups_ = [[1,2,3]];
+
+/**
+ * @enum {number}
+ */
+proto.openstorage.api.SdkCredentialCreateRequest.CredentialTypeCase = {
+  CREDENTIAL_TYPE_NOT_SET: 0,
+  AWS_CREDENTIAL: 1,
+  AZURE_CREDENTIAL: 2,
+  GOOGLE_CREDENTIAL: 3
+};
+
+/**
+ * @return {proto.openstorage.api.SdkCredentialCreateRequest.CredentialTypeCase}
+ */
+proto.openstorage.api.SdkCredentialCreateRequest.prototype.getCredentialTypeCase = function() {
+  return /** @type {proto.openstorage.api.SdkCredentialCreateRequest.CredentialTypeCase} */(jspb.Message.computeOneofCase(this, proto.openstorage.api.SdkCredentialCreateRequest.oneofGroups_[0]));
+};
+
 
 
 if (jspb.Message.GENERATE_TO_OBJECT) {
@@ -10308,8 +10332,8 @@ if (jspb.Message.GENERATE_TO_OBJECT) {
  *     for transitional soy proto support: http://goto/soy-param-migration
  * @return {!Object}
  */
-proto.openstorage.api.SdkCredentialCreateAzureRequest.prototype.toObject = function(opt_includeInstance) {
-  return proto.openstorage.api.SdkCredentialCreateAzureRequest.toObject(opt_includeInstance, this);
+proto.openstorage.api.SdkCredentialCreateRequest.prototype.toObject = function(opt_includeInstance) {
+  return proto.openstorage.api.SdkCredentialCreateRequest.toObject(opt_includeInstance, this);
 };
 
 
@@ -10318,13 +10342,15 @@ proto.openstorage.api.SdkCredentialCreateAzureRequest.prototype.toObject = funct
  * @param {boolean|undefined} includeInstance Whether to include the JSPB
  *     instance for transitional soy proto support:
  *     http://goto/soy-param-migration
- * @param {!proto.openstorage.api.SdkCredentialCreateAzureRequest} msg The msg instance to transform.
+ * @param {!proto.openstorage.api.SdkCredentialCreateRequest} msg The msg instance to transform.
  * @return {!Object}
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
-proto.openstorage.api.SdkCredentialCreateAzureRequest.toObject = function(includeInstance, msg) {
+proto.openstorage.api.SdkCredentialCreateRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    credential: (f = msg.getCredential()) && proto.openstorage.api.AzureCredential.toObject(includeInstance, f)
+    awsCredential: (f = msg.getAwsCredential()) && proto.openstorage.api.SdkAwsCredentialRequest.toObject(includeInstance, f),
+    azureCredential: (f = msg.getAzureCredential()) && proto.openstorage.api.SdkAzureCredentialRequest.toObject(includeInstance, f),
+    googleCredential: (f = msg.getGoogleCredential()) && proto.openstorage.api.SdkGoogleCredentialRequest.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -10338,23 +10364,23 @@ proto.openstorage.api.SdkCredentialCreateAzureRequest.toObject = function(includ
 /**
  * Deserializes binary data (in protobuf wire format).
  * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.openstorage.api.SdkCredentialCreateAzureRequest}
+ * @return {!proto.openstorage.api.SdkCredentialCreateRequest}
  */
-proto.openstorage.api.SdkCredentialCreateAzureRequest.deserializeBinary = function(bytes) {
+proto.openstorage.api.SdkCredentialCreateRequest.deserializeBinary = function(bytes) {
   var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.openstorage.api.SdkCredentialCreateAzureRequest;
-  return proto.openstorage.api.SdkCredentialCreateAzureRequest.deserializeBinaryFromReader(msg, reader);
+  var msg = new proto.openstorage.api.SdkCredentialCreateRequest;
+  return proto.openstorage.api.SdkCredentialCreateRequest.deserializeBinaryFromReader(msg, reader);
 };
 
 
 /**
  * Deserializes binary data (in protobuf wire format) from the
  * given reader into the given message object.
- * @param {!proto.openstorage.api.SdkCredentialCreateAzureRequest} msg The message object to deserialize into.
+ * @param {!proto.openstorage.api.SdkCredentialCreateRequest} msg The message object to deserialize into.
  * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.openstorage.api.SdkCredentialCreateAzureRequest}
+ * @return {!proto.openstorage.api.SdkCredentialCreateRequest}
  */
-proto.openstorage.api.SdkCredentialCreateAzureRequest.deserializeBinaryFromReader = function(msg, reader) {
+proto.openstorage.api.SdkCredentialCreateRequest.deserializeBinaryFromReader = function(msg, reader) {
   while (reader.nextField()) {
     if (reader.isEndGroup()) {
       break;
@@ -10362,929 +10388,408 @@ proto.openstorage.api.SdkCredentialCreateAzureRequest.deserializeBinaryFromReade
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
-      var value = new proto.openstorage.api.AzureCredential;
-      reader.readMessage(value,proto.openstorage.api.AzureCredential.deserializeBinaryFromReader);
-      msg.setCredential(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.openstorage.api.SdkCredentialCreateAzureRequest.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.openstorage.api.SdkCredentialCreateAzureRequest.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.openstorage.api.SdkCredentialCreateAzureRequest} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.openstorage.api.SdkCredentialCreateAzureRequest.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getCredential();
-  if (f != null) {
-    writer.writeMessage(
-      1,
-      f,
-      proto.openstorage.api.AzureCredential.serializeBinaryToWriter
-    );
-  }
-};
-
-
-/**
- * optional AzureCredential credential = 1;
- * @return {?proto.openstorage.api.AzureCredential}
- */
-proto.openstorage.api.SdkCredentialCreateAzureRequest.prototype.getCredential = function() {
-  return /** @type{?proto.openstorage.api.AzureCredential} */ (
-    jspb.Message.getWrapperField(this, proto.openstorage.api.AzureCredential, 1));
-};
-
-
-/** @param {?proto.openstorage.api.AzureCredential|undefined} value */
-proto.openstorage.api.SdkCredentialCreateAzureRequest.prototype.setCredential = function(value) {
-  jspb.Message.setWrapperField(this, 1, value);
-};
-
-
-proto.openstorage.api.SdkCredentialCreateAzureRequest.prototype.clearCredential = function() {
-  this.setCredential(undefined);
-};
-
-
-/**
- * Returns whether this field is set.
- * @return {!boolean}
- */
-proto.openstorage.api.SdkCredentialCreateAzureRequest.prototype.hasCredential = function() {
-  return jspb.Message.getField(this, 1) != null;
-};
-
-
-
-/**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
- */
-proto.openstorage.api.SdkCredentialCreateAzureResponse = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
-};
-goog.inherits(proto.openstorage.api.SdkCredentialCreateAzureResponse, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  proto.openstorage.api.SdkCredentialCreateAzureResponse.displayName = 'proto.openstorage.api.SdkCredentialCreateAzureResponse';
-}
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto suitable for use in Soy templates.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     com.google.apps.jspb.JsClassTemplate.JS_RESERVED_WORDS.
- * @param {boolean=} opt_includeInstance Whether to include the JSPB instance
- *     for transitional soy proto support: http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.openstorage.api.SdkCredentialCreateAzureResponse.prototype.toObject = function(opt_includeInstance) {
-  return proto.openstorage.api.SdkCredentialCreateAzureResponse.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Whether to include the JSPB
- *     instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.openstorage.api.SdkCredentialCreateAzureResponse} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.openstorage.api.SdkCredentialCreateAzureResponse.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    credentialId: jspb.Message.getFieldWithDefault(msg, 1, "")
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.openstorage.api.SdkCredentialCreateAzureResponse}
- */
-proto.openstorage.api.SdkCredentialCreateAzureResponse.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.openstorage.api.SdkCredentialCreateAzureResponse;
-  return proto.openstorage.api.SdkCredentialCreateAzureResponse.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.openstorage.api.SdkCredentialCreateAzureResponse} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.openstorage.api.SdkCredentialCreateAzureResponse}
- */
-proto.openstorage.api.SdkCredentialCreateAzureResponse.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 1:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setCredentialId(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.openstorage.api.SdkCredentialCreateAzureResponse.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.openstorage.api.SdkCredentialCreateAzureResponse.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.openstorage.api.SdkCredentialCreateAzureResponse} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.openstorage.api.SdkCredentialCreateAzureResponse.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getCredentialId();
-  if (f.length > 0) {
-    writer.writeString(
-      1,
-      f
-    );
-  }
-};
-
-
-/**
- * optional string credential_id = 1;
- * @return {string}
- */
-proto.openstorage.api.SdkCredentialCreateAzureResponse.prototype.getCredentialId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
-};
-
-
-/** @param {string} value */
-proto.openstorage.api.SdkCredentialCreateAzureResponse.prototype.setCredentialId = function(value) {
-  jspb.Message.setField(this, 1, value);
-};
-
-
-
-/**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
- */
-proto.openstorage.api.SdkCredentialCreateGoogleRequest = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
-};
-goog.inherits(proto.openstorage.api.SdkCredentialCreateGoogleRequest, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  proto.openstorage.api.SdkCredentialCreateGoogleRequest.displayName = 'proto.openstorage.api.SdkCredentialCreateGoogleRequest';
-}
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto suitable for use in Soy templates.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     com.google.apps.jspb.JsClassTemplate.JS_RESERVED_WORDS.
- * @param {boolean=} opt_includeInstance Whether to include the JSPB instance
- *     for transitional soy proto support: http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.openstorage.api.SdkCredentialCreateGoogleRequest.prototype.toObject = function(opt_includeInstance) {
-  return proto.openstorage.api.SdkCredentialCreateGoogleRequest.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Whether to include the JSPB
- *     instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.openstorage.api.SdkCredentialCreateGoogleRequest} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.openstorage.api.SdkCredentialCreateGoogleRequest.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    credential: (f = msg.getCredential()) && proto.openstorage.api.GoogleCredential.toObject(includeInstance, f)
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.openstorage.api.SdkCredentialCreateGoogleRequest}
- */
-proto.openstorage.api.SdkCredentialCreateGoogleRequest.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.openstorage.api.SdkCredentialCreateGoogleRequest;
-  return proto.openstorage.api.SdkCredentialCreateGoogleRequest.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.openstorage.api.SdkCredentialCreateGoogleRequest} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.openstorage.api.SdkCredentialCreateGoogleRequest}
- */
-proto.openstorage.api.SdkCredentialCreateGoogleRequest.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 1:
-      var value = new proto.openstorage.api.GoogleCredential;
-      reader.readMessage(value,proto.openstorage.api.GoogleCredential.deserializeBinaryFromReader);
-      msg.setCredential(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.openstorage.api.SdkCredentialCreateGoogleRequest.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.openstorage.api.SdkCredentialCreateGoogleRequest.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.openstorage.api.SdkCredentialCreateGoogleRequest} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.openstorage.api.SdkCredentialCreateGoogleRequest.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getCredential();
-  if (f != null) {
-    writer.writeMessage(
-      1,
-      f,
-      proto.openstorage.api.GoogleCredential.serializeBinaryToWriter
-    );
-  }
-};
-
-
-/**
- * optional GoogleCredential credential = 1;
- * @return {?proto.openstorage.api.GoogleCredential}
- */
-proto.openstorage.api.SdkCredentialCreateGoogleRequest.prototype.getCredential = function() {
-  return /** @type{?proto.openstorage.api.GoogleCredential} */ (
-    jspb.Message.getWrapperField(this, proto.openstorage.api.GoogleCredential, 1));
-};
-
-
-/** @param {?proto.openstorage.api.GoogleCredential|undefined} value */
-proto.openstorage.api.SdkCredentialCreateGoogleRequest.prototype.setCredential = function(value) {
-  jspb.Message.setWrapperField(this, 1, value);
-};
-
-
-proto.openstorage.api.SdkCredentialCreateGoogleRequest.prototype.clearCredential = function() {
-  this.setCredential(undefined);
-};
-
-
-/**
- * Returns whether this field is set.
- * @return {!boolean}
- */
-proto.openstorage.api.SdkCredentialCreateGoogleRequest.prototype.hasCredential = function() {
-  return jspb.Message.getField(this, 1) != null;
-};
-
-
-
-/**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
- */
-proto.openstorage.api.SdkCredentialCreateGoogleResponse = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
-};
-goog.inherits(proto.openstorage.api.SdkCredentialCreateGoogleResponse, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  proto.openstorage.api.SdkCredentialCreateGoogleResponse.displayName = 'proto.openstorage.api.SdkCredentialCreateGoogleResponse';
-}
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto suitable for use in Soy templates.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     com.google.apps.jspb.JsClassTemplate.JS_RESERVED_WORDS.
- * @param {boolean=} opt_includeInstance Whether to include the JSPB instance
- *     for transitional soy proto support: http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.openstorage.api.SdkCredentialCreateGoogleResponse.prototype.toObject = function(opt_includeInstance) {
-  return proto.openstorage.api.SdkCredentialCreateGoogleResponse.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Whether to include the JSPB
- *     instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.openstorage.api.SdkCredentialCreateGoogleResponse} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.openstorage.api.SdkCredentialCreateGoogleResponse.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    credentialId: jspb.Message.getFieldWithDefault(msg, 1, "")
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.openstorage.api.SdkCredentialCreateGoogleResponse}
- */
-proto.openstorage.api.SdkCredentialCreateGoogleResponse.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.openstorage.api.SdkCredentialCreateGoogleResponse;
-  return proto.openstorage.api.SdkCredentialCreateGoogleResponse.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.openstorage.api.SdkCredentialCreateGoogleResponse} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.openstorage.api.SdkCredentialCreateGoogleResponse}
- */
-proto.openstorage.api.SdkCredentialCreateGoogleResponse.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 1:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setCredentialId(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.openstorage.api.SdkCredentialCreateGoogleResponse.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.openstorage.api.SdkCredentialCreateGoogleResponse.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.openstorage.api.SdkCredentialCreateGoogleResponse} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.openstorage.api.SdkCredentialCreateGoogleResponse.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getCredentialId();
-  if (f.length > 0) {
-    writer.writeString(
-      1,
-      f
-    );
-  }
-};
-
-
-/**
- * optional string credential_id = 1;
- * @return {string}
- */
-proto.openstorage.api.SdkCredentialCreateGoogleResponse.prototype.getCredentialId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
-};
-
-
-/** @param {string} value */
-proto.openstorage.api.SdkCredentialCreateGoogleResponse.prototype.setCredentialId = function(value) {
-  jspb.Message.setField(this, 1, value);
-};
-
-
-
-/**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
- */
-proto.openstorage.api.SdkCredentialCreateAWSRequest = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
-};
-goog.inherits(proto.openstorage.api.SdkCredentialCreateAWSRequest, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  proto.openstorage.api.SdkCredentialCreateAWSRequest.displayName = 'proto.openstorage.api.SdkCredentialCreateAWSRequest';
-}
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto suitable for use in Soy templates.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     com.google.apps.jspb.JsClassTemplate.JS_RESERVED_WORDS.
- * @param {boolean=} opt_includeInstance Whether to include the JSPB instance
- *     for transitional soy proto support: http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.openstorage.api.SdkCredentialCreateAWSRequest.prototype.toObject = function(opt_includeInstance) {
-  return proto.openstorage.api.SdkCredentialCreateAWSRequest.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Whether to include the JSPB
- *     instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.openstorage.api.SdkCredentialCreateAWSRequest} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.openstorage.api.SdkCredentialCreateAWSRequest.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    credential: (f = msg.getCredential()) && proto.openstorage.api.S3Credential.toObject(includeInstance, f)
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.openstorage.api.SdkCredentialCreateAWSRequest}
- */
-proto.openstorage.api.SdkCredentialCreateAWSRequest.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.openstorage.api.SdkCredentialCreateAWSRequest;
-  return proto.openstorage.api.SdkCredentialCreateAWSRequest.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.openstorage.api.SdkCredentialCreateAWSRequest} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.openstorage.api.SdkCredentialCreateAWSRequest}
- */
-proto.openstorage.api.SdkCredentialCreateAWSRequest.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 1:
-      var value = new proto.openstorage.api.S3Credential;
-      reader.readMessage(value,proto.openstorage.api.S3Credential.deserializeBinaryFromReader);
-      msg.setCredential(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.openstorage.api.SdkCredentialCreateAWSRequest.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.openstorage.api.SdkCredentialCreateAWSRequest.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.openstorage.api.SdkCredentialCreateAWSRequest} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.openstorage.api.SdkCredentialCreateAWSRequest.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getCredential();
-  if (f != null) {
-    writer.writeMessage(
-      1,
-      f,
-      proto.openstorage.api.S3Credential.serializeBinaryToWriter
-    );
-  }
-};
-
-
-/**
- * optional S3Credential credential = 1;
- * @return {?proto.openstorage.api.S3Credential}
- */
-proto.openstorage.api.SdkCredentialCreateAWSRequest.prototype.getCredential = function() {
-  return /** @type{?proto.openstorage.api.S3Credential} */ (
-    jspb.Message.getWrapperField(this, proto.openstorage.api.S3Credential, 1));
-};
-
-
-/** @param {?proto.openstorage.api.S3Credential|undefined} value */
-proto.openstorage.api.SdkCredentialCreateAWSRequest.prototype.setCredential = function(value) {
-  jspb.Message.setWrapperField(this, 1, value);
-};
-
-
-proto.openstorage.api.SdkCredentialCreateAWSRequest.prototype.clearCredential = function() {
-  this.setCredential(undefined);
-};
-
-
-/**
- * Returns whether this field is set.
- * @return {!boolean}
- */
-proto.openstorage.api.SdkCredentialCreateAWSRequest.prototype.hasCredential = function() {
-  return jspb.Message.getField(this, 1) != null;
-};
-
-
-
-/**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
- */
-proto.openstorage.api.SdkCredentialCreateAWSResponse = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
-};
-goog.inherits(proto.openstorage.api.SdkCredentialCreateAWSResponse, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  proto.openstorage.api.SdkCredentialCreateAWSResponse.displayName = 'proto.openstorage.api.SdkCredentialCreateAWSResponse';
-}
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto suitable for use in Soy templates.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     com.google.apps.jspb.JsClassTemplate.JS_RESERVED_WORDS.
- * @param {boolean=} opt_includeInstance Whether to include the JSPB instance
- *     for transitional soy proto support: http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.openstorage.api.SdkCredentialCreateAWSResponse.prototype.toObject = function(opt_includeInstance) {
-  return proto.openstorage.api.SdkCredentialCreateAWSResponse.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Whether to include the JSPB
- *     instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.openstorage.api.SdkCredentialCreateAWSResponse} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.openstorage.api.SdkCredentialCreateAWSResponse.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    credentialId: jspb.Message.getFieldWithDefault(msg, 1, "")
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.openstorage.api.SdkCredentialCreateAWSResponse}
- */
-proto.openstorage.api.SdkCredentialCreateAWSResponse.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.openstorage.api.SdkCredentialCreateAWSResponse;
-  return proto.openstorage.api.SdkCredentialCreateAWSResponse.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.openstorage.api.SdkCredentialCreateAWSResponse} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.openstorage.api.SdkCredentialCreateAWSResponse}
- */
-proto.openstorage.api.SdkCredentialCreateAWSResponse.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 1:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setCredentialId(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.openstorage.api.SdkCredentialCreateAWSResponse.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.openstorage.api.SdkCredentialCreateAWSResponse.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.openstorage.api.SdkCredentialCreateAWSResponse} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.openstorage.api.SdkCredentialCreateAWSResponse.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getCredentialId();
-  if (f.length > 0) {
-    writer.writeString(
-      1,
-      f
-    );
-  }
-};
-
-
-/**
- * optional string credential_id = 1;
- * @return {string}
- */
-proto.openstorage.api.SdkCredentialCreateAWSResponse.prototype.getCredentialId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
-};
-
-
-/** @param {string} value */
-proto.openstorage.api.SdkCredentialCreateAWSResponse.prototype.setCredentialId = function(value) {
-  jspb.Message.setField(this, 1, value);
-};
-
-
-
-/**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
- */
-proto.openstorage.api.S3Credential = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
-};
-goog.inherits(proto.openstorage.api.S3Credential, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  proto.openstorage.api.S3Credential.displayName = 'proto.openstorage.api.S3Credential';
-}
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto suitable for use in Soy templates.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     com.google.apps.jspb.JsClassTemplate.JS_RESERVED_WORDS.
- * @param {boolean=} opt_includeInstance Whether to include the JSPB instance
- *     for transitional soy proto support: http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.openstorage.api.S3Credential.prototype.toObject = function(opt_includeInstance) {
-  return proto.openstorage.api.S3Credential.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Whether to include the JSPB
- *     instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.openstorage.api.S3Credential} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.openstorage.api.S3Credential.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    credentialId: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    accessKey: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    secretKey: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    endpoint: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    region: jspb.Message.getFieldWithDefault(msg, 5, "")
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.openstorage.api.S3Credential}
- */
-proto.openstorage.api.S3Credential.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.openstorage.api.S3Credential;
-  return proto.openstorage.api.S3Credential.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.openstorage.api.S3Credential} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.openstorage.api.S3Credential}
- */
-proto.openstorage.api.S3Credential.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 1:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setCredentialId(value);
+      var value = new proto.openstorage.api.SdkAwsCredentialRequest;
+      reader.readMessage(value,proto.openstorage.api.SdkAwsCredentialRequest.deserializeBinaryFromReader);
+      msg.setAwsCredential(value);
       break;
     case 2:
+      var value = new proto.openstorage.api.SdkAzureCredentialRequest;
+      reader.readMessage(value,proto.openstorage.api.SdkAzureCredentialRequest.deserializeBinaryFromReader);
+      msg.setAzureCredential(value);
+      break;
+    case 3:
+      var value = new proto.openstorage.api.SdkGoogleCredentialRequest;
+      reader.readMessage(value,proto.openstorage.api.SdkGoogleCredentialRequest.deserializeBinaryFromReader);
+      msg.setGoogleCredential(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.openstorage.api.SdkCredentialCreateRequest.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.openstorage.api.SdkCredentialCreateRequest.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.openstorage.api.SdkCredentialCreateRequest} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.openstorage.api.SdkCredentialCreateRequest.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getAwsCredential();
+  if (f != null) {
+    writer.writeMessage(
+      1,
+      f,
+      proto.openstorage.api.SdkAwsCredentialRequest.serializeBinaryToWriter
+    );
+  }
+  f = message.getAzureCredential();
+  if (f != null) {
+    writer.writeMessage(
+      2,
+      f,
+      proto.openstorage.api.SdkAzureCredentialRequest.serializeBinaryToWriter
+    );
+  }
+  f = message.getGoogleCredential();
+  if (f != null) {
+    writer.writeMessage(
+      3,
+      f,
+      proto.openstorage.api.SdkGoogleCredentialRequest.serializeBinaryToWriter
+    );
+  }
+};
+
+
+/**
+ * optional SdkAwsCredentialRequest aws_credential = 1;
+ * @return {?proto.openstorage.api.SdkAwsCredentialRequest}
+ */
+proto.openstorage.api.SdkCredentialCreateRequest.prototype.getAwsCredential = function() {
+  return /** @type{?proto.openstorage.api.SdkAwsCredentialRequest} */ (
+    jspb.Message.getWrapperField(this, proto.openstorage.api.SdkAwsCredentialRequest, 1));
+};
+
+
+/** @param {?proto.openstorage.api.SdkAwsCredentialRequest|undefined} value */
+proto.openstorage.api.SdkCredentialCreateRequest.prototype.setAwsCredential = function(value) {
+  jspb.Message.setOneofWrapperField(this, 1, proto.openstorage.api.SdkCredentialCreateRequest.oneofGroups_[0], value);
+};
+
+
+proto.openstorage.api.SdkCredentialCreateRequest.prototype.clearAwsCredential = function() {
+  this.setAwsCredential(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {!boolean}
+ */
+proto.openstorage.api.SdkCredentialCreateRequest.prototype.hasAwsCredential = function() {
+  return jspb.Message.getField(this, 1) != null;
+};
+
+
+/**
+ * optional SdkAzureCredentialRequest azure_credential = 2;
+ * @return {?proto.openstorage.api.SdkAzureCredentialRequest}
+ */
+proto.openstorage.api.SdkCredentialCreateRequest.prototype.getAzureCredential = function() {
+  return /** @type{?proto.openstorage.api.SdkAzureCredentialRequest} */ (
+    jspb.Message.getWrapperField(this, proto.openstorage.api.SdkAzureCredentialRequest, 2));
+};
+
+
+/** @param {?proto.openstorage.api.SdkAzureCredentialRequest|undefined} value */
+proto.openstorage.api.SdkCredentialCreateRequest.prototype.setAzureCredential = function(value) {
+  jspb.Message.setOneofWrapperField(this, 2, proto.openstorage.api.SdkCredentialCreateRequest.oneofGroups_[0], value);
+};
+
+
+proto.openstorage.api.SdkCredentialCreateRequest.prototype.clearAzureCredential = function() {
+  this.setAzureCredential(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {!boolean}
+ */
+proto.openstorage.api.SdkCredentialCreateRequest.prototype.hasAzureCredential = function() {
+  return jspb.Message.getField(this, 2) != null;
+};
+
+
+/**
+ * optional SdkGoogleCredentialRequest google_credential = 3;
+ * @return {?proto.openstorage.api.SdkGoogleCredentialRequest}
+ */
+proto.openstorage.api.SdkCredentialCreateRequest.prototype.getGoogleCredential = function() {
+  return /** @type{?proto.openstorage.api.SdkGoogleCredentialRequest} */ (
+    jspb.Message.getWrapperField(this, proto.openstorage.api.SdkGoogleCredentialRequest, 3));
+};
+
+
+/** @param {?proto.openstorage.api.SdkGoogleCredentialRequest|undefined} value */
+proto.openstorage.api.SdkCredentialCreateRequest.prototype.setGoogleCredential = function(value) {
+  jspb.Message.setOneofWrapperField(this, 3, proto.openstorage.api.SdkCredentialCreateRequest.oneofGroups_[0], value);
+};
+
+
+proto.openstorage.api.SdkCredentialCreateRequest.prototype.clearGoogleCredential = function() {
+  this.setGoogleCredential(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {!boolean}
+ */
+proto.openstorage.api.SdkCredentialCreateRequest.prototype.hasGoogleCredential = function() {
+  return jspb.Message.getField(this, 3) != null;
+};
+
+
+
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.openstorage.api.SdkCredentialCreateResponse = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.openstorage.api.SdkCredentialCreateResponse, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  proto.openstorage.api.SdkCredentialCreateResponse.displayName = 'proto.openstorage.api.SdkCredentialCreateResponse';
+}
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto suitable for use in Soy templates.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     com.google.apps.jspb.JsClassTemplate.JS_RESERVED_WORDS.
+ * @param {boolean=} opt_includeInstance Whether to include the JSPB instance
+ *     for transitional soy proto support: http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.openstorage.api.SdkCredentialCreateResponse.prototype.toObject = function(opt_includeInstance) {
+  return proto.openstorage.api.SdkCredentialCreateResponse.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Whether to include the JSPB
+ *     instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.openstorage.api.SdkCredentialCreateResponse} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.openstorage.api.SdkCredentialCreateResponse.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    credentialId: jspb.Message.getFieldWithDefault(msg, 1, "")
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.openstorage.api.SdkCredentialCreateResponse}
+ */
+proto.openstorage.api.SdkCredentialCreateResponse.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.openstorage.api.SdkCredentialCreateResponse;
+  return proto.openstorage.api.SdkCredentialCreateResponse.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.openstorage.api.SdkCredentialCreateResponse} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.openstorage.api.SdkCredentialCreateResponse}
+ */
+proto.openstorage.api.SdkCredentialCreateResponse.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setCredentialId(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.openstorage.api.SdkCredentialCreateResponse.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.openstorage.api.SdkCredentialCreateResponse.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.openstorage.api.SdkCredentialCreateResponse} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.openstorage.api.SdkCredentialCreateResponse.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getCredentialId();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional string credential_id = 1;
+ * @return {string}
+ */
+proto.openstorage.api.SdkCredentialCreateResponse.prototype.getCredentialId = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/** @param {string} value */
+proto.openstorage.api.SdkCredentialCreateResponse.prototype.setCredentialId = function(value) {
+  jspb.Message.setField(this, 1, value);
+};
+
+
+
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.openstorage.api.SdkAwsCredentialRequest = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.openstorage.api.SdkAwsCredentialRequest, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  proto.openstorage.api.SdkAwsCredentialRequest.displayName = 'proto.openstorage.api.SdkAwsCredentialRequest';
+}
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto suitable for use in Soy templates.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     com.google.apps.jspb.JsClassTemplate.JS_RESERVED_WORDS.
+ * @param {boolean=} opt_includeInstance Whether to include the JSPB instance
+ *     for transitional soy proto support: http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.openstorage.api.SdkAwsCredentialRequest.prototype.toObject = function(opt_includeInstance) {
+  return proto.openstorage.api.SdkAwsCredentialRequest.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Whether to include the JSPB
+ *     instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.openstorage.api.SdkAwsCredentialRequest} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.openstorage.api.SdkAwsCredentialRequest.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    accessKey: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    secretKey: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    endpoint: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    region: jspb.Message.getFieldWithDefault(msg, 4, "")
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.openstorage.api.SdkAwsCredentialRequest}
+ */
+proto.openstorage.api.SdkAwsCredentialRequest.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.openstorage.api.SdkAwsCredentialRequest;
+  return proto.openstorage.api.SdkAwsCredentialRequest.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.openstorage.api.SdkAwsCredentialRequest} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.openstorage.api.SdkAwsCredentialRequest}
+ */
+proto.openstorage.api.SdkAwsCredentialRequest.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
       var value = /** @type {string} */ (reader.readString());
       msg.setAccessKey(value);
       break;
-    case 3:
+    case 2:
       var value = /** @type {string} */ (reader.readString());
       msg.setSecretKey(value);
       break;
-    case 4:
+    case 3:
       var value = /** @type {string} */ (reader.readString());
       msg.setEndpoint(value);
       break;
-    case 5:
+    case 4:
       var value = /** @type {string} */ (reader.readString());
       msg.setRegion(value);
       break;
@@ -11301,9 +10806,9 @@ proto.openstorage.api.S3Credential.deserializeBinaryFromReader = function(msg, r
  * Serializes the message to binary data (in protobuf wire format).
  * @return {!Uint8Array}
  */
-proto.openstorage.api.S3Credential.prototype.serializeBinary = function() {
+proto.openstorage.api.SdkAwsCredentialRequest.prototype.serializeBinary = function() {
   var writer = new jspb.BinaryWriter();
-  proto.openstorage.api.S3Credential.serializeBinaryToWriter(this, writer);
+  proto.openstorage.api.SdkAwsCredentialRequest.serializeBinaryToWriter(this, writer);
   return writer.getResultBuffer();
 };
 
@@ -11311,122 +10816,100 @@ proto.openstorage.api.S3Credential.prototype.serializeBinary = function() {
 /**
  * Serializes the given message to binary data (in protobuf wire
  * format), writing to the given BinaryWriter.
- * @param {!proto.openstorage.api.S3Credential} message
+ * @param {!proto.openstorage.api.SdkAwsCredentialRequest} message
  * @param {!jspb.BinaryWriter} writer
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
-proto.openstorage.api.S3Credential.serializeBinaryToWriter = function(message, writer) {
+proto.openstorage.api.SdkAwsCredentialRequest.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getCredentialId();
+  f = message.getAccessKey();
   if (f.length > 0) {
     writer.writeString(
       1,
       f
     );
   }
-  f = message.getAccessKey();
+  f = message.getSecretKey();
   if (f.length > 0) {
     writer.writeString(
       2,
       f
     );
   }
-  f = message.getSecretKey();
+  f = message.getEndpoint();
   if (f.length > 0) {
     writer.writeString(
       3,
       f
     );
   }
-  f = message.getEndpoint();
+  f = message.getRegion();
   if (f.length > 0) {
     writer.writeString(
       4,
       f
     );
   }
-  f = message.getRegion();
-  if (f.length > 0) {
-    writer.writeString(
-      5,
-      f
-    );
-  }
 };
 
 
 /**
- * optional string credential_id = 1;
+ * optional string access_key = 1;
  * @return {string}
  */
-proto.openstorage.api.S3Credential.prototype.getCredentialId = function() {
+proto.openstorage.api.SdkAwsCredentialRequest.prototype.getAccessKey = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
 };
 
 
 /** @param {string} value */
-proto.openstorage.api.S3Credential.prototype.setCredentialId = function(value) {
+proto.openstorage.api.SdkAwsCredentialRequest.prototype.setAccessKey = function(value) {
   jspb.Message.setField(this, 1, value);
 };
 
 
 /**
- * optional string access_key = 2;
+ * optional string secret_key = 2;
  * @return {string}
  */
-proto.openstorage.api.S3Credential.prototype.getAccessKey = function() {
+proto.openstorage.api.SdkAwsCredentialRequest.prototype.getSecretKey = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
 };
 
 
 /** @param {string} value */
-proto.openstorage.api.S3Credential.prototype.setAccessKey = function(value) {
+proto.openstorage.api.SdkAwsCredentialRequest.prototype.setSecretKey = function(value) {
   jspb.Message.setField(this, 2, value);
 };
 
 
 /**
- * optional string secret_key = 3;
+ * optional string endpoint = 3;
  * @return {string}
  */
-proto.openstorage.api.S3Credential.prototype.getSecretKey = function() {
+proto.openstorage.api.SdkAwsCredentialRequest.prototype.getEndpoint = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
 };
 
 
 /** @param {string} value */
-proto.openstorage.api.S3Credential.prototype.setSecretKey = function(value) {
+proto.openstorage.api.SdkAwsCredentialRequest.prototype.setEndpoint = function(value) {
   jspb.Message.setField(this, 3, value);
 };
 
 
 /**
- * optional string endpoint = 4;
+ * optional string region = 4;
  * @return {string}
  */
-proto.openstorage.api.S3Credential.prototype.getEndpoint = function() {
+proto.openstorage.api.SdkAwsCredentialRequest.prototype.getRegion = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
 };
 
 
 /** @param {string} value */
-proto.openstorage.api.S3Credential.prototype.setEndpoint = function(value) {
+proto.openstorage.api.SdkAwsCredentialRequest.prototype.setRegion = function(value) {
   jspb.Message.setField(this, 4, value);
-};
-
-
-/**
- * optional string region = 5;
- * @return {string}
- */
-proto.openstorage.api.S3Credential.prototype.getRegion = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
-};
-
-
-/** @param {string} value */
-proto.openstorage.api.S3Credential.prototype.setRegion = function(value) {
-  jspb.Message.setField(this, 5, value);
 };
 
 
@@ -11441,12 +10924,12 @@ proto.openstorage.api.S3Credential.prototype.setRegion = function(value) {
  * @extends {jspb.Message}
  * @constructor
  */
-proto.openstorage.api.AzureCredential = function(opt_data) {
+proto.openstorage.api.SdkAzureCredentialRequest = function(opt_data) {
   jspb.Message.initialize(this, opt_data, 0, -1, null, null);
 };
-goog.inherits(proto.openstorage.api.AzureCredential, jspb.Message);
+goog.inherits(proto.openstorage.api.SdkAzureCredentialRequest, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
-  proto.openstorage.api.AzureCredential.displayName = 'proto.openstorage.api.AzureCredential';
+  proto.openstorage.api.SdkAzureCredentialRequest.displayName = 'proto.openstorage.api.SdkAzureCredentialRequest';
 }
 
 
@@ -11461,8 +10944,8 @@ if (jspb.Message.GENERATE_TO_OBJECT) {
  *     for transitional soy proto support: http://goto/soy-param-migration
  * @return {!Object}
  */
-proto.openstorage.api.AzureCredential.prototype.toObject = function(opt_includeInstance) {
-  return proto.openstorage.api.AzureCredential.toObject(opt_includeInstance, this);
+proto.openstorage.api.SdkAzureCredentialRequest.prototype.toObject = function(opt_includeInstance) {
+  return proto.openstorage.api.SdkAzureCredentialRequest.toObject(opt_includeInstance, this);
 };
 
 
@@ -11471,15 +10954,14 @@ proto.openstorage.api.AzureCredential.prototype.toObject = function(opt_includeI
  * @param {boolean|undefined} includeInstance Whether to include the JSPB
  *     instance for transitional soy proto support:
  *     http://goto/soy-param-migration
- * @param {!proto.openstorage.api.AzureCredential} msg The msg instance to transform.
+ * @param {!proto.openstorage.api.SdkAzureCredentialRequest} msg The msg instance to transform.
  * @return {!Object}
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
-proto.openstorage.api.AzureCredential.toObject = function(includeInstance, msg) {
+proto.openstorage.api.SdkAzureCredentialRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    credentialId: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    accountName: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    accountKey: jspb.Message.getFieldWithDefault(msg, 3, "")
+    accountName: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    accountKey: jspb.Message.getFieldWithDefault(msg, 2, "")
   };
 
   if (includeInstance) {
@@ -11493,23 +10975,23 @@ proto.openstorage.api.AzureCredential.toObject = function(includeInstance, msg) 
 /**
  * Deserializes binary data (in protobuf wire format).
  * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.openstorage.api.AzureCredential}
+ * @return {!proto.openstorage.api.SdkAzureCredentialRequest}
  */
-proto.openstorage.api.AzureCredential.deserializeBinary = function(bytes) {
+proto.openstorage.api.SdkAzureCredentialRequest.deserializeBinary = function(bytes) {
   var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.openstorage.api.AzureCredential;
-  return proto.openstorage.api.AzureCredential.deserializeBinaryFromReader(msg, reader);
+  var msg = new proto.openstorage.api.SdkAzureCredentialRequest;
+  return proto.openstorage.api.SdkAzureCredentialRequest.deserializeBinaryFromReader(msg, reader);
 };
 
 
 /**
  * Deserializes binary data (in protobuf wire format) from the
  * given reader into the given message object.
- * @param {!proto.openstorage.api.AzureCredential} msg The message object to deserialize into.
+ * @param {!proto.openstorage.api.SdkAzureCredentialRequest} msg The message object to deserialize into.
  * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.openstorage.api.AzureCredential}
+ * @return {!proto.openstorage.api.SdkAzureCredentialRequest}
  */
-proto.openstorage.api.AzureCredential.deserializeBinaryFromReader = function(msg, reader) {
+proto.openstorage.api.SdkAzureCredentialRequest.deserializeBinaryFromReader = function(msg, reader) {
   while (reader.nextField()) {
     if (reader.isEndGroup()) {
       break;
@@ -11518,13 +11000,9 @@ proto.openstorage.api.AzureCredential.deserializeBinaryFromReader = function(msg
     switch (field) {
     case 1:
       var value = /** @type {string} */ (reader.readString());
-      msg.setCredentialId(value);
-      break;
-    case 2:
-      var value = /** @type {string} */ (reader.readString());
       msg.setAccountName(value);
       break;
-    case 3:
+    case 2:
       var value = /** @type {string} */ (reader.readString());
       msg.setAccountKey(value);
       break;
@@ -11541,9 +11019,9 @@ proto.openstorage.api.AzureCredential.deserializeBinaryFromReader = function(msg
  * Serializes the message to binary data (in protobuf wire format).
  * @return {!Uint8Array}
  */
-proto.openstorage.api.AzureCredential.prototype.serializeBinary = function() {
+proto.openstorage.api.SdkAzureCredentialRequest.prototype.serializeBinary = function() {
   var writer = new jspb.BinaryWriter();
-  proto.openstorage.api.AzureCredential.serializeBinaryToWriter(this, writer);
+  proto.openstorage.api.SdkAzureCredentialRequest.serializeBinaryToWriter(this, writer);
   return writer.getResultBuffer();
 };
 
@@ -11551,78 +11029,56 @@ proto.openstorage.api.AzureCredential.prototype.serializeBinary = function() {
 /**
  * Serializes the given message to binary data (in protobuf wire
  * format), writing to the given BinaryWriter.
- * @param {!proto.openstorage.api.AzureCredential} message
+ * @param {!proto.openstorage.api.SdkAzureCredentialRequest} message
  * @param {!jspb.BinaryWriter} writer
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
-proto.openstorage.api.AzureCredential.serializeBinaryToWriter = function(message, writer) {
+proto.openstorage.api.SdkAzureCredentialRequest.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getCredentialId();
+  f = message.getAccountName();
   if (f.length > 0) {
     writer.writeString(
       1,
       f
     );
   }
-  f = message.getAccountName();
+  f = message.getAccountKey();
   if (f.length > 0) {
     writer.writeString(
       2,
       f
     );
   }
-  f = message.getAccountKey();
-  if (f.length > 0) {
-    writer.writeString(
-      3,
-      f
-    );
-  }
 };
 
 
 /**
- * optional string credential_id = 1;
+ * optional string account_name = 1;
  * @return {string}
  */
-proto.openstorage.api.AzureCredential.prototype.getCredentialId = function() {
+proto.openstorage.api.SdkAzureCredentialRequest.prototype.getAccountName = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
 };
 
 
 /** @param {string} value */
-proto.openstorage.api.AzureCredential.prototype.setCredentialId = function(value) {
+proto.openstorage.api.SdkAzureCredentialRequest.prototype.setAccountName = function(value) {
   jspb.Message.setField(this, 1, value);
 };
 
 
 /**
- * optional string account_name = 2;
+ * optional string account_key = 2;
  * @return {string}
  */
-proto.openstorage.api.AzureCredential.prototype.getAccountName = function() {
+proto.openstorage.api.SdkAzureCredentialRequest.prototype.getAccountKey = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
 };
 
 
 /** @param {string} value */
-proto.openstorage.api.AzureCredential.prototype.setAccountName = function(value) {
+proto.openstorage.api.SdkAzureCredentialRequest.prototype.setAccountKey = function(value) {
   jspb.Message.setField(this, 2, value);
-};
-
-
-/**
- * optional string account_key = 3;
- * @return {string}
- */
-proto.openstorage.api.AzureCredential.prototype.getAccountKey = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
-};
-
-
-/** @param {string} value */
-proto.openstorage.api.AzureCredential.prototype.setAccountKey = function(value) {
-  jspb.Message.setField(this, 3, value);
 };
 
 
@@ -11637,12 +11093,12 @@ proto.openstorage.api.AzureCredential.prototype.setAccountKey = function(value) 
  * @extends {jspb.Message}
  * @constructor
  */
-proto.openstorage.api.GoogleCredential = function(opt_data) {
+proto.openstorage.api.SdkGoogleCredentialRequest = function(opt_data) {
   jspb.Message.initialize(this, opt_data, 0, -1, null, null);
 };
-goog.inherits(proto.openstorage.api.GoogleCredential, jspb.Message);
+goog.inherits(proto.openstorage.api.SdkGoogleCredentialRequest, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
-  proto.openstorage.api.GoogleCredential.displayName = 'proto.openstorage.api.GoogleCredential';
+  proto.openstorage.api.SdkGoogleCredentialRequest.displayName = 'proto.openstorage.api.SdkGoogleCredentialRequest';
 }
 
 
@@ -11657,8 +11113,8 @@ if (jspb.Message.GENERATE_TO_OBJECT) {
  *     for transitional soy proto support: http://goto/soy-param-migration
  * @return {!Object}
  */
-proto.openstorage.api.GoogleCredential.prototype.toObject = function(opt_includeInstance) {
-  return proto.openstorage.api.GoogleCredential.toObject(opt_includeInstance, this);
+proto.openstorage.api.SdkGoogleCredentialRequest.prototype.toObject = function(opt_includeInstance) {
+  return proto.openstorage.api.SdkGoogleCredentialRequest.toObject(opt_includeInstance, this);
 };
 
 
@@ -11667,15 +11123,14 @@ proto.openstorage.api.GoogleCredential.prototype.toObject = function(opt_include
  * @param {boolean|undefined} includeInstance Whether to include the JSPB
  *     instance for transitional soy proto support:
  *     http://goto/soy-param-migration
- * @param {!proto.openstorage.api.GoogleCredential} msg The msg instance to transform.
+ * @param {!proto.openstorage.api.SdkGoogleCredentialRequest} msg The msg instance to transform.
  * @return {!Object}
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
-proto.openstorage.api.GoogleCredential.toObject = function(includeInstance, msg) {
+proto.openstorage.api.SdkGoogleCredentialRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    credentialId: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    projectId: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    jsonKey: jspb.Message.getFieldWithDefault(msg, 3, "")
+    projectId: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    jsonKey: jspb.Message.getFieldWithDefault(msg, 2, "")
   };
 
   if (includeInstance) {
@@ -11689,23 +11144,23 @@ proto.openstorage.api.GoogleCredential.toObject = function(includeInstance, msg)
 /**
  * Deserializes binary data (in protobuf wire format).
  * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.openstorage.api.GoogleCredential}
+ * @return {!proto.openstorage.api.SdkGoogleCredentialRequest}
  */
-proto.openstorage.api.GoogleCredential.deserializeBinary = function(bytes) {
+proto.openstorage.api.SdkGoogleCredentialRequest.deserializeBinary = function(bytes) {
   var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.openstorage.api.GoogleCredential;
-  return proto.openstorage.api.GoogleCredential.deserializeBinaryFromReader(msg, reader);
+  var msg = new proto.openstorage.api.SdkGoogleCredentialRequest;
+  return proto.openstorage.api.SdkGoogleCredentialRequest.deserializeBinaryFromReader(msg, reader);
 };
 
 
 /**
  * Deserializes binary data (in protobuf wire format) from the
  * given reader into the given message object.
- * @param {!proto.openstorage.api.GoogleCredential} msg The message object to deserialize into.
+ * @param {!proto.openstorage.api.SdkGoogleCredentialRequest} msg The message object to deserialize into.
  * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.openstorage.api.GoogleCredential}
+ * @return {!proto.openstorage.api.SdkGoogleCredentialRequest}
  */
-proto.openstorage.api.GoogleCredential.deserializeBinaryFromReader = function(msg, reader) {
+proto.openstorage.api.SdkGoogleCredentialRequest.deserializeBinaryFromReader = function(msg, reader) {
   while (reader.nextField()) {
     if (reader.isEndGroup()) {
       break;
@@ -11714,13 +11169,9 @@ proto.openstorage.api.GoogleCredential.deserializeBinaryFromReader = function(ms
     switch (field) {
     case 1:
       var value = /** @type {string} */ (reader.readString());
-      msg.setCredentialId(value);
-      break;
-    case 2:
-      var value = /** @type {string} */ (reader.readString());
       msg.setProjectId(value);
       break;
-    case 3:
+    case 2:
       var value = /** @type {string} */ (reader.readString());
       msg.setJsonKey(value);
       break;
@@ -11737,9 +11188,9 @@ proto.openstorage.api.GoogleCredential.deserializeBinaryFromReader = function(ms
  * Serializes the message to binary data (in protobuf wire format).
  * @return {!Uint8Array}
  */
-proto.openstorage.api.GoogleCredential.prototype.serializeBinary = function() {
+proto.openstorage.api.SdkGoogleCredentialRequest.prototype.serializeBinary = function() {
   var writer = new jspb.BinaryWriter();
-  proto.openstorage.api.GoogleCredential.serializeBinaryToWriter(this, writer);
+  proto.openstorage.api.SdkGoogleCredentialRequest.serializeBinaryToWriter(this, writer);
   return writer.getResultBuffer();
 };
 
@@ -11747,11 +11198,572 @@ proto.openstorage.api.GoogleCredential.prototype.serializeBinary = function() {
 /**
  * Serializes the given message to binary data (in protobuf wire
  * format), writing to the given BinaryWriter.
- * @param {!proto.openstorage.api.GoogleCredential} message
+ * @param {!proto.openstorage.api.SdkGoogleCredentialRequest} message
  * @param {!jspb.BinaryWriter} writer
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
-proto.openstorage.api.GoogleCredential.serializeBinaryToWriter = function(message, writer) {
+proto.openstorage.api.SdkGoogleCredentialRequest.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getProjectId();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+  f = message.getJsonKey();
+  if (f.length > 0) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional string project_id = 1;
+ * @return {string}
+ */
+proto.openstorage.api.SdkGoogleCredentialRequest.prototype.getProjectId = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/** @param {string} value */
+proto.openstorage.api.SdkGoogleCredentialRequest.prototype.setProjectId = function(value) {
+  jspb.Message.setField(this, 1, value);
+};
+
+
+/**
+ * optional string json_key = 2;
+ * @return {string}
+ */
+proto.openstorage.api.SdkGoogleCredentialRequest.prototype.getJsonKey = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/** @param {string} value */
+proto.openstorage.api.SdkGoogleCredentialRequest.prototype.setJsonKey = function(value) {
+  jspb.Message.setField(this, 2, value);
+};
+
+
+
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.openstorage.api.SdkAwsCredentialResponse = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.openstorage.api.SdkAwsCredentialResponse, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  proto.openstorage.api.SdkAwsCredentialResponse.displayName = 'proto.openstorage.api.SdkAwsCredentialResponse';
+}
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto suitable for use in Soy templates.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     com.google.apps.jspb.JsClassTemplate.JS_RESERVED_WORDS.
+ * @param {boolean=} opt_includeInstance Whether to include the JSPB instance
+ *     for transitional soy proto support: http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.openstorage.api.SdkAwsCredentialResponse.prototype.toObject = function(opt_includeInstance) {
+  return proto.openstorage.api.SdkAwsCredentialResponse.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Whether to include the JSPB
+ *     instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.openstorage.api.SdkAwsCredentialResponse} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.openstorage.api.SdkAwsCredentialResponse.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    credentialId: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    accessKey: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    endpoint: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    region: jspb.Message.getFieldWithDefault(msg, 4, "")
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.openstorage.api.SdkAwsCredentialResponse}
+ */
+proto.openstorage.api.SdkAwsCredentialResponse.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.openstorage.api.SdkAwsCredentialResponse;
+  return proto.openstorage.api.SdkAwsCredentialResponse.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.openstorage.api.SdkAwsCredentialResponse} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.openstorage.api.SdkAwsCredentialResponse}
+ */
+proto.openstorage.api.SdkAwsCredentialResponse.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setCredentialId(value);
+      break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setAccessKey(value);
+      break;
+    case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setEndpoint(value);
+      break;
+    case 4:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setRegion(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.openstorage.api.SdkAwsCredentialResponse.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.openstorage.api.SdkAwsCredentialResponse.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.openstorage.api.SdkAwsCredentialResponse} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.openstorage.api.SdkAwsCredentialResponse.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getCredentialId();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+  f = message.getAccessKey();
+  if (f.length > 0) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
+  f = message.getEndpoint();
+  if (f.length > 0) {
+    writer.writeString(
+      3,
+      f
+    );
+  }
+  f = message.getRegion();
+  if (f.length > 0) {
+    writer.writeString(
+      4,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional string credential_id = 1;
+ * @return {string}
+ */
+proto.openstorage.api.SdkAwsCredentialResponse.prototype.getCredentialId = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/** @param {string} value */
+proto.openstorage.api.SdkAwsCredentialResponse.prototype.setCredentialId = function(value) {
+  jspb.Message.setField(this, 1, value);
+};
+
+
+/**
+ * optional string access_key = 2;
+ * @return {string}
+ */
+proto.openstorage.api.SdkAwsCredentialResponse.prototype.getAccessKey = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/** @param {string} value */
+proto.openstorage.api.SdkAwsCredentialResponse.prototype.setAccessKey = function(value) {
+  jspb.Message.setField(this, 2, value);
+};
+
+
+/**
+ * optional string endpoint = 3;
+ * @return {string}
+ */
+proto.openstorage.api.SdkAwsCredentialResponse.prototype.getEndpoint = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+};
+
+
+/** @param {string} value */
+proto.openstorage.api.SdkAwsCredentialResponse.prototype.setEndpoint = function(value) {
+  jspb.Message.setField(this, 3, value);
+};
+
+
+/**
+ * optional string region = 4;
+ * @return {string}
+ */
+proto.openstorage.api.SdkAwsCredentialResponse.prototype.getRegion = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
+};
+
+
+/** @param {string} value */
+proto.openstorage.api.SdkAwsCredentialResponse.prototype.setRegion = function(value) {
+  jspb.Message.setField(this, 4, value);
+};
+
+
+
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.openstorage.api.SdkAzureCredentialResponse = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.openstorage.api.SdkAzureCredentialResponse, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  proto.openstorage.api.SdkAzureCredentialResponse.displayName = 'proto.openstorage.api.SdkAzureCredentialResponse';
+}
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto suitable for use in Soy templates.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     com.google.apps.jspb.JsClassTemplate.JS_RESERVED_WORDS.
+ * @param {boolean=} opt_includeInstance Whether to include the JSPB instance
+ *     for transitional soy proto support: http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.openstorage.api.SdkAzureCredentialResponse.prototype.toObject = function(opt_includeInstance) {
+  return proto.openstorage.api.SdkAzureCredentialResponse.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Whether to include the JSPB
+ *     instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.openstorage.api.SdkAzureCredentialResponse} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.openstorage.api.SdkAzureCredentialResponse.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    credentialId: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    accountName: jspb.Message.getFieldWithDefault(msg, 2, "")
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.openstorage.api.SdkAzureCredentialResponse}
+ */
+proto.openstorage.api.SdkAzureCredentialResponse.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.openstorage.api.SdkAzureCredentialResponse;
+  return proto.openstorage.api.SdkAzureCredentialResponse.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.openstorage.api.SdkAzureCredentialResponse} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.openstorage.api.SdkAzureCredentialResponse}
+ */
+proto.openstorage.api.SdkAzureCredentialResponse.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setCredentialId(value);
+      break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setAccountName(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.openstorage.api.SdkAzureCredentialResponse.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.openstorage.api.SdkAzureCredentialResponse.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.openstorage.api.SdkAzureCredentialResponse} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.openstorage.api.SdkAzureCredentialResponse.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getCredentialId();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+  f = message.getAccountName();
+  if (f.length > 0) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional string credential_id = 1;
+ * @return {string}
+ */
+proto.openstorage.api.SdkAzureCredentialResponse.prototype.getCredentialId = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/** @param {string} value */
+proto.openstorage.api.SdkAzureCredentialResponse.prototype.setCredentialId = function(value) {
+  jspb.Message.setField(this, 1, value);
+};
+
+
+/**
+ * optional string account_name = 2;
+ * @return {string}
+ */
+proto.openstorage.api.SdkAzureCredentialResponse.prototype.getAccountName = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/** @param {string} value */
+proto.openstorage.api.SdkAzureCredentialResponse.prototype.setAccountName = function(value) {
+  jspb.Message.setField(this, 2, value);
+};
+
+
+
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.openstorage.api.SdkGoogleCredentialResponse = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.openstorage.api.SdkGoogleCredentialResponse, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  proto.openstorage.api.SdkGoogleCredentialResponse.displayName = 'proto.openstorage.api.SdkGoogleCredentialResponse';
+}
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto suitable for use in Soy templates.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     com.google.apps.jspb.JsClassTemplate.JS_RESERVED_WORDS.
+ * @param {boolean=} opt_includeInstance Whether to include the JSPB instance
+ *     for transitional soy proto support: http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.openstorage.api.SdkGoogleCredentialResponse.prototype.toObject = function(opt_includeInstance) {
+  return proto.openstorage.api.SdkGoogleCredentialResponse.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Whether to include the JSPB
+ *     instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.openstorage.api.SdkGoogleCredentialResponse} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.openstorage.api.SdkGoogleCredentialResponse.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    credentialId: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    projectId: jspb.Message.getFieldWithDefault(msg, 2, "")
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.openstorage.api.SdkGoogleCredentialResponse}
+ */
+proto.openstorage.api.SdkGoogleCredentialResponse.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.openstorage.api.SdkGoogleCredentialResponse;
+  return proto.openstorage.api.SdkGoogleCredentialResponse.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.openstorage.api.SdkGoogleCredentialResponse} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.openstorage.api.SdkGoogleCredentialResponse}
+ */
+proto.openstorage.api.SdkGoogleCredentialResponse.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setCredentialId(value);
+      break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setProjectId(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.openstorage.api.SdkGoogleCredentialResponse.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.openstorage.api.SdkGoogleCredentialResponse.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.openstorage.api.SdkGoogleCredentialResponse} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.openstorage.api.SdkGoogleCredentialResponse.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
   f = message.getCredentialId();
   if (f.length > 0) {
@@ -11767,13 +11779,6 @@ proto.openstorage.api.GoogleCredential.serializeBinaryToWriter = function(messag
       f
     );
   }
-  f = message.getJsonKey();
-  if (f.length > 0) {
-    writer.writeString(
-      3,
-      f
-    );
-  }
 };
 
 
@@ -11781,13 +11786,13 @@ proto.openstorage.api.GoogleCredential.serializeBinaryToWriter = function(messag
  * optional string credential_id = 1;
  * @return {string}
  */
-proto.openstorage.api.GoogleCredential.prototype.getCredentialId = function() {
+proto.openstorage.api.SdkGoogleCredentialResponse.prototype.getCredentialId = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
 };
 
 
 /** @param {string} value */
-proto.openstorage.api.GoogleCredential.prototype.setCredentialId = function(value) {
+proto.openstorage.api.SdkGoogleCredentialResponse.prototype.setCredentialId = function(value) {
   jspb.Message.setField(this, 1, value);
 };
 
@@ -11796,32 +11801,17 @@ proto.openstorage.api.GoogleCredential.prototype.setCredentialId = function(valu
  * optional string project_id = 2;
  * @return {string}
  */
-proto.openstorage.api.GoogleCredential.prototype.getProjectId = function() {
+proto.openstorage.api.SdkGoogleCredentialResponse.prototype.getProjectId = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
 };
 
 
 /** @param {string} value */
-proto.openstorage.api.GoogleCredential.prototype.setProjectId = function(value) {
+proto.openstorage.api.SdkGoogleCredentialResponse.prototype.setProjectId = function(value) {
   jspb.Message.setField(this, 2, value);
 };
 
 
-/**
- * optional string json_key = 3;
- * @return {string}
- */
-proto.openstorage.api.GoogleCredential.prototype.getJsonKey = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
-};
-
-
-/** @param {string} value */
-proto.openstorage.api.GoogleCredential.prototype.setJsonKey = function(value) {
-  jspb.Message.setField(this, 3, value);
-};
-
-
 
 /**
  * Generated by JsPbCodeGenerator.
@@ -11833,12 +11823,12 @@ proto.openstorage.api.GoogleCredential.prototype.setJsonKey = function(value) {
  * @extends {jspb.Message}
  * @constructor
  */
-proto.openstorage.api.SdkCredentialEnumerateAWSRequest = function(opt_data) {
+proto.openstorage.api.SdkCredentialEnumerateRequest = function(opt_data) {
   jspb.Message.initialize(this, opt_data, 0, -1, null, null);
 };
-goog.inherits(proto.openstorage.api.SdkCredentialEnumerateAWSRequest, jspb.Message);
+goog.inherits(proto.openstorage.api.SdkCredentialEnumerateRequest, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
-  proto.openstorage.api.SdkCredentialEnumerateAWSRequest.displayName = 'proto.openstorage.api.SdkCredentialEnumerateAWSRequest';
+  proto.openstorage.api.SdkCredentialEnumerateRequest.displayName = 'proto.openstorage.api.SdkCredentialEnumerateRequest';
 }
 
 
@@ -11853,8 +11843,8 @@ if (jspb.Message.GENERATE_TO_OBJECT) {
  *     for transitional soy proto support: http://goto/soy-param-migration
  * @return {!Object}
  */
-proto.openstorage.api.SdkCredentialEnumerateAWSRequest.prototype.toObject = function(opt_includeInstance) {
-  return proto.openstorage.api.SdkCredentialEnumerateAWSRequest.toObject(opt_includeInstance, this);
+proto.openstorage.api.SdkCredentialEnumerateRequest.prototype.toObject = function(opt_includeInstance) {
+  return proto.openstorage.api.SdkCredentialEnumerateRequest.toObject(opt_includeInstance, this);
 };
 
 
@@ -11863,11 +11853,290 @@ proto.openstorage.api.SdkCredentialEnumerateAWSRequest.prototype.toObject = func
  * @param {boolean|undefined} includeInstance Whether to include the JSPB
  *     instance for transitional soy proto support:
  *     http://goto/soy-param-migration
- * @param {!proto.openstorage.api.SdkCredentialEnumerateAWSRequest} msg The msg instance to transform.
+ * @param {!proto.openstorage.api.SdkCredentialEnumerateRequest} msg The msg instance to transform.
  * @return {!Object}
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
-proto.openstorage.api.SdkCredentialEnumerateAWSRequest.toObject = function(includeInstance, msg) {
+proto.openstorage.api.SdkCredentialEnumerateRequest.toObject = function(includeInstance, msg) {
+  var f, obj = {
+
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.openstorage.api.SdkCredentialEnumerateRequest}
+ */
+proto.openstorage.api.SdkCredentialEnumerateRequest.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.openstorage.api.SdkCredentialEnumerateRequest;
+  return proto.openstorage.api.SdkCredentialEnumerateRequest.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.openstorage.api.SdkCredentialEnumerateRequest} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.openstorage.api.SdkCredentialEnumerateRequest}
+ */
+proto.openstorage.api.SdkCredentialEnumerateRequest.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.openstorage.api.SdkCredentialEnumerateRequest.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.openstorage.api.SdkCredentialEnumerateRequest.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.openstorage.api.SdkCredentialEnumerateRequest} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.openstorage.api.SdkCredentialEnumerateRequest.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+};
+
+
+
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.openstorage.api.SdkCredentialEnumerateResponse = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, proto.openstorage.api.SdkCredentialEnumerateResponse.repeatedFields_, null);
+};
+goog.inherits(proto.openstorage.api.SdkCredentialEnumerateResponse, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  proto.openstorage.api.SdkCredentialEnumerateResponse.displayName = 'proto.openstorage.api.SdkCredentialEnumerateResponse';
+}
+/**
+ * List of repeated fields within this message type.
+ * @private {!Array<number>}
+ * @const
+ */
+proto.openstorage.api.SdkCredentialEnumerateResponse.repeatedFields_ = [1];
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto suitable for use in Soy templates.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     com.google.apps.jspb.JsClassTemplate.JS_RESERVED_WORDS.
+ * @param {boolean=} opt_includeInstance Whether to include the JSPB instance
+ *     for transitional soy proto support: http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.openstorage.api.SdkCredentialEnumerateResponse.prototype.toObject = function(opt_includeInstance) {
+  return proto.openstorage.api.SdkCredentialEnumerateResponse.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Whether to include the JSPB
+ *     instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.openstorage.api.SdkCredentialEnumerateResponse} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.openstorage.api.SdkCredentialEnumerateResponse.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    credentialIdsList: jspb.Message.getRepeatedField(msg, 1)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.openstorage.api.SdkCredentialEnumerateResponse}
+ */
+proto.openstorage.api.SdkCredentialEnumerateResponse.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.openstorage.api.SdkCredentialEnumerateResponse;
+  return proto.openstorage.api.SdkCredentialEnumerateResponse.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.openstorage.api.SdkCredentialEnumerateResponse} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.openstorage.api.SdkCredentialEnumerateResponse}
+ */
+proto.openstorage.api.SdkCredentialEnumerateResponse.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.addCredentialIds(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.openstorage.api.SdkCredentialEnumerateResponse.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.openstorage.api.SdkCredentialEnumerateResponse.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.openstorage.api.SdkCredentialEnumerateResponse} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.openstorage.api.SdkCredentialEnumerateResponse.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getCredentialIdsList();
+  if (f.length > 0) {
+    writer.writeRepeatedString(
+      1,
+      f
+    );
+  }
+};
+
+
+/**
+ * repeated string credential_ids = 1;
+ * @return {!Array.<string>}
+ */
+proto.openstorage.api.SdkCredentialEnumerateResponse.prototype.getCredentialIdsList = function() {
+  return /** @type {!Array.<string>} */ (jspb.Message.getRepeatedField(this, 1));
+};
+
+
+/** @param {!Array.<string>} value */
+proto.openstorage.api.SdkCredentialEnumerateResponse.prototype.setCredentialIdsList = function(value) {
+  jspb.Message.setField(this, 1, value || []);
+};
+
+
+/**
+ * @param {!string} value
+ * @param {number=} opt_index
+ */
+proto.openstorage.api.SdkCredentialEnumerateResponse.prototype.addCredentialIds = function(value, opt_index) {
+  jspb.Message.addToRepeatedField(this, 1, value, opt_index);
+};
+
+
+proto.openstorage.api.SdkCredentialEnumerateResponse.prototype.clearCredentialIdsList = function() {
+  this.setCredentialIdsList([]);
+};
+
+
+
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.openstorage.api.SdkCredentialInspectRequest = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.openstorage.api.SdkCredentialInspectRequest, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  proto.openstorage.api.SdkCredentialInspectRequest.displayName = 'proto.openstorage.api.SdkCredentialInspectRequest';
+}
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto suitable for use in Soy templates.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     com.google.apps.jspb.JsClassTemplate.JS_RESERVED_WORDS.
+ * @param {boolean=} opt_includeInstance Whether to include the JSPB instance
+ *     for transitional soy proto support: http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.openstorage.api.SdkCredentialInspectRequest.prototype.toObject = function(opt_includeInstance) {
+  return proto.openstorage.api.SdkCredentialInspectRequest.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Whether to include the JSPB
+ *     instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.openstorage.api.SdkCredentialInspectRequest} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.openstorage.api.SdkCredentialInspectRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
     credentialId: jspb.Message.getFieldWithDefault(msg, 1, "")
   };
@@ -11883,23 +12152,23 @@ proto.openstorage.api.SdkCredentialEnumerateAWSRequest.toObject = function(inclu
 /**
  * Deserializes binary data (in protobuf wire format).
  * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.openstorage.api.SdkCredentialEnumerateAWSRequest}
+ * @return {!proto.openstorage.api.SdkCredentialInspectRequest}
  */
-proto.openstorage.api.SdkCredentialEnumerateAWSRequest.deserializeBinary = function(bytes) {
+proto.openstorage.api.SdkCredentialInspectRequest.deserializeBinary = function(bytes) {
   var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.openstorage.api.SdkCredentialEnumerateAWSRequest;
-  return proto.openstorage.api.SdkCredentialEnumerateAWSRequest.deserializeBinaryFromReader(msg, reader);
+  var msg = new proto.openstorage.api.SdkCredentialInspectRequest;
+  return proto.openstorage.api.SdkCredentialInspectRequest.deserializeBinaryFromReader(msg, reader);
 };
 
 
 /**
  * Deserializes binary data (in protobuf wire format) from the
  * given reader into the given message object.
- * @param {!proto.openstorage.api.SdkCredentialEnumerateAWSRequest} msg The message object to deserialize into.
+ * @param {!proto.openstorage.api.SdkCredentialInspectRequest} msg The message object to deserialize into.
  * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.openstorage.api.SdkCredentialEnumerateAWSRequest}
+ * @return {!proto.openstorage.api.SdkCredentialInspectRequest}
  */
-proto.openstorage.api.SdkCredentialEnumerateAWSRequest.deserializeBinaryFromReader = function(msg, reader) {
+proto.openstorage.api.SdkCredentialInspectRequest.deserializeBinaryFromReader = function(msg, reader) {
   while (reader.nextField()) {
     if (reader.isEndGroup()) {
       break;
@@ -11923,9 +12192,9 @@ proto.openstorage.api.SdkCredentialEnumerateAWSRequest.deserializeBinaryFromRead
  * Serializes the message to binary data (in protobuf wire format).
  * @return {!Uint8Array}
  */
-proto.openstorage.api.SdkCredentialEnumerateAWSRequest.prototype.serializeBinary = function() {
+proto.openstorage.api.SdkCredentialInspectRequest.prototype.serializeBinary = function() {
   var writer = new jspb.BinaryWriter();
-  proto.openstorage.api.SdkCredentialEnumerateAWSRequest.serializeBinaryToWriter(this, writer);
+  proto.openstorage.api.SdkCredentialInspectRequest.serializeBinaryToWriter(this, writer);
   return writer.getResultBuffer();
 };
 
@@ -11933,11 +12202,11 @@ proto.openstorage.api.SdkCredentialEnumerateAWSRequest.prototype.serializeBinary
 /**
  * Serializes the given message to binary data (in protobuf wire
  * format), writing to the given BinaryWriter.
- * @param {!proto.openstorage.api.SdkCredentialEnumerateAWSRequest} message
+ * @param {!proto.openstorage.api.SdkCredentialInspectRequest} message
  * @param {!jspb.BinaryWriter} writer
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
-proto.openstorage.api.SdkCredentialEnumerateAWSRequest.serializeBinaryToWriter = function(message, writer) {
+proto.openstorage.api.SdkCredentialInspectRequest.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
   f = message.getCredentialId();
   if (f.length > 0) {
@@ -11953,13 +12222,13 @@ proto.openstorage.api.SdkCredentialEnumerateAWSRequest.serializeBinaryToWriter =
  * optional string credential_id = 1;
  * @return {string}
  */
-proto.openstorage.api.SdkCredentialEnumerateAWSRequest.prototype.getCredentialId = function() {
+proto.openstorage.api.SdkCredentialInspectRequest.prototype.getCredentialId = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
 };
 
 
 /** @param {string} value */
-proto.openstorage.api.SdkCredentialEnumerateAWSRequest.prototype.setCredentialId = function(value) {
+proto.openstorage.api.SdkCredentialInspectRequest.prototype.setCredentialId = function(value) {
   jspb.Message.setField(this, 1, value);
 };
 
@@ -11975,19 +12244,39 @@ proto.openstorage.api.SdkCredentialEnumerateAWSRequest.prototype.setCredentialId
  * @extends {jspb.Message}
  * @constructor
  */
-proto.openstorage.api.SdkCredentialEnumerateAWSResponse = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, proto.openstorage.api.SdkCredentialEnumerateAWSResponse.repeatedFields_, null);
+proto.openstorage.api.SdkCredentialInspectResponse = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, proto.openstorage.api.SdkCredentialInspectResponse.oneofGroups_);
 };
-goog.inherits(proto.openstorage.api.SdkCredentialEnumerateAWSResponse, jspb.Message);
+goog.inherits(proto.openstorage.api.SdkCredentialInspectResponse, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
-  proto.openstorage.api.SdkCredentialEnumerateAWSResponse.displayName = 'proto.openstorage.api.SdkCredentialEnumerateAWSResponse';
+  proto.openstorage.api.SdkCredentialInspectResponse.displayName = 'proto.openstorage.api.SdkCredentialInspectResponse';
 }
 /**
- * List of repeated fields within this message type.
- * @private {!Array<number>}
+ * Oneof group definitions for this message. Each group defines the field
+ * numbers belonging to that group. When of these fields' value is set, all
+ * other fields in the group are cleared. During deserialization, if multiple
+ * fields are encountered for a group, only the last value seen will be kept.
+ * @private {!Array<!Array<number>>}
  * @const
  */
-proto.openstorage.api.SdkCredentialEnumerateAWSResponse.repeatedFields_ = [1];
+proto.openstorage.api.SdkCredentialInspectResponse.oneofGroups_ = [[1,2,3]];
+
+/**
+ * @enum {number}
+ */
+proto.openstorage.api.SdkCredentialInspectResponse.CredentialTypeCase = {
+  CREDENTIAL_TYPE_NOT_SET: 0,
+  AWS_CREDENTIAL: 1,
+  AZURE_CREDENTIAL: 2,
+  GOOGLE_CREDENTIAL: 3
+};
+
+/**
+ * @return {proto.openstorage.api.SdkCredentialInspectResponse.CredentialTypeCase}
+ */
+proto.openstorage.api.SdkCredentialInspectResponse.prototype.getCredentialTypeCase = function() {
+  return /** @type {proto.openstorage.api.SdkCredentialInspectResponse.CredentialTypeCase} */(jspb.Message.computeOneofCase(this, proto.openstorage.api.SdkCredentialInspectResponse.oneofGroups_[0]));
+};
 
 
 
@@ -12002,8 +12291,8 @@ if (jspb.Message.GENERATE_TO_OBJECT) {
  *     for transitional soy proto support: http://goto/soy-param-migration
  * @return {!Object}
  */
-proto.openstorage.api.SdkCredentialEnumerateAWSResponse.prototype.toObject = function(opt_includeInstance) {
-  return proto.openstorage.api.SdkCredentialEnumerateAWSResponse.toObject(opt_includeInstance, this);
+proto.openstorage.api.SdkCredentialInspectResponse.prototype.toObject = function(opt_includeInstance) {
+  return proto.openstorage.api.SdkCredentialInspectResponse.toObject(opt_includeInstance, this);
 };
 
 
@@ -12012,14 +12301,15 @@ proto.openstorage.api.SdkCredentialEnumerateAWSResponse.prototype.toObject = fun
  * @param {boolean|undefined} includeInstance Whether to include the JSPB
  *     instance for transitional soy proto support:
  *     http://goto/soy-param-migration
- * @param {!proto.openstorage.api.SdkCredentialEnumerateAWSResponse} msg The msg instance to transform.
+ * @param {!proto.openstorage.api.SdkCredentialInspectResponse} msg The msg instance to transform.
  * @return {!Object}
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
-proto.openstorage.api.SdkCredentialEnumerateAWSResponse.toObject = function(includeInstance, msg) {
+proto.openstorage.api.SdkCredentialInspectResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    credentialList: jspb.Message.toObjectList(msg.getCredentialList(),
-    proto.openstorage.api.S3Credential.toObject, includeInstance)
+    awsCredential: (f = msg.getAwsCredential()) && proto.openstorage.api.SdkAwsCredentialResponse.toObject(includeInstance, f),
+    azureCredential: (f = msg.getAzureCredential()) && proto.openstorage.api.SdkAzureCredentialResponse.toObject(includeInstance, f),
+    googleCredential: (f = msg.getGoogleCredential()) && proto.openstorage.api.SdkGoogleCredentialResponse.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -12033,23 +12323,23 @@ proto.openstorage.api.SdkCredentialEnumerateAWSResponse.toObject = function(incl
 /**
  * Deserializes binary data (in protobuf wire format).
  * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.openstorage.api.SdkCredentialEnumerateAWSResponse}
+ * @return {!proto.openstorage.api.SdkCredentialInspectResponse}
  */
-proto.openstorage.api.SdkCredentialEnumerateAWSResponse.deserializeBinary = function(bytes) {
+proto.openstorage.api.SdkCredentialInspectResponse.deserializeBinary = function(bytes) {
   var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.openstorage.api.SdkCredentialEnumerateAWSResponse;
-  return proto.openstorage.api.SdkCredentialEnumerateAWSResponse.deserializeBinaryFromReader(msg, reader);
+  var msg = new proto.openstorage.api.SdkCredentialInspectResponse;
+  return proto.openstorage.api.SdkCredentialInspectResponse.deserializeBinaryFromReader(msg, reader);
 };
 
 
 /**
  * Deserializes binary data (in protobuf wire format) from the
  * given reader into the given message object.
- * @param {!proto.openstorage.api.SdkCredentialEnumerateAWSResponse} msg The message object to deserialize into.
+ * @param {!proto.openstorage.api.SdkCredentialInspectResponse} msg The message object to deserialize into.
  * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.openstorage.api.SdkCredentialEnumerateAWSResponse}
+ * @return {!proto.openstorage.api.SdkCredentialInspectResponse}
  */
-proto.openstorage.api.SdkCredentialEnumerateAWSResponse.deserializeBinaryFromReader = function(msg, reader) {
+proto.openstorage.api.SdkCredentialInspectResponse.deserializeBinaryFromReader = function(msg, reader) {
   while (reader.nextField()) {
     if (reader.isEndGroup()) {
       break;
@@ -12057,9 +12347,19 @@ proto.openstorage.api.SdkCredentialEnumerateAWSResponse.deserializeBinaryFromRea
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
-      var value = new proto.openstorage.api.S3Credential;
-      reader.readMessage(value,proto.openstorage.api.S3Credential.deserializeBinaryFromReader);
-      msg.addCredential(value);
+      var value = new proto.openstorage.api.SdkAwsCredentialResponse;
+      reader.readMessage(value,proto.openstorage.api.SdkAwsCredentialResponse.deserializeBinaryFromReader);
+      msg.setAwsCredential(value);
+      break;
+    case 2:
+      var value = new proto.openstorage.api.SdkAzureCredentialResponse;
+      reader.readMessage(value,proto.openstorage.api.SdkAzureCredentialResponse.deserializeBinaryFromReader);
+      msg.setAzureCredential(value);
+      break;
+    case 3:
+      var value = new proto.openstorage.api.SdkGoogleCredentialResponse;
+      reader.readMessage(value,proto.openstorage.api.SdkGoogleCredentialResponse.deserializeBinaryFromReader);
+      msg.setGoogleCredential(value);
       break;
     default:
       reader.skipField();
@@ -12074,9 +12374,9 @@ proto.openstorage.api.SdkCredentialEnumerateAWSResponse.deserializeBinaryFromRea
  * Serializes the message to binary data (in protobuf wire format).
  * @return {!Uint8Array}
  */
-proto.openstorage.api.SdkCredentialEnumerateAWSResponse.prototype.serializeBinary = function() {
+proto.openstorage.api.SdkCredentialInspectResponse.prototype.serializeBinary = function() {
   var writer = new jspb.BinaryWriter();
-  proto.openstorage.api.SdkCredentialEnumerateAWSResponse.serializeBinaryToWriter(this, writer);
+  proto.openstorage.api.SdkCredentialInspectResponse.serializeBinaryToWriter(this, writer);
   return writer.getResultBuffer();
 };
 
@@ -12084,671 +12384,126 @@ proto.openstorage.api.SdkCredentialEnumerateAWSResponse.prototype.serializeBinar
 /**
  * Serializes the given message to binary data (in protobuf wire
  * format), writing to the given BinaryWriter.
- * @param {!proto.openstorage.api.SdkCredentialEnumerateAWSResponse} message
+ * @param {!proto.openstorage.api.SdkCredentialInspectResponse} message
  * @param {!jspb.BinaryWriter} writer
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
-proto.openstorage.api.SdkCredentialEnumerateAWSResponse.serializeBinaryToWriter = function(message, writer) {
+proto.openstorage.api.SdkCredentialInspectResponse.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getCredentialList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
+  f = message.getAwsCredential();
+  if (f != null) {
+    writer.writeMessage(
       1,
       f,
-      proto.openstorage.api.S3Credential.serializeBinaryToWriter
+      proto.openstorage.api.SdkAwsCredentialResponse.serializeBinaryToWriter
     );
   }
-};
-
-
-/**
- * repeated S3Credential credential = 1;
- * @return {!Array.<!proto.openstorage.api.S3Credential>}
- */
-proto.openstorage.api.SdkCredentialEnumerateAWSResponse.prototype.getCredentialList = function() {
-  return /** @type{!Array.<!proto.openstorage.api.S3Credential>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.openstorage.api.S3Credential, 1));
-};
-
-
-/** @param {!Array.<!proto.openstorage.api.S3Credential>} value */
-proto.openstorage.api.SdkCredentialEnumerateAWSResponse.prototype.setCredentialList = function(value) {
-  jspb.Message.setRepeatedWrapperField(this, 1, value);
-};
-
-
-/**
- * @param {!proto.openstorage.api.S3Credential=} opt_value
- * @param {number=} opt_index
- * @return {!proto.openstorage.api.S3Credential}
- */
-proto.openstorage.api.SdkCredentialEnumerateAWSResponse.prototype.addCredential = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 1, opt_value, proto.openstorage.api.S3Credential, opt_index);
-};
-
-
-proto.openstorage.api.SdkCredentialEnumerateAWSResponse.prototype.clearCredentialList = function() {
-  this.setCredentialList([]);
-};
-
-
-
-/**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
- */
-proto.openstorage.api.SdkCredentialEnumerateAzureRequest = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
-};
-goog.inherits(proto.openstorage.api.SdkCredentialEnumerateAzureRequest, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  proto.openstorage.api.SdkCredentialEnumerateAzureRequest.displayName = 'proto.openstorage.api.SdkCredentialEnumerateAzureRequest';
-}
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto suitable for use in Soy templates.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     com.google.apps.jspb.JsClassTemplate.JS_RESERVED_WORDS.
- * @param {boolean=} opt_includeInstance Whether to include the JSPB instance
- *     for transitional soy proto support: http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.openstorage.api.SdkCredentialEnumerateAzureRequest.prototype.toObject = function(opt_includeInstance) {
-  return proto.openstorage.api.SdkCredentialEnumerateAzureRequest.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Whether to include the JSPB
- *     instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.openstorage.api.SdkCredentialEnumerateAzureRequest} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.openstorage.api.SdkCredentialEnumerateAzureRequest.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    credentialId: jspb.Message.getFieldWithDefault(msg, 1, "")
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.openstorage.api.SdkCredentialEnumerateAzureRequest}
- */
-proto.openstorage.api.SdkCredentialEnumerateAzureRequest.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.openstorage.api.SdkCredentialEnumerateAzureRequest;
-  return proto.openstorage.api.SdkCredentialEnumerateAzureRequest.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.openstorage.api.SdkCredentialEnumerateAzureRequest} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.openstorage.api.SdkCredentialEnumerateAzureRequest}
- */
-proto.openstorage.api.SdkCredentialEnumerateAzureRequest.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 1:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setCredentialId(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.openstorage.api.SdkCredentialEnumerateAzureRequest.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.openstorage.api.SdkCredentialEnumerateAzureRequest.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.openstorage.api.SdkCredentialEnumerateAzureRequest} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.openstorage.api.SdkCredentialEnumerateAzureRequest.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getCredentialId();
-  if (f.length > 0) {
-    writer.writeString(
-      1,
-      f
-    );
-  }
-};
-
-
-/**
- * optional string credential_id = 1;
- * @return {string}
- */
-proto.openstorage.api.SdkCredentialEnumerateAzureRequest.prototype.getCredentialId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
-};
-
-
-/** @param {string} value */
-proto.openstorage.api.SdkCredentialEnumerateAzureRequest.prototype.setCredentialId = function(value) {
-  jspb.Message.setField(this, 1, value);
-};
-
-
-
-/**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
- */
-proto.openstorage.api.SdkCredentialEnumerateAzureResponse = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, proto.openstorage.api.SdkCredentialEnumerateAzureResponse.repeatedFields_, null);
-};
-goog.inherits(proto.openstorage.api.SdkCredentialEnumerateAzureResponse, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  proto.openstorage.api.SdkCredentialEnumerateAzureResponse.displayName = 'proto.openstorage.api.SdkCredentialEnumerateAzureResponse';
-}
-/**
- * List of repeated fields within this message type.
- * @private {!Array<number>}
- * @const
- */
-proto.openstorage.api.SdkCredentialEnumerateAzureResponse.repeatedFields_ = [1];
-
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto suitable for use in Soy templates.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     com.google.apps.jspb.JsClassTemplate.JS_RESERVED_WORDS.
- * @param {boolean=} opt_includeInstance Whether to include the JSPB instance
- *     for transitional soy proto support: http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.openstorage.api.SdkCredentialEnumerateAzureResponse.prototype.toObject = function(opt_includeInstance) {
-  return proto.openstorage.api.SdkCredentialEnumerateAzureResponse.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Whether to include the JSPB
- *     instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.openstorage.api.SdkCredentialEnumerateAzureResponse} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.openstorage.api.SdkCredentialEnumerateAzureResponse.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    credentialList: jspb.Message.toObjectList(msg.getCredentialList(),
-    proto.openstorage.api.AzureCredential.toObject, includeInstance)
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.openstorage.api.SdkCredentialEnumerateAzureResponse}
- */
-proto.openstorage.api.SdkCredentialEnumerateAzureResponse.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.openstorage.api.SdkCredentialEnumerateAzureResponse;
-  return proto.openstorage.api.SdkCredentialEnumerateAzureResponse.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.openstorage.api.SdkCredentialEnumerateAzureResponse} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.openstorage.api.SdkCredentialEnumerateAzureResponse}
- */
-proto.openstorage.api.SdkCredentialEnumerateAzureResponse.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 1:
-      var value = new proto.openstorage.api.AzureCredential;
-      reader.readMessage(value,proto.openstorage.api.AzureCredential.deserializeBinaryFromReader);
-      msg.addCredential(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.openstorage.api.SdkCredentialEnumerateAzureResponse.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.openstorage.api.SdkCredentialEnumerateAzureResponse.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.openstorage.api.SdkCredentialEnumerateAzureResponse} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.openstorage.api.SdkCredentialEnumerateAzureResponse.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getCredentialList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
-      1,
+  f = message.getAzureCredential();
+  if (f != null) {
+    writer.writeMessage(
+      2,
       f,
-      proto.openstorage.api.AzureCredential.serializeBinaryToWriter
+      proto.openstorage.api.SdkAzureCredentialResponse.serializeBinaryToWriter
     );
   }
-};
-
-
-/**
- * repeated AzureCredential credential = 1;
- * @return {!Array.<!proto.openstorage.api.AzureCredential>}
- */
-proto.openstorage.api.SdkCredentialEnumerateAzureResponse.prototype.getCredentialList = function() {
-  return /** @type{!Array.<!proto.openstorage.api.AzureCredential>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.openstorage.api.AzureCredential, 1));
-};
-
-
-/** @param {!Array.<!proto.openstorage.api.AzureCredential>} value */
-proto.openstorage.api.SdkCredentialEnumerateAzureResponse.prototype.setCredentialList = function(value) {
-  jspb.Message.setRepeatedWrapperField(this, 1, value);
-};
-
-
-/**
- * @param {!proto.openstorage.api.AzureCredential=} opt_value
- * @param {number=} opt_index
- * @return {!proto.openstorage.api.AzureCredential}
- */
-proto.openstorage.api.SdkCredentialEnumerateAzureResponse.prototype.addCredential = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 1, opt_value, proto.openstorage.api.AzureCredential, opt_index);
-};
-
-
-proto.openstorage.api.SdkCredentialEnumerateAzureResponse.prototype.clearCredentialList = function() {
-  this.setCredentialList([]);
-};
-
-
-
-/**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
- */
-proto.openstorage.api.SdkCredentialEnumerateGoogleRequest = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
-};
-goog.inherits(proto.openstorage.api.SdkCredentialEnumerateGoogleRequest, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  proto.openstorage.api.SdkCredentialEnumerateGoogleRequest.displayName = 'proto.openstorage.api.SdkCredentialEnumerateGoogleRequest';
-}
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto suitable for use in Soy templates.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     com.google.apps.jspb.JsClassTemplate.JS_RESERVED_WORDS.
- * @param {boolean=} opt_includeInstance Whether to include the JSPB instance
- *     for transitional soy proto support: http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.openstorage.api.SdkCredentialEnumerateGoogleRequest.prototype.toObject = function(opt_includeInstance) {
-  return proto.openstorage.api.SdkCredentialEnumerateGoogleRequest.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Whether to include the JSPB
- *     instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.openstorage.api.SdkCredentialEnumerateGoogleRequest} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.openstorage.api.SdkCredentialEnumerateGoogleRequest.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    credentialId: jspb.Message.getFieldWithDefault(msg, 1, "")
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.openstorage.api.SdkCredentialEnumerateGoogleRequest}
- */
-proto.openstorage.api.SdkCredentialEnumerateGoogleRequest.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.openstorage.api.SdkCredentialEnumerateGoogleRequest;
-  return proto.openstorage.api.SdkCredentialEnumerateGoogleRequest.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.openstorage.api.SdkCredentialEnumerateGoogleRequest} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.openstorage.api.SdkCredentialEnumerateGoogleRequest}
- */
-proto.openstorage.api.SdkCredentialEnumerateGoogleRequest.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 1:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setCredentialId(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.openstorage.api.SdkCredentialEnumerateGoogleRequest.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.openstorage.api.SdkCredentialEnumerateGoogleRequest.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.openstorage.api.SdkCredentialEnumerateGoogleRequest} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.openstorage.api.SdkCredentialEnumerateGoogleRequest.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getCredentialId();
-  if (f.length > 0) {
-    writer.writeString(
-      1,
-      f
-    );
-  }
-};
-
-
-/**
- * optional string credential_id = 1;
- * @return {string}
- */
-proto.openstorage.api.SdkCredentialEnumerateGoogleRequest.prototype.getCredentialId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
-};
-
-
-/** @param {string} value */
-proto.openstorage.api.SdkCredentialEnumerateGoogleRequest.prototype.setCredentialId = function(value) {
-  jspb.Message.setField(this, 1, value);
-};
-
-
-
-/**
- * Generated by JsPbCodeGenerator.
- * @param {Array=} opt_data Optional initial data array, typically from a
- * server response, or constructed directly in Javascript. The array is used
- * in place and becomes part of the constructed object. It is not cloned.
- * If no data is provided, the constructed object will be empty, but still
- * valid.
- * @extends {jspb.Message}
- * @constructor
- */
-proto.openstorage.api.SdkCredentialEnumerateGoogleResponse = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, proto.openstorage.api.SdkCredentialEnumerateGoogleResponse.repeatedFields_, null);
-};
-goog.inherits(proto.openstorage.api.SdkCredentialEnumerateGoogleResponse, jspb.Message);
-if (goog.DEBUG && !COMPILED) {
-  proto.openstorage.api.SdkCredentialEnumerateGoogleResponse.displayName = 'proto.openstorage.api.SdkCredentialEnumerateGoogleResponse';
-}
-/**
- * List of repeated fields within this message type.
- * @private {!Array<number>}
- * @const
- */
-proto.openstorage.api.SdkCredentialEnumerateGoogleResponse.repeatedFields_ = [1];
-
-
-
-if (jspb.Message.GENERATE_TO_OBJECT) {
-/**
- * Creates an object representation of this proto suitable for use in Soy templates.
- * Field names that are reserved in JavaScript and will be renamed to pb_name.
- * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
- * For the list of reserved names please see:
- *     com.google.apps.jspb.JsClassTemplate.JS_RESERVED_WORDS.
- * @param {boolean=} opt_includeInstance Whether to include the JSPB instance
- *     for transitional soy proto support: http://goto/soy-param-migration
- * @return {!Object}
- */
-proto.openstorage.api.SdkCredentialEnumerateGoogleResponse.prototype.toObject = function(opt_includeInstance) {
-  return proto.openstorage.api.SdkCredentialEnumerateGoogleResponse.toObject(opt_includeInstance, this);
-};
-
-
-/**
- * Static version of the {@see toObject} method.
- * @param {boolean|undefined} includeInstance Whether to include the JSPB
- *     instance for transitional soy proto support:
- *     http://goto/soy-param-migration
- * @param {!proto.openstorage.api.SdkCredentialEnumerateGoogleResponse} msg The msg instance to transform.
- * @return {!Object}
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.openstorage.api.SdkCredentialEnumerateGoogleResponse.toObject = function(includeInstance, msg) {
-  var f, obj = {
-    credentialList: jspb.Message.toObjectList(msg.getCredentialList(),
-    proto.openstorage.api.GoogleCredential.toObject, includeInstance)
-  };
-
-  if (includeInstance) {
-    obj.$jspbMessageInstance = msg;
-  }
-  return obj;
-};
-}
-
-
-/**
- * Deserializes binary data (in protobuf wire format).
- * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.openstorage.api.SdkCredentialEnumerateGoogleResponse}
- */
-proto.openstorage.api.SdkCredentialEnumerateGoogleResponse.deserializeBinary = function(bytes) {
-  var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.openstorage.api.SdkCredentialEnumerateGoogleResponse;
-  return proto.openstorage.api.SdkCredentialEnumerateGoogleResponse.deserializeBinaryFromReader(msg, reader);
-};
-
-
-/**
- * Deserializes binary data (in protobuf wire format) from the
- * given reader into the given message object.
- * @param {!proto.openstorage.api.SdkCredentialEnumerateGoogleResponse} msg The message object to deserialize into.
- * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.openstorage.api.SdkCredentialEnumerateGoogleResponse}
- */
-proto.openstorage.api.SdkCredentialEnumerateGoogleResponse.deserializeBinaryFromReader = function(msg, reader) {
-  while (reader.nextField()) {
-    if (reader.isEndGroup()) {
-      break;
-    }
-    var field = reader.getFieldNumber();
-    switch (field) {
-    case 1:
-      var value = new proto.openstorage.api.GoogleCredential;
-      reader.readMessage(value,proto.openstorage.api.GoogleCredential.deserializeBinaryFromReader);
-      msg.addCredential(value);
-      break;
-    default:
-      reader.skipField();
-      break;
-    }
-  }
-  return msg;
-};
-
-
-/**
- * Serializes the message to binary data (in protobuf wire format).
- * @return {!Uint8Array}
- */
-proto.openstorage.api.SdkCredentialEnumerateGoogleResponse.prototype.serializeBinary = function() {
-  var writer = new jspb.BinaryWriter();
-  proto.openstorage.api.SdkCredentialEnumerateGoogleResponse.serializeBinaryToWriter(this, writer);
-  return writer.getResultBuffer();
-};
-
-
-/**
- * Serializes the given message to binary data (in protobuf wire
- * format), writing to the given BinaryWriter.
- * @param {!proto.openstorage.api.SdkCredentialEnumerateGoogleResponse} message
- * @param {!jspb.BinaryWriter} writer
- * @suppress {unusedLocalVariables} f is only used for nested messages
- */
-proto.openstorage.api.SdkCredentialEnumerateGoogleResponse.serializeBinaryToWriter = function(message, writer) {
-  var f = undefined;
-  f = message.getCredentialList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
-      1,
+  f = message.getGoogleCredential();
+  if (f != null) {
+    writer.writeMessage(
+      3,
       f,
-      proto.openstorage.api.GoogleCredential.serializeBinaryToWriter
+      proto.openstorage.api.SdkGoogleCredentialResponse.serializeBinaryToWriter
     );
   }
 };
 
 
 /**
- * repeated GoogleCredential credential = 1;
- * @return {!Array.<!proto.openstorage.api.GoogleCredential>}
+ * optional SdkAwsCredentialResponse aws_credential = 1;
+ * @return {?proto.openstorage.api.SdkAwsCredentialResponse}
  */
-proto.openstorage.api.SdkCredentialEnumerateGoogleResponse.prototype.getCredentialList = function() {
-  return /** @type{!Array.<!proto.openstorage.api.GoogleCredential>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.openstorage.api.GoogleCredential, 1));
+proto.openstorage.api.SdkCredentialInspectResponse.prototype.getAwsCredential = function() {
+  return /** @type{?proto.openstorage.api.SdkAwsCredentialResponse} */ (
+    jspb.Message.getWrapperField(this, proto.openstorage.api.SdkAwsCredentialResponse, 1));
 };
 
 
-/** @param {!Array.<!proto.openstorage.api.GoogleCredential>} value */
-proto.openstorage.api.SdkCredentialEnumerateGoogleResponse.prototype.setCredentialList = function(value) {
-  jspb.Message.setRepeatedWrapperField(this, 1, value);
+/** @param {?proto.openstorage.api.SdkAwsCredentialResponse|undefined} value */
+proto.openstorage.api.SdkCredentialInspectResponse.prototype.setAwsCredential = function(value) {
+  jspb.Message.setOneofWrapperField(this, 1, proto.openstorage.api.SdkCredentialInspectResponse.oneofGroups_[0], value);
+};
+
+
+proto.openstorage.api.SdkCredentialInspectResponse.prototype.clearAwsCredential = function() {
+  this.setAwsCredential(undefined);
 };
 
 
 /**
- * @param {!proto.openstorage.api.GoogleCredential=} opt_value
- * @param {number=} opt_index
- * @return {!proto.openstorage.api.GoogleCredential}
+ * Returns whether this field is set.
+ * @return {!boolean}
  */
-proto.openstorage.api.SdkCredentialEnumerateGoogleResponse.prototype.addCredential = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 1, opt_value, proto.openstorage.api.GoogleCredential, opt_index);
+proto.openstorage.api.SdkCredentialInspectResponse.prototype.hasAwsCredential = function() {
+  return jspb.Message.getField(this, 1) != null;
 };
 
 
-proto.openstorage.api.SdkCredentialEnumerateGoogleResponse.prototype.clearCredentialList = function() {
-  this.setCredentialList([]);
+/**
+ * optional SdkAzureCredentialResponse azure_credential = 2;
+ * @return {?proto.openstorage.api.SdkAzureCredentialResponse}
+ */
+proto.openstorage.api.SdkCredentialInspectResponse.prototype.getAzureCredential = function() {
+  return /** @type{?proto.openstorage.api.SdkAzureCredentialResponse} */ (
+    jspb.Message.getWrapperField(this, proto.openstorage.api.SdkAzureCredentialResponse, 2));
+};
+
+
+/** @param {?proto.openstorage.api.SdkAzureCredentialResponse|undefined} value */
+proto.openstorage.api.SdkCredentialInspectResponse.prototype.setAzureCredential = function(value) {
+  jspb.Message.setOneofWrapperField(this, 2, proto.openstorage.api.SdkCredentialInspectResponse.oneofGroups_[0], value);
+};
+
+
+proto.openstorage.api.SdkCredentialInspectResponse.prototype.clearAzureCredential = function() {
+  this.setAzureCredential(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {!boolean}
+ */
+proto.openstorage.api.SdkCredentialInspectResponse.prototype.hasAzureCredential = function() {
+  return jspb.Message.getField(this, 2) != null;
+};
+
+
+/**
+ * optional SdkGoogleCredentialResponse google_credential = 3;
+ * @return {?proto.openstorage.api.SdkGoogleCredentialResponse}
+ */
+proto.openstorage.api.SdkCredentialInspectResponse.prototype.getGoogleCredential = function() {
+  return /** @type{?proto.openstorage.api.SdkGoogleCredentialResponse} */ (
+    jspb.Message.getWrapperField(this, proto.openstorage.api.SdkGoogleCredentialResponse, 3));
+};
+
+
+/** @param {?proto.openstorage.api.SdkGoogleCredentialResponse|undefined} value */
+proto.openstorage.api.SdkCredentialInspectResponse.prototype.setGoogleCredential = function(value) {
+  jspb.Message.setOneofWrapperField(this, 3, proto.openstorage.api.SdkCredentialInspectResponse.oneofGroups_[0], value);
+};
+
+
+proto.openstorage.api.SdkCredentialInspectResponse.prototype.clearGoogleCredential = function() {
+  this.setGoogleCredential(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {!boolean}
+ */
+proto.openstorage.api.SdkCredentialInspectResponse.prototype.hasGoogleCredential = function() {
+  return jspb.Message.getField(this, 3) != null;
 };
 
 

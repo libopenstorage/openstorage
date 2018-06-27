@@ -219,7 +219,7 @@ docker-build-osd: docker-build-osd-dev
 			make docker-build-osd-internal
 
 launch-sdk: sdk
-	docker run \
+	docker run --rm --name sdk \
 		-d -p 9110:9110 -p 9100:9100 \
 		openstorage/mock-sdk-server
 

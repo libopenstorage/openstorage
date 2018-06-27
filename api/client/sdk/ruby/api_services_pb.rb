@@ -100,21 +100,12 @@ module Openstorage
         # Provide credentials to OpenStorage and if valid,
         # it will return an identifier to the credentials
         #
-        # Create credential for AWS S3 and if valid ,
-        # returns a unique identifier
-        rpc :CreateForAWS, SdkCredentialCreateAWSRequest, SdkCredentialCreateAWSResponse
-        # Create credential for Azure and if valid ,
-        # returns a unique identifier
-        rpc :CreateForAzure, SdkCredentialCreateAzureRequest, SdkCredentialCreateAzureResponse
-        # Create credential for Google and if valid ,
-        # returns a unique identifier
-        rpc :CreateForGoogle, SdkCredentialCreateGoogleRequest, SdkCredentialCreateGoogleResponse
-        # EnumerateForAWS lists the configured AWS credentials
-        rpc :EnumerateForAWS, SdkCredentialEnumerateAWSRequest, SdkCredentialEnumerateAWSResponse
-        # EnumerateForAzure lists the configured Azure credentials
-        rpc :EnumerateForAzure, SdkCredentialEnumerateAzureRequest, SdkCredentialEnumerateAzureResponse
-        # EnumerateForGoogle lists the configured Google credentials
-        rpc :EnumerateForGoogle, SdkCredentialEnumerateGoogleRequest, SdkCredentialEnumerateGoogleResponse
+        # Create cloud credentials
+        rpc :Create, SdkCredentialCreateRequest, SdkCredentialCreateResponse
+        # Enumerate returns a list of credential ids
+        rpc :Enumerate, SdkCredentialEnumerateRequest, SdkCredentialEnumerateResponse
+        # Inspect returns the information about a credential
+        rpc :Inspect, SdkCredentialInspectRequest, SdkCredentialInspectResponse
         # Delete a specified credential
         rpc :Delete, SdkCredentialDeleteRequest, SdkCredentialDeleteResponse
         # Validate a specified credential

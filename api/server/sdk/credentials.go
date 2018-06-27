@@ -19,8 +19,6 @@ package sdk
 
 import (
 	"context"
-	"fmt"
-	"reflect"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
@@ -33,42 +31,59 @@ type CredentialServer struct {
 	driver volume.VolumeDriver
 }
 
-// CreateForAWS method creates credential for AWS S3.
-func (s *CredentialServer) CreateForAWS(
+// Create method creates credentials
+func (s *CredentialServer) Create(
 	ctx context.Context,
-	req *api.SdkCredentialCreateAWSRequest,
-) (*api.SdkCredentialCreateAWSResponse, error) {
+	req *api.SdkCredentialCreateRequest,
+) (*api.SdkCredentialCreateResponse, error) {
 
-	if len(req.GetCredential().GetAccessKey()) == 0 {
+	if aws := req.GetAwsCredential(); aws != nil {
+		return s.awsCreate(ctx, aws)
+	} else if azure := req.GetAzureCredential(); azure != nil {
+		return s.azureCreate(ctx, azure)
+	} else if google := req.GetGoogleCredential(); google != nil {
+		return s.googleCreate(ctx, google)
+	} else {
+		return nil, status.Error(codes.InvalidArgument, "Unknown credential type")
+	}
+
+}
+
+func (s *CredentialServer) awsCreate(
+	ctx context.Context,
+	req *api.SdkAwsCredentialRequest,
+) (*api.SdkCredentialCreateResponse, error) {
+
+	if len(req.GetAccessKey()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply Access Key")
 	}
 
-	if len(req.GetCredential().GetSecretKey()) == 0 {
+	if len(req.GetSecretKey()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply Secret Key")
 	}
 
-	if len(req.GetCredential().GetRegion()) == 0 {
+	if len(req.GetRegion()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply Region Key")
 	}
 
-	if len(req.GetCredential().GetEndpoint()) == 0 {
+	if len(req.GetEndpoint()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply Endpoint Key")
 	}
 
 	params := make(map[string]string)
 
 	params[api.OptCredType] = "s3"
-	params[api.OptCredRegion] = req.GetCredential().GetRegion()
-	params[api.OptCredEndpoint] = req.GetCredential().GetEndpoint()
-	params[api.OptCredAccessKey] = req.GetCredential().GetAccessKey()
-	params[api.OptCredSecretKey] = req.GetCredential().GetSecretKey()
+	params[api.OptCredRegion] = req.GetRegion()
+	params[api.OptCredEndpoint] = req.GetEndpoint()
+	params[api.OptCredAccessKey] = req.GetAccessKey()
+	params[api.OptCredSecretKey] = req.GetSecretKey()
 
 	uuid, err := s.driver.CredsCreate(params)
 
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
-			"failed to create S3 credentials: %v",
+			"failed to create aws credentials: %v",
 			err.Error())
 	}
 
@@ -77,29 +92,27 @@ func (s *CredentialServer) CreateForAWS(
 	if err != nil {
 		return nil, err
 	}
-	return &api.SdkCredentialCreateAWSResponse{CredentialId: uuid}, nil
-
+	return &api.SdkCredentialCreateResponse{CredentialId: uuid}, nil
 }
 
-// CreateForAzure method creates credential for Azure.
-func (s *CredentialServer) CreateForAzure(
+func (s *CredentialServer) azureCreate(
 	ctx context.Context,
-	req *api.SdkCredentialCreateAzureRequest,
-) (*api.SdkCredentialCreateAzureResponse, error) {
+	req *api.SdkAzureCredentialRequest,
+) (*api.SdkCredentialCreateResponse, error) {
 
-	if len(req.GetCredential().GetAccountKey()) == 0 {
+	if len(req.GetAccountKey()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply Account Key")
 	}
 
-	if len(req.GetCredential().GetAccountName()) == 0 {
+	if len(req.GetAccountName()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply Account name")
 	}
 
 	params := make(map[string]string)
 
 	params[api.OptCredType] = "azure"
-	params[api.OptCredAzureAccountKey] = req.GetCredential().GetAccountKey()
-	params[api.OptCredAzureAccountName] = req.GetCredential().GetAccountName()
+	params[api.OptCredAzureAccountKey] = req.GetAccountKey()
+	params[api.OptCredAzureAccountName] = req.GetAccountName()
 
 	uuid, err := s.driver.CredsCreate(params)
 
@@ -115,28 +128,27 @@ func (s *CredentialServer) CreateForAzure(
 	if err != nil {
 		return nil, err
 	}
-	return &api.SdkCredentialCreateAzureResponse{CredentialId: uuid}, nil
+	return &api.SdkCredentialCreateResponse{CredentialId: uuid}, nil
 }
 
-// CreateForGoogle method creates credential for Google.
-func (s *CredentialServer) CreateForGoogle(
+func (s *CredentialServer) googleCreate(
 	ctx context.Context,
-	req *api.SdkCredentialCreateGoogleRequest,
-) (*api.SdkCredentialCreateGoogleResponse, error) {
+	req *api.SdkGoogleCredentialRequest,
+) (*api.SdkCredentialCreateResponse, error) {
 
-	if len(req.GetCredential().GetJsonKey()) == 0 {
+	if len(req.GetJsonKey()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply JSON Key")
 	}
 
-	if len(req.GetCredential().GetProjectId()) == 0 {
+	if len(req.GetProjectId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply Project ID")
 	}
 
 	params := make(map[string]string)
 
 	params[api.OptCredType] = "google"
-	params[api.OptCredGoogleProjectID] = req.GetCredential().GetProjectId()
-	params[api.OptCredGoogleJsonKey] = req.GetCredential().GetJsonKey()
+	params[api.OptCredGoogleProjectID] = req.GetProjectId()
+	params[api.OptCredGoogleJsonKey] = req.GetJsonKey()
 
 	uuid, err := s.driver.CredsCreate(params)
 
@@ -153,7 +165,7 @@ func (s *CredentialServer) CreateForGoogle(
 		return nil, err
 	}
 
-	return &api.SdkCredentialCreateGoogleResponse{CredentialId: uuid}, nil
+	return &api.SdkCredentialCreateResponse{CredentialId: uuid}, nil
 }
 
 // Validate validates a specified Credential.
@@ -201,11 +213,11 @@ func (s *CredentialServer) Delete(
 	return &api.SdkCredentialDeleteResponse{}, nil
 }
 
-// EnumerateForAWS list credentials for AWS
-func (s *CredentialServer) EnumerateForAWS(
+// Enumerate returns a list credentials ids
+func (s *CredentialServer) Enumerate(
 	ctx context.Context,
-	req *api.SdkCredentialEnumerateAWSRequest,
-) (*api.SdkCredentialEnumerateAWSResponse, error) {
+	req *api.SdkCredentialEnumerateRequest,
+) (*api.SdkCredentialEnumerateResponse, error) {
 
 	credList, err := s.driver.CredsEnumerate()
 	if err != nil {
@@ -215,38 +227,29 @@ func (s *CredentialServer) EnumerateForAWS(
 			err.Error())
 	}
 
-	// By defaultcredList will have all credential details, we will extract for
-	// respective cloud provider and return result
-	// this may not be expected behaviour, we have to do this since
-	// `interface` can't be mapped directly with other lang
-	s3Creds, err := getCredentialMap(credList, "s3")
-	if err != nil {
-		return nil, status.Errorf(
-			codes.Internal,
-			"Unable to enumerate credentials AWS: %v",
-			err.Error())
+	ids := make([]string, len(credList))
+	i := 0
+	for id := range credList {
+		ids[i] = id
+		i++
 	}
 
-	// Fill up s3 credential resonse
-	creds := []*api.S3Credential{}
-	for id, cred := range s3Creds {
-		credResp := &api.S3Credential{
-			CredentialId: id,
-			AccessKey:    cred[api.OptCredAccessKey],
-			Endpoint:     cred[api.OptCredEndpoint],
-			Region:       cred[api.OptCredRegion],
-		}
-		creds = append(creds, credResp)
-	}
+	return &api.SdkCredentialEnumerateResponse{
+		CredentialIds: ids,
+	}, nil
 
-	return &api.SdkCredentialEnumerateAWSResponse{Credential: creds}, nil
 }
 
-// EnumerateForAzure list credentials for AWS
-func (s *CredentialServer) EnumerateForAzure(
+// Inspect returns information about credential id
+func (s *CredentialServer) Inspect(
 	ctx context.Context,
-	req *api.SdkCredentialEnumerateAzureRequest,
-) (*api.SdkCredentialEnumerateAzureResponse, error) {
+	req *api.SdkCredentialInspectRequest,
+) (*api.SdkCredentialInspectResponse, error) {
+
+	if len(req.GetCredentialId()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Must provide a credential id")
+	}
+
 	credList, err := s.driver.CredsEnumerate()
 	if err != nil {
 		return nil, status.Errorf(
@@ -255,67 +258,52 @@ func (s *CredentialServer) EnumerateForAzure(
 			err.Error())
 	}
 
-	// By defaultcredList will have all credential details, we will extract for
-	// respective cloud provider and return result
-	// this may not be expected behaviour, we have to do this since
-	// `interface` can't be mapped directly with other lang
-	azureCreds, err := getCredentialMap(credList, "azure")
-	if err != nil {
+	val, ok := credList[req.GetCredentialId()]
+	if !ok {
+		return nil, status.Errorf(codes.NotFound, "Credential id %s not found", req.GetCredentialId())
+	}
+	info, ok := val.(map[string]string)
+	if !ok {
+		return nil, status.Error(codes.Internal, "Unable to get credential id information")
+	}
+
+	switch info[api.OptCredType] {
+	case "s3":
+		return &api.SdkCredentialInspectResponse{
+			CredentialType: &api.SdkCredentialInspectResponse_AwsCredential{
+				AwsCredential: &api.SdkAwsCredentialResponse{
+					CredentialId: req.GetCredentialId(),
+					AccessKey:    info[api.OptCredAccessKey],
+					Endpoint:     info[api.OptCredEndpoint],
+					Region:       info[api.OptCredRegion],
+				},
+			},
+		}, nil
+	case "azure":
+		return &api.SdkCredentialInspectResponse{
+			CredentialType: &api.SdkCredentialInspectResponse_AzureCredential{
+				AzureCredential: &api.SdkAzureCredentialResponse{
+					CredentialId: req.GetCredentialId(),
+					AccountName:  info[api.OptCredAzureAccountName],
+				},
+			},
+		}, nil
+	case "google":
+		return &api.SdkCredentialInspectResponse{
+			CredentialType: &api.SdkCredentialInspectResponse_GoogleCredential{
+				GoogleCredential: &api.SdkGoogleCredentialResponse{
+					CredentialId: req.GetCredentialId(),
+					ProjectId:    info[api.OptCredGoogleProjectID],
+				},
+			},
+		}, nil
+	default:
 		return nil, status.Errorf(
 			codes.Internal,
-			"Unable to enumerate credentials Azure: %v",
-			err.Error())
+			"Received unknown credential type of %s",
+			info[api.OptCredType])
 	}
 
-	// Fill up azure credential resonse
-	creds := []*api.AzureCredential{}
-	for id, cred := range azureCreds {
-		credResp := &api.AzureCredential{
-			CredentialId: id,
-			AccountName:  cred[api.OptCredAzureAccountName],
-			AccountKey:   cred[api.OptCredAzureAccountKey],
-		}
-		creds = append(creds, credResp)
-	}
-	return &api.SdkCredentialEnumerateAzureResponse{Credential: creds}, nil
-}
-
-// EnumerateForGoogle list credentials for Google
-func (s *CredentialServer) EnumerateForGoogle(
-	ctx context.Context,
-	req *api.SdkCredentialEnumerateGoogleRequest,
-) (*api.SdkCredentialEnumerateGoogleResponse, error) {
-	credList, err := s.driver.CredsEnumerate()
-	if err != nil {
-		return nil, status.Errorf(
-			codes.Internal,
-			"Unable to enumerate credentials: %v",
-			err.Error())
-	}
-
-	// By defaultcredList will have all credential details, we will extract for
-	// respective cloud provider and return result
-	// this may not be expected behaviour, we have to do this since
-	// `interface` can't be mapped directly with other lang
-	googleCreds, err := getCredentialMap(credList, "google")
-	if err != nil {
-		return nil, status.Errorf(
-			codes.Internal,
-			"Unable to enumerate credentials Azure: %v",
-			err.Error())
-	}
-
-	// Fill up google credential resonse
-	creds := []*api.GoogleCredential{}
-	for id, cred := range googleCreds {
-		credResp := &api.GoogleCredential{
-			CredentialId: id,
-			ProjectId:    cred[api.OptCredGoogleProjectID],
-		}
-		creds = append(creds, credResp)
-	}
-
-	return &api.SdkCredentialEnumerateGoogleResponse{Credential: creds}, nil
 }
 
 func validateAndDeleteIfInvalid(s *CredentialServer, uuid string) error {
@@ -342,23 +330,4 @@ func validateAndDeleteIfInvalid(s *CredentialServer, uuid string) error {
 	}
 
 	return nil
-}
-
-func getCredentialMap(credList map[string]interface{}, credType string) (map[string]map[string]string, error) {
-	filtered := make(map[string]map[string]string)
-
-	for k, v := range credList {
-		c, ok := v.(map[string]string)
-		if !ok {
-			return nil, fmt.Errorf("Error parsing credentials of type %v",
-				reflect.TypeOf(v).String())
-		}
-
-		// Look for only one type, fill up creds with same type array
-		if c[api.OptCredType] == credType {
-			filtered[k] = c
-		}
-	}
-
-	return filtered, nil
 }
