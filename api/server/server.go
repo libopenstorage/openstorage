@@ -10,6 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/gorilla/mux"
+	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/objectstore"
 	sched "github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
@@ -114,7 +115,7 @@ func StartVolumePluginAPI(
 	return nil
 }
 
-func CheckNullClusterServerConfiguration(config *ClusterServerConfiguration) {
+func CheckNullClusterServerConfiguration(config *cluster.ClusterServerConfiguration) {
 
 	// Set config managers to null/generic implementation if passed as null
 	if config.ConfigSecretManager == nil {
@@ -132,7 +133,7 @@ func CheckNullClusterServerConfiguration(config *ClusterServerConfiguration) {
 }
 
 func StartClusterApiWithConfiguration(
-	config ClusterServerConfiguration,
+	config cluster.ClusterServerConfiguration,
 	clusterApiBase string,
 	clusterPort uint16,
 ) error {
@@ -157,7 +158,7 @@ func StartClusterApiWithConfiguration(
 // from the CLI/UX to control the OSD cluster.
 func StartClusterAPI(clusterApiBase string, clusterPort uint16) error {
 	return StartClusterApiWithConfiguration(
-		ClusterServerConfiguration{},
+		cluster.ClusterServerConfiguration{},
 		clusterApiBase,
 		clusterPort,
 	)
@@ -166,11 +167,11 @@ func StartClusterAPI(clusterApiBase string, clusterPort uint16) error {
 //old version compatible
 func GetClusterAPIRoutes() []*Route {
 	return GetClusterAPIRoutesWithConfiguration(
-		ClusterServerConfiguration{},
+		cluster.ClusterServerConfiguration{},
 	)
 }
 
-func GetClusterAPIRoutesWithConfiguration(config ClusterServerConfiguration) []*Route {
+func GetClusterAPIRoutesWithConfiguration(config cluster.ClusterServerConfiguration) []*Route {
 	CheckNullClusterServerConfiguration(&config)
 	clusterApi := newClusterAPI(config)
 	return clusterApi.Routes()

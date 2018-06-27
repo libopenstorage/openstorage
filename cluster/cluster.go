@@ -36,6 +36,17 @@ const (
 	APIBase = "/var/lib/osd/cluster/"
 )
 
+// ClusterServerConfiguration holds manager implementation
+// Caller has to create the manager and passes it in
+type ClusterServerConfiguration struct {
+	// holds implementation to Secrets interface
+	ConfigSecretManager secrets.Secrets
+	// holds implementeation to SchedulePolicy interface
+	ConfigSchedManager sched.SchedulePolicyProvider
+	// holds implementation to ObjectStore interface
+	ConfigObjectStoreManager objectstore.ObjectStore
+}
+
 // NodeEntry is used to discover other nodes in the cluster
 // and setup the gossip protocol with them.
 type NodeEntry struct {
@@ -258,7 +269,7 @@ type Cluster interface {
 	ClusterAlerts
 	osdconfig.ConfigCaller
 	secrets.Secrets
-	sched.SchedulePolicy
+	sched.SchedulePolicyProvider
 	objectstore.ObjectStore
 }
 

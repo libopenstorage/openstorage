@@ -7,7 +7,7 @@ var (
 	ErrNotImplemented = errors.New("Not Implemented")
 )
 
-type SchedulePolicy interface {
+type SchedulePolicyProvider interface {
 	// SchedPolicyCreate creates a policy with given name and schedule.
 	SchedPolicyCreate(name, sched string) error
 	// SchedPolicyUpdate updates a policy with given name and schedule.
@@ -18,31 +18,4 @@ type SchedulePolicy interface {
 	SchedPolicyEnumerate() ([]*SchedPolicy, error)
 	// SchedPolicyGet returns schedule policy matching given name.
 	SchedPolicyGet(name string) (*SchedPolicy, error)
-}
-
-func NewDefaultSchedulePolicy() SchedulePolicy {
-	return &nullSchedMgr{}
-}
-
-type nullSchedMgr struct {
-}
-
-func (sp *nullSchedMgr) SchedPolicyCreate(name, sched string) error {
-	return ErrNotImplemented
-}
-
-func (sp *nullSchedMgr) SchedPolicyUpdate(name, sched string) error {
-	return ErrNotImplemented
-}
-
-func (sp *nullSchedMgr) SchedPolicyDelete(name string) error {
-	return ErrNotImplemented
-}
-
-func (sp *nullSchedMgr) SchedPolicyEnumerate() ([]*SchedPolicy, error) {
-	return nil, ErrNotImplemented
-}
-
-func (sp *nullSchedMgr) SchedPolicyGet(name string) (*SchedPolicy, error) {
-	return nil, ErrNotImplemented
 }

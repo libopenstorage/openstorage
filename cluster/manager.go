@@ -50,7 +50,6 @@ var (
 // ClusterManager implements the cluster interface
 type ClusterManager struct {
 	secrets.Secrets
-	sched.SchedulePolicy
 	objectstore.ObjectStore
 
 	size          int
@@ -69,6 +68,7 @@ type ClusterManager struct {
 	selfNodeLock  sync.Mutex // Lock that guards data and label of selfNode
 	system        systemutils.System
 	configManager osdconfig.ConfigManager
+	schedManager  sched.SchedulePolicyProvider
 }
 
 type checkFunc func(ClusterInfo) error
@@ -1062,11 +1062,30 @@ func (c *ClusterManager) initializeAndStartHeartbeat(
 	return lastIndex, nil
 }
 
+func (c *ClusterManager) setupDefaultManagers(config *ClusterServerConfiguration) {
+	if config.ConfigSchedManager == nil {
+		c.schedManager = sched.NewDefaultSchedulePolicy()
+	}
+}
+
 // Start initiates the cluster manager and the cluster state machine
 func (c *ClusterManager) Start(
 	clusterMaxSize int,
 	nodeInitialized bool,
 	gossipPort string,
+) error {
+	return c.StartWithConfiguration(
+		clusterMaxSize,
+		nodeInitialized,
+		gossipPort,
+		&ClusterServerConfiguration{})
+}
+
+func (c *ClusterManager) StartWithConfiguration(
+	clusterMaxSize int,
+	nodeInitialized bool,
+	gossipPort string,
+	config *ClusterServerConfiguration,
 ) error {
 	var err error
 
@@ -1080,6 +1099,9 @@ func (c *ClusterManager) Start(
 	if err != nil {
 		return err
 	}
+
+	// Setup any default managers if none were provided
+	c.setupDefaultManagers(config)
 
 	c.gEnabled = true
 	c.selfNode = api.Node{}
@@ -1694,4 +1716,24 @@ func (c *ClusterManager) DeleteNodeConf(nodeID string) error {
 
 func (c *ClusterManager) EnumerateNodeConf() (*osdconfig.NodesConfig, error) {
 	return c.configManager.EnumerateNodeConf()
+}
+
+func (c *ClusterManager) SchedPolicyCreate(name, sched string) error {
+	return c.schedManager.SchedPolicyCreate(name, sched)
+}
+
+func (c *ClusterManager) SchedPolicyUpdate(name, sched string) error {
+	return c.schedManager.SchedPolicyUpdate(name, sched)
+}
+
+func (c *ClusterManager) SchedPolicyDelete(name string) error {
+	return c.schedManager.SchedPolicyDelete(name)
+}
+
+func (c *ClusterManager) SchedPolicyEnumerate() ([]*sched.SchedPolicy, error) {
+	return c.schedManager.SchedPolicyEnumerate()
+}
+
+func (c *ClusterManager) SchedPolicyGet(name string) (*sched.SchedPolicy, error) {
+	return c.schedManager.SchedPolicyGet(name)
 }

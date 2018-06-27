@@ -24,23 +24,11 @@ const (
 type clusterApi struct {
 	restBase
 	SecretManager      secrets.Secrets
-	SchedPolicyManager sched.SchedulePolicy
+	SchedPolicyManager sched.SchedulePolicyProvider
 	ObjectStoreManager objectstore.ObjectStore
 }
 
-// ClusterServerConfiguration holds manager implementation
-// Caller has to create the manager and passes it in
-// StartClusterAPIWithConfiguration() to override with his own implementation
-type ClusterServerConfiguration struct {
-	// holds implementation to Secrets interface
-	ConfigSecretManager secrets.Secrets
-	// holds implementeation to SchedulePolicy interface
-	ConfigSchedManager sched.SchedulePolicy
-	// holds implementation to ObjectStore interface
-	ConfigObjectStoreManager objectstore.ObjectStore
-}
-
-func newClusterAPI(config ClusterServerConfiguration) restServer {
+func newClusterAPI(config cluster.ClusterServerConfiguration) restServer {
 	return &clusterApi{
 		restBase: restBase{
 			version: cluster.APIVersion,
