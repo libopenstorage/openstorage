@@ -1235,7 +1235,7 @@
           },
           "title": "Endpoints for accessing objectstore"
         },
-        "current_endPoint": {
+        "current_endpoint": {
           "type": "string",
           "title": "CurrentEndpoint on which objectstore server is accessible"
         },

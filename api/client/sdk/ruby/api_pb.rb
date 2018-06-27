@@ -133,7 +133,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :access_key, :string, 6
     optional :secret_key, :string, 7
     repeated :endpoints, :string, 8
-    optional :current_endPoint, :string, 9
+    optional :current_endpoint, :string, 9
     optional :access_port, :int64, 10
     optional :region, :string, 11
   end
