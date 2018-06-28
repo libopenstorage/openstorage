@@ -54,7 +54,7 @@ func (s *fakeObjectstoreMgr) ObjectStoreCreate(volumeID string) (*api.Objectstor
 		Uuid:            objectstoreID,
 		VolumeId:        volumeID,
 		Enabled:         false,
-		CurrentEndPoint: "http://test:9000",
+		CurrentEndpoint: "http://test:9000",
 	}
 
 	_, err := s.kv.Create(fakeObjectstorePrefix+"/"+objectstoreID, fakeObjStoreInfo, 0)
