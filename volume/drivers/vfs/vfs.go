@@ -35,6 +35,7 @@ type driver struct {
 	volume.StatsDriver
 	volume.CredsDriver
 	volume.CloudBackupDriver
+	volume.CloudMigrateDriver
 }
 
 // Init Driver intialization.
@@ -47,6 +48,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		volume.StatsNotSupported,
 		volume.CredsNotSupported,
 		volume.CloudBackupNotSupported,
+		volume.CloudMigrateNotSupported,
 	}, nil
 }
 

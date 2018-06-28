@@ -160,6 +160,16 @@ type CloudBackupDriver interface {
 	CloudBackupSchedEnumerate() (*api.CloudBackupSchedEnumerateResponse, error)
 }
 
+// CloudMigrateDriver interface provides Cloud migration features
+type CloudMigrateDriver interface {
+	// CloudMigrateStart starts a migrate operation
+	CloudMigrateStart(request *api.CloudMigrateStartRequest) error
+	// CloudMigrateCancel cancels a migrate operation
+	CloudMigrateCancel(request *api.CloudMigrateCancelRequest) error
+	// CloudMigrateStatus returns status for the migration operations
+	CloudMigrateStatus() (*api.CloudMigrateStatusResponse, error)
+}
+
 // ProtoDriver must be implemented by all volume drivers.  It specifies the
 // most basic functionality, such as creating and deleting volumes.
 type ProtoDriver interface {
@@ -168,6 +178,7 @@ type ProtoDriver interface {
 	QuiesceDriver
 	CredsDriver
 	CloudBackupDriver
+	CloudMigrateDriver
 	// Name returns the name of the driver.
 	Name() string
 	// Type of this driver

@@ -197,6 +197,43 @@ func (mr *MockVolumeDriverMockRecorder) CloudBackupStatus(arg0 interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloudBackupStatus", reflect.TypeOf((*MockVolumeDriver)(nil).CloudBackupStatus), arg0)
 }
 
+// CloudMigrateCancel mocks base method
+func (m *MockVolumeDriver) CloudMigrateCancel(arg0 *api.CloudMigrateCancelRequest) error {
+	ret := m.ctrl.Call(m, "CloudMigrateCancel", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CloudMigrateCancel indicates an expected call of CloudMigrateCancel
+func (mr *MockVolumeDriverMockRecorder) CloudMigrateCancel(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloudMigrateCancel", reflect.TypeOf((*MockVolumeDriver)(nil).CloudMigrateCancel), arg0)
+}
+
+// CloudMigrateStart mocks base method
+func (m *MockVolumeDriver) CloudMigrateStart(arg0 *api.CloudMigrateStartRequest) error {
+	ret := m.ctrl.Call(m, "CloudMigrateStart", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CloudMigrateStart indicates an expected call of CloudMigrateStart
+func (mr *MockVolumeDriverMockRecorder) CloudMigrateStart(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloudMigrateStart", reflect.TypeOf((*MockVolumeDriver)(nil).CloudMigrateStart), arg0)
+}
+
+// CloudMigrateStatus mocks base method
+func (m *MockVolumeDriver) CloudMigrateStatus() (*api.CloudMigrateStatusResponse, error) {
+	ret := m.ctrl.Call(m, "CloudMigrateStatus")
+	ret0, _ := ret[0].(*api.CloudMigrateStatusResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CloudMigrateStatus indicates an expected call of CloudMigrateStatus
+func (mr *MockVolumeDriverMockRecorder) CloudMigrateStatus() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloudMigrateStatus", reflect.TypeOf((*MockVolumeDriver)(nil).CloudMigrateStatus))
+}
+
 // Create mocks base method
 func (m *MockVolumeDriver) Create(arg0 *api.VolumeLocator, arg1 *api.Source, arg2 *api.VolumeSpec) (string, error) {
 	ret := m.ctrl.Call(m, "Create", arg0, arg1, arg2)

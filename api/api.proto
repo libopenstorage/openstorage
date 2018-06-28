@@ -1637,3 +1637,86 @@ message SdkCloudBackupStateChangeRequest {
 
 message SdkCloudBackupStateChangeResponse {
 }
+
+message CloudMigrate {
+    enum OperationType {
+        InvalidType = 0;
+        // Migrate all volumes in the cluster
+        MigrateCluster = 1;
+        // Migrate a single volume
+        MigrateVolume = 2;
+        // Migrate a group of volumes
+        MigrateVolumeGroup = 3;
+    }
+
+    enum Stage {
+        InvalidStage = 0;
+        Backup = 1;
+        Restore = 2;
+        VolumeUpdate = 3;
+        Done = 4;
+    }
+
+    enum Status {
+        InvalidStatus = 0;
+        Queued = 1;
+        Initialized = 2;
+        InProgress = 3;
+        Failed = 4;
+        Complete = 5;
+    }
+}
+
+// Request to start a cloud migration
+message CloudMigrateStartRequest {
+    // The type of operation to start
+    CloudMigrate.OperationType operation = 1;
+    // ID of the cluster to which volumes are to be migrated
+    string cluster_id = 2;
+    // Depending on the operation type this can be a VolumeID or VolumeGroupID
+    string target_id = 3;
+}
+
+// Request to stop a cloud migration
+message CloudMigrateCancelRequest {
+    // The type of operation to cancel
+    CloudMigrate.OperationType operation = 1;
+    // ID of the cluster to which migration should be cancelled
+    string cluster_id = 2;
+    // Depending on the operation type this can be a VolumeID or VolumeGroupID
+    string target_id = 3;
+}
+
+message CloudMigrateInfo {
+    // ID of the cluster where the volume is being migrated
+    string cluster_id = 1;
+    // ID of the volume on the local cluster
+    string local_volume_id = 2;
+    // Name of the volume on the local cluster
+    string local_volume_name = 3;
+    // ID of the volume on the remote cluster
+    string remote_volume_id = 4;
+    // ID of the cloudbackup used for the migration
+    string cloudbackup_id = 5;
+    // Current stage of the volume migration
+    CloudMigrate.Stage current_stage = 6;
+    // Status of the current stage
+    CloudMigrate.Status status = 7;
+    // Last time the status was updated
+    google.protobuf.Timestamp last_update = 8;
+    // Time of the last successful migration of the volume
+    google.protobuf.Timestamp last_success = 9;
+}
+
+message CloudMigrateInfoList {
+    repeated CloudMigrateInfo list = 1;
+}
+
+// Response with a status of the cloud migration operations
+message CloudMigrateStatusResponse {
+    // Map of cluster id to the status of volumes being migrated
+    map<string, CloudMigrateInfoList> info = 1;
+}
+
+
+

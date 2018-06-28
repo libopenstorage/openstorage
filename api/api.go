@@ -105,11 +105,15 @@ const (
 
 // Api clientserver Constants
 const (
-	OsdVolumePath   = "osd-volumes"
-	OsdSnapshotPath = "osd-snapshot"
-	OsdCredsPath    = "osd-creds"
-	OsdBackupPath   = "osd-backup"
-	TimeLayout      = "Jan 2 15:04:05 UTC 2006"
+	OsdVolumePath        = "osd-volumes"
+	OsdSnapshotPath      = "osd-snapshot"
+	OsdCredsPath         = "osd-creds"
+	OsdBackupPath        = "osd-backup"
+	OsdMigratePath       = "osd-migrate"
+	OsdMigrateStartPath  = OsdMigratePath + "/start"
+	OsdMigrateCancelPath = OsdMigratePath + "/cancel"
+	OsdMigrateStatusPath = OsdMigratePath + "/status"
+	TimeLayout           = "Jan 2 15:04:05 UTC 2006"
 )
 
 const (

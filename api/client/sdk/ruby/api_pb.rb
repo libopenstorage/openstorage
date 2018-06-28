@@ -565,6 +565,56 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   end
   add_message "openstorage.api.SdkCloudBackupStateChangeResponse" do
   end
+  add_message "openstorage.api.CloudMigrate" do
+  end
+  add_enum "openstorage.api.CloudMigrate.OperationType" do
+    value :InvalidType, 0
+    value :MigrateCluster, 1
+    value :MigrateVolume, 2
+    value :MigrateVolumeGroup, 3
+  end
+  add_enum "openstorage.api.CloudMigrate.Stage" do
+    value :InvalidStage, 0
+    value :Backup, 1
+    value :Restore, 2
+    value :VolumeUpdate, 3
+    value :Done, 4
+  end
+  add_enum "openstorage.api.CloudMigrate.Status" do
+    value :InvalidStatus, 0
+    value :Queued, 1
+    value :Initialized, 2
+    value :InProgress, 3
+    value :Failed, 4
+    value :Complete, 5
+  end
+  add_message "openstorage.api.CloudMigrateStartRequest" do
+    optional :operation, :enum, 1, "openstorage.api.CloudMigrate.OperationType"
+    optional :cluster_id, :string, 2
+    optional :target_id, :string, 3
+  end
+  add_message "openstorage.api.CloudMigrateCancelRequest" do
+    optional :operation, :enum, 1, "openstorage.api.CloudMigrate.OperationType"
+    optional :cluster_id, :string, 2
+    optional :target_id, :string, 3
+  end
+  add_message "openstorage.api.CloudMigrateInfo" do
+    optional :cluster_id, :string, 1
+    optional :local_volume_id, :string, 2
+    optional :local_volume_name, :string, 3
+    optional :remote_volume_id, :string, 4
+    optional :cloudbackup_id, :string, 5
+    optional :current_stage, :enum, 6, "openstorage.api.CloudMigrate.Stage"
+    optional :status, :enum, 7, "openstorage.api.CloudMigrate.Status"
+    optional :last_update, :message, 8, "google.protobuf.Timestamp"
+    optional :last_success, :message, 9, "google.protobuf.Timestamp"
+  end
+  add_message "openstorage.api.CloudMigrateInfoList" do
+    repeated :list, :message, 1, "openstorage.api.CloudMigrateInfo"
+  end
+  add_message "openstorage.api.CloudMigrateStatusResponse" do
+    map :info, :string, :message, 1, "openstorage.api.CloudMigrateInfoList"
+  end
   add_enum "openstorage.api.Status" do
     value :STATUS_NONE, 0
     value :STATUS_INIT, 1
@@ -839,6 +889,15 @@ module Openstorage
     SdkCloudBackupHistoryResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupHistoryResponse").msgclass
     SdkCloudBackupStateChangeRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupStateChangeRequest").msgclass
     SdkCloudBackupStateChangeResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupStateChangeResponse").msgclass
+    CloudMigrate = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudMigrate").msgclass
+    CloudMigrate::OperationType = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudMigrate.OperationType").enummodule
+    CloudMigrate::Stage = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudMigrate.Stage").enummodule
+    CloudMigrate::Status = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudMigrate.Status").enummodule
+    CloudMigrateStartRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudMigrateStartRequest").msgclass
+    CloudMigrateCancelRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudMigrateCancelRequest").msgclass
+    CloudMigrateInfo = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudMigrateInfo").msgclass
+    CloudMigrateInfoList = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudMigrateInfoList").msgclass
+    CloudMigrateStatusResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudMigrateStatusResponse").msgclass
     Status = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.Status").enummodule
     DriverType = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.DriverType").enummodule
     FSType = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.FSType").enummodule
