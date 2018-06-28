@@ -439,7 +439,7 @@ message ObjectstoreInfo {
     // Endpoints for accessing objectstore
     repeated string endpoints = 8;
     // CurrentEndpoint on which objectstore server is accessible
-    string current_endPoint = 9;
+    string current_endpoint = 9;
     // AccessPort is objectstore server port
     int64 access_port = 10;
     // Region for this objectstore

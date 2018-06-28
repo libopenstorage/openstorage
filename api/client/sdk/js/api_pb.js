@@ -4800,7 +4800,7 @@ proto.openstorage.api.ObjectstoreInfo.prototype.clearEndpointsList = function() 
 
 
 /**
- * optional string current_endPoint = 9;
+ * optional string current_endpoint = 9;
  * @return {string}
  */
 proto.openstorage.api.ObjectstoreInfo.prototype.getCurrentEndpoint = function() {
