@@ -1785,8 +1785,8 @@
           "title": "Name of the schedule policy"
         },
         "schedule": {
-          "type": "string",
-          "title": "Schedule string in yaml"
+          "$ref": "#/definitions/apiSdkSchedulePolicyInterval",
+          "title": "Schedule policy"
         }
       }
     },
@@ -1826,6 +1826,81 @@
         }
       }
     },
+    "apiSdkSchedulePolicyInterval": {
+      "type": "object",
+      "properties": {
+        "retain": {
+          "type": "string",
+          "format": "int64",
+          "title": "Number of instances to retain"
+        },
+        "daily": {
+          "$ref": "#/definitions/apiSdkSchedulePolicyIntervalDaily",
+          "title": "Daily policy"
+        },
+        "weekly": {
+          "$ref": "#/definitions/apiSdkSchedulePolicyIntervalWeekly",
+          "title": "Weekly policy"
+        },
+        "monthly": {
+          "$ref": "#/definitions/apiSdkSchedulePolicyIntervalMonthly",
+          "title": "Monthly policy"
+        }
+      }
+    },
+    "apiSdkSchedulePolicyIntervalDaily": {
+      "type": "object",
+      "properties": {
+        "hour": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Range: 0-23"
+        },
+        "minute": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Range: 0-59"
+        }
+      }
+    },
+    "apiSdkSchedulePolicyIntervalMonthly": {
+      "type": "object",
+      "properties": {
+        "day": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Range: 1-28"
+        },
+        "hour": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Range: 0-59"
+        },
+        "minute": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Range: 0-59"
+        }
+      }
+    },
+    "apiSdkSchedulePolicyIntervalWeekly": {
+      "type": "object",
+      "properties": {
+        "day": {
+          "$ref": "#/definitions/apiSdkTimeWeekday"
+        },
+        "hour": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Range: 0-23"
+        },
+        "minute": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Range: 0-59"
+        }
+      }
+    },
     "apiSdkSchedulePolicyUpdateRequest": {
       "type": "object",
       "properties": {
@@ -1837,6 +1912,19 @@
     },
     "apiSdkSchedulePolicyUpdateResponse": {
       "type": "object"
+    },
+    "apiSdkTimeWeekday": {
+      "type": "string",
+      "enum": [
+        "SdkTimeWeekdaySunday",
+        "SdkTimeWeekdayMonday",
+        "SdkTimeWeekdayTuesday",
+        "SdkTimeWeekdayWednesday",
+        "SdkTimeWeekdayThursday",
+        "SdkTimeWeekdayFriday",
+        "SdkTimeWeekdaySaturday"
+      ],
+      "default": "SdkTimeWeekdaySunday"
     },
     "apiSdkVolumeAttachRequest": {
       "type": "object",

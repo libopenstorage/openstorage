@@ -41,18 +41,21 @@ func (s *SchedulePolicyServer) Create(
 
 	if req.GetSchedulePolicy() == nil {
 		return nil, status.Error(codes.InvalidArgument, "SchedulePolicy object cannot be nil")
-	}
-
-	if len(req.GetSchedulePolicy().GetName()) == 0 {
+	} else if len(req.GetSchedulePolicy().GetName()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply Schedule name")
-	}
-
-	if len(req.GetSchedulePolicy().GetSchedule()) == 0 {
+	} else if req.GetSchedulePolicy().GetSchedule() == nil ||
+		req.GetSchedulePolicy().GetSchedule().GetPeriodType() == nil {
 		return nil, status.Error(codes.InvalidArgument, "Must supply Schedule")
+	} else if req.GetSchedulePolicy().GetSchedule().GetRetain() < 1 {
+		return nil, status.Error(codes.InvalidArgument, "Must retain more than 0")
 	}
 
-	err := s.cluster.SchedPolicyCreate(req.GetSchedulePolicy().GetName(), req.GetSchedulePolicy().GetSchedule())
+	out, err := sdkSchedToRetainInternalSpecYamlByte(req.GetSchedulePolicy().GetSchedule())
+	if err != nil {
+		return nil, err
+	}
 
+	err = s.cluster.SchedPolicyCreate(req.GetSchedulePolicy().GetName(), string(out))
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -71,18 +74,20 @@ func (s *SchedulePolicyServer) Update(
 
 	if req.GetSchedulePolicy() == nil {
 		return nil, status.Error(codes.InvalidArgument, "SchedulePolicy object cannot be nil")
-	}
-
-	if len(req.GetSchedulePolicy().GetName()) == 0 {
+	} else if len(req.GetSchedulePolicy().GetName()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply Schedule name")
-	}
-
-	if len(req.GetSchedulePolicy().GetSchedule()) == 0 {
+	} else if req.GetSchedulePolicy().GetSchedule() == nil ||
+		req.GetSchedulePolicy().GetSchedule().GetPeriodType() == nil {
 		return nil, status.Error(codes.InvalidArgument, "Must supply Schedule")
+	} else if req.GetSchedulePolicy().GetSchedule().GetRetain() < 1 {
+		return nil, status.Error(codes.InvalidArgument, "Must retain more than 0")
 	}
 
-	err := s.cluster.SchedPolicyUpdate(req.GetSchedulePolicy().GetName(), req.GetSchedulePolicy().GetSchedule())
-
+	out, err := sdkSchedToRetainInternalSpecYamlByte(req.GetSchedulePolicy().GetSchedule())
+	if err != nil {
+		return nil, err
+	}
+	err = s.cluster.SchedPolicyUpdate(req.GetSchedulePolicy().GetName(), string(out))
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -132,9 +137,14 @@ func (s *SchedulePolicyServer) Enumerate(
 	sdkpolicies := []*api.SdkSchedulePolicy{}
 	for _, policy := range policies {
 
+		schedule, err := retainInternalSpecYamlByteToSdkSched([]byte(policy.Schedule))
+		if err != nil {
+			return nil, err
+		}
+
 		p := &api.SdkSchedulePolicy{
 			Name:     policy.Name,
-			Schedule: policy.Schedule,
+			Schedule: schedule,
 		}
 		sdkpolicies = append(sdkpolicies, p)
 	}
@@ -153,7 +163,6 @@ func (s *SchedulePolicyServer) Inspect(
 	}
 
 	policy, err := s.cluster.SchedPolicyGet(req.GetName())
-
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -161,9 +170,14 @@ func (s *SchedulePolicyServer) Inspect(
 			err.Error())
 	}
 
+	schedule, err := retainInternalSpecYamlByteToSdkSched([]byte(policy.Schedule))
+	if err != nil {
+		return nil, err
+	}
+
 	sdkpolicy := &api.SdkSchedulePolicy{
 		Name:     policy.Name,
-		Schedule: policy.Schedule,
+		Schedule: schedule,
 	}
 
 	return &api.SdkSchedulePolicyInspectResponse{Policy: sdkpolicy}, err

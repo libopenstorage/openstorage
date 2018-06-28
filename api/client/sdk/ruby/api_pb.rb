@@ -255,9 +255,31 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   end
   add_message "openstorage.api.SdkSchedulePolicyDeleteResponse" do
   end
+  add_message "openstorage.api.SdkSchedulePolicyIntervalDaily" do
+    optional :hour, :int32, 1
+    optional :minute, :int32, 2
+  end
+  add_message "openstorage.api.SdkSchedulePolicyIntervalWeekly" do
+    optional :day, :enum, 1, "openstorage.api.SdkTimeWeekday"
+    optional :hour, :int32, 2
+    optional :minute, :int32, 3
+  end
+  add_message "openstorage.api.SdkSchedulePolicyIntervalMonthly" do
+    optional :day, :int32, 1
+    optional :hour, :int32, 2
+    optional :minute, :int32, 3
+  end
+  add_message "openstorage.api.SdkSchedulePolicyInterval" do
+    optional :retain, :int64, 1
+    oneof :period_type do
+      optional :daily, :message, 2, "openstorage.api.SdkSchedulePolicyIntervalDaily"
+      optional :weekly, :message, 3, "openstorage.api.SdkSchedulePolicyIntervalWeekly"
+      optional :monthly, :message, 4, "openstorage.api.SdkSchedulePolicyIntervalMonthly"
+    end
+  end
   add_message "openstorage.api.SdkSchedulePolicy" do
     optional :name, :string, 1
-    optional :schedule, :string, 2
+    optional :schedule, :message, 2, "openstorage.api.SdkSchedulePolicyInterval"
   end
   add_message "openstorage.api.SdkCredentialCreateRequest" do
     oneof :credential_type do
@@ -656,6 +678,15 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     value :OP_FLAGS_NONE, 1
     value :OP_FLAGS_DETACH_FORCE, 2
   end
+  add_enum "openstorage.api.SdkTimeWeekday" do
+    value :SdkTimeWeekdaySunday, 0
+    value :SdkTimeWeekdayMonday, 1
+    value :SdkTimeWeekdayTuesday, 2
+    value :SdkTimeWeekdayWednesday, 3
+    value :SdkTimeWeekdayThursday, 4
+    value :SdkTimeWeekdayFriday, 5
+    value :SdkTimeWeekdaySaturday, 6
+  end
   add_enum "openstorage.api.SdkCloudBackupOpType" do
     value :SdkCloudBackupOpTypeUnknown, 0
     value :SdkCloudBackupOpTypeBackupOp, 1
@@ -722,6 +753,10 @@ module Openstorage
     SdkSchedulePolicyInspectResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkSchedulePolicyInspectResponse").msgclass
     SdkSchedulePolicyDeleteRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkSchedulePolicyDeleteRequest").msgclass
     SdkSchedulePolicyDeleteResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkSchedulePolicyDeleteResponse").msgclass
+    SdkSchedulePolicyIntervalDaily = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkSchedulePolicyIntervalDaily").msgclass
+    SdkSchedulePolicyIntervalWeekly = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkSchedulePolicyIntervalWeekly").msgclass
+    SdkSchedulePolicyIntervalMonthly = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkSchedulePolicyIntervalMonthly").msgclass
+    SdkSchedulePolicyInterval = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkSchedulePolicyInterval").msgclass
     SdkSchedulePolicy = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkSchedulePolicy").msgclass
     SdkCredentialCreateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCredentialCreateRequest").msgclass
     SdkCredentialCreateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCredentialCreateResponse").msgclass
@@ -818,6 +853,7 @@ module Openstorage
     ClusterNotify = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.ClusterNotify").enummodule
     AttachState = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.AttachState").enummodule
     OperationFlags = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.OperationFlags").enummodule
+    SdkTimeWeekday = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkTimeWeekday").enummodule
     SdkCloudBackupOpType = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupOpType").enummodule
     SdkCloudBackupStatusType = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupStatusType").enummodule
     SdkCloudBackupRequestedState = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupRequestedState").enummodule

@@ -1073,11 +1073,59 @@ message SdkSchedulePolicyDeleteRequest {
 message SdkSchedulePolicyDeleteResponse {
 }
 
+enum SdkTimeWeekday {
+  SdkTimeWeekdaySunday = 0;
+  SdkTimeWeekdayMonday = 1;
+  SdkTimeWeekdayTuesday = 2;
+  SdkTimeWeekdayWednesday = 3;
+  SdkTimeWeekdayThursday = 4;
+  SdkTimeWeekdayFriday = 5;
+  SdkTimeWeekdaySaturday = 6;
+}
+
+message SdkSchedulePolicyIntervalDaily {
+  // Range: 0-23
+  int32 hour = 1;
+  // Range: 0-59
+  int32 minute = 2;
+}
+
+message SdkSchedulePolicyIntervalWeekly{
+  SdkTimeWeekday day = 1;
+  // Range: 0-23
+  int32 hour = 2;
+  // Range: 0-59
+  int32 minute = 3;
+}
+
+message SdkSchedulePolicyIntervalMonthly{
+  // Range: 1-28
+  int32 day = 1;
+  // Range: 0-59
+  int32 hour = 2;
+  // Range: 0-59
+  int32 minute = 3;
+}
+
+message SdkSchedulePolicyInterval {
+  // Number of instances to retain
+  int64 retain = 1;
+
+  oneof period_type {
+    // Daily policy
+    SdkSchedulePolicyIntervalDaily daily = 2;
+    // Weekly policy
+    SdkSchedulePolicyIntervalWeekly weekly = 3;
+    // Monthly policy
+    SdkSchedulePolicyIntervalMonthly monthly = 4;
+  }
+}
+
 message SdkSchedulePolicy {
   // Name of the schedule policy
   string name = 1;
-  // Schedule string in yaml
-  string schedule = 2;
+  // Schedule policy
+  SdkSchedulePolicyInterval schedule = 2;
 }
 
 message SdkCredentialCreateRequest {
