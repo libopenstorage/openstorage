@@ -55,10 +55,10 @@ func (s *ObjectstoreServer) Create(
 	req *api.SdkObjectstoreCreateRequest,
 ) (*api.SdkObjectstoreCreateResponse, error) {
 
-	if len(req.GetVolumeName()) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Must provide volume name")
+	if len(req.GetVolumeId()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Must provide volume ID")
 	}
-	objResp, err := s.cluster.ObjectStoreCreate(req.GetVolumeName())
+	objResp, err := s.cluster.ObjectStoreCreate(req.GetVolumeId())
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,

@@ -52,8 +52,8 @@ func (Status) EnumDescriptor() ([]byte, []int) {
 }
 
 type Foo struct {
-	Timestamp            *timestamp.Timestamp `protobuf:"bytes,1,opt,name=timestamp" json:"timestamp,omitempty"`
-	Status               Status               `protobuf:"varint,2,opt,name=status,enum=testing.Status" json:"status,omitempty"`
+	Timestamp            *timestamp.Timestamp `protobuf:"bytes,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Status               Status               `protobuf:"varint,2,opt,name=status,proto3,enum=testing.Status" json:"status,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
 	XXX_unrecognized     []byte               `json:"-"`
 	XXX_sizecache        int32                `json:"-"`
