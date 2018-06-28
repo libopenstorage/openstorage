@@ -1425,7 +1425,7 @@ message SdkObjectstoreInspectResponse {
 
 message SdkObjectstoreCreateRequest {
   // Volume on which objectstore will be running
-  string volume_name= 1;
+  string volume_id= 1;
 }
 
 message SdkObjectstoreCreateResponse {

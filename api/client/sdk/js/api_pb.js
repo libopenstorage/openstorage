@@ -19494,7 +19494,7 @@ proto.openstorage.api.SdkObjectstoreCreateRequest.prototype.toObject = function(
  */
 proto.openstorage.api.SdkObjectstoreCreateRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    volumeName: jspb.Message.getFieldWithDefault(msg, 1, "")
+    volumeId: jspb.Message.getFieldWithDefault(msg, 1, "")
   };
 
   if (includeInstance) {
@@ -19533,7 +19533,7 @@ proto.openstorage.api.SdkObjectstoreCreateRequest.deserializeBinaryFromReader = 
     switch (field) {
     case 1:
       var value = /** @type {string} */ (reader.readString());
-      msg.setVolumeName(value);
+      msg.setVolumeId(value);
       break;
     default:
       reader.skipField();
@@ -19564,7 +19564,7 @@ proto.openstorage.api.SdkObjectstoreCreateRequest.prototype.serializeBinary = fu
  */
 proto.openstorage.api.SdkObjectstoreCreateRequest.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getVolumeName();
+  f = message.getVolumeId();
   if (f.length > 0) {
     writer.writeString(
       1,
@@ -19575,16 +19575,16 @@ proto.openstorage.api.SdkObjectstoreCreateRequest.serializeBinaryToWriter = func
 
 
 /**
- * optional string volume_name = 1;
+ * optional string volume_id = 1;
  * @return {string}
  */
-proto.openstorage.api.SdkObjectstoreCreateRequest.prototype.getVolumeName = function() {
+proto.openstorage.api.SdkObjectstoreCreateRequest.prototype.getVolumeId = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
 };
 
 
 /** @param {string} value */
-proto.openstorage.api.SdkObjectstoreCreateRequest.prototype.setVolumeName = function(value) {
+proto.openstorage.api.SdkObjectstoreCreateRequest.prototype.setVolumeId = function(value) {
   jspb.Message.setField(this, 1, value);
 };
 

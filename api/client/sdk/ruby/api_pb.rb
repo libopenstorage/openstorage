@@ -460,7 +460,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :objectstore_status, :message, 1, "openstorage.api.ObjectstoreInfo"
   end
   add_message "openstorage.api.SdkObjectstoreCreateRequest" do
-    optional :volume_name, :string, 1
+    optional :volume_id, :string, 1
   end
   add_message "openstorage.api.SdkObjectstoreCreateResponse" do
     optional :objectstore_status, :message, 1, "openstorage.api.ObjectstoreInfo"
