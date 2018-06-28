@@ -23,7 +23,7 @@ import (
 )
 
 func TestFakeSchedule(t *testing.T) {
-	f := newFakeSchedManager()
+	f := NewFakeScheduler()
 	err := f.SchedPolicyCreate("hello", "world")
 	assert.NoError(t, err)
 	err = f.SchedPolicyCreate("name", "sched")

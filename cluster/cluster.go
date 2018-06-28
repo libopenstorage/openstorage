@@ -261,7 +261,11 @@ type Cluster interface {
 	// It also causes this node to join the cluster.
 	// nodeInitialized indicates if the caller of this method expects the node
 	// to have been in an already-initialized state.
+	// All managers will default returning NotSupported.
 	Start(clusterSize int, nodeInitialized bool, gossipPort string) error
+
+	// Like Start, but have the ability to pass in managers to the cluster object
+	StartWithConfiguration(clusterMaxSize int, nodeInitialized bool, gossipPort string, config *ClusterServerConfiguration) error
 
 	ClusterData
 	ClusterRemove
