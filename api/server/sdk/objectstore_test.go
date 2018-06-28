@@ -81,18 +81,18 @@ func TestObjectstoreCreateSuccess(t *testing.T) {
 		Enabled:  false,
 	}
 
-	volName := "test-vol"
+	volId := "test-vol-id"
 
 	s.MockCluster().
 		EXPECT().
-		ObjectStoreCreate(volName).
+		ObjectStoreCreate(volId).
 		Return(objResp, nil)
 
 	// Setup client
 	c := api.NewOpenStorageObjectstoreClient(s.Conn())
 
 	// Get info
-	resp, err := c.Create(context.Background(), &api.SdkObjectstoreCreateRequest{VolumeName: volName})
+	resp, err := c.Create(context.Background(), &api.SdkObjectstoreCreateRequest{VolumeId: volId})
 	assert.NoError(t, err)
 	assert.NotNil(t, resp.GetObjectstoreStatus())
 
@@ -105,17 +105,17 @@ func TestObjectstoreCreateFailed(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	volName := "test-vol"
+	volId := "test-vol-id-123"
 	s.MockCluster().
 		EXPECT().
-		ObjectStoreCreate(volName).
+		ObjectStoreCreate(volId).
 		Return(nil, fmt.Errorf("some error"))
 
 	// Setup client
 	c := api.NewOpenStorageObjectstoreClient(s.Conn())
 
 	// Get info
-	resp, err := c.Create(context.Background(), &api.SdkObjectstoreCreateRequest{VolumeName: volName})
+	resp, err := c.Create(context.Background(), &api.SdkObjectstoreCreateRequest{VolumeId: volId})
 	assert.Error(t, err)
 	assert.Nil(t, resp)
 
@@ -128,21 +128,21 @@ func TestObjectstoreCreateFailedBadArgument(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	volName := ""
+	volId := ""
 
 	// Setup client
 	c := api.NewOpenStorageObjectstoreClient(s.Conn())
 
 	// Get info
-	_, err := c.Create(context.Background(), &api.SdkObjectstoreCreateRequest{VolumeName: volName})
+	_, err := c.Create(context.Background(), &api.SdkObjectstoreCreateRequest{VolumeId: volId})
 	assert.Error(t, err)
 
 	// Verify
-	assert.Contains(t, err.Error(), "Must provide volume name")
+	assert.Contains(t, err.Error(), "Must provide volume ID")
 	serverError, ok := status.FromError(err)
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "Must provide volume name")
+	assert.Contains(t, serverError.Message(), "Must provide volume ID")
 }
 
 func TestObjectstoreUpdateSuccess(t *testing.T) {
