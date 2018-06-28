@@ -34,11 +34,7 @@ type fakeObjectstoreMgr struct {
 	kv kvdb.Kvdb
 }
 
-func NewDefaultObjectStore() ObjectStore {
-	return newfakeObjectstoreMgr()
-}
-
-func newfakeObjectstoreMgr() *fakeObjectstoreMgr {
+func NewfakeObjectstore() *fakeObjectstoreMgr {
 	// This instance of the KVDB is Always in memory and created for each instance of the fake driver
 	// It is not necessary to run a single instance, and it helps tests create a new kvdb on each test
 	kv, err := kvdb.New(mem.Name, "fake_objectstore", []string{}, nil, logrus.Panicf)

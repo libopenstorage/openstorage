@@ -1068,6 +1068,13 @@ func (c *ClusterManager) setupManagers(config *ClusterServerConfiguration) {
 	} else {
 		c.schedManager = config.ConfigSchedManager
 	}
+
+	if config.ConfigObjectStoreManager == nil {
+		c.objstoreManager = objectstore.NewDefaultObjectStore()
+	} else {
+		c.objstoreManager = config.ConfigObjectStoreManager
+	}
+
 }
 
 // Start initiates the cluster manager and the cluster state machine

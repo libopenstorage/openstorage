@@ -21,7 +21,7 @@ import (
 
 func TestFakeObjectstore(t *testing.T) {
 
-	f := newfakeObjectstoreMgr()
+	f := NewfakeObjectstore()
 	volumeId := "test-vol-id"
 
 	// Create objectstore with given volumeID

@@ -26,3 +26,26 @@ type ObjectStore interface {
 	// ObjectStoreUpdate enable/disable objectstore
 	ObjectStoreUpdate(objectstoreID string, enable bool) error
 }
+
+func NewDefaultObjectStore() ObjectStore {
+	return &nullObjectStoreMgr{}
+}
+
+type nullObjectStoreMgr struct {
+}
+
+func (n *nullObjectStoreMgr) ObjectStoreInspect(objectstoreID string) (*api.ObjectstoreInfo, error) {
+	return nil, ErrNotImplemented
+}
+
+func (n *nullObjectStoreMgr) ObjectStoreCreate(volume string) (*api.ObjectstoreInfo, error) {
+	return nil, ErrNotImplemented
+}
+
+func (n *nullObjectStoreMgr) ObjectStoreUpdate(objectstoreID string, enable bool) error {
+	return ErrNotImplemented
+}
+
+func (n *nullObjectStoreMgr) ObjectStoreDelete(objectstoreID string) error {
+	return ErrNotImplemented
+}
