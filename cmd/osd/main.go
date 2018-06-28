@@ -43,6 +43,7 @@ import (
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/csi"
 	"github.com/libopenstorage/openstorage/graph/drivers"
+	"github.com/libopenstorage/openstorage/objectstore"
 	"github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
@@ -304,7 +305,8 @@ func start(c *cli.Context) error {
 			false,
 			"9002",
 			&cluster.ClusterServerConfiguration{
-				ConfigSchedManager: schedpolicy.NewFakeScheduler(),
+				ConfigSchedManager:       schedpolicy.NewFakeScheduler(),
+				ConfigObjectStoreManager: objectstore.NewfakeObjectstore(),
 			},
 		); err != nil {
 			return fmt.Errorf("Unable to start cluster manager: %v", err)
