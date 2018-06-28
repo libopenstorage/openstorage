@@ -51,6 +51,7 @@ type driver struct {
 	volume.QuiesceDriver
 	volume.CredsDriver
 	volume.CloudBackupDriver
+	volume.CloudMigrateDriver
 	kv          kvdb.Kvdb
 	thisCluster cluster.Cluster
 }
@@ -85,11 +86,12 @@ func new(params map[string]string) (*driver, error) {
 		return nil, err
 	}
 	inst := &driver{
-		IODriver:        volume.IONotSupported,
-		StoreEnumerator: common.NewDefaultStoreEnumerator(Name, kv),
-		StatsDriver:     volume.StatsNotSupported,
-		QuiesceDriver:   volume.QuiesceNotSupported,
-		kv:              kv,
+		IODriver:           volume.IONotSupported,
+		StoreEnumerator:    common.NewDefaultStoreEnumerator(Name, kv),
+		StatsDriver:        volume.StatsNotSupported,
+		QuiesceDriver:      volume.QuiesceNotSupported,
+		CloudMigrateDriver: volume.CloudMigrateNotSupported,
+		kv:                 kv,
 	}
 
 	inst.thisCluster, err = cluster.Inst()

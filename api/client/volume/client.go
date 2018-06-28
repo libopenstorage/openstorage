@@ -17,8 +17,6 @@ const (
 	graphPath  = "/graph"
 	volumePath = "/osd-volumes"
 	snapPath   = "/osd-snapshot"
-	credsPath  = "/osd-creds"
-	backupPath = "/osd-backup"
 )
 
 type volumeClient struct {
@@ -441,7 +439,7 @@ func (v *volumeClient) Unquiesce(volumeID string) error {
 // CredsEnumerate enumerates configured credentials in the cluster
 func (v *volumeClient) CredsEnumerate() (map[string]interface{}, error) {
 	creds := make(map[string]interface{}, 0)
-	err := v.c.Get().Resource(credsPath).Do().Unmarshal(&creds)
+	err := v.c.Get().Resource(api.OsdCredsPath).Do().Unmarshal(&creds)
 	return creds, err
 }
 
@@ -451,7 +449,7 @@ func (v *volumeClient) CredsCreate(params map[string]string) (string, error) {
 	request := &api.CredCreateRequest{
 		InputParams: params,
 	}
-	req := v.c.Post().Resource(credsPath).Body(request)
+	req := v.c.Post().Resource(api.OsdCredsPath).Body(request)
 	response := req.Do()
 	if response.Error() != nil {
 		return "", response.FormatError()
@@ -464,7 +462,7 @@ func (v *volumeClient) CredsCreate(params map[string]string) (string, error) {
 
 // CredsDelete deletes the credential with given UUID
 func (v *volumeClient) CredsDelete(uuid string) error {
-	req := v.c.Delete().Resource(credsPath).Instance(uuid)
+	req := v.c.Delete().Resource(api.OsdCredsPath).Instance(uuid)
 	response := req.Do()
 	if response.Error() != nil {
 		return response.FormatError()
@@ -475,7 +473,7 @@ func (v *volumeClient) CredsDelete(uuid string) error {
 // CredsValidate validates the credential by accessuing the cloud
 // provider with the given credential
 func (v *volumeClient) CredsValidate(uuid string) error {
-	req := v.c.Put().Resource(credsPath + "/validate").Instance(uuid)
+	req := v.c.Put().Resource(api.OsdCredsPath + "/validate").Instance(uuid)
 	response := req.Do()
 	if response.Error() != nil {
 		return response.FormatError()
@@ -487,7 +485,7 @@ func (v *volumeClient) CredsValidate(uuid string) error {
 func (v *volumeClient) CloudBackupCreate(
 	input *api.CloudBackupCreateRequest,
 ) error {
-	req := v.c.Post().Resource(backupPath).Body(input)
+	req := v.c.Post().Resource(api.OsdBackupPath).Body(input)
 	response := req.Do()
 	if response.Error() != nil {
 		return response.FormatError()
@@ -500,7 +498,7 @@ func (v *volumeClient) CloudBackupRestore(
 	input *api.CloudBackupRestoreRequest,
 ) (*api.CloudBackupRestoreResponse, error) {
 	restoreResponse := &api.CloudBackupRestoreResponse{}
-	req := v.c.Post().Resource(backupPath + "/restore").Body(input)
+	req := v.c.Post().Resource(api.OsdBackupPath + "/restore").Body(input)
 	response := req.Do()
 	if response.Error() != nil {
 		return nil, response.FormatError()
@@ -517,7 +515,7 @@ func (v *volumeClient) CloudBackupEnumerate(
 	input *api.CloudBackupEnumerateRequest,
 ) (*api.CloudBackupEnumerateResponse, error) {
 	enumerateResponse := &api.CloudBackupEnumerateResponse{}
-	req := v.c.Get().Resource(backupPath).Body(input)
+	req := v.c.Get().Resource(api.OsdBackupPath).Body(input)
 	response := req.Do()
 	if response.Error() != nil {
 		return nil, response.FormatError()
@@ -533,7 +531,7 @@ func (v *volumeClient) CloudBackupEnumerate(
 func (v *volumeClient) CloudBackupDelete(
 	input *api.CloudBackupDeleteRequest,
 ) error {
-	req := v.c.Delete().Resource(backupPath).Body(input)
+	req := v.c.Delete().Resource(api.OsdBackupPath).Body(input)
 	response := req.Do()
 	if response.Error() != nil {
 		return response.FormatError()
@@ -545,7 +543,7 @@ func (v *volumeClient) CloudBackupDelete(
 func (v *volumeClient) CloudBackupDeleteAll(
 	input *api.CloudBackupDeleteAllRequest,
 ) error {
-	req := v.c.Delete().Resource(backupPath + "/all").Body(input)
+	req := v.c.Delete().Resource(api.OsdBackupPath + "/all").Body(input)
 	response := req.Do()
 	if response.Error() != nil {
 		return response.FormatError()
@@ -558,7 +556,7 @@ func (v *volumeClient) CloudBackupStatus(
 	input *api.CloudBackupStatusRequest,
 ) (*api.CloudBackupStatusResponse, error) {
 	statusResponse := &api.CloudBackupStatusResponse{}
-	req := v.c.Get().Resource(backupPath + "/status").Body(input)
+	req := v.c.Get().Resource(api.OsdBackupPath + "/status").Body(input)
 	response := req.Do()
 	if response.Error() != nil {
 		return nil, response.FormatError()
@@ -575,7 +573,7 @@ func (v *volumeClient) CloudBackupCatalog(
 	input *api.CloudBackupCatalogRequest,
 ) (*api.CloudBackupCatalogResponse, error) {
 	catalogResponse := &api.CloudBackupCatalogResponse{}
-	req := v.c.Get().Resource(backupPath + "/catalog").Body(input)
+	req := v.c.Get().Resource(api.OsdBackupPath + "/catalog").Body(input)
 	response := req.Do()
 	if response.Error() != nil {
 		return nil, response.FormatError()
@@ -592,7 +590,7 @@ func (v *volumeClient) CloudBackupHistory(
 	input *api.CloudBackupHistoryRequest,
 ) (*api.CloudBackupHistoryResponse, error) {
 	historyResponse := &api.CloudBackupHistoryResponse{}
-	req := v.c.Get().Resource(backupPath + "/history").Body(input)
+	req := v.c.Get().Resource(api.OsdBackupPath + "/history").Body(input)
 	response := req.Do()
 	if response.Error() != nil {
 		return nil, response.FormatError()
@@ -609,7 +607,7 @@ func (v *volumeClient) CloudBackupHistory(
 func (v *volumeClient) CloudBackupStateChange(
 	input *api.CloudBackupStateChangeRequest,
 ) error {
-	req := v.c.Put().Resource(backupPath + "/statechange").Body(input)
+	req := v.c.Put().Resource(api.OsdBackupPath + "/statechange").Body(input)
 	response := req.Do()
 	if response.Error() != nil {
 		return response.FormatError()
@@ -622,7 +620,7 @@ func (v *volumeClient) CloudBackupSchedCreate(
 	input *api.CloudBackupSchedCreateRequest,
 ) (*api.CloudBackupSchedCreateResponse, error) {
 	createResponse := &api.CloudBackupSchedCreateResponse{}
-	req := v.c.Post().Resource(backupPath + "/sched").Body(input)
+	req := v.c.Post().Resource(api.OsdBackupPath + "/sched").Body(input)
 	response := req.Do()
 	if response.Error() != nil {
 		return nil, response.FormatError()
@@ -638,7 +636,7 @@ func (v *volumeClient) CloudBackupSchedCreate(
 func (v *volumeClient) CloudBackupSchedDelete(
 	input *api.CloudBackupSchedDeleteRequest,
 ) error {
-	req := v.c.Delete().Resource(backupPath + "/sched").Body(input)
+	req := v.c.Delete().Resource(api.OsdBackupPath + "/sched").Body(input)
 	response := req.Do()
 	if response.Error() != nil {
 		return response.FormatError()
@@ -649,7 +647,7 @@ func (v *volumeClient) CloudBackupSchedDelete(
 // CloudBackupSchedEnumerate enumerates the configured backup-schedules in the cluster
 func (v *volumeClient) CloudBackupSchedEnumerate() (*api.CloudBackupSchedEnumerateResponse, error) {
 	enumerateResponse := &api.CloudBackupSchedEnumerateResponse{}
-	req := v.c.Get().Resource(backupPath + "/sched")
+	req := v.c.Get().Resource(api.OsdBackupPath + "/sched")
 	response := req.Do()
 	if response.Error() != nil {
 		return nil, response.FormatError()
@@ -678,4 +676,35 @@ func (v *volumeClient) SnapshotGroup(groupID string, labels map[string]string) (
 		return nil, err
 	}
 	return response, nil
+}
+
+func (v *volumeClient) CloudMigrateStart(request *api.CloudMigrateStartRequest) error {
+	req := v.c.Post().Resource(api.OsdMigrateStartPath).Body(request)
+	response := req.Do()
+	if response.Error() != nil {
+		return response.FormatError()
+	}
+	return nil
+}
+
+func (v *volumeClient) CloudMigrateCancel(request *api.CloudMigrateCancelRequest) error {
+	req := v.c.Post().Resource(api.OsdMigrateCancelPath).Body(request)
+	response := req.Do()
+	if response.Error() != nil {
+		return response.FormatError()
+	}
+	return nil
+}
+
+func (v *volumeClient) CloudMigrateStatus() (*api.CloudMigrateStatusResponse, error) {
+	statusResponse := &api.CloudMigrateStatusResponse{}
+	req := v.c.Get().Resource(api.OsdMigrateStatusPath)
+	response := req.Do()
+	if response.Error() != nil {
+		return nil, response.FormatError()
+	}
+	if err := response.Unmarshal(statusResponse); err != nil {
+		return nil, err
+	}
+	return statusResponse, nil
 }
