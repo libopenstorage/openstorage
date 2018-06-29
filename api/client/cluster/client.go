@@ -13,13 +13,14 @@ import (
 )
 
 const (
-	clusterPath     = "/cluster"
-	secretPath      = "/secrets"
-	SchedPath       = "/schedpolicy"
-	loggingurl      = "/loggingurl"
-	managementurl   = "/managementurl"
-	fluentdhost     = "/fluentdconfig"
-	tunnelconfigurl = "/tunnelconfig"
+	clusterPath       = "/cluster"
+	secretPath        = "/secrets"
+	UriSchedEnumerate = "/schedpolicy/enumerate"
+	UriSchedPolicy    = "/schedpolicy/policy"
+	loggingurl        = "/loggingurl"
+	managementurl     = "/managementurl"
+	fluentdhost       = "/fluentdconfig"
+	tunnelconfigurl   = "/tunnelconfig"
 )
 
 type clusterClient struct {
@@ -284,7 +285,7 @@ func (c *clusterClient) SecretLogin(secretType string, secretConfig map[string]s
 // SchedPolicyEnumerate enumerates all configured policies
 func (c *clusterClient) SchedPolicyEnumerate() ([]*sched.SchedPolicy, error) {
 	var schedPolicies []*sched.SchedPolicy
-	req := c.c.Get().Resource(clusterPath + SchedPath)
+	req := c.c.Get().Resource(clusterPath + UriSchedEnumerate)
 
 	if err := req.Do().Unmarshal(&schedPolicies); err != nil {
 		return nil, err
@@ -300,7 +301,7 @@ func (c *clusterClient) SchedPolicyCreate(name, schedule string) error {
 		Schedule: schedule,
 	}
 
-	req := c.c.Post().Resource(clusterPath + SchedPath).Body(request)
+	req := c.c.Post().Resource(clusterPath + UriSchedPolicy).Body(request)
 	res := req.Do()
 	if res.Error() != nil {
 		return res.FormatError()
@@ -316,7 +317,7 @@ func (c *clusterClient) SchedPolicyUpdate(name, schedule string) error {
 		Schedule: schedule,
 	}
 
-	req := c.c.Put().Resource(clusterPath + SchedPath).Body(request)
+	req := c.c.Put().Resource(clusterPath + UriSchedPolicy).Body(request)
 	res := req.Do()
 	if res.Error() != nil {
 		return res.FormatError()
@@ -327,7 +328,8 @@ func (c *clusterClient) SchedPolicyUpdate(name, schedule string) error {
 
 // SchedPolicyDelete deletes a policy with given name
 func (c *clusterClient) SchedPolicyDelete(name string) error {
-	req := c.c.Delete().Resource(clusterPath + SchedPath + "/" + name)
+	req := c.c.Delete().Resource(clusterPath + UriSchedPolicy)
+	req.QueryOption(sched.SchedName, name)
 	res := req.Do()
 
 	if res.Error() != nil {
@@ -344,7 +346,8 @@ func (c *clusterClient) SchedPolicyGet(name string) (*sched.SchedPolicy, error) 
 		return nil, errors.New("Missing policy name")
 	}
 
-	req := c.c.Get().Resource(clusterPath + SchedPath + "/" + name)
+	req := c.c.Get().Resource(clusterPath + UriSchedPolicy)
+	req.QueryOption(sched.SchedName, name)
 
 	if err := req.Do().Unmarshal(policy); err != nil {
 		return nil, err
