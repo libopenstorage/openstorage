@@ -1,4 +1,4 @@
-HAS_GRPCTOOLS := $(shell command -v grpc_tools_ruby_protoc)
+HAS_GRPCTOOLS := $(shell command -v grpc_tools_ruby_protoc 2> /dev/null)
 APIDIR := "../../../../api"
 all: grpc
 
