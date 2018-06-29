@@ -327,7 +327,7 @@ func (c *clusterClient) SchedPolicyUpdate(name, schedule string) error {
 
 // SchedPolicyDelete deletes a policy with given name
 func (c *clusterClient) SchedPolicyDelete(name string) error {
-	req := c.c.Delete().Resource(clusterPath + SchedPath + "/" + name)
+	req := c.c.Delete().Resource(clusterPath + SchedPath).Instance(name)
 	res := req.Do()
 
 	if res.Error() != nil {
@@ -344,7 +344,7 @@ func (c *clusterClient) SchedPolicyGet(name string) (*sched.SchedPolicy, error) 
 		return nil, errors.New("Missing policy name")
 	}
 
-	req := c.c.Get().Resource(clusterPath + SchedPath + "/" + name)
+	req := c.c.Get().Resource(clusterPath + SchedPath).Instance(name)
 
 	if err := req.Do().Unmarshal(policy); err != nil {
 		return nil, err
