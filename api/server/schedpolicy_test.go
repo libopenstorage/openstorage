@@ -140,6 +140,32 @@ func TestSchedPolicyDeleteSuccess(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestSchedPolicyDeleteWithSensitieName(t *testing.T) {
+
+	// Create a new global test cluster
+	ts, tc := testClusterServer(t)
+	defer ts.Close()
+	defer tc.Finish()
+
+	name := "TestsSp1"
+	// mock the cluster schedulePolicy response
+	// this should Recive it as "TestSp1" only
+	tc.MockClusterSchedPolicy().
+		EXPECT().
+		SchedPolicyDelete(name).
+		Return(nil)
+
+	// create a cluster client to make the REST call
+	c, err := clusterclient.NewClusterClient(ts.URL, "v1")
+	assert.NoError(t, err)
+
+	// make the REST call
+	restClient := clusterclient.ClusterManager(c)
+	err = restClient.SchedPolicyDelete(name)
+
+	assert.NoError(t, err)
+}
+
 func TestSchedPolicyDeleteFailed(t *testing.T) {
 
 	// Create a new global test cluster
@@ -239,6 +265,36 @@ func TestSchedPolicyGetSuccess(t *testing.T) {
 		Return(&sched.SchedPolicy{
 			Name:     name,
 			Schedule: "testsched:test",
+		}, nil)
+
+	// create a cluster client to make the REST call
+	c, err := clusterclient.NewClusterClient(ts.URL, "v1")
+	assert.NoError(t, err)
+
+	// make the REST call
+	restClient := clusterclient.ClusterManager(c)
+	schedPolicy, err := restClient.SchedPolicyGet(name)
+
+	assert.NotNil(t, schedPolicy)
+	assert.EqualValues(t, schedPolicy.Name, name)
+	assert.NoError(t, err)
+}
+
+func TestSchedPolicyGetSuccessWithSensitiveName(t *testing.T) {
+
+	// Create a new global test cluster
+	ts, tc := testClusterServer(t)
+	defer ts.Close()
+	defer tc.Finish()
+
+	name := "TestSchedPolicy1"
+	// mock the cluster schedulePolicy response
+	tc.MockClusterSchedPolicy().
+		EXPECT().
+		SchedPolicyGet(name).
+		Return(&sched.SchedPolicy{
+			Name:     name,
+			Schedule: "freq:periodic\nperiod:120000\n",
 		}, nil)
 
 	// create a cluster client to make the REST call

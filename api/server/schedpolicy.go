@@ -4,11 +4,10 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/gorilla/mux"
 	sched "github.com/libopenstorage/openstorage/schedpolicy"
 )
 
-// swagger:operation GET /cluster/schedpolicy schedpolicy schedPolicyEnumerate
+// swagger:operation GET /cluster/schedpolicy/enumerate schedpolicy schedPolicyEnumerate
 //
 // List schedule policies
 //
@@ -36,7 +35,7 @@ func (c *clusterApi) schedPolicyEnumerate(w http.ResponseWriter, r *http.Request
 	json.NewEncoder(w).Encode(schedPolicies)
 }
 
-// swagger:operation GET /cluster/schedpolicy/{name} schedpolicy schedPolicyGet
+// swagger:operation GET /cluster/schedpolicy/policy schedpolicy schedPolicyGet
 //
 // Get policy details
 //
@@ -47,7 +46,7 @@ func (c *clusterApi) schedPolicyEnumerate(w http.ResponseWriter, r *http.Request
 // - application/json
 // parameters:
 // - name: name
-//   in: path
+//   in: query
 //   description: Retrive details of given policy name
 //   required: true
 //   type: string
@@ -58,10 +57,15 @@ func (c *clusterApi) schedPolicyEnumerate(w http.ResponseWriter, r *http.Request
 //      $ref: '#/definitions/SchedPolicy'
 func (c *clusterApi) schedPolicyGet(w http.ResponseWriter, r *http.Request) {
 	method := "schedPolicyGet"
-	vars := mux.Vars(r)
-	schedName, ok := vars[sched.SchedName]
+	var schedName string
+	params := r.URL.Query()
+	v := params[sched.SchedName]
 
-	if !ok || schedName == "" {
+	if v != nil {
+		schedName = v[0]
+	}
+
+	if schedName == "" {
 		c.sendError(c.name, method, w, "Missing Schedule Policy Name", http.StatusBadRequest)
 		return
 	}
@@ -76,7 +80,7 @@ func (c *clusterApi) schedPolicyGet(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(schedPolicy)
 }
 
-// swagger:operation POST /cluster/schedpolicy schedpolicy schedPolicyCreate
+// swagger:operation POST /cluster/schedpolicy/policy schedpolicy schedPolicyCreate
 //
 // Create schedule policy
 //
@@ -114,7 +118,7 @@ func (c *clusterApi) schedPolicyCreate(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// swagger:operation PUT /cluster/schedpolicy schedpolicy schedPolicyUpdate
+// swagger:operation PUT /cluster/schedpolicy/policy schedpolicy schedPolicyUpdate
 //
 // Update schedule policy
 //
@@ -152,7 +156,7 @@ func (c *clusterApi) schedPolicyUpdate(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// swagger:operation DELETE /cluster/schedpolicy/{name} schedpolicy shedPolicyDelete
+// swagger:operation DELETE /cluster/schedpolicy/policy schedpolicy shedPolicyDelete
 //
 // Delete schedule policy
 //
@@ -163,7 +167,7 @@ func (c *clusterApi) schedPolicyUpdate(w http.ResponseWriter, r *http.Request) {
 // - application/json
 // parameters:
 // - name: name
-//   in: path
+//   in: query
 //   description: policy name and schedule to delete
 //   required: true
 //   type: string
@@ -174,10 +178,15 @@ func (c *clusterApi) schedPolicyDelete(w http.ResponseWriter, r *http.Request) {
 
 	method := "schedPolicyDelete"
 
-	vars := mux.Vars(r)
-	schedName, ok := vars[sched.SchedName]
+	var schedName string
+	params := r.URL.Query()
+	v := params[sched.SchedName]
 
-	if !ok || schedName == "" {
+	if v != nil {
+		schedName = v[0]
+	}
+
+	if schedName == "" {
 		c.sendError(c.name, method, w, "Missing Schedule Policy Name", http.StatusBadRequest)
 		return
 	}
