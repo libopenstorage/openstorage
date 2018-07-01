@@ -712,31 +712,31 @@ func (SdkCloudBackupRequestedState) EnumDescriptor() ([]byte, []int) {
 // swagger:model
 type StorageResource struct {
 	// Id is the LUN identifier.
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id string `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
 	// Path device path for this storage resource.
-	Path string `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"`
+	Path string `protobuf:"bytes,2,opt,name=path" json:"path,omitempty"`
 	// Storage medium.
-	Medium StorageMedium `protobuf:"varint,3,opt,name=medium,proto3,enum=openstorage.api.StorageMedium" json:"medium,omitempty"`
+	Medium StorageMedium `protobuf:"varint,3,opt,name=medium,enum=openstorage.api.StorageMedium" json:"medium,omitempty"`
 	// True if this device is online.
-	Online bool `protobuf:"varint,4,opt,name=online,proto3" json:"online,omitempty"`
+	Online bool `protobuf:"varint,4,opt,name=online" json:"online,omitempty"`
 	// IOPS
-	Iops uint64 `protobuf:"varint,5,opt,name=iops,proto3" json:"iops,omitempty"`
+	Iops uint64 `protobuf:"varint,5,opt,name=iops" json:"iops,omitempty"`
 	// SeqWrite
-	SeqWrite float64 `protobuf:"fixed64,6,opt,name=seq_write,json=seqWrite,proto3" json:"seq_write,omitempty"`
+	SeqWrite float64 `protobuf:"fixed64,6,opt,name=seq_write,json=seqWrite" json:"seq_write,omitempty"`
 	// SeqRead
-	SeqRead float64 `protobuf:"fixed64,7,opt,name=seq_read,json=seqRead,proto3" json:"seq_read,omitempty"`
+	SeqRead float64 `protobuf:"fixed64,7,opt,name=seq_read,json=seqRead" json:"seq_read,omitempty"`
 	// RandRW
-	RandRW float64 `protobuf:"fixed64,8,opt,name=randRW,proto3" json:"randRW,omitempty"`
+	RandRW float64 `protobuf:"fixed64,8,opt,name=randRW" json:"randRW,omitempty"`
 	// Total size in bytes.
-	Size uint64 `protobuf:"varint,9,opt,name=size,proto3" json:"size,omitempty"`
+	Size uint64 `protobuf:"varint,9,opt,name=size" json:"size,omitempty"`
 	// Physical Bytes used.
-	Used uint64 `protobuf:"varint,10,opt,name=used,proto3" json:"used,omitempty"`
+	Used uint64 `protobuf:"varint,10,opt,name=used" json:"used,omitempty"`
 	// True if this device is rotational.
-	RotationSpeed string `protobuf:"bytes,11,opt,name=rotation_speed,json=rotationSpeed,proto3" json:"rotation_speed,omitempty"`
+	RotationSpeed string `protobuf:"bytes,11,opt,name=rotation_speed,json=rotationSpeed" json:"rotation_speed,omitempty"`
 	// Timestamp of last time this device was scanned.
-	LastScan *timestamp.Timestamp `protobuf:"bytes,12,opt,name=last_scan,json=lastScan,proto3" json:"last_scan,omitempty"`
+	LastScan *timestamp.Timestamp `protobuf:"bytes,12,opt,name=last_scan,json=lastScan" json:"last_scan,omitempty"`
 	// True if dedicated for metadata.
-	Metadata             bool     `protobuf:"varint,13,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Metadata             bool     `protobuf:"varint,13,opt,name=metadata" json:"metadata,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -860,19 +860,19 @@ func (m *StorageResource) GetMetadata() bool {
 // StoragePool groups different storage devices based on their CosType
 type StoragePool struct {
 	// ID pool ID
-	ID int32 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	ID int32 `protobuf:"varint,1,opt,name=ID" json:"ID,omitempty"`
 	// Cos reflects the capabilities of this drive pool
-	Cos CosType `protobuf:"varint,2,opt,name=Cos,proto3,enum=openstorage.api.CosType" json:"Cos,omitempty"`
+	Cos CosType `protobuf:"varint,2,opt,name=Cos,enum=openstorage.api.CosType" json:"Cos,omitempty"`
 	// Medium underlying storage type
-	Medium StorageMedium `protobuf:"varint,3,opt,name=Medium,proto3,enum=openstorage.api.StorageMedium" json:"Medium,omitempty"`
+	Medium StorageMedium `protobuf:"varint,3,opt,name=Medium,enum=openstorage.api.StorageMedium" json:"Medium,omitempty"`
 	// RaidLevel storage raid level
-	RaidLevel string `protobuf:"bytes,4,opt,name=RaidLevel,proto3" json:"RaidLevel,omitempty"`
+	RaidLevel string `protobuf:"bytes,4,opt,name=RaidLevel" json:"RaidLevel,omitempty"`
 	// TotalSize of the pool
-	TotalSize uint64 `protobuf:"varint,7,opt,name=TotalSize,proto3" json:"TotalSize,omitempty"`
+	TotalSize uint64 `protobuf:"varint,7,opt,name=TotalSize" json:"TotalSize,omitempty"`
 	// Used size of the pool
-	Used uint64 `protobuf:"varint,8,opt,name=Used,proto3" json:"Used,omitempty"`
+	Used uint64 `protobuf:"varint,8,opt,name=Used" json:"Used,omitempty"`
 	// Labels is a list of user defined name-value pairs
-	Labels               map[string]string `protobuf:"bytes,9,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Labels               map[string]string `protobuf:"bytes,9,rep,name=labels" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -956,9 +956,9 @@ func (m *StoragePool) GetLabels() map[string]string {
 // swagger:model
 type VolumeLocator struct {
 	// User friendly identifier
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Name string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
 	// A set of name-value pairs that acts as search filters
-	VolumeLabels         map[string]string `protobuf:"bytes,2,rep,name=volume_labels,json=volumeLabels,proto3" json:"volume_labels,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	VolumeLabels         map[string]string `protobuf:"bytes,2,rep,name=volume_labels,json=volumeLabels" json:"volume_labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -1007,10 +1007,10 @@ func (m *VolumeLocator) GetVolumeLabels() map[string]string {
 // swagger:model
 type Source struct {
 	// A volume id, if specified will create a clone of the parent.
-	Parent string `protobuf:"bytes,1,opt,name=parent,proto3" json:"parent,omitempty"`
+	Parent string `protobuf:"bytes,1,opt,name=parent" json:"parent,omitempty"`
 	// Seed will seed the volume from the specified URI
 	// Any additional config for the source comes from the labels in the spec
-	Seed                 string   `protobuf:"bytes,2,opt,name=seed,proto3" json:"seed,omitempty"`
+	Seed                 string   `protobuf:"bytes,2,opt,name=seed" json:"seed,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -1059,7 +1059,7 @@ func (m *Source) GetSeed() string {
 // swagger:model
 type Group struct {
 	// Id common identifier across volumes that have the same group.
-	Id                   string   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id                   string   `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -1100,53 +1100,53 @@ func (m *Group) GetId() string {
 // swagger:model
 type VolumeSpec struct {
 	// Ephemeral storage
-	Ephemeral bool `protobuf:"varint,1,opt,name=ephemeral,proto3" json:"ephemeral,omitempty"`
+	Ephemeral bool `protobuf:"varint,1,opt,name=ephemeral" json:"ephemeral,omitempty"`
 	// Size specifies the thin provisioned volume size.
-	Size uint64 `protobuf:"varint,2,opt,name=size,proto3" json:"size,omitempty"`
+	Size uint64 `protobuf:"varint,2,opt,name=size" json:"size,omitempty"`
 	// Format specifies the filesystem for this volume.
-	Format FSType `protobuf:"varint,3,opt,name=format,proto3,enum=openstorage.api.FSType" json:"format,omitempty"`
+	Format FSType `protobuf:"varint,3,opt,name=format,enum=openstorage.api.FSType" json:"format,omitempty"`
 	// BlockSize for the filesystem.
-	BlockSize int64 `protobuf:"varint,4,opt,name=block_size,json=blockSize,proto3" json:"block_size,omitempty"`
+	BlockSize int64 `protobuf:"varint,4,opt,name=block_size,json=blockSize" json:"block_size,omitempty"`
 	// HaLevel specifies the number of copies of data.
-	HaLevel int64 `protobuf:"varint,5,opt,name=ha_level,json=haLevel,proto3" json:"ha_level,omitempty"`
+	HaLevel int64 `protobuf:"varint,5,opt,name=ha_level,json=haLevel" json:"ha_level,omitempty"`
 	// Cos specifies the relative class of service.
-	Cos CosType `protobuf:"varint,6,opt,name=cos,proto3,enum=openstorage.api.CosType" json:"cos,omitempty"`
+	Cos CosType `protobuf:"varint,6,opt,name=cos,enum=openstorage.api.CosType" json:"cos,omitempty"`
 	// IoProfile provides a hint about application using this volume.
-	IoProfile IoProfile `protobuf:"varint,7,opt,name=io_profile,json=ioProfile,proto3,enum=openstorage.api.IoProfile" json:"io_profile,omitempty"`
+	IoProfile IoProfile `protobuf:"varint,7,opt,name=io_profile,json=ioProfile,enum=openstorage.api.IoProfile" json:"io_profile,omitempty"`
 	// Dedupe specifies if the volume data is to be de-duplicated.
-	Dedupe bool `protobuf:"varint,8,opt,name=dedupe,proto3" json:"dedupe,omitempty"`
+	Dedupe bool `protobuf:"varint,8,opt,name=dedupe" json:"dedupe,omitempty"`
 	// SnapshotInterval in minutes, set to 0 to disable snapshots
-	SnapshotInterval uint32 `protobuf:"varint,9,opt,name=snapshot_interval,json=snapshotInterval,proto3" json:"snapshot_interval,omitempty"`
+	SnapshotInterval uint32 `protobuf:"varint,9,opt,name=snapshot_interval,json=snapshotInterval" json:"snapshot_interval,omitempty"`
 	// VolumeLabels configuration labels
-	VolumeLabels map[string]string `protobuf:"bytes,10,rep,name=volume_labels,json=volumeLabels,proto3" json:"volume_labels,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	VolumeLabels map[string]string `protobuf:"bytes,10,rep,name=volume_labels,json=volumeLabels" json:"volume_labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// Shared is true if this volume can be remotely accessed.
-	Shared bool `protobuf:"varint,11,opt,name=shared,proto3" json:"shared,omitempty"`
+	Shared bool `protobuf:"varint,11,opt,name=shared" json:"shared,omitempty"`
 	// ReplicaSet is the desired set of nodes for the volume data.
-	ReplicaSet *ReplicaSet `protobuf:"bytes,12,opt,name=replica_set,json=replicaSet,proto3" json:"replica_set,omitempty"`
+	ReplicaSet *ReplicaSet `protobuf:"bytes,12,opt,name=replica_set,json=replicaSet" json:"replica_set,omitempty"`
 	// Aggregatiokn level Specifies the number of parts the volume can be aggregated from.
-	AggregationLevel uint32 `protobuf:"varint,13,opt,name=aggregation_level,json=aggregationLevel,proto3" json:"aggregation_level,omitempty"`
+	AggregationLevel uint32 `protobuf:"varint,13,opt,name=aggregation_level,json=aggregationLevel" json:"aggregation_level,omitempty"`
 	// Encrypted is true if this volume will be cryptographically secured.
-	Encrypted bool `protobuf:"varint,14,opt,name=encrypted,proto3" json:"encrypted,omitempty"`
+	Encrypted bool `protobuf:"varint,14,opt,name=encrypted" json:"encrypted,omitempty"`
 	// Passphrase for an encrypted volume
-	Passphrase string `protobuf:"bytes,15,opt,name=passphrase,proto3" json:"passphrase,omitempty"`
+	Passphrase string `protobuf:"bytes,15,opt,name=passphrase" json:"passphrase,omitempty"`
 	// SnapshotSchedule a well known string that specifies when snapshots should be taken.
-	SnapshotSchedule string `protobuf:"bytes,16,opt,name=snapshot_schedule,json=snapshotSchedule,proto3" json:"snapshot_schedule,omitempty"`
+	SnapshotSchedule string `protobuf:"bytes,16,opt,name=snapshot_schedule,json=snapshotSchedule" json:"snapshot_schedule,omitempty"`
 	// Scale allows autocreation of volumes.
-	Scale uint32 `protobuf:"varint,17,opt,name=scale,proto3" json:"scale,omitempty"`
+	Scale uint32 `protobuf:"varint,17,opt,name=scale" json:"scale,omitempty"`
 	// Sticky volumes cannot be deleted until the flag is removed.
-	Sticky bool `protobuf:"varint,18,opt,name=sticky,proto3" json:"sticky,omitempty"`
+	Sticky bool `protobuf:"varint,18,opt,name=sticky" json:"sticky,omitempty"`
 	// Group identifies a consistency group
-	Group *Group `protobuf:"bytes,21,opt,name=group,proto3" json:"group,omitempty"`
+	Group *Group `protobuf:"bytes,21,opt,name=group" json:"group,omitempty"`
 	// GroupEnforced is true if consistency group creation is enforced.
-	GroupEnforced bool `protobuf:"varint,22,opt,name=group_enforced,json=groupEnforced,proto3" json:"group_enforced,omitempty"`
+	GroupEnforced bool `protobuf:"varint,22,opt,name=group_enforced,json=groupEnforced" json:"group_enforced,omitempty"`
 	// Compressed is true if this volume is to be compressed.
-	Compressed bool `protobuf:"varint,23,opt,name=compressed,proto3" json:"compressed,omitempty"`
+	Compressed bool `protobuf:"varint,23,opt,name=compressed" json:"compressed,omitempty"`
 	// Cascaded is true if this volume can be populated on any node from an external source.
-	Cascaded bool `protobuf:"varint,24,opt,name=cascaded,proto3" json:"cascaded,omitempty"`
+	Cascaded bool `protobuf:"varint,24,opt,name=cascaded" json:"cascaded,omitempty"`
 	// Journal is true if data for the volume goes into the journal.
-	Journal bool `protobuf:"varint,25,opt,name=journal,proto3" json:"journal,omitempty"`
+	Journal bool `protobuf:"varint,25,opt,name=journal" json:"journal,omitempty"`
 	// Sharedv4 is true if this volume can be accessed via sharedv4.
-	Sharedv4             bool     `protobuf:"varint,26,opt,name=sharedv4,proto3" json:"sharedv4,omitempty"`
+	Sharedv4             bool     `protobuf:"varint,26,opt,name=sharedv4" json:"sharedv4,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -1348,7 +1348,7 @@ func (m *VolumeSpec) GetSharedv4() bool {
 // coded - for clustered storage arrays
 // swagger:model
 type ReplicaSet struct {
-	Nodes                []string `protobuf:"bytes,1,rep,name=nodes,proto3" json:"nodes,omitempty"`
+	Nodes                []string `protobuf:"bytes,1,rep,name=nodes" json:"nodes,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -1389,7 +1389,7 @@ func (m *ReplicaSet) GetNodes() []string {
 // information.
 // swagger:model
 type RuntimeStateMap struct {
-	RuntimeState         map[string]string `protobuf:"bytes,1,rep,name=runtime_state,json=runtimeState,proto3" json:"runtime_state,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	RuntimeState         map[string]string `protobuf:"bytes,1,rep,name=runtime_state,json=runtimeState" json:"runtime_state,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -1431,50 +1431,50 @@ func (m *RuntimeStateMap) GetRuntimeState() map[string]string {
 // swagger:model
 type Volume struct {
 	// Self referential volume ID.
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id string `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
 	// Source specified seed data for the volume.
-	Source *Source `protobuf:"bytes,2,opt,name=source,proto3" json:"source,omitempty"`
+	Source *Source `protobuf:"bytes,2,opt,name=source" json:"source,omitempty"`
 	// Group volumes in the same group have the same group id.
-	Group *Group `protobuf:"bytes,3,opt,name=group,proto3" json:"group,omitempty"`
+	Group *Group `protobuf:"bytes,3,opt,name=group" json:"group,omitempty"`
 	// Readonly is true if this volume is to be mounted with readonly access.
-	Readonly bool `protobuf:"varint,4,opt,name=readonly,proto3" json:"readonly,omitempty"`
+	Readonly bool `protobuf:"varint,4,opt,name=readonly" json:"readonly,omitempty"`
 	// User specified locator
-	Locator *VolumeLocator `protobuf:"bytes,5,opt,name=locator,proto3" json:"locator,omitempty"`
+	Locator *VolumeLocator `protobuf:"bytes,5,opt,name=locator" json:"locator,omitempty"`
 	// Volume creation time
-	Ctime *timestamp.Timestamp `protobuf:"bytes,6,opt,name=ctime,proto3" json:"ctime,omitempty"`
+	Ctime *timestamp.Timestamp `protobuf:"bytes,6,opt,name=ctime" json:"ctime,omitempty"`
 	// User specified VolumeSpec
-	Spec *VolumeSpec `protobuf:"bytes,7,opt,name=spec,proto3" json:"spec,omitempty"`
+	Spec *VolumeSpec `protobuf:"bytes,7,opt,name=spec" json:"spec,omitempty"`
 	// Usage is bytes consumed by vtheis volume.
-	Usage uint64 `protobuf:"varint,8,opt,name=usage,proto3" json:"usage,omitempty"`
+	Usage uint64 `protobuf:"varint,8,opt,name=usage" json:"usage,omitempty"`
 	// LastScan is the time when an integrity check was run.
-	LastScan *timestamp.Timestamp `protobuf:"bytes,9,opt,name=last_scan,json=lastScan,proto3" json:"last_scan,omitempty"`
+	LastScan *timestamp.Timestamp `protobuf:"bytes,9,opt,name=last_scan,json=lastScan" json:"last_scan,omitempty"`
 	// Format specifies the filesytem for this volume.
-	Format FSType `protobuf:"varint,10,opt,name=format,proto3,enum=openstorage.api.FSType" json:"format,omitempty"`
+	Format FSType `protobuf:"varint,10,opt,name=format,enum=openstorage.api.FSType" json:"format,omitempty"`
 	// Status is the availability status of this volume.
-	Status VolumeStatus `protobuf:"varint,11,opt,name=status,proto3,enum=openstorage.api.VolumeStatus" json:"status,omitempty"`
+	Status VolumeStatus `protobuf:"varint,11,opt,name=status,enum=openstorage.api.VolumeStatus" json:"status,omitempty"`
 	// State is the current runtime state of this volume.
-	State VolumeState `protobuf:"varint,12,opt,name=state,proto3,enum=openstorage.api.VolumeState" json:"state,omitempty"`
+	State VolumeState `protobuf:"varint,12,opt,name=state,enum=openstorage.api.VolumeState" json:"state,omitempty"`
 	// AttachedOn is the node instance identifier for clustered systems.
-	AttachedOn string `protobuf:"bytes,13,opt,name=attached_on,json=attachedOn,proto3" json:"attached_on,omitempty"`
+	AttachedOn string `protobuf:"bytes,13,opt,name=attached_on,json=attachedOn" json:"attached_on,omitempty"`
 	// AttachedState shows whether the device is attached for internal or external use.
-	AttachedState AttachState `protobuf:"varint,14,opt,name=attached_state,json=attachedState,proto3,enum=openstorage.api.AttachState" json:"attached_state,omitempty"`
+	AttachedState AttachState `protobuf:"varint,14,opt,name=attached_state,json=attachedState,enum=openstorage.api.AttachState" json:"attached_state,omitempty"`
 	// DevicePath is the device exported by block device implementations.
-	DevicePath string `protobuf:"bytes,15,opt,name=device_path,json=devicePath,proto3" json:"device_path,omitempty"`
+	DevicePath string `protobuf:"bytes,15,opt,name=device_path,json=devicePath" json:"device_path,omitempty"`
 	// SecureDevicePath is the device path for an encrypted volume.
-	SecureDevicePath string `protobuf:"bytes,16,opt,name=secure_device_path,json=secureDevicePath,proto3" json:"secure_device_path,omitempty"`
+	SecureDevicePath string `protobuf:"bytes,16,opt,name=secure_device_path,json=secureDevicePath" json:"secure_device_path,omitempty"`
 	// AttachPath is the mounted path in the host namespace.
-	AttachPath []string `protobuf:"bytes,17,rep,name=attach_path,json=attachPath,proto3" json:"attach_path,omitempty"`
+	AttachPath []string `protobuf:"bytes,17,rep,name=attach_path,json=attachPath" json:"attach_path,omitempty"`
 	// AttachInfo is a list of name value mappings that provides attach information.
-	AttachInfo map[string]string `protobuf:"bytes,18,rep,name=attach_info,json=attachInfo,proto3" json:"attach_info,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	AttachInfo map[string]string `protobuf:"bytes,18,rep,name=attach_info,json=attachInfo" json:"attach_info,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// ReplicatSets storage for this volumefor clustered storage arrays.
-	ReplicaSets []*ReplicaSet `protobuf:"bytes,19,rep,name=replica_sets,json=replicaSets,proto3" json:"replica_sets,omitempty"`
+	ReplicaSets []*ReplicaSet `protobuf:"bytes,19,rep,name=replica_sets,json=replicaSets" json:"replica_sets,omitempty"`
 	// RuntimeState is a lst of name value mapping of driver specific runtime
 	// information.
-	RuntimeState []*RuntimeStateMap `protobuf:"bytes,20,rep,name=runtime_state,json=runtimeState,proto3" json:"runtime_state,omitempty"`
+	RuntimeState []*RuntimeStateMap `protobuf:"bytes,20,rep,name=runtime_state,json=runtimeState" json:"runtime_state,omitempty"`
 	// Error is the Last recorded error.
-	Error string `protobuf:"bytes,21,opt,name=error,proto3" json:"error,omitempty"`
+	Error string `protobuf:"bytes,21,opt,name=error" json:"error,omitempty"`
 	// VolumeConsumers are entities that consume this volume
-	VolumeConsumers      []*VolumeConsumer `protobuf:"bytes,22,rep,name=volume_consumers,json=volumeConsumers,proto3" json:"volume_consumers,omitempty"`
+	VolumeConsumers      []*VolumeConsumer `protobuf:"bytes,22,rep,name=volume_consumers,json=volumeConsumers" json:"volume_consumers,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -1662,23 +1662,23 @@ func (m *Volume) GetVolumeConsumers() []*VolumeConsumer {
 // swagger:model
 type Stats struct {
 	// Reads completed successfully
-	Reads uint64 `protobuf:"varint,1,opt,name=reads,proto3" json:"reads,omitempty"`
+	Reads uint64 `protobuf:"varint,1,opt,name=reads" json:"reads,omitempty"`
 	// Time spent in reads in ms
-	ReadMs    uint64 `protobuf:"varint,2,opt,name=read_ms,json=readMs,proto3" json:"read_ms,omitempty"`
-	ReadBytes uint64 `protobuf:"varint,3,opt,name=read_bytes,json=readBytes,proto3" json:"read_bytes,omitempty"`
+	ReadMs    uint64 `protobuf:"varint,2,opt,name=read_ms,json=readMs" json:"read_ms,omitempty"`
+	ReadBytes uint64 `protobuf:"varint,3,opt,name=read_bytes,json=readBytes" json:"read_bytes,omitempty"`
 	// Writes completed successfully
-	Writes uint64 `protobuf:"varint,4,opt,name=writes,proto3" json:"writes,omitempty"`
+	Writes uint64 `protobuf:"varint,4,opt,name=writes" json:"writes,omitempty"`
 	// Time spent in writes in ms
-	WriteMs    uint64 `protobuf:"varint,5,opt,name=write_ms,json=writeMs,proto3" json:"write_ms,omitempty"`
-	WriteBytes uint64 `protobuf:"varint,6,opt,name=write_bytes,json=writeBytes,proto3" json:"write_bytes,omitempty"`
+	WriteMs    uint64 `protobuf:"varint,5,opt,name=write_ms,json=writeMs" json:"write_ms,omitempty"`
+	WriteBytes uint64 `protobuf:"varint,6,opt,name=write_bytes,json=writeBytes" json:"write_bytes,omitempty"`
 	// IOs curently in progress
-	IoProgress uint64 `protobuf:"varint,7,opt,name=io_progress,json=ioProgress,proto3" json:"io_progress,omitempty"`
+	IoProgress uint64 `protobuf:"varint,7,opt,name=io_progress,json=ioProgress" json:"io_progress,omitempty"`
 	// Time spent doing IOs ms
-	IoMs uint64 `protobuf:"varint,8,opt,name=io_ms,json=ioMs,proto3" json:"io_ms,omitempty"`
+	IoMs uint64 `protobuf:"varint,8,opt,name=io_ms,json=ioMs" json:"io_ms,omitempty"`
 	// BytesUsed
-	BytesUsed uint64 `protobuf:"varint,9,opt,name=bytes_used,json=bytesUsed,proto3" json:"bytes_used,omitempty"`
+	BytesUsed uint64 `protobuf:"varint,9,opt,name=bytes_used,json=bytesUsed" json:"bytes_used,omitempty"`
 	// Interval in ms during which stats were collected
-	IntervalMs           uint64   `protobuf:"varint,10,opt,name=interval_ms,json=intervalMs,proto3" json:"interval_ms,omitempty"`
+	IntervalMs           uint64   `protobuf:"varint,10,opt,name=interval_ms,json=intervalMs" json:"interval_ms,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -1782,29 +1782,29 @@ func (m *Stats) GetIntervalMs() uint64 {
 // swagger:model
 type Alert struct {
 	// Id for Alert
-	Id int64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id int64 `protobuf:"varint,1,opt,name=id" json:"id,omitempty"`
 	// Severity of the Alert
-	Severity SeverityType `protobuf:"varint,2,opt,name=severity,proto3,enum=openstorage.api.SeverityType" json:"severity,omitempty"`
+	Severity SeverityType `protobuf:"varint,2,opt,name=severity,enum=openstorage.api.SeverityType" json:"severity,omitempty"`
 	// AlertType user defined alert type
-	AlertType int64 `protobuf:"varint,3,opt,name=alert_type,json=alertType,proto3" json:"alert_type,omitempty"`
+	AlertType int64 `protobuf:"varint,3,opt,name=alert_type,json=alertType" json:"alert_type,omitempty"`
 	// Message describing the Alert
-	Message string `protobuf:"bytes,4,opt,name=message,proto3" json:"message,omitempty"`
+	Message string `protobuf:"bytes,4,opt,name=message" json:"message,omitempty"`
 	// Timestamp when Alert occured
-	Timestamp *timestamp.Timestamp `protobuf:"bytes,5,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Timestamp *timestamp.Timestamp `protobuf:"bytes,5,opt,name=timestamp" json:"timestamp,omitempty"`
 	// ResourceId where Alert occured
-	ResourceId string `protobuf:"bytes,6,opt,name=resource_id,json=resourceId,proto3" json:"resource_id,omitempty"`
+	ResourceId string `protobuf:"bytes,6,opt,name=resource_id,json=resourceId" json:"resource_id,omitempty"`
 	// Resource where Alert occured
-	Resource ResourceType `protobuf:"varint,7,opt,name=resource,proto3,enum=openstorage.api.ResourceType" json:"resource,omitempty"`
+	Resource ResourceType `protobuf:"varint,7,opt,name=resource,enum=openstorage.api.ResourceType" json:"resource,omitempty"`
 	// Cleared Flag
-	Cleared bool `protobuf:"varint,8,opt,name=cleared,proto3" json:"cleared,omitempty"`
+	Cleared bool `protobuf:"varint,8,opt,name=cleared" json:"cleared,omitempty"`
 	// TTL in seconds for this Alert
-	Ttl uint64 `protobuf:"varint,9,opt,name=ttl,proto3" json:"ttl,omitempty"`
+	Ttl uint64 `protobuf:"varint,9,opt,name=ttl" json:"ttl,omitempty"`
 	// UniqueTag helps identify a unique alert for a given resouce
-	UniqueTag string `protobuf:"bytes,10,opt,name=unique_tag,json=uniqueTag,proto3" json:"unique_tag,omitempty"`
+	UniqueTag string `protobuf:"bytes,10,opt,name=unique_tag,json=uniqueTag" json:"unique_tag,omitempty"`
 	// Count of such alerts raised so far.
-	Count int64 `protobuf:"varint,11,opt,name=count,proto3" json:"count,omitempty"`
+	Count int64 `protobuf:"varint,11,opt,name=count" json:"count,omitempty"`
 	// Timestamp when such alert was raised the very first time.
-	FirstSeen            *timestamp.Timestamp `protobuf:"bytes,12,opt,name=first_seen,json=firstSeen,proto3" json:"first_seen,omitempty"`
+	FirstSeen            *timestamp.Timestamp `protobuf:"bytes,12,opt,name=first_seen,json=firstSeen" json:"first_seen,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
 	XXX_unrecognized     []byte               `json:"-"`
 	XXX_sizecache        int32                `json:"-"`
@@ -1921,7 +1921,7 @@ func (m *Alert) GetFirstSeen() *timestamp.Timestamp {
 // Alerts is an array of Alert objects
 // swagger:model
 type Alerts struct {
-	Alert                []*Alert `protobuf:"bytes,1,rep,name=alert,proto3" json:"alert,omitempty"`
+	Alert                []*Alert `protobuf:"bytes,1,rep,name=alert" json:"alert,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -1962,27 +1962,27 @@ func (m *Alerts) GetAlert() []*Alert {
 // swagger:model
 type ObjectstoreInfo struct {
 	// UUID of objectstore
-	Uuid string `protobuf:"bytes,1,opt,name=uuid,proto3" json:"uuid,omitempty"`
+	Uuid string `protobuf:"bytes,1,opt,name=uuid" json:"uuid,omitempty"`
 	// VolumeID of volume used by object store
-	VolumeId string `protobuf:"bytes,2,opt,name=volume_id,json=volumeId,proto3" json:"volume_id,omitempty"`
+	VolumeId string `protobuf:"bytes,2,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
 	// Enable/Disable created objectstore
-	Enabled bool `protobuf:"varint,3,opt,name=enabled,proto3" json:"enabled,omitempty"`
+	Enabled bool `protobuf:"varint,3,opt,name=enabled" json:"enabled,omitempty"`
 	// Status of objectstore running/failed
-	Status string `protobuf:"bytes,4,opt,name=status,proto3" json:"status,omitempty"`
+	Status string `protobuf:"bytes,4,opt,name=status" json:"status,omitempty"`
 	// Action being taken on this objectstore
-	Action int64 `protobuf:"varint,5,opt,name=action,proto3" json:"action,omitempty"`
+	Action int64 `protobuf:"varint,5,opt,name=action" json:"action,omitempty"`
 	// AccessKey for login into objectstore
-	AccessKey string `protobuf:"bytes,6,opt,name=access_key,json=accessKey,proto3" json:"access_key,omitempty"`
+	AccessKey string `protobuf:"bytes,6,opt,name=access_key,json=accessKey" json:"access_key,omitempty"`
 	// SecretKey for login into objectstore
-	SecretKey string `protobuf:"bytes,7,opt,name=secret_key,json=secretKey,proto3" json:"secret_key,omitempty"`
+	SecretKey string `protobuf:"bytes,7,opt,name=secret_key,json=secretKey" json:"secret_key,omitempty"`
 	// Endpoints for accessing objectstore
-	Endpoints []string `protobuf:"bytes,8,rep,name=endpoints,proto3" json:"endpoints,omitempty"`
+	Endpoints []string `protobuf:"bytes,8,rep,name=endpoints" json:"endpoints,omitempty"`
 	// CurrentEndpoint on which objectstore server is accessible
-	CurrentEndpoint string `protobuf:"bytes,9,opt,name=current_endpoint,json=currentEndpoint,proto3" json:"current_endpoint,omitempty"`
+	CurrentEndpoint string `protobuf:"bytes,9,opt,name=current_endpoint,json=currentEndpoint" json:"current_endpoint,omitempty"`
 	// AccessPort is objectstore server port
-	AccessPort int64 `protobuf:"varint,10,opt,name=access_port,json=accessPort,proto3" json:"access_port,omitempty"`
+	AccessPort int64 `protobuf:"varint,10,opt,name=access_port,json=accessPort" json:"access_port,omitempty"`
 	// Region for this objectstore
-	Region               string   `protobuf:"bytes,11,opt,name=region,proto3" json:"region,omitempty"`
+	Region               string   `protobuf:"bytes,11,opt,name=region" json:"region,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -2094,11 +2094,11 @@ func (m *ObjectstoreInfo) GetRegion() string {
 // swagger:model
 type VolumeCreateRequest struct {
 	// User specified volume name and labels
-	Locator *VolumeLocator `protobuf:"bytes,1,opt,name=locator,proto3" json:"locator,omitempty"`
+	Locator *VolumeLocator `protobuf:"bytes,1,opt,name=locator" json:"locator,omitempty"`
 	// Source to create volume
-	Source *Source `protobuf:"bytes,2,opt,name=source,proto3" json:"source,omitempty"`
+	Source *Source `protobuf:"bytes,2,opt,name=source" json:"source,omitempty"`
 	// The storage spec for the volume
-	Spec                 *VolumeSpec `protobuf:"bytes,3,opt,name=spec,proto3" json:"spec,omitempty"`
+	Spec                 *VolumeSpec `protobuf:"bytes,3,opt,name=spec" json:"spec,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
 	XXX_unrecognized     []byte      `json:"-"`
 	XXX_sizecache        int32       `json:"-"`
@@ -2156,7 +2156,7 @@ type VolumeResponse struct {
 	//
 	// in: body
 	// Required: true
-	Error                string   `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
+	Error                string   `protobuf:"bytes,1,opt,name=error" json:"error,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -2200,12 +2200,12 @@ type VolumeCreateResponse struct {
 	//
 	// in: body
 	// Required: true
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id string `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
 	// Volume Response
 	//
 	// in: body
 	// Required: true
-	VolumeResponse       *VolumeResponse `protobuf:"bytes,2,opt,name=volume_response,json=volumeResponse,proto3" json:"volume_response,omitempty"`
+	VolumeResponse       *VolumeResponse `protobuf:"bytes,2,opt,name=volume_response,json=volumeResponse" json:"volume_response,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
 	XXX_unrecognized     []byte          `json:"-"`
 	XXX_sizecache        int32           `json:"-"`
@@ -2253,13 +2253,13 @@ func (m *VolumeCreateResponse) GetVolumeResponse() *VolumeResponse {
 // swagger:model
 type VolumeStateAction struct {
 	// Attach or Detach volume
-	Attach VolumeActionParam `protobuf:"varint,1,opt,name=attach,proto3,enum=openstorage.api.VolumeActionParam" json:"attach,omitempty"`
+	Attach VolumeActionParam `protobuf:"varint,1,opt,name=attach,enum=openstorage.api.VolumeActionParam" json:"attach,omitempty"`
 	// Mount or unmount volume
-	Mount VolumeActionParam `protobuf:"varint,2,opt,name=mount,proto3,enum=openstorage.api.VolumeActionParam" json:"mount,omitempty"`
+	Mount VolumeActionParam `protobuf:"varint,2,opt,name=mount,enum=openstorage.api.VolumeActionParam" json:"mount,omitempty"`
 	// MountPath Path where the device is mounted
-	MountPath string `protobuf:"bytes,3,opt,name=mount_path,json=mountPath,proto3" json:"mount_path,omitempty"`
+	MountPath string `protobuf:"bytes,3,opt,name=mount_path,json=mountPath" json:"mount_path,omitempty"`
 	// DevicePath Path returned in attach
-	DevicePath           string   `protobuf:"bytes,4,opt,name=device_path,json=devicePath,proto3" json:"device_path,omitempty"`
+	DevicePath           string   `protobuf:"bytes,4,opt,name=device_path,json=devicePath" json:"device_path,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -2321,14 +2321,14 @@ func (m *VolumeStateAction) GetDevicePath() string {
 // swagger:model
 type VolumeSetRequest struct {
 	// User specified volume name and labels
-	Locator *VolumeLocator `protobuf:"bytes,1,opt,name=locator,proto3" json:"locator,omitempty"`
+	Locator *VolumeLocator `protobuf:"bytes,1,opt,name=locator" json:"locator,omitempty"`
 	// The storage spec for the volume
-	Spec *VolumeSpec `protobuf:"bytes,2,opt,name=spec,proto3" json:"spec,omitempty"`
+	Spec *VolumeSpec `protobuf:"bytes,2,opt,name=spec" json:"spec,omitempty"`
 	// State modification on this volume.
-	Action *VolumeStateAction `protobuf:"bytes,3,opt,name=action,proto3" json:"action,omitempty"`
+	Action *VolumeStateAction `protobuf:"bytes,3,opt,name=action" json:"action,omitempty"`
 	// additional options
 	// required for the Set operation.
-	Options              map[string]string `protobuf:"bytes,4,rep,name=options,proto3" json:"options,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Options              map[string]string `protobuf:"bytes,4,rep,name=options" json:"options,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -2393,12 +2393,12 @@ type VolumeSetResponse struct {
 	//
 	// in: body
 	// Required: true
-	Volume *Volume `protobuf:"bytes,1,opt,name=volume,proto3" json:"volume,omitempty"`
+	Volume *Volume `protobuf:"bytes,1,opt,name=volume" json:"volume,omitempty"`
 	// VolumeResponse
 	//
 	// in: body
 	// Required: true
-	VolumeResponse       *VolumeResponse `protobuf:"bytes,2,opt,name=volume_response,json=volumeResponse,proto3" json:"volume_response,omitempty"`
+	VolumeResponse       *VolumeResponse `protobuf:"bytes,2,opt,name=volume_response,json=volumeResponse" json:"volume_response,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
 	XXX_unrecognized     []byte          `json:"-"`
 	XXX_sizecache        int32           `json:"-"`
@@ -2446,9 +2446,9 @@ func (m *VolumeSetResponse) GetVolumeResponse() *VolumeResponse {
 // swagger:parameters snapVolume
 type SnapCreateRequest struct {
 	// volume id
-	Id                   string         `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Locator              *VolumeLocator `protobuf:"bytes,2,opt,name=locator,proto3" json:"locator,omitempty"`
-	Readonly             bool           `protobuf:"varint,3,opt,name=readonly,proto3" json:"readonly,omitempty"`
+	Id                   string         `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
+	Locator              *VolumeLocator `protobuf:"bytes,2,opt,name=locator" json:"locator,omitempty"`
+	Readonly             bool           `protobuf:"varint,3,opt,name=readonly" json:"readonly,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
 	XXX_unrecognized     []byte         `json:"-"`
 	XXX_sizecache        int32          `json:"-"`
@@ -2506,7 +2506,7 @@ type SnapCreateResponse struct {
 	//
 	// in: body
 	// Required: true
-	VolumeCreateResponse *VolumeCreateResponse `protobuf:"bytes,1,opt,name=volume_create_response,json=volumeCreateResponse,proto3" json:"volume_create_response,omitempty"`
+	VolumeCreateResponse *VolumeCreateResponse `protobuf:"bytes,1,opt,name=volume_create_response,json=volumeCreateResponse" json:"volume_create_response,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
 	XXX_unrecognized     []byte                `json:"-"`
 	XXX_sizecache        int32                 `json:"-"`
@@ -2546,9 +2546,9 @@ func (m *SnapCreateResponse) GetVolumeCreateResponse() *VolumeCreateResponse {
 // VolumeInfo
 // swagger:model
 type VolumeInfo struct {
-	VolumeId             string      `protobuf:"bytes,1,opt,name=volume_id,json=volumeId,proto3" json:"volume_id,omitempty"`
-	Path                 string      `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"`
-	Storage              *VolumeSpec `protobuf:"bytes,3,opt,name=storage,proto3" json:"storage,omitempty"`
+	VolumeId             string      `protobuf:"bytes,1,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
+	Path                 string      `protobuf:"bytes,2,opt,name=path" json:"path,omitempty"`
+	Storage              *VolumeSpec `protobuf:"bytes,3,opt,name=storage" json:"storage,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
 	XXX_unrecognized     []byte      `json:"-"`
 	XXX_sizecache        int32       `json:"-"`
@@ -2605,22 +2605,22 @@ func (m *VolumeInfo) GetStorage() *VolumeSpec {
 // swagger: model
 type VolumeConsumer struct {
 	// Name is the name of the volume consumer
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Name string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
 	// Namespace is the namespace of the volume consumer
-	Namespace string `protobuf:"bytes,2,opt,name=namespace,proto3" json:"namespace,omitempty"`
+	Namespace string `protobuf:"bytes,2,opt,name=namespace" json:"namespace,omitempty"`
 	// Type is the type of the consumer. E.g a Kubernetes pod
-	Type string `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty"`
+	Type string `protobuf:"bytes,3,opt,name=type" json:"type,omitempty"`
 	// NodeID is the identifier of the node on which the consumer is running. This
 	// identifier would be from the perspective of the container runtime or
 	// orchestrator under which the volume consumer resides. For example, NodeID
 	//  can be name of a minion in Kubernetes.
-	NodeId string `protobuf:"bytes,4,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
+	NodeId string `protobuf:"bytes,4,opt,name=node_id,json=nodeId" json:"node_id,omitempty"`
 	// OwnerName is the name of the entity who owns this volume consumer
-	OwnerName string `protobuf:"bytes,5,opt,name=owner_name,json=ownerName,proto3" json:"owner_name,omitempty"`
+	OwnerName string `protobuf:"bytes,5,opt,name=owner_name,json=ownerName" json:"owner_name,omitempty"`
 	// OwnerType is the type of the entity who owns this volume consumer. The type would
 	// be from the perspective of the container runtime or the orchestrator under which
 	// the volume consumer resides. For e.g OwnerType can be a Deployment in Kubernetes.
-	OwnerType            string   `protobuf:"bytes,6,opt,name=owner_type,json=ownerType,proto3" json:"owner_type,omitempty"`
+	OwnerType            string   `protobuf:"bytes,6,opt,name=owner_type,json=ownerType" json:"owner_type,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -2698,8 +2698,8 @@ func (m *VolumeConsumer) GetOwnerType() string {
 // Where the Path is the filesystem path within the layered filesystem
 // swagger:model
 type GraphDriverChanges struct {
-	Path                 string                `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
-	Kind                 GraphDriverChangeType `protobuf:"varint,2,opt,name=kind,proto3,enum=openstorage.api.GraphDriverChangeType" json:"kind,omitempty"`
+	Path                 string                `protobuf:"bytes,1,opt,name=path" json:"path,omitempty"`
+	Kind                 GraphDriverChangeType `protobuf:"varint,2,opt,name=kind,enum=openstorage.api.GraphDriverChangeType" json:"kind,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
 	XXX_unrecognized     []byte                `json:"-"`
 	XXX_sizecache        int32                 `json:"-"`
@@ -2749,7 +2749,7 @@ type ClusterResponse struct {
 	// Error code
 	//
 	// in: body
-	Error                string   `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
+	Error                string   `protobuf:"bytes,1,opt,name=error" json:"error,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -2789,7 +2789,7 @@ func (m *ClusterResponse) GetError() string {
 // Active Request
 // swagger:model
 type ActiveRequest struct {
-	ReqestKV             map[int64]string `protobuf:"bytes,1,rep,name=ReqestKV,proto3" json:"ReqestKV,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	ReqestKV             map[int64]string `protobuf:"bytes,1,rep,name=ReqestKV" json:"ReqestKV,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	XXX_NoUnkeyedLiteral struct{}         `json:"-"`
 	XXX_unrecognized     []byte           `json:"-"`
 	XXX_sizecache        int32            `json:"-"`
@@ -2829,8 +2829,8 @@ func (m *ActiveRequest) GetReqestKV() map[int64]string {
 // Active Requests
 // swagger:model
 type ActiveRequests struct {
-	RequestCount         int64            `protobuf:"varint,1,opt,name=RequestCount,proto3" json:"RequestCount,omitempty"`
-	ActiveRequest        []*ActiveRequest `protobuf:"bytes,2,rep,name=ActiveRequest,proto3" json:"ActiveRequest,omitempty"`
+	RequestCount         int64            `protobuf:"varint,1,opt,name=RequestCount" json:"RequestCount,omitempty"`
+	ActiveRequest        []*ActiveRequest `protobuf:"bytes,2,rep,name=ActiveRequest" json:"ActiveRequest,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}         `json:"-"`
 	XXX_unrecognized     []byte           `json:"-"`
 	XXX_sizecache        int32            `json:"-"`
@@ -2877,8 +2877,8 @@ func (m *ActiveRequests) GetActiveRequest() []*ActiveRequest {
 // GroupSnapCreateRequest specifies a request to create a snapshot of given group.
 // swagger:model
 type GroupSnapCreateRequest struct {
-	Id                   string            `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Labels               map[string]string `protobuf:"bytes,2,rep,name=Labels,proto3" json:"Labels,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Id                   string            `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
+	Labels               map[string]string `protobuf:"bytes,2,rep,name=Labels" json:"Labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -2929,12 +2929,12 @@ type GroupSnapCreateResponse struct {
 	//
 	// in: body
 	// Required: true
-	Snapshots map[string]*SnapCreateResponse `protobuf:"bytes,1,rep,name=snapshots,proto3" json:"snapshots,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Snapshots map[string]*SnapCreateResponse `protobuf:"bytes,1,rep,name=snapshots" json:"snapshots,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// Error message
 	//
 	// in: body
 	// Required: true
-	Error                string   `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
+	Error                string   `protobuf:"bytes,2,opt,name=error" json:"error,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -2981,31 +2981,31 @@ func (m *GroupSnapCreateResponse) GetError() string {
 // StorageNode describes the state of the node
 type StorageNode struct {
 	// Id of the node
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id string `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
 	// Cpu usage of the node
-	Cpu float64 `protobuf:"fixed64,2,opt,name=cpu,proto3" json:"cpu,omitempty"`
+	Cpu float64 `protobuf:"fixed64,2,opt,name=cpu" json:"cpu,omitempty"`
 	// Total memory of the node
-	MemTotal uint64 `protobuf:"varint,3,opt,name=mem_total,json=memTotal,proto3" json:"mem_total,omitempty"`
+	MemTotal uint64 `protobuf:"varint,3,opt,name=mem_total,json=memTotal" json:"mem_total,omitempty"`
 	// Used memory of the node
-	MemUsed uint64 `protobuf:"varint,4,opt,name=mem_used,json=memUsed,proto3" json:"mem_used,omitempty"`
+	MemUsed uint64 `protobuf:"varint,4,opt,name=mem_used,json=memUsed" json:"mem_used,omitempty"`
 	// Free memory of the node
-	MemFree uint64 `protobuf:"varint,5,opt,name=mem_free,json=memFree,proto3" json:"mem_free,omitempty"`
+	MemFree uint64 `protobuf:"varint,5,opt,name=mem_free,json=memFree" json:"mem_free,omitempty"`
 	// Average load (percentage)
-	AvgLoad int64 `protobuf:"varint,6,opt,name=avg_load,json=avgLoad,proto3" json:"avg_load,omitempty"`
+	AvgLoad int64 `protobuf:"varint,6,opt,name=avg_load,json=avgLoad" json:"avg_load,omitempty"`
 	// Node status
-	Status Status `protobuf:"varint,7,opt,name=status,proto3,enum=openstorage.api.Status" json:"status,omitempty"`
+	Status Status `protobuf:"varint,7,opt,name=status,enum=openstorage.api.Status" json:"status,omitempty"`
 	// List of disks on the node
-	Disks map[string]*StorageResource `protobuf:"bytes,9,rep,name=disks,proto3" json:"disks,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Disks map[string]*StorageResource `protobuf:"bytes,9,rep,name=disks" json:"disks,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// List of storage pools this node supports
-	Pools []*StoragePool `protobuf:"bytes,10,rep,name=pools,proto3" json:"pools,omitempty"`
+	Pools []*StoragePool `protobuf:"bytes,10,rep,name=pools" json:"pools,omitempty"`
 	// Management IP
-	MgmtIp string `protobuf:"bytes,11,opt,name=mgmt_ip,json=mgmtIp,proto3" json:"mgmt_ip,omitempty"`
+	MgmtIp string `protobuf:"bytes,11,opt,name=mgmt_ip,json=mgmtIp" json:"mgmt_ip,omitempty"`
 	// Data IP
-	DataIp string `protobuf:"bytes,12,opt,name=data_ip,json=dataIp,proto3" json:"data_ip,omitempty"`
+	DataIp string `protobuf:"bytes,12,opt,name=data_ip,json=dataIp" json:"data_ip,omitempty"`
 	// Hostname of the node
-	Hostname string `protobuf:"bytes,15,opt,name=hostname,proto3" json:"hostname,omitempty"`
+	Hostname string `protobuf:"bytes,15,opt,name=hostname" json:"hostname,omitempty"`
 	// User defined labels for the node
-	NodeLabels           map[string]string `protobuf:"bytes,16,rep,name=node_labels,json=nodeLabels,proto3" json:"node_labels,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	NodeLabels           map[string]string `protobuf:"bytes,16,rep,name=node_labels,json=nodeLabels" json:"node_labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -3129,13 +3129,13 @@ func (m *StorageNode) GetNodeLabels() map[string]string {
 // StorageCluster represents the state of the cluster
 type StorageCluster struct {
 	// Status of the cluster
-	Status Status `protobuf:"varint,1,opt,name=status,proto3,enum=openstorage.api.Status" json:"status,omitempty"`
+	Status Status `protobuf:"varint,1,opt,name=status,enum=openstorage.api.Status" json:"status,omitempty"`
 	// Id of the cluster
-	Id string `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
+	Id string `protobuf:"bytes,2,opt,name=id" json:"id,omitempty"`
 	// NodeId is the id of the node servicing these requests
-	NodeId string `protobuf:"bytes,3,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
+	NodeId string `protobuf:"bytes,3,opt,name=node_id,json=nodeId" json:"node_id,omitempty"`
 	// Nodes are a list of all the nodes on the cluster
-	NodeIds              []string `protobuf:"bytes,4,rep,name=node_ids,json=nodeIds,proto3" json:"node_ids,omitempty"`
+	NodeIds              []string `protobuf:"bytes,4,rep,name=node_ids,json=nodeIds" json:"node_ids,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -3195,7 +3195,7 @@ func (m *StorageCluster) GetNodeIds() []string {
 
 type SdkSchedulePolicyCreateRequest struct {
 	// Schedule Policy
-	SchedulePolicy       *SdkSchedulePolicy `protobuf:"bytes,1,opt,name=SchedulePolicy,proto3" json:"SchedulePolicy,omitempty"`
+	SchedulePolicy       *SdkSchedulePolicy `protobuf:"bytes,1,opt,name=SchedulePolicy" json:"SchedulePolicy,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}           `json:"-"`
 	XXX_unrecognized     []byte             `json:"-"`
 	XXX_sizecache        int32              `json:"-"`
@@ -3264,7 +3264,7 @@ var xxx_messageInfo_SdkSchedulePolicyCreateResponse proto.InternalMessageInfo
 
 type SdkSchedulePolicyUpdateRequest struct {
 	// Schedule Policy
-	SchedulePolicy       *SdkSchedulePolicy `protobuf:"bytes,1,opt,name=SchedulePolicy,proto3" json:"SchedulePolicy,omitempty"`
+	SchedulePolicy       *SdkSchedulePolicy `protobuf:"bytes,1,opt,name=SchedulePolicy" json:"SchedulePolicy,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}           `json:"-"`
 	XXX_unrecognized     []byte             `json:"-"`
 	XXX_sizecache        int32              `json:"-"`
@@ -3363,7 +3363,7 @@ var xxx_messageInfo_SdkSchedulePolicyEnumerateRequest proto.InternalMessageInfo
 
 type SdkSchedulePolicyEnumerateResponse struct {
 	// List of Schedule Policy
-	Policies             []*SdkSchedulePolicy `protobuf:"bytes,1,rep,name=policies,proto3" json:"policies,omitempty"`
+	Policies             []*SdkSchedulePolicy `protobuf:"bytes,1,rep,name=policies" json:"policies,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
 	XXX_unrecognized     []byte               `json:"-"`
 	XXX_sizecache        int32                `json:"-"`
@@ -3402,7 +3402,7 @@ func (m *SdkSchedulePolicyEnumerateResponse) GetPolicies() []*SdkSchedulePolicy 
 
 type SdkSchedulePolicyInspectRequest struct {
 	// Name of the schedule Policy
-	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Name                 string   `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -3441,7 +3441,7 @@ func (m *SdkSchedulePolicyInspectRequest) GetName() string {
 
 type SdkSchedulePolicyInspectResponse struct {
 	// List of Schedule Policy
-	Policy               *SdkSchedulePolicy `protobuf:"bytes,1,opt,name=policy,proto3" json:"policy,omitempty"`
+	Policy               *SdkSchedulePolicy `protobuf:"bytes,1,opt,name=policy" json:"policy,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}           `json:"-"`
 	XXX_unrecognized     []byte             `json:"-"`
 	XXX_sizecache        int32              `json:"-"`
@@ -3480,7 +3480,7 @@ func (m *SdkSchedulePolicyInspectResponse) GetPolicy() *SdkSchedulePolicy {
 
 type SdkSchedulePolicyDeleteRequest struct {
 	// Name of the schedule policy
-	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Name                 string   `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -3549,9 +3549,9 @@ var xxx_messageInfo_SdkSchedulePolicyDeleteResponse proto.InternalMessageInfo
 
 type SdkSchedulePolicyIntervalDaily struct {
 	// Range: 0-23
-	Hour int32 `protobuf:"varint,1,opt,name=hour,proto3" json:"hour,omitempty"`
+	Hour int32 `protobuf:"varint,1,opt,name=hour" json:"hour,omitempty"`
 	// Range: 0-59
-	Minute               int32    `protobuf:"varint,2,opt,name=minute,proto3" json:"minute,omitempty"`
+	Minute               int32    `protobuf:"varint,2,opt,name=minute" json:"minute,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -3596,11 +3596,11 @@ func (m *SdkSchedulePolicyIntervalDaily) GetMinute() int32 {
 }
 
 type SdkSchedulePolicyIntervalWeekly struct {
-	Day SdkTimeWeekday `protobuf:"varint,1,opt,name=day,proto3,enum=openstorage.api.SdkTimeWeekday" json:"day,omitempty"`
+	Day SdkTimeWeekday `protobuf:"varint,1,opt,name=day,enum=openstorage.api.SdkTimeWeekday" json:"day,omitempty"`
 	// Range: 0-23
-	Hour int32 `protobuf:"varint,2,opt,name=hour,proto3" json:"hour,omitempty"`
+	Hour int32 `protobuf:"varint,2,opt,name=hour" json:"hour,omitempty"`
 	// Range: 0-59
-	Minute               int32    `protobuf:"varint,3,opt,name=minute,proto3" json:"minute,omitempty"`
+	Minute               int32    `protobuf:"varint,3,opt,name=minute" json:"minute,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -3653,11 +3653,11 @@ func (m *SdkSchedulePolicyIntervalWeekly) GetMinute() int32 {
 
 type SdkSchedulePolicyIntervalMonthly struct {
 	// Range: 1-28
-	Day int32 `protobuf:"varint,1,opt,name=day,proto3" json:"day,omitempty"`
+	Day int32 `protobuf:"varint,1,opt,name=day" json:"day,omitempty"`
 	// Range: 0-59
-	Hour int32 `protobuf:"varint,2,opt,name=hour,proto3" json:"hour,omitempty"`
+	Hour int32 `protobuf:"varint,2,opt,name=hour" json:"hour,omitempty"`
 	// Range: 0-59
-	Minute               int32    `protobuf:"varint,3,opt,name=minute,proto3" json:"minute,omitempty"`
+	Minute               int32    `protobuf:"varint,3,opt,name=minute" json:"minute,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -3710,7 +3710,7 @@ func (m *SdkSchedulePolicyIntervalMonthly) GetMinute() int32 {
 
 type SdkSchedulePolicyInterval struct {
 	// Number of instances to retain
-	Retain int64 `protobuf:"varint,1,opt,name=retain,proto3" json:"retain,omitempty"`
+	Retain int64 `protobuf:"varint,1,opt,name=retain" json:"retain,omitempty"`
 	// Types that are valid to be assigned to PeriodType:
 	//	*SdkSchedulePolicyInterval_Daily
 	//	*SdkSchedulePolicyInterval_Weekly
@@ -3750,13 +3750,13 @@ type isSdkSchedulePolicyInterval_PeriodType interface {
 }
 
 type SdkSchedulePolicyInterval_Daily struct {
-	Daily *SdkSchedulePolicyIntervalDaily `protobuf:"bytes,2,opt,name=daily,proto3,oneof"`
+	Daily *SdkSchedulePolicyIntervalDaily `protobuf:"bytes,2,opt,name=daily,oneof"`
 }
 type SdkSchedulePolicyInterval_Weekly struct {
-	Weekly *SdkSchedulePolicyIntervalWeekly `protobuf:"bytes,3,opt,name=weekly,proto3,oneof"`
+	Weekly *SdkSchedulePolicyIntervalWeekly `protobuf:"bytes,3,opt,name=weekly,oneof"`
 }
 type SdkSchedulePolicyInterval_Monthly struct {
-	Monthly *SdkSchedulePolicyIntervalMonthly `protobuf:"bytes,4,opt,name=monthly,proto3,oneof"`
+	Monthly *SdkSchedulePolicyIntervalMonthly `protobuf:"bytes,4,opt,name=monthly,oneof"`
 }
 
 func (*SdkSchedulePolicyInterval_Daily) isSdkSchedulePolicyInterval_PeriodType()   {}
@@ -3893,9 +3893,9 @@ func _SdkSchedulePolicyInterval_OneofSizer(msg proto.Message) (n int) {
 
 type SdkSchedulePolicy struct {
 	// Name of the schedule policy
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Name string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
 	// Schedule policy
-	Schedule             *SdkSchedulePolicyInterval `protobuf:"bytes,2,opt,name=schedule,proto3" json:"schedule,omitempty"`
+	Schedule             *SdkSchedulePolicyInterval `protobuf:"bytes,2,opt,name=schedule" json:"schedule,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                   `json:"-"`
 	XXX_unrecognized     []byte                     `json:"-"`
 	XXX_sizecache        int32                      `json:"-"`
@@ -3979,13 +3979,13 @@ type isSdkCredentialCreateRequest_CredentialType interface {
 }
 
 type SdkCredentialCreateRequest_AwsCredential struct {
-	AwsCredential *SdkAwsCredentialRequest `protobuf:"bytes,1,opt,name=aws_credential,json=awsCredential,proto3,oneof"`
+	AwsCredential *SdkAwsCredentialRequest `protobuf:"bytes,1,opt,name=aws_credential,json=awsCredential,oneof"`
 }
 type SdkCredentialCreateRequest_AzureCredential struct {
-	AzureCredential *SdkAzureCredentialRequest `protobuf:"bytes,2,opt,name=azure_credential,json=azureCredential,proto3,oneof"`
+	AzureCredential *SdkAzureCredentialRequest `protobuf:"bytes,2,opt,name=azure_credential,json=azureCredential,oneof"`
 }
 type SdkCredentialCreateRequest_GoogleCredential struct {
-	GoogleCredential *SdkGoogleCredentialRequest `protobuf:"bytes,3,opt,name=google_credential,json=googleCredential,proto3,oneof"`
+	GoogleCredential *SdkGoogleCredentialRequest `protobuf:"bytes,3,opt,name=google_credential,json=googleCredential,oneof"`
 }
 
 func (*SdkCredentialCreateRequest_AwsCredential) isSdkCredentialCreateRequest_CredentialType()    {}
@@ -4115,7 +4115,7 @@ func _SdkCredentialCreateRequest_OneofSizer(msg proto.Message) (n int) {
 
 type SdkCredentialCreateResponse struct {
 	// Id of the credentials
-	CredentialId         string   `protobuf:"bytes,1,opt,name=credential_id,json=credentialId,proto3" json:"credential_id,omitempty"`
+	CredentialId         string   `protobuf:"bytes,1,opt,name=credential_id,json=credentialId" json:"credential_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -4154,13 +4154,13 @@ func (m *SdkCredentialCreateResponse) GetCredentialId() string {
 
 type SdkAwsCredentialRequest struct {
 	// Access key
-	AccessKey string `protobuf:"bytes,1,opt,name=access_key,json=accessKey,proto3" json:"access_key,omitempty"`
+	AccessKey string `protobuf:"bytes,1,opt,name=access_key,json=accessKey" json:"access_key,omitempty"`
 	// Secret key
-	SecretKey string `protobuf:"bytes,2,opt,name=secret_key,json=secretKey,proto3" json:"secret_key,omitempty"`
+	SecretKey string `protobuf:"bytes,2,opt,name=secret_key,json=secretKey" json:"secret_key,omitempty"`
 	// Endpoint
-	Endpoint string `protobuf:"bytes,3,opt,name=endpoint,proto3" json:"endpoint,omitempty"`
+	Endpoint string `protobuf:"bytes,3,opt,name=endpoint" json:"endpoint,omitempty"`
 	// Region
-	Region               string   `protobuf:"bytes,4,opt,name=region,proto3" json:"region,omitempty"`
+	Region               string   `protobuf:"bytes,4,opt,name=region" json:"region,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -4220,9 +4220,9 @@ func (m *SdkAwsCredentialRequest) GetRegion() string {
 
 type SdkAzureCredentialRequest struct {
 	// Account name
-	AccountName string `protobuf:"bytes,1,opt,name=account_name,json=accountName,proto3" json:"account_name,omitempty"`
+	AccountName string `protobuf:"bytes,1,opt,name=account_name,json=accountName" json:"account_name,omitempty"`
 	// Account key
-	AccountKey           string   `protobuf:"bytes,2,opt,name=account_key,json=accountKey,proto3" json:"account_key,omitempty"`
+	AccountKey           string   `protobuf:"bytes,2,opt,name=account_key,json=accountKey" json:"account_key,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -4268,9 +4268,9 @@ func (m *SdkAzureCredentialRequest) GetAccountKey() string {
 
 type SdkGoogleCredentialRequest struct {
 	// Project ID
-	ProjectId string `protobuf:"bytes,1,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	ProjectId string `protobuf:"bytes,1,opt,name=project_id,json=projectId" json:"project_id,omitempty"`
 	// JSON Key
-	JsonKey              string   `protobuf:"bytes,2,opt,name=json_key,json=jsonKey,proto3" json:"json_key,omitempty"`
+	JsonKey              string   `protobuf:"bytes,2,opt,name=json_key,json=jsonKey" json:"json_key,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -4316,13 +4316,13 @@ func (m *SdkGoogleCredentialRequest) GetJsonKey() string {
 
 type SdkAwsCredentialResponse struct {
 	// Credential Id
-	CredentialId string `protobuf:"bytes,1,opt,name=credential_id,json=credentialId,proto3" json:"credential_id,omitempty"`
+	CredentialId string `protobuf:"bytes,1,opt,name=credential_id,json=credentialId" json:"credential_id,omitempty"`
 	// Access key
-	AccessKey string `protobuf:"bytes,2,opt,name=access_key,json=accessKey,proto3" json:"access_key,omitempty"`
+	AccessKey string `protobuf:"bytes,2,opt,name=access_key,json=accessKey" json:"access_key,omitempty"`
 	// Endpoint
-	Endpoint string `protobuf:"bytes,3,opt,name=endpoint,proto3" json:"endpoint,omitempty"`
+	Endpoint string `protobuf:"bytes,3,opt,name=endpoint" json:"endpoint,omitempty"`
 	// Region
-	Region               string   `protobuf:"bytes,4,opt,name=region,proto3" json:"region,omitempty"`
+	Region               string   `protobuf:"bytes,4,opt,name=region" json:"region,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -4382,9 +4382,9 @@ func (m *SdkAwsCredentialResponse) GetRegion() string {
 
 type SdkAzureCredentialResponse struct {
 	// Credential Id
-	CredentialId string `protobuf:"bytes,1,opt,name=credential_id,json=credentialId,proto3" json:"credential_id,omitempty"`
+	CredentialId string `protobuf:"bytes,1,opt,name=credential_id,json=credentialId" json:"credential_id,omitempty"`
 	// Account name
-	AccountName          string   `protobuf:"bytes,2,opt,name=account_name,json=accountName,proto3" json:"account_name,omitempty"`
+	AccountName          string   `protobuf:"bytes,2,opt,name=account_name,json=accountName" json:"account_name,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -4430,9 +4430,9 @@ func (m *SdkAzureCredentialResponse) GetAccountName() string {
 
 type SdkGoogleCredentialResponse struct {
 	// Credential Id
-	CredentialId string `protobuf:"bytes,1,opt,name=credential_id,json=credentialId,proto3" json:"credential_id,omitempty"`
+	CredentialId string `protobuf:"bytes,1,opt,name=credential_id,json=credentialId" json:"credential_id,omitempty"`
 	// Project ID
-	ProjectId            string   `protobuf:"bytes,2,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	ProjectId            string   `protobuf:"bytes,2,opt,name=project_id,json=projectId" json:"project_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -4507,7 +4507,7 @@ func (m *SdkCredentialEnumerateRequest) XXX_DiscardUnknown() {
 var xxx_messageInfo_SdkCredentialEnumerateRequest proto.InternalMessageInfo
 
 type SdkCredentialEnumerateResponse struct {
-	CredentialIds        []string `protobuf:"bytes,1,rep,name=credential_ids,json=credentialIds,proto3" json:"credential_ids,omitempty"`
+	CredentialIds        []string `protobuf:"bytes,1,rep,name=credential_ids,json=credentialIds" json:"credential_ids,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -4545,7 +4545,7 @@ func (m *SdkCredentialEnumerateResponse) GetCredentialIds() []string {
 }
 
 type SdkCredentialInspectRequest struct {
-	CredentialId         string   `protobuf:"bytes,1,opt,name=credential_id,json=credentialId,proto3" json:"credential_id,omitempty"`
+	CredentialId         string   `protobuf:"bytes,1,opt,name=credential_id,json=credentialId" json:"credential_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -4624,13 +4624,13 @@ type isSdkCredentialInspectResponse_CredentialType interface {
 }
 
 type SdkCredentialInspectResponse_AwsCredential struct {
-	AwsCredential *SdkAwsCredentialResponse `protobuf:"bytes,1,opt,name=aws_credential,json=awsCredential,proto3,oneof"`
+	AwsCredential *SdkAwsCredentialResponse `protobuf:"bytes,1,opt,name=aws_credential,json=awsCredential,oneof"`
 }
 type SdkCredentialInspectResponse_AzureCredential struct {
-	AzureCredential *SdkAzureCredentialResponse `protobuf:"bytes,2,opt,name=azure_credential,json=azureCredential,proto3,oneof"`
+	AzureCredential *SdkAzureCredentialResponse `protobuf:"bytes,2,opt,name=azure_credential,json=azureCredential,oneof"`
 }
 type SdkCredentialInspectResponse_GoogleCredential struct {
-	GoogleCredential *SdkGoogleCredentialResponse `protobuf:"bytes,3,opt,name=google_credential,json=googleCredential,proto3,oneof"`
+	GoogleCredential *SdkGoogleCredentialResponse `protobuf:"bytes,3,opt,name=google_credential,json=googleCredential,oneof"`
 }
 
 func (*SdkCredentialInspectResponse_AwsCredential) isSdkCredentialInspectResponse_CredentialType()   {}
@@ -4761,7 +4761,7 @@ func _SdkCredentialInspectResponse_OneofSizer(msg proto.Message) (n int) {
 
 type SdkCredentialDeleteRequest struct {
 	// ID for credentials
-	CredentialId         string   `protobuf:"bytes,1,opt,name=credential_id,json=credentialId,proto3" json:"credential_id,omitempty"`
+	CredentialId         string   `protobuf:"bytes,1,opt,name=credential_id,json=credentialId" json:"credential_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -4830,7 +4830,7 @@ var xxx_messageInfo_SdkCredentialDeleteResponse proto.InternalMessageInfo
 
 type SdkCredentialValidateRequest struct {
 	// Id of the credentials
-	CredentialId         string   `protobuf:"bytes,1,opt,name=credential_id,json=credentialId,proto3" json:"credential_id,omitempty"`
+	CredentialId         string   `protobuf:"bytes,1,opt,name=credential_id,json=credentialId" json:"credential_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -4899,11 +4899,11 @@ var xxx_messageInfo_SdkCredentialValidateResponse proto.InternalMessageInfo
 
 type SdkVolumeMountRequest struct {
 	// Id of the volume
-	VolumeId string `protobuf:"bytes,1,opt,name=volume_id,json=volumeId,proto3" json:"volume_id,omitempty"`
+	VolumeId string `protobuf:"bytes,1,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
 	// Mount path for mounting the volume.
-	MountPath string `protobuf:"bytes,2,opt,name=mount_path,json=mountPath,proto3" json:"mount_path,omitempty"`
+	MountPath string `protobuf:"bytes,2,opt,name=mount_path,json=mountPath" json:"mount_path,omitempty"`
 	// Additional options
-	Options              map[string]string `protobuf:"bytes,3,rep,name=options,proto3" json:"options,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Options              map[string]string `protobuf:"bytes,3,rep,name=options" json:"options,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -4986,11 +4986,11 @@ var xxx_messageInfo_SdkVolumeMountResponse proto.InternalMessageInfo
 
 type SdkVolumeUnmountRequest struct {
 	// Id of volume
-	VolumeId string `protobuf:"bytes,1,opt,name=volume_id,json=volumeId,proto3" json:"volume_id,omitempty"`
+	VolumeId string `protobuf:"bytes,1,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
 	// MountPath for device
-	MountPath string `protobuf:"bytes,2,opt,name=mount_path,json=mountPath,proto3" json:"mount_path,omitempty"`
+	MountPath string `protobuf:"bytes,2,opt,name=mount_path,json=mountPath" json:"mount_path,omitempty"`
 	// Options to unmount device
-	Options              map[string]string `protobuf:"bytes,3,rep,name=options,proto3" json:"options,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Options              map[string]string `protobuf:"bytes,3,rep,name=options" json:"options,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -5073,9 +5073,9 @@ var xxx_messageInfo_SdkVolumeUnmountResponse proto.InternalMessageInfo
 
 type SdkVolumeAttachRequest struct {
 	// Id of volume
-	VolumeId string `protobuf:"bytes,1,opt,name=volume_id,json=volumeId,proto3" json:"volume_id,omitempty"`
+	VolumeId string `protobuf:"bytes,1,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
 	// Options for attaching volume, right now only passphrase options is supported
-	Options              map[string]string `protobuf:"bytes,2,rep,name=options,proto3" json:"options,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Options              map[string]string `protobuf:"bytes,2,rep,name=options" json:"options,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -5121,7 +5121,7 @@ func (m *SdkVolumeAttachRequest) GetOptions() map[string]string {
 
 type SdkVolumeAttachResponse struct {
 	// Device path where device is exported
-	DevicePath           string   `protobuf:"bytes,1,opt,name=device_path,json=devicePath,proto3" json:"device_path,omitempty"`
+	DevicePath           string   `protobuf:"bytes,1,opt,name=device_path,json=devicePath" json:"device_path,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -5160,7 +5160,7 @@ func (m *SdkVolumeAttachResponse) GetDevicePath() string {
 
 type SdkVolumeDetachRequest struct {
 	// Id of the volume
-	VolumeId             string   `protobuf:"bytes,1,opt,name=volume_id,json=volumeId,proto3" json:"volume_id,omitempty"`
+	VolumeId             string   `protobuf:"bytes,1,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -5229,9 +5229,9 @@ var xxx_messageInfo_SdkVolumeDetachResponse proto.InternalMessageInfo
 
 type SdkVolumeCreateRequest struct {
 	// Unique name of the volume. This will be used for idempotency.
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Name string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
 	// Volume specification
-	Spec                 *VolumeSpec `protobuf:"bytes,2,opt,name=spec,proto3" json:"spec,omitempty"`
+	Spec                 *VolumeSpec `protobuf:"bytes,2,opt,name=spec" json:"spec,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
 	XXX_unrecognized     []byte      `json:"-"`
 	XXX_sizecache        int32       `json:"-"`
@@ -5277,7 +5277,7 @@ func (m *SdkVolumeCreateRequest) GetSpec() *VolumeSpec {
 
 type SdkVolumeCreateResponse struct {
 	// Id of new volume
-	VolumeId             string   `protobuf:"bytes,1,opt,name=volume_id,json=volumeId,proto3" json:"volume_id,omitempty"`
+	VolumeId             string   `protobuf:"bytes,1,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -5316,11 +5316,11 @@ func (m *SdkVolumeCreateResponse) GetVolumeId() string {
 
 type SdkVolumeCloneRequest struct {
 	// Unique name of the volume. This will be used for idempotency.
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Name string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
 	// Parent volume id, if specified will create a new volume as a clone of the parent.
-	ParentId string `protobuf:"bytes,2,opt,name=parent_id,json=parentId,proto3" json:"parent_id,omitempty"`
+	ParentId string `protobuf:"bytes,2,opt,name=parent_id,json=parentId" json:"parent_id,omitempty"`
 	// Volume specification
-	Spec                 *VolumeSpec `protobuf:"bytes,3,opt,name=spec,proto3" json:"spec,omitempty"`
+	Spec                 *VolumeSpec `protobuf:"bytes,3,opt,name=spec" json:"spec,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
 	XXX_unrecognized     []byte      `json:"-"`
 	XXX_sizecache        int32       `json:"-"`
@@ -5373,7 +5373,7 @@ func (m *SdkVolumeCloneRequest) GetSpec() *VolumeSpec {
 
 type SdkVolumeCloneResponse struct {
 	// Id of new volume
-	VolumeId             string   `protobuf:"bytes,1,opt,name=volume_id,json=volumeId,proto3" json:"volume_id,omitempty"`
+	VolumeId             string   `protobuf:"bytes,1,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -5412,7 +5412,7 @@ func (m *SdkVolumeCloneResponse) GetVolumeId() string {
 
 type SdkVolumeDeleteRequest struct {
 	// Id of volume to delete
-	VolumeId             string   `protobuf:"bytes,1,opt,name=volume_id,json=volumeId,proto3" json:"volume_id,omitempty"`
+	VolumeId             string   `protobuf:"bytes,1,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -5481,7 +5481,7 @@ var xxx_messageInfo_SdkVolumeDeleteResponse proto.InternalMessageInfo
 
 type SdkVolumeInspectRequest struct {
 	// Id of volume to inspect
-	VolumeId             string   `protobuf:"bytes,1,opt,name=volume_id,json=volumeId,proto3" json:"volume_id,omitempty"`
+	VolumeId             string   `protobuf:"bytes,1,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -5520,7 +5520,7 @@ func (m *SdkVolumeInspectRequest) GetVolumeId() string {
 
 type SdkVolumeInspectResponse struct {
 	// Information about the volume
-	Volume               *Volume  `protobuf:"bytes,1,opt,name=volume,proto3" json:"volume,omitempty"`
+	Volume               *Volume  `protobuf:"bytes,1,opt,name=volume" json:"volume,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -5560,7 +5560,7 @@ func (m *SdkVolumeInspectResponse) GetVolume() *Volume {
 type SdkVolumeEnumerateRequest struct {
 	// Volumes to match to this locator.
 	// If not provided, all volumes will be returned.
-	Locator              *VolumeLocator `protobuf:"bytes,1,opt,name=locator,proto3" json:"locator,omitempty"`
+	Locator              *VolumeLocator `protobuf:"bytes,1,opt,name=locator" json:"locator,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
 	XXX_unrecognized     []byte         `json:"-"`
 	XXX_sizecache        int32          `json:"-"`
@@ -5599,7 +5599,7 @@ func (m *SdkVolumeEnumerateRequest) GetLocator() *VolumeLocator {
 
 type SdkVolumeEnumerateResponse struct {
 	// List of volumes matching label
-	VolumeIds            []string `protobuf:"bytes,1,rep,name=volume_ids,json=volumeIds,proto3" json:"volume_ids,omitempty"`
+	VolumeIds            []string `protobuf:"bytes,1,rep,name=volume_ids,json=volumeIds" json:"volume_ids,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -5638,9 +5638,9 @@ func (m *SdkVolumeEnumerateResponse) GetVolumeIds() []string {
 
 type SdkVolumeSnapshotCreateRequest struct {
 	// Id of volume to take the snapshot from
-	VolumeId string `protobuf:"bytes,1,opt,name=volume_id,json=volumeId,proto3" json:"volume_id,omitempty"`
+	VolumeId string `protobuf:"bytes,1,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
 	// Labels to apply to snapshot
-	Labels               map[string]string `protobuf:"bytes,2,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Labels               map[string]string `protobuf:"bytes,2,rep,name=labels" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -5686,7 +5686,7 @@ func (m *SdkVolumeSnapshotCreateRequest) GetLabels() map[string]string {
 
 type SdkVolumeSnapshotCreateResponse struct {
 	// Id of immutable snapshot
-	SnapshotId           string   `protobuf:"bytes,1,opt,name=snapshot_id,json=snapshotId,proto3" json:"snapshot_id,omitempty"`
+	SnapshotId           string   `protobuf:"bytes,1,opt,name=snapshot_id,json=snapshotId" json:"snapshot_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -5725,9 +5725,9 @@ func (m *SdkVolumeSnapshotCreateResponse) GetSnapshotId() string {
 
 type SdkVolumeSnapshotRestoreRequest struct {
 	// Id of volume
-	VolumeId string `protobuf:"bytes,1,opt,name=volume_id,json=volumeId,proto3" json:"volume_id,omitempty"`
+	VolumeId string `protobuf:"bytes,1,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
 	// Snapshot id to apply to `volume_id`
-	SnapshotId           string   `protobuf:"bytes,2,opt,name=snapshot_id,json=snapshotId,proto3" json:"snapshot_id,omitempty"`
+	SnapshotId           string   `protobuf:"bytes,2,opt,name=snapshot_id,json=snapshotId" json:"snapshot_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -5803,9 +5803,9 @@ var xxx_messageInfo_SdkVolumeSnapshotRestoreResponse proto.InternalMessageInfo
 
 type SdkVolumeSnapshotEnumerateRequest struct {
 	// Id of volume
-	VolumeId string `protobuf:"bytes,1,opt,name=volume_id,json=volumeId,proto3" json:"volume_id,omitempty"`
+	VolumeId string `protobuf:"bytes,1,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
 	// Labels from snapshot
-	Labels               map[string]string `protobuf:"bytes,2,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Labels               map[string]string `protobuf:"bytes,2,rep,name=labels" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -5851,7 +5851,7 @@ func (m *SdkVolumeSnapshotEnumerateRequest) GetLabels() map[string]string {
 
 type SdkVolumeSnapshotEnumerateResponse struct {
 	// List of immutable snapshots
-	VolumeSnapshotIds    []string `protobuf:"bytes,1,rep,name=volume_snapshot_ids,json=volumeSnapshotIds,proto3" json:"volume_snapshot_ids,omitempty"`
+	VolumeSnapshotIds    []string `protobuf:"bytes,1,rep,name=volume_snapshot_ids,json=volumeSnapshotIds" json:"volume_snapshot_ids,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -5920,7 +5920,7 @@ var xxx_messageInfo_SdkClusterEnumerateRequest proto.InternalMessageInfo
 
 type SdkClusterEnumerateResponse struct {
 	// Cluster information
-	Cluster              *StorageCluster `protobuf:"bytes,1,opt,name=cluster,proto3" json:"cluster,omitempty"`
+	Cluster              *StorageCluster `protobuf:"bytes,1,opt,name=cluster" json:"cluster,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
 	XXX_unrecognized     []byte          `json:"-"`
 	XXX_sizecache        int32           `json:"-"`
@@ -5959,7 +5959,7 @@ func (m *SdkClusterEnumerateResponse) GetCluster() *StorageCluster {
 
 type SdkClusterInspectRequest struct {
 	// Id of node to inspect (required)
-	NodeId               string   `protobuf:"bytes,1,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
+	NodeId               string   `protobuf:"bytes,1,opt,name=node_id,json=nodeId" json:"node_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -5998,7 +5998,7 @@ func (m *SdkClusterInspectRequest) GetNodeId() string {
 
 type SdkClusterInspectResponse struct {
 	// Node information
-	Node                 *StorageNode `protobuf:"bytes,1,opt,name=node,proto3" json:"node,omitempty"`
+	Node                 *StorageNode `protobuf:"bytes,1,opt,name=node" json:"node,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
 	XXX_unrecognized     []byte       `json:"-"`
 	XXX_sizecache        int32        `json:"-"`
@@ -6037,11 +6037,11 @@ func (m *SdkClusterInspectResponse) GetNode() *StorageNode {
 
 type SdkClusterAlertEnumerateRequest struct {
 	// Start time of alerts (required)
-	TimeStart *timestamp.Timestamp `protobuf:"bytes,1,opt,name=time_start,json=timeStart,proto3" json:"time_start,omitempty"`
+	TimeStart *timestamp.Timestamp `protobuf:"bytes,1,opt,name=time_start,json=timeStart" json:"time_start,omitempty"`
 	// End time of alerts (required)
-	TimeEnd *timestamp.Timestamp `protobuf:"bytes,2,opt,name=time_end,json=timeEnd,proto3" json:"time_end,omitempty"`
+	TimeEnd *timestamp.Timestamp `protobuf:"bytes,2,opt,name=time_end,json=timeEnd" json:"time_end,omitempty"`
 	// Type of resource (required)
-	Resource             ResourceType `protobuf:"varint,3,opt,name=resource,proto3,enum=openstorage.api.ResourceType" json:"resource,omitempty"`
+	Resource             ResourceType `protobuf:"varint,3,opt,name=resource,enum=openstorage.api.ResourceType" json:"resource,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
 	XXX_unrecognized     []byte       `json:"-"`
 	XXX_sizecache        int32        `json:"-"`
@@ -6094,7 +6094,7 @@ func (m *SdkClusterAlertEnumerateRequest) GetResource() ResourceType {
 
 type SdkClusterAlertEnumerateResponse struct {
 	// Information on the alerts requested
-	Alerts               []*Alert `protobuf:"bytes,1,rep,name=alerts,proto3" json:"alerts,omitempty"`
+	Alerts               []*Alert `protobuf:"bytes,1,rep,name=alerts" json:"alerts,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -6133,9 +6133,9 @@ func (m *SdkClusterAlertEnumerateResponse) GetAlerts() []*Alert {
 
 type SdkClusterAlertClearRequest struct {
 	// Type of resource (required)
-	Resource ResourceType `protobuf:"varint,1,opt,name=resource,proto3,enum=openstorage.api.ResourceType" json:"resource,omitempty"`
+	Resource ResourceType `protobuf:"varint,1,opt,name=resource,enum=openstorage.api.ResourceType" json:"resource,omitempty"`
 	// Id of alert as returned by ClusterEnumerateAlertResponse (required)
-	AlertId              int64    `protobuf:"varint,2,opt,name=alert_id,json=alertId,proto3" json:"alert_id,omitempty"`
+	AlertId              int64    `protobuf:"varint,2,opt,name=alert_id,json=alertId" json:"alert_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -6211,9 +6211,9 @@ var xxx_messageInfo_SdkClusterAlertClearResponse proto.InternalMessageInfo
 
 type SdkClusterAlertDeleteRequest struct {
 	// Type of resource (required)
-	Resource ResourceType `protobuf:"varint,1,opt,name=resource,proto3,enum=openstorage.api.ResourceType" json:"resource,omitempty"`
+	Resource ResourceType `protobuf:"varint,1,opt,name=resource,enum=openstorage.api.ResourceType" json:"resource,omitempty"`
 	// Id of alert as returned by ClusterEnumerateAlertResponse (required)
-	AlertId              int64    `protobuf:"varint,2,opt,name=alert_id,json=alertId,proto3" json:"alert_id,omitempty"`
+	AlertId              int64    `protobuf:"varint,2,opt,name=alert_id,json=alertId" json:"alert_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -6289,7 +6289,7 @@ var xxx_messageInfo_SdkClusterAlertDeleteResponse proto.InternalMessageInfo
 
 type SdkObjectstoreInspectRequest struct {
 	// ObjecstoreID to query objestore status
-	ObjectstoreId        string   `protobuf:"bytes,1,opt,name=objectstore_id,json=objectstoreId,proto3" json:"objectstore_id,omitempty"`
+	ObjectstoreId        string   `protobuf:"bytes,1,opt,name=objectstore_id,json=objectstoreId" json:"objectstore_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -6328,7 +6328,7 @@ func (m *SdkObjectstoreInspectRequest) GetObjectstoreId() string {
 
 type SdkObjectstoreInspectResponse struct {
 	// Objectstore status
-	ObjectstoreStatus    *ObjectstoreInfo `protobuf:"bytes,1,opt,name=objectstore_status,json=objectstoreStatus,proto3" json:"objectstore_status,omitempty"`
+	ObjectstoreStatus    *ObjectstoreInfo `protobuf:"bytes,1,opt,name=objectstore_status,json=objectstoreStatus" json:"objectstore_status,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}         `json:"-"`
 	XXX_unrecognized     []byte           `json:"-"`
 	XXX_sizecache        int32            `json:"-"`
@@ -6367,7 +6367,7 @@ func (m *SdkObjectstoreInspectResponse) GetObjectstoreStatus() *ObjectstoreInfo 
 
 type SdkObjectstoreCreateRequest struct {
 	// Volume on which objectstore will be running
-	VolumeId             string   `protobuf:"bytes,1,opt,name=volume_id,json=volumeId,proto3" json:"volume_id,omitempty"`
+	VolumeId             string   `protobuf:"bytes,1,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -6406,7 +6406,7 @@ func (m *SdkObjectstoreCreateRequest) GetVolumeId() string {
 
 type SdkObjectstoreCreateResponse struct {
 	// Created objecstore status
-	ObjectstoreStatus    *ObjectstoreInfo `protobuf:"bytes,1,opt,name=objectstore_status,json=objectstoreStatus,proto3" json:"objectstore_status,omitempty"`
+	ObjectstoreStatus    *ObjectstoreInfo `protobuf:"bytes,1,opt,name=objectstore_status,json=objectstoreStatus" json:"objectstore_status,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}         `json:"-"`
 	XXX_unrecognized     []byte           `json:"-"`
 	XXX_sizecache        int32            `json:"-"`
@@ -6445,7 +6445,7 @@ func (m *SdkObjectstoreCreateResponse) GetObjectstoreStatus() *ObjectstoreInfo {
 
 type SdkObjectstoreDeleteRequest struct {
 	// Objectstore ID to delete
-	ObjectstoreId        string   `protobuf:"bytes,1,opt,name=objectstore_id,json=objectstoreId,proto3" json:"objectstore_id,omitempty"`
+	ObjectstoreId        string   `protobuf:"bytes,1,opt,name=objectstore_id,json=objectstoreId" json:"objectstore_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -6514,9 +6514,9 @@ var xxx_messageInfo_SdkObjectstoreDeleteResponse proto.InternalMessageInfo
 
 type SdkObjectstoreUpdateRequest struct {
 	// Objectstore Id to update
-	ObjectstoreId string `protobuf:"bytes,1,opt,name=objectstore_id,json=objectstoreId,proto3" json:"objectstore_id,omitempty"`
+	ObjectstoreId string `protobuf:"bytes,1,opt,name=objectstore_id,json=objectstoreId" json:"objectstore_id,omitempty"`
 	// enable/disable objectstore
-	Enable               bool     `protobuf:"varint,2,opt,name=enable,proto3" json:"enable,omitempty"`
+	Enable               bool     `protobuf:"varint,2,opt,name=enable" json:"enable,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -6592,11 +6592,11 @@ var xxx_messageInfo_SdkObjectstoreUpdateResponse proto.InternalMessageInfo
 
 type SdkCloudBackupCreateRequest struct {
 	// VolumeID of the volume for which cloudbackup is requested
-	VolumeId string `protobuf:"bytes,1,opt,name=volume_id,json=volumeId,proto3" json:"volume_id,omitempty"`
+	VolumeId string `protobuf:"bytes,1,opt,name=volume_id,json=volumeId" json:"volume_id,omitempty"`
 	// CredentialUUID is cloud credential to be used for backup
-	CredentialUuid string `protobuf:"bytes,2,opt,name=credential_uuid,json=credentialUuid,proto3" json:"credential_uuid,omitempty"`
+	CredentialUuid string `protobuf:"bytes,2,opt,name=credential_uuid,json=credentialUuid" json:"credential_uuid,omitempty"`
 	// Full indicates if full backup is desired even though incremental is possible
-	Full                 bool     `protobuf:"varint,3,opt,name=full,proto3" json:"full,omitempty"`
+	Full                 bool     `protobuf:"varint,3,opt,name=full" json:"full,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -6649,7 +6649,7 @@ func (m *SdkCloudBackupCreateRequest) GetFull() bool {
 
 type SdkCloudBackupCreateResponse struct {
 	// Id of the backup created
-	BackupId             string   `protobuf:"bytes,1,opt,name=backup_id,json=backupId,proto3" json:"backup_id,omitempty"`
+	BackupId             string   `protobuf:"bytes,1,opt,name=backup_id,json=backupId" json:"backup_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -6688,15 +6688,15 @@ func (m *SdkCloudBackupCreateResponse) GetBackupId() string {
 
 type SdkCloudBackupRestoreRequest struct {
 	// Backup ID being restored
-	BackupId string `protobuf:"bytes,1,opt,name=backup_id,json=backupId,proto3" json:"backup_id,omitempty"`
+	BackupId string `protobuf:"bytes,1,opt,name=backup_id,json=backupId" json:"backup_id,omitempty"`
 	// Optional volume Name of the new volume to be created
 	// in the cluster for restoring the cloudbackup
-	RestoreVolumeName string `protobuf:"bytes,2,opt,name=restore_volume_name,json=restoreVolumeName,proto3" json:"restore_volume_name,omitempty"`
+	RestoreVolumeName string `protobuf:"bytes,2,opt,name=restore_volume_name,json=restoreVolumeName" json:"restore_volume_name,omitempty"`
 	// The credential to be used for restore operation
-	CredentialUuid string `protobuf:"bytes,3,opt,name=credential_uuid,json=credentialUuid,proto3" json:"credential_uuid,omitempty"`
+	CredentialUuid string `protobuf:"bytes,3,opt,name=credential_uuid,json=credentialUuid" json:"credential_uuid,omitempty"`
 	// Optional for provisioning restore
 	// volume (ResoreVolumeName should not be specified)
-	NodeId               string   `protobuf:"bytes,4,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
+	NodeId               string   `protobuf:"bytes,4,opt,name=node_id,json=nodeId" json:"node_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -6756,7 +6756,7 @@ func (m *SdkCloudBackupRestoreRequest) GetNodeId() string {
 
 type SdkCloudBackupRestoreResponse struct {
 	// VolumeID to which the backup is being restored
-	RestoreVolumeId      string   `protobuf:"bytes,1,opt,name=restore_volume_id,json=restoreVolumeId,proto3" json:"restore_volume_id,omitempty"`
+	RestoreVolumeId      string   `protobuf:"bytes,1,opt,name=restore_volume_id,json=restoreVolumeId" json:"restore_volume_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -6795,11 +6795,11 @@ func (m *SdkCloudBackupRestoreResponse) GetRestoreVolumeId() string {
 
 type SdkCloudBackupDeleteRequest struct {
 	// ID is the ID of the cloud backup
-	BackupId string `protobuf:"bytes,1,opt,name=backup_id,json=backupId,proto3" json:"backup_id,omitempty"`
+	BackupId string `protobuf:"bytes,1,opt,name=backup_id,json=backupId" json:"backup_id,omitempty"`
 	// CredentialUUID is the credential for cloud to be used for the request
-	CredentialUuid string `protobuf:"bytes,2,opt,name=credential_uuid,json=credentialUuid,proto3" json:"credential_uuid,omitempty"`
+	CredentialUuid string `protobuf:"bytes,2,opt,name=credential_uuid,json=credentialUuid" json:"credential_uuid,omitempty"`
 	// Force Delete cloudbackup even if there are dependencies
-	Force                bool     `protobuf:"varint,3,opt,name=force,proto3" json:"force,omitempty"`
+	Force                bool     `protobuf:"varint,3,opt,name=force" json:"force,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -6882,9 +6882,9 @@ var xxx_messageInfo_SdkCloudBackupDeleteResponse proto.InternalMessageInfo
 
 type SdkCloudBackupDeleteAllRequest struct {
 	// id of the volume for the request
-	SrcVolumeId string `protobuf:"bytes,1,opt,name=src_volume_id,json=srcVolumeId,proto3" json:"src_volume_id,omitempty"`
+	SrcVolumeId string `protobuf:"bytes,1,opt,name=src_volume_id,json=srcVolumeId" json:"src_volume_id,omitempty"`
 	// CredentialUUID is the credential for cloud to be used for the request
-	CredentialUuid       string   `protobuf:"bytes,2,opt,name=credential_uuid,json=credentialUuid,proto3" json:"credential_uuid,omitempty"`
+	CredentialUuid       string   `protobuf:"bytes,2,opt,name=credential_uuid,json=credentialUuid" json:"credential_uuid,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -6960,13 +6960,13 @@ var xxx_messageInfo_SdkCloudBackupDeleteAllResponse proto.InternalMessageInfo
 
 type SdkCloudBackupEnumerateRequest struct {
 	// Optional source id of the volume for the request
-	SrcVolumeId string `protobuf:"bytes,1,opt,name=src_volume_id,json=srcVolumeId,proto3" json:"src_volume_id,omitempty"`
+	SrcVolumeId string `protobuf:"bytes,1,opt,name=src_volume_id,json=srcVolumeId" json:"src_volume_id,omitempty"`
 	// ClusterID is the optional clusterID for the request
-	ClusterId string `protobuf:"bytes,2,opt,name=cluster_id,json=clusterId,proto3" json:"cluster_id,omitempty"`
+	ClusterId string `protobuf:"bytes,2,opt,name=cluster_id,json=clusterId" json:"cluster_id,omitempty"`
 	// CredentialUUID is the credential for cloud to be used for the request
-	CredentialUuid string `protobuf:"bytes,3,opt,name=credential_uuid,json=credentialUuid,proto3" json:"credential_uuid,omitempty"`
+	CredentialUuid string `protobuf:"bytes,3,opt,name=credential_uuid,json=credentialUuid" json:"credential_uuid,omitempty"`
 	// All if set to true, backups for all clusters in the cloud are processed
-	All                  bool     `protobuf:"varint,4,opt,name=all,proto3" json:"all,omitempty"`
+	All                  bool     `protobuf:"varint,4,opt,name=all" json:"all,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -7026,18 +7026,18 @@ func (m *SdkCloudBackupEnumerateRequest) GetAll() bool {
 
 type SdkCloudBackupInfo struct {
 	// ID is the ID of the cloud backup
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id string `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
 	// Source volumeID of the backup
-	SrcVolumeId string `protobuf:"bytes,2,opt,name=src_volume_id,json=srcVolumeId,proto3" json:"src_volume_id,omitempty"`
+	SrcVolumeId string `protobuf:"bytes,2,opt,name=src_volume_id,json=srcVolumeId" json:"src_volume_id,omitempty"`
 	// Name of the sourceVolume of the backup
-	SrcVolumeName string `protobuf:"bytes,3,opt,name=src_volume_name,json=srcVolumeName,proto3" json:"src_volume_name,omitempty"`
+	SrcVolumeName string `protobuf:"bytes,3,opt,name=src_volume_name,json=srcVolumeName" json:"src_volume_name,omitempty"`
 	// Timestamp is the timestamp at which the source volume
 	// was backed up to cloud
-	Timestamp *timestamp.Timestamp `protobuf:"bytes,4,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Timestamp *timestamp.Timestamp `protobuf:"bytes,4,opt,name=timestamp" json:"timestamp,omitempty"`
 	// Metadata associated with the backup
-	Metadata map[string]string `protobuf:"bytes,5,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Metadata map[string]string `protobuf:"bytes,5,rep,name=metadata" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// Status indicates the status of the backup
-	Status               SdkCloudBackupStatusType `protobuf:"varint,6,opt,name=status,proto3,enum=openstorage.api.SdkCloudBackupStatusType" json:"status,omitempty"`
+	Status               SdkCloudBackupStatusType `protobuf:"varint,6,opt,name=status,enum=openstorage.api.SdkCloudBackupStatusType" json:"status,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                 `json:"-"`
 	XXX_unrecognized     []byte                   `json:"-"`
 	XXX_sizecache        int32                    `json:"-"`
@@ -7110,7 +7110,7 @@ func (m *SdkCloudBackupInfo) GetStatus() SdkCloudBackupStatusType {
 }
 
 type SdkCloudBackupEnumerateResponse struct {
-	BackupIds            []string `protobuf:"bytes,1,rep,name=backup_ids,json=backupIds,proto3" json:"backup_ids,omitempty"`
+	BackupIds            []string `protobuf:"bytes,1,rep,name=backup_ids,json=backupIds" json:"backup_ids,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -7149,19 +7149,19 @@ func (m *SdkCloudBackupEnumerateResponse) GetBackupIds() []string {
 
 type SdkCloudBackupStatus struct {
 	// ID is the ID for the operation
-	BackupId string `protobuf:"bytes,1,opt,name=backup_id,json=backupId,proto3" json:"backup_id,omitempty"`
+	BackupId string `protobuf:"bytes,1,opt,name=backup_id,json=backupId" json:"backup_id,omitempty"`
 	// OpType indicates if this is a backup or restore
-	Optype SdkCloudBackupOpType `protobuf:"varint,2,opt,name=optype,proto3,enum=openstorage.api.SdkCloudBackupOpType" json:"optype,omitempty"`
+	Optype SdkCloudBackupOpType `protobuf:"varint,2,opt,name=optype,enum=openstorage.api.SdkCloudBackupOpType" json:"optype,omitempty"`
 	// State indicates if the op is currently active/done/failed
-	Status SdkCloudBackupStatusType `protobuf:"varint,3,opt,name=status,proto3,enum=openstorage.api.SdkCloudBackupStatusType" json:"status,omitempty"`
+	Status SdkCloudBackupStatusType `protobuf:"varint,3,opt,name=status,enum=openstorage.api.SdkCloudBackupStatusType" json:"status,omitempty"`
 	// BytesDone indicates total Bytes uploaded/downloaded
-	BytesDone uint64 `protobuf:"varint,4,opt,name=bytes_done,json=bytesDone,proto3" json:"bytes_done,omitempty"`
+	BytesDone uint64 `protobuf:"varint,4,opt,name=bytes_done,json=bytesDone" json:"bytes_done,omitempty"`
 	// StartTime indicates Op's start time
-	StartTime *timestamp.Timestamp `protobuf:"bytes,5,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
+	StartTime *timestamp.Timestamp `protobuf:"bytes,5,opt,name=start_time,json=startTime" json:"start_time,omitempty"`
 	// CompletedTime indicates Op's completed time
-	CompletedTime *timestamp.Timestamp `protobuf:"bytes,6,opt,name=completed_time,json=completedTime,proto3" json:"completed_time,omitempty"`
+	CompletedTime *timestamp.Timestamp `protobuf:"bytes,6,opt,name=completed_time,json=completedTime" json:"completed_time,omitempty"`
 	// NodeID is the ID of the node where this Op is active
-	NodeId               string   `protobuf:"bytes,7,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
+	NodeId               string   `protobuf:"bytes,7,opt,name=node_id,json=nodeId" json:"node_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -7242,10 +7242,10 @@ func (m *SdkCloudBackupStatus) GetNodeId() string {
 
 type SdkCloudBackupStatusRequest struct {
 	// SrcVolumeID optional volumeID to list status of backup/restore
-	SrcVolumeId string `protobuf:"bytes,1,opt,name=src_volume_id,json=srcVolumeId,proto3" json:"src_volume_id,omitempty"`
+	SrcVolumeId string `protobuf:"bytes,1,opt,name=src_volume_id,json=srcVolumeId" json:"src_volume_id,omitempty"`
 	// Local indicates if only those backups/restores that are
 	// active on current node must be returned
-	Local                bool     `protobuf:"varint,2,opt,name=local,proto3" json:"local,omitempty"`
+	Local                bool     `protobuf:"varint,2,opt,name=local" json:"local,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -7291,7 +7291,7 @@ func (m *SdkCloudBackupStatusRequest) GetLocal() bool {
 
 type SdkCloudBackupStatusResponse struct {
 	// statuses is list of currently active/failed/done backup/restores
-	Statuses             map[string]*SdkCloudBackupStatus `protobuf:"bytes,1,rep,name=statuses,proto3" json:"statuses,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Statuses             map[string]*SdkCloudBackupStatus `protobuf:"bytes,1,rep,name=statuses" json:"statuses,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	XXX_NoUnkeyedLiteral struct{}                         `json:"-"`
 	XXX_unrecognized     []byte                           `json:"-"`
 	XXX_sizecache        int32                            `json:"-"`
@@ -7330,9 +7330,9 @@ func (m *SdkCloudBackupStatusResponse) GetStatuses() map[string]*SdkCloudBackupS
 
 type SdkCloudBackupCatalogRequest struct {
 	// Id of the backup
-	BackupId string `protobuf:"bytes,1,opt,name=backup_id,json=backupId,proto3" json:"backup_id,omitempty"`
+	BackupId string `protobuf:"bytes,1,opt,name=backup_id,json=backupId" json:"backup_id,omitempty"`
 	// is the credential for cloud
-	CredentialUuid       string   `protobuf:"bytes,2,opt,name=credential_uuid,json=credentialUuid,proto3" json:"credential_uuid,omitempty"`
+	CredentialUuid       string   `protobuf:"bytes,2,opt,name=credential_uuid,json=credentialUuid" json:"credential_uuid,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -7378,7 +7378,7 @@ func (m *SdkCloudBackupCatalogRequest) GetCredentialUuid() string {
 
 type SdkCloudBackupCatalogResponse struct {
 	// Contents is listing of backup contents
-	Contents             []string `protobuf:"bytes,1,rep,name=contents,proto3" json:"contents,omitempty"`
+	Contents             []string `protobuf:"bytes,1,rep,name=contents" json:"contents,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -7417,11 +7417,11 @@ func (m *SdkCloudBackupCatalogResponse) GetContents() []string {
 
 type SdkCloudBackupHistoryItem struct {
 	// SrcVolumeID is volume ID which was backedup
-	SrcVolumeId string `protobuf:"bytes,1,opt,name=src_volume_id,json=srcVolumeId,proto3" json:"src_volume_id,omitempty"`
+	SrcVolumeId string `protobuf:"bytes,1,opt,name=src_volume_id,json=srcVolumeId" json:"src_volume_id,omitempty"`
 	// TimeStamp is the time at which either backup completed/failed
-	Timestamp *timestamp.Timestamp `protobuf:"bytes,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Timestamp *timestamp.Timestamp `protobuf:"bytes,2,opt,name=timestamp" json:"timestamp,omitempty"`
 	// Status indicates whether backup was completed/failed
-	Status               SdkCloudBackupStatusType `protobuf:"varint,3,opt,name=status,proto3,enum=openstorage.api.SdkCloudBackupStatusType" json:"status,omitempty"`
+	Status               SdkCloudBackupStatusType `protobuf:"varint,3,opt,name=status,enum=openstorage.api.SdkCloudBackupStatusType" json:"status,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                 `json:"-"`
 	XXX_unrecognized     []byte                   `json:"-"`
 	XXX_sizecache        int32                    `json:"-"`
@@ -7475,7 +7475,7 @@ func (m *SdkCloudBackupHistoryItem) GetStatus() SdkCloudBackupStatusType {
 type SdkCloudBackupHistoryRequest struct {
 	// volumeID for which history of backup/restore is being requested
 	// (optional) If not provided, it will return the history for all volumes.
-	SrcVolumeId          string   `protobuf:"bytes,1,opt,name=src_volume_id,json=srcVolumeId,proto3" json:"src_volume_id,omitempty"`
+	SrcVolumeId          string   `protobuf:"bytes,1,opt,name=src_volume_id,json=srcVolumeId" json:"src_volume_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -7514,7 +7514,7 @@ func (m *SdkCloudBackupHistoryRequest) GetSrcVolumeId() string {
 
 type SdkCloudBackupHistoryResponse struct {
 	// HistoryList is list of past backup/restores in the cluster
-	HistoryList          []*SdkCloudBackupHistoryItem `protobuf:"bytes,1,rep,name=history_list,json=historyList,proto3" json:"history_list,omitempty"`
+	HistoryList          []*SdkCloudBackupHistoryItem `protobuf:"bytes,1,rep,name=history_list,json=historyList" json:"history_list,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                     `json:"-"`
 	XXX_unrecognized     []byte                       `json:"-"`
 	XXX_sizecache        int32                        `json:"-"`
@@ -7554,10 +7554,10 @@ func (m *SdkCloudBackupHistoryResponse) GetHistoryList() []*SdkCloudBackupHistor
 type SdkCloudBackupStateChangeRequest struct {
 	// SrcVolumeID is volume ID on which backup/restore
 	// state change is being requested
-	SrcVolumeId string `protobuf:"bytes,1,opt,name=src_volume_id,json=srcVolumeId,proto3" json:"src_volume_id,omitempty"`
+	SrcVolumeId string `protobuf:"bytes,1,opt,name=src_volume_id,json=srcVolumeId" json:"src_volume_id,omitempty"`
 	// RequestedState is desired state of the op
 	// can be pause/resume/stop
-	RequestedState       SdkCloudBackupRequestedState `protobuf:"varint,2,opt,name=requested_state,json=requestedState,proto3,enum=openstorage.api.SdkCloudBackupRequestedState" json:"requested_state,omitempty"`
+	RequestedState       SdkCloudBackupRequestedState `protobuf:"varint,2,opt,name=requested_state,json=requestedState,enum=openstorage.api.SdkCloudBackupRequestedState" json:"requested_state,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                     `json:"-"`
 	XXX_unrecognized     []byte                       `json:"-"`
 	XXX_sizecache        int32                        `json:"-"`
@@ -7805,9 +7805,8 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// OpenStorageClusterClient is the client API for OpenStorageCluster service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+// Client API for OpenStorageCluster service
+
 type OpenStorageClusterClient interface {
 	// Enumerate lists all the nodes in the cluster.
 	Enumerate(ctx context.Context, in *SdkClusterEnumerateRequest, opts ...grpc.CallOption) (*SdkClusterEnumerateResponse, error)
@@ -7831,7 +7830,7 @@ func NewOpenStorageClusterClient(cc *grpc.ClientConn) OpenStorageClusterClient {
 
 func (c *openStorageClusterClient) Enumerate(ctx context.Context, in *SdkClusterEnumerateRequest, opts ...grpc.CallOption) (*SdkClusterEnumerateResponse, error) {
 	out := new(SdkClusterEnumerateResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageCluster/Enumerate", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCluster/Enumerate", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -7840,7 +7839,7 @@ func (c *openStorageClusterClient) Enumerate(ctx context.Context, in *SdkCluster
 
 func (c *openStorageClusterClient) Inspect(ctx context.Context, in *SdkClusterInspectRequest, opts ...grpc.CallOption) (*SdkClusterInspectResponse, error) {
 	out := new(SdkClusterInspectResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageCluster/Inspect", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCluster/Inspect", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -7849,7 +7848,7 @@ func (c *openStorageClusterClient) Inspect(ctx context.Context, in *SdkClusterIn
 
 func (c *openStorageClusterClient) AlertEnumerate(ctx context.Context, in *SdkClusterAlertEnumerateRequest, opts ...grpc.CallOption) (*SdkClusterAlertEnumerateResponse, error) {
 	out := new(SdkClusterAlertEnumerateResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageCluster/AlertEnumerate", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCluster/AlertEnumerate", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -7858,7 +7857,7 @@ func (c *openStorageClusterClient) AlertEnumerate(ctx context.Context, in *SdkCl
 
 func (c *openStorageClusterClient) AlertClear(ctx context.Context, in *SdkClusterAlertClearRequest, opts ...grpc.CallOption) (*SdkClusterAlertClearResponse, error) {
 	out := new(SdkClusterAlertClearResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageCluster/AlertClear", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCluster/AlertClear", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -7867,14 +7866,15 @@ func (c *openStorageClusterClient) AlertClear(ctx context.Context, in *SdkCluste
 
 func (c *openStorageClusterClient) AlertDelete(ctx context.Context, in *SdkClusterAlertDeleteRequest, opts ...grpc.CallOption) (*SdkClusterAlertDeleteResponse, error) {
 	out := new(SdkClusterAlertDeleteResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageCluster/AlertDelete", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCluster/AlertDelete", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// OpenStorageClusterServer is the server API for OpenStorageCluster service.
+// Server API for OpenStorageCluster service
+
 type OpenStorageClusterServer interface {
 	// Enumerate lists all the nodes in the cluster.
 	Enumerate(context.Context, *SdkClusterEnumerateRequest) (*SdkClusterEnumerateResponse, error)
@@ -8011,9 +8011,8 @@ var _OpenStorageCluster_serviceDesc = grpc.ServiceDesc{
 	Metadata: "api/api.proto",
 }
 
-// OpenStorageVolumeClient is the client API for OpenStorageVolume service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+// Client API for OpenStorageVolume service
+
 type OpenStorageVolumeClient interface {
 	// Creates a new volume
 	Create(ctx context.Context, in *SdkVolumeCreateRequest, opts ...grpc.CallOption) (*SdkVolumeCreateResponse, error)
@@ -8052,7 +8051,7 @@ func NewOpenStorageVolumeClient(cc *grpc.ClientConn) OpenStorageVolumeClient {
 
 func (c *openStorageVolumeClient) Create(ctx context.Context, in *SdkVolumeCreateRequest, opts ...grpc.CallOption) (*SdkVolumeCreateResponse, error) {
 	out := new(SdkVolumeCreateResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageVolume/Create", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageVolume/Create", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -8061,7 +8060,7 @@ func (c *openStorageVolumeClient) Create(ctx context.Context, in *SdkVolumeCreat
 
 func (c *openStorageVolumeClient) Clone(ctx context.Context, in *SdkVolumeCloneRequest, opts ...grpc.CallOption) (*SdkVolumeCloneResponse, error) {
 	out := new(SdkVolumeCloneResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageVolume/Clone", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageVolume/Clone", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -8070,7 +8069,7 @@ func (c *openStorageVolumeClient) Clone(ctx context.Context, in *SdkVolumeCloneR
 
 func (c *openStorageVolumeClient) Delete(ctx context.Context, in *SdkVolumeDeleteRequest, opts ...grpc.CallOption) (*SdkVolumeDeleteResponse, error) {
 	out := new(SdkVolumeDeleteResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageVolume/Delete", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageVolume/Delete", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -8079,7 +8078,7 @@ func (c *openStorageVolumeClient) Delete(ctx context.Context, in *SdkVolumeDelet
 
 func (c *openStorageVolumeClient) Inspect(ctx context.Context, in *SdkVolumeInspectRequest, opts ...grpc.CallOption) (*SdkVolumeInspectResponse, error) {
 	out := new(SdkVolumeInspectResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageVolume/Inspect", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageVolume/Inspect", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -8088,7 +8087,7 @@ func (c *openStorageVolumeClient) Inspect(ctx context.Context, in *SdkVolumeInsp
 
 func (c *openStorageVolumeClient) Enumerate(ctx context.Context, in *SdkVolumeEnumerateRequest, opts ...grpc.CallOption) (*SdkVolumeEnumerateResponse, error) {
 	out := new(SdkVolumeEnumerateResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageVolume/Enumerate", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageVolume/Enumerate", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -8097,7 +8096,7 @@ func (c *openStorageVolumeClient) Enumerate(ctx context.Context, in *SdkVolumeEn
 
 func (c *openStorageVolumeClient) SnapshotCreate(ctx context.Context, in *SdkVolumeSnapshotCreateRequest, opts ...grpc.CallOption) (*SdkVolumeSnapshotCreateResponse, error) {
 	out := new(SdkVolumeSnapshotCreateResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageVolume/SnapshotCreate", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageVolume/SnapshotCreate", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -8106,7 +8105,7 @@ func (c *openStorageVolumeClient) SnapshotCreate(ctx context.Context, in *SdkVol
 
 func (c *openStorageVolumeClient) SnapshotRestore(ctx context.Context, in *SdkVolumeSnapshotRestoreRequest, opts ...grpc.CallOption) (*SdkVolumeSnapshotRestoreResponse, error) {
 	out := new(SdkVolumeSnapshotRestoreResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageVolume/SnapshotRestore", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageVolume/SnapshotRestore", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -8115,7 +8114,7 @@ func (c *openStorageVolumeClient) SnapshotRestore(ctx context.Context, in *SdkVo
 
 func (c *openStorageVolumeClient) SnapshotEnumerate(ctx context.Context, in *SdkVolumeSnapshotEnumerateRequest, opts ...grpc.CallOption) (*SdkVolumeSnapshotEnumerateResponse, error) {
 	out := new(SdkVolumeSnapshotEnumerateResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageVolume/SnapshotEnumerate", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageVolume/SnapshotEnumerate", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -8124,7 +8123,7 @@ func (c *openStorageVolumeClient) SnapshotEnumerate(ctx context.Context, in *Sdk
 
 func (c *openStorageVolumeClient) Attach(ctx context.Context, in *SdkVolumeAttachRequest, opts ...grpc.CallOption) (*SdkVolumeAttachResponse, error) {
 	out := new(SdkVolumeAttachResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageVolume/Attach", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageVolume/Attach", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -8133,7 +8132,7 @@ func (c *openStorageVolumeClient) Attach(ctx context.Context, in *SdkVolumeAttac
 
 func (c *openStorageVolumeClient) Detach(ctx context.Context, in *SdkVolumeDetachRequest, opts ...grpc.CallOption) (*SdkVolumeDetachResponse, error) {
 	out := new(SdkVolumeDetachResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageVolume/Detach", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageVolume/Detach", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -8142,7 +8141,7 @@ func (c *openStorageVolumeClient) Detach(ctx context.Context, in *SdkVolumeDetac
 
 func (c *openStorageVolumeClient) Mount(ctx context.Context, in *SdkVolumeMountRequest, opts ...grpc.CallOption) (*SdkVolumeMountResponse, error) {
 	out := new(SdkVolumeMountResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageVolume/Mount", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageVolume/Mount", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -8151,14 +8150,15 @@ func (c *openStorageVolumeClient) Mount(ctx context.Context, in *SdkVolumeMountR
 
 func (c *openStorageVolumeClient) Unmount(ctx context.Context, in *SdkVolumeUnmountRequest, opts ...grpc.CallOption) (*SdkVolumeUnmountResponse, error) {
 	out := new(SdkVolumeUnmountResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageVolume/Unmount", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageVolume/Unmount", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// OpenStorageVolumeServer is the server API for OpenStorageVolume service.
+// Server API for OpenStorageVolume service
+
 type OpenStorageVolumeServer interface {
 	// Creates a new volume
 	Create(context.Context, *SdkVolumeCreateRequest) (*SdkVolumeCreateResponse, error)
@@ -8464,9 +8464,8 @@ var _OpenStorageVolume_serviceDesc = grpc.ServiceDesc{
 	Metadata: "api/api.proto",
 }
 
-// OpenStorageObjectstoreClient is the client API for OpenStorageObjectstore service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+// Client API for OpenStorageObjectstore service
+
 type OpenStorageObjectstoreClient interface {
 	// Inspect returns current status of objectstore
 	Inspect(ctx context.Context, in *SdkObjectstoreInspectRequest, opts ...grpc.CallOption) (*SdkObjectstoreInspectResponse, error)
@@ -8488,7 +8487,7 @@ func NewOpenStorageObjectstoreClient(cc *grpc.ClientConn) OpenStorageObjectstore
 
 func (c *openStorageObjectstoreClient) Inspect(ctx context.Context, in *SdkObjectstoreInspectRequest, opts ...grpc.CallOption) (*SdkObjectstoreInspectResponse, error) {
 	out := new(SdkObjectstoreInspectResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageObjectstore/Inspect", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageObjectstore/Inspect", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -8497,7 +8496,7 @@ func (c *openStorageObjectstoreClient) Inspect(ctx context.Context, in *SdkObjec
 
 func (c *openStorageObjectstoreClient) Create(ctx context.Context, in *SdkObjectstoreCreateRequest, opts ...grpc.CallOption) (*SdkObjectstoreCreateResponse, error) {
 	out := new(SdkObjectstoreCreateResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageObjectstore/Create", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageObjectstore/Create", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -8506,7 +8505,7 @@ func (c *openStorageObjectstoreClient) Create(ctx context.Context, in *SdkObject
 
 func (c *openStorageObjectstoreClient) Delete(ctx context.Context, in *SdkObjectstoreDeleteRequest, opts ...grpc.CallOption) (*SdkObjectstoreDeleteResponse, error) {
 	out := new(SdkObjectstoreDeleteResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageObjectstore/Delete", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageObjectstore/Delete", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -8515,14 +8514,15 @@ func (c *openStorageObjectstoreClient) Delete(ctx context.Context, in *SdkObject
 
 func (c *openStorageObjectstoreClient) Update(ctx context.Context, in *SdkObjectstoreUpdateRequest, opts ...grpc.CallOption) (*SdkObjectstoreUpdateResponse, error) {
 	out := new(SdkObjectstoreUpdateResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageObjectstore/Update", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageObjectstore/Update", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// OpenStorageObjectstoreServer is the server API for OpenStorageObjectstore service.
+// Server API for OpenStorageObjectstore service
+
 type OpenStorageObjectstoreServer interface {
 	// Inspect returns current status of objectstore
 	Inspect(context.Context, *SdkObjectstoreInspectRequest) (*SdkObjectstoreInspectResponse, error)
@@ -8635,9 +8635,8 @@ var _OpenStorageObjectstore_serviceDesc = grpc.ServiceDesc{
 	Metadata: "api/api.proto",
 }
 
-// OpenStorageCredentialsClient is the client API for OpenStorageCredentials service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+// Client API for OpenStorageCredentials service
+
 type OpenStorageCredentialsClient interface {
 	// Create cloud credentials
 	Create(ctx context.Context, in *SdkCredentialCreateRequest, opts ...grpc.CallOption) (*SdkCredentialCreateResponse, error)
@@ -8661,7 +8660,7 @@ func NewOpenStorageCredentialsClient(cc *grpc.ClientConn) OpenStorageCredentials
 
 func (c *openStorageCredentialsClient) Create(ctx context.Context, in *SdkCredentialCreateRequest, opts ...grpc.CallOption) (*SdkCredentialCreateResponse, error) {
 	out := new(SdkCredentialCreateResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageCredentials/Create", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCredentials/Create", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -8670,7 +8669,7 @@ func (c *openStorageCredentialsClient) Create(ctx context.Context, in *SdkCreden
 
 func (c *openStorageCredentialsClient) Enumerate(ctx context.Context, in *SdkCredentialEnumerateRequest, opts ...grpc.CallOption) (*SdkCredentialEnumerateResponse, error) {
 	out := new(SdkCredentialEnumerateResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageCredentials/Enumerate", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCredentials/Enumerate", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -8679,7 +8678,7 @@ func (c *openStorageCredentialsClient) Enumerate(ctx context.Context, in *SdkCre
 
 func (c *openStorageCredentialsClient) Inspect(ctx context.Context, in *SdkCredentialInspectRequest, opts ...grpc.CallOption) (*SdkCredentialInspectResponse, error) {
 	out := new(SdkCredentialInspectResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageCredentials/Inspect", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCredentials/Inspect", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -8688,7 +8687,7 @@ func (c *openStorageCredentialsClient) Inspect(ctx context.Context, in *SdkCrede
 
 func (c *openStorageCredentialsClient) Delete(ctx context.Context, in *SdkCredentialDeleteRequest, opts ...grpc.CallOption) (*SdkCredentialDeleteResponse, error) {
 	out := new(SdkCredentialDeleteResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageCredentials/Delete", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCredentials/Delete", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -8697,14 +8696,15 @@ func (c *openStorageCredentialsClient) Delete(ctx context.Context, in *SdkCreden
 
 func (c *openStorageCredentialsClient) Validate(ctx context.Context, in *SdkCredentialValidateRequest, opts ...grpc.CallOption) (*SdkCredentialValidateResponse, error) {
 	out := new(SdkCredentialValidateResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageCredentials/Validate", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCredentials/Validate", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// OpenStorageCredentialsServer is the server API for OpenStorageCredentials service.
+// Server API for OpenStorageCredentials service
+
 type OpenStorageCredentialsServer interface {
 	// Create cloud credentials
 	Create(context.Context, *SdkCredentialCreateRequest) (*SdkCredentialCreateResponse, error)
@@ -8841,9 +8841,8 @@ var _OpenStorageCredentials_serviceDesc = grpc.ServiceDesc{
 	Metadata: "api/api.proto",
 }
 
-// OpenStorageSchedulePolicyClient is the client API for OpenStorageSchedulePolicy service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+// Client API for OpenStorageSchedulePolicy service
+
 type OpenStorageSchedulePolicyClient interface {
 	// Create Schedule Policy for snapshots
 	Create(ctx context.Context, in *SdkSchedulePolicyCreateRequest, opts ...grpc.CallOption) (*SdkSchedulePolicyCreateResponse, error)
@@ -8866,7 +8865,7 @@ func NewOpenStorageSchedulePolicyClient(cc *grpc.ClientConn) OpenStorageSchedule
 
 func (c *openStorageSchedulePolicyClient) Create(ctx context.Context, in *SdkSchedulePolicyCreateRequest, opts ...grpc.CallOption) (*SdkSchedulePolicyCreateResponse, error) {
 	out := new(SdkSchedulePolicyCreateResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageSchedulePolicy/Create", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageSchedulePolicy/Create", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -8875,7 +8874,7 @@ func (c *openStorageSchedulePolicyClient) Create(ctx context.Context, in *SdkSch
 
 func (c *openStorageSchedulePolicyClient) Update(ctx context.Context, in *SdkSchedulePolicyUpdateRequest, opts ...grpc.CallOption) (*SdkSchedulePolicyUpdateResponse, error) {
 	out := new(SdkSchedulePolicyUpdateResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageSchedulePolicy/Update", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageSchedulePolicy/Update", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -8884,7 +8883,7 @@ func (c *openStorageSchedulePolicyClient) Update(ctx context.Context, in *SdkSch
 
 func (c *openStorageSchedulePolicyClient) Enumerate(ctx context.Context, in *SdkSchedulePolicyEnumerateRequest, opts ...grpc.CallOption) (*SdkSchedulePolicyEnumerateResponse, error) {
 	out := new(SdkSchedulePolicyEnumerateResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageSchedulePolicy/Enumerate", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageSchedulePolicy/Enumerate", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -8893,7 +8892,7 @@ func (c *openStorageSchedulePolicyClient) Enumerate(ctx context.Context, in *Sdk
 
 func (c *openStorageSchedulePolicyClient) Inspect(ctx context.Context, in *SdkSchedulePolicyInspectRequest, opts ...grpc.CallOption) (*SdkSchedulePolicyInspectResponse, error) {
 	out := new(SdkSchedulePolicyInspectResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageSchedulePolicy/Inspect", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageSchedulePolicy/Inspect", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -8902,14 +8901,15 @@ func (c *openStorageSchedulePolicyClient) Inspect(ctx context.Context, in *SdkSc
 
 func (c *openStorageSchedulePolicyClient) Delete(ctx context.Context, in *SdkSchedulePolicyDeleteRequest, opts ...grpc.CallOption) (*SdkSchedulePolicyDeleteResponse, error) {
 	out := new(SdkSchedulePolicyDeleteResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageSchedulePolicy/Delete", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageSchedulePolicy/Delete", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// OpenStorageSchedulePolicyServer is the server API for OpenStorageSchedulePolicy service.
+// Server API for OpenStorageSchedulePolicy service
+
 type OpenStorageSchedulePolicyServer interface {
 	// Create Schedule Policy for snapshots
 	Create(context.Context, *SdkSchedulePolicyCreateRequest) (*SdkSchedulePolicyCreateResponse, error)
@@ -9045,9 +9045,8 @@ var _OpenStorageSchedulePolicy_serviceDesc = grpc.ServiceDesc{
 	Metadata: "api/api.proto",
 }
 
-// OpenStorageCloudBackupClient is the client API for OpenStorageCloudBackup service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+// Client API for OpenStorageCloudBackup service
+
 type OpenStorageCloudBackupClient interface {
 	// Create
 	Create(ctx context.Context, in *SdkCloudBackupCreateRequest, opts ...grpc.CallOption) (*SdkCloudBackupCreateResponse, error)
@@ -9079,7 +9078,7 @@ func NewOpenStorageCloudBackupClient(cc *grpc.ClientConn) OpenStorageCloudBackup
 
 func (c *openStorageCloudBackupClient) Create(ctx context.Context, in *SdkCloudBackupCreateRequest, opts ...grpc.CallOption) (*SdkCloudBackupCreateResponse, error) {
 	out := new(SdkCloudBackupCreateResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageCloudBackup/Create", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCloudBackup/Create", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -9088,7 +9087,7 @@ func (c *openStorageCloudBackupClient) Create(ctx context.Context, in *SdkCloudB
 
 func (c *openStorageCloudBackupClient) Restore(ctx context.Context, in *SdkCloudBackupRestoreRequest, opts ...grpc.CallOption) (*SdkCloudBackupRestoreResponse, error) {
 	out := new(SdkCloudBackupRestoreResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageCloudBackup/Restore", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCloudBackup/Restore", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -9097,7 +9096,7 @@ func (c *openStorageCloudBackupClient) Restore(ctx context.Context, in *SdkCloud
 
 func (c *openStorageCloudBackupClient) Delete(ctx context.Context, in *SdkCloudBackupDeleteRequest, opts ...grpc.CallOption) (*SdkCloudBackupDeleteResponse, error) {
 	out := new(SdkCloudBackupDeleteResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageCloudBackup/Delete", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCloudBackup/Delete", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -9106,7 +9105,7 @@ func (c *openStorageCloudBackupClient) Delete(ctx context.Context, in *SdkCloudB
 
 func (c *openStorageCloudBackupClient) DeleteAll(ctx context.Context, in *SdkCloudBackupDeleteAllRequest, opts ...grpc.CallOption) (*SdkCloudBackupDeleteAllResponse, error) {
 	out := new(SdkCloudBackupDeleteAllResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageCloudBackup/DeleteAll", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCloudBackup/DeleteAll", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -9115,7 +9114,7 @@ func (c *openStorageCloudBackupClient) DeleteAll(ctx context.Context, in *SdkClo
 
 func (c *openStorageCloudBackupClient) Enumerate(ctx context.Context, in *SdkCloudBackupEnumerateRequest, opts ...grpc.CallOption) (*SdkCloudBackupEnumerateResponse, error) {
 	out := new(SdkCloudBackupEnumerateResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageCloudBackup/Enumerate", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCloudBackup/Enumerate", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -9124,7 +9123,7 @@ func (c *openStorageCloudBackupClient) Enumerate(ctx context.Context, in *SdkClo
 
 func (c *openStorageCloudBackupClient) Status(ctx context.Context, in *SdkCloudBackupStatusRequest, opts ...grpc.CallOption) (*SdkCloudBackupStatusResponse, error) {
 	out := new(SdkCloudBackupStatusResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageCloudBackup/Status", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCloudBackup/Status", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -9133,7 +9132,7 @@ func (c *openStorageCloudBackupClient) Status(ctx context.Context, in *SdkCloudB
 
 func (c *openStorageCloudBackupClient) Catalog(ctx context.Context, in *SdkCloudBackupCatalogRequest, opts ...grpc.CallOption) (*SdkCloudBackupCatalogResponse, error) {
 	out := new(SdkCloudBackupCatalogResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageCloudBackup/Catalog", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCloudBackup/Catalog", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -9142,7 +9141,7 @@ func (c *openStorageCloudBackupClient) Catalog(ctx context.Context, in *SdkCloud
 
 func (c *openStorageCloudBackupClient) History(ctx context.Context, in *SdkCloudBackupHistoryRequest, opts ...grpc.CallOption) (*SdkCloudBackupHistoryResponse, error) {
 	out := new(SdkCloudBackupHistoryResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageCloudBackup/History", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCloudBackup/History", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -9151,14 +9150,15 @@ func (c *openStorageCloudBackupClient) History(ctx context.Context, in *SdkCloud
 
 func (c *openStorageCloudBackupClient) StateChange(ctx context.Context, in *SdkCloudBackupStateChangeRequest, opts ...grpc.CallOption) (*SdkCloudBackupStateChangeResponse, error) {
 	out := new(SdkCloudBackupStateChangeResponse)
-	err := c.cc.Invoke(ctx, "/openstorage.api.OpenStorageCloudBackup/StateChange", in, out, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCloudBackup/StateChange", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// OpenStorageCloudBackupServer is the server API for OpenStorageCloudBackup service.
+// Server API for OpenStorageCloudBackup service
+
 type OpenStorageCloudBackupServer interface {
 	// Create
 	Create(context.Context, *SdkCloudBackupCreateRequest) (*SdkCloudBackupCreateResponse, error)
