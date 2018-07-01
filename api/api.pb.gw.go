@@ -792,14 +792,14 @@ func RegisterOpenStorageClusterHandlerFromEndpoint(ctx context.Context, mux *run
 	defer func() {
 		if err != nil {
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 			return
 		}
 		go func() {
 			<-ctx.Done()
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 		}()
 	}()
@@ -813,8 +813,8 @@ func RegisterOpenStorageClusterHandler(ctx context.Context, mux *runtime.ServeMu
 	return RegisterOpenStorageClusterHandlerClient(ctx, mux, NewOpenStorageClusterClient(conn))
 }
 
-// RegisterOpenStorageClusterHandler registers the http handlers for service OpenStorageCluster to "mux".
-// The handlers forward requests to the grpc endpoint over the given implementation of "OpenStorageClusterClient".
+// RegisterOpenStorageClusterHandlerClient registers the http handlers for service OpenStorageCluster
+// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "OpenStorageClusterClient".
 // Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "OpenStorageClusterClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "OpenStorageClusterClient" to call the correct interceptors.
@@ -1002,14 +1002,14 @@ func RegisterOpenStorageVolumeHandlerFromEndpoint(ctx context.Context, mux *runt
 	defer func() {
 		if err != nil {
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 			return
 		}
 		go func() {
 			<-ctx.Done()
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 		}()
 	}()
@@ -1023,8 +1023,8 @@ func RegisterOpenStorageVolumeHandler(ctx context.Context, mux *runtime.ServeMux
 	return RegisterOpenStorageVolumeHandlerClient(ctx, mux, NewOpenStorageVolumeClient(conn))
 }
 
-// RegisterOpenStorageVolumeHandler registers the http handlers for service OpenStorageVolume to "mux".
-// The handlers forward requests to the grpc endpoint over the given implementation of "OpenStorageVolumeClient".
+// RegisterOpenStorageVolumeHandlerClient registers the http handlers for service OpenStorageVolume
+// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "OpenStorageVolumeClient".
 // Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "OpenStorageVolumeClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "OpenStorageVolumeClient" to call the correct interceptors.
@@ -1443,14 +1443,14 @@ func RegisterOpenStorageObjectstoreHandlerFromEndpoint(ctx context.Context, mux 
 	defer func() {
 		if err != nil {
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 			return
 		}
 		go func() {
 			<-ctx.Done()
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 		}()
 	}()
@@ -1464,8 +1464,8 @@ func RegisterOpenStorageObjectstoreHandler(ctx context.Context, mux *runtime.Ser
 	return RegisterOpenStorageObjectstoreHandlerClient(ctx, mux, NewOpenStorageObjectstoreClient(conn))
 }
 
-// RegisterOpenStorageObjectstoreHandler registers the http handlers for service OpenStorageObjectstore to "mux".
-// The handlers forward requests to the grpc endpoint over the given implementation of "OpenStorageObjectstoreClient".
+// RegisterOpenStorageObjectstoreHandlerClient registers the http handlers for service OpenStorageObjectstore
+// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "OpenStorageObjectstoreClient".
 // Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "OpenStorageObjectstoreClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "OpenStorageObjectstoreClient" to call the correct interceptors.
@@ -1620,14 +1620,14 @@ func RegisterOpenStorageCredentialsHandlerFromEndpoint(ctx context.Context, mux 
 	defer func() {
 		if err != nil {
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 			return
 		}
 		go func() {
 			<-ctx.Done()
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 		}()
 	}()
@@ -1641,8 +1641,8 @@ func RegisterOpenStorageCredentialsHandler(ctx context.Context, mux *runtime.Ser
 	return RegisterOpenStorageCredentialsHandlerClient(ctx, mux, NewOpenStorageCredentialsClient(conn))
 }
 
-// RegisterOpenStorageCredentialsHandler registers the http handlers for service OpenStorageCredentials to "mux".
-// The handlers forward requests to the grpc endpoint over the given implementation of "OpenStorageCredentialsClient".
+// RegisterOpenStorageCredentialsHandlerClient registers the http handlers for service OpenStorageCredentials
+// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "OpenStorageCredentialsClient".
 // Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "OpenStorageCredentialsClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "OpenStorageCredentialsClient" to call the correct interceptors.
@@ -1830,14 +1830,14 @@ func RegisterOpenStorageSchedulePolicyHandlerFromEndpoint(ctx context.Context, m
 	defer func() {
 		if err != nil {
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 			return
 		}
 		go func() {
 			<-ctx.Done()
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 		}()
 	}()
@@ -1851,8 +1851,8 @@ func RegisterOpenStorageSchedulePolicyHandler(ctx context.Context, mux *runtime.
 	return RegisterOpenStorageSchedulePolicyHandlerClient(ctx, mux, NewOpenStorageSchedulePolicyClient(conn))
 }
 
-// RegisterOpenStorageSchedulePolicyHandler registers the http handlers for service OpenStorageSchedulePolicy to "mux".
-// The handlers forward requests to the grpc endpoint over the given implementation of "OpenStorageSchedulePolicyClient".
+// RegisterOpenStorageSchedulePolicyHandlerClient registers the http handlers for service OpenStorageSchedulePolicy
+// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "OpenStorageSchedulePolicyClient".
 // Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "OpenStorageSchedulePolicyClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "OpenStorageSchedulePolicyClient" to call the correct interceptors.
@@ -2040,14 +2040,14 @@ func RegisterOpenStorageCloudBackupHandlerFromEndpoint(ctx context.Context, mux 
 	defer func() {
 		if err != nil {
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 			return
 		}
 		go func() {
 			<-ctx.Done()
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 		}()
 	}()
@@ -2061,8 +2061,8 @@ func RegisterOpenStorageCloudBackupHandler(ctx context.Context, mux *runtime.Ser
 	return RegisterOpenStorageCloudBackupHandlerClient(ctx, mux, NewOpenStorageCloudBackupClient(conn))
 }
 
-// RegisterOpenStorageCloudBackupHandler registers the http handlers for service OpenStorageCloudBackup to "mux".
-// The handlers forward requests to the grpc endpoint over the given implementation of "OpenStorageCloudBackupClient".
+// RegisterOpenStorageCloudBackupHandlerClient registers the http handlers for service OpenStorageCloudBackup
+// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "OpenStorageCloudBackupClient".
 // Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "OpenStorageCloudBackupClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "OpenStorageCloudBackupClient" to call the correct interceptors.
