@@ -411,6 +411,10 @@ message Alert {
   uint64 ttl = 9;
   // UniqueTag helps identify a unique alert for a given resouce
   string unique_tag = 10;
+  // Count of such alerts raised so far.
+  int64 count = 11;
+  // Timestamp when such alert was raised the very first time.
+  google.protobuf.Timestamp first_seen = 12;
 }
 
 // Alerts is an array of Alert objects
