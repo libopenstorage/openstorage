@@ -3893,7 +3893,9 @@ proto.openstorage.api.Alert.toObject = function(includeInstance, msg) {
     resource: jspb.Message.getFieldWithDefault(msg, 7, 0),
     cleared: jspb.Message.getFieldWithDefault(msg, 8, false),
     ttl: jspb.Message.getFieldWithDefault(msg, 9, 0),
-    uniqueTag: jspb.Message.getFieldWithDefault(msg, 10, "")
+    uniqueTag: jspb.Message.getFieldWithDefault(msg, 10, ""),
+    count: jspb.Message.getFieldWithDefault(msg, 11, 0),
+    firstSeen: (f = msg.getFirstSeen()) && google_protobuf_timestamp_pb.Timestamp.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -3970,6 +3972,15 @@ proto.openstorage.api.Alert.deserializeBinaryFromReader = function(msg, reader) 
     case 10:
       var value = /** @type {string} */ (reader.readString());
       msg.setUniqueTag(value);
+      break;
+    case 11:
+      var value = /** @type {number} */ (reader.readInt64());
+      msg.setCount(value);
+      break;
+    case 12:
+      var value = new google_protobuf_timestamp_pb.Timestamp;
+      reader.readMessage(value,google_protobuf_timestamp_pb.Timestamp.deserializeBinaryFromReader);
+      msg.setFirstSeen(value);
       break;
     default:
       reader.skipField();
@@ -4069,6 +4080,21 @@ proto.openstorage.api.Alert.serializeBinaryToWriter = function(message, writer) 
     writer.writeString(
       10,
       f
+    );
+  }
+  f = message.getCount();
+  if (f !== 0) {
+    writer.writeInt64(
+      11,
+      f
+    );
+  }
+  f = message.getFirstSeen();
+  if (f != null) {
+    writer.writeMessage(
+      12,
+      f,
+      google_protobuf_timestamp_pb.Timestamp.serializeBinaryToWriter
     );
   }
 };
@@ -4238,6 +4264,51 @@ proto.openstorage.api.Alert.prototype.getUniqueTag = function() {
 /** @param {string} value */
 proto.openstorage.api.Alert.prototype.setUniqueTag = function(value) {
   jspb.Message.setField(this, 10, value);
+};
+
+
+/**
+ * optional int64 count = 11;
+ * @return {number}
+ */
+proto.openstorage.api.Alert.prototype.getCount = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 11, 0));
+};
+
+
+/** @param {number} value */
+proto.openstorage.api.Alert.prototype.setCount = function(value) {
+  jspb.Message.setField(this, 11, value);
+};
+
+
+/**
+ * optional google.protobuf.Timestamp first_seen = 12;
+ * @return {?proto.google.protobuf.Timestamp}
+ */
+proto.openstorage.api.Alert.prototype.getFirstSeen = function() {
+  return /** @type{?proto.google.protobuf.Timestamp} */ (
+    jspb.Message.getWrapperField(this, google_protobuf_timestamp_pb.Timestamp, 12));
+};
+
+
+/** @param {?proto.google.protobuf.Timestamp|undefined} value */
+proto.openstorage.api.Alert.prototype.setFirstSeen = function(value) {
+  jspb.Message.setWrapperField(this, 12, value);
+};
+
+
+proto.openstorage.api.Alert.prototype.clearFirstSeen = function() {
+  this.setFirstSeen(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {!boolean}
+ */
+proto.openstorage.api.Alert.prototype.hasFirstSeen = function() {
+  return jspb.Message.getField(this, 12) != null;
 };
 
 

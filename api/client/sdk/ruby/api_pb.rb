@@ -120,6 +120,8 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :cleared, :bool, 8
     optional :ttl, :uint64, 9
     optional :unique_tag, :string, 10
+    optional :count, :int64, 11
+    optional :first_seen, :message, 12, "google.protobuf.Timestamp"
   end
   add_message "openstorage.api.Alerts" do
     repeated :alert, :message, 1, "openstorage.api.Alert"
