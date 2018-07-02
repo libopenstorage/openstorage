@@ -17,7 +17,7 @@
   "paths": {
     "/v1/cloudbackup": {
       "get": {
-        "summary": "Enumerate",
+        "summary": "Return a list of backups for the specified volume",
         "operationId": "Enumerate",
         "responses": {
           "200": {
@@ -63,7 +63,7 @@
         ]
       },
       "post": {
-        "summary": "Create",
+        "summary": "Creates a backup request for a specified volume. Use\nOpenStorageCloudBackup.Status() to get the current status of the\nbackup request.",
         "operationId": "Create",
         "responses": {
           "200": {
@@ -90,7 +90,7 @@
     },
     "/v1/cloudbackup/catalog/{backup_id}": {
       "get": {
-        "summary": "Catalog",
+        "summary": "Catalog returns a list of the contents in the backup",
         "operationId": "Catalog",
         "responses": {
           "200": {
@@ -122,7 +122,7 @@
     },
     "/v1/cloudbackup/deleteall": {
       "post": {
-        "summary": "DeleteAll",
+        "summary": "DeleteAll deletes all the backups in the cloud for the specified volume.",
         "operationId": "DeleteAll",
         "responses": {
           "200": {
@@ -149,7 +149,7 @@
     },
     "/v1/cloudbackup/history/{src_volume_id}": {
       "get": {
-        "summary": "History",
+        "summary": "History returns a list of backups for a specified volume",
         "operationId": "History",
         "responses": {
           "200": {
@@ -174,7 +174,7 @@
     },
     "/v1/cloudbackup/restore": {
       "post": {
-        "summary": "Restore",
+        "summary": "Restore creates a new volume from a backup id. The newly created volume\nhas an ha_level (number of replicas) of only 1. To increase the number of\nreplicas, use OpenStorageVolume.Set() to change the ha_level.",
         "operationId": "Restore",
         "responses": {
           "200": {
@@ -268,7 +268,7 @@
     },
     "/v1/cloudbackup/statechange": {
       "post": {
-        "summary": "StateChange",
+        "summary": "StateChange can be used to stop, pause, and restart a backup",
         "operationId": "StateChange",
         "responses": {
           "200": {
@@ -295,7 +295,7 @@
     },
     "/v1/cloudbackup/status/{src_volume_id}": {
       "get": {
-        "summary": "Status",
+        "summary": "Status returns the status of any cloud backups of a volume",
         "operationId": "Status",
         "responses": {
           "200": {
@@ -328,7 +328,7 @@
     },
     "/v1/cloudbackup/{backup_id}": {
       "delete": {
-        "summary": "Delete",
+        "summary": "Delete deletes a backup stored in the cloud. If the backup is an incremental\nbackup and other backups are dependent on it, it will not be able to be deleted.",
         "operationId": "Delete",
         "responses": {
           "200": {
@@ -368,7 +368,7 @@
     },
     "/v1/cluster": {
       "get": {
-        "summary": "Enumerate lists all the nodes in the cluster.",
+        "summary": "Enumerate returns information about the cluster and the unique ids of\nall the nodes in the cluster.",
         "operationId": "Enumerate",
         "responses": {
           "200": {
@@ -385,7 +385,7 @@
     },
     "/v1/cluster/alert/clear": {
       "post": {
-        "summary": "Clear the alert for a given resource",
+        "summary": "AlertClear clears the alert for a given resource",
         "operationId": "AlertClear",
         "responses": {
           "200": {
@@ -412,7 +412,7 @@
     },
     "/v1/cluster/alert/enumerate": {
       "post": {
-        "summary": "Get a list of alerts from the storage cluster",
+        "summary": "AlertEnumerate returns a list of alerts from the storage cluster",
         "operationId": "AlertEnumerate",
         "responses": {
           "200": {
@@ -439,7 +439,7 @@
     },
     "/v1/cluster/alert/{alert_id}": {
       "delete": {
-        "summary": "Erases an alert for a given resource",
+        "summary": "AlertDelete deletes an alert for all resources",
         "operationId": "AlertDelete",
         "responses": {
           "200": {
@@ -480,7 +480,7 @@
     },
     "/v1/cluster/{node_id}": {
       "get": {
-        "summary": "Inspect the node given a UUID.",
+        "summary": "Inspect returns information about the specified node",
         "operationId": "Inspect",
         "responses": {
           "200": {
@@ -520,7 +520,8 @@
         ]
       },
       "post": {
-        "summary": "Create cloud credentials",
+        "summary": "Create is used to submit cloud credentials. It will return an\nid of the credentials once they are verified to work.",
+        "description": "##### Example\n{% codetabs name=\"Golang\", type=\"go\" -%}\nid, err := client.Create(context.Background(), \u0026api.SdkCredentialCreateRequest{\n  CredentialType: \u0026api.SdkCredentialCreateRequest_AwsCredential{\n    AwsCredential: \u0026api.SdkAwsCredentialRequest{\n    AccessKey: \"dummy-access\",\n    SecretKey: \"dummy-secret\",\n    Endpoint:  \"dummy-endpoint\",\n    Region:    \"dummy-region\",\n  },\n})\n{%- language name=\"Python\", type=\"py\" -%}\nen_resp = client.Create(api_pb2.SdkCredentialCreateRequest(\n  aws_credential=api_pb2.SdkAwsCredentialRequest(\n    access_key='dummy-access',\n    secret_key='dumm-secret',\n    endpoint='dummy-endpoint',\n    region='dummy-region')))\n{%- endcodetabs %}",
         "operationId": "Create",
         "responses": {
           "200": {
@@ -547,7 +548,7 @@
     },
     "/v1/credentials/validate/{credential_id}": {
       "get": {
-        "summary": "Validate a specified credential",
+        "summary": "Validate is used to validate credentials",
         "operationId": "Validate",
         "responses": {
           "200": {
@@ -572,7 +573,7 @@
     },
     "/v1/credentials/{credential_id}": {
       "get": {
-        "summary": "Inspect returns the information about a credential",
+        "summary": "Inspect returns the information about a credential, but does not return the secret key.",
         "operationId": "Inspect",
         "responses": {
           "200": {
@@ -620,7 +621,7 @@
     },
     "/v1/objectstore": {
       "post": {
-        "summary": "Creates objectstore on specified volume",
+        "summary": "Creates creates an object store endpoint on specified volume",
         "operationId": "Create",
         "responses": {
           "200": {
@@ -647,7 +648,7 @@
     },
     "/v1/objectstore/update": {
       "post": {
-        "summary": "Updates provided objectstore status",
+        "summary": "Updates provided objectstore status.\nThis call can be used to stop and start the server while maintaining the same\nobject storage id.",
         "operationId": "Update",
         "responses": {
           "200": {
@@ -674,7 +675,7 @@
     },
     "/v1/objectstore/{objectstore_id}": {
       "get": {
-        "summary": "Inspect returns current status of objectstore",
+        "summary": "Inspect returns information about the object store endpoint",
         "operationId": "Inspect",
         "responses": {
           "200": {
@@ -697,7 +698,7 @@
         ]
       },
       "delete": {
-        "summary": "Deletes objectstore by id",
+        "summary": "Delete destroys the object store endpoint on the volume",
         "operationId": "Delete",
         "responses": {
           "200": {
@@ -722,6 +723,7 @@
     },
     "/v1/schedulepolicy": {
       "get": {
+        "summary": "Enumerate returns a list of schedules",
         "operationId": "Enumerate",
         "responses": {
           "200": {
@@ -736,7 +738,7 @@
         ]
       },
       "post": {
-        "summary": "Create Schedule Policy for snapshots",
+        "summary": "Create creates a new snapshot schedule. They can be setup daily,\nweekly, or monthly.",
         "operationId": "Create",
         "responses": {
           "200": {
@@ -759,11 +761,9 @@
         "tags": [
           "OpenStorageSchedulePolicy"
         ]
-      }
-    },
-    "/v1/schedulepolicy/update": {
-      "post": {
-        "summary": "Update Schedule Policy",
+      },
+      "put": {
+        "summary": "Update a snapshot schedule",
         "operationId": "Update",
         "responses": {
           "200": {
@@ -790,7 +790,7 @@
     },
     "/v1/schedulepolicy/{name}": {
       "get": {
-        "summary": "Inspect Schedule Policy",
+        "summary": "Inspect returns information about a specified schedule",
         "operationId": "Inspect",
         "responses": {
           "200": {
@@ -813,7 +813,7 @@
         ]
       },
       "delete": {
-        "summary": "Delete Schedule Policy",
+        "summary": "Delete removes a snapshot schedule",
         "operationId": "Delete",
         "responses": {
           "200": {
@@ -838,7 +838,8 @@
     },
     "/v1/volume": {
       "post": {
-        "summary": "Creates a new volume",
+        "summary": "Create creates a volume according to the specification provided",
+        "description": "##### Example\n{% codetabs name=\"Golang\", type=\"go\" -%}\nid, err := client.Create(context.Background(), \u0026api.SdkVolumeCreateRequest{\n  Name: \"volume-12345-east\",\n  Spec: \u0026api.VolumeSpec {\n    Size: 1234567,\n  },\n})\n{%- language name=\"Python\", type=\"py\" -%}\nen_resp = client.Create(api_pb2.SdkVolumeCreateRequest(\n  name=\"volume-12345-east\",\n  spec=api_pb2.VolumeSpec(size=1234567)))\n{%- endcodetabs %}",
         "operationId": "Create",
         "responses": {
           "200": {
@@ -865,7 +866,7 @@
     },
     "/v1/volume/attach": {
       "post": {
-        "summary": "Attach device to host",
+        "summary": "Attach attaches device to the host that the client is communicating with.\nNOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more\ninformation about a new feature to allow attachment to any node.",
         "operationId": "Attach",
         "responses": {
           "200": {
@@ -892,7 +893,7 @@
     },
     "/v1/volume/clone": {
       "post": {
-        "summary": "Clone creates a new volume cloned from an existing volume",
+        "summary": "Clone creates a new writable volume cloned from an existing volume",
         "operationId": "Clone",
         "responses": {
           "200": {
@@ -919,7 +920,7 @@
     },
     "/v1/volume/detach": {
       "post": {
-        "summary": "Detaches the volume from the node.",
+        "summary": "Detaches a the volume from the host that the client is communicating with\nNOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more\ninformation about a new feature to allow attachment to any node.",
         "operationId": "Detach",
         "responses": {
           "200": {
@@ -946,7 +947,7 @@
     },
     "/v1/volume/enumerate": {
       "post": {
-        "summary": "Get a list of volumes",
+        "summary": "Enumerate returns a list of volume ids that match the labels if any are provided.",
         "operationId": "Enumerate",
         "responses": {
           "200": {
@@ -973,7 +974,7 @@
     },
     "/v1/volume/mount": {
       "post": {
-        "summary": "Attaches the volume to a node.",
+        "summary": "Mount mounts an attached volume in the host that the client is communicating with\nNOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more\ninformation about a new feature to allow attachment to any node.",
         "operationId": "Mount",
         "responses": {
           "200": {
@@ -998,9 +999,36 @@
         ]
       }
     },
+    "/v1/volume/set": {
+      "post": {
+        "summary": "Set provides a method for manipulating the specification and attributes of a volume.\nSet can be used to resize a volume, update labels, change replica count, and much more.",
+        "operationId": "Set",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeSetResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeSetRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
     "/v1/volume/snapshot": {
       "post": {
-        "summary": "Create a snapshot of a volume. This creates an immutable (read-only),\npoint-in-time snapshot of a volume.",
+        "summary": "SnapshotCreate creates a snapshot of a volume. This creates an immutable (read-only),\npoint-in-time snapshot of a volume.",
         "operationId": "SnapshotCreate",
         "responses": {
           "200": {
@@ -1027,7 +1055,7 @@
     },
     "/v1/volume/snapshot/enumerate": {
       "post": {
-        "summary": "List the number of snapshots for a specific volume",
+        "summary": "SnapshotEnumerate returns a list of snapshots for a specific volume\nthat match the labels provided if any.",
         "operationId": "SnapshotEnumerate",
         "responses": {
           "200": {
@@ -1054,7 +1082,7 @@
     },
     "/v1/volume/snapshot/restore": {
       "post": {
-        "summary": "Restores a volume to a specified snapshot",
+        "summary": "SnapshotRestore restores a volume to a specified snapshot",
         "operationId": "SnapshotRestore",
         "responses": {
           "200": {
@@ -1081,7 +1109,7 @@
     },
     "/v1/volume/unmount": {
       "post": {
-        "summary": "Unmount volume at specified path",
+        "summary": "Unmount unmounts a mounted volume in the host that the client is communicating with\nNOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more\ninformation about a new feature to allow attachment to any node.",
         "operationId": "Unmount",
         "responses": {
           "200": {
@@ -1108,7 +1136,7 @@
     },
     "/v1/volume/{volume_id}": {
       "get": {
-        "summary": "Get information on a volume",
+        "summary": "Inspect returns information about a volume",
         "operationId": "Inspect",
         "responses": {
           "200": {
@@ -1131,7 +1159,7 @@
         ]
       },
       "delete": {
-        "summary": "Delete a volume",
+        "summary": "Delete deletes the provided volume",
         "operationId": "Delete",
         "responses": {
           "200": {
@@ -1198,7 +1226,7 @@
         "ttl": {
           "type": "string",
           "format": "uint64",
-          "title": "TTL in seconds for this Alert"
+          "title": "Time-to-live in seconds for this Alert"
         },
         "unique_tag": {
           "type": "string",
@@ -1486,10 +1514,10 @@
     "apiSdkCloudBackupEnumerateResponse": {
       "type": "object",
       "properties": {
-        "backup_ids": {
+        "backups": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/definitions/apiSdkCloudBackupInfo"
           }
         }
       }
@@ -1521,6 +1549,39 @@
             "$ref": "#/definitions/apiSdkCloudBackupHistoryItem"
           },
           "title": "HistoryList is list of past backup/restores in the cluster"
+        }
+      }
+    },
+    "apiSdkCloudBackupInfo": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "ID is the ID of the cloud backup"
+        },
+        "src_volume_id": {
+          "type": "string",
+          "title": "Source volumeID of the backup"
+        },
+        "src_volume_name": {
+          "type": "string",
+          "title": "Name of the sourceVolume of the backup"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Timestamp is the timestamp at which the source volume\nwas backed up to cloud"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Metadata associated with the backup"
+        },
+        "status": {
+          "$ref": "#/definitions/apiSdkCloudBackupStatusType",
+          "title": "Status indicates the status of the backup"
         }
       }
     },
@@ -1732,18 +1793,19 @@
         "time_start": {
           "type": "string",
           "format": "date-time",
-          "title": "Start time of alerts (required)"
+          "title": "Start time of alerts"
         },
         "time_end": {
           "type": "string",
           "format": "date-time",
-          "title": "End time of alerts (required)"
+          "title": "End time of alerts"
         },
         "resource": {
           "$ref": "#/definitions/apiResourceType",
-          "title": "Type of resource (required)"
+          "title": "Type of resource"
         }
-      }
+      },
+      "title": "This request contains the information needed to get alerts from\nthe storage system"
     },
     "apiSdkClusterAlertEnumerateResponse": {
       "type": "object",
@@ -1755,7 +1817,8 @@
           },
           "title": "Information on the alerts requested"
         }
-      }
+      },
+      "description": "This response provides a list of the alerts at the specified time."
     },
     "apiSdkClusterEnumerateResponse": {
       "type": "object",
@@ -1764,7 +1827,8 @@
           "$ref": "#/definitions/apiStorageCluster",
           "title": "Cluster information"
         }
-      }
+      },
+      "title": "This response returns information about the cluster"
     },
     "apiSdkClusterInspectResponse": {
       "type": "object",
@@ -1773,7 +1837,8 @@
           "$ref": "#/definitions/apiStorageNode",
           "title": "Node information"
         }
-      }
+      },
+      "title": "This response contains information about the respective node requested"
     },
     "apiSdkCredentialCreateRequest": {
       "type": "object",
@@ -2193,6 +2258,28 @@
     "apiSdkVolumeMountResponse": {
       "type": "object"
     },
+    "apiSdkVolumeSetRequest": {
+      "type": "object",
+      "properties": {
+        "volume_id": {
+          "type": "string",
+          "title": "Id of the volume to update"
+        },
+        "locator": {
+          "$ref": "#/definitions/apiVolumeLocator",
+          "description": "Change locator values. Some of these values may not be able to be changed.\nNew labels will be added to the current volume labels. To delete a label, set the\nvalue of the label to an empty string."
+        },
+        "spec": {
+          "$ref": "#/definitions/apiVolumeSpecSet",
+          "description": "VolumeSpecSet provides a method to request that certain values\nin the VolumeSpec are changed. This is necessary as a separate variable\nbecause values like int and bool in the VolumeSpec cannot be determined\nif they are being requested to change in gRPC proto3. Some of these\nvalues may not be able to be changed.\nHere are a few examples of actions that can be accomplished using the VolumeSpec.\nTo resize the volume: Set a new value in spec.size.\nTo change number of replicas: Adjust spec.ha_level.\nTo change the I/O Profile: Adjust spec.io_profile."
+        }
+      },
+      "title": "This request is used to adjust or set new values in the volume"
+    },
+    "apiSdkVolumeSetResponse": {
+      "type": "object",
+      "title": "The response returns no data"
+    },
     "apiSdkVolumeSnapshotCreateRequest": {
       "type": "object",
       "properties": {
@@ -2322,17 +2409,17 @@
         },
         "node_id": {
           "type": "string",
-          "title": "NodeId is the id of the node servicing these requests"
+          "title": "The id of the node servicing these requests"
         },
         "node_ids": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "Nodes are a list of all the nodes on the cluster"
+          "title": "List of all the node ids in the cluster"
         }
       },
-      "title": "StorageCluster represents the state of the cluster"
+      "title": "StorageCluster represents the state and information about the cluster"
     },
     "apiStorageMedium": {
       "type": "string",
@@ -2694,7 +2781,7 @@
         "size": {
           "type": "string",
           "format": "uint64",
-          "description": "Size specifies the thin provisioned volume size."
+          "title": "Size specifies the thin provisioned volume size in bytes"
         },
         "format": {
           "$ref": "#/definitions/apiFSType",
@@ -2803,6 +2890,105 @@
         }
       },
       "title": "VolumeSpec has the properties needed to create a volume.\nswagger:model"
+    },
+    "apiVolumeSpecSet": {
+      "type": "object",
+      "properties": {
+        "ephemeral": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "size": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "format": {
+          "$ref": "#/definitions/apiFSType"
+        },
+        "block_size": {
+          "type": "string",
+          "format": "int64"
+        },
+        "ha_level": {
+          "type": "string",
+          "format": "int64"
+        },
+        "cos": {
+          "$ref": "#/definitions/apiCosType"
+        },
+        "io_profile": {
+          "$ref": "#/definitions/apiIoProfile"
+        },
+        "dedupe": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "snapshot_interval": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "volume_labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "VolumeLabels configuration labels"
+        },
+        "shared": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "replica_set": {
+          "$ref": "#/definitions/apiReplicaSet",
+          "description": "ReplicaSet is the desired set of nodes for the volume data."
+        },
+        "aggregation_level": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "encrypted": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "passphrase": {
+          "type": "string"
+        },
+        "snapshot_schedule": {
+          "type": "string"
+        },
+        "scale": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "sticky": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "group": {
+          "$ref": "#/definitions/apiGroup"
+        },
+        "group_enforced": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "compressed": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "cascaded": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "journal": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "sharedv4": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      },
+      "title": "VolumeSpecSet provides a method to set any of the VolumeSpec of an existing volume"
     },
     "apiVolumeState": {
       "type": "string",

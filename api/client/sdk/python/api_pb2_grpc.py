@@ -5,8 +5,8 @@ import api_pb2 as api__pb2
 
 
 class OpenStorageClusterStub(object):
-  # missing associated documentation comment in .proto file
-  pass
+  """OpenStorageCluster service provides the methods to manage the cluster
+  """
 
   def __init__(self, channel):
     """Constructor.
@@ -42,39 +42,40 @@ class OpenStorageClusterStub(object):
 
 
 class OpenStorageClusterServicer(object):
-  # missing associated documentation comment in .proto file
-  pass
+  """OpenStorageCluster service provides the methods to manage the cluster
+  """
 
   def Enumerate(self, request, context):
-    """Enumerate lists all the nodes in the cluster.
+    """Enumerate returns information about the cluster and the unique ids of
+    all the nodes in the cluster.
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def Inspect(self, request, context):
-    """Inspect the node given a UUID.
+    """Inspect returns information about the specified node
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def AlertEnumerate(self, request, context):
-    """Get a list of alerts from the storage cluster
+    """AlertEnumerate returns a list of alerts from the storage cluster
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def AlertClear(self, request, context):
-    """Clear the alert for a given resource
+    """AlertClear clears the alert for a given resource
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def AlertDelete(self, request, context):
-    """Erases an alert for a given resource
+    """AlertDelete deletes an alert for all resources
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -115,8 +116,8 @@ def add_OpenStorageClusterServicer_to_server(servicer, server):
 
 
 class OpenStorageVolumeStub(object):
-  # missing associated documentation comment in .proto file
-  pass
+  """OpenStorageVolume is a service used to manage the volumes of a storage system
+  """
 
   def __init__(self, channel):
     """Constructor.
@@ -143,6 +144,11 @@ class OpenStorageVolumeStub(object):
         '/openstorage.api.OpenStorageVolume/Inspect',
         request_serializer=api__pb2.SdkVolumeInspectRequest.SerializeToString,
         response_deserializer=api__pb2.SdkVolumeInspectResponse.FromString,
+        )
+    self.Set = channel.unary_unary(
+        '/openstorage.api.OpenStorageVolume/Set',
+        request_serializer=api__pb2.SdkVolumeSetRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkVolumeSetResponse.FromString,
         )
     self.Enumerate = channel.unary_unary(
         '/openstorage.api.OpenStorageVolume/Enumerate',
@@ -187,46 +193,68 @@ class OpenStorageVolumeStub(object):
 
 
 class OpenStorageVolumeServicer(object):
-  # missing associated documentation comment in .proto file
-  pass
+  """OpenStorageVolume is a service used to manage the volumes of a storage system
+  """
 
   def Create(self, request, context):
-    """Creates a new volume
+    """Create creates a volume according to the specification provided
+
+    ##### Example
+    {% codetabs name="Golang", type="go" -%}
+    id, err := client.Create(context.Background(), &api.SdkVolumeCreateRequest{
+    Name: "volume-12345-east",
+    Spec: &api.VolumeSpec {
+    Size: 1234567,
+    },
+    })
+    {%- language name="Python", type="py" -%}
+    en_resp = client.Create(api_pb2.SdkVolumeCreateRequest(
+    name="volume-12345-east",
+    spec=api_pb2.VolumeSpec(size=1234567)))
+    {%- endcodetabs %}
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def Clone(self, request, context):
-    """Clone creates a new volume cloned from an existing volume
+    """Clone creates a new writable volume cloned from an existing volume
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def Delete(self, request, context):
-    """Delete a volume
+    """Delete deletes the provided volume
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def Inspect(self, request, context):
-    """Get information on a volume
+    """Inspect returns information about a volume
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def Set(self, request, context):
+    """Set provides a method for manipulating the specification and attributes of a volume.
+    Set can be used to resize a volume, update labels, change replica count, and much more.
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def Enumerate(self, request, context):
-    """Get a list of volumes
+    """Enumerate returns a list of volume ids that match the labels if any are provided.
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def SnapshotCreate(self, request, context):
-    """Create a snapshot of a volume. This creates an immutable (read-only),
+    """SnapshotCreate creates a snapshot of a volume. This creates an immutable (read-only),
     point-in-time snapshot of a volume.
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -234,42 +262,51 @@ class OpenStorageVolumeServicer(object):
     raise NotImplementedError('Method not implemented!')
 
   def SnapshotRestore(self, request, context):
-    """Restores a volume to a specified snapshot
+    """SnapshotRestore restores a volume to a specified snapshot
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def SnapshotEnumerate(self, request, context):
-    """List the number of snapshots for a specific volume
+    """SnapshotEnumerate returns a list of snapshots for a specific volume
+    that match the labels provided if any.
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def Attach(self, request, context):
-    """Attach device to host
+    """Attach attaches device to the host that the client is communicating with.
+    NOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more
+    information about a new feature to allow attachment to any node.
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def Detach(self, request, context):
-    """Detaches the volume from the node.
+    """Detaches a the volume from the host that the client is communicating with
+    NOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more
+    information about a new feature to allow attachment to any node.
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def Mount(self, request, context):
-    """Attaches the volume to a node.
+    """Mount mounts an attached volume in the host that the client is communicating with
+    NOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more
+    information about a new feature to allow attachment to any node.
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def Unmount(self, request, context):
-    """Unmount volume at specified path
+    """Unmount unmounts a mounted volume in the host that the client is communicating with
+    NOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more
+    information about a new feature to allow attachment to any node.
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -297,6 +334,11 @@ def add_OpenStorageVolumeServicer_to_server(servicer, server):
           servicer.Inspect,
           request_deserializer=api__pb2.SdkVolumeInspectRequest.FromString,
           response_serializer=api__pb2.SdkVolumeInspectResponse.SerializeToString,
+      ),
+      'Set': grpc.unary_unary_rpc_method_handler(
+          servicer.Set,
+          request_deserializer=api__pb2.SdkVolumeSetRequest.FromString,
+          response_serializer=api__pb2.SdkVolumeSetResponse.SerializeToString,
       ),
       'Enumerate': grpc.unary_unary_rpc_method_handler(
           servicer.Enumerate,
@@ -345,8 +387,8 @@ def add_OpenStorageVolumeServicer_to_server(servicer, server):
 
 
 class OpenStorageObjectstoreStub(object):
-  # missing associated documentation comment in .proto file
-  pass
+  """OpenStorageObjectstore is a service used to manage object store services on volumes
+  """
 
   def __init__(self, channel):
     """Constructor.
@@ -377,32 +419,34 @@ class OpenStorageObjectstoreStub(object):
 
 
 class OpenStorageObjectstoreServicer(object):
-  # missing associated documentation comment in .proto file
-  pass
+  """OpenStorageObjectstore is a service used to manage object store services on volumes
+  """
 
   def Inspect(self, request, context):
-    """Inspect returns current status of objectstore
+    """Inspect returns information about the object store endpoint
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def Create(self, request, context):
-    """Creates objectstore on specified volume
+    """Creates creates an object store endpoint on specified volume
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def Delete(self, request, context):
-    """Deletes objectstore by id
+    """Delete destroys the object store endpoint on the volume
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def Update(self, request, context):
-    """Updates provided objectstore status
+    """Updates provided objectstore status.
+    This call can be used to stop and start the server while maintaining the same
+    object storage id.
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -438,8 +482,9 @@ def add_OpenStorageObjectstoreServicer_to_server(servicer, server):
 
 
 class OpenStorageCredentialsStub(object):
-  # missing associated documentation comment in .proto file
-  pass
+  """OpenStorageCredentials is a service used to manage the cloud credentials
+  which can then be used by the OpenStorageCloudBackup service
+  """
 
   def __init__(self, channel):
     """Constructor.
@@ -475,14 +520,33 @@ class OpenStorageCredentialsStub(object):
 
 
 class OpenStorageCredentialsServicer(object):
-  # missing associated documentation comment in .proto file
-  pass
+  """OpenStorageCredentials is a service used to manage the cloud credentials
+  which can then be used by the OpenStorageCloudBackup service
+  """
 
   def Create(self, request, context):
-    """Provide credentials to OpenStorage and if valid,
-    it will return an identifier to the credentials
+    """Create is used to submit cloud credentials. It will return an
+    id of the credentials once they are verified to work.
 
-    Create cloud credentials
+    ##### Example
+    {% codetabs name="Golang", type="go" -%}
+    id, err := client.Create(context.Background(), &api.SdkCredentialCreateRequest{
+    CredentialType: &api.SdkCredentialCreateRequest_AwsCredential{
+    AwsCredential: &api.SdkAwsCredentialRequest{
+    AccessKey: "dummy-access",
+    SecretKey: "dummy-secret",
+    Endpoint:  "dummy-endpoint",
+    Region:    "dummy-region",
+    },
+    })
+    {%- language name="Python", type="py" -%}
+    en_resp = client.Create(api_pb2.SdkCredentialCreateRequest(
+    aws_credential=api_pb2.SdkAwsCredentialRequest(
+    access_key='dummy-access',
+    secret_key='dumm-secret',
+    endpoint='dummy-endpoint',
+    region='dummy-region')))
+    {%- endcodetabs %}
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -496,7 +560,7 @@ class OpenStorageCredentialsServicer(object):
     raise NotImplementedError('Method not implemented!')
 
   def Inspect(self, request, context):
-    """Inspect returns the information about a credential
+    """Inspect returns the information about a credential, but does not return the secret key.
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -510,7 +574,7 @@ class OpenStorageCredentialsServicer(object):
     raise NotImplementedError('Method not implemented!')
 
   def Validate(self, request, context):
-    """Validate a specified credential
+    """Validate is used to validate credentials
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -551,8 +615,9 @@ def add_OpenStorageCredentialsServicer_to_server(servicer, server):
 
 
 class OpenStorageSchedulePolicyStub(object):
-  # missing associated documentation comment in .proto file
-  pass
+  """OpenStorageSchedulePolicy service is used to manage the automated
+  snapshots for a volume
+  """
 
   def __init__(self, channel):
     """Constructor.
@@ -588,39 +653,41 @@ class OpenStorageSchedulePolicyStub(object):
 
 
 class OpenStorageSchedulePolicyServicer(object):
-  # missing associated documentation comment in .proto file
-  pass
+  """OpenStorageSchedulePolicy service is used to manage the automated
+  snapshots for a volume
+  """
 
   def Create(self, request, context):
-    """Create Schedule Policy for snapshots
+    """Create creates a new snapshot schedule. They can be setup daily,
+    weekly, or monthly.
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def Update(self, request, context):
-    """Update Schedule Policy
+    """Update a snapshot schedule
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def Enumerate(self, request, context):
-    # missing associated documentation comment in .proto file
-    pass
+    """Enumerate returns a list of schedules
+    """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def Inspect(self, request, context):
-    """Inspect Schedule Policy
+    """Inspect returns information about a specified schedule
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def Delete(self, request, context):
-    """Delete Schedule Policy
+    """Delete removes a snapshot schedule
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -661,8 +728,9 @@ def add_OpenStorageSchedulePolicyServicer_to_server(servicer, server):
 
 
 class OpenStorageCloudBackupStub(object):
-  # missing associated documentation comment in .proto file
-  pass
+  """OpenStorageCloudBackup service manages backing up volumes to a cloud
+  location like Amazon, Google, or Azure.
+  """
 
   def __init__(self, channel):
     """Constructor.
@@ -733,67 +801,73 @@ class OpenStorageCloudBackupStub(object):
 
 
 class OpenStorageCloudBackupServicer(object):
-  # missing associated documentation comment in .proto file
-  pass
+  """OpenStorageCloudBackup service manages backing up volumes to a cloud
+  location like Amazon, Google, or Azure.
+  """
 
   def Create(self, request, context):
-    """Create
+    """Creates a backup request for a specified volume. Use
+    OpenStorageCloudBackup.Status() to get the current status of the
+    backup request.
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def Restore(self, request, context):
-    """Restore
+    """Restore creates a new volume from a backup id. The newly created volume
+    has an ha_level (number of replicas) of only 1. To increase the number of
+    replicas, use OpenStorageVolume.Set() to change the ha_level.
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def Delete(self, request, context):
-    """Delete
+    """Delete deletes a backup stored in the cloud. If the backup is an incremental
+    backup and other backups are dependent on it, it will not be able to be deleted.
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def DeleteAll(self, request, context):
-    """DeleteAll
+    """DeleteAll deletes all the backups in the cloud for the specified volume.
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def Enumerate(self, request, context):
-    """Enumerate
+    """Return a list of backups for the specified volume
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def Status(self, request, context):
-    """Status
+    """Status returns the status of any cloud backups of a volume
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def Catalog(self, request, context):
-    """Catalog
+    """Catalog returns a list of the contents in the backup
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def History(self, request, context):
-    """History
+    """History returns a list of backups for a specified volume
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def StateChange(self, request, context):
-    """StateChange
+    """StateChange can be used to stop, pause, and restart a backup
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')

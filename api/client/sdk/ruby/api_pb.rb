@@ -67,6 +67,76 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :journal, :bool, 25
     optional :sharedv4, :bool, 26
   end
+  add_message "openstorage.api.VolumeSpecSet" do
+    map :volume_labels, :string, :string, 10
+    optional :replica_set, :message, 12, "openstorage.api.ReplicaSet"
+    oneof :ephemeral_opt do
+      optional :ephemeral, :bool, 1
+    end
+    oneof :size_opt do
+      optional :size, :uint64, 2
+    end
+    oneof :format_opt do
+      optional :format, :enum, 3, "openstorage.api.FSType"
+    end
+    oneof :block_size_opt do
+      optional :block_size, :int64, 4
+    end
+    oneof :ha_level_opt do
+      optional :ha_level, :int64, 5
+    end
+    oneof :cos_opt do
+      optional :cos, :enum, 6, "openstorage.api.CosType"
+    end
+    oneof :io_profile_opt do
+      optional :io_profile, :enum, 7, "openstorage.api.IoProfile"
+    end
+    oneof :dedupe_opt do
+      optional :dedupe, :bool, 8
+    end
+    oneof :snapshot_interval_opt do
+      optional :snapshot_interval, :uint32, 9
+    end
+    oneof :shared_opt do
+      optional :shared, :bool, 11
+    end
+    oneof :aggregation_level_opt do
+      optional :aggregation_level, :uint32, 13
+    end
+    oneof :encrypted_opt do
+      optional :encrypted, :bool, 14
+    end
+    oneof :passphrase_opt do
+      optional :passphrase, :string, 15
+    end
+    oneof :snapshot_schedule_opt do
+      optional :snapshot_schedule, :string, 16
+    end
+    oneof :scale_opt do
+      optional :scale, :uint32, 17
+    end
+    oneof :sticky_opt do
+      optional :sticky, :bool, 18
+    end
+    oneof :group_opt do
+      optional :group, :message, 19, "openstorage.api.Group"
+    end
+    oneof :group_enforced_opt do
+      optional :group_enforced, :bool, 20
+    end
+    oneof :compressed_opt do
+      optional :compressed, :bool, 21
+    end
+    oneof :cascaded_opt do
+      optional :cascaded, :bool, 22
+    end
+    oneof :journal_opt do
+      optional :journal, :bool, 23
+    end
+    oneof :sharedv4_opt do
+      optional :sharedv4, :bool, 24
+    end
+  end
   add_message "openstorage.api.ReplicaSet" do
     repeated :nodes, :string, 1
   end
@@ -398,6 +468,13 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "openstorage.api.SdkVolumeInspectResponse" do
     optional :volume, :message, 1, "openstorage.api.Volume"
   end
+  add_message "openstorage.api.SdkVolumeSetRequest" do
+    optional :volume_id, :string, 1
+    optional :locator, :message, 2, "openstorage.api.VolumeLocator"
+    optional :spec, :message, 4, "openstorage.api.VolumeSpecSet"
+  end
+  add_message "openstorage.api.SdkVolumeSetResponse" do
+  end
   add_message "openstorage.api.SdkVolumeEnumerateRequest" do
     optional :locator, :message, 1, "openstorage.api.VolumeLocator"
   end
@@ -522,7 +599,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :status, :enum, 6, "openstorage.api.SdkCloudBackupStatusType"
   end
   add_message "openstorage.api.SdkCloudBackupEnumerateResponse" do
-    repeated :backup_ids, :string, 1
+    repeated :backups, :message, 1, "openstorage.api.SdkCloudBackupInfo"
   end
   add_message "openstorage.api.SdkCloudBackupStatus" do
     optional :backup_id, :string, 1
@@ -791,6 +868,7 @@ module Openstorage
     Source = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.Source").msgclass
     Group = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.Group").msgclass
     VolumeSpec = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.VolumeSpec").msgclass
+    VolumeSpecSet = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.VolumeSpecSet").msgclass
     ReplicaSet = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.ReplicaSet").msgclass
     RuntimeStateMap = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.RuntimeStateMap").msgclass
     Volume = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.Volume").msgclass
@@ -863,6 +941,8 @@ module Openstorage
     SdkVolumeDeleteResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeDeleteResponse").msgclass
     SdkVolumeInspectRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeInspectRequest").msgclass
     SdkVolumeInspectResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeInspectResponse").msgclass
+    SdkVolumeSetRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeSetRequest").msgclass
+    SdkVolumeSetResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeSetResponse").msgclass
     SdkVolumeEnumerateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeEnumerateRequest").msgclass
     SdkVolumeEnumerateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeEnumerateResponse").msgclass
     SdkVolumeSnapshotCreateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeSnapshotCreateRequest").msgclass
