@@ -9,6 +9,7 @@ _tmp
 *.swl
 *.swm
 *.swn
+.idea
 .starscope.db
 cscope.out
 cmd/osd-sanity/osd-sanity
