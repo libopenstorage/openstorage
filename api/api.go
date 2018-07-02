@@ -752,14 +752,15 @@ func (b *CloudBackupInfo) ToSdkCloudBackupInfo() *SdkCloudBackupInfo {
 }
 
 func (r *CloudBackupEnumerateResponse) ToSdkCloudBackupEnumerateResponse() *SdkCloudBackupEnumerateResponse {
-	ids := make([]string, len(r.Backups))
-	for i, backup := range r.Backups {
-		ids[i] = backup.ID
+	resp := &SdkCloudBackupEnumerateResponse{
+		Backups: make([]*SdkCloudBackupInfo, len(r.Backups)),
 	}
 
-	return &SdkCloudBackupEnumerateResponse{
-		BackupIds: ids,
+	for i, v := range r.Backups {
+		resp.Backups[i] = v.ToSdkCloudBackupInfo()
 	}
+
+	return resp
 }
 
 func CloudBackupOpTypeToSdkCloudBackupOpType(t CloudBackupOpType) SdkCloudBackupOpType {

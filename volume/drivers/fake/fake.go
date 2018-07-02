@@ -74,10 +74,10 @@ type fakeSchedules struct {
 }
 
 func Init(params map[string]string) (volume.VolumeDriver, error) {
-	return new(params)
+	return newFakeDriver(params)
 }
 
-func new(params map[string]string) (*driver, error) {
+func newFakeDriver(params map[string]string) (*driver, error) {
 
 	// This instance of the KVDB is Always in memory and created for each instance of the fake driver
 	// It is not necessary to run a single instance, and it helps tests create a new kvdb on each test
@@ -247,16 +247,54 @@ func (d *driver) Detach(volumeID string, options map[string]string) error {
 }
 
 func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
-	if spec != nil {
-		return volume.ErrNotSupported
-	}
 	v, err := d.GetVol(volumeID)
 	if err != nil {
 		return err
 	}
+
+	// Set locator
 	if locator != nil {
-		v.Locator = locator
+		if len(locator.GetName()) != 0 {
+			v.Locator.Name = locator.GetName()
+		}
+
+		if len(locator.GetVolumeLabels()) != 0 {
+			volumeLabels := v.GetLocator().GetVolumeLabels()
+			if volumeLabels == nil {
+				volumeLabels = locator.GetVolumeLabels()
+			} else {
+				for key, val := range locator.GetVolumeLabels() {
+					if len(val) == 0 {
+						delete(volumeLabels, key)
+					} else {
+						volumeLabels[key] = val
+					}
+				}
+			}
+			v.Locator.VolumeLabels = volumeLabels
+		}
 	}
+
+	// Set Spec
+	if spec != nil {
+		if spec.Size != 0 {
+			v.Spec.Size = spec.Size
+		}
+		if spec.HaLevel > 0 && spec.HaLevel < 4 {
+			v.Spec.HaLevel = spec.HaLevel
+		}
+		if spec.GetReplicaSet() != nil {
+			v.Spec.ReplicaSet = spec.GetReplicaSet()
+		}
+		v.Spec.Scale = spec.Scale
+		v.Spec.Sticky = spec.Sticky
+		v.Spec.Shared = spec.Shared
+		v.Spec.Sharedv4 = spec.Sharedv4
+		v.Spec.Journal = spec.Journal
+		v.Spec.SnapshotInterval = spec.SnapshotInterval
+		v.Spec.IoProfile = spec.IoProfile
+	}
+
 	return d.UpdateVol(v)
 }
 

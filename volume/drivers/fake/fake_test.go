@@ -153,7 +153,7 @@ func testInitForCloudBackups(t *testing.T, d *driver) (string, *api.CloudBackupC
 }
 
 func TestFakeCloudBackupRestore(t *testing.T) {
-	d, err := new(map[string]string{})
+	d, err := newFakeDriver(map[string]string{})
 	assert.NoError(t, err)
 
 	backupId, createReq, origvol := testInitForCloudBackups(t, d)
@@ -175,7 +175,7 @@ func TestFakeCloudBackupRestore(t *testing.T) {
 }
 
 func TestFakeCloudBackupDelete(t *testing.T) {
-	d, err := new(map[string]string{})
+	d, err := newFakeDriver(map[string]string{})
 	assert.NoError(t, err)
 
 	backupId, createReq, _ := testInitForCloudBackups(t, d)
@@ -193,7 +193,7 @@ func TestFakeCloudBackupDelete(t *testing.T) {
 }
 
 func TestFakeCloudBackupEnumerateWithoutMatches(t *testing.T) {
-	d, err := new(map[string]string{})
+	d, err := newFakeDriver(map[string]string{})
 	assert.NoError(t, err)
 
 	numbackups := 50
@@ -213,7 +213,7 @@ func TestFakeCloudBackupEnumerateWithoutMatches(t *testing.T) {
 }
 
 func TestFakeCloudBackupEnumerateMatchingVolumes(t *testing.T) {
-	d, err := new(map[string]string{})
+	d, err := newFakeDriver(map[string]string{})
 	assert.NoError(t, err)
 
 	numbackups := 50
@@ -235,7 +235,7 @@ func TestFakeCloudBackupEnumerateMatchingVolumes(t *testing.T) {
 }
 
 func TestFakeCloudBackupDeleteAllWithoutMatches(t *testing.T) {
-	d, err := new(map[string]string{})
+	d, err := newFakeDriver(map[string]string{})
 	assert.NoError(t, err)
 
 	numbackups := 50
@@ -271,7 +271,7 @@ func TestFakeCloudBackupDeleteAllWithoutMatches(t *testing.T) {
 }
 
 func TestFakeCloudBackupDeleteAllVolumeIdMatch(t *testing.T) {
-	d, err := new(map[string]string{})
+	d, err := newFakeDriver(map[string]string{})
 	assert.NoError(t, err)
 
 	numbackups := 50
@@ -309,7 +309,7 @@ func TestFakeCloudBackupDeleteAllVolumeIdMatch(t *testing.T) {
 }
 
 func TestFakeCloudBackupStatusWithoutMatches(t *testing.T) {
-	d, err := new(map[string]string{})
+	d, err := newFakeDriver(map[string]string{})
 	assert.NoError(t, err)
 
 	numbackups := 50
@@ -366,7 +366,7 @@ func TestFakeCloudBackupStatusWithoutMatches(t *testing.T) {
 }
 
 func TestFakeCloudBackupStatusWithMatchingVolume(t *testing.T) {
-	d, err := new(map[string]string{})
+	d, err := newFakeDriver(map[string]string{})
 	assert.NoError(t, err)
 
 	numbackups := 50
@@ -408,7 +408,7 @@ func TestFakeCloudBackupStatusWithMatchingVolume(t *testing.T) {
 }
 
 func TestFakeCloudBackupCatalog(t *testing.T) {
-	d, err := new(map[string]string{})
+	d, err := newFakeDriver(map[string]string{})
 	assert.NoError(t, err)
 
 	backupId, createReq, _ := testInitForCloudBackups(t, d)
@@ -428,7 +428,7 @@ func TestFakeCloudBackupCatalog(t *testing.T) {
 }
 
 func TestFakeCloudBackupHistoryWithoutMatches(t *testing.T) {
-	d, err := new(map[string]string{})
+	d, err := newFakeDriver(map[string]string{})
 	assert.NoError(t, err)
 
 	numbackups := 50
@@ -454,7 +454,7 @@ func TestFakeCloudBackupHistoryWithoutMatches(t *testing.T) {
 }
 
 func TestFakeCloudBackupHistoryWithMatchingVolume(t *testing.T) {
-	d, err := new(map[string]string{})
+	d, err := newFakeDriver(map[string]string{})
 	assert.NoError(t, err)
 
 	numbackups := 50
@@ -485,7 +485,7 @@ func TestFakeCloudBackupHistoryWithMatchingVolume(t *testing.T) {
 }
 
 func TestFakeCloudBackupStateChange(t *testing.T) {
-	d, err := new(map[string]string{})
+	d, err := newFakeDriver(map[string]string{})
 	assert.NoError(t, err)
 
 	backupId, _, vol := testInitForCloudBackups(t, d)
@@ -572,7 +572,7 @@ func TestFakeCloudBackupStateChange(t *testing.T) {
 }
 
 func TestFakeCloudBackupSchedule(t *testing.T) {
-	d, err := new(map[string]string{})
+	d, err := newFakeDriver(map[string]string{})
 	assert.NoError(t, err)
 
 	_, req, vol := testInitForCloudBackups(t, d)
@@ -602,4 +602,47 @@ func TestFakeCloudBackupSchedule(t *testing.T) {
 	schedules, err = d.CloudBackupSchedEnumerate()
 	assert.NoError(t, err)
 	assert.Empty(t, schedules.Schedules)
+}
+
+func TestFakeSet(t *testing.T) {
+	d, err := newFakeDriver(map[string]string{})
+	assert.NoError(t, err)
+
+	// Create a vol
+	name := "myvol"
+	size := uint64(1234)
+	volid, err := d.Create(&api.VolumeLocator{Name: name}, &api.Source{}, &api.VolumeSpec{
+		Size: size,
+	})
+	assert.NoError(t, err)
+	assert.NotEmpty(t, volid)
+
+	// Set values
+	err = d.Set(volid, &api.VolumeLocator{
+		Name: "newname",
+		VolumeLabels: map[string]string{
+			"hello": "world",
+		},
+	}, &api.VolumeSpec{
+		Size:    9876,
+		HaLevel: 1,
+		Journal: true,
+	})
+	assert.NoError(t, err)
+
+	// Verify
+	vols, err := d.Inspect([]string{volid})
+	assert.NoError(t, err)
+	assert.Len(t, vols, 1)
+	assert.NotNil(t, vols[0])
+
+	locator := vols[0].GetLocator()
+	assert.NotNil(t, locator)
+	assert.Equal(t, locator.GetName(), "newname")
+	assert.Equal(t, locator.GetVolumeLabels()["hello"], "world")
+
+	spec := vols[0].GetSpec()
+	assert.Equal(t, spec.Size, uint64(9876))
+	assert.Equal(t, spec.HaLevel, int64(1))
+	assert.Equal(t, spec.Journal, true)
 }

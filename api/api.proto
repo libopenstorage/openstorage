@@ -1,3 +1,13 @@
+// Please use the following editor setup for this file:
+// Tab size=2; Tabs as spaces; Clean up trailing whitepsace
+//
+// In vim add: au FileType proto setl sw=2 ts=2 expandtab list
+//
+// Note, the documentation provided here for can be created in
+// markdown format plus the use of 'codetabs' are supported. The documentation
+// will then be rendered by github.com/openstoreage/libopenstoreage.github.io and
+// provided on https://libopenstorage.github.io
+//
 syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
@@ -251,7 +261,7 @@ message Group {
 message VolumeSpec {
   // Ephemeral storage
   bool ephemeral = 1;
-  // Size specifies the thin provisioned volume size.
+  // Size specifies the thin provisioned volume size in bytes
   uint64 size = 2;
   // Format specifies the filesystem for this volume.
   FSType format = 3;
@@ -297,6 +307,58 @@ message VolumeSpec {
   bool journal = 25;
   // Sharedv4 is true if this volume can be accessed via sharedv4.
   bool sharedv4 = 26;
+}
+
+// VolumeSpecSet provides a method to set any of the VolumeSpec of an existing volume
+message VolumeSpecSet {
+  // Ephemeral storage
+  oneof ephemeral_opt { bool ephemeral = 1; }
+  // Size specifies the thin provisioned volume size in bytes
+  oneof size_opt { uint64 size = 2; }
+  // Format specifies the filesystem for this volume.
+  oneof format_opt { FSType format = 3; }
+  // BlockSize for the filesystem.
+  oneof block_size_opt { int64 block_size = 4; }
+  // HaLevel specifies the number of copies of data.
+  oneof ha_level_opt { int64 ha_level = 5; }
+  // Cos specifies the relative class of service.
+  oneof cos_opt { CosType cos = 6; }
+  // IoProfile provides a hint about application using this volume.
+  oneof io_profile_opt { IoProfile io_profile = 7; }
+  // Dedupe specifies if the volume data is to be de-duplicated.
+  oneof dedupe_opt { bool dedupe = 8; }
+  // SnapshotInterval in minutes, set to 0 to disable snapshots
+  oneof snapshot_interval_opt { uint32 snapshot_interval = 9; }
+  // VolumeLabels configuration labels
+  map<string, string> volume_labels = 10;
+  // Shared is true if this volume can be remotely accessed.
+  oneof shared_opt { bool shared = 11; }
+  // ReplicaSet is the desired set of nodes for the volume data.
+  ReplicaSet replica_set = 12;
+  // Aggregatiokn level Specifies the number of parts the volume can be aggregated from.
+  oneof aggregation_level_opt { uint32 aggregation_level = 13; }
+  // Encrypted is true if this volume will be cryptographically secured.
+  oneof encrypted_opt { bool encrypted = 14; }
+  // Passphrase for an encrypted volume
+  oneof passphrase_opt { string passphrase = 15; }
+  // SnapshotSchedule a well known string that specifies when snapshots should be taken.
+  oneof snapshot_schedule_opt { string snapshot_schedule = 16; }
+  // Scale allows autocreation of volumes.
+  oneof scale_opt { uint32 scale = 17; }
+  // Sticky volumes cannot be deleted until the flag is removed.
+  oneof sticky_opt { bool sticky = 18; }
+  // Group identifies a consistency group
+  oneof group_opt { Group group = 19; }
+  // GroupEnforced is true if consistency group creation is enforced.
+  oneof group_enforced_opt { bool group_enforced = 20; }
+  // Compressed is true if this volume is to be compressed.
+  oneof compressed_opt { bool compressed = 21; }
+  // Cascaded is true if this volume can be populated on any node from an external source.
+  oneof cascaded_opt { bool cascaded = 22; }
+  // Journal is true if data for the volume goes into the journal.
+  oneof journal_opt { bool journal = 23; }
+  // Sharedv4 is true if this volume can be accessed via sharedv4.
+  oneof sharedv4_opt { bool sharedv4 = 24; }
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
@@ -407,7 +469,7 @@ message Alert {
   ResourceType resource = 7;
   // Cleared Flag
   bool cleared = 8;
-  // TTL in seconds for this Alert
+  // Time-to-live in seconds for this Alert
   uint64 ttl = 9;
   // UniqueTag helps identify a unique alert for a given resouce
   string unique_tag = 10;
@@ -664,20 +726,22 @@ message StorageNode {
   map<string, string> node_labels = 16;
 }
 
-// StorageCluster represents the state of the cluster
+// StorageCluster represents the state and information about the cluster
 message StorageCluster {
   // Status of the cluster
   Status status = 1;
   // Id of the cluster
   string id = 2;
-  // NodeId is the id of the node servicing these requests
+  // The id of the node servicing these requests
   string node_id = 3;
-  // Nodes are a list of all the nodes on the cluster
+  // List of all the node ids in the cluster
   repeated string node_ids = 4;
 }
 
+// OpenStorageCluster service provides the methods to manage the cluster
 service OpenStorageCluster {
-  // Enumerate lists all the nodes in the cluster.
+  // Enumerate returns information about the cluster and the unique ids of
+  // all the nodes in the cluster.
   rpc Enumerate(SdkClusterEnumerateRequest)
     returns (SdkClusterEnumerateResponse) {
       option(google.api.http) = {
@@ -685,7 +749,7 @@ service OpenStorageCluster {
       };
     }
 
-  // Inspect the node given a UUID.
+  // Inspect returns information about the specified node
   rpc Inspect(SdkClusterInspectRequest)
     returns (SdkClusterInspectResponse) {
       option(google.api.http) = {
@@ -693,7 +757,7 @@ service OpenStorageCluster {
       };
     }
 
-  // Get a list of alerts from the storage cluster
+  // AlertEnumerate returns a list of alerts from the storage cluster
   rpc AlertEnumerate(SdkClusterAlertEnumerateRequest)
     returns (SdkClusterAlertEnumerateResponse) {
       option(google.api.http) = {
@@ -702,7 +766,7 @@ service OpenStorageCluster {
       };
     }
 
-  // Clear the alert for a given resource
+  // AlertClear clears the alert for a given resource
   rpc AlertClear(SdkClusterAlertClearRequest)
     returns (SdkClusterAlertClearResponse) {
       option(google.api.http) = {
@@ -711,7 +775,7 @@ service OpenStorageCluster {
       };
     }
 
-  // Erases an alert for a given resource
+  // AlertDelete deletes an alert for all resources
   rpc AlertDelete(SdkClusterAlertDeleteRequest)
     returns (SdkClusterAlertDeleteResponse) {
       option(google.api.http) = {
@@ -720,8 +784,24 @@ service OpenStorageCluster {
     }
 }
 
+// OpenStorageVolume is a service used to manage the volumes of a storage system
 service OpenStorageVolume {
-  // Creates a new volume
+
+  // Create creates a volume according to the specification provided
+  //
+  // ##### Example
+  // {% codetabs name="Golang", type="go" -%}
+  // id, err := client.Create(context.Background(), &api.SdkVolumeCreateRequest{
+  //   Name: "volume-12345-east",
+  //   Spec: &api.VolumeSpec {
+  //     Size: 1234567,
+  //   },
+  // })
+  // {%- language name="Python", type="py" -%}
+  // en_resp = client.Create(api_pb2.SdkVolumeCreateRequest(
+  //   name="volume-12345-east",
+  //   spec=api_pb2.VolumeSpec(size=1234567)))
+  // {%- endcodetabs %}
   rpc Create(SdkVolumeCreateRequest)
     returns (SdkVolumeCreateResponse) {
       option(google.api.http) = {
@@ -730,7 +810,7 @@ service OpenStorageVolume {
       };
     }
 
-  // Clone creates a new volume cloned from an existing volume
+  // Clone creates a new writable volume cloned from an existing volume
   rpc Clone(SdkVolumeCloneRequest)
     returns (SdkVolumeCloneResponse) {
       option(google.api.http) = {
@@ -739,7 +819,7 @@ service OpenStorageVolume {
       };
     }
 
-  // Delete a volume
+  // Delete deletes the provided volume
   rpc Delete(SdkVolumeDeleteRequest)
     returns (SdkVolumeDeleteResponse) {
       option(google.api.http) = {
@@ -747,7 +827,7 @@ service OpenStorageVolume {
       };
     }
 
-  // Get information on a volume
+  // Inspect returns information about a volume
   rpc Inspect(SdkVolumeInspectRequest)
     returns (SdkVolumeInspectResponse) {
       option(google.api.http) = {
@@ -755,7 +835,17 @@ service OpenStorageVolume {
       };
     }
 
-  // Get a list of volumes
+  // Set provides a method for manipulating the specification and attributes of a volume.
+  // Set can be used to resize a volume, update labels, change replica count, and much more.
+  rpc Set(SdkVolumeSetRequest)
+    returns (SdkVolumeSetResponse) {
+      option(google.api.http) = {
+        post: "/v1/volume/set"
+        body: "*"
+      };
+    }
+
+  // Enumerate returns a list of volume ids that match the labels if any are provided.
   rpc Enumerate(SdkVolumeEnumerateRequest)
     returns (SdkVolumeEnumerateResponse) {
       option(google.api.http) = {
@@ -764,7 +854,7 @@ service OpenStorageVolume {
       };
     }
 
-  // Create a snapshot of a volume. This creates an immutable (read-only),
+  // SnapshotCreate creates a snapshot of a volume. This creates an immutable (read-only),
   // point-in-time snapshot of a volume.
   rpc SnapshotCreate(SdkVolumeSnapshotCreateRequest)
     returns (SdkVolumeSnapshotCreateResponse) {
@@ -774,7 +864,7 @@ service OpenStorageVolume {
       };
     }
 
-  // Restores a volume to a specified snapshot
+  // SnapshotRestore restores a volume to a specified snapshot
   rpc SnapshotRestore(SdkVolumeSnapshotRestoreRequest)
     returns (SdkVolumeSnapshotRestoreResponse) {
       option(google.api.http) = {
@@ -783,7 +873,8 @@ service OpenStorageVolume {
       };
     }
 
-  // List the number of snapshots for a specific volume
+  // SnapshotEnumerate returns a list of snapshots for a specific volume
+  // that match the labels provided if any.
   rpc SnapshotEnumerate(SdkVolumeSnapshotEnumerateRequest)
     returns (SdkVolumeSnapshotEnumerateResponse) {
       option(google.api.http) = {
@@ -792,7 +883,9 @@ service OpenStorageVolume {
       };
     }
 
-  // Attach device to host
+  // Attach attaches device to the host that the client is communicating with.
+  // NOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more
+  // information about a new feature to allow attachment to any node.
   rpc Attach(SdkVolumeAttachRequest)
     returns (SdkVolumeAttachResponse) {
       option(google.api.http) = {
@@ -801,7 +894,9 @@ service OpenStorageVolume {
       };
     }
 
-  // Detaches the volume from the node.
+  // Detaches a the volume from the host that the client is communicating with
+  // NOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more
+  // information about a new feature to allow attachment to any node.
   rpc Detach(SdkVolumeDetachRequest)
     returns (SdkVolumeDetachResponse) {
       option(google.api.http) = {
@@ -810,7 +905,9 @@ service OpenStorageVolume {
       };
     }
 
-  // Attaches the volume to a node.
+  // Mount mounts an attached volume in the host that the client is communicating with
+  // NOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more
+  // information about a new feature to allow attachment to any node.
   rpc Mount(SdkVolumeMountRequest)
     returns(SdkVolumeMountResponse) {
       option(google.api.http) = {
@@ -819,7 +916,9 @@ service OpenStorageVolume {
       };
     }
 
-  // Unmount volume at specified path
+  // Unmount unmounts a mounted volume in the host that the client is communicating with
+  // NOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more
+  // information about a new feature to allow attachment to any node.
   rpc Unmount(SdkVolumeUnmountRequest)
       returns(SdkVolumeUnmountResponse) {
       option(google.api.http) = {
@@ -829,8 +928,10 @@ service OpenStorageVolume {
     }
 }
 
+// OpenStorageObjectstore is a service used to manage object store services on volumes
 service OpenStorageObjectstore {
-  // Inspect returns current status of objectstore
+
+  // Inspect returns information about the object store endpoint
   rpc Inspect(SdkObjectstoreInspectRequest)
     returns(SdkObjectstoreInspectResponse){
       option(google.api.http) = {
@@ -838,7 +939,7 @@ service OpenStorageObjectstore {
       };
     }
 
-  // Creates objectstore on specified volume
+  // Creates creates an object store endpoint on specified volume
   rpc Create(SdkObjectstoreCreateRequest)
     returns(SdkObjectstoreCreateResponse){
       option(google.api.http) = {
@@ -847,7 +948,7 @@ service OpenStorageObjectstore {
       };
     }
 
-  // Deletes objectstore by id
+  // Delete destroys the object store endpoint on the volume
   rpc Delete(SdkObjectstoreDeleteRequest)
     returns(SdkObjectstoreDeleteResponse){
       option(google.api.http) = {
@@ -855,7 +956,9 @@ service OpenStorageObjectstore {
       };
     }
 
-  // Updates provided objectstore status
+  // Updates provided objectstore status.
+  // This call can be used to stop and start the server while maintaining the same
+  // object storage id.
   rpc Update(SdkObjectstoreUpdateRequest)
     returns(SdkObjectstoreUpdateResponse){
       option(google.api.http) ={
@@ -865,12 +968,32 @@ service OpenStorageObjectstore {
   }
 }
 
+// OpenStorageCredentials is a service used to manage the cloud credentials
+// which can then be used by the OpenStorageCloudBackup service
 service OpenStorageCredentials {
 
-  // Provide credentials to OpenStorage and if valid,
-  // it will return an identifier to the credentials
-
-  // Create cloud credentials
+  // Create is used to submit cloud credentials. It will return an
+  // id of the credentials once they are verified to work.
+  //
+  // ##### Example
+  // {% codetabs name="Golang", type="go" -%}
+  // id, err := client.Create(context.Background(), &api.SdkCredentialCreateRequest{
+  //   CredentialType: &api.SdkCredentialCreateRequest_AwsCredential{
+  //     AwsCredential: &api.SdkAwsCredentialRequest{
+  //     AccessKey: "dummy-access",
+  //     SecretKey: "dummy-secret",
+  //     Endpoint:  "dummy-endpoint",
+  //     Region:    "dummy-region",
+  //   },
+  // })
+  // {%- language name="Python", type="py" -%}
+  // en_resp = client.Create(api_pb2.SdkCredentialCreateRequest(
+  //   aws_credential=api_pb2.SdkAwsCredentialRequest(
+  //     access_key='dummy-access',
+  //     secret_key='dumm-secret',
+  //     endpoint='dummy-endpoint',
+  //     region='dummy-region')))
+  // {%- endcodetabs %}
   rpc Create(SdkCredentialCreateRequest)
     returns (SdkCredentialCreateResponse) {
       option(google.api.http) = {
@@ -887,7 +1010,7 @@ service OpenStorageCredentials {
       };
     }
 
-  // Inspect returns the information about a credential
+  // Inspect returns the information about a credential, but does not return the secret key.
   rpc Inspect(SdkCredentialInspectRequest)
     returns (SdkCredentialInspectResponse) {
       option(google.api.http) = {
@@ -903,7 +1026,7 @@ service OpenStorageCredentials {
       };
     }
 
-  // Validate a specified credential
+  // Validate is used to validate credentials
   rpc Validate(SdkCredentialValidateRequest)
     returns (SdkCredentialValidateResponse) {
       option(google.api.http) = {
@@ -912,9 +1035,12 @@ service OpenStorageCredentials {
     }
 }
 
+// OpenStorageSchedulePolicy service is used to manage the automated
+// snapshots for a volume
 service OpenStorageSchedulePolicy {
 
-  // Create Schedule Policy for snapshots
+  // Create creates a new snapshot schedule. They can be setup daily,
+  // weekly, or monthly.
   rpc Create(SdkSchedulePolicyCreateRequest)
     returns (SdkSchedulePolicyCreateResponse) {
       option(google.api.http) = {
@@ -923,15 +1049,16 @@ service OpenStorageSchedulePolicy {
       };
     }
 
-  // Update Schedule Policy
+  // Update a snapshot schedule
   rpc Update(SdkSchedulePolicyUpdateRequest)
     returns (SdkSchedulePolicyUpdateResponse) {
       option(google.api.http) = {
-        post: "/v1/schedulepolicy/update"
+        put: "/v1/schedulepolicy"
         body: "*"
       };
     }
 
+  // Enumerate returns a list of schedules
   rpc Enumerate(SdkSchedulePolicyEnumerateRequest)
     returns (SdkSchedulePolicyEnumerateResponse) {
       option(google.api.http) = {
@@ -939,7 +1066,7 @@ service OpenStorageSchedulePolicy {
       };
     }
 
-  // Inspect Schedule Policy
+  // Inspect returns information about a specified schedule
   rpc Inspect(SdkSchedulePolicyInspectRequest)
   returns (SdkSchedulePolicyInspectResponse) {
     option(google.api.http) = {
@@ -947,7 +1074,7 @@ service OpenStorageSchedulePolicy {
     };
   }
 
-  // Delete Schedule Policy
+  // Delete removes a snapshot schedule
   rpc Delete(SdkSchedulePolicyDeleteRequest)
     returns (SdkSchedulePolicyDeleteResponse) {
       option(google.api.http) = {
@@ -956,9 +1083,13 @@ service OpenStorageSchedulePolicy {
     }
 }
 
+// OpenStorageCloudBackup service manages backing up volumes to a cloud
+// location like Amazon, Google, or Azure.
 service OpenStorageCloudBackup {
 
-  // Create
+  // Creates a backup request for a specified volume. Use
+  // OpenStorageCloudBackup.Status() to get the current status of the
+  // backup request.
   rpc Create(SdkCloudBackupCreateRequest)
     returns (SdkCloudBackupCreateResponse) {
       option(google.api.http) = {
@@ -967,7 +1098,9 @@ service OpenStorageCloudBackup {
       };
     }
 
-  // Restore
+  // Restore creates a new volume from a backup id. The newly created volume
+  // has an ha_level (number of replicas) of only 1. To increase the number of
+  // replicas, use OpenStorageVolume.Set() to change the ha_level.
   rpc Restore(SdkCloudBackupRestoreRequest)
     returns (SdkCloudBackupRestoreResponse) {
       option(google.api.http) = {
@@ -976,7 +1109,8 @@ service OpenStorageCloudBackup {
       };
     }
 
-  // Delete
+  // Delete deletes a backup stored in the cloud. If the backup is an incremental
+  // backup and other backups are dependent on it, it will not be able to be deleted.
   rpc Delete(SdkCloudBackupDeleteRequest)
     returns (SdkCloudBackupDeleteResponse) {
       option(google.api.http) = {
@@ -984,7 +1118,7 @@ service OpenStorageCloudBackup {
       };
     }
 
-  // DeleteAll
+  // DeleteAll deletes all the backups in the cloud for the specified volume.
   rpc DeleteAll(SdkCloudBackupDeleteAllRequest)
     returns (SdkCloudBackupDeleteAllResponse) {
       option(google.api.http) = {
@@ -993,7 +1127,7 @@ service OpenStorageCloudBackup {
       };
     }
 
-  // Enumerate
+  // Return a list of backups for the specified volume
   rpc Enumerate(SdkCloudBackupEnumerateRequest)
     returns (SdkCloudBackupEnumerateResponse) {
       option(google.api.http) = {
@@ -1001,7 +1135,7 @@ service OpenStorageCloudBackup {
       };
     }
 
-  // Status
+  // Status returns the status of any cloud backups of a volume
   rpc Status(SdkCloudBackupStatusRequest)
     returns (SdkCloudBackupStatusResponse) {
       option(google.api.http) = {
@@ -1009,7 +1143,7 @@ service OpenStorageCloudBackup {
       };
     }
 
-  // Catalog
+  // Catalog returns a list of the contents in the backup
   rpc Catalog(SdkCloudBackupCatalogRequest)
     returns (SdkCloudBackupCatalogResponse) {
       option(google.api.http) = {
@@ -1017,7 +1151,7 @@ service OpenStorageCloudBackup {
       };
     }
 
-  // History
+  // History returns a list of backups for a specified volume
   rpc History(SdkCloudBackupHistoryRequest)
     returns (SdkCloudBackupHistoryResponse) {
       option(google.api.http) = {
@@ -1025,7 +1159,7 @@ service OpenStorageCloudBackup {
       };
     }
 
-  // StateChange
+  // StateChange can be used to stop, pause, and restart a backup
   rpc StateChange(SdkCloudBackupStateChangeRequest)
     returns (SdkCloudBackupStateChangeResponse) {
       option(google.api.http) = {
@@ -1345,6 +1479,30 @@ message SdkVolumeInspectResponse {
   Volume volume = 1;
 }
 
+// This request is used to adjust or set new values in the volume
+message SdkVolumeSetRequest {
+  // Id of the volume to update
+  string volume_id = 1;
+  // Change locator values. Some of these values may not be able to be changed.
+  // New labels will be added to the current volume labels. To delete a label, set the
+  // value of the label to an empty string.
+  VolumeLocator locator = 2;
+  // VolumeSpecSet provides a method to request that certain values
+  // in the VolumeSpec are changed. This is necessary as a separate variable
+  // because values like int and bool in the VolumeSpec cannot be determined
+  // if they are being requested to change in gRPC proto3. Some of these
+  // values may not be able to be changed.
+  // Here are a few examples of actions that can be accomplished using the VolumeSpec.
+  // To resize the volume: Set a new value in spec.size.
+  // To change number of replicas: Adjust spec.ha_level.
+  // To change the I/O Profile: Adjust spec.io_profile.
+  VolumeSpecSet spec = 4;
+}
+
+// The response returns no data
+message SdkVolumeSetResponse {
+}
+
 message SdkVolumeEnumerateRequest {
   // Volumes to match to this locator.
   // If not provided, all volumes will be returned.
@@ -1390,33 +1548,40 @@ message SdkVolumeSnapshotEnumerateResponse {
   repeated string volume_snapshot_ids = 1;
 }
 
+// This request is an empty request
 message SdkClusterEnumerateRequest {
 }
 
+// This response returns information about the cluster
 message SdkClusterEnumerateResponse {
   // Cluster information
   StorageCluster cluster = 1;
 }
 
+// Contains the request when inspecting a node
 message SdkClusterInspectRequest {
   // Id of node to inspect (required)
   string node_id = 1;
 }
 
+// This response contains information about the respective node requested
 message SdkClusterInspectResponse {
   // Node information
   StorageNode node = 1;
 }
 
+// This request contains the information needed to get alerts from
+// the storage system
 message SdkClusterAlertEnumerateRequest {
-  // Start time of alerts (required)
+  // Start time of alerts
   google.protobuf.Timestamp time_start = 1;
-  // End time of alerts (required)
+  // End time of alerts
   google.protobuf.Timestamp time_end = 2;
-  // Type of resource (required)
+  // Type of resource
   ResourceType resource = 3;
 }
 
+// This response provides a list of the alerts at the specified time.
 message SdkClusterAlertEnumerateResponse {
   // Information on the alerts requested
   repeated Alert alerts = 1;
@@ -1560,7 +1725,7 @@ message SdkCloudBackupInfo {
 }
 
 message SdkCloudBackupEnumerateResponse {
-  repeated string backup_ids = 1;
+  repeated SdkCloudBackupInfo backups = 1;
 }
 
 enum SdkCloudBackupOpType {

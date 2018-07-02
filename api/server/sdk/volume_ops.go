@@ -212,7 +212,7 @@ func (s *VolumeServer) Inspect(
 	}
 
 	vols, err := s.driver.Inspect([]string{req.GetVolumeId()})
-	if err != nil {
+	if err != nil || len(vols) < 1 {
 		return nil, status.Errorf(
 			codes.Internal,
 			"Failed to inspect volume %s: %v",
@@ -247,4 +247,149 @@ func (s *VolumeServer) Enumerate(
 	return &api.SdkVolumeEnumerateResponse{
 		VolumeIds: ids,
 	}, nil
+}
+
+// Set will update volume values
+func (s *VolumeServer) Set(
+	ctx context.Context,
+	req *api.SdkVolumeSetRequest,
+) (*api.SdkVolumeSetResponse, error) {
+
+	if len(req.GetVolumeId()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
+	}
+
+	// Get current state
+	resp, err := s.Inspect(ctx, &api.SdkVolumeInspectRequest{
+		VolumeId: req.GetVolumeId(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	spec := s.mergeVolumeSpecs(resp.GetVolume().GetSpec(), req.GetSpec())
+
+	// Send to driver
+	if err := s.driver.Set(req.GetVolumeId(), req.GetLocator(), spec); err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to update volume: %v", err)
+	}
+
+	return &api.SdkVolumeSetResponse{}, nil
+}
+
+func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpecSet) *api.VolumeSpec {
+
+	spec := &api.VolumeSpec{}
+	spec.Shared = setSpecBool(vol.GetShared(), req.GetShared(), req.GetSharedOpt())
+	spec.Sharedv4 = setSpecBool(vol.GetSharedv4(), req.GetSharedv4(), req.GetSharedv4Opt())
+	spec.Sticky = setSpecBool(vol.GetSticky(), req.GetSticky(), req.GetStickyOpt())
+	spec.Compressed = setSpecBool(vol.GetCompressed(), req.GetCompressed(), req.GetCompressedOpt())
+	spec.GroupEnforced = setSpecBool(vol.GetGroupEnforced(), req.GetGroupEnforced(), req.GetGroupEnforcedOpt())
+	spec.Ephemeral = setSpecBool(vol.GetEphemeral(), req.GetEphemeral(), req.GetEphemeralOpt())
+	spec.Encrypted = setSpecBool(vol.GetEncrypted(), req.GetEncrypted(), req.GetEncryptedOpt())
+	spec.Cascaded = setSpecBool(vol.GetCascaded(), req.GetCascaded(), req.GetCascadedOpt())
+	spec.Journal = setSpecBool(vol.GetJournal(), req.GetJournal(), req.GetJournalOpt())
+
+	// Cos
+	if req.GetCosOpt() != nil {
+		spec.Cos = req.GetCos()
+	} else {
+		spec.Cos = vol.GetCos()
+	}
+
+	// Volume configuration labels
+	// If none are provided, send `nil` to the driver
+	spec.VolumeLabels = req.GetVolumeLabels()
+
+	// Aggregation Level
+	if req.GetAggregationLevelOpt() != nil {
+		spec.AggregationLevel = req.GetAggregationLevel()
+	} else {
+		spec.AggregationLevel = vol.GetAggregationLevel()
+	}
+
+	// Passphrase
+	if req.GetPassphraseOpt() != nil {
+		spec.Passphrase = req.GetPassphrase()
+	} else {
+		spec.Passphrase = vol.GetPassphrase()
+	}
+
+	// Snapshot schedule as a string
+	if req.GetSnapshotScheduleOpt() != nil {
+		spec.SnapshotSchedule = req.GetSnapshotSchedule()
+	} else {
+		spec.SnapshotSchedule = vol.GetSnapshotSchedule()
+	}
+
+	// Scale
+	if req.GetScaleOpt() != nil {
+		spec.Scale = req.GetScale()
+	} else {
+		spec.Scale = vol.GetScale()
+	}
+
+	// Snapshot Interval
+	if req.GetSnapshotIntervalOpt() != nil {
+		spec.SnapshotInterval = req.GetSnapshotInterval()
+	} else {
+		spec.SnapshotInterval = vol.GetSnapshotInterval()
+	}
+
+	// Io Profile
+	if req.GetIoProfileOpt() != nil {
+		spec.IoProfile = req.GetIoProfile()
+	} else {
+		spec.IoProfile = vol.GetIoProfile()
+	}
+
+	// FSType / format
+	if req.GetFormatOpt() != nil {
+		spec.Format = req.GetFormat()
+	} else {
+		spec.Format = vol.GetFormat()
+	}
+
+	// GroupID
+	if req.GetGroupOpt() != nil {
+		spec.Group = req.GetGroup()
+	} else {
+		spec.Group = vol.GetGroup()
+	}
+
+	// Group Enforced
+	if req.GetGroupEnforcedOpt() != nil {
+		spec.GroupEnforced = req.GetGroupEnforced()
+	} else {
+		spec.GroupEnforced = vol.GetGroupEnforced()
+	}
+
+	// Size
+	if req.GetSizeOpt() != nil {
+		spec.Size = req.GetSize()
+	} else {
+		spec.Size = vol.GetSize()
+	}
+
+	// ReplicaSet
+	if req.GetReplicaSet() != nil {
+		spec.ReplicaSet = req.GetReplicaSet()
+	} else {
+		spec.ReplicaSet = vol.GetReplicaSet()
+	}
+
+	// HA Level
+	if req.GetHaLevelOpt() != nil {
+		spec.HaLevel = req.GetHaLevel()
+	} else {
+		spec.HaLevel = vol.GetHaLevel()
+	}
+
+	return spec
+}
+
+func setSpecBool(current, req bool, reqSet interface{}) bool {
+	if reqSet != nil {
+		return req
+	}
+	return current
 }
