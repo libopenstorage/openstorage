@@ -82,6 +82,18 @@ $(OSDSANITY)-install:
 $(OSDSANITY)-clean:
 	@$(MAKE) -C cmd/osd-sanity clean
 
+docker-build-proto:
+	docker build -t openstorage/osd-proto -f Dockerfile.proto .
+
+docker-proto: docker-build-proto
+	docker run \
+		--privileged \
+		-v $(shell pwd):/go/src/github.com/libopenstorage/openstorage \
+		-e "GOPATH=/go" \
+		-e "PATH=/bin:/usr/bin:/usr/local/bin:/go/bin" \
+		openstorage/osd-proto \
+			make proto
+
 proto:
 ifndef HAS_PROTOC_GEN_GO
 	@echo "Installing protoc-gen-go"
