@@ -42,7 +42,7 @@ To add an API, follow the following steps:
 
 * Create a new API in a service proto file and create its messages.
     * It is **HIGHLY** recommended that you have these messages reviewed _first_ before sending your PR. The easiest way is to create an [Issue](https://github.com/libopenstorage/openstorage/issues/new) with the description of the plan and the proto file API and messages. If not you may have to change all your code in case their is a suggestion on changes to your proto file.
-* Generate the Golang bindings by running: `make proto`.
+* Generate the Golang bindings by running: `make docker-proto`.
 * Add the implementation of the API server interface to the appropriate service file in `api/server/sdk`. You are also welcomed to create new files in that directory which are prefixed by the service name, here is an example: [volume_node_ops.go](https://github.com/libopenstorage/openstorage/blob/master/api/server/sdk/volume_node_ops.go)
 * The implementation should only communicate with the OpenStorage golang interfaces, never the REST API.
 * You _must_ provide unit tests for your changes which utilize either a mock cluster or a mock driver.
