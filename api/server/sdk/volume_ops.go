@@ -248,3 +248,23 @@ func (s *VolumeServer) Enumerate(
 		VolumeIds: ids,
 	}, nil
 }
+
+// Set will update volume values
+func (s *VolumeServer) Set(
+	ctx context.Context,
+	req *api.SdkVolumeSetRequest,
+) (*api.SdkVolumeSetResponse, error) {
+
+	if len(req.GetVolumeId()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
+	}
+
+	// If an unrecognized type was provided just noop
+	if req.GetLocator() != nil || req.GetSpec() != nil {
+		if err := s.driver.Set(req.GetVolumeId(), req.GetLocator(), req.GetSpec()); err != nil {
+			return nil, status.Errorf(codes.Internal, "Failed to update volume: %v", err)
+		}
+	}
+
+	return &api.SdkVolumeSetResponse{}, nil
+}
