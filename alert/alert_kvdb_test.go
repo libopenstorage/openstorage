@@ -6,6 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"encoding/json"
+	"fmt"
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/proto/time"
 	"github.com/portworx/kvdb"
@@ -40,6 +43,7 @@ func TestAll(t *testing.T) {
 	clearWithTTL(t)
 	enumerate(t)
 	watch(t)
+	testKvAlert_RaiseSingleton(t)
 }
 
 func setup(t *testing.T) {
@@ -447,4 +451,44 @@ func watch(t *testing.T) {
 	require.Equal(t, "alert/node/"+strconv.FormatInt(raiseAlertNew.Id, 10), watcherKey, "key mismatch")
 
 	err = kva.Erase(api.ResourceType_RESOURCE_TYPE_NODE, raiseAlertNew.Id)
+}
+
+func testKvAlert_RaiseSingleton(t *testing.T) {
+	alert := new(api.Alert)
+	alert.AlertType = 1
+	alert.ResourceId = "my_resource_id"
+
+	// now raise alerts with same alert type and resource id several times, but it should return the latest one
+	alert.Message = "my message 1"
+	alert.Timestamp = alert.GetTimestamp()
+	if err := kva.RaiseSingleton(alert); err != nil {
+		t.Fatal(err)
+	}
+
+	alert.Message = "my message 2"
+	alert.Timestamp = alert.GetTimestamp()
+	if err := kva.RaiseSingleton(alert); err != nil {
+		t.Fatal(err)
+	}
+
+	alert.Message = "my message 3"
+	alert.Timestamp = alert.GetTimestamp()
+	if err := kva.RaiseSingleton(alert); err != nil {
+		t.Fatal(err)
+	}
+
+	key := fmt.Sprintf("%s_%d", alert.ResourceId, alert.AlertType)
+	kvp, err := kva.GetKvdbInstance().Get(key)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	alertReceived := new(api.Alert)
+	if err := json.Unmarshal(kvp.Value, alertReceived); err != nil {
+		t.Fatal(err)
+	}
+
+	if alert.Message != alertReceived.Message {
+		t.Fatal("expected:", alert.Message, ", received:", alertReceived.Message)
+	}
 }
