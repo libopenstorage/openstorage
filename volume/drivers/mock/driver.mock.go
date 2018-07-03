@@ -121,6 +121,31 @@ func (mr *MockVolumeDriverMockRecorder) CloudBackupEnumerate(arg0 interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloudBackupEnumerate", reflect.TypeOf((*MockVolumeDriver)(nil).CloudBackupEnumerate), arg0)
 }
 
+// CloudBackupGroupCreate mocks base method
+func (m *MockVolumeDriver) CloudBackupGroupCreate(arg0 *api.CloudBackupGroupCreateRequest) error {
+	ret := m.ctrl.Call(m, "CloudBackupGroupCreate", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CloudBackupGroupCreate indicates an expected call of CloudBackupGroupCreate
+func (mr *MockVolumeDriverMockRecorder) CloudBackupGroupCreate(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloudBackupGroupCreate", reflect.TypeOf((*MockVolumeDriver)(nil).CloudBackupGroupCreate), arg0)
+}
+
+// CloudBackupGroupSchedCreate mocks base method
+func (m *MockVolumeDriver) CloudBackupGroupSchedCreate(arg0 *api.CloudBackupGroupSchedCreateRequest) (*api.CloudBackupSchedCreateResponse, error) {
+	ret := m.ctrl.Call(m, "CloudBackupGroupSchedCreate", arg0)
+	ret0, _ := ret[0].(*api.CloudBackupSchedCreateResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CloudBackupGroupSchedCreate indicates an expected call of CloudBackupGroupSchedCreate
+func (mr *MockVolumeDriverMockRecorder) CloudBackupGroupSchedCreate(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloudBackupGroupSchedCreate", reflect.TypeOf((*MockVolumeDriver)(nil).CloudBackupGroupSchedCreate), arg0)
+}
+
 // CloudBackupHistory mocks base method
 func (m *MockVolumeDriver) CloudBackupHistory(arg0 *api.CloudBackupHistoryRequest) (*api.CloudBackupHistoryResponse, error) {
 	ret := m.ctrl.Call(m, "CloudBackupHistory", arg0)

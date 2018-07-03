@@ -256,6 +256,17 @@ type CloudBackupCreateRequest struct {
 	Full bool
 }
 
+type CloudBackupGroupCreateRequest struct {
+	// GroupID indicates backup request for a volumegroup with this group id
+	GroupID string
+	// Labels indicates backup request for a volume group with these labels
+	Labels map[string]string
+	// CredentialUUID is cloud credential to be used for backup
+	CredentialUUID string
+	// Full indicates if full backup is desired even though incremental is possible
+	Full bool
+}
+
 type CloudBackupRestoreRequest struct {
 	// ID is the backup ID being restored
 	ID string
@@ -429,10 +440,30 @@ type CloudBackupScheduleInfo struct {
 	// MaxBackups are the maximum number of backups retained
 	// in cloud.Older backups are deleted
 	MaxBackups uint
+	// GroupID indicates the group of volumes for this cloudbackup schedule
+	GroupID string
+	// Labels indicates a volume group for this cloudsnap schedule
+	Labels map[string]string
 }
 
 type CloudBackupSchedCreateRequest struct {
 	CloudBackupScheduleInfo
+}
+
+type CloudBackupGroupSchedCreateRequest struct {
+	// GroupID indicates the group of volumes for which cloudbackup schedule is
+	// being created
+	GroupID string
+	// Labels indicates a volume group for which this group cloudsnap schedule is
+	// being created. If this is provided GroupId is not needed and vice-versa.
+	Labels map[string]string
+	// CredentialUUID is cloud credential to be used with this schedule
+	CredentialUUID string
+	// Schedule is the frequence of backup
+	Schedule string
+	// MaxBackups are the maximum number of backups retained
+	// in cloud.Older backups are deleted
+	MaxBackups uint
 }
 
 type CloudBackupSchedCreateResponse struct {

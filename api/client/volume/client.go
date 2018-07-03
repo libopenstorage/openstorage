@@ -501,6 +501,18 @@ func (v *volumeClient) CloudBackupCreate(
 	return nil
 }
 
+// CloudBackupGroupCreate uploads snapshots of a volume group to cloud
+func (v *volumeClient) CloudBackupGroupCreate(
+	input *api.CloudBackupGroupCreateRequest,
+) error {
+	req := v.c.Post().Resource(api.OsdBackupPath + "/group").Body(input)
+	response := req.Do()
+	if response.Error() != nil {
+		return response.FormatError()
+	}
+	return nil
+}
+
 // CloudBackupRestore downloads a cloud backup to a newly created volume
 func (v *volumeClient) CloudBackupRestore(
 	input *api.CloudBackupRestoreRequest,
@@ -629,6 +641,24 @@ func (v *volumeClient) CloudBackupSchedCreate(
 ) (*api.CloudBackupSchedCreateResponse, error) {
 	createResponse := &api.CloudBackupSchedCreateResponse{}
 	req := v.c.Post().Resource(api.OsdBackupPath + "/sched").Body(input)
+	response := req.Do()
+	if response.Error() != nil {
+		return nil, response.FormatError()
+	}
+
+	if err := response.Unmarshal(&createResponse); err != nil {
+		return nil, err
+	}
+	return createResponse, nil
+}
+
+// CloudBackupGroupSchedCreate for a volume group creates a schedule to backup
+// volume group to the cloud
+func (v *volumeClient) CloudBackupGroupSchedCreate(
+	input *api.CloudBackupGroupSchedCreateRequest,
+) (*api.CloudBackupSchedCreateResponse, error) {
+	createResponse := &api.CloudBackupSchedCreateResponse{}
+	req := v.c.Post().Resource(api.OsdBackupPath + "/schedgroup").Body(input)
 	response := req.Do()
 	if response.Error() != nil {
 		return nil, response.FormatError()

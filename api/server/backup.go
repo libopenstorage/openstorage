@@ -30,6 +30,29 @@ func (vd *volAPI) cloudBackupCreate(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func (vd *volAPI) cloudBackupGroupCreate(w http.ResponseWriter, r *http.Request) {
+	backupGroupReq := &api.CloudBackupGroupCreateRequest{}
+	method := "cloudBackupGroupCreate"
+
+	if err := json.NewDecoder(r.Body).Decode(backupGroupReq); err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	d, err := vd.getVolDriver(r)
+	if err != nil {
+		notFound(w, r)
+		return
+	}
+
+	err = d.CloudBackupGroupCreate(backupGroupReq)
+	if err != nil {
+		vd.sendError(method, backupGroupReq.GroupID, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
 func (vd *volAPI) cloudBackupRestore(w http.ResponseWriter, r *http.Request) {
 	restoreReq := &api.CloudBackupRestoreRequest{}
 	method := "cloudBackupRestore"
@@ -242,6 +265,28 @@ func (vd *volAPI) cloudBackupSchedCreate(w http.ResponseWriter, r *http.Request)
 	backupSchedResp, err := d.CloudBackupSchedCreate(backupSchedReq)
 	if err != nil {
 		vd.sendError(method, backupSchedReq.SrcVolumeID, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(backupSchedResp)
+}
+
+func (vd *volAPI) cloudBackupGroupSchedCreate(w http.ResponseWriter, r *http.Request) {
+	method := "cloudBackupGroupSchedCreate"
+	backupGroupSchedReq := &api.CloudBackupGroupSchedCreateRequest{}
+	if err := json.NewDecoder(r.Body).Decode(backupGroupSchedReq); err != nil {
+		vd.sendError(method, "", w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	d, err := vd.getVolDriver(r)
+	if err != nil {
+		notFound(w, r)
+		return
+	}
+
+	backupSchedResp, err := d.CloudBackupGroupSchedCreate(backupGroupSchedReq)
+	if err != nil {
+		vd.sendError(method, backupGroupSchedReq.GroupID, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	json.NewEncoder(w).Encode(backupSchedResp)
