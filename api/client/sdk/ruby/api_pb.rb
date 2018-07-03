@@ -398,6 +398,13 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "openstorage.api.SdkVolumeInspectResponse" do
     optional :volume, :message, 1, "openstorage.api.Volume"
   end
+  add_message "openstorage.api.SdkVolumeSetRequest" do
+    optional :volume_id, :string, 1
+    optional :locator, :message, 2, "openstorage.api.VolumeLocator"
+    optional :spec, :message, 3, "openstorage.api.VolumeSpec"
+  end
+  add_message "openstorage.api.SdkVolumeSetResponse" do
+  end
   add_message "openstorage.api.SdkVolumeEnumerateRequest" do
     optional :locator, :message, 1, "openstorage.api.VolumeLocator"
   end
@@ -523,7 +530,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :status, :enum, 6, "openstorage.api.SdkCloudBackupStatusType"
   end
   add_message "openstorage.api.SdkCloudBackupEnumerateResponse" do
-    repeated :backup_ids, :string, 1
+    repeated :backups, :message, 1, "openstorage.api.SdkCloudBackupInfo"
   end
   add_message "openstorage.api.SdkCloudBackupStatus" do
     optional :backup_id, :string, 1
@@ -842,6 +849,8 @@ module Openstorage
     SdkVolumeDeleteResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeDeleteResponse").msgclass
     SdkVolumeInspectRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeInspectRequest").msgclass
     SdkVolumeInspectResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeInspectResponse").msgclass
+    SdkVolumeSetRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeSetRequest").msgclass
+    SdkVolumeSetResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeSetResponse").msgclass
     SdkVolumeEnumerateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeEnumerateRequest").msgclass
     SdkVolumeEnumerateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeEnumerateResponse").msgclass
     SdkVolumeSnapshotCreateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeSnapshotCreateRequest").msgclass
