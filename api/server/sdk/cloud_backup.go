@@ -255,3 +255,71 @@ func (s *CloudBackupServer) StateChange(
 
 	return &api.SdkCloudBackupStateChangeResponse{}, nil
 }
+
+// SchedCreate new schedule for cloud backup
+func (s *CloudBackupServer) SchedCreate(
+	ctx context.Context,
+	req *api.SdkCloudBackupSchedCreateRequest,
+) (*api.SdkCloudBackupSchedCreateResponse, error) {
+
+	if req.GetCloudSchedInfo() == nil {
+		return nil, status.Error(codes.InvalidArgument, "BackupSchedule object cannot be nil")
+	} else if len(req.GetCloudSchedInfo().GetSrcVolumeId()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Must supply source volume id")
+	} else if len(req.GetCloudSchedInfo().GetCredentialUuid()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Must supply credential uuid")
+	} else if req.GetCloudSchedInfo().GetSchedule() == nil ||
+		req.GetCloudSchedInfo().GetSchedule().GetPeriodType() == nil {
+		return nil, status.Error(codes.InvalidArgument, "Must supply Schedule")
+	}
+
+	sched, err := sdkSchedToRetainInternalSpecYamlByte(req.GetCloudSchedInfo().GetSchedule())
+	if err != nil {
+		return nil, err
+	}
+
+	bkpRequest := api.CloudBackupSchedCreateRequest{}
+	bkpRequest.SrcVolumeID = req.GetCloudSchedInfo().GetSrcVolumeId()
+	bkpRequest.CredentialUUID = req.GetCloudSchedInfo().GetCredentialUuid()
+	bkpRequest.Schedule = string(sched)
+	bkpRequest.MaxBackups = uint(req.GetCloudSchedInfo().GetMaxBackups())
+
+	// Create the backup
+	schedResp, err := s.driver.CloudBackupSchedCreate(&bkpRequest)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to create backup: %v", err)
+	}
+
+	return &api.SdkCloudBackupSchedCreateResponse{
+		Uuid: schedResp.UUID,
+	}, nil
+
+}
+
+// SchedDelete cloud backup schedule
+func (s *CloudBackupServer) SchedDelete(
+	ctx context.Context,
+	req *api.SdkCloudBackupSchedDeleteRequest,
+) (*api.SdkCloudBackupSchedDeleteResponse, error) {
+
+	if len(req.GetUuid()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Must provide credential uuid")
+	}
+
+	// Call cloud backup driver function to delete cloud schedule
+	if err := s.driver.CloudBackupSchedDelete(&api.CloudBackupSchedDeleteRequest{
+		UUID: req.GetUuid(),
+	}); err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to delete cloud backuo schedule: %v", err)
+	}
+
+	return &api.SdkCloudBackupSchedDeleteResponse{}, nil
+}
+
+// SchedEnumerate cloud backup schedule
+func (s *CloudBackupServer) SchedEnumerate(
+	ctx context.Context,
+	req *api.SdkCloudBackupSchedEnumerateRequest,
+) (*api.SdkCloudBackupSchedEnumerateResponse, error) {
+	return &api.SdkCloudBackupSchedEnumerateResponse{}, nil
+}

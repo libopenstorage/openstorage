@@ -618,3 +618,119 @@ func TestSdkCloudBackupStateChange(t *testing.T) {
 		assert.NoError(t, err)
 	}
 }
+
+func TestSdkCloudSchedDelete(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	uuid := "uuid-test-1"
+	req := &api.SdkCloudBackupSchedDeleteRequest{
+		Uuid: uuid,
+	}
+
+	// Create response
+	s.MockDriver().
+		EXPECT().
+		CloudBackupSchedDelete(&api.CloudBackupSchedDeleteRequest{
+			UUID: uuid,
+		}).
+		Return(nil).
+		Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageCloudBackupClient(s.Conn())
+
+	// Get info
+	_, err := c.SchedDelete(context.Background(), req)
+	assert.NoError(t, err)
+}
+
+func TestSdkCloudBackupSchedDeleteBadArguments(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	req := &api.SdkCloudBackupSchedDeleteRequest{}
+
+	// Setup client
+	c := api.NewOpenStorageCloudBackupClient(s.Conn())
+
+	// backup id missing
+	_, err := c.SchedDelete(context.Background(), req)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "credential uuid")
+}
+
+func TestSdkCloudBackupSchedCreate(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	testSched := &api.SdkSchedulePolicyInterval{
+		Retain: 1,
+		PeriodType: &api.SdkSchedulePolicyInterval_Daily{
+			Daily: &api.SdkSchedulePolicyIntervalDaily{
+				Hour:   0,
+				Minute: 30,
+			},
+		},
+	}
+	req := &api.SdkCloudBackupSchedCreateRequest{
+		CloudSchedInfo: &api.SdkCloudBackupScheduleInfo{
+			SrcVolumeId:    "test-id",
+			CredentialUuid: "uuid",
+			Schedule:       testSched,
+		},
+	}
+
+	mockReq := api.CloudBackupSchedCreateRequest{}
+	mockReq.SrcVolumeID = req.GetCloudSchedInfo().GetSrcVolumeId()
+	mockReq.CredentialUUID = req.GetCloudSchedInfo().GetCredentialUuid()
+	mockReq.Schedule = "freq: daily\nminute: 30\nretain: 1\n"
+
+	// Create response
+	s.MockDriver().
+		EXPECT().
+		CloudBackupSchedCreate(&mockReq).
+		Return(&api.CloudBackupSchedCreateResponse{}, nil).
+		Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageCloudBackupClient(s.Conn())
+
+	// Get info
+	_, err := c.SchedCreate(context.Background(), req)
+	assert.NoError(t, err)
+}
+
+func TestSdkCloudBackupSchedCreateBadArguments(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	req := &api.SdkCloudBackupCreateRequest{}
+
+	// Setup client
+	c := api.NewOpenStorageCloudBackupClient(s.Conn())
+
+	// volume id missing
+	_, err := c.Create(context.Background(), req)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "volume id")
+
+	// Missing credential uuid
+	req.VolumeId = "id"
+	_, err = c.Create(context.Background(), req)
+	serverError, ok = status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "credential uuid")
+}
