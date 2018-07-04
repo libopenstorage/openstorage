@@ -163,6 +163,12 @@ module Openstorage
         rpc :History, SdkCloudBackupHistoryRequest, SdkCloudBackupHistoryResponse
         # StateChange
         rpc :StateChange, SdkCloudBackupStateChangeRequest, SdkCloudBackupStateChangeResponse
+        # Create Schedule
+        rpc :SchedCreate, SdkCloudBackupSchedCreateRequest, SdkCloudBackupSchedCreateResponse
+        # Delete Schedule
+        rpc :SchedDelete, SdkCloudBackupSchedDeleteRequest, SdkCloudBackupSchedDeleteResponse
+        # Enumerate schedules
+        rpc :SchedEnumerate, SdkCloudBackupSchedEnumerateRequest, SdkCloudBackupSchedEnumerateResponse
       end
 
       Stub = Service.rpc_stub_class

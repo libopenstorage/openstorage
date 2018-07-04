@@ -199,6 +199,72 @@
         ]
       }
     },
+    "/v1/cloudbackup/schedule": {
+      "get": {
+        "summary": "Enumerate schedules",
+        "operationId": "SchedEnumerate",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupSchedEnumerateResponse"
+            }
+          }
+        },
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      },
+      "delete": {
+        "summary": "Delete Schedule",
+        "operationId": "SchedDelete",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupSchedDeleteResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "uuid",
+            "description": "UUID of cloud backup to delete.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      },
+      "post": {
+        "summary": "Create Schedule",
+        "operationId": "SchedCreate",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupSchedCreateResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupSchedCreateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      }
+    },
     "/v1/cloudbackup/statechange": {
       "post": {
         "summary": "StateChange",
@@ -1512,6 +1578,61 @@
         }
       }
     },
+    "apiSdkCloudBackupSchedCreateRequest": {
+      "type": "object",
+      "properties": {
+        "cloud_sched_info": {
+          "$ref": "#/definitions/apiSdkCloudBackupScheduleInfo",
+          "title": "Cloud Backup Schedule info"
+        }
+      }
+    },
+    "apiSdkCloudBackupSchedCreateResponse": {
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "title": "UUID of newly created backup schedule"
+        }
+      }
+    },
+    "apiSdkCloudBackupSchedDeleteResponse": {
+      "type": "object"
+    },
+    "apiSdkCloudBackupSchedEnumerateResponse": {
+      "type": "object",
+      "properties": {
+        "sched_List": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/apiSdkCloudBackupScheduleInfo"
+          },
+          "title": "Returns list of backup schedules"
+        }
+      }
+    },
+    "apiSdkCloudBackupScheduleInfo": {
+      "type": "object",
+      "properties": {
+        "src_volume_id": {
+          "type": "string",
+          "title": "SrcVolumeID is the schedule's source volume"
+        },
+        "credential_uuid": {
+          "type": "string",
+          "title": "CredentialUUID is the cloud credential used with this schedule"
+        },
+        "schedule": {
+          "$ref": "#/definitions/apiSdkSchedulePolicyInterval",
+          "title": "Schedule is the frequence of backup"
+        },
+        "max_backups": {
+          "type": "string",
+          "format": "uint64",
+          "title": "MaxBackups are the maximum number of backups retained\nin cloud.Older backups are deleted"
+        }
+      }
+    },
     "apiSdkCloudBackupStateChangeRequest": {
       "type": "object",
       "properties": {
@@ -2193,33 +2314,11 @@
       },
       "title": "Source is a structure that can be given to a volume\nto seed the volume with data.\nswagger:model"
     },
-    "apiStatus": {
-      "type": "string",
-      "enum": [
-        "STATUS_NONE",
-        "STATUS_INIT",
-        "STATUS_OK",
-        "STATUS_OFFLINE",
-        "STATUS_ERROR",
-        "STATUS_NOT_IN_QUORUM",
-        "STATUS_DECOMMISSION",
-        "STATUS_MAINTENANCE",
-        "STATUS_STORAGE_DOWN",
-        "STATUS_STORAGE_DEGRADED",
-        "STATUS_NEEDS_REBOOT",
-        "STATUS_STORAGE_REBALANCE",
-        "STATUS_STORAGE_DRIVE_REPLACE",
-        "STATUS_NOT_IN_QUORUM_NO_STORAGE",
-        "STATUS_MAX"
-      ],
-      "default": "STATUS_NONE",
-      "title": "- STATUS_MAX: Add statuses before MAX and update the number for MAX"
-    },
     "apiStorageCluster": {
       "type": "object",
       "properties": {
         "status": {
-          "$ref": "#/definitions/apiStatus",
+          "$ref": "#/definitions/openstorageapiStatus",
           "title": "Status of the cluster"
         },
         "id": {
@@ -2283,7 +2382,7 @@
           "title": "Average load (percentage)"
         },
         "status": {
-          "$ref": "#/definitions/apiStatus",
+          "$ref": "#/definitions/openstorageapiStatus",
           "title": "Node status"
         },
         "disks": {
@@ -2738,6 +2837,28 @@
       ],
       "default": "VOLUME_STATUS_NONE",
       "description": "VolumeStatus represents a health status for a volume.\n\n - VOLUME_STATUS_NOT_PRESENT: Volume is not present\n - VOLUME_STATUS_UP: Volume is healthy\n - VOLUME_STATUS_DOWN: Volume is in fail mode\n - VOLUME_STATUS_DEGRADED: Volume is up but with degraded performance\nIn a RAID group, this may indicate a problem with one or more drives"
+    },
+    "openstorageapiStatus": {
+      "type": "string",
+      "enum": [
+        "STATUS_NONE",
+        "STATUS_INIT",
+        "STATUS_OK",
+        "STATUS_OFFLINE",
+        "STATUS_ERROR",
+        "STATUS_NOT_IN_QUORUM",
+        "STATUS_DECOMMISSION",
+        "STATUS_MAINTENANCE",
+        "STATUS_STORAGE_DOWN",
+        "STATUS_STORAGE_DEGRADED",
+        "STATUS_NEEDS_REBOOT",
+        "STATUS_STORAGE_REBALANCE",
+        "STATUS_STORAGE_DRIVE_REPLACE",
+        "STATUS_NOT_IN_QUORUM_NO_STORAGE",
+        "STATUS_MAX"
+      ],
+      "default": "STATUS_NONE",
+      "title": "- STATUS_MAX: Add statuses before MAX and update the number for MAX"
     }
   }
 }

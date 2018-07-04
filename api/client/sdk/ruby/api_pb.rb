@@ -565,6 +565,28 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   end
   add_message "openstorage.api.SdkCloudBackupStateChangeResponse" do
   end
+  add_message "openstorage.api.SdkCloudBackupScheduleInfo" do
+    optional :src_volume_id, :string, 1
+    optional :credential_uuid, :string, 2
+    optional :schedule, :message, 3, "openstorage.api.SdkSchedulePolicyInterval"
+    optional :max_backups, :uint64, 4
+  end
+  add_message "openstorage.api.SdkCloudBackupSchedCreateRequest" do
+    optional :cloud_sched_info, :message, 1, "openstorage.api.SdkCloudBackupScheduleInfo"
+  end
+  add_message "openstorage.api.SdkCloudBackupSchedCreateResponse" do
+    optional :uuid, :string, 1
+  end
+  add_message "openstorage.api.SdkCloudBackupSchedDeleteRequest" do
+    optional :uuid, :string, 1
+  end
+  add_message "openstorage.api.SdkCloudBackupSchedDeleteResponse" do
+  end
+  add_message "openstorage.api.SdkCloudBackupSchedEnumerateRequest" do
+  end
+  add_message "openstorage.api.SdkCloudBackupSchedEnumerateResponse" do
+    map :sched_List, :string, :message, 1, "openstorage.api.SdkCloudBackupScheduleInfo"
+  end
   add_message "openstorage.api.CloudMigrate" do
   end
   add_enum "openstorage.api.CloudMigrate.OperationType" do
@@ -889,6 +911,13 @@ module Openstorage
     SdkCloudBackupHistoryResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupHistoryResponse").msgclass
     SdkCloudBackupStateChangeRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupStateChangeRequest").msgclass
     SdkCloudBackupStateChangeResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupStateChangeResponse").msgclass
+    SdkCloudBackupScheduleInfo = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupScheduleInfo").msgclass
+    SdkCloudBackupSchedCreateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupSchedCreateRequest").msgclass
+    SdkCloudBackupSchedCreateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupSchedCreateResponse").msgclass
+    SdkCloudBackupSchedDeleteRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupSchedDeleteRequest").msgclass
+    SdkCloudBackupSchedDeleteResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupSchedDeleteResponse").msgclass
+    SdkCloudBackupSchedEnumerateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupSchedEnumerateRequest").msgclass
+    SdkCloudBackupSchedEnumerateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkCloudBackupSchedEnumerateResponse").msgclass
     CloudMigrate = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudMigrate").msgclass
     CloudMigrate::OperationType = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudMigrate.OperationType").enummodule
     CloudMigrate::Stage = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CloudMigrate.Stage").enummodule
