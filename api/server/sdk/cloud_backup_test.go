@@ -734,3 +734,53 @@ func TestSdkCloudBackupSchedCreateBadArguments(t *testing.T) {
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
 	assert.Contains(t, serverError.Message(), "credential uuid")
 }
+
+func TestSdkCloudBackupSchedEnumerate(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	req := &api.SdkCloudBackupSchedEnumerateRequest{}
+	schedList := &api.CloudBackupSchedEnumerateResponse{
+		Schedules: map[string]api.CloudBackupScheduleInfo{
+			"test-uuid-1": api.CloudBackupScheduleInfo{
+				SrcVolumeID:    "myid",
+				CredentialUUID: "test-uuid-1",
+				Schedule:       "freq: daily\nminute: 30\nretain: 1\n",
+				MaxBackups:     4,
+			},
+			"test-uuid-2": api.CloudBackupScheduleInfo{
+				SrcVolumeID:    "myid2",
+				CredentialUUID: "test-uuid-1",
+				Schedule:       "freq: daily\nminute: 30\nretain: 1\n",
+				MaxBackups:     3,
+			},
+		},
+	}
+
+	// Create response
+	s.MockDriver().
+		EXPECT().
+		CloudBackupSchedEnumerate().
+		Return(schedList, nil).
+		Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageCloudBackupClient(s.Conn())
+
+	// Get info
+	r, err := c.SchedEnumerate(context.Background(), req)
+	assert.NoError(t, err)
+	assert.NotNil(t, r.GetCloudSchedList())
+	assert.Len(t, r.GetCloudSchedList(), 2)
+
+	// Verify
+	for k, v := range r.GetCloudSchedList() {
+		sched := schedList.Schedules[k]
+		assert.Equal(t, v.GetSrcVolumeId(), sched.SrcVolumeID)
+		assert.Equal(t, v.GetCredentialUuid(), sched.CredentialUUID)
+		assert.Equal(t, v.GetMaxBackups(), uint64(sched.MaxBackups))
+		assert.Equal(t, v.GetSchedule().GetDaily().GetMinute(), int32(30))
+	}
+}

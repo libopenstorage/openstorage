@@ -1034,7 +1034,7 @@ service OpenStorageCloudBackup {
       };
     }
 
-  // Create Schedule
+  // Create cloud backup schedule
   rpc SchedCreate(SdkCloudBackupSchedCreateRequest)
     returns (SdkCloudBackupSchedCreateResponse) {
       option(google.api.http) = {
@@ -1043,15 +1043,15 @@ service OpenStorageCloudBackup {
       };
     }
 
-  // Delete Schedule
+  // Delete cloud backup schedule
   rpc SchedDelete(SdkCloudBackupSchedDeleteRequest)
     returns (SdkCloudBackupSchedDeleteResponse) {
       option(google.api.http) = {
-        delete: "/v1/cloudbackup/schedule"
+        delete: "/v1/cloudbackup/schedule/{uuid}"
       };
     }
 
-  // Enumerate schedules
+  // Enumerate cloud backup schedules
   rpc SchedEnumerate(SdkCloudBackupSchedEnumerateRequest)
     returns (SdkCloudBackupSchedEnumerateResponse) {
       option(google.api.http) = {
@@ -1699,7 +1699,7 @@ message SdkCloudBackupSchedEnumerateRequest{
 
 message SdkCloudBackupSchedEnumerateResponse{
   // Returns list of backup schedules
-  map<string, SdkCloudBackupScheduleInfo> sched_List = 1;
+  map<string, SdkCloudBackupScheduleInfo> cloud_sched_list = 1;
 }
 
 message CloudMigrate {

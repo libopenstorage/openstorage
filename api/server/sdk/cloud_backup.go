@@ -310,7 +310,7 @@ func (s *CloudBackupServer) SchedDelete(
 	if err := s.driver.CloudBackupSchedDelete(&api.CloudBackupSchedDeleteRequest{
 		UUID: req.GetUuid(),
 	}); err != nil {
-		return nil, status.Errorf(codes.Internal, "Failed to delete cloud backuo schedule: %v", err)
+		return nil, status.Errorf(codes.Internal, "Failed to delete cloud backup schedule: %v", err)
 	}
 
 	return &api.SdkCloudBackupSchedDeleteResponse{}, nil
@@ -321,5 +321,40 @@ func (s *CloudBackupServer) SchedEnumerate(
 	ctx context.Context,
 	req *api.SdkCloudBackupSchedEnumerateRequest,
 ) (*api.SdkCloudBackupSchedEnumerateResponse, error) {
-	return &api.SdkCloudBackupSchedEnumerateResponse{}, nil
+	r, err := s.driver.CloudBackupSchedEnumerate()
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to enumerate backups: %v", err)
+	}
+	// since can't import sdk/utils to api because of cyclic import, converting
+	// api.CloudBackupScheduleInfo to api.SdkCloudBackupScheduleInfo
+	return ToSdkCloudBackupSchedEnumerateResponse(r), nil
+}
+
+func ToSdkCloudBackupSchedEnumerateResponse(r *api.CloudBackupSchedEnumerateResponse) *api.SdkCloudBackupSchedEnumerateResponse {
+	resp := &api.SdkCloudBackupSchedEnumerateResponse{
+		CloudSchedList: make(map[string]*api.SdkCloudBackupScheduleInfo),
+	}
+
+	for k, v := range r.Schedules {
+		resp.CloudSchedList[k] = ToSdkCloudBackupdScheduleInfo(v)
+	}
+
+	return resp
+}
+
+func ToSdkCloudBackupdScheduleInfo(s api.CloudBackupScheduleInfo) *api.SdkCloudBackupScheduleInfo {
+
+	schedule, err := retainInternalSpecYamlByteToSdkSched([]byte(s.Schedule))
+	if err != nil {
+		return nil
+	}
+	cloudSched := &api.SdkCloudBackupScheduleInfo{
+		SrcVolumeId:    s.SrcVolumeID,
+		CredentialUuid: s.CredentialUUID,
+		Schedule:       schedule,
+		// Not sure about go and protobuf type conversion, converting to higher type
+		// converting uint to uint64
+		MaxBackups: uint64(s.MaxBackups),
+	}
+	return cloudSched
 }
