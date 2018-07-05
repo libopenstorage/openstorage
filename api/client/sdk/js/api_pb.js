@@ -25123,7 +25123,7 @@ proto.openstorage.api.SdkCloudBackupSchedEnumerateResponse.prototype.toObject = 
  */
 proto.openstorage.api.SdkCloudBackupSchedEnumerateResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    schedListMap: (f = msg.getSchedListMap()) ? f.toObject(includeInstance, proto.openstorage.api.SdkCloudBackupScheduleInfo.toObject) : []
+    cloudSchedListMap: (f = msg.getCloudSchedListMap()) ? f.toObject(includeInstance, proto.openstorage.api.SdkCloudBackupScheduleInfo.toObject) : []
   };
 
   if (includeInstance) {
@@ -25161,7 +25161,7 @@ proto.openstorage.api.SdkCloudBackupSchedEnumerateResponse.deserializeBinaryFrom
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
-      var value = msg.getSchedListMap();
+      var value = msg.getCloudSchedListMap();
       reader.readMessage(value, function(message, reader) {
         jspb.Map.deserializeBinary(message, reader, jspb.BinaryReader.prototype.readString, jspb.BinaryReader.prototype.readMessage, proto.openstorage.api.SdkCloudBackupScheduleInfo.deserializeBinaryFromReader);
          });
@@ -25195,7 +25195,7 @@ proto.openstorage.api.SdkCloudBackupSchedEnumerateResponse.prototype.serializeBi
  */
 proto.openstorage.api.SdkCloudBackupSchedEnumerateResponse.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getSchedListMap(true);
+  f = message.getCloudSchedListMap(true);
   if (f && f.getLength() > 0) {
     f.serializeBinary(1, writer, jspb.BinaryWriter.prototype.writeString, jspb.BinaryWriter.prototype.writeMessage, proto.openstorage.api.SdkCloudBackupScheduleInfo.serializeBinaryToWriter);
   }
@@ -25203,20 +25203,20 @@ proto.openstorage.api.SdkCloudBackupSchedEnumerateResponse.serializeBinaryToWrit
 
 
 /**
- * map<string, SdkCloudBackupScheduleInfo> sched_List = 1;
+ * map<string, SdkCloudBackupScheduleInfo> cloud_sched_list = 1;
  * @param {boolean=} opt_noLazyCreate Do not create the map if
  * empty, instead returning `undefined`
  * @return {!jspb.Map<string,!proto.openstorage.api.SdkCloudBackupScheduleInfo>}
  */
-proto.openstorage.api.SdkCloudBackupSchedEnumerateResponse.prototype.getSchedListMap = function(opt_noLazyCreate) {
+proto.openstorage.api.SdkCloudBackupSchedEnumerateResponse.prototype.getCloudSchedListMap = function(opt_noLazyCreate) {
   return /** @type {!jspb.Map<string,!proto.openstorage.api.SdkCloudBackupScheduleInfo>} */ (
       jspb.Message.getMapField(this, 1, opt_noLazyCreate,
       proto.openstorage.api.SdkCloudBackupScheduleInfo));
 };
 
 
-proto.openstorage.api.SdkCloudBackupSchedEnumerateResponse.prototype.clearSchedListMap = function() {
-  this.getSchedListMap().clear();
+proto.openstorage.api.SdkCloudBackupSchedEnumerateResponse.prototype.clearCloudSchedListMap = function() {
+  this.getCloudSchedListMap().clear();
 };
 
 

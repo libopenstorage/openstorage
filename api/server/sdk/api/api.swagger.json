@@ -215,30 +215,6 @@
           "OpenStorageCloudBackup"
         ]
       },
-      "delete": {
-        "summary": "Delete Schedule",
-        "operationId": "SchedDelete",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkCloudBackupSchedDeleteResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "uuid",
-            "description": "UUID of cloud backup to delete.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "OpenStorageCloudBackup"
-        ]
-      },
       "post": {
         "summary": "Create Schedule",
         "operationId": "SchedCreate",
@@ -258,6 +234,31 @@
             "schema": {
               "$ref": "#/definitions/apiSdkCloudBackupSchedCreateRequest"
             }
+          }
+        ],
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      }
+    },
+    "/v1/cloudbackup/schedule/{uuid}": {
+      "delete": {
+        "summary": "Delete Schedule",
+        "operationId": "SchedDelete",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupSchedDeleteResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "type": "string"
           }
         ],
         "tags": [
@@ -1602,7 +1603,7 @@
     "apiSdkCloudBackupSchedEnumerateResponse": {
       "type": "object",
       "properties": {
-        "sched_List": {
+        "cloud_sched_list": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/apiSdkCloudBackupScheduleInfo"

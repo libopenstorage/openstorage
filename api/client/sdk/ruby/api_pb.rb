@@ -585,7 +585,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "openstorage.api.SdkCloudBackupSchedEnumerateRequest" do
   end
   add_message "openstorage.api.SdkCloudBackupSchedEnumerateResponse" do
-    map :sched_List, :string, :message, 1, "openstorage.api.SdkCloudBackupScheduleInfo"
+    map :cloud_sched_list, :string, :message, 1, "openstorage.api.SdkCloudBackupScheduleInfo"
   end
   add_message "openstorage.api.CloudMigrate" do
   end
