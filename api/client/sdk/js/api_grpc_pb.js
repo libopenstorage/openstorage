@@ -160,6 +160,72 @@ function deserialize_openstorage_api_SdkCloudBackupRestoreResponse(buffer_arg) {
   return api_pb.SdkCloudBackupRestoreResponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_openstorage_api_SdkCloudBackupSchedCreateRequest(arg) {
+  if (!(arg instanceof api_pb.SdkCloudBackupSchedCreateRequest)) {
+    throw new Error('Expected argument of type openstorage.api.SdkCloudBackupSchedCreateRequest');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkCloudBackupSchedCreateRequest(buffer_arg) {
+  return api_pb.SdkCloudBackupSchedCreateRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkCloudBackupSchedCreateResponse(arg) {
+  if (!(arg instanceof api_pb.SdkCloudBackupSchedCreateResponse)) {
+    throw new Error('Expected argument of type openstorage.api.SdkCloudBackupSchedCreateResponse');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkCloudBackupSchedCreateResponse(buffer_arg) {
+  return api_pb.SdkCloudBackupSchedCreateResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkCloudBackupSchedDeleteRequest(arg) {
+  if (!(arg instanceof api_pb.SdkCloudBackupSchedDeleteRequest)) {
+    throw new Error('Expected argument of type openstorage.api.SdkCloudBackupSchedDeleteRequest');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkCloudBackupSchedDeleteRequest(buffer_arg) {
+  return api_pb.SdkCloudBackupSchedDeleteRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkCloudBackupSchedDeleteResponse(arg) {
+  if (!(arg instanceof api_pb.SdkCloudBackupSchedDeleteResponse)) {
+    throw new Error('Expected argument of type openstorage.api.SdkCloudBackupSchedDeleteResponse');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkCloudBackupSchedDeleteResponse(buffer_arg) {
+  return api_pb.SdkCloudBackupSchedDeleteResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkCloudBackupSchedEnumerateRequest(arg) {
+  if (!(arg instanceof api_pb.SdkCloudBackupSchedEnumerateRequest)) {
+    throw new Error('Expected argument of type openstorage.api.SdkCloudBackupSchedEnumerateRequest');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkCloudBackupSchedEnumerateRequest(buffer_arg) {
+  return api_pb.SdkCloudBackupSchedEnumerateRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkCloudBackupSchedEnumerateResponse(arg) {
+  if (!(arg instanceof api_pb.SdkCloudBackupSchedEnumerateResponse)) {
+    throw new Error('Expected argument of type openstorage.api.SdkCloudBackupSchedEnumerateResponse');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkCloudBackupSchedEnumerateResponse(buffer_arg) {
+  return api_pb.SdkCloudBackupSchedEnumerateResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_openstorage_api_SdkCloudBackupStateChangeRequest(arg) {
   if (!(arg instanceof api_pb.SdkCloudBackupStateChangeRequest)) {
     throw new Error('Expected argument of type openstorage.api.SdkCloudBackupStateChangeRequest');
@@ -1390,6 +1456,42 @@ var OpenStorageCloudBackupService = exports.OpenStorageCloudBackupService = {
     requestDeserialize: deserialize_openstorage_api_SdkCloudBackupStateChangeRequest,
     responseSerialize: serialize_openstorage_api_SdkCloudBackupStateChangeResponse,
     responseDeserialize: deserialize_openstorage_api_SdkCloudBackupStateChangeResponse,
+  },
+  // Create Schedule
+  schedCreate: {
+    path: '/openstorage.api.OpenStorageCloudBackup/SchedCreate',
+    requestStream: false,
+    responseStream: false,
+    requestType: api_pb.SdkCloudBackupSchedCreateRequest,
+    responseType: api_pb.SdkCloudBackupSchedCreateResponse,
+    requestSerialize: serialize_openstorage_api_SdkCloudBackupSchedCreateRequest,
+    requestDeserialize: deserialize_openstorage_api_SdkCloudBackupSchedCreateRequest,
+    responseSerialize: serialize_openstorage_api_SdkCloudBackupSchedCreateResponse,
+    responseDeserialize: deserialize_openstorage_api_SdkCloudBackupSchedCreateResponse,
+  },
+  // Delete Schedule
+  schedDelete: {
+    path: '/openstorage.api.OpenStorageCloudBackup/SchedDelete',
+    requestStream: false,
+    responseStream: false,
+    requestType: api_pb.SdkCloudBackupSchedDeleteRequest,
+    responseType: api_pb.SdkCloudBackupSchedDeleteResponse,
+    requestSerialize: serialize_openstorage_api_SdkCloudBackupSchedDeleteRequest,
+    requestDeserialize: deserialize_openstorage_api_SdkCloudBackupSchedDeleteRequest,
+    responseSerialize: serialize_openstorage_api_SdkCloudBackupSchedDeleteResponse,
+    responseDeserialize: deserialize_openstorage_api_SdkCloudBackupSchedDeleteResponse,
+  },
+  // Enumerate schedules
+  schedEnumerate: {
+    path: '/openstorage.api.OpenStorageCloudBackup/SchedEnumerate',
+    requestStream: false,
+    responseStream: false,
+    requestType: api_pb.SdkCloudBackupSchedEnumerateRequest,
+    responseType: api_pb.SdkCloudBackupSchedEnumerateResponse,
+    requestSerialize: serialize_openstorage_api_SdkCloudBackupSchedEnumerateRequest,
+    requestDeserialize: deserialize_openstorage_api_SdkCloudBackupSchedEnumerateRequest,
+    responseSerialize: serialize_openstorage_api_SdkCloudBackupSchedEnumerateResponse,
+    responseDeserialize: deserialize_openstorage_api_SdkCloudBackupSchedEnumerateResponse,
   },
 };
 

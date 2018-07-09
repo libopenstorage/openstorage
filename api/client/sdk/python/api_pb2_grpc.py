@@ -715,6 +715,21 @@ class OpenStorageCloudBackupStub(object):
         request_serializer=api__pb2.SdkCloudBackupStateChangeRequest.SerializeToString,
         response_deserializer=api__pb2.SdkCloudBackupStateChangeResponse.FromString,
         )
+    self.SchedCreate = channel.unary_unary(
+        '/openstorage.api.OpenStorageCloudBackup/SchedCreate',
+        request_serializer=api__pb2.SdkCloudBackupSchedCreateRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkCloudBackupSchedCreateResponse.FromString,
+        )
+    self.SchedDelete = channel.unary_unary(
+        '/openstorage.api.OpenStorageCloudBackup/SchedDelete',
+        request_serializer=api__pb2.SdkCloudBackupSchedDeleteRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkCloudBackupSchedDeleteResponse.FromString,
+        )
+    self.SchedEnumerate = channel.unary_unary(
+        '/openstorage.api.OpenStorageCloudBackup/SchedEnumerate',
+        request_serializer=api__pb2.SdkCloudBackupSchedEnumerateRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkCloudBackupSchedEnumerateResponse.FromString,
+        )
 
 
 class OpenStorageCloudBackupServicer(object):
@@ -784,6 +799,27 @@ class OpenStorageCloudBackupServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
+  def SchedCreate(self, request, context):
+    """Create Schedule
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def SchedDelete(self, request, context):
+    """Delete Schedule
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def SchedEnumerate(self, request, context):
+    """Enumerate schedules
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
 
 def add_OpenStorageCloudBackupServicer_to_server(servicer, server):
   rpc_method_handlers = {
@@ -831,6 +867,21 @@ def add_OpenStorageCloudBackupServicer_to_server(servicer, server):
           servicer.StateChange,
           request_deserializer=api__pb2.SdkCloudBackupStateChangeRequest.FromString,
           response_serializer=api__pb2.SdkCloudBackupStateChangeResponse.SerializeToString,
+      ),
+      'SchedCreate': grpc.unary_unary_rpc_method_handler(
+          servicer.SchedCreate,
+          request_deserializer=api__pb2.SdkCloudBackupSchedCreateRequest.FromString,
+          response_serializer=api__pb2.SdkCloudBackupSchedCreateResponse.SerializeToString,
+      ),
+      'SchedDelete': grpc.unary_unary_rpc_method_handler(
+          servicer.SchedDelete,
+          request_deserializer=api__pb2.SdkCloudBackupSchedDeleteRequest.FromString,
+          response_serializer=api__pb2.SdkCloudBackupSchedDeleteResponse.SerializeToString,
+      ),
+      'SchedEnumerate': grpc.unary_unary_rpc_method_handler(
+          servicer.SchedEnumerate,
+          request_deserializer=api__pb2.SdkCloudBackupSchedEnumerateRequest.FromString,
+          response_serializer=api__pb2.SdkCloudBackupSchedEnumerateResponse.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(

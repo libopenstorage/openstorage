@@ -1033,6 +1033,31 @@ service OpenStorageCloudBackup {
         body: "*"
       };
     }
+
+  // Create cloud backup schedule
+  rpc SchedCreate(SdkCloudBackupSchedCreateRequest)
+    returns (SdkCloudBackupSchedCreateResponse) {
+      option(google.api.http) = {
+        post: "/v1/cloudbackup/schedule"
+        body: "*"
+      };
+    }
+
+  // Delete cloud backup schedule
+  rpc SchedDelete(SdkCloudBackupSchedDeleteRequest)
+    returns (SdkCloudBackupSchedDeleteResponse) {
+      option(google.api.http) = {
+        delete: "/v1/cloudbackup/schedule/{uuid}"
+      };
+    }
+
+  // Enumerate cloud backup schedules
+  rpc SchedEnumerate(SdkCloudBackupSchedEnumerateRequest)
+    returns (SdkCloudBackupSchedEnumerateResponse) {
+      option(google.api.http) = {
+        get: "/v1/cloudbackup/schedule"
+      };
+    }
 }
 
 message SdkSchedulePolicyCreateRequest {
@@ -1636,6 +1661,45 @@ message SdkCloudBackupStateChangeRequest {
 }
 
 message SdkCloudBackupStateChangeResponse {
+}
+
+message SdkCloudBackupScheduleInfo{
+  // SrcVolumeID is the schedule's source volume
+  string src_volume_id = 1;
+  // CredentialUUID is the cloud credential used with this schedule
+  string credential_uuid = 2;
+  // Schedule is the frequence of backup
+  SdkSchedulePolicyInterval schedule = 3;
+  // MaxBackups are the maximum number of backups retained
+  // in cloud.Older backups are deleted
+  uint64 max_backups = 4;
+}
+
+message SdkCloudBackupSchedCreateRequest{
+  // Cloud Backup Schedule info 
+  SdkCloudBackupScheduleInfo cloud_sched_info = 1;
+
+}
+
+message SdkCloudBackupSchedCreateResponse{
+   // UUID of newly created backup schedule
+   string uuid = 1;
+}
+
+message SdkCloudBackupSchedDeleteRequest{
+  // UUID of cloud backup to delete
+  string uuid = 1;
+}
+
+message SdkCloudBackupSchedDeleteResponse{
+}
+
+message SdkCloudBackupSchedEnumerateRequest{
+}
+
+message SdkCloudBackupSchedEnumerateResponse{
+  // Returns list of backup schedules
+  map<string, SdkCloudBackupScheduleInfo> cloud_sched_list = 1;
 }
 
 message CloudMigrate {
