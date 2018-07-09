@@ -20625,7 +20625,7 @@ proto.openstorage.api.SdkCloudBackupCreateResponse.prototype.toObject = function
  */
 proto.openstorage.api.SdkCloudBackupCreateResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    backupId: jspb.Message.getFieldWithDefault(msg, 1, "")
+
   };
 
   if (includeInstance) {
@@ -20662,10 +20662,6 @@ proto.openstorage.api.SdkCloudBackupCreateResponse.deserializeBinaryFromReader =
     }
     var field = reader.getFieldNumber();
     switch (field) {
-    case 1:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setBackupId(value);
-      break;
     default:
       reader.skipField();
       break;
@@ -20695,28 +20691,6 @@ proto.openstorage.api.SdkCloudBackupCreateResponse.prototype.serializeBinary = f
  */
 proto.openstorage.api.SdkCloudBackupCreateResponse.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getBackupId();
-  if (f.length > 0) {
-    writer.writeString(
-      1,
-      f
-    );
-  }
-};
-
-
-/**
- * optional string backup_id = 1;
- * @return {string}
- */
-proto.openstorage.api.SdkCloudBackupCreateResponse.prototype.getBackupId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
-};
-
-
-/** @param {string} value */
-proto.openstorage.api.SdkCloudBackupCreateResponse.prototype.setBackupId = function(value) {
-  jspb.Message.setField(this, 1, value);
 };
 
 

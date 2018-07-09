@@ -484,7 +484,6 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :full, :bool, 3
   end
   add_message "openstorage.api.SdkCloudBackupCreateResponse" do
-    optional :backup_id, :string, 1
   end
   add_message "openstorage.api.SdkCloudBackupRestoreRequest" do
     optional :backup_id, :string, 1

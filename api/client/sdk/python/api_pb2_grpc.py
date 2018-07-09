@@ -800,21 +800,21 @@ class OpenStorageCloudBackupServicer(object):
     raise NotImplementedError('Method not implemented!')
 
   def SchedCreate(self, request, context):
-    """Create Schedule
+    """Create cloud backup schedule
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def SchedDelete(self, request, context):
-    """Delete Schedule
+    """Delete cloud backup schedule
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def SchedEnumerate(self, request, context):
-    """Enumerate schedules
+    """Enumerate cloud backup schedules
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')

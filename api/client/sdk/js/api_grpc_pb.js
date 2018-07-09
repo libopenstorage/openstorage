@@ -1457,7 +1457,7 @@ var OpenStorageCloudBackupService = exports.OpenStorageCloudBackupService = {
     responseSerialize: serialize_openstorage_api_SdkCloudBackupStateChangeResponse,
     responseDeserialize: deserialize_openstorage_api_SdkCloudBackupStateChangeResponse,
   },
-  // Create Schedule
+  // Create cloud backup schedule
   schedCreate: {
     path: '/openstorage.api.OpenStorageCloudBackup/SchedCreate',
     requestStream: false,
@@ -1469,7 +1469,7 @@ var OpenStorageCloudBackupService = exports.OpenStorageCloudBackupService = {
     responseSerialize: serialize_openstorage_api_SdkCloudBackupSchedCreateResponse,
     responseDeserialize: deserialize_openstorage_api_SdkCloudBackupSchedCreateResponse,
   },
-  // Delete Schedule
+  // Delete cloud backup schedule
   schedDelete: {
     path: '/openstorage.api.OpenStorageCloudBackup/SchedDelete',
     requestStream: false,
@@ -1481,7 +1481,7 @@ var OpenStorageCloudBackupService = exports.OpenStorageCloudBackupService = {
     responseSerialize: serialize_openstorage_api_SdkCloudBackupSchedDeleteResponse,
     responseDeserialize: deserialize_openstorage_api_SdkCloudBackupSchedDeleteResponse,
   },
-  // Enumerate schedules
+  // Enumerate cloud backup schedules
   schedEnumerate: {
     path: '/openstorage.api.OpenStorageCloudBackup/SchedEnumerate',
     requestStream: false,
