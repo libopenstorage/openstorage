@@ -52,12 +52,7 @@ func (s *CloudBackupServer) Create(
 		return nil, status.Errorf(codes.Internal, "Failed to create backup: %v", err)
 	}
 
-	return &api.SdkCloudBackupCreateResponse{
-		// TODO: Wait until the CloudBackupCreate API returns an ID. We thought
-		// about using Enumerate to get the ID, but it is dangerous
-		// to guess which id pertains to this exact request.
-		BackupId: "TBD",
-	}, nil
+	return &api.SdkCloudBackupCreateResponse{}, nil
 }
 
 // Restore a backup

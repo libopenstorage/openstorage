@@ -201,7 +201,7 @@
     },
     "/v1/cloudbackup/schedule": {
       "get": {
-        "summary": "Enumerate schedules",
+        "summary": "Enumerate cloud backup schedules",
         "operationId": "SchedEnumerate",
         "responses": {
           "200": {
@@ -216,7 +216,7 @@
         ]
       },
       "post": {
-        "summary": "Create Schedule",
+        "summary": "Create cloud backup schedule",
         "operationId": "SchedCreate",
         "responses": {
           "200": {
@@ -243,7 +243,7 @@
     },
     "/v1/cloudbackup/schedule/{uuid}": {
       "delete": {
-        "summary": "Delete Schedule",
+        "summary": "Delete cloud backup schedule",
         "operationId": "SchedDelete",
         "responses": {
           "200": {
@@ -1462,13 +1462,7 @@
       }
     },
     "apiSdkCloudBackupCreateResponse": {
-      "type": "object",
-      "properties": {
-        "backup_id": {
-          "type": "string",
-          "title": "Id of the backup created"
-        }
-      }
+      "type": "object"
     },
     "apiSdkCloudBackupDeleteAllRequest": {
       "type": "object",

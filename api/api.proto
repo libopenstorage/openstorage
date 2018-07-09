@@ -1490,8 +1490,6 @@ message SdkCloudBackupCreateRequest {
 }
 
 message SdkCloudBackupCreateResponse {
-  // Id of the backup created
-  string backup_id = 1;
 }
 
 message SdkCloudBackupRestoreRequest {
