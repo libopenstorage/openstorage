@@ -1,8 +1,8 @@
-//go:generate mockgen -package=mock -destination=mock/objectstore.mock.go github.com/libopenstorage/openstorage/objectstore ObjectStore
 package objectstore
 
 import (
 	"errors"
+
 	"github.com/libopenstorage/openstorage/api"
 )
 

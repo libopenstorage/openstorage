@@ -5,7 +5,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/libopenstorage/openstorage/cluster"
+	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
+
 	sched "github.com/libopenstorage/openstorage/schedpolicy"
 )
 
@@ -28,7 +29,7 @@ import (
 func (c *clusterApi) schedPolicyEnumerate(w http.ResponseWriter, r *http.Request) {
 	method := "schedPolicyEnumerate"
 
-	inst, err := cluster.Inst()
+	inst, err := clustermanager.Inst()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -73,7 +74,7 @@ func (c *clusterApi) schedPolicyGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inst, err := cluster.Inst()
+	inst, err := clustermanager.Inst()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -118,7 +119,7 @@ func (c *clusterApi) schedPolicyCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inst, err := cluster.Inst()
+	inst, err := clustermanager.Inst()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -161,7 +162,7 @@ func (c *clusterApi) schedPolicyUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inst, err := cluster.Inst()
+	inst, err := clustermanager.Inst()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -204,7 +205,7 @@ func (c *clusterApi) schedPolicyDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inst, err := cluster.Inst()
+	inst, err := clustermanager.Inst()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return

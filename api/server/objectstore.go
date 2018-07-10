@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/libopenstorage/openstorage/cluster"
+	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/objectstore"
 )
 
@@ -38,7 +38,7 @@ func (c *clusterApi) objectStoreInspect(w http.ResponseWriter, r *http.Request) 
 		objstoreID = v[0]
 	}
 
-	inst, err := cluster.Inst()
+	inst, err := clustermanager.Inst()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -83,7 +83,7 @@ func (c *clusterApi) objectStoreCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inst, err := cluster.Inst()
+	inst, err := clustermanager.Inst()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -141,7 +141,7 @@ func (c *clusterApi) objectStoreUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inst, err := cluster.Inst()
+	inst, err := clustermanager.Inst()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -183,7 +183,7 @@ func (c *clusterApi) objectStoreDelete(w http.ResponseWriter, r *http.Request) {
 		objstoreID = v[0]
 	}
 
-	inst, err := cluster.Inst()
+	inst, err := clustermanager.Inst()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return

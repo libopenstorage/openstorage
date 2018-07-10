@@ -14,9 +14,6 @@ import (
 	"github.com/libopenstorage/openstorage/cluster"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	mockcluster "github.com/libopenstorage/openstorage/cluster/mock"
-	mockobject "github.com/libopenstorage/openstorage/objectstore/mock"
-	mocksched "github.com/libopenstorage/openstorage/schedpolicy/mock"
-	mocksecrets "github.com/libopenstorage/openstorage/secrets/mock"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
@@ -39,11 +36,6 @@ type testCluster struct {
 	c       *mockcluster.MockCluster
 	mc      *gomock.Controller
 	oldInst func() (cluster.Cluster, error)
-	// Secrets are not called by MockCluster, have to add MockSecrets
-	sm *mocksecrets.MockSecrets
-	// SchedulePolicy  not called by MockCluster, have to add MockSchedulePolicy
-	sp *mocksched.MockSchedulePolicy
-	os *mockobject.MockObjectStore
 }
 
 func newTestCluster(t *testing.T) *testCluster {
@@ -58,15 +50,6 @@ func newTestCluster(t *testing.T) *testCluster {
 
 	// Create a new mock cluster
 	tester.c = mockcluster.NewMockCluster(tester.mc)
-
-	// Create a new mock Secrets
-	tester.sm = mocksecrets.NewMockSecrets(tester.mc)
-
-	// Create a new mock SchedPolicy
-	tester.sp = mocksched.NewMockSchedulePolicy(tester.mc)
-
-	// Create a new mock ObjectStore
-	tester.os = mockobject.NewMockObjectStore(tester.mc)
 
 	// Override cluster.Inst to return our mock cluster
 	clustermanager.Inst = func() (cluster.Cluster, error) {
@@ -121,12 +104,7 @@ func testRestServer(t *testing.T) (*httptest.Server, *testServer) {
 
 func testClusterServer(t *testing.T) (*httptest.Server, *testCluster) {
 	tc := newTestCluster(t)
-	capi := newClusterAPI(cluster.ClusterServerConfiguration{
-		ConfigSecretManager:      tc.sm,
-		ConfigSchedManager:       tc.sp,
-		ConfigObjectStoreManager: tc.os,
-	},
-	)
+	capi := newClusterAPI()
 	router := mux.NewRouter()
 	// Register all routes from the App
 	for _, route := range capi.Routes() {
@@ -144,17 +122,6 @@ func (c *testCluster) MockCluster() *mockcluster.MockCluster {
 	return c.c
 }
 
-func (c *testCluster) MockClusterSecrets() *mocksecrets.MockSecrets {
-	return c.sm
-}
-
-func (c *testCluster) MockClusterSchedPolicy() *mocksched.MockSchedulePolicy {
-	return c.sp
-}
-
-func (c *testCluster) MockClusterObjectStore() *mockobject.MockObjectStore {
-	return c.os
-}
 func (c *testCluster) Finish() {
 	clustermanager.Inst = c.oldInst
 	c.mc.Finish()

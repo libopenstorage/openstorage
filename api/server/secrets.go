@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/libopenstorage/openstorage/cluster"
+	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/secrets"
 )
 
@@ -36,7 +36,7 @@ func (c *clusterApi) setDefaultSecretKey(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	inst, err := cluster.Inst()
+	inst, err := clustermanager.Inst()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -68,7 +68,7 @@ func (c *clusterApi) setDefaultSecretKey(w http.ResponseWriter, r *http.Request)
 func (c *clusterApi) getDefaultSecretKey(w http.ResponseWriter, r *http.Request) {
 	method := "getDefaultSecretKey"
 
-	inst, err := cluster.Inst()
+	inst, err := clustermanager.Inst()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -114,7 +114,7 @@ func (c *clusterApi) secretsLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inst, err := cluster.Inst()
+	inst, err := clustermanager.Inst()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -172,7 +172,7 @@ func (c *clusterApi) setSecret(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inst, err := cluster.Inst()
+	inst, err := clustermanager.Inst()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -217,7 +217,7 @@ func (c *clusterApi) getSecret(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inst, err := cluster.Inst()
+	inst, err := clustermanager.Inst()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -250,7 +250,7 @@ func (c *clusterApi) getSecret(w http.ResponseWriter, r *http.Request) {
 func (c *clusterApi) secretLoginCheck(w http.ResponseWriter, r *http.Request) {
 	method := "secretLoginCheck"
 
-	inst, err := cluster.Inst()
+	inst, err := clustermanager.Inst()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return

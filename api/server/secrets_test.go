@@ -18,7 +18,7 @@ func TestSecretSetDefaultSecretKeySuccess(t *testing.T) {
 	secretKey := "testkey"
 	overrideFlag := true
 	// mock the cluster secret response
-	tc.MockClusterSecrets().
+	tc.MockCluster().
 		EXPECT().
 		SecretSetDefaultSecretKey(secretKey, overrideFlag).
 		Return(nil)
@@ -44,7 +44,7 @@ func TestSecretSetDefaultSecretKeyFailed(t *testing.T) {
 	secretKey := "testClusterKey"
 	overrideFlag := false
 	// mock the cluster secrets response
-	tc.MockClusterSecrets().
+	tc.MockCluster().
 		EXPECT().
 		SecretSetDefaultSecretKey(secretKey, overrideFlag).
 		Return(fmt.Errorf("Not Implemented"))
@@ -70,7 +70,7 @@ func TestSecretGetDefaultSecretKeySuccess(t *testing.T) {
 
 	defaultSecretTest := "testclusterkeyval"
 	// mock the cluster secrets response
-	tc.MockClusterSecrets().
+	tc.MockCluster().
 		EXPECT().
 		SecretGetDefaultSecretKey().
 		Return(defaultSecretTest, nil)
@@ -95,7 +95,7 @@ func TestSecretGetDefaultSecretKeyFailed(t *testing.T) {
 	defer tc.Finish()
 
 	// mock the cluster secrets response
-	tc.MockClusterSecrets().
+	tc.MockCluster().
 		EXPECT().
 		SecretGetDefaultSecretKey().
 		Return(nil, fmt.Errorf("Not Implemented"))
@@ -123,7 +123,7 @@ func TestGetSuccess(t *testing.T) {
 	secretKey := "testkey"
 	secretValue := "testvalue"
 	// mock the cluster secrets response
-	tc.MockClusterSecrets().
+	tc.MockCluster().
 		EXPECT().
 		SecretGet(secretKey).
 		Return(secretValue, nil)
@@ -149,7 +149,7 @@ func TestSecretGetFailed(t *testing.T) {
 
 	testKey := "testkey"
 	// mock the cluster secrets response
-	tc.MockClusterSecrets().
+	tc.MockCluster().
 		EXPECT().
 		SecretGet(testKey).
 		Return(nil, fmt.Errorf("Not Implemented"))
@@ -177,7 +177,7 @@ func TestSetSuccess(t *testing.T) {
 	secretKey := "testsecretkey"
 	secretValue := "testsecretvalue"
 	// mock the cluster secrets response
-	tc.MockClusterSecrets().
+	tc.MockCluster().
 		EXPECT().
 		SecretSet(secretKey, secretValue).
 		Return(nil)
@@ -202,7 +202,7 @@ func TestSetFailed(t *testing.T) {
 	secretKey := "testsecretkey"
 	secretValue := "testsecretvalue"
 	// mock the cluster secrets response
-	tc.MockClusterSecrets().
+	tc.MockCluster().
 		EXPECT().
 		SecretSet(secretKey, secretValue).
 		Return(fmt.Errorf("Not Implemented"))
@@ -228,7 +228,7 @@ func TestVerifySuccess(t *testing.T) {
 	defer tc.Finish()
 
 	// mock the cluster secrets response
-	tc.MockClusterSecrets().
+	tc.MockCluster().
 		EXPECT().
 		SecretCheckLogin().
 		Return(nil)
@@ -252,7 +252,7 @@ func TestVerifyFailed(t *testing.T) {
 	defer tc.Finish()
 
 	// mock the cluster secrets response
-	tc.MockClusterSecrets().
+	tc.MockCluster().
 		EXPECT().
 		SecretCheckLogin().
 		Return(fmt.Errorf("Not Implemented"))
@@ -281,7 +281,7 @@ func TestSecretLoginSuccess(t *testing.T) {
 	secretConfig := make(map[string]string)
 	secretConfig["testconfig1"] = "testconfigdata1"
 	secretConfig["testconfig2"] = "testconfigdata2"
-	tc.MockClusterSecrets().
+	tc.MockCluster().
 		EXPECT().
 		SecretLogin(secretType, secretConfig).
 		Return(nil)
@@ -306,7 +306,7 @@ func TestSecretLoginFailed(t *testing.T) {
 
 	// mock the cluster secrets response
 	secretType := "teststore2"
-	tc.MockClusterSecrets().
+	tc.MockCluster().
 		EXPECT().
 		SecretLogin(secretType, nil).
 		Return(fmt.Errorf("Not Implemented"))
@@ -332,7 +332,7 @@ func TestSecretLoginAccessDenied(t *testing.T) {
 
 	// mock the cluster secrets response
 	secretType := "teststore2"
-	tc.MockClusterSecrets().
+	tc.MockCluster().
 		EXPECT().
 		SecretLogin(secretType, nil).
 		Return(fmt.Errorf("Not authenticated with the secrets endpoint"))
