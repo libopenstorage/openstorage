@@ -23,6 +23,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/portworx/kvdb"
 )
 
 // SnapshotCreate creates a read-only snapshot of a volume
@@ -40,6 +41,12 @@ func (s *VolumeServer) SnapshotCreate(
 		VolumeLabels: req.GetLabels(),
 	})
 	if err != nil {
+		if err == kvdb.ErrNotFound {
+			return nil, status.Errorf(
+				codes.NotFound,
+				"Id %s not found",
+				req.GetVolumeId())
+		}
 		return nil, status.Errorf(codes.Internal, "Failed to create snapshot: %v", err.Error())
 	}
 
@@ -62,6 +69,12 @@ func (s *VolumeServer) SnapshotRestore(
 
 	err := s.driver.Restore(req.GetVolumeId(), req.GetSnapshotId())
 	if err != nil {
+		if err == kvdb.ErrNotFound {
+			return nil, status.Errorf(
+				codes.NotFound,
+				"Id %s or %s not found",
+				req.GetVolumeId(), req.GetSnapshotId())
+		}
 		return nil, status.Errorf(
 			codes.Internal,
 			"Failed to restore volume %s to snapshot %s: %v",

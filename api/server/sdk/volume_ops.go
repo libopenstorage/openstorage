@@ -143,13 +143,8 @@ func (s *VolumeServer) Clone(
 		return nil, status.Error(
 			codes.InvalidArgument,
 			"Must parent volume id")
-	} else if req.GetSpec() == nil {
-		return nil, status.Error(
-			codes.InvalidArgument,
-			"Must supply spec object")
 	}
 
-	spec := req.GetSpec()
 	locator := &api.VolumeLocator{
 		Name: req.GetName(),
 	}
@@ -157,7 +152,16 @@ func (s *VolumeServer) Clone(
 		Parent: req.GetParentId(),
 	}
 
-	id, err := s.create(locator, source, spec)
+	// Get spec. This also checks if the parend id exists.
+	parentVol, err := s.Inspect(ctx, &api.SdkVolumeInspectRequest{
+		VolumeId: req.GetParentId(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Create the clone
+	id, err := s.create(locator, source, parentVol.GetVolume().GetSpec())
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -215,7 +219,7 @@ func (s *VolumeServer) Inspect(
 	vols, err := s.driver.Inspect([]string{req.GetVolumeId()})
 	if err == kvdb.ErrNotFound || (err == nil && len(vols) == 0) {
 		return nil, status.Errorf(
-			codes.InvalidArgument,
+			codes.NotFound,
 			"Volume id %s not found",
 			req.GetVolumeId())
 	} else if err != nil {
@@ -254,11 +258,11 @@ func (s *VolumeServer) Enumerate(
 	}, nil
 }
 
-// Set will update volume values
-func (s *VolumeServer) Set(
+// Update allows the caller to change values in the volume specification
+func (s *VolumeServer) Update(
 	ctx context.Context,
-	req *api.SdkVolumeSetRequest,
-) (*api.SdkVolumeSetResponse, error) {
+	req *api.SdkVolumeUpdateRequest,
+) (*api.SdkVolumeUpdateResponse, error) {
 
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
@@ -278,10 +282,10 @@ func (s *VolumeServer) Set(
 		return nil, status.Errorf(codes.Internal, "Failed to update volume: %v", err)
 	}
 
-	return &api.SdkVolumeSetResponse{}, nil
+	return &api.SdkVolumeUpdateResponse{}, nil
 }
 
-func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpecSet) *api.VolumeSpec {
+func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpecUpdate) *api.VolumeSpec {
 
 	spec := &api.VolumeSpec{}
 	spec.Shared = setSpecBool(vol.GetShared(), req.GetShared(), req.GetSharedOpt())

@@ -21,6 +21,7 @@ import (
 	"context"
 
 	"github.com/libopenstorage/openstorage/cluster"
+	"github.com/portworx/kvdb"
 
 	"github.com/libopenstorage/openstorage/api"
 	"google.golang.org/grpc/codes"
@@ -89,9 +90,15 @@ func (s *SchedulePolicyServer) Update(
 	}
 	err = s.cluster.SchedPolicyUpdate(req.GetSchedulePolicy().GetName(), string(out))
 	if err != nil {
+		if err == kvdb.ErrNotFound {
+			return nil, status.Errorf(
+				codes.NotFound,
+				"Schedule policy %s not found",
+				req.GetSchedulePolicy().GetName())
+		}
 		return nil, status.Errorf(
 			codes.Internal,
-			"failed to update schedule policy: %v",
+			"Failed to update schedule policy: %v",
 			err.Error())
 	}
 
@@ -109,15 +116,14 @@ func (s *SchedulePolicyServer) Delete(
 	}
 
 	err := s.cluster.SchedPolicyDelete(req.GetName())
-
-	if err != nil {
+	if err != nil && err != kvdb.ErrNotFound {
 		return nil, status.Errorf(
 			codes.Internal,
-			"failed to delete schedule policy: %v",
+			"Failed to delete schedule policy: %v",
 			err.Error())
 	}
 
-	return &api.SdkSchedulePolicyDeleteResponse{}, err
+	return &api.SdkSchedulePolicyDeleteResponse{}, nil
 }
 
 // Enumerate method enumerates schedule policies
@@ -131,7 +137,7 @@ func (s *SchedulePolicyServer) Enumerate(
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
-			"failed to enumerate schedule policy: %v",
+			"Failed to enumerate schedule policy: %v",
 			err.Error())
 	}
 	sdkpolicies := []*api.SdkSchedulePolicy{}
@@ -164,9 +170,15 @@ func (s *SchedulePolicyServer) Inspect(
 
 	policy, err := s.cluster.SchedPolicyGet(req.GetName())
 	if err != nil {
+		if err == kvdb.ErrNotFound {
+			return nil, status.Errorf(
+				codes.NotFound,
+				"Schedule policy %s not found",
+				req.GetName())
+		}
 		return nil, status.Errorf(
 			codes.Internal,
-			"failed to inspect schedule policy: %v",
+			"Failed to inspect schedule policy: %v",
 			err.Error())
 	}
 

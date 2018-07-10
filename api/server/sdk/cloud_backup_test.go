@@ -41,9 +41,9 @@ func TestSdkCloudBackupCreate(t *testing.T) {
 	uuid := "uuid"
 	full := false
 	req := &api.SdkCloudBackupCreateRequest{
-		VolumeId:       id,
-		CredentialUuid: uuid,
-		Full:           full,
+		VolumeId:     id,
+		CredentialId: uuid,
+		Full:         full,
 	}
 
 	// Create response
@@ -102,8 +102,8 @@ func TestSdkCloudRestoreCreate(t *testing.T) {
 	id := "myvol"
 	uuid := "uuid"
 	req := &api.SdkCloudBackupRestoreRequest{
-		BackupId:       backupid,
-		CredentialUuid: uuid,
+		BackupId:     backupid,
+		CredentialId: uuid,
 	}
 
 	// Create response
@@ -163,8 +163,8 @@ func TestSdkCloudDeleteCreate(t *testing.T) {
 	backupid := "backupid"
 	uuid := "uuid"
 	req := &api.SdkCloudBackupDeleteRequest{
-		BackupId:       backupid,
-		CredentialUuid: uuid,
+		BackupId:     backupid,
+		CredentialId: uuid,
 	}
 
 	// Create response
@@ -222,8 +222,8 @@ func TestSdkCloudDeleteAllCreate(t *testing.T) {
 	id := "myvol"
 	uuid := "uuid"
 	req := &api.SdkCloudBackupDeleteAllRequest{
-		SrcVolumeId:    id,
-		CredentialUuid: uuid,
+		SrcVolumeId:  id,
+		CredentialId: uuid,
 	}
 
 	// Create response
@@ -282,8 +282,8 @@ func TestSdkCloudBackupEnumerate(t *testing.T) {
 	id := "myvol"
 	uuid := "uuid"
 	req := &api.SdkCloudBackupEnumerateRequest{
-		SrcVolumeId:    id,
-		CredentialUuid: uuid,
+		SrcVolumeId:  id,
+		CredentialId: uuid,
 	}
 
 	list := &api.CloudBackupEnumerateResponse{
@@ -446,8 +446,8 @@ func TestSdkCloudBackupCatalog(t *testing.T) {
 	id := "mybackup"
 	creds := "creds"
 	req := &api.SdkCloudBackupCatalogRequest{
-		BackupId:       id,
-		CredentialUuid: creds,
+		BackupId:     id,
+		CredentialId: creds,
 	}
 	catalog := &api.CloudBackupCatalogResponse{
 		Contents: []string{
@@ -636,7 +636,7 @@ func TestSdkCloudSchedDelete(t *testing.T) {
 
 	uuid := "uuid-test-1"
 	req := &api.SdkCloudBackupSchedDeleteRequest{
-		Uuid: uuid,
+		BackupScheduleId: uuid,
 	}
 
 	// Create response
@@ -691,15 +691,15 @@ func TestSdkCloudBackupSchedCreate(t *testing.T) {
 	}
 	req := &api.SdkCloudBackupSchedCreateRequest{
 		CloudSchedInfo: &api.SdkCloudBackupScheduleInfo{
-			SrcVolumeId:    "test-id",
-			CredentialUuid: "uuid",
-			Schedule:       testSched,
+			SrcVolumeId:  "test-id",
+			CredentialId: "uuid",
+			Schedule:     testSched,
 		},
 	}
 
 	mockReq := api.CloudBackupSchedCreateRequest{}
 	mockReq.SrcVolumeID = req.GetCloudSchedInfo().GetSrcVolumeId()
-	mockReq.CredentialUUID = req.GetCloudSchedInfo().GetCredentialUuid()
+	mockReq.CredentialUUID = req.GetCloudSchedInfo().GetCredentialId()
 	mockReq.Schedule = "freq: daily\nminute: 30\nretain: 1\n"
 
 	// Create response
@@ -788,7 +788,7 @@ func TestSdkCloudBackupSchedEnumerate(t *testing.T) {
 	for k, v := range r.GetCloudSchedList() {
 		sched := schedList.Schedules[k]
 		assert.Equal(t, v.GetSrcVolumeId(), sched.SrcVolumeID)
-		assert.Equal(t, v.GetCredentialUuid(), sched.CredentialUUID)
+		assert.Equal(t, v.GetCredentialId(), sched.CredentialUUID)
 		assert.Equal(t, v.GetMaxBackups(), uint64(sched.MaxBackups))
 		assert.Equal(t, v.GetSchedule().GetDaily().GetMinute(), int32(30))
 	}

@@ -58,6 +58,7 @@ type Server struct {
 
 	restPort             string
 	clusterServer        *ClusterServer
+	nodeServer           *NodeServer
 	volumeServer         *VolumeServer
 	objectstoreServer    *ObjectstoreServer
 	schedulePolicyServer *SchedulePolicyServer
@@ -97,7 +98,10 @@ func New(config *ServerConfig) (*Server, error) {
 		GrpcServer: gServer,
 		restPort:   config.RestPort,
 		clusterServer: &ClusterServer{
-			config.Cluster,
+			cluster: config.Cluster,
+		},
+		nodeServer: &NodeServer{
+			cluster: config.Cluster,
 		},
 		volumeServer: &VolumeServer{
 			driver:      d,
@@ -126,6 +130,7 @@ func (s *Server) Start() error {
 	// Start the gRPC Server
 	err := s.GrpcServer.Start(func(grpcServer *grpc.Server) {
 		api.RegisterOpenStorageClusterServer(grpcServer, s.clusterServer)
+		api.RegisterOpenStorageNodeServer(grpcServer, s.nodeServer)
 		api.RegisterOpenStorageObjectstoreServer(grpcServer, s.objectstoreServer)
 		api.RegisterOpenStorageVolumeServer(grpcServer, s.volumeServer)
 		api.RegisterOpenStorageCredentialsServer(grpcServer, s.credentialServer)
@@ -191,6 +196,15 @@ func (s *Server) restServerSetupHandlers() (*http.ServeMux, error) {
 	// Create a router just for HTTP REST gRPC Server Gateway
 	gmux := runtime.NewServeMux()
 	err := api.RegisterOpenStorageClusterHandlerFromEndpoint(
+		context.Background(),
+		gmux,
+		s.Address(),
+		[]grpc.DialOption{grpc.WithInsecure()})
+	if err != nil {
+		return nil, err
+	}
+
+	err = api.RegisterOpenStorageNodeHandlerFromEndpoint(
 		context.Background(),
 		gmux,
 		s.Address(),
