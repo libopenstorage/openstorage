@@ -380,3 +380,7 @@ func (cl *clusterListener) Join(
 func (cl *clusterListener) String() string {
 	return Name
 }
+
+func (d *driver) Du(volumeID, path string) (map[string]int64, error) {
+	return nil, volume.ErrNotSupported
+}

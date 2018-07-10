@@ -164,3 +164,7 @@ func (v *volumeDriver) Status() [][2]string {
 }
 
 func (v *volumeDriver) Shutdown() {}
+
+func (d *volumeDriver) Du(volumeID, path string) (map[string]int64, error) {
+	return nil, volume.ErrNotSupported
+}

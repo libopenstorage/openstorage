@@ -205,6 +205,8 @@ type ProtoDriver interface {
 	Status() [][2]string
 	// Shutdown and cleanup.
 	Shutdown()
+	// DU specified volume and potentially the subfolder if provided.
+	Du(volumeid, subfolder string) (map[string]int64, error)
 }
 
 // Enumerator provides a set of interfaces to get details on a set of volumes.

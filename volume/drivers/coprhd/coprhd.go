@@ -270,3 +270,7 @@ func (d *driver) getAuthSession() (session *napping.Session, err error) {
 
 	return
 }
+
+func (d *driver) Du(volumeID, path string) (map[string]int64, error) {
+	return nil, volume.ErrNotSupported
+}

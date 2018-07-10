@@ -60,11 +60,19 @@ func (vd *volAPI) getVolDriver(r *http.Request) (volume.VolumeDriver, error) {
 }
 
 func (vd *volAPI) parseID(r *http.Request) (string, error) {
-	vars := mux.Vars(r)
-	if id, ok := vars["id"]; ok {
-		return string(id), nil
+	if id, err := vd.parseParam(r, "id"); err == nil {
+		return id, nil
 	}
+
 	return "", fmt.Errorf("could not parse snap ID")
+}
+
+func (vd *volAPI) parseParam(r *http.Request, param string) (string, error) {
+	vars := mux.Vars(r)
+	if id, ok := vars[param]; ok {
+		return id, nil
+	}
+	return "", fmt.Errorf("could not parse %s", param)
 }
 
 func (vd *volAPI) nodeIPtoIds(nodes []string) ([]string, error) {
@@ -1004,6 +1012,63 @@ func (vd *volAPI) versions(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(versions)
 }
 
+// swagger:operation GET /osd-volumes/{id}/{path} volume inspectVolume
+//
+// DU on volume with specified id.
+// Path is optional and default behaviour is a du on the root of the volume.
+//
+// ---
+// produces:
+// - application/json
+// parameters:
+// - name: id
+//   in: path
+//   description: id to get volume with
+//   required: true
+//   type: integer
+// - name: path
+//   in: path
+//   description: Optional path inside volume to du
+//   required: false
+//   type: string
+// responses:
+//   '200':
+//     description: volume du response
+//     schema:
+//         "$ref": "#/definitions/VolumeDuResponse"
+func (vd *volAPI) du(w http.ResponseWriter, r *http.Request) {
+	var err error
+	var volumeID string
+	var path string
+
+	method := "du"
+	d, err := vd.getVolDriver(r)
+	if err != nil {
+		notFound(w, r)
+		return
+	}
+
+	if volumeID, err = vd.parseParam(r, "id"); err != nil {
+		e := fmt.Errorf("Failed to parse ID: %s", err.Error())
+		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if path, err = vd.parseParam(r, "path"); err != nil {
+		e := fmt.Errorf("Failed to parse Path: %s", err.Error())
+		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+		return
+	}
+
+	dk, err := d.Du(volumeID, path)
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(dk)
+}
+
 func volVersion(route, version string) string {
 	if version == "" {
 		return "/" + route
@@ -1048,6 +1113,7 @@ func (vd *volAPI) Routes() []*Route {
 		{verb: "GET", path: volPath("/requests/{id}", volume.APIVersion), fn: vd.requests},
 		{verb: "POST", path: volPath("/quiesce/{id}", volume.APIVersion), fn: vd.quiesce},
 		{verb: "POST", path: volPath("/unquiesce/{id}", volume.APIVersion), fn: vd.unquiesce},
+		{verb: "GET", path: volPath("/du/{id}/{path}", volume.APIVersion), fn: vd.du},
 		{verb: "POST", path: snapPath("", volume.APIVersion), fn: vd.snap},
 		{verb: "GET", path: snapPath("", volume.APIVersion), fn: vd.snapEnumerate},
 		{verb: "POST", path: snapPath("/restore/{id}", volume.APIVersion), fn: vd.restore},

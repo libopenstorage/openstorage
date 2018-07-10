@@ -184,3 +184,7 @@ func (d *driver) Alerts(volumeID string) (*api.Alerts, error) {
 }
 
 func (d *driver) Shutdown() {}
+
+func (d *driver) Du(volumeID, path string) (map[string]int64, error) {
+	return nil, volume.ErrNotSupported
+}

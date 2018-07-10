@@ -640,7 +640,7 @@ func (d *driver) CloudBackupHistory(input *api.CloudBackupHistoryRequest) (*api.
 			Status:      string(elem.Status.Status),
 		}
 		i++
-	}
+	} 
 
 	return &api.CloudBackupHistoryResponse{
 		HistoryList: items,
@@ -769,4 +769,8 @@ func (d *driver) CloudBackupSchedEnumerate() (*api.CloudBackupSchedEnumerateResp
 	return &api.CloudBackupSchedEnumerateResponse{
 		Schedules: schedules,
 	}, nil
+}
+
+func (d *driver) Du(volumeID, path string) (map[string]int64, error) {
+	return nil, volume.ErrNotSupported
 }

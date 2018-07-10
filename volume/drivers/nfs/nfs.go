@@ -559,3 +559,7 @@ func copyDir(source string, dest string) (err error) {
 	}
 	return
 }
+
+func (d *driver) Du(volumeID, path string) (map[string]int64, error) {
+	return nil, volume.ErrNotSupported
+}

@@ -708,3 +708,14 @@ func (v *volumeClient) CloudMigrateStatus() (*api.CloudMigrateStatusResponse, er
 	}
 	return statusResponse, nil
 }
+
+// Du specified volume id and specifically path (if provided)
+func (v *volumeClient) Du(id, path string) (map[string]int64, error) {
+	paths := make(map[string]int64, 0)
+
+	if err := v.c.Get().Resource(volumePath + "/du").Instance(id).Instance(path).Do().Unmarshal(&paths); err != nil {
+		return nil, err
+	}
+
+	return paths, nil
+}

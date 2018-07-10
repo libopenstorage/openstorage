@@ -206,3 +206,7 @@ func (d *driver) Quiesce(
 func (d *driver) Unquiesce(volumeID string) error {
 	return d.fsFreeze(volumeID, false)
 }
+
+func (d *driver) Du(volumeID, path string) (map[string]int64, error) {
+	return nil, volume.ErrNotSupported
+}
