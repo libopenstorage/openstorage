@@ -25,6 +25,7 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/util"
 	"github.com/libopenstorage/openstorage/volume"
+	"github.com/portworx/kvdb"
 )
 
 func (s *VolumeServer) create(
@@ -212,12 +213,16 @@ func (s *VolumeServer) Inspect(
 	}
 
 	vols, err := s.driver.Inspect([]string{req.GetVolumeId()})
-	if err != nil || len(vols) < 1 {
+	if err == kvdb.ErrNotFound || (err == nil && len(vols) == 0) {
+		return nil, status.Errorf(
+			codes.InvalidArgument,
+			"Volume id %s not found",
+			req.GetVolumeId())
+	} else if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
 			"Failed to inspect volume %s: %v",
-			req.GetVolumeId(),
-			err.Error())
+			req.GetVolumeId(), err)
 	}
 
 	return &api.SdkVolumeInspectResponse{

@@ -79,6 +79,38 @@ func TestFakeCredentials(t *testing.T) {
 	assert.Empty(t, creds)
 }
 
+func TestFakeCreateVolume(t *testing.T) {
+	d, err := newFakeDriver(map[string]string{})
+	assert.NoError(t, err)
+
+	vid, err := d.Create(&api.VolumeLocator{
+		Name: "myvol",
+	}, &api.Source{}, &api.VolumeSpec{
+		Size: 1234,
+	})
+	assert.NoError(t, err)
+	assert.NotEmpty(t, vid)
+
+	vols, err := d.Inspect([]string{vid})
+	assert.NoError(t, err)
+	assert.NotNil(t, vols)
+	assert.Len(t, vols, 1)
+	vol := vols[0]
+	assert.Equal(t, "myvol", vol.GetLocator().GetName())
+	assert.Equal(t, uint64(1234), vol.GetSpec().GetSize())
+}
+
+func TestFakeInspect(t *testing.T) {
+	d, err := newFakeDriver(map[string]string{})
+	assert.NoError(t, err)
+
+	v, err := d.Inspect([]string{"asdf"})
+	assert.NotNil(t, err)
+	assert.Error(t, err)
+	assert.Equal(t, err, kvdb.ErrNotFound)
+	assert.Nil(t, v)
+}
+
 func TestFakeCloudBackupCreate(t *testing.T) {
 	d, err := Init(map[string]string{})
 	assert.NoError(t, err)

@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/portworx/kvdb"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -291,6 +292,70 @@ func TestSdkVolumeInspect(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, r.GetVolume())
 	assert.Equal(t, r.GetVolume().GetId(), id)
+}
+
+func TestSdkVolumeInspectKeyNotFound(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	id := "myid"
+	req := &api.SdkVolumeInspectRequest{
+		VolumeId: id,
+	}
+
+	// Setup client
+	c := api.NewOpenStorageVolumeClient(s.Conn())
+
+	// Returns key not found
+	s.MockDriver().
+		EXPECT().
+		Inspect([]string{id}).
+		Return([]*api.Volume{}, kvdb.ErrNotFound).
+		Times(1)
+
+	// Get info
+	_, err := c.Inspect(context.Background(), req)
+	assert.Error(t, err)
+
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "not found")
+
+	// Key not found, err is nil but empty list returned
+	s.MockDriver().
+		EXPECT().
+		Inspect([]string{id}).
+		Return([]*api.Volume{}, nil).
+		Times(1)
+
+	// Get info
+	_, err = c.Inspect(context.Background(), req)
+	assert.Error(t, err)
+
+	serverError, ok = status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "not found")
+
+	// Other error
+	expectedErr := fmt.Errorf("WEIRD ERROR")
+	s.MockDriver().
+		EXPECT().
+		Inspect([]string{id}).
+		Return([]*api.Volume{}, expectedErr).
+		Times(1)
+
+	// Get info
+	_, err = c.Inspect(context.Background(), req)
+	assert.Error(t, err)
+
+	serverError, ok = status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.Internal)
+	assert.Contains(t, serverError.Message(), "WEIRD ERROR")
 }
 
 func TestSdkVolumeEnumerate(t *testing.T) {
