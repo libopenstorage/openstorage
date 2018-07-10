@@ -46,6 +46,19 @@ func (mr *MockVolumeDriverMockRecorder) Attach(arg0, arg1 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Attach", reflect.TypeOf((*MockVolumeDriver)(nil).Attach), arg0, arg1)
 }
 
+// Catalog mocks base method
+func (m *MockVolumeDriver) Catalog(arg0, arg1, arg2 string) (api.CatalogResponse, error) {
+	ret := m.ctrl.Call(m, "Catalog", arg0, arg1, arg2)
+	ret0, _ := ret[0].(api.CatalogResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Catalog indicates an expected call of Catalog
+func (mr *MockVolumeDriverMockRecorder) Catalog(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Catalog", reflect.TypeOf((*MockVolumeDriver)(nil).Catalog), arg0, arg1, arg2)
+}
+
 // CloudBackupCatalog mocks base method
 func (m *MockVolumeDriver) CloudBackupCatalog(arg0 *api.CloudBackupCatalogRequest) (*api.CloudBackupCatalogResponse, error) {
 	ret := m.ctrl.Call(m, "CloudBackupCatalog", arg0)

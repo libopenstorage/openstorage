@@ -101,6 +101,10 @@ const (
 	OptBkupOpState = "OpState"
 	// OptBackupSchedUUID is the UUID of the backup-schedule
 	OptBackupSchedUUID = "BkupSchedUUID"
+	// OptVolumeSubFolder query parameter used to catalog a particular path inside a volume
+	OptCatalogSubFolder = "subfolder"
+	// OptCatalogMaxDepth query parameter used to limit the depth we return
+	OptCatalogMaxDepth = "depth"
 )
 
 // Api clientserver Constants

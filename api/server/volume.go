@@ -60,11 +60,19 @@ func (vd *volAPI) getVolDriver(r *http.Request) (volume.VolumeDriver, error) {
 }
 
 func (vd *volAPI) parseID(r *http.Request) (string, error) {
-	vars := mux.Vars(r)
-	if id, ok := vars["id"]; ok {
-		return string(id), nil
+	if id, err := vd.parseParam(r, "id"); err == nil {
+		return id, nil
 	}
+
 	return "", fmt.Errorf("could not parse snap ID")
+}
+
+func (vd *volAPI) parseParam(r *http.Request, param string) (string, error) {
+	vars := mux.Vars(r)
+	if id, ok := vars[param]; ok {
+		return id, nil
+	}
+	return "", fmt.Errorf("could not parse %s", param)
 }
 
 func (vd *volAPI) nodeIPtoIds(nodes []string) ([]string, error) {
@@ -1004,6 +1012,75 @@ func (vd *volAPI) versions(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(versions)
 }
 
+// swagger:operation GET /osd-volumes/catalog/{id} volume catalogVolume
+//
+// Catalog lists the files and folders on volume with specified id.
+// Path is optional and default the behaviour is a catalog on the root of the volume.
+//
+// ---
+// produces:
+// - application/json
+// parameters:
+// - name: id
+//   in: path
+//   description: id to get volume with
+//   required: true
+//   type: integer
+// - name: subfolder
+//   in: query
+//   description: Optional path inside mount to catalog.
+//   required: false
+//   type: string
+// - name: depth
+//   in: query
+//   description: Folder depth we wish to return, default is all.
+//   required: false
+//   type: string
+// responses:
+//   '200':
+//     description: volume catalog response
+//     schema:
+//       $ref: '#/definitions/CatalogResponse'
+func (vd *volAPI) catalog(w http.ResponseWriter, r *http.Request) {
+	var err error
+	var volumeID string
+	var subfolder string
+	var depth = "0"
+
+	method := "catalog"
+	d, err := vd.getVolDriver(r)
+	if err != nil {
+		fmt.Println("Volume not found")
+		notFound(w, r)
+		return
+	}
+
+	if volumeID, err = vd.parseParam(r, "id"); err != nil {
+		e := fmt.Errorf("Failed to parse ID: %s", err.Error())
+		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+		return
+	}
+
+	params := r.URL.Query()
+	folderParam := params[string(api.OptCatalogSubFolder)]
+	if len(folderParam) > 0 {
+		subfolder = folderParam[0]
+	}
+
+	depthParam := params[string(api.OptCatalogMaxDepth)]
+	if len(depthParam) > 0 {
+		depth = depthParam[0]
+	}
+
+	dk, err := d.Catalog(volumeID, subfolder, depth)
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(dk)
+}
+
 func volVersion(route, version string) string {
 	if version == "" {
 		return "/" + route
@@ -1048,6 +1125,7 @@ func (vd *volAPI) Routes() []*Route {
 		{verb: "GET", path: volPath("/requests/{id}", volume.APIVersion), fn: vd.requests},
 		{verb: "POST", path: volPath("/quiesce/{id}", volume.APIVersion), fn: vd.quiesce},
 		{verb: "POST", path: volPath("/unquiesce/{id}", volume.APIVersion), fn: vd.unquiesce},
+		{verb: "GET", path: volPath("/catalog/{id}", volume.APIVersion), fn: vd.catalog},
 		{verb: "POST", path: snapPath("", volume.APIVersion), fn: vd.snap},
 		{verb: "GET", path: snapPath("", volume.APIVersion), fn: vd.snapEnumerate},
 		{verb: "POST", path: snapPath("/restore/{id}", volume.APIVersion), fn: vd.restore},

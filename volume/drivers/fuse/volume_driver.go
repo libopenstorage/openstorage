@@ -164,3 +164,7 @@ func (v *volumeDriver) Status() [][2]string {
 }
 
 func (v *volumeDriver) Shutdown() {}
+
+func (d *volumeDriver) Catalog(volumeID, path, depth string) (api.CatalogResponse, error) {
+	return api.CatalogResponse{}, volume.ErrNotSupported
+}

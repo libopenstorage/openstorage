@@ -503,3 +503,7 @@ func (d *Driver) Shutdown() {
 func (d *Driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
 	return volume.ErrNotSupported
 }
+
+func (d *Driver) Catalog(volumeID, path, depth string) (api.CatalogResponse, error) {
+	return api.CatalogResponse{}, volume.ErrNotSupported
+}

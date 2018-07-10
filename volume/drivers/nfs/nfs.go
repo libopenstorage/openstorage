@@ -559,3 +559,7 @@ func copyDir(source string, dest string) (err error) {
 	}
 	return
 }
+
+func (d *driver) Catalog(volumeID, path, depth string) (api.CatalogResponse, error) {
+	return api.CatalogResponse{}, volume.ErrNotSupported
+}
