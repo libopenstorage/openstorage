@@ -22,7 +22,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='api.proto',
   package='openstorage.api',
   syntax='proto3',
-  serialized_pb=_b('\n\tapi.proto\x12\x0fopenstorage.api\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1cgoogle/api/annotations.proto\"\xa3\x02\n\x0fStorageResource\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x04path\x18\x02 \x01(\t\x12.\n\x06medium\x18\x03 \x01(\x0e\x32\x1e.openstorage.api.StorageMedium\x12\x0e\n\x06online\x18\x04 \x01(\x08\x12\x0c\n\x04iops\x18\x05 \x01(\x04\x12\x11\n\tseq_write\x18\x06 \x01(\x01\x12\x10\n\x08seq_read\x18\x07 \x01(\x01\x12\x0e\n\x06randRW\x18\x08 \x01(\x01\x12\x0c\n\x04size\x18\t \x01(\x04\x12\x0c\n\x04used\x18\n \x01(\x04\x12\x16\n\x0erotation_speed\x18\x0b \x01(\t\x12-\n\tlast_scan\x18\x0c \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x10\n\x08metadata\x18\r \x01(\x08\"\x8d\x02\n\x0bStoragePool\x12\n\n\x02ID\x18\x01 \x01(\x05\x12%\n\x03\x43os\x18\x02 \x01(\x0e\x32\x18.openstorage.api.CosType\x12.\n\x06Medium\x18\x03 \x01(\x0e\x32\x1e.openstorage.api.StorageMedium\x12\x11\n\tRaidLevel\x18\x04 \x01(\t\x12\x11\n\tTotalSize\x18\x07 \x01(\x04\x12\x0c\n\x04Used\x18\x08 \x01(\x04\x12\x38\n\x06labels\x18\t \x03(\x0b\x32(.openstorage.api.StoragePool.LabelsEntry\x1a-\n\x0bLabelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x9b\x01\n\rVolumeLocator\x12\x0c\n\x04name\x18\x01 \x01(\t\x12G\n\rvolume_labels\x18\x02 \x03(\x0b\x32\x30.openstorage.api.VolumeLocator.VolumeLabelsEntry\x1a\x33\n\x11VolumeLabelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"&\n\x06Source\x12\x0e\n\x06parent\x18\x01 \x01(\t\x12\x0c\n\x04seed\x18\x02 \x01(\t\"\x13\n\x05Group\x12\n\n\x02id\x18\x01 \x01(\t\"\xbf\x05\n\nVolumeSpec\x12\x11\n\tephemeral\x18\x01 \x01(\x08\x12\x0c\n\x04size\x18\x02 \x01(\x04\x12\'\n\x06\x66ormat\x18\x03 \x01(\x0e\x32\x17.openstorage.api.FSType\x12\x12\n\nblock_size\x18\x04 \x01(\x03\x12\x10\n\x08ha_level\x18\x05 \x01(\x03\x12%\n\x03\x63os\x18\x06 \x01(\x0e\x32\x18.openstorage.api.CosType\x12.\n\nio_profile\x18\x07 \x01(\x0e\x32\x1a.openstorage.api.IoProfile\x12\x0e\n\x06\x64\x65\x64upe\x18\x08 \x01(\x08\x12\x19\n\x11snapshot_interval\x18\t \x01(\r\x12\x44\n\rvolume_labels\x18\n \x03(\x0b\x32-.openstorage.api.VolumeSpec.VolumeLabelsEntry\x12\x0e\n\x06shared\x18\x0b \x01(\x08\x12\x30\n\x0breplica_set\x18\x0c \x01(\x0b\x32\x1b.openstorage.api.ReplicaSet\x12\x19\n\x11\x61ggregation_level\x18\r \x01(\r\x12\x11\n\tencrypted\x18\x0e \x01(\x08\x12\x12\n\npassphrase\x18\x0f \x01(\t\x12\x19\n\x11snapshot_schedule\x18\x10 \x01(\t\x12\r\n\x05scale\x18\x11 \x01(\r\x12\x0e\n\x06sticky\x18\x12 \x01(\x08\x12%\n\x05group\x18\x15 \x01(\x0b\x32\x16.openstorage.api.Group\x12\x16\n\x0egroup_enforced\x18\x16 \x01(\x08\x12\x12\n\ncompressed\x18\x17 \x01(\x08\x12\x10\n\x08\x63\x61scaded\x18\x18 \x01(\x08\x12\x0f\n\x07journal\x18\x19 \x01(\x08\x12\x10\n\x08sharedv4\x18\x1a \x01(\x08\x1a\x33\n\x11VolumeLabelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x1b\n\nReplicaSet\x12\r\n\x05nodes\x18\x01 \x03(\t\"\x91\x01\n\x0fRuntimeStateMap\x12I\n\rruntime_state\x18\x01 \x03(\x0b\x32\x32.openstorage.api.RuntimeStateMap.RuntimeStateEntry\x1a\x33\n\x11RuntimeStateEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xf8\x06\n\x06Volume\x12\n\n\x02id\x18\x01 \x01(\t\x12\'\n\x06source\x18\x02 \x01(\x0b\x32\x17.openstorage.api.Source\x12%\n\x05group\x18\x03 \x01(\x0b\x32\x16.openstorage.api.Group\x12\x10\n\x08readonly\x18\x04 \x01(\x08\x12/\n\x07locator\x18\x05 \x01(\x0b\x32\x1e.openstorage.api.VolumeLocator\x12)\n\x05\x63time\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12)\n\x04spec\x18\x07 \x01(\x0b\x32\x1b.openstorage.api.VolumeSpec\x12\r\n\x05usage\x18\x08 \x01(\x04\x12-\n\tlast_scan\x18\t \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\'\n\x06\x66ormat\x18\n \x01(\x0e\x32\x17.openstorage.api.FSType\x12-\n\x06status\x18\x0b \x01(\x0e\x32\x1d.openstorage.api.VolumeStatus\x12+\n\x05state\x18\x0c \x01(\x0e\x32\x1c.openstorage.api.VolumeState\x12\x13\n\x0b\x61ttached_on\x18\r \x01(\t\x12\x34\n\x0e\x61ttached_state\x18\x0e \x01(\x0e\x32\x1c.openstorage.api.AttachState\x12\x13\n\x0b\x64\x65vice_path\x18\x0f \x01(\t\x12\x1a\n\x12secure_device_path\x18\x10 \x01(\t\x12\x13\n\x0b\x61ttach_path\x18\x11 \x03(\t\x12<\n\x0b\x61ttach_info\x18\x12 \x03(\x0b\x32\'.openstorage.api.Volume.AttachInfoEntry\x12\x31\n\x0creplica_sets\x18\x13 \x03(\x0b\x32\x1b.openstorage.api.ReplicaSet\x12\x37\n\rruntime_state\x18\x14 \x03(\x0b\x32 .openstorage.api.RuntimeStateMap\x12\r\n\x05\x65rror\x18\x15 \x01(\t\x12\x39\n\x10volume_consumers\x18\x16 \x03(\x0b\x32\x1f.openstorage.api.VolumeConsumer\x1a\x31\n\x0f\x41ttachInfoEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xbf\x01\n\x05Stats\x12\r\n\x05reads\x18\x01 \x01(\x04\x12\x0f\n\x07read_ms\x18\x02 \x01(\x04\x12\x12\n\nread_bytes\x18\x03 \x01(\x04\x12\x0e\n\x06writes\x18\x04 \x01(\x04\x12\x10\n\x08write_ms\x18\x05 \x01(\x04\x12\x13\n\x0bwrite_bytes\x18\x06 \x01(\x04\x12\x13\n\x0bio_progress\x18\x07 \x01(\x04\x12\r\n\x05io_ms\x18\x08 \x01(\x04\x12\x12\n\nbytes_used\x18\t \x01(\x04\x12\x13\n\x0binterval_ms\x18\n \x01(\x04\"\xcf\x02\n\x05\x41lert\x12\n\n\x02id\x18\x01 \x01(\x03\x12/\n\x08severity\x18\x02 \x01(\x0e\x32\x1d.openstorage.api.SeverityType\x12\x12\n\nalert_type\x18\x03 \x01(\x03\x12\x0f\n\x07message\x18\x04 \x01(\t\x12-\n\ttimestamp\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x13\n\x0bresource_id\x18\x06 \x01(\t\x12/\n\x08resource\x18\x07 \x01(\x0e\x32\x1d.openstorage.api.ResourceType\x12\x0f\n\x07\x63leared\x18\x08 \x01(\x08\x12\x0b\n\x03ttl\x18\t \x01(\x04\x12\x12\n\nunique_tag\x18\n \x01(\t\x12\r\n\x05\x63ount\x18\x0b \x01(\x03\x12.\n\nfirst_seen\x18\x0c \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"/\n\x06\x41lerts\x12%\n\x05\x61lert\x18\x01 \x03(\x0b\x32\x16.openstorage.api.Alert\"\xdd\x01\n\x0fObjectstoreInfo\x12\x0c\n\x04uuid\x18\x01 \x01(\t\x12\x11\n\tvolume_id\x18\x02 \x01(\t\x12\x0f\n\x07\x65nabled\x18\x03 \x01(\x08\x12\x0e\n\x06status\x18\x04 \x01(\t\x12\x0e\n\x06\x61\x63tion\x18\x05 \x01(\x03\x12\x12\n\naccess_key\x18\x06 \x01(\t\x12\x12\n\nsecret_key\x18\x07 \x01(\t\x12\x11\n\tendpoints\x18\x08 \x03(\t\x12\x18\n\x10\x63urrent_endpoint\x18\t \x01(\t\x12\x13\n\x0b\x61\x63\x63\x65ss_port\x18\n \x01(\x03\x12\x0e\n\x06region\x18\x0b \x01(\t\"\x9a\x01\n\x13VolumeCreateRequest\x12/\n\x07locator\x18\x01 \x01(\x0b\x32\x1e.openstorage.api.VolumeLocator\x12\'\n\x06source\x18\x02 \x01(\x0b\x32\x17.openstorage.api.Source\x12)\n\x04spec\x18\x03 \x01(\x0b\x32\x1b.openstorage.api.VolumeSpec\"\x1f\n\x0eVolumeResponse\x12\r\n\x05\x65rror\x18\x01 \x01(\t\"\\\n\x14VolumeCreateResponse\x12\n\n\x02id\x18\x01 \x01(\t\x12\x38\n\x0fvolume_response\x18\x02 \x01(\x0b\x32\x1f.openstorage.api.VolumeResponse\"\xa3\x01\n\x11VolumeStateAction\x12\x32\n\x06\x61ttach\x18\x01 \x01(\x0e\x32\".openstorage.api.VolumeActionParam\x12\x31\n\x05mount\x18\x02 \x01(\x0e\x32\".openstorage.api.VolumeActionParam\x12\x12\n\nmount_path\x18\x03 \x01(\t\x12\x13\n\x0b\x64\x65vice_path\x18\x04 \x01(\t\"\x93\x02\n\x10VolumeSetRequest\x12/\n\x07locator\x18\x01 \x01(\x0b\x32\x1e.openstorage.api.VolumeLocator\x12)\n\x04spec\x18\x02 \x01(\x0b\x32\x1b.openstorage.api.VolumeSpec\x12\x32\n\x06\x61\x63tion\x18\x03 \x01(\x0b\x32\".openstorage.api.VolumeStateAction\x12?\n\x07options\x18\x04 \x03(\x0b\x32..openstorage.api.VolumeSetRequest.OptionsEntry\x1a.\n\x0cOptionsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"v\n\x11VolumeSetResponse\x12\'\n\x06volume\x18\x01 \x01(\x0b\x32\x17.openstorage.api.Volume\x12\x38\n\x0fvolume_response\x18\x02 \x01(\x0b\x32\x1f.openstorage.api.VolumeResponse\"b\n\x11SnapCreateRequest\x12\n\n\x02id\x18\x01 \x01(\t\x12/\n\x07locator\x18\x02 \x01(\x0b\x32\x1e.openstorage.api.VolumeLocator\x12\x10\n\x08readonly\x18\x03 \x01(\x08\"[\n\x12SnapCreateResponse\x12\x45\n\x16volume_create_response\x18\x01 \x01(\x0b\x32%.openstorage.api.VolumeCreateResponse\"[\n\nVolumeInfo\x12\x11\n\tvolume_id\x18\x01 \x01(\t\x12\x0c\n\x04path\x18\x02 \x01(\t\x12,\n\x07storage\x18\x03 \x01(\x0b\x32\x1b.openstorage.api.VolumeSpec\"x\n\x0eVolumeConsumer\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x11\n\tnamespace\x18\x02 \x01(\t\x12\x0c\n\x04type\x18\x03 \x01(\t\x12\x0f\n\x07node_id\x18\x04 \x01(\t\x12\x12\n\nowner_name\x18\x05 \x01(\t\x12\x12\n\nowner_type\x18\x06 \x01(\t\"X\n\x12GraphDriverChanges\x12\x0c\n\x04path\x18\x01 \x01(\t\x12\x34\n\x04kind\x18\x02 \x01(\x0e\x32&.openstorage.api.GraphDriverChangeType\" \n\x0f\x43lusterResponse\x12\r\n\x05\x65rror\x18\x01 \x01(\t\"\x80\x01\n\rActiveRequest\x12>\n\x08ReqestKV\x18\x01 \x03(\x0b\x32,.openstorage.api.ActiveRequest.ReqestKVEntry\x1a/\n\rReqestKVEntry\x12\x0b\n\x03key\x18\x01 \x01(\x03\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"]\n\x0e\x41\x63tiveRequests\x12\x14\n\x0cRequestCount\x18\x01 \x01(\x03\x12\x35\n\rActiveRequest\x18\x02 \x03(\x0b\x32\x1e.openstorage.api.ActiveRequest\"\x98\x01\n\x16GroupSnapCreateRequest\x12\n\n\x02id\x18\x01 \x01(\t\x12\x43\n\x06Labels\x18\x02 \x03(\x0b\x32\x33.openstorage.api.GroupSnapCreateRequest.LabelsEntry\x1a-\n\x0bLabelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xcb\x01\n\x17GroupSnapCreateResponse\x12J\n\tsnapshots\x18\x01 \x03(\x0b\x32\x37.openstorage.api.GroupSnapCreateResponse.SnapshotsEntry\x12\r\n\x05\x65rror\x18\x02 \x01(\t\x1aU\n\x0eSnapshotsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x32\n\x05value\x18\x02 \x01(\x0b\x32#.openstorage.api.SnapCreateResponse:\x02\x38\x01\"\xf7\x03\n\x0bStorageNode\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0b\n\x03\x63pu\x18\x02 \x01(\x01\x12\x11\n\tmem_total\x18\x03 \x01(\x04\x12\x10\n\x08mem_used\x18\x04 \x01(\x04\x12\x10\n\x08mem_free\x18\x05 \x01(\x04\x12\x10\n\x08\x61vg_load\x18\x06 \x01(\x03\x12\'\n\x06status\x18\x07 \x01(\x0e\x32\x17.openstorage.api.Status\x12\x36\n\x05\x64isks\x18\t \x03(\x0b\x32\'.openstorage.api.StorageNode.DisksEntry\x12+\n\x05pools\x18\n \x03(\x0b\x32\x1c.openstorage.api.StoragePool\x12\x0f\n\x07mgmt_ip\x18\x0b \x01(\t\x12\x0f\n\x07\x64\x61ta_ip\x18\x0c \x01(\t\x12\x10\n\x08hostname\x18\x0f \x01(\t\x12\x41\n\x0bnode_labels\x18\x10 \x03(\x0b\x32,.openstorage.api.StorageNode.NodeLabelsEntry\x1aN\n\nDisksEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12/\n\x05value\x18\x02 \x01(\x0b\x32 .openstorage.api.StorageResource:\x02\x38\x01\x1a\x31\n\x0fNodeLabelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"h\n\x0eStorageCluster\x12\'\n\x06status\x18\x01 \x01(\x0e\x32\x17.openstorage.api.Status\x12\n\n\x02id\x18\x02 \x01(\t\x12\x0f\n\x07node_id\x18\x03 \x01(\t\x12\x10\n\x08node_ids\x18\x04 \x03(\t\"\\\n\x1eSdkSchedulePolicyCreateRequest\x12:\n\x0eSchedulePolicy\x18\x01 \x01(\x0b\x32\".openstorage.api.SdkSchedulePolicy\"!\n\x1fSdkSchedulePolicyCreateResponse\"\\\n\x1eSdkSchedulePolicyUpdateRequest\x12:\n\x0eSchedulePolicy\x18\x01 \x01(\x0b\x32\".openstorage.api.SdkSchedulePolicy\"!\n\x1fSdkSchedulePolicyUpdateResponse\"#\n!SdkSchedulePolicyEnumerateRequest\"Z\n\"SdkSchedulePolicyEnumerateResponse\x12\x34\n\x08policies\x18\x01 \x03(\x0b\x32\".openstorage.api.SdkSchedulePolicy\"/\n\x1fSdkSchedulePolicyInspectRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\"V\n SdkSchedulePolicyInspectResponse\x12\x32\n\x06policy\x18\x01 \x01(\x0b\x32\".openstorage.api.SdkSchedulePolicy\".\n\x1eSdkSchedulePolicyDeleteRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\"!\n\x1fSdkSchedulePolicyDeleteResponse\">\n\x1eSdkSchedulePolicyIntervalDaily\x12\x0c\n\x04hour\x18\x01 \x01(\x05\x12\x0e\n\x06minute\x18\x02 \x01(\x05\"m\n\x1fSdkSchedulePolicyIntervalWeekly\x12,\n\x03\x64\x61y\x18\x01 \x01(\x0e\x32\x1f.openstorage.api.SdkTimeWeekday\x12\x0c\n\x04hour\x18\x02 \x01(\x05\x12\x0e\n\x06minute\x18\x03 \x01(\x05\"M\n SdkSchedulePolicyIntervalMonthly\x12\x0b\n\x03\x64\x61y\x18\x01 \x01(\x05\x12\x0c\n\x04hour\x18\x02 \x01(\x05\x12\x0e\n\x06minute\x18\x03 \x01(\x05\"\x86\x02\n\x19SdkSchedulePolicyInterval\x12\x0e\n\x06retain\x18\x01 \x01(\x03\x12@\n\x05\x64\x61ily\x18\x02 \x01(\x0b\x32/.openstorage.api.SdkSchedulePolicyIntervalDailyH\x00\x12\x42\n\x06weekly\x18\x03 \x01(\x0b\x32\x30.openstorage.api.SdkSchedulePolicyIntervalWeeklyH\x00\x12\x44\n\x07monthly\x18\x04 \x01(\x0b\x32\x31.openstorage.api.SdkSchedulePolicyIntervalMonthlyH\x00\x42\r\n\x0bperiod_type\"_\n\x11SdkSchedulePolicy\x12\x0c\n\x04name\x18\x01 \x01(\t\x12<\n\x08schedule\x18\x02 \x01(\x0b\x32*.openstorage.api.SdkSchedulePolicyInterval\"\x85\x02\n\x1aSdkCredentialCreateRequest\x12\x42\n\x0e\x61ws_credential\x18\x01 \x01(\x0b\x32(.openstorage.api.SdkAwsCredentialRequestH\x00\x12\x46\n\x10\x61zure_credential\x18\x02 \x01(\x0b\x32*.openstorage.api.SdkAzureCredentialRequestH\x00\x12H\n\x11google_credential\x18\x03 \x01(\x0b\x32+.openstorage.api.SdkGoogleCredentialRequestH\x00\x42\x11\n\x0f\x63redential_type\"4\n\x1bSdkCredentialCreateResponse\x12\x15\n\rcredential_id\x18\x01 \x01(\t\"c\n\x17SdkAwsCredentialRequest\x12\x12\n\naccess_key\x18\x01 \x01(\t\x12\x12\n\nsecret_key\x18\x02 \x01(\t\x12\x10\n\x08\x65ndpoint\x18\x03 \x01(\t\x12\x0e\n\x06region\x18\x04 \x01(\t\"F\n\x19SdkAzureCredentialRequest\x12\x14\n\x0c\x61\x63\x63ount_name\x18\x01 \x01(\t\x12\x13\n\x0b\x61\x63\x63ount_key\x18\x02 \x01(\t\"B\n\x1aSdkGoogleCredentialRequest\x12\x12\n\nproject_id\x18\x01 \x01(\t\x12\x10\n\x08json_key\x18\x02 \x01(\t\"g\n\x18SdkAwsCredentialResponse\x12\x15\n\rcredential_id\x18\x01 \x01(\t\x12\x12\n\naccess_key\x18\x02 \x01(\t\x12\x10\n\x08\x65ndpoint\x18\x03 \x01(\t\x12\x0e\n\x06region\x18\x04 \x01(\t\"I\n\x1aSdkAzureCredentialResponse\x12\x15\n\rcredential_id\x18\x01 \x01(\t\x12\x14\n\x0c\x61\x63\x63ount_name\x18\x02 \x01(\t\"H\n\x1bSdkGoogleCredentialResponse\x12\x15\n\rcredential_id\x18\x01 \x01(\t\x12\x12\n\nproject_id\x18\x02 \x01(\t\"\x1f\n\x1dSdkCredentialEnumerateRequest\"8\n\x1eSdkCredentialEnumerateResponse\x12\x16\n\x0e\x63redential_ids\x18\x01 \x03(\t\"4\n\x1bSdkCredentialInspectRequest\x12\x15\n\rcredential_id\x18\x01 \x01(\t\"\x8a\x02\n\x1cSdkCredentialInspectResponse\x12\x43\n\x0e\x61ws_credential\x18\x01 \x01(\x0b\x32).openstorage.api.SdkAwsCredentialResponseH\x00\x12G\n\x10\x61zure_credential\x18\x02 \x01(\x0b\x32+.openstorage.api.SdkAzureCredentialResponseH\x00\x12I\n\x11google_credential\x18\x03 \x01(\x0b\x32,.openstorage.api.SdkGoogleCredentialResponseH\x00\x42\x11\n\x0f\x63redential_type\"3\n\x1aSdkCredentialDeleteRequest\x12\x15\n\rcredential_id\x18\x01 \x01(\t\"\x1d\n\x1bSdkCredentialDeleteResponse\"5\n\x1cSdkCredentialValidateRequest\x12\x15\n\rcredential_id\x18\x01 \x01(\t\"\x1f\n\x1dSdkCredentialValidateResponse\"\xb4\x01\n\x15SdkVolumeMountRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\x12\x12\n\nmount_path\x18\x02 \x01(\t\x12\x44\n\x07options\x18\x03 \x03(\x0b\x32\x33.openstorage.api.SdkVolumeMountRequest.OptionsEntry\x1a.\n\x0cOptionsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x18\n\x16SdkVolumeMountResponse\"\xb8\x01\n\x17SdkVolumeUnmountRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\x12\x12\n\nmount_path\x18\x02 \x01(\t\x12\x46\n\x07options\x18\x03 \x03(\x0b\x32\x35.openstorage.api.SdkVolumeUnmountRequest.OptionsEntry\x1a.\n\x0cOptionsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x1a\n\x18SdkVolumeUnmountResponse\"\xa2\x01\n\x16SdkVolumeAttachRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\x12\x45\n\x07options\x18\x02 \x03(\x0b\x32\x34.openstorage.api.SdkVolumeAttachRequest.OptionsEntry\x1a.\n\x0cOptionsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\".\n\x17SdkVolumeAttachResponse\x12\x13\n\x0b\x64\x65vice_path\x18\x01 \x01(\t\"+\n\x16SdkVolumeDetachRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\"\x19\n\x17SdkVolumeDetachResponse\"Q\n\x16SdkVolumeCreateRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12)\n\x04spec\x18\x02 \x01(\x0b\x32\x1b.openstorage.api.VolumeSpec\",\n\x17SdkVolumeCreateResponse\x12\x11\n\tvolume_id\x18\x01 \x01(\t\"c\n\x15SdkVolumeCloneRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x11\n\tparent_id\x18\x02 \x01(\t\x12)\n\x04spec\x18\x03 \x01(\x0b\x32\x1b.openstorage.api.VolumeSpec\"+\n\x16SdkVolumeCloneResponse\x12\x11\n\tvolume_id\x18\x01 \x01(\t\"+\n\x16SdkVolumeDeleteRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\"\x19\n\x17SdkVolumeDeleteResponse\",\n\x17SdkVolumeInspectRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\"C\n\x18SdkVolumeInspectResponse\x12\'\n\x06volume\x18\x01 \x01(\x0b\x32\x17.openstorage.api.Volume\"L\n\x19SdkVolumeEnumerateRequest\x12/\n\x07locator\x18\x01 \x01(\x0b\x32\x1e.openstorage.api.VolumeLocator\"0\n\x1aSdkVolumeEnumerateResponse\x12\x12\n\nvolume_ids\x18\x01 \x03(\t\"\xaf\x01\n\x1eSdkVolumeSnapshotCreateRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\x12K\n\x06labels\x18\x02 \x03(\x0b\x32;.openstorage.api.SdkVolumeSnapshotCreateRequest.LabelsEntry\x1a-\n\x0bLabelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"6\n\x1fSdkVolumeSnapshotCreateResponse\x12\x13\n\x0bsnapshot_id\x18\x01 \x01(\t\"I\n\x1fSdkVolumeSnapshotRestoreRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\x12\x13\n\x0bsnapshot_id\x18\x02 \x01(\t\"\"\n SdkVolumeSnapshotRestoreResponse\"\xb5\x01\n!SdkVolumeSnapshotEnumerateRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\x12N\n\x06labels\x18\x02 \x03(\x0b\x32>.openstorage.api.SdkVolumeSnapshotEnumerateRequest.LabelsEntry\x1a-\n\x0bLabelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"A\n\"SdkVolumeSnapshotEnumerateResponse\x12\x1b\n\x13volume_snapshot_ids\x18\x01 \x03(\t\"\x1c\n\x1aSdkClusterEnumerateRequest\"O\n\x1bSdkClusterEnumerateResponse\x12\x30\n\x07\x63luster\x18\x01 \x01(\x0b\x32\x1f.openstorage.api.StorageCluster\"+\n\x18SdkClusterInspectRequest\x12\x0f\n\x07node_id\x18\x01 \x01(\t\"G\n\x19SdkClusterInspectResponse\x12*\n\x04node\x18\x01 \x01(\x0b\x32\x1c.openstorage.api.StorageNode\"\xb0\x01\n\x1fSdkClusterAlertEnumerateRequest\x12.\n\ntime_start\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12,\n\x08time_end\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12/\n\x08resource\x18\x03 \x01(\x0e\x32\x1d.openstorage.api.ResourceType\"J\n SdkClusterAlertEnumerateResponse\x12&\n\x06\x61lerts\x18\x01 \x03(\x0b\x32\x16.openstorage.api.Alert\"`\n\x1bSdkClusterAlertClearRequest\x12/\n\x08resource\x18\x01 \x01(\x0e\x32\x1d.openstorage.api.ResourceType\x12\x10\n\x08\x61lert_id\x18\x02 \x01(\x03\"\x1e\n\x1cSdkClusterAlertClearResponse\"a\n\x1cSdkClusterAlertDeleteRequest\x12/\n\x08resource\x18\x01 \x01(\x0e\x32\x1d.openstorage.api.ResourceType\x12\x10\n\x08\x61lert_id\x18\x02 \x01(\x03\"\x1f\n\x1dSdkClusterAlertDeleteResponse\"6\n\x1cSdkObjectstoreInspectRequest\x12\x16\n\x0eobjectstore_id\x18\x01 \x01(\t\"]\n\x1dSdkObjectstoreInspectResponse\x12<\n\x12objectstore_status\x18\x01 \x01(\x0b\x32 .openstorage.api.ObjectstoreInfo\"0\n\x1bSdkObjectstoreCreateRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\"\\\n\x1cSdkObjectstoreCreateResponse\x12<\n\x12objectstore_status\x18\x01 \x01(\x0b\x32 .openstorage.api.ObjectstoreInfo\"5\n\x1bSdkObjectstoreDeleteRequest\x12\x16\n\x0eobjectstore_id\x18\x01 \x01(\t\"\x1e\n\x1cSdkObjectstoreDeleteResponse\"E\n\x1bSdkObjectstoreUpdateRequest\x12\x16\n\x0eobjectstore_id\x18\x01 \x01(\t\x12\x0e\n\x06\x65nable\x18\x02 \x01(\x08\"\x1e\n\x1cSdkObjectstoreUpdateResponse\"W\n\x1bSdkCloudBackupCreateRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\x12\x17\n\x0f\x63redential_uuid\x18\x02 \x01(\t\x12\x0c\n\x04\x66ull\x18\x03 \x01(\x08\"\x1e\n\x1cSdkCloudBackupCreateResponse\"x\n\x1cSdkCloudBackupRestoreRequest\x12\x11\n\tbackup_id\x18\x01 \x01(\t\x12\x1b\n\x13restore_volume_name\x18\x02 \x01(\t\x12\x17\n\x0f\x63redential_uuid\x18\x03 \x01(\t\x12\x0f\n\x07node_id\x18\x04 \x01(\t\":\n\x1dSdkCloudBackupRestoreResponse\x12\x19\n\x11restore_volume_id\x18\x01 \x01(\t\"X\n\x1bSdkCloudBackupDeleteRequest\x12\x11\n\tbackup_id\x18\x01 \x01(\t\x12\x17\n\x0f\x63redential_uuid\x18\x02 \x01(\t\x12\r\n\x05\x66orce\x18\x03 \x01(\x08\"\x1e\n\x1cSdkCloudBackupDeleteResponse\"P\n\x1eSdkCloudBackupDeleteAllRequest\x12\x15\n\rsrc_volume_id\x18\x01 \x01(\t\x12\x17\n\x0f\x63redential_uuid\x18\x02 \x01(\t\"!\n\x1fSdkCloudBackupDeleteAllResponse\"q\n\x1eSdkCloudBackupEnumerateRequest\x12\x15\n\rsrc_volume_id\x18\x01 \x01(\t\x12\x12\n\ncluster_id\x18\x02 \x01(\t\x12\x17\n\x0f\x63redential_uuid\x18\x03 \x01(\t\x12\x0b\n\x03\x61ll\x18\x04 \x01(\x08\"\xb0\x02\n\x12SdkCloudBackupInfo\x12\n\n\x02id\x18\x01 \x01(\t\x12\x15\n\rsrc_volume_id\x18\x02 \x01(\t\x12\x17\n\x0fsrc_volume_name\x18\x03 \x01(\t\x12-\n\ttimestamp\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x43\n\x08metadata\x18\x05 \x03(\x0b\x32\x31.openstorage.api.SdkCloudBackupInfo.MetadataEntry\x12\x39\n\x06status\x18\x06 \x01(\x0e\x32).openstorage.api.SdkCloudBackupStatusType\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"5\n\x1fSdkCloudBackupEnumerateResponse\x12\x12\n\nbackup_ids\x18\x01 \x03(\t\"\xa4\x02\n\x14SdkCloudBackupStatus\x12\x11\n\tbackup_id\x18\x01 \x01(\t\x12\x35\n\x06optype\x18\x02 \x01(\x0e\x32%.openstorage.api.SdkCloudBackupOpType\x12\x39\n\x06status\x18\x03 \x01(\x0e\x32).openstorage.api.SdkCloudBackupStatusType\x12\x12\n\nbytes_done\x18\x04 \x01(\x04\x12.\n\nstart_time\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x32\n\x0e\x63ompleted_time\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x0f\n\x07node_id\x18\x07 \x01(\t\"C\n\x1bSdkCloudBackupStatusRequest\x12\x15\n\rsrc_volume_id\x18\x01 \x01(\t\x12\r\n\x05local\x18\x02 \x01(\x08\"\xc5\x01\n\x1cSdkCloudBackupStatusResponse\x12M\n\x08statuses\x18\x01 \x03(\x0b\x32;.openstorage.api.SdkCloudBackupStatusResponse.StatusesEntry\x1aV\n\rStatusesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x34\n\x05value\x18\x02 \x01(\x0b\x32%.openstorage.api.SdkCloudBackupStatus:\x02\x38\x01\"J\n\x1cSdkCloudBackupCatalogRequest\x12\x11\n\tbackup_id\x18\x01 \x01(\t\x12\x17\n\x0f\x63redential_uuid\x18\x02 \x01(\t\"1\n\x1dSdkCloudBackupCatalogResponse\x12\x10\n\x08\x63ontents\x18\x01 \x03(\t\"\x9c\x01\n\x19SdkCloudBackupHistoryItem\x12\x15\n\rsrc_volume_id\x18\x01 \x01(\t\x12-\n\ttimestamp\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x39\n\x06status\x18\x03 \x01(\x0e\x32).openstorage.api.SdkCloudBackupStatusType\"5\n\x1cSdkCloudBackupHistoryRequest\x12\x15\n\rsrc_volume_id\x18\x01 \x01(\t\"a\n\x1dSdkCloudBackupHistoryResponse\x12@\n\x0chistory_list\x18\x01 \x03(\x0b\x32*.openstorage.api.SdkCloudBackupHistoryItem\"\x81\x01\n SdkCloudBackupStateChangeRequest\x12\x15\n\rsrc_volume_id\x18\x01 \x01(\t\x12\x46\n\x0frequested_state\x18\x02 \x01(\x0e\x32-.openstorage.api.SdkCloudBackupRequestedState\"#\n!SdkCloudBackupStateChangeResponse\"\x9f\x01\n\x1aSdkCloudBackupScheduleInfo\x12\x15\n\rsrc_volume_id\x18\x01 \x01(\t\x12\x17\n\x0f\x63redential_uuid\x18\x02 \x01(\t\x12<\n\x08schedule\x18\x03 \x01(\x0b\x32*.openstorage.api.SdkSchedulePolicyInterval\x12\x13\n\x0bmax_backups\x18\x04 \x01(\x04\"i\n SdkCloudBackupSchedCreateRequest\x12\x45\n\x10\x63loud_sched_info\x18\x01 \x01(\x0b\x32+.openstorage.api.SdkCloudBackupScheduleInfo\"1\n!SdkCloudBackupSchedCreateResponse\x12\x0c\n\x04uuid\x18\x01 \x01(\t\"0\n SdkCloudBackupSchedDeleteRequest\x12\x0c\n\x04uuid\x18\x01 \x01(\t\"#\n!SdkCloudBackupSchedDeleteResponse\"%\n#SdkCloudBackupSchedEnumerateRequest\"\xef\x01\n$SdkCloudBackupSchedEnumerateResponse\x12\x63\n\x10\x63loud_sched_list\x18\x01 \x03(\x0b\x32I.openstorage.api.SdkCloudBackupSchedEnumerateResponse.CloudSchedListEntry\x1a\x62\n\x13\x43loudSchedListEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12:\n\x05value\x18\x02 \x01(\x0b\x32+.openstorage.api.SdkCloudBackupScheduleInfo:\x02\x38\x01\"\xa3\x02\n\x0c\x43loudMigrate\"_\n\rOperationType\x12\x0f\n\x0bInvalidType\x10\x00\x12\x12\n\x0eMigrateCluster\x10\x01\x12\x11\n\rMigrateVolume\x10\x02\x12\x16\n\x12MigrateVolumeGroup\x10\x03\"N\n\x05Stage\x12\x10\n\x0cInvalidStage\x10\x00\x12\n\n\x06\x42\x61\x63kup\x10\x01\x12\x0b\n\x07Restore\x10\x02\x12\x10\n\x0cVolumeUpdate\x10\x03\x12\x08\n\x04\x44one\x10\x04\"b\n\x06Status\x12\x11\n\rInvalidStatus\x10\x00\x12\n\n\x06Queued\x10\x01\x12\x0f\n\x0bInitialized\x10\x02\x12\x0e\n\nInProgress\x10\x03\x12\n\n\x06\x46\x61iled\x10\x04\x12\x0c\n\x08\x43omplete\x10\x05\"\x81\x01\n\x18\x43loudMigrateStartRequest\x12>\n\toperation\x18\x01 \x01(\x0e\x32+.openstorage.api.CloudMigrate.OperationType\x12\x12\n\ncluster_id\x18\x02 \x01(\t\x12\x11\n\ttarget_id\x18\x03 \x01(\t\"\x82\x01\n\x19\x43loudMigrateCancelRequest\x12>\n\toperation\x18\x01 \x01(\x0e\x32+.openstorage.api.CloudMigrate.OperationType\x12\x12\n\ncluster_id\x18\x02 \x01(\t\x12\x11\n\ttarget_id\x18\x03 \x01(\t\"\xe1\x02\n\x10\x43loudMigrateInfo\x12\x12\n\ncluster_id\x18\x01 \x01(\t\x12\x17\n\x0flocal_volume_id\x18\x02 \x01(\t\x12\x19\n\x11local_volume_name\x18\x03 \x01(\t\x12\x18\n\x10remote_volume_id\x18\x04 \x01(\t\x12\x16\n\x0e\x63loudbackup_id\x18\x05 \x01(\t\x12:\n\rcurrent_stage\x18\x06 \x01(\x0e\x32#.openstorage.api.CloudMigrate.Stage\x12\x34\n\x06status\x18\x07 \x01(\x0e\x32$.openstorage.api.CloudMigrate.Status\x12/\n\x0blast_update\x18\x08 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x30\n\x0clast_success\x18\t \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"G\n\x14\x43loudMigrateInfoList\x12/\n\x04list\x18\x01 \x03(\x0b\x32!.openstorage.api.CloudMigrateInfo\"\xb5\x01\n\x1a\x43loudMigrateStatusResponse\x12\x43\n\x04info\x18\x01 \x03(\x0b\x32\x35.openstorage.api.CloudMigrateStatusResponse.InfoEntry\x1aR\n\tInfoEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x34\n\x05value\x18\x02 \x01(\x0b\x32%.openstorage.api.CloudMigrateInfoList:\x02\x38\x01*\xee\x02\n\x06Status\x12\x0f\n\x0bSTATUS_NONE\x10\x00\x12\x0f\n\x0bSTATUS_INIT\x10\x01\x12\r\n\tSTATUS_OK\x10\x02\x12\x12\n\x0eSTATUS_OFFLINE\x10\x03\x12\x10\n\x0cSTATUS_ERROR\x10\x04\x12\x18\n\x14STATUS_NOT_IN_QUORUM\x10\x05\x12\x17\n\x13STATUS_DECOMMISSION\x10\x06\x12\x16\n\x12STATUS_MAINTENANCE\x10\x07\x12\x17\n\x13STATUS_STORAGE_DOWN\x10\x08\x12\x1b\n\x17STATUS_STORAGE_DEGRADED\x10\t\x12\x17\n\x13STATUS_NEEDS_REBOOT\x10\n\x12\x1c\n\x18STATUS_STORAGE_REBALANCE\x10\x0b\x12 \n\x1cSTATUS_STORAGE_DRIVE_REPLACE\x10\x0c\x12#\n\x1fSTATUS_NOT_IN_QUORUM_NO_STORAGE\x10\r\x12\x0e\n\nSTATUS_MAX\x10\x0e*\x99\x01\n\nDriverType\x12\x14\n\x10\x44RIVER_TYPE_NONE\x10\x00\x12\x14\n\x10\x44RIVER_TYPE_FILE\x10\x01\x12\x15\n\x11\x44RIVER_TYPE_BLOCK\x10\x02\x12\x16\n\x12\x44RIVER_TYPE_OBJECT\x10\x03\x12\x19\n\x15\x44RIVER_TYPE_CLUSTERED\x10\x04\x12\x15\n\x11\x44RIVER_TYPE_GRAPH\x10\x05*\x95\x01\n\x06\x46SType\x12\x10\n\x0c\x46S_TYPE_NONE\x10\x00\x12\x11\n\rFS_TYPE_BTRFS\x10\x01\x12\x10\n\x0c\x46S_TYPE_EXT4\x10\x02\x12\x10\n\x0c\x46S_TYPE_FUSE\x10\x03\x12\x0f\n\x0b\x46S_TYPE_NFS\x10\x04\x12\x0f\n\x0b\x46S_TYPE_VFS\x10\x05\x12\x0f\n\x0b\x46S_TYPE_XFS\x10\x06\x12\x0f\n\x0b\x46S_TYPE_ZFS\x10\x07*\xab\x01\n\x15GraphDriverChangeType\x12!\n\x1dGRAPH_DRIVER_CHANGE_TYPE_NONE\x10\x00\x12%\n!GRAPH_DRIVER_CHANGE_TYPE_MODIFIED\x10\x01\x12\"\n\x1eGRAPH_DRIVER_CHANGE_TYPE_ADDED\x10\x02\x12$\n GRAPH_DRIVER_CHANGE_TYPE_DELETED\x10\x03*t\n\x0cSeverityType\x12\x16\n\x12SEVERITY_TYPE_NONE\x10\x00\x12\x17\n\x13SEVERITY_TYPE_ALARM\x10\x01\x12\x19\n\x15SEVERITY_TYPE_WARNING\x10\x02\x12\x18\n\x14SEVERITY_TYPE_NOTIFY\x10\x03*\x8c\x01\n\x0cResourceType\x12\x16\n\x12RESOURCE_TYPE_NONE\x10\x00\x12\x18\n\x14RESOURCE_TYPE_VOLUME\x10\x01\x12\x16\n\x12RESOURCE_TYPE_NODE\x10\x02\x12\x19\n\x15RESOURCE_TYPE_CLUSTER\x10\x03\x12\x17\n\x13RESOURCE_TYPE_DRIVE\x10\x04*\x87\x01\n\x0f\x41lertActionType\x12\x1a\n\x16\x41LERT_ACTION_TYPE_NONE\x10\x00\x12\x1c\n\x18\x41LERT_ACTION_TYPE_DELETE\x10\x01\x12\x1c\n\x18\x41LERT_ACTION_TYPE_CREATE\x10\x02\x12\x1c\n\x18\x41LERT_ACTION_TYPE_UPDATE\x10\x03*j\n\x11VolumeActionParam\x12\x1c\n\x18VOLUME_ACTION_PARAM_NONE\x10\x00\x12\x1b\n\x17VOLUME_ACTION_PARAM_OFF\x10\x01\x12\x1a\n\x16VOLUME_ACTION_PARAM_ON\x10\x02*2\n\x07\x43osType\x12\x08\n\x04NONE\x10\x00\x12\x07\n\x03LOW\x10\x01\x12\n\n\x06MEDIUM\x10\x02\x12\x08\n\x04HIGH\x10\x03*~\n\tIoProfile\x12\x19\n\x15IO_PROFILE_SEQUENTIAL\x10\x00\x12\x15\n\x11IO_PROFILE_RANDOM\x10\x01\x12\x11\n\rIO_PROFILE_DB\x10\x02\x12\x18\n\x14IO_PROFILE_DB_REMOTE\x10\x03\x12\x12\n\x0eIO_PROFILE_CMS\x10\x04*\x99\x02\n\x0bVolumeState\x12\x15\n\x11VOLUME_STATE_NONE\x10\x00\x12\x18\n\x14VOLUME_STATE_PENDING\x10\x01\x12\x1a\n\x16VOLUME_STATE_AVAILABLE\x10\x02\x12\x19\n\x15VOLUME_STATE_ATTACHED\x10\x03\x12\x19\n\x15VOLUME_STATE_DETACHED\x10\x04\x12\x1b\n\x17VOLUME_STATE_DETATCHING\x10\x05\x12\x16\n\x12VOLUME_STATE_ERROR\x10\x06\x12\x18\n\x14VOLUME_STATE_DELETED\x10\x07\x12\x1e\n\x1aVOLUME_STATE_TRY_DETACHING\x10\x08\x12\x18\n\x14VOLUME_STATE_RESTORE\x10\t*\x8f\x01\n\x0cVolumeStatus\x12\x16\n\x12VOLUME_STATUS_NONE\x10\x00\x12\x1d\n\x19VOLUME_STATUS_NOT_PRESENT\x10\x01\x12\x14\n\x10VOLUME_STATUS_UP\x10\x02\x12\x16\n\x12VOLUME_STATUS_DOWN\x10\x03\x12\x1a\n\x16VOLUME_STATUS_DEGRADED\x10\x04*]\n\rStorageMedium\x12\x1b\n\x17STORAGE_MEDIUM_MAGNETIC\x10\x00\x12\x16\n\x12STORAGE_MEDIUM_SSD\x10\x01\x12\x17\n\x13STORAGE_MEDIUM_NVME\x10\x02*(\n\rClusterNotify\x12\x17\n\x13\x43LUSTER_NOTIFY_DOWN\x10\x00*e\n\x0b\x41ttachState\x12\x19\n\x15\x41TTACH_STATE_EXTERNAL\x10\x00\x12\x19\n\x15\x41TTACH_STATE_INTERNAL\x10\x01\x12 \n\x1c\x41TTACH_STATE_INTERNAL_SWITCH\x10\x02*T\n\x0eOperationFlags\x12\x14\n\x10OP_FLAGS_UNKNOWN\x10\x00\x12\x11\n\rOP_FLAGS_NONE\x10\x01\x12\x19\n\x15OP_FLAGS_DETACH_FORCE\x10\x02*\xce\x01\n\x0eSdkTimeWeekday\x12\x18\n\x14SdkTimeWeekdaySunday\x10\x00\x12\x18\n\x14SdkTimeWeekdayMonday\x10\x01\x12\x19\n\x15SdkTimeWeekdayTuesday\x10\x02\x12\x1b\n\x17SdkTimeWeekdayWednesday\x10\x03\x12\x1a\n\x16SdkTimeWeekdayThursday\x10\x04\x12\x18\n\x14SdkTimeWeekdayFriday\x10\x05\x12\x1a\n\x16SdkTimeWeekdaySaturday\x10\x06*|\n\x14SdkCloudBackupOpType\x12\x1f\n\x1bSdkCloudBackupOpTypeUnknown\x10\x00\x12 \n\x1cSdkCloudBackupOpTypeBackupOp\x10\x01\x12!\n\x1dSdkCloudBackupOpTypeRestoreOp\x10\x02*\xbf\x02\n\x18SdkCloudBackupStatusType\x12#\n\x1fSdkCloudBackupStatusTypeUnknown\x10\x00\x12&\n\"SdkCloudBackupStatusTypeNotStarted\x10\x01\x12 \n\x1cSdkCloudBackupStatusTypeDone\x10\x02\x12#\n\x1fSdkCloudBackupStatusTypeAborted\x10\x03\x12\"\n\x1eSdkCloudBackupStatusTypePaused\x10\x04\x12#\n\x1fSdkCloudBackupStatusTypeStopped\x10\x05\x12\"\n\x1eSdkCloudBackupStatusTypeActive\x10\x06\x12\"\n\x1eSdkCloudBackupStatusTypeFailed\x10\x07*\xbc\x01\n\x1cSdkCloudBackupRequestedState\x12\'\n#SdkCloudBackupRequestedStateUnknown\x10\x00\x12%\n!SdkCloudBackupRequestedStatePause\x10\x01\x12&\n\"SdkCloudBackupRequestedStateResume\x10\x02\x12$\n SdkCloudBackupRequestedStateStop\x10\x03\x32\xd7\x05\n\x12OpenStorageCluster\x12{\n\tEnumerate\x12+.openstorage.api.SdkClusterEnumerateRequest\x1a,.openstorage.api.SdkClusterEnumerateResponse\"\x13\x82\xd3\xe4\x93\x02\r\x12\x0b/v1/cluster\x12\x7f\n\x07Inspect\x12).openstorage.api.SdkClusterInspectRequest\x1a*.openstorage.api.SdkClusterInspectResponse\"\x1d\x82\xd3\xe4\x93\x02\x17\x12\x15/v1/cluster/{node_id}\x12\x9d\x01\n\x0e\x41lertEnumerate\x12\x30.openstorage.api.SdkClusterAlertEnumerateRequest\x1a\x31.openstorage.api.SdkClusterAlertEnumerateResponse\"&\x82\xd3\xe4\x93\x02 \"\x1b/v1/cluster/alert/enumerate:\x01*\x12\x8d\x01\n\nAlertClear\x12,.openstorage.api.SdkClusterAlertClearRequest\x1a-.openstorage.api.SdkClusterAlertClearResponse\"\"\x82\xd3\xe4\x93\x02\x1c\"\x17/v1/cluster/alert/clear:\x01*\x12\x92\x01\n\x0b\x41lertDelete\x12-.openstorage.api.SdkClusterAlertDeleteRequest\x1a..openstorage.api.SdkClusterAlertDeleteResponse\"$\x82\xd3\xe4\x93\x02\x1e*\x1c/v1/cluster/alert/{alert_id}2\xcf\x0c\n\x11OpenStorageVolume\x12r\n\x06\x43reate\x12\'.openstorage.api.SdkVolumeCreateRequest\x1a(.openstorage.api.SdkVolumeCreateResponse\"\x15\x82\xd3\xe4\x93\x02\x0f\"\n/v1/volume:\x01*\x12u\n\x05\x43lone\x12&.openstorage.api.SdkVolumeCloneRequest\x1a\'.openstorage.api.SdkVolumeCloneResponse\"\x1b\x82\xd3\xe4\x93\x02\x15\"\x10/v1/volume/clone:\x01*\x12{\n\x06\x44\x65lete\x12\'.openstorage.api.SdkVolumeDeleteRequest\x1a(.openstorage.api.SdkVolumeDeleteResponse\"\x1e\x82\xd3\xe4\x93\x02\x18*\x16/v1/volume/{volume_id}\x12~\n\x07Inspect\x12(.openstorage.api.SdkVolumeInspectRequest\x1a).openstorage.api.SdkVolumeInspectResponse\"\x1e\x82\xd3\xe4\x93\x02\x18\x12\x16/v1/volume/{volume_id}\x12\x85\x01\n\tEnumerate\x12*.openstorage.api.SdkVolumeEnumerateRequest\x1a+.openstorage.api.SdkVolumeEnumerateResponse\"\x1f\x82\xd3\xe4\x93\x02\x19\"\x14/v1/volume/enumerate:\x01*\x12\x93\x01\n\x0eSnapshotCreate\x12/.openstorage.api.SdkVolumeSnapshotCreateRequest\x1a\x30.openstorage.api.SdkVolumeSnapshotCreateResponse\"\x1e\x82\xd3\xe4\x93\x02\x18\"\x13/v1/volume/snapshot:\x01*\x12\x9e\x01\n\x0fSnapshotRestore\x12\x30.openstorage.api.SdkVolumeSnapshotRestoreRequest\x1a\x31.openstorage.api.SdkVolumeSnapshotRestoreResponse\"&\x82\xd3\xe4\x93\x02 \"\x1b/v1/volume/snapshot/restore:\x01*\x12\xa6\x01\n\x11SnapshotEnumerate\x12\x32.openstorage.api.SdkVolumeSnapshotEnumerateRequest\x1a\x33.openstorage.api.SdkVolumeSnapshotEnumerateResponse\"(\x82\xd3\xe4\x93\x02\"\"\x1d/v1/volume/snapshot/enumerate:\x01*\x12y\n\x06\x41ttach\x12\'.openstorage.api.SdkVolumeAttachRequest\x1a(.openstorage.api.SdkVolumeAttachResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\"\x11/v1/volume/attach:\x01*\x12y\n\x06\x44\x65tach\x12\'.openstorage.api.SdkVolumeDetachRequest\x1a(.openstorage.api.SdkVolumeDetachResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\"\x11/v1/volume/detach:\x01*\x12u\n\x05Mount\x12&.openstorage.api.SdkVolumeMountRequest\x1a\'.openstorage.api.SdkVolumeMountResponse\"\x1b\x82\xd3\xe4\x93\x02\x15\"\x10/v1/volume/mount:\x01*\x12}\n\x07Unmount\x12(.openstorage.api.SdkVolumeUnmountRequest\x1a).openstorage.api.SdkVolumeUnmountResponse\"\x1d\x82\xd3\xe4\x93\x02\x17\"\x12/v1/volume/unmount:\x01*2\xce\x04\n\x16OpenStorageObjectstore\x12\x92\x01\n\x07Inspect\x12-.openstorage.api.SdkObjectstoreInspectRequest\x1a..openstorage.api.SdkObjectstoreInspectResponse\"(\x82\xd3\xe4\x93\x02\"\x12 /v1/objectstore/{objectstore_id}\x12\x81\x01\n\x06\x43reate\x12,.openstorage.api.SdkObjectstoreCreateRequest\x1a-.openstorage.api.SdkObjectstoreCreateResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\"\x0f/v1/objectstore:\x01*\x12\x8f\x01\n\x06\x44\x65lete\x12,.openstorage.api.SdkObjectstoreDeleteRequest\x1a-.openstorage.api.SdkObjectstoreDeleteResponse\"(\x82\xd3\xe4\x93\x02\"* /v1/objectstore/{objectstore_id}\x12\x88\x01\n\x06Update\x12,.openstorage.api.SdkObjectstoreUpdateRequest\x1a-.openstorage.api.SdkObjectstoreUpdateResponse\"!\x82\xd3\xe4\x93\x02\x1b\"\x16/v1/objectstore/update:\x01*2\xe0\x05\n\x16OpenStorageCredentials\x12\x7f\n\x06\x43reate\x12+.openstorage.api.SdkCredentialCreateRequest\x1a,.openstorage.api.SdkCredentialCreateResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\"\x0f/v1/credentials:\x01*\x12\x85\x01\n\tEnumerate\x12..openstorage.api.SdkCredentialEnumerateRequest\x1a/.openstorage.api.SdkCredentialEnumerateResponse\"\x17\x82\xd3\xe4\x93\x02\x11\x12\x0f/v1/credentials\x12\x8f\x01\n\x07Inspect\x12,.openstorage.api.SdkCredentialInspectRequest\x1a-.openstorage.api.SdkCredentialInspectResponse\"\'\x82\xd3\xe4\x93\x02!\x12\x1f/v1/credentials/{credential_id}\x12\x8c\x01\n\x06\x44\x65lete\x12+.openstorage.api.SdkCredentialDeleteRequest\x1a,.openstorage.api.SdkCredentialDeleteResponse\"\'\x82\xd3\xe4\x93\x02!*\x1f/v1/credentials/{credential_id}\x12\x9b\x01\n\x08Validate\x12-.openstorage.api.SdkCredentialValidateRequest\x1a..openstorage.api.SdkCredentialValidateResponse\"0\x82\xd3\xe4\x93\x02*\x12(/v1/credentials/validate/{credential_id}2\xf4\x05\n\x19OpenStorageSchedulePolicy\x12\x8a\x01\n\x06\x43reate\x12/.openstorage.api.SdkSchedulePolicyCreateRequest\x1a\x30.openstorage.api.SdkSchedulePolicyCreateResponse\"\x1d\x82\xd3\xe4\x93\x02\x17\"\x12/v1/schedulepolicy:\x01*\x12\x91\x01\n\x06Update\x12/.openstorage.api.SdkSchedulePolicyUpdateRequest\x1a\x30.openstorage.api.SdkSchedulePolicyUpdateResponse\"$\x82\xd3\xe4\x93\x02\x1e\"\x19/v1/schedulepolicy/update:\x01*\x12\x90\x01\n\tEnumerate\x12\x32.openstorage.api.SdkSchedulePolicyEnumerateRequest\x1a\x33.openstorage.api.SdkSchedulePolicyEnumerateResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\x12\x12/v1/schedulepolicy\x12\x91\x01\n\x07Inspect\x12\x30.openstorage.api.SdkSchedulePolicyInspectRequest\x1a\x31.openstorage.api.SdkSchedulePolicyInspectResponse\"!\x82\xd3\xe4\x93\x02\x1b\x12\x19/v1/schedulepolicy/{name}\x12\x8e\x01\n\x06\x44\x65lete\x12/.openstorage.api.SdkSchedulePolicyDeleteRequest\x1a\x30.openstorage.api.SdkSchedulePolicyDeleteResponse\"!\x82\xd3\xe4\x93\x02\x1b*\x19/v1/schedulepolicy/{name}2\xa2\x0e\n\x16OpenStorageCloudBackup\x12\x81\x01\n\x06\x43reate\x12,.openstorage.api.SdkCloudBackupCreateRequest\x1a-.openstorage.api.SdkCloudBackupCreateResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\"\x0f/v1/cloudbackup:\x01*\x12\x8c\x01\n\x07Restore\x12-.openstorage.api.SdkCloudBackupRestoreRequest\x1a..openstorage.api.SdkCloudBackupRestoreResponse\"\"\x82\xd3\xe4\x93\x02\x1c\"\x17/v1/cloudbackup/restore:\x01*\x12\x8a\x01\n\x06\x44\x65lete\x12,.openstorage.api.SdkCloudBackupDeleteRequest\x1a-.openstorage.api.SdkCloudBackupDeleteResponse\"#\x82\xd3\xe4\x93\x02\x1d*\x1b/v1/cloudbackup/{backup_id}\x12\x94\x01\n\tDeleteAll\x12/.openstorage.api.SdkCloudBackupDeleteAllRequest\x1a\x30.openstorage.api.SdkCloudBackupDeleteAllResponse\"$\x82\xd3\xe4\x93\x02\x1e\"\x19/v1/cloudbackup/deleteall:\x01*\x12\x87\x01\n\tEnumerate\x12/.openstorage.api.SdkCloudBackupEnumerateRequest\x1a\x30.openstorage.api.SdkCloudBackupEnumerateResponse\"\x17\x82\xd3\xe4\x93\x02\x11\x12\x0f/v1/cloudbackup\x12\x95\x01\n\x06Status\x12,.openstorage.api.SdkCloudBackupStatusRequest\x1a-.openstorage.api.SdkCloudBackupStatusResponse\".\x82\xd3\xe4\x93\x02(\x12&/v1/cloudbackup/status/{src_volume_id}\x12\x95\x01\n\x07\x43\x61talog\x12-.openstorage.api.SdkCloudBackupCatalogRequest\x1a..openstorage.api.SdkCloudBackupCatalogResponse\"+\x82\xd3\xe4\x93\x02%\x12#/v1/cloudbackup/catalog/{backup_id}\x12\x99\x01\n\x07History\x12-.openstorage.api.SdkCloudBackupHistoryRequest\x1a..openstorage.api.SdkCloudBackupHistoryResponse\"/\x82\xd3\xe4\x93\x02)\x12\'/v1/cloudbackup/history/{src_volume_id}\x12\x9c\x01\n\x0bStateChange\x12\x31.openstorage.api.SdkCloudBackupStateChangeRequest\x1a\x32.openstorage.api.SdkCloudBackupStateChangeResponse\"&\x82\xd3\xe4\x93\x02 \"\x1b/v1/cloudbackup/statechange:\x01*\x12\x99\x01\n\x0bSchedCreate\x12\x31.openstorage.api.SdkCloudBackupSchedCreateRequest\x1a\x32.openstorage.api.SdkCloudBackupSchedCreateResponse\"#\x82\xd3\xe4\x93\x02\x1d\"\x18/v1/cloudbackup/schedule:\x01*\x12\x9d\x01\n\x0bSchedDelete\x12\x31.openstorage.api.SdkCloudBackupSchedDeleteRequest\x1a\x32.openstorage.api.SdkCloudBackupSchedDeleteResponse\"\'\x82\xd3\xe4\x93\x02!*\x1f/v1/cloudbackup/schedule/{uuid}\x12\x9f\x01\n\x0eSchedEnumerate\x12\x34.openstorage.api.SdkCloudBackupSchedEnumerateRequest\x1a\x35.openstorage.api.SdkCloudBackupSchedEnumerateResponse\" \x82\xd3\xe4\x93\x02\x1a\x12\x18/v1/cloudbackup/scheduleB\x1c\n\x13\x63om.openstorage.apiP\x01Z\x03\x61pib\x06proto3')
+  serialized_pb=_b('\n\tapi.proto\x12\x0fopenstorage.api\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1cgoogle/api/annotations.proto\"\xa3\x02\n\x0fStorageResource\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x04path\x18\x02 \x01(\t\x12.\n\x06medium\x18\x03 \x01(\x0e\x32\x1e.openstorage.api.StorageMedium\x12\x0e\n\x06online\x18\x04 \x01(\x08\x12\x0c\n\x04iops\x18\x05 \x01(\x04\x12\x11\n\tseq_write\x18\x06 \x01(\x01\x12\x10\n\x08seq_read\x18\x07 \x01(\x01\x12\x0e\n\x06randRW\x18\x08 \x01(\x01\x12\x0c\n\x04size\x18\t \x01(\x04\x12\x0c\n\x04used\x18\n \x01(\x04\x12\x16\n\x0erotation_speed\x18\x0b \x01(\t\x12-\n\tlast_scan\x18\x0c \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x10\n\x08metadata\x18\r \x01(\x08\"\x8d\x02\n\x0bStoragePool\x12\n\n\x02ID\x18\x01 \x01(\x05\x12%\n\x03\x43os\x18\x02 \x01(\x0e\x32\x18.openstorage.api.CosType\x12.\n\x06Medium\x18\x03 \x01(\x0e\x32\x1e.openstorage.api.StorageMedium\x12\x11\n\tRaidLevel\x18\x04 \x01(\t\x12\x11\n\tTotalSize\x18\x07 \x01(\x04\x12\x0c\n\x04Used\x18\x08 \x01(\x04\x12\x38\n\x06labels\x18\t \x03(\x0b\x32(.openstorage.api.StoragePool.LabelsEntry\x1a-\n\x0bLabelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x9b\x01\n\rVolumeLocator\x12\x0c\n\x04name\x18\x01 \x01(\t\x12G\n\rvolume_labels\x18\x02 \x03(\x0b\x32\x30.openstorage.api.VolumeLocator.VolumeLabelsEntry\x1a\x33\n\x11VolumeLabelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"&\n\x06Source\x12\x0e\n\x06parent\x18\x01 \x01(\t\x12\x0c\n\x04seed\x18\x02 \x01(\t\"\x13\n\x05Group\x12\n\n\x02id\x18\x01 \x01(\t\"\xbf\x05\n\nVolumeSpec\x12\x11\n\tephemeral\x18\x01 \x01(\x08\x12\x0c\n\x04size\x18\x02 \x01(\x04\x12\'\n\x06\x66ormat\x18\x03 \x01(\x0e\x32\x17.openstorage.api.FSType\x12\x12\n\nblock_size\x18\x04 \x01(\x03\x12\x10\n\x08ha_level\x18\x05 \x01(\x03\x12%\n\x03\x63os\x18\x06 \x01(\x0e\x32\x18.openstorage.api.CosType\x12.\n\nio_profile\x18\x07 \x01(\x0e\x32\x1a.openstorage.api.IoProfile\x12\x0e\n\x06\x64\x65\x64upe\x18\x08 \x01(\x08\x12\x19\n\x11snapshot_interval\x18\t \x01(\r\x12\x44\n\rvolume_labels\x18\n \x03(\x0b\x32-.openstorage.api.VolumeSpec.VolumeLabelsEntry\x12\x0e\n\x06shared\x18\x0b \x01(\x08\x12\x30\n\x0breplica_set\x18\x0c \x01(\x0b\x32\x1b.openstorage.api.ReplicaSet\x12\x19\n\x11\x61ggregation_level\x18\r \x01(\r\x12\x11\n\tencrypted\x18\x0e \x01(\x08\x12\x12\n\npassphrase\x18\x0f \x01(\t\x12\x19\n\x11snapshot_schedule\x18\x10 \x01(\t\x12\r\n\x05scale\x18\x11 \x01(\r\x12\x0e\n\x06sticky\x18\x12 \x01(\x08\x12%\n\x05group\x18\x15 \x01(\x0b\x32\x16.openstorage.api.Group\x12\x16\n\x0egroup_enforced\x18\x16 \x01(\x08\x12\x12\n\ncompressed\x18\x17 \x01(\x08\x12\x10\n\x08\x63\x61scaded\x18\x18 \x01(\x08\x12\x0f\n\x07journal\x18\x19 \x01(\x08\x12\x10\n\x08sharedv4\x18\x1a \x01(\x08\x1a\x33\n\x11VolumeLabelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xe4\x08\n\rVolumeSpecSet\x12\x13\n\tephemeral\x18\x01 \x01(\x08H\x00\x12\x0e\n\x04size\x18\x02 \x01(\x04H\x01\x12)\n\x06\x66ormat\x18\x03 \x01(\x0e\x32\x17.openstorage.api.FSTypeH\x02\x12\x14\n\nblock_size\x18\x04 \x01(\x03H\x03\x12\x12\n\x08ha_level\x18\x05 \x01(\x03H\x04\x12\'\n\x03\x63os\x18\x06 \x01(\x0e\x32\x18.openstorage.api.CosTypeH\x05\x12\x30\n\nio_profile\x18\x07 \x01(\x0e\x32\x1a.openstorage.api.IoProfileH\x06\x12\x10\n\x06\x64\x65\x64upe\x18\x08 \x01(\x08H\x07\x12\x1b\n\x11snapshot_interval\x18\t \x01(\rH\x08\x12G\n\rvolume_labels\x18\n \x03(\x0b\x32\x30.openstorage.api.VolumeSpecSet.VolumeLabelsEntry\x12\x10\n\x06shared\x18\x0b \x01(\x08H\t\x12\x30\n\x0breplica_set\x18\x0c \x01(\x0b\x32\x1b.openstorage.api.ReplicaSet\x12\x1b\n\x11\x61ggregation_level\x18\r \x01(\rH\n\x12\x13\n\tencrypted\x18\x0e \x01(\x08H\x0b\x12\x14\n\npassphrase\x18\x0f \x01(\tH\x0c\x12\x1b\n\x11snapshot_schedule\x18\x10 \x01(\tH\r\x12\x0f\n\x05scale\x18\x11 \x01(\rH\x0e\x12\x10\n\x06sticky\x18\x12 \x01(\x08H\x0f\x12\'\n\x05group\x18\x13 \x01(\x0b\x32\x16.openstorage.api.GroupH\x10\x12\x18\n\x0egroup_enforced\x18\x14 \x01(\x08H\x11\x12\x14\n\ncompressed\x18\x15 \x01(\x08H\x12\x12\x12\n\x08\x63\x61scaded\x18\x16 \x01(\x08H\x13\x12\x11\n\x07journal\x18\x17 \x01(\x08H\x14\x12\x12\n\x08sharedv4\x18\x18 \x01(\x08H\x15\x1a\x33\n\x11VolumeLabelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x42\x0f\n\rephemeral_optB\n\n\x08size_optB\x0c\n\nformat_optB\x10\n\x0e\x62lock_size_optB\x0e\n\x0cha_level_optB\t\n\x07\x63os_optB\x10\n\x0eio_profile_optB\x0c\n\ndedupe_optB\x17\n\x15snapshot_interval_optB\x0c\n\nshared_optB\x17\n\x15\x61ggregation_level_optB\x0f\n\rencrypted_optB\x10\n\x0epassphrase_optB\x17\n\x15snapshot_schedule_optB\x0b\n\tscale_optB\x0c\n\nsticky_optB\x0b\n\tgroup_optB\x14\n\x12group_enforced_optB\x10\n\x0e\x63ompressed_optB\x0e\n\x0c\x63\x61scaded_optB\r\n\x0bjournal_optB\x0e\n\x0csharedv4_opt\"\x1b\n\nReplicaSet\x12\r\n\x05nodes\x18\x01 \x03(\t\"\x91\x01\n\x0fRuntimeStateMap\x12I\n\rruntime_state\x18\x01 \x03(\x0b\x32\x32.openstorage.api.RuntimeStateMap.RuntimeStateEntry\x1a\x33\n\x11RuntimeStateEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xf8\x06\n\x06Volume\x12\n\n\x02id\x18\x01 \x01(\t\x12\'\n\x06source\x18\x02 \x01(\x0b\x32\x17.openstorage.api.Source\x12%\n\x05group\x18\x03 \x01(\x0b\x32\x16.openstorage.api.Group\x12\x10\n\x08readonly\x18\x04 \x01(\x08\x12/\n\x07locator\x18\x05 \x01(\x0b\x32\x1e.openstorage.api.VolumeLocator\x12)\n\x05\x63time\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12)\n\x04spec\x18\x07 \x01(\x0b\x32\x1b.openstorage.api.VolumeSpec\x12\r\n\x05usage\x18\x08 \x01(\x04\x12-\n\tlast_scan\x18\t \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\'\n\x06\x66ormat\x18\n \x01(\x0e\x32\x17.openstorage.api.FSType\x12-\n\x06status\x18\x0b \x01(\x0e\x32\x1d.openstorage.api.VolumeStatus\x12+\n\x05state\x18\x0c \x01(\x0e\x32\x1c.openstorage.api.VolumeState\x12\x13\n\x0b\x61ttached_on\x18\r \x01(\t\x12\x34\n\x0e\x61ttached_state\x18\x0e \x01(\x0e\x32\x1c.openstorage.api.AttachState\x12\x13\n\x0b\x64\x65vice_path\x18\x0f \x01(\t\x12\x1a\n\x12secure_device_path\x18\x10 \x01(\t\x12\x13\n\x0b\x61ttach_path\x18\x11 \x03(\t\x12<\n\x0b\x61ttach_info\x18\x12 \x03(\x0b\x32\'.openstorage.api.Volume.AttachInfoEntry\x12\x31\n\x0creplica_sets\x18\x13 \x03(\x0b\x32\x1b.openstorage.api.ReplicaSet\x12\x37\n\rruntime_state\x18\x14 \x03(\x0b\x32 .openstorage.api.RuntimeStateMap\x12\r\n\x05\x65rror\x18\x15 \x01(\t\x12\x39\n\x10volume_consumers\x18\x16 \x03(\x0b\x32\x1f.openstorage.api.VolumeConsumer\x1a\x31\n\x0f\x41ttachInfoEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xbf\x01\n\x05Stats\x12\r\n\x05reads\x18\x01 \x01(\x04\x12\x0f\n\x07read_ms\x18\x02 \x01(\x04\x12\x12\n\nread_bytes\x18\x03 \x01(\x04\x12\x0e\n\x06writes\x18\x04 \x01(\x04\x12\x10\n\x08write_ms\x18\x05 \x01(\x04\x12\x13\n\x0bwrite_bytes\x18\x06 \x01(\x04\x12\x13\n\x0bio_progress\x18\x07 \x01(\x04\x12\r\n\x05io_ms\x18\x08 \x01(\x04\x12\x12\n\nbytes_used\x18\t \x01(\x04\x12\x13\n\x0binterval_ms\x18\n \x01(\x04\"\xcf\x02\n\x05\x41lert\x12\n\n\x02id\x18\x01 \x01(\x03\x12/\n\x08severity\x18\x02 \x01(\x0e\x32\x1d.openstorage.api.SeverityType\x12\x12\n\nalert_type\x18\x03 \x01(\x03\x12\x0f\n\x07message\x18\x04 \x01(\t\x12-\n\ttimestamp\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x13\n\x0bresource_id\x18\x06 \x01(\t\x12/\n\x08resource\x18\x07 \x01(\x0e\x32\x1d.openstorage.api.ResourceType\x12\x0f\n\x07\x63leared\x18\x08 \x01(\x08\x12\x0b\n\x03ttl\x18\t \x01(\x04\x12\x12\n\nunique_tag\x18\n \x01(\t\x12\r\n\x05\x63ount\x18\x0b \x01(\x03\x12.\n\nfirst_seen\x18\x0c \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"/\n\x06\x41lerts\x12%\n\x05\x61lert\x18\x01 \x03(\x0b\x32\x16.openstorage.api.Alert\"\xdd\x01\n\x0fObjectstoreInfo\x12\x0c\n\x04uuid\x18\x01 \x01(\t\x12\x11\n\tvolume_id\x18\x02 \x01(\t\x12\x0f\n\x07\x65nabled\x18\x03 \x01(\x08\x12\x0e\n\x06status\x18\x04 \x01(\t\x12\x0e\n\x06\x61\x63tion\x18\x05 \x01(\x03\x12\x12\n\naccess_key\x18\x06 \x01(\t\x12\x12\n\nsecret_key\x18\x07 \x01(\t\x12\x11\n\tendpoints\x18\x08 \x03(\t\x12\x18\n\x10\x63urrent_endpoint\x18\t \x01(\t\x12\x13\n\x0b\x61\x63\x63\x65ss_port\x18\n \x01(\x03\x12\x0e\n\x06region\x18\x0b \x01(\t\"\x9a\x01\n\x13VolumeCreateRequest\x12/\n\x07locator\x18\x01 \x01(\x0b\x32\x1e.openstorage.api.VolumeLocator\x12\'\n\x06source\x18\x02 \x01(\x0b\x32\x17.openstorage.api.Source\x12)\n\x04spec\x18\x03 \x01(\x0b\x32\x1b.openstorage.api.VolumeSpec\"\x1f\n\x0eVolumeResponse\x12\r\n\x05\x65rror\x18\x01 \x01(\t\"\\\n\x14VolumeCreateResponse\x12\n\n\x02id\x18\x01 \x01(\t\x12\x38\n\x0fvolume_response\x18\x02 \x01(\x0b\x32\x1f.openstorage.api.VolumeResponse\"\xa3\x01\n\x11VolumeStateAction\x12\x32\n\x06\x61ttach\x18\x01 \x01(\x0e\x32\".openstorage.api.VolumeActionParam\x12\x31\n\x05mount\x18\x02 \x01(\x0e\x32\".openstorage.api.VolumeActionParam\x12\x12\n\nmount_path\x18\x03 \x01(\t\x12\x13\n\x0b\x64\x65vice_path\x18\x04 \x01(\t\"\x93\x02\n\x10VolumeSetRequest\x12/\n\x07locator\x18\x01 \x01(\x0b\x32\x1e.openstorage.api.VolumeLocator\x12)\n\x04spec\x18\x02 \x01(\x0b\x32\x1b.openstorage.api.VolumeSpec\x12\x32\n\x06\x61\x63tion\x18\x03 \x01(\x0b\x32\".openstorage.api.VolumeStateAction\x12?\n\x07options\x18\x04 \x03(\x0b\x32..openstorage.api.VolumeSetRequest.OptionsEntry\x1a.\n\x0cOptionsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"v\n\x11VolumeSetResponse\x12\'\n\x06volume\x18\x01 \x01(\x0b\x32\x17.openstorage.api.Volume\x12\x38\n\x0fvolume_response\x18\x02 \x01(\x0b\x32\x1f.openstorage.api.VolumeResponse\"b\n\x11SnapCreateRequest\x12\n\n\x02id\x18\x01 \x01(\t\x12/\n\x07locator\x18\x02 \x01(\x0b\x32\x1e.openstorage.api.VolumeLocator\x12\x10\n\x08readonly\x18\x03 \x01(\x08\"[\n\x12SnapCreateResponse\x12\x45\n\x16volume_create_response\x18\x01 \x01(\x0b\x32%.openstorage.api.VolumeCreateResponse\"[\n\nVolumeInfo\x12\x11\n\tvolume_id\x18\x01 \x01(\t\x12\x0c\n\x04path\x18\x02 \x01(\t\x12,\n\x07storage\x18\x03 \x01(\x0b\x32\x1b.openstorage.api.VolumeSpec\"x\n\x0eVolumeConsumer\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x11\n\tnamespace\x18\x02 \x01(\t\x12\x0c\n\x04type\x18\x03 \x01(\t\x12\x0f\n\x07node_id\x18\x04 \x01(\t\x12\x12\n\nowner_name\x18\x05 \x01(\t\x12\x12\n\nowner_type\x18\x06 \x01(\t\"X\n\x12GraphDriverChanges\x12\x0c\n\x04path\x18\x01 \x01(\t\x12\x34\n\x04kind\x18\x02 \x01(\x0e\x32&.openstorage.api.GraphDriverChangeType\" \n\x0f\x43lusterResponse\x12\r\n\x05\x65rror\x18\x01 \x01(\t\"\x80\x01\n\rActiveRequest\x12>\n\x08ReqestKV\x18\x01 \x03(\x0b\x32,.openstorage.api.ActiveRequest.ReqestKVEntry\x1a/\n\rReqestKVEntry\x12\x0b\n\x03key\x18\x01 \x01(\x03\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"]\n\x0e\x41\x63tiveRequests\x12\x14\n\x0cRequestCount\x18\x01 \x01(\x03\x12\x35\n\rActiveRequest\x18\x02 \x03(\x0b\x32\x1e.openstorage.api.ActiveRequest\"\x98\x01\n\x16GroupSnapCreateRequest\x12\n\n\x02id\x18\x01 \x01(\t\x12\x43\n\x06Labels\x18\x02 \x03(\x0b\x32\x33.openstorage.api.GroupSnapCreateRequest.LabelsEntry\x1a-\n\x0bLabelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xcb\x01\n\x17GroupSnapCreateResponse\x12J\n\tsnapshots\x18\x01 \x03(\x0b\x32\x37.openstorage.api.GroupSnapCreateResponse.SnapshotsEntry\x12\r\n\x05\x65rror\x18\x02 \x01(\t\x1aU\n\x0eSnapshotsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x32\n\x05value\x18\x02 \x01(\x0b\x32#.openstorage.api.SnapCreateResponse:\x02\x38\x01\"\xf7\x03\n\x0bStorageNode\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0b\n\x03\x63pu\x18\x02 \x01(\x01\x12\x11\n\tmem_total\x18\x03 \x01(\x04\x12\x10\n\x08mem_used\x18\x04 \x01(\x04\x12\x10\n\x08mem_free\x18\x05 \x01(\x04\x12\x10\n\x08\x61vg_load\x18\x06 \x01(\x03\x12\'\n\x06status\x18\x07 \x01(\x0e\x32\x17.openstorage.api.Status\x12\x36\n\x05\x64isks\x18\t \x03(\x0b\x32\'.openstorage.api.StorageNode.DisksEntry\x12+\n\x05pools\x18\n \x03(\x0b\x32\x1c.openstorage.api.StoragePool\x12\x0f\n\x07mgmt_ip\x18\x0b \x01(\t\x12\x0f\n\x07\x64\x61ta_ip\x18\x0c \x01(\t\x12\x10\n\x08hostname\x18\x0f \x01(\t\x12\x41\n\x0bnode_labels\x18\x10 \x03(\x0b\x32,.openstorage.api.StorageNode.NodeLabelsEntry\x1aN\n\nDisksEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12/\n\x05value\x18\x02 \x01(\x0b\x32 .openstorage.api.StorageResource:\x02\x38\x01\x1a\x31\n\x0fNodeLabelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"h\n\x0eStorageCluster\x12\'\n\x06status\x18\x01 \x01(\x0e\x32\x17.openstorage.api.Status\x12\n\n\x02id\x18\x02 \x01(\t\x12\x0f\n\x07node_id\x18\x03 \x01(\t\x12\x10\n\x08node_ids\x18\x04 \x03(\t\"\\\n\x1eSdkSchedulePolicyCreateRequest\x12:\n\x0eSchedulePolicy\x18\x01 \x01(\x0b\x32\".openstorage.api.SdkSchedulePolicy\"!\n\x1fSdkSchedulePolicyCreateResponse\"\\\n\x1eSdkSchedulePolicyUpdateRequest\x12:\n\x0eSchedulePolicy\x18\x01 \x01(\x0b\x32\".openstorage.api.SdkSchedulePolicy\"!\n\x1fSdkSchedulePolicyUpdateResponse\"#\n!SdkSchedulePolicyEnumerateRequest\"Z\n\"SdkSchedulePolicyEnumerateResponse\x12\x34\n\x08policies\x18\x01 \x03(\x0b\x32\".openstorage.api.SdkSchedulePolicy\"/\n\x1fSdkSchedulePolicyInspectRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\"V\n SdkSchedulePolicyInspectResponse\x12\x32\n\x06policy\x18\x01 \x01(\x0b\x32\".openstorage.api.SdkSchedulePolicy\".\n\x1eSdkSchedulePolicyDeleteRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\"!\n\x1fSdkSchedulePolicyDeleteResponse\">\n\x1eSdkSchedulePolicyIntervalDaily\x12\x0c\n\x04hour\x18\x01 \x01(\x05\x12\x0e\n\x06minute\x18\x02 \x01(\x05\"m\n\x1fSdkSchedulePolicyIntervalWeekly\x12,\n\x03\x64\x61y\x18\x01 \x01(\x0e\x32\x1f.openstorage.api.SdkTimeWeekday\x12\x0c\n\x04hour\x18\x02 \x01(\x05\x12\x0e\n\x06minute\x18\x03 \x01(\x05\"M\n SdkSchedulePolicyIntervalMonthly\x12\x0b\n\x03\x64\x61y\x18\x01 \x01(\x05\x12\x0c\n\x04hour\x18\x02 \x01(\x05\x12\x0e\n\x06minute\x18\x03 \x01(\x05\"\x86\x02\n\x19SdkSchedulePolicyInterval\x12\x0e\n\x06retain\x18\x01 \x01(\x03\x12@\n\x05\x64\x61ily\x18\x02 \x01(\x0b\x32/.openstorage.api.SdkSchedulePolicyIntervalDailyH\x00\x12\x42\n\x06weekly\x18\x03 \x01(\x0b\x32\x30.openstorage.api.SdkSchedulePolicyIntervalWeeklyH\x00\x12\x44\n\x07monthly\x18\x04 \x01(\x0b\x32\x31.openstorage.api.SdkSchedulePolicyIntervalMonthlyH\x00\x42\r\n\x0bperiod_type\"_\n\x11SdkSchedulePolicy\x12\x0c\n\x04name\x18\x01 \x01(\t\x12<\n\x08schedule\x18\x02 \x01(\x0b\x32*.openstorage.api.SdkSchedulePolicyInterval\"\x85\x02\n\x1aSdkCredentialCreateRequest\x12\x42\n\x0e\x61ws_credential\x18\x01 \x01(\x0b\x32(.openstorage.api.SdkAwsCredentialRequestH\x00\x12\x46\n\x10\x61zure_credential\x18\x02 \x01(\x0b\x32*.openstorage.api.SdkAzureCredentialRequestH\x00\x12H\n\x11google_credential\x18\x03 \x01(\x0b\x32+.openstorage.api.SdkGoogleCredentialRequestH\x00\x42\x11\n\x0f\x63redential_type\"4\n\x1bSdkCredentialCreateResponse\x12\x15\n\rcredential_id\x18\x01 \x01(\t\"c\n\x17SdkAwsCredentialRequest\x12\x12\n\naccess_key\x18\x01 \x01(\t\x12\x12\n\nsecret_key\x18\x02 \x01(\t\x12\x10\n\x08\x65ndpoint\x18\x03 \x01(\t\x12\x0e\n\x06region\x18\x04 \x01(\t\"F\n\x19SdkAzureCredentialRequest\x12\x14\n\x0c\x61\x63\x63ount_name\x18\x01 \x01(\t\x12\x13\n\x0b\x61\x63\x63ount_key\x18\x02 \x01(\t\"B\n\x1aSdkGoogleCredentialRequest\x12\x12\n\nproject_id\x18\x01 \x01(\t\x12\x10\n\x08json_key\x18\x02 \x01(\t\"g\n\x18SdkAwsCredentialResponse\x12\x15\n\rcredential_id\x18\x01 \x01(\t\x12\x12\n\naccess_key\x18\x02 \x01(\t\x12\x10\n\x08\x65ndpoint\x18\x03 \x01(\t\x12\x0e\n\x06region\x18\x04 \x01(\t\"I\n\x1aSdkAzureCredentialResponse\x12\x15\n\rcredential_id\x18\x01 \x01(\t\x12\x14\n\x0c\x61\x63\x63ount_name\x18\x02 \x01(\t\"H\n\x1bSdkGoogleCredentialResponse\x12\x15\n\rcredential_id\x18\x01 \x01(\t\x12\x12\n\nproject_id\x18\x02 \x01(\t\"\x1f\n\x1dSdkCredentialEnumerateRequest\"8\n\x1eSdkCredentialEnumerateResponse\x12\x16\n\x0e\x63redential_ids\x18\x01 \x03(\t\"4\n\x1bSdkCredentialInspectRequest\x12\x15\n\rcredential_id\x18\x01 \x01(\t\"\x8a\x02\n\x1cSdkCredentialInspectResponse\x12\x43\n\x0e\x61ws_credential\x18\x01 \x01(\x0b\x32).openstorage.api.SdkAwsCredentialResponseH\x00\x12G\n\x10\x61zure_credential\x18\x02 \x01(\x0b\x32+.openstorage.api.SdkAzureCredentialResponseH\x00\x12I\n\x11google_credential\x18\x03 \x01(\x0b\x32,.openstorage.api.SdkGoogleCredentialResponseH\x00\x42\x11\n\x0f\x63redential_type\"3\n\x1aSdkCredentialDeleteRequest\x12\x15\n\rcredential_id\x18\x01 \x01(\t\"\x1d\n\x1bSdkCredentialDeleteResponse\"5\n\x1cSdkCredentialValidateRequest\x12\x15\n\rcredential_id\x18\x01 \x01(\t\"\x1f\n\x1dSdkCredentialValidateResponse\"\xb4\x01\n\x15SdkVolumeMountRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\x12\x12\n\nmount_path\x18\x02 \x01(\t\x12\x44\n\x07options\x18\x03 \x03(\x0b\x32\x33.openstorage.api.SdkVolumeMountRequest.OptionsEntry\x1a.\n\x0cOptionsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x18\n\x16SdkVolumeMountResponse\"\xb8\x01\n\x17SdkVolumeUnmountRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\x12\x12\n\nmount_path\x18\x02 \x01(\t\x12\x46\n\x07options\x18\x03 \x03(\x0b\x32\x35.openstorage.api.SdkVolumeUnmountRequest.OptionsEntry\x1a.\n\x0cOptionsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x1a\n\x18SdkVolumeUnmountResponse\"\xa2\x01\n\x16SdkVolumeAttachRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\x12\x45\n\x07options\x18\x02 \x03(\x0b\x32\x34.openstorage.api.SdkVolumeAttachRequest.OptionsEntry\x1a.\n\x0cOptionsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\".\n\x17SdkVolumeAttachResponse\x12\x13\n\x0b\x64\x65vice_path\x18\x01 \x01(\t\"+\n\x16SdkVolumeDetachRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\"\x19\n\x17SdkVolumeDetachResponse\"Q\n\x16SdkVolumeCreateRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12)\n\x04spec\x18\x02 \x01(\x0b\x32\x1b.openstorage.api.VolumeSpec\",\n\x17SdkVolumeCreateResponse\x12\x11\n\tvolume_id\x18\x01 \x01(\t\"c\n\x15SdkVolumeCloneRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x11\n\tparent_id\x18\x02 \x01(\t\x12)\n\x04spec\x18\x03 \x01(\x0b\x32\x1b.openstorage.api.VolumeSpec\"+\n\x16SdkVolumeCloneResponse\x12\x11\n\tvolume_id\x18\x01 \x01(\t\"+\n\x16SdkVolumeDeleteRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\"\x19\n\x17SdkVolumeDeleteResponse\",\n\x17SdkVolumeInspectRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\"C\n\x18SdkVolumeInspectResponse\x12\'\n\x06volume\x18\x01 \x01(\x0b\x32\x17.openstorage.api.Volume\"\x87\x01\n\x13SdkVolumeSetRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\x12/\n\x07locator\x18\x02 \x01(\x0b\x32\x1e.openstorage.api.VolumeLocator\x12,\n\x04spec\x18\x04 \x01(\x0b\x32\x1e.openstorage.api.VolumeSpecSet\"\x16\n\x14SdkVolumeSetResponse\"L\n\x19SdkVolumeEnumerateRequest\x12/\n\x07locator\x18\x01 \x01(\x0b\x32\x1e.openstorage.api.VolumeLocator\"0\n\x1aSdkVolumeEnumerateResponse\x12\x12\n\nvolume_ids\x18\x01 \x03(\t\"\xaf\x01\n\x1eSdkVolumeSnapshotCreateRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\x12K\n\x06labels\x18\x02 \x03(\x0b\x32;.openstorage.api.SdkVolumeSnapshotCreateRequest.LabelsEntry\x1a-\n\x0bLabelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"6\n\x1fSdkVolumeSnapshotCreateResponse\x12\x13\n\x0bsnapshot_id\x18\x01 \x01(\t\"I\n\x1fSdkVolumeSnapshotRestoreRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\x12\x13\n\x0bsnapshot_id\x18\x02 \x01(\t\"\"\n SdkVolumeSnapshotRestoreResponse\"\xb5\x01\n!SdkVolumeSnapshotEnumerateRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\x12N\n\x06labels\x18\x02 \x03(\x0b\x32>.openstorage.api.SdkVolumeSnapshotEnumerateRequest.LabelsEntry\x1a-\n\x0bLabelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"A\n\"SdkVolumeSnapshotEnumerateResponse\x12\x1b\n\x13volume_snapshot_ids\x18\x01 \x03(\t\"\x1c\n\x1aSdkClusterEnumerateRequest\"O\n\x1bSdkClusterEnumerateResponse\x12\x30\n\x07\x63luster\x18\x01 \x01(\x0b\x32\x1f.openstorage.api.StorageCluster\"+\n\x18SdkClusterInspectRequest\x12\x0f\n\x07node_id\x18\x01 \x01(\t\"G\n\x19SdkClusterInspectResponse\x12*\n\x04node\x18\x01 \x01(\x0b\x32\x1c.openstorage.api.StorageNode\"\xb0\x01\n\x1fSdkClusterAlertEnumerateRequest\x12.\n\ntime_start\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12,\n\x08time_end\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12/\n\x08resource\x18\x03 \x01(\x0e\x32\x1d.openstorage.api.ResourceType\"J\n SdkClusterAlertEnumerateResponse\x12&\n\x06\x61lerts\x18\x01 \x03(\x0b\x32\x16.openstorage.api.Alert\"`\n\x1bSdkClusterAlertClearRequest\x12/\n\x08resource\x18\x01 \x01(\x0e\x32\x1d.openstorage.api.ResourceType\x12\x10\n\x08\x61lert_id\x18\x02 \x01(\x03\"\x1e\n\x1cSdkClusterAlertClearResponse\"a\n\x1cSdkClusterAlertDeleteRequest\x12/\n\x08resource\x18\x01 \x01(\x0e\x32\x1d.openstorage.api.ResourceType\x12\x10\n\x08\x61lert_id\x18\x02 \x01(\x03\"\x1f\n\x1dSdkClusterAlertDeleteResponse\"6\n\x1cSdkObjectstoreInspectRequest\x12\x16\n\x0eobjectstore_id\x18\x01 \x01(\t\"]\n\x1dSdkObjectstoreInspectResponse\x12<\n\x12objectstore_status\x18\x01 \x01(\x0b\x32 .openstorage.api.ObjectstoreInfo\"0\n\x1bSdkObjectstoreCreateRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\"\\\n\x1cSdkObjectstoreCreateResponse\x12<\n\x12objectstore_status\x18\x01 \x01(\x0b\x32 .openstorage.api.ObjectstoreInfo\"5\n\x1bSdkObjectstoreDeleteRequest\x12\x16\n\x0eobjectstore_id\x18\x01 \x01(\t\"\x1e\n\x1cSdkObjectstoreDeleteResponse\"E\n\x1bSdkObjectstoreUpdateRequest\x12\x16\n\x0eobjectstore_id\x18\x01 \x01(\t\x12\x0e\n\x06\x65nable\x18\x02 \x01(\x08\"\x1e\n\x1cSdkObjectstoreUpdateResponse\"W\n\x1bSdkCloudBackupCreateRequest\x12\x11\n\tvolume_id\x18\x01 \x01(\t\x12\x17\n\x0f\x63redential_uuid\x18\x02 \x01(\t\x12\x0c\n\x04\x66ull\x18\x03 \x01(\x08\"\x1e\n\x1cSdkCloudBackupCreateResponse\"x\n\x1cSdkCloudBackupRestoreRequest\x12\x11\n\tbackup_id\x18\x01 \x01(\t\x12\x1b\n\x13restore_volume_name\x18\x02 \x01(\t\x12\x17\n\x0f\x63redential_uuid\x18\x03 \x01(\t\x12\x0f\n\x07node_id\x18\x04 \x01(\t\":\n\x1dSdkCloudBackupRestoreResponse\x12\x19\n\x11restore_volume_id\x18\x01 \x01(\t\"X\n\x1bSdkCloudBackupDeleteRequest\x12\x11\n\tbackup_id\x18\x01 \x01(\t\x12\x17\n\x0f\x63redential_uuid\x18\x02 \x01(\t\x12\r\n\x05\x66orce\x18\x03 \x01(\x08\"\x1e\n\x1cSdkCloudBackupDeleteResponse\"P\n\x1eSdkCloudBackupDeleteAllRequest\x12\x15\n\rsrc_volume_id\x18\x01 \x01(\t\x12\x17\n\x0f\x63redential_uuid\x18\x02 \x01(\t\"!\n\x1fSdkCloudBackupDeleteAllResponse\"q\n\x1eSdkCloudBackupEnumerateRequest\x12\x15\n\rsrc_volume_id\x18\x01 \x01(\t\x12\x12\n\ncluster_id\x18\x02 \x01(\t\x12\x17\n\x0f\x63redential_uuid\x18\x03 \x01(\t\x12\x0b\n\x03\x61ll\x18\x04 \x01(\x08\"\xb0\x02\n\x12SdkCloudBackupInfo\x12\n\n\x02id\x18\x01 \x01(\t\x12\x15\n\rsrc_volume_id\x18\x02 \x01(\t\x12\x17\n\x0fsrc_volume_name\x18\x03 \x01(\t\x12-\n\ttimestamp\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x43\n\x08metadata\x18\x05 \x03(\x0b\x32\x31.openstorage.api.SdkCloudBackupInfo.MetadataEntry\x12\x39\n\x06status\x18\x06 \x01(\x0e\x32).openstorage.api.SdkCloudBackupStatusType\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"W\n\x1fSdkCloudBackupEnumerateResponse\x12\x34\n\x07\x62\x61\x63kups\x18\x01 \x03(\x0b\x32#.openstorage.api.SdkCloudBackupInfo\"\xa4\x02\n\x14SdkCloudBackupStatus\x12\x11\n\tbackup_id\x18\x01 \x01(\t\x12\x35\n\x06optype\x18\x02 \x01(\x0e\x32%.openstorage.api.SdkCloudBackupOpType\x12\x39\n\x06status\x18\x03 \x01(\x0e\x32).openstorage.api.SdkCloudBackupStatusType\x12\x12\n\nbytes_done\x18\x04 \x01(\x04\x12.\n\nstart_time\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x32\n\x0e\x63ompleted_time\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x0f\n\x07node_id\x18\x07 \x01(\t\"C\n\x1bSdkCloudBackupStatusRequest\x12\x15\n\rsrc_volume_id\x18\x01 \x01(\t\x12\r\n\x05local\x18\x02 \x01(\x08\"\xc5\x01\n\x1cSdkCloudBackupStatusResponse\x12M\n\x08statuses\x18\x01 \x03(\x0b\x32;.openstorage.api.SdkCloudBackupStatusResponse.StatusesEntry\x1aV\n\rStatusesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x34\n\x05value\x18\x02 \x01(\x0b\x32%.openstorage.api.SdkCloudBackupStatus:\x02\x38\x01\"J\n\x1cSdkCloudBackupCatalogRequest\x12\x11\n\tbackup_id\x18\x01 \x01(\t\x12\x17\n\x0f\x63redential_uuid\x18\x02 \x01(\t\"1\n\x1dSdkCloudBackupCatalogResponse\x12\x10\n\x08\x63ontents\x18\x01 \x03(\t\"\x9c\x01\n\x19SdkCloudBackupHistoryItem\x12\x15\n\rsrc_volume_id\x18\x01 \x01(\t\x12-\n\ttimestamp\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x39\n\x06status\x18\x03 \x01(\x0e\x32).openstorage.api.SdkCloudBackupStatusType\"5\n\x1cSdkCloudBackupHistoryRequest\x12\x15\n\rsrc_volume_id\x18\x01 \x01(\t\"a\n\x1dSdkCloudBackupHistoryResponse\x12@\n\x0chistory_list\x18\x01 \x03(\x0b\x32*.openstorage.api.SdkCloudBackupHistoryItem\"\x81\x01\n SdkCloudBackupStateChangeRequest\x12\x15\n\rsrc_volume_id\x18\x01 \x01(\t\x12\x46\n\x0frequested_state\x18\x02 \x01(\x0e\x32-.openstorage.api.SdkCloudBackupRequestedState\"#\n!SdkCloudBackupStateChangeResponse\"\x9f\x01\n\x1aSdkCloudBackupScheduleInfo\x12\x15\n\rsrc_volume_id\x18\x01 \x01(\t\x12\x17\n\x0f\x63redential_uuid\x18\x02 \x01(\t\x12<\n\x08schedule\x18\x03 \x01(\x0b\x32*.openstorage.api.SdkSchedulePolicyInterval\x12\x13\n\x0bmax_backups\x18\x04 \x01(\x04\"i\n SdkCloudBackupSchedCreateRequest\x12\x45\n\x10\x63loud_sched_info\x18\x01 \x01(\x0b\x32+.openstorage.api.SdkCloudBackupScheduleInfo\"1\n!SdkCloudBackupSchedCreateResponse\x12\x0c\n\x04uuid\x18\x01 \x01(\t\"0\n SdkCloudBackupSchedDeleteRequest\x12\x0c\n\x04uuid\x18\x01 \x01(\t\"#\n!SdkCloudBackupSchedDeleteResponse\"%\n#SdkCloudBackupSchedEnumerateRequest\"\xef\x01\n$SdkCloudBackupSchedEnumerateResponse\x12\x63\n\x10\x63loud_sched_list\x18\x01 \x03(\x0b\x32I.openstorage.api.SdkCloudBackupSchedEnumerateResponse.CloudSchedListEntry\x1a\x62\n\x13\x43loudSchedListEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12:\n\x05value\x18\x02 \x01(\x0b\x32+.openstorage.api.SdkCloudBackupScheduleInfo:\x02\x38\x01\"\xa3\x02\n\x0c\x43loudMigrate\"_\n\rOperationType\x12\x0f\n\x0bInvalidType\x10\x00\x12\x12\n\x0eMigrateCluster\x10\x01\x12\x11\n\rMigrateVolume\x10\x02\x12\x16\n\x12MigrateVolumeGroup\x10\x03\"N\n\x05Stage\x12\x10\n\x0cInvalidStage\x10\x00\x12\n\n\x06\x42\x61\x63kup\x10\x01\x12\x0b\n\x07Restore\x10\x02\x12\x10\n\x0cVolumeUpdate\x10\x03\x12\x08\n\x04\x44one\x10\x04\"b\n\x06Status\x12\x11\n\rInvalidStatus\x10\x00\x12\n\n\x06Queued\x10\x01\x12\x0f\n\x0bInitialized\x10\x02\x12\x0e\n\nInProgress\x10\x03\x12\n\n\x06\x46\x61iled\x10\x04\x12\x0c\n\x08\x43omplete\x10\x05\"\x81\x01\n\x18\x43loudMigrateStartRequest\x12>\n\toperation\x18\x01 \x01(\x0e\x32+.openstorage.api.CloudMigrate.OperationType\x12\x12\n\ncluster_id\x18\x02 \x01(\t\x12\x11\n\ttarget_id\x18\x03 \x01(\t\"\x82\x01\n\x19\x43loudMigrateCancelRequest\x12>\n\toperation\x18\x01 \x01(\x0e\x32+.openstorage.api.CloudMigrate.OperationType\x12\x12\n\ncluster_id\x18\x02 \x01(\t\x12\x11\n\ttarget_id\x18\x03 \x01(\t\"\xe1\x02\n\x10\x43loudMigrateInfo\x12\x12\n\ncluster_id\x18\x01 \x01(\t\x12\x17\n\x0flocal_volume_id\x18\x02 \x01(\t\x12\x19\n\x11local_volume_name\x18\x03 \x01(\t\x12\x18\n\x10remote_volume_id\x18\x04 \x01(\t\x12\x16\n\x0e\x63loudbackup_id\x18\x05 \x01(\t\x12:\n\rcurrent_stage\x18\x06 \x01(\x0e\x32#.openstorage.api.CloudMigrate.Stage\x12\x34\n\x06status\x18\x07 \x01(\x0e\x32$.openstorage.api.CloudMigrate.Status\x12/\n\x0blast_update\x18\x08 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x30\n\x0clast_success\x18\t \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"G\n\x14\x43loudMigrateInfoList\x12/\n\x04list\x18\x01 \x03(\x0b\x32!.openstorage.api.CloudMigrateInfo\"\xb5\x01\n\x1a\x43loudMigrateStatusResponse\x12\x43\n\x04info\x18\x01 \x03(\x0b\x32\x35.openstorage.api.CloudMigrateStatusResponse.InfoEntry\x1aR\n\tInfoEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x34\n\x05value\x18\x02 \x01(\x0b\x32%.openstorage.api.CloudMigrateInfoList:\x02\x38\x01*\xee\x02\n\x06Status\x12\x0f\n\x0bSTATUS_NONE\x10\x00\x12\x0f\n\x0bSTATUS_INIT\x10\x01\x12\r\n\tSTATUS_OK\x10\x02\x12\x12\n\x0eSTATUS_OFFLINE\x10\x03\x12\x10\n\x0cSTATUS_ERROR\x10\x04\x12\x18\n\x14STATUS_NOT_IN_QUORUM\x10\x05\x12\x17\n\x13STATUS_DECOMMISSION\x10\x06\x12\x16\n\x12STATUS_MAINTENANCE\x10\x07\x12\x17\n\x13STATUS_STORAGE_DOWN\x10\x08\x12\x1b\n\x17STATUS_STORAGE_DEGRADED\x10\t\x12\x17\n\x13STATUS_NEEDS_REBOOT\x10\n\x12\x1c\n\x18STATUS_STORAGE_REBALANCE\x10\x0b\x12 \n\x1cSTATUS_STORAGE_DRIVE_REPLACE\x10\x0c\x12#\n\x1fSTATUS_NOT_IN_QUORUM_NO_STORAGE\x10\r\x12\x0e\n\nSTATUS_MAX\x10\x0e*\x99\x01\n\nDriverType\x12\x14\n\x10\x44RIVER_TYPE_NONE\x10\x00\x12\x14\n\x10\x44RIVER_TYPE_FILE\x10\x01\x12\x15\n\x11\x44RIVER_TYPE_BLOCK\x10\x02\x12\x16\n\x12\x44RIVER_TYPE_OBJECT\x10\x03\x12\x19\n\x15\x44RIVER_TYPE_CLUSTERED\x10\x04\x12\x15\n\x11\x44RIVER_TYPE_GRAPH\x10\x05*\x95\x01\n\x06\x46SType\x12\x10\n\x0c\x46S_TYPE_NONE\x10\x00\x12\x11\n\rFS_TYPE_BTRFS\x10\x01\x12\x10\n\x0c\x46S_TYPE_EXT4\x10\x02\x12\x10\n\x0c\x46S_TYPE_FUSE\x10\x03\x12\x0f\n\x0b\x46S_TYPE_NFS\x10\x04\x12\x0f\n\x0b\x46S_TYPE_VFS\x10\x05\x12\x0f\n\x0b\x46S_TYPE_XFS\x10\x06\x12\x0f\n\x0b\x46S_TYPE_ZFS\x10\x07*\xab\x01\n\x15GraphDriverChangeType\x12!\n\x1dGRAPH_DRIVER_CHANGE_TYPE_NONE\x10\x00\x12%\n!GRAPH_DRIVER_CHANGE_TYPE_MODIFIED\x10\x01\x12\"\n\x1eGRAPH_DRIVER_CHANGE_TYPE_ADDED\x10\x02\x12$\n GRAPH_DRIVER_CHANGE_TYPE_DELETED\x10\x03*t\n\x0cSeverityType\x12\x16\n\x12SEVERITY_TYPE_NONE\x10\x00\x12\x17\n\x13SEVERITY_TYPE_ALARM\x10\x01\x12\x19\n\x15SEVERITY_TYPE_WARNING\x10\x02\x12\x18\n\x14SEVERITY_TYPE_NOTIFY\x10\x03*\x8c\x01\n\x0cResourceType\x12\x16\n\x12RESOURCE_TYPE_NONE\x10\x00\x12\x18\n\x14RESOURCE_TYPE_VOLUME\x10\x01\x12\x16\n\x12RESOURCE_TYPE_NODE\x10\x02\x12\x19\n\x15RESOURCE_TYPE_CLUSTER\x10\x03\x12\x17\n\x13RESOURCE_TYPE_DRIVE\x10\x04*\x87\x01\n\x0f\x41lertActionType\x12\x1a\n\x16\x41LERT_ACTION_TYPE_NONE\x10\x00\x12\x1c\n\x18\x41LERT_ACTION_TYPE_DELETE\x10\x01\x12\x1c\n\x18\x41LERT_ACTION_TYPE_CREATE\x10\x02\x12\x1c\n\x18\x41LERT_ACTION_TYPE_UPDATE\x10\x03*j\n\x11VolumeActionParam\x12\x1c\n\x18VOLUME_ACTION_PARAM_NONE\x10\x00\x12\x1b\n\x17VOLUME_ACTION_PARAM_OFF\x10\x01\x12\x1a\n\x16VOLUME_ACTION_PARAM_ON\x10\x02*2\n\x07\x43osType\x12\x08\n\x04NONE\x10\x00\x12\x07\n\x03LOW\x10\x01\x12\n\n\x06MEDIUM\x10\x02\x12\x08\n\x04HIGH\x10\x03*~\n\tIoProfile\x12\x19\n\x15IO_PROFILE_SEQUENTIAL\x10\x00\x12\x15\n\x11IO_PROFILE_RANDOM\x10\x01\x12\x11\n\rIO_PROFILE_DB\x10\x02\x12\x18\n\x14IO_PROFILE_DB_REMOTE\x10\x03\x12\x12\n\x0eIO_PROFILE_CMS\x10\x04*\x99\x02\n\x0bVolumeState\x12\x15\n\x11VOLUME_STATE_NONE\x10\x00\x12\x18\n\x14VOLUME_STATE_PENDING\x10\x01\x12\x1a\n\x16VOLUME_STATE_AVAILABLE\x10\x02\x12\x19\n\x15VOLUME_STATE_ATTACHED\x10\x03\x12\x19\n\x15VOLUME_STATE_DETACHED\x10\x04\x12\x1b\n\x17VOLUME_STATE_DETATCHING\x10\x05\x12\x16\n\x12VOLUME_STATE_ERROR\x10\x06\x12\x18\n\x14VOLUME_STATE_DELETED\x10\x07\x12\x1e\n\x1aVOLUME_STATE_TRY_DETACHING\x10\x08\x12\x18\n\x14VOLUME_STATE_RESTORE\x10\t*\x8f\x01\n\x0cVolumeStatus\x12\x16\n\x12VOLUME_STATUS_NONE\x10\x00\x12\x1d\n\x19VOLUME_STATUS_NOT_PRESENT\x10\x01\x12\x14\n\x10VOLUME_STATUS_UP\x10\x02\x12\x16\n\x12VOLUME_STATUS_DOWN\x10\x03\x12\x1a\n\x16VOLUME_STATUS_DEGRADED\x10\x04*]\n\rStorageMedium\x12\x1b\n\x17STORAGE_MEDIUM_MAGNETIC\x10\x00\x12\x16\n\x12STORAGE_MEDIUM_SSD\x10\x01\x12\x17\n\x13STORAGE_MEDIUM_NVME\x10\x02*(\n\rClusterNotify\x12\x17\n\x13\x43LUSTER_NOTIFY_DOWN\x10\x00*e\n\x0b\x41ttachState\x12\x19\n\x15\x41TTACH_STATE_EXTERNAL\x10\x00\x12\x19\n\x15\x41TTACH_STATE_INTERNAL\x10\x01\x12 \n\x1c\x41TTACH_STATE_INTERNAL_SWITCH\x10\x02*T\n\x0eOperationFlags\x12\x14\n\x10OP_FLAGS_UNKNOWN\x10\x00\x12\x11\n\rOP_FLAGS_NONE\x10\x01\x12\x19\n\x15OP_FLAGS_DETACH_FORCE\x10\x02*\xce\x01\n\x0eSdkTimeWeekday\x12\x18\n\x14SdkTimeWeekdaySunday\x10\x00\x12\x18\n\x14SdkTimeWeekdayMonday\x10\x01\x12\x19\n\x15SdkTimeWeekdayTuesday\x10\x02\x12\x1b\n\x17SdkTimeWeekdayWednesday\x10\x03\x12\x1a\n\x16SdkTimeWeekdayThursday\x10\x04\x12\x18\n\x14SdkTimeWeekdayFriday\x10\x05\x12\x1a\n\x16SdkTimeWeekdaySaturday\x10\x06*|\n\x14SdkCloudBackupOpType\x12\x1f\n\x1bSdkCloudBackupOpTypeUnknown\x10\x00\x12 \n\x1cSdkCloudBackupOpTypeBackupOp\x10\x01\x12!\n\x1dSdkCloudBackupOpTypeRestoreOp\x10\x02*\xbf\x02\n\x18SdkCloudBackupStatusType\x12#\n\x1fSdkCloudBackupStatusTypeUnknown\x10\x00\x12&\n\"SdkCloudBackupStatusTypeNotStarted\x10\x01\x12 \n\x1cSdkCloudBackupStatusTypeDone\x10\x02\x12#\n\x1fSdkCloudBackupStatusTypeAborted\x10\x03\x12\"\n\x1eSdkCloudBackupStatusTypePaused\x10\x04\x12#\n\x1fSdkCloudBackupStatusTypeStopped\x10\x05\x12\"\n\x1eSdkCloudBackupStatusTypeActive\x10\x06\x12\"\n\x1eSdkCloudBackupStatusTypeFailed\x10\x07*\xbc\x01\n\x1cSdkCloudBackupRequestedState\x12\'\n#SdkCloudBackupRequestedStateUnknown\x10\x00\x12%\n!SdkCloudBackupRequestedStatePause\x10\x01\x12&\n\"SdkCloudBackupRequestedStateResume\x10\x02\x12$\n SdkCloudBackupRequestedStateStop\x10\x03\x32\xd7\x05\n\x12OpenStorageCluster\x12{\n\tEnumerate\x12+.openstorage.api.SdkClusterEnumerateRequest\x1a,.openstorage.api.SdkClusterEnumerateResponse\"\x13\x82\xd3\xe4\x93\x02\r\x12\x0b/v1/cluster\x12\x7f\n\x07Inspect\x12).openstorage.api.SdkClusterInspectRequest\x1a*.openstorage.api.SdkClusterInspectResponse\"\x1d\x82\xd3\xe4\x93\x02\x17\x12\x15/v1/cluster/{node_id}\x12\x9d\x01\n\x0e\x41lertEnumerate\x12\x30.openstorage.api.SdkClusterAlertEnumerateRequest\x1a\x31.openstorage.api.SdkClusterAlertEnumerateResponse\"&\x82\xd3\xe4\x93\x02 \"\x1b/v1/cluster/alert/enumerate:\x01*\x12\x8d\x01\n\nAlertClear\x12,.openstorage.api.SdkClusterAlertClearRequest\x1a-.openstorage.api.SdkClusterAlertClearResponse\"\"\x82\xd3\xe4\x93\x02\x1c\"\x17/v1/cluster/alert/clear:\x01*\x12\x92\x01\n\x0b\x41lertDelete\x12-.openstorage.api.SdkClusterAlertDeleteRequest\x1a..openstorage.api.SdkClusterAlertDeleteResponse\"$\x82\xd3\xe4\x93\x02\x1e*\x1c/v1/cluster/alert/{alert_id}2\xbe\r\n\x11OpenStorageVolume\x12r\n\x06\x43reate\x12\'.openstorage.api.SdkVolumeCreateRequest\x1a(.openstorage.api.SdkVolumeCreateResponse\"\x15\x82\xd3\xe4\x93\x02\x0f\"\n/v1/volume:\x01*\x12u\n\x05\x43lone\x12&.openstorage.api.SdkVolumeCloneRequest\x1a\'.openstorage.api.SdkVolumeCloneResponse\"\x1b\x82\xd3\xe4\x93\x02\x15\"\x10/v1/volume/clone:\x01*\x12{\n\x06\x44\x65lete\x12\'.openstorage.api.SdkVolumeDeleteRequest\x1a(.openstorage.api.SdkVolumeDeleteResponse\"\x1e\x82\xd3\xe4\x93\x02\x18*\x16/v1/volume/{volume_id}\x12~\n\x07Inspect\x12(.openstorage.api.SdkVolumeInspectRequest\x1a).openstorage.api.SdkVolumeInspectResponse\"\x1e\x82\xd3\xe4\x93\x02\x18\x12\x16/v1/volume/{volume_id}\x12m\n\x03Set\x12$.openstorage.api.SdkVolumeSetRequest\x1a%.openstorage.api.SdkVolumeSetResponse\"\x19\x82\xd3\xe4\x93\x02\x13\"\x0e/v1/volume/set:\x01*\x12\x85\x01\n\tEnumerate\x12*.openstorage.api.SdkVolumeEnumerateRequest\x1a+.openstorage.api.SdkVolumeEnumerateResponse\"\x1f\x82\xd3\xe4\x93\x02\x19\"\x14/v1/volume/enumerate:\x01*\x12\x93\x01\n\x0eSnapshotCreate\x12/.openstorage.api.SdkVolumeSnapshotCreateRequest\x1a\x30.openstorage.api.SdkVolumeSnapshotCreateResponse\"\x1e\x82\xd3\xe4\x93\x02\x18\"\x13/v1/volume/snapshot:\x01*\x12\x9e\x01\n\x0fSnapshotRestore\x12\x30.openstorage.api.SdkVolumeSnapshotRestoreRequest\x1a\x31.openstorage.api.SdkVolumeSnapshotRestoreResponse\"&\x82\xd3\xe4\x93\x02 \"\x1b/v1/volume/snapshot/restore:\x01*\x12\xa6\x01\n\x11SnapshotEnumerate\x12\x32.openstorage.api.SdkVolumeSnapshotEnumerateRequest\x1a\x33.openstorage.api.SdkVolumeSnapshotEnumerateResponse\"(\x82\xd3\xe4\x93\x02\"\"\x1d/v1/volume/snapshot/enumerate:\x01*\x12y\n\x06\x41ttach\x12\'.openstorage.api.SdkVolumeAttachRequest\x1a(.openstorage.api.SdkVolumeAttachResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\"\x11/v1/volume/attach:\x01*\x12y\n\x06\x44\x65tach\x12\'.openstorage.api.SdkVolumeDetachRequest\x1a(.openstorage.api.SdkVolumeDetachResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\"\x11/v1/volume/detach:\x01*\x12u\n\x05Mount\x12&.openstorage.api.SdkVolumeMountRequest\x1a\'.openstorage.api.SdkVolumeMountResponse\"\x1b\x82\xd3\xe4\x93\x02\x15\"\x10/v1/volume/mount:\x01*\x12}\n\x07Unmount\x12(.openstorage.api.SdkVolumeUnmountRequest\x1a).openstorage.api.SdkVolumeUnmountResponse\"\x1d\x82\xd3\xe4\x93\x02\x17\"\x12/v1/volume/unmount:\x01*2\xce\x04\n\x16OpenStorageObjectstore\x12\x92\x01\n\x07Inspect\x12-.openstorage.api.SdkObjectstoreInspectRequest\x1a..openstorage.api.SdkObjectstoreInspectResponse\"(\x82\xd3\xe4\x93\x02\"\x12 /v1/objectstore/{objectstore_id}\x12\x81\x01\n\x06\x43reate\x12,.openstorage.api.SdkObjectstoreCreateRequest\x1a-.openstorage.api.SdkObjectstoreCreateResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\"\x0f/v1/objectstore:\x01*\x12\x8f\x01\n\x06\x44\x65lete\x12,.openstorage.api.SdkObjectstoreDeleteRequest\x1a-.openstorage.api.SdkObjectstoreDeleteResponse\"(\x82\xd3\xe4\x93\x02\"* /v1/objectstore/{objectstore_id}\x12\x88\x01\n\x06Update\x12,.openstorage.api.SdkObjectstoreUpdateRequest\x1a-.openstorage.api.SdkObjectstoreUpdateResponse\"!\x82\xd3\xe4\x93\x02\x1b\"\x16/v1/objectstore/update:\x01*2\xe0\x05\n\x16OpenStorageCredentials\x12\x7f\n\x06\x43reate\x12+.openstorage.api.SdkCredentialCreateRequest\x1a,.openstorage.api.SdkCredentialCreateResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\"\x0f/v1/credentials:\x01*\x12\x85\x01\n\tEnumerate\x12..openstorage.api.SdkCredentialEnumerateRequest\x1a/.openstorage.api.SdkCredentialEnumerateResponse\"\x17\x82\xd3\xe4\x93\x02\x11\x12\x0f/v1/credentials\x12\x8f\x01\n\x07Inspect\x12,.openstorage.api.SdkCredentialInspectRequest\x1a-.openstorage.api.SdkCredentialInspectResponse\"\'\x82\xd3\xe4\x93\x02!\x12\x1f/v1/credentials/{credential_id}\x12\x8c\x01\n\x06\x44\x65lete\x12+.openstorage.api.SdkCredentialDeleteRequest\x1a,.openstorage.api.SdkCredentialDeleteResponse\"\'\x82\xd3\xe4\x93\x02!*\x1f/v1/credentials/{credential_id}\x12\x9b\x01\n\x08Validate\x12-.openstorage.api.SdkCredentialValidateRequest\x1a..openstorage.api.SdkCredentialValidateResponse\"0\x82\xd3\xe4\x93\x02*\x12(/v1/credentials/validate/{credential_id}2\xed\x05\n\x19OpenStorageSchedulePolicy\x12\x8a\x01\n\x06\x43reate\x12/.openstorage.api.SdkSchedulePolicyCreateRequest\x1a\x30.openstorage.api.SdkSchedulePolicyCreateResponse\"\x1d\x82\xd3\xe4\x93\x02\x17\"\x12/v1/schedulepolicy:\x01*\x12\x8a\x01\n\x06Update\x12/.openstorage.api.SdkSchedulePolicyUpdateRequest\x1a\x30.openstorage.api.SdkSchedulePolicyUpdateResponse\"\x1d\x82\xd3\xe4\x93\x02\x17\x1a\x12/v1/schedulepolicy:\x01*\x12\x90\x01\n\tEnumerate\x12\x32.openstorage.api.SdkSchedulePolicyEnumerateRequest\x1a\x33.openstorage.api.SdkSchedulePolicyEnumerateResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\x12\x12/v1/schedulepolicy\x12\x91\x01\n\x07Inspect\x12\x30.openstorage.api.SdkSchedulePolicyInspectRequest\x1a\x31.openstorage.api.SdkSchedulePolicyInspectResponse\"!\x82\xd3\xe4\x93\x02\x1b\x12\x19/v1/schedulepolicy/{name}\x12\x8e\x01\n\x06\x44\x65lete\x12/.openstorage.api.SdkSchedulePolicyDeleteRequest\x1a\x30.openstorage.api.SdkSchedulePolicyDeleteResponse\"!\x82\xd3\xe4\x93\x02\x1b*\x19/v1/schedulepolicy/{name}2\xa2\x0e\n\x16OpenStorageCloudBackup\x12\x81\x01\n\x06\x43reate\x12,.openstorage.api.SdkCloudBackupCreateRequest\x1a-.openstorage.api.SdkCloudBackupCreateResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\"\x0f/v1/cloudbackup:\x01*\x12\x8c\x01\n\x07Restore\x12-.openstorage.api.SdkCloudBackupRestoreRequest\x1a..openstorage.api.SdkCloudBackupRestoreResponse\"\"\x82\xd3\xe4\x93\x02\x1c\"\x17/v1/cloudbackup/restore:\x01*\x12\x8a\x01\n\x06\x44\x65lete\x12,.openstorage.api.SdkCloudBackupDeleteRequest\x1a-.openstorage.api.SdkCloudBackupDeleteResponse\"#\x82\xd3\xe4\x93\x02\x1d*\x1b/v1/cloudbackup/{backup_id}\x12\x94\x01\n\tDeleteAll\x12/.openstorage.api.SdkCloudBackupDeleteAllRequest\x1a\x30.openstorage.api.SdkCloudBackupDeleteAllResponse\"$\x82\xd3\xe4\x93\x02\x1e\"\x19/v1/cloudbackup/deleteall:\x01*\x12\x87\x01\n\tEnumerate\x12/.openstorage.api.SdkCloudBackupEnumerateRequest\x1a\x30.openstorage.api.SdkCloudBackupEnumerateResponse\"\x17\x82\xd3\xe4\x93\x02\x11\x12\x0f/v1/cloudbackup\x12\x95\x01\n\x06Status\x12,.openstorage.api.SdkCloudBackupStatusRequest\x1a-.openstorage.api.SdkCloudBackupStatusResponse\".\x82\xd3\xe4\x93\x02(\x12&/v1/cloudbackup/status/{src_volume_id}\x12\x95\x01\n\x07\x43\x61talog\x12-.openstorage.api.SdkCloudBackupCatalogRequest\x1a..openstorage.api.SdkCloudBackupCatalogResponse\"+\x82\xd3\xe4\x93\x02%\x12#/v1/cloudbackup/catalog/{backup_id}\x12\x99\x01\n\x07History\x12-.openstorage.api.SdkCloudBackupHistoryRequest\x1a..openstorage.api.SdkCloudBackupHistoryResponse\"/\x82\xd3\xe4\x93\x02)\x12\'/v1/cloudbackup/history/{src_volume_id}\x12\x9c\x01\n\x0bStateChange\x12\x31.openstorage.api.SdkCloudBackupStateChangeRequest\x1a\x32.openstorage.api.SdkCloudBackupStateChangeResponse\"&\x82\xd3\xe4\x93\x02 \"\x1b/v1/cloudbackup/statechange:\x01*\x12\x99\x01\n\x0bSchedCreate\x12\x31.openstorage.api.SdkCloudBackupSchedCreateRequest\x1a\x32.openstorage.api.SdkCloudBackupSchedCreateResponse\"#\x82\xd3\xe4\x93\x02\x1d\"\x18/v1/cloudbackup/schedule:\x01*\x12\x9d\x01\n\x0bSchedDelete\x12\x31.openstorage.api.SdkCloudBackupSchedDeleteRequest\x1a\x32.openstorage.api.SdkCloudBackupSchedDeleteResponse\"\'\x82\xd3\xe4\x93\x02!*\x1f/v1/cloudbackup/schedule/{uuid}\x12\x9f\x01\n\x0eSchedEnumerate\x12\x34.openstorage.api.SdkCloudBackupSchedEnumerateRequest\x1a\x35.openstorage.api.SdkCloudBackupSchedEnumerateResponse\" \x82\xd3\xe4\x93\x02\x1a\x12\x18/v1/cloudbackup/scheduleB\x1c\n\x13\x63om.openstorage.apiP\x01Z\x03\x61pib\x06proto3')
   ,
   dependencies=[google_dot_protobuf_dot_timestamp__pb2.DESCRIPTOR,google_dot_api_dot_annotations__pb2.DESCRIPTOR,])
 
@@ -95,8 +95,8 @@ _STATUS = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=15837,
-  serialized_end=16203,
+  serialized_start=17160,
+  serialized_end=17526,
 )
 _sym_db.RegisterEnumDescriptor(_STATUS)
 
@@ -134,8 +134,8 @@ _DRIVERTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=16206,
-  serialized_end=16359,
+  serialized_start=17529,
+  serialized_end=17682,
 )
 _sym_db.RegisterEnumDescriptor(_DRIVERTYPE)
 
@@ -181,8 +181,8 @@ _FSTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=16362,
-  serialized_end=16511,
+  serialized_start=17685,
+  serialized_end=17834,
 )
 _sym_db.RegisterEnumDescriptor(_FSTYPE)
 
@@ -212,8 +212,8 @@ _GRAPHDRIVERCHANGETYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=16514,
-  serialized_end=16685,
+  serialized_start=17837,
+  serialized_end=18008,
 )
 _sym_db.RegisterEnumDescriptor(_GRAPHDRIVERCHANGETYPE)
 
@@ -243,8 +243,8 @@ _SEVERITYTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=16687,
-  serialized_end=16803,
+  serialized_start=18010,
+  serialized_end=18126,
 )
 _sym_db.RegisterEnumDescriptor(_SEVERITYTYPE)
 
@@ -278,8 +278,8 @@ _RESOURCETYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=16806,
-  serialized_end=16946,
+  serialized_start=18129,
+  serialized_end=18269,
 )
 _sym_db.RegisterEnumDescriptor(_RESOURCETYPE)
 
@@ -309,8 +309,8 @@ _ALERTACTIONTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=16949,
-  serialized_end=17084,
+  serialized_start=18272,
+  serialized_end=18407,
 )
 _sym_db.RegisterEnumDescriptor(_ALERTACTIONTYPE)
 
@@ -336,8 +336,8 @@ _VOLUMEACTIONPARAM = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=17086,
-  serialized_end=17192,
+  serialized_start=18409,
+  serialized_end=18515,
 )
 _sym_db.RegisterEnumDescriptor(_VOLUMEACTIONPARAM)
 
@@ -367,8 +367,8 @@ _COSTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=17194,
-  serialized_end=17244,
+  serialized_start=18517,
+  serialized_end=18567,
 )
 _sym_db.RegisterEnumDescriptor(_COSTYPE)
 
@@ -402,8 +402,8 @@ _IOPROFILE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=17246,
-  serialized_end=17372,
+  serialized_start=18569,
+  serialized_end=18695,
 )
 _sym_db.RegisterEnumDescriptor(_IOPROFILE)
 
@@ -457,8 +457,8 @@ _VOLUMESTATE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=17375,
-  serialized_end=17656,
+  serialized_start=18698,
+  serialized_end=18979,
 )
 _sym_db.RegisterEnumDescriptor(_VOLUMESTATE)
 
@@ -492,8 +492,8 @@ _VOLUMESTATUS = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=17659,
-  serialized_end=17802,
+  serialized_start=18982,
+  serialized_end=19125,
 )
 _sym_db.RegisterEnumDescriptor(_VOLUMESTATUS)
 
@@ -519,8 +519,8 @@ _STORAGEMEDIUM = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=17804,
-  serialized_end=17897,
+  serialized_start=19127,
+  serialized_end=19220,
 )
 _sym_db.RegisterEnumDescriptor(_STORAGEMEDIUM)
 
@@ -538,8 +538,8 @@ _CLUSTERNOTIFY = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=17899,
-  serialized_end=17939,
+  serialized_start=19222,
+  serialized_end=19262,
 )
 _sym_db.RegisterEnumDescriptor(_CLUSTERNOTIFY)
 
@@ -565,8 +565,8 @@ _ATTACHSTATE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=17941,
-  serialized_end=18042,
+  serialized_start=19264,
+  serialized_end=19365,
 )
 _sym_db.RegisterEnumDescriptor(_ATTACHSTATE)
 
@@ -592,8 +592,8 @@ _OPERATIONFLAGS = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=18044,
-  serialized_end=18128,
+  serialized_start=19367,
+  serialized_end=19451,
 )
 _sym_db.RegisterEnumDescriptor(_OPERATIONFLAGS)
 
@@ -635,8 +635,8 @@ _SDKTIMEWEEKDAY = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=18131,
-  serialized_end=18337,
+  serialized_start=19454,
+  serialized_end=19660,
 )
 _sym_db.RegisterEnumDescriptor(_SDKTIMEWEEKDAY)
 
@@ -662,8 +662,8 @@ _SDKCLOUDBACKUPOPTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=18339,
-  serialized_end=18463,
+  serialized_start=19662,
+  serialized_end=19786,
 )
 _sym_db.RegisterEnumDescriptor(_SDKCLOUDBACKUPOPTYPE)
 
@@ -709,8 +709,8 @@ _SDKCLOUDBACKUPSTATUSTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=18466,
-  serialized_end=18785,
+  serialized_start=19789,
+  serialized_end=20108,
 )
 _sym_db.RegisterEnumDescriptor(_SDKCLOUDBACKUPSTATUSTYPE)
 
@@ -740,8 +740,8 @@ _SDKCLOUDBACKUPREQUESTEDSTATE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=18788,
-  serialized_end=18976,
+  serialized_start=20111,
+  serialized_end=20299,
 )
 _sym_db.RegisterEnumDescriptor(_SDKCLOUDBACKUPREQUESTEDSTATE)
 
@@ -878,8 +878,8 @@ _CLOUDMIGRATE_OPERATIONTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=14681,
-  serialized_end=14776,
+  serialized_start=16004,
+  serialized_end=16099,
 )
 _sym_db.RegisterEnumDescriptor(_CLOUDMIGRATE_OPERATIONTYPE)
 
@@ -912,8 +912,8 @@ _CLOUDMIGRATE_STAGE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=14778,
-  serialized_end=14856,
+  serialized_start=16101,
+  serialized_end=16179,
 )
 _sym_db.RegisterEnumDescriptor(_CLOUDMIGRATE_STAGE)
 
@@ -950,8 +950,8 @@ _CLOUDMIGRATE_STATUS = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=14858,
-  serialized_end=14956,
+  serialized_start=16181,
+  serialized_end=16279,
 )
 _sym_db.RegisterEnumDescriptor(_CLOUDMIGRATE_STATUS)
 
@@ -1554,6 +1554,301 @@ _VOLUMESPEC = _descriptor.Descriptor(
 )
 
 
+_VOLUMESPECSET_VOLUMELABELSENTRY = _descriptor.Descriptor(
+  name='VolumeLabelsEntry',
+  full_name='openstorage.api.VolumeSpecSet.VolumeLabelsEntry',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='key', full_name='openstorage.api.VolumeSpecSet.VolumeLabelsEntry.key', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='value', full_name='openstorage.api.VolumeSpecSet.VolumeLabelsEntry.value', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=_descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('8\001')),
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=764,
+  serialized_end=815,
+)
+
+_VOLUMESPECSET = _descriptor.Descriptor(
+  name='VolumeSpecSet',
+  full_name='openstorage.api.VolumeSpecSet',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='ephemeral', full_name='openstorage.api.VolumeSpecSet.ephemeral', index=0,
+      number=1, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='size', full_name='openstorage.api.VolumeSpecSet.size', index=1,
+      number=2, type=4, cpp_type=4, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='format', full_name='openstorage.api.VolumeSpecSet.format', index=2,
+      number=3, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='block_size', full_name='openstorage.api.VolumeSpecSet.block_size', index=3,
+      number=4, type=3, cpp_type=2, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='ha_level', full_name='openstorage.api.VolumeSpecSet.ha_level', index=4,
+      number=5, type=3, cpp_type=2, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='cos', full_name='openstorage.api.VolumeSpecSet.cos', index=5,
+      number=6, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='io_profile', full_name='openstorage.api.VolumeSpecSet.io_profile', index=6,
+      number=7, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='dedupe', full_name='openstorage.api.VolumeSpecSet.dedupe', index=7,
+      number=8, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='snapshot_interval', full_name='openstorage.api.VolumeSpecSet.snapshot_interval', index=8,
+      number=9, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='volume_labels', full_name='openstorage.api.VolumeSpecSet.volume_labels', index=9,
+      number=10, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='shared', full_name='openstorage.api.VolumeSpecSet.shared', index=10,
+      number=11, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='replica_set', full_name='openstorage.api.VolumeSpecSet.replica_set', index=11,
+      number=12, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='aggregation_level', full_name='openstorage.api.VolumeSpecSet.aggregation_level', index=12,
+      number=13, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='encrypted', full_name='openstorage.api.VolumeSpecSet.encrypted', index=13,
+      number=14, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='passphrase', full_name='openstorage.api.VolumeSpecSet.passphrase', index=14,
+      number=15, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='snapshot_schedule', full_name='openstorage.api.VolumeSpecSet.snapshot_schedule', index=15,
+      number=16, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='scale', full_name='openstorage.api.VolumeSpecSet.scale', index=16,
+      number=17, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='sticky', full_name='openstorage.api.VolumeSpecSet.sticky', index=17,
+      number=18, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='group', full_name='openstorage.api.VolumeSpecSet.group', index=18,
+      number=19, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='group_enforced', full_name='openstorage.api.VolumeSpecSet.group_enforced', index=19,
+      number=20, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='compressed', full_name='openstorage.api.VolumeSpecSet.compressed', index=20,
+      number=21, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='cascaded', full_name='openstorage.api.VolumeSpecSet.cascaded', index=21,
+      number=22, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='journal', full_name='openstorage.api.VolumeSpecSet.journal', index=22,
+      number=23, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='sharedv4', full_name='openstorage.api.VolumeSpecSet.sharedv4', index=23,
+      number=24, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[_VOLUMESPECSET_VOLUMELABELSENTRY, ],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+    _descriptor.OneofDescriptor(
+      name='ephemeral_opt', full_name='openstorage.api.VolumeSpecSet.ephemeral_opt',
+      index=0, containing_type=None, fields=[]),
+    _descriptor.OneofDescriptor(
+      name='size_opt', full_name='openstorage.api.VolumeSpecSet.size_opt',
+      index=1, containing_type=None, fields=[]),
+    _descriptor.OneofDescriptor(
+      name='format_opt', full_name='openstorage.api.VolumeSpecSet.format_opt',
+      index=2, containing_type=None, fields=[]),
+    _descriptor.OneofDescriptor(
+      name='block_size_opt', full_name='openstorage.api.VolumeSpecSet.block_size_opt',
+      index=3, containing_type=None, fields=[]),
+    _descriptor.OneofDescriptor(
+      name='ha_level_opt', full_name='openstorage.api.VolumeSpecSet.ha_level_opt',
+      index=4, containing_type=None, fields=[]),
+    _descriptor.OneofDescriptor(
+      name='cos_opt', full_name='openstorage.api.VolumeSpecSet.cos_opt',
+      index=5, containing_type=None, fields=[]),
+    _descriptor.OneofDescriptor(
+      name='io_profile_opt', full_name='openstorage.api.VolumeSpecSet.io_profile_opt',
+      index=6, containing_type=None, fields=[]),
+    _descriptor.OneofDescriptor(
+      name='dedupe_opt', full_name='openstorage.api.VolumeSpecSet.dedupe_opt',
+      index=7, containing_type=None, fields=[]),
+    _descriptor.OneofDescriptor(
+      name='snapshot_interval_opt', full_name='openstorage.api.VolumeSpecSet.snapshot_interval_opt',
+      index=8, containing_type=None, fields=[]),
+    _descriptor.OneofDescriptor(
+      name='shared_opt', full_name='openstorage.api.VolumeSpecSet.shared_opt',
+      index=9, containing_type=None, fields=[]),
+    _descriptor.OneofDescriptor(
+      name='aggregation_level_opt', full_name='openstorage.api.VolumeSpecSet.aggregation_level_opt',
+      index=10, containing_type=None, fields=[]),
+    _descriptor.OneofDescriptor(
+      name='encrypted_opt', full_name='openstorage.api.VolumeSpecSet.encrypted_opt',
+      index=11, containing_type=None, fields=[]),
+    _descriptor.OneofDescriptor(
+      name='passphrase_opt', full_name='openstorage.api.VolumeSpecSet.passphrase_opt',
+      index=12, containing_type=None, fields=[]),
+    _descriptor.OneofDescriptor(
+      name='snapshot_schedule_opt', full_name='openstorage.api.VolumeSpecSet.snapshot_schedule_opt',
+      index=13, containing_type=None, fields=[]),
+    _descriptor.OneofDescriptor(
+      name='scale_opt', full_name='openstorage.api.VolumeSpecSet.scale_opt',
+      index=14, containing_type=None, fields=[]),
+    _descriptor.OneofDescriptor(
+      name='sticky_opt', full_name='openstorage.api.VolumeSpecSet.sticky_opt',
+      index=15, containing_type=None, fields=[]),
+    _descriptor.OneofDescriptor(
+      name='group_opt', full_name='openstorage.api.VolumeSpecSet.group_opt',
+      index=16, containing_type=None, fields=[]),
+    _descriptor.OneofDescriptor(
+      name='group_enforced_opt', full_name='openstorage.api.VolumeSpecSet.group_enforced_opt',
+      index=17, containing_type=None, fields=[]),
+    _descriptor.OneofDescriptor(
+      name='compressed_opt', full_name='openstorage.api.VolumeSpecSet.compressed_opt',
+      index=18, containing_type=None, fields=[]),
+    _descriptor.OneofDescriptor(
+      name='cascaded_opt', full_name='openstorage.api.VolumeSpecSet.cascaded_opt',
+      index=19, containing_type=None, fields=[]),
+    _descriptor.OneofDescriptor(
+      name='journal_opt', full_name='openstorage.api.VolumeSpecSet.journal_opt',
+      index=20, containing_type=None, fields=[]),
+    _descriptor.OneofDescriptor(
+      name='sharedv4_opt', full_name='openstorage.api.VolumeSpecSet.sharedv4_opt',
+      index=21, containing_type=None, fields=[]),
+  ],
+  serialized_start=1585,
+  serialized_end=2709,
+)
+
+
 _REPLICASET = _descriptor.Descriptor(
   name='ReplicaSet',
   full_name='openstorage.api.ReplicaSet',
@@ -1580,8 +1875,8 @@ _REPLICASET = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1584,
-  serialized_end=1611,
+  serialized_start=2711,
+  serialized_end=2738,
 )
 
 
@@ -1618,8 +1913,8 @@ _RUNTIMESTATEMAP_RUNTIMESTATEENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1708,
-  serialized_end=1759,
+  serialized_start=2835,
+  serialized_end=2886,
 )
 
 _RUNTIMESTATEMAP = _descriptor.Descriptor(
@@ -1648,8 +1943,8 @@ _RUNTIMESTATEMAP = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1614,
-  serialized_end=1759,
+  serialized_start=2741,
+  serialized_end=2886,
 )
 
 
@@ -1686,8 +1981,8 @@ _VOLUME_ATTACHINFOENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2601,
-  serialized_end=2650,
+  serialized_start=3728,
+  serialized_end=3777,
 )
 
 _VOLUME = _descriptor.Descriptor(
@@ -1863,8 +2158,8 @@ _VOLUME = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1762,
-  serialized_end=2650,
+  serialized_start=2889,
+  serialized_end=3777,
 )
 
 
@@ -1957,8 +2252,8 @@ _STATS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2653,
-  serialized_end=2844,
+  serialized_start=3780,
+  serialized_end=3971,
 )
 
 
@@ -2065,8 +2360,8 @@ _ALERT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2847,
-  serialized_end=3182,
+  serialized_start=3974,
+  serialized_end=4309,
 )
 
 
@@ -2096,8 +2391,8 @@ _ALERTS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=3184,
-  serialized_end=3231,
+  serialized_start=4311,
+  serialized_end=4358,
 )
 
 
@@ -2197,8 +2492,8 @@ _OBJECTSTOREINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=3234,
-  serialized_end=3455,
+  serialized_start=4361,
+  serialized_end=4582,
 )
 
 
@@ -2242,8 +2537,8 @@ _VOLUMECREATEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=3458,
-  serialized_end=3612,
+  serialized_start=4585,
+  serialized_end=4739,
 )
 
 
@@ -2273,8 +2568,8 @@ _VOLUMERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=3614,
-  serialized_end=3645,
+  serialized_start=4741,
+  serialized_end=4772,
 )
 
 
@@ -2311,8 +2606,8 @@ _VOLUMECREATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=3647,
-  serialized_end=3739,
+  serialized_start=4774,
+  serialized_end=4866,
 )
 
 
@@ -2363,8 +2658,8 @@ _VOLUMESTATEACTION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=3742,
-  serialized_end=3905,
+  serialized_start=4869,
+  serialized_end=5032,
 )
 
 
@@ -2401,8 +2696,8 @@ _VOLUMESETREQUEST_OPTIONSENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=4137,
-  serialized_end=4183,
+  serialized_start=5264,
+  serialized_end=5310,
 )
 
 _VOLUMESETREQUEST = _descriptor.Descriptor(
@@ -2452,8 +2747,8 @@ _VOLUMESETREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=3908,
-  serialized_end=4183,
+  serialized_start=5035,
+  serialized_end=5310,
 )
 
 
@@ -2490,8 +2785,8 @@ _VOLUMESETRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=4185,
-  serialized_end=4303,
+  serialized_start=5312,
+  serialized_end=5430,
 )
 
 
@@ -2535,8 +2830,8 @@ _SNAPCREATEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=4305,
-  serialized_end=4403,
+  serialized_start=5432,
+  serialized_end=5530,
 )
 
 
@@ -2566,8 +2861,8 @@ _SNAPCREATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=4405,
-  serialized_end=4496,
+  serialized_start=5532,
+  serialized_end=5623,
 )
 
 
@@ -2611,8 +2906,8 @@ _VOLUMEINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=4498,
-  serialized_end=4589,
+  serialized_start=5625,
+  serialized_end=5716,
 )
 
 
@@ -2677,8 +2972,8 @@ _VOLUMECONSUMER = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=4591,
-  serialized_end=4711,
+  serialized_start=5718,
+  serialized_end=5838,
 )
 
 
@@ -2715,8 +3010,8 @@ _GRAPHDRIVERCHANGES = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=4713,
-  serialized_end=4801,
+  serialized_start=5840,
+  serialized_end=5928,
 )
 
 
@@ -2746,8 +3041,8 @@ _CLUSTERRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=4803,
-  serialized_end=4835,
+  serialized_start=5930,
+  serialized_end=5962,
 )
 
 
@@ -2784,8 +3079,8 @@ _ACTIVEREQUEST_REQESTKVENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=4919,
-  serialized_end=4966,
+  serialized_start=6046,
+  serialized_end=6093,
 )
 
 _ACTIVEREQUEST = _descriptor.Descriptor(
@@ -2814,8 +3109,8 @@ _ACTIVEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=4838,
-  serialized_end=4966,
+  serialized_start=5965,
+  serialized_end=6093,
 )
 
 
@@ -2852,8 +3147,8 @@ _ACTIVEREQUESTS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=4968,
-  serialized_end=5061,
+  serialized_start=6095,
+  serialized_end=6188,
 )
 
 
@@ -2927,8 +3222,8 @@ _GROUPSNAPCREATEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=5064,
-  serialized_end=5216,
+  serialized_start=6191,
+  serialized_end=6343,
 )
 
 
@@ -2965,8 +3260,8 @@ _GROUPSNAPCREATERESPONSE_SNAPSHOTSENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=5337,
-  serialized_end=5422,
+  serialized_start=6464,
+  serialized_end=6549,
 )
 
 _GROUPSNAPCREATERESPONSE = _descriptor.Descriptor(
@@ -3002,8 +3297,8 @@ _GROUPSNAPCREATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=5219,
-  serialized_end=5422,
+  serialized_start=6346,
+  serialized_end=6549,
 )
 
 
@@ -3040,8 +3335,8 @@ _STORAGENODE_DISKSENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=5799,
-  serialized_end=5877,
+  serialized_start=6926,
+  serialized_end=7004,
 )
 
 _STORAGENODE_NODELABELSENTRY = _descriptor.Descriptor(
@@ -3077,8 +3372,8 @@ _STORAGENODE_NODELABELSENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=5879,
-  serialized_end=5928,
+  serialized_start=7006,
+  serialized_end=7055,
 )
 
 _STORAGENODE = _descriptor.Descriptor(
@@ -3191,8 +3486,8 @@ _STORAGENODE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=5425,
-  serialized_end=5928,
+  serialized_start=6552,
+  serialized_end=7055,
 )
 
 
@@ -3243,8 +3538,8 @@ _STORAGECLUSTER = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=5930,
-  serialized_end=6034,
+  serialized_start=7057,
+  serialized_end=7161,
 )
 
 
@@ -3274,8 +3569,8 @@ _SDKSCHEDULEPOLICYCREATEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6036,
-  serialized_end=6128,
+  serialized_start=7163,
+  serialized_end=7255,
 )
 
 
@@ -3298,8 +3593,8 @@ _SDKSCHEDULEPOLICYCREATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6130,
-  serialized_end=6163,
+  serialized_start=7257,
+  serialized_end=7290,
 )
 
 
@@ -3329,8 +3624,8 @@ _SDKSCHEDULEPOLICYUPDATEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6165,
-  serialized_end=6257,
+  serialized_start=7292,
+  serialized_end=7384,
 )
 
 
@@ -3353,8 +3648,8 @@ _SDKSCHEDULEPOLICYUPDATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6259,
-  serialized_end=6292,
+  serialized_start=7386,
+  serialized_end=7419,
 )
 
 
@@ -3377,8 +3672,8 @@ _SDKSCHEDULEPOLICYENUMERATEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6294,
-  serialized_end=6329,
+  serialized_start=7421,
+  serialized_end=7456,
 )
 
 
@@ -3408,8 +3703,8 @@ _SDKSCHEDULEPOLICYENUMERATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6331,
-  serialized_end=6421,
+  serialized_start=7458,
+  serialized_end=7548,
 )
 
 
@@ -3439,8 +3734,8 @@ _SDKSCHEDULEPOLICYINSPECTREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6423,
-  serialized_end=6470,
+  serialized_start=7550,
+  serialized_end=7597,
 )
 
 
@@ -3470,8 +3765,8 @@ _SDKSCHEDULEPOLICYINSPECTRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6472,
-  serialized_end=6558,
+  serialized_start=7599,
+  serialized_end=7685,
 )
 
 
@@ -3501,8 +3796,8 @@ _SDKSCHEDULEPOLICYDELETEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6560,
-  serialized_end=6606,
+  serialized_start=7687,
+  serialized_end=7733,
 )
 
 
@@ -3525,8 +3820,8 @@ _SDKSCHEDULEPOLICYDELETERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6608,
-  serialized_end=6641,
+  serialized_start=7735,
+  serialized_end=7768,
 )
 
 
@@ -3563,8 +3858,8 @@ _SDKSCHEDULEPOLICYINTERVALDAILY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6643,
-  serialized_end=6705,
+  serialized_start=7770,
+  serialized_end=7832,
 )
 
 
@@ -3608,8 +3903,8 @@ _SDKSCHEDULEPOLICYINTERVALWEEKLY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6707,
-  serialized_end=6816,
+  serialized_start=7834,
+  serialized_end=7943,
 )
 
 
@@ -3653,8 +3948,8 @@ _SDKSCHEDULEPOLICYINTERVALMONTHLY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6818,
-  serialized_end=6895,
+  serialized_start=7945,
+  serialized_end=8022,
 )
 
 
@@ -3708,8 +4003,8 @@ _SDKSCHEDULEPOLICYINTERVAL = _descriptor.Descriptor(
       name='period_type', full_name='openstorage.api.SdkSchedulePolicyInterval.period_type',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=6898,
-  serialized_end=7160,
+  serialized_start=8025,
+  serialized_end=8287,
 )
 
 
@@ -3746,8 +4041,8 @@ _SDKSCHEDULEPOLICY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=7162,
-  serialized_end=7257,
+  serialized_start=8289,
+  serialized_end=8384,
 )
 
 
@@ -3794,8 +4089,8 @@ _SDKCREDENTIALCREATEREQUEST = _descriptor.Descriptor(
       name='credential_type', full_name='openstorage.api.SdkCredentialCreateRequest.credential_type',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=7260,
-  serialized_end=7521,
+  serialized_start=8387,
+  serialized_end=8648,
 )
 
 
@@ -3825,8 +4120,8 @@ _SDKCREDENTIALCREATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=7523,
-  serialized_end=7575,
+  serialized_start=8650,
+  serialized_end=8702,
 )
 
 
@@ -3877,8 +4172,8 @@ _SDKAWSCREDENTIALREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=7577,
-  serialized_end=7676,
+  serialized_start=8704,
+  serialized_end=8803,
 )
 
 
@@ -3915,8 +4210,8 @@ _SDKAZURECREDENTIALREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=7678,
-  serialized_end=7748,
+  serialized_start=8805,
+  serialized_end=8875,
 )
 
 
@@ -3953,8 +4248,8 @@ _SDKGOOGLECREDENTIALREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=7750,
-  serialized_end=7816,
+  serialized_start=8877,
+  serialized_end=8943,
 )
 
 
@@ -4005,8 +4300,8 @@ _SDKAWSCREDENTIALRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=7818,
-  serialized_end=7921,
+  serialized_start=8945,
+  serialized_end=9048,
 )
 
 
@@ -4043,8 +4338,8 @@ _SDKAZURECREDENTIALRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=7923,
-  serialized_end=7996,
+  serialized_start=9050,
+  serialized_end=9123,
 )
 
 
@@ -4081,8 +4376,8 @@ _SDKGOOGLECREDENTIALRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=7998,
-  serialized_end=8070,
+  serialized_start=9125,
+  serialized_end=9197,
 )
 
 
@@ -4105,8 +4400,8 @@ _SDKCREDENTIALENUMERATEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=8072,
-  serialized_end=8103,
+  serialized_start=9199,
+  serialized_end=9230,
 )
 
 
@@ -4136,8 +4431,8 @@ _SDKCREDENTIALENUMERATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=8105,
-  serialized_end=8161,
+  serialized_start=9232,
+  serialized_end=9288,
 )
 
 
@@ -4167,8 +4462,8 @@ _SDKCREDENTIALINSPECTREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=8163,
-  serialized_end=8215,
+  serialized_start=9290,
+  serialized_end=9342,
 )
 
 
@@ -4215,8 +4510,8 @@ _SDKCREDENTIALINSPECTRESPONSE = _descriptor.Descriptor(
       name='credential_type', full_name='openstorage.api.SdkCredentialInspectResponse.credential_type',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=8218,
-  serialized_end=8484,
+  serialized_start=9345,
+  serialized_end=9611,
 )
 
 
@@ -4246,8 +4541,8 @@ _SDKCREDENTIALDELETEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=8486,
-  serialized_end=8537,
+  serialized_start=9613,
+  serialized_end=9664,
 )
 
 
@@ -4270,8 +4565,8 @@ _SDKCREDENTIALDELETERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=8539,
-  serialized_end=8568,
+  serialized_start=9666,
+  serialized_end=9695,
 )
 
 
@@ -4301,8 +4596,8 @@ _SDKCREDENTIALVALIDATEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=8570,
-  serialized_end=8623,
+  serialized_start=9697,
+  serialized_end=9750,
 )
 
 
@@ -4325,8 +4620,8 @@ _SDKCREDENTIALVALIDATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=8625,
-  serialized_end=8656,
+  serialized_start=9752,
+  serialized_end=9783,
 )
 
 
@@ -4363,8 +4658,8 @@ _SDKVOLUMEMOUNTREQUEST_OPTIONSENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=4137,
-  serialized_end=4183,
+  serialized_start=5264,
+  serialized_end=5310,
 )
 
 _SDKVOLUMEMOUNTREQUEST = _descriptor.Descriptor(
@@ -4407,8 +4702,8 @@ _SDKVOLUMEMOUNTREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=8659,
-  serialized_end=8839,
+  serialized_start=9786,
+  serialized_end=9966,
 )
 
 
@@ -4431,8 +4726,8 @@ _SDKVOLUMEMOUNTRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=8841,
-  serialized_end=8865,
+  serialized_start=9968,
+  serialized_end=9992,
 )
 
 
@@ -4469,8 +4764,8 @@ _SDKVOLUMEUNMOUNTREQUEST_OPTIONSENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=4137,
-  serialized_end=4183,
+  serialized_start=5264,
+  serialized_end=5310,
 )
 
 _SDKVOLUMEUNMOUNTREQUEST = _descriptor.Descriptor(
@@ -4513,8 +4808,8 @@ _SDKVOLUMEUNMOUNTREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=8868,
-  serialized_end=9052,
+  serialized_start=9995,
+  serialized_end=10179,
 )
 
 
@@ -4537,8 +4832,8 @@ _SDKVOLUMEUNMOUNTRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=9054,
-  serialized_end=9080,
+  serialized_start=10181,
+  serialized_end=10207,
 )
 
 
@@ -4575,8 +4870,8 @@ _SDKVOLUMEATTACHREQUEST_OPTIONSENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=4137,
-  serialized_end=4183,
+  serialized_start=5264,
+  serialized_end=5310,
 )
 
 _SDKVOLUMEATTACHREQUEST = _descriptor.Descriptor(
@@ -4612,8 +4907,8 @@ _SDKVOLUMEATTACHREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=9083,
-  serialized_end=9245,
+  serialized_start=10210,
+  serialized_end=10372,
 )
 
 
@@ -4643,8 +4938,8 @@ _SDKVOLUMEATTACHRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=9247,
-  serialized_end=9293,
+  serialized_start=10374,
+  serialized_end=10420,
 )
 
 
@@ -4674,8 +4969,8 @@ _SDKVOLUMEDETACHREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=9295,
-  serialized_end=9338,
+  serialized_start=10422,
+  serialized_end=10465,
 )
 
 
@@ -4698,8 +4993,8 @@ _SDKVOLUMEDETACHRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=9340,
-  serialized_end=9365,
+  serialized_start=10467,
+  serialized_end=10492,
 )
 
 
@@ -4736,8 +5031,8 @@ _SDKVOLUMECREATEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=9367,
-  serialized_end=9448,
+  serialized_start=10494,
+  serialized_end=10575,
 )
 
 
@@ -4767,8 +5062,8 @@ _SDKVOLUMECREATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=9450,
-  serialized_end=9494,
+  serialized_start=10577,
+  serialized_end=10621,
 )
 
 
@@ -4812,8 +5107,8 @@ _SDKVOLUMECLONEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=9496,
-  serialized_end=9595,
+  serialized_start=10623,
+  serialized_end=10722,
 )
 
 
@@ -4843,8 +5138,8 @@ _SDKVOLUMECLONERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=9597,
-  serialized_end=9640,
+  serialized_start=10724,
+  serialized_end=10767,
 )
 
 
@@ -4874,8 +5169,8 @@ _SDKVOLUMEDELETEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=9642,
-  serialized_end=9685,
+  serialized_start=10769,
+  serialized_end=10812,
 )
 
 
@@ -4898,8 +5193,8 @@ _SDKVOLUMEDELETERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=9687,
-  serialized_end=9712,
+  serialized_start=10814,
+  serialized_end=10839,
 )
 
 
@@ -4929,8 +5224,8 @@ _SDKVOLUMEINSPECTREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=9714,
-  serialized_end=9758,
+  serialized_start=10841,
+  serialized_end=10885,
 )
 
 
@@ -4960,8 +5255,77 @@ _SDKVOLUMEINSPECTRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=9760,
-  serialized_end=9827,
+  serialized_start=10887,
+  serialized_end=10954,
+)
+
+
+_SDKVOLUMESETREQUEST = _descriptor.Descriptor(
+  name='SdkVolumeSetRequest',
+  full_name='openstorage.api.SdkVolumeSetRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='volume_id', full_name='openstorage.api.SdkVolumeSetRequest.volume_id', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='locator', full_name='openstorage.api.SdkVolumeSetRequest.locator', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='spec', full_name='openstorage.api.SdkVolumeSetRequest.spec', index=2,
+      number=4, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=10957,
+  serialized_end=11092,
+)
+
+
+_SDKVOLUMESETRESPONSE = _descriptor.Descriptor(
+  name='SdkVolumeSetResponse',
+  full_name='openstorage.api.SdkVolumeSetResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=11094,
+  serialized_end=11116,
 )
 
 
@@ -4991,8 +5355,8 @@ _SDKVOLUMEENUMERATEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=9829,
-  serialized_end=9905,
+  serialized_start=11118,
+  serialized_end=11194,
 )
 
 
@@ -5022,8 +5386,8 @@ _SDKVOLUMEENUMERATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=9907,
-  serialized_end=9955,
+  serialized_start=11196,
+  serialized_end=11244,
 )
 
 
@@ -5097,8 +5461,8 @@ _SDKVOLUMESNAPSHOTCREATEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=9958,
-  serialized_end=10133,
+  serialized_start=11247,
+  serialized_end=11422,
 )
 
 
@@ -5128,8 +5492,8 @@ _SDKVOLUMESNAPSHOTCREATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=10135,
-  serialized_end=10189,
+  serialized_start=11424,
+  serialized_end=11478,
 )
 
 
@@ -5166,8 +5530,8 @@ _SDKVOLUMESNAPSHOTRESTOREREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=10191,
-  serialized_end=10264,
+  serialized_start=11480,
+  serialized_end=11553,
 )
 
 
@@ -5190,8 +5554,8 @@ _SDKVOLUMESNAPSHOTRESTORERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=10266,
-  serialized_end=10300,
+  serialized_start=11555,
+  serialized_end=11589,
 )
 
 
@@ -5265,8 +5629,8 @@ _SDKVOLUMESNAPSHOTENUMERATEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=10303,
-  serialized_end=10484,
+  serialized_start=11592,
+  serialized_end=11773,
 )
 
 
@@ -5296,8 +5660,8 @@ _SDKVOLUMESNAPSHOTENUMERATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=10486,
-  serialized_end=10551,
+  serialized_start=11775,
+  serialized_end=11840,
 )
 
 
@@ -5320,8 +5684,8 @@ _SDKCLUSTERENUMERATEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=10553,
-  serialized_end=10581,
+  serialized_start=11842,
+  serialized_end=11870,
 )
 
 
@@ -5351,8 +5715,8 @@ _SDKCLUSTERENUMERATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=10583,
-  serialized_end=10662,
+  serialized_start=11872,
+  serialized_end=11951,
 )
 
 
@@ -5382,8 +5746,8 @@ _SDKCLUSTERINSPECTREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=10664,
-  serialized_end=10707,
+  serialized_start=11953,
+  serialized_end=11996,
 )
 
 
@@ -5413,8 +5777,8 @@ _SDKCLUSTERINSPECTRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=10709,
-  serialized_end=10780,
+  serialized_start=11998,
+  serialized_end=12069,
 )
 
 
@@ -5458,8 +5822,8 @@ _SDKCLUSTERALERTENUMERATEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=10783,
-  serialized_end=10959,
+  serialized_start=12072,
+  serialized_end=12248,
 )
 
 
@@ -5489,8 +5853,8 @@ _SDKCLUSTERALERTENUMERATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=10961,
-  serialized_end=11035,
+  serialized_start=12250,
+  serialized_end=12324,
 )
 
 
@@ -5527,8 +5891,8 @@ _SDKCLUSTERALERTCLEARREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=11037,
-  serialized_end=11133,
+  serialized_start=12326,
+  serialized_end=12422,
 )
 
 
@@ -5551,8 +5915,8 @@ _SDKCLUSTERALERTCLEARRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=11135,
-  serialized_end=11165,
+  serialized_start=12424,
+  serialized_end=12454,
 )
 
 
@@ -5589,8 +5953,8 @@ _SDKCLUSTERALERTDELETEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=11167,
-  serialized_end=11264,
+  serialized_start=12456,
+  serialized_end=12553,
 )
 
 
@@ -5613,8 +5977,8 @@ _SDKCLUSTERALERTDELETERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=11266,
-  serialized_end=11297,
+  serialized_start=12555,
+  serialized_end=12586,
 )
 
 
@@ -5644,8 +6008,8 @@ _SDKOBJECTSTOREINSPECTREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=11299,
-  serialized_end=11353,
+  serialized_start=12588,
+  serialized_end=12642,
 )
 
 
@@ -5675,8 +6039,8 @@ _SDKOBJECTSTOREINSPECTRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=11355,
-  serialized_end=11448,
+  serialized_start=12644,
+  serialized_end=12737,
 )
 
 
@@ -5706,8 +6070,8 @@ _SDKOBJECTSTORECREATEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=11450,
-  serialized_end=11498,
+  serialized_start=12739,
+  serialized_end=12787,
 )
 
 
@@ -5737,8 +6101,8 @@ _SDKOBJECTSTORECREATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=11500,
-  serialized_end=11592,
+  serialized_start=12789,
+  serialized_end=12881,
 )
 
 
@@ -5768,8 +6132,8 @@ _SDKOBJECTSTOREDELETEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=11594,
-  serialized_end=11647,
+  serialized_start=12883,
+  serialized_end=12936,
 )
 
 
@@ -5792,8 +6156,8 @@ _SDKOBJECTSTOREDELETERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=11649,
-  serialized_end=11679,
+  serialized_start=12938,
+  serialized_end=12968,
 )
 
 
@@ -5830,8 +6194,8 @@ _SDKOBJECTSTOREUPDATEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=11681,
-  serialized_end=11750,
+  serialized_start=12970,
+  serialized_end=13039,
 )
 
 
@@ -5854,8 +6218,8 @@ _SDKOBJECTSTOREUPDATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=11752,
-  serialized_end=11782,
+  serialized_start=13041,
+  serialized_end=13071,
 )
 
 
@@ -5899,8 +6263,8 @@ _SDKCLOUDBACKUPCREATEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=11784,
-  serialized_end=11871,
+  serialized_start=13073,
+  serialized_end=13160,
 )
 
 
@@ -5923,8 +6287,8 @@ _SDKCLOUDBACKUPCREATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=11873,
-  serialized_end=11903,
+  serialized_start=13162,
+  serialized_end=13192,
 )
 
 
@@ -5975,8 +6339,8 @@ _SDKCLOUDBACKUPRESTOREREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=11905,
-  serialized_end=12025,
+  serialized_start=13194,
+  serialized_end=13314,
 )
 
 
@@ -6006,8 +6370,8 @@ _SDKCLOUDBACKUPRESTORERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=12027,
-  serialized_end=12085,
+  serialized_start=13316,
+  serialized_end=13374,
 )
 
 
@@ -6051,8 +6415,8 @@ _SDKCLOUDBACKUPDELETEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=12087,
-  serialized_end=12175,
+  serialized_start=13376,
+  serialized_end=13464,
 )
 
 
@@ -6075,8 +6439,8 @@ _SDKCLOUDBACKUPDELETERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=12177,
-  serialized_end=12207,
+  serialized_start=13466,
+  serialized_end=13496,
 )
 
 
@@ -6113,8 +6477,8 @@ _SDKCLOUDBACKUPDELETEALLREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=12209,
-  serialized_end=12289,
+  serialized_start=13498,
+  serialized_end=13578,
 )
 
 
@@ -6137,8 +6501,8 @@ _SDKCLOUDBACKUPDELETEALLRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=12291,
-  serialized_end=12324,
+  serialized_start=13580,
+  serialized_end=13613,
 )
 
 
@@ -6189,8 +6553,8 @@ _SDKCLOUDBACKUPENUMERATEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=12326,
-  serialized_end=12439,
+  serialized_start=13615,
+  serialized_end=13728,
 )
 
 
@@ -6227,8 +6591,8 @@ _SDKCLOUDBACKUPINFO_METADATAENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=12699,
-  serialized_end=12746,
+  serialized_start=13988,
+  serialized_end=14035,
 )
 
 _SDKCLOUDBACKUPINFO = _descriptor.Descriptor(
@@ -6292,8 +6656,8 @@ _SDKCLOUDBACKUPINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=12442,
-  serialized_end=12746,
+  serialized_start=13731,
+  serialized_end=14035,
 )
 
 
@@ -6305,8 +6669,8 @@ _SDKCLOUDBACKUPENUMERATERESPONSE = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='backup_ids', full_name='openstorage.api.SdkCloudBackupEnumerateResponse.backup_ids', index=0,
-      number=1, type=9, cpp_type=9, label=3,
+      name='backups', full_name='openstorage.api.SdkCloudBackupEnumerateResponse.backups', index=0,
+      number=1, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -6323,8 +6687,8 @@ _SDKCLOUDBACKUPENUMERATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=12748,
-  serialized_end=12801,
+  serialized_start=14037,
+  serialized_end=14124,
 )
 
 
@@ -6396,8 +6760,8 @@ _SDKCLOUDBACKUPSTATUS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=12804,
-  serialized_end=13096,
+  serialized_start=14127,
+  serialized_end=14419,
 )
 
 
@@ -6434,8 +6798,8 @@ _SDKCLOUDBACKUPSTATUSREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=13098,
-  serialized_end=13165,
+  serialized_start=14421,
+  serialized_end=14488,
 )
 
 
@@ -6472,8 +6836,8 @@ _SDKCLOUDBACKUPSTATUSRESPONSE_STATUSESENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=13279,
-  serialized_end=13365,
+  serialized_start=14602,
+  serialized_end=14688,
 )
 
 _SDKCLOUDBACKUPSTATUSRESPONSE = _descriptor.Descriptor(
@@ -6502,8 +6866,8 @@ _SDKCLOUDBACKUPSTATUSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=13168,
-  serialized_end=13365,
+  serialized_start=14491,
+  serialized_end=14688,
 )
 
 
@@ -6540,8 +6904,8 @@ _SDKCLOUDBACKUPCATALOGREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=13367,
-  serialized_end=13441,
+  serialized_start=14690,
+  serialized_end=14764,
 )
 
 
@@ -6571,8 +6935,8 @@ _SDKCLOUDBACKUPCATALOGRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=13443,
-  serialized_end=13492,
+  serialized_start=14766,
+  serialized_end=14815,
 )
 
 
@@ -6616,8 +6980,8 @@ _SDKCLOUDBACKUPHISTORYITEM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=13495,
-  serialized_end=13651,
+  serialized_start=14818,
+  serialized_end=14974,
 )
 
 
@@ -6647,8 +7011,8 @@ _SDKCLOUDBACKUPHISTORYREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=13653,
-  serialized_end=13706,
+  serialized_start=14976,
+  serialized_end=15029,
 )
 
 
@@ -6678,8 +7042,8 @@ _SDKCLOUDBACKUPHISTORYRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=13708,
-  serialized_end=13805,
+  serialized_start=15031,
+  serialized_end=15128,
 )
 
 
@@ -6716,8 +7080,8 @@ _SDKCLOUDBACKUPSTATECHANGEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=13808,
-  serialized_end=13937,
+  serialized_start=15131,
+  serialized_end=15260,
 )
 
 
@@ -6740,8 +7104,8 @@ _SDKCLOUDBACKUPSTATECHANGERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=13939,
-  serialized_end=13974,
+  serialized_start=15262,
+  serialized_end=15297,
 )
 
 
@@ -6792,8 +7156,8 @@ _SDKCLOUDBACKUPSCHEDULEINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=13977,
-  serialized_end=14136,
+  serialized_start=15300,
+  serialized_end=15459,
 )
 
 
@@ -6823,8 +7187,8 @@ _SDKCLOUDBACKUPSCHEDCREATEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=14138,
-  serialized_end=14243,
+  serialized_start=15461,
+  serialized_end=15566,
 )
 
 
@@ -6854,8 +7218,8 @@ _SDKCLOUDBACKUPSCHEDCREATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=14245,
-  serialized_end=14294,
+  serialized_start=15568,
+  serialized_end=15617,
 )
 
 
@@ -6885,8 +7249,8 @@ _SDKCLOUDBACKUPSCHEDDELETEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=14296,
-  serialized_end=14344,
+  serialized_start=15619,
+  serialized_end=15667,
 )
 
 
@@ -6909,8 +7273,8 @@ _SDKCLOUDBACKUPSCHEDDELETERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=14346,
-  serialized_end=14381,
+  serialized_start=15669,
+  serialized_end=15704,
 )
 
 
@@ -6933,8 +7297,8 @@ _SDKCLOUDBACKUPSCHEDENUMERATEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=14383,
-  serialized_end=14420,
+  serialized_start=15706,
+  serialized_end=15743,
 )
 
 
@@ -6971,8 +7335,8 @@ _SDKCLOUDBACKUPSCHEDENUMERATERESPONSE_CLOUDSCHEDLISTENTRY = _descriptor.Descript
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=14564,
-  serialized_end=14662,
+  serialized_start=15887,
+  serialized_end=15985,
 )
 
 _SDKCLOUDBACKUPSCHEDENUMERATERESPONSE = _descriptor.Descriptor(
@@ -7001,8 +7365,8 @@ _SDKCLOUDBACKUPSCHEDENUMERATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=14423,
-  serialized_end=14662,
+  serialized_start=15746,
+  serialized_end=15985,
 )
 
 
@@ -7028,8 +7392,8 @@ _CLOUDMIGRATE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=14665,
-  serialized_end=14956,
+  serialized_start=15988,
+  serialized_end=16279,
 )
 
 
@@ -7073,8 +7437,8 @@ _CLOUDMIGRATESTARTREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=14959,
-  serialized_end=15088,
+  serialized_start=16282,
+  serialized_end=16411,
 )
 
 
@@ -7118,8 +7482,8 @@ _CLOUDMIGRATECANCELREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=15091,
-  serialized_end=15221,
+  serialized_start=16414,
+  serialized_end=16544,
 )
 
 
@@ -7205,8 +7569,8 @@ _CLOUDMIGRATEINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=15224,
-  serialized_end=15577,
+  serialized_start=16547,
+  serialized_end=16900,
 )
 
 
@@ -7236,8 +7600,8 @@ _CLOUDMIGRATEINFOLIST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=15579,
-  serialized_end=15650,
+  serialized_start=16902,
+  serialized_end=16973,
 )
 
 
@@ -7274,8 +7638,8 @@ _CLOUDMIGRATESTATUSRESPONSE_INFOENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=15752,
-  serialized_end=15834,
+  serialized_start=17075,
+  serialized_end=17157,
 )
 
 _CLOUDMIGRATESTATUSRESPONSE = _descriptor.Descriptor(
@@ -7304,8 +7668,8 @@ _CLOUDMIGRATESTATUSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=15653,
-  serialized_end=15834,
+  serialized_start=16976,
+  serialized_end=17157,
 )
 
 _STORAGERESOURCE.fields_by_name['medium'].enum_type = _STORAGEMEDIUM
@@ -7323,6 +7687,79 @@ _VOLUMESPEC.fields_by_name['io_profile'].enum_type = _IOPROFILE
 _VOLUMESPEC.fields_by_name['volume_labels'].message_type = _VOLUMESPEC_VOLUMELABELSENTRY
 _VOLUMESPEC.fields_by_name['replica_set'].message_type = _REPLICASET
 _VOLUMESPEC.fields_by_name['group'].message_type = _GROUP
+_VOLUMESPECSET_VOLUMELABELSENTRY.containing_type = _VOLUMESPECSET
+_VOLUMESPECSET.fields_by_name['format'].enum_type = _FSTYPE
+_VOLUMESPECSET.fields_by_name['cos'].enum_type = _COSTYPE
+_VOLUMESPECSET.fields_by_name['io_profile'].enum_type = _IOPROFILE
+_VOLUMESPECSET.fields_by_name['volume_labels'].message_type = _VOLUMESPECSET_VOLUMELABELSENTRY
+_VOLUMESPECSET.fields_by_name['replica_set'].message_type = _REPLICASET
+_VOLUMESPECSET.fields_by_name['group'].message_type = _GROUP
+_VOLUMESPECSET.oneofs_by_name['ephemeral_opt'].fields.append(
+  _VOLUMESPECSET.fields_by_name['ephemeral'])
+_VOLUMESPECSET.fields_by_name['ephemeral'].containing_oneof = _VOLUMESPECSET.oneofs_by_name['ephemeral_opt']
+_VOLUMESPECSET.oneofs_by_name['size_opt'].fields.append(
+  _VOLUMESPECSET.fields_by_name['size'])
+_VOLUMESPECSET.fields_by_name['size'].containing_oneof = _VOLUMESPECSET.oneofs_by_name['size_opt']
+_VOLUMESPECSET.oneofs_by_name['format_opt'].fields.append(
+  _VOLUMESPECSET.fields_by_name['format'])
+_VOLUMESPECSET.fields_by_name['format'].containing_oneof = _VOLUMESPECSET.oneofs_by_name['format_opt']
+_VOLUMESPECSET.oneofs_by_name['block_size_opt'].fields.append(
+  _VOLUMESPECSET.fields_by_name['block_size'])
+_VOLUMESPECSET.fields_by_name['block_size'].containing_oneof = _VOLUMESPECSET.oneofs_by_name['block_size_opt']
+_VOLUMESPECSET.oneofs_by_name['ha_level_opt'].fields.append(
+  _VOLUMESPECSET.fields_by_name['ha_level'])
+_VOLUMESPECSET.fields_by_name['ha_level'].containing_oneof = _VOLUMESPECSET.oneofs_by_name['ha_level_opt']
+_VOLUMESPECSET.oneofs_by_name['cos_opt'].fields.append(
+  _VOLUMESPECSET.fields_by_name['cos'])
+_VOLUMESPECSET.fields_by_name['cos'].containing_oneof = _VOLUMESPECSET.oneofs_by_name['cos_opt']
+_VOLUMESPECSET.oneofs_by_name['io_profile_opt'].fields.append(
+  _VOLUMESPECSET.fields_by_name['io_profile'])
+_VOLUMESPECSET.fields_by_name['io_profile'].containing_oneof = _VOLUMESPECSET.oneofs_by_name['io_profile_opt']
+_VOLUMESPECSET.oneofs_by_name['dedupe_opt'].fields.append(
+  _VOLUMESPECSET.fields_by_name['dedupe'])
+_VOLUMESPECSET.fields_by_name['dedupe'].containing_oneof = _VOLUMESPECSET.oneofs_by_name['dedupe_opt']
+_VOLUMESPECSET.oneofs_by_name['snapshot_interval_opt'].fields.append(
+  _VOLUMESPECSET.fields_by_name['snapshot_interval'])
+_VOLUMESPECSET.fields_by_name['snapshot_interval'].containing_oneof = _VOLUMESPECSET.oneofs_by_name['snapshot_interval_opt']
+_VOLUMESPECSET.oneofs_by_name['shared_opt'].fields.append(
+  _VOLUMESPECSET.fields_by_name['shared'])
+_VOLUMESPECSET.fields_by_name['shared'].containing_oneof = _VOLUMESPECSET.oneofs_by_name['shared_opt']
+_VOLUMESPECSET.oneofs_by_name['aggregation_level_opt'].fields.append(
+  _VOLUMESPECSET.fields_by_name['aggregation_level'])
+_VOLUMESPECSET.fields_by_name['aggregation_level'].containing_oneof = _VOLUMESPECSET.oneofs_by_name['aggregation_level_opt']
+_VOLUMESPECSET.oneofs_by_name['encrypted_opt'].fields.append(
+  _VOLUMESPECSET.fields_by_name['encrypted'])
+_VOLUMESPECSET.fields_by_name['encrypted'].containing_oneof = _VOLUMESPECSET.oneofs_by_name['encrypted_opt']
+_VOLUMESPECSET.oneofs_by_name['passphrase_opt'].fields.append(
+  _VOLUMESPECSET.fields_by_name['passphrase'])
+_VOLUMESPECSET.fields_by_name['passphrase'].containing_oneof = _VOLUMESPECSET.oneofs_by_name['passphrase_opt']
+_VOLUMESPECSET.oneofs_by_name['snapshot_schedule_opt'].fields.append(
+  _VOLUMESPECSET.fields_by_name['snapshot_schedule'])
+_VOLUMESPECSET.fields_by_name['snapshot_schedule'].containing_oneof = _VOLUMESPECSET.oneofs_by_name['snapshot_schedule_opt']
+_VOLUMESPECSET.oneofs_by_name['scale_opt'].fields.append(
+  _VOLUMESPECSET.fields_by_name['scale'])
+_VOLUMESPECSET.fields_by_name['scale'].containing_oneof = _VOLUMESPECSET.oneofs_by_name['scale_opt']
+_VOLUMESPECSET.oneofs_by_name['sticky_opt'].fields.append(
+  _VOLUMESPECSET.fields_by_name['sticky'])
+_VOLUMESPECSET.fields_by_name['sticky'].containing_oneof = _VOLUMESPECSET.oneofs_by_name['sticky_opt']
+_VOLUMESPECSET.oneofs_by_name['group_opt'].fields.append(
+  _VOLUMESPECSET.fields_by_name['group'])
+_VOLUMESPECSET.fields_by_name['group'].containing_oneof = _VOLUMESPECSET.oneofs_by_name['group_opt']
+_VOLUMESPECSET.oneofs_by_name['group_enforced_opt'].fields.append(
+  _VOLUMESPECSET.fields_by_name['group_enforced'])
+_VOLUMESPECSET.fields_by_name['group_enforced'].containing_oneof = _VOLUMESPECSET.oneofs_by_name['group_enforced_opt']
+_VOLUMESPECSET.oneofs_by_name['compressed_opt'].fields.append(
+  _VOLUMESPECSET.fields_by_name['compressed'])
+_VOLUMESPECSET.fields_by_name['compressed'].containing_oneof = _VOLUMESPECSET.oneofs_by_name['compressed_opt']
+_VOLUMESPECSET.oneofs_by_name['cascaded_opt'].fields.append(
+  _VOLUMESPECSET.fields_by_name['cascaded'])
+_VOLUMESPECSET.fields_by_name['cascaded'].containing_oneof = _VOLUMESPECSET.oneofs_by_name['cascaded_opt']
+_VOLUMESPECSET.oneofs_by_name['journal_opt'].fields.append(
+  _VOLUMESPECSET.fields_by_name['journal'])
+_VOLUMESPECSET.fields_by_name['journal'].containing_oneof = _VOLUMESPECSET.oneofs_by_name['journal_opt']
+_VOLUMESPECSET.oneofs_by_name['sharedv4_opt'].fields.append(
+  _VOLUMESPECSET.fields_by_name['sharedv4'])
+_VOLUMESPECSET.fields_by_name['sharedv4'].containing_oneof = _VOLUMESPECSET.oneofs_by_name['sharedv4_opt']
 _RUNTIMESTATEMAP_RUNTIMESTATEENTRY.containing_type = _RUNTIMESTATEMAP
 _RUNTIMESTATEMAP.fields_by_name['runtime_state'].message_type = _RUNTIMESTATEMAP_RUNTIMESTATEENTRY
 _VOLUME_ATTACHINFOENTRY.containing_type = _VOLUME
@@ -7429,6 +7866,8 @@ _SDKVOLUMEATTACHREQUEST.fields_by_name['options'].message_type = _SDKVOLUMEATTAC
 _SDKVOLUMECREATEREQUEST.fields_by_name['spec'].message_type = _VOLUMESPEC
 _SDKVOLUMECLONEREQUEST.fields_by_name['spec'].message_type = _VOLUMESPEC
 _SDKVOLUMEINSPECTRESPONSE.fields_by_name['volume'].message_type = _VOLUME
+_SDKVOLUMESETREQUEST.fields_by_name['locator'].message_type = _VOLUMELOCATOR
+_SDKVOLUMESETREQUEST.fields_by_name['spec'].message_type = _VOLUMESPECSET
 _SDKVOLUMEENUMERATEREQUEST.fields_by_name['locator'].message_type = _VOLUMELOCATOR
 _SDKVOLUMESNAPSHOTCREATEREQUEST_LABELSENTRY.containing_type = _SDKVOLUMESNAPSHOTCREATEREQUEST
 _SDKVOLUMESNAPSHOTCREATEREQUEST.fields_by_name['labels'].message_type = _SDKVOLUMESNAPSHOTCREATEREQUEST_LABELSENTRY
@@ -7448,6 +7887,7 @@ _SDKCLOUDBACKUPINFO_METADATAENTRY.containing_type = _SDKCLOUDBACKUPINFO
 _SDKCLOUDBACKUPINFO.fields_by_name['timestamp'].message_type = google_dot_protobuf_dot_timestamp__pb2._TIMESTAMP
 _SDKCLOUDBACKUPINFO.fields_by_name['metadata'].message_type = _SDKCLOUDBACKUPINFO_METADATAENTRY
 _SDKCLOUDBACKUPINFO.fields_by_name['status'].enum_type = _SDKCLOUDBACKUPSTATUSTYPE
+_SDKCLOUDBACKUPENUMERATERESPONSE.fields_by_name['backups'].message_type = _SDKCLOUDBACKUPINFO
 _SDKCLOUDBACKUPSTATUS.fields_by_name['optype'].enum_type = _SDKCLOUDBACKUPOPTYPE
 _SDKCLOUDBACKUPSTATUS.fields_by_name['status'].enum_type = _SDKCLOUDBACKUPSTATUSTYPE
 _SDKCLOUDBACKUPSTATUS.fields_by_name['start_time'].message_type = google_dot_protobuf_dot_timestamp__pb2._TIMESTAMP
@@ -7483,6 +7923,7 @@ DESCRIPTOR.message_types_by_name['VolumeLocator'] = _VOLUMELOCATOR
 DESCRIPTOR.message_types_by_name['Source'] = _SOURCE
 DESCRIPTOR.message_types_by_name['Group'] = _GROUP
 DESCRIPTOR.message_types_by_name['VolumeSpec'] = _VOLUMESPEC
+DESCRIPTOR.message_types_by_name['VolumeSpecSet'] = _VOLUMESPECSET
 DESCRIPTOR.message_types_by_name['ReplicaSet'] = _REPLICASET
 DESCRIPTOR.message_types_by_name['RuntimeStateMap'] = _RUNTIMESTATEMAP
 DESCRIPTOR.message_types_by_name['Volume'] = _VOLUME
@@ -7555,6 +7996,8 @@ DESCRIPTOR.message_types_by_name['SdkVolumeDeleteRequest'] = _SDKVOLUMEDELETEREQ
 DESCRIPTOR.message_types_by_name['SdkVolumeDeleteResponse'] = _SDKVOLUMEDELETERESPONSE
 DESCRIPTOR.message_types_by_name['SdkVolumeInspectRequest'] = _SDKVOLUMEINSPECTREQUEST
 DESCRIPTOR.message_types_by_name['SdkVolumeInspectResponse'] = _SDKVOLUMEINSPECTRESPONSE
+DESCRIPTOR.message_types_by_name['SdkVolumeSetRequest'] = _SDKVOLUMESETREQUEST
+DESCRIPTOR.message_types_by_name['SdkVolumeSetResponse'] = _SDKVOLUMESETRESPONSE
 DESCRIPTOR.message_types_by_name['SdkVolumeEnumerateRequest'] = _SDKVOLUMEENUMERATEREQUEST
 DESCRIPTOR.message_types_by_name['SdkVolumeEnumerateResponse'] = _SDKVOLUMEENUMERATERESPONSE
 DESCRIPTOR.message_types_by_name['SdkVolumeSnapshotCreateRequest'] = _SDKVOLUMESNAPSHOTCREATEREQUEST
@@ -7702,6 +8145,21 @@ VolumeSpec = _reflection.GeneratedProtocolMessageType('VolumeSpec', (_message.Me
   ))
 _sym_db.RegisterMessage(VolumeSpec)
 _sym_db.RegisterMessage(VolumeSpec.VolumeLabelsEntry)
+
+VolumeSpecSet = _reflection.GeneratedProtocolMessageType('VolumeSpecSet', (_message.Message,), dict(
+
+  VolumeLabelsEntry = _reflection.GeneratedProtocolMessageType('VolumeLabelsEntry', (_message.Message,), dict(
+    DESCRIPTOR = _VOLUMESPECSET_VOLUMELABELSENTRY,
+    __module__ = 'api_pb2'
+    # @@protoc_insertion_point(class_scope:openstorage.api.VolumeSpecSet.VolumeLabelsEntry)
+    ))
+  ,
+  DESCRIPTOR = _VOLUMESPECSET,
+  __module__ = 'api_pb2'
+  # @@protoc_insertion_point(class_scope:openstorage.api.VolumeSpecSet)
+  ))
+_sym_db.RegisterMessage(VolumeSpecSet)
+_sym_db.RegisterMessage(VolumeSpecSet.VolumeLabelsEntry)
 
 ReplicaSet = _reflection.GeneratedProtocolMessageType('ReplicaSet', (_message.Message,), dict(
   DESCRIPTOR = _REPLICASET,
@@ -8295,6 +8753,20 @@ SdkVolumeInspectResponse = _reflection.GeneratedProtocolMessageType('SdkVolumeIn
   ))
 _sym_db.RegisterMessage(SdkVolumeInspectResponse)
 
+SdkVolumeSetRequest = _reflection.GeneratedProtocolMessageType('SdkVolumeSetRequest', (_message.Message,), dict(
+  DESCRIPTOR = _SDKVOLUMESETREQUEST,
+  __module__ = 'api_pb2'
+  # @@protoc_insertion_point(class_scope:openstorage.api.SdkVolumeSetRequest)
+  ))
+_sym_db.RegisterMessage(SdkVolumeSetRequest)
+
+SdkVolumeSetResponse = _reflection.GeneratedProtocolMessageType('SdkVolumeSetResponse', (_message.Message,), dict(
+  DESCRIPTOR = _SDKVOLUMESETRESPONSE,
+  __module__ = 'api_pb2'
+  # @@protoc_insertion_point(class_scope:openstorage.api.SdkVolumeSetResponse)
+  ))
+_sym_db.RegisterMessage(SdkVolumeSetResponse)
+
 SdkVolumeEnumerateRequest = _reflection.GeneratedProtocolMessageType('SdkVolumeEnumerateRequest', (_message.Message,), dict(
   DESCRIPTOR = _SDKVOLUMEENUMERATEREQUEST,
   __module__ = 'api_pb2'
@@ -8772,6 +9244,8 @@ _VOLUMELOCATOR_VOLUMELABELSENTRY.has_options = True
 _VOLUMELOCATOR_VOLUMELABELSENTRY._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('8\001'))
 _VOLUMESPEC_VOLUMELABELSENTRY.has_options = True
 _VOLUMESPEC_VOLUMELABELSENTRY._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('8\001'))
+_VOLUMESPECSET_VOLUMELABELSENTRY.has_options = True
+_VOLUMESPECSET_VOLUMELABELSENTRY._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('8\001'))
 _RUNTIMESTATEMAP_RUNTIMESTATEENTRY.has_options = True
 _RUNTIMESTATEMAP_RUNTIMESTATEENTRY._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('8\001'))
 _VOLUME_ATTACHINFOENTRY.has_options = True
@@ -8813,8 +9287,8 @@ _OPENSTORAGECLUSTER = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   options=None,
-  serialized_start=18979,
-  serialized_end=19706,
+  serialized_start=20302,
+  serialized_end=21029,
   methods=[
   _descriptor.MethodDescriptor(
     name='Enumerate',
@@ -8873,8 +9347,8 @@ _OPENSTORAGEVOLUME = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=1,
   options=None,
-  serialized_start=19709,
-  serialized_end=21324,
+  serialized_start=21032,
+  serialized_end=22758,
   methods=[
   _descriptor.MethodDescriptor(
     name='Create',
@@ -8913,9 +9387,18 @@ _OPENSTORAGEVOLUME = _descriptor.ServiceDescriptor(
     options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\030\022\026/v1/volume/{volume_id}')),
   ),
   _descriptor.MethodDescriptor(
+    name='Set',
+    full_name='openstorage.api.OpenStorageVolume.Set',
+    index=4,
+    containing_service=None,
+    input_type=_SDKVOLUMESETREQUEST,
+    output_type=_SDKVOLUMESETRESPONSE,
+    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\023\"\016/v1/volume/set:\001*')),
+  ),
+  _descriptor.MethodDescriptor(
     name='Enumerate',
     full_name='openstorage.api.OpenStorageVolume.Enumerate',
-    index=4,
+    index=5,
     containing_service=None,
     input_type=_SDKVOLUMEENUMERATEREQUEST,
     output_type=_SDKVOLUMEENUMERATERESPONSE,
@@ -8924,7 +9407,7 @@ _OPENSTORAGEVOLUME = _descriptor.ServiceDescriptor(
   _descriptor.MethodDescriptor(
     name='SnapshotCreate',
     full_name='openstorage.api.OpenStorageVolume.SnapshotCreate',
-    index=5,
+    index=6,
     containing_service=None,
     input_type=_SDKVOLUMESNAPSHOTCREATEREQUEST,
     output_type=_SDKVOLUMESNAPSHOTCREATERESPONSE,
@@ -8933,7 +9416,7 @@ _OPENSTORAGEVOLUME = _descriptor.ServiceDescriptor(
   _descriptor.MethodDescriptor(
     name='SnapshotRestore',
     full_name='openstorage.api.OpenStorageVolume.SnapshotRestore',
-    index=6,
+    index=7,
     containing_service=None,
     input_type=_SDKVOLUMESNAPSHOTRESTOREREQUEST,
     output_type=_SDKVOLUMESNAPSHOTRESTORERESPONSE,
@@ -8942,7 +9425,7 @@ _OPENSTORAGEVOLUME = _descriptor.ServiceDescriptor(
   _descriptor.MethodDescriptor(
     name='SnapshotEnumerate',
     full_name='openstorage.api.OpenStorageVolume.SnapshotEnumerate',
-    index=7,
+    index=8,
     containing_service=None,
     input_type=_SDKVOLUMESNAPSHOTENUMERATEREQUEST,
     output_type=_SDKVOLUMESNAPSHOTENUMERATERESPONSE,
@@ -8951,7 +9434,7 @@ _OPENSTORAGEVOLUME = _descriptor.ServiceDescriptor(
   _descriptor.MethodDescriptor(
     name='Attach',
     full_name='openstorage.api.OpenStorageVolume.Attach',
-    index=8,
+    index=9,
     containing_service=None,
     input_type=_SDKVOLUMEATTACHREQUEST,
     output_type=_SDKVOLUMEATTACHRESPONSE,
@@ -8960,7 +9443,7 @@ _OPENSTORAGEVOLUME = _descriptor.ServiceDescriptor(
   _descriptor.MethodDescriptor(
     name='Detach',
     full_name='openstorage.api.OpenStorageVolume.Detach',
-    index=9,
+    index=10,
     containing_service=None,
     input_type=_SDKVOLUMEDETACHREQUEST,
     output_type=_SDKVOLUMEDETACHRESPONSE,
@@ -8969,7 +9452,7 @@ _OPENSTORAGEVOLUME = _descriptor.ServiceDescriptor(
   _descriptor.MethodDescriptor(
     name='Mount',
     full_name='openstorage.api.OpenStorageVolume.Mount',
-    index=10,
+    index=11,
     containing_service=None,
     input_type=_SDKVOLUMEMOUNTREQUEST,
     output_type=_SDKVOLUMEMOUNTRESPONSE,
@@ -8978,7 +9461,7 @@ _OPENSTORAGEVOLUME = _descriptor.ServiceDescriptor(
   _descriptor.MethodDescriptor(
     name='Unmount',
     full_name='openstorage.api.OpenStorageVolume.Unmount',
-    index=11,
+    index=12,
     containing_service=None,
     input_type=_SDKVOLUMEUNMOUNTREQUEST,
     output_type=_SDKVOLUMEUNMOUNTRESPONSE,
@@ -8996,8 +9479,8 @@ _OPENSTORAGEOBJECTSTORE = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=2,
   options=None,
-  serialized_start=21327,
-  serialized_end=21917,
+  serialized_start=22761,
+  serialized_end=23351,
   methods=[
   _descriptor.MethodDescriptor(
     name='Inspect',
@@ -9047,8 +9530,8 @@ _OPENSTORAGECREDENTIALS = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=3,
   options=None,
-  serialized_start=21920,
-  serialized_end=22656,
+  serialized_start=23354,
+  serialized_end=24090,
   methods=[
   _descriptor.MethodDescriptor(
     name='Create',
@@ -9107,8 +9590,8 @@ _OPENSTORAGESCHEDULEPOLICY = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=4,
   options=None,
-  serialized_start=22659,
-  serialized_end=23415,
+  serialized_start=24093,
+  serialized_end=24842,
   methods=[
   _descriptor.MethodDescriptor(
     name='Create',
@@ -9126,7 +9609,7 @@ _OPENSTORAGESCHEDULEPOLICY = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_SDKSCHEDULEPOLICYUPDATEREQUEST,
     output_type=_SDKSCHEDULEPOLICYUPDATERESPONSE,
-    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\036\"\031/v1/schedulepolicy/update:\001*')),
+    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\027\032\022/v1/schedulepolicy:\001*')),
   ),
   _descriptor.MethodDescriptor(
     name='Enumerate',
@@ -9167,8 +9650,8 @@ _OPENSTORAGECLOUDBACKUP = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=5,
   options=None,
-  serialized_start=23418,
-  serialized_end=25244,
+  serialized_start=24845,
+  serialized_end=26671,
   methods=[
   _descriptor.MethodDescriptor(
     name='Create',

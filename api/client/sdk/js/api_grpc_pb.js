@@ -1,5 +1,16 @@
 // GENERATED CODE -- DO NOT EDIT!
 
+// Original file comments:
+// Please use the following editor setup for this file:
+// Tab size=2; Tabs as spaces; Clean up trailing whitepsace
+//
+// In vim add: au FileType proto setl sw=2 ts=2 expandtab list
+//
+// Note, the documentation provided here for can be created in
+// markdown format plus the use of 'codetabs' are supported. The documentation
+// will then be rendered by github.com/openstoreage/libopenstoreage.github.io and
+// provided on https://libopenstorage.github.io
+//
 'use strict';
 var grpc = require('grpc');
 var api_pb = require('./api_pb.js');
@@ -864,6 +875,28 @@ function deserialize_openstorage_api_SdkVolumeMountResponse(buffer_arg) {
   return api_pb.SdkVolumeMountResponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_openstorage_api_SdkVolumeSetRequest(arg) {
+  if (!(arg instanceof api_pb.SdkVolumeSetRequest)) {
+    throw new Error('Expected argument of type openstorage.api.SdkVolumeSetRequest');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkVolumeSetRequest(buffer_arg) {
+  return api_pb.SdkVolumeSetRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkVolumeSetResponse(arg) {
+  if (!(arg instanceof api_pb.SdkVolumeSetResponse)) {
+    throw new Error('Expected argument of type openstorage.api.SdkVolumeSetResponse');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkVolumeSetResponse(buffer_arg) {
+  return api_pb.SdkVolumeSetResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_openstorage_api_SdkVolumeSnapshotCreateRequest(arg) {
   if (!(arg instanceof api_pb.SdkVolumeSnapshotCreateRequest)) {
     throw new Error('Expected argument of type openstorage.api.SdkVolumeSnapshotCreateRequest');
@@ -953,8 +986,10 @@ function deserialize_openstorage_api_SdkVolumeUnmountResponse(buffer_arg) {
 }
 
 
+// OpenStorageCluster service provides the methods to manage the cluster
 var OpenStorageClusterService = exports.OpenStorageClusterService = {
-  // Enumerate lists all the nodes in the cluster.
+  // Enumerate returns information about the cluster and the unique ids of
+  // all the nodes in the cluster.
   enumerate: {
     path: '/openstorage.api.OpenStorageCluster/Enumerate',
     requestStream: false,
@@ -966,7 +1001,7 @@ var OpenStorageClusterService = exports.OpenStorageClusterService = {
     responseSerialize: serialize_openstorage_api_SdkClusterEnumerateResponse,
     responseDeserialize: deserialize_openstorage_api_SdkClusterEnumerateResponse,
   },
-  // Inspect the node given a UUID.
+  // Inspect returns information about the specified node
   inspect: {
     path: '/openstorage.api.OpenStorageCluster/Inspect',
     requestStream: false,
@@ -978,7 +1013,7 @@ var OpenStorageClusterService = exports.OpenStorageClusterService = {
     responseSerialize: serialize_openstorage_api_SdkClusterInspectResponse,
     responseDeserialize: deserialize_openstorage_api_SdkClusterInspectResponse,
   },
-  // Get a list of alerts from the storage cluster
+  // AlertEnumerate returns a list of alerts from the storage cluster
   alertEnumerate: {
     path: '/openstorage.api.OpenStorageCluster/AlertEnumerate',
     requestStream: false,
@@ -990,7 +1025,7 @@ var OpenStorageClusterService = exports.OpenStorageClusterService = {
     responseSerialize: serialize_openstorage_api_SdkClusterAlertEnumerateResponse,
     responseDeserialize: deserialize_openstorage_api_SdkClusterAlertEnumerateResponse,
   },
-  // Clear the alert for a given resource
+  // AlertClear clears the alert for a given resource
   alertClear: {
     path: '/openstorage.api.OpenStorageCluster/AlertClear',
     requestStream: false,
@@ -1002,7 +1037,7 @@ var OpenStorageClusterService = exports.OpenStorageClusterService = {
     responseSerialize: serialize_openstorage_api_SdkClusterAlertClearResponse,
     responseDeserialize: deserialize_openstorage_api_SdkClusterAlertClearResponse,
   },
-  // Erases an alert for a given resource
+  // AlertDelete deletes an alert for all resources
   alertDelete: {
     path: '/openstorage.api.OpenStorageCluster/AlertDelete',
     requestStream: false,
@@ -1017,8 +1052,23 @@ var OpenStorageClusterService = exports.OpenStorageClusterService = {
 };
 
 exports.OpenStorageClusterClient = grpc.makeGenericClientConstructor(OpenStorageClusterService);
+// OpenStorageVolume is a service used to manage the volumes of a storage system
 var OpenStorageVolumeService = exports.OpenStorageVolumeService = {
-  // Creates a new volume
+  // Create creates a volume according to the specification provided
+  //
+  // ##### Example
+  // {% codetabs name="Golang", type="go" -%}
+  // id, err := client.Create(context.Background(), &api.SdkVolumeCreateRequest{
+  //   Name: "volume-12345-east",
+  //   Spec: &api.VolumeSpec {
+  //     Size: 1234567,
+  //   },
+  // })
+  // {%- language name="Python", type="py" -%}
+  // en_resp = client.Create(api_pb2.SdkVolumeCreateRequest(
+  //   name="volume-12345-east",
+  //   spec=api_pb2.VolumeSpec(size=1234567)))
+  // {%- endcodetabs %}
   create: {
     path: '/openstorage.api.OpenStorageVolume/Create',
     requestStream: false,
@@ -1030,7 +1080,7 @@ var OpenStorageVolumeService = exports.OpenStorageVolumeService = {
     responseSerialize: serialize_openstorage_api_SdkVolumeCreateResponse,
     responseDeserialize: deserialize_openstorage_api_SdkVolumeCreateResponse,
   },
-  // Clone creates a new volume cloned from an existing volume
+  // Clone creates a new writable volume cloned from an existing volume
   clone: {
     path: '/openstorage.api.OpenStorageVolume/Clone',
     requestStream: false,
@@ -1042,7 +1092,7 @@ var OpenStorageVolumeService = exports.OpenStorageVolumeService = {
     responseSerialize: serialize_openstorage_api_SdkVolumeCloneResponse,
     responseDeserialize: deserialize_openstorage_api_SdkVolumeCloneResponse,
   },
-  // Delete a volume
+  // Delete deletes the provided volume
   delete: {
     path: '/openstorage.api.OpenStorageVolume/Delete',
     requestStream: false,
@@ -1054,7 +1104,7 @@ var OpenStorageVolumeService = exports.OpenStorageVolumeService = {
     responseSerialize: serialize_openstorage_api_SdkVolumeDeleteResponse,
     responseDeserialize: deserialize_openstorage_api_SdkVolumeDeleteResponse,
   },
-  // Get information on a volume
+  // Inspect returns information about a volume
   inspect: {
     path: '/openstorage.api.OpenStorageVolume/Inspect',
     requestStream: false,
@@ -1066,7 +1116,20 @@ var OpenStorageVolumeService = exports.OpenStorageVolumeService = {
     responseSerialize: serialize_openstorage_api_SdkVolumeInspectResponse,
     responseDeserialize: deserialize_openstorage_api_SdkVolumeInspectResponse,
   },
-  // Get a list of volumes
+  // Set provides a method for manipulating the specification and attributes of a volume.
+  // Set can be used to resize a volume, update labels, change replica count, and much more.
+  set: {
+    path: '/openstorage.api.OpenStorageVolume/Set',
+    requestStream: false,
+    responseStream: false,
+    requestType: api_pb.SdkVolumeSetRequest,
+    responseType: api_pb.SdkVolumeSetResponse,
+    requestSerialize: serialize_openstorage_api_SdkVolumeSetRequest,
+    requestDeserialize: deserialize_openstorage_api_SdkVolumeSetRequest,
+    responseSerialize: serialize_openstorage_api_SdkVolumeSetResponse,
+    responseDeserialize: deserialize_openstorage_api_SdkVolumeSetResponse,
+  },
+  // Enumerate returns a list of volume ids that match the labels if any are provided.
   enumerate: {
     path: '/openstorage.api.OpenStorageVolume/Enumerate',
     requestStream: false,
@@ -1078,7 +1141,7 @@ var OpenStorageVolumeService = exports.OpenStorageVolumeService = {
     responseSerialize: serialize_openstorage_api_SdkVolumeEnumerateResponse,
     responseDeserialize: deserialize_openstorage_api_SdkVolumeEnumerateResponse,
   },
-  // Create a snapshot of a volume. This creates an immutable (read-only),
+  // SnapshotCreate creates a snapshot of a volume. This creates an immutable (read-only),
   // point-in-time snapshot of a volume.
   snapshotCreate: {
     path: '/openstorage.api.OpenStorageVolume/SnapshotCreate',
@@ -1091,7 +1154,7 @@ var OpenStorageVolumeService = exports.OpenStorageVolumeService = {
     responseSerialize: serialize_openstorage_api_SdkVolumeSnapshotCreateResponse,
     responseDeserialize: deserialize_openstorage_api_SdkVolumeSnapshotCreateResponse,
   },
-  // Restores a volume to a specified snapshot
+  // SnapshotRestore restores a volume to a specified snapshot
   snapshotRestore: {
     path: '/openstorage.api.OpenStorageVolume/SnapshotRestore',
     requestStream: false,
@@ -1103,7 +1166,8 @@ var OpenStorageVolumeService = exports.OpenStorageVolumeService = {
     responseSerialize: serialize_openstorage_api_SdkVolumeSnapshotRestoreResponse,
     responseDeserialize: deserialize_openstorage_api_SdkVolumeSnapshotRestoreResponse,
   },
-  // List the number of snapshots for a specific volume
+  // SnapshotEnumerate returns a list of snapshots for a specific volume
+  // that match the labels provided if any.
   snapshotEnumerate: {
     path: '/openstorage.api.OpenStorageVolume/SnapshotEnumerate',
     requestStream: false,
@@ -1115,7 +1179,9 @@ var OpenStorageVolumeService = exports.OpenStorageVolumeService = {
     responseSerialize: serialize_openstorage_api_SdkVolumeSnapshotEnumerateResponse,
     responseDeserialize: deserialize_openstorage_api_SdkVolumeSnapshotEnumerateResponse,
   },
-  // Attach device to host
+  // Attach attaches device to the host that the client is communicating with.
+  // NOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more
+  // information about a new feature to allow attachment to any node.
   attach: {
     path: '/openstorage.api.OpenStorageVolume/Attach',
     requestStream: false,
@@ -1127,7 +1193,9 @@ var OpenStorageVolumeService = exports.OpenStorageVolumeService = {
     responseSerialize: serialize_openstorage_api_SdkVolumeAttachResponse,
     responseDeserialize: deserialize_openstorage_api_SdkVolumeAttachResponse,
   },
-  // Detaches the volume from the node.
+  // Detaches a the volume from the host that the client is communicating with
+  // NOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more
+  // information about a new feature to allow attachment to any node.
   detach: {
     path: '/openstorage.api.OpenStorageVolume/Detach',
     requestStream: false,
@@ -1139,7 +1207,9 @@ var OpenStorageVolumeService = exports.OpenStorageVolumeService = {
     responseSerialize: serialize_openstorage_api_SdkVolumeDetachResponse,
     responseDeserialize: deserialize_openstorage_api_SdkVolumeDetachResponse,
   },
-  // Attaches the volume to a node.
+  // Mount mounts an attached volume in the host that the client is communicating with
+  // NOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more
+  // information about a new feature to allow attachment to any node.
   mount: {
     path: '/openstorage.api.OpenStorageVolume/Mount',
     requestStream: false,
@@ -1151,7 +1221,9 @@ var OpenStorageVolumeService = exports.OpenStorageVolumeService = {
     responseSerialize: serialize_openstorage_api_SdkVolumeMountResponse,
     responseDeserialize: deserialize_openstorage_api_SdkVolumeMountResponse,
   },
-  // Unmount volume at specified path
+  // Unmount unmounts a mounted volume in the host that the client is communicating with
+  // NOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more
+  // information about a new feature to allow attachment to any node.
   unmount: {
     path: '/openstorage.api.OpenStorageVolume/Unmount',
     requestStream: false,
@@ -1166,8 +1238,9 @@ var OpenStorageVolumeService = exports.OpenStorageVolumeService = {
 };
 
 exports.OpenStorageVolumeClient = grpc.makeGenericClientConstructor(OpenStorageVolumeService);
+// OpenStorageObjectstore is a service used to manage object store services on volumes
 var OpenStorageObjectstoreService = exports.OpenStorageObjectstoreService = {
-  // Inspect returns current status of objectstore
+  // Inspect returns information about the object store endpoint
   inspect: {
     path: '/openstorage.api.OpenStorageObjectstore/Inspect',
     requestStream: false,
@@ -1179,7 +1252,7 @@ var OpenStorageObjectstoreService = exports.OpenStorageObjectstoreService = {
     responseSerialize: serialize_openstorage_api_SdkObjectstoreInspectResponse,
     responseDeserialize: deserialize_openstorage_api_SdkObjectstoreInspectResponse,
   },
-  // Creates objectstore on specified volume
+  // Creates creates an object store endpoint on specified volume
   create: {
     path: '/openstorage.api.OpenStorageObjectstore/Create',
     requestStream: false,
@@ -1191,7 +1264,7 @@ var OpenStorageObjectstoreService = exports.OpenStorageObjectstoreService = {
     responseSerialize: serialize_openstorage_api_SdkObjectstoreCreateResponse,
     responseDeserialize: deserialize_openstorage_api_SdkObjectstoreCreateResponse,
   },
-  // Deletes objectstore by id
+  // Delete destroys the object store endpoint on the volume
   delete: {
     path: '/openstorage.api.OpenStorageObjectstore/Delete',
     requestStream: false,
@@ -1203,7 +1276,9 @@ var OpenStorageObjectstoreService = exports.OpenStorageObjectstoreService = {
     responseSerialize: serialize_openstorage_api_SdkObjectstoreDeleteResponse,
     responseDeserialize: deserialize_openstorage_api_SdkObjectstoreDeleteResponse,
   },
-  // Updates provided objectstore status
+  // Updates provided objectstore status.
+  // This call can be used to stop and start the server while maintaining the same
+  // object storage id.
   update: {
     path: '/openstorage.api.OpenStorageObjectstore/Update',
     requestStream: false,
@@ -1218,11 +1293,31 @@ var OpenStorageObjectstoreService = exports.OpenStorageObjectstoreService = {
 };
 
 exports.OpenStorageObjectstoreClient = grpc.makeGenericClientConstructor(OpenStorageObjectstoreService);
+// OpenStorageCredentials is a service used to manage the cloud credentials
+// which can then be used by the OpenStorageCloudBackup service
 var OpenStorageCredentialsService = exports.OpenStorageCredentialsService = {
-  // Provide credentials to OpenStorage and if valid,
-  // it will return an identifier to the credentials
+  // Create is used to submit cloud credentials. It will return an
+  // id of the credentials once they are verified to work.
   //
-  // Create cloud credentials
+  // ##### Example
+  // {% codetabs name="Golang", type="go" -%}
+  // id, err := client.Create(context.Background(), &api.SdkCredentialCreateRequest{
+  //   CredentialType: &api.SdkCredentialCreateRequest_AwsCredential{
+  //     AwsCredential: &api.SdkAwsCredentialRequest{
+  //     AccessKey: "dummy-access",
+  //     SecretKey: "dummy-secret",
+  //     Endpoint:  "dummy-endpoint",
+  //     Region:    "dummy-region",
+  //   },
+  // })
+  // {%- language name="Python", type="py" -%}
+  // en_resp = client.Create(api_pb2.SdkCredentialCreateRequest(
+  //   aws_credential=api_pb2.SdkAwsCredentialRequest(
+  //     access_key='dummy-access',
+  //     secret_key='dumm-secret',
+  //     endpoint='dummy-endpoint',
+  //     region='dummy-region')))
+  // {%- endcodetabs %}
   create: {
     path: '/openstorage.api.OpenStorageCredentials/Create',
     requestStream: false,
@@ -1246,7 +1341,7 @@ var OpenStorageCredentialsService = exports.OpenStorageCredentialsService = {
     responseSerialize: serialize_openstorage_api_SdkCredentialEnumerateResponse,
     responseDeserialize: deserialize_openstorage_api_SdkCredentialEnumerateResponse,
   },
-  // Inspect returns the information about a credential
+  // Inspect returns the information about a credential, but does not return the secret key.
   inspect: {
     path: '/openstorage.api.OpenStorageCredentials/Inspect',
     requestStream: false,
@@ -1270,7 +1365,7 @@ var OpenStorageCredentialsService = exports.OpenStorageCredentialsService = {
     responseSerialize: serialize_openstorage_api_SdkCredentialDeleteResponse,
     responseDeserialize: deserialize_openstorage_api_SdkCredentialDeleteResponse,
   },
-  // Validate a specified credential
+  // Validate is used to validate credentials
   validate: {
     path: '/openstorage.api.OpenStorageCredentials/Validate',
     requestStream: false,
@@ -1285,8 +1380,11 @@ var OpenStorageCredentialsService = exports.OpenStorageCredentialsService = {
 };
 
 exports.OpenStorageCredentialsClient = grpc.makeGenericClientConstructor(OpenStorageCredentialsService);
+// OpenStorageSchedulePolicy service is used to manage the automated
+// snapshots for a volume
 var OpenStorageSchedulePolicyService = exports.OpenStorageSchedulePolicyService = {
-  // Create Schedule Policy for snapshots
+  // Create creates a new snapshot schedule. They can be setup daily,
+  // weekly, or monthly.
   create: {
     path: '/openstorage.api.OpenStorageSchedulePolicy/Create',
     requestStream: false,
@@ -1298,7 +1396,7 @@ var OpenStorageSchedulePolicyService = exports.OpenStorageSchedulePolicyService 
     responseSerialize: serialize_openstorage_api_SdkSchedulePolicyCreateResponse,
     responseDeserialize: deserialize_openstorage_api_SdkSchedulePolicyCreateResponse,
   },
-  // Update Schedule Policy
+  // Update a snapshot schedule
   update: {
     path: '/openstorage.api.OpenStorageSchedulePolicy/Update',
     requestStream: false,
@@ -1310,6 +1408,7 @@ var OpenStorageSchedulePolicyService = exports.OpenStorageSchedulePolicyService 
     responseSerialize: serialize_openstorage_api_SdkSchedulePolicyUpdateResponse,
     responseDeserialize: deserialize_openstorage_api_SdkSchedulePolicyUpdateResponse,
   },
+  // Enumerate returns a list of schedules
   enumerate: {
     path: '/openstorage.api.OpenStorageSchedulePolicy/Enumerate',
     requestStream: false,
@@ -1321,7 +1420,7 @@ var OpenStorageSchedulePolicyService = exports.OpenStorageSchedulePolicyService 
     responseSerialize: serialize_openstorage_api_SdkSchedulePolicyEnumerateResponse,
     responseDeserialize: deserialize_openstorage_api_SdkSchedulePolicyEnumerateResponse,
   },
-  // Inspect Schedule Policy
+  // Inspect returns information about a specified schedule
   inspect: {
     path: '/openstorage.api.OpenStorageSchedulePolicy/Inspect',
     requestStream: false,
@@ -1333,7 +1432,7 @@ var OpenStorageSchedulePolicyService = exports.OpenStorageSchedulePolicyService 
     responseSerialize: serialize_openstorage_api_SdkSchedulePolicyInspectResponse,
     responseDeserialize: deserialize_openstorage_api_SdkSchedulePolicyInspectResponse,
   },
-  // Delete Schedule Policy
+  // Delete removes a snapshot schedule
   delete: {
     path: '/openstorage.api.OpenStorageSchedulePolicy/Delete',
     requestStream: false,
@@ -1348,8 +1447,12 @@ var OpenStorageSchedulePolicyService = exports.OpenStorageSchedulePolicyService 
 };
 
 exports.OpenStorageSchedulePolicyClient = grpc.makeGenericClientConstructor(OpenStorageSchedulePolicyService);
+// OpenStorageCloudBackup service manages backing up volumes to a cloud
+// location like Amazon, Google, or Azure.
 var OpenStorageCloudBackupService = exports.OpenStorageCloudBackupService = {
-  // Create
+  // Creates a backup request for a specified volume. Use
+  // OpenStorageCloudBackup.Status() to get the current status of the
+  // backup request.
   create: {
     path: '/openstorage.api.OpenStorageCloudBackup/Create',
     requestStream: false,
@@ -1361,7 +1464,9 @@ var OpenStorageCloudBackupService = exports.OpenStorageCloudBackupService = {
     responseSerialize: serialize_openstorage_api_SdkCloudBackupCreateResponse,
     responseDeserialize: deserialize_openstorage_api_SdkCloudBackupCreateResponse,
   },
-  // Restore
+  // Restore creates a new volume from a backup id. The newly created volume
+  // has an ha_level (number of replicas) of only 1. To increase the number of
+  // replicas, use OpenStorageVolume.Set() to change the ha_level.
   restore: {
     path: '/openstorage.api.OpenStorageCloudBackup/Restore',
     requestStream: false,
@@ -1373,7 +1478,8 @@ var OpenStorageCloudBackupService = exports.OpenStorageCloudBackupService = {
     responseSerialize: serialize_openstorage_api_SdkCloudBackupRestoreResponse,
     responseDeserialize: deserialize_openstorage_api_SdkCloudBackupRestoreResponse,
   },
-  // Delete
+  // Delete deletes a backup stored in the cloud. If the backup is an incremental
+  // backup and other backups are dependent on it, it will not be able to be deleted.
   delete: {
     path: '/openstorage.api.OpenStorageCloudBackup/Delete',
     requestStream: false,
@@ -1385,7 +1491,7 @@ var OpenStorageCloudBackupService = exports.OpenStorageCloudBackupService = {
     responseSerialize: serialize_openstorage_api_SdkCloudBackupDeleteResponse,
     responseDeserialize: deserialize_openstorage_api_SdkCloudBackupDeleteResponse,
   },
-  // DeleteAll
+  // DeleteAll deletes all the backups in the cloud for the specified volume.
   deleteAll: {
     path: '/openstorage.api.OpenStorageCloudBackup/DeleteAll',
     requestStream: false,
@@ -1397,7 +1503,7 @@ var OpenStorageCloudBackupService = exports.OpenStorageCloudBackupService = {
     responseSerialize: serialize_openstorage_api_SdkCloudBackupDeleteAllResponse,
     responseDeserialize: deserialize_openstorage_api_SdkCloudBackupDeleteAllResponse,
   },
-  // Enumerate
+  // Return a list of backups for the specified volume
   enumerate: {
     path: '/openstorage.api.OpenStorageCloudBackup/Enumerate',
     requestStream: false,
@@ -1409,7 +1515,7 @@ var OpenStorageCloudBackupService = exports.OpenStorageCloudBackupService = {
     responseSerialize: serialize_openstorage_api_SdkCloudBackupEnumerateResponse,
     responseDeserialize: deserialize_openstorage_api_SdkCloudBackupEnumerateResponse,
   },
-  // Status
+  // Status returns the status of any cloud backups of a volume
   status: {
     path: '/openstorage.api.OpenStorageCloudBackup/Status',
     requestStream: false,
@@ -1421,7 +1527,7 @@ var OpenStorageCloudBackupService = exports.OpenStorageCloudBackupService = {
     responseSerialize: serialize_openstorage_api_SdkCloudBackupStatusResponse,
     responseDeserialize: deserialize_openstorage_api_SdkCloudBackupStatusResponse,
   },
-  // Catalog
+  // Catalog returns a list of the contents in the backup
   catalog: {
     path: '/openstorage.api.OpenStorageCloudBackup/Catalog',
     requestStream: false,
@@ -1433,7 +1539,7 @@ var OpenStorageCloudBackupService = exports.OpenStorageCloudBackupService = {
     responseSerialize: serialize_openstorage_api_SdkCloudBackupCatalogResponse,
     responseDeserialize: deserialize_openstorage_api_SdkCloudBackupCatalogResponse,
   },
-  // History
+  // History returns a list of backups for a specified volume
   history: {
     path: '/openstorage.api.OpenStorageCloudBackup/History',
     requestStream: false,
@@ -1445,7 +1551,7 @@ var OpenStorageCloudBackupService = exports.OpenStorageCloudBackupService = {
     responseSerialize: serialize_openstorage_api_SdkCloudBackupHistoryResponse,
     responseDeserialize: deserialize_openstorage_api_SdkCloudBackupHistoryResponse,
   },
-  // StateChange
+  // StateChange can be used to stop, pause, and restart a backup
   stateChange: {
     path: '/openstorage.api.OpenStorageCloudBackup/StateChange',
     requestStream: false,

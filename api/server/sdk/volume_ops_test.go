@@ -320,3 +320,81 @@ func TestSdkVolumeEnumerate(t *testing.T) {
 	assert.Len(t, r.GetVolumeIds(), 1)
 	assert.Equal(t, r.GetVolumeIds()[0], id)
 }
+
+func TestSdkVolumeSet(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	id := "myid"
+	newlabels := map[string]string{
+		"hello": "world",
+	}
+	req := &api.SdkVolumeSetRequest{
+		VolumeId: id,
+		Locator: &api.VolumeLocator{
+			VolumeLabels: newlabels,
+		},
+	}
+
+	// Check Locator
+	s.MockDriver().
+		EXPECT().
+		Inspect([]string{id}).
+		Return([]*api.Volume{&api.Volume{Spec: &api.VolumeSpec{}}}, nil).
+		AnyTimes()
+	s.MockDriver().
+		EXPECT().
+		Set(id, &api.VolumeLocator{VolumeLabels: newlabels}, &api.VolumeSpec{}).
+		Return(nil).
+		Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageVolumeClient(s.Conn())
+
+	// Get info
+	_, err := c.Set(context.Background(), req)
+	assert.NoError(t, err)
+
+	// Now check spec
+	req.Locator = nil
+	req.Spec = &api.VolumeSpecSet{
+		SizeOpt: &api.VolumeSpecSet_Size{
+			Size: 1234,
+		},
+	}
+
+	s.MockDriver().
+		EXPECT().
+		Set(id, nil, &api.VolumeSpec{Size: 1234}).
+		Return(nil).
+		Times(1)
+	_, err = c.Set(context.Background(), req)
+	assert.NoError(t, err)
+
+	// Check both locator and spec
+	req = &api.SdkVolumeSetRequest{
+		VolumeId: id,
+		Locator: &api.VolumeLocator{
+			VolumeLabels: newlabels,
+		},
+		Spec: &api.VolumeSpecSet{
+			SizeOpt: &api.VolumeSpecSet_Size{
+				Size: 1234,
+			},
+		},
+	}
+
+	s.MockDriver().
+		EXPECT().
+		Set(
+			id,
+			&api.VolumeLocator{VolumeLabels: newlabels},
+			&api.VolumeSpec{Size: 1234},
+		).
+		Return(nil).
+		Times(1)
+	_, err = c.Set(context.Background(), req)
+	assert.NoError(t, err)
+}
