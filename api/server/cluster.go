@@ -12,9 +12,6 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
-	"github.com/libopenstorage/openstorage/objectstore"
-	sched "github.com/libopenstorage/openstorage/schedpolicy"
-	"github.com/libopenstorage/openstorage/secrets"
 )
 
 const (
@@ -24,20 +21,14 @@ const (
 
 type clusterApi struct {
 	restBase
-	SecretManager      secrets.Secrets
-	SchedPolicyManager sched.SchedulePolicyProvider
-	ObjectStoreManager objectstore.ObjectStore
 }
 
-func newClusterAPI(config cluster.ClusterServerConfiguration) restServer {
+func newClusterAPI() restServer {
 	return &clusterApi{
 		restBase: restBase{
 			version: cluster.APIVersion,
 			name:    "Cluster API",
 		},
-		SecretManager:      config.ConfigSecretManager,
-		SchedPolicyManager: config.ConfigSchedManager,
-		ObjectStoreManager: config.ConfigObjectStoreManager,
 	}
 }
 
