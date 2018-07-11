@@ -126,6 +126,17 @@ func (d *driver) Status() [][2]string {
 	return [][2]string{}
 }
 
+func (d *driver) Inspect(volumeIDs []string) ([]*api.Volume, error) {
+	volumes, err := d.StoreEnumerator.Inspect(volumeIDs)
+	if err != nil {
+		return nil, err
+	} else if err == nil && len(volumes) == 0 {
+		return nil, kvdb.ErrNotFound
+	}
+
+	return volumes, err
+}
+
 //
 // These functions below implement the volume driver interface.
 //
