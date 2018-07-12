@@ -309,8 +309,8 @@ message VolumeSpec {
   bool sharedv4 = 26;
 }
 
-// VolumeSpecSet provides a method to set any of the VolumeSpec of an existing volume
-message VolumeSpecSet {
+// VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
+message VolumeSpecUpdate {
   // Ephemeral storage
   oneof ephemeral_opt { bool ephemeral = 1; }
   // Size specifies the thin provisioned volume size in bytes
@@ -732,37 +732,24 @@ message StorageCluster {
   Status status = 1;
   // Id of the cluster
   string id = 2;
-  // The id of the node servicing these requests
-  string node_id = 3;
-  // List of all the node ids in the cluster
-  repeated string node_ids = 4;
 }
 
 // OpenStorageCluster service provides the methods to manage the cluster
 service OpenStorageCluster {
-  // Enumerate returns information about the cluster and the unique ids of
-  // all the nodes in the cluster.
-  rpc Enumerate(SdkClusterEnumerateRequest)
-    returns (SdkClusterEnumerateResponse) {
+  // InspectCurrent returns information about the current cluster
+  rpc InspectCurrent(SdkClusterInspectCurrentRequest)
+    returns (SdkClusterInspectCurrentResponse) {
       option(google.api.http) = {
-        get: "/v1/cluster"
-      };
-    }
-
-  // Inspect returns information about the specified node
-  rpc Inspect(SdkClusterInspectRequest)
-    returns (SdkClusterInspectResponse) {
-      option(google.api.http) = {
-        get: "/v1/cluster/{node_id}"
+        get: "/v1/clusters/current"
       };
     }
 
   // AlertEnumerate returns a list of alerts from the storage cluster
+  // In REST, use the request values as query parameters.
   rpc AlertEnumerate(SdkClusterAlertEnumerateRequest)
     returns (SdkClusterAlertEnumerateResponse) {
       option(google.api.http) = {
-        post: "/v1/cluster/alert/enumerate"
-        body: "*"
+        get: "/v1/clusters/alerts"
       };
     }
 
@@ -770,7 +757,7 @@ service OpenStorageCluster {
   rpc AlertClear(SdkClusterAlertClearRequest)
     returns (SdkClusterAlertClearResponse) {
       option(google.api.http) = {
-        post: "/v1/cluster/alert/clear"
+        post: "/v1/clusters/alerts/clear"
         body: "*"
       };
     }
@@ -779,7 +766,35 @@ service OpenStorageCluster {
   rpc AlertDelete(SdkClusterAlertDeleteRequest)
     returns (SdkClusterAlertDeleteResponse) {
       option(google.api.http) = {
-        delete: "/v1/cluster/alert/{alert_id}"
+        delete: "/v1/clusters/alerts/{alert_id}"
+      };
+    }
+}
+
+// OpenStorageNode is a service used to manage nodes in the cluster
+service OpenStorageNode {
+  // Inspect returns information about the specified node
+  rpc Inspect(SdkNodeInspectRequest)
+    returns (SdkNodeInspectResponse) {
+      option(google.api.http) = {
+        get: "/v1/nodes/node/{node_id}"
+      };
+    }
+
+  // InspectCurrent returns information about the storage node
+  // where the client is currently connected to.
+  rpc InspectCurrent(SdkNodeInspectCurrentRequest)
+    returns (SdkNodeInspectCurrentResponse) {
+      option(google.api.http) = {
+        get: "/v1/nodes/current"
+      };
+    }
+
+  // Enumerate returns the ids of all the nodes in the current cluster
+  rpc Enumerate(SdkNodeEnumerateRequest)
+    returns (SdkNodeEnumerateResponse) {
+      option(google.api.http) = {
+        get: "/v1/nodes"
       };
     }
 }
@@ -805,7 +820,7 @@ service OpenStorageVolume {
   rpc Create(SdkVolumeCreateRequest)
     returns (SdkVolumeCreateResponse) {
       option(google.api.http) = {
-        post: "/v1/volume"
+        post: "/v1/volumes"
         body: "*"
       };
     }
@@ -814,7 +829,7 @@ service OpenStorageVolume {
   rpc Clone(SdkVolumeCloneRequest)
     returns (SdkVolumeCloneResponse) {
       option(google.api.http) = {
-        post: "/v1/volume/clone"
+        post: "/v1/volumes/clone"
         body: "*"
       };
     }
@@ -823,7 +838,7 @@ service OpenStorageVolume {
   rpc Delete(SdkVolumeDeleteRequest)
     returns (SdkVolumeDeleteResponse) {
       option(google.api.http) = {
-        delete: "/v1/volume/{volume_id}"
+        delete: "/v1/volumes/{volume_id}"
       };
     }
 
@@ -831,16 +846,16 @@ service OpenStorageVolume {
   rpc Inspect(SdkVolumeInspectRequest)
     returns (SdkVolumeInspectResponse) {
       option(google.api.http) = {
-        get: "/v1/volume/{volume_id}"
+        get: "/v1/volumes/{volume_id}"
       };
     }
 
-  // Set provides a method for manipulating the specification and attributes of a volume.
+  // Update provides a method for manipulating the specification and attributes of a volume.
   // Set can be used to resize a volume, update labels, change replica count, and much more.
-  rpc Set(SdkVolumeSetRequest)
-    returns (SdkVolumeSetResponse) {
+  rpc Update(SdkVolumeUpdateRequest)
+    returns (SdkVolumeUpdateResponse) {
       option(google.api.http) = {
-        post: "/v1/volume/set"
+        put: "/v1/volumes"
         body: "*"
       };
     }
@@ -849,17 +864,18 @@ service OpenStorageVolume {
   rpc Enumerate(SdkVolumeEnumerateRequest)
     returns (SdkVolumeEnumerateResponse) {
       option(google.api.http) = {
-        post: "/v1/volume/enumerate"
+        post: "/v1/volumes/enumerate"
         body: "*"
       };
     }
 
   // SnapshotCreate creates a snapshot of a volume. This creates an immutable (read-only),
-  // point-in-time snapshot of a volume.
+  // point-in-time snapshot of a volume. To create a new writable volume from
+  // a snapshot, please use OpenStorageVolume.Clone().
   rpc SnapshotCreate(SdkVolumeSnapshotCreateRequest)
     returns (SdkVolumeSnapshotCreateResponse) {
       option(google.api.http) = {
-        post: "/v1/volume/snapshot"
+        post: "/v1/volumes/snapshots"
         body: "*"
       };
     }
@@ -868,7 +884,7 @@ service OpenStorageVolume {
   rpc SnapshotRestore(SdkVolumeSnapshotRestoreRequest)
     returns (SdkVolumeSnapshotRestoreResponse) {
       option(google.api.http) = {
-        post: "/v1/volume/snapshot/restore"
+        post: "/v1/volumes/snapshots/restore"
         body: "*"
       };
     }
@@ -878,7 +894,7 @@ service OpenStorageVolume {
   rpc SnapshotEnumerate(SdkVolumeSnapshotEnumerateRequest)
     returns (SdkVolumeSnapshotEnumerateResponse) {
       option(google.api.http) = {
-        post: "/v1/volume/snapshot/enumerate"
+        post: "/v1/volumes/snapshots/enumerate"
         body: "*"
       };
     }
@@ -889,18 +905,16 @@ service OpenStorageVolume {
   rpc Attach(SdkVolumeAttachRequest)
     returns (SdkVolumeAttachResponse) {
       option(google.api.http) = {
-        post: "/v1/volume/attach"
+        post: "/v1/volumes/attach"
         body: "*"
       };
     }
 
-  // Detaches a the volume from the host that the client is communicating with
-  // NOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more
-  // information about a new feature to allow attachment to any node.
+  // Detaches a the volume from the host
   rpc Detach(SdkVolumeDetachRequest)
     returns (SdkVolumeDetachResponse) {
       option(google.api.http) = {
-        post: "/v1/volume/detach"
+        post: "/v1/volumes/detach"
         body: "*"
       };
     }
@@ -911,7 +925,7 @@ service OpenStorageVolume {
   rpc Mount(SdkVolumeMountRequest)
     returns(SdkVolumeMountResponse) {
       option(google.api.http) = {
-        post: "/v1/volume/mount"
+        post: "/v1/volumes/mount"
         body: "*"
       };
     }
@@ -922,7 +936,7 @@ service OpenStorageVolume {
   rpc Unmount(SdkVolumeUnmountRequest)
       returns(SdkVolumeUnmountResponse) {
       option(google.api.http) = {
-        post: "/v1/volume/unmount"
+        post: "/v1/volumes/unmount"
         body: "*"
       };
     }
@@ -935,7 +949,7 @@ service OpenStorageObjectstore {
   rpc Inspect(SdkObjectstoreInspectRequest)
     returns(SdkObjectstoreInspectResponse){
       option(google.api.http) = {
-        get: "/v1/objectstore/{objectstore_id}"
+        get: "/v1/objectstores/{objectstore_id}"
       };
     }
 
@@ -943,7 +957,7 @@ service OpenStorageObjectstore {
   rpc Create(SdkObjectstoreCreateRequest)
     returns(SdkObjectstoreCreateResponse){
       option(google.api.http) = {
-        post: "/v1/objectstore"
+        post: "/v1/objectstores"
         body: "*"
       };
     }
@@ -952,7 +966,7 @@ service OpenStorageObjectstore {
   rpc Delete(SdkObjectstoreDeleteRequest)
     returns(SdkObjectstoreDeleteResponse){
       option(google.api.http) = {
-        delete: "/v1/objectstore/{objectstore_id}"
+        delete: "/v1/objectstores/{objectstore_id}"
       };
     }
 
@@ -962,7 +976,7 @@ service OpenStorageObjectstore {
   rpc Update(SdkObjectstoreUpdateRequest)
     returns(SdkObjectstoreUpdateResponse){
       option(google.api.http) ={
-        post: "/v1/objectstore/update"
+        put: "/v1/objectstores"
         body: "*"
       };
   }
@@ -1030,7 +1044,7 @@ service OpenStorageCredentials {
   rpc Validate(SdkCredentialValidateRequest)
     returns (SdkCredentialValidateResponse) {
       option(google.api.http) = {
-        get: "/v1/credentials/validate/{credential_id}"
+        get: "/v1/credentials/{credential_id}/validate"
       };
     }
 }
@@ -1044,7 +1058,7 @@ service OpenStorageSchedulePolicy {
   rpc Create(SdkSchedulePolicyCreateRequest)
     returns (SdkSchedulePolicyCreateResponse) {
       option(google.api.http) = {
-        post: "/v1/schedulepolicy"
+        post: "/v1/schedulepolicies"
         body: "*"
       };
     }
@@ -1053,7 +1067,7 @@ service OpenStorageSchedulePolicy {
   rpc Update(SdkSchedulePolicyUpdateRequest)
     returns (SdkSchedulePolicyUpdateResponse) {
       option(google.api.http) = {
-        put: "/v1/schedulepolicy"
+        put: "/v1/schedulepolicies"
         body: "*"
       };
     }
@@ -1062,7 +1076,7 @@ service OpenStorageSchedulePolicy {
   rpc Enumerate(SdkSchedulePolicyEnumerateRequest)
     returns (SdkSchedulePolicyEnumerateResponse) {
       option(google.api.http) = {
-        get: "/v1/schedulepolicy"
+        get: "/v1/schedulepolicies"
       };
     }
 
@@ -1070,7 +1084,7 @@ service OpenStorageSchedulePolicy {
   rpc Inspect(SdkSchedulePolicyInspectRequest)
   returns (SdkSchedulePolicyInspectResponse) {
     option(google.api.http) = {
-      get: "/v1/schedulepolicy/{name}"
+      get: "/v1/schedulepolicies/{name}"
     };
   }
 
@@ -1078,7 +1092,7 @@ service OpenStorageSchedulePolicy {
   rpc Delete(SdkSchedulePolicyDeleteRequest)
     returns (SdkSchedulePolicyDeleteResponse) {
       option(google.api.http) = {
-        delete: "/v1/schedulepolicy/{name}"
+        delete: "/v1/schedulepolicies/{name}"
       };
     }
 }
@@ -1093,7 +1107,7 @@ service OpenStorageCloudBackup {
   rpc Create(SdkCloudBackupCreateRequest)
     returns (SdkCloudBackupCreateResponse) {
       option(google.api.http) = {
-        post: "/v1/cloudbackup"
+        post: "/v1/cloudbackups"
         body: "*"
       };
     }
@@ -1104,7 +1118,7 @@ service OpenStorageCloudBackup {
   rpc Restore(SdkCloudBackupRestoreRequest)
     returns (SdkCloudBackupRestoreResponse) {
       option(google.api.http) = {
-        post: "/v1/cloudbackup/restore"
+        post: "/v1/cloudbackups/restore"
         body: "*"
       };
     }
@@ -1114,7 +1128,7 @@ service OpenStorageCloudBackup {
   rpc Delete(SdkCloudBackupDeleteRequest)
     returns (SdkCloudBackupDeleteResponse) {
       option(google.api.http) = {
-        delete: "/v1/cloudbackup/{backup_id}"
+        delete: "/v1/cloudbackups/backup/{backup_id}"
       };
     }
 
@@ -1122,7 +1136,7 @@ service OpenStorageCloudBackup {
   rpc DeleteAll(SdkCloudBackupDeleteAllRequest)
     returns (SdkCloudBackupDeleteAllResponse) {
       option(google.api.http) = {
-        post: "/v1/cloudbackup/deleteall"
+        post: "/v1/cloudbackups/deleteall"
         body: "*"
       };
     }
@@ -1131,7 +1145,7 @@ service OpenStorageCloudBackup {
   rpc Enumerate(SdkCloudBackupEnumerateRequest)
     returns (SdkCloudBackupEnumerateResponse) {
       option(google.api.http) = {
-        get: "/v1/cloudbackup"
+        get: "/v1/cloudbackups"
       };
     }
 
@@ -1139,7 +1153,7 @@ service OpenStorageCloudBackup {
   rpc Status(SdkCloudBackupStatusRequest)
     returns (SdkCloudBackupStatusResponse) {
       option(google.api.http) = {
-        get: "/v1/cloudbackup/status/{src_volume_id}"
+        get: "/v1/cloudbackups/volume/{src_volume_id}/status"
       };
     }
 
@@ -1147,7 +1161,7 @@ service OpenStorageCloudBackup {
   rpc Catalog(SdkCloudBackupCatalogRequest)
     returns (SdkCloudBackupCatalogResponse) {
       option(google.api.http) = {
-        get: "/v1/cloudbackup/catalog/{backup_id}"
+        get: "/v1/cloudbackups/backup/{backup_id}/catalog"
       };
     }
 
@@ -1155,7 +1169,7 @@ service OpenStorageCloudBackup {
   rpc History(SdkCloudBackupHistoryRequest)
     returns (SdkCloudBackupHistoryResponse) {
       option(google.api.http) = {
-        get: "/v1/cloudbackup/history/{src_volume_id}"
+        get: "/v1/cloudbackups/volume/{src_volume_id}/history"
       };
     }
 
@@ -1163,7 +1177,7 @@ service OpenStorageCloudBackup {
   rpc StateChange(SdkCloudBackupStateChangeRequest)
     returns (SdkCloudBackupStateChangeResponse) {
       option(google.api.http) = {
-        post: "/v1/cloudbackup/statechange"
+        post: "/v1/cloudbackups/statechange"
         body: "*"
       };
     }
@@ -1172,7 +1186,7 @@ service OpenStorageCloudBackup {
   rpc SchedCreate(SdkCloudBackupSchedCreateRequest)
     returns (SdkCloudBackupSchedCreateResponse) {
       option(google.api.http) = {
-        post: "/v1/cloudbackup/schedule"
+        post: "/v1/cloudbackups/schedules"
         body: "*"
       };
     }
@@ -1181,7 +1195,7 @@ service OpenStorageCloudBackup {
   rpc SchedDelete(SdkCloudBackupSchedDeleteRequest)
     returns (SdkCloudBackupSchedDeleteResponse) {
       option(google.api.http) = {
-        delete: "/v1/cloudbackup/schedule/{uuid}"
+        delete: "/v1/cloudbackups/schedules/{backup_schedule_id}"
       };
     }
 
@@ -1189,63 +1203,82 @@ service OpenStorageCloudBackup {
   rpc SchedEnumerate(SdkCloudBackupSchedEnumerateRequest)
     returns (SdkCloudBackupSchedEnumerateResponse) {
       option(google.api.http) = {
-        get: "/v1/cloudbackup/schedule"
+        get: "/v1/cloudbackups/schedules"
       };
     }
 }
 
+// Define a schedule policy request
 message SdkSchedulePolicyCreateRequest {
   // Schedule Policy
   SdkSchedulePolicy SchedulePolicy = 1;
 }
 
+// Empty response
 message SdkSchedulePolicyCreateResponse {
 }
 
+// Define a request to update a schedule policy
 message SdkSchedulePolicyUpdateRequest {
   // Schedule Policy
   SdkSchedulePolicy SchedulePolicy = 1;
 }
 
+// Empty response
 message SdkSchedulePolicyUpdateResponse {
 }
 
+// Empty request
 message SdkSchedulePolicyEnumerateRequest {
 }
 
+// Defines a schedule policy enumerate response
 message SdkSchedulePolicyEnumerateResponse {
   // List of Schedule Policy
   repeated SdkSchedulePolicy policies = 1;
 }
 
+// Define a schedule policy inspection request
 message SdkSchedulePolicyInspectRequest {
   // Name of the schedule Policy
   string name = 1;
 }
 
+// Defines a schedule policy inspection response
 message SdkSchedulePolicyInspectResponse {
   // List of Schedule Policy
   SdkSchedulePolicy policy = 1;
 }
 
+// Define schedule policy deletion request
 message SdkSchedulePolicyDeleteRequest {
   // Name of the schedule policy
   string name = 1;
 }
 
+// Empty response
 message SdkSchedulePolicyDeleteResponse {
 }
 
+// Defines times of day
 enum SdkTimeWeekday {
+  // Sunday
   SdkTimeWeekdaySunday = 0;
+  // Monday
   SdkTimeWeekdayMonday = 1;
+  // Tuesday
   SdkTimeWeekdayTuesday = 2;
+  // Wednesday
   SdkTimeWeekdayWednesday = 3;
+  // Thursday
   SdkTimeWeekdayThursday = 4;
+  // Friday
   SdkTimeWeekdayFriday = 5;
+  // Saturday
   SdkTimeWeekdaySaturday = 6;
 }
 
+// Defines a daily schedule
 message SdkSchedulePolicyIntervalDaily {
   // Range: 0-23
   int32 hour = 1;
@@ -1253,6 +1286,7 @@ message SdkSchedulePolicyIntervalDaily {
   int32 minute = 2;
 }
 
+// Defines a weekly schedule
 message SdkSchedulePolicyIntervalWeekly{
   SdkTimeWeekday day = 1;
   // Range: 0-23
@@ -1261,6 +1295,7 @@ message SdkSchedulePolicyIntervalWeekly{
   int32 minute = 3;
 }
 
+// Defines a monthly schedule
 message SdkSchedulePolicyIntervalMonthly{
   // Range: 1-28
   int32 day = 1;
@@ -1270,6 +1305,7 @@ message SdkSchedulePolicyIntervalMonthly{
   int32 minute = 3;
 }
 
+// Defines a schedule policy interval
 message SdkSchedulePolicyInterval {
   // Number of instances to retain
   int64 retain = 1;
@@ -1284,6 +1320,7 @@ message SdkSchedulePolicyInterval {
   }
 }
 
+// Defines a schedule policy
 message SdkSchedulePolicy {
   // Name of the schedule policy
   string name = 1;
@@ -1291,19 +1328,25 @@ message SdkSchedulePolicy {
   SdkSchedulePolicyInterval schedule = 2;
 }
 
+// Defines a request to create credentials
 message SdkCredentialCreateRequest {
   oneof credential_type {
+    // Credentials for AWS/S3
     SdkAwsCredentialRequest aws_credential = 1;
+    // Credentials for Azure
     SdkAzureCredentialRequest azure_credential = 2;
+    // Credentials for Google
     SdkGoogleCredentialRequest google_credential = 3;
   }
 }
 
+// Defines a response from creating a credential
 message SdkCredentialCreateResponse {
   // Id of the credentials
   string credential_id = 1;
 }
 
+// Defines credentials for Aws/S3 endpoints
 message SdkAwsCredentialRequest {
   // Access key
   string access_key = 1;
@@ -1315,6 +1358,7 @@ message SdkAwsCredentialRequest {
   string region = 4;
 }
 
+// Defines credentials for Azure
 message SdkAzureCredentialRequest {
   // Account name
   string account_name = 1;
@@ -1322,6 +1366,7 @@ message SdkAzureCredentialRequest {
   string account_key = 2;
 }
 
+// Defines credentials for Google
 message SdkGoogleCredentialRequest {
   // Project ID
   string project_id = 1;
@@ -1329,6 +1374,7 @@ message SdkGoogleCredentialRequest {
   string json_key = 2;
 }
 
+// Defines the response for AWS/S3 credentials
 message SdkAwsCredentialResponse {
   // Credential Id
   string credential_id = 1;
@@ -1340,6 +1386,7 @@ message SdkAwsCredentialResponse {
   string region = 4;
 }
 
+// Defines the response for Azure credentials
 message SdkAzureCredentialResponse {
   // Credential Id
   string credential_id = 1;
@@ -1347,6 +1394,7 @@ message SdkAzureCredentialResponse {
   string account_name = 2;
 }
 
+// Defines the response for Google credentials
 message SdkGoogleCredentialResponse {
   // Credential Id
   string credential_id = 1;
@@ -1354,43 +1402,57 @@ message SdkGoogleCredentialResponse {
   string project_id = 2;
 }
 
+// Empty request
 message SdkCredentialEnumerateRequest {
 }
 
+// Defines response for a enumeration of credentials
 message SdkCredentialEnumerateResponse {
+  // List of credentials
   repeated string credential_ids = 1;
 }
 
+// Defines the request to inspection for credentials
 message SdkCredentialInspectRequest {
+  // Id of the credential
   string credential_id = 1;
 }
 
+// Defines the response to an inspection of a credential.
 // This response uses OneOf proto style. Depending on your programming language
 // you will need to check if the value of credential_type is one of the ones below.
 message SdkCredentialInspectResponse {
   oneof credential_type {
+    // Aws credentials
     SdkAwsCredentialResponse aws_credential = 1;
+    // Azure credentials
     SdkAzureCredentialResponse azure_credential = 2;
+    // Google credentials
     SdkGoogleCredentialResponse google_credential = 3;
   }
 }
 
+// Defines the request to delete credentials
 message SdkCredentialDeleteRequest {
-  // ID for credentials
+  // Id for credentials
   string credential_id = 1;
 }
 
+// Empty response
 message SdkCredentialDeleteResponse {
 }
 
+// Defines a request to validate credentials
 message SdkCredentialValidateRequest {
   // Id of the credentials
   string credential_id = 1;
 }
 
+// Empty response
 message SdkCredentialValidateResponse {
 }
 
+// Defines a request to mount a volume to the node receiving this request
 message SdkVolumeMountRequest {
   // Id of the volume
   string volume_id = 1;
@@ -1400,9 +1462,11 @@ message SdkVolumeMountRequest {
   map<string, string> options = 3;
 }
 
+// Empty response
 message SdkVolumeMountResponse {
 }
 
+// Defines a request to unmount a volume on the node receiving this request
 message SdkVolumeUnmountRequest {
   // Id of volume
   string volume_id = 1;
@@ -1412,9 +1476,11 @@ message SdkVolumeUnmountRequest {
   map<string, string> options = 3;
 }
 
+// Empty response
 message SdkVolumeUnmountResponse {
 }
 
+// Defines a request to attach a volume to the node receiving this request
 message SdkVolumeAttachRequest {
   // Id of volume
   string volume_id = 1;
@@ -1422,19 +1488,24 @@ message SdkVolumeAttachRequest {
   map<string, string>  options = 2;
 }
 
+// Defines a response from the node which received the request to attach
 message SdkVolumeAttachResponse {
   // Device path where device is exported
   string device_path = 1;
 }
 
+// Defines a request to detach a volume
 message SdkVolumeDetachRequest {
   // Id of the volume
   string volume_id = 1;
 }
 
+// Empty response
 message SdkVolumeDetachResponse {
 }
 
+// Defines a request to create a volume. Use OpenStorageVolume.Update()
+// to update any labels on the volume.
 message SdkVolumeCreateRequest {
   // Unique name of the volume. This will be used for idempotency.
   string name = 1;
@@ -1442,52 +1513,57 @@ message SdkVolumeCreateRequest {
   VolumeSpec spec = 2;
 }
 
+// Defines a response to the creation of a volume
 message SdkVolumeCreateResponse {
   // Id of new volume
   string volume_id = 1;
 }
 
+// Defines a request to clone a volume or create a volume from a snapshot
 message SdkVolumeCloneRequest {
   // Unique name of the volume. This will be used for idempotency.
   string name = 1;
-  // Parent volume id, if specified will create a new volume as a clone of the parent.
+  // Parent volume id or snapshot id will create a new volume as a clone of the parent.
   string parent_id = 2;
-  // Volume specification
-  VolumeSpec spec = 3;
 }
 
+// Defines the response when creating a clone from a volume or a snapshot
 message SdkVolumeCloneResponse {
   // Id of new volume
   string volume_id = 1;
 }
 
+// Defines the request to delete a volume
 message SdkVolumeDeleteRequest {
   // Id of volume to delete
   string volume_id = 1;
 }
 
+// Empty response
 message SdkVolumeDeleteResponse {
 }
 
+// Defines the request to inspect a volume
 message SdkVolumeInspectRequest {
   // Id of volume to inspect
   string volume_id = 1;
 }
 
+// Defines the response when inspecting a volume
 message SdkVolumeInspectResponse {
   // Information about the volume
   Volume volume = 1;
 }
 
 // This request is used to adjust or set new values in the volume
-message SdkVolumeSetRequest {
+message SdkVolumeUpdateRequest {
   // Id of the volume to update
   string volume_id = 1;
   // Change locator values. Some of these values may not be able to be changed.
   // New labels will be added to the current volume labels. To delete a label, set the
   // value of the label to an empty string.
   VolumeLocator locator = 2;
-  // VolumeSpecSet provides a method to request that certain values
+  // VolumeSpecUpdate provides a method to request that certain values
   // in the VolumeSpec are changed. This is necessary as a separate variable
   // because values like int and bool in the VolumeSpec cannot be determined
   // if they are being requested to change in gRPC proto3. Some of these
@@ -1496,36 +1572,41 @@ message SdkVolumeSetRequest {
   // To resize the volume: Set a new value in spec.size.
   // To change number of replicas: Adjust spec.ha_level.
   // To change the I/O Profile: Adjust spec.io_profile.
-  VolumeSpecSet spec = 4;
+  VolumeSpecUpdate spec = 4;
 }
 
-// The response returns no data
-message SdkVolumeSetResponse {
+// Empty response
+message SdkVolumeUpdateResponse {
 }
 
+// Defines a request to list volumes
 message SdkVolumeEnumerateRequest {
   // Volumes to match to this locator.
   // If not provided, all volumes will be returned.
   VolumeLocator locator = 1;
 }
 
+// Defines the response when listing volumes
 message SdkVolumeEnumerateResponse {
   // List of volumes matching label
   repeated string volume_ids = 1;
 }
 
-message SdkVolumeSnapshotCreateRequest{
+// Defines the request when creating a snapshot from a volume.
+message SdkVolumeSnapshotCreateRequest {
   // Id of volume to take the snapshot from
   string volume_id = 1;
   // Labels to apply to snapshot
   map<string, string> labels = 2;
 }
 
+// Defines a response after creating a snapshot of a volume
 message SdkVolumeSnapshotCreateResponse {
   // Id of immutable snapshot
   string snapshot_id = 1;
 }
 
+// Defines a request to restore a volume to a snapshot
 message SdkVolumeSnapshotRestoreRequest {
   // Id of volume
   string volume_id = 1;
@@ -1533,9 +1614,11 @@ message SdkVolumeSnapshotRestoreRequest {
   string snapshot_id = 2;
 }
 
+// Empty response
 message SdkVolumeSnapshotRestoreResponse {
 }
 
+// Defines a request to list the snaphots
 message SdkVolumeSnapshotEnumerateRequest {
   // Id of volume
   string volume_id = 1;
@@ -1543,35 +1626,57 @@ message SdkVolumeSnapshotEnumerateRequest {
   map<string, string> labels = 2;
 }
 
+// Defines a response when listing snapshots
 message SdkVolumeSnapshotEnumerateResponse {
   // List of immutable snapshots
   repeated string volume_snapshot_ids = 1;
 }
 
-// This request is an empty request
-message SdkClusterEnumerateRequest {
+// Empty request
+message SdkClusterInspectCurrentRequest {
 }
 
-// This response returns information about the cluster
-message SdkClusterEnumerateResponse {
+// Defines a response when inspecting the current cluster
+message SdkClusterInspectCurrentResponse {
   // Cluster information
   StorageCluster cluster = 1;
 }
 
-// Contains the request when inspecting a node
-message SdkClusterInspectRequest {
-  // Id of node to inspect (required)
+// Defines a request when inspecting a node
+message SdkNodeInspectRequest {
+  // Id of node to inspect
   string node_id = 1;
 }
 
-// This response contains information about the respective node requested
-message SdkClusterInspectResponse {
+// Defines a response when inspecting a node
+message SdkNodeInspectResponse {
   // Node information
   StorageNode node = 1;
 }
 
-// This request contains the information needed to get alerts from
-// the storage system
+// Empty request
+message SdkNodeInspectCurrentRequest {
+}
+
+// Defines a response when inspecting a node
+message SdkNodeInspectCurrentResponse {
+  // Node information
+  StorageNode node = 1;
+}
+
+// Empty request
+message SdkNodeEnumerateRequest {
+}
+
+// Defines a response with a list of nodes
+message SdkNodeEnumerateResponse {
+  // List of all the node ids in the cluster
+  repeated string node_ids = 1;
+}
+
+// Defines a request contains the information needed to get alerts from
+// the storage system. For REST you will need to pass these
+// as query parameters. See swagger documentation for more information.
 message SdkClusterAlertEnumerateRequest {
   // Start time of alerts
   google.protobuf.Timestamp time_start = 1;
@@ -1581,12 +1686,13 @@ message SdkClusterAlertEnumerateRequest {
   ResourceType resource = 3;
 }
 
-// This response provides a list of the alerts at the specified time.
+// Defines a response providing a list of alerts
 message SdkClusterAlertEnumerateResponse {
   // Information on the alerts requested
   repeated Alert alerts = 1;
 }
 
+// Defines a request to clear an alert
 message SdkClusterAlertClearRequest {
   // Type of resource (required)
   ResourceType resource = 1;
@@ -1594,9 +1700,11 @@ message SdkClusterAlertClearRequest {
   int64 alert_id = 2;
 }
 
+// Empty response
 message SdkClusterAlertClearResponse {
 }
 
+// Defines a request to delete an alert
 message SdkClusterAlertDeleteRequest {
   // Type of resource (required)
   ResourceType resource = 1;
@@ -1604,37 +1712,46 @@ message SdkClusterAlertDeleteRequest {
   int64 alert_id = 2;
 }
 
+// Empty response
 message SdkClusterAlertDeleteResponse {
 }
 
+// Defines a request to get information about an object store endpoint
 message SdkObjectstoreInspectRequest {
-  //ObjecstoreID to query objestore status
+  // Id of the object store
   string objectstore_id = 1;
 }
 
+// Defines a response when inspecting an object store endpoint
 message SdkObjectstoreInspectResponse {
-  // Objectstore status
+  // Contains information about the object store requested
   ObjectstoreInfo objectstore_status = 1;
 }
 
+// Defines a request to create an object store
 message SdkObjectstoreCreateRequest {
   // Volume on which objectstore will be running
-  string volume_id= 1;
+  string volume_id = 1;
 }
 
+// Defines a response when an object store has been created for a
+// specified volume
 message SdkObjectstoreCreateResponse {
   // Created objecstore status
   ObjectstoreInfo objectstore_status = 1;
 }
 
+// Defines a request to delete an object store service from a volume
 message SdkObjectstoreDeleteRequest {
-  // Objectstore ID to delete
+  // Id of the object store to delete
   string objectstore_id = 1;
 }
 
+// Empty response
 message SdkObjectstoreDeleteResponse {
 }
 
+// Defines a request to update an object store
 message SdkObjectstoreUpdateRequest {
   // Objectstore Id to update
   string objectstore_id = 1;
@@ -1642,21 +1759,26 @@ message SdkObjectstoreUpdateRequest {
   bool enable = 2;
 }
 
+// Empty response
 message SdkObjectstoreUpdateResponse {
 }
 
+// Defines a request to create a backup of a volume to the cloud
 message SdkCloudBackupCreateRequest {
   // VolumeID of the volume for which cloudbackup is requested
   string volume_id = 1;
-  // CredentialUUID is cloud credential to be used for backup
-  string credential_uuid = 2;
+  // Credential id refers to the cloud credentials needed to backup
+  string credential_id = 2;
   // Full indicates if full backup is desired even though incremental is possible
   bool full = 3;
 }
 
+// Empty response
 message SdkCloudBackupCreateResponse {
 }
 
+// Defines a request to restore a volume from an existing backup stored by
+// a cloud provider
 message SdkCloudBackupRestoreRequest {
   // Backup ID being restored
   string backup_id = 1;
@@ -1664,50 +1786,61 @@ message SdkCloudBackupRestoreRequest {
   // in the cluster for restoring the cloudbackup
   string restore_volume_name = 2;
   // The credential to be used for restore operation
-  string credential_uuid = 3;
+  string credential_id = 3;
   // Optional for provisioning restore
   // volume (ResoreVolumeName should not be specified)
   string node_id = 4;
 }
 
+// Defines a response when restoring a volume from a backup stored by
+// a cloud provider
 message SdkCloudBackupRestoreResponse {
   // VolumeID to which the backup is being restored
   string restore_volume_id = 1;
 }
 
+// Defines a request to delete a single backup stored by a cloud provider
 message SdkCloudBackupDeleteRequest {
   // ID is the ID of the cloud backup
   string backup_id = 1;
-  // CredentialUUID is the credential for cloud to be used for the request
-  string credential_uuid = 2;
-  // Force Delete cloudbackup even if there are dependencies
+  // Credential id is the credential for cloud to be used for the request
+  string credential_id = 2;
+  // Force Delete cloudbackup even if there are dependencies. This may be
+  // needed if the backup is an incremental backup and subsequent backups
+  // depend on this backup specified by `backup_id`.
   bool force = 3;
 }
 
+// Empty response
 message SdkCloudBackupDeleteResponse {
 }
 
+// Defines a request to delete all the backups stored by a cloud provider
+// for a specified volume
 message SdkCloudBackupDeleteAllRequest {
   // id of the volume for the request
   string src_volume_id = 1;
-  // CredentialUUID is the credential for cloud to be used for the request
-  string credential_uuid = 2;
+  // Credential id is the credential for cloud to be used for the request
+  string credential_id = 2;
 }
 
+// Empty response
 message SdkCloudBackupDeleteAllResponse {
 }
 
+// Defines a request to list the backups stored by a cloud provider
 message SdkCloudBackupEnumerateRequest {
   // Optional source id of the volume for the request
   string src_volume_id = 1;
-  // ClusterID is the optional clusterID for the request
+  // Cluster id is an optional parameter which defines the cluster
   string cluster_id = 2;
-  // CredentialUUID is the credential for cloud to be used for the request
-  string credential_uuid = 3;
+  // Credential id is the credential for cloud to be used for the request
+  string credential_id = 3;
   // All if set to true, backups for all clusters in the cloud are processed
   bool all = 4;
 }
 
+// SdkCloudBackupInfo has information about a backup stored by a cloud provider
 message SdkCloudBackupInfo {
   // ID is the ID of the cloud backup
   string id = 1;
@@ -1724,27 +1857,42 @@ message SdkCloudBackupInfo {
   SdkCloudBackupStatusType status = 6;
 }
 
+// Defines a response which lists all the backups stored by a cloud provider
 message SdkCloudBackupEnumerateResponse {
   repeated SdkCloudBackupInfo backups = 1;
 }
 
+// CloudBackup operations types
 enum SdkCloudBackupOpType {
+  // Unknown
   SdkCloudBackupOpTypeUnknown = 0;
+  // Backup
   SdkCloudBackupOpTypeBackupOp = 1;
+  // Restore
   SdkCloudBackupOpTypeRestoreOp = 2;
 }
 
+// CloudBackup status types
 enum SdkCloudBackupStatusType {
+  // Unkonwn
   SdkCloudBackupStatusTypeUnknown = 0;
+  // Not started
   SdkCloudBackupStatusTypeNotStarted = 1;
+  // Done
   SdkCloudBackupStatusTypeDone = 2;
+  // Aborted
   SdkCloudBackupStatusTypeAborted = 3;
+  // Paused
   SdkCloudBackupStatusTypePaused = 4;
+  // Stopped
   SdkCloudBackupStatusTypeStopped = 5;
+  // Active
   SdkCloudBackupStatusTypeActive = 6;
+  // Failed
   SdkCloudBackupStatusTypeFailed = 7;
 }
 
+// SdkCloudBackupStatus defines the status of a backup stored by a cloud provider
 message SdkCloudBackupStatus {
   // ID is the ID for the operation
   string backup_id = 1;
@@ -1762,6 +1910,7 @@ message SdkCloudBackupStatus {
   string node_id = 7;
 }
 
+// Defines a request to retreive the status of a backup for a specified volume
 message SdkCloudBackupStatusRequest {
   // SrcVolumeID optional volumeID to list status of backup/restore
   string src_volume_id = 1;
@@ -1770,23 +1919,28 @@ message SdkCloudBackupStatusRequest {
   bool local = 2;
 }
 
+// Defines a response containing the status of the backups for a specified volume
 message SdkCloudBackupStatusResponse {
-  // statuses is list of currently active/failed/done backup/restores
+  // Statuses is list of currently active/failed/done backup/restores
   map<string, SdkCloudBackupStatus> statuses = 1;
 }
 
+// Defines a request to get catalog of a backup stored by a cloud provider
 message SdkCloudBackupCatalogRequest {
   // Id of the backup
   string backup_id = 1;
-  // is the credential for cloud
-  string credential_uuid = 2;
+  // Credential id describe the credentials for the cloud
+  string credential_id = 2;
 }
 
+// Defines a response containing the contents of a backup stored by a cloud provider
 message SdkCloudBackupCatalogResponse {
   // Contents is listing of backup contents
   repeated string contents = 1;
 }
 
+// SdkCloudBackupHistoryItem contains information about a backup for a
+// specific volume
 message SdkCloudBackupHistoryItem {
   // SrcVolumeID is volume ID which was backedup
   string src_volume_id = 1;
@@ -1796,41 +1950,54 @@ message SdkCloudBackupHistoryItem {
   SdkCloudBackupStatusType status = 3;
 }
 
+// Defines a request to retreive the history of the backups for
+// a specific volume to a cloud provider
 message SdkCloudBackupHistoryRequest {
-  // volumeID for which history of backup/restore is being requested
-  // (optional) If not provided, it will return the history for all volumes.
+  // This optional value defines which history of backup/restore is being
+  // requested. If not provided, it will return the history for all volumes.
   string src_volume_id = 1;
 }
 
+// Defines a response containing a list of history of backups to a cloud provider
 message SdkCloudBackupHistoryResponse {
   // HistoryList is list of past backup/restores in the cluster
   repeated SdkCloudBackupHistoryItem history_list = 1;
 }
 
+// SdkCloudBackupRequestedState defines states to set a specified backup or restore
+// to or from a cloud provider
 enum SdkCloudBackupRequestedState {
+  // Unknown state
   SdkCloudBackupRequestedStateUnknown = 0;
+  // Pause the backup or restore
   SdkCloudBackupRequestedStatePause = 1;
+  // Resume the backup or restore
   SdkCloudBackupRequestedStateResume = 2;
+  // Stop a backup or restore
   SdkCloudBackupRequestedStateStop = 3;
 }
 
+// Defines a request to change the state of a backup or restore to or
+// from a cloud provider
 message SdkCloudBackupStateChangeRequest {
-  // SrcVolumeID is volume ID on which backup/restore
+  // Describes the volume id on which backup/restore
   // state change is being requested
   string src_volume_id = 1;
-  // RequestedState is desired state of the op
-  // can be pause/resume/stop
+  // The desired state of the operation
   SdkCloudBackupRequestedState requested_state = 2;
 }
 
+// Empty response
 message SdkCloudBackupStateChangeResponse {
 }
 
+// SdkCloudBackupScheduleInfo describes a schedule for volume backups to
+// a cloud provider
 message SdkCloudBackupScheduleInfo{
-  // SrcVolumeID is the schedule's source volume
+  // The schedule's source volume
   string src_volume_id = 1;
-  // CredentialUUID is the cloud credential used with this schedule
-  string credential_uuid = 2;
+  // The cloud credential used with this schedule
+  string credential_id = 2;
   // Schedule is the frequence of backup
   SdkSchedulePolicyInterval schedule = 3;
   // MaxBackups are the maximum number of backups retained
@@ -1838,28 +2005,36 @@ message SdkCloudBackupScheduleInfo{
   uint64 max_backups = 4;
 }
 
+// Defines a request to create a schedule for volume backups to a
+// cloud provider
 message SdkCloudBackupSchedCreateRequest{
-  // Cloud Backup Schedule info 
+  // Cloud Backup Schedule info
   SdkCloudBackupScheduleInfo cloud_sched_info = 1;
-
 }
 
+// Defines a response containing the id of a schedule for a volume backup
+// to a cloud provider
 message SdkCloudBackupSchedCreateResponse{
-   // UUID of newly created backup schedule
-   string uuid = 1;
+   // Id of newly created backup schedule
+   string backup_schedule_id = 1;
 }
 
+// Defines a request to delete a backup schedule
 message SdkCloudBackupSchedDeleteRequest{
-  // UUID of cloud backup to delete
-  string uuid = 1;
+  // Id of cloud backup to delete
+  string backup_schedule_id = 1;
 }
 
+// Empty response
 message SdkCloudBackupSchedDeleteResponse{
 }
 
+// Empty request
 message SdkCloudBackupSchedEnumerateRequest{
 }
 
+// Defines a response containing a map listing the schedules for volume
+// backups to a cloud provider
 message SdkCloudBackupSchedEnumerateResponse{
   // Returns list of backup schedules
   map<string, SdkCloudBackupScheduleInfo> cloud_sched_list = 1;

@@ -699,12 +699,6 @@ func (c *Cluster) ToStorageCluster() *StorageCluster {
 	cluster := &StorageCluster{
 		Status: c.Status,
 		Id:     c.Id,
-		NodeId: c.NodeId,
-	}
-
-	cluster.NodeIds = make([]string, len(c.Nodes))
-	for i, v := range c.Nodes {
-		cluster.NodeIds[i] = v.Id
 	}
 
 	return cluster

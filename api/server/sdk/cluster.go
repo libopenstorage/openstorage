@@ -28,36 +28,23 @@ import (
 	"github.com/libopenstorage/openstorage/cluster"
 )
 
-// ClusterServer is an implementation of the gRPC OpenStorageCluster interface
+// ClusterServer is an implementation of the gRPC OpenStorageClusterServer interface
 type ClusterServer struct {
 	cluster cluster.Cluster
 }
 
-// Enumerate returns information about the cluster
-func (s *ClusterServer) Enumerate(ctx context.Context, req *api.SdkClusterEnumerateRequest) (*api.SdkClusterEnumerateResponse, error) {
+// InspectCurrent returns information about the current cluster
+func (s *ClusterServer) InspectCurrent(
+	ctx context.Context,
+	req *api.SdkClusterInspectCurrentRequest,
+) (*api.SdkClusterInspectCurrentResponse, error) {
 	c, err := s.cluster.Enumerate()
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &api.SdkClusterEnumerateResponse{
+	return &api.SdkClusterInspectCurrentResponse{
 		Cluster: c.ToStorageCluster(),
-	}, nil
-}
-
-// Inspect returns information about a specific node
-func (s *ClusterServer) Inspect(ctx context.Context, req *api.SdkClusterInspectRequest) (*api.SdkClusterInspectResponse, error) {
-	if len(req.GetNodeId()) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Node id must be provided")
-	}
-
-	node, err := s.cluster.Inspect(req.GetNodeId())
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	return &api.SdkClusterInspectResponse{
-		Node: node.ToStorageNode(),
 	}, nil
 }
 

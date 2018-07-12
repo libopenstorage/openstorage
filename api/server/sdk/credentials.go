@@ -43,9 +43,8 @@ func (s *CredentialServer) Create(
 		return s.azureCreate(ctx, azure)
 	} else if google := req.GetGoogleCredential(); google != nil {
 		return s.googleCreate(ctx, google)
-	} else {
-		return nil, status.Error(codes.InvalidArgument, "Unknown credential type")
 	}
+	return nil, status.Error(codes.InvalidArgument, "Unknown credential type")
 
 }
 

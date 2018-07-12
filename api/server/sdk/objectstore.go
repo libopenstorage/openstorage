@@ -22,6 +22,7 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
+	"github.com/portworx/kvdb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -32,7 +33,7 @@ type ObjectstoreServer struct {
 	cluster cluster.Cluster
 }
 
-// InspectObjectstore return status of provided objectstore
+// Inspect Objectstore return status of provided objectstore
 func (s *ObjectstoreServer) Inspect(
 	ctx context.Context,
 	req *api.SdkObjectstoreInspectRequest,
@@ -40,9 +41,15 @@ func (s *ObjectstoreServer) Inspect(
 
 	objResp, err := s.cluster.ObjectStoreInspect(req.GetObjectstoreId())
 	if err != nil {
+		if err == kvdb.ErrNotFound {
+			return nil, status.Errorf(
+				codes.NotFound,
+				"Id %s not found",
+				req.GetObjectstoreId())
+		}
 		return nil, status.Errorf(
 			codes.Internal,
-			"Failed to inspect objectstore %v",
+			"Failed to inspect objectstore: %v",
 			err.Error())
 	}
 
@@ -62,7 +69,7 @@ func (s *ObjectstoreServer) Create(
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
-			"Failed to create objectstore %v",
+			"Failed to create objectstore: %v",
 			err.Error())
 	}
 
@@ -77,9 +84,15 @@ func (s *ObjectstoreServer) Update(
 
 	err := s.cluster.ObjectStoreUpdate(req.GetObjectstoreId(), req.GetEnable())
 	if err != nil {
+		if err == kvdb.ErrNotFound {
+			return nil, status.Errorf(
+				codes.NotFound,
+				"Id %s not found",
+				req.GetObjectstoreId())
+		}
 		return nil, status.Errorf(
 			codes.Internal,
-			"Failed to update objectstore %v",
+			"Failed to update objectstore: %v",
 			err.Error())
 	}
 
@@ -93,10 +106,10 @@ func (s *ObjectstoreServer) Delete(
 ) (*api.SdkObjectstoreDeleteResponse, error) {
 
 	err := s.cluster.ObjectStoreDelete(req.GetObjectstoreId())
-	if err != nil {
+	if err != nil && err != kvdb.ErrNotFound {
 		return nil, status.Errorf(
 			codes.Internal,
-			"Failed to delete objectstore %v",
+			"Failed to delete objectstore: %v",
 			err.Error())
 	}
 

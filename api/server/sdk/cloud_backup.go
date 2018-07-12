@@ -39,14 +39,14 @@ func (s *CloudBackupServer) Create(
 
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply a volume id")
-	} else if len(req.GetCredentialUuid()) == 0 {
+	} else if len(req.GetCredentialId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply credential uuid")
 	}
 
 	// Create the backup
 	if err := s.driver.CloudBackupCreate(&api.CloudBackupCreateRequest{
 		VolumeID:       req.GetVolumeId(),
-		CredentialUUID: req.GetCredentialUuid(),
+		CredentialUUID: req.GetCredentialId(),
 		Full:           req.GetFull(),
 	}); err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to create backup: %v", err)
@@ -63,14 +63,14 @@ func (s *CloudBackupServer) Restore(
 
 	if len(req.GetBackupId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must provide backup id")
-	} else if len(req.GetCredentialUuid()) == 0 {
+	} else if len(req.GetCredentialId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must provide credential uuid")
 	}
 
 	r, err := s.driver.CloudBackupRestore(&api.CloudBackupRestoreRequest{
 		ID:                req.GetBackupId(),
 		RestoreVolumeName: req.GetRestoreVolumeName(),
-		CredentialUUID:    req.GetCredentialUuid(),
+		CredentialUUID:    req.GetCredentialId(),
 		NodeID:            req.GetNodeId(),
 	})
 	if err != nil {
@@ -91,13 +91,13 @@ func (s *CloudBackupServer) Delete(
 
 	if len(req.GetBackupId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must provide backup id")
-	} else if len(req.GetCredentialUuid()) == 0 {
+	} else if len(req.GetCredentialId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must provide credential uuid")
 	}
 
 	if err := s.driver.CloudBackupDelete(&api.CloudBackupDeleteRequest{
 		ID:             req.GetBackupId(),
-		CredentialUUID: req.GetCredentialUuid(),
+		CredentialUUID: req.GetCredentialId(),
 		Force:          req.GetForce(),
 	}); err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to delete backup: %v", err)
@@ -114,14 +114,14 @@ func (s *CloudBackupServer) DeleteAll(
 
 	if len(req.GetSrcVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must provide source volume id")
-	} else if len(req.GetCredentialUuid()) == 0 {
+	} else if len(req.GetCredentialId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must provide credential uuid")
 	}
 
 	if err := s.driver.CloudBackupDeleteAll(&api.CloudBackupDeleteAllRequest{
 		CloudBackupGenericRequest: api.CloudBackupGenericRequest{
 			SrcVolumeID:    req.GetSrcVolumeId(),
-			CredentialUUID: req.GetCredentialUuid(),
+			CredentialUUID: req.GetCredentialId(),
 		},
 	}); err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to delete backup: %v", err)
@@ -136,7 +136,7 @@ func (s *CloudBackupServer) Enumerate(
 	req *api.SdkCloudBackupEnumerateRequest,
 ) (*api.SdkCloudBackupEnumerateResponse, error) {
 
-	if len(req.GetCredentialUuid()) == 0 {
+	if len(req.GetCredentialId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must provide credential uuid")
 	}
 
@@ -144,7 +144,7 @@ func (s *CloudBackupServer) Enumerate(
 		CloudBackupGenericRequest: api.CloudBackupGenericRequest{
 			SrcVolumeID:    req.GetSrcVolumeId(),
 			ClusterID:      req.GetClusterId(),
-			CredentialUUID: req.GetCredentialUuid(),
+			CredentialUUID: req.GetCredentialId(),
 			All:            req.GetAll(),
 		},
 	})
@@ -180,13 +180,13 @@ func (s *CloudBackupServer) Catalog(
 
 	if len(req.GetBackupId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must provide backup id")
-	} else if len(req.GetCredentialUuid()) == 0 {
+	} else if len(req.GetCredentialId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must provide credential uuid")
 	}
 
 	r, err := s.driver.CloudBackupCatalog(&api.CloudBackupCatalogRequest{
 		ID:             req.GetBackupId(),
-		CredentialUUID: req.GetCredentialUuid(),
+		CredentialUUID: req.GetCredentialId(),
 	})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to get catalog: %v", err)
@@ -261,7 +261,7 @@ func (s *CloudBackupServer) SchedCreate(
 		return nil, status.Error(codes.InvalidArgument, "BackupSchedule object cannot be nil")
 	} else if len(req.GetCloudSchedInfo().GetSrcVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply source volume id")
-	} else if len(req.GetCloudSchedInfo().GetCredentialUuid()) == 0 {
+	} else if len(req.GetCloudSchedInfo().GetCredentialId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply credential uuid")
 	} else if req.GetCloudSchedInfo().GetSchedule() == nil ||
 		req.GetCloudSchedInfo().GetSchedule().GetPeriodType() == nil {
@@ -275,7 +275,7 @@ func (s *CloudBackupServer) SchedCreate(
 
 	bkpRequest := api.CloudBackupSchedCreateRequest{}
 	bkpRequest.SrcVolumeID = req.GetCloudSchedInfo().GetSrcVolumeId()
-	bkpRequest.CredentialUUID = req.GetCloudSchedInfo().GetCredentialUuid()
+	bkpRequest.CredentialUUID = req.GetCloudSchedInfo().GetCredentialId()
 	bkpRequest.Schedule = string(sched)
 	bkpRequest.MaxBackups = uint(req.GetCloudSchedInfo().GetMaxBackups())
 
@@ -286,7 +286,7 @@ func (s *CloudBackupServer) SchedCreate(
 	}
 
 	return &api.SdkCloudBackupSchedCreateResponse{
-		Uuid: schedResp.UUID,
+		BackupScheduleId: schedResp.UUID,
 	}, nil
 
 }
@@ -297,13 +297,13 @@ func (s *CloudBackupServer) SchedDelete(
 	req *api.SdkCloudBackupSchedDeleteRequest,
 ) (*api.SdkCloudBackupSchedDeleteResponse, error) {
 
-	if len(req.GetUuid()) == 0 {
+	if len(req.GetBackupScheduleId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must provide credential uuid")
 	}
 
 	// Call cloud backup driver function to delete cloud schedule
 	if err := s.driver.CloudBackupSchedDelete(&api.CloudBackupSchedDeleteRequest{
-		UUID: req.GetUuid(),
+		UUID: req.GetBackupScheduleId(),
 	}); err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to delete cloud backup schedule: %v", err)
 	}
@@ -344,9 +344,9 @@ func ToSdkCloudBackupdScheduleInfo(s api.CloudBackupScheduleInfo) *api.SdkCloudB
 		return nil
 	}
 	cloudSched := &api.SdkCloudBackupScheduleInfo{
-		SrcVolumeId:    s.SrcVolumeID,
-		CredentialUuid: s.CredentialUUID,
-		Schedule:       schedule,
+		SrcVolumeId:  s.SrcVolumeID,
+		CredentialId: s.CredentialUUID,
+		Schedule:     schedule,
 		// Not sure about go and protobuf type conversion, converting to higher type
 		// converting uint to uint64
 		MaxBackups: uint64(s.MaxBackups),

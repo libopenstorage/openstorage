@@ -159,7 +159,7 @@ func TestSdkGateway(t *testing.T) {
 	s.MockCluster().EXPECT().Enumerate().Return(cluster, nil).Times(1)
 
 	// Then send the request
-	res, err = http.Get(s.GatewayURL() + "/v1/cluster")
+	res, err = http.Get(s.GatewayURL() + "/v1/clusters/current")
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 }

@@ -131,18 +131,29 @@ func TestSdkVolumeClone(t *testing.T) {
 
 	name := "myvol"
 	parentid := "myparent"
-	size := uint64(1234)
+	parentVol := &api.Volume{
+		Id: parentid,
+		Spec: &api.VolumeSpec{
+			Size: 1234,
+		},
+		Locator: &api.VolumeLocator{
+			Name: parentid,
+		},
+	}
 	req := &api.SdkVolumeCloneRequest{
 		Name:     name,
 		ParentId: parentid,
-		Spec: &api.VolumeSpec{
-			Size: size,
-		},
 	}
 
 	// Create response
 	id := "myid"
 	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{parentid}).
+			Return([]*api.Volume{parentVol}, nil).
+			Times(1),
+
 		s.MockDriver().
 			EXPECT().
 			Inspect([]string{name}).
@@ -158,11 +169,7 @@ func TestSdkVolumeClone(t *testing.T) {
 		s.MockDriver().
 			EXPECT().
 			Inspect([]string{parentid}).
-			Return([]*api.Volume{
-				&api.Volume{
-					Id: parentid,
-				},
-			}, nil).
+			Return([]*api.Volume{parentVol}, nil).
 			Times(1),
 
 		s.MockDriver().
@@ -321,7 +328,7 @@ func TestSdkVolumeInspectKeyNotFound(t *testing.T) {
 
 	serverError, ok := status.FromError(err)
 	assert.True(t, ok)
-	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Equal(t, serverError.Code(), codes.NotFound)
 	assert.Contains(t, serverError.Message(), "not found")
 
 	// Key not found, err is nil but empty list returned
@@ -337,7 +344,7 @@ func TestSdkVolumeInspectKeyNotFound(t *testing.T) {
 
 	serverError, ok = status.FromError(err)
 	assert.True(t, ok)
-	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Equal(t, serverError.Code(), codes.NotFound)
 	assert.Contains(t, serverError.Message(), "not found")
 
 	// Other error
@@ -386,7 +393,7 @@ func TestSdkVolumeEnumerate(t *testing.T) {
 	assert.Equal(t, r.GetVolumeIds()[0], id)
 }
 
-func TestSdkVolumeSet(t *testing.T) {
+func TestSdkVolumeUpdate(t *testing.T) {
 
 	// Create server and client connection
 	s := newTestServer(t)
@@ -396,7 +403,7 @@ func TestSdkVolumeSet(t *testing.T) {
 	newlabels := map[string]string{
 		"hello": "world",
 	}
-	req := &api.SdkVolumeSetRequest{
+	req := &api.SdkVolumeUpdateRequest{
 		VolumeId: id,
 		Locator: &api.VolumeLocator{
 			VolumeLabels: newlabels,
@@ -419,13 +426,13 @@ func TestSdkVolumeSet(t *testing.T) {
 	c := api.NewOpenStorageVolumeClient(s.Conn())
 
 	// Get info
-	_, err := c.Set(context.Background(), req)
+	_, err := c.Update(context.Background(), req)
 	assert.NoError(t, err)
 
 	// Now check spec
 	req.Locator = nil
-	req.Spec = &api.VolumeSpecSet{
-		SizeOpt: &api.VolumeSpecSet_Size{
+	req.Spec = &api.VolumeSpecUpdate{
+		SizeOpt: &api.VolumeSpecUpdate_Size{
 			Size: 1234,
 		},
 	}
@@ -435,17 +442,17 @@ func TestSdkVolumeSet(t *testing.T) {
 		Set(id, nil, &api.VolumeSpec{Size: 1234}).
 		Return(nil).
 		Times(1)
-	_, err = c.Set(context.Background(), req)
+	_, err = c.Update(context.Background(), req)
 	assert.NoError(t, err)
 
 	// Check both locator and spec
-	req = &api.SdkVolumeSetRequest{
+	req = &api.SdkVolumeUpdateRequest{
 		VolumeId: id,
 		Locator: &api.VolumeLocator{
 			VolumeLabels: newlabels,
 		},
-		Spec: &api.VolumeSpecSet{
-			SizeOpt: &api.VolumeSpecSet_Size{
+		Spec: &api.VolumeSpecUpdate{
+			SizeOpt: &api.VolumeSpecUpdate_Size{
 				Size: 1234,
 			},
 		},
@@ -460,6 +467,6 @@ func TestSdkVolumeSet(t *testing.T) {
 		).
 		Return(nil).
 		Times(1)
-	_, err = c.Set(context.Background(), req)
+	_, err = c.Update(context.Background(), req)
 	assert.NoError(t, err)
 }

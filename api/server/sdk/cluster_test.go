@@ -18,15 +18,11 @@ package sdk
 
 import (
 	"context"
-	"fmt"
 	"testing"
-	"time"
 
 	"github.com/golang/protobuf/ptypes"
 
 	"github.com/stretchr/testify/assert"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/golang/mock/gomock"
 
@@ -89,7 +85,7 @@ func TestNewSdkServerBadParameters(t *testing.T) {
 	assert.Contains(t, err.Error(), "Unable to setup server")
 }
 
-func TestSdkEnumerateNoNodes(t *testing.T) {
+func TestSdkClusterInspectCurrent(t *testing.T) {
 
 	// Create server and client connection
 	s := newTestServer(t)
@@ -107,187 +103,11 @@ func TestSdkEnumerateNoNodes(t *testing.T) {
 	c := api.NewOpenStorageClusterClient(s.Conn())
 
 	// Get info
-	r, err := c.Enumerate(context.Background(), &api.SdkClusterEnumerateRequest{})
+	r, err := c.InspectCurrent(context.Background(), &api.SdkClusterInspectCurrentRequest{})
 	assert.NoError(t, err)
 	assert.NotNil(t, r.GetCluster())
-
-	// Verify
-	assert.Equal(t, r.GetCluster().GetId(), cluster.Id)
-	assert.Equal(t, r.GetCluster().GetNodeId(), cluster.NodeId)
-	assert.Equal(t, r.GetCluster().GetStatus(), cluster.Status)
-	assert.Len(t, r.GetCluster().GetNodeIds(), 0)
-}
-
-func TestSdkEnumerate(t *testing.T) {
-
-	// Create server and client connection
-	s := newTestServer(t)
-	defer s.Stop()
-
-	// Create response
-	cluster := api.Cluster{
-		Id:     "someid",
-		NodeId: "somenodeid",
-		Status: api.Status_STATUS_NOT_IN_QUORUM,
-		Nodes: []api.Node{
-			api.Node{
-				Id:       "nodeid",
-				Cpu:      1.414,
-				MemTotal: 112,
-				MemUsed:  41,
-				MemFree:  93,
-			},
-		},
-	}
-	s.MockCluster().EXPECT().Enumerate().Return(cluster, nil).Times(1)
-
-	// Setup client
-	c := api.NewOpenStorageClusterClient(s.Conn())
-
-	// Get info
-	r, err := c.Enumerate(context.Background(), &api.SdkClusterEnumerateRequest{})
-	assert.NoError(t, err)
-	assert.NotNil(t, r.GetCluster())
-
-	// Verify
-	assert.Equal(t, r.GetCluster().GetId(), cluster.Id)
-	assert.Equal(t, r.GetCluster().GetNodeId(), cluster.NodeId)
-	assert.Equal(t, r.GetCluster().GetStatus(), cluster.Status)
-	assert.Len(t, r.GetCluster().GetNodeIds(), 1)
-
-	// Verify node
-	node := cluster.Nodes[0]
-	id := r.GetCluster().GetNodeIds()[0]
-	assert.Equal(t, id, node.Id)
-}
-
-func TestSdkEnumerateFail(t *testing.T) {
-
-	// Create server and client connection
-	s := newTestServer(t)
-	defer s.Stop()
-
-	mockerr := fmt.Errorf("MOCK")
-	s.MockCluster().EXPECT().Enumerate().Return(api.Cluster{}, mockerr).Times(1)
-
-	// Setup client
-	c := api.NewOpenStorageClusterClient(s.Conn())
-
-	// Get info
-	r, err := c.Enumerate(context.Background(), &api.SdkClusterEnumerateRequest{})
-	assert.Error(t, err)
-	assert.Nil(t, r.GetCluster())
-
-	serverError, ok := status.FromError(err)
-	assert.True(t, ok)
-	assert.Equal(t, serverError.Code(), codes.Internal)
-	assert.Equal(t, serverError.Message(), mockerr.Error())
-}
-
-func TestSdkInspect(t *testing.T) {
-
-	// Create server and client connection
-	s := newTestServer(t)
-	defer s.Stop()
-
-	// Create response
-	nodeid := "nodeid"
-	node := api.Node{
-		Id:       nodeid,
-		Cpu:      1.414,
-		MemTotal: 112,
-		MemUsed:  41,
-		MemFree:  93,
-		Avgload:  834,
-		Status:   api.Status_STATUS_MAX,
-		Disks: map[string]api.StorageResource{
-			"disk1": api.StorageResource{
-				Id:     "12345",
-				Path:   "mymount",
-				Medium: api.StorageMedium_STORAGE_MEDIUM_SSD,
-				Online: true,
-			},
-		},
-		Timestamp: time.Now(),
-		StartTime: time.Now(),
-		NodeLabels: map[string]string{
-			"hello": "world",
-		},
-	}
-	s.MockCluster().EXPECT().Inspect(nodeid).Return(node, nil).Times(1)
-
-	// Setup client
-	c := api.NewOpenStorageClusterClient(s.Conn())
-
-	// Get info
-	r, err := c.Inspect(context.Background(), &api.SdkClusterInspectRequest{
-		NodeId: nodeid,
-	})
-	assert.NoError(t, err)
-	assert.NotNil(t, r.GetNode())
-
-	// Verify
-	rn := r.GetNode()
-	assert.Equal(t, rn.GetId(), node.Id)
-	assert.Equal(t, rn.GetCpu(), node.Cpu)
-	assert.Equal(t, rn.GetMemTotal(), node.MemTotal)
-	assert.Equal(t, rn.GetMemFree(), node.MemFree)
-	assert.Equal(t, rn.GetMemUsed(), node.MemUsed)
-	assert.Equal(t, rn.GetAvgLoad(), int64(node.Avgload))
-	assert.Equal(t, rn.GetStatus(), node.Status)
-
-	// Check Disk
-	assert.Len(t, rn.GetDisks(), 1)
-	assert.Equal(t, *rn.GetDisks()["disk1"], node.Disks["disk1"])
-
-	// Check Labels
-	assert.Len(t, rn.GetNodeLabels(), 1)
-	assert.Equal(t, rn.GetNodeLabels(), node.NodeLabels)
-}
-
-func TestSdkInspectFail(t *testing.T) {
-
-	// Create server and client connection
-	s := newTestServer(t)
-	defer s.Stop()
-
-	mockerr := fmt.Errorf("MOCK")
-	s.MockCluster().EXPECT().Inspect("mynode").Return(api.Node{}, mockerr).Times(1)
-
-	// Setup client
-	c := api.NewOpenStorageClusterClient(s.Conn())
-
-	// Get info
-	r, err := c.Inspect(context.Background(), &api.SdkClusterInspectRequest{
-		NodeId: "mynode",
-	})
-	assert.Error(t, err)
-	assert.Nil(t, r.GetNode())
-
-	serverError, ok := status.FromError(err)
-	assert.True(t, ok)
-	assert.Equal(t, serverError.Code(), codes.Internal)
-	assert.Equal(t, serverError.Message(), mockerr.Error())
-}
-
-func TestSdkInspectIdNotPassed(t *testing.T) {
-
-	// Create server and client connection
-	s := newTestServer(t)
-	defer s.Stop()
-
-	// Setup client
-	c := api.NewOpenStorageClusterClient(s.Conn())
-
-	// Get info
-	r, err := c.Inspect(context.Background(), &api.SdkClusterInspectRequest{})
-	assert.Error(t, err)
-	assert.Nil(t, r.GetNode())
-
-	serverError, ok := status.FromError(err)
-	assert.True(t, ok)
-	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "Node")
+	assert.Equal(t, cluster.Id, r.GetCluster().GetId())
+	assert.Equal(t, cluster.Status, r.GetCluster().GetStatus())
 }
 
 func TestSdkAlertEnumerate(t *testing.T) {
