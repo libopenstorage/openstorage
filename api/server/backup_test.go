@@ -6,6 +6,7 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	client "github.com/libopenstorage/openstorage/api/client/volume"
+	"github.com/libopenstorage/openstorage/volume"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -134,21 +135,49 @@ func TestClientBackupDelete(t *testing.T) {
 	require.NoError(t, err)
 
 	goodInput := &api.CloudBackupDeleteRequest{}
-	goodInput.SrcVolumeID = "goodsrc"
+	goodInput.ID = "goodID"
 	goodInput.CredentialUUID = ""
 
 	badInput := &api.CloudBackupDeleteRequest{}
-	badInput.SrcVolumeID = "badsrc"
+	badInput.ID = "badID"
 	badInput.CredentialUUID = ""
 	testVolDriver.MockDriver().EXPECT().CloudBackupDelete(goodInput).
 		Return(nil).Times(1)
 	testVolDriver.MockDriver().EXPECT().CloudBackupDelete(badInput).
-		Return(fmt.Errorf("Src volume not found")).Times(1)
+		Return(fmt.Errorf("BackupID not found")).Times(1)
 
-	// Invoke restore
+	// Invoke Delete
 	err = client.VolumeDriver(cl).CloudBackupDelete(goodInput)
 	require.NoError(t, err)
 	err = client.VolumeDriver(cl).CloudBackupDelete(badInput)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "BackupID not found")
+}
+
+func TestClientBackupDeleteAll(t *testing.T) {
+	ts, testVolDriver := testRestServer(t)
+	defer ts.Close()
+	defer testVolDriver.Stop()
+
+	cl, err := client.NewDriverClient(ts.URL, mockDriverName, "", mockDriverName)
+	require.NoError(t, err)
+
+	goodInput := &api.CloudBackupDeleteAllRequest{}
+	goodInput.SrcVolumeID = "goodsrc"
+	goodInput.CredentialUUID = ""
+
+	badInput := &api.CloudBackupDeleteAllRequest{}
+	badInput.SrcVolumeID = "badsrc"
+	badInput.CredentialUUID = ""
+	testVolDriver.MockDriver().EXPECT().CloudBackupDeleteAll(goodInput).
+		Return(nil).Times(1)
+	testVolDriver.MockDriver().EXPECT().CloudBackupDeleteAll(badInput).
+		Return(fmt.Errorf("Src volume not found")).Times(1)
+
+	// Invoke DeleteAll
+	err = client.VolumeDriver(cl).CloudBackupDeleteAll(goodInput)
+	require.NoError(t, err)
+	err = client.VolumeDriver(cl).CloudBackupDeleteAll(badInput)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "Src volume not found")
 }
@@ -374,4 +403,77 @@ func TestClientBackupSchedEnumerate(t *testing.T) {
 	_, err = client.VolumeDriver(cl).CloudBackupSchedEnumerate()
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "Failed to Enumerate")
+}
+
+func TestCloudBackupWait(t *testing.T) {
+	ts, testVolDriver := testRestServer(t)
+	defer ts.Close()
+	defer testVolDriver.Stop()
+
+	cl, err := client.NewDriverClient(ts.URL, mockDriverName, "", mockDriverName)
+	require.NoError(t, err)
+
+	id := "testId"
+	notStartedStatus := &api.CloudBackupStatusResponse{
+		Statuses: map[string]api.CloudBackupStatus{
+			id: api.CloudBackupStatus{
+				ID:     id,
+				OpType: api.CloudBackupOp,
+				Status: api.CloudBackupStatusNotStarted,
+			},
+		},
+	}
+	activeStatus := &api.CloudBackupStatusResponse{
+		Statuses: map[string]api.CloudBackupStatus{
+			id: api.CloudBackupStatus{
+				ID:     id,
+				OpType: api.CloudBackupOp,
+				Status: api.CloudBackupStatusActive,
+			},
+		},
+	}
+	doneStatus := &api.CloudBackupStatusResponse{
+		Statuses: map[string]api.CloudBackupStatus{
+			id: api.CloudBackupStatus{
+				ID:     id,
+				OpType: api.CloudBackupOp,
+				Status: api.CloudBackupStatusDone,
+			},
+		},
+	}
+	failedStatus := &api.CloudBackupStatusResponse{
+		Statuses: map[string]api.CloudBackupStatus{
+			id: api.CloudBackupStatus{
+				ID:     id,
+				OpType: api.CloudBackupOp,
+				Status: api.CloudBackupStatusFailed,
+			},
+		},
+	}
+
+	testVolDriver.MockDriver().EXPECT().CloudBackupStatus(&api.CloudBackupStatusRequest{
+		SrcVolumeID: id}).
+		Return(notStartedStatus, nil).Times(1)
+	testVolDriver.MockDriver().EXPECT().CloudBackupStatus(&api.CloudBackupStatusRequest{
+		SrcVolumeID: id}).
+		Return(activeStatus, nil).Times(1)
+	testVolDriver.MockDriver().EXPECT().CloudBackupStatus(&api.CloudBackupStatusRequest{
+		SrcVolumeID: id}).
+		Return(doneStatus, nil).Times(1)
+
+	err = volume.CloudBackupWaitForCompletion(client.VolumeDriver(cl), id, api.CloudBackupOp)
+	require.NoError(t, err)
+
+	testVolDriver.MockDriver().EXPECT().CloudBackupStatus(&api.CloudBackupStatusRequest{
+		SrcVolumeID: id}).
+		Return(notStartedStatus, nil).Times(1)
+	testVolDriver.MockDriver().EXPECT().CloudBackupStatus(&api.CloudBackupStatusRequest{
+		SrcVolumeID: id}).
+		Return(activeStatus, nil).Times(1)
+	testVolDriver.MockDriver().EXPECT().CloudBackupStatus(&api.CloudBackupStatusRequest{
+		SrcVolumeID: id}).
+		Return(failedStatus, nil).Times(1)
+
+	err = volume.CloudBackupWaitForCompletion(client.VolumeDriver(cl), id, api.CloudBackupOp)
+	require.Error(t, err)
 }

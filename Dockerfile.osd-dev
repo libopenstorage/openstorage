@@ -1,4 +1,4 @@
-FROM golang:1.9.2
+FROM golang:1.9.5
 MAINTAINER gou@portworx.com
 
 EXPOSE 9005
@@ -13,5 +13,6 @@ RUN \
   curl -sSL https://get.docker.com/builds/Linux/x86_64/docker-1.10.3 > /bin/docker && \
   chmod +x /bin/docker
 RUN mkdir -p /go/src/github.com/libopenstorage/openstorage
+RUN go get -u github.com/gobuffalo/packr/...
 ADD . /go/src/github.com/libopenstorage/openstorage/
 WORKDIR /go/src/github.com/libopenstorage/openstorage

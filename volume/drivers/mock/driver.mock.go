@@ -83,6 +83,18 @@ func (mr *MockVolumeDriverMockRecorder) CloudBackupDelete(arg0 interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloudBackupDelete", reflect.TypeOf((*MockVolumeDriver)(nil).CloudBackupDelete), arg0)
 }
 
+// CloudBackupDeleteAll mocks base method
+func (m *MockVolumeDriver) CloudBackupDeleteAll(arg0 *api.CloudBackupDeleteAllRequest) error {
+	ret := m.ctrl.Call(m, "CloudBackupDeleteAll", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CloudBackupDeleteAll indicates an expected call of CloudBackupDeleteAll
+func (mr *MockVolumeDriverMockRecorder) CloudBackupDeleteAll(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloudBackupDeleteAll", reflect.TypeOf((*MockVolumeDriver)(nil).CloudBackupDeleteAll), arg0)
+}
+
 // CloudBackupEnumerate mocks base method
 func (m *MockVolumeDriver) CloudBackupEnumerate(arg0 *api.CloudBackupEnumerateRequest) (*api.CloudBackupEnumerateResponse, error) {
 	ret := m.ctrl.Call(m, "CloudBackupEnumerate", arg0)
@@ -183,6 +195,43 @@ func (m *MockVolumeDriver) CloudBackupStatus(arg0 *api.CloudBackupStatusRequest)
 // CloudBackupStatus indicates an expected call of CloudBackupStatus
 func (mr *MockVolumeDriverMockRecorder) CloudBackupStatus(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloudBackupStatus", reflect.TypeOf((*MockVolumeDriver)(nil).CloudBackupStatus), arg0)
+}
+
+// CloudMigrateCancel mocks base method
+func (m *MockVolumeDriver) CloudMigrateCancel(arg0 *api.CloudMigrateCancelRequest) error {
+	ret := m.ctrl.Call(m, "CloudMigrateCancel", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CloudMigrateCancel indicates an expected call of CloudMigrateCancel
+func (mr *MockVolumeDriverMockRecorder) CloudMigrateCancel(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloudMigrateCancel", reflect.TypeOf((*MockVolumeDriver)(nil).CloudMigrateCancel), arg0)
+}
+
+// CloudMigrateStart mocks base method
+func (m *MockVolumeDriver) CloudMigrateStart(arg0 *api.CloudMigrateStartRequest) error {
+	ret := m.ctrl.Call(m, "CloudMigrateStart", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CloudMigrateStart indicates an expected call of CloudMigrateStart
+func (mr *MockVolumeDriverMockRecorder) CloudMigrateStart(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloudMigrateStart", reflect.TypeOf((*MockVolumeDriver)(nil).CloudMigrateStart), arg0)
+}
+
+// CloudMigrateStatus mocks base method
+func (m *MockVolumeDriver) CloudMigrateStatus() (*api.CloudMigrateStatusResponse, error) {
+	ret := m.ctrl.Call(m, "CloudMigrateStatus")
+	ret0, _ := ret[0].(*api.CloudMigrateStatusResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CloudMigrateStatus indicates an expected call of CloudMigrateStatus
+func (mr *MockVolumeDriverMockRecorder) CloudMigrateStatus() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloudMigrateStatus", reflect.TypeOf((*MockVolumeDriver)(nil).CloudMigrateStatus))
 }
 
 // Create mocks base method
@@ -442,6 +491,19 @@ func (m *MockVolumeDriver) Snapshot(arg0 string, arg1 bool, arg2 *api.VolumeLoca
 // Snapshot indicates an expected call of Snapshot
 func (mr *MockVolumeDriverMockRecorder) Snapshot(arg0, arg1, arg2 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Snapshot", reflect.TypeOf((*MockVolumeDriver)(nil).Snapshot), arg0, arg1, arg2)
+}
+
+// SnapshotGroup mocks base method
+func (m *MockVolumeDriver) SnapshotGroup(arg0 string, arg1 map[string]string) (*api.GroupSnapCreateResponse, error) {
+	ret := m.ctrl.Call(m, "SnapshotGroup", arg0, arg1)
+	ret0, _ := ret[0].(*api.GroupSnapCreateResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SnapshotGroup indicates an expected call of SnapshotGroup
+func (mr *MockVolumeDriverMockRecorder) SnapshotGroup(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SnapshotGroup", reflect.TypeOf((*MockVolumeDriver)(nil).SnapshotGroup), arg0, arg1)
 }
 
 // Stats mocks base method

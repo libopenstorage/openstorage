@@ -936,6 +936,52 @@ func (vd *volAPI) unquiesce(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(volumeResponse)
 }
 
+// swagger:operation POST /osd-snapshots/groupsnap volumegroup snapVolumeGroup
+//
+// Take a snapshot of volumegroup
+//
+// ---
+// produces:
+// - application/json
+// parameters:
+// - name: groupspec
+//   in: body
+//   description: GroupSnap create request
+//   required: true
+//   schema:
+//    "$ref": "#/definitions/GroupSnapCreateRequest"
+// responses:
+//   '200':
+//     description: group snap create response
+//     schema:
+//      "$ref": "#/definitions/GroupSnapCreateResponse"
+//   default:
+//     description: unexpected error
+//     schema:
+//      "$ref": "#/definitions/GroupSnapCreateResponse"
+func (vd *volAPI) snapGroup(w http.ResponseWriter, r *http.Request) {
+	var snapReq api.GroupSnapCreateRequest
+	var snapRes *api.GroupSnapCreateResponse
+	method := "snapGroup"
+
+	if err := json.NewDecoder(r.Body).Decode(&snapReq); err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	d, err := vd.getVolDriver(r)
+	if err != nil {
+		notFound(w, r)
+		return
+	}
+	snapRes, err = d.SnapshotGroup(snapReq.Id, snapReq.Labels)
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	json.NewEncoder(w).Encode(&snapRes)
+}
+
 // swagger:operation GET /osd-volumes/versions volume listVersions
 //
 // Lists API versions supported by this volumeDriver.
@@ -982,6 +1028,10 @@ func backupPath(route, version string) string {
 	return volVersion(api.OsdBackupPath+route, version)
 }
 
+func migratePath(route, version string) string {
+	return volVersion(route, version)
+}
+
 func (vd *volAPI) Routes() []*Route {
 	return []*Route{
 		{verb: "GET", path: "/" + api.OsdVolumePath + "/versions", fn: vd.versions},
@@ -1001,6 +1051,7 @@ func (vd *volAPI) Routes() []*Route {
 		{verb: "POST", path: snapPath("", volume.APIVersion), fn: vd.snap},
 		{verb: "GET", path: snapPath("", volume.APIVersion), fn: vd.snapEnumerate},
 		{verb: "POST", path: snapPath("/restore/{id}", volume.APIVersion), fn: vd.restore},
+		{verb: "POST", path: snapPath("/snapshotgroup", volume.APIVersion), fn: vd.snapGroup},
 		{verb: "GET", path: credsPath("", volume.APIVersion), fn: vd.credsEnumerate},
 		{verb: "POST", path: credsPath("", volume.APIVersion), fn: vd.credsCreate},
 		{verb: "DELETE", path: credsPath("/{uuid}", volume.APIVersion), fn: vd.credsDelete},
@@ -1009,6 +1060,7 @@ func (vd *volAPI) Routes() []*Route {
 		{verb: "POST", path: backupPath("/restore", volume.APIVersion), fn: vd.cloudBackupRestore},
 		{verb: "GET", path: backupPath("", volume.APIVersion), fn: vd.cloudBackupEnumerate},
 		{verb: "DELETE", path: backupPath("", volume.APIVersion), fn: vd.cloudBackupDelete},
+		{verb: "DELETE", path: backupPath("/all", volume.APIVersion), fn: vd.cloudBackupDeleteAll},
 		{verb: "GET", path: backupPath("/status", volume.APIVersion), fn: vd.cloudBackupStatus},
 		{verb: "GET", path: backupPath("/catalog", volume.APIVersion), fn: vd.cloudBackupCatalog},
 		{verb: "GET", path: backupPath("/history", volume.APIVersion), fn: vd.cloudBackupHistory},
@@ -1016,5 +1068,8 @@ func (vd *volAPI) Routes() []*Route {
 		{verb: "POST", path: backupPath("/sched", volume.APIVersion), fn: vd.cloudBackupSchedCreate},
 		{verb: "DELETE", path: backupPath("/sched", volume.APIVersion), fn: vd.cloudBackupSchedDelete},
 		{verb: "GET", path: backupPath("/sched", volume.APIVersion), fn: vd.cloudBackupSchedEnumerate},
+		{verb: "POST", path: migratePath(api.OsdMigrateStartPath, volume.APIVersion), fn: vd.cloudMigrateStart},
+		{verb: "POST", path: migratePath(api.OsdMigrateCancelPath, volume.APIVersion), fn: vd.cloudMigrateCancel},
+		{verb: "GET", path: migratePath(api.OsdMigrateStatusPath, volume.APIVersion), fn: vd.cloudMigrateStatus},
 	}
 }

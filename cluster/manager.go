@@ -19,7 +19,10 @@ import (
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
+	"github.com/libopenstorage/openstorage/objectstore"
 	"github.com/libopenstorage/openstorage/osdconfig"
+	sched "github.com/libopenstorage/openstorage/schedpolicy"
+	"github.com/libopenstorage/openstorage/secrets"
 	"github.com/libopenstorage/systemutils"
 	"github.com/portworx/kvdb"
 	"github.com/sirupsen/logrus"
@@ -46,22 +49,26 @@ var (
 
 // ClusterManager implements the cluster interface
 type ClusterManager struct {
-	size          int
-	listeners     *list.List
-	config        config.ClusterConfig
-	kv            kvdb.Kvdb
-	status        api.Status
-	nodeCache     map[string]api.Node // Cached info on the nodes in the cluster.
-	nodeCacheLock sync.Mutex
-	nodeStatuses  map[string]api.Status // Set of nodes currently marked down.
-	gossip        gossip.Gossiper
-	gossipVersion string
-	gossipPort    string
-	gEnabled      bool
-	selfNode      api.Node
-	selfNodeLock  sync.Mutex // Lock that guards data and label of selfNode
-	system        systemutils.System
-	configManager osdconfig.ConfigManager
+	secrets.Secrets
+
+	size            int
+	listeners       *list.List
+	config          config.ClusterConfig
+	kv              kvdb.Kvdb
+	status          api.Status
+	nodeCache       map[string]api.Node // Cached info on the nodes in the cluster.
+	nodeCacheLock   sync.Mutex
+	nodeStatuses    map[string]api.Status // Set of nodes currently marked down.
+	gossip          gossip.Gossiper
+	gossipVersion   string
+	gossipPort      string
+	gEnabled        bool
+	selfNode        api.Node
+	selfNodeLock    sync.Mutex // Lock that guards data and label of selfNode
+	system          systemutils.System
+	configManager   osdconfig.ConfigManager
+	schedManager    sched.SchedulePolicyProvider
+	objstoreManager objectstore.ObjectStore
 }
 
 type checkFunc func(ClusterInfo) error
@@ -272,7 +279,6 @@ func (c *ClusterManager) nodeIdFromIp(idIp string) (string, error) {
 	// Caller's responsibility to lock the access to the NodeCache.
 	for _, n := range c.nodeCache {
 		if n.DataIp == idIp || n.MgmtIp == idIp {
-			logrus.Infof("Node IP: " + idIp + " maps to ID: " + n.Id)
 			return n.Id, nil // return Id
 		}
 	}
@@ -1056,15 +1062,55 @@ func (c *ClusterManager) initializeAndStartHeartbeat(
 	return lastIndex, nil
 }
 
+func (c *ClusterManager) setupManagers(config *ClusterServerConfiguration) {
+	if config.ConfigSchedManager == nil {
+		c.schedManager = sched.NewDefaultSchedulePolicy()
+	} else {
+		c.schedManager = config.ConfigSchedManager
+	}
+
+	if config.ConfigObjectStoreManager == nil {
+		c.objstoreManager = objectstore.NewDefaultObjectStore()
+	} else {
+		c.objstoreManager = config.ConfigObjectStoreManager
+	}
+
+}
+
 // Start initiates the cluster manager and the cluster state machine
 func (c *ClusterManager) Start(
 	clusterMaxSize int,
 	nodeInitialized bool,
 	gossipPort string,
 ) error {
+	return c.StartWithConfiguration(
+		clusterMaxSize,
+		nodeInitialized,
+		gossipPort,
+		&ClusterServerConfiguration{})
+}
+
+func (c *ClusterManager) StartWithConfiguration(
+	clusterMaxSize int,
+	nodeInitialized bool,
+	gossipPort string,
+	config *ClusterServerConfiguration,
+) error {
 	var err error
 
 	logrus.Infoln("Cluster manager starting...")
+
+	kv := kvdb.Instance()
+
+	// osdconfig manager should be instantiated as soon as kv is ready
+	logrus.Info("initializing osdconfig manager")
+	c.configManager, err = osdconfig.NewManager(kv)
+	if err != nil {
+		return err
+	}
+
+	// Setup any default managers if none were provided
+	c.setupManagers(config)
 
 	c.gEnabled = true
 	c.selfNode = api.Node{}
@@ -1105,10 +1151,8 @@ func (c *ClusterManager) Start(
 	c.gossipVersion = types.GOSSIP_VERSION_2
 
 	var exist bool
-	kvdb := kvdb.Instance()
-
 	lastIndex, err := c.initializeAndStartHeartbeat(
-		kvdb,
+		kv,
 		clusterMaxSize,
 		&exist,
 		nodeInitialized,
@@ -1117,14 +1161,9 @@ func (c *ClusterManager) Start(
 		return err
 	}
 
-	c.startClusterDBWatch(lastIndex, kvdb)
+	c.startClusterDBWatch(lastIndex, kv)
 
 	err = c.waitForQuorum(exist)
-	if err != nil {
-		return err
-	}
-
-	c.configManager, err = osdconfig.NewManager(c.kv)
 	if err != nil {
 		return err
 	}
@@ -1268,8 +1307,6 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 	// Allow listeners to add/modify data
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		if err := e.Value.(ClusterListener).Enumerate(cluster); err != nil {
-			logrus.Warnf("listener %s enumerate failed: %v",
-				e.Value.(ClusterListener).String(), err)
 			continue
 		}
 	}
@@ -1615,8 +1652,6 @@ func (c *ClusterManager) EnumerateAlerts(ts, te time.Time, resource api.Resource
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		listenerAlerts, err := e.Value.(ClusterListener).EnumerateAlerts(ts, te, resource)
 		if err != nil {
-			logrus.Warnf("Failed to enumerate alerts from (%v): %v",
-				e.Value.(ClusterListener).String(), err)
 			continue
 		}
 		if listenerAlerts != nil {
@@ -1690,4 +1725,40 @@ func (c *ClusterManager) DeleteNodeConf(nodeID string) error {
 
 func (c *ClusterManager) EnumerateNodeConf() (*osdconfig.NodesConfig, error) {
 	return c.configManager.EnumerateNodeConf()
+}
+
+func (c *ClusterManager) SchedPolicyCreate(name, sched string) error {
+	return c.schedManager.SchedPolicyCreate(name, sched)
+}
+
+func (c *ClusterManager) SchedPolicyUpdate(name, sched string) error {
+	return c.schedManager.SchedPolicyUpdate(name, sched)
+}
+
+func (c *ClusterManager) SchedPolicyDelete(name string) error {
+	return c.schedManager.SchedPolicyDelete(name)
+}
+
+func (c *ClusterManager) SchedPolicyEnumerate() ([]*sched.SchedPolicy, error) {
+	return c.schedManager.SchedPolicyEnumerate()
+}
+
+func (c *ClusterManager) SchedPolicyGet(name string) (*sched.SchedPolicy, error) {
+	return c.schedManager.SchedPolicyGet(name)
+}
+
+func (c *ClusterManager) ObjectStoreInspect(objectstoreID string) (*api.ObjectstoreInfo, error) {
+	return c.objstoreManager.ObjectStoreInspect(objectstoreID)
+}
+
+func (c *ClusterManager) ObjectStoreCreate(volumeID string) (*api.ObjectstoreInfo, error) {
+	return c.objstoreManager.ObjectStoreCreate(volumeID)
+}
+
+func (c *ClusterManager) ObjectStoreUpdate(objectstoreID string, enable bool) error {
+	return c.objstoreManager.ObjectStoreUpdate(objectstoreID, enable)
+}
+
+func (c *ClusterManager) ObjectStoreDelete(objectstoreID string) error {
+	return c.objstoreManager.ObjectStoreDelete(objectstoreID)
 }

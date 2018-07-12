@@ -11,6 +11,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
+	"github.com/libopenstorage/openstorage/objectstore"
+	sched "github.com/libopenstorage/openstorage/schedpolicy"
+	"github.com/libopenstorage/openstorage/secrets"
 )
 
 const (
@@ -20,10 +23,21 @@ const (
 
 type clusterApi struct {
 	restBase
+	SecretManager      secrets.Secrets
+	SchedPolicyManager sched.SchedulePolicyProvider
+	ObjectStoreManager objectstore.ObjectStore
 }
 
-func newClusterAPI() restServer {
-	return &clusterApi{restBase{version: cluster.APIVersion, name: "Cluster API"}}
+func newClusterAPI(config cluster.ClusterServerConfiguration) restServer {
+	return &clusterApi{
+		restBase: restBase{
+			version: cluster.APIVersion,
+			name:    "Cluster API",
+		},
+		SecretManager:      config.ConfigSecretManager,
+		SchedPolicyManager: config.ConfigSchedManager,
+		ObjectStoreManager: config.ConfigObjectStoreManager,
+	}
 }
 
 func (c *clusterApi) String() string {
@@ -684,6 +698,10 @@ func (c *clusterApi) sendNotImplemented(w http.ResponseWriter, method string) {
 
 func clusterVersion(route, version string) string {
 	return "/" + version + "/" + route
+}
+
+func clusterSecretPath(route, version string) string {
+	return clusterPath("/secrets"+route, version)
 }
 
 func clusterPath(route, version string) string {

@@ -4,8 +4,8 @@ services:
   - docker
 language: go
 go:
-  - 1.8.5
-  - 1.9.2
+  - 1.9.5
+  - 1.10.3
 before_install:
   - sudo apt-get update -yq
   - sudo apt-get -o Dpkg::Options::="--force-confnew" install -yq docker-ce
@@ -18,15 +18,14 @@ script:
   - go fmt $(go list ./... | grep -v vendor) | wc -l | grep 0
   - make install
   - make vet
-  - make lint
   - make docker-test
   - make docs
-  - make docker-coverage
-  - goveralls -coverprofile=/mnt/coverage.out -service=travis-ci -repotoken "${COVERALLS_TOKEN}"
   - if [ "${TRAVIS_BRANCH}" == "master" ] && [ "${TRAVIS_PULL_REQUEST}" == "false" ]; then
       make docker-build-osd;
-      docker login -u "${DOCKER_USER}" -p "${DOCKER_PASS}";
+      make docker-build-mock-sdk-server;
+      echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin;
       docker push openstorage/osd;
+      docker push openstorage/mock-sdk-server;
     fi
 notifications:
   email:

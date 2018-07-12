@@ -15,6 +15,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/docker/docker/pkg/mount"
 	"github.com/libopenstorage/openstorage/pkg/chattr"
 	"github.com/libopenstorage/openstorage/pkg/keylock"
 	"github.com/libopenstorage/openstorage/pkg/options"
@@ -83,6 +84,8 @@ const (
 	// CustomMount indicates a custom mount type with its
 	// own defined way of handling mount table
 	CustomMount
+	// BindMount indicates a bind mount point
+	BindMount
 )
 
 const mountPathRemoveDelay = 30 * time.Second
@@ -110,6 +113,7 @@ type PathMap map[string]string
 
 // PathInfo is a reference counted path
 type PathInfo struct {
+	Root string
 	Path string
 }
 
@@ -132,6 +136,8 @@ type Mounter struct {
 	kl            keylock.KeyLock
 	trashLocation string
 }
+
+type findMountPoint func(source *mount.Info, destination string, mountInfo []*mount.Info) (bool, string, string)
 
 // DefaultMounter defaults to syscall implementation.
 type DefaultMounter struct {
@@ -294,29 +300,6 @@ func (m *Mounter) maybeRemoveDevice(device string) {
 	}
 }
 
-func (m *Mounter) hasPath(path string) (string, bool) {
-	m.Lock()
-	defer m.Unlock()
-	p, ok := m.paths[path]
-	return p, ok
-}
-
-func (m *Mounter) addPath(path, device string) {
-	m.Lock()
-	defer m.Unlock()
-	m.paths[path] = device
-}
-
-func (m *Mounter) deletePath(path string) bool {
-	m.Lock()
-	defer m.Unlock()
-	if _, pathExists := m.paths[path]; pathExists {
-		delete(m.paths, path)
-		return true
-	}
-	return false
-}
-
 // reload from newM
 func (m *Mounter) reload(device string, newM *Info) error {
 	m.Lock()
@@ -350,6 +333,54 @@ func (m *Mounter) reload(device string, newM *Info) error {
 	return nil
 }
 
+func (m *Mounter) load(prefixes []string, fmp findMountPoint) error {
+	info, err := mount.GetMounts()
+	if err != nil {
+		return err
+	}
+DeviceLoop:
+	for _, v := range info {
+		var (
+			sourcePath, devicePath string
+			foundPrefix            bool
+		)
+		for _, devPrefix := range prefixes {
+			foundPrefix, sourcePath, devicePath = fmp(v, devPrefix, info)
+			if foundPrefix {
+				break
+			}
+		}
+		if !foundPrefix {
+			continue
+		}
+		mount, ok := m.mounts[sourcePath]
+		if !ok {
+			mount = &Info{
+				Device:     devicePath,
+				Fs:         v.Fstype,
+				Minor:      v.Minor,
+				Mountpoint: make([]*PathInfo, 0),
+			}
+			m.mounts[sourcePath] = mount
+		}
+		// Allow Load to be called multiple times.
+		for _, p := range mount.Mountpoint {
+			if p.Path == v.Mountpoint {
+				continue DeviceLoop
+			}
+		}
+		mount.Mountpoint = append(
+			mount.Mountpoint,
+			&PathInfo{
+				Root: normalizeMountPath(v.Root),
+				Path: normalizeMountPath(v.Mountpoint),
+			},
+		)
+		m.paths[v.Mountpoint] = sourcePath
+	}
+	return nil
+}
+
 // Mount new mountpoint for specified device.
 func (m *Mounter) Mount(
 	minor int,
@@ -380,7 +411,7 @@ func (m *Mounter) Mount(
 			return ErrMountpathNotAllowed
 		}
 	}
-	dev, ok := m.hasPath(path)
+	dev, ok := m.HasTarget(path)
 	if ok && dev != device {
 		logrus.Warnf("cannot mount %q,  device %q is mounted at %q", device, dev, path)
 		return ErrExist
@@ -401,7 +432,8 @@ func (m *Mounter) Mount(
 	defer info.Unlock()
 
 	// Validate input params
-	if fs != info.Fs {
+	// FS check is not needed if it is a bind mount
+	if !strings.HasPrefix(info.Fs, fs) && (flags&syscall.MS_BIND) != syscall.MS_BIND {
 		logrus.Warnf("%s Existing mountpoint has fs %q cannot change to %q",
 			device, info.Fs, fs)
 		return ErrEinval
@@ -410,6 +442,8 @@ func (m *Mounter) Mount(
 	// Try to find the mountpoint. If it already exists, do nothing
 	for _, p := range info.Mountpoint {
 		if p.Path == path {
+			logrus.Warnf("%q mountpoint for device %q already exists",
+				device, path)
 			return nil
 		}
 	}
@@ -437,7 +471,6 @@ func (m *Mounter) Mount(
 	}
 
 	info.Mountpoint = append(info.Mountpoint, &PathInfo{Path: path})
-	m.addPath(path, device)
 
 	return nil
 }
@@ -463,6 +496,8 @@ func (m *Mounter) Unmount(
 	info, ok := m.mounts[device]
 	if !ok {
 		m.Unlock()
+		logrus.Warnf("Unable to unmount device %q path %q: %v",
+			devPath, path, ErrEnoent.Error())
 		return ErrEnoent
 	}
 	m.Unlock()
@@ -475,10 +510,6 @@ func (m *Mounter) Unmount(
 		err := m.mountImpl.Unmount(path, flags, timeout)
 		if err != nil {
 			return err
-		}
-		if pathExists := m.deletePath(path); !pathExists {
-			logrus.Warnf("Path %q for device %q does not exist in pathMap",
-				path, device)
 		}
 		// Blow away this mountpoint.
 		info.Mountpoint[i] = info.Mountpoint[len(info.Mountpoint)-1]
@@ -639,6 +670,8 @@ func New(
 		return NewDeviceMounter(identifiers, mountImpl, allowedDirs, trashLocation)
 	case NFSMount:
 		return NewNFSMounter(identifiers, mountImpl, allowedDirs)
+	case BindMount:
+		return NewBindMounter(identifiers, mountImpl, allowedDirs, trashLocation)
 	case CustomMount:
 		return NewCustomMounter(identifiers, mountImpl, customMounter, allowedDirs)
 	}

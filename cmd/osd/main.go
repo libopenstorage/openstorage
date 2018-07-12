@@ -37,11 +37,14 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/flexvolume"
 	"github.com/libopenstorage/openstorage/api/server"
+	"github.com/libopenstorage/openstorage/api/server/sdk"
 	osdcli "github.com/libopenstorage/openstorage/cli"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/csi"
 	"github.com/libopenstorage/openstorage/graph/drivers"
+	"github.com/libopenstorage/openstorage/objectstore"
+	"github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
 	"github.com/portworx/kvdb"
@@ -85,6 +88,16 @@ func main() {
 			Name:  "file,f",
 			Usage: "file to read the OSD configuration from.",
 			Value: "",
+		},
+		cli.StringFlag{
+			Name:  "sdkport",
+			Usage: "gRPC port for SDK. Example: 9100",
+			Value: "9100",
+		},
+		cli.StringFlag{
+			Name:  "sdkrestport",
+			Usage: "gRPC REST Gateway port for SDK. Example: 9110",
+			Value: "9110",
 		},
 	}
 	app.Action = wrapAction(start)
@@ -235,13 +248,15 @@ func start(c *cli.Context) error {
 		}
 
 		// Start CSI Server for this driver
+		csisock := fmt.Sprintf("/var/lib/osd/driver/%s-csi.sock", d)
+		os.Remove(csisock)
 		cm, err := cluster.Inst()
 		if err != nil {
 			return fmt.Errorf("Unable to find cluster instance: %v", err)
 		}
 		csiServer, err := csi.NewOsdCsiServer(&csi.OsdCsiServerConfig{
 			Net:        "unix",
-			Address:    fmt.Sprintf("/var/lib/osd/driver/%s-csi.sock", d),
+			Address:    csisock,
 			DriverName: d,
 			Cluster:    cm,
 		})
@@ -249,6 +264,19 @@ func start(c *cli.Context) error {
 			return fmt.Errorf("Failed to start CSI server for driver %s: %v", d, err)
 		}
 		csiServer.Start()
+
+		// Start SDK Server for this driver
+		sdkServer, err := sdk.New(&sdk.ServerConfig{
+			Net:        "tcp",
+			Address:    ":" + c.String("sdkport"),
+			RestPort:   c.String("sdkrestport"),
+			DriverName: d,
+			Cluster:    cm,
+		})
+		if err != nil {
+			return fmt.Errorf("Failed to start SDK server for driver %s: %v", d, err)
+		}
+		sdkServer.Start()
 	}
 
 	if cfg.Osd.ClusterConfig.DefaultDriver != "" && !isDefaultSet {
@@ -272,7 +300,15 @@ func start(c *cli.Context) error {
 		if err != nil {
 			return fmt.Errorf("Unable to find cluster instance: %v", err)
 		}
-		if err := cm.Start(0, false, "9002"); err != nil {
+		if err := cm.StartWithConfiguration(
+			0,
+			false,
+			"9002",
+			&cluster.ClusterServerConfiguration{
+				ConfigSchedManager:       schedpolicy.NewFakeScheduler(),
+				ConfigObjectStoreManager: objectstore.NewfakeObjectstore(),
+			},
+		); err != nil {
 			return fmt.Errorf("Unable to start cluster manager: %v", err)
 		}
 	}

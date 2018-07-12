@@ -74,7 +74,7 @@ func testIfVolumeCreatedSuccessfully(
 	Expect(volumesList[0].GetSpec().GetHaLevel()).To(BeEquivalentTo(vr.GetSpec().GetHaLevel()))
 	Expect(volumesList[0].GetSpec().GetIoProfile()).To(BeEquivalentTo(vr.GetSpec().GetIoProfile()))
 	Expect(volumesList[0].GetSpec().GetJournal()).To(BeEquivalentTo(vr.GetSpec().GetJournal()))
-	Expect(volumesList[0].GetSpec().GetNfs()).To(BeEquivalentTo(vr.GetSpec().GetNfs()))
+	Expect(volumesList[0].GetSpec().GetSharedv4()).To(BeEquivalentTo(vr.GetSpec().GetSharedv4()))
 	Expect(volumesList[0].GetSpec().GetPassphrase()).To(BeEquivalentTo(vr.GetSpec().GetPassphrase()))
 	Expect(volumesList[0].GetSpec().GetReplicaSet()).To(BeEquivalentTo(vr.GetSpec().GetReplicaSet()))
 	Expect(volumesList[0].GetSpec().GetScale()).To(BeEquivalentTo(vr.GetSpec().GetScale()))

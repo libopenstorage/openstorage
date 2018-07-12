@@ -41,6 +41,7 @@ type driver struct {
 	volume.QuiesceDriver
 	volume.CredsDriver
 	volume.CloudBackupDriver
+	volume.CloudMigrateDriver
 	nfsServers []string
 	nfsPath    string
 	mounter    mount.Manager
@@ -69,15 +70,16 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		return nil, err
 	}
 	inst := &driver{
-		IODriver:          volume.IONotSupported,
-		StoreEnumerator:   common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
-		StatsDriver:       volume.StatsNotSupported,
-		QuiesceDriver:     volume.QuiesceNotSupported,
-		nfsServers:        servers,
-		CredsDriver:       volume.CredsNotSupported,
-		nfsPath:           path,
-		mounter:           mounter,
-		CloudBackupDriver: volume.CloudBackupNotSupported,
+		IODriver:           volume.IONotSupported,
+		StoreEnumerator:    common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
+		StatsDriver:        volume.StatsNotSupported,
+		QuiesceDriver:      volume.QuiesceNotSupported,
+		nfsServers:         servers,
+		CredsDriver:        volume.CredsNotSupported,
+		nfsPath:            path,
+		mounter:            mounter,
+		CloudBackupDriver:  volume.CloudBackupNotSupported,
+		CloudMigrateDriver: volume.CloudMigrateNotSupported,
 	}
 
 	//make directory for each nfs server
@@ -445,6 +447,11 @@ func (d *driver) Restore(volumeID string, snapID string) error {
 		return err
 	}
 	return nil
+}
+
+func (d *driver) SnapshotGroup(groupID string, labels map[string]string) (*api.GroupSnapCreateResponse, error) {
+
+	return nil, volume.ErrNotSupported
 }
 
 func (d *driver) Attach(volumeID string, attachOptions map[string]string) (string, error) {

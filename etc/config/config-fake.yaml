@@ -1,0 +1,7 @@
+---
+osd:
+  cluster:
+    nodeid: "1"
+    clusterid: "mock"
+  drivers:
+    fake:

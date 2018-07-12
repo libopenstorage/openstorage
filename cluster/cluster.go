@@ -9,7 +9,10 @@ import (
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
+	"github.com/libopenstorage/openstorage/objectstore"
 	"github.com/libopenstorage/openstorage/osdconfig"
+	sched "github.com/libopenstorage/openstorage/schedpolicy"
+	"github.com/libopenstorage/openstorage/secrets"
 	"github.com/portworx/kvdb"
 )
 
@@ -32,6 +35,17 @@ const (
 	// APIBase url for cluster APIs
 	APIBase = "/var/lib/osd/cluster/"
 )
+
+// ClusterServerConfiguration holds manager implementation
+// Caller has to create the manager and passes it in
+type ClusterServerConfiguration struct {
+	// holds implementation to Secrets interface
+	ConfigSecretManager secrets.Secrets
+	// holds implementeation to SchedulePolicy interface
+	ConfigSchedManager sched.SchedulePolicyProvider
+	// holds implementation to ObjectStore interface
+	ConfigObjectStoreManager objectstore.ObjectStore
+}
 
 // NodeEntry is used to discover other nodes in the cluster
 // and setup the gossip protocol with them.
@@ -247,13 +261,20 @@ type Cluster interface {
 	// It also causes this node to join the cluster.
 	// nodeInitialized indicates if the caller of this method expects the node
 	// to have been in an already-initialized state.
+	// All managers will default returning NotSupported.
 	Start(clusterSize int, nodeInitialized bool, gossipPort string) error
+
+	// Like Start, but have the ability to pass in managers to the cluster object
+	StartWithConfiguration(clusterMaxSize int, nodeInitialized bool, gossipPort string, config *ClusterServerConfiguration) error
 
 	ClusterData
 	ClusterRemove
 	ClusterStatus
 	ClusterAlerts
 	osdconfig.ConfigCaller
+	secrets.Secrets
+	sched.SchedulePolicyProvider
+	objectstore.ObjectStore
 }
 
 // ClusterNotify is the callback function listeners can use to notify cluster manager

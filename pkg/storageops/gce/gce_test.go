@@ -2,6 +2,7 @@ package gce_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/libopenstorage/openstorage/pkg/storageops"
@@ -28,6 +29,7 @@ func initGCE(t *testing.T) (storageops.Ops, map[string]interface{}) {
 		Description: newDiskDescription,
 		Name:        diskName,
 		SizeGb:      newDiskSizeInGB,
+		Zone:        os.Getenv("GCE_INSTANCE_ZONE"),
 	}
 
 	return driver, map[string]interface{}{

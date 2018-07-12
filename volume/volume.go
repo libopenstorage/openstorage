@@ -104,6 +104,8 @@ type SnapshotDriver interface {
 	Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator) (string, error)
 	// Restore restores volume to specified snapshot.
 	Restore(volumeID string, snapshotID string) error
+	// GroupSnapshot takes a snapshot of specified volumegroup.
+	SnapshotGroup(groupID string, labels map[string]string) (*api.GroupSnapCreateResponse, error)
 }
 
 // StatsDriver interface provides stats features
@@ -138,8 +140,10 @@ type CloudBackupDriver interface {
 	CloudBackupRestore(input *api.CloudBackupRestoreRequest) (*api.CloudBackupRestoreResponse, error)
 	// CloudBackupEnumerate enumerates the backups for a given cluster/credential/volumeID
 	CloudBackupEnumerate(input *api.CloudBackupEnumerateRequest) (*api.CloudBackupEnumerateResponse, error)
-	// CloudBackupDelete deletes the backups in cloud
+	// CloudBackupDelete deletes the specified backup in cloud
 	CloudBackupDelete(input *api.CloudBackupDeleteRequest) error
+	// CloudBackupDelete deletes all the backups for a given volume in cloud
+	CloudBackupDeleteAll(input *api.CloudBackupDeleteAllRequest) error
 	// CloudBackupStatus indicates the most recent status of backup/restores
 	CloudBackupStatus(input *api.CloudBackupStatusRequest) (*api.CloudBackupStatusResponse, error)
 	// CloudBackupCatalog displays listing of backup content
@@ -156,6 +160,16 @@ type CloudBackupDriver interface {
 	CloudBackupSchedEnumerate() (*api.CloudBackupSchedEnumerateResponse, error)
 }
 
+// CloudMigrateDriver interface provides Cloud migration features
+type CloudMigrateDriver interface {
+	// CloudMigrateStart starts a migrate operation
+	CloudMigrateStart(request *api.CloudMigrateStartRequest) error
+	// CloudMigrateCancel cancels a migrate operation
+	CloudMigrateCancel(request *api.CloudMigrateCancelRequest) error
+	// CloudMigrateStatus returns status for the migration operations
+	CloudMigrateStatus() (*api.CloudMigrateStatusResponse, error)
+}
+
 // ProtoDriver must be implemented by all volume drivers.  It specifies the
 // most basic functionality, such as creating and deleting volumes.
 type ProtoDriver interface {
@@ -164,6 +178,7 @@ type ProtoDriver interface {
 	QuiesceDriver
 	CredsDriver
 	CloudBackupDriver
+	CloudMigrateDriver
 	// Name returns the name of the driver.
 	Name() string
 	// Type of this driver
