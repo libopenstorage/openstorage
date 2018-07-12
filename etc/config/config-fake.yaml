@@ -2,6 +2,6 @@
 osd:
   cluster:
     nodeid: "1"
-    clusterid: "deadbeeef"
+    clusterid: "mock"
   drivers:
     fake:
