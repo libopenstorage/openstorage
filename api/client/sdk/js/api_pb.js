@@ -24973,7 +24973,7 @@ proto.openstorage.api.SdkCloudBackupStatusRequest.prototype.toObject = function(
  */
 proto.openstorage.api.SdkCloudBackupStatusRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    srcVolumeId: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    volumeId: jspb.Message.getFieldWithDefault(msg, 1, ""),
     local: jspb.Message.getFieldWithDefault(msg, 2, false)
   };
 
@@ -25013,7 +25013,7 @@ proto.openstorage.api.SdkCloudBackupStatusRequest.deserializeBinaryFromReader = 
     switch (field) {
     case 1:
       var value = /** @type {string} */ (reader.readString());
-      msg.setSrcVolumeId(value);
+      msg.setVolumeId(value);
       break;
     case 2:
       var value = /** @type {boolean} */ (reader.readBool());
@@ -25048,7 +25048,7 @@ proto.openstorage.api.SdkCloudBackupStatusRequest.prototype.serializeBinary = fu
  */
 proto.openstorage.api.SdkCloudBackupStatusRequest.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getSrcVolumeId();
+  f = message.getVolumeId();
   if (f.length > 0) {
     writer.writeString(
       1,
@@ -25066,16 +25066,16 @@ proto.openstorage.api.SdkCloudBackupStatusRequest.serializeBinaryToWriter = func
 
 
 /**
- * optional string src_volume_id = 1;
+ * optional string volume_id = 1;
  * @return {string}
  */
-proto.openstorage.api.SdkCloudBackupStatusRequest.prototype.getSrcVolumeId = function() {
+proto.openstorage.api.SdkCloudBackupStatusRequest.prototype.getVolumeId = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
 };
 
 
 /** @param {string} value */
-proto.openstorage.api.SdkCloudBackupStatusRequest.prototype.setSrcVolumeId = function(value) {
+proto.openstorage.api.SdkCloudBackupStatusRequest.prototype.setVolumeId = function(value) {
   jspb.Message.setField(this, 1, value);
 };
 

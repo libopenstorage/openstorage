@@ -35,12 +35,11 @@ import (
 )
 
 const (
-	Name              = "fake"
-	credsKeyPrefix    = "/fake/credentials"
-	backupsKeyPrefix  = "/fake/backups"
-	restoresKeyPrefix = "/fake/restores"
-	schedPrefix       = "/fake/schedules"
-	Type              = api.DriverType_DRIVER_TYPE_BLOCK
+	Name             = "fake"
+	credsKeyPrefix   = "/fake/credentials"
+	backupsKeyPrefix = "/fake/backups"
+	schedPrefix      = "/fake/schedules"
+	Type             = api.DriverType_DRIVER_TYPE_BLOCK
 )
 
 // Implements the open storage volume interface.
@@ -62,7 +61,7 @@ type fakeCred struct {
 }
 
 type fakeBackups struct {
-	Spec      api.VolumeSpec
+	Volume    api.Volume
 	Info      api.CloudBackupInfo
 	Status    api.CloudBackupStatus
 	ClusterId string
@@ -391,15 +390,16 @@ func (d *driver) cloudBackupCreate(input *api.CloudBackupCreateRequest) (string,
 	}
 
 	// Save cloud backup
-	id := uuid.New()
+	cloudId := uuid.New()
 	clusterInfo, err := d.thisCluster.Enumerate()
 	if err != nil {
 		return "", err
 	}
-	_, err = d.kv.Put(backupsKeyPrefix+"/"+id, &fakeBackups{
-		Spec:      *vol.GetSpec(),
+	_, err = d.kv.Put(backupsKeyPrefix+"/"+cloudId, &fakeBackups{
+		Volume:    *vol,
 		ClusterId: clusterInfo.Id,
 		Status: api.CloudBackupStatus{
+			ID:            cloudId,
 			OpType:        api.CloudBackupOp,
 			Status:        api.CloudBackupStatusDone,
 			BytesDone:     vol.GetSpec().GetSize(),
@@ -408,7 +408,7 @@ func (d *driver) cloudBackupCreate(input *api.CloudBackupCreateRequest) (string,
 			NodeID:        clusterInfo.NodeId,
 		},
 		Info: api.CloudBackupInfo{
-			ID:            id,
+			ID:            cloudId,
 			SrcVolumeID:   input.VolumeID,
 			SrcVolumeName: vol.GetLocator().GetName(),
 			Timestamp:     time.Now(),
@@ -422,7 +422,7 @@ func (d *driver) cloudBackupCreate(input *api.CloudBackupCreateRequest) (string,
 		return "", err
 	}
 
-	return id, nil
+	return cloudId, nil
 }
 
 // CloudBackupRestore downloads a cloud backup and restores it to a volume
@@ -442,7 +442,7 @@ func (d *driver) CloudBackupRestore(
 		return nil, err
 	}
 
-	volid, err := d.Create(&api.VolumeLocator{Name: input.RestoreVolumeName}, &api.Source{}, &backup.Spec)
+	volid, err := d.Create(&api.VolumeLocator{Name: input.RestoreVolumeName}, &api.Source{}, backup.Volume.GetSpec())
 	if err != nil {
 		return nil, err
 	}
@@ -458,31 +458,22 @@ func (d *driver) CloudBackupRestore(
 		return nil, fmt.Errorf("Internal error. Volume has no specificiation")
 	}
 
-	id := uuid.New()
+	cloudId := uuid.New()
 	clusterInfo, err := d.thisCluster.Enumerate()
 	if err != nil {
 		return nil, err
 	}
-	_, err = d.kv.Put(restoresKeyPrefix+"/"+id, &fakeBackups{
-		Spec:      *vol.GetSpec(),
+	_, err = d.kv.Put(backupsKeyPrefix+"/"+cloudId, &fakeBackups{
+		Volume:    *vol,
 		ClusterId: clusterInfo.Id,
 		Status: api.CloudBackupStatus{
+			ID:            cloudId,
 			OpType:        api.CloudRestoreOp,
 			Status:        api.CloudBackupStatusDone,
 			BytesDone:     vol.GetSpec().GetSize(),
 			StartTime:     time.Now(),
 			CompletedTime: time.Now().Local().Add(1 * time.Second),
 			NodeID:        clusterInfo.NodeId,
-		},
-		Info: api.CloudBackupInfo{
-			ID:            id,
-			SrcVolumeID:   backup.Info.SrcVolumeID,
-			SrcVolumeName: backup.Info.SrcVolumeName,
-			Timestamp:     time.Now(),
-			Metadata: map[string]string{
-				"fake": "restore",
-			},
-			Status: string(api.CloudBackupStatusDone),
 		},
 	}, 0)
 	if err != nil {
@@ -540,6 +531,10 @@ func (d *driver) CloudBackupEnumerate(input *api.CloudBackupEnumerateRequest) (*
 		if err := json.Unmarshal(v.Value, elem); err != nil {
 			return nil, err
 		}
+		if elem.Status.OpType == api.CloudRestoreOp {
+			continue
+		}
+
 		if len(input.SrcVolumeID) == 0 && len(input.ClusterID) == 0 {
 			backups = append(backups, elem.Info)
 		} else if input.SrcVolumeID == elem.Info.SrcVolumeID {
@@ -585,9 +580,13 @@ func (d *driver) CloudBackupDeleteAll(input *api.CloudBackupDeleteAllRequest) er
 		if err := json.Unmarshal(v.Value, elem); err != nil {
 			return err
 		}
+		if elem.Status.OpType == api.CloudRestoreOp {
+			continue
+		}
+
 		if len(input.SrcVolumeID) == 0 && len(input.ClusterID) == 0 {
 			d.kv.Delete(backupsKeyPrefix + "/" + elem.Info.ID)
-		} else if input.SrcVolumeID == elem.Info.SrcVolumeID {
+		} else if input.SrcVolumeID == elem.Volume.GetId() {
 			d.kv.Delete(backupsKeyPrefix + "/" + elem.Info.ID)
 		} else if input.ClusterID == elem.ClusterId {
 			d.kv.Delete(backupsKeyPrefix + "/" + elem.Info.ID)
@@ -607,15 +606,10 @@ func (d *driver) CloudBackupStatus(input *api.CloudBackupStatusRequest) (*api.Cl
 
 	statuses := make(map[string]api.CloudBackupStatus)
 
-	backups, err := d.kv.Enumerate(backupsKeyPrefix)
+	kvps, err := d.kv.Enumerate(backupsKeyPrefix)
 	if err != nil {
 		return nil, err
 	}
-	restores, err := d.kv.Enumerate(restoresKeyPrefix)
-	if err != nil {
-		return nil, err
-	}
-	kvps := append(backups, restores...)
 
 	for _, v := range kvps {
 		elem := &fakeBackups{}
@@ -623,11 +617,11 @@ func (d *driver) CloudBackupStatus(input *api.CloudBackupStatusRequest) (*api.Cl
 			return nil, err
 		}
 		if len(input.SrcVolumeID) == 0 && !input.Local {
-			statuses[elem.Info.ID] = elem.Status
-		} else if input.SrcVolumeID == elem.Info.SrcVolumeID {
-			statuses[elem.Info.ID] = elem.Status
+			statuses[elem.Volume.GetId()] = elem.Status
+		} else if input.SrcVolumeID == elem.Volume.GetId() {
+			statuses[elem.Volume.GetId()] = elem.Status
 		} else if input.Local && clusterInfo.NodeId == elem.Status.NodeID {
-			statuses[elem.Info.ID] = elem.Status
+			statuses[elem.Volume.GetId()] = elem.Status
 		}
 	}
 
@@ -662,33 +656,35 @@ func (d *driver) CloudBackupCatalog(input *api.CloudBackupCatalogRequest) (*api.
 // CloudBackupHistory displays past backup/restore operations on a volume
 func (d *driver) CloudBackupHistory(input *api.CloudBackupHistoryRequest) (*api.CloudBackupHistoryResponse, error) {
 
-	resp, err := d.CloudBackupStatus(&api.CloudBackupStatusRequest{
-		SrcVolumeID: input.SrcVolumeID,
-	})
+	kvps, err := d.kv.Enumerate(backupsKeyPrefix)
 	if err != nil {
 		return nil, err
 	}
-	items := make([]api.CloudBackupHistoryItem, len(resp.Statuses))
-	i := 0
-	for id, v := range resp.Statuses {
+	items := make([]api.CloudBackupHistoryItem, 0)
+	for _, v := range kvps {
 
-		var elem *fakeBackups
-		var err error
-		if v.OpType == api.CloudBackupOp {
-			_, err = d.kv.GetVal(backupsKeyPrefix+"/"+id, &elem)
-		} else {
-			_, err = d.kv.GetVal(restoresKeyPrefix+"/"+id, &elem)
-		}
-		if err != nil {
+		elem := &fakeBackups{}
+		if err := json.Unmarshal(v.Value, elem); err != nil {
 			return nil, err
 		}
 
-		items[i] = api.CloudBackupHistoryItem{
-			SrcVolumeID: elem.Info.SrcVolumeID,
-			Timestamp:   elem.Status.CompletedTime,
-			Status:      string(elem.Status.Status),
+		if elem.Status.OpType == api.CloudRestoreOp {
+			continue
 		}
-		i++
+
+		if len(input.SrcVolumeID) == 0 {
+			items = append(items, api.CloudBackupHistoryItem{
+				SrcVolumeID: elem.Info.SrcVolumeID,
+				Timestamp:   elem.Status.CompletedTime,
+				Status:      string(elem.Status.Status),
+			})
+		} else if input.SrcVolumeID == elem.Info.SrcVolumeID {
+			items = append(items, api.CloudBackupHistoryItem{
+				SrcVolumeID: elem.Info.SrcVolumeID,
+				Timestamp:   elem.Status.CompletedTime,
+				Status:      string(elem.Status.Status),
+			})
+		}
 	}
 
 	return &api.CloudBackupHistoryResponse{
@@ -710,7 +706,7 @@ func (d *driver) CloudBackupStateChange(input *api.CloudBackupStateChangeRequest
 		return err
 	}
 
-	for id, status := range resp.Statuses {
+	for _, status := range resp.Statuses {
 		save := false
 		if status.Status == api.CloudBackupStatusPaused {
 			save = true
@@ -729,20 +725,13 @@ func (d *driver) CloudBackupStateChange(input *api.CloudBackupStateChangeRequest
 		}
 
 		if save {
-			var prefix string
-			if status.OpType == api.CloudBackupOp {
-				prefix = backupsKeyPrefix
-			} else {
-				prefix = restoresKeyPrefix
-			}
-
 			var elem *fakeBackups
-			_, err := d.kv.GetVal(prefix+"/"+id, &elem)
+			_, err := d.kv.GetVal(backupsKeyPrefix+"/"+status.ID, &elem)
 			if err != nil {
 				return err
 			}
 			elem.Status = status
-			_, err = d.kv.Update(prefix+"/"+id, elem, 0)
+			_, err = d.kv.Update(backupsKeyPrefix+"/"+status.ID, elem, 0)
 			if err != nil {
 				return err
 			}

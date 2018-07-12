@@ -374,7 +374,7 @@ func TestSdkCloudBackupStatus(t *testing.T) {
 
 	id := "myvol"
 	req := &api.SdkCloudBackupStatusRequest{
-		SrcVolumeId: id,
+		VolumeId: id,
 	}
 	statuses := &api.CloudBackupStatusResponse{
 		Statuses: map[string]api.CloudBackupStatus{

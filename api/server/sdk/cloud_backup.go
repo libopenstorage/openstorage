@@ -162,7 +162,7 @@ func (s *CloudBackupServer) Status(
 ) (*api.SdkCloudBackupStatusResponse, error) {
 
 	r, err := s.driver.CloudBackupStatus(&api.CloudBackupStatusRequest{
-		SrcVolumeID: req.GetSrcVolumeId(),
+		SrcVolumeID: req.GetVolumeId(),
 		Local:       req.GetLocal(),
 	})
 	if err != nil {
@@ -172,7 +172,7 @@ func (s *CloudBackupServer) Status(
 	return r.ToSdkCloudBackupStatusResponse(), nil
 }
 
-// Catalog returns???
+// Catalog
 func (s *CloudBackupServer) Catalog(
 	ctx context.Context,
 	req *api.SdkCloudBackupCatalogRequest,

@@ -992,12 +992,13 @@ service OpenStorageCredentials {
   // ##### Example
   // {% codetabs name="Golang", type="go" -%}
   // id, err := client.Create(context.Background(), &api.SdkCredentialCreateRequest{
-  //   CredentialType: &api.SdkCredentialCreateRequest_AwsCredential{
-  //     AwsCredential: &api.SdkAwsCredentialRequest{
-  //     AccessKey: "dummy-access",
-  //     SecretKey: "dummy-secret",
-  //     Endpoint:  "dummy-endpoint",
-  //     Region:    "dummy-region",
+  //     CredentialType: &api.SdkCredentialCreateRequest_AwsCredential{
+  //       AwsCredential: &api.SdkAwsCredentialRequest{
+  //       AccessKey: "dummy-access",
+  //       SecretKey: "dummy-secret",
+  //       Endpoint:  "dummy-endpoint",
+  //       Region:    "dummy-region",
+  //     },
   //   },
   // })
   // {%- language name="Python", type="py" -%}
@@ -1099,6 +1100,19 @@ service OpenStorageSchedulePolicy {
 
 // OpenStorageCloudBackup service manages backing up volumes to a cloud
 // location like Amazon, Google, or Azure.
+//
+// #### Backup
+// To create a backup, you must first call the Create() call for a specified
+// volume. To see the status of this request, use Status() which returns
+// a map where the keys are the source volume id.
+//
+// #### Restore
+// To restore, you would pass a `backup_id` of a successful backup.
+// `backup_id` can be retreived by calling Enumerate() for a specified volume.
+// Pass this `backup_id` and a new volume name to Restore() to start
+// restoring a new volume from an existing backup. To see the status of this
+// restore, pass volume id returned by Restore() to input to Status()
+//
 service OpenStorageCloudBackup {
 
   // Creates a backup request for a specified volume. Use
@@ -1153,7 +1167,7 @@ service OpenStorageCloudBackup {
   rpc Status(SdkCloudBackupStatusRequest)
     returns (SdkCloudBackupStatusResponse) {
       option(google.api.http) = {
-        get: "/v1/cloudbackups/volume/{src_volume_id}/status"
+        get: "/v1/cloudbackups/volume/{volume_id}/status"
       };
     }
 
@@ -1842,7 +1856,7 @@ message SdkCloudBackupEnumerateRequest {
 
 // SdkCloudBackupInfo has information about a backup stored by a cloud provider
 message SdkCloudBackupInfo {
-  // ID is the ID of the cloud backup
+  // This is the id as represented by the cloud provider
   string id = 1;
   // Source volumeID of the backup
   string src_volume_id = 2;
@@ -1894,7 +1908,7 @@ enum SdkCloudBackupStatusType {
 
 // SdkCloudBackupStatus defines the status of a backup stored by a cloud provider
 message SdkCloudBackupStatus {
-  // ID is the ID for the operation
+  // This is the id as represented by the cloud provider
   string backup_id = 1;
   // OpType indicates if this is a backup or restore
   SdkCloudBackupOpType optype = 2;
@@ -1910,10 +1924,13 @@ message SdkCloudBackupStatus {
   string node_id = 7;
 }
 
-// Defines a request to retreive the status of a backup for a specified volume
+// Defines a request to retreive the status of a backup or restore for a
+// specified volume
 message SdkCloudBackupStatusRequest {
-  // SrcVolumeID optional volumeID to list status of backup/restore
-  string src_volume_id = 1;
+  // This is an optional value which is used to get information on the
+  // status of a backup for the specified volume. If no volume id is provided,
+  // then status for all volumes is returned.
+  string volume_id = 1;
   // Local indicates if only those backups/restores that are
   // active on current node must be returned
   bool local = 2;
@@ -1921,7 +1938,8 @@ message SdkCloudBackupStatusRequest {
 
 // Defines a response containing the status of the backups for a specified volume
 message SdkCloudBackupStatusResponse {
-  // Statuses is list of currently active/failed/done backup/restores
+  // Statuses is list of currently active/failed/done backup/restores where
+  // the key is the volume ids of current volumes being backed up or restored
   map<string, SdkCloudBackupStatus> statuses = 1;
 }
 
@@ -1953,14 +1971,14 @@ message SdkCloudBackupHistoryItem {
 // Defines a request to retreive the history of the backups for
 // a specific volume to a cloud provider
 message SdkCloudBackupHistoryRequest {
-  // This optional value defines which history of backup/restore is being
+  // This optional value defines which history of backups is being
   // requested. If not provided, it will return the history for all volumes.
   string src_volume_id = 1;
 }
 
 // Defines a response containing a list of history of backups to a cloud provider
 message SdkCloudBackupHistoryResponse {
-  // HistoryList is list of past backup/restores in the cluster
+  // HistoryList is list of past backups on this volume
   repeated SdkCloudBackupHistoryItem history_list = 1;
 }
 
