@@ -15,6 +15,7 @@ import (
 var diskLabels = map[string]string{
 	"source": "openstorage-test",
 	"foo":    "bar",
+	"Test":   "UPPER_CASE",
 }
 
 func RunTest(drivers map[string]storageops.Ops,
@@ -76,7 +77,7 @@ func tags(t *testing.T, driver storageops.Ops, diskName string) {
 
 	tags, err := driver.Tags(diskName)
 	require.NoError(t, err, "failed to get tags for disk")
-	require.Len(t, tags, 2, "invalid number of labels found on disk")
+	require.Len(t, tags, 3, "invalid number of labels found on disk")
 
 	err = driver.RemoveTags(diskName, diskLabels)
 	require.NoError(t, err, "failed to remove tags from disk")

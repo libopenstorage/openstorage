@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"strings"
 	"sync"
 	"time"
 
@@ -98,7 +99,7 @@ func (s *gceOps) ApplyTags(
 		currentLabels = d.Labels
 	}
 
-	for k, v := range labels {
+	for k, v := range formatLabels(labels) {
 		currentLabels[k] = v
 	}
 
@@ -160,7 +161,7 @@ func (s *gceOps) Create(
 
 	newDisk := &compute.Disk{
 		Description:    "Disk created by openstorage",
-		Labels:         labels,
+		Labels:         formatLabels(labels),
 		Name:           v.Name,
 		SizeGb:         v.SizeGb,
 		SourceImage:    v.SourceImage,
@@ -293,7 +294,7 @@ func (s *gceOps) Enumerate(
 	sets := make(map[string][]interface{})
 	found := false
 
-	allDisks, err := s.getDisksFromAllZones(labels)
+	allDisks, err := s.getDisksFromAllZones(formatLabels(labels))
 	if err != nil {
 		return nil, err
 	}
@@ -366,7 +367,7 @@ func (s *gceOps) RemoveTags(
 
 	if len(d.Labels) != 0 {
 		currentLabels := d.Labels
-		for k := range labels {
+		for k := range formatLabels(labels) {
 			delete(currentLabels, k)
 		}
 
@@ -655,4 +656,12 @@ func (s *gceOps) getDisksFromAllZones(labels map[string]string) (map[string]*com
 	}
 
 	return response, nil
+}
+
+func formatLabels(labels map[string]string) map[string]string {
+	newLabels := make(map[string]string)
+	for k, v := range labels {
+		newLabels[strings.ToLower(k)] = strings.ToLower(v)
+	}
+	return newLabels
 }
