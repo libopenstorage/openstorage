@@ -17,6 +17,7 @@ limitations under the License.
 package fake
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/libopenstorage/openstorage/api"
@@ -347,13 +348,13 @@ func TestFakeCloudBackupStatusWithoutMatches(t *testing.T) {
 	numbackups := 50
 	for i := 0; i < numbackups; i++ {
 		// create backups
-		backupid, credBackupReq, vol := testInitForCloudBackups(t, d)
+		backupid, credBackupReq, _ := testInitForCloudBackups(t, d)
 
 		// create restores
 		resp, err := d.CloudBackupRestore(&api.CloudBackupRestoreRequest{
 			CredentialUUID:    credBackupReq.CredentialUUID,
 			ID:                backupid,
-			RestoreVolumeName: "restore-" + vol.GetLocator().GetName(),
+			RestoreVolumeName: fmt.Sprintf("restore-%d", i),
 		})
 		assert.NoError(t, err)
 		assert.NotEmpty(t, resp.RestoreVolumeID)
@@ -363,6 +364,7 @@ func TestFakeCloudBackupStatusWithoutMatches(t *testing.T) {
 	assert.NoError(t, err)
 
 	// backups and restores
+	// restores overwrite backups
 	assert.Len(t, resp.Statuses, numbackups*2)
 
 	var nbackups, nrestores int
@@ -393,8 +395,8 @@ func TestFakeCloudBackupStatusWithoutMatches(t *testing.T) {
 			nrestores++
 		}
 	}
-	assert.Equal(t, nbackups, 50)
-	assert.Equal(t, nrestores, 50)
+	assert.Equal(t, 50, nbackups)
+	assert.Equal(t, 50, nrestores)
 }
 
 func TestFakeCloudBackupStatusWithMatchingVolume(t *testing.T) {
@@ -413,7 +415,7 @@ func TestFakeCloudBackupStatusWithMatchingVolume(t *testing.T) {
 		resp, err := d.CloudBackupRestore(&api.CloudBackupRestoreRequest{
 			CredentialUUID:    credBackupReq.CredentialUUID,
 			ID:                backupid,
-			RestoreVolumeName: "restore-" + vol.GetLocator().GetName(),
+			RestoreVolumeName: fmt.Sprintf("restore-%d", i),
 		})
 		assert.NoError(t, err)
 		assert.NotEmpty(t, resp.RestoreVolumeID)
@@ -425,18 +427,8 @@ func TestFakeCloudBackupStatusWithMatchingVolume(t *testing.T) {
 	assert.NoError(t, err)
 
 	// backups and restores
-	assert.Len(t, resp.Statuses, 2)
-
-	var nbackups, nrestores int
-	for _, status := range resp.Statuses {
-		if status.OpType == api.CloudBackupOp {
-			nbackups++
-		} else {
-			nrestores++
-		}
-	}
-	assert.Equal(t, nbackups, 1)
-	assert.Equal(t, nrestores, 1)
+	assert.Len(t, resp.Statuses, 1)
+	assert.Equal(t, api.CloudBackupOp, resp.Statuses[vol.GetId()].OpType)
 }
 
 func TestFakeCloudBackupCatalog(t *testing.T) {
@@ -466,13 +458,13 @@ func TestFakeCloudBackupHistoryWithoutMatches(t *testing.T) {
 	numbackups := 50
 	for i := 0; i < numbackups; i++ {
 		// create backups
-		backupid, credBackupReq, vol := testInitForCloudBackups(t, d)
+		backupid, credBackupReq, _ := testInitForCloudBackups(t, d)
 
 		// create restores
 		resp, err := d.CloudBackupRestore(&api.CloudBackupRestoreRequest{
 			CredentialUUID:    credBackupReq.CredentialUUID,
 			ID:                backupid,
-			RestoreVolumeName: "restore-" + vol.GetLocator().GetName(),
+			RestoreVolumeName: fmt.Sprintf("restore-%d", i),
 		})
 		assert.NoError(t, err)
 		assert.NotEmpty(t, resp.RestoreVolumeID)
@@ -482,7 +474,7 @@ func TestFakeCloudBackupHistoryWithoutMatches(t *testing.T) {
 	assert.NoError(t, err)
 
 	// backups and restores
-	assert.Len(t, resp.HistoryList, numbackups*2)
+	assert.Len(t, resp.HistoryList, numbackups)
 }
 
 func TestFakeCloudBackupHistoryWithMatchingVolume(t *testing.T) {
@@ -501,7 +493,7 @@ func TestFakeCloudBackupHistoryWithMatchingVolume(t *testing.T) {
 		resp, err := d.CloudBackupRestore(&api.CloudBackupRestoreRequest{
 			CredentialUUID:    credBackupReq.CredentialUUID,
 			ID:                backupid,
-			RestoreVolumeName: "restore-" + vol.GetLocator().GetName(),
+			RestoreVolumeName: fmt.Sprintf("restore-%d", i),
 		})
 		assert.NoError(t, err)
 		assert.NotEmpty(t, resp.RestoreVolumeID)
@@ -512,8 +504,8 @@ func TestFakeCloudBackupHistoryWithMatchingVolume(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	// backups and restores
-	assert.Len(t, resp.HistoryList, 2)
+	// Only backups
+	assert.Len(t, resp.HistoryList, 1)
 }
 
 func TestFakeCloudBackupStateChange(t *testing.T) {
@@ -536,7 +528,7 @@ func TestFakeCloudBackupStateChange(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.Len(t, statuses.Statuses, 1)
-	assert.Equal(t, api.CloudBackupStatusActive, statuses.Statuses[backupId].Status)
+	assert.Equal(t, api.CloudBackupStatusActive, statuses.Statuses[vol.GetId()].Status)
 
 	// No values errors
 	err = d.CloudBackupStateChange(&api.CloudBackupStateChangeRequest{})
@@ -555,7 +547,7 @@ func TestFakeCloudBackupStateChange(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.Len(t, statuses.Statuses, 1)
-	assert.Equal(t, api.CloudBackupStatusPaused, statuses.Statuses[backupId].Status)
+	assert.Equal(t, api.CloudBackupStatusPaused, statuses.Statuses[vol.GetId()].Status)
 
 	// Resume
 	err = d.CloudBackupStateChange(&api.CloudBackupStateChangeRequest{
@@ -570,7 +562,7 @@ func TestFakeCloudBackupStateChange(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.Len(t, statuses.Statuses, 1)
-	assert.Equal(t, api.CloudBackupStatusActive, statuses.Statuses[backupId].Status)
+	assert.Equal(t, api.CloudBackupStatusActive, statuses.Statuses[vol.GetId()].Status)
 
 	// Stop
 	err = d.CloudBackupStateChange(&api.CloudBackupStateChangeRequest{
@@ -585,7 +577,7 @@ func TestFakeCloudBackupStateChange(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.Len(t, statuses.Statuses, 1)
-	assert.Equal(t, api.CloudBackupStatusStopped, statuses.Statuses[backupId].Status)
+	assert.Equal(t, api.CloudBackupStatusStopped, statuses.Statuses[vol.GetId()].Status)
 
 	// Still stopped
 	err = d.CloudBackupStateChange(&api.CloudBackupStateChangeRequest{
@@ -600,7 +592,7 @@ func TestFakeCloudBackupStateChange(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.Len(t, statuses.Statuses, 1)
-	assert.Equal(t, api.CloudBackupStatusStopped, statuses.Statuses[backupId].Status)
+	assert.Equal(t, api.CloudBackupStatusStopped, statuses.Statuses[vol.GetId()].Status)
 }
 
 func TestFakeCloudBackupSchedule(t *testing.T) {
