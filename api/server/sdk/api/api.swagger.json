@@ -333,7 +333,7 @@
         ]
       }
     },
-    "/v1/cloudbackups/volume/{src_volume_id}/status": {
+    "/v1/cloudbackups/volume/{volume_id}/status": {
       "get": {
         "summary": "Status returns the status of any cloud backups of a volume",
         "operationId": "Status",
@@ -347,7 +347,7 @@
         },
         "parameters": [
           {
-            "name": "src_volume_id",
+            "name": "volume_id",
             "in": "path",
             "required": true,
             "type": "string"
@@ -519,7 +519,7 @@
       },
       "post": {
         "summary": "Create is used to submit cloud credentials. It will return an\nid of the credentials once they are verified to work.",
-        "description": "##### Example\n{% codetabs name=\"Golang\", type=\"go\" -%}\nid, err := client.Create(context.Background(), \u0026api.SdkCredentialCreateRequest{\n  CredentialType: \u0026api.SdkCredentialCreateRequest_AwsCredential{\n    AwsCredential: \u0026api.SdkAwsCredentialRequest{\n    AccessKey: \"dummy-access\",\n    SecretKey: \"dummy-secret\",\n    Endpoint:  \"dummy-endpoint\",\n    Region:    \"dummy-region\",\n  },\n})\n{%- language name=\"Python\", type=\"py\" -%}\nen_resp = client.Create(api_pb2.SdkCredentialCreateRequest(\n  aws_credential=api_pb2.SdkAwsCredentialRequest(\n    access_key='dummy-access',\n    secret_key='dumm-secret',\n    endpoint='dummy-endpoint',\n    region='dummy-region')))\n{%- endcodetabs %}",
+        "description": "##### Example\n{% codetabs name=\"Golang\", type=\"go\" -%}\nid, err := client.Create(context.Background(), \u0026api.SdkCredentialCreateRequest{\n    CredentialType: \u0026api.SdkCredentialCreateRequest_AwsCredential{\n      AwsCredential: \u0026api.SdkAwsCredentialRequest{\n      AccessKey: \"dummy-access\",\n      SecretKey: \"dummy-secret\",\n      Endpoint:  \"dummy-endpoint\",\n      Region:    \"dummy-region\",\n    },\n  },\n})\n{%- language name=\"Python\", type=\"py\" -%}\nen_resp = client.Create(api_pb2.SdkCredentialCreateRequest(\n  aws_credential=api_pb2.SdkAwsCredentialRequest(\n    access_key='dummy-access',\n    secret_key='dumm-secret',\n    endpoint='dummy-endpoint',\n    region='dummy-region')))\n{%- endcodetabs %}",
         "operationId": "Create",
         "responses": {
           "200": {
@@ -1613,7 +1613,7 @@
           "items": {
             "$ref": "#/definitions/apiSdkCloudBackupHistoryItem"
           },
-          "title": "HistoryList is list of past backup/restores in the cluster"
+          "title": "HistoryList is list of past backups on this volume"
         }
       },
       "title": "Defines a response containing a list of history of backups to a cloud provider"
@@ -1623,7 +1623,7 @@
       "properties": {
         "id": {
           "type": "string",
-          "title": "ID is the ID of the cloud backup"
+          "title": "This is the id as represented by the cloud provider"
         },
         "src_volume_id": {
           "type": "string",
@@ -1790,7 +1790,7 @@
       "properties": {
         "backup_id": {
           "type": "string",
-          "title": "ID is the ID for the operation"
+          "title": "This is the id as represented by the cloud provider"
         },
         "optype": {
           "$ref": "#/definitions/apiSdkCloudBackupOpType",
@@ -1830,7 +1830,7 @@
           "additionalProperties": {
             "$ref": "#/definitions/apiSdkCloudBackupStatus"
           },
-          "title": "Statuses is list of currently active/failed/done backup/restores"
+          "title": "Statuses is list of currently active/failed/done backup/restores where\nthe key is the volume ids of current volumes being backed up or restored"
         }
       },
       "title": "Defines a response containing the status of the backups for a specified volume"

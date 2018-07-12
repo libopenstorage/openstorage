@@ -166,12 +166,13 @@ module Openstorage
         # ##### Example
         # {% codetabs name="Golang", type="go" -%}
         # id, err := client.Create(context.Background(), &api.SdkCredentialCreateRequest{
-        #   CredentialType: &api.SdkCredentialCreateRequest_AwsCredential{
-        #     AwsCredential: &api.SdkAwsCredentialRequest{
-        #     AccessKey: "dummy-access",
-        #     SecretKey: "dummy-secret",
-        #     Endpoint:  "dummy-endpoint",
-        #     Region:    "dummy-region",
+        #     CredentialType: &api.SdkCredentialCreateRequest_AwsCredential{
+        #       AwsCredential: &api.SdkAwsCredentialRequest{
+        #       AccessKey: "dummy-access",
+        #       SecretKey: "dummy-secret",
+        #       Endpoint:  "dummy-endpoint",
+        #       Region:    "dummy-region",
+        #     },
         #   },
         # })
         # {%- language name="Python", type="py" -%}
@@ -224,6 +225,19 @@ module Openstorage
     module OpenStorageCloudBackup
       # OpenStorageCloudBackup service manages backing up volumes to a cloud
       # location like Amazon, Google, or Azure.
+      #
+      # #### Backup
+      # To create a backup, you must first call the Create() call for a specified
+      # volume. To see the status of this request, use Status() which returns
+      # a map where the keys are the source volume id.
+      #
+      # #### Restore
+      # To restore, you would pass a `backup_id` of a successful backup.
+      # `backup_id` can be retreived by calling Enumerate() for a specified volume.
+      # Pass this `backup_id` and a new volume name to Restore() to start
+      # restoring a new volume from an existing backup. To see the status of this
+      # restore, pass volume id returned by Restore() to input to Status()
+      #
       class Service
 
         include GRPC::GenericService

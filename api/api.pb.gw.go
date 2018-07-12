@@ -708,7 +708,7 @@ func request_OpenStorageCloudBackup_Enumerate_0(ctx context.Context, marshaler r
 }
 
 var (
-	filter_OpenStorageCloudBackup_Status_0 = &utilities.DoubleArray{Encoding: map[string]int{"src_volume_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+	filter_OpenStorageCloudBackup_Status_0 = &utilities.DoubleArray{Encoding: map[string]int{"volume_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
 )
 
 func request_OpenStorageCloudBackup_Status_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageCloudBackupClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -722,15 +722,15 @@ func request_OpenStorageCloudBackup_Status_0(ctx context.Context, marshaler runt
 		_   = err
 	)
 
-	val, ok = pathParams["src_volume_id"]
+	val, ok = pathParams["volume_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "src_volume_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "volume_id")
 	}
 
-	protoReq.SrcVolumeId, err = runtime.String(val)
+	protoReq.VolumeId, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "src_volume_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "volume_id", err)
 	}
 
 	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_OpenStorageCloudBackup_Status_0); err != nil {
@@ -2658,7 +2658,7 @@ var (
 
 	pattern_OpenStorageCloudBackup_Enumerate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "cloudbackups"}, ""))
 
-	pattern_OpenStorageCloudBackup_Status_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "cloudbackups", "volume", "src_volume_id", "status"}, ""))
+	pattern_OpenStorageCloudBackup_Status_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "cloudbackups", "volume", "volume_id", "status"}, ""))
 
 	pattern_OpenStorageCloudBackup_Catalog_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "cloudbackups", "backup", "backup_id", "catalog"}, ""))
 

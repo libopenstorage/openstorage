@@ -618,7 +618,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :node_id, :string, 7
   end
   add_message "openstorage.api.SdkCloudBackupStatusRequest" do
-    optional :src_volume_id, :string, 1
+    optional :volume_id, :string, 1
     optional :local, :bool, 2
   end
   add_message "openstorage.api.SdkCloudBackupStatusResponse" do

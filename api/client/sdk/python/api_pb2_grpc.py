@@ -597,6 +597,7 @@ class OpenStorageCredentialsServicer(object):
     Endpoint:  "dummy-endpoint",
     Region:    "dummy-region",
     },
+    },
     })
     {%- language name="Python", type="py" -%}
     en_resp = client.Create(api_pb2.SdkCredentialCreateRequest(
@@ -789,6 +790,19 @@ def add_OpenStorageSchedulePolicyServicer_to_server(servicer, server):
 class OpenStorageCloudBackupStub(object):
   """OpenStorageCloudBackup service manages backing up volumes to a cloud
   location like Amazon, Google, or Azure.
+
+  #### Backup
+  To create a backup, you must first call the Create() call for a specified
+  volume. To see the status of this request, use Status() which returns
+  a map where the keys are the source volume id.
+
+  #### Restore
+  To restore, you would pass a `backup_id` of a successful backup.
+  `backup_id` can be retreived by calling Enumerate() for a specified volume.
+  Pass this `backup_id` and a new volume name to Restore() to start
+  restoring a new volume from an existing backup. To see the status of this
+  restore, pass volume id returned by Restore() to input to Status()
+
   """
 
   def __init__(self, channel):
@@ -862,6 +876,19 @@ class OpenStorageCloudBackupStub(object):
 class OpenStorageCloudBackupServicer(object):
   """OpenStorageCloudBackup service manages backing up volumes to a cloud
   location like Amazon, Google, or Azure.
+
+  #### Backup
+  To create a backup, you must first call the Create() call for a specified
+  volume. To see the status of this request, use Status() which returns
+  a map where the keys are the source volume id.
+
+  #### Restore
+  To restore, you would pass a `backup_id` of a successful backup.
+  `backup_id` can be retreived by calling Enumerate() for a specified volume.
+  Pass this `backup_id` and a new volume name to Restore() to start
+  restoring a new volume from an existing backup. To see the status of this
+  restore, pass volume id returned by Restore() to input to Status()
+
   """
 
   def Create(self, request, context):
