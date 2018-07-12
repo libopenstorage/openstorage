@@ -27,17 +27,36 @@ module Openstorage
         self.unmarshal_class_method = :decode
         self.service_name = 'openstorage.api.OpenStorageCluster'
 
-        # Enumerate returns information about the cluster and the unique ids of
-        # all the nodes in the cluster.
-        rpc :Enumerate, SdkClusterEnumerateRequest, SdkClusterEnumerateResponse
-        # Inspect returns information about the specified node
-        rpc :Inspect, SdkClusterInspectRequest, SdkClusterInspectResponse
+        # InspectCurrent returns information about the current cluster
+        rpc :InspectCurrent, SdkClusterInspectCurrentRequest, SdkClusterInspectCurrentResponse
         # AlertEnumerate returns a list of alerts from the storage cluster
+        # In REST, use the request values as query parameters.
         rpc :AlertEnumerate, SdkClusterAlertEnumerateRequest, SdkClusterAlertEnumerateResponse
         # AlertClear clears the alert for a given resource
         rpc :AlertClear, SdkClusterAlertClearRequest, SdkClusterAlertClearResponse
         # AlertDelete deletes an alert for all resources
         rpc :AlertDelete, SdkClusterAlertDeleteRequest, SdkClusterAlertDeleteResponse
+      end
+
+      Stub = Service.rpc_stub_class
+    end
+    module OpenStorageNode
+      # OpenStorageNode is a service used to manage nodes in the cluster
+      class Service
+
+        include GRPC::GenericService
+
+        self.marshal_class_method = :encode
+        self.unmarshal_class_method = :decode
+        self.service_name = 'openstorage.api.OpenStorageNode'
+
+        # Inspect returns information about the specified node
+        rpc :Inspect, SdkNodeInspectRequest, SdkNodeInspectResponse
+        # InspectCurrent returns information about the storage node
+        # where the client is currently connected to.
+        rpc :InspectCurrent, SdkNodeInspectCurrentRequest, SdkNodeInspectCurrentResponse
+        # Enumerate returns the ids of all the nodes in the current cluster
+        rpc :Enumerate, SdkNodeEnumerateRequest, SdkNodeEnumerateResponse
       end
 
       Stub = Service.rpc_stub_class
@@ -74,13 +93,14 @@ module Openstorage
         rpc :Delete, SdkVolumeDeleteRequest, SdkVolumeDeleteResponse
         # Inspect returns information about a volume
         rpc :Inspect, SdkVolumeInspectRequest, SdkVolumeInspectResponse
-        # Set provides a method for manipulating the specification and attributes of a volume.
+        # Update provides a method for manipulating the specification and attributes of a volume.
         # Set can be used to resize a volume, update labels, change replica count, and much more.
-        rpc :Set, SdkVolumeSetRequest, SdkVolumeSetResponse
+        rpc :Update, SdkVolumeUpdateRequest, SdkVolumeUpdateResponse
         # Enumerate returns a list of volume ids that match the labels if any are provided.
         rpc :Enumerate, SdkVolumeEnumerateRequest, SdkVolumeEnumerateResponse
         # SnapshotCreate creates a snapshot of a volume. This creates an immutable (read-only),
-        # point-in-time snapshot of a volume.
+        # point-in-time snapshot of a volume. To create a new writable volume from
+        # a snapshot, please use OpenStorageVolume.Clone().
         rpc :SnapshotCreate, SdkVolumeSnapshotCreateRequest, SdkVolumeSnapshotCreateResponse
         # SnapshotRestore restores a volume to a specified snapshot
         rpc :SnapshotRestore, SdkVolumeSnapshotRestoreRequest, SdkVolumeSnapshotRestoreResponse
@@ -91,9 +111,7 @@ module Openstorage
         # NOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more
         # information about a new feature to allow attachment to any node.
         rpc :Attach, SdkVolumeAttachRequest, SdkVolumeAttachResponse
-        # Detaches a the volume from the host that the client is communicating with
-        # NOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more
-        # information about a new feature to allow attachment to any node.
+        # Detaches a the volume from the host
         rpc :Detach, SdkVolumeDetachRequest, SdkVolumeDetachResponse
         # Mount mounts an attached volume in the host that the client is communicating with
         # NOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more

@@ -347,48 +347,26 @@ function deserialize_openstorage_api_SdkClusterAlertEnumerateResponse(buffer_arg
   return api_pb.SdkClusterAlertEnumerateResponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
-function serialize_openstorage_api_SdkClusterEnumerateRequest(arg) {
-  if (!(arg instanceof api_pb.SdkClusterEnumerateRequest)) {
-    throw new Error('Expected argument of type openstorage.api.SdkClusterEnumerateRequest');
+function serialize_openstorage_api_SdkClusterInspectCurrentRequest(arg) {
+  if (!(arg instanceof api_pb.SdkClusterInspectCurrentRequest)) {
+    throw new Error('Expected argument of type openstorage.api.SdkClusterInspectCurrentRequest');
   }
   return new Buffer(arg.serializeBinary());
 }
 
-function deserialize_openstorage_api_SdkClusterEnumerateRequest(buffer_arg) {
-  return api_pb.SdkClusterEnumerateRequest.deserializeBinary(new Uint8Array(buffer_arg));
+function deserialize_openstorage_api_SdkClusterInspectCurrentRequest(buffer_arg) {
+  return api_pb.SdkClusterInspectCurrentRequest.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
-function serialize_openstorage_api_SdkClusterEnumerateResponse(arg) {
-  if (!(arg instanceof api_pb.SdkClusterEnumerateResponse)) {
-    throw new Error('Expected argument of type openstorage.api.SdkClusterEnumerateResponse');
+function serialize_openstorage_api_SdkClusterInspectCurrentResponse(arg) {
+  if (!(arg instanceof api_pb.SdkClusterInspectCurrentResponse)) {
+    throw new Error('Expected argument of type openstorage.api.SdkClusterInspectCurrentResponse');
   }
   return new Buffer(arg.serializeBinary());
 }
 
-function deserialize_openstorage_api_SdkClusterEnumerateResponse(buffer_arg) {
-  return api_pb.SdkClusterEnumerateResponse.deserializeBinary(new Uint8Array(buffer_arg));
-}
-
-function serialize_openstorage_api_SdkClusterInspectRequest(arg) {
-  if (!(arg instanceof api_pb.SdkClusterInspectRequest)) {
-    throw new Error('Expected argument of type openstorage.api.SdkClusterInspectRequest');
-  }
-  return new Buffer(arg.serializeBinary());
-}
-
-function deserialize_openstorage_api_SdkClusterInspectRequest(buffer_arg) {
-  return api_pb.SdkClusterInspectRequest.deserializeBinary(new Uint8Array(buffer_arg));
-}
-
-function serialize_openstorage_api_SdkClusterInspectResponse(arg) {
-  if (!(arg instanceof api_pb.SdkClusterInspectResponse)) {
-    throw new Error('Expected argument of type openstorage.api.SdkClusterInspectResponse');
-  }
-  return new Buffer(arg.serializeBinary());
-}
-
-function deserialize_openstorage_api_SdkClusterInspectResponse(buffer_arg) {
-  return api_pb.SdkClusterInspectResponse.deserializeBinary(new Uint8Array(buffer_arg));
+function deserialize_openstorage_api_SdkClusterInspectCurrentResponse(buffer_arg) {
+  return api_pb.SdkClusterInspectCurrentResponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
 function serialize_openstorage_api_SdkCredentialCreateRequest(arg) {
@@ -499,6 +477,72 @@ function serialize_openstorage_api_SdkCredentialValidateResponse(arg) {
 
 function deserialize_openstorage_api_SdkCredentialValidateResponse(buffer_arg) {
   return api_pb.SdkCredentialValidateResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkNodeEnumerateRequest(arg) {
+  if (!(arg instanceof api_pb.SdkNodeEnumerateRequest)) {
+    throw new Error('Expected argument of type openstorage.api.SdkNodeEnumerateRequest');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkNodeEnumerateRequest(buffer_arg) {
+  return api_pb.SdkNodeEnumerateRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkNodeEnumerateResponse(arg) {
+  if (!(arg instanceof api_pb.SdkNodeEnumerateResponse)) {
+    throw new Error('Expected argument of type openstorage.api.SdkNodeEnumerateResponse');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkNodeEnumerateResponse(buffer_arg) {
+  return api_pb.SdkNodeEnumerateResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkNodeInspectCurrentRequest(arg) {
+  if (!(arg instanceof api_pb.SdkNodeInspectCurrentRequest)) {
+    throw new Error('Expected argument of type openstorage.api.SdkNodeInspectCurrentRequest');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkNodeInspectCurrentRequest(buffer_arg) {
+  return api_pb.SdkNodeInspectCurrentRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkNodeInspectCurrentResponse(arg) {
+  if (!(arg instanceof api_pb.SdkNodeInspectCurrentResponse)) {
+    throw new Error('Expected argument of type openstorage.api.SdkNodeInspectCurrentResponse');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkNodeInspectCurrentResponse(buffer_arg) {
+  return api_pb.SdkNodeInspectCurrentResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkNodeInspectRequest(arg) {
+  if (!(arg instanceof api_pb.SdkNodeInspectRequest)) {
+    throw new Error('Expected argument of type openstorage.api.SdkNodeInspectRequest');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkNodeInspectRequest(buffer_arg) {
+  return api_pb.SdkNodeInspectRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkNodeInspectResponse(arg) {
+  if (!(arg instanceof api_pb.SdkNodeInspectResponse)) {
+    throw new Error('Expected argument of type openstorage.api.SdkNodeInspectResponse');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkNodeInspectResponse(buffer_arg) {
+  return api_pb.SdkNodeInspectResponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
 function serialize_openstorage_api_SdkObjectstoreCreateRequest(arg) {
@@ -875,28 +919,6 @@ function deserialize_openstorage_api_SdkVolumeMountResponse(buffer_arg) {
   return api_pb.SdkVolumeMountResponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
-function serialize_openstorage_api_SdkVolumeSetRequest(arg) {
-  if (!(arg instanceof api_pb.SdkVolumeSetRequest)) {
-    throw new Error('Expected argument of type openstorage.api.SdkVolumeSetRequest');
-  }
-  return new Buffer(arg.serializeBinary());
-}
-
-function deserialize_openstorage_api_SdkVolumeSetRequest(buffer_arg) {
-  return api_pb.SdkVolumeSetRequest.deserializeBinary(new Uint8Array(buffer_arg));
-}
-
-function serialize_openstorage_api_SdkVolumeSetResponse(arg) {
-  if (!(arg instanceof api_pb.SdkVolumeSetResponse)) {
-    throw new Error('Expected argument of type openstorage.api.SdkVolumeSetResponse');
-  }
-  return new Buffer(arg.serializeBinary());
-}
-
-function deserialize_openstorage_api_SdkVolumeSetResponse(buffer_arg) {
-  return api_pb.SdkVolumeSetResponse.deserializeBinary(new Uint8Array(buffer_arg));
-}
-
 function serialize_openstorage_api_SdkVolumeSnapshotCreateRequest(arg) {
   if (!(arg instanceof api_pb.SdkVolumeSnapshotCreateRequest)) {
     throw new Error('Expected argument of type openstorage.api.SdkVolumeSnapshotCreateRequest');
@@ -985,35 +1007,45 @@ function deserialize_openstorage_api_SdkVolumeUnmountResponse(buffer_arg) {
   return api_pb.SdkVolumeUnmountResponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_openstorage_api_SdkVolumeUpdateRequest(arg) {
+  if (!(arg instanceof api_pb.SdkVolumeUpdateRequest)) {
+    throw new Error('Expected argument of type openstorage.api.SdkVolumeUpdateRequest');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkVolumeUpdateRequest(buffer_arg) {
+  return api_pb.SdkVolumeUpdateRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkVolumeUpdateResponse(arg) {
+  if (!(arg instanceof api_pb.SdkVolumeUpdateResponse)) {
+    throw new Error('Expected argument of type openstorage.api.SdkVolumeUpdateResponse');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkVolumeUpdateResponse(buffer_arg) {
+  return api_pb.SdkVolumeUpdateResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 
 // OpenStorageCluster service provides the methods to manage the cluster
 var OpenStorageClusterService = exports.OpenStorageClusterService = {
-  // Enumerate returns information about the cluster and the unique ids of
-  // all the nodes in the cluster.
-  enumerate: {
-    path: '/openstorage.api.OpenStorageCluster/Enumerate',
+  // InspectCurrent returns information about the current cluster
+  inspectCurrent: {
+    path: '/openstorage.api.OpenStorageCluster/InspectCurrent',
     requestStream: false,
     responseStream: false,
-    requestType: api_pb.SdkClusterEnumerateRequest,
-    responseType: api_pb.SdkClusterEnumerateResponse,
-    requestSerialize: serialize_openstorage_api_SdkClusterEnumerateRequest,
-    requestDeserialize: deserialize_openstorage_api_SdkClusterEnumerateRequest,
-    responseSerialize: serialize_openstorage_api_SdkClusterEnumerateResponse,
-    responseDeserialize: deserialize_openstorage_api_SdkClusterEnumerateResponse,
-  },
-  // Inspect returns information about the specified node
-  inspect: {
-    path: '/openstorage.api.OpenStorageCluster/Inspect',
-    requestStream: false,
-    responseStream: false,
-    requestType: api_pb.SdkClusterInspectRequest,
-    responseType: api_pb.SdkClusterInspectResponse,
-    requestSerialize: serialize_openstorage_api_SdkClusterInspectRequest,
-    requestDeserialize: deserialize_openstorage_api_SdkClusterInspectRequest,
-    responseSerialize: serialize_openstorage_api_SdkClusterInspectResponse,
-    responseDeserialize: deserialize_openstorage_api_SdkClusterInspectResponse,
+    requestType: api_pb.SdkClusterInspectCurrentRequest,
+    responseType: api_pb.SdkClusterInspectCurrentResponse,
+    requestSerialize: serialize_openstorage_api_SdkClusterInspectCurrentRequest,
+    requestDeserialize: deserialize_openstorage_api_SdkClusterInspectCurrentRequest,
+    responseSerialize: serialize_openstorage_api_SdkClusterInspectCurrentResponse,
+    responseDeserialize: deserialize_openstorage_api_SdkClusterInspectCurrentResponse,
   },
   // AlertEnumerate returns a list of alerts from the storage cluster
+  // In REST, use the request values as query parameters.
   alertEnumerate: {
     path: '/openstorage.api.OpenStorageCluster/AlertEnumerate',
     requestStream: false,
@@ -1052,6 +1084,48 @@ var OpenStorageClusterService = exports.OpenStorageClusterService = {
 };
 
 exports.OpenStorageClusterClient = grpc.makeGenericClientConstructor(OpenStorageClusterService);
+// OpenStorageNode is a service used to manage nodes in the cluster
+var OpenStorageNodeService = exports.OpenStorageNodeService = {
+  // Inspect returns information about the specified node
+  inspect: {
+    path: '/openstorage.api.OpenStorageNode/Inspect',
+    requestStream: false,
+    responseStream: false,
+    requestType: api_pb.SdkNodeInspectRequest,
+    responseType: api_pb.SdkNodeInspectResponse,
+    requestSerialize: serialize_openstorage_api_SdkNodeInspectRequest,
+    requestDeserialize: deserialize_openstorage_api_SdkNodeInspectRequest,
+    responseSerialize: serialize_openstorage_api_SdkNodeInspectResponse,
+    responseDeserialize: deserialize_openstorage_api_SdkNodeInspectResponse,
+  },
+  // InspectCurrent returns information about the storage node
+  // where the client is currently connected to.
+  inspectCurrent: {
+    path: '/openstorage.api.OpenStorageNode/InspectCurrent',
+    requestStream: false,
+    responseStream: false,
+    requestType: api_pb.SdkNodeInspectCurrentRequest,
+    responseType: api_pb.SdkNodeInspectCurrentResponse,
+    requestSerialize: serialize_openstorage_api_SdkNodeInspectCurrentRequest,
+    requestDeserialize: deserialize_openstorage_api_SdkNodeInspectCurrentRequest,
+    responseSerialize: serialize_openstorage_api_SdkNodeInspectCurrentResponse,
+    responseDeserialize: deserialize_openstorage_api_SdkNodeInspectCurrentResponse,
+  },
+  // Enumerate returns the ids of all the nodes in the current cluster
+  enumerate: {
+    path: '/openstorage.api.OpenStorageNode/Enumerate',
+    requestStream: false,
+    responseStream: false,
+    requestType: api_pb.SdkNodeEnumerateRequest,
+    responseType: api_pb.SdkNodeEnumerateResponse,
+    requestSerialize: serialize_openstorage_api_SdkNodeEnumerateRequest,
+    requestDeserialize: deserialize_openstorage_api_SdkNodeEnumerateRequest,
+    responseSerialize: serialize_openstorage_api_SdkNodeEnumerateResponse,
+    responseDeserialize: deserialize_openstorage_api_SdkNodeEnumerateResponse,
+  },
+};
+
+exports.OpenStorageNodeClient = grpc.makeGenericClientConstructor(OpenStorageNodeService);
 // OpenStorageVolume is a service used to manage the volumes of a storage system
 var OpenStorageVolumeService = exports.OpenStorageVolumeService = {
   // Create creates a volume according to the specification provided
@@ -1116,18 +1190,18 @@ var OpenStorageVolumeService = exports.OpenStorageVolumeService = {
     responseSerialize: serialize_openstorage_api_SdkVolumeInspectResponse,
     responseDeserialize: deserialize_openstorage_api_SdkVolumeInspectResponse,
   },
-  // Set provides a method for manipulating the specification and attributes of a volume.
+  // Update provides a method for manipulating the specification and attributes of a volume.
   // Set can be used to resize a volume, update labels, change replica count, and much more.
-  set: {
-    path: '/openstorage.api.OpenStorageVolume/Set',
+  update: {
+    path: '/openstorage.api.OpenStorageVolume/Update',
     requestStream: false,
     responseStream: false,
-    requestType: api_pb.SdkVolumeSetRequest,
-    responseType: api_pb.SdkVolumeSetResponse,
-    requestSerialize: serialize_openstorage_api_SdkVolumeSetRequest,
-    requestDeserialize: deserialize_openstorage_api_SdkVolumeSetRequest,
-    responseSerialize: serialize_openstorage_api_SdkVolumeSetResponse,
-    responseDeserialize: deserialize_openstorage_api_SdkVolumeSetResponse,
+    requestType: api_pb.SdkVolumeUpdateRequest,
+    responseType: api_pb.SdkVolumeUpdateResponse,
+    requestSerialize: serialize_openstorage_api_SdkVolumeUpdateRequest,
+    requestDeserialize: deserialize_openstorage_api_SdkVolumeUpdateRequest,
+    responseSerialize: serialize_openstorage_api_SdkVolumeUpdateResponse,
+    responseDeserialize: deserialize_openstorage_api_SdkVolumeUpdateResponse,
   },
   // Enumerate returns a list of volume ids that match the labels if any are provided.
   enumerate: {
@@ -1142,7 +1216,8 @@ var OpenStorageVolumeService = exports.OpenStorageVolumeService = {
     responseDeserialize: deserialize_openstorage_api_SdkVolumeEnumerateResponse,
   },
   // SnapshotCreate creates a snapshot of a volume. This creates an immutable (read-only),
-  // point-in-time snapshot of a volume.
+  // point-in-time snapshot of a volume. To create a new writable volume from
+  // a snapshot, please use OpenStorageVolume.Clone().
   snapshotCreate: {
     path: '/openstorage.api.OpenStorageVolume/SnapshotCreate',
     requestStream: false,
@@ -1193,9 +1268,7 @@ var OpenStorageVolumeService = exports.OpenStorageVolumeService = {
     responseSerialize: serialize_openstorage_api_SdkVolumeAttachResponse,
     responseDeserialize: deserialize_openstorage_api_SdkVolumeAttachResponse,
   },
-  // Detaches a the volume from the host that the client is communicating with
-  // NOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more
-  // information about a new feature to allow attachment to any node.
+  // Detaches a the volume from the host
   detach: {
     path: '/openstorage.api.OpenStorageVolume/Detach',
     requestStream: false,

@@ -14,15 +14,10 @@ class OpenStorageClusterStub(object):
     Args:
       channel: A grpc.Channel.
     """
-    self.Enumerate = channel.unary_unary(
-        '/openstorage.api.OpenStorageCluster/Enumerate',
-        request_serializer=api__pb2.SdkClusterEnumerateRequest.SerializeToString,
-        response_deserializer=api__pb2.SdkClusterEnumerateResponse.FromString,
-        )
-    self.Inspect = channel.unary_unary(
-        '/openstorage.api.OpenStorageCluster/Inspect',
-        request_serializer=api__pb2.SdkClusterInspectRequest.SerializeToString,
-        response_deserializer=api__pb2.SdkClusterInspectResponse.FromString,
+    self.InspectCurrent = channel.unary_unary(
+        '/openstorage.api.OpenStorageCluster/InspectCurrent',
+        request_serializer=api__pb2.SdkClusterInspectCurrentRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkClusterInspectCurrentResponse.FromString,
         )
     self.AlertEnumerate = channel.unary_unary(
         '/openstorage.api.OpenStorageCluster/AlertEnumerate',
@@ -45,16 +40,8 @@ class OpenStorageClusterServicer(object):
   """OpenStorageCluster service provides the methods to manage the cluster
   """
 
-  def Enumerate(self, request, context):
-    """Enumerate returns information about the cluster and the unique ids of
-    all the nodes in the cluster.
-    """
-    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-    context.set_details('Method not implemented!')
-    raise NotImplementedError('Method not implemented!')
-
-  def Inspect(self, request, context):
-    """Inspect returns information about the specified node
+  def InspectCurrent(self, request, context):
+    """InspectCurrent returns information about the current cluster
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -62,6 +49,7 @@ class OpenStorageClusterServicer(object):
 
   def AlertEnumerate(self, request, context):
     """AlertEnumerate returns a list of alerts from the storage cluster
+    In REST, use the request values as query parameters.
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -84,15 +72,10 @@ class OpenStorageClusterServicer(object):
 
 def add_OpenStorageClusterServicer_to_server(servicer, server):
   rpc_method_handlers = {
-      'Enumerate': grpc.unary_unary_rpc_method_handler(
-          servicer.Enumerate,
-          request_deserializer=api__pb2.SdkClusterEnumerateRequest.FromString,
-          response_serializer=api__pb2.SdkClusterEnumerateResponse.SerializeToString,
-      ),
-      'Inspect': grpc.unary_unary_rpc_method_handler(
-          servicer.Inspect,
-          request_deserializer=api__pb2.SdkClusterInspectRequest.FromString,
-          response_serializer=api__pb2.SdkClusterInspectResponse.SerializeToString,
+      'InspectCurrent': grpc.unary_unary_rpc_method_handler(
+          servicer.InspectCurrent,
+          request_deserializer=api__pb2.SdkClusterInspectCurrentRequest.FromString,
+          response_serializer=api__pb2.SdkClusterInspectCurrentResponse.SerializeToString,
       ),
       'AlertEnumerate': grpc.unary_unary_rpc_method_handler(
           servicer.AlertEnumerate,
@@ -112,6 +95,83 @@ def add_OpenStorageClusterServicer_to_server(servicer, server):
   }
   generic_handler = grpc.method_handlers_generic_handler(
       'openstorage.api.OpenStorageCluster', rpc_method_handlers)
+  server.add_generic_rpc_handlers((generic_handler,))
+
+
+class OpenStorageNodeStub(object):
+  """OpenStorageNode is a service used to manage nodes in the cluster
+  """
+
+  def __init__(self, channel):
+    """Constructor.
+
+    Args:
+      channel: A grpc.Channel.
+    """
+    self.Inspect = channel.unary_unary(
+        '/openstorage.api.OpenStorageNode/Inspect',
+        request_serializer=api__pb2.SdkNodeInspectRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkNodeInspectResponse.FromString,
+        )
+    self.InspectCurrent = channel.unary_unary(
+        '/openstorage.api.OpenStorageNode/InspectCurrent',
+        request_serializer=api__pb2.SdkNodeInspectCurrentRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkNodeInspectCurrentResponse.FromString,
+        )
+    self.Enumerate = channel.unary_unary(
+        '/openstorage.api.OpenStorageNode/Enumerate',
+        request_serializer=api__pb2.SdkNodeEnumerateRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkNodeEnumerateResponse.FromString,
+        )
+
+
+class OpenStorageNodeServicer(object):
+  """OpenStorageNode is a service used to manage nodes in the cluster
+  """
+
+  def Inspect(self, request, context):
+    """Inspect returns information about the specified node
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def InspectCurrent(self, request, context):
+    """InspectCurrent returns information about the storage node
+    where the client is currently connected to.
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def Enumerate(self, request, context):
+    """Enumerate returns the ids of all the nodes in the current cluster
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+
+def add_OpenStorageNodeServicer_to_server(servicer, server):
+  rpc_method_handlers = {
+      'Inspect': grpc.unary_unary_rpc_method_handler(
+          servicer.Inspect,
+          request_deserializer=api__pb2.SdkNodeInspectRequest.FromString,
+          response_serializer=api__pb2.SdkNodeInspectResponse.SerializeToString,
+      ),
+      'InspectCurrent': grpc.unary_unary_rpc_method_handler(
+          servicer.InspectCurrent,
+          request_deserializer=api__pb2.SdkNodeInspectCurrentRequest.FromString,
+          response_serializer=api__pb2.SdkNodeInspectCurrentResponse.SerializeToString,
+      ),
+      'Enumerate': grpc.unary_unary_rpc_method_handler(
+          servicer.Enumerate,
+          request_deserializer=api__pb2.SdkNodeEnumerateRequest.FromString,
+          response_serializer=api__pb2.SdkNodeEnumerateResponse.SerializeToString,
+      ),
+  }
+  generic_handler = grpc.method_handlers_generic_handler(
+      'openstorage.api.OpenStorageNode', rpc_method_handlers)
   server.add_generic_rpc_handlers((generic_handler,))
 
 
@@ -145,10 +205,10 @@ class OpenStorageVolumeStub(object):
         request_serializer=api__pb2.SdkVolumeInspectRequest.SerializeToString,
         response_deserializer=api__pb2.SdkVolumeInspectResponse.FromString,
         )
-    self.Set = channel.unary_unary(
-        '/openstorage.api.OpenStorageVolume/Set',
-        request_serializer=api__pb2.SdkVolumeSetRequest.SerializeToString,
-        response_deserializer=api__pb2.SdkVolumeSetResponse.FromString,
+    self.Update = channel.unary_unary(
+        '/openstorage.api.OpenStorageVolume/Update',
+        request_serializer=api__pb2.SdkVolumeUpdateRequest.SerializeToString,
+        response_deserializer=api__pb2.SdkVolumeUpdateResponse.FromString,
         )
     self.Enumerate = channel.unary_unary(
         '/openstorage.api.OpenStorageVolume/Enumerate',
@@ -238,8 +298,8 @@ class OpenStorageVolumeServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def Set(self, request, context):
-    """Set provides a method for manipulating the specification and attributes of a volume.
+  def Update(self, request, context):
+    """Update provides a method for manipulating the specification and attributes of a volume.
     Set can be used to resize a volume, update labels, change replica count, and much more.
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -255,7 +315,8 @@ class OpenStorageVolumeServicer(object):
 
   def SnapshotCreate(self, request, context):
     """SnapshotCreate creates a snapshot of a volume. This creates an immutable (read-only),
-    point-in-time snapshot of a volume.
+    point-in-time snapshot of a volume. To create a new writable volume from
+    a snapshot, please use OpenStorageVolume.Clone().
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -286,9 +347,7 @@ class OpenStorageVolumeServicer(object):
     raise NotImplementedError('Method not implemented!')
 
   def Detach(self, request, context):
-    """Detaches a the volume from the host that the client is communicating with
-    NOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more
-    information about a new feature to allow attachment to any node.
+    """Detaches a the volume from the host
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -335,10 +394,10 @@ def add_OpenStorageVolumeServicer_to_server(servicer, server):
           request_deserializer=api__pb2.SdkVolumeInspectRequest.FromString,
           response_serializer=api__pb2.SdkVolumeInspectResponse.SerializeToString,
       ),
-      'Set': grpc.unary_unary_rpc_method_handler(
-          servicer.Set,
-          request_deserializer=api__pb2.SdkVolumeSetRequest.FromString,
-          response_serializer=api__pb2.SdkVolumeSetResponse.SerializeToString,
+      'Update': grpc.unary_unary_rpc_method_handler(
+          servicer.Update,
+          request_deserializer=api__pb2.SdkVolumeUpdateRequest.FromString,
+          response_serializer=api__pb2.SdkVolumeUpdateResponse.SerializeToString,
       ),
       'Enumerate': grpc.unary_unary_rpc_method_handler(
           servicer.Enumerate,

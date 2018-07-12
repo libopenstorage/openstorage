@@ -67,7 +67,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :journal, :bool, 25
     optional :sharedv4, :bool, 26
   end
-  add_message "openstorage.api.VolumeSpecSet" do
+  add_message "openstorage.api.VolumeSpecUpdate" do
     map :volume_labels, :string, :string, 10
     optional :replica_set, :message, 12, "openstorage.api.ReplicaSet"
     oneof :ephemeral_opt do
@@ -298,8 +298,6 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "openstorage.api.StorageCluster" do
     optional :status, :enum, 1, "openstorage.api.Status"
     optional :id, :string, 2
-    optional :node_id, :string, 3
-    repeated :node_ids, :string, 4
   end
   add_message "openstorage.api.SdkSchedulePolicyCreateRequest" do
     optional :SchedulePolicy, :message, 1, "openstorage.api.SdkSchedulePolicy"
@@ -452,7 +450,6 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "openstorage.api.SdkVolumeCloneRequest" do
     optional :name, :string, 1
     optional :parent_id, :string, 2
-    optional :spec, :message, 3, "openstorage.api.VolumeSpec"
   end
   add_message "openstorage.api.SdkVolumeCloneResponse" do
     optional :volume_id, :string, 1
@@ -468,12 +465,12 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "openstorage.api.SdkVolumeInspectResponse" do
     optional :volume, :message, 1, "openstorage.api.Volume"
   end
-  add_message "openstorage.api.SdkVolumeSetRequest" do
+  add_message "openstorage.api.SdkVolumeUpdateRequest" do
     optional :volume_id, :string, 1
     optional :locator, :message, 2, "openstorage.api.VolumeLocator"
-    optional :spec, :message, 4, "openstorage.api.VolumeSpecSet"
+    optional :spec, :message, 4, "openstorage.api.VolumeSpecUpdate"
   end
-  add_message "openstorage.api.SdkVolumeSetResponse" do
+  add_message "openstorage.api.SdkVolumeUpdateResponse" do
   end
   add_message "openstorage.api.SdkVolumeEnumerateRequest" do
     optional :locator, :message, 1, "openstorage.api.VolumeLocator"
@@ -501,16 +498,26 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "openstorage.api.SdkVolumeSnapshotEnumerateResponse" do
     repeated :volume_snapshot_ids, :string, 1
   end
-  add_message "openstorage.api.SdkClusterEnumerateRequest" do
+  add_message "openstorage.api.SdkClusterInspectCurrentRequest" do
   end
-  add_message "openstorage.api.SdkClusterEnumerateResponse" do
+  add_message "openstorage.api.SdkClusterInspectCurrentResponse" do
     optional :cluster, :message, 1, "openstorage.api.StorageCluster"
   end
-  add_message "openstorage.api.SdkClusterInspectRequest" do
+  add_message "openstorage.api.SdkNodeInspectRequest" do
     optional :node_id, :string, 1
   end
-  add_message "openstorage.api.SdkClusterInspectResponse" do
+  add_message "openstorage.api.SdkNodeInspectResponse" do
     optional :node, :message, 1, "openstorage.api.StorageNode"
+  end
+  add_message "openstorage.api.SdkNodeInspectCurrentRequest" do
+  end
+  add_message "openstorage.api.SdkNodeInspectCurrentResponse" do
+    optional :node, :message, 1, "openstorage.api.StorageNode"
+  end
+  add_message "openstorage.api.SdkNodeEnumerateRequest" do
+  end
+  add_message "openstorage.api.SdkNodeEnumerateResponse" do
+    repeated :node_ids, :string, 1
   end
   add_message "openstorage.api.SdkClusterAlertEnumerateRequest" do
     optional :time_start, :message, 1, "google.protobuf.Timestamp"
@@ -557,7 +564,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   end
   add_message "openstorage.api.SdkCloudBackupCreateRequest" do
     optional :volume_id, :string, 1
-    optional :credential_uuid, :string, 2
+    optional :credential_id, :string, 2
     optional :full, :bool, 3
   end
   add_message "openstorage.api.SdkCloudBackupCreateResponse" do
@@ -565,7 +572,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "openstorage.api.SdkCloudBackupRestoreRequest" do
     optional :backup_id, :string, 1
     optional :restore_volume_name, :string, 2
-    optional :credential_uuid, :string, 3
+    optional :credential_id, :string, 3
     optional :node_id, :string, 4
   end
   add_message "openstorage.api.SdkCloudBackupRestoreResponse" do
@@ -573,21 +580,21 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   end
   add_message "openstorage.api.SdkCloudBackupDeleteRequest" do
     optional :backup_id, :string, 1
-    optional :credential_uuid, :string, 2
+    optional :credential_id, :string, 2
     optional :force, :bool, 3
   end
   add_message "openstorage.api.SdkCloudBackupDeleteResponse" do
   end
   add_message "openstorage.api.SdkCloudBackupDeleteAllRequest" do
     optional :src_volume_id, :string, 1
-    optional :credential_uuid, :string, 2
+    optional :credential_id, :string, 2
   end
   add_message "openstorage.api.SdkCloudBackupDeleteAllResponse" do
   end
   add_message "openstorage.api.SdkCloudBackupEnumerateRequest" do
     optional :src_volume_id, :string, 1
     optional :cluster_id, :string, 2
-    optional :credential_uuid, :string, 3
+    optional :credential_id, :string, 3
     optional :all, :bool, 4
   end
   add_message "openstorage.api.SdkCloudBackupInfo" do
@@ -619,7 +626,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   end
   add_message "openstorage.api.SdkCloudBackupCatalogRequest" do
     optional :backup_id, :string, 1
-    optional :credential_uuid, :string, 2
+    optional :credential_id, :string, 2
   end
   add_message "openstorage.api.SdkCloudBackupCatalogResponse" do
     repeated :contents, :string, 1
@@ -643,7 +650,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   end
   add_message "openstorage.api.SdkCloudBackupScheduleInfo" do
     optional :src_volume_id, :string, 1
-    optional :credential_uuid, :string, 2
+    optional :credential_id, :string, 2
     optional :schedule, :message, 3, "openstorage.api.SdkSchedulePolicyInterval"
     optional :max_backups, :uint64, 4
   end
@@ -651,10 +658,10 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :cloud_sched_info, :message, 1, "openstorage.api.SdkCloudBackupScheduleInfo"
   end
   add_message "openstorage.api.SdkCloudBackupSchedCreateResponse" do
-    optional :uuid, :string, 1
+    optional :backup_schedule_id, :string, 1
   end
   add_message "openstorage.api.SdkCloudBackupSchedDeleteRequest" do
-    optional :uuid, :string, 1
+    optional :backup_schedule_id, :string, 1
   end
   add_message "openstorage.api.SdkCloudBackupSchedDeleteResponse" do
   end
@@ -868,7 +875,7 @@ module Openstorage
     Source = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.Source").msgclass
     Group = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.Group").msgclass
     VolumeSpec = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.VolumeSpec").msgclass
-    VolumeSpecSet = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.VolumeSpecSet").msgclass
+    VolumeSpecUpdate = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.VolumeSpecUpdate").msgclass
     ReplicaSet = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.ReplicaSet").msgclass
     RuntimeStateMap = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.RuntimeStateMap").msgclass
     Volume = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.Volume").msgclass
@@ -941,8 +948,8 @@ module Openstorage
     SdkVolumeDeleteResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeDeleteResponse").msgclass
     SdkVolumeInspectRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeInspectRequest").msgclass
     SdkVolumeInspectResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeInspectResponse").msgclass
-    SdkVolumeSetRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeSetRequest").msgclass
-    SdkVolumeSetResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeSetResponse").msgclass
+    SdkVolumeUpdateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeUpdateRequest").msgclass
+    SdkVolumeUpdateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeUpdateResponse").msgclass
     SdkVolumeEnumerateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeEnumerateRequest").msgclass
     SdkVolumeEnumerateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeEnumerateResponse").msgclass
     SdkVolumeSnapshotCreateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeSnapshotCreateRequest").msgclass
@@ -951,10 +958,14 @@ module Openstorage
     SdkVolumeSnapshotRestoreResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeSnapshotRestoreResponse").msgclass
     SdkVolumeSnapshotEnumerateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeSnapshotEnumerateRequest").msgclass
     SdkVolumeSnapshotEnumerateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeSnapshotEnumerateResponse").msgclass
-    SdkClusterEnumerateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkClusterEnumerateRequest").msgclass
-    SdkClusterEnumerateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkClusterEnumerateResponse").msgclass
-    SdkClusterInspectRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkClusterInspectRequest").msgclass
-    SdkClusterInspectResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkClusterInspectResponse").msgclass
+    SdkClusterInspectCurrentRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkClusterInspectCurrentRequest").msgclass
+    SdkClusterInspectCurrentResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkClusterInspectCurrentResponse").msgclass
+    SdkNodeInspectRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkNodeInspectRequest").msgclass
+    SdkNodeInspectResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkNodeInspectResponse").msgclass
+    SdkNodeInspectCurrentRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkNodeInspectCurrentRequest").msgclass
+    SdkNodeInspectCurrentResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkNodeInspectCurrentResponse").msgclass
+    SdkNodeEnumerateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkNodeEnumerateRequest").msgclass
+    SdkNodeEnumerateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkNodeEnumerateResponse").msgclass
     SdkClusterAlertEnumerateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkClusterAlertEnumerateRequest").msgclass
     SdkClusterAlertEnumerateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkClusterAlertEnumerateResponse").msgclass
     SdkClusterAlertClearRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkClusterAlertClearRequest").msgclass
