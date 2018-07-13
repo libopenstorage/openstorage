@@ -1780,5 +1780,11 @@ message CloudMigrateStatusResponse {
     map<string, CloudMigrateInfoList> info = 1;
 }
 
-
-
+message DiskAnalysisResponse {
+	// Type Directory or File
+	string type = 1;
+	// File or Directory Size
+	int64 size = 2;
+	// Last Modified
+	google.protobuf.Timestamp LastModified = 3;
+}

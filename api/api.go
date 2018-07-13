@@ -102,7 +102,7 @@ const (
 	// OptBackupSchedUUID is the UUID of the backup-schedule
 	OptBackupSchedUUID = "BkupSchedUUID"
 	// OptVolumeSubFolder query parameter used to du a particular path inside a volume
-	OptVolumeSubFolder = "VolumeSubfolder"
+	OptSubFolder = "Subfolder"
 )
 
 // Api clientserver Constants
