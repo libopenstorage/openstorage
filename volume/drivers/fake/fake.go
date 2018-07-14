@@ -148,6 +148,8 @@ func (d *driver) Create(
 
 	if spec.Size == 0 {
 		return "", fmt.Errorf("Volume size cannot be zero")
+	} else if spec.GetHaLevel() == 0 {
+		return "", fmt.Errorf("HA level cannot be zero")
 	}
 
 	volumeID := strings.TrimSuffix(uuid.New(), "\n")
