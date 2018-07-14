@@ -200,3 +200,63 @@ func TestSdkVolumeSnapshotEnumerate(t *testing.T) {
 	assert.Len(t, r.GetVolumeSnapshotIds(), 1)
 	assert.Equal(t, r.GetVolumeSnapshotIds()[0], snapid)
 }
+
+func TestSdkVolumeSnapshotEnumerateWithFiltersBadArguments(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	req := &api.SdkVolumeSnapshotEnumerateWithFiltersRequest{}
+
+	// Setup client
+	c := api.NewOpenStorageVolumeClient(s.Conn())
+
+	// Get info
+	r, err := c.SnapshotEnumerateWithFilters(context.Background(), req)
+	assert.Error(t, err)
+	assert.Nil(t, r)
+
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "volume id")
+}
+
+func TestSdkVolumeSnapshotEnumerateWithFilters(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	volid := "volid"
+	snapid := "snapid"
+	labels := map[string]string{
+		"hello": "world",
+	}
+	req := &api.SdkVolumeSnapshotEnumerateWithFiltersRequest{
+		VolumeId: volid,
+		Labels:   labels,
+	}
+
+	// Create response
+	s.MockDriver().
+		EXPECT().
+		SnapEnumerate([]string{volid}, labels).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id: snapid,
+			},
+		}, nil).
+		Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageVolumeClient(s.Conn())
+
+	// Get info
+	r, err := c.SnapshotEnumerateWithFilters(context.Background(), req)
+	assert.NoError(t, err)
+	assert.NotNil(t, r.GetVolumeSnapshotIds())
+	assert.Len(t, r.GetVolumeSnapshotIds(), 1)
+	assert.Equal(t, r.GetVolumeSnapshotIds()[0], snapid)
+}

@@ -240,6 +240,26 @@ func (s *VolumeServer) Enumerate(
 	req *api.SdkVolumeEnumerateRequest,
 ) (*api.SdkVolumeEnumerateResponse, error) {
 
+	resp, err := s.EnumerateWithFilters(
+		ctx,
+		&api.SdkVolumeEnumerateWithFiltersRequest{},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &api.SdkVolumeEnumerateResponse{
+		VolumeIds: resp.GetVolumeIds(),
+	}, nil
+
+}
+
+// EnumerateWithFilters returns a list of volumes for the provided filters
+func (s *VolumeServer) EnumerateWithFilters(
+	ctx context.Context,
+	req *api.SdkVolumeEnumerateWithFiltersRequest,
+) (*api.SdkVolumeEnumerateWithFiltersResponse, error) {
+
 	vols, err := s.driver.Enumerate(req.GetLocator(), nil)
 	if err != nil {
 		return nil, status.Errorf(
@@ -253,7 +273,7 @@ func (s *VolumeServer) Enumerate(
 		ids[i] = vol.GetId()
 	}
 
-	return &api.SdkVolumeEnumerateResponse{
+	return &api.SdkVolumeEnumerateWithFiltersResponse{
 		VolumeIds: ids,
 	}, nil
 }

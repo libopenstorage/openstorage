@@ -855,16 +855,24 @@ service OpenStorageVolume {
   rpc Update(SdkVolumeUpdateRequest)
     returns (SdkVolumeUpdateResponse) {
       option(google.api.http) = {
-        put: "/v1/volumes"
+        put: "/v1/volumes/{volume_id}"
         body: "*"
       };
     }
 
-  // Enumerate returns a list of volume ids that match the labels if any are provided.
+  // Enumerate returns a list of volume ids
   rpc Enumerate(SdkVolumeEnumerateRequest)
     returns (SdkVolumeEnumerateResponse) {
       option(google.api.http) = {
-        post: "/v1/volumes/enumerate"
+        get: "/v1/volumes"
+      };
+    }
+
+  // Enumerate returns a list of volume ids that match the labels if any are provided.
+  rpc EnumerateWithFilters(SdkVolumeEnumerateWithFiltersRequest)
+    returns (SdkVolumeEnumerateWithFiltersResponse) {
+      option(google.api.http) = {
+        post: "/v1/volumes/filters"
         body: "*"
       };
     }
@@ -894,7 +902,16 @@ service OpenStorageVolume {
   rpc SnapshotEnumerate(SdkVolumeSnapshotEnumerateRequest)
     returns (SdkVolumeSnapshotEnumerateResponse) {
       option(google.api.http) = {
-        post: "/v1/volumes/snapshots/enumerate"
+        get: "/v1/volumes/snapshots/{volume_id}"
+      };
+    }
+
+  // SnapshotEnumerate returns a list of snapshots for a specific volume
+  // that match the labels provided if any.
+  rpc SnapshotEnumerateWithFilters(SdkVolumeSnapshotEnumerateWithFiltersRequest)
+    returns (SdkVolumeSnapshotEnumerateWithFiltersResponse) {
+      option(google.api.http) = {
+        post: "/v1/volumes/snapshots/{volume_id}/filters"
         body: "*"
       };
     }
@@ -976,7 +993,7 @@ service OpenStorageObjectstore {
   rpc Update(SdkObjectstoreUpdateRequest)
     returns(SdkObjectstoreUpdateResponse){
       option(google.api.http) ={
-        put: "/v1/objectstores"
+        put: "/v1/objectstores/{objectstore_id}"
         body: "*"
       };
   }
@@ -1137,7 +1154,7 @@ service OpenStorageCloudBackup {
       };
     }
 
-  // Delete deletes a backup stored in the cloud. If the backup is an incremental
+  // Deletes a backup stored in the cloud. If the backup is an incremental
   // backup and other backups are dependent on it, it will not be able to be deleted.
   rpc Delete(SdkCloudBackupDeleteRequest)
     returns (SdkCloudBackupDeleteResponse) {
@@ -1159,7 +1176,7 @@ service OpenStorageCloudBackup {
   rpc Enumerate(SdkCloudBackupEnumerateRequest)
     returns (SdkCloudBackupEnumerateResponse) {
       option(google.api.http) = {
-        get: "/v1/cloudbackups"
+        get: "/v1/cloudbackups/volume"
       };
     }
 
@@ -1167,7 +1184,7 @@ service OpenStorageCloudBackup {
   rpc Status(SdkCloudBackupStatusRequest)
     returns (SdkCloudBackupStatusResponse) {
       option(google.api.http) = {
-        get: "/v1/cloudbackups/volume/{volume_id}/status"
+        get: "/v1/cloudbackups/volume/status"
       };
     }
 
@@ -1175,7 +1192,7 @@ service OpenStorageCloudBackup {
   rpc Catalog(SdkCloudBackupCatalogRequest)
     returns (SdkCloudBackupCatalogResponse) {
       option(google.api.http) = {
-        get: "/v1/cloudbackups/backup/{backup_id}/catalog"
+        get: "/v1/cloudbackups/backup/catalog"
       };
     }
 
@@ -1183,7 +1200,7 @@ service OpenStorageCloudBackup {
   rpc History(SdkCloudBackupHistoryRequest)
     returns (SdkCloudBackupHistoryResponse) {
       option(google.api.http) = {
-        get: "/v1/cloudbackups/volume/{src_volume_id}/history"
+        get: "/v1/cloudbackups/volume/history"
       };
     }
 
@@ -1595,13 +1612,23 @@ message SdkVolumeUpdateResponse {
 
 // Defines a request to list volumes
 message SdkVolumeEnumerateRequest {
+}
+
+// Defines the response when listing volumes
+message SdkVolumeEnumerateResponse {
+  // List of volumes matching label
+  repeated string volume_ids = 1;
+}
+
+// Defines a request to list volumes
+message SdkVolumeEnumerateWithFiltersRequest {
   // Volumes to match to this locator.
   // If not provided, all volumes will be returned.
   VolumeLocator locator = 1;
 }
 
 // Defines the response when listing volumes
-message SdkVolumeEnumerateResponse {
+message SdkVolumeEnumerateWithFiltersResponse {
   // List of volumes matching label
   repeated string volume_ids = 1;
 }
@@ -1634,14 +1661,26 @@ message SdkVolumeSnapshotRestoreResponse {
 
 // Defines a request to list the snaphots
 message SdkVolumeSnapshotEnumerateRequest {
-  // Id of volume
+  // Get the snapshots for this volume id
   string volume_id = 1;
-  // Labels from snapshot
-  map<string, string> labels = 2;
 }
 
 // Defines a response when listing snapshots
 message SdkVolumeSnapshotEnumerateResponse {
+  // List of immutable snapshots
+  repeated string volume_snapshot_ids = 1;
+}
+
+// Defines a request to list the snaphots
+message SdkVolumeSnapshotEnumerateWithFiltersRequest {
+  // Get the snapshots for this volume id
+  string volume_id = 1;
+  // Get snapshots that match these labels
+  map<string, string> labels = 2;
+}
+
+// Defines a response when listing snapshots
+message SdkVolumeSnapshotEnumerateWithFiltersResponse {
   // List of immutable snapshots
   repeated string volume_snapshot_ids = 1;
 }
