@@ -3038,6 +3038,11 @@
             "$ref": "#/definitions/apiVolumeConsumer"
           },
           "title": "VolumeConsumers are entities that consume this volume"
+        },
+        "fs_resize_required": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "FsResizeRequired if an FS resize is required on the volume."
         }
       },
       "title": "Volume represents an abstract storage volume.\nVolume represents an abstract storage volume.\nswagger:model"

@@ -424,6 +424,8 @@ message Volume {
   string error = 21;
   // VolumeConsumers are entities that consume this volume
   repeated VolumeConsumer volume_consumers = 22;
+  // FsResizeRequired if an FS resize is required on the volume.
+  bool fs_resize_required = 23;
 }
 
 // Stats is a structure that represents last collected stats for a volume
