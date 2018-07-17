@@ -92,6 +92,29 @@ func (s *VolumeServer) SnapshotEnumerate(
 	req *api.SdkVolumeSnapshotEnumerateRequest,
 ) (*api.SdkVolumeSnapshotEnumerateResponse, error) {
 
+	resp, err := s.SnapshotEnumerateWithFilters(
+		ctx,
+		&api.SdkVolumeSnapshotEnumerateWithFiltersRequest{
+			VolumeId: req.GetVolumeId(),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &api.SdkVolumeSnapshotEnumerateResponse{
+		VolumeSnapshotIds: resp.GetVolumeSnapshotIds(),
+	}, nil
+
+}
+
+// SnapshotEnumerateWithFilters returns a list of snapshots for the specified
+// volume and labels
+func (s *VolumeServer) SnapshotEnumerateWithFilters(
+	ctx context.Context,
+	req *api.SdkVolumeSnapshotEnumerateWithFiltersRequest,
+) (*api.SdkVolumeSnapshotEnumerateWithFiltersResponse, error) {
+
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
 	}
@@ -110,7 +133,7 @@ func (s *VolumeServer) SnapshotEnumerate(
 		ids[i] = snapshot.GetId()
 	}
 
-	return &api.SdkVolumeSnapshotEnumerateResponse{
+	return &api.SdkVolumeSnapshotEnumerateWithFiltersResponse{
 		VolumeSnapshotIds: ids,
 	}, nil
 }

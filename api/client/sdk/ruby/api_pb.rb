@@ -473,9 +473,14 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "openstorage.api.SdkVolumeUpdateResponse" do
   end
   add_message "openstorage.api.SdkVolumeEnumerateRequest" do
-    optional :locator, :message, 1, "openstorage.api.VolumeLocator"
   end
   add_message "openstorage.api.SdkVolumeEnumerateResponse" do
+    repeated :volume_ids, :string, 1
+  end
+  add_message "openstorage.api.SdkVolumeEnumerateWithFiltersRequest" do
+    optional :locator, :message, 1, "openstorage.api.VolumeLocator"
+  end
+  add_message "openstorage.api.SdkVolumeEnumerateWithFiltersResponse" do
     repeated :volume_ids, :string, 1
   end
   add_message "openstorage.api.SdkVolumeSnapshotCreateRequest" do
@@ -493,9 +498,15 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   end
   add_message "openstorage.api.SdkVolumeSnapshotEnumerateRequest" do
     optional :volume_id, :string, 1
-    map :labels, :string, :string, 2
   end
   add_message "openstorage.api.SdkVolumeSnapshotEnumerateResponse" do
+    repeated :volume_snapshot_ids, :string, 1
+  end
+  add_message "openstorage.api.SdkVolumeSnapshotEnumerateWithFiltersRequest" do
+    optional :volume_id, :string, 1
+    map :labels, :string, :string, 2
+  end
+  add_message "openstorage.api.SdkVolumeSnapshotEnumerateWithFiltersResponse" do
     repeated :volume_snapshot_ids, :string, 1
   end
   add_message "openstorage.api.SdkClusterInspectCurrentRequest" do
@@ -999,12 +1010,16 @@ module Openstorage
     SdkVolumeUpdateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeUpdateResponse").msgclass
     SdkVolumeEnumerateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeEnumerateRequest").msgclass
     SdkVolumeEnumerateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeEnumerateResponse").msgclass
+    SdkVolumeEnumerateWithFiltersRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeEnumerateWithFiltersRequest").msgclass
+    SdkVolumeEnumerateWithFiltersResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeEnumerateWithFiltersResponse").msgclass
     SdkVolumeSnapshotCreateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeSnapshotCreateRequest").msgclass
     SdkVolumeSnapshotCreateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeSnapshotCreateResponse").msgclass
     SdkVolumeSnapshotRestoreRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeSnapshotRestoreRequest").msgclass
     SdkVolumeSnapshotRestoreResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeSnapshotRestoreResponse").msgclass
     SdkVolumeSnapshotEnumerateRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeSnapshotEnumerateRequest").msgclass
     SdkVolumeSnapshotEnumerateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeSnapshotEnumerateResponse").msgclass
+    SdkVolumeSnapshotEnumerateWithFiltersRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeSnapshotEnumerateWithFiltersRequest").msgclass
+    SdkVolumeSnapshotEnumerateWithFiltersResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkVolumeSnapshotEnumerateWithFiltersResponse").msgclass
     SdkClusterInspectCurrentRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkClusterInspectCurrentRequest").msgclass
     SdkClusterInspectCurrentResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkClusterInspectCurrentResponse").msgclass
     SdkNodeInspectRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.SdkNodeInspectRequest").msgclass

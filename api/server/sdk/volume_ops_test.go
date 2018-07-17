@@ -393,6 +393,45 @@ func TestSdkVolumeEnumerate(t *testing.T) {
 	assert.Equal(t, r.GetVolumeIds()[0], id)
 }
 
+func TestSdkVolumeEnumerateWithFilters(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	id := "myid"
+	locator := &api.VolumeLocator{
+		Name: id,
+		VolumeLabels: map[string]string{
+			"hello": "world",
+		},
+	}
+	expect := *locator
+	s.MockDriver().
+		EXPECT().
+		Enumerate(&expect, nil).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id: id,
+			},
+		}, nil).
+		Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageVolumeClient(s.Conn())
+
+	// Get info
+	r, err := c.EnumerateWithFilters(
+		context.Background(),
+		&api.SdkVolumeEnumerateWithFiltersRequest{
+			Locator: locator,
+		})
+	assert.NoError(t, err)
+	assert.NotNil(t, r.GetVolumeIds())
+	assert.Len(t, r.GetVolumeIds(), 1)
+	assert.Equal(t, r.GetVolumeIds()[0], id)
+}
+
 func TestSdkVolumeUpdate(t *testing.T) {
 
 	// Create server and client connection

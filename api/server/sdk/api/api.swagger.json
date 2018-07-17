@@ -16,52 +16,6 @@
   ],
   "paths": {
     "/v1/cloudbackups": {
-      "get": {
-        "summary": "Return a list of backups for the specified volume",
-        "operationId": "Enumerate",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkCloudBackupEnumerateResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "src_volume_id",
-            "description": "Optional source id of the volume for the request.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "cluster_id",
-            "description": "Cluster id is an optional parameter which defines the cluster.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "credential_id",
-            "description": "Credential id is the credential for cloud to be used for the request.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "all",
-            "description": "All if set to true, backups for all clusters in the cloud are processed.",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          }
-        ],
-        "tags": [
-          "OpenStorageCloudBackup"
-        ]
-      },
       "post": {
         "summary": "Creates a backup request for a specified volume. Use\nOpenStorageCloudBackup.Status() to get the current status of the\nbackup request.",
         "operationId": "Create",
@@ -88,9 +42,42 @@
         ]
       }
     },
+    "/v1/cloudbackups/backup/catalog": {
+      "get": {
+        "summary": "Catalog returns a list of the contents in the backup",
+        "operationId": "Catalog",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupCatalogResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "backup_id",
+            "description": "Id of the backup.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "credential_id",
+            "description": "Credential id describe the credentials for the cloud.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      }
+    },
     "/v1/cloudbackups/backup/{backup_id}": {
       "delete": {
-        "summary": "Delete deletes a backup stored in the cloud. If the backup is an incremental\nbackup and other backups are dependent on it, it will not be able to be deleted.",
+        "summary": "Deletes a backup stored in the cloud. If the backup is an incremental\nbackup and other backups are dependent on it, it will not be able to be deleted.",
         "operationId": "Delete",
         "responses": {
           "200": {
@@ -121,38 +108,6 @@
             "required": false,
             "type": "boolean",
             "format": "boolean"
-          }
-        ],
-        "tags": [
-          "OpenStorageCloudBackup"
-        ]
-      }
-    },
-    "/v1/cloudbackups/backup/{backup_id}/catalog": {
-      "get": {
-        "summary": "Catalog returns a list of the contents in the backup",
-        "operationId": "Catalog",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkCloudBackupCatalogResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "backup_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "credential_id",
-            "description": "Credential id describe the credentials for the cloud.",
-            "in": "query",
-            "required": false,
-            "type": "string"
           }
         ],
         "tags": [
@@ -308,7 +263,55 @@
         ]
       }
     },
-    "/v1/cloudbackups/volume/{src_volume_id}/history": {
+    "/v1/cloudbackups/volume": {
+      "get": {
+        "summary": "Return a list of backups for the specified volume",
+        "operationId": "Enumerate",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupEnumerateResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "src_volume_id",
+            "description": "Optional source id of the volume for the request.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "cluster_id",
+            "description": "Cluster id is an optional parameter which defines the cluster.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "credential_id",
+            "description": "Credential id is the credential for cloud to be used for the request.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "all",
+            "description": "All if set to true, backups for all clusters in the cloud are processed.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          }
+        ],
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      }
+    },
+    "/v1/cloudbackups/volume/history": {
       "get": {
         "summary": "History returns a list of backups for a specified volume",
         "operationId": "History",
@@ -323,8 +326,9 @@
         "parameters": [
           {
             "name": "src_volume_id",
-            "in": "path",
-            "required": true,
+            "description": "This optional value defines which history of backups is being\nrequested. If not provided, it will return the history for all volumes.",
+            "in": "query",
+            "required": false,
             "type": "string"
           }
         ],
@@ -333,7 +337,7 @@
         ]
       }
     },
-    "/v1/cloudbackups/volume/{volume_id}/status": {
+    "/v1/cloudbackups/volume/status": {
       "get": {
         "summary": "Status returns the status of any cloud backups of a volume",
         "operationId": "Status",
@@ -348,8 +352,9 @@
         "parameters": [
           {
             "name": "volume_id",
-            "in": "path",
-            "required": true,
+            "description": "This is an optional value which is used to get information on the\nstatus of a backup for the specified volume. If no volume id is provided,\nthen status for all volumes is returned.",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -701,31 +706,6 @@
         "tags": [
           "OpenStorageObjectstore"
         ]
-      },
-      "put": {
-        "summary": "Updates provided objectstore status.\nThis call can be used to stop and start the server while maintaining the same\nobject storage id.",
-        "operationId": "Update",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkObjectstoreUpdateResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/apiSdkObjectstoreUpdateRequest"
-            }
-          }
-        ],
-        "tags": [
-          "OpenStorageObjectstore"
-        ]
       }
     },
     "/v1/objectstores/{objectstore_id}": {
@@ -769,6 +749,37 @@
             "in": "path",
             "required": true,
             "type": "string"
+          }
+        ],
+        "tags": [
+          "OpenStorageObjectstore"
+        ]
+      },
+      "put": {
+        "summary": "Updates provided objectstore status.\nThis call can be used to stop and start the server while maintaining the same\nobject storage id.",
+        "operationId": "Update",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkObjectstoreUpdateResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "objectstore_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkObjectstoreUpdateRequest"
+            }
           }
         ],
         "tags": [
@@ -892,6 +903,21 @@
       }
     },
     "/v1/volumes": {
+      "get": {
+        "summary": "Enumerate returns a list of volume ids",
+        "operationId": "Enumerate",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeEnumerateResponse"
+            }
+          }
+        },
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      },
       "post": {
         "summary": "Create creates a volume according to the specification provided",
         "description": "##### Example\n{% codetabs name=\"Golang\", type=\"go\" -%}\nid, err := client.Create(context.Background(), \u0026api.SdkVolumeCreateRequest{\n  Name: \"volume-12345-east\",\n  Spec: \u0026api.VolumeSpec {\n    Size: 1234567,\n  },\n})\n{%- language name=\"Python\", type=\"py\" -%}\nen_resp = client.Create(api_pb2.SdkVolumeCreateRequest(\n  name=\"volume-12345-east\",\n  spec=api_pb2.VolumeSpec(size=1234567)))\n{%- endcodetabs %}",
@@ -911,31 +937,6 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/apiSdkVolumeCreateRequest"
-            }
-          }
-        ],
-        "tags": [
-          "OpenStorageVolume"
-        ]
-      },
-      "put": {
-        "summary": "Update provides a method for manipulating the specification and attributes of a volume.\nSet can be used to resize a volume, update labels, change replica count, and much more.",
-        "operationId": "Update",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeUpdateResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeUpdateRequest"
             }
           }
         ],
@@ -1025,15 +1026,15 @@
         ]
       }
     },
-    "/v1/volumes/enumerate": {
+    "/v1/volumes/filters": {
       "post": {
         "summary": "Enumerate returns a list of volume ids that match the labels if any are provided.",
-        "operationId": "Enumerate",
+        "operationId": "EnumerateWithFilters",
         "responses": {
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiSdkVolumeEnumerateResponse"
+              "$ref": "#/definitions/apiSdkVolumeEnumerateWithFiltersResponse"
             }
           }
         },
@@ -1043,7 +1044,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/apiSdkVolumeEnumerateRequest"
+              "$ref": "#/definitions/apiSdkVolumeEnumerateWithFiltersRequest"
             }
           }
         ],
@@ -1106,33 +1107,6 @@
         ]
       }
     },
-    "/v1/volumes/snapshots/enumerate": {
-      "post": {
-        "summary": "SnapshotEnumerate returns a list of snapshots for a specific volume\nthat match the labels provided if any.",
-        "operationId": "SnapshotEnumerate",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeSnapshotEnumerateResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeSnapshotEnumerateRequest"
-            }
-          }
-        ],
-        "tags": [
-          "OpenStorageVolume"
-        ]
-      }
-    },
     "/v1/volumes/snapshots/restore": {
       "post": {
         "summary": "SnapshotRestore restores a volume to a specified snapshot",
@@ -1152,6 +1126,64 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/apiSdkVolumeSnapshotRestoreRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/volumes/snapshots/{volume_id}": {
+      "get": {
+        "summary": "SnapshotEnumerate returns a list of snapshots for a specific volume\nthat match the labels provided if any.",
+        "operationId": "SnapshotEnumerate",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeSnapshotEnumerateResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "volume_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/volumes/snapshots/{volume_id}/filters": {
+      "post": {
+        "summary": "SnapshotEnumerate returns a list of snapshots for a specific volume\nthat match the labels provided if any.",
+        "operationId": "SnapshotEnumerateWithFilters",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeSnapshotEnumerateWithFiltersResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "volume_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeSnapshotEnumerateWithFiltersRequest"
             }
           }
         ],
@@ -1228,6 +1260,37 @@
             "in": "path",
             "required": true,
             "type": "string"
+          }
+        ],
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      },
+      "put": {
+        "summary": "Update provides a method for manipulating the specification and attributes of a volume.\nSet can be used to resize a volume, update labels, change replica count, and much more.",
+        "operationId": "Update",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeUpdateResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "volume_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeUpdateRequest"
+            }
           }
         ],
         "tags": [
@@ -2334,7 +2397,20 @@
       "type": "object",
       "title": "Empty response"
     },
-    "apiSdkVolumeEnumerateRequest": {
+    "apiSdkVolumeEnumerateResponse": {
+      "type": "object",
+      "properties": {
+        "volume_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "List of volumes matching label"
+        }
+      },
+      "title": "Defines the response when listing volumes"
+    },
+    "apiSdkVolumeEnumerateWithFiltersRequest": {
       "type": "object",
       "properties": {
         "locator": {
@@ -2344,7 +2420,7 @@
       },
       "title": "Defines a request to list volumes"
     },
-    "apiSdkVolumeEnumerateResponse": {
+    "apiSdkVolumeEnumerateWithFiltersResponse": {
       "type": "object",
       "properties": {
         "volume_ids": {
@@ -2419,24 +2495,37 @@
       },
       "title": "Defines a response after creating a snapshot of a volume"
     },
-    "apiSdkVolumeSnapshotEnumerateRequest": {
+    "apiSdkVolumeSnapshotEnumerateResponse": {
+      "type": "object",
+      "properties": {
+        "volume_snapshot_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "List of immutable snapshots"
+        }
+      },
+      "title": "Defines a response when listing snapshots"
+    },
+    "apiSdkVolumeSnapshotEnumerateWithFiltersRequest": {
       "type": "object",
       "properties": {
         "volume_id": {
           "type": "string",
-          "title": "Id of volume"
+          "title": "Get the snapshots for this volume id"
         },
         "labels": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "title": "Labels from snapshot"
+          "title": "Get snapshots that match these labels"
         }
       },
       "title": "Defines a request to list the snaphots"
     },
-    "apiSdkVolumeSnapshotEnumerateResponse": {
+    "apiSdkVolumeSnapshotEnumerateWithFiltersResponse": {
       "type": "object",
       "properties": {
         "volume_snapshot_ids": {

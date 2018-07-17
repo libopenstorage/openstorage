@@ -875,6 +875,28 @@ function deserialize_openstorage_api_SdkVolumeEnumerateResponse(buffer_arg) {
   return api_pb.SdkVolumeEnumerateResponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_openstorage_api_SdkVolumeEnumerateWithFiltersRequest(arg) {
+  if (!(arg instanceof api_pb.SdkVolumeEnumerateWithFiltersRequest)) {
+    throw new Error('Expected argument of type openstorage.api.SdkVolumeEnumerateWithFiltersRequest');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkVolumeEnumerateWithFiltersRequest(buffer_arg) {
+  return api_pb.SdkVolumeEnumerateWithFiltersRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkVolumeEnumerateWithFiltersResponse(arg) {
+  if (!(arg instanceof api_pb.SdkVolumeEnumerateWithFiltersResponse)) {
+    throw new Error('Expected argument of type openstorage.api.SdkVolumeEnumerateWithFiltersResponse');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkVolumeEnumerateWithFiltersResponse(buffer_arg) {
+  return api_pb.SdkVolumeEnumerateWithFiltersResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_openstorage_api_SdkVolumeInspectRequest(arg) {
   if (!(arg instanceof api_pb.SdkVolumeInspectRequest)) {
     throw new Error('Expected argument of type openstorage.api.SdkVolumeInspectRequest');
@@ -961,6 +983,28 @@ function serialize_openstorage_api_SdkVolumeSnapshotEnumerateResponse(arg) {
 
 function deserialize_openstorage_api_SdkVolumeSnapshotEnumerateResponse(buffer_arg) {
   return api_pb.SdkVolumeSnapshotEnumerateResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkVolumeSnapshotEnumerateWithFiltersRequest(arg) {
+  if (!(arg instanceof api_pb.SdkVolumeSnapshotEnumerateWithFiltersRequest)) {
+    throw new Error('Expected argument of type openstorage.api.SdkVolumeSnapshotEnumerateWithFiltersRequest');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkVolumeSnapshotEnumerateWithFiltersRequest(buffer_arg) {
+  return api_pb.SdkVolumeSnapshotEnumerateWithFiltersRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_openstorage_api_SdkVolumeSnapshotEnumerateWithFiltersResponse(arg) {
+  if (!(arg instanceof api_pb.SdkVolumeSnapshotEnumerateWithFiltersResponse)) {
+    throw new Error('Expected argument of type openstorage.api.SdkVolumeSnapshotEnumerateWithFiltersResponse');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_openstorage_api_SdkVolumeSnapshotEnumerateWithFiltersResponse(buffer_arg) {
+  return api_pb.SdkVolumeSnapshotEnumerateWithFiltersResponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
 function serialize_openstorage_api_SdkVolumeSnapshotRestoreRequest(arg) {
@@ -1203,7 +1247,7 @@ var OpenStorageVolumeService = exports.OpenStorageVolumeService = {
     responseSerialize: serialize_openstorage_api_SdkVolumeUpdateResponse,
     responseDeserialize: deserialize_openstorage_api_SdkVolumeUpdateResponse,
   },
-  // Enumerate returns a list of volume ids that match the labels if any are provided.
+  // Enumerate returns a list of volume ids
   enumerate: {
     path: '/openstorage.api.OpenStorageVolume/Enumerate',
     requestStream: false,
@@ -1214,6 +1258,18 @@ var OpenStorageVolumeService = exports.OpenStorageVolumeService = {
     requestDeserialize: deserialize_openstorage_api_SdkVolumeEnumerateRequest,
     responseSerialize: serialize_openstorage_api_SdkVolumeEnumerateResponse,
     responseDeserialize: deserialize_openstorage_api_SdkVolumeEnumerateResponse,
+  },
+  // Enumerate returns a list of volume ids that match the labels if any are provided.
+  enumerateWithFilters: {
+    path: '/openstorage.api.OpenStorageVolume/EnumerateWithFilters',
+    requestStream: false,
+    responseStream: false,
+    requestType: api_pb.SdkVolumeEnumerateWithFiltersRequest,
+    responseType: api_pb.SdkVolumeEnumerateWithFiltersResponse,
+    requestSerialize: serialize_openstorage_api_SdkVolumeEnumerateWithFiltersRequest,
+    requestDeserialize: deserialize_openstorage_api_SdkVolumeEnumerateWithFiltersRequest,
+    responseSerialize: serialize_openstorage_api_SdkVolumeEnumerateWithFiltersResponse,
+    responseDeserialize: deserialize_openstorage_api_SdkVolumeEnumerateWithFiltersResponse,
   },
   // SnapshotCreate creates a snapshot of a volume. This creates an immutable (read-only),
   // point-in-time snapshot of a volume. To create a new writable volume from
@@ -1253,6 +1309,19 @@ var OpenStorageVolumeService = exports.OpenStorageVolumeService = {
     requestDeserialize: deserialize_openstorage_api_SdkVolumeSnapshotEnumerateRequest,
     responseSerialize: serialize_openstorage_api_SdkVolumeSnapshotEnumerateResponse,
     responseDeserialize: deserialize_openstorage_api_SdkVolumeSnapshotEnumerateResponse,
+  },
+  // SnapshotEnumerate returns a list of snapshots for a specific volume
+  // that match the labels provided if any.
+  snapshotEnumerateWithFilters: {
+    path: '/openstorage.api.OpenStorageVolume/SnapshotEnumerateWithFilters',
+    requestStream: false,
+    responseStream: false,
+    requestType: api_pb.SdkVolumeSnapshotEnumerateWithFiltersRequest,
+    responseType: api_pb.SdkVolumeSnapshotEnumerateWithFiltersResponse,
+    requestSerialize: serialize_openstorage_api_SdkVolumeSnapshotEnumerateWithFiltersRequest,
+    requestDeserialize: deserialize_openstorage_api_SdkVolumeSnapshotEnumerateWithFiltersRequest,
+    responseSerialize: serialize_openstorage_api_SdkVolumeSnapshotEnumerateWithFiltersResponse,
+    responseDeserialize: deserialize_openstorage_api_SdkVolumeSnapshotEnumerateWithFiltersResponse,
   },
   // Attach attaches device to the host that the client is communicating with.
   // NOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more
@@ -1565,7 +1634,7 @@ var OpenStorageCloudBackupService = exports.OpenStorageCloudBackupService = {
     responseSerialize: serialize_openstorage_api_SdkCloudBackupRestoreResponse,
     responseDeserialize: deserialize_openstorage_api_SdkCloudBackupRestoreResponse,
   },
-  // Delete deletes a backup stored in the cloud. If the backup is an incremental
+  // Deletes a backup stored in the cloud. If the backup is an incremental
   // backup and other backups are dependent on it, it will not be able to be deleted.
   delete: {
     path: '/openstorage.api.OpenStorageCloudBackup/Delete',
