@@ -96,8 +96,10 @@ module Openstorage
         # Update provides a method for manipulating the specification and attributes of a volume.
         # Set can be used to resize a volume, update labels, change replica count, and much more.
         rpc :Update, SdkVolumeUpdateRequest, SdkVolumeUpdateResponse
-        # Enumerate returns a list of volume ids that match the labels if any are provided.
+        # Enumerate returns a list of volume ids
         rpc :Enumerate, SdkVolumeEnumerateRequest, SdkVolumeEnumerateResponse
+        # Enumerate returns a list of volume ids that match the labels if any are provided.
+        rpc :EnumerateWithFilters, SdkVolumeEnumerateWithFiltersRequest, SdkVolumeEnumerateWithFiltersResponse
         # SnapshotCreate creates a snapshot of a volume. This creates an immutable (read-only),
         # point-in-time snapshot of a volume. To create a new writable volume from
         # a snapshot, please use OpenStorageVolume.Clone().
@@ -107,6 +109,9 @@ module Openstorage
         # SnapshotEnumerate returns a list of snapshots for a specific volume
         # that match the labels provided if any.
         rpc :SnapshotEnumerate, SdkVolumeSnapshotEnumerateRequest, SdkVolumeSnapshotEnumerateResponse
+        # SnapshotEnumerate returns a list of snapshots for a specific volume
+        # that match the labels provided if any.
+        rpc :SnapshotEnumerateWithFilters, SdkVolumeSnapshotEnumerateWithFiltersRequest, SdkVolumeSnapshotEnumerateWithFiltersResponse
         # Attach attaches device to the host that the client is communicating with.
         # NOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more
         # information about a new feature to allow attachment to any node.
@@ -254,7 +259,7 @@ module Openstorage
         # has an ha_level (number of replicas) of only 1. To increase the number of
         # replicas, use OpenStorageVolume.Set() to change the ha_level.
         rpc :Restore, SdkCloudBackupRestoreRequest, SdkCloudBackupRestoreResponse
-        # Delete deletes a backup stored in the cloud. If the backup is an incremental
+        # Deletes a backup stored in the cloud. If the backup is an incremental
         # backup and other backups are dependent on it, it will not be able to be deleted.
         rpc :Delete, SdkCloudBackupDeleteRequest, SdkCloudBackupDeleteResponse
         # DeleteAll deletes all the backups in the cloud for the specified volume.
