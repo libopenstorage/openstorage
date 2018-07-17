@@ -89,6 +89,15 @@ func TestFakeCreateVolume(t *testing.T) {
 	}, &api.Source{}, &api.VolumeSpec{
 		Size: 1234,
 	})
+	assert.Error(t, err)
+	assert.Empty(t, vid)
+
+	vid, err = d.Create(&api.VolumeLocator{
+		Name: "myvol",
+	}, &api.Source{}, &api.VolumeSpec{
+		Size:    1234,
+		HaLevel: 1,
+	})
 	assert.NoError(t, err)
 	assert.NotEmpty(t, vid)
 
@@ -128,7 +137,8 @@ func TestFakeCloudBackupCreate(t *testing.T) {
 	name := "myvol"
 	size := uint64(1234)
 	volid, err := d.Create(&api.VolumeLocator{Name: name}, &api.Source{}, &api.VolumeSpec{
-		Size: size,
+		Size:    size,
+		HaLevel: 1,
 	})
 	assert.NoError(t, err)
 	assert.NotEmpty(t, volid)
@@ -156,7 +166,8 @@ func testInitForCloudBackups(t *testing.T, d *driver) (string, *api.CloudBackupC
 	name := "myvol"
 	size := uint64(1234)
 	volid, err := d.Create(&api.VolumeLocator{Name: name}, &api.Source{}, &api.VolumeSpec{
-		Size: size,
+		Size:    size,
+		HaLevel: 1,
 	})
 	assert.NoError(t, err)
 	assert.NotEmpty(t, volid)
@@ -636,7 +647,8 @@ func TestFakeSet(t *testing.T) {
 	name := "myvol"
 	size := uint64(1234)
 	volid, err := d.Create(&api.VolumeLocator{Name: name}, &api.Source{}, &api.VolumeSpec{
-		Size: size,
+		Size:    size,
+		HaLevel: 1,
 	})
 	assert.NoError(t, err)
 	assert.NotEmpty(t, volid)
