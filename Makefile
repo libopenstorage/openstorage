@@ -170,7 +170,7 @@ generate-mockfiles:
 
 generate: docs generate-mockfiles
 
-sdk: proto docker-build-mock-sdk-server
+sdk: docker-proto docker-build-mock-sdk-server
 
 docker-build-mock-sdk-server: packr
 	rm -rf _tmp
