@@ -90,11 +90,15 @@ docker-proto: docker-build-proto
 		--privileged \
 		-v $(shell pwd):/go/src/github.com/libopenstorage/openstorage \
 		-e "GOPATH=/go" \
+		-e "DOCKER_PROTO=yes" \
 		-e "PATH=/bin:/usr/bin:/usr/local/bin:/go/bin" \
 		openstorage/osd-proto \
 			make proto
 
 proto:
+ifndef DOCKER_PROTO
+	$(error Do not run directly. Run 'make docker-proto' instead.)
+endif
 ifndef HAS_PROTOC_GEN_GO
 	@echo "Installing protoc-gen-go"
 	go get -u github.com/golang/protobuf/protoc-gen-go
