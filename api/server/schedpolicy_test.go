@@ -19,7 +19,7 @@ func TestSchedPolicyCreateSuccess(t *testing.T) {
 	name := "testsp1"
 	schedule := "freq:periodic\nperiod:120000\n"
 	// mock the cluster schedulePolicy response
-	tc.MockClusterSchedPolicy().
+	tc.MockCluster().
 		EXPECT().
 		SchedPolicyCreate(name, schedule).
 		Return(nil)
@@ -45,7 +45,7 @@ func TestSchedPolicyCreateFailed(t *testing.T) {
 	name := "testsp1"
 	schedule := "freq:periodic\nperiod:120000\n"
 	// mock the cluster schedulePolicy response
-	tc.MockClusterSchedPolicy().
+	tc.MockCluster().
 		EXPECT().
 		SchedPolicyCreate(name, schedule).
 		Return(fmt.Errorf("Not Implemented"))
@@ -72,7 +72,7 @@ func TestSchedPolicyUpdateSuccess(t *testing.T) {
 	name := "testsp1"
 	schedule := "freq:periodic\nperiod:120000\n"
 	// mock the cluster schedulePolicy response
-	tc.MockClusterSchedPolicy().
+	tc.MockCluster().
 		EXPECT().
 		SchedPolicyUpdate(name, schedule).
 		Return(nil)
@@ -98,7 +98,7 @@ func TestSchedPolicyUpdateFailed(t *testing.T) {
 	name := "testsp1"
 	schedule := "freq:periodic\nperiod:120000\n"
 	// mock the cluster schedulePolicy response
-	tc.MockClusterSchedPolicy().
+	tc.MockCluster().
 		EXPECT().
 		SchedPolicyUpdate(name, schedule).
 		Return(fmt.Errorf("Not Implemented"))
@@ -124,7 +124,7 @@ func TestSchedPolicyDeleteSuccess(t *testing.T) {
 
 	name := "testsp1"
 	// mock the cluster schedulePolicy response
-	tc.MockClusterSchedPolicy().
+	tc.MockCluster().
 		EXPECT().
 		SchedPolicyDelete(name).
 		Return(nil)
@@ -150,7 +150,7 @@ func TestSchedPolicyDeleteWithCaseSensitiveName(t *testing.T) {
 	name := "TestSchedPolicy1"
 	// mock the cluster schedulePolicy response
 	// this should be recived it as "TestSchedPolicy1" only
-	tc.MockClusterSchedPolicy().
+	tc.MockCluster().
 		EXPECT().
 		SchedPolicyDelete(name).
 		Return(nil)
@@ -175,7 +175,7 @@ func TestSchedPolicyDeleteFailed(t *testing.T) {
 
 	name := "testsp1"
 	// mock the cluster schedulePolicy response
-	tc.MockClusterSchedPolicy().
+	tc.MockCluster().
 		EXPECT().
 		SchedPolicyDelete(name).
 		Return(fmt.Errorf("Not Implemented"))
@@ -201,7 +201,7 @@ func TestSchedPolicyEnumerateSuccess(t *testing.T) {
 
 	name := "testsp1"
 	// mock the cluster schedulePolicy response
-	tc.MockClusterSchedPolicy().
+	tc.MockCluster().
 		EXPECT().
 		SchedPolicyEnumerate().
 		Return([]*sched.SchedPolicy{
@@ -232,7 +232,7 @@ func TestSchedPolicyEnumerateFailed(t *testing.T) {
 	defer tc.Finish()
 
 	// mock the cluster schedulePolicy response
-	tc.MockClusterSchedPolicy().
+	tc.MockCluster().
 		EXPECT().
 		SchedPolicyEnumerate().
 		Return(nil, fmt.Errorf("Not Implemented"))
@@ -259,7 +259,7 @@ func TestSchedPolicyGetSuccess(t *testing.T) {
 
 	name := "testsp1"
 	// mock the cluster schedulePolicy response
-	tc.MockClusterSchedPolicy().
+	tc.MockCluster().
 		EXPECT().
 		SchedPolicyGet(name).
 		Return(&sched.SchedPolicy{
@@ -289,7 +289,7 @@ func TestSchedPolicyGetSuccessWithSensitiveName(t *testing.T) {
 
 	name := "testSchedPolicy@Periodic1"
 	// mock the cluster schedulePolicy response
-	tc.MockClusterSchedPolicy().
+	tc.MockCluster().
 		EXPECT().
 		SchedPolicyGet(name).
 		Return(&sched.SchedPolicy{
@@ -319,7 +319,7 @@ func TestSchedPolicyGetFailed(t *testing.T) {
 
 	name := "testsp"
 	// mock the cluster schedulePolicy response
-	tc.MockClusterSchedPolicy().
+	tc.MockCluster().
 		EXPECT().
 		SchedPolicyGet(name).
 		Return(nil, fmt.Errorf("Not Implemented"))

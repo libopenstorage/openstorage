@@ -10,10 +10,6 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/gorilla/mux"
-	"github.com/libopenstorage/openstorage/cluster"
-	"github.com/libopenstorage/openstorage/objectstore"
-	sched "github.com/libopenstorage/openstorage/schedpolicy"
-	"github.com/libopenstorage/openstorage/secrets"
 )
 
 // Route is a specification and  handler for a REST endpoint.
@@ -115,36 +111,10 @@ func StartVolumePluginAPI(
 	return nil
 }
 
-func CheckNullClusterServerConfiguration(config *cluster.ClusterServerConfiguration) {
-
-	// Set config managers to null/generic implementation if passed as null
-	if config.ConfigSecretManager == nil {
-		config.ConfigSecretManager = secrets.NewDefaultSecrets()
-	}
-
-	if config.ConfigSchedManager == nil {
-		config.ConfigSchedManager = sched.NewDefaultSchedulePolicy()
-	}
-
-	if config.ConfigObjectStoreManager == nil {
-		config.ConfigObjectStoreManager = objectstore.NewDefaultObjectStore()
-	}
-
-}
-
-func StartClusterApiWithConfiguration(
-	config cluster.ClusterServerConfiguration,
-	clusterApiBase string,
-	clusterPort uint16,
-) error {
-
-	CheckNullClusterServerConfiguration(&config)
-	// newClusterAPI now must take a ClusterServerConfiguration.
-	// This makes it so that it does not have to create the fake server by default.
-	// The caller is the one who creates the manager and passes it in.
-	//
-	// newClusterAPI now calls RegisterManager according to the config.
-	clusterApi := newClusterAPI(config)
+// StartClusterAPI starts a REST server to receive driver configuration commands
+// from the CLI/UX to control the OSD cluster.
+func StartClusterAPI(clusterApiBase string, clusterPort uint16) error {
+	clusterApi := newClusterAPI()
 
 	// start server as before
 	if err := startServer("osd", clusterApiBase, clusterPort, clusterApi.Routes()); err != nil {
@@ -154,26 +124,8 @@ func StartClusterApiWithConfiguration(
 	return nil
 }
 
-// StartClusterAPI starts a REST server to receive driver configuration commands
-// from the CLI/UX to control the OSD cluster.
-func StartClusterAPI(clusterApiBase string, clusterPort uint16) error {
-	return StartClusterApiWithConfiguration(
-		cluster.ClusterServerConfiguration{},
-		clusterApiBase,
-		clusterPort,
-	)
-}
-
-//old version compatible
 func GetClusterAPIRoutes() []*Route {
-	return GetClusterAPIRoutesWithConfiguration(
-		cluster.ClusterServerConfiguration{},
-	)
-}
-
-func GetClusterAPIRoutesWithConfiguration(config cluster.ClusterServerConfiguration) []*Route {
-	CheckNullClusterServerConfiguration(&config)
-	clusterApi := newClusterAPI(config)
+	clusterApi := newClusterAPI()
 	return clusterApi.Routes()
 }
 

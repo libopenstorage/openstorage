@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/objectstore"
 )
 
@@ -12,7 +13,7 @@ import (
 //
 // Lists Objectstore
 //
-// This will list current object stores
+// This will list current objectstores
 //
 // ---
 // produces:
@@ -37,7 +38,13 @@ func (c *clusterApi) objectStoreInspect(w http.ResponseWriter, r *http.Request) 
 		objstoreID = v[0]
 	}
 
-	objInfo, err := c.ObjectStoreManager.ObjectStoreInspect(objstoreID)
+	inst, err := clustermanager.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	objInfo, err := inst.ObjectStoreInspect(objstoreID)
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -76,7 +83,13 @@ func (c *clusterApi) objectStoreCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	objInfo, err := c.ObjectStoreManager.ObjectStoreCreate(volumeName[0])
+	inst, err := clustermanager.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	objInfo, err := inst.ObjectStoreCreate(volumeName[0])
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -128,7 +141,13 @@ func (c *clusterApi) objectStoreUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = c.ObjectStoreManager.ObjectStoreUpdate(objstoreID, enable)
+	inst, err := clustermanager.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = inst.ObjectStoreUpdate(objstoreID, enable)
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -164,7 +183,13 @@ func (c *clusterApi) objectStoreDelete(w http.ResponseWriter, r *http.Request) {
 		objstoreID = v[0]
 	}
 
-	err := c.ObjectStoreManager.ObjectStoreDelete(objstoreID)
+	inst, err := clustermanager.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = inst.ObjectStoreDelete(objstoreID)
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return

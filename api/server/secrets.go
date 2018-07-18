@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/secrets"
 )
 
@@ -27,7 +28,6 @@ import (
 //   '200':
 //     description: success
 func (c *clusterApi) setDefaultSecretKey(w http.ResponseWriter, r *http.Request) {
-
 	method := "setDefaultSecretKey"
 	var secReq secrets.DefaultSecretKeyRequest
 
@@ -36,11 +36,13 @@ func (c *clusterApi) setDefaultSecretKey(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err := c.SecretManager.SecretSetDefaultSecretKey(
-		secReq.DefaultSecretKey,
-		secReq.Override,
-	)
+	inst, err := clustermanager.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
+	err = inst.SecretSetDefaultSecretKey(secReq.DefaultSecretKey, secReq.Override)
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -64,10 +66,15 @@ func (c *clusterApi) setDefaultSecretKey(w http.ResponseWriter, r *http.Request)
 //      schema:
 //       $ref: '#/definitions/GetSecretResponse'
 func (c *clusterApi) getDefaultSecretKey(w http.ResponseWriter, r *http.Request) {
-
 	method := "getDefaultSecretKey"
 
-	secretValue, err := c.SecretManager.SecretGetDefaultSecretKey()
+	inst, err := clustermanager.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	secretValue, err := inst.SecretGetDefaultSecretKey()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -107,7 +114,13 @@ func (c *clusterApi) secretsLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := c.SecretManager.SecretLogin(secReq.SecretType, secReq.SecretConfig)
+	inst, err := clustermanager.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = inst.SecretLogin(secReq.SecretType, secReq.SecretConfig)
 	if err != nil {
 		if err == secrets.ErrNotAuthenticated {
 			c.sendError(c.name, method, w, err.Error(), http.StatusUnauthorized)
@@ -145,7 +158,6 @@ func (c *clusterApi) secretsLogin(w http.ResponseWriter, r *http.Request) {
 //   '200':
 //     description: success
 func (c *clusterApi) setSecret(w http.ResponseWriter, r *http.Request) {
-
 	method := "setSecret"
 	var secReq secrets.SetSecretRequest
 	params := r.URL.Query()
@@ -155,13 +167,18 @@ func (c *clusterApi) setSecret(w http.ResponseWriter, r *http.Request) {
 		c.sendError(c.name, method, w, "Missing secret ID", http.StatusBadRequest)
 		return
 	}
-
 	if err := json.NewDecoder(r.Body).Decode(&secReq); err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	err := c.SecretManager.SecretSet(secretID[0], secReq.SecretValue)
+	inst, err := clustermanager.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = inst.SecretSet(secretID[0], secReq.SecretValue)
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -191,7 +208,6 @@ func (c *clusterApi) setSecret(w http.ResponseWriter, r *http.Request) {
 //      schema:
 //       $ref: '#/definitions/GetSecretResponse'
 func (c *clusterApi) getSecret(w http.ResponseWriter, r *http.Request) {
-
 	method := "getSecret"
 	params := r.URL.Query()
 	secretID := params[secrets.SecretKey]
@@ -201,7 +217,13 @@ func (c *clusterApi) getSecret(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	secretValue, err := c.SecretManager.SecretGet(secretID[0])
+	inst, err := clustermanager.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	secretValue, err := inst.SecretGet(secretID[0])
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -210,7 +232,6 @@ func (c *clusterApi) getSecret(w http.ResponseWriter, r *http.Request) {
 	secResp := &secrets.GetSecretResponse{
 		SecretValue: secretValue,
 	}
-
 	json.NewEncoder(w).Encode(secResp)
 }
 
@@ -227,10 +248,15 @@ func (c *clusterApi) getSecret(w http.ResponseWriter, r *http.Request) {
 //   '200':
 //      description: validates session with secret store
 func (c *clusterApi) secretLoginCheck(w http.ResponseWriter, r *http.Request) {
-
 	method := "secretLoginCheck"
-	err := c.SecretManager.SecretCheckLogin()
 
+	inst, err := clustermanager.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = inst.SecretCheckLogin()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return

@@ -1,4 +1,3 @@
-//go:generate mockgen -package=mock -destination=mock/schedpolicy.mock.go github.com/libopenstorage/openstorage/schedpolicy SchedulePolicy
 package schedpolicy
 
 import "errors"

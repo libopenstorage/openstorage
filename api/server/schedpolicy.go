@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
+
 	sched "github.com/libopenstorage/openstorage/schedpolicy"
 )
 
@@ -26,8 +28,14 @@ import (
 //           $ref: '#/definitions/SchedPolicy'
 func (c *clusterApi) schedPolicyEnumerate(w http.ResponseWriter, r *http.Request) {
 	method := "schedPolicyEnumerate"
-	schedPolicies, err := c.SchedPolicyManager.SchedPolicyEnumerate()
 
+	inst, err := clustermanager.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	schedPolicies, err := inst.SchedPolicyEnumerate()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -66,7 +74,13 @@ func (c *clusterApi) schedPolicyGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	schedPolicy, err := c.SchedPolicyManager.SchedPolicyGet(schedName)
+	inst, err := clustermanager.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	schedPolicy, err := inst.SchedPolicyGet(schedName)
 
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
@@ -105,7 +119,13 @@ func (c *clusterApi) schedPolicyCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := c.SchedPolicyManager.SchedPolicyCreate(schedReq.Name, schedReq.Schedule)
+	inst, err := clustermanager.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = inst.SchedPolicyCreate(schedReq.Name, schedReq.Schedule)
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -134,7 +154,6 @@ func (c *clusterApi) schedPolicyCreate(w http.ResponseWriter, r *http.Request) {
 //   '200':
 //     description: success
 func (c *clusterApi) schedPolicyUpdate(w http.ResponseWriter, r *http.Request) {
-
 	method := "schedPolicyUpdate"
 	var schedReq sched.SchedPolicy
 
@@ -143,7 +162,13 @@ func (c *clusterApi) schedPolicyUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := c.SchedPolicyManager.SchedPolicyUpdate(schedReq.Name, schedReq.Schedule)
+	inst, err := clustermanager.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = inst.SchedPolicyUpdate(schedReq.Name, schedReq.Schedule)
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
@@ -171,9 +196,7 @@ func (c *clusterApi) schedPolicyUpdate(w http.ResponseWriter, r *http.Request) {
 //   '200':
 //     description: success
 func (c *clusterApi) schedPolicyDelete(w http.ResponseWriter, r *http.Request) {
-
 	method := "schedPolicyDelete"
-
 	vars := mux.Vars(r)
 	schedName, ok := vars[sched.SchedName]
 
@@ -181,7 +204,14 @@ func (c *clusterApi) schedPolicyDelete(w http.ResponseWriter, r *http.Request) {
 		c.sendError(c.name, method, w, "Missing Schedule Policy Name", http.StatusBadRequest)
 		return
 	}
-	err := c.SchedPolicyManager.SchedPolicyDelete(schedName)
+
+	inst, err := clustermanager.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = inst.SchedPolicyDelete(schedName)
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return

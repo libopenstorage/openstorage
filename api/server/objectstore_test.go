@@ -22,7 +22,7 @@ func TestObjectStoreInspectSuccess(t *testing.T) {
 		Enabled:  false,
 	}
 	// mock the cluster objectstore response
-	tc.MockClusterObjectStore().
+	tc.MockCluster().
 		EXPECT().
 		ObjectStoreInspect(objInfo.Uuid).
 		Return(objInfo, nil)
@@ -55,7 +55,7 @@ func TestObjectStoreInspectWithEmptyObjectstoreIDSuccess(t *testing.T) {
 
 	objID := ""
 	// mock the cluster objectstore response
-	tc.MockClusterObjectStore().
+	tc.MockCluster().
 		EXPECT().
 		ObjectStoreInspect(objID).
 		Return(objInfo, nil)
@@ -82,7 +82,7 @@ func TestObjectStoreInspectFailed(t *testing.T) {
 
 	objID := "objtestid-1"
 	// mock the cluster objectstore response
-	tc.MockClusterObjectStore().
+	tc.MockCluster().
 		EXPECT().
 		ObjectStoreInspect(objID).
 		Return(nil, fmt.Errorf("Not Implemented"))
@@ -112,7 +112,7 @@ func TestObjectStoreCreateSuccess(t *testing.T) {
 		Enabled:  false,
 	}
 	// mock the cluster objectstore response
-	tc.MockClusterObjectStore().
+	tc.MockCluster().
 		EXPECT().
 		ObjectStoreCreate(name).
 		Return(objInfo, nil)
@@ -138,7 +138,7 @@ func TestObjectStoreCreateFailed(t *testing.T) {
 
 	name := "testvol1"
 	// mock the cluster objectstore response
-	tc.MockClusterObjectStore().
+	tc.MockCluster().
 		EXPECT().
 		ObjectStoreCreate(name).
 		Return(nil, fmt.Errorf("Not Implemented"))
@@ -166,7 +166,7 @@ func TestObjectStoreUpdateSuccess(t *testing.T) {
 	enable := true
 	objID := "objtestid-1"
 	// mock the cluster objectstore response
-	tc.MockClusterObjectStore().
+	tc.MockCluster().
 		EXPECT().
 		ObjectStoreUpdate(objID, enable).
 		Return(nil)
@@ -192,7 +192,7 @@ func TestObjectStoreUpdateWithEmptyObjectstoreIDSuccess(t *testing.T) {
 	enable := true
 	objID := ""
 	// mock the cluster objectstore response
-	tc.MockClusterObjectStore().
+	tc.MockCluster().
 		EXPECT().
 		ObjectStoreUpdate(objID, enable).
 		Return(nil)
@@ -218,7 +218,7 @@ func TestObjectStoreUpdateFailed(t *testing.T) {
 	enable := false
 	objID := "testobjid-2"
 	// mock the cluster objectstore response
-	tc.MockClusterObjectStore().
+	tc.MockCluster().
 		EXPECT().
 		ObjectStoreUpdate(objID, enable).
 		Return(fmt.Errorf("Not Implemented"))
@@ -244,7 +244,7 @@ func TestObjectStoreDeleteSuccess(t *testing.T) {
 
 	objID := "objtestid-1"
 	// mock the cluster objectstore response
-	tc.MockClusterObjectStore().
+	tc.MockCluster().
 		EXPECT().
 		ObjectStoreDelete(objID).
 		Return(nil)
@@ -269,7 +269,7 @@ func TestObjectStoreDeleteWithEmptyObjectstoreIDSuccess(t *testing.T) {
 
 	objID := ""
 	// mock the cluster objectstore response
-	tc.MockClusterObjectStore().
+	tc.MockCluster().
 		EXPECT().
 		ObjectStoreDelete(objID).
 		Return(nil)
@@ -293,7 +293,7 @@ func TestObjectStoreDeleteFailed(t *testing.T) {
 
 	objID := "objtestid-1"
 	// mock the cluster objectstore response
-	tc.MockClusterObjectStore().
+	tc.MockCluster().
 		EXPECT().
 		ObjectStoreDelete(objID).
 		Return(fmt.Errorf("Not Implemented"))

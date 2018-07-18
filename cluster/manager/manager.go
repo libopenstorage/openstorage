@@ -52,8 +52,6 @@ var (
 
 // ClusterManager implements the cluster interface
 type ClusterManager struct {
-	secrets.Secrets
-
 	size            int
 	listeners       *list.List
 	config          config.ClusterConfig
@@ -72,6 +70,7 @@ type ClusterManager struct {
 	configManager   osdconfig.ConfigManager
 	schedManager    sched.SchedulePolicyProvider
 	objstoreManager objectstore.ObjectStore
+	secretsManager  secrets.Secrets
 }
 
 // Init instantiates a new cluster manager.
@@ -1108,6 +1107,12 @@ func (c *ClusterManager) setupManagers(config *cluster.ClusterServerConfiguratio
 		c.objstoreManager = config.ConfigObjectStoreManager
 	}
 
+	if config.ConfigSecretManager == nil {
+		c.secretsManager = secrets.NewDefaultSecrets()
+	} else {
+		c.secretsManager = config.ConfigSecretManager
+	}
+
 }
 
 // Start initiates the cluster manager and the cluster state machine
@@ -1762,38 +1767,77 @@ func (c *ClusterManager) EnumerateNodeConf() (*osdconfig.NodesConfig, error) {
 	return c.configManager.EnumerateNodeConf()
 }
 
+// SchedPolicyCreate creates a policy with given name and schedule.
 func (c *ClusterManager) SchedPolicyCreate(name, sched string) error {
 	return c.schedManager.SchedPolicyCreate(name, sched)
 }
 
+// SchedPolicyUpdate updates a policy with given name and schedule.
 func (c *ClusterManager) SchedPolicyUpdate(name, sched string) error {
 	return c.schedManager.SchedPolicyUpdate(name, sched)
 }
 
+// SchedPolicyDelete deletes a policy with given name.
 func (c *ClusterManager) SchedPolicyDelete(name string) error {
 	return c.schedManager.SchedPolicyDelete(name)
 }
 
+// SchedPolicyEnumerate enumerates all configured policies or the ones specified.
 func (c *ClusterManager) SchedPolicyEnumerate() ([]*sched.SchedPolicy, error) {
 	return c.schedManager.SchedPolicyEnumerate()
 }
 
+// SchedPolicyGet returns schedule policy matching given name.
 func (c *ClusterManager) SchedPolicyGet(name string) (*sched.SchedPolicy, error) {
 	return c.schedManager.SchedPolicyGet(name)
 }
 
+// ObjectStoreInspect returns status of objectstore
 func (c *ClusterManager) ObjectStoreInspect(objectstoreID string) (*api.ObjectstoreInfo, error) {
 	return c.objstoreManager.ObjectStoreInspect(objectstoreID)
 }
 
+// ObjectStoreCreate objectstore on specified volume
 func (c *ClusterManager) ObjectStoreCreate(volumeID string) (*api.ObjectstoreInfo, error) {
 	return c.objstoreManager.ObjectStoreCreate(volumeID)
 }
 
+// ObjectStoreUpdate enable/disable objectstore
 func (c *ClusterManager) ObjectStoreUpdate(objectstoreID string, enable bool) error {
 	return c.objstoreManager.ObjectStoreUpdate(objectstoreID, enable)
 }
 
+// ObjectStoreDelete objectstore from cluster
 func (c *ClusterManager) ObjectStoreDelete(objectstoreID string) error {
 	return c.objstoreManager.ObjectStoreDelete(objectstoreID)
+}
+
+// SecretLogin create session with secret store
+func (c *ClusterManager) SecretLogin(secretType string, secretConfig map[string]string) error {
+	return c.secretsManager.SecretLogin(secretType, secretConfig)
+}
+
+// SecretSetDefaultSecretKey  sets the cluster wide secret key
+func (c *ClusterManager) SecretSetDefaultSecretKey(secretKey string, override bool) error {
+	return c.secretsManager.SecretSetDefaultSecretKey(secretKey, override)
+}
+
+// SecretGetDefaultSecretKey returns cluster wide secret key
+func (c *ClusterManager) SecretGetDefaultSecretKey() (interface{}, error) {
+	return c.secretsManager.SecretGetDefaultSecretKey()
+}
+
+// SecretCheckLogin validates session with secret store
+func (c *ClusterManager) SecretCheckLogin() error {
+	return c.SecretCheckLogin()
+}
+
+// SecretSet the given value/data against the key
+func (c *ClusterManager) SecretSet(secretKey string, secretValue interface{}) error {
+	return c.SecretSet(secretKey, secretValue)
+}
+
+// SecretGet retrieves the value/data for given key
+func (c *ClusterManager) SecretGet(secretKey string) (interface{}, error) {
+	return c.SecretGet(secretKey)
 }

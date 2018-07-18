@@ -249,7 +249,7 @@
     },
     "/cluster/objectstore": {
       "get": {
-        "description": "This will list current object stores",
+        "description": "This will list current objectstores",
         "produces": [
           "application/json"
         ],
@@ -3174,13 +3174,6 @@
     },
     "SdkCloudBackupCreateResponse": {
       "type": "object",
-      "properties": {
-        "backup_id": {
-          "description": "Id of the backup created",
-          "type": "string",
-          "x-go-name": "BackupId"
-        }
-      },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupDeleteAllRequest": {
@@ -3387,6 +3380,84 @@
           "description": "VolumeID to which the backup is being restored",
           "type": "string",
           "x-go-name": "RestoreVolumeId"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "SdkCloudBackupSchedCreateRequest": {
+      "type": "object",
+      "properties": {
+        "cloud_sched_info": {
+          "$ref": "#/definitions/SdkCloudBackupScheduleInfo"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "SdkCloudBackupSchedCreateResponse": {
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "description": "UUID of newly created backup schedule",
+          "type": "string",
+          "x-go-name": "Uuid"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "SdkCloudBackupSchedDeleteRequest": {
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "description": "UUID of cloud backup to delete",
+          "type": "string",
+          "x-go-name": "Uuid"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "SdkCloudBackupSchedDeleteResponse": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "SdkCloudBackupSchedEnumerateRequest": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "SdkCloudBackupSchedEnumerateResponse": {
+      "type": "object",
+      "properties": {
+        "cloud_sched_list": {
+          "description": "Returns list of backup schedules",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/SdkCloudBackupScheduleInfo"
+          },
+          "x-go-name": "CloudSchedList"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "SdkCloudBackupScheduleInfo": {
+      "type": "object",
+      "properties": {
+        "credential_uuid": {
+          "description": "CredentialUUID is the cloud credential used with this schedule",
+          "type": "string",
+          "x-go-name": "CredentialUuid"
+        },
+        "max_backups": {
+          "description": "MaxBackups are the maximum number of backups retained\nin cloud.Older backups are deleted",
+          "type": "integer",
+          "format": "uint64",
+          "x-go-name": "MaxBackups"
+        },
+        "schedule": {
+          "$ref": "#/definitions/SdkSchedulePolicyInterval"
+        },
+        "src_volume_id": {
+          "description": "SrcVolumeID is the schedule's source volume",
+          "type": "string",
+          "x-go-name": "SrcVolumeId"
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
