@@ -15,7 +15,8 @@ endif
 		-I$(GOPATH)/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
 		--python_out=. \
 		--grpc_python_out=. \
-		$(APIDIR)/api.proto"
+		$(APIDIR)/api.proto" && \
+		mv api_pb2*.py openstorage
 	bash -c "source $(VEDIR)/bin/activate && \
 	python -m grpc_tools.protoc \
 		-I$(APIDIR) \
