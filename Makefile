@@ -135,8 +135,6 @@ endif
 	$(PROTOC) -I/usr/local/include -I$(PROTOSRC_PATH) -I$(PROTOS_PATH)/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis --grpc-gateway_out=logtostderr=true:. $(PROTOSRC_PATH)/pkg/flexvolume/flexvolume.proto
 	@echo "Generating protobuf definitions from pkg/jsonpb/testing/testing.proto"
 	$(PROTOC) -I $(PROTOSRC_PATH) $(PROTOSRC_PATH)/pkg/jsonpb/testing/testing.proto --go_out=plugins=grpc:.
-	@echo "Generating gRPC clients"
-	$(MAKE) -C api/client/sdk
 
 lint:
 	go get -v github.com/golang/lint/golint
