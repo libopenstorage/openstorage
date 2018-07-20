@@ -12,7 +12,8 @@ import (
 )
 
 const (
-	path = "/var/cores/"
+	path     = "/var/cores/"
+	fnameFmt = "2006-01-02T15:04:05.999999-0700MST"
 )
 
 // DumpGoMemoryTrace output memory profile to logs.
@@ -28,11 +29,11 @@ func DumpGoMemoryTrace() {
 func DumpGoProfile() error {
 	trace := make([]byte, 5120*1024)
 	len := runtime.Stack(trace, true)
-	return ioutil.WriteFile(path+time.Now().Format("2006-01-02T15:04:05.999999-0700MST")+".stack", trace[:len], 0644)
+	return ioutil.WriteFile(path+time.Now().Format(fnameFmt)+".stack", trace[:len], 0644)
 }
 
 func DumpHeap() {
-	f, err := os.Create(path + time.Now().Format("2006-01-02T15:04:05.999999-0700MST") + ".heap")
+	f, err := os.Create(path + time.Now().Format(fnameFmt) + ".heap")
 	if err != nil {
 		logrus.Errorf("could not create memory profile: %v", err)
 		return
