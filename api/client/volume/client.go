@@ -708,3 +708,15 @@ func (v *volumeClient) CloudMigrateStatus() (*api.CloudMigrateStatusResponse, er
 	}
 	return statusResponse, nil
 }
+
+// Du specified volume id and specifically path (if provided)
+func (v *volumeClient) Catalog(id, subfolder, maxDepth string) (api.CatalogResponse, error) {
+	var catalog api.CatalogResponse
+
+	req := v.c.Get().Resource(volumePath + "/catalog").Instance(id)
+	if err := req.QueryOption(api.OptCatalogSubFolder, subfolder).QueryOption(api.OptCatalogMaxDepth, maxDepth).Do().Unmarshal(&catalog); err != nil {
+		return catalog, err
+	}
+
+	return catalog, nil
+}

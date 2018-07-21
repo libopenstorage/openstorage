@@ -270,3 +270,7 @@ func (d *driver) getAuthSession() (session *napping.Session, err error) {
 
 	return
 }
+
+func (d *driver) Catalog(volumeID, path, depth string) (api.CatalogResponse, error) {
+	return api.CatalogResponse{}, volume.ErrNotSupported
+}

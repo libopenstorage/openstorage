@@ -2296,3 +2296,32 @@ message ClusterPairsEnumerateResponse {
     // required: false
     map<string, ClusterPairInfo> pairs = 2;
 }
+
+message Catalog {
+	// Name of the Directory/File
+	string name = 1;
+	// Full Path of the Directory/File
+	string path = 2;
+	// Type Directory or File
+	string type = 3;
+	// File or Directory Size
+	uint64 size = 4;
+	// Last Modified
+	google.protobuf.Timestamp LastModified = 5;
+	// Children
+	repeated Catalog children = 6;
+}
+
+message Report {
+	// Directory count
+	int64 directories = 2;
+	// File count
+	int64 files = 3;
+}
+
+message CatalogResponse {
+	// Root Catalog
+	Catalog root = 1;
+	// Report of total directories and files count
+	Report report = 2;
+}

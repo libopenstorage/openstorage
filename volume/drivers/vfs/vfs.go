@@ -206,3 +206,7 @@ func (d *driver) Quiesce(
 func (d *driver) Unquiesce(volumeID string) error {
 	return d.fsFreeze(volumeID, false)
 }
+
+func (d *driver) Catalog(volumeID, path string, depth string) (api.CatalogResponse, error) {
+	return api.CatalogResponse{}, volume.ErrNotSupported
+}

@@ -1195,6 +1195,48 @@
         }
       }
     },
+    "/osd-volumes/catalog/{id}": {
+      "get": {
+        "description": "Path is optional and default the behaviour is a catalog on the root of the volume.",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "volume"
+        ],
+        "summary": "Catalog lists the files and folders on volume with specified id.",
+        "operationId": "catalogVolume",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "id to get volume with",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Optional path inside mount to catalog.",
+            "name": "subfolder",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Folder depth we wish to return, default is all.",
+            "name": "depth",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "volume catalog response",
+            "schema": {
+              "$ref": "#/definitions/CatalogResponse"
+            }
+          }
+        }
+      }
+    },
     "/osd-volumes/quiesce/{id}": {
       "get": {
         "produces": [
@@ -1580,7 +1622,7 @@
           "$ref": "#/definitions/Timestamp"
         },
         "ttl": {
-          "description": "TTL in seconds for this Alert",
+          "description": "Time-to-live in seconds for this Alert",
           "type": "integer",
           "format": "uint64",
           "x-go-name": "Ttl"
@@ -1615,6 +1657,56 @@
     "AttachState": {
       "type": "integer",
       "format": "int32",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "Catalog": {
+      "type": "object",
+      "properties": {
+        "LastModified": {
+          "$ref": "#/definitions/Timestamp"
+        },
+        "children": {
+          "description": "Children",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Catalog"
+          },
+          "x-go-name": "Children"
+        },
+        "name": {
+          "description": "Name of the Directory/File",
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "path": {
+          "description": "Full Path of the Directory/File",
+          "type": "string",
+          "x-go-name": "Path"
+        },
+        "size": {
+          "description": "File or Directory Size",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Size"
+        },
+        "type": {
+          "description": "Type Directory or File",
+          "type": "string",
+          "x-go-name": "Type"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "CatalogResponse": {
+      "type": "object",
+      "properties": {
+        "report": {
+          "$ref": "#/definitions/Report"
+        },
+        "root": {
+          "$ref": "#/definitions/Catalog"
+        }
+      },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "CloudBackupCatalogRequest": {
@@ -2203,40 +2295,46 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "ClusterConfig": {
+      "description": "ClusterConfig is a cluster level config parameter struct",
       "type": "object",
       "properties": {
-        "ClusterId": {
-          "type": "string"
+        "cluster_id": {
+          "type": "string",
+          "x-go-name": "ClusterId"
         },
-        "DataIface": {
-          "type": "string"
+        "created": {
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "Created"
         },
-        "DataIp": {
-          "type": "string"
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
         },
-        "DefaultDriver": {
-          "type": "string"
+        "domain": {
+          "type": "string",
+          "x-go-name": "Domain"
         },
-        "FluentDHost": {
-          "type": "string"
+        "kvdb": {
+          "$ref": "#/definitions/KvdbConfig"
         },
-        "LoggingURL": {
-          "type": "string"
+        "mode": {
+          "type": "string",
+          "x-go-name": "Mode"
         },
-        "ManagementURL": {
-          "type": "string"
+        "private": {
+          "type": "object",
+          "x-go-name": "Private"
         },
-        "MgmtIp": {
-          "type": "string"
+        "secrets": {
+          "$ref": "#/definitions/SecretsConfig"
         },
-        "MgtIface": {
-          "type": "string"
-        },
-        "NodeId": {
-          "type": "string"
+        "version": {
+          "type": "string",
+          "x-go-name": "Version"
         }
       },
-      "x-go-package": "github.com/libopenstorage/openstorage/config"
+      "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
     },
     "ClusterNotify": {
       "type": "integer",
@@ -2962,6 +3060,14 @@
       "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
+    "OpenStorageNodeClient": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "OpenStorageNodeServer": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
     "OpenStorageObjectstoreClient": {
       "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
@@ -3005,6 +3111,24 @@
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
+    "Report": {
+      "type": "object",
+      "properties": {
+        "directories": {
+          "description": "Directory count",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Directories"
+        },
+        "files": {
+          "description": "File count",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Files"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
     "ResourceType": {
       "type": "integer",
       "format": "int32",
@@ -3038,6 +3162,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/schedpolicy"
     },
     "SdkAwsCredentialRequest": {
+      "description": "Defines credentials for Aws/S3 endpoints",
       "type": "object",
       "properties": {
         "access_key": {
@@ -3064,6 +3189,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkAwsCredentialResponse": {
+      "description": "Defines the response for AWS/S3 credentials",
       "type": "object",
       "properties": {
         "access_key": {
@@ -3090,6 +3216,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkAzureCredentialRequest": {
+      "description": "Defines credentials for Azure",
       "type": "object",
       "properties": {
         "account_key": {
@@ -3106,6 +3233,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkAzureCredentialResponse": {
+      "description": "Defines the response for Azure credentials",
       "type": "object",
       "properties": {
         "account_name": {
@@ -3122,6 +3250,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupCatalogRequest": {
+      "description": "Defines a request to get catalog of a backup stored by a cloud provider",
       "type": "object",
       "properties": {
         "backup_id": {
@@ -3129,15 +3258,16 @@
           "type": "string",
           "x-go-name": "BackupId"
         },
-        "credential_uuid": {
-          "description": "is the credential for cloud",
+        "credential_id": {
+          "description": "Credential id describe the credentials for the cloud",
           "type": "string",
-          "x-go-name": "CredentialUuid"
+          "x-go-name": "CredentialId"
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupCatalogResponse": {
+      "description": "Defines a response containing the contents of a backup stored by a cloud provider",
       "type": "object",
       "properties": {
         "contents": {
@@ -3152,12 +3282,13 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupCreateRequest": {
+      "description": "Defines a request to create a backup of a volume to the cloud",
       "type": "object",
       "properties": {
-        "credential_uuid": {
-          "description": "CredentialUUID is cloud credential to be used for backup",
+        "credential_id": {
+          "description": "Credential id refers to the cloud credentials needed to backup",
           "type": "string",
-          "x-go-name": "CredentialUuid"
+          "x-go-name": "CredentialId"
         },
         "full": {
           "description": "Full indicates if full backup is desired even though incremental is possible",
@@ -3173,16 +3304,18 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupCreateResponse": {
+      "description": "Empty response",
       "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupDeleteAllRequest": {
+      "description": "Defines a request to delete all the backups stored by a cloud provider\nfor a specified volume",
       "type": "object",
       "properties": {
-        "credential_uuid": {
-          "description": "CredentialUUID is the credential for cloud to be used for the request",
+        "credential_id": {
+          "description": "Credential id is the credential for cloud to be used for the request",
           "type": "string",
-          "x-go-name": "CredentialUuid"
+          "x-go-name": "CredentialId"
         },
         "src_volume_id": {
           "description": "id of the volume for the request",
@@ -3193,10 +3326,12 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupDeleteAllResponse": {
+      "description": "Empty response",
       "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupDeleteRequest": {
+      "description": "Defines a request to delete a single backup stored by a cloud provider",
       "type": "object",
       "properties": {
         "backup_id": {
@@ -3204,13 +3339,13 @@
           "type": "string",
           "x-go-name": "BackupId"
         },
-        "credential_uuid": {
-          "description": "CredentialUUID is the credential for cloud to be used for the request",
+        "credential_id": {
+          "description": "Credential id is the credential for cloud to be used for the request",
           "type": "string",
-          "x-go-name": "CredentialUuid"
+          "x-go-name": "CredentialId"
         },
         "force": {
-          "description": "Force Delete cloudbackup even if there are dependencies",
+          "description": "Force Delete cloudbackup even if there are dependencies. This may be\nneeded if the backup is an incremental backup and subsequent backups\ndepend on this backup specified by `backup_id`.",
           "type": "boolean",
           "x-go-name": "Force"
         }
@@ -3218,10 +3353,12 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupDeleteResponse": {
+      "description": "Empty response",
       "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupEnumerateRequest": {
+      "description": "Defines a request to list the backups stored by a cloud provider",
       "type": "object",
       "properties": {
         "all": {
@@ -3230,14 +3367,14 @@
           "x-go-name": "All"
         },
         "cluster_id": {
-          "description": "ClusterID is the optional clusterID for the request",
+          "description": "Cluster id is an optional parameter which defines the cluster",
           "type": "string",
           "x-go-name": "ClusterId"
         },
-        "credential_uuid": {
-          "description": "CredentialUUID is the credential for cloud to be used for the request",
+        "credential_id": {
+          "description": "Credential id is the credential for cloud to be used for the request",
           "type": "string",
-          "x-go-name": "CredentialUuid"
+          "x-go-name": "CredentialId"
         },
         "src_volume_id": {
           "description": "Optional source id of the volume for the request",
@@ -3248,19 +3385,21 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupEnumerateResponse": {
+      "description": "Defines a response which lists all the backups stored by a cloud provider",
       "type": "object",
       "properties": {
-        "backup_ids": {
+        "backups": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/definitions/SdkCloudBackupInfo"
           },
-          "x-go-name": "BackupIds"
+          "x-go-name": "Backups"
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupHistoryItem": {
+      "description": "SdkCloudBackupHistoryItem contains information about a backup for a\nspecific volume",
       "type": "object",
       "properties": {
         "src_volume_id": {
@@ -3278,10 +3417,11 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupHistoryRequest": {
+      "description": "Defines a request to retreive the history of the backups for\na specific volume to a cloud provider",
       "type": "object",
       "properties": {
         "src_volume_id": {
-          "description": "volumeID for which history of backup/restore is being requested\n(optional) If not provided, it will return the history for all volumes.",
+          "description": "This optional value defines which history of backups is being\nrequested. If not provided, it will return the history for all volumes.",
           "type": "string",
           "x-go-name": "SrcVolumeId"
         }
@@ -3289,10 +3429,11 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupHistoryResponse": {
+      "description": "Defines a response containing a list of history of backups to a cloud provider",
       "type": "object",
       "properties": {
         "history_list": {
-          "description": "HistoryList is list of past backup/restores in the cluster",
+          "description": "HistoryList is list of past backups on this volume",
           "type": "array",
           "items": {
             "$ref": "#/definitions/SdkCloudBackupHistoryItem"
@@ -3303,10 +3444,11 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupInfo": {
+      "description": "SdkCloudBackupInfo has information about a backup stored by a cloud provider",
       "type": "object",
       "properties": {
         "id": {
-          "description": "ID is the ID of the cloud backup",
+          "description": "This is the id as represented by the cloud provider",
           "type": "string",
           "x-go-name": "Id"
         },
@@ -3338,16 +3480,19 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupOpType": {
+      "description": "CloudBackup operations types",
       "type": "integer",
       "format": "int32",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupRequestedState": {
+      "description": "SdkCloudBackupRequestedState defines states to set a specified backup or restore\nto or from a cloud provider",
       "type": "integer",
       "format": "int32",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupRestoreRequest": {
+      "description": "Defines a request to restore a volume from an existing backup stored by\na cloud provider",
       "type": "object",
       "properties": {
         "backup_id": {
@@ -3355,10 +3500,10 @@
           "type": "string",
           "x-go-name": "BackupId"
         },
-        "credential_uuid": {
+        "credential_id": {
           "description": "The credential to be used for restore operation",
           "type": "string",
-          "x-go-name": "CredentialUuid"
+          "x-go-name": "CredentialId"
         },
         "node_id": {
           "description": "Optional for provisioning restore\nvolume (ResoreVolumeName should not be specified)",
@@ -3374,6 +3519,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupRestoreResponse": {
+      "description": "Defines a response when restoring a volume from a backup stored by\na cloud provider",
       "type": "object",
       "properties": {
         "restore_volume_id": {
@@ -3385,6 +3531,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupSchedCreateRequest": {
+      "description": "Defines a request to create a schedule for volume backups to a\ncloud provider",
       "type": "object",
       "properties": {
         "cloud_sched_info": {
@@ -3394,36 +3541,41 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupSchedCreateResponse": {
+      "description": "Defines a response containing the id of a schedule for a volume backup\nto a cloud provider",
       "type": "object",
       "properties": {
-        "uuid": {
-          "description": "UUID of newly created backup schedule",
+        "backup_schedule_id": {
+          "description": "Id of newly created backup schedule",
           "type": "string",
-          "x-go-name": "Uuid"
+          "x-go-name": "BackupScheduleId"
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupSchedDeleteRequest": {
+      "description": "Defines a request to delete a backup schedule",
       "type": "object",
       "properties": {
-        "uuid": {
-          "description": "UUID of cloud backup to delete",
+        "backup_schedule_id": {
+          "description": "Id of cloud backup to delete",
           "type": "string",
-          "x-go-name": "Uuid"
+          "x-go-name": "BackupScheduleId"
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupSchedDeleteResponse": {
+      "description": "Empty response",
       "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupSchedEnumerateRequest": {
+      "description": "Empty request",
       "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupSchedEnumerateResponse": {
+      "description": "Defines a response containing a map listing the schedules for volume\nbackups to a cloud provider",
       "type": "object",
       "properties": {
         "cloud_sched_list": {
@@ -3438,12 +3590,13 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupScheduleInfo": {
+      "description": "SdkCloudBackupScheduleInfo describes a schedule for volume backups to\na cloud provider",
       "type": "object",
       "properties": {
-        "credential_uuid": {
-          "description": "CredentialUUID is the cloud credential used with this schedule",
+        "credential_id": {
+          "description": "The cloud credential used with this schedule",
           "type": "string",
-          "x-go-name": "CredentialUuid"
+          "x-go-name": "CredentialId"
         },
         "max_backups": {
           "description": "MaxBackups are the maximum number of backups retained\nin cloud.Older backups are deleted",
@@ -3455,7 +3608,7 @@
           "$ref": "#/definitions/SdkSchedulePolicyInterval"
         },
         "src_volume_id": {
-          "description": "SrcVolumeID is the schedule's source volume",
+          "description": "The schedule's source volume",
           "type": "string",
           "x-go-name": "SrcVolumeId"
         }
@@ -3463,13 +3616,14 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupStateChangeRequest": {
+      "description": "Defines a request to change the state of a backup or restore to or\nfrom a cloud provider",
       "type": "object",
       "properties": {
         "requested_state": {
           "$ref": "#/definitions/SdkCloudBackupRequestedState"
         },
         "src_volume_id": {
-          "description": "SrcVolumeID is volume ID on which backup/restore\nstate change is being requested",
+          "description": "Describes the volume id on which backup/restore\nstate change is being requested",
           "type": "string",
           "x-go-name": "SrcVolumeId"
         }
@@ -3477,14 +3631,16 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupStateChangeResponse": {
+      "description": "Empty response",
       "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupStatus": {
+      "description": "SdkCloudBackupStatus defines the status of a backup stored by a cloud provider",
       "type": "object",
       "properties": {
         "backup_id": {
-          "description": "ID is the ID for the operation",
+          "description": "This is the id as represented by the cloud provider",
           "type": "string",
           "x-go-name": "BackupId"
         },
@@ -3515,6 +3671,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupStatusRequest": {
+      "description": "Defines a request to retreive the status of a backup or restore for a\nspecified volume",
       "type": "object",
       "properties": {
         "local": {
@@ -3522,19 +3679,20 @@
           "type": "boolean",
           "x-go-name": "Local"
         },
-        "src_volume_id": {
-          "description": "SrcVolumeID optional volumeID to list status of backup/restore",
+        "volume_id": {
+          "description": "This is an optional value which is used to get information on the\nstatus of a backup for the specified volume. If no volume id is provided,\nthen status for all volumes is returned.",
           "type": "string",
-          "x-go-name": "SrcVolumeId"
+          "x-go-name": "VolumeId"
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupStatusResponse": {
+      "description": "Defines a response containing the status of the backups for a specified volume",
       "type": "object",
       "properties": {
         "statuses": {
-          "description": "statuses is list of currently active/failed/done backup/restores",
+          "description": "Statuses is list of currently active/failed/done backup/restores where\nthe key is the volume ids of current volumes being backed up or restored",
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/SdkCloudBackupStatus"
@@ -3545,11 +3703,13 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCloudBackupStatusType": {
+      "description": "CloudBackup status types",
       "type": "integer",
       "format": "int32",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkClusterAlertClearRequest": {
+      "description": "Defines a request to clear an alert",
       "type": "object",
       "properties": {
         "alert_id": {
@@ -3565,10 +3725,12 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkClusterAlertClearResponse": {
+      "description": "Empty response",
       "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkClusterAlertDeleteRequest": {
+      "description": "Defines a request to delete an alert",
       "type": "object",
       "properties": {
         "alert_id": {
@@ -3584,10 +3746,12 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkClusterAlertDeleteResponse": {
+      "description": "Empty response",
       "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkClusterAlertEnumerateRequest": {
+      "description": "Defines a request contains the information needed to get alerts from\nthe storage system. For REST you will need to pass these\nas query parameters. See swagger documentation for more information.",
       "type": "object",
       "properties": {
         "resource": {
@@ -3603,6 +3767,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkClusterAlertEnumerateResponse": {
+      "description": "Defines a response providing a list of alerts",
       "type": "object",
       "properties": {
         "alerts": {
@@ -3616,11 +3781,13 @@
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
-    "SdkClusterEnumerateRequest": {
+    "SdkClusterInspectCurrentRequest": {
+      "description": "Empty request",
       "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
-    "SdkClusterEnumerateResponse": {
+    "SdkClusterInspectCurrentResponse": {
+      "description": "Defines a response when inspecting the current cluster",
       "type": "object",
       "properties": {
         "cluster": {
@@ -3629,27 +3796,8 @@
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
-    "SdkClusterInspectRequest": {
-      "type": "object",
-      "properties": {
-        "node_id": {
-          "description": "Id of node to inspect (required)",
-          "type": "string",
-          "x-go-name": "NodeId"
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "SdkClusterInspectResponse": {
-      "type": "object",
-      "properties": {
-        "node": {
-          "$ref": "#/definitions/StorageNode"
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
     "SdkCredentialCreateRequest": {
+      "description": "Defines a request to create credentials",
       "type": "object",
       "properties": {
         "CredentialType": {
@@ -3686,6 +3834,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCredentialCreateResponse": {
+      "description": "Defines a response from creating a credential",
       "type": "object",
       "properties": {
         "credential_id": {
@@ -3697,10 +3846,11 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCredentialDeleteRequest": {
+      "description": "Defines the request to delete credentials",
       "type": "object",
       "properties": {
         "credential_id": {
-          "description": "ID for credentials",
+          "description": "Id for credentials",
           "type": "string",
           "x-go-name": "CredentialId"
         }
@@ -3708,17 +3858,21 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCredentialDeleteResponse": {
+      "description": "Empty response",
       "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCredentialEnumerateRequest": {
+      "description": "Empty request",
       "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCredentialEnumerateResponse": {
+      "description": "Defines response for a enumeration of credentials",
       "type": "object",
       "properties": {
         "credential_ids": {
+          "description": "List of credentials",
           "type": "array",
           "items": {
             "type": "string"
@@ -3729,9 +3883,11 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCredentialInspectRequest": {
+      "description": "Defines the request to inspection for credentials",
       "type": "object",
       "properties": {
         "credential_id": {
+          "description": "Id of the credential",
           "type": "string",
           "x-go-name": "CredentialId"
         }
@@ -3741,6 +3897,7 @@
     "SdkCredentialInspectResponse": {
       "description": "This response uses OneOf proto style. Depending on your programming language\nyou will need to check if the value of credential_type is one of the ones below.",
       "type": "object",
+      "title": "Defines the response to an inspection of a credential.",
       "properties": {
         "CredentialType": {
           "$ref": "#/definitions/isSdkCredentialInspectResponse_CredentialType"
@@ -3776,6 +3933,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCredentialValidateRequest": {
+      "description": "Defines a request to validate credentials",
       "type": "object",
       "properties": {
         "credential_id": {
@@ -3787,10 +3945,12 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkCredentialValidateResponse": {
+      "description": "Empty response",
       "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkGoogleCredentialRequest": {
+      "description": "Defines credentials for Google",
       "type": "object",
       "properties": {
         "json_key": {
@@ -3807,6 +3967,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkGoogleCredentialResponse": {
+      "description": "Defines the response for Google credentials",
       "type": "object",
       "properties": {
         "credential_id": {
@@ -3822,7 +3983,65 @@
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
+    "SdkNodeEnumerateRequest": {
+      "description": "Empty request",
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "SdkNodeEnumerateResponse": {
+      "description": "Defines a response with a list of nodes",
+      "type": "object",
+      "properties": {
+        "node_ids": {
+          "description": "List of all the node ids in the cluster",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "NodeIds"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "SdkNodeInspectCurrentRequest": {
+      "description": "Empty request",
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "SdkNodeInspectCurrentResponse": {
+      "description": "Defines a response when inspecting a node",
+      "type": "object",
+      "properties": {
+        "node": {
+          "$ref": "#/definitions/StorageNode"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "SdkNodeInspectRequest": {
+      "description": "Defines a request when inspecting a node",
+      "type": "object",
+      "properties": {
+        "node_id": {
+          "description": "Id of node to inspect",
+          "type": "string",
+          "x-go-name": "NodeId"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "SdkNodeInspectResponse": {
+      "description": "Defines a response when inspecting a node",
+      "type": "object",
+      "properties": {
+        "node": {
+          "$ref": "#/definitions/StorageNode"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
     "SdkObjectstoreCreateRequest": {
+      "description": "Defines a request to create an object store",
       "type": "object",
       "properties": {
         "volume_id": {
@@ -3834,6 +4053,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkObjectstoreCreateResponse": {
+      "description": "Defines a response when an object store has been created for a\nspecified volume",
       "type": "object",
       "properties": {
         "objectstore_status": {
@@ -3843,10 +4063,11 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkObjectstoreDeleteRequest": {
+      "description": "Defines a request to delete an object store service from a volume",
       "type": "object",
       "properties": {
         "objectstore_id": {
-          "description": "Objectstore ID to delete",
+          "description": "Id of the object store to delete",
           "type": "string",
           "x-go-name": "ObjectstoreId"
         }
@@ -3854,14 +4075,16 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkObjectstoreDeleteResponse": {
+      "description": "Empty response",
       "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkObjectstoreInspectRequest": {
+      "description": "Defines a request to get information about an object store endpoint",
       "type": "object",
       "properties": {
         "objectstore_id": {
-          "description": "ObjecstoreID to query objestore status",
+          "description": "Id of the object store",
           "type": "string",
           "x-go-name": "ObjectstoreId"
         }
@@ -3869,6 +4092,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkObjectstoreInspectResponse": {
+      "description": "Defines a response when inspecting an object store endpoint",
       "type": "object",
       "properties": {
         "objectstore_status": {
@@ -3878,6 +4102,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkObjectstoreUpdateRequest": {
+      "description": "Defines a request to update an object store",
       "type": "object",
       "properties": {
         "enable": {
@@ -3894,10 +4119,12 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkObjectstoreUpdateResponse": {
+      "description": "Empty response",
       "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkSchedulePolicy": {
+      "description": "Defines a schedule policy",
       "type": "object",
       "properties": {
         "name": {
@@ -3912,6 +4139,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkSchedulePolicyCreateRequest": {
+      "description": "Define a schedule policy request",
       "type": "object",
       "properties": {
         "SchedulePolicy": {
@@ -3921,10 +4149,12 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkSchedulePolicyCreateResponse": {
+      "description": "Empty response",
       "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkSchedulePolicyDeleteRequest": {
+      "description": "Define schedule policy deletion request",
       "type": "object",
       "properties": {
         "name": {
@@ -3936,14 +4166,17 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkSchedulePolicyDeleteResponse": {
+      "description": "Empty response",
       "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkSchedulePolicyEnumerateRequest": {
+      "description": "Empty request",
       "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkSchedulePolicyEnumerateResponse": {
+      "description": "Defines a schedule policy enumerate response",
       "type": "object",
       "properties": {
         "policies": {
@@ -3958,6 +4191,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkSchedulePolicyInspectRequest": {
+      "description": "Define a schedule policy inspection request",
       "type": "object",
       "properties": {
         "name": {
@@ -3969,6 +4203,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkSchedulePolicyInspectResponse": {
+      "description": "Defines a schedule policy inspection response",
       "type": "object",
       "properties": {
         "policy": {
@@ -3978,6 +4213,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkSchedulePolicyInterval": {
+      "description": "Defines a schedule policy interval",
       "type": "object",
       "properties": {
         "PeriodType": {
@@ -3993,6 +4229,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkSchedulePolicyIntervalDaily": {
+      "description": "Defines a daily schedule",
       "type": "object",
       "properties": {
         "hour": {
@@ -4011,6 +4248,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkSchedulePolicyIntervalMonthly": {
+      "description": "Defines a monthly schedule",
       "type": "object",
       "properties": {
         "day": {
@@ -4035,6 +4273,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkSchedulePolicyIntervalWeekly": {
+      "description": "Defines a weekly schedule",
       "type": "object",
       "properties": {
         "day": {
@@ -4083,6 +4322,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkSchedulePolicyUpdateRequest": {
+      "description": "Define a request to update a schedule policy",
       "type": "object",
       "properties": {
         "SchedulePolicy": {
@@ -4092,15 +4332,18 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkSchedulePolicyUpdateResponse": {
+      "description": "Empty response",
       "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkTimeWeekday": {
+      "description": "Defines times of day",
       "type": "integer",
       "format": "int32",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkVolumeAttachRequest": {
+      "description": "Defines a request to attach a volume to the node receiving this request",
       "type": "object",
       "properties": {
         "options": {
@@ -4120,6 +4363,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkVolumeAttachResponse": {
+      "description": "Defines a response from the node which received the request to attach",
       "type": "object",
       "properties": {
         "device_path": {
@@ -4131,6 +4375,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkVolumeCloneRequest": {
+      "description": "Defines a request to clone a volume or create a volume from a snapshot",
       "type": "object",
       "properties": {
         "name": {
@@ -4139,17 +4384,15 @@
           "x-go-name": "Name"
         },
         "parent_id": {
-          "description": "Parent volume id, if specified will create a new volume as a clone of the parent.",
+          "description": "Parent volume id or snapshot id will create a new volume as a clone of the parent.",
           "type": "string",
           "x-go-name": "ParentId"
-        },
-        "spec": {
-          "$ref": "#/definitions/VolumeSpec"
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkVolumeCloneResponse": {
+      "description": "Defines the response when creating a clone from a volume or a snapshot",
       "type": "object",
       "properties": {
         "volume_id": {
@@ -4161,6 +4404,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkVolumeCreateRequest": {
+      "description": "Defines a request to create a volume. Use OpenStorageVolume.Update()\nto update any labels on the volume.",
       "type": "object",
       "properties": {
         "name": {
@@ -4175,6 +4419,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkVolumeCreateResponse": {
+      "description": "Defines a response to the creation of a volume",
       "type": "object",
       "properties": {
         "volume_id": {
@@ -4186,6 +4431,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkVolumeDeleteRequest": {
+      "description": "Defines the request to delete a volume",
       "type": "object",
       "properties": {
         "volume_id": {
@@ -4197,10 +4443,12 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkVolumeDeleteResponse": {
+      "description": "Empty response",
       "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkVolumeDetachRequest": {
+      "description": "Defines a request to detach a volume",
       "type": "object",
       "properties": {
         "volume_id": {
@@ -4212,10 +4460,32 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkVolumeDetachResponse": {
+      "description": "Empty response",
       "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkVolumeEnumerateRequest": {
+      "description": "Defines a request to list volumes",
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "SdkVolumeEnumerateResponse": {
+      "description": "Defines the response when listing volumes",
+      "type": "object",
+      "properties": {
+        "volume_ids": {
+          "description": "List of volumes matching label",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "VolumeIds"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "SdkVolumeEnumerateWithFiltersRequest": {
+      "description": "Defines a request to list volumes",
       "type": "object",
       "properties": {
         "locator": {
@@ -4224,7 +4494,8 @@
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
-    "SdkVolumeEnumerateResponse": {
+    "SdkVolumeEnumerateWithFiltersResponse": {
+      "description": "Defines the response when listing volumes",
       "type": "object",
       "properties": {
         "volume_ids": {
@@ -4239,6 +4510,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkVolumeInspectRequest": {
+      "description": "Defines the request to inspect a volume",
       "type": "object",
       "properties": {
         "volume_id": {
@@ -4250,6 +4522,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkVolumeInspectResponse": {
+      "description": "Defines the response when inspecting a volume",
       "type": "object",
       "properties": {
         "volume": {
@@ -4259,6 +4532,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkVolumeMountRequest": {
+      "description": "Defines a request to mount a volume to the node receiving this request",
       "type": "object",
       "properties": {
         "mount_path": {
@@ -4283,11 +4557,13 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkVolumeMountResponse": {
+      "description": "Empty response",
       "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkVolumeSnapshotCreateRequest": {
       "type": "object",
+      "title": "Defines the request when creating a snapshot from a volume.",
       "properties": {
         "labels": {
           "description": "Labels to apply to snapshot",
@@ -4306,6 +4582,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkVolumeSnapshotCreateResponse": {
+      "description": "Defines a response after creating a snapshot of a volume",
       "type": "object",
       "properties": {
         "snapshot_id": {
@@ -4317,18 +4594,11 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkVolumeSnapshotEnumerateRequest": {
+      "description": "Defines a request to list the snaphots",
       "type": "object",
       "properties": {
-        "labels": {
-          "description": "Labels from snapshot",
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "x-go-name": "Labels"
-        },
         "volume_id": {
-          "description": "Id of volume",
+          "description": "Get the snapshots for this volume id",
           "type": "string",
           "x-go-name": "VolumeId"
         }
@@ -4336,6 +4606,42 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkVolumeSnapshotEnumerateResponse": {
+      "description": "Defines a response when listing snapshots",
+      "type": "object",
+      "properties": {
+        "volume_snapshot_ids": {
+          "description": "List of immutable snapshots",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "VolumeSnapshotIds"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "SdkVolumeSnapshotEnumerateWithFiltersRequest": {
+      "description": "Defines a request to list the snaphots",
+      "type": "object",
+      "properties": {
+        "labels": {
+          "description": "Get snapshots that match these labels",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "x-go-name": "Labels"
+        },
+        "volume_id": {
+          "description": "Get the snapshots for this volume id",
+          "type": "string",
+          "x-go-name": "VolumeId"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "SdkVolumeSnapshotEnumerateWithFiltersResponse": {
+      "description": "Defines a response when listing snapshots",
       "type": "object",
       "properties": {
         "volume_snapshot_ids": {
@@ -4350,6 +4656,7 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkVolumeSnapshotRestoreRequest": {
+      "description": "Defines a request to restore a volume to a snapshot",
       "type": "object",
       "properties": {
         "snapshot_id": {
@@ -4366,10 +4673,12 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkVolumeSnapshotRestoreResponse": {
+      "description": "Empty response",
       "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkVolumeUnmountRequest": {
+      "description": "Defines a request to unmount a volume on the node receiving this request",
       "type": "object",
       "properties": {
         "mount_path": {
@@ -4394,6 +4703,30 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkVolumeUnmountResponse": {
+      "description": "Empty response",
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "SdkVolumeUpdateRequest": {
+      "description": "This request is used to adjust or set new values in the volume",
+      "type": "object",
+      "properties": {
+        "locator": {
+          "$ref": "#/definitions/VolumeLocator"
+        },
+        "spec": {
+          "$ref": "#/definitions/VolumeSpecUpdate"
+        },
+        "volume_id": {
+          "description": "Id of the volume to update",
+          "type": "string",
+          "x-go-name": "VolumeId"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "SdkVolumeUpdateResponse": {
+      "description": "Empty response",
       "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
@@ -4599,26 +4932,13 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "StorageCluster": {
-      "description": "StorageCluster represents the state of the cluster",
+      "description": "StorageCluster represents the state and information about the cluster",
       "type": "object",
       "properties": {
         "id": {
           "description": "Id of the cluster",
           "type": "string",
           "x-go-name": "Id"
-        },
-        "node_id": {
-          "description": "NodeId is the id of the node servicing these requests",
-          "type": "string",
-          "x-go-name": "NodeId"
-        },
-        "node_ids": {
-          "description": "Nodes are a list of all the nodes on the cluster",
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "x-go-name": "NodeIds"
         },
         "status": {
           "$ref": "#/definitions/Status"
@@ -5333,7 +5653,7 @@
           "x-go-name": "Sharedv4"
         },
         "size": {
-          "description": "Size specifies the thin provisioned volume size.",
+          "description": "Size specifies the thin provisioned volume size in bytes",
           "type": "integer",
           "format": "uint64",
           "x-go-name": "Size"
@@ -5361,6 +5681,294 @@
             "type": "string"
           },
           "x-go-name": "VolumeLabels"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VolumeSpecUpdate": {
+      "description": "VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume",
+      "type": "object",
+      "properties": {
+        "AggregationLevelOpt": {
+          "$ref": "#/definitions/isVolumeSpecUpdate_AggregationLevelOpt"
+        },
+        "BlockSizeOpt": {
+          "$ref": "#/definitions/isVolumeSpecUpdate_BlockSizeOpt"
+        },
+        "CascadedOpt": {
+          "$ref": "#/definitions/isVolumeSpecUpdate_CascadedOpt"
+        },
+        "CompressedOpt": {
+          "$ref": "#/definitions/isVolumeSpecUpdate_CompressedOpt"
+        },
+        "CosOpt": {
+          "$ref": "#/definitions/isVolumeSpecUpdate_CosOpt"
+        },
+        "DedupeOpt": {
+          "$ref": "#/definitions/isVolumeSpecUpdate_DedupeOpt"
+        },
+        "EncryptedOpt": {
+          "$ref": "#/definitions/isVolumeSpecUpdate_EncryptedOpt"
+        },
+        "EphemeralOpt": {
+          "$ref": "#/definitions/isVolumeSpecUpdate_EphemeralOpt"
+        },
+        "FormatOpt": {
+          "$ref": "#/definitions/isVolumeSpecUpdate_FormatOpt"
+        },
+        "GroupEnforcedOpt": {
+          "$ref": "#/definitions/isVolumeSpecUpdate_GroupEnforcedOpt"
+        },
+        "GroupOpt": {
+          "$ref": "#/definitions/isVolumeSpecUpdate_GroupOpt"
+        },
+        "HaLevelOpt": {
+          "$ref": "#/definitions/isVolumeSpecUpdate_HaLevelOpt"
+        },
+        "IoProfileOpt": {
+          "$ref": "#/definitions/isVolumeSpecUpdate_IoProfileOpt"
+        },
+        "JournalOpt": {
+          "$ref": "#/definitions/isVolumeSpecUpdate_JournalOpt"
+        },
+        "PassphraseOpt": {
+          "$ref": "#/definitions/isVolumeSpecUpdate_PassphraseOpt"
+        },
+        "ScaleOpt": {
+          "$ref": "#/definitions/isVolumeSpecUpdate_ScaleOpt"
+        },
+        "SharedOpt": {
+          "$ref": "#/definitions/isVolumeSpecUpdate_SharedOpt"
+        },
+        "Sharedv4Opt": {
+          "$ref": "#/definitions/isVolumeSpecUpdate_Sharedv4Opt"
+        },
+        "SizeOpt": {
+          "$ref": "#/definitions/isVolumeSpecUpdate_SizeOpt"
+        },
+        "SnapshotIntervalOpt": {
+          "$ref": "#/definitions/isVolumeSpecUpdate_SnapshotIntervalOpt"
+        },
+        "SnapshotScheduleOpt": {
+          "$ref": "#/definitions/isVolumeSpecUpdate_SnapshotScheduleOpt"
+        },
+        "StickyOpt": {
+          "$ref": "#/definitions/isVolumeSpecUpdate_StickyOpt"
+        },
+        "replica_set": {
+          "$ref": "#/definitions/ReplicaSet"
+        },
+        "volume_labels": {
+          "description": "VolumeLabels configuration labels",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "x-go-name": "VolumeLabels"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VolumeSpecUpdate_AggregationLevel": {
+      "type": "object",
+      "properties": {
+        "AggregationLevel": {
+          "type": "integer",
+          "format": "uint32"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VolumeSpecUpdate_BlockSize": {
+      "type": "object",
+      "properties": {
+        "BlockSize": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VolumeSpecUpdate_Cascaded": {
+      "type": "object",
+      "properties": {
+        "Cascaded": {
+          "type": "boolean"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VolumeSpecUpdate_Compressed": {
+      "type": "object",
+      "properties": {
+        "Compressed": {
+          "type": "boolean"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VolumeSpecUpdate_Cos": {
+      "type": "object",
+      "properties": {
+        "Cos": {
+          "$ref": "#/definitions/CosType"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VolumeSpecUpdate_Dedupe": {
+      "type": "object",
+      "properties": {
+        "Dedupe": {
+          "type": "boolean"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VolumeSpecUpdate_Encrypted": {
+      "type": "object",
+      "properties": {
+        "Encrypted": {
+          "type": "boolean"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VolumeSpecUpdate_Ephemeral": {
+      "type": "object",
+      "properties": {
+        "Ephemeral": {
+          "type": "boolean"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VolumeSpecUpdate_Format": {
+      "type": "object",
+      "properties": {
+        "Format": {
+          "$ref": "#/definitions/FSType"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VolumeSpecUpdate_Group": {
+      "type": "object",
+      "properties": {
+        "Group": {
+          "$ref": "#/definitions/Group"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VolumeSpecUpdate_GroupEnforced": {
+      "type": "object",
+      "properties": {
+        "GroupEnforced": {
+          "type": "boolean"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VolumeSpecUpdate_HaLevel": {
+      "type": "object",
+      "properties": {
+        "HaLevel": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VolumeSpecUpdate_IoProfile": {
+      "type": "object",
+      "properties": {
+        "IoProfile": {
+          "$ref": "#/definitions/IoProfile"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VolumeSpecUpdate_Journal": {
+      "type": "object",
+      "properties": {
+        "Journal": {
+          "type": "boolean"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VolumeSpecUpdate_Passphrase": {
+      "type": "object",
+      "properties": {
+        "Passphrase": {
+          "type": "string"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VolumeSpecUpdate_Scale": {
+      "type": "object",
+      "properties": {
+        "Scale": {
+          "type": "integer",
+          "format": "uint32"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VolumeSpecUpdate_Shared": {
+      "type": "object",
+      "properties": {
+        "Shared": {
+          "type": "boolean"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VolumeSpecUpdate_Sharedv4": {
+      "type": "object",
+      "properties": {
+        "Sharedv4": {
+          "type": "boolean"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VolumeSpecUpdate_Size": {
+      "type": "object",
+      "properties": {
+        "Size": {
+          "type": "integer",
+          "format": "uint64"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VolumeSpecUpdate_SnapshotInterval": {
+      "type": "object",
+      "properties": {
+        "SnapshotInterval": {
+          "type": "integer",
+          "format": "uint32"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VolumeSpecUpdate_SnapshotSchedule": {
+      "type": "object",
+      "properties": {
+        "SnapshotSchedule": {
+          "type": "string"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "VolumeSpecUpdate_Sticky": {
+      "type": "object",
+      "properties": {
+        "Sticky": {
+          "type": "boolean"
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
@@ -5412,6 +6020,94 @@
       "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
+    "isVolumeSpecUpdate_AggregationLevelOpt": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "isVolumeSpecUpdate_BlockSizeOpt": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "isVolumeSpecUpdate_CascadedOpt": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "isVolumeSpecUpdate_CompressedOpt": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "isVolumeSpecUpdate_CosOpt": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "isVolumeSpecUpdate_DedupeOpt": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "isVolumeSpecUpdate_EncryptedOpt": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "isVolumeSpecUpdate_EphemeralOpt": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "isVolumeSpecUpdate_FormatOpt": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "isVolumeSpecUpdate_GroupEnforcedOpt": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "isVolumeSpecUpdate_GroupOpt": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "isVolumeSpecUpdate_HaLevelOpt": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "isVolumeSpecUpdate_IoProfileOpt": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "isVolumeSpecUpdate_JournalOpt": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "isVolumeSpecUpdate_PassphraseOpt": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "isVolumeSpecUpdate_ScaleOpt": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "isVolumeSpecUpdate_SharedOpt": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "isVolumeSpecUpdate_Sharedv4Opt": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "isVolumeSpecUpdate_SizeOpt": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "isVolumeSpecUpdate_SnapshotIntervalOpt": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "isVolumeSpecUpdate_SnapshotScheduleOpt": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "isVolumeSpecUpdate_StickyOpt": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
     "openStorageCloudBackupClient": {
       "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
@@ -5421,6 +6117,10 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "openStorageCredentialsClient": {
+      "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "openStorageNodeClient": {
       "type": "object",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },

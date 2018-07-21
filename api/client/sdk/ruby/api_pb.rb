@@ -778,6 +778,22 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :default_id, :string, 1
     map :pairs, :string, :message, 2, "openstorage.api.ClusterPairInfo"
   end
+  add_message "openstorage.api.Catalog" do
+    optional :name, :string, 1
+    optional :path, :string, 2
+    optional :type, :string, 3
+    optional :size, :uint64, 4
+    optional :LastModified, :message, 5, "google.protobuf.Timestamp"
+    repeated :children, :message, 6, "openstorage.api.Catalog"
+  end
+  add_message "openstorage.api.Report" do
+    optional :directories, :int64, 2
+    optional :files, :int64, 3
+  end
+  add_message "openstorage.api.CatalogResponse" do
+    optional :root, :message, 1, "openstorage.api.Catalog"
+    optional :report, :message, 2, "openstorage.api.Report"
+  end
   add_enum "openstorage.api.Status" do
     value :STATUS_NONE, 0
     value :STATUS_INIT, 1
@@ -1090,6 +1106,9 @@ module Openstorage
     ClusterPairGetRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.ClusterPairGetRequest").msgclass
     ClusterPairGetResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.ClusterPairGetResponse").msgclass
     ClusterPairsEnumerateResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.ClusterPairsEnumerateResponse").msgclass
+    Catalog = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.Catalog").msgclass
+    Report = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.Report").msgclass
+    CatalogResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.CatalogResponse").msgclass
     Status = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.Status").enummodule
     DriverType = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.DriverType").enummodule
     FSType = Google::Protobuf::DescriptorPool.generated_pool.lookup("openstorage.api.FSType").enummodule

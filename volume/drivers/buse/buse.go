@@ -381,3 +381,7 @@ func (cl *clusterListener) Join(
 func (cl *clusterListener) String() string {
 	return Name
 }
+
+func (d *driver) Catalog(volumeID, path, depth string) (api.CatalogResponse, error) {
+	return api.CatalogResponse{}, volume.ErrNotSupported
+}

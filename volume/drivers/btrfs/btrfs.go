@@ -184,3 +184,7 @@ func (d *driver) Alerts(volumeID string) (*api.Alerts, error) {
 }
 
 func (d *driver) Shutdown() {}
+
+func (d *driver) Catalog(volumeID, path, depth string) (api.CatalogResponse, error) {
+	return api.CatalogResponse{}, volume.ErrNotSupported
+}

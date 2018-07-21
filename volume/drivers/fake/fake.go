@@ -25,6 +25,7 @@ import (
 
 	"strings"
 
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
@@ -809,5 +810,21 @@ func (d *driver) CloudBackupSchedEnumerate() (*api.CloudBackupSchedEnumerateResp
 
 	return &api.CloudBackupSchedEnumerateResponse{
 		Schedules: schedules,
+	}, nil
+}
+
+func (d *driver) Catalog(volumeID, path, depth string) (api.CatalogResponse, error) {
+	return api.CatalogResponse{
+		Root: &api.Catalog{
+			Name:         "",
+			Path:         "/var/lib/osd/catalog/12345678",
+			Type:         "Directory",
+			Size:         4096,
+			LastModified: &timestamp.Timestamp{},
+		},
+		Report: &api.Report{
+			Directories: 0,
+			Files:       0,
+		},
 	}, nil
 }
