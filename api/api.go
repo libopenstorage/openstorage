@@ -82,6 +82,8 @@ const (
 	OptCredAccessKey = "CredAccessKey"
 	// OptCredSecretKey for s3
 	OptCredSecretKey = "CredSecretKey"
+	// OptCredBucket is the optional bucket name
+	OptCredBucket = "CredBucket"
 	// OptCredGoogleProjectID projectID for google cloud
 	OptCredGoogleProjectID = "CredProjectID"
 	// OptCredGoogleJsonKey for google cloud
