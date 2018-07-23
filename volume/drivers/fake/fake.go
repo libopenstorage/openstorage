@@ -313,6 +313,30 @@ func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.Volu
 }
 
 func (d *driver) Shutdown() {}
+func (d *driver) Stats(volumeID string, cumulative bool) (*api.Stats, error) {
+
+	vols, err := d.Inspect([]string{volumeID})
+	if err == kvdb.ErrNotFound {
+		return nil, fmt.Errorf("Volume not found")
+	} else if err != nil {
+		return nil, err
+	} else if len(vols) == 0 {
+		return nil, fmt.Errorf("Volume not found")
+	}
+
+	return &api.Stats{
+		Reads:      uint64(12345),
+		ReadMs:     uint64(1),
+		ReadBytes:  uint64(1234567),
+		Writes:     uint64(9876),
+		WriteMs:    uint64(2),
+		WriteBytes: uint64(7654321),
+		IoProgress: uint64(987),
+		IoMs:       uint64(3),
+		BytesUsed:  uint64(1234567890),
+		IntervalMs: uint64(4),
+	}, nil
+}
 
 func (d *driver) CredsCreate(
 	params map[string]string,
