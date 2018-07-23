@@ -509,3 +509,55 @@ func TestSdkVolumeUpdate(t *testing.T) {
 	_, err = c.Update(context.Background(), req)
 	assert.NoError(t, err)
 }
+
+func TestSdkVolumeStats(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	id := "myid"
+	cumulative := true
+
+	s.MockDriver().
+		EXPECT().
+		Stats(id, cumulative).
+		Return(&api.Stats{
+			Reads: 12345,
+		}, nil).
+		Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageVolumeClient(s.Conn())
+
+	// Get info
+	r, err := c.Stats(
+		context.Background(),
+		&api.SdkVolumeStatsRequest{
+			VolumeId: id,
+		})
+	assert.NoError(t, err)
+	assert.NotNil(t, r.GetStats())
+	assert.Equal(t, uint64(12345), r.GetStats().GetReads())
+}
+
+func TestSdkVolumeStatsBadArguments(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	req := &api.SdkVolumeStatsRequest{}
+
+	// Setup client
+	c := api.NewOpenStorageVolumeClient(s.Conn())
+
+	// Get info
+	_, err := c.Stats(context.Background(), req)
+	assert.Error(t, err)
+
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "volume id")
+}

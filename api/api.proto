@@ -427,17 +427,18 @@ message Volume {
 }
 
 // Stats is a structure that represents last collected stats for a volume
-// swagger:model
 message Stats {
   // Reads completed successfully
   uint64 reads = 1;
   // Time spent in reads in ms
   uint64 read_ms = 2;
+  // Number of bytes read
   uint64 read_bytes = 3;
   // Writes completed successfully
   uint64 writes = 4;
   // Time spent in writes in ms
   uint64 write_ms = 5;
+  // Number of bytes written
   uint64 write_bytes = 6;
   // IOs curently in progress
   uint64 io_progress = 7;
@@ -451,7 +452,6 @@ message Stats {
 
 
 // Alert is a structure that represents an alert object
-// swagger:model
 message Alert {
   // Id for Alert
   int64 id = 1;
@@ -857,6 +857,14 @@ service OpenStorageVolume {
       option(google.api.http) = {
         put: "/v1/volumes/{volume_id}"
         body: "*"
+      };
+    }
+
+  // Stats returns the statistics for the requested volume
+  rpc Stats(SdkVolumeStatsRequest)
+    returns (SdkVolumeStatsResponse) {
+      option(google.api.http) = {
+        get: "/v1/volumes/stats/{volume_id}"
       };
     }
 
@@ -1608,6 +1616,21 @@ message SdkVolumeUpdateRequest {
 
 // Empty response
 message SdkVolumeUpdateResponse {
+}
+
+// Defines a request to retreive volume statistics
+message SdkVolumeStatsRequest {
+  // Id of the volume to get statistics
+  string volume_id = 1;
+  // When set to false the stats are in /proc/diskstats style stats.
+  // When set to true the stats are stats for a specific duration.
+  bool not_cumulative = 2;
+}
+
+// Defines a response containing drive statistics
+message SdkVolumeStatsResponse {
+  // Statistics for a single volume
+  Stats stats = 1;
 }
 
 // Defines a request to list volumes

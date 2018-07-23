@@ -1192,6 +1192,39 @@
         ]
       }
     },
+    "/v1/volumes/stats/{volume_id}": {
+      "get": {
+        "summary": "Stats returns the statistics for the requested volume",
+        "operationId": "Stats",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeStatsResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "volume_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "not_cumulative",
+            "description": "When set to false the stats are in /proc/diskstats style stats.\nWhen set to true the stats are stats for a specific duration.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          }
+        ],
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
     "/v1/volumes/unmount": {
       "post": {
         "summary": "Unmount unmounts a mounted volume in the host that the client is communicating with\nNOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more\ninformation about a new feature to allow attachment to any node.",
@@ -1359,7 +1392,7 @@
           "description": "Timestamp when such alert was raised the very first time."
         }
       },
-      "title": "Alert is a structure that represents an alert object\nswagger:model"
+      "title": "Alert is a structure that represents an alert object"
     },
     "apiAttachState": {
       "type": "string",
@@ -2556,6 +2589,16 @@
       "type": "object",
       "title": "Empty response"
     },
+    "apiSdkVolumeStatsResponse": {
+      "type": "object",
+      "properties": {
+        "stats": {
+          "$ref": "#/definitions/apiStats",
+          "title": "Statistics for a single volume"
+        }
+      },
+      "title": "Defines a response containing drive statistics"
+    },
     "apiSdkVolumeUnmountRequest": {
       "type": "object",
       "properties": {
@@ -2626,6 +2669,62 @@
         }
       },
       "title": "Source is a structure that can be given to a volume\nto seed the volume with data.\nswagger:model"
+    },
+    "apiStats": {
+      "type": "object",
+      "properties": {
+        "reads": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Reads completed successfully"
+        },
+        "read_ms": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Time spent in reads in ms"
+        },
+        "read_bytes": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Number of bytes read"
+        },
+        "writes": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Writes completed successfully"
+        },
+        "write_ms": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Time spent in writes in ms"
+        },
+        "write_bytes": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Number of bytes written"
+        },
+        "io_progress": {
+          "type": "string",
+          "format": "uint64",
+          "title": "IOs curently in progress"
+        },
+        "io_ms": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Time spent doing IOs ms"
+        },
+        "bytes_used": {
+          "type": "string",
+          "format": "uint64",
+          "title": "BytesUsed"
+        },
+        "interval_ms": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Interval in ms during which stats were collected"
+        }
+      },
+      "title": "Stats is a structure that represents last collected stats for a volume"
     },
     "apiStorageCluster": {
       "type": "object",

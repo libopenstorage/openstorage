@@ -305,6 +305,30 @@ func (s *VolumeServer) Update(
 	return &api.SdkVolumeUpdateResponse{}, nil
 }
 
+// Stats returns volume statistics
+func (s *VolumeServer) Stats(
+	ctx context.Context,
+	req *api.SdkVolumeStatsRequest,
+) (*api.SdkVolumeStatsResponse, error) {
+
+	if len(req.GetVolumeId()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
+	}
+
+	stats, err := s.driver.Stats(req.GetVolumeId(), !req.GetNotCumulative())
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"Failed to obtain stats for volume %s: %v",
+			req.GetVolumeId(),
+			err.Error())
+	}
+
+	return &api.SdkVolumeStatsResponse{
+		Stats: stats,
+	}, nil
+}
+
 func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpecUpdate) *api.VolumeSpec {
 
 	spec := &api.VolumeSpec{}
