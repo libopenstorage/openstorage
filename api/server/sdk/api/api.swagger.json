@@ -1851,9 +1851,12 @@
           "type": "string",
           "title": "The cloud credential used with this schedule"
         },
-        "schedule": {
-          "$ref": "#/definitions/apiSdkSchedulePolicyInterval",
-          "title": "Schedule is the frequence of backup"
+        "schedules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiSdkSchedulePolicyInterval"
+          },
+          "title": "Schedules are the frequencies of the backup"
         },
         "max_backups": {
           "type": "string",
@@ -2181,9 +2184,12 @@
           "type": "string",
           "title": "Name of the schedule policy"
         },
-        "schedule": {
-          "$ref": "#/definitions/apiSdkSchedulePolicyInterval",
-          "title": "Schedule policy"
+        "schedules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiSdkSchedulePolicyInterval"
+          },
+          "title": "Schedule policies"
         }
       },
       "title": "Defines a schedule policy"
