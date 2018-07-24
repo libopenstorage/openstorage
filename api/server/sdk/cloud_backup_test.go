@@ -680,12 +680,14 @@ func TestSdkCloudBackupSchedCreate(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
-	testSched := &api.SdkSchedulePolicyInterval{
-		Retain: 1,
-		PeriodType: &api.SdkSchedulePolicyInterval_Daily{
-			Daily: &api.SdkSchedulePolicyIntervalDaily{
-				Hour:   0,
-				Minute: 30,
+	testSched := []*api.SdkSchedulePolicyInterval{
+		&api.SdkSchedulePolicyInterval{
+			Retain: 1,
+			PeriodType: &api.SdkSchedulePolicyInterval_Daily{
+				Daily: &api.SdkSchedulePolicyIntervalDaily{
+					Hour:   0,
+					Minute: 30,
+				},
 			},
 		},
 	}
@@ -693,14 +695,14 @@ func TestSdkCloudBackupSchedCreate(t *testing.T) {
 		CloudSchedInfo: &api.SdkCloudBackupScheduleInfo{
 			SrcVolumeId:  "test-id",
 			CredentialId: "uuid",
-			Schedule:     testSched,
+			Schedules:    testSched,
 		},
 	}
 
 	mockReq := api.CloudBackupSchedCreateRequest{}
 	mockReq.SrcVolumeID = req.GetCloudSchedInfo().GetSrcVolumeId()
 	mockReq.CredentialUUID = req.GetCloudSchedInfo().GetCredentialId()
-	mockReq.Schedule = "freq: daily\nminute: 30\nretain: 1\n"
+	mockReq.Schedule = "- freq: daily\n  minute: 30\n  retain: 1\n"
 
 	// Create response
 	s.MockDriver().
@@ -756,13 +758,13 @@ func TestSdkCloudBackupSchedEnumerate(t *testing.T) {
 			"test-uuid-1": api.CloudBackupScheduleInfo{
 				SrcVolumeID:    "myid",
 				CredentialUUID: "test-uuid-1",
-				Schedule:       "freq: daily\nminute: 30\nretain: 1\n",
+				Schedule:       "- freq: daily\n  minute: 30\n  retain: 1\n",
 				MaxBackups:     4,
 			},
 			"test-uuid-2": api.CloudBackupScheduleInfo{
 				SrcVolumeID:    "myid2",
 				CredentialUUID: "test-uuid-1",
-				Schedule:       "freq: daily\nminute: 30\nretain: 1\n",
+				Schedule:       "- freq: daily\n  minute: 30\n  retain: 1\n",
 				MaxBackups:     3,
 			},
 		},
@@ -790,6 +792,7 @@ func TestSdkCloudBackupSchedEnumerate(t *testing.T) {
 		assert.Equal(t, v.GetSrcVolumeId(), sched.SrcVolumeID)
 		assert.Equal(t, v.GetCredentialId(), sched.CredentialUUID)
 		assert.Equal(t, v.GetMaxBackups(), uint64(sched.MaxBackups))
-		assert.Equal(t, v.GetSchedule().GetDaily().GetMinute(), int32(30))
+		assert.Len(t, v.GetSchedules(), 1)
+		assert.Equal(t, v.GetSchedules()[0].GetDaily().GetMinute(), int32(30))
 	}
 }

@@ -23,6 +23,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 
+	"github.com/libopenstorage/openstorage/pkg/sched"
 	"github.com/libopenstorage/openstorage/schedpolicy"
 
 	"github.com/stretchr/testify/assert"
@@ -31,38 +32,6 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 )
-
-/*
-//
-// Schedules in yaml format
-//
-// Day: "freq: daily\nminute: 30\n"
-// Weekly: "freq: weekly\nweekday: 5\nhour: 11\nminute: 30\n"
-// Monthly: "freq: monthly\nday: 5\nhour: 10\nminute: 30\n"
-//
-package main
-
-import (
-        "fmt"
-        "github.com/libopenstorage/openstorage/pkg/sched"
-        "gopkg.in/yaml.v2"
-        "time"
-)
-
-func main() {
-        daily := sched.Daily(0, 30).Spec()
-        weekly := sched.Weekly(time.Friday, 11, 30).Spec()
-        monthly := sched.Monthly(5, 10, 30).Spec()
-
-        do, _ := yaml.Marshal(daily)
-        wo, _ := yaml.Marshal(weekly)
-        mo, _ := yaml.Marshal(monthly)
-
-        fmt.Printf("D: %q\n", do)
-        fmt.Printf("W: %q\n", wo)
-        fmt.Printf("M: %q\n", mo)
-}
-*/
 
 func TestSdkSchedulePolicyCreateSuccess(t *testing.T) {
 
@@ -73,12 +42,23 @@ func TestSdkSchedulePolicyCreateSuccess(t *testing.T) {
 	req := &api.SdkSchedulePolicyCreateRequest{
 		SchedulePolicy: &api.SdkSchedulePolicy{
 			Name: "dummy-schedule-name",
-			Schedule: &api.SdkSchedulePolicyInterval{
-				Retain: 1,
-				PeriodType: &api.SdkSchedulePolicyInterval_Daily{
-					Daily: &api.SdkSchedulePolicyIntervalDaily{
-						Hour:   0,
-						Minute: 30,
+			Schedules: []*api.SdkSchedulePolicyInterval{
+				&api.SdkSchedulePolicyInterval{
+					Retain: 1,
+					PeriodType: &api.SdkSchedulePolicyInterval_Daily{
+						Daily: &api.SdkSchedulePolicyIntervalDaily{
+							Hour:   0,
+							Minute: 30,
+						},
+					},
+				},
+				&api.SdkSchedulePolicyInterval{
+					Retain: 1,
+					PeriodType: &api.SdkSchedulePolicyInterval_Daily{
+						Daily: &api.SdkSchedulePolicyIntervalDaily{
+							Minute: 1,
+							Hour:   0,
+						},
 					},
 				},
 			},
@@ -87,9 +67,15 @@ func TestSdkSchedulePolicyCreateSuccess(t *testing.T) {
 
 	s.MockCluster().
 		EXPECT().
-		SchedPolicyCreate(req.GetSchedulePolicy().GetName(),
-			gomock.Any()).
-		Return(nil)
+		SchedPolicyCreate(req.GetSchedulePolicy().GetName(), gomock.Any()).
+		Do(func(name, schedule string) {
+			// Verify that the yaml string created can be parsed
+			intervals, _, err := sched.ParseScheduleAndPolicies(schedule)
+			assert.NoError(t, err)
+			assert.Len(t, intervals, len(req.GetSchedulePolicy().GetSchedules()))
+		}).
+		Return(nil).
+		Times(1)
 
 		// Setup client
 	c := api.NewOpenStorageSchedulePolicyClient(s.Conn())
@@ -98,6 +84,7 @@ func TestSdkSchedulePolicyCreateSuccess(t *testing.T) {
 	_, err := c.Create(context.Background(), req)
 	assert.NoError(t, err)
 }
+
 func TestSdkSchedulePolicyCreateFailed(t *testing.T) {
 
 	// Create server and client connection
@@ -107,13 +94,15 @@ func TestSdkSchedulePolicyCreateFailed(t *testing.T) {
 	req := &api.SdkSchedulePolicyCreateRequest{
 		SchedulePolicy: &api.SdkSchedulePolicy{
 			Name: "dummy-schedule-name",
-			Schedule: &api.SdkSchedulePolicyInterval{
-				Retain: 2,
-				PeriodType: &api.SdkSchedulePolicyInterval_Weekly{
-					Weekly: &api.SdkSchedulePolicyIntervalWeekly{
-						Day:    api.SdkTimeWeekday_SdkTimeWeekdayFriday,
-						Hour:   0,
-						Minute: 30,
+			Schedules: []*api.SdkSchedulePolicyInterval{
+				&api.SdkSchedulePolicyInterval{
+					Retain: 2,
+					PeriodType: &api.SdkSchedulePolicyInterval_Weekly{
+						Weekly: &api.SdkSchedulePolicyIntervalWeekly{
+							Day:    api.SdkTimeWeekday_SdkTimeWeekdayFriday,
+							Hour:   0,
+							Minute: 30,
+						},
 					},
 				},
 			},
@@ -193,13 +182,24 @@ func TestSdkSchedulePolicyUpdateSuccess(t *testing.T) {
 	req := &api.SdkSchedulePolicyUpdateRequest{
 		SchedulePolicy: &api.SdkSchedulePolicy{
 			Name: "dummy-schedule-name",
-			Schedule: &api.SdkSchedulePolicyInterval{
-				Retain: 1,
-				PeriodType: &api.SdkSchedulePolicyInterval_Monthly{
-					Monthly: &api.SdkSchedulePolicyIntervalMonthly{
-						Day:    1,
-						Hour:   0,
-						Minute: 30,
+			Schedules: []*api.SdkSchedulePolicyInterval{
+				&api.SdkSchedulePolicyInterval{
+					Retain: 1,
+					PeriodType: &api.SdkSchedulePolicyInterval_Monthly{
+						Monthly: &api.SdkSchedulePolicyIntervalMonthly{
+							Day:    1,
+							Hour:   0,
+							Minute: 30,
+						},
+					},
+				},
+				&api.SdkSchedulePolicyInterval{
+					Retain: 1,
+					PeriodType: &api.SdkSchedulePolicyInterval_Daily{
+						Daily: &api.SdkSchedulePolicyIntervalDaily{
+							Minute: 1,
+							Hour:   0,
+						},
 					},
 				},
 			},
@@ -210,6 +210,10 @@ func TestSdkSchedulePolicyUpdateSuccess(t *testing.T) {
 		EXPECT().
 		SchedPolicyUpdate(req.GetSchedulePolicy().GetName(),
 			gomock.Any()).
+		Do(func(name, schedule string) {
+			_, _, err := sched.ParseScheduleAndPolicies(schedule)
+			assert.NoError(t, err)
+		}).
 		Return(nil)
 
 		// Setup client
@@ -219,6 +223,7 @@ func TestSdkSchedulePolicyUpdateSuccess(t *testing.T) {
 	_, err := c.Update(context.Background(), req)
 	assert.NoError(t, err)
 }
+
 func TestSdkSchedulePolicyUpdateFailed(t *testing.T) {
 
 	// Create server and client connection
@@ -228,13 +233,24 @@ func TestSdkSchedulePolicyUpdateFailed(t *testing.T) {
 	req := &api.SdkSchedulePolicyUpdateRequest{
 		SchedulePolicy: &api.SdkSchedulePolicy{
 			Name: "dummy-schedule-name",
-			Schedule: &api.SdkSchedulePolicyInterval{
-				Retain: 10,
-				PeriodType: &api.SdkSchedulePolicyInterval_Monthly{
-					Monthly: &api.SdkSchedulePolicyIntervalMonthly{
-						Day:    1,
-						Hour:   0,
-						Minute: 30,
+			Schedules: []*api.SdkSchedulePolicyInterval{
+				&api.SdkSchedulePolicyInterval{
+					Retain: 1,
+					PeriodType: &api.SdkSchedulePolicyInterval_Monthly{
+						Monthly: &api.SdkSchedulePolicyIntervalMonthly{
+							Day:    1,
+							Hour:   0,
+							Minute: 30,
+						},
+					},
+				},
+				&api.SdkSchedulePolicyInterval{
+					Retain: 1,
+					PeriodType: &api.SdkSchedulePolicyInterval_Daily{
+						Daily: &api.SdkSchedulePolicyIntervalDaily{
+							Minute: 1,
+							Hour:   0,
+						},
 					},
 				},
 			},
@@ -387,11 +403,11 @@ func TestSdkSchedulePolicyEnumerateSuccess(t *testing.T) {
 	enumerateData := []*schedpolicy.SchedPolicy{
 		&schedpolicy.SchedPolicy{
 			Name:     "sched-1",
-			Schedule: "freq: daily\nminute: 30\n",
+			Schedule: "- freq: daily\n  minute: 30\n",
 		},
 		&schedpolicy.SchedPolicy{
 			Name:     "sched-2",
-			Schedule: "freq: weekly\nweekday: 5\nhour: 11\nminute: 30\n",
+			Schedule: "- freq: weekly\n  weekday: 5\n  hour: 11\n  minute: 30\n",
 		},
 	}
 
@@ -447,7 +463,7 @@ func TestSdkSchedulePolicyInspectSuccess(t *testing.T) {
 
 	policy := &schedpolicy.SchedPolicy{
 		Name:     "sched-2",
-		Schedule: "freq: monthly\nday: 5\nhour: 10\nminute: 30\n",
+		Schedule: "- freq: monthly\n  day: 5\n  hour: 10\n  minute: 30\n",
 	}
 
 	s.MockCluster().

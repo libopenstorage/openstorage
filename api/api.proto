@@ -1365,8 +1365,8 @@ message SdkSchedulePolicyInterval {
 message SdkSchedulePolicy {
   // Name of the schedule policy
   string name = 1;
-  // Schedule policy
-  SdkSchedulePolicyInterval schedule = 2;
+  // Schedule policies
+  repeated SdkSchedulePolicyInterval schedules = 2;
 }
 
 // Defines a request to create credentials
@@ -2080,8 +2080,8 @@ message SdkCloudBackupScheduleInfo{
   string src_volume_id = 1;
   // The cloud credential used with this schedule
   string credential_id = 2;
-  // Schedule is the frequence of backup
-  SdkSchedulePolicyInterval schedule = 3;
+  // Schedules are the frequencies of the backup
+  repeated SdkSchedulePolicyInterval schedules = 3;
   // MaxBackups are the maximum number of backups retained
   // in cloud.Older backups are deleted
   uint64 max_backups = 4;

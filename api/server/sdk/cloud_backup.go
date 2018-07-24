@@ -263,12 +263,12 @@ func (s *CloudBackupServer) SchedCreate(
 		return nil, status.Error(codes.InvalidArgument, "Must supply source volume id")
 	} else if len(req.GetCloudSchedInfo().GetCredentialId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply credential uuid")
-	} else if req.GetCloudSchedInfo().GetSchedule() == nil ||
-		req.GetCloudSchedInfo().GetSchedule().GetPeriodType() == nil {
+	} else if req.GetCloudSchedInfo().GetSchedules() == nil ||
+		len(req.GetCloudSchedInfo().GetSchedules()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply Schedule")
 	}
 
-	sched, err := sdkSchedToRetainInternalSpecYamlByte(req.GetCloudSchedInfo().GetSchedule())
+	sched, err := sdkSchedToRetainInternalSpecYamlByte(req.GetCloudSchedInfo().GetSchedules())
 	if err != nil {
 		return nil, err
 	}
@@ -339,14 +339,14 @@ func ToSdkCloudBackupSchedEnumerateResponse(r *api.CloudBackupSchedEnumerateResp
 
 func ToSdkCloudBackupdScheduleInfo(s api.CloudBackupScheduleInfo) *api.SdkCloudBackupScheduleInfo {
 
-	schedule, err := retainInternalSpecYamlByteToSdkSched([]byte(s.Schedule))
+	schedules, err := retainInternalSpecYamlByteToSdkSched([]byte(s.Schedule))
 	if err != nil {
 		return nil
 	}
 	cloudSched := &api.SdkCloudBackupScheduleInfo{
 		SrcVolumeId:  s.SrcVolumeID,
 		CredentialId: s.CredentialUUID,
-		Schedule:     schedule,
+		Schedules:    schedules,
 		// Not sure about go and protobuf type conversion, converting to higher type
 		// converting uint to uint64
 		MaxBackups: uint64(s.MaxBackups),
