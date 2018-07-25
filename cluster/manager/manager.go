@@ -434,12 +434,13 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 
 	c.size = db.Size
 
-	peers := c.getNonDecommisionedPeers(db)
-	c.gossip.UpdateCluster(peers)
+	c.gossip.UpdateCluster(c.getNonDecommisionedPeers(db))
+
+	// update the nodeCache and remove any nodes not present in cluster database
 	c.nodeCacheLock.Lock()
 	defer c.nodeCacheLock.Unlock()
 	for _, n := range c.nodeCache {
-		_, found := peers[types.NodeId(n.Id)]
+		_, found := db.NodeEntries[n.Id]
 		if !found {
 			delete(c.nodeCache, n.Id)
 		}
@@ -1066,6 +1067,14 @@ func (c *ClusterManager) initListeners(
 	if kvClusterInfo.Status == api.Status_STATUS_INIT {
 		logrus.Panicln("Cluster in an unexpected state: ", kvClusterInfo.Status)
 	}
+
+	// update node cache with entries in the database at this point since
+	// we are going to start watch at kvp.ModifiedIndex
+	c.nodeCacheLock.Lock()
+	defer c.nodeCacheLock.Unlock()
+	for _, node := range c.nodes(kvClusterInfo) {
+		c.nodeCache[node.Id] = node
+	}
 	return kvp.ModifiedIndex, kvClusterInfo, nil
 }
 
@@ -1284,18 +1293,10 @@ func (c *ClusterManager) PeerStatus(listenerName string) (map[string]api.Status,
 	return statusMap, nil
 }
 
-func (c *ClusterManager) enumerateNodesFromClusterDB() []api.Node {
-	clusterDB, _, err := readClusterInfo()
-	if err != nil {
-		logrus.Errorf("enumerateNodesFromClusterDB failed with error: %v", err)
-		return make([]api.Node, 0)
-	}
+func (c *ClusterManager) nodes(clusterDB *cluster.ClusterInfo) []api.Node {
 	nodes := []api.Node{}
 	for _, n := range clusterDB.NodeEntries {
 		node := api.Node{}
-		if n.Status == api.Status_STATUS_DECOMMISSION {
-			continue
-		}
 		if n.Id == c.selfNode.Id {
 			node = *c.getCurrentState()
 		} else {
@@ -1309,6 +1310,15 @@ func (c *ClusterManager) enumerateNodesFromClusterDB() []api.Node {
 		nodes = append(nodes, node)
 	}
 	return nodes
+}
+
+func (c *ClusterManager) enumerateNodesFromClusterDB() []api.Node {
+	clusterDB, _, err := readClusterInfo()
+	if err != nil {
+		logrus.Errorf("enumerateNodesFromClusterDB failed with error: %v", err)
+		return make([]api.Node, 0)
+	}
+	return c.nodes(&clusterDB)
 }
 
 func (c *ClusterManager) enumerateNodesFromCache() []api.Node {
