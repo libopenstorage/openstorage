@@ -1662,8 +1662,10 @@ message SdkVolumeEnumerateWithFiltersResponse {
 message SdkVolumeSnapshotCreateRequest {
   // Id of volume to take the snapshot from
   string volume_id = 1;
+  // Name of the snapshot.
+  string name = 2;
   // Labels to apply to snapshot
-  map<string, string> labels = 2;
+  map<string, string> labels = 3;
 }
 
 // Defines a response after creating a snapshot of a volume

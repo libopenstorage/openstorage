@@ -57,14 +57,18 @@ func TestSdkVolumeSnapshotCreate(t *testing.T) {
 
 	volid := "volid"
 	snapid := "snapid"
+	snapName := "snapName"
 	req := &api.SdkVolumeSnapshotCreateRequest{
 		VolumeId: volid,
+		Name:     snapName,
 	}
 
 	// Create response
 	s.MockDriver().
 		EXPECT().
-		Snapshot(req.GetVolumeId(), true, &api.VolumeLocator{}).
+		Snapshot(req.GetVolumeId(), true, &api.VolumeLocator{
+			Name: snapName,
+		}).
 		Return(snapid, nil).
 		Times(1)
 

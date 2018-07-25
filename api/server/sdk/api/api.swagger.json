@@ -2514,6 +2514,10 @@
           "type": "string",
           "title": "Id of volume to take the snapshot from"
         },
+        "name": {
+          "type": "string",
+          "description": "Name of the snapshot."
+        },
         "labels": {
           "type": "object",
           "additionalProperties": {
