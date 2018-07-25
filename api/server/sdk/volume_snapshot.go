@@ -34,10 +34,13 @@ func (s *VolumeServer) SnapshotCreate(
 
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
+	} else if len(req.GetName()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Must supply a name")
 	}
 
 	readonly := true
 	snapshotID, err := s.driver.Snapshot(req.GetVolumeId(), readonly, &api.VolumeLocator{
+		Name:         req.GetName(),
 		VolumeLabels: req.GetLabels(),
 	})
 	if err != nil {

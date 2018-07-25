@@ -223,6 +223,11 @@ func (d *driver) Unmount(volumeID string, mountpath string, options map[string]s
 }
 
 func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator) (string, error) {
+
+	if len(locator.GetName()) == 0 {
+		return "", fmt.Errorf("Name for snapshot must be provided")
+	}
+
 	volIDs := []string{volumeID}
 	vols, err := d.Inspect(volIDs)
 	if err != nil {
