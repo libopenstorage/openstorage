@@ -282,6 +282,8 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			locator.VolumeLabels[k] = v
 		case api.SpecRack:
 			locator.VolumeLabels[api.SpecRacks] = v
+		case api.SpecBestEffortLocationProvisioning:
+			locator.VolumeLabels[k] = "true"
 		case api.SpecCompressed:
 			if compressed, err := strconv.ParseBool(v); err != nil {
 				return nil, nil, nil, err
