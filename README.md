@@ -4,11 +4,11 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/openstorage/osd.svg)](https://hub.docker.com/r/openstorage/osd)
 [![Go Report Card](https://goreportcard.com/badge/github.com/libopenstorage/openstorage)](https://goreportcard.com/report/github.com/libopenstorage/openstorage)
 
-OpenStorage is a clustered implementation of the [Open Storage](https://github.com/libopenstorage/specs) specification and relies on the Docker runtime.  It allows you to run stateful services in Linux Containers in a multi-host environment.  It plugs into CSI and Docker volumes to provide storage to a container and plugs into Kubernetes and Mesosphere to operate in a clustered environment. 
+OpenStorage is a clustered implementation of the [Open Storage](https://github.com/libopenstorage/specs) specification and facilitates the provisioning of cloud native volumes for Kubernetes.  It allows you to run stateful services in Linux Containers in a multi host, multi zone and multi region environment.  It plugs into [CSI](https://landscape.cncf.io/selected=container-storage-interface-csi) and Docker volumes to provide storage to containers and plugs into Kubernetes to allow for dynamic and programmatic provisioning of volumes.
 
 # What you get from using Open Storage
 
-When you install openstorage on a Linux host, you will automatically get a stateful storage layer that integrates with CSI or the Docker runtime and operates in a multi host environment.  It starts an Open Storage Daemon - `OSD` that currently supports CSI and DVDI and will support any Linux container runtime that conforms to the [OCI](https://www.opencontainers.org/).  
+When you install openstorage on a Linux host, you will automatically get a stateful storage overlay that integrates with [CSI](https://landscape.cncf.io/selected=container-storage-interface-csi) or the Docker runtime and provide volumes that are usable across hosts that are running in different regions or even clouds.  It starts an Open Storage Daemon - `OSD` that supports any Linux container runtime that conforms to the [OCI](https://www.opencontainers.org/) spec.  From here, you can use Kubernetes to directly create cloud native storage volumes that are highly available cluster wide.
 
 ## Scheduler integration
 
