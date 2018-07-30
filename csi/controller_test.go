@@ -1313,7 +1313,7 @@ func TestControllerCreateVolumeBadSnapshot(t *testing.T) {
 		// Return an error from snapshot
 		s.MockDriver().
 			EXPECT().
-			Snapshot(parent, false, &api.VolumeLocator{Name: name}).
+			Snapshot(parent, false, &api.VolumeLocator{Name: name}, false).
 			Return("", fmt.Errorf("snapshoterr")).
 			Times(1),
 	)
@@ -1633,7 +1633,8 @@ func TestControllerCreateVolumeSnapshot(t *testing.T) {
 			EXPECT().
 			Snapshot(mockParentID, false, &api.VolumeLocator{
 				Name: name,
-			}).
+			},
+				false).
 			Return(id, nil).
 			Times(1),
 

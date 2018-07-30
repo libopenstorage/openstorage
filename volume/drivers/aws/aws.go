@@ -337,6 +337,7 @@ func (d *Driver) Snapshot(
 	volumeID string,
 	readonly bool,
 	locator *api.VolumeLocator,
+	noRetry bool,
 ) (string, error) {
 	vols, err := d.StoreEnumerator.Inspect([]string{volumeID})
 	if err != nil {

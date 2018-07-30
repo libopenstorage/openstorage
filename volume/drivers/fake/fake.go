@@ -232,7 +232,7 @@ func (d *driver) Unmount(volumeID string, mountpath string, options map[string]s
 	return d.UpdateVol(v)
 }
 
-func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator) (string, error) {
+func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
 
 	if len(locator.GetName()) == 0 {
 		return "", fmt.Errorf("Name for snapshot must be provided")

@@ -68,7 +68,7 @@ func TestSdkVolumeSnapshotCreate(t *testing.T) {
 		EXPECT().
 		Snapshot(req.GetVolumeId(), true, &api.VolumeLocator{
 			Name: snapName,
-		}).
+		}, false).
 		Return(snapid, nil).
 		Times(1)
 

@@ -42,7 +42,7 @@ func (s *VolumeServer) SnapshotCreate(
 	snapshotID, err := s.driver.Snapshot(req.GetVolumeId(), readonly, &api.VolumeLocator{
 		Name:         req.GetName(),
 		VolumeLabels: req.GetLabels(),
-	})
+	}, false)
 	if err != nil {
 		if err == kvdb.ErrNotFound {
 			return nil, status.Errorf(

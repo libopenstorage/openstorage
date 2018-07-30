@@ -600,6 +600,8 @@ message SnapCreateRequest {
   string id = 1;
   VolumeLocator locator = 2;
   bool readonly = 3;
+  // NoRetry indicates not to retry snapshot creation in the background.
+  bool no_retry = 4;
 }
 
 // SnapCreateRequest specifies a response that get's returned when creating a snapshot.
