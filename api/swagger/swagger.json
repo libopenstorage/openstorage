@@ -1686,7 +1686,7 @@
         "size": {
           "description": "File or Directory Size",
           "type": "integer",
-          "format": "int64",
+          "format": "uint64",
           "x-go-name": "Size"
         },
         "type": {
@@ -2781,6 +2781,10 @@
           "type": "string",
           "x-go-name": "AclToken"
         },
+        "ca_auth_address": {
+          "type": "string",
+          "x-go-name": "CAAuthAddress"
+        },
         "ca_file": {
           "type": "string",
           "x-go-name": "CAFile"
@@ -2804,6 +2808,10 @@
           },
           "x-go-name": "Discovery"
         },
+        "insecure_skip_verify": {
+          "type": "boolean",
+          "x-go-name": "InsecureSkipVerify"
+        },
         "name": {
           "type": "string",
           "x-go-name": "Name"
@@ -2811,6 +2819,10 @@
         "password": {
           "type": "string",
           "x-go-name": "Password"
+        },
+        "transport_scheme": {
+          "type": "string",
+          "x-go-name": "TransportScheme"
         },
         "trusted_ca_file": {
           "type": "string",
@@ -3604,8 +3616,13 @@
           "format": "uint64",
           "x-go-name": "MaxBackups"
         },
-        "schedule": {
-          "$ref": "#/definitions/SdkSchedulePolicyInterval"
+        "schedules": {
+          "description": "Schedules are the frequencies of the backup",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SdkSchedulePolicyInterval"
+          },
+          "x-go-name": "Schedules"
         },
         "src_volume_id": {
           "description": "The schedule's source volume",
@@ -4132,8 +4149,13 @@
           "type": "string",
           "x-go-name": "Name"
         },
-        "schedule": {
-          "$ref": "#/definitions/SdkSchedulePolicyInterval"
+        "schedules": {
+          "description": "Schedule policies",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SdkSchedulePolicyInterval"
+          },
+          "x-go-name": "Schedules"
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
@@ -4573,6 +4595,11 @@
           },
           "x-go-name": "Labels"
         },
+        "name": {
+          "description": "Name of the snapshot.",
+          "type": "string",
+          "x-go-name": "Name"
+        },
         "volume_id": {
           "description": "Id of volume to take the snapshot from",
           "type": "string",
@@ -4675,6 +4702,33 @@
     "SdkVolumeSnapshotRestoreResponse": {
       "description": "Empty response",
       "type": "object",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "SdkVolumeStatsRequest": {
+      "description": "Defines a request to retreive volume statistics",
+      "type": "object",
+      "properties": {
+        "not_cumulative": {
+          "description": "When set to false the stats are in /proc/diskstats style stats.\nWhen set to true the stats are stats for a specific duration.",
+          "type": "boolean",
+          "x-go-name": "NotCumulative"
+        },
+        "volume_id": {
+          "description": "Id of the volume to get statistics",
+          "type": "string",
+          "x-go-name": "VolumeId"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "SdkVolumeStatsResponse": {
+      "description": "Defines a response containing drive statistics",
+      "type": "object",
+      "properties": {
+        "stats": {
+          "$ref": "#/definitions/Stats"
+        }
+      },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SdkVolumeUnmountRequest": {
@@ -4890,6 +4944,7 @@
           "x-go-name": "IoProgress"
         },
         "read_bytes": {
+          "description": "Number of bytes read",
           "type": "integer",
           "format": "uint64",
           "x-go-name": "ReadBytes"
@@ -4907,6 +4962,7 @@
           "x-go-name": "Reads"
         },
         "write_bytes": {
+          "description": "Number of bytes written",
           "type": "integer",
           "format": "uint64",
           "x-go-name": "WriteBytes"
@@ -5318,6 +5374,11 @@
         },
         "format": {
           "$ref": "#/definitions/FSType"
+        },
+        "fs_resize_required": {
+          "description": "FsResizeRequired if an FS resize is required on the volume.",
+          "type": "boolean",
+          "x-go-name": "FsResizeRequired"
         },
         "group": {
           "$ref": "#/definitions/Group"
