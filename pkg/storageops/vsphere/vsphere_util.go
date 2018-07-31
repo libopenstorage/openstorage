@@ -3,6 +3,7 @@ package vsphere
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -102,7 +103,7 @@ func IsDevMode() bool {
 // Borrowed from https://github.com/kubernetes/kubernetes/blob/release-1.10/pkg/cloudprovider/providers/vsphere/vsphere_util.go#L312
 // Example1: The canonical path for volume path - [vsanDatastore] kubevols/volume.vmdk will be [vsanDatastore] 25d8b159-948c-4b73-e499-02001ad1b044/volume.vmdk
 // Example2: The canonical path for volume path - [vsanDatastore] 25d8b159-948c-4b73-e499-02001ad1b044/volume.vmdk will be same as volume Path.
-func getcanonicalVolumePath(ctx context.Context, dc *vclib.Datacenter, volumePath string) (string, error) {
+func getCanonicalVolumePath(ctx context.Context, dc *vclib.Datacenter, volumePath string) (string, error) {
 	var folderID string
 	var folderExists bool
 	canonicalVolumePath := volumePath
@@ -141,7 +142,12 @@ func getcanonicalVolumePath(ctx context.Context, dc *vclib.Datacenter, volumePat
 		folderID = strings.Split(strings.TrimSpace(diskPath), "/")[0]
 		setdatastoreFolderIDMap(datastoreFolderIDMap, datastore, dsFolder, folderID)
 	}
+
 	canonicalVolumePath = strings.Replace(volumePath, dsFolder, folderID, 1)
+	if filepath.Base(datastore) != datastore {
+		// If datastore is within cluster, add cluster path to the volumePath
+		canonicalVolumePath = strings.Replace(canonicalVolumePath, filepath.Base(datastore), datastore, 1)
+	}
 	return canonicalVolumePath, nil
 }
 

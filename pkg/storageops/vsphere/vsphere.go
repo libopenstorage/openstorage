@@ -120,16 +120,11 @@ func (ops *vsphereOps) Create(opts interface{}, labels map[string]string) (inter
 	}
 
 	// Get the canonical path for the volume path.
-	canonicalVolumePath, err := getcanonicalVolumePath(ctx, vmObj.Datacenter, diskPath)
+	canonicalVolumePath, err := getCanonicalVolumePath(ctx, vmObj.Datacenter, diskPath)
 	if err != nil {
 		logrus.Errorf("Failed to get canonical vsphere disk path for: %s with "+
 			"volumeOptions: %+v on datastore: %s. err: %+v", diskPath, volumeOptions, datastore, err)
 		return nil, err
-	}
-
-	if filepath.Base(datastore) != datastore {
-		// If datastore is within cluster, add cluster path to the volumePath
-		canonicalVolumePath = strings.Replace(canonicalVolumePath, filepath.Base(datastore), datastore, 1)
 	}
 
 	return canonicalVolumePath, nil
