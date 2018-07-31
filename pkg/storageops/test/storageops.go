@@ -20,21 +20,14 @@ var diskLabels = map[string]string{
 func RunTest(drivers map[string]storageops.Ops,
 	diskTemplates map[string]map[string]interface{},
 	t *testing.T) {
-	for driverName, d := range drivers {
+	for _, d := range drivers {
 		name(t, d)
 
 		for _, template := range diskTemplates[d.Name()] {
 			disk := create(t, d, template)
 			fmt.Printf("Created disk: %v\n", disk)
-			var diskID string
-			var ok bool
-			if driverName == "vsphere" {
-				diskID, ok = disk.(string)
-				require.True(t, ok, fmt.Sprintf("invalid disk: %s returned by %s driver", disk, driverName))
-			} else {
-				diskID = id(t, d, disk)
-			}
-
+			diskID := id(t, d, disk)
+			require.NotEmpty(t, diskID, "disk ID should not be empty")
 			snapshot(t, d, diskID)
 			tags(t, d, diskID)
 			enumerate(t, d, diskID)
@@ -42,6 +35,7 @@ func RunTest(drivers map[string]storageops.Ops,
 			attach(t, d, diskID)
 			devicePath(t, d, diskID)
 			teardown(t, d, diskID)
+			fmt.Printf("Tore down disk: %v\n", disk)
 		}
 	}
 }

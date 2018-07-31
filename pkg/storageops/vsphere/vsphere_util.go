@@ -23,8 +23,6 @@ type VSphereConfig struct {
 	VCenterPort string
 	// InsecureFlag True if vCenter uses self-signed cert.
 	InsecureFlag bool
-	// Datastore where all disks should be created
-	Datastore string
 	// RoundTripperCount is the Soap round tripper count (retries = RoundTripper - 1)
 	RoundTripperCount uint
 	// VMUUID is the VM Instance UUID of virtual machine which can be retrieved from instanceUuid
@@ -75,13 +73,17 @@ func ReadVSphereConfigFromEnv() (*VSphereConfig, error) {
 		return nil, err
 	}
 
-	cfg.Datastore, _ = storageops.GetEnvValueStrict("VSPHERE_DATASTORE")
-
 	cfg.InsecureFlag = false
 	insecure, err := storageops.GetEnvValueStrict("VSPHERE_INSECURE")
 	if err == nil && strings.ToLower(insecure) == "true" {
 		cfg.InsecureFlag = true
 	}
+
+	cfg.VMUUID, err = storageops.GetEnvValueStrict("VSPHERE_VM_UUID")
+	if err != nil {
+		return nil, err
+	}
+
 	return &cfg, nil
 }
 
@@ -92,12 +94,12 @@ func IsDevMode() bool {
 		return false
 	}
 
-	_, err = storageops.GetEnvValueStrict("VSPHERE_DATASTORE")
+	_, err = storageops.GetEnvValueStrict("VSPHERE_TEST_DATASTORE")
 	return err == nil
 }
 
 // Get canonical volume path for volume Path.
-// Borowwed from https://github.com/kubernetes/kubernetes/blob/release-1.10/pkg/cloudprovider/providers/vsphere/vsphere_util.go#L312
+// Borrowed from https://github.com/kubernetes/kubernetes/blob/release-1.10/pkg/cloudprovider/providers/vsphere/vsphere_util.go#L312
 // Example1: The canonical path for volume path - [vsanDatastore] kubevols/volume.vmdk will be [vsanDatastore] 25d8b159-948c-4b73-e499-02001ad1b044/volume.vmdk
 // Example2: The canonical path for volume path - [vsanDatastore] 25d8b159-948c-4b73-e499-02001ad1b044/volume.vmdk will be same as volume Path.
 func getcanonicalVolumePath(ctx context.Context, dc *vclib.Datacenter, volumePath string) (string, error) {

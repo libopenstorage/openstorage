@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"path"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"github.com/kubernetes/kubernetes/pkg/cloudprovider/providers/vsphere/vclib/diskmanagers"
@@ -46,28 +45,10 @@ func NewClient(cfg *VSphereConfig) (storageops.Ops, error) {
 		return nil, err
 	}
 
-	availableDatastores, err := vmObj.GetAllAccessibleDatastores(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	// create datastore URL map for faster lookup
-	datastores := make([]string, 0)
-	for _, ds := range availableDatastores {
-		if strings.HasPrefix(ds.Info.Name, cfg.Datastore) {
-			datastores = append(datastores, ds.Info.Name)
-		}
-	}
-
-	if len(datastores) == 0 {
-		return nil, fmt.Errorf("failed to find any available datastores to vm: %s for given prefix: %s", vmObj.Name(), cfg.Datastore)
-	}
-
 	logrus.Infof("Using following configuration for vsphere:")
 	logrus.Infof("  vCenter: %s:%s", cfg.VCenterIP, cfg.VCenterPort)
 	logrus.Infof("  Datacenter: %s", vmObj.Datacenter.Name())
 	logrus.Infof("  VMUUID: %s", cfg.VMUUID)
-	logrus.Infof("  Datastores: %v", datastores)
 
 	return &vsphereOps{
 		cfg:  cfg,
@@ -87,7 +68,7 @@ func (ops *vsphereOps) Create(opts interface{}, labels map[string]string) (inter
 		return nil, fmt.Errorf("invalid volume options specified to create: %v", opts)
 	}
 
-	if volumeOptions.Tags == nil || len(volumeOptions.Tags) == 0 {
+	if len(volumeOptions.Tags) == 0 {
 		volumeOptions.Tags = labels
 	} else {
 		for k, v := range labels {
@@ -105,8 +86,14 @@ func (ops *vsphereOps) Create(opts interface{}, labels map[string]string) (inter
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ds, err := ops.vm.Datacenter.GetDatastoreByName(ctx, datastore)
+	vmObj, err := ops.renewVM(ctx, ops.vm)
 	if err != nil {
+		return nil, err
+	}
+
+	ds, err := vmObj.Datacenter.GetDatastoreByName(ctx, datastore)
+	if err != nil {
+		logrus.Errorf("Failed to get datastore: %s due to: %v", datastore, err)
 		return nil, err
 	}
 
@@ -133,7 +120,7 @@ func (ops *vsphereOps) Create(opts interface{}, labels map[string]string) (inter
 	}
 
 	// Get the canonical path for the volume path.
-	canonicalVolumePath, err := getcanonicalVolumePath(ctx, ops.vm.Datacenter, diskPath)
+	canonicalVolumePath, err := getcanonicalVolumePath(ctx, vmObj.Datacenter, diskPath)
 	if err != nil {
 		logrus.Errorf("Failed to get canonical vsphere disk path for: %s with "+
 			"volumeOptions: %+v on datastore: %s. err: %+v", diskPath, volumeOptions, datastore, err)
@@ -163,14 +150,14 @@ func (ops *vsphereOps) Attach(diskPath string) (string, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	err := ops.renewVM(ctx, ops.vm)
+	vmObj, err := ops.renewVM(ctx, ops.vm)
 	if err != nil {
 		return "", err
 	}
 
-	diskUUID, err := ops.vm.AttachDisk(ctx, diskPath, &vclib.VolumeOptions{SCSIControllerType: vclib.PVSCSIControllerType})
+	diskUUID, err := vmObj.AttachDisk(ctx, diskPath, &vclib.VolumeOptions{SCSIControllerType: vclib.PVSCSIControllerType})
 	if err != nil {
-		logrus.Errorf("Failed to attach vsphere disk: %s for VM: %s. err: +%v", diskPath, ops.vm.Name(), err)
+		logrus.Errorf("Failed to attach vsphere disk: %s for VM: %s. err: +%v", diskPath, vmObj.Name(), err)
 		return "", err
 	}
 
@@ -181,14 +168,13 @@ func (ops *vsphereOps) Detach(diskPath string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	err := ops.renewVM(ctx, ops.vm)
+	vmObj, err := ops.renewVM(ctx, ops.vm)
 	if err != nil {
 		return err
 	}
 
-	err = ops.vm.DetachDisk(ctx, diskPath)
-	if err != nil {
-		logrus.Errorf("Failed to detach vsphere disk: %s for VM: %s. err: +%v", diskPath, ops.vm.Name(), err)
+	if err := vmObj.DetachDisk(ctx, diskPath); err != nil {
+		logrus.Errorf("Failed to detach vsphere disk: %s for VM: %s. err: +%v", diskPath, vmObj.Name(), err)
 		return err
 	}
 
@@ -200,7 +186,7 @@ func (ops *vsphereOps) Delete(diskPath string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	err := ops.renewVM(ctx, ops.vm)
+	vmObj, err := ops.renewVM(ctx, ops.vm)
 	if err != nil {
 		return err
 	}
@@ -210,7 +196,8 @@ func (ops *vsphereOps) Delete(diskPath string) error {
 		VolumeOptions: &vclib.VolumeOptions{},
 		VMOptions:     &vclib.VMOptions{},
 	}
-	err = disk.Delete(ctx, ops.vm.Datacenter)
+
+	err = disk.Delete(ctx, vmObj.Datacenter)
 	if err != nil {
 		logrus.Errorf("Failed to delete vsphere disk: %s. err: %+v", diskPath, err)
 	}
@@ -218,17 +205,12 @@ func (ops *vsphereOps) Delete(diskPath string) error {
 	return err
 }
 
-// Desribe an instance
+// Desribe an instance of the virtual machine object to which ops is connected to
 func (ops *vsphereOps) Describe() (interface{}, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	err := ops.renewVM(ctx, ops.vm)
-	if err != nil {
-		return nil, err
-	}
-
-	return ops.vm, nil
+	return ops.renewVM(ctx, ops.vm)
 }
 
 // FreeDevices is not supported by this provider
@@ -248,29 +230,27 @@ func (ops *vsphereOps) DeviceMappings() (map[string]string, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	err := ops.renewVM(ctx, ops.vm)
+	vmObj, err := ops.renewVM(ctx, ops.vm)
 	if err != nil {
 		return nil, err
 	}
 
-	vmDevices, err := ops.vm.Device(ctx)
+	vmDevices, err := vmObj.Device(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get devices for vm: %s", ops.vm.Name())
+		return nil, fmt.Errorf("failed to get devices for vm: %s", vmObj.Name())
 	}
 
-	dsMatcher := regexp.MustCompile(fmt.Sprintf(".*\\[%s.+", ops.cfg.Datastore))
-
+	// Go over all the devices attached on this vm and create a map of just the virtual disks and where
+	// they are attached on the vm
 	m := make(map[string]string)
 	for _, device := range vmDevices {
 		if vmDevices.TypeName(device) == "VirtualDisk" {
 			virtualDevice := device.GetVirtualDevice()
 			backing, ok := virtualDevice.Backing.(*types.VirtualDiskFlatVer2BackingInfo)
 			if ok {
-				if dsMatcher.MatchString(backing.FileName) {
-					devicePath, err := ops.DevicePath(backing.FileName)
-					if err == nil && len(devicePath) != 0 { // TODO can ignore errors?
-						m[devicePath] = backing.FileName
-					}
+				devicePath, err := ops.DevicePath(backing.FileName)
+				if err == nil && len(devicePath) != 0 { // TODO can ignore errors?
+					m[devicePath] = backing.FileName
 				}
 			}
 		}
@@ -284,24 +264,24 @@ func (ops *vsphereOps) DevicePath(diskPath string) (string, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	err := ops.renewVM(ctx, ops.vm)
+	vmObj, err := ops.renewVM(ctx, ops.vm)
 	if err != nil {
 		return "", err
 	}
 
-	attached, err := ops.vm.IsDiskAttached(ctx, diskPath)
+	attached, err := vmObj.IsDiskAttached(ctx, diskPath)
 	if err != nil {
 		return "", fmt.Errorf("failed to check if disk: %s is attached on vm: %s. err: %v",
-			diskPath, ops.vm.Name(), err)
+			diskPath, vmObj.Name(), err)
 	}
 
 	if !attached {
-		return "", fmt.Errorf("disk: %s is not attached on vm: %s", diskPath, ops.vm.Name())
+		return "", fmt.Errorf("disk: %s is not attached on vm: %s", diskPath, vmObj.Name())
 	}
 
-	diskUUID, err := ops.vm.Datacenter.GetVirtualDiskPage83Data(ctx, diskPath)
+	diskUUID, err := vmObj.Datacenter.GetVirtualDiskPage83Data(ctx, diskPath)
 	if err != nil {
-		logrus.Errorf("failed to get device path for disk: %s on vm: %s", diskPath, ops.vm.Name())
+		logrus.Errorf("failed to get device path for disk: %s on vm: %s", diskPath, vmObj.Name())
 		return "", err
 	}
 
@@ -340,13 +320,17 @@ func (ops *vsphereOps) Tags(volumeID string) (map[string]string, error) {
 	return nil, storageops.ErrNotSupported
 }
 
-func GetVMObject(ctx context.Context, conn *vclib.VSphereConnection, uuid string) (*vclib.VirtualMachine, error) {
+// GetVMObject fetches the VirtualMachine object corresponding to the given virtual machine uuid
+func GetVMObject(ctx context.Context, conn *vclib.VSphereConnection, vmUUID string) (*vclib.VirtualMachine, error) {
 	// TODO change impl below using multiple goroutines and sync.WaitGroup to make it faster
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	err := conn.Connect(ctx)
-	if err != nil {
+	if err := conn.Connect(ctx); err != nil {
 		return nil, err
+	}
+
+	if len(vmUUID) == 0 {
+		return nil, fmt.Errorf("virtual machine uuid is required")
 	}
 
 	datacenterObjs, err := vclib.GetAllDatacenter(ctx, conn)
@@ -354,14 +338,15 @@ func GetVMObject(ctx context.Context, conn *vclib.VSphereConnection, uuid string
 		return nil, err
 	}
 
+	// Lookup in each vsphere datacenter for this virtual machine
 	for _, dc := range datacenterObjs {
-		vm, err := dc.GetVMByUUID(ctx, uuid)
+		vm, err := dc.GetVMByUUID(ctx, vmUUID)
 		if err != nil {
 			if err != vclib.ErrNoVMFound {
-				logrus.Warnf("failed to find vm with uuid: %s in datacenter: %s due to err: %v", uuid, dc.Name(), err)
+				logrus.Warnf("failed to find vm with uuid: %s in datacenter: %s due to err: %v", vmUUID, dc.Name(), err)
 				// don't let one bad egg fail entire search. keep looking.
 			} else {
-				logrus.Debugf("did not find vm with uuid: %s in datacenter: %s", uuid, dc.Name())
+				logrus.Debugf("did not find vm with uuid: %s in datacenter: %s", vmUUID, dc.Name())
 			}
 			continue
 		}
@@ -372,26 +357,25 @@ func GetVMObject(ctx context.Context, conn *vclib.VSphereConnection, uuid string
 				return nil, err
 			}
 
-			logrus.Infof("vm: %s uuid: %s is in datacenter: %s running on host: %v", vm.Name(), uuid, dc.Name(), host.Reference())
+			logrus.Infof("vm: %s uuid: %s is in datacenter: %s running on host: %v", vm.Name(), vmUUID, dc.Name(), host.Reference())
 			return vm, nil
 		}
 	}
 
-	return nil, fmt.Errorf("failed to find vm with uuid: %s in any datacenter for vc: %s", uuid, conn.Hostname)
+	return nil, fmt.Errorf("failed to find vm with uuid: %s in any datacenter for vc: %s", vmUUID, conn.Hostname)
 }
 
-func (ops *vsphereOps) renewVM(ctx context.Context, vm *vclib.VirtualMachine) error {
+func (ops *vsphereOps) renewVM(ctx context.Context, vm *vclib.VirtualMachine) (*vclib.VirtualMachine, error) {
 	err := ops.conn.Connect(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	client, err := ops.conn.NewClient(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	renewVM := vm.RenewVM(client)
-	ops.vm = &renewVM
-	return nil
+	vmObj := vm.RenewVM(client)
+	return &vmObj, nil
 }

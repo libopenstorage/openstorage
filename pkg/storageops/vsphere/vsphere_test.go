@@ -25,7 +25,9 @@ func initVsphere(t *testing.T) (storageops.Ops, map[string]interface{}) {
 
 	cfg.VMUUID, err = storageops.GetEnvValueStrict("VSPHERE_VM_UUID")
 	require.NoError(t, err, "failed to get vsphere config from env variable VSPHERE_VM_UUID")
-	require.NotEmpty(t, cfg.VMUUID, "got empty VMUUID from env variable VSPHERE_VM_UUID")
+
+	datastoreForTest, err := storageops.GetEnvValueStrict("VSPHERE_TEST_DATASTORE")
+	require.NoError(t, err, "failed to get datastore from env variable VSPHERE_TEST_DATASTORE")
 
 	driver, err := NewClient(cfg)
 	require.NoError(t, err, "failed to instantiate storage ops driver")
@@ -37,7 +39,7 @@ func initVsphere(t *testing.T) (storageops.Ops, map[string]interface{}) {
 		Name:       diskName,
 		Tags:       tags,
 		CapacityKB: newDiskSizeInKB,
-		Datastore:  cfg.Datastore,
+		Datastore:  datastoreForTest,
 	}
 
 	return driver, map[string]interface{}{

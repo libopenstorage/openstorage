@@ -13,7 +13,7 @@ export VSPHERE_INSECURE=true
 # To get the VM-MOREF, select the VM in vcenter server and you will see a string of format "VirtualMachine:vm-155" in the URL. vm-155 is the moref.
 
 export VSPHERE_VM_UUID=42124a20-d049-9c0a-0094-1552b320fb18
-export VSPHERE_DATASTORE=name-of-esxi-datastore-on-vms-host
+export VSPHERE_TEST_DATASTORE=<test-datastore-to-use>
 
 go test -v
 ```
