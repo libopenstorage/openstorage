@@ -622,6 +622,23 @@
         ]
       }
     },
+    "/v1/identities/capabilities": {
+      "get": {
+        "summary": "Capabilities returns the supported services by the cluster.\nThis allows SDK implementations to advertise their supported\nservices as the API matures. With this information, clients\ncan determine supported services from storage clusters at\ndifferent versions.",
+        "operationId": "Capabilities",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkIdentityCapabilitiesResponse"
+            }
+          }
+        },
+        "tags": [
+          "OpenStorageIdentity"
+        ]
+      }
+    },
     "/v1/nodes": {
       "get": {
         "summary": "Enumerate returns the ids of all the nodes in the current cluster",
@@ -1333,6 +1350,30 @@
     }
   },
   "definitions": {
+    "SdkServiceCapabilityOpenStorageService": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "$ref": "#/definitions/SdkServiceCapabilityOpenStorageServiceType",
+          "title": "Type of service supported"
+        }
+      }
+    },
+    "SdkServiceCapabilityOpenStorageServiceType": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "CLUSTER",
+        "CLOUD_BACKUP",
+        "CREDENTIALS",
+        "NODE",
+        "OBJECT_STORAGE",
+        "SCHEDULE_POLICY",
+        "VOLUME"
+      ],
+      "default": "UNKNOWN",
+      "title": "- UNKNOWN: Unknown service\n - CLUSTER: Cluster management\n - CLOUD_BACKUP: Cloud backup of volumes management\n - CREDENTIALS: Credentials management\n - NODE: Node management\n - OBJECT_STORAGE: Object Storage management\n - SCHEDULE_POLICY: Schedule policy management\n - VOLUME: Volume management"
+    },
     "apiAlert": {
       "type": "object",
       "properties": {
@@ -2091,6 +2132,19 @@
       },
       "title": "Defines the response for Google credentials"
     },
+    "apiSdkIdentityCapabilitiesResponse": {
+      "type": "object",
+      "properties": {
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiSdkServiceCapability"
+          },
+          "title": "Provides all the capabilites supported by the cluster"
+        }
+      },
+      "title": "Defines a response containing the capabilites of the cluster"
+    },
     "apiSdkNodeEnumerateResponse": {
       "type": "object",
       "properties": {
@@ -2327,6 +2381,16 @@
     "apiSdkSchedulePolicyUpdateResponse": {
       "type": "object",
       "title": "Empty response"
+    },
+    "apiSdkServiceCapability": {
+      "type": "object",
+      "properties": {
+        "service": {
+          "$ref": "#/definitions/SdkServiceCapabilityOpenStorageService",
+          "title": "service type supported by this cluster"
+        }
+      },
+      "title": "Defines a capability of he cluster"
     },
     "apiSdkTimeWeekday": {
       "type": "string",
