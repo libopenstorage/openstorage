@@ -64,6 +64,7 @@ type Server struct {
 	schedulePolicyServer *SchedulePolicyServer
 	cloudBackupServer    *CloudBackupServer
 	credentialServer     *CredentialServer
+	identityServer       *IdentityServer
 }
 
 // Interface check
@@ -95,8 +96,9 @@ func New(config *ServerConfig) (*Server, error) {
 	}
 
 	return &Server{
-		GrpcServer: gServer,
-		restPort:   config.RestPort,
+		GrpcServer:     gServer,
+		restPort:       config.RestPort,
+		identityServer: &IdentityServer{},
 		clusterServer: &ClusterServer{
 			cluster: config.Cluster,
 		},
@@ -136,6 +138,7 @@ func (s *Server) Start() error {
 		api.RegisterOpenStorageCredentialsServer(grpcServer, s.credentialServer)
 		api.RegisterOpenStorageSchedulePolicyServer(grpcServer, s.schedulePolicyServer)
 		api.RegisterOpenStorageCloudBackupServer(grpcServer, s.cloudBackupServer)
+		api.RegisterOpenStorageIdentityServer(grpcServer, s.identityServer)
 	})
 	if err != nil {
 		return err
@@ -250,6 +253,15 @@ func (s *Server) restServerSetupHandlers() (*http.ServeMux, error) {
 	}
 
 	err = api.RegisterOpenStorageCloudBackupHandlerFromEndpoint(
+		context.Background(),
+		gmux,
+		s.Address(),
+		[]grpc.DialOption{grpc.WithInsecure()})
+	if err != nil {
+		return nil, err
+	}
+
+	err = api.RegisterOpenStorageIdentityHandlerFromEndpoint(
 		context.Background(),
 		gmux,
 		s.Address(),
