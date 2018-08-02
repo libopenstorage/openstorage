@@ -27,16 +27,19 @@ func (conf *NodeConfig) Init() *NodeConfig {
 // KvdbConfig stores parameters defining kvdb configuration
 // swagger:model
 type KvdbConfig struct {
-	Name           string   `json:"name,omitempty" enable:"true" hidden:"false" usage:"Name for kvdb"`
-	Username       string   `json:"username,omitempty" enable:"true" hidden:"false" usage:"Username for kvdb"`
-	Password       string   `json:"password,omitempty" enable:"true" hidden:"false" usage:"Passwd for kvdb"`
-	CAFile         string   `json:"ca_file,omitempty" enable:"true" hidden:"false" usage:"CA file for kvdb"`
-	CertFile       string   `json:"cert_file,omitempty" enable:"true" hidden:"false" usage:"Cert file for kvdb"`
-	CertKeyFile    string   `json:"cert_key_file,omitempty" enable:"true" hidden:"false" usage:"Cert key file for kvdb"`
-	TrustedCAFile  string   `json:"trusted_ca_file,omitempty" enable:"true" hidden:"false" usage:"Trusted CA file for kvdb"`
-	ClientCertAuth string   `json:"client_cert_auth,omitempty" enable:"true" hidden:"false" usage:"Client cert auth"`
-	AclToken       string   `json:"acl_token,omitempty" enable:"true" hidden:"false" usage:"ACL token"`
-	Discovery      []string `json:"discovery,omitempty" enable:"true" hidden:"false" usage:"List of etcd endpoints"`
+	Name               string   `json:"name,omitempty" enable:"true" hidden:"false" usage:"Name for kvdb"`
+	Username           string   `json:"username,omitempty" enable:"true" hidden:"false" usage:"Username for kvdb"`
+	Password           string   `json:"password,omitempty" enable:"true" hidden:"false" usage:"Passwd for kvdb"`
+	CAFile             string   `json:"ca_file,omitempty" enable:"true" hidden:"false" usage:"CA file for kvdb"`
+	CertFile           string   `json:"cert_file,omitempty" enable:"true" hidden:"false" usage:"Cert file for kvdb"`
+	CertKeyFile        string   `json:"cert_key_file,omitempty" enable:"true" hidden:"false" usage:"Cert key file for kvdb"`
+	TrustedCAFile      string   `json:"trusted_ca_file,omitempty" enable:"true" hidden:"false" usage:"Trusted CA file for kvdb"`
+	ClientCertAuth     string   `json:"client_cert_auth,omitempty" enable:"true" hidden:"false" usage:"Client cert auth"`
+	AclToken           string   `json:"acl_token,omitempty" enable:"true" hidden:"false" usage:"ACL token"`
+	CAAuthAddress      string   `json:"ca_auth_address,omitempty" enable:"true" hidden:"false" usage:"Address of CA auth server (only for consul)"`
+	InsecureSkipVerify bool     `json:"insecure_skip_verify,omitempty" enable:"true" hidden:"false" usage:"Insecure skip verify bool (only for consul)"`
+	TransportScheme    string   `json:"transport_scheme,omitempty" enable:"true" hidden:"false" usage:"Transport method http or https (only for consul)"`
+	Discovery          []string `json:"discovery,omitempty" enable:"true" hidden:"false" usage:"List of etcd endpoints"`
 }
 
 func (conf *KvdbConfig) Init() *KvdbConfig {
