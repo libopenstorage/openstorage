@@ -736,6 +736,24 @@ message StorageCluster {
   string id = 2;
 }
 
+// OpenStorageIdentity service provides methods to obtain information
+// about the cluster
+service OpenStorageIdentity {
+
+  // Capabilities returns the supported services by the cluster.
+  // This allows SDK implementations to advertise their supported
+  // services as the API matures. With this information, clients
+  // can determine supported services from storage clusters at
+  // different versions.
+  rpc Capabilities(SdkIdentityCapabilitiesRequest)
+    returns (SdkIdentityCapabilitiesResponse) {
+      option(google.api.http) = {
+        get: "/v1/identities/capabilities"
+      };
+    }
+
+}
+
 // OpenStorageCluster service provides the methods to manage the cluster
 service OpenStorageCluster {
   // InspectCurrent returns information about the current cluster
@@ -2122,6 +2140,50 @@ message SdkCloudBackupSchedEnumerateRequest{
 message SdkCloudBackupSchedEnumerateResponse{
   // Returns list of backup schedules
   map<string, SdkCloudBackupScheduleInfo> cloud_sched_list = 1;
+}
+
+// Empty request
+message SdkIdentityCapabilitiesRequest {
+}
+
+// Defines a response containing the capabilites of the cluster
+message SdkIdentityCapabilitiesResponse {
+  // Provides all the capabilites supported by the cluster
+  repeated SdkServiceCapability capabilities = 1;
+}
+
+// Defines a capability of he cluster
+message SdkServiceCapability {
+  message OpenStorageService {
+    enum Type {
+      // Unknown service
+      UNKNOWN = 0;
+      // Cluster management
+      CLUSTER = 1;
+      // Cloud backup of volumes management
+      CLOUD_BACKUP = 2;
+      // Credentials management
+      CREDENTIALS = 3;
+      // Node management
+      NODE = 4;
+      // Object Storage management
+      OBJECT_STORAGE = 5;
+      // Schedule policy management
+      SCHEDULE_POLICY = 6;
+      // Volume management
+      VOLUME = 7;
+    }
+
+    // Type of service supported
+    Type type = 1;
+  }
+
+  // Use oneof to have only one type of service defined making it
+  // future proof to add other types.
+  oneof type {
+    // service type supported by this cluster
+    OpenStorageService service = 1;
+  }
 }
 
 message CloudMigrate {
