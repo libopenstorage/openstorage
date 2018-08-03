@@ -7,11 +7,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kubernetes/kubernetes/pkg/cloudprovider/providers/vsphere/vclib/diskmanagers"
 	"github.com/libopenstorage/openstorage/pkg/storageops"
 	"github.com/sirupsen/logrus"
+	"github.com/vmware/govmomi"
 	"github.com/vmware/govmomi/vim25/types"
 	"k8s.io/kubernetes/pkg/cloudprovider/providers/vsphere/vclib"
+	"k8s.io/kubernetes/pkg/cloudprovider/providers/vsphere/vclib/diskmanagers"
 )
 
 const (
@@ -361,14 +362,15 @@ func GetVMObject(ctx context.Context, conn *vclib.VSphereConnection, vmUUID stri
 }
 
 func (ops *vsphereOps) renewVM(ctx context.Context, vm *vclib.VirtualMachine) (*vclib.VirtualMachine, error) {
+	var client *govmomi.Client
 	err := ops.conn.Connect(ctx)
 	if err != nil {
-		return nil, err
-	}
-
-	client, err := ops.conn.NewClient(ctx)
-	if err != nil {
-		return nil, err
+		client, err = ops.conn.NewClient(ctx)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		client = ops.conn.GoVmomiClient
 	}
 
 	vmObj := vm.RenewVM(client)
