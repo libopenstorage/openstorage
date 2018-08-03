@@ -885,12 +885,6 @@
 			"revisionTime": "2018-03-20T00:02:26Z"
 		},
 		{
-			"checksumSHA1": "9noLOop9qqzgu2VmG5YP7vTujwk=",
-			"path": "github.com/kubernetes/kubernetes/pkg/cloudprovider/providers/vsphere/vclib/diskmanagers",
-			"revision": "fc32d2f3698e36b93322a3465f63a14e9f0eaead",
-			"revisionTime": "2018-03-23T22:34:25Z"
-		},
-		{
 			"checksumSHA1": "XxSculDWJ8paPj2VbSbbxPDSb7Q=",
 			"path": "github.com/libopenstorage/gossip",
 			"revision": "aa5bca5fb84334d7d29c26b5ccd7c819f344beac",
@@ -2105,6 +2099,12 @@
 		{
 			"checksumSHA1": "bvvbPZitrlqA/Elm/XwdZdHDQSA=",
 			"path": "k8s.io/kubernetes/pkg/cloudprovider/providers/vsphere/vclib",
+			"revision": "9f8ebd171479bec0ada837d7ee641dec2f8c6dd1",
+			"revisionTime": "2018-03-20T19:21:10Z"
+		},
+		{
+			"checksumSHA1": "Gbwz/IHo4Hrss4WZAN6eP0afN9M=",
+			"path": "k8s.io/kubernetes/pkg/cloudprovider/providers/vsphere/vclib/diskmanagers",
 			"revision": "9f8ebd171479bec0ada837d7ee641dec2f8c6dd1",
 			"revisionTime": "2018-03-20T19:21:10Z"
 		}
