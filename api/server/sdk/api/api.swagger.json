@@ -639,6 +639,23 @@
         ]
       }
     },
+    "/v1/identities/version": {
+      "get": {
+        "summary": "Version returns version information about the system.",
+        "operationId": "Version",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkIdentityVersionResponse"
+            }
+          }
+        },
+        "tags": [
+          "OpenStorageIdentity"
+        ]
+      }
+    },
     "/v1/nodes": {
       "get": {
         "summary": "Enumerate returns the ids of all the nodes in the current cluster",
@@ -2145,6 +2162,20 @@
       },
       "title": "Defines a response containing the capabilites of the cluster"
     },
+    "apiSdkIdentityVersionResponse": {
+      "type": "object",
+      "properties": {
+        "sdk_version": {
+          "$ref": "#/definitions/apiSdkVersion",
+          "title": "OpenStorage SDK version used by the server"
+        },
+        "version": {
+          "$ref": "#/definitions/apiStorageVersion",
+          "title": "Version information about the storage system"
+        }
+      },
+      "title": "Defines a response containing version information"
+    },
     "apiSdkNodeEnumerateResponse": {
       "type": "object",
       "properties": {
@@ -2406,6 +2437,31 @@
       "default": "SdkTimeWeekdaySunday",
       "description": "- SdkTimeWeekdaySunday: Sunday\n - SdkTimeWeekdayMonday: Monday\n - SdkTimeWeekdayTuesday: Tuesday\n - SdkTimeWeekdayWednesday: Wednesday\n - SdkTimeWeekdayThursday: Thursday\n - SdkTimeWeekdayFriday: Friday\n - SdkTimeWeekdaySaturday: Saturday",
       "title": "Defines times of day"
+    },
+    "apiSdkVersion": {
+      "type": "object",
+      "properties": {
+        "major": {
+          "type": "integer",
+          "format": "int32",
+          "title": "SDK version major number"
+        },
+        "minor": {
+          "type": "integer",
+          "format": "int32",
+          "title": "SDK version minor number"
+        },
+        "patch": {
+          "type": "integer",
+          "format": "int32",
+          "title": "SDK version patch number"
+        },
+        "version": {
+          "type": "string",
+          "description": "String representation of the SDK version. Must be\nin `major.minor.patch` format."
+        }
+      },
+      "description": "SDK version in Major.Minor.Patch format. The goal of this\nmessage is to provide clients a method to determine the SDK\nversion run by an SDK server."
     },
     "apiSdkVolumeAttachRequest": {
       "type": "object",
@@ -3002,6 +3058,27 @@
         }
       },
       "title": "StorageResource groups properties of a storage device.\nswagger:model"
+    },
+    "apiStorageVersion": {
+      "type": "object",
+      "properties": {
+        "driver": {
+          "type": "string",
+          "title": "OpenStorage driver name"
+        },
+        "version": {
+          "type": "string",
+          "title": "Version of the server"
+        },
+        "details": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Extra information provided by the storage system"
+        }
+      },
+      "title": "Version information about the storage system"
     },
     "apiVolume": {
       "type": "object",

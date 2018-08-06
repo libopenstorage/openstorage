@@ -38,6 +38,10 @@ func (v *volumeClient) Type() api.DriverType {
 	return api.DriverType_DRIVER_TYPE_BLOCK
 }
 
+func (v *volumeClient) Version() (*api.StorageVersion, error) {
+	return nil, volume.ErrNotSupported
+}
+
 func (v *volumeClient) GraphDriverCreate(id string, parent string) error {
 	response := ""
 	if err := v.c.Put().Resource(graphPath + "/create").Instance(id).Do().Unmarshal(&response); err != nil {

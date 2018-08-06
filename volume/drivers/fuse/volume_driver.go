@@ -63,6 +63,13 @@ func (v *volumeDriver) Type() api.DriverType {
 	return api.DriverType_DRIVER_TYPE_FILE
 }
 
+func (v *volumeDriver) Version() (*api.StorageVersion, error) {
+	return &api.StorageVersion{
+		Driver:  v.Name(),
+		Version: "1.0.0",
+	}, nil
+}
+
 func (v *volumeDriver) Create(
 	volumeLocator *api.VolumeLocator,
 	source *api.Source,
