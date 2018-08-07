@@ -752,6 +752,14 @@ service OpenStorageIdentity {
       };
     }
 
+  // Version returns version information about the system.
+  rpc Version(SdkIdentityVersionRequest)
+    returns (SdkIdentityVersionResponse) {
+      option(google.api.http) = {
+        get: "/v1/identities/version"
+      };
+    }
+
 }
 
 // OpenStorageCluster service provides the methods to manage the cluster
@@ -2152,6 +2160,18 @@ message SdkIdentityCapabilitiesResponse {
   repeated SdkServiceCapability capabilities = 1;
 }
 
+// Empty request
+message SdkIdentityVersionRequest {
+}
+
+// Defines a response containing version information
+message SdkIdentityVersionResponse {
+  // OpenStorage SDK version used by the server
+  SdkVersion sdk_version = 1;
+  // Version information about the storage system
+  StorageVersion version = 2;
+}
+
 // Defines a capability of he cluster
 message SdkServiceCapability {
   message OpenStorageService {
@@ -2184,6 +2204,53 @@ message SdkServiceCapability {
     // service type supported by this cluster
     OpenStorageService service = 1;
   }
+}
+
+// SDK version in Major.Minor.Patch format. The goal of this
+// message is to provide clients a method to determine the SDK
+// version run by an SDK server.
+message SdkVersion {
+
+  // These values are constants that can be used by the
+  // client and server applications
+  enum Version {
+    // Allows multiple values to be set to the same integer
+    // Set when needed
+    option allow_alias = true;
+
+    // Must be set in the proto file; ignore.
+    MUST_HAVE_ZERO_VALUE = 0;
+
+    // SDK version major value of this specification
+    Major = 0;
+    // SDK version minor value of this specification
+    Minor = 1;
+    // SDK version patch value of this specification
+    Patch = 0;
+  }
+
+  // The following cannot be set to use the enum Version because the REST
+  // Gateway would then return the string value of the enum.
+
+  // SDK version major number
+  int32 major = 1;
+  // SDK version minor number
+  int32 minor = 2;
+  // SDK version patch number
+  int32 patch = 3;
+  // String representation of the SDK version. Must be
+  // in `major.minor.patch` format.
+  string version = 4;
+}
+
+// Version information about the storage system
+message StorageVersion {
+   // OpenStorage driver name
+   string driver = 1;
+   // Version of the server
+   string version = 2;
+   // Extra information provided by the storage system
+   map<string, string> details = 3;
 }
 
 message CloudMigrate {

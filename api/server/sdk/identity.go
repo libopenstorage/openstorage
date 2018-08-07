@@ -18,12 +18,17 @@ package sdk
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/volume"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // IdentityServer is an implementation of the gRPC OpenStorageIdentityServer interface
 type IdentityServer struct {
+	driver volume.VolumeDriver
 }
 
 // Capabilities returns the capabilities of the SDK server
@@ -92,5 +97,36 @@ func (s *IdentityServer) Capabilities(
 			capSchedulePolicy,
 			capVolume,
 		},
+	}, nil
+}
+
+// Version returns version of the storage system
+func (s *IdentityServer) Version(
+	ctx context.Context,
+	req *api.SdkIdentityVersionRequest,
+) (*api.SdkIdentityVersionResponse, error) {
+
+	version, err := s.driver.Version()
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"Failed to get version information: %v", err,
+		)
+	}
+
+	sdkVersion := &api.SdkVersion{
+		Major: int32(api.SdkVersion_Major),
+		Minor: int32(api.SdkVersion_Minor),
+		Patch: int32(api.SdkVersion_Patch),
+		Version: fmt.Sprintf("%d.%d.%d",
+			api.SdkVersion_Major,
+			api.SdkVersion_Minor,
+			api.SdkVersion_Patch,
+		),
+	}
+
+	return &api.SdkIdentityVersionResponse{
+		SdkVersion: sdkVersion,
+		Version:    version,
 	}, nil
 }

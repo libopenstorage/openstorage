@@ -80,7 +80,7 @@ func (s *VolumeServer) create(
 		if err != nil {
 			return "", status.Errorf(
 				codes.Internal,
-				"unable to create snapshot: %s\n",
+				"unable to create snapshot: %s",
 				err.Error())
 		}
 	} else {

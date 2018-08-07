@@ -142,6 +142,13 @@ func (d *driver) Type() api.DriverType {
 	return Type
 }
 
+func (d *driver) Version() (*api.StorageVersion, error) {
+	return &api.StorageVersion{
+		Driver:  d.Name(),
+		Version: "1.0.0",
+	}, nil
+}
+
 // Status diagnostic information
 func (d *driver) Status() [][2]string {
 	return [][2]string{}

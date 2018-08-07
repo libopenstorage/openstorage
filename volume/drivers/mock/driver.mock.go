@@ -593,6 +593,19 @@ func (mr *MockVolumeDriverMockRecorder) UsedSize(arg0 interface{}) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UsedSize", reflect.TypeOf((*MockVolumeDriver)(nil).UsedSize), arg0)
 }
 
+// Version mocks base method
+func (m *MockVolumeDriver) Version() (*api.StorageVersion, error) {
+	ret := m.ctrl.Call(m, "Version")
+	ret0, _ := ret[0].(*api.StorageVersion)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Version indicates an expected call of Version
+func (mr *MockVolumeDriverMockRecorder) Version() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Version", reflect.TypeOf((*MockVolumeDriver)(nil).Version))
+}
+
 // Write mocks base method
 func (m *MockVolumeDriver) Write(arg0 string, arg1 []byte, arg2 uint64, arg3 int64) (int64, error) {
 	ret := m.ctrl.Call(m, "Write", arg0, arg1, arg2, arg3)

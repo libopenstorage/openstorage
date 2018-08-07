@@ -183,6 +183,8 @@ type ProtoDriver interface {
 	Name() string
 	// Type of this driver
 	Type() api.DriverType
+	// Version information of the driver
+	Version() (*api.StorageVersion, error)
 	// Create a new Vol for the specific volume spec.
 	// It returns a system generated VolumeID that uniquely identifies the volume
 	Create(locator *api.VolumeLocator, Source *api.Source, spec *api.VolumeSpec) (string, error)
