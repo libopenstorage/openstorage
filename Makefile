@@ -2,6 +2,7 @@ HAS_PACKR := $(shell command -v packr 2> /dev/null)
 HAS_PROTOC_GEN_GRPC_GATEWAY := $(shell command -v protoc-gen-grpc-gateway 2> /dev/null)
 HAS_PROTOC_GEN_SWAGGER := $(shell command -v protoc-gen-swagger 2> /dev/null)
 HAS_PROTOC_GEN_GO := $(shell command -v protoc-gen-go 2> /dev/null)
+HAS_SDKTEST := $(shell command -v sdk-test 2> /dev/null)
 
 ifndef TAGS
 TAGS := daemon
@@ -149,6 +150,17 @@ errcheck:
 
 pretest: lint vet errcheck
 
+install-sdk-test:
+ifndef HAS_SDKTEST
+	@echo "Installing sdk-test"
+	@-go get -d -u github.com/libopenstorage/sdk-test 1>/dev/null 2>&1
+	@(cd $(GOPATH)/src/github.com/libopenstorage/sdk-test/cmd/sdk-test && make install )
+endif
+
+test-sdk: install-sdk-test launch-sdk
+	timeout 30 sh -c 'until curl --silent -X GET -d {} http://localhost:9110/v1/clusters/current | grep STATUS_OK; do sleep 1; done'
+	sdk-test -ginkgo.noColor -ginkgo.noisySkippings=false -sdk.endpoint=localhost:9100
+
 test: packr
 	go test -tags "$(TAGS)" $(TESTFLAGS) $(PKGS)
 
@@ -232,10 +244,13 @@ docker-build-osd: docker-build-osd-dev
 		openstorage/osd-dev \
 			make docker-build-osd-internal
 
-launch-sdk: sdk
+launch-sdk-quick:
+	@-docker stop sdk > /dev/null 2>&1
 	docker run --rm --name sdk \
 		-d -p 9110:9110 -p 9100:9100 \
 		openstorage/mock-sdk-server
+
+launch-sdk: sdk launch-sdk-quick
 
 launch: docker-build-osd
 	docker run \
