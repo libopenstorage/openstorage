@@ -28,6 +28,9 @@ All SDK APIs and values must satisfy by the following:
 
 ## Creating new API
 
+### Version
+Please request what the version number of the SDK should be changed to if at all.
+
 ### Service
 If you are adding a new service, use the following steps:
 
@@ -71,4 +74,12 @@ $ git checkout --ours <file with conflict>
 $ git add <file with conflict>
 $ git rebase --continue
 ```
+
+# Release Management
+The following steps can be used to publish it once the SDK is ready for a new release and the version number has been updated:
+
+* Update [sdk-test](https://github.com/libopenstorage/sdk-test) to test the new functionality.
+* Update [docs](https://github.com/libopenstorage/libopenstorage.github.io) _Reference_ and _Changelog_.
+* Update [openstorage-sdk-clients](https://github.com/libopenstorage/openstorage-sdk-clients) to regenerate new clients.
+
 
