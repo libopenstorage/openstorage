@@ -18,7 +18,7 @@ All SDK APIs and values must satisfy by the following:
     * All APIs **must** have a single message for the request and a single message for the response with the following style: `Sdk<Service Type><Api Name>Request|Response`
 * Enums
     * Enum of zero value should be labeled as `XXX_UNKNOWN`, `XXX_NONE`, or `XXX_UNDEFINED` to check if it was not set.
-    * All enums must be unique across the entire proto file, not just the single enum.
+    * Top level enums must be unique across the entire proto file.
 * Messages
     * Try not to use `uint64`. Instead try to use signed `int64`. (There is a reason for this which is why CSI changed all uint64s to in64s in version 0.2, but I can find out why.)
 * Documentation
