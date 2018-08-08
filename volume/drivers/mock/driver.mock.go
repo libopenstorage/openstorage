@@ -494,16 +494,16 @@ func (mr *MockVolumeDriverMockRecorder) SnapEnumerate(arg0, arg1 interface{}) *g
 }
 
 // Snapshot mocks base method
-func (m *MockVolumeDriver) Snapshot(arg0 string, arg1 bool, arg2 *api.VolumeLocator) (string, error) {
-	ret := m.ctrl.Call(m, "Snapshot", arg0, arg1, arg2)
+func (m *MockVolumeDriver) Snapshot(arg0 string, arg1 bool, arg2 *api.VolumeLocator, arg3 bool) (string, error) {
+	ret := m.ctrl.Call(m, "Snapshot", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Snapshot indicates an expected call of Snapshot
-func (mr *MockVolumeDriverMockRecorder) Snapshot(arg0, arg1, arg2 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Snapshot", reflect.TypeOf((*MockVolumeDriver)(nil).Snapshot), arg0, arg1, arg2)
+func (mr *MockVolumeDriverMockRecorder) Snapshot(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Snapshot", reflect.TypeOf((*MockVolumeDriver)(nil).Snapshot), arg0, arg1, arg2, arg3)
 }
 
 // SnapshotGroup mocks base method
@@ -591,6 +591,19 @@ func (m *MockVolumeDriver) UsedSize(arg0 string) (uint64, error) {
 // UsedSize indicates an expected call of UsedSize
 func (mr *MockVolumeDriverMockRecorder) UsedSize(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UsedSize", reflect.TypeOf((*MockVolumeDriver)(nil).UsedSize), arg0)
+}
+
+// Version mocks base method
+func (m *MockVolumeDriver) Version() (*api.StorageVersion, error) {
+	ret := m.ctrl.Call(m, "Version")
+	ret0, _ := ret[0].(*api.StorageVersion)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Version indicates an expected call of Version
+func (mr *MockVolumeDriverMockRecorder) Version() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Version", reflect.TypeOf((*MockVolumeDriver)(nil).Version))
 }
 
 // Write mocks base method

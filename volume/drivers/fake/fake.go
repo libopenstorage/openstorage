@@ -122,6 +122,16 @@ func (d *driver) Type() api.DriverType {
 	return Type
 }
 
+func (d *driver) Version() (*api.StorageVersion, error) {
+	return &api.StorageVersion{
+		Driver:  d.Name(),
+		Version: "1.0.0-fake",
+		Details: map[string]string{
+			"example": "data",
+		},
+	}, nil
+}
+
 // Status diagnostic information
 func (d *driver) Status() [][2]string {
 	return [][2]string{}
@@ -222,7 +232,7 @@ func (d *driver) Unmount(volumeID string, mountpath string, options map[string]s
 	return d.UpdateVol(v)
 }
 
-func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator) (string, error) {
+func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
 
 	if len(locator.GetName()) == 0 {
 		return "", fmt.Errorf("Name for snapshot must be provided")

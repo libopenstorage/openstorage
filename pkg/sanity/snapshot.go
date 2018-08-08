@@ -113,7 +113,7 @@ var _ = Describe("Volume [Snapshot Tests]", func() {
 				Name: "snapshot-of-" + volumeID,
 			}
 
-			snapID, err = volumedriver.Snapshot(volumeID, true, loc)
+			snapID, err = volumedriver.Snapshot(volumeID, true, loc, false)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(snapID).To(Not(BeNil()))
 
@@ -201,7 +201,7 @@ var _ = Describe("Volume [Snapshot Tests]", func() {
 					Name: "snapshot-" + strconv.Itoa(i) + "-of-" + volumeID,
 				}
 
-				snapID, err = volumedriver.Snapshot(volumeID, true, loc)
+				snapID, err = volumedriver.Snapshot(volumeID, true, loc, false)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(snapID).To(Not(BeNil()))
 
@@ -294,7 +294,7 @@ var _ = Describe("Volume [Snapshot Tests]", func() {
 				Name: "snapshot-of-" + volumeID,
 			}
 
-			snapID, err = volumedriver.Snapshot(volumeID, true, loc)
+			snapID, err = volumedriver.Snapshot(volumeID, true, loc, false)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(snapID).To(Not(BeNil()))
 

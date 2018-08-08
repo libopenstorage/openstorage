@@ -18,9 +18,12 @@ package sdk
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/libopenstorage/openstorage/api"
 )
@@ -67,4 +70,50 @@ func TestIdentityCapabilities(t *testing.T) {
 	for _, cap := range expectedCapabilities {
 		expectCapability(t, cap, r.GetCapabilities())
 	}
+}
+
+func TestIdentityVersion(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	c := api.NewOpenStorageIdentityClient(s.Conn())
+	s.MockDriver().EXPECT().Version().Return(nil, fmt.Errorf("MOCK")).Times(1)
+	_, err := c.Version(context.Background(), &api.SdkIdentityVersionRequest{})
+	assert.Error(t, err)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.Internal)
+	assert.Contains(t, serverError.Message(), "MOCK")
+
+	version := &api.StorageVersion{
+		Driver:  "mock",
+		Version: "1.2.4-asdf",
+		Details: map[string]string{
+			"hello": "world",
+		},
+	}
+
+	s.MockDriver().EXPECT().Version().Return(version, nil).Times(1)
+	r, err := c.Version(context.Background(), &api.SdkIdentityVersionRequest{})
+	assert.NoError(t, err)
+	assert.NotNil(t, r)
+
+	assert.NotNil(t, r.GetSdkVersion())
+	assert.Equal(t, int32(api.SdkVersion_Major), r.GetSdkVersion().GetMajor())
+	assert.Equal(t, int32(api.SdkVersion_Minor), r.GetSdkVersion().GetMinor())
+	assert.Equal(t, int32(api.SdkVersion_Patch), r.GetSdkVersion().GetPatch())
+	assert.Equal(t,
+		fmt.Sprintf("%d.%d.%d",
+			api.SdkVersion_Major,
+			api.SdkVersion_Minor,
+			api.SdkVersion_Patch,
+		),
+		r.GetSdkVersion().GetVersion())
+
+	assert.NotNil(t, r.GetVersion())
+	assert.Equal(t, version.GetDriver(), r.GetVersion().GetDriver())
+	assert.Equal(t, version.GetVersion(), r.GetVersion().GetVersion())
+	assert.Equal(t, version.GetDetails(), r.GetVersion().GetDetails())
 }

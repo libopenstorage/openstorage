@@ -70,6 +70,13 @@ func (d *driver) Type() api.DriverType {
 	return Type
 }
 
+func (d *driver) Version() (*api.StorageVersion, error) {
+	return &api.StorageVersion{
+		Driver:  d.Name(),
+		Version: "1.0.0",
+	}, nil
+}
+
 // Create a new subvolume. The volume spec is not taken into account.
 func (d *driver) Create(
 	locator *api.VolumeLocator,
@@ -150,7 +157,7 @@ func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.Volu
 }
 
 // Snapshot create new subvolume from volume
-func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator) (string, error) {
+func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
 	vols, err := d.Inspect([]string{volumeID})
 	if err != nil {
 		return "", err

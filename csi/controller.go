@@ -371,7 +371,8 @@ func (s *OsdCsiServer) CreateVolume(
 		// Create a snapshot from the parent
 		id, err = s.driver.Snapshot(parent.GetId(), false, &api.VolumeLocator{
 			Name: req.GetName(),
-		})
+		},
+			false)
 		if err != nil {
 			e := fmt.Sprintf("unable to create snapshot: %s\n", err.Error())
 			logrus.Errorln(e)

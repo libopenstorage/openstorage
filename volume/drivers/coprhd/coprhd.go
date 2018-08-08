@@ -143,6 +143,13 @@ func (d *driver) Type() api.DriverType {
 	return Type
 }
 
+func (d *driver) Version() (*api.StorageVersion, error) {
+	return &api.StorageVersion{
+		Driver:  d.Name(),
+		Version: "1.0.0",
+	}, nil
+}
+
 func (d *driver) Create(
 	locator *api.VolumeLocator,
 	source *api.Source,
@@ -223,7 +230,9 @@ func (d *driver) Shutdown() {
 func (d *driver) Snapshot(
 	volumeID string,
 	readonly bool,
-	locator *api.VolumeLocator) (string, error) {
+	locator *api.VolumeLocator,
+	noRetry bool,
+) (string, error) {
 	return "", nil
 }
 

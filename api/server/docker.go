@@ -205,6 +205,7 @@ func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 			if _, err = v.Snapshot(vol.Id,
 				false,
 				&api.VolumeLocator{Name: name},
+				false,
 			); err != nil {
 				d.errorResponse(method, w, err)
 				return

@@ -12,13 +12,13 @@ All SDK APIs and values must satisfy by the following:
 * Services:
     * Services should be in the format `OpenStorage<Type>`.
     * Note that the service is a collection of APIs and are grouped as such in the documentation.
-        * Here is an example for [OpenStorageClusterService](https://libopenstorage.github.io/w/generated-api.html#openstorageapiopenstoragecluster)
+        * Here is an example for [OpenStorageClusterService](https://libopenstorage.github.io/w/generated-api.html#serviceopenstorageapiopenstoragecluster)
 * APIs
     * If it is a new service, then it should have `Create`, `Inspect`, `Delete`, or `Enumerate` style APIs.
     * All APIs **must** have a single message for the request and a single message for the response with the following style: `Sdk<Service Type><Api Name>Request|Response`
 * Enums
     * Enum of zero value should be labeled as `XXX_UNKNOWN`, `XXX_NONE`, or `XXX_UNDEFINED` to check if it was not set.
-    * All enums must be unique across the entire proto file, not just the single enum.
+    * Top level enums must be unique across the entire proto file.
 * Messages
     * Try not to use `uint64`. Instead try to use signed `int64`. (There is a reason for this which is why CSI changed all uint64s to in64s in version 0.2, but I can find out why.)
 * Documentation
@@ -27,6 +27,9 @@ All SDK APIs and values must satisfy by the following:
 **NOTE** Most importantly is that these APIs _must_ be supported forever. They will almost never be deprecated since at some point we will have many versions of the clients. So please be clear and careful on the API you create.
 
 ## Creating new API
+
+### Version
+Please request what the version number of the SDK should be changed to if at all.
 
 ### Service
 If you are adding a new service, use the following steps:
@@ -71,4 +74,12 @@ $ git checkout --ours <file with conflict>
 $ git add <file with conflict>
 $ git rebase --continue
 ```
+
+# Release Management
+The following steps can be used to publish it once the SDK is ready for a new release and the version number has been updated:
+
+* Update [sdk-test](https://github.com/libopenstorage/sdk-test) to test the new functionality.
+* Update [docs](https://github.com/libopenstorage/libopenstorage.github.io) _Reference_ and _Changelog_.
+* Update [openstorage-sdk-clients](https://github.com/libopenstorage/openstorage-sdk-clients) to regenerate new clients.
+
 

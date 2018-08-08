@@ -310,7 +310,8 @@ func snap(t *testing.T, ctx *Context) {
 	labels := map[string]string{"oh": "snap"}
 	require.NotEqual(t, ctx.volID, "", "invalid volume ID")
 	id, err := ctx.Snapshot(ctx.volID, false,
-		&api.VolumeLocator{Name: "snappy", VolumeLabels: labels})
+		&api.VolumeLocator{Name: "snappy", VolumeLabels: labels},
+		false)
 	require.NoError(t, err, "Failed in creating a snapshot")
 	ctx.snapID = id
 }

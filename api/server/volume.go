@@ -549,7 +549,7 @@ func (vd *volAPI) snap(w http.ResponseWriter, r *http.Request) {
 
 	vd.logRequest(method, string(snapReq.Id)).Infoln("")
 
-	id, err := d.Snapshot(snapReq.Id, snapReq.Readonly, snapReq.Locator)
+	id, err := d.Snapshot(snapReq.Id, snapReq.Readonly, snapReq.Locator, snapReq.NoRetry)
 	snapRes.VolumeCreateResponse = &api.VolumeCreateResponse{
 		Id: id,
 		VolumeResponse: &api.VolumeResponse{

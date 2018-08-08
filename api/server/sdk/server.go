@@ -96,9 +96,11 @@ func New(config *ServerConfig) (*Server, error) {
 	}
 
 	return &Server{
-		GrpcServer:     gServer,
-		restPort:       config.RestPort,
-		identityServer: &IdentityServer{},
+		GrpcServer: gServer,
+		restPort:   config.RestPort,
+		identityServer: &IdentityServer{
+			driver: d,
+		},
 		clusterServer: &ClusterServer{
 			cluster: config.Cluster,
 		},

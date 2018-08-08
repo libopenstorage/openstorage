@@ -4848,6 +4848,11 @@
         "locator": {
           "$ref": "#/definitions/VolumeLocator"
         },
+        "no_retry": {
+          "description": "NoRetry indicates not to retry snapshot creation in the background.",
+          "type": "boolean",
+          "x-go-name": "NoRetry"
+        },
         "readonly": {
           "type": "boolean",
           "x-go-name": "Readonly"
