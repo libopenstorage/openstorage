@@ -2781,8 +2781,13 @@
       "enum": [
         "SEVERITY_TYPE_NONE",
         "SEVERITY_TYPE_ALARM",
+        "SEVERITY_TYPE_CRITICAL",
+        "SEVERITY_TYPE_ERROR",
         "SEVERITY_TYPE_WARNING",
-        "SEVERITY_TYPE_NOTIFY"
+        "SEVERITY_TYPE_NOTIFY",
+        "SEVERITY_TYPE_NOTICE",
+        "SEVERITY_TYPE_INFO",
+        "SEVERITY_TYPE_DEBUG"
       ],
       "default": "SEVERITY_TYPE_NONE"
     },
