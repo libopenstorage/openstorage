@@ -66,10 +66,17 @@ enum GraphDriverChangeType {
 }
 
 enum SeverityType {
+  option allow_alias = true;
+
   SEVERITY_TYPE_NONE = 0;
-  SEVERITY_TYPE_ALARM = 1;
+  SEVERITY_TYPE_ALARM = 1 [deprecated=true];
+  SEVERITY_TYPE_CRITICAL = 1;
+  SEVERITY_TYPE_ERROR = 4;
   SEVERITY_TYPE_WARNING = 2;
-  SEVERITY_TYPE_NOTIFY = 3;
+  SEVERITY_TYPE_NOTIFY = 3 [deprecated=true];
+  SEVERITY_TYPE_NOTICE = 3;
+  SEVERITY_TYPE_INFO = 5;
+  SEVERITY_TYPE_DEBUG = 6;
 }
 
 enum ResourceType {
