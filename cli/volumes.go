@@ -301,7 +301,8 @@ func (v *volDriver) snapCreate(context *cli.Context) {
 		VolumeLabels: labels,
 	}
 	readonly := context.Bool("readonly")
-	id, err := v.volDriver.Snapshot(volumeID, readonly, locator)
+	noRetry := context.Bool("noretry")
+	id, err := v.volDriver.Snapshot(volumeID, readonly, locator, noRetry)
 	if err != nil {
 		cmdError(context, fn, err)
 		return

@@ -230,7 +230,9 @@ func (d *driver) Shutdown() {
 func (d *driver) Snapshot(
 	volumeID string,
 	readonly bool,
-	locator *api.VolumeLocator) (string, error) {
+	locator *api.VolumeLocator,
+	noRetry bool,
+) (string, error) {
 	return "", nil
 }
 
