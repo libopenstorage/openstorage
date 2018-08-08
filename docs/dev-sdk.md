@@ -12,7 +12,7 @@ All SDK APIs and values must satisfy by the following:
 * Services:
     * Services should be in the format `OpenStorage<Type>`.
     * Note that the service is a collection of APIs and are grouped as such in the documentation.
-        * Here is an example for [OpenStorageClusterService](https://libopenstorage.github.io/w/generated-api.html#openstorageapiopenstoragecluster)
+        * Here is an example for [OpenStorageClusterService](https://libopenstorage.github.io/w/generated-api.html#serviceopenstorageapiopenstoragecluster)
 * APIs
     * If it is a new service, then it should have `Create`, `Inspect`, `Delete`, or `Enumerate` style APIs.
     * All APIs **must** have a single message for the request and a single message for the response with the following style: `Sdk<Service Type><Api Name>Request|Response`
