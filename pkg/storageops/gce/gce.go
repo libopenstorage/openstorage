@@ -3,7 +3,6 @@ package gce
 import (
 	"context"
 	"fmt"
-	"os"
 	"path"
 	"regexp"
 	"strings"
@@ -531,30 +530,22 @@ func gceInfo(inst *instance) error {
 
 func gceInfoFromEnv(inst *instance) error {
 	var err error
-	inst.Name, err = getEnvValueStrict("GCE_INSTANCE_NAME")
+	inst.Name, err = storageops.GetEnvValueStrict("GCE_INSTANCE_NAME")
 	if err != nil {
 		return err
 	}
 
-	inst.Zone, err = getEnvValueStrict("GCE_INSTANCE_ZONE")
+	inst.Zone, err = storageops.GetEnvValueStrict("GCE_INSTANCE_ZONE")
 	if err != nil {
 		return err
 	}
 
-	inst.Project, err = getEnvValueStrict("GCE_INSTANCE_PROJECT")
+	inst.Project, err = storageops.GetEnvValueStrict("GCE_INSTANCE_PROJECT")
 	if err != nil {
 		return err
 	}
 
 	return nil
-}
-
-func getEnvValueStrict(key string) (string, error) {
-	if val := os.Getenv(key); len(val) != 0 {
-		return val, nil
-	}
-
-	return "", fmt.Errorf("env variable %s is not set", key)
 }
 
 func (s *gceOps) rollbackCreate(id string, createErr error) error {

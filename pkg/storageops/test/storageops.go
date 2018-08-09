@@ -2,13 +2,12 @@ package test
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/libopenstorage/openstorage/pkg/storageops"
-	uuid "github.com/satori/go.uuid"
+	"github.com/pborman/uuid"
 	"github.com/stretchr/testify/require"
 )
 
@@ -26,14 +25,17 @@ func RunTest(drivers map[string]storageops.Ops,
 
 		for _, template := range diskTemplates[d.Name()] {
 			disk := create(t, d, template)
-			diskName := id(t, d, disk)
-			snapshot(t, d, diskName)
-			tags(t, d, diskName)
-			enumerate(t, d, diskName)
-			inspect(t, d, diskName)
-			attach(t, d, diskName)
-			devicePath(t, d, diskName)
-			teardown(t, d, diskName)
+			fmt.Printf("Created disk: %v\n", disk)
+			diskID := id(t, d, disk)
+			require.NotEmpty(t, diskID, "disk ID should not be empty")
+			snapshot(t, d, diskID)
+			tags(t, d, diskID)
+			enumerate(t, d, diskID)
+			inspect(t, d, diskID)
+			attach(t, d, diskID)
+			devicePath(t, d, diskID)
+			teardown(t, d, diskID)
+			fmt.Printf("Tore down disk: %v\n", disk)
 		}
 	}
 }
@@ -60,6 +62,10 @@ func id(t *testing.T, driver storageops.Ops, disk interface{}) string {
 
 func snapshot(t *testing.T, driver storageops.Ops, diskName string) {
 	snap, err := driver.Snapshot(diskName, true)
+	if err == storageops.ErrNotSupported {
+		return
+	}
+
 	require.NoError(t, err, "failed to create snapshot")
 	require.NotEmpty(t, snap, "got empty snapshot from create API")
 
@@ -73,6 +79,10 @@ func snapshot(t *testing.T, driver storageops.Ops, diskName string) {
 
 func tags(t *testing.T, driver storageops.Ops, diskName string) {
 	err := driver.ApplyTags(diskName, diskLabels)
+	if err == storageops.ErrNotSupported {
+		return
+	}
+
 	require.NoError(t, err, "failed to apply tags to disk")
 
 	tags, err := driver.Tags(diskName)
@@ -92,11 +102,15 @@ func tags(t *testing.T, driver storageops.Ops, diskName string) {
 
 func enumerate(t *testing.T, driver storageops.Ops, diskName string) {
 	disks, err := driver.Enumerate([]*string{&diskName}, diskLabels, storageops.SetIdentifierNone)
+	if err == storageops.ErrNotSupported {
+		return
+	}
+
 	require.NoError(t, err, "failed to enumerate disk")
 	require.Len(t, disks, 1, "enumerate returned invalid length")
 
 	// enumerate with invalid labels
-	randomStr := uuid.NewV4().String()
+	randomStr := uuid.New()
 	randomStr = strings.Replace(randomStr, "-", "", -1)
 	invalidLabels := map[string]string{
 		fmt.Sprintf("key%s", randomStr): fmt.Sprintf("val%s", randomStr),
@@ -108,6 +122,10 @@ func enumerate(t *testing.T, driver storageops.Ops, diskName string) {
 
 func inspect(t *testing.T, driver storageops.Ops, diskName string) {
 	disks, err := driver.Inspect([]*string{&diskName})
+	if err == storageops.ErrNotSupported {
+		return
+	}
+
 	require.NoError(t, err, "failed to inspect disk")
 	require.Len(t, disks, 1, fmt.Sprintf("inspect returned invalid length: %d", len(disks)))
 }
@@ -126,16 +144,14 @@ func devicePath(t *testing.T, driver storageops.Ops, diskName string) {
 	devPath, err := driver.DevicePath(diskName)
 	require.NoError(t, err, "get device path returned error")
 	require.NotEmpty(t, devPath, "received empty devicePath")
-	_, err = os.Stat(devPath)
-	require.NoError(t, err, "expected device path to exist")
 }
 
-func teardown(t *testing.T, driver storageops.Ops, diskName string) {
-	err := driver.Detach(diskName)
+func teardown(t *testing.T, driver storageops.Ops, diskID string) {
+	err := driver.Detach(diskID)
 	require.NoError(t, err, "disk detach returned error")
 
 	time.Sleep(3 * time.Second)
 
-	err = driver.Delete(diskName)
+	err = driver.Delete(diskID)
 	require.NoError(t, err, "failed to delete disk")
 }

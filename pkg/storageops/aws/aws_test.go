@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/libopenstorage/openstorage/pkg/storageops"
 	"github.com/libopenstorage/openstorage/pkg/storageops/test"
-	uuid "github.com/satori/go.uuid"
+	"github.com/pborman/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,7 +18,7 @@ const (
 	newDiskPrefix   = "openstorage-test"
 )
 
-var diskName = fmt.Sprintf("%s-%s", newDiskPrefix, uuid.NewV4())
+var diskName = fmt.Sprintf("%s-%s", newDiskPrefix, uuid.New())
 
 func TestAll(t *testing.T) {
 	drivers := make(map[string]storageops.Ops)
