@@ -516,6 +516,10 @@ func (s *ec2Ops) Create(
 	return s.refreshVol(resp.VolumeId)
 }
 
+func (s *ec2Ops) DeleteFrom(id, _ string) error {
+	return s.Delete(id)
+}
+
 func (s *ec2Ops) Delete(id string) error {
 	req := &ec2.DeleteVolumeInput{VolumeId: &id}
 	_, err := s.ec2.DeleteVolume(req)
@@ -560,9 +564,17 @@ func (s *ec2Ops) Attach(volumeID string) (string, error) {
 }
 
 func (s *ec2Ops) Detach(volumeID string) error {
+	return s.detachInternal(volumeID, s.instance)
+}
+
+func (s *ec2Ops) DetachFrom(volumeID, instanceName string) error {
+	return s.detachInternal(volumeID, instanceName)
+}
+
+func (s *ec2Ops) detachInternal(volumeID, instanceName string) error {
 	force := false
 	req := &ec2.DetachVolumeInput{
-		InstanceId: &s.instance,
+		InstanceId: &instanceName,
 		VolumeId:   &volumeID,
 		Force:      &force,
 	}

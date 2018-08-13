@@ -186,6 +186,10 @@ func (s *gceOps) Create(
 	return d, err
 }
 
+func (s *gceOps) DeleteFrom(id, _ string) error {
+	return s.Delete(id)
+}
+
 func (s *gceOps) Delete(id string) error {
 	ctx := context.Background()
 	found := false
@@ -214,10 +218,18 @@ func (s *gceOps) Delete(id string) error {
 }
 
 func (s *gceOps) Detach(devicePath string) error {
+	return s.detachInternal(devicePath, s.inst.Name)
+}
+
+func (s *gceOps) DetachFrom(devicePath, instanceName string) error {
+	return s.detachInternal(devicePath, instanceName)
+}
+
+func (s *gceOps) detachInternal(devicePath, instanceName string) error {
 	_, err := s.service.Instances.DetachDisk(
 		s.inst.Project,
 		s.inst.Zone,
-		s.inst.Name,
+		instanceName,
 		devicePath).Do()
 	if err != nil {
 		return err
