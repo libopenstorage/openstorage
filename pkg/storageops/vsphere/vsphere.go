@@ -58,10 +58,9 @@ func NewClient(cfg *VSphereConfig) (storageops.Ops, error) {
 	}, nil
 }
 
-// Name returns name of the storage operations driver
-func (ops *vsphereOps) Name() string {
-	return "vsphere"
-}
+func (ops *vsphereOps) Name() string { return "vsphere" }
+
+func (ops *vsphereOps) InstanceID() string { return ops.cfg.VMUUID }
 
 func (ops *vsphereOps) Create(opts interface{}, labels map[string]string) (interface{}, error) {
 	volumeOptions, ok := opts.(*vclib.VolumeOptions)
@@ -161,12 +160,29 @@ func (ops *vsphereOps) Attach(diskPath string) (string, error) {
 }
 
 func (ops *vsphereOps) Detach(diskPath string) error {
+	return ops.detachInternal(diskPath, ops.cfg.VMUUID)
+}
+
+func (ops *vsphereOps) DetachFrom(diskPath, instanceID string) error {
+	return ops.detachInternal(diskPath, instanceID)
+}
+
+func (ops *vsphereOps) detachInternal(diskPath, instanceID string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	vmObj, err := ops.renewVM(ctx, ops.vm)
-	if err != nil {
-		return err
+	var vmObj *vclib.VirtualMachine
+	var err error
+	if instanceID == ops.cfg.VMUUID {
+		vmObj, err = ops.renewVM(ctx, ops.vm)
+		if err != nil {
+			return err
+		}
+	} else {
+		vmObj, err = GetVMObject(ctx, ops.conn, instanceID)
+		if err != nil {
+			return err
+		}
 	}
 
 	if err := vmObj.DetachDisk(ctx, diskPath); err != nil {
@@ -179,12 +195,29 @@ func (ops *vsphereOps) Detach(diskPath string) error {
 
 // Delete virtual disk at given path
 func (ops *vsphereOps) Delete(diskPath string) error {
+	return ops.deleteInternal(diskPath, ops.cfg.VMUUID)
+}
+
+func (ops *vsphereOps) DeleteFrom(diskPath, instanceID string) error {
+	return ops.deleteInternal(diskPath, instanceID)
+}
+
+func (ops *vsphereOps) deleteInternal(diskPath, instanceID string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	vmObj, err := ops.renewVM(ctx, ops.vm)
-	if err != nil {
-		return err
+	var vmObj *vclib.VirtualMachine
+	var err error
+	if instanceID == ops.cfg.VMUUID {
+		vmObj, err = ops.renewVM(ctx, ops.vm)
+		if err != nil {
+			return err
+		}
+	} else {
+		vmObj, err = GetVMObject(ctx, ops.conn, instanceID)
+		if err != nil {
+			return err
+		}
 	}
 
 	disk := diskmanagers.VirtualDisk{

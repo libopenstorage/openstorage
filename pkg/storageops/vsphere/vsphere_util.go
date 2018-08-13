@@ -80,10 +80,7 @@ func ReadVSphereConfigFromEnv() (*VSphereConfig, error) {
 		cfg.InsecureFlag = true
 	}
 
-	cfg.VMUUID, err = storageops.GetEnvValueStrict("VSPHERE_VM_UUID")
-	if err != nil {
-		return nil, err
-	}
+	cfg.VMUUID, _ = storageops.GetEnvValueStrict("VSPHERE_VM_UUID")
 
 	return &cfg, nil
 }
