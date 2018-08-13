@@ -58,10 +58,9 @@ func NewClient(cfg *VSphereConfig) (storageops.Ops, error) {
 	}, nil
 }
 
-// Name returns name of the storage operations driver
-func (ops *vsphereOps) Name() string {
-	return "vsphere"
-}
+func (ops *vsphereOps) Name() string { return "vsphere" }
+
+func (ops *vsphereOps) InstanceID() string { return ops.cfg.VMUUID }
 
 func (ops *vsphereOps) Create(opts interface{}, labels map[string]string) (interface{}, error) {
 	volumeOptions, ok := opts.(*vclib.VolumeOptions)

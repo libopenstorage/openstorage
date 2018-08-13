@@ -17,7 +17,8 @@ var diskLabels = map[string]string{
 	"Test":   "UPPER_CASE",
 }
 
-func RunTest(drivers map[string]storageops.Ops,
+func RunTest(
+	drivers map[string]storageops.Ops,
 	diskTemplates map[string]map[string]interface{},
 	t *testing.T) {
 	for _, d := range drivers {
@@ -136,6 +137,17 @@ func attach(t *testing.T, driver storageops.Ops, diskName string) {
 	require.NotEmpty(t, devPath, "disk attach returned empty devicePath")
 
 	mappings, err := driver.DeviceMappings()
+	require.NoError(t, err, "get device mappings returned error")
+	require.NotEmpty(t, mappings, "received empty device mappings")
+
+	err = driver.DetachFrom(diskName, driver.InstanceID())
+	require.NoError(t, err, "disk DetachFrom returned error")
+
+	devPath, err = driver.Attach(diskName)
+	require.NoError(t, err, "disk attach returned error")
+	require.NotEmpty(t, devPath, "disk attach returned empty devicePath")
+
+	mappings, err = driver.DeviceMappings()
 	require.NoError(t, err, "get device mappings returned error")
 	require.NotEmpty(t, mappings, "received empty device mappings")
 }

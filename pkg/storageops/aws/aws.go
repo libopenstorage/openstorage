@@ -189,6 +189,8 @@ func (s *ec2Ops) waitAttachmentStatus(
 
 func (s *ec2Ops) Name() string { return "aws" }
 
+func (s *ec2Ops) InstanceID() string { return s.instance }
+
 func (s *ec2Ops) ApplyTags(volumeID string, labels map[string]string) error {
 	req := &ec2.CreateTagsInput{
 		Resources: []*string{&volumeID},

@@ -37,6 +37,8 @@ type StorageError struct {
 type Ops interface {
 	// Name returns name of the storage operations driver
 	Name() string
+	// InstanceID returns the ID of the instance of the default instance the operations are performed on
+	InstanceID() string
 	// Create volume based on input template volume and also apply given labels.
 	Create(template interface{}, labels map[string]string) (interface{}, error)
 	// GetDeviceID returns ID/Name of the given device/disk or snapshot
