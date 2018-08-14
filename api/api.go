@@ -260,6 +260,8 @@ type CloudBackupGroupCreateRequest struct {
 	// GroupID indicates backup request for a volumegroup with this group id
 	GroupID string
 	// Labels indicates backup request for a volume group with these labels
+	// If both GroupID and Labels are specified, volumes matching both
+	// criteria are backed up to cloud
 	Labels map[string]string
 	// CredentialUUID is cloud credential to be used for backup
 	CredentialUUID string
@@ -459,7 +461,7 @@ type CloudBackupGroupSchedCreateRequest struct {
 	Labels map[string]string
 	// CredentialUUID is cloud credential to be used with this schedule
 	CredentialUUID string
-	// Schedule is the frequence of backup
+	// Schedule is the frequency of backup
 	Schedule string
 	// MaxBackups are the maximum number of backups retained
 	// in cloud.Older backups are deleted
