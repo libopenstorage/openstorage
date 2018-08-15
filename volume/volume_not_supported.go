@@ -135,6 +135,12 @@ func (cl *cloudBackupNotSupported) CloudBackupCreate(
 	return ErrNotSupported
 }
 
+func (cl *cloudBackupNotSupported) CloudBackupGroupCreate(
+	input *api.CloudBackupGroupCreateRequest,
+) error {
+	return ErrNotSupported
+}
+
 func (cl *cloudBackupNotSupported) CloudBackupRestore(
 	input *api.CloudBackupRestoreRequest,
 ) (*api.CloudBackupRestoreResponse, error) {
@@ -185,6 +191,12 @@ func (cl *cloudBackupNotSupported) CloudBackupStateChange(
 
 func (cl *cloudBackupNotSupported) CloudBackupSchedCreate(
 	input *api.CloudBackupSchedCreateRequest,
+) (*api.CloudBackupSchedCreateResponse, error) {
+	return nil, ErrNotSupported
+}
+
+func (cl *cloudBackupNotSupported) CloudBackupGroupSchedCreate(
+	input *api.CloudBackupGroupSchedCreateRequest,
 ) (*api.CloudBackupSchedCreateResponse, error) {
 	return nil, ErrNotSupported
 }

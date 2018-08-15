@@ -136,6 +136,8 @@ type QuiesceDriver interface {
 type CloudBackupDriver interface {
 	// CloudBackupCreate uploads snapshot of a volume to the cloud
 	CloudBackupCreate(input *api.CloudBackupCreateRequest) error
+	// CloudBackupGroupCreate creates and then uploads volumegroup snapshots
+	CloudBackupGroupCreate(input *api.CloudBackupGroupCreateRequest) error
 	// CloudBackupRestore downloads a cloud backup and restores it to a volume
 	CloudBackupRestore(input *api.CloudBackupRestoreRequest) (*api.CloudBackupRestoreResponse, error)
 	// CloudBackupEnumerate enumerates the backups for a given cluster/credential/volumeID
@@ -152,9 +154,11 @@ type CloudBackupDriver interface {
 	CloudBackupHistory(input *api.CloudBackupHistoryRequest) (*api.CloudBackupHistoryResponse, error)
 	// CloudBackupStateChange allows a current backup state transisions(pause/resume/stop)
 	CloudBackupStateChange(input *api.CloudBackupStateChangeRequest) error
-	// CloudBackupSchedCreate creates a schedule backup volume to cloud
+	// CloudBackupSchedCreate creates a schedule to backup volume to cloud
 	CloudBackupSchedCreate(input *api.CloudBackupSchedCreateRequest) (*api.CloudBackupSchedCreateResponse, error)
-	// CloudBackupSchedDelete delete a volume backup schedule to cloud
+	// CloudBackupGroupSchedCreate creates a schedule to backup a volumegroup to cloud
+	CloudBackupGroupSchedCreate(input *api.CloudBackupGroupSchedCreateRequest) (*api.CloudBackupSchedCreateResponse, error)
+	// CloudBackupSchedDelete delete a backup schedule
 	CloudBackupSchedDelete(input *api.CloudBackupSchedDeleteRequest) error
 	// CloudBackupSchedEnumerate enumerates the configured backup schedules in the cluster
 	CloudBackupSchedEnumerate() (*api.CloudBackupSchedEnumerateResponse, error)

@@ -44,6 +44,43 @@ func TestClientBackup(t *testing.T) {
 	require.Contains(t, err.Error(), "Volume not found")
 }
 
+func TestClientGroupBackup(t *testing.T) {
+	ts, testVolDriver := testRestServer(t)
+	defer ts.Close()
+	defer testVolDriver.Stop()
+
+	cl, err := client.NewDriverClient(ts.URL, mockDriverName, "", mockDriverName)
+	require.NoError(t, err)
+
+	testVolDriver.MockDriver().EXPECT().CloudBackupGroupCreate(&api.CloudBackupGroupCreateRequest{
+		GroupID:        "goodvolgroup",
+		Labels:         nil,
+		CredentialUUID: "",
+		Full:           false}).Return(nil).Times(1)
+	testVolDriver.MockDriver().EXPECT().CloudBackupGroupCreate(&api.CloudBackupGroupCreateRequest{
+		GroupID:        "badvolgroup",
+		Labels:         nil,
+		CredentialUUID: "",
+		Full:           false}).Return(fmt.Errorf("Volume group not found")).Times(1)
+
+	// Create Backup
+	err = client.VolumeDriver(cl).
+		CloudBackupGroupCreate(&api.CloudBackupGroupCreateRequest{
+			GroupID:        "goodvolgroup",
+			Labels:         nil,
+			CredentialUUID: "",
+			Full:           false})
+	require.NoError(t, err)
+	err = client.VolumeDriver(cl).
+		CloudBackupGroupCreate(&api.CloudBackupGroupCreateRequest{
+			GroupID:        "badvolgroup",
+			Labels:         nil,
+			CredentialUUID: "",
+			Full:           false})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "Volume group not found")
+}
+
 func TestClientBackupRestore(t *testing.T) {
 	ts, testVolDriver := testRestServer(t)
 	defer ts.Close()
@@ -355,6 +392,35 @@ func TestClientBackupSchedCreate(t *testing.T) {
 	_, err = client.VolumeDriver(cl).CloudBackupSchedCreate(&badRequest)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "Invalid src volume or schedule")
+}
+
+func TestClientBackupGroupSchedCreate(t *testing.T) {
+	ts, testVolDriver := testRestServer(t)
+	defer ts.Close()
+	defer testVolDriver.Stop()
+
+	cl, err := client.NewDriverClient(ts.URL, mockDriverName, "", mockDriverName)
+	require.NoError(t, err)
+
+	goodRequest := api.CloudBackupGroupSchedCreateRequest{}
+	goodRequest.GroupID = "goodvolgroup"
+	goodRequest.CredentialUUID = ""
+	goodRequest.Schedule = "daily@10:00"
+	testVolDriver.MockDriver().EXPECT().CloudBackupGroupSchedCreate(&goodRequest).
+		Return(&api.CloudBackupSchedCreateResponse{}, nil).Times(1)
+	badRequest := api.CloudBackupGroupSchedCreateRequest{}
+	badRequest.GroupID = "badvolgroup"
+	badRequest.CredentialUUID = ""
+	badRequest.Schedule = ""
+	testVolDriver.MockDriver().EXPECT().CloudBackupGroupSchedCreate(&badRequest).
+		Return(&api.CloudBackupSchedCreateResponse{}, fmt.Errorf("Invalid volume group or schedule")).Times(1)
+
+	// Invoke Schedule Create
+	_, err = client.VolumeDriver(cl).CloudBackupGroupSchedCreate(&goodRequest)
+	require.NoError(t, err)
+	_, err = client.VolumeDriver(cl).CloudBackupGroupSchedCreate(&badRequest)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "Invalid volume group or schedule")
 }
 
 func TestClientBackupSchedDelete(t *testing.T) {
