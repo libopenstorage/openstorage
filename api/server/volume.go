@@ -745,8 +745,7 @@ func (vd *volAPI) stats(w http.ResponseWriter, r *http.Request) {
 
 	stats, err := d.Stats(volumeID, cumulative)
 	if err != nil {
-		e := fmt.Errorf("Failed to get stats: %s", err.Error())
-		http.Error(w, e.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	json.NewEncoder(w).Encode(stats)
