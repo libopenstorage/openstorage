@@ -71,6 +71,8 @@ const (
 	OptQuiesceID = "QuiesceID"
 	// OptCredUUID is the UUID of the credential
 	OptCredUUID = "CredUUID"
+	// OptCredName indicates unique name of credential
+	OptCredName = "CredName"
 	// OptCredType  indicates type of credential
 	OptCredType = "CredType"
 	// OptCredEncrKey is the key used to encrypt data

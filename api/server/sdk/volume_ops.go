@@ -106,7 +106,7 @@ func (s *VolumeServer) Create(
 	if len(req.GetName()) == 0 {
 		return nil, status.Error(
 			codes.InvalidArgument,
-			"Must supply a uniqe name")
+			"Must supply a unique name")
 	} else if req.GetSpec() == nil {
 		return nil, status.Error(
 			codes.InvalidArgument,

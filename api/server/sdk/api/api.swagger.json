@@ -524,7 +524,7 @@
       },
       "post": {
         "summary": "Create is used to submit cloud credentials. It will return an\nid of the credentials once they are verified to work.",
-        "description": "##### Example\n{% codetabs name=\"Golang\", type=\"go\" -%}\nid, err := client.Create(context.Background(), \u0026api.SdkCredentialCreateRequest{\n    CredentialType: \u0026api.SdkCredentialCreateRequest_AwsCredential{\n      AwsCredential: \u0026api.SdkAwsCredentialRequest{\n      AccessKey: \"dummy-access\",\n      SecretKey: \"dummy-secret\",\n      Endpoint:  \"dummy-endpoint\",\n      Region:    \"dummy-region\",\n    },\n  },\n})\n{%- language name=\"Python\", type=\"py\" -%}\nen_resp = client.Create(api_pb2.SdkCredentialCreateRequest(\n  aws_credential=api_pb2.SdkAwsCredentialRequest(\n    access_key='dummy-access',\n    secret_key='dumm-secret',\n    endpoint='dummy-endpoint',\n    region='dummy-region')))\n{%- endcodetabs %}",
+        "description": "##### Example\n{% codetabs name=\"Golang\", type=\"go\" -%}\nid, err := client.Create(context.Background(), \u0026api.SdkCredentialCreateRequest{\n    Name: \"awscred\",\n    CredentialType: \u0026api.SdkCredentialCreateRequest_AwsCredential{\n      AwsCredential: \u0026api.SdkAwsCredentialRequest{\n      AccessKey: \"dummy-access\",\n      SecretKey: \"dummy-secret\",\n      Endpoint:  \"dummy-endpoint\",\n      Region:    \"dummy-region\",\n    },\n  },\n})\n{%- language name=\"Python\", type=\"py\" -%}\nen_resp = client.Create(api_pb2.SdkCredentialCreateRequest(\n  name='awscred',\n  aws_credential=api_pb2.SdkAwsCredentialRequest(\n    access_key='dummy-access',\n    secret_key='dumm-secret',\n    endpoint='dummy-endpoint',\n    region='dummy-region')))\n{%- endcodetabs %}",
         "operationId": "Create",
         "responses": {
           "200": {
@@ -1623,10 +1623,6 @@
     "apiSdkAwsCredentialResponse": {
       "type": "object",
       "properties": {
-        "credential_id": {
-          "type": "string",
-          "title": "Credential Id"
-        },
         "access_key": {
           "type": "string",
           "title": "Access key"
@@ -1659,10 +1655,6 @@
     "apiSdkAzureCredentialResponse": {
       "type": "object",
       "properties": {
-        "credential_id": {
-          "type": "string",
-          "title": "Credential Id"
-        },
         "account_name": {
           "type": "string",
           "title": "Account name"
@@ -2057,6 +2049,10 @@
     "apiSdkCredentialCreateRequest": {
       "type": "object",
       "properties": {
+        "name": {
+          "type": "string",
+          "title": "Name of the credential"
+        },
         "aws_credential": {
           "$ref": "#/definitions/apiSdkAwsCredentialRequest",
           "title": "Credentials for AWS/S3"
@@ -2102,6 +2098,14 @@
     "apiSdkCredentialInspectResponse": {
       "type": "object",
       "properties": {
+        "credential_id": {
+          "type": "string",
+          "title": "Credential id"
+        },
+        "name": {
+          "type": "string",
+          "title": "Name of the credential"
+        },
         "aws_credential": {
           "$ref": "#/definitions/apiSdkAwsCredentialResponse",
           "title": "Aws credentials"
@@ -2138,10 +2142,6 @@
     "apiSdkGoogleCredentialResponse": {
       "type": "object",
       "properties": {
-        "credential_id": {
-          "type": "string",
-          "title": "Credential Id"
-        },
         "project_id": {
           "type": "string",
           "title": "Project ID"
