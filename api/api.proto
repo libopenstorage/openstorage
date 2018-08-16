@@ -1047,6 +1047,7 @@ service OpenStorageCredentials {
   // ##### Example
   // {% codetabs name="Golang", type="go" -%}
   // id, err := client.Create(context.Background(), &api.SdkCredentialCreateRequest{
+  //     Name: "awscred",
   //     CredentialType: &api.SdkCredentialCreateRequest_AwsCredential{
   //       AwsCredential: &api.SdkAwsCredentialRequest{
   //       AccessKey: "dummy-access",
@@ -1058,6 +1059,7 @@ service OpenStorageCredentials {
   // })
   // {%- language name="Python", type="py" -%}
   // en_resp = client.Create(api_pb2.SdkCredentialCreateRequest(
+  //   name='awscred',
   //   aws_credential=api_pb2.SdkAwsCredentialRequest(
   //     access_key='dummy-access',
   //     secret_key='dumm-secret',
@@ -1379,13 +1381,14 @@ message SdkSchedulePolicyInterval {
   // Number of instances to retain
   int64 retain = 1;
 
+  // Start oneof at field number 200 to allow for expansion
   oneof period_type {
     // Daily policy
-    SdkSchedulePolicyIntervalDaily daily = 2;
+    SdkSchedulePolicyIntervalDaily daily = 200;
     // Weekly policy
-    SdkSchedulePolicyIntervalWeekly weekly = 3;
+    SdkSchedulePolicyIntervalWeekly weekly = 201;
     // Monthly policy
-    SdkSchedulePolicyIntervalMonthly monthly = 4;
+    SdkSchedulePolicyIntervalMonthly monthly = 202;
   }
 }
 
@@ -1399,13 +1402,17 @@ message SdkSchedulePolicy {
 
 // Defines a request to create credentials
 message SdkCredentialCreateRequest {
+  // Name of the credential
+  string name = 1;
+
+  // Start at field number 200 to allow for expansion
   oneof credential_type {
     // Credentials for AWS/S3
-    SdkAwsCredentialRequest aws_credential = 1;
+    SdkAwsCredentialRequest aws_credential = 200;
     // Credentials for Azure
-    SdkAzureCredentialRequest azure_credential = 2;
+    SdkAzureCredentialRequest azure_credential = 201;
     // Credentials for Google
-    SdkGoogleCredentialRequest google_credential = 3;
+    SdkGoogleCredentialRequest google_credential = 202;
   }
 }
 
@@ -1445,8 +1452,6 @@ message SdkGoogleCredentialRequest {
 
 // Defines the response for AWS/S3 credentials
 message SdkAwsCredentialResponse {
-  // Credential Id
-  string credential_id = 1;
   // Access key
   string access_key = 2;
   // Endpoint
@@ -1457,16 +1462,12 @@ message SdkAwsCredentialResponse {
 
 // Defines the response for Azure credentials
 message SdkAzureCredentialResponse {
-  // Credential Id
-  string credential_id = 1;
   // Account name
   string account_name = 2;
 }
 
 // Defines the response for Google credentials
 message SdkGoogleCredentialResponse {
-  // Credential Id
-  string credential_id = 1;
   // Project ID
   string project_id = 2;
 }
@@ -1491,13 +1492,19 @@ message SdkCredentialInspectRequest {
 // This response uses OneOf proto style. Depending on your programming language
 // you will need to check if the value of credential_type is one of the ones below.
 message SdkCredentialInspectResponse {
+  // Credential id
+  string credential_id = 1;
+  // Name of the credential
+  string name = 2;
+
+  // Start at field number 200 for expansion support
   oneof credential_type {
     // Aws credentials
-    SdkAwsCredentialResponse aws_credential = 1;
+    SdkAwsCredentialResponse aws_credential = 200;
     // Azure credentials
-    SdkAzureCredentialResponse azure_credential = 2;
+    SdkAzureCredentialResponse azure_credential = 201;
     // Google credentials
-    SdkGoogleCredentialResponse google_credential = 3;
+    SdkGoogleCredentialResponse google_credential = 202;
   }
 }
 
@@ -2226,7 +2233,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 1;
+    Minor = 2;
     // SDK version patch value of this specification
     Patch = 0;
   }

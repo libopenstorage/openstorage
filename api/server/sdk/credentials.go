@@ -14,7 +14,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
 package sdk
 
 import (
@@ -37,12 +36,14 @@ func (s *CredentialServer) Create(
 	req *api.SdkCredentialCreateRequest,
 ) (*api.SdkCredentialCreateResponse, error) {
 
-	if aws := req.GetAwsCredential(); aws != nil {
-		return s.awsCreate(ctx, aws)
+	if len(req.GetName()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Must supply a name")
+	} else if aws := req.GetAwsCredential(); aws != nil {
+		return s.awsCreate(ctx, req, aws)
 	} else if azure := req.GetAzureCredential(); azure != nil {
-		return s.azureCreate(ctx, azure)
+		return s.azureCreate(ctx, req, azure)
 	} else if google := req.GetGoogleCredential(); google != nil {
-		return s.googleCreate(ctx, google)
+		return s.googleCreate(ctx, req, google)
 	}
 	return nil, status.Error(codes.InvalidArgument, "Unknown credential type")
 
@@ -50,32 +51,34 @@ func (s *CredentialServer) Create(
 
 func (s *CredentialServer) awsCreate(
 	ctx context.Context,
-	req *api.SdkAwsCredentialRequest,
+	req *api.SdkCredentialCreateRequest,
+	aws *api.SdkAwsCredentialRequest,
 ) (*api.SdkCredentialCreateResponse, error) {
 
-	if len(req.GetAccessKey()) == 0 {
+	if len(aws.GetAccessKey()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply Access Key")
 	}
 
-	if len(req.GetSecretKey()) == 0 {
+	if len(aws.GetSecretKey()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply Secret Key")
 	}
 
-	if len(req.GetRegion()) == 0 {
+	if len(aws.GetRegion()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply Region Key")
 	}
 
-	if len(req.GetEndpoint()) == 0 {
+	if len(aws.GetEndpoint()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply Endpoint Key")
 	}
 
 	params := make(map[string]string)
 
 	params[api.OptCredType] = "s3"
-	params[api.OptCredRegion] = req.GetRegion()
-	params[api.OptCredEndpoint] = req.GetEndpoint()
-	params[api.OptCredAccessKey] = req.GetAccessKey()
-	params[api.OptCredSecretKey] = req.GetSecretKey()
+	params[api.OptCredName] = req.GetName()
+	params[api.OptCredRegion] = aws.GetRegion()
+	params[api.OptCredEndpoint] = aws.GetEndpoint()
+	params[api.OptCredAccessKey] = aws.GetAccessKey()
+	params[api.OptCredSecretKey] = aws.GetSecretKey()
 
 	uuid, err := s.driver.CredsCreate(params)
 
@@ -96,22 +99,24 @@ func (s *CredentialServer) awsCreate(
 
 func (s *CredentialServer) azureCreate(
 	ctx context.Context,
-	req *api.SdkAzureCredentialRequest,
+	req *api.SdkCredentialCreateRequest,
+	azure *api.SdkAzureCredentialRequest,
 ) (*api.SdkCredentialCreateResponse, error) {
 
-	if len(req.GetAccountKey()) == 0 {
+	if len(azure.GetAccountKey()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply Account Key")
 	}
 
-	if len(req.GetAccountName()) == 0 {
+	if len(azure.GetAccountName()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply Account name")
 	}
 
 	params := make(map[string]string)
 
 	params[api.OptCredType] = "azure"
-	params[api.OptCredAzureAccountKey] = req.GetAccountKey()
-	params[api.OptCredAzureAccountName] = req.GetAccountName()
+	params[api.OptCredName] = req.GetName()
+	params[api.OptCredAzureAccountKey] = azure.GetAccountKey()
+	params[api.OptCredAzureAccountName] = azure.GetAccountName()
 
 	uuid, err := s.driver.CredsCreate(params)
 
@@ -132,22 +137,24 @@ func (s *CredentialServer) azureCreate(
 
 func (s *CredentialServer) googleCreate(
 	ctx context.Context,
-	req *api.SdkGoogleCredentialRequest,
+	req *api.SdkCredentialCreateRequest,
+	google *api.SdkGoogleCredentialRequest,
 ) (*api.SdkCredentialCreateResponse, error) {
 
-	if len(req.GetJsonKey()) == 0 {
+	if len(google.GetJsonKey()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply JSON Key")
 	}
 
-	if len(req.GetProjectId()) == 0 {
+	if len(google.GetProjectId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply Project ID")
 	}
 
 	params := make(map[string]string)
 
 	params[api.OptCredType] = "google"
-	params[api.OptCredGoogleProjectID] = req.GetProjectId()
-	params[api.OptCredGoogleJsonKey] = req.GetJsonKey()
+	params[api.OptCredName] = req.GetName()
+	params[api.OptCredGoogleProjectID] = google.GetProjectId()
+	params[api.OptCredGoogleJsonKey] = google.GetJsonKey()
 
 	uuid, err := s.driver.CredsCreate(params)
 
@@ -266,36 +273,32 @@ func (s *CredentialServer) Inspect(
 		return nil, status.Error(codes.Internal, "Unable to get credential id information")
 	}
 
+	resp := &api.SdkCredentialInspectResponse{
+		CredentialId: req.GetCredentialId(),
+		Name:         info[api.OptCredName],
+	}
+
 	switch info[api.OptCredType] {
 	case "s3":
-		return &api.SdkCredentialInspectResponse{
-			CredentialType: &api.SdkCredentialInspectResponse_AwsCredential{
-				AwsCredential: &api.SdkAwsCredentialResponse{
-					CredentialId: req.GetCredentialId(),
-					AccessKey:    info[api.OptCredAccessKey],
-					Endpoint:     info[api.OptCredEndpoint],
-					Region:       info[api.OptCredRegion],
-				},
+		resp.CredentialType = &api.SdkCredentialInspectResponse_AwsCredential{
+			AwsCredential: &api.SdkAwsCredentialResponse{
+				AccessKey: info[api.OptCredAccessKey],
+				Endpoint:  info[api.OptCredEndpoint],
+				Region:    info[api.OptCredRegion],
 			},
-		}, nil
+		}
 	case "azure":
-		return &api.SdkCredentialInspectResponse{
-			CredentialType: &api.SdkCredentialInspectResponse_AzureCredential{
-				AzureCredential: &api.SdkAzureCredentialResponse{
-					CredentialId: req.GetCredentialId(),
-					AccountName:  info[api.OptCredAzureAccountName],
-				},
+		resp.CredentialType = &api.SdkCredentialInspectResponse_AzureCredential{
+			AzureCredential: &api.SdkAzureCredentialResponse{
+				AccountName: info[api.OptCredAzureAccountName],
 			},
-		}, nil
+		}
 	case "google":
-		return &api.SdkCredentialInspectResponse{
-			CredentialType: &api.SdkCredentialInspectResponse_GoogleCredential{
-				GoogleCredential: &api.SdkGoogleCredentialResponse{
-					CredentialId: req.GetCredentialId(),
-					ProjectId:    info[api.OptCredGoogleProjectID],
-				},
+		resp.CredentialType = &api.SdkCredentialInspectResponse_GoogleCredential{
+			GoogleCredential: &api.SdkGoogleCredentialResponse{
+				ProjectId: info[api.OptCredGoogleProjectID],
 			},
-		}, nil
+		}
 	default:
 		return nil, status.Errorf(
 			codes.Internal,
@@ -303,6 +306,7 @@ func (s *CredentialServer) Inspect(
 			info[api.OptCredType])
 	}
 
+	return resp, nil
 }
 
 func validateAndDeleteIfInvalid(s *CredentialServer, uuid string) error {
