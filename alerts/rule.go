@@ -34,13 +34,3 @@ func (a *rule) GetFilter() Filter {
 func (a *rule) GetAction() Action {
 	return a.action
 }
-
-// OnRaise creates a rule that activates when a raised alerts matches filter.
-func NewRaiseRule(filter Filter, action Action) Rule {
-	return &rule{event: RaiseEvent, filter: filter, action: action}
-}
-
-// OnDelete creates a rule that activates when deleted alert matches filter.
-func NewDeleteRule(filter Filter, action Action) Rule {
-	return &rule{event: DeleteEvent, filter: filter, action: action}
-}

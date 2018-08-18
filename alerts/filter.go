@@ -136,30 +136,3 @@ func (f *filter) Match(alert *api.Alert) (bool, error) {
 		return false, invalidFilterType
 	}
 }
-
-// NewResourceTypeFilter creates a filter that matches on resource type.
-func NewResourceTypeFilter(resourceType api.ResourceType) Filter {
-	return &filter{filterType: ResourceTypeFilter, value: resourceType}
-}
-
-// NewResourceIDFilter creates a filter that matches on resource id.
-func NewResourceIDFilter(resourceID string, resourceType api.ResourceType) Filter {
-	return &filter{filterType: ResourceIDFilter, value: resourceInfo{
-		resourceID: resourceID, resourceType: resourceType}}
-}
-
-// NewAlertTypeFilter creates a filter that matches on alert type.
-func NewAlertTypeFilter(alertType int64, resourceID string, resourceType api.ResourceType) Filter {
-	return &filter{filterType: AlertTypeFilter, value: alertInfo{
-		alertType: alertType, resourceID: resourceID, resourceType: resourceType}}
-}
-
-// NewTimeFilter creates a filter that matches on alert raised in a given time window.
-func NewTimeFilter(start, stop time.Time) Filter {
-	return &filter{filterType: TimeFilter, value: timeZone{start: start, stop: stop}}
-}
-
-// NewCustomFilter creates a filter that matches on UDF (user defined function)
-func NewCustomFilter(f func(alert *api.Alert) (bool, error)) Filter {
-	return &filter{filterType: CustomFilter, value: f}
-}

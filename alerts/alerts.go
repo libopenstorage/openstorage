@@ -5,6 +5,9 @@ import (
 	"sort"
 	"strconv"
 
+	"crypto/md5"
+	"encoding/json"
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/portworx/kvdb"
 )
@@ -35,15 +38,13 @@ type Manager interface {
 	SetRules(rules ...Rule)
 }
 
+func newManager(kv kvdb.Kvdb) *manager {
+	return &manager{kv: kv}
+}
+
 type manager struct {
 	kv    kvdb.Kvdb
 	rules []Rule
-}
-
-func NewManager() Manager {
-	m := new(manager)
-	m.kv = kvdb.Instance()
-	return m
 }
 
 func (m *manager) Raise(alert *api.Alert) error {
@@ -54,7 +55,9 @@ func (m *manager) Raise(alert *api.Alert) error {
 				return err
 			}
 			if match {
-				rule.GetAction().Run(m)
+				if err := rule.GetAction().Run(m); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -68,49 +71,84 @@ func (m *manager) Raise(alert *api.Alert) error {
 }
 
 func (m *manager) Enumerate(filters ...Filter) ([]*api.Alert, error) {
-	key := KvdbKey
+	myAlerts := make([]*api.Alert, 0, 0)
+	alertsMap := make(map[string]*api.Alert)
+	var keys []string
 
 	// sort filters so we know how to query
 	if len(filters) > 0 {
 		sort.Sort(Filters(filters))
 
-		// determine how to query kvdb tree based on first filter
-		filter := filters[0]
-		switch filter.GetFilterType() {
-		case CustomFilter, TimeFilter:
-		case ResourceTypeFilter:
-			v, ok := filter.GetValue().(api.ResourceType)
-			if !ok {
-				return nil, typeAssertionError
+		for _, filter := range filters {
+			key := KvdbKey
+			switch filter.GetFilterType() {
+			case CustomFilter, TimeFilter:
+			case ResourceTypeFilter:
+				v, ok := filter.GetValue().(api.ResourceType)
+				if !ok {
+					return nil, typeAssertionError
+				}
+				key = filepath.Join(key, v.String())
+			case ResourceIDFilter:
+				v, ok := filter.GetValue().(resourceInfo)
+				if !ok {
+					return nil, typeAssertionError
+				}
+				key = filepath.Join(key, v.resourceType.String(), v.resourceID)
+			case AlertTypeFilter:
+				v, ok := filter.GetValue().(alertInfo)
+				if !ok {
+					return nil, typeAssertionError
+				}
+				key = filepath.Join(key,
+					v.resourceType.String(), v.resourceID, strconv.FormatInt(v.alertType, 16))
 			}
-			key = filepath.Join(key, v.String())
-		case ResourceIDFilter:
-			v, ok := filter.GetValue().(resourceInfo)
-			if !ok {
-				return nil, typeAssertionError
+
+			keys = append(keys, key)
+		}
+	} else {
+		keys = []string{KvdbKey}
+	}
+
+	for _, key := range keys {
+		kvps, err := m.kv.Enumerate(key)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, kvp := range kvps {
+			alert := new(api.Alert)
+			if err := json.Unmarshal(kvp.Value, alert); err != nil {
+				return nil, err
 			}
-			key = filepath.Join(key, v.resourceType.String(), v.resourceID)
-		case AlertTypeFilter:
-			v, ok := filter.GetValue().(alertInfo)
-			if !ok {
-				return nil, typeAssertionError
-			}
-			key = filepath.Join(key,
-				v.resourceType.String(), v.resourceID, strconv.FormatInt(v.alertType, 16))
+			md5sum := md5.Sum(kvp.Value)
+			alertsMap[string(md5sum[:])] = alert
 		}
 	}
 
-	kvp, err := m.kv.Get(key)
-	if err != nil {
-		return nil, err
+	for _, alert := range alertsMap {
+		alert := alert
+		myAlerts = append(myAlerts, alert)
 	}
 
-	_ = kvp
-
-	return nil, nil
+	return myAlerts, nil
 }
 
 func (m *manager) Delete(filters ...Filter) error {
+	/*for _, rule := range m.rules {
+		if rule.GetEvent() == DeleteEvent {
+			match, err := rule.GetFilter().Match(alert)
+			if err != nil {
+				return err
+			}
+			if match {
+				if err := rule.GetAction().Run(m); err != nil {
+					return err
+				}
+			}
+		}
+	}*/
+
 	_, err := m.kv.Delete(KvdbKey)
 	if err != nil {
 		return err
