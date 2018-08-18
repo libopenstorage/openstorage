@@ -140,6 +140,8 @@ const (
 type Node struct {
 	// Id of the node.
 	Id string
+	// Name of the node.
+	Name string
 	// Cpu usage of the node.
 	Cpu float64 // percentage.
 	// Total Memory of the node

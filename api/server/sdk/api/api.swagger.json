@@ -2948,6 +2948,10 @@
             "type": "string"
           },
           "title": "User defined labels for the node"
+        },
+        "name": {
+          "type": "string",
+          "title": "Name of the node"
         }
       },
       "title": "StorageNode describes the state of the node"

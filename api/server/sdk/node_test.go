@@ -117,6 +117,7 @@ func TestSdkNodeInspect(t *testing.T) {
 	nodeid := "nodeid"
 	node := api.Node{
 		Id:       nodeid,
+		Name:     "nodename",
 		Cpu:      1.414,
 		MemTotal: 112,
 		MemUsed:  41,
@@ -152,6 +153,7 @@ func TestSdkNodeInspect(t *testing.T) {
 	// Verify
 	rn := r.GetNode()
 	assert.Equal(t, rn.GetId(), node.Id)
+	assert.Equal(t, rn.GetName(), node.Name)
 	assert.Equal(t, rn.GetCpu(), node.Cpu)
 	assert.Equal(t, rn.GetMemTotal(), node.MemTotal)
 	assert.Equal(t, rn.GetMemFree(), node.MemFree)
@@ -220,6 +222,7 @@ func TestSdkNodeInspectCurrent(t *testing.T) {
 	// Create response
 	node := api.Node{
 		Id:       nodeid,
+		Name:     "nodename",
 		Cpu:      1.414,
 		MemTotal: 112,
 		MemUsed:  41,

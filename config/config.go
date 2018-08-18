@@ -30,6 +30,7 @@ func init() {
 type ClusterConfig struct {
 	ClusterId     string
 	NodeId        string
+	NodeName      string
 	MgtIface      string
 	DataIface     string
 	DefaultDriver string

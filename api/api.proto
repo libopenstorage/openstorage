@@ -728,6 +728,8 @@ message StorageNode {
   string hostname = 15;
   // User defined labels for the node
   map<string, string> node_labels = 16;
+  // Name of the node
+  string name = 17;
 }
 
 // StorageCluster represents the state and information about the cluster

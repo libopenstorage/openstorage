@@ -46,6 +46,7 @@ type ClusterServerConfiguration struct {
 // and setup the gossip protocol with them.
 type NodeEntry struct {
 	Id              string
+	Name            string
 	MgmtIp          string
 	DataIp          string
 	GenNumber       uint64
