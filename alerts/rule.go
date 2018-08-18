@@ -8,12 +8,12 @@ type Rule interface {
 }
 
 // Event contains Event information.
-type Event string
+type Event int
 
 // Event constants
 const (
-	RaiseEvent  Event = "onRaise"
-	DeleteEvent Event = "onDelete"
+	RaiseEvent Event = iota
+	DeleteEvent
 )
 
 // rule implements Rule interface.

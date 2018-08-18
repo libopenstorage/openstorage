@@ -1,34 +1,38 @@
 package alerts
 
+// Action is something that runs for an alerts manager.
 type Action interface {
-	Run(manager Manager)
+	Run(manager Manager) error
 }
 
-type ActionType string
+// ActionType defines categories of actions.
+type ActionType int
 
+// ActionType constants
 const (
-	DeleteAction ActionType = "delete"
-	CustomAction ActionType = "custom"
+	DeleteAction ActionType = iota
+	CustomAction
 )
 
+// action implements Action interface.
 type action struct {
-	action ActionType
-	filter Filter
-	f      func(manager Manager, filter Filter)
+	action  ActionType
+	filters []Filter
+	f       func(manager Manager, filter ...Filter) error
 }
 
-func (a *action) Run(manager Manager) {
-	a.f(manager, a.filter)
+func (a *action) Run(manager Manager) error {
+	return a.f(manager, a.filters...)
 }
 
-func NewDeleteAction(filter Filter) Action {
-	return &action{action: DeleteAction, filter: filter, f: deleteAction}
+func NewDeleteAction(filter ...Filter) Action {
+	return &action{action: DeleteAction, filters: filter, f: deleteAction}
 }
 
-func NewCustomAction(filter Filter, f func(manager Manager, filter Filter)) Action {
-	return &action{action: CustomAction, filter: filter, f: f}
+func NewCustomAction(f func(manager Manager, filter ...Filter) error, filter ...Filter) Action {
+	return &action{action: CustomAction, filters: filter, f: f}
 }
 
-func deleteAction(manager Manager, filter Filter) {
-	manager.Delete(filter)
+func deleteAction(manager Manager, filter ...Filter) error {
+	return manager.Delete(filter...)
 }
