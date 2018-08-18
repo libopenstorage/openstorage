@@ -8,6 +8,8 @@ import (
 	"crypto/md5"
 	"encoding/json"
 
+	"sync"
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/portworx/kvdb"
 )
@@ -45,6 +47,7 @@ func newManager(kv kvdb.Kvdb) *manager {
 type manager struct {
 	kv    kvdb.Kvdb
 	rules []Rule
+	sync.Mutex
 }
 
 func (m *manager) Raise(alert *api.Alert) error {
@@ -135,19 +138,13 @@ func (m *manager) Enumerate(filters ...Filter) ([]*api.Alert, error) {
 }
 
 func (m *manager) Delete(filters ...Filter) error {
-	/*for _, rule := range m.rules {
+	for _, rule := range m.rules {
 		if rule.GetEvent() == DeleteEvent {
-			match, err := rule.GetFilter().Match(alert)
-			if err != nil {
+			if err := rule.GetAction().Run(m); err != nil {
 				return err
 			}
-			if match {
-				if err := rule.GetAction().Run(m); err != nil {
-					return err
-				}
-			}
 		}
-	}*/
+	}
 
 	_, err := m.kv.Delete(KvdbKey)
 	if err != nil {
@@ -157,5 +154,7 @@ func (m *manager) Delete(filters ...Filter) error {
 }
 
 func (m *manager) SetRules(rules ...Rule) {
+	m.Lock()
+	defer m.Unlock()
 	m.rules = append(m.rules, rules...)
 }
