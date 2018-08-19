@@ -1,12 +1,11 @@
 package alerts
 
 import (
-	"time"
-
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/libopenstorage/openstorage/api"
 )

@@ -2,7 +2,6 @@ package alerts
 
 import (
 	"testing"
-
 	"time"
 
 	"github.com/golang/protobuf/ptypes/timestamp"

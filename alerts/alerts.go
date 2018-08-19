@@ -1,13 +1,10 @@
 package alerts
 
 import (
+	"encoding/json"
 	"path/filepath"
 	"strconv"
-
-	"encoding/json"
-
 	"sync"
-
 	"time"
 
 	"github.com/golang/protobuf/ptypes/timestamp"
