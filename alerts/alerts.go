@@ -8,6 +8,9 @@ import (
 
 	"sync"
 
+	"time"
+
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/portworx/kvdb"
 )
@@ -37,11 +40,11 @@ type Manager interface {
 	// SetRules sets a set of rules to be performed on alert events.
 	SetRules(rules ...Rule)
 	// DeleteRules deletes rules
-	DeleteRules(names ...string)
+	DeleteRules(rules ...Rule)
 }
 
 func newManager(kv kvdb.Kvdb) *manager {
-	return &manager{kv: kv}
+	return &manager{kv: kv, rules: make(map[string]Rule)}
 }
 
 type manager struct {
@@ -51,9 +54,6 @@ type manager struct {
 }
 
 func (m *manager) Raise(alert *api.Alert) error {
-	m.Lock()
-	defer m.Unlock()
-
 	for _, rule := range m.rules {
 		if rule.GetEvent() == RaiseEvent {
 			match, err := rule.GetFilter().Match(alert)
@@ -72,6 +72,9 @@ func (m *manager) Raise(alert *api.Alert) error {
 		alert.Resource.String(),
 		alert.ResourceId,
 		strconv.FormatInt(alert.GetAlertType(), 16))
+	if alert.Timestamp == nil {
+		alert.Timestamp = &timestamp.Timestamp{Seconds: time.Now().Unix()}
+	}
 	_, err := m.kv.Put(key, alert, 0)
 	return err
 }
@@ -98,7 +101,21 @@ func (m *manager) Enumerate(filters ...Filter) ([]*api.Alert, error) {
 			if err := json.Unmarshal(kvp.Value, alert); err != nil {
 				return nil, err
 			}
-			myAlerts = append(myAlerts, alert)
+
+			atLeastOneMatch := false
+			for _, filter := range filters {
+				if match, err := filter.Match(alert); err != nil {
+					return nil, err
+				} else {
+					if match {
+						atLeastOneMatch = match
+					}
+				}
+			}
+
+			if atLeastOneMatch || len(filters) == 0 {
+				myAlerts = append(myAlerts, alert)
+			}
 		}
 	}
 
@@ -106,9 +123,6 @@ func (m *manager) Enumerate(filters ...Filter) ([]*api.Alert, error) {
 }
 
 func (m *manager) Delete(filters ...Filter) error {
-	m.Lock()
-	defer m.Unlock()
-
 	for _, rule := range m.rules {
 		if rule.GetEvent() == DeleteEvent {
 			if err := rule.GetAction().Run(m); err != nil {
@@ -117,14 +131,41 @@ func (m *manager) Delete(filters ...Filter) error {
 		}
 	}
 
-	keys, err := getKeysFromFilters(filters...)
-	if err != nil {
-		return err
+	allFiltersIndexBased := true
+Loop:
+	for _, filter := range filters {
+		switch filter.GetFilterType() {
+		case CustomFilter, TimeFilter:
+			allFiltersIndexBased = false
+			break Loop
+		}
 	}
 
-	for key := range keys {
-		if err := m.kv.DeleteTree(key); err != nil {
+	if allFiltersIndexBased {
+		keys, err := getKeysFromFilters(filters...)
+		if err != nil {
 			return err
+		}
+
+		for key := range keys {
+			if err := m.kv.DeleteTree(key); err != nil {
+				return err
+			}
+		}
+	} else {
+		myAlerts, err := m.Enumerate(filters...)
+		if err != nil {
+			return err
+		}
+
+		for _, alert := range myAlerts {
+			key := filepath.Join(KvdbKey,
+				alert.Resource.String(),
+				alert.ResourceId,
+				strconv.FormatInt(alert.GetAlertType(), 16))
+			if _, err := m.kv.Delete(key); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -139,10 +180,10 @@ func (m *manager) SetRules(rules ...Rule) {
 	}
 }
 
-func (m *manager) DeleteRules(names ...string) {
+func (m *manager) DeleteRules(rules ...Rule) {
 	m.Lock()
 	defer m.Unlock()
-	for _, name := range names {
-		delete(m.rules, name)
+	for _, rule := range rules {
+		delete(m.rules, rule.GetName())
 	}
 }

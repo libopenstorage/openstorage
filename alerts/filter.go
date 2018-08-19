@@ -97,9 +97,8 @@ func (f *filter) Match(alert *api.Alert) (bool, error) {
 		if !ok {
 			return false, typeAssertionError
 		}
-		timeSlot := v
-		if alert.FirstSeen.Seconds >= int64(timeSlot.start.Second()) &&
-			alert.Timestamp.Seconds <= int64(timeSlot.stop.Second()) {
+		if alert.Timestamp.Seconds >= v.start.Unix() &&
+			alert.Timestamp.Seconds <= v.stop.Unix() {
 			return true, nil
 		} else {
 			return false, nil
