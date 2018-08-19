@@ -20,7 +20,8 @@ func newInMemKvdb() (kvdb.Kvdb, error) {
 	}
 }
 
-func writeSomeAlerts(manager Manager) error {
+// raiseAlerts is a helper func that raises some alerts for test purposes.
+func raiseAlerts(manager Manager) error {
 	var alert *api.Alert
 	alert = new(api.Alert)
 	alert.AlertType = 10
@@ -73,7 +74,8 @@ func writeSomeAlerts(manager Manager) error {
 	return nil
 }
 
-func TestManager_Raise(t *testing.T) {
+// TestManager_Enumerate tests enumeration based on various filters.
+func TestManager_Enumerate(t *testing.T) {
 	kv, err := newInMemKvdb()
 	if err != nil {
 		t.Fatal(err)
@@ -81,7 +83,7 @@ func TestManager_Raise(t *testing.T) {
 
 	manager := NewManager(kv)
 
-	if err := writeSomeAlerts(manager); err != nil {
+	if err := raiseAlerts(manager); err != nil {
 		t.Fatal(err)
 	}
 
@@ -183,6 +185,7 @@ func TestManager_Raise(t *testing.T) {
 		},
 	}
 
+	// iterate over all configs and test
 	for _, config := range configs {
 		myAlerts, err := manager.Enumerate(config.filters...)
 		if err != nil {
@@ -195,6 +198,7 @@ func TestManager_Raise(t *testing.T) {
 	}
 }
 
+// TestManager_Delete tests if delete works as governed by filters.
 func TestManager_Delete(t *testing.T) {
 	kv, err := newInMemKvdb()
 	if err != nil {
@@ -301,8 +305,9 @@ func TestManager_Delete(t *testing.T) {
 		},
 	}
 
+	// iterate over all configs and test
 	for _, config := range configs {
-		if err := writeSomeAlerts(manager); err != nil {
+		if err := raiseAlerts(manager); err != nil {
 			t.Fatal(err)
 		}
 

@@ -36,6 +36,8 @@ type Manager interface {
 	Delete(filters ...Filter) error
 	// SetRules sets a set of rules to be performed on alert events.
 	SetRules(rules ...Rule)
+	// DeleteRules deletes rules
+	DeleteRules(names ...string)
 }
 
 func newManager(kv kvdb.Kvdb) *manager {
@@ -44,7 +46,7 @@ func newManager(kv kvdb.Kvdb) *manager {
 
 type manager struct {
 	kv    kvdb.Kvdb
-	rules []Rule
+	rules map[string]Rule
 	sync.Mutex
 }
 
@@ -132,5 +134,15 @@ func (m *manager) Delete(filters ...Filter) error {
 func (m *manager) SetRules(rules ...Rule) {
 	m.Lock()
 	defer m.Unlock()
-	m.rules = append(m.rules, rules...)
+	for _, rule := range rules {
+		m.rules[rule.GetName()] = rule
+	}
+}
+
+func (m *manager) DeleteRules(names ...string) {
+	m.Lock()
+	defer m.Unlock()
+	for _, name := range names {
+		delete(m.rules, name)
+	}
 }

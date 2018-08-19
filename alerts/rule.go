@@ -2,6 +2,7 @@ package alerts
 
 // Rule defines an rule on an Event, for a filter, executing a func.
 type Rule interface {
+	GetName() string
 	GetEvent() Event
 	GetFilter() Filter
 	GetAction() Action
@@ -18,9 +19,14 @@ const (
 
 // rule implements Rule interface.
 type rule struct {
+	name   string
 	event  Event
 	filter Filter
 	action Action
+}
+
+func (a *rule) GetName() string {
+	return a.name
 }
 
 func (a *rule) GetEvent() Event {

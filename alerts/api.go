@@ -56,11 +56,11 @@ func NewCustomAction(f func(manager Manager, filter ...Filter) error, filter ...
 // Rule API
 
 // NewRaiseRule creates a rule that activates when a raised alerts matches filter.
-func NewRaiseRule(filter Filter, action Action) Rule {
-	return &rule{event: RaiseEvent, filter: filter, action: action}
+func NewRaiseRule(name string, filter Filter, action Action) Rule {
+	return &rule{name: name, event: RaiseEvent, filter: filter, action: action}
 }
 
 // NewDeleteRule creates a rule that activates when deleted alert matches filter.
-func NewDeleteRule(filter Filter, action Action) Rule {
-	return &rule{event: DeleteEvent, filter: filter, action: action}
+func NewDeleteRule(name string, filter Filter, action Action) Rule {
+	return &rule{name: name, event: DeleteEvent, filter: filter, action: action}
 }
