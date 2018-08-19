@@ -2,10 +2,8 @@ package alerts
 
 import (
 	"path/filepath"
-	"sort"
 	"strconv"
 
-	"crypto/md5"
 	"encoding/json"
 
 	"sync"
@@ -51,6 +49,9 @@ type manager struct {
 }
 
 func (m *manager) Raise(alert *api.Alert) error {
+	m.Lock()
+	defer m.Unlock()
+
 	for _, rule := range m.rules {
 		if rule.GetEvent() == RaiseEvent {
 			match, err := rule.GetFilter().Match(alert)
@@ -73,47 +74,18 @@ func (m *manager) Raise(alert *api.Alert) error {
 	return err
 }
 
+// Enumerate takes a variadic list of filters that are first analyzed to see if one filter
+// is inclusive of other. Only the filters that are unique supersets are retained and their contents
+// is fetched using kvdb enumerate.
 func (m *manager) Enumerate(filters ...Filter) ([]*api.Alert, error) {
 	myAlerts := make([]*api.Alert, 0, 0)
-	alertsMap := make(map[string]*api.Alert)
-	var keys []string
-
-	// sort filters so we know how to query
-	if len(filters) > 0 {
-		sort.Sort(Filters(filters))
-
-		for _, filter := range filters {
-			key := KvdbKey
-			switch filter.GetFilterType() {
-			case CustomFilter, TimeFilter:
-			case ResourceTypeFilter:
-				v, ok := filter.GetValue().(api.ResourceType)
-				if !ok {
-					return nil, typeAssertionError
-				}
-				key = filepath.Join(key, v.String())
-			case ResourceIDFilter:
-				v, ok := filter.GetValue().(resourceInfo)
-				if !ok {
-					return nil, typeAssertionError
-				}
-				key = filepath.Join(key, v.resourceType.String(), v.resourceID)
-			case AlertTypeFilter:
-				v, ok := filter.GetValue().(alertInfo)
-				if !ok {
-					return nil, typeAssertionError
-				}
-				key = filepath.Join(key,
-					v.resourceType.String(), v.resourceID, strconv.FormatInt(v.alertType, 16))
-			}
-
-			keys = append(keys, key)
-		}
-	} else {
-		keys = []string{KvdbKey}
+	keys, err := getKeysFromFilters(filters...)
+	if err != nil {
+		return nil, err
 	}
 
-	for _, key := range keys {
+	// enumerate for unique keys
+	for key := range keys {
 		kvps, err := m.kv.Enumerate(key)
 		if err != nil {
 			return nil, err
@@ -124,20 +96,17 @@ func (m *manager) Enumerate(filters ...Filter) ([]*api.Alert, error) {
 			if err := json.Unmarshal(kvp.Value, alert); err != nil {
 				return nil, err
 			}
-			md5sum := md5.Sum(kvp.Value)
-			alertsMap[string(md5sum[:])] = alert
+			myAlerts = append(myAlerts, alert)
 		}
-	}
-
-	for _, alert := range alertsMap {
-		alert := alert
-		myAlerts = append(myAlerts, alert)
 	}
 
 	return myAlerts, nil
 }
 
 func (m *manager) Delete(filters ...Filter) error {
+	m.Lock()
+	defer m.Unlock()
+
 	for _, rule := range m.rules {
 		if rule.GetEvent() == DeleteEvent {
 			if err := rule.GetAction().Run(m); err != nil {
@@ -146,10 +115,17 @@ func (m *manager) Delete(filters ...Filter) error {
 		}
 	}
 
-	_, err := m.kv.Delete(KvdbKey)
+	keys, err := getKeysFromFilters(filters...)
 	if err != nil {
 		return err
 	}
+
+	for key := range keys {
+		if err := m.kv.DeleteTree(key); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

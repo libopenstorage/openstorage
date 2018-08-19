@@ -3,6 +3,11 @@ package alerts
 import (
 	"time"
 
+	"path/filepath"
+	"sort"
+	"strconv"
+	"strings"
+
 	"github.com/libopenstorage/openstorage/api"
 )
 
@@ -135,4 +140,69 @@ func (f *filter) Match(alert *api.Alert) (bool, error) {
 	default:
 		return false, invalidFilterType
 	}
+}
+
+// getKeysFromFilters analyzes filters and outputs a map of unique keys such that
+// these keys do not point to sub trees of one another.
+func getKeysFromFilters(filters ...Filter) (map[string]bool, error) {
+	keys := make(map[string]bool)
+
+	// sort filters so we know how to query
+	if len(filters) > 0 {
+		sort.Sort(Filters(filters))
+
+		for _, filter := range filters {
+			key := KvdbKey
+			switch filter.GetFilterType() {
+			case CustomFilter, TimeFilter:
+			case ResourceTypeFilter:
+				v, ok := filter.GetValue().(api.ResourceType)
+				if !ok {
+					return nil, typeAssertionError
+				}
+				key = filepath.Join(key, v.String())
+			case ResourceIDFilter:
+				v, ok := filter.GetValue().(resourceInfo)
+				if !ok {
+					return nil, typeAssertionError
+				}
+				key = filepath.Join(key, v.resourceType.String(), v.resourceID)
+			case AlertTypeFilter:
+				v, ok := filter.GetValue().(alertInfo)
+				if !ok {
+					return nil, typeAssertionError
+				}
+				key = filepath.Join(key,
+					v.resourceType.String(), v.resourceID, strconv.FormatInt(v.alertType, 16))
+			}
+
+			keyPath, _ := filepath.Split(key)
+			keyPath = strings.Trim(keyPath, "/")
+			if !keys[keyPath] {
+				keys[key] = true
+			}
+		}
+	} else {
+		keys[KvdbKey] = true
+	}
+
+	// remove all keys that access sub tree of another key
+	var keysToDelete []string
+	for key := range keys {
+		keyPath := key
+		for len(keyPath) > 0 {
+			keyPath, _ = filepath.Split(keyPath)
+			keyPath = strings.Trim(keyPath, "/")
+			if keys[keyPath] {
+				keysToDelete = append(keysToDelete, key)
+				break
+			}
+		}
+	}
+
+	for _, key := range keysToDelete {
+		delete(keys, key)
+	}
+
+	return keys, nil
 }
