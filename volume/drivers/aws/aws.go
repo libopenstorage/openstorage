@@ -68,11 +68,15 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 	if err != nil {
 		return nil, err
 	}
-	instance, err := metadata("instance-id")
+	instanceID, err := metadata("instance-id")
 	if err != nil {
 		return nil, err
 	}
-	logrus.Infof("AWS instance %v zone %v", instance, zone)
+	instanceType, err := metadata("instance-type")
+	if err != nil {
+		return nil, err
+	}
+	logrus.Infof("AWS instance %v zone %v", instanceID, zone)
 
 	accessKey, secretKey, err := authKeys(params)
 	if err != nil {
@@ -90,10 +94,10 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 	)
 	d := &Driver{
 		StatsDriver: volume.StatsNotSupported,
-		ops:         aws_ops.NewEc2Storage(instance, ec2),
+		ops:         aws_ops.NewEc2Storage(instanceID, instanceType, ec2),
 		md: &Metadata{
 			zone:     zone,
-			instance: instance,
+			instance: instanceID,
 		},
 		IODriver:           volume.IONotSupported,
 		QuiesceDriver:      volume.QuiesceNotSupported,

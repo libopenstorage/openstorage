@@ -72,6 +72,11 @@ func TestAwsGetPrefixFromRootDeviceName(t *testing.T) {
 			expectError:    true,
 		},
 		{
+			deviceName:     "/dev/hdf",
+			expectedPrefix: "/dev/hd",
+			expectError:    false,
+		},
+		{
 			deviceName:     "/dev/sys/dev/asdfasdfasdf",
 			expectedPrefix: "",
 			expectError:    true,
