@@ -16,6 +16,7 @@ const (
 	clusterPath     = "/cluster"
 	secretPath      = "/secrets"
 	SchedPath       = "/schedpolicy"
+	ServicePath     = "/service"
 	loggingurl      = "/loggingurl"
 	managementurl   = "/managementurl"
 	fluentdhost     = "/fluentdconfig"
