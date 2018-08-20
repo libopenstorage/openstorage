@@ -8,5 +8,6 @@ export AWS_ZONE=<aws-availibility-zone>
 export AWS_INSTANCE_NAME=<aws-instance-name>
 export AWS_ACCESS_KEY_ID=<access-id>
 export AWS_SECRET_ACCESS_KEY=<access-secret>
+export AWS_INSTANCE_TYPE=<aws-instance-type>
 go test
 ```
