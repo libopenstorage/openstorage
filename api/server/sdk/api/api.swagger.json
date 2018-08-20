@@ -2948,6 +2948,10 @@
             "type": "string"
           },
           "title": "User defined labels for the node"
+        },
+        "scheduler_node_name": {
+          "type": "string",
+          "description": "SchedulerNodeName is name of the node in scheduler context. It can be\nempty if unable to get the name from the scheduler."
         }
       },
       "title": "StorageNode describes the state of the node"

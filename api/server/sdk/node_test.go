@@ -116,13 +116,14 @@ func TestSdkNodeInspect(t *testing.T) {
 	// Create response
 	nodeid := "nodeid"
 	node := api.Node{
-		Id:       nodeid,
-		Cpu:      1.414,
-		MemTotal: 112,
-		MemUsed:  41,
-		MemFree:  93,
-		Avgload:  834,
-		Status:   api.Status_STATUS_MAX,
+		Id:                nodeid,
+		SchedulerNodeName: "nodename",
+		Cpu:               1.414,
+		MemTotal:          112,
+		MemUsed:           41,
+		MemFree:           93,
+		Avgload:           834,
+		Status:            api.Status_STATUS_MAX,
 		Disks: map[string]api.StorageResource{
 			"disk1": api.StorageResource{
 				Id:     "12345",
@@ -152,6 +153,7 @@ func TestSdkNodeInspect(t *testing.T) {
 	// Verify
 	rn := r.GetNode()
 	assert.Equal(t, rn.GetId(), node.Id)
+	assert.Equal(t, rn.GetSchedulerNodeName(), node.SchedulerNodeName)
 	assert.Equal(t, rn.GetCpu(), node.Cpu)
 	assert.Equal(t, rn.GetMemTotal(), node.MemTotal)
 	assert.Equal(t, rn.GetMemFree(), node.MemFree)
@@ -219,13 +221,14 @@ func TestSdkNodeInspectCurrent(t *testing.T) {
 
 	// Create response
 	node := api.Node{
-		Id:       nodeid,
-		Cpu:      1.414,
-		MemTotal: 112,
-		MemUsed:  41,
-		MemFree:  93,
-		Avgload:  834,
-		Status:   api.Status_STATUS_MAX,
+		Id:                nodeid,
+		SchedulerNodeName: "nodename",
+		Cpu:               1.414,
+		MemTotal:          112,
+		MemUsed:           41,
+		MemFree:           93,
+		Avgload:           834,
+		Status:            api.Status_STATUS_MAX,
 		Disks: map[string]api.StorageResource{
 			"disk1": api.StorageResource{
 				Id:     "12345",
@@ -262,6 +265,7 @@ func TestSdkNodeInspectCurrent(t *testing.T) {
 	// Verify
 	rn := r.GetNode()
 	assert.Equal(t, rn.GetId(), node.Id)
+	assert.Equal(t, rn.GetSchedulerNodeName(), node.SchedulerNodeName)
 	assert.Equal(t, rn.GetCpu(), node.Cpu)
 	assert.Equal(t, rn.GetMemTotal(), node.MemTotal)
 	assert.Equal(t, rn.GetMemFree(), node.MemFree)

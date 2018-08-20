@@ -728,6 +728,9 @@ message StorageNode {
   string hostname = 15;
   // User defined labels for the node
   map<string, string> node_labels = 16;
+  // SchedulerNodeName is name of the node in scheduler context. It can be
+  // empty if unable to get the name from the scheduler.
+  string scheduler_node_name = 17;
 }
 
 // StorageCluster represents the state and information about the cluster
@@ -2233,7 +2236,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 2;
+    Minor = 3;
     // SDK version patch value of this specification
     Patch = 0;
   }

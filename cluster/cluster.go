@@ -45,16 +45,17 @@ type ClusterServerConfiguration struct {
 // NodeEntry is used to discover other nodes in the cluster
 // and setup the gossip protocol with them.
 type NodeEntry struct {
-	Id              string
-	MgmtIp          string
-	DataIp          string
-	GenNumber       uint64
-	StartTime       time.Time
-	MemTotal        uint64
-	Hostname        string
-	Status          api.Status
-	NodeLabels      map[string]string
-	NonQuorumMember bool
+	Id                string
+	SchedulerNodeName string
+	MgmtIp            string
+	DataIp            string
+	GenNumber         uint64
+	StartTime         time.Time
+	MemTotal          uint64
+	Hostname          string
+	Status            api.Status
+	NodeLabels        map[string]string
+	NonQuorumMember   bool
 }
 
 // ClusterInfo is the basic info about the cluster and its nodes

@@ -247,6 +247,7 @@ func (c *ClusterManager) getNodeEntry(nodeID string, clustDBRef *cluster.Cluster
 		// an offline node. Provide the essential data
 		// that we have in the cluster db
 		if v, ok := clustDBRef.NodeEntries[n.Id]; ok {
+			n.SchedulerNodeName = v.SchedulerNodeName
 			n.MgmtIp = v.MgmtIp
 			n.DataIp = v.DataIp
 			n.Hostname = v.Hostname
@@ -477,14 +478,15 @@ func (c *ClusterManager) initNode(db *cluster.ClusterInfo) (*api.Node, bool) {
 	labels := make(map[string]string)
 	labels[gossipVersionKey] = c.gossipVersion
 	nodeEntry := cluster.NodeEntry{
-		Id:         c.selfNode.Id,
-		MgmtIp:     c.selfNode.MgmtIp,
-		DataIp:     c.selfNode.DataIp,
-		GenNumber:  c.selfNode.GenNumber,
-		StartTime:  c.selfNode.StartTime,
-		MemTotal:   c.selfNode.MemTotal,
-		Hostname:   c.selfNode.Hostname,
-		NodeLabels: labels,
+		Id:                c.selfNode.Id,
+		SchedulerNodeName: c.selfNode.SchedulerNodeName,
+		MgmtIp:            c.selfNode.MgmtIp,
+		DataIp:            c.selfNode.DataIp,
+		GenNumber:         c.selfNode.GenNumber,
+		StartTime:         c.selfNode.StartTime,
+		MemTotal:          c.selfNode.MemTotal,
+		Hostname:          c.selfNode.Hostname,
+		NodeLabels:        labels,
 	}
 
 	db.NodeEntries[c.config.NodeId] = nodeEntry
@@ -1163,6 +1165,7 @@ func (c *ClusterManager) StartWithConfiguration(
 	c.selfNode = api.Node{}
 	c.selfNode.GenNumber = uint64(time.Now().UnixNano())
 	c.selfNode.Id = c.config.NodeId
+	c.selfNode.SchedulerNodeName = c.config.SchedulerNodeName
 	c.selfNode.Status = api.Status_STATUS_INIT
 	c.selfNode.MgmtIp, c.selfNode.DataIp, err = ExternalIp(&c.config)
 	c.selfNode.StartTime = time.Now()
@@ -1301,6 +1304,7 @@ func (c *ClusterManager) nodes(clusterDB *cluster.ClusterInfo) []api.Node {
 			node = *c.getCurrentState()
 		} else {
 			node.Id = n.Id
+			node.SchedulerNodeName = n.SchedulerNodeName
 			node.Status = n.Status
 			node.MgmtIp = n.MgmtIp
 			node.DataIp = n.DataIp
