@@ -235,7 +235,7 @@ func (s *ec2Ops) DeviceMappings() (map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	devPrefix := awsDevicePrefix
+
 	m := make(map[string]string)
 	for _, d := range instance.BlockDeviceMappings {
 		if d.DeviceName != nil && d.Ebs != nil && d.Ebs.VolumeId != nil {
@@ -244,9 +244,10 @@ func (s *ec2Ops) DeviceMappings() (map[string]string, error) {
 			if devName == *instance.RootDeviceName {
 				continue
 			}
-			// AWS EBS volumes get mapped from /dev/sdN -->/dev/xvdN
-			if strings.HasPrefix(devName, devPrefix) {
-				devName = awsDevicePrefixWithX + devName[len(devPrefix):]
+
+			devicePath, err := s.getActualDevicePath(devName)
+			if err == nil {
+				devName = devicePath
 			}
 			m[devName] = *d.Ebs.VolumeId
 		}
@@ -325,6 +326,7 @@ func (s *ec2Ops) getActualDevicePath(ipDevicePath string) (string, error) {
 		return "", fmt.Errorf("unable to map %v block device to an"+
 			" actual device path on the host", ipDevicePath)
 	}
+
 	// We name our EBS volumes /dev/xvd[f-p]. The nvme devices are serially
 	// named based on the input EBS volume device name is given.
 	// /dev/xvda -> /dev/nvme0 is reserved for root device.
@@ -335,6 +337,7 @@ func (s *ec2Ops) getActualDevicePath(ipDevicePath string) (string, error) {
 		return "", err
 	}
 	return devicePath, nil
+
 }
 
 func (s *ec2Ops) FreeDevices(
