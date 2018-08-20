@@ -728,8 +728,9 @@ message StorageNode {
   string hostname = 15;
   // User defined labels for the node
   map<string, string> node_labels = 16;
-  // Name of the node
-  string name = 17;
+  // SchedulerNodeName is name of the node in scheduler context. It can be
+  // empty if unable to get the name from the scheduler.
+  string scheduler_node_name = 17;
 }
 
 // StorageCluster represents the state and information about the cluster

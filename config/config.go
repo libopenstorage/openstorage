@@ -28,17 +28,17 @@ func init() {
 
 // swagger:model
 type ClusterConfig struct {
-	ClusterId     string
-	NodeId        string
-	NodeName      string
-	MgtIface      string
-	DataIface     string
-	DefaultDriver string
-	MgmtIp        string
-	DataIp        string
-	LoggingURL    string
-	ManagementURL string
-	FluentDHost   string
+	ClusterId         string
+	NodeId            string
+	SchedulerNodeName string
+	MgtIface          string
+	DataIface         string
+	DefaultDriver     string
+	MgmtIp            string
+	DataIp            string
+	LoggingURL        string
+	ManagementURL     string
+	FluentDHost       string
 }
 
 // swagger:model

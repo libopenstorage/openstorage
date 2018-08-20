@@ -140,8 +140,9 @@ const (
 type Node struct {
 	// Id of the node.
 	Id string
-	// Name of the node.
-	Name string
+	// SchedulerNodeName is name of the node in scheduler context. It can be
+	// empty if unable to get the name from the scheduler.
+	SchedulerNodeName string
 	// Cpu usage of the node.
 	Cpu float64 // percentage.
 	// Total Memory of the node
@@ -710,16 +711,17 @@ func (v Volume) DisplayId() string {
 // ToStorageNode converts a Node structure to an exported gRPC StorageNode struct
 func (s *Node) ToStorageNode() *StorageNode {
 	node := &StorageNode{
-		Id:       s.Id,
-		Cpu:      s.Cpu,
-		MemTotal: s.MemTotal,
-		MemUsed:  s.MemUsed,
-		MemFree:  s.MemFree,
-		AvgLoad:  int64(s.Avgload),
-		Status:   s.Status,
-		MgmtIp:   s.MgmtIp,
-		DataIp:   s.DataIp,
-		Hostname: s.Hostname,
+		Id:                s.Id,
+		SchedulerNodeName: s.SchedulerNodeName,
+		Cpu:               s.Cpu,
+		MemTotal:          s.MemTotal,
+		MemUsed:           s.MemUsed,
+		MemFree:           s.MemFree,
+		AvgLoad:           int64(s.Avgload),
+		Status:            s.Status,
+		MgmtIp:            s.MgmtIp,
+		DataIp:            s.DataIp,
+		Hostname:          s.Hostname,
 	}
 
 	node.Disks = make(map[string]*StorageResource)
