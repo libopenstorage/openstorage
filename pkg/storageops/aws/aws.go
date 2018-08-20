@@ -37,19 +37,19 @@ var ErrAWSEnvNotAvailable = fmt.Errorf("AWS credentials are not set in environme
 
 // NewEnvClient creates a new AWS storage ops instance using environment vars
 func NewEnvClient() (storageops.Ops, error) {
-	region := os.Getenv("AWS_REGION")
-	if len(region) == 0 {
-		return nil, ErrAWSEnvNotAvailable
+	region, err := storageops.GetEnvValueStrict("AWS_REGION")
+	if err != nil {
+		return nil, err
 	}
 
-	instance := os.Getenv("AWS_INSTANCE_NAME")
-	if len(instance) == 0 {
-		return nil, ErrAWSEnvNotAvailable
+	instance, err := storageops.GetEnvValueStrict("AWS_INSTANCE_NAME")
+	if err != nil {
+		return nil, err
 	}
 
-	instanceType := os.Getenv("AWS_INSTANCE_TYPE")
-	if len(instanceType) == 0 {
-		return nil, ErrAWSEnvNotAvailable
+	instanceType, err := storageops.GetEnvValueStrict("AWS_INSTANCE_TYPE")
+	if err != nil {
+		return nil, err
 	}
 
 	if _, err := credentials.NewEnvCredentials().Get(); err != nil {
@@ -328,7 +328,7 @@ func (s *ec2Ops) getActualDevicePath(ipDevicePath string) (string, error) {
 	// We name our EBS volumes /dev/xvd[f-p]. The nvme devices are serially
 	// named based on the input EBS volume device name is given.
 	// /dev/xvda -> /dev/nvme0 is reserved for root device.
-	// /dev/xvdf maps to /dev/nvme1 and so on
+	// /dev/xvdf maps to /dev/nvme1 and so on. The actual device name looks like /dev/nvme1n1
 	nvmeCount := letter[0] - 'f' + 1
 	devicePath = awsDevicePrefixNvme + strconv.FormatInt(int64(nvmeCount), 10) + "n1"
 	if _, err := os.Stat(devicePath); err != nil {

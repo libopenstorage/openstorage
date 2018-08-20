@@ -76,7 +76,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 	if err != nil {
 		return nil, err
 	}
-	logrus.Infof("AWS instance %v zone %v", instanceID, zone)
+	logrus.Infof("AWS instance %v with type %v zone %v", instanceID, instanceType, zone)
 
 	accessKey, secretKey, err := authKeys(params)
 	if err != nil {
