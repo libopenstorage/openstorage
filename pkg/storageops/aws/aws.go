@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -20,12 +21,15 @@ import (
 const (
 	awsDevicePrefix      = "/dev/sd"
 	awsDevicePrefixWithX = "/dev/xvd"
+	awsDevicePrefixWithH = "/dev/hd"
+	awsDevicePrefixNvme  = "/dev/nvme"
 )
 
 type ec2Ops struct {
-	instance string
-	ec2      *ec2.EC2
-	mutex    sync.Mutex
+	instanceType string
+	instance     string
+	ec2          *ec2.EC2
+	mutex        sync.Mutex
 }
 
 // ErrAWSEnvNotAvailable is the error type when aws credentails are not set
@@ -33,14 +37,19 @@ var ErrAWSEnvNotAvailable = fmt.Errorf("AWS credentials are not set in environme
 
 // NewEnvClient creates a new AWS storage ops instance using environment vars
 func NewEnvClient() (storageops.Ops, error) {
-	region := os.Getenv("AWS_REGION")
-	if len(region) == 0 {
-		return nil, ErrAWSEnvNotAvailable
+	region, err := storageops.GetEnvValueStrict("AWS_REGION")
+	if err != nil {
+		return nil, err
 	}
 
-	instance := os.Getenv("AWS_INSTANCE_NAME")
-	if len(instance) == 0 {
-		return nil, ErrAWSEnvNotAvailable
+	instance, err := storageops.GetEnvValueStrict("AWS_INSTANCE_NAME")
+	if err != nil {
+		return nil, err
+	}
+
+	instanceType, err := storageops.GetEnvValueStrict("AWS_INSTANCE_TYPE")
+	if err != nil {
+		return nil, err
 	}
 
 	if _, err := credentials.NewEnvCredentials().Get(); err != nil {
@@ -56,16 +65,20 @@ func NewEnvClient() (storageops.Ops, error) {
 		),
 	)
 
-	return NewEc2Storage(instance, ec2), nil
+	return NewEc2Storage(instance, instanceType, ec2), nil
 }
 
 // NewEc2Storage creates a new aws storage ops instance
-func NewEc2Storage(instance string, ec2 *ec2.EC2) storageops.Ops {
+func NewEc2Storage(instance, instanceType string, ec2 *ec2.EC2) storageops.Ops {
 	return &ec2Ops{
-		instance: instance,
-		ec2:      ec2,
+		instance:     instance,
+		instanceType: instanceType,
+		ec2:          ec2,
 	}
 }
+
+// nvmeInstanceTypes are list of instance types whose EBS volumes are exposed as NVMe block devices
+var nvmeInstanceTypes = []string{"c5", "c5d", "i3.metal", "m5", "m5d", "r5", "r5d", "z1d"}
 
 func (s *ec2Ops) filters(
 	labels map[string]string,
@@ -270,8 +283,11 @@ func (s *ec2Ops) getPrefixFromRootDeviceName(rootDeviceName string) (string, err
 	if !strings.HasPrefix(rootDeviceName, devPrefix) {
 		devPrefix = awsDevicePrefixWithX
 		if !strings.HasPrefix(rootDeviceName, devPrefix) {
-			return "", fmt.Errorf("unknown prefix type on root device: %s",
-				rootDeviceName)
+			devPrefix = awsDevicePrefixWithH
+			if !strings.HasPrefix(rootDeviceName, devPrefix) {
+				return "", fmt.Errorf("unknown prefix type on root device: %s",
+					rootDeviceName)
+			}
 		}
 	}
 	return devPrefix, nil
@@ -281,14 +297,42 @@ func (s *ec2Ops) getPrefixFromRootDeviceName(rootDeviceName string) (string, err
 // If not found it will try all the different devicePrefixes provided by AWS
 // such as /dev/sd and /dev/xvd and return the devicePath which is found
 // or return an error
-func (s *ec2Ops) getActualDevicePath(devicePath string) (string, error) {
-	letter := devicePath[len(devicePath)-1:]
-	devicePath = awsDevicePrefix + letter
-	if _, err := os.Stat(devicePath); err != nil {
-		devicePath = awsDevicePrefixWithX + letter
-		if _, err := os.Stat(devicePath); err != nil {
-			return "", err
+func (s *ec2Ops) getActualDevicePath(ipDevicePath string) (string, error) {
+	letter := ipDevicePath[len(ipDevicePath)-1:]
+	devicePath := awsDevicePrefix + letter
+	if _, err := os.Stat(devicePath); err == nil {
+		return devicePath, nil
+	}
+	devicePath = awsDevicePrefixWithX + letter
+	if _, err := os.Stat(devicePath); err == nil {
+		return devicePath, nil
+	}
+
+	devicePath = awsDevicePrefixWithH + letter
+	if _, err := os.Stat(devicePath); err == nil {
+		return devicePath, nil
+	}
+
+	// Check if the EBS volumes are exposed as NVMe drives
+	found := false
+	for _, instancePrefix := range nvmeInstanceTypes {
+		if strings.HasPrefix(s.instanceType, instancePrefix) {
+			found = true
+			break
 		}
+	}
+	if !found {
+		return "", fmt.Errorf("unable to map %v block device to an"+
+			" actual device path on the host", ipDevicePath)
+	}
+	// We name our EBS volumes /dev/xvd[f-p]. The nvme devices are serially
+	// named based on the input EBS volume device name is given.
+	// /dev/xvda -> /dev/nvme0 is reserved for root device.
+	// /dev/xvdf maps to /dev/nvme1 and so on. The actual device name looks like /dev/nvme1n1
+	nvmeCount := letter[0] - 'f' + 1
+	devicePath = awsDevicePrefixNvme + strconv.FormatInt(int64(nvmeCount), 10) + "n1"
+	if _, err := os.Stat(devicePath); err != nil {
+		return "", err
 	}
 	return devicePath, nil
 }
@@ -313,10 +357,14 @@ func (s *ec2Ops) FreeDevices(
 		if !strings.HasPrefix(devName, devPrefix) {
 			devPrefix = awsDevicePrefixWithX
 			if !strings.HasPrefix(devName, devPrefix) {
-				return nil, fmt.Errorf("bad device name %q", devName)
+				devPrefix = awsDevicePrefixWithH
+				if !strings.HasPrefix(devName, devPrefix) {
+					return nil, fmt.Errorf("bad device name %q", devName)
+				}
 			}
 		}
 		letter := devName[len(devPrefix):]
+
 		// Reset devPrefix for next devices
 		devPrefix = awsDevicePrefix
 
@@ -551,7 +599,7 @@ func (s *ec2Ops) Attach(volumeID string) (string, error) {
 		InstanceId: &s.instance,
 		VolumeId:   &volumeID,
 	}
-	if _, err = s.ec2.AttachVolume(req); err != nil {
+	if _, err := s.ec2.AttachVolume(req); err != nil {
 		return "", err
 	}
 	vol, err := s.waitAttachmentStatus(

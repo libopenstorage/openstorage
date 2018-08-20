@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -24,10 +23,10 @@ func TestAll(t *testing.T) {
 	drivers := make(map[string]storageops.Ops)
 	diskTemplates := make(map[string]map[string]interface{})
 
-	if d, err := NewEnvClient(); err != ErrAWSEnvNotAvailable {
+	if d, err := NewEnvClient(); err == nil {
 		volType := opsworks.VolumeTypeGp2
 		volSize := int64(newDiskSizeInGB)
-		zone := os.Getenv("AWS_ZONE")
+		zone, _ := storageops.GetEnvValueStrict("AWS_ZONE")
 		ebsVol := &ec2.Volume{
 			AvailabilityZone: &zone,
 			VolumeType:       &volType,
@@ -70,6 +69,11 @@ func TestAwsGetPrefixFromRootDeviceName(t *testing.T) {
 			deviceName:     "/dev/dda",
 			expectedPrefix: "",
 			expectError:    true,
+		},
+		{
+			deviceName:     "/dev/hdf",
+			expectedPrefix: "/dev/hd",
+			expectError:    false,
 		},
 		{
 			deviceName:     "/dev/sys/dev/asdfasdfasdf",
