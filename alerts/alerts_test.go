@@ -218,6 +218,157 @@ func TestManager_Enumerate(t *testing.T) {
 	}
 }
 
+// TestManager_Filter tests alert filtering based on various filters.
+func TestManager_Filter(t *testing.T) {
+	kv, err := newInMemKvdb()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	manager := NewManager(kv)
+
+	if err := raiseAlerts(manager); err != nil {
+		t.Fatal(err)
+	}
+
+	// prepare a test configuration table
+	configs := []struct {
+		name          string
+		filters       []Filter
+		expectedCount int
+	}{
+		{
+			name:          "by none",
+			expectedCount: 6,
+		},
+		{
+			name: "by 1 resource type",
+			filters: []Filter{
+				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
+			},
+			expectedCount: 1,
+		},
+		{
+			name: "by 2 resource types",
+			filters: []Filter{
+				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
+				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_CLUSTER),
+			},
+			expectedCount: 0,
+		},
+		{
+			name: "by 2 resource types",
+			filters: []Filter{
+				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_CLUSTER),
+			},
+			expectedCount: 0,
+		},
+		{
+			name: "by 1 resource id",
+			filters: []Filter{
+				NewResourceIDFilter("inca", api.ResourceType_RESOURCE_TYPE_VOLUME),
+			},
+			expectedCount: 1,
+		},
+		{
+			name: "by 2 resource ids",
+			filters: []Filter{
+				NewResourceIDFilter("inca", api.ResourceType_RESOURCE_TYPE_VOLUME),
+				NewResourceIDFilter("maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+			},
+			expectedCount: 0,
+		},
+		{
+			name: "by 2 different filter types",
+			filters: []Filter{
+				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
+				NewResourceIDFilter("maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+			},
+			expectedCount: 0,
+		},
+		{
+			name: "two levels of filter",
+			filters: []Filter{
+				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewResourceIDFilter("maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+			},
+			expectedCount: 2,
+		},
+		{
+			name: "skip a level",
+			filters: []Filter{
+				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewAlertTypeFilter(12, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+			},
+			expectedCount: 1,
+		},
+		{
+			name: "alert type",
+			filters: []Filter{
+				NewAlertTypeFilter(12, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+			},
+			expectedCount: 1,
+		},
+		{
+			name: "alert types",
+			filters: []Filter{
+				NewAlertTypeFilter(10, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewAlertTypeFilter(12, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+			},
+			expectedCount: 0,
+		},
+		{
+			name: "time and other filters",
+			filters: []Filter{
+				NewTimeFilter(time.Now().AddDate(0, 0, -1), time.Now()),
+				NewAlertTypeFilter(10, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewAlertTypeFilter(12, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+			},
+			expectedCount: 0,
+		},
+		{
+			name: "time filter match none",
+			filters: []Filter{
+				NewTimeFilter(time.Now().AddDate(0, 0, -1), time.Now()),
+			},
+			expectedCount: 0,
+		},
+		{
+			name: "time filter match all in last 3 months",
+			filters: []Filter{
+				NewTimeFilter(time.Now().AddDate(0, -3, 0), time.Now()),
+			},
+			expectedCount: 4,
+		},
+		{
+			name: "time filter match all in last 3 months for drive type",
+			filters: []Filter{
+				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewTimeFilter(time.Now().AddDate(0, -3, 0), time.Now()),
+			},
+			expectedCount: 2,
+		},
+	}
+
+	// iterate over all configs and test
+	for _, config := range configs {
+		myAlerts, err := manager.Enumerate()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		myAlerts, err = manager.Filter(myAlerts, config.filters...)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(myAlerts) != config.expectedCount {
+			t.Fatal("test:", config.name, ", alert count: expected:", config.expectedCount, ", found:", len(myAlerts))
+		}
+	}
+}
+
 // TestManager_Delete tests if delete works as governed by filters.
 func TestManager_Delete(t *testing.T) {
 	kv, err := newInMemKvdb()

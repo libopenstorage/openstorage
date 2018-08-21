@@ -30,8 +30,11 @@ const (
 type Manager interface {
 	// Raise raises an alert.
 	Raise(alert *api.Alert) error
-	// Enumerate lists all alerts filtered by a chain of filters.
+	// Enumerate lists all alerts filtered by a variadic list of filters.
+	// Note: It will fetch a superset such that every alert is matched by at least one filter.
 	Enumerate(filters ...Filter) ([]*api.Alert, error)
+	// Filter filters given list of alerts successively through each filter.
+	Filter(alerts []*api.Alert, filters ...Filter) ([]*api.Alert, error)
 	// Delete deletes alerts filtered by a chain of filters.
 	Delete(filters ...Filter) error
 	// SetRules sets a set of rules to be performed on alert events.
@@ -117,6 +120,32 @@ func (m *manager) Enumerate(filters ...Filter) ([]*api.Alert, error) {
 	}
 
 	return myAlerts, nil
+}
+
+func (m *manager) Filter(alerts []*api.Alert, filters ...Filter) ([]*api.Alert, error) {
+	for _, filter := range filters {
+		i := 0
+		for j, alert := range alerts {
+			match, err := filter.Match(alert)
+			if err != nil {
+				return nil, err
+			}
+
+			if match {
+				alerts[i] = alerts[j]
+				i += 1
+			}
+		}
+
+		// shrink the list
+		alerts = alerts[:i]
+
+		if len(alerts) == 0 {
+			return alerts, nil
+		}
+	}
+
+	return alerts, nil
 }
 
 func (m *manager) Delete(filters ...Filter) error {
