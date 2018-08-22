@@ -15,6 +15,10 @@ import (
 	"time"
 )
 
+const (
+	maxRetryDuration = 5 * time.Minute
+)
+
 // Request is contructed iteratively by the client and finally dispatched.
 // A REST endpoint is accessed with the following convention:
 // base_url/<version>/<resource>/[<instance>]
@@ -226,6 +230,7 @@ func parseHTTPStatus(resp *http.Response, body []byte) error {
 }
 
 // Do executes the request and returns a Response.
+// Do executes the request and returns a Response.
 func (r *Request) Do() *Response {
 	var (
 		err  error
@@ -234,6 +239,7 @@ func (r *Request) Do() *Response {
 		url  string
 		body []byte
 	)
+
 	if r.err != nil {
 		return &Response{err: r.err}
 	}
@@ -258,23 +264,44 @@ func (r *Request) Do() *Response {
 		req.Header.Set("Access-Token", r.accesstoken)
 	}
 
-	resp, err = r.client.Do(req)
-	if err != nil {
-		return &Response{err: err}
+	start := time.Now()
+	for {
+		if resp, err = r.client.Do(req); err != nil {
+			return &Response{err: err}
+		}
+
+		if time.Since(start) >= maxRetryDuration ||
+			resp.StatusCode != http.StatusServiceUnavailable {
+			// Server needs to set this header along with returning a 503
+			break
+		}
+		handleServiceUnavailable(resp)
 	}
+
 	if resp.Body != nil {
 		defer resp.Body.Close()
-		body, err = ioutil.ReadAll(resp.Body)
+		if body, err = ioutil.ReadAll(resp.Body); err != nil {
+			return &Response{err: err}
+		}
 	}
-	if err != nil {
-		return &Response{err: err}
-	}
+
 	return &Response{
 		status:     resp.Status,
 		statusCode: resp.StatusCode,
 		body:       body,
 		err:        parseHTTPStatus(resp, body),
 	}
+}
+
+func handleServiceUnavailable(resp *http.Response) {
+	var duration = time.Duration(1 * time.Second)
+	if len(resp.Header["Retry-After"]) > 0 {
+		if retryafter, err := strconv.Atoi(resp.Header["Retry-After"][0]); err == nil {
+			duration = time.Duration(retryafter) * time.Second
+		}
+	}
+
+	time.Sleep(duration)
 }
 
 // Body return http body, valid only if there is no error
