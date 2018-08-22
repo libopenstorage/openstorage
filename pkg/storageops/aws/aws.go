@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -13,6 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/opsworks"
+	sh "github.com/codeskyblue/go-sh"
+	oexec "github.com/libopenstorage/openstorage/pkg/exec"
 	"github.com/libopenstorage/openstorage/pkg/storageops"
 	"github.com/portworx/sched-ops/task"
 	"github.com/sirupsen/logrus"
@@ -32,8 +33,11 @@ type ec2Ops struct {
 	mutex        sync.Mutex
 }
 
-// ErrAWSEnvNotAvailable is the error type when aws credentails are not set
-var ErrAWSEnvNotAvailable = fmt.Errorf("AWS credentials are not set in environment")
+var (
+	// ErrAWSEnvNotAvailable is the error type when aws credentials are not set
+	ErrAWSEnvNotAvailable = fmt.Errorf("AWS credentials are not set in environment")
+	nvmeCmd               = oexec.Which("nvme")
+)
 
 // NewEnvClient creates a new AWS storage ops instance using environment vars
 func NewEnvClient() (storageops.Ops, error) {
@@ -245,7 +249,7 @@ func (s *ec2Ops) DeviceMappings() (map[string]string, error) {
 				continue
 			}
 
-			devicePath, err := s.getActualDevicePath(devName)
+			devicePath, err := s.getActualDevicePath(devName, *d.Ebs.VolumeId)
 			if err == nil {
 				devName = devicePath
 			}
@@ -298,7 +302,7 @@ func (s *ec2Ops) getPrefixFromRootDeviceName(rootDeviceName string) (string, err
 // If not found it will try all the different devicePrefixes provided by AWS
 // such as /dev/sd and /dev/xvd and return the devicePath which is found
 // or return an error
-func (s *ec2Ops) getActualDevicePath(ipDevicePath string) (string, error) {
+func (s *ec2Ops) getActualDevicePath(ipDevicePath, volumeID string) (string, error) {
 	letter := ipDevicePath[len(ipDevicePath)-1:]
 	devicePath := awsDevicePrefix + letter
 	if _, err := os.Stat(devicePath); err == nil {
@@ -322,22 +326,37 @@ func (s *ec2Ops) getActualDevicePath(ipDevicePath string) (string, error) {
 			break
 		}
 	}
+
 	if !found {
-		return "", fmt.Errorf("unable to map %v block device to an"+
-			" actual device path on the host", ipDevicePath)
+		return "", fmt.Errorf("unable to map volume %v with block device mapping %v to an"+
+			" actual device path on the host", volumeID, ipDevicePath)
 	}
 
-	// We name our EBS volumes /dev/xvd[f-p]. The nvme devices are serially
-	// named based on the input EBS volume device name is given.
-	// /dev/xvda -> /dev/nvme0 is reserved for root device.
-	// /dev/xvdf maps to /dev/nvme1 and so on. The actual device name looks like /dev/nvme1n1
-	nvmeCount := letter[0] - 'f' + 1
-	devicePath = awsDevicePrefixNvme + strconv.FormatInt(int64(nvmeCount), 10) + "n1"
+	devicePath, err := s.getNvmeDeviceFromVolumeID(volumeID)
+	if err != nil {
+		return "", err
+	}
 	if _, err := os.Stat(devicePath); err != nil {
 		return "", err
 	}
 	return devicePath, nil
 
+}
+
+func (s *ec2Ops) getNvmeDeviceFromVolumeID(volumeID string) (string, error) {
+	// We will use nvme list command to find nvme device mappings
+	// A typical output of nvme list looks like this
+	// # nvme list
+	// Node             SN                   Model                                    Namespace Usage                      Format           FW Rev
+	// ---------------- -------------------- ---------------------------------------- --------- -------------------------- ---------------- --------
+	// /dev/nvme0n1     vol00fd6f8c30dc619f4 Amazon Elastic Block Store               1           0.00   B / 137.44  GB    512   B +  0 B   1.0
+	// /dev/nvme1n1     vol044e12c8c0af45b3d Amazon Elastic Block Store               1           0.00   B / 107.37  GB    512   B +  0 B   1.0
+	trimmedVolumeID := strings.Replace(volumeID, "-", "", 1)
+	out, err := sh.Command(nvmeCmd, "list").Command("grep", trimmedVolumeID).Command("awk", "{print $1}").Output()
+	if err != nil {
+		return "", fmt.Errorf("unable to map %v volume to an nvme device: %v", volumeID, err)
+	}
+	return strings.TrimSpace(string(out)), nil
 }
 
 func (s *ec2Ops) FreeDevices(
@@ -694,7 +713,7 @@ func (s *ec2Ops) DevicePath(volumeID string) (string, error) {
 		return "", storageops.NewStorageError(storageops.ErrVolInval,
 			"Unable to determine volume attachment path", "")
 	}
-	devicePath, err := s.getActualDevicePath(*vol.Attachments[0].Device)
+	devicePath, err := s.getActualDevicePath(*vol.Attachments[0].Device, volumeID)
 	if err != nil {
 		return "", storageops.NewStorageError(storageops.ErrVolInval,
 			err.Error(), "")
