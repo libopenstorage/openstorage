@@ -207,6 +207,18 @@
 			"revisionTime": "2016-03-26T22:39:47Z"
 		},
 		{
+			"checksumSHA1": "fcfxNsCuheCrubAAl6zWgimCnLY=",
+			"path": "github.com/codegangsta/inject",
+			"revision": "33e0aa1cb7c019ccc3fbe049a8262a6403d30504",
+			"revisionTime": "2015-01-14T23:56:00Z"
+		},
+		{
+			"checksumSHA1": "6OZKBZbJ2yrRjgS3cb9hICh7w5M=",
+			"path": "github.com/codeskyblue/go-sh",
+			"revision": "cf804ac79dffabb6b16342e24362cc744afc144f",
+			"revisionTime": "2017-12-28T01:44:52Z"
+		},
+		{
 			"checksumSHA1": "BKQRkbPMH3shDkfWGs+sx07n0gI=",
 			"path": "github.com/container-storage-interface/spec/lib/go/csi",
 			"revision": "35d9f9d77954980e449e52c3f3e43c21bd8171f5",
