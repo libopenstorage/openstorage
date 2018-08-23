@@ -56,6 +56,7 @@ enum FSType {
   FS_TYPE_VFS = 5;
   FS_TYPE_XFS = 6;
   FS_TYPE_ZFS = 7;
+  FS_TYPE_XFSv2 = 8;
 }
 
 enum GraphDriverChangeType {
