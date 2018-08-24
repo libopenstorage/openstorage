@@ -311,12 +311,17 @@ func (s *CredentialServer) Inspect(
 		if !ok {
 			return nil, status.Error(codes.Internal, "Unable to parse region")
 		}
+		disableSsl, ok := info[api.OptCredDisableSSL].(string)
+		if !ok {
+			return nil, status.Error(codes.Internal, "Unable to parse disabling ssl was requested")
+		}
 
 		resp.CredentialType = &api.SdkCredentialInspectResponse_AwsCredential{
 			AwsCredential: &api.SdkAwsCredentialResponse{
-				AccessKey: accessKey,
-				Endpoint:  endpoint,
-				Region:    region,
+				AccessKey:  accessKey,
+				Endpoint:   endpoint,
+				Region:     region,
+				DisableSsl: disableSsl == "true",
 			},
 		}
 	case "azure":
@@ -333,7 +338,7 @@ func (s *CredentialServer) Inspect(
 	case "google":
 		projectId, ok := info[api.OptCredGoogleProjectID].(string)
 		if !ok {
-			return nil, status.Error(codes.Internal, "Unable to parse account name")
+			return nil, status.Error(codes.Internal, "Unable to parse project id")
 		}
 		resp.CredentialType = &api.SdkCredentialInspectResponse_GoogleCredential{
 			GoogleCredential: &api.SdkGoogleCredentialResponse{
