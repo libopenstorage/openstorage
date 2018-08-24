@@ -79,3 +79,7 @@ func TestOptNodes(t *testing.T) {
 	testSpecNodeOptString(t, api.SpecNodes, "node1;node2")
 	testSpecNodeOptString(t, api.SpecNodes, "node1")
 }
+
+func TestQueueDepth(t *testing.T) {
+	testSpecOptString(t, api.SpecQueueDepth, "10")
+}
