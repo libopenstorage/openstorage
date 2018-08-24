@@ -268,35 +268,63 @@ func (s *CredentialServer) Inspect(
 	if !ok {
 		return nil, status.Errorf(codes.NotFound, "Credential id %s not found", req.GetCredentialId())
 	}
-	info, ok := val.(map[string]string)
+	info, ok := val.(map[string]interface{})
 	if !ok {
 		return nil, status.Error(codes.Internal, "Unable to get credential id information")
 	}
 
+	credName, ok := info[api.OptCredName].(string)
+	if !ok {
+		// The code to support names may not be available
+		credName = ""
+	}
+
 	resp := &api.SdkCredentialInspectResponse{
 		CredentialId: req.GetCredentialId(),
-		Name:         info[api.OptCredName],
+		Name:         credName,
 	}
 
 	switch info[api.OptCredType] {
 	case "s3":
+		accessKey, ok := info[api.OptCredAccessKey].(string)
+		if !ok {
+			return nil, status.Error(codes.Internal, "Unable to parse accessKey")
+		}
+		endpoint, ok := info[api.OptCredEndpoint].(string)
+		if !ok {
+			return nil, status.Error(codes.Internal, "Unable to parse endpoint")
+		}
+		region, ok := info[api.OptCredRegion].(string)
+		if !ok {
+			return nil, status.Error(codes.Internal, "Unable to parse region")
+		}
+
 		resp.CredentialType = &api.SdkCredentialInspectResponse_AwsCredential{
 			AwsCredential: &api.SdkAwsCredentialResponse{
-				AccessKey: info[api.OptCredAccessKey],
-				Endpoint:  info[api.OptCredEndpoint],
-				Region:    info[api.OptCredRegion],
+				AccessKey: accessKey,
+				Endpoint:  endpoint,
+				Region:    region,
 			},
 		}
 	case "azure":
+		accountName, ok := info[api.OptCredAzureAccountName].(string)
+		if !ok {
+			return nil, status.Error(codes.Internal, "Unable to parse account name")
+		}
+
 		resp.CredentialType = &api.SdkCredentialInspectResponse_AzureCredential{
 			AzureCredential: &api.SdkAzureCredentialResponse{
-				AccountName: info[api.OptCredAzureAccountName],
+				AccountName: accountName,
 			},
 		}
 	case "google":
+		projectId, ok := info[api.OptCredGoogleProjectID].(string)
+		if !ok {
+			return nil, status.Error(codes.Internal, "Unable to parse account name")
+		}
 		resp.CredentialType = &api.SdkCredentialInspectResponse_GoogleCredential{
 			GoogleCredential: &api.SdkGoogleCredentialResponse{
-				ProjectId: info[api.OptCredGoogleProjectID],
+				ProjectId: projectId,
 			},
 		}
 	default:

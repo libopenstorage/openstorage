@@ -502,7 +502,7 @@ func TestSdkCredentialEnumerate(t *testing.T) {
 
 	req := &api.SdkCredentialEnumerateRequest{}
 
-	enumS3test1 := map[string]string{
+	enumS3test1 := map[string]interface{}{
 		api.OptCredType:      "s3",
 		api.OptCredAccessKey: "test-access",
 		api.OptCredSecretKey: "test-secret",
@@ -510,7 +510,7 @@ func TestSdkCredentialEnumerate(t *testing.T) {
 		api.OptCredRegion:    "test-region",
 	}
 
-	enumS3test2 := map[string]string{
+	enumS3test2 := map[string]interface{}{
 		api.OptCredType:      "s3",
 		api.OptCredAccessKey: "test-access1",
 		api.OptCredSecretKey: "test-secret1",
@@ -518,7 +518,7 @@ func TestSdkCredentialEnumerate(t *testing.T) {
 		api.OptCredRegion:    "test-region1",
 	}
 
-	enumAzure := map[string]string{
+	enumAzure := map[string]interface{}{
 		api.OptCredType:             "azure",
 		api.OptCredAzureAccountName: "test-azure-account",
 		api.OptCredAzureAccountKey:  "test-azure-account",
@@ -557,7 +557,7 @@ func TestSdkCredentialInspectIdNotFound(t *testing.T) {
 		CredentialId: "test",
 	}
 
-	enumS3 := map[string]string{
+	enumS3 := map[string]interface{}{
 		api.OptCredType:      "s3",
 		api.OptCredAccessKey: "test-access",
 		api.OptCredSecretKey: "test-secret",
@@ -565,13 +565,13 @@ func TestSdkCredentialInspectIdNotFound(t *testing.T) {
 		api.OptCredRegion:    "test-region",
 	}
 
-	enumAzure := map[string]string{
+	enumAzure := map[string]interface{}{
 		api.OptCredType:             "azure",
 		api.OptCredAzureAccountName: "test-azure-account",
 		api.OptCredAzureAccountKey:  "test-azure-account",
 	}
 
-	enumGoogle := map[string]string{
+	enumGoogle := map[string]interface{}{
 		api.OptCredType:            "google",
 		api.OptCredGoogleProjectID: "test-google-project-id",
 	}
@@ -631,7 +631,7 @@ func TestSdkCredentialInspect(t *testing.T) {
 		CredentialId: uuid,
 	}
 
-	enumAzure := map[string]string{
+	enumAzure := map[string]interface{}{
 		api.OptCredType:             "azure",
 		api.OptCredName:             "test",
 		api.OptCredAzureAccountName: "test-azure-account",
