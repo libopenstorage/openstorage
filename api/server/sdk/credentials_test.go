@@ -35,13 +35,16 @@ func TestSdkAWSCredentialCreateSuccess(t *testing.T) {
 	defer s.Stop()
 
 	req := &api.SdkCredentialCreateRequest{
-		Name: "test",
+		Name:          "test",
+		Bucket:        "mybucket",
+		EncryptionKey: "key",
 		CredentialType: &api.SdkCredentialCreateRequest_AwsCredential{
 			AwsCredential: &api.SdkAwsCredentialRequest{
-				AccessKey: "dummy-access",
-				SecretKey: "dummy-secret",
-				Endpoint:  "dummy-endpoint",
-				Region:    "dummy-region",
+				AccessKey:  "dummy-access",
+				SecretKey:  "dummy-secret",
+				Endpoint:   "dummy-endpoint",
+				Region:     "dummy-region",
+				DisableSsl: true,
 			},
 		},
 	}
@@ -50,10 +53,13 @@ func TestSdkAWSCredentialCreateSuccess(t *testing.T) {
 
 	params[api.OptCredType] = "s3"
 	params[api.OptCredName] = req.GetName()
+	params[api.OptCredEncrKey] = req.GetEncryptionKey()
+	params[api.OptCredBucket] = req.GetBucket()
 	params[api.OptCredRegion] = req.GetAwsCredential().GetRegion()
 	params[api.OptCredEndpoint] = req.GetAwsCredential().GetEndpoint()
 	params[api.OptCredAccessKey] = req.GetAwsCredential().GetAccessKey()
 	params[api.OptCredSecretKey] = req.GetAwsCredential().GetSecretKey()
+	params[api.OptCredDisableSSL] = "true"
 
 	uuid := "good-uuid"
 	s.MockDriver().
@@ -96,10 +102,13 @@ func TestSdkAWSCredentialCreateFailed(t *testing.T) {
 
 	params[api.OptCredType] = "s3"
 	params[api.OptCredName] = req.GetName()
+	params[api.OptCredEncrKey] = ""
+	params[api.OptCredBucket] = ""
 	params[api.OptCredRegion] = req.GetAwsCredential().GetRegion()
 	params[api.OptCredEndpoint] = req.GetAwsCredential().GetEndpoint()
 	params[api.OptCredAccessKey] = req.GetAwsCredential().GetAccessKey()
 	params[api.OptCredSecretKey] = req.GetAwsCredential().GetSecretKey()
+	params[api.OptCredDisableSSL] = "false"
 
 	uuid := "bad-uuid"
 	s.MockDriver().
@@ -191,6 +200,8 @@ func TestSdkAzureCredentialCreateSuccess(t *testing.T) {
 
 	params[api.OptCredType] = "azure"
 	params[api.OptCredName] = req.GetName()
+	params[api.OptCredEncrKey] = ""
+	params[api.OptCredBucket] = ""
 	params[api.OptCredAzureAccountKey] = req.GetAzureCredential().GetAccountKey()
 	params[api.OptCredAzureAccountName] = req.GetAzureCredential().GetAccountName()
 
@@ -232,6 +243,8 @@ func TestSdkAzureCredentialCreateFailed(t *testing.T) {
 
 	params[api.OptCredType] = "azure"
 	params[api.OptCredName] = req.GetName()
+	params[api.OptCredEncrKey] = ""
+	params[api.OptCredBucket] = ""
 	params[api.OptCredAzureAccountKey] = req.GetAzureCredential().GetAccountKey()
 	params[api.OptCredAzureAccountName] = req.GetAzureCredential().GetAccountName()
 
@@ -311,6 +324,8 @@ func TestSdkGoogleCredentialCreateSuccess(t *testing.T) {
 
 	params[api.OptCredType] = "google"
 	params[api.OptCredName] = req.GetName()
+	params[api.OptCredEncrKey] = ""
+	params[api.OptCredBucket] = ""
 	params[api.OptCredGoogleJsonKey] = req.GetGoogleCredential().GetJsonKey()
 	params[api.OptCredGoogleProjectID] = req.GetGoogleCredential().GetProjectId()
 
@@ -352,6 +367,8 @@ func TestSdkGoogleCredentialCreateFailed(t *testing.T) {
 
 	params[api.OptCredType] = "google"
 	params[api.OptCredName] = req.GetName()
+	params[api.OptCredEncrKey] = ""
+	params[api.OptCredBucket] = ""
 	params[api.OptCredGoogleJsonKey] = req.GetGoogleCredential().GetJsonKey()
 	params[api.OptCredGoogleProjectID] = req.GetGoogleCredential().GetProjectId()
 
@@ -634,6 +651,8 @@ func TestSdkCredentialInspect(t *testing.T) {
 	enumAzure := map[string]interface{}{
 		api.OptCredType:             "azure",
 		api.OptCredName:             "test",
+		api.OptCredBucket:           "mybucket",
+		api.OptCredEncrKey:          "key",
 		api.OptCredAzureAccountName: "test-azure-account",
 		api.OptCredAzureAccountKey:  "test-azure-account",
 	}
@@ -655,6 +674,7 @@ func TestSdkCredentialInspect(t *testing.T) {
 	assert.NotNil(t, resp.GetAzureCredential())
 	assert.Equal(t, resp.GetAzureCredential().GetAccountName(), enumAzure[api.OptCredAzureAccountName])
 	assert.Equal(t, enumAzure[api.OptCredName], resp.GetName())
+	assert.Equal(t, enumAzure[api.OptCredBucket], resp.GetBucket())
 }
 
 func TestSdkCredentialDeleteSuccess(t *testing.T) {

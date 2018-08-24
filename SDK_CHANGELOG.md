@@ -5,6 +5,11 @@
 
 ## Releases
 
+### v0.4.0 - Tech Preview (8/24/2018)
+
+* Added bucket name and encryption key to SdkCredentialCreateRequest
+* Added the ability to disable ssl connection to SdkAwsCredentialRequest
+
 ### v0.3.0 - Tech Preview (8/20/2018)
 
 * Added SchedulerNodeName field to StorageNode object

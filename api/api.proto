@@ -1408,6 +1408,10 @@ message SdkSchedulePolicy {
 message SdkCredentialCreateRequest {
   // Name of the credential
   string name = 1;
+  // (optional) Name of bucket
+  string bucket = 2;
+  // (optional) Key used to encrypt the data
+  string encryption_key = 3;
 
   // Start at field number 200 to allow for expansion
   oneof credential_type {
@@ -1436,6 +1440,8 @@ message SdkAwsCredentialRequest {
   string endpoint = 3;
   // Region
   string region = 4;
+  // (optional) Disable SSL connection
+  bool disable_ssl = 5;
 }
 
 // Defines credentials for Azure
@@ -1462,6 +1468,8 @@ message SdkAwsCredentialResponse {
   string endpoint = 3;
   // Region
   string region = 4;
+  // (optional) Disable SSL connection
+  bool disable_ssl = 5;
 }
 
 // Defines the response for Azure credentials
@@ -1500,6 +1508,8 @@ message SdkCredentialInspectResponse {
   string credential_id = 1;
   // Name of the credential
   string name = 2;
+  // (optional) Name of bucket
+  string bucket = 3;
 
   // Start at field number 200 for expansion support
   oneof credential_type {
@@ -2237,7 +2247,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 3;
+    Minor = 4;
     // SDK version patch value of this specification
     Patch = 0;
   }

@@ -1617,6 +1617,11 @@
         "region": {
           "type": "string",
           "title": "Region"
+        },
+        "disable_ssl": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "(optional) Disable SSL connection"
         }
       },
       "title": "Defines credentials for Aws/S3 endpoints"
@@ -1635,6 +1640,11 @@
         "region": {
           "type": "string",
           "title": "Region"
+        },
+        "disable_ssl": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "(optional) Disable SSL connection"
         }
       },
       "title": "Defines the response for AWS/S3 credentials"
@@ -2054,6 +2064,14 @@
           "type": "string",
           "title": "Name of the credential"
         },
+        "bucket": {
+          "type": "string",
+          "title": "(optional) Name of bucket"
+        },
+        "encryption_key": {
+          "type": "string",
+          "title": "(optional) Key used to encrypt the data"
+        },
         "aws_credential": {
           "$ref": "#/definitions/apiSdkAwsCredentialRequest",
           "title": "Credentials for AWS/S3"
@@ -2106,6 +2124,10 @@
         "name": {
           "type": "string",
           "title": "Name of the credential"
+        },
+        "bucket": {
+          "type": "string",
+          "title": "(optional) Name of bucket"
         },
         "aws_credential": {
           "$ref": "#/definitions/apiSdkAwsCredentialResponse",
