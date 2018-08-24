@@ -53,6 +53,13 @@ type manager struct {
 	sync.Mutex
 }
 
+// getKey is a util func that constructs kvdb key.
+// kvdb tree structure is setup as follows:
+// <baseKey>/<resourceType>/<dec2hex(alertType)>/<resourceID>/<alertObject>
+func getKey(resourceType string, alertType int64, resourceID string) string {
+	return filepath.Join(KvdbKey, resourceType, strconv.FormatInt(alertType, 16), resourceID)
+}
+
 func (m *manager) Raise(alert *api.Alert) error {
 	for _, rule := range m.rules {
 		if rule.GetEvent() == RaiseEvent {
@@ -68,14 +75,10 @@ func (m *manager) Raise(alert *api.Alert) error {
 		}
 	}
 
-	key := filepath.Join(KvdbKey,
-		alert.Resource.String(),
-		alert.ResourceId,
-		strconv.FormatInt(alert.GetAlertType(), 16))
 	if alert.Timestamp == nil {
 		alert.Timestamp = &timestamp.Timestamp{Seconds: time.Now().Unix()}
 	}
-	_, err := m.kv.Put(key, alert, 0)
+	_, err := m.kv.Put(getKey(alert.Resource.String(), alert.GetAlertType(), alert.ResourceId), alert, 0)
 	return err
 }
 
@@ -161,7 +164,7 @@ func (m *manager) Delete(filters ...Filter) error {
 Loop:
 	for _, filter := range filters {
 		switch filter.GetFilterType() {
-		case CustomFilter, TimeFilter:
+		case CustomFilter, TimeFilter, AlertTypeFilter, ResourceIDFilter, CountFilter:
 			allFiltersIndexBased = false
 			break Loop
 		}
@@ -185,11 +188,7 @@ Loop:
 		}
 
 		for _, alert := range myAlerts {
-			key := filepath.Join(KvdbKey,
-				alert.Resource.String(),
-				alert.ResourceId,
-				strconv.FormatInt(alert.GetAlertType(), 16))
-			if _, err := m.kv.Delete(key); err != nil {
+			if _, err := m.kv.Delete(getKey(alert.Resource.String(), alert.GetAlertType(), alert.ResourceId)); err != nil {
 				return err
 			}
 		}

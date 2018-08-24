@@ -106,88 +106,88 @@ func TestManager_Enumerate(t *testing.T) {
 		{
 			name: "by 1 resource type",
 			filters: []Filter{
-				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
+				NewQueryResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
 			},
 			expectedCount: 1,
 		},
 		{
 			name: "by 2 resource types",
 			filters: []Filter{
-				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
-				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_CLUSTER),
+				NewQueryResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
+				NewQueryResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_CLUSTER),
 			},
 			expectedCount: 2,
 		},
 		{
 			name: "by 2 resource types",
 			filters: []Filter{
-				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
-				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_CLUSTER),
+				NewQueryResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_CLUSTER),
 			},
 			expectedCount: 5,
 		},
 		{
 			name: "by 1 resource id",
 			filters: []Filter{
-				NewResourceIDFilter("inca", api.ResourceType_RESOURCE_TYPE_VOLUME),
+				NewResourceIDFilter("inca"),
 			},
-			expectedCount: 1,
+			expectedCount: 2,
 		},
 		{
 			name: "by 2 resource ids",
 			filters: []Filter{
-				NewResourceIDFilter("inca", api.ResourceType_RESOURCE_TYPE_VOLUME),
-				NewResourceIDFilter("maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewResourceIDFilter("inca"),
+				NewResourceIDFilter("maya"),
 			},
-			expectedCount: 3,
+			expectedCount: 4,
 		},
 		{
 			name: "by 2 different filter types",
 			filters: []Filter{
-				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
-				NewResourceIDFilter("maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
+				NewResourceIDFilter("maya"),
 			},
 			expectedCount: 3,
 		},
 		{
 			name: "two levels of filter",
 			filters: []Filter{
-				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
-				NewResourceIDFilter("maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewResourceIDFilter("maya"),
 			},
 			expectedCount: 4,
 		},
 		{
 			name: "skip a level",
 			filters: []Filter{
-				NewAlertTypeFilter(12, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
-				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryAlertTypeFilter(12, api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
 			},
 			expectedCount: 4,
 		},
 		{
 			name: "alert type",
 			filters: []Filter{
-				NewAlertTypeFilter(12, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryAlertTypeFilter(12, api.ResourceType_RESOURCE_TYPE_DRIVE),
 			},
 			expectedCount: 1,
 		},
 		{
 			name: "alert types",
 			filters: []Filter{
-				NewAlertTypeFilter(10, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
-				NewAlertTypeFilter(12, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryAlertTypeFilter(10, api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryAlertTypeFilter(12, api.ResourceType_RESOURCE_TYPE_DRIVE),
 			},
-			expectedCount: 2,
+			expectedCount: 3,
 		},
 		{
 			name: "time and other filters",
 			filters: []Filter{
 				NewTimeFilter(time.Now().AddDate(0, 0, -1), time.Now()),
-				NewAlertTypeFilter(10, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
-				NewAlertTypeFilter(12, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryAlertTypeFilter(10, api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryAlertTypeFilter(12, api.ResourceType_RESOURCE_TYPE_DRIVE),
 			},
-			expectedCount: 2,
+			expectedCount: 3,
 		},
 		{
 			name: "time filter match none",
@@ -244,77 +244,77 @@ func TestManager_Filter(t *testing.T) {
 		{
 			name: "by 1 resource type",
 			filters: []Filter{
-				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
+				NewQueryResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
 			},
 			expectedCount: 1,
 		},
 		{
 			name: "by 2 resource types",
 			filters: []Filter{
-				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
-				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_CLUSTER),
+				NewQueryResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
+				NewQueryResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_CLUSTER),
 			},
 			expectedCount: 0,
 		},
 		{
 			name: "by 2 resource types",
 			filters: []Filter{
-				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
-				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_CLUSTER),
+				NewQueryResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_CLUSTER),
 			},
 			expectedCount: 0,
 		},
 		{
 			name: "by 1 resource id",
 			filters: []Filter{
-				NewResourceIDFilter("inca", api.ResourceType_RESOURCE_TYPE_VOLUME),
+				NewResourceIDFilter("inca"),
 			},
-			expectedCount: 1,
+			expectedCount: 2,
 		},
 		{
 			name: "by 2 resource ids",
 			filters: []Filter{
-				NewResourceIDFilter("inca", api.ResourceType_RESOURCE_TYPE_VOLUME),
-				NewResourceIDFilter("maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewResourceIDFilter("inca"),
+				NewResourceIDFilter("maya"),
 			},
 			expectedCount: 0,
 		},
 		{
 			name: "by 2 different filter types",
 			filters: []Filter{
-				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
-				NewResourceIDFilter("maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
+				NewResourceIDFilter("maya"),
 			},
 			expectedCount: 0,
 		},
 		{
 			name: "two levels of filter",
 			filters: []Filter{
-				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
-				NewResourceIDFilter("maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewResourceIDFilter("maya"),
 			},
 			expectedCount: 2,
 		},
 		{
 			name: "skip a level",
 			filters: []Filter{
-				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
-				NewAlertTypeFilter(12, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryAlertTypeFilter(12, api.ResourceType_RESOURCE_TYPE_DRIVE),
 			},
 			expectedCount: 1,
 		},
 		{
 			name: "alert type",
 			filters: []Filter{
-				NewAlertTypeFilter(12, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryAlertTypeFilter(12, api.ResourceType_RESOURCE_TYPE_DRIVE),
 			},
 			expectedCount: 1,
 		},
 		{
 			name: "alert types",
 			filters: []Filter{
-				NewAlertTypeFilter(10, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
-				NewAlertTypeFilter(12, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryAlertTypeFilter(10, api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryAlertTypeFilter(12, api.ResourceType_RESOURCE_TYPE_DRIVE),
 			},
 			expectedCount: 0,
 		},
@@ -322,8 +322,8 @@ func TestManager_Filter(t *testing.T) {
 			name: "time and other filters",
 			filters: []Filter{
 				NewTimeFilter(time.Now().AddDate(0, 0, -1), time.Now()),
-				NewAlertTypeFilter(10, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
-				NewAlertTypeFilter(12, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryAlertTypeFilter(10, api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryAlertTypeFilter(12, api.ResourceType_RESOURCE_TYPE_DRIVE),
 			},
 			expectedCount: 0,
 		},
@@ -344,7 +344,7 @@ func TestManager_Filter(t *testing.T) {
 		{
 			name: "time filter match all in last 3 months for drive type",
 			filters: []Filter{
-				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
 				NewTimeFilter(time.Now().AddDate(0, -3, 0), time.Now()),
 			},
 			expectedCount: 2,
@@ -391,88 +391,88 @@ func TestManager_Delete(t *testing.T) {
 		{
 			name: "by 1 resource type",
 			filters: []Filter{
-				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
+				NewQueryResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
 			},
 			expectedCount: 5,
 		},
 		{
 			name: "by 2 resource types",
 			filters: []Filter{
-				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
-				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_CLUSTER),
+				NewQueryResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
+				NewQueryResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_CLUSTER),
 			},
 			expectedCount: 4,
 		},
 		{
 			name: "by 2 resource types",
 			filters: []Filter{
-				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
-				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_CLUSTER),
+				NewQueryResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_CLUSTER),
 			},
 			expectedCount: 1,
 		},
 		{
 			name: "by 1 resource id",
 			filters: []Filter{
-				NewResourceIDFilter("inca", api.ResourceType_RESOURCE_TYPE_VOLUME),
+				NewResourceIDFilter("inca"),
 			},
-			expectedCount: 5,
+			expectedCount: 4,
 		},
 		{
 			name: "by 2 resource ids",
 			filters: []Filter{
-				NewResourceIDFilter("inca", api.ResourceType_RESOURCE_TYPE_VOLUME),
-				NewResourceIDFilter("maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewResourceIDFilter("inca"),
+				NewResourceIDFilter("maya"),
 			},
-			expectedCount: 3,
+			expectedCount: 2,
 		},
 		{
 			name: "by 2 different filter types",
 			filters: []Filter{
-				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
-				NewResourceIDFilter("maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
+				NewResourceIDFilter("maya"),
 			},
 			expectedCount: 3,
 		},
 		{
 			name: "two levels of filter",
 			filters: []Filter{
-				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
-				NewResourceIDFilter("maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewResourceIDFilter("maya"),
 			},
 			expectedCount: 2,
 		},
 		{
 			name: "skip a level",
 			filters: []Filter{
-				NewAlertTypeFilter(12, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
-				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryAlertTypeFilter(12, api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
 			},
 			expectedCount: 2,
 		},
 		{
 			name: "alert type",
 			filters: []Filter{
-				NewAlertTypeFilter(12, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryAlertTypeFilter(12, api.ResourceType_RESOURCE_TYPE_DRIVE),
 			},
 			expectedCount: 5,
 		},
 		{
 			name: "alert types",
 			filters: []Filter{
-				NewAlertTypeFilter(10, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
-				NewAlertTypeFilter(12, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryAlertTypeFilter(10, api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryAlertTypeFilter(12, api.ResourceType_RESOURCE_TYPE_DRIVE),
 			},
-			expectedCount: 4,
+			expectedCount: 3,
 		},
 		{
 			name: "time filter",
 			filters: []Filter{
 				NewTimeFilter(time.Now().AddDate(0, 0, -1), time.Now()),
-				NewAlertTypeFilter(10, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
-				NewAlertTypeFilter(12, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryAlertTypeFilter(10, api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewQueryAlertTypeFilter(12, api.ResourceType_RESOURCE_TYPE_DRIVE),
 			},
-			expectedCount: 4,
+			expectedCount: 3,
 		},
 	}
 
@@ -517,12 +517,12 @@ func TestManager_SetRules_Raise(t *testing.T) {
 			rules: []Rule{
 				// define a rule that will delete every alert of RESOURCE_TYPE_VOLUME
 				// and RESOURCE_TYPE_CLUSTER before
-				// raising an alert that matches NewAlertTypeFilter(10, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE)
+				// raising an alert that matches NewQueryAlertTypeFilter(10, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE)
 				NewRaiseRule("deleteOnRaise0",
-					NewAlertTypeFilter(10, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+					NewQueryAlertTypeFilter(10, api.ResourceType_RESOURCE_TYPE_DRIVE),
 					NewDeleteAction(
-						NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
-						NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_CLUSTER),
+						NewQueryResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
+						NewQueryResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_CLUSTER),
 					)),
 			},
 			myAlert: &api.Alert{
@@ -536,9 +536,9 @@ func TestManager_SetRules_Raise(t *testing.T) {
 			name: "deleteAllOnRaise",
 			rules: []Rule{
 				// define a rule that will delete every alert before
-				// raising an alert that matches NewAlertTypeFilter(10, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE)
+				// raising an alert that matches NewQueryAlertTypeFilter(10, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE)
 				NewRaiseRule("deleteOnRaise0",
-					NewAlertTypeFilter(10, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+					NewQueryAlertTypeFilter(10, api.ResourceType_RESOURCE_TYPE_DRIVE),
 					NewDeleteAction(),
 				),
 			},
@@ -554,12 +554,12 @@ func TestManager_SetRules_Raise(t *testing.T) {
 			rules: []Rule{
 				// define a rule that will delete every alert of RESOURCE_TYPE_VOLUME
 				// and RESOURCE_TYPE_CLUSTER before
-				// raising an alert that matches NewAlertTypeFilter(10, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE)
+				// raising an alert that matches NewQueryAlertTypeFilter(10, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE)
 				NewRaiseRule("deleteOnRaise0",
-					NewAlertTypeFilter(10, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+					NewQueryAlertTypeFilter(10, api.ResourceType_RESOURCE_TYPE_DRIVE),
 					NewDeleteAction(
-						NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
-						NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_CLUSTER),
+						NewQueryResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
+						NewQueryResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_CLUSTER),
 					)),
 			},
 			myAlert: &api.Alert{
@@ -574,9 +574,9 @@ func TestManager_SetRules_Raise(t *testing.T) {
 			rules: []Rule{
 				// define a rule that will delete every alert of RESOURCE_TYPE_VOLUME
 				// and RESOURCE_TYPE_CLUSTER before
-				// raising an alert that matches NewAlertTypeFilter(10, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE)
+				// raising an alert that matches NewQueryAlertTypeFilter(10, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE)
 				NewRaiseRule("deleteOnRaise0",
-					NewAlertTypeFilter(10, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE),
+					NewQueryAlertTypeFilter(10, api.ResourceType_RESOURCE_TYPE_DRIVE),
 					NewDeleteAction(
 						NewTimeFilter(time.Now().AddDate(0, -3, 0), time.Now()),
 					)),

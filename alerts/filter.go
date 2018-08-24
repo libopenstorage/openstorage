@@ -44,12 +44,16 @@ type FilterType int
 //
 // Input filters are sorted based
 const (
-	// CustomFilter
+	// Filter types listed below do not query kvdb directly. Instead they enumerate and then filter.
 	CustomFilter FilterType = iota
 	TimeFilter
-	ResourceTypeFilter
-	ResourceIDFilter
 	AlertTypeFilter
+	ResourceIDFilter
+	CountFilter
+	// Filter types listed below provide more efficient querying into kvdb by directly querying kvdb sub tree.
+	QueryResourceTypeFilter
+	QueryAlertTypeFilter
+	QueryResourceIDFilter
 )
 
 // filter implements Filter interface.
@@ -64,15 +68,10 @@ type timeZone struct {
 	stop  time.Time
 }
 
-type resourceInfo struct {
-	resourceID   string
-	resourceType api.ResourceType
-}
-
 type alertInfo struct {
 	alertType    int64
-	resourceID   string
 	resourceType api.ResourceType
+	resourceID   string
 }
 
 func (f *filter) GetFilterType() FilterType {
@@ -102,7 +101,37 @@ func (f *filter) Match(alert *api.Alert) (bool, error) {
 		} else {
 			return false, nil
 		}
-	case ResourceTypeFilter:
+	case AlertTypeFilter:
+		v, ok := f.value.(int64)
+		if !ok {
+			return false, typeAssertionError
+		}
+		if alert.AlertType == v {
+			return true, nil
+		} else {
+			return false, nil
+		}
+	case ResourceIDFilter:
+		v, ok := f.value.(string)
+		if !ok {
+			return false, typeAssertionError
+		}
+		if alert.ResourceId == v {
+			return true, nil
+		} else {
+			return false, nil
+		}
+	case CountFilter:
+		v, ok := f.value.(int64)
+		if !ok {
+			return false, typeAssertionError
+		}
+		if alert.Count == v {
+			return true, nil
+		} else {
+			return false, nil
+		}
+	case QueryResourceTypeFilter:
 		v, ok := f.value.(api.ResourceType)
 		if !ok {
 			return false, typeAssertionError
@@ -112,18 +141,18 @@ func (f *filter) Match(alert *api.Alert) (bool, error) {
 		} else {
 			return false, nil
 		}
-	case ResourceIDFilter:
-		v, ok := f.value.(resourceInfo)
+	case QueryAlertTypeFilter:
+		v, ok := f.value.(alertInfo)
 		if !ok {
 			return false, typeAssertionError
 		}
-		if alert.ResourceId == v.resourceID &&
+		if alert.AlertType == v.alertType &&
 			alert.Resource == v.resourceType {
 			return true, nil
 		} else {
 			return false, nil
 		}
-	case AlertTypeFilter:
+	case QueryResourceIDFilter:
 		v, ok := f.value.(alertInfo)
 		if !ok {
 			return false, typeAssertionError
@@ -152,26 +181,28 @@ func getKeysFromFilters(filters ...Filter) (map[string]bool, error) {
 		for _, filter := range filters {
 			key := KvdbKey
 			switch filter.GetFilterType() {
-			case CustomFilter, TimeFilter:
-			case ResourceTypeFilter:
+			// only these filter types benefit from efficient kvdb querying.
+			// for everything else we enumerate and then filter.
+			case QueryResourceTypeFilter:
 				v, ok := filter.GetValue().(api.ResourceType)
 				if !ok {
 					return nil, typeAssertionError
 				}
 				key = filepath.Join(key, v.String())
-			case ResourceIDFilter:
-				v, ok := filter.GetValue().(resourceInfo)
-				if !ok {
-					return nil, typeAssertionError
-				}
-				key = filepath.Join(key, v.resourceType.String(), v.resourceID)
-			case AlertTypeFilter:
+			case QueryAlertTypeFilter:
 				v, ok := filter.GetValue().(alertInfo)
 				if !ok {
 					return nil, typeAssertionError
 				}
 				key = filepath.Join(key,
-					v.resourceType.String(), v.resourceID, strconv.FormatInt(v.alertType, 16))
+					v.resourceType.String(), strconv.FormatInt(v.alertType, 16))
+			case QueryResourceIDFilter:
+				v, ok := filter.GetValue().(alertInfo)
+				if !ok {
+					return nil, typeAssertionError
+				}
+				key = filepath.Join(key,
+					v.resourceType.String(), strconv.FormatInt(v.alertType, 16), v.resourceID)
 			}
 
 			keyPath, _ := filepath.Split(key)
@@ -179,6 +210,7 @@ func getKeysFromFilters(filters ...Filter) (map[string]bool, error) {
 			if !keys[keyPath] {
 				keys[key] = true
 			}
+
 		}
 	} else {
 		keys[KvdbKey] = true

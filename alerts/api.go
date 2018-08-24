@@ -14,26 +14,38 @@ func NewManager(kv kvdb.Kvdb) Manager {
 
 // Filter API
 
-// NewResourceTypeFilter creates a filter that matches on resource type.
-func NewResourceTypeFilter(resourceType api.ResourceType) Filter {
-	return &filter{filterType: ResourceTypeFilter, value: resourceType}
+// NewQueryResourceTypeFilter creates a filter that matches on resource type.
+func NewQueryResourceTypeFilter(resourceType api.ResourceType) Filter {
+	return &filter{filterType: QueryResourceTypeFilter, value: resourceType}
 }
 
-// NewResourceIDFilter creates a filter that matches on resource id.
-func NewResourceIDFilter(resourceID string, resourceType api.ResourceType) Filter {
-	return &filter{filterType: ResourceIDFilter, value: resourceInfo{
-		resourceID: resourceID, resourceType: resourceType}}
-}
-
-// NewAlertTypeFilter creates a filter that matches on alert type.
-func NewAlertTypeFilter(alertType int64, resourceID string, resourceType api.ResourceType) Filter {
-	return &filter{filterType: AlertTypeFilter, value: alertInfo{
-		alertType: alertType, resourceID: resourceID, resourceType: resourceType}}
+// NewQueryAlertTypeFilter creates a filter that matches on alert type.
+func NewQueryAlertTypeFilter(alertType int64, resourceType api.ResourceType) Filter {
+	return &filter{filterType: QueryAlertTypeFilter, value: alertInfo{
+		alertType: alertType, resourceType: resourceType}}
 }
 
 // NewTimeFilter creates a filter that matches on alert raised in a given time window.
 func NewTimeFilter(start, stop time.Time) Filter {
 	return &filter{filterType: TimeFilter, value: timeZone{start: start, stop: stop}}
+}
+
+// NewAlertTypeFilter provides a filter that matches on alerty type.
+// Please note that if you are filtering for alert types for a given resource type, it is better
+// to use NewQueryAlertTypeFilter instead of this filter since it is more efficient in terms of
+// kvdb access.
+func NewAlertTypeFilter(alertType int64) Filter {
+	return &filter{filterType: AlertTypeFilter, value: alertType}
+}
+
+// NewResourceIDFilter provides a filter that matches on resource id.
+func NewResourceIDFilter(resourceID string) Filter {
+	return &filter{filterType: ResourceIDFilter, value: resourceID}
+}
+
+// NewCountFilter provides a filter that matches on alert count.
+func NewCountFilter(count int64) Filter {
+	return &filter{filterType: CountFilter, value: count}
 }
 
 // NewCustomFilter creates a filter that matches on UDF (user defined function)
