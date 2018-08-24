@@ -67,10 +67,10 @@ func TestFakeCredentials(t *testing.T) {
 	assert.Len(t, creds, 1)
 
 	data := creds[id]
-	value, ok := data.(map[string]string)
+	value, ok := data.(map[string]interface{})
 	assert.True(t, ok)
 	assert.NotEmpty(t, value)
-	assert.Equal(t, value["hello"], "world")
+	assert.Equal(t, value["hello"].(string), "world")
 
 	err = d.CredsDelete(id)
 	assert.NoError(t, err)

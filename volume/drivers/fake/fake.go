@@ -59,7 +59,7 @@ type driver struct {
 
 type fakeCred struct {
 	Id     string
-	Params map[string]string
+	Params map[string]interface{}
 }
 
 type fakeBackups struct {
@@ -357,10 +357,15 @@ func (d *driver) CredsCreate(
 	params map[string]string,
 ) (string, error) {
 
+	// Convert types
+	converted := make(map[string]interface{})
+	for k, v := range params {
+		converted[k] = v
+	}
 	id := uuid.New()
 	_, err := d.kv.Put(credsKeyPrefix+"/"+id, &fakeCred{
 		Id:     id,
-		Params: params,
+		Params: converted,
 	}, 0)
 	if err != nil {
 		return "", err

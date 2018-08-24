@@ -1482,7 +1482,8 @@
         "FS_TYPE_NFS",
         "FS_TYPE_VFS",
         "FS_TYPE_XFS",
-        "FS_TYPE_ZFS"
+        "FS_TYPE_ZFS",
+        "FS_TYPE_XFSv2"
       ],
       "default": "FS_TYPE_NONE"
     },
