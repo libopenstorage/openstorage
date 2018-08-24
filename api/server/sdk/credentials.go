@@ -18,6 +18,7 @@ package sdk
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
@@ -75,10 +76,13 @@ func (s *CredentialServer) awsCreate(
 
 	params[api.OptCredType] = "s3"
 	params[api.OptCredName] = req.GetName()
+	params[api.OptCredEncrKey] = req.GetEncryptionKey()
+	params[api.OptCredBucket] = req.GetBucket()
 	params[api.OptCredRegion] = aws.GetRegion()
 	params[api.OptCredEndpoint] = aws.GetEndpoint()
 	params[api.OptCredAccessKey] = aws.GetAccessKey()
 	params[api.OptCredSecretKey] = aws.GetSecretKey()
+	params[api.OptCredDisableSSL] = fmt.Sprintf("%v", aws.GetDisableSsl())
 
 	uuid, err := s.driver.CredsCreate(params)
 
@@ -115,6 +119,8 @@ func (s *CredentialServer) azureCreate(
 
 	params[api.OptCredType] = "azure"
 	params[api.OptCredName] = req.GetName()
+	params[api.OptCredEncrKey] = req.GetEncryptionKey()
+	params[api.OptCredBucket] = req.GetBucket()
 	params[api.OptCredAzureAccountKey] = azure.GetAccountKey()
 	params[api.OptCredAzureAccountName] = azure.GetAccountName()
 
@@ -153,6 +159,8 @@ func (s *CredentialServer) googleCreate(
 
 	params[api.OptCredType] = "google"
 	params[api.OptCredName] = req.GetName()
+	params[api.OptCredEncrKey] = req.GetEncryptionKey()
+	params[api.OptCredBucket] = req.GetBucket()
 	params[api.OptCredGoogleProjectID] = google.GetProjectId()
 	params[api.OptCredGoogleJsonKey] = google.GetJsonKey()
 
@@ -278,10 +286,15 @@ func (s *CredentialServer) Inspect(
 		// The code to support names may not be available
 		credName = ""
 	}
+	bucket, ok := info[api.OptCredBucket].(string)
+	if !ok {
+		return nil, status.Error(codes.Internal, "Unable to get bucket name")
+	}
 
 	resp := &api.SdkCredentialInspectResponse{
 		CredentialId: req.GetCredentialId(),
 		Name:         credName,
+		Bucket:       bucket,
 	}
 
 	switch info[api.OptCredType] {
