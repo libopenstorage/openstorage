@@ -637,7 +637,53 @@ func TestSdkCredentialInspectFailed(t *testing.T) {
 	assert.Contains(t, serverError.Message(), "credential id")
 }
 
-func TestSdkCredentialInspect(t *testing.T) {
+func TestSdkAWSInspect(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	uuid := "test"
+	req := &api.SdkCredentialInspectRequest{
+		CredentialId: uuid,
+	}
+
+	enumAws := map[string]interface{}{
+		api.OptCredType:       "s3",
+		api.OptCredName:       "test",
+		api.OptCredBucket:     "mybucket",
+		api.OptCredEncrKey:    "key",
+		api.OptCredRegion:     "test-azure-account",
+		api.OptCredEndpoint:   "test-azure-account",
+		api.OptCredAccessKey:  "access",
+		api.OptCredSecretKey:  "secret",
+		api.OptCredDisableSSL: "false",
+	}
+	enumerateData := map[string]interface{}{
+		uuid: enumAws,
+	}
+
+	s.MockDriver().
+		EXPECT().
+		CredsEnumerate().
+		Return(enumerateData, nil)
+
+	// Setup client
+	c := api.NewOpenStorageCredentialsClient(s.Conn())
+
+	// Inspect
+	resp, err := c.Inspect(context.Background(), req)
+	assert.NoError(t, err)
+	assert.NotNil(t, resp.GetAwsCredential())
+	assert.Equal(t, enumAws[api.OptCredName], resp.GetName())
+	assert.Equal(t, enumAws[api.OptCredBucket], resp.GetBucket())
+	assert.Equal(t, enumAws[api.OptCredRegion], resp.GetAwsCredential().GetRegion())
+	assert.Equal(t, enumAws[api.OptCredEndpoint], resp.GetAwsCredential().GetEndpoint())
+	assert.Equal(t, enumAws[api.OptCredAccessKey], resp.GetAwsCredential().GetAccessKey())
+	assert.Equal(t, enumAws[api.OptCredDisableSSL] == "true", resp.GetAwsCredential().GetDisableSsl())
+}
+
+func TestSdkCredentialAzureInspect(t *testing.T) {
 
 	// Create server and client connection
 	s := newTestServer(t)
