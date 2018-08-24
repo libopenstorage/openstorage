@@ -308,6 +308,8 @@ message VolumeSpec {
   bool journal = 25;
   // Sharedv4 is true if this volume can be accessed via sharedv4.
   bool sharedv4 = 26;
+  // QueueDepth defines the desired block device queue depth
+  int32 queue_depth = 27;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume

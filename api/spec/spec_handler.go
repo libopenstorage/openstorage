@@ -83,6 +83,7 @@ var (
 	scaleRegex      = regexp.MustCompile(api.SpecScale + "=([0-9]+),?")
 	fsRegex         = regexp.MustCompile(api.SpecFilesystem + "=([0-9A-Za-z]+),?")
 	bsRegex         = regexp.MustCompile(api.SpecBlockSize + "=([0-9]+),?")
+	queueDepthRegex = regexp.MustCompile(api.SpecQueueDepth + "=([0-9]+),?")
 	haRegex         = regexp.MustCompile(api.SpecHaLevel + "=([0-9]+),?")
 	cosRegex        = regexp.MustCompile(api.SpecPriority + "=([A-Za-z]+),?")
 	sharedRegex     = regexp.MustCompile(api.SpecShared + "=([A-Za-z]+),?")
@@ -201,6 +202,12 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				return nil, nil, nil, err
 			} else {
 				spec.BlockSize = blockSize
+			}
+		case api.SpecQueueDepth:
+			if queueDepth, err := units.Parse(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.QueueDepth = int32(queueDepth)
 			}
 		case api.SpecHaLevel:
 			haLevel, _ := strconv.ParseInt(v, 10, 64)
@@ -353,6 +360,9 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, bs := d.getVal(bsRegex, str); ok {
 		opts[api.SpecBlockSize] = bs
+	}
+	if ok, qd := d.getVal(queueDepthRegex, str); ok {
+		opts[api.SpecQueueDepth] = qd
 	}
 	if ok, ha := d.getVal(haRegex, str); ok {
 		opts[api.SpecHaLevel] = ha

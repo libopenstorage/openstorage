@@ -1482,7 +1482,8 @@
         "FS_TYPE_NFS",
         "FS_TYPE_VFS",
         "FS_TYPE_XFS",
-        "FS_TYPE_ZFS"
+        "FS_TYPE_ZFS",
+        "FS_TYPE_XFSv2"
       ],
       "default": "FS_TYPE_NONE"
     },
@@ -3366,6 +3367,11 @@
           "type": "boolean",
           "format": "boolean",
           "description": "Sharedv4 is true if this volume can be accessed via sharedv4."
+        },
+        "queue_depth": {
+          "type": "integer",
+          "format": "int32",
+          "title": "QueueDepth defines the desired block device queue depth"
         }
       },
       "title": "VolumeSpec has the properties needed to create a volume.\nswagger:model"

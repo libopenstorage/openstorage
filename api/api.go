@@ -29,6 +29,7 @@ const (
 	SpecScale                = "scale"
 	SpecFilesystem           = "fs"
 	SpecBlockSize            = "block_size"
+	SpecQueueDepth           = "queue_depth"
 	SpecHaLevel              = "repl"
 	SpecPriority             = "io_priority"
 	SpecSnapshotInterval     = "snap_interval"
