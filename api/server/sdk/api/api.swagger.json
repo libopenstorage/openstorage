@@ -3223,7 +3223,7 @@
           "description": "FsResizeRequired if an FS resize is required on the volume."
         }
       },
-      "title": "Volume represents an abstract storage volume.\nVolume represents an abstract storage volume.\nswagger:model"
+      "title": "Volume represents an abstract storage volume.\nswagger:model"
     },
     "apiVolumeConsumer": {
       "type": "object",
@@ -3401,20 +3401,9 @@
     "apiVolumeSpecUpdate": {
       "type": "object",
       "properties": {
-        "ephemeral": {
-          "type": "boolean",
-          "format": "boolean"
-        },
         "size": {
           "type": "string",
           "format": "uint64"
-        },
-        "format": {
-          "$ref": "#/definitions/apiFSType"
-        },
-        "block_size": {
-          "type": "string",
-          "format": "int64"
         },
         "ha_level": {
           "type": "string",
@@ -3449,14 +3438,6 @@
           "$ref": "#/definitions/apiReplicaSet",
           "description": "ReplicaSet is the desired set of nodes for the volume data."
         },
-        "aggregation_level": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "encrypted": {
-          "type": "boolean",
-          "format": "boolean"
-        },
         "passphrase": {
           "type": "string"
         },
@@ -3473,18 +3454,6 @@
         },
         "group": {
           "$ref": "#/definitions/apiGroup"
-        },
-        "group_enforced": {
-          "type": "boolean",
-          "format": "boolean"
-        },
-        "compressed": {
-          "type": "boolean",
-          "format": "boolean"
-        },
-        "cascaded": {
-          "type": "boolean",
-          "format": "boolean"
         },
         "journal": {
           "type": "boolean",

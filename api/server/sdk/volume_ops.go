@@ -335,11 +335,6 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 	spec.Shared = setSpecBool(vol.GetShared(), req.GetShared(), req.GetSharedOpt())
 	spec.Sharedv4 = setSpecBool(vol.GetSharedv4(), req.GetSharedv4(), req.GetSharedv4Opt())
 	spec.Sticky = setSpecBool(vol.GetSticky(), req.GetSticky(), req.GetStickyOpt())
-	spec.Compressed = setSpecBool(vol.GetCompressed(), req.GetCompressed(), req.GetCompressedOpt())
-	spec.GroupEnforced = setSpecBool(vol.GetGroupEnforced(), req.GetGroupEnforced(), req.GetGroupEnforcedOpt())
-	spec.Ephemeral = setSpecBool(vol.GetEphemeral(), req.GetEphemeral(), req.GetEphemeralOpt())
-	spec.Encrypted = setSpecBool(vol.GetEncrypted(), req.GetEncrypted(), req.GetEncryptedOpt())
-	spec.Cascaded = setSpecBool(vol.GetCascaded(), req.GetCascaded(), req.GetCascadedOpt())
 	spec.Journal = setSpecBool(vol.GetJournal(), req.GetJournal(), req.GetJournalOpt())
 
 	// Cos
@@ -352,13 +347,6 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 	// Volume configuration labels
 	// If none are provided, send `nil` to the driver
 	spec.VolumeLabels = req.GetVolumeLabels()
-
-	// Aggregation Level
-	if req.GetAggregationLevelOpt() != nil {
-		spec.AggregationLevel = req.GetAggregationLevel()
-	} else {
-		spec.AggregationLevel = vol.GetAggregationLevel()
-	}
 
 	// Passphrase
 	if req.GetPassphraseOpt() != nil {
@@ -395,25 +383,11 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 		spec.IoProfile = vol.GetIoProfile()
 	}
 
-	// FSType / format
-	if req.GetFormatOpt() != nil {
-		spec.Format = req.GetFormat()
-	} else {
-		spec.Format = vol.GetFormat()
-	}
-
 	// GroupID
 	if req.GetGroupOpt() != nil {
 		spec.Group = req.GetGroup()
 	} else {
 		spec.Group = vol.GetGroup()
-	}
-
-	// Group Enforced
-	if req.GetGroupEnforcedOpt() != nil {
-		spec.GroupEnforced = req.GetGroupEnforced()
-	} else {
-		spec.GroupEnforced = vol.GetGroupEnforced()
 	}
 
 	// Size
