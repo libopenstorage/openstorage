@@ -362,6 +362,8 @@ message VolumeSpecUpdate {
   oneof journal_opt { bool journal = 23; }
   // Sharedv4 is true if this volume can be accessed via sharedv4.
   oneof sharedv4_opt { bool sharedv4 = 24; }
+  // QueueDepth defines the desired block device queue depth
+  oneof queue_depth_opt { int32 queue_depth = 25; }
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
@@ -2249,7 +2251,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 4;
+    Minor = 5;
     // SDK version patch value of this specification
     Patch = 0;
   }

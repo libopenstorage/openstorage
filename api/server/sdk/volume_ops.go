@@ -437,6 +437,13 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 		spec.HaLevel = vol.GetHaLevel()
 	}
 
+	// Queue depth
+	if req.GetQueueDepthOpt() != nil {
+		spec.QueueDepth = req.GetQueueDepth()
+	} else {
+		spec.QueueDepth = vol.GetQueueDepth()
+	}
+
 	return spec
 }
 

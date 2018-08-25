@@ -3493,6 +3493,10 @@
         "sharedv4": {
           "type": "boolean",
           "format": "boolean"
+        },
+        "queue_depth": {
+          "type": "integer",
+          "format": "int32"
         }
       },
       "title": "VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume"
