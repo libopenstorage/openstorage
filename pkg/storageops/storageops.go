@@ -18,6 +18,8 @@ const (
 	// ErrVolAttachedOnRemoteNode is code when a volume is not attached locally
 	// but attached on a remote node
 	ErrVolAttachedOnRemoteNode
+	// ErrVolNotFound is code when a volume is not found
+	ErrVolNotFound
 )
 
 // ErrNotSupported is returned when a particular operation is not supported
