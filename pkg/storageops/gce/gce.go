@@ -3,6 +3,7 @@ package gce
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"path"
 	"regexp"
 	"strings"
@@ -15,6 +16,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2/google"
 	compute "google.golang.org/api/compute/v1"
+	"google.golang.org/api/googleapi"
 )
 
 var notFoundRegex = regexp.MustCompile(`.*notFound`)
@@ -265,7 +267,13 @@ func (s *gceOps) DeviceMappings() (map[string]string, error) {
 
 func (s *gceOps) DevicePath(diskName string) (string, error) {
 	d, err := s.service.Disks.Get(s.inst.project, s.inst.zone, diskName).Do()
-	if err != nil {
+	if gerr, ok := err.(*googleapi.Error); ok &&
+		gerr.Code == http.StatusNotFound {
+		return "", storageops.NewStorageError(
+			storageops.ErrVolNotFound,
+			fmt.Sprintf("Disk: %s not found in zone %s", diskName, s.inst.zone),
+			s.inst.name)
+	} else if err != nil {
 		return "", err
 	}
 
