@@ -20,6 +20,8 @@ const (
 	ErrVolAttachedOnRemoteNode
 	// ErrVolNotFound is code when a volume is not found
 	ErrVolNotFound
+	// ErrInvalidDevicePath is code when a volume/disk has invalid device path
+	ErrInvalidDevicePath
 )
 
 // ErrNotSupported is returned when a particular operation is not supported

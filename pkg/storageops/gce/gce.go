@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
@@ -23,6 +25,11 @@ var notFoundRegex = regexp.MustCompile(`.*notFound`)
 
 const googleDiskPrefix = "/dev/disk/by-id/google-"
 const STATUS_READY = "READY"
+
+const (
+	devicePathMaxRetryCount = 3
+	devicePathRetryInterval = 2 * time.Second
+)
 
 type gceOps struct {
 	inst    *instance
@@ -259,7 +266,15 @@ func (s *gceOps) DeviceMappings() (map[string]string, error) {
 			continue
 		}
 
-		m[fmt.Sprintf("%s%s", googleDiskPrefix, d.DeviceName)] = path.Base(d.Source)
+		pathByID := fmt.Sprintf("%s%s", googleDiskPrefix, d.DeviceName)
+		devPath, err := s.diskIDToBlockDevPath(pathByID)
+		if err != nil {
+			return nil, storageops.NewStorageError(
+				storageops.ErrInvalidDevicePath,
+				fmt.Sprintf("unable to find block dev path for %s. %v", pathByID, err),
+				s.inst.name)
+		}
+		m[devPath] = path.Base(d.Source)
 	}
 
 	return m, nil
@@ -291,7 +306,15 @@ func (s *gceOps) DevicePath(diskName string) (string, error) {
 
 	for _, instDisk := range inst.Disks {
 		if instDisk.Source == d.SelfLink {
-			return fmt.Sprintf("%s%s", googleDiskPrefix, instDisk.DeviceName), nil
+			pathbyID := fmt.Sprintf("%s%s", googleDiskPrefix, instDisk.DeviceName)
+			devPath, err := s.diskIDToBlockDevPathWithRetry(pathbyID)
+			if err == nil {
+				return devPath, nil
+			}
+			return "", storageops.NewStorageError(
+				storageops.ErrInvalidDevicePath,
+				fmt.Sprintf("unable to find block dev path for %s. %v", devPath, err),
+				s.inst.name)
 		}
 	}
 
@@ -559,7 +582,7 @@ func (s *gceOps) rollbackCreate(id string, createErr error) error {
 	return createErr
 }
 
-// waitForAttach checks if given disk is detached from the local instance
+// waitForDetach checks if given disk is detached from the local instance
 func (s *gceOps) waitForDetach(
 	diskURL string,
 	timeout time.Duration,
@@ -597,7 +620,10 @@ func (s *gceOps) waitForAttach(
 	devicePath, err := task.DoRetryWithTimeout(
 		func() (interface{}, bool, error) {
 			devicePath, err := s.DevicePath(disk.Name)
-			if err != nil {
+			if se, ok := err.(*storageops.StorageError); ok &&
+				se.Code == storageops.ErrVolAttachedOnRemoteNode {
+				return "", false, err
+			} else if err != nil {
 				return "", true, err
 			}
 
@@ -649,6 +675,46 @@ func (s *gceOps) getDisksFromAllZones(labels map[string]string) (map[string]*com
 	}
 
 	return response, nil
+}
+
+func (s *gceOps) diskIDToBlockDevPathWithRetry(devPath string) (string, error) {
+	var (
+		retryCount int
+		path       string
+		err        error
+	)
+
+	for {
+		if path, err = s.diskIDToBlockDevPath(devPath); err == nil {
+			return path, nil
+		}
+		logrus.Warnf(err.Error())
+		retryCount++
+		if retryCount >= devicePathMaxRetryCount {
+			break
+		}
+		time.Sleep(devicePathRetryInterval)
+	}
+	return "", err
+}
+
+func (s *gceOps) diskIDToBlockDevPath(devPath string) (string, error) {
+	// check if path is a sym link. If yes, return pointee
+	fi, err := os.Lstat(devPath)
+	if err != nil {
+		return "", err
+	}
+
+	if fi.Mode()&os.ModeSymlink != 0 {
+		output, err := filepath.EvalSymlinks(devPath)
+		if err != nil {
+			return "", fmt.Errorf("failed to read symlink due to: %v", err)
+		}
+
+		devPath = strings.TrimSpace(string(output))
+	}
+
+	return devPath, nil
 }
 
 func formatLabels(labels map[string]string) map[string]string {

@@ -166,22 +166,22 @@ func (s *ec2Ops) waitAttachmentStatus(
 ) (*ec2.Volume, error) {
 	id := volumeID
 	request := &ec2.DescribeVolumesInput{VolumeIds: []*string{&id}}
-	actual := ""
 	interval := 2 * time.Second
 	logrus.Infof("Waiting for state transition to %q", desired)
 
-	var outVol *ec2.Volume
-	for elapsed, runs := 0*time.Second, 0; actual != desired && elapsed < timeout; elapsed, runs = elapsed+interval, runs+1 {
+	f := func() (interface{}, bool, error) {
 		awsVols, err := s.ec2.DescribeVolumes(request)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 		if len(awsVols.Volumes) != 1 {
-			return nil, fmt.Errorf("expected one volume %v got %v",
+			return nil, false, fmt.Errorf("expected one volume %v got %v",
 				volumeID, len(awsVols.Volumes))
 		}
-		outVol = awsVols.Volumes[0]
-		awsAttachment := awsVols.Volumes[0].Attachments
+
+		var actual string
+		vol := awsVols.Volumes[0]
+		awsAttachment := vol.Attachments
 		if awsAttachment == nil || len(awsAttachment) == 0 {
 			// We have encountered scenarios where AWS returns a nil attachment state
 			// for a volume transitioning from detaching -> attaching.
@@ -190,18 +190,20 @@ func (s *ec2Ops) waitAttachmentStatus(
 			actual = *awsAttachment[0].State
 		}
 		if actual == desired {
-			break
+			return vol, false, nil
 		}
-		time.Sleep(interval)
-		if (runs % 10) == 0 {
-			logrus.Infof("Tried %d times", runs)
-		}
-	}
-	if actual != desired {
-		return nil, fmt.Errorf("Volume %v failed to transition to  %v current state %v",
+		return nil, true, fmt.Errorf("Volume %v failed to transition to  %v current state %v",
 			volumeID, desired, actual)
 	}
-	return outVol, nil
+
+	outVol, err := task.DoRetryWithTimeout(f, timeout, interval)
+	if err != nil {
+		return nil, err
+	}
+	if vol, ok := outVol.(*ec2.Volume); ok {
+		return vol, nil
+	}
+	return nil, fmt.Errorf("Invalid volume object for volume %s", volumeID)
 }
 
 func (s *ec2Ops) Name() string { return "aws" }
@@ -250,10 +252,13 @@ func (s *ec2Ops) DeviceMappings() (map[string]string, error) {
 			}
 
 			devicePath, err := s.getActualDevicePath(devName, *d.Ebs.VolumeId)
-			if err == nil {
-				devName = devicePath
+			if err != nil {
+				return nil, storageops.NewStorageError(
+					storageops.ErrInvalidDevicePath,
+					fmt.Sprintf("unable to get actual device path for %s. %v", devName, err),
+					s.instance)
 			}
-			m[devName] = *d.Ebs.VolumeId
+			m[devicePath] = *d.Ebs.VolumeId
 		}
 	}
 	return m, nil
