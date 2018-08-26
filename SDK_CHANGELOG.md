@@ -5,6 +5,11 @@
 
 ## Releases
 
+### v0.5.0 - Tech Preview (8/25/2018)
+
+* Added `queue_depth` to VolumeSpec and VolumeSpecUpdate
+* Remove values from VolumeSpecUpdate which cannot be updated [#590](https://github.com/libopenstorage/openstorage/issues/590)
+
 ### v0.4.0 - Tech Preview (8/24/2018)
 
 * Added bucket name and encryption key to SdkCredentialCreateRequest

@@ -36,7 +36,8 @@ func TestCmdMarshalProto(t *testing.T) {
  "compressed": false,
  "cascaded": false,
  "journal": false,
- "sharedv4": false
+ "sharedv4": false,
+ "queue_depth": 0
 }`,
 		data,
 	)

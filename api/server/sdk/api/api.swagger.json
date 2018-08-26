@@ -3223,7 +3223,7 @@
           "description": "FsResizeRequired if an FS resize is required on the volume."
         }
       },
-      "title": "Volume represents an abstract storage volume.\nVolume represents an abstract storage volume.\nswagger:model"
+      "title": "Volume represents an abstract storage volume.\nswagger:model"
     },
     "apiVolumeConsumer": {
       "type": "object",
@@ -3389,6 +3389,11 @@
           "type": "boolean",
           "format": "boolean",
           "description": "Sharedv4 is true if this volume can be accessed via sharedv4."
+        },
+        "queue_depth": {
+          "type": "integer",
+          "format": "int32",
+          "title": "QueueDepth defines the desired block device queue depth"
         }
       },
       "title": "VolumeSpec has the properties needed to create a volume.\nswagger:model"
@@ -3396,20 +3401,9 @@
     "apiVolumeSpecUpdate": {
       "type": "object",
       "properties": {
-        "ephemeral": {
-          "type": "boolean",
-          "format": "boolean"
-        },
         "size": {
           "type": "string",
           "format": "uint64"
-        },
-        "format": {
-          "$ref": "#/definitions/apiFSType"
-        },
-        "block_size": {
-          "type": "string",
-          "format": "int64"
         },
         "ha_level": {
           "type": "string",
@@ -3444,14 +3438,6 @@
           "$ref": "#/definitions/apiReplicaSet",
           "description": "ReplicaSet is the desired set of nodes for the volume data."
         },
-        "aggregation_level": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "encrypted": {
-          "type": "boolean",
-          "format": "boolean"
-        },
         "passphrase": {
           "type": "string"
         },
@@ -3469,18 +3455,6 @@
         "group": {
           "$ref": "#/definitions/apiGroup"
         },
-        "group_enforced": {
-          "type": "boolean",
-          "format": "boolean"
-        },
-        "compressed": {
-          "type": "boolean",
-          "format": "boolean"
-        },
-        "cascaded": {
-          "type": "boolean",
-          "format": "boolean"
-        },
         "journal": {
           "type": "boolean",
           "format": "boolean"
@@ -3488,6 +3462,10 @@
         "sharedv4": {
           "type": "boolean",
           "format": "boolean"
+        },
+        "queue_depth": {
+          "type": "integer",
+          "format": "int32"
         }
       },
       "title": "VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume"
