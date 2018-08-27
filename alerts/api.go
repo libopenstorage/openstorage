@@ -14,15 +14,21 @@ func NewManager(kv kvdb.Kvdb) Manager {
 
 // Filter API
 
-// NewQueryResourceTypeFilter creates a filter that matches on resource type.
+// NewQueryResourceTypeFilter creates a filter that matches on <resourceType>
 func NewQueryResourceTypeFilter(resourceType api.ResourceType) Filter {
 	return &filter{filterType: QueryResourceTypeFilter, value: resourceType}
 }
 
-// NewQueryAlertTypeFilter creates a filter that matches on alert type.
+// NewQueryAlertTypeFilter creates a filter that matches on <resourceType>/<alertType>
 func NewQueryAlertTypeFilter(alertType int64, resourceType api.ResourceType) Filter {
 	return &filter{filterType: QueryAlertTypeFilter, value: alertInfo{
 		alertType: alertType, resourceType: resourceType}}
+}
+
+// NewQueryResourceIDFilter creates a filter that matches on <resourceType>/<alertType>/<resourceID>
+func NewQueryResourceIDFilter(resourceID string, alertType int64, resourceType api.ResourceType) Filter {
+	return &filter{filterType: QueryResourceIDFilter, value: alertInfo{
+		resourceID: resourceID, alertType: alertType, resourceType: resourceType}}
 }
 
 // NewTimeFilter creates a filter that matches on alert raised in a given time window.

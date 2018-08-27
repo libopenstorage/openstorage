@@ -173,6 +173,20 @@ func TestManager_Enumerate(t *testing.T) {
 			expectedCount: 1,
 		},
 		{
+			name: "query resource id",
+			filters: []Filter{
+				NewQueryResourceIDFilter("maya", 12, api.ResourceType_RESOURCE_TYPE_DRIVE),
+			},
+			expectedCount: 1,
+		},
+		{
+			name: "query resource id",
+			filters: []Filter{
+				NewQueryResourceIDFilter("inca", 12, api.ResourceType_RESOURCE_TYPE_DRIVE),
+			},
+			expectedCount: 0,
+		},
+		{
 			name: "alert types",
 			filters: []Filter{
 				NewQueryAlertTypeFilter(10, api.ResourceType_RESOURCE_TYPE_DRIVE),
