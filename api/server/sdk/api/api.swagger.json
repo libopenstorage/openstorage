@@ -1,1383 +1,19 @@
 {
-  "swagger": "2.0",
-  "info": {
-    "title": "api/api.proto",
-    "version": "version not set"
-  },
-  "schemes": [
-    "http",
-    "https"
-  ],
   "consumes": [
     "application/json"
   ],
-  "produces": [
-    "application/json"
-  ],
-  "paths": {
-    "/v1/cloudbackups": {
-      "post": {
-        "summary": "Creates a backup request for a specified volume. Use\nOpenStorageCloudBackup.Status() to get the current status of the\nbackup request.",
-        "operationId": "Create",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkCloudBackupCreateResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/apiSdkCloudBackupCreateRequest"
-            }
-          }
-        ],
-        "tags": [
-          "OpenStorageCloudBackup"
-        ]
-      }
-    },
-    "/v1/cloudbackups/backup/catalog": {
-      "get": {
-        "summary": "Catalog returns a list of the contents in the backup",
-        "operationId": "Catalog",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkCloudBackupCatalogResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "backup_id",
-            "description": "Id of the backup.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "credential_id",
-            "description": "Credential id describe the credentials for the cloud.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "OpenStorageCloudBackup"
-        ]
-      }
-    },
-    "/v1/cloudbackups/backup/{backup_id}": {
-      "delete": {
-        "summary": "Deletes a backup stored in the cloud. If the backup is an incremental\nbackup and other backups are dependent on it, it will not be able to be deleted.",
-        "operationId": "Delete",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkCloudBackupDeleteResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "backup_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "credential_id",
-            "description": "Credential id is the credential for cloud to be used for the request.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "force",
-            "description": "Force Delete cloudbackup even if there are dependencies. This may be\nneeded if the backup is an incremental backup and subsequent backups\ndepend on this backup specified by `backup_id`.",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          }
-        ],
-        "tags": [
-          "OpenStorageCloudBackup"
-        ]
-      }
-    },
-    "/v1/cloudbackups/deleteall": {
-      "post": {
-        "summary": "DeleteAll deletes all the backups in the cloud for the specified volume.",
-        "operationId": "DeleteAll",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkCloudBackupDeleteAllResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/apiSdkCloudBackupDeleteAllRequest"
-            }
-          }
-        ],
-        "tags": [
-          "OpenStorageCloudBackup"
-        ]
-      }
-    },
-    "/v1/cloudbackups/restore": {
-      "post": {
-        "summary": "Restore creates a new volume from a backup id. The newly created volume\nhas an ha_level (number of replicas) of only 1. To increase the number of\nreplicas, use OpenStorageVolume.Set() to change the ha_level.",
-        "operationId": "Restore",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkCloudBackupRestoreResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/apiSdkCloudBackupRestoreRequest"
-            }
-          }
-        ],
-        "tags": [
-          "OpenStorageCloudBackup"
-        ]
-      }
-    },
-    "/v1/cloudbackups/schedules": {
-      "get": {
-        "summary": "Enumerate cloud backup schedules",
-        "operationId": "SchedEnumerate",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkCloudBackupSchedEnumerateResponse"
-            }
-          }
-        },
-        "tags": [
-          "OpenStorageCloudBackup"
-        ]
-      },
-      "post": {
-        "summary": "Create cloud backup schedule",
-        "operationId": "SchedCreate",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkCloudBackupSchedCreateResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/apiSdkCloudBackupSchedCreateRequest"
-            }
-          }
-        ],
-        "tags": [
-          "OpenStorageCloudBackup"
-        ]
-      }
-    },
-    "/v1/cloudbackups/schedules/{backup_schedule_id}": {
-      "delete": {
-        "summary": "Delete cloud backup schedule",
-        "operationId": "SchedDelete",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkCloudBackupSchedDeleteResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "backup_schedule_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "OpenStorageCloudBackup"
-        ]
-      }
-    },
-    "/v1/cloudbackups/statechange": {
-      "post": {
-        "summary": "StateChange can be used to stop, pause, and restart a backup",
-        "operationId": "StateChange",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkCloudBackupStateChangeResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/apiSdkCloudBackupStateChangeRequest"
-            }
-          }
-        ],
-        "tags": [
-          "OpenStorageCloudBackup"
-        ]
-      }
-    },
-    "/v1/cloudbackups/volume": {
-      "get": {
-        "summary": "Return a list of backups for the specified volume",
-        "operationId": "Enumerate",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkCloudBackupEnumerateResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "src_volume_id",
-            "description": "Optional source id of the volume for the request.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "cluster_id",
-            "description": "Cluster id is an optional parameter which defines the cluster.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "credential_id",
-            "description": "Credential id is the credential for cloud to be used for the request.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "all",
-            "description": "All if set to true, backups for all clusters in the cloud are processed.",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          }
-        ],
-        "tags": [
-          "OpenStorageCloudBackup"
-        ]
-      }
-    },
-    "/v1/cloudbackups/volume/history": {
-      "get": {
-        "summary": "History returns a list of backups for a specified volume",
-        "operationId": "History",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkCloudBackupHistoryResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "src_volume_id",
-            "description": "This optional value defines which history of backups is being\nrequested. If not provided, it will return the history for all volumes.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "OpenStorageCloudBackup"
-        ]
-      }
-    },
-    "/v1/cloudbackups/volume/status": {
-      "get": {
-        "summary": "Status returns the status of any cloud backups of a volume",
-        "operationId": "Status",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkCloudBackupStatusResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "volume_id",
-            "description": "This is an optional value which is used to get information on the\nstatus of a backup for the specified volume. If no volume id is provided,\nthen status for all volumes is returned.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "local",
-            "description": "Local indicates if only those backups/restores that are\nactive on current node must be returned.",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          }
-        ],
-        "tags": [
-          "OpenStorageCloudBackup"
-        ]
-      }
-    },
-    "/v1/clusters/alerts": {
-      "get": {
-        "summary": "AlertEnumerate returns a list of alerts from the storage cluster\nIn REST, use the request values as query parameters.",
-        "operationId": "AlertEnumerate",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkClusterAlertEnumerateResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "time_start",
-            "description": "Start time of alerts.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "time_end",
-            "description": "End time of alerts.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "resource",
-            "description": "Type of resource.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "enum": [
-              "RESOURCE_TYPE_NONE",
-              "RESOURCE_TYPE_VOLUME",
-              "RESOURCE_TYPE_NODE",
-              "RESOURCE_TYPE_CLUSTER",
-              "RESOURCE_TYPE_DRIVE"
-            ],
-            "default": "RESOURCE_TYPE_NONE"
-          }
-        ],
-        "tags": [
-          "OpenStorageCluster"
-        ]
-      }
-    },
-    "/v1/clusters/alerts/clear": {
-      "post": {
-        "summary": "AlertClear clears the alert for a given resource",
-        "operationId": "AlertClear",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkClusterAlertClearResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/apiSdkClusterAlertClearRequest"
-            }
-          }
-        ],
-        "tags": [
-          "OpenStorageCluster"
-        ]
-      }
-    },
-    "/v1/clusters/alerts/{alert_id}": {
-      "delete": {
-        "summary": "AlertDelete deletes an alert for all resources",
-        "operationId": "AlertDelete",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkClusterAlertDeleteResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "alert_id",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "format": "int64"
-          },
-          {
-            "name": "resource",
-            "description": "Type of resource (required).",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "enum": [
-              "RESOURCE_TYPE_NONE",
-              "RESOURCE_TYPE_VOLUME",
-              "RESOURCE_TYPE_NODE",
-              "RESOURCE_TYPE_CLUSTER",
-              "RESOURCE_TYPE_DRIVE"
-            ],
-            "default": "RESOURCE_TYPE_NONE"
-          }
-        ],
-        "tags": [
-          "OpenStorageCluster"
-        ]
-      }
-    },
-    "/v1/clusters/current": {
-      "get": {
-        "summary": "InspectCurrent returns information about the current cluster",
-        "operationId": "InspectCurrent",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkClusterInspectCurrentResponse"
-            }
-          }
-        },
-        "tags": [
-          "OpenStorageCluster"
-        ]
-      }
-    },
-    "/v1/credentials": {
-      "get": {
-        "summary": "Enumerate returns a list of credential ids",
-        "operationId": "Enumerate",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkCredentialEnumerateResponse"
-            }
-          }
-        },
-        "tags": [
-          "OpenStorageCredentials"
-        ]
-      },
-      "post": {
-        "summary": "Create is used to submit cloud credentials. It will return an\nid of the credentials once they are verified to work.",
-        "description": "##### Example\n{% codetabs name=\"Golang\", type=\"go\" -%}\nid, err := client.Create(context.Background(), \u0026api.SdkCredentialCreateRequest{\n    Name: \"awscred\",\n    CredentialType: \u0026api.SdkCredentialCreateRequest_AwsCredential{\n      AwsCredential: \u0026api.SdkAwsCredentialRequest{\n      AccessKey: \"dummy-access\",\n      SecretKey: \"dummy-secret\",\n      Endpoint:  \"dummy-endpoint\",\n      Region:    \"dummy-region\",\n    },\n  },\n})\n{%- language name=\"Python\", type=\"py\" -%}\nen_resp = client.Create(api_pb2.SdkCredentialCreateRequest(\n  name='awscred',\n  aws_credential=api_pb2.SdkAwsCredentialRequest(\n    access_key='dummy-access',\n    secret_key='dumm-secret',\n    endpoint='dummy-endpoint',\n    region='dummy-region')))\n{%- endcodetabs %}",
-        "operationId": "Create",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkCredentialCreateResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/apiSdkCredentialCreateRequest"
-            }
-          }
-        ],
-        "tags": [
-          "OpenStorageCredentials"
-        ]
-      }
-    },
-    "/v1/credentials/{credential_id}": {
-      "get": {
-        "summary": "Inspect returns the information about a credential, but does not return the secret key.",
-        "operationId": "Inspect",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkCredentialInspectResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "credential_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "OpenStorageCredentials"
-        ]
-      },
-      "delete": {
-        "summary": "Delete a specified credential",
-        "operationId": "Delete",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkCredentialDeleteResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "credential_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "OpenStorageCredentials"
-        ]
-      }
-    },
-    "/v1/credentials/{credential_id}/validate": {
-      "get": {
-        "summary": "Validate is used to validate credentials",
-        "operationId": "Validate",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkCredentialValidateResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "credential_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "OpenStorageCredentials"
-        ]
-      }
-    },
-    "/v1/identities/capabilities": {
-      "get": {
-        "summary": "Capabilities returns the supported services by the cluster.\nThis allows SDK implementations to advertise their supported\nservices as the API matures. With this information, clients\ncan determine supported services from storage clusters at\ndifferent versions.",
-        "operationId": "Capabilities",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkIdentityCapabilitiesResponse"
-            }
-          }
-        },
-        "tags": [
-          "OpenStorageIdentity"
-        ]
-      }
-    },
-    "/v1/identities/version": {
-      "get": {
-        "summary": "Version returns version information about the system.",
-        "operationId": "Version",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkIdentityVersionResponse"
-            }
-          }
-        },
-        "tags": [
-          "OpenStorageIdentity"
-        ]
-      }
-    },
-    "/v1/nodes": {
-      "get": {
-        "summary": "Enumerate returns the ids of all the nodes in the current cluster",
-        "operationId": "Enumerate",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkNodeEnumerateResponse"
-            }
-          }
-        },
-        "tags": [
-          "OpenStorageNode"
-        ]
-      }
-    },
-    "/v1/nodes/current": {
-      "get": {
-        "summary": "InspectCurrent returns information about the storage node\nwhere the client is currently connected to.",
-        "operationId": "InspectCurrent",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkNodeInspectCurrentResponse"
-            }
-          }
-        },
-        "tags": [
-          "OpenStorageNode"
-        ]
-      }
-    },
-    "/v1/nodes/node/{node_id}": {
-      "get": {
-        "summary": "Inspect returns information about the specified node",
-        "operationId": "Inspect",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkNodeInspectResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "node_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "OpenStorageNode"
-        ]
-      }
-    },
-    "/v1/objectstores": {
-      "post": {
-        "summary": "Creates creates an object store endpoint on specified volume",
-        "operationId": "Create",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkObjectstoreCreateResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/apiSdkObjectstoreCreateRequest"
-            }
-          }
-        ],
-        "tags": [
-          "OpenStorageObjectstore"
-        ]
-      }
-    },
-    "/v1/objectstores/{objectstore_id}": {
-      "get": {
-        "summary": "Inspect returns information about the object store endpoint",
-        "operationId": "Inspect",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkObjectstoreInspectResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "objectstore_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "OpenStorageObjectstore"
-        ]
-      },
-      "delete": {
-        "summary": "Delete destroys the object store endpoint on the volume",
-        "operationId": "Delete",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkObjectstoreDeleteResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "objectstore_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "OpenStorageObjectstore"
-        ]
-      },
-      "put": {
-        "summary": "Updates provided objectstore status.\nThis call can be used to stop and start the server while maintaining the same\nobject storage id.",
-        "operationId": "Update",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkObjectstoreUpdateResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "objectstore_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/apiSdkObjectstoreUpdateRequest"
-            }
-          }
-        ],
-        "tags": [
-          "OpenStorageObjectstore"
-        ]
-      }
-    },
-    "/v1/schedulepolicies": {
-      "get": {
-        "summary": "Enumerate returns a list of schedules",
-        "operationId": "Enumerate",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkSchedulePolicyEnumerateResponse"
-            }
-          }
-        },
-        "tags": [
-          "OpenStorageSchedulePolicy"
-        ]
-      },
-      "post": {
-        "summary": "Create creates a new snapshot schedule. They can be setup daily,\nweekly, or monthly.",
-        "operationId": "Create",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkSchedulePolicyCreateResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/apiSdkSchedulePolicyCreateRequest"
-            }
-          }
-        ],
-        "tags": [
-          "OpenStorageSchedulePolicy"
-        ]
-      },
-      "put": {
-        "summary": "Update a snapshot schedule",
-        "operationId": "Update",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkSchedulePolicyUpdateResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/apiSdkSchedulePolicyUpdateRequest"
-            }
-          }
-        ],
-        "tags": [
-          "OpenStorageSchedulePolicy"
-        ]
-      }
-    },
-    "/v1/schedulepolicies/{name}": {
-      "get": {
-        "summary": "Inspect returns information about a specified schedule",
-        "operationId": "Inspect",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkSchedulePolicyInspectResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "name",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "OpenStorageSchedulePolicy"
-        ]
-      },
-      "delete": {
-        "summary": "Delete removes a snapshot schedule",
-        "operationId": "Delete",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkSchedulePolicyDeleteResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "name",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "OpenStorageSchedulePolicy"
-        ]
-      }
-    },
-    "/v1/volumes": {
-      "get": {
-        "summary": "Enumerate returns a list of volume ids",
-        "operationId": "Enumerate",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeEnumerateResponse"
-            }
-          }
-        },
-        "tags": [
-          "OpenStorageVolume"
-        ]
-      },
-      "post": {
-        "summary": "Create creates a volume according to the specification provided",
-        "description": "##### Example\n{% codetabs name=\"Golang\", type=\"go\" -%}\nid, err := client.Create(context.Background(), \u0026api.SdkVolumeCreateRequest{\n  Name: \"volume-12345-east\",\n  Spec: \u0026api.VolumeSpec {\n    Size: 1234567,\n  },\n})\n{%- language name=\"Python\", type=\"py\" -%}\nen_resp = client.Create(api_pb2.SdkVolumeCreateRequest(\n  name=\"volume-12345-east\",\n  spec=api_pb2.VolumeSpec(size=1234567)))\n{%- endcodetabs %}",
-        "operationId": "Create",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeCreateResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeCreateRequest"
-            }
-          }
-        ],
-        "tags": [
-          "OpenStorageVolume"
-        ]
-      }
-    },
-    "/v1/volumes/attach": {
-      "post": {
-        "summary": "Attach attaches device to the host that the client is communicating with.\nNOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more\ninformation about a new feature to allow attachment to any node.",
-        "operationId": "Attach",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeAttachResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeAttachRequest"
-            }
-          }
-        ],
-        "tags": [
-          "OpenStorageVolume"
-        ]
-      }
-    },
-    "/v1/volumes/clone": {
-      "post": {
-        "summary": "Clone creates a new writable volume cloned from an existing volume",
-        "operationId": "Clone",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeCloneResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeCloneRequest"
-            }
-          }
-        ],
-        "tags": [
-          "OpenStorageVolume"
-        ]
-      }
-    },
-    "/v1/volumes/detach": {
-      "post": {
-        "summary": "Detaches a the volume from the host",
-        "operationId": "Detach",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeDetachResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeDetachRequest"
-            }
-          }
-        ],
-        "tags": [
-          "OpenStorageVolume"
-        ]
-      }
-    },
-    "/v1/volumes/filters": {
-      "post": {
-        "summary": "Enumerate returns a list of volume ids that match the labels if any are provided.",
-        "operationId": "EnumerateWithFilters",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeEnumerateWithFiltersResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeEnumerateWithFiltersRequest"
-            }
-          }
-        ],
-        "tags": [
-          "OpenStorageVolume"
-        ]
-      }
-    },
-    "/v1/volumes/mount": {
-      "post": {
-        "summary": "Mount mounts an attached volume in the host that the client is communicating with\nNOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more\ninformation about a new feature to allow attachment to any node.",
-        "operationId": "Mount",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeMountResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeMountRequest"
-            }
-          }
-        ],
-        "tags": [
-          "OpenStorageVolume"
-        ]
-      }
-    },
-    "/v1/volumes/snapshots": {
-      "post": {
-        "summary": "SnapshotCreate creates a snapshot of a volume. This creates an immutable (read-only),\npoint-in-time snapshot of a volume. To create a new writable volume from\na snapshot, please use OpenStorageVolume.Clone().",
-        "operationId": "SnapshotCreate",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeSnapshotCreateResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeSnapshotCreateRequest"
-            }
-          }
-        ],
-        "tags": [
-          "OpenStorageVolume"
-        ]
-      }
-    },
-    "/v1/volumes/snapshots/restore": {
-      "post": {
-        "summary": "SnapshotRestore restores a volume to a specified snapshot",
-        "operationId": "SnapshotRestore",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeSnapshotRestoreResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeSnapshotRestoreRequest"
-            }
-          }
-        ],
-        "tags": [
-          "OpenStorageVolume"
-        ]
-      }
-    },
-    "/v1/volumes/snapshots/{volume_id}": {
-      "get": {
-        "summary": "SnapshotEnumerate returns a list of snapshots for a specific volume\nthat match the labels provided if any.",
-        "operationId": "SnapshotEnumerate",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeSnapshotEnumerateResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "volume_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "OpenStorageVolume"
-        ]
-      }
-    },
-    "/v1/volumes/snapshots/{volume_id}/filters": {
-      "post": {
-        "summary": "SnapshotEnumerate returns a list of snapshots for a specific volume\nthat match the labels provided if any.",
-        "operationId": "SnapshotEnumerateWithFilters",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeSnapshotEnumerateWithFiltersResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "volume_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeSnapshotEnumerateWithFiltersRequest"
-            }
-          }
-        ],
-        "tags": [
-          "OpenStorageVolume"
-        ]
-      }
-    },
-    "/v1/volumes/stats/{volume_id}": {
-      "get": {
-        "summary": "Stats returns the statistics for the requested volume",
-        "operationId": "Stats",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeStatsResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "volume_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "not_cumulative",
-            "description": "When set to false the stats are in /proc/diskstats style stats.\nWhen set to true the stats are stats for a specific duration.",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          }
-        ],
-        "tags": [
-          "OpenStorageVolume"
-        ]
-      }
-    },
-    "/v1/volumes/unmount": {
-      "post": {
-        "summary": "Unmount unmounts a mounted volume in the host that the client is communicating with\nNOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more\ninformation about a new feature to allow attachment to any node.",
-        "operationId": "Unmount",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeUnmountResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeUnmountRequest"
-            }
-          }
-        ],
-        "tags": [
-          "OpenStorageVolume"
-        ]
-      }
-    },
-    "/v1/volumes/{volume_id}": {
-      "get": {
-        "summary": "Inspect returns information about a volume",
-        "operationId": "Inspect",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeInspectResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "volume_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "OpenStorageVolume"
-        ]
-      },
-      "delete": {
-        "summary": "Delete deletes the provided volume",
-        "operationId": "Delete",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeDeleteResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "volume_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "OpenStorageVolume"
-        ]
-      },
-      "put": {
-        "summary": "Update provides a method for manipulating the specification and attributes of a volume.\nSet can be used to resize a volume, update labels, change replica count, and much more.",
-        "operationId": "Update",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeUpdateResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "volume_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeUpdateRequest"
-            }
-          }
-        ],
-        "tags": [
-          "OpenStorageVolume"
-        ]
-      }
-    }
-  },
   "definitions": {
     "SdkServiceCapabilityOpenStorageService": {
-      "type": "object",
       "properties": {
         "type": {
           "$ref": "#/definitions/SdkServiceCapabilityOpenStorageServiceType",
           "title": "Type of service supported"
         }
-      }
+      },
+      "type": "object"
     },
     "SdkServiceCapabilityOpenStorageServiceType": {
-      "type": "string",
+      "default": "UNKNOWN",
       "enum": [
         "UNKNOWN",
         "CLUSTER",
@@ -1388,92 +24,92 @@
         "SCHEDULE_POLICY",
         "VOLUME"
       ],
-      "default": "UNKNOWN",
-      "title": "- UNKNOWN: Unknown service\n - CLUSTER: Cluster management\n - CLOUD_BACKUP: Cloud backup of volumes management\n - CREDENTIALS: Credentials management\n - NODE: Node management\n - OBJECT_STORAGE: Object Storage management\n - SCHEDULE_POLICY: Schedule policy management\n - VOLUME: Volume management"
+      "title": "- UNKNOWN: Unknown service\n - CLUSTER: Cluster management\n - CLOUD_BACKUP: Cloud backup of volumes management\n - CREDENTIALS: Credentials management\n - NODE: Node management\n - OBJECT_STORAGE: Object Storage management\n - SCHEDULE_POLICY: Schedule policy management\n - VOLUME: Volume management",
+      "type": "string"
     },
     "apiAlert": {
-      "type": "object",
       "properties": {
-        "id": {
-          "type": "string",
-          "format": "int64",
-          "title": "Id for Alert"
-        },
-        "severity": {
-          "$ref": "#/definitions/apiSeverityType",
-          "title": "Severity of the Alert"
-        },
         "alert_type": {
-          "type": "string",
           "format": "int64",
-          "title": "AlertType user defined alert type"
+          "title": "AlertType user defined alert type",
+          "type": "string"
+        },
+        "cleared": {
+          "format": "boolean",
+          "title": "Cleared Flag",
+          "type": "boolean"
+        },
+        "count": {
+          "description": "Count of such alerts raised so far.",
+          "format": "int64",
+          "type": "string"
+        },
+        "first_seen": {
+          "description": "Timestamp when such alert was raised the very first time.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "id": {
+          "format": "int64",
+          "title": "Id for Alert",
+          "type": "string"
         },
         "message": {
-          "type": "string",
-          "title": "Message describing the Alert"
-        },
-        "timestamp": {
-          "type": "string",
-          "format": "date-time",
-          "title": "Timestamp when Alert occured"
-        },
-        "resource_id": {
-          "type": "string",
-          "title": "ResourceId where Alert occured"
+          "title": "Message describing the Alert",
+          "type": "string"
         },
         "resource": {
           "$ref": "#/definitions/apiResourceType",
           "title": "Resource where Alert occured"
         },
-        "cleared": {
-          "type": "boolean",
-          "format": "boolean",
-          "title": "Cleared Flag"
+        "resource_id": {
+          "title": "ResourceId where Alert occured",
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/definitions/apiSeverityType",
+          "title": "Severity of the Alert"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp when Alert occured",
+          "type": "string"
         },
         "ttl": {
-          "type": "string",
           "format": "uint64",
-          "title": "Time-to-live in seconds for this Alert"
+          "title": "Time-to-live in seconds for this Alert",
+          "type": "string"
         },
         "unique_tag": {
-          "type": "string",
-          "title": "UniqueTag helps identify a unique alert for a given resouce"
-        },
-        "count": {
-          "type": "string",
-          "format": "int64",
-          "description": "Count of such alerts raised so far."
-        },
-        "first_seen": {
-          "type": "string",
-          "format": "date-time",
-          "description": "Timestamp when such alert was raised the very first time."
+          "title": "UniqueTag helps identify a unique alert for a given resouce",
+          "type": "string"
         }
       },
-      "title": "Alert is a structure that represents an alert object"
+      "title": "Alert is a structure that represents an alert object",
+      "type": "object"
     },
     "apiAttachState": {
-      "type": "string",
+      "default": "ATTACH_STATE_EXTERNAL",
       "enum": [
         "ATTACH_STATE_EXTERNAL",
         "ATTACH_STATE_INTERNAL",
         "ATTACH_STATE_INTERNAL_SWITCH"
       ],
-      "default": "ATTACH_STATE_EXTERNAL",
-      "title": "- ATTACH_STATE_EXTERNAL: Attached and available externally\n - ATTACH_STATE_INTERNAL: Attached but only available internally\n - ATTACH_STATE_INTERNAL_SWITCH: Switching from External to Internal"
+      "title": "- ATTACH_STATE_EXTERNAL: Attached and available externally\n - ATTACH_STATE_INTERNAL: Attached but only available internally\n - ATTACH_STATE_INTERNAL_SWITCH: Switching from External to Internal",
+      "type": "string"
     },
     "apiCosType": {
-      "type": "string",
+      "default": "NONE",
       "enum": [
         "NONE",
         "LOW",
         "MEDIUM",
         "HIGH"
       ],
-      "default": "NONE"
+      "type": "string"
     },
     "apiFSType": {
-      "type": "string",
+      "default": "FS_TYPE_NONE",
       "enum": [
         "FS_TYPE_NONE",
         "FS_TYPE_BTRFS",
@@ -1485,20 +121,20 @@
         "FS_TYPE_ZFS",
         "FS_TYPE_XFSv2"
       ],
-      "default": "FS_TYPE_NONE"
+      "type": "string"
     },
     "apiGroup": {
-      "type": "object",
       "properties": {
         "id": {
-          "type": "string",
-          "description": "Id common identifier across volumes that have the same group."
+          "description": "Id common identifier across volumes that have the same group.",
+          "type": "string"
         }
       },
-      "title": "Group represents VolumeGroup / namespace\nAll volumes in the same group share this object.\nswagger:model"
+      "title": "Group represents VolumeGroup / namespace\nAll volumes in the same group share this object.\nswagger:model",
+      "type": "object"
     },
     "apiIoProfile": {
-      "type": "string",
+      "default": "IO_PROFILE_SEQUENTIAL",
       "enum": [
         "IO_PROFILE_SEQUENTIAL",
         "IO_PROFILE_RANDOM",
@@ -1506,78 +142,78 @@
         "IO_PROFILE_DB_REMOTE",
         "IO_PROFILE_CMS"
       ],
-      "default": "IO_PROFILE_SEQUENTIAL"
+      "type": "string"
     },
     "apiObjectstoreInfo": {
-      "type": "object",
       "properties": {
-        "uuid": {
-          "type": "string",
-          "title": "UUID of objectstore"
+        "access_key": {
+          "title": "AccessKey for login into objectstore",
+          "type": "string"
         },
-        "volume_id": {
-          "type": "string",
-          "title": "VolumeID of volume used by object store"
-        },
-        "enabled": {
-          "type": "boolean",
-          "format": "boolean",
-          "title": "Enable/Disable created objectstore"
-        },
-        "status": {
-          "type": "string",
-          "title": "Status of objectstore running/failed"
+        "access_port": {
+          "format": "int64",
+          "title": "AccessPort is objectstore server port",
+          "type": "string"
         },
         "action": {
-          "type": "string",
           "format": "int64",
-          "title": "Action being taken on this objectstore"
+          "title": "Action being taken on this objectstore",
+          "type": "string"
         },
-        "access_key": {
-          "type": "string",
-          "title": "AccessKey for login into objectstore"
+        "current_endpoint": {
+          "title": "CurrentEndpoint on which objectstore server is accessible",
+          "type": "string"
         },
-        "secret_key": {
-          "type": "string",
-          "title": "SecretKey for login into objectstore"
+        "enabled": {
+          "format": "boolean",
+          "title": "Enable/Disable created objectstore",
+          "type": "boolean"
         },
         "endpoints": {
-          "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "Endpoints for accessing objectstore"
-        },
-        "current_endpoint": {
-          "type": "string",
-          "title": "CurrentEndpoint on which objectstore server is accessible"
-        },
-        "access_port": {
-          "type": "string",
-          "format": "int64",
-          "title": "AccessPort is objectstore server port"
+          "title": "Endpoints for accessing objectstore",
+          "type": "array"
         },
         "region": {
-          "type": "string",
-          "title": "Region for this objectstore"
+          "title": "Region for this objectstore",
+          "type": "string"
+        },
+        "secret_key": {
+          "title": "SecretKey for login into objectstore",
+          "type": "string"
+        },
+        "status": {
+          "title": "Status of objectstore running/failed",
+          "type": "string"
+        },
+        "uuid": {
+          "title": "UUID of objectstore",
+          "type": "string"
+        },
+        "volume_id": {
+          "title": "VolumeID of volume used by object store",
+          "type": "string"
         }
       },
-      "title": "ObjectstoreInfo is a structure that has current objectstore info\nswagger:model"
+      "title": "ObjectstoreInfo is a structure that has current objectstore info\nswagger:model",
+      "type": "object"
     },
     "apiReplicaSet": {
-      "type": "object",
       "properties": {
         "nodes": {
-          "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "type": "array"
         }
       },
-      "title": "ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure\ncoded - for clustered storage arrays\nswagger:model"
+      "title": "ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure\ncoded - for clustered storage arrays\nswagger:model",
+      "type": "object"
     },
     "apiResourceType": {
-      "type": "string",
+      "default": "RESOURCE_TYPE_NONE",
       "enum": [
         "RESOURCE_TYPE_NONE",
         "RESOURCE_TYPE_VOLUME",
@@ -1585,418 +221,419 @@
         "RESOURCE_TYPE_CLUSTER",
         "RESOURCE_TYPE_DRIVE"
       ],
-      "default": "RESOURCE_TYPE_NONE"
+      "type": "string"
     },
     "apiRuntimeStateMap": {
-      "type": "object",
       "properties": {
         "runtime_state": {
-          "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "type": "object"
         }
       },
-      "title": "RuntimeStateMap is a list of name value mapping of driver specific runtime\ninformation.\nswagger:model"
+      "title": "RuntimeStateMap is a list of name value mapping of driver specific runtime\ninformation.\nswagger:model",
+      "type": "object"
     },
     "apiSdkAwsCredentialRequest": {
-      "type": "object",
       "properties": {
         "access_key": {
-          "type": "string",
-          "title": "Access key"
+          "title": "Access key",
+          "type": "string"
+        },
+        "disable_ssl": {
+          "format": "boolean",
+          "title": "(optional) Disable SSL connection",
+          "type": "boolean"
+        },
+        "endpoint": {
+          "title": "Endpoint",
+          "type": "string"
+        },
+        "region": {
+          "title": "Region",
+          "type": "string"
         },
         "secret_key": {
-          "type": "string",
-          "title": "Secret key"
-        },
-        "endpoint": {
-          "type": "string",
-          "title": "Endpoint"
-        },
-        "region": {
-          "type": "string",
-          "title": "Region"
-        },
-        "disable_ssl": {
-          "type": "boolean",
-          "format": "boolean",
-          "title": "(optional) Disable SSL connection"
+          "title": "Secret key",
+          "type": "string"
         }
       },
-      "title": "Defines credentials for Aws/S3 endpoints"
+      "title": "Defines credentials for Aws/S3 endpoints",
+      "type": "object"
     },
     "apiSdkAwsCredentialResponse": {
-      "type": "object",
       "properties": {
         "access_key": {
-          "type": "string",
-          "title": "Access key"
-        },
-        "endpoint": {
-          "type": "string",
-          "title": "Endpoint"
-        },
-        "region": {
-          "type": "string",
-          "title": "Region"
+          "title": "Access key",
+          "type": "string"
         },
         "disable_ssl": {
-          "type": "boolean",
           "format": "boolean",
-          "title": "(optional) Disable SSL connection"
+          "title": "(optional) Disable SSL connection",
+          "type": "boolean"
+        },
+        "endpoint": {
+          "title": "Endpoint",
+          "type": "string"
+        },
+        "region": {
+          "title": "Region",
+          "type": "string"
         }
       },
-      "title": "Defines the response for AWS/S3 credentials"
+      "title": "Defines the response for AWS/S3 credentials",
+      "type": "object"
     },
     "apiSdkAzureCredentialRequest": {
-      "type": "object",
       "properties": {
-        "account_name": {
-          "type": "string",
-          "title": "Account name"
-        },
         "account_key": {
-          "type": "string",
-          "title": "Account key"
+          "title": "Account key",
+          "type": "string"
+        },
+        "account_name": {
+          "title": "Account name",
+          "type": "string"
         }
       },
-      "title": "Defines credentials for Azure"
+      "title": "Defines credentials for Azure",
+      "type": "object"
     },
     "apiSdkAzureCredentialResponse": {
-      "type": "object",
       "properties": {
         "account_name": {
-          "type": "string",
-          "title": "Account name"
+          "title": "Account name",
+          "type": "string"
         }
       },
-      "title": "Defines the response for Azure credentials"
+      "title": "Defines the response for Azure credentials",
+      "type": "object"
     },
     "apiSdkCloudBackupCatalogResponse": {
-      "type": "object",
       "properties": {
         "contents": {
-          "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "Contents is listing of backup contents"
+          "title": "Contents is listing of backup contents",
+          "type": "array"
         }
       },
-      "title": "Defines a response containing the contents of a backup stored by a cloud provider"
+      "title": "Defines a response containing the contents of a backup stored by a cloud provider",
+      "type": "object"
     },
     "apiSdkCloudBackupCreateRequest": {
-      "type": "object",
       "properties": {
-        "volume_id": {
-          "type": "string",
-          "title": "VolumeID of the volume for which cloudbackup is requested"
-        },
         "credential_id": {
-          "type": "string",
-          "title": "Credential id refers to the cloud credentials needed to backup"
+          "title": "Credential id refers to the cloud credentials needed to backup",
+          "type": "string"
         },
         "full": {
-          "type": "boolean",
           "format": "boolean",
-          "title": "Full indicates if full backup is desired even though incremental is possible"
+          "title": "Full indicates if full backup is desired even though incremental is possible",
+          "type": "boolean"
+        },
+        "volume_id": {
+          "title": "VolumeID of the volume for which cloudbackup is requested",
+          "type": "string"
         }
       },
-      "title": "Defines a request to create a backup of a volume to the cloud"
+      "title": "Defines a request to create a backup of a volume to the cloud",
+      "type": "object"
     },
     "apiSdkCloudBackupCreateResponse": {
-      "type": "object",
-      "title": "Empty response"
+      "title": "Empty response",
+      "type": "object"
     },
     "apiSdkCloudBackupDeleteAllRequest": {
-      "type": "object",
       "properties": {
-        "src_volume_id": {
-          "type": "string",
-          "title": "id of the volume for the request"
-        },
         "credential_id": {
-          "type": "string",
-          "title": "Credential id is the credential for cloud to be used for the request"
+          "title": "Credential id is the credential for cloud to be used for the request",
+          "type": "string"
+        },
+        "src_volume_id": {
+          "title": "id of the volume for the request",
+          "type": "string"
         }
       },
-      "title": "Defines a request to delete all the backups stored by a cloud provider\nfor a specified volume"
+      "title": "Defines a request to delete all the backups stored by a cloud provider\nfor a specified volume",
+      "type": "object"
     },
     "apiSdkCloudBackupDeleteAllResponse": {
-      "type": "object",
-      "title": "Empty response"
+      "title": "Empty response",
+      "type": "object"
     },
     "apiSdkCloudBackupDeleteResponse": {
-      "type": "object",
-      "title": "Empty response"
+      "title": "Empty response",
+      "type": "object"
     },
     "apiSdkCloudBackupEnumerateResponse": {
-      "type": "object",
       "properties": {
         "backups": {
-          "type": "array",
           "items": {
             "$ref": "#/definitions/apiSdkCloudBackupInfo"
-          }
+          },
+          "type": "array"
         }
       },
-      "title": "Defines a response which lists all the backups stored by a cloud provider"
+      "title": "Defines a response which lists all the backups stored by a cloud provider",
+      "type": "object"
     },
     "apiSdkCloudBackupHistoryItem": {
-      "type": "object",
       "properties": {
         "src_volume_id": {
-          "type": "string",
-          "title": "SrcVolumeID is volume ID which was backedup"
-        },
-        "timestamp": {
-          "type": "string",
-          "format": "date-time",
-          "title": "TimeStamp is the time at which either backup completed/failed"
+          "title": "SrcVolumeID is volume ID which was backedup",
+          "type": "string"
         },
         "status": {
           "$ref": "#/definitions/apiSdkCloudBackupStatusType",
           "title": "Status indicates whether backup was completed/failed"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "TimeStamp is the time at which either backup completed/failed",
+          "type": "string"
         }
       },
-      "title": "SdkCloudBackupHistoryItem contains information about a backup for a\nspecific volume"
+      "title": "SdkCloudBackupHistoryItem contains information about a backup for a\nspecific volume",
+      "type": "object"
     },
     "apiSdkCloudBackupHistoryResponse": {
-      "type": "object",
       "properties": {
         "history_list": {
-          "type": "array",
           "items": {
             "$ref": "#/definitions/apiSdkCloudBackupHistoryItem"
           },
-          "title": "HistoryList is list of past backups on this volume"
+          "title": "HistoryList is list of past backups on this volume",
+          "type": "array"
         }
       },
-      "title": "Defines a response containing a list of history of backups to a cloud provider"
+      "title": "Defines a response containing a list of history of backups to a cloud provider",
+      "type": "object"
     },
     "apiSdkCloudBackupInfo": {
-      "type": "object",
       "properties": {
         "id": {
-          "type": "string",
-          "title": "This is the id as represented by the cloud provider"
-        },
-        "src_volume_id": {
-          "type": "string",
-          "title": "Source volumeID of the backup"
-        },
-        "src_volume_name": {
-          "type": "string",
-          "title": "Name of the sourceVolume of the backup"
-        },
-        "timestamp": {
-          "type": "string",
-          "format": "date-time",
-          "title": "Timestamp is the timestamp at which the source volume\nwas backed up to cloud"
+          "title": "This is the id as represented by the cloud provider",
+          "type": "string"
         },
         "metadata": {
-          "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "title": "Metadata associated with the backup"
+          "title": "Metadata associated with the backup",
+          "type": "object"
+        },
+        "src_volume_id": {
+          "title": "Source volumeID of the backup",
+          "type": "string"
+        },
+        "src_volume_name": {
+          "title": "Name of the sourceVolume of the backup",
+          "type": "string"
         },
         "status": {
           "$ref": "#/definitions/apiSdkCloudBackupStatusType",
           "title": "Status indicates the status of the backup"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp is the timestamp at which the source volume\nwas backed up to cloud",
+          "type": "string"
         }
       },
-      "title": "SdkCloudBackupInfo has information about a backup stored by a cloud provider"
+      "title": "SdkCloudBackupInfo has information about a backup stored by a cloud provider",
+      "type": "object"
     },
     "apiSdkCloudBackupOpType": {
-      "type": "string",
+      "default": "SdkCloudBackupOpTypeUnknown",
+      "description": "- SdkCloudBackupOpTypeUnknown: Unknown\n - SdkCloudBackupOpTypeBackupOp: Backup\n - SdkCloudBackupOpTypeRestoreOp: Restore",
       "enum": [
         "SdkCloudBackupOpTypeUnknown",
         "SdkCloudBackupOpTypeBackupOp",
         "SdkCloudBackupOpTypeRestoreOp"
       ],
-      "default": "SdkCloudBackupOpTypeUnknown",
-      "description": "- SdkCloudBackupOpTypeUnknown: Unknown\n - SdkCloudBackupOpTypeBackupOp: Backup\n - SdkCloudBackupOpTypeRestoreOp: Restore",
-      "title": "CloudBackup operations types"
+      "title": "CloudBackup operations types",
+      "type": "string"
     },
     "apiSdkCloudBackupRequestedState": {
-      "type": "string",
+      "default": "SdkCloudBackupRequestedStateUnknown",
+      "description": "- SdkCloudBackupRequestedStateUnknown: Unknown state\n - SdkCloudBackupRequestedStatePause: Pause the backup or restore\n - SdkCloudBackupRequestedStateResume: Resume the backup or restore\n - SdkCloudBackupRequestedStateStop: Stop a backup or restore",
       "enum": [
         "SdkCloudBackupRequestedStateUnknown",
         "SdkCloudBackupRequestedStatePause",
         "SdkCloudBackupRequestedStateResume",
         "SdkCloudBackupRequestedStateStop"
       ],
-      "default": "SdkCloudBackupRequestedStateUnknown",
-      "description": "- SdkCloudBackupRequestedStateUnknown: Unknown state\n - SdkCloudBackupRequestedStatePause: Pause the backup or restore\n - SdkCloudBackupRequestedStateResume: Resume the backup or restore\n - SdkCloudBackupRequestedStateStop: Stop a backup or restore",
-      "title": "SdkCloudBackupRequestedState defines states to set a specified backup or restore\nto or from a cloud provider"
+      "title": "SdkCloudBackupRequestedState defines states to set a specified backup or restore\nto or from a cloud provider",
+      "type": "string"
     },
     "apiSdkCloudBackupRestoreRequest": {
-      "type": "object",
       "properties": {
         "backup_id": {
-          "type": "string",
-          "title": "Backup ID being restored"
-        },
-        "restore_volume_name": {
-          "type": "string",
-          "title": "Optional volume Name of the new volume to be created\nin the cluster for restoring the cloudbackup"
+          "title": "Backup ID being restored",
+          "type": "string"
         },
         "credential_id": {
-          "type": "string",
-          "title": "The credential to be used for restore operation"
+          "title": "The credential to be used for restore operation",
+          "type": "string"
         },
         "node_id": {
-          "type": "string",
-          "title": "Optional for provisioning restore\nvolume (ResoreVolumeName should not be specified)"
+          "title": "Optional for provisioning restore\nvolume (ResoreVolumeName should not be specified)",
+          "type": "string"
+        },
+        "restore_volume_name": {
+          "title": "Optional volume Name of the new volume to be created\nin the cluster for restoring the cloudbackup",
+          "type": "string"
         }
       },
-      "title": "Defines a request to restore a volume from an existing backup stored by\na cloud provider"
+      "title": "Defines a request to restore a volume from an existing backup stored by\na cloud provider",
+      "type": "object"
     },
     "apiSdkCloudBackupRestoreResponse": {
-      "type": "object",
       "properties": {
         "restore_volume_id": {
-          "type": "string",
-          "title": "VolumeID to which the backup is being restored"
+          "title": "VolumeID to which the backup is being restored",
+          "type": "string"
         }
       },
-      "title": "Defines a response when restoring a volume from a backup stored by\na cloud provider"
+      "title": "Defines a response when restoring a volume from a backup stored by\na cloud provider",
+      "type": "object"
     },
     "apiSdkCloudBackupSchedCreateRequest": {
-      "type": "object",
       "properties": {
         "cloud_sched_info": {
           "$ref": "#/definitions/apiSdkCloudBackupScheduleInfo",
           "title": "Cloud Backup Schedule info"
         }
       },
-      "title": "Defines a request to create a schedule for volume backups to a\ncloud provider"
+      "title": "Defines a request to create a schedule for volume backups to a\ncloud provider",
+      "type": "object"
     },
     "apiSdkCloudBackupSchedCreateResponse": {
-      "type": "object",
       "properties": {
         "backup_schedule_id": {
-          "type": "string",
-          "title": "Id of newly created backup schedule"
+          "title": "Id of newly created backup schedule",
+          "type": "string"
         }
       },
-      "title": "Defines a response containing the id of a schedule for a volume backup\nto a cloud provider"
+      "title": "Defines a response containing the id of a schedule for a volume backup\nto a cloud provider",
+      "type": "object"
     },
     "apiSdkCloudBackupSchedDeleteResponse": {
-      "type": "object",
-      "title": "Empty response"
+      "title": "Empty response",
+      "type": "object"
     },
     "apiSdkCloudBackupSchedEnumerateResponse": {
-      "type": "object",
       "properties": {
         "cloud_sched_list": {
-          "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/apiSdkCloudBackupScheduleInfo"
           },
-          "title": "Returns list of backup schedules"
+          "title": "Returns list of backup schedules",
+          "type": "object"
         }
       },
-      "title": "Defines a response containing a map listing the schedules for volume\nbackups to a cloud provider"
+      "title": "Defines a response containing a map listing the schedules for volume\nbackups to a cloud provider",
+      "type": "object"
     },
     "apiSdkCloudBackupScheduleInfo": {
-      "type": "object",
       "properties": {
-        "src_volume_id": {
-          "type": "string",
-          "title": "The schedule's source volume"
-        },
         "credential_id": {
-          "type": "string",
-          "title": "The cloud credential used with this schedule"
+          "title": "The cloud credential used with this schedule",
+          "type": "string"
+        },
+        "max_backups": {
+          "format": "uint64",
+          "title": "MaxBackups are the maximum number of backups retained\nin cloud.Older backups are deleted",
+          "type": "string"
         },
         "schedules": {
-          "type": "array",
           "items": {
             "$ref": "#/definitions/apiSdkSchedulePolicyInterval"
           },
-          "title": "Schedules are the frequencies of the backup"
+          "title": "Schedules are the frequencies of the backup",
+          "type": "array"
         },
-        "max_backups": {
-          "type": "string",
-          "format": "uint64",
-          "title": "MaxBackups are the maximum number of backups retained\nin cloud.Older backups are deleted"
+        "src_volume_id": {
+          "title": "The schedule's source volume",
+          "type": "string"
         }
       },
-      "title": "SdkCloudBackupScheduleInfo describes a schedule for volume backups to\na cloud provider"
+      "title": "SdkCloudBackupScheduleInfo describes a schedule for volume backups to\na cloud provider",
+      "type": "object"
     },
     "apiSdkCloudBackupStateChangeRequest": {
-      "type": "object",
       "properties": {
-        "src_volume_id": {
-          "type": "string",
-          "title": "Describes the volume id on which backup/restore\nstate change is being requested"
-        },
         "requested_state": {
           "$ref": "#/definitions/apiSdkCloudBackupRequestedState",
           "title": "The desired state of the operation"
+        },
+        "src_volume_id": {
+          "title": "Describes the volume id on which backup/restore\nstate change is being requested",
+          "type": "string"
         }
       },
-      "title": "Defines a request to change the state of a backup or restore to or\nfrom a cloud provider"
+      "title": "Defines a request to change the state of a backup or restore to or\nfrom a cloud provider",
+      "type": "object"
     },
     "apiSdkCloudBackupStateChangeResponse": {
-      "type": "object",
-      "title": "Empty response"
+      "title": "Empty response",
+      "type": "object"
     },
     "apiSdkCloudBackupStatus": {
-      "type": "object",
       "properties": {
         "backup_id": {
-          "type": "string",
-          "title": "This is the id as represented by the cloud provider"
+          "title": "This is the id as represented by the cloud provider",
+          "type": "string"
+        },
+        "bytes_done": {
+          "format": "uint64",
+          "title": "BytesDone indicates total Bytes uploaded/downloaded",
+          "type": "string"
+        },
+        "completed_time": {
+          "format": "date-time",
+          "title": "CompletedTime indicates Op's completed time",
+          "type": "string"
+        },
+        "node_id": {
+          "title": "NodeID is the ID of the node where this Op is active",
+          "type": "string"
         },
         "optype": {
           "$ref": "#/definitions/apiSdkCloudBackupOpType",
           "title": "OpType indicates if this is a backup or restore"
         },
+        "start_time": {
+          "format": "date-time",
+          "title": "StartTime indicates Op's start time",
+          "type": "string"
+        },
         "status": {
           "$ref": "#/definitions/apiSdkCloudBackupStatusType",
           "title": "State indicates if the op is currently active/done/failed"
-        },
-        "bytes_done": {
-          "type": "string",
-          "format": "uint64",
-          "title": "BytesDone indicates total Bytes uploaded/downloaded"
-        },
-        "start_time": {
-          "type": "string",
-          "format": "date-time",
-          "title": "StartTime indicates Op's start time"
-        },
-        "completed_time": {
-          "type": "string",
-          "format": "date-time",
-          "title": "CompletedTime indicates Op's completed time"
-        },
-        "node_id": {
-          "type": "string",
-          "title": "NodeID is the ID of the node where this Op is active"
         }
       },
-      "title": "SdkCloudBackupStatus defines the status of a backup stored by a cloud provider"
+      "title": "SdkCloudBackupStatus defines the status of a backup stored by a cloud provider",
+      "type": "object"
     },
     "apiSdkCloudBackupStatusResponse": {
-      "type": "object",
       "properties": {
         "statuses": {
-          "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/apiSdkCloudBackupStatus"
           },
-          "title": "Statuses is list of currently active/failed/done backup/restores where\nthe key is the volume ids of current volumes being backed up or restored"
+          "title": "Statuses is list of currently active/failed/done backup/restores where\nthe key is the volume ids of current volumes being backed up or restored",
+          "type": "object"
         }
       },
-      "title": "Defines a response containing the status of the backups for a specified volume"
+      "title": "Defines a response containing the status of the backups for a specified volume",
+      "type": "object"
     },
     "apiSdkCloudBackupStatusType": {
-      "type": "string",
+      "default": "SdkCloudBackupStatusTypeUnknown",
+      "description": "- SdkCloudBackupStatusTypeUnknown: Unkonwn\n - SdkCloudBackupStatusTypeNotStarted: Not started\n - SdkCloudBackupStatusTypeDone: Done\n - SdkCloudBackupStatusTypeAborted: Aborted\n - SdkCloudBackupStatusTypePaused: Paused\n - SdkCloudBackupStatusTypeStopped: Stopped\n - SdkCloudBackupStatusTypeActive: Active\n - SdkCloudBackupStatusTypeFailed: Failed",
       "enum": [
         "SdkCloudBackupStatusTypeUnknown",
         "SdkCloudBackupStatusTypeNotStarted",
@@ -2007,71 +644,57 @@
         "SdkCloudBackupStatusTypeActive",
         "SdkCloudBackupStatusTypeFailed"
       ],
-      "default": "SdkCloudBackupStatusTypeUnknown",
-      "description": "- SdkCloudBackupStatusTypeUnknown: Unkonwn\n - SdkCloudBackupStatusTypeNotStarted: Not started\n - SdkCloudBackupStatusTypeDone: Done\n - SdkCloudBackupStatusTypeAborted: Aborted\n - SdkCloudBackupStatusTypePaused: Paused\n - SdkCloudBackupStatusTypeStopped: Stopped\n - SdkCloudBackupStatusTypeActive: Active\n - SdkCloudBackupStatusTypeFailed: Failed",
-      "title": "CloudBackup status types"
+      "title": "CloudBackup status types",
+      "type": "string"
     },
     "apiSdkClusterAlertClearRequest": {
-      "type": "object",
       "properties": {
+        "alert_id": {
+          "format": "int64",
+          "title": "Id of alert as returned by ClusterEnumerateAlertResponse (required)",
+          "type": "string"
+        },
         "resource": {
           "$ref": "#/definitions/apiResourceType",
           "title": "Type of resource (required)"
-        },
-        "alert_id": {
-          "type": "string",
-          "format": "int64",
-          "title": "Id of alert as returned by ClusterEnumerateAlertResponse (required)"
         }
       },
-      "title": "Defines a request to clear an alert"
+      "title": "Defines a request to clear an alert",
+      "type": "object"
     },
     "apiSdkClusterAlertClearResponse": {
-      "type": "object",
-      "title": "Empty response"
+      "title": "Empty response",
+      "type": "object"
     },
     "apiSdkClusterAlertDeleteResponse": {
-      "type": "object",
-      "title": "Empty response"
+      "title": "Empty response",
+      "type": "object"
     },
     "apiSdkClusterAlertEnumerateResponse": {
-      "type": "object",
       "properties": {
         "alerts": {
-          "type": "array",
           "items": {
             "$ref": "#/definitions/apiAlert"
           },
-          "title": "Information on the alerts requested"
+          "title": "Information on the alerts requested",
+          "type": "array"
         }
       },
-      "title": "Defines a response providing a list of alerts"
+      "title": "Defines a response providing a list of alerts",
+      "type": "object"
     },
     "apiSdkClusterInspectCurrentResponse": {
-      "type": "object",
       "properties": {
         "cluster": {
           "$ref": "#/definitions/apiStorageCluster",
           "title": "Cluster information"
         }
       },
-      "title": "Defines a response when inspecting the current cluster"
+      "title": "Defines a response when inspecting the current cluster",
+      "type": "object"
     },
     "apiSdkCredentialCreateRequest": {
-      "type": "object",
       "properties": {
-        "name": {
-          "type": "string",
-          "title": "Name of the credential"
-        },
-        "bucket": {
-          "type": "string",
-          "title": "(optional) Name of bucket"
-        },
-        "encryption_key": {
-          "type": "string",
-          "title": "(optional) Key used to encrypt the data"
-        },
         "aws_credential": {
           "$ref": "#/definitions/apiSdkAwsCredentialRequest",
           "title": "Credentials for AWS/S3"
@@ -2080,55 +703,56 @@
           "$ref": "#/definitions/apiSdkAzureCredentialRequest",
           "title": "Credentials for Azure"
         },
+        "bucket": {
+          "title": "(optional) Name of bucket",
+          "type": "string"
+        },
+        "encryption_key": {
+          "title": "(optional) Key used to encrypt the data",
+          "type": "string"
+        },
         "google_credential": {
           "$ref": "#/definitions/apiSdkGoogleCredentialRequest",
           "title": "Credentials for Google"
+        },
+        "name": {
+          "title": "Name of the credential",
+          "type": "string"
         }
       },
-      "title": "Defines a request to create credentials"
+      "title": "Defines a request to create credentials",
+      "type": "object"
     },
     "apiSdkCredentialCreateResponse": {
-      "type": "object",
       "properties": {
         "credential_id": {
-          "type": "string",
-          "title": "Id of the credentials"
+          "title": "Id of the credentials",
+          "type": "string"
         }
       },
-      "title": "Defines a response from creating a credential"
+      "title": "Defines a response from creating a credential",
+      "type": "object"
     },
     "apiSdkCredentialDeleteResponse": {
-      "type": "object",
-      "title": "Empty response"
+      "title": "Empty response",
+      "type": "object"
     },
     "apiSdkCredentialEnumerateResponse": {
-      "type": "object",
       "properties": {
         "credential_ids": {
-          "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "List of credentials"
+          "title": "List of credentials",
+          "type": "array"
         }
       },
-      "title": "Defines response for a enumeration of credentials"
+      "title": "Defines response for a enumeration of credentials",
+      "type": "object"
     },
     "apiSdkCredentialInspectResponse": {
-      "type": "object",
+      "description": "Defines the response to an inspection of a credential.\nThis response uses OneOf proto style. Depending on your programming language\nyou will need to check if the value of credential_type is one of the ones below.",
       "properties": {
-        "credential_id": {
-          "type": "string",
-          "title": "Credential id"
-        },
-        "name": {
-          "type": "string",
-          "title": "Name of the credential"
-        },
-        "bucket": {
-          "type": "string",
-          "title": "(optional) Name of bucket"
-        },
         "aws_credential": {
           "$ref": "#/definitions/apiSdkAwsCredentialResponse",
           "title": "Aws credentials"
@@ -2137,56 +761,67 @@
           "$ref": "#/definitions/apiSdkAzureCredentialResponse",
           "title": "Azure credentials"
         },
+        "bucket": {
+          "title": "(optional) Name of bucket",
+          "type": "string"
+        },
+        "credential_id": {
+          "title": "Credential id",
+          "type": "string"
+        },
         "google_credential": {
           "$ref": "#/definitions/apiSdkGoogleCredentialResponse",
           "title": "Google credentials"
+        },
+        "name": {
+          "title": "Name of the credential",
+          "type": "string"
         }
       },
-      "description": "Defines the response to an inspection of a credential.\nThis response uses OneOf proto style. Depending on your programming language\nyou will need to check if the value of credential_type is one of the ones below."
+      "type": "object"
     },
     "apiSdkCredentialValidateResponse": {
-      "type": "object",
-      "title": "Empty response"
+      "title": "Empty response",
+      "type": "object"
     },
     "apiSdkGoogleCredentialRequest": {
-      "type": "object",
       "properties": {
-        "project_id": {
-          "type": "string",
-          "title": "Project ID"
-        },
         "json_key": {
-          "type": "string",
-          "title": "JSON Key"
+          "title": "JSON Key",
+          "type": "string"
+        },
+        "project_id": {
+          "title": "Project ID",
+          "type": "string"
         }
       },
-      "title": "Defines credentials for Google"
+      "title": "Defines credentials for Google",
+      "type": "object"
     },
     "apiSdkGoogleCredentialResponse": {
-      "type": "object",
       "properties": {
         "project_id": {
-          "type": "string",
-          "title": "Project ID"
+          "title": "Project ID",
+          "type": "string"
         }
       },
-      "title": "Defines the response for Google credentials"
+      "title": "Defines the response for Google credentials",
+      "type": "object"
     },
     "apiSdkIdentityCapabilitiesResponse": {
-      "type": "object",
       "properties": {
         "capabilities": {
-          "type": "array",
           "items": {
             "$ref": "#/definitions/apiSdkServiceCapability"
           },
-          "title": "Provides all the capabilites supported by the cluster"
+          "title": "Provides all the capabilites supported by the cluster",
+          "type": "array"
         }
       },
-      "title": "Defines a response containing the capabilites of the cluster"
+      "title": "Defines a response containing the capabilites of the cluster",
+      "type": "object"
     },
     "apiSdkIdentityVersionResponse": {
-      "type": "object",
       "properties": {
         "sdk_version": {
           "$ref": "#/definitions/apiSdkVersion",
@@ -2197,257 +832,259 @@
           "title": "Version information about the storage system"
         }
       },
-      "title": "Defines a response containing version information"
+      "title": "Defines a response containing version information",
+      "type": "object"
     },
     "apiSdkNodeEnumerateResponse": {
-      "type": "object",
       "properties": {
         "node_ids": {
-          "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "List of all the node ids in the cluster"
+          "title": "List of all the node ids in the cluster",
+          "type": "array"
         }
       },
-      "title": "Defines a response with a list of nodes"
+      "title": "Defines a response with a list of nodes",
+      "type": "object"
     },
     "apiSdkNodeInspectCurrentResponse": {
-      "type": "object",
       "properties": {
         "node": {
           "$ref": "#/definitions/apiStorageNode",
           "title": "Node information"
         }
       },
-      "title": "Defines a response when inspecting a node"
+      "title": "Defines a response when inspecting a node",
+      "type": "object"
     },
     "apiSdkNodeInspectResponse": {
-      "type": "object",
       "properties": {
         "node": {
           "$ref": "#/definitions/apiStorageNode",
           "title": "Node information"
         }
       },
-      "title": "Defines a response when inspecting a node"
+      "title": "Defines a response when inspecting a node",
+      "type": "object"
     },
     "apiSdkObjectstoreCreateRequest": {
-      "type": "object",
       "properties": {
         "volume_id": {
-          "type": "string",
-          "title": "Volume on which objectstore will be running"
+          "title": "Volume on which objectstore will be running",
+          "type": "string"
         }
       },
-      "title": "Defines a request to create an object store"
+      "title": "Defines a request to create an object store",
+      "type": "object"
     },
     "apiSdkObjectstoreCreateResponse": {
-      "type": "object",
       "properties": {
         "objectstore_status": {
           "$ref": "#/definitions/apiObjectstoreInfo",
           "title": "Created objecstore status"
         }
       },
-      "title": "Defines a response when an object store has been created for a\nspecified volume"
+      "title": "Defines a response when an object store has been created for a\nspecified volume",
+      "type": "object"
     },
     "apiSdkObjectstoreDeleteResponse": {
-      "type": "object",
-      "title": "Empty response"
+      "title": "Empty response",
+      "type": "object"
     },
     "apiSdkObjectstoreInspectResponse": {
-      "type": "object",
       "properties": {
         "objectstore_status": {
           "$ref": "#/definitions/apiObjectstoreInfo",
           "title": "Contains information about the object store requested"
         }
       },
-      "title": "Defines a response when inspecting an object store endpoint"
+      "title": "Defines a response when inspecting an object store endpoint",
+      "type": "object"
     },
     "apiSdkObjectstoreUpdateRequest": {
-      "type": "object",
       "properties": {
-        "objectstore_id": {
-          "type": "string",
-          "title": "Objectstore Id to update"
-        },
         "enable": {
-          "type": "boolean",
           "format": "boolean",
-          "title": "enable/disable objectstore"
+          "title": "enable/disable objectstore",
+          "type": "boolean"
+        },
+        "objectstore_id": {
+          "title": "Objectstore Id to update",
+          "type": "string"
         }
       },
-      "title": "Defines a request to update an object store"
+      "title": "Defines a request to update an object store",
+      "type": "object"
     },
     "apiSdkObjectstoreUpdateResponse": {
-      "type": "object",
-      "title": "Empty response"
+      "title": "Empty response",
+      "type": "object"
     },
     "apiSdkSchedulePolicy": {
-      "type": "object",
       "properties": {
         "name": {
-          "type": "string",
-          "title": "Name of the schedule policy"
+          "title": "Name of the schedule policy",
+          "type": "string"
         },
         "schedules": {
-          "type": "array",
           "items": {
             "$ref": "#/definitions/apiSdkSchedulePolicyInterval"
           },
-          "title": "Schedule policies"
+          "title": "Schedule policies",
+          "type": "array"
         }
       },
-      "title": "Defines a schedule policy"
+      "title": "Defines a schedule policy",
+      "type": "object"
     },
     "apiSdkSchedulePolicyCreateRequest": {
-      "type": "object",
       "properties": {
         "SchedulePolicy": {
           "$ref": "#/definitions/apiSdkSchedulePolicy",
           "title": "Schedule Policy"
         }
       },
-      "title": "Define a schedule policy request"
+      "title": "Define a schedule policy request",
+      "type": "object"
     },
     "apiSdkSchedulePolicyCreateResponse": {
-      "type": "object",
-      "title": "Empty response"
+      "title": "Empty response",
+      "type": "object"
     },
     "apiSdkSchedulePolicyDeleteResponse": {
-      "type": "object",
-      "title": "Empty response"
+      "title": "Empty response",
+      "type": "object"
     },
     "apiSdkSchedulePolicyEnumerateResponse": {
-      "type": "object",
       "properties": {
         "policies": {
-          "type": "array",
           "items": {
             "$ref": "#/definitions/apiSdkSchedulePolicy"
           },
-          "title": "List of Schedule Policy"
+          "title": "List of Schedule Policy",
+          "type": "array"
         }
       },
-      "title": "Defines a schedule policy enumerate response"
+      "title": "Defines a schedule policy enumerate response",
+      "type": "object"
     },
     "apiSdkSchedulePolicyInspectResponse": {
-      "type": "object",
       "properties": {
         "policy": {
           "$ref": "#/definitions/apiSdkSchedulePolicy",
           "title": "List of Schedule Policy"
         }
       },
-      "title": "Defines a schedule policy inspection response"
+      "title": "Defines a schedule policy inspection response",
+      "type": "object"
     },
     "apiSdkSchedulePolicyInterval": {
-      "type": "object",
       "properties": {
-        "retain": {
-          "type": "string",
-          "format": "int64",
-          "title": "Number of instances to retain"
-        },
         "daily": {
           "$ref": "#/definitions/apiSdkSchedulePolicyIntervalDaily",
           "title": "Daily policy"
         },
-        "weekly": {
-          "$ref": "#/definitions/apiSdkSchedulePolicyIntervalWeekly",
-          "title": "Weekly policy"
-        },
         "monthly": {
           "$ref": "#/definitions/apiSdkSchedulePolicyIntervalMonthly",
           "title": "Monthly policy"
+        },
+        "retain": {
+          "format": "int64",
+          "title": "Number of instances to retain",
+          "type": "string"
+        },
+        "weekly": {
+          "$ref": "#/definitions/apiSdkSchedulePolicyIntervalWeekly",
+          "title": "Weekly policy"
         }
       },
-      "title": "Defines a schedule policy interval"
+      "title": "Defines a schedule policy interval",
+      "type": "object"
     },
     "apiSdkSchedulePolicyIntervalDaily": {
-      "type": "object",
       "properties": {
         "hour": {
-          "type": "integer",
           "format": "int32",
-          "title": "Range: 0-23"
+          "title": "Range: 0-23",
+          "type": "integer"
         },
         "minute": {
-          "type": "integer",
           "format": "int32",
-          "title": "Range: 0-59"
+          "title": "Range: 0-59",
+          "type": "integer"
         }
       },
-      "title": "Defines a daily schedule"
+      "title": "Defines a daily schedule",
+      "type": "object"
     },
     "apiSdkSchedulePolicyIntervalMonthly": {
-      "type": "object",
       "properties": {
         "day": {
-          "type": "integer",
           "format": "int32",
-          "title": "Range: 1-28"
+          "title": "Range: 1-28",
+          "type": "integer"
         },
         "hour": {
-          "type": "integer",
           "format": "int32",
-          "title": "Range: 0-59"
+          "title": "Range: 0-59",
+          "type": "integer"
         },
         "minute": {
-          "type": "integer",
           "format": "int32",
-          "title": "Range: 0-59"
+          "title": "Range: 0-59",
+          "type": "integer"
         }
       },
-      "title": "Defines a monthly schedule"
+      "title": "Defines a monthly schedule",
+      "type": "object"
     },
     "apiSdkSchedulePolicyIntervalWeekly": {
-      "type": "object",
       "properties": {
         "day": {
           "$ref": "#/definitions/apiSdkTimeWeekday"
         },
         "hour": {
-          "type": "integer",
           "format": "int32",
-          "title": "Range: 0-23"
+          "title": "Range: 0-23",
+          "type": "integer"
         },
         "minute": {
-          "type": "integer",
           "format": "int32",
-          "title": "Range: 0-59"
+          "title": "Range: 0-59",
+          "type": "integer"
         }
       },
-      "title": "Defines a weekly schedule"
+      "title": "Defines a weekly schedule",
+      "type": "object"
     },
     "apiSdkSchedulePolicyUpdateRequest": {
-      "type": "object",
       "properties": {
         "SchedulePolicy": {
           "$ref": "#/definitions/apiSdkSchedulePolicy",
           "title": "Schedule Policy"
         }
       },
-      "title": "Define a request to update a schedule policy"
+      "title": "Define a request to update a schedule policy",
+      "type": "object"
     },
     "apiSdkSchedulePolicyUpdateResponse": {
-      "type": "object",
-      "title": "Empty response"
+      "title": "Empty response",
+      "type": "object"
     },
     "apiSdkServiceCapability": {
-      "type": "object",
       "properties": {
         "service": {
           "$ref": "#/definitions/SdkServiceCapabilityOpenStorageService",
           "title": "service type supported by this cluster"
         }
       },
-      "title": "Defines a capability of he cluster"
+      "title": "Defines a capability of he cluster",
+      "type": "object"
     },
     "apiSdkTimeWeekday": {
-      "type": "string",
+      "default": "SdkTimeWeekdaySunday",
+      "description": "- SdkTimeWeekdaySunday: Sunday\n - SdkTimeWeekdayMonday: Monday\n - SdkTimeWeekdayTuesday: Tuesday\n - SdkTimeWeekdayWednesday: Wednesday\n - SdkTimeWeekdayThursday: Thursday\n - SdkTimeWeekdayFriday: Friday\n - SdkTimeWeekdaySaturday: Saturday",
       "enum": [
         "SdkTimeWeekdaySunday",
         "SdkTimeWeekdayMonday",
@@ -2457,333 +1094,327 @@
         "SdkTimeWeekdayFriday",
         "SdkTimeWeekdaySaturday"
       ],
-      "default": "SdkTimeWeekdaySunday",
-      "description": "- SdkTimeWeekdaySunday: Sunday\n - SdkTimeWeekdayMonday: Monday\n - SdkTimeWeekdayTuesday: Tuesday\n - SdkTimeWeekdayWednesday: Wednesday\n - SdkTimeWeekdayThursday: Thursday\n - SdkTimeWeekdayFriday: Friday\n - SdkTimeWeekdaySaturday: Saturday",
-      "title": "Defines times of day"
+      "title": "Defines times of day",
+      "type": "string"
     },
     "apiSdkVersion": {
-      "type": "object",
+      "description": "SDK version in Major.Minor.Patch format. The goal of this\nmessage is to provide clients a method to determine the SDK\nversion run by an SDK server.",
       "properties": {
         "major": {
-          "type": "integer",
           "format": "int32",
-          "title": "SDK version major number"
+          "title": "SDK version major number",
+          "type": "integer"
         },
         "minor": {
-          "type": "integer",
           "format": "int32",
-          "title": "SDK version minor number"
+          "title": "SDK version minor number",
+          "type": "integer"
         },
         "patch": {
-          "type": "integer",
           "format": "int32",
-          "title": "SDK version patch number"
+          "title": "SDK version patch number",
+          "type": "integer"
         },
         "version": {
-          "type": "string",
-          "description": "String representation of the SDK version. Must be\nin `major.minor.patch` format."
+          "description": "String representation of the SDK version. Must be\nin `major.minor.patch` format.",
+          "type": "string"
         }
       },
-      "description": "SDK version in Major.Minor.Patch format. The goal of this\nmessage is to provide clients a method to determine the SDK\nversion run by an SDK server."
+      "type": "object"
     },
     "apiSdkVolumeAttachRequest": {
-      "type": "object",
       "properties": {
-        "volume_id": {
-          "type": "string",
-          "title": "Id of volume"
-        },
         "options": {
-          "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "title": "Options for attaching volume, right now only passphrase options is supported"
+          "title": "Options for attaching volume, right now only passphrase options is supported",
+          "type": "object"
+        },
+        "volume_id": {
+          "title": "Id of volume",
+          "type": "string"
         }
       },
-      "title": "Defines a request to attach a volume to the node receiving this request"
+      "title": "Defines a request to attach a volume to the node receiving this request",
+      "type": "object"
     },
     "apiSdkVolumeAttachResponse": {
-      "type": "object",
       "properties": {
         "device_path": {
-          "type": "string",
-          "title": "Device path where device is exported"
+          "title": "Device path where device is exported",
+          "type": "string"
         }
       },
-      "title": "Defines a response from the node which received the request to attach"
+      "title": "Defines a response from the node which received the request to attach",
+      "type": "object"
     },
     "apiSdkVolumeCloneRequest": {
-      "type": "object",
       "properties": {
         "name": {
-          "type": "string",
-          "description": "Unique name of the volume. This will be used for idempotency."
+          "description": "Unique name of the volume. This will be used for idempotency.",
+          "type": "string"
         },
         "parent_id": {
-          "type": "string",
-          "description": "Parent volume id or snapshot id will create a new volume as a clone of the parent."
+          "description": "Parent volume id or snapshot id will create a new volume as a clone of the parent.",
+          "type": "string"
         }
       },
-      "title": "Defines a request to clone a volume or create a volume from a snapshot"
+      "title": "Defines a request to clone a volume or create a volume from a snapshot",
+      "type": "object"
     },
     "apiSdkVolumeCloneResponse": {
-      "type": "object",
       "properties": {
         "volume_id": {
-          "type": "string",
-          "title": "Id of new volume"
+          "title": "Id of new volume",
+          "type": "string"
         }
       },
-      "title": "Defines the response when creating a clone from a volume or a snapshot"
+      "title": "Defines the response when creating a clone from a volume or a snapshot",
+      "type": "object"
     },
     "apiSdkVolumeCreateRequest": {
-      "type": "object",
+      "description": "Defines a request to create a volume. Use OpenStorageVolume.Update()\nto update any labels on the volume.",
       "properties": {
         "name": {
-          "type": "string",
-          "description": "Unique name of the volume. This will be used for idempotency."
+          "description": "Unique name of the volume. This will be used for idempotency.",
+          "type": "string"
         },
         "spec": {
           "$ref": "#/definitions/apiVolumeSpec",
           "title": "Volume specification"
         }
       },
-      "description": "Defines a request to create a volume. Use OpenStorageVolume.Update()\nto update any labels on the volume."
+      "type": "object"
     },
     "apiSdkVolumeCreateResponse": {
-      "type": "object",
       "properties": {
         "volume_id": {
-          "type": "string",
-          "title": "Id of new volume"
+          "title": "Id of new volume",
+          "type": "string"
         }
       },
-      "title": "Defines a response to the creation of a volume"
+      "title": "Defines a response to the creation of a volume",
+      "type": "object"
     },
     "apiSdkVolumeDeleteResponse": {
-      "type": "object",
-      "title": "Empty response"
+      "title": "Empty response",
+      "type": "object"
     },
     "apiSdkVolumeDetachRequest": {
-      "type": "object",
       "properties": {
         "volume_id": {
-          "type": "string",
-          "title": "Id of the volume"
+          "title": "Id of the volume",
+          "type": "string"
         }
       },
-      "title": "Defines a request to detach a volume"
+      "title": "Defines a request to detach a volume",
+      "type": "object"
     },
     "apiSdkVolumeDetachResponse": {
-      "type": "object",
-      "title": "Empty response"
+      "title": "Empty response",
+      "type": "object"
     },
     "apiSdkVolumeEnumerateResponse": {
-      "type": "object",
       "properties": {
         "volume_ids": {
-          "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "List of volumes matching label"
+          "title": "List of volumes matching label",
+          "type": "array"
         }
       },
-      "title": "Defines the response when listing volumes"
+      "title": "Defines the response when listing volumes",
+      "type": "object"
     },
     "apiSdkVolumeEnumerateWithFiltersRequest": {
-      "type": "object",
       "properties": {
         "locator": {
           "$ref": "#/definitions/apiVolumeLocator",
           "description": "Volumes to match to this locator.\nIf not provided, all volumes will be returned."
         }
       },
-      "title": "Defines a request to list volumes"
+      "title": "Defines a request to list volumes",
+      "type": "object"
     },
     "apiSdkVolumeEnumerateWithFiltersResponse": {
-      "type": "object",
       "properties": {
         "volume_ids": {
-          "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "List of volumes matching label"
+          "title": "List of volumes matching label",
+          "type": "array"
         }
       },
-      "title": "Defines the response when listing volumes"
+      "title": "Defines the response when listing volumes",
+      "type": "object"
     },
     "apiSdkVolumeInspectResponse": {
-      "type": "object",
       "properties": {
         "volume": {
           "$ref": "#/definitions/apiVolume",
           "title": "Information about the volume"
         }
       },
-      "title": "Defines the response when inspecting a volume"
+      "title": "Defines the response when inspecting a volume",
+      "type": "object"
     },
     "apiSdkVolumeMountRequest": {
-      "type": "object",
       "properties": {
-        "volume_id": {
-          "type": "string",
-          "title": "Id of the volume"
-        },
         "mount_path": {
-          "type": "string",
-          "description": "Mount path for mounting the volume."
+          "description": "Mount path for mounting the volume.",
+          "type": "string"
         },
         "options": {
-          "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "title": "Additional options"
+          "title": "Additional options",
+          "type": "object"
+        },
+        "volume_id": {
+          "title": "Id of the volume",
+          "type": "string"
         }
       },
-      "title": "Defines a request to mount a volume to the node receiving this request"
+      "title": "Defines a request to mount a volume to the node receiving this request",
+      "type": "object"
     },
     "apiSdkVolumeMountResponse": {
-      "type": "object",
-      "title": "Empty response"
+      "title": "Empty response",
+      "type": "object"
     },
     "apiSdkVolumeSnapshotCreateRequest": {
-      "type": "object",
+      "description": "Defines the request when creating a snapshot from a volume.",
       "properties": {
-        "volume_id": {
-          "type": "string",
-          "title": "Id of volume to take the snapshot from"
+        "labels": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Labels to apply to snapshot",
+          "type": "object"
         },
         "name": {
-          "type": "string",
-          "description": "Name of the snapshot."
+          "description": "Name of the snapshot.",
+          "type": "string"
         },
-        "labels": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "title": "Labels to apply to snapshot"
+        "volume_id": {
+          "title": "Id of volume to take the snapshot from",
+          "type": "string"
         }
       },
-      "description": "Defines the request when creating a snapshot from a volume."
+      "type": "object"
     },
     "apiSdkVolumeSnapshotCreateResponse": {
-      "type": "object",
       "properties": {
         "snapshot_id": {
-          "type": "string",
-          "title": "Id of immutable snapshot"
+          "title": "Id of immutable snapshot",
+          "type": "string"
         }
       },
-      "title": "Defines a response after creating a snapshot of a volume"
+      "title": "Defines a response after creating a snapshot of a volume",
+      "type": "object"
     },
     "apiSdkVolumeSnapshotEnumerateResponse": {
-      "type": "object",
       "properties": {
         "volume_snapshot_ids": {
-          "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "List of immutable snapshots"
+          "title": "List of immutable snapshots",
+          "type": "array"
         }
       },
-      "title": "Defines a response when listing snapshots"
+      "title": "Defines a response when listing snapshots",
+      "type": "object"
     },
     "apiSdkVolumeSnapshotEnumerateWithFiltersRequest": {
-      "type": "object",
       "properties": {
-        "volume_id": {
-          "type": "string",
-          "title": "Get the snapshots for this volume id"
-        },
         "labels": {
-          "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "title": "Get snapshots that match these labels"
+          "title": "Get snapshots that match these labels",
+          "type": "object"
+        },
+        "volume_id": {
+          "title": "Get the snapshots for this volume id",
+          "type": "string"
         }
       },
-      "title": "Defines a request to list the snaphots"
+      "title": "Defines a request to list the snaphots",
+      "type": "object"
     },
     "apiSdkVolumeSnapshotEnumerateWithFiltersResponse": {
-      "type": "object",
       "properties": {
         "volume_snapshot_ids": {
-          "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "List of immutable snapshots"
+          "title": "List of immutable snapshots",
+          "type": "array"
         }
       },
-      "title": "Defines a response when listing snapshots"
+      "title": "Defines a response when listing snapshots",
+      "type": "object"
     },
     "apiSdkVolumeSnapshotRestoreRequest": {
-      "type": "object",
       "properties": {
-        "volume_id": {
-          "type": "string",
-          "title": "Id of volume"
-        },
         "snapshot_id": {
-          "type": "string",
-          "title": "Snapshot id to apply to `volume_id`"
+          "title": "Snapshot id to apply to `volume_id`",
+          "type": "string"
+        },
+        "volume_id": {
+          "title": "Id of volume",
+          "type": "string"
         }
       },
-      "title": "Defines a request to restore a volume to a snapshot"
+      "title": "Defines a request to restore a volume to a snapshot",
+      "type": "object"
     },
     "apiSdkVolumeSnapshotRestoreResponse": {
-      "type": "object",
-      "title": "Empty response"
+      "title": "Empty response",
+      "type": "object"
     },
     "apiSdkVolumeStatsResponse": {
-      "type": "object",
       "properties": {
         "stats": {
           "$ref": "#/definitions/apiStats",
           "title": "Statistics for a single volume"
         }
       },
-      "title": "Defines a response containing drive statistics"
+      "title": "Defines a response containing drive statistics",
+      "type": "object"
     },
     "apiSdkVolumeUnmountRequest": {
-      "type": "object",
       "properties": {
-        "volume_id": {
-          "type": "string",
-          "title": "Id of volume"
-        },
         "mount_path": {
-          "type": "string",
-          "title": "MountPath for device"
+          "title": "MountPath for device",
+          "type": "string"
         },
         "options": {
-          "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "title": "Options to unmount device"
+          "title": "Options to unmount device",
+          "type": "object"
+        },
+        "volume_id": {
+          "title": "Id of volume",
+          "type": "string"
         }
       },
-      "title": "Defines a request to unmount a volume on the node receiving this request"
+      "title": "Defines a request to unmount a volume on the node receiving this request",
+      "type": "object"
     },
     "apiSdkVolumeUnmountResponse": {
-      "type": "object",
-      "title": "Empty response"
+      "title": "Empty response",
+      "type": "object"
     },
     "apiSdkVolumeUpdateRequest": {
-      "type": "object",
       "properties": {
-        "volume_id": {
-          "type": "string",
-          "title": "Id of the volume to update"
-        },
         "locator": {
           "$ref": "#/definitions/apiVolumeLocator",
           "description": "Change locator values. Some of these values may not be able to be changed.\nNew labels will be added to the current volume labels. To delete a label, set the\nvalue of the label to an empty string."
@@ -2791,687 +1422,693 @@
         "spec": {
           "$ref": "#/definitions/apiVolumeSpecUpdate",
           "description": "VolumeSpecUpdate provides a method to request that certain values\nin the VolumeSpec are changed. This is necessary as a separate variable\nbecause values like int and bool in the VolumeSpec cannot be determined\nif they are being requested to change in gRPC proto3. Some of these\nvalues may not be able to be changed.\nHere are a few examples of actions that can be accomplished using the VolumeSpec.\nTo resize the volume: Set a new value in spec.size.\nTo change number of replicas: Adjust spec.ha_level.\nTo change the I/O Profile: Adjust spec.io_profile."
+        },
+        "volume_id": {
+          "title": "Id of the volume to update",
+          "type": "string"
         }
       },
-      "title": "This request is used to adjust or set new values in the volume"
+      "title": "This request is used to adjust or set new values in the volume",
+      "type": "object"
     },
     "apiSdkVolumeUpdateResponse": {
-      "type": "object",
-      "title": "Empty response"
+      "title": "Empty response",
+      "type": "object"
     },
     "apiSeverityType": {
-      "type": "string",
+      "default": "SEVERITY_TYPE_NONE",
       "enum": [
         "SEVERITY_TYPE_NONE",
         "SEVERITY_TYPE_ALARM",
         "SEVERITY_TYPE_WARNING",
         "SEVERITY_TYPE_NOTIFY"
       ],
-      "default": "SEVERITY_TYPE_NONE"
+      "type": "string"
     },
     "apiSource": {
-      "type": "object",
       "properties": {
         "parent": {
-          "type": "string",
-          "description": "A volume id, if specified will create a clone of the parent."
+          "description": "A volume id, if specified will create a clone of the parent.",
+          "type": "string"
         },
         "seed": {
-          "type": "string",
-          "title": "Seed will seed the volume from the specified URI\nAny additional config for the source comes from the labels in the spec"
+          "title": "Seed will seed the volume from the specified URI\nAny additional config for the source comes from the labels in the spec",
+          "type": "string"
         }
       },
-      "title": "Source is a structure that can be given to a volume\nto seed the volume with data.\nswagger:model"
+      "title": "Source is a structure that can be given to a volume\nto seed the volume with data.\nswagger:model",
+      "type": "object"
     },
     "apiStats": {
-      "type": "object",
       "properties": {
-        "reads": {
-          "type": "string",
-          "format": "uint64",
-          "title": "Reads completed successfully"
-        },
-        "read_ms": {
-          "type": "string",
-          "format": "uint64",
-          "title": "Time spent in reads in ms"
-        },
-        "read_bytes": {
-          "type": "string",
-          "format": "uint64",
-          "title": "Number of bytes read"
-        },
-        "writes": {
-          "type": "string",
-          "format": "uint64",
-          "title": "Writes completed successfully"
-        },
-        "write_ms": {
-          "type": "string",
-          "format": "uint64",
-          "title": "Time spent in writes in ms"
-        },
-        "write_bytes": {
-          "type": "string",
-          "format": "uint64",
-          "title": "Number of bytes written"
-        },
-        "io_progress": {
-          "type": "string",
-          "format": "uint64",
-          "title": "IOs curently in progress"
-        },
-        "io_ms": {
-          "type": "string",
-          "format": "uint64",
-          "title": "Time spent doing IOs ms"
-        },
         "bytes_used": {
-          "type": "string",
           "format": "uint64",
-          "title": "BytesUsed"
+          "title": "BytesUsed",
+          "type": "string"
         },
         "interval_ms": {
-          "type": "string",
           "format": "uint64",
-          "title": "Interval in ms during which stats were collected"
+          "title": "Interval in ms during which stats were collected",
+          "type": "string"
+        },
+        "io_ms": {
+          "format": "uint64",
+          "title": "Time spent doing IOs ms",
+          "type": "string"
+        },
+        "io_progress": {
+          "format": "uint64",
+          "title": "IOs curently in progress",
+          "type": "string"
+        },
+        "read_bytes": {
+          "format": "uint64",
+          "title": "Number of bytes read",
+          "type": "string"
+        },
+        "read_ms": {
+          "format": "uint64",
+          "title": "Time spent in reads in ms",
+          "type": "string"
+        },
+        "reads": {
+          "format": "uint64",
+          "title": "Reads completed successfully",
+          "type": "string"
+        },
+        "write_bytes": {
+          "format": "uint64",
+          "title": "Number of bytes written",
+          "type": "string"
+        },
+        "write_ms": {
+          "format": "uint64",
+          "title": "Time spent in writes in ms",
+          "type": "string"
+        },
+        "writes": {
+          "format": "uint64",
+          "title": "Writes completed successfully",
+          "type": "string"
         }
       },
-      "title": "Stats is a structure that represents last collected stats for a volume"
+      "title": "Stats is a structure that represents last collected stats for a volume",
+      "type": "object"
     },
     "apiStorageCluster": {
-      "type": "object",
       "properties": {
+        "id": {
+          "title": "Id of the cluster",
+          "type": "string"
+        },
         "status": {
           "$ref": "#/definitions/openstorageapiStatus",
           "title": "Status of the cluster"
-        },
-        "id": {
-          "type": "string",
-          "title": "Id of the cluster"
         }
       },
-      "title": "StorageCluster represents the state and information about the cluster"
+      "title": "StorageCluster represents the state and information about the cluster",
+      "type": "object"
     },
     "apiStorageMedium": {
-      "type": "string",
+      "default": "STORAGE_MEDIUM_MAGNETIC",
       "enum": [
         "STORAGE_MEDIUM_MAGNETIC",
         "STORAGE_MEDIUM_SSD",
         "STORAGE_MEDIUM_NVME"
       ],
-      "default": "STORAGE_MEDIUM_MAGNETIC",
-      "title": "- STORAGE_MEDIUM_MAGNETIC: Magnetic spinning disk.\n - STORAGE_MEDIUM_SSD: SSD disk\n - STORAGE_MEDIUM_NVME: NVME disk"
+      "title": "- STORAGE_MEDIUM_MAGNETIC: Magnetic spinning disk.\n - STORAGE_MEDIUM_SSD: SSD disk\n - STORAGE_MEDIUM_NVME: NVME disk",
+      "type": "string"
     },
     "apiStorageNode": {
-      "type": "object",
       "properties": {
-        "id": {
-          "type": "string",
-          "title": "Id of the node"
+        "avg_load": {
+          "format": "int64",
+          "title": "Average load (percentage)",
+          "type": "string"
         },
         "cpu": {
-          "type": "number",
           "format": "double",
-          "title": "Cpu usage of the node"
+          "title": "Cpu usage of the node",
+          "type": "number"
         },
-        "mem_total": {
-          "type": "string",
-          "format": "uint64",
-          "title": "Total memory of the node"
+        "data_ip": {
+          "title": "Data IP",
+          "type": "string"
         },
-        "mem_used": {
-          "type": "string",
-          "format": "uint64",
-          "title": "Used memory of the node"
+        "disks": {
+          "additionalProperties": {
+            "$ref": "#/definitions/apiStorageResource"
+          },
+          "title": "List of disks on the node",
+          "type": "object"
+        },
+        "hostname": {
+          "title": "Hostname of the node",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id of the node",
+          "type": "string"
         },
         "mem_free": {
-          "type": "string",
           "format": "uint64",
-          "title": "Free memory of the node"
+          "title": "Free memory of the node",
+          "type": "string"
         },
-        "avg_load": {
-          "type": "string",
-          "format": "int64",
-          "title": "Average load (percentage)"
+        "mem_total": {
+          "format": "uint64",
+          "title": "Total memory of the node",
+          "type": "string"
+        },
+        "mem_used": {
+          "format": "uint64",
+          "title": "Used memory of the node",
+          "type": "string"
+        },
+        "mgmt_ip": {
+          "title": "Management IP",
+          "type": "string"
+        },
+        "node_labels": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "User defined labels for the node",
+          "type": "object"
+        },
+        "pools": {
+          "items": {
+            "$ref": "#/definitions/apiStoragePool"
+          },
+          "title": "List of storage pools this node supports",
+          "type": "array"
+        },
+        "scheduler_node_name": {
+          "description": "SchedulerNodeName is name of the node in scheduler context. It can be\nempty if unable to get the name from the scheduler.",
+          "type": "string"
         },
         "status": {
           "$ref": "#/definitions/openstorageapiStatus",
           "title": "Node status"
-        },
-        "disks": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/apiStorageResource"
-          },
-          "title": "List of disks on the node"
-        },
-        "pools": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/apiStoragePool"
-          },
-          "title": "List of storage pools this node supports"
-        },
-        "mgmt_ip": {
-          "type": "string",
-          "title": "Management IP"
-        },
-        "data_ip": {
-          "type": "string",
-          "title": "Data IP"
-        },
-        "hostname": {
-          "type": "string",
-          "title": "Hostname of the node"
-        },
-        "node_labels": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "title": "User defined labels for the node"
-        },
-        "scheduler_node_name": {
-          "type": "string",
-          "description": "SchedulerNodeName is name of the node in scheduler context. It can be\nempty if unable to get the name from the scheduler."
         }
       },
-      "title": "StorageNode describes the state of the node"
+      "title": "StorageNode describes the state of the node",
+      "type": "object"
     },
     "apiStoragePool": {
-      "type": "object",
       "properties": {
-        "ID": {
-          "type": "integer",
-          "format": "int32",
-          "title": "ID pool ID"
-        },
         "Cos": {
           "$ref": "#/definitions/apiCosType",
           "title": "Cos reflects the capabilities of this drive pool"
+        },
+        "ID": {
+          "format": "int32",
+          "title": "ID pool ID",
+          "type": "integer"
         },
         "Medium": {
           "$ref": "#/definitions/apiStorageMedium",
           "title": "Medium underlying storage type"
         },
         "RaidLevel": {
-          "type": "string",
-          "title": "RaidLevel storage raid level"
+          "title": "RaidLevel storage raid level",
+          "type": "string"
         },
         "TotalSize": {
-          "type": "string",
           "format": "uint64",
-          "title": "TotalSize of the pool"
+          "title": "TotalSize of the pool",
+          "type": "string"
         },
         "Used": {
-          "type": "string",
           "format": "uint64",
-          "title": "Used size of the pool"
+          "title": "Used size of the pool",
+          "type": "string"
         },
         "labels": {
-          "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "title": "Labels is a list of user defined name-value pairs"
+          "title": "Labels is a list of user defined name-value pairs",
+          "type": "object"
         }
       },
-      "title": "StoragePool groups different storage devices based on their CosType"
+      "title": "StoragePool groups different storage devices based on their CosType",
+      "type": "object"
     },
     "apiStorageResource": {
-      "type": "object",
       "properties": {
         "id": {
-          "type": "string",
-          "description": "Id is the LUN identifier."
+          "description": "Id is the LUN identifier.",
+          "type": "string"
         },
-        "path": {
-          "type": "string",
-          "description": "Path device path for this storage resource."
+        "iops": {
+          "format": "uint64",
+          "title": "IOPS",
+          "type": "string"
+        },
+        "last_scan": {
+          "description": "Timestamp of last time this device was scanned.",
+          "format": "date-time",
+          "type": "string"
         },
         "medium": {
           "$ref": "#/definitions/apiStorageMedium",
           "description": "Storage medium."
         },
-        "online": {
-          "type": "boolean",
+        "metadata": {
+          "description": "True if dedicated for metadata.",
           "format": "boolean",
-          "description": "True if this device is online."
+          "type": "boolean"
         },
-        "iops": {
-          "type": "string",
-          "format": "uint64",
-          "title": "IOPS"
+        "online": {
+          "description": "True if this device is online.",
+          "format": "boolean",
+          "type": "boolean"
         },
-        "seq_write": {
-          "type": "number",
-          "format": "double",
-          "title": "SeqWrite"
-        },
-        "seq_read": {
-          "type": "number",
-          "format": "double",
-          "title": "SeqRead"
+        "path": {
+          "description": "Path device path for this storage resource.",
+          "type": "string"
         },
         "randRW": {
-          "type": "number",
           "format": "double",
-          "title": "RandRW"
-        },
-        "size": {
-          "type": "string",
-          "format": "uint64",
-          "description": "Total size in bytes."
-        },
-        "used": {
-          "type": "string",
-          "format": "uint64",
-          "description": "Physical Bytes used."
+          "title": "RandRW",
+          "type": "number"
         },
         "rotation_speed": {
-          "type": "string",
-          "description": "True if this device is rotational."
+          "description": "True if this device is rotational.",
+          "type": "string"
         },
-        "last_scan": {
-          "type": "string",
-          "format": "date-time",
-          "description": "Timestamp of last time this device was scanned."
+        "seq_read": {
+          "format": "double",
+          "title": "SeqRead",
+          "type": "number"
         },
-        "metadata": {
-          "type": "boolean",
-          "format": "boolean",
-          "description": "True if dedicated for metadata."
+        "seq_write": {
+          "format": "double",
+          "title": "SeqWrite",
+          "type": "number"
+        },
+        "size": {
+          "description": "Total size in bytes.",
+          "format": "uint64",
+          "type": "string"
+        },
+        "used": {
+          "description": "Physical Bytes used.",
+          "format": "uint64",
+          "type": "string"
         }
       },
-      "title": "StorageResource groups properties of a storage device.\nswagger:model"
+      "title": "StorageResource groups properties of a storage device.\nswagger:model",
+      "type": "object"
     },
     "apiStorageVersion": {
-      "type": "object",
       "properties": {
-        "driver": {
-          "type": "string",
-          "title": "OpenStorage driver name"
-        },
-        "version": {
-          "type": "string",
-          "title": "Version of the server"
-        },
         "details": {
-          "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "title": "Extra information provided by the storage system"
+          "title": "Extra information provided by the storage system",
+          "type": "object"
+        },
+        "driver": {
+          "title": "OpenStorage driver name",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version of the server",
+          "type": "string"
         }
       },
-      "title": "Version information about the storage system"
+      "title": "Version information about the storage system",
+      "type": "object"
     },
     "apiVolume": {
-      "type": "object",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Self referential volume ID."
+        "attach_info": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "AttachInfo is a list of name value mappings that provides attach information.",
+          "type": "object"
         },
-        "source": {
-          "$ref": "#/definitions/apiSource",
-          "description": "Source specified seed data for the volume."
-        },
-        "group": {
-          "$ref": "#/definitions/apiGroup",
-          "description": "Group volumes in the same group have the same group id."
-        },
-        "readonly": {
-          "type": "boolean",
-          "format": "boolean",
-          "description": "Readonly is true if this volume is to be mounted with readonly access."
-        },
-        "locator": {
-          "$ref": "#/definitions/apiVolumeLocator",
-          "title": "User specified locator"
-        },
-        "ctime": {
-          "type": "string",
-          "format": "date-time",
-          "title": "Volume creation time"
-        },
-        "spec": {
-          "$ref": "#/definitions/apiVolumeSpec",
-          "title": "User specified VolumeSpec"
-        },
-        "usage": {
-          "type": "string",
-          "format": "uint64",
-          "description": "Usage is bytes consumed by vtheis volume."
-        },
-        "last_scan": {
-          "type": "string",
-          "format": "date-time",
-          "description": "LastScan is the time when an integrity check was run."
-        },
-        "format": {
-          "$ref": "#/definitions/apiFSType",
-          "description": "Format specifies the filesytem for this volume."
-        },
-        "status": {
-          "$ref": "#/definitions/apiVolumeStatus",
-          "description": "Status is the availability status of this volume."
-        },
-        "state": {
-          "$ref": "#/definitions/apiVolumeState",
-          "description": "State is the current runtime state of this volume."
+        "attach_path": {
+          "description": "AttachPath is the mounted path in the host namespace.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "attached_on": {
-          "type": "string",
-          "description": "AttachedOn is the node instance identifier for clustered systems."
+          "description": "AttachedOn is the node instance identifier for clustered systems.",
+          "type": "string"
         },
         "attached_state": {
           "$ref": "#/definitions/apiAttachState",
           "description": "AttachedState shows whether the device is attached for internal or external use."
         },
+        "ctime": {
+          "format": "date-time",
+          "title": "Volume creation time",
+          "type": "string"
+        },
         "device_path": {
-          "type": "string",
-          "description": "DevicePath is the device exported by block device implementations."
-        },
-        "secure_device_path": {
-          "type": "string",
-          "description": "SecureDevicePath is the device path for an encrypted volume."
-        },
-        "attach_path": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "AttachPath is the mounted path in the host namespace."
-        },
-        "attach_info": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "AttachInfo is a list of name value mappings that provides attach information."
-        },
-        "replica_sets": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/apiReplicaSet"
-          },
-          "description": "ReplicatSets storage for this volumefor clustered storage arrays."
-        },
-        "runtime_state": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/apiRuntimeStateMap"
-          },
-          "description": "RuntimeState is a lst of name value mapping of driver specific runtime\ninformation."
+          "description": "DevicePath is the device exported by block device implementations.",
+          "type": "string"
         },
         "error": {
-          "type": "string",
-          "description": "Error is the Last recorded error."
-        },
-        "volume_consumers": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/apiVolumeConsumer"
-          },
-          "title": "VolumeConsumers are entities that consume this volume"
-        },
-        "fs_resize_required": {
-          "type": "boolean",
-          "format": "boolean",
-          "description": "FsResizeRequired if an FS resize is required on the volume."
-        }
-      },
-      "title": "Volume represents an abstract storage volume.\nswagger:model"
-    },
-    "apiVolumeConsumer": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string",
-          "title": "Name is the name of the volume consumer"
-        },
-        "namespace": {
-          "type": "string",
-          "title": "Namespace is the namespace of the volume consumer"
-        },
-        "type": {
-          "type": "string",
-          "title": "Type is the type of the consumer. E.g a Kubernetes pod"
-        },
-        "node_id": {
-          "type": "string",
-          "description": "NodeID is the identifier of the node on which the consumer is running. This\nidentifier would be from the perspective of the container runtime or\norchestrator under which the volume consumer resides. For example, NodeID\n can be name of a minion in Kubernetes."
-        },
-        "owner_name": {
-          "type": "string",
-          "title": "OwnerName is the name of the entity who owns this volume consumer"
-        },
-        "owner_type": {
-          "type": "string",
-          "description": "OwnerType is the type of the entity who owns this volume consumer. The type would\nbe from the perspective of the container runtime or the orchestrator under which\nthe volume consumer resides. For e.g OwnerType can be a Deployment in Kubernetes."
-        }
-      },
-      "title": "VolumeConsumer identifies a consumer for a Volume. An example of a VolumeConsumer\nwould be a Pod in Kubernetes who has mounted the PersistentVolumeClaim for the\nVolume\nswagger: model"
-    },
-    "apiVolumeLocator": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string",
-          "title": "User friendly identifier"
-        },
-        "volume_labels": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "title": "A set of name-value pairs that acts as search filters"
-        }
-      },
-      "title": "VolumeLocator is a structure that is attached to a volume\nand is used to carry opaque metadata.\nswagger:model"
-    },
-    "apiVolumeSpec": {
-      "type": "object",
-      "properties": {
-        "ephemeral": {
-          "type": "boolean",
-          "format": "boolean",
-          "title": "Ephemeral storage"
-        },
-        "size": {
-          "type": "string",
-          "format": "uint64",
-          "title": "Size specifies the thin provisioned volume size in bytes"
+          "description": "Error is the Last recorded error.",
+          "type": "string"
         },
         "format": {
           "$ref": "#/definitions/apiFSType",
-          "description": "Format specifies the filesystem for this volume."
+          "description": "Format specifies the filesytem for this volume."
+        },
+        "fs_resize_required": {
+          "description": "FsResizeRequired if an FS resize is required on the volume.",
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "group": {
+          "$ref": "#/definitions/apiGroup",
+          "description": "Group volumes in the same group have the same group id."
+        },
+        "id": {
+          "description": "Self referential volume ID.",
+          "type": "string"
+        },
+        "last_scan": {
+          "description": "LastScan is the time when an integrity check was run.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "locator": {
+          "$ref": "#/definitions/apiVolumeLocator",
+          "title": "User specified locator"
+        },
+        "readonly": {
+          "description": "Readonly is true if this volume is to be mounted with readonly access.",
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "replica_sets": {
+          "description": "ReplicatSets storage for this volumefor clustered storage arrays.",
+          "items": {
+            "$ref": "#/definitions/apiReplicaSet"
+          },
+          "type": "array"
+        },
+        "runtime_state": {
+          "description": "RuntimeState is a lst of name value mapping of driver specific runtime\ninformation.",
+          "items": {
+            "$ref": "#/definitions/apiRuntimeStateMap"
+          },
+          "type": "array"
+        },
+        "secure_device_path": {
+          "description": "SecureDevicePath is the device path for an encrypted volume.",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/definitions/apiSource",
+          "description": "Source specified seed data for the volume."
+        },
+        "spec": {
+          "$ref": "#/definitions/apiVolumeSpec",
+          "title": "User specified VolumeSpec"
+        },
+        "state": {
+          "$ref": "#/definitions/apiVolumeState",
+          "description": "State is the current runtime state of this volume."
+        },
+        "status": {
+          "$ref": "#/definitions/apiVolumeStatus",
+          "description": "Status is the availability status of this volume."
+        },
+        "usage": {
+          "description": "Usage is bytes consumed by vtheis volume.",
+          "format": "uint64",
+          "type": "string"
+        },
+        "volume_consumers": {
+          "items": {
+            "$ref": "#/definitions/apiVolumeConsumer"
+          },
+          "title": "VolumeConsumers are entities that consume this volume",
+          "type": "array"
+        }
+      },
+      "title": "Volume represents an abstract storage volume.\nswagger:model",
+      "type": "object"
+    },
+    "apiVolumeConsumer": {
+      "properties": {
+        "name": {
+          "title": "Name is the name of the volume consumer",
+          "type": "string"
+        },
+        "namespace": {
+          "title": "Namespace is the namespace of the volume consumer",
+          "type": "string"
+        },
+        "node_id": {
+          "description": "NodeID is the identifier of the node on which the consumer is running. This\nidentifier would be from the perspective of the container runtime or\norchestrator under which the volume consumer resides. For example, NodeID\n can be name of a minion in Kubernetes.",
+          "type": "string"
+        },
+        "owner_name": {
+          "title": "OwnerName is the name of the entity who owns this volume consumer",
+          "type": "string"
+        },
+        "owner_type": {
+          "description": "OwnerType is the type of the entity who owns this volume consumer. The type would\nbe from the perspective of the container runtime or the orchestrator under which\nthe volume consumer resides. For e.g OwnerType can be a Deployment in Kubernetes.",
+          "type": "string"
+        },
+        "type": {
+          "title": "Type is the type of the consumer. E.g a Kubernetes pod",
+          "type": "string"
+        }
+      },
+      "title": "VolumeConsumer identifies a consumer for a Volume. An example of a VolumeConsumer\nwould be a Pod in Kubernetes who has mounted the PersistentVolumeClaim for the\nVolume\nswagger: model",
+      "type": "object"
+    },
+    "apiVolumeLocator": {
+      "properties": {
+        "name": {
+          "title": "User friendly identifier",
+          "type": "string"
+        },
+        "volume_labels": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "A set of name-value pairs that acts as search filters",
+          "type": "object"
+        }
+      },
+      "title": "VolumeLocator is a structure that is attached to a volume\nand is used to carry opaque metadata.\nswagger:model",
+      "type": "object"
+    },
+    "apiVolumeSpec": {
+      "properties": {
+        "aggregation_level": {
+          "description": "Aggregatiokn level Specifies the number of parts the volume can be aggregated from.",
+          "format": "int64",
+          "type": "integer"
         },
         "block_size": {
-          "type": "string",
+          "description": "BlockSize for the filesystem.",
           "format": "int64",
-          "description": "BlockSize for the filesystem."
+          "type": "string"
         },
-        "ha_level": {
-          "type": "string",
-          "format": "int64",
-          "description": "HaLevel specifies the number of copies of data."
+        "cascaded": {
+          "description": "Cascaded is true if this volume can be populated on any node from an external source.",
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "compressed": {
+          "description": "Compressed is true if this volume is to be compressed.",
+          "format": "boolean",
+          "type": "boolean"
         },
         "cos": {
           "$ref": "#/definitions/apiCosType",
           "description": "Cos specifies the relative class of service."
         },
-        "io_profile": {
-          "$ref": "#/definitions/apiIoProfile",
-          "description": "IoProfile provides a hint about application using this volume."
-        },
         "dedupe": {
-          "type": "boolean",
+          "description": "Dedupe specifies if the volume data is to be de-duplicated.",
           "format": "boolean",
-          "description": "Dedupe specifies if the volume data is to be de-duplicated."
-        },
-        "snapshot_interval": {
-          "type": "integer",
-          "format": "int64",
-          "title": "SnapshotInterval in minutes, set to 0 to disable snapshots"
-        },
-        "volume_labels": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "title": "VolumeLabels configuration labels"
-        },
-        "shared": {
-          "type": "boolean",
-          "format": "boolean",
-          "description": "Shared is true if this volume can be remotely accessed."
-        },
-        "replica_set": {
-          "$ref": "#/definitions/apiReplicaSet",
-          "description": "ReplicaSet is the desired set of nodes for the volume data."
-        },
-        "aggregation_level": {
-          "type": "integer",
-          "format": "int64",
-          "description": "Aggregatiokn level Specifies the number of parts the volume can be aggregated from."
+          "type": "boolean"
         },
         "encrypted": {
-          "type": "boolean",
+          "description": "Encrypted is true if this volume will be cryptographically secured.",
           "format": "boolean",
-          "description": "Encrypted is true if this volume will be cryptographically secured."
+          "type": "boolean"
         },
-        "passphrase": {
-          "type": "string",
-          "title": "Passphrase for an encrypted volume"
-        },
-        "snapshot_schedule": {
-          "type": "string",
-          "description": "SnapshotSchedule a well known string that specifies when snapshots should be taken."
-        },
-        "scale": {
-          "type": "integer",
-          "format": "int64",
-          "description": "Scale allows autocreation of volumes."
-        },
-        "sticky": {
-          "type": "boolean",
+        "ephemeral": {
           "format": "boolean",
-          "description": "Sticky volumes cannot be deleted until the flag is removed."
+          "title": "Ephemeral storage",
+          "type": "boolean"
+        },
+        "format": {
+          "$ref": "#/definitions/apiFSType",
+          "description": "Format specifies the filesystem for this volume."
         },
         "group": {
           "$ref": "#/definitions/apiGroup",
           "title": "Group identifies a consistency group"
         },
         "group_enforced": {
-          "type": "boolean",
+          "description": "GroupEnforced is true if consistency group creation is enforced.",
           "format": "boolean",
-          "description": "GroupEnforced is true if consistency group creation is enforced."
-        },
-        "compressed": {
-          "type": "boolean",
-          "format": "boolean",
-          "description": "Compressed is true if this volume is to be compressed."
-        },
-        "cascaded": {
-          "type": "boolean",
-          "format": "boolean",
-          "description": "Cascaded is true if this volume can be populated on any node from an external source."
-        },
-        "journal": {
-          "type": "boolean",
-          "format": "boolean",
-          "description": "Journal is true if data for the volume goes into the journal."
-        },
-        "sharedv4": {
-          "type": "boolean",
-          "format": "boolean",
-          "description": "Sharedv4 is true if this volume can be accessed via sharedv4."
-        },
-        "queue_depth": {
-          "type": "integer",
-          "format": "int32",
-          "title": "QueueDepth defines the desired block device queue depth"
-        }
-      },
-      "title": "VolumeSpec has the properties needed to create a volume.\nswagger:model"
-    },
-    "apiVolumeSpecUpdate": {
-      "type": "object",
-      "properties": {
-        "size": {
-          "type": "string",
-          "format": "uint64"
+          "type": "boolean"
         },
         "ha_level": {
-          "type": "string",
-          "format": "int64"
-        },
-        "cos": {
-          "$ref": "#/definitions/apiCosType"
+          "description": "HaLevel specifies the number of copies of data.",
+          "format": "int64",
+          "type": "string"
         },
         "io_profile": {
-          "$ref": "#/definitions/apiIoProfile"
+          "$ref": "#/definitions/apiIoProfile",
+          "description": "IoProfile provides a hint about application using this volume."
         },
-        "dedupe": {
-          "type": "boolean",
-          "format": "boolean"
+        "journal": {
+          "description": "Journal is true if data for the volume goes into the journal.",
+          "format": "boolean",
+          "type": "boolean"
         },
-        "snapshot_interval": {
-          "type": "integer",
-          "format": "int64"
+        "passphrase": {
+          "title": "Passphrase for an encrypted volume",
+          "type": "string"
         },
-        "volume_labels": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "title": "VolumeLabels configuration labels"
-        },
-        "shared": {
-          "type": "boolean",
-          "format": "boolean"
+        "queue_depth": {
+          "format": "int32",
+          "title": "QueueDepth defines the desired block device queue depth",
+          "type": "integer"
         },
         "replica_set": {
           "$ref": "#/definitions/apiReplicaSet",
           "description": "ReplicaSet is the desired set of nodes for the volume data."
         },
-        "passphrase": {
+        "scale": {
+          "description": "Scale allows autocreation of volumes.",
+          "format": "int64",
+          "type": "integer"
+        },
+        "shared": {
+          "description": "Shared is true if this volume can be remotely accessed.",
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "sharedv4": {
+          "description": "Sharedv4 is true if this volume can be accessed via sharedv4.",
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "size": {
+          "format": "uint64",
+          "title": "Size specifies the thin provisioned volume size in bytes",
           "type": "string"
+        },
+        "snapshot_interval": {
+          "format": "int64",
+          "title": "SnapshotInterval in minutes, set to 0 to disable snapshots",
+          "type": "integer"
         },
         "snapshot_schedule": {
+          "description": "SnapshotSchedule a well known string that specifies when snapshots should be taken.",
           "type": "string"
         },
-        "scale": {
-          "type": "integer",
-          "format": "int64"
-        },
         "sticky": {
-          "type": "boolean",
-          "format": "boolean"
+          "description": "Sticky volumes cannot be deleted until the flag is removed.",
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "volume_labels": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "VolumeLabels configuration labels",
+          "type": "object"
+        }
+      },
+      "title": "VolumeSpec has the properties needed to create a volume.\nswagger:model",
+      "type": "object"
+    },
+    "apiVolumeSpecUpdate": {
+      "properties": {
+        "cos": {
+          "$ref": "#/definitions/apiCosType"
+        },
+        "dedupe": {
+          "format": "boolean",
+          "type": "boolean"
         },
         "group": {
           "$ref": "#/definitions/apiGroup"
         },
-        "journal": {
-          "type": "boolean",
-          "format": "boolean"
+        "ha_level": {
+          "format": "int64",
+          "type": "string"
         },
-        "sharedv4": {
-          "type": "boolean",
-          "format": "boolean"
+        "io_profile": {
+          "$ref": "#/definitions/apiIoProfile"
+        },
+        "journal": {
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "passphrase": {
+          "type": "string"
         },
         "queue_depth": {
-          "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "type": "integer"
+        },
+        "replica_set": {
+          "$ref": "#/definitions/apiReplicaSet",
+          "description": "ReplicaSet is the desired set of nodes for the volume data."
+        },
+        "scale": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "shared": {
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "sharedv4": {
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "size": {
+          "format": "uint64",
+          "type": "string"
+        },
+        "snapshot_interval": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "snapshot_schedule": {
+          "type": "string"
+        },
+        "sticky": {
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "volume_labels": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "VolumeLabels configuration labels",
+          "type": "object"
         }
       },
-      "title": "VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume"
+      "title": "VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume",
+      "type": "object"
     },
     "apiVolumeState": {
-      "type": "string",
+      "default": "VOLUME_STATE_NONE",
+      "description": "VolumeState represents the state of a volume.\n\n - VOLUME_STATE_PENDING: Volume is transitioning to new state\n - VOLUME_STATE_AVAILABLE: Volume is ready to be assigned to a container\n - VOLUME_STATE_ATTACHED: Volume is attached to container\n - VOLUME_STATE_DETACHED: Volume is detached but associated with a container\n - VOLUME_STATE_DETATCHING: Volume detach is in progress\n - VOLUME_STATE_ERROR: Volume is in error state\n - VOLUME_STATE_DELETED: Volume is deleted, it will remain in this state\nwhile resources are asynchronously reclaimed\n - VOLUME_STATE_TRY_DETACHING: Volume is trying to be detached\n - VOLUME_STATE_RESTORE: Volume is undergoing restore",
       "enum": [
         "VOLUME_STATE_NONE",
         "VOLUME_STATE_PENDING",
@@ -3484,11 +2121,11 @@
         "VOLUME_STATE_TRY_DETACHING",
         "VOLUME_STATE_RESTORE"
       ],
-      "default": "VOLUME_STATE_NONE",
-      "description": "VolumeState represents the state of a volume.\n\n - VOLUME_STATE_PENDING: Volume is transitioning to new state\n - VOLUME_STATE_AVAILABLE: Volume is ready to be assigned to a container\n - VOLUME_STATE_ATTACHED: Volume is attached to container\n - VOLUME_STATE_DETACHED: Volume is detached but associated with a container\n - VOLUME_STATE_DETATCHING: Volume detach is in progress\n - VOLUME_STATE_ERROR: Volume is in error state\n - VOLUME_STATE_DELETED: Volume is deleted, it will remain in this state\nwhile resources are asynchronously reclaimed\n - VOLUME_STATE_TRY_DETACHING: Volume is trying to be detached\n - VOLUME_STATE_RESTORE: Volume is undergoing restore"
+      "type": "string"
     },
     "apiVolumeStatus": {
-      "type": "string",
+      "default": "VOLUME_STATUS_NONE",
+      "description": "VolumeStatus represents a health status for a volume.\n\n - VOLUME_STATUS_NOT_PRESENT: Volume is not present\n - VOLUME_STATUS_UP: Volume is healthy\n - VOLUME_STATUS_DOWN: Volume is in fail mode\n - VOLUME_STATUS_DEGRADED: Volume is up but with degraded performance\nIn a RAID group, this may indicate a problem with one or more drives",
       "enum": [
         "VOLUME_STATUS_NONE",
         "VOLUME_STATUS_NOT_PRESENT",
@@ -3496,11 +2133,10 @@
         "VOLUME_STATUS_DOWN",
         "VOLUME_STATUS_DEGRADED"
       ],
-      "default": "VOLUME_STATUS_NONE",
-      "description": "VolumeStatus represents a health status for a volume.\n\n - VOLUME_STATUS_NOT_PRESENT: Volume is not present\n - VOLUME_STATUS_UP: Volume is healthy\n - VOLUME_STATUS_DOWN: Volume is in fail mode\n - VOLUME_STATUS_DEGRADED: Volume is up but with degraded performance\nIn a RAID group, this may indicate a problem with one or more drives"
+      "type": "string"
     },
     "openstorageapiStatus": {
-      "type": "string",
+      "default": "STATUS_NONE",
       "enum": [
         "STATUS_NONE",
         "STATUS_INIT",
@@ -3518,8 +2154,1372 @@
         "STATUS_NOT_IN_QUORUM_NO_STORAGE",
         "STATUS_MAX"
       ],
-      "default": "STATUS_NONE",
-      "title": "- STATUS_MAX: Add statuses before MAX and update the number for MAX"
+      "title": "- STATUS_MAX: Add statuses before MAX and update the number for MAX",
+      "type": "string"
     }
-  }
+  },
+  "info": {
+    "title": "OpenStorage SDK",
+    "version": "0.5.0"
+  },
+  "paths": {
+    "/v1/cloudbackups": {
+      "post": {
+        "operationId": "Create",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupCreateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupCreateResponse"
+            }
+          }
+        },
+        "summary": "Creates a backup request for a specified volume. Use\nOpenStorageCloudBackup.Status() to get the current status of the\nbackup request.",
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      }
+    },
+    "/v1/cloudbackups/backup/catalog": {
+      "get": {
+        "operationId": "Catalog",
+        "parameters": [
+          {
+            "description": "Id of the backup.",
+            "in": "query",
+            "name": "backup_id",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "description": "Credential id describe the credentials for the cloud.",
+            "in": "query",
+            "name": "credential_id",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupCatalogResponse"
+            }
+          }
+        },
+        "summary": "Catalog returns a list of the contents in the backup",
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      }
+    },
+    "/v1/cloudbackups/backup/{backup_id}": {
+      "delete": {
+        "operationId": "Delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "backup_id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "Credential id is the credential for cloud to be used for the request.",
+            "in": "query",
+            "name": "credential_id",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "description": "Force Delete cloudbackup even if there are dependencies. This may be\nneeded if the backup is an incremental backup and subsequent backups\ndepend on this backup specified by `backup_id`.",
+            "format": "boolean",
+            "in": "query",
+            "name": "force",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupDeleteResponse"
+            }
+          }
+        },
+        "summary": "Deletes a backup stored in the cloud. If the backup is an incremental\nbackup and other backups are dependent on it, it will not be able to be deleted.",
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      }
+    },
+    "/v1/cloudbackups/deleteall": {
+      "post": {
+        "operationId": "DeleteAll",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupDeleteAllRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupDeleteAllResponse"
+            }
+          }
+        },
+        "summary": "DeleteAll deletes all the backups in the cloud for the specified volume.",
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      }
+    },
+    "/v1/cloudbackups/restore": {
+      "post": {
+        "operationId": "Restore",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupRestoreRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupRestoreResponse"
+            }
+          }
+        },
+        "summary": "Restore creates a new volume from a backup id. The newly created volume\nhas an ha_level (number of replicas) of only 1. To increase the number of\nreplicas, use OpenStorageVolume.Set() to change the ha_level.",
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      }
+    },
+    "/v1/cloudbackups/schedules": {
+      "get": {
+        "operationId": "SchedEnumerate",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupSchedEnumerateResponse"
+            }
+          }
+        },
+        "summary": "Enumerate cloud backup schedules",
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      },
+      "post": {
+        "operationId": "SchedCreate",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupSchedCreateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupSchedCreateResponse"
+            }
+          }
+        },
+        "summary": "Create cloud backup schedule",
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      }
+    },
+    "/v1/cloudbackups/schedules/{backup_schedule_id}": {
+      "delete": {
+        "operationId": "SchedDelete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "backup_schedule_id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupSchedDeleteResponse"
+            }
+          }
+        },
+        "summary": "Delete cloud backup schedule",
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      }
+    },
+    "/v1/cloudbackups/statechange": {
+      "post": {
+        "operationId": "StateChange",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupStateChangeRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupStateChangeResponse"
+            }
+          }
+        },
+        "summary": "StateChange can be used to stop, pause, and restart a backup",
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      }
+    },
+    "/v1/cloudbackups/volume": {
+      "get": {
+        "operationId": "Enumerate",
+        "parameters": [
+          {
+            "description": "Optional source id of the volume for the request.",
+            "in": "query",
+            "name": "src_volume_id",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "description": "Cluster id is an optional parameter which defines the cluster.",
+            "in": "query",
+            "name": "cluster_id",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "description": "Credential id is the credential for cloud to be used for the request.",
+            "in": "query",
+            "name": "credential_id",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "description": "All if set to true, backups for all clusters in the cloud are processed.",
+            "format": "boolean",
+            "in": "query",
+            "name": "all",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupEnumerateResponse"
+            }
+          }
+        },
+        "summary": "Return a list of backups for the specified volume",
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      }
+    },
+    "/v1/cloudbackups/volume/history": {
+      "get": {
+        "operationId": "History",
+        "parameters": [
+          {
+            "description": "This optional value defines which history of backups is being\nrequested. If not provided, it will return the history for all volumes.",
+            "in": "query",
+            "name": "src_volume_id",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupHistoryResponse"
+            }
+          }
+        },
+        "summary": "History returns a list of backups for a specified volume",
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      }
+    },
+    "/v1/cloudbackups/volume/status": {
+      "get": {
+        "operationId": "Status",
+        "parameters": [
+          {
+            "description": "This is an optional value which is used to get information on the\nstatus of a backup for the specified volume. If no volume id is provided,\nthen status for all volumes is returned.",
+            "in": "query",
+            "name": "volume_id",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "description": "Local indicates if only those backups/restores that are\nactive on current node must be returned.",
+            "format": "boolean",
+            "in": "query",
+            "name": "local",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupStatusResponse"
+            }
+          }
+        },
+        "summary": "Status returns the status of any cloud backups of a volume",
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      }
+    },
+    "/v1/clusters/alerts": {
+      "get": {
+        "operationId": "AlertEnumerate",
+        "parameters": [
+          {
+            "description": "Start time of alerts.",
+            "format": "date-time",
+            "in": "query",
+            "name": "time_start",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "description": "End time of alerts.",
+            "format": "date-time",
+            "in": "query",
+            "name": "time_end",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "default": "RESOURCE_TYPE_NONE",
+            "description": "Type of resource.",
+            "enum": [
+              "RESOURCE_TYPE_NONE",
+              "RESOURCE_TYPE_VOLUME",
+              "RESOURCE_TYPE_NODE",
+              "RESOURCE_TYPE_CLUSTER",
+              "RESOURCE_TYPE_DRIVE"
+            ],
+            "in": "query",
+            "name": "resource",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkClusterAlertEnumerateResponse"
+            }
+          }
+        },
+        "summary": "AlertEnumerate returns a list of alerts from the storage cluster\nIn REST, use the request values as query parameters.",
+        "tags": [
+          "OpenStorageCluster"
+        ]
+      }
+    },
+    "/v1/clusters/alerts/clear": {
+      "post": {
+        "operationId": "AlertClear",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkClusterAlertClearRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkClusterAlertClearResponse"
+            }
+          }
+        },
+        "summary": "AlertClear clears the alert for a given resource",
+        "tags": [
+          "OpenStorageCluster"
+        ]
+      }
+    },
+    "/v1/clusters/alerts/{alert_id}": {
+      "delete": {
+        "operationId": "AlertDelete",
+        "parameters": [
+          {
+            "format": "int64",
+            "in": "path",
+            "name": "alert_id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": "RESOURCE_TYPE_NONE",
+            "description": "Type of resource (required).",
+            "enum": [
+              "RESOURCE_TYPE_NONE",
+              "RESOURCE_TYPE_VOLUME",
+              "RESOURCE_TYPE_NODE",
+              "RESOURCE_TYPE_CLUSTER",
+              "RESOURCE_TYPE_DRIVE"
+            ],
+            "in": "query",
+            "name": "resource",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkClusterAlertDeleteResponse"
+            }
+          }
+        },
+        "summary": "AlertDelete deletes an alert for all resources",
+        "tags": [
+          "OpenStorageCluster"
+        ]
+      }
+    },
+    "/v1/clusters/current": {
+      "get": {
+        "operationId": "InspectCurrent",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkClusterInspectCurrentResponse"
+            }
+          }
+        },
+        "summary": "InspectCurrent returns information about the current cluster",
+        "tags": [
+          "OpenStorageCluster"
+        ]
+      }
+    },
+    "/v1/credentials": {
+      "get": {
+        "operationId": "Enumerate",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCredentialEnumerateResponse"
+            }
+          }
+        },
+        "summary": "Enumerate returns a list of credential ids",
+        "tags": [
+          "OpenStorageCredentials"
+        ]
+      },
+      "post": {
+        "description": "##### Example\n{% codetabs name=\"Golang\", type=\"go\" -%}\nid, err := client.Create(context.Background(), \u0026api.SdkCredentialCreateRequest{\n    Name: \"awscred\",\n    CredentialType: \u0026api.SdkCredentialCreateRequest_AwsCredential{\n      AwsCredential: \u0026api.SdkAwsCredentialRequest{\n      AccessKey: \"dummy-access\",\n      SecretKey: \"dummy-secret\",\n      Endpoint:  \"dummy-endpoint\",\n      Region:    \"dummy-region\",\n    },\n  },\n})\n{%- language name=\"Python\", type=\"py\" -%}\nen_resp = client.Create(api_pb2.SdkCredentialCreateRequest(\n  name='awscred',\n  aws_credential=api_pb2.SdkAwsCredentialRequest(\n    access_key='dummy-access',\n    secret_key='dumm-secret',\n    endpoint='dummy-endpoint',\n    region='dummy-region')))\n{%- endcodetabs %}",
+        "operationId": "Create",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkCredentialCreateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCredentialCreateResponse"
+            }
+          }
+        },
+        "summary": "Create is used to submit cloud credentials. It will return an\nid of the credentials once they are verified to work.",
+        "tags": [
+          "OpenStorageCredentials"
+        ]
+      }
+    },
+    "/v1/credentials/{credential_id}": {
+      "delete": {
+        "operationId": "Delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "credential_id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCredentialDeleteResponse"
+            }
+          }
+        },
+        "summary": "Delete a specified credential",
+        "tags": [
+          "OpenStorageCredentials"
+        ]
+      },
+      "get": {
+        "operationId": "Inspect",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "credential_id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCredentialInspectResponse"
+            }
+          }
+        },
+        "summary": "Inspect returns the information about a credential, but does not return the secret key.",
+        "tags": [
+          "OpenStorageCredentials"
+        ]
+      }
+    },
+    "/v1/credentials/{credential_id}/validate": {
+      "get": {
+        "operationId": "Validate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "credential_id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCredentialValidateResponse"
+            }
+          }
+        },
+        "summary": "Validate is used to validate credentials",
+        "tags": [
+          "OpenStorageCredentials"
+        ]
+      }
+    },
+    "/v1/identities/capabilities": {
+      "get": {
+        "operationId": "Capabilities",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkIdentityCapabilitiesResponse"
+            }
+          }
+        },
+        "summary": "Capabilities returns the supported services by the cluster.\nThis allows SDK implementations to advertise their supported\nservices as the API matures. With this information, clients\ncan determine supported services from storage clusters at\ndifferent versions.",
+        "tags": [
+          "OpenStorageIdentity"
+        ]
+      }
+    },
+    "/v1/identities/version": {
+      "get": {
+        "operationId": "Version",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkIdentityVersionResponse"
+            }
+          }
+        },
+        "summary": "Version returns version information about the system.",
+        "tags": [
+          "OpenStorageIdentity"
+        ]
+      }
+    },
+    "/v1/nodes": {
+      "get": {
+        "operationId": "Enumerate",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkNodeEnumerateResponse"
+            }
+          }
+        },
+        "summary": "Enumerate returns the ids of all the nodes in the current cluster",
+        "tags": [
+          "OpenStorageNode"
+        ]
+      }
+    },
+    "/v1/nodes/current": {
+      "get": {
+        "operationId": "InspectCurrent",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkNodeInspectCurrentResponse"
+            }
+          }
+        },
+        "summary": "InspectCurrent returns information about the storage node\nwhere the client is currently connected to.",
+        "tags": [
+          "OpenStorageNode"
+        ]
+      }
+    },
+    "/v1/nodes/node/{node_id}": {
+      "get": {
+        "operationId": "Inspect",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "node_id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkNodeInspectResponse"
+            }
+          }
+        },
+        "summary": "Inspect returns information about the specified node",
+        "tags": [
+          "OpenStorageNode"
+        ]
+      }
+    },
+    "/v1/objectstores": {
+      "post": {
+        "operationId": "Create",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkObjectstoreCreateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkObjectstoreCreateResponse"
+            }
+          }
+        },
+        "summary": "Creates creates an object store endpoint on specified volume",
+        "tags": [
+          "OpenStorageObjectstore"
+        ]
+      }
+    },
+    "/v1/objectstores/{objectstore_id}": {
+      "delete": {
+        "operationId": "Delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "objectstore_id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkObjectstoreDeleteResponse"
+            }
+          }
+        },
+        "summary": "Delete destroys the object store endpoint on the volume",
+        "tags": [
+          "OpenStorageObjectstore"
+        ]
+      },
+      "get": {
+        "operationId": "Inspect",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "objectstore_id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkObjectstoreInspectResponse"
+            }
+          }
+        },
+        "summary": "Inspect returns information about the object store endpoint",
+        "tags": [
+          "OpenStorageObjectstore"
+        ]
+      },
+      "put": {
+        "operationId": "Update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "objectstore_id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkObjectstoreUpdateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkObjectstoreUpdateResponse"
+            }
+          }
+        },
+        "summary": "Updates provided objectstore status.\nThis call can be used to stop and start the server while maintaining the same\nobject storage id.",
+        "tags": [
+          "OpenStorageObjectstore"
+        ]
+      }
+    },
+    "/v1/schedulepolicies": {
+      "get": {
+        "operationId": "Enumerate",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkSchedulePolicyEnumerateResponse"
+            }
+          }
+        },
+        "summary": "Enumerate returns a list of schedules",
+        "tags": [
+          "OpenStorageSchedulePolicy"
+        ]
+      },
+      "post": {
+        "operationId": "Create",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkSchedulePolicyCreateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkSchedulePolicyCreateResponse"
+            }
+          }
+        },
+        "summary": "Create creates a new snapshot schedule. They can be setup daily,\nweekly, or monthly.",
+        "tags": [
+          "OpenStorageSchedulePolicy"
+        ]
+      },
+      "put": {
+        "operationId": "Update",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkSchedulePolicyUpdateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkSchedulePolicyUpdateResponse"
+            }
+          }
+        },
+        "summary": "Update a snapshot schedule",
+        "tags": [
+          "OpenStorageSchedulePolicy"
+        ]
+      }
+    },
+    "/v1/schedulepolicies/{name}": {
+      "delete": {
+        "operationId": "Delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkSchedulePolicyDeleteResponse"
+            }
+          }
+        },
+        "summary": "Delete removes a snapshot schedule",
+        "tags": [
+          "OpenStorageSchedulePolicy"
+        ]
+      },
+      "get": {
+        "operationId": "Inspect",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkSchedulePolicyInspectResponse"
+            }
+          }
+        },
+        "summary": "Inspect returns information about a specified schedule",
+        "tags": [
+          "OpenStorageSchedulePolicy"
+        ]
+      }
+    },
+    "/v1/volumes": {
+      "get": {
+        "operationId": "Enumerate",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeEnumerateResponse"
+            }
+          }
+        },
+        "summary": "Enumerate returns a list of volume ids",
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      },
+      "post": {
+        "description": "##### Example\n{% codetabs name=\"Golang\", type=\"go\" -%}\nid, err := client.Create(context.Background(), \u0026api.SdkVolumeCreateRequest{\n  Name: \"volume-12345-east\",\n  Spec: \u0026api.VolumeSpec {\n    Size: 1234567,\n  },\n})\n{%- language name=\"Python\", type=\"py\" -%}\nen_resp = client.Create(api_pb2.SdkVolumeCreateRequest(\n  name=\"volume-12345-east\",\n  spec=api_pb2.VolumeSpec(size=1234567)))\n{%- endcodetabs %}",
+        "operationId": "Create",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeCreateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeCreateResponse"
+            }
+          }
+        },
+        "summary": "Create creates a volume according to the specification provided",
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/volumes/attach": {
+      "post": {
+        "operationId": "Attach",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeAttachRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeAttachResponse"
+            }
+          }
+        },
+        "summary": "Attach attaches device to the host that the client is communicating with.\nNOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more\ninformation about a new feature to allow attachment to any node.",
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/volumes/clone": {
+      "post": {
+        "operationId": "Clone",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeCloneRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeCloneResponse"
+            }
+          }
+        },
+        "summary": "Clone creates a new writable volume cloned from an existing volume",
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/volumes/detach": {
+      "post": {
+        "operationId": "Detach",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeDetachRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeDetachResponse"
+            }
+          }
+        },
+        "summary": "Detaches a the volume from the host",
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/volumes/filters": {
+      "post": {
+        "operationId": "EnumerateWithFilters",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeEnumerateWithFiltersRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeEnumerateWithFiltersResponse"
+            }
+          }
+        },
+        "summary": "Enumerate returns a list of volume ids that match the labels if any are provided.",
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/volumes/mount": {
+      "post": {
+        "operationId": "Mount",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeMountRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeMountResponse"
+            }
+          }
+        },
+        "summary": "Mount mounts an attached volume in the host that the client is communicating with\nNOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more\ninformation about a new feature to allow attachment to any node.",
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/volumes/snapshots": {
+      "post": {
+        "operationId": "SnapshotCreate",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeSnapshotCreateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeSnapshotCreateResponse"
+            }
+          }
+        },
+        "summary": "SnapshotCreate creates a snapshot of a volume. This creates an immutable (read-only),\npoint-in-time snapshot of a volume. To create a new writable volume from\na snapshot, please use OpenStorageVolume.Clone().",
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/volumes/snapshots/restore": {
+      "post": {
+        "operationId": "SnapshotRestore",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeSnapshotRestoreRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeSnapshotRestoreResponse"
+            }
+          }
+        },
+        "summary": "SnapshotRestore restores a volume to a specified snapshot",
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/volumes/snapshots/{volume_id}": {
+      "get": {
+        "operationId": "SnapshotEnumerate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "volume_id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeSnapshotEnumerateResponse"
+            }
+          }
+        },
+        "summary": "SnapshotEnumerate returns a list of snapshots for a specific volume\nthat match the labels provided if any.",
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/volumes/snapshots/{volume_id}/filters": {
+      "post": {
+        "operationId": "SnapshotEnumerateWithFilters",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "volume_id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeSnapshotEnumerateWithFiltersRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeSnapshotEnumerateWithFiltersResponse"
+            }
+          }
+        },
+        "summary": "SnapshotEnumerate returns a list of snapshots for a specific volume\nthat match the labels provided if any.",
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/volumes/stats/{volume_id}": {
+      "get": {
+        "operationId": "Stats",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "volume_id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "When set to false the stats are in /proc/diskstats style stats.\nWhen set to true the stats are stats for a specific duration.",
+            "format": "boolean",
+            "in": "query",
+            "name": "not_cumulative",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeStatsResponse"
+            }
+          }
+        },
+        "summary": "Stats returns the statistics for the requested volume",
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/volumes/unmount": {
+      "post": {
+        "operationId": "Unmount",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeUnmountRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeUnmountResponse"
+            }
+          }
+        },
+        "summary": "Unmount unmounts a mounted volume in the host that the client is communicating with\nNOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more\ninformation about a new feature to allow attachment to any node.",
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/volumes/{volume_id}": {
+      "delete": {
+        "operationId": "Delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "volume_id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeDeleteResponse"
+            }
+          }
+        },
+        "summary": "Delete deletes the provided volume",
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      },
+      "get": {
+        "operationId": "Inspect",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "volume_id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeInspectResponse"
+            }
+          }
+        },
+        "summary": "Inspect returns information about a volume",
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      },
+      "put": {
+        "operationId": "Update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "volume_id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeUpdateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeUpdateResponse"
+            }
+          }
+        },
+        "summary": "Update provides a method for manipulating the specification and attributes of a volume.\nSet can be used to resize a volume, update labels, change replica count, and much more.",
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    }
+  },
+  "produces": [
+    "application/json"
+  ],
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "swagger": "2.0"
 }
