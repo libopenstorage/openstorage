@@ -134,6 +134,21 @@ func TestManager_Enumerate(t *testing.T) {
 			expectedCount: 2,
 		},
 		{
+			name: "by 1 query resource id",
+			filters: []Filter{
+				NewQueryResourceIDFilter("inca", 10, api.ResourceType_RESOURCE_TYPE_VOLUME),
+			},
+			expectedCount: 1,
+		},
+		{
+			name: "by 2 query resource id",
+			filters: []Filter{
+				NewQueryResourceIDFilter("inca", 10, api.ResourceType_RESOURCE_TYPE_VOLUME),
+				NewQueryResourceIDFilter("inca", 10, api.ResourceType_RESOURCE_TYPE_DRIVE),
+			},
+			expectedCount: 2,
+		},
+		{
 			name: "by 2 resource ids",
 			filters: []Filter{
 				NewResourceIDFilter("inca"),
@@ -290,6 +305,21 @@ func TestManager_Filter(t *testing.T) {
 			filters: []Filter{
 				NewResourceIDFilter("inca"),
 				NewResourceIDFilter("maya"),
+			},
+			expectedCount: 0,
+		},
+		{
+			name: "by 1 query resource id",
+			filters: []Filter{
+				NewQueryResourceIDFilter("inca", 10, api.ResourceType_RESOURCE_TYPE_VOLUME),
+			},
+			expectedCount: 1,
+		},
+		{
+			name: "by 2 query resource id",
+			filters: []Filter{
+				NewQueryResourceIDFilter("inca", 10, api.ResourceType_RESOURCE_TYPE_VOLUME),
+				NewQueryResourceIDFilter("inca", 10, api.ResourceType_RESOURCE_TYPE_DRIVE),
 			},
 			expectedCount: 0,
 		},
@@ -470,6 +500,21 @@ func TestManager_Delete(t *testing.T) {
 				NewQueryAlertTypeFilter(12, api.ResourceType_RESOURCE_TYPE_DRIVE),
 			},
 			expectedCount: 5,
+		},
+		{
+			name: "by 1 query resource id",
+			filters: []Filter{
+				NewQueryResourceIDFilter("inca", 10, api.ResourceType_RESOURCE_TYPE_VOLUME),
+			},
+			expectedCount: 5,
+		},
+		{
+			name: "by 2 query resource id",
+			filters: []Filter{
+				NewQueryResourceIDFilter("inca", 10, api.ResourceType_RESOURCE_TYPE_VOLUME),
+				NewQueryResourceIDFilter("inca", 10, api.ResourceType_RESOURCE_TYPE_DRIVE),
+			},
+			expectedCount: 4,
 		},
 		{
 			name: "alert types",
