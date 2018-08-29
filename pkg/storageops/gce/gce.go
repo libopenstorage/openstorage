@@ -306,8 +306,8 @@ func (s *gceOps) DevicePath(diskName string) (string, error) {
 
 	for _, instDisk := range inst.Disks {
 		if instDisk.Source == d.SelfLink {
-			pathbyID := fmt.Sprintf("%s%s", googleDiskPrefix, instDisk.DeviceName)
-			devPath, err := s.diskIDToBlockDevPathWithRetry(pathbyID)
+			pathByID := fmt.Sprintf("%s%s", googleDiskPrefix, instDisk.DeviceName)
+			devPath, err := s.diskIDToBlockDevPathWithRetry(pathByID)
 			if err == nil {
 				return devPath, nil
 			}
@@ -712,6 +712,9 @@ func (s *gceOps) diskIDToBlockDevPath(devPath string) (string, error) {
 		}
 
 		devPath = strings.TrimSpace(string(output))
+	} else {
+		return "", fmt.Errorf("%s was expected to be a symlink to actual "+
+			"device path", devPath)
 	}
 
 	return devPath, nil
