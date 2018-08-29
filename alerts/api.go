@@ -62,13 +62,18 @@ func NewCustomFilter(f func(alert *api.Alert) (bool, error)) Filter {
 // Action API
 
 // NewDeleteAction deletes alert entries based on filters.
-func NewDeleteAction(filter ...Filter) Action {
-	return &action{action: DeleteAction, filters: filter, f: deleteAction}
+func NewDeleteAction(filters ...Filter) Action {
+	return &action{action: DeleteAction, filters: filters, f: deleteAction}
+}
+
+// NewClearAction marks alert entries as cleared that get deleted after half a day of life in kvdb.
+func NewClearAction(filters ...Filter) Action {
+	return &action{action: ClearAction, filters: filters, f: clearAction}
 }
 
 // NewCustomAction takes custom action using user defined function.
-func NewCustomAction(f func(manager Manager, filter ...Filter) error, filter ...Filter) Action {
-	return &action{action: CustomAction, filters: filter, f: f}
+func NewCustomAction(f func(manager Manager, filters ...Filter) error, filters ...Filter) Action {
+	return &action{action: CustomAction, filters: filters, f: f}
 }
 
 // Rule API

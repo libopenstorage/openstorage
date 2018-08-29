@@ -26,6 +26,12 @@ const (
 	invalidFilterType  Error = "invalid filter type"
 )
 
+const (
+	HalfDay  = 60 * 60 * 12
+	Day      = 60 * 60 * 24
+	FiveDays = 60 * 60 * 24 * 5
+)
+
 // Manager manages alerts.
 type Manager interface {
 	// Raise raises an alert.
@@ -78,8 +84,15 @@ func (m *manager) Raise(alert *api.Alert) error {
 	if alert.Timestamp == nil {
 		alert.Timestamp = &timestamp.Timestamp{Seconds: time.Now().Unix()}
 	}
-	_, err := m.kv.Put(getKey(alert.Resource.String(), alert.GetAlertType(), alert.ResourceId), alert, 0)
-	return err
+
+	if alert.Cleared {
+		// if the alert is marked Cleared, it is pushed to kvdb with a TTL of half day
+		_, err := m.kv.Put(getKey(alert.Resource.String(), alert.GetAlertType(), alert.ResourceId), alert, HalfDay)
+		return err
+	} else {
+		_, err := m.kv.Put(getKey(alert.Resource.String(), alert.GetAlertType(), alert.ResourceId), alert, 0)
+		return err
+	}
 }
 
 // Enumerate takes a variadic list of filters that are first analyzed to see if one filter
