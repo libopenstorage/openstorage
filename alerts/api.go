@@ -50,8 +50,8 @@ func NewResourceIDFilter(resourceID string) Filter {
 }
 
 // NewCountFilter provides a filter that matches on alert count.
-func NewCountFilter(count int64) Filter {
-	return &filter{filterType: CountFilter, value: count}
+func NewCountFilter(minCount, maxCount int64) Filter {
+	return &filter{filterType: CountFilter, value: []int64{minCount, maxCount}}
 }
 
 // NewCustomFilter creates a filter that matches on UDF (user defined function)

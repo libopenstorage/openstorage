@@ -21,9 +21,10 @@ func (e Error) Error() string {
 }
 
 const (
-	KvdbKey                  = "alerts"
-	typeAssertionError Error = "type assertion error"
-	invalidFilterType  Error = "invalid filter type"
+	KvdbKey                    = "alerts"
+	typeAssertionError   Error = "type assertion error"
+	invalidFilterType    Error = "invalid filter type"
+	incorrectFilterValue Error = "incorrectly set filter value"
 )
 
 const (
@@ -37,7 +38,7 @@ type Manager interface {
 	// Raise raises an alert.
 	Raise(alert *api.Alert) error
 	// Enumerate lists all alerts filtered by a variadic list of filters.
-	// Note: It will fetch a superset such that every alert is matched by at least one filter.
+	// It will fetch a superset such that every alert is matched by at least one filter.
 	Enumerate(filters ...Filter) ([]*api.Alert, error)
 	// Filter filters given list of alerts successively through each filter.
 	Filter(alerts []*api.Alert, filters ...Filter) ([]*api.Alert, error)
@@ -100,7 +101,7 @@ func (m *manager) Raise(alert *api.Alert) error {
 // is fetched using kvdb enumerate.
 func (m *manager) Enumerate(filters ...Filter) ([]*api.Alert, error) {
 	myAlerts := make([]*api.Alert, 0, 0)
-	keys, err := getKeysFromFilters(filters...)
+	keys, err := getUniqueKeysFromFilters(filters...)
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +185,7 @@ Loop:
 	}
 
 	if allFiltersIndexBased {
-		keys, err := getKeysFromFilters(filters...)
+		keys, err := getUniqueKeysFromFilters(filters...)
 		if err != nil {
 			return err
 		}

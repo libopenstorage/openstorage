@@ -40,19 +40,49 @@ type FilterType int
 // since filters are sorted based on this ordering and such sorting is done to
 // properly query kvdb tree structure.
 //
-// kvdb tree struct is defined as alerts/<resourceType>/<resourceID>/<alertType>/data
+// kvdb tree struct is defined as alerts/<resourceType>/<alertType>/<resourceID>/data
 //
 // Input filters are sorted based
 const (
 	// Filter types listed below do not query kvdb directly. Instead they enumerate and then filter.
+
+	// CustomFilter is based on a user defined function (UDF). All alert entries are fetched from kvdb
+	// and then passed through UDF. Entries that match are returned. Therefore, this filter does not query
+	// kvdb efficiently.
 	CustomFilter FilterType = iota
+	// TimeFilter is based on a start and end timestamp. All alert entries are fetched from kvdb
+	// and then parsed to see if the timestamp for each entry falls within the start and end timestamp
+	// of this filter. Matching entries are returned.
+	// This filter is not an efficient filter.
 	TimeFilter
+	// AlertTypeFilter takes only one argument, i.e., alert type. It first fetches all entries from kvdb
+	// then parses them to see if alert types match. Matching entries are returned.
+	// This filter is not an efficient filter either.
+	// Recommend to use QueryAlertTypeFilter if resource type is known along with alert type.
 	AlertTypeFilter
+	// ResourceIDFilter takes only one argume, i.e., resource id. It fetches all entries from kvdb
+	// then parses them to see resource id's are matching. Matching entries are returned.
+	// This filter is not an efficient filter since it requires pulling all entries.
+	// Recommend to use QueryResourceIDFilter is you resource type and alert type info is also known for
+	// efficient querying.
 	ResourceIDFilter
+	// CounterFilter parses on the count value of alert entries. This filter requires pulling all entries
+	// and is there not an efficient filter.
 	CountFilter
+
 	// Filter types listed below provide more efficient querying into kvdb by directly querying kvdb sub tree.
+
+	// QueryResourceTypeFilter takes resource type and fetches all alert entries under that resource type prefix.
+	// Since resource type is a top level indexing of data, it always performs querying efficiently without
+	// requiring any further filtering.
 	QueryResourceTypeFilter
+	// QueryAlertTypeFilter draws alert entries under a prefix based on resourceType/alertType.
+	// In other words, to use this filter you would need to provide both inputs.
+	// This filter also fetches only the required contents which do not require further filtering.
 	QueryAlertTypeFilter
+	// QueryResourceIDFilter, similarly, requires three inputs, i.e., resourceID, alert type and
+	// resource type. This filter also fetches efficiently based on prefix defined by these three
+	// inputs and requires no further filtering on the fetched contents.
 	QueryResourceIDFilter
 )
 
@@ -122,11 +152,14 @@ func (f *filter) Match(alert *api.Alert) (bool, error) {
 			return false, nil
 		}
 	case CountFilter:
-		v, ok := f.value.(int64)
+		v, ok := f.value.([]int64)
 		if !ok {
 			return false, typeAssertionError
 		}
-		if alert.Count == v {
+		if len(v) != 2 {
+			return false, incorrectFilterValue
+		}
+		if alert.Count >= v[0] && alert.Count <= v[1] {
 			return true, nil
 		} else {
 			return false, nil
@@ -169,9 +202,9 @@ func (f *filter) Match(alert *api.Alert) (bool, error) {
 	}
 }
 
-// getKeysFromFilters analyzes filters and outputs a map of unique keys such that
+// getUniqueKeysFromFilters analyzes filters and outputs a map of unique keys such that
 // these keys do not point to sub trees of one another.
-func getKeysFromFilters(filters ...Filter) (map[string]bool, error) {
+func getUniqueKeysFromFilters(filters ...Filter) (map[string]bool, error) {
 	keys := make(map[string]bool)
 
 	// sort filters so we know how to query
