@@ -556,6 +556,71 @@ func TestManager_Delete(t *testing.T) {
 	}
 }
 
+// TestManager_DeleteMultipleTimes tests if delete works without errors if called multiple times.
+func TestManager_DeleteMultipleTimes(t *testing.T) {
+	kv, err := newInMemKvdb()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	manager := NewManager(kv)
+
+	// prepare a test configuration table
+	configs := []struct {
+		name          string
+		filters       []Filter
+		expectedCount int
+	}{
+		{
+			name:          "by none",
+			expectedCount: 0,
+		},
+		{
+			name: "by 1 resource type",
+			filters: []Filter{
+				NewQueryResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
+			},
+			expectedCount: 5,
+		},
+	}
+
+	// iterate over all configs and test
+	for _, config := range configs {
+		if err := raiseAlerts(manager); err != nil {
+			t.Fatal(err)
+		}
+
+		// call delete multiple times, none should error out
+		if err := manager.Delete(config.filters...); err != nil {
+			t.Fatal(err)
+		}
+		myAlerts, err := manager.Enumerate()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if err := manager.Delete(config.filters...); err != nil {
+			t.Fatal(err)
+		}
+		myAlerts, err = manager.Enumerate()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if err := manager.Delete(config.filters...); err != nil {
+			t.Fatal(err)
+		}
+		myAlerts, err = manager.Enumerate()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(myAlerts) != config.expectedCount {
+			t.Fatal("test:", config.name, ", alert count: expected:", config.expectedCount, ", found:", len(myAlerts))
+		}
+	}
+}
+
 // TestManager_SetRules_Raise tests if set rules activate on raise.
 func TestManager_SetRules_Raise(t *testing.T) {
 	kv, err := newInMemKvdb()
