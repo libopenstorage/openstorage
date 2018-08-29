@@ -10,6 +10,10 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/storageops"
 	"github.com/sirupsen/logrus"
 	"github.com/vmware/govmomi"
+	"github.com/vmware/govmomi/find"
+	"github.com/vmware/govmomi/object"
+	"github.com/vmware/govmomi/property"
+	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
 	"k8s.io/kubernetes/pkg/cloudprovider/providers/vsphere/vclib"
 	"k8s.io/kubernetes/pkg/cloudprovider/providers/vsphere/vclib/diskmanagers"
@@ -46,10 +50,10 @@ func NewClient(cfg *VSphereConfig) (storageops.Ops, error) {
 		return nil, err
 	}
 
-	logrus.Infof("Using following configuration for vsphere:")
-	logrus.Infof("  vCenter: %s:%s", cfg.VCenterIP, cfg.VCenterPort)
-	logrus.Infof("  Datacenter: %s", vmObj.Datacenter.Name())
-	logrus.Infof("  VMUUID: %s", cfg.VMUUID)
+	logrus.Debugf("Using following configuration for vsphere:")
+	logrus.Debugf("  vCenter: %s:%s", cfg.VCenterIP, cfg.VCenterPort)
+	logrus.Debugf("  Datacenter: %s", vmObj.Datacenter.Name())
+	logrus.Debugf("  VMUUID: %s", cfg.VMUUID)
 
 	return &vsphereOps{
 		cfg:  cfg,
@@ -81,7 +85,7 @@ func (ops *vsphereOps) Create(opts interface{}, labels map[string]string) (inter
 	}
 
 	datastore := strings.TrimSpace(volumeOptions.Datastore)
-	logrus.Infof("Using datastore: %s for new disk", datastore)
+	logrus.Infof("Given datastore/datastore cluster: %s for new disk", datastore)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -90,6 +94,59 @@ func (ops *vsphereOps) Create(opts interface{}, labels map[string]string) (inter
 	if err != nil {
 		return nil, err
 	}
+
+	isPod, storagePod, err := IsStoragePod(ctx, vmObj, volumeOptions.Datastore)
+	if err != nil {
+		return nil, err
+	}
+
+	if isPod {
+		logrus.Infof("Using storage pod: %s", storagePod.Name())
+		var devices object.VirtualDeviceList
+		scsi, err := devices.CreateSCSIController("scsi")
+		if err != nil {
+			return nil, err
+		}
+
+		devices = append(devices, scsi)
+
+		controller, err := devices.FindDiskController("scsi")
+		if err != nil {
+			return nil, err
+		}
+
+		disk := &types.VirtualDisk{
+			VirtualDevice: types.VirtualDevice{
+				Key: devices.NewKey(),
+				Backing: &types.VirtualDiskFlatVer2BackingInfo{
+					DiskMode:        string(types.VirtualDiskModePersistent),
+					ThinProvisioned: types.NewBool(true),
+				},
+			},
+			CapacityInKB: int64(volumeOptions.CapacityKB),
+		}
+
+		devices = append(devices, disk)
+		devices.AssignController(disk, controller)
+		deviceChange, err := devices.ConfigSpec(types.VirtualDeviceConfigSpecOperationAdd)
+		if err != nil {
+			return nil, err
+		}
+
+		spec := &types.VirtualMachineConfigSpec{
+			Name: vmObj.Name(),
+		}
+
+		spec.DeviceChange = deviceChange
+		recommendedDatastore, err := recommendDatastore(ctx, vmObj, storagePod, spec)
+		if err != nil {
+			return nil, err
+		}
+
+		datastore = recommendedDatastore.Name()
+	}
+
+	logrus.Infof("Using datastore: %s for new disk", datastore)
 
 	ds, err := vmObj.Datacenter.GetDatastoreByName(ctx, datastore)
 	if err != nil {
@@ -381,12 +438,6 @@ func GetVMObject(ctx context.Context, conn *vclib.VSphereConnection, vmUUID stri
 		}
 
 		if vm != nil {
-			host, err := vm.HostSystem(ctx)
-			if err != nil {
-				return nil, err
-			}
-
-			logrus.Infof("vm: %s uuid: %s is in datacenter: %s running on host: %v", vm.Name(), vmUUID, dc.Name(), host.Reference())
 			return vm, nil
 		}
 	}
@@ -408,4 +459,112 @@ func (ops *vsphereOps) renewVM(ctx context.Context, vm *vclib.VirtualMachine) (*
 
 	vmObj := vm.RenewVM(client)
 	return &vmObj, nil
+}
+
+// recommendedDatastore recommends a datastore to use for the given storage pod by
+// quering the storage resource manager
+func recommendDatastore(
+	ctx context.Context,
+	vmObj *vclib.VirtualMachine,
+	storagePod *object.StoragePod,
+	spec *types.VirtualMachineConfigSpec) (*object.Datastore, error) {
+	sp := storagePod.Reference()
+
+	// Build pod selection spec from config spec
+	podSelectionSpec := types.StorageDrsPodSelectionSpec{
+		StoragePod: &sp,
+	}
+
+	for _, deviceConfigSpec := range spec.DeviceChange {
+		s := deviceConfigSpec.GetVirtualDeviceConfigSpec()
+		if s.Operation != types.VirtualDeviceConfigSpecOperationAdd {
+			continue
+		}
+
+		if s.FileOperation != types.VirtualDeviceConfigSpecFileOperationCreate {
+			continue
+		}
+
+		d, ok := s.Device.(*types.VirtualDisk)
+		if !ok {
+			continue
+		}
+
+		podConfigForPlacement := types.VmPodConfigForPlacement{
+			StoragePod: sp,
+			Disk: []types.PodDiskLocator{
+				{
+					DiskId:          d.Key,
+					DiskBackingInfo: d.Backing,
+				},
+			},
+		}
+
+		podSelectionSpec.InitialVmConfig = append(podSelectionSpec.InitialVmConfig, podConfigForPlacement)
+	}
+
+	resourcePool, err := vmObj.ResourcePool(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vm resource pool due to: %v", err)
+	}
+
+	if resourcePool == nil {
+		return nil, fmt.Errorf("failed to get vm resource pool")
+	}
+
+	resourcePoolRef := resourcePool.Reference()
+
+	sps := types.StoragePlacementSpec{
+		Type:             string(types.StoragePlacementSpecPlacementTypeCreate),
+		PodSelectionSpec: podSelectionSpec,
+		ConfigSpec:       spec,
+		ResourcePool:     &resourcePoolRef,
+	}
+
+	srm := object.NewStorageResourceManager(vmObj.Client())
+	result, err := srm.RecommendDatastores(ctx, sps)
+	if err != nil {
+		logrus.Errorf("failed to get datastore recommendations due to: %v", err)
+		return nil, err
+	}
+
+	// Use result to pin disks to recommended datastores
+	recs := result.Recommendations
+	if len(recs) == 0 {
+		return nil, fmt.Errorf("no datastores recommendations")
+	}
+
+	ds := recs[0].Action[0].(*types.StoragePlacementAction).Destination
+
+	var mds mo.Datastore
+	err = property.DefaultCollector(vmObj.Client()).RetrieveOne(ctx, ds, []string{"name"}, &mds)
+	if err != nil {
+		return nil, err
+	}
+
+	datastore := object.NewDatastore(vmObj.Client(), ds)
+	datastore.InventoryPath = mds.Name
+
+	return datastore, nil
+}
+
+// IsStoragePod checks if the object with given name is a StoragePod (Datastore cluster)
+func IsStoragePod(ctx context.Context, vmObj *vclib.VirtualMachine, name string) (bool, *object.StoragePod, error) {
+	f := find.NewFinder(vmObj.Client(), true)
+	f.SetDatacenter(vmObj.Datacenter.Datacenter)
+	sp, err := f.DatastoreCluster(ctx, name)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			return false, nil, nil
+		}
+
+		logrus.Errorf("got error: %v fetching datastore cluster: %s", err, name)
+		return false, nil, err
+	}
+
+	if sp == nil {
+		return false, nil, nil
+	}
+
+	return true, sp, nil
 }
