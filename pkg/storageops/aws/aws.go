@@ -203,7 +203,8 @@ func (s *ec2Ops) waitAttachmentStatus(
 	if vol, ok := outVol.(*ec2.Volume); ok {
 		return vol, nil
 	}
-	return nil, fmt.Errorf("Invalid volume object for volume %s", volumeID)
+	return nil, storageops.NewStorageError(storageops.ErrVolInval,
+		fmt.Sprintf("Invalid volume object for volume %s", volumeID), "")
 }
 
 func (s *ec2Ops) Name() string { return "aws" }
