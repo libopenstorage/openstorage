@@ -119,19 +119,22 @@ func (m *manager) Enumerate(filters ...Filter) ([]*api.Alert, error) {
 				return nil, err
 			}
 
-			atLeastOneMatch := false
+			if len(filters) == 0 {
+				myAlerts = append(myAlerts, alert)
+				continue
+			}
+
 			for _, filter := range filters {
 				if match, err := filter.Match(alert); err != nil {
 					return nil, err
 				} else {
+					// if alert is matched by at least one filter,
+					// include it and break out of loop to avoid further checks.
 					if match {
-						atLeastOneMatch = match
+						myAlerts = append(myAlerts, alert)
+						break
 					}
 				}
-			}
-
-			if atLeastOneMatch || len(filters) == 0 {
-				myAlerts = append(myAlerts, alert)
 			}
 		}
 	}
@@ -178,7 +181,7 @@ func (m *manager) Delete(filters ...Filter) error {
 Loop:
 	for _, filter := range filters {
 		switch filter.GetFilterType() {
-		case CustomFilter, TimeFilter, AlertTypeFilter, ResourceIDFilter, CountFilter:
+		case CustomFilter, TimeSpanFilter, AlertTypeFilter, InefficientResourceIDFilter, CountSpanFilter:
 			allFiltersIndexBased = false
 			break Loop
 		}

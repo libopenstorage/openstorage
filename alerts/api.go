@@ -14,44 +14,36 @@ func NewManager(kv kvdb.Kvdb) Manager {
 
 // Filter API
 
-// NewQueryResourceTypeFilter creates a filter that matches on <resourceType>
-func NewQueryResourceTypeFilter(resourceType api.ResourceType) Filter {
-	return &filter{filterType: QueryResourceTypeFilter, value: resourceType}
+// NewResourceTypeFilter creates a filter that matches on <resourceType>
+func NewResourceTypeFilter(resourceType api.ResourceType) Filter {
+	return &filter{filterType: ResourceTypeFilter, value: resourceType}
 }
 
-// NewQueryAlertTypeFilter creates a filter that matches on <resourceType>/<alertType>
-func NewQueryAlertTypeFilter(alertType int64, resourceType api.ResourceType) Filter {
-	return &filter{filterType: QueryAlertTypeFilter, value: alertInfo{
+// NewAlertTypeFilter creates a filter that matches on <resourceType>/<alertType>
+func NewAlertTypeFilter(alertType int64, resourceType api.ResourceType) Filter {
+	return &filter{filterType: AlertTypeFilter, value: alertInfo{
 		alertType: alertType, resourceType: resourceType}}
 }
 
-// NewQueryResourceIDFilter creates a filter that matches on <resourceType>/<alertType>/<resourceID>
-func NewQueryResourceIDFilter(resourceID string, alertType int64, resourceType api.ResourceType) Filter {
-	return &filter{filterType: QueryResourceIDFilter, value: alertInfo{
+// NewResourceIDFilter creates a filter that matches on <resourceType>/<alertType>/<resourceID>
+func NewResourceIDFilter(resourceID string, alertType int64, resourceType api.ResourceType) Filter {
+	return &filter{filterType: ResourceIDFilter, value: alertInfo{
 		resourceID: resourceID, alertType: alertType, resourceType: resourceType}}
 }
 
-// NewTimeFilter creates a filter that matches on alert raised in a given time window.
-func NewTimeFilter(start, stop time.Time) Filter {
-	return &filter{filterType: TimeFilter, value: timeZone{start: start, stop: stop}}
+// NewTimeSpanFilter creates a filter that matches on alert raised in a given time window.
+func NewTimeSpanFilter(start, stop time.Time) Filter {
+	return &filter{filterType: TimeSpanFilter, value: timeZone{start: start, stop: stop}}
 }
 
-// NewAlertTypeFilter provides a filter that matches on alerty type.
-// Please note that if you are filtering for alert types for a given resource type, it is better
-// to use NewQueryAlertTypeFilter instead of this filter since it is more efficient in terms of
-// kvdb access.
-func NewAlertTypeFilter(alertType int64) Filter {
-	return &filter{filterType: AlertTypeFilter, value: alertType}
+// NewInefficientResourceIDFilter provides a filter that matches on resource id.
+func NewInefficientResourceIDFilter(resourceID string) Filter {
+	return &filter{filterType: InefficientResourceIDFilter, value: resourceID}
 }
 
-// NewResourceIDFilter provides a filter that matches on resource id.
-func NewResourceIDFilter(resourceID string) Filter {
-	return &filter{filterType: ResourceIDFilter, value: resourceID}
-}
-
-// NewCountFilter provides a filter that matches on alert count.
-func NewCountFilter(minCount, maxCount int64) Filter {
-	return &filter{filterType: CountFilter, value: []int64{minCount, maxCount}}
+// NewCountSpanFilter provides a filter that matches on alert count.
+func NewCountSpanFilter(minCount, maxCount int64) Filter {
+	return &filter{filterType: CountSpanFilter, value: []int64{minCount, maxCount}}
 }
 
 // NewCustomFilter creates a filter that matches on UDF (user defined function)
