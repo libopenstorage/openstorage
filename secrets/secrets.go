@@ -34,34 +34,34 @@ type Secrets interface {
 	SecretGet(key string) (interface{}, error)
 }
 
-type nullSecrets struct {
+type NullSecrets struct {
 }
 
 // New returns null secrets implementation
 func NewDefaultSecrets() Secrets {
-	return &nullSecrets{}
+	return &NullSecrets{}
 }
 
-func (f *nullSecrets) SecretLogin(secretType string, secretConfig map[string]string) error {
+func (f *NullSecrets) SecretLogin(secretType string, secretConfig map[string]string) error {
 	return ErrNotImplemented
 }
 
-func (f *nullSecrets) SecretSetDefaultSecretKey(secretKey string, override bool) error {
+func (f *NullSecrets) SecretSetDefaultSecretKey(secretKey string, override bool) error {
 	return ErrNotImplemented
 }
 
-func (f *nullSecrets) SecretGetDefaultSecretKey() (interface{}, error) {
+func (f *NullSecrets) SecretGetDefaultSecretKey() (interface{}, error) {
 	return nil, ErrNotImplemented
 }
 
-func (f *nullSecrets) SecretCheckLogin() error {
+func (f *NullSecrets) SecretCheckLogin() error {
 	return ErrNotImplemented
 }
 
-func (f *nullSecrets) SecretSet(secretKey string, secretValue interface{}) error {
+func (f *NullSecrets) SecretSet(secretKey string, secretValue interface{}) error {
 	return ErrNotImplemented
 }
 
-func (f *nullSecrets) SecretGet(secretKey string) (interface{}, error) {
+func (f *NullSecrets) SecretGet(secretKey string) (interface{}, error) {
 	return nil, ErrNotImplemented
 }
