@@ -1,6 +1,6 @@
 package alerts
 
-// Rule defines an rule on an Event, for a filter, executing a func.
+// Rule defines a rule on an Event, for a filter, executing a func.
 type Rule interface {
 	GetName() string
 	GetEvent() Event
