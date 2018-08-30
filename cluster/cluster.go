@@ -29,6 +29,7 @@ var (
 		"could not be found in the cluster map.")
 	ErrNodeDecommissioned   = errors.New("Node is decomissioned.")
 	ErrRemoveCausesDataLoss = errors.New("Cannot remove node without data loss")
+	ErrNotImplemented       = errors.New("Not Implemented")
 )
 
 // ClusterServerConfiguration holds manager implementation
