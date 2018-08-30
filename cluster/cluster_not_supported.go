@@ -4,252 +4,214 @@ import (
 	time "time"
 
 	api "github.com/libopenstorage/openstorage/api"
-	osdconfig "github.com/libopenstorage/openstorage/osdconfig"
+	"github.com/libopenstorage/openstorage/objectstore"
+	"github.com/libopenstorage/openstorage/osdconfig"
 	schedpolicy "github.com/libopenstorage/openstorage/schedpolicy"
+	"github.com/libopenstorage/openstorage/secrets"
 )
 
-// nullClusterMgr is a NULL implementation of the Cluster interface
+// NullClusterManager is a NULL implementation of the Cluster interface
 // It is primarily used for testing the ClusterManager as well as the
 // ClusterListener interface
-type NullClusterMgr struct {
+type NullClusterManager struct {
+	NullClusterData
+	NullClusterRemove
+	NullClusterStatus
+	NullClusterAlerts
+	NullClusterPair
+	osdconfig.NullConfigCaller
+	secrets.NullSecrets
+	schedpolicy.NullSchedMgr
+	objectstore.NullObjectStoreMgr
 }
 
-// AddEventListener
-func (m *NullClusterMgr) AddEventListener(arg0 ClusterListener) error {
-	return nil
+func NewDefaultClusterManager() Cluster {
+	return &NullClusterManager{}
 }
 
-// ClearAlert
-func (m *NullClusterMgr) ClearAlert(arg0 api.ResourceType, arg1 int64) error {
-	return ErrNotImplemented
+// NullClusterData is a NULL implementation of the ClusterData interface
+type NullClusterData struct {
 }
 
-// CreatePair
-func (m *NullClusterMgr) CreatePair(arg0 *api.ClusterPairCreateRequest) (*api.ClusterPairCreateResponse, error) {
-	return nil, ErrNotImplemented
+func NewDefaultClusterData() ClusterData {
+	return &NullClusterData{}
 }
 
-// DeleteNodeConf
-func (m *NullClusterMgr) DeleteNodeConf(arg0 string) error {
-	return ErrNotImplemented
+// NullClusterRemove is a NULL implementation of the ClusterRemove interface
+type NullClusterRemove struct {
 }
 
-// DeletePair
-func (m *NullClusterMgr) DeletePair(arg0 string) error {
-	return ErrNotImplemented
+func NewDefaultClusterRemove() ClusterRemove {
+	return &NullClusterRemove{}
 }
 
-// DisableUpdates
-func (m *NullClusterMgr) DisableUpdates() error {
-	return ErrNotImplemented
+// NullClusterStatus is a NULL implementation of the ClusterStatus interface
+type NullClusterStatus struct {
 }
 
-// EnableUpdates
-func (m *NullClusterMgr) EnableUpdates() error {
-	return ErrNotImplemented
+func NewDefaultClusterStatus() ClusterStatus {
+	return &NullClusterStatus{}
 }
 
-// Enumerate
-func (m *NullClusterMgr) Enumerate() (api.Cluster, error) {
-	return api.Cluster{}, ErrNotImplemented
+// NullClusterAlerts is a NULL implementation of the ClusterAlerts interface
+type NullClusterAlerts struct {
 }
 
-// EnumerateAlerts
-func (m *NullClusterMgr) EnumerateAlerts(arg0, arg1 time.Time, arg2 api.ResourceType) (*api.Alerts, error) {
-	return nil, ErrNotImplemented
+func NewDefaultClusterAlerts() ClusterAlerts {
+	return &NullClusterAlerts{}
 }
 
-// EnumerateNodeConf
-func (m *NullClusterMgr) EnumerateNodeConf() (*osdconfig.NodesConfig, error) {
-	return nil, ErrNotImplemented
+// NullClusterPair is a NULL implementation of the ClusterPair interface
+type NullClusterPair struct {
 }
 
-// EnumeratePairs
-func (m *NullClusterMgr) EnumeratePairs() (*api.ClusterPairsEnumerateResponse, error) {
-	return nil, ErrNotImplemented
+func NewDefaultCluterPair() ClusterPair {
+	return &NullClusterPair{}
 }
 
-// EraseAlert
-func (m *NullClusterMgr) EraseAlert(arg0 api.ResourceType, arg1 int64) error {
-	return ErrNotImplemented
-}
-
-// GetClusterConf
-func (m *NullClusterMgr) GetClusterConf() (*osdconfig.ClusterConfig, error) {
-	return nil, ErrNotImplemented
-}
-
-// GetData
-func (m *NullClusterMgr) GetData() (map[string]*api.Node, error) {
-	return nil, ErrNotImplemented
-}
-
-// GetGossipState
-func (m *NullClusterMgr) GetGossipState() *ClusterState {
-	return nil
-}
-
-// GetNodeConf
-func (m *NullClusterMgr) GetNodeConf(arg0 string) (*osdconfig.NodeConfig, error) {
-	return nil, ErrNotImplemented
-}
-
-// GetNodeIdFromIp
-func (m *NullClusterMgr) GetNodeIdFromIp(arg0 string) (string, error) {
-	return "", ErrNotImplemented
-}
-
-// GetPair
-func (m *NullClusterMgr) GetPair(arg0 string) (*api.ClusterPairGetResponse, error) {
-	return nil, ErrNotImplemented
-}
-
-// GetPairToken
-func (m *NullClusterMgr) GetPairToken(arg0 bool) (*api.ClusterPairTokenGetResponse, error) {
-	return nil, ErrNotImplemented
-}
+// NullClusterManager implementations
 
 // Inspect
-func (m *NullClusterMgr) Inspect(arg0 string) (api.Node, error) {
+func (m *NullClusterManager) Inspect(arg0 string) (api.Node, error) {
 	return api.Node{}, ErrNotImplemented
 }
 
-// NodeRemoveDone
-func (m *NullClusterMgr) NodeRemoveDone(arg0 string, arg1 error) {
-	return
+// AddEventListener
+func (m *NullClusterManager) AddEventListener(arg0 ClusterListener) error {
+	return nil
 }
 
-// Nodestatus
-func (m *NullClusterMgr) NodeStatus() (api.Status, error) {
-	return api.Status_STATUS_NONE, ErrNotImplemented
-}
-
-// ObjectStoreCreate
-func (m *NullClusterMgr) ObjectStoreCreate(arg0 string) (*api.ObjectstoreInfo, error) {
-	return nil, ErrNotImplemented
-}
-
-// ObjectStoreDelete
-func (m *NullClusterMgr) ObjectStoreDelete(arg0 string) error {
-	return ErrNotImplemented
-}
-
-// ObjectStoreInspect
-func (m *NullClusterMgr) ObjectStoreInspect(arg0 string) (*api.ObjectstoreInfo, error) {
-	return nil, ErrNotImplemented
-}
-
-// ObjectStoreUpdate
-func (m *NullClusterMgr) ObjectStoreUpdate(arg0 string, arg1 bool) error {
-	return ErrNotImplemented
-}
-
-// PeerStatus
-func (m *NullClusterMgr) PeerStatus(arg0 string) (map[string]api.Status, error) {
-	return nil, ErrNotImplemented
-}
-
-// ProcessPairRequest
-func (m *NullClusterMgr) ProcessPairRequest(arg0 *api.ClusterPairProcessRequest) (*api.ClusterPairProcessResponse, error) {
-	return nil, ErrNotImplemented
-}
-
-// Remove
-func (m *NullClusterMgr) Remove(arg0 []api.Node, arg1 bool) error {
-	return ErrNotImplemented
-}
-
-// SchedPolicyCreate
-func (m *NullClusterMgr) SchedPolicyCreate(arg0, arg1 string) error {
-	return ErrNotImplemented
-}
-
-// SchedPolicyDelete
-func (m *NullClusterMgr) SchedPolicyDelete(arg0 string) error {
-	return ErrNotImplemented
-}
-
-// SchedPolicyEnumerate
-func (m *NullClusterMgr) SchedPolicyEnumerate() ([]*schedpolicy.SchedPolicy, error) {
-	return nil, ErrNotImplemented
-}
-
-// SchedPolicyGet
-func (m *NullClusterMgr) SchedPolicyGet(arg0 string) (*schedpolicy.SchedPolicy, error) {
-	return nil, ErrNotImplemented
-}
-
-// SchedPolicyUpdate
-func (m *NullClusterMgr) SchedPolicyUpdate(arg0, arg1 string) error {
-	return ErrNotImplemented
-}
-
-// SecretCheckLogin
-func (m *NullClusterMgr) SecretCheckLogin() error {
-	return ErrNotImplemented
-}
-
-// SecretGet
-func (m *NullClusterMgr) SecretGet(arg0 string) (interface{}, error) {
-	return nil, ErrNotImplemented
-}
-
-// SecretGetDefaultSecretKey
-func (m *NullClusterMgr) SecretGetDefaultSecretKey() (interface{}, error) {
-	return nil, ErrNotImplemented
-}
-
-// SecretLogin
-func (m *NullClusterMgr) SecretLogin(arg0 string, arg1 map[string]string) error {
-	return ErrNotImplemented
-}
-
-// SecretSet
-func (m *NullClusterMgr) SecretSet(arg0 string, arg1 interface{}) error {
-	return ErrNotImplemented
-}
-
-// SecretSetDefaultSecretKey
-func (m *NullClusterMgr) SecretSetDefaultSecretKey(arg0 string, arg1 bool) error {
-	return ErrNotImplemented
-}
-
-// SetClusterConf
-func (m *NullClusterMgr) SetClusterConf(arg0 *osdconfig.ClusterConfig) error {
-	return ErrNotImplemented
-}
-
-// SetNodeConf
-func (m *NullClusterMgr) SetNodeConf(arg0 *osdconfig.NodeConfig) error {
-	return ErrNotImplemented
+// Enumerate
+func (m *NullClusterManager) Enumerate() (api.Cluster, error) {
+	return api.Cluster{}, ErrNotImplemented
 }
 
 // SetSize
-func (m *NullClusterMgr) SetSize(arg0 int) error {
+func (m *NullClusterManager) SetSize(arg0 int) error {
 	return ErrNotImplemented
 }
 
 // Shutdown
-func (m *NullClusterMgr) Shutdown() error {
+func (m *NullClusterManager) Shutdown() error {
 	return ErrNotImplemented
 }
 
 // Start
-func (m *NullClusterMgr) Start(arg0 int, arg1 bool, arg2 string) error {
+func (m *NullClusterManager) Start(arg0 int, arg1 bool, arg2 string) error {
 	return ErrNotImplemented
 }
 
 // StartWithConfiguration
-func (m *NullClusterMgr) StartWithConfiguration(arg0 int, arg1 bool, arg2 string, arg3 *ClusterServerConfiguration) error {
+func (m *NullClusterManager) StartWithConfiguration(arg0 int, arg1 bool, arg2 string, arg3 *ClusterServerConfiguration) error {
 	return ErrNotImplemented
 }
 
+// NullClusterData implementations
+
 // UpdateData
-func (m *NullClusterMgr) UpdateData(arg0 map[string]interface{}) error {
+func (m *NullClusterData) UpdateData(arg0 map[string]interface{}) error {
 	return ErrNotImplemented
 }
 
 // UpdateLabels
-func (m *NullClusterMgr) UpdateLabels(arg0 map[string]string) error {
+func (m *NullClusterData) UpdateLabels(arg0 map[string]string) error {
 	return ErrNotImplemented
+}
+
+// GetData
+func (m *NullClusterData) GetData() (map[string]*api.Node, error) {
+	return nil, ErrNotImplemented
+}
+
+// GetNodeIdFromIp
+func (m *NullClusterData) GetNodeIdFromIp(arg0 string) (string, error) {
+	return "", ErrNotImplemented
+}
+
+// EnableUpdates
+func (m *NullClusterData) EnableUpdates() error {
+	return ErrNotImplemented
+}
+
+// DisableUpdates
+func (m *NullClusterData) DisableUpdates() error {
+	return ErrNotImplemented
+}
+
+// GetGossipState
+func (m *NullClusterData) GetGossipState() *ClusterState {
+	return nil
+}
+
+// NullClusterRemove implementations
+
+// Remove
+func (m *NullClusterRemove) Remove(arg0 []api.Node, arg1 bool) error {
+	return ErrNotImplemented
+}
+
+// NodeRemoveDone
+func (m *NullClusterRemove) NodeRemoveDone(arg0 string, arg1 error) {
+	return
+}
+
+// NullClusterStatus implementations
+
+// Nodestatus
+func (m *NullClusterStatus) NodeStatus() (api.Status, error) {
+	return api.Status_STATUS_NONE, ErrNotImplemented
+}
+
+// PeerStatus
+func (m *NullClusterStatus) PeerStatus(arg0 string) (map[string]api.Status, error) {
+	return nil, ErrNotImplemented
+}
+
+// NullClusterAlerts implementations
+
+// EnumerateAlerts
+func (m *NullClusterAlerts) EnumerateAlerts(arg0, arg1 time.Time, arg2 api.ResourceType) (*api.Alerts, error) {
+	return nil, ErrNotImplemented
+}
+
+// EraseAlert
+func (m *NullClusterAlerts) EraseAlert(arg0 api.ResourceType, arg1 int64) error {
+	return ErrNotImplemented
+}
+
+// ClearAlert
+func (m *NullClusterAlerts) ClearAlert(arg0 api.ResourceType, arg1 int64) error {
+	return ErrNotImplemented
+}
+
+// NullClusterPair implementations
+
+// CreatePair
+func (m *NullClusterPair) CreatePair(arg0 *api.ClusterPairCreateRequest) (*api.ClusterPairCreateResponse, error) {
+	return nil, ErrNotImplemented
+}
+
+// ProcessPairRequest
+func (m *NullClusterPair) ProcessPairRequest(arg0 *api.ClusterPairProcessRequest) (*api.ClusterPairProcessResponse, error) {
+	return nil, ErrNotImplemented
+}
+
+// GetPair
+func (m *NullClusterPair) GetPair(arg0 string) (*api.ClusterPairGetResponse, error) {
+	return nil, ErrNotImplemented
+}
+
+// EnumeratePairs
+func (m *NullClusterPair) EnumeratePairs() (*api.ClusterPairsEnumerateResponse, error) {
+	return nil, ErrNotImplemented
+}
+
+// DeletePair
+func (m *NullClusterPair) DeletePair(arg0 string) error {
+	return ErrNotImplemented
+}
+
+// GetPairToken
+func (m *NullClusterPair) GetPairToken(arg0 bool) (*api.ClusterPairTokenGetResponse, error) {
+	return nil, ErrNotImplemented
 }

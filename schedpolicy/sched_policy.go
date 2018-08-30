@@ -20,28 +20,28 @@ type SchedulePolicyProvider interface {
 }
 
 func NewDefaultSchedulePolicy() SchedulePolicyProvider {
-	return &nullSchedMgr{}
+	return &NullSchedMgr{}
 }
 
-type nullSchedMgr struct {
+type NullSchedMgr struct {
 }
 
-func (sp *nullSchedMgr) SchedPolicyCreate(name, sched string) error {
+func (sp *NullSchedMgr) SchedPolicyCreate(name, sched string) error {
 	return ErrNotImplemented
 }
 
-func (sp *nullSchedMgr) SchedPolicyUpdate(name, sched string) error {
+func (sp *NullSchedMgr) SchedPolicyUpdate(name, sched string) error {
 	return ErrNotImplemented
 }
 
-func (sp *nullSchedMgr) SchedPolicyDelete(name string) error {
+func (sp *NullSchedMgr) SchedPolicyDelete(name string) error {
 	return ErrNotImplemented
 }
 
-func (sp *nullSchedMgr) SchedPolicyEnumerate() ([]*SchedPolicy, error) {
+func (sp *NullSchedMgr) SchedPolicyEnumerate() ([]*SchedPolicy, error) {
 	return nil, ErrNotImplemented
 }
 
-func (sp *nullSchedMgr) SchedPolicyGet(name string) (*SchedPolicy, error) {
+func (sp *NullSchedMgr) SchedPolicyGet(name string) (*SchedPolicy, error) {
 	return nil, ErrNotImplemented
 }
