@@ -310,6 +310,9 @@ message VolumeSpec {
   bool sharedv4 = 26;
   // QueueDepth defines the desired block device queue depth
   int32 queue_depth = 27;
+  // Use to force a file system type which is not recommended.
+  // The driver may still refuse to use the file system type.
+  bool force_unsupported_fs_type = 28;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -762,32 +765,6 @@ service OpenStorageCluster {
     returns (SdkClusterInspectCurrentResponse) {
       option(google.api.http) = {
         get: "/v1/clusters/current"
-      };
-    }
-
-  // AlertEnumerate returns a list of alerts from the storage cluster
-  // In REST, use the request values as query parameters.
-  rpc AlertEnumerate(SdkClusterAlertEnumerateRequest)
-    returns (SdkClusterAlertEnumerateResponse) {
-      option(google.api.http) = {
-        get: "/v1/clusters/alerts"
-      };
-    }
-
-  // AlertClear clears the alert for a given resource
-  rpc AlertClear(SdkClusterAlertClearRequest)
-    returns (SdkClusterAlertClearResponse) {
-      option(google.api.http) = {
-        post: "/v1/clusters/alerts/clear"
-        body: "*"
-      };
-    }
-
-  // AlertDelete deletes an alert for all resources
-  rpc AlertDelete(SdkClusterAlertDeleteRequest)
-    returns (SdkClusterAlertDeleteResponse) {
-      option(google.api.http) = {
-        delete: "/v1/clusters/alerts/{alert_id}"
       };
     }
 }
@@ -1790,48 +1767,6 @@ message SdkNodeEnumerateResponse {
   repeated string node_ids = 1;
 }
 
-// Defines a request contains the information needed to get alerts from
-// the storage system. For REST you will need to pass these
-// as query parameters. See swagger documentation for more information.
-message SdkClusterAlertEnumerateRequest {
-  // Start time of alerts
-  google.protobuf.Timestamp time_start = 1;
-  // End time of alerts
-  google.protobuf.Timestamp time_end = 2;
-  // Type of resource
-  ResourceType resource = 3;
-}
-
-// Defines a response providing a list of alerts
-message SdkClusterAlertEnumerateResponse {
-  // Information on the alerts requested
-  repeated Alert alerts = 1;
-}
-
-// Defines a request to clear an alert
-message SdkClusterAlertClearRequest {
-  // Type of resource (required)
-  ResourceType resource = 1;
-  // Id of alert as returned by ClusterEnumerateAlertResponse (required)
-  int64 alert_id = 2;
-}
-
-// Empty response
-message SdkClusterAlertClearResponse {
-}
-
-// Defines a request to delete an alert
-message SdkClusterAlertDeleteRequest {
-  // Type of resource (required)
-  ResourceType resource = 1;
-  // Id of alert as returned by ClusterEnumerateAlertResponse (required)
-  int64 alert_id = 2;
-}
-
-// Empty response
-message SdkClusterAlertDeleteResponse {
-}
-
 // Defines a request to get information about an object store endpoint
 message SdkObjectstoreInspectRequest {
   // Id of the object store
@@ -2234,7 +2169,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 5;
+    Minor = 6;
     // SDK version patch value of this specification
     Patch = 0;
   }

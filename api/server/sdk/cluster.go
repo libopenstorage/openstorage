@@ -22,8 +22,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/golang/protobuf/ptypes"
-
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
 )
@@ -46,78 +44,4 @@ func (s *ClusterServer) InspectCurrent(
 	return &api.SdkClusterInspectCurrentResponse{
 		Cluster: c.ToStorageCluster(),
 	}, nil
-}
-
-// AlertEnumerate returns a list of alerts from the storage cluster
-func (s *ClusterServer) AlertEnumerate(
-	ctx context.Context,
-	req *api.SdkClusterAlertEnumerateRequest,
-) (*api.SdkClusterAlertEnumerateResponse, error) {
-
-	ts, err := ptypes.Timestamp(req.GetTimeStart())
-	if err != nil {
-		return nil, status.Errorf(
-			codes.InvalidArgument,
-			"Unable to get start time from request: %v",
-			err.Error())
-	}
-
-	te, err := ptypes.Timestamp(req.GetTimeEnd())
-	if err != nil {
-		return nil, status.Errorf(
-			codes.InvalidArgument,
-			"Unable to get start time from request: %v",
-			err.Error())
-	}
-
-	alerts, err := s.cluster.EnumerateAlerts(ts, te, req.GetResource())
-	if err != nil {
-		return nil, status.Errorf(
-			codes.Internal,
-			"Failed to enumerate alerts for type %v: %v",
-			req.GetResource(),
-			err.Error())
-	}
-
-	return &api.SdkClusterAlertEnumerateResponse{
-		Alerts: alerts.Alert,
-	}, nil
-}
-
-// AlertClear clears the alert for a given resource
-func (s *ClusterServer) AlertClear(
-	ctx context.Context,
-	req *api.SdkClusterAlertClearRequest,
-) (*api.SdkClusterAlertClearResponse, error) {
-
-	err := s.cluster.ClearAlert(req.GetResource(), req.GetAlertId())
-	if err != nil {
-		return nil, status.Errorf(
-			codes.Internal,
-			"Failed to clear alert %d for type %v: %v",
-			req.GetAlertId(),
-			req.GetResource(),
-			err.Error())
-	}
-
-	return &api.SdkClusterAlertClearResponse{}, nil
-}
-
-// AlertDelete deletes an alert for a given resource
-func (s *ClusterServer) AlertDelete(
-	ctx context.Context,
-	req *api.SdkClusterAlertDeleteRequest,
-) (*api.SdkClusterAlertDeleteResponse, error) {
-
-	err := s.cluster.EraseAlert(req.GetResource(), req.GetAlertId())
-	if err != nil {
-		return nil, status.Errorf(
-			codes.Internal,
-			"Failed to delete alert %d for type %v: %v",
-			req.GetAlertId(),
-			req.GetResource(),
-			err.Error())
-	}
-
-	return &api.SdkClusterAlertDeleteResponse{}, nil
 }

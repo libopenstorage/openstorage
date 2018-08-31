@@ -27,67 +27,6 @@
       "title": "- UNKNOWN: Unknown service\n - CLUSTER: Cluster management\n - CLOUD_BACKUP: Cloud backup of volumes management\n - CREDENTIALS: Credentials management\n - NODE: Node management\n - OBJECT_STORAGE: Object Storage management\n - SCHEDULE_POLICY: Schedule policy management\n - VOLUME: Volume management",
       "type": "string"
     },
-    "apiAlert": {
-      "properties": {
-        "alert_type": {
-          "format": "int64",
-          "title": "AlertType user defined alert type",
-          "type": "string"
-        },
-        "cleared": {
-          "format": "boolean",
-          "title": "Cleared Flag",
-          "type": "boolean"
-        },
-        "count": {
-          "description": "Count of such alerts raised so far.",
-          "format": "int64",
-          "type": "string"
-        },
-        "first_seen": {
-          "description": "Timestamp when such alert was raised the very first time.",
-          "format": "date-time",
-          "type": "string"
-        },
-        "id": {
-          "format": "int64",
-          "title": "Id for Alert",
-          "type": "string"
-        },
-        "message": {
-          "title": "Message describing the Alert",
-          "type": "string"
-        },
-        "resource": {
-          "$ref": "#/definitions/apiResourceType",
-          "title": "Resource where Alert occured"
-        },
-        "resource_id": {
-          "title": "ResourceId where Alert occured",
-          "type": "string"
-        },
-        "severity": {
-          "$ref": "#/definitions/apiSeverityType",
-          "title": "Severity of the Alert"
-        },
-        "timestamp": {
-          "format": "date-time",
-          "title": "Timestamp when Alert occured",
-          "type": "string"
-        },
-        "ttl": {
-          "format": "uint64",
-          "title": "Time-to-live in seconds for this Alert",
-          "type": "string"
-        },
-        "unique_tag": {
-          "title": "UniqueTag helps identify a unique alert for a given resouce",
-          "type": "string"
-        }
-      },
-      "title": "Alert is a structure that represents an alert object",
-      "type": "object"
-    },
     "apiAttachState": {
       "default": "ATTACH_STATE_EXTERNAL",
       "enum": [
@@ -211,17 +150,6 @@
       },
       "title": "ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure\ncoded - for clustered storage arrays\nswagger:model",
       "type": "object"
-    },
-    "apiResourceType": {
-      "default": "RESOURCE_TYPE_NONE",
-      "enum": [
-        "RESOURCE_TYPE_NONE",
-        "RESOURCE_TYPE_VOLUME",
-        "RESOURCE_TYPE_NODE",
-        "RESOURCE_TYPE_CLUSTER",
-        "RESOURCE_TYPE_DRIVE"
-      ],
-      "type": "string"
     },
     "apiRuntimeStateMap": {
       "properties": {
@@ -646,42 +574,6 @@
       ],
       "title": "CloudBackup status types",
       "type": "string"
-    },
-    "apiSdkClusterAlertClearRequest": {
-      "properties": {
-        "alert_id": {
-          "format": "int64",
-          "title": "Id of alert as returned by ClusterEnumerateAlertResponse (required)",
-          "type": "string"
-        },
-        "resource": {
-          "$ref": "#/definitions/apiResourceType",
-          "title": "Type of resource (required)"
-        }
-      },
-      "title": "Defines a request to clear an alert",
-      "type": "object"
-    },
-    "apiSdkClusterAlertClearResponse": {
-      "title": "Empty response",
-      "type": "object"
-    },
-    "apiSdkClusterAlertDeleteResponse": {
-      "title": "Empty response",
-      "type": "object"
-    },
-    "apiSdkClusterAlertEnumerateResponse": {
-      "properties": {
-        "alerts": {
-          "items": {
-            "$ref": "#/definitions/apiAlert"
-          },
-          "title": "Information on the alerts requested",
-          "type": "array"
-        }
-      },
-      "title": "Defines a response providing a list of alerts",
-      "type": "object"
     },
     "apiSdkClusterInspectCurrentResponse": {
       "properties": {
@@ -1435,16 +1327,6 @@
       "title": "Empty response",
       "type": "object"
     },
-    "apiSeverityType": {
-      "default": "SEVERITY_TYPE_NONE",
-      "enum": [
-        "SEVERITY_TYPE_NONE",
-        "SEVERITY_TYPE_ALARM",
-        "SEVERITY_TYPE_WARNING",
-        "SEVERITY_TYPE_NOTIFY"
-      ],
-      "type": "string"
-    },
     "apiSource": {
       "properties": {
         "parent": {
@@ -1949,6 +1831,11 @@
           "title": "Ephemeral storage",
           "type": "boolean"
         },
+        "force_unsupported_fs_type": {
+          "description": "Use to force a file system type which is not recommended.\nThe driver may still refuse to use the file system type.",
+          "format": "boolean",
+          "type": "boolean"
+        },
         "format": {
           "$ref": "#/definitions/apiFSType",
           "description": "Format specifies the filesystem for this volume."
@@ -2160,7 +2047,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.5.0"
+    "version": "0.6.0"
   },
   "paths": {
     "/v1/cloudbackups": {
@@ -2516,124 +2403,6 @@
         "summary": "Status returns the status of any cloud backups of a volume",
         "tags": [
           "OpenStorageCloudBackup"
-        ]
-      }
-    },
-    "/v1/clusters/alerts": {
-      "get": {
-        "operationId": "AlertEnumerate",
-        "parameters": [
-          {
-            "description": "Start time of alerts.",
-            "format": "date-time",
-            "in": "query",
-            "name": "time_start",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "description": "End time of alerts.",
-            "format": "date-time",
-            "in": "query",
-            "name": "time_end",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "default": "RESOURCE_TYPE_NONE",
-            "description": "Type of resource.",
-            "enum": [
-              "RESOURCE_TYPE_NONE",
-              "RESOURCE_TYPE_VOLUME",
-              "RESOURCE_TYPE_NODE",
-              "RESOURCE_TYPE_CLUSTER",
-              "RESOURCE_TYPE_DRIVE"
-            ],
-            "in": "query",
-            "name": "resource",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkClusterAlertEnumerateResponse"
-            }
-          }
-        },
-        "summary": "AlertEnumerate returns a list of alerts from the storage cluster\nIn REST, use the request values as query parameters.",
-        "tags": [
-          "OpenStorageCluster"
-        ]
-      }
-    },
-    "/v1/clusters/alerts/clear": {
-      "post": {
-        "operationId": "AlertClear",
-        "parameters": [
-          {
-            "in": "body",
-            "name": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/apiSdkClusterAlertClearRequest"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkClusterAlertClearResponse"
-            }
-          }
-        },
-        "summary": "AlertClear clears the alert for a given resource",
-        "tags": [
-          "OpenStorageCluster"
-        ]
-      }
-    },
-    "/v1/clusters/alerts/{alert_id}": {
-      "delete": {
-        "operationId": "AlertDelete",
-        "parameters": [
-          {
-            "format": "int64",
-            "in": "path",
-            "name": "alert_id",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "default": "RESOURCE_TYPE_NONE",
-            "description": "Type of resource (required).",
-            "enum": [
-              "RESOURCE_TYPE_NONE",
-              "RESOURCE_TYPE_VOLUME",
-              "RESOURCE_TYPE_NODE",
-              "RESOURCE_TYPE_CLUSTER",
-              "RESOURCE_TYPE_DRIVE"
-            ],
-            "in": "query",
-            "name": "resource",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkClusterAlertDeleteResponse"
-            }
-          }
-        },
-        "summary": "AlertDelete deletes an alert for all resources",
-        "tags": [
-          "OpenStorageCluster"
         ]
       }
     },
