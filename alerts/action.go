@@ -35,7 +35,7 @@ func deleteAction(manager Manager, filters ...Filter) error {
 
 // clearAction first enumerates, then changes Cleared flag to true,
 // then updates it.
-// Raise method determines if TTL needs to be applied based on clear flag.
+// Raise method determines if TTLOption needs to be applied based on clear flag.
 func clearAction(manager Manager, filters ...Filter) error {
 	myAlerts, err := manager.Enumerate(filters...)
 	if err != nil {

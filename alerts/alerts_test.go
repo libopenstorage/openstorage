@@ -87,7 +87,10 @@ func TestManager_Enumerate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	manager := NewManager(kv)
+	manager, err := NewManager(kv)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if err := raiseAlerts(manager); err != nil {
 		t.Fatal(err)
@@ -254,7 +257,10 @@ func TestManager_Filter(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	manager := NewManager(kv)
+	manager, err := NewManager(kv)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if err := raiseAlerts(manager); err != nil {
 		t.Fatal(err)
@@ -420,7 +426,10 @@ func TestManager_Delete(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	manager := NewManager(kv)
+	manager, err := NewManager(kv)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// prepare a test configuration table
 	configs := []struct {
@@ -563,7 +572,10 @@ func TestManager_DeleteMultipleTimes(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	manager := NewManager(kv)
+	manager, err := NewManager(kv)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// prepare a test configuration table
 	configs := []struct {
@@ -621,14 +633,17 @@ func TestManager_DeleteMultipleTimes(t *testing.T) {
 	}
 }
 
-// TestManager_SetRules_Raise tests if set rules activate on raise.
-func TestManager_SetRules_Raise(t *testing.T) {
+// TestManager_SetRules_EventRaise_ActionDelete tests if set rules activate on raise.
+func TestManager_SetRules_EventRaise_ActionDelete(t *testing.T) {
 	kv, err := newInMemKvdb()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	manager := NewManager(kv)
+	manager, err := NewManager(kv)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	configs := []struct {
 		name          string
@@ -740,5 +755,77 @@ func TestManager_SetRules_Raise(t *testing.T) {
 			t.Fatal(config.name, "expected", config.expectedCount, "found", len(myAlerts))
 		}
 
+	}
+}
+
+// TestManager_SetRules_EventRaise_ActionCancel tests if we can cancel alerts by raising
+// some other alerts.
+func TestManager_SetRules_EventRaise_ActionClear(t *testing.T) {
+	kv, err := newInMemKvdb()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// create a ttl value of 5 seconds
+	manager, err := NewManager(kv, NewTTLOption(1))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	configs := []struct {
+		name          string
+		rules         []Rule
+		myAlert       *api.Alert
+		expectedCount int
+	}{
+		{
+			name: "deleteOnRaise",
+			rules: []Rule{
+				// define a rule that will delete every alert of RESOURCE_TYPE_VOLUME
+				// and RESOURCE_TYPE_CLUSTER before
+				// raising an alert that matches NewAlertTypeFilter(10, "maya", api.ResourceType_RESOURCE_TYPE_DRIVE)
+				NewRaiseRule("deleteOnRaise0",
+					NewAlertTypeFilter(10, api.ResourceType_RESOURCE_TYPE_DRIVE),
+					NewClearAction(
+						NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
+						NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_CLUSTER),
+					)),
+			},
+			myAlert: &api.Alert{
+				AlertType:  10,
+				ResourceId: "maya",
+				Resource:   api.ResourceType_RESOURCE_TYPE_DRIVE,
+			},
+			expectedCount: 4, // 4 since 2 of 6 should fall off with ttl of 1 second
+		},
+	}
+
+	for _, config := range configs {
+		// first ensure there are no rules
+		manager.DeleteRules(config.rules...)
+
+		// then raise some alerts
+		if err := raiseAlerts(manager); err != nil {
+			t.Fatal(err)
+		}
+
+		// then set rules
+		manager.SetRules(config.rules...)
+
+		// then raise an alert
+		if err := manager.Raise(config.myAlert); err != nil {
+			t.Fatal(err)
+		}
+
+		time.Sleep(time.Second * 2)
+
+		myAlerts, err := manager.Enumerate()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(myAlerts) != config.expectedCount {
+			t.Fatal(config.name, "expected", config.expectedCount, "found", len(myAlerts))
+		}
 	}
 }

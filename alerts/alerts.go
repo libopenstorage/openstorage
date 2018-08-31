@@ -50,13 +50,26 @@ type Manager interface {
 	DeleteRules(rules ...Rule)
 }
 
-func newManager(kv kvdb.Kvdb) *manager {
-	return &manager{kv: kv, rules: make(map[string]Rule)}
+func newManager(kv kvdb.Kvdb, options ...Option) (*manager, error) {
+	m := &manager{kv: kv, rules: make(map[string]Rule), ttl: HalfDay}
+	for _, option := range options {
+		switch option.GetType() {
+		case TTLOption:
+			v, ok := option.GetValue().(uint64)
+			if !ok {
+				return nil, typeAssertionError
+			}
+			m.ttl = v
+		}
+	}
+	return m, nil
 }
 
+// manager implements Manager interface.
 type manager struct {
 	kv    kvdb.Kvdb
 	rules map[string]Rule
+	ttl   uint64
 	sync.Mutex
 }
 
@@ -87,8 +100,8 @@ func (m *manager) Raise(alert *api.Alert) error {
 	}
 
 	if alert.Cleared {
-		// if the alert is marked Cleared, it is pushed to kvdb with a TTL of half day
-		_, err := m.kv.Put(getKey(alert.Resource.String(), alert.GetAlertType(), alert.ResourceId), alert, HalfDay)
+		// if the alert is marked Cleared, it is pushed to kvdb with a TTLOption of half day
+		_, err := m.kv.Put(getKey(alert.Resource.String(), alert.GetAlertType(), alert.ResourceId), alert, m.ttl)
 		return err
 	} else {
 		_, err := m.kv.Put(getKey(alert.Resource.String(), alert.GetAlertType(), alert.ResourceId), alert, 0)

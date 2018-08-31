@@ -8,8 +8,12 @@ import (
 )
 
 // NewManager obtains instance of Manager for alerts management.
-func NewManager(kv kvdb.Kvdb) Manager {
-	return newManager(kv)
+func NewManager(kv kvdb.Kvdb, options ...Option) (Manager, error) {
+	return newManager(kv, options...)
+}
+
+func NewTTLOption(ttl uint64) Option {
+	return &option{optionType: TTLOption, value: ttl}
 }
 
 // Filter API
