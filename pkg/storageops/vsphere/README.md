@@ -15,6 +15,8 @@ export VSPHERE_INSECURE=true
 export VSPHERE_VM_UUID=42124a20-d049-9c0a-0094-1552b320fb18
 export VSPHERE_TEST_DATASTORE=<test-datastore-to-use>
 
+# VSPHERE_TEST_DATASTORE above can be a vSphere datastore or datastore cluster name. When testing changes, it is recommended to test with both.
+
 go test -v
 ```
 
