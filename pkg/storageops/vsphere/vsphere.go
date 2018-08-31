@@ -101,49 +101,10 @@ func (ops *vsphereOps) Create(opts interface{}, labels map[string]string) (inter
 	}
 
 	if isPod {
-		logrus.Infof("Using storage pod: %s", storagePod.Name())
-		var devices object.VirtualDeviceList
-		scsi, err := devices.CreateSCSIController("scsi")
+		datastore, err = ops.getDatastoreToUseInStoragePod(ctx, vmObj, volumeOptions, storagePod)
 		if err != nil {
 			return nil, err
 		}
-
-		devices = append(devices, scsi)
-
-		controller, err := devices.FindDiskController("scsi")
-		if err != nil {
-			return nil, err
-		}
-
-		disk := &types.VirtualDisk{
-			VirtualDevice: types.VirtualDevice{
-				Key: devices.NewKey(),
-				Backing: &types.VirtualDiskFlatVer2BackingInfo{
-					DiskMode:        string(types.VirtualDiskModePersistent),
-					ThinProvisioned: types.NewBool(true),
-				},
-			},
-			CapacityInKB: int64(volumeOptions.CapacityKB),
-		}
-
-		devices = append(devices, disk)
-		devices.AssignController(disk, controller)
-		deviceChange, err := devices.ConfigSpec(types.VirtualDeviceConfigSpecOperationAdd)
-		if err != nil {
-			return nil, err
-		}
-
-		spec := &types.VirtualMachineConfigSpec{
-			Name: vmObj.Name(),
-		}
-
-		spec.DeviceChange = deviceChange
-		recommendedDatastore, err := recommendDatastore(ctx, vmObj, storagePod, spec)
-		if err != nil {
-			return nil, err
-		}
-
-		datastore = recommendedDatastore.Name()
 	}
 
 	logrus.Infof("Using datastore: %s for new disk", datastore)
@@ -461,8 +422,62 @@ func (ops *vsphereOps) renewVM(ctx context.Context, vm *vclib.VirtualMachine) (*
 	return &vmObj, nil
 }
 
+// getDatastoreToUseInStoragePod asks the storage resource manager to recommend a datastore
+// in the given storage pod (datastore cluster) for the required disk spec
+func (ops *vsphereOps) getDatastoreToUseInStoragePod(
+	ctx context.Context, vmObj *vclib.VirtualMachine,
+	volumeOptions *vclib.VolumeOptions, storagePod *object.StoragePod) (string, error) {
+	logrus.Infof("Using storage pod: %s", storagePod.Name())
+
+	// devices is a list of devices in the virtual machine (disks and disk controllers) that
+	// will be part of the request spec to storage resource manager
+	var devices object.VirtualDeviceList
+	scsi, err := devices.CreateSCSIController("scsi")
+	if err != nil {
+		return "", err
+	}
+
+	devices = append(devices, scsi)
+
+	controller, err := devices.FindDiskController("scsi")
+	if err != nil {
+		return "", err
+	}
+
+	disk := &types.VirtualDisk{
+		VirtualDevice: types.VirtualDevice{
+			Key: devices.NewKey(),
+			Backing: &types.VirtualDiskFlatVer2BackingInfo{
+				DiskMode:        string(types.VirtualDiskModePersistent),
+				ThinProvisioned: types.NewBool(true),
+			},
+		},
+		CapacityInKB: int64(volumeOptions.CapacityKB),
+	}
+
+	devices = append(devices, disk)
+	devices.AssignController(disk, controller)
+	deviceChange, err := devices.ConfigSpec(types.VirtualDeviceConfigSpecOperationAdd)
+	if err != nil {
+		return "", err
+	}
+
+	spec := &types.VirtualMachineConfigSpec{
+		Name: vmObj.Name(),
+	}
+
+	spec.DeviceChange = deviceChange
+	recommendedDatastore, err := recommendDatastore(ctx, vmObj, storagePod, spec)
+	if err != nil {
+		return "", err
+	}
+
+	return recommendedDatastore.Name(), nil
+}
+
 // recommendedDatastore recommends a datastore to use for the given storage pod by
 // quering the storage resource manager
+// logic borrowwed from recommendDatastore() at https://github.com/vmware/govmomi/blob/master/govc/vm/create.go#L455
 func recommendDatastore(
 	ctx context.Context,
 	vmObj *vclib.VirtualMachine,

@@ -171,15 +171,15 @@ func setdatastoreFolderIDMap(
 func GetStoragePodMoList(
 	ctx context.Context,
 	client *vim25.Client,
-	storagepodRefs []types.ManagedObjectReference,
+	storagePodRefs []types.ManagedObjectReference,
 	properties []string) ([]mo.StoragePod, error) {
-	var storagepodMoList []mo.StoragePod
+	var storagePodMoList []mo.StoragePod
 	pc := property.DefaultCollector(client)
-	err := pc.Retrieve(ctx, storagepodRefs, properties, &storagepodMoList)
+	err := pc.Retrieve(ctx, storagePodRefs, properties, &storagePodMoList)
 	if err != nil {
 		logrus.Errorf("Failed to get Storagepod managed objects from storage pod refs: %+v, properties: %+v, err: %v",
-			storagepodRefs, properties, err)
+			storagePodRefs, properties, err)
 		return nil, err
 	}
-	return storagepodMoList, nil
+	return storagePodMoList, nil
 }
