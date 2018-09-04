@@ -244,8 +244,6 @@ type ClusterAlerts interface {
 	// Enumerate enumerates alerts on this cluster for the given resource
 	// within a specific time range.
 	EnumerateAlerts(timeStart, timeEnd time.Time, resource api.ResourceType) (*api.Alerts, error)
-	// ClearAlert clears an alert for the given resource
-	ClearAlert(resource api.ResourceType, alertID int64) error
 	// EraseAlert erases an alert for the given resource
 	EraseAlert(resource api.ResourceType, alertID int64) error
 }
@@ -416,12 +414,7 @@ func (nc *NullClusterListener) EnumerateAlerts(
 ) (*api.Alerts, error) {
 	return nil, nil
 }
-func (nc *NullClusterListener) ClearAlert(
-	resource api.ResourceType,
-	alertID int64,
-) error {
-	return nil
-}
+
 func (nc *NullClusterListener) EraseAlert(
 	resource api.ResourceType,
 	alertID int64,

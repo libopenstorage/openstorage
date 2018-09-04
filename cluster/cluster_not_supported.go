@@ -183,11 +183,6 @@ func (m *NullClusterAlerts) EraseAlert(arg0 api.ResourceType, arg1 int64) error 
 	return ErrNotImplemented
 }
 
-// ClearAlert
-func (m *NullClusterAlerts) ClearAlert(arg0 api.ResourceType, arg1 int64) error {
-	return ErrNotImplemented
-}
-
 // NullClusterPair implementations
 
 // CreatePair

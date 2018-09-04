@@ -1715,20 +1715,6 @@ func (c *ClusterManager) EnumerateAlerts(ts, te time.Time, resource api.Resource
 	return &a, nil
 }
 
-func (c *ClusterManager) ClearAlert(resource api.ResourceType, alertID int64) error {
-	cleared := false
-	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		if err := e.Value.(cluster.ClusterListener).ClearAlert(resource, alertID); err != nil {
-			continue
-		}
-		cleared = true
-	}
-	if !cleared {
-		return fmt.Errorf("Unable to clear alert (%v)", alertID)
-	}
-	return nil
-}
-
 func (c *ClusterManager) EraseAlert(resource api.ResourceType, alertID int64) error {
 	erased := false
 	for e := c.listeners.Front(); e != nil; e = e.Next() {

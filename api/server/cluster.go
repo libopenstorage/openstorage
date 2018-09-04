@@ -549,57 +549,6 @@ func (c *clusterApi) enumerateAlerts(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(alerts)
 }
 
-// swagger:operation PUT /cluster/alerts/{resource}/{id} cluster clearAlert
-//
-// This will clear alert {id} with resourcetype {resource}
-//
-// ---
-// produces:
-// - application/json
-// parameters:
-// - name: resource
-//   in: path
-//   description: |
-//    resourcetype to get alerts with.
-//    0: All
-//    1: Volume
-//    2: Node
-//    3: Cluster
-//    4: Drive
-//   required: true
-//   type: integer
-// - name: id
-//   in: path
-//   description: id to get alerts with
-//   required: true
-//   type: integer
-// responses:
-//   '200':
-//      description: Alerts object
-//      schema:
-//       type: string
-func (c *clusterApi) clearAlert(w http.ResponseWriter, r *http.Request) {
-	method := "clearAlert"
-
-	resourceType, alertId, err := c.getAlertParams(w, r, method)
-	if err != nil {
-		return
-	}
-
-	inst, err := clustermanager.Inst()
-	if err != nil {
-		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	err = inst.ClearAlert(resourceType, alertId)
-	if err != nil {
-		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	json.NewEncoder(w).Encode("Successfully cleared Alert")
-}
-
 // swagger:operation DELETE /cluster/alerts/{resource}/{id} cluster deleteAlert
 //
 // This delete clear alert {id} with resourcetype {resource}

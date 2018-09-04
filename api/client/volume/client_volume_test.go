@@ -3,11 +3,12 @@ package volume
 import (
 	"crypto/tls"
 	"encoding/json"
-	"github.com/libopenstorage/openstorage/api"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/libopenstorage/openstorage/api"
+	"github.com/stretchr/testify/require"
 )
 
 func TestClientTLS(t *testing.T) {

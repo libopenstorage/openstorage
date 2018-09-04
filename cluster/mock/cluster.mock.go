@@ -5,13 +5,14 @@
 package mock
 
 import (
+	reflect "reflect"
+	time "time"
+
 	gomock "github.com/golang/mock/gomock"
 	api "github.com/libopenstorage/openstorage/api"
 	cluster "github.com/libopenstorage/openstorage/cluster"
 	osdconfig "github.com/libopenstorage/openstorage/osdconfig"
 	schedpolicy "github.com/libopenstorage/openstorage/schedpolicy"
-	reflect "reflect"
-	time "time"
 )
 
 // MockCluster is a mock of Cluster interface
