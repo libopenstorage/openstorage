@@ -5,6 +5,11 @@
 
 ## Releases
 
+### v0.6.0 - Tech Preview (8/30/2018)
+
+* Remove unsupported FS Types from supported drivers [#593](https://github.com/libopenstorage/openstorage/issues/593)
+* Remove SDK Alert calls as they will be redesinged [#596](https://github.com/libopenstorage/openstorage/issues/596)
+
 ### v0.5.0 - Tech Preview (8/25/2018)
 
 * Added `queue_depth` to VolumeSpec and VolumeSpecUpdate
