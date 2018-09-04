@@ -5,14 +5,13 @@
 package mock
 
 import (
-	reflect "reflect"
-	time "time"
-
 	gomock "github.com/golang/mock/gomock"
 	api "github.com/libopenstorage/openstorage/api"
 	cluster "github.com/libopenstorage/openstorage/cluster"
 	osdconfig "github.com/libopenstorage/openstorage/osdconfig"
 	schedpolicy "github.com/libopenstorage/openstorage/schedpolicy"
+	reflect "reflect"
+	time "time"
 )
 
 // MockCluster is a mock of Cluster interface
@@ -48,18 +47,6 @@ func (m *MockCluster) AddEventListener(arg0 cluster.ClusterListener) error {
 // AddEventListener indicates an expected call of AddEventListener
 func (mr *MockClusterMockRecorder) AddEventListener(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddEventListener", reflect.TypeOf((*MockCluster)(nil).AddEventListener), arg0)
-}
-
-// ClearAlert mocks base method
-func (m *MockCluster) ClearAlert(arg0 api.ResourceType, arg1 int64) error {
-	ret := m.ctrl.Call(m, "ClearAlert", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// ClearAlert indicates an expected call of ClearAlert
-func (mr *MockClusterMockRecorder) ClearAlert(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearAlert", reflect.TypeOf((*MockCluster)(nil).ClearAlert), arg0, arg1)
 }
 
 // CreatePair mocks base method
