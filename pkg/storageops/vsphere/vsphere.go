@@ -32,6 +32,14 @@ type vsphereOps struct {
 	cfg  *VSphereConfig
 }
 
+// VirtualDisk encapsulates the existing virtual disk object to add a managed object
+// reference to the datastore of the disk
+type VirtualDisk struct {
+	diskmanagers.VirtualDisk
+	// DatastoreRef is the managed object reference of the datastore on which the disk belongs
+	DatastoreRef types.ManagedObjectReference
+}
+
 // NewClient creates a new vsphere storageops instance
 func NewClient(cfg *VSphereConfig) (storageops.Ops, error) {
 	vSphereConn := &vclib.VSphereConnection{
@@ -145,17 +153,21 @@ func (ops *vsphereOps) Create(opts interface{}, labels map[string]string) (inter
 		return nil, err
 	}
 
-	return canonicalVolumePath, nil
+	disk.DiskPath = canonicalVolumePath
 
+	return &VirtualDisk{
+		VirtualDisk:  disk,
+		DatastoreRef: ds.Reference(),
+	}, nil
 }
 
-func (ops *vsphereOps) GetDeviceID(diskPath interface{}) (string, error) {
-	id, ok := diskPath.(string)
+func (ops *vsphereOps) GetDeviceID(vDisk interface{}) (string, error) {
+	disk, ok := vDisk.(*VirtualDisk)
 	if !ok {
-		return "", fmt.Errorf("invalid input: %v to GetDeviceID", diskPath)
+		return "", fmt.Errorf("invalid input: %v to GetDeviceID", vDisk)
 	}
 
-	return id, nil
+	return disk.DiskPath, nil
 }
 
 // Attach takes in the path of the vmdk file and returns where it is attached inside the vm instance
