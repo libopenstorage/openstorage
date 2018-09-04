@@ -8,6 +8,11 @@ import (
 	"strings"
 
 	"github.com/libopenstorage/openstorage/pkg/storageops"
+	"github.com/sirupsen/logrus"
+	"github.com/vmware/govmomi/property"
+	"github.com/vmware/govmomi/vim25"
+	"github.com/vmware/govmomi/vim25/mo"
+	"github.com/vmware/govmomi/vim25/types"
 	"k8s.io/kubernetes/pkg/cloudprovider/providers/vsphere/vclib"
 )
 
@@ -159,4 +164,22 @@ func setdatastoreFolderIDMap(
 		datastoreFolderIDMap[datastore] = folderNameIDMap
 	}
 	folderNameIDMap[folderName] = folderID
+}
+
+// GetStoragePodMoList fetches the managed storage pod objects for the given references
+//		Only the properties is the given property list will be populated in the response
+func GetStoragePodMoList(
+	ctx context.Context,
+	client *vim25.Client,
+	storagePodRefs []types.ManagedObjectReference,
+	properties []string) ([]mo.StoragePod, error) {
+	var storagePodMoList []mo.StoragePod
+	pc := property.DefaultCollector(client)
+	err := pc.Retrieve(ctx, storagePodRefs, properties, &storagePodMoList)
+	if err != nil {
+		logrus.Errorf("Failed to get Storagepod managed objects from storage pod refs: %+v, properties: %+v, err: %v",
+			storagePodRefs, properties, err)
+		return nil, err
+	}
+	return storagePodMoList, nil
 }
