@@ -90,12 +90,15 @@ func TestSdkClusterInspectCurrent(t *testing.T) {
 	defer s.Stop()
 
 	// Create response
+	uuid := "id"
+	name := "name"
 	cluster := api.Cluster{
-		Id:     "someid",
+		Id:     name,
 		NodeId: "somenodeid",
 		Status: api.Status_STATUS_NOT_IN_QUORUM,
 	}
 	s.MockCluster().EXPECT().Enumerate().Return(cluster, nil).Times(1)
+	s.MockCluster().EXPECT().Uuid().Return(uuid).Times(1)
 
 	// Setup client
 	c := api.NewOpenStorageClusterClient(s.Conn())
@@ -104,6 +107,7 @@ func TestSdkClusterInspectCurrent(t *testing.T) {
 	r, err := c.InspectCurrent(context.Background(), &api.SdkClusterInspectCurrentRequest{})
 	assert.NoError(t, err)
 	assert.NotNil(t, r.GetCluster())
-	assert.Equal(t, cluster.Id, r.GetCluster().GetId())
+	assert.Equal(t, cluster.Id, r.GetCluster().GetName())
 	assert.Equal(t, cluster.Status, r.GetCluster().GetStatus())
+	assert.Equal(t, uuid, r.GetCluster().GetId())
 }

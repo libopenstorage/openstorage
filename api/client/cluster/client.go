@@ -243,6 +243,10 @@ func (c *clusterClient) Start(int, bool, string) error {
 	return nil
 }
 
+func (c *clusterClient) Uuid() string {
+	return ""
+}
+
 func (c *clusterClient) StartWithConfiguration(int, bool, string, *cluster.ClusterServerConfiguration) error {
 	return nil
 }

@@ -1855,3 +1855,11 @@ func (c *ClusterManager) SecretSet(secretKey string, secretValue interface{}) er
 func (c *ClusterManager) SecretGet(secretKey string) (interface{}, error) {
 	return c.SecretGet(secretKey)
 }
+
+// Uuid returns the unique id of the cluster
+func (c *ClusterManager) Uuid() string {
+	if len(c.config.ClusterUuid) == 0 {
+		return c.config.ClusterId
+	}
+	return c.config.ClusterUuid
+}

@@ -1403,6 +1403,10 @@
           "title": "Id of the cluster",
           "type": "string"
         },
+        "name": {
+          "title": "Name of the cluster",
+          "type": "string"
+        },
         "status": {
           "$ref": "#/definitions/openstorageapiStatus",
           "title": "Status of the cluster"
@@ -2047,7 +2051,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.6.0"
+    "version": "0.7.0"
   },
   "paths": {
     "/v1/cloudbackups": {
