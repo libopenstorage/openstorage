@@ -20,8 +20,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/golang/protobuf/ptypes"
-
 	"github.com/stretchr/testify/assert"
 
 	"github.com/golang/mock/gomock"
@@ -108,106 +106,4 @@ func TestSdkClusterInspectCurrent(t *testing.T) {
 	assert.NotNil(t, r.GetCluster())
 	assert.Equal(t, cluster.Id, r.GetCluster().GetId())
 	assert.Equal(t, cluster.Status, r.GetCluster().GetStatus())
-}
-
-func TestSdkAlertEnumerate(t *testing.T) {
-
-	// Create server and client connection
-	s := newTestServer(t)
-	defer s.Stop()
-
-	// Setup client
-	c := api.NewOpenStorageClusterClient(s.Conn())
-
-	// Create request
-	req := &api.SdkClusterAlertEnumerateRequest{
-		TimeStart: ptypes.TimestampNow(),
-		TimeEnd:   ptypes.TimestampNow(),
-		Resource:  api.ResourceType_RESOURCE_TYPE_DRIVE,
-	}
-
-	// Mock output
-	out := &api.Alerts{
-		Alert: []*api.Alert{
-			&api.Alert{
-				Id: 1234,
-			},
-			&api.Alert{
-				Id: 6789,
-			},
-		},
-	}
-
-	// Mock
-	ts, err := ptypes.Timestamp(req.TimeStart)
-	assert.NoError(t, err)
-	te, err := ptypes.Timestamp(req.TimeEnd)
-	assert.NoError(t, err)
-	s.MockCluster().
-		EXPECT().
-		EnumerateAlerts(ts, te, api.ResourceType_RESOURCE_TYPE_DRIVE).
-		Return(out, nil).
-		Times(1)
-
-	// Get info
-	r, err := c.AlertEnumerate(context.Background(), req)
-	assert.NoError(t, err)
-	assert.NotNil(t, r.GetAlerts())
-	assert.Len(t, r.GetAlerts(), 2)
-	assert.Equal(t, r.GetAlerts()[0].Id, out.Alert[0].Id)
-	assert.Equal(t, r.GetAlerts()[1].Id, out.Alert[1].Id)
-}
-
-func TestSdkAlertClear(t *testing.T) {
-
-	// Create server and client connection
-	s := newTestServer(t)
-	defer s.Stop()
-
-	// Setup client
-	c := api.NewOpenStorageClusterClient(s.Conn())
-
-	// Create request
-	req := &api.SdkClusterAlertClearRequest{
-		AlertId:  1234,
-		Resource: api.ResourceType_RESOURCE_TYPE_DRIVE,
-	}
-
-	// Mock
-	s.MockCluster().
-		EXPECT().
-		ClearAlert(req.Resource, req.AlertId).
-		Return(nil).
-		Times(1)
-
-	// Get info
-	_, err := c.AlertClear(context.Background(), req)
-	assert.NoError(t, err)
-}
-
-func TestSdkAlertDelete(t *testing.T) {
-
-	// Create server and client connection
-	s := newTestServer(t)
-	defer s.Stop()
-
-	// Setup client
-	c := api.NewOpenStorageClusterClient(s.Conn())
-
-	// Create request
-	req := &api.SdkClusterAlertDeleteRequest{
-		AlertId:  1234,
-		Resource: api.ResourceType_RESOURCE_TYPE_DRIVE,
-	}
-
-	// Mock
-	s.MockCluster().
-		EXPECT().
-		EraseAlert(req.Resource, req.AlertId).
-		Return(nil).
-		Times(1)
-
-	// Get info
-	_, err := c.AlertDelete(context.Background(), req)
-	assert.NoError(t, err)
 }
