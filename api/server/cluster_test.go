@@ -416,59 +416,6 @@ func TestEnumerateAlertsSuccess(t *testing.T) {
 	assert.EqualValues(t, api.ResourceType_RESOURCE_TYPE_NODE, resp.Alert[0].GetResource())
 }
 
-func TestClearAlertSuccess(t *testing.T) {
-
-	// Create a new global test cluster
-	ts, tc := testClusterServer(t)
-	defer ts.Close()
-	defer tc.Finish()
-
-	// alertId
-	alertID := int64(12345)
-
-	// mock the cluster response
-	tc.MockCluster().
-		EXPECT().
-		ClearAlert(api.ResourceType_RESOURCE_TYPE_NODE, gomock.Any()).
-		Return(nil)
-
-	// create a cluster client to make the REST call
-	c, err := clusterclient.NewClusterClient(ts.URL, "v1")
-	assert.NoError(t, err)
-
-	// make the REST call
-	restClient := clusterclient.ClusterManager(c)
-	resp := restClient.ClearAlert(api.ResourceType_RESOURCE_TYPE_NODE, alertID)
-	assert.NoError(t, resp)
-}
-
-func TestClearAlertFailed(t *testing.T) {
-
-	// Create a new global test cluster
-	ts, tc := testClusterServer(t)
-	defer ts.Close()
-	defer tc.Finish()
-
-	// alertId
-	alertID := int64(12345)
-
-	// mock the cluster response
-	tc.MockCluster().
-		EXPECT().
-		ClearAlert(api.ResourceType_RESOURCE_TYPE_NODE, gomock.Any()).
-		Return(fmt.Errorf("Error in clearing alert"))
-
-	// create a cluster client to make the REST call
-	c, err := clusterclient.NewClusterClient(ts.URL, "v1")
-	assert.NoError(t, err)
-
-	// make the REST call
-	restClient := clusterclient.ClusterManager(c)
-	resp := restClient.ClearAlert(api.ResourceType_RESOURCE_TYPE_NODE, alertID)
-	assert.Error(t, resp)
-	assert.Contains(t, resp.Error(), "Error in clearing alert")
-}
-
 func TestEraseAlertSuccess(t *testing.T) {
 
 	// Create a new global test cluster
