@@ -1,6 +1,7 @@
 ---
 osd:
   cluster:
+    clusteruuid: "ce6b309e289d620be08c964969aeb39f"
     nodeid: "1"
     schedulernodename: "node-1"
     clusterid: "mock"

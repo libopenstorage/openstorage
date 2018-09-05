@@ -151,12 +151,15 @@ func TestSdkGateway(t *testing.T) {
 
 	// Check the gateway works
 	// First setup the mock
+	id := "id"
+	name := "name"
 	cluster := api.Cluster{
-		Id:     "someid",
+		Id:     name,
 		NodeId: "somenodeid",
 		Status: api.Status_STATUS_NOT_IN_QUORUM,
 	}
 	s.MockCluster().EXPECT().Enumerate().Return(cluster, nil).Times(1)
+	s.MockCluster().EXPECT().Uuid().Return(id).Times(1)
 
 	// Then send the request
 	res, err = http.Get(s.GatewayURL() + "/v1/clusters/current")

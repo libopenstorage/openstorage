@@ -106,6 +106,10 @@ func (m *NullClusterManager) StartWithConfiguration(arg0 int, arg1 bool, arg2 st
 	return ErrNotImplemented
 }
 
+func (n *NullClusterManager) Uuid() string {
+	return ""
+}
+
 // NullClusterData implementations
 
 // UpdateData

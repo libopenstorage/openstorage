@@ -41,7 +41,13 @@ func (s *ClusterServer) InspectCurrent(
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	// Get cluster information
+	cluster := c.ToStorageCluster()
+
+	// Get cluster unique id
+	cluster.Id = s.cluster.Uuid()
+
 	return &api.SdkClusterInspectCurrentResponse{
-		Cluster: c.ToStorageCluster(),
+		Cluster: cluster,
 	}, nil
 }

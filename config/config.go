@@ -29,6 +29,7 @@ func init() {
 // swagger:model
 type ClusterConfig struct {
 	ClusterId         string
+	ClusterUuid       string
 	NodeId            string
 	SchedulerNodeName string
 	MgtIface          string

@@ -631,3 +631,15 @@ func (m *MockCluster) UpdateLabels(arg0 map[string]string) error {
 func (mr *MockClusterMockRecorder) UpdateLabels(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateLabels", reflect.TypeOf((*MockCluster)(nil).UpdateLabels), arg0)
 }
+
+// Uuid mocks base method
+func (m *MockCluster) Uuid() string {
+	ret := m.ctrl.Call(m, "Uuid")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// Uuid indicates an expected call of Uuid
+func (mr *MockClusterMockRecorder) Uuid() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Uuid", reflect.TypeOf((*MockCluster)(nil).Uuid))
+}
