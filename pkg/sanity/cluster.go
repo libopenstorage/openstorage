@@ -219,24 +219,6 @@ var _ = Describe("Cluster [Cluster Tests]", func() {
 
 			randomVolumeAlertID := alerts.Alert[random(0, len(alerts.Alert))].Id
 
-			By("Clear alerts")
-			err = manager.ClearAlert(api.ResourceType_RESOURCE_TYPE_NODE, randomVolumeAlertID)
-			Expect(err).NotTo(HaveOccurred())
-
-			By("Enumerating the alerts again and checking if the alert cleared")
-
-			alerts, err = manager.EnumerateAlerts(startTime, endTime, api.ResourceType_RESOURCE_TYPE_NODE)
-
-			Expect(err).NotTo(HaveOccurred())
-			Expect(alerts).NotTo(BeNil())
-
-			for _, alert := range alerts.Alert {
-				if alert.Id == randomVolumeAlertID {
-					Expect(alert.Cleared).To(BeTrue())
-					break
-				}
-			}
-
 			By("Erasing alerts")
 			err = manager.EraseAlert(api.ResourceType_RESOURCE_TYPE_NODE, randomVolumeAlertID)
 			Expect(err).NotTo(HaveOccurred())

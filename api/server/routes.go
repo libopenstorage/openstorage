@@ -22,7 +22,6 @@ func (c *clusterApi) Routes() []*Route {
 		{verb: "PUT", path: clusterPath("/shutdown", cluster.APIVersion), fn: c.shutdown},
 		{verb: "PUT", path: clusterPath("/shutdown/{id}", cluster.APIVersion), fn: c.shutdown},
 		{verb: "GET", path: clusterPath("/alerts/{resource}", cluster.APIVersion), fn: c.enumerateAlerts},
-		{verb: "PUT", path: clusterPath("/alerts/{resource}/{id}", cluster.APIVersion), fn: c.clearAlert},
 		{verb: "DELETE", path: clusterPath("/alerts/{resource}/{id}", cluster.APIVersion), fn: c.eraseAlert},
 		{verb: "GET", path: clusterPath(client.UriCluster, cluster.APIVersion), fn: c.getClusterConf},
 		{verb: "GET", path: clusterPath(client.UriNode+"/{id}", cluster.APIVersion), fn: c.getNodeConf},
