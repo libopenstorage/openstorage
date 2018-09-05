@@ -913,7 +913,7 @@ service OpenStorageVolume {
       };
     }
 
-  // SnapshotEnumerate returns a list of snapshots. 
+  // SnapshotEnumerate returns a list of snapshots.
   // To filter all the snapshots for a specific volume which may no longer exist,
   // specifiy a volume id.
   // Labels can also be used to filter the snapshot list.
@@ -925,10 +925,16 @@ service OpenStorageVolume {
         body: "*"
       };
     }
+}
+
+// OpenStorageMountAttach is a service used to manage node access to a volume.
+// Note, these APIs are here for testing or diagnostics purposes only. In normal
+// operations, the Container Orchestration (CO) system is managing all mount
+// and attach calls through the CSI interface. The normal usage is once volumes
+// are created, to let the CO manage the node access functions to the volume.
+service OpenStorageMountAttach {
 
   // Attach attaches device to the host that the client is communicating with.
-  // NOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more
-  // information about a new feature to allow attachment to any node.
   rpc Attach(SdkVolumeAttachRequest)
     returns (SdkVolumeAttachResponse) {
       option(google.api.http) = {
@@ -947,8 +953,6 @@ service OpenStorageVolume {
     }
 
   // Mount mounts an attached volume in the host that the client is communicating with
-  // NOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more
-  // information about a new feature to allow attachment to any node.
   rpc Mount(SdkVolumeMountRequest)
     returns(SdkVolumeMountResponse) {
       option(google.api.http) = {
@@ -958,8 +962,6 @@ service OpenStorageVolume {
     }
 
   // Unmount unmounts a mounted volume in the host that the client is communicating with
-  // NOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more
-  // information about a new feature to allow attachment to any node.
   rpc Unmount(SdkVolumeUnmountRequest)
       returns(SdkVolumeUnmountResponse) {
       option(google.api.http) = {
@@ -1516,8 +1518,6 @@ message SdkVolumeMountRequest {
   string volume_id = 1;
   // Mount path for mounting the volume.
   string mount_path = 2;
-  // Additional options
-  map<string, string> options = 3;
 }
 
 // Empty response
@@ -1531,7 +1531,18 @@ message SdkVolumeUnmountRequest {
   // MountPath for device
   string mount_path = 2;
   // Options to unmount device
-  map<string, string> options = 3;
+  message Options {
+    // Delete the mount path on the node after unmounting
+    bool delete_mount_path = 1;
+    // Do not wait for a delay before deleting path.
+    // Normally a storage driver may delay before deleting the mount path,
+    // which may be necessary to reduce the risk of race conditions. This
+    // choice will remove that delay. This value is only usable when
+    // `delete_mount_path` is set.
+    bool no_delay_before_deleting_mount_path = 2;
+  }
+  // Options to unmount device
+  Options options = 3;
 }
 
 // Empty response
@@ -1542,8 +1553,20 @@ message SdkVolumeUnmountResponse {
 message SdkVolumeAttachRequest {
   // Id of volume
   string volume_id = 1;
-  // Options for attaching volume, right now only passphrase options is supported
-  map<string, string>  options = 2;
+  // Options to attach device
+  message Options {
+    // Indicates the name of the secret stored in a secret store
+    // In case of Hashicorp's Vault, it will be the key from the key-value pair stored in its kv backend.
+    // In case of Kubernetes secret, it is the name of the secret object itself
+    string secret_name = 1;
+    // In case of Kubernetes, this will be the key stored in the Kubernetes secret
+    string secret_key = 2;
+    // It indicates the additional context which could be used to retrieve the secret.
+    // In case of Kubernetes, this is the namespace in which the secret is created.
+    string secret_context = 3;
+  }
+  // Options to attach device
+  Options options = 2;
 }
 
 // Defines a response from the node which received the request to attach
@@ -1556,6 +1579,14 @@ message SdkVolumeAttachResponse {
 message SdkVolumeDetachRequest {
   // Id of the volume
   string volume_id = 1;
+  // Options to detach device
+  message Options {
+    // Forcefully detach device from the kernel
+    bool force = 1;
+    // Unmount the volume before detaching
+    bool unmount_before_detach = 2;
+  }
+  Options options = 2;
 }
 
 // Empty response
@@ -2185,7 +2216,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 8;
+    Minor = 9;
     // SDK version patch value of this specification
     Patch = 0;
   }

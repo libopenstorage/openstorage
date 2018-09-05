@@ -5,6 +5,15 @@
 
 ## Releases
 
+### v0.9.0 - Tech Preview (9/18/2018)
+
+NOTE: This release has breaking chages for the Mount/Attach/Detach/Unmount calls
+
+* New service called OpenStorageMountAttach has been created and documented to
+  hold the mount/attach/detach/unmount calls.
+* Mount/Attach/Detach/Unmount calls have been moved from the OpenStorageVolume
+  service to the OpenStorageMountAttach service.
+
 ### v0.8.0 - Tech Preview (9/11/2018)
 
 * SdkVolumeSnapshotEnumerateWithFilters all attributes are now optional. [#609](https://github.com/libopenstorage/openstorage/issues/609)
