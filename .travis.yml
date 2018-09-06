@@ -5,7 +5,7 @@ services:
 language: go
 go:
   - 1.9.7
-  - 1.10.3
+  - 1.10.4
 before_install:
   - sudo apt-get update -yq
   - sudo apt-get -o Dpkg::Options::="--force-confnew" install -yq docker-ce
@@ -21,6 +21,7 @@ script:
   - make install
   - make vet
   - make docker-test
+  - make test-sdk
   - make docs
   - if [ "${TRAVIS_BRANCH}" == "master" ] && [ "${TRAVIS_PULL_REQUEST}" == "false" ]; then
       make docker-build-osd;
