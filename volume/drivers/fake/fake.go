@@ -554,21 +554,6 @@ func (d *driver) CloudBackupEnumerate(input *api.CloudBackupEnumerateRequest) (*
 		return nil, err
 	}
 
-	// Get volume info
-	if len(input.SrcVolumeID) != 0 {
-		vols, err := d.Inspect([]string{input.SrcVolumeID})
-		if err != nil {
-			return nil, fmt.Errorf("Volume id not found")
-		}
-		if len(vols) < 1 {
-			return nil, fmt.Errorf("Internal error. Volume found but no data returned")
-		}
-		vol := vols[0]
-		if vol.GetSpec() == nil {
-			return nil, fmt.Errorf("Internal error. Volume has no specificiation")
-		}
-	}
-
 	backups := make([]api.CloudBackupInfo, 0)
 	kvp, err := d.kv.Enumerate(backupsKeyPrefix)
 	if err != nil {
