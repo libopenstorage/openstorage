@@ -7,23 +7,47 @@ import (
 // Options specifies keys from a key-value pair
 // that can be passed in to the APIS
 const (
-	// OptionsSecret Secret used to get secret for secure devices
+	// OptionsSecret is an option provided to the following Openstorage Volume API
+	// - Attach
+	// It indicates the name of the secret stored in a secret store
+	// SECRET_NAME in case of hashicorp's Vault will be the key from the key-value pair stored in its kv backend.
+	// SECRET_NAME for Kubernetes secret, it is the name of the secret object itself
 	OptionsSecret = "SECRET_NAME"
-	// OptionsSecretKey Key used to secure devices
+	// OptionsSecretKey is an option provided to the following Openstorage Volume API
+	// - Attach
+	// SECRET_KEY in case of kubernetes will be the key stored in the kubernetes secret with name SECRET_NAME
 	OptionsSecretKey = "SECRET_KEY"
-	// OptionsSecretContext Context used to provide additional info to retrive secret
+	// OptionsSecretContext is an option provided to the following Openstorage Volume API
+	// - Attach
+	// It indicates the additional context which could be used to retrieve the secret
+	// SECRET_CONTEXT in case of kubernetes secret is the namespace in which the secret is created
 	OptionsSecretContext = "SECRET_CONTEXT"
-	// OptionsUnmountBeforeDetach Issue an Unmount before trying the detach
+	// OptionsUnmountBeforeDetach is an option provided to the following Openstorage Volume API
+	// - Detach
+	// It indicates the Volume Driver to issue an Unmount before trying the detach operation
 	OptionsUnmountBeforeDetach = "UNMOUNT_BEFORE_DETACH"
-	// OptionsDeleteAfterUnmount Delete the mount path after Unmount
+	// OptionsDeleteAfterUnmount is an option provided to the following Openstorage Volume API
+	// - Unmount
+	// It indicates the Volume Driver to delete the mount path after a successful Unmount
 	OptionsDeleteAfterUnmount = "DELETE_AFTER_UNMOUNT"
-	// OptionsDeleteAfterUnmount Introduce a delay before deleting mount path
+	// OptionsWaitBeforeDelete is an option provided to the following Openstorage Volume API
+	// - Unmount
+	// This option is used in conjunction with OptionsDeleteAfterUnmount.
+	// It indicates the Volume Driver to introduce a delay before deleting mount path
 	OptionsWaitBeforeDelete = "WAIT_BEFORE_DELETE"
-	// OptionsRedirectDetach Redirect detach to the node where volume is attached
+	// OptionsRedirectDetach is an option provided to the following Openstorage Volume API
+	// - Detach
+	// It indicates the Volume Driver to redirect detach to the node where volume is attached
 	OptionsRedirectDetach = "REDIRECT_DETACH"
-	// OptionsDeviceFuseMount name of fuse mount device
+	// OptionsDeviceFuseMount is an option provided to the following Openstorage Volume APIs
+	// - Mount
+	// - Unmount
+	// It is used for volume types which use FUSE mounts.
+	// It provides the Volume Driver with the underlying name of fuse mount device
 	OptionsDeviceFuseMount = "DEV_FUSE_MOUNT"
-	// OptionsForceDetach Forcefully detach device from kernel
+	// OptionsForceDetach is an option provided to the following Openstorage Volume API
+	// - Detach
+	// It indicates the Volume Driver to forcefully detach device from kernel
 	OptionsForceDetach = "FORCE_DETACH"
 )
 
