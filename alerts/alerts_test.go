@@ -80,6 +80,212 @@ func raiseAlerts(manager Manager) error {
 	return nil
 }
 
+func TestUniqueKeys(t *testing.T) {
+	kv, err := newInMemKvdb()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	manager, err := NewManager(kv)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := raiseAlerts(manager); err != nil {
+		t.Fatal(err)
+	}
+
+	// prepare a test configuration table
+	configs := []struct {
+		name          string
+		filters       []Filter
+		keys          []string
+		expectedCount int
+	}{
+		{
+			name:          "by none",
+			keys:          []string{"alerts"},
+			expectedCount: 1,
+		},
+		{
+			name: "by 1 resource type",
+			filters: []Filter{
+				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
+			},
+			keys:          []string{"alerts/RESOURCE_TYPE_VOLUME"},
+			expectedCount: 1,
+		},
+		{
+			name: "by 2 resource types",
+			filters: []Filter{
+				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
+				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_CLUSTER),
+			},
+			keys: []string{
+				"alerts/RESOURCE_TYPE_VOLUME",
+				"alerts/RESOURCE_TYPE_CLUSTER",
+			},
+			expectedCount: 2,
+		},
+		{
+			name: "by 2 resource types",
+			filters: []Filter{
+				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_CLUSTER),
+			},
+			keys: []string{
+				"alerts/RESOURCE_TYPE_DRIVE",
+				"alerts/RESOURCE_TYPE_CLUSTER",
+			},
+			expectedCount: 2,
+		},
+		{
+			name: "by 1 resource id",
+			filters: []Filter{
+				NewInefficientResourceIDFilter("inca"),
+			},
+			keys:          []string{"alerts"},
+			expectedCount: 1,
+		},
+		{
+			name: "by 1 query resource id",
+			filters: []Filter{
+				NewResourceIDFilter("inca", 10, api.ResourceType_RESOURCE_TYPE_VOLUME),
+			},
+			keys:          []string{"alerts/RESOURCE_TYPE_VOLUME/a/inca"},
+			expectedCount: 1,
+		},
+		{
+			name: "by 2 query resource id",
+			filters: []Filter{
+				NewResourceIDFilter("inca", 10, api.ResourceType_RESOURCE_TYPE_VOLUME),
+				NewResourceIDFilter("inca", 10, api.ResourceType_RESOURCE_TYPE_DRIVE),
+			},
+			keys: []string{
+				"alerts/RESOURCE_TYPE_VOLUME/a/inca",
+				"alerts/RESOURCE_TYPE_DRIVE/a/inca",
+			},
+			expectedCount: 2,
+		},
+		{
+			name: "by 2 resource ids",
+			filters: []Filter{
+				NewInefficientResourceIDFilter("inca"),
+				NewInefficientResourceIDFilter("maya"),
+			},
+			keys:          []string{"alerts"},
+			expectedCount: 1,
+		},
+		{
+			name: "by 2 different filter types",
+			filters: []Filter{
+				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
+				NewInefficientResourceIDFilter("maya"),
+			},
+			keys:          []string{"alerts"},
+			expectedCount: 1,
+		},
+		{
+			name: "two levels of filter",
+			filters: []Filter{
+				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewInefficientResourceIDFilter("maya"),
+			},
+			keys:          []string{"alerts"},
+			expectedCount: 1,
+		},
+		{
+			name: "skip a level",
+			filters: []Filter{
+				NewAlertTypeFilter(12, api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
+			},
+			keys:          []string{"alerts/RESOURCE_TYPE_DRIVE"},
+			expectedCount: 1,
+		},
+		{
+			name: "alert type",
+			filters: []Filter{
+				NewAlertTypeFilter(12, api.ResourceType_RESOURCE_TYPE_DRIVE),
+			},
+			keys:          []string{"alerts/RESOURCE_TYPE_DRIVE/c"},
+			expectedCount: 1,
+		},
+		{
+			name: "query resource id",
+			filters: []Filter{
+				NewResourceIDFilter("maya", 12, api.ResourceType_RESOURCE_TYPE_DRIVE),
+			},
+			keys:          []string{"alerts/RESOURCE_TYPE_DRIVE/c/maya"},
+			expectedCount: 1,
+		},
+		{
+			name: "query resource id",
+			filters: []Filter{
+				NewResourceIDFilter("inca", 12, api.ResourceType_RESOURCE_TYPE_DRIVE),
+			},
+			keys:          []string{"alerts/RESOURCE_TYPE_DRIVE/c/inca"},
+			expectedCount: 1,
+		},
+		{
+			name: "alert types",
+			filters: []Filter{
+				NewAlertTypeFilter(10, api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewAlertTypeFilter(12, api.ResourceType_RESOURCE_TYPE_DRIVE),
+			},
+			keys: []string{
+				"alerts/RESOURCE_TYPE_DRIVE/a",
+				"alerts/RESOURCE_TYPE_DRIVE/c",
+			},
+			expectedCount: 2,
+		},
+		{
+			name: "time and other filters",
+			filters: []Filter{
+				NewTimeSpanFilter(time.Now().AddDate(0, 0, -1), time.Now()),
+				NewAlertTypeFilter(10, api.ResourceType_RESOURCE_TYPE_DRIVE),
+				NewAlertTypeFilter(12, api.ResourceType_RESOURCE_TYPE_DRIVE),
+			},
+			keys:          []string{"alerts"},
+			expectedCount: 1,
+		},
+		{
+			name: "time filter match none",
+			filters: []Filter{
+				NewTimeSpanFilter(time.Now().AddDate(0, 0, -1), time.Now()),
+			},
+			keys:          []string{"alerts"},
+			expectedCount: 1,
+		},
+		{
+			name: "time filter match all in last 3 months",
+			filters: []Filter{
+				NewTimeSpanFilter(time.Now().AddDate(0, -3, 0), time.Now()),
+			},
+			keys:          []string{"alerts"},
+			expectedCount: 1,
+		},
+	}
+
+	// iterate over all configs and test
+	for _, config := range configs {
+		m, err := getUniqueKeysFromFilters(config.filters...)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(m) != len(config.keys) {
+			t.Fatal(len(config.keys), "number of keys expected, got", len(m), "instead")
+		}
+
+		for _, key := range config.keys {
+			if _, ok := m[key]; !ok {
+				t.Fatal("expected key", key, "to be present in one of the unique keys")
+			}
+		}
+	}
+}
+
 // TestManager_Enumerate tests enumeration based on various filters.
 func TestManager_Enumerate(t *testing.T) {
 	kv, err := newInMemKvdb()

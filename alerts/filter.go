@@ -56,9 +56,9 @@ const (
 	// This filter is not an efficient filter.
 	TimeSpanFilter
 	// CounterFilter parses on the count value of alert entries. This filter requires pulling all entries
-	// and is there not an efficient filter.
+	// and is, therefore, not an efficient filter.
 	CountSpanFilter
-	// InefficientResourceIDFilter takes only one argume, i.e., resource id. It fetches all entries from kvdb
+	// InefficientResourceIDFilter takes only one argument, i.e., resource id. It fetches all entries from kvdb
 	// then parses them to see resource id's are matching. Matching entries are returned.
 	// This filter is not an efficient filter since it requires pulling all entries.
 	// Recommend to use ResourceIDFilter is you resource type and alert type info is also known for

@@ -99,12 +99,15 @@ func (m *manager) Raise(alert *api.Alert) error {
 		alert.Timestamp = &timestamp.Timestamp{Seconds: time.Now().Unix()}
 	}
 
+	// ttl is time to live. it indicates how long (in seconds) the object should live inside kvdb backend.
+	// kvdb will delete the object once ttl elapses.
 	if alert.Cleared {
 		// if the alert is marked Cleared, it is pushed to kvdb with a TTLOption of half day
 		_, err := m.kv.Put(getKey(alert.Resource.String(), alert.GetAlertType(), alert.ResourceId), alert, m.ttl)
 		return err
 	} else {
-		_, err := m.kv.Put(getKey(alert.Resource.String(), alert.GetAlertType(), alert.ResourceId), alert, 0)
+		// otherwise use the ttl value embedded in the alert object
+		_, err := m.kv.Put(getKey(alert.Resource.String(), alert.GetAlertType(), alert.ResourceId), alert, alert.Ttl)
 		return err
 	}
 }
@@ -121,7 +124,7 @@ func (m *manager) Enumerate(filters ...Filter) ([]*api.Alert, error) {
 
 	// enumerate for unique keys
 	for key := range keys {
-		kvps, err := m.kv.Enumerate(key)
+		kvps, err := enumerate(m.kv, key)
 		if err != nil {
 			return nil, err
 		}
@@ -153,6 +156,40 @@ func (m *manager) Enumerate(filters ...Filter) ([]*api.Alert, error) {
 	}
 
 	return myAlerts, nil
+}
+
+// enumerate recursively fetches kvpairs.
+// Recursive call is required since, unlike mem kv, an etcd or consul based kv will not return
+// leaf objects if the key is a prefix referencing only higher level paths. For instance if the
+// kvdb structure is as follows:
+// a/b/c/<data>
+// a/B/C/<data>
+// then enumerating for keys using "a" will only return "b" and "B".
+func enumerate(kv kvdb.Kvdb, key string) (kvdb.KVPairs, error) {
+	kvps, err := kv.Enumerate(key)
+	if err != nil {
+		return nil, err
+	}
+
+	var keys []string
+	var out kvdb.KVPairs
+	for _, kvp := range kvps {
+		kvp := kvp
+		if kvp.Value == nil {
+			keys = append(keys, kvp.Key)
+			continue
+		}
+		out = append(out, kvp)
+	}
+
+	for _, key := range keys {
+		kvps, err := enumerate(kv, key)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, kvps...)
+	}
+	return out, nil
 }
 
 func (m *manager) Filter(alerts []*api.Alert, filters ...Filter) ([]*api.Alert, error) {

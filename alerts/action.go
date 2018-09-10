@@ -29,14 +29,14 @@ func (a *action) Run(manager Manager) error {
 	return a.f(manager, a.filters...)
 }
 
-func deleteAction(manager Manager, filters ...Filter) error {
+func deleteActionFunc(manager Manager, filters ...Filter) error {
 	return manager.Delete(filters...)
 }
 
-// clearAction first enumerates, then changes Cleared flag to true,
+// clearActionFunc first enumerates, then changes Cleared flag to true,
 // then updates it.
 // Raise method determines if TTLOption needs to be applied based on clear flag.
-func clearAction(manager Manager, filters ...Filter) error {
+func clearActionFunc(manager Manager, filters ...Filter) error {
 	myAlerts, err := manager.Enumerate(filters...)
 	if err != nil {
 		return err
