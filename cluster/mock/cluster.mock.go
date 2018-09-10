@@ -49,18 +49,6 @@ func (mr *MockClusterMockRecorder) AddEventListener(arg0 interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddEventListener", reflect.TypeOf((*MockCluster)(nil).AddEventListener), arg0)
 }
 
-// ClearAlert mocks base method
-func (m *MockCluster) ClearAlert(arg0 api.ResourceType, arg1 int64) error {
-	ret := m.ctrl.Call(m, "ClearAlert", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// ClearAlert indicates an expected call of ClearAlert
-func (mr *MockClusterMockRecorder) ClearAlert(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearAlert", reflect.TypeOf((*MockCluster)(nil).ClearAlert), arg0, arg1)
-}
-
 // CreatePair mocks base method
 func (m *MockCluster) CreatePair(arg0 *api.ClusterPairCreateRequest) (*api.ClusterPairCreateResponse, error) {
 	ret := m.ctrl.Call(m, "CreatePair", arg0)

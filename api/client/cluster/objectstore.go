@@ -1,9 +1,10 @@
 package cluster
 
 import (
+	"strconv"
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/objectstore"
-	"strconv"
 )
 
 const (

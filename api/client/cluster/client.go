@@ -283,16 +283,6 @@ func (c *clusterClient) EnumerateAlerts(ts, te time.Time, resource api.ResourceT
 	return &a, nil
 }
 
-func (c *clusterClient) ClearAlert(resource api.ResourceType, alertID int64) error {
-	path := clusterPath + "/alerts/" + strconv.FormatInt(int64(resource), 10) + "/" + strconv.FormatInt(alertID, 10)
-	request := c.c.Put().Resource(path)
-	resp := request.Do()
-	if resp.Error() != nil {
-		return resp.FormatError()
-	}
-	return nil
-}
-
 func (c *clusterClient) EraseAlert(resource api.ResourceType, alertID int64) error {
 	path := clusterPath + "/alerts/" + strconv.FormatInt(int64(resource), 10) + "/" + strconv.FormatInt(alertID, 10)
 	request := c.c.Delete().Resource(path)
