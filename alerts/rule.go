@@ -13,8 +13,10 @@ type Event int
 
 // Event constants
 const (
-	RaiseEvent Event = iota
-	DeleteEvent
+	// raiseEvent refers to event of raising an alert.
+	raiseEvent Event = iota
+	// deleteEvent refers to event of deleting an event.
+	deleteEvent
 )
 
 // rule implements Rule interface.

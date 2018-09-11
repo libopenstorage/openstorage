@@ -89,7 +89,7 @@ func getKey(resourceType string, alertType int64, resourceID string) string {
 
 func (m *manager) Raise(alert *api.Alert) error {
 	for _, rule := range m.rules {
-		if rule.GetEvent() == RaiseEvent {
+		if rule.GetEvent() == raiseEvent {
 			match, err := rule.GetFilter().Match(alert)
 			if err != nil {
 				return err
@@ -227,7 +227,7 @@ func (m *manager) Filter(alerts []*api.Alert, filters ...Filter) ([]*api.Alert, 
 
 func (m *manager) Delete(filters ...Filter) error {
 	for _, rule := range m.rules {
-		if rule.GetEvent() == DeleteEvent {
+		if rule.GetEvent() == deleteEvent {
 			if err := rule.GetAction().Run(m); err != nil {
 				return err
 			}
