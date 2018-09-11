@@ -1228,11 +1228,11 @@
           "additionalProperties": {
             "type": "string"
           },
-          "title": "Get snapshots that match these labels",
+          "title": "(optional) Get snapshots that match these labels",
           "type": "object"
         },
         "volume_id": {
-          "title": "Get the snapshots for this volume id",
+          "title": "(optional) Get the snapshots for this volume id",
           "type": "string"
         }
       },
@@ -2051,7 +2051,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.7.0"
+    "version": "0.8.0"
   },
   "paths": {
     "/v1/cloudbackups": {
@@ -3108,7 +3108,7 @@
             }
           }
         },
-        "summary": "SnapshotEnumerate returns a list of snapshots for a specific volume\nthat match the labels provided if any.",
+        "summary": "SnapshotEnumerate returns a list of snapshots for a specific volume",
         "tags": [
           "OpenStorageVolume"
         ]
@@ -3141,7 +3141,7 @@
             }
           }
         },
-        "summary": "SnapshotEnumerate returns a list of snapshots for a specific volume\nthat match the labels provided if any.",
+        "summary": "SnapshotEnumerate returns a list of snapshots. \nTo filter all the snapshots for a specific volume which may no longer exist,\nspecifiy a volume id.\nLabels can also be used to filter the snapshot list.\nIf neither are provided all snapshots will be returned.",
         "tags": [
           "OpenStorageVolume"
         ]

@@ -906,7 +906,6 @@ service OpenStorageVolume {
     }
 
   // SnapshotEnumerate returns a list of snapshots for a specific volume
-  // that match the labels provided if any.
   rpc SnapshotEnumerate(SdkVolumeSnapshotEnumerateRequest)
     returns (SdkVolumeSnapshotEnumerateResponse) {
       option(google.api.http) = {
@@ -914,8 +913,11 @@ service OpenStorageVolume {
       };
     }
 
-  // SnapshotEnumerate returns a list of snapshots for a specific volume
-  // that match the labels provided if any.
+  // SnapshotEnumerate returns a list of snapshots. 
+  // To filter all the snapshots for a specific volume which may no longer exist,
+  // specifiy a volume id.
+  // Labels can also be used to filter the snapshot list.
+  // If neither are provided all snapshots will be returned.
   rpc SnapshotEnumerateWithFilters(SdkVolumeSnapshotEnumerateWithFiltersRequest)
     returns (SdkVolumeSnapshotEnumerateWithFiltersResponse) {
       option(google.api.http) = {
@@ -1715,9 +1717,9 @@ message SdkVolumeSnapshotEnumerateResponse {
 
 // Defines a request to list the snaphots
 message SdkVolumeSnapshotEnumerateWithFiltersRequest {
-  // Get the snapshots for this volume id
+  // (optional) Get the snapshots for this volume id
   string volume_id = 1;
-  // Get snapshots that match these labels
+  // (optional) Get snapshots that match these labels
   map<string, string> labels = 2;
 }
 
@@ -2171,7 +2173,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 7;
+    Minor = 8;
     // SDK version patch value of this specification
     Patch = 0;
   }

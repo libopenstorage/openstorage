@@ -95,6 +95,9 @@ func (s *VolumeServer) SnapshotEnumerate(
 	req *api.SdkVolumeSnapshotEnumerateRequest,
 ) (*api.SdkVolumeSnapshotEnumerateResponse, error) {
 
+	if len(req.GetVolumeId()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
+	}
 	resp, err := s.SnapshotEnumerateWithFilters(
 		ctx,
 		&api.SdkVolumeSnapshotEnumerateWithFiltersRequest{
@@ -117,10 +120,6 @@ func (s *VolumeServer) SnapshotEnumerateWithFilters(
 	ctx context.Context,
 	req *api.SdkVolumeSnapshotEnumerateWithFiltersRequest,
 ) (*api.SdkVolumeSnapshotEnumerateWithFiltersResponse, error) {
-
-	if len(req.GetVolumeId()) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
-	}
 
 	snapshots, err := s.driver.SnapEnumerate([]string{req.GetVolumeId()}, req.GetLabels())
 	if err != nil {

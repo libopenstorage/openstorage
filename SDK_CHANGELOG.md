@@ -5,6 +5,10 @@
 
 ## Releases
 
+### v0.8.0 - Tech Preview (9/11/2018)
+
+* SdkVolumeSnapshotEnumerateWithFilters all attributes are now optional. [#609](https://github.com/libopenstorage/openstorage/issues/609)
+
 ### v0.7.0 - Tech Preview (9/5/2018)
 
 * Add `Name` to `StorageCluster`. This name will hold the name given to the cluster by the administrator. The `StorageCluster.Id` will now hold a unique id for the cluster.
