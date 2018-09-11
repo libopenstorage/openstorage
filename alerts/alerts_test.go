@@ -320,12 +320,29 @@ func TestManager_Enumerate(t *testing.T) {
 			expectedCount: 1,
 		},
 		{
+			name: "by 1 resource type but with options",
+			filters: []Filter{
+				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME,
+					NewCountSpanOption(10, 50)), // first fetch, then filter using these opts
+			},
+			expectedCount: 0,
+		},
+		{
 			name: "by 2 resource types",
 			filters: []Filter{
 				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
 				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_CLUSTER),
 			},
 			expectedCount: 2,
+		},
+		{
+			name: "by 2 resource types but one has options",
+			filters: []Filter{
+				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
+				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_CLUSTER,
+					NewCountSpanOption(10, 50)), // only applies to filter it is defined within
+			},
+			expectedCount: 1,
 		},
 		{
 			name: "by 2 resource types",

@@ -204,7 +204,7 @@ func (f *filter) Match(alert *api.Alert) (bool, error) {
 		if alert.Resource == v {
 			// iterate through options and match alert
 			for _, opt := range f.options {
-				if w, ok := opt.(Filter); !ok {
+				if w, ok := opt.GetValue().(Filter); !ok {
 					return false, typeAssertionError.
 						Tag("invalid option").
 						Tag("resourceTypeFilter").
@@ -233,7 +233,7 @@ func (f *filter) Match(alert *api.Alert) (bool, error) {
 			alert.Resource == v.resourceType {
 			// iterate through options and match alert
 			for _, opt := range f.options {
-				if w, ok := opt.(Filter); !ok {
+				if w, ok := opt.GetValue().(Filter); !ok {
 					return false, typeAssertionError.
 						Tag("alertTypeFilter").
 						Tag("func Match")
@@ -262,7 +262,7 @@ func (f *filter) Match(alert *api.Alert) (bool, error) {
 			alert.ResourceId == v.resourceID {
 			// iterate through options and match alert
 			for _, opt := range f.options {
-				if w, ok := opt.(Filter); !ok {
+				if w, ok := opt.GetValue().(Filter); !ok {
 					return false, typeAssertionError.
 						Tag("resourceIDFilter").
 						Tag("func Match")
