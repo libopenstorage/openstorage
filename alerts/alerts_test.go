@@ -331,7 +331,7 @@ func TestManager_Enumerate(t *testing.T) {
 			name: "by 1 resource type but with options 2 of 3",
 			filters: []Filter{
 				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME,
-					NewresourceIdOption("inca")), // first fetch, then filter using these opts
+					NewResourceIdOption("inca")), // first fetch, then filter using these opts
 			},
 			expectedCount: 1,
 		},
@@ -339,7 +339,7 @@ func TestManager_Enumerate(t *testing.T) {
 			name: "by 1 resource type but with options 3 of 3",
 			filters: []Filter{
 				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME,
-					NewresourceIdOption("maya")), // first fetch, then filter using these opts
+					NewResourceIdOption("maya")), // first fetch, then filter using these opts
 			},
 			expectedCount: 0,
 		},

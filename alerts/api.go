@@ -46,10 +46,10 @@ func NewFlagCheckOption(flag bool) Option {
 	return &option{optionType: flagCheckOption, value: NewFlagCheckFilter(flag)}
 }
 
-// NewresourceIdOption provides an option to be used during filter creation that
+// NewResourceIdOption provides an option to be used during filter creation that
 // accept such options. Only filters that are efficient in querying kvdb accept options
 // and apply these options during matching alerts.
-func NewresourceIdOption(resourceId string) Option {
+func NewResourceIdOption(resourceId string) Option {
 	return &option{optionType: resourceIdOption, value: NewMatchResourceIDFilter(resourceId)}
 }
 
