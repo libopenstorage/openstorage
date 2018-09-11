@@ -42,10 +42,10 @@ The package also provides an implementation of this interface via `kvdb`. So an 
 created as follows:
 ```go
 // NewManager obtains instance of Manager for alerts management.
-NewManager(kv kvdb.Kvdb, options ...Option) (Manager, error) {...}
+func NewManager(kv kvdb.Kvdb, options ...Option) (Manager, error) {...}
 
 // NewTTLOption provides an option to be used in manager creation.
-NewTTLOption(ttl uint64) Option {...}
+func NewTTLOption(ttl uint64) Option {...}
 ```
 
 Currently, it accepts only one type of option, which is TTL option. A `TTL` value indicates how long a cleared
@@ -60,32 +60,32 @@ You can obtain an instance of this interface using following API:
 // Filter API
 
 // NewResourceTypeFilter creates a filter that matches on <resourceType>
-NewResourceTypeFilter(resourceType api.ResourceType, options ...Option) Filter {...}
+func NewResourceTypeFilter(resourceType api.ResourceType, options ...Option) Filter {...}
 
 // NewAlertTypeFilter creates a filter that matches on <resourceType>/<alertType>
-NewAlertTypeFilter(alertType int64, resourceType api.ResourceType, options ...Option) Filter {...}
+func NewAlertTypeFilter(alertType int64, resourceType api.ResourceType, options ...Option) Filter {...}
 
 // NewResourceIDFilter creates a filter that matches on <resourceType>/<alertType>/<resourceID>
-NewResourceIDFilter(resourceID string, alertType int64, resourceType api.ResourceType, options ...Option) Filter {...}
+func NewResourceIDFilter(resourceID string, alertType int64, resourceType api.ResourceType, options ...Option) Filter {...}
 
 // NewTimeSpanFilter creates a filter that matches on alert raised in a given time window.
-NewTimeSpanFilter(start, stop time.Time) Filter {...}
+func NewTimeSpanFilter(start, stop time.Time) Filter {...}
 
 // NewMatchResourceIDFilter provides a filter that matches on resource id.
-NewMatchResourceIDFilter(resourceID string) Filter {...}
+func NewMatchResourceIDFilter(resourceID string) Filter {...}
 
 // NewCountSpanFilter provides a filter that matches on alert count.
-NewCountSpanFilter(minCount, maxCount int64) Filter {...}
+func NewCountSpanFilter(minCount, maxCount int64) Filter {...}
 
 // NewMinSeverityFilter provides a filter that matches on alert when severity is greater than
 // or equal to the minSev value.
-NewMinSeverityFilter(minSev api.SeverityType) Filter {...}
+func NewMinSeverityFilter(minSev api.SeverityType) Filter {...}
 
 // NewFlagCheckFilter provides a filter that matches on alert clear flag.
-NewFlagCheckFilter(flag bool) Filter {...}
+func NewFlagCheckFilter(flag bool) Filter {...}
 
 // NewCustomFilter creates a filter that matches on UDF (user defined function)
-NewCustomFilter(f func(alert *api.Alert) (bool, error)) Filter {...}
+func NewCustomFilter(f func(alert *api.Alert) (bool, error)) Filter {...}
 ```
 
 As you can see three of these filters take options for further configuration. These options provide a way to filter
@@ -94,27 +94,27 @@ out alerts. An option is also an interface and following options can be created.
 ```go
 // NewTimeSpanOption provides an option to be used in filter definition.
 // Filters that take options, apply options only during matching alerts.
-NewTimeSpanOption(start, stop time.Time) Option {...}
+func NewTimeSpanOption(start, stop time.Time) Option {...}
 
 // NewCountSpanOption provides an option to be used in filter definition that
 // accept options. Only filters that are efficient in querying kvdb accept options
 // and apply these options during matching alerts.
-NewCountSpanOption(minCount, maxCount int64) Option {...}
+func NewCountSpanOption(minCount, maxCount int64) Option {...}
 
 // NewMinSeverityOption provides an option to be used during filter creation that
 // accept such options. Only filters that are efficient in querying kvdb accept options
 // and apply these options during matching alerts.
-NewMinSeverityOption(minSev api.SeverityType) Option {...}
+func NewMinSeverityOption(minSev api.SeverityType) Option {...}
 
 // NewFlagCheckOptions provides an option to be used during filter creation that
 // accept such options. Only filters that are efficient in querying kvdb accept options
 // and apply these options during matching alerts.
-NewFlagCheckOption(flag bool) Option {...}
+func NewFlagCheckOption(flag bool) Option {...}
 
 // NewresourceIdOption provides an option to be used during filter creation that
 // accept such options. Only filters that are efficient in querying kvdb accept options
 // and apply these options during matching alerts.
-NewresourceIdOption(resourceId string) Option {...}
+func NewResourceIdOption(resourceId string) Option {...}
 ```
 
 A filter with an option works in a way that _all_ conditions need to be satisfied. It is an AND operation.
@@ -130,11 +130,11 @@ Different rules for different qualifying events can be obtained as follows:
 ```go
 // NewRaiseRule creates a rule that runs action when a raised alerts matche filter.
 // Action happens before incoming alert is raised.
-NewRaiseRule(name string, filter Filter, action Action) Rule {...}
+func NewRaiseRule(name string, filter Filter, action Action) Rule {...}
 
 // NewDeleteRule creates a rule that runs action when deleted alerts matche filter.
 // Action happens after matching alerts are deleted.
-NewDeleteRule(name string, filter Filter, action Action) Rule {...}
+func NewDeleteRule(name string, filter Filter, action Action) Rule {...}
 ```
 
 Each rule also takes an action. So what is an action?
@@ -148,13 +148,13 @@ An instance of an action can be obtained as follows:
 
 ```go
 // NewDeleteAction deletes alert entries based on filters.
-NewDeleteAction(filters ...Filter) Action {...}
+func NewDeleteAction(filters ...Filter) Action {...}
 
 // NewClearAction marks alert entries as cleared that get deleted after half a day of life in kvdb.
-NewClearAction(filters ...Filter) Action {...}
+func NewClearAction(filters ...Filter) Action {...}
 
 // NewCustomAction takes custom action using user defined function.
-NewCustomAction(f func(manager Manager, filters ...Filter) error, filters ...Filter) Action {...}
+func NewCustomAction(f func(manager Manager, filters ...Filter) error, filters ...Filter) Action {...}
 ```
 
 The list of filters here work together in such a way that an action will be performed on an alert as long as
