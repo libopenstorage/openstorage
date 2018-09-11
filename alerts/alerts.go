@@ -20,10 +20,17 @@ func (e Error) Error() string {
 	return string(e)
 }
 
+// Tag tags an error with a tag string.
+// Helpful for providing error contexts.
+func (e Error) Tag(tag Error) Error {
+	return Error(string(tag) + ":" + string(e))
+}
+
 const (
-	KvdbKey                    = "alerts"
+	kvdbKey                    = "alerts"
 	typeAssertionError   Error = "type assertion error"
 	invalidFilterType    Error = "invalid filter type"
+	invalidOptionType    Error = "invalid option type"
 	incorrectFilterValue Error = "incorrectly set filter value"
 )
 
@@ -54,7 +61,7 @@ func newManager(kv kvdb.Kvdb, options ...Option) (*manager, error) {
 	m := &manager{kv: kv, rules: make(map[string]Rule), ttl: HalfDay}
 	for _, option := range options {
 		switch option.GetType() {
-		case TTLOption:
+		case ttlOption:
 			v, ok := option.GetValue().(uint64)
 			if !ok {
 				return nil, typeAssertionError
@@ -77,7 +84,7 @@ type manager struct {
 // kvdb tree structure is setup as follows:
 // <baseKey>/<resourceType>/<dec2hex(alertType)>/<resourceID>/<alertObject>
 func getKey(resourceType string, alertType int64, resourceID string) string {
-	return filepath.Join(KvdbKey, resourceType, strconv.FormatInt(alertType, 16), resourceID)
+	return filepath.Join(kvdbKey, resourceType, strconv.FormatInt(alertType, 16), resourceID)
 }
 
 func (m *manager) Raise(alert *api.Alert) error {
@@ -102,7 +109,7 @@ func (m *manager) Raise(alert *api.Alert) error {
 	// ttl is time to live. it indicates how long (in seconds) the object should live inside kvdb backend.
 	// kvdb will delete the object once ttl elapses.
 	if alert.Cleared {
-		// if the alert is marked Cleared, it is pushed to kvdb with a TTLOption of half day
+		// if the alert is marked Cleared, it is pushed to kvdb with a ttlOption of half day
 		_, err := m.kv.Put(getKey(alert.Resource.String(), alert.GetAlertType(), alert.ResourceId), alert, m.ttl)
 		return err
 	} else {
@@ -231,7 +238,7 @@ func (m *manager) Delete(filters ...Filter) error {
 Loop:
 	for _, filter := range filters {
 		switch filter.GetFilterType() {
-		case CustomFilter, TimeSpanFilter, AlertTypeFilter, MatchResourceIDFilter, CountSpanFilter:
+		case CustomFilter, timeSpanFilter, alertTypeFilter, matchResourceIDFilter, countSpanFilter:
 			allFiltersIndexBased = false
 			break Loop
 		}

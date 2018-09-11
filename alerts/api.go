@@ -16,81 +16,88 @@ func NewManager(kv kvdb.Kvdb, options ...Option) (Manager, error) {
 
 // NewTTLOption provides an option to be used in manager creation.
 func NewTTLOption(ttl uint64) Option {
-	return &option{optionType: TTLOption, value: ttl}
+	return &option{optionType: ttlOption, value: ttl}
 }
 
 // NewTimeSpanOption provides an option to be used in filter definition.
-// Filters that take options, apply options only during matching
+// Filters that take options, apply options only during matching alerts.
 func NewTimeSpanOption(start, stop time.Time) Option {
-	return &option{optionType: TimeSpanOption, value: NewTimeSpanFilter(start, stop)}
+	return &option{optionType: timeSpanOption, value: NewTimeSpanFilter(start, stop)}
 }
 
 // NewCountSpanOption provides an option to be used in filter definition that
 // accept options. Only filters that are efficient in querying kvdb accept options
 // and apply these options during matching alerts.
 func NewCountSpanOption(minCount, maxCount int64) Option {
-	return &option{optionType: CountSpanOption, value: NewCountSpanFilter(minCount, maxCount)}
+	return &option{optionType: countSpanOption, value: NewCountSpanFilter(minCount, maxCount)}
 }
 
 // NewMinSeverityOption provides an option to be used during filter creation that
 // accept such options. Only filters that are efficient in querying kvdb accept options
 // and apply these options during matching alerts.
 func NewMinSeverityOption(minSev api.SeverityType) Option {
-	return &option{optionType: MinSeverityOption, value: NewMinSeverityFilter(minSev)}
+	return &option{optionType: minSeverityOption, value: NewMinSeverityFilter(minSev)}
 }
 
 // NewFlagCheckOptions provides an option to be used during filter creation that
 // accept such options. Only filters that are efficient in querying kvdb accept options
 // and apply these options during matching alerts.
 func NewFlagCheckOption(flag bool) Option {
-	return &option{optionType: FlagCheckOption, value: NewFlagCheckFilter(flag)}
+	return &option{optionType: flagCheckOption, value: NewFlagCheckFilter(flag)}
+}
+
+// NewresourceIdOption provides an option to be used during filter creation that
+// accept such options. Only filters that are efficient in querying kvdb accept options
+// and apply these options during matching alerts.
+func NewresourceIdOption(resourceId string) Option {
+	return &option{optionType: resourceIdOption, value: NewMatchResourceIDFilter(resourceId)}
 }
 
 // Filter API
 
 // NewResourceTypeFilter creates a filter that matches on <resourceType>
 func NewResourceTypeFilter(resourceType api.ResourceType, options ...Option) Filter {
-	return &filter{filterType: ResourceTypeFilter, value: resourceType, options: options}
+	return &filter{filterType: resourceTypeFilter, value: resourceType, options: options}
 }
 
 // NewAlertTypeFilter creates a filter that matches on <resourceType>/<alertType>
 func NewAlertTypeFilter(alertType int64, resourceType api.ResourceType, options ...Option) Filter {
-	return &filter{filterType: AlertTypeFilter, value: alertInfo{
+	return &filter{filterType: alertTypeFilter, value: alertInfo{
 		alertType: alertType, resourceType: resourceType},
 		options: options}
 }
 
 // NewResourceIDFilter creates a filter that matches on <resourceType>/<alertType>/<resourceID>
 func NewResourceIDFilter(resourceID string, alertType int64, resourceType api.ResourceType, options ...Option) Filter {
-	return &filter{filterType: ResourceIDFilter, value: alertInfo{
+	return &filter{filterType: resourceIDFilter, value: alertInfo{
 		resourceID: resourceID, alertType: alertType, resourceType: resourceType},
 		options: options}
 }
 
 // NewTimeSpanFilter creates a filter that matches on alert raised in a given time window.
 func NewTimeSpanFilter(start, stop time.Time) Filter {
-	return &filter{filterType: TimeSpanFilter, value: timeZone{start: start, stop: stop}}
+	return &filter{filterType: timeSpanFilter, value: timeZone{start: start, stop: stop}}
 }
 
-// NewInefficientResourceIDFilter provides a filter that matches on resource id.
-func NewInefficientResourceIDFilter(resourceID string) Filter {
-	return &filter{filterType: MatchResourceIDFilter, value: resourceID}
+// NewMatchResourceIDFilter provides a filter that matches on resource id.
+func NewMatchResourceIDFilter(resourceID string) Filter {
+	return &filter{filterType: matchResourceIDFilter, value: resourceID}
 }
 
 // NewCountSpanFilter provides a filter that matches on alert count.
 func NewCountSpanFilter(minCount, maxCount int64) Filter {
-	return &filter{filterType: CountSpanFilter, value: []int64{minCount, maxCount}}
+	return &filter{filterType: countSpanFilter, value: []int64{minCount, maxCount}}
 }
 
 // NewMinSeverityFilter provides a filter that matches on alert when severity is greater than
 // or equal to the minSev value.
 func NewMinSeverityFilter(minSev api.SeverityType) Filter {
-	return &filter{filterType: MinSeverityFilter, value: minSev}
+	return &filter{filterType: minSeverityFilter, value: minSev}
 }
 
 // NewFlagCheckFilter provides a filter that matches on alert clear flag.
 func NewFlagCheckFilter(flag bool) Filter {
-	return &filter{filterType: FlagCheckFilter, value: flag}
+	return &filter{filterType: flagCheckFilter, value: flag}
 }
 
 // NewCustomFilter creates a filter that matches on UDF (user defined function)
@@ -102,12 +109,12 @@ func NewCustomFilter(f func(alert *api.Alert) (bool, error)) Filter {
 
 // NewDeleteAction deletes alert entries based on filters.
 func NewDeleteAction(filters ...Filter) Action {
-	return &action{action: DeleteAction, filters: filters, f: deleteActionFunc}
+	return &action{action: deleteAction, filters: filters, f: deleteActionFunc}
 }
 
 // NewClearAction marks alert entries as cleared that get deleted after half a day of life in kvdb.
 func NewClearAction(filters ...Filter) Action {
-	return &action{action: ClearAction, filters: filters, f: clearActionFunc}
+	return &action{action: clearAction, filters: filters, f: clearActionFunc}
 }
 
 // NewCustomAction takes custom action using user defined function.
