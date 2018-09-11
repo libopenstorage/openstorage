@@ -93,6 +93,7 @@ const (
 type filter struct {
 	filterType FilterType
 	value      interface{}
+	options    []Option
 }
 
 // timeZone contains information about time window.
@@ -172,12 +173,28 @@ func (f *filter) Match(alert *api.Alert) (bool, error) {
 			return true, nil
 		}
 		return false, nil
+	// Cases below are for efficient filters
+	// -------------------------------------
 	case ResourceTypeFilter:
 		v, ok := f.value.(api.ResourceType)
 		if !ok {
 			return false, typeAssertionError
 		}
 		if alert.Resource == v {
+			// iterate through options and match alert
+			for _, opt := range f.options {
+				if w, ok := opt.(Filter); !ok {
+					return false, typeAssertionError
+				} else {
+					if matched, err := w.Match(alert); err != nil {
+						return false, err
+					} else {
+						if !matched {
+							return false, nil
+						}
+					}
+				}
+			}
 			return true, nil
 		}
 		return false, nil
@@ -188,6 +205,20 @@ func (f *filter) Match(alert *api.Alert) (bool, error) {
 		}
 		if alert.AlertType == v.alertType &&
 			alert.Resource == v.resourceType {
+			// iterate through options and match alert
+			for _, opt := range f.options {
+				if w, ok := opt.(Filter); !ok {
+					return false, typeAssertionError
+				} else {
+					if matched, err := w.Match(alert); err != nil {
+						return false, err
+					} else {
+						if !matched {
+							return false, nil
+						}
+					}
+				}
+			}
 			return true, nil
 		}
 		return false, nil
@@ -199,6 +230,20 @@ func (f *filter) Match(alert *api.Alert) (bool, error) {
 		if alert.AlertType == v.alertType &&
 			alert.Resource == v.resourceType &&
 			alert.ResourceId == v.resourceID {
+			// iterate through options and match alert
+			for _, opt := range f.options {
+				if w, ok := opt.(Filter); !ok {
+					return false, typeAssertionError
+				} else {
+					if matched, err := w.Match(alert); err != nil {
+						return false, err
+					} else {
+						if !matched {
+							return false, nil
+						}
+					}
+				}
+			}
 			return true, nil
 		}
 		return false, nil

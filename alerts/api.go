@@ -12,27 +12,59 @@ func NewManager(kv kvdb.Kvdb, options ...Option) (Manager, error) {
 	return newManager(kv, options...)
 }
 
+// Option API
+
+// NewTTLOption provides an option to be used in manager creation.
 func NewTTLOption(ttl uint64) Option {
 	return &option{optionType: TTLOption, value: ttl}
+}
+
+// NewTimeSpanOption provides an option to be used in filter definition.
+// Filters that take options, apply options only during matching
+func NewTimeSpanOption(start, stop time.Time) Option {
+	return &option{optionType: TimeSpanOption, value: NewTimeSpanFilter(start, stop)}
+}
+
+// NewCountSpanOption provides an option to be used in filter definition that
+// accept options. Only filters that are efficient in querying kvdb accept options
+// and apply these options during matching alerts.
+func NewCountSpanOption(minCount, maxCount int64) Option {
+	return &option{optionType: CountSpanOption, value: NewCountSpanFilter(minCount, maxCount)}
+}
+
+// NewMinSeverityOption provides an option to be used during filter creation that
+// accept such options. Only filters that are efficient in querying kvdb accept options
+// and apply these options during matching alerts.
+func NewMinSeverityOption(minSev api.SeverityType) Option {
+	return &option{optionType: MinSeverityOption, value: NewMinSeverityFilter(minSev)}
+}
+
+// NewFlagCheckOptions provides an option to be used during filter creation that
+// accept such options. Only filters that are efficient in querying kvdb accept options
+// and apply these options during matching alerts.
+func NewFlagCheckOption(flag bool) Option {
+	return &option{optionType: FlagCheckOption, value: NewFlagCheckFilter(flag)}
 }
 
 // Filter API
 
 // NewResourceTypeFilter creates a filter that matches on <resourceType>
-func NewResourceTypeFilter(resourceType api.ResourceType) Filter {
-	return &filter{filterType: ResourceTypeFilter, value: resourceType}
+func NewResourceTypeFilter(resourceType api.ResourceType, options ...Option) Filter {
+	return &filter{filterType: ResourceTypeFilter, value: resourceType, options: options}
 }
 
 // NewAlertTypeFilter creates a filter that matches on <resourceType>/<alertType>
-func NewAlertTypeFilter(alertType int64, resourceType api.ResourceType) Filter {
+func NewAlertTypeFilter(alertType int64, resourceType api.ResourceType, options ...Option) Filter {
 	return &filter{filterType: AlertTypeFilter, value: alertInfo{
-		alertType: alertType, resourceType: resourceType}}
+		alertType: alertType, resourceType: resourceType},
+		options: options}
 }
 
 // NewResourceIDFilter creates a filter that matches on <resourceType>/<alertType>/<resourceID>
-func NewResourceIDFilter(resourceID string, alertType int64, resourceType api.ResourceType) Filter {
+func NewResourceIDFilter(resourceID string, alertType int64, resourceType api.ResourceType, options ...Option) Filter {
 	return &filter{filterType: ResourceIDFilter, value: alertInfo{
-		resourceID: resourceID, alertType: alertType, resourceType: resourceType}}
+		resourceID: resourceID, alertType: alertType, resourceType: resourceType},
+		options: options}
 }
 
 // NewTimeSpanFilter creates a filter that matches on alert raised in a given time window.
