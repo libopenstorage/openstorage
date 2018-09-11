@@ -44,7 +44,10 @@ type FilterType int
 //
 // Input filters are sorted based
 const (
-	// Filter types listed below do not query kvdb directly. Instead they enumerate and then filter.
+	// This group of filters, when used to fetch directly from kvdb, target all entries in kvdb.
+	// Therefore, these filters are considered inefficient in fetching. They fetch _all_ entries
+	// and then filter out the fetched entries. Due to this reason these filters need to be handled
+	// individually in the Delete method implementation.
 
 	// CustomFilter is based on a user defined function (UDF). All alert entries are fetched from kvdb
 	// and then passed through UDF. Entries that match are returned. Therefore, this filter does not query
@@ -74,6 +77,8 @@ const (
 	matchResourceIDFilter
 
 	// Filter types listed below provide more efficient querying into kvdb by directly querying kvdb sub tree.
+	// These filters reach a sub tree in kvdb and only fetch some alerts, therefore, these are called efficient
+	// filters.
 
 	// resourceTypeFilter takes resource type and fetches all alert entries under that resource type prefix.
 	// Since resource type is a top level indexing of data, it always performs querying efficiently without

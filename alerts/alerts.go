@@ -238,7 +238,13 @@ func (m *manager) Delete(filters ...Filter) error {
 Loop:
 	for _, filter := range filters {
 		switch filter.GetFilterType() {
-		case CustomFilter, timeSpanFilter, alertTypeFilter, matchResourceIDFilter, countSpanFilter:
+		case CustomFilter,
+			timeSpanFilter,
+			alertTypeFilter,
+			countSpanFilter,
+			minSeverityFilter,
+			flagCheckFilter,
+			matchResourceIDFilter:
 			allFiltersIndexBased = false
 			break Loop
 		}
