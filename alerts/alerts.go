@@ -175,7 +175,7 @@ func enumerate(kv kvdb.Kvdb, key string) (kvdb.KVPairs, error) {
 	var out kvdb.KVPairs
 	for _, kvp := range kvps {
 		kvp := kvp
-		if kvp.Value == nil {
+		if len(kvp.Value) == 0 {
 			keys = append(keys, kvp.Key)
 			continue
 		}
@@ -231,7 +231,7 @@ func (m *manager) Delete(filters ...Filter) error {
 Loop:
 	for _, filter := range filters {
 		switch filter.GetFilterType() {
-		case CustomFilter, TimeSpanFilter, AlertTypeFilter, InefficientResourceIDFilter, CountSpanFilter:
+		case CustomFilter, TimeSpanFilter, AlertTypeFilter, MatchResourceIDFilter, CountSpanFilter:
 			allFiltersIndexBased = false
 			break Loop
 		}

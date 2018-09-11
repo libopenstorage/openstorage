@@ -42,12 +42,23 @@ func NewTimeSpanFilter(start, stop time.Time) Filter {
 
 // NewInefficientResourceIDFilter provides a filter that matches on resource id.
 func NewInefficientResourceIDFilter(resourceID string) Filter {
-	return &filter{filterType: InefficientResourceIDFilter, value: resourceID}
+	return &filter{filterType: MatchResourceIDFilter, value: resourceID}
 }
 
 // NewCountSpanFilter provides a filter that matches on alert count.
 func NewCountSpanFilter(minCount, maxCount int64) Filter {
 	return &filter{filterType: CountSpanFilter, value: []int64{minCount, maxCount}}
+}
+
+// NewMinSeverityFilter provides a filter that matches on alert when severity is greater than
+// or equal to the minSev value.
+func NewMinSeverityFilter(minSev api.SeverityType) Filter {
+	return &filter{filterType: MinSeverityFilter, value: minSev}
+}
+
+// NewFlagCheckFilter provides a filter that matches on alert clear flag.
+func NewFlagCheckFilter(flag bool) Filter {
+	return &filter{filterType: FlagCheckFilter, value: flag}
 }
 
 // NewCustomFilter creates a filter that matches on UDF (user defined function)

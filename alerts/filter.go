@@ -58,12 +58,20 @@ const (
 	// CounterFilter parses on the count value of alert entries. This filter requires pulling all entries
 	// and is, therefore, not an efficient filter.
 	CountSpanFilter
-	// InefficientResourceIDFilter takes only one argument, i.e., resource id. It fetches all entries from kvdb
+	// MinSeverityFilter matches on the alert severity if it is more than or equal to severity set in this filter.
+	// This filter can be used for fetching alerts directly but it not an efficient filter. Therefore, the
+	// recommended approach is to fetch alerts from kvdb using one of the efficient filters, then
+	// filter the fetched alerts using this filter.
+	MinSeverityFilter
+	// FlagCheckFilter matches on the clear alert flag. This filter should be used for filtering the fetched
+	// alerts and not directly for fetching alerts from kvdb since this is not an efficient filter.
+	FlagCheckFilter
+	// MatchResourceIDFilter takes only one argument, i.e., resource id. It fetches all entries from kvdb
 	// then parses them to see resource id's are matching. Matching entries are returned.
 	// This filter is not an efficient filter since it requires pulling all entries.
 	// Recommend to use ResourceIDFilter is you resource type and alert type info is also known for
 	// efficient querying.
-	InefficientResourceIDFilter
+	MatchResourceIDFilter
 
 	// Filter types listed below provide more efficient querying into kvdb by directly querying kvdb sub tree.
 
@@ -123,19 +131,17 @@ func (f *filter) Match(alert *api.Alert) (bool, error) {
 		if alert.Timestamp.Seconds >= v.start.Unix() &&
 			alert.Timestamp.Seconds <= v.stop.Unix() {
 			return true, nil
-		} else {
-			return false, nil
 		}
-	case InefficientResourceIDFilter:
+		return false, nil
+	case MatchResourceIDFilter:
 		v, ok := f.value.(string)
 		if !ok {
 			return false, typeAssertionError
 		}
 		if alert.ResourceId == v {
 			return true, nil
-		} else {
-			return false, nil
 		}
+		return false, nil
 	case CountSpanFilter:
 		v, ok := f.value.([]int64)
 		if !ok {
@@ -146,9 +152,26 @@ func (f *filter) Match(alert *api.Alert) (bool, error) {
 		}
 		if alert.Count >= v[0] && alert.Count <= v[1] {
 			return true, nil
-		} else {
-			return false, nil
 		}
+		return false, nil
+	case MinSeverityFilter:
+		v, ok := f.value.(api.SeverityType)
+		if !ok {
+			return false, typeAssertionError
+		}
+		if alert.Severity >= v {
+			return true, nil
+		}
+		return false, nil
+	case FlagCheckFilter:
+		v, ok := f.value.(bool)
+		if !ok {
+			return false, typeAssertionError
+		}
+		if alert.Cleared == v {
+			return true, nil
+		}
+		return false, nil
 	case ResourceTypeFilter:
 		v, ok := f.value.(api.ResourceType)
 		if !ok {
@@ -156,9 +179,8 @@ func (f *filter) Match(alert *api.Alert) (bool, error) {
 		}
 		if alert.Resource == v {
 			return true, nil
-		} else {
-			return false, nil
 		}
+		return false, nil
 	case AlertTypeFilter:
 		v, ok := f.value.(alertInfo)
 		if !ok {
@@ -167,9 +189,8 @@ func (f *filter) Match(alert *api.Alert) (bool, error) {
 		if alert.AlertType == v.alertType &&
 			alert.Resource == v.resourceType {
 			return true, nil
-		} else {
-			return false, nil
 		}
+		return false, nil
 	case ResourceIDFilter:
 		v, ok := f.value.(alertInfo)
 		if !ok {
@@ -179,9 +200,8 @@ func (f *filter) Match(alert *api.Alert) (bool, error) {
 			alert.Resource == v.resourceType &&
 			alert.ResourceId == v.resourceID {
 			return true, nil
-		} else {
-			return false, nil
 		}
+		return false, nil
 	default:
 		return false, invalidFilterType
 	}
