@@ -62,6 +62,7 @@ type watcher struct {
 }
 
 // KvAlert is used for managing the alerts and its kvdb instance
+// Deprecated: Kept temporarily for backward compatibility.
 type KvAlert struct {
 	// clusterID for which this alerts object will be used
 	clusterID string
@@ -72,6 +73,7 @@ func getLockId(resourceId, uniqueTag string) string {
 }
 
 // GetKvdbInstance returns a kvdb instance associated with this alert client and clusterID combination.
+// Deprecated: Kept temporarily for backward compatibility.
 func (kva *KvAlert) GetKvdbInstance() kvdb.Kvdb {
 	kvdbLock.RLock()
 	defer kvdbLock.RUnlock()
@@ -79,6 +81,7 @@ func (kva *KvAlert) GetKvdbInstance() kvdb.Kvdb {
 }
 
 // Init initializes a AlertClient interface implementation.
+// Deprecated: Kept temporarily for backward compatibility.
 func Init(kv kvdb.Kvdb, clusterID string) (Alert, error) {
 	kvdbLock.Lock()
 	defer kvdbLock.Unlock()
@@ -89,6 +92,7 @@ func Init(kv kvdb.Kvdb, clusterID string) (Alert, error) {
 }
 
 // Raise raises an Alert.
+// Deprecated: Kept temporarily for backward compatibility.
 func (kva *KvAlert) Raise(a *api.Alert) error {
 	var subscriptions []api.Alert
 	kv := kva.GetKvdbInstance()
@@ -107,6 +111,7 @@ func (kva *KvAlert) Raise(a *api.Alert) error {
 }
 
 // Raise raises an Alert if does not exists yet.
+// Deprecated: Kept temporarily for backward compatibility.
 func (kva *KvAlert) RaiseIfNotExist(a *api.Alert) error {
 	if strings.TrimSpace(a.ResourceId) == "" ||
 		strings.TrimSpace(a.UniqueTag) == "" {
@@ -129,6 +134,7 @@ func (kva *KvAlert) RaiseIfNotExist(a *api.Alert) error {
 }
 
 // Subscribe allows a child (dependent) alert to subscribe to a parent alert
+// Deprecated: Kept temporarily for backward compatibility.
 func (kva *KvAlert) Subscribe(parentAlertType int64, childAlert *api.Alert) error {
 	var subscriptions []api.Alert
 	kv := kva.GetKvdbInstance()
@@ -143,6 +149,7 @@ func (kva *KvAlert) Subscribe(parentAlertType int64, childAlert *api.Alert) erro
 }
 
 // Erase erases an alert.
+// Deprecated: Kept temporarily for backward compatibility.
 func (kva *KvAlert) Erase(resourceType api.ResourceType, alertID int64) error {
 	kv := kva.GetKvdbInstance()
 	if resourceType == api.ResourceType_RESOURCE_TYPE_NONE {
@@ -153,11 +160,13 @@ func (kva *KvAlert) Erase(resourceType api.ResourceType, alertID int64) error {
 }
 
 // Clear clears an alert.
+// Deprecated: Kept temporarily for backward compatibility.
 func (kva *KvAlert) Clear(resourceType api.ResourceType, alertID int64, ttl uint64) error {
 	return kva.clear(resourceType, alertID, ttl)
 }
 
 // Retrieve retrieves a specific alert.
+// Deprecated: Kept temporarily for backward compatibility.
 func (kva *KvAlert) Retrieve(resourceType api.ResourceType, alertID int64) (*api.Alert, error) {
 	var alert api.Alert
 	if resourceType == api.ResourceType_RESOURCE_TYPE_NONE {
@@ -169,12 +178,14 @@ func (kva *KvAlert) Retrieve(resourceType api.ResourceType, alertID int64) (*api
 }
 
 // Enumerate enumerates alert
+// Deprecated: Kept temporarily for backward compatibility.
 func (kva *KvAlert) Enumerate(filter *api.Alert) ([]*api.Alert, error) {
 	kv := kva.GetKvdbInstance()
 	return kva.enumerate(kv, filter)
 }
 
 // EnumerateWithinTimeRange enumerates alert between timeStart and timeEnd.
+// Deprecated: Kept temporarily for backward compatibility.
 func (kva *KvAlert) EnumerateWithinTimeRange(
 	timeStart time.Time,
 	timeEnd time.Time,
@@ -209,6 +220,7 @@ func (kva *KvAlert) EnumerateWithinTimeRange(
 // kvdb options provided while creating the alertClient object to access this cluster
 // This way we ensure that the caller of the api is able to watch alerts on clusters that
 // it is authorized for.
+// Deprecated: Kept temporarily for backward compatibility.
 func (kva *KvAlert) Watch(clusterID string, alertWatcherFunc AlertWatcherFunc) error {
 
 	kv, err := kva.getKvdbForCluster(clusterID)
@@ -228,10 +240,12 @@ func (kva *KvAlert) Watch(clusterID string, alertWatcherFunc AlertWatcherFunc) e
 }
 
 // Shutdown shutdown
+// Deprecated: Kept temporarily for backward compatibility.
 func (kva *KvAlert) Shutdown() {
 }
 
 // String
+// Deprecated: Kept temporarily for backward compatibility.
 func (kva *KvAlert) String() string {
 	return Name
 }
@@ -275,6 +289,7 @@ func (kva *KvAlert) raise(a *api.Alert) error {
 
 }
 
+// Deprecated: Kept temporarily for backward compatibility.
 func (kva *KvAlert) raiseIfNotExist(a *api.Alert) error {
 	kv := kva.GetKvdbInstance()
 	if a.Resource == api.ResourceType_RESOURCE_TYPE_NONE {
@@ -309,6 +324,7 @@ func (kva *KvAlert) raiseIfNotExist(a *api.Alert) error {
 	return kva.raise(a)
 }
 
+// Deprecated: Kept temporarily for backward compatibility.
 func (kva *KvAlert) ClearByUniqueTag(
 	resourceType api.ResourceType,
 	resourceId string,
@@ -347,6 +363,7 @@ func (kva *KvAlert) ClearByUniqueTag(
 	return nil
 }
 
+// Deprecated: Kept temporarily for backward compatibility.
 func (kva *KvAlert) clear(resourceType api.ResourceType, alertID int64, ttl uint64) error {
 	kv := kva.GetKvdbInstance()
 	var alert api.Alert
@@ -362,6 +379,7 @@ func (kva *KvAlert) clear(resourceType api.ResourceType, alertID int64, ttl uint
 	return err
 }
 
+// Deprecated: Kept temporarily for backward compatibility.
 func (kva *KvAlert) getNextIDFromKVDB() (int64, error) {
 	kv := kva.GetKvdbInstance()
 	nextAlertID := 0

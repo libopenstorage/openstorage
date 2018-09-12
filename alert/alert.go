@@ -37,38 +37,49 @@ var (
 )
 
 // InitFunc initialization function for alert.
+// Deprecated: Kept temporarily for backward compatibility.
 type InitFunc func(kv kvdb.Kvdb, clusterID string) (Alert, error)
 
 // AlertWatcherFunc is a function type used as a callback for KV WatchTree.
+// Deprecated: Kept temporarily for backward compatibility.
 type AlertWatcherFunc func(*api.Alert, api.AlertActionType, string, string) error
 
 // Alert interface for Alert API.
+// Deprecated: Kept temporarily for backward compatibility.
 type Alert interface {
 	fmt.Stringer
 
 	// Shutdown.
+	// Deprecated: Kept temporarily for backward compatibility.
 	Shutdown()
 
 	// GetKvdbInstance.
+	// Deprecated: Kept temporarily for backward compatibility.
 	GetKvdbInstance() kvdb.Kvdb
 
 	// Raise raises an Alert.
+	// Deprecated: Kept temporarily for backward compatibility.
 	Raise(alert *api.Alert) error
 
 	// Raise raises an Alert only if another alert with given resource type,
 	// resource id, and unqiue_tage doesnt exists already.
+	// Deprecated: Kept temporarily for backward compatibility.
 	RaiseIfNotExist(alert *api.Alert) error
 
 	// Subscribe allows a child (dependent) alert to subscribe to a parent alert
+	// Deprecated: Kept temporarily for backward compatibility.
 	Subscribe(parentAlertType int64, childAlert *api.Alert) error
 
 	// Retrieve retrieves specific Alert.
+	// Deprecated: Kept temporarily for backward compatibility.
 	Retrieve(resourceType api.ResourceType, id int64) (*api.Alert, error)
 
 	// Enumerate enumerates Alert.
+	// Deprecated: Kept temporarily for backward compatibility.
 	Enumerate(filter *api.Alert) ([]*api.Alert, error)
 
 	// EnumerateWithinTimeRange enumerates Alert between timeStart and timeEnd.
+	// Deprecated: Kept temporarily for backward compatibility.
 	EnumerateWithinTimeRange(
 		timeStart time.Time,
 		timeEnd time.Time,
@@ -76,12 +87,15 @@ type Alert interface {
 	) ([]*api.Alert, error)
 
 	// Erase erases an Alert.
+	// Deprecated: Kept temporarily for backward compatibility.
 	Erase(resourceType api.ResourceType, alertID int64) error
 
 	// Clear an Alert.
+	// Deprecated: Kept temporarily for backward compatibility.
 	Clear(resourceType api.ResourceType, alertID int64, ttl uint64) error
 
 	// Clear an Alert for a resource with unique tag.
+	// Deprecated: Kept temporarily for backward compatibility.
 	ClearByUniqueTag(
 		resourceType api.ResourceType,
 		resourceId string,
@@ -92,10 +106,12 @@ type Alert interface {
 	// Watch on all Alerts for the given clusterID. It uses the global kvdb
 	// options provided while creating the alertClient object to access this
 	// cluster
+	// Deprecated: Kept temporarily for backward compatibility.
 	Watch(clusterID string, alertWatcher AlertWatcherFunc) error
 }
 
 // Shutdown the alert instance.
+// Deprecated: Kept temporarily for backward compatibility.
 func Shutdown() {
 	lock.Lock()
 	defer lock.Unlock()
@@ -105,6 +121,7 @@ func Shutdown() {
 }
 
 // New returns a new alert instance tied with a clusterID and kvdb.
+// Deprecated: Kept temporarily for backward compatibility.
 func New(name string, clusterID string, kv kvdb.Kvdb) (Alert, error) {
 	lock.Lock()
 	defer lock.Unlock()
@@ -121,6 +138,7 @@ func New(name string, clusterID string, kv kvdb.Kvdb) (Alert, error) {
 }
 
 // Register an alert interface.
+// Deprecated: Kept temporarily for backward compatibility.
 func Register(name string, initFunc InitFunc) error {
 	lock.Lock()
 	defer lock.Unlock()
