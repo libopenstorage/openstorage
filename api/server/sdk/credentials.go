@@ -288,7 +288,8 @@ func (s *CredentialServer) Inspect(
 	}
 	bucket, ok := info[api.OptCredBucket].(string)
 	if !ok {
-		return nil, status.Error(codes.Internal, "Unable to get bucket name")
+		// The code to support bucket may not be available
+		bucket = ""
 	}
 
 	resp := &api.SdkCredentialInspectResponse{
