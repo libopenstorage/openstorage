@@ -2430,3 +2430,15 @@ message CatalogResponse {
 	// Report of total directories and files count
 	Report report = 2;
 }
+
+
+// Locate response woul be used to return a set of mounts
+// and/or Container IDs and their mount paths
+message LocateResponse {
+	// Map of mounts
+	// <host>: /var/lib/osd/<volumemount>
+	map<string, string> mounts = 1;
+	// Map of docker id's and their mounts
+	// <containerid>: /var/www
+	map<string, string> dockerids = 2;
+}
