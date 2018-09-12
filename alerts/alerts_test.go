@@ -142,7 +142,7 @@ func TestUniqueKeys(t *testing.T) {
 		{
 			name: "by 1 resource id",
 			filters: []Filter{
-				NewInefficientResourceIDFilter("inca"),
+				NewMatchResourceIDFilter("inca"),
 			},
 			keys:          []string{"alerts"},
 			expectedCount: 1,
@@ -170,8 +170,8 @@ func TestUniqueKeys(t *testing.T) {
 		{
 			name: "by 2 resource ids",
 			filters: []Filter{
-				NewInefficientResourceIDFilter("inca"),
-				NewInefficientResourceIDFilter("maya"),
+				NewMatchResourceIDFilter("inca"),
+				NewMatchResourceIDFilter("maya"),
 			},
 			keys:          []string{"alerts"},
 			expectedCount: 1,
@@ -180,7 +180,7 @@ func TestUniqueKeys(t *testing.T) {
 			name: "by 2 different filter types",
 			filters: []Filter{
 				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
-				NewInefficientResourceIDFilter("maya"),
+				NewMatchResourceIDFilter("maya"),
 			},
 			keys:          []string{"alerts"},
 			expectedCount: 1,
@@ -189,7 +189,7 @@ func TestUniqueKeys(t *testing.T) {
 			name: "two levels of filter",
 			filters: []Filter{
 				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
-				NewInefficientResourceIDFilter("maya"),
+				NewMatchResourceIDFilter("maya"),
 			},
 			keys:          []string{"alerts"},
 			expectedCount: 1,
@@ -320,12 +320,45 @@ func TestManager_Enumerate(t *testing.T) {
 			expectedCount: 1,
 		},
 		{
+			name: "by 1 resource type but with options 1 of 3",
+			filters: []Filter{
+				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME,
+					NewCountSpanOption(10, 50)), // first fetch, then filter using these opts
+			},
+			expectedCount: 0,
+		},
+		{
+			name: "by 1 resource type but with options 2 of 3",
+			filters: []Filter{
+				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME,
+					NewResourceIdOption("inca")), // first fetch, then filter using these opts
+			},
+			expectedCount: 1,
+		},
+		{
+			name: "by 1 resource type but with options 3 of 3",
+			filters: []Filter{
+				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME,
+					NewResourceIdOption("maya")), // first fetch, then filter using these opts
+			},
+			expectedCount: 0,
+		},
+		{
 			name: "by 2 resource types",
 			filters: []Filter{
 				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
 				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_CLUSTER),
 			},
 			expectedCount: 2,
+		},
+		{
+			name: "by 2 resource types but one has options",
+			filters: []Filter{
+				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
+				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_CLUSTER,
+					NewCountSpanOption(10, 50)), // only applies to filter it is defined within
+			},
+			expectedCount: 1,
 		},
 		{
 			name: "by 2 resource types",
@@ -338,7 +371,7 @@ func TestManager_Enumerate(t *testing.T) {
 		{
 			name: "by 1 resource id",
 			filters: []Filter{
-				NewInefficientResourceIDFilter("inca"),
+				NewMatchResourceIDFilter("inca"),
 			},
 			expectedCount: 2,
 		},
@@ -360,8 +393,8 @@ func TestManager_Enumerate(t *testing.T) {
 		{
 			name: "by 2 resource ids",
 			filters: []Filter{
-				NewInefficientResourceIDFilter("inca"),
-				NewInefficientResourceIDFilter("maya"),
+				NewMatchResourceIDFilter("inca"),
+				NewMatchResourceIDFilter("maya"),
 			},
 			expectedCount: 4,
 		},
@@ -369,7 +402,7 @@ func TestManager_Enumerate(t *testing.T) {
 			name: "by 2 different filter types",
 			filters: []Filter{
 				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
-				NewInefficientResourceIDFilter("maya"),
+				NewMatchResourceIDFilter("maya"),
 			},
 			expectedCount: 3,
 		},
@@ -377,7 +410,7 @@ func TestManager_Enumerate(t *testing.T) {
 			name: "two levels of filter",
 			filters: []Filter{
 				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
-				NewInefficientResourceIDFilter("maya"),
+				NewMatchResourceIDFilter("maya"),
 			},
 			expectedCount: 4,
 		},
@@ -508,15 +541,15 @@ func TestManager_Filter(t *testing.T) {
 		{
 			name: "by 1 resource id",
 			filters: []Filter{
-				NewInefficientResourceIDFilter("inca"),
+				NewMatchResourceIDFilter("inca"),
 			},
 			expectedCount: 2,
 		},
 		{
 			name: "by 2 resource ids",
 			filters: []Filter{
-				NewInefficientResourceIDFilter("inca"),
-				NewInefficientResourceIDFilter("maya"),
+				NewMatchResourceIDFilter("inca"),
+				NewMatchResourceIDFilter("maya"),
 			},
 			expectedCount: 0,
 		},
@@ -539,7 +572,7 @@ func TestManager_Filter(t *testing.T) {
 			name: "by 2 different filter types",
 			filters: []Filter{
 				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
-				NewInefficientResourceIDFilter("maya"),
+				NewMatchResourceIDFilter("maya"),
 			},
 			expectedCount: 0,
 		},
@@ -547,7 +580,7 @@ func TestManager_Filter(t *testing.T) {
 			name: "two levels of filter",
 			filters: []Filter{
 				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
-				NewInefficientResourceIDFilter("maya"),
+				NewMatchResourceIDFilter("maya"),
 			},
 			expectedCount: 2,
 		},
@@ -673,15 +706,15 @@ func TestManager_Delete(t *testing.T) {
 		{
 			name: "by 1 resource id",
 			filters: []Filter{
-				NewInefficientResourceIDFilter("inca"),
+				NewMatchResourceIDFilter("inca"),
 			},
 			expectedCount: 4,
 		},
 		{
 			name: "by 2 resource ids",
 			filters: []Filter{
-				NewInefficientResourceIDFilter("inca"),
-				NewInefficientResourceIDFilter("maya"),
+				NewMatchResourceIDFilter("inca"),
+				NewMatchResourceIDFilter("maya"),
 			},
 			expectedCount: 2,
 		},
@@ -689,7 +722,7 @@ func TestManager_Delete(t *testing.T) {
 			name: "by 2 different filter types",
 			filters: []Filter{
 				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
-				NewInefficientResourceIDFilter("maya"),
+				NewMatchResourceIDFilter("maya"),
 			},
 			expectedCount: 3,
 		},
@@ -697,7 +730,7 @@ func TestManager_Delete(t *testing.T) {
 			name: "two levels of filter",
 			filters: []Filter{
 				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE),
-				NewInefficientResourceIDFilter("maya"),
+				NewMatchResourceIDFilter("maya"),
 			},
 			expectedCount: 2,
 		},

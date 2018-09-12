@@ -11,9 +11,9 @@ type ActionType int
 // ActionType constants
 const (
 	// Deletes alert entries.
-	DeleteAction ActionType = iota
+	deleteAction ActionType = iota
 	// Alerts get marked for deletion.
-	ClearAction
+	clearAction
 	// Custom user action.
 	CustomAction
 )
@@ -35,7 +35,7 @@ func deleteActionFunc(manager Manager, filters ...Filter) error {
 
 // clearActionFunc first enumerates, then changes Cleared flag to true,
 // then updates it.
-// Raise method determines if TTLOption needs to be applied based on clear flag.
+// Raise method determines if ttlOption needs to be applied based on clear flag.
 func clearActionFunc(manager Manager, filters ...Filter) error {
 	myAlerts, err := manager.Enumerate(filters...)
 	if err != nil {
