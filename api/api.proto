@@ -1890,8 +1890,8 @@ message SdkCloudBackupDeleteAllResponse {
 // and do not provide `cluster_id` and `all`.
 // * For a specific volume in a specific cluster: Set `src_volume_id` to your desired volume id
 // and specify `cluster_id`.
-// * For a specific volume in all clusteres: Set `src_volume_id` to your desired volume id
-// and specify set `all` to true, do not provide `cluster_id`.
+// * For a specific volume in all clusters: Set `src_volume_id` to your desired volume id
+// and set `all` to true, do not provide `cluster_id`.
 // * For all volumes in current cluster: do not provide `cluster_id`, `volume_id` and `all`.
 // * For all volumes in a specific cluster: Set `cluster_id` to your desired cluster id
 // and do not provide `volume_id` and `all`.
