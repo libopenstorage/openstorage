@@ -421,7 +421,7 @@ func (c *clusterApi) delete(w http.ResponseWriter, r *http.Request) {
 
 	err = inst.Remove(nodes, forceRemove)
 	if err != nil {
-		clusterResponse.Error = fmt.Errorf("Node Remove: %s", err).Error()
+		clusterResponse.Error = err.Error()
 	}
 	json.NewEncoder(w).Encode(clusterResponse)
 }
