@@ -2307,14 +2307,14 @@
         "operationId": "Enumerate",
         "parameters": [
           {
-            "description": "Optional source id of the volume for the request.",
+            "description": "(optional) Source id of the volume for the request.",
             "in": "query",
             "name": "src_volume_id",
             "required": false,
             "type": "string"
           },
           {
-            "description": "Cluster id is an optional parameter which defines the cluster.",
+            "description": "(optional) Cluster id specifies the cluster for the request.",
             "in": "query",
             "name": "cluster_id",
             "required": false,
@@ -2328,7 +2328,7 @@
             "type": "string"
           },
           {
-            "description": "All if set to true, backups for all clusters in the cloud are processed.",
+            "description": "(optional) All indicates if the request should show cloud backups for all clusters or the current cluster.",
             "format": "boolean",
             "in": "query",
             "name": "all",
