@@ -21,11 +21,14 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/golang/mock/gomock"
+
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/libopenstorage/openstorage/api"
+	mountattachoptions "github.com/libopenstorage/openstorage/pkg/options"
 )
 
 func TestSdkVolumeAttachSuccess(t *testing.T) {
@@ -35,25 +38,86 @@ func TestSdkVolumeAttachSuccess(t *testing.T) {
 	defer s.Stop()
 
 	id := "myid"
+	devpath := "/my/path"
 	options := map[string]string{
-		"SECRET_NAME": "value1",
+		mountattachoptions.OptionsSecret:        "name",
+		mountattachoptions.OptionsSecretContext: "context",
+		mountattachoptions.OptionsSecretKey:     "key",
 	}
 
 	req := &api.SdkVolumeAttachRequest{
 		VolumeId: id,
-		Options:  options,
+		Options: &api.SdkVolumeAttachRequest_Options{
+			SecretName:    "name",
+			SecretContext: "context",
+			SecretKey:     "key",
+		},
 	}
-	s.MockDriver().
-		EXPECT().
-		Attach(id, options).
-		Return("", nil)
+
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{id}).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id:    id,
+					State: api.VolumeState_VOLUME_STATE_DETACHED,
+				},
+			}, nil).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Attach(id, options).
+			Return(devpath, nil),
+	)
 
 	// Setup client
-	c := api.NewOpenStorageVolumeClient(s.Conn())
+	c := api.NewOpenStorageMountAttachClient(s.Conn())
 
 	// Attach Volume
-	_, err := c.Attach(context.Background(), req)
+	res, err := c.Attach(context.Background(), req)
 	assert.NoError(t, err)
+	assert.Equal(t, res.GetDevicePath(), devpath)
+}
+
+func TestSdkVolumeAttachSuccessIdempotent(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	id := "myid"
+	devpath := "/my/path"
+	req := &api.SdkVolumeAttachRequest{
+		VolumeId: id,
+		Options: &api.SdkVolumeAttachRequest_Options{
+			SecretName:    "name",
+			SecretContext: "context",
+			SecretKey:     "key",
+		},
+	}
+
+	s.MockDriver().
+		EXPECT().
+		Inspect([]string{id}).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id:            id,
+				State:         api.VolumeState_VOLUME_STATE_ATTACHED,
+				AttachedState: api.AttachState_ATTACH_STATE_EXTERNAL,
+				DevicePath:    devpath,
+			},
+		}, nil).
+		Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageMountAttachClient(s.Conn())
+
+	// Attach Volume
+	res, err := c.Attach(context.Background(), req)
+	assert.NoError(t, err)
+	assert.Equal(t, res.GetDevicePath(), devpath)
 }
 
 func TestSdkVolumeAttachFailed(t *testing.T) {
@@ -64,21 +128,39 @@ func TestSdkVolumeAttachFailed(t *testing.T) {
 
 	id := "mytestid"
 	options := map[string]string{
-		"passphrase": "testval",
+		mountattachoptions.OptionsSecret:        "name",
+		mountattachoptions.OptionsSecretContext: "context",
+		mountattachoptions.OptionsSecretKey:     "key",
 	}
 
 	req := &api.SdkVolumeAttachRequest{
 		VolumeId: id,
-		Options:  options,
+		Options: &api.SdkVolumeAttachRequest_Options{
+			SecretName:    "name",
+			SecretContext: "context",
+			SecretKey:     "key",
+		},
 	}
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{id}).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id:    id,
+					State: api.VolumeState_VOLUME_STATE_DETACHED,
+				},
+			}, nil).
+			Times(1),
 
-	s.MockDriver().
-		EXPECT().
-		Attach(id, options).
-		Return("", fmt.Errorf("Failed to Attach device"))
+		s.MockDriver().
+			EXPECT().
+			Attach(id, options).
+			Return("", fmt.Errorf("Failed to Attach device")),
+	)
 
 	// Setup client
-	c := api.NewOpenStorageVolumeClient(s.Conn())
+	c := api.NewOpenStorageMountAttachClient(s.Conn())
 
 	// Get info
 	_, err := c.Attach(context.Background(), req)
@@ -96,18 +178,12 @@ func TestSdkVolumeAttachBadArgument(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	id := ""
-	options := map[string]string{
-		"passphrase": "testval",
-	}
-
 	req := &api.SdkVolumeAttachRequest{
-		VolumeId: id,
-		Options:  options,
+		VolumeId: "",
 	}
 
 	// Setup client
-	c := api.NewOpenStorageVolumeClient(s.Conn())
+	c := api.NewOpenStorageMountAttachClient(s.Conn())
 
 	// Get info
 	_, err := c.Attach(context.Background(), req)
@@ -126,16 +202,72 @@ func TestSdkVolumeDetachSuccess(t *testing.T) {
 	defer s.Stop()
 
 	id := "dummy-volume-id"
+	options := map[string]string{
+		mountattachoptions.OptionsRedirectDetach:      "true",
+		mountattachoptions.OptionsForceDetach:         "false",
+		mountattachoptions.OptionsUnmountBeforeDetach: "true",
+	}
 	req := &api.SdkVolumeDetachRequest{
 		VolumeId: id,
+		Options: &api.SdkVolumeDetachRequest_Options{
+			Force:               false,
+			UnmountBeforeDetach: true,
+		},
 	}
-	s.MockDriver().
-		EXPECT().
-		Detach(id, nil).
-		Return(nil)
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{id}).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id:    id,
+					State: api.VolumeState_VOLUME_STATE_ATTACHED,
+				},
+			}, nil).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Detach(id, options).
+			Return(nil),
+	)
 
 	// Setup client
-	c := api.NewOpenStorageVolumeClient(s.Conn())
+	c := api.NewOpenStorageMountAttachClient(s.Conn())
+
+	// Get info
+	_, err := c.Detach(context.Background(), req)
+	assert.NoError(t, err)
+}
+
+func TestSdkVolumeDetachSuccessIdempotency(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	id := "dummy-volume-id"
+	req := &api.SdkVolumeDetachRequest{
+		VolumeId: id,
+		Options: &api.SdkVolumeDetachRequest_Options{
+			Force:               false,
+			UnmountBeforeDetach: true,
+		},
+	}
+
+	s.MockDriver().
+		EXPECT().
+		Inspect([]string{id}).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id:    id,
+				State: api.VolumeState_VOLUME_STATE_DETACHED,
+			},
+		}, nil).
+		Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageMountAttachClient(s.Conn())
 
 	// Get info
 	_, err := c.Detach(context.Background(), req)
@@ -149,16 +281,38 @@ func TestSdkVolumeDetachFailed(t *testing.T) {
 	defer s.Stop()
 
 	id := "dummy-volume-id"
+	options := map[string]string{
+		mountattachoptions.OptionsRedirectDetach:      "true",
+		mountattachoptions.OptionsForceDetach:         "true",
+		mountattachoptions.OptionsUnmountBeforeDetach: "false",
+	}
 	req := &api.SdkVolumeDetachRequest{
 		VolumeId: id,
+		Options: &api.SdkVolumeDetachRequest_Options{
+			Force:               true,
+			UnmountBeforeDetach: false,
+		},
 	}
-	s.MockDriver().
-		EXPECT().
-		Detach(id, nil).
-		Return(fmt.Errorf("Failed to Detach"))
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{id}).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id:    id,
+					State: api.VolumeState_VOLUME_STATE_ATTACHED,
+				},
+			}, nil).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Detach(id, options).
+			Return(fmt.Errorf("Failed to Detach")),
+	)
 
 	// Setup client
-	c := api.NewOpenStorageVolumeClient(s.Conn())
+	c := api.NewOpenStorageMountAttachClient(s.Conn())
 
 	// Get info
 	_, err := c.Detach(context.Background(), req)
@@ -166,7 +320,7 @@ func TestSdkVolumeDetachFailed(t *testing.T) {
 
 	serverError, ok := status.FromError(err)
 	assert.True(t, ok)
-	assert.Equal(t, serverError.Code(), codes.Unknown)
+	assert.Equal(t, serverError.Code(), codes.Internal)
 	assert.Contains(t, serverError.Message(), "Failed to Detach")
 }
 
@@ -176,13 +330,10 @@ func TestSdkVolumeDetachBadArgument(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	id := ""
-	req := &api.SdkVolumeDetachRequest{
-		VolumeId: id,
-	}
+	req := &api.SdkVolumeDetachRequest{}
 
 	// Setup client
-	c := api.NewOpenStorageVolumeClient(s.Conn())
+	c := api.NewOpenStorageMountAttachClient(s.Conn())
 
 	// Get info
 	_, err := c.Detach(context.Background(), req)
@@ -201,24 +352,19 @@ func TestSdkVolumeMountSuccess(t *testing.T) {
 	defer s.Stop()
 
 	id := "dummy-volume-id"
-	options := map[string]string{
-		"option1": "value1",
-		"option2": "value2",
-	}
 	mountPath := "/dev/real/path"
 
 	req := &api.SdkVolumeMountRequest{
 		VolumeId:  id,
 		MountPath: mountPath,
-		Options:   options,
 	}
 	s.MockDriver().
 		EXPECT().
-		Mount(id, mountPath, options).
+		Mount(id, mountPath, nil).
 		Return(nil)
 
 	// Setup client
-	c := api.NewOpenStorageVolumeClient(s.Conn())
+	c := api.NewOpenStorageMountAttachClient(s.Conn())
 
 	// Get info
 	_, err := c.Mount(context.Background(), req)
@@ -231,24 +377,19 @@ func TestSdkVolumeMountFailed(t *testing.T) {
 	defer s.Stop()
 
 	id := "dummy-volume-id"
-	options := map[string]string{
-		"option1": "value1",
-		"option2": "value2",
-	}
 	mountPath := "/dev/fake/path"
 
 	req := &api.SdkVolumeMountRequest{
 		VolumeId:  id,
 		MountPath: mountPath,
-		Options:   options,
 	}
 	s.MockDriver().
 		EXPECT().
-		Mount(id, mountPath, options).
+		Mount(id, mountPath, nil).
 		Return(fmt.Errorf("Invalid Mount Path"))
 
 	// Setup client
-	c := api.NewOpenStorageVolumeClient(s.Conn())
+	c := api.NewOpenStorageMountAttachClient(s.Conn())
 
 	// Get info
 	_, err := c.Mount(context.Background(), req)
@@ -256,7 +397,7 @@ func TestSdkVolumeMountFailed(t *testing.T) {
 
 	serverError, ok := status.FromError(err)
 	assert.True(t, ok)
-	assert.Equal(t, serverError.Code(), codes.Unknown)
+	assert.Equal(t, serverError.Code(), codes.Internal)
 	assert.Contains(t, serverError.Message(), "Invalid Mount Path")
 }
 
@@ -267,20 +408,15 @@ func TestSdkVolumeMountBadArgument(t *testing.T) {
 	defer s.Stop()
 
 	id := "dummy-volume-id"
-	options := map[string]string{
-		"option1": "value1",
-		"option2": "value2",
-	}
 	mountPath := ""
 
 	req := &api.SdkVolumeMountRequest{
 		VolumeId:  id,
 		MountPath: mountPath,
-		Options:   options,
 	}
 
 	// Setup client
-	c := api.NewOpenStorageVolumeClient(s.Conn())
+	c := api.NewOpenStorageMountAttachClient(s.Conn())
 
 	// Get info
 	_, err := c.Mount(context.Background(), req)
@@ -301,14 +437,17 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 	id := "myid"
 
 	options := map[string]string{
-		"option1": "value1",
-		"option2": "value2",
+		mountattachoptions.OptionsDeleteAfterUnmount: "true",
+		mountattachoptions.OptionsWaitBeforeDelete:   "true",
 	}
 	mountPath := "/mnt/testmount"
 	req := &api.SdkVolumeUnmountRequest{
 		VolumeId:  id,
 		MountPath: mountPath,
-		Options:   options,
+		Options: &api.SdkVolumeUnmountRequest_Options{
+			DeleteMountPath:                true,
+			NoDelayBeforeDeletingMountPath: false,
+		},
 	}
 
 	s.MockDriver().
@@ -317,10 +456,103 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 		Return(nil)
 
 	// Setup client
-	c := api.NewOpenStorageVolumeClient(s.Conn())
+	c := api.NewOpenStorageMountAttachClient(s.Conn())
 
 	// Unmount Volume
 	_, err := c.Unmount(context.Background(), req)
+	assert.NoError(t, err)
+
+	options = map[string]string{
+		mountattachoptions.OptionsDeleteAfterUnmount: "true",
+		mountattachoptions.OptionsWaitBeforeDelete:   "true",
+	}
+	req = &api.SdkVolumeUnmountRequest{
+		VolumeId:  id,
+		MountPath: mountPath,
+		Options: &api.SdkVolumeUnmountRequest_Options{
+			DeleteMountPath: true,
+		},
+	}
+
+	s.MockDriver().
+		EXPECT().
+		Unmount(id, mountPath, options).
+		Return(nil)
+
+	_, err = c.Unmount(context.Background(), req)
+	assert.NoError(t, err)
+
+	options = map[string]string{
+		mountattachoptions.OptionsDeleteAfterUnmount: "true",
+		mountattachoptions.OptionsWaitBeforeDelete:   "false",
+	}
+	req = &api.SdkVolumeUnmountRequest{
+		VolumeId:  id,
+		MountPath: mountPath,
+		Options: &api.SdkVolumeUnmountRequest_Options{
+			DeleteMountPath:                true,
+			NoDelayBeforeDeletingMountPath: true,
+		},
+	}
+
+	s.MockDriver().
+		EXPECT().
+		Unmount(id, mountPath, options).
+		Return(nil)
+
+	_, err = c.Unmount(context.Background(), req)
+	assert.NoError(t, err)
+
+	options = map[string]string{
+		mountattachoptions.OptionsDeleteAfterUnmount: "false",
+	}
+	req = &api.SdkVolumeUnmountRequest{
+		VolumeId:  id,
+		MountPath: mountPath,
+		Options: &api.SdkVolumeUnmountRequest_Options{
+			DeleteMountPath: false,
+		},
+	}
+
+	s.MockDriver().
+		EXPECT().
+		Unmount(id, mountPath, options).
+		Return(nil)
+
+	_, err = c.Unmount(context.Background(), req)
+	assert.NoError(t, err)
+
+	// Check when no values set
+	options = map[string]string{
+		mountattachoptions.OptionsDeleteAfterUnmount: "false",
+	}
+	req = &api.SdkVolumeUnmountRequest{
+		VolumeId:  id,
+		MountPath: mountPath,
+		Options:   &api.SdkVolumeUnmountRequest_Options{},
+	}
+
+	s.MockDriver().
+		EXPECT().
+		Unmount(id, mountPath, options).
+		Return(nil)
+
+	_, err = c.Unmount(context.Background(), req)
+	assert.NoError(t, err)
+
+	// Check when no options are given
+	options = map[string]string{}
+	req = &api.SdkVolumeUnmountRequest{
+		VolumeId:  id,
+		MountPath: mountPath,
+	}
+
+	s.MockDriver().
+		EXPECT().
+		Unmount(id, mountPath, options).
+		Return(nil)
+
+	_, err = c.Unmount(context.Background(), req)
 	assert.NoError(t, err)
 }
 
@@ -331,16 +563,12 @@ func TestSdkVolumeUnmountFailed(t *testing.T) {
 	defer s.Stop()
 
 	id := "testid"
-	options := map[string]string{
-		"option1": "value1",
-		"option2": "value2",
-	}
+	options := map[string]string{}
 	mountPath := "/dev/fake/path"
 
 	req := &api.SdkVolumeUnmountRequest{
 		VolumeId:  id,
 		MountPath: mountPath,
-		Options:   options,
 	}
 	s.MockDriver().
 		EXPECT().
@@ -348,7 +576,7 @@ func TestSdkVolumeUnmountFailed(t *testing.T) {
 		Return(fmt.Errorf("Invalid Mount Path"))
 
 	// Setup client
-	c := api.NewOpenStorageVolumeClient(s.Conn())
+	c := api.NewOpenStorageMountAttachClient(s.Conn())
 
 	// Get info
 	_, err := c.Unmount(context.Background(), req)
@@ -367,20 +595,15 @@ func TestSdkVolumeUnountBadArgument(t *testing.T) {
 	defer s.Stop()
 
 	id := ""
-	options := map[string]string{
-		"option1": "value1",
-		"option2": "value2",
-	}
 	mountPath := "/mnt/mounttest"
 
 	req := &api.SdkVolumeUnmountRequest{
 		VolumeId:  id,
 		MountPath: mountPath,
-		Options:   options,
 	}
 
 	// Setup client
-	c := api.NewOpenStorageVolumeClient(s.Conn())
+	c := api.NewOpenStorageMountAttachClient(s.Conn())
 
 	// Get info
 	_, err := c.Unmount(context.Background(), req)

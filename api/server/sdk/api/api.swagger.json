@@ -1017,11 +1017,8 @@
     "apiSdkVolumeAttachRequest": {
       "properties": {
         "options": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "title": "Options for attaching volume, right now only passphrase options is supported",
-          "type": "object"
+          "$ref": "#/definitions/apiSdkVolumeAttachRequestOptions",
+          "title": "Options to attach device"
         },
         "volume_id": {
           "title": "Id of volume",
@@ -1029,6 +1026,24 @@
         }
       },
       "title": "Defines a request to attach a volume to the node receiving this request",
+      "type": "object"
+    },
+    "apiSdkVolumeAttachRequestOptions": {
+      "properties": {
+        "secret_context": {
+          "description": "It indicates the additional context which could be used to retrieve the secret.\nIn case of Kubernetes, this is the namespace in which the secret is created.",
+          "type": "string"
+        },
+        "secret_key": {
+          "title": "In case of Kubernetes, this will be the key stored in the Kubernetes secret",
+          "type": "string"
+        },
+        "secret_name": {
+          "title": "Indicates the name of the secret stored in a secret store\nIn case of Hashicorp's Vault, it will be the key from the key-value pair stored in its kv backend.\nIn case of Kubernetes secret, it is the name of the secret object itself",
+          "type": "string"
+        }
+      },
+      "title": "Options to attach device",
       "type": "object"
     },
     "apiSdkVolumeAttachResponse": {
@@ -1095,12 +1110,31 @@
     },
     "apiSdkVolumeDetachRequest": {
       "properties": {
+        "options": {
+          "$ref": "#/definitions/apiSdkVolumeDetachRequestOptions"
+        },
         "volume_id": {
           "title": "Id of the volume",
           "type": "string"
         }
       },
       "title": "Defines a request to detach a volume",
+      "type": "object"
+    },
+    "apiSdkVolumeDetachRequestOptions": {
+      "properties": {
+        "force": {
+          "format": "boolean",
+          "title": "Forcefully detach device from the kernel",
+          "type": "boolean"
+        },
+        "unmount_before_detach": {
+          "format": "boolean",
+          "title": "Unmount the volume before detaching",
+          "type": "boolean"
+        }
+      },
+      "title": "Options to detach device",
       "type": "object"
     },
     "apiSdkVolumeDetachResponse": {
@@ -1158,13 +1192,6 @@
         "mount_path": {
           "description": "Mount path for mounting the volume.",
           "type": "string"
-        },
-        "options": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "title": "Additional options",
-          "type": "object"
         },
         "volume_id": {
           "title": "Id of the volume",
@@ -1287,11 +1314,8 @@
           "type": "string"
         },
         "options": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "title": "Options to unmount device",
-          "type": "object"
+          "$ref": "#/definitions/apiSdkVolumeUnmountRequestOptions",
+          "title": "Options to unmount device"
         },
         "volume_id": {
           "title": "Id of volume",
@@ -1299,6 +1323,22 @@
         }
       },
       "title": "Defines a request to unmount a volume on the node receiving this request",
+      "type": "object"
+    },
+    "apiSdkVolumeUnmountRequestOptions": {
+      "properties": {
+        "delete_mount_path": {
+          "format": "boolean",
+          "title": "Delete the mount path on the node after unmounting",
+          "type": "boolean"
+        },
+        "no_delay_before_deleting_mount_path": {
+          "description": "Do not wait for a delay before deleting path.\nNormally a storage driver may delay before deleting the mount path,\nwhich may be necessary to reduce the risk of race conditions. This\nchoice will remove that delay. This value is only usable when\n`delete_mount_path` is set.",
+          "format": "boolean",
+          "type": "boolean"
+        }
+      },
+      "title": "Options to unmount device",
       "type": "object"
     },
     "apiSdkVolumeUnmountResponse": {
@@ -2051,7 +2091,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.8.0"
+    "version": "0.9.0"
   },
   "paths": {
     "/v1/cloudbackups": {
@@ -2921,9 +2961,9 @@
             }
           }
         },
-        "summary": "Attach attaches device to the host that the client is communicating with.\nNOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more\ninformation about a new feature to allow attachment to any node.",
+        "summary": "Attach attaches device to the host that the client is communicating with.",
         "tags": [
-          "OpenStorageVolume"
+          "OpenStorageMountAttach"
         ]
       }
     },
@@ -2977,7 +3017,7 @@
         },
         "summary": "Detaches a the volume from the host",
         "tags": [
-          "OpenStorageVolume"
+          "OpenStorageMountAttach"
         ]
       }
     },
@@ -3029,9 +3069,9 @@
             }
           }
         },
-        "summary": "Mount mounts an attached volume in the host that the client is communicating with\nNOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more\ninformation about a new feature to allow attachment to any node.",
+        "summary": "Mount mounts an attached volume in the host that the client is communicating with",
         "tags": [
-          "OpenStorageVolume"
+          "OpenStorageMountAttach"
         ]
       }
     },
@@ -3141,7 +3181,7 @@
             }
           }
         },
-        "summary": "SnapshotEnumerate returns a list of snapshots. \nTo filter all the snapshots for a specific volume which may no longer exist,\nspecifiy a volume id.\nLabels can also be used to filter the snapshot list.\nIf neither are provided all snapshots will be returned.",
+        "summary": "SnapshotEnumerate returns a list of snapshots.\nTo filter all the snapshots for a specific volume which may no longer exist,\nspecifiy a volume id.\nLabels can also be used to filter the snapshot list.\nIf neither are provided all snapshots will be returned.",
         "tags": [
           "OpenStorageVolume"
         ]
@@ -3201,9 +3241,9 @@
             }
           }
         },
-        "summary": "Unmount unmounts a mounted volume in the host that the client is communicating with\nNOTE: Please see [#381](https://github.com/libopenstorage/openstorage/issues/381) for more\ninformation about a new feature to allow attachment to any node.",
+        "summary": "Unmount unmounts a mounted volume in the host that the client is communicating with",
         "tags": [
-          "OpenStorageVolume"
+          "OpenStorageMountAttach"
         ]
       }
     },
