@@ -4,6 +4,7 @@ package mount
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/docker/docker/pkg/mount"
@@ -70,4 +71,22 @@ func deviceFindMountPoint(info *mount.Info, destination string, infos []*mount.I
 		return true, info.Source, info.Source
 	}
 	return false, "", ""
+}
+
+// getTargetDevice follows the symbolic link for the provided devPath and gets the target device
+// For ex. /dev/mapper/vg-lv1 -> /dev/dm-1
+func getTargetDevice(devPath string) string {
+	fi, err := os.Lstat(devPath)
+	if err == nil &&
+		(fi.Mode()&os.ModeSymlink != 0) {
+		// Found a symbolic link reference
+		out, err := filepath.EvalSymlinks(devPath)
+		if err != nil {
+			// We do a best effort to find the target
+			return ""
+		}
+		return strings.TrimSpace(string(out))
+
+	} // else we are given a prefix
+	return ""
 }

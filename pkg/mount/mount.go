@@ -88,7 +88,10 @@ const (
 	BindMount
 )
 
-const mountPathRemoveDelay = 30 * time.Second
+const (
+	mountPathRemoveDelay = 30 * time.Second
+	testDeviceEnv        = "Test_Device_Mounter"
+)
 
 var (
 	// ErrExist is returned if path is already mounted to a different device.
@@ -334,49 +337,72 @@ func (m *Mounter) reload(device string, newM *Info) error {
 }
 
 func (m *Mounter) load(prefixes []string, fmp findMountPoint) error {
-	info, err := mount.GetMounts()
+	info, err := GetMounts()
 	if err != nil {
 		return err
 	}
-DeviceLoop:
 	for _, v := range info {
 		var (
-			sourcePath, devicePath string
-			foundPrefix            bool
+			sourcePath, devicePath, targetDevice string
+			foundPrefix, foundTarget             bool
 		)
 		for _, devPrefix := range prefixes {
 			foundPrefix, sourcePath, devicePath = fmp(v, devPrefix, info)
-			if foundPrefix {
+			targetDevice = getTargetDevice(devPrefix)
+			if !foundPrefix && targetDevice != "" {
+				foundTarget, _, _ = fmp(v, targetDevice, info)
+				// We could not find a mountpoint for devPrefix (/dev/mapper/vg-lvm1) but found
+				// one for its target device (/dev/dm-0). Change the sourcePath to devPrefix
+				// as fmp might have returned an incorrect or empty sourcePath
+				sourcePath = devPrefix
+				devicePath = devPrefix
+			}
+
+			if foundPrefix || foundTarget {
 				break
 			}
 		}
-		if !foundPrefix {
+		if !foundPrefix && !foundTarget {
 			continue
 		}
-		mount, ok := m.mounts[sourcePath]
-		if !ok {
-			mount = &Info{
-				Device:     devicePath,
-				Fs:         v.Fstype,
-				Minor:      v.Minor,
-				Mountpoint: make([]*PathInfo, 0),
+
+		addMountTableEntry := func(mountSourcePath, deviceSourcePath string, updatePaths bool) {
+			mount, ok := m.mounts[mountSourcePath]
+			if !ok {
+				mount = &Info{
+					Device:     deviceSourcePath,
+					Fs:         v.Fstype,
+					Minor:      v.Minor,
+					Mountpoint: make([]*PathInfo, 0),
+				}
+				m.mounts[mountSourcePath] = mount
 			}
-			m.mounts[sourcePath] = mount
-		}
-		// Allow Load to be called multiple times.
-		for _, p := range mount.Mountpoint {
-			if p.Path == v.Mountpoint {
-				continue DeviceLoop
+			// Allow Load to be called multiple times.
+			for _, p := range mount.Mountpoint {
+				if p.Path == v.Mountpoint {
+					// No need of updating Mountpoint
+					return
+				}
+			}
+			mount.Mountpoint = append(
+				mount.Mountpoint,
+				&PathInfo{
+					Root: normalizeMountPath(v.Root),
+					Path: normalizeMountPath(v.Mountpoint),
+				},
+			)
+			if updatePaths {
+				m.paths[v.Mountpoint] = mountSourcePath
 			}
 		}
-		mount.Mountpoint = append(
-			mount.Mountpoint,
-			&PathInfo{
-				Root: normalizeMountPath(v.Root),
-				Path: normalizeMountPath(v.Mountpoint),
-			},
-		)
-		m.paths[v.Mountpoint] = sourcePath
+		// Only update the paths map with the device with which load was called.
+		addMountTableEntry(sourcePath, devicePath, true /*updatePaths*/)
+
+		// Add a mountpoint entry for the target device as well.
+		if targetDevice == "" {
+			continue
+		}
+		addMountTableEntry(targetDevice, targetDevice, false /*updatePaths*/)
 	}
 	return nil
 }
@@ -676,4 +702,28 @@ func New(
 		return NewCustomMounter(identifiers, mountImpl, customMounter, allowedDirs)
 	}
 	return nil, ErrUnsupported
+}
+
+// GetMounts is a wrapper over mount.GetMounts(). It is mainly used to add a switch
+// to enable device mounter tests.
+func GetMounts() ([]*mount.Info, error) {
+	if os.Getenv(testDeviceEnv) != "" {
+		return testGetMounts()
+	}
+	return mount.GetMounts()
+}
+
+var (
+	// testMounts is a global test list of mount table entries
+	testMounts []*mount.Info
+)
+
+// testGetMounts is only used in tests to get the test list of mount table
+// entries
+func testGetMounts() ([]*mount.Info, error) {
+	var err error
+	if len(testMounts) == 0 {
+		testMounts, err = mount.GetMounts()
+	}
+	return testMounts, err
 }
