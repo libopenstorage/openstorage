@@ -25,6 +25,7 @@ func raiseAlerts(manager Manager) error {
 	var alert *api.Alert
 	alert = new(api.Alert)
 	alert.AlertType = 10
+	alert.Severity = api.SeverityType_SEVERITY_TYPE_NOTIFY
 	alert.Resource = api.ResourceType_RESOURCE_TYPE_VOLUME
 	alert.ResourceId = "inca"
 	alert.Timestamp = &timestamp.Timestamp{Seconds: time.Now().AddDate(0, -1, 0).Unix()}
@@ -34,6 +35,7 @@ func raiseAlerts(manager Manager) error {
 
 	alert = new(api.Alert)
 	alert.AlertType = 12
+	alert.Severity = api.SeverityType_SEVERITY_TYPE_NOTIFY
 	alert.Resource = api.ResourceType_RESOURCE_TYPE_CLUSTER
 	alert.ResourceId = "aztec"
 	alert.Timestamp = &timestamp.Timestamp{Seconds: time.Now().AddDate(0, -2, 0).Unix()}
@@ -43,6 +45,7 @@ func raiseAlerts(manager Manager) error {
 
 	alert = new(api.Alert)
 	alert.AlertType = 10
+	alert.Severity = api.SeverityType_SEVERITY_TYPE_NOTIFY
 	alert.Resource = api.ResourceType_RESOURCE_TYPE_DRIVE
 	alert.ResourceId = "maya"
 	alert.Timestamp = &timestamp.Timestamp{Seconds: time.Now().AddDate(0, -3, 0).Unix()}
@@ -52,6 +55,7 @@ func raiseAlerts(manager Manager) error {
 
 	alert = new(api.Alert)
 	alert.AlertType = 10
+	alert.Severity = api.SeverityType_SEVERITY_TYPE_WARNING
 	alert.Resource = api.ResourceType_RESOURCE_TYPE_DRIVE
 	alert.ResourceId = "inca"
 	alert.Timestamp = &timestamp.Timestamp{Seconds: time.Now().AddDate(0, -1, 0).Unix()}
@@ -61,6 +65,7 @@ func raiseAlerts(manager Manager) error {
 
 	alert = new(api.Alert)
 	alert.AlertType = 14
+	alert.Severity = api.SeverityType_SEVERITY_TYPE_ALARM
 	alert.Resource = api.ResourceType_RESOURCE_TYPE_DRIVE
 	alert.ResourceId = "aztec"
 	alert.Timestamp = &timestamp.Timestamp{Seconds: time.Now().AddDate(0, -4, 0).Unix()}
@@ -70,6 +75,7 @@ func raiseAlerts(manager Manager) error {
 
 	alert = new(api.Alert)
 	alert.AlertType = 12
+	alert.Severity = api.SeverityType_SEVERITY_TYPE_ALARM
 	alert.Resource = api.ResourceType_RESOURCE_TYPE_DRIVE
 	alert.ResourceId = "maya"
 	alert.Timestamp = &timestamp.Timestamp{Seconds: time.Now().AddDate(0, -5, 0).Unix()}
@@ -318,6 +324,38 @@ func TestManager_Enumerate(t *testing.T) {
 				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_VOLUME),
 			},
 			expectedCount: 1,
+		},
+		{
+			name: "by 1 resource type and min severity 1 of 4",
+			filters: []Filter{
+				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE,
+					NewMinSeverityOption(api.SeverityType_SEVERITY_TYPE_NONE)),
+			},
+			expectedCount: 4,
+		},
+		{
+			name: "by 1 resource type and min severity 2 of 4",
+			filters: []Filter{
+				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE,
+					NewMinSeverityOption(api.SeverityType_SEVERITY_TYPE_NOTIFY)),
+			},
+			expectedCount: 4,
+		},
+		{
+			name: "by 1 resource type and min severity 3 of 4",
+			filters: []Filter{
+				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE,
+					NewMinSeverityOption(api.SeverityType_SEVERITY_TYPE_WARNING)),
+			},
+			expectedCount: 3,
+		},
+		{
+			name: "by 1 resource type and min severity 4 of 4",
+			filters: []Filter{
+				NewResourceTypeFilter(api.ResourceType_RESOURCE_TYPE_DRIVE,
+					NewMinSeverityOption(api.SeverityType_SEVERITY_TYPE_ALARM)),
+			},
+			expectedCount: 2,
 		},
 		{
 			name: "by 1 resource type but with options 1 of 3",

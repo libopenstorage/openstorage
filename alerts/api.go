@@ -12,6 +12,11 @@ func NewManager(kv kvdb.Kvdb, options ...Option) (Manager, error) {
 	return newManager(kv, options...)
 }
 
+// NewReader obtains instance of Reader for alerts enumeration.
+func NewReader(kv kvdb.Kvdb, options ...Option) (Reader, error) {
+	return newManager(kv, options...)
+}
+
 // Option API
 
 // NewTTLOption provides an option to be used in manager creation.
@@ -79,7 +84,14 @@ func NewTimeSpanFilter(start, stop time.Time) Filter {
 	return &filter{filterType: timeSpanFilter, value: timeZone{start: start, stop: stop}}
 }
 
+// NewMatchAlertTypeFilter provides a filter that matches on alert type.
+// Please use NewAlertTypeFilter if other inputs are known.
+func NewMatchAlertTypeFilter(alertType int64) Filter {
+	return &filter{filterType: matchAlertTypeFilter, value: alertType}
+}
+
 // NewMatchResourceIDFilter provides a filter that matches on resource id.
+// Please use NewResourceIDFilter if other inputs are known.
 func NewMatchResourceIDFilter(resourceID string) Filter {
 	return &filter{filterType: matchResourceIDFilter, value: resourceID}
 }
