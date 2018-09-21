@@ -22,17 +22,17 @@ import (
 	"mime"
 	"net/http"
 
+	"github.com/libopenstorage/openstorage/alerts"
+
 	"github.com/gobuffalo/packr"
-
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/sirupsen/logrus"
-	"google.golang.org/grpc"
-
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/spec"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
+	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc"
 )
 
 // ServerConfig provides the configuration to the SDK server
@@ -50,6 +50,8 @@ type ServerConfig struct {
 	DriverName string
 	// Cluster interface
 	Cluster cluster.Cluster
+	// AlertsReader
+	AlertsReader alerts.Reader
 }
 
 // Server is an implementation of the gRPC SDK interface
@@ -65,6 +67,7 @@ type Server struct {
 	cloudBackupServer    *CloudBackupServer
 	credentialServer     *CredentialServer
 	identityServer       *IdentityServer
+	alertsServer         api.OpenStorageAlertsServer
 }
 
 // Interface check
@@ -124,6 +127,9 @@ func New(config *ServerConfig) (*Server, error) {
 		credentialServer: &CredentialServer{
 			driver: d,
 		},
+		alertsServer: &alertsServer{
+			reader: config.AlertsReader,
+		},
 	}, nil
 }
 
@@ -142,6 +148,7 @@ func (s *Server) Start() error {
 		api.RegisterOpenStorageCloudBackupServer(grpcServer, s.cloudBackupServer)
 		api.RegisterOpenStorageIdentityServer(grpcServer, s.identityServer)
 		api.RegisterOpenStorageMountAttachServer(grpcServer, s.volumeServer)
+		api.RegisterOpenStorageAlertsServer(grpcServer, s.alertsServer)
 	})
 	if err != nil {
 		return err
@@ -274,6 +281,15 @@ func (s *Server) restServerSetupHandlers() (*http.ServeMux, error) {
 	}
 
 	err = api.RegisterOpenStorageMountAttachHandlerFromEndpoint(
+		context.Background(),
+		gmux,
+		s.Address(),
+		[]grpc.DialOption{grpc.WithInsecure()})
+	if err != nil {
+		return nil, err
+	}
+
+	err = api.RegisterOpenStorageAlertsHandlerFromEndpoint(
 		context.Background(),
 		gmux,
 		s.Address(),

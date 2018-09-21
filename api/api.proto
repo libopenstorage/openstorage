@@ -472,6 +472,130 @@ message Alert {
   google.protobuf.Timestamp first_seen = 12;
 }
 
+// SdkAlertsTimeSpan to store time window information.
+message SdkAlertsTimeSpan {
+    //Start timestamp when Alert occured
+    google.protobuf.Timestamp start_time = 1;
+    //End timestamp when Alert occured
+    google.protobuf.Timestamp end_time = 2;
+}
+
+// SdkAlertsCountSpan to store count range information.
+message SdkAlertsCountSpan {
+    // Min count of such alerts raised so far.
+    int64 min_count = 1;
+    // Max count of such alerts raised so far.
+    int64 max_count = 2;
+}
+
+// SdkAlertsOption contains options for filtering alerts.
+message SdkAlertsOption {
+    oneof opt {
+        // min_severity_type to query using severity type.
+        SeverityType min_severity_type = 1;
+        // is_cleared indicates querying for alerts cleared flag.
+        bool is_cleared = 2;
+        // time_span to query in a given time span range.
+        SdkAlertsTimeSpan time_span = 3;
+        // count_span to query in a given count range.
+        SdkAlertsCountSpan count_span = 4;
+    }
+}
+
+// SdkAlertsResourceTypeQuery queries for alerts using only resource id.
+message SdkAlertsResourceTypeQuery {
+    // resource_type is the resource type of alerts to query with.
+    ResourceType resource_type = 1;
+}
+
+// SdkAlertsAlertTypeQuery queries for alerts using alert type
+// and it requires that resource type be provided as well.
+message SdkAlertsAlertTypeQuery {
+    // resource_type is the resource type of alerts to query with.
+    ResourceType resource_type = 1;
+    // alert_type is the alert type of the alerts to query with.
+    int64 alert_type = 2;
+}
+
+// SdkAlertsResourceIdQuery queries for alerts using resource id
+// and it requires that both alert type and resource type be provided
+// as well.
+message SdkAlertsResourceIdQuery {
+    // resource_type is the resource type of alerts to query with.
+    ResourceType resource_type = 1;
+    // alert_type is the alert type of the alerts to query with.
+    int64 alert_type = 2;
+    // resource_id is the resource id of the alerts to query with.
+    string resource_id = 3;
+}
+
+// SdkAlertsQuery is one of the query types and a list of options.
+// Each query object is one of the three query types and a list of
+// options.
+message SdkAlertsQuery {
+    oneof query {
+        SdkAlertsResourceTypeQuery resource_type_query = 1;
+        SdkAlertsAlertTypeQuery alert_type_query = 2;
+        SdkAlertsResourceIdQuery resource_id_query = 3;
+    }
+    // opts is a list of options associated with one of the queries.
+    repeated SdkAlertsOption opts = 4;
+}
+
+// SdkAlertsEnumerateRequest is a request message to enumerate alerts.
+message SdkAlertsEnumerateRequest {
+    // queries is a list of queries to find matching alerts.
+    // Output of each of these queries is added to a global pool
+    // and returned as output of an RPC call.
+    // In that sense alerts are fetched if they match any of the
+    // queries.
+    repeated SdkAlertsQuery queries = 1;
+}
+
+// SdkAlertsEnumerateResponse is a list of alerts.
+message SdkAlertsEnumerateResponse {
+    // alerts is a list of alert objects retured from RPC call.
+    repeated Alert alerts = 1;
+}
+
+// OpenStorageAlerts defines rpc's for alerts.
+service OpenStorageAlerts {
+    // Enumerate allows listing alerts using 3 different types of queries as defined below:
+    // Query that takes only resource type as input
+    // Query that takes resource type and alert type as input and
+    // Query that takes resource id, alert type and resource type as input.
+    // SdkAlertsEnumerateRequest takes a list of such queries and the returned
+    // output is a collective ouput from each of these queries. In that sense,
+    // the filtering of these queries has a behavior of OR operation.
+    // Each query also has a list of optional options. These options allow
+    // narrowing down the scope of alerts search. These options have a
+    // behavior of AND operation.
+    // Some example are as follows:
+    // To search by a resource type in a given time window would require
+    // initializing SdkAlertsResourceTypeQuery query and pass in
+    // SdkAlertsTimeSpan option into SdkAlertsQuery struct and finally
+    // packing any other such queries into SdkAlertsEnumerateRequest object.
+    // Alternatively, to search by both resource type and alert type, use
+    // SdkAlertsAlertTypeQuery as query builder.
+    // Finally to search all alerts of a given resource type and some
+    // alerts of another resource type but with specific alert type,
+    // use two queries, first initialized with SdkAlertsResourceTypeQuery
+    // and second initialized with SdkAlertsAlertTypeQuery and both
+    // eventually packed as list in SdkAlertsEnumerateRequest.
+    rpc Enumerate(SdkAlertsEnumerateRequest)
+    returns (SdkAlertsEnumerateResponse) {
+        option(google.api.http) = {
+                get: "/v1/alerts"
+            };
+    }
+}
+
+// Define a schedule policy request
+message SdkSchedulePolicyCreateRequest {
+    // Schedule Policy
+    SdkSchedulePolicy SchedulePolicy = 1;
+}
+
 // Alerts is an array of Alert objects
 // swagger:model
 message Alerts {
@@ -1251,12 +1375,6 @@ service OpenStorageCloudBackup {
         get: "/v1/cloudbackups/schedules"
       };
     }
-}
-
-// Define a schedule policy request
-message SdkSchedulePolicyCreateRequest {
-  // Schedule Policy
-  SdkSchedulePolicy SchedulePolicy = 1;
 }
 
 // Empty response
@@ -2184,6 +2302,8 @@ message SdkServiceCapability {
       SCHEDULE_POLICY = 6;
       // Volume management
       VOLUME = 7;
+      // Alert enumeration
+      ALERTS = 8;
     }
 
     // Type of service supported
@@ -2446,42 +2566,42 @@ message ClusterPairsEnumerateResponse {
 }
 
 message Catalog {
-	// Name of the Directory/File
-	string name = 1;
-	// Full Path of the Directory/File
-	string path = 2;
-	// Type Directory or File
-	string type = 3;
-	// File or Directory Size
-	uint64 size = 4;
-	// Last Modified
-	google.protobuf.Timestamp LastModified = 5;
-	// Children
-	repeated Catalog children = 6;
+    // Name of the Directory/File
+    string name = 1;
+    // Full Path of the Directory/File
+    string path = 2;
+    // Type Directory or File
+    string type = 3;
+    // File or Directory Size
+    uint64 size = 4;
+    // Last Modified
+    google.protobuf.Timestamp LastModified = 5;
+    // Children
+    repeated Catalog children = 6;
 }
 
 message Report {
-	// Directory count
-	int64 directories = 2;
-	// File count
-	int64 files = 3;
+    // Directory count
+    int64 directories = 2;
+    // File count
+    int64 files = 3;
 }
 
 message CatalogResponse {
-	// Root Catalog
-	Catalog root = 1;
-	// Report of total directories and files count
-	Report report = 2;
+    // Root Catalog
+    Catalog root = 1;
+    // Report of total directories and files count
+    Report report = 2;
 }
 
 
 // Locate response woul be used to return a set of mounts
 // and/or Container IDs and their mount paths
 message LocateResponse {
-	// Map of mounts
-	// <host>: /var/lib/osd/<volumemount>
-	map<string, string> mounts = 1;
-	// Map of docker id's and their mounts
-	// <containerid>: /var/www
-	map<string, string> dockerids = 2;
+    // Map of mounts
+    // <host>: /var/lib/osd/<volumemount>
+    map<string, string> mounts = 1;
+    // Map of docker id's and their mounts
+    // <containerid>: /var/www
+    map<string, string> dockerids = 2;
 }
