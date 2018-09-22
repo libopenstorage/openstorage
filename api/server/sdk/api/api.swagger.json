@@ -22,10 +22,72 @@
         "NODE",
         "OBJECT_STORAGE",
         "SCHEDULE_POLICY",
-        "VOLUME"
+        "VOLUME",
+        "ALERTS"
       ],
-      "title": "- UNKNOWN: Unknown service\n - CLUSTER: Cluster management\n - CLOUD_BACKUP: Cloud backup of volumes management\n - CREDENTIALS: Credentials management\n - NODE: Node management\n - OBJECT_STORAGE: Object Storage management\n - SCHEDULE_POLICY: Schedule policy management\n - VOLUME: Volume management",
+      "title": "- UNKNOWN: Unknown service\n - CLUSTER: Cluster management\n - CLOUD_BACKUP: Cloud backup of volumes management\n - CREDENTIALS: Credentials management\n - NODE: Node management\n - OBJECT_STORAGE: Object Storage management\n - SCHEDULE_POLICY: Schedule policy management\n - VOLUME: Volume management\n - ALERTS: Alert enumeration",
       "type": "string"
+    },
+    "apiAlert": {
+      "properties": {
+        "alert_type": {
+          "format": "int64",
+          "title": "AlertType user defined alert type",
+          "type": "string"
+        },
+        "cleared": {
+          "format": "boolean",
+          "title": "Cleared Flag",
+          "type": "boolean"
+        },
+        "count": {
+          "description": "Count of such alerts raised so far.",
+          "format": "int64",
+          "type": "string"
+        },
+        "first_seen": {
+          "description": "Timestamp when such alert was raised the very first time.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "id": {
+          "format": "int64",
+          "title": "Id for Alert",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message describing the Alert",
+          "type": "string"
+        },
+        "resource": {
+          "$ref": "#/definitions/apiResourceType",
+          "title": "Resource where Alert occured"
+        },
+        "resource_id": {
+          "title": "ResourceId where Alert occured",
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/definitions/apiSeverityType",
+          "title": "Severity of the Alert"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp when Alert occured",
+          "type": "string"
+        },
+        "ttl": {
+          "format": "uint64",
+          "title": "Time-to-live in seconds for this Alert",
+          "type": "string"
+        },
+        "unique_tag": {
+          "title": "UniqueTag helps identify a unique alert for a given resouce",
+          "type": "string"
+        }
+      },
+      "title": "Alert is a structure that represents an alert object",
+      "type": "object"
     },
     "apiAttachState": {
       "default": "ATTACH_STATE_EXTERNAL",
@@ -151,6 +213,17 @@
       "title": "ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure\ncoded - for clustered storage arrays\nswagger:model",
       "type": "object"
     },
+    "apiResourceType": {
+      "default": "RESOURCE_TYPE_NONE",
+      "enum": [
+        "RESOURCE_TYPE_NONE",
+        "RESOURCE_TYPE_VOLUME",
+        "RESOURCE_TYPE_NODE",
+        "RESOURCE_TYPE_CLUSTER",
+        "RESOURCE_TYPE_DRIVE"
+      ],
+      "type": "string"
+    },
     "apiRuntimeStateMap": {
       "properties": {
         "runtime_state": {
@@ -161,6 +234,140 @@
         }
       },
       "title": "RuntimeStateMap is a list of name value mapping of driver specific runtime\ninformation.\nswagger:model",
+      "type": "object"
+    },
+    "apiSdkAlertsAlertTypeQuery": {
+      "description": "SdkAlertsAlertTypeQuery queries for alerts using alert type\nand it requires that resource type be provided as well.",
+      "properties": {
+        "alert_type": {
+          "description": "alert_type is the alert type of the alerts to query with.",
+          "format": "int64",
+          "type": "string"
+        },
+        "resource_type": {
+          "$ref": "#/definitions/apiResourceType",
+          "description": "resource_type is the resource type of alerts to query with."
+        }
+      },
+      "type": "object"
+    },
+    "apiSdkAlertsCountSpan": {
+      "description": "SdkAlertsCountSpan to store count range information.",
+      "properties": {
+        "max_count": {
+          "description": "Max count of such alerts raised so far.",
+          "format": "int64",
+          "type": "string"
+        },
+        "min_count": {
+          "description": "Min count of such alerts raised so far.",
+          "format": "int64",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "apiSdkAlertsEnumerateResponse": {
+      "description": "SdkAlertsEnumerateResponse is a list of alerts.",
+      "properties": {
+        "alerts": {
+          "description": "alerts is a list of alert objects retured from RPC call.",
+          "items": {
+            "$ref": "#/definitions/apiAlert"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "apiSdkAlertsOption": {
+      "description": "SdkAlertsOption contains options for filtering alerts.",
+      "properties": {
+        "count_span": {
+          "$ref": "#/definitions/apiSdkAlertsCountSpan",
+          "description": "count_span to query in a given count range."
+        },
+        "is_cleared": {
+          "description": "is_cleared indicates querying for alerts cleared flag.",
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "min_severity_type": {
+          "$ref": "#/definitions/apiSeverityType",
+          "description": "min_severity_type to query using severity type."
+        },
+        "time_span": {
+          "$ref": "#/definitions/apiSdkAlertsTimeSpan",
+          "description": "time_span to query in a given time span range."
+        }
+      },
+      "type": "object"
+    },
+    "apiSdkAlertsQuery": {
+      "description": "SdkAlertsQuery is one of the query types and a list of options.\nEach query object is one of the three query types and a list of\noptions.",
+      "properties": {
+        "alert_type_query": {
+          "$ref": "#/definitions/apiSdkAlertsAlertTypeQuery"
+        },
+        "opts": {
+          "description": "opts is a list of options associated with one of the queries.",
+          "items": {
+            "$ref": "#/definitions/apiSdkAlertsOption"
+          },
+          "type": "array"
+        },
+        "resource_id_query": {
+          "$ref": "#/definitions/apiSdkAlertsResourceIdQuery"
+        },
+        "resource_type_query": {
+          "$ref": "#/definitions/apiSdkAlertsResourceTypeQuery"
+        }
+      },
+      "type": "object"
+    },
+    "apiSdkAlertsResourceIdQuery": {
+      "description": "SdkAlertsResourceIdQuery queries for alerts using resource id\nand it requires that both alert type and resource type be provided\nas well.",
+      "properties": {
+        "alert_type": {
+          "description": "alert_type is the alert type of the alerts to query with.",
+          "format": "int64",
+          "type": "string"
+        },
+        "resource_id": {
+          "description": "resource_id is the resource id of the alerts to query with.",
+          "type": "string"
+        },
+        "resource_type": {
+          "$ref": "#/definitions/apiResourceType",
+          "description": "resource_type is the resource type of alerts to query with."
+        }
+      },
+      "type": "object"
+    },
+    "apiSdkAlertsResourceTypeQuery": {
+      "description": "SdkAlertsResourceTypeQuery queries for alerts using only resource id.",
+      "properties": {
+        "resource_type": {
+          "$ref": "#/definitions/apiResourceType",
+          "description": "resource_type is the resource type of alerts to query with."
+        }
+      },
+      "type": "object"
+    },
+    "apiSdkAlertsTimeSpan": {
+      "description": "SdkAlertsTimeSpan to store time window information.",
+      "properties": {
+        "end_time": {
+          "format": "date-time",
+          "title": "End timestamp when Alert occured",
+          "type": "string"
+        },
+        "start_time": {
+          "format": "date-time",
+          "title": "Start timestamp when Alert occured",
+          "type": "string"
+        }
+      },
       "type": "object"
     },
     "apiSdkAwsCredentialRequest": {
@@ -1367,6 +1574,16 @@
       "title": "Empty response",
       "type": "object"
     },
+    "apiSeverityType": {
+      "default": "SEVERITY_TYPE_NONE",
+      "enum": [
+        "SEVERITY_TYPE_NONE",
+        "SEVERITY_TYPE_ALARM",
+        "SEVERITY_TYPE_WARNING",
+        "SEVERITY_TYPE_NOTIFY"
+      ],
+      "type": "string"
+    },
     "apiSource": {
       "properties": {
         "parent": {
@@ -2094,6 +2311,23 @@
     "version": "0.9.0"
   },
   "paths": {
+    "/v1/alerts": {
+      "get": {
+        "operationId": "Enumerate",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkAlertsEnumerateResponse"
+            }
+          }
+        },
+        "summary": "Enumerate allows listing alerts using 3 different types of queries as defined below:\nQuery that takes only resource type as input\nQuery that takes resource type and alert type as input and\nQuery that takes resource id, alert type and resource type as input.\nSdkAlertsEnumerateRequest takes a list of such queries and the returned\noutput is a collective ouput from each of these queries. In that sense,\nthe filtering of these queries has a behavior of OR operation.\nEach query also has a list of optional options. These options allow\nnarrowing down the scope of alerts search. These options have a\nbehavior of AND operation.\nSome example are as follows:\nTo search by a resource type in a given time window would require\ninitializing SdkAlertsResourceTypeQuery query and pass in\nSdkAlertsTimeSpan option into SdkAlertsQuery struct and finally\npacking any other such queries into SdkAlertsEnumerateRequest object.\nAlternatively, to search by both resource type and alert type, use\nSdkAlertsAlertTypeQuery as query builder.\nFinally to search all alerts of a given resource type and some\nalerts of another resource type but with specific alert type,\nuse two queries, first initialized with SdkAlertsResourceTypeQuery\nand second initialized with SdkAlertsAlertTypeQuery and both\neventually packed as list in SdkAlertsEnumerateRequest.",
+        "tags": [
+          "OpenStorageAlerts"
+        ]
+      }
+    },
     "/v1/cloudbackups": {
       "post": {
         "operationId": "Create",

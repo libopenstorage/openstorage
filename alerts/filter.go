@@ -72,9 +72,15 @@ const (
 	// matchResourceIDFilter takes only one argument, i.e., resource id. It fetches all entries from kvdb
 	// then parses them to see resource id's are matching. Matching entries are returned.
 	// This filter is not an efficient filter since it requires pulling all entries.
-	// Recommend to use resourceIDFilter is you resource type and alert type info is also known for
+	// Recommend to use resourceIDFilter if resource type and alert type info is also known for
 	// efficient querying.
 	matchResourceIDFilter
+	// matchAlertTypeFilter takes only one argume, i.e., an alert type. It fetches all entries from kvdb
+	// then parses them to see alert type is matching. Matching entries are returned.
+	// This filter is not an efficient filter since it requires pulling all entries.
+	// Recommend to use alertTypeFilter if resource type info is also known for
+	// efficient querying.
+	matchAlertTypeFilter
 
 	// Filter types listed below provide more efficient querying into kvdb by directly querying kvdb sub tree.
 	// These filters reach a sub tree in kvdb and only fetch some alerts, therefore, these are called efficient
@@ -154,6 +160,17 @@ func (f *filter) Match(alert *api.Alert) (bool, error) {
 			return true, nil
 		}
 		return false, nil
+	case matchAlertTypeFilter:
+		v, ok := f.value.(int64)
+		if !ok {
+			return false, typeAssertionError.
+				Tag("matchAlertTypeFilter").
+				Tag("func Match")
+		}
+		if alert.AlertType == v {
+			return true, nil
+		}
+		return false, nil
 	case countSpanFilter:
 		v, ok := f.value.([]int64)
 		if !ok {
@@ -177,8 +194,16 @@ func (f *filter) Match(alert *api.Alert) (bool, error) {
 				Tag("minSeverityFilter").
 				Tag("func Match")
 		}
-		if alert.Severity >= v {
+		switch v {
+		case api.SeverityType_SEVERITY_TYPE_NONE:
 			return true, nil
+		case api.SeverityType_SEVERITY_TYPE_NOTIFY,
+			api.SeverityType_SEVERITY_TYPE_WARNING,
+			api.SeverityType_SEVERITY_TYPE_ALARM:
+			if alert.Severity <= v &&
+				alert.Severity != api.SeverityType_SEVERITY_TYPE_NONE {
+				return true, nil
+			}
 		}
 		return false, nil
 	case flagCheckFilter:
