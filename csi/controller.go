@@ -25,6 +25,7 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/util"
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi/v0"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
@@ -55,6 +56,15 @@ func (s *OsdCsiServer) ControllerGetCapabilities(
 		},
 	}
 
+	// Creating and deleting snapshots
+	capCreateDeleteSnapshot := &csi.ControllerServiceCapability{
+		Type: &csi.ControllerServiceCapability_Rpc{
+			Rpc: &csi.ControllerServiceCapability_RPC{
+				Type: csi.ControllerServiceCapability_RPC_CREATE_DELETE_SNAPSHOT,
+			},
+		},
+	}
+
 	// ListVolumes supported
 	capListVolumes := &csi.ControllerServiceCapability{
 		Type: &csi.ControllerServiceCapability_Rpc{
@@ -67,6 +77,7 @@ func (s *OsdCsiServer) ControllerGetCapabilities(
 	return &csi.ControllerGetCapabilitiesResponse{
 		Capabilities: []*csi.ControllerServiceCapability{
 			capCreateDeleteVolume,
+			capCreateDeleteSnapshot,
 			capListVolumes,
 		},
 	}, nil
@@ -357,6 +368,11 @@ func (s *OsdCsiServer) CreateVolume(
 		return resp, nil
 	}
 
+	// Check if this is a cloning request to create a volume from a snapshot
+	if req.GetVolumeContentSource().GetSnapshot() != nil {
+		source.Parent = req.GetVolumeContentSource().GetSnapshot().GetId()
+	}
+
 	// Check if the caller is asking to create a snapshot or for a new volume
 	var id string
 	if source != nil && len(source.GetParent()) != 0 {
@@ -455,9 +471,123 @@ func csiRequestsSharedVolume(req *csi.CreateVolumeRequest) bool {
 	return false
 }
 
-/*
-For next patches what still needs to be worked on in the Conroller server:
+// CreateSnapshot is a CSI implementation to create a snapshot from the volume
+func (s *OsdCsiServer) CreateSnapshot(
+	ctx context.Context,
+	req *csi.CreateSnapshotRequest,
+) (*csi.CreateSnapshotResponse, error) {
 
-	GetCapacity(context.Context, *GetCapacityRequest) (*GetCapacityResponse, error)
-	ControllerGetCapabilities(context.Context, *ControllerGetCapabilitiesRequest) (*ControllerGetCapabilitiesResponse, error)
-*/
+	if len(req.GetSourceVolumeId()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Volume id must be provided")
+	} else if len(req.GetName()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Name must be provided")
+	}
+
+	// Check if the snapshot with this name already exists
+	v, err := util.VolumeFromName(s.driver, req.GetName())
+	if err == nil {
+		// Verify the parent is the same
+		if req.GetSourceVolumeId() != v.GetSource().GetParent() {
+			return nil, status.Error(codes.AlreadyExists, "Requested snapshot already exists for another source volume id")
+		}
+
+		// Return current snapshot info
+		createdAt, err := ptypes.Timestamp(v.GetCtime())
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "Failed to get time snapshot was created: %v", err)
+		}
+		return &csi.CreateSnapshotResponse{
+			Snapshot: &csi.Snapshot{
+				Id:             v.GetId(),
+				SourceVolumeId: v.GetSource().GetParent(),
+				CreatedAt:      createdAt.Unix(),
+				Status: &csi.SnapshotStatus{
+					// This means that we are not uploading our snapshot
+					// We may add support for cloud snaps in future patches
+					Type: csi.SnapshotStatus_READY,
+				},
+			},
+		}, nil
+	}
+
+	// Get any labels passed in by the CO
+	_, locator, _, err := s.specHandler.SpecFromOpts(req.GetParameters())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Unable to get parameters: %v", err)
+	}
+
+	// Create snapshot
+	readonly := true
+	snapshotID, err := s.driver.Snapshot(req.GetSourceVolumeId(), readonly, &api.VolumeLocator{
+		Name:         req.GetName(),
+		VolumeLabels: locator.GetVolumeLabels(),
+	}, false)
+	if err != nil {
+		if err == kvdb.ErrNotFound {
+			return nil, status.Errorf(codes.NotFound, "Volume id %s not found", req.GetSourceVolumeId())
+		}
+		return nil, status.Errorf(codes.Internal, "Failed to create snapshot: %v", err)
+	}
+
+	snapInfo, err := util.VolumeFromName(s.driver, snapshotID)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to get information about the snapshot: %v", err)
+	}
+	createdAt, err := ptypes.Timestamp(snapInfo.GetCtime())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to get time snapshot was created: %v", err)
+	}
+
+	return &csi.CreateSnapshotResponse{
+		Snapshot: &csi.Snapshot{
+			Id:             snapshotID,
+			SourceVolumeId: req.GetSourceVolumeId(),
+			CreatedAt:      createdAt.Unix(),
+			Status: &csi.SnapshotStatus{
+				// This means that we are not uploading our snapshot
+				// We may add support flow cloud snaps in future patches
+				Type: csi.SnapshotStatus_READY,
+			},
+		},
+	}, nil
+}
+
+// DeleteSnapshot is a CSI implementation to delete a snapshot
+func (s *OsdCsiServer) DeleteSnapshot(
+	ctx context.Context,
+	req *csi.DeleteSnapshotRequest,
+) (*csi.DeleteSnapshotResponse, error) {
+
+	if len(req.GetSnapshotId()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Snapshot id must be provided")
+	}
+
+	// If the snapshot is not found, then we can return OK
+	volumes, err := s.driver.Inspect([]string{req.GetSnapshotId()})
+	if (err == nil && len(volumes) == 0) ||
+		(err != nil && err == kvdb.ErrNotFound) {
+		return &csi.DeleteSnapshotResponse{}, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	err = s.driver.Delete(req.GetSnapshotId())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Unable to delete snapshot %s: %v",
+			req.GetSnapshotId(),
+			err)
+	}
+
+	return &csi.DeleteSnapshotResponse{}, nil
+}
+
+// ListSnapshots is not supported (we can add this later)
+func (s *OsdCsiServer) ListSnapshots(
+	ctx context.Context,
+	req *csi.ListSnapshotsRequest,
+) (*csi.ListSnapshotsResponse, error) {
+
+	// The function ListSnapshots is also not published as
+	// supported by this implementation
+	return nil, status.Error(codes.Unimplemented, "ListSnapshots is not implemented")
+}

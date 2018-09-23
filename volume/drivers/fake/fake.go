@@ -244,7 +244,7 @@ func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 		return "", nil
 	}
 	source := &api.Source{Parent: volumeID}
-	logrus.Infof("Creating snap vol name: %s", locator.Name)
+	logrus.Infof("Creating snap %s for vol %s", locator.Name, volumeID)
 	newVolumeID, err := d.Create(locator, source, vols[0].Spec)
 	if err != nil {
 		return "", nil

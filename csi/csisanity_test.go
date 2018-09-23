@@ -1,5 +1,3 @@
-// +build daemon
-
 /*
 CSI Interface for OSD
 Copyright 2017 Portworx
@@ -19,12 +17,10 @@ limitations under the License.
 package csi
 
 import (
-	"os"
 	"testing"
 
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/config"
-	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
 
 	"github.com/kubernetes-csi/csi-test/pkg/sanity"
@@ -34,54 +30,30 @@ import (
 	"github.com/portworx/kvdb/mem"
 )
 
-const (
-	testPath = "/tmp/openstorage_driver_test"
-)
-
-var (
-	testEnumerator volume.StoreEnumerator
-	testLabels     = map[string]string{"Foo": "DEADBEEF"}
-)
-
 func TestCSISanity(t *testing.T) {
 
-	kv, err := kvdb.New(mem.Name, "driver_test", []string{}, nil, logrus.Panicf)
+	kv, err := kvdb.New(mem.Name, "fake_test", []string{}, nil, logrus.Panicf)
 	if err != nil {
-		t.Fatalf("Failed to initialize KVDB")
+		logrus.Panicf("Failed to initialize KVDB")
 	}
 	if err := kvdb.SetInstance(kv); err != nil {
-		t.Fatalf("Failed to set KVDB instance")
+		logrus.Panicf("Failed to set KVDB instance")
 	}
-
-	err = os.MkdirAll(testPath, 0744)
-	if err != nil {
-		t.Fatalf("Failed to create test path: %v", err)
-	}
-
-	if err := volumedrivers.Register("nfs", map[string]string{"path": testPath}); err != nil {
-		t.Fatalf("Unable to start volume driver nfs")
-	}
-
-	// Initialize the cluster
-	if err := clustermanager.Init(config.ClusterConfig{
-		ClusterId:     "cluster",
-		NodeId:        "node1",
-		DefaultDriver: "nfs",
-	}); err != nil {
-		t.Fatalf("Unable to init cluster server: %v", err)
-	}
-
+	clustermanager.Init(config.ClusterConfig{
+		ClusterId: "fakecluster",
+		NodeId:    "fakeNode",
+	})
 	cm, err := clustermanager.Inst()
-	if err != nil {
-		t.Fatalf("Unable to find cluster instance: %v", err)
-	}
 	go func() {
 		cm.Start(0, false, "9002")
 	}()
+	if err := volumedrivers.Register("fake", map[string]string{}); err != nil {
+		t.Fatalf("Unable to start volume driver fake: %v", err)
+	}
 
 	// Start CSI Server
 	server, err := NewOsdCsiServer(&OsdCsiServerConfig{
-		DriverName: "nfs",
+		DriverName: "fake",
 		Net:        "tcp",
 		Address:    "127.0.0.1:0",
 		Cluster:    cm,
@@ -95,6 +67,6 @@ func TestCSISanity(t *testing.T) {
 	// Start CSI Sanity test
 	sanity.Test(t, &sanity.Config{
 		Address:    server.Address(),
-		TargetPath: "/mnt/openstorage/mount/nfs",
+		TargetPath: "/mnt",
 	})
 }
