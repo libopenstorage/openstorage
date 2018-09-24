@@ -30,10 +30,13 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// alertsServer implements api.OpenStorageAlertsServer
-type alertsServer struct {
-	// reader holds pointer to alerts reader
-	reader alerts.Reader
+// AlertsServer implements api.OpenStorageAlertsServer.
+// In order to use this server implementation just have
+// AlertsServer pointer properly instantiated with a valid
+// alerts.Reader.
+type AlertsServer struct {
+	// Reader holds pointer to alerts Reader
+	Reader alerts.Reader
 }
 
 func getOpts(opts []*api.SdkAlertsOption) []alerts.Option {
@@ -96,10 +99,10 @@ func getFilters(queries []*api.SdkAlertsQuery) []alerts.Filter {
 	return filters
 }
 
-// Enumerate implements api.OpenStorageAlertsServer for alertsServer.
+// Enumerate implements api.OpenStorageAlertsServer for AlertsServer.
 // Input context should ideally have a deadline, in which case, a
 // graceful exit is ensured within that deadline.
-func (g *alertsServer) Enumerate(ctx context.Context,
+func (g *AlertsServer) Enumerate(ctx context.Context,
 	request *api.SdkAlertsEnumerateRequest) (*api.SdkAlertsEnumerateResponse, error) {
 
 	// if input has deadline, ensure graceful exit within that deadline.
@@ -127,7 +130,7 @@ func (g *alertsServer) Enumerate(ctx context.Context,
 	// spawn err-group process.
 	// collect output using mutex.
 	group.Go(func() error {
-		if out, err := g.reader.Enumerate(filters...); err != nil {
+		if out, err := g.Reader.Enumerate(filters...); err != nil {
 			return err
 		} else {
 			mu.Lock()

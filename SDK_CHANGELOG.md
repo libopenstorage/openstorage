@@ -5,6 +5,12 @@
 
 ## Releases
 
+### v0.10.0 - Tech Preview (9/24/2018)
+
+* New service called OpenStorageAlerts has been created and documented to
+  allow querying alert events.
+
+
 ### v0.9.0 - Tech Preview (9/18/2018)
 
 NOTE: This release has breaking chages for the Mount/Attach/Detach/Unmount calls
