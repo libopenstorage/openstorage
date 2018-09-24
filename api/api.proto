@@ -560,17 +560,23 @@ message SdkAlertsEnumerateResponse {
 
 // OpenStorageAlerts defines rpc's for alerts.
 service OpenStorageAlerts {
-    // Enumerate allows listing alerts using 3 different types of queries as defined below:
-    // Query that takes only resource type as input
-    // Query that takes resource type and alert type as input and
-    // Query that takes resource id, alert type and resource type as input.
+    // Enumerate allows querying alerts.
+    //
+    // #### Enumerate
+    // Enumerate allows 3 different types of queries as defined below:
+    // * Query that takes only resource type as input
+    // * Query that takes resource type and alert type as input and
+    // * Query that takes resource id, alert type and resource type as input.
+    //
+    // #### Input
     // SdkAlertsEnumerateRequest takes a list of such queries and the returned
     // output is a collective ouput from each of these queries. In that sense,
     // the filtering of these queries has a behavior of OR operation.
     // Each query also has a list of optional options. These options allow
     // narrowing down the scope of alerts search. These options have a
-    // behavior of AND operation.
-    // Some example are as follows:
+    // behavior of an AND operation.
+    //
+    // #### Examples
     // To search by a resource type in a given time window would require
     // initializing SdkAlertsResourceTypeQuery query and pass in
     // SdkAlertsTimeSpan option into SdkAlertsQuery struct and finally
@@ -2336,7 +2342,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 9;
+    Minor = 10;
     // SDK version patch value of this specification
     Patch = 0;
   }
