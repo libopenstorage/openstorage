@@ -564,6 +564,7 @@ service OpenStorageAlerts {
     //
     // #### Enumerate
     // Enumerate allows 3 different types of queries as defined below:
+    //
     // * Query that takes only resource type as input
     // * Query that takes resource type and alert type as input and
     // * Query that takes resource id, alert type and resource type as input.
