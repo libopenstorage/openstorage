@@ -33,10 +33,10 @@ import (
 // AlertsServer implements api.OpenStorageAlertsServer.
 // In order to use this server implementation just have
 // AlertsServer pointer properly instantiated with a valid
-// alerts.Reader.
+// alerts.FilterDeleter.
 type AlertsServer struct {
-	// Reader holds pointer to alerts Reader
-	Reader alerts.Reader
+	// FilterDeleter holds pointer to alerts FilterDeleter
+	FilterDeleter alerts.FilterDeleter
 }
 
 func getOpts(opts []*api.SdkAlertsOption) []alerts.Option {
@@ -104,6 +104,10 @@ func getFilters(queries []*api.SdkAlertsQuery) []alerts.Filter {
 // graceful exit is ensured within that deadline.
 func (g *AlertsServer) Enumerate(ctx context.Context,
 	request *api.SdkAlertsEnumerateRequest) (*api.SdkAlertsEnumerateResponse, error) {
+	queries := request.GetQueries()
+	if queries == nil {
+		return nil, status.Error(codes.InvalidArgument, "Must provide at least one query")
+	}
 
 	// if input has deadline, ensure graceful exit within that deadline.
 	deadline, ok := ctx.Deadline()
@@ -120,17 +124,12 @@ func (g *AlertsServer) Enumerate(ctx context.Context,
 	resp := new(api.SdkAlertsEnumerateResponse)
 	var mu sync.Mutex
 
-	queries := request.GetQueries()
-	if queries == nil {
-		return nil, status.Error(codes.InvalidArgument, "must provide a query")
-	}
-
 	filters := getFilters(queries)
 
 	// spawn err-group process.
 	// collect output using mutex.
 	group.Go(func() error {
-		if out, err := g.Reader.Enumerate(filters...); err != nil {
+		if out, err := g.FilterDeleter.Enumerate(filters...); err != nil {
 			return err
 		} else {
 			mu.Lock()
@@ -149,12 +148,62 @@ func (g *AlertsServer) Enumerate(ctx context.Context,
 	select {
 	case err := <-errChan:
 		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
+			return nil, status.Errorf(codes.Internal, "error enumerating alerts: %v", err)
 		} else {
 			return resp, nil
 		}
 	case <-ctx.Done():
 		return nil, status.Error(codes.DeadlineExceeded,
-			"deadline is reached, server side func exiting")
+			"Deadline is reached, server side func exiting")
+	}
+}
+
+// Delete implements api.OpenStorageAlertsServer for AlertsServer.
+// Input context should ideally have a deadline, in which case, a
+// graceful exit is ensured within that deadline.
+func (g *AlertsServer) Delete(ctx context.Context,
+	request *api.SdkAlertsDeleteRequest) (*api.SdkAlertsDeleteResponse, error) {
+	queries := request.GetQueries()
+	if queries == nil {
+		return nil, status.Error(codes.InvalidArgument, "Must provide at least one query")
+	}
+
+	// if input has deadline, ensure graceful exit within that deadline.
+	deadline, ok := ctx.Deadline()
+	var cancel context.CancelFunc
+	if ok {
+		// create a new context that will get done on deadline
+		ctx, cancel = context.WithTimeout(ctx, deadline.Sub(time.Now()))
+		defer cancel()
+	}
+
+	group, _ := errgroup.WithContext(ctx)
+	errChan := make(chan error)
+
+	resp := new(api.SdkAlertsDeleteResponse)
+
+	filters := getFilters(queries)
+
+	// spawn err-group process.
+	group.Go(func() error {
+		return g.FilterDeleter.Delete(filters...)
+	})
+
+	// wait for err-group processes to be done
+	go func() {
+		errChan <- group.Wait()
+	}()
+
+	// wait only as long as context deadline allows
+	select {
+	case err := <-errChan:
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "error deleting alerts: %v", err)
+		} else {
+			return resp, nil
+		}
+	case <-ctx.Done():
+		return nil, status.Error(codes.DeadlineExceeded,
+			"Deadline is reached, server side func exiting")
 	}
 }

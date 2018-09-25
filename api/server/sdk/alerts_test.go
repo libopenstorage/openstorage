@@ -311,8 +311,8 @@ func testNewIsClearedOption(isCleared bool) *api.SdkAlertsOption_IsCleared {
 		IsCleared: isCleared}
 }
 
-// TestAlertsServer_Enumerate tests enumerate functionality over gRPC using mock.
-func TestAlertsServer_Enumerate(t *testing.T) {
+// TestAlertsServerEnumerate tests enumerate functionality over gRPC using mock.
+func TestAlertsServerEnumerate(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
@@ -329,7 +329,7 @@ func TestAlertsServer_Enumerate(t *testing.T) {
 		for i := range myAlerts {
 			myAlerts[i] = new(api.Alert)
 		}
-		s.MockReader().EXPECT().Enumerate(filters...).Return(myAlerts, nil).Times(1)
+		s.MockFilterDeleter().EXPECT().Enumerate(filters...).Return(myAlerts, nil).Times(1)
 
 		// Get info
 		r, err := c.Enumerate(context.Background(), config.req)
@@ -338,8 +338,8 @@ func TestAlertsServer_Enumerate(t *testing.T) {
 	}
 }
 
-// TestAlertsServer_Enumerate_Error tests errors returned from server code.
-func TestAlertsServer_Enumerate_Error(t *testing.T) {
+// TestAlertsServerEnumerateError tests errors returned from server code.
+func TestAlertsServerEnumerateError(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
@@ -362,9 +362,68 @@ func TestAlertsServer_Enumerate_Error(t *testing.T) {
 			filters = append(filters, filter)
 		}
 
-		s.MockReader().EXPECT().Enumerate(filters...).Return(myAlerts, err).Times(1)
+		s.MockFilterDeleter().EXPECT().Enumerate(filters...).Return(myAlerts, err).Times(1)
 		// Get info
 		_, outErr := c.Enumerate(context.Background(), configs[0].req)
+		assert.Error(t, outErr, err.Error())
+	}
+}
+
+// TestAlertsServerDelete tests delete functionality over gRPC using mock.
+func TestAlertsServerDelete(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	// Setup client
+	c := api.NewOpenStorageAlertsClient(s.Conn())
+
+	for _, config := range configs {
+		var filters []interface{}
+		for _, filter := range getFilters(config.req.Queries) {
+			filters = append(filters, filter)
+		}
+		myAlerts := make([]*api.Alert, config.expected)
+		for i := range myAlerts {
+			myAlerts[i] = new(api.Alert)
+		}
+		s.MockFilterDeleter().EXPECT().Delete(filters...).Return(nil).Times(1)
+
+		// Get info
+		_, err := c.Delete(context.Background(), &api.SdkAlertsDeleteRequest{
+			Queries: config.req.Queries,
+		})
+		assert.NoError(t, err)
+	}
+}
+
+// TestAlertsServerDeleteError tests errors returned from server code.
+func TestAlertsServerDeleteError(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	// Setup client
+	c := api.NewOpenStorageAlertsClient(s.Conn())
+
+	errs := []error{
+		status.Error(codes.InvalidArgument, "must provide a query"),
+		status.Error(codes.Internal, errors.New("kvdb error").Error()),
+		status.Error(codes.DeadlineExceeded,
+			"deadline is reached, server side func exiting"),
+	}
+
+	for _, err := range errs {
+		var filters []interface{}
+		for _, filter := range getFilters(configs[0].req.Queries) {
+			filters = append(filters, filter)
+		}
+
+		s.MockFilterDeleter().EXPECT().Delete(filters...).Return(err).Times(1)
+		// Get info
+		_, outErr := c.Delete(context.Background(), &api.SdkAlertsDeleteRequest{
+			Queries: configs[0].req.Queries,
+		})
 		assert.Error(t, outErr, err.Error())
 	}
 }

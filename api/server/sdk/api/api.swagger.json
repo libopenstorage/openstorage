@@ -240,13 +240,13 @@
       "description": "SdkAlertsAlertTypeQuery queries for alerts using alert type\nand it requires that resource type be provided as well.",
       "properties": {
         "alert_type": {
-          "description": "alert_type is the alert type of the alerts to query with.",
+          "description": "Alert type used to build query.",
           "format": "int64",
           "type": "string"
         },
         "resource_type": {
           "$ref": "#/definitions/apiResourceType",
-          "description": "resource_type is the resource type of alerts to query with."
+          "description": "Resource type used to build query."
         }
       },
       "type": "object"
@@ -267,11 +267,15 @@
       },
       "type": "object"
     },
+    "apiSdkAlertsDeleteResponse": {
+      "description": "SdkAlertsDeleteResponse is empty.",
+      "type": "object"
+    },
     "apiSdkAlertsEnumerateResponse": {
       "description": "SdkAlertsEnumerateResponse is a list of alerts.",
       "properties": {
         "alerts": {
-          "description": "alerts is a list of alert objects retured from RPC call.",
+          "description": "Response contains a list of alerts.",
           "items": {
             "$ref": "#/definitions/apiAlert"
           },
@@ -285,20 +289,20 @@
       "properties": {
         "count_span": {
           "$ref": "#/definitions/apiSdkAlertsCountSpan",
-          "description": "count_span to query in a given count range."
+          "description": "Query using a count span in which alert count exists."
         },
         "is_cleared": {
-          "description": "is_cleared indicates querying for alerts cleared flag.",
+          "description": "Query using cleared flag.",
           "format": "boolean",
           "type": "boolean"
         },
         "min_severity_type": {
           "$ref": "#/definitions/apiSeverityType",
-          "description": "min_severity_type to query using severity type."
+          "description": "Query using minimum severity type."
         },
         "time_span": {
           "$ref": "#/definitions/apiSdkAlertsTimeSpan",
-          "description": "time_span to query in a given time span range."
+          "description": "Query using a time span during which alert was last seen."
         }
       },
       "type": "object"
@@ -307,20 +311,23 @@
       "description": "SdkAlertsQuery is one of the query types and a list of options.\nEach query object is one of the three query types and a list of\noptions.",
       "properties": {
         "alert_type_query": {
-          "$ref": "#/definitions/apiSdkAlertsAlertTypeQuery"
+          "$ref": "#/definitions/apiSdkAlertsAlertTypeQuery",
+          "description": "Query using alert type and resource type."
         },
         "opts": {
-          "description": "opts is a list of options associated with one of the queries.",
+          "description": "Opts is a list of options associated with one of the queries.",
           "items": {
             "$ref": "#/definitions/apiSdkAlertsOption"
           },
           "type": "array"
         },
         "resource_id_query": {
-          "$ref": "#/definitions/apiSdkAlertsResourceIdQuery"
+          "$ref": "#/definitions/apiSdkAlertsResourceIdQuery",
+          "description": "Query using resource id, alert type and resource type."
         },
         "resource_type_query": {
-          "$ref": "#/definitions/apiSdkAlertsResourceTypeQuery"
+          "$ref": "#/definitions/apiSdkAlertsResourceTypeQuery",
+          "description": "Query only using resource type."
         }
       },
       "type": "object"
@@ -329,17 +336,17 @@
       "description": "SdkAlertsResourceIdQuery queries for alerts using resource id\nand it requires that both alert type and resource type be provided\nas well.",
       "properties": {
         "alert_type": {
-          "description": "alert_type is the alert type of the alerts to query with.",
+          "description": "Alert type used to build query.",
           "format": "int64",
           "type": "string"
         },
         "resource_id": {
-          "description": "resource_id is the resource id of the alerts to query with.",
+          "description": "Resource ID used to build query.",
           "type": "string"
         },
         "resource_type": {
           "$ref": "#/definitions/apiResourceType",
-          "description": "resource_type is the resource type of alerts to query with."
+          "description": "Resource type used to build query."
         }
       },
       "type": "object"
@@ -349,7 +356,7 @@
       "properties": {
         "resource_type": {
           "$ref": "#/definitions/apiResourceType",
-          "description": "resource_type is the resource type of alerts to query with."
+          "description": "Resource type used to build query."
         }
       },
       "type": "object"
@@ -2308,10 +2315,26 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.10.0"
+    "version": "0.11.0"
   },
   "paths": {
     "/v1/alerts": {
+      "delete": {
+        "description": "#### Delete\nDelete allows 3 different types of queries as defined below:\n\n* Query that takes only resource type as input\n* Query that takes resource type and alert type as input and\n* Query that takes resource id, alert type and resource type as input.\n\n#### Input\nSdkAlertsEnumerateRequest takes a list of such queries and all alerts\nthat match at least one of the queries are deleted.",
+        "operationId": "Delete",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkAlertsDeleteResponse"
+            }
+          }
+        },
+        "summary": "Delete allows deleting alerts.",
+        "tags": [
+          "OpenStorageAlerts"
+        ]
+      },
       "get": {
         "description": "#### Enumerate\nEnumerate allows 3 different types of queries as defined below:\n\n* Query that takes only resource type as input\n* Query that takes resource type and alert type as input and\n* Query that takes resource id, alert type and resource type as input.\n\n#### Input\nSdkAlertsEnumerateRequest takes a list of such queries and the returned\noutput is a collective ouput from each of these queries. In that sense,\nthe filtering of these queries has a behavior of OR operation.\nEach query also has a list of optional options. These options allow\nnarrowing down the scope of alerts search. These options have a\nbehavior of an AND operation.\n\n#### Examples\nTo search by a resource type in a given time window would require\ninitializing SdkAlertsResourceTypeQuery query and pass in\nSdkAlertsTimeSpan option into SdkAlertsQuery struct and finally\npacking any other such queries into SdkAlertsEnumerateRequest object.\nAlternatively, to search by both resource type and alert type, use\nSdkAlertsAlertTypeQuery as query builder.\nFinally to search all alerts of a given resource type and some\nalerts of another resource type but with specific alert type,\nuse two queries, first initialized with SdkAlertsResourceTypeQuery\nand second initialized with SdkAlertsAlertTypeQuery and both\neventually packed as list in SdkAlertsEnumerateRequest.",
         "operationId": "Enumerate",

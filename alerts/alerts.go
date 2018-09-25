@@ -1,4 +1,4 @@
-//go:generate mockgen -package=mock -destination=mock/alerts.mock.go github.com/libopenstorage/openstorage/alerts Reader
+//go:generate mockgen -package=mockalerts -destination=mock/alerts.mock.go github.com/libopenstorage/openstorage/alerts FilterDeleter
 package alerts
 
 import (
@@ -43,25 +43,26 @@ const (
 
 // Manager manages alerts.
 type Manager interface {
-	// Reader allows read only operation on alerts
-	Reader
+	// FilterDeleter allows read only operation on alerts
+	FilterDeleter
 	// Raise raises an alert.
 	Raise(alert *api.Alert) error
-	// Delete deletes alerts filtered by a chain of filters.
-	Delete(filters ...Filter) error
 	// SetRules sets a set of rules to be performed on alert events.
 	SetRules(rules ...Rule)
 	// DeleteRules deletes rules
 	DeleteRules(rules ...Rule)
 }
 
-// Reader provides a read-only access to alerts.
-type Reader interface {
+// FilterDeleter defines a list and delete interface on alerts.
+// This interface is used in SDK.
+type FilterDeleter interface {
 	// Enumerate lists all alerts filtered by a variadic list of filters.
 	// It will fetch a superset such that every alert is matched by at least one filter.
 	Enumerate(filters ...Filter) ([]*api.Alert, error)
 	// Filter filters given list of alerts successively through each filter.
 	Filter(alerts []*api.Alert, filters ...Filter) ([]*api.Alert, error)
+	// Delete deletes alerts filtered by a chain of filters.
+	Delete(filters ...Filter) error
 }
 
 func newManager(kv kvdb.Kvdb, options ...Option) (*manager, error) {
