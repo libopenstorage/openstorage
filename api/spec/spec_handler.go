@@ -207,7 +207,7 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			if queueDepth, err := units.Parse(v); err != nil {
 				return nil, nil, nil, err
 			} else {
-				spec.QueueDepth = int32(queueDepth)
+				spec.QueueDepth = uint32(queueDepth)
 			}
 		case api.SpecHaLevel:
 			haLevel, _ := strconv.ParseInt(v, 10, 64)
