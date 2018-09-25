@@ -50,8 +50,8 @@ type ServerConfig struct {
 	DriverName string
 	// Cluster interface
 	Cluster cluster.Cluster
-	// AlertsReader
-	AlertsReader alerts.Reader
+	// AlertsFilterDeleter
+	AlertsFilterDeleter alerts.FilterDeleter
 }
 
 // Server is an implementation of the gRPC SDK interface
@@ -127,8 +127,8 @@ func New(config *ServerConfig) (*Server, error) {
 		credentialServer: &CredentialServer{
 			driver: d,
 		},
-		alertsServer: &AlertsServer{
-			Reader: config.AlertsReader,
+		alertsServer: &alertsServer{
+			filterDeleter: config.AlertsFilterDeleter,
 		},
 	}, nil
 }

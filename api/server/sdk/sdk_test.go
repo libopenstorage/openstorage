@@ -48,7 +48,7 @@ type testServer struct {
 	server *Server
 	m      *mockdriver.MockVolumeDriver
 	c      *mockcluster.MockCluster
-	a      *mock.MockReader
+	a      *mockalerts.MockFilterDeleter
 	mc     *gomock.Controller
 	gw     *httptest.Server
 }
@@ -72,18 +72,18 @@ func newTestServer(t *testing.T) *testServer {
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
 	tester.m = mockdriver.NewMockVolumeDriver(tester.mc)
 	tester.c = mockcluster.NewMockCluster(tester.mc)
-	tester.a = mock.NewMockReader(tester.mc)
+	tester.a = mockalerts.NewMockFilterDeleter(tester.mc)
 
 	setupMockDriver(tester, t)
 
 	var err error
 	// Setup simple driver
 	tester.server, err = New(&ServerConfig{
-		DriverName:   mockDriverName,
-		Net:          "tcp",
-		Address:      "127.0.0.1:0",
-		Cluster:      tester.c,
-		AlertsReader: tester.a,
+		DriverName:          mockDriverName,
+		Net:                 "tcp",
+		Address:             "127.0.0.1:0",
+		Cluster:             tester.c,
+		AlertsFilterDeleter: tester.a,
 	})
 	assert.Nil(t, err)
 	err = tester.server.Start()
@@ -110,7 +110,7 @@ func (s *testServer) MockCluster() *mockcluster.MockCluster {
 	return s.c
 }
 
-func (s *testServer) MockReader() *mock.MockReader {
+func (s *testServer) MockFilterDeleter() *mockalerts.MockFilterDeleter {
 	return s.a
 }
 

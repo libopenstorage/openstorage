@@ -5,6 +5,11 @@
 
 ## Releases
 
+### v0.11.0 - Tech Preview (9/25/2018)
+
+* New RPC in service called OpenStorageAlerts has been created and documented to
+  allow deleting alert events.
+
 ### v0.10.0 - Tech Preview (9/24/2018)
 
 * New service called OpenStorageAlerts has been created and documented to
