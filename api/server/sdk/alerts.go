@@ -30,13 +30,13 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// AlertsServer implements api.OpenStorageAlertsServer.
+// alertsServer implements api.OpenStorageAlertsServer.
 // In order to use this server implementation just have
-// AlertsServer pointer properly instantiated with a valid
-// alerts.FilterDeleter.
-type AlertsServer struct {
-	// FilterDeleter holds pointer to alerts FilterDeleter
-	FilterDeleter alerts.FilterDeleter
+// alertsServer pointer properly instantiated with a valid
+// alerts.filterDeleter.
+type alertsServer struct {
+	// filterDeleter holds pointer to alerts filterDeleter
+	filterDeleter alerts.FilterDeleter
 }
 
 func getOpts(opts []*api.SdkAlertsOption) []alerts.Option {
@@ -99,10 +99,10 @@ func getFilters(queries []*api.SdkAlertsQuery) []alerts.Filter {
 	return filters
 }
 
-// Enumerate implements api.OpenStorageAlertsServer for AlertsServer.
+// Enumerate implements api.OpenStorageAlertsServer for alertsServer.
 // Input context should ideally have a deadline, in which case, a
 // graceful exit is ensured within that deadline.
-func (g *AlertsServer) Enumerate(ctx context.Context,
+func (g *alertsServer) Enumerate(ctx context.Context,
 	request *api.SdkAlertsEnumerateRequest) (*api.SdkAlertsEnumerateResponse, error) {
 	queries := request.GetQueries()
 	if queries == nil {
@@ -129,7 +129,7 @@ func (g *AlertsServer) Enumerate(ctx context.Context,
 	// spawn err-group process.
 	// collect output using mutex.
 	group.Go(func() error {
-		if out, err := g.FilterDeleter.Enumerate(filters...); err != nil {
+		if out, err := g.filterDeleter.Enumerate(filters...); err != nil {
 			return err
 		} else {
 			mu.Lock()
@@ -158,10 +158,10 @@ func (g *AlertsServer) Enumerate(ctx context.Context,
 	}
 }
 
-// Delete implements api.OpenStorageAlertsServer for AlertsServer.
+// Delete implements api.OpenStorageAlertsServer for alertsServer.
 // Input context should ideally have a deadline, in which case, a
 // graceful exit is ensured within that deadline.
-func (g *AlertsServer) Delete(ctx context.Context,
+func (g *alertsServer) Delete(ctx context.Context,
 	request *api.SdkAlertsDeleteRequest) (*api.SdkAlertsDeleteResponse, error) {
 	queries := request.GetQueries()
 	if queries == nil {
@@ -186,7 +186,7 @@ func (g *AlertsServer) Delete(ctx context.Context,
 
 	// spawn err-group process.
 	group.Go(func() error {
-		return g.FilterDeleter.Delete(filters...)
+		return g.filterDeleter.Delete(filters...)
 	})
 
 	// wait for err-group processes to be done
