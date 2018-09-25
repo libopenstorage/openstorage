@@ -309,7 +309,7 @@ message VolumeSpec {
   // Sharedv4 is true if this volume can be accessed via sharedv4.
   bool sharedv4 = 26;
   // QueueDepth defines the desired block device queue depth
-  int32 queue_depth = 27;
+  uint32 queue_depth = 27;
   // Use to force a file system type which is not recommended.
   // The driver may still refuse to use the file system type.
   bool force_unsupported_fs_type = 28;
@@ -350,7 +350,7 @@ message VolumeSpecUpdate {
   // Sharedv4 is true if this volume can be accessed via sharedv4.
   oneof sharedv4_opt { bool sharedv4 = 24; }
   // QueueDepth defines the desired block device queue depth
-  oneof queue_depth_opt { int32 queue_depth = 25; }
+  oneof queue_depth_opt { uint32 queue_depth = 25; }
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure

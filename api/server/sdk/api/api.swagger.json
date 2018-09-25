@@ -2136,7 +2136,7 @@
           "type": "string"
         },
         "queue_depth": {
-          "format": "int32",
+          "format": "int64",
           "title": "QueueDepth defines the desired block device queue depth",
           "type": "integer"
         },
@@ -2216,7 +2216,7 @@
           "type": "string"
         },
         "queue_depth": {
-          "format": "int32",
+          "format": "int64",
           "type": "integer"
         },
         "replica_set": {
