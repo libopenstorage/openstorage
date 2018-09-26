@@ -127,9 +127,7 @@ func New(config *ServerConfig) (*Server, error) {
 		credentialServer: &CredentialServer{
 			driver: d,
 		},
-		alertsServer: &alertsServer{
-			filterDeleter: config.AlertsFilterDeleter,
-		},
+		alertsServer: NewAlertsServer(config.AlertsFilterDeleter),
 	}, nil
 }
 
