@@ -5,6 +5,11 @@
 
 ## Releases
 
+### v0.12.0 - Tech Preview (9/27/2018)
+
+* Moved MountAttach service REST endpoints to their own namespace
+* Added new MountAttach to SdkSErviceCapability
+
 ### v0.11.0 - Tech Preview (9/25/2018)
 
 * New RPC in service called OpenStorageAlerts has been created and documented to
@@ -14,7 +19,6 @@
 
 * New service called OpenStorageAlerts has been created and documented to
   allow querying alert events.
-
 
 ### v0.9.0 - Tech Preview (9/18/2018)
 

@@ -65,6 +65,8 @@ func TestIdentityCapabilities(t *testing.T) {
 		api.SdkServiceCapability_OpenStorageService_OBJECT_STORAGE,
 		api.SdkServiceCapability_OpenStorageService_SCHEDULE_POLICY,
 		api.SdkServiceCapability_OpenStorageService_VOLUME,
+		api.SdkServiceCapability_OpenStorageService_ALERTS,
+		api.SdkServiceCapability_OpenStorageService_MOUNT_ATTACH,
 	}
 
 	for _, cap := range expectedCapabilities {

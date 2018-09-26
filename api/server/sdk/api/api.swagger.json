@@ -23,9 +23,10 @@
         "OBJECT_STORAGE",
         "SCHEDULE_POLICY",
         "VOLUME",
-        "ALERTS"
+        "ALERTS",
+        "MOUNT_ATTACH"
       ],
-      "title": "- UNKNOWN: Unknown service\n - CLUSTER: Cluster management\n - CLOUD_BACKUP: Cloud backup of volumes management\n - CREDENTIALS: Credentials management\n - NODE: Node management\n - OBJECT_STORAGE: Object Storage management\n - SCHEDULE_POLICY: Schedule policy management\n - VOLUME: Volume management\n - ALERTS: Alert enumeration",
+      "title": "- UNKNOWN: Unknown service\n - CLUSTER: Cluster management\n - CLOUD_BACKUP: Cloud backup of volumes management\n - CREDENTIALS: Credentials management\n - NODE: Node management\n - OBJECT_STORAGE: Object Storage management\n - SCHEDULE_POLICY: Schedule policy management\n - VOLUME: Volume management\n - ALERTS: Alert enumeration\n - MOUNT_ATTACH: Mount/Attach Support",
       "type": "string"
     },
     "apiAlert": {
@@ -2315,7 +2316,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.11.0"
+    "version": "0.12.0"
   },
   "paths": {
     "/v1/alerts": {
@@ -2875,6 +2876,114 @@
         ]
       }
     },
+    "/v1/mountattach/attach": {
+      "post": {
+        "operationId": "Attach",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeAttachRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeAttachResponse"
+            }
+          }
+        },
+        "summary": "Attach attaches device to the host that the client is communicating with.",
+        "tags": [
+          "OpenStorageMountAttach"
+        ]
+      }
+    },
+    "/v1/mountattach/detach": {
+      "post": {
+        "operationId": "Detach",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeDetachRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeDetachResponse"
+            }
+          }
+        },
+        "summary": "Detaches a the volume from the host",
+        "tags": [
+          "OpenStorageMountAttach"
+        ]
+      }
+    },
+    "/v1/mountattach/mount": {
+      "post": {
+        "operationId": "Mount",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeMountRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeMountResponse"
+            }
+          }
+        },
+        "summary": "Mount mounts an attached volume in the host that the client is communicating with",
+        "tags": [
+          "OpenStorageMountAttach"
+        ]
+      }
+    },
+    "/v1/mountattach/unmount": {
+      "post": {
+        "operationId": "Unmount",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeUnmountRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeUnmountResponse"
+            }
+          }
+        },
+        "summary": "Unmount unmounts a mounted volume in the host that the client is communicating with",
+        "tags": [
+          "OpenStorageMountAttach"
+        ]
+      }
+    },
     "/v1/nodes": {
       "get": {
         "operationId": "Enumerate",
@@ -3198,33 +3307,6 @@
         ]
       }
     },
-    "/v1/volumes/attach": {
-      "post": {
-        "operationId": "Attach",
-        "parameters": [
-          {
-            "in": "body",
-            "name": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeAttachRequest"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeAttachResponse"
-            }
-          }
-        },
-        "summary": "Attach attaches device to the host that the client is communicating with.",
-        "tags": [
-          "OpenStorageMountAttach"
-        ]
-      }
-    },
     "/v1/volumes/clone": {
       "post": {
         "operationId": "Clone",
@@ -3252,33 +3334,6 @@
         ]
       }
     },
-    "/v1/volumes/detach": {
-      "post": {
-        "operationId": "Detach",
-        "parameters": [
-          {
-            "in": "body",
-            "name": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeDetachRequest"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeDetachResponse"
-            }
-          }
-        },
-        "summary": "Detaches a the volume from the host",
-        "tags": [
-          "OpenStorageMountAttach"
-        ]
-      }
-    },
     "/v1/volumes/filters": {
       "post": {
         "operationId": "EnumerateWithFilters",
@@ -3303,33 +3358,6 @@
         "summary": "Enumerate returns a list of volume ids that match the labels if any are provided.",
         "tags": [
           "OpenStorageVolume"
-        ]
-      }
-    },
-    "/v1/volumes/mount": {
-      "post": {
-        "operationId": "Mount",
-        "parameters": [
-          {
-            "in": "body",
-            "name": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeMountRequest"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeMountResponse"
-            }
-          }
-        },
-        "summary": "Mount mounts an attached volume in the host that the client is communicating with",
-        "tags": [
-          "OpenStorageMountAttach"
         ]
       }
     },
@@ -3475,33 +3503,6 @@
         "summary": "Stats returns the statistics for the requested volume",
         "tags": [
           "OpenStorageVolume"
-        ]
-      }
-    },
-    "/v1/volumes/unmount": {
-      "post": {
-        "operationId": "Unmount",
-        "parameters": [
-          {
-            "in": "body",
-            "name": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeUnmountRequest"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeUnmountResponse"
-            }
-          }
-        },
-        "summary": "Unmount unmounts a mounted volume in the host that the client is communicating with",
-        "tags": [
-          "OpenStorageMountAttach"
         ]
       }
     },
