@@ -452,6 +452,8 @@ type CloudBackupScheduleInfo struct {
 	GroupID string
 	// Labels indicates a volume group for this cloudsnap schedule
 	Labels map[string]string
+	// Full indicates if scheduled backups must be full always
+	Full bool
 }
 
 type CloudBackupSchedCreateRequest struct {
@@ -472,6 +474,8 @@ type CloudBackupGroupSchedCreateRequest struct {
 	// MaxBackups are the maximum number of backups retained
 	// in cloud.Older backups are deleted
 	MaxBackups uint
+	// Full indicates if scheduled backups must be full always
+	Full bool
 }
 
 type CloudBackupSchedCreateResponse struct {

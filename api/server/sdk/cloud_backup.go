@@ -278,6 +278,7 @@ func (s *CloudBackupServer) SchedCreate(
 	bkpRequest.CredentialUUID = req.GetCloudSchedInfo().GetCredentialId()
 	bkpRequest.Schedule = string(sched)
 	bkpRequest.MaxBackups = uint(req.GetCloudSchedInfo().GetMaxBackups())
+	bkpRequest.Full = req.GetCloudSchedInfo().GetFull()
 
 	// Create the backup
 	schedResp, err := s.driver.CloudBackupSchedCreate(&bkpRequest)
@@ -350,6 +351,7 @@ func ToSdkCloudBackupdScheduleInfo(s api.CloudBackupScheduleInfo) *api.SdkCloudB
 		// Not sure about go and protobuf type conversion, converting to higher type
 		// converting uint to uint64
 		MaxBackups: uint64(s.MaxBackups),
+		Full:       s.Full,
 	}
 	return cloudSched
 }
