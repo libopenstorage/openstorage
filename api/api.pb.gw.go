@@ -1975,13 +1975,13 @@ func RegisterOpenStorageMountAttachHandlerClient(ctx context.Context, mux *runti
 }
 
 var (
-	pattern_OpenStorageMountAttach_Attach_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "volumes", "attach"}, ""))
+	pattern_OpenStorageMountAttach_Attach_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "mountattach", "attach"}, ""))
 
-	pattern_OpenStorageMountAttach_Detach_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "volumes", "detach"}, ""))
+	pattern_OpenStorageMountAttach_Detach_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "mountattach", "detach"}, ""))
 
-	pattern_OpenStorageMountAttach_Mount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "volumes", "mount"}, ""))
+	pattern_OpenStorageMountAttach_Mount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "mountattach", "mount"}, ""))
 
-	pattern_OpenStorageMountAttach_Unmount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "volumes", "unmount"}, ""))
+	pattern_OpenStorageMountAttach_Unmount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "mountattach", "unmount"}, ""))
 )
 
 var (

@@ -1101,7 +1101,7 @@ service OpenStorageMountAttach {
   rpc Attach(SdkVolumeAttachRequest)
     returns (SdkVolumeAttachResponse) {
       option(google.api.http) = {
-        post: "/v1/volumes/attach"
+        post: "/v1/mountattach/attach"
         body: "*"
       };
     }
@@ -1110,7 +1110,7 @@ service OpenStorageMountAttach {
   rpc Detach(SdkVolumeDetachRequest)
     returns (SdkVolumeDetachResponse) {
       option(google.api.http) = {
-        post: "/v1/volumes/detach"
+        post: "/v1/mountattach/detach"
         body: "*"
       };
     }
@@ -1119,7 +1119,7 @@ service OpenStorageMountAttach {
   rpc Mount(SdkVolumeMountRequest)
     returns(SdkVolumeMountResponse) {
       option(google.api.http) = {
-        post: "/v1/volumes/mount"
+        post: "/v1/mountattach/mount"
         body: "*"
       };
     }
@@ -1128,7 +1128,7 @@ service OpenStorageMountAttach {
   rpc Unmount(SdkVolumeUnmountRequest)
       returns(SdkVolumeUnmountResponse) {
       option(google.api.http) = {
-        post: "/v1/volumes/unmount"
+        post: "/v1/mountattach/unmount"
         body: "*"
       };
     }
@@ -2343,6 +2343,8 @@ message SdkServiceCapability {
       VOLUME = 7;
       // Alert enumeration
       ALERTS = 8;
+      // Mount/Attach Support
+      MOUNT_ATTACH = 9;
     }
 
     // Type of service supported
@@ -2375,7 +2377,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 11;
+    Minor = 12;
     // SDK version patch value of this specification
     Patch = 0;
   }

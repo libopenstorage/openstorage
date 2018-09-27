@@ -93,6 +93,13 @@ func (s *IdentityServer) Capabilities(
 			},
 		},
 	}
+	capMountAttach := &api.SdkServiceCapability{
+		Type: &api.SdkServiceCapability_Service{
+			Service: &api.SdkServiceCapability_OpenStorageService{
+				Type: api.SdkServiceCapability_OpenStorageService_MOUNT_ATTACH,
+			},
+		},
+	}
 
 	return &api.SdkIdentityCapabilitiesResponse{
 		Capabilities: []*api.SdkServiceCapability{
@@ -104,6 +111,7 @@ func (s *IdentityServer) Capabilities(
 			capSchedulePolicy,
 			capVolume,
 			capAlerts,
+			capMountAttach,
 		},
 	}, nil
 }
