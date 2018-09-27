@@ -686,6 +686,11 @@
           "title": "The cloud credential used with this schedule",
           "type": "string"
         },
+        "full": {
+          "description": "Full indicates if scheduled backups should always be full and never incremental.",
+          "format": "boolean",
+          "type": "boolean"
+        },
         "max_backups": {
           "format": "uint64",
           "title": "MaxBackups are the maximum number of backups retained\nin cloud.Older backups are deleted",
@@ -2316,7 +2321,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.12.0"
+    "version": "0.13.0"
   },
   "paths": {
     "/v1/alerts": {

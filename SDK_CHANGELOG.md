@@ -5,6 +5,11 @@
 
 ## Releases
 
+### v0.13.0 - Tech Preview (9/27/2018)
+
+* Added new field to CloudBackup schedules that allows scheduled backups
+  to be always full and never incremental.
+
 ### v0.12.0 - Tech Preview (9/27/2018)
 
 * Moved MountAttach service REST endpoints to their own namespace
