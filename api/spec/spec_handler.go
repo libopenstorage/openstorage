@@ -101,7 +101,8 @@ var (
 	compressedRegex   = regexp.MustCompile(api.SpecCompressed + "=([A-Za-z]+),?")
 	snapScheduleRegex = regexp.MustCompile(api.SpecSnapshotSchedule +
 		`=([A-Za-z0-9:;@=#]+),?`)
-	ioProfileRegex = regexp.MustCompile(api.SpecIoProfile + "=([0-9A-Za-z_-]+),?")
+	ioProfileRegex              = regexp.MustCompile(api.SpecIoProfile + "=([0-9A-Za-z_-]+),?")
+	forceUnsupportedFsTypeRegex = regexp.MustCompile(api.SpecForceUnsupportedFsType + "=([A-Za-z]+),?")
 )
 
 type specHandler struct {
@@ -418,6 +419,9 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, ioProfile := d.getVal(ioProfileRegex, str); ok {
 		opts[api.SpecIoProfile] = ioProfile
+	}
+	if ok, forceUnsupportedFsType := d.getVal(forceUnsupportedFsTypeRegex, str); ok {
+		opts[api.SpecForceUnsupportedFsType] = forceUnsupportedFsType
 	}
 
 	return true, opts, name
