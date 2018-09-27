@@ -39,6 +39,11 @@ type alertsServer struct {
 	filterDeleter alerts.FilterDeleter
 }
 
+// NewAlertsServer provides an instance of alerts server interface.
+func NewAlertsServer(filterDeleter alerts.FilterDeleter) api.OpenStorageAlertsServer {
+	return &alertsServer{filterDeleter: filterDeleter}
+}
+
 func getOpts(opts []*api.SdkAlertsOption) []alerts.Option {
 	var options []alerts.Option
 
