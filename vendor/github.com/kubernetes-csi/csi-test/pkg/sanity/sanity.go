@@ -18,11 +18,12 @@ package sanity
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
-	"sync"
 	"testing"
 
 	"github.com/kubernetes-csi/csi-test/utils"
+	yaml "gopkg.in/yaml.v2"
 
 	"google.golang.org/grpc"
 
@@ -30,49 +31,88 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var (
-	config *Config
-	conn   *grpc.ClientConn
-	lock   sync.Mutex
-)
-
-// Config provides the configuration for the sanity tests
-type Config struct {
-	TargetPath  string
-	StagingPath string
-	Address     string
+// CSISecrets consists of secrets used in CSI credentials.
+type CSISecrets struct {
+	CreateVolumeSecret              map[string]string `yaml:"CreateVolumeSecret"`
+	DeleteVolumeSecret              map[string]string `yaml:"DeleteVolumeSecret"`
+	ControllerPublishVolumeSecret   map[string]string `yaml:"ControllerPublishVolumeSecret"`
+	ControllerUnpublishVolumeSecret map[string]string `yaml:"ControllerUnpublishVolumeSecret"`
+	NodeStageVolumeSecret           map[string]string `yaml:"NodeStageVolumeSecret"`
+	NodePublishVolumeSecret         map[string]string `yaml:"NodePublishVolumeSecret"`
+	CreateSnapshotSecret            map[string]string `yaml:"CreateSnapshotSecret"`
+	DeleteSnapshotSecret            map[string]string `yaml:"DeleteSnapshotSecret"`
 }
 
-// Test will test the CSI driver at the specified address
-func Test(t *testing.T, reqConfig *Config) {
-	lock.Lock()
-	defer lock.Unlock()
+// Config provides the configuration for the sanity tests. It
+// needs to be initialized by the user of the sanity package.
+type Config struct {
+	TargetPath     string
+	StagingPath    string
+	Address        string
+	SecretsFile    string
+	TestVolumeSize int64
+}
 
-	config = reqConfig
+// SanityContext holds the variables that each test can depend on. It
+// gets initialized before each test block runs.
+type SanityContext struct {
+	Config  *Config
+	Conn    *grpc.ClientConn
+	Secrets *CSISecrets
+}
+
+// Test will test the CSI driver at the specified address by
+// setting up a Ginkgo suite and running it.
+func Test(t *testing.T, reqConfig *Config) {
+	sc := &SanityContext{
+		Config: reqConfig,
+	}
+
+	registerTestsInGinkgo(sc)
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "CSI Driver Test Suite")
 }
 
-var _ = BeforeSuite(func() {
+func GinkgoTest(reqConfig *Config) {
+	sc := &SanityContext{
+		Config: reqConfig,
+	}
+
+	registerTestsInGinkgo(sc)
+}
+
+func (sc *SanityContext) setup() {
 	var err error
 
+	if len(sc.Config.SecretsFile) > 0 {
+		sc.Secrets, err = loadSecrets(sc.Config.SecretsFile)
+		Expect(err).NotTo(HaveOccurred())
+	}
+
 	By("connecting to CSI driver")
-	conn, err = utils.Connect(config.Address)
+	sc.Conn, err = utils.Connect(sc.Config.Address)
 	Expect(err).NotTo(HaveOccurred())
 
 	By("creating mount and staging directories")
-	err = createMountTargetLocation(config.TargetPath)
+	err = createMountTargetLocation(sc.Config.TargetPath)
 	Expect(err).NotTo(HaveOccurred())
-})
+	if len(sc.Config.StagingPath) > 0 {
+		err = createMountTargetLocation(sc.Config.StagingPath)
+		Expect(err).NotTo(HaveOccurred())
+	}
+}
 
-var _ = AfterSuite(func() {
-	conn.Close()
-})
+func (sc *SanityContext) teardown() {
+	if sc.Conn != nil {
+		sc.Conn.Close()
+		sc.Conn = nil
+	}
+}
 
 func createMountTargetLocation(targetPath string) error {
 	fileInfo, err := os.Stat(targetPath)
 	if err != nil && os.IsNotExist(err) {
-		return os.Mkdir(targetPath, 0755)
+		return os.MkdirAll(targetPath, 0755)
 	} else if err != nil {
 		return err
 	}
@@ -81,4 +121,20 @@ func createMountTargetLocation(targetPath string) error {
 	}
 
 	return nil
+}
+
+func loadSecrets(path string) (*CSISecrets, error) {
+	var creds CSISecrets
+
+	yamlFile, err := ioutil.ReadFile(path)
+	if err != nil {
+		return &creds, fmt.Errorf("failed to read file %q: #%v", path, err)
+	}
+
+	err = yaml.Unmarshal(yamlFile, &creds)
+	if err != nil {
+		return &creds, fmt.Errorf("error unmarshaling yaml: #%v", err)
+	}
+
+	return &creds, nil
 }

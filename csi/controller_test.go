@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/golang/protobuf/ptypes"
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/portworx/kvdb"
 
@@ -47,6 +49,7 @@ func TestControllerGetCapabilities(t *testing.T) {
 	// Verify
 	expectedValues := []csi.ControllerServiceCapability_RPC_Type{
 		csi.ControllerServiceCapability_RPC_LIST_VOLUMES,
+		csi.ControllerServiceCapability_RPC_CREATE_DELETE_SNAPSHOT,
 		csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME,
 	}
 	caps := r.GetCapabilities()
@@ -1581,7 +1584,99 @@ func TestControllerCreateVolume(t *testing.T) {
 	assert.NotEqual(t, "true", volumeInfo.GetAttributes()[api.SpecShared])
 }
 
-func TestControllerCreateVolumeSnapshot(t *testing.T) {
+func TestControllerCreateVolumeFromSnapshot(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	// Setup request
+	mockParentID := "parendId"
+	name := "myvol"
+	size := int64(1234)
+	req := &csi.CreateVolumeRequest{
+		Name: name,
+		VolumeCapabilities: []*csi.VolumeCapability{
+			&csi.VolumeCapability{},
+		},
+		CapacityRange: &csi.CapacityRange{
+			RequiredBytes: size,
+		},
+		VolumeContentSource: &csi.VolumeContentSource{
+			Type: &csi.VolumeContentSource_Snapshot{
+				Snapshot: &csi.VolumeContentSource_SnapshotSource{
+					Id: mockParentID,
+				},
+			},
+		},
+	}
+
+	// Setup mock functions
+	id := "myid"
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{mockParentID}).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id: mockParentID,
+				},
+			}, nil).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Snapshot(mockParentID, false, &api.VolumeLocator{
+				Name: name,
+			},
+				false).
+			Return(id, nil).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{id}).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id: id,
+					Locator: &api.VolumeLocator{
+						Name: name,
+					},
+					Spec: &api.VolumeSpec{
+						Size: uint64(size),
+					},
+					Source: &api.Source{
+						Parent: mockParentID,
+					},
+				},
+			}, nil).
+			Times(1),
+	)
+
+	r, err := c.CreateVolume(context.Background(), req)
+	assert.Nil(t, err)
+	assert.NotNil(t, r)
+	volumeInfo := r.GetVolume()
+
+	assert.Equal(t, id, volumeInfo.GetId())
+	assert.Equal(t, size, volumeInfo.GetCapacityBytes())
+	assert.NotEqual(t, "true", volumeInfo.GetAttributes()[api.SpecShared])
+	assert.Equal(t, mockParentID, volumeInfo.GetAttributes()[api.SpecParent])
+}
+
+func TestControllerCreateVolumeSnapshotThroughParameters(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
@@ -1778,4 +1873,204 @@ func TestControllerDeleteVolume(t *testing.T) {
 
 	_, err = c.DeleteVolume(context.Background(), req)
 	assert.Nil(t, err)
+}
+
+func TestControllerCreateSnapshotBadParameters(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	_, err := c.CreateSnapshot(context.Background(), &csi.CreateSnapshotRequest{})
+	assert.Error(t, err)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "id must be provided")
+
+	_, err = c.CreateSnapshot(context.Background(), &csi.CreateSnapshotRequest{
+		SourceVolumeId: "id",
+	})
+	assert.Error(t, err)
+	serverError, ok = status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "Name must be provided")
+}
+
+func TestControllerCreateSnapshotIdempotent(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	name := "name"
+	volume := "id"
+	req := &csi.CreateSnapshotRequest{
+		Name:           name,
+		SourceVolumeId: volume,
+	}
+	snapInfo := &api.Volume{
+		Id: name,
+		Source: &api.Source{
+			Parent: volume,
+		},
+		Ctime: ptypes.TimestampNow(),
+		Locator: &api.VolumeLocator{
+			Name: name,
+		},
+	}
+
+	// Snapshot already exists
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return([]*api.Volume{snapInfo}, nil).
+			Times(1),
+	)
+
+	r, err := c.CreateSnapshot(context.Background(), req)
+	assert.NoError(t, err)
+	assert.Equal(t, name, r.GetSnapshot().GetId())
+	assert.Equal(t, snapInfo.Source.Parent, r.GetSnapshot().GetSourceVolumeId())
+}
+
+func TestControllerCreateSnapshot(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	// Setup request
+	name := "name"
+	volume := "id"
+	req := &csi.CreateSnapshotRequest{
+		Name:           name,
+		SourceVolumeId: volume,
+		Parameters: map[string]string{
+			"labels": "hello=world",
+		},
+	}
+	snapInfo := &api.Volume{
+		Id: name,
+		Source: &api.Source{
+			Parent: volume,
+		},
+		Ctime: ptypes.TimestampNow(),
+		Locator: &api.VolumeLocator{
+			Name: name,
+		},
+	}
+	ctime, err := ptypes.Timestamp(snapInfo.GetCtime())
+	assert.NoError(t, err)
+
+	// Setup mock functions
+	id := "myid"
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Snapshot(volume, true, &api.VolumeLocator{
+				Name: name,
+				VolumeLabels: map[string]string{
+					"hello": "world",
+				},
+			}, false).
+			Return(id, nil).
+			Times(1),
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{id}).
+			Return([]*api.Volume{snapInfo}, nil).
+			Times(1),
+	)
+
+	r, err := c.CreateSnapshot(context.Background(), req)
+	assert.Nil(t, err)
+	assert.NotNil(t, r)
+	assert.Equal(t, id, r.GetSnapshot().GetId())
+	assert.Equal(t, ctime.Unix(), r.GetSnapshot().GetCreatedAt())
+	assert.Equal(t, volume, r.GetSnapshot().GetSourceVolumeId())
+}
+
+func TestControllerDeleteSnapshotBadParameters(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	_, err := c.DeleteSnapshot(context.Background(), &csi.DeleteSnapshotRequest{})
+	assert.Error(t, err)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "id must be provided")
+}
+
+func TestControllerDeleteSnapshotIdempotent(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	id := "id"
+	// Snapshot already exists
+	s.MockDriver().
+		EXPECT().
+		Inspect([]string{id}).
+		Return(nil, kvdb.ErrNotFound).
+		Times(1)
+
+	_, err := c.DeleteSnapshot(context.Background(), &csi.DeleteSnapshotRequest{
+		SnapshotId: id,
+	})
+	assert.NoError(t, err)
+}
+
+func TestControllerDeleteSnapshot(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	id := "id"
+
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{id}).
+			Return([]*api.Volume{
+				&api.Volume{},
+			}, nil).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Delete(id).
+			Return(nil).
+			Times(1),
+	)
+
+	_, err := c.DeleteSnapshot(context.Background(), &csi.DeleteSnapshotRequest{
+		SnapshotId: id,
+	})
+	assert.NoError(t, err)
 }
