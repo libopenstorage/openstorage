@@ -106,4 +106,14 @@ func TestForceUnsupportedFsType(t *testing.T) {
 		api.SpecForceUnsupportedFsType: "blah",
 	})
 	require.Error(t, err)
+
+	spec = testSpecFromString(t, api.SpecForceUnsupportedFsType, "true")
+	require.True(t, spec.ForceUnsupportedFsType)
+
+	spec = testSpecFromString(t, api.SpecForceUnsupportedFsType, "false")
+	require.False(t, spec.ForceUnsupportedFsType)
+
+	// Test that it is false when not present
+	spec = testSpecFromString(t, api.SpecRack, "ignore")
+	require.False(t, spec.ForceUnsupportedFsType)
 }
