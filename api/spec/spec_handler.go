@@ -311,6 +311,12 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			} else {
 				spec.IoProfile = ioProfile
 			}
+		case api.SpecForceUnsupportedFsType:
+			if forceFs, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.ForceUnsupportedFsType = forceFs
+			}
 		default:
 			spec.VolumeLabels[k] = v
 		}
