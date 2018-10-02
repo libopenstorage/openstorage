@@ -50,6 +50,10 @@ const (
 	// SpecBestEffortLocationProvisioning default is false. If set provisioning request will succeed
 	// even if specified data location parameters could not be satisfied.
 	SpecBestEffortLocationProvisioning = "best_effort_location_provisioning"
+	// SpecForceUnsuppportedFsType is of type boolean and if true it sets
+	// the VolumeSpec.force_unsupported_fs_type. When set to true it asks
+	// the driver to use an unsupported value of VolumeSpec.format if possible
+	SpecForceUnsupportedFsType = "force_unsupported_fs_type"
 )
 
 // OptionKey specifies a set of recognized query params.
@@ -452,6 +456,8 @@ type CloudBackupScheduleInfo struct {
 	GroupID string
 	// Labels indicates a volume group for this cloudsnap schedule
 	Labels map[string]string
+	// Full indicates if scheduled backups must be full always
+	Full bool
 }
 
 type CloudBackupSchedCreateRequest struct {
@@ -472,6 +478,8 @@ type CloudBackupGroupSchedCreateRequest struct {
 	// MaxBackups are the maximum number of backups retained
 	// in cloud.Older backups are deleted
 	MaxBackups uint
+	// Full indicates if scheduled backups must be full always
+	Full bool
 }
 
 type CloudBackupSchedCreateResponse struct {

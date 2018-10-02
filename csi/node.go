@@ -31,6 +31,23 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+func (s *OsdCsiServer) NodeGetInfo(
+	ctx context.Context,
+	req *csi.NodeGetInfoRequest,
+) (*csi.NodeGetInfoResponse, error) {
+
+	clus, err := s.cluster.Enumerate()
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Unable to Enumerate cluster: %s", err)
+	}
+
+	result := &csi.NodeGetInfoResponse{
+		NodeId: clus.NodeId,
+	}
+
+	return result, nil
+}
+
 // NodeGetId is a CSI API which gets the PX NodeId for the local node
 func (s *OsdCsiServer) NodeGetId(
 	ctx context.Context,

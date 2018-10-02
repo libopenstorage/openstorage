@@ -12,8 +12,8 @@ func NewManager(kv kvdb.Kvdb, options ...Option) (Manager, error) {
 	return newManager(kv, options...)
 }
 
-// NewReader obtains instance of Reader for alerts enumeration.
-func NewReader(kv kvdb.Kvdb, options ...Option) (Reader, error) {
+// NewFilterDeleter obtains instance of FilterDeleter for alerts enumeration and deletion.
+func NewFilterDeleter(kv kvdb.Kvdb, options ...Option) (FilterDeleter, error) {
 	return newManager(kv, options...)
 }
 

@@ -45,6 +45,23 @@ func request_OpenStorageAlerts_Enumerate_0(ctx context.Context, marshaler runtim
 
 }
 
+var (
+	filter_OpenStorageAlerts_Delete_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_OpenStorageAlerts_Delete_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageAlertsClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SdkAlertsDeleteRequest
+	var metadata runtime.ServerMetadata
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_OpenStorageAlerts_Delete_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.Delete(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
 func request_OpenStorageIdentity_Capabilities_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageIdentityClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq SdkIdentityCapabilitiesRequest
 	var metadata runtime.ServerMetadata
@@ -982,15 +999,48 @@ func RegisterOpenStorageAlertsHandlerClient(ctx context.Context, mux *runtime.Se
 
 	})
 
+	mux.Handle("DELETE", pattern_OpenStorageAlerts_Delete_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_OpenStorageAlerts_Delete_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_OpenStorageAlerts_Delete_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	return nil
 }
 
 var (
 	pattern_OpenStorageAlerts_Enumerate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "alerts"}, ""))
+
+	pattern_OpenStorageAlerts_Delete_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "alerts"}, ""))
 )
 
 var (
 	forward_OpenStorageAlerts_Enumerate_0 = runtime.ForwardResponseMessage
+
+	forward_OpenStorageAlerts_Delete_0 = runtime.ForwardResponseMessage
 )
 
 // RegisterOpenStorageIdentityHandlerFromEndpoint is same as RegisterOpenStorageIdentityHandler but
@@ -1925,13 +1975,13 @@ func RegisterOpenStorageMountAttachHandlerClient(ctx context.Context, mux *runti
 }
 
 var (
-	pattern_OpenStorageMountAttach_Attach_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "volumes", "attach"}, ""))
+	pattern_OpenStorageMountAttach_Attach_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "mountattach", "attach"}, ""))
 
-	pattern_OpenStorageMountAttach_Detach_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "volumes", "detach"}, ""))
+	pattern_OpenStorageMountAttach_Detach_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "mountattach", "detach"}, ""))
 
-	pattern_OpenStorageMountAttach_Mount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "volumes", "mount"}, ""))
+	pattern_OpenStorageMountAttach_Mount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "mountattach", "mount"}, ""))
 
-	pattern_OpenStorageMountAttach_Unmount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "volumes", "unmount"}, ""))
+	pattern_OpenStorageMountAttach_Unmount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "mountattach", "unmount"}, ""))
 )
 
 var (

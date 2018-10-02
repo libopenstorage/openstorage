@@ -101,7 +101,8 @@ var (
 	compressedRegex   = regexp.MustCompile(api.SpecCompressed + "=([A-Za-z]+),?")
 	snapScheduleRegex = regexp.MustCompile(api.SpecSnapshotSchedule +
 		`=([A-Za-z0-9:;@=#]+),?`)
-	ioProfileRegex = regexp.MustCompile(api.SpecIoProfile + "=([0-9A-Za-z_-]+),?")
+	ioProfileRegex              = regexp.MustCompile(api.SpecIoProfile + "=([0-9A-Za-z_-]+),?")
+	forceUnsupportedFsTypeRegex = regexp.MustCompile(api.SpecForceUnsupportedFsType + "=([A-Za-z]+),?")
 )
 
 type specHandler struct {
@@ -207,7 +208,7 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			if queueDepth, err := units.Parse(v); err != nil {
 				return nil, nil, nil, err
 			} else {
-				spec.QueueDepth = int32(queueDepth)
+				spec.QueueDepth = uint32(queueDepth)
 			}
 		case api.SpecHaLevel:
 			haLevel, _ := strconv.ParseInt(v, 10, 64)
@@ -311,6 +312,12 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			} else {
 				spec.IoProfile = ioProfile
 			}
+		case api.SpecForceUnsupportedFsType:
+			if forceFs, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.ForceUnsupportedFsType = forceFs
+			}
 		default:
 			spec.VolumeLabels[k] = v
 		}
@@ -412,6 +419,9 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, ioProfile := d.getVal(ioProfileRegex, str); ok {
 		opts[api.SpecIoProfile] = ioProfile
+	}
+	if ok, forceUnsupportedFsType := d.getVal(forceUnsupportedFsTypeRegex, str); ok {
+		opts[api.SpecForceUnsupportedFsType] = forceUnsupportedFsType
 	}
 
 	return true, opts, name

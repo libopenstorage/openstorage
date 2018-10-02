@@ -189,9 +189,9 @@ message StorageResource {
   // Storage medium.
   StorageMedium medium = 3;
   // True if this device is online.
-  bool online = 4;;
+  bool online = 4;
   // IOPS
-  uint64 iops = 5;;
+  uint64 iops = 5;
   // SeqWrite
   double seq_write = 6;
   // SeqRead
@@ -199,7 +199,7 @@ message StorageResource {
   // RandRW
   double randRW  = 8;
   // Total size in bytes.
-  uint64 size = 9;;
+  uint64 size = 9;
   // Physical Bytes used.
   uint64 used = 10;
   // True if this device is rotational.
@@ -309,7 +309,7 @@ message VolumeSpec {
   // Sharedv4 is true if this volume can be accessed via sharedv4.
   bool sharedv4 = 26;
   // QueueDepth defines the desired block device queue depth
-  int32 queue_depth = 27;
+  uint32 queue_depth = 27;
   // Use to force a file system type which is not recommended.
   // The driver may still refuse to use the file system type.
   bool force_unsupported_fs_type = 28;
@@ -350,7 +350,7 @@ message VolumeSpecUpdate {
   // Sharedv4 is true if this volume can be accessed via sharedv4.
   oneof sharedv4_opt { bool sharedv4 = 24; }
   // QueueDepth defines the desired block device queue depth
-  oneof queue_depth_opt { int32 queue_depth = 25; }
+  oneof queue_depth_opt { uint32 queue_depth = 25; }
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
@@ -491,29 +491,29 @@ message SdkAlertsCountSpan {
 // SdkAlertsOption contains options for filtering alerts.
 message SdkAlertsOption {
     oneof opt {
-        // min_severity_type to query using severity type.
+        // Query using minimum severity type.
         SeverityType min_severity_type = 1;
-        // is_cleared indicates querying for alerts cleared flag.
+        // Query using cleared flag.
         bool is_cleared = 2;
-        // time_span to query in a given time span range.
+        // Query using a time span during which alert was last seen.
         SdkAlertsTimeSpan time_span = 3;
-        // count_span to query in a given count range.
+        // Query using a count span in which alert count exists.
         SdkAlertsCountSpan count_span = 4;
     }
 }
 
 // SdkAlertsResourceTypeQuery queries for alerts using only resource id.
 message SdkAlertsResourceTypeQuery {
-    // resource_type is the resource type of alerts to query with.
+    // Resource type used to build query.
     ResourceType resource_type = 1;
 }
 
 // SdkAlertsAlertTypeQuery queries for alerts using alert type
 // and it requires that resource type be provided as well.
 message SdkAlertsAlertTypeQuery {
-    // resource_type is the resource type of alerts to query with.
+    // Resource type used to build query.
     ResourceType resource_type = 1;
-    // alert_type is the alert type of the alerts to query with.
+    // Alert type used to build query.
     int64 alert_type = 2;
 }
 
@@ -521,11 +521,11 @@ message SdkAlertsAlertTypeQuery {
 // and it requires that both alert type and resource type be provided
 // as well.
 message SdkAlertsResourceIdQuery {
-    // resource_type is the resource type of alerts to query with.
+    // Resource type used to build query.
     ResourceType resource_type = 1;
-    // alert_type is the alert type of the alerts to query with.
+    // Alert type used to build query.
     int64 alert_type = 2;
-    // resource_id is the resource id of the alerts to query with.
+    // Resource ID used to build query.
     string resource_id = 3;
 }
 
@@ -533,18 +533,22 @@ message SdkAlertsResourceIdQuery {
 // Each query object is one of the three query types and a list of
 // options.
 message SdkAlertsQuery {
+    // One of the query types can be used to build SdkAlertsQuery.
     oneof query {
+        // Query only using resource type.
         SdkAlertsResourceTypeQuery resource_type_query = 1;
+        // Query using alert type and resource type.
         SdkAlertsAlertTypeQuery alert_type_query = 2;
+        // Query using resource id, alert type and resource type.
         SdkAlertsResourceIdQuery resource_id_query = 3;
     }
-    // opts is a list of options associated with one of the queries.
+    // Opts is a list of options associated with one of the queries.
     repeated SdkAlertsOption opts = 4;
 }
 
 // SdkAlertsEnumerateRequest is a request message to enumerate alerts.
 message SdkAlertsEnumerateRequest {
-    // queries is a list of queries to find matching alerts.
+    // It is a list of queries to find matching alerts.
     // Output of each of these queries is added to a global pool
     // and returned as output of an RPC call.
     // In that sense alerts are fetched if they match any of the
@@ -554,9 +558,19 @@ message SdkAlertsEnumerateRequest {
 
 // SdkAlertsEnumerateResponse is a list of alerts.
 message SdkAlertsEnumerateResponse {
-    // alerts is a list of alert objects retured from RPC call.
+    // Response contains a list of alerts.
     repeated Alert alerts = 1;
 }
+
+// SdkAlertsDeleteRequest is a request message to delete alerts.
+message SdkAlertsDeleteRequest {
+  // It takes a list of queries to find matching alerts.
+  // Matching alerts are deleted.
+  repeated SdkAlertsQuery queries = 1;
+}
+
+// SdkAlertsDeleteResponse is empty.
+message SdkAlertsDeleteResponse {}
 
 // OpenStorageAlerts defines rpc's for alerts.
 service OpenStorageAlerts {
@@ -593,6 +607,24 @@ service OpenStorageAlerts {
     returns (SdkAlertsEnumerateResponse) {
         option(google.api.http) = {
                 get: "/v1/alerts"
+            };
+    }
+    // Delete allows deleting alerts.
+    //
+    // #### Delete
+    // Delete allows 3 different types of queries as defined below:
+    //
+    // * Query that takes only resource type as input
+    // * Query that takes resource type and alert type as input and
+    // * Query that takes resource id, alert type and resource type as input.
+    //
+    // #### Input
+    // SdkAlertsEnumerateRequest takes a list of such queries and all alerts
+    // that match at least one of the queries are deleted.
+    rpc Delete(SdkAlertsDeleteRequest)
+    returns (SdkAlertsDeleteResponse) {
+      option(google.api.http) = {
+                delete: "/v1/alerts"
             };
     }
 }
@@ -1069,7 +1101,7 @@ service OpenStorageMountAttach {
   rpc Attach(SdkVolumeAttachRequest)
     returns (SdkVolumeAttachResponse) {
       option(google.api.http) = {
-        post: "/v1/volumes/attach"
+        post: "/v1/mountattach/attach"
         body: "*"
       };
     }
@@ -1078,7 +1110,7 @@ service OpenStorageMountAttach {
   rpc Detach(SdkVolumeDetachRequest)
     returns (SdkVolumeDetachResponse) {
       option(google.api.http) = {
-        post: "/v1/volumes/detach"
+        post: "/v1/mountattach/detach"
         body: "*"
       };
     }
@@ -1087,7 +1119,7 @@ service OpenStorageMountAttach {
   rpc Mount(SdkVolumeMountRequest)
     returns(SdkVolumeMountResponse) {
       option(google.api.http) = {
-        post: "/v1/volumes/mount"
+        post: "/v1/mountattach/mount"
         body: "*"
       };
     }
@@ -1096,7 +1128,7 @@ service OpenStorageMountAttach {
   rpc Unmount(SdkVolumeUnmountRequest)
       returns(SdkVolumeUnmountResponse) {
       option(google.api.http) = {
-        post: "/v1/volumes/unmount"
+        post: "/v1/mountattach/unmount"
         body: "*"
       };
     }
@@ -2230,6 +2262,8 @@ message SdkCloudBackupScheduleInfo{
   // MaxBackups are the maximum number of backups retained
   // in cloud.Older backups are deleted
   uint64 max_backups = 4;
+  // Full indicates if scheduled backups should always be full and never incremental.
+  bool full = 5;
 }
 
 // Defines a request to create a schedule for volume backups to a
@@ -2311,6 +2345,8 @@ message SdkServiceCapability {
       VOLUME = 7;
       // Alert enumeration
       ALERTS = 8;
+      // Mount/Attach Support
+      MOUNT_ATTACH = 9;
     }
 
     // Type of service supported
@@ -2343,7 +2379,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 10;
+    Minor = 13;
     // SDK version patch value of this specification
     Patch = 0;
   }

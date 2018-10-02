@@ -376,6 +376,7 @@ func TestClientBackupSchedCreate(t *testing.T) {
 	goodRequest := api.CloudBackupSchedCreateRequest{}
 	goodRequest.SrcVolumeID = "goodsrc"
 	goodRequest.CredentialUUID = ""
+	goodRequest.Full = false
 	goodRequest.Schedule = "daily@10:00"
 	testVolDriver.MockDriver().EXPECT().CloudBackupSchedCreate(&goodRequest).
 		Return(&api.CloudBackupSchedCreateResponse{}, nil).Times(1)
