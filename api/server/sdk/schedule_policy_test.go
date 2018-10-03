@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 
@@ -39,6 +40,7 @@ func TestSdkSchedulePolicyCreateSuccess(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
+	seconds := int64(1234567)
 	req := &api.SdkSchedulePolicyCreateRequest{
 		SchedulePolicy: &api.SdkSchedulePolicy{
 			Name: "dummy-schedule-name",
@@ -58,6 +60,14 @@ func TestSdkSchedulePolicyCreateSuccess(t *testing.T) {
 						Daily: &api.SdkSchedulePolicyIntervalDaily{
 							Minute: 1,
 							Hour:   0,
+						},
+					},
+				},
+				&api.SdkSchedulePolicyInterval{
+					Retain: 1,
+					PeriodType: &api.SdkSchedulePolicyInterval_Periodic{
+						Periodic: &api.SdkSchedulePolicyIntervalPeriodic{
+							Seconds: seconds,
 						},
 					},
 				},
@@ -400,6 +410,7 @@ func TestSdkSchedulePolicyEnumerateSuccess(t *testing.T) {
 
 	req := &api.SdkSchedulePolicyEnumerateRequest{}
 
+	seconds := int64(123456)
 	enumerateData := []*schedpolicy.SchedPolicy{
 		&schedpolicy.SchedPolicy{
 			Name:     "sched-1",
@@ -408,6 +419,10 @@ func TestSdkSchedulePolicyEnumerateSuccess(t *testing.T) {
 		&schedpolicy.SchedPolicy{
 			Name:     "sched-2",
 			Schedule: "- freq: weekly\n  weekday: 5\n  hour: 11\n  minute: 30\n",
+		},
+		&schedpolicy.SchedPolicy{
+			Name:     "sched-3",
+			Schedule: fmt.Sprintf("- freq: periodic\n  period: %d\n", int64(time.Duration(seconds)*time.Second)),
 		},
 	}
 
@@ -422,8 +437,13 @@ func TestSdkSchedulePolicyEnumerateSuccess(t *testing.T) {
 	// Enumerate Schedule Policy
 	resp, err := c.Enumerate(context.Background(), req)
 	assert.NoError(t, err)
-	assert.Equal(t, len(resp.GetPolicies()), 2)
+	assert.Len(t, resp.GetPolicies(), 3)
 	assert.Equal(t, resp.GetPolicies()[0].GetName(), "sched-1")
+	assert.Equal(t, resp.GetPolicies()[2].GetName(), "sched-3")
+
+	s3policy := resp.GetPolicies()[2].GetSchedules()
+	assert.Len(t, s3policy, 1)
+	assert.Equal(t, s3policy[0].GetPeriodic().GetSeconds(), seconds)
 }
 func TestSdkSchedulePolicyEnumerateFailed(t *testing.T) {
 

@@ -1350,6 +1350,12 @@ message SdkSchedulePolicyIntervalMonthly{
   int32 minute = 3;
 }
 
+// Defines a periodic schedule
+message SdkSchedulePolicyIntervalPeriodic{
+  // Specify the number of seconds between intervals
+  int64 seconds = 1;
+}
+
 // Defines a schedule policy interval
 message SdkSchedulePolicyInterval {
   // Number of instances to retain
@@ -1363,6 +1369,8 @@ message SdkSchedulePolicyInterval {
     SdkSchedulePolicyIntervalWeekly weekly = 201;
     // Monthly policy
     SdkSchedulePolicyIntervalMonthly monthly = 202;
+    // Periodic policy
+    SdkSchedulePolicyIntervalPeriodic periodic = 203;
   }
 }
 
