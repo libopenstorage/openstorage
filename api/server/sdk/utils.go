@@ -36,6 +36,8 @@ const (
 	maxHour = int32(23)
 	// Max minute
 	maxMinute = int32(59)
+	// Min periodic seconds
+	minPeriodicSeconds = int64(60) * int64(15)
 )
 
 func sdkWeekdayToTimeWeekday(weekday api.SdkTimeWeekday) time.Weekday {
@@ -131,7 +133,14 @@ func sdkSchedToRetainInternalSpec(
 			int(monthly.GetMinute())).
 			Spec()
 	} else if periodic := req.GetPeriodic(); periodic != nil {
-		spec = sched.Periodic(time.Duration(req.GetPeriodic().GetSeconds()) * time.Second).Spec()
+		if periodic.GetSeconds() < minPeriodicSeconds {
+			return nil, status.Errorf(
+				codes.InvalidArgument,
+				"Requested periodic value of %d is too low. Must be more than %d.",
+				periodic.GetSeconds(),
+				minPeriodicSeconds)
+		}
+		spec = sched.Periodic(time.Duration(periodic.GetSeconds()) * time.Second).Spec()
 	} else {
 		return nil, status.Error(codes.InvalidArgument, "Invalid schedule period type")
 	}
