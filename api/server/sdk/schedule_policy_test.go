@@ -95,6 +95,42 @@ func TestSdkSchedulePolicyCreateSuccess(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestSdkSchedulePolicyCreateLimitFailures(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	seconds := int64(120)
+	req := &api.SdkSchedulePolicyCreateRequest{
+		SchedulePolicy: &api.SdkSchedulePolicy{
+			Name: "dummy-schedule-name",
+			Schedules: []*api.SdkSchedulePolicyInterval{
+				&api.SdkSchedulePolicyInterval{
+					Retain: 1,
+					PeriodType: &api.SdkSchedulePolicyInterval_Periodic{
+						Periodic: &api.SdkSchedulePolicyIntervalPeriodic{
+							Seconds: seconds,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// Setup client
+	c := api.NewOpenStorageSchedulePolicyClient(s.Conn())
+
+	// Create Schedule Policy
+	_, err := c.Create(context.Background(), req)
+	assert.Error(t, err)
+
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "Requested periodic value")
+}
+
 func TestSdkSchedulePolicyCreateFailed(t *testing.T) {
 
 	// Create server and client connection
