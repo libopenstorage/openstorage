@@ -1101,6 +1101,10 @@
           "$ref": "#/definitions/apiSdkSchedulePolicyIntervalMonthly",
           "title": "Monthly policy"
         },
+        "periodic": {
+          "$ref": "#/definitions/apiSdkSchedulePolicyIntervalPeriodic",
+          "title": "Periodic policy"
+        },
         "retain": {
           "format": "int64",
           "title": "Number of instances to retain",
@@ -1149,6 +1153,17 @@
         }
       },
       "title": "Defines a monthly schedule",
+      "type": "object"
+    },
+    "apiSdkSchedulePolicyIntervalPeriodic": {
+      "properties": {
+        "seconds": {
+          "format": "int64",
+          "title": "Specify the number of seconds between intervals",
+          "type": "string"
+        }
+      },
+      "title": "Defines a periodic schedule",
       "type": "object"
     },
     "apiSdkSchedulePolicyIntervalWeekly": {
@@ -2321,7 +2336,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.13.0"
+    "version": "0.14.0"
   },
   "paths": {
     "/v1/alerts": {

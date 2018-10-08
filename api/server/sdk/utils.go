@@ -130,6 +130,8 @@ func sdkSchedToRetainInternalSpec(
 			int(monthly.GetHour()),
 			int(monthly.GetMinute())).
 			Spec()
+	} else if periodic := req.GetPeriodic(); periodic != nil {
+		spec = sched.Periodic(time.Duration(req.GetPeriodic().GetSeconds()) * time.Second).Spec()
 	} else {
 		return nil, status.Error(codes.InvalidArgument, "Invalid schedule period type")
 	}
@@ -188,6 +190,14 @@ func retainInternalSpecToSdkSched(spec *sched.RetainIntervalSpec) (*api.SdkSched
 				Daily: &api.SdkSchedulePolicyIntervalDaily{
 					Hour:   int32(spec.Hour),
 					Minute: int32(spec.Minute),
+				},
+			},
+		}
+	case sched.PeriodicType:
+		resp = &api.SdkSchedulePolicyInterval{
+			PeriodType: &api.SdkSchedulePolicyInterval_Periodic{
+				Periodic: &api.SdkSchedulePolicyIntervalPeriodic{
+					Seconds: int64(time.Duration(spec.Period) / time.Second),
 				},
 			},
 		}
