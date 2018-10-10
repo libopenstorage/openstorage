@@ -1187,7 +1187,7 @@
     },
     "apiSdkSchedulePolicyUpdateRequest": {
       "properties": {
-        "SchedulePolicy": {
+        "schedule_policy": {
           "$ref": "#/definitions/apiSdkSchedulePolicy",
           "title": "Schedule Policy"
         }
@@ -1529,6 +1529,27 @@
       "type": "object"
     },
     "apiSdkVolumeSnapshotRestoreResponse": {
+      "title": "Empty response",
+      "type": "object"
+    },
+    "apiSdkVolumeSnapshotScheduleUpdateRequest": {
+      "properties": {
+        "snapshot_schedule_names": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Names of schedule policies",
+          "type": "array"
+        },
+        "volume_id": {
+          "title": "Id of volume",
+          "type": "string"
+        }
+      },
+      "title": "Defines a request to update the snapshot schedule of a volume",
+      "type": "object"
+    },
+    "apiSdkVolumeSnapshotScheduleUpdateResponse": {
       "title": "Empty response",
       "type": "object"
     },
@@ -2336,7 +2357,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.14.0"
+    "version": "0.15.0"
   },
   "paths": {
     "/v1/alerts": {
@@ -3376,6 +3397,39 @@
           }
         },
         "summary": "Enumerate returns a list of volume ids that match the labels if any are provided.",
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/volumes/snapshot/schedules/{volume_id}": {
+      "post": {
+        "operationId": "SnapshotScheduleUpdate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "volume_id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeSnapshotScheduleUpdateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeSnapshotScheduleUpdateResponse"
+            }
+          }
+        },
+        "summary": "Sets the snapshot schedules. This information is saved in the VolumeSpec.snapshot_schedule\nas `policy=\u003cname\u003e,...`. This function will overwrite any policy values\nin the volume. To delete the policies in the volume send no policies.",
         "tags": [
           "OpenStorageVolume"
         ]
