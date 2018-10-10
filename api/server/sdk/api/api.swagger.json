@@ -881,6 +881,10 @@
           "$ref": "#/definitions/apiSdkSchedulePolicyIntervalMonthly",
           "title": "Monthly policy"
         },
+        "periodic": {
+          "$ref": "#/definitions/apiSdkSchedulePolicyIntervalPeriodic",
+          "title": "Periodic policy"
+        },
         "retain": {
           "format": "int64",
           "title": "Number of instances to retain",
@@ -931,6 +935,17 @@
       "title": "Defines a monthly schedule",
       "type": "object"
     },
+    "apiSdkSchedulePolicyIntervalPeriodic": {
+      "properties": {
+        "seconds": {
+          "format": "int64",
+          "title": "Specify the number of seconds between intervals",
+          "type": "string"
+        }
+      },
+      "title": "Defines a periodic schedule",
+      "type": "object"
+    },
     "apiSdkSchedulePolicyIntervalWeekly": {
       "properties": {
         "day": {
@@ -952,7 +967,7 @@
     },
     "apiSdkSchedulePolicyUpdateRequest": {
       "properties": {
-        "SchedulePolicy": {
+        "schedule_policy": {
           "$ref": "#/definitions/apiSdkSchedulePolicy",
           "title": "Schedule Policy"
         }
@@ -1294,6 +1309,27 @@
       "type": "object"
     },
     "apiSdkVolumeSnapshotRestoreResponse": {
+      "title": "Empty response",
+      "type": "object"
+    },
+    "apiSdkVolumeSnapshotScheduleUpdateRequest": {
+      "properties": {
+        "snapshot_schedule_names": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Names of schedule policies",
+          "type": "array"
+        },
+        "volume_id": {
+          "title": "Id of volume",
+          "type": "string"
+        }
+      },
+      "title": "Defines a request to update the snapshot schedule of a volume",
+      "type": "object"
+    },
+    "apiSdkVolumeSnapshotScheduleUpdateResponse": {
       "title": "Empty response",
       "type": "object"
     },
@@ -2091,7 +2127,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.9.0"
+    "version": "0.9.1"
   },
   "paths": {
     "/v1/cloudbackups": {
@@ -3072,6 +3108,39 @@
         "summary": "Mount mounts an attached volume in the host that the client is communicating with",
         "tags": [
           "OpenStorageMountAttach"
+        ]
+      }
+    },
+    "/v1/volumes/snapshot/schedules/{volume_id}": {
+      "post": {
+        "operationId": "SnapshotScheduleUpdate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "volume_id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeSnapshotScheduleUpdateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeSnapshotScheduleUpdateResponse"
+            }
+          }
+        },
+        "summary": "Sets the snapshot schedules. This information is saved in the VolumeSpec.snapshot_schedule\nas `policy=\u003cname\u003e,...`. This function will overwrite any policy values\nin the volume. To delete the policies in the volume send no policies.",
+        "tags": [
+          "OpenStorageVolume"
         ]
       }
     },

@@ -589,17 +589,28 @@ type PolicyTags struct {
 
 var policyNameRegex = regexp.MustCompile("[A-Za-z0-9_]+")
 
+func (p *PolicyTags) verifyPolicyTags() error {
+	for _, name := range p.Names {
+		if !policyNameRegex.MatchString(name) {
+			return fmt.Errorf("Invalid policy name '%s'", name)
+		}
+	}
+
+	return nil
+}
+
+// NewPolicyTagsFromSlice returns a new object from a string slice of names
+func NewPolicyTagsFromSlice(policies []string) (*PolicyTags, error) {
+	p := &PolicyTags{Names: policies}
+	return p, p.verifyPolicyTags()
+}
+
 func NewPolicyTags(policies string) (*PolicyTags, error) {
 	if policies == "" {
 		return nil, nil
 	}
 	p := &PolicyTags{Names: strings.Split(policies, policyNameSeparator)}
-	for _, name := range p.Names {
-		if !policyNameRegex.MatchString(name) {
-			return nil, fmt.Errorf("Invalid policy name '%s'", name)
-		}
-	}
-	return p, nil
+	return p, p.verifyPolicyTags()
 }
 
 func (p *PolicyTags) Summary() string {

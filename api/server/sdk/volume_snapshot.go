@@ -23,6 +23,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/pkg/sched"
 	"github.com/portworx/kvdb"
 )
 
@@ -138,4 +139,69 @@ func (s *VolumeServer) SnapshotEnumerateWithFilters(
 	return &api.SdkVolumeSnapshotEnumerateWithFiltersResponse{
 		VolumeSnapshotIds: ids,
 	}, nil
+}
+
+// SnapshotScheduleUpdate updates the snapshot schedule in the volume.
+// It only manages the PolicyTags
+func (s *VolumeServer) SnapshotScheduleUpdate(
+	ctx context.Context,
+	req *api.SdkVolumeSnapshotScheduleUpdateRequest,
+) (*api.SdkVolumeSnapshotScheduleUpdateResponse, error) {
+
+	if len(req.GetVolumeId()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
+	}
+
+	// Determine if they exist
+	for _, name := range req.GetSnapshotScheduleNames() {
+		_, err := s.cluster.SchedPolicyGet(name)
+		if err != nil {
+			return nil, status.Errorf(
+				codes.Aborted,
+				"Error accessing schedule policy %s: %v",
+				name, err)
+		}
+	}
+
+	// Get volume specification
+	resp, err := s.Inspect(ctx, &api.SdkVolumeInspectRequest{
+		VolumeId: req.GetVolumeId(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Apply names to snapshot schedule in the Volume specification
+	// merging with any schedule already there in "schedule" format.
+	var pt *sched.PolicyTags
+	if len(req.GetSnapshotScheduleNames()) != 0 {
+		pt, err = sched.NewPolicyTagsFromSlice(req.GetSnapshotScheduleNames())
+		if err != nil {
+			return nil, status.Errorf(
+				codes.Internal,
+				"Unable to parse policies: %v", err)
+		}
+	}
+	snapscheds, _, err := sched.ParseScheduleAndPolicies(resp.GetVolume().GetSpec().GetSnapshotSchedule())
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"Unable to parse snapshot schedule: %v", err)
+	}
+	snapshotSchedule := sched.ScheduleSummary(snapscheds, pt)
+
+	// Update the volume specification
+	_, err = s.Update(ctx, &api.SdkVolumeUpdateRequest{
+		VolumeId: req.GetVolumeId(),
+		Spec: &api.VolumeSpecUpdate{
+			SnapshotScheduleOpt: &api.VolumeSpecUpdate_SnapshotSchedule{
+				SnapshotSchedule: snapshotSchedule,
+			},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &api.SdkVolumeSnapshotScheduleUpdateResponse{}, nil
 }

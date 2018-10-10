@@ -925,6 +925,17 @@ service OpenStorageVolume {
         body: "*"
       };
     }
+
+  // Sets the snapshot schedules. This information is saved in the VolumeSpec.snapshot_schedule
+  // as `policy=<name>,...`. This function will overwrite any policy values
+  // in the volume. To delete the policies in the volume send no policies.
+  rpc SnapshotScheduleUpdate(SdkVolumeSnapshotScheduleUpdateRequest)
+    returns (SdkVolumeSnapshotScheduleUpdateResponse) {
+      option(google.api.http) = {
+        post: "/v1/volumes/snapshot/schedules/{volume_id}"
+        body: "*"
+      };
+    }
 }
 
 // OpenStorageMountAttach is a service used to manage node access to a volume.
@@ -1266,7 +1277,7 @@ message SdkSchedulePolicyCreateResponse {
 // Define a request to update a schedule policy
 message SdkSchedulePolicyUpdateRequest {
   // Schedule Policy
-  SdkSchedulePolicy SchedulePolicy = 1;
+  SdkSchedulePolicy schedule_policy = 1;
 }
 
 // Empty response
@@ -1768,6 +1779,18 @@ message SdkVolumeSnapshotEnumerateWithFiltersResponse {
   repeated string volume_snapshot_ids = 1;
 }
 
+// Defines a request to update the snapshot schedule of a volume
+message SdkVolumeSnapshotScheduleUpdateRequest {
+  // Id of volume
+  string volume_id = 1;
+  // Names of schedule policies
+  repeated string snapshot_schedule_names = 2;
+}
+
+// Empty response
+message SdkVolumeSnapshotScheduleUpdateResponse {
+}
+
 // Empty request
 message SdkClusterInspectCurrentRequest {
 }
@@ -2226,7 +2249,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 9;
     // SDK version patch value of this specification
-    Patch = 0;
+    Patch = 1;
   }
 
   // The following cannot be set to use the enum Version because the REST
