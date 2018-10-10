@@ -5,6 +5,10 @@
 
 ## Releases
 
+### v0.15.0 - Tech Preview (10/10/2018)
+
+* Added support to set the snapshot schedule policy of a Volume
+
 ### v0.14.0 - Tech Preview (10/8/2018)
 
 * Added support for periodic type in OpenStorageSchedulePolicy service
