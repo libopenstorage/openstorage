@@ -621,22 +621,20 @@ func (m *Mounter) EmptyTrashDir() error {
 		return err
 	}
 
-	for _, file := range files {
-		if _, err := sched.Instance().Schedule(
-			func(sched.Interval) {
+	if _, err := sched.Instance().Schedule(
+		func(sched.Interval) {
+			for _, file := range files {
 				e := m.removeSoftlinkAndTarget(path.Join(m.trashLocation, file.Name()))
 				if e != nil {
 					logrus.Errorf("failed to remove link: %s. Err: %v", path.Join(m.trashLocation, file.Name()), e)
-					err = e
-					// continue with other directories
 				}
-			},
-			sched.Periodic(time.Second),
-			time.Now().Add(mountPathRemoveDelay),
-			true /* run only once */); err != nil {
-			logrus.Errorf("Failed to cleanup of trash dir. Err: %v", err)
-			return err
-		}
+			}
+		},
+		sched.Periodic(time.Second),
+		time.Now().Add(mountPathRemoveDelay),
+		true /* run only once */); err != nil {
+		logrus.Errorf("Failed to cleanup of trash dir. Err: %v", err)
+		return err
 	}
 
 	return nil
