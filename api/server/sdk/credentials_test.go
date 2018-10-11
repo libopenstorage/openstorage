@@ -21,11 +21,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	"github.com/libopenstorage/openstorage/api"
 )
 
 func TestSdkAWSCredentialCreateSuccess(t *testing.T) {
@@ -159,7 +158,7 @@ func TestSdkAWSCredentialCreateBadArgument(t *testing.T) {
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
 	assert.Contains(t, serverError.Message(), "name")
 
-	// Set AWS missing key
+	// ProviderSet AWS missing key
 	req = &api.SdkCredentialCreateRequest{
 		Name: "test",
 		CredentialType: &api.SdkCredentialCreateRequest_AwsCredential{

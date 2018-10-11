@@ -33,6 +33,11 @@ type ObjectstoreServer struct {
 	cluster cluster.Cluster
 }
 
+// NewObjectstoreServer is a provider of Objectstoreserver
+func NewObjectstoreServer(openStorageObjectstoreServer api.OpenStorageObjectstoreServer, cluster cluster.Cluster) *ObjectstoreServer {
+	return &ObjectstoreServer{cluster: cluster, OpenStorageObjectstoreServer: openStorageObjectstoreServer}
+}
+
 // Inspect Objectstore return status of provided objectstore
 func (s *ObjectstoreServer) Inspect(
 	ctx context.Context,

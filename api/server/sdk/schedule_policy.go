@@ -20,10 +20,9 @@ package sdk
 import (
 	"context"
 
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/portworx/kvdb"
-
-	"github.com/libopenstorage/openstorage/api"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -32,6 +31,11 @@ import (
 type SchedulePolicyServer struct {
 	api.OpenStorageSchedulePolicyServer
 	cluster cluster.Cluster
+}
+
+// NewSchedulePolicyServer is a provider of SchedulePolicyServer
+func NewSchedulePolicyServer(openStorageSchedulePolicyServer api.OpenStorageSchedulePolicyServer, cluster cluster.Cluster) *SchedulePolicyServer {
+	return &SchedulePolicyServer{cluster: cluster, OpenStorageSchedulePolicyServer: openStorageSchedulePolicyServer}
 }
 
 // Create method creates schedule policy

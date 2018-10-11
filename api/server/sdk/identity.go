@@ -31,6 +31,11 @@ type IdentityServer struct {
 	driver volume.VolumeDriver
 }
 
+// NewIdentityServer is a provider of IdentiryServer
+func NewIdentityServer(driver volume.VolumeDriver) *IdentityServer {
+	return &IdentityServer{driver: driver}
+}
+
 // Capabilities returns the capabilities of the SDK server
 func (s *IdentityServer) Capabilities(
 	ctx context.Context,

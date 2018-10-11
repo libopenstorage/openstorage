@@ -19,17 +19,21 @@ package sdk
 import (
 	"context"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/portworx/kvdb"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // NodeServer is an implementation of the gRPC OpenStorageNodeServer interface
 type NodeServer struct {
 	cluster cluster.Cluster
+}
+
+// NewNodeServer is a provider of NodeServer
+func NewNodeServer(cluster cluster.Cluster) *NodeServer {
+	return &NodeServer{cluster: cluster}
 }
 
 // Enumerate returns the ids of all the nodes in the cluster

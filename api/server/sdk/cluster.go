@@ -19,16 +19,20 @@ package sdk
 import (
 	"context"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // ClusterServer is an implementation of the gRPC OpenStorageClusterServer interface
 type ClusterServer struct {
 	cluster cluster.Cluster
+}
+
+// NewClusterServer is a provider of ClusterServer
+func NewClusterServer(cluster cluster.Cluster) *ClusterServer {
+	return &ClusterServer{cluster: cluster}
 }
 
 // InspectCurrent returns information about the current cluster

@@ -21,20 +21,17 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/libopenstorage/openstorage/alerts/mock"
-
-	"github.com/stretchr/testify/assert"
-	"google.golang.org/grpc"
-
 	"github.com/golang/mock/gomock"
 	"github.com/kubernetes-csi/csi-test/utils"
-
+	"github.com/libopenstorage/openstorage/alerts/mock"
 	"github.com/libopenstorage/openstorage/api"
 	mockcluster "github.com/libopenstorage/openstorage/cluster/mock"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
+	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc"
 )
 
 const (

@@ -17,9 +17,12 @@ limitations under the License.
 package sdk
 
 import (
+	"fmt"
+
 	"github.com/libopenstorage/openstorage/api/spec"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/volume"
+	"github.com/libopenstorage/openstorage/volume/drivers"
 )
 
 // VolumeServer is an implementation of the gRPC OpenStorageVolume interface
@@ -27,4 +30,20 @@ type VolumeServer struct {
 	specHandler spec.SpecHandler
 	driver      volume.VolumeDriver
 	cluster     cluster.Cluster
+}
+
+// NewVolumeServer is a provider of VolumeServer
+func NewVolumeServer(specHandler spec.SpecHandler, driver volume.VolumeDriver, cluster cluster.Cluster) *VolumeServer {
+	return &VolumeServer{specHandler: specHandler, driver: driver, cluster: cluster}
+}
+
+// NewVolumeDriver is a provider of VolumeDriver.
+// There could be other providers for volume driver but this is how it is being initialized in SDK,
+// therefore, this provider func should be included in providers.ProviderSet
+func NewVolumeDriver(driver DriverNameStr) (volume.VolumeDriver, error) {
+	d, err := volumedrivers.Get(string(driver))
+	if err != nil {
+		return nil, fmt.Errorf("Unable to get driver %v info: %s", driver, err.Error())
+	}
+	return d, nil
 }

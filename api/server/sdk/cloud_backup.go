@@ -19,16 +19,20 @@ package sdk
 import (
 	"context"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // CloudBackupServer is an implementation of the gRPC OpenStorageCloudBackup interface
 type CloudBackupServer struct {
 	driver volume.VolumeDriver
+}
+
+// NewCloudBackupServer is a provider of CloudBackupServer
+func NewCloudBackupServer(driver volume.VolumeDriver) *CloudBackupServer {
+	return &CloudBackupServer{driver: driver}
 }
 
 // Create creates a backup for a volume

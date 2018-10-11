@@ -30,18 +30,18 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// alertsServer implements api.OpenStorageAlertsServer.
+// AlertsServer implements api.OpenStorageAlertsServer.
 // In order to use this server implementation just have
-// alertsServer pointer properly instantiated with a valid
+// AlertsServer pointer properly instantiated with a valid
 // alerts.filterDeleter.
-type alertsServer struct {
+type AlertsServer struct {
 	// filterDeleter holds pointer to alerts filterDeleter
 	filterDeleter alerts.FilterDeleter
 }
 
 // NewAlertsServer provides an instance of alerts server interface.
-func NewAlertsServer(filterDeleter alerts.FilterDeleter) api.OpenStorageAlertsServer {
-	return &alertsServer{filterDeleter: filterDeleter}
+func NewAlertsServer(filterDeleter alerts.FilterDeleter) *AlertsServer {
+	return &AlertsServer{filterDeleter: filterDeleter}
 }
 
 func getOpts(opts []*api.SdkAlertsOption) []alerts.Option {
@@ -104,10 +104,10 @@ func getFilters(queries []*api.SdkAlertsQuery) []alerts.Filter {
 	return filters
 }
 
-// Enumerate implements api.OpenStorageAlertsServer for alertsServer.
+// Enumerate implements api.OpenStorageAlertsServer for AlertsServer.
 // Input context should ideally have a deadline, in which case, a
 // graceful exit is ensured within that deadline.
-func (g *alertsServer) Enumerate(ctx context.Context,
+func (g *AlertsServer) Enumerate(ctx context.Context,
 	request *api.SdkAlertsEnumerateRequest) (*api.SdkAlertsEnumerateResponse, error) {
 	queries := request.GetQueries()
 	if queries == nil {
@@ -163,10 +163,10 @@ func (g *alertsServer) Enumerate(ctx context.Context,
 	}
 }
 
-// Delete implements api.OpenStorageAlertsServer for alertsServer.
+// Delete implements api.OpenStorageAlertsServer for AlertsServer.
 // Input context should ideally have a deadline, in which case, a
 // graceful exit is ensured within that deadline.
-func (g *alertsServer) Delete(ctx context.Context,
+func (g *AlertsServer) Delete(ctx context.Context,
 	request *api.SdkAlertsDeleteRequest) (*api.SdkAlertsDeleteResponse, error) {
 	queries := request.GetQueries()
 	if queries == nil {

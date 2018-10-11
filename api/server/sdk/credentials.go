@@ -31,6 +31,11 @@ type CredentialServer struct {
 	driver volume.VolumeDriver
 }
 
+// NewCredentialServer is a provider of CredentialServer
+func NewCredentialServer(driver volume.VolumeDriver) *CredentialServer {
+	return &CredentialServer{driver: driver}
+}
+
 // Create method creates credentials
 func (s *CredentialServer) Create(
 	ctx context.Context,

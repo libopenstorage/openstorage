@@ -22,10 +22,10 @@ import (
 	"mime"
 	"net/http"
 
-	"github.com/libopenstorage/openstorage/alerts"
-
 	"github.com/gobuffalo/packr"
+	"github.com/google/go-cloud/wire"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/libopenstorage/openstorage/alerts"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/spec"
 	"github.com/libopenstorage/openstorage/cluster"
@@ -35,30 +35,57 @@ import (
 	"google.golang.org/grpc"
 )
 
+type NetStr string
+type AddrStr string
+type RestPortStr string
+type DriverNameStr string
+
 // ServerConfig provides the configuration to the SDK server
 type ServerConfig struct {
 	// Net is the transport for gRPC: unix, tcp, etc.
 	// For the gRPC Server. This value goes together with `Address`.
-	Net string
+	Net NetStr
 	// Address is the port number or the unix domain socket path.
 	// For the gRPC Server. This value goes together with `Net`.
-	Address string
+	Address AddrStr
 	// RestAdress is the port number. Example: 9110
 	// For the gRPC REST Gateway.
-	RestPort string
+	RestPort RestPortStr
 	// The OpenStorage driver to use
-	DriverName string
+	DriverName DriverNameStr
 	// Cluster interface
 	Cluster cluster.Cluster
 	// AlertsFilterDeleter
 	AlertsFilterDeleter alerts.FilterDeleter
 }
 
+// NewServerConfig is a provider of ServerConfig
+func NewServerConfig(net NetStr,
+	addr AddrStr,
+	restPort RestPortStr,
+	driver DriverNameStr,
+	cluster cluster.Cluster,
+	alertsFilterDeleter alerts.FilterDeleter,
+) (*ServerConfig, error) {
+	if len(driver) == 0 {
+		return nil, fmt.Errorf("OpenStorage Driver name must be provided")
+	}
+
+	return &ServerConfig{
+		Net:                 net,
+		Address:             addr,
+		RestPort:            restPort,
+		DriverName:          driver,
+		Cluster:             cluster,
+		AlertsFilterDeleter: alertsFilterDeleter,
+	}, nil
+}
+
 // Server is an implementation of the gRPC SDK interface
 type Server struct {
 	*grpcserver.GrpcServer
 
-	restPort             string
+	restPort             RestPortStr
 	clusterServer        *ClusterServer
 	nodeServer           *NodeServer
 	volumeServer         *VolumeServer
@@ -67,11 +94,45 @@ type Server struct {
 	cloudBackupServer    *CloudBackupServer
 	credentialServer     *CredentialServer
 	identityServer       *IdentityServer
-	alertsServer         api.OpenStorageAlertsServer
+	alertsServer         *AlertsServer
+}
+
+// NewServer is a provider of Server
+func NewServer(
+	GrpcServer *grpcserver.GrpcServer,
+	restPort RestPortStr,
+	clusterServer *ClusterServer,
+	nodeServer *NodeServer,
+	volumeServer *VolumeServer,
+	objectstoreServer *ObjectstoreServer,
+	schedulePolicyServer *SchedulePolicyServer,
+	cloudBackupServer *CloudBackupServer,
+	credentialServer *CredentialServer,
+	identityServer *IdentityServer,
+	alertsServer *AlertsServer,
+) *Server {
+	return &Server{
+		GrpcServer:           GrpcServer,
+		restPort:             restPort,
+		clusterServer:        clusterServer,
+		nodeServer:           nodeServer,
+		volumeServer:         volumeServer,
+		objectstoreServer:    objectstoreServer,
+		schedulePolicyServer: schedulePolicyServer,
+		cloudBackupServer:    cloudBackupServer,
+		credentialServer:     credentialServer,
+		identityServer:       identityServer,
+		alertsServer:         alertsServer,
+	}
 }
 
 // Interface check
 var _ grpcserver.Server = &Server{}
+
+func Initialize() (*Server, error) {
+	wire.Build(ProviderSet)
+	return &Server{}, nil
+}
 
 // New creates a new SDK gRPC server
 func New(config *ServerConfig) (*Server, error) {
@@ -83,7 +144,7 @@ func New(config *ServerConfig) (*Server, error) {
 	}
 
 	// Save the driver for future calls
-	d, err := volumedrivers.Get(config.DriverName)
+	d, err := volumedrivers.Get(string(config.DriverName))
 	if err != nil {
 		return nil, fmt.Errorf("Unable to get driver %s info: %s", config.DriverName, err.Error())
 	}
@@ -91,8 +152,8 @@ func New(config *ServerConfig) (*Server, error) {
 	// Create gRPC server
 	gServer, err := grpcserver.New(&grpcserver.GrpcServerConfig{
 		Name:    "SDK",
-		Net:     config.Net,
-		Address: config.Address,
+		Net:     string(config.Net),
+		Address: string(config.Address),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("Unable to setup server: %v", err)
@@ -168,7 +229,7 @@ func (s *Server) startRestServer() error {
 	ready := make(chan bool)
 	go func() {
 		ready <- true
-		err := http.ListenAndServe(":"+s.restPort, mux)
+		err := http.ListenAndServe(":"+string(s.restPort), mux)
 		if err != nil {
 			logrus.Fatalf("Unable to start SDK REST gRPC Gateway: %s\n",
 				err.Error())
