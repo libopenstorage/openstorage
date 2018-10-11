@@ -200,7 +200,10 @@ func (s *Server) restServerSetupHandlers() (*http.ServeMux, error) {
 		http.StripPrefix(prefix, http.FileServer(swaggerUIBox)))
 
 	// Create a router just for HTTP REST gRPC Server Gateway
-	gmux := runtime.NewServeMux()
+	gmux := runtime.NewServeMux(
+		runtime.WithMarshalerOption(
+			runtime.MIMEWildcard,
+			&runtime.JSONPb{OrigName: true, EmitDefaults: true}))
 	err := api.RegisterOpenStorageClusterHandlerFromEndpoint(
 		context.Background(),
 		gmux,
