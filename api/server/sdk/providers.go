@@ -18,5 +18,5 @@ var ProviderSet = wire.NewSet(
 	NewNodeServer,
 	NewObjectstoreServer,
 	NewSchedulePolicyServer,
-	NewVolumeServer, NewVolumeDriver,
+	NewVolumeServer, NewVolumeDriver, NewSpecHandler,
 )

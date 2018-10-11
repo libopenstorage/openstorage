@@ -47,3 +47,8 @@ func NewVolumeDriver(driver DriverNameStr) (volume.VolumeDriver, error) {
 	}
 	return d, nil
 }
+
+// NewSpecHandler is a provider of SpecHandler
+func NewSpecHandler() spec.SpecHandler {
+	return spec.NewSpecHandler()
+}
