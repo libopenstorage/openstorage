@@ -38,7 +38,8 @@ func TestCmdMarshalProto(t *testing.T) {
  "journal": false,
  "sharedv4": false,
  "queue_depth": 0,
- "force_unsupported_fs_type": false
+ "force_unsupported_fs_type": false,
+ "discard": false
 }`,
 		data,
 	)
