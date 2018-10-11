@@ -1,4 +1,4 @@
-//go:generate mockgen -package=mock -destination=mock/driver.mock.go github.com/libopenstorage/openstorage/volume VolumeDriver
+//go:generate mockgen -package=mockdriver -destination=mock/driver.mock.go github.com/libopenstorage/openstorage/volume VolumeDriver
 
 package volumedrivers
 

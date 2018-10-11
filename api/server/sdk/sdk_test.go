@@ -25,11 +25,11 @@ import (
 	"github.com/kubernetes-csi/csi-test/utils"
 	"github.com/libopenstorage/openstorage/alerts/mock"
 	"github.com/libopenstorage/openstorage/api"
-	mockcluster "github.com/libopenstorage/openstorage/cluster/mock"
+	"github.com/libopenstorage/openstorage/cluster/mock"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 	"github.com/libopenstorage/openstorage/volume"
-	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
-	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
+	"github.com/libopenstorage/openstorage/volume/drivers"
+	"github.com/libopenstorage/openstorage/volume/drivers/mock"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 )
@@ -76,9 +76,9 @@ func newTestServer(t *testing.T) *testServer {
 	var err error
 	// Setup simple driver
 	tester.server, err = New(&ServerConfig{
-		DriverName:          mockDriverName,
-		Net:                 "tcp",
-		Address:             "127.0.0.1:0",
+		DriverName:          Driver(mockDriverName),
+		Net:                 Net("tcp"),
+		Address:             Address("127.0.0.1:0"),
 		Cluster:             tester.c,
 		AlertsFilterDeleter: tester.a,
 	})

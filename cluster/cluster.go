@@ -1,4 +1,4 @@
-//go:generate mockgen -package=mock -destination=mock/cluster.mock.go github.com/libopenstorage/openstorage/cluster Cluster
+//go:generate mockgen -package=mockcluster -destination=mock/cluster.mock.go github.com/libopenstorage/openstorage/cluster Cluster
 package cluster
 
 import (

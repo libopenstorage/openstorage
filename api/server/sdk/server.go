@@ -23,36 +23,36 @@ import (
 	"net/http"
 
 	"github.com/gobuffalo/packr"
-	"github.com/google/go-cloud/wire"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/libopenstorage/openstorage/alerts"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/spec"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
-	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
+	"github.com/libopenstorage/openstorage/volume/drivers"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
 
-type NetStr string
-type AddrStr string
-type RestPortStr string
-type DriverNameStr string
+// types for various inputs required to initialize new SDK server
+type Net string
+type Address string
+type RestPort string
+type Driver string
 
 // ServerConfig provides the configuration to the SDK server
 type ServerConfig struct {
 	// Net is the transport for gRPC: unix, tcp, etc.
 	// For the gRPC Server. This value goes together with `Address`.
-	Net NetStr
+	Net Net
 	// Address is the port number or the unix domain socket path.
 	// For the gRPC Server. This value goes together with `Net`.
-	Address AddrStr
+	Address Address
 	// RestAdress is the port number. Example: 9110
 	// For the gRPC REST Gateway.
-	RestPort RestPortStr
+	RestPort RestPort
 	// The OpenStorage driver to use
-	DriverName DriverNameStr
+	DriverName Driver
 	// Cluster interface
 	Cluster cluster.Cluster
 	// AlertsFilterDeleter
@@ -60,10 +60,10 @@ type ServerConfig struct {
 }
 
 // NewServerConfig is a provider of ServerConfig
-func NewServerConfig(net NetStr,
-	addr AddrStr,
-	restPort RestPortStr,
-	driver DriverNameStr,
+func NewServerConfig(net Net,
+	addr Address,
+	restPort RestPort,
+	driver Driver,
 	cluster cluster.Cluster,
 	alertsFilterDeleter alerts.FilterDeleter,
 ) (*ServerConfig, error) {
@@ -85,7 +85,7 @@ func NewServerConfig(net NetStr,
 type Server struct {
 	*grpcserver.GrpcServer
 
-	restPort             RestPortStr
+	restPort             RestPort
 	clusterServer        *ClusterServer
 	nodeServer           *NodeServer
 	volumeServer         *VolumeServer
@@ -97,10 +97,10 @@ type Server struct {
 	alertsServer         *AlertsServer
 }
 
-// NewServer is a provider of Server
-func NewServer(
+// NewServerProvider is a provider of Server
+func NewServerProvider(
 	GrpcServer *grpcserver.GrpcServer,
-	restPort RestPortStr,
+	restPort RestPort,
 	clusterServer *ClusterServer,
 	nodeServer *NodeServer,
 	volumeServer *VolumeServer,
@@ -128,17 +128,6 @@ func NewServer(
 
 // Interface check
 var _ grpcserver.Server = &Server{}
-
-func Initialize(net NetStr,
-	addr AddrStr,
-	restPort RestPortStr,
-	driver DriverNameStr,
-	cluster cluster.Cluster,
-	alertsFilterDeleter alerts.FilterDeleter,
-) (*Server, error) {
-	wire.Build(ProviderSet)
-	return &Server{}, nil
-}
 
 // New creates a new SDK gRPC server
 func New(config *ServerConfig) (*Server, error) {
