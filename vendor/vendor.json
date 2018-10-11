@@ -795,6 +795,12 @@
 			"revisionTime": "2016-12-17T18:35:37Z"
 		},
 		{
+			"checksumSHA1": "MxuFMn2PA7zDHzYhg9oft4Ceutw=",
+			"path": "github.com/google/go-cloud/wire",
+			"revision": "a7de5791ec88e33229ecb6a7ab5a75953ba8d46e",
+			"revisionTime": "2018-10-10T17:51:46Z"
+		},
+		{
 			"checksumSHA1": "iIUYZyoanCQQTUaWsu8b+iOSPt4=",
 			"path": "github.com/gorilla/context",
 			"revision": "1ea25387ff6f684839d82767c1733ff4d4d15d0a",
