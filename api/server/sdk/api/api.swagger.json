@@ -2131,6 +2131,11 @@
           "format": "boolean",
           "type": "boolean"
         },
+        "discard": {
+          "description": "Discard is true if the volume will be mounted with discard support.",
+          "format": "boolean",
+          "type": "boolean"
+        },
         "encrypted": {
           "description": "Encrypted is true if this volume will be cryptographically secured.",
           "format": "boolean",

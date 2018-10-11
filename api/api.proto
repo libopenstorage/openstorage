@@ -313,6 +313,8 @@ message VolumeSpec {
   // Use to force a file system type which is not recommended.
   // The driver may still refuse to use the file system type.
   bool force_unsupported_fs_type = 28;
+  // Discard is true if the volume will be mounted with discard support.
+  bool discard = 29;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
