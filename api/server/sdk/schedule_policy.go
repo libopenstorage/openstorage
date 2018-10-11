@@ -34,8 +34,8 @@ type SchedulePolicyServer struct {
 }
 
 // NewSchedulePolicyServer is a provider of SchedulePolicyServer
-func NewSchedulePolicyServer(openStorageSchedulePolicyServer api.OpenStorageSchedulePolicyServer, cluster cluster.Cluster) *SchedulePolicyServer {
-	return &SchedulePolicyServer{cluster: cluster, OpenStorageSchedulePolicyServer: openStorageSchedulePolicyServer}
+func NewSchedulePolicyServer(cluster cluster.Cluster) *SchedulePolicyServer {
+	return &SchedulePolicyServer{cluster: cluster}
 }
 
 // Create method creates schedule policy
