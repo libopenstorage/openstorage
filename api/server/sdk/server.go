@@ -129,7 +129,13 @@ func NewServer(
 // Interface check
 var _ grpcserver.Server = &Server{}
 
-func Initialize() (*Server, error) {
+func Initialize(net NetStr,
+	addr AddrStr,
+	restPort RestPortStr,
+	driver DriverNameStr,
+	cluster cluster.Cluster,
+	alertsFilterDeleter alerts.FilterDeleter,
+) (*Server, error) {
 	wire.Build(ProviderSet)
 	return &Server{}, nil
 }
