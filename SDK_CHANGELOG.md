@@ -5,6 +5,11 @@
 
 ## Releases
 
+### v0.9.1 - Tech Preview (10/10/2018)
+
+* (Backport from v0.15.0) Added support to set the snapshot schedule policy of a Volume
+* (Backport from v0.14.0) Added support for periodic type in OpenStorageSchedulePolicy service
+
 ### v0.9.0 - Tech Preview (9/18/2018)
 
 NOTE: This release has breaking chages for the Mount/Attach/Detach/Unmount calls
