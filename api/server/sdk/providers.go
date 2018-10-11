@@ -29,6 +29,7 @@ var MockProviderSet = wire.NewSet(
 	mockdriver.NewMockVolumeDriver,
 	mockalerts.NewMockFilterDeleter,
 	NewMockCluster,
+	NewMockFilterDeleter,
 	NewMockNet,
 	NewMockRestPort,
 	NewMockAddress,
