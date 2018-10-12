@@ -132,6 +132,8 @@ func TestBasicDeviceMounterWithMultipleMounts(t *testing.T) {
 	cleanupDeviceMount(t)
 }
 
+/*
+// This test has been set to skip due to issues in Travis.
 func TestBasicDeviceMounterWithSymLinks(t *testing.T) {
 	setupDeviceMount(t)
 
@@ -177,6 +179,7 @@ func TestBasicDeviceMounterWithSymLinks(t *testing.T) {
 	removeMountEntries(t, 1)
 	cleanupDeviceMount(t)
 }
+*/
 
 func testExists(t *testing.T, orderedDevices, orderedPaths []string, dm Manager) {
 	for i, device := range orderedDevices {
