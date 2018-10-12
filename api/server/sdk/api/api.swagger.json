@@ -2173,6 +2173,11 @@
           "format": "boolean",
           "type": "boolean"
         },
+        "nodiscard": {
+          "description": "Nodiscard specifies if the volume will be mounted with discard support disabled.\ni.e. FS will not release allocated blocks back to the backing storage pool.",
+          "format": "boolean",
+          "type": "boolean"
+        },
         "passphrase": {
           "title": "Passphrase for an encrypted volume",
           "type": "string"
