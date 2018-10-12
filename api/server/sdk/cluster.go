@@ -51,3 +51,51 @@ func (s *ClusterServer) InspectCurrent(
 		Cluster: cluster,
 	}, nil
 }
+
+// CreatePair with a remote cluster
+func (s *ClusterServer) CreatePair(
+	ctx context.Context,
+	req *api.ClusterPairCreateRequest,
+) (*api.ClusterPairCreateResponse, error) {
+	return &api.ClusterPairCreateResponse{}, nil
+}
+
+// ProcessPairRequest handles an incoming pair request from a remote cluster
+func (s *ClusterServer) ProcessPairRequest(
+	ctx context.Context,
+	req *api.ClusterPairProcessRequest,
+) (*api.ClusterPairProcessResponse, error) {
+	return &api.ClusterPairProcessResponse{}, nil
+}
+
+// GetPair returns pair information for a cluster
+func (s *ClusterServer) GetPair(
+	ctx context.Context,
+	req *api.ClusterPairGetRequest,
+) (*api.ClusterPairGetResponse, error) {
+	return &api.ClusterPairGetResponse{}, nil
+}
+
+// EnumeratePairs returns list of cluster pairs
+func (s *ClusterServer) EnumeratePairs(
+	ctx context.Context,
+	req *api.ClusterPairsEnumerateRequest,
+) (*api.ClusterPairsEnumerateResponse, error) {
+	return &api.ClusterPairsEnumerateResponse{}, nil
+}
+
+// DeletePair Delete a cluster pairing
+func (s *ClusterServer) DeletePair(
+	ctx context.Context,
+	req *api.ClusterPairDeleteRequest,
+) (*api.ClusterPairDeleteResponse, error) {
+	return &api.ClusterPairDeleteResponse{}, nil
+}
+
+// GetPairToken gets the authentication token for this cluster
+func (s *ClusterServer) GetPairToken(
+	ctx context.Context,
+	req *api.ClusterPairTokenGetRequest,
+) (*api.ClusterPairTokenGetResponse, error) {
+	return &api.ClusterPairTokenGetResponse{}, nil
+}
