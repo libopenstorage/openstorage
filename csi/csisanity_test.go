@@ -18,7 +18,9 @@ package csi
 
 import (
 	"testing"
+	"time"
 
+	"github.com/libopenstorage/openstorage/api"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/volume/drivers"
@@ -63,6 +65,23 @@ func TestCSISanity(t *testing.T) {
 	}
 	server.Start()
 	defer server.Stop()
+
+	timeout := time.After(30 * time.Second)
+	for {
+		select {
+		case <-timeout:
+			t.Fatal("Timemout waiting for cluster to be ready")
+		default:
+		}
+		cl, err := cm.Enumerate()
+		if err != nil {
+			t.Fatal("Unable to get cluster status")
+		}
+		if cl.Status == api.Status_STATUS_OK {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
 
 	// Start CSI Sanity test
 	sanity.Test(t, &sanity.Config{
