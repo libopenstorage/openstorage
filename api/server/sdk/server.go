@@ -65,6 +65,7 @@ type Server struct {
 	objectstoreServer    *ObjectstoreServer
 	schedulePolicyServer *SchedulePolicyServer
 	cloudBackupServer    *CloudBackupServer
+	cloudMigrateServer   *CloudMigrateServer
 	credentialServer     *CredentialServer
 	identityServer       *IdentityServer
 	alertsServer         api.OpenStorageAlertsServer
@@ -124,6 +125,9 @@ func New(config *ServerConfig) (*Server, error) {
 		cloudBackupServer: &CloudBackupServer{
 			driver: d,
 		},
+		cloudMigrateServer: &CloudMigrateServer{
+			driver: d,
+		},
 		credentialServer: &CredentialServer{
 			driver: d,
 		},
@@ -144,6 +148,7 @@ func (s *Server) Start() error {
 		api.RegisterOpenStorageCredentialsServer(grpcServer, s.credentialServer)
 		api.RegisterOpenStorageSchedulePolicyServer(grpcServer, s.schedulePolicyServer)
 		api.RegisterOpenStorageCloudBackupServer(grpcServer, s.cloudBackupServer)
+		api.RegisterOpenStorageCloudMigrateServer(grpcServer, s.cloudMigrateServer)
 		api.RegisterOpenStorageIdentityServer(grpcServer, s.identityServer)
 		api.RegisterOpenStorageMountAttachServer(grpcServer, s.volumeServer)
 		api.RegisterOpenStorageAlertsServer(grpcServer, s.alertsServer)

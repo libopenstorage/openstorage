@@ -935,6 +935,50 @@ service OpenStorageCluster {
         get: "/v1/clusters/current"
       };
     }
+    // Creates Pair with a remote cluster and returns details about the remote cluster
+    rpc CreatePair(ClusterPairCreateRequest)
+    returns (ClusterPairCreateResponse){
+      option(google.api.http) = {
+        post: "/v1/clusters/pair"
+        body: "*"
+      };
+    }
+    // Process incoming request from a remote cluster
+    rpc ProcessPairRequest(ClusterPairProcessRequest)
+    returns (ClusterPairProcessResponse){
+      option(google.api.http) = {
+        post: "/v1/clusters/pair/process"
+        body: "*"
+      };
+    }
+    //Get information regarding the cluster pair(s)
+    rpc GetPair(ClusterPairGetRequest)
+    returns (ClusterPairGetResponse){
+      option(google.api.http) = {
+        get: "/v1/clusters/pair"
+      };
+    }
+    //List of cluster pairs
+    rpc EnumeratePairs(ClusterPairsEnumerateRequest)
+    returns (ClusterPairsEnumerateResponse){
+      option(google.api.http) = {
+        get: "/v1/clusters"
+      };
+    }
+    //Delete cluster pair
+    rpc DeletePair(ClusterPairDeleteRequest)
+    returns (ClusterPairDeleteResponse){
+      option(google.api.http) = {
+        delete: "/v1/clusters/pair/{cluster_id}"
+      };
+    }
+    //Get pair token
+    rpc GetPairToken(ClusterPairTokenGetRequest)
+    returns (ClusterPairTokenGetResponse){
+      option(google.api.http) = {
+        get: "/v1/clusters/pair/token"
+      };
+    }
 }
 
 // OpenStorageNode is a service used to manage nodes in the cluster
@@ -1429,6 +1473,34 @@ service OpenStorageCloudBackup {
       };
     }
 }
+
+// Provides Cloud migration features
+service OpenStorageCloudMigrate {
+  //Start a migration operation
+  rpc CloudMigrateStart(CloudMigrateStartRequest)
+    returns (CloudMigrateStartResponse) {
+      option(google.api.http) = {
+        post: "/v1/cloudmigrate"
+        body: "*"
+      };
+    }
+  //Stop a migration operation
+  rpc CloudMigrateCancel(CloudMigrateCancelRequest)
+    returns (CloudMigrateCancelResponse) {
+      option(google.api.http) = {
+        post: "/v1/cloudmigrate/cancel"
+        body: "*"
+      };
+    }
+  //Get the status of migration operation  
+  rpc CloudMigrateStatus(CloudMigrateStatusRequest)
+    returns (CloudMigrateStatusResponse) {
+      option(google.api.http) = {
+        get: "/v1/cloudmigrate"
+      };
+    }
+}
+
 
 // Empty response
 message SdkSchedulePolicyCreateResponse {
@@ -2481,6 +2553,10 @@ message CloudMigrateStartRequest {
     string target_id = 3;
 }
 
+// Empty response
+message CloudMigrateStartResponse {
+}
+
 // Request to stop a cloud migration
 message CloudMigrateCancelRequest {
     // The type of operation to cancel
@@ -2489,6 +2565,14 @@ message CloudMigrateCancelRequest {
     string cluster_id = 2;
     // Depending on the operation type this can be a VolumeID or VolumeGroupID
     string target_id = 3;
+}
+
+// Empty response
+message CloudMigrateCancelResponse {
+}
+
+// Request for cloud migration operations
+message CloudMigrateStatusRequest{
 }
 
 message CloudMigrateInfo {
@@ -2515,6 +2599,7 @@ message CloudMigrateInfo {
 message CloudMigrateInfoList {
     repeated CloudMigrateInfo list = 1;
 }
+
 
 // Response with a status of the cloud migration operations
 message CloudMigrateStatusResponse {
@@ -2578,6 +2663,10 @@ message ClusterPairDeleteRequest {
     string cluster_id = 1;
 }
 
+// Response to delete a cluster pair
+// swagger:model
+message ClusterPairDeleteResponse {
+}
 // Request to get the token for a cluster
 // swagger:model
 message ClusterPairTokenGetRequest {
@@ -2626,6 +2715,11 @@ message ClusterPairGetResponse {
     //
     // in: body
     ClusterPairInfo pair_info = 1;
+}
+
+// Request to list a cluster
+// swagger:model
+message ClusterPairsEnumerateRequest {
 }
 
 // Response to enumerate all the cluster pairs
