@@ -1052,7 +1052,7 @@
     },
     "apiSdkSchedulePolicyCreateRequest": {
       "properties": {
-        "SchedulePolicy": {
+        "schedule_policy": {
           "$ref": "#/definitions/apiSdkSchedulePolicy",
           "title": "Schedule Policy"
         }
@@ -2362,7 +2362,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.15.0"
+    "version": "0.16.0"
   },
   "paths": {
     "/v1/alerts": {
