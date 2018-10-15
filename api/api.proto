@@ -1267,7 +1267,7 @@ service OpenStorageCloudBackup {
 // Define a schedule policy request
 message SdkSchedulePolicyCreateRequest {
   // Schedule Policy
-  SdkSchedulePolicy SchedulePolicy = 1;
+  SdkSchedulePolicy schedule_policy = 1;
 }
 
 // Empty response
@@ -2249,7 +2249,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 9;
     // SDK version patch value of this specification
-    Patch = 1;
+    Patch = 2;
   }
 
   // The following cannot be set to use the enum Version because the REST
