@@ -47,7 +47,11 @@ func (s *ClusterPairServer) Create(
 
 	resp, err := s.cluster.CreatePair(req)
 	if err != nil {
+<<<<<<< HEAD
 		return nil, status.Errorf(codes.Internal, "Cannot create cluster with remote pair %s : %v",
+=======
+		return nil, status.Errorf(codes.Internal, "Cannot create cluster with remote pair %v : %v",
+>>>>>>> CreatePair API implementation with Success test
 			req.GetRemoteClusterIp(), err.Error())
 	}
 
@@ -56,6 +60,7 @@ func (s *ClusterPairServer) Create(
 		RemoteClusterName: resp.GetRemoteClusterName(),
 	}, nil
 }
+<<<<<<< HEAD
 
 // ProcessRequest handles a remote cluster's pair request
 func (s *ClusterPairServer) ProcessRequest(
@@ -132,3 +137,5 @@ func (s *ClusterPairServer) Delete(
 	}
 	return &api.SdkClusterPairDeleteResponse{}, nil
 }
+=======
+>>>>>>> CreatePair API implementation with Success test
