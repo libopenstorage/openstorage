@@ -46,7 +46,7 @@ func TestSdkSchedulePolicyCreateSuccess(t *testing.T) {
 			Name: "dummy-schedule-name",
 			Schedules: []*api.SdkSchedulePolicyInterval{
 				&api.SdkSchedulePolicyInterval{
-					Retain: 1,
+					Retain: 10,
 					PeriodType: &api.SdkSchedulePolicyInterval_Daily{
 						Daily: &api.SdkSchedulePolicyIntervalDaily{
 							Hour:   0,
@@ -55,19 +55,30 @@ func TestSdkSchedulePolicyCreateSuccess(t *testing.T) {
 					},
 				},
 				&api.SdkSchedulePolicyInterval{
-					Retain: 1,
-					PeriodType: &api.SdkSchedulePolicyInterval_Daily{
-						Daily: &api.SdkSchedulePolicyIntervalDaily{
-							Minute: 1,
-							Hour:   0,
+					Retain: 20,
+					PeriodType: &api.SdkSchedulePolicyInterval_Monthly{
+						Monthly: &api.SdkSchedulePolicyIntervalMonthly{
+							Day:    20,
+							Hour:   11,
+							Minute: 22,
 						},
 					},
 				},
 				&api.SdkSchedulePolicyInterval{
-					Retain: 1,
+					Retain: 30,
 					PeriodType: &api.SdkSchedulePolicyInterval_Periodic{
 						Periodic: &api.SdkSchedulePolicyIntervalPeriodic{
 							Seconds: seconds,
+						},
+					},
+				},
+				&api.SdkSchedulePolicyInterval{
+					Retain: 40,
+					PeriodType: &api.SdkSchedulePolicyInterval_Weekly{
+						Weekly: &api.SdkSchedulePolicyIntervalWeekly{
+							Day:    api.SdkTimeWeekday_SdkTimeWeekdayTuesday,
+							Hour:   10,
+							Minute: 10,
 						},
 					},
 				},
@@ -83,6 +94,43 @@ func TestSdkSchedulePolicyCreateSuccess(t *testing.T) {
 			intervals, _, err := sched.ParseScheduleAndPolicies(schedule)
 			assert.NoError(t, err)
 			assert.Len(t, intervals, len(req.GetSchedulePolicy().GetSchedules()))
+
+			// Verify name is correct
+			assert.Equal(t, req.GetSchedulePolicy().GetName(), name)
+
+			// Verify data is correct
+			policies, err := retainInternalSpecYamlByteToSdkSched([]byte(schedule))
+			assert.NoError(t, err)
+			assert.Len(t, policies, len(req.GetSchedulePolicy().GetSchedules()))
+
+			// Check Daily data
+			actualDaily := policies[0]
+			expectedDaily := req.GetSchedulePolicy().GetSchedules()[0]
+			assert.Equal(t, expectedDaily.GetRetain(), actualDaily.GetRetain())
+			assert.Equal(t, expectedDaily.GetDaily().GetHour(), actualDaily.GetDaily().GetHour())
+			assert.Equal(t, expectedDaily.GetDaily().GetMinute(), actualDaily.GetDaily().GetMinute())
+
+			// Check Monthly data
+			actualMonthly := policies[1]
+			expectedMonthly := req.GetSchedulePolicy().GetSchedules()[1]
+			assert.Equal(t, expectedMonthly.GetRetain(), actualMonthly.GetRetain())
+			assert.Equal(t, expectedMonthly.GetMonthly().GetDay(), actualMonthly.GetMonthly().GetDay())
+			assert.Equal(t, expectedMonthly.GetMonthly().GetHour(), actualMonthly.GetMonthly().GetHour())
+			assert.Equal(t, expectedMonthly.GetMonthly().GetMinute(), actualMonthly.GetMonthly().GetMinute())
+
+			// Check Periodic data
+			actualPeriodic := policies[2]
+			expectedPeriodic := req.GetSchedulePolicy().GetSchedules()[2]
+			assert.Equal(t, expectedPeriodic.GetRetain(), actualPeriodic.GetRetain())
+			assert.Equal(t, expectedPeriodic.GetPeriodic().GetSeconds(), actualPeriodic.GetPeriodic().GetSeconds())
+
+			// Check weekly data
+			actualWeekly := policies[3]
+			expectedWeekly := req.GetSchedulePolicy().GetSchedules()[3]
+			assert.Equal(t, expectedWeekly.GetRetain(), actualWeekly.GetRetain())
+			assert.Equal(t, expectedWeekly.GetWeekly().GetDay(), actualWeekly.GetWeekly().GetDay())
+			assert.Equal(t, expectedWeekly.GetWeekly().GetHour(), actualWeekly.GetWeekly().GetHour())
+			assert.Equal(t, expectedWeekly.GetWeekly().GetMinute(), actualWeekly.GetWeekly().GetMinute())
 		}).
 		Return(nil).
 		Times(1)
