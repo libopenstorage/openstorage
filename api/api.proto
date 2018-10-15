@@ -951,6 +951,28 @@ service OpenStorageCluster {
     }
 }
 
+// OpenStorageClusterPair service provides the methods to manage a cluster pair
+service OpenStorageClusterPair{
+  // Creates Pair with a remote cluster and returns details about the remote cluster
+  //
+  // ##### Example
+  // {% codetabs name="Golang", type="go" -%}
+  // id, err := client.Create(context.Background(), &api.ClusterPairCreateRequest{
+  //   RemoteClusterIp: "127.0.0.1",
+  //   RemoteClusterPort: 12345,
+  //   RemoteClusterToken: "<Auth-Token>",
+  //   SetDefault: <Boolean-Value>,
+  // })
+  // {%- endcodetabs %}
+  rpc Create(ClusterPairCreateRequest)
+    returns (ClusterPairCreateResponse){
+      option(google.api.http) = {
+        post: "/v1/clusterspairs"
+        body: "*"
+      };
+    }
+}
+
 // OpenStorageNode is a service used to manage nodes in the cluster
 service OpenStorageNode {
   // Inspect returns information about the specified node
@@ -2683,6 +2705,7 @@ message ClusterPairsEnumerateResponse {
     // required: false
     map<string, ClusterPairInfo> pairs = 2;
 }
+
 
 message Catalog {
     // Name of the Directory/File
