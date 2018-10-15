@@ -113,8 +113,8 @@ func sdkSchedToRetainInternalSpec(
 		}
 		spec = sched.Weekly(
 			sdkWeekdayToTimeWeekday(weekly.GetDay()),
-			int(daily.GetHour()),
-			int(daily.GetMinute())).
+			int(weekly.GetHour()),
+			int(weekly.GetMinute())).
 			Spec()
 	} else if monthly := req.GetMonthly(); monthly != nil {
 		// monthly
