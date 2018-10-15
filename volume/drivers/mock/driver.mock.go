@@ -5,9 +5,10 @@
 package mock
 
 import (
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	api "github.com/libopenstorage/openstorage/api"
-	reflect "reflect"
 )
 
 // MockVolumeDriver is a mock of VolumeDriver interface
