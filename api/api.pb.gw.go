@@ -89,6 +89,19 @@ func request_OpenStorageCluster_InspectCurrent_0(ctx context.Context, marshaler 
 
 }
 
+func request_OpenStorageClusterPair_Create_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageClusterPairClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ClusterPairCreateRequest
+	var metadata runtime.ServerMetadata
+
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.Create(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
 func request_OpenStorageNode_Inspect_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageNodeClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq SdkNodeInspectRequest
 	var metadata runtime.ServerMetadata
@@ -1261,6 +1274,84 @@ var (
 
 var (
 	forward_OpenStorageCluster_InspectCurrent_0 = runtime.ForwardResponseMessage
+)
+
+// RegisterOpenStorageClusterPairHandlerFromEndpoint is same as RegisterOpenStorageClusterPairHandler but
+// automatically dials to "endpoint" and closes the connection when "ctx" gets done.
+func RegisterOpenStorageClusterPairHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
+	conn, err := grpc.Dial(endpoint, opts...)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			if cerr := conn.Close(); cerr != nil {
+				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+			}
+			return
+		}
+		go func() {
+			<-ctx.Done()
+			if cerr := conn.Close(); cerr != nil {
+				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+			}
+		}()
+	}()
+
+	return RegisterOpenStorageClusterPairHandler(ctx, mux, conn)
+}
+
+// RegisterOpenStorageClusterPairHandler registers the http handlers for service OpenStorageClusterPair to "mux".
+// The handlers forward requests to the grpc endpoint over "conn".
+func RegisterOpenStorageClusterPairHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
+	return RegisterOpenStorageClusterPairHandlerClient(ctx, mux, NewOpenStorageClusterPairClient(conn))
+}
+
+// RegisterOpenStorageClusterPairHandler registers the http handlers for service OpenStorageClusterPair to "mux".
+// The handlers forward requests to the grpc endpoint over the given implementation of "OpenStorageClusterPairClient".
+// Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "OpenStorageClusterPairClient"
+// doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
+// "OpenStorageClusterPairClient" to call the correct interceptors.
+func RegisterOpenStorageClusterPairHandlerClient(ctx context.Context, mux *runtime.ServeMux, client OpenStorageClusterPairClient) error {
+
+	mux.Handle("POST", pattern_OpenStorageClusterPair_Create_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_OpenStorageClusterPair_Create_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_OpenStorageClusterPair_Create_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	return nil
+}
+
+var (
+	pattern_OpenStorageClusterPair_Create_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "clusterspairs"}, ""))
+)
+
+var (
+	forward_OpenStorageClusterPair_Create_0 = runtime.ForwardResponseMessage
 )
 
 // RegisterOpenStorageNodeHandlerFromEndpoint is same as RegisterOpenStorageNodeHandler but
