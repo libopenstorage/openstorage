@@ -18,10 +18,9 @@ script:
   - make vet
   - make docker-test
   - make test-sdk
-  - if [ "${TRAVIS_BRANCH}" == "master" ] && [ "${TRAVIS_PULL_REQUEST}" == "false" ]; then
+  - if [ "${TRAVIS_PULL_REQUEST}" == "false" ]; then
       echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin;
-      make docker-build-mock-sdk-server;
-      docker push openstorage/mock-sdk-server;
+      make push-mock-sdk-server;
     fi
 notifications:
   email:

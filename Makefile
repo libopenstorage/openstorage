@@ -3,6 +3,16 @@ HAS_PROTOC_GEN_GRPC_GATEWAY := $(shell command -v protoc-gen-grpc-gateway 2> /de
 HAS_PROTOC_GEN_SWAGGER := $(shell command -v protoc-gen-swagger 2> /dev/null)
 HAS_PROTOC_GEN_GO := $(shell command -v protoc-gen-go 2> /dev/null)
 HAS_SDKTEST := $(shell command -v sdk-test 2> /dev/null)
+BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+
+ifeq ($(BRANCH), master)
+MOCKSDKSERVERTAG := latest
+else
+MOCKSDKSERVERTAG := $(shell go run tools/sdkver/sdkver.go)
+endif
+
+REGISTRY = openstorage
+IMAGE_MOCKSDKSERVER := $(REGISTRY)/mock-sdk-server:$(MOCKSDKSERVERTAG)
 
 ifndef TAGS
 TAGS := daemon
@@ -192,11 +202,14 @@ docker-build-mock-sdk-server: packr
 				-tags "$(TAGS)" \
 				-o ./_tmp/osd \
 				./cmd/osd
-	docker build -t openstorage/mock-sdk-server -f Dockerfile.sdk .
+	docker build -t $(IMAGE_MOCKSDKSERVER) -f Dockerfile.sdk .
 	rm -rf _tmp
 
 docker-build-osd-dev-base:
 	docker build -t quay.io/openstorage/osd-dev-base -f Dockerfile.osd-dev-base .
+
+push-mock-sdk-server: docker-build-mock-sdk-server
+	docker push $(IMAGE_MOCKSDKSERVER)
 
 docker-build-osd-dev:
 	# This image is local only and will not be pushed
@@ -254,7 +267,7 @@ launch-sdk-quick:
 	@-docker stop sdk > /dev/null 2>&1
 	docker run --rm --name sdk \
 		-d -p 9110:9110 -p 9100:9100 \
-		openstorage/mock-sdk-server
+		$(IMAGE_MOCKSDKSERVER)
 
 launch-sdk: sdk launch-sdk-quick
 
