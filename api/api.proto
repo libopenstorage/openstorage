@@ -953,7 +953,7 @@ service OpenStorageClusterPair{
   rpc Create(ClusterPairCreateRequest)
     returns (ClusterPairCreateResponse){
       option(google.api.http) = {
-        post: "/v1/clusters/pair"
+        post: "/v1/clusterspairs"
         body: "*"
       };
     }
