@@ -57,7 +57,7 @@ func main() {
 		}
 	}
 
-	fmt.Printf("%s", version)
+	fmt.Printf("%s\n", version)
 }
 
 func setSwaggerVersion(file, version string) error {
