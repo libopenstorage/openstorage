@@ -2830,7 +2830,7 @@
         ]
       }
     },
-    "/v1/clusters/pair": {
+    "/v1/clusterspairs": {
       "post": {
         "description": "##### Example\n{% codetabs name=\"Golang\", type=\"go\" -%}\nid, err := client.Create(context.Background(), \u0026api.ClusterPairCreateRequest{\n  RemoteClusterIp: \"127.0.0.1\",\n  RemoteClusterPort: 12345,\n  RemoteClusterToken: \"\u003cAuth-Token\u003e\",\n  SetDefault: \u003cBoolean-Value\u003e,\n})\n{%- endcodetabs %}",
         "operationId": "Create",
