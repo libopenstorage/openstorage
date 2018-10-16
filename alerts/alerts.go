@@ -116,7 +116,7 @@ func (m *manager) Raise(alert *api.Alert) error {
 	}
 
 	key := getKey(alert.Resource.String(), alert.GetAlertType(), alert.ResourceId)
-	if _, err := m.kv.Delete(key); err != nil {
+	if _, err := m.kv.Delete(key); err != nil && err != kvdb.ErrNotFound {
 		logrus.WithField("pkg", "openstorage/alerts").WithField("func", "Raise").Error(err)
 	}
 
