@@ -11,6 +11,7 @@ import (
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/portworx/kvdb"
+	"github.com/sirupsen/logrus"
 )
 
 // Error type for defining error constants.
@@ -36,9 +37,9 @@ const (
 )
 
 const (
-	HalfDay  = 60 * 60 * 12
+	HalfDay  = Day / 2
 	Day      = 60 * 60 * 24
-	FiveDays = 60 * 60 * 24 * 5
+	FiveDays = Day * 5
 )
 
 // Manager manages alerts.
@@ -114,15 +115,20 @@ func (m *manager) Raise(alert *api.Alert) error {
 		alert.Timestamp = &timestamp.Timestamp{Seconds: time.Now().Unix()}
 	}
 
+	key := getKey(alert.Resource.String(), alert.GetAlertType(), alert.ResourceId)
+	if _, err := m.kv.Delete(key); err != nil && err != kvdb.ErrNotFound {
+		logrus.WithField("pkg", "openstorage/alerts").WithField("func", "Raise").Error(err)
+	}
+
 	// ttl is time to live. it indicates how long (in seconds) the object should live inside kvdb backend.
 	// kvdb will delete the object once ttl elapses.
 	if alert.Cleared {
 		// if the alert is marked Cleared, it is pushed to kvdb with a ttlOption of half day
-		_, err := m.kv.Put(getKey(alert.Resource.String(), alert.GetAlertType(), alert.ResourceId), alert, m.ttl)
+		_, err := m.kv.Put(key, alert, m.ttl)
 		return err
 	} else {
 		// otherwise use the ttl value embedded in the alert object
-		_, err := m.kv.Put(getKey(alert.Resource.String(), alert.GetAlertType(), alert.ResourceId), alert, alert.Ttl)
+		_, err := m.kv.Put(key, alert, alert.Ttl)
 		return err
 	}
 }
