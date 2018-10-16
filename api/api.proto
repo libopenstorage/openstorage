@@ -943,7 +943,7 @@ service OpenStorageClusterPair{
   //
   // ##### Example
   // {% codetabs name="Golang", type="go" -%}
-  // id, err := client.Create(context.Background(), &api.SdkVolumeCreateRequest{
+  // id, err := client.Create(context.Background(), &api.ClusterPairCreateRequest{
   //   RemoteClusterIp: "127.0.0.1",
   //   RemoteClusterPort: 12345,
   //   RemoteClusterToken: "<Auth-Token>",
