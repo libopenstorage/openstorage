@@ -137,15 +137,6 @@ const (
 	AutoAggregation = math.MaxUint32
 )
 
-// Api cluster pair constants
-const (
-	ClusterPairIP      = "ClusterPairIP"
-	ClusterPairPort    = "ClusterPairPort"
-	ClusterPairName    = "name"
-	ClusterPairToken   = "<Auth-Token>"
-	ClusterPairDefault = "false"
-)
-
 // Node describes the state of a node.
 // It includes the current physical state (CPU, memory, storage, network usage) as
 // well as the containers running on the system.

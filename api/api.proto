@@ -2666,6 +2666,24 @@ message ClusterPairsEnumerateResponse {
     map<string, ClusterPairInfo> pairs = 2;
 }
 
+// Request to create a cluster pair
+message SdkClusterPairsCreateRequest {
+    // Request of the cluster pair creation
+    //
+    // in: body
+    // required: true
+    ClusterPairCreateRequest req = 1;
+}
+
+// Response of the cluster pair creation 
+message SdkClusterPairsCreateResponse {
+  // Response of the cluster pair creation
+  //
+  // in: body
+  // required: true
+  ClusterPairCreateResponse response = 1;
+}
+
 message Catalog {
     // Name of the Directory/File
     string name = 1;
