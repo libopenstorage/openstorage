@@ -100,6 +100,44 @@
       "title": "- ATTACH_STATE_EXTERNAL: Attached and available externally\n - ATTACH_STATE_INTERNAL: Attached but only available internally\n - ATTACH_STATE_INTERNAL_SWITCH: Switching from External to Internal",
       "type": "string"
     },
+    "apiClusterPairCreateRequest": {
+      "properties": {
+        "remote_cluster_ip": {
+          "title": "IP of the remote cluster",
+          "type": "string"
+        },
+        "remote_cluster_port": {
+          "format": "int64",
+          "title": "Port for the remote cluster",
+          "type": "integer"
+        },
+        "remote_cluster_token": {
+          "title": "Token used to authenticate with the remote cluster",
+          "type": "string"
+        },
+        "set_default": {
+          "format": "boolean",
+          "title": "Set the new pair as the default",
+          "type": "boolean"
+        }
+      },
+      "title": "Used to send a request to create a cluster pair\nswagger:model",
+      "type": "object"
+    },
+    "apiClusterPairCreateResponse": {
+      "properties": {
+        "remote_cluster_id": {
+          "title": "ID of the remote cluster",
+          "type": "string"
+        },
+        "remote_cluster_name": {
+          "title": "Name of the remote cluster",
+          "type": "string"
+        }
+      },
+      "title": "Response for a pair request\nswagger:response",
+      "type": "object"
+    },
     "apiCosType": {
       "default": "NONE",
       "enum": [
@@ -2789,6 +2827,34 @@
         "summary": "InspectCurrent returns information about the current cluster",
         "tags": [
           "OpenStorageCluster"
+        ]
+      }
+    },
+    "/v1/clusters/pair": {
+      "post": {
+        "description": "##### Example\n{% codetabs name=\"Golang\", type=\"go\" -%}\nid, err := client.Create(context.Background(), \u0026api.SdkVolumeCreateRequest{\n  RemoteClusterIp: \"127.0.0.1\",\n  RemoteClusterPort: 12345,\n  RemoteClusterToken: \"\u003cAuth-Token\u003e\",\n  SetDefault: \u003cBoolean-Value\u003e,\n})\n{%- endcodetabs %}",
+        "operationId": "Create",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiClusterPairCreateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiClusterPairCreateResponse"
+            }
+          }
+        },
+        "summary": "Creates Pair with a remote cluster and returns details about the remote cluster",
+        "tags": [
+          "OpenStorageClusterPair"
         ]
       }
     },
