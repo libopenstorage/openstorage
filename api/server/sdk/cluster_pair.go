@@ -47,7 +47,7 @@ func (s *ClusterPairServer) Create(
 
 	resp, err := s.cluster.CreatePair(req)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Cannot create cluster with remote pair %v : %v",
+		return nil, status.Errorf(codes.Internal, "Cannot create cluster with remote pair %s : %v",
 			req.GetRemoteClusterIp(), err.Error())
 	}
 
