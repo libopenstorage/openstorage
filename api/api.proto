@@ -635,7 +635,7 @@ service OpenStorageAlerts {
 // Define a schedule policy request
 message SdkSchedulePolicyCreateRequest {
     // Schedule Policy
-    SdkSchedulePolicy SchedulePolicy = 1;
+    SdkSchedulePolicy schedule_policy = 1;
 }
 
 // Alerts is an array of Alert objects
@@ -2435,7 +2435,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 15;
+    Minor = 16;
     // SDK version patch value of this specification
     Patch = 0;
   }
@@ -2578,19 +2578,23 @@ message ClusterPairProcessRequest {
 // Response after a pairing has been processed
 // swagger:response
 message ClusterPairProcessResponse {
+    // ID of the cluster which processed the pair request
     //
     // in: body
-    // ID of the cluster which processed the pair request
     string remote_cluster_id = 1;
     // Name of the cluster which processed the pair request
     //
     // in: body
     string remote_cluster_name = 2;
+    // List of endpoints that can be used to communicate with the cluster
+    //
+    // in: body
+    repeated string remote_cluster_endpoints = 3;
     // Key/value pair of options returned on successful pairing
     // Opaque to openstorage and interpreted by the drivers
     //
     // in: body
-    map<string, string> options = 3;
+    map<string, string> options = 4;
 }
 
 // Request to to delete a cluster pair
@@ -2621,17 +2625,15 @@ message ClusterPairInfo {
     string id = 1;
     // Name of the cluster
     string name = 2;
-    // IP of the cluster
-    string ip = 3;
-    // Port for the cluster
-    uint32 port = 4;
+    // Endpoints of the cluster
+    repeated string endpoints = 3;
     // Flag used to determine if communication is over a secure channel
-    bool secure = 5;
+    bool secure = 4;
     // Token associated with cluster
-    string token = 6;
+    string token = 5;
     // Key/value pair of options associated with the cluster
     // Opaque to openstorage and interpreted by the drivers
-    map<string, string> options = 7;
+    map<string, string> options = 6;
 }
 
 // Request to get a cluster pair

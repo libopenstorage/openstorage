@@ -63,12 +63,11 @@ func (c *ClusterManager) CreatePair(
 	}
 
 	pairInfo := &api.ClusterPairInfo{
-		Id:      resp.RemoteClusterId,
-		Name:    resp.RemoteClusterName,
-		Ip:      request.RemoteClusterIp,
-		Port:    request.RemoteClusterPort,
-		Token:   request.RemoteClusterToken,
-		Options: resp.Options,
+		Id:        resp.RemoteClusterId,
+		Name:      resp.RemoteClusterName,
+		Endpoints: resp.RemoteClusterEndpoints,
+		Token:     request.RemoteClusterToken,
+		Options:   resp.Options,
 	}
 	err = pairCreate(pairInfo, request.SetDefault)
 	if err != nil {

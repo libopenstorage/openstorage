@@ -5,6 +5,11 @@
 
 ## Releases
 
+### v0.16.0 - Tech Preview (10/15/2018)
+
+* Changed value of SdkSchedulePolicyCreateRequest from `SchedulePolicy` to the
+  correct name of `schedule_policy`. This will not impact Golang.
+
 ### v0.15.0 - Tech Preview (10/10/2018)
 
 * Added support to set the snapshot schedule policy of a Volume
