@@ -101,6 +101,19 @@ func (c *clusterClient) GetPair(
 	return resp, nil
 }
 
+func (c *clusterClient) RefreshPair(
+	pairId string,
+) error {
+
+	path := clusterPath + PairPath
+	response := c.c.Put().Resource(path).Instance(pairId).Do()
+
+	if response.Error() != nil {
+		return response.FormatError()
+	}
+	return nil
+}
+
 func (c *clusterClient) EnumeratePairs() (*api.ClusterPairsEnumerateResponse, error) {
 	resp := &api.ClusterPairsEnumerateResponse{}
 	path := clusterPath + PairPath

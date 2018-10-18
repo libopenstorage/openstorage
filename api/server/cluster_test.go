@@ -877,6 +877,34 @@ func TestGetClusterPair(t *testing.T) {
 	assert.Nil(t, resp)
 }
 
+func TestRefreshClusterPair(t *testing.T) {
+	// Create a new global test cluster
+	ts, tc := testClusterServer(t)
+	defer ts.Close()
+	defer tc.Finish()
+
+	// create a cluster client to make the REST call
+	c, err := clusterclient.NewClusterClient(ts.URL, "v1")
+	assert.NoError(t, err)
+
+	// mock the cluster response
+	tc.MockCluster().
+		EXPECT().
+		RefreshPair("goodPairId").
+		Return(nil)
+	tc.MockCluster().
+		EXPECT().
+		RefreshPair("badPairId").
+		Return(fmt.Errorf("Pair Id not found"))
+
+	// make the REST call
+	restClient := clusterclient.ClusterManager(c)
+	err = restClient.RefreshPair("goodPairId")
+	assert.NoError(t, err)
+	err = restClient.RefreshPair("badPairId")
+	assert.Error(t, err)
+}
+
 func TestEnumerateClusterPairs(t *testing.T) {
 	// Create a new global test cluster
 	ts, tc := testClusterServer(t)

@@ -376,6 +376,18 @@ func (mr *MockClusterMockRecorder) ProcessPairRequest(arg0 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProcessPairRequest", reflect.TypeOf((*MockCluster)(nil).ProcessPairRequest), arg0)
 }
 
+// RefreshPair mocks base method
+func (m *MockCluster) RefreshPair(arg0 string) error {
+	ret := m.ctrl.Call(m, "RefreshPair", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RefreshPair indicates an expected call of RefreshPair
+func (mr *MockClusterMockRecorder) RefreshPair(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RefreshPair", reflect.TypeOf((*MockCluster)(nil).RefreshPair), arg0)
+}
+
 // Remove mocks base method
 func (m *MockCluster) Remove(arg0 []api.Node, arg1 bool) error {
 	ret := m.ctrl.Call(m, "Remove", arg0, arg1)

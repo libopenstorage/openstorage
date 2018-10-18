@@ -87,7 +87,7 @@ func (c *ClusterManager) ProcessPairRequest(
 	request *api.ClusterPairProcessRequest,
 ) (*api.ClusterPairProcessResponse, error) {
 	response := &api.ClusterPairProcessResponse{
-		RemoteClusterId:   c.config.ClusterId,
+		RemoteClusterId:   c.Uuid(),
 		RemoteClusterName: c.config.ClusterId,
 	}
 
@@ -119,6 +119,50 @@ func (c *ClusterManager) ProcessPairRequest(
 	logrus.Infof("Successfully paired with remote cluster %v", request.SourceClusterId)
 
 	return response, nil
+}
+
+func (c *ClusterManager) RefreshPair(
+	id string,
+) error {
+	pair, err := pairGet(id)
+	if err != nil {
+		return err
+	}
+	processRequest := &api.ClusterPairProcessRequest{
+		SourceClusterId:    c.config.ClusterId,
+		RemoteClusterToken: pair.Token,
+	}
+
+	for _, endpoint := range pair.Endpoints {
+		clnt, err := clusterclient.NewClusterClient(endpoint, cluster.APIVersion)
+		if err != nil {
+			logrus.Warnf("Unable to create cluster client for %v: %v", pair.Endpoints[0], err)
+			continue
+		}
+		remoteCluster := clusterclient.ClusterManager(clnt)
+
+		// Issue a remote pair request to get updated info about the cluster
+		resp, err := remoteCluster.ProcessPairRequest(processRequest)
+		if err != nil {
+			logrus.Warnf("Unable to get pair info from %v: %v", endpoint, err)
+			continue
+		}
+		pairInfo := &api.ClusterPairInfo{
+			Id:        resp.RemoteClusterId,
+			Name:      resp.RemoteClusterName,
+			Endpoints: resp.RemoteClusterEndpoints,
+			Token:     pair.Token,
+		}
+		// Use original options and override with updates ones. This
+		// prevents any options we created locally from getting overriden
+		pairInfo.Options = pair.Options
+		for k, v := range resp.Options {
+			pairInfo.Options[k] = v
+		}
+
+		return pairUpdate(pairInfo)
+	}
+	return fmt.Errorf("error updating pair info for %v, all endpoints are unreachable", id)
 }
 
 func (c *ClusterManager) DeletePair(

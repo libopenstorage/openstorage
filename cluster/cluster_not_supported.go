@@ -200,6 +200,11 @@ func (m *NullClusterPair) GetPair(arg0 string) (*api.ClusterPairGetResponse, err
 	return nil, ErrNotImplemented
 }
 
+// RefreshPair
+func (m *NullClusterPair) RefreshPair(arg0 string) error {
+	return ErrNotImplemented
+}
+
 // EnumeratePairs
 func (m *NullClusterPair) EnumeratePairs() (*api.ClusterPairsEnumerateResponse, error) {
 	return nil, ErrNotImplemented

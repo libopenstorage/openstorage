@@ -261,6 +261,10 @@ type ClusterPair interface {
 	// EnumeratePairs returns list of cluster pairs
 	EnumeratePairs() (*api.ClusterPairsEnumerateResponse, error)
 
+	// RefreshPair Refreshes a cluster pairing by fetching latest information
+	// from the remote cluster
+	RefreshPair(string) error
+
 	// DeletePair Delete a cluster pairing
 	DeletePair(string) error
 
