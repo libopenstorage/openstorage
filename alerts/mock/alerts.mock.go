@@ -5,11 +5,10 @@
 package mockalerts
 
 import (
-	reflect "reflect"
-
 	gomock "github.com/golang/mock/gomock"
 	alerts "github.com/libopenstorage/openstorage/alerts"
 	api "github.com/libopenstorage/openstorage/api"
+	reflect "reflect"
 )
 
 // MockFilterDeleter is a mock of FilterDeleter interface

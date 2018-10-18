@@ -773,6 +773,31 @@ func (c *clusterApi) getPair(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
+func (c *clusterApi) refreshPair(w http.ResponseWriter, r *http.Request) {
+	method := "refreshPair"
+
+	vars := mux.Vars(r)
+	id, ok := vars["id"]
+	if !ok {
+		c.sendError(c.name, method, w, "id required for refresh Pair request", http.StatusBadRequest)
+		return
+	}
+
+	inst, err := clustermanager.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = inst.RefreshPair(id)
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode("Successfully refreshed cluster pair")
+}
+
 func (c *clusterApi) deletePair(w http.ResponseWriter, r *http.Request) {
 	method := "deletePair"
 
