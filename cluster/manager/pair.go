@@ -50,7 +50,6 @@ func (c *ClusterManager) CreatePair(
 	// Alert all listeners that we are pairing with a cluster.
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err = e.Value.(cluster.ClusterListener).CreatePair(
-			&c.selfNode,
 			resp,
 		)
 		if err != nil {
@@ -107,7 +106,7 @@ func (c *ClusterManager) ProcessPairRequest(
 	// Alert all listeners that we have received a pair request
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err := e.Value.(cluster.ClusterListener).ProcessPairRequest(
-			&c.selfNode,
+			request,
 			response,
 		)
 		if err != nil {
@@ -133,7 +132,7 @@ func (c *ClusterManager) RefreshPair(
 		return err
 	}
 	processRequest := &api.ClusterPairProcessRequest{
-		SourceClusterId:    c.config.ClusterId,
+		SourceClusterId:    c.Uuid(),
 		RemoteClusterToken: pair.Token,
 	}
 
