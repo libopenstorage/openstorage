@@ -30,7 +30,7 @@ func (c *ClusterManager) CreatePair(
 	logrus.Infof("Attempting to pair with cluster at IP %v", remoteIp)
 
 	processRequest := &api.ClusterPairProcessRequest{
-		SourceClusterId:    c.config.ClusterId,
+		SourceClusterId:    c.Uuid(),
 		RemoteClusterToken: request.RemoteClusterToken,
 	}
 
@@ -86,6 +86,10 @@ func (c *ClusterManager) CreatePair(
 func (c *ClusterManager) ProcessPairRequest(
 	request *api.ClusterPairProcessRequest,
 ) (*api.ClusterPairProcessResponse, error) {
+	if request.SourceClusterId == c.Uuid() {
+		return nil, fmt.Errorf("Cannot create cluster pair with self")
+	}
+
 	response := &api.ClusterPairProcessResponse{
 		RemoteClusterId:   c.Uuid(),
 		RemoteClusterName: c.config.ClusterId,
