@@ -2790,6 +2790,10 @@ message SdkClusterPairDeleteRequest {
 message SdkClusterPairDeleteResponse{
 }
 
+// Empty Response
+message SdkClusterPairDeleteResponse{
+}
+
 // Request to get the token for a cluster
 message ClusterPairTokenGetRequest {
     // Reset token if already preset
