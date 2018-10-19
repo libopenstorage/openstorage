@@ -84,10 +84,41 @@ func sdkSchedToRetainInternalSpec(
 	req *api.SdkSchedulePolicyInterval,
 ) (*sched.RetainIntervalSpec, error) {
 
+	// Set Default Retain Values to Schedule Policy Object depending on the type.
+	// So if the golang default values or Zero is passed by the user
+	// they are converted internally to the default values specifed in pxctl
+	// This should be documented in the openstorage sdk so the user knows
+	// what are the default retain values for their respecitive SchedulePolicy types
+
+	periodType := req.GetPeriodType()
+	switch periodType.(type) {
+
+	// PXCTL says 0 disables for periodic, need to figure out a way to differentiate
+	// between wanting to set a default value by passing nothing and
+	// deliberately passing a default value 0 to disable periodic type
+	// Combination of using *int64 and omitempty would help in during JSON unmarshalling
+
+	// Below is pxctl help output
+	/*
+				OPTIONS:
+		   --periodic mins,k, -p mins,k                  periodic snapshot interval in mins,k (keeps 5 by default), 0 disables all schedule snapshots
+		   --daily hh:mm,k, -d hh:mm,k                   daily snapshot at specified hh:mm,k (keeps 7 by default)
+		   --weekly weekday@hh:mm,k, -w weekday@hh:mm,k  weekly snapshot at specified weekday@hh:mm,k (keeps 5 by default)
+			 --monthly day@hh:mm,k, -m day@hh:mm,k         monthly snapshot at specified day@hh:mm,k (keeps 12 by default)
+	*/
+	case *api.SdkSchedulePolicyInterval_Periodic:
+		req.Retain = 5
+	case *api.SdkSchedulePolicyInterval_Daily:
+		req.Retain = 7
+	case *api.SdkSchedulePolicyInterval_Weekly:
+		req.Retain = 5
+	case *api.SdkSchedulePolicyInterval_Monthly:
+		req.Retain = 12
+	}
+
 	if req.GetRetain() < 1 {
 		return nil, status.Error(codes.InvalidArgument, "Must retain more than 0")
 	}
-
 	// Translate sdk schedule to yaml RetainIntervalSpec string.
 	var spec sched.IntervalSpec
 	if daily := req.GetDaily(); daily != nil {
