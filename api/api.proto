@@ -179,6 +179,18 @@ enum OperationFlags {
   OP_FLAGS_DETACH_FORCE = 2;
 }
 
+enum VolumePlacementEnforcementType {
+  Required = 0;
+  Preferred = 1;
+}
+
+enum LabelSelectorOperator {
+  In = 0;
+  NotIn = 1;
+  Exists = 2;
+  DoesNotExist = 3;
+}
+
 // StorageResource groups properties of a storage device.
 // swagger:model
 message StorageResource {
@@ -2722,50 +2734,29 @@ message VolumePlacementSpec {
 message VolumePlacementRule {
   // Defines the number of volume replicas affected by this rule. If not provided,
   // rule would affect all replicas
-  // +optional
-  uint64 affectedReplicas = 1;
+  // (optional)
+  int64 affected_replicas = 1;
+  // Defines the weight of the rule which allows to break to tie with other matching rules
+  // (optional)
+  int64 weight = 2;
+  // Specifies the rule enforcement policy. Can take values: required or preferred.
+  // (optional)
+  VolumePlacementEnforcementType enforcement = 3;
   // Defines the affinity rule for the volume placement
-  VolumePlacementAffinity affinity = 2;
-}
-
-// VolumePlacementAffinity allows to specify affinity and anti-affinity rules based on
-// storage pools, nodes and volumes.
-message VolumePlacementAffinity {
-  // Defines the storage pool affinity for volume placement
-  AffinityRule poolAffinity = 1;
-  // Defines the storage pool anti-affinity for volume placement
-  AffinityRule poolAntiAffinity = 2;
-
-  // Defines the node affinity for volume placement
-  AffinityRule nodeAffinity = 3;
-  // Defines the node anti-affinity for volume placement
-  AffinityRule nodeAntiAffinity = 4;
-
-  // Defines the volume affinity for volume placement
-  AffinityRule volumeAffinity = 5;
-  // Defines the volume anti-affinity for volume placement
-  AffinityRule volumeAntiAffinity = 6;
+  AffinityRule affinity = 4;
+  // Defines the anti affinity rule for the volume placement
+  AffinityRule anti_affinity = 5;
 }
 
 message AffinityRule {
-  // If false, the affinity rule is best-effort/preferred rather than enforced
-  bool bestEffort = 1;
-  // A label query over storage pools to select
-  LabelSelector labelSelector = 2;
+  // This is a list of label selector requirements. The requirements are ANDed.
+  repeated LabelSelectorRequirement match_expressions = 1;
 }
 
 
-// A label selector is a label query over a set of resources. The result of matchLabels and
-// matchExpressions are ANDed. An empty label selector matches all objects. A null
-// label selector matches no objects.
+// A label selector is a label query over a set of resources. The result of match_labels and
+// match_expressions are ANDed. A nil or empty label selector matches all objects.
 message LabelSelector {
-  // matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
-  // map is equivalent to an element of matchExpressions, whose key field is "key", the
-  // operator is "In", and the values array contains only "value". The requirements are ANDed.
-  map<string, string> matchLabels = 1;
-
-  // matchExpressions is a list of label selector requirements. The requirements are ANDed.
-  repeated LabelSelectorRequirement matchExpressions = 2;
 }
 
 // A label selector requirement is a selector that contains values, a key, and an operator that
@@ -2776,7 +2767,7 @@ message LabelSelectorRequirement {
 
   // operator represents a key's relationship to a set of values.
   // Valid operators are In, NotIn, Exists and DoesNotExist.
-  string operator = 2;
+  LabelSelectorOperator operator = 2;
 
   // values is an array of string values. If the operator is In or NotIn,
   // the values array must be non-empty. If the operator is Exists or DoesNotExist,

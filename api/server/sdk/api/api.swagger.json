@@ -29,6 +29,21 @@
       "title": "- UNKNOWN: Unknown service\n - CLUSTER: Cluster management\n - CLOUD_BACKUP: Cloud backup of volumes management\n - CREDENTIALS: Credentials management\n - NODE: Node management\n - OBJECT_STORAGE: Object Storage management\n - SCHEDULE_POLICY: Schedule policy management\n - VOLUME: Volume management\n - ALERTS: Alert enumeration\n - MOUNT_ATTACH: Mount/Attach Support",
       "type": "string"
     },
+<<<<<<< HEAD
+=======
+    "apiAffinityRule": {
+      "properties": {
+        "match_expressions": {
+          "description": "This is a list of label selector requirements. The requirements are ANDed.",
+          "items": {
+            "$ref": "#/definitions/apiLabelSelectorRequirement"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+>>>>>>> 48e2a6b... simplify the structure by removing node, pool and volume types
     "apiAlert": {
       "properties": {
         "alert_type": {
@@ -146,6 +161,7 @@
       ],
       "type": "string"
     },
+<<<<<<< HEAD
     "apiIoStrategy": {
       "description": "IoStrategy defines how I/O should be performed to backing storage media.",
       "properties": {
@@ -153,6 +169,28 @@
           "description": "AsyncIO enables kaio.",
           "format": "boolean",
           "type": "boolean"
+=======
+    "apiLabelSelectorOperator": {
+      "default": "In",
+      "enum": [
+        "In",
+        "NotIn",
+        "Exists",
+        "DoesNotExist"
+      ],
+      "type": "string"
+    },
+    "apiLabelSelectorRequirement": {
+      "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
+      "properties": {
+        "key": {
+          "description": "key is the label key that the selector applies to.",
+          "type": "string"
+        },
+        "operator": {
+          "$ref": "#/definitions/apiLabelSelectorOperator",
+          "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist."
+>>>>>>> 48e2a6b... simplify the structure by removing node, pool and volume types
         },
         "early_ack": {
           "description": "EarlyAck enables acks for async I/O at the source.",
@@ -2145,6 +2183,56 @@
       "title": "VolumeLocator is a structure that is attached to a volume\nand is used to carry opaque metadata.\nswagger:model",
       "type": "object"
     },
+<<<<<<< HEAD
+=======
+    "apiVolumePlacementEnforcementType": {
+      "default": "Required",
+      "enum": [
+        "Required",
+        "Preferred"
+      ],
+      "type": "string"
+    },
+    "apiVolumePlacementRule": {
+      "properties": {
+        "affected_replicas": {
+          "format": "int64",
+          "title": "Defines the number of volume replicas affected by this rule. If not provided,\nrule would affect all replicas\n(optional)",
+          "type": "string"
+        },
+        "affinity": {
+          "$ref": "#/definitions/apiAffinityRule",
+          "title": "Defines the affinity rule for the volume placement"
+        },
+        "anti_affinity": {
+          "$ref": "#/definitions/apiAffinityRule",
+          "title": "Defines the anti affinity rule for the volume placement"
+        },
+        "enforcement": {
+          "$ref": "#/definitions/apiVolumePlacementEnforcementType",
+          "title": "Specifies the rule enforcement policy. Can take values: required or preferred.\n(optional)"
+        },
+        "weight": {
+          "format": "int64",
+          "title": "Defines the weight of the rule which allows to break to tie with other matching rules\n(optional)",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "apiVolumePlacementSpec": {
+      "properties": {
+        "rules": {
+          "items": {
+            "$ref": "#/definitions/apiVolumePlacementRule"
+          },
+          "title": "Defines a list of rules as part of the placement spec",
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+>>>>>>> 48e2a6b... simplify the structure by removing node, pool and volume types
     "apiVolumeSpec": {
       "properties": {
         "aggregation_level": {
