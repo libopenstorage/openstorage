@@ -208,7 +208,6 @@ func (c *ClusterManager) EnumeratePairs() (*api.ClusterPairsEnumerateResponse, e
 	response.DefaultId, err = getDefaultPairId()
 	if err != nil {
 		logrus.Warnf("Error getting default cluster pair: %v", err)
-		return nil, err
 	}
 	return response, nil
 }
@@ -281,6 +280,9 @@ func pairCreate(info *api.ClusterPairInfo, setDefault bool) error {
 	key := ClusterPairKey + "/" + info.Id
 	_, err = kv.Create(key, info, 0)
 	if err != nil {
+		if err == kvdb.ErrExist {
+			return fmt.Errorf("Already paired with cluster %v", info.Id)
+		}
 		return err
 	}
 
