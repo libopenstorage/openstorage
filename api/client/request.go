@@ -332,7 +332,7 @@ func (r Response) FormatError() error {
 	if len(r.body) == 0 {
 		return fmt.Errorf("Error: %v", r.err)
 	}
-	return fmt.Errorf("HTTP-%d: %s", r.statusCode, string(r.body))
+	return fmt.Errorf("%v", strings.TrimSpace(string(r.body)))
 }
 
 func digest(method string, path string) string {
