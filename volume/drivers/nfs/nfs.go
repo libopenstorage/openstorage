@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path"
 	"strconv"
 	"syscall"
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"golang.org/x/sys/unix"
+	losetup "gopkg.in/freddierice/go-losetup.v1"
 
 	"math/rand"
 	"strings"
@@ -19,6 +22,7 @@ import (
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/pkg/mount"
 	"github.com/libopenstorage/openstorage/pkg/seed"
+	"github.com/libopenstorage/openstorage/pkg/util"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers/common"
 	"github.com/pborman/uuid"
@@ -27,10 +31,12 @@ import (
 
 const (
 	Name         = "nfs"
-	Type         = api.DriverType_DRIVER_TYPE_FILE
 	NfsDBKey     = "OpenStorageNFSKey"
 	nfsMountPath = "/var/lib/openstorage/nfs/"
 	nfsBlockFile = ".blockdevice"
+
+	// Set to block, but it will handle size 0 as file based
+	Type = api.DriverType_DRIVER_TYPE_BLOCK
 )
 
 // Implements the open storage volume interface.
@@ -60,7 +66,6 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 	} else {
 		logrus.Printf("NFS driver initializing with %s:%s ", server, path)
 	}
-
 	//support more than one server using CSV
 	//TB-FIXME: modify driver params flow to support map[string]struct/array
 	servers := strings.Split(server, ",")
@@ -71,6 +76,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		logrus.Warnf("Failed to create mount manager for server: %v (%v)", server, err)
 		return nil, err
 	}
+
 	inst := &driver{
 		IODriver:              volume.IONotSupported,
 		StoreEnumerator:       common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
@@ -89,10 +95,11 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 	//make directory for each nfs server
 	for _, v := range servers {
 		logrus.Infof("Calling mkdirAll: %s", nfsMountPath+v)
-		if err := os.MkdirAll(nfsMountPath+v, 0744); err != nil {
+		if err := os.MkdirAll(nfsMountPath+v, 0755); err != nil {
 			return nil, err
 		}
 	}
+
 	src := inst.nfsPath
 	if server != "" {
 		src = ":" + inst.nfsPath
@@ -100,27 +107,46 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 
 	//mount each nfs server
 	for _, v := range inst.nfsServers {
-		// If src is already mounted at dest, leave it be.
-		mountExists, err := mounter.Exists(src, nfsMountPath+v)
-		if !mountExists {
-			// Mount the nfs server locally on a unique path.
-			syscall.Unmount(nfsMountPath+v, 0)
+		nfsServer := v + src
+		nfsMountPoint := nfsMountPath + v
+		inst.mounter.Reload(nfsServer)
+
+		// ignore the error and let it retry
+		mounted, err := inst.mounter.Exists(nfsServer, nfsMountPoint)
+		if err != nil && err != mount.ErrEnoent {
+			return nil, fmt.Errorf("Unable to determine if mounted nfs exists: %v", err)
+		}
+		if !mounted {
 			if server != "" {
-				err = syscall.Mount(
-					src,
-					nfsMountPath+v,
+				err = inst.mounter.Mount(
+					0,
+					nfsServer,
+					nfsMountPoint,
 					"nfs",
 					0,
 					"nolock,addr="+v,
-				)
+					0,
+					nil)
 			} else {
-				err = syscall.Mount(src, nfsMountPath+v, "", syscall.MS_BIND, "")
+				err = inst.mounter.Mount(
+					0,
+					nfsServer,
+					nfsMountPoint,
+					"",
+					syscall.MS_BIND,
+					"",
+					0,
+					nil)
 			}
 			if err != nil {
-				logrus.Printf("Unable to mount %s:%s at %s (%+v)",
+				logrus.Errorf("Unable to mount %s:%s at %s (%+v)",
 					v, inst.nfsPath, nfsMountPath+v, err)
 				return nil, err
+			} else {
+				logrus.Infof("NFS: %s mounted", nfsMountPath+v)
 			}
+		} else {
+			logrus.Infof("NFS: %s already mounted", nfsMountPath+v)
 		}
 	}
 
@@ -259,15 +285,10 @@ func (d *driver) Create(
 
 		labels["server"] = server
 	}
-
-	// Create a directory on the NFS server with this UUID.
 	volPathParent := path.Join(nfsMountPath, labels["server"])
 	volPath := path.Join(volPathParent, volumeID)
-	err := os.MkdirAll(volPath, 0744)
-	if err != nil {
-		logrus.Println(err)
-		return "", err
-	}
+
+	// Setup volume object
 	if source != nil {
 		if len(source.Seed) != 0 {
 			seed, err := seed.New(source.Seed, locator.VolumeLabels)
@@ -285,50 +306,163 @@ func (d *driver) Create(
 		}
 	}
 
-	f, err := os.Create(path.Join(volPathParent, volumeID+nfsBlockFile))
-	if err != nil {
-		logrus.Println(err)
-		return "", err
-	}
-	defer f.Close()
+	// Create volume
+	var v *api.Volume
+	if d.isShared(spec) {
+		// File based
+		v = common.NewVolume(
+			volumeID,
+			api.FSType_FS_TYPE_NFS,
+			locator,
+			source,
+			spec,
+		)
 
-	if err := f.Truncate(int64(spec.Size)); err != nil {
-		logrus.Println(err)
-		return "", err
+		// Create a directory on the NFS server with this UUID.
+		err := os.MkdirAll(volPath, 0744)
+		if err != nil {
+			logrus.Println(err)
+			return "", err
+		}
+
+		// Setup volume
+		v.State = api.VolumeState_VOLUME_STATE_PENDING
+		if err := d.CreateVol(v); err != nil {
+			return "", err
+		}
+
+		// Check for cloning
+		if source != nil && len(source.GetParent()) != 0 {
+			// Need to clone
+			if err := d.clone(volumeID, source.GetParent()); err != nil {
+				d.Delete(v.GetId())
+				return "", err
+			}
+		}
+
+		// Set to ready
+		v.State = api.VolumeState_VOLUME_STATE_AVAILABLE
+		if err := d.UpdateVol(v); err != nil {
+			d.Delete(v.GetId())
+			logrus.Errorf("Failed to update volume %s to ready state: %v", volumeID, err)
+			return "", err
+		}
+	} else {
+		// Block volume
+		if spec.GetSize() == 0 {
+			return "", fmt.Errorf("Cannot have size of zero on block volume")
+		}
+		v = common.NewVolume(
+			volumeID,
+			spec.GetFormat(),
+			locator,
+			source,
+			spec,
+		)
+
+		// Set as pending until the volume is ready
+		v.State = api.VolumeState_VOLUME_STATE_PENDING
+		if err := d.CreateVol(v); err != nil {
+			return "", err
+		}
+
+		// Check if this from as a clone
+		if source != nil && len(source.GetParent()) != 0 {
+			// Need to clone
+			if err := d.clone(volumeID, source.GetParent()); err != nil {
+				d.Delete(v.GetId())
+				return "", err
+			}
+		} else {
+			// This is a new volume
+			blockFile := path.Join(volPathParent, volumeID+nfsBlockFile)
+			f, err := os.Create(blockFile)
+			if err != nil {
+				logrus.Errorf("Unable to create block file %s: %v", blockFile, err)
+				return "", err
+			}
+			defer f.Close()
+
+			// Create sparse file
+			if err := f.Truncate(int64(spec.Size)); err != nil {
+				logrus.Println(err)
+				return "", err
+			}
+
+			// Format
+			if spec.GetFormat() != api.FSType_FS_TYPE_NONE {
+				dev, err := losetup.Attach(blockFile, 0, false)
+				if err != nil {
+					return "", err
+				}
+				defer func() {
+					if err := dev.Detach(); err != nil {
+						logrus.Errorf("Failed to detach %s", dev)
+					}
+				}()
+				logrus.Infof("Formatting %s with %v", dev, spec.Format)
+
+				// Get mkfs
+				cmd, err := mkfsFormatTypeCmd(spec.Format.SimpleString())
+				if err != nil {
+					return "", err
+				}
+				o, err := exec.Command(cmd, dev.Path()).Output()
+				if err != nil {
+					logrus.Warnf("Failed to run command %s %s: %v\nOutput: %s", cmd, dev.Path(), err, string(o))
+					return "", err
+				}
+			}
+		}
+
+		// Set to ready
+		v.State = api.VolumeState_VOLUME_STATE_AVAILABLE
+		if err := d.UpdateVol(v); err != nil {
+			d.Delete(v.GetId())
+			logrus.Errorf("Failed to update volume %s to ready state: %v", volumeID, err)
+			return "", err
+		}
 	}
 
-	v := common.NewVolume(
-		volumeID,
-		api.FSType_FS_TYPE_NFS,
-		locator,
-		source,
-		spec,
-	)
-	v.DevicePath = path.Join(volPathParent, volumeID+nfsBlockFile)
-
-	if err := d.CreateVol(v); err != nil {
-		return "", err
-	}
-	return v.Id, err
+	return v.Id, nil
 }
 
-func (d *driver) Delete(volumeID string) error {
+func (d *driver) Delete(volumeID string) (e error) {
+	defer func() {
+		if e != nil {
+			logrus.Errorf("Delete of %s failed: %v", volumeID, e)
+		} else {
+			logrus.Infof("Volume %s deleted", volumeID)
+		}
+	}()
+
 	v, err := d.GetVol(volumeID)
 	if err != nil {
 		logrus.Println(err)
 		return err
 	}
 
-	// Delete the simulated block volume
-	os.Remove(v.DevicePath)
+	if v.GetState() == api.VolumeState_VOLUME_STATE_ATTACHED {
+		return fmt.Errorf("Volume is still attached and cannot be deleted")
+	}
 
 	nfsVolPath, err := d.getNFSVolumePath(v)
 	if err != nil {
 		return err
 	}
 
-	// Delete the directory on the nfs server.
-	os.RemoveAll(nfsVolPath)
+	// Delete the simulated block volume
+	if d.isShared(v.GetSpec()) {
+		// Delete the directory on the nfs server.
+		if err := os.RemoveAll(nfsVolPath); err != nil {
+			return fmt.Errorf("Failed to remove %s: %v", nfsVolPath, err)
+		}
+	} else {
+		// Delete the block device
+		if err := os.Remove(nfsVolPath + nfsBlockFile); err != nil {
+			return fmt.Errorf("Failed to remove %s: %v", nfsVolPath+nfsBlockFile, err)
+		}
+	}
 
 	err = d.DeleteVol(volumeID)
 	if err != nil {
@@ -356,23 +490,46 @@ func (d *driver) Mount(volumeID string, mountpath string, options map[string]str
 		return err
 	}
 
-	srcPath := path.Join(":", nfsPath, volumeID)
-	mountExists, err := d.mounter.Exists(srcPath, mountpath)
-	if !mountExists {
-		d.mounter.Unmount(path.Join(nfsPath, volumeID), mountpath,
-			syscall.MNT_DETACH, 0, nil)
-		if err := d.mounter.Mount(
-			0, path.Join(nfsPath, volumeID),
-			mountpath,
-			string(v.Spec.Format),
-			syscall.MS_BIND,
-			"",
-			0,
-			nil,
-		); err != nil {
-			logrus.Printf("Cannot mount %s at %s because %+v",
-				path.Join(nfsPath, volumeID), mountpath, err)
-			return err
+	if d.isShared(v.GetSpec()) {
+		if v.GetState() != api.VolumeState_VOLUME_STATE_AVAILABLE {
+			return fmt.Errorf("Volume is not in an available state")
+		}
+		// File access
+		srcPath := path.Join(":", nfsPath, volumeID)
+		mountExists, _ := d.mounter.Exists(srcPath, mountpath)
+		if !mountExists {
+			/*
+				THIS was here and probably needs to be removed
+				d.mounter.Unmount(path.Join(nfsPath, volumeID), mountpath,
+					syscall.MNT_DETACH, 0, nil)
+			*/
+			if err := d.mounter.Mount(
+				0, path.Join(nfsPath, volumeID),
+				mountpath,
+				"",
+				syscall.MS_BIND,
+				"",
+				0,
+				nil,
+			); err != nil {
+				logrus.Printf("Cannot mount %s at %s because %+v",
+					path.Join(nfsPath, volumeID), mountpath, err)
+				return err
+			}
+		}
+	} else {
+		// Block access
+		if d.isRaw(v) {
+			return fmt.Errorf("Volume of raw format cannot be mounted")
+		}
+		if v.GetState() != api.VolumeState_VOLUME_STATE_ATTACHED {
+			return fmt.Errorf("Voume %s is not attached", volumeID)
+		}
+		mountExists, _ := d.mounter.Exists(v.DevicePath, mountpath)
+		if !mountExists {
+			if err := syscall.Mount(v.DevicePath, mountpath, v.Spec.Format.SimpleString(), 0, ""); err != nil {
+				return fmt.Errorf("Failed to mount %v at %v: %v", v.DevicePath, mountpath, err)
+			}
 		}
 	}
 	if v.AttachPath == nil {
@@ -380,6 +537,7 @@ func (d *driver) Mount(volumeID string, mountpath string, options map[string]str
 	}
 	v.AttachPath = append(v.AttachPath, mountpath)
 	return d.UpdateVol(v)
+
 }
 
 func (d *driver) Unmount(volumeID string, mountpath string, options map[string]string) error {
@@ -396,13 +554,91 @@ func (d *driver) Unmount(volumeID string, mountpath string, options map[string]s
 		return err
 	}
 
-	err = d.mounter.Unmount(nfsVolPath, mountpath,
-		syscall.MNT_DETACH, 0, nil)
+	if d.isShared(v.GetSpec()) {
+		err = d.mounter.Unmount(nfsVolPath, mountpath, syscall.MNT_DETACH, 0, nil)
+		if err != nil {
+			return err
+		}
+		v.AttachPath = d.mounter.Mounts(nfsVolPath)
+	} else {
+		if err := syscall.Unmount(mountpath, 0); err != nil {
+			return err
+		}
+		v.AttachPath = nil
+	}
+	return d.UpdateVol(v)
+}
+
+func (d *driver) clone(newVolumeID, volumeID string) error {
+	nfsVolPath, err := d.getNFSVolumePathById(volumeID)
 	if err != nil {
 		return err
 	}
-	v.AttachPath = d.mounter.Mounts(nfsVolPath)
-	return d.UpdateVol(v)
+
+	newNfsVolPath, err := d.getNFSVolumePathById(newVolumeID)
+	if err != nil {
+		return err
+	}
+
+	v, err := d.GetVol(volumeID)
+	if err != nil {
+		return err
+	}
+
+	// NFS does not support snapshots, so just copy the files.
+
+	if d.isShared(v.GetSpec()) {
+		// Copy directory
+		if err := copyDir(nfsVolPath, newNfsVolPath); err != nil {
+			d.Delete(newVolumeID)
+			return err
+		}
+	} else {
+		origBlockPath := nfsVolPath + nfsBlockFile
+		cloneBlockPath := newNfsVolPath + nfsBlockFile
+		// Copy the block file. Could take a while so try to optimize it.
+		_, err = exec.Command(
+			"/bin/cp",
+			"--reflink=always",
+			origBlockPath,
+			cloneBlockPath,
+		).Output()
+		if err == nil {
+			logrus.Infof("Cloned %s to %s using reflink copy",
+				origBlockPath,
+				cloneBlockPath)
+		} else {
+			// Second try sparse copy
+			_, err = exec.Command(
+				"/bin/cp",
+				"--sparse=always",
+				origBlockPath,
+				cloneBlockPath,
+			).Output()
+			if err == nil {
+				logrus.Infof("Cloned %s to %s using sparse copy",
+					origBlockPath,
+					cloneBlockPath)
+			} else {
+				// slow copy
+				if err := copyFile(origBlockPath, cloneBlockPath); err == nil {
+					logrus.Infof("Cloned %s to %s using slow copy",
+						origBlockPath,
+						cloneBlockPath)
+				} else {
+					logrus.Errorf("Failed to clone %s to %s: %v",
+						origBlockPath,
+						cloneBlockPath,
+						err)
+					return fmt.Errorf("Failed to clone %s to %s: %v",
+						origBlockPath,
+						cloneBlockPath,
+						err)
+				}
+			}
+		}
+	}
+	return nil
 }
 
 func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
@@ -412,30 +648,8 @@ func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 		return "", nil
 	}
 	source := &api.Source{Parent: volumeID}
-	locator.Name = d.getNewSnapVolName(source.Parent)
-
 	logrus.Infof("Creating snap vol name: %s", locator.Name)
-	newVolumeID, err := d.Create(locator, source, vols[0].Spec)
-	if err != nil {
-		return "", nil
-	}
-
-	nfsVolPath, err := d.getNFSVolumePathById(volumeID)
-	if err != nil {
-		return "", err
-	}
-
-	newNfsVolPath, err := d.getNFSVolumePathById(newVolumeID)
-	if err != nil {
-		return "", err
-	}
-
-	// NFS does not support snapshots, so just copy the files.
-	if err := copyDir(nfsVolPath, newNfsVolPath); err != nil {
-		d.Delete(newVolumeID)
-		return "", nil
-	}
-	return newVolumeID, nil
+	return d.Create(locator, source, vols[0].Spec)
 }
 
 func (d *driver) Restore(volumeID string, snapID string) error {
@@ -471,11 +685,74 @@ func (d *driver) Attach(volumeID string, attachOptions map[string]string) (strin
 	if err != nil {
 		return "", err
 	}
+	blockFile := path.Join(nfsPath, volumeID+nfsBlockFile)
 
-	return path.Join(nfsPath, volumeID+nfsBlockFile), nil
+	// Check if it is block
+	v, err := util.VolumeFromName(d, volumeID)
+	if err != nil {
+		return "", err
+	}
+
+	// If it has no size, no need to attach
+	if d.isShared(v.GetSpec()) {
+		return nfsPath, nil
+	} else if v.GetState() == api.VolumeState_VOLUME_STATE_ATTACHED {
+		// if it already attached.
+		return v.GetDevicePath(), nil
+	}
+
+	// If it is a block device, create a loop device
+	dev, err := losetup.Attach(blockFile, 0, false /* not read only: TODO change this */)
+	if err != nil {
+		return "", err
+	}
+
+	// Update volume info
+	v.DevicePath = dev.Path()
+	v.State = api.VolumeState_VOLUME_STATE_ATTACHED
+	if err := d.UpdateVol(v); err != nil {
+		dev.Detach()
+		return "", err
+	}
+
+	return dev.Path(), nil
 }
 
 func (d *driver) Detach(volumeID string, options map[string]string) error {
+
+	// Get volume info
+	v, err := util.VolumeFromName(d, volumeID)
+	if err != nil {
+		return err
+	}
+
+	// If it has no size, no need to detach
+	if d.isShared(v.GetSpec()) {
+		return nil
+	} else if v.GetState() != api.VolumeState_VOLUME_STATE_ATTACHED {
+		// if it is not attached, just return
+		return nil
+	}
+
+	// Detach -- code from https://github.com/freddierice/go-losetup
+	loopFile, err := os.OpenFile(v.GetDevicePath(), os.O_RDONLY, 0660)
+	if err != nil {
+		return fmt.Errorf("could not open loop device")
+	}
+	defer loopFile.Close()
+
+	_, _, errno := unix.Syscall(unix.SYS_IOCTL, loopFile.Fd(), losetup.ClrFd, 0)
+	if errno != 0 {
+		return fmt.Errorf("error clearing loopfile: %v", errno)
+	}
+
+	// Update volume info
+	v.DevicePath = ""
+	v.State = api.VolumeState_VOLUME_STATE_AVAILABLE
+	if err := d.UpdateVol(v); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -577,4 +854,38 @@ func (d *driver) Catalog(volumeID, path, depth string) (api.CatalogResponse, err
 
 func (d *driver) VolService(volumeID string, vtreq *api.VolumeServiceRequest) (*api.VolumeServiceResponse, error) {
 	return nil, volume.ErrNotSupported
+}
+
+func (d *driver) isRaw(v *api.Volume) bool {
+	return d.isRawBySpec(v.GetSpec())
+}
+
+func (d *driver) isRawBySpec(spec *api.VolumeSpec) bool {
+	return !d.isShared(spec) &&
+		spec.GetFormat() == api.FSType_FS_TYPE_NONE
+}
+
+func (d *driver) isShared(spec *api.VolumeSpec) bool {
+	return spec.GetShared() || spec.GetSharedv4()
+}
+
+func mkfsFormatTypeCmd(format string) (string, error) {
+	cmd := "mkfs." + format
+	dirs := []string{"/usr/sbin", "/sbin", "/usr/bin", "/bin"}
+	for _, d := range dirs {
+		checkCmd := d + "/" + cmd
+		if fileExists(checkCmd) {
+			return checkCmd, nil
+		}
+	}
+	return "", fmt.Errorf("File %s not found in %+v", cmd, dirs)
+}
+
+// From https://golangcode.com/check-if-a-file-exists/
+func fileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
 }

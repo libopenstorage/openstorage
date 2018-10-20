@@ -47,6 +47,7 @@ type Context struct {
 	testPath      string
 	testFile      string
 	Encrypted     bool
+	Shared        bool
 	Passphrase    string
 	AttachOptions map[string]string
 }
@@ -115,6 +116,7 @@ func create(t *testing.T, ctx *Context) {
 			Format:     ctx.Filesystem,
 			Encrypted:  ctx.Encrypted,
 			Passphrase: ctx.Passphrase,
+			Shared:     ctx.Shared,
 		})
 
 	require.NoError(t, err, "Failed in Create")
