@@ -84,16 +84,16 @@ $(OSDSANITY)-clean:
 	@$(MAKE) -C cmd/osd-sanity clean
 
 docker-build-proto:
-	docker build -t openstorage/osd-proto -f Dockerfile.proto .
+	docker build -t quay.io/openstorage/osd-proto -f Dockerfile.proto .
 
-docker-proto: docker-build-proto
+docker-proto:
 	docker run \
 		--privileged \
 		-v $(shell pwd):/go/src/github.com/libopenstorage/openstorage \
 		-e "GOPATH=/go" \
 		-e "DOCKER_PROTO=yes" \
 		-e "PATH=/bin:/usr/bin:/usr/local/bin:/go/bin" \
-		openstorage/osd-proto \
+		quay.io/openstorage/osd-proto \
 			make proto
 
 proto:
@@ -195,7 +195,11 @@ docker-build-mock-sdk-server: packr
 	docker build -t openstorage/mock-sdk-server -f Dockerfile.sdk .
 	rm -rf _tmp
 
+docker-build-osd-dev-base:
+	docker build -t quay.io/openstorage/osd-dev-base -f Dockerfile.osd-dev-base .
+
 docker-build-osd-dev:
+	# This image is local only and will not be pushed
 	docker build -t openstorage/osd-dev -f Dockerfile.osd-dev .
 
 docker-build: docker-build-osd-dev
@@ -235,7 +239,7 @@ docker-build-osd-internal:
 	rm -rf _tmp
 	mkdir -p _tmp
 	go build -a -tags "$(TAGS)" -o _tmp/osd cmd/osd/main.go
-	docker build -t openstorage/osd -f Dockerfile.osd .
+	docker build -t quay.io/openstorage/osd -f Dockerfile.osd .
 
 docker-build-osd: docker-build-osd-dev
 	docker run \
@@ -264,7 +268,7 @@ launch: docker-build-osd
 		-p 9005:9005 \
 		-p 9100:9100 \
 		-p 9110:9110 \
-		openstorage/osd -d -f /etc/config/config.yaml
+		quay.io/openstorage/osd -d -f /etc/config/config.yaml
 
 # must set HAVE_BTRFS
 launch-local-btrfs: install
@@ -345,3 +349,9 @@ docker-coverage: docker-build-osd-dev
 		-e "TESTFLAGS=$(TESTFLAGS)" \
 		openstorage/osd-dev \
 			make coverage
+
+docker-images: docker-build-proto docker-build-osd-dev-base
+push-docker-images: docker-images
+	docker push quay.io/openstorage/osd-dev-base
+	docker push quay.io/openstorage/osd-proto
+
