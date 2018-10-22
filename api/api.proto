@@ -957,6 +957,52 @@ service OpenStorageClusterPair{
         body: "*"
       };
     }
+    // ProcessRequest handles a remote cluster's pair request
+    //
+    // ##### Example
+    // {% codetabs name="Golang", type="go" -%}
+    // id, err := client.Create(context.Background(), &api.ClusterPairProcessRequest{
+    //   SourceClusterId: "ID",
+    //   RemoteClusterToken: "<Auth-Token>",
+    // })
+    // {%- endcodetabs %}
+    rpc ProcessRequest(ClusterPairProcessRequest)
+      returns (ClusterPairProcessResponse){
+        option(google.api.http) = {
+          post: "/v1/clusterspairs/process"
+          body:"*"
+        };
+      }
+      // Get information about a cluster pair
+      rpc Get(ClusterPairGetRequest)
+        returns (ClusterPairGetResponse){
+          option(google.api.http) = {
+            get: "/v1/clusterspairs/{id}"
+          };
+        }
+      // Enumerate returns list of cluster pairs
+      rpc Enumerate(SdkClusterPairsEnumerateRequest)
+        returns (ClusterPairsEnumerateResponse){
+          option(google.api.http) = {
+            get: "/v1/clusterspairs"
+          };
+        }
+        // GetToken returns a auth token
+        rpc GetToken(ClusterPairTokenGetRequest)
+          returns(ClusterPairTokenGetResponse){
+            option(google.api.http)={
+              get: "/v1/clusterspairs/token"
+            };
+          }
+        // Delete a cluster pair
+        rpc Delete(ClusterPairDeleteRequest)
+          returns (SdkClusterPairDeleteResponse){
+            option(google.api.http) = {
+              delete: "/v1/clusterspairs/{cluster_id}"
+            };
+          }
+
+
 }
 
 // OpenStorageNode is a service used to manage nodes in the cluster
@@ -1166,6 +1212,33 @@ service OpenStorageMountAttach {
       option(google.api.http) = {
         post: "/v1/mountattach/unmount"
         body: "*"
+      };
+    }
+}
+
+// OpenStorageVolumeMigrate is a service used to manage migration of volumes
+service OpenStorageVolumeMigrate {
+  //Start a migration operation
+  rpc Start(CloudMigrateStartRequest)
+    returns (SdkCloudMigrateStartResponse) {
+      option(google.api.http) = {
+        post: "/v1/volumemigrate"
+        body: "*"
+      };
+    }
+  //Stop a migration operation
+  rpc Cancel(CloudMigrateCancelRequest)
+    returns (SdkCloudMigrateCancelResponse) {
+      option(google.api.http) = {
+        post: "/v1/volumemigrate/cancel"
+        body: "*"
+      };
+    }
+  //Get the status of migration operation  
+  rpc Status(SdkCloudMigrateStatusRequest)
+    returns (CloudMigrateStatusResponse) {
+      option(google.api.http) = {
+        get: "/v1/volumemigrate"
       };
     }
 }
@@ -2503,6 +2576,11 @@ message CloudMigrateStartRequest {
     string target_id = 3;
 }
 
+// Empty Response
+message SdkCloudMigrateStartResponse {
+
+}
+
 // Request to stop a cloud migration
 message CloudMigrateCancelRequest {
     // The type of operation to cancel
@@ -2513,6 +2591,10 @@ message CloudMigrateCancelRequest {
     string target_id = 3;
 }
 
+// Empty Response
+message SdkCloudMigrateCancelResponse {
+
+}
 message CloudMigrateInfo {
     // ID of the cluster where the volume is being migrated
     string cluster_id = 1;
@@ -2538,6 +2620,10 @@ message CloudMigrateInfoList {
     repeated CloudMigrateInfo list = 1;
 }
 
+// Empty Request
+message SdkCloudMigrateStatusRequest {
+  
+}
 // Response with a status of the cloud migration operations
 message CloudMigrateStatusResponse {
     // Map of cluster id to the status of volumes being migrated
@@ -2604,6 +2690,10 @@ message ClusterPairDeleteRequest {
     string cluster_id = 1;
 }
 
+// Empty Response
+message SdkClusterPairDeleteResponse{
+}
+
 // Request to get the token for a cluster
 // swagger:model
 message ClusterPairTokenGetRequest {
@@ -2650,6 +2740,10 @@ message ClusterPairGetResponse {
     //
     // in: body
     ClusterPairInfo pair_info = 1;
+}
+
+// Empty Request
+message SdkClusterPairsEnumerateRequest{
 }
 
 // Response to enumerate all the cluster pairs

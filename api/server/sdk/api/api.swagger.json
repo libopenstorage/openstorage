@@ -3,6 +3,28 @@
     "application/json"
   ],
   "definitions": {
+    "CloudMigrateOperationType": {
+      "default": "InvalidType",
+      "enum": [
+        "InvalidType",
+        "MigrateCluster",
+        "MigrateVolume",
+        "MigrateVolumeGroup"
+      ],
+      "title": "- MigrateCluster: Migrate all volumes in the cluster\n - MigrateVolume: Migrate a single volume\n - MigrateVolumeGroup: Migrate a group of volumes",
+      "type": "string"
+    },
+    "CloudMigrateStage": {
+      "default": "InvalidStage",
+      "enum": [
+        "InvalidStage",
+        "Backup",
+        "Restore",
+        "VolumeUpdate",
+        "Done"
+      ],
+      "type": "string"
+    },
     "SdkServiceCapabilityOpenStorageService": {
       "properties": {
         "type": {
@@ -100,6 +122,121 @@
       "title": "- ATTACH_STATE_EXTERNAL: Attached and available externally\n - ATTACH_STATE_INTERNAL: Attached but only available internally\n - ATTACH_STATE_INTERNAL_SWITCH: Switching from External to Internal",
       "type": "string"
     },
+    "apiCloudMigrateCancelRequest": {
+      "properties": {
+        "cluster_id": {
+          "title": "ID of the cluster to which migration should be cancelled",
+          "type": "string"
+        },
+        "operation": {
+          "$ref": "#/definitions/CloudMigrateOperationType",
+          "title": "The type of operation to cancel"
+        },
+        "target_id": {
+          "title": "Depending on the operation type this can be a VolumeID or VolumeGroupID",
+          "type": "string"
+        }
+      },
+      "title": "Request to stop a cloud migration",
+      "type": "object"
+    },
+    "apiCloudMigrateInfo": {
+      "properties": {
+        "cloudbackup_id": {
+          "title": "ID of the cloudbackup used for the migration",
+          "type": "string"
+        },
+        "cluster_id": {
+          "title": "ID of the cluster where the volume is being migrated",
+          "type": "string"
+        },
+        "current_stage": {
+          "$ref": "#/definitions/CloudMigrateStage",
+          "title": "Current stage of the volume migration"
+        },
+        "last_success": {
+          "format": "date-time",
+          "title": "Time of the last successful migration of the volume",
+          "type": "string"
+        },
+        "last_update": {
+          "format": "date-time",
+          "title": "Last time the status was updated",
+          "type": "string"
+        },
+        "local_volume_id": {
+          "title": "ID of the volume on the local cluster",
+          "type": "string"
+        },
+        "local_volume_name": {
+          "title": "Name of the volume on the local cluster",
+          "type": "string"
+        },
+        "remote_volume_id": {
+          "title": "ID of the volume on the remote cluster",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/definitions/apiCloudMigrateStatus",
+          "title": "Status of the current stage"
+        }
+      },
+      "type": "object"
+    },
+    "apiCloudMigrateInfoList": {
+      "properties": {
+        "list": {
+          "items": {
+            "$ref": "#/definitions/apiCloudMigrateInfo"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "apiCloudMigrateStartRequest": {
+      "properties": {
+        "cluster_id": {
+          "title": "ID of the cluster to which volumes are to be migrated",
+          "type": "string"
+        },
+        "operation": {
+          "$ref": "#/definitions/CloudMigrateOperationType",
+          "title": "The type of operation to start"
+        },
+        "target_id": {
+          "title": "Depending on the operation type this can be a VolumeID or VolumeGroupID",
+          "type": "string"
+        }
+      },
+      "title": "Request to start a cloud migration",
+      "type": "object"
+    },
+    "apiCloudMigrateStatus": {
+      "default": "InvalidStatus",
+      "enum": [
+        "InvalidStatus",
+        "Queued",
+        "Initialized",
+        "InProgress",
+        "Failed",
+        "Complete"
+      ],
+      "type": "string"
+    },
+    "apiCloudMigrateStatusResponse": {
+      "properties": {
+        "info": {
+          "additionalProperties": {
+            "$ref": "#/definitions/apiCloudMigrateInfoList"
+          },
+          "title": "Map of cluster id to the status of volumes being migrated",
+          "type": "object"
+        }
+      },
+      "title": "Response with a status of the cloud migration operations",
+      "type": "object"
+    },
     "apiClusterPairCreateRequest": {
       "properties": {
         "remote_cluster_ip": {
@@ -136,6 +273,129 @@
         }
       },
       "title": "Response for a pair request\nswagger:response",
+      "type": "object"
+    },
+    "apiClusterPairGetResponse": {
+      "properties": {
+        "pair_info": {
+          "$ref": "#/definitions/apiClusterPairInfo",
+          "description": "in: body",
+          "title": "Info about the cluster pair"
+        }
+      },
+      "title": "Reponse to get a cluster pair\nswagger:response",
+      "type": "object"
+    },
+    "apiClusterPairInfo": {
+      "properties": {
+        "endpoints": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Endpoints of the cluster",
+          "type": "array"
+        },
+        "id": {
+          "title": "ID of the cluster",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name of the cluster",
+          "type": "string"
+        },
+        "options": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Key/value pair of options associated with the cluster\nOpaque to openstorage and interpreted by the drivers",
+          "type": "object"
+        },
+        "secure": {
+          "format": "boolean",
+          "title": "Flag used to determine if communication is over a secure channel",
+          "type": "boolean"
+        },
+        "token": {
+          "title": "Token associated with cluster",
+          "type": "string"
+        }
+      },
+      "title": "Information about a cluster pair\nswagger:model",
+      "type": "object"
+    },
+    "apiClusterPairProcessRequest": {
+      "properties": {
+        "remote_cluster_token": {
+          "title": "Token used to authenticate with the remote cluster",
+          "type": "string"
+        },
+        "source_cluster_id": {
+          "title": "ID of the cluster requesting the pairing",
+          "type": "string"
+        }
+      },
+      "title": "Used to process a pair request from a remote cluster\nswagger:model",
+      "type": "object"
+    },
+    "apiClusterPairProcessResponse": {
+      "properties": {
+        "options": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "in: body",
+          "title": "Key/value pair of options returned on successful pairing\nOpaque to openstorage and interpreted by the drivers",
+          "type": "object"
+        },
+        "remote_cluster_endpoints": {
+          "description": "in: body",
+          "items": {
+            "type": "string"
+          },
+          "title": "List of endpoints that can be used to communicate with the cluster",
+          "type": "array"
+        },
+        "remote_cluster_id": {
+          "description": "in: body",
+          "title": "ID of the cluster which processed the pair request",
+          "type": "string"
+        },
+        "remote_cluster_name": {
+          "description": "in: body",
+          "title": "Name of the cluster which processed the pair request",
+          "type": "string"
+        }
+      },
+      "title": "Response after a pairing has been processed\nswagger:response",
+      "type": "object"
+    },
+    "apiClusterPairTokenGetResponse": {
+      "properties": {
+        "token": {
+          "title": "Token used to authenticate clusters",
+          "type": "string"
+        }
+      },
+      "title": "Response to get the cluster token\nswagger:model",
+      "type": "object"
+    },
+    "apiClusterPairsEnumerateResponse": {
+      "properties": {
+        "default_id": {
+          "description": "in: body",
+          "title": "ID of the default cluster pair",
+          "type": "string"
+        },
+        "pairs": {
+          "additionalProperties": {
+            "$ref": "#/definitions/apiClusterPairInfo"
+          },
+          "description": "in: body\nrequired: false",
+          "title": "Pairs Info about the cluster pairs",
+          "type": "object"
+        }
+      },
+      "title": "Response to enumerate all the cluster pairs\nswagger:response",
       "type": "object"
     },
     "apiCosType": {
@@ -833,6 +1093,14 @@
       "title": "CloudBackup status types",
       "type": "string"
     },
+    "apiSdkCloudMigrateCancelResponse": {
+      "title": "Empty Response",
+      "type": "object"
+    },
+    "apiSdkCloudMigrateStartResponse": {
+      "title": "Empty Response",
+      "type": "object"
+    },
     "apiSdkClusterInspectCurrentResponse": {
       "properties": {
         "cluster": {
@@ -841,6 +1109,10 @@
         }
       },
       "title": "Defines a response when inspecting the current cluster",
+      "type": "object"
+    },
+    "apiSdkClusterPairDeleteResponse": {
+      "title": "Empty Response",
       "type": "object"
     },
     "apiSdkCredentialCreateRequest": {
@@ -2811,6 +3083,21 @@
       }
     },
     "/v1/clusterspairs": {
+      "get": {
+        "operationId": "Enumerate",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiClusterPairsEnumerateResponse"
+            }
+          }
+        },
+        "summary": "Enumerate returns list of cluster pairs",
+        "tags": [
+          "OpenStorageClusterPair"
+        ]
+      },
       "post": {
         "description": "##### Example\n{% codetabs name=\"Golang\", type=\"go\" -%}\nid, err := client.Create(context.Background(), \u0026api.ClusterPairCreateRequest{\n  RemoteClusterIp: \"127.0.0.1\",\n  RemoteClusterPort: 12345,\n  RemoteClusterToken: \"\u003cAuth-Token\u003e\",\n  SetDefault: \u003cBoolean-Value\u003e,\n})\n{%- endcodetabs %}",
         "operationId": "Create",
@@ -2833,6 +3120,111 @@
           }
         },
         "summary": "Creates Pair with a remote cluster and returns details about the remote cluster",
+        "tags": [
+          "OpenStorageClusterPair"
+        ]
+      }
+    },
+    "/v1/clusterspairs/process": {
+      "post": {
+        "description": "##### Example\n{% codetabs name=\"Golang\", type=\"go\" -%}\nid, err := client.Create(context.Background(), \u0026api.ClusterPairProcessRequest{\n  SourceClusterId: \"ID\",\n  RemoteClusterToken: \"\u003cAuth-Token\u003e\",\n})\n{%- endcodetabs %}",
+        "operationId": "ProcessRequest",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiClusterPairProcessRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiClusterPairProcessResponse"
+            }
+          }
+        },
+        "summary": "ProcessRequest handles a remote cluster's pair request",
+        "tags": [
+          "OpenStorageClusterPair"
+        ]
+      }
+    },
+    "/v1/clusterspairs/token": {
+      "get": {
+        "operationId": "GetToken",
+        "parameters": [
+          {
+            "description": "Reset token if already preset.",
+            "format": "boolean",
+            "in": "query",
+            "name": "reset_token",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiClusterPairTokenGetResponse"
+            }
+          }
+        },
+        "summary": "GetToken returns a auth token",
+        "tags": [
+          "OpenStorageClusterPair"
+        ]
+      }
+    },
+    "/v1/clusterspairs/{cluster_id}": {
+      "delete": {
+        "operationId": "Delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "cluster_id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkClusterPairDeleteResponse"
+            }
+          }
+        },
+        "summary": "Delete a cluster pair",
+        "tags": [
+          "OpenStorageClusterPair"
+        ]
+      }
+    },
+    "/v1/clusterspairs/{id}": {
+      "get": {
+        "operationId": "Get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiClusterPairGetResponse"
+            }
+          }
+        },
+        "summary": "Get information about a cluster pair",
         "tags": [
           "OpenStorageClusterPair"
         ]
@@ -3373,6 +3765,75 @@
         "summary": "Inspect returns information about a specified schedule",
         "tags": [
           "OpenStorageSchedulePolicy"
+        ]
+      }
+    },
+    "/v1/volumemigrate": {
+      "get": {
+        "operationId": "Status",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiCloudMigrateStatusResponse"
+            }
+          }
+        },
+        "summary": "Get the status of migration operation",
+        "tags": [
+          "OpenStorageVolumeMigrate"
+        ]
+      },
+      "post": {
+        "operationId": "Start",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiCloudMigrateStartRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudMigrateStartResponse"
+            }
+          }
+        },
+        "summary": "Start a migration operation",
+        "tags": [
+          "OpenStorageVolumeMigrate"
+        ]
+      }
+    },
+    "/v1/volumemigrate/cancel": {
+      "post": {
+        "operationId": "Cancel",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiCloudMigrateCancelRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudMigrateCancelResponse"
+            }
+          }
+        },
+        "summary": "Stop a migration operation",
+        "tags": [
+          "OpenStorageVolumeMigrate"
         ]
       }
     },
