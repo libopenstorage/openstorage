@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -758,6 +759,51 @@ func (s *VolumeSpec) Copy() *VolumeSpec {
 		copy(spec.ReplicaSet.Nodes, s.ReplicaSet.Nodes)
 	}
 	return &spec
+}
+
+func (s *VolumeSpec) Equals(in *VolumeSpec) bool {
+	if in == nil {
+		return false
+	}
+
+	if in.Ephemeral == s.Ephemeral &&
+		in.Size == s.Size &&
+		in.Format == s.Format &&
+		in.BlockSize == s.BlockSize &&
+		in.HaLevel == s.HaLevel &&
+		in.IoProfile == s.IoProfile &&
+		in.Dedupe == s.Dedupe &&
+		in.SnapshotInterval == s.SnapshotInterval &&
+		reflect.DeepEqual(in.VolumeLabels, s.VolumeLabels) &&
+		in.Shared == s.Shared &&
+		isAggregrationLevelSame(in.AggregationLevel, s.AggregationLevel) &&
+		in.Encrypted == s.Encrypted &&
+		in.Passphrase == s.Passphrase &&
+		in.Scale == s.Scale &&
+		in.Sticky == s.Sticky &&
+		reflect.DeepEqual(in.Group, s.Group) &&
+		in.GroupEnforced == s.GroupEnforced &&
+		in.Compressed == s.Compressed &&
+		in.Cascaded == s.Cascaded &&
+		in.Journal == s.Journal &&
+		in.Sharedv4 == s.Sharedv4 &&
+		in.ForceUnsupportedFsType == s.ForceUnsupportedFsType &&
+		in.Nodiscard == s.Nodiscard {
+		return true
+	}
+
+	return false
+}
+
+func isAggregrationLevelSame(aggr1, aggr2 uint32) bool {
+	if aggr1 == aggr2 ||
+		// one of them is 0 and other is 1.
+		// Both are defaults and mean the same aggregation level
+		aggr1+aggr2 == 1 {
+		return true
+	}
+
+	return false
 }
 
 // Copy makes a deep copy of Node

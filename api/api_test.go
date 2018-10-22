@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCloudBackupStatusTypeToSdkCloudBackupStatusType(t *testing.T) {
@@ -114,4 +115,36 @@ func TestStringToSdkCloudBackupStatusType(t *testing.T) {
 			test.sdkType,
 			StringToSdkCloudBackupStatusType(test.internalType))
 	}
+}
+
+func TestVolumeSpecEquals(t *testing.T) {
+
+	labels := map[string]string{
+		"foo":  "bar",
+		"foo2": "bar2",
+	}
+
+	vol1 := &VolumeSpec{
+		Ephemeral: true,
+		Size:      5,
+		HaLevel:   3,
+		IoProfile: IoProfile_IO_PROFILE_DB,
+		Group: &Group{
+			Id: "foo",
+		},
+		VolumeLabels: labels,
+	}
+
+	isEqual := vol1.Equals(nil)
+	require.False(t, isEqual, "expected both volumes not to be equal")
+
+	vol1Copy := vol1.Copy()
+
+	isEqual = vol1.Equals(vol1Copy)
+	require.True(t, isEqual, "expected both volumes to be equal")
+
+	vol1Copy.Size = 7
+	isEqual = vol1.Equals(vol1Copy)
+	require.False(t, isEqual, "expected both volumes not to be equal")
+
 }
