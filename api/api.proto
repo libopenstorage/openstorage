@@ -1230,6 +1230,33 @@ service OpenStorageMountAttach {
     }
 }
 
+// OpenStorageVolumeMigrate is a service used to manage migration of volumes
+service OpenStorageVolumeMigrate {
+  //Start a migration operation
+  rpc Start(CloudMigrateStartRequest)
+    returns (SdkCloudMigrateStartResponse) {
+      option(google.api.http) = {
+        post: "/v1/volumemigrate"
+        body: "*"
+      };
+    }
+  //Stop a migration operation
+  rpc Cancel(CloudMigrateCancelRequest)
+    returns (SdkCloudMigrateCancelResponse) {
+      option(google.api.http) = {
+        post: "/v1/volumemigrate/cancel"
+        body: "*"
+      };
+    }
+  //Get the status of migration operation  
+  rpc Status(SdkCloudMigrateStatusRequest)
+    returns (CloudMigrateStatusResponse) {
+      option(google.api.http) = {
+        get: "/v1/volumemigrate"
+      };
+    }
+}
+
 // OpenStorageObjectstore is a service used to manage object store services on volumes
 service OpenStorageObjectstore {
 
@@ -2591,12 +2618,21 @@ message CloudMigrateStartResponse {
     string task_id = 1;
 }
 
+// Empty Response
+message SdkCloudMigrateStartResponse {
+
+}
+
 // Request to stop a cloud migration
 message CloudMigrateCancelRequest {
     // The id of the task to cancel
     string task_id = 1;
 }
 
+// Empty Response
+message SdkCloudMigrateCancelResponse {
+
+}
 message CloudMigrateInfo {
     // Task id associated with this migration
     string task_id = 1;
@@ -2624,6 +2660,10 @@ message CloudMigrateInfoList {
     repeated CloudMigrateInfo list = 1;
 }
 
+// Empty Request
+message SdkCloudMigrateStatusRequest {
+  
+}
 // Response with a status of the cloud migration operations
 message CloudMigrateStatusResponse {
     // Map of cluster id to the status of volumes being migrated
