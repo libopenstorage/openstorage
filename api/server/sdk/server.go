@@ -145,6 +145,7 @@ func (s *Server) Start() error {
 		api.RegisterOpenStorageNodeServer(grpcServer, s.nodeServer)
 		api.RegisterOpenStorageObjectstoreServer(grpcServer, s.objectstoreServer)
 		api.RegisterOpenStorageVolumeServer(grpcServer, s.volumeServer)
+		api.RegisterOpenStorageVolumeMigrateServer(grpcServer, s.volumeServer)
 		api.RegisterOpenStorageCredentialsServer(grpcServer, s.credentialServer)
 		api.RegisterOpenStorageSchedulePolicyServer(grpcServer, s.schedulePolicyServer)
 		api.RegisterOpenStorageCloudBackupServer(grpcServer, s.cloudBackupServer)
@@ -304,6 +305,15 @@ func (s *Server) restServerSetupHandlers() (*http.ServeMux, error) {
 		return nil, err
 	}
 	err = api.RegisterOpenStorageClusterPairHandlerFromEndpoint(
+		context.Background(),
+		gmux,
+		s.Address(),
+		[]grpc.DialOption{grpc.WithInsecure()})
+	if err != nil {
+		return nil, err
+	}
+
+	err = api.RegisterOpenStorageVolumeMigrateHandlerFromEndpoint(
 		context.Background(),
 		gmux,
 		s.Address(),
