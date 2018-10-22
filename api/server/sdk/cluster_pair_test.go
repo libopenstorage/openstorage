@@ -22,6 +22,8 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func TestClusterPairServer_CreateSuccess(t *testing.T) {
@@ -64,4 +66,61 @@ func TestClusterPairServer_CreateSuccess(t *testing.T) {
 	assert.NotNil(t, r.GetRemoteClusterId())
 	assert.Equal(t, remoteClusterID, r.GetRemoteClusterId())
 	assert.Equal(t, remoteClusterName, r.GetRemoteClusterName())
+}
+func TestClusterPairServer_CreateFailure(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	// Create response
+	remoteClusterIP := "127.0.0.1"
+	var remoteClusterPort uint32
+	remoteClusterPort = uint32(12345)
+
+	noip := &api.ClusterPairCreateRequest{
+		RemoteClusterPort:  remoteClusterPort,
+		RemoteClusterToken: "<Auth-Token>",
+		SetDefault:         false,
+	}
+
+	noport := &api.ClusterPairCreateRequest{
+		RemoteClusterIp:    remoteClusterIP,
+		RemoteClusterToken: "<Auth-Token>",
+		SetDefault:         false,
+	}
+
+	notoken := &api.ClusterPairCreateRequest{
+		RemoteClusterIp:   remoteClusterIP,
+		RemoteClusterPort: remoteClusterPort,
+		SetDefault:        false,
+	}
+
+	// Setup client
+	c := api.NewOpenStorageClusterPairClient(s.Conn())
+	// create the pair
+	//noip
+	r, err := c.Create(context.Background(), noip)
+	assert.Error(t, err)
+	assert.Nil(t, r)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "Must supply Remote cluster IP")
+
+	r, err = c.Create(context.Background(), noport)
+	assert.Error(t, err)
+	assert.Nil(t, r)
+	serverError, ok = status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "Must supply Remote cluster Port")
+
+	r, err = c.Create(context.Background(), notoken)
+	assert.Error(t, err)
+	assert.Nil(t, r)
+	serverError, ok = status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "Must supply Authentication Token")
+
 }
