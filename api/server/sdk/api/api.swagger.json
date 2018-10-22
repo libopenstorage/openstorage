@@ -2217,7 +2217,7 @@
           "type": "integer"
         },
         "shared": {
-          "description": "Shared is true if this volume can be concurrently accessed  by multiple users.",
+          "description": "Shared is true if this volume can be concurrently accessed by multiple users.",
           "format": "boolean",
           "type": "boolean"
         },
@@ -2382,7 +2382,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.16.0"
+    "version": "0.17.0"
   },
   "paths": {
     "/v1/alerts": {
