@@ -7,8 +7,8 @@
 
 ### v0.18.0 - Tech Preview (10/23/2018)
 
-* Following CloudBackup APIs have been refactored to include task id rather than
-* source volume id.
+* Following CloudBackup APIs have been refactored to include task id rather
+  than source volume id.
 * CloudBackupCreate now returns task id.
 * CloudBackupRestore too returns task id along with restore volume id.
 * CloudBackupStatusRequest can take task id as an optional parameter.

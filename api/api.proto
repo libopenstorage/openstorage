@@ -2058,7 +2058,8 @@ message SdkCloudBackupCreateRequest {
   string credential_id = 2;
   // Full indicates if full backup is desired even though incremental is possible
   bool full = 3;
-  // Name of the task performing this backup
+  // Name of the task performing this backup. This value is required and used for
+  // idempotency.
   string name = 4;
 }
 
@@ -2226,7 +2227,7 @@ message SdkCloudBackupStatus {
 // specified volume
 message SdkCloudBackupStatusRequest {
   // VolumeId is an optional value which is used to get information on the
-  // status of a backup for the specified volume. If no volume id and Name
+  // status of a backup for the specified volume. If no volume id and name
   // is provided, then status for all volumes is returned.
   string volume_id = 1;
   // Local indicates if only those backups/restores that are
@@ -2234,7 +2235,7 @@ message SdkCloudBackupStatusRequest {
   bool local = 2;
   // Name of the backup/restore task, if this is specified,
   // volume_id is ignored.
-  string Name = 3;
+  string name = 3;
 }
 
 // Defines a response containing the status of the backups for a specified volume
@@ -2301,7 +2302,7 @@ enum SdkCloudBackupRequestedState {
 message SdkCloudBackupStateChangeRequest {
   // Describes the backup/restore Name
   // state change is being requested
-  string Name = 1;
+  string name = 1;
   // The desired state of the operation
   SdkCloudBackupRequestedState requested_state = 2;
 }
