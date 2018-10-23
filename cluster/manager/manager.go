@@ -22,6 +22,8 @@ import (
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/objectstore"
 	"github.com/libopenstorage/openstorage/osdconfig"
+	"github.com/libopenstorage/openstorage/pkg/pcqueue"
+	jobsched "github.com/libopenstorage/openstorage/pkg/sched"
 	sched "github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
 	"github.com/libopenstorage/systemutils"
@@ -71,6 +73,7 @@ type ClusterManager struct {
 	schedManager    sched.SchedulePolicyProvider
 	objstoreManager objectstore.ObjectStore
 	secretsManager  secrets.Secrets
+	scheduler       jobsched.Scheduler
 }
 
 // Init instantiates a new cluster manager.
@@ -84,13 +87,17 @@ func Init(cfg config.ClusterConfig) error {
 		return errors.New("KVDB is not yet initialized.  " +
 			"A valid KVDB instance required for the cluster to start.")
 	}
-
 	inst = &ClusterManager{
 		listeners:    list.New(),
 		config:       cfg,
 		kv:           kv,
 		nodeCache:    make(map[string]api.Node),
 		nodeStatuses: make(map[string]api.Status),
+	}
+	if jobsched.Instance() == nil {
+		inst.scheduler = jobsched.New(time.Second)
+	} else {
+		inst.scheduler = jobsched.Instance()
 	}
 
 	return nil
@@ -697,6 +704,7 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *cluster.ClusterInfo) {
 
 func (c *ClusterManager) updateClusterStatus() {
 	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
+	listenerQueue := pcqueue.New(1)
 	for {
 		node := c.getCurrentState()
 		c.putNodeCacheEntry(node.Id, *node)
@@ -787,12 +795,21 @@ func (c *ClusterManager) updateClusterStatus() {
 
 				c.nodeStatuses[string(id)] = peerNodeInCache.Status
 
+				peerNodeCopy := peerNodeInCache.Copy()
+
+				// Notify the listeners asynchronously
 				for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
-					err := e.Value.(cluster.ClusterListener).Update(&peerNodeInCache)
-					if err != nil {
-						logrus.Warnln("Failed to notify ",
-							e.Value.(cluster.ClusterListener).String())
+					clusterListener := e.Value.(cluster.ClusterListener)
+					updateSchedule := func() {
+						err := clusterListener.Update(peerNodeCopy)
+						if err != nil {
+							logrus.Warnf("Failed to notify node update to %v: %v",
+								e.Value.(cluster.ClusterListener).String(),
+								err,
+							)
+						}
 					}
+					listenerQueue.Enqueue(updateSchedule)
 				}
 
 			case gossipNodeInfo.Status == types.NODE_STATUS_UP:
@@ -807,12 +824,21 @@ func (c *ClusterManager) updateClusterStatus() {
 				logrus.Infoln("Detected node", peerNodeInCache.Id,
 					" to be in the cluster.")
 
+				peerNodeCopy := peerNodeInCache.Copy()
+
+				// Notify the listeners asynchronously
 				for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
-					err := e.Value.(cluster.ClusterListener).Add(&peerNodeInCache)
-					if err != nil {
-						logrus.Warnln("Failed to notify ",
-							e.Value.(cluster.ClusterListener).String())
+					clusterListener := e.Value.(cluster.ClusterListener)
+					addSchedule := func() {
+						err := clusterListener.Add(peerNodeCopy)
+						if err != nil {
+							logrus.Warnln("Failed to notify node add to %v: %v",
+								e.Value.(cluster.ClusterListener).String(),
+								err,
+							)
+						}
 					}
+					listenerQueue.Enqueue(addSchedule)
 				}
 			}
 
