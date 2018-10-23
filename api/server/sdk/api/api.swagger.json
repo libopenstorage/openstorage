@@ -146,6 +146,22 @@
       ],
       "type": "string"
     },
+    "apiIoStrategy": {
+      "description": "IoStrategy defines how I/O should be performed to backing storage media.",
+      "properties": {
+        "async_io": {
+          "description": "AsyncIO enables kaio.",
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "early_ack": {
+          "description": "EarlyAck enables acks for async I/O at the source.",
+          "format": "boolean",
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
     "apiObjectstoreInfo": {
       "properties": {
         "access_key": {
@@ -2168,6 +2184,10 @@
           "$ref": "#/definitions/apiIoProfile",
           "description": "IoProfile provides a hint about application using this volume."
         },
+        "io_strategy": {
+          "$ref": "#/definitions/apiIoStrategy",
+          "description": "IoStrategy preferred strategy for I/O."
+        },
         "journal": {
           "description": "Journal is true if data for the volume goes into the journal.",
           "format": "boolean",
@@ -2197,7 +2217,7 @@
           "type": "integer"
         },
         "shared": {
-          "description": "Shared is true if this volume can be remotely accessed.",
+          "description": "Shared is true if this volume can be concurrently accessed by multiple users.",
           "format": "boolean",
           "type": "boolean"
         },
@@ -2362,7 +2382,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.16.0"
+    "version": "0.17.0"
   },
   "paths": {
     "/v1/alerts": {

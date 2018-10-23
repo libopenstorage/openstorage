@@ -257,6 +257,14 @@ message Group {
   string id = 1;
 }
 
+// IoStrategy defines how I/O should be performed to backing storage media.
+message IoStrategy {
+  // AsyncIO enables kaio. 
+  bool async_io = 1;
+  // EarlyAck enables acks for async I/O at the source.
+  bool early_ack = 2;
+}
+
 // VolumeSpec has the properties needed to create a volume.
 // swagger:model
 message VolumeSpec {
@@ -280,7 +288,7 @@ message VolumeSpec {
   uint32 snapshot_interval = 9;
   // VolumeLabels configuration labels
   map<string, string> volume_labels = 10;
-  // Shared is true if this volume can be remotely accessed.
+  // Shared is true if this volume can be concurrently accessed by multiple users.
   bool shared = 11;
   // ReplicaSet is the desired set of nodes for the volume data.
   ReplicaSet replica_set = 12;
@@ -316,6 +324,8 @@ message VolumeSpec {
   // Nodiscard specifies if the volume will be mounted with discard support disabled.
   // i.e. FS will not release allocated blocks back to the backing storage pool.
   bool nodiscard = 29;
+  // IoStrategy preferred strategy for I/O.
+  IoStrategy io_strategy = 30;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -2413,7 +2423,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 16;
+    Minor = 17;
     // SDK version patch value of this specification
     Patch = 0;
   }

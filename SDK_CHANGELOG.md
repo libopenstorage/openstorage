@@ -86,3 +86,7 @@ NOTE: This release has breaking chages for the Mount/Attach/Detach/Unmount calls
 
 * Added [Idenity](https://libopenstorage.github.io/w/generated-api.html#serviceopenstorageapiopenstorageidentity) Service
 * Added [Identity.Capabilities](https://libopenstorage.github.io/w/generated-api.html#methodopenstorageapiopenstorageidentitycapabilities) RPC
+*
+### Tech Preview (10/21/2018)
+
+* Added IoStrategy - ability to specify I/O characteristics.
