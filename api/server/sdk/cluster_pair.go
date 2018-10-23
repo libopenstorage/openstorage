@@ -19,11 +19,10 @@ package sdk
 import (
 	"context"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // ClusterPairServer is an implementation of the gRPC OpenStorageClusterServer interface
@@ -47,15 +46,8 @@ func (s *ClusterPairServer) Create(
 
 	resp, err := s.cluster.CreatePair(req)
 	if err != nil {
-<<<<<<< HEAD
-<<<<<<< HEAD
+
 		return nil, status.Errorf(codes.Internal, "Cannot create cluster with remote pair %s : %v",
-=======
-		return nil, status.Errorf(codes.Internal, "Cannot create cluster with remote pair %v : %v",
->>>>>>> CreatePair API implementation with Success test
-=======
-		return nil, status.Errorf(codes.Internal, "Cannot create cluster with remote pair %s : %v",
->>>>>>> 64acf85c16fd9c2e293c6dcbbcaabf2675131885
 			req.GetRemoteClusterIp(), err.Error())
 	}
 
@@ -64,10 +56,6 @@ func (s *ClusterPairServer) Create(
 		RemoteClusterName: resp.GetRemoteClusterName(),
 	}, nil
 }
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 64acf85c16fd9c2e293c6dcbbcaabf2675131885
 
 // ProcessRequest handles a remote cluster's pair request
 func (s *ClusterPairServer) ProcessRequest(
@@ -144,8 +132,3 @@ func (s *ClusterPairServer) Delete(
 	}
 	return &api.SdkClusterPairDeleteResponse{}, nil
 }
-<<<<<<< HEAD
-=======
->>>>>>> CreatePair API implementation with Success test
-=======
->>>>>>> 64acf85c16fd9c2e293c6dcbbcaabf2675131885
