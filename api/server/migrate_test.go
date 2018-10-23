@@ -27,15 +27,20 @@ func TestMigrateStart(t *testing.T) {
 		ClusterId: "clusterID",
 		TargetId:  "badVolumeID",
 	}
-	testVolDriver.MockDriver().EXPECT().CloudMigrateStart(badRequest).Return(fmt.Errorf("Volume not found")).Times(1)
-	testVolDriver.MockDriver().EXPECT().CloudMigrateStart(goodRequest).Return(nil).Times(1)
+	goodResponse := &api.CloudMigrateStartResponse{
+		TaskId: "random-id",
+	}
+	testVolDriver.MockDriver().EXPECT().CloudMigrateStart(badRequest).Return(nil, fmt.Errorf("Volume not found")).Times(1)
+	testVolDriver.MockDriver().EXPECT().CloudMigrateStart(goodRequest).Return(goodResponse, nil).Times(1)
 
 	// Start Migrate
-	err = client.VolumeDriver(cl).CloudMigrateStart(badRequest)
+	resp, err := client.VolumeDriver(cl).CloudMigrateStart(badRequest)
 	require.Error(t, err)
+	require.Nil(t, resp)
 	require.Contains(t, err.Error(), "Volume not found")
-	err = client.VolumeDriver(cl).CloudMigrateStart(goodRequest)
+	resp, err = client.VolumeDriver(cl).CloudMigrateStart(goodRequest)
 	require.NoError(t, err)
+	require.Equal(t, goodResponse.TaskId, resp.TaskId, "Unexpected taskId in response")
 }
 
 func TestMigrateCancel(t *testing.T) {
@@ -47,22 +52,18 @@ func TestMigrateCancel(t *testing.T) {
 	require.NoError(t, err)
 
 	goodRequest := &api.CloudMigrateCancelRequest{
-		Operation: api.CloudMigrate_MigrateCluster,
-		ClusterId: "clusterID",
-		TargetId:  "goodVolumeID",
+		TaskId: "goodTaskID",
 	}
 	badRequest := &api.CloudMigrateCancelRequest{
-		Operation: api.CloudMigrate_MigrateCluster,
-		ClusterId: "clusterID",
-		TargetId:  "badVolumeID",
+		TaskId: "badTaskID",
 	}
-	testVolDriver.MockDriver().EXPECT().CloudMigrateCancel(badRequest).Return(fmt.Errorf("Volume not found")).Times(1)
+	testVolDriver.MockDriver().EXPECT().CloudMigrateCancel(badRequest).Return(fmt.Errorf("TaskId not found")).Times(1)
 	testVolDriver.MockDriver().EXPECT().CloudMigrateCancel(goodRequest).Return(nil).Times(1)
 
 	// Cancel Migrate
 	err = client.VolumeDriver(cl).CloudMigrateCancel(badRequest)
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "Volume not found")
+	require.Contains(t, err.Error(), "TaskId not found")
 	err = client.VolumeDriver(cl).CloudMigrateCancel(goodRequest)
 	require.NoError(t, err)
 }
@@ -81,6 +82,7 @@ func TestMigrateiStatus(t *testing.T) {
 			"clusterId": &api.CloudMigrateInfoList{
 				List: []*api.CloudMigrateInfo{
 					&api.CloudMigrateInfo{
+						TaskId:          "taskId",
 						ClusterId:       "clusterId",
 						LocalVolumeId:   "localVolumeId",
 						LocalVolumeName: "localVolumeName",

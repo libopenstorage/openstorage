@@ -2510,37 +2510,44 @@ message CloudMigrateStartRequest {
     string cluster_id = 2;
     // Depending on the operation type this can be a VolumeID or VolumeGroupID
     string target_id = 3;
+    // (Optional) Unique TaskId assocaiated with this migration. If not provided one will
+    // be generated and returned in the response
+    string task_id = 4;
+}
+
+// Response to start a cloud migration
+message CloudMigrateStartResponse {
+    // TaskId assocaiated with the migration that was started
+    string task_id = 1;
 }
 
 // Request to stop a cloud migration
 message CloudMigrateCancelRequest {
-    // The type of operation to cancel
-    CloudMigrate.OperationType operation = 1;
-    // ID of the cluster to which migration should be cancelled
-    string cluster_id = 2;
-    // Depending on the operation type this can be a VolumeID or VolumeGroupID
-    string target_id = 3;
+    // The id of the task to cancel
+    string task_id = 1;
 }
 
 message CloudMigrateInfo {
+    // Task id associated with this migration
+    string task_id = 1;
     // ID of the cluster where the volume is being migrated
-    string cluster_id = 1;
+    string cluster_id = 2;
     // ID of the volume on the local cluster
-    string local_volume_id = 2;
+    string local_volume_id = 3;
     // Name of the volume on the local cluster
-    string local_volume_name = 3;
+    string local_volume_name = 4;
     // ID of the volume on the remote cluster
-    string remote_volume_id = 4;
+    string remote_volume_id = 5;
     // ID of the cloudbackup used for the migration
-    string cloudbackup_id = 5;
+    string cloudbackup_id = 6;
     // Current stage of the volume migration
-    CloudMigrate.Stage current_stage = 6;
+    CloudMigrate.Stage current_stage = 7;
     // Status of the current stage
-    CloudMigrate.Status status = 7;
+    CloudMigrate.Status status = 8;
     // Last time the status was updated
-    google.protobuf.Timestamp last_update = 8;
+    google.protobuf.Timestamp last_update = 9;
     // Time of the last successful migration of the volume
-    google.protobuf.Timestamp last_success = 9;
+    google.protobuf.Timestamp last_success = 10;
 }
 
 message CloudMigrateInfoList {

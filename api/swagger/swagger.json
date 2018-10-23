@@ -2185,18 +2185,10 @@
       "description": "Request to stop a cloud migration",
       "type": "object",
       "properties": {
-        "cluster_id": {
-          "description": "ID of the cluster to which migration should be cancelled",
+        "task_id": {
+          "description": "The id of the task to cancel",
           "type": "string",
-          "x-go-name": "ClusterId"
-        },
-        "operation": {
-          "$ref": "#/definitions/CloudMigrate_OperationType"
-        },
-        "target_id": {
-          "description": "Depending on the operation type this can be a VolumeID or VolumeGroupID",
-          "type": "string",
-          "x-go-name": "TargetId"
+          "x-go-name": "TaskId"
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
@@ -2240,6 +2232,11 @@
         },
         "status": {
           "$ref": "#/definitions/CloudMigrate_Status"
+        },
+        "task_id": {
+          "description": "Task id associated with this migration",
+          "type": "string",
+          "x-go-name": "TaskId"
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
@@ -2273,6 +2270,23 @@
           "description": "Depending on the operation type this can be a VolumeID or VolumeGroupID",
           "type": "string",
           "x-go-name": "TargetId"
+        },
+        "task_id": {
+          "description": "(Optional) Unique TaskId assocaiated with this migration. If not provided one will\nbe generated and returned in the response",
+          "type": "string",
+          "x-go-name": "TaskId"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "CloudMigrateStartResponse": {
+      "description": "Response to start a cloud migration",
+      "type": "object",
+      "properties": {
+        "task_id": {
+          "description": "TaskId assocaiated with the migration that was started",
+          "type": "string",
+          "x-go-name": "TaskId"
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
@@ -2831,6 +2845,23 @@
     "IoProfile": {
       "type": "integer",
       "format": "int32",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "IoStrategy": {
+      "type": "object",
+      "title": "IoStrategy defines how I/O should be performed to backing storage media.",
+      "properties": {
+        "async_io": {
+          "description": "AsyncIO enables kaio.",
+          "type": "boolean",
+          "x-go-name": "AsyncIo"
+        },
+        "early_ack": {
+          "description": "EarlyAck enables acks for async I/O at the source.",
+          "type": "boolean",
+          "x-go-name": "EarlyAck"
+        }
+      },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "KvdbConfig": {
@@ -6213,6 +6244,9 @@
         "io_profile": {
           "$ref": "#/definitions/IoProfile"
         },
+        "io_strategy": {
+          "$ref": "#/definitions/IoStrategy"
+        },
         "journal": {
           "description": "Journal is true if data for the volume goes into the journal.",
           "type": "boolean",
@@ -6244,7 +6278,7 @@
           "x-go-name": "Scale"
         },
         "shared": {
-          "description": "Shared is true if this volume can be remotely accessed.",
+          "description": "Shared is true if this volume can be concurrently accessed by multiple users.",
           "type": "boolean",
           "x-go-name": "Shared"
         },

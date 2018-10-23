@@ -721,13 +721,17 @@ func (v *volumeClient) SnapshotGroup(groupID string, labels map[string]string) (
 	return response, nil
 }
 
-func (v *volumeClient) CloudMigrateStart(request *api.CloudMigrateStartRequest) error {
+func (v *volumeClient) CloudMigrateStart(request *api.CloudMigrateStartRequest) (*api.CloudMigrateStartResponse, error) {
+	startResponse := &api.CloudMigrateStartResponse{}
 	req := v.c.Post().Resource(api.OsdMigrateStartPath).Body(request)
 	response := req.Do()
 	if response.Error() != nil {
-		return response.FormatError()
+		return nil, response.FormatError()
 	}
-	return nil
+	if err := response.Unmarshal(startResponse); err != nil {
+		return nil, err
+	}
+	return startResponse, nil
 }
 
 func (v *volumeClient) CloudMigrateCancel(request *api.CloudMigrateCancelRequest) error {
