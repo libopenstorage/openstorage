@@ -23,10 +23,15 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/stretchr/testify/assert"
 <<<<<<< HEAD
+<<<<<<< HEAD
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 =======
 >>>>>>> CreatePair API implementation with Success test
+=======
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+>>>>>>> 64acf85c16fd9c2e293c6dcbbcaabf2675131885
 )
 
 func TestClusterPairServer_CreateSuccess(t *testing.T) {
@@ -71,6 +76,9 @@ func TestClusterPairServer_CreateSuccess(t *testing.T) {
 	assert.Equal(t, remoteClusterName, r.GetRemoteClusterName())
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 64acf85c16fd9c2e293c6dcbbcaabf2675131885
 func TestClusterPairServer_CreateFailure(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
@@ -358,5 +366,8 @@ func TestClusterPairServer_DeleteFailure(t *testing.T) {
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
 	assert.Contains(t, serverError.Message(), "Must supply valid cluster ID")
 }
+<<<<<<< HEAD
 =======
 >>>>>>> CreatePair API implementation with Success test
+=======
+>>>>>>> 64acf85c16fd9c2e293c6dcbbcaabf2675131885
