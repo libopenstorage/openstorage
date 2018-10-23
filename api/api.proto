@@ -179,17 +179,7 @@ enum OperationFlags {
   OP_FLAGS_DETACH_FORCE = 2;
 }
 
-enum VolumePlacementEnforcementType {
-  Required = 0;
-  Preferred = 1;
-}
 
-enum LabelSelectorOperator {
-  In = 0;
-  NotIn = 1;
-  Exists = 2;
-  DoesNotExist = 3;
-}
 
 // StorageResource groups properties of a storage device.
 // swagger:model
@@ -338,8 +328,8 @@ message VolumeSpec {
   bool nodiscard = 29;
   // IoStrategy preferred strategy for I/O.
   IoStrategy io_strategy = 30;
-  // VolumePlacementSpec specifies a spec to indicate where to place the volume.
-  VolumePlacementSpec placement = 30;
+  // VolumePlacementStrategy specifies a spec to indicate where to place the volume.
+  VolumePlacementStrategy placement_strategy = 31;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -2726,38 +2716,49 @@ message LocateResponse {
     map<string, string> dockerids = 2;
 }
 
-message VolumePlacementSpec {
-  // Defines a list of rules as part of the placement spec
+message VolumePlacementStrategy {
+  // Defines a list of rules as part of the placement spec. All the rules specified will
+  // be applied for volume placement.
+  // Rules that have enforcement as "required" are strictly enforced while "preferred" are best effort.
+  // In situations, where 2 or more rules conflict, the weight of the rules will dictate which wins.
   repeated VolumePlacementRule rules = 1;
 }
 
+// This defines a single placement rule
 message VolumePlacementRule {
   // Defines the number of volume replicas affected by this rule. If not provided,
   // rule would affect all replicas
   // (optional)
-  int64 affected_replicas = 1;
-  // Defines the weight of the rule which allows to break to tie with other matching rules
+  int32 affected_replicas = 1;
+  // Defines the weight of the rule which allows to break the tie with other matching rules. A rule with
+  // higher weight wins over a rule with lower weight.
   // (optional)
   int64 weight = 2;
+
+  // Defines the types of enforcement on the given rules
+  enum EnforcementType {
+    // This specifies that the rule is required and must be strictly enforced
+    Required = 0;
+    // This specifies that the rule is preferred and can be best effort
+    Preferred = 1;
+  }
+
   // Specifies the rule enforcement policy. Can take values: required or preferred.
   // (optional)
-  VolumePlacementEnforcementType enforcement = 3;
+  EnforcementType enforcement = 3;
   // Defines the affinity rule for the volume placement
   AffinityRule affinity = 4;
   // Defines the anti affinity rule for the volume placement
   AffinityRule anti_affinity = 5;
+
 }
 
+// Specifies the label matching rules for an affinity or anti-affinity
 message AffinityRule {
   // This is a list of label selector requirements. The requirements are ANDed.
   repeated LabelSelectorRequirement match_expressions = 1;
 }
 
-
-// A label selector is a label query over a set of resources. The result of match_labels and
-// match_expressions are ANDed. A nil or empty label selector matches all objects.
-message LabelSelector {
-}
 
 // A label selector requirement is a selector that contains values, a key, and an operator that
 // relates the key and values.
@@ -2765,9 +2766,17 @@ message LabelSelectorRequirement {
   // key is the label key that the selector applies to.
   string key = 1;
 
+  // This defines operator types used in a label matching rule
+  enum Operator {
+    In = 0;
+    NotIn = 1;
+    Exists = 2;
+    DoesNotExist = 3;
+  }
+
   // operator represents a key's relationship to a set of values.
   // Valid operators are In, NotIn, Exists and DoesNotExist.
-  LabelSelectorOperator operator = 2;
+  Operator operator = 2;
 
   // values is an array of string values. If the operator is In or NotIn,
   // the values array must be non-empty. If the operator is Exists or DoesNotExist,
