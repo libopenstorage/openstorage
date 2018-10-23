@@ -5,6 +5,10 @@
 
 ## Releases
 
+### v0.17.0 - Tech Preview (10/21/2018)
+
+* Added IoStrategy - ability to specify I/O characteristics.
+
 ### v0.16.0 - Tech Preview (10/15/2018)
 
 * Changed value of SdkSchedulePolicyCreateRequest from `SchedulePolicy` to the
@@ -86,7 +90,4 @@ NOTE: This release has breaking chages for the Mount/Attach/Detach/Unmount calls
 
 * Added [Idenity](https://libopenstorage.github.io/w/generated-api.html#serviceopenstorageapiopenstorageidentity) Service
 * Added [Identity.Capabilities](https://libopenstorage.github.io/w/generated-api.html#methodopenstorageapiopenstorageidentitycapabilities) RPC
-*
-### Tech Preview (10/21/2018)
 
-* Added IoStrategy - ability to specify I/O characteristics.
