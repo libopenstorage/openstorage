@@ -328,7 +328,7 @@ message VolumeSpec {
   bool nodiscard = 29;
   // IoStrategy preferred strategy for I/O.
   IoStrategy io_strategy = 30;
-  // VolumePlacementStrategy specifies a spec to indicate where to place the volume.
+  // PlacementStrategy specifies a spec to indicate where to place the volume.
   VolumePlacementStrategy placement_strategy = 31;
 }
 
@@ -2716,21 +2716,22 @@ message LocateResponse {
     map<string, string> dockerids = 2;
 }
 
+// VolumePlacementStrategy defines a strategy for placing volumes in the cluster which will be a series of rules
 message VolumePlacementStrategy {
-  // Defines a list of rules as part of the placement spec. All the rules specified will
+  // Rules defines a list of rules as part of the placement spec. All the rules specified will
   // be applied for volume placement.
   // Rules that have enforcement as "required" are strictly enforced while "preferred" are best effort.
   // In situations, where 2 or more rules conflict, the weight of the rules will dictate which wins.
   repeated VolumePlacementRule rules = 1;
 }
 
-// This defines a single placement rule
+// VolumePlacementRule defines a single placement rule
 message VolumePlacementRule {
-  // Defines the number of volume replicas affected by this rule. If not provided,
+  // AffectedReplicas defines the number of volume replicas affected by this rule. If not provided,
   // rule would affect all replicas
   // (optional)
   int32 affected_replicas = 1;
-  // Defines the weight of the rule which allows to break the tie with other matching rules. A rule with
+  // Weight defines the weight of the rule which allows to break the tie with other matching rules. A rule with
   // higher weight wins over a rule with lower weight.
   // (optional)
   int64 weight = 2;
@@ -2743,42 +2744,46 @@ message VolumePlacementRule {
     Preferred = 1;
   }
 
-  // Specifies the rule enforcement policy. Can take values: required or preferred.
+  // Enforcement specifies the rule enforcement policy. Can take values: required or preferred.
   // (optional)
   EnforcementType enforcement = 3;
-  // Defines the affinity rule for the volume placement
+  // Affinity defines the affinity rule for the volume placement
   AffinityRule affinity = 4;
-  // Defines the anti affinity rule for the volume placement
+  // AntiAffinity defines the anti affinity rule for the volume placement
   AffinityRule anti_affinity = 5;
 
 }
 
-// Specifies the label matching rules for an affinity or anti-affinity
+// AffinityRule specifies the label matching rules for an affinity or anti-affinity
 message AffinityRule {
-  // This is a list of label selector requirements. The requirements are ANDed.
+  // MatchExpressions is a list of label selector requirements. The requirements are ANDed.
   repeated LabelSelectorRequirement match_expressions = 1;
 }
 
 
-// A label selector requirement is a selector that contains values, a key, and an operator that
+// LabelSelectorRequirement is a selector that contains values, a key, and an operator that
 // relates the key and values.
 message LabelSelectorRequirement {
-  // key is the label key that the selector applies to.
+  // Key is the label key that the selector applies to.
   string key = 1;
 
   // This defines operator types used in a label matching rule
   enum Operator {
+    // In means the value for 'key' should be in one of the given 'values'
     In = 0;
+    // NotIn means the value for 'key' should NOT be in one of the given 'values'
     NotIn = 1;
+    // Exists means the 'key' should just exist regardless of the value
     Exists = 2;
+    // DoesNotExist means the 'key' should NOT exist
     DoesNotExist = 3;
   }
 
-  // operator represents a key's relationship to a set of values.
+  // Operator represents a key's relationship to a set of values.
   // Valid operators are In, NotIn, Exists and DoesNotExist.
   Operator operator = 2;
 
-  // values is an array of string values. If the operator is In or NotIn,
+  // Values is an array of string values. If the operator is In or NotIn,
   // the values array must be non-empty. If the operator is Exists or DoesNotExist,
   // the values array must be empty. This array is replaced during a strategic
   // merge patch.

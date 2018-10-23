@@ -5,6 +5,7 @@
   "definitions": {
     "LabelSelectorRequirementOperator": {
       "default": "In",
+      "description": "- In: In means the value for 'key' should be in one of the given 'values'\n - NotIn: NotIn means the value for 'key' should NOT be in one of the given 'values'\n - Exists: Exists means the 'key' should just exist regardless of the value\n - DoesNotExist: DoesNotExist means the 'key' should NOT exist",
       "enum": [
         "In",
         "NotIn",
@@ -53,14 +54,14 @@
     "apiAffinityRule": {
       "properties": {
         "match_expressions": {
-          "description": "This is a list of label selector requirements. The requirements are ANDed.",
+          "description": "MatchExpressions is a list of label selector requirements. The requirements are ANDed.",
           "items": {
             "$ref": "#/definitions/apiLabelSelectorRequirement"
           },
           "type": "array"
         }
       },
-      "title": "Specifies the label matching rules for an affinity or anti-affinity",
+      "title": "AffinityRule specifies the label matching rules for an affinity or anti-affinity",
       "type": "object"
     },
     "apiAlert": {
@@ -197,18 +198,18 @@
       "type": "object"
     },
     "apiLabelSelectorRequirement": {
-      "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
+      "description": "LabelSelectorRequirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
       "properties": {
         "key": {
-          "description": "key is the label key that the selector applies to.",
+          "description": "Key is the label key that the selector applies to.",
           "type": "string"
         },
         "operator": {
           "$ref": "#/definitions/LabelSelectorRequirementOperator",
-          "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist."
+          "description": "Operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist."
         },
         "values": {
-          "description": "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
+          "description": "Values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
           "items": {
             "type": "string"
           },
@@ -2204,40 +2205,41 @@
       "properties": {
         "affected_replicas": {
           "format": "int32",
-          "title": "Defines the number of volume replicas affected by this rule. If not provided,\nrule would affect all replicas\n(optional)",
+          "title": "AffectedReplicas defines the number of volume replicas affected by this rule. If not provided,\nrule would affect all replicas\n(optional)",
           "type": "integer"
         },
         "affinity": {
           "$ref": "#/definitions/apiAffinityRule",
-          "title": "Defines the affinity rule for the volume placement"
+          "title": "Affinity defines the affinity rule for the volume placement"
         },
         "anti_affinity": {
           "$ref": "#/definitions/apiAffinityRule",
-          "title": "Defines the anti affinity rule for the volume placement"
+          "title": "AntiAffinity defines the anti affinity rule for the volume placement"
         },
         "enforcement": {
           "$ref": "#/definitions/VolumePlacementRuleEnforcementType",
-          "title": "Specifies the rule enforcement policy. Can take values: required or preferred.\n(optional)"
+          "title": "Enforcement specifies the rule enforcement policy. Can take values: required or preferred.\n(optional)"
         },
         "weight": {
           "format": "int64",
-          "title": "Defines the weight of the rule which allows to break the tie with other matching rules. A rule with\nhigher weight wins over a rule with lower weight.\n(optional)",
+          "title": "Weight defines the weight of the rule which allows to break the tie with other matching rules. A rule with\nhigher weight wins over a rule with lower weight.\n(optional)",
           "type": "string"
         }
       },
-      "title": "This defines a single placement rule",
+      "title": "VolumePlacementRule defines a single placement rule",
       "type": "object"
     },
     "apiVolumePlacementStrategy": {
       "properties": {
         "rules": {
-          "description": "Defines a list of rules as part of the placement spec. All the rules specified will\nbe applied for volume placement.\nRules that have enforcement as \"required\" are strictly enforced while \"preferred\" are best effort.\nIn situations, where 2 or more rules conflict, the weight of the rules will dictate which wins.",
+          "description": "Rules defines a list of rules as part of the placement spec. All the rules specified will\nbe applied for volume placement.\nRules that have enforcement as \"required\" are strictly enforced while \"preferred\" are best effort.\nIn situations, where 2 or more rules conflict, the weight of the rules will dictate which wins.",
           "items": {
             "$ref": "#/definitions/apiVolumePlacementRule"
           },
           "type": "array"
         }
       },
+      "title": "VolumePlacementStrategy defines a strategy for placing volumes in the cluster which will be a series of rules",
       "type": "object"
     },
     "apiVolumeSpec": {
@@ -2328,7 +2330,7 @@
         },
         "placement_strategy": {
           "$ref": "#/definitions/apiVolumePlacementStrategy",
-          "description": "VolumePlacementStrategy specifies a spec to indicate where to place the volume."
+          "description": "PlacementStrategy specifies a spec to indicate where to place the volume."
         },
         "queue_depth": {
           "format": "int64",
