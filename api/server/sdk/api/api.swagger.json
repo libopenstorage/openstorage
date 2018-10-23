@@ -492,6 +492,10 @@
           "title": "Full indicates if full backup is desired even though incremental is possible",
           "type": "boolean"
         },
+        "name": {
+          "title": "Name of the task performing this backup",
+          "type": "string"
+        },
         "volume_id": {
           "title": "VolumeID of the volume for which cloudbackup is requested",
           "type": "string"
@@ -501,6 +505,12 @@
       "type": "object"
     },
     "apiSdkCloudBackupCreateResponse": {
+      "properties": {
+        "name": {
+          "title": "Name of the task performing the backup",
+          "type": "string"
+        }
+      },
       "title": "Empty response",
       "type": "object"
     },
@@ -637,6 +647,10 @@
           "title": "The credential to be used for restore operation",
           "type": "string"
         },
+        "name": {
+          "title": "Name of the task performing this restore",
+          "type": "string"
+        },
         "node_id": {
           "title": "Optional for provisioning restore\nvolume (ResoreVolumeName should not be specified)",
           "type": "string"
@@ -651,6 +665,10 @@
     },
     "apiSdkCloudBackupRestoreResponse": {
       "properties": {
+        "name": {
+          "title": "Name of the task performing the restore",
+          "type": "string"
+        },
         "restore_volume_id": {
           "title": "VolumeID to which the backup is being restored",
           "type": "string"
@@ -729,13 +747,13 @@
     },
     "apiSdkCloudBackupStateChangeRequest": {
       "properties": {
+        "Name": {
+          "title": "Describes the backup/restore Name\nstate change is being requested",
+          "type": "string"
+        },
         "requested_state": {
           "$ref": "#/definitions/apiSdkCloudBackupRequestedState",
           "title": "The desired state of the operation"
-        },
-        "src_volume_id": {
-          "title": "Describes the volume id on which backup/restore\nstate change is being requested",
-          "type": "string"
         }
       },
       "title": "Defines a request to change the state of a backup or restore to or\nfrom a cloud provider",
@@ -761,6 +779,13 @@
           "title": "CompletedTime indicates Op's completed time",
           "type": "string"
         },
+        "info": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Info currently indicates the failure cause for failed backup/restore",
+          "type": "array"
+        },
         "node_id": {
           "title": "NodeID is the ID of the node where this Op is active",
           "type": "string"
@@ -768,6 +793,10 @@
         "optype": {
           "$ref": "#/definitions/apiSdkCloudBackupOpType",
           "title": "OpType indicates if this is a backup or restore"
+        },
+        "src_volume_id": {
+          "title": "SourceVolumeID is the the volume that is either being backed up to cloud\nor target volume to which a backup is being restored",
+          "type": "string"
         },
         "start_time": {
           "format": "date-time",
@@ -788,7 +817,7 @@
           "additionalProperties": {
             "$ref": "#/definitions/apiSdkCloudBackupStatus"
           },
-          "title": "Statuses is list of currently active/failed/done backup/restores where\nthe key is the volume ids of current volumes being backed up or restored",
+          "description": "Statuses is list of currently active/failed/done backup/restores where\nthe key is the id of the task performing backup/restore.",
           "type": "object"
         }
       },
@@ -2382,7 +2411,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.17.0"
+    "version": "0.18.0"
   },
   "paths": {
     "/v1/alerts": {
@@ -2746,7 +2775,7 @@
         "operationId": "Status",
         "parameters": [
           {
-            "description": "This is an optional value which is used to get information on the\nstatus of a backup for the specified volume. If no volume id is provided,\nthen status for all volumes is returned.",
+            "description": "VolumeId is an optional value which is used to get information on the\nstatus of a backup for the specified volume. If no volume id and Name\nis provided, then status for all volumes is returned.",
             "in": "query",
             "name": "volume_id",
             "required": false,
@@ -2759,6 +2788,13 @@
             "name": "local",
             "required": false,
             "type": "boolean"
+          },
+          {
+            "description": "Name of the backup/restore task, if this is specified,\nvolume_id is ignored.",
+            "in": "query",
+            "name": "Name",
+            "required": false,
+            "type": "string"
           }
         ],
         "responses": {

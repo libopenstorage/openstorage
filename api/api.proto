@@ -2058,10 +2058,14 @@ message SdkCloudBackupCreateRequest {
   string credential_id = 2;
   // Full indicates if full backup is desired even though incremental is possible
   bool full = 3;
+  // Name of the task performing this backup
+  string name = 4;
 }
 
 // Empty response
 message SdkCloudBackupCreateResponse {
+  // Name of the task performing the backup
+  string name = 1;
 }
 
 // Defines a request to restore a volume from an existing backup stored by
@@ -2077,6 +2081,8 @@ message SdkCloudBackupRestoreRequest {
   // Optional for provisioning restore
   // volume (ResoreVolumeName should not be specified)
   string node_id = 4;
+  // Name of the task performing this restore
+  string name = 5;
 }
 
 // Defines a response when restoring a volume from a backup stored by
@@ -2084,6 +2090,8 @@ message SdkCloudBackupRestoreRequest {
 message SdkCloudBackupRestoreResponse {
   // VolumeID to which the backup is being restored
   string restore_volume_id = 1;
+  // Name of the task performing the restore
+  string name = 2;
 }
 
 // Defines a request to delete a single backup stored by a cloud provider
@@ -2207,24 +2215,32 @@ message SdkCloudBackupStatus {
   google.protobuf.Timestamp completed_time = 6;
   // NodeID is the ID of the node where this Op is active
   string node_id = 7;
+  // SourceVolumeID is the the volume that is either being backed up to cloud
+  // or target volume to which a backup is being restored
+  string src_volume_id = 8;
+  // Info currently indicates the failure cause for failed backup/restore
+  repeated string info = 9;
 }
 
 // Defines a request to retreive the status of a backup or restore for a
 // specified volume
 message SdkCloudBackupStatusRequest {
-  // This is an optional value which is used to get information on the
-  // status of a backup for the specified volume. If no volume id is provided,
-  // then status for all volumes is returned.
+  // VolumeId is an optional value which is used to get information on the
+  // status of a backup for the specified volume. If no volume id and Name
+  // is provided, then status for all volumes is returned.
   string volume_id = 1;
   // Local indicates if only those backups/restores that are
   // active on current node must be returned
   bool local = 2;
+  // Name of the backup/restore task, if this is specified,
+  // volume_id is ignored.
+  string Name = 3;
 }
 
 // Defines a response containing the status of the backups for a specified volume
 message SdkCloudBackupStatusResponse {
   // Statuses is list of currently active/failed/done backup/restores where
-  // the key is the volume ids of current volumes being backed up or restored
+  // the key is the id of the task performing backup/restore.
   map<string, SdkCloudBackupStatus> statuses = 1;
 }
 
@@ -2283,9 +2299,9 @@ enum SdkCloudBackupRequestedState {
 // Defines a request to change the state of a backup or restore to or
 // from a cloud provider
 message SdkCloudBackupStateChangeRequest {
-  // Describes the volume id on which backup/restore
+  // Describes the backup/restore Name
   // state change is being requested
-  string src_volume_id = 1;
+  string Name = 1;
   // The desired state of the operation
   SdkCloudBackupRequestedState requested_state = 2;
 }
@@ -2423,7 +2439,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 17;
+    Minor = 18;
     // SDK version patch value of this specification
     Patch = 0;
   }
