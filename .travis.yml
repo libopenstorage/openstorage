@@ -19,10 +19,8 @@ script:
   - make docker-test
   - make test-sdk
   - if [ "${TRAVIS_BRANCH}" == "master" ] && [ "${TRAVIS_PULL_REQUEST}" == "false" ]; then
-      make docker-build-osd;
-      make docker-build-mock-sdk-server;
       echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin;
-      docker push openstorage/osd;
+      make docker-build-mock-sdk-server;
       docker push openstorage/mock-sdk-server;
     fi
 notifications:
