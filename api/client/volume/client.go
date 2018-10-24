@@ -740,6 +740,12 @@ func (v *volumeClient) CloudMigrateStart(request *api.CloudMigrateStartRequest) 
 	req := v.c.Post().Resource(api.OsdMigrateStartPath).Body(request)
 	response := req.Do()
 	if response.Error() != nil {
+		if response.StatusCode() == http.StatusConflict {
+			return nil, &ost_errors.ErrExists{
+				Type: "CloudMigrate",
+				ID:   request.TaskId,
+			}
+		}
 		return nil, response.FormatError()
 	}
 	if err := response.Unmarshal(startResponse); err != nil {
