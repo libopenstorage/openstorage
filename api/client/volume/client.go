@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"strconv"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/client"
+	ost_errors "github.com/libopenstorage/openstorage/api/errors"
 	"github.com/libopenstorage/openstorage/volume"
 )
 
@@ -497,6 +499,12 @@ func (v *volumeClient) CloudBackupCreate(
 	req := v.c.Post().Resource(api.OsdBackupPath).Body(input)
 	response := req.Do()
 	if response.Error() != nil {
+		if response.StatusCode() == http.StatusConflict {
+			return nil, &ost_errors.ErrExists{
+				Type: "CloudBackupCreate",
+				ID:   input.Name,
+			}
+		}
 		return nil, response.FormatError()
 	}
 	if err := response.Unmarshal(&createResp); err != nil {
@@ -526,6 +534,12 @@ func (v *volumeClient) CloudBackupRestore(
 	req := v.c.Post().Resource(api.OsdBackupPath + "/restore").Body(input)
 	response := req.Do()
 	if response.Error() != nil {
+		if response.StatusCode() == http.StatusConflict {
+			return nil, &ost_errors.ErrExists{
+				Type: "CloudBackupRestore",
+				ID:   input.Name,
+			}
+		}
 		return nil, response.FormatError()
 	}
 

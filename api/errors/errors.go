@@ -14,6 +14,18 @@ func (e *ErrNotFound) Error() string {
 	return fmt.Sprintf("%v with ID: %v not found", e.Type, e.ID)
 }
 
+// ErrExists type for objects already present
+type ErrExists struct {
+	// ID unique object identifier.
+	ID string
+	// Type of the object which already exists
+	Type string
+}
+
+func (e *ErrExists) Error() string {
+	return fmt.Sprintf("%v with ID: %v already exists", e.Type, e.ID)
+}
+
 // ErrNotSupported error type for APIs that are not supported
 type ErrNotSupported struct{}
 
