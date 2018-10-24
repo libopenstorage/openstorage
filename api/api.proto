@@ -2546,8 +2546,6 @@ message CloudMigrateInfo {
     CloudMigrate.Status status = 8;
     // Last time the status was updated
     google.protobuf.Timestamp last_update = 9;
-    // Time of the last successful migration of the volume
-    google.protobuf.Timestamp last_success = 10;
 }
 
 message CloudMigrateInfoList {
