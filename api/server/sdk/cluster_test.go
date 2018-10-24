@@ -39,22 +39,14 @@ func TestNewSdkServerBadParameters(t *testing.T) {
 	s, err = New(&ServerConfig{})
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "must be provided")
+	assert.Contains(t, err.Error(), "Unable to setup server")
 
 	s, err = New(&ServerConfig{
 		Net: "test",
 	})
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "must be provided")
-
-	s, err = New(&ServerConfig{
-		Net:     "test",
-		Address: "blah",
-	})
-	assert.Nil(t, s)
-	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "must be provided")
+	assert.Contains(t, err.Error(), "Unable to setup server")
 
 	s, err = New(&ServerConfig{
 		Net:        "test",

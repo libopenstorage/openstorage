@@ -28,7 +28,11 @@ import (
 
 // CredentialServer is an implementation of the gRPC OpenStorageCredential interface
 type CredentialServer struct {
-	driver volume.VolumeDriver
+	server *Server
+}
+
+func (s *CredentialServer) driver() volume.VolumeDriver {
+	return s.server.driver()
 }
 
 // Create method creates credentials
@@ -36,6 +40,9 @@ func (s *CredentialServer) Create(
 	ctx context.Context,
 	req *api.SdkCredentialCreateRequest,
 ) (*api.SdkCredentialCreateResponse, error) {
+	if s.driver() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
 	if len(req.GetName()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply a name")
@@ -84,7 +91,7 @@ func (s *CredentialServer) awsCreate(
 	params[api.OptCredSecretKey] = aws.GetSecretKey()
 	params[api.OptCredDisableSSL] = fmt.Sprintf("%v", aws.GetDisableSsl())
 
-	uuid, err := s.driver.CredsCreate(params)
+	uuid, err := s.driver().CredsCreate(params)
 
 	if err != nil {
 		return nil, status.Errorf(
@@ -124,7 +131,7 @@ func (s *CredentialServer) azureCreate(
 	params[api.OptCredAzureAccountKey] = azure.GetAccountKey()
 	params[api.OptCredAzureAccountName] = azure.GetAccountName()
 
-	uuid, err := s.driver.CredsCreate(params)
+	uuid, err := s.driver().CredsCreate(params)
 
 	if err != nil {
 		return nil, status.Errorf(
@@ -164,7 +171,7 @@ func (s *CredentialServer) googleCreate(
 	params[api.OptCredGoogleProjectID] = google.GetProjectId()
 	params[api.OptCredGoogleJsonKey] = google.GetJsonKey()
 
-	uuid, err := s.driver.CredsCreate(params)
+	uuid, err := s.driver().CredsCreate(params)
 
 	if err != nil {
 		return nil, status.Errorf(
@@ -187,6 +194,9 @@ func (s *CredentialServer) Validate(
 	ctx context.Context,
 	req *api.SdkCredentialValidateRequest,
 ) (*api.SdkCredentialValidateResponse, error) {
+	if s.driver() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
 	if len(req.GetCredentialId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must provide credentials uuid")
@@ -194,7 +204,7 @@ func (s *CredentialServer) Validate(
 
 	validateReq := &api.SdkCredentialValidateRequest{CredentialId: req.GetCredentialId()}
 
-	err := s.driver.CredsValidate(validateReq.GetCredentialId())
+	err := s.driver().CredsValidate(validateReq.GetCredentialId())
 
 	if err != nil {
 		return nil, status.Errorf(
@@ -211,12 +221,15 @@ func (s *CredentialServer) Delete(
 	ctx context.Context,
 	req *api.SdkCredentialDeleteRequest,
 ) (*api.SdkCredentialDeleteResponse, error) {
+	if s.driver() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
 	if len(req.GetCredentialId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must provide credentials uuid")
 	}
 
-	err := s.driver.CredsDelete(req.GetCredentialId())
+	err := s.driver().CredsDelete(req.GetCredentialId())
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -232,8 +245,11 @@ func (s *CredentialServer) Enumerate(
 	ctx context.Context,
 	req *api.SdkCredentialEnumerateRequest,
 ) (*api.SdkCredentialEnumerateResponse, error) {
+	if s.driver() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
-	credList, err := s.driver.CredsEnumerate()
+	credList, err := s.driver().CredsEnumerate()
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -259,12 +275,15 @@ func (s *CredentialServer) Inspect(
 	ctx context.Context,
 	req *api.SdkCredentialInspectRequest,
 ) (*api.SdkCredentialInspectResponse, error) {
+	if s.driver() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
 	if len(req.GetCredentialId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must provide a credential id")
 	}
 
-	credList, err := s.driver.CredsEnumerate()
+	credList, err := s.driver().CredsEnumerate()
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -360,11 +379,11 @@ func validateAndDeleteIfInvalid(s *CredentialServer, uuid string) error {
 	// Validate if the credentials provided were correct or not
 	req := &api.SdkCredentialValidateRequest{CredentialId: uuid}
 
-	validateErr := s.driver.CredsValidate(req.GetCredentialId())
+	validateErr := s.driver().CredsValidate(req.GetCredentialId())
 
 	if validateErr != nil {
 		deleteCred := &api.SdkCredentialDeleteRequest{CredentialId: uuid}
-		err := s.driver.CredsDelete(deleteCred.GetCredentialId())
+		err := s.driver().CredsDelete(deleteCred.GetCredentialId())
 
 		if err != nil {
 			return status.Errorf(
