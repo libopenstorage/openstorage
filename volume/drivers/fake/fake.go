@@ -322,6 +322,7 @@ func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.Volu
 		v.Spec.Journal = spec.Journal
 		v.Spec.SnapshotInterval = spec.SnapshotInterval
 		v.Spec.IoProfile = spec.IoProfile
+		v.Spec.SnapshotSchedule = spec.SnapshotSchedule
 	}
 
 	return d.UpdateVol(v)
