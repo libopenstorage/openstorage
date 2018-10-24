@@ -264,6 +264,14 @@ type CloudBackupCreateRequest struct {
 	CredentialUUID string
 	// Full indicates if full backup is desired even though incremental is possible
 	Full bool
+	// Name is optional unique id to be used for this backup
+	// If not specified backup creates this by default
+	Name string
+}
+
+type CloudBackupCreateResponse struct {
+	// Name of the task performing this backup
+	Name string
 }
 
 type CloudBackupGroupCreateRequest struct {
@@ -290,11 +298,16 @@ type CloudBackupRestoreRequest struct {
 	// NodeID is the optional NodeID for provisioning restore
 	// volume (ResoreVolumeName should not be specified)
 	NodeID string
+	// Name is optional unique id to be used for this restore op
+	// restore creates this by default
+	Name string
 }
 
 type CloudBackupRestoreResponse struct {
 	// RestoreVolumeID is the volumeID to which the backup is being restored
 	RestoreVolumeID string
+	// Name of the task performing this restore
+	Name string
 }
 
 type CloudBackupGenericRequest struct {
@@ -352,6 +365,9 @@ type CloudBackupStatusRequest struct {
 	// Local indicates if only those backups/restores that are
 	// active on current node must be returned
 	Local bool
+	// Name of the backup/restore task. If this is specified, SrcVolumeID is
+	// ignored
+	Name string
 }
 
 type CloudBackupOpType string
@@ -370,6 +386,7 @@ const (
 	CloudBackupStatusPaused     = CloudBackupStatusType("Paused")
 	CloudBackupStatusStopped    = CloudBackupStatusType("Stopped")
 	CloudBackupStatusActive     = CloudBackupStatusType("Active")
+	CloudBackupStatusQueued     = CloudBackupStatusType("Queued")
 	CloudBackupStatusFailed     = CloudBackupStatusType("Failed")
 )
 
@@ -394,10 +411,16 @@ type CloudBackupStatus struct {
 	CompletedTime time.Time
 	// NodeID is the ID of the node where this Op is active
 	NodeID string
+	// SrcVolumeID is either the volume being backed-up or target volume to
+	// which a cloud backup is being restored
+	SrcVolumeID string
+	// Info currently indicates only failure cause in case of failed backup/restore
+	Info []string
 }
 
 type CloudBackupStatusResponse struct {
 	// statuses is list of currently active/failed/done backup/restores
+	// map key is the id of the task
 	Statuses map[string]CloudBackupStatus
 }
 
@@ -434,9 +457,9 @@ type CloudBackupHistoryResponse struct {
 }
 
 type CloudBackupStateChangeRequest struct {
-	// SrcVolumeID is volume ID on which backup/restore
-	// state change is being requested
-	SrcVolumeID string
+	// Name of the backup/restore task for which state change
+	// is being requested
+	Name string
 	// RequestedState is desired state of the op
 	// can be pause/resume/stop
 	RequestedState string
@@ -839,6 +862,7 @@ func (s CloudBackupStatus) ToSdkCloudBackupStatus() *SdkCloudBackupStatus {
 		Status:    CloudBackupStatusTypeToSdkCloudBackupStatusType(s.Status),
 		BytesDone: s.BytesDone,
 		NodeId:    s.NodeID,
+		Info:      s.Info,
 	}
 
 	status.StartTime, _ = ptypes.TimestampProto(s.StartTime)

@@ -22,26 +22,41 @@ func TestClientBackup(t *testing.T) {
 	testVolDriver.MockDriver().EXPECT().CloudBackupCreate(&api.CloudBackupCreateRequest{
 		VolumeID:       "goodvol",
 		CredentialUUID: "",
-		Full:           false}).Return(nil).Times(1)
+		Full:           false}).Return(&api.CloudBackupCreateResponse{Name: "good-backup-Name"}, nil).Times(1)
 	testVolDriver.MockDriver().EXPECT().CloudBackupCreate(&api.CloudBackupCreateRequest{
 		VolumeID:       "badvol",
 		CredentialUUID: "",
-		Full:           false}).Return(fmt.Errorf("Volume not found")).Times(1)
+		Full:           false}).Return(nil, fmt.Errorf("Volume not found")).Times(1)
+	testVolDriver.MockDriver().EXPECT().CloudBackupCreate(&api.CloudBackupCreateRequest{
+		VolumeID:       "goodvol",
+		CredentialUUID: "",
+		Full:           false,
+		Name:           "unique-id-from-app"}).Return(&api.CloudBackupCreateResponse{Name: "unique-id-from-app"}, nil).Times(1)
 
 	// Create Backup
-	err = client.VolumeDriver(cl).
+	createResponse, err := client.VolumeDriver(cl).
 		CloudBackupCreate(&api.CloudBackupCreateRequest{
 			VolumeID:       "goodvol",
 			CredentialUUID: "",
 			Full:           false})
 	require.NoError(t, err)
-	err = client.VolumeDriver(cl).
+	require.NotEqual(t, createResponse.Name, "")
+	createResponse, err = client.VolumeDriver(cl).
 		CloudBackupCreate(&api.CloudBackupCreateRequest{
 			VolumeID:       "badvol",
 			CredentialUUID: "",
 			Full:           false})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "Volume not found")
+	createResponse, err = client.VolumeDriver(cl).
+		CloudBackupCreate(&api.CloudBackupCreateRequest{
+			VolumeID:       "goodvol",
+			CredentialUUID: "",
+			Full:           false,
+			Name:           "unique-id-from-app"})
+	require.NoError(t, err)
+	require.Equal(t, createResponse.Name, "unique-id-from-app")
+
 }
 
 func TestClientGroupBackup(t *testing.T) {
@@ -136,7 +151,7 @@ func TestClientBackupRestoreGetNodeIdFromIp(t *testing.T) {
 		ID:             "goodBackupid",
 		CredentialUUID: "",
 		NodeID:         "nodeid"}).
-		Return(&api.CloudBackupRestoreResponse{}, nil)
+		Return(&api.CloudBackupRestoreResponse{Name: "good-back-taskid"}, nil)
 
 	// Invoke restore with IP Success
 	_, err = client.VolumeDriver(cl).
@@ -343,23 +358,23 @@ func TestClientBackupStateChange(t *testing.T) {
 	require.NoError(t, err)
 
 	testVolDriver.MockDriver().EXPECT().CloudBackupStateChange(&api.CloudBackupStateChangeRequest{
-		SrcVolumeID:    "goodsrc",
+		Name:           "good-task",
 		RequestedState: "pause"}).
 		Return(nil).Times(1)
 	testVolDriver.MockDriver().EXPECT().CloudBackupStateChange(&api.CloudBackupStateChangeRequest{
-		SrcVolumeID:    "",
+		Name:           "",
 		RequestedState: ""}).
 		Return(fmt.Errorf("Failed to change state")).Times(1)
 
 	//Invoke StateChange
 	err = client.VolumeDriver(cl).
 		CloudBackupStateChange(&api.CloudBackupStateChangeRequest{
-			SrcVolumeID:    "goodsrc",
+			Name:           "good-task",
 			RequestedState: "pause"})
 	require.NoError(t, err)
 	err = client.VolumeDriver(cl).
 		CloudBackupStateChange(&api.CloudBackupStateChangeRequest{
-			SrcVolumeID:    "",
+			Name:           "",
 			RequestedState: ""})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "Failed to change state")

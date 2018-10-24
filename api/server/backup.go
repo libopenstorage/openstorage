@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/volume"
 )
 
 func (vd *volAPI) cloudBackupCreate(w http.ResponseWriter, r *http.Request) {
@@ -22,12 +23,16 @@ func (vd *volAPI) cloudBackupCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = d.CloudBackupCreate(backupReq)
+	createResp, err := d.CloudBackupCreate(backupReq)
 	if err != nil {
+		if err == volume.ErrInvalidName {
+			w.WriteHeader(http.StatusConflict)
+			return
+		}
 		vd.sendError(method, backupReq.VolumeID, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(createResp)
 }
 
 func (vd *volAPI) cloudBackupGroupCreate(w http.ResponseWriter, r *http.Request) {
@@ -83,6 +88,10 @@ func (vd *volAPI) cloudBackupRestore(w http.ResponseWriter, r *http.Request) {
 
 	restoreResp, err := d.CloudBackupRestore(restoreReq)
 	if err != nil {
+		if err == volume.ErrInvalidName {
+			w.WriteHeader(http.StatusConflict)
+			return
+		}
 		vd.sendError(method, restoreReq.ID, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -174,6 +183,10 @@ func (vd *volAPI) cloudBackupStatus(w http.ResponseWriter, r *http.Request) {
 
 	backupStatusResp, err := d.CloudBackupStatus(backupStatus)
 	if err != nil {
+		if err == volume.ErrInvalidName {
+			w.WriteHeader(http.StatusConflict)
+			return
+		}
 		vd.sendError(method, "", w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -242,7 +255,7 @@ func (vd *volAPI) cloudBackupStateChange(w http.ResponseWriter, r *http.Request)
 
 	err = d.CloudBackupStateChange(stateChangeReq)
 	if err != nil {
-		vd.sendError(method, stateChangeReq.SrcVolumeID, w, err.Error(), http.StatusInternalServerError)
+		vd.sendError(method, "", w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)

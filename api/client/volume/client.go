@@ -492,13 +492,17 @@ func (v *volumeClient) CredsValidate(uuid string) error {
 // CloudBackupCreate uploads snapshot of a volume to cloud
 func (v *volumeClient) CloudBackupCreate(
 	input *api.CloudBackupCreateRequest,
-) error {
+) (*api.CloudBackupCreateResponse, error) {
+	createResp := &api.CloudBackupCreateResponse{}
 	req := v.c.Post().Resource(api.OsdBackupPath).Body(input)
 	response := req.Do()
 	if response.Error() != nil {
-		return response.FormatError()
+		return nil, response.FormatError()
 	}
-	return nil
+	if err := response.Unmarshal(&createResp); err != nil {
+		return nil, err
+	}
+	return createResp, nil
 }
 
 // CloudBackupGroupCreate uploads snapshots of a volume group to cloud
@@ -510,6 +514,7 @@ func (v *volumeClient) CloudBackupGroupCreate(
 	if response.Error() != nil {
 		return response.FormatError()
 	}
+
 	return nil
 }
 

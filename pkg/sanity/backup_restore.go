@@ -156,7 +156,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(str).NotTo(BeNil())
 
-				err = volumedriver.CloudBackupCreate(bkpReq)
+				_, err = volumedriver.CloudBackupCreate(bkpReq)
 				Expect(err).To((BeNil()))
 
 				By("Checking backup status")
@@ -261,7 +261,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(str).NotTo(BeNil())
 
-				err = volumedriver.CloudBackupCreate(bkpReq)
+				_, err = volumedriver.CloudBackupCreate(bkpReq)
 				Expect(err).To(BeNil()) // give 3 attempts for backup to be successfull before declaring failed
 
 				By("Checking backup status")
@@ -388,7 +388,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(str).NotTo(BeNil())
 
-				err = volumedriver.CloudBackupCreate(bkpReq)
+				_, err = volumedriver.CloudBackupCreate(bkpReq)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Checking backup status")
@@ -782,7 +782,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(str).NotTo(BeNil())
 
-				err = volumedriver.CloudBackupCreate(bkpReq)
+				_, err = volumedriver.CloudBackupCreate(bkpReq)
 				Expect(err).To((BeNil()))
 
 				By("Checking backup status")

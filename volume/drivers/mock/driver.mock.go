@@ -73,10 +73,11 @@ func (mr *MockVolumeDriverMockRecorder) CloudBackupCatalog(arg0 interface{}) *go
 }
 
 // CloudBackupCreate mocks base method
-func (m *MockVolumeDriver) CloudBackupCreate(arg0 *api.CloudBackupCreateRequest) error {
+func (m *MockVolumeDriver) CloudBackupCreate(arg0 *api.CloudBackupCreateRequest) (*api.CloudBackupCreateResponse, error) {
 	ret := m.ctrl.Call(m, "CloudBackupCreate", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(*api.CloudBackupCreateResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // CloudBackupCreate indicates an expected call of CloudBackupCreate

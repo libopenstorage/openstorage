@@ -131,8 +131,8 @@ type cloudBackupNotSupported struct{}
 
 func (cl *cloudBackupNotSupported) CloudBackupCreate(
 	input *api.CloudBackupCreateRequest,
-) error {
-	return ErrNotSupported
+) (*api.CloudBackupCreateResponse, error) {
+	return nil, ErrNotSupported
 }
 
 func (cl *cloudBackupNotSupported) CloudBackupGroupCreate(

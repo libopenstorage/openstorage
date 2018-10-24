@@ -178,7 +178,6 @@ test: packr
 
 docs:
 	go generate ./cmd/osd/main.go
-	swagger validate api/swagger/swagger.json
 
 packr:
 ifndef HAS_PACKR
