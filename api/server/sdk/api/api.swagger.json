@@ -3,6 +3,18 @@
     "application/json"
   ],
   "definitions": {
+    "LabelSelectorRequirementOperator": {
+      "default": "In",
+      "description": "- In: In means the value for 'key' should be in one of the given 'values'\n - NotIn: NotIn means the value for 'key' should NOT be in one of the given 'values'\n - Exists: Exists means the 'key' should just exist regardless of the value\n - DoesNotExist: DoesNotExist means the 'key' should NOT exist",
+      "enum": [
+        "In",
+        "NotIn",
+        "Exists",
+        "DoesNotExist"
+      ],
+      "title": "This defines operator types used in a label matching rule",
+      "type": "string"
+    },
     "SdkServiceCapabilityOpenStorageService": {
       "properties": {
         "type": {
@@ -28,6 +40,29 @@
       ],
       "title": "- UNKNOWN: Unknown service\n - CLUSTER: Cluster management\n - CLOUD_BACKUP: Cloud backup of volumes management\n - CREDENTIALS: Credentials management\n - NODE: Node management\n - OBJECT_STORAGE: Object Storage management\n - SCHEDULE_POLICY: Schedule policy management\n - VOLUME: Volume management\n - ALERTS: Alert enumeration\n - MOUNT_ATTACH: Mount/Attach Support",
       "type": "string"
+    },
+    "VolumePlacementRuleEnforcementType": {
+      "default": "Required",
+      "description": "- Required: This specifies that the rule is required and must be strictly enforced\n - Preferred: This specifies that the rule is preferred and can be best effort",
+      "enum": [
+        "Required",
+        "Preferred"
+      ],
+      "title": "Defines the types of enforcement on the given rules",
+      "type": "string"
+    },
+    "apiAffinityRule": {
+      "properties": {
+        "match_expressions": {
+          "description": "MatchExpressions is a list of label selector requirements. The requirements are ANDed.",
+          "items": {
+            "$ref": "#/definitions/apiLabelSelectorRequirement"
+          },
+          "type": "array"
+        }
+      },
+      "title": "AffinityRule specifies the label matching rules for an affinity or anti-affinity",
+      "type": "object"
     },
     "apiAlert": {
       "properties": {
@@ -158,6 +193,27 @@
           "description": "EarlyAck enables acks for async I/O at the source.",
           "format": "boolean",
           "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "apiLabelSelectorRequirement": {
+      "description": "LabelSelectorRequirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
+      "properties": {
+        "key": {
+          "description": "Key is the label key that the selector applies to.",
+          "type": "string"
+        },
+        "operator": {
+          "$ref": "#/definitions/LabelSelectorRequirementOperator",
+          "description": "Operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist."
+        },
+        "values": {
+          "description": "Values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         }
       },
       "type": "object"
@@ -2145,6 +2201,47 @@
       "title": "VolumeLocator is a structure that is attached to a volume\nand is used to carry opaque metadata.\nswagger:model",
       "type": "object"
     },
+    "apiVolumePlacementRule": {
+      "properties": {
+        "affected_replicas": {
+          "format": "int32",
+          "title": "AffectedReplicas defines the number of volume replicas affected by this rule. If not provided,\nrule would affect all replicas\n(optional)",
+          "type": "integer"
+        },
+        "affinity": {
+          "$ref": "#/definitions/apiAffinityRule",
+          "title": "Affinity defines the affinity rule for the volume placement"
+        },
+        "anti_affinity": {
+          "$ref": "#/definitions/apiAffinityRule",
+          "title": "AntiAffinity defines the anti affinity rule for the volume placement"
+        },
+        "enforcement": {
+          "$ref": "#/definitions/VolumePlacementRuleEnforcementType",
+          "title": "Enforcement specifies the rule enforcement policy. Can take values: required or preferred.\n(optional)"
+        },
+        "weight": {
+          "format": "int64",
+          "title": "Weight defines the weight of the rule which allows to break the tie with other matching rules. A rule with\nhigher weight wins over a rule with lower weight.\n(optional)",
+          "type": "string"
+        }
+      },
+      "title": "VolumePlacementRule defines a single placement rule",
+      "type": "object"
+    },
+    "apiVolumePlacementStrategy": {
+      "properties": {
+        "rules": {
+          "description": "Rules defines a list of rules as part of the placement spec. All the rules specified will\nbe applied for volume placement.\nRules that have enforcement as \"required\" are strictly enforced while \"preferred\" are best effort.\nIn situations, where 2 or more rules conflict, the weight of the rules will dictate which wins.",
+          "items": {
+            "$ref": "#/definitions/apiVolumePlacementRule"
+          },
+          "type": "array"
+        }
+      },
+      "title": "VolumePlacementStrategy defines a strategy for placing volumes in the cluster which will be a series of rules",
+      "type": "object"
+    },
     "apiVolumeSpec": {
       "properties": {
         "aggregation_level": {
@@ -2230,6 +2327,10 @@
         "passphrase": {
           "title": "Passphrase for an encrypted volume",
           "type": "string"
+        },
+        "placement_strategy": {
+          "$ref": "#/definitions/apiVolumePlacementStrategy",
+          "description": "PlacementStrategy specifies a spec to indicate where to place the volume."
         },
         "queue_depth": {
           "format": "int64",
