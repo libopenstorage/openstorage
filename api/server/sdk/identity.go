@@ -28,7 +28,11 @@ import (
 
 // IdentityServer is an implementation of the gRPC OpenStorageIdentityServer interface
 type IdentityServer struct {
-	driver volume.VolumeDriver
+	server *Server
+}
+
+func (s *IdentityServer) driver() volume.VolumeDriver {
+	return s.server.driver()
 }
 
 // Capabilities returns the capabilities of the SDK server
@@ -122,12 +126,22 @@ func (s *IdentityServer) Version(
 	req *api.SdkIdentityVersionRequest,
 ) (*api.SdkIdentityVersionResponse, error) {
 
-	version, err := s.driver.Version()
-	if err != nil {
-		return nil, status.Errorf(
-			codes.Internal,
-			"Failed to get version information: %v", err,
-		)
+	var (
+		version *api.StorageVersion
+		err     error
+	)
+	if s.driver() == nil {
+		version = &api.StorageVersion{
+			Driver: "no driver running",
+		}
+	} else {
+		version, err = s.driver().Version()
+		if err != nil {
+			return nil, status.Errorf(
+				codes.Internal,
+				"Failed to get version information: %v", err,
+			)
+		}
 	}
 
 	sdkVersion := &api.SdkVersion{
