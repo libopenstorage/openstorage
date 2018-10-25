@@ -387,22 +387,24 @@ func TestSdkCloudBackupStatus(t *testing.T) {
 	statuses := &api.CloudBackupStatusResponse{
 		Statuses: map[string]api.CloudBackupStatus{
 			"hello": api.CloudBackupStatus{
-				ID:            "myid",
-				OpType:        api.CloudBackupOp,
-				Status:        api.CloudBackupStatusPaused,
-				BytesDone:     123456,
-				StartTime:     time.Now(),
-				CompletedTime: time.Now(),
-				NodeID:        "mynode",
+				ID:             "myid",
+				OpType:         api.CloudBackupOp,
+				Status:         api.CloudBackupStatusPaused,
+				BytesDone:      123456,
+				StartTime:      time.Now(),
+				CompletedTime:  time.Now(),
+				NodeID:         "mynode",
+				CredentialUUID: "uuid",
 			},
 			"world": api.CloudBackupStatus{
-				ID:            "another",
-				OpType:        api.CloudRestoreOp,
-				Status:        api.CloudBackupStatusDone,
-				BytesDone:     97324,
-				StartTime:     time.Now(),
-				CompletedTime: time.Now(),
-				NodeID:        "myothernode",
+				ID:             "another",
+				OpType:         api.CloudRestoreOp,
+				Status:         api.CloudBackupStatusDone,
+				BytesDone:      97324,
+				StartTime:      time.Now(),
+				CompletedTime:  time.Now(),
+				NodeID:         "myothernode",
+				CredentialUUID: "uuid",
 			},
 		},
 	}
@@ -434,6 +436,7 @@ func TestSdkCloudBackupStatus(t *testing.T) {
 		assert.Equal(t, v.GetNodeId(), status.NodeID)
 		assert.Equal(t, v.GetOptype(), api.CloudBackupOpTypeToSdkCloudBackupOpType(status.OpType))
 		assert.Equal(t, v.GetStatus(), api.CloudBackupStatusTypeToSdkCloudBackupStatusType(status.Status))
+		assert.Equal(t, v.GetCredentialId(), status.CredentialUUID)
 
 		ts, err := ptypes.TimestampProto(status.StartTime)
 		assert.NoError(t, err)
