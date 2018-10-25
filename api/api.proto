@@ -2225,6 +2225,8 @@ message SdkCloudBackupStatus {
   string src_volume_id = 8;
   // Info currently indicates the failure cause for failed backup/restore
   repeated string info = 9;
+  // CredentialId is the credential used for cloud with this backup/restore op
+  string credential_id  = 10;
 }
 
 // Defines a request to retreive the status of a backup or restore for a
@@ -2444,7 +2446,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 18;
+    Minor = 19;
     // SDK version patch value of this specification
     Patch = 0;
   }

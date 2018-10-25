@@ -835,6 +835,10 @@
           "title": "CompletedTime indicates Op's completed time",
           "type": "string"
         },
+        "credential_id": {
+          "title": "CredentialId is the credential used for cloud with this backup/restore op",
+          "type": "string"
+        },
         "info": {
           "items": {
             "type": "string"
@@ -2512,7 +2516,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.18.0"
+    "version": "0.19.0"
   },
   "paths": {
     "/v1/alerts": {

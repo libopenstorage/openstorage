@@ -416,6 +416,8 @@ type CloudBackupStatus struct {
 	SrcVolumeID string
 	// Info currently indicates only failure cause in case of failed backup/restore
 	Info []string
+	// CredentialUUID used for this backup/restore op
+	CredentialUUID string
 }
 
 type CloudBackupStatusResponse struct {
@@ -857,12 +859,13 @@ func StringToSdkCloudBackupOpType(s string) SdkCloudBackupOpType {
 
 func (s CloudBackupStatus) ToSdkCloudBackupStatus() *SdkCloudBackupStatus {
 	status := &SdkCloudBackupStatus{
-		BackupId:  s.ID,
-		Optype:    CloudBackupOpTypeToSdkCloudBackupOpType(s.OpType),
-		Status:    CloudBackupStatusTypeToSdkCloudBackupStatusType(s.Status),
-		BytesDone: s.BytesDone,
-		NodeId:    s.NodeID,
-		Info:      s.Info,
+		BackupId:     s.ID,
+		Optype:       CloudBackupOpTypeToSdkCloudBackupOpType(s.OpType),
+		Status:       CloudBackupStatusTypeToSdkCloudBackupStatusType(s.Status),
+		BytesDone:    s.BytesDone,
+		NodeId:       s.NodeID,
+		Info:         s.Info,
+		CredentialId: s.CredentialUUID,
 	}
 
 	status.StartTime, _ = ptypes.TimestampProto(s.StartTime)
