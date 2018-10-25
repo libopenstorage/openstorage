@@ -41,6 +41,16 @@
       "title": "- UNKNOWN: Unknown service\n - CLUSTER: Cluster management\n - CLOUD_BACKUP: Cloud backup of volumes management\n - CREDENTIALS: Credentials management\n - NODE: Node management\n - OBJECT_STORAGE: Object Storage management\n - SCHEDULE_POLICY: Schedule policy management\n - VOLUME: Volume management\n - ALERTS: Alert enumeration\n - MOUNT_ATTACH: Mount/Attach Support",
       "type": "string"
     },
+    "VolumePlacementRuleAffinityRuleType": {
+      "default": "Affinity",
+      "description": "- Affinity: Affinity means the rule specifies an affinity to objects that match the below label selector requirements\n - AntiAffinity: AntiAffinity means the rule specifies an anti-affinity to objects that match the below label selector requirements",
+      "enum": [
+        "Affinity",
+        "AntiAffinity"
+      ],
+      "title": "This specifies the type an affinity rule can take",
+      "type": "string"
+    },
     "VolumePlacementRuleEnforcementType": {
       "default": "Required",
       "description": "- Required: This specifies that the rule is required and must be strictly enforced\n - Preferred: This specifies that the rule is preferred and can be best effort",
@@ -50,19 +60,6 @@
       ],
       "title": "Defines the types of enforcement on the given rules",
       "type": "string"
-    },
-    "apiAffinityRule": {
-      "properties": {
-        "match_expressions": {
-          "description": "MatchExpressions is a list of label selector requirements. The requirements are ANDed.",
-          "items": {
-            "$ref": "#/definitions/apiLabelSelectorRequirement"
-          },
-          "type": "array"
-        }
-      },
-      "title": "AffinityRule specifies the label matching rules for an affinity or anti-affinity",
-      "type": "object"
     },
     "apiAlert": {
       "properties": {
@@ -2212,17 +2209,20 @@
           "title": "AffectedReplicas defines the number of volume replicas affected by this rule. If not provided,\nrule would affect all replicas\n(optional)",
           "type": "integer"
         },
-        "affinity": {
-          "$ref": "#/definitions/apiAffinityRule",
-          "title": "Affinity defines the affinity rule for the volume placement"
-        },
-        "anti_affinity": {
-          "$ref": "#/definitions/apiAffinityRule",
-          "title": "AntiAffinity defines the anti affinity rule for the volume placement"
-        },
         "enforcement": {
           "$ref": "#/definitions/VolumePlacementRuleEnforcementType",
           "title": "Enforcement specifies the rule enforcement policy. Can take values: required or preferred.\n(optional)"
+        },
+        "match_expressions": {
+          "description": "MatchExpressions is a list of label selector requirements. The requirements are ANDed.",
+          "items": {
+            "$ref": "#/definitions/apiLabelSelectorRequirement"
+          },
+          "type": "array"
+        },
+        "type": {
+          "$ref": "#/definitions/VolumePlacementRuleAffinityRuleType",
+          "title": "Type is the type of the affinity rule"
         },
         "weight": {
           "format": "int64",
