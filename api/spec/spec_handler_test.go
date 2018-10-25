@@ -84,6 +84,86 @@ func TestQueueDepth(t *testing.T) {
 	testSpecOptString(t, api.SpecQueueDepth, "10")
 }
 
+func TestEarlyAck(t *testing.T) {
+	s := NewSpecHandler()
+	spec, _, _, err := s.SpecFromOpts(map[string]string{
+		api.SpecEarlyAck: "true",
+	})
+
+	require.NoError(t, err)
+	ioStrategy := spec.GetIoStrategy()
+	require.NotNil(t, ioStrategy)
+	require.True(t, ioStrategy.EarlyAck)
+
+	spec, _, _, err = s.SpecFromOpts(map[string]string{
+		api.SpecEarlyAck: "false",
+	})
+	require.NoError(t, err)
+	ioStrategy = spec.GetIoStrategy()
+	require.NotNil(t, ioStrategy)
+	require.False(t, ioStrategy.EarlyAck)
+
+	spec, _, _, err = s.SpecFromOpts(map[string]string{})
+	require.Nil(t, spec.GetIoStrategy())
+	require.NoError(t, err)
+
+	_, _, _, err = s.SpecFromOpts(map[string]string{
+		api.SpecAsyncIo: "blah",
+	})
+	require.Error(t, err)
+	require.Nil(t, spec.GetIoStrategy())
+
+	spec = testSpecFromString(t, api.SpecAsyncIo, "true")
+	ioStrategy = spec.GetIoStrategy()
+	require.NotNil(t, ioStrategy)
+	require.True(t, ioStrategy.AsyncIo)
+
+	spec = testSpecFromString(t, api.SpecAsyncIo, "false")
+	ioStrategy = spec.GetIoStrategy()
+	require.NotNil(t, ioStrategy)
+	require.False(t, ioStrategy.AsyncIo)
+}
+
+func TestAsyncIo(t *testing.T) {
+	s := NewSpecHandler()
+	spec, _, _, err := s.SpecFromOpts(map[string]string{
+		api.SpecAsyncIo: "true",
+	})
+
+	require.NoError(t, err)
+	ioStrategy := spec.GetIoStrategy()
+	require.NotNil(t, ioStrategy)
+	require.True(t, ioStrategy.AsyncIo)
+
+	spec, _, _, err = s.SpecFromOpts(map[string]string{
+		api.SpecAsyncIo: "false",
+	})
+	require.NoError(t, err)
+	ioStrategy = spec.GetIoStrategy()
+	require.NotNil(t, ioStrategy)
+	require.False(t, ioStrategy.AsyncIo)
+
+	spec, _, _, err = s.SpecFromOpts(map[string]string{})
+	require.NoError(t, err)
+	require.Nil(t, spec.GetIoStrategy())
+
+	_, _, _, err = s.SpecFromOpts(map[string]string{
+		api.SpecAsyncIo: "blah",
+	})
+	require.Error(t, err)
+	require.Nil(t, spec.GetIoStrategy())
+
+	spec = testSpecFromString(t, api.SpecAsyncIo, "true")
+	ioStrategy = spec.GetIoStrategy()
+	require.NotNil(t, ioStrategy)
+	require.True(t, ioStrategy.AsyncIo)
+
+	spec = testSpecFromString(t, api.SpecAsyncIo, "false")
+	ioStrategy = spec.GetIoStrategy()
+	require.NotNil(t, ioStrategy)
+	require.False(t, ioStrategy.AsyncIo)
+}
+
 func TestForceUnsupportedFsType(t *testing.T) {
 	s := NewSpecHandler()
 	spec, _, _, err := s.SpecFromOpts(map[string]string{
