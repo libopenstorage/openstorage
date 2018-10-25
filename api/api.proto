@@ -179,6 +179,8 @@ enum OperationFlags {
   OP_FLAGS_DETACH_FORCE = 2;
 }
 
+
+
 // StorageResource groups properties of a storage device.
 // swagger:model
 message StorageResource {
@@ -259,7 +261,7 @@ message Group {
 
 // IoStrategy defines how I/O should be performed to backing storage media.
 message IoStrategy {
-  // AsyncIO enables kaio. 
+  // AsyncIO enables kaio.
   bool async_io = 1;
   // EarlyAck enables acks for async I/O at the source.
   bool early_ack = 2;
@@ -326,6 +328,8 @@ message VolumeSpec {
   bool nodiscard = 29;
   // IoStrategy preferred strategy for I/O.
   IoStrategy io_strategy = 30;
+  // PlacementStrategy specifies a spec to indicate where to place the volume.
+  VolumePlacementStrategy placement_strategy = 31;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -2221,6 +2225,8 @@ message SdkCloudBackupStatus {
   string src_volume_id = 8;
   // Info currently indicates the failure cause for failed backup/restore
   repeated string info = 9;
+  // CredentialId is the credential used for cloud with this backup/restore op
+  string credential_id  = 10;
 }
 
 // Defines a request to retreive the status of a backup or restore for a
@@ -2440,7 +2446,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 18;
+    Minor = 19;
     // SDK version patch value of this specification
     Patch = 0;
   }
@@ -2506,37 +2512,42 @@ message CloudMigrateStartRequest {
     string cluster_id = 2;
     // Depending on the operation type this can be a VolumeID or VolumeGroupID
     string target_id = 3;
+    // (Optional) Unique TaskId assocaiated with this migration. If not provided one will
+    // be generated and returned in the response
+    string task_id = 4;
+}
+
+// Response to start a cloud migration
+message CloudMigrateStartResponse {
+    // TaskId assocaiated with the migration that was started
+    string task_id = 1;
 }
 
 // Request to stop a cloud migration
 message CloudMigrateCancelRequest {
-    // The type of operation to cancel
-    CloudMigrate.OperationType operation = 1;
-    // ID of the cluster to which migration should be cancelled
-    string cluster_id = 2;
-    // Depending on the operation type this can be a VolumeID or VolumeGroupID
-    string target_id = 3;
+    // The id of the task to cancel
+    string task_id = 1;
 }
 
 message CloudMigrateInfo {
+    // Task id associated with this migration
+    string task_id = 1;
     // ID of the cluster where the volume is being migrated
-    string cluster_id = 1;
+    string cluster_id = 2;
     // ID of the volume on the local cluster
-    string local_volume_id = 2;
+    string local_volume_id = 3;
     // Name of the volume on the local cluster
-    string local_volume_name = 3;
+    string local_volume_name = 4;
     // ID of the volume on the remote cluster
-    string remote_volume_id = 4;
+    string remote_volume_id = 5;
     // ID of the cloudbackup used for the migration
-    string cloudbackup_id = 5;
+    string cloudbackup_id = 6;
     // Current stage of the volume migration
-    CloudMigrate.Stage current_stage = 6;
+    CloudMigrate.Stage current_stage = 7;
     // Status of the current stage
-    CloudMigrate.Status status = 7;
+    CloudMigrate.Status status = 8;
     // Last time the status was updated
-    google.protobuf.Timestamp last_update = 8;
-    // Time of the last successful migration of the volume
-    google.protobuf.Timestamp last_success = 9;
+    google.protobuf.Timestamp last_update = 9;
 }
 
 message CloudMigrateInfoList {
@@ -2701,7 +2712,7 @@ message CatalogResponse {
 }
 
 
-// Locate response woul be used to return a set of mounts
+// Locate response would be used to return a set of mounts
 // and/or Container IDs and their mount paths
 message LocateResponse {
     // Map of mounts
@@ -2710,4 +2721,81 @@ message LocateResponse {
     // Map of docker id's and their mounts
     // <containerid>: /var/www
     map<string, string> dockerids = 2;
+}
+
+// VolumePlacementStrategy defines a strategy for placing volumes in the cluster which will be a series of rules
+message VolumePlacementStrategy {
+  // Rules defines a list of rules as part of the placement spec. All the rules specified will
+  // be applied for volume placement.
+  // Rules that have enforcement as "required" are strictly enforced while "preferred" are best effort.
+  // In situations, where 2 or more rules conflict, the weight of the rules will dictate which wins.
+  repeated VolumePlacementRule rules = 1;
+}
+
+// VolumePlacementRule defines a single placement rule
+message VolumePlacementRule {
+  // AffectedReplicas defines the number of volume replicas affected by this rule. If not provided,
+  // rule would affect all replicas
+  // (optional)
+  int32 affected_replicas = 1;
+  // Weight defines the weight of the rule which allows to break the tie with other matching rules. A rule with
+  // higher weight wins over a rule with lower weight.
+  // (optional)
+  int64 weight = 2;
+
+  // Defines the types of enforcement on the given rules
+  enum EnforcementType {
+    // This specifies that the rule is required and must be strictly enforced
+    Required = 0;
+    // This specifies that the rule is preferred and can be best effort
+    Preferred = 1;
+  }
+
+  // Enforcement specifies the rule enforcement policy. Can take values: required or preferred.
+  // (optional)
+  EnforcementType enforcement = 3;
+
+  // This specifies the type an affinity rule can take
+  enum AffinityRuleType {
+    // Affinity means the rule specifies an affinity to objects that match the below label selector requirements
+    Affinity = 0;
+    // AntiAffinity means the rule specifies an anti-affinity to objects that match the below label selector requirements
+    AntiAffinity = 1;
+  }
+
+  // Type is the type of the affinity rule
+  AffinityRuleType type = 4;
+
+  // MatchExpressions is a list of label selector requirements. The requirements are ANDed.
+  repeated LabelSelectorRequirement match_expressions = 5;
+}
+
+
+// LabelSelectorRequirement is a selector that contains values, a key, and an operator that
+// relates the key and values.
+message LabelSelectorRequirement {
+  // Key is the label key that the selector applies to.
+  string key = 1;
+
+  // This defines operator types used in a label matching rule
+  enum Operator {
+    // In means the value for 'key' should be in one of the given 'values'
+    In = 0;
+    // NotIn means the value for 'key' should NOT be in one of the given 'values'
+    NotIn = 1;
+    // Exists means the 'key' should just exist regardless of the value
+    Exists = 2;
+    // DoesNotExist means the 'key' should NOT exist
+    DoesNotExist = 3;
+  }
+
+  // Operator represents a key's relationship to a set of values.
+  // Valid operators are In, NotIn, Exists and DoesNotExist.
+  Operator operator = 2;
+
+  // Values is an array of string values. If the operator is In or NotIn,
+  // the values array must be non-empty. If the operator is Exists or DoesNotExist,
+  // the values array must be empty. This array is replaced during a strategic
+  // merge patch.
+  repeated string values = 3;
 }

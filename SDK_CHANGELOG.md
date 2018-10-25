@@ -5,6 +5,11 @@
 
 ## Releases
 
+### v0.19.0 - Tech Preview (10/23/2018)
+
+* CloudBackupStatus now returns CredentialUUID used for cloud for the
+  backup/restore op under consideration.
+
 ### v0.18.0 - Tech Preview (10/23/2018)
 
 * Following CloudBackup APIs have been refactored to include task id rather

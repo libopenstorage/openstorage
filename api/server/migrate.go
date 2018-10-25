@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/libopenstorage/openstorage/api"
+	ost_errors "github.com/libopenstorage/openstorage/api/errors"
 )
 
 func (vd *volAPI) cloudMigrateStart(w http.ResponseWriter, r *http.Request) {
@@ -22,12 +23,16 @@ func (vd *volAPI) cloudMigrateStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = d.CloudMigrateStart(startReq)
+	response, err := d.CloudMigrateStart(startReq)
 	if err != nil {
+		if _, ok := err.(*ost_errors.ErrExists); ok {
+			w.WriteHeader(http.StatusConflict)
+			return
+		}
 		vd.sendError(method, startReq.TargetId, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
 }
 
 func (vd *volAPI) cloudMigrateCancel(w http.ResponseWriter, r *http.Request) {
@@ -47,7 +52,7 @@ func (vd *volAPI) cloudMigrateCancel(w http.ResponseWriter, r *http.Request) {
 
 	err = d.CloudMigrateCancel(cancelReq)
 	if err != nil {
-		vd.sendError(method, cancelReq.TargetId, w, err.Error(), http.StatusInternalServerError)
+		vd.sendError(method, cancelReq.TaskId, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)

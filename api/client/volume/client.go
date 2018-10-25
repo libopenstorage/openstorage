@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"strconv"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/client"
+	ost_errors "github.com/libopenstorage/openstorage/api/errors"
 	"github.com/libopenstorage/openstorage/volume"
 )
 
@@ -497,6 +499,12 @@ func (v *volumeClient) CloudBackupCreate(
 	req := v.c.Post().Resource(api.OsdBackupPath).Body(input)
 	response := req.Do()
 	if response.Error() != nil {
+		if response.StatusCode() == http.StatusConflict {
+			return nil, &ost_errors.ErrExists{
+				Type: "CloudBackupCreate",
+				ID:   input.Name,
+			}
+		}
 		return nil, response.FormatError()
 	}
 	if err := response.Unmarshal(&createResp); err != nil {
@@ -526,6 +534,12 @@ func (v *volumeClient) CloudBackupRestore(
 	req := v.c.Post().Resource(api.OsdBackupPath + "/restore").Body(input)
 	response := req.Do()
 	if response.Error() != nil {
+		if response.StatusCode() == http.StatusConflict {
+			return nil, &ost_errors.ErrExists{
+				Type: "CloudBackupRestore",
+				ID:   input.Name,
+			}
+		}
 		return nil, response.FormatError()
 	}
 
@@ -721,13 +735,23 @@ func (v *volumeClient) SnapshotGroup(groupID string, labels map[string]string) (
 	return response, nil
 }
 
-func (v *volumeClient) CloudMigrateStart(request *api.CloudMigrateStartRequest) error {
+func (v *volumeClient) CloudMigrateStart(request *api.CloudMigrateStartRequest) (*api.CloudMigrateStartResponse, error) {
+	startResponse := &api.CloudMigrateStartResponse{}
 	req := v.c.Post().Resource(api.OsdMigrateStartPath).Body(request)
 	response := req.Do()
 	if response.Error() != nil {
-		return response.FormatError()
+		if response.StatusCode() == http.StatusConflict {
+			return nil, &ost_errors.ErrExists{
+				Type: "CloudMigrate",
+				ID:   request.TaskId,
+			}
+		}
+		return nil, response.FormatError()
 	}
-	return nil
+	if err := response.Unmarshal(startResponse); err != nil {
+		return nil, err
+	}
+	return startResponse, nil
 }
 
 func (v *volumeClient) CloudMigrateCancel(request *api.CloudMigrateCancelRequest) error {

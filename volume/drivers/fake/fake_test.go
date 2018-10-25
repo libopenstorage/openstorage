@@ -481,6 +481,7 @@ func TestFakeCloudBackupStatusWithMatchingVolume(t *testing.T) {
 	// backups and restores
 	assert.Len(t, resp.Statuses, 1)
 	assert.Equal(t, api.CloudBackupOp, resp.Statuses[name].OpType)
+	assert.Equal(t, credBackupReq.CredentialUUID, resp.Statuses[name].CredentialUUID)
 }
 
 func TestFakeCloudBackupCatalog(t *testing.T) {
