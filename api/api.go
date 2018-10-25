@@ -47,6 +47,8 @@ const (
 	SpecLabels               = "labels"
 	SpecPriorityAlias        = "priority_io"
 	SpecIoProfile            = "io_profile"
+	SpecAsyncIo              = "async_io"
+	SpecEarlyAck             = "early_ack"
 	// SpecBestEffortLocationProvisioning default is false. If set provisioning request will succeed
 	// even if specified data location parameters could not be satisfied.
 	SpecBestEffortLocationProvisioning = "best_effort_location_provisioning"
