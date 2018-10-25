@@ -2754,17 +2754,20 @@ message VolumePlacementRule {
   // Enforcement specifies the rule enforcement policy. Can take values: required or preferred.
   // (optional)
   EnforcementType enforcement = 3;
-  // Affinity defines the affinity rule for the volume placement
-  AffinityRule affinity = 4;
-  // AntiAffinity defines the anti affinity rule for the volume placement
-  AffinityRule anti_affinity = 5;
 
-}
+  // This specifies the type an affinity rule can take
+  enum AffinityRuleType {
+    // Affinity means the rule specifies an affinity to objects that match the below label selector requirements
+    Affinity = 0;
+    // AntiAffinity means the rule specifies an anti-affinity to objects that match the below label selector requirements
+    AntiAffinity = 1;
+  }
 
-// AffinityRule specifies the label matching rules for an affinity or anti-affinity
-message AffinityRule {
+  // Type is the type of the affinity rule
+  AffinityRuleType type = 4;
+
   // MatchExpressions is a list of label selector requirements. The requirements are ANDed.
-  repeated LabelSelectorRequirement match_expressions = 1;
+  repeated LabelSelectorRequirement match_expressions = 5;
 }
 
 
