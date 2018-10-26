@@ -2548,6 +2548,8 @@ message CloudMigrateInfo {
     CloudMigrate.Status status = 8;
     // Last time the status was updated
     google.protobuf.Timestamp last_update = 9;
+    // Contains the reason for the migration error
+    string error_reason = 10;
 }
 
 message CloudMigrateInfoList {
