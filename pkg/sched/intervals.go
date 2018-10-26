@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/libopenstorage/openstorage/api"
 	"gopkg.in/yaml.v2"
 )
 
@@ -18,9 +19,6 @@ const (
 	WeeklyType           = "weekly"
 	PeriodicType         = "periodic"
 	retainSeparator      = ","
-	MonthlyRetain        = 12
-	WeeklyRetain         = 5
-	DailyRetain          = 7
 )
 
 var (
@@ -557,11 +555,11 @@ func SetupIntvWithDefaults(intvs []RetainInterval) []RetainInterval {
 		if intv.RetainNumber() == 0 {
 			switch intv.IntervalType() {
 			case DailyType:
-				p.retain = DailyRetain
+				p.retain = uint32(api.SdkSchedulePolicyInterval_DailyScheduleRetain)
 			case WeeklyType, PeriodicType:
-				p.retain = WeeklyRetain
+				p.retain = uint32(api.SdkSchedulePolicyInterval_WeeklyScheduleRetain)
 			case MonthlyType:
-				p.retain = MonthlyRetain
+				p.retain = uint32(api.SdkSchedulePolicyInterval_MonthlyScheduleRetain)
 			}
 		} else {
 			p.retain = intv.RetainNumber()

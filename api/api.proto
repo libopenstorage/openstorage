@@ -1543,6 +1543,35 @@ message SdkSchedulePolicyIntervalPeriodic{
 
 // Defines a schedule policy interval
 message SdkSchedulePolicyInterval {
+
+  // Defines default retain value for daily schedule
+  enum DefaultDailyScheduleRetain {
+    // Do not use
+    DailyScheduleRetain_UNKNOWN = 0;
+    // Default Retain value for daily schedule policy is 5
+    DailyScheduleRetain = 5;
+  }
+  // Defines default retain value for weekly schedule
+  enum DefaultWeeklyScheduleRetain {
+    // Do not use
+    WeeklyScheduleRetain_UNKNOWN = 0;
+    // Default Retain value for weekly schedule policy is 7
+    WeeklyScheduleRetain = 7;
+  }
+  // Defines default retain value for monthly schedule
+  enum DefaultMonthlyScheduleRetain {
+    // Do not use
+    MonthlyScheduleRetain_UNKNOWN = 0;
+    // Default Retain value for monthly schedule policy is 12
+    MonthlyScheduleRetain = 12;
+  }
+  // Defines default retain value for periodic schedule
+  enum DefaultPeriodicScheduleRetain {
+    // Do not use
+    PeriodicScheduleRetain_UNKNOWN = 0;
+    // Default Retain value for periodic schedule policy is 5
+    PeriodicScheduleRetain = 5;
+  }
   // Number of instances to retain
   int64 retain = 1;
 

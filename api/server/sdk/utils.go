@@ -84,7 +84,7 @@ func sdkSchedToRetainInternalSpec(
 	req *api.SdkSchedulePolicyInterval,
 ) (*sched.RetainIntervalSpec, error) {
 
-	if req.GetRetain() < 1 {
+	if req.GetRetain() < 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must retain more than 0")
 	}
 
