@@ -35,13 +35,18 @@ import (
 // alertsServer pointer properly instantiated with a valid
 // alerts.filterDeleter.
 type alertsServer struct {
-	// filterDeleter holds pointer to alerts filterDeleter
-	filterDeleter alerts.FilterDeleter
+	server *Server
+}
+
+func (s *alertsServer) alert() alerts.FilterDeleter {
+	return s.server.alert()
 }
 
 // NewAlertsServer provides an instance of alerts server interface.
 func NewAlertsServer(filterDeleter alerts.FilterDeleter) api.OpenStorageAlertsServer {
-	return &alertsServer{filterDeleter: filterDeleter}
+	return &alertsServer{
+		server: &Server{alertHandler: filterDeleter},
+	}
 }
 
 func getOpts(opts []*api.SdkAlertsOption) []alerts.Option {
@@ -109,6 +114,10 @@ func getFilters(queries []*api.SdkAlertsQuery) []alerts.Filter {
 // graceful exit is ensured within that deadline.
 func (g *alertsServer) Enumerate(ctx context.Context,
 	request *api.SdkAlertsEnumerateRequest) (*api.SdkAlertsEnumerateResponse, error) {
+	if g.alert() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+
 	queries := request.GetQueries()
 	if queries == nil {
 		return nil, status.Error(codes.InvalidArgument, "Must provide at least one query")
@@ -134,7 +143,7 @@ func (g *alertsServer) Enumerate(ctx context.Context,
 	// spawn err-group process.
 	// collect output using mutex.
 	group.Go(func() error {
-		if out, err := g.filterDeleter.Enumerate(filters...); err != nil {
+		if out, err := g.alert().Enumerate(filters...); err != nil {
 			return err
 		} else {
 			mu.Lock()
@@ -168,6 +177,10 @@ func (g *alertsServer) Enumerate(ctx context.Context,
 // graceful exit is ensured within that deadline.
 func (g *alertsServer) Delete(ctx context.Context,
 	request *api.SdkAlertsDeleteRequest) (*api.SdkAlertsDeleteResponse, error) {
+	if g.alert() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+
 	queries := request.GetQueries()
 	if queries == nil {
 		return nil, status.Error(codes.InvalidArgument, "Must provide at least one query")
@@ -191,7 +204,7 @@ func (g *alertsServer) Delete(ctx context.Context,
 
 	// spawn err-group process.
 	group.Go(func() error {
-		return g.filterDeleter.Delete(filters...)
+		return g.alert().Delete(filters...)
 	})
 
 	// wait for err-group processes to be done

@@ -82,16 +82,42 @@ func (s *GrpcServer) Start(register func(grpcServer *grpc.Server)) error {
 
 	s.server = grpc.NewServer()
 	register(s.server)
-	reflection.Register(s.server)
 
 	// Start listening for requests
+	s.startGrpcService()
+	return nil
+}
+
+// Start is used to start the server.
+// It will return an error if the server is already runnig.
+func (s *GrpcServer) StartWithServer(server func() *grpc.Server) error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	if server == nil {
+		return fmt.Errorf("Server function has not been defined")
+	}
+
+	if s.running {
+		return fmt.Errorf("Server already running")
+	}
+
+	s.server = server()
+
+	// Start listening for requests
+	s.startGrpcService()
+	return nil
+}
+
+// Lock must have been taken
+func (s *GrpcServer) startGrpcService() {
+	// Start listening for requests
+	reflection.Register(s.server)
 	logrus.Infof("%s gRPC Server ready on %s", s.name, s.Address())
 	waitForServer := make(chan bool)
 	s.goServe(waitForServer)
 	<-waitForServer
-
 	s.running = true
-	return nil
 }
 
 // Stop is used to stop the gRPC server.
