@@ -35,13 +35,16 @@ func TestVolumeMigrate_StartSuccess(t *testing.T) {
 		ClusterId: "Source",
 		TargetId:  "Target",
 	}
+	resp := &api.SdkCloudMigrateStartResponse{
+		TaskId: "1",
+	}
 	s.MockDriver().EXPECT().
 		CloudMigrateStart(&api.CloudMigrateStartRequest{
 			Operation: api.CloudMigrate_MigrateCluster,
 			ClusterId: "Source",
 			TargetId:  "Target",
 		}).
-		Return(nil)
+		Return(resp, nil)
 	// Setup client
 	c := api.NewOpenStorageVolumeMigrateClient(s.Conn())
 	r, err := c.Start(context.Background(), req)
@@ -100,15 +103,11 @@ func TestVolumeMigrate_CancelSuccess(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 	req := &api.CloudMigrateCancelRequest{
-		Operation: api.CloudMigrate_MigrateCluster,
-		ClusterId: "Source",
-		TargetId:  "Target",
+		TaskId: "1",
 	}
 	s.MockDriver().EXPECT().
 		CloudMigrateCancel(&api.CloudMigrateCancelRequest{
-			Operation: api.CloudMigrate_MigrateCluster,
-			ClusterId: "Source",
-			TargetId:  "Target",
+			TaskId: "1",
 		}).
 		Return(nil)
 	// Setup client
@@ -123,18 +122,10 @@ func TestVolumeMigrate_CancelFailure(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
-	invalidOp := &api.CloudMigrateCancelRequest{
-		Operation: api.CloudMigrate_InvalidType,
-		ClusterId: "Source",
-		TargetId:  "Target",
-	}
+	invalidOp := &api.CloudMigrateCancelRequest{}
+
 	noSource := &api.CloudMigrateCancelRequest{
-		Operation: api.CloudMigrate_MigrateVolume,
-		TargetId:  "Target",
-	}
-	noTarget := &api.CloudMigrateCancelRequest{
-		Operation: api.CloudMigrate_MigrateVolumeGroup,
-		ClusterId: "Source",
+		TaskId: "",
 	}
 
 	// Setup client
@@ -146,7 +137,7 @@ func TestVolumeMigrate_CancelFailure(t *testing.T) {
 	serverError, ok := status.FromError(err)
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "Must supply valid Operation")
+	assert.Contains(t, serverError.Message(), "Must supply valid Task ID")
 
 	r, err = c.Cancel(context.Background(), noSource)
 	assert.Error(t, err)
@@ -154,15 +145,8 @@ func TestVolumeMigrate_CancelFailure(t *testing.T) {
 	serverError, ok = status.FromError(err)
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "Must supply valid Cluster ID")
+	assert.Contains(t, serverError.Message(), "Must supply valid Task ID")
 
-	r, err = c.Cancel(context.Background(), noTarget)
-	assert.Error(t, err)
-	assert.Nil(t, r)
-	serverError, ok = status.FromError(err)
-	assert.True(t, ok)
-	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "Must supply valid Target cluster ID")
 }
 
 func TestVolumeMigrate_StatusSucess(t *testing.T) {

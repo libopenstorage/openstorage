@@ -5,9 +5,10 @@
 package mock
 
 import (
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	api "github.com/libopenstorage/openstorage/api"
-	reflect "reflect"
 )
 
 // MockVolumeDriver is a mock of VolumeDriver interface
@@ -249,9 +250,9 @@ func (mr *MockVolumeDriverMockRecorder) CloudMigrateCancel(arg0 interface{}) *go
 }
 
 // CloudMigrateStart mocks base method
-func (m *MockVolumeDriver) CloudMigrateStart(arg0 *api.CloudMigrateStartRequest) (*api.CloudMigrateStartResponse, error) {
+func (m *MockVolumeDriver) CloudMigrateStart(arg0 *api.CloudMigrateStartRequest) (*api.SdkCloudMigrateStartResponse, error) {
 	ret := m.ctrl.Call(m, "CloudMigrateStart", arg0)
-	ret0, _ := ret[0].(*api.CloudMigrateStartResponse)
+	ret0, _ := ret[0].(*api.SdkCloudMigrateStartResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
