@@ -50,6 +50,7 @@ func TestCSISanity(t *testing.T) {
 	go func() {
 		cm.Start(0, false, "9002")
 	}()
+	defer cm.Shutdown()
 	if err := volumedrivers.Register("fake", map[string]string{}); err != nil {
 		t.Fatalf("Unable to start volume driver fake: %v", err)
 	}

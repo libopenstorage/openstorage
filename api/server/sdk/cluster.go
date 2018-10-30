@@ -28,7 +28,11 @@ import (
 
 // ClusterServer is an implementation of the gRPC OpenStorageClusterServer interface
 type ClusterServer struct {
-	cluster cluster.Cluster
+	server *Server
+}
+
+func (s *ClusterServer) cluster() cluster.Cluster {
+	return s.server.cluster()
 }
 
 // InspectCurrent returns information about the current cluster
@@ -36,7 +40,11 @@ func (s *ClusterServer) InspectCurrent(
 	ctx context.Context,
 	req *api.SdkClusterInspectCurrentRequest,
 ) (*api.SdkClusterInspectCurrentResponse, error) {
-	c, err := s.cluster.Enumerate()
+	if s.cluster() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+
+	c, err := s.cluster().Enumerate()
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -45,7 +53,7 @@ func (s *ClusterServer) InspectCurrent(
 	cluster := c.ToStorageCluster()
 
 	// Get cluster unique id
-	cluster.Id = s.cluster.Uuid()
+	cluster.Id = s.cluster().Uuid()
 
 	return &api.SdkClusterInspectCurrentResponse{
 		Cluster: cluster,

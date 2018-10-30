@@ -32,13 +32,16 @@ func (s *VolumeServer) Attach(
 	ctx context.Context,
 	req *api.SdkVolumeAttachRequest,
 ) (*api.SdkVolumeAttachResponse, error) {
+	if s.cluster() == nil || s.driver() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
 	}
 
 	// Check if already attached
-	v, err := util.VolumeFromName(s.driver, req.GetVolumeId())
+	v, err := util.VolumeFromName(s.driver(), req.GetVolumeId())
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "Volume %s was not found", req.GetVolumeId())
 	}
@@ -63,7 +66,7 @@ func (s *VolumeServer) Attach(
 		}
 	}
 
-	devPath, err := s.driver.Attach(req.GetVolumeId(), options)
+	devPath, err := s.driver().Attach(req.GetVolumeId(), options)
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -79,13 +82,16 @@ func (s *VolumeServer) Detach(
 	ctx context.Context,
 	req *api.SdkVolumeDetachRequest,
 ) (*api.SdkVolumeDetachResponse, error) {
+	if s.cluster() == nil || s.driver() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
 	}
 
 	// Check if already attached
-	v, err := util.VolumeFromName(s.driver, req.GetVolumeId())
+	v, err := util.VolumeFromName(s.driver(), req.GetVolumeId())
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "Volume %s was not found", req.GetVolumeId())
 	}
@@ -103,7 +109,7 @@ func (s *VolumeServer) Detach(
 		options[mountattachoptions.OptionsForceDetach] = fmt.Sprint(req.GetOptions().GetForce())
 		options[mountattachoptions.OptionsUnmountBeforeDetach] = fmt.Sprint(req.GetOptions().GetUnmountBeforeDetach())
 	}
-	err = s.driver.Detach(req.GetVolumeId(), options)
+	err = s.driver().Detach(req.GetVolumeId(), options)
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -120,6 +126,9 @@ func (s *VolumeServer) Mount(
 	ctx context.Context,
 	req *api.SdkVolumeMountRequest,
 ) (*api.SdkVolumeMountResponse, error) {
+	if s.cluster() == nil || s.driver() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
@@ -128,7 +137,7 @@ func (s *VolumeServer) Mount(
 		return nil, status.Error(codes.InvalidArgument, "Invalid Mount Path")
 	}
 
-	err := s.driver.Mount(req.GetVolumeId(), req.GetMountPath(), nil)
+	err := s.driver().Mount(req.GetVolumeId(), req.GetMountPath(), nil)
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -144,6 +153,9 @@ func (s *VolumeServer) Unmount(
 	ctx context.Context,
 	req *api.SdkVolumeUnmountRequest,
 ) (*api.SdkVolumeUnmountResponse, error) {
+	if s.cluster() == nil || s.driver() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
@@ -163,7 +175,7 @@ func (s *VolumeServer) Unmount(
 		}
 	}
 
-	err := s.driver.Unmount(req.GetVolumeId(), req.GetMountPath(), options)
+	err := s.driver().Unmount(req.GetVolumeId(), req.GetMountPath(), options)
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,

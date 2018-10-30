@@ -25,6 +25,13 @@ import (
 // VolumeServer is an implementation of the gRPC OpenStorageVolume interface
 type VolumeServer struct {
 	specHandler spec.SpecHandler
-	driver      volume.VolumeDriver
-	cluster     cluster.Cluster
+	server      *Server
+}
+
+func (s *VolumeServer) cluster() cluster.Cluster {
+	return s.server.cluster()
+}
+
+func (s *VolumeServer) driver() volume.VolumeDriver {
+	return s.server.driver()
 }
