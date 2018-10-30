@@ -3,6 +3,28 @@
     "application/json"
   ],
   "definitions": {
+    "CloudMigrateOperationType": {
+      "default": "InvalidType",
+      "enum": [
+        "InvalidType",
+        "MigrateCluster",
+        "MigrateVolume",
+        "MigrateVolumeGroup"
+      ],
+      "title": "- MigrateCluster: Migrate all volumes in the cluster\n - MigrateVolume: Migrate a single volume\n - MigrateVolumeGroup: Migrate a group of volumes",
+      "type": "string"
+    },
+    "CloudMigrateStage": {
+      "default": "InvalidStage",
+      "enum": [
+        "InvalidStage",
+        "Backup",
+        "Restore",
+        "VolumeUpdate",
+        "Done"
+      ],
+      "type": "string"
+    },
     "LabelSelectorRequirementOperator": {
       "default": "In",
       "description": "- In: In means the value for 'key' should be in one of the given 'values'\n - NotIn: NotIn means the value for 'key' should NOT be in one of the given 'values'\n - Exists: Exists means the 'key' should just exist regardless of the value\n - DoesNotExist: DoesNotExist means the 'key' should NOT exist",
@@ -131,6 +153,120 @@
       ],
       "title": "- ATTACH_STATE_EXTERNAL: Attached and available externally\n - ATTACH_STATE_INTERNAL: Attached but only available internally\n - ATTACH_STATE_INTERNAL_SWITCH: Switching from External to Internal",
       "type": "string"
+    },
+    "apiCloudMigrateCancelRequest": {
+      "properties": {
+        "task_id": {
+          "title": "The id of the task to cancel",
+          "type": "string"
+        }
+      },
+      "title": "Request to stop a cloud migration",
+      "type": "object"
+    },
+    "apiCloudMigrateInfo": {
+      "properties": {
+        "cloudbackup_id": {
+          "title": "ID of the cloudbackup used for the migration",
+          "type": "string"
+        },
+        "cluster_id": {
+          "title": "ID of the cluster where the volume is being migrated",
+          "type": "string"
+        },
+        "current_stage": {
+          "$ref": "#/definitions/CloudMigrateStage",
+          "title": "Current stage of the volume migration"
+        },
+        "error_reason": {
+          "title": "Contains the reason for the migration error",
+          "type": "string"
+        },
+        "last_update": {
+          "format": "date-time",
+          "title": "Last time the status was updated",
+          "type": "string"
+        },
+        "local_volume_id": {
+          "title": "ID of the volume on the local cluster",
+          "type": "string"
+        },
+        "local_volume_name": {
+          "title": "Name of the volume on the local cluster",
+          "type": "string"
+        },
+        "remote_volume_id": {
+          "title": "ID of the volume on the remote cluster",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/definitions/apiCloudMigrateStatus",
+          "title": "Status of the current stage"
+        },
+        "task_id": {
+          "title": "Task id associated with this migration",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "apiCloudMigrateInfoList": {
+      "properties": {
+        "list": {
+          "items": {
+            "$ref": "#/definitions/apiCloudMigrateInfo"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "apiCloudMigrateStartRequest": {
+      "properties": {
+        "cluster_id": {
+          "title": "ID of the cluster to which volumes are to be migrated",
+          "type": "string"
+        },
+        "operation": {
+          "$ref": "#/definitions/CloudMigrateOperationType",
+          "title": "The type of operation to start"
+        },
+        "target_id": {
+          "title": "Depending on the operation type this can be a VolumeID or VolumeGroupID",
+          "type": "string"
+        },
+        "task_id": {
+          "title": "(Optional) Unique TaskId assocaiated with this migration. If not provided one will\nbe generated and returned in the response",
+          "type": "string"
+        }
+      },
+      "title": "Request to start a cloud migration",
+      "type": "object"
+    },
+    "apiCloudMigrateStatus": {
+      "default": "InvalidStatus",
+      "enum": [
+        "InvalidStatus",
+        "Queued",
+        "Initialized",
+        "InProgress",
+        "Failed",
+        "Complete"
+      ],
+      "type": "string"
+    },
+    "apiCloudMigrateStatusResponse": {
+      "properties": {
+        "info": {
+          "additionalProperties": {
+            "$ref": "#/definitions/apiCloudMigrateInfoList"
+          },
+          "title": "Map of cluster id to the status of volumes being migrated",
+          "type": "object"
+        }
+      },
+      "title": "Response with a status of the cloud migration operations",
+      "type": "object"
     },
     "apiClusterPairCreateRequest": {
       "properties": {
@@ -1057,6 +1193,20 @@
       ],
       "title": "CloudBackup status types",
       "type": "string"
+    },
+    "apiSdkCloudMigrateCancelResponse": {
+      "title": "Empty Response",
+      "type": "object"
+    },
+    "apiSdkCloudMigrateStartResponse": {
+      "properties": {
+        "task_id": {
+          "title": "TaskId assocaiated with the migration that was started",
+          "type": "string"
+        }
+      },
+      "title": "Response to start a cloud migration",
+      "type": "object"
     },
     "apiSdkClusterInspectCurrentResponse": {
       "properties": {
@@ -3781,6 +3931,75 @@
         "summary": "Inspect returns information about a specified schedule",
         "tags": [
           "OpenStorageSchedulePolicy"
+        ]
+      }
+    },
+    "/v1/volumemigrate": {
+      "get": {
+        "operationId": "Status",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiCloudMigrateStatusResponse"
+            }
+          }
+        },
+        "summary": "Get the status of migration operation",
+        "tags": [
+          "OpenStorageVolumeMigrate"
+        ]
+      },
+      "post": {
+        "operationId": "Start",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiCloudMigrateStartRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudMigrateStartResponse"
+            }
+          }
+        },
+        "summary": "Start a migration operation",
+        "tags": [
+          "OpenStorageVolumeMigrate"
+        ]
+      }
+    },
+    "/v1/volumemigrate/cancel": {
+      "post": {
+        "operationId": "Cancel",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiCloudMigrateCancelRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudMigrateCancelResponse"
+            }
+          }
+        },
+        "summary": "Stop a migration operation",
+        "tags": [
+          "OpenStorageVolumeMigrate"
         ]
       }
     },

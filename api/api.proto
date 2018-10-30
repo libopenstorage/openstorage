@@ -2613,14 +2613,9 @@ message CloudMigrateStartRequest {
 }
 
 // Response to start a cloud migration
-message CloudMigrateStartResponse {
+message SdkCloudMigrateStartResponse {
     // TaskId assocaiated with the migration that was started
     string task_id = 1;
-}
-
-// Empty Response
-message SdkCloudMigrateStartResponse {
-
 }
 
 // Request to stop a cloud migration

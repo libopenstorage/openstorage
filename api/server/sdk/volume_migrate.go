@@ -37,11 +37,15 @@ func (s *VolumeServer) Start(
 	} else if len(req.GetTargetId()) == 0 {
 		return nil, status.Errorf(codes.InvalidArgument, "Must supply valid Target cluster ID")
 	}
-	err := s.driver.CloudMigrateStart(req)
+	resp, err := s.driver.CloudMigrateStart(req)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Cannot start migration for %s : %v", req.GetClusterId(), err.Error())
 	}
-	return &api.SdkCloudMigrateStartResponse{}, nil
+	retVal := &api.SdkCloudMigrateStartResponse{}
+	if resp != nil {
+		retVal.TaskId = resp.GetTaskId()
+	}
+	return retVal, nil
 }
 
 // Cancel or stop a ongoing migration
@@ -50,16 +54,12 @@ func (s *VolumeServer) Cancel(
 	req *api.CloudMigrateCancelRequest,
 ) (*api.SdkCloudMigrateCancelResponse, error) {
 
-	if req.GetOperation() == api.CloudMigrate_InvalidType {
-		return nil, status.Errorf(codes.InvalidArgument, "Must supply valid Operation")
-	} else if len(req.GetClusterId()) == 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "Must supply valid Cluster ID")
-	} else if len(req.GetTargetId()) == 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "Must supply valid Target cluster ID")
+	if len(req.GetTaskId()) == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "Must supply valid Task ID")
 	}
 	err := s.driver.CloudMigrateCancel(req)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Cannot stop migration for %s : %v", req.GetClusterId(), err.Error())
+		return nil, status.Errorf(codes.Internal, "Cannot stop migration for %s : %v", req.GetTaskId(), err.Error())
 	}
 	return &api.SdkCloudMigrateCancelResponse{}, nil
 }
