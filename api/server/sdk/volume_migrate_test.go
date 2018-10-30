@@ -53,7 +53,6 @@ func TestVolumeMigrate_StartVolumeSuccess(t *testing.T) {
 			TaskId:    "1",
 		}).
 		Return(resp, nil)
-
 	// Setup client
 	c := api.NewOpenStorageMigrateClient(s.Conn())
 	r, err := c.Start(context.Background(), req)
