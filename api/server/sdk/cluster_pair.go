@@ -19,11 +19,10 @@ package sdk
 import (
 	"context"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // ClusterPairServer is an implementation of the gRPC OpenStorageClusterServer interface
@@ -48,7 +47,7 @@ func (s *ClusterPairServer) Create(
 	resp, err := s.cluster.CreatePair(req)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Cannot create cluster with remote pair %s : %v",
-			req.GetRemoteClusterIp(), err.Error())
+			req.GetRemoteClusterIp(), err)
 	}
 
 	return &api.ClusterPairCreateResponse{
@@ -71,7 +70,7 @@ func (s *ClusterPairServer) ProcessRequest(
 	resp, err := s.cluster.ProcessPairRequest(request)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Cannot process cluster pair request with remote pair %s : %v",
-			request.GetSourceClusterId(), err.Error())
+			request.GetSourceClusterId(), err)
 	}
 	return resp, nil
 }
@@ -87,7 +86,7 @@ func (s *ClusterPairServer) Get(
 	}
 	resp, err := s.cluster.GetPair(name)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Cannot Get cluster information for %s : %v", name, err.Error())
+		return nil, status.Errorf(codes.Internal, "Cannot Get cluster information for %s : %v", name, err)
 	}
 	return resp, nil
 }
@@ -99,7 +98,7 @@ func (s *ClusterPairServer) Enumerate(
 ) (*api.ClusterPairsEnumerateResponse, error) {
 	resp, err := s.cluster.EnumeratePairs()
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Cannot list cluster pairs : %v", err.Error())
+		return nil, status.Errorf(codes.Internal, "Cannot list cluster pairs : %v", err)
 	}
 	return resp, nil
 }
@@ -112,7 +111,7 @@ func (s *ClusterPairServer) GetToken(
 	reset := req.GetResetToken()
 	resp, err := s.cluster.GetPairToken(reset)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Cannot generate token : %v", err.Error())
+		return nil, status.Errorf(codes.Internal, "Cannot generate token : %v", err)
 	}
 	return resp, nil
 }
@@ -128,7 +127,7 @@ func (s *ClusterPairServer) Delete(
 	}
 	err := s.cluster.DeletePair(id)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Cannot delete the cluster pair %s : %v", id, err.Error())
+		return nil, status.Errorf(codes.Internal, "Cannot delete the cluster pair %s : %v", id, err)
 	}
 	return &api.SdkClusterPairDeleteResponse{}, nil
 }

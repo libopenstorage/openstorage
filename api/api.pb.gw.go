@@ -1620,17 +1620,17 @@ func RegisterOpenStorageClusterPairHandlerClient(ctx context.Context, mux *runti
 }
 
 var (
-	pattern_OpenStorageClusterPair_Create_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "clusterspairs"}, ""))
+	pattern_OpenStorageClusterPair_Create_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "clusterpairs"}, ""))
 
-	pattern_OpenStorageClusterPair_ProcessRequest_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "clusterspairs", "process"}, ""))
+	pattern_OpenStorageClusterPair_ProcessRequest_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "clusterpairs", "process"}, ""))
 
-	pattern_OpenStorageClusterPair_Get_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "clusterspairs", "id"}, ""))
+	pattern_OpenStorageClusterPair_Get_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "clusterpairs", "id"}, ""))
 
-	pattern_OpenStorageClusterPair_Enumerate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "clusterspairs"}, ""))
+	pattern_OpenStorageClusterPair_Enumerate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "clusterpairs"}, ""))
 
-	pattern_OpenStorageClusterPair_GetToken_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "clusterspairs", "token"}, ""))
+	pattern_OpenStorageClusterPair_GetToken_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "clusterpairs", "token"}, ""))
 
-	pattern_OpenStorageClusterPair_Delete_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "clusterspairs", "cluster_id"}, ""))
+	pattern_OpenStorageClusterPair_Delete_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "clusterpairs", "cluster_id"}, ""))
 )
 
 var (

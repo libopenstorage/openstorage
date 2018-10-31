@@ -39,13 +39,12 @@ func (s *VolumeServer) Start(
 	}
 	resp, err := s.driver.CloudMigrateStart(req)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Cannot start migration for %s : %v", req.GetClusterId(), err.Error())
+		return nil, status.Errorf(codes.Internal, "Cannot start migration for %s : %v", req.GetClusterId(), err)
 	}
-	retVal := &api.SdkCloudMigrateStartResponse{}
-	if resp != nil {
-		retVal.TaskId = resp.GetTaskId()
-	}
-	return retVal, nil
+
+	return &api.SdkCloudMigrateStartResponse{
+		TaskId: resp.GetTaskId(),
+	}, nil
 }
 
 // Cancel or stop a ongoing migration
@@ -59,7 +58,7 @@ func (s *VolumeServer) Cancel(
 	}
 	err := s.driver.CloudMigrateCancel(req)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Cannot stop migration for %s : %v", req.GetTaskId(), err.Error())
+		return nil, status.Errorf(codes.Internal, "Cannot stop migration for %s : %v", req.GetTaskId(), err)
 	}
 	return &api.SdkCloudMigrateCancelResponse{}, nil
 }
@@ -72,7 +71,7 @@ func (s *VolumeServer) Status(
 
 	resp, err := s.driver.CloudMigrateStatus()
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Cannot get status of migration : %v", err.Error())
+		return nil, status.Errorf(codes.Internal, "Cannot get status of migration : %v", err)
 	}
 	return resp, nil
 }
