@@ -169,7 +169,7 @@ type CloudBackupDriver interface {
 // CloudMigrateDriver interface provides Cloud migration features
 type CloudMigrateDriver interface {
 	// CloudMigrateStart starts a migrate operation
-	CloudMigrateStart(request *api.CloudMigrateStartRequest) (*api.SdkCloudMigrateStartResponse, error)
+	CloudMigrateStart(request *api.CloudMigrateStartRequest) (*api.CloudMigrateStartResponse, error)
 	// CloudMigrateCancel cancels a migrate operation
 	CloudMigrateCancel(request *api.CloudMigrateCancelRequest) error
 	// CloudMigrateStatus returns status for the migration operations

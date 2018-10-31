@@ -250,9 +250,9 @@ func (mr *MockVolumeDriverMockRecorder) CloudMigrateCancel(arg0 interface{}) *go
 }
 
 // CloudMigrateStart mocks base method
-func (m *MockVolumeDriver) CloudMigrateStart(arg0 *api.CloudMigrateStartRequest) (*api.SdkCloudMigrateStartResponse, error) {
+func (m *MockVolumeDriver) CloudMigrateStart(arg0 *api.CloudMigrateStartRequest) (*api.CloudMigrateStartResponse, error) {
 	ret := m.ctrl.Call(m, "CloudMigrateStart", arg0)
-	ret0, _ := ret[0].(*api.SdkCloudMigrateStartResponse)
+	ret0, _ := ret[0].(*api.CloudMigrateStartResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
