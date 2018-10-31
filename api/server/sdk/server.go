@@ -148,7 +148,7 @@ func New(config *ServerConfig) (*Server, error) {
 	s.alertsServer = &alertsServer{
 		server: s,
 	}
-	s.clusterPairServer = &clusterServer{
+	s.clusterPairServer = &ClusterPairServer{
 		server: s,
 	}
 
