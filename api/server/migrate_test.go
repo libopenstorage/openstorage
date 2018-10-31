@@ -27,7 +27,7 @@ func TestMigrateStart(t *testing.T) {
 		ClusterId: "clusterID",
 		TargetId:  "badVolumeID",
 	}
-	goodResponse := &api.SdkCloudMigrateStartResponse{
+	goodResponse := &api.CloudMigrateStartResponse{
 		TaskId: "random-id",
 	}
 	testVolDriver.MockDriver().EXPECT().CloudMigrateStart(badRequest).Return(nil, fmt.Errorf("Volume not found")).Times(1)
