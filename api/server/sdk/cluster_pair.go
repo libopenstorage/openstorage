@@ -27,7 +27,11 @@ import (
 
 // ClusterPairServer is an implementation of the gRPC OpenStorageClusterServer interface
 type ClusterPairServer struct {
-	cluster cluster.Cluster
+	server *Server
+}
+
+func (s *ClusterPairServer) cluster() cluster.Cluster {
+	return s.server.cluster()
 }
 
 // Create a new cluster with remote pair
@@ -40,7 +44,7 @@ func (s *ClusterPairServer) Create(
 		return nil, status.Errorf(codes.InvalidArgument, "Must supply valid request")
 	}
 
-	resp, err := s.cluster.CreatePair(req.GetRequest())
+	resp, err := s.cluster().CreatePair(req.GetRequest())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Cannot create cluster with remote pair %s : %v",
 			req.GetRequest().GetRemoteClusterIp(), err)
@@ -60,7 +64,7 @@ func (s *ClusterPairServer) Inspect(
 	if len(req.GetId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply cluster ID")
 	}
-	resp, err := s.cluster.GetPair(req.GetId())
+	resp, err := s.cluster().GetPair(req.GetId())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Cannot Get cluster information for %s : %v", req.GetId(), err)
 	}
@@ -75,7 +79,7 @@ func (s *ClusterPairServer) Enumerate(
 	req *api.SdkClusterPairEnumerateRequest,
 ) (*api.SdkClusterPairEnumerateResponse, error) {
 
-	resp, err := s.cluster.EnumeratePairs()
+	resp, err := s.cluster().EnumeratePairs()
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Cannot list cluster pairs : %v", err)
 	}
@@ -90,7 +94,7 @@ func (s *ClusterPairServer) Token(
 	req *api.SdkClusterPairTokenRequest,
 ) (*api.SdkClusterPairTokenResponse, error) {
 
-	resp, err := s.cluster.GetPairToken(false)
+	resp, err := s.cluster().GetPairToken(false)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Cannot generate token : %v", err)
 	}
@@ -105,7 +109,7 @@ func (s *ClusterPairServer) ClearToken(
 	req *api.SdkClusterPairClearTokenRequest,
 ) (*api.SdkClusterPairClearTokenResponse, error) {
 
-	resp, err := s.cluster.GetPairToken(true)
+	resp, err := s.cluster().GetPairToken(true)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Cannot generate token : %v", err)
 	}
@@ -123,7 +127,7 @@ func (s *ClusterPairServer) Delete(
 	if len(req.GetClusterId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply valid cluster ID")
 	}
-	err := s.cluster.DeletePair(req.GetClusterId())
+	err := s.cluster().DeletePair(req.GetClusterId())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Cannot delete the cluster pair %s : %v", req.GetClusterId(), err)
 	}

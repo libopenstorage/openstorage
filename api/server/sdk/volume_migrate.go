@@ -57,7 +57,7 @@ func (s *VolumeServer) volumeGroupMigrate(
 		TargetId:  volumeGroup.GetGroupId(),
 		TaskId:    req.GetName(),
 	}
-	resp, err := s.driver.CloudMigrateStart(request)
+	resp, err := s.driver().CloudMigrateStart(request)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Cannot start migration for %s : %v", req.GetClusterId(), err)
 	}
@@ -77,7 +77,7 @@ func (s *VolumeServer) allVolumesMigrate(
 		ClusterId: req.GetClusterId(),
 		TaskId:    req.GetName(),
 	}
-	resp, err := s.driver.CloudMigrateStart(request)
+	resp, err := s.driver().CloudMigrateStart(request)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Cannot start migration for %s : %v", req.GetClusterId(), err)
 	}
@@ -98,7 +98,7 @@ func (s *VolumeServer) volumeMigrate(
 		TargetId:  volume.GetVolumeId(),
 		TaskId:    req.GetName(),
 	}
-	resp, err := s.driver.CloudMigrateStart(request)
+	resp, err := s.driver().CloudMigrateStart(request)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Cannot start migration for %s : %v", req.GetClusterId(), err)
 	}
@@ -118,7 +118,7 @@ func (s *VolumeServer) Cancel(
 	} else if len(req.GetRequest().GetTaskId()) == 0 {
 		return nil, status.Errorf(codes.InvalidArgument, "Must supply valid Task ID")
 	}
-	err := s.driver.CloudMigrateCancel(req.GetRequest())
+	err := s.driver().CloudMigrateCancel(req.GetRequest())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Cannot stop migration for %s : %v",
 			req.GetRequest().GetTaskId(), err)
@@ -132,7 +132,7 @@ func (s *VolumeServer) Status(
 	req *api.SdkCloudMigrateStatusRequest,
 ) (*api.SdkCloudMigrateStatusResponse, error) {
 
-	resp, err := s.driver.CloudMigrateStatus()
+	resp, err := s.driver().CloudMigrateStatus()
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Cannot get status of migration : %v", err)
 	}
