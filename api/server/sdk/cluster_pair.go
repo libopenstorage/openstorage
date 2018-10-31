@@ -33,8 +33,8 @@ type ClusterPairServer struct {
 // Create a new cluster with remote pair
 func (s *ClusterPairServer) Create(
 	ctx context.Context,
-	req *api.ClusterPairCreateRequest,
-) (*api.ClusterPairCreateResponse, error) {
+	req *api.SdkClusterPairCreateRequest,
+) (*api.SdkClusterPairCreateResponse, error) {
 
 	if len(req.GetRemoteClusterIp()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply Remote cluster IP")
@@ -44,15 +44,14 @@ func (s *ClusterPairServer) Create(
 		return nil, status.Error(codes.InvalidArgument, "Must supply Remote cluster Port")
 	}
 
-	resp, err := s.cluster.CreatePair(req)
+	resp, err := s.cluster.CreatePair(req.GetRequest())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Cannot create cluster with remote pair %s : %v",
 			req.GetRemoteClusterIp(), err)
 	}
 
-	return &api.ClusterPairCreateResponse{
-		RemoteClusterId:   resp.GetRemoteClusterId(),
-		RemoteClusterName: resp.GetRemoteClusterName(),
+	return &api.SdkClusterPairCreateResponse{
+		Result: resp,
 	}, nil
 }
 

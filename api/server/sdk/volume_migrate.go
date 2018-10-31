@@ -27,16 +27,16 @@ import (
 // Start a volume migration
 func (s *VolumeServer) Start(
 	ctx context.Context,
-	req *api.CloudMigrateStartRequest,
+	req *api.SdkCloudMigrateStartRequest,
 ) (*api.SdkCloudMigrateStartResponse, error) {
 
-	if req.GetOperation() == api.CloudMigrate_InvalidType {
-		return nil, status.Errorf(codes.InvalidArgument, "Must supply valid Operation")
-	} else if len(req.GetClusterId()) == 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "Must supply valid Cluster ID")
-	} else if len(req.GetTargetId()) == 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "Must supply valid Target cluster ID")
-	}
+	// if req.GetOperation() == api.CloudMigrate_InvalidType {
+	// 	return nil, status.Errorf(codes.InvalidArgument, "Must supply valid Operation")
+	// } else if len(req.GetClusterId()) == 0 {
+	// 	return nil, status.Errorf(codes.InvalidArgument, "Must supply valid Cluster ID")
+	// } else if len(req.GetTargetId()) == 0 {
+	// 	return nil, status.Errorf(codes.InvalidArgument, "Must supply valid Target cluster ID")
+	// }
 	resp, err := s.driver.CloudMigrateStart(req)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Cannot start migration for %s : %v", req.GetClusterId(), err)
