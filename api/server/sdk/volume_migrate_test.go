@@ -16,189 +16,315 @@ limitations under the License.
 */
 package sdk
 
-// import (
-// 	"context"
-// 	"testing"
+import (
+	"context"
+	"fmt"
+	"testing"
 
-// 	"github.com/libopenstorage/openstorage/api"
-// 	"github.com/stretchr/testify/assert"
-// 	"google.golang.org/grpc/codes"
-// 	"google.golang.org/grpc/status"
-// )
+	"github.com/libopenstorage/openstorage/api"
+	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+)
 
-// func TestVolumeMigrate_StartSuccess(t *testing.T) {
-// 	// Create server and client connection
-// 	s := newTestServer(t)
-// 	defer s.Stop()
-// 	req := &api.CloudMigrateStartRequest{
-// 		Operation: api.CloudMigrate_MigrateCluster,
-// 		ClusterId: "Source",
-// 		TargetId:  "Target",
-// 	}
-// 	resp := &api.SdkCloudMigrateStartResponse{
-// 		TaskId: "1",
-// 	}
-// 	s.MockDriver().EXPECT().
-// 		CloudMigrateStart(&api.CloudMigrateStartRequest{
-// 			Operation: api.CloudMigrate_MigrateCluster,
-// 			ClusterId: "Source",
-// 			TargetId:  "Target",
-// 		}).
-// 		Return(resp, nil)
-// 	// Setup client
-// 	c := api.NewOpenStorageVolumeMigrateClient(s.Conn())
-// 	r, err := c.Start(context.Background(), req)
-// 	assert.NoError(t, err)
-// 	assert.NotNil(t, r)
-// }
+func TestVolumeMigrate_StartVolumeSuccess(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	req := &api.SdkCloudMigrateStartRequest{
+		ClusterId: "Source",
+		Name:      "1",
+		Opt: &api.SdkCloudMigrateStartRequest_Volume{
+			Volume: &api.SdkCloudMigrateStartRequest_MigrateVolume{
+				VolumeId: "Target",
+			},
+		},
+	}
 
-// func TestVolumeMigrate_StartFailure(t *testing.T) {
-// 	// Create server and client connection
-// 	s := newTestServer(t)
-// 	defer s.Stop()
-// 	invalidOp := &api.CloudMigrateStartRequest{
-// 		Operation: api.CloudMigrate_InvalidType,
-// 		ClusterId: "Source",
-// 		TargetId:  "Target",
-// 	}
-// 	noSource := &api.CloudMigrateStartRequest{
-// 		Operation: api.CloudMigrate_MigrateVolume,
-// 		TargetId:  "Target",
-// 	}
-// 	noTarget := &api.CloudMigrateStartRequest{
-// 		Operation: api.CloudMigrate_MigrateVolumeGroup,
-// 		ClusterId: "Source",
-// 	}
+	resp := &api.CloudMigrateStartResponse{
+		TaskId: "1",
+	}
 
-// 	// Setup client
-// 	c := api.NewOpenStorageVolumeMigrateClient(s.Conn())
+	s.MockDriver().EXPECT().
+		CloudMigrateStart(&api.CloudMigrateStartRequest{
+			Operation: api.CloudMigrate_MigrateVolume,
+			ClusterId: "Source",
+			TargetId:  "Target",
+			TaskId:    "1",
+		}).
+		Return(resp, nil)
 
-// 	r, err := c.Start(context.Background(), invalidOp)
-// 	assert.Error(t, err)
-// 	assert.Nil(t, r)
-// 	serverError, ok := status.FromError(err)
-// 	assert.True(t, ok)
-// 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-// 	assert.Contains(t, serverError.Message(), "Must supply valid Operation")
+	// Setup client
+	c := api.NewOpenStorageMigrateClient(s.Conn())
+	r, err := c.Start(context.Background(), req)
+	assert.NoError(t, err)
+	assert.NotNil(t, r)
+}
+func TestVolumeMigrate_StartVolumeGroupSuccess(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	req := &api.SdkCloudMigrateStartRequest{
+		ClusterId: "Source",
+		Name:      "1",
+		Opt: &api.SdkCloudMigrateStartRequest_VolumeGroup{
+			VolumeGroup: &api.SdkCloudMigrateStartRequest_MigrateVolumeGroup{
+				GroupId: "Target",
+			},
+		},
+	}
 
-// 	r, err = c.Start(context.Background(), noSource)
-// 	assert.Error(t, err)
-// 	assert.Nil(t, r)
-// 	serverError, ok = status.FromError(err)
-// 	assert.True(t, ok)
-// 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-// 	assert.Contains(t, serverError.Message(), "Must supply valid Cluster ID")
+	resp := &api.CloudMigrateStartResponse{
+		TaskId: "1",
+	}
 
-// 	r, err = c.Start(context.Background(), noTarget)
-// 	assert.Error(t, err)
-// 	assert.Nil(t, r)
-// 	serverError, ok = status.FromError(err)
-// 	assert.True(t, ok)
-// 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-// 	assert.Contains(t, serverError.Message(), "Must supply valid Target cluster ID")
-// }
+	s.MockDriver().EXPECT().
+		CloudMigrateStart(&api.CloudMigrateStartRequest{
+			Operation: api.CloudMigrate_MigrateVolumeGroup,
+			ClusterId: "Source",
+			TargetId:  "Target",
+			TaskId:    "1",
+		}).
+		Return(resp, nil)
 
-// func TestVolumeMigrate_CancelSuccess(t *testing.T) {
-// 	// Create server and client connection
-// 	s := newTestServer(t)
-// 	defer s.Stop()
-// 	req := &api.CloudMigrateCancelRequest{
-// 		TaskId: "1",
-// 	}
-// 	s.MockDriver().EXPECT().
-// 		CloudMigrateCancel(&api.CloudMigrateCancelRequest{
-// 			TaskId: "1",
-// 		}).
-// 		Return(nil)
-// 	// Setup client
-// 	c := api.NewOpenStorageVolumeMigrateClient(s.Conn())
-// 	r, err := c.Cancel(context.Background(), req)
-// 	assert.NoError(t, err)
-// 	assert.NotNil(t, r)
+	// Setup client
+	c := api.NewOpenStorageMigrateClient(s.Conn())
+	r, err := c.Start(context.Background(), req)
+	assert.NoError(t, err)
+	assert.NotNil(t, r)
+}
+func TestVolumeMigrate_StartAllVolumeFailure(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	req := &api.SdkCloudMigrateStartRequest{
+		ClusterId: "Source",
+		Name:      "1",
+		Opt: &api.SdkCloudMigrateStartRequest_AllVolumes{
+			AllVolumes: &api.SdkCloudMigrateStartRequest_MigrateAllVolumes{},
+		},
+	}
 
-// }
+	s.MockDriver().EXPECT().
+		CloudMigrateStart(&api.CloudMigrateStartRequest{
+			Operation: api.CloudMigrate_MigrateCluster,
+			ClusterId: "Source",
+			TaskId:    "1",
+		}).
+		Return(nil, fmt.Errorf("Cannot start migration"))
 
-// func TestVolumeMigrate_CancelFailure(t *testing.T) {
-// 	// Create server and client connection
-// 	s := newTestServer(t)
-// 	defer s.Stop()
-// 	invalidOp := &api.CloudMigrateCancelRequest{}
+	// Setup client
+	c := api.NewOpenStorageMigrateClient(s.Conn())
+	_, err := c.Start(context.Background(), req)
+	assert.Error(t, err)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.Internal)
+	assert.Contains(t, serverError.Message(), "Cannot start migration")
+}
 
-// 	noSource := &api.CloudMigrateCancelRequest{
-// 		TaskId: "",
-// 	}
+func TestVolumeMigrate_StartVolumeGroupFailure(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	req := &api.SdkCloudMigrateStartRequest{
+		ClusterId: "Source",
+		Name:      "1",
+		Opt: &api.SdkCloudMigrateStartRequest_VolumeGroup{
+			VolumeGroup: &api.SdkCloudMigrateStartRequest_MigrateVolumeGroup{
+				GroupId: "Target",
+			},
+		},
+	}
 
-// 	// Setup client
-// 	c := api.NewOpenStorageVolumeMigrateClient(s.Conn())
+	s.MockDriver().EXPECT().
+		CloudMigrateStart(&api.CloudMigrateStartRequest{
+			Operation: api.CloudMigrate_MigrateVolumeGroup,
+			ClusterId: "Source",
+			TargetId:  "Target",
+			TaskId:    "1",
+		}).
+		Return(nil, fmt.Errorf("Cannot start migration"))
 
-// 	r, err := c.Cancel(context.Background(), invalidOp)
-// 	assert.Error(t, err)
-// 	assert.Nil(t, r)
-// 	serverError, ok := status.FromError(err)
-// 	assert.True(t, ok)
-// 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-// 	assert.Contains(t, serverError.Message(), "Must supply valid Task ID")
+	// Setup client
+	c := api.NewOpenStorageMigrateClient(s.Conn())
+	_, err := c.Start(context.Background(), req)
+	assert.Error(t, err)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.Internal)
+	assert.Contains(t, serverError.Message(), "Cannot start migration")
+}
+func TestVolumeMigrate_StartVolumeFailure(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	req := &api.SdkCloudMigrateStartRequest{
+		ClusterId: "Source",
+		Name:      "1",
+		Opt: &api.SdkCloudMigrateStartRequest_Volume{
+			Volume: &api.SdkCloudMigrateStartRequest_MigrateVolume{
+				VolumeId: "Target",
+			},
+		},
+	}
 
-// 	r, err = c.Cancel(context.Background(), noSource)
-// 	assert.Error(t, err)
-// 	assert.Nil(t, r)
-// 	serverError, ok = status.FromError(err)
-// 	assert.True(t, ok)
-// 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-// 	assert.Contains(t, serverError.Message(), "Must supply valid Task ID")
+	s.MockDriver().EXPECT().
+		CloudMigrateStart(&api.CloudMigrateStartRequest{
+			Operation: api.CloudMigrate_MigrateVolume,
+			ClusterId: "Source",
+			TargetId:  "Target",
+			TaskId:    "1",
+		}).
+		Return(nil, fmt.Errorf("Cannot start migration"))
 
-// }
+	// Setup client
+	c := api.NewOpenStorageMigrateClient(s.Conn())
+	_, err := c.Start(context.Background(), req)
+	assert.Error(t, err)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.Internal)
+	assert.Contains(t, serverError.Message(), "Cannot start migration")
+}
+func TestVolumeMigrate_StartAllVolumeSuccess(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	req := &api.SdkCloudMigrateStartRequest{
+		ClusterId: "Source",
+		Name:      "1",
+		Opt: &api.SdkCloudMigrateStartRequest_AllVolumes{
+			AllVolumes: &api.SdkCloudMigrateStartRequest_MigrateAllVolumes{},
+		},
+	}
 
-// func TestVolumeMigrate_StatusSucess(t *testing.T) {
-// 	// Create server and cl	ient connection
-// 	s := newTestServer(t)
-// 	defer s.Stop()
-// 	req := &api.SdkCloudMigrateStatusRequest{}
-// 	info := &api.CloudMigrateInfo{
-// 		ClusterId:       "Source",
-// 		LocalVolumeId:   "VID",
-// 		LocalVolumeName: "VNAME",
-// 		RemoteVolumeId:  "RID",
-// 		CloudbackupId:   "CBKUPID",
-// 		CurrentStage:    api.CloudMigrate_Backup,
-// 		Status:          api.CloudMigrate_Queued,
-// 	}
-// 	ll := make([]*api.CloudMigrateInfo, 0)
-// 	ll = append(ll, info)
-// 	l := api.CloudMigrateInfoList{
-// 		List: ll,
-// 	}
-// 	infoList := make(map[string]*api.CloudMigrateInfoList)
-// 	infoList["Source"] = &l
-// 	resp := &api.CloudMigrateStatusResponse{
-// 		Info: infoList,
-// 	}
-// 	s.MockDriver().EXPECT().
-// 		CloudMigrateStatus().
-// 		Return(resp, nil)
-// 	// Setup client
-// 	c := api.NewOpenStorageVolumeMigrateClient(s.Conn())
-// 	r, err := c.Status(context.Background(), req)
-// 	assert.NoError(t, err)
-// 	assert.NotNil(t, r)
-// 	assert.NotNil(t, r.GetInfo())
-// }
+	resp := &api.CloudMigrateStartResponse{
+		TaskId: "1",
+	}
 
-// func TestVolumeMigrate_StatusFailure(t *testing.T) {
-// 	// Create server and cl	ient connection
-// 	s := newTestServer(t)
-// 	defer s.Stop()
-// 	req := &api.SdkCloudMigrateStatusRequest{}
-// 	s.MockDriver().EXPECT().
-// 		CloudMigrateStatus().
-// 		Return(nil, status.Errorf(codes.Internal, "Cannot get status of migration"))
-// 	// Setup client
-// 	c := api.NewOpenStorageVolumeMigrateClient(s.Conn())
-// 	r, err := c.Status(context.Background(), req)
-// 	assert.Error(t, err)
-// 	assert.Nil(t, r)
-// 	serverError, ok := status.FromError(err)
-// 	assert.True(t, ok)
-// 	assert.Equal(t, serverError.Code(), codes.Internal)
-// 	assert.Contains(t, serverError.Message(), "Cannot get status of migration")
-// }
+	s.MockDriver().EXPECT().
+		CloudMigrateStart(&api.CloudMigrateStartRequest{
+			Operation: api.CloudMigrate_MigrateCluster,
+			ClusterId: "Source",
+			TaskId:    "1",
+		}).
+		Return(resp, nil)
+
+	// Setup client
+	c := api.NewOpenStorageMigrateClient(s.Conn())
+	r, err := c.Start(context.Background(), req)
+	assert.NoError(t, err)
+	assert.NotNil(t, r)
+}
+func TestVolumeMigrate_CancelSuccess(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	req := &api.SdkCloudMigrateCancelRequest{
+		Request: &api.CloudMigrateCancelRequest{
+			TaskId: "1"},
+	}
+
+	s.MockDriver().EXPECT().
+		CloudMigrateCancel(&api.CloudMigrateCancelRequest{
+			TaskId: "1",
+		}).
+		Return(nil)
+	// Setup client
+	c := api.NewOpenStorageMigrateClient(s.Conn())
+	r, err := c.Cancel(context.Background(), req)
+	assert.NoError(t, err)
+	assert.NotNil(t, r)
+
+}
+
+func TestVolumeMigrate_CancelFailure(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	invalidOp := &api.SdkCloudMigrateCancelRequest{
+		Request: &api.CloudMigrateCancelRequest{},
+	}
+
+	noSource := &api.SdkCloudMigrateCancelRequest{
+		Request: &api.CloudMigrateCancelRequest{
+			TaskId: "",
+		},
+	}
+
+	// Setup client
+	c := api.NewOpenStorageMigrateClient(s.Conn())
+
+	r, err := c.Cancel(context.Background(), invalidOp)
+	assert.Error(t, err)
+	assert.Nil(t, r)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "Must supply valid Task ID")
+
+	r, err = c.Cancel(context.Background(), noSource)
+	assert.Error(t, err)
+	assert.Nil(t, r)
+	serverError, ok = status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "Must supply valid Task ID")
+
+}
+
+func TestVolumeMigrate_StatusSucess(t *testing.T) {
+	// Create server and cl	ient connection
+	s := newTestServer(t)
+	defer s.Stop()
+	req := &api.SdkCloudMigrateStatusRequest{}
+	info := &api.CloudMigrateInfo{
+		ClusterId:       "Source",
+		LocalVolumeId:   "VID",
+		LocalVolumeName: "VNAME",
+		RemoteVolumeId:  "RID",
+		CloudbackupId:   "CBKUPID",
+		CurrentStage:    api.CloudMigrate_Backup,
+		Status:          api.CloudMigrate_Queued,
+	}
+	ll := make([]*api.CloudMigrateInfo, 0)
+	ll = append(ll, info)
+	l := api.CloudMigrateInfoList{
+		List: ll,
+	}
+	infoList := make(map[string]*api.CloudMigrateInfoList)
+	infoList["Source"] = &l
+	resp := &api.CloudMigrateStatusResponse{
+		Info: infoList,
+	}
+	s.MockDriver().EXPECT().
+		CloudMigrateStatus().
+		Return(resp, nil)
+	// Setup client
+	c := api.NewOpenStorageMigrateClient(s.Conn())
+	r, err := c.Status(context.Background(), req)
+	assert.NoError(t, err)
+	assert.NotNil(t, r)
+	assert.NotNil(t, r.GetResult().GetInfo())
+}
+
+func TestVolumeMigrate_StatusFailure(t *testing.T) {
+	// Create server and cl	ient connection
+	s := newTestServer(t)
+	defer s.Stop()
+	req := &api.SdkCloudMigrateStatusRequest{}
+	s.MockDriver().EXPECT().
+		CloudMigrateStatus().
+		Return(nil, status.Errorf(codes.Internal, "Cannot get status of migration"))
+	// Setup client
+	c := api.NewOpenStorageMigrateClient(s.Conn())
+	r, err := c.Status(context.Background(), req)
+	assert.Error(t, err)
+	assert.Nil(t, r)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.Internal)
+	assert.Contains(t, serverError.Message(), "Cannot get status of migration")
+}
