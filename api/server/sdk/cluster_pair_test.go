@@ -65,7 +65,7 @@ func TestClusterPairServer_CreateSuccess(t *testing.T) {
 	// create the pair
 	r, err := c.Create(context.Background(), &req)
 	assert.NoError(t, err)
-	assert.NotNil(t, r.GetRemoteClusterId())
+	assert.NotNil(t, r.GetResult().GetRemoteClusterId())
 	assert.Equal(t, remoteClusterID, r.GetResult().GetRemoteClusterId())
 	assert.Equal(t, remoteClusterName, r.GetResult().GetRemoteClusterName())
 }
@@ -74,135 +74,34 @@ func TestClusterPairServer_CreateFailure(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	// Create response
-	remoteClusterIP := "127.0.0.1"
-	var remoteClusterPort uint32
-	remoteClusterPort = uint32(12345)
-
-	noip := &api.ClusterPairCreateRequest{
-		RemoteClusterPort:  remoteClusterPort,
-		RemoteClusterToken: "<Auth-Token>",
-		SetDefault:         false,
+	noreq := &api.SdkClusterPairCreateRequest{
+		Request: &api.ClusterPairCreateRequest{},
 	}
-
-	noport := &api.ClusterPairCreateRequest{
-		RemoteClusterIp:    remoteClusterIP,
-		RemoteClusterToken: "<Auth-Token>",
-		SetDefault:         false,
-	}
-
-	notoken := &api.ClusterPairCreateRequest{
-		RemoteClusterIp:   remoteClusterIP,
-		RemoteClusterPort: remoteClusterPort,
-		SetDefault:        false,
-	}
-
+	s.MockCluster().
+		EXPECT().
+		CreatePair(&api.ClusterPairCreateRequest{}).
+		Return(nil, status.Errorf(codes.InvalidArgument, "Must supply valid request"))
 	// Setup client
 	c := api.NewOpenStorageClusterPairClient(s.Conn())
 	// create the pair
 	//noip
-	r, err := c.Create(context.Background(), noip)
+	r, err := c.Create(context.Background(), noreq)
 	assert.Error(t, err)
 	assert.Nil(t, r)
 	serverError, ok := status.FromError(err)
 	assert.True(t, ok)
-	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "Must supply Remote cluster IP")
-
-	r, err = c.Create(context.Background(), noport)
-	assert.Error(t, err)
-	assert.Nil(t, r)
-	serverError, ok = status.FromError(err)
-	assert.True(t, ok)
-	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "Must supply Remote cluster Port")
-
-	r, err = c.Create(context.Background(), notoken)
-	assert.Error(t, err)
-	assert.Nil(t, r)
-	serverError, ok = status.FromError(err)
-	assert.True(t, ok)
-	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "Must supply Authentication Token")
-
+	assert.Equal(t, serverError.Code(), codes.Internal)
+	assert.Contains(t, serverError.Message(), "Must supply valid request")
 }
 
-func TestClusterPairServer_ProcessRequestSuccess(t *testing.T) {
+func TestClusterPairServer_InspectSuccess(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
-
-	req := &api.ClusterPairProcessRequest{
-		SourceClusterId:    "source",
-		RemoteClusterToken: "<Auth-Token>",
-	}
-	var endpoints = make([]string, 0)
-
-	endpoints = append(endpoints, "ep1:123")
-	endpoints = append(endpoints, "ep2:456")
-	endpoints = append(endpoints, "ep3:789")
-
-	resp := &api.ClusterPairProcessResponse{
-		RemoteClusterId:        "remote",
-		RemoteClusterName:      "remote",
-		RemoteClusterEndpoints: endpoints,
-		Options:                make(map[string]string, 0),
-	}
-	s.MockCluster().
-		EXPECT().ProcessPairRequest(&api.ClusterPairProcessRequest{
-		SourceClusterId:    "source",
-		RemoteClusterToken: "<Auth-Token>",
-	}).Return(resp, nil)
-	// Setup client
-	c := api.NewOpenStorageClusterPairClient(s.Conn())
-	// create the pair
-	r, err := c.ProcessRequest(context.Background(), req)
-	assert.NoError(t, err)
-	assert.NotNil(t, r.GetRemoteClusterId())
-	assert.Equal(t, "remote", r.GetRemoteClusterId())
-	assert.Equal(t, "remote", r.GetRemoteClusterName())
-	assert.Equal(t, endpoints, r.GetRemoteClusterEndpoints())
-}
-
-func TestClusterPairServer_ProcessRequestFailure(t *testing.T) {
-	// Create server and client connection
-	s := newTestServer(t)
-	defer s.Stop()
-
-	noSource := &api.ClusterPairProcessRequest{
-		RemoteClusterToken: "<Auth-Token>",
-	}
-
-	noToken := &api.ClusterPairProcessRequest{
-		SourceClusterId: "source",
-	}
-	// Setup client
-	c := api.NewOpenStorageClusterPairClient(s.Conn())
-
-	r, err := c.ProcessRequest(context.Background(), noSource)
-	assert.Error(t, err)
-	assert.Nil(t, r)
-	serverError, ok := status.FromError(err)
-	assert.True(t, ok)
-	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "Must supply Source cluster ID")
-
-	r, err = c.ProcessRequest(context.Background(), noToken)
-	assert.Error(t, err)
-	assert.Nil(t, r)
-	serverError, ok = status.FromError(err)
-	assert.True(t, ok)
-	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "Must supply Remote cluster Token")
-}
-
-func TestClusterPairServer_GetSuccess(t *testing.T) {
-	// Create server and client connection
-	s := newTestServer(t)
-	defer s.Stop()
-	req := &api.ClusterPairGetRequest{
+	req := &api.SdkClusterPairInspectRequest{
 		Id: "ID",
 	}
+
 	info := &api.ClusterPairInfo{
 		Id:     "ID",
 		Name:   "test",
@@ -215,19 +114,19 @@ func TestClusterPairServer_GetSuccess(t *testing.T) {
 		GetPair(req.GetId()).Return(resp, nil)
 	// Setup client
 	c := api.NewOpenStorageClusterPairClient(s.Conn())
-	r, err := c.Get(context.Background(), req)
+	r, err := c.Inspect(context.Background(), req)
 	assert.NoError(t, err)
-	assert.NotNil(t, r.GetPairInfo())
+	assert.NotNil(t, r.GetResult().GetPairInfo())
 }
 
-func TestClusterPairServer_GetFailure(t *testing.T) {
+func TestClusterPairServer_InspectFailure(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
-	req := &api.ClusterPairGetRequest{}
+	req := &api.SdkClusterPairInspectRequest{}
 	// Setup client
 	c := api.NewOpenStorageClusterPairClient(s.Conn())
-	r, err := c.Get(context.Background(), req)
+	r, err := c.Inspect(context.Background(), req)
 	assert.Error(t, err)
 	assert.Nil(t, r)
 	serverError, ok := status.FromError(err)
@@ -240,7 +139,7 @@ func TestClusterPairServer_EnumerateSuccess(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
-	req := &api.SdkClusterPairsEnumerateRequest{}
+	req := &api.SdkClusterPairEnumerateRequest{}
 	info := &api.ClusterPairInfo{
 		Id:     "ID",
 		Name:   "test",
@@ -259,7 +158,7 @@ func TestClusterPairServer_EnumerateSuccess(t *testing.T) {
 	c := api.NewOpenStorageClusterPairClient(s.Conn())
 	r, err := c.Enumerate(context.Background(), req)
 	assert.NoError(t, err)
-	assert.NotNil(t, r.GetPairs())
+	assert.NotNil(t, r.GetResult().GetPairs())
 }
 
 func TestClusterPairServer_EnumerateFailure(t *testing.T) {
@@ -267,7 +166,7 @@ func TestClusterPairServer_EnumerateFailure(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 	// Setup client
-	req := &api.SdkClusterPairsEnumerateRequest{}
+	req := &api.SdkClusterPairEnumerateRequest{}
 
 	s.MockCluster().
 		EXPECT().
@@ -284,53 +183,89 @@ func TestClusterPairServer_EnumerateFailure(t *testing.T) {
 	assert.Contains(t, serverError.Message(), "No Pair Found")
 }
 
-func TestClusterPairServer_TokenGetSuccess(t *testing.T) {
+func TestClusterPairServer_TokenSuccess(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
 	// Setup client
-	req := &api.ClusterPairTokenGetRequest{
-		ResetToken: true,
-	}
+	req := &api.SdkClusterPairTokenRequest{}
+
 	resp := &api.ClusterPairTokenGetResponse{
 		Token: "<Auth-Token>",
 	}
-	s.MockCluster().EXPECT().GetPairToken(req.GetResetToken()).Return(resp, nil)
+	s.MockCluster().EXPECT().GetPairToken(false).Return(resp, nil)
 
 	c := api.NewOpenStorageClusterPairClient(s.Conn())
-	r, err := c.GetToken(context.Background(), req)
+	r, err := c.Token(context.Background(), req)
 	assert.NoError(t, err)
-	assert.NotNil(t, r.GetToken())
+	assert.NotNil(t, r.GetResult().GetToken())
 }
 
-func TestClusterPairServer_TokenGetFailure(t *testing.T) {
+func TestClusterPairServer_TokenFailure(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
-	req := &api.ClusterPairTokenGetRequest{
-		ResetToken: true,
-	}
+	req := &api.SdkClusterPairTokenRequest{}
+
 	s.MockCluster().
 		EXPECT().
-		GetPairToken(req.GetResetToken()).
+		GetPairToken(false).
 		Return(nil, status.Errorf(codes.Internal, "Cannot Generate Token"))
 	// Setup client
 	c := api.NewOpenStorageClusterPairClient(s.Conn())
-	r, err := c.GetToken(context.Background(), req)
+	r, err := c.Token(context.Background(), req)
 	assert.Error(t, err)
 	assert.Nil(t, r)
 	serverError, ok := status.FromError(err)
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.Internal)
 	assert.Contains(t, serverError.Message(), "Cannot Generate Token")
+}
 
+func TestClusterPairServer_ClearTokenSuccess(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	// Setup client
+	req := &api.SdkClusterPairClearTokenRequest{}
+
+	resp := &api.ClusterPairTokenGetResponse{
+		Token: "<Auth-Token>",
+	}
+	s.MockCluster().EXPECT().GetPairToken(true).Return(resp, nil)
+
+	c := api.NewOpenStorageClusterPairClient(s.Conn())
+	r, err := c.ClearToken(context.Background(), req)
+	assert.NoError(t, err)
+	assert.NotNil(t, r.GetResult().GetToken())
+}
+
+func TestClusterPairServer_ClearTokenFailure(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	req := &api.SdkClusterPairClearTokenRequest{}
+
+	s.MockCluster().
+		EXPECT().
+		GetPairToken(true).
+		Return(nil, status.Errorf(codes.Internal, "Cannot Generate Token"))
+	// Setup client
+	c := api.NewOpenStorageClusterPairClient(s.Conn())
+	r, err := c.ClearToken(context.Background(), req)
+	assert.Error(t, err)
+	assert.Nil(t, r)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.Internal)
+	assert.Contains(t, serverError.Message(), "Cannot Generate Token")
 }
 
 func TestClusterPairServer_DeleteSuccess(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
-	req := &api.ClusterPairDeleteRequest{
+	req := &api.SdkClusterPairDeleteRequest{
 		ClusterId: "ID",
 	}
 	s.MockCluster().EXPECT().DeletePair(req.GetClusterId()).Return(nil)
@@ -345,7 +280,7 @@ func TestClusterPairServer_DeleteFailure(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
-	req := &api.ClusterPairDeleteRequest{}
+	req := &api.SdkClusterPairDeleteRequest{}
 	// Setup client
 	c := api.NewOpenStorageClusterPairClient(s.Conn())
 	r, err := c.Delete(context.Background(), req)

@@ -20,8 +20,6 @@ import (
 	"context"
 
 	"github.com/libopenstorage/openstorage/api"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // Start a volume migration
@@ -37,41 +35,44 @@ func (s *VolumeServer) Start(
 	// } else if len(req.GetTargetId()) == 0 {
 	// 	return nil, status.Errorf(codes.InvalidArgument, "Must supply valid Target cluster ID")
 	// }
-	resp, err := s.driver.CloudMigrateStart(req)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Cannot start migration for %s : %v", req.GetClusterId(), err)
-	}
+	// resp, err := s.driver.CloudMigrateStart(req.Get)
+	// if err != nil {
+	// 	return nil, status.Errorf(codes.Internal, "Cannot start migration for %s : %v", req.GetClusterId(), err)
+	// }
 
-	return &api.SdkCloudMigrateStartResponse{
-		TaskId: resp.GetTaskId(),
-	}, nil
+	// return &api.SdkCloudMigrateStartResponse{
+	// 	TaskId: resp.GetTaskId(),
+	// }, nil
+	return nil, nil
 }
 
 // Cancel or stop a ongoing migration
 func (s *VolumeServer) Cancel(
 	ctx context.Context,
-	req *api.CloudMigrateCancelRequest,
+	req *api.SdkCloudMigrateCancelRequest,
 ) (*api.SdkCloudMigrateCancelResponse, error) {
 
-	if len(req.GetTaskId()) == 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "Must supply valid Task ID")
-	}
-	err := s.driver.CloudMigrateCancel(req)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Cannot stop migration for %s : %v", req.GetTaskId(), err)
-	}
-	return &api.SdkCloudMigrateCancelResponse{}, nil
+	// if len(req.GetTaskId()) == 0 {
+	// 	return nil, status.Errorf(codes.InvalidArgument, "Must supply valid Task ID")
+	// }
+	// err := s.driver.CloudMigrateCancel(req)
+	// if err != nil {
+	// 	return nil, status.Errorf(codes.Internal, "Cannot stop migration for %s : %v", req.GetTaskId(), err)
+	// }
+	// return &api.SdkCloudMigrateCancelResponse{}, nil
+	return nil, nil
 }
 
 // Status of ongoing migration
 func (s *VolumeServer) Status(
 	ctx context.Context,
 	req *api.SdkCloudMigrateStatusRequest,
-) (*api.CloudMigrateStatusResponse, error) {
+) (*api.SdkCloudMigrateStatusResponse, error) {
 
-	resp, err := s.driver.CloudMigrateStatus()
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Cannot get status of migration : %v", err)
-	}
-	return resp, nil
+	// resp, err := s.driver.CloudMigrateStatus()
+	// if err != nil {
+	// 	return nil, status.Errorf(codes.Internal, "Cannot get status of migration : %v", err)
+	// }
+	// return resp, nil
+	return nil, nil
 }

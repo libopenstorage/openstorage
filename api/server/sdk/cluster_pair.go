@@ -36,18 +36,14 @@ func (s *ClusterPairServer) Create(
 	req *api.SdkClusterPairCreateRequest,
 ) (*api.SdkClusterPairCreateResponse, error) {
 
-	if len(req.GetRemoteClusterIp()) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Must supply Remote cluster IP")
-	} else if len(req.GetRemoteClusterToken()) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Must supply Authentication Token")
-	} else if req.GetRemoteClusterPort() == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Must supply Remote cluster Port")
+	if req.GetRequest() == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Must supply valid request")
 	}
 
 	resp, err := s.cluster.CreatePair(req.GetRequest())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Cannot create cluster with remote pair %s : %v",
-			req.GetRemoteClusterIp(), err)
+			req.GetRequest().GetRemoteClusterIp(), err)
 	}
 
 	return &api.SdkClusterPairCreateResponse{
@@ -55,78 +51,81 @@ func (s *ClusterPairServer) Create(
 	}, nil
 }
 
-// ProcessRequest handles a remote cluster's pair request
-func (s *ClusterPairServer) ProcessRequest(
+// Inspect information about a cluster pair
+func (s *ClusterPairServer) Inspect(
 	ctx context.Context,
-	request *api.ClusterPairProcessRequest,
-) (*api.ClusterPairProcessResponse, error) {
+	req *api.SdkClusterPairInspectRequest,
+) (*api.SdkClusterPairInspectResponse, error) {
 
-	if len(request.GetSourceClusterId()) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Must supply Source cluster ID")
-	} else if len(request.GetRemoteClusterToken()) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Must supply Remote cluster Token")
-	}
-	resp, err := s.cluster.ProcessPairRequest(request)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Cannot process cluster pair request with remote pair %s : %v",
-			request.GetSourceClusterId(), err)
-	}
-	return resp, nil
-}
-
-// Get information about a cluster pair
-func (s *ClusterPairServer) Get(
-	ctx context.Context,
-	req *api.ClusterPairGetRequest,
-) (*api.ClusterPairGetResponse, error) {
-	name := req.GetId()
-	if len(name) == 0 {
+	if len(req.GetId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply cluster ID")
 	}
-	resp, err := s.cluster.GetPair(name)
+	resp, err := s.cluster.GetPair(req.GetId())
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Cannot Get cluster information for %s : %v", name, err)
+		return nil, status.Errorf(codes.Internal, "Cannot Get cluster information for %s : %v", req.GetId(), err)
 	}
-	return resp, nil
+	return &api.SdkClusterPairInspectResponse{
+		Result: resp,
+	}, nil
 }
 
 // Enumerate returns list of cluster pairs
 func (s *ClusterPairServer) Enumerate(
 	ctx context.Context,
-	req *api.SdkClusterPairsEnumerateRequest,
-) (*api.ClusterPairsEnumerateResponse, error) {
+	req *api.SdkClusterPairEnumerateRequest,
+) (*api.SdkClusterPairEnumerateResponse, error) {
+
 	resp, err := s.cluster.EnumeratePairs()
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Cannot list cluster pairs : %v", err)
 	}
-	return resp, nil
+	return &api.SdkClusterPairEnumerateResponse{
+		Result: resp,
+	}, nil
 }
 
-// GetToken gets the authentication token for this cluster
-func (s *ClusterPairServer) GetToken(
+// Token gets the authentication token for this cluster
+func (s *ClusterPairServer) Token(
 	ctx context.Context,
-	req *api.ClusterPairTokenGetRequest,
-) (*api.ClusterPairTokenGetResponse, error) {
-	reset := req.GetResetToken()
-	resp, err := s.cluster.GetPairToken(reset)
+	req *api.SdkClusterPairTokenRequest,
+) (*api.SdkClusterPairTokenResponse, error) {
+
+	resp, err := s.cluster.GetPairToken(false)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Cannot generate token : %v", err)
 	}
-	return resp, nil
+	return &api.SdkClusterPairTokenResponse{
+		Result: resp,
+	}, nil
+}
+
+// ClearToken gets the authentication token for this cluster
+func (s *ClusterPairServer) ClearToken(
+	ctx context.Context,
+	req *api.SdkClusterPairClearTokenRequest,
+) (*api.SdkClusterPairClearTokenResponse, error) {
+
+	resp, err := s.cluster.GetPairToken(true)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Cannot generate token : %v", err)
+	}
+	return &api.SdkClusterPairClearTokenResponse{
+		Result: resp,
+	}, nil
 }
 
 // Delete removes the cluster pairing
 func (s *ClusterPairServer) Delete(
 	ctx context.Context,
-	req *api.ClusterPairDeleteRequest,
+	req *api.SdkClusterPairDeleteRequest,
 ) (*api.SdkClusterPairDeleteResponse, error) {
-	id := req.GetClusterId()
-	if len(id) == 0 {
+
+	if len(req.GetClusterId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply valid cluster ID")
 	}
-	err := s.cluster.DeletePair(id)
+	err := s.cluster.DeletePair(req.GetClusterId())
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Cannot delete the cluster pair %s : %v", id, err)
+		return nil, status.Errorf(codes.Internal, "Cannot delete the cluster pair %s : %v", req.GetClusterId(), err)
 	}
 	return &api.SdkClusterPairDeleteResponse{}, nil
 }

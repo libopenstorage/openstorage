@@ -22,10 +22,9 @@ import (
 	"mime"
 	"net/http"
 
-	"github.com/libopenstorage/openstorage/alerts"
-
 	"github.com/gobuffalo/packr"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/libopenstorage/openstorage/alerts"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/spec"
 	"github.com/libopenstorage/openstorage/cluster"
@@ -145,7 +144,7 @@ func (s *Server) Start() error {
 		api.RegisterOpenStorageNodeServer(grpcServer, s.nodeServer)
 		api.RegisterOpenStorageObjectstoreServer(grpcServer, s.objectstoreServer)
 		api.RegisterOpenStorageVolumeServer(grpcServer, s.volumeServer)
-		api.RegisterOpenStorageVolumeMigrateServer(grpcServer, s.volumeServer)
+		api.RegisterOpenStorageMigrateServer(grpcServer, s.volumeServer)
 		api.RegisterOpenStorageCredentialsServer(grpcServer, s.credentialServer)
 		api.RegisterOpenStorageSchedulePolicyServer(grpcServer, s.schedulePolicyServer)
 		api.RegisterOpenStorageCloudBackupServer(grpcServer, s.cloudBackupServer)
@@ -313,7 +312,7 @@ func (s *Server) restServerSetupHandlers() (*http.ServeMux, error) {
 		return nil, err
 	}
 
-	err = api.RegisterOpenStorageVolumeMigrateHandlerFromEndpoint(
+	err = api.RegisterOpenStorageMigrateHandlerFromEndpoint(
 		context.Background(),
 		gmux,
 		s.Address(),
