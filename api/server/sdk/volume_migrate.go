@@ -20,6 +20,8 @@ import (
 	"context"
 
 	"github.com/libopenstorage/openstorage/api"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // Start a volume migration
@@ -28,22 +30,81 @@ func (s *VolumeServer) Start(
 	req *api.SdkCloudMigrateStartRequest,
 ) (*api.SdkCloudMigrateStartResponse, error) {
 
-	// if req.GetOperation() == api.CloudMigrate_InvalidType {
-	// 	return nil, status.Errorf(codes.InvalidArgument, "Must supply valid Operation")
-	// } else if len(req.GetClusterId()) == 0 {
-	// 	return nil, status.Errorf(codes.InvalidArgument, "Must supply valid Cluster ID")
-	// } else if len(req.GetTargetId()) == 0 {
-	// 	return nil, status.Errorf(codes.InvalidArgument, "Must supply valid Target cluster ID")
-	// }
-	// resp, err := s.driver.CloudMigrateStart(req.Get)
-	// if err != nil {
-	// 	return nil, status.Errorf(codes.Internal, "Cannot start migration for %s : %v", req.GetClusterId(), err)
-	// }
+	if len(req.GetName()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Must supply a name")
+	} else if volume := req.GetVolume(); volume != nil {
+		//migrate volume
+		return s.volumeMigrate(ctx, req, volume)
+	} else if volumeGroup := req.GetVolumeGroup(); volumeGroup != nil {
+		//migrate volume groups
+		return s.volumeGroupMigrate(ctx, req, volumeGroup)
+	} else if allVolumes := req.GetAllVolumes(); allVolumes != nil {
+		// migrate all volumes
+		return s.allVolumesMigrate(ctx, req, allVolumes)
+	}
+	return nil, status.Error(codes.InvalidArgument, "Unknown operation request")
+}
 
-	// return &api.SdkCloudMigrateStartResponse{
-	// 	TaskId: resp.GetTaskId(),
-	// }, nil
-	return nil, nil
+func (s *VolumeServer) volumeGroupMigrate(
+	ctx context.Context,
+	req *api.SdkCloudMigrateStartRequest,
+	volumeGroup *api.SdkCloudMigrateStartRequest_MigrateVolumeGroup,
+) (*api.SdkCloudMigrateStartResponse, error) {
+	//Create a request object with operation as Migrate volume
+	request := &api.CloudMigrateStartRequest{
+		Operation: api.CloudMigrate_MigrateVolumeGroup,
+		ClusterId: req.GetClusterId(),
+		TargetId:  volumeGroup.GetGroupId(),
+		TaskId:    req.GetName(),
+	}
+	resp, err := s.driver.CloudMigrateStart(request)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Cannot start migration for %s : %v", req.GetClusterId(), err)
+	}
+	return &api.SdkCloudMigrateStartResponse{
+		Result: resp,
+	}, nil
+}
+
+func (s *VolumeServer) allVolumesMigrate(
+	ctx context.Context,
+	req *api.SdkCloudMigrateStartRequest,
+	allVolume *api.SdkCloudMigrateStartRequest_MigrateAllVolumes,
+) (*api.SdkCloudMigrateStartResponse, error) {
+	//Create a request object with operation as Migrate volume
+	request := &api.CloudMigrateStartRequest{
+		Operation: api.CloudMigrate_MigrateCluster,
+		ClusterId: req.GetClusterId(),
+		TaskId:    req.GetName(),
+	}
+	resp, err := s.driver.CloudMigrateStart(request)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Cannot start migration for %s : %v", req.GetClusterId(), err)
+	}
+	return &api.SdkCloudMigrateStartResponse{
+		Result: resp,
+	}, nil
+}
+
+func (s *VolumeServer) volumeMigrate(
+	ctx context.Context,
+	req *api.SdkCloudMigrateStartRequest,
+	volume *api.SdkCloudMigrateStartRequest_MigrateVolume,
+) (*api.SdkCloudMigrateStartResponse, error) {
+	//Create a request object with operation as Migrate volume
+	request := &api.CloudMigrateStartRequest{
+		Operation: api.CloudMigrate_MigrateVolume,
+		ClusterId: req.GetClusterId(),
+		TargetId:  volume.GetVolumeId(),
+		TaskId:    req.GetName(),
+	}
+	resp, err := s.driver.CloudMigrateStart(request)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Cannot start migration for %s : %v", req.GetClusterId(), err)
+	}
+	return &api.SdkCloudMigrateStartResponse{
+		Result: resp,
+	}, nil
 }
 
 // Cancel or stop a ongoing migration
@@ -52,15 +113,17 @@ func (s *VolumeServer) Cancel(
 	req *api.SdkCloudMigrateCancelRequest,
 ) (*api.SdkCloudMigrateCancelResponse, error) {
 
-	// if len(req.GetTaskId()) == 0 {
-	// 	return nil, status.Errorf(codes.InvalidArgument, "Must supply valid Task ID")
-	// }
-	// err := s.driver.CloudMigrateCancel(req)
-	// if err != nil {
-	// 	return nil, status.Errorf(codes.Internal, "Cannot stop migration for %s : %v", req.GetTaskId(), err)
-	// }
-	// return &api.SdkCloudMigrateCancelResponse{}, nil
-	return nil, nil
+	if req.GetRequest() == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Must supply valid request")
+	} else if len(req.GetRequest().GetTaskId()) == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "Must supply valid Task ID")
+	}
+	err := s.driver.CloudMigrateCancel(req.GetRequest())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Cannot stop migration for %s : %v",
+			req.GetRequest().GetTaskId(), err)
+	}
+	return &api.SdkCloudMigrateCancelResponse{}, nil
 }
 
 // Status of ongoing migration
@@ -69,10 +132,12 @@ func (s *VolumeServer) Status(
 	req *api.SdkCloudMigrateStatusRequest,
 ) (*api.SdkCloudMigrateStatusResponse, error) {
 
-	// resp, err := s.driver.CloudMigrateStatus()
-	// if err != nil {
-	// 	return nil, status.Errorf(codes.Internal, "Cannot get status of migration : %v", err)
-	// }
-	// return resp, nil
-	return nil, nil
+	resp, err := s.driver.CloudMigrateStatus()
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Cannot get status of migration : %v", err)
+	}
+	return &api.SdkCloudMigrateStatusResponse{
+		Result: resp,
+	}, nil
+
 }

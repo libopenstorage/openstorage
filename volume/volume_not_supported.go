@@ -213,7 +213,7 @@ func (cl *cloudBackupNotSupported) CloudBackupSchedEnumerate() (*api.CloudBackup
 
 type cloudMigrateNotSupported struct{}
 
-func (cl *cloudMigrateNotSupported) CloudMigrateStart(request *api.CloudMigrateStartRequest) (*api.SdkCloudMigrateStartResponse, error) {
+func (cl *cloudMigrateNotSupported) CloudMigrateStart(request *api.CloudMigrateStartRequest) (*api.CloudMigrateStartResponse, error) {
 	return nil, ErrNotSupported
 }
 

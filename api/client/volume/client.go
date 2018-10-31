@@ -735,8 +735,8 @@ func (v *volumeClient) SnapshotGroup(groupID string, labels map[string]string) (
 	return response, nil
 }
 
-func (v *volumeClient) CloudMigrateStart(request *api.CloudMigrateStartRequest) (*api.SdkCloudMigrateStartResponse, error) {
-	startResponse := &api.SdkCloudMigrateStartResponse{}
+func (v *volumeClient) CloudMigrateStart(request *api.CloudMigrateStartRequest) (*api.CloudMigrateStartResponse, error) {
+	startResponse := &api.CloudMigrateStartResponse{}
 	req := v.c.Post().Resource(api.OsdMigrateStartPath).Body(request)
 	response := req.Do()
 	if response.Error() != nil {
