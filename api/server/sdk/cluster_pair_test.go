@@ -38,11 +38,13 @@ func TestClusterPairServer_CreateSuccess(t *testing.T) {
 	var remoteClusterPort uint32
 	remoteClusterPort = uint32(12345)
 
-	req := api.ClusterPairCreateRequest{
-		RemoteClusterIp:    remoteClusterIP,
-		RemoteClusterPort:  remoteClusterPort,
-		RemoteClusterToken: "<Auth-Token>",
-		SetDefault:         false,
+	req := api.SdkClusterPairCreateRequest{
+		Request: &api.ClusterPairCreateRequest{
+			RemoteClusterIp:    remoteClusterIP,
+			RemoteClusterPort:  remoteClusterPort,
+			RemoteClusterToken: "<Auth-Token>",
+			SetDefault:         false,
+		},
 	}
 	resp := &api.ClusterPairCreateResponse{
 		RemoteClusterId:   remoteClusterID,
@@ -64,8 +66,8 @@ func TestClusterPairServer_CreateSuccess(t *testing.T) {
 	r, err := c.Create(context.Background(), &req)
 	assert.NoError(t, err)
 	assert.NotNil(t, r.GetRemoteClusterId())
-	assert.Equal(t, remoteClusterID, r.GetRemoteClusterId())
-	assert.Equal(t, remoteClusterName, r.GetRemoteClusterName())
+	assert.Equal(t, remoteClusterID, r.GetResult().GetRemoteClusterId())
+	assert.Equal(t, remoteClusterName, r.GetResult().GetRemoteClusterName())
 }
 func TestClusterPairServer_CreateFailure(t *testing.T) {
 	// Create server and client connection

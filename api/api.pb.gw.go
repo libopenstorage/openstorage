@@ -90,7 +90,7 @@ func request_OpenStorageCluster_InspectCurrent_0(ctx context.Context, marshaler 
 }
 
 func request_OpenStorageClusterPair_Create_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageClusterPairClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ClusterPairCreateRequest
+	var protoReq SdkClusterPairCreateRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -102,21 +102,8 @@ func request_OpenStorageClusterPair_Create_0(ctx context.Context, marshaler runt
 
 }
 
-func request_OpenStorageClusterPair_ProcessRequest_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageClusterPairClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ClusterPairProcessRequest
-	var metadata runtime.ServerMetadata
-
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.ProcessRequest(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func request_OpenStorageClusterPair_Get_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageClusterPairClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ClusterPairGetRequest
+func request_OpenStorageClusterPair_Inspect_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageClusterPairClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SdkClusterPairInspectRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -137,13 +124,13 @@ func request_OpenStorageClusterPair_Get_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
 
-	msg, err := client.Get(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.Inspect(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
 func request_OpenStorageClusterPair_Enumerate_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageClusterPairClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq SdkClusterPairsEnumerateRequest
+	var protoReq SdkClusterPairEnumerateRequest
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.Enumerate(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -151,25 +138,30 @@ func request_OpenStorageClusterPair_Enumerate_0(ctx context.Context, marshaler r
 
 }
 
-var (
-	filter_OpenStorageClusterPair_GetToken_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
-)
-
-func request_OpenStorageClusterPair_GetToken_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageClusterPairClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ClusterPairTokenGetRequest
+func request_OpenStorageClusterPair_Token_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageClusterPairClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SdkClusterPairTokenRequest
 	var metadata runtime.ServerMetadata
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_OpenStorageClusterPair_GetToken_0); err != nil {
+	msg, err := client.Token(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func request_OpenStorageClusterPair_ClearToken_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageClusterPairClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SdkClusterPairClearTokenRequest
+	var metadata runtime.ServerMetadata
+
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.GetToken(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ClearToken(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
 func request_OpenStorageClusterPair_Delete_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageClusterPairClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ClusterPairDeleteRequest
+	var protoReq SdkClusterPairDeleteRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -575,8 +567,8 @@ func request_OpenStorageMountAttach_Unmount_0(ctx context.Context, marshaler run
 
 }
 
-func request_OpenStorageVolumeMigrate_Start_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageVolumeMigrateClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq CloudMigrateStartRequest
+func request_OpenStorageMigrate_Start_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageMigrateClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SdkCloudMigrateStartRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -588,8 +580,8 @@ func request_OpenStorageVolumeMigrate_Start_0(ctx context.Context, marshaler run
 
 }
 
-func request_OpenStorageVolumeMigrate_Cancel_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageVolumeMigrateClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq CloudMigrateCancelRequest
+func request_OpenStorageMigrate_Cancel_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageMigrateClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SdkCloudMigrateCancelRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -601,7 +593,7 @@ func request_OpenStorageVolumeMigrate_Cancel_0(ctx context.Context, marshaler ru
 
 }
 
-func request_OpenStorageVolumeMigrate_Status_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageVolumeMigrateClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_OpenStorageMigrate_Status_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageMigrateClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq SdkCloudMigrateStatusRequest
 	var metadata runtime.ServerMetadata
 
@@ -1471,7 +1463,7 @@ func RegisterOpenStorageClusterPairHandlerClient(ctx context.Context, mux *runti
 
 	})
 
-	mux.Handle("POST", pattern_OpenStorageClusterPair_ProcessRequest_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_OpenStorageClusterPair_Inspect_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -1489,43 +1481,14 @@ func RegisterOpenStorageClusterPairHandlerClient(ctx context.Context, mux *runti
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_OpenStorageClusterPair_ProcessRequest_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_OpenStorageClusterPair_Inspect_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_OpenStorageClusterPair_ProcessRequest_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
-	mux.Handle("GET", pattern_OpenStorageClusterPair_Get_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_OpenStorageClusterPair_Get_0(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_OpenStorageClusterPair_Get_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_OpenStorageClusterPair_Inspect_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1558,7 +1521,7 @@ func RegisterOpenStorageClusterPairHandlerClient(ctx context.Context, mux *runti
 
 	})
 
-	mux.Handle("GET", pattern_OpenStorageClusterPair_GetToken_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_OpenStorageClusterPair_Token_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -1576,14 +1539,43 @@ func RegisterOpenStorageClusterPairHandlerClient(ctx context.Context, mux *runti
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_OpenStorageClusterPair_GetToken_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_OpenStorageClusterPair_Token_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_OpenStorageClusterPair_GetToken_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_OpenStorageClusterPair_Token_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_OpenStorageClusterPair_ClearToken_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_OpenStorageClusterPair_ClearToken_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_OpenStorageClusterPair_ClearToken_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1622,13 +1614,13 @@ func RegisterOpenStorageClusterPairHandlerClient(ctx context.Context, mux *runti
 var (
 	pattern_OpenStorageClusterPair_Create_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "clusterpairs"}, ""))
 
-	pattern_OpenStorageClusterPair_ProcessRequest_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "clusterpairs", "process"}, ""))
-
-	pattern_OpenStorageClusterPair_Get_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "clusterpairs", "id"}, ""))
+	pattern_OpenStorageClusterPair_Inspect_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "clusterpairs", "id"}, ""))
 
 	pattern_OpenStorageClusterPair_Enumerate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "clusterpairs"}, ""))
 
-	pattern_OpenStorageClusterPair_GetToken_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "clusterpairs", "token"}, ""))
+	pattern_OpenStorageClusterPair_Token_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "clusterpairs", "token"}, ""))
+
+	pattern_OpenStorageClusterPair_ClearToken_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "clusterpairs", "token"}, ""))
 
 	pattern_OpenStorageClusterPair_Delete_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "clusterpairs", "cluster_id"}, ""))
 )
@@ -1636,13 +1628,13 @@ var (
 var (
 	forward_OpenStorageClusterPair_Create_0 = runtime.ForwardResponseMessage
 
-	forward_OpenStorageClusterPair_ProcessRequest_0 = runtime.ForwardResponseMessage
-
-	forward_OpenStorageClusterPair_Get_0 = runtime.ForwardResponseMessage
+	forward_OpenStorageClusterPair_Inspect_0 = runtime.ForwardResponseMessage
 
 	forward_OpenStorageClusterPair_Enumerate_0 = runtime.ForwardResponseMessage
 
-	forward_OpenStorageClusterPair_GetToken_0 = runtime.ForwardResponseMessage
+	forward_OpenStorageClusterPair_Token_0 = runtime.ForwardResponseMessage
+
+	forward_OpenStorageClusterPair_ClearToken_0 = runtime.ForwardResponseMessage
 
 	forward_OpenStorageClusterPair_Delete_0 = runtime.ForwardResponseMessage
 )
@@ -2442,9 +2434,9 @@ var (
 	forward_OpenStorageMountAttach_Unmount_0 = runtime.ForwardResponseMessage
 )
 
-// RegisterOpenStorageVolumeMigrateHandlerFromEndpoint is same as RegisterOpenStorageVolumeMigrateHandler but
+// RegisterOpenStorageMigrateHandlerFromEndpoint is same as RegisterOpenStorageMigrateHandler but
 // automatically dials to "endpoint" and closes the connection when "ctx" gets done.
-func RegisterOpenStorageVolumeMigrateHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
+func RegisterOpenStorageMigrateHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
 	conn, err := grpc.Dial(endpoint, opts...)
 	if err != nil {
 		return err
@@ -2464,23 +2456,23 @@ func RegisterOpenStorageVolumeMigrateHandlerFromEndpoint(ctx context.Context, mu
 		}()
 	}()
 
-	return RegisterOpenStorageVolumeMigrateHandler(ctx, mux, conn)
+	return RegisterOpenStorageMigrateHandler(ctx, mux, conn)
 }
 
-// RegisterOpenStorageVolumeMigrateHandler registers the http handlers for service OpenStorageVolumeMigrate to "mux".
+// RegisterOpenStorageMigrateHandler registers the http handlers for service OpenStorageMigrate to "mux".
 // The handlers forward requests to the grpc endpoint over "conn".
-func RegisterOpenStorageVolumeMigrateHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
-	return RegisterOpenStorageVolumeMigrateHandlerClient(ctx, mux, NewOpenStorageVolumeMigrateClient(conn))
+func RegisterOpenStorageMigrateHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
+	return RegisterOpenStorageMigrateHandlerClient(ctx, mux, NewOpenStorageMigrateClient(conn))
 }
 
-// RegisterOpenStorageVolumeMigrateHandler registers the http handlers for service OpenStorageVolumeMigrate to "mux".
-// The handlers forward requests to the grpc endpoint over the given implementation of "OpenStorageVolumeMigrateClient".
-// Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "OpenStorageVolumeMigrateClient"
+// RegisterOpenStorageMigrateHandler registers the http handlers for service OpenStorageMigrate to "mux".
+// The handlers forward requests to the grpc endpoint over the given implementation of "OpenStorageMigrateClient".
+// Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "OpenStorageMigrateClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
-// "OpenStorageVolumeMigrateClient" to call the correct interceptors.
-func RegisterOpenStorageVolumeMigrateHandlerClient(ctx context.Context, mux *runtime.ServeMux, client OpenStorageVolumeMigrateClient) error {
+// "OpenStorageMigrateClient" to call the correct interceptors.
+func RegisterOpenStorageMigrateHandlerClient(ctx context.Context, mux *runtime.ServeMux, client OpenStorageMigrateClient) error {
 
-	mux.Handle("POST", pattern_OpenStorageVolumeMigrate_Start_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_OpenStorageMigrate_Start_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -2498,18 +2490,18 @@ func RegisterOpenStorageVolumeMigrateHandlerClient(ctx context.Context, mux *run
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_OpenStorageVolumeMigrate_Start_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_OpenStorageMigrate_Start_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_OpenStorageVolumeMigrate_Start_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_OpenStorageMigrate_Start_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_OpenStorageVolumeMigrate_Cancel_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_OpenStorageMigrate_Cancel_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -2527,18 +2519,18 @@ func RegisterOpenStorageVolumeMigrateHandlerClient(ctx context.Context, mux *run
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_OpenStorageVolumeMigrate_Cancel_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_OpenStorageMigrate_Cancel_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_OpenStorageVolumeMigrate_Cancel_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_OpenStorageMigrate_Cancel_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_OpenStorageVolumeMigrate_Status_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_OpenStorageMigrate_Status_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -2556,14 +2548,14 @@ func RegisterOpenStorageVolumeMigrateHandlerClient(ctx context.Context, mux *run
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_OpenStorageVolumeMigrate_Status_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_OpenStorageMigrate_Status_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_OpenStorageVolumeMigrate_Status_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_OpenStorageMigrate_Status_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -2571,19 +2563,19 @@ func RegisterOpenStorageVolumeMigrateHandlerClient(ctx context.Context, mux *run
 }
 
 var (
-	pattern_OpenStorageVolumeMigrate_Start_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "volumemigrate"}, ""))
+	pattern_OpenStorageMigrate_Start_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "volumemigrate"}, ""))
 
-	pattern_OpenStorageVolumeMigrate_Cancel_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "volumemigrate", "cancel"}, ""))
+	pattern_OpenStorageMigrate_Cancel_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "volumemigrate", "cancel"}, ""))
 
-	pattern_OpenStorageVolumeMigrate_Status_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "volumemigrate"}, ""))
+	pattern_OpenStorageMigrate_Status_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "volumemigrate"}, ""))
 )
 
 var (
-	forward_OpenStorageVolumeMigrate_Start_0 = runtime.ForwardResponseMessage
+	forward_OpenStorageMigrate_Start_0 = runtime.ForwardResponseMessage
 
-	forward_OpenStorageVolumeMigrate_Cancel_0 = runtime.ForwardResponseMessage
+	forward_OpenStorageMigrate_Cancel_0 = runtime.ForwardResponseMessage
 
-	forward_OpenStorageVolumeMigrate_Status_0 = runtime.ForwardResponseMessage
+	forward_OpenStorageMigrate_Status_0 = runtime.ForwardResponseMessage
 )
 
 // RegisterOpenStorageObjectstoreHandlerFromEndpoint is same as RegisterOpenStorageObjectstoreHandler but

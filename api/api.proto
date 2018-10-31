@@ -957,69 +957,63 @@ service OpenStorageClusterPair{
   //
   // ##### Example
   // {% codetabs name="Golang", type="go" -%}
-  // id, err := client.Create(context.Background(), &api.ClusterPairCreateRequest{
-  //   RemoteClusterIp: "127.0.0.1",
-  //   RemoteClusterPort: 12345,
-  //   RemoteClusterToken: "<Auth-Token>",
-  //   SetDefault: true,
-  // })
+  // id, err := client.Create(context.Background(), &api.SdkClusterPairCreateRequest {
+  //   Request : &api.ClusterPairCreateRequest {
+  //                  RemoteClusterIp: "127.0.0.1",
+  //                  RemoteClusterPort: 12345,
+  //                  RemoteClusterToken: "<Auth-Token>",
+  //                  SetDefault: true,
+  //              }
+  //        })
   // {%- endcodetabs %}
-  rpc Create(ClusterPairCreateRequest)
-    returns (ClusterPairCreateResponse){
+  rpc Create(SdkClusterPairCreateRequest)
+    returns (SdkClusterPairCreateResponse){
       option(google.api.http) = {
         post: "/v1/clusterpairs"
         body: "*"
       };
     }
 
-    // ProcessRequest handles a remote cluster's pair request
-    //
-    // ##### Example
-    // {% codetabs name="Golang", type="go" -%}
-    // id, err := client.ProcessRequest(context.Background(), &api.ClusterPairProcessRequest{
-    //   SourceClusterId: "ID",
-    //   RemoteClusterToken: "<Auth-Token>",
-    // })
-    // {%- endcodetabs %}
-    rpc ProcessRequest(ClusterPairProcessRequest)
-      returns (ClusterPairProcessResponse){
-        option(google.api.http) = {
-          post: "/v1/clusterpairs/process"
-          body:"*"
-        };
-      }
+  // Inspect information about a cluster pair
+  rpc Inspect(SdkClusterPairInspectRequest)
+    returns (SdkClusterPairInspectResponse){
+      option(google.api.http) = {
+        get: "/v1/clusterpairs/{id}"
+      };
+    }
 
-      // Get information about a cluster pair
-      rpc Get(ClusterPairGetRequest)
-        returns (ClusterPairGetResponse){
-          option(google.api.http) = {
-            get: "/v1/clusterpairs/{id}"
-          };
-        }
+  // Enumerate returns list of cluster pairs
+  rpc Enumerate(SdkClusterPairEnumerateRequest)
+    returns (SdkClusterPairEnumerateResponse){
+      option(google.api.http) = {
+        get: "/v1/clusterpairs"
+      };
+    }
 
-      // Enumerate returns list of cluster pairs
-      rpc Enumerate(SdkClusterPairsEnumerateRequest)
-        returns (ClusterPairsEnumerateResponse){
-          option(google.api.http) = {
-            get: "/v1/clusterpairs"
-          };
-        }
+  // Token returns a auth token
+  rpc Token(SdkClusterPairTokenRequest)
+    returns(SdkClusterPairTokenResponse){
+      option(google.api.http)={
+        get: "/v1/clusterpairs/token"
+      };
+    }
 
-        // GetToken returns a auth token
-        rpc GetToken(ClusterPairTokenGetRequest)
-          returns(ClusterPairTokenGetResponse){
-            option(google.api.http)={
-              get: "/v1/clusterpairs/token"
-            };
-          }
+  // ClearToken returns a auth token
+  rpc ClearToken(SdkClusterPairClearTokenRequest)
+    returns(SdkClusterPairClearTokenResponse){
+      option(google.api.http)={
+        post: "/v1/clusterpairs/token"
+        body: "*"
+      };
+    }
 
-        // Delete a cluster pair
-        rpc Delete(ClusterPairDeleteRequest)
-          returns (SdkClusterPairDeleteResponse){
-            option(google.api.http) = {
-              delete: "/v1/clusterpairs/{cluster_id}"
-            };
-          }
+  // Delete a cluster pair
+  rpc Delete(SdkClusterPairDeleteRequest)
+    returns (SdkClusterPairDeleteResponse){
+      option(google.api.http) = {
+        delete: "/v1/clusterpairs/{cluster_id}"
+      };
+    }
 }
 
 // OpenStorageNode is a service used to manage nodes in the cluster
@@ -1233,10 +1227,10 @@ service OpenStorageMountAttach {
     }
 }
 
-// OpenStorageVolumeMigrate is a service used to manage migration of volumes
-service OpenStorageVolumeMigrate {
-  //Start a migration operation
-  rpc Start(CloudMigrateStartRequest)
+// OpenStorageMigrate is a service used to manage migration of volumes
+service OpenStorageMigrate {
+  // Start a migration operation
+  rpc Start(SdkCloudMigrateStartRequest)
     returns (SdkCloudMigrateStartResponse) {
       option(google.api.http) = {
         post: "/v1/volumemigrate"
@@ -1244,8 +1238,8 @@ service OpenStorageVolumeMigrate {
       };
     }
 
-  //Stop a migration operation
-  rpc Cancel(CloudMigrateCancelRequest)
+  // Cancel a migration operation
+  rpc Cancel(SdkCloudMigrateCancelRequest)
     returns (SdkCloudMigrateCancelResponse) {
       option(google.api.http) = {
         post: "/v1/volumemigrate/cancel"
@@ -1253,9 +1247,9 @@ service OpenStorageVolumeMigrate {
       };
     }
 
-  //Get the status of migration operation  
+  // Inspect the status of migration operation  
   rpc Status(SdkCloudMigrateStatusRequest)
-    returns (CloudMigrateStatusResponse) {
+    returns (SdkCloudMigrateStatusResponse) {
       option(google.api.http) = {
         get: "/v1/volumemigrate"
       };
@@ -2546,7 +2540,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 19;
+    Minor = 20;
     // SDK version patch value of this specification
     Patch = 0;
   }
@@ -2617,16 +2611,63 @@ message CloudMigrateStartRequest {
     string task_id = 4;
 }
 
+// Defines a migration request 
+message SdkCloudMigrateStartRequest {
+  // Defines a migration request for a volume
+  message MigrateVolume { 
+    string volume_id = 1;
+  }
+
+  // Defines a migration request for a volume group
+  message MigrateVolumeGroup { 
+    string group_id = 1;
+  }
+  
+  // Defines a migration request for all volumes in a cluster
+  message MigrateAllVolumes { 
+  }
+
+  // ID of the cluster to which volumes are to be migrated
+  string cluster_id = 1;
+  
+  // Unique name assocaiated with this migration. 
+  // This is a required field for idempotency
+  string name = 2;
+  
+  oneof opt {
+    // Request to migrate a volume
+    MigrateVolume volume = 200;
+
+    // Request to migrate a volume group
+    MigrateVolumeGroup volume_group = 201;
+    
+    // Request to migrate all volumes
+    MigrateAllVolumes all_volumes = 202;
+  }
+}
+
 // Response to start a cloud migration
-message SdkCloudMigrateStartResponse {
+message CloudMigrateStartResponse {
     // TaskId assocaiated with the migration that was started
     string task_id = 1;
+}
+
+// Defines a response for the migration that was started
+message SdkCloudMigrateStartResponse {
+    // Result assocaiated with the migration that was started
+    CloudMigrateStartResponse result = 1;
 }
 
 // Request to stop a cloud migration
 message CloudMigrateCancelRequest {
     // The id of the task to cancel
     string task_id = 1;
+}
+
+// Defines a request to stop a cloud migration
+message SdkCloudMigrateCancelRequest {
+    // Request containing the task id to be cancelled
+    CloudMigrateCancelRequest request = 1;
 }
 
 // Empty Response
@@ -2670,26 +2711,41 @@ message CloudMigrateStatusResponse {
     map<string, CloudMigrateInfoList> info = 1;
 }
 
+// Defines a response for the status request
+message SdkCloudMigrateStatusResponse {
+  // Status of all migration requests
+  CloudMigrateStatusResponse result = 1;
+}
+
 // Used to send a request to create a cluster pair
-// swagger:model
 message ClusterPairCreateRequest {
-    // IP of the remote cluster
-    string remote_cluster_ip = 1;
-    // Port for the remote cluster
-    uint32 remote_cluster_port = 2;
-    // Token used to authenticate with the remote cluster
-    string remote_cluster_token = 3;
-    // Set the new pair as the default
-    bool set_default = 4;
+  // IP of the remote cluster
+  string remote_cluster_ip = 1;
+  // Port for the remote cluster
+  uint32 remote_cluster_port = 2;
+  // Token used to authenticate with the remote cluster
+  string remote_cluster_token = 3;
+  // Set the new pair as the default
+  bool set_default = 4;
 }
 
 // Response for a pair request
-// swagger:response
 message ClusterPairCreateResponse {
-    // ID of the remote cluster
-    string remote_cluster_id = 1;
-    // Name of the remote cluster
-    string remote_cluster_name = 2;
+  // ID of the remote cluster
+  string remote_cluster_id = 1;
+  // Name of the remote cluster
+  string remote_cluster_name = 2;
+}
+
+// Defines a request for creating a cluster pair
+message SdkClusterPairCreateRequest {
+  ClusterPairCreateRequest request = 1;
+}
+
+// Defines a result of the cluster pair
+message SdkClusterPairCreateResponse {
+  // Contains the information about cluster pair
+  ClusterPairCreateResponse result = 1;
 }
 
 // Used to process a pair request from a remote cluster
@@ -2701,54 +2757,70 @@ message ClusterPairProcessRequest {
 }
 
 // Response after a pairing has been processed
-// swagger:response
 message ClusterPairProcessResponse {
     // ID of the cluster which processed the pair request
-    //
-    // in: body
     string remote_cluster_id = 1;
+
     // Name of the cluster which processed the pair request
-    //
-    // in: body
     string remote_cluster_name = 2;
+
     // List of endpoints that can be used to communicate with the cluster
-    //
-    // in: body
     repeated string remote_cluster_endpoints = 3;
-    // Key/value pair of options returned on successful pairing
+
+    // Key/value pair of options returned on successful pairing.
     // Opaque to openstorage and interpreted by the drivers
-    //
-    // in: body
     map<string, string> options = 4;
 }
 
 // Request to to delete a cluster pair
-// swagger:model
 message ClusterPairDeleteRequest {
-    // ID of the cluster pair to be deleted
-    string cluster_id = 1;
+  // ID of the cluster pair to be deleted
+  string cluster_id = 1;
 }
 
-// Empty Response
+// Defines a delete request for a cluster pair
+message SdkClusterPairDeleteRequest {
+  // ID of the cluster pair to be deleted
+  string cluster_id = 1;
+}
+
+// Empty response
 message SdkClusterPairDeleteResponse{
 }
 
 // Request to get the token for a cluster
-// swagger:model
 message ClusterPairTokenGetRequest {
     // Reset token if already preset
     bool reset_token = 1;
 }
 
 // Response to get the cluster token
-// swagger:model
 message ClusterPairTokenGetResponse {
     // Token used to authenticate clusters
     string token = 1;
 }
 
+// Empty request
+message SdkClusterPairTokenRequest {
+}
+
+// Defines a response for the token request
+message SdkClusterPairTokenResponse {
+  // Contains authentication token for the cluster
+  ClusterPairTokenGetResponse result = 1;
+}
+
+// Empty request
+message SdkClusterPairClearTokenRequest {
+}
+
+// Defines a response for the token request
+message SdkClusterPairClearTokenResponse {
+  // Contains authentication token for the cluster
+  ClusterPairTokenGetResponse result = 1;
+}
+
 // Information about a cluster pair
-// swagger:model
 message ClusterPairInfo {
     // ID of the cluster
     string id = 1;
@@ -2766,8 +2838,13 @@ message ClusterPairInfo {
 }
 
 // Request to get a cluster pair
-// swagger:model
 message ClusterPairGetRequest {
+    // ID of the cluster, if empty gets the default pair
+    string id = 1;
+}
+
+// Defines a cluster pair inspect request
+message SdkClusterPairInspectRequest{
     // ID of the cluster, if empty gets the default pair
     string id = 1;
 }
@@ -2775,26 +2852,32 @@ message ClusterPairGetRequest {
 // Reponse to get a cluster pair
 message ClusterPairGetResponse {
     // Info about the cluster pair
-    //
-    // in: body
     ClusterPairInfo pair_info = 1;
 }
 
+// Defines a cluster pair inspect response
+message SdkClusterPairInspectResponse {
+  // Information about cluster pair
+  ClusterPairGetResponse result = 1;
+}
+
 // Empty Request
-message SdkClusterPairsEnumerateRequest{
+message SdkClusterPairEnumerateRequest{
 }
 
 // Response to enumerate all the cluster pairs
 message ClusterPairsEnumerateResponse {
     // ID of the default cluster pair
-    //
-    // in: body
     string default_id = 1;
+
     // Pairs Info about the cluster pairs
-    //
-    // in: body
-    // required: false
     map<string, ClusterPairInfo> pairs = 2;
+}
+
+// Defines a list of cluster pair
+message SdkClusterPairEnumerateResponse {
+  // List of all the cluster pairs 
+  ClusterPairsEnumerateResponse result = 1;
 }
 
 message Catalog {
