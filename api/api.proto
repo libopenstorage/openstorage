@@ -961,21 +961,22 @@ service OpenStorageClusterPair{
   //   RemoteClusterIp: "127.0.0.1",
   //   RemoteClusterPort: 12345,
   //   RemoteClusterToken: "<Auth-Token>",
-  //   SetDefault: <Boolean-Value>,
+  //   SetDefault: true,
   // })
   // {%- endcodetabs %}
   rpc Create(ClusterPairCreateRequest)
     returns (ClusterPairCreateResponse){
       option(google.api.http) = {
-        post: "/v1/clusterspairs"
+        post: "/v1/clusterpairs"
         body: "*"
       };
     }
+
     // ProcessRequest handles a remote cluster's pair request
     //
     // ##### Example
     // {% codetabs name="Golang", type="go" -%}
-    // id, err := client.Create(context.Background(), &api.ClusterPairProcessRequest{
+    // id, err := client.ProcessRequest(context.Background(), &api.ClusterPairProcessRequest{
     //   SourceClusterId: "ID",
     //   RemoteClusterToken: "<Auth-Token>",
     // })
@@ -983,40 +984,42 @@ service OpenStorageClusterPair{
     rpc ProcessRequest(ClusterPairProcessRequest)
       returns (ClusterPairProcessResponse){
         option(google.api.http) = {
-          post: "/v1/clusterspairs/process"
+          post: "/v1/clusterpairs/process"
           body:"*"
         };
       }
+
       // Get information about a cluster pair
       rpc Get(ClusterPairGetRequest)
         returns (ClusterPairGetResponse){
           option(google.api.http) = {
-            get: "/v1/clusterspairs/{id}"
+            get: "/v1/clusterpairs/{id}"
           };
         }
+
       // Enumerate returns list of cluster pairs
       rpc Enumerate(SdkClusterPairsEnumerateRequest)
         returns (ClusterPairsEnumerateResponse){
           option(google.api.http) = {
-            get: "/v1/clusterspairs"
+            get: "/v1/clusterpairs"
           };
         }
+
         // GetToken returns a auth token
         rpc GetToken(ClusterPairTokenGetRequest)
           returns(ClusterPairTokenGetResponse){
             option(google.api.http)={
-              get: "/v1/clusterspairs/token"
+              get: "/v1/clusterpairs/token"
             };
           }
+
         // Delete a cluster pair
         rpc Delete(ClusterPairDeleteRequest)
           returns (SdkClusterPairDeleteResponse){
             option(google.api.http) = {
-              delete: "/v1/clusterspairs/{cluster_id}"
+              delete: "/v1/clusterpairs/{cluster_id}"
             };
           }
-
-
 }
 
 // OpenStorageNode is a service used to manage nodes in the cluster
@@ -1240,6 +1243,7 @@ service OpenStorageVolumeMigrate {
         body: "*"
       };
     }
+
   //Stop a migration operation
   rpc Cancel(CloudMigrateCancelRequest)
     returns (SdkCloudMigrateCancelResponse) {
@@ -1248,6 +1252,7 @@ service OpenStorageVolumeMigrate {
         body: "*"
       };
     }
+
   //Get the status of migration operation  
   rpc Status(SdkCloudMigrateStatusRequest)
     returns (CloudMigrateStatusResponse) {
@@ -2626,8 +2631,8 @@ message CloudMigrateCancelRequest {
 
 // Empty Response
 message SdkCloudMigrateCancelResponse {
-
 }
+
 message CloudMigrateInfo {
     // Task id associated with this migration
     string task_id = 1;
@@ -2659,8 +2664,8 @@ message CloudMigrateInfoList {
 
 // Empty Request
 message SdkCloudMigrateStatusRequest {
-  
 }
+
 // Response with a status of the cloud migration operations
 message CloudMigrateStatusResponse {
     // Map of cluster id to the status of volumes being migrated
@@ -2690,7 +2695,6 @@ message ClusterPairCreateResponse {
 }
 
 // Used to process a pair request from a remote cluster
-// swagger:model
 message ClusterPairProcessRequest {
     // ID of the cluster requesting the pairing
     string source_cluster_id = 1;
@@ -2771,7 +2775,6 @@ message ClusterPairGetRequest {
 }
 
 // Reponse to get a cluster pair
-// swagger:response
 message ClusterPairGetResponse {
     // Info about the cluster pair
     //
@@ -2784,7 +2787,6 @@ message SdkClusterPairsEnumerateRequest{
 }
 
 // Response to enumerate all the cluster pairs
-// swagger:response
 message ClusterPairsEnumerateResponse {
     // ID of the default cluster pair
     //
@@ -2796,7 +2798,6 @@ message ClusterPairsEnumerateResponse {
     // required: false
     map<string, ClusterPairInfo> pairs = 2;
 }
-
 
 message Catalog {
     // Name of the Directory/File
