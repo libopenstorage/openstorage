@@ -80,7 +80,6 @@ type Server struct {
 	credentialServer     *CredentialServer
 	identityServer       *IdentityServer
 	alertsServer         api.OpenStorageAlertsServer
-	clusterPairServer    *ClusterPairServer
 }
 
 // Interface check
