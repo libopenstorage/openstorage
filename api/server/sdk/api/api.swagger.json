@@ -2890,7 +2890,11 @@
   },
   "info": {
     "title": "OpenStorage SDK",
+<<<<<<< HEAD
     "version": "0.21.0"
+=======
+    "version": "0.20.0"
+>>>>>>> faf727f3e15833dc93af4de78b83ba19cff6e19c
   },
   "paths": {
     "/v1/alerts": {
@@ -3350,7 +3354,11 @@
         ]
       },
       "post": {
+<<<<<<< HEAD
         "operationId": "ResetToken",
+=======
+        "operationId": "ClearToken",
+>>>>>>> faf727f3e15833dc93af4de78b83ba19cff6e19c
         "parameters": [
           {
             "in": "body",
@@ -3369,7 +3377,11 @@
             }
           }
         },
+<<<<<<< HEAD
         "summary": "ResetToken returns a auth token",
+=======
+        "summary": "ClearToken returns a auth token",
+>>>>>>> faf727f3e15833dc93af4de78b83ba19cff6e19c
         "tags": [
           "OpenStorageClusterPair"
         ]
