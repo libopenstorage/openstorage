@@ -18,6 +18,7 @@ script:
   - go fmt $(go list ./... | grep -v vendor) | wc -l | grep 0
   - make docker-proto
   - git diff $(find . -name "*.pb.*go" -o -name "api.swagger.json" | grep -v vendor) | wc -l | grep "^0"
+  - make sdk-check-version
   - make install
   - make vet
   - make docker-test
