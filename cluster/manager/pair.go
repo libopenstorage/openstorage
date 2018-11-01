@@ -34,7 +34,8 @@ func (c *ClusterManager) CreatePair(
 		RemoteClusterToken: request.RemoteClusterToken,
 	}
 
-	clnt, err := clusterclient.NewClusterClient("http://"+remoteIp+":"+strconv.FormatUint(uint64(request.RemoteClusterPort), 10), cluster.APIVersion)
+	endpoint := "http://" + remoteIp + ":" + strconv.FormatUint(uint64(request.RemoteClusterPort), 10)
+	clnt, err := clusterclient.NewClusterClient(endpoint, cluster.APIVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -62,12 +63,14 @@ func (c *ClusterManager) CreatePair(
 	}
 
 	pairInfo := &api.ClusterPairInfo{
-		Id:        resp.RemoteClusterId,
-		Name:      resp.RemoteClusterName,
-		Endpoints: resp.RemoteClusterEndpoints,
-		Token:     request.RemoteClusterToken,
-		Options:   resp.Options,
+		Id:               resp.RemoteClusterId,
+		Name:             resp.RemoteClusterName,
+		Endpoint:         endpoint,
+		CurrentEndpoints: resp.RemoteClusterEndpoints,
+		Token:            request.RemoteClusterToken,
+		Options:          resp.Options,
 	}
+
 	err = pairCreate(pairInfo, request.SetDefault)
 	if err != nil {
 		return nil, err
@@ -136,10 +139,12 @@ func (c *ClusterManager) RefreshPair(
 		RemoteClusterToken: pair.Token,
 	}
 
-	for _, endpoint := range pair.Endpoints {
+	endpoints := pair.CurrentEndpoints
+	endpoints = append(endpoints, pair.Endpoint)
+	for _, endpoint := range endpoints {
 		clnt, err := clusterclient.NewClusterClient(endpoint, cluster.APIVersion)
 		if err != nil {
-			logrus.Warnf("Unable to create cluster client for %v: %v", pair.Endpoints[0], err)
+			logrus.Warnf("Unable to create cluster client for %v: %v", endpoint, err)
 			continue
 		}
 		remoteCluster := clusterclient.ClusterManager(clnt)
@@ -151,10 +156,11 @@ func (c *ClusterManager) RefreshPair(
 			continue
 		}
 		pairInfo := &api.ClusterPairInfo{
-			Id:        resp.RemoteClusterId,
-			Name:      resp.RemoteClusterName,
-			Endpoints: resp.RemoteClusterEndpoints,
-			Token:     pair.Token,
+			Id:               resp.RemoteClusterId,
+			Name:             resp.RemoteClusterName,
+			Endpoint:         pair.Endpoint,
+			CurrentEndpoints: resp.RemoteClusterEndpoints,
+			Token:            pair.Token,
 		}
 		// Use original options and override with updates ones. This
 		// prevents any options we created locally from getting overriden

@@ -2643,15 +2643,17 @@ message ClusterPairInfo {
     string id = 1;
     // Name of the cluster
     string name = 2;
-    // Endpoints of the cluster
-    repeated string endpoints = 3;
+    // The endpoint used for creating the pair
+    string endpoint = 3;
+    // Current endpoints of the cluster
+    repeated string current_endpoints = 4;
     // Flag used to determine if communication is over a secure channel
-    bool secure = 4;
+    bool secure = 5;
     // Token associated with cluster
-    string token = 5;
+    string token = 6;
     // Key/value pair of options associated with the cluster
     // Opaque to openstorage and interpreted by the drivers
-    map<string, string> options = 6;
+    map<string, string> options = 7;
 }
 
 // Request to get a cluster pair
