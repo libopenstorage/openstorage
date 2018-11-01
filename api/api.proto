@@ -2785,14 +2785,18 @@ message LabelSelectorRequirement {
 
   // This defines operator types used in a label matching rule
   enum Operator {
-    // In means the value for 'key' should be in one of the given 'values'
+    // In means the value for 'key' should be in one of the given value(s)
     In = 0;
-    // NotIn means the value for 'key' should NOT be in one of the given 'values'
+    // NotIn means the value for 'key' should NOT be in one of the given value(s)
     NotIn = 1;
     // Exists means the 'key' should just exist regardless of the value
     Exists = 2;
     // DoesNotExist means the 'key' should NOT exist
     DoesNotExist = 3;
+    // Gt means the 'key' should be greater than the value(s)
+    Gt = 4;
+    // Lt means the 'key' should be less than the value(s)
+    Lt = 5;
   }
 
   // Operator represents a key's relationship to a set of values.
