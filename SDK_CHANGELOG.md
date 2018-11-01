@@ -5,6 +5,10 @@
 
 ## Releases
 
+### v0.20.0 - Tech Preview (11/1/2018)
+
+* Added ETA for cloud snap status.
+
 ### v0.19.0 - Tech Preview (10/23/2018)
 
 * CloudBackupStatus now returns CredentialUUID used for cloud for the
