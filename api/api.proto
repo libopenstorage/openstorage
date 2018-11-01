@@ -2790,16 +2790,6 @@ message SdkClusterPairDeleteRequest {
 message SdkClusterPairDeleteResponse{
 }
 
-// Defines a delete request for a cluster pair
-message SdkClusterPairDeleteRequest {
-  // ID of the cluster pair to be deleted
-  string cluster_id = 1;
-}
-
-// Empty response
-message SdkClusterPairDeleteResponse{
-}
-
 // Request to get the token for a cluster
 message ClusterPairTokenGetRequest {
     // Reset token if already preset

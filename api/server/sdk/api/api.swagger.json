@@ -217,6 +217,11 @@
         "task_id": {
           "title": "Task id associated with this migration",
           "type": "string"
+        },
+        "time_remaining": {
+          "format": "int64",
+          "title": "time_remaining is the estimated time remaining to completion",
+          "type": "string"
         }
       },
       "type": "object"
