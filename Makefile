@@ -330,7 +330,8 @@ clean: $(OSDSANITY)-clean
 	$(OSDSANITY)-clean \
 	clean \
 	generate \
-	generate-mockfiles
+	generate-mockfiles \
+	sdk-check-version
 
 $(GOPATH)/bin/cover:
 	go get golang.org/x/tools/cmd/cover
@@ -366,4 +367,11 @@ docker-images: docker-build-proto docker-build-osd-dev-base
 push-docker-images: docker-images
 	docker push quay.io/openstorage/osd-dev-base
 	docker push quay.io/openstorage/osd-proto
+
+# This needs to be adjusted for each release branch according
+# to the SDK Version.
+# For master (until released), major should be 0 and patch should be 0.
+# For release branches, major and minor should be frozen.
+sdk-check-version:
+	go run tools/sdkver/sdkver.go --check-major=0 --check-patch=0
 
