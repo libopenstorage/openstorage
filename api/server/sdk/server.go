@@ -23,18 +23,16 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/libopenstorage/openstorage/alerts"
-	"github.com/libopenstorage/openstorage/volume"
-
+	"github.com/gobuffalo/packr"
 	"github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
-
-	"github.com/gobuffalo/packr"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/libopenstorage/openstorage/alerts"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/spec"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
+	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -81,6 +79,7 @@ type Server struct {
 	credentialServer     *CredentialServer
 	identityServer       *IdentityServer
 	alertsServer         api.OpenStorageAlertsServer
+	clusterPairServer    *ClusterPairServer
 }
 
 // Interface check
@@ -149,6 +148,9 @@ func New(config *ServerConfig) (*Server, error) {
 	s.alertsServer = &alertsServer{
 		server: s,
 	}
+	s.clusterPairServer = &ClusterPairServer{
+		server: s,
+	}
 
 	return s, nil
 }
@@ -174,12 +176,12 @@ func (s *Server) Start() error {
 		api.RegisterOpenStorageSchedulePolicyServer(grpcServer, s.schedulePolicyServer)
 		api.RegisterOpenStorageIdentityServer(grpcServer, s.identityServer)
 		api.RegisterOpenStorageVolumeServer(grpcServer, s.volumeServer)
-		api.RegisterOpenStorageVolumeMigrateServer(grpcServer, s.volumeServer)
+		api.RegisterOpenStorageMigrateServer(grpcServer, s.volumeServer)
 		api.RegisterOpenStorageCredentialsServer(grpcServer, s.credentialServer)
 		api.RegisterOpenStorageCloudBackupServer(grpcServer, s.cloudBackupServer)
 		api.RegisterOpenStorageMountAttachServer(grpcServer, s.volumeServer)
 		api.RegisterOpenStorageAlertsServer(grpcServer, s.alertsServer)
-
+		api.RegisterOpenStorageClusterPairServer(grpcServer, s.clusterPairServer)
 		return grpcServer
 	})
 	if err != nil {
@@ -371,7 +373,7 @@ func (s *Server) restServerSetupHandlers() (*http.ServeMux, error) {
 		return nil, err
 	}
 
-	err = api.RegisterOpenStorageVolumeMigrateHandlerFromEndpoint(
+	err = api.RegisterOpenStorageMigrateHandlerFromEndpoint(
 		context.Background(),
 		gmux,
 		s.Address(),
