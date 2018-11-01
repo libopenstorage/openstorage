@@ -222,7 +222,7 @@ func TestClusterPairServer_TokenFailure(t *testing.T) {
 	assert.Contains(t, serverError.Message(), "Cannot Generate Token")
 }
 
-func TestClusterPairServer_ClearTokenSuccess(t *testing.T) {
+func TestClusterPairServer_ResetTokenSuccess(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
@@ -235,12 +235,12 @@ func TestClusterPairServer_ClearTokenSuccess(t *testing.T) {
 	s.MockCluster().EXPECT().GetPairToken(true).Return(resp, nil)
 
 	c := api.NewOpenStorageClusterPairClient(s.Conn())
-	r, err := c.ClearToken(context.Background(), req)
+	r, err := c.ResetToken(context.Background(), req)
 	assert.NoError(t, err)
 	assert.NotNil(t, r.GetResult().GetToken())
 }
 
-func TestClusterPairServer_ClearTokenFailure(t *testing.T) {
+func TestClusterPairServer_ResetTokenFailure(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
@@ -252,7 +252,7 @@ func TestClusterPairServer_ClearTokenFailure(t *testing.T) {
 		Return(nil, status.Errorf(codes.Internal, "Cannot Generate Token"))
 	// Setup client
 	c := api.NewOpenStorageClusterPairClient(s.Conn())
-	r, err := c.ClearToken(context.Background(), req)
+	r, err := c.ResetToken(context.Background(), req)
 	assert.Error(t, err)
 	assert.Nil(t, r)
 	serverError, ok := status.FromError(err)

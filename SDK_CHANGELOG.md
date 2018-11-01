@@ -5,7 +5,7 @@
 
 ## Releases
 
-### v0.20.0 - Tech Preview (10/31/2018)
+### v0.21.0 - Tech Preview (10/31/2018)
 
 * Addition of ClusterPairing and VolumeMigrate services
 

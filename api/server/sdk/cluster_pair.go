@@ -103,8 +103,8 @@ func (s *ClusterPairServer) Token(
 	}, nil
 }
 
-// ClearToken gets the authentication token for this cluster
-func (s *ClusterPairServer) ClearToken(
+// ResetToken gets the authentication token for this cluster
+func (s *ClusterPairServer) ResetToken(
 	ctx context.Context,
 	req *api.SdkClusterPairClearTokenRequest,
 ) (*api.SdkClusterPairClearTokenResponse, error) {

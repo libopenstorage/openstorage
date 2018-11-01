@@ -2890,7 +2890,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.20.0"
+    "version": "0.21.0"
   },
   "paths": {
     "/v1/alerts": {
@@ -3350,7 +3350,7 @@
         ]
       },
       "post": {
-        "operationId": "ClearToken",
+        "operationId": "ResetToken",
         "parameters": [
           {
             "in": "body",
@@ -3369,7 +3369,7 @@
             }
           }
         },
-        "summary": "ClearToken returns a auth token",
+        "summary": "ResetToken returns a auth token",
         "tags": [
           "OpenStorageClusterPair"
         ]
