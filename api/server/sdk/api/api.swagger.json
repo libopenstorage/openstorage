@@ -1085,6 +1085,11 @@
           "title": "BytesDone indicates total Bytes uploaded/downloaded",
           "type": "string"
         },
+        "bytes_total": {
+          "format": "uint64",
+          "title": "BytesTotal is the total number of bytes being transferred",
+          "type": "string"
+        },
         "completed_time": {
           "format": "date-time",
           "title": "CompletedTime indicates Op's completed time",

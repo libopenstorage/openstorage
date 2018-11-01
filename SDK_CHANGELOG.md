@@ -5,6 +5,13 @@
 
 ## Releases
 
+### v0.23.0 - Tech Preview (11/2/2018)
+
+* Cloud migrate status and cloud backup status now report
+  total bytes to be transferred and bytes already transferred.
+* These status blocks also report the start time of the operation
+  so that client could calculate progress of the operation.
+  
 ### v0.22.0 - Tech Preview (11/1/2018)
 
 * Rename the field "name" to "TaskId" in sdkCloudBackupcreate/restore/status
