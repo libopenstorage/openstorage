@@ -75,6 +75,7 @@ type Server struct {
 	volumeServer         *VolumeServer
 	objectstoreServer    *ObjectstoreServer
 	schedulePolicyServer *SchedulePolicyServer
+	clusterPairServer    *ClusterPairServer
 	cloudBackupServer    *CloudBackupServer
 	credentialServer     *CredentialServer
 	identityServer       *IdentityServer
@@ -365,6 +366,23 @@ func (s *Server) restServerSetupHandlers() (*http.ServeMux, error) {
 	}
 
 	err = api.RegisterOpenStorageAlertsHandlerFromEndpoint(
+		context.Background(),
+		gmux,
+		s.Address(),
+		[]grpc.DialOption{grpc.WithInsecure()})
+	if err != nil {
+		return nil, err
+	}
+	err = api.RegisterOpenStorageClusterPairHandlerFromEndpoint(
+		context.Background(),
+		gmux,
+		s.Address(),
+		[]grpc.DialOption{grpc.WithInsecure()})
+	if err != nil {
+		return nil, err
+	}
+
+	err = api.RegisterOpenStorageMigrateHandlerFromEndpoint(
 		context.Background(),
 		gmux,
 		s.Address(),
