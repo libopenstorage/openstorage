@@ -5,6 +5,11 @@
 
 ## Releases
 
+### v0.22.0 - Tech Preview (11/1/2018)
+
+* Rename the field "name" to "TaskId" in sdkCloudBackupcreate/restore/status
+  structures.
+
 ### v0.21.0 - Tech Preview (10/31/2018)
 
 * Addition of ClusterPairing and VolumeMigrate services
