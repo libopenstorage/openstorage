@@ -200,12 +200,27 @@
     },
     "apiCloudMigrateInfo": {
       "properties": {
+        "bytes_done": {
+          "format": "uint64",
+          "title": "BytesDone is the number of bytes already transferred",
+          "type": "string"
+        },
+        "bytes_total": {
+          "format": "uint64",
+          "title": "BytesTotal is the number of bytes being transferred",
+          "type": "string"
+        },
         "cloudbackup_id": {
           "title": "ID of the cloudbackup used for the migration",
           "type": "string"
         },
         "cluster_id": {
           "title": "ID of the cluster where the volume is being migrated",
+          "type": "string"
+        },
+        "completed_time": {
+          "format": "date-time",
+          "title": "CompletedTime indicates Op's completed time",
           "type": "string"
         },
         "current_stage": {
@@ -233,17 +248,17 @@
           "title": "ID of the volume on the remote cluster",
           "type": "string"
         },
+        "start_time": {
+          "format": "date-time",
+          "title": "StartTime indicates Op's start time",
+          "type": "string"
+        },
         "status": {
           "$ref": "#/definitions/apiCloudMigrateStatus",
           "title": "Status of the current stage"
         },
         "task_id": {
           "title": "Task id associated with this migration",
-          "type": "string"
-        },
-        "time_remaining": {
-          "format": "int64",
-          "title": "time_remaining is the estimated time remaining to completion",
           "type": "string"
         }
       },
@@ -1150,6 +1165,11 @@
         "bytes_done": {
           "format": "uint64",
           "title": "BytesDone indicates total Bytes uploaded/downloaded",
+          "type": "string"
+        },
+        "bytes_total": {
+          "format": "uint64",
+          "title": "BytesTotal is the total number of bytes being transferred",
           "type": "string"
         },
         "completed_time": {
