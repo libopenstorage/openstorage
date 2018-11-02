@@ -156,7 +156,7 @@ func TestVolumeMigrate_StartVolumeFailure(t *testing.T) {
 	defer s.Stop()
 	req := &api.SdkCloudMigrateStartRequest{
 		ClusterId: "Source",
-		TaskId:      "1",
+		TaskId:    "1",
 		Opt: &api.SdkCloudMigrateStartRequest_Volume{
 			Volume: &api.SdkCloudMigrateStartRequest_MigrateVolume{
 				VolumeId: "Target",
