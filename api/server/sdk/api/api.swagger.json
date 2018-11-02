@@ -5,12 +5,14 @@
   "definitions": {
     "LabelSelectorRequirementOperator": {
       "default": "In",
-      "description": "- In: In means the value for 'key' should be in one of the given 'values'\n - NotIn: NotIn means the value for 'key' should NOT be in one of the given 'values'\n - Exists: Exists means the 'key' should just exist regardless of the value\n - DoesNotExist: DoesNotExist means the 'key' should NOT exist",
+      "description": "- In: In means the value for 'key' should be in one of the given value(s)\n - NotIn: NotIn means the value for 'key' should NOT be in one of the given value(s)\n - Exists: Exists means the 'key' should just exist regardless of the value\n - DoesNotExist: DoesNotExist means the 'key' should NOT exist\n - Gt: Gt means the 'key' should be greater than the value(s)\n - Lt: Lt means the 'key' should be less than the value(s)",
       "enum": [
         "In",
         "NotIn",
         "Exists",
-        "DoesNotExist"
+        "DoesNotExist",
+        "Gt",
+        "Lt"
       ],
       "title": "This defines operator types used in a label matching rule",
       "type": "string"
