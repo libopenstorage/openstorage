@@ -990,17 +990,17 @@ service OpenStorageClusterPair{
       };
     }
 
-  // Token returns a auth token
-  rpc Token(SdkClusterPairTokenRequest)
-    returns(SdkClusterPairTokenResponse){
+  // GetToken returns a auth token
+  rpc GetToken(SdkClusterPairGetTokenRequest)
+    returns(SdkClusterPairGetTokenResponse){
       option(google.api.http)={
         get: "/v1/clusterpairs/token"
       };
     }
 
   // ResetToken returns a auth token
-  rpc ResetToken(SdkClusterPairClearTokenRequest)
-    returns(SdkClusterPairClearTokenResponse){
+  rpc ResetToken(SdkClusterPairResetTokenRequest)
+    returns(SdkClusterPairResetTokenResponse){
       option(google.api.http)={
         post: "/v1/clusterpairs/token"
         body: "*"
@@ -2631,8 +2631,8 @@ message SdkCloudMigrateStartRequest {
   string cluster_id = 1;
   
   // Unique name assocaiated with this migration. 
-  // This is a required field for idempotency
-  string name = 2;
+  // This is a Optional field for idempotency
+  string task_id = 2;
   
   oneof opt {
     // Request to migrate a volume
@@ -2803,21 +2803,21 @@ message ClusterPairTokenGetResponse {
 }
 
 // Empty request
-message SdkClusterPairTokenRequest {
+message SdkClusterPairGetTokenRequest {
 }
 
 // Defines a response for the token request
-message SdkClusterPairTokenResponse {
+message SdkClusterPairGetTokenResponse {
   // Contains authentication token for the cluster
   ClusterPairTokenGetResponse result = 1;
 }
 
 // Empty request
-message SdkClusterPairClearTokenRequest {
+message SdkClusterPairResetTokenRequest {
 }
 
 // Defines a response for the token request
-message SdkClusterPairClearTokenResponse {
+message SdkClusterPairResetTokenResponse {
   // Contains authentication token for the cluster
   ClusterPairTokenGetResponse result = 1;
 }

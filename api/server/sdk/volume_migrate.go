@@ -30,9 +30,7 @@ func (s *VolumeServer) Start(
 	req *api.SdkCloudMigrateStartRequest,
 ) (*api.SdkCloudMigrateStartResponse, error) {
 
-	if len(req.GetName()) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Must supply a name")
-	} else if volume := req.GetVolume(); volume != nil {
+	if volume := req.GetVolume(); volume != nil {
 		//migrate volume
 		return s.volumeMigrate(ctx, req, volume)
 	} else if volumeGroup := req.GetVolumeGroup(); volumeGroup != nil {
@@ -55,7 +53,7 @@ func (s *VolumeServer) volumeGroupMigrate(
 		Operation: api.CloudMigrate_MigrateVolumeGroup,
 		ClusterId: req.GetClusterId(),
 		TargetId:  volumeGroup.GetGroupId(),
-		TaskId:    req.GetName(),
+		TaskId:    req.GetTaskId(), // optional will be "" if not passed
 	}
 	resp, err := s.driver().CloudMigrateStart(request)
 	if err != nil {
@@ -75,7 +73,7 @@ func (s *VolumeServer) allVolumesMigrate(
 	request := &api.CloudMigrateStartRequest{
 		Operation: api.CloudMigrate_MigrateCluster,
 		ClusterId: req.GetClusterId(),
-		TaskId:    req.GetName(),
+		TaskId:    req.GetTaskId(),
 	}
 	resp, err := s.driver().CloudMigrateStart(request)
 	if err != nil {
@@ -96,7 +94,7 @@ func (s *VolumeServer) volumeMigrate(
 		Operation: api.CloudMigrate_MigrateVolume,
 		ClusterId: req.GetClusterId(),
 		TargetId:  volume.GetVolumeId(),
-		TaskId:    req.GetName(),
+		TaskId:    req.GetTaskId(),
 	}
 	resp, err := s.driver().CloudMigrateStart(request)
 	if err != nil {
