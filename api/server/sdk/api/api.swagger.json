@@ -324,12 +324,16 @@
     },
     "apiClusterPairInfo": {
       "properties": {
-        "endpoints": {
+        "current_endpoints": {
           "items": {
             "type": "string"
           },
-          "title": "Endpoints of the cluster",
+          "title": "Current endpoints of the cluster",
           "type": "array"
+        },
+        "endpoint": {
+          "title": "The endpoint used for creating the pair",
+          "type": "string"
         },
         "id": {
           "title": "ID of the cluster",
