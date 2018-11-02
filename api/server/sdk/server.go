@@ -390,15 +390,6 @@ func (s *Server) restServerSetupHandlers() (*http.ServeMux, error) {
 		return nil, err
 	}
 
-	err = api.RegisterOpenStorageMigrateHandlerFromEndpoint(
-		context.Background(),
-		gmux,
-		s.Address(),
-		[]grpc.DialOption{grpc.WithInsecure()})
-	if err != nil {
-		return nil, err
-	}
-
 	// Pass all other unhandled paths to the gRPC gateway
 	mux.Handle("/", gmux)
 

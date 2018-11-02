@@ -1175,8 +1175,8 @@
           "title": "ID of the cluster to which volumes are to be migrated",
           "type": "string"
         },
-        "name": {
-          "title": "Unique name assocaiated with this migration. \nThis is a required field for idempotency",
+        "task_id": {
+          "title": "Unique name assocaiated with this migration. \nThis is a Optional field for idempotency",
           "type": "string"
         },
         "volume": {
@@ -1221,20 +1221,6 @@
       "title": "Defines a response when inspecting the current cluster",
       "type": "object"
     },
-    "apiSdkClusterPairClearTokenRequest": {
-      "title": "Empty request",
-      "type": "object"
-    },
-    "apiSdkClusterPairClearTokenResponse": {
-      "properties": {
-        "result": {
-          "$ref": "#/definitions/apiClusterPairTokenGetResponse",
-          "title": "Contains authentication token for the cluster"
-        }
-      },
-      "title": "Defines a response for the token request",
-      "type": "object"
-    },
     "apiSdkClusterPairCreateRequest": {
       "properties": {
         "request": {
@@ -1268,6 +1254,16 @@
       "title": "Defines a list of cluster pair",
       "type": "object"
     },
+    "apiSdkClusterPairGetTokenResponse": {
+      "properties": {
+        "result": {
+          "$ref": "#/definitions/apiClusterPairTokenGetResponse",
+          "title": "Contains authentication token for the cluster"
+        }
+      },
+      "title": "Defines a response for the token request",
+      "type": "object"
+    },
     "apiSdkClusterPairInspectResponse": {
       "properties": {
         "result": {
@@ -1278,7 +1274,11 @@
       "title": "Defines a cluster pair inspect response",
       "type": "object"
     },
-    "apiSdkClusterPairTokenResponse": {
+    "apiSdkClusterPairResetTokenRequest": {
+      "title": "Empty request",
+      "type": "object"
+    },
+    "apiSdkClusterPairResetTokenResponse": {
       "properties": {
         "result": {
           "$ref": "#/definitions/apiClusterPairTokenGetResponse",
@@ -3342,16 +3342,16 @@
     },
     "/v1/clusterpairs/token": {
       "get": {
-        "operationId": "Token",
+        "operationId": "GetToken",
         "responses": {
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiSdkClusterPairTokenResponse"
+              "$ref": "#/definitions/apiSdkClusterPairGetTokenResponse"
             }
           }
         },
-        "summary": "Token returns a auth token",
+        "summary": "GetToken returns a auth token",
         "tags": [
           "OpenStorageClusterPair"
         ]
@@ -3364,7 +3364,7 @@
             "name": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/apiSdkClusterPairClearTokenRequest"
+              "$ref": "#/definitions/apiSdkClusterPairResetTokenRequest"
             }
           }
         ],
@@ -3372,7 +3372,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiSdkClusterPairClearTokenResponse"
+              "$ref": "#/definitions/apiSdkClusterPairResetTokenResponse"
             }
           }
         },

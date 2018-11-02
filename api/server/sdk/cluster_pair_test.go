@@ -183,12 +183,12 @@ func TestClusterPairServer_EnumerateFailure(t *testing.T) {
 	assert.Contains(t, serverError.Message(), "No Pair Found")
 }
 
-func TestClusterPairServer_TokenSuccess(t *testing.T) {
+func TestClusterPairServer_GetTokenSuccess(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
 	// Setup client
-	req := &api.SdkClusterPairTokenRequest{}
+	req := &api.SdkClusterPairGetTokenRequest{}
 
 	resp := &api.ClusterPairTokenGetResponse{
 		Token: "<Auth-Token>",
@@ -196,16 +196,16 @@ func TestClusterPairServer_TokenSuccess(t *testing.T) {
 	s.MockCluster().EXPECT().GetPairToken(false).Return(resp, nil)
 
 	c := api.NewOpenStorageClusterPairClient(s.Conn())
-	r, err := c.Token(context.Background(), req)
+	r, err := c.GetToken(context.Background(), req)
 	assert.NoError(t, err)
 	assert.NotNil(t, r.GetResult().GetToken())
 }
 
-func TestClusterPairServer_TokenFailure(t *testing.T) {
+func TestClusterPairServer_GetTokenFailure(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
-	req := &api.SdkClusterPairTokenRequest{}
+	req := &api.SdkClusterPairGetTokenRequest{}
 
 	s.MockCluster().
 		EXPECT().
@@ -213,7 +213,7 @@ func TestClusterPairServer_TokenFailure(t *testing.T) {
 		Return(nil, status.Errorf(codes.Internal, "Cannot Generate Token"))
 	// Setup client
 	c := api.NewOpenStorageClusterPairClient(s.Conn())
-	r, err := c.Token(context.Background(), req)
+	r, err := c.GetToken(context.Background(), req)
 	assert.Error(t, err)
 	assert.Nil(t, r)
 	serverError, ok := status.FromError(err)
@@ -227,7 +227,7 @@ func TestClusterPairServer_ResetTokenSuccess(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 	// Setup client
-	req := &api.SdkClusterPairClearTokenRequest{}
+	req := &api.SdkClusterPairResetTokenRequest{}
 
 	resp := &api.ClusterPairTokenGetResponse{
 		Token: "<Auth-Token>",
@@ -244,7 +244,7 @@ func TestClusterPairServer_ResetTokenFailure(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
-	req := &api.SdkClusterPairClearTokenRequest{}
+	req := &api.SdkClusterPairResetTokenRequest{}
 
 	s.MockCluster().
 		EXPECT().

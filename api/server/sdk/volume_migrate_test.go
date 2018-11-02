@@ -33,7 +33,6 @@ func TestVolumeMigrate_StartVolumeSuccess(t *testing.T) {
 	defer s.Stop()
 	req := &api.SdkCloudMigrateStartRequest{
 		ClusterId: "Source",
-		Name:      "1",
 		Opt: &api.SdkCloudMigrateStartRequest_Volume{
 			Volume: &api.SdkCloudMigrateStartRequest_MigrateVolume{
 				VolumeId: "Target",
@@ -50,7 +49,6 @@ func TestVolumeMigrate_StartVolumeSuccess(t *testing.T) {
 			Operation: api.CloudMigrate_MigrateVolume,
 			ClusterId: "Source",
 			TargetId:  "Target",
-			TaskId:    "1",
 		}).
 		Return(resp, nil)
 	// Setup client
@@ -65,7 +63,6 @@ func TestVolumeMigrate_StartVolumeGroupSuccess(t *testing.T) {
 	defer s.Stop()
 	req := &api.SdkCloudMigrateStartRequest{
 		ClusterId: "Source",
-		Name:      "1",
 		Opt: &api.SdkCloudMigrateStartRequest_VolumeGroup{
 			VolumeGroup: &api.SdkCloudMigrateStartRequest_MigrateVolumeGroup{
 				GroupId: "Target",
@@ -82,7 +79,6 @@ func TestVolumeMigrate_StartVolumeGroupSuccess(t *testing.T) {
 			Operation: api.CloudMigrate_MigrateVolumeGroup,
 			ClusterId: "Source",
 			TargetId:  "Target",
-			TaskId:    "1",
 		}).
 		Return(resp, nil)
 
@@ -98,7 +94,7 @@ func TestVolumeMigrate_StartAllVolumeFailure(t *testing.T) {
 	defer s.Stop()
 	req := &api.SdkCloudMigrateStartRequest{
 		ClusterId: "Source",
-		Name:      "1",
+		TaskId:    "1",
 		Opt: &api.SdkCloudMigrateStartRequest_AllVolumes{
 			AllVolumes: &api.SdkCloudMigrateStartRequest_MigrateAllVolumes{},
 		},
@@ -128,7 +124,7 @@ func TestVolumeMigrate_StartVolumeGroupFailure(t *testing.T) {
 	defer s.Stop()
 	req := &api.SdkCloudMigrateStartRequest{
 		ClusterId: "Source",
-		Name:      "1",
+		TaskId:    "1",
 		Opt: &api.SdkCloudMigrateStartRequest_VolumeGroup{
 			VolumeGroup: &api.SdkCloudMigrateStartRequest_MigrateVolumeGroup{
 				GroupId: "Target",
@@ -160,7 +156,7 @@ func TestVolumeMigrate_StartVolumeFailure(t *testing.T) {
 	defer s.Stop()
 	req := &api.SdkCloudMigrateStartRequest{
 		ClusterId: "Source",
-		Name:      "1",
+		TaskId:      "1",
 		Opt: &api.SdkCloudMigrateStartRequest_Volume{
 			Volume: &api.SdkCloudMigrateStartRequest_MigrateVolume{
 				VolumeId: "Target",
@@ -192,7 +188,6 @@ func TestVolumeMigrate_StartAllVolumeSuccess(t *testing.T) {
 	defer s.Stop()
 	req := &api.SdkCloudMigrateStartRequest{
 		ClusterId: "Source",
-		Name:      "1",
 		Opt: &api.SdkCloudMigrateStartRequest_AllVolumes{
 			AllVolumes: &api.SdkCloudMigrateStartRequest_MigrateAllVolumes{},
 		},
@@ -206,7 +201,6 @@ func TestVolumeMigrate_StartAllVolumeSuccess(t *testing.T) {
 		CloudMigrateStart(&api.CloudMigrateStartRequest{
 			Operation: api.CloudMigrate_MigrateCluster,
 			ClusterId: "Source",
-			TaskId:    "1",
 		}).
 		Return(resp, nil)
 

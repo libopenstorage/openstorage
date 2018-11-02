@@ -88,17 +88,17 @@ func (s *ClusterPairServer) Enumerate(
 	}, nil
 }
 
-// Token gets the authentication token for this cluster
-func (s *ClusterPairServer) Token(
+// GetToken gets the authentication token for this cluster
+func (s *ClusterPairServer) GetToken(
 	ctx context.Context,
-	req *api.SdkClusterPairTokenRequest,
-) (*api.SdkClusterPairTokenResponse, error) {
+	req *api.SdkClusterPairGetTokenRequest,
+) (*api.SdkClusterPairGetTokenResponse, error) {
 
 	resp, err := s.cluster().GetPairToken(false)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Cannot generate token : %v", err)
 	}
-	return &api.SdkClusterPairTokenResponse{
+	return &api.SdkClusterPairGetTokenResponse{
 		Result: resp,
 	}, nil
 }
@@ -106,14 +106,14 @@ func (s *ClusterPairServer) Token(
 // ResetToken gets the authentication token for this cluster
 func (s *ClusterPairServer) ResetToken(
 	ctx context.Context,
-	req *api.SdkClusterPairClearTokenRequest,
-) (*api.SdkClusterPairClearTokenResponse, error) {
+	req *api.SdkClusterPairResetTokenRequest,
+) (*api.SdkClusterPairResetTokenResponse, error) {
 
 	resp, err := s.cluster().GetPairToken(true)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Cannot generate token : %v", err)
 	}
-	return &api.SdkClusterPairClearTokenResponse{
+	return &api.SdkClusterPairResetTokenResponse{
 		Result: resp,
 	}, nil
 }
