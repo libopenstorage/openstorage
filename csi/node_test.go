@@ -18,7 +18,9 @@ package csi
 
 import (
 	"fmt"
+	"os"
 	"testing"
+	"time"
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi/v0"
 	"github.com/golang/mock/gomock"
@@ -189,6 +191,11 @@ func TestNodePublishVolumeBadAttribute(t *testing.T) {
 	size := uint64(10)
 	s.MockDriver().
 		EXPECT().
+		Type().
+		Return(api.DriverType_DRIVER_TYPE_BLOCK).
+		Times(1)
+	s.MockDriver().
+		EXPECT().
 		Inspect([]string{name}).
 		Return([]*api.Volume{
 			&api.Volume{
@@ -245,6 +252,17 @@ func TestNodePublishVolumeInvalidTargetLocation(t *testing.T) {
 
 	c := csi.NewNodeClient(s.Conn())
 	name := "myvol"
+	devicePath := "/dev/mock"
+	s.MockDriver().
+		EXPECT().
+		Type().
+		Return(api.DriverType_DRIVER_TYPE_BLOCK).
+		Times(2 * len(testargs))
+	s.MockDriver().
+		EXPECT().
+		Attach(name, map[string]string{}).
+		Return(devicePath, nil).
+		Times(len(testargs))
 	s.MockDriver().
 		EXPECT().
 		Inspect([]string{name}).
@@ -259,6 +277,9 @@ func TestNodePublishVolumeInvalidTargetLocation(t *testing.T) {
 		VolumeId: name,
 		VolumeCapability: &csi.VolumeCapability{
 			AccessMode: &csi.VolumeCapability_AccessMode{},
+			AccessType: &csi.VolumeCapability_Mount{
+				Mount: &csi.VolumeCapability_MountVolume{},
+			},
 		},
 	}
 
@@ -303,7 +324,7 @@ func TestNodePublishVolumeFailedToAttach(t *testing.T) {
 			EXPECT().
 			Type().
 			Return(api.DriverType_DRIVER_TYPE_BLOCK).
-			Times(1),
+			Times(2),
 		s.MockDriver().
 			EXPECT().
 			Attach(name, gomock.Any()).
@@ -359,7 +380,7 @@ func TestNodePublishVolumeFailedMount(t *testing.T) {
 			EXPECT().
 			Type().
 			Return(api.DriverType_DRIVER_TYPE_BLOCK).
-			Times(1),
+			Times(2),
 		s.MockDriver().
 			EXPECT().
 			Attach(name, gomock.Any()).
@@ -394,6 +415,74 @@ func TestNodePublishVolumeFailedMount(t *testing.T) {
 	assert.Contains(t, serverError.Message(), "MOUNT ERROR")
 }
 
+func TestNodePublishVolumeBlock(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	// Make a call
+	c := csi.NewNodeClient(s.Conn())
+
+	name := "myvol"
+	size := uint64(10)
+	devicePath := fmt.Sprintf("/tmp/csi-devicePath.%d", time.Now().Unix())
+	targetPath := fmt.Sprintf("/tmp/csi-targetPath.%d", time.Now().Unix())
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{name}).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id: name,
+					Locator: &api.VolumeLocator{
+						Name: name,
+					},
+					Spec: &api.VolumeSpec{
+						Size: size,
+					},
+				},
+			}, nil).
+			Times(1),
+		s.MockDriver().
+			EXPECT().
+			Type().
+			Return(api.DriverType_DRIVER_TYPE_BLOCK).
+			Times(2),
+		s.MockDriver().
+			EXPECT().
+			Attach(name, gomock.Any()).
+			Return(devicePath, nil).
+			Times(1),
+	)
+
+	// Create the devicePath
+	f, err := os.Create(devicePath)
+	assert.NoError(t, err)
+	f.Close()
+	defer os.Remove(devicePath)
+
+	req := &csi.NodePublishVolumeRequest{
+		VolumeId:   name,
+		TargetPath: targetPath,
+		VolumeCapability: &csi.VolumeCapability{
+			AccessMode: &csi.VolumeCapability_AccessMode{},
+			AccessType: &csi.VolumeCapability_Block{
+				Block: &csi.VolumeCapability_BlockVolume{},
+			},
+		},
+	}
+
+	defer os.Remove(targetPath)
+	r, err := c.NodePublishVolume(context.Background(), req)
+	assert.Nil(t, err)
+	assert.NotNil(t, r)
+
+	// Check that the symlink was created
+	fileInfo, err := os.Lstat(targetPath)
+	assert.NoError(t, err)
+	assert.Equal(t, fileInfo.Mode()&os.ModeSymlink, os.ModeSymlink)
+}
+
 func TestNodePublishVolumeMount(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
@@ -425,7 +514,7 @@ func TestNodePublishVolumeMount(t *testing.T) {
 			EXPECT().
 			Type().
 			Return(api.DriverType_DRIVER_TYPE_BLOCK).
-			Times(1),
+			Times(2),
 		s.MockDriver().
 			EXPECT().
 			Attach(name, gomock.Any()).
@@ -497,10 +586,6 @@ func TestNodeUnpublishVolumeInvalidTargetLocation(t *testing.T) {
 		expectedErrorContains string
 		targetPath            string
 	}{
-		{
-			expectedErrorContains: "does not exist",
-			targetPath:            "////a/sdf//fd/asdf/as/f/asdfasf/fds",
-		},
 		{
 			expectedErrorContains: "not a directory",
 			targetPath:            "/etc/hosts",
