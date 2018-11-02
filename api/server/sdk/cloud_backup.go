@@ -45,9 +45,7 @@ func (s *CloudBackupServer) Create(
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
-	if len(req.GetName()) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Must supply a name")
-	} else if len(req.GetVolumeId()) == 0 {
+	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply a volume id")
 	} else if len(req.GetCredentialId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply credential uuid")
@@ -58,14 +56,14 @@ func (s *CloudBackupServer) Create(
 		VolumeID:       req.GetVolumeId(),
 		CredentialUUID: req.GetCredentialId(),
 		Full:           req.GetFull(),
-		Name:           req.GetName(),
+		Name:           req.GetTaskId(),
 	})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to create backup: %v", err)
 	}
 
 	return &api.SdkCloudBackupCreateResponse{
-		Name: r.Name,
+		TaskId: r.Name,
 	}, nil
 }
 
@@ -78,9 +76,7 @@ func (s *CloudBackupServer) Restore(
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
-	if len(req.GetName()) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Must provide a name")
-	} else if len(req.GetBackupId()) == 0 {
+	if len(req.GetBackupId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must provide backup id")
 	} else if len(req.GetCredentialId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must provide credential uuid")
@@ -91,7 +87,7 @@ func (s *CloudBackupServer) Restore(
 		RestoreVolumeName: req.GetRestoreVolumeName(),
 		CredentialUUID:    req.GetCredentialId(),
 		NodeID:            req.GetNodeId(),
-		Name:              req.GetName(),
+		Name:              req.GetTaskId(),
 	})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to restore backup: %v", err)
@@ -99,7 +95,7 @@ func (s *CloudBackupServer) Restore(
 
 	return &api.SdkCloudBackupRestoreResponse{
 		RestoreVolumeId: r.RestoreVolumeID,
-		Name:            r.Name,
+		TaskId:          r.Name,
 	}, nil
 
 }
@@ -197,6 +193,7 @@ func (s *CloudBackupServer) Status(
 	r, err := s.driver().CloudBackupStatus(&api.CloudBackupStatusRequest{
 		SrcVolumeID: req.GetVolumeId(),
 		Local:       req.GetLocal(),
+		Name:        req.GetTaskId(),
 	})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to get status of backup: %v", err)
@@ -264,8 +261,8 @@ func (s *CloudBackupServer) StateChange(
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
-	if len(req.GetName()) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Must provide name")
+	if len(req.GetTaskId()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Must provide taskid")
 	} else if req.GetRequestedState() == api.SdkCloudBackupRequestedState_SdkCloudBackupRequestedStateUnknown {
 		return nil, status.Error(codes.InvalidArgument, "Must provide requested state")
 	}
@@ -283,7 +280,7 @@ func (s *CloudBackupServer) StateChange(
 	}
 
 	err := s.driver().CloudBackupStateChange(&api.CloudBackupStateChangeRequest{
-		Name:           req.GetName(),
+		Name:           req.GetTaskId(),
 		RequestedState: rs,
 	})
 	if err != nil {
