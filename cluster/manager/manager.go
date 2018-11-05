@@ -765,6 +765,10 @@ func (c *ClusterManager) updateClusterStatus() {
 			peerNodeInCache.Id = string(id)
 			peerNodeInCache.Status = api.Status_STATUS_OK
 
+			// Initialize a no-op notify listeners function
+			notifyListenerFn := func() {}
+			var peerNodeCopy *api.Node
+
 			switch {
 			case gossipNodeInfo.Status == types.NODE_STATUS_DOWN:
 				// Replace the status of this node in cache to offline
@@ -786,12 +790,14 @@ func (c *ClusterManager) updateClusterStatus() {
 				}
 
 				c.nodeStatuses[string(id)] = peerNodeInCache.Status
-
-				for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
-					err := e.Value.(cluster.ClusterListener).Update(&peerNodeInCache)
-					if err != nil {
-						logrus.Warnln("Failed to notify ",
-							e.Value.(cluster.ClusterListener).String())
+				peerNodeCopy = peerNodeInCache.Copy()
+				notifyListenerFn = func() {
+					for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
+						err := e.Value.(cluster.ClusterListener).Update(peerNodeCopy)
+						if err != nil {
+							logrus.Warnln("Failed to notify ",
+								e.Value.(cluster.ClusterListener).String())
+						}
 					}
 				}
 
@@ -807,11 +813,14 @@ func (c *ClusterManager) updateClusterStatus() {
 				logrus.Infoln("Detected node", peerNodeInCache.Id,
 					" to be in the cluster.")
 
-				for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
-					err := e.Value.(cluster.ClusterListener).Add(&peerNodeInCache)
-					if err != nil {
-						logrus.Warnln("Failed to notify ",
-							e.Value.(cluster.ClusterListener).String())
+				peerNodeCopy = peerNodeInCache.Copy()
+				notifyListenerFn = func() {
+					for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
+						err := e.Value.(cluster.ClusterListener).Add(peerNodeCopy)
+						if err != nil {
+							logrus.Warnln("Failed to notify ",
+								e.Value.(cluster.ClusterListener).String())
+						}
 					}
 				}
 			}
@@ -839,6 +848,9 @@ func (c *ClusterManager) updateClusterStatus() {
 			} else {
 				c.putNodeCacheEntry(peerNodeInCache.Id, peerNodeInCache)
 			}
+
+			// Notify the listeners
+			notifyListenerFn()
 		}
 		time.Sleep(2 * time.Second)
 	}
