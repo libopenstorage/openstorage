@@ -30,8 +30,11 @@ import (
 
 // SchedulePolicyServer is an implementation of the gRPC OpenStorageSchedulePolicy interface
 type SchedulePolicyServer struct {
-	api.OpenStorageSchedulePolicyServer
-	cluster cluster.Cluster
+	server *Server
+}
+
+func (s *SchedulePolicyServer) cluster() cluster.Cluster {
+	return s.server.cluster()
 }
 
 // Create method creates schedule policy
@@ -39,6 +42,9 @@ func (s *SchedulePolicyServer) Create(
 	ctx context.Context,
 	req *api.SdkSchedulePolicyCreateRequest,
 ) (*api.SdkSchedulePolicyCreateResponse, error) {
+	if s.cluster() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
 	if req.GetSchedulePolicy() == nil {
 		return nil, status.Error(codes.InvalidArgument, "SchedulePolicy object cannot be nil")
@@ -54,7 +60,7 @@ func (s *SchedulePolicyServer) Create(
 		return nil, err
 	}
 
-	err = s.cluster.SchedPolicyCreate(req.GetSchedulePolicy().GetName(), string(out))
+	err = s.cluster().SchedPolicyCreate(req.GetSchedulePolicy().GetName(), string(out))
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -70,6 +76,9 @@ func (s *SchedulePolicyServer) Update(
 	ctx context.Context,
 	req *api.SdkSchedulePolicyUpdateRequest,
 ) (*api.SdkSchedulePolicyUpdateResponse, error) {
+	if s.cluster() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
 	if req.GetSchedulePolicy() == nil {
 		return nil, status.Error(codes.InvalidArgument, "SchedulePolicy object cannot be nil")
@@ -84,7 +93,7 @@ func (s *SchedulePolicyServer) Update(
 	if err != nil {
 		return nil, err
 	}
-	err = s.cluster.SchedPolicyUpdate(req.GetSchedulePolicy().GetName(), string(out))
+	err = s.cluster().SchedPolicyUpdate(req.GetSchedulePolicy().GetName(), string(out))
 	if err != nil {
 		if err == kvdb.ErrNotFound {
 			return nil, status.Errorf(
@@ -106,12 +115,15 @@ func (s *SchedulePolicyServer) Delete(
 	ctx context.Context,
 	req *api.SdkSchedulePolicyDeleteRequest,
 ) (*api.SdkSchedulePolicyDeleteResponse, error) {
+	if s.cluster() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
 	if len(req.GetName()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply Schedule name")
 	}
 
-	err := s.cluster.SchedPolicyDelete(req.GetName())
+	err := s.cluster().SchedPolicyDelete(req.GetName())
 	if err != nil && err != kvdb.ErrNotFound {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -127,8 +139,11 @@ func (s *SchedulePolicyServer) Enumerate(
 	ctx context.Context,
 	req *api.SdkSchedulePolicyEnumerateRequest,
 ) (*api.SdkSchedulePolicyEnumerateResponse, error) {
+	if s.cluster() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
-	policies, err := s.cluster.SchedPolicyEnumerate()
+	policies, err := s.cluster().SchedPolicyEnumerate()
 
 	if err != nil {
 		return nil, status.Errorf(
@@ -159,12 +174,15 @@ func (s *SchedulePolicyServer) Inspect(
 	ctx context.Context,
 	req *api.SdkSchedulePolicyInspectRequest,
 ) (*api.SdkSchedulePolicyInspectResponse, error) {
+	if s.cluster() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
 	if len(req.GetName()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply Schedule name")
 	}
 
-	policy, err := s.cluster.SchedPolicyGet(req.GetName())
+	policy, err := s.cluster().SchedPolicyGet(req.GetName())
 	if err != nil {
 		if err == kvdb.ErrNotFound {
 			return nil, status.Errorf(

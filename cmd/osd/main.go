@@ -29,6 +29,7 @@ import (
 	"os"
 	"runtime"
 	"strconv"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 
@@ -99,6 +100,16 @@ func main() {
 			Name:  "sdkrestport",
 			Usage: "gRPC REST Gateway port for SDK. Example: 9110",
 			Value: "9110",
+		},
+		cli.StringFlag{
+			Name:  "nodeid",
+			Usage: "Name of this node",
+			Value: "1",
+		},
+		cli.StringFlag{
+			Name:  "clusterid",
+			Usage: "Cluster id",
+			Value: "openstorage.cluster",
 		},
 	}
 	app.Action = wrapAction(start)
@@ -172,16 +183,72 @@ func start(c *cli.Context) error {
 		return nil
 	}
 
+	var (
+		cfg *config.Config
+	)
+
 	// We are in daemon mode.
 	file := c.String("file")
-	if file == "" {
-		return fmt.Errorf("OSD configuration file not specified.  Visit openstorage.org for an example.")
+	if len(file) != 0 {
+		// Read from file
+		var err error
+		cfg, err = config.Parse(file)
+		if err != nil {
+			return err
+		}
+	} else {
+		cfg = &config.Config{}
 	}
 
-	cfg, err := config.Parse(file)
-	if err != nil {
-		return err
+	// Check if values are set
+	if len(cfg.Osd.ClusterConfig.ClusterId) == 0 {
+		cfg.Osd.ClusterConfig.ClusterId = c.String("clusterid")
 	}
+	if len(cfg.Osd.ClusterConfig.NodeId) == 0 {
+		cfg.Osd.ClusterConfig.NodeId = c.String("nodeid")
+	}
+
+	// Get driver information
+	driverInfoList := c.StringSlice("driver")
+	if len(driverInfoList) != 0 {
+		if cfg.Osd.Drivers == nil {
+			cfg.Osd.Drivers = make(map[string]map[string]string)
+		}
+		params := make(map[string]string)
+		var name string
+
+		// many driver infos provided as a []string
+		for _, driverInfo := range driverInfoList {
+
+			// driverInfo of the format name=xxx,opt1=val1,opt2=val2
+			for _, pair := range strings.Split(driverInfo, ",") {
+				kv := strings.Split(pair, "=")
+				if len(kv) != 2 {
+					return fmt.Errorf("driver option has a an invalid pair %s", kv)
+				}
+				k := kv[0]
+				v := kv[1]
+				if len(k) == 0 || len(v) == 0 {
+					return fmt.Errorf("driver option '%s' is invalid", pair)
+				}
+				if k == "name" {
+					// Driver name
+					name = v
+				} else {
+					// Options for driver
+					params[k] = v
+				}
+			}
+			if len(name) == 0 {
+				return fmt.Errorf("driver option is missing driver name")
+			}
+			cfg.Osd.Drivers[name] = params
+		}
+	}
+	if len(cfg.Osd.Drivers) == 0 {
+		return fmt.Errorf("Must supply driver information")
+	}
+
 	kvdbURL := c.String("kvdb")
 	u, err := url.Parse(kvdbURL)
 	scheme := u.Scheme
@@ -249,7 +316,10 @@ func start(c *cli.Context) error {
 		}
 
 		// Start CSI Server for this driver
-		csisock := fmt.Sprintf("/var/lib/osd/driver/%s-csi.sock", d)
+		csisock := os.Getenv("CSI_ENDPOINT")
+		if len(csisock) == 0 {
+			csisock = fmt.Sprintf("/var/lib/osd/driver/%s-csi.sock", d)
+		}
 		os.Remove(csisock)
 		cm, err := clustermanager.Inst()
 		if err != nil {

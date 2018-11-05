@@ -36,7 +36,7 @@ func (s *VolumeServer) create(
 
 	// Check if the volume has already been created or is in process of creation
 	volName := locator.GetName()
-	v, err := util.VolumeFromName(s.driver, volName)
+	v, err := util.VolumeFromName(s.driver(), volName)
 	if err == nil {
 		// Check the requested arguments match that of the existing volume
 		if v.GetSpec().GetSize() != spec.GetSize() {
@@ -65,7 +65,7 @@ func (s *VolumeServer) create(
 	var id string
 	if len(source.GetParent()) != 0 {
 		// Get parent volume information
-		parent, err := util.VolumeFromName(s.driver, source.Parent)
+		parent, err := util.VolumeFromName(s.driver(), source.Parent)
 		if err != nil {
 			return "", status.Errorf(
 				codes.InvalidArgument,
@@ -74,7 +74,7 @@ func (s *VolumeServer) create(
 		}
 
 		// Create a snapshot from the parent
-		id, err = s.driver.Snapshot(parent.GetId(), false, &api.VolumeLocator{
+		id, err = s.driver().Snapshot(parent.GetId(), false, &api.VolumeLocator{
 			Name: volName,
 		}, false)
 		if err != nil {
@@ -85,7 +85,7 @@ func (s *VolumeServer) create(
 		}
 	} else {
 		// Create the volume
-		id, err = s.driver.Create(locator, source, spec)
+		id, err = s.driver().Create(locator, source, spec)
 		if err != nil {
 			return "", status.Errorf(
 				codes.Internal,
@@ -102,6 +102,9 @@ func (s *VolumeServer) Create(
 	ctx context.Context,
 	req *api.SdkVolumeCreateRequest,
 ) (*api.SdkVolumeCreateResponse, error) {
+	if s.cluster() == nil || s.driver() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
 	if len(req.GetName()) == 0 {
 		return nil, status.Error(
@@ -134,6 +137,9 @@ func (s *VolumeServer) Clone(
 	ctx context.Context,
 	req *api.SdkVolumeCloneRequest,
 ) (*api.SdkVolumeCloneResponse, error) {
+	if s.cluster() == nil || s.driver() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
 	if len(req.GetName()) == 0 {
 		return nil, status.Error(
@@ -176,13 +182,16 @@ func (s *VolumeServer) Delete(
 	ctx context.Context,
 	req *api.SdkVolumeDeleteRequest,
 ) (*api.SdkVolumeDeleteResponse, error) {
+	if s.cluster() == nil || s.driver() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
 	}
 
 	// If the volume is not found, return OK to be idempotent
-	volumes, err := s.driver.Inspect([]string{req.GetVolumeId()})
+	volumes, err := s.driver().Inspect([]string{req.GetVolumeId()})
 	if (err == nil && len(volumes) == 0) ||
 		(err != nil && err == volume.ErrEnoEnt) {
 		return &api.SdkVolumeDeleteResponse{}, nil
@@ -194,7 +203,7 @@ func (s *VolumeServer) Delete(
 			err.Error())
 	}
 
-	err = s.driver.Delete(req.GetVolumeId())
+	err = s.driver().Delete(req.GetVolumeId())
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -211,12 +220,15 @@ func (s *VolumeServer) Inspect(
 	ctx context.Context,
 	req *api.SdkVolumeInspectRequest,
 ) (*api.SdkVolumeInspectResponse, error) {
+	if s.cluster() == nil || s.driver() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
 	}
 
-	vols, err := s.driver.Inspect([]string{req.GetVolumeId()})
+	vols, err := s.driver().Inspect([]string{req.GetVolumeId()})
 	if err == kvdb.ErrNotFound || (err == nil && len(vols) == 0) {
 		return nil, status.Errorf(
 			codes.NotFound,
@@ -239,6 +251,9 @@ func (s *VolumeServer) Enumerate(
 	ctx context.Context,
 	req *api.SdkVolumeEnumerateRequest,
 ) (*api.SdkVolumeEnumerateResponse, error) {
+	if s.cluster() == nil || s.driver() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
 	resp, err := s.EnumerateWithFilters(
 		ctx,
@@ -259,8 +274,11 @@ func (s *VolumeServer) EnumerateWithFilters(
 	ctx context.Context,
 	req *api.SdkVolumeEnumerateWithFiltersRequest,
 ) (*api.SdkVolumeEnumerateWithFiltersResponse, error) {
+	if s.cluster() == nil || s.driver() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
-	vols, err := s.driver.Enumerate(req.GetLocator(), nil)
+	vols, err := s.driver().Enumerate(req.GetLocator(), nil)
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -283,6 +301,9 @@ func (s *VolumeServer) Update(
 	ctx context.Context,
 	req *api.SdkVolumeUpdateRequest,
 ) (*api.SdkVolumeUpdateResponse, error) {
+	if s.cluster() == nil || s.driver() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
@@ -298,7 +319,7 @@ func (s *VolumeServer) Update(
 	spec := s.mergeVolumeSpecs(resp.GetVolume().GetSpec(), req.GetSpec())
 
 	// Send to driver
-	if err := s.driver.Set(req.GetVolumeId(), req.GetLocator(), spec); err != nil {
+	if err := s.driver().Set(req.GetVolumeId(), req.GetLocator(), spec); err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to update volume: %v", err)
 	}
 
@@ -310,12 +331,15 @@ func (s *VolumeServer) Stats(
 	ctx context.Context,
 	req *api.SdkVolumeStatsRequest,
 ) (*api.SdkVolumeStatsResponse, error) {
+	if s.cluster() == nil || s.driver() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
 	}
 
-	stats, err := s.driver.Stats(req.GetVolumeId(), !req.GetNotCumulative())
+	stats, err := s.driver().Stats(req.GetVolumeId(), !req.GetNotCumulative())
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,

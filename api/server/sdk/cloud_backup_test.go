@@ -39,13 +39,13 @@ func TestSdkCloudBackupCreate(t *testing.T) {
 
 	id := "myvol"
 	uuid := "uuid"
-	name := "backup-myvol"
+	taskId := "backup-task"
 	full := false
 	req := &api.SdkCloudBackupCreateRequest{
 		VolumeId:     id,
 		CredentialId: uuid,
 		Full:         full,
-		Name:         name,
+		TaskId:       taskId,
 	}
 
 	// Create response
@@ -55,7 +55,7 @@ func TestSdkCloudBackupCreate(t *testing.T) {
 			VolumeID:       id,
 			CredentialUUID: uuid,
 			Full:           false,
-			Name:           name,
+			Name:           taskId,
 		}).
 		Return(&api.CloudBackupCreateResponse{Name: "good-backup-name"}, nil).
 		Times(1)
@@ -75,7 +75,7 @@ func TestSdkCloudBackupCreateBadArguments(t *testing.T) {
 	defer s.Stop()
 
 	req := &api.SdkCloudBackupCreateRequest{}
-	req.Name = "backup-myvol"
+	req.TaskId = "backup-task"
 
 	// Setup client
 	c := api.NewOpenStorageCloudBackupClient(s.Conn())
@@ -104,12 +104,12 @@ func TestSdkCloudRestoreCreate(t *testing.T) {
 
 	backupid := "backupid"
 	id := "myvol"
-	name := "restore-backupid"
+	taskId := "restore-task"
 	uuid := "uuid"
 	req := &api.SdkCloudBackupRestoreRequest{
 		BackupId:     backupid,
 		CredentialId: uuid,
-		Name:         name,
+		TaskId:       taskId,
 	}
 
 	// Create response
@@ -118,11 +118,11 @@ func TestSdkCloudRestoreCreate(t *testing.T) {
 		CloudBackupRestore(&api.CloudBackupRestoreRequest{
 			ID:             backupid,
 			CredentialUUID: uuid,
-			Name:           name,
+			Name:           taskId,
 		}).
 		Return(&api.CloudBackupRestoreResponse{
 			RestoreVolumeID: id,
-			Name:            name,
+			Name:            taskId,
 		}, nil).
 		Times(1)
 
@@ -142,7 +142,7 @@ func TestSdkCloudBackupRestoreBadArguments(t *testing.T) {
 	defer s.Stop()
 
 	req := &api.SdkCloudBackupRestoreRequest{}
-	req.Name = "restore-backupid"
+	req.TaskId = "restore-task"
 	// Setup client
 	c := api.NewOpenStorageCloudBackupClient(s.Conn())
 
@@ -632,7 +632,7 @@ func TestSdkCloudBackupStateChange(t *testing.T) {
 
 		// Get info
 		_, err := c.StateChange(context.Background(), &api.SdkCloudBackupStateChangeRequest{
-			Name:           id,
+			TaskId:         id,
 			RequestedState: test.sdkrs,
 		})
 		assert.NoError(t, err)
@@ -741,24 +741,17 @@ func TestSdkCloudBackupSchedCreateBadArguments(t *testing.T) {
 	// Setup client
 	c := api.NewOpenStorageCloudBackupClient(s.Conn())
 
-	// name  missing
+	// volume id missing
+	req.TaskId = "backup-task"
 	_, err := c.Create(context.Background(), req)
 	serverError, ok := status.FromError(err)
-	assert.True(t, ok)
-	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "name")
-
-	// volume id missing
-	req.Name = "backup-muvol"
-	_, err = c.Create(context.Background(), req)
-	serverError, ok = status.FromError(err)
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
 	assert.Contains(t, serverError.Message(), "volume id")
 
 	// Missing credential uuid
 	req.VolumeId = "id"
-	req.Name = "backup-muvol"
+	req.TaskId = "backup-task"
 	_, err = c.Create(context.Background(), req)
 	serverError, ok = status.FromError(err)
 	assert.True(t, ok)

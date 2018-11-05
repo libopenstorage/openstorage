@@ -97,6 +97,10 @@ func (s *OsdCsiServer) NodePublishVolume(
 			req.GetVolumeId(),
 			err.Error())
 	}
+	if s.driver.Type() != api.DriverType_DRIVER_TYPE_BLOCK &&
+		req.GetVolumeCapability().GetBlock() != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Trying to attach as block a non block device")
+	}
 
 	// Gather volume attributes
 	spec, _, _, err := s.specHandler.SpecFromOpts(req.GetVolumeAttributes())
@@ -113,18 +117,10 @@ func (s *OsdCsiServer) NodePublishVolume(
 		opts[options.OptionsSecret] = spec.GetPassphrase()
 	}
 
-	// Verify target location is an existing directory
-	if err := verifyTargetLocation(req.GetTargetPath()); err != nil {
-		return nil, status.Errorf(
-			codes.Aborted,
-			"Failed to use target location %s: %s",
-			req.GetTargetPath(),
-			err.Error())
-	}
-
 	// If this is for a block driver, first attach the volume
+	var devicePath string
 	if s.driver.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-		if _, err := s.driver.Attach(req.GetVolumeId(), opts); err != nil {
+		if devicePath, err = s.driver.Attach(req.GetVolumeId(), opts); err != nil {
 			return nil, status.Errorf(
 				codes.Internal,
 				"Unable to attach volume: %s",
@@ -132,21 +128,49 @@ func (s *OsdCsiServer) NodePublishVolume(
 		}
 	}
 
-	// Mount volume onto the path
-	if err := s.driver.Mount(req.GetVolumeId(), req.GetTargetPath(), nil); err != nil {
-		// Detach on error
-		detachErr := s.driver.Detach(v.GetId(), opts)
-		if detachErr != nil {
-			logrus.Errorf("Unable to detach volume %s: %s",
-				v.GetId(),
-				detachErr.Error())
+	if req.GetVolumeCapability().GetBlock() != nil {
+		// As block create a sym link to the attached location
+		err = os.Symlink(devicePath, req.GetTargetPath())
+		if err != nil {
+			detachErr := s.driver.Detach(v.GetId(), opts)
+			if detachErr != nil {
+				logrus.Errorf("Unable to detach volume %s: %s",
+					v.GetId(),
+					detachErr.Error())
+			}
+			return nil, status.Errorf(
+				codes.Internal,
+				"Failed to create symlink %s -> %s: %v",
+				req.GetTargetPath(),
+				devicePath,
+				err)
 		}
-		return nil, status.Errorf(
-			codes.Internal,
-			"Unable to mount volume %s onto %s: %s",
-			req.GetVolumeId(),
-			req.GetTargetPath(),
-			err.Error())
+	} else {
+		// Verify target location is an existing directory
+		if err := verifyTargetLocation(req.GetTargetPath()); err != nil {
+			return nil, status.Errorf(
+				codes.Aborted,
+				"Failed to use target location %s: %s",
+				req.GetTargetPath(),
+				err.Error())
+		}
+
+		// Mount volume onto the path
+		if err := s.driver.Mount(req.GetVolumeId(), req.GetTargetPath(), nil); err != nil {
+			// Detach on error
+			detachErr := s.driver.Detach(v.GetId(), opts)
+			if detachErr != nil {
+				logrus.Errorf("Unable to detach volume %s: %s",
+					v.GetId(),
+					detachErr.Error())
+			}
+			return nil, status.Errorf(
+				codes.Internal,
+				"Unable to mount volume %s onto %s: %s",
+				req.GetVolumeId(),
+				req.GetTargetPath(),
+				err.Error())
+		}
 	}
 
 	logrus.Infof("Volume %s mounted on %s",
@@ -180,20 +204,43 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 			err.Error())
 	}
 
-	// Verify target location is an existing directory
-	// See: https://github.com/container-storage-interface/spec/issues/60
-	if err = verifyTargetLocation(req.GetTargetPath()); err != nil {
-		return nil, status.Error(codes.NotFound, err.Error())
-	}
-
-	// Mount volume onto the path
-	if err = s.driver.Unmount(req.GetVolumeId(), req.GetTargetPath(), nil); err != nil {
+	// Get information about the target since the request does not
+	// tell us if it is for block or mount point.
+	// https://github.com/container-storage-interface/spec/issues/285
+	fileInfo, err := os.Lstat(req.GetTargetPath())
+	if err != nil && os.IsNotExist(err) {
+		// For idempotency, return that there is nothing to unmount
+		logrus.Infof("NodeUnpublishVolume on target path %s but it does "+
+			"not exist, returning there is nothing to do", req.GetTargetPath())
+		return &csi.NodeUnpublishVolumeResponse{}, nil
+	} else if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
-			"Unable to unmount volume %s onto %s: %s",
-			req.GetVolumeId(),
+			"Unknown error while verifying target location %s: %s",
 			req.GetTargetPath(),
 			err.Error())
+	}
+
+	// Check if it is block or not
+	if fileInfo.Mode()&os.ModeSymlink != 0 {
+		// If block, we just need to remove the link.
+		os.Remove(req.GetTargetPath())
+	} else {
+		if !fileInfo.IsDir() {
+			return nil, status.Errorf(
+				codes.NotFound,
+				"Target location %s is not a directory", req.GetTargetPath())
+		}
+
+		// Mount volume onto the path
+		if err = s.driver.Unmount(req.GetVolumeId(), req.GetTargetPath(), nil); err != nil {
+			return nil, status.Errorf(
+				codes.Internal,
+				"Unable to unmount volume %s onto %s: %s",
+				req.GetVolumeId(),
+				req.GetTargetPath(),
+				err.Error())
+		}
 	}
 
 	if s.driver.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
@@ -233,7 +280,7 @@ func (s *OsdCsiServer) NodeGetCapabilities(
 }
 
 func verifyTargetLocation(targetPath string) error {
-	fileInfo, err := os.Stat(targetPath)
+	fileInfo, err := os.Lstat(targetPath)
 	if err != nil && os.IsNotExist(err) {
 		return fmt.Errorf("Target location %s does not exist", targetPath)
 	} else if err != nil {

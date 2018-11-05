@@ -21,15 +21,18 @@ import (
 	"fmt"
 	"mime"
 	"net/http"
-
-	"github.com/libopenstorage/openstorage/alerts"
+	"sync"
 
 	"github.com/gobuffalo/packr"
+	"github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/libopenstorage/openstorage/alerts"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/spec"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
+	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -46,9 +49,9 @@ type ServerConfig struct {
 	// RestAdress is the port number. Example: 9110
 	// For the gRPC REST Gateway.
 	RestPort string
-	// The OpenStorage driver to use
+	// (optional) The OpenStorage driver to use
 	DriverName string
-	// Cluster interface
+	// (optional) Cluster interface
 	Cluster cluster.Cluster
 	// AlertsFilterDeleter
 	AlertsFilterDeleter alerts.FilterDeleter
@@ -58,12 +61,21 @@ type ServerConfig struct {
 type Server struct {
 	*grpcserver.GrpcServer
 
-	restPort             string
+	restPort string
+	lock     sync.RWMutex
+
+	// Interface implementations
+	clusterHandler cluster.Cluster
+	driverHandler  volume.VolumeDriver
+	alertHandler   alerts.FilterDeleter
+
+	// gRPC Handlers
 	clusterServer        *ClusterServer
 	nodeServer           *NodeServer
 	volumeServer         *VolumeServer
 	objectstoreServer    *ObjectstoreServer
 	schedulePolicyServer *SchedulePolicyServer
+	clusterPairServer    *ClusterPairServer
 	cloudBackupServer    *CloudBackupServer
 	credentialServer     *CredentialServer
 	identityServer       *IdentityServer
@@ -78,14 +90,17 @@ func New(config *ServerConfig) (*Server, error) {
 	if nil == config {
 		return nil, fmt.Errorf("Configuration must be provided")
 	}
-	if len(config.DriverName) == 0 {
-		return nil, fmt.Errorf("OpenStorage Driver name must be provided")
-	}
 
 	// Save the driver for future calls
-	d, err := volumedrivers.Get(config.DriverName)
-	if err != nil {
-		return nil, fmt.Errorf("Unable to get driver %s info: %s", config.DriverName, err.Error())
+	var (
+		d   volume.VolumeDriver
+		err error
+	)
+	if len(config.DriverName) != 0 {
+		d, err = volumedrivers.Get(config.DriverName)
+		if err != nil {
+			return nil, fmt.Errorf("Unable to get driver %s info: %s", config.DriverName, err.Error())
+		}
 	}
 
 	// Create gRPC server
@@ -98,63 +113,122 @@ func New(config *ServerConfig) (*Server, error) {
 		return nil, fmt.Errorf("Unable to setup server: %v", err)
 	}
 
-	return &Server{
-		GrpcServer: gServer,
-		restPort:   config.RestPort,
-		identityServer: &IdentityServer{
-			driver: d,
-		},
-		clusterServer: &ClusterServer{
-			cluster: config.Cluster,
-		},
-		nodeServer: &NodeServer{
-			cluster: config.Cluster,
-		},
-		volumeServer: &VolumeServer{
-			driver:      d,
-			cluster:     config.Cluster,
-			specHandler: spec.NewSpecHandler(),
-		},
-		objectstoreServer: &ObjectstoreServer{
-			cluster: config.Cluster,
-		},
-		schedulePolicyServer: &SchedulePolicyServer{
-			cluster: config.Cluster,
-		},
-		cloudBackupServer: &CloudBackupServer{
-			driver: d,
-		},
-		credentialServer: &CredentialServer{
-			driver: d,
-		},
-		alertsServer: NewAlertsServer(config.AlertsFilterDeleter),
-	}, nil
+	s := &Server{
+		GrpcServer:     gServer,
+		restPort:       config.RestPort,
+		clusterHandler: config.Cluster,
+		driverHandler:  d,
+		alertHandler:   config.AlertsFilterDeleter,
+	}
+	s.identityServer = &IdentityServer{
+		server: s,
+	}
+	s.clusterServer = &ClusterServer{
+		server: s,
+	}
+	s.nodeServer = &NodeServer{
+		server: s,
+	}
+	s.volumeServer = &VolumeServer{
+		server:      s,
+		specHandler: spec.NewSpecHandler(),
+	}
+	s.objectstoreServer = &ObjectstoreServer{
+		server: s,
+	}
+	s.schedulePolicyServer = &SchedulePolicyServer{
+		server: s,
+	}
+	s.cloudBackupServer = &CloudBackupServer{
+		server: s,
+	}
+	s.credentialServer = &CredentialServer{
+		server: s,
+	}
+	s.alertsServer = &alertsServer{
+		server: s,
+	}
+	s.clusterPairServer = &ClusterPairServer{
+		server: s,
+	}
+
+	return s, nil
 }
 
 // Start is used to start the server.
 // It will return an error if the server is already running.
 func (s *Server) Start() error {
 
+	opts := make([]grpc.ServerOption, 0)
+	opts = append(opts, grpc.UnaryInterceptor(
+		grpc_middleware.ChainUnaryServer(
+			s.rwlockIntercepter,
+			grpc_recovery.UnaryServerInterceptor(),
+		)))
+
 	// Start the gRPC Server
-	err := s.GrpcServer.Start(func(grpcServer *grpc.Server) {
+	err := s.GrpcServer.StartWithServer(func() *grpc.Server {
+		grpcServer := grpc.NewServer(opts...)
+
 		api.RegisterOpenStorageClusterServer(grpcServer, s.clusterServer)
 		api.RegisterOpenStorageNodeServer(grpcServer, s.nodeServer)
 		api.RegisterOpenStorageObjectstoreServer(grpcServer, s.objectstoreServer)
-		api.RegisterOpenStorageVolumeServer(grpcServer, s.volumeServer)
-		api.RegisterOpenStorageCredentialsServer(grpcServer, s.credentialServer)
 		api.RegisterOpenStorageSchedulePolicyServer(grpcServer, s.schedulePolicyServer)
-		api.RegisterOpenStorageCloudBackupServer(grpcServer, s.cloudBackupServer)
 		api.RegisterOpenStorageIdentityServer(grpcServer, s.identityServer)
+		api.RegisterOpenStorageVolumeServer(grpcServer, s.volumeServer)
+		api.RegisterOpenStorageMigrateServer(grpcServer, s.volumeServer)
+		api.RegisterOpenStorageCredentialsServer(grpcServer, s.credentialServer)
+		api.RegisterOpenStorageCloudBackupServer(grpcServer, s.cloudBackupServer)
 		api.RegisterOpenStorageMountAttachServer(grpcServer, s.volumeServer)
 		api.RegisterOpenStorageAlertsServer(grpcServer, s.alertsServer)
+		api.RegisterOpenStorageClusterPairServer(grpcServer, s.clusterPairServer)
+		return grpcServer
 	})
 	if err != nil {
 		return err
 	}
+
 	if len(s.restPort) != 0 {
 		return s.startRestServer()
 	}
 	return nil
+}
+
+// UseCluster will setup a new cluster object for the gRPC handlers
+func (s *Server) UseCluster(c cluster.Cluster) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	s.clusterHandler = c
+}
+
+// UseVolumeDriver will setup a new driver object for the gRPC handlers
+func (s *Server) UseVolumeDriver(d volume.VolumeDriver) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	s.driverHandler = d
+}
+
+// UseAlert will setup a new alert object for the gRPC handlers
+func (s *Server) UseAlert(a alerts.FilterDeleter) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	s.alertHandler = a
+}
+
+// Accessors
+func (s *Server) driver() volume.VolumeDriver {
+	return s.driverHandler
+}
+
+func (s *Server) cluster() cluster.Cluster {
+	return s.clusterHandler
+}
+
+func (s *Server) alert() alerts.FilterDeleter {
+	return s.alertHandler
 }
 
 // startRestServer starts the HTTP/REST gRPC gateway.
@@ -298,9 +372,39 @@ func (s *Server) restServerSetupHandlers() (*http.ServeMux, error) {
 	if err != nil {
 		return nil, err
 	}
+	err = api.RegisterOpenStorageClusterPairHandlerFromEndpoint(
+		context.Background(),
+		gmux,
+		s.Address(),
+		[]grpc.DialOption{grpc.WithInsecure()})
+	if err != nil {
+		return nil, err
+	}
+
+	err = api.RegisterOpenStorageMigrateHandlerFromEndpoint(
+		context.Background(),
+		gmux,
+		s.Address(),
+		[]grpc.DialOption{grpc.WithInsecure()})
+	if err != nil {
+		return nil, err
+	}
 
 	// Pass all other unhandled paths to the gRPC gateway
 	mux.Handle("/", gmux)
 
 	return mux, nil
+}
+
+// This interceptor provides a way to lock out any calls while we adjust the server
+func (s *Server) rwlockIntercepter(
+	ctx context.Context,
+	req interface{},
+	info *grpc.UnaryServerInfo,
+	handler grpc.UnaryHandler,
+) (interface{}, error) {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+
+	return handler(ctx, req)
 }

@@ -29,8 +29,11 @@ import (
 
 // Objectstoreserver is an implementation of the gRPC OpenStorageObjectstore interface
 type ObjectstoreServer struct {
-	api.OpenStorageObjectstoreServer
-	cluster cluster.Cluster
+	server *Server
+}
+
+func (s *ObjectstoreServer) cluster() cluster.Cluster {
+	return s.server.cluster()
 }
 
 // Inspect Objectstore return status of provided objectstore
@@ -38,8 +41,11 @@ func (s *ObjectstoreServer) Inspect(
 	ctx context.Context,
 	req *api.SdkObjectstoreInspectRequest,
 ) (*api.SdkObjectstoreInspectResponse, error) {
+	if s.cluster() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
-	objResp, err := s.cluster.ObjectStoreInspect(req.GetObjectstoreId())
+	objResp, err := s.cluster().ObjectStoreInspect(req.GetObjectstoreId())
 	if err != nil {
 		if err == kvdb.ErrNotFound {
 			return nil, status.Errorf(
@@ -61,11 +67,14 @@ func (s *ObjectstoreServer) Create(
 	ctx context.Context,
 	req *api.SdkObjectstoreCreateRequest,
 ) (*api.SdkObjectstoreCreateResponse, error) {
+	if s.cluster() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must provide volume ID")
 	}
-	objResp, err := s.cluster.ObjectStoreCreate(req.GetVolumeId())
+	objResp, err := s.cluster().ObjectStoreCreate(req.GetVolumeId())
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -81,8 +90,11 @@ func (s *ObjectstoreServer) Update(
 	ctx context.Context,
 	req *api.SdkObjectstoreUpdateRequest,
 ) (*api.SdkObjectstoreUpdateResponse, error) {
+	if s.cluster() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
-	err := s.cluster.ObjectStoreUpdate(req.GetObjectstoreId(), req.GetEnable())
+	err := s.cluster().ObjectStoreUpdate(req.GetObjectstoreId(), req.GetEnable())
 	if err != nil {
 		if err == kvdb.ErrNotFound {
 			return nil, status.Errorf(
@@ -104,8 +116,11 @@ func (s *ObjectstoreServer) Delete(
 	ctx context.Context,
 	req *api.SdkObjectstoreDeleteRequest,
 ) (*api.SdkObjectstoreDeleteResponse, error) {
+	if s.cluster() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
-	err := s.cluster.ObjectStoreDelete(req.GetObjectstoreId())
+	err := s.cluster().ObjectStoreDelete(req.GetObjectstoreId())
 	if err != nil && err != kvdb.ErrNotFound {
 		return nil, status.Errorf(
 			codes.Internal,

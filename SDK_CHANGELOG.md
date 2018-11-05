@@ -5,6 +5,26 @@
 
 ## Releases
 
+### v0.23.0 - Tech Preview (11/2/2018)
+
+* Cloud migrate status and cloud backup status now report
+  total bytes to be transferred and bytes already transferred.
+* These status blocks also report the start time of the operation
+  so that client could calculate progress of the operation.
+  
+### v0.22.0 - Tech Preview (11/1/2018)
+
+* Rename the field "name" to "TaskId" in sdkCloudBackupcreate/restore/status
+  structures.
+
+### v0.21.0 - Tech Preview (10/31/2018)
+
+* Addition of ClusterPairing and VolumeMigrate services
+
+### v0.20.0 - Tech Preview (11/1/2018)
+
+* Added ETA for cloud snap status.
+
 ### v0.19.0 - Tech Preview (10/23/2018)
 
 * CloudBackupStatus now returns CredentialUUID used for cloud for the
