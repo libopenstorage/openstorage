@@ -4,24 +4,26 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/openstorage/osd.svg)](https://hub.docker.com/r/openstorage/osd)
 [![Go Report Card](https://goreportcard.com/badge/github.com/libopenstorage/openstorage)](https://goreportcard.com/report/github.com/libopenstorage/openstorage)
 
-OpenStorage is a clustered implementation of the [Open Storage](https://github.com/libopenstorage/specs) specification and facilitates the provisioning of cloud native volumes for Kubernetes.  It allows you to run stateful services in Linux Containers in a multi host, multi zone and multi region environment.  It plugs into [CSI](https://landscape.cncf.io/selected=container-storage-interface-csi) and Docker volumes to provide storage to containers and plugs into Kubernetes to allow for dynamic and programmatic provisioning of volumes.
+OpenStorage is an API abstraction layer providing support for multiple public APIs, including the [OpenStorage SDK](https://libopenstorage.github.io), [CSI](https://github.com/container-storage-interface/spec), and the [Docker Volume API](https://docs.docker.com/engine/reference/api/docker_remote_api/). Developers using OpenStorage for their storage systems can expect it to work seamlessly with any of the supported public APIs. These implementations provide users with the ability to run statefule services in Linux containers on multiple hosts.
 
-# What you get from using Open Storage
+OpenStoage makes it simple for developers to write a single implementation which supports many methods of control:
 
-When you install openstorage on a Linux host, you will automatically get a stateful storage overlay that integrates with [CSI](https://landscape.cncf.io/selected=container-storage-interface-csi) or the Docker runtime and provide volumes that are usable across hosts that are running in different regions or even clouds.  It starts an Open Storage Daemon - `OSD` that supports any Linux container runtime that conforms to the [OCI](https://www.opencontainers.org/) spec.  From here, you can use Kubernetes to directly create cloud native storage volumes that are highly available cluster wide.
+![openstorage](docs/images/openstorage.png)
 
-## Scheduler integration
+Not only does OpenStorage allow storage developers to integrated their storage system with container orchestrations systems,
+but also enables applications developers to use the OpenStorage SDK to manage and expose the latest storage features to their
+clients.
 
-OSD will work with any distributed scheduler that is compatible with the [CSI](https://github.com/container-storage-interface/spec) or [Docker remote API](https://docs.docker.com/engine/reference/api/docker_remote_api/)
-
-![OSD with schedulers](https://i.imgur.com/YNCqiwY.png)
+## Supported Control APIs
 
 ### CSI
 [Container Storage Interface](https://github.com/container-storage-interface/spec) is the standard way for a container orchestrator such as Kubernetes or Mesosphere to communicate with a storage provider.  OSD provides a CSI implementation to provision storage volumes to a container on behalf of any third party OSD driver and ensures the volumes are available in a multi host environment.
 
 ### Docker Volumes
+OSD integrates with [Docker Volumes](https://docs.docker.com/engine/extend/plugins_volume/) and provisions storage to a container on behalf of any third party OSD driver and ensures the volumes are available in a multi host environment.
 
-OSD integrates with [Docker Volumes](https://docs.docker.com/engine/extend/plugins_volume/) and provisions storage to a container on behalf of any third party OSD driver and ensures the volumes are available in a multi host environment. 
+### OpenStorage SDK
+CSI and Docker Volumes API provide a very generic storage control model, but with the [OpenStorage SDK](https://libopenstorage.github.io), applications can take control and utilize the latest features of a storage system. For example, with the OpenStorage SDK, applications can control their volumes backups, schedules, etc.
 
 # Documents
 
