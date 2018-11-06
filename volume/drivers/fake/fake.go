@@ -463,6 +463,7 @@ func (d *driver) cloudBackupCreate(input *api.CloudBackupCreateRequest) (string,
 			CompletedTime:  time.Now().Local().Add(1 * time.Second),
 			NodeID:         clusterInfo.NodeId,
 			CredentialUUID: input.CredentialUUID,
+			SrcVolumeID:    input.VolumeID,
 		},
 		Info: api.CloudBackupInfo{
 			ID:            cloudId,
@@ -556,6 +557,7 @@ func (d *driver) CloudBackupRestore(
 			CompletedTime:  time.Now().Local().Add(1 * time.Second),
 			NodeID:         clusterInfo.NodeId,
 			CredentialUUID: input.CredentialUUID,
+			SrcVolumeID:    volid,
 		},
 	}, 0)
 	if err != nil {
