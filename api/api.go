@@ -868,6 +868,7 @@ func (s CloudBackupStatus) ToSdkCloudBackupStatus() *SdkCloudBackupStatus {
 		NodeId:       s.NodeID,
 		Info:         s.Info,
 		CredentialId: s.CredentialUUID,
+		SrcVolumeId:  s.SrcVolumeID,
 	}
 
 	status.StartTime, _ = ptypes.TimestampProto(s.StartTime)
