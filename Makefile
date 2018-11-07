@@ -5,10 +5,16 @@ HAS_PROTOC_GEN_GO := $(shell command -v protoc-gen-go 2> /dev/null)
 HAS_SDKTEST := $(shell command -v sdk-test 2> /dev/null)
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 
+ifeq ($(TRAVIS_BRANCH), master)
+MOCKSDKSERVERTAG := latest
+else
+
 ifeq ($(BRANCH), master)
 MOCKSDKSERVERTAG := latest
 else
 MOCKSDKSERVERTAG := $(shell go run tools/sdkver/sdkver.go)
+endif
+
 endif
 
 REGISTRY = openstorage
