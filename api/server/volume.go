@@ -832,6 +832,32 @@ func (vd *volAPI) requests(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(requests)
 }
 
+func (vd *volAPI) volumeusage(w http.ResponseWriter, r *http.Request) {
+	var err error
+
+	method := "volumeusage"
+	volumeID, err := vd.parseID(r)
+	if err != nil {
+		e := fmt.Errorf("Failed to parse volumeID: %s", err.Error())
+		http.Error(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+
+	d, err := vd.getVolDriver(r)
+	if err != nil {
+		notFound(w, r)
+		return
+	}
+
+	capacityInfo, err := d.CapacityUsage(volumeID)
+	if err != nil {
+		e := fmt.Errorf("Failed to get CapacityUsage: %s", err.Error())
+		vd.sendError(vd.name, method, w, e.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(capacityInfo)
+}
+
 // swagger:operation GET /osd-volumes/quiesce/{id} volume quiesceVolume
 //
 // Quiesce volume with specified id.
@@ -1122,6 +1148,8 @@ func (vd *volAPI) Routes() []*Route {
 		{verb: "GET", path: volPath("/usedsize/{id}", volume.APIVersion), fn: vd.usedsize},
 		{verb: "GET", path: volPath("/requests", volume.APIVersion), fn: vd.requests},
 		{verb: "GET", path: volPath("/requests/{id}", volume.APIVersion), fn: vd.requests},
+		{verb: "GET", path: volPath("/usage", volume.APIVersion), fn: vd.volumeusage},
+		{verb: "GET", path: volPath("/usage/{id}", volume.APIVersion), fn: vd.volumeusage},
 		{verb: "POST", path: volPath("/quiesce/{id}", volume.APIVersion), fn: vd.quiesce},
 		{verb: "POST", path: volPath("/unquiesce/{id}", volume.APIVersion), fn: vd.unquiesce},
 		{verb: "GET", path: volPath("/catalog/{id}", volume.APIVersion), fn: vd.catalog},

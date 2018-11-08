@@ -443,6 +443,19 @@ message Stats {
   uint64 interval_ms = 10;
 }
 
+// Provides details on exclusive and shared storage used by
+// snapshot/volume specifically for copy-on-write(COW) snapshots. Deletion
+// of snapshots and overwirte of volume will affect the exclusive storage
+// used by the other dependent snaps and parent volume.
+message CapacityUsageInfo {
+  // Storage consumed exclusively by this single snapshot. Deletion of this
+  // snapshot may increase the free storage available by this amount.
+  int64 exclusive_bytes = 1;
+  // Storage consumed by this snapshot that is shared with parent and children
+  int64 shared_bytes = 2;
+  // TotalBytes used by this volume
+  int64 total_bytes = 3;
+}
 
 // Alert is a structure that represents an alert object
 message Alert {
@@ -865,6 +878,20 @@ service OpenStorageVolume {
     returns (SdkVolumeStatsResponse) {
       option(google.api.http) = {
         get: "/v1/volumes/stats/{volume_id}"
+      };
+    }
+
+  // CapacityUsage returns volume/snapshot's capacity usage details
+  //
+  // ##### Error codes:
+  //
+  // * codes.Aborted : Command was aborted and only total_bytes field is valid
+  // * code.Unimmplemented : Command is not suported this kernel.Only total_bytes
+  // field is valid;
+  rpc CapacityUsage(SdkVolumeCapacityUsageRequest)
+    returns (SdkVolumeCapacityUsageResponse) {
+      option(google.api.http) = {
+        get: "/v1/volumes/usage/{volume_id}"
       };
     }
 
@@ -1696,10 +1723,23 @@ message SdkVolumeStatsRequest {
   bool not_cumulative = 2;
 }
 
+
 // Defines a response containing drive statistics
 message SdkVolumeStatsResponse {
   // Statistics for a single volume
   Stats stats = 1;
+}
+
+// Defines request to retrieve volume/snapshot capacity usage details
+message SdkVolumeCapacityUsageRequest {
+  // Id of the snapshot/volume to get capacity usage details
+  string volume_id = 1;
+}
+
+// Defines response containing volume/snapshot capacity usage details
+message SdkVolumeCapacityUsageResponse {
+  // CapacityUsage details
+  CapacityUsageInfo capacity_usage_info = 1;
 }
 
 // Defines a request to list volumes
@@ -2249,7 +2289,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 9;
     // SDK version patch value of this specification
-    Patch = 2;
+    Patch = 3;
   }
 
   // The following cannot be set to use the enum Version because the REST

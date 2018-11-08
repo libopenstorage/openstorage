@@ -329,6 +329,50 @@ func (s *VolumeServer) Stats(
 	}, nil
 }
 
+func (s *VolumeServer) CapacityUsage(
+	ctx context.Context,
+	req *api.SdkVolumeCapacityUsageRequest,
+) (*api.SdkVolumeCapacityUsageResponse, error) {
+
+	if len(req.GetVolumeId()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
+	}
+
+	dResp, err := s.driver.CapacityUsage(req.GetVolumeId())
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"Failed to obtain stats for volume %s: %v",
+			req.GetVolumeId(),
+			err.Error())
+	}
+
+	resp := &api.SdkVolumeCapacityUsageResponse{}
+	resp.CapacityUsageInfo = &api.CapacityUsageInfo{}
+	if dResp != nil {
+		resp.CapacityUsageInfo.ExclusiveBytes = dResp.CapacityUsageInfo.ExclusiveBytes
+		resp.CapacityUsageInfo.SharedBytes = dResp.CapacityUsageInfo.SharedBytes
+		resp.CapacityUsageInfo.TotalBytes = dResp.CapacityUsageInfo.TotalBytes
+		if dResp.Error != nil {
+			if dResp.Error == volume.ErrAborted {
+				return resp, status.Errorf(
+					codes.Aborted,
+					"Failed to obtain stats for volume %s: %v",
+					req.GetVolumeId(),
+					volume.ErrAborted.Error())
+			} else if dResp.Error == volume.ErrNotSupported {
+				return resp, status.Errorf(
+					codes.Unimplemented,
+					"Failed to obtain stats for volume %s: %v",
+					req.GetVolumeId(),
+					volume.ErrNotSupported.Error())
+			}
+		}
+	}
+
+	return resp, nil
+}
+
 func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpecUpdate) *api.VolumeSpec {
 
 	spec := &api.VolumeSpec{}

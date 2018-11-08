@@ -46,6 +46,19 @@ func (mr *MockVolumeDriverMockRecorder) Attach(arg0, arg1 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Attach", reflect.TypeOf((*MockVolumeDriver)(nil).Attach), arg0, arg1)
 }
 
+// CapacityUsage mocks base method
+func (m *MockVolumeDriver) CapacityUsage(arg0 string) (*api.CapacityUsageResponse, error) {
+	ret := m.ctrl.Call(m, "CapacityUsage", arg0)
+	ret0, _ := ret[0].(*api.CapacityUsageResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CapacityUsage indicates an expected call of CapacityUsage
+func (mr *MockVolumeDriverMockRecorder) CapacityUsage(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CapacityUsage", reflect.TypeOf((*MockVolumeDriver)(nil).CapacityUsage), arg0)
+}
+
 // Catalog mocks base method
 func (m *MockVolumeDriver) Catalog(arg0, arg1, arg2 string) (api.CatalogResponse, error) {
 	ret := m.ctrl.Call(m, "Catalog", arg0, arg1, arg2)
