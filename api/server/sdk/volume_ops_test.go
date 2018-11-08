@@ -560,3 +560,100 @@ func TestSdkVolumeStatsBadArguments(t *testing.T) {
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
 	assert.Contains(t, serverError.Message(), "volume id")
 }
+
+func TestSdkVolumeCapacityUsage(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	id := "myid"
+	resp := &api.CapacityUsageResponse{}
+	resp.CapacityUsageInfo = &api.CapacityUsageInfo{}
+	resp.CapacityUsageInfo.ExclusiveBytes = 12000
+	resp.CapacityUsageInfo.SharedBytes = 345
+	resp.CapacityUsageInfo.TotalBytes = 12345
+	s.MockDriver().
+		EXPECT().
+		CapacityUsage(id).
+		Return(resp, nil).
+		Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageVolumeClient(s.Conn())
+
+	// Get info
+	r, err := c.CapacityUsage(
+		context.Background(),
+		&api.SdkVolumeCapacityUsageRequest{
+			VolumeId: id,
+		})
+	assert.NoError(t, err)
+	assert.NotNil(t, r.GetCapacityUsageInfo)
+}
+
+func TestSdkVolumeCapacityUsageAbortedResult(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	id := "myid"
+	resp := &api.CapacityUsageResponse{}
+	resp.CapacityUsageInfo = &api.CapacityUsageInfo{}
+	resp.CapacityUsageInfo.ExclusiveBytes = 0
+	resp.CapacityUsageInfo.SharedBytes = 0
+	resp.CapacityUsageInfo.TotalBytes = 12345
+	resp.Error = volume.ErrAborted
+	s.MockDriver().
+		EXPECT().
+		CapacityUsage(id).
+		Return(resp, nil).
+		Times(1)
+	// Setup client
+	c := api.NewOpenStorageVolumeClient(s.Conn())
+
+	// Get info
+	r, err := c.CapacityUsage(
+		context.Background(),
+		&api.SdkVolumeCapacityUsageRequest{
+			VolumeId: id,
+		})
+	assert.Error(t, err)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.Aborted)
+	assert.NotNil(t, r.GetCapacityUsageInfo)
+}
+
+func TestSdkVolumeCapacityUsageUnimplementedResult(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	id := "myid"
+	resp := &api.CapacityUsageResponse{}
+	resp.CapacityUsageInfo = &api.CapacityUsageInfo{}
+	resp.CapacityUsageInfo.ExclusiveBytes = 0
+	resp.CapacityUsageInfo.SharedBytes = 0
+	resp.CapacityUsageInfo.TotalBytes = 12345
+	resp.Error = volume.ErrNotSupported
+	s.MockDriver().
+		EXPECT().
+		CapacityUsage(id).
+		Return(resp, nil).
+		Times(1)
+	// Setup client
+	c := api.NewOpenStorageVolumeClient(s.Conn())
+
+	// Get info
+	r, err := c.CapacityUsage(
+		context.Background(),
+		&api.SdkVolumeCapacityUsageRequest{
+			VolumeId: id,
+		})
+	assert.Error(t, err)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.Unimplemented)
+	assert.NotNil(t, r.GetCapacityUsageInfo)
+}

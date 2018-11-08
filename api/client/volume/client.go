@@ -263,6 +263,25 @@ func (v *volumeClient) GetActiveRequests() (*api.ActiveRequests, error) {
 	return requests, nil
 }
 
+// CapacityUsage returns exclusive and shared capacity
+// usage of a snapshot/volume
+func (v *volumeClient) CapacityUsage(
+	ID string,
+) (*api.CapacityUsageResponse, error) {
+	requests := &api.CapacityUsageResponse{}
+	resp := v.c.Get().Resource(volumePath + "/usage").Instance(ID).Do()
+
+	if resp.Error() != nil {
+		return nil, resp.FormatError()
+	}
+
+	if err := resp.Unmarshal(requests); err != nil {
+		return nil, err
+	}
+
+	return requests, nil
+}
+
 // Shutdown and cleanup.
 func (v *volumeClient) Shutdown() {}
 
