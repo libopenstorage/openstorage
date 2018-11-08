@@ -210,6 +210,8 @@ message StorageResource {
   google.protobuf.Timestamp last_scan = 12;
   // True if dedicated for metadata.
   bool metadata = 13;
+  // True if dedicated as cache
+  bool cache = 14;
 }
 
 // StoragePool groups different storage devices based on their CosType
@@ -2542,7 +2544,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 23;
+    Minor = 24;
     // SDK version patch value of this specification
     Patch = 0;
   }

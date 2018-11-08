@@ -5,6 +5,9 @@
 
 ## Releases
 
+### v0.24.0 
+* Extend attribute of StorageResource to be marked as a cache.
+
 ### v0.23.0 - Tech Preview (11/2/2018)
 
 * Cloud migrate status and cloud backup status now report
