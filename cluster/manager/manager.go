@@ -22,6 +22,7 @@ import (
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/objectstore"
 	"github.com/libopenstorage/openstorage/osdconfig"
+	"github.com/libopenstorage/openstorage/pkg/dbg"
 	sched "github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
 	"github.com/libopenstorage/systemutils"
@@ -258,6 +259,13 @@ func (c *ClusterManager) getNodeEntry(nodeID string, clustDBRef *cluster.Cluster
 		}
 	}
 	return n, nil
+}
+
+func (c *ClusterManager) unlockClusterDb(kvp *kvdb.KVPair, fn string) error {
+	kv := kvdb.Instance()
+	err := kv.Unlock(kvp)
+	dbg.Assert(err == nil, "%v: cluster db unlock failed, kvp : %v err: %v", fn, kvp.Key, err)
+	return err
 }
 
 // Inspect inspects given node and returns the state
@@ -578,7 +586,10 @@ func (c *ClusterManager) joinCluster(
 		return err
 	}
 	initState, err := snapAndReadClusterInfo()
-	kvdb.Unlock(kvlock)
+	if unlockErr := kvdb.Unlock(kvlock); unlockErr != nil {
+		logrus.Warnln("Unable to release cluster lock after creating snapshot: ", unlockErr)
+		return unlockErr
+	}
 	if err != nil {
 		logrus.Panicf("Fatal, Unable to create snapshot: %v", err)
 		return err
@@ -1383,6 +1394,7 @@ func (c *ClusterManager) updateNodeEntryDB(
 	nodeEntry cluster.NodeEntry,
 	checkCbBeforeUpdate checkFunc,
 ) (*kvdb.KVPair, *cluster.ClusterInfo, error) {
+	fn := "updateNodeEntryDB"
 	kvdb := kvdb.Instance()
 	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
 	if err != nil {
@@ -1390,7 +1402,7 @@ func (c *ClusterManager) updateNodeEntryDB(
 			err)
 		return nil, nil, err
 	}
-	defer kvdb.Unlock(kvlock)
+	defer c.unlockClusterDb(kvlock, fn)
 
 	currentState, _, err := readClusterInfo()
 	if err != nil {
@@ -1421,7 +1433,10 @@ func (c *ClusterManager) SetSize(size int) error {
 		logrus.Warnln("Unable to obtain cluster lock for updating config", err)
 		return nil
 	}
-	defer kvdb.Unlock(kvlock)
+	defer func() error {
+		err := kvdb.Unlock(kvlock)
+		return err
+	}()
 
 	db, _, err := readClusterInfo()
 	if err != nil {
@@ -1436,6 +1451,7 @@ func (c *ClusterManager) SetSize(size int) error {
 }
 
 func (c *ClusterManager) getNodeInfoFromClusterDb(id string) (api.Node, error) {
+	fn := "getNodeInfoFromClusterDb"
 	node := api.Node{Id: id}
 	kvdb := kvdb.Instance()
 	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
@@ -1444,7 +1460,7 @@ func (c *ClusterManager) getNodeInfoFromClusterDb(id string) (api.Node, error) {
 			"node decommission", err)
 		return node, err
 	}
-	defer kvdb.Unlock(kvlock)
+	defer c.unlockClusterDb(kvlock, fn)
 
 	db, _, err := readClusterInfo()
 	if err != nil {
@@ -1461,6 +1477,7 @@ func (c *ClusterManager) getNodeInfoFromClusterDb(id string) (api.Node, error) {
 }
 
 func (c *ClusterManager) markNodeDecommission(node api.Node) error {
+	fn := "markNodeDecommission"
 	kvdb := kvdb.Instance()
 	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
 	if err != nil {
@@ -1469,7 +1486,7 @@ func (c *ClusterManager) markNodeDecommission(node api.Node) error {
 			err)
 		return err
 	}
-	defer kvdb.Unlock(kvlock)
+	defer c.unlockClusterDb(kvlock, fn)
 
 	db, _, err := readClusterInfo()
 	if err != nil {
@@ -1495,13 +1512,14 @@ func (c *ClusterManager) markNodeDecommission(node api.Node) error {
 }
 
 func (c *ClusterManager) deleteNodeFromDB(nodeID string) error {
+	fn := "deleteNodeFromDB"
 	// Delete node from cluster DB
 	kvdb := kvdb.Instance()
 	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
 	if err != nil {
 		logrus.Panicln("fatal, unable to obtain cluster lock. ", err)
 	}
-	defer kvdb.Unlock(kvlock)
+	defer c.unlockClusterDb(kvlock, fn)
 
 	currentState, _, err := readClusterInfo()
 	if err != nil {
