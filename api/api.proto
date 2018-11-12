@@ -2323,6 +2323,8 @@ message SdkCloudBackupStatus {
   string credential_id  = 10;
   // BytesTotal is the total number of bytes being transferred
   uint64 bytes_total = 11;
+  // ETASeconds is the number of seconds for cloud backup completion
+  int64 e_t_a_seconds = 12;
 }
 
 // Defines a request to retreive the status of a backup or restore for a
@@ -2542,7 +2544,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 23;
+    Minor = 24;
     // SDK version patch value of this specification
     Patch = 0;
   }
@@ -2705,6 +2707,8 @@ message CloudMigrateInfo {
     uint64 bytes_total = 13;
     // BytesDone is the number of bytes already transferred
     uint64 bytes_done = 14;
+    // ETASeconds the time duration in seconds for cloud migration completion
+    int64 e_t_a_seconds = 15;
 }
 
 message CloudMigrateInfoList {

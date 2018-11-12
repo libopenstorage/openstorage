@@ -22,11 +22,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	"github.com/libopenstorage/openstorage/api"
 )
 
 func TestSdkNodeEnumerateNoNodes(t *testing.T) {

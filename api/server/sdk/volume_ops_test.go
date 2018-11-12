@@ -22,13 +22,12 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/volume"
 	"github.com/portworx/kvdb"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/volume"
 )
 
 func TestSdkVolumeCreateCheckIdempotency(t *testing.T) {
