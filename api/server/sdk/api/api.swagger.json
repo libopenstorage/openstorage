@@ -823,6 +823,13 @@
           "title": "Full indicates if full backup is desired even though incremental is possible",
           "type": "boolean"
         },
+        "labels": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Labels list of key value pairs to tag the cloud backup",
+          "type": "object"
+        },
         "task_id": {
           "description": "TaskId of the task performing this backup. This value can be used for\nidempotency.",
           "type": "string"
