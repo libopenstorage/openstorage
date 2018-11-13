@@ -337,6 +337,12 @@ type CloudBackupInfo struct {
 	Metadata map[string]string
 	// Status indicates the status of the backup
 	Status string
+	// BytesTotal is the number of bytes being transferred
+	BytesTotal uint64
+	// BytesDone is the number of bytes already transferred
+	BytesDone uint64
+	// ETASeconds the time duration in seconds for cloud migration completion
+	ETASeconds int64
 }
 
 type CloudBackupEnumerateRequest struct {

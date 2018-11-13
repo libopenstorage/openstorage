@@ -206,13 +206,13 @@
           "$ref": "#/definitions/CloudMigrateStage",
           "title": "Current stage of the volume migration"
         },
-        "e_t_a_seconds": {
-          "format": "int64",
-          "title": "ETASeconds the time duration in seconds for cloud migration completion",
-          "type": "string"
-        },
         "error_reason": {
           "title": "Contains the reason for the migration error",
+          "type": "string"
+        },
+        "eta_seconds": {
+          "format": "int64",
+          "title": "ETASeconds the time duration in seconds for cloud migration completion",
           "type": "string"
         },
         "last_update": {
@@ -1119,7 +1119,7 @@
           "title": "CredentialId is the credential used for cloud with this backup/restore op",
           "type": "string"
         },
-        "e_t_a_seconds": {
+        "eta_seconds": {
           "format": "int64",
           "title": "ETASeconds is the number of seconds for cloud backup completion",
           "type": "string"
