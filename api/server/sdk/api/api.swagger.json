@@ -231,6 +231,11 @@
           "title": "Contains the reason for the migration error",
           "type": "string"
         },
+        "eta_seconds": {
+          "format": "int64",
+          "title": "ETASeconds the time duration in seconds for cloud migration completion",
+          "type": "string"
+        },
         "last_update": {
           "format": "date-time",
           "title": "Last time the status was updated",
@@ -1179,6 +1184,11 @@
         },
         "credential_id": {
           "title": "CredentialId is the credential used for cloud with this backup/restore op",
+          "type": "string"
+        },
+        "eta_seconds": {
+          "format": "int64",
+          "title": "ETASeconds is the number of seconds for cloud backup completion",
           "type": "string"
         },
         "info": {

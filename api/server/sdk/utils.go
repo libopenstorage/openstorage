@@ -20,12 +20,10 @@ package sdk
 import (
 	"time"
 
-	"github.com/libopenstorage/openstorage/pkg/sched"
-
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/pkg/sched"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
 	"gopkg.in/yaml.v2"
 )
 
