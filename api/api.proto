@@ -2158,7 +2158,9 @@ message SdkCloudBackupCreateRequest {
   bool full = 3;
   // TaskId of the task performing this backup. This value can be used for
   // idempotency.
-  string task_id= 4;
+  string task_id = 4;
+  // Labels list of key value pairs to tag the cloud backup
+  map<string, string> labels = 5;
 }
 
 // Empty response
