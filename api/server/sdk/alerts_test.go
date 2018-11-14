@@ -381,7 +381,9 @@ func TestAlertsServerEnumerateError(t *testing.T) {
 		assert.NoError(t, enumerateClientErr)
 		for {
 			_, outErr := enumerateClient.Recv()
-			if outErr == io.EOF { break }
+			if outErr == io.EOF {
+				break
+			}
 			assert.Error(t, outErr, err.Error())
 		}
 	}
