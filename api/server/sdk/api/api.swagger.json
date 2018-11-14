@@ -277,7 +277,8 @@
         "Initialized",
         "InProgress",
         "Failed",
-        "Complete"
+        "Complete",
+        "Canceled"
       ],
       "type": "string"
     },
