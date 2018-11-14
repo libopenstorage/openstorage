@@ -823,6 +823,13 @@
           "title": "Full indicates if full backup is desired even though incremental is possible",
           "type": "boolean"
         },
+        "labels": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Labels are list of key value pairs to tag the cloud backup. These labels\nare stored in the metadata associated with the backup.",
+          "type": "object"
+        },
         "task_id": {
           "description": "TaskId of the task performing this backup. This value can be used for\nidempotency.",
           "type": "string"
@@ -1210,7 +1217,7 @@
           "type": "string"
         },
         "task_id": {
-          "title": "Unique name assocaiated with this migration. \nThis is a Optional field for idempotency",
+          "title": "Unique name assocaiated with this migration.\nThis is a Optional field for idempotency",
           "type": "string"
         },
         "volume": {
@@ -2931,7 +2938,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.24.0"
+    "version": "0.25.0"
   },
   "paths": {
     "/v1/alerts": {

@@ -39,11 +39,13 @@ func TestSdkCloudBackupCreate(t *testing.T) {
 	uuid := "uuid"
 	taskId := "backup-task"
 	full := false
+	labels := map[string]string{"foo": "bar"}
 	req := &api.SdkCloudBackupCreateRequest{
 		VolumeId:     id,
 		CredentialId: uuid,
 		Full:         full,
 		TaskId:       taskId,
+		Labels:       labels,
 	}
 
 	// Create response
@@ -54,6 +56,7 @@ func TestSdkCloudBackupCreate(t *testing.T) {
 			CredentialUUID: uuid,
 			Full:           false,
 			Name:           taskId,
+			Labels:         labels,
 		}).
 		Return(&api.CloudBackupCreateResponse{Name: "good-backup-name"}, nil).
 		Times(1)
