@@ -19,19 +19,27 @@ func TestClientBackup(t *testing.T) {
 	cl, err := client.NewDriverClient(ts.URL, mockDriverName, "", mockDriverName)
 	require.NoError(t, err)
 
-	testVolDriver.MockDriver().EXPECT().CloudBackupCreate(&api.CloudBackupCreateRequest{
-		VolumeID:       "goodvol",
-		CredentialUUID: "",
-		Full:           false}).Return(&api.CloudBackupCreateResponse{Name: "good-backup-Name"}, nil).Times(1)
-	testVolDriver.MockDriver().EXPECT().CloudBackupCreate(&api.CloudBackupCreateRequest{
-		VolumeID:       "badvol",
-		CredentialUUID: "",
-		Full:           false}).Return(nil, fmt.Errorf("Volume not found")).Times(1)
-	testVolDriver.MockDriver().EXPECT().CloudBackupCreate(&api.CloudBackupCreateRequest{
-		VolumeID:       "goodvol",
-		CredentialUUID: "",
-		Full:           false,
-		Name:           "unique-id-from-app"}).Return(&api.CloudBackupCreateResponse{Name: "unique-id-from-app"}, nil).Times(1)
+	testVolDriver.MockDriver().EXPECT().
+		CloudBackupCreate(&api.CloudBackupCreateRequest{
+			VolumeID:       "goodvol",
+			CredentialUUID: "",
+			Full:           false}).
+		Return(&api.CloudBackupCreateResponse{Name: "good-backup-Name"}, nil).Times(1)
+	testVolDriver.MockDriver().EXPECT().
+		CloudBackupCreate(&api.CloudBackupCreateRequest{
+			VolumeID:       "badvol",
+			CredentialUUID: "",
+			Full:           false}).
+		Return(nil, fmt.Errorf("Volume not found")).Times(1)
+	testVolDriver.MockDriver().EXPECT().
+		CloudBackupCreate(&api.CloudBackupCreateRequest{
+			VolumeID:       "goodvol",
+			CredentialUUID: "",
+			Full:           false,
+			Name:           "unique-id-from-app",
+			Labels:         map[string]string{"app": "mysql", "tier": "backend"},
+		}).
+		Return(&api.CloudBackupCreateResponse{Name: "unique-id-from-app"}, nil).Times(1)
 
 	// Create Backup
 	createResponse, err := client.VolumeDriver(cl).
@@ -53,7 +61,8 @@ func TestClientBackup(t *testing.T) {
 			VolumeID:       "goodvol",
 			CredentialUUID: "",
 			Full:           false,
-			Name:           "unique-id-from-app"})
+			Name:           "unique-id-from-app",
+			Labels:         map[string]string{"app": "mysql", "tier": "backend"}})
 	require.NoError(t, err)
 	require.Equal(t, createResponse.Name, "unique-id-from-app")
 

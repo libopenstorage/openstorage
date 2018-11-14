@@ -5,20 +5,24 @@
 
 ## Releases
 
-### v0.25.0 - Tech Preview (11/14/2018)
+### v0.26.0 - Tech Preview (11/14/2018)
 * Extend attribute of StorageResource to be marked as a cache.
+
+### v0.25.0 - Tech Preview (11/13/2018)
+
+* Added labels field to cloud backup create message
 
 ### v0.24.0 - Tech Preview (11/12/2018)
 
 * Added ETA fields to cloud backup and cloud migrate status messages
-  
+
 ### v0.23.0 - Tech Preview (11/2/2018)
 
 * Cloud migrate status and cloud backup status now report
   total bytes to be transferred and bytes already transferred.
 * These status blocks also report the start time of the operation
   so that client could calculate progress of the operation.
-  
+
 ### v0.22.0 - Tech Preview (11/1/2018)
 
 * Rename the field "name" to "TaskId" in sdkCloudBackupcreate/restore/status
@@ -132,4 +136,3 @@ NOTE: This release has breaking chages for the Mount/Attach/Detach/Unmount calls
 
 * Added [Idenity](https://libopenstorage.github.io/w/generated-api.html#serviceopenstorageapiopenstorageidentity) Service
 * Added [Identity.Capabilities](https://libopenstorage.github.io/w/generated-api.html#methodopenstorageapiopenstorageidentitycapabilities) RPC
-
