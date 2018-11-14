@@ -5,6 +5,9 @@
 
 ## Releases
 
+### v0.26.0 - Tech Preview (11/14/2018)
+* Extend attribute of StorageResource to be marked as a cache.
+
 ### v0.25.0 - Tech Preview (11/13/2018)
 
 * Added labels field to cloud backup create message

@@ -2374,6 +2374,11 @@
     },
     "apiStorageResource": {
       "properties": {
+        "cache": {
+          "format": "boolean",
+          "title": "True if dedicated as cache",
+          "type": "boolean"
+        },
         "id": {
           "description": "Id is the LUN identifier.",
           "type": "string"
@@ -2939,7 +2944,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.25.0"
+    "version": "0.26.0"
   },
   "paths": {
     "/v1/alerts": {
