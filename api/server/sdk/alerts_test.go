@@ -377,8 +377,13 @@ func TestAlertsServerEnumerateError(t *testing.T) {
 
 		s.MockFilterDeleter().EXPECT().Enumerate(filters...).Return(myAlerts, err).Times(1)
 		// Get info
-		_, outErr := c.Enumerate(context.Background(), configs[0].req)
-		assert.Error(t, outErr, err.Error())
+		enumerateClient, enumerateClientErr := c.Enumerate(context.Background(), configs[0].req)
+		assert.NoError(t, enumerateClientErr)
+		for {
+			_, outErr := enumerateClient.Recv()
+			if outErr == io.EOF { break }
+			assert.Error(t, outErr, err.Error())
+		}
 	}
 }
 
