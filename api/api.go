@@ -269,7 +269,8 @@ type CloudBackupCreateRequest struct {
 	// Name is optional unique id to be used for this backup
 	// If not specified backup creates this by default
 	Name string
-	// Labels list of key value pairs to tag the cloud backup
+	// Labels are list of key value pairs to tag the cloud backup. These labels
+	// are stored in the metadata associated with the backup.
 	Labels map[string]string
 }
 

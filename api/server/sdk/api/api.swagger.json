@@ -829,7 +829,7 @@
           "additionalProperties": {
             "type": "string"
           },
-          "title": "Labels list of key value pairs to tag the cloud backup",
+          "description": "Labels are list of key value pairs to tag the cloud backup. These labels\nare stored in the metadata associated with the backup.",
           "type": "object"
         },
         "task_id": {
