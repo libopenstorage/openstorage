@@ -5,9 +5,13 @@
 
 ## Releases
 
-### v0.24.0 
+### v0.25.0 - Tech Preview (11/14/2018)
 * Extend attribute of StorageResource to be marked as a cache.
 
+### v0.24.0 - Tech Preview (11/12/2018)
+
+* Added ETA fields to cloud backup and cloud migrate status messages
+  
 ### v0.23.0 - Tech Preview (11/2/2018)
 
 * Cloud migrate status and cloud backup status now report

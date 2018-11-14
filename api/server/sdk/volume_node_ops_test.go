@@ -22,13 +22,11 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-
+	"github.com/libopenstorage/openstorage/api"
+	mountattachoptions "github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	"github.com/libopenstorage/openstorage/api"
-	mountattachoptions "github.com/libopenstorage/openstorage/pkg/options"
 )
 
 func TestSdkVolumeAttachSuccess(t *testing.T) {
