@@ -2597,6 +2597,7 @@ message CloudMigrate {
         InProgress = 3;
         Failed = 4;
         Complete = 5;
+        Canceled = 6;
     }
 }
 
