@@ -28,7 +28,7 @@ import (
 
 // IdentityServer is an implementation of the gRPC OpenStorageIdentityServer interface
 type IdentityServer struct {
-	server *Server
+	server serverAccessor
 }
 
 func (s *IdentityServer) driver() volume.VolumeDriver {

@@ -28,7 +28,7 @@ import (
 
 // CredentialServer is an implementation of the gRPC OpenStorageCredential interface
 type CredentialServer struct {
-	server *Server
+	server serverAccessor
 }
 
 func (s *CredentialServer) driver() volume.VolumeDriver {

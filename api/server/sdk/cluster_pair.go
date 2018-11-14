@@ -27,7 +27,7 @@ import (
 
 // ClusterPairServer is an implementation of the gRPC OpenStorageClusterServer interface
 type ClusterPairServer struct {
-	server *Server
+	server serverAccessor
 }
 
 func (s *ClusterPairServer) cluster() cluster.Cluster {
@@ -39,6 +39,9 @@ func (s *ClusterPairServer) Create(
 	ctx context.Context,
 	req *api.SdkClusterPairCreateRequest,
 ) (*api.SdkClusterPairCreateResponse, error) {
+	if s.cluster() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
 	if req.GetRequest() == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "Must supply valid request")
@@ -60,6 +63,9 @@ func (s *ClusterPairServer) Inspect(
 	ctx context.Context,
 	req *api.SdkClusterPairInspectRequest,
 ) (*api.SdkClusterPairInspectResponse, error) {
+	if s.cluster() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
 	if len(req.GetId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply cluster ID")
@@ -78,6 +84,9 @@ func (s *ClusterPairServer) Enumerate(
 	ctx context.Context,
 	req *api.SdkClusterPairEnumerateRequest,
 ) (*api.SdkClusterPairEnumerateResponse, error) {
+	if s.cluster() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
 	resp, err := s.cluster().EnumeratePairs()
 	if err != nil {
@@ -93,6 +102,9 @@ func (s *ClusterPairServer) GetToken(
 	ctx context.Context,
 	req *api.SdkClusterPairGetTokenRequest,
 ) (*api.SdkClusterPairGetTokenResponse, error) {
+	if s.cluster() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
 	resp, err := s.cluster().GetPairToken(false)
 	if err != nil {
@@ -108,6 +120,9 @@ func (s *ClusterPairServer) ResetToken(
 	ctx context.Context,
 	req *api.SdkClusterPairResetTokenRequest,
 ) (*api.SdkClusterPairResetTokenResponse, error) {
+	if s.cluster() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
 	resp, err := s.cluster().GetPairToken(true)
 	if err != nil {
@@ -123,6 +138,9 @@ func (s *ClusterPairServer) Delete(
 	ctx context.Context,
 	req *api.SdkClusterPairDeleteRequest,
 ) (*api.SdkClusterPairDeleteResponse, error) {
+	if s.cluster() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
 	if len(req.GetClusterId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply valid cluster ID")

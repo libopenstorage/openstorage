@@ -28,7 +28,7 @@ import (
 
 // NodeServer is an implementation of the gRPC OpenStorageNodeServer interface
 type NodeServer struct {
-	server *Server
+	server serverAccessor
 }
 
 func (s *NodeServer) cluster() cluster.Cluster {
