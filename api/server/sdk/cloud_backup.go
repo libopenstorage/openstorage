@@ -56,6 +56,7 @@ func (s *CloudBackupServer) Create(
 		CredentialUUID: req.GetCredentialId(),
 		Full:           req.GetFull(),
 		Name:           req.GetTaskId(),
+		Labels:         req.GetLabels(),
 	})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to create backup: %v", err)

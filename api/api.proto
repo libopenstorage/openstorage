@@ -2159,7 +2159,8 @@ message SdkCloudBackupCreateRequest {
   // TaskId of the task performing this backup. This value can be used for
   // idempotency.
   string task_id = 4;
-  // Labels list of key value pairs to tag the cloud backup
+  // Labels are list of key value pairs to tag the cloud backup. These labels
+  // are stored in the metadata associated with the backup.
   map<string, string> labels = 5;
 }
 
