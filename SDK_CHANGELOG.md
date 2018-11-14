@@ -5,7 +5,12 @@
 
 ## Releases
 
+### v0.27.0 - Tech Preview (11/8/2018)
+
+* Add new API for extracting volume capacity usage details.
+
 ### v0.26.0 - Tech Preview (11/14/2018)
+
 * Extend attribute of StorageResource to be marked as a cache.
 
 ### v0.25.0 - Tech Preview (11/13/2018)

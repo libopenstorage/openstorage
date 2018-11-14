@@ -533,6 +533,14 @@ type CloudBackupSchedEnumerateResponse struct {
 	Schedules map[string]CloudBackupScheduleInfo
 }
 
+// Defines the response for CapacityUsage request
+type CapacityUsageResponse struct {
+	CapacityUsageInfo *CapacityUsageInfo
+	// Describes the err if all of the usage details could not be obtained
+	Error error
+}
+
+//
 // DriverTypeSimpleValueOf returns the string format of DriverType
 func DriverTypeSimpleValueOf(s string) (DriverType, error) {
 	obj, err := simpleValueOf("driver_type", DriverType_value, s)
