@@ -147,9 +147,6 @@ endif
 		-I $(PROTOS_PATH)/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
 		--swagger_out=logtostderr=true:$(PROTOSRC_PATH)/api/server/sdk \
 		$(PROTOSRC_PATH)/api/api.proto
-	@echo "Generating grpc protobuf definitions from pkg/flexvolume/flexvolume.proto"
-	$(PROTOC) -I/usr/local/include -I$(PROTOSRC_PATH) -I$(PROTOS_PATH)/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis --go_out=plugins=grpc:. $(PROTOSRC_PATH)/pkg/flexvolume/flexvolume.proto
-	$(PROTOC) -I/usr/local/include -I$(PROTOSRC_PATH) -I$(PROTOS_PATH)/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis --grpc-gateway_out=logtostderr=true:. $(PROTOSRC_PATH)/pkg/flexvolume/flexvolume.proto
 	@echo "Generating protobuf definitions from pkg/jsonpb/testing/testing.proto"
 	$(PROTOC) -I $(PROTOSRC_PATH) $(PROTOSRC_PATH)/pkg/jsonpb/testing/testing.proto --go_out=plugins=grpc:.
 	@echo "Updating SDK versions"
@@ -293,15 +290,6 @@ launch-local-btrfs: install
 	sudo bash -x etc/btrfs/init.sh
 	sudo $(shell which osd) -d -f etc/config/config_btrfs.yaml
 
-install-flexvolume:
-	go install -a -tags "$(TAGS)" github.com/libopenstorage/openstorage/pkg/flexvolume github.com/libopenstorage/openstorage/pkg/flexvolume/cmd/flexvolume
-
-install-flexvolume-plugin: install-flexvolume
-	sudo rm -rf /usr/libexec/kubernetes/kubelet/volume/exec-plugins/openstorage~openstorage
-	sudo mkdir -p /usr/libexec/kubernetes/kubelet/volume/exec-plugins/openstorage~openstorage
-	sudo chmod 777 /usr/libexec/kubernetes/kubelet/volume/exec-plugins/openstorage~openstorage
-	cp $(GOPATH)/bin/flexvolume /usr/libexec/kubernetes/kubelet/volume/exec-plugins/openstorage~openstorage/openstorage
-
 clean: $(OSDSANITY)-clean
 	go clean -i $(PKGS)
 	packr clean
@@ -331,7 +319,6 @@ clean: $(OSDSANITY)-clean
 	docker-build-osd \
 	launch \
 	launch-local-btrfs \
-	install-flexvolume-plugin \
 	$(OSDSANITY)-install \
 	$(OSDSANITY)-clean \
 	clean \
