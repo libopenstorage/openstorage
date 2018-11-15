@@ -1274,7 +1274,7 @@ service OpenStorageMigrate {
       };
     }
 
-  // Inspect the status of migration operation  
+  // Inspect the status of migration operation
   rpc Status(SdkCloudMigrateStatusRequest)
     returns (SdkCloudMigrateStatusResponse) {
       option(google.api.http) = {
@@ -2583,7 +2583,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 23;
+    Minor = 24;
     // SDK version patch value of this specification
     Patch = 0;
   }
@@ -2655,36 +2655,36 @@ message CloudMigrateStartRequest {
     string task_id = 4;
 }
 
-// Defines a migration request 
+// Defines a migration request
 message SdkCloudMigrateStartRequest {
   // Defines a migration request for a volume
-  message MigrateVolume { 
+  message MigrateVolume {
     string volume_id = 1;
   }
 
   // Defines a migration request for a volume group
-  message MigrateVolumeGroup { 
+  message MigrateVolumeGroup {
     string group_id = 1;
   }
-  
+
   // Defines a migration request for all volumes in a cluster
-  message MigrateAllVolumes { 
+  message MigrateAllVolumes {
   }
 
   // ID of the cluster to which volumes are to be migrated
   string cluster_id = 1;
-  
-  // Unique name assocaiated with this migration. 
+
+  // Unique name assocaiated with this migration.
   // This is a Optional field for idempotency
   string task_id = 2;
-  
+
   oneof opt {
     // Request to migrate a volume
     MigrateVolume volume = 200;
 
     // Request to migrate a volume group
     MigrateVolumeGroup volume_group = 201;
-    
+
     // Request to migrate all volumes
     MigrateAllVolumes all_volumes = 202;
   }
@@ -2924,7 +2924,7 @@ message ClusterPairsEnumerateResponse {
 
 // Defines a list of cluster pair
 message SdkClusterPairEnumerateResponse {
-  // List of all the cluster pairs 
+  // List of all the cluster pairs
   ClusterPairsEnumerateResponse result = 1;
 }
 
