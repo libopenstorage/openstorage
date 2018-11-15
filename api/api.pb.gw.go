@@ -993,32 +993,24 @@ func request_OpenStorageCloudBackup_DeleteAll_0(ctx context.Context, marshaler r
 
 }
 
-var (
-	filter_OpenStorageCloudBackup_Enumerate_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
-)
-
-func request_OpenStorageCloudBackup_Enumerate_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageCloudBackupClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq SdkCloudBackupEnumerateRequest
+func request_OpenStorageCloudBackup_EnumerateWithFilters_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageCloudBackupClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SdkCloudBackupEnumerateWithFiltersRequest
 	var metadata runtime.ServerMetadata
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_OpenStorageCloudBackup_Enumerate_0); err != nil {
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.Enumerate(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.EnumerateWithFilters(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
-
-var (
-	filter_OpenStorageCloudBackup_Status_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
-)
 
 func request_OpenStorageCloudBackup_Status_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageCloudBackupClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq SdkCloudBackupStatusRequest
 	var metadata runtime.ServerMetadata
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_OpenStorageCloudBackup_Status_0); err != nil {
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -1027,15 +1019,11 @@ func request_OpenStorageCloudBackup_Status_0(ctx context.Context, marshaler runt
 
 }
 
-var (
-	filter_OpenStorageCloudBackup_Catalog_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
-)
-
 func request_OpenStorageCloudBackup_Catalog_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageCloudBackupClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq SdkCloudBackupCatalogRequest
 	var metadata runtime.ServerMetadata
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_OpenStorageCloudBackup_Catalog_0); err != nil {
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -1044,16 +1032,26 @@ func request_OpenStorageCloudBackup_Catalog_0(ctx context.Context, marshaler run
 
 }
 
-var (
-	filter_OpenStorageCloudBackup_History_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
-)
-
 func request_OpenStorageCloudBackup_History_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageCloudBackupClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq SdkCloudBackupHistoryRequest
 	var metadata runtime.ServerMetadata
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_OpenStorageCloudBackup_History_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["src_volume_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "src_volume_id")
+	}
+
+	protoReq.SrcVolumeId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "src_volume_id", err)
 	}
 
 	msg, err := client.History(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -1416,7 +1414,7 @@ func RegisterOpenStorageClusterHandlerClient(ctx context.Context, mux *runtime.S
 }
 
 var (
-	pattern_OpenStorageCluster_InspectCurrent_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "clusters", "current"}, ""))
+	pattern_OpenStorageCluster_InspectCurrent_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "clusters", "inspectcurrent"}, ""))
 )
 
 var (
@@ -1641,7 +1639,7 @@ func RegisterOpenStorageClusterPairHandlerClient(ctx context.Context, mux *runti
 var (
 	pattern_OpenStorageClusterPair_Create_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "clusterpairs"}, ""))
 
-	pattern_OpenStorageClusterPair_Inspect_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "clusterpairs", "id"}, ""))
+	pattern_OpenStorageClusterPair_Inspect_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "clusterpairs", "inspect", "id"}, ""))
 
 	pattern_OpenStorageClusterPair_Enumerate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "clusterpairs"}, ""))
 
@@ -1795,9 +1793,9 @@ func RegisterOpenStorageNodeHandlerClient(ctx context.Context, mux *runtime.Serv
 }
 
 var (
-	pattern_OpenStorageNode_Inspect_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "nodes", "node", "node_id"}, ""))
+	pattern_OpenStorageNode_Inspect_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "nodes", "inspect", "node_id"}, ""))
 
-	pattern_OpenStorageNode_InspectCurrent_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "nodes", "current"}, ""))
+	pattern_OpenStorageNode_InspectCurrent_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "nodes", "inspectcurrent"}, ""))
 
 	pattern_OpenStorageNode_Enumerate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "nodes"}, ""))
 )
@@ -2264,7 +2262,7 @@ var (
 
 	pattern_OpenStorageVolume_Delete_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "volumes", "volume_id"}, ""))
 
-	pattern_OpenStorageVolume_Inspect_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "volumes", "volume_id"}, ""))
+	pattern_OpenStorageVolume_Inspect_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "volumes", "inspect", "volume_id"}, ""))
 
 	pattern_OpenStorageVolume_Update_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "volumes", "volume_id"}, ""))
 
@@ -2796,7 +2794,7 @@ func RegisterOpenStorageObjectstoreHandlerClient(ctx context.Context, mux *runti
 }
 
 var (
-	pattern_OpenStorageObjectstore_Inspect_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "objectstores", "objectstore_id"}, ""))
+	pattern_OpenStorageObjectstore_Inspect_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "objectstores", "inspect", "objectstore_id"}, ""))
 
 	pattern_OpenStorageObjectstore_Create_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "objectstores"}, ""))
 
@@ -3006,11 +3004,11 @@ var (
 
 	pattern_OpenStorageCredentials_Enumerate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "credentials"}, ""))
 
-	pattern_OpenStorageCredentials_Inspect_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "credentials", "credential_id"}, ""))
+	pattern_OpenStorageCredentials_Inspect_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "credentials", "inspect", "credential_id"}, ""))
 
 	pattern_OpenStorageCredentials_Delete_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "credentials", "credential_id"}, ""))
 
-	pattern_OpenStorageCredentials_Validate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "credentials", "credential_id", "validate"}, ""))
+	pattern_OpenStorageCredentials_Validate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "credentials", "validate", "credential_id"}, ""))
 )
 
 var (
@@ -3218,7 +3216,7 @@ var (
 
 	pattern_OpenStorageSchedulePolicy_Enumerate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "schedulepolicies"}, ""))
 
-	pattern_OpenStorageSchedulePolicy_Inspect_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "schedulepolicies", "name"}, ""))
+	pattern_OpenStorageSchedulePolicy_Inspect_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "schedulepolicies", "inspect", "name"}, ""))
 
 	pattern_OpenStorageSchedulePolicy_Delete_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "schedulepolicies", "name"}, ""))
 )
@@ -3389,7 +3387,7 @@ func RegisterOpenStorageCloudBackupHandlerClient(ctx context.Context, mux *runti
 
 	})
 
-	mux.Handle("GET", pattern_OpenStorageCloudBackup_Enumerate_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_OpenStorageCloudBackup_EnumerateWithFilters_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -3407,18 +3405,18 @@ func RegisterOpenStorageCloudBackupHandlerClient(ctx context.Context, mux *runti
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_OpenStorageCloudBackup_Enumerate_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_OpenStorageCloudBackup_EnumerateWithFilters_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_OpenStorageCloudBackup_Enumerate_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_OpenStorageCloudBackup_EnumerateWithFilters_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_OpenStorageCloudBackup_Status_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_OpenStorageCloudBackup_Status_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -3447,7 +3445,7 @@ func RegisterOpenStorageCloudBackupHandlerClient(ctx context.Context, mux *runti
 
 	})
 
-	mux.Handle("GET", pattern_OpenStorageCloudBackup_Catalog_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_OpenStorageCloudBackup_Catalog_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -3633,13 +3631,13 @@ var (
 
 	pattern_OpenStorageCloudBackup_DeleteAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "cloudbackups", "deleteall"}, ""))
 
-	pattern_OpenStorageCloudBackup_Enumerate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "cloudbackups", "volume"}, ""))
+	pattern_OpenStorageCloudBackup_EnumerateWithFilters_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "cloudbackups", "enumerate", "filters"}, ""))
 
-	pattern_OpenStorageCloudBackup_Status_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "cloudbackups", "volume", "status"}, ""))
+	pattern_OpenStorageCloudBackup_Status_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "cloudbackups", "status"}, ""))
 
-	pattern_OpenStorageCloudBackup_Catalog_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "cloudbackups", "backup", "catalog"}, ""))
+	pattern_OpenStorageCloudBackup_Catalog_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "cloudbackups", "catalog"}, ""))
 
-	pattern_OpenStorageCloudBackup_History_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "cloudbackups", "volume", "history"}, ""))
+	pattern_OpenStorageCloudBackup_History_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "cloudbackups", "history", "src_volume_id"}, ""))
 
 	pattern_OpenStorageCloudBackup_StateChange_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "cloudbackups", "statechange"}, ""))
 
@@ -3659,7 +3657,7 @@ var (
 
 	forward_OpenStorageCloudBackup_DeleteAll_0 = runtime.ForwardResponseMessage
 
-	forward_OpenStorageCloudBackup_Enumerate_0 = runtime.ForwardResponseMessage
+	forward_OpenStorageCloudBackup_EnumerateWithFilters_0 = runtime.ForwardResponseMessage
 
 	forward_OpenStorageCloudBackup_Status_0 = runtime.ForwardResponseMessage
 

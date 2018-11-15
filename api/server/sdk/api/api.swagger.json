@@ -801,6 +801,20 @@
       "title": "Defines the response for Azure credentials",
       "type": "object"
     },
+    "apiSdkCloudBackupCatalogRequest": {
+      "properties": {
+        "backup_id": {
+          "title": "Id of the backup",
+          "type": "string"
+        },
+        "credential_id": {
+          "title": "Credential id describe the credentials for the cloud",
+          "type": "string"
+        }
+      },
+      "title": "Defines a request to get catalog of a backup stored by a cloud provider",
+      "type": "object"
+    },
     "apiSdkCloudBackupCatalogResponse": {
       "properties": {
         "contents": {
@@ -876,7 +890,31 @@
       "title": "Empty response",
       "type": "object"
     },
-    "apiSdkCloudBackupEnumerateResponse": {
+    "apiSdkCloudBackupEnumerateWithFiltersRequest": {
+      "description": "* For a specific volume in current cluster: Set `src_volume_id` to your desired volume id\nand do not provide `cluster_id` and `all`.\n* For a specific volume in a specific cluster: Set `src_volume_id` to your desired volume id\nand specify `cluster_id`.\n* For a specific volume in all clusters: Set `src_volume_id` to your desired volume id\nand set `all` to true, do not provide `cluster_id`.\n* For all volumes in current cluster: do not provide `cluster_id`, `volume_id` and `all`.\n* For all volumes in a specific cluster: Set `cluster_id` to your desired cluster id\nand do not provide `volume_id` and `all`.\n* For all volumes in all clusters: Set `all` to true do not provide `volume_id` and `cluster_id`.",
+      "properties": {
+        "all": {
+          "description": "(optional) All indicates if the request should show cloud backups for all clusters or the current cluster.",
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "cluster_id": {
+          "title": "(optional) Cluster id specifies the cluster for the request",
+          "type": "string"
+        },
+        "credential_id": {
+          "title": "Credential id is the credential for cloud to be used for the request",
+          "type": "string"
+        },
+        "src_volume_id": {
+          "description": "(optional) Source id of the volume for the request.",
+          "type": "string"
+        }
+      },
+      "title": "Defines a request to list the backups stored by a cloud provider.\nThe following combinations can be used to get cloud backup information:",
+      "type": "object"
+    },
+    "apiSdkCloudBackupEnumerateWithFiltersResponse": {
       "properties": {
         "backups": {
           "items": {
@@ -1153,6 +1191,25 @@
         }
       },
       "title": "SdkCloudBackupStatus defines the status of a backup stored by a cloud provider",
+      "type": "object"
+    },
+    "apiSdkCloudBackupStatusRequest": {
+      "properties": {
+        "local": {
+          "format": "boolean",
+          "title": "Local indicates if only those backups/restores that are\nactive on current node must be returned",
+          "type": "boolean"
+        },
+        "task_id": {
+          "description": "TaskId of the backup/restore task, if this is specified,\nvolume_id is ignored.",
+          "type": "string"
+        },
+        "volume_id": {
+          "description": "(optional) VolumeId is a value which is used to get information on the\nstatus of a backup for the specified volume. If no volume id and task_id\nis provided, then status for all volumes is returned.",
+          "type": "string"
+        }
+      },
+      "title": "Defines a request to retreive the status of a backup or restore for a\nspecified volume",
       "type": "object"
     },
     "apiSdkCloudBackupStatusResponse": {
@@ -2940,7 +2997,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.22.2"
+    "version": "0.22.3"
   },
   "paths": {
     "/v1/alerts": {
@@ -3004,39 +3061,6 @@
         ]
       }
     },
-    "/v1/cloudbackups/backup/catalog": {
-      "get": {
-        "operationId": "Catalog",
-        "parameters": [
-          {
-            "description": "Id of the backup.",
-            "in": "query",
-            "name": "backup_id",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "description": "Credential id describe the credentials for the cloud.",
-            "in": "query",
-            "name": "credential_id",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkCloudBackupCatalogResponse"
-            }
-          }
-        },
-        "summary": "Catalog returns a list of the contents in the backup",
-        "tags": [
-          "OpenStorageCloudBackup"
-        ]
-      }
-    },
     "/v1/cloudbackups/backup/{backup_id}": {
       "delete": {
         "operationId": "Delete",
@@ -3077,6 +3101,33 @@
         ]
       }
     },
+    "/v1/cloudbackups/catalog": {
+      "post": {
+        "operationId": "Catalog",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupCatalogRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupCatalogResponse"
+            }
+          }
+        },
+        "summary": "Catalog returns a list of the contents in the backup",
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      }
+    },
     "/v1/cloudbackups/deleteall": {
       "post": {
         "operationId": "DeleteAll",
@@ -3099,6 +3150,58 @@
           }
         },
         "summary": "DeleteAll deletes all the backups in the cloud for the specified volume.",
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      }
+    },
+    "/v1/cloudbackups/enumerate/filters": {
+      "post": {
+        "operationId": "EnumerateWithFilters",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupEnumerateWithFiltersRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupEnumerateWithFiltersResponse"
+            }
+          }
+        },
+        "summary": "Return a list of backups for the specified volume",
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      }
+    },
+    "/v1/cloudbackups/history/{src_volume_id}": {
+      "get": {
+        "operationId": "History",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "src_volume_id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupHistoryResponse"
+            }
+          }
+        },
+        "summary": "History returns a list of backups for a specified volume",
         "tags": [
           "OpenStorageCloudBackup"
         ]
@@ -3225,105 +3328,17 @@
         ]
       }
     },
-    "/v1/cloudbackups/volume": {
-      "get": {
-        "operationId": "Enumerate",
-        "parameters": [
-          {
-            "description": "(optional) Source id of the volume for the request.",
-            "in": "query",
-            "name": "src_volume_id",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "description": "(optional) Cluster id specifies the cluster for the request.",
-            "in": "query",
-            "name": "cluster_id",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "description": "Credential id is the credential for cloud to be used for the request.",
-            "in": "query",
-            "name": "credential_id",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "description": "(optional) All indicates if the request should show cloud backups for all clusters or the current cluster.",
-            "format": "boolean",
-            "in": "query",
-            "name": "all",
-            "required": false,
-            "type": "boolean"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkCloudBackupEnumerateResponse"
-            }
-          }
-        },
-        "summary": "Return a list of backups for the specified volume",
-        "tags": [
-          "OpenStorageCloudBackup"
-        ]
-      }
-    },
-    "/v1/cloudbackups/volume/history": {
-      "get": {
-        "operationId": "History",
-        "parameters": [
-          {
-            "description": "This optional value defines which history of backups is being\nrequested. If not provided, it will return the history for all volumes.",
-            "in": "query",
-            "name": "src_volume_id",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkCloudBackupHistoryResponse"
-            }
-          }
-        },
-        "summary": "History returns a list of backups for a specified volume",
-        "tags": [
-          "OpenStorageCloudBackup"
-        ]
-      }
-    },
-    "/v1/cloudbackups/volume/status": {
-      "get": {
+    "/v1/cloudbackups/status": {
+      "post": {
         "operationId": "Status",
         "parameters": [
           {
-            "description": "VolumeId is an optional value which is used to get information on the\nstatus of a backup for the specified volume. If no volume id and task_id\nis provided, then status for all volumes is returned.",
-            "in": "query",
-            "name": "volume_id",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "description": "Local indicates if only those backups/restores that are\nactive on current node must be returned.",
-            "format": "boolean",
-            "in": "query",
-            "name": "local",
-            "required": false,
-            "type": "boolean"
-          },
-          {
-            "description": "TaskId of the backup/restore task, if this is specified,\nvolume_id is ignored.",
-            "in": "query",
-            "name": "task_id",
-            "required": false,
-            "type": "string"
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudBackupStatusRequest"
+            }
           }
         ],
         "responses": {
@@ -3378,6 +3393,31 @@
           }
         },
         "summary": "Creates Pair with a remote cluster and returns details about the remote cluster",
+        "tags": [
+          "OpenStorageClusterPair"
+        ]
+      }
+    },
+    "/v1/clusterpairs/inspect/{id}": {
+      "get": {
+        "operationId": "Inspect",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkClusterPairInspectResponse"
+            }
+          }
+        },
+        "summary": "Inspect information about a cluster pair",
         "tags": [
           "OpenStorageClusterPair"
         ]
@@ -3450,32 +3490,7 @@
         ]
       }
     },
-    "/v1/clusterpairs/{id}": {
-      "get": {
-        "operationId": "Inspect",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkClusterPairInspectResponse"
-            }
-          }
-        },
-        "summary": "Inspect information about a cluster pair",
-        "tags": [
-          "OpenStorageClusterPair"
-        ]
-      }
-    },
-    "/v1/clusters/current": {
+    "/v1/clusters/inspectcurrent": {
       "get": {
         "operationId": "InspectCurrent",
         "responses": {
@@ -3535,30 +3550,7 @@
         ]
       }
     },
-    "/v1/credentials/{credential_id}": {
-      "delete": {
-        "operationId": "Delete",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "credential_id",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkCredentialDeleteResponse"
-            }
-          }
-        },
-        "summary": "Delete a specified credential",
-        "tags": [
-          "OpenStorageCredentials"
-        ]
-      },
+    "/v1/credentials/inspect/{credential_id}": {
       "get": {
         "operationId": "Inspect",
         "parameters": [
@@ -3583,7 +3575,7 @@
         ]
       }
     },
-    "/v1/credentials/{credential_id}/validate": {
+    "/v1/credentials/validate/{credential_id}": {
       "get": {
         "operationId": "Validate",
         "parameters": [
@@ -3603,6 +3595,31 @@
           }
         },
         "summary": "Validate is used to validate credentials",
+        "tags": [
+          "OpenStorageCredentials"
+        ]
+      }
+    },
+    "/v1/credentials/{credential_id}": {
+      "delete": {
+        "operationId": "Delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "credential_id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCredentialDeleteResponse"
+            }
+          }
+        },
+        "summary": "Delete a specified credential",
         "tags": [
           "OpenStorageCredentials"
         ]
@@ -3767,24 +3784,7 @@
         ]
       }
     },
-    "/v1/nodes/current": {
-      "get": {
-        "operationId": "InspectCurrent",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkNodeInspectCurrentResponse"
-            }
-          }
-        },
-        "summary": "InspectCurrent returns information about the storage node\nwhere the client is currently connected to.",
-        "tags": [
-          "OpenStorageNode"
-        ]
-      }
-    },
-    "/v1/nodes/node/{node_id}": {
+    "/v1/nodes/inspect/{node_id}": {
       "get": {
         "operationId": "Inspect",
         "parameters": [
@@ -3804,6 +3804,23 @@
           }
         },
         "summary": "Inspect returns information about the specified node",
+        "tags": [
+          "OpenStorageNode"
+        ]
+      }
+    },
+    "/v1/nodes/inspectcurrent": {
+      "get": {
+        "operationId": "InspectCurrent",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkNodeInspectCurrentResponse"
+            }
+          }
+        },
+        "summary": "InspectCurrent returns information about the storage node\nwhere the client is currently connected to.",
         "tags": [
           "OpenStorageNode"
         ]
@@ -3836,6 +3853,31 @@
         ]
       }
     },
+    "/v1/objectstores/inspect/{objectstore_id}": {
+      "get": {
+        "operationId": "Inspect",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "objectstore_id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkObjectstoreInspectResponse"
+            }
+          }
+        },
+        "summary": "Inspect returns information about the object store endpoint",
+        "tags": [
+          "OpenStorageObjectstore"
+        ]
+      }
+    },
     "/v1/objectstores/{objectstore_id}": {
       "delete": {
         "operationId": "Delete",
@@ -3856,29 +3898,6 @@
           }
         },
         "summary": "Delete destroys the object store endpoint on the volume",
-        "tags": [
-          "OpenStorageObjectstore"
-        ]
-      },
-      "get": {
-        "operationId": "Inspect",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "objectstore_id",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkObjectstoreInspectResponse"
-            }
-          }
-        },
-        "summary": "Inspect returns information about the object store endpoint",
         "tags": [
           "OpenStorageObjectstore"
         ]
@@ -3982,6 +4001,31 @@
         ]
       }
     },
+    "/v1/schedulepolicies/inspect/{name}": {
+      "get": {
+        "operationId": "Inspect",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkSchedulePolicyInspectResponse"
+            }
+          }
+        },
+        "summary": "Inspect returns information about a specified schedule",
+        "tags": [
+          "OpenStorageSchedulePolicy"
+        ]
+      }
+    },
     "/v1/schedulepolicies/{name}": {
       "delete": {
         "operationId": "Delete",
@@ -4002,29 +4046,6 @@
           }
         },
         "summary": "Delete removes a snapshot schedule",
-        "tags": [
-          "OpenStorageSchedulePolicy"
-        ]
-      },
-      "get": {
-        "operationId": "Inspect",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "name",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkSchedulePolicyInspectResponse"
-            }
-          }
-        },
-        "summary": "Inspect returns information about a specified schedule",
         "tags": [
           "OpenStorageSchedulePolicy"
         ]
@@ -4191,6 +4212,31 @@
           }
         },
         "summary": "Enumerate returns a list of volume ids that match the labels if any are provided.",
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/volumes/inspect/{volume_id}": {
+      "get": {
+        "operationId": "Inspect",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "volume_id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeInspectResponse"
+            }
+          }
+        },
+        "summary": "Inspect returns information about a volume",
         "tags": [
           "OpenStorageVolume"
         ]
@@ -4420,29 +4466,6 @@
           }
         },
         "summary": "Delete deletes the provided volume",
-        "tags": [
-          "OpenStorageVolume"
-        ]
-      },
-      "get": {
-        "operationId": "Inspect",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "volume_id",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkVolumeInspectResponse"
-            }
-          }
-        },
-        "summary": "Inspect returns information about a volume",
         "tags": [
           "OpenStorageVolume"
         ]

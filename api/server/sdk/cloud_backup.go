@@ -155,10 +155,10 @@ func (s *CloudBackupServer) DeleteAll(
 }
 
 // Enumerate returns information about the backups
-func (s *CloudBackupServer) Enumerate(
+func (s *CloudBackupServer) EnumerateWithFilters(
 	ctx context.Context,
-	req *api.SdkCloudBackupEnumerateRequest,
-) (*api.SdkCloudBackupEnumerateResponse, error) {
+	req *api.SdkCloudBackupEnumerateWithFiltersRequest,
+) (*api.SdkCloudBackupEnumerateWithFiltersResponse, error) {
 	if s.driver() == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
@@ -179,7 +179,7 @@ func (s *CloudBackupServer) Enumerate(
 		return nil, status.Errorf(codes.Internal, "Failed to enumerate backups: %v", err)
 	}
 
-	return r.ToSdkCloudBackupEnumerateResponse(), nil
+	return r.ToSdkCloudBackupEnumerateWithFiltersResponse(), nil
 }
 
 // Status provides status on a backup

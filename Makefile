@@ -170,7 +170,7 @@ ifndef HAS_SDKTEST
 endif
 
 test-sdk: install-sdk-test launch-sdk
-	timeout 30 sh -c 'until curl --silent -X GET -d {} http://localhost:9110/v1/clusters/current | grep STATUS_OK; do sleep 1; done'
+	timeout 30 sh -c 'until curl --silent -X GET -d {} http://localhost:9110/v1/clusters/inspectcurrent | grep STATUS_OK; do sleep 1; done'
 	sdk-test -ginkgo.noColor -ginkgo.noisySkippings=false -sdk.endpoint=localhost:9100 -sdk.cpg=$(GOPATH)/src/github.com/libopenstorage/sdk-test/cmd/sdk-test/cb.yaml
 
 test: packr
