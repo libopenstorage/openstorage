@@ -167,6 +167,27 @@
       "title": "- ATTACH_STATE_EXTERNAL: Attached and available externally\n - ATTACH_STATE_INTERNAL: Attached but only available internally\n - ATTACH_STATE_INTERNAL_SWITCH: Switching from External to Internal",
       "type": "string"
     },
+    "apiCapacityUsageInfo": {
+      "description": "Provides details on exclusive and shared storage used by\nsnapshot/volume specifically for copy-on-write(COW) snapshots. Deletion\nof snapshots and overwirte of volume will affect the exclusive storage\nused by the other dependent snaps and parent volume.",
+      "properties": {
+        "exclusive_bytes": {
+          "description": "Storage consumed exclusively by this single snapshot. Deletion of this\nsnapshot may increase the free storage available by this amount.",
+          "format": "int64",
+          "type": "string"
+        },
+        "shared_bytes": {
+          "format": "int64",
+          "title": "Storage consumed by this snapshot that is shared with parent and children",
+          "type": "string"
+        },
+        "total_bytes": {
+          "format": "int64",
+          "title": "TotalBytes used by this volume",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
     "apiCloudMigrateCancelRequest": {
       "properties": {
         "task_id": {
@@ -1786,6 +1807,16 @@
       "title": "Defines a response from the node which received the request to attach",
       "type": "object"
     },
+    "apiSdkVolumeCapacityUsageResponse": {
+      "properties": {
+        "capacity_usage_info": {
+          "$ref": "#/definitions/apiCapacityUsageInfo",
+          "title": "CapacityUsage details"
+        }
+      },
+      "title": "Defines response containing volume/snapshot capacity usage details",
+      "type": "object"
+    },
     "apiSdkVolumeCloneRequest": {
       "properties": {
         "name": {
@@ -2909,7 +2940,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.22.0"
+    "version": "0.23.0"
   },
   "paths": {
     "/v1/alerts": {
@@ -4338,6 +4369,32 @@
           }
         },
         "summary": "Stats returns the statistics for the requested volume",
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/volumes/usage/{volume_id}": {
+      "get": {
+        "description": "##### Error codes:\n\n* codes.Aborted : Command was aborted and only total_bytes field is valid\n* code.Unimmplemented : Command is not suported this kernel.Only total_bytes\nfield is valid;",
+        "operationId": "CapacityUsage",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "volume_id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeCapacityUsageResponse"
+            }
+          }
+        },
+        "summary": "CapacityUsage returns volume/snapshot's capacity usage details",
         "tags": [
           "OpenStorageVolume"
         ]

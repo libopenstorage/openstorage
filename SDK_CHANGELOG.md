@@ -5,6 +5,10 @@
 
 ## Releases
 
+### v0.23.0 - Tech Preview (11/8/2018)
+
+* Add new API for extracting volume capacity usage details.
+
 ### v0.22.0 - Tech Preview (11/1/2018)
 
 * Rename the field "name" to "TaskId" in sdkCloudBackupcreate/restore/status

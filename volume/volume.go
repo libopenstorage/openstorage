@@ -36,6 +36,8 @@ var (
 	ErrNotSupported = errors.New("Operation not supported")
 	// ErrVolBusy returned when volume is in busy state
 	ErrVolBusy = errors.New("Volume is busy")
+	// ErrAborted returned when capacityUsageInfo cannot be returned
+	ErrAborted = errors.New("Aborted CapacityUsage request")
 	// ErrInvalidName returned when Cloudbackup Name/request is invalid
 	ErrInvalidName = errors.New("Invalid name for cloud backup/restore request")
 )
@@ -122,6 +124,9 @@ type StatsDriver interface {
 	UsedSize(volumeID string) (uint64, error)
 	// GetActiveRequests get active requests
 	GetActiveRequests() (*api.ActiveRequests, error)
+	// CapacityUsage returns both exclusive and shared usage
+	// of a snap/volume
+	CapacityUsage(ID string) (*api.CapacityUsageResponse, error)
 }
 
 type QuiesceDriver interface {
