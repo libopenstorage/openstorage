@@ -1041,6 +1041,18 @@
 			"revisionTime": "2016-07-01T21:55:24Z"
 		},
 		{
+			"checksumSHA1": "4owLcxwLFcNhxmUpDC5KR3duspU=",
+			"path": "github.com/libopenstorage/openstorage/pkg/flexvolume",
+			"revision": "501049066d62fd28e88924d9820ddd4460396992",
+			"revisionTime": "2016-07-01T21:55:24Z"
+		},
+		{
+			"checksumSHA1": "dF/gRx2Ef4LdYaM4MDpjwxWYNjo=",
+			"path": "github.com/libopenstorage/openstorage/pkg/flexvolume/cmd/flexvolume",
+			"revision": "501049066d62fd28e88924d9820ddd4460396992",
+			"revisionTime": "2016-07-01T21:55:24Z"
+		},
+		{
 			"checksumSHA1": "Fc+o+y2kCMu5szHTv5m4Q8S5by8=",
 			"path": "github.com/libopenstorage/openstorage/pkg/jsonpb",
 			"revision": "501049066d62fd28e88924d9820ddd4460396992",

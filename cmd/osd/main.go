@@ -36,6 +36,7 @@ import (
 	"github.com/codegangsta/cli"
 	"github.com/docker/docker/pkg/reexec"
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/api/flexvolume"
 	"github.com/libopenstorage/openstorage/api/server"
 	"github.com/libopenstorage/openstorage/api/server/sdk"
 	osdcli "github.com/libopenstorage/openstorage/cli"
@@ -99,11 +100,6 @@ func main() {
 			Name:  "sdkrestport",
 			Usage: "gRPC REST Gateway port for SDK. Example: 9110",
 			Value: "9110",
-		},
-		cli.StringFlag{
-			Name:  "gossipport",
-			Usage: "Gossip port. Example: 9002",
-			Value: "9002",
 		},
 		cli.StringFlag{
 			Name:  "nodeid",
@@ -358,6 +354,10 @@ func start(c *cli.Context) error {
 		return fmt.Errorf("Invalid OSD config file: Default Driver specified but driver not initialized")
 	}
 
+	if err := flexvolume.StartFlexVolumeAPI(config.FlexVolumePort, cfg.Osd.ClusterConfig.DefaultDriver); err != nil {
+		return fmt.Errorf("Unable to start flexvolume API: %v", err)
+	}
+
 	// Start the graph drivers.
 	for d := range cfg.Osd.GraphDrivers {
 		logrus.Infof("Starting graph driver: %v", d)
@@ -374,7 +374,7 @@ func start(c *cli.Context) error {
 		if err := cm.StartWithConfiguration(
 			0,
 			false,
-			c.String("gossipport"),
+			"9002",
 			&cluster.ClusterServerConfiguration{
 				ConfigSchedManager:       schedpolicy.NewFakeScheduler(),
 				ConfigObjectStoreManager: objectstore.NewfakeObjectstore(),
