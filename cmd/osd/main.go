@@ -102,6 +102,11 @@ func main() {
 			Value: "9110",
 		},
 		cli.StringFlag{
+			Name:  "gossipport",
+			Usage: "Gossip port. Example: 9002",
+			Value: "9002",
+		},
+		cli.StringFlag{
 			Name:  "nodeid",
 			Usage: "Name of this node",
 			Value: "1",
@@ -374,7 +379,7 @@ func start(c *cli.Context) error {
 		if err := cm.StartWithConfiguration(
 			0,
 			false,
-			"9002",
+			c.String("gossipport"),
 			&cluster.ClusterServerConfiguration{
 				ConfigSchedManager:       schedpolicy.NewFakeScheduler(),
 				ConfigObjectStoreManager: objectstore.NewfakeObjectstore(),
