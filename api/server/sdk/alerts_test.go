@@ -379,13 +379,8 @@ func TestAlertsServerEnumerateError(t *testing.T) {
 		// Get info
 		enumerateClient, enumerateClientErr := c.Enumerate(context.Background(), configs[0].req)
 		assert.NoError(t, enumerateClientErr)
-		for {
-			_, outErr := enumerateClient.Recv()
-			if outErr == io.EOF {
-				break
-			}
-			assert.Error(t, outErr, err.Error())
-		}
+		_, outErr := enumerateClient.Recv()
+		assert.Error(t, outErr, err.Error())
 	}
 }
 
