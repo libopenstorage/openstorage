@@ -1,4 +1,4 @@
-// Please use the following editor setup for this file:
+
 // Tab size=2; Tabs as spaces; Clean up trailing whitepsace
 //
 // In vim add: au FileType proto setl sw=2 ts=2 expandtab list
@@ -2583,9 +2583,9 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 24;
+    Minor = 22;
     // SDK version patch value of this specification
-    Patch = 0;
+    Patch = 2;
   }
 
   // The following cannot be set to use the enum Version because the REST
