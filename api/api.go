@@ -849,8 +849,8 @@ func (b *CloudBackupInfo) ToSdkCloudBackupInfo() *SdkCloudBackupInfo {
 	return info
 }
 
-func (r *CloudBackupEnumerateResponse) ToSdkCloudBackupEnumerateResponse() *SdkCloudBackupEnumerateResponse {
-	resp := &SdkCloudBackupEnumerateResponse{
+func (r *CloudBackupEnumerateResponse) ToSdkCloudBackupEnumerateWithFiltersResponse() *SdkCloudBackupEnumerateWithFiltersResponse {
+	resp := &SdkCloudBackupEnumerateWithFiltersResponse{
 		Backups: make([]*SdkCloudBackupInfo, len(r.Backups)),
 	}
 
