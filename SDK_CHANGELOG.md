@@ -5,6 +5,11 @@
 
 ## Releases
 
+### v0.22.3 - Tech Preview (11/15/2018)
+
+* (breaking change) Restructured all SDK REST routes
+* (breaking change) Reworded OpenStorageCloudBackup.Enumerate to EnumerateWithFilters
+
 ### v0.22.2 - Tech Preview (11/15/2018)
 
 * Added labels field to cloud backup create message
