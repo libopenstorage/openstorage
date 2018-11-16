@@ -5,11 +5,11 @@
 
 ## Releases
 
-### v0.24.0 - Tech Preview (11/15/2018)
+### v0.22.2 - Tech Preview (11/15/2018)
 
 * Added labels field to cloud backup create message
 
-### v0.23.0 - Tech Preview (11/8/2018)
+### v0.22.1 - Tech Preview (11/8/2018)
 
 * Add new API for extracting volume capacity usage details.
 
