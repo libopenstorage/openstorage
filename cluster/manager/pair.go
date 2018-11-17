@@ -375,9 +375,30 @@ func pairDelete(id string) error {
 
 	defaultId, err := getDefaultPairId()
 	if err != kvdb.ErrNotFound && defaultId == id {
-		err = deleteDefaultPairId()
+		defaultUpdated := false
+		// Set one of the other pairs as the default
+		pairs, err := pairList()
 		if err != nil {
-			return fmt.Errorf("error deleting default pair id")
+			logrus.Warnf("Error getting clusterpairs, will not update default: %v", err)
+		} else {
+			for _, pair := range pairs {
+				if pair.Id != id {
+					err := setDefaultPairId(pair.Id)
+					if err != nil {
+						logrus.Warnf("Error updating default clusterpair: %v", err)
+					} else {
+						defaultUpdated = true
+						break
+					}
+				}
+			}
+
+		}
+		if !defaultUpdated {
+			err = deleteDefaultPairId()
+			if err != nil {
+				return fmt.Errorf("error deleting default pair id")
+			}
 		}
 	}
 
