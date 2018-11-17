@@ -282,7 +282,7 @@ func TestSdkCloudBackupDeleteAllBadArguments(t *testing.T) {
 	assert.Contains(t, serverError.Message(), "credential uuid")
 }
 
-func TestSdkCloudBackupEnumerate(t *testing.T) {
+func TestSdkCloudBackupEnumerateWithFilters(t *testing.T) {
 
 	// Create server and client connection
 	s := newTestServer(t)
@@ -290,7 +290,7 @@ func TestSdkCloudBackupEnumerate(t *testing.T) {
 
 	id := "myvol"
 	uuid := "uuid"
-	req := &api.SdkCloudBackupEnumerateRequest{
+	req := &api.SdkCloudBackupEnumerateWithFiltersRequest{
 		SrcVolumeId:  id,
 		CredentialId: uuid,
 	}
@@ -336,7 +336,7 @@ func TestSdkCloudBackupEnumerate(t *testing.T) {
 	c := api.NewOpenStorageCloudBackupClient(s.Conn())
 
 	// Get info
-	r, err := c.Enumerate(context.Background(), req)
+	r, err := c.EnumerateWithFilters(context.Background(), req)
 	assert.NoError(t, err)
 	assert.NotNil(t, r.GetBackups())
 	assert.Len(t, r.GetBackups(), 2)
@@ -355,20 +355,20 @@ func TestSdkCloudBackupEnumerate(t *testing.T) {
 	}
 }
 
-func TestSdkCloudBackupEnumerateBadArguments(t *testing.T) {
+func TestSdkCloudBackupEnumerateWithFiltersBadArguments(t *testing.T) {
 
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.SdkCloudBackupEnumerateRequest{}
+	req := &api.SdkCloudBackupEnumerateWithFiltersRequest{}
 
 	// Setup client
 	c := api.NewOpenStorageCloudBackupClient(s.Conn())
 
 	// Missing credential uuid
 	req.SrcVolumeId = "id"
-	_, err := c.Enumerate(context.Background(), req)
+	_, err := c.EnumerateWithFilters(context.Background(), req)
 	serverError, ok := status.FromError(err)
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
