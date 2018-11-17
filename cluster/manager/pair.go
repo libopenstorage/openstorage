@@ -84,7 +84,7 @@ func (c *ClusterManager) CreatePair(
 	return response, nil
 }
 
-// RemotePairPair handles a remote cluster's pair request
+// ProcessPairRequest handles a remote cluster's pair request
 func (c *ClusterManager) ProcessPairRequest(
 	request *api.ClusterPairProcessRequest,
 ) (*api.ClusterPairProcessResponse, error) {
@@ -290,9 +290,21 @@ func pairCreate(info *api.ClusterPairInfo, setDefault bool) error {
 	_, err = kv.Create(key, info, 0)
 	if err != nil {
 		if err == kvdb.ErrExist {
-			return fmt.Errorf("Already paired with cluster %v", info.Id)
+			kvp, err = kv.Get(key)
+			if err != nil {
+				return err
+			}
+			storedInfo := &api.ClusterPairInfo{}
+			err = json.Unmarshal(kvp.Value, &storedInfo)
+			if err != nil {
+				return err
+			}
+			if info.Token != storedInfo.Token {
+				return fmt.Errorf("Invalid token for already paired cluster %v", info.Id)
+			}
+		} else {
+			return err
 		}
-		return err
 	}
 
 	defaultId, err := getDefaultPairId()
