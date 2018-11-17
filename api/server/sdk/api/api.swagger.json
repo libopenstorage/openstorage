@@ -2997,11 +2997,27 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.22.3"
+    "version": "0.29.3"
   },
   "paths": {
     "/v1/alerts": {
-      "delete": {
+      "get": {
+        "description": "#### Enumerate\nEnumerate allows 3 different types of queries as defined below:\n\n* Query that takes only resource type as input\n* Query that takes resource type and alert type as input and\n* Query that takes resource id, alert type and resource type as input.\n\n#### Input\nSdkAlertsEnumerateRequest takes a list of such queries and the returned\noutput is a collective ouput from each of these queries. In that sense,\nthe filtering of these queries has a behavior of OR operation.\nEach query also has a list of optional options. These options allow\nnarrowing down the scope of alerts search. These options have a\nbehavior of an AND operation.\n\n#### Examples\nTo search by a resource type in a given time window would require\ninitializing SdkAlertsResourceTypeQuery query and pass in\nSdkAlertsTimeSpan option into SdkAlertsQuery struct and finally\npacking any other such queries into SdkAlertsEnumerateRequest object.\nAlternatively, to search by both resource type and alert type, use\nSdkAlertsAlertTypeQuery as query builder.\nFinally to search all alerts of a given resource type and some\nalerts of another resource type but with specific alert type,\nuse two queries, first initialized with SdkAlertsResourceTypeQuery\nand second initialized with SdkAlertsAlertTypeQuery and both\neventually packed as list in SdkAlertsEnumerateRequest.",
+        "operationId": "Enumerate",
+        "responses": {
+          "200": {
+            "description": "(streaming responses)",
+            "schema": {
+              "$ref": "#/definitions/apiSdkAlertsEnumerateResponse"
+            }
+          }
+        },
+        "summary": "Enumerate allows querying alerts.",
+        "tags": [
+          "OpenStorageAlerts"
+        ]
+      },
+      "post": {
         "description": "#### Delete\nDelete allows 3 different types of queries as defined below:\n\n* Query that takes only resource type as input\n* Query that takes resource type and alert type as input and\n* Query that takes resource id, alert type and resource type as input.\n\n#### Input\nSdkAlertsEnumerateRequest takes a list of such queries and all alerts\nthat match at least one of the queries are deleted.",
         "operationId": "Delete",
         "responses": {
@@ -3013,22 +3029,6 @@
           }
         },
         "summary": "Delete allows deleting alerts.",
-        "tags": [
-          "OpenStorageAlerts"
-        ]
-      },
-      "get": {
-        "description": "#### Enumerate\nEnumerate allows 3 different types of queries as defined below:\n\n* Query that takes only resource type as input\n* Query that takes resource type and alert type as input and\n* Query that takes resource id, alert type and resource type as input.\n\n#### Input\nSdkAlertsEnumerateRequest takes a list of such queries and the returned\noutput is a collective ouput from each of these queries. In that sense,\nthe filtering of these queries has a behavior of OR operation.\nEach query also has a list of optional options. These options allow\nnarrowing down the scope of alerts search. These options have a\nbehavior of an AND operation.\n\n#### Examples\nTo search by a resource type in a given time window would require\ninitializing SdkAlertsResourceTypeQuery query and pass in\nSdkAlertsTimeSpan option into SdkAlertsQuery struct and finally\npacking any other such queries into SdkAlertsEnumerateRequest object.\nAlternatively, to search by both resource type and alert type, use\nSdkAlertsAlertTypeQuery as query builder.\nFinally to search all alerts of a given resource type and some\nalerts of another resource type but with specific alert type,\nuse two queries, first initialized with SdkAlertsResourceTypeQuery\nand second initialized with SdkAlertsAlertTypeQuery and both\neventually packed as list in SdkAlertsEnumerateRequest.",
-        "operationId": "Enumerate",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkAlertsEnumerateResponse"
-            }
-          }
-        },
-        "summary": "Enumerate allows querying alerts.",
         "tags": [
           "OpenStorageAlerts"
         ]

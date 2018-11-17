@@ -32,7 +32,7 @@ var (
 	filter_OpenStorageAlerts_Enumerate_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 )
 
-func request_OpenStorageAlerts_Enumerate_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageAlertsClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_OpenStorageAlerts_Enumerate_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageAlertsClient, req *http.Request, pathParams map[string]string) (OpenStorageAlerts_EnumerateClient, runtime.ServerMetadata, error) {
 	var protoReq SdkAlertsEnumerateRequest
 	var metadata runtime.ServerMetadata
 
@@ -40,8 +40,16 @@ func request_OpenStorageAlerts_Enumerate_0(ctx context.Context, marshaler runtim
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.Enumerate(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	stream, err := client.Enumerate(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
 
 }
 
@@ -1184,11 +1192,11 @@ func RegisterOpenStorageAlertsHandlerClient(ctx context.Context, mux *runtime.Se
 			return
 		}
 
-		forward_OpenStorageAlerts_Enumerate_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_OpenStorageAlerts_Enumerate_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("DELETE", pattern_OpenStorageAlerts_Delete_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_OpenStorageAlerts_Delete_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -1227,7 +1235,7 @@ var (
 )
 
 var (
-	forward_OpenStorageAlerts_Enumerate_0 = runtime.ForwardResponseMessage
+	forward_OpenStorageAlerts_Enumerate_0 = runtime.ForwardResponseStream
 
 	forward_OpenStorageAlerts_Delete_0 = runtime.ForwardResponseMessage
 )
