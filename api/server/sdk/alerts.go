@@ -19,6 +19,7 @@ package sdk
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/libopenstorage/openstorage/alerts"
@@ -111,16 +112,15 @@ func getFilters(queries []*api.SdkAlertsQuery) []alerts.Filter {
 // Enumerate implements api.OpenStorageAlertsServer for alertsServer.
 // Input context should ideally have a deadline, in which case, a
 // graceful exit is ensured within that deadline.
-func (g *alertsServer) Enumerate(request *api.SdkAlertsEnumerateRequest, stream api.OpenStorageAlerts_EnumerateServer) error {
-	ctx := stream.Context()
-
+func (g *alertsServer) Enumerate(ctx context.Context,
+	request *api.SdkAlertsEnumerateRequest) (*api.SdkAlertsEnumerateResponse, error) {
 	if g.alert() == nil {
-		return status.Error(codes.Unavailable, "Resource has not been initialized")
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
 	queries := request.GetQueries()
 	if queries == nil {
-		return status.Error(codes.InvalidArgument, "Must provide at least one query")
+		return nil, status.Error(codes.InvalidArgument, "Must provide at least one query")
 	}
 
 	// if input has deadline, ensure graceful exit within that deadline.
@@ -135,6 +135,9 @@ func (g *alertsServer) Enumerate(request *api.SdkAlertsEnumerateRequest, stream 
 	group, _ := errgroup.WithContext(ctx)
 	errChan := make(chan error)
 
+	resp := new(api.SdkAlertsEnumerateResponse)
+	var mu sync.Mutex
+
 	filters := getFilters(queries)
 
 	// spawn err-group process.
@@ -143,19 +146,9 @@ func (g *alertsServer) Enumerate(request *api.SdkAlertsEnumerateRequest, stream 
 		if out, err := g.alert().Enumerate(filters...); err != nil {
 			return err
 		} else {
-			step := 128
-			for i := 0; i < len(out); i += step {
-				start := i * step
-				stop := (i + 1) * step
-				if stop >= len(out) {
-					stop = len(out)
-				}
-				resp := new(api.SdkAlertsEnumerateResponse)
-				resp.Alerts = append(resp.Alerts, out[start:stop]...)
-				if err := stream.Send(resp); err != nil {
-					return err
-				}
-			}
+			mu.Lock()
+			resp.Alerts = append(resp.Alerts, out...)
+			mu.Unlock()
 			return nil
 		}
 	})
@@ -169,12 +162,12 @@ func (g *alertsServer) Enumerate(request *api.SdkAlertsEnumerateRequest, stream 
 	select {
 	case err := <-errChan:
 		if err != nil {
-			return status.Errorf(codes.Internal, "error enumerating alerts: %v", err)
+			return nil, status.Errorf(codes.Internal, "error enumerating alerts: %v", err)
 		} else {
-			return nil
+			return resp, nil
 		}
 	case <-ctx.Done():
-		return status.Error(codes.DeadlineExceeded,
+		return nil, status.Error(codes.DeadlineExceeded,
 			"Deadline is reached, server side func exiting")
 	}
 }

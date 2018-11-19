@@ -634,7 +634,7 @@ service OpenStorageAlerts {
     // and second initialized with SdkAlertsAlertTypeQuery and both
     // eventually packed as list in SdkAlertsEnumerateRequest.
     rpc Enumerate(SdkAlertsEnumerateRequest)
-    returns (stream SdkAlertsEnumerateResponse) {
+    returns (SdkAlertsEnumerateResponse) {
         option(google.api.http) = {
                 get: "/v1/alerts"
             };
@@ -654,7 +654,7 @@ service OpenStorageAlerts {
     rpc Delete(SdkAlertsDeleteRequest)
     returns (SdkAlertsDeleteResponse) {
       option(google.api.http) = {
-                post: "/v1/alerts"
+                delete: "/v1/alerts"
             };
     }
 }
@@ -2586,9 +2586,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-
-    Minor = 29;
-    
+    Minor = 22;
     // SDK version patch value of this specification
     Patch = 3;
   }

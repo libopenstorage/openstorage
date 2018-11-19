@@ -20,7 +20,6 @@ package sdk
 import (
 	"context"
 	"errors"
-	"io"
 	"testing"
 	"time"
 
@@ -333,21 +332,9 @@ func TestAlertsServerEnumerate(t *testing.T) {
 		s.MockFilterDeleter().EXPECT().Enumerate(filters...).Return(myAlerts, nil).Times(1)
 
 		// Get info
-		enumerateClient, err := c.Enumerate(context.Background(), config.req)
+		r, err := c.Enumerate(context.Background(), config.req)
 		assert.NoError(t, err)
-
-		R := new(api.SdkAlertsEnumerateResponse)
-		for {
-			r, err := enumerateClient.Recv()
-			if err == io.EOF {
-				break
-			}
-			assert.NoError(t, err)
-
-			R.Alerts = append(R.Alerts, r.Alerts...)
-		}
-
-		assert.Len(t, R.Alerts, config.expected)
+		assert.Len(t, r.Alerts, config.expected)
 	}
 }
 
@@ -377,9 +364,7 @@ func TestAlertsServerEnumerateError(t *testing.T) {
 
 		s.MockFilterDeleter().EXPECT().Enumerate(filters...).Return(myAlerts, err).Times(1)
 		// Get info
-		enumerateClient, enumerateClientErr := c.Enumerate(context.Background(), configs[0].req)
-		assert.NoError(t, enumerateClientErr)
-		_, outErr := enumerateClient.Recv()
+		_, outErr := c.Enumerate(context.Background(), configs[0].req)
 		assert.Error(t, outErr, err.Error())
 	}
 }
