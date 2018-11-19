@@ -392,6 +392,8 @@ func TestSdkCloudBackupStatus(t *testing.T) {
 				OpType:         api.CloudBackupOp,
 				Status:         api.CloudBackupStatusPaused,
 				BytesDone:      123456,
+				BytesTotal:     123456,
+				EtaSeconds:     0,
 				StartTime:      time.Now(),
 				CompletedTime:  time.Now(),
 				NodeID:         "mynode",
@@ -402,6 +404,8 @@ func TestSdkCloudBackupStatus(t *testing.T) {
 				OpType:         api.CloudRestoreOp,
 				Status:         api.CloudBackupStatusDone,
 				BytesDone:      97324,
+				BytesTotal:     123456,
+				EtaSeconds:     37,
 				StartTime:      time.Now(),
 				CompletedTime:  time.Now(),
 				NodeID:         "myothernode",
@@ -434,6 +438,8 @@ func TestSdkCloudBackupStatus(t *testing.T) {
 		status := statuses.Statuses[k]
 		assert.Equal(t, v.GetBackupId(), status.ID)
 		assert.Equal(t, v.GetBytesDone(), status.BytesDone)
+		assert.Equal(t, v.GetBytesTotal(), status.BytesTotal)
+		assert.Equal(t, v.GetEtaSeconds(), status.EtaSeconds)
 		assert.Equal(t, v.GetNodeId(), status.NodeID)
 		assert.Equal(t, v.GetOptype(), api.CloudBackupOpTypeToSdkCloudBackupOpType(status.OpType))
 		assert.Equal(t, v.GetStatus(), api.CloudBackupStatusTypeToSdkCloudBackupStatusType(status.Status))
