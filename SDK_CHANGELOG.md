@@ -5,7 +5,11 @@
 
 ## Releases
 
-### v0.22.5 - Tech Preview (11/2/2018)
+### v0.22.6 - Tech Preview (11/20/2018)
+
+* SDK Alerts enumerate chunking bug resolution.
+
+### v0.22.5 - Tech Preview (11/20/2018)
 
 * Cloud migrate status and cloud backup status now report
   total bytes to be transferred and bytes already transferred.
