@@ -5,6 +5,10 @@
 
 ## Releases
 
+### v0.22.4 - Tech Preview (11/19/2018)
+
+* SDK Alerts enumerate is now a server side streaming api.
+
 ### v0.22.3 - Tech Preview (11/15/2018)
 
 * (breaking change) Restructured all SDK REST routes
