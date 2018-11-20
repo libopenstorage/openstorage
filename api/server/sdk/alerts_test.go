@@ -369,6 +369,11 @@ func TestAlertsServerEnumerateChunkingLogic(t *testing.T) {
 		},
 	}
 
+	var filters []interface{}
+	for _, filter := range getFilters(req.Queries) {
+		filters = append(filters, filter)
+	}
+
 	myAlerts := make([]*api.Alert, alertChunkSize*5/2)
 	for i := range myAlerts {
 		myAlerts[i] = new(api.Alert)
@@ -377,7 +382,7 @@ func TestAlertsServerEnumerateChunkingLogic(t *testing.T) {
 		myAlerts[i].ResourceId = fmt.Sprintf("resource-%d", i)
 	}
 
-	s.MockFilterDeleter().EXPECT().Enumerate(nil...).Return(myAlerts, nil).Times(1)
+	s.MockFilterDeleter().EXPECT().Enumerate(filters...).Return(myAlerts, nil).Times(1)
 
 	// Get info
 	enumerateClient, err := c.Enumerate(context.Background(), req)
