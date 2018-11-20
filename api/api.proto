@@ -2355,7 +2355,7 @@ message SdkCloudBackupStatus {
   // State indicates if the op is currently active/done/failed
   SdkCloudBackupStatusType status = 3;
   // BytesDone indicates total Bytes uploaded/downloaded
-  uint64 bytes_done = 4;
+  int64 bytes_done = 4;
   // StartTime indicates Op's start time
   google.protobuf.Timestamp start_time = 5;
   // CompletedTime indicates Op's completed time
@@ -2370,7 +2370,7 @@ message SdkCloudBackupStatus {
   // CredentialId is the credential used for cloud with this backup/restore op
   string credential_id  = 10;
   // BytesTotal is the total number of bytes being transferred
-  uint64 bytes_total = 11;
+  int64 bytes_total = 11;
   // ETASeconds is the number of seconds for cloud backup completion
   int64 eta_seconds = 12;
 }
@@ -2753,9 +2753,9 @@ message CloudMigrateInfo {
     // CompletedTime indicates Op's completed time
     google.protobuf.Timestamp completed_time = 12;
     // BytesTotal is the number of bytes being transferred
-    uint64 bytes_total = 13;
+    int64 bytes_total = 13;
     // BytesDone is the number of bytes already transferred
-    uint64 bytes_done = 14;
+    int64 bytes_done = 14;
     // ETASeconds the time duration in seconds for cloud migration completion
     int64 eta_seconds = 15;
 }

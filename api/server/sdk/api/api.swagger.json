@@ -201,12 +201,12 @@
     "apiCloudMigrateInfo": {
       "properties": {
         "bytes_done": {
-          "format": "uint64",
+          "format": "int64",
           "title": "BytesDone is the number of bytes already transferred",
           "type": "string"
         },
         "bytes_total": {
-          "format": "uint64",
+          "format": "int64",
           "title": "BytesTotal is the number of bytes being transferred",
           "type": "string"
         },
@@ -1168,12 +1168,12 @@
           "type": "string"
         },
         "bytes_done": {
-          "format": "uint64",
+          "format": "int64",
           "title": "BytesDone indicates total Bytes uploaded/downloaded",
           "type": "string"
         },
         "bytes_total": {
-          "format": "uint64",
+          "format": "int64",
           "title": "BytesTotal is the total number of bytes being transferred",
           "type": "string"
         },

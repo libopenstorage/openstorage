@@ -409,9 +409,9 @@ type CloudBackupStatus struct {
 	// State indicates if the op is currently active/done/failed
 	Status CloudBackupStatusType
 	// BytesDone indicates Bytes uploaded/downloaded so far
-	BytesDone uint64
+	BytesDone int64
 	// BytesTotal is the total number of bytes being transferred
-	BytesTotal uint64
+	BytesTotal int64
 	// EtaSeconds estimated time in seconds for backup/restore completion
 	EtaSeconds int64
 	// StartTime indicates Op's start time
