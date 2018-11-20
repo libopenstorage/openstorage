@@ -29,6 +29,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+const (
+	alertChunkSize = 128
+)
+
 // alertsServer implements api.OpenStorageAlertsServer.
 // In order to use this server implementation just have
 // alertsServer pointer properly instantiated with a valid
@@ -138,22 +142,30 @@ func (g *alertsServer) Enumerate(request *api.SdkAlertsEnumerateRequest, stream 
 	filters := getFilters(queries)
 
 	// spawn err-group process.
-	// collect output using mutex.
 	group.Go(func() error {
 		if out, err := g.alert().Enumerate(filters...); err != nil {
 			return err
 		} else {
-			step := 128
-			for i := 0; i < len(out); i += step {
-				start := i * step
-				stop := (i + 1) * step
-				if stop >= len(out) {
+			for i := 0; ; i++ {
+				start := i * alertChunkSize
+				stop := (i + 1) * alertChunkSize
+
+				if start >= len(out) {
+					break
+				}
+
+				if stop > len(out) {
 					stop = len(out)
 				}
+
 				resp := new(api.SdkAlertsEnumerateResponse)
 				resp.Alerts = append(resp.Alerts, out[start:stop]...)
 				if err := stream.Send(resp); err != nil {
 					return err
+				}
+
+				if stop == len(out) {
+					break
 				}
 			}
 			return nil
