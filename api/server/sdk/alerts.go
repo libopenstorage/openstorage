@@ -138,7 +138,6 @@ func (g *alertsServer) Enumerate(request *api.SdkAlertsEnumerateRequest, stream 
 	filters := getFilters(queries)
 
 	// spawn err-group process.
-	// collect output using mutex.
 	group.Go(func() error {
 		if out, err := g.alert().Enumerate(filters...); err != nil {
 			return err
@@ -152,7 +151,7 @@ func (g *alertsServer) Enumerate(request *api.SdkAlertsEnumerateRequest, stream 
 					break
 				}
 
-				if stop >= len(out) {
+				if stop > len(out) {
 					stop = len(out)
 				}
 
