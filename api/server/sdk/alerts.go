@@ -144,16 +144,26 @@ func (g *alertsServer) Enumerate(request *api.SdkAlertsEnumerateRequest, stream 
 			return err
 		} else {
 			step := 128
-			for i := 0; i < len(out); i += step {
+			for i := 0; ; i++ {
 				start := i * step
 				stop := (i + 1) * step
+
+				if start >= len(out) {
+					break
+				}
+
 				if stop >= len(out) {
 					stop = len(out)
 				}
+
 				resp := new(api.SdkAlertsEnumerateResponse)
 				resp.Alerts = append(resp.Alerts, out[start:stop]...)
 				if err := stream.Send(resp); err != nil {
 					return err
+				}
+
+				if stop == len(out) {
+					break
 				}
 			}
 			return nil
