@@ -2591,6 +2591,7 @@ message SdkVersion {
     Major = 0;
     // SDK version minor value of this specification
     Minor = 22;
+
     // SDK version patch value of this specification
     Patch = 4;
   }
