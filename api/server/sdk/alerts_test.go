@@ -377,7 +377,7 @@ func TestAlertsServerEnumerateChunkingLogic(t *testing.T) {
 		myAlerts[i].ResourceId = fmt.Sprintf("resource-%d", i)
 	}
 
-	s.MockFilterDeleter().EXPECT().Enumerate().Return(myAlerts, nil).Times(1)
+	s.MockFilterDeleter().EXPECT().Enumerate(nil...).Return(myAlerts, nil).Times(1)
 
 	// Get info
 	enumerateClient, err := c.Enumerate(context.Background(), req)
