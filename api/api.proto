@@ -2367,6 +2367,10 @@ message SdkCloudBackupStatus {
   repeated string info = 9;
   // CredentialId is the credential used for cloud with this backup/restore op
   string credential_id  = 10;
+  // BytesTotal is the total number of bytes being transferred
+  uint64 bytes_total = 11;
+  // ETASeconds is the number of seconds for cloud backup completion
+  int64 eta_seconds = 12;
 }
 
 // Defines a request to retreive the status of a backup or restore for a
@@ -2587,7 +2591,6 @@ message SdkVersion {
     Major = 0;
     // SDK version minor value of this specification
     Minor = 22;
-
     // SDK version patch value of this specification
     Patch = 4;
   }
@@ -2743,8 +2746,16 @@ message CloudMigrateInfo {
     google.protobuf.Timestamp last_update = 9;
     // Contains the reason for the migration error
     string error_reason = 10;
-    // time_remaining is the estimated time remaining to completion
-    int64 time_remaining = 11;
+    // StartTime indicates Op's start time
+    google.protobuf.Timestamp start_time = 11;
+    // CompletedTime indicates Op's completed time
+    google.protobuf.Timestamp completed_time = 12;
+    // BytesTotal is the number of bytes being transferred
+    uint64 bytes_total = 13;
+    // BytesDone is the number of bytes already transferred
+    uint64 bytes_done = 14;
+    // ETASeconds the time duration in seconds for cloud migration completion
+    int64 eta_seconds = 15;
 }
 
 message CloudMigrateInfoList {

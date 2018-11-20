@@ -23,15 +23,12 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/sched"
 	"github.com/libopenstorage/openstorage/schedpolicy"
-
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	"github.com/libopenstorage/openstorage/api"
 )
 
 func TestSdkSchedulePolicyCreateSuccess(t *testing.T) {

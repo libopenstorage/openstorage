@@ -408,8 +408,12 @@ type CloudBackupStatus struct {
 	OpType CloudBackupOpType
 	// State indicates if the op is currently active/done/failed
 	Status CloudBackupStatusType
-	// BytesDone indicates total Bytes uploaded/downloaded
+	// BytesDone indicates Bytes uploaded/downloaded so far
 	BytesDone uint64
+	// BytesTotal is the total number of bytes being transferred
+	BytesTotal uint64
+	// EtaSeconds estimated time in seconds for backup/restore completion
+	EtaSeconds int64
 	// StartTime indicates Op's start time
 	StartTime time.Time
 	// CompletedTime indicates Op's completed time
@@ -880,6 +884,8 @@ func (s CloudBackupStatus) ToSdkCloudBackupStatus() *SdkCloudBackupStatus {
 		Info:         s.Info,
 		CredentialId: s.CredentialUUID,
 		SrcVolumeId:  s.SrcVolumeID,
+		EtaSeconds:   s.EtaSeconds,
+		BytesTotal:   s.BytesTotal,
 	}
 
 	status.StartTime, _ = ptypes.TimestampProto(s.StartTime)

@@ -5,6 +5,14 @@
 
 ## Releases
 
+### v0.22.5 - Tech Preview (11/2/2018)
+
+* Cloud migrate status and cloud backup status now report
+  total bytes to be transferred and bytes already transferred.
+* These status blocks also report the start time of the operation
+  so that client could calculate progress of the operation.
+* Added ETA fields to cloud backup and cloud migrate status messages
+  
 ### v0.22.4 - Tech Preview (11/19/2018)
 
 * SDK Alerts enumerate is now a server side streaming api.

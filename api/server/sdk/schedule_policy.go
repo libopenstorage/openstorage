@@ -20,10 +20,9 @@ package sdk
 import (
 	"context"
 
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/portworx/kvdb"
-
-	"github.com/libopenstorage/openstorage/api"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
