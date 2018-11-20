@@ -5,6 +5,10 @@
 
 ## Releases
 
+### v0.30.0 - Tech Preview (11/20/2018)
+
+* SDK Alerts enumerate chunking bug resolution.
+
 ### v0.29.0 - Tech Preview (11/17/2018)
 
 * SDK Alerts enumerate is now a server side streaming api.
