@@ -216,7 +216,7 @@ func (c *ClusterManager) EnumeratePairs() (*api.ClusterPairsEnumerateResponse, e
 	response.Pairs = pairs
 	response.DefaultId, err = getDefaultPairId()
 	if err != nil {
-		logrus.Warnf("Error getting default cluster pair: %v", err)
+		logrus.Debugf("Error getting default cluster pair: %v", err)
 	}
 	return response, nil
 }
