@@ -19,7 +19,7 @@ package csi
 import (
 	"fmt"
 
-	csi "github.com/container-storage-interface/spec/lib/go/csi/v0"
+	csi "github.com/container-storage-interface/spec/lib/go/csi"
 	"google.golang.org/grpc"
 
 	"github.com/libopenstorage/openstorage/api/spec"

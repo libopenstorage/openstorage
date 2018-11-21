@@ -22,7 +22,7 @@ import (
 	"testing"
 	"time"
 
-	csi "github.com/container-storage-interface/spec/lib/go/csi/v0"
+	csi "github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/golang/mock/gomock"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/stretchr/testify/assert"
@@ -30,65 +30,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
-
-func TestNewCSIServerGetNodeId(t *testing.T) {
-
-	// Create server and client connection
-	s := newTestServer(t)
-	defer s.Stop()
-
-	// Make a call
-	c := csi.NewNodeClient(s.Conn())
-
-	s.MockCluster().
-		EXPECT().
-		Enumerate().
-		Return(api.Cluster{
-			Status: api.Status_STATUS_OK,
-			Id:     "pwx-testcluster",
-			NodeId: "pwx-testnodeid",
-		}, nil).
-		Times(1)
-
-	// Setup request
-	req := &csi.NodeGetIdRequest{}
-
-	r, err := c.NodeGetId(context.Background(), req)
-	assert.Nil(t, err)
-	assert.NotNil(t, r)
-
-	// Verify
-	nodeid := r.GetNodeId()
-	assert.Equal(t, nodeid, "pwx-testnodeid")
-}
-
-func TestNewCSIServerGetNodeIdEnumerateError(t *testing.T) {
-
-	// Create server and client connection
-	s := newTestServer(t)
-	defer s.Stop()
-
-	// Make a call
-	c := csi.NewNodeClient(s.Conn())
-
-	s.MockCluster().
-		EXPECT().
-		Enumerate().
-		Return(api.Cluster{}, fmt.Errorf("TEST")).
-		Times(1)
-
-	// Setup request
-	req := &csi.NodeGetIdRequest{}
-
-	// Expect error without version
-	_, err := c.NodeGetId(context.Background(), req)
-
-	assert.NotNil(t, err)
-	serverError, ok := status.FromError(err)
-	assert.True(t, ok)
-	assert.Equal(t, serverError.Code(), codes.Internal)
-	assert.Contains(t, serverError.Message(), "TEST")
-}
 
 func TestNodePublishVolumeBadArguments(t *testing.T) {
 	// Create server and client connection
@@ -218,7 +159,7 @@ func TestNodePublishVolumeBadAttribute(t *testing.T) {
 		},
 
 		// This will cause an error
-		VolumeAttributes: map[string]string{
+		VolumeContext: map[string]string{
 			api.SpecFilesystem: "whatkindoffsisthis?",
 		},
 	}

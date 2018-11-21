@@ -25,7 +25,7 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/portworx/kvdb"
 
-	csi "github.com/container-storage-interface/spec/lib/go/csi/v0"
+	csi "github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
@@ -369,22 +369,22 @@ func TestControllerValidateVolumeAccessModeSNWR(t *testing.T) {
 	c := csi.NewControllerClient(s.Conn())
 	r, err := c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.True(t, r.Supported)
+	assert.NotNil(t, r.GetConfirmed())
 
 	// Expect RO and non-SH
 	r, err = c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.False(t, r.Supported)
+	assert.Nil(t, r.GetConfirmed())
 
 	// Expect non-RO and SH
 	r, err = c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.False(t, r.Supported)
+	assert.Nil(t, r.GetConfirmed())
 
 	// Expect RO and SH
 	r, err = c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.False(t, r.Supported)
+	assert.Nil(t, r.GetConfirmed())
 }
 
 func TestControllerValidateVolumeAccessModeSNRO(t *testing.T) {
@@ -477,22 +477,22 @@ func TestControllerValidateVolumeAccessModeSNRO(t *testing.T) {
 	c := csi.NewControllerClient(s.Conn())
 	r, err := c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.False(t, r.Supported)
+	assert.Nil(t, r.GetConfirmed())
 
 	// Expect RO and non-SH
 	r, err = c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.True(t, r.Supported)
+	assert.NotNil(t, r.GetConfirmed())
 
 	// Expect non-RO and SH
 	r, err = c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.False(t, r.Supported)
+	assert.Nil(t, r.GetConfirmed())
 
 	// Expect RO and SH
 	r, err = c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.False(t, r.Supported)
+	assert.Nil(t, r.GetConfirmed())
 }
 
 func TestControllerValidateVolumeAccessModeMNRO(t *testing.T) {
@@ -585,22 +585,22 @@ func TestControllerValidateVolumeAccessModeMNRO(t *testing.T) {
 	c := csi.NewControllerClient(s.Conn())
 	r, err := c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.False(t, r.Supported)
+	assert.Nil(t, r.GetConfirmed())
 
 	// Expect RO and non-SH
 	r, err = c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.False(t, r.Supported)
+	assert.Nil(t, r.GetConfirmed())
 
 	// Expect non-RO and SH
 	r, err = c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.False(t, r.Supported)
+	assert.Nil(t, r.GetConfirmed())
 
 	// Expect RO and SH
 	r, err = c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.True(t, r.Supported)
+	assert.NotNil(t, r.GetConfirmed())
 }
 
 func TestControllerValidateVolumeAccessModeMNWR(t *testing.T) {
@@ -693,22 +693,22 @@ func TestControllerValidateVolumeAccessModeMNWR(t *testing.T) {
 	c := csi.NewControllerClient(s.Conn())
 	r, err := c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.False(t, r.Supported)
+	assert.Nil(t, r.GetConfirmed())
 
 	// Expect RO and non-SH
 	r, err = c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.False(t, r.Supported)
+	assert.Nil(t, r.GetConfirmed())
 
 	// Expect non-RO and SH
 	r, err = c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.True(t, r.Supported)
+	assert.NotNil(t, r.GetConfirmed())
 
 	// Expect RO and SH
 	r, err = c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.Nil(t, err)
-	assert.False(t, r.Supported)
+	assert.Nil(t, r.GetConfirmed())
 }
 
 func TestControllerValidateVolumeAccessModeUnknown(t *testing.T) {
@@ -864,11 +864,11 @@ func TestControllerListVolumes(t *testing.T) {
 			info := v.GetVolume()
 			assert.NotNil(t, info)
 
-			if mv.GetId() == info.GetId() {
+			if mv.GetId() == info.GetVolumeId() {
 				found++
 				assert.Equal(t, info.GetCapacityBytes(), int64(mv.GetSpec().GetSize()))
 
-				attributes := info.GetAttributes()
+				attributes := info.GetVolumeContext()
 				assert.Equal(t, attributes["readonly"], fmt.Sprintf("%v", mv.GetReadonly()))
 				assert.Equal(t, attributes[api.SpecShared], fmt.Sprintf("%v", mv.GetSpec().GetShared()))
 				assert.Equal(t, attributes["state"], mv.GetState().String())
@@ -1105,7 +1105,7 @@ func TestControllerCreateVolumeNoCapacity(t *testing.T) {
 	assert.NotNil(t, r)
 	volumeInfo := r.GetVolume()
 
-	assert.Equal(t, id, volumeInfo.GetId())
+	assert.Equal(t, id, volumeInfo.GetVolumeId())
 	assert.Equal(t, int64(defaultCSIVolumeSize), volumeInfo.GetCapacityBytes())
 }
 
@@ -1158,7 +1158,7 @@ func TestControllerCreateVolumeFoundByVolumeFromName(t *testing.T) {
 	assert.NotNil(t, r)
 	volumeInfo := r.GetVolume()
 
-	assert.Equal(t, name, volumeInfo.GetId())
+	assert.Equal(t, name, volumeInfo.GetVolumeId())
 	assert.Equal(t, size, volumeInfo.GetCapacityBytes())
 }
 
@@ -1402,9 +1402,9 @@ func TestControllerCreateVolumeWithSharedVolume(t *testing.T) {
 		assert.NotNil(t, r)
 		volumeInfo := r.GetVolume()
 
-		assert.Equal(t, id, volumeInfo.GetId())
+		assert.Equal(t, id, volumeInfo.GetVolumeId())
 		assert.Equal(t, size, volumeInfo.GetCapacityBytes())
-		assert.Equal(t, "true", volumeInfo.GetAttributes()[api.SpecShared])
+		assert.Equal(t, "true", volumeInfo.GetVolumeContext()[api.SpecShared])
 	}
 }
 
@@ -1579,9 +1579,9 @@ func TestControllerCreateVolume(t *testing.T) {
 	assert.NotNil(t, r)
 	volumeInfo := r.GetVolume()
 
-	assert.Equal(t, id, volumeInfo.GetId())
+	assert.Equal(t, id, volumeInfo.GetVolumeId())
 	assert.Equal(t, size, volumeInfo.GetCapacityBytes())
-	assert.NotEqual(t, "true", volumeInfo.GetAttributes()[api.SpecShared])
+	assert.NotEqual(t, "true", volumeInfo.GetVolumeContext()[api.SpecShared])
 }
 
 func TestControllerCreateVolumeFromSnapshot(t *testing.T) {
@@ -1605,7 +1605,7 @@ func TestControllerCreateVolumeFromSnapshot(t *testing.T) {
 		VolumeContentSource: &csi.VolumeContentSource{
 			Type: &csi.VolumeContentSource_Snapshot{
 				Snapshot: &csi.VolumeContentSource_SnapshotSource{
-					Id: mockParentID,
+					SnapshotId: mockParentID,
 				},
 			},
 		},
@@ -1670,10 +1670,10 @@ func TestControllerCreateVolumeFromSnapshot(t *testing.T) {
 	assert.NotNil(t, r)
 	volumeInfo := r.GetVolume()
 
-	assert.Equal(t, id, volumeInfo.GetId())
+	assert.Equal(t, id, volumeInfo.GetVolumeId())
 	assert.Equal(t, size, volumeInfo.GetCapacityBytes())
-	assert.NotEqual(t, "true", volumeInfo.GetAttributes()[api.SpecShared])
-	assert.Equal(t, mockParentID, volumeInfo.GetAttributes()[api.SpecParent])
+	assert.NotEqual(t, "true", volumeInfo.GetVolumeContext()[api.SpecShared])
+	assert.Equal(t, mockParentID, volumeInfo.GetVolumeContext()[api.SpecParent])
 }
 
 func TestControllerCreateVolumeSnapshotThroughParameters(t *testing.T) {
@@ -1758,10 +1758,10 @@ func TestControllerCreateVolumeSnapshotThroughParameters(t *testing.T) {
 	assert.NotNil(t, r)
 	volumeInfo := r.GetVolume()
 
-	assert.Equal(t, id, volumeInfo.GetId())
+	assert.Equal(t, id, volumeInfo.GetVolumeId())
 	assert.Equal(t, size, volumeInfo.GetCapacityBytes())
-	assert.NotEqual(t, "true", volumeInfo.GetAttributes()[api.SpecShared])
-	assert.Equal(t, mockParentID, volumeInfo.GetAttributes()[api.SpecParent])
+	assert.NotEqual(t, "true", volumeInfo.GetVolumeContext()[api.SpecShared])
+	assert.Equal(t, mockParentID, volumeInfo.GetVolumeContext()[api.SpecParent])
 }
 
 func TestControllerDeleteVolumeInvalidArguments(t *testing.T) {
@@ -1938,7 +1938,7 @@ func TestControllerCreateSnapshotIdempotent(t *testing.T) {
 
 	r, err := c.CreateSnapshot(context.Background(), req)
 	assert.NoError(t, err)
-	assert.Equal(t, name, r.GetSnapshot().GetId())
+	assert.Equal(t, name, r.GetSnapshot().GetSnapshotId())
 	assert.Equal(t, snapInfo.Source.Parent, r.GetSnapshot().GetSourceVolumeId())
 }
 
@@ -1968,8 +1968,6 @@ func TestControllerCreateSnapshot(t *testing.T) {
 			Name: name,
 		},
 	}
-	ctime, err := ptypes.Timestamp(snapInfo.GetCtime())
-	assert.NoError(t, err)
 
 	// Setup mock functions
 	id := "myid"
@@ -2006,8 +2004,7 @@ func TestControllerCreateSnapshot(t *testing.T) {
 	r, err := c.CreateSnapshot(context.Background(), req)
 	assert.Nil(t, err)
 	assert.NotNil(t, r)
-	assert.Equal(t, id, r.GetSnapshot().GetId())
-	assert.Equal(t, ctime.Unix(), r.GetSnapshot().GetCreatedAt())
+	assert.Equal(t, id, r.GetSnapshot().GetSnapshotId())
 	assert.Equal(t, volume, r.GetSnapshot().GetSourceVolumeId())
 }
 

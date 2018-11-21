@@ -24,7 +24,7 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/pkg/util"
 
-	csi "github.com/container-storage-interface/spec/lib/go/csi/v0"
+	csi "github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
@@ -44,25 +44,6 @@ func (s *OsdCsiServer) NodeGetInfo(
 	result := &csi.NodeGetInfoResponse{
 		NodeId: clus.NodeId,
 	}
-
-	return result, nil
-}
-
-// NodeGetId is a CSI API which gets the PX NodeId for the local node
-func (s *OsdCsiServer) NodeGetId(
-	ctx context.Context,
-	req *csi.NodeGetIdRequest,
-) (*csi.NodeGetIdResponse, error) {
-	clus, err := s.cluster.Enumerate()
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Unable to Enumerate cluster: %s", err)
-	}
-
-	result := &csi.NodeGetIdResponse{
-		NodeId: clus.NodeId,
-	}
-
-	logrus.Infof("NodeId is %s", result.NodeId)
 
 	return result, nil
 }
@@ -103,12 +84,12 @@ func (s *OsdCsiServer) NodePublishVolume(
 	}
 
 	// Gather volume attributes
-	spec, _, _, err := s.specHandler.SpecFromOpts(req.GetVolumeAttributes())
+	spec, _, _, err := s.specHandler.SpecFromOpts(req.GetVolumeContext())
 	if err != nil {
 		return nil, status.Errorf(
 			codes.InvalidArgument,
 			"Invalid volume attributes: %#v",
-			req.GetVolumeAttributes())
+			req.GetVolumeContext())
 	}
 
 	// This seems weird as a way to change opts to map[string]string
