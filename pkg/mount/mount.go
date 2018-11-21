@@ -22,6 +22,7 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/pkg/sched"
 	"github.com/libopenstorage/openstorage/volume"
+	"github.com/pborman/uuid"
 	"github.com/sirupsen/logrus"
 )
 
@@ -44,8 +45,11 @@ type Manager interface {
 	// Exists returns true if the device is mounted at specified path.
 	// returned if the device does not exists.
 	Exists(source, path string) (bool, error)
+	// GetRootPath scans mounts for a specified mountPath and returns the
+	// rootPath if found or returns an ErrEnoent
+	GetRootPath(mountPath string) (string, error)
 	// GetSourcePath scans mount for a specified mountPath and returns the
-	// sourcePath if found or returnes an ErrEnoent
+	// sourcePath if found or returns an ErrEnoent
 	GetSourcePath(mountPath string) (string, error)
 	// GetSourcePaths returns all source paths from the mount table
 	GetSourcePaths() []string
@@ -93,6 +97,7 @@ const (
 const (
 	mountPathRemoveDelay = 30 * time.Second
 	testDeviceEnv        = "Test_Device_Mounter"
+	bindMountPrefix      = "readonly"
 )
 
 var (
@@ -269,6 +274,22 @@ func (m *Mounter) Exists(sourcePath string, path string) (bool, error) {
 		}
 	}
 	return false, nil
+}
+
+// GetRootPath scans mounts for a specified mountPath and return the
+// rootPath if found or returns an ErrEnoent
+func (m *Mounter) GetRootPath(mountPath string) (string, error) {
+	m.Lock()
+	defer m.Unlock()
+
+	for _, v := range m.mounts {
+		for _, p := range v.Mountpoint {
+			if p.Path == mountPath {
+				return p.Root, nil
+			}
+		}
+	}
+	return "", ErrEnoent
 }
 
 // GetSourcePath scans mount for a specified mountPath and returns the sourcePath
@@ -481,14 +502,17 @@ func (m *Mounter) Mount(
 
 	// Record previous state of the path
 	pathWasReadOnly := m.isPathSetImmutable(path)
-	isBindMounted := false
+	var (
+		isBindMounted bool = false
+		bindMountPath string
+	)
 
 	if err := m.makeMountpathReadOnly(path); err != nil {
 		if strings.Contains(err.Error(), "Inappropriate ioctl for device") {
 			logrus.Warnf("failed to make %s readonly. Err: %v", path, err)
 			// If we cannot chattr the original mount path, we bind mount it to
 			// a path in osd mount path and then chattr it
-			if err := m.bindMountOriginalPath(path); err != nil {
+			if bindMountPath, err = m.bindMountOriginalPath(path); err != nil {
 				return err
 			}
 			isBindMounted = true
@@ -506,18 +530,8 @@ func (m *Mounter) Mount(
 					path, e, err)
 			}
 			if isBindMounted {
-				if e := m.mountImpl.Unmount(path, syscall.MS_BIND, 0); e != nil {
-					return fmt.Errorf("failed to unmount bind mounted path %s. Err: %v Mount err: %v",
-						path, e, err)
-				}
-				bindMountPath, bindErr := bindMountPath(path)
-				if bindErr != nil {
-					return fmt.Errorf("failed to remove bind mount dir. Err: %v Mount err: %v",
-						bindErr, err)
-				}
-				if e := os.Remove(bindMountPath); e != nil {
-					return fmt.Errorf("failed to remove the bind mount dir %v. Err: %v Mount err: %v",
-						bindMountPath, e, err)
+				if cleanupErr := m.cleanupBindMount(path, bindMountPath, err); cleanupErr != nil {
+					return cleanupErr
 				}
 			}
 		}
@@ -530,32 +544,42 @@ func (m *Mounter) Mount(
 	return nil
 }
 
-func (m *Mounter) bindMountOriginalPath(path string) error {
-	bindMountPath, err := bindMountPath(path)
-	if err != nil {
-		return err
-	}
-	if bindMountPath == path {
-		// If there is an error chattr-ing osd mount path, then there is no point
-		// in moving forward as we are creating a bind mount on the same path.
-		return fmt.Errorf("cannot bind mount path [%s] to itself", path)
-	}
-
+func (m *Mounter) bindMountOriginalPath(path string) (string, error) {
+	bindMountPath := filepath.Join(volume.MountBase, bindMountPrefix, uuid.New())
 	if err := os.MkdirAll(bindMountPath, 0755); err != nil {
-		return fmt.Errorf("failed to create bind mount directory %v. Err: %v",
+		return "", fmt.Errorf("failed to create bind mount directory %v. Err: %v",
 			bindMountPath, err)
 	}
 
 	// Create a bind mount in osd mount path from the original mount path which
 	// we can chattr instead of the original path
 	if err := m.mountImpl.Mount(bindMountPath, path, "", syscall.MS_BIND, "", 0); err != nil {
-		return fmt.Errorf("failed to bind mount %v to %v. Err: %v", path, bindMountPath, err)
+		if e := os.Remove(bindMountPath); e != nil {
+			logrus.Warnf("Failed to remove the bind mount dir %v. Err: %v Mount err: %v",
+				bindMountPath, e, err)
+		}
+		return "", fmt.Errorf("failed to bind mount %v to %v. Err: %v", path, bindMountPath, err)
 	}
 	logrus.Infof("Successfully bind mounted path [%v] on [%v]", bindMountPath, path)
 
 	if err := m.makeMountpathReadOnly(path); err != nil {
-		return fmt.Errorf("failed to make %s readonly after bind mounting. Err: %v",
+		if cleanupErr := m.cleanupBindMount(path, bindMountPath, err); cleanupErr != nil {
+			logrus.Warnf(cleanupErr.Error())
+		}
+		return "", fmt.Errorf("failed to make %s readonly after bind mounting. Err: %v",
 			path, err)
+	}
+	return bindMountPath, nil
+}
+
+func (m *Mounter) cleanupBindMount(path, bindMountPath string, err error) error {
+	if e := m.mountImpl.Unmount(path, syscall.MS_BIND, 0); e != nil {
+		return fmt.Errorf("failed to unmount bind mounted path %s. Err: %v Mount err: %v",
+			path, e, err)
+	}
+	if e := os.Remove(bindMountPath); e != nil {
+		return fmt.Errorf("failed to remove the bind mount dir %v. Err: %v Mount err: %v",
+			bindMountPath, e, err)
 	}
 	return nil
 }
@@ -624,12 +648,13 @@ func (m *Mounter) removeMountPath(path string) error {
 		return nil
 	}
 
+	var bindMountPath string
 	bindMounter, err := New(BindMount, nil, []string{""}, nil, []string{}, "")
 	if err != nil {
 		return err
 	}
 	if devicePath, mounted := bindMounter.HasTarget(path); mounted {
-		// Unmount the bind mount path if it exists
+		bindMountPath, err = bindMounter.GetRootPath(path)
 		if err := m.mountImpl.Unmount(path, 0, 0); err != nil {
 			return fmt.Errorf("failed to unmount bind mount %v. Err: %v", devicePath, err)
 		}
@@ -642,16 +667,15 @@ func (m *Mounter) removeMountPath(path string) error {
 			return err
 		}
 	}
-	bindMountPath, err := bindMountPath(path)
-	if err != nil {
-		return err
-	}
-	if _, err := os.Stat(bindMountPath); err == nil {
-		logrus.Infof("Removing bind mount path source: %v", bindMountPath)
-		if err = os.Remove(bindMountPath); err != nil {
-			logrus.Warnf("Failed to remove bind mount path: %v Err: %v",
-				bindMountPath, err)
-			return err
+
+	if bindMountPath != "" {
+		if _, err := os.Stat(bindMountPath); err == nil {
+			logrus.Infof("Removing bind mount path source: %v", bindMountPath)
+			if err = os.Remove(bindMountPath); err != nil {
+				logrus.Warnf("Failed to remove bind mount path: %v Err: %v",
+					bindMountPath, err)
+				return err
+			}
 		}
 	}
 	return nil
@@ -782,16 +806,6 @@ func New(
 		return NewCustomMounter(identifiers, mountImpl, customMounter, allowedDirs)
 	}
 	return nil, ErrUnsupported
-}
-
-// bindMountPath return the path used to bind mount to a user given mount path.
-// This allows us to chattr the path in case we cannot chattr the original mount path.
-func bindMountPath(path string) (string, error) {
-	pathSlice := strings.Split(path, "/")
-	if len(pathSlice) == 0 {
-		return "", fmt.Errorf("mount path cannot be empty")
-	}
-	return filepath.Join(volume.MountBase, pathSlice[len(pathSlice)-1]), nil
 }
 
 // GetMounts is a wrapper over mount.GetMounts(). It is mainly used to add a switch
