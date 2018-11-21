@@ -340,12 +340,6 @@ type CloudBackupInfo struct {
 	Metadata map[string]string
 	// Status indicates the status of the backup
 	Status string
-	// BytesTotal is the number of bytes being transferred
-	BytesTotal uint64
-	// BytesDone is the number of bytes already transferred
-	BytesDone uint64
-	// ETASeconds the time duration in seconds for cloud migration completion
-	ETASeconds int64
 }
 
 type CloudBackupEnumerateRequest struct {
@@ -414,8 +408,12 @@ type CloudBackupStatus struct {
 	OpType CloudBackupOpType
 	// State indicates if the op is currently active/done/failed
 	Status CloudBackupStatusType
-	// BytesDone indicates total Bytes uploaded/downloaded
+	// BytesDone indicates Bytes uploaded/downloaded so far
 	BytesDone uint64
+	// BytesTotal is the total number of bytes being transferred
+	BytesTotal uint64
+	// EtaSeconds estimated time in seconds for backup/restore completion
+	EtaSeconds int64
 	// StartTime indicates Op's start time
 	StartTime time.Time
 	// CompletedTime indicates Op's completed time
@@ -849,8 +847,8 @@ func (b *CloudBackupInfo) ToSdkCloudBackupInfo() *SdkCloudBackupInfo {
 	return info
 }
 
-func (r *CloudBackupEnumerateResponse) ToSdkCloudBackupEnumerateResponse() *SdkCloudBackupEnumerateResponse {
-	resp := &SdkCloudBackupEnumerateResponse{
+func (r *CloudBackupEnumerateResponse) ToSdkCloudBackupEnumerateWithFiltersResponse() *SdkCloudBackupEnumerateWithFiltersResponse {
+	resp := &SdkCloudBackupEnumerateWithFiltersResponse{
 		Backups: make([]*SdkCloudBackupInfo, len(r.Backups)),
 	}
 
@@ -886,6 +884,8 @@ func (s CloudBackupStatus) ToSdkCloudBackupStatus() *SdkCloudBackupStatus {
 		Info:         s.Info,
 		CredentialId: s.CredentialUUID,
 		SrcVolumeId:  s.SrcVolumeID,
+		EtaSeconds:   s.EtaSeconds,
+		BytesTotal:   s.BytesTotal,
 	}
 
 	status.StartTime, _ = ptypes.TimestampProto(s.StartTime)
