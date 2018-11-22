@@ -84,7 +84,7 @@ func (c *ClusterManager) CreatePair(
 	return response, nil
 }
 
-// RemotePairPair handles a remote cluster's pair request
+// ProcessPairRequest handles a remote cluster's pair request
 func (c *ClusterManager) ProcessPairRequest(
 	request *api.ClusterPairProcessRequest,
 ) (*api.ClusterPairProcessResponse, error) {
@@ -216,7 +216,7 @@ func (c *ClusterManager) EnumeratePairs() (*api.ClusterPairsEnumerateResponse, e
 	response.Pairs = pairs
 	response.DefaultId, err = getDefaultPairId()
 	if err != nil {
-		logrus.Warnf("Error getting default cluster pair: %v", err)
+		logrus.Debugf("Error getting default cluster pair: %v", err)
 	}
 	return response, nil
 }
@@ -290,9 +290,21 @@ func pairCreate(info *api.ClusterPairInfo, setDefault bool) error {
 	_, err = kv.Create(key, info, 0)
 	if err != nil {
 		if err == kvdb.ErrExist {
-			return fmt.Errorf("Already paired with cluster %v", info.Id)
+			kvp, err = kv.Get(key)
+			if err != nil {
+				return err
+			}
+			storedInfo := &api.ClusterPairInfo{}
+			err = json.Unmarshal(kvp.Value, &storedInfo)
+			if err != nil {
+				return err
+			}
+			if info.Token != storedInfo.Token {
+				return fmt.Errorf("Invalid token for already paired cluster %v", info.Id)
+			}
+		} else {
+			return err
 		}
-		return err
 	}
 
 	defaultId, err := getDefaultPairId()
@@ -363,9 +375,30 @@ func pairDelete(id string) error {
 
 	defaultId, err := getDefaultPairId()
 	if err != kvdb.ErrNotFound && defaultId == id {
-		err = deleteDefaultPairId()
+		defaultUpdated := false
+		// Set one of the other pairs as the default
+		pairs, err := pairList()
 		if err != nil {
-			return fmt.Errorf("error deleting default pair id")
+			logrus.Warnf("Error getting clusterpairs, will not update default: %v", err)
+		} else {
+			for _, pair := range pairs {
+				if pair.Id != id {
+					err := setDefaultPairId(pair.Id)
+					if err != nil {
+						logrus.Warnf("Error updating default clusterpair: %v", err)
+					} else {
+						defaultUpdated = true
+						break
+					}
+				}
+			}
+
+		}
+		if !defaultUpdated {
+			err = deleteDefaultPairId()
+			if err != nil {
+				return fmt.Errorf("error deleting default pair id")
+			}
 		}
 	}
 

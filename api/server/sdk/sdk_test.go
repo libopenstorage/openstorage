@@ -177,7 +177,7 @@ func TestSdkGateway(t *testing.T) {
 	s.MockCluster().EXPECT().Uuid().Return(id).Times(1)
 
 	// Then send the request
-	res, err = http.Get(s.GatewayURL() + "/v1/clusters/current")
+	res, err = http.Get(s.GatewayURL() + "/v1/clusters/inspectcurrent")
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 }
@@ -243,7 +243,7 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 		"/openstorage.api.OpenStorageCloudBackup/Restore",
 		"/openstorage.api.OpenStorageCloudBackup/Delete",
 		"/openstorage.api.OpenStorageCloudBackup/DeleteAll",
-		"/openstorage.api.OpenStorageCloudBackup/Enumerate",
+		"/openstorage.api.OpenStorageCloudBackup/EnumerateWithFilters",
 		"/openstorage.api.OpenStorageCloudBackup/Status",
 		"/openstorage.api.OpenStorageCloudBackup/Catalog",
 		"/openstorage.api.OpenStorageCloudBackup/History",

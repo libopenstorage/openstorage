@@ -5,6 +5,19 @@
 
 ## Releases
 
+### v0.30.0 - Tech Preview (11/20/2018)
+
+* SDK Alerts enumerate chunking bug resolution.
+
+### v0.29.0 - Tech Preview (11/17/2018)
+
+* SDK Alerts enumerate is now a server side streaming api.
+
+### v0.28.0 - Tech Preview (11/15/2018)
+
+* (breaking change) Restructured all SDK REST routes
+* (breaking change) Reworded OpenStorageCloudBackup.Enumerate to EnumerateWithFilters
+
 ### v0.27.0 - Tech Preview (11/8/2018)
 
 * Add new API for extracting volume capacity usage details.

@@ -20,6 +20,8 @@ package sdk
 import (
 	"context"
 	"errors"
+	"fmt"
+	"io"
 	"testing"
 	"time"
 
@@ -332,10 +334,72 @@ func TestAlertsServerEnumerate(t *testing.T) {
 		s.MockFilterDeleter().EXPECT().Enumerate(filters...).Return(myAlerts, nil).Times(1)
 
 		// Get info
-		r, err := c.Enumerate(context.Background(), config.req)
+		enumerateClient, err := c.Enumerate(context.Background(), config.req)
 		assert.NoError(t, err)
-		assert.Len(t, r.Alerts, config.expected)
+
+		R := new(api.SdkAlertsEnumerateResponse)
+		for {
+			r, err := enumerateClient.Recv()
+			if err == io.EOF {
+				break
+			}
+			assert.NoError(t, err)
+
+			R.Alerts = append(R.Alerts, r.Alerts...)
+		}
+
+		assert.Len(t, R.Alerts, config.expected)
 	}
+}
+
+// TestAlertsServerEnumerateChunkingLogic tests enumerate functionality over gRPC using mock.
+func TestAlertsServerEnumerateChunkingLogic(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	// Setup client
+	c := api.NewOpenStorageAlertsClient(s.Conn())
+
+	req := &api.SdkAlertsEnumerateRequest{
+		Queries: []*api.SdkAlertsQuery{
+			{
+				Query: testNewResourceTypeQuery(api.ResourceType_RESOURCE_TYPE_VOLUME),
+			},
+		},
+	}
+
+	var filters []interface{}
+	for _, filter := range getFilters(req.Queries) {
+		filters = append(filters, filter)
+	}
+
+	myAlerts := make([]*api.Alert, alertChunkSize*5/2)
+	for i := range myAlerts {
+		myAlerts[i] = new(api.Alert)
+		myAlerts[i].Resource = api.ResourceType_RESOURCE_TYPE_VOLUME
+		myAlerts[i].AlertType = 0
+		myAlerts[i].ResourceId = fmt.Sprintf("resource-%d", i)
+	}
+
+	s.MockFilterDeleter().EXPECT().Enumerate(filters...).Return(myAlerts, nil).Times(1)
+
+	// Get info
+	enumerateClient, err := c.Enumerate(context.Background(), req)
+	assert.NoError(t, err)
+
+	R := new(api.SdkAlertsEnumerateResponse)
+	for {
+		r, err := enumerateClient.Recv()
+		if err == io.EOF {
+			break
+		}
+		assert.NoError(t, err)
+
+		R.Alerts = append(R.Alerts, r.Alerts...)
+	}
+
+	assert.Len(t, R.Alerts, alertChunkSize*5/2)
 }
 
 // TestAlertsServerEnumerateError tests errors returned from server code.
@@ -364,7 +428,9 @@ func TestAlertsServerEnumerateError(t *testing.T) {
 
 		s.MockFilterDeleter().EXPECT().Enumerate(filters...).Return(myAlerts, err).Times(1)
 		// Get info
-		_, outErr := c.Enumerate(context.Background(), configs[0].req)
+		enumerateClient, enumerateClientErr := c.Enumerate(context.Background(), configs[0].req)
+		assert.NoError(t, enumerateClientErr)
+		_, outErr := enumerateClient.Recv()
 		assert.Error(t, outErr, err.Error())
 	}
 }
