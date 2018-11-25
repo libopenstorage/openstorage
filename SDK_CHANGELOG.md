@@ -5,6 +5,11 @@
 
 ## Releases
 
+### v0.22.7 - Tech Preview (11/27/2018)
+
+* (breaking change) REST API for Sdk OpenStorageAlerts has changed
+* (breaking change) OpenStorageAlerts.Enumerate is now EnumerateWithFilters
+
 ### v0.22.6 - Tech Preview (11/20/2018)
 
 * SDK Alerts enumerate chunking bug resolution.
@@ -16,7 +21,7 @@
 * These status blocks also report the start time of the operation
   so that client could calculate progress of the operation.
 * Added ETA fields to cloud backup and cloud migrate status messages
-  
+
 ### v0.22.4 - Tech Preview (11/19/2018)
 
 * SDK Alerts enumerate is now a server side streaming api.
