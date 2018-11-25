@@ -5,6 +5,11 @@
 
 ## Releases
 
+### v0.31.0 - Tech Preview (11/27/2018)
+
+* (breaking change) REST API for Sdk OpenStorageAlerts has changed
+* (breaking change) OpenStorageAlerts.Enumerate is now EnumerateWithFilters
+
 ### v0.30.0 - Tech Preview (11/20/2018)
 
 * SDK Alerts enumerate chunking bug resolution.
