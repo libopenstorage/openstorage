@@ -67,7 +67,7 @@ type ClusterManager struct {
 	selfNode        api.Node
 	selfNodeLock    sync.Mutex // Lock that guards data and label of selfNode
 	system          systemutils.System
-	configManager   osdconfig.ConfigManager
+	configManager   osdconfig.ConfigCaller
 	schedManager    sched.SchedulePolicyProvider
 	objstoreManager objectstore.ObjectStore
 	secretsManager  secrets.Secrets
@@ -1153,7 +1153,7 @@ func (c *ClusterManager) StartWithConfiguration(
 
 	// osdconfig manager should be instantiated as soon as kv is ready
 	logrus.Info("initializing osdconfig manager")
-	c.configManager, err = osdconfig.NewManager(kv)
+	c.configManager, err = osdconfig.NewCaller(kv)
 	if err != nil {
 		return err
 	}
@@ -1211,7 +1211,7 @@ func (c *ClusterManager) StartWithConfiguration(
 		return err
 	}
 
-	c.startClusterDBWatch(lastIndex, kv)
+	_ = c.startClusterDBWatch(lastIndex, kv)
 
 	err = c.waitForQuorum(exist)
 	if err != nil {
