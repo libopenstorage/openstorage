@@ -577,7 +577,7 @@ message SdkAlertsQuery {
 }
 
 // SdkAlertsEnumerateRequest is a request message to enumerate alerts.
-message SdkAlertsEnumerateRequest {
+message SdkAlertsEnumerateWithFiltersRequest {
     // It is a list of queries to find matching alerts.
     // Output of each of these queries is added to a global pool
     // and returned as output of an RPC call.
@@ -587,7 +587,7 @@ message SdkAlertsEnumerateRequest {
 }
 
 // SdkAlertsEnumerateResponse is a list of alerts.
-message SdkAlertsEnumerateResponse {
+message SdkAlertsEnumerateWithFiltersResponse {
     // Response contains a list of alerts.
     repeated Alert alerts = 1;
 }
@@ -604,10 +604,9 @@ message SdkAlertsDeleteResponse {}
 
 // OpenStorageAlerts defines rpc's for alerts.
 service OpenStorageAlerts {
-    // Enumerate allows querying alerts.
+    // Allows querying alerts.
     //
-    // #### Enumerate
-    // Enumerate allows 3 different types of queries as defined below:
+    // EnumerateWithFilters allows 3 different types of queries as defined below:
     //
     // * Query that takes only resource type as input
     // * Query that takes resource type and alert type as input and
@@ -633,13 +632,15 @@ service OpenStorageAlerts {
     // use two queries, first initialized with SdkAlertsResourceTypeQuery
     // and second initialized with SdkAlertsAlertTypeQuery and both
     // eventually packed as list in SdkAlertsEnumerateRequest.
-    rpc Enumerate(SdkAlertsEnumerateRequest)
-    returns (stream SdkAlertsEnumerateResponse) {
+    rpc EnumerateWithFilters(SdkAlertsEnumerateWithFiltersRequest)
+      returns (stream SdkAlertsEnumerateWithFiltersResponse) {
         option(google.api.http) = {
-                get: "/v1/alerts"
-            };
+          post: "/v1/alerts/filters"
+          body: "*"
+        };
     }
-    // Delete allows deleting alerts.
+
+    // Delete alerts
     //
     // #### Delete
     // Delete allows 3 different types of queries as defined below:
@@ -649,13 +650,14 @@ service OpenStorageAlerts {
     // * Query that takes resource id, alert type and resource type as input.
     //
     // #### Input
-    // SdkAlertsEnumerateRequest takes a list of such queries and all alerts
+    // SdkAlertsDeleteRequest takes a list of such queries and all alerts
     // that match at least one of the queries are deleted.
     rpc Delete(SdkAlertsDeleteRequest)
-    returns (SdkAlertsDeleteResponse) {
-      option(google.api.http) = {
-                post: "/v1/alerts"
-            };
+      returns (SdkAlertsDeleteResponse) {
+        option(google.api.http) = {
+          post: "/v1/alerts"
+          body: "*"
+        };
     }
 }
 
@@ -2591,9 +2593,8 @@ message SdkVersion {
     Major = 0;
     // SDK version minor value of this specification
     Minor = 22;
-
     // SDK version patch value of this specification
-    Patch = 4;
+    Patch = 7;
   }
 
   // The following cannot be set to use the enum Version because the REST
