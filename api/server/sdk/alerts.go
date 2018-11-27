@@ -112,10 +112,10 @@ func getFilters(queries []*api.SdkAlertsQuery) []alerts.Filter {
 	return filters
 }
 
-// Enumerate implements api.OpenStorageAlertsServer for alertsServer.
+// EnumerateWithFilters implements api.OpenStorageAlertsServer for alertsServer.
 // Input context should ideally have a deadline, in which case, a
 // graceful exit is ensured within that deadline.
-func (g *alertsServer) Enumerate(request *api.SdkAlertsEnumerateRequest, stream api.OpenStorageAlerts_EnumerateServer) error {
+func (g *alertsServer) EnumerateWithFilters(request *api.SdkAlertsEnumerateWithFiltersRequest, stream api.OpenStorageAlerts_EnumerateWithFiltersServer) error {
 	ctx := stream.Context()
 
 	if g.alert() == nil {
@@ -158,7 +158,7 @@ func (g *alertsServer) Enumerate(request *api.SdkAlertsEnumerateRequest, stream 
 					stop = len(out)
 				}
 
-				resp := new(api.SdkAlertsEnumerateResponse)
+				resp := new(api.SdkAlertsEnumerateWithFiltersResponse)
 				resp.Alerts = append(resp.Alerts, out[start:stop]...)
 				if err := stream.Send(resp); err != nil {
 					return err

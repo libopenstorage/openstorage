@@ -28,19 +28,15 @@ var _ status.Status
 var _ = runtime.String
 var _ = utilities.NewDoubleArray
 
-var (
-	filter_OpenStorageAlerts_Enumerate_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
-)
-
-func request_OpenStorageAlerts_Enumerate_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageAlertsClient, req *http.Request, pathParams map[string]string) (OpenStorageAlerts_EnumerateClient, runtime.ServerMetadata, error) {
-	var protoReq SdkAlertsEnumerateRequest
+func request_OpenStorageAlerts_EnumerateWithFilters_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageAlertsClient, req *http.Request, pathParams map[string]string) (OpenStorageAlerts_EnumerateWithFiltersClient, runtime.ServerMetadata, error) {
+	var protoReq SdkAlertsEnumerateWithFiltersRequest
 	var metadata runtime.ServerMetadata
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_OpenStorageAlerts_Enumerate_0); err != nil {
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	stream, err := client.Enumerate(ctx, &protoReq)
+	stream, err := client.EnumerateWithFilters(ctx, &protoReq)
 	if err != nil {
 		return nil, metadata, err
 	}
@@ -53,15 +49,11 @@ func request_OpenStorageAlerts_Enumerate_0(ctx context.Context, marshaler runtim
 
 }
 
-var (
-	filter_OpenStorageAlerts_Delete_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
-)
-
 func request_OpenStorageAlerts_Delete_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageAlertsClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq SdkAlertsDeleteRequest
 	var metadata runtime.ServerMetadata
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_OpenStorageAlerts_Delete_0); err != nil {
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -1167,7 +1159,7 @@ func RegisterOpenStorageAlertsHandler(ctx context.Context, mux *runtime.ServeMux
 // "OpenStorageAlertsClient" to call the correct interceptors.
 func RegisterOpenStorageAlertsHandlerClient(ctx context.Context, mux *runtime.ServeMux, client OpenStorageAlertsClient) error {
 
-	mux.Handle("GET", pattern_OpenStorageAlerts_Enumerate_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_OpenStorageAlerts_EnumerateWithFilters_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -1185,14 +1177,14 @@ func RegisterOpenStorageAlertsHandlerClient(ctx context.Context, mux *runtime.Se
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_OpenStorageAlerts_Enumerate_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_OpenStorageAlerts_EnumerateWithFilters_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_OpenStorageAlerts_Enumerate_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+		forward_OpenStorageAlerts_EnumerateWithFilters_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1229,13 +1221,13 @@ func RegisterOpenStorageAlertsHandlerClient(ctx context.Context, mux *runtime.Se
 }
 
 var (
-	pattern_OpenStorageAlerts_Enumerate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "alerts"}, ""))
+	pattern_OpenStorageAlerts_EnumerateWithFilters_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "alerts", "filters"}, ""))
 
 	pattern_OpenStorageAlerts_Delete_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "alerts"}, ""))
 )
 
 var (
-	forward_OpenStorageAlerts_Enumerate_0 = runtime.ForwardResponseStream
+	forward_OpenStorageAlerts_EnumerateWithFilters_0 = runtime.ForwardResponseStream
 
 	forward_OpenStorageAlerts_Delete_0 = runtime.ForwardResponseMessage
 )

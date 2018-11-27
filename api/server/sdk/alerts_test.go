@@ -38,13 +38,13 @@ var (
 		// name of the test, helps debugging when a certain test case fails.
 		name string
 		// req is the request object being sent over gRPC call.
-		req *api.SdkAlertsEnumerateRequest
+		req *api.SdkAlertsEnumerateWithFiltersRequest
 		// expected is the number of alerts objects returned in output.
 		expected int
 	}{
 		{
 			name: "ResourceTypeQuery, opt count",
-			req: &api.SdkAlertsEnumerateRequest{
+			req: &api.SdkAlertsEnumerateWithFiltersRequest{
 				Queries: []*api.SdkAlertsQuery{
 					{
 						Query: testNewResourceTypeQuery(api.ResourceType_RESOURCE_TYPE_DRIVE),
@@ -60,7 +60,7 @@ var (
 		},
 		{
 			name: "ResourceTypeQuery, minsev none",
-			req: &api.SdkAlertsEnumerateRequest{
+			req: &api.SdkAlertsEnumerateWithFiltersRequest{
 				Queries: []*api.SdkAlertsQuery{
 					{
 						Query: testNewResourceTypeQuery(api.ResourceType_RESOURCE_TYPE_DRIVE),
@@ -76,7 +76,7 @@ var (
 		},
 		{
 			name: "ResourceTypeQuery, minsev notify",
-			req: &api.SdkAlertsEnumerateRequest{
+			req: &api.SdkAlertsEnumerateWithFiltersRequest{
 				Queries: []*api.SdkAlertsQuery{
 					{
 						Query: testNewResourceTypeQuery(api.ResourceType_RESOURCE_TYPE_DRIVE),
@@ -92,7 +92,7 @@ var (
 		},
 		{
 			name: "ResourceTypeQuery, minsev warning",
-			req: &api.SdkAlertsEnumerateRequest{
+			req: &api.SdkAlertsEnumerateWithFiltersRequest{
 				Queries: []*api.SdkAlertsQuery{
 					{
 						Query: testNewResourceTypeQuery(api.ResourceType_RESOURCE_TYPE_DRIVE),
@@ -108,7 +108,7 @@ var (
 		},
 		{
 			name: "ResourceTypeQuery, minsev alarm",
-			req: &api.SdkAlertsEnumerateRequest{
+			req: &api.SdkAlertsEnumerateWithFiltersRequest{
 				Queries: []*api.SdkAlertsQuery{
 					{
 						Query: testNewResourceTypeQuery(api.ResourceType_RESOURCE_TYPE_DRIVE),
@@ -124,7 +124,7 @@ var (
 		},
 		{
 			name: "ResourceTypeQuery, time range 1",
-			req: &api.SdkAlertsEnumerateRequest{
+			req: &api.SdkAlertsEnumerateWithFiltersRequest{
 				Queries: []*api.SdkAlertsQuery{
 					{
 						Query: testNewResourceTypeQuery(api.ResourceType_RESOURCE_TYPE_DRIVE),
@@ -142,7 +142,7 @@ var (
 		},
 		{
 			name: "ResourceTypeQuery, time range 2",
-			req: &api.SdkAlertsEnumerateRequest{
+			req: &api.SdkAlertsEnumerateWithFiltersRequest{
 				Queries: []*api.SdkAlertsQuery{
 					{
 						Query: testNewResourceTypeQuery(api.ResourceType_RESOURCE_TYPE_DRIVE),
@@ -160,7 +160,7 @@ var (
 		},
 		{
 			name: "ResourceTypeQuery, time range 3",
-			req: &api.SdkAlertsEnumerateRequest{
+			req: &api.SdkAlertsEnumerateWithFiltersRequest{
 				Queries: []*api.SdkAlertsQuery{
 					{
 						Query: testNewResourceTypeQuery(api.ResourceType_RESOURCE_TYPE_DRIVE),
@@ -179,7 +179,7 @@ var (
 		},
 		{
 			name: "ResourceTypeQuery, time range and severity warning",
-			req: &api.SdkAlertsEnumerateRequest{
+			req: &api.SdkAlertsEnumerateWithFiltersRequest{
 				Queries: []*api.SdkAlertsQuery{
 					{
 						Query: testNewResourceTypeQuery(api.ResourceType_RESOURCE_TYPE_DRIVE),
@@ -201,7 +201,7 @@ var (
 		},
 		{
 			name: "AlertTypeQuery, time range and severity warning",
-			req: &api.SdkAlertsEnumerateRequest{
+			req: &api.SdkAlertsEnumerateWithFiltersRequest{
 				Queries: []*api.SdkAlertsQuery{
 					{
 						Query: testNewAlertTypeQuery(10, api.ResourceType_RESOURCE_TYPE_DRIVE),
@@ -223,7 +223,7 @@ var (
 		},
 		{
 			name: "ResourceIdQuery, time range and severity warning",
-			req: &api.SdkAlertsEnumerateRequest{
+			req: &api.SdkAlertsEnumerateWithFiltersRequest{
 				Queries: []*api.SdkAlertsQuery{
 					{
 						Query: testNewResourceIdQuery("maya", 10, api.ResourceType_RESOURCE_TYPE_DRIVE),
@@ -334,10 +334,10 @@ func TestAlertsServerEnumerate(t *testing.T) {
 		s.MockFilterDeleter().EXPECT().Enumerate(filters...).Return(myAlerts, nil).Times(1)
 
 		// Get info
-		enumerateClient, err := c.Enumerate(context.Background(), config.req)
+		enumerateClient, err := c.EnumerateWithFilters(context.Background(), config.req)
 		assert.NoError(t, err)
 
-		R := new(api.SdkAlertsEnumerateResponse)
+		R := new(api.SdkAlertsEnumerateWithFiltersResponse)
 		for {
 			r, err := enumerateClient.Recv()
 			if err == io.EOF {
@@ -361,7 +361,7 @@ func TestAlertsServerEnumerateChunkingLogic(t *testing.T) {
 	// Setup client
 	c := api.NewOpenStorageAlertsClient(s.Conn())
 
-	req := &api.SdkAlertsEnumerateRequest{
+	req := &api.SdkAlertsEnumerateWithFiltersRequest{
 		Queries: []*api.SdkAlertsQuery{
 			{
 				Query: testNewResourceTypeQuery(api.ResourceType_RESOURCE_TYPE_VOLUME),
@@ -385,10 +385,10 @@ func TestAlertsServerEnumerateChunkingLogic(t *testing.T) {
 	s.MockFilterDeleter().EXPECT().Enumerate(filters...).Return(myAlerts, nil).Times(1)
 
 	// Get info
-	enumerateClient, err := c.Enumerate(context.Background(), req)
+	enumerateClient, err := c.EnumerateWithFilters(context.Background(), req)
 	assert.NoError(t, err)
 
-	R := new(api.SdkAlertsEnumerateResponse)
+	R := new(api.SdkAlertsEnumerateWithFiltersResponse)
 	for {
 		r, err := enumerateClient.Recv()
 		if err == io.EOF {
@@ -428,7 +428,7 @@ func TestAlertsServerEnumerateError(t *testing.T) {
 
 		s.MockFilterDeleter().EXPECT().Enumerate(filters...).Return(myAlerts, err).Times(1)
 		// Get info
-		enumerateClient, enumerateClientErr := c.Enumerate(context.Background(), configs[0].req)
+		enumerateClient, enumerateClientErr := c.EnumerateWithFilters(context.Background(), configs[0].req)
 		assert.NoError(t, enumerateClientErr)
 		_, outErr := enumerateClient.Recv()
 		assert.Error(t, outErr, err.Error())
