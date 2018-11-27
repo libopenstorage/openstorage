@@ -221,6 +221,51 @@ func (c *ClusterManager) EnumeratePairs() (*api.ClusterPairsEnumerateResponse, e
 	return response, nil
 }
 
+func (c *ClusterManager) ValidatePair(
+	id string,
+) error {
+	pairResp, err := c.GetPair(id)
+	if err != nil {
+		return err
+	} else if pairResp.PairInfo == nil {
+		return fmt.Errorf("Cluster pair for id %v not found", id)
+	}
+
+	clnt, err := clusterclient.NewClusterClient(
+		pairResp.PairInfo.Endpoint,
+		cluster.APIVersion,
+	)
+	if err != nil {
+		return err
+	}
+	remoteCluster := clusterclient.ClusterManager(clnt)
+
+	// Check the status of the remote cluster
+	resp, err := remoteCluster.Enumerate()
+	if err != nil {
+		return err
+	} else if resp.Status != api.Status_STATUS_OK {
+		return fmt.Errorf("Invalid remote cluster status: %v", resp.Status)
+	}
+
+	for e := c.listeners.Front(); e != nil; e = e.Next() {
+		err := e.Value.(cluster.ClusterListener).ValidatePair(
+			pairResp.PairInfo,
+		)
+		if err != nil {
+			logrus.Errorf("Unable to validate %v on a cluster validate event: %v",
+				e.Value.(cluster.ClusterListener).String(),
+				err,
+			)
+			return fmt.Errorf("Failed to validate cluster pair. %v", err)
+		}
+	}
+
+	logrus.Infof("Successfully validated pairing with cluster ID: %v",
+		pairResp.PairInfo.Id)
+	return nil
+}
+
 func (c *ClusterManager) GetPairToken(
 	reset bool,
 ) (*api.ClusterPairTokenGetResponse, error) {
