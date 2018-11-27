@@ -210,6 +210,11 @@ func (m *NullClusterPair) EnumeratePairs() (*api.ClusterPairsEnumerateResponse, 
 	return nil, ErrNotImplemented
 }
 
+// ValidatePair
+func (m *NullClusterPair) ValidatePair(arg0 string) error {
+	return ErrNotImplemented
+}
+
 // DeletePair
 func (m *NullClusterPair) DeletePair(arg0 string) error {
 	return ErrNotImplemented
