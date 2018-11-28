@@ -84,7 +84,7 @@ func (vd *volAPI) credsValidate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := d.CredsValidate(uuid); err != nil {
-		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusUnprocessableEntity)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
