@@ -77,21 +77,21 @@
       "type": "string"
     },
     "VolumePlacementRuleAffinityRuleType": {
-      "default": "Affinity",
-      "description": "- Affinity: Affinity means the rule specifies an affinity to objects that match the below label selector requirements\n - AntiAffinity: AntiAffinity means the rule specifies an anti-affinity to objects that match the below label selector requirements",
+      "default": "affinity",
+      "description": "- affinity: Affinity means the rule specifies an affinity to objects that match the below label selector requirements\n - antiAffinity: AntiAffinity means the rule specifies an anti-affinity to objects that match the below label selector requirements",
       "enum": [
-        "Affinity",
-        "AntiAffinity"
+        "affinity",
+        "antiAffinity"
       ],
       "title": "This specifies the type an affinity rule can take",
       "type": "string"
     },
     "VolumePlacementRuleEnforcementType": {
-      "default": "Required",
-      "description": "- Required: This specifies that the rule is required and must be strictly enforced\n - Preferred: This specifies that the rule is preferred and can be best effort",
+      "default": "required",
+      "description": "- required: This specifies that the rule is required and must be strictly enforced\n - preferred: This specifies that the rule is preferred and can be best effort",
       "enum": [
-        "Required",
-        "Preferred"
+        "required",
+        "preferred"
       ],
       "title": "Defines the types of enforcement on the given rules",
       "type": "string"

@@ -2993,9 +2993,9 @@ message VolumePlacementRule {
   // Defines the types of enforcement on the given rules
   enum EnforcementType {
     // This specifies that the rule is required and must be strictly enforced
-    Required = 0;
+    required = 0;
     // This specifies that the rule is preferred and can be best effort
-    Preferred = 1;
+    preferred = 1;
   }
 
   // Enforcement specifies the rule enforcement policy. Can take values: required or preferred.
@@ -3005,9 +3005,9 @@ message VolumePlacementRule {
   // This specifies the type an affinity rule can take
   enum AffinityRuleType {
     // Affinity means the rule specifies an affinity to objects that match the below label selector requirements
-    Affinity = 0;
+    affinity = 0;
     // AntiAffinity means the rule specifies an anti-affinity to objects that match the below label selector requirements
-    AntiAffinity = 1;
+    antiAffinity = 1;
   }
 
   // Type is the type of the affinity rule
