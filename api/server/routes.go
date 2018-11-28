@@ -51,7 +51,7 @@ func (c *clusterApi) Routes() []*Route {
 		{verb: "GET", path: clusterPairPath("/{id}", cluster.APIVersion), fn: c.getPair},
 		{verb: "PUT", path: clusterPairPath("/{id}", cluster.APIVersion), fn: c.refreshPair},
 		{verb: "DELETE", path: clusterPairPath("/{id}", cluster.APIVersion), fn: c.deletePair},
-		{verb: "POST", path: clusterPairPath(client.PairValidatePath+"/{id}", cluster.APIVersion), fn: c.validatePair},
+		{verb: "PUT", path: clusterPairPath(client.PairValidatePath+"/{id}", cluster.APIVersion), fn: c.validatePair},
 		{verb: "GET", path: clusterPath(client.PairTokenPath, cluster.APIVersion), fn: c.getPairToken},
 	}
 }
