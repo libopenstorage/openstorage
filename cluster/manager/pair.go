@@ -231,21 +231,39 @@ func (c *ClusterManager) ValidatePair(
 		return fmt.Errorf("Cluster pair for id %v not found", id)
 	}
 
-	clnt, err := clusterclient.NewClusterClient(
-		pairResp.PairInfo.Endpoint,
-		cluster.APIVersion,
-	)
-	if err != nil {
-		return err
-	}
-	remoteCluster := clusterclient.ClusterManager(clnt)
+	var lastErr error
+	endpoints := pairResp.PairInfo.CurrentEndpoints
+	endpoints = append(endpoints, pairResp.PairInfo.Endpoint)
+	for _, endpoint := range endpoints {
+		clnt, err := clusterclient.NewClusterClient(
+			endpoint,
+			cluster.APIVersion,
+		)
+		if err != nil {
+			msg := fmt.Sprintf("Unable to create cluster client for %v: %v", endpoint, err)
+			logrus.Warn(msg)
+			lastErr = fmt.Errorf(msg)
+			continue
+		}
 
-	// Check the status of the remote cluster
-	resp, err := remoteCluster.Enumerate()
-	if err != nil {
-		return err
-	} else if resp.Status != api.Status_STATUS_OK {
-		return fmt.Errorf("Invalid remote cluster status: %v", resp.Status)
+		resp, err := clusterclient.ClusterManager(clnt).Enumerate()
+		if err != nil {
+			msg := fmt.Sprintf("Unable to get cluster status from %v: %v", endpoint, err)
+			logrus.Warn(msg)
+			lastErr = fmt.Errorf(msg)
+			continue
+		}
+		if resp.Status == api.Status_STATUS_OK {
+			lastErr = nil
+			break
+		}
+		msg := fmt.Sprintf("Invalid remote cluster status: %v", resp.Status)
+		logrus.Warn(msg)
+		lastErr = fmt.Errorf(msg)
+	}
+
+	if lastErr != nil {
+		return lastErr
 	}
 
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
