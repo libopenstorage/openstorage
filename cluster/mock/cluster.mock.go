@@ -643,3 +643,15 @@ func (m *MockCluster) Uuid() string {
 func (mr *MockClusterMockRecorder) Uuid() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Uuid", reflect.TypeOf((*MockCluster)(nil).Uuid))
 }
+
+// ValidatePair mocks base method
+func (m *MockCluster) ValidatePair(arg0 string) error {
+	ret := m.ctrl.Call(m, "ValidatePair", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ValidatePair indicates an expected call of ValidatePair
+func (mr *MockClusterMockRecorder) ValidatePair(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatePair", reflect.TypeOf((*MockCluster)(nil).ValidatePair), arg0)
+}
