@@ -1022,8 +1022,35 @@ func TestProcessClusterPair(t *testing.T) {
 	assert.Contains(t, err.Error(), "No token in request")
 }
 
-func TestPairToken(t *testing.T) {
+func TestValidateClusterPair(t *testing.T) {
+	// Create a new global test cluster
+	ts, tc := testClusterServer(t)
+	defer ts.Close()
+	defer tc.Finish()
 
+	// create a cluster client to make the REST call
+	c, err := clusterclient.NewClusterClient(ts.URL, "v1")
+	assert.NoError(t, err)
+
+	// mock the cluster response
+	tc.MockCluster().
+		EXPECT().
+		ValidatePair("goodPairId").
+		Return(nil)
+	tc.MockCluster().
+		EXPECT().
+		ValidatePair("badPairId").
+		Return(fmt.Errorf("Pair Id not found"))
+
+	// make the REST call
+	restClient := clusterclient.ClusterManager(c)
+	err = restClient.ValidatePair("goodPairId")
+	assert.NoError(t, err)
+	err = restClient.ValidatePair("badPairId")
+	assert.Error(t, err)
+}
+
+func TestPairToken(t *testing.T) {
 	// Create a new global test cluster
 	ts, tc := testClusterServer(t)
 	defer ts.Close()
