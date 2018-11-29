@@ -5,6 +5,10 @@
 
 ## Releases
 
+### v0.32.0 - Tech Preview (11/28/2018)
+
+* Removing unused objects created for cluster pair APIs
+
 ### v0.31.0 - Tech Preview (11/27/2018)
 
 * (breaking change) REST API for Sdk OpenStorageAlerts has changed
