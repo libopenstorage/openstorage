@@ -2594,7 +2594,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 31;
+    Minor = 32;
     // SDK version patch value of this specification
     Patch = 0;
   }
@@ -2837,12 +2837,6 @@ message ClusterPairProcessResponse {
     map<string, string> options = 4;
 }
 
-// Request to to delete a cluster pair
-message ClusterPairDeleteRequest {
-  // ID of the cluster pair to be deleted
-  string cluster_id = 1;
-}
-
 // Defines a delete request for a cluster pair
 message SdkClusterPairDeleteRequest {
   // ID of the cluster pair to be deleted
@@ -2851,12 +2845,6 @@ message SdkClusterPairDeleteRequest {
 
 // Empty response
 message SdkClusterPairDeleteResponse{
-}
-
-// Request to get the token for a cluster
-message ClusterPairTokenGetRequest {
-    // Reset token if already preset
-    bool reset_token = 1;
 }
 
 // Response to get the cluster token
@@ -2902,12 +2890,6 @@ message ClusterPairInfo {
     // Key/value pair of options associated with the cluster
     // Opaque to openstorage and interpreted by the drivers
     map<string, string> options = 7;
-}
-
-// Request to get a cluster pair
-message ClusterPairGetRequest {
-    // ID of the cluster, if empty gets the default pair
-    string id = 1;
 }
 
 // Defines a cluster pair inspect request
