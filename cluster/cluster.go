@@ -203,6 +203,11 @@ type ClusterData interface {
 
 	// UpdateLabels updates node labels associated with this node
 	UpdateLabels(nodeLabels map[string]string) error
+
+	// UpdateSchedulerNodeName updates the scheduler node name
+	// associated with this node
+	UpdateSchedulerNodeName(name string) error
+
 	// GetData get sdata associated with all nodes.
 	// Key is the node id
 	GetData() (map[string]*api.Node, error)
