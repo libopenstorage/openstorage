@@ -632,6 +632,18 @@ func (mr *MockClusterMockRecorder) UpdateLabels(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateLabels", reflect.TypeOf((*MockCluster)(nil).UpdateLabels), arg0)
 }
 
+// UpdateSchedulerNodeName mocks base method
+func (m *MockCluster) UpdateSchedulerNodeName(arg0 string) error {
+	ret := m.ctrl.Call(m, "UpdateSchedulerNodeName", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateSchedulerNodeName indicates an expected call of UpdateSchedulerNodeName
+func (mr *MockClusterMockRecorder) UpdateSchedulerNodeName(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSchedulerNodeName", reflect.TypeOf((*MockCluster)(nil).UpdateSchedulerNodeName), arg0)
+}
+
 // Uuid mocks base method
 func (m *MockCluster) Uuid() string {
 	ret := m.ctrl.Call(m, "Uuid")
