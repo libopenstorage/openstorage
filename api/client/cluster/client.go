@@ -205,6 +205,10 @@ func (c *clusterClient) UpdateLabels(nodeLabels map[string]string) error {
 	return nil
 }
 
+func (c *clusterClient) UpdateSchedulerNodeName(name string) error {
+	return nil
+}
+
 func (c *clusterClient) GetData() (map[string]*api.Node, error) {
 	return nil, nil
 }
