@@ -296,6 +296,35 @@ func (c *ClusterManager) UpdateLabels(nodeLabels map[string]string) error {
 	return nil
 }
 
+func (c *ClusterManager) UpdateSchedulerNodeName(schedulerNodeName string) error {
+	c.selfNodeLock.Lock()
+	defer c.selfNodeLock.Unlock()
+	c.selfNode.SchedulerNodeName = schedulerNodeName
+
+	kvdb := kvdb.Instance()
+	kvlock, err := kvdb.LockWithID(clusterLockKey, c.selfNode.Id)
+	if err != nil {
+		logrus.Warnln("Unable to obtain cluster lock for updating config", err)
+		return err
+	}
+	defer kvdb.Unlock(kvlock)
+
+	db, _, err := readClusterInfo()
+	if err != nil {
+		return err
+	}
+
+	nodeEntry, ok := db.NodeEntries[c.selfNode.Id]
+	if !ok {
+		return fmt.Errorf("Node not found in cluster database")
+	}
+	nodeEntry.SchedulerNodeName = schedulerNodeName
+	db.NodeEntries[c.selfNode.Id] = nodeEntry
+
+	_, err = writeClusterInfo(&db)
+	return err
+}
+
 // GetData returns self node's data
 func (c *ClusterManager) GetData() (map[string]*api.Node, error) {
 	nodes := make(map[string]*api.Node)
