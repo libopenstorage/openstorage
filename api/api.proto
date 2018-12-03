@@ -195,11 +195,11 @@ message StorageResource {
   // IOPS
   uint64 iops = 5;
   // SeqWrite
-  double seq_write = 6;
+  uint64 seq_write = 6;
   // SeqRead
-  double seq_read = 7;
+  uint64 seq_read = 7;
   // RandRW
-  double randRW  = 8;
+  uint64 randRW  = 8;
   // Total size in bytes.
   uint64 size = 9;
   // Physical Bytes used.
