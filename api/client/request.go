@@ -182,7 +182,7 @@ func (r *Request) URL() *url.URL {
 		p = path.Join(p, strings.ToLower(r.version))
 	}
 	if len(r.resource) != 0 {
-		p = path.Join(p, strings.ToLower(r.resource))
+		p = path.Join(p, r.resource)
 		if len(r.instance) != 0 {
 			p = path.Join(p, r.instance)
 		}
@@ -229,7 +229,6 @@ func parseHTTPStatus(resp *http.Response, body []byte) error {
 	return fmt.Errorf("HTTP error %d", resp.StatusCode)
 }
 
-// Do executes the request and returns a Response.
 // Do executes the request and returns a Response.
 func (r *Request) Do() *Response {
 	var (
