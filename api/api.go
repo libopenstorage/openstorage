@@ -15,6 +15,7 @@ import (
 // Strings for VolumeSpec
 const (
 	Name                     = "name"
+	Token                    = "token"
 	SpecNodes                = "nodes"
 	SpecParent               = "parent"
 	SpecEphemeral            = "ephemeral"
