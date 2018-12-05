@@ -275,16 +275,16 @@ func (mr *MockVolumeDriverMockRecorder) CloudMigrateStart(arg0 interface{}) *gom
 }
 
 // CloudMigrateStatus mocks base method
-func (m *MockVolumeDriver) CloudMigrateStatus() (*api.CloudMigrateStatusResponse, error) {
-	ret := m.ctrl.Call(m, "CloudMigrateStatus")
+func (m *MockVolumeDriver) CloudMigrateStatus(arg0 *api.CloudMigrateStatusRequest) (*api.CloudMigrateStatusResponse, error) {
+	ret := m.ctrl.Call(m, "CloudMigrateStatus", arg0)
 	ret0, _ := ret[0].(*api.CloudMigrateStatusResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CloudMigrateStatus indicates an expected call of CloudMigrateStatus
-func (mr *MockVolumeDriverMockRecorder) CloudMigrateStatus() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloudMigrateStatus", reflect.TypeOf((*MockVolumeDriver)(nil).CloudMigrateStatus))
+func (mr *MockVolumeDriverMockRecorder) CloudMigrateStatus(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloudMigrateStatus", reflect.TypeOf((*MockVolumeDriver)(nil).CloudMigrateStatus), arg0)
 }
 
 // Create mocks base method

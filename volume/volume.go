@@ -178,7 +178,7 @@ type CloudMigrateDriver interface {
 	// CloudMigrateCancel cancels a migrate operation
 	CloudMigrateCancel(request *api.CloudMigrateCancelRequest) error
 	// CloudMigrateStatus returns status for the migration operations
-	CloudMigrateStatus() (*api.CloudMigrateStatusResponse, error)
+	CloudMigrateStatus(request *api.CloudMigrateStatusRequest) (*api.CloudMigrateStatusResponse, error)
 }
 
 // ProtoDriver must be implemented by all volume drivers.  It specifies the
