@@ -93,14 +93,14 @@ func TestMigrateiStatus(t *testing.T) {
 					}}}},
 	}
 
-	testVolDriver.MockDriver().EXPECT().CloudMigrateStatus().Return(emptyStatus, nil).Times(1)
-	testVolDriver.MockDriver().EXPECT().CloudMigrateStatus().Return(statusResponse, nil).Times(1)
+	testVolDriver.MockDriver().EXPECT().CloudMigrateStatus(&api.CloudMigrateStatusRequest{}).Return(emptyStatus, nil).Times(1)
+	testVolDriver.MockDriver().EXPECT().CloudMigrateStatus(&api.CloudMigrateStatusRequest{}).Return(statusResponse, nil).Times(1)
 
 	// Get Migrate status
-	status, err := client.VolumeDriver(cl).CloudMigrateStatus()
+	status, err := client.VolumeDriver(cl).CloudMigrateStatus(&api.CloudMigrateStatusRequest{})
 	require.NoError(t, err)
 	require.Equal(t, 0, len(status.Info))
-	status, err = client.VolumeDriver(cl).CloudMigrateStatus()
+	status, err = client.VolumeDriver(cl).CloudMigrateStatus(&api.CloudMigrateStatusRequest{})
 	require.NoError(t, err)
 	require.Equal(t, 1, len(status.Info))
 	require.Equal(t, statusResponse, status)

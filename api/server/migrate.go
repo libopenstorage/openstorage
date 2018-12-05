@@ -59,6 +59,7 @@ func (vd *volAPI) cloudMigrateCancel(w http.ResponseWriter, r *http.Request) {
 }
 
 func (vd *volAPI) cloudMigrateStatus(w http.ResponseWriter, r *http.Request) {
+	statusReq := &api.CloudMigrateStatusRequest{}
 	method := "cloudMigrateState"
 
 	d, err := vd.getVolDriver(r)
@@ -67,7 +68,12 @@ func (vd *volAPI) cloudMigrateStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	statusResp, err := d.CloudMigrateStatus()
+	if err := json.NewDecoder(r.Body).Decode(statusReq); err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	statusResp, err := d.CloudMigrateStatus(statusReq)
 	if err != nil {
 		vd.sendError(method, "", w, err.Error(), http.StatusInternalServerError)
 		return

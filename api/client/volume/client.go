@@ -782,9 +782,9 @@ func (v *volumeClient) CloudMigrateCancel(request *api.CloudMigrateCancelRequest
 	return nil
 }
 
-func (v *volumeClient) CloudMigrateStatus() (*api.CloudMigrateStatusResponse, error) {
+func (v *volumeClient) CloudMigrateStatus(request *api.CloudMigrateStatusRequest) (*api.CloudMigrateStatusResponse, error) {
 	statusResponse := &api.CloudMigrateStatusResponse{}
-	req := v.c.Get().Resource(api.OsdMigrateStatusPath)
+	req := v.c.Get().Resource(api.OsdMigrateStatusPath).Body(request)
 	response := req.Do()
 	if response.Error() != nil {
 		return nil, response.FormatError()

@@ -272,7 +272,9 @@ func TestVolumeMigrate_StatusSucess(t *testing.T) {
 	// Create server and cl	ient connection
 	s := newTestServer(t)
 	defer s.Stop()
-	req := &api.SdkCloudMigrateStatusRequest{}
+	req := &api.SdkCloudMigrateStatusRequest{
+		Request: &api.CloudMigrateStatusRequest{},
+	}
 	info := &api.CloudMigrateInfo{
 		ClusterId:       "Source",
 		LocalVolumeId:   "VID",
@@ -293,7 +295,7 @@ func TestVolumeMigrate_StatusSucess(t *testing.T) {
 		Info: infoList,
 	}
 	s.MockDriver().EXPECT().
-		CloudMigrateStatus().
+		CloudMigrateStatus(&api.CloudMigrateStatusRequest{}).
 		Return(resp, nil)
 	// Setup client
 	c := api.NewOpenStorageMigrateClient(s.Conn())
@@ -307,9 +309,11 @@ func TestVolumeMigrate_StatusFailure(t *testing.T) {
 	// Create server and cl	ient connection
 	s := newTestServer(t)
 	defer s.Stop()
-	req := &api.SdkCloudMigrateStatusRequest{}
+	req := &api.SdkCloudMigrateStatusRequest{
+		Request: &api.CloudMigrateStatusRequest{},
+	}
 	s.MockDriver().EXPECT().
-		CloudMigrateStatus().
+		CloudMigrateStatus(&api.CloudMigrateStatusRequest{}).
 		Return(nil, status.Errorf(codes.Internal, "Cannot get status of migration"))
 	// Setup client
 	c := api.NewOpenStorageMigrateClient(s.Conn())
