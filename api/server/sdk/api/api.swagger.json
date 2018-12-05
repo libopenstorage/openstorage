@@ -303,6 +303,20 @@
       ],
       "type": "string"
     },
+    "apiCloudMigrateStatusRequest": {
+      "properties": {
+        "cluster_id": {
+          "title": "ID of the cluster for which to return migration statuses",
+          "type": "string"
+        },
+        "task_id": {
+          "title": "Task id for which to return status",
+          "type": "string"
+        }
+      },
+      "title": "Request for cloud migration operation status",
+      "type": "object"
+    },
     "apiCloudMigrateStatusResponse": {
       "properties": {
         "info": {
@@ -4137,6 +4151,22 @@
     "/v1/volumemigrate": {
       "get": {
         "operationId": "Status",
+        "parameters": [
+          {
+            "description": "Task id for which to return status.",
+            "in": "query",
+            "name": "request.task_id",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "description": "ID of the cluster for which to return migration statuses.",
+            "in": "query",
+            "name": "request.cluster_id",
+            "required": false,
+            "type": "string"
+          }
+        ],
         "responses": {
           "200": {
             "description": "",

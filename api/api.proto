@@ -2766,8 +2766,19 @@ message CloudMigrateInfoList {
     repeated CloudMigrateInfo list = 1;
 }
 
-// Empty Request
+// Request for cloud migration operation status
 message SdkCloudMigrateStatusRequest {
+    // Request contains the task id and cluster id for which status should be
+    // returned
+    CloudMigrateStatusRequest request = 1;
+}
+
+// Request for cloud migration operation status
+message CloudMigrateStatusRequest {
+    // Task id for which to return status
+    string task_id = 1;
+    // ID of the cluster for which to return migration statuses
+    string cluster_id = 2;
 }
 
 // Response with a status of the cloud migration operations
