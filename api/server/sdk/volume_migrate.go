@@ -130,7 +130,7 @@ func (s *VolumeServer) Status(
 	req *api.SdkCloudMigrateStatusRequest,
 ) (*api.SdkCloudMigrateStatusResponse, error) {
 
-	resp, err := s.driver().CloudMigrateStatus()
+	resp, err := s.driver().CloudMigrateStatus(req.GetRequest())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Cannot get status of migration : %v", err)
 	}

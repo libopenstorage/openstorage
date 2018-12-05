@@ -228,6 +228,6 @@ func (cl *cloudMigrateNotSupported) CloudMigrateStart(request *api.CloudMigrateS
 func (cl *cloudMigrateNotSupported) CloudMigrateCancel(request *api.CloudMigrateCancelRequest) error {
 	return ErrNotSupported
 }
-func (cl *cloudMigrateNotSupported) CloudMigrateStatus() (*api.CloudMigrateStatusResponse, error) {
+func (cl *cloudMigrateNotSupported) CloudMigrateStatus(request *api.CloudMigrateStatusRequest) (*api.CloudMigrateStatusResponse, error) {
 	return nil, ErrNotSupported
 }
