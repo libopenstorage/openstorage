@@ -17,6 +17,7 @@ limitations under the License.
 package sanity
 
 import (
+	"crypto/rand"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -46,11 +47,14 @@ type CSISecrets struct {
 // Config provides the configuration for the sanity tests. It
 // needs to be initialized by the user of the sanity package.
 type Config struct {
-	TargetPath     string
-	StagingPath    string
-	Address        string
-	SecretsFile    string
-	TestVolumeSize int64
+	TargetPath  string
+	StagingPath string
+	Address     string
+	SecretsFile string
+
+	TestVolumeSize           int64
+	TestVolumeParametersFile string
+	TestVolumeParameters     map[string]string
 }
 
 // SanityContext holds the variables that each test can depend on. It
@@ -59,11 +63,25 @@ type SanityContext struct {
 	Config  *Config
 	Conn    *grpc.ClientConn
 	Secrets *CSISecrets
+
+	connAddress string
 }
 
 // Test will test the CSI driver at the specified address by
 // setting up a Ginkgo suite and running it.
 func Test(t *testing.T, reqConfig *Config) {
+	path := reqConfig.TestVolumeParametersFile
+	if len(path) != 0 {
+		yamlFile, err := ioutil.ReadFile(path)
+		if err != nil {
+			panic(fmt.Sprintf("failed to read file %q: %v", path, err))
+		}
+		err = yaml.Unmarshal(yamlFile, &reqConfig.TestVolumeParameters)
+		if err != nil {
+			panic(fmt.Sprintf("error unmarshaling yaml: %v", err))
+		}
+	}
+
 	sc := &SanityContext{
 		Config: reqConfig,
 	}
@@ -87,11 +105,21 @@ func (sc *SanityContext) setup() {
 	if len(sc.Config.SecretsFile) > 0 {
 		sc.Secrets, err = loadSecrets(sc.Config.SecretsFile)
 		Expect(err).NotTo(HaveOccurred())
+	} else {
+		sc.Secrets = &CSISecrets{}
 	}
 
-	By("connecting to CSI driver")
-	sc.Conn, err = utils.Connect(sc.Config.Address)
-	Expect(err).NotTo(HaveOccurred())
+	// It is possible that a test sets sc.Config.Address
+	// dynamically (and differently!) in a BeforeEach, so only
+	// reuse the connection if the address is still the same.
+	if sc.Conn == nil || sc.connAddress != sc.Config.Address {
+		By("connecting to CSI driver")
+		sc.Conn, err = utils.Connect(sc.Config.Address)
+		Expect(err).NotTo(HaveOccurred())
+		sc.connAddress = sc.Config.Address
+	} else {
+		By(fmt.Sprintf("reusing connection to CSI driver at %s", sc.connAddress))
+	}
 
 	By("creating mount and staging directories")
 	err = createMountTargetLocation(sc.Config.TargetPath)
@@ -103,10 +131,16 @@ func (sc *SanityContext) setup() {
 }
 
 func (sc *SanityContext) teardown() {
-	if sc.Conn != nil {
-		sc.Conn.Close()
-		sc.Conn = nil
-	}
+	// We intentionally do not close the connection to the CSI
+	// driver here because the large amount of connection attempts
+	// caused test failures
+	// (https://github.com/kubernetes-csi/csi-test/issues/101). We
+	// could fix this with retries
+	// (https://github.com/kubernetes-csi/csi-test/pull/97) but
+	// that requires more discussion, so instead we just connect
+	// once per process instead of once per test case. This was
+	// also said to be faster
+	// (https://github.com/kubernetes-csi/csi-test/pull/98).
 }
 
 func createMountTargetLocation(targetPath string) error {
@@ -137,4 +171,24 @@ func loadSecrets(path string) (*CSISecrets, error) {
 	}
 
 	return &creds, nil
+}
+
+var uniqueSuffix = "-" + pseudoUUID()
+
+// pseudoUUID returns a unique string generated from random
+// bytes, empty string in case of error.
+func pseudoUUID() string {
+	b := make([]byte, 8)
+	if _, err := rand.Read(b); err != nil {
+		// Shouldn't happen?!
+		return ""
+	}
+	return fmt.Sprintf("%08X-%08X", b[0:4], b[4:8])
+}
+
+// uniqueString returns a unique string by appending a random
+// number. In case of an error, just the prefix is returned, so it
+// alone should already be fairly unique.
+func uniqueString(prefix string) string {
+	return prefix + uniqueSuffix
 }

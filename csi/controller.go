@@ -24,8 +24,7 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/util"
 
-	csi "github.com/container-storage-interface/spec/lib/go/csi/v0"
-	"github.com/golang/protobuf/ptypes"
+	csi "github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
@@ -104,10 +103,6 @@ func (s *OsdCsiServer) ControllerUnpublishVolume(
 
 // ValidateVolumeCapabilities is a CSI API used by container orchestration systems
 // to make sure a volume specification is validiated by the CSI driver.
-// Note: The method used here to return errors is still not part of the spec.
-// See: https://github.com/container-storage-interface/spec/pull/115
-// Discussion:  https://groups.google.com/forum/#!topic/kubernetes-sig-storage-wg-csi/TpTrNFbRa1I
-//
 func (s *OsdCsiServer) ValidateVolumeCapabilities(
 	ctx context.Context,
 	req *csi.ValidateVolumeCapabilitiesRequest,
@@ -121,15 +116,12 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 	if len(id) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "volume_id must be specified")
 	}
-	attributes := req.GetVolumeAttributes()
 
 	// Log request
 	logrus.Debugf("ValidateVolumeCapabilities of id %s "+
 		"capabilities %#v "+
-		"attributes %#v ",
 		id,
-		capabilities,
-		attributes)
+		capabilities)
 
 	// Check ID is valid with the specified volume capabilities
 	volumes, err := s.driver.Inspect([]string{id})
@@ -155,7 +147,11 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 
 	// Setup uninitialized response object
 	result := &csi.ValidateVolumeCapabilitiesResponse{
-		Supported: true,
+		Confirmed: &csi.ValidateVolumeCapabilitiesResponse_Confirmed{
+			VolumeContext:      req.GetVolumeContext(),
+			VolumeCapabilities: req.GetVolumeCapabilities(),
+			Parameters:         req.GetParameters(),
+		},
 	}
 
 	// Check capability
@@ -174,46 +170,46 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 		switch {
 		case mode.Mode == csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER:
 			if v.Spec.Shared {
-				result.Supported = false
+				result.Confirmed = nil
 				result.Message = volumeCapabilityMessageMultinodeVolume
 				break
 			}
 			if v.Readonly {
-				result.Supported = false
+				result.Confirmed = nil
 				result.Message = volumeCapabilityMessageReadOnlyVolume
 				break
 			}
 		case mode.Mode == csi.VolumeCapability_AccessMode_SINGLE_NODE_READER_ONLY:
 			if v.Spec.Shared {
-				result.Supported = false
+				result.Confirmed = nil
 				result.Message = volumeCapabilityMessageMultinodeVolume
 				break
 			}
 			if !v.Readonly {
-				result.Supported = false
+				result.Confirmed = nil
 				result.Message = volumeCapabilityMessageNotReadOnlyVolume
 				break
 			}
 		case mode.Mode == csi.VolumeCapability_AccessMode_MULTI_NODE_READER_ONLY:
 			if !v.Spec.Shared {
-				result.Supported = false
+				result.Confirmed = nil
 				result.Message = volumeCapabilityMessageNotMultinodeVolume
 				break
 			}
 			if !v.Readonly {
-				result.Supported = false
+				result.Confirmed = nil
 				result.Message = volumeCapabilityMessageNotReadOnlyVolume
 				break
 			}
 		case mode.Mode == csi.VolumeCapability_AccessMode_MULTI_NODE_SINGLE_WRITER ||
 			mode.Mode == csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER:
 			if !v.Spec.Shared {
-				result.Supported = false
+				result.Confirmed = nil
 				result.Message = volumeCapabilityMessageNotMultinodeVolume
 				break
 			}
 			if v.Readonly {
-				result.Supported = false
+				result.Confirmed = nil
 				result.Message = volumeCapabilityMessageReadOnlyVolume
 				break
 			}
@@ -224,13 +220,13 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 				mode.Mode.String())
 		}
 
-		if !result.Supported {
+		if result.Confirmed == nil {
 			return result, nil
 		}
 	}
 
-	// If we passed all the checks, then it is valid
-	result.Message = "Volume is supported"
+	// If we passed all the checks, then it is valid.
+	// result.Message needs to be empty on return
 	return result, nil
 }
 
@@ -271,7 +267,7 @@ func (s *OsdCsiServer) ListVolumes(
 		}
 
 		// Required
-		entries[i].Volume.Id = v.Id
+		entries[i].Volume.VolumeId = v.Id
 
 		// This entry is optional in the API, but OSD has
 		// the information available to provide it
@@ -280,7 +276,7 @@ func (s *OsdCsiServer) ListVolumes(
 		// Attributes. We can add or remove as needed since they
 		// are optional and opaque to the Container Orchestrator(CO)
 		// but could be used for debugging using a csi complient client.
-		entries[i].Volume.Attributes = osdVolumeAttributes(v)
+		entries[i].Volume.VolumeContext = osdVolumeContext(v)
 	}
 
 	return &csi.ListVolumesResponse{
@@ -288,9 +284,9 @@ func (s *OsdCsiServer) ListVolumes(
 	}, nil
 }
 
-// osdVolumeAttributes returns the attributes of a volume as a map
+// osdVolumeContext returns the attributes of a volume as a map
 // to be returned to the CSI API caller
-func osdVolumeAttributes(v *api.Volume) map[string]string {
+func osdVolumeContext(v *api.Volume) map[string]string {
 	return map[string]string{
 		api.SpecParent: v.GetSource().GetParent(),
 		api.SpecSecure: fmt.Sprintf("%v", v.GetSpec().GetEncrypted()),
@@ -370,7 +366,7 @@ func (s *OsdCsiServer) CreateVolume(
 
 	// Check if this is a cloning request to create a volume from a snapshot
 	if req.GetVolumeContentSource().GetSnapshot() != nil {
-		source.Parent = req.GetVolumeContentSource().GetSnapshot().GetId()
+		source.Parent = req.GetVolumeContentSource().GetSnapshot().GetSnapshotId()
 	}
 
 	// Check if the caller is asking to create a snapshot or for a new volume
@@ -454,9 +450,9 @@ func (s *OsdCsiServer) DeleteVolume(
 }
 
 func osdToCsiVolumeInfo(dest *csi.Volume, src *api.Volume) {
-	dest.Id = src.GetId()
+	dest.VolumeId = src.GetId()
 	dest.CapacityBytes = int64(src.Spec.GetSize())
-	dest.Attributes = osdVolumeAttributes(src)
+	dest.VolumeContext = osdVolumeContext(src)
 }
 
 func csiRequestsSharedVolume(req *csi.CreateVolumeRequest) bool {
@@ -491,21 +487,12 @@ func (s *OsdCsiServer) CreateSnapshot(
 			return nil, status.Error(codes.AlreadyExists, "Requested snapshot already exists for another source volume id")
 		}
 
-		// Return current snapshot info
-		createdAt, err := ptypes.Timestamp(v.GetCtime())
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, "Failed to get time snapshot was created: %v", err)
-		}
 		return &csi.CreateSnapshotResponse{
 			Snapshot: &csi.Snapshot{
-				Id:             v.GetId(),
+				SnapshotId:     v.GetId(),
 				SourceVolumeId: v.GetSource().GetParent(),
-				CreatedAt:      createdAt.Unix(),
-				Status: &csi.SnapshotStatus{
-					// This means that we are not uploading our snapshot
-					// We may add support for cloud snaps in future patches
-					Type: csi.SnapshotStatus_READY,
-				},
+				CreationTime:   v.GetCtime(),
+				ReadyToUse:     true,
 			},
 		}, nil
 	}
@@ -533,21 +520,13 @@ func (s *OsdCsiServer) CreateSnapshot(
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to get information about the snapshot: %v", err)
 	}
-	createdAt, err := ptypes.Timestamp(snapInfo.GetCtime())
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Failed to get time snapshot was created: %v", err)
-	}
 
 	return &csi.CreateSnapshotResponse{
 		Snapshot: &csi.Snapshot{
-			Id:             snapshotID,
+			SnapshotId:     snapshotID,
 			SourceVolumeId: req.GetSourceVolumeId(),
-			CreatedAt:      createdAt.Unix(),
-			Status: &csi.SnapshotStatus{
-				// This means that we are not uploading our snapshot
-				// We may add support flow cloud snaps in future patches
-				Type: csi.SnapshotStatus_READY,
-			},
+			CreationTime:   snapInfo.GetCtime(),
+			ReadyToUse:     true,
 		},
 	}, nil
 }

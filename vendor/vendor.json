@@ -219,16 +219,10 @@
 			"revisionTime": "2017-12-28T01:44:52Z"
 		},
 		{
-			"checksumSHA1": "BKQRkbPMH3shDkfWGs+sx07n0gI=",
+			"checksumSHA1": "HTaiWUhwMbtPVxoi6y1ezrm9Swk=",
 			"path": "github.com/container-storage-interface/spec/lib/go/csi",
-			"revision": "35d9f9d77954980e449e52c3f3e43c21bd8171f5",
-			"revisionTime": "2018-02-24T01:47:49Z"
-		},
-		{
-			"checksumSHA1": "w7wR+UZBh669l8z+6zGZROzPOu4=",
-			"path": "github.com/container-storage-interface/spec/lib/go/csi/v0",
-			"revision": "2178fdeea87f1150a17a63252eee28d4d8141f72",
-			"revisionTime": "2018-02-09T06:36:19Z"
+			"revision": "ed0bb0e1557548aa028307f48728767cfe8f6345",
+			"revisionTime": "2018-11-15T05:27:45Z"
 		},
 		{
 			"checksumSHA1": "sFGNqtSE3WlMiyT+JkVaW2OzstM=",
@@ -909,16 +903,16 @@
 			"revisionTime": "2016-09-07T12:20:59Z"
 		},
 		{
-			"checksumSHA1": "LyBy6Kkk8PYSmZoa3HudcJKBtDc=",
+			"checksumSHA1": "7YjWGRuNxRQQxqQnyarhWelHwRg=",
 			"path": "github.com/kubernetes-csi/csi-test/pkg/sanity",
-			"revision": "718c9544f5e16cba31881333e0f9dff371663dea",
-			"revisionTime": "2018-07-18T17:07:10Z"
+			"revision": "d8da31da5fc7842397a37934652487bf3e4f6ab0",
+			"revisionTime": "2018-11-15T22:01:24Z"
 		},
 		{
-			"checksumSHA1": "u9bObWdPHfMHx7GURJ2El86Lkp0=",
+			"checksumSHA1": "JZL2D53S5iaBUwg6hTQTabwYsdQ=",
 			"path": "github.com/kubernetes-csi/csi-test/utils",
-			"revision": "718c9544f5e16cba31881333e0f9dff371663dea",
-			"revisionTime": "2018-07-18T17:07:10Z"
+			"revision": "d8da31da5fc7842397a37934652487bf3e4f6ab0",
+			"revisionTime": "2018-11-15T22:01:24Z"
 		},
 		{
 			"checksumSHA1": "XxSculDWJ8paPj2VbSbbxPDSb7Q=",

@@ -22,7 +22,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 
-	csi "github.com/container-storage-interface/spec/lib/go/csi/v0"
+	csi "github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/golang/mock/gomock"
 	"github.com/kubernetes-csi/csi-test/utils"
 	"golang.org/x/net/context"
