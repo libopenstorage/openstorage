@@ -5,6 +5,10 @@
 
 ## Releases
 
+### v0.22.9 - Tech Preview (12/05/2018)
+
+* Add TaskId and ClusterId to CloudMigrate status request
+
 ### v0.22.8 - Tech Preview (11/28/2018)
 
 * Removing unused objects created for cluster pair APIs
