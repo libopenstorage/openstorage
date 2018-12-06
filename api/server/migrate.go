@@ -68,9 +68,12 @@ func (vd *volAPI) cloudMigrateStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := json.NewDecoder(r.Body).Decode(statusReq); err != nil {
-		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
-		return
+	// Use empty request if nothing was sent
+	if r.ContentLength != 0 {
+		if err := json.NewDecoder(r.Body).Decode(statusReq); err != nil {
+			vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+			return
+		}
 	}
 
 	statusResp, err := d.CloudMigrateStatus(statusReq)
