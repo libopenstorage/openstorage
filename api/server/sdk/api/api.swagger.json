@@ -2540,23 +2540,23 @@
           "type": "string"
         },
         "randRW": {
-          "format": "double",
+          "format": "uint64",
           "title": "RandRW",
-          "type": "number"
+          "type": "string"
         },
         "rotation_speed": {
           "description": "True if this device is rotational.",
           "type": "string"
         },
         "seq_read": {
-          "format": "double",
+          "format": "uint64",
           "title": "SeqRead",
-          "type": "number"
+          "type": "string"
         },
         "seq_write": {
-          "format": "double",
+          "format": "uint64",
           "title": "SeqWrite",
-          "type": "number"
+          "type": "string"
         },
         "size": {
           "description": "Total size in bytes.",
