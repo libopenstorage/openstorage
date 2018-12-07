@@ -29,7 +29,7 @@ import (
 
 // SchedulePolicyServer is an implementation of the gRPC OpenStorageSchedulePolicy interface
 type SchedulePolicyServer struct {
-	server *Server
+	server serverAccessor
 }
 
 func (s *SchedulePolicyServer) cluster() cluster.Cluster {

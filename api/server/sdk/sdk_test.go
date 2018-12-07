@@ -18,8 +18,10 @@ package sdk
 
 import (
 	"context"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -40,11 +42,15 @@ import (
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/status"
 )
 
 const (
 	mockDriverName = "mock"
+	testUds        = "/tmp/sdk-test.sock"
+	testHttpsPort  = "34000"
+	testRESTPort   = "34001"
 )
 
 // testServer is a simple struct used abstract
@@ -57,6 +63,10 @@ type testServer struct {
 	a      *mockalerts.MockFilterDeleter
 	mc     *gomock.Controller
 	gw     *httptest.Server
+}
+
+func init() {
+	logrus.SetLevel(logrus.PanicLevel)
 }
 
 func setupMockDriver(tester *testServer, t *testing.T) {
@@ -84,23 +94,35 @@ func newTestServer(t *testing.T) *testServer {
 
 	var err error
 	// Setup simple driver
+	os.Remove(testUds)
 	tester.server, err = New(&ServerConfig{
 		DriverName:          mockDriverName,
 		Net:                 "tcp",
-		Address:             "127.0.0.1:0",
+		Address:             ":" + testHttpsPort,
+		RestPort:            testRESTPort,
+		Socket:              testUds,
 		Cluster:             tester.c,
 		AlertsFilterDeleter: tester.a,
+		AccessOutput:        ioutil.Discard,
+		AuditOutput:         ioutil.Discard,
+		Tls: &TLSConfig{
+			CertFile: "test_certs/server-cert.pem",
+			KeyFile:  "test_certs/server-key.pem",
+		},
 	})
 	assert.Nil(t, err)
 	err = tester.server.Start()
 	assert.Nil(t, err)
 
+	grpccreds, err := credentials.NewClientTLSFromFile("test_certs/server-cert.pem", "")
+	assert.Nil(t, err)
+
 	// Setup a connection to the driver
-	tester.conn, err = grpc.Dial(tester.server.Address(), grpc.WithInsecure())
+	tester.conn, err = grpc.Dial("localhost:"+testHttpsPort, grpc.WithTransportCredentials(grpccreds))
 	assert.Nil(t, err)
 
 	// Setup REST gateway
-	mux, err := tester.server.restServerSetupHandlers()
+	mux, err := tester.server.restGateway.restServerSetupHandlers()
 	assert.NoError(t, err)
 	assert.NotNil(t, mux)
 	tester.gw = httptest.NewServer(mux)
@@ -138,7 +160,11 @@ func (s *testServer) Conn() *grpc.ClientConn {
 }
 
 func (s *testServer) Server() grpcserver.Server {
-	return s.server
+	return s.server.netServer
+}
+
+func (s *testServer) UdsServer() grpcserver.Server {
+	return s.server.udsServer
 }
 
 func (s *testServer) GatewayURL() string {
@@ -206,19 +232,32 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 	// Setup SDK Server with no volume driver
 	alert, err := alerts.NewFilterDeleter(kv)
 	assert.NoError(t, err)
+
+	os.Remove(testUds)
 	server, err := New(&ServerConfig{
 		Net:                 "tcp",
-		Address:             "127.0.0.1:0",
+		Address:             ":" + testHttpsPort,
+		RestPort:            testRESTPort,
+		Socket:              testUds,
 		Cluster:             cm,
 		AlertsFilterDeleter: alert,
+		AccessOutput:        ioutil.Discard,
+		AuditOutput:         ioutil.Discard,
+		Tls: &TLSConfig{
+			CertFile: "test_certs/server-cert.pem",
+			KeyFile:  "test_certs/server-key.pem",
+		},
 	})
 	assert.Nil(t, err)
 	err = server.Start()
 	assert.Nil(t, err)
+	defer server.Stop()
+
+	grpccreds, err := credentials.NewClientTLSFromFile("test_certs/server-cert.pem", "")
+	assert.Nil(t, err)
 
 	// Setup a connection to the driver
-	conn, err := grpc.Dial(server.Address(), grpc.WithInsecure())
-	assert.NoError(t, err)
+	conn, err := grpc.Dial("localhost:"+testHttpsPort, grpc.WithTransportCredentials(grpccreds))
 
 	// Setup API names that depend on the volume driver
 	// To get the names, look at api.pb.go and search for grpc.Invoke or c.cc.Invoke

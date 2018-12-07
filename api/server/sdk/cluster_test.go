@@ -18,6 +18,7 @@ package sdk
 
 import (
 	"context"
+	"io/ioutil"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -33,27 +34,30 @@ func TestNewSdkServerBadParameters(t *testing.T) {
 	s, err := New(nil)
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "configuration")
 
 	s, err = New(&ServerConfig{})
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "Unable to setup server")
+	assert.Contains(t, err.Error(), "Must provide unix domain")
 
 	s, err = New(&ServerConfig{
 		Net: "test",
 	})
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "Unable to setup server")
+	assert.Contains(t, err.Error(), "Must provide unix domain")
 
 	s, err = New(&ServerConfig{
-		Net:        "test",
-		Address:    "blah",
-		DriverName: "name",
+		Net:          "test",
+		Socket:       "blah",
+		RestPort:     testRESTPort,
+		AccessOutput: ioutil.Discard,
+		AuditOutput:  ioutil.Discard,
 	})
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "Unable to get driver")
+	assert.Contains(t, err.Error(), "Address must be")
 
 	// Add driver to registry
 	mc := gomock.NewController(t)
@@ -64,13 +68,16 @@ func TestNewSdkServerBadParameters(t *testing.T) {
 	})
 	defer volumedrivers.Remove("mock")
 	s, err = New(&ServerConfig{
-		Net:        "test",
-		Address:    "blah",
-		DriverName: "mock",
+		Net:          "test",
+		Address:      "blah",
+		DriverName:   "mock",
+		RestPort:     testRESTPort,
+		AccessOutput: ioutil.Discard,
+		AuditOutput:  ioutil.Discard,
 	})
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "Unable to setup server")
+	assert.Contains(t, err.Error(), "Must provide unix domain")
 }
 
 func TestSdkClusterInspectCurrent(t *testing.T) {

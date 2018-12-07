@@ -18,6 +18,8 @@ limitations under the License.
 package sdk
 
 import (
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/libopenstorage/openstorage/api"
@@ -228,4 +230,12 @@ func retainInternalSpecYamlByteToSdkSched(
 		}
 	}
 	return scheds, nil
+}
+
+func openLog(logfile string) (*os.File, error) {
+	file, err := os.OpenFile(logfile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to open logfile %s: %v", logfile, err)
+	}
+	return file, nil
 }

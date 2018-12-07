@@ -29,7 +29,7 @@ import (
 
 // Objectstoreserver is an implementation of the gRPC OpenStorageObjectstore interface
 type ObjectstoreServer struct {
-	server *Server
+	server serverAccessor
 }
 
 func (s *ObjectstoreServer) cluster() cluster.Cluster {

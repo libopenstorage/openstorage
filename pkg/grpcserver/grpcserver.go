@@ -88,7 +88,7 @@ func (s *GrpcServer) Start(register func(grpcServer *grpc.Server)) error {
 	return nil
 }
 
-// Start is used to start the server.
+// StartWithServer is used to start the server.
 // It will return an error if the server is already runnig.
 func (s *GrpcServer) StartWithServer(server func() *grpc.Server) error {
 	s.lock.Lock()

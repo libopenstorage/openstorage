@@ -27,7 +27,7 @@ import (
 
 // CloudBackupServer is an implementation of the gRPC OpenStorageCloudBackup interface
 type CloudBackupServer struct {
-	server *Server
+	server serverAccessor
 }
 
 func (s *CloudBackupServer) driver() volume.VolumeDriver {

@@ -531,6 +531,12 @@
 			"revisionTime": "2015-11-05T21:09:06Z"
 		},
 		{
+			"checksumSHA1": "mUeojTdLEyzYOki70VUAeeYr/wQ=",
+			"path": "github.com/dgrijalva/jwt-go",
+			"revision": "0b96aaa707760d6ab28d9b9d1913ff5993328bae",
+			"revisionTime": "2018-07-19T21:18:23Z"
+		},
+		{
 			"checksumSHA1": "swrmSZR/wRFxtu7eftd7Vm9ykrI=",
 			"path": "github.com/docker/docker/daemon/graphdriver",
 			"revision": "4a7bd7eaef0038b006cf23adface84081e5aab3b",
@@ -807,10 +813,22 @@
 			"revisionTime": "2018-08-30T09:29:08Z"
 		},
 		{
+			"checksumSHA1": "tvOR7YKj51rBR+j5C/ZyZj6rvYc=",
+			"path": "github.com/grpc-ecosystem/go-grpc-middleware/auth",
+			"revision": "3304cc8863525cd0b328fbfd5bf745bbd38e7106",
+			"revisionTime": "2018-11-12T10:25:10Z"
+		},
+		{
 			"checksumSHA1": "mlh8jfZweEtX64NHqAyXHKm94kA=",
 			"path": "github.com/grpc-ecosystem/go-grpc-middleware/recovery",
 			"revision": "498ae206fc3cfe81cd82e48c1d4354026fa5f9ec",
 			"revisionTime": "2018-08-30T09:29:08Z"
+		},
+		{
+			"checksumSHA1": "L5z1C445GhhQmDKSisTFv754LdU=",
+			"path": "github.com/grpc-ecosystem/go-grpc-middleware/util/metautils",
+			"revision": "3304cc8863525cd0b328fbfd5bf745bbd38e7106",
+			"revisionTime": "2018-11-12T10:25:10Z"
 		},
 		{
 			"checksumSHA1": "s7J8PdKJFnoBFg6MowXLTvix7ug=",
@@ -937,6 +955,12 @@
 			"path": "github.com/libopenstorage/gossip/types",
 			"revision": "aa5bca5fb84334d7d29c26b5ccd7c819f344beac",
 			"revisionTime": "2017-03-28T20:16:54Z"
+		},
+		{
+			"checksumSHA1": "yyJrIKiuCXOeaCjoVnqYJHEBUD8=",
+			"path": "github.com/libopenstorage/openstorage-sdk-auth/pkg/auth",
+			"revision": "2d45760fa8157ab7021c8eaea483e2d2e7c4d495",
+			"revisionTime": "2018-11-14T03:34:01Z"
 		},
 		{
 			"checksumSHA1": "//fxGW9CLGgr6AMunoZkR4lbYzk=",
