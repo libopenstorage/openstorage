@@ -506,10 +506,7 @@ func (v *volumeClient) CredsValidate(uuid string) error {
 	response := req.Do()
 	if response.Error() != nil {
 		if response.StatusCode() == http.StatusUnprocessableEntity {
-			return volume.NewCredentialError(
-				volume.ErrInvalidCredential,
-				response.Error().Error(),
-			)
+			return volume.NewCredentialError(response.Error().Error())
 		}
 		return response.FormatError()
 	}
