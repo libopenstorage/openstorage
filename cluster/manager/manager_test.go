@@ -18,17 +18,20 @@ package manager
 import (
 	"testing"
 
-	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
-
+	"github.com/libopenstorage/openstorage/config"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
+)
 
-	"github.com/libopenstorage/openstorage/config"
+var (
+	kv kvdb.Kvdb
 )
 
 func init() {
-	kv, err := kvdb.New(mem.Name, "manager_test", []string{}, nil, logrus.Panicf)
+	var err error
+	kv, err = kvdb.New(mem.Name, "manager_test", []string{}, nil, logrus.Panicf)
 	if err != nil {
 		logrus.Panicf("Failed to initialize KVDB")
 	}
@@ -51,4 +54,28 @@ func TestClusterManagerUuid(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, uuid, inst.Uuid())
+}
+
+func TestUpdateSchedulerNodeName(t *testing.T) {
+	nodeID := "node-alpha"
+	Init(config.ClusterConfig{
+		ClusterId:         "update-sched-name-id",
+		ClusterUuid:       "udpate-sched-name-uuid",
+		NodeId:            nodeID,
+		SchedulerNodeName: "old-sched-name",
+	})
+
+	err := inst.Start(1, false, "0")
+	assert.NoError(t, err)
+
+	node, err := inst.Inspect(nodeID)
+	assert.NoError(t, err)
+	assert.Equal(t, "old-sched-name", node.SchedulerNodeName)
+
+	err = inst.UpdateSchedulerNodeName("new-sched-name")
+	assert.NoError(t, err)
+
+	node, err = inst.Inspect(nodeID)
+	assert.NoError(t, err)
+	assert.Equal(t, "new-sched-name", node.SchedulerNodeName)
 }
