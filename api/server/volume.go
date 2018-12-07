@@ -850,8 +850,13 @@ func (vd *volAPI) volumeusage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	capacityInfo, err := d.CapacityUsage(volumeID)
-	if err != nil {
-		e := fmt.Errorf("Failed to get CapacityUsage: %s", err.Error())
+	if err != nil || capacityInfo.Error != nil {
+		var e error
+		if err != nil {
+			e = fmt.Errorf("Failed to get CapacityUsage: %s", err.Error())
+		} else {
+			e = fmt.Errorf("Failed to get CapacityUsage: %s", capacityInfo.Error.Error())
+		}
 		vd.sendError(vd.name, method, w, e.Error(), http.StatusInternalServerError)
 		return
 	}
