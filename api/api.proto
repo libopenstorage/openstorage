@@ -1895,16 +1895,43 @@ message SdkCredentialValidateRequest {
 message SdkCredentialValidateResponse {
 }
 
+// Options to attach device
+message SdkVolumeAttachOptions {
+  // Indicates the name of the secret stored in a secret store
+  // In case of Hashicorp's Vault, it will be the key from the key-value pair stored in its kv backend.
+  // In case of Kubernetes secret, it is the name of the secret object itself
+  string secret_name = 1;
+  // In case of Kubernetes, this will be the key stored in the Kubernetes secret
+  string secret_key = 2;
+  // It indicates the additional context which could be used to retrieve the secret.
+  // In case of Kubernetes, this is the namespace in which the secret is created.
+  string secret_context = 3;
+}
+
 // Defines a request to mount a volume to the node receiving this request
 message SdkVolumeMountRequest {
   // Id of the volume
   string volume_id = 1;
   // Mount path for mounting the volume.
   string mount_path = 2;
+  // Options to attach device
+  SdkVolumeAttachOptions options = 3;
 }
 
 // Empty response
 message SdkVolumeMountResponse {
+}
+
+// Options to unmount device
+message SdkVolumeUnmountOptions {
+  // Delete the mount path on the node after unmounting
+  bool delete_mount_path = 1;
+  // Do not wait for a delay before deleting path.
+  // Normally a storage driver may delay before deleting the mount path,
+  // which may be necessary to reduce the risk of race conditions. This
+  // choice will remove that delay. This value is only usable when
+  // `delete_mount_path` is set.
+  bool no_delay_before_deleting_mount_path = 2;
 }
 
 // Defines a request to unmount a volume on the node receiving this request
@@ -1914,18 +1941,7 @@ message SdkVolumeUnmountRequest {
   // MountPath for device
   string mount_path = 2;
   // Options to unmount device
-  message Options {
-    // Delete the mount path on the node after unmounting
-    bool delete_mount_path = 1;
-    // Do not wait for a delay before deleting path.
-    // Normally a storage driver may delay before deleting the mount path,
-    // which may be necessary to reduce the risk of race conditions. This
-    // choice will remove that delay. This value is only usable when
-    // `delete_mount_path` is set.
-    bool no_delay_before_deleting_mount_path = 2;
-  }
-  // Options to unmount device
-  Options options = 3;
+  SdkVolumeUnmountOptions options = 3;
 }
 
 // Empty response
@@ -1937,19 +1953,7 @@ message SdkVolumeAttachRequest {
   // Id of volume
   string volume_id = 1;
   // Options to attach device
-  message Options {
-    // Indicates the name of the secret stored in a secret store
-    // In case of Hashicorp's Vault, it will be the key from the key-value pair stored in its kv backend.
-    // In case of Kubernetes secret, it is the name of the secret object itself
-    string secret_name = 1;
-    // In case of Kubernetes, this will be the key stored in the Kubernetes secret
-    string secret_key = 2;
-    // It indicates the additional context which could be used to retrieve the secret.
-    // In case of Kubernetes, this is the namespace in which the secret is created.
-    string secret_context = 3;
-  }
-  // Options to attach device
-  Options options = 2;
+  SdkVolumeAttachOptions options = 2;
 }
 
 // Defines a response from the node which received the request to attach
@@ -1958,18 +1962,19 @@ message SdkVolumeAttachResponse {
   string device_path = 1;
 }
 
+message SdkVolumeDetachOptions {
+  // Forcefully detach device from the kernel
+  bool force = 1;
+  // Unmount the volume before detaching
+  bool unmount_before_detach = 2;
+}
+
 // Defines a request to detach a volume
 message SdkVolumeDetachRequest {
   // Id of the volume
   string volume_id = 1;
   // Options to detach device
-  message Options {
-    // Forcefully detach device from the kernel
-    bool force = 1;
-    // Unmount the volume before detaching
-    bool unmount_before_detach = 2;
-  }
-  Options options = 2;
+  SdkVolumeDetachOptions options = 2;
 }
 
 // Empty response
@@ -2768,7 +2773,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 34;
+    Minor = 35;
     // SDK version patch value of this specification
     Patch = 0;
   }

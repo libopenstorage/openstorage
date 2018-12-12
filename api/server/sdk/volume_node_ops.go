@@ -21,8 +21,10 @@ import (
 	"fmt"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/pkg/options"
 	mountattachoptions "github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/pkg/util"
+	"github.com/libopenstorage/openstorage/volume"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -126,6 +128,7 @@ func (s *VolumeServer) Mount(
 	ctx context.Context,
 	req *api.SdkVolumeMountRequest,
 ) (*api.SdkVolumeMountResponse, error) {
+
 	if s.cluster() == nil || s.driver() == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
@@ -137,7 +140,53 @@ func (s *VolumeServer) Mount(
 		return nil, status.Error(codes.InvalidArgument, "Invalid Mount Path")
 	}
 
-	err := s.driver().Mount(req.GetVolumeId(), req.GetMountPath(), nil)
+	vols, err := s.driver().Inspect([]string{req.VolumeId})
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Invalid volume id")
+	}
+	vol := vols[0]
+	mountpoint := req.MountPath
+	name := vol.Locator.Name
+
+	if vol.Spec.Scale > 1 {
+		if len(req.VolumeId) != 0 {
+			err = s.driver().Unmount(req.VolumeId, mountpoint, nil)
+			if err != nil {
+				return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("Cannot remount scaled volume(%v)."+
+					" Volume %v is mounted at %v", name, req.VolumeId, mountpoint))
+			}
+
+			if s.driver().Type() == api.DriverType_DRIVER_TYPE_BLOCK {
+				err = s.driver().Detach(req.VolumeId, nil)
+				if err != nil {
+					_ = s.driver().Mount(req.VolumeId, mountpoint, nil)
+					return nil, status.Error(codes.InvalidArgument,
+						fmt.Sprintf("Cannot remount scaled volume(%v)."+
+							" Volume %v is mounted at %v", name, req.VolumeId, mountpoint))
+				}
+			}
+		}
+	}
+
+	// If this is a block driver, first attach the volume.
+	if s.driver().Type() == api.DriverType_DRIVER_TYPE_BLOCK {
+		// If volume is scaled up, a new volume is created and
+		// vol will change.
+		attachOptions := make(map[string]string)
+		attachOptions[options.OptionsSecret] = req.Options.SecretName
+		attachOptions[options.OptionsSecretKey] = req.Options.SecretKey
+		attachOptions[options.OptionsSecretContext] = req.Options.SecretContext
+		if vol.Scaled() {
+			vol, err = s.attachScale(ctx, vol, attachOptions)
+		} else {
+			vol, err = s.attachVol(ctx, vol, attachOptions)
+		}
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		}
+	}
+
+	err = s.driver().Mount(req.GetVolumeId(), req.GetMountPath(), nil)
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -169,14 +218,25 @@ func (s *VolumeServer) Unmount(
 	if req.GetOptions() != nil {
 		options[mountattachoptions.OptionsDeleteAfterUnmount] = fmt.Sprint(req.GetOptions().GetDeleteMountPath())
 
-		// Only set if
 		if req.GetOptions().GetDeleteMountPath() {
 			options[mountattachoptions.OptionsWaitBeforeDelete] = fmt.Sprint(!req.GetOptions().GetNoDelayBeforeDeletingMountPath())
 		}
 	}
 
-	err := s.driver().Unmount(req.GetVolumeId(), req.GetMountPath(), options)
+	// Get volume to unmount
+	vols, err := s.driver().Inspect([]string{req.VolumeId})
 	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Invalid volume id")
+	}
+	vol := vols[0]
+	if vol.Spec.Scale > 1 {
+		if len(req.VolumeId) == 0 {
+			return &api.SdkVolumeUnmountResponse{},
+				fmt.Errorf("Failed to find volume mapping for %v", req.MountPath)
+		}
+	}
+
+	if err = s.driver().Unmount(req.GetVolumeId(), req.GetMountPath(), options); err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
 			"Failed to unmount volume %s: %v",
@@ -184,5 +244,158 @@ func (s *VolumeServer) Unmount(
 			err.Error())
 	}
 
+	if s.driver().Type() == api.DriverType_DRIVER_TYPE_BLOCK {
+		_ = s.driver().Detach(req.VolumeId, nil)
+	}
+
 	return &api.SdkVolumeUnmountResponse{}, nil
+}
+
+func (s *VolumeServer) scaleUp(
+	ctx context.Context,
+	inVol *api.Volume,
+	allVols []*api.Volume,
+	attachOptions map[string]string,
+) (
+	outVol *api.Volume,
+	err error,
+) {
+	// Create new volume if existing volumes are not available.
+	spec := inVol.Spec.Copy()
+	spec.Scale = 1
+	spec.ReplicaSet = nil
+	volCount := len(allVols)
+	for i := len(allVols); volCount < int(inVol.Spec.Scale); i++ {
+		name := fmt.Sprintf("%s_%03d", inVol.Locator.Name, i)
+		id := ""
+
+		// create, get vol from name, attach
+		if id, err = s.driver().Create(
+			&api.VolumeLocator{Name: name},
+			nil,
+			spec,
+		); err != nil {
+			// It is possible to get an error on a name conflict
+			// either due to concurrent creates or holes punched in
+			// from previous deletes.
+			if err == volume.ErrExist {
+				continue
+			}
+			return nil, err
+		}
+
+		outVol, err := s.volFromId(id)
+		if err != nil {
+			return nil, err
+		}
+		if _, err = s.driver().Attach(outVol.Id, attachOptions); err == nil {
+			return outVol, nil
+		}
+		// If we fail to attach the volume, continue to look for a
+		// free volume.
+		volCount++
+	}
+	return nil, volume.ErrVolAttachedScale
+}
+
+func (s *VolumeServer) attachScale(
+	ctx context.Context,
+	inVol *api.Volume,
+	attachOptions map[string]string,
+) (
+	*api.Volume,
+	error,
+) {
+	// Find a volume that has data local to this node.
+	volumes, err := s.driver().Enumerate(&api.VolumeLocator{
+		Name: fmt.Sprintf("%s.*", inVol.Locator.Name),
+		VolumeLabels: map[string]string{
+			volume.LocationConstraint: volume.LocalNode,
+		},
+	}, nil)
+
+	// Try to attach local volumes.
+	if err == nil {
+		for _, vol := range volumes {
+			if v, err := s.attachVol(ctx, vol, attachOptions); err == nil {
+				return v, nil
+			}
+		}
+	}
+	// Create a new local volume if we fail to attach existing local volume
+	// or if none exist.
+	allVols, err := s.driver().Enumerate(
+		&api.VolumeLocator{
+			Name: fmt.Sprintf("%s.*", inVol.Locator.Name),
+		},
+		nil,
+	)
+
+	// Try to attach existing volumes.
+	for _, outVol := range allVols {
+		if _, err = s.driver().Attach(outVol.Id, attachOptions); err == nil {
+			return outVol, nil
+		}
+	}
+
+	if len(allVols) < int(inVol.Spec.Scale) {
+		name := fmt.Sprintf("%s_%03d", inVol.Locator.Name, len(allVols))
+		spec := inVol.Spec.Copy()
+		spec.ReplicaSet = &api.ReplicaSet{Nodes: []string{volume.LocalNode}}
+		spec.Scale = 1
+
+		// create, vol from name, attach
+		id, err := s.driver().Create(&api.VolumeLocator{Name: name}, nil, spec)
+		if err != nil {
+			return s.scaleUp(ctx, inVol, allVols, attachOptions)
+		}
+
+		outVol, err := s.volFromId(id)
+		if err != nil {
+			return nil, err
+		}
+		if _, err = s.driver().Attach(outVol.Id, attachOptions); err == nil {
+			return outVol, nil
+		}
+
+		// We failed to attach, scaleUp.
+		allVols = append(allVols, outVol)
+	}
+	return s.scaleUp(ctx, inVol, allVols, attachOptions)
+}
+
+func (s *VolumeServer) attachVol(
+	ctx context.Context,
+	vol *api.Volume,
+	attachOptions map[string]string,
+) (
+	outVolume *api.Volume,
+	err error,
+) {
+	_, err = s.driver().Attach(vol.Id, attachOptions)
+
+	switch err {
+	case nil:
+		return vol, nil
+	case volume.ErrVolAttachedOnRemoteNode:
+		return vol, err
+	default:
+		return vol, err
+	}
+}
+
+func (s *VolumeServer) volFromName(name string) (*api.Volume, error) {
+	vols, err := s.driver().Enumerate(&api.VolumeLocator{Name: name}, nil)
+	if err != nil || len(vols) <= 0 {
+		return nil, fmt.Errorf("Cannot locate volume with name %s", name)
+	}
+	return vols[0], nil
+}
+
+func (s *VolumeServer) volFromId(volId string) (*api.Volume, error) {
+	vols, err := s.driver().Inspect([]string{volId})
+	if err != nil || len(vols) <= 0 {
+		return nil, fmt.Errorf("Cannot locate volume with id %s", volId)
+	}
+	return vols[0], nil
 }
