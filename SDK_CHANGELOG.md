@@ -5,6 +5,10 @@
 
 ## Releases
 
+### v0.9.3 - Tech Preview (12/5/2018)
+
+* Add new API for extracting volume capacity usage details.
+
 ### v0.9.2 - Tech Preview (10/15/2018)
 
 * Changed value of SdkSchedulePolicyCreateRequest from `SchedulePolicy` to the

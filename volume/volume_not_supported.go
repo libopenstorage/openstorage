@@ -88,6 +88,14 @@ func (s *statsNotSupported) GetActiveRequests() (*api.ActiveRequests, error) {
 	return nil, nil
 }
 
+// GetCapacityUsage gets exclusive and shared capacity
+// usage of snap
+func (s *statsNotSupported) CapacityUsage(
+	ID string,
+) (*api.CapacityUsageResponse, error) {
+	return nil, ErrNotSupported
+}
+
 type quiesceNotSupported struct{}
 
 func (s *quiesceNotSupported) Quiesce(

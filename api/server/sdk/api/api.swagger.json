@@ -37,6 +37,27 @@
       "title": "- ATTACH_STATE_EXTERNAL: Attached and available externally\n - ATTACH_STATE_INTERNAL: Attached but only available internally\n - ATTACH_STATE_INTERNAL_SWITCH: Switching from External to Internal",
       "type": "string"
     },
+    "apiCapacityUsageInfo": {
+      "description": "Provides details on exclusive and shared storage used by\nsnapshot/volume specifically for copy-on-write(COW) snapshots. Deletion\nof snapshots and overwirte of volume will affect the exclusive storage\nused by the other dependent snaps and parent volume.",
+      "properties": {
+        "exclusive_bytes": {
+          "description": "Storage consumed exclusively by this single snapshot. Deletion of this\nsnapshot may increase the free storage available by this amount.",
+          "format": "int64",
+          "type": "string"
+        },
+        "shared_bytes": {
+          "format": "int64",
+          "title": "Storage consumed by this snapshot that is shared with parent and children",
+          "type": "string"
+        },
+        "total_bytes": {
+          "format": "int64",
+          "title": "TotalBytes used by this volume",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
     "apiCosType": {
       "default": "NONE",
       "enum": [
@@ -1071,6 +1092,16 @@
       "title": "Defines a response from the node which received the request to attach",
       "type": "object"
     },
+    "apiSdkVolumeCapacityUsageResponse": {
+      "properties": {
+        "capacity_usage_info": {
+          "$ref": "#/definitions/apiCapacityUsageInfo",
+          "title": "CapacityUsage details"
+        }
+      },
+      "title": "Defines response containing volume/snapshot capacity usage details",
+      "type": "object"
+    },
     "apiSdkVolumeCloneRequest": {
       "properties": {
         "name": {
@@ -1943,6 +1974,11 @@
           "format": "boolean",
           "type": "boolean"
         },
+        "nodiscard": {
+          "description": "Nodiscard specifies if the volume will be mounted with discard support disabled.\ni.e. FS will not release allocated blocks back to the backing storage pool.",
+          "format": "boolean",
+          "type": "boolean"
+        },
         "passphrase": {
           "title": "Passphrase for an encrypted volume",
           "type": "string"
@@ -2127,7 +2163,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.9.2"
+    "version": "0.9.3"
   },
   "paths": {
     "/v1/cloudbackups": {
@@ -3313,6 +3349,32 @@
         "summary": "Unmount unmounts a mounted volume in the host that the client is communicating with",
         "tags": [
           "OpenStorageMountAttach"
+        ]
+      }
+    },
+    "/v1/volumes/usage/{volume_id}": {
+      "get": {
+        "description": "##### Error codes:\n\n* codes.Aborted : Command was aborted and only total_bytes field is valid\n* code.Unimmplemented : Command is not suported this kernel.Only total_bytes\nfield is valid;",
+        "operationId": "CapacityUsage",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "volume_id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkVolumeCapacityUsageResponse"
+            }
+          }
+        },
+        "summary": "CapacityUsage returns volume/snapshot's capacity usage details",
+        "tags": [
+          "OpenStorageVolume"
         ]
       }
     },
