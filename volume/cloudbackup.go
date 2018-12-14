@@ -18,7 +18,7 @@ var (
 
 func CloudBackupWaitForCompletion(
 	cl CloudBackupDriver,
-	id string,
+	taskId string,
 	opType api.CloudBackupOpType,
 ) error {
 	cloudsnapBackoff := backoff.NewExponentialBackOff()
@@ -30,18 +30,18 @@ func CloudBackupWaitForCompletion(
 	var opError error
 	err := backoff.Retry(func() error {
 		response, err := cl.CloudBackupStatus(&api.CloudBackupStatusRequest{
-			SrcVolumeID: id,
+			Name: taskId,
 		})
 		if err != nil {
 			return err
 		}
-		csStatus, present := response.Statuses[id]
+		csStatus, present := response.Statuses[taskId]
 		if !present {
-			opError = fmt.Errorf("failed to get cloudsnap status for volume: %s", id)
+			opError = fmt.Errorf("failed to get cloudsnap status for volume: %s", taskId)
 			return nil
 		}
 
-		err = fmt.Errorf("CloudBackup operation %v for %v in state %v", opType, id, csStatus.Status)
+		err = fmt.Errorf("CloudBackup operation %v for %v in state %v", opType, taskId, csStatus.Status)
 		switch csStatus.Status {
 		case api.CloudBackupStatusFailed, api.CloudBackupStatusAborted, api.CloudBackupStatusStopped:
 			opError = err
