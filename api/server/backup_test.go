@@ -543,26 +543,26 @@ func TestCloudBackupWait(t *testing.T) {
 	}
 
 	testVolDriver.MockDriver().EXPECT().CloudBackupStatus(&api.CloudBackupStatusRequest{
-		SrcVolumeID: id}).
+		Name: id}).
 		Return(notStartedStatus, nil).Times(1)
 	testVolDriver.MockDriver().EXPECT().CloudBackupStatus(&api.CloudBackupStatusRequest{
-		SrcVolumeID: id}).
+		Name: id}).
 		Return(activeStatus, nil).Times(1)
 	testVolDriver.MockDriver().EXPECT().CloudBackupStatus(&api.CloudBackupStatusRequest{
-		SrcVolumeID: id}).
+		Name: id}).
 		Return(doneStatus, nil).Times(1)
 
 	err = volume.CloudBackupWaitForCompletion(client.VolumeDriver(cl), id, api.CloudBackupOp)
 	require.NoError(t, err)
 
 	testVolDriver.MockDriver().EXPECT().CloudBackupStatus(&api.CloudBackupStatusRequest{
-		SrcVolumeID: id}).
+		Name: id}).
 		Return(notStartedStatus, nil).Times(1)
 	testVolDriver.MockDriver().EXPECT().CloudBackupStatus(&api.CloudBackupStatusRequest{
-		SrcVolumeID: id}).
+		Name: id}).
 		Return(activeStatus, nil).Times(1)
 	testVolDriver.MockDriver().EXPECT().CloudBackupStatus(&api.CloudBackupStatusRequest{
-		SrcVolumeID: id}).
+		Name: id}).
 		Return(failedStatus, nil).Times(1)
 
 	err = volume.CloudBackupWaitForCompletion(client.VolumeDriver(cl), id, api.CloudBackupOp)
