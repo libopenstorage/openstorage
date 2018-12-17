@@ -1,20 +1,25 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"path"
+	"sync"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/spec"
 	"github.com/libopenstorage/openstorage/config"
+	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/pkg/util"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 const (
@@ -26,6 +31,10 @@ const (
 type driver struct {
 	restBase
 	spec.SpecHandler
+
+	sdkUds string
+	conn   *grpc.ClientConn
+	mu     sync.Mutex
 }
 
 type handshakeResp struct {
@@ -64,8 +73,13 @@ type capabilitiesResponse struct {
 	Capabilities capabilities
 }
 
-func newVolumePlugin(name string) restServer {
-	return &driver{restBase{name: name, version: "0.3"}, spec.NewSpecHandler()}
+func newVolumePlugin(name, sdkUds string) restServer {
+	d := &driver{
+		restBase:    restBase{name: name, version: "0.3"},
+		SpecHandler: spec.NewSpecHandler(),
+		sdkUds:      sdkUds,
+	}
+	return d
 }
 
 func (d *driver) String() string {
@@ -127,6 +141,38 @@ func (d *driver) volFromName(name string) (*api.Volume, error) {
 	return util.VolumeFromName(v, name)
 }
 
+func (d *driver) volFromNameSdk(ctx context.Context, volumes api.OpenStorageVolumeClient, name string) (*api.Volume, error) {
+	// get volume id
+	volId, err := d.volIdFromName(ctx, volumes, name)
+	if err != nil {
+		return nil, err
+	}
+
+	// inspect for actual volume
+	inspectResp, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
+		VolumeId: volId,
+	})
+	if err == nil {
+		return inspectResp.Volume, nil
+	}
+	return nil, fmt.Errorf("Cannot locate volume with name %s", name)
+}
+
+func (d *driver) volIdFromName(ctx context.Context, volumes api.OpenStorageVolumeClient, name string) (string, error) {
+	enumerateResp, err := volumes.EnumerateWithFilters(ctx, &api.SdkVolumeEnumerateWithFiltersRequest{
+		Locator: &api.VolumeLocator{
+			Name: name,
+		},
+	})
+	if err != nil {
+		return "", err
+	} else if len(enumerateResp.VolumeIds) < 1 {
+		return "", fmt.Errorf("Cannot locate volume with name %s", name)
+	}
+
+	return enumerateResp.VolumeIds[0], nil
+}
+
 func (d *driver) decode(method string, w http.ResponseWriter, r *http.Request) (*volumeRequest, error) {
 	var request volumeRequest
 	err := json.NewDecoder(r.Body).Decode(&request)
@@ -161,6 +207,17 @@ func (d *driver) handshake(w http.ResponseWriter, r *http.Request) {
 	d.logRequest("handshake", "").Debugln("Handshake completed")
 }
 
+func (d *driver) attachToken(ctx context.Context, request *volumeRequest) context.Context {
+	token, tokenInName := d.GetTokenFromString(request.Name)
+	if !tokenInName {
+		token = request.Opts[api.Token]
+	}
+	md := metadata.New(map[string]string{
+		"authorization": "bearer " + token,
+	})
+	return metadata.NewOutgoingContext(ctx, md)
+}
+
 func (d *driver) status(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, fmt.Sprintln("osd plugin", d.version))
 }
@@ -169,79 +226,116 @@ func (d *driver) mountpath(name string) string {
 	return path.Join(volume.MountBase, name)
 }
 
+func (d *driver) getConn() (*grpc.ClientConn, error) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	if d.conn == nil {
+		var err error
+		d.conn, err = grpcserver.Connect(
+			d.sdkUds,
+			[]grpc.DialOption{grpc.WithInsecure()})
+		if err != nil {
+			return nil, fmt.Errorf("Failed to connect to gRPC handler: %v", err)
+		}
+	}
+	return d.conn, nil
+}
+
 func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 	method := "create"
+	ctx := r.Context()
+
+	// decode request
 	request, err := d.decode(method, w, r)
 	if err != nil {
 		return
 	}
 
+	// attach token in context metadata
+	ctx = d.attachToken(ctx, request)
+
+	// get spec for volume creation
 	specParsed, spec, locator, source, name := d.SpecFromString(request.Name)
 	d.logRequest(method, name).Infoln("")
-	// If we fail to find the volume, create it.
-	if _, err = d.volFromName(name); err != nil {
-		v, err := volumedrivers.Get(d.name)
+	if !specParsed {
+		spec, locator, source, err = d.SpecFromOpts(request.Opts)
 		if err != nil {
 			d.errorResponse(method, w, err)
 			return
 		}
-		if !specParsed {
-			spec, locator, source, err = d.SpecFromOpts(request.Opts)
-			if err != nil {
-				d.errorResponse(method, w, err)
-				return
-			}
-		}
-		if locator == nil {
-			locator = &api.VolumeLocator{}
-		}
-		locator.Name = name
-		if source != nil && len(source.Parent) != 0 {
-			vol, err := d.volFromName(source.Parent)
-			if err != nil {
-				d.errorResponse(method, w, err)
-				return
-			}
-			if _, err = v.Snapshot(vol.Id,
-				false,
-				&api.VolumeLocator{Name: name},
-				false,
-			); err != nil {
-				d.errorResponse(method, w, err)
-				return
-			}
-		} else if _, err := v.Create(
-			locator,
-			nil,
-			spec,
-		); err != nil && err != volume.ErrExist {
-			d.errorResponse(method, w, err)
-			return
-		}
 	}
+
+	// get grpc connection
+	conn, err := d.getConn()
+	if err != nil {
+		d.errorResponse(method, w, err)
+		return
+	}
+
+	// clone if exists, create otherwise
+	spec.VolumeLabels = locator.VolumeLabels
+	volumes := api.NewOpenStorageVolumeClient(conn)
+	if source != nil && len(source.Parent) != 0 {
+		// clone
+		_, err = volumes.Clone(ctx, &api.SdkVolumeCloneRequest{
+			Name:     name,
+			ParentId: source.Parent,
+		})
+	} else {
+		// create
+		_, err = volumes.Create(ctx, &api.SdkVolumeCreateRequest{
+			Name: name,
+			Spec: spec,
+		})
+	}
+	if err != nil {
+		d.errorResponse(method, w, err)
+		return
+	}
+
 	json.NewEncoder(w).Encode(&volumeResponse{})
 }
 
 func (d *driver) remove(w http.ResponseWriter, r *http.Request) {
 	method := "remove"
+	ctx := r.Context()
+
 	request, err := d.decode(method, w, r)
 	if err != nil {
 		return
 	}
 
-	v, err := volumedrivers.Get(d.name)
-	if err != nil {
-		d.logRequest(method, "").Warnf("Cannot locate volume driver")
-		d.errorResponse(method, w, err)
-		return
-	}
+	// attach token in context metadata
+	ctx = d.attachToken(ctx, request)
 
+	// get name for deletion
 	_, _, _, _, name := d.SpecFromString(request.Name)
+	d.logRequest(method, name).Infoln("")
 
-	if err = v.Delete(name); err != nil {
+	// get grpc connection
+	conn, err := d.getConn()
+	if err != nil {
 		d.errorResponse(method, w, err)
 		return
 	}
+	volumes := api.NewOpenStorageVolumeClient(conn)
+
+	// get volume id to delete
+	volId, err := d.volIdFromName(ctx, volumes, name)
+	if err != nil {
+		notFound(w, r)
+		return
+	}
+
+	// delete volume
+	_, err = volumes.Delete(ctx, &api.SdkVolumeDeleteRequest{
+		VolumeId: volId,
+	})
+	if err != nil {
+		d.errorResponse(method, w, err)
+		return
+	}
+
 	json.NewEncoder(w).Encode(&volumeResponse{})
 }
 
@@ -482,6 +576,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 
 func (d *driver) path(w http.ResponseWriter, r *http.Request) {
 	method := "path"
+	ctx := r.Context()
 	var response volumePathResponse
 
 	request, err := d.decode(method, w, r)
@@ -489,8 +584,19 @@ func (d *driver) path(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// attach token in context metadata
+	ctx = d.attachToken(ctx, request)
+
+	// get grpc connection
+	conn, err := d.getConn()
+	if err != nil {
+		d.errorResponse(method, w, err)
+		return
+	}
+
+	volumes := api.NewOpenStorageVolumeClient(conn)
 	_, _, _, _, name := d.SpecFromString(request.Name)
-	vol, err := d.volFromName(name)
+	vol, err := d.volFromNameSdk(ctx, volumes, name)
 	if err != nil {
 		e := d.volNotFound(method, request.Name, err, w)
 		d.errorResponse(method, w, e)
@@ -511,25 +617,42 @@ func (d *driver) path(w http.ResponseWriter, r *http.Request) {
 
 func (d *driver) list(w http.ResponseWriter, r *http.Request) {
 	method := "list"
+	ctx := r.Context()
 
-	v, err := volumedrivers.Get(d.name)
+	request, err := d.decode(method, w, r)
 	if err != nil {
-		d.logRequest(method, "").Warnf("Cannot locate volume driver: %v", err.Error())
+		return
+	}
+
+	// attach token in context metadata
+	ctx = d.attachToken(ctx, request)
+
+	// get grpc connection
+	conn, err := d.getConn()
+	if err != nil {
 		d.errorResponse(method, w, err)
 		return
 	}
 
-	vols, err := v.Enumerate(nil, nil)
+	// get all volumes
+	volumes := api.NewOpenStorageVolumeClient(conn)
+	enumerateResp, err := volumes.Enumerate(ctx, &api.SdkVolumeEnumerateRequest{})
 	if err != nil {
 		d.errorResponse(method, w, err)
 		return
 	}
 
-	volInfo := make([]volumeInfo, len(vols))
-	for i, v := range vols {
-		volInfo[i].Name = v.Locator.Name
-		if len(v.AttachPath) > 0 || len(v.AttachPath) > 0 {
-			volInfo[i].Mountpoint = path.Join(v.AttachPath[0], config.DataDir)
+	volInfo := make([]volumeInfo, len(enumerateResp.VolumeIds))
+	for i, id := range enumerateResp.VolumeIds {
+		inspectResp, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
+			VolumeId: id,
+		})
+		if err != nil {
+			continue
+		}
+		volInfo[i].Name = inspectResp.Volume.Locator.Name
+		if len(inspectResp.Volume.AttachPath) > 0 || len(inspectResp.Volume.AttachPath) > 0 {
+			volInfo[i].Mountpoint = path.Join(inspectResp.Volume.AttachPath[0], config.DataDir)
 		}
 	}
 	json.NewEncoder(w).Encode(map[string][]volumeInfo{"Volumes": volInfo})
@@ -537,25 +660,42 @@ func (d *driver) list(w http.ResponseWriter, r *http.Request) {
 
 func (d *driver) get(w http.ResponseWriter, r *http.Request) {
 	method := "get"
+	ctx := r.Context()
 
 	request, err := d.decode(method, w, r)
 	if err != nil {
 		return
 	}
+
+	// attach token in context metadata
+	ctx = d.attachToken(ctx, request)
+
+	// get name from the request
 	parsed, _, _, _, name := d.SpecFromString(request.Name)
-	returnName := ""
+	var returnName string
 	if parsed {
 		returnName = request.Name
 	} else {
 		returnName = name
 	}
-	vol, err := d.volFromName(name)
+
+	// get grpc connection
+	conn, err := d.getConn()
+	if err != nil {
+		d.errorResponse(method, w, err)
+		return
+	}
+
+	// get volume
+	volumes := api.NewOpenStorageVolumeClient(conn)
+	vol, err := d.volFromNameSdk(ctx, volumes, name)
 	if err != nil {
 		e := d.volNotFound(method, request.Name, err, w)
 		d.errorResponse(method, w, e)
 		return
 	}
 
+	// create response info
 	volInfo := volumeInfo{Name: returnName}
 	if len(vol.AttachPath) > 0 || len(vol.AttachPath) > 0 {
 		volInfo.Mountpoint = path.Join(vol.AttachPath[0], config.DataDir)

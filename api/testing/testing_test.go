@@ -63,6 +63,7 @@ func TestAll(t *testing.T) {
 
 	server.StartPluginAPI(
 		nfs.Name,
+		"",
 		volume.DriverAPIBase,
 		volume.PluginAPIBase,
 		0,
