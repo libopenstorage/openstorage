@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"gopkg.in/jmcvetta/napping.v3"
+	napping "gopkg.in/jmcvetta/napping.v3"
 
 	"github.com/sirupsen/logrus"
 
@@ -240,7 +240,7 @@ func (d *driver) Restore(volumeID string, snapID string) error {
 	return volume.ErrNotSupported
 }
 
-func (d *driver) SnapshotGroup(groupID string, labels map[string]string) (*api.GroupSnapCreateResponse, error) {
+func (d *driver) SnapshotGroup(groupID string, labels map[string]string, volumeIDs []string) (*api.GroupSnapCreateResponse, error) {
 
 	return nil, volume.ErrNotSupported
 }
