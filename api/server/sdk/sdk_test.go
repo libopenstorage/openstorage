@@ -118,7 +118,7 @@ func newTestServer(t *testing.T) *testServer {
 	assert.Nil(t, err)
 
 	// Setup a connection to the driver
-	tester.conn, err = grpc.Dial("localhost:"+testHttpsPort, grpc.WithTransportCredentials(grpccreds))
+	tester.conn, err = grpcserver.Connect("localhost:"+testHttpsPort, []grpc.DialOption{grpc.WithTransportCredentials(grpccreds)})
 	assert.Nil(t, err)
 
 	// Setup REST gateway

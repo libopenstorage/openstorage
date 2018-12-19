@@ -1,5 +1,6 @@
 package server
 
+/*
 import (
 	"fmt"
 	"testing"
@@ -172,3 +173,4 @@ func TestClientCredsList(t *testing.T) {
 	_, err = client.VolumeDriver(cl).CredsEnumerate()
 	require.NoError(t, err)
 }
+*/

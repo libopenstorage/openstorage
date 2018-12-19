@@ -121,6 +121,12 @@ func (s *VolumeServer) Create(
 	}
 	source := &api.Source{}
 
+	// Convert node IP to ID if necessary for API calls
+	if err := s.updateReplicaSpecNodeIPstoIds(spec.GetReplicaSet()); err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to get replicat set information: %v", err)
+	}
+
+	// Create volume
 	id, err := s.create(locator, source, spec)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -483,6 +489,39 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 	}
 
 	return spec
+}
+
+func (s *VolumeServer) nodeIPtoIds(nodes []string) ([]string, error) {
+	nodeIds := make([]string, 0)
+
+	for _, idIp := range nodes {
+		if idIp != "" {
+			id, err := s.cluster().GetNodeIdFromIp(idIp)
+			if err != nil {
+				return nodeIds, err
+			}
+			nodeIds = append(nodeIds, id)
+		}
+	}
+
+	return nodeIds, nil
+}
+
+// Convert any replica set node values which are IPs to the corresponding Node ID.
+// Update the replica set node list.
+func (s *VolumeServer) updateReplicaSpecNodeIPstoIds(rspecRef *api.ReplicaSet) error {
+	if rspecRef != nil && len(rspecRef.Nodes) > 0 {
+		nodeIds, err := s.nodeIPtoIds(rspecRef.Nodes)
+		if err != nil {
+			return err
+		}
+
+		if len(nodeIds) > 0 {
+			rspecRef.Nodes = nodeIds
+		}
+	}
+
+	return nil
 }
 
 func setSpecBool(current, req bool, reqSet interface{}) bool {

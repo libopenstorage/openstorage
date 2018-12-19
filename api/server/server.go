@@ -53,7 +53,7 @@ func StartPluginAPI(
 	pluginPort uint16,
 ) error {
 	if err := StartVolumeMgmtAPI(
-		name,
+		name, sdkUds,
 		mgmtBase,
 		mgmtPort,
 	); err != nil {
@@ -71,11 +71,11 @@ func StartPluginAPI(
 
 // StartVolumeMgmtAPI starts a REST server to receive volume management API commands
 func StartVolumeMgmtAPI(
-	name string,
+	name, sdkUds string,
 	mgmtBase string,
 	mgmtPort uint16,
 ) error {
-	volMgmtApi := newVolumeAPI(name)
+	volMgmtApi := newVolumeAPI(name, sdkUds)
 	if err := startServer(
 		name,
 		mgmtBase,
@@ -87,8 +87,8 @@ func StartVolumeMgmtAPI(
 	return nil
 }
 
-func GetVolumeAPIRoutes(name string) []*Route {
-	volMgmtApi := newVolumeAPI(name)
+func GetVolumeAPIRoutes(name, sdkUds string) []*Route {
+	volMgmtApi := newVolumeAPI(name, sdkUds)
 	return volMgmtApi.Routes()
 }
 

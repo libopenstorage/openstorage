@@ -1,15 +1,15 @@
 package server
 
 import (
-	"fmt"
+	//	"fmt"
+	"context"
 	"testing"
 
 	"github.com/libopenstorage/openstorage/api"
 	volumeclient "github.com/libopenstorage/openstorage/api/client/volume"
 
-	"github.com/golang/mock/gomock"
+	//	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestVolumeCreateSuccess(t *testing.T) {
@@ -17,12 +17,16 @@ func TestVolumeCreateSuccess(t *testing.T) {
 	var err error
 
 	// Setup volume rest functions server
-	ts, testVolDriver := testRestServer(t)
+	ts, testVolDriver := testRestServerSdk(t)
 	defer ts.Close()
 	defer testVolDriver.Stop()
 
-	cl, err := volumeclient.NewDriverClient(ts.URL, mockDriverName, version, mockDriverName)
-	require.NoError(t, err)
+	// get token
+	token, err := createToken("test", "admin", testSharedSecret)
+	assert.NoError(t, err)
+
+	cl, err := volumeclient.NewAuthDriverClient(ts.URL, mockDriverName, version, token, "", mockDriverName)
+	assert.NoError(t, err)
 
 	// Setup request
 	name := "myvol"
@@ -30,81 +34,67 @@ func TestVolumeCreateSuccess(t *testing.T) {
 	req := &api.VolumeCreateRequest{
 		Locator: &api.VolumeLocator{Name: name},
 		Source:  &api.Source{},
-		Spec:    &api.VolumeSpec{Size: size},
+		Spec: &api.VolumeSpec{
+			HaLevel: 1,
+			Size:    size,
+		},
 	}
 
-	// Setup mock functions
-	id := "myid"
-	testVolDriver.MockDriver().
-		EXPECT().
-		Create(req.GetLocator(), req.GetSource(), req.GetSpec()).
-		Return(id, nil)
-
-	// create a volume client
+	// Create a volume client
 	driverclient := volumeclient.VolumeDriver(cl)
-	res, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
-	assert.Equal(t, id, res)
+	assert.NotEmpty(t, id)
 
-	// Create a new global test cluster
-	tc := newTestCluster(t)
-	defer tc.Finish()
-
-	// Mock cluster
-	nodeId := "nodeid"
-	tc.MockCluster().
-		EXPECT().
-		GetNodeIdFromIp("192.168.1.1").
-		Return(nodeId, nil).Times(1)
-
-	// create a volume client with Replica IPs
-	rset := &api.ReplicaSet{Nodes: []string{"192.168.1.1"}}
-	req.Spec.ReplicaSet = rset
-	expectedSpec := req.Spec.Copy()
-	expectedSpec.ReplicaSet.Nodes = []string{nodeId}
-
-	testVolDriver.MockDriver().
-		EXPECT().
-		Create(req.GetLocator(), req.GetSource(), expectedSpec).
-		Return(id, nil)
-
-	res, err = driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
-	assert.Nil(t, err)
-	assert.Equal(t, id, res)
+	// Assert volume information is correct
+	volumes := api.NewOpenStorageVolumeClient(testVolDriver.Conn())
+	ctx, err := contextWithToken(context.Background(), "test", "admin", testSharedSecret)
+	assert.NoError(t, err)
+	r, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
+		VolumeId: id,
+	})
+	assert.NoError(t, err)
+	assert.NotNil(t, r)
+	assert.Equal(t, req.GetLocator().GetName(), r.GetVolume().GetLocator().GetName())
+	assert.Equal(t, req.GetSpec().GetSize(), r.GetVolume().GetSpec().GetSize())
 }
 
-func TestVolumeCreateFailed(t *testing.T) {
+func TestVolumeCreateFailedToAuthenticate(t *testing.T) {
 
 	var err error
 
-	ts, testVolDriver := testRestServer(t)
-
+	// Setup volume rest functions server
+	ts, testVolDriver := testRestServerSdk(t)
 	defer ts.Close()
 	defer testVolDriver.Stop()
 
-	client, err := volumeclient.NewDriverClient(ts.URL, mockDriverName, version, mockDriverName)
+	// get token
+	token, err := createToken("test", "admin", "badsecret")
+	assert.NoError(t, err)
 
+	client, err := volumeclient.NewAuthDriverClient(ts.URL, mockDriverName, version, token, "", mockDriverName)
 	assert.Nil(t, err)
 	assert.NotNil(t, client)
 
-	req := &api.VolumeCreateRequest{}
-
-	// Setup mock functions
-	testVolDriver.MockDriver().
-		EXPECT().
-		Create(req.GetLocator(), req.GetSource(), req.GetSpec()).
-		Return("", fmt.Errorf("error in create"))
+	// Setup request
+	name := "myvol"
+	size := uint64(1234)
+	req := &api.VolumeCreateRequest{
+		Locator: &api.VolumeLocator{Name: name},
+		Source:  &api.Source{},
+		Spec: &api.VolumeSpec{
+			HaLevel: 1,
+			Size:    size,
+		},
+	}
 
 	// create a volume client
 	driverclient := volumeclient.VolumeDriver(client)
-
-	res, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
-
-	assert.NotNil(t, err)
-	assert.EqualValues(t, "", res)
-	assert.Contains(t, err.Error(), "error in create")
+	_, err = driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	assert.Error(t, err)
 }
 
+/*
 func TestVolumeCreateGetNodeIdFromIpFailed(t *testing.T) {
 
 	var err error
@@ -933,7 +923,7 @@ func TestVolumeQuiesceFailed(t *testing.T) {
 	assert.Contains(t, res.Error(), "error in quiesce")
 }
 
-/* TODO(ram-infrac) : Test case is failing, recheck
+* TODO(ram-infrac) : Test case is failing, recheck
 func TestVolumeUnquiesceSuccess(t *testing.T) {
 
         ts, testVolDriver := testRestServer(t)
@@ -958,7 +948,7 @@ func TestVolumeUnquiesceSuccess(t *testing.T) {
 
         assert.Nil(t, res)
 }
-*/
+*
 
 func TestVolumeUnquiesceFailed(t *testing.T) {
 
@@ -1627,3 +1617,5 @@ func TestVolumeCatalogFailed(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "error in volume catalog")
 }
+
+*/
