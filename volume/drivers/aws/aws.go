@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/chaos"
-	"github.com/libopenstorage/openstorage/pkg/proto/time"
+	prototime "github.com/libopenstorage/openstorage/pkg/proto/time"
 	"github.com/libopenstorage/openstorage/pkg/storageops"
 	aws_ops "github.com/libopenstorage/openstorage/pkg/storageops/aws"
 	"github.com/libopenstorage/openstorage/volume"
@@ -375,7 +375,7 @@ func (d *Driver) Restore(volumeID string, snapID string) error {
 	return volume.ErrNotSupported
 }
 
-func (d *Driver) SnapshotGroup(groupID string, labels map[string]string) (*api.GroupSnapCreateResponse, error) {
+func (d *Driver) SnapshotGroup(groupID string, labels map[string]string, volumeIDs []string) (*api.GroupSnapCreateResponse, error) {
 	return nil, volume.ErrNotSupported
 }
 
