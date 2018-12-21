@@ -5,9 +5,10 @@
 package mock
 
 import (
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	api "github.com/libopenstorage/openstorage/api"
-	reflect "reflect"
 )
 
 // MockVolumeDriver is a mock of VolumeDriver interface
@@ -547,16 +548,16 @@ func (mr *MockVolumeDriverMockRecorder) Snapshot(arg0, arg1, arg2, arg3 interfac
 }
 
 // SnapshotGroup mocks base method
-func (m *MockVolumeDriver) SnapshotGroup(arg0 string, arg1 map[string]string) (*api.GroupSnapCreateResponse, error) {
-	ret := m.ctrl.Call(m, "SnapshotGroup", arg0, arg1)
+func (m *MockVolumeDriver) SnapshotGroup(arg0 string, arg1 map[string]string, arg2 []string) (*api.GroupSnapCreateResponse, error) {
+	ret := m.ctrl.Call(m, "SnapshotGroup", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*api.GroupSnapCreateResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // SnapshotGroup indicates an expected call of SnapshotGroup
-func (mr *MockVolumeDriverMockRecorder) SnapshotGroup(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SnapshotGroup", reflect.TypeOf((*MockVolumeDriver)(nil).SnapshotGroup), arg0, arg1)
+func (mr *MockVolumeDriverMockRecorder) SnapshotGroup(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SnapshotGroup", reflect.TypeOf((*MockVolumeDriver)(nil).SnapshotGroup), arg0, arg1, arg2)
 }
 
 // Stats mocks base method

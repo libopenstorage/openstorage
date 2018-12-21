@@ -737,12 +737,13 @@ func (v *volumeClient) CloudBackupSchedEnumerate() (*api.CloudBackupSchedEnumera
 	return enumerateResponse, nil
 }
 
-func (v *volumeClient) SnapshotGroup(groupID string, labels map[string]string) (*api.GroupSnapCreateResponse, error) {
+func (v *volumeClient) SnapshotGroup(groupID string, labels map[string]string, volumeIDs []string) (*api.GroupSnapCreateResponse, error) {
 
 	response := &api.GroupSnapCreateResponse{}
 	request := &api.GroupSnapCreateRequest{
-		Id:     groupID,
-		Labels: labels,
+		Id:        groupID,
+		Labels:    labels,
+		VolumeIds: volumeIDs,
 	}
 
 	req := v.c.Post().Resource(snapPath + "/snapshotgroup").Body(request)
