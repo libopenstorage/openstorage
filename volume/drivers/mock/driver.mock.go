@@ -556,8 +556,8 @@ func (m *MockVolumeDriver) SnapshotGroup(arg0 string, arg1 map[string]string, ar
 }
 
 // SnapshotGroup indicates an expected call of SnapshotGroup
-func (mr *MockVolumeDriverMockRecorder) SnapshotGroup(arg0, arg1, arg3 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SnapshotGroup", reflect.TypeOf((*MockVolumeDriver)(nil).SnapshotGroup), arg0, arg1)
+func (mr *MockVolumeDriverMockRecorder) SnapshotGroup(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SnapshotGroup", reflect.TypeOf((*MockVolumeDriver)(nil).SnapshotGroup), arg0, arg1, arg2)
 }
 
 // Stats mocks base method
