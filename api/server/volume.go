@@ -12,7 +12,7 @@ import (
 	"github.com/libopenstorage/openstorage/api/errors"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/volume"
-	"github.com/libopenstorage/openstorage/volume/drivers"
+	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 )
 
 const schedDriverPostFix = "-sched"
@@ -1011,7 +1011,7 @@ func (vd *volAPI) snapGroup(w http.ResponseWriter, r *http.Request) {
 		notFound(w, r)
 		return
 	}
-	snapRes, err = d.SnapshotGroup(snapReq.Id, snapReq.Labels)
+	snapRes, err = d.SnapshotGroup(snapReq.Id, snapReq.Labels, snapReq.VolumeIds)
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return

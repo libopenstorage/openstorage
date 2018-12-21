@@ -108,8 +108,11 @@ type SnapshotDriver interface {
 	Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error)
 	// Restore restores volume to specified snapshot.
 	Restore(volumeID string, snapshotID string) error
-	// GroupSnapshot takes a snapshot of specified volumegroup.
-	SnapshotGroup(groupID string, labels map[string]string) (*api.GroupSnapCreateResponse, error)
+	// SnapshotGroup takes a snapshot of a group of volumes that can be specified with either of the following
+	//	1. group ID
+	//	2. labels
+	//	3. volumeIDs
+	SnapshotGroup(groupID string, labels map[string]string, volumeIDs []string) (*api.GroupSnapCreateResponse, error)
 }
 
 // StatsDriver interface provides stats features

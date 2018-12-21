@@ -1563,13 +1563,13 @@ func TestGroupSnapshotCreateSuccess(t *testing.T) {
 	//mock Snapshot call
 	testVolDriver.MockDriver().
 		EXPECT().
-		SnapshotGroup(req.GetId(), req.GetLabels()).
+		SnapshotGroup(req.GetId(), req.GetLabels(), req.GetVolumeIds()).
 		Return(response, nil)
 
 	// create client
 	driverclient := volumeclient.VolumeDriver(client)
 
-	res, err := driverclient.SnapshotGroup(req.GetId(), req.GetLabels())
+	res, err := driverclient.SnapshotGroup(req.GetId(), req.GetLabels(), req.GetVolumeIds())
 
 	assert.Nil(t, err)
 	assert.Equal(t, len(response.Snapshots), len(res.Snapshots))

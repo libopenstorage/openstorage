@@ -1833,8 +1833,15 @@
           "type": "string"
         },
         "Labels": {
-          "description": "Labels indicates backup request for a volume group with these labels\nIf both GroupID and Labels are specified, volumes matching both\ncriteria are backed up to cloud",
+          "description": "Labels indicates backup request for a volume group with these labels\nIf multiple of GroupID, Labels or VolumeIDs are specified, volumes matching all\ncriteria are backed up to cloud",
           "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "VolumeIDs": {
+          "description": "VolumeIDs are a list of volume IDs to use for the backup request.\nIf multiple of GroupID, Labels or VolumeIDs are specified, volumes matching all criteria are backed up to cloud",
+          "type": "array",
           "additionalProperties": {
             "type": "string"
           }
@@ -1860,6 +1867,13 @@
         "Labels": {
           "description": "Labels indicates a volume group for which this group cloudsnap schedule is\nbeing created. If this is provided GroupId is not needed and vice-versa.",
           "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "VolumeIDs": {
+          "description": "VolumeIDs are a list of volume IDs to use for the backup request.\nIf multiple of GroupID, Labels or VolumeIDs are specified, volumes matching all of them are backed up to cloud",
+          "type": "array",
           "additionalProperties": {
             "type": "string"
           }
