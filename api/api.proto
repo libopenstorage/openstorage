@@ -869,6 +869,7 @@ message ActiveRequests {
 message GroupSnapCreateRequest {
   string id = 1;
   map<string, string> Labels = 2;
+  repeated string volume_ids = 3;
 }
 
 // GroupSnapCreateRequest specifies a response that get's returned when creating a group snapshot.

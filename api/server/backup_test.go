@@ -79,11 +79,13 @@ func TestClientGroupBackup(t *testing.T) {
 	testVolDriver.MockDriver().EXPECT().CloudBackupGroupCreate(&api.CloudBackupGroupCreateRequest{
 		GroupID:        "goodvolgroup",
 		Labels:         nil,
+		VolumeIDs:      nil,
 		CredentialUUID: "",
 		Full:           false}).Return(nil).Times(1)
 	testVolDriver.MockDriver().EXPECT().CloudBackupGroupCreate(&api.CloudBackupGroupCreateRequest{
 		GroupID:        "badvolgroup",
 		Labels:         nil,
+		VolumeIDs:      nil,
 		CredentialUUID: "",
 		Full:           false}).Return(fmt.Errorf("Volume group not found")).Times(1)
 
@@ -92,6 +94,7 @@ func TestClientGroupBackup(t *testing.T) {
 		CloudBackupGroupCreate(&api.CloudBackupGroupCreateRequest{
 			GroupID:        "goodvolgroup",
 			Labels:         nil,
+			VolumeIDs:      nil,
 			CredentialUUID: "",
 			Full:           false})
 	require.NoError(t, err)
@@ -99,6 +102,7 @@ func TestClientGroupBackup(t *testing.T) {
 		CloudBackupGroupCreate(&api.CloudBackupGroupCreateRequest{
 			GroupID:        "badvolgroup",
 			Labels:         nil,
+			VolumeIDs:      nil,
 			CredentialUUID: "",
 			Full:           false})
 	require.Error(t, err)
