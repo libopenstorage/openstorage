@@ -25,6 +25,7 @@ import (
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
+	"github.com/libopenstorage/openstorage/pkg/role"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
@@ -121,8 +122,13 @@ func newTestServerSdk(t *testing.T) *testServer {
 	tester.m = mockdriver.NewMockVolumeDriver(tester.mc)
 	tester.c = mockcluster.NewMockCluster(tester.mc)
 
+	// Create a role manager
+	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, logrus.Panicf)
+	assert.NoError(t, err)
+	rm, err := role.NewSdkRoleManager(kv)
+	assert.NoError(t, err)
+
 	os.Remove(testSdkSock)
-	var err error
 	tester.sdk, err = sdk.New(&sdk.ServerConfig{
 		DriverName:   "fake",
 		Net:          "tcp",
@@ -132,6 +138,7 @@ func newTestServerSdk(t *testing.T) *testServer {
 		Socket:       testSdkSock,
 		AccessOutput: ioutil.Discard,
 		AuditOutput:  ioutil.Discard,
+		Role:         rm,
 		Auth: &auth.JwtAuthConfig{
 			SharedSecret: []byte(testSharedSecret),
 		},

@@ -35,6 +35,7 @@ import (
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
+	"github.com/libopenstorage/openstorage/pkg/role"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 )
@@ -81,6 +82,9 @@ type ServerConfig struct {
 	DriverName string
 	// (optional) Cluster interface
 	Cluster cluster.Cluster
+	// Role implementation
+	// TODO: Group all security configurations under one struct
+	Role role.RoleManager
 	// AlertsFilterDeleter
 	AlertsFilterDeleter alerts.FilterDeleter
 	// Authentication configuration
@@ -139,6 +143,7 @@ type sdkGrpcServer struct {
 	cloudBackupServer    *CloudBackupServer
 	credentialServer     *CredentialServer
 	identityServer       *IdentityServer
+	roleServer           role.RoleManager
 	alertsServer         api.OpenStorageAlertsServer
 }
 
@@ -296,6 +301,12 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		// Check the necessary security config options are set
+		if config.Role == nil {
+			return nil, fmt.Errorf("Must supply role manager when authentication enabled")
+		}
+
 		log.Info(name + " authentication enabled")
 	} else {
 		log.Info(name + " authentication disabled")
@@ -354,6 +365,7 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 	s.clusterPairServer = &ClusterPairServer{
 		server: s,
 	}
+	s.roleServer = config.Role
 
 	return s, nil
 }
@@ -408,6 +420,10 @@ func (s *sdkGrpcServer) Start() error {
 		api.RegisterOpenStorageMountAttachServer(grpcServer, s.volumeServer)
 		api.RegisterOpenStorageAlertsServer(grpcServer, s.alertsServer)
 		api.RegisterOpenStorageClusterPairServer(grpcServer, s.clusterPairServer)
+
+		if s.config.Role != nil {
+			api.RegisterOpenStorageRoleServer(grpcServer, s.roleServer)
+		}
 		return grpcServer
 	})
 	if err != nil {

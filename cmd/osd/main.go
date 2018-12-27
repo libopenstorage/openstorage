@@ -48,6 +48,7 @@ import (
 	"github.com/libopenstorage/openstorage/graph/drivers"
 	"github.com/libopenstorage/openstorage/objectstore"
 	"github.com/libopenstorage/openstorage/pkg/auth"
+	"github.com/libopenstorage/openstorage/pkg/role"
 	"github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
@@ -339,6 +340,12 @@ func start(c *cli.Context) error {
 		}
 		csiServer.Start()
 
+		// Create a role manager
+		rm, err := role.NewSdkRoleManager(kv)
+		if err != nil {
+			return fmt.Errorf("Failed to create a role manager")
+		}
+
 		// Start SDK Server for this driver
 		os.Remove(sdksocket)
 
@@ -349,6 +356,7 @@ func start(c *cli.Context) error {
 			Socket:     sdksocket,
 			DriverName: d,
 			Cluster:    cm,
+			Role:       rm,
 			Auth:       setupAuth(),
 			Tls:        setupSdkTls(),
 		})

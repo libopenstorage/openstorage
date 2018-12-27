@@ -22,7 +22,7 @@ func TestVolumeCreateSuccess(t *testing.T) {
 	defer testVolDriver.Stop()
 
 	// get token
-	token, err := createToken("test", "admin", testSharedSecret)
+	token, err := createToken("test", "system.admin", testSharedSecret)
 	assert.NoError(t, err)
 
 	cl, err := volumeclient.NewAuthDriverClient(ts.URL, mockDriverName, version, token, "", mockDriverName)
@@ -48,7 +48,7 @@ func TestVolumeCreateSuccess(t *testing.T) {
 
 	// Assert volume information is correct
 	volumes := api.NewOpenStorageVolumeClient(testVolDriver.Conn())
-	ctx, err := contextWithToken(context.Background(), "test", "admin", testSharedSecret)
+	ctx, err := contextWithToken(context.Background(), "test", "system.admin", testSharedSecret)
 	assert.NoError(t, err)
 	r, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
 		VolumeId: id,
@@ -69,7 +69,7 @@ func TestVolumeCreateFailedToAuthenticate(t *testing.T) {
 	defer testVolDriver.Stop()
 
 	// get token
-	token, err := createToken("test", "admin", "badsecret")
+	token, err := createToken("test", "system.admin", "badsecret")
 	assert.NoError(t, err)
 
 	client, err := volumeclient.NewAuthDriverClient(ts.URL, mockDriverName, version, token, "", mockDriverName)

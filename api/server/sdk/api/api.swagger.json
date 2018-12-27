@@ -71,9 +71,12 @@
         "SCHEDULE_POLICY",
         "VOLUME",
         "ALERTS",
-        "MOUNT_ATTACH"
+        "MOUNT_ATTACH",
+        "ROLE",
+        "CLUSTER_PAIR",
+        "MIGRATE"
       ],
-      "title": "- UNKNOWN: Unknown service\n - CLUSTER: Cluster management\n - CLOUD_BACKUP: Cloud backup of volumes management\n - CREDENTIALS: Credentials management\n - NODE: Node management\n - OBJECT_STORAGE: Object Storage management\n - SCHEDULE_POLICY: Schedule policy management\n - VOLUME: Volume management\n - ALERTS: Alert enumeration\n - MOUNT_ATTACH: Mount/Attach Support",
+      "title": "- UNKNOWN: Unknown service\n - CLUSTER: Cluster management\n - CLOUD_BACKUP: Cloud backup of volumes management\n - CREDENTIALS: Credentials management\n - NODE: Node management\n - OBJECT_STORAGE: Object Storage management\n - SCHEDULE_POLICY: Schedule policy management\n - VOLUME: Volume management\n - ALERTS: Alert enumeration\n - MOUNT_ATTACH: Mount/Attach Support\n - ROLE: Role service\n - CLUSTER_PAIR: Cluster Pair service\n - MIGRATE: Migrate service",
       "type": "string"
     },
     "VolumePlacementRuleAffinityRuleType": {
@@ -1676,6 +1679,107 @@
       "title": "Empty response",
       "type": "object"
     },
+    "apiSdkRole": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "rules": {
+          "items": {
+            "$ref": "#/definitions/apiSdkRule"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "apiSdkRoleCreateRequest": {
+      "properties": {
+        "role": {
+          "$ref": "#/definitions/apiSdkRole",
+          "title": "Role"
+        }
+      },
+      "title": "Defines a request for creating a role",
+      "type": "object"
+    },
+    "apiSdkRoleCreateResponse": {
+      "properties": {
+        "role": {
+          "$ref": "#/definitions/apiSdkRole",
+          "title": "Role created"
+        }
+      },
+      "title": "Response contains informaiton about the creation of the role",
+      "type": "object"
+    },
+    "apiSdkRoleDeleteResponse": {
+      "title": "Empty response",
+      "type": "object"
+    },
+    "apiSdkRoleEnumerateResponse": {
+      "properties": {
+        "names": {
+          "items": {
+            "type": "string"
+          },
+          "title": "List of role names",
+          "type": "array"
+        }
+      },
+      "title": "Respose to enumerate all roles",
+      "type": "object"
+    },
+    "apiSdkRoleInspectResponse": {
+      "properties": {
+        "role": {
+          "$ref": "#/definitions/apiSdkRole",
+          "title": "Role requested"
+        }
+      },
+      "title": "Response to inspection request",
+      "type": "object"
+    },
+    "apiSdkRoleUpdateRequest": {
+      "properties": {
+        "role": {
+          "$ref": "#/definitions/apiSdkRole",
+          "title": "New role update"
+        }
+      },
+      "title": "Defines a request to update an existing role",
+      "type": "object"
+    },
+    "apiSdkRoleUpdateResponse": {
+      "properties": {
+        "role": {
+          "$ref": "#/definitions/apiSdkRole",
+          "title": "Role updated"
+        }
+      },
+      "title": "Response contains information about the updated role",
+      "type": "object"
+    },
+    "apiSdkRule": {
+      "description": "SdkRule is the message used to construct custom roles in the OpenStorage SDK.\n\n### Format\nThe following shows the supported format for SdkRule:\n\n* Services: Is the gRPC service name in `OpenStorage\u003cservice name\u003e` in lowercase\n* Apis: Is the API name in the service in lowercase\n\nValues can also be set to `*`, or start or end with `*` to allow multiple matches in services or apis.\n\n### Examples\n\n* Allow any call:\n\n```yaml\nSdkRule:\n  - Services: [\"*\"]\n    Apis: [\"*\"]\n```\n\n* Allow only cluster operations:\n\n```yaml\nSdkRule:\n  - services: [\"cluster\"]\n    apis: [\"*\"]\n```\n\n* Allow inspection of any object and listings of only volumes\n\n```yaml\nSdkRule:\n  - Services: [\"volumes\"]\n    Apis: [\"*enumerate*\"]\n  - Services: [\"*\"]\n    Apis: [\"inspect*\"]\n```",
+      "properties": {
+        "apis": {
+          "items": {
+            "type": "string"
+          },
+          "title": "The API name in the service in lowercase",
+          "type": "array"
+        },
+        "services": {
+          "items": {
+            "type": "string"
+          },
+          "title": "The gRPC service name in `OpenStorage\u003cservice name\u003e` in lowercase",
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
     "apiSdkSchedulePolicy": {
       "properties": {
         "name": {
@@ -3072,7 +3176,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.33.0"
+    "version": "0.34.0"
   },
   "paths": {
     "/v1/alerts": {
@@ -4028,6 +4132,123 @@
         "summary": "Updates provided objectstore status.\nThis call can be used to stop and start the server while maintaining the same\nobject storage id.",
         "tags": [
           "OpenStorageObjectstore"
+        ]
+      }
+    },
+    "/v1/roles": {
+      "get": {
+        "operationId": "Enumerate",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkRoleEnumerateResponse"
+            }
+          }
+        },
+        "summary": "List all roles",
+        "tags": [
+          "OpenStorageRole"
+        ]
+      },
+      "post": {
+        "operationId": "Create",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkRoleCreateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkRoleCreateResponse"
+            }
+          }
+        },
+        "summary": "Create a role for users in the system",
+        "tags": [
+          "OpenStorageRole"
+        ]
+      },
+      "put": {
+        "operationId": "Update",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkRoleUpdateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkRoleUpdateResponse"
+            }
+          }
+        },
+        "summary": "Update an existing role",
+        "tags": [
+          "OpenStorageRole"
+        ]
+      }
+    },
+    "/v1/roles/inspect/{name}": {
+      "get": {
+        "operationId": "Inspect",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkRoleInspectResponse"
+            }
+          }
+        },
+        "summary": "Get information about a role",
+        "tags": [
+          "OpenStorageRole"
+        ]
+      }
+    },
+    "/v1/roles/{name}": {
+      "delete": {
+        "operationId": "Delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkRoleDeleteResponse"
+            }
+          }
+        },
+        "summary": "Delete an existing role",
+        "tags": [
+          "OpenStorageRole"
         ]
       }
     },
