@@ -1,5 +1,6 @@
 package server
 
+/*
 import (
 	"fmt"
 	"testing"
@@ -572,3 +573,4 @@ func TestCloudBackupWait(t *testing.T) {
 	err = volume.CloudBackupWaitForCompletion(client.VolumeDriver(cl), id, api.CloudBackupOp)
 	require.Error(t, err)
 }
+*/

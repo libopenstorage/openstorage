@@ -72,19 +72,22 @@ func (vd *volAPI) cloudBackupRestore(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if restoreReq.NodeID != "" {
-		nodeIds, err := vd.nodeIPtoIds([]string{restoreReq.NodeID})
-		if err != nil {
-			vd.sendError(method, restoreReq.ID, w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+	/*
+		NEED TO ADD TO SDK
+		if restoreReq.NodeID != "" {
+			nodeIds, err := vd.nodeIPtoIds([]string{restoreReq.NodeID})
+			if err != nil {
+				vd.sendError(method, restoreReq.ID, w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 
-		if len(nodeIds) > 0 {
-			if nodeIds[0] != restoreReq.NodeID {
-				restoreReq.NodeID = nodeIds[0]
+			if len(nodeIds) > 0 {
+				if nodeIds[0] != restoreReq.NodeID {
+					restoreReq.NodeID = nodeIds[0]
+				}
 			}
 		}
-	}
+	*/
 
 	restoreResp, err := d.CloudBackupRestore(restoreReq)
 	if err != nil {

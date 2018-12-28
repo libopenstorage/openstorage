@@ -1,24 +1,34 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/gorilla/mux"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/errors"
-	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
+	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
+
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"google.golang.org/grpc"
 )
 
 const schedDriverPostFix = "-sched"
 
 type volAPI struct {
 	restBase
+
+	sdkUds   string
+	conn     *grpc.ClientConn
+	dummyMux *runtime.ServeMux
+	mu       sync.Mutex
 }
 
 func responseStatus(err error) string {
@@ -28,12 +38,37 @@ func responseStatus(err error) string {
 	return err.Error()
 }
 
-func newVolumeAPI(name string) restServer {
-	return &volAPI{restBase{version: volume.APIVersion, name: name}}
+func newVolumeAPI(name, sdkUds string) restServer {
+	return &volAPI{
+		restBase: restBase{version: volume.APIVersion, name: name},
+		sdkUds:   sdkUds,
+		dummyMux: runtime.NewServeMux(),
+	}
 }
 
 func (vd *volAPI) String() string {
 	return vd.name
+}
+
+func (vd *volAPI) getConn() (*grpc.ClientConn, error) {
+	vd.mu.Lock()
+	defer vd.mu.Unlock()
+	if vd.conn == nil {
+		var err error
+		vd.conn, err = grpcserver.Connect(
+			vd.sdkUds,
+			[]grpc.DialOption{grpc.WithInsecure()})
+		if err != nil {
+			return nil, fmt.Errorf("Failed to connect to gRPC handler: %v", err)
+		}
+	}
+	return vd.conn, nil
+}
+
+func (vd *volAPI) annotateContext(r *http.Request) (context.Context, error) {
+	// This creates a context and populates the authentication token
+	// using the same function as the SDK REST Gateway
+	return runtime.AnnotateContext(context.Background(), vd.dummyMux, r)
 }
 
 func (vd *volAPI) getVolDriver(r *http.Request) (volume.VolumeDriver, error) {
@@ -75,73 +110,7 @@ func (vd *volAPI) parseParam(r *http.Request, param string) (string, error) {
 	return "", fmt.Errorf("could not parse %s", param)
 }
 
-func (vd *volAPI) nodeIPtoIds(nodes []string) ([]string, error) {
-	nodeIds := make([]string, 0)
-
-	// Get cluster instance
-	c, err := clustermanager.Inst()
-	if err != nil {
-		return nodeIds, err
-	}
-
-	if c == nil {
-		return nodeIds, fmt.Errorf("failed to get cluster instance.")
-	}
-
-	for _, idIp := range nodes {
-		if idIp != "" {
-			id, err := c.GetNodeIdFromIp(idIp)
-			if err != nil {
-				return nodeIds, err
-			}
-			nodeIds = append(nodeIds, id)
-		}
-	}
-
-	return nodeIds, err
-}
-
-// Convert any replica set node values which are IPs to the corresponding Node ID.
-// Update the replica set node list.
-func (vd *volAPI) updateReplicaSpecNodeIPstoIds(rspecRef *api.ReplicaSet) error {
-	if rspecRef != nil && len(rspecRef.Nodes) > 0 {
-		nodeIds, err := vd.nodeIPtoIds(rspecRef.Nodes)
-		if err != nil {
-			return err
-		}
-
-		if len(nodeIds) > 0 {
-			rspecRef.Nodes = nodeIds
-		}
-	}
-
-	return nil
-}
-
-// swagger:operation POST /osd-volumes volume createVolume
-//
 // Creates a single volume with given spec.
-//
-// ---
-// produces:
-// - application/json
-// parameters:
-// - name: spec
-//   in: body
-//   description: spec to create volume with
-//   required: true
-//   schema:
-//         "$ref": "#/definitions/VolumeCreateRequest"
-// responses:
-//   '200':
-//     description: volume create response
-//     schema:
-//         "$ref": "#/definitions/VolumeCreateResponse"
-//   default:
-//     description: unexpected error
-//     schema:
-//       "$ref": "#/definitions/VolumeCreateResponse"
-
 func (vd *volAPI) create(w http.ResponseWriter, r *http.Request) {
 	var dcRes api.VolumeCreateResponse
 	var dcReq api.VolumeCreateRequest
@@ -152,24 +121,29 @@ func (vd *volAPI) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	d, err := vd.getVolDriver(r)
+	// Get context with auth token
+	ctx, err := vd.annotateContext(r)
 	if err != nil {
-		notFound(w, r)
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if dcReq.Spec != nil {
-		if err = vd.updateReplicaSpecNodeIPstoIds(dcReq.Spec.ReplicaSet); err != nil {
-			vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
-			return
-		}
+	// Get gRPC connection
+	conn, err := vd.getConn()
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
 	}
+	volumes := api.NewOpenStorageVolumeClient(conn)
+	id, err := volumes.Create(ctx, &api.SdkVolumeCreateRequest{
+		Name: dcReq.Locator.GetName(),
+		Spec: dcReq.GetSpec(),
+	})
 
-	id, err := d.Create(dcReq.Locator, dcReq.Source, dcReq.Spec)
 	dcRes.VolumeResponse = &api.VolumeResponse{Error: responseStatus(err)}
-	dcRes.Id = id
-
-	vd.logRequest(method, id).Infoln("")
+	if err == nil {
+		dcRes.Id = id.GetVolumeId()
+	}
 
 	json.NewEncoder(w).Encode(&dcRes)
 }
@@ -258,6 +232,8 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	/* May need to add to SDK
+
 	if req.Locator != nil || req.Spec != nil {
 		if req.Spec != nil {
 			if err = vd.updateReplicaSpecNodeIPstoIds(req.Spec.ReplicaSet); err != nil {
@@ -267,6 +243,7 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 		}
 		err = d.Set(volumeID, req.Locator, req.Spec)
 	}
+	*/
 
 	for err == nil && req.Action != nil {
 		if req.Action.Attach != api.VolumeActionParam_VOLUME_ACTION_PARAM_NONE {
