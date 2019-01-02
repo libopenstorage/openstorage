@@ -183,6 +183,8 @@ type Node struct {
 	NodeData map[string]interface{}
 	// User defined labels for node. Key Value pairs
 	NodeLabels map[string]string
+	// GossipPort is the port used by the gossip protocol
+	GossipPort string
 }
 
 // FluentDConfig describes ip and port of a fluentdhost.

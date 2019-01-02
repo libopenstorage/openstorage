@@ -516,6 +516,7 @@ func (c *ClusterManager) initNode(db *cluster.ClusterInfo) (*api.Node, bool) {
 		MemTotal:          c.selfNode.MemTotal,
 		Hostname:          c.selfNode.Hostname,
 		NodeLabels:        labels,
+		GossipPort:        c.selfNode.GossipPort,
 	}
 
 	db.NodeEntries[c.config.NodeId] = nodeEntry
@@ -694,7 +695,16 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *cluster.ClusterInfo) {
 			continue
 		}
 
-		nodeIps = append(nodeIps, nodeEntry.DataIp+":"+c.gossipPort)
+		gossipPort := nodeEntry.GossipPort
+		if gossipPort == "" {
+			// The cluster DB does not have the gossip port value
+			// The probability of this happening is close to 0
+			// In an event if this happens, lets use our own gossip port
+			// for this node. If that node has a different port, once that
+			// node pings us, gossip protocol will automatically update the port
+			gossipPort = c.gossipPort
+		}
+		nodeIps = append(nodeIps, nodeEntry.DataIp+":"+gossipPort)
 	}
 	if len(nodeIps) > 0 {
 		logrus.Infof("Starting Gossip... Gossiping to these nodes : %v", nodeIps)
@@ -1212,6 +1222,7 @@ func (c *ClusterManager) StartWithConfiguration(
 	c.selfNode.StartTime = time.Now()
 	c.selfNode.Hostname, _ = os.Hostname()
 	c.gossipPort = gossipPort
+	c.selfNode.GossipPort = gossipPort
 	if err != nil {
 		logrus.Errorf("Failed to get external IP address for mgt/data interfaces: %s.",
 			err)
