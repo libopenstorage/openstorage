@@ -165,6 +165,9 @@ func (vd *volAPI) create(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Merge labels from the spec to the locator
+	dcReq.Locator = dcReq.Locator.MergeVolumeSpecLabels(dcReq.GetSpec())
+
 	id, err := d.Create(dcReq.Locator, dcReq.Source, dcReq.Spec)
 	dcRes.VolumeResponse = &api.VolumeResponse{Error: responseStatus(err)}
 	dcRes.Id = id

@@ -399,16 +399,17 @@ func TestSdkVolumeEnumerateWithFilters(t *testing.T) {
 	defer s.Stop()
 
 	id := "myid"
-	locator := &api.VolumeLocator{
-		Name: id,
-		VolumeLabels: map[string]string{
-			"hello": "world",
-		},
+	labels := map[string]string{
+		"hello": "world",
 	}
-	expect := *locator
+	locator := &api.VolumeLocator{
+		Name:         id,
+		VolumeLabels: labels,
+	}
+
 	s.MockDriver().
 		EXPECT().
-		Enumerate(&expect, nil).
+		Enumerate(locator, nil).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id: id,
@@ -423,7 +424,8 @@ func TestSdkVolumeEnumerateWithFilters(t *testing.T) {
 	r, err := c.EnumerateWithFilters(
 		context.Background(),
 		&api.SdkVolumeEnumerateWithFiltersRequest{
-			Locator: locator,
+			Name:   id,
+			Labels: labels,
 		})
 	assert.NoError(t, err)
 	assert.NotNil(t, r.GetVolumeIds())
@@ -443,9 +445,7 @@ func TestSdkVolumeUpdate(t *testing.T) {
 	}
 	req := &api.SdkVolumeUpdateRequest{
 		VolumeId: id,
-		Locator: &api.VolumeLocator{
-			VolumeLabels: newlabels,
-		},
+		Labels:   newlabels,
 	}
 
 	// Check Locator
@@ -468,7 +468,7 @@ func TestSdkVolumeUpdate(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Now check spec
-	req.Locator = nil
+	req.Labels = nil
 	req.Spec = &api.VolumeSpecUpdate{
 		SizeOpt: &api.VolumeSpecUpdate_Size{
 			Size: 1234,
@@ -486,9 +486,7 @@ func TestSdkVolumeUpdate(t *testing.T) {
 	// Check both locator and spec
 	req = &api.SdkVolumeUpdateRequest{
 		VolumeId: id,
-		Locator: &api.VolumeLocator{
-			VolumeLabels: newlabels,
-		},
+		Labels:   newlabels,
 		Spec: &api.VolumeSpecUpdate{
 			SizeOpt: &api.VolumeSpecUpdate_Size{
 				Size: 1234,

@@ -28,16 +28,34 @@ func TestVolumeCreateSuccess(t *testing.T) {
 	name := "myvol"
 	size := uint64(1234)
 	req := &api.VolumeCreateRequest{
-		Locator: &api.VolumeLocator{Name: name},
-		Source:  &api.Source{},
-		Spec:    &api.VolumeSpec{Size: size},
+		Locator: &api.VolumeLocator{
+			Name: name,
+			VolumeLabels: map[string]string{
+				"locator": "labels",
+			},
+		},
+		Source: &api.Source{},
+		Spec: &api.VolumeSpec{
+			Size: size,
+			VolumeLabels: map[string]string{
+				"from": "spec",
+			},
+		},
+	}
+
+	mergedLocator := &api.VolumeLocator{
+		Name: name,
+		VolumeLabels: map[string]string{
+			"locator": "labels",
+			"from":    "spec",
+		},
 	}
 
 	// Setup mock functions
 	id := "myid"
 	testVolDriver.MockDriver().
 		EXPECT().
-		Create(req.GetLocator(), req.GetSource(), req.GetSpec()).
+		Create(mergedLocator, req.GetSource(), req.GetSpec()).
 		Return(id, nil)
 
 	// create a volume client
@@ -65,7 +83,7 @@ func TestVolumeCreateSuccess(t *testing.T) {
 
 	testVolDriver.MockDriver().
 		EXPECT().
-		Create(req.GetLocator(), req.GetSource(), expectedSpec).
+		Create(mergedLocator, req.GetSource(), expectedSpec).
 		Return(id, nil)
 
 	res, err = driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())

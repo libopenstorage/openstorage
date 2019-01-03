@@ -182,13 +182,10 @@ func match(
 	volumeLabels map[string]string,
 ) bool {
 	if locator == nil {
-		return hasSubset(v.Spec.VolumeLabels, volumeLabels)
+		return hasSubset(v.Locator.VolumeLabels, volumeLabels)
 	}
 	if locator.Name != "" && v.Locator.Name != locator.Name {
 		return false
 	}
-	if !hasSubset(v.Locator.VolumeLabels, locator.VolumeLabels) {
-		return false
-	}
-	return hasSubset(v.Spec.VolumeLabels, volumeLabels)
+	return hasSubset(v.Locator.VolumeLabels, locator.VolumeLabels)
 }

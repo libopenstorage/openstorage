@@ -5,6 +5,16 @@
 
 ## Releases
 
+### v0.22.10 - Tech Preview (1/9/2019)
+
+* Refactor confusing labels.
+    * (breaking change) REST call to OpenStorageVolume.EnumerateWithFilters has changed
+    * Deprecated Volume.Spec.VolumeLabels.
+    * Any labels in Volume.Spec.VolumeLabels will be copied to Volume.Locator
+    * Added Labels to Volume.Create
+    * Volume.Update now takes Labels and Name instead of VolumeLocator
+    * Volume.Inspect now also returns Name and Labels to match Volume.Create
+
 ### v0.22.9 - Tech Preview (12/05/2018)
 
 * Add TaskId and ClusterId to CloudMigrate status request
