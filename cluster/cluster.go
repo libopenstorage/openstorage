@@ -57,6 +57,7 @@ type NodeEntry struct {
 	Status            api.Status
 	NodeLabels        map[string]string
 	NonQuorumMember   bool
+	GossipPort        string
 }
 
 // ClusterInfo is the basic info about the cluster and its nodes

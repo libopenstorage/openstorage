@@ -25,13 +25,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const (
+	testClusterId   = "test-cluster-id"
+	testClusterUuid = "test-cluster-uuid"
+)
+
 var (
 	kv kvdb.Kvdb
 )
 
 func init() {
 	var err error
-	kv, err = kvdb.New(mem.Name, "manager_test", []string{}, nil, logrus.Panicf)
+	kv, err = kvdb.New(mem.Name, "manager_test/"+testClusterId, []string{}, nil, logrus.Panicf)
 	if err != nil {
 		logrus.Panicf("Failed to initialize KVDB")
 	}
@@ -59,18 +64,19 @@ func TestClusterManagerUuid(t *testing.T) {
 func TestUpdateSchedulerNodeName(t *testing.T) {
 	nodeID := "node-alpha"
 	Init(config.ClusterConfig{
-		ClusterId:         "update-sched-name-id",
-		ClusterUuid:       "udpate-sched-name-uuid",
+		ClusterId:         testClusterId,
+		ClusterUuid:       testClusterUuid,
 		NodeId:            nodeID,
 		SchedulerNodeName: "old-sched-name",
 	})
 
-	err := inst.Start(1, false, "0")
+	err := inst.Start(1, false, "1001")
 	assert.NoError(t, err)
 
 	node, err := inst.Inspect(nodeID)
 	assert.NoError(t, err)
 	assert.Equal(t, "old-sched-name", node.SchedulerNodeName)
+	assert.Equal(t, node.GossipPort, "1001", "Expected gossip port to be updated in cluster database")
 
 	err = inst.UpdateSchedulerNodeName("new-sched-name")
 	assert.NoError(t, err)
