@@ -19,8 +19,6 @@ package sdk
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"strings"
 	"time"
 
 	sdk_auth "github.com/libopenstorage/openstorage-sdk-auth/pkg/auth"
@@ -47,17 +45,6 @@ const (
 	// key as the location of the raw token coming from the standard REST
 	// header: Authorization: bearer <adaf0sdfsd...token>
 	ContextMetadataTokenKey = "bearer"
-)
-
-var (
-	defaultRoles = map[string][]sdk_auth.Rule{
-		"admin": {
-			{
-				Services: []string{"*"},
-				Apis:     []string{"*"},
-			},
-		},
-	}
 )
 
 // This interceptor provides a way to lock out any calls while we adjust the server
@@ -146,64 +133,15 @@ func (s *sdkGrpcServer) authorizationServerInterceptor(
 		"method": info.FullMethod,
 	})
 
-	// Determine rules
-	var rules []sdk_auth.Rule
-	if len(claims.Rules) != 0 {
-		rules = claims.Rules
-	} else {
-		if len(claims.Role) == 0 {
-			return nil, status.Error(codes.PermissionDenied, "Access denied, no roles or rules set")
-		}
-		rules, ok = defaultRoles[claims.Role]
-		if !ok {
-			return nil, status.Errorf(
-				codes.PermissionDenied,
-				"Access denied, unknown role: %s", claims.Role)
-		}
-	}
-
 	// Authorize
-	if err := authorizeClaims(rules, info.FullMethod); err != nil {
+	if err := s.roleServer.Verify(ctx, claims.Role, info.FullMethod); err != nil {
 		logger.Infof("Access denied")
 		return nil, status.Errorf(
 			codes.PermissionDenied,
-			"Access to %s denied",
-			info.FullMethod)
+			"Access to %s denied: %v",
+			info.FullMethod, err)
 	}
 
 	logger.Info("Authorized")
 	return handler(ctx, req)
-}
-
-func authorizeClaims(rules []sdk_auth.Rule, fullmethod string) error {
-
-	var reqService, reqApi string
-
-	// String: "/openstorage.api.OpenStorage<service>/<method>"
-	parts := strings.Split(fullmethod, "/")
-
-	if len(parts) > 1 {
-		reqService = strings.TrimPrefix(strings.ToLower(parts[1]), "openstorage.api.openstorage")
-	}
-
-	if len(parts) > 2 {
-		reqApi = strings.ToLower(parts[2])
-	}
-
-	// Go through each rule until a match is found
-	for _, rule := range rules {
-		for _, service := range rule.Services {
-			if service == "*" ||
-				service == reqService {
-				for _, api := range rule.Apis {
-					if api == "*" ||
-						api == reqApi {
-						return nil
-					}
-				}
-			}
-		}
-	}
-
-	return fmt.Errorf("no accessable rule to authorize access found")
 }
