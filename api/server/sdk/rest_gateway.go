@@ -137,6 +137,7 @@ func (s *sdkRestGateway) restServerSetupHandlers() (*http.ServeMux, error) {
 		api.RegisterOpenStorageAlertsHandler,
 		api.RegisterOpenStorageClusterPairHandler,
 		api.RegisterOpenStorageMigrateHandler,
+		api.RegisterOpenStorageRoleHandler,
 	}
 
 	// Register the REST Gateway handlers

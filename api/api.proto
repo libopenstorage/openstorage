@@ -932,6 +932,67 @@ message StorageCluster {
   string name = 3;
 }
 
+// OpenStorageRole service provides methods to manage user roles
+//
+// ### Custom roles
+// The OpenStorage SDK server is equipped to handle customized authorization
+// roles. Using this model it allows administrators to customize the permission
+// rules of a role to be used by a user.
+//
+// Creating a custom role, or an SdkRole, is done by setting up a set of allowed _rules_,
+// or SdkRules, directives which are sequentially scanned until a match is found. Rules
+// are created using the names of OpenStorage SDK services and APIs as follows:
+//
+// The message SdkRules has the following properties:
+//
+// * Services: Is the gRPC service name in `OpenStorage<service name>` in lowercase
+// * Apis: Is the API name in the service in lowercase
+//
+// Please see SdkRule for more information on the format.
+service OpenStorageRole {
+
+  // Create a role for users in the system
+  rpc Create(SdkRoleCreateRequest)
+    returns (SdkRoleCreateResponse){
+      option(google.api.http) = {
+        post: "/v1/roles"
+        body: "*"
+      };
+    }
+
+  // List all roles
+  rpc Enumerate(SdkRoleEnumerateRequest)
+    returns (SdkRoleEnumerateResponse){
+      option(google.api.http) = {
+        get: "/v1/roles"
+      };
+    }
+
+  // Get information about a role
+  rpc Inspect(SdkRoleInspectRequest)
+    returns (SdkRoleInspectResponse){
+      option(google.api.http) = {
+        get: "/v1/roles/inspect/{name}"
+      };
+    }
+
+  // Delete an existing role
+  rpc Delete(SdkRoleDeleteRequest)
+    returns (SdkRoleDeleteResponse){
+      option(google.api.http) = {
+        delete: "/v1/roles/{name}"
+      };
+    }
+
+  // Update an existing role
+  rpc Update(SdkRoleUpdateRequest)
+    returns (SdkRoleUpdateResponse){
+      option(google.api.http) = {
+        put: "/v1/roles"
+        body: "*"
+      };
+    }
+}
 // OpenStorageIdentity service provides methods to obtain information
 // about the cluster
 service OpenStorageIdentity {
@@ -2517,6 +2578,112 @@ message SdkCloudBackupSchedEnumerateResponse{
   map<string, SdkCloudBackupScheduleInfo> cloud_sched_list = 1;
 }
 
+//
+// SdkRule is the message used to construct custom roles in the OpenStorage SDK.
+//
+// ### Format
+// The following shows the supported format for SdkRule:
+//
+// * Services: Is the gRPC service name in `OpenStorage<service name>` in lowercase
+// * Apis: Is the API name in the service in lowercase
+//
+// Values can also be set to `*`, or start or end with `*` to allow multiple matches in services or apis.
+//
+// ### Examples
+//
+// * Allow any call:
+//
+// ```yaml
+// SdkRule:
+//   - Services: ["*"]
+//     Apis: ["*"]
+// ```
+//
+// * Allow only cluster operations:
+//
+// ```yaml
+// SdkRule:
+//   - services: ["cluster"]
+//     apis: ["*"]
+// ```
+//
+// * Allow inspection of any object and listings of only volumes
+//
+// ```yaml
+// SdkRule:
+//   - Services: ["volumes"]
+//     Apis: ["*enumerate*"]
+//   - Services: ["*"]
+//     Apis: ["inspect*"]
+// ```
+//
+message SdkRule {
+  // The gRPC service name in `OpenStorage<service name>` in lowercase
+  repeated string services = 1;
+  // The API name in the service in lowercase
+  repeated string apis = 2;
+}
+
+message SdkRole {
+  string name = 1;
+  repeated SdkRule rules = 2;
+}
+
+// Defines a request for creating a role
+message SdkRoleCreateRequest {
+  // Role
+  SdkRole role = 1;
+}
+
+// Response contains informaiton about the creation of the role
+message SdkRoleCreateResponse {
+  // Role created
+  SdkRole role = 1;
+}
+
+// Empty request
+message SdkRoleEnumerateRequest {
+}
+
+// Respose to enumerate all roles
+message SdkRoleEnumerateResponse {
+  // List of role names
+  repeated string names = 1;
+}
+
+// Defines a request to inspect a role
+message SdkRoleInspectRequest {
+  // Name of role
+  string name = 1;
+}
+
+// Response to inspection request
+message SdkRoleInspectResponse {
+  // Role requested
+  SdkRole role = 1;
+}
+
+// Defines a request to delete a role
+message SdkRoleDeleteRequest {
+  string name = 1;
+}
+
+// Empty response
+message SdkRoleDeleteResponse {
+}
+
+// Defines a request to update an existing role
+message SdkRoleUpdateRequest {
+  // New role update
+  SdkRole role = 1;
+}
+
+// Response contains information about the updated role
+message SdkRoleUpdateResponse {
+  // Role updated
+  SdkRole role = 1;
+}
+
 // Empty request
 message SdkIdentityCapabilitiesRequest {
 }
@@ -2563,6 +2730,12 @@ message SdkServiceCapability {
       ALERTS = 8;
       // Mount/Attach Support
       MOUNT_ATTACH = 9;
+      // Role service
+      ROLE = 10;
+      // Cluster Pair service
+      CLUSTER_PAIR = 11;
+      // Migrate service
+      MIGRATE = 12;
     }
 
     // Type of service supported
@@ -2595,7 +2768,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 33;
+    Minor = 34;
     // SDK version patch value of this specification
     Patch = 0;
   }

@@ -104,6 +104,27 @@ func (s *IdentityServer) Capabilities(
 			},
 		},
 	}
+	capRole := &api.SdkServiceCapability{
+		Type: &api.SdkServiceCapability_Service{
+			Service: &api.SdkServiceCapability_OpenStorageService{
+				Type: api.SdkServiceCapability_OpenStorageService_ROLE,
+			},
+		},
+	}
+	capClusterPair := &api.SdkServiceCapability{
+		Type: &api.SdkServiceCapability_Service{
+			Service: &api.SdkServiceCapability_OpenStorageService{
+				Type: api.SdkServiceCapability_OpenStorageService_CLUSTER_PAIR,
+			},
+		},
+	}
+	capMigrate := &api.SdkServiceCapability{
+		Type: &api.SdkServiceCapability_Service{
+			Service: &api.SdkServiceCapability_OpenStorageService{
+				Type: api.SdkServiceCapability_OpenStorageService_MIGRATE,
+			},
+		},
+	}
 
 	return &api.SdkIdentityCapabilitiesResponse{
 		Capabilities: []*api.SdkServiceCapability{
@@ -116,6 +137,9 @@ func (s *IdentityServer) Capabilities(
 			capVolume,
 			capAlerts,
 			capMountAttach,
+			capRole,
+			capClusterPair,
+			capMigrate,
 		},
 	}, nil
 }
