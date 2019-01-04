@@ -296,7 +296,7 @@ message VolumeSpec {
   bool shared = 11;
   // ReplicaSet is the desired set of nodes for the volume data.
   ReplicaSet replica_set = 12;
-  // Aggregatiokn level Specifies the number of parts the volume can be aggregated from.
+  // Aggregation level specifies the number of parts the volume can be aggregated from.
   uint32 aggregation_level = 13;
   // Encrypted is true if this volume will be cryptographically secured.
   bool encrypted = 14;
