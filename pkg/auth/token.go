@@ -21,30 +21,39 @@ import (
 )
 
 // Rule provides a method to provide a custom authorization
+// Rules can also be set to `*` to allow all services or apis.
 type Rule struct {
+	// Services is the gRPC service name in `OpenStorage<service name>` in lowercase
 	Services []string `json:"services,omitempty" yaml:"services,omitempty"`
-	Apis     []string `json:"apis,omitempty" yaml:"apis,omitempty"`
+	// Apis is the API name in the service in lowercase
+	Apis []string `json:"apis,omitempty" yaml:"apis,omitempty"`
 }
 
 // Claims provides information about the claims in the token
+// See https://openid.net/specs/openid-connect-core-1_0.html#IDToken
+// for more information.
 type Claims struct {
-	Name   string   `json:"name" yaml:"name"`
-	Email  string   `json:"email" yaml:"email"`
-	Role   string   `json:"role,omitempty" yaml:"role,omitempty"`
+	// Subject identifier. Unique ID of this account
+	Subject string `json:"sub" yaml:"sub"`
+	// Account name
+	Name string `json:"name" yaml:"name"`
+	// Account email
+	Email string `json:"email" yaml:"email"`
+	// (optional) Role of this account
+	Role string `json:"role,omitempty" yaml:"role,omitempty"`
+	// (optional) Groups in which this account is part of
 	Groups []string `json:"groups,omitempty" yaml:"groups,omitempty"`
-	Rules  []Rule   `json:"rules,omitempty" yaml:"rules,omitempty"`
-}
-
-// Signature describes the signature type using definitions from
-// the jwt package
-type Signature struct {
-	Type jwt.SigningMethod
-	Key  interface{}
+	// (optional) RBAC rules for the OpenStorage SDK
+	// (DO NOT USE) This will be removed from the claims
+	Rules []Rule `json:"rules,omitempty" yaml:"rules,omitempty"`
 }
 
 // Options provide any options to apply to the token
 type Options struct {
+	// Expiration time in Unix format as per JWT standard
 	Expiration int64
+	// Issuer of the claims
+	Issuer string
 }
 
 // Token returns a signed JWT containing the claims provided
@@ -55,6 +64,8 @@ func Token(
 ) (string, error) {
 
 	mapclaims := jwt.MapClaims{
+		"sub":   claims.Subject,
+		"iss":   options.Issuer,
 		"email": claims.Email,
 		"name":  claims.Name,
 		"role":  claims.Role,

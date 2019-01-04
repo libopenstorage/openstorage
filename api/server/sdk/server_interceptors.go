@@ -21,7 +21,7 @@ import (
 	"encoding/json"
 	"time"
 
-	sdk_auth "github.com/libopenstorage/openstorage-sdk-auth/pkg/auth"
+	sdk_auth "github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/pborman/uuid"
 	"github.com/sirupsen/logrus"
 

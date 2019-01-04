@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	sdk_auth "github.com/libopenstorage/openstorage-sdk-auth/pkg/auth"
 )
 
 var (
@@ -32,7 +31,7 @@ var (
 
 // Authenticator interface validates and extracts the claims from a raw token
 type Authenticator interface {
-	AuthenticateToken(string) (*sdk_auth.Claims, error)
+	AuthenticateToken(string) (*Claims, error)
 }
 
 // JwtAuthConfig provides JwtAuthenticator the keys to validate the token
@@ -91,7 +90,7 @@ func New(config *JwtAuthConfig) (*JwtAuthenticator, error) {
 
 // AuthenticateToken determines if a token is valid and if it is, returns
 // the information in the claims.
-func (j *JwtAuthenticator) AuthenticateToken(rawtoken string) (*sdk_auth.Claims, error) {
+func (j *JwtAuthenticator) AuthenticateToken(rawtoken string) (*Claims, error) {
 
 	// Parse token
 	token, err := jwt.Parse(rawtoken, func(token *jwt.Token) (interface{}, error) {
@@ -139,7 +138,7 @@ func (j *JwtAuthenticator) AuthenticateToken(rawtoken string) (*sdk_auth.Claims,
 	if err != nil {
 		return nil, fmt.Errorf("Failed to decode claims: %v", err)
 	}
-	var sdkClaims sdk_auth.Claims
+	var sdkClaims Claims
 	err = json.Unmarshal(claimBytes, &sdkClaims)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to get sdkclaims: %v", err)
