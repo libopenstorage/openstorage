@@ -152,10 +152,20 @@ func (d *driver) volFromNameSdk(ctx context.Context, volumes api.OpenStorageVolu
 	inspectResp, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
 		VolumeId: volId,
 	})
-	if err == nil {
-		return inspectResp.Volume, nil
+	if err != nil {
+		return nil, fmt.Errorf("Cannot locate volume with name %s", name)
 	}
-	return nil, fmt.Errorf("Cannot locate volume with name %s", name)
+	return inspectResp.Volume, nil
+}
+
+func (d *driver) volFromIdSdk(ctx context.Context, volumes api.OpenStorageVolumeClient, volId string) (*api.Volume, error) {
+	inspectResp, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
+		VolumeId: volId,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("Cannot locate volume with id %s", volId)
+	}
+	return inspectResp.Volume, nil
 }
 
 func (d *driver) volIdFromName(ctx context.Context, volumes api.OpenStorageVolumeClient, name string) (string, error) {
@@ -218,6 +228,14 @@ func (d *driver) attachToken(ctx context.Context, request *volumeRequest) contex
 	return metadata.NewOutgoingContext(ctx, md)
 }
 
+func (d *driver) attachTokenMount(ctx context.Context, request *mountRequest) context.Context {
+	token, _ := d.GetTokenFromString(request.Name)
+	md := metadata.New(map[string]string{
+		"authorization": "bearer " + token,
+	})
+	return metadata.NewOutgoingContext(ctx, md)
+}
+
 func (d *driver) status(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, fmt.Sprintln("osd plugin", d.version))
 }
@@ -244,8 +262,6 @@ func (d *driver) getConn() (*grpc.ClientConn, error) {
 func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 	method := "create"
 	ctx := r.Context()
-
-	// decode request
 	request, err := d.decode(method, w, r)
 	if err != nil {
 		return
@@ -299,7 +315,6 @@ func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 func (d *driver) remove(w http.ResponseWriter, r *http.Request) {
 	method := "remove"
 	ctx := r.Context()
-
 	request, err := d.decode(method, w, r)
 	if err != nil {
 		return
@@ -323,7 +338,7 @@ func (d *driver) remove(w http.ResponseWriter, r *http.Request) {
 	// get volume id to delete
 	volId, err := d.volIdFromName(ctx, volumes, name)
 	if err != nil {
-		notFound(w, r)
+		d.errorResponse(method, w, err)
 		return
 	}
 
@@ -339,142 +354,6 @@ func (d *driver) remove(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(&volumeResponse{})
 }
 
-func (d *driver) scaleUp(
-	method string,
-	vd volume.VolumeDriver,
-	inVol *api.Volume,
-	allVols []*api.Volume,
-	attachOptions map[string]string,
-) (
-	outVol *api.Volume,
-	err error,
-) {
-	// Create new volume if existing volumes are not available.
-	spec := inVol.Spec.Copy()
-	spec.Scale = 1
-	spec.ReplicaSet = nil
-	volCount := len(allVols)
-	for i := len(allVols); volCount < int(inVol.Spec.Scale); i++ {
-		name := fmt.Sprintf("%s_%03d", inVol.Locator.Name, i)
-		id := ""
-		if id, err = vd.Create(
-			&api.VolumeLocator{Name: name},
-			nil,
-			spec,
-		); err != nil {
-			// It is possible to get an error on a name conflict
-			// either due to concurrent creates or holes punched in
-			// from previous deletes.
-			if err == volume.ErrExist {
-				continue
-			}
-			return nil, err
-		}
-		if outVol, err = d.volFromName(id); err != nil {
-			return nil, err
-		}
-		if _, err = vd.Attach(outVol.Id, attachOptions); err == nil {
-			return outVol, nil
-		}
-		// If we fail to attach the volume, continue to look for a
-		// free volume.
-		volCount++
-	}
-	return nil, volume.ErrVolAttachedScale
-}
-
-func (d *driver) attachScale(
-	method string,
-	vd volume.VolumeDriver,
-	inVol *api.Volume,
-	attachOptions map[string]string,
-) (
-	*api.Volume,
-	error,
-) {
-	// Find a volume that has data local to this node.
-	vols, err := vd.Enumerate(
-		&api.VolumeLocator{
-			Name: fmt.Sprintf("%s.*", inVol.Locator.Name),
-			VolumeLabels: map[string]string{
-				volume.LocationConstraint: volume.LocalNode,
-			},
-		},
-		nil,
-	)
-	// Try to attach local volumes.
-	if err == nil {
-		for _, vol := range vols {
-			if v, err := d.attachVol(method, vd, vol, attachOptions); err == nil {
-				return v, nil
-			}
-		}
-	}
-	// Create a new local volume if we fail to attach existing local volume
-	// or if none exist.
-	allVols, err := vd.Enumerate(
-		&api.VolumeLocator{
-			Name: fmt.Sprintf("%s.*", inVol.Locator.Name),
-		},
-		nil,
-	)
-
-	// Try to attach existing volumes.
-	for _, outVol := range allVols {
-		if _, err = vd.Attach(outVol.Id, attachOptions); err == nil {
-			return outVol, nil
-		}
-	}
-
-	if len(allVols) < int(inVol.Spec.Scale) {
-		name := fmt.Sprintf("%s_%03d", inVol.Locator.Name, len(allVols))
-		spec := inVol.Spec.Copy()
-		spec.ReplicaSet = &api.ReplicaSet{Nodes: []string{volume.LocalNode}}
-		spec.Scale = 1
-		id, err := vd.Create(&api.VolumeLocator{Name: name}, nil, spec)
-		if err != nil {
-			return d.scaleUp(method, vd, inVol, allVols, attachOptions)
-		}
-		outVol, err := d.volFromName(id)
-		if err != nil {
-			return nil, err
-		}
-		if _, err = vd.Attach(outVol.Id, attachOptions); err == nil {
-			return outVol, nil
-		}
-		// We failed to attach, scaleUp.
-		allVols = append(allVols, outVol)
-	}
-	return d.scaleUp(method, vd, inVol, allVols, attachOptions)
-}
-
-func (d *driver) attachVol(
-	method string,
-	vd volume.VolumeDriver,
-	vol *api.Volume,
-	attachOptions map[string]string,
-) (
-	outVolume *api.Volume,
-	err error,
-) {
-	attachPath, err := vd.Attach(vol.Id, attachOptions)
-
-	switch err {
-	case nil:
-		d.logRequest(method, vol.Locator.Name).Debugf(
-			"response %v", attachPath)
-		return vol, nil
-	case volume.ErrVolAttachedOnRemoteNode:
-		d.logRequest(method, vol.Locator.Name).Infof(
-			"Mount volume attached on remote node.")
-		return vol, err
-	default:
-		d.logRequest(method, vol.Locator.Name).Warnf(
-			"Cannot attach volume: %v", err.Error())
-		return vol, err
-	}
-}
-
 func (d *driver) attachOptionsFromSpec(
 	spec *api.VolumeSpec,
 ) map[string]string {
@@ -488,88 +367,53 @@ func (d *driver) attachOptionsFromSpec(
 
 func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 	var response volumePathResponse
+	ctx := r.Context()
 	method := "mount"
-
-	v, err := volumedrivers.Get(d.name)
-	if err != nil {
-		d.logRequest(method, "").Warnf("Cannot locate volume driver")
-		d.errorResponse(method, w, err)
-		return
-	}
-
 	request, err := d.decodeMount(method, w, r)
 	if err != nil {
 		d.errorResponse(method, w, err)
 		return
 	}
+
+	// get spec and name from request
 	_, spec, _, _, name := d.SpecFromString(request.Name)
 	attachOptions := d.attachOptionsFromSpec(spec)
-	vol, err := d.volFromName(name)
+
+	// attach token in context metadata
+	ctx = d.attachTokenMount(ctx, request)
+
+	// get grpc connection
+	conn, err := d.getConn()
+	if err != nil {
+		d.errorResponse(method, w, err)
+		return
+	}
+
+	//get volume to mount
+	volumeClient := api.NewOpenStorageVolumeClient(conn)
+	vol, err := d.volFromNameSdk(ctx, volumeClient, name)
 	if err != nil {
 		d.sendError(method, "", w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// If a scaled volume is already mounted, check if it can be unmounted and
-	// detached. If not return an error.
+	// get and prepare mountpath
 	mountpoint := d.mountpath(name)
-	if vol.Spec.Scale > 1 {
-		id := v.MountedAt(mountpoint)
-		if len(id) != 0 {
-			err = v.Unmount(id, mountpoint, nil)
-			if err != nil {
-				d.logRequest(method, "").Warnf("Error unmounting scaled volume: %v", err)
-				err = fmt.Errorf("Cannot remount scaled volume(%v)."+
-					" Volume %v is mounted at %v", name, id, mountpoint)
-				d.errorResponse(method, w, err)
-				return
-			}
-
-			if v.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-				err = v.Detach(id, nil)
-				if err != nil {
-					d.logRequest(method, "").Warnf("Error detaching scaled volume: %v", err)
-					mountErr := v.Mount(id, mountpoint, nil)
-					if mountErr != nil {
-						d.logRequest(method, "").Warnf("Error remounting scaled volume: %v", mountErr.Error())
-					}
-					err = fmt.Errorf("Cannot remount scaled volume(%v)."+
-						" Volume %v is mounted at %v", name, id, mountpoint)
-					d.logRequest(method, "").Warnf(err.Error())
-					d.errorResponse(method, w, err)
-					return
-				}
-			}
-		}
-	}
-
-	// If this is a block driver, first attach the volume.
-	if v.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-		// If volume is scaled up, a new volume is created and
-		// vol will change.
-		if vol.Scaled() {
-			vol, err = d.attachScale(method, v, vol, attachOptions)
-		} else {
-			vol, err = d.attachVol(method, v, vol, attachOptions)
-		}
-		if err != nil {
-			d.errorResponse(method, w, err)
-			return
-		}
-	}
-
-	// Note that name is unchanged even if a new volume was created as a
-	// result of scale up.
 	response.Mountpoint = mountpoint
 	os.MkdirAll(mountpoint, 0755)
-	err = v.Mount(vol.Id, response.Mountpoint, nil)
+
+	// mount volume
+	mountClient := api.NewOpenStorageMountAttachClient(conn)
+	_, err = mountClient.Mount(ctx, &api.SdkVolumeMountRequest{
+		VolumeId:  vol.Id,
+		MountPath: mountpoint,
+		Options:   options.NewVolumeAttachOptions(attachOptions),
+	})
 	if err != nil {
-		d.logRequest(method, request.Name).Warnf(
-			"Cannot mount volume %v, %v",
-			response.Mountpoint, err)
 		d.errorResponse(method, w, err)
 		return
 	}
+
 	d.logRequest(method, request.Name).Infof("response %v", response.Mountpoint)
 	json.NewEncoder(w).Encode(&response)
 }
@@ -577,12 +421,11 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 func (d *driver) path(w http.ResponseWriter, r *http.Request) {
 	method := "path"
 	ctx := r.Context()
-	var response volumePathResponse
-
 	request, err := d.decode(method, w, r)
 	if err != nil {
 		return
 	}
+	var response volumePathResponse
 
 	// attach token in context metadata
 	ctx = d.attachToken(ctx, request)
@@ -618,7 +461,6 @@ func (d *driver) path(w http.ResponseWriter, r *http.Request) {
 func (d *driver) list(w http.ResponseWriter, r *http.Request) {
 	method := "list"
 	ctx := r.Context()
-
 	request, err := d.decode(method, w, r)
 	if err != nil {
 		return
@@ -661,7 +503,6 @@ func (d *driver) list(w http.ResponseWriter, r *http.Request) {
 func (d *driver) get(w http.ResponseWriter, r *http.Request) {
 	method := "get"
 	ctx := r.Context()
-
 	request, err := d.decode(method, w, r)
 	if err != nil {
 		return
@@ -690,7 +531,7 @@ func (d *driver) get(w http.ResponseWriter, r *http.Request) {
 	volumes := api.NewOpenStorageVolumeClient(conn)
 	vol, err := d.volFromNameSdk(ctx, volumes, name)
 	if err != nil {
-		e := d.volNotFound(method, request.Name, err, w)
+		e := d.volNotFound(method, name, err, w)
 		d.errorResponse(method, w, e)
 		return
 	}
@@ -706,49 +547,47 @@ func (d *driver) get(w http.ResponseWriter, r *http.Request) {
 
 func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 	method := "unmount"
-
-	v, err := volumedrivers.Get(d.name)
-	if err != nil {
-		d.logRequest(method, "").Warnf(
-			"Cannot locate volume driver: %v",
-			err.Error())
-		d.errorResponse(method, w, err)
-		return
-	}
-
+	ctx := r.Context()
 	request, err := d.decodeMount(method, w, r)
 	if err != nil {
 		return
 	}
 
+	// attach token in context metadata
+	ctx = d.attachTokenMount(ctx, request)
+
+	// get name from the request
 	_, _, _, _, name := d.SpecFromString(request.Name)
-	vol, err := d.volFromName(name)
+
+	// get grpc connection
+	conn, err := d.getConn()
+	if err != nil {
+		d.errorResponse(method, w, err)
+		return
+	}
+
+	// get volume to mount
+	volumeClient := api.NewOpenStorageVolumeClient(conn)
+	vol, err := d.volFromNameSdk(ctx, volumeClient, name)
 	if err != nil {
 		e := d.volNotFound(method, name, err, w)
 		d.errorResponse(method, w, e)
 		return
 	}
 
-	mountpoint := d.mountpath(name)
-	id := vol.Id
-	if vol.Spec.Scale > 1 {
-		id = v.MountedAt(mountpoint)
-		if len(id) == 0 {
-			err := fmt.Errorf("Failed to find volume mapping for %v",
-				mountpoint)
-			d.logRequest(method, request.Name).Warnf(
-				"Cannot unmount volume %v, %v",
-				mountpoint, err)
-			d.errorResponse(method, w, err)
-			return
-		}
-	}
-
+	// create default unmount options
 	opts := make(map[string]string)
 	opts[options.OptionsDeleteAfterUnmount] = "true"
+	opts[options.OptionsWaitBeforeDelete] = "false"
 
-	err = v.Unmount(id, mountpoint, opts)
-	if err != nil {
+	// Unmount volume
+	mountpoint := d.mountpath(name)
+	mountClient := api.NewOpenStorageMountAttachClient(conn)
+	if _, err = mountClient.Unmount(ctx, &api.SdkVolumeUnmountRequest{
+		VolumeId:  vol.Id,
+		MountPath: mountpoint,
+		Options:   options.NewVolumeUnmountOptions(opts),
+	}); err != nil {
 		d.logRequest(method, request.Name).Warnf(
 			"Cannot unmount volume %v, %v",
 			mountpoint, err)
@@ -756,9 +595,6 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if v.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-		_ = v.Detach(id, nil)
-	}
 	d.emptyResponse(w)
 }
 
