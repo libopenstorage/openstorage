@@ -5,6 +5,13 @@
 
 ## Releases
 
+### v0.35.0 - Tech Preview (1/4/2019)
+
+* Rename SdkVolumeAttachRequest_Options to SdkVolumeAttachOptions
+* Rename SdkVolumeUnmount_Options to SdkVolumeUnmountOptions
+* Rename SdkVolumeDetach_Options to SdkVolumeDetachOptions
+* Change SdkVolumeMountRequest to include SdkVolumeAttachOptions
+
 ### v0.34.0 - Tech Preview (1/2/2019)
 
 * Role support

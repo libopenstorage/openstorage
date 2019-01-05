@@ -1996,21 +1996,7 @@
       },
       "type": "object"
     },
-    "apiSdkVolumeAttachRequest": {
-      "properties": {
-        "options": {
-          "$ref": "#/definitions/apiSdkVolumeAttachRequestOptions",
-          "title": "Options to attach device"
-        },
-        "volume_id": {
-          "title": "Id of volume",
-          "type": "string"
-        }
-      },
-      "title": "Defines a request to attach a volume to the node receiving this request",
-      "type": "object"
-    },
-    "apiSdkVolumeAttachRequestOptions": {
+    "apiSdkVolumeAttachOptions": {
       "properties": {
         "secret_context": {
           "description": "It indicates the additional context which could be used to retrieve the secret.\nIn case of Kubernetes, this is the namespace in which the secret is created.",
@@ -2026,6 +2012,20 @@
         }
       },
       "title": "Options to attach device",
+      "type": "object"
+    },
+    "apiSdkVolumeAttachRequest": {
+      "properties": {
+        "options": {
+          "$ref": "#/definitions/apiSdkVolumeAttachOptions",
+          "title": "Options to attach device"
+        },
+        "volume_id": {
+          "title": "Id of volume",
+          "type": "string"
+        }
+      },
+      "title": "Defines a request to attach a volume to the node receiving this request",
       "type": "object"
     },
     "apiSdkVolumeAttachResponse": {
@@ -2100,20 +2100,7 @@
       "title": "Empty response",
       "type": "object"
     },
-    "apiSdkVolumeDetachRequest": {
-      "properties": {
-        "options": {
-          "$ref": "#/definitions/apiSdkVolumeDetachRequestOptions"
-        },
-        "volume_id": {
-          "title": "Id of the volume",
-          "type": "string"
-        }
-      },
-      "title": "Defines a request to detach a volume",
-      "type": "object"
-    },
-    "apiSdkVolumeDetachRequestOptions": {
+    "apiSdkVolumeDetachOptions": {
       "properties": {
         "force": {
           "format": "boolean",
@@ -2126,7 +2113,20 @@
           "type": "boolean"
         }
       },
-      "title": "Options to detach device",
+      "type": "object"
+    },
+    "apiSdkVolumeDetachRequest": {
+      "properties": {
+        "options": {
+          "$ref": "#/definitions/apiSdkVolumeDetachOptions",
+          "title": "Options to detach device"
+        },
+        "volume_id": {
+          "title": "Id of the volume",
+          "type": "string"
+        }
+      },
+      "title": "Defines a request to detach a volume",
       "type": "object"
     },
     "apiSdkVolumeDetachResponse": {
@@ -2184,6 +2184,10 @@
         "mount_path": {
           "description": "Mount path for mounting the volume.",
           "type": "string"
+        },
+        "options": {
+          "$ref": "#/definitions/apiSdkVolumeAttachOptions",
+          "title": "Options to attach device"
         },
         "volume_id": {
           "title": "Id of the volume",
@@ -2320,25 +2324,7 @@
       "title": "Defines a response containing drive statistics",
       "type": "object"
     },
-    "apiSdkVolumeUnmountRequest": {
-      "properties": {
-        "mount_path": {
-          "title": "MountPath for device",
-          "type": "string"
-        },
-        "options": {
-          "$ref": "#/definitions/apiSdkVolumeUnmountRequestOptions",
-          "title": "Options to unmount device"
-        },
-        "volume_id": {
-          "title": "Id of volume",
-          "type": "string"
-        }
-      },
-      "title": "Defines a request to unmount a volume on the node receiving this request",
-      "type": "object"
-    },
-    "apiSdkVolumeUnmountRequestOptions": {
+    "apiSdkVolumeUnmountOptions": {
       "properties": {
         "delete_mount_path": {
           "format": "boolean",
@@ -2352,6 +2338,24 @@
         }
       },
       "title": "Options to unmount device",
+      "type": "object"
+    },
+    "apiSdkVolumeUnmountRequest": {
+      "properties": {
+        "mount_path": {
+          "title": "MountPath for device",
+          "type": "string"
+        },
+        "options": {
+          "$ref": "#/definitions/apiSdkVolumeUnmountOptions",
+          "title": "Options to unmount device"
+        },
+        "volume_id": {
+          "title": "Id of volume",
+          "type": "string"
+        }
+      },
+      "title": "Defines a request to unmount a volume on the node receiving this request",
       "type": "object"
     },
     "apiSdkVolumeUnmountResponse": {
@@ -3176,7 +3180,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.34.0"
+    "version": "0.35.0"
   },
   "paths": {
     "/v1/alerts": {
