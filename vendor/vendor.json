@@ -957,12 +957,6 @@
 			"revisionTime": "2017-03-28T20:16:54Z"
 		},
 		{
-			"checksumSHA1": "yyJrIKiuCXOeaCjoVnqYJHEBUD8=",
-			"path": "github.com/libopenstorage/openstorage-sdk-auth/pkg/auth",
-			"revision": "2d45760fa8157ab7021c8eaea483e2d2e7c4d495",
-			"revisionTime": "2018-11-14T03:34:01Z"
-		},
-		{
 			"checksumSHA1": "//fxGW9CLGgr6AMunoZkR4lbYzk=",
 			"path": "github.com/libopenstorage/openstorage/alert",
 			"revision": "501049066d62fd28e88924d9820ddd4460396992",

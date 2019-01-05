@@ -15,7 +15,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/golang/mock/gomock"
-	sdkauth "github.com/libopenstorage/openstorage-sdk-auth/pkg/auth"
+	sdkauth "github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/libopenstorage/openstorage/api/server/sdk"
