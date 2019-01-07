@@ -512,7 +512,7 @@ func (d *driver) get(w http.ResponseWriter, r *http.Request) {
 	// get name from the request
 	parsed, _, _, _, name := d.SpecFromString(request.Name)
 	var returnName string
-	if parsed {
+	if !parsed {
 		returnName = request.Name
 	} else {
 		returnName = name
