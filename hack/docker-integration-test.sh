@@ -20,7 +20,6 @@ get_volume_id() {
 assert_attached(){
 	# Get Vol ID
 	get_volume_id $volume_name
-
 	attach_path=$(curl -X GET "http://localhost:9116/v1/volumes/inspect/$volume_id" -H "accept:application/json" -H "Authorization:bearer $token" | jq  ."volume" | jq ."attach_path" | jq .[0] -r)
 
 	# ATTACH_PATH is null when the volume unmounted. If it is non-null,
@@ -39,7 +38,7 @@ assert_attached(){
 		fi
 	# Here we can assert that the volume is unmounted
 	else
-		echo "Asserting volume detached: $attach_path"	
+		echo "Asserting volume detached: $attach_path"
 		if [ $attach_path == "null" ];
 		then
 			return 0
@@ -69,7 +68,7 @@ sleep 3
 # Test & assert
 volume_name=$(sudo docker volume create -d fake -o size=1234 -o token=$token)
 assert_success
-sudo docker volume inspect token=$token,name=$volume_name
+sudo docker volume inspect token=$token,name=${volume_name}
 assert_success
 
 # Get Vol ID
@@ -80,9 +79,7 @@ assert_attached false
 
 # Run app with our  volume
 app_name="APP_TEST_$volume_name"
-
-sudo docker stop $app_name && sudo docker rm $app_name 
-sudo docker run -d --name $app_name --volume-driver fake -v token=$token,name=$volume_name:/app nginx:latest
+sudo docker run -d --name $app_name --volume-driver fake -v size=12345,token=$token,name=${volume_name}_new:/app nginx:latest
 assert_success
 assert_attached true
 
