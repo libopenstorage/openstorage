@@ -17,7 +17,7 @@ const (
 	ClusterDBKey = "cluster/database"
 )
 
-func snapAndReadClusterInfo() (*cluster.ClusterInitState, error) {
+func snapAndReadClusterInfo(snapshotPrefixes []string) (*cluster.ClusterInitState, error) {
 	kv := kvdb.Instance()
 
 	// To work-around a kvdb issue with watches, try snapshot in a loop
@@ -39,7 +39,7 @@ func snapAndReadClusterInfo() (*cluster.ClusterInitState, error) {
 			continue
 		}
 		// Create the snapshot
-		snap, version, err = kv.Snapshot("")
+		snap, version, err = kv.Snapshot(snapshotPrefixes)
 		if err != nil {
 			logrus.Errorf("Snapshot failed for cluster db: %v", err)
 			collector.Stop()
