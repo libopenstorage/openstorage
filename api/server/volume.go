@@ -136,8 +136,9 @@ func (vd *volAPI) create(w http.ResponseWriter, r *http.Request) {
 	}
 	volumes := api.NewOpenStorageVolumeClient(conn)
 	id, err := volumes.Create(ctx, &api.SdkVolumeCreateRequest{
-		Name: dcReq.Locator.GetName(),
-		Spec: dcReq.GetSpec(),
+		Name:   dcReq.Locator.GetName(),
+		Labels: dcReq.Locator.GetVolumeLabels(),
+		Spec:   dcReq.GetSpec(),
 	})
 
 	dcRes.VolumeResponse = &api.VolumeResponse{Error: responseStatus(err)}

@@ -197,3 +197,19 @@ func TestForceUnsupportedFsType(t *testing.T) {
 	spec = testSpecFromString(t, api.SpecRack, "ignore")
 	require.False(t, spec.ForceUnsupportedFsType)
 }
+
+func TestCopyingLabelsFromSpecToLocator(t *testing.T) {
+	s := NewSpecHandler()
+	opts := map[string]string{
+		"hello": "world",
+	}
+	spec := &api.VolumeSpec{
+		VolumeLabels: map[string]string{
+			"goodbye": "fornow",
+		},
+	}
+	_, locator, _, err := s.UpdateSpecFromOpts(opts, spec, nil, nil)
+	require.NoError(t, err)
+	require.Contains(t, locator.VolumeLabels, "hello")
+	require.Contains(t, locator.VolumeLabels, "goodbye")
+}

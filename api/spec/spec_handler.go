@@ -153,9 +153,8 @@ func (d *specHandler) getVal(r *regexp.Regexp, str string) (bool, string) {
 
 func (d *specHandler) DefaultSpec() *api.VolumeSpec {
 	return &api.VolumeSpec{
-		VolumeLabels: make(map[string]string),
-		Format:       api.FSType_FS_TYPE_EXT4,
-		HaLevel:      1,
+		Format:  api.FSType_FS_TYPE_EXT4,
+		HaLevel: 1,
 	}
 }
 
@@ -347,9 +346,13 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				spec.ForceUnsupportedFsType = forceFs
 			}
 		default:
-			spec.VolumeLabels[k] = v
+			locator.VolumeLabels[k] = v
 		}
 	}
+
+	// Copy any spec labels to the locator
+	locator = locator.MergeVolumeSpecLabels(spec)
+
 	return spec, locator, source, nil
 }
 

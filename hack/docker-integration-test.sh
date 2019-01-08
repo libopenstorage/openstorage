@@ -14,22 +14,22 @@ assert_success() {
 }
 
 get_volume_id() {
-	volume_id=$(curl -X POST "http://localhost:9116/v1/volumes/filters" -H "accept: application/json" -H "Content-Type:application/json" -H "Authorization:bearer $token" -d "{ \"locator\": { \"name\": \"$1\"}}" | jq .[] | jq .[0] -r)
+	volume_id=$(curl -X POST "http://localhost:9116/v1/volumes/filters" -H "accept: application/json" -H "Content-Type:application/json" -H "Authorization:bearer $token" -d "{ \"name\": \"$1\"}" | jq .[] | jq .[0] -r)
 }
 
 assert_attached(){
 	# Get Vol ID
 	get_volume_id $volume_name
-	
+
 	attach_path=$(curl -X GET "http://localhost:9116/v1/volumes/inspect/$volume_id" -H "accept:application/json" -H "Authorization:bearer $token" | jq  ."volume" | jq ."attach_path" | jq .[0] -r)
 
 	# ATTACH_PATH is null when the volume unmounted. If it is non-null,
-	# we know that the volume is mounted. 
+	# we know that the volume is mounted.
 	#
 	# Here we can assert that the volume is mounted
 	if [ $1 == "true" ];
 	then
-		echo "Asserting volume attached: $attach_path"	
+		echo "Asserting volume attached: $attach_path"
 		if [ $attach_path != "null" ];
 		then
 			return 0

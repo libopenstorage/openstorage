@@ -266,7 +266,7 @@ func (d *driver) Create(
 	}
 	if source != nil {
 		if len(source.Seed) != 0 {
-			seed, err := seed.New(source.Seed, spec.VolumeLabels)
+			seed, err := seed.New(source.Seed, locator.VolumeLabels)
 			if err != nil {
 				logrus.Warnf("Failed to initailize seed from %q : %v",
 					source.Seed, err)

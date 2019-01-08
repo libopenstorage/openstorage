@@ -170,9 +170,7 @@ func (d *driver) volFromIdSdk(ctx context.Context, volumes api.OpenStorageVolume
 
 func (d *driver) volIdFromName(ctx context.Context, volumes api.OpenStorageVolumeClient, name string) (string, error) {
 	enumerateResp, err := volumes.EnumerateWithFilters(ctx, &api.SdkVolumeEnumerateWithFiltersRequest{
-		Locator: &api.VolumeLocator{
-			Name: name,
-		},
+		Name: name,
 	})
 	if err != nil {
 		return "", err
@@ -289,7 +287,6 @@ func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// clone if exists, create otherwise
-	spec.VolumeLabels = locator.VolumeLabels
 	volumes := api.NewOpenStorageVolumeClient(conn)
 	if source != nil && len(source.Parent) != 0 {
 		// clone
@@ -300,8 +297,9 @@ func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 	} else {
 		// create
 		_, err = volumes.Create(ctx, &api.SdkVolumeCreateRequest{
-			Name: name,
-			Spec: spec,
+			Name:   name,
+			Spec:   spec,
+			Labels: locator.GetVolumeLabels(),
 		})
 	}
 	if err != nil {
