@@ -737,12 +737,6 @@ func (m *Volume) Contains(mid string) bool {
 // Copy makes a deep copy of VolumeSpec
 func (s *VolumeSpec) Copy() *VolumeSpec {
 	spec := *s
-	if s.VolumeLabels != nil {
-		spec.VolumeLabels = make(map[string]string)
-		for k, v := range s.VolumeLabels {
-			spec.VolumeLabels[k] = v
-		}
-	}
 	if s.ReplicaSet != nil {
 		spec.ReplicaSet = &ReplicaSet{Nodes: make([]string, len(s.ReplicaSet.Nodes))}
 		copy(spec.ReplicaSet.Nodes, s.ReplicaSet.Nodes)
@@ -940,4 +934,12 @@ func (r *CloudBackupHistoryResponse) ToSdkCloudBackupHistoryResponse() *SdkCloud
 	}
 
 	return resp
+}
+
+func (l *VolumeLocator) MergeVolumeSpecLabels(s *VolumeSpec) *VolumeLocator {
+	for k, v := range s.GetVolumeLabels() {
+		l.VolumeLabels[k] = v
+	}
+
+	return l
 }

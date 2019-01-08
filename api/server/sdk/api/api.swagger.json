@@ -475,13 +475,13 @@
       "type": "string"
     },
     "apiGroup": {
+      "description": "Group represents VolumeGroup / namespace\nAll volumes in the same group share this object.",
       "properties": {
         "id": {
           "description": "Id common identifier across volumes that have the same group.",
           "type": "string"
         }
       },
-      "title": "Group represents VolumeGroup / namespace\nAll volumes in the same group share this object.\nswagger:model",
       "type": "object"
     },
     "apiIoProfile": {
@@ -585,7 +585,7 @@
           "type": "string"
         }
       },
-      "title": "ObjectstoreInfo is a structure that has current objectstore info\nswagger:model",
+      "title": "ObjectstoreInfo is a structure that has current objectstore info",
       "type": "object"
     },
     "apiReplicaSet": {
@@ -597,7 +597,7 @@
           "type": "array"
         }
       },
-      "title": "ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure\ncoded - for clustered storage arrays\nswagger:model",
+      "title": "ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure\ncoded - for clustered storage arrays",
       "type": "object"
     },
     "apiResourceType": {
@@ -612,6 +612,7 @@
       "type": "string"
     },
     "apiRuntimeStateMap": {
+      "description": "RuntimeStateMap is a list of name value mapping of driver specific runtime\ninformation.",
       "properties": {
         "runtime_state": {
           "additionalProperties": {
@@ -620,7 +621,6 @@
           "type": "object"
         }
       },
-      "title": "RuntimeStateMap is a list of name value mapping of driver specific runtime\ninformation.\nswagger:model",
       "type": "object"
     },
     "apiSdkAlertsAlertTypeQuery": {
@@ -2075,6 +2075,13 @@
     "apiSdkVolumeCreateRequest": {
       "description": "Defines a request to create a volume. Use OpenStorageVolume.Update()\nto update any labels on the volume.",
       "properties": {
+        "labels": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Labels to apply to the volume",
+          "type": "object"
+        },
         "name": {
           "description": "Unique name of the volume. This will be used for idempotency.",
           "type": "string"
@@ -2148,9 +2155,16 @@
     },
     "apiSdkVolumeEnumerateWithFiltersRequest": {
       "properties": {
-        "locator": {
-          "$ref": "#/definitions/apiVolumeLocator",
-          "description": "Volumes to match to this locator.\nIf not provided, all volumes will be returned."
+        "labels": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "(optional) Labels to search",
+          "type": "object"
+        },
+        "name": {
+          "title": "(optional) Name to search",
+          "type": "string"
         }
       },
       "title": "Defines a request to list volumes",
@@ -2171,6 +2185,17 @@
     },
     "apiSdkVolumeInspectResponse": {
       "properties": {
+        "labels": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Volume labels",
+          "type": "object"
+        },
+        "name": {
+          "title": "Name of volume",
+          "type": "string"
+        },
         "volume": {
           "$ref": "#/definitions/apiVolume",
           "title": "Information about the volume"
@@ -2364,13 +2389,16 @@
     },
     "apiSdkVolumeUpdateRequest": {
       "properties": {
-        "locator": {
-          "$ref": "#/definitions/apiVolumeLocator",
-          "description": "Change locator values. Some of these values may not be able to be changed.\nNew labels will be added to the current volume labels. To delete a label, set the\nvalue of the label to an empty string."
+        "labels": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Change label values. Some of these values may not be able to be changed.\nNew labels will be added to the current volume labels. To delete a label, set the\nvalue of the label to an empty string.",
+          "type": "object"
         },
         "spec": {
           "$ref": "#/definitions/apiVolumeSpecUpdate",
-          "description": "VolumeSpecUpdate provides a method to request that certain values\nin the VolumeSpec are changed. This is necessary as a separate variable\nbecause values like int and bool in the VolumeSpec cannot be determined\nif they are being requested to change in gRPC proto3. Some of these\nvalues may not be able to be changed.\nHere are a few examples of actions that can be accomplished using the VolumeSpec.\nTo resize the volume: Set a new value in spec.size.\nTo change number of replicas: Adjust spec.ha_level.\nTo change the I/O Profile: Adjust spec.io_profile."
+          "description": "VolumeSpecUpdate provides a method to request that certain values\nin the VolumeSpec are changed. This is necessary as a separate variable\nbecause values like int and bool in the VolumeSpec cannot be determined\nif they are being requested to change in gRPC proto3. Some of these\nvalues may not be able to be changed.\n\nHere are a few examples of actions that can be accomplished using the VolumeSpec:\n\n* To resize the volume: Set a new value in spec.size_opt.size.\n* To change number of replicas: Adjust spec.ha_level_opt.ha_level.\n* To change the I/O Profile: Adjust spec.io_profile_opt.io_profile."
         },
         "volume_id": {
           "title": "Id of the volume to update",
@@ -2395,6 +2423,7 @@
       "type": "string"
     },
     "apiSource": {
+      "description": "Source is a structure that can be given to a volume\nto seed the volume with data.",
       "properties": {
         "parent": {
           "description": "A volume id, if specified will create a clone of the parent.",
@@ -2405,7 +2434,6 @@
           "type": "string"
         }
       },
-      "title": "Source is a structure that can be given to a volume\nto seed the volume with data.\nswagger:model",
       "type": "object"
     },
     "apiStats": {
@@ -2609,6 +2637,7 @@
       "type": "object"
     },
     "apiStorageResource": {
+      "description": "StorageResource groups properties of a storage device.",
       "properties": {
         "cache": {
           "format": "boolean",
@@ -2677,7 +2706,6 @@
           "type": "string"
         }
       },
-      "title": "StorageResource groups properties of a storage device.\nswagger:model",
       "type": "object"
     },
     "apiStorageVersion": {
@@ -2702,6 +2730,7 @@
       "type": "object"
     },
     "apiVolume": {
+      "description": "Volume represents an abstract storage volume.",
       "properties": {
         "attach_info": {
           "additionalProperties": {
@@ -2816,7 +2845,6 @@
           "type": "array"
         }
       },
-      "title": "Volume represents an abstract storage volume.\nswagger:model",
       "type": "object"
     },
     "apiVolumeConsumer": {
@@ -2846,10 +2874,11 @@
           "type": "string"
         }
       },
-      "title": "VolumeConsumer identifies a consumer for a Volume. An example of a VolumeConsumer\nwould be a Pod in Kubernetes who has mounted the PersistentVolumeClaim for the\nVolume\nswagger: model",
+      "title": "VolumeConsumer identifies a consumer for a Volume. An example of a VolumeConsumer\nwould be a Pod in Kubernetes who has mounted the PersistentVolumeClaim for the\nVolume",
       "type": "object"
     },
     "apiVolumeLocator": {
+      "description": "VolumeLocator is a structure that is attached to a volume\nand is used to carry opaque metadata.",
       "properties": {
         "name": {
           "title": "User friendly identifier",
@@ -2863,7 +2892,6 @@
           "type": "object"
         }
       },
-      "title": "VolumeLocator is a structure that is attached to a volume\nand is used to carry opaque metadata.\nswagger:model",
       "type": "object"
     },
     "apiVolumePlacementRule": {
@@ -2911,6 +2939,7 @@
       "type": "object"
     },
     "apiVolumeSpec": {
+      "description": "VolumeSpec has the properties needed to create a volume.",
       "properties": {
         "aggregation_level": {
           "description": "Aggregatiokn level Specifies the number of parts the volume can be aggregated from.",
@@ -3047,11 +3076,10 @@
           "additionalProperties": {
             "type": "string"
           },
-          "title": "VolumeLabels configuration labels",
+          "title": "(deprecated, do not use) VolumeLabels configuration labels",
           "type": "object"
         }
       },
-      "title": "VolumeSpec has the properties needed to create a volume.\nswagger:model",
       "type": "object"
     },
     "apiVolumeSpecUpdate": {
@@ -3114,13 +3142,6 @@
         "sticky": {
           "format": "boolean",
           "type": "boolean"
-        },
-        "volume_labels": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "title": "VolumeLabels configuration labels",
-          "type": "object"
         }
       },
       "title": "VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume",
@@ -3180,7 +3201,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.35.0"
+    "version": "0.36.0"
   },
   "paths": {
     "/v1/alerts": {

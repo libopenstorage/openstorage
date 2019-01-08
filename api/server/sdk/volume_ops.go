@@ -117,9 +117,13 @@ func (s *VolumeServer) Create(
 
 	spec := req.GetSpec()
 	locator := &api.VolumeLocator{
-		Name: req.GetName(),
+		Name:         req.GetName(),
+		VolumeLabels: req.GetLabels(),
 	}
 	source := &api.Source{}
+
+	// Copy any labels from the spec to the locator
+	locator = locator.MergeVolumeSpecLabels(spec)
 
 	// Convert node IP to ID if necessary for API calls
 	if err := s.updateReplicaSpecNodeIPstoIds(spec.GetReplicaSet()); err != nil {
@@ -246,8 +250,11 @@ func (s *VolumeServer) Inspect(
 			req.GetVolumeId(), err)
 	}
 
+	v := vols[0]
 	return &api.SdkVolumeInspectResponse{
-		Volume: vols[0],
+		Volume: v,
+		Name:   v.GetLocator().GetName(),
+		Labels: v.GetLocator().GetVolumeLabels(),
 	}, nil
 }
 
@@ -283,7 +290,15 @@ func (s *VolumeServer) EnumerateWithFilters(
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
-	vols, err := s.driver().Enumerate(req.GetLocator(), nil)
+	var locator *api.VolumeLocator
+	if len(req.GetName()) != 0 || len(req.GetLabels()) != 0 {
+		locator = &api.VolumeLocator{
+			Name:         req.GetName(),
+			VolumeLabels: req.GetLabels(),
+		}
+	}
+
+	vols, err := s.driver().Enumerate(locator, nil)
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -323,8 +338,14 @@ func (s *VolumeServer) Update(
 	}
 	spec := s.mergeVolumeSpecs(resp.GetVolume().GetSpec(), req.GetSpec())
 
+	// Check if labels have been updated
+	var locator *api.VolumeLocator
+	if len(req.GetLabels()) != 0 {
+		locator = &api.VolumeLocator{VolumeLabels: req.GetLabels()}
+	}
+
 	// Send to driver
-	if err := s.driver().Set(req.GetVolumeId(), req.GetLocator(), spec); err != nil {
+	if err := s.driver().Set(req.GetVolumeId(), locator, spec); err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to update volume: %v", err)
 	}
 
@@ -413,10 +434,6 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 	} else {
 		spec.Cos = vol.GetCos()
 	}
-
-	// Volume configuration labels
-	// If none are provided, send `nil` to the driver
-	spec.VolumeLabels = req.GetVolumeLabels()
 
 	// Passphrase
 	if req.GetPassphraseOpt() != nil {

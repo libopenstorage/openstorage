@@ -179,10 +179,7 @@ enum OperationFlags {
   OP_FLAGS_DETACH_FORCE = 2;
 }
 
-
-
 // StorageResource groups properties of a storage device.
-// swagger:model
 message StorageResource {
   // Id is the LUN identifier.
   string id = 1;
@@ -234,7 +231,6 @@ message StoragePool {
 
 // VolumeLocator is a structure that is attached to a volume
 // and is used to carry opaque metadata.
-// swagger:model
 message VolumeLocator {
   // User friendly identifier
   string name = 1;
@@ -244,7 +240,6 @@ message VolumeLocator {
 
 // Source is a structure that can be given to a volume
 // to seed the volume with data.
-// swagger:model
 message Source {
   // A volume id, if specified will create a clone of the parent.
   string parent = 1;
@@ -255,7 +250,6 @@ message Source {
 
 // Group represents VolumeGroup / namespace
 // All volumes in the same group share this object.
-// swagger:model
 message Group {
   // Id common identifier across volumes that have the same group.
   string id = 1;
@@ -270,7 +264,6 @@ message IoStrategy {
 }
 
 // VolumeSpec has the properties needed to create a volume.
-// swagger:model
 message VolumeSpec {
   // Ephemeral storage
   bool ephemeral = 1;
@@ -290,7 +283,7 @@ message VolumeSpec {
   bool dedupe = 8;
   // SnapshotInterval in minutes, set to 0 to disable snapshots
   uint32 snapshot_interval = 9;
-  // VolumeLabels configuration labels
+  // (deprecated, do not use) VolumeLabels configuration labels
   map<string, string> volume_labels = 10;
   // Shared is true if this volume can be concurrently accessed by multiple users.
   bool shared = 11;
@@ -348,8 +341,6 @@ message VolumeSpecUpdate {
   oneof dedupe_opt { bool dedupe = 8; }
   // SnapshotInterval in minutes, set to 0 to disable snapshots
   oneof snapshot_interval_opt { uint32 snapshot_interval = 9; }
-  // VolumeLabels configuration labels
-  map<string, string> volume_labels = 10;
   // Shared is true if this volume can be remotely accessed.
   oneof shared_opt { bool shared = 11; }
   // ReplicaSet is the desired set of nodes for the volume data.
@@ -374,20 +365,17 @@ message VolumeSpecUpdate {
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
 // coded - for clustered storage arrays
-// swagger:model
 message ReplicaSet {
   repeated string nodes = 1;
 }
 
 // RuntimeStateMap is a list of name value mapping of driver specific runtime
 // information.
-// swagger:model
 message RuntimeStateMap {
   map<string, string> runtime_state = 1;
 }
 
 // Volume represents an abstract storage volume.
-// swagger:model
 message Volume {
   // Self referential volume ID.
   string id = 1;
@@ -670,13 +658,11 @@ message SdkSchedulePolicyCreateRequest {
 }
 
 // Alerts is an array of Alert objects
-// swagger:model
 message Alerts {
   repeated Alert alert = 1;
 }
 
 // ObjectstoreInfo is a structure that has current objectstore info
-// swagger:model
 message ObjectstoreInfo {
     // UUID of objectstore
     string uuid = 1;
@@ -704,7 +690,6 @@ message ObjectstoreInfo {
 
 // VolumeCreateRequest is a structure that has the locator, source and spec
 // to create a volume
-// swagger:model
 message VolumeCreateRequest {
   // User specified volume name and labels
   VolumeLocator locator = 1;
@@ -715,7 +700,6 @@ message VolumeCreateRequest {
 }
 
 // VolumeResponse is a structure that wraps an error.
-// swagger:response volumeResponse
 message VolumeResponse {
   // Error message
   //
@@ -725,7 +709,6 @@ message VolumeResponse {
 }
 
 // VolumeCreateResponse
-// swagger:response volumeCreateResponse
 message VolumeCreateResponse {
   // ID of the newly created volume
   //
@@ -740,7 +723,6 @@ message VolumeCreateResponse {
 }
 
 // VolumeStateAction specifies desired actions.
-// swagger:model
 message VolumeStateAction {
   // Attach or Detach volume
   VolumeActionParam attach = 1;
@@ -753,7 +735,6 @@ message VolumeStateAction {
 }
 
 // VolumeSet specifies a request to update a volume.
-// swagger:model
 message VolumeSetRequest {
   // User specified volume name and labels
   VolumeLocator locator = 1;
@@ -767,7 +748,6 @@ message VolumeSetRequest {
 }
 
 // VolumeSetResponse
-// swagger:response volumeSetResponse
 message VolumeSetResponse {
   // Volume
   //
@@ -782,7 +762,6 @@ message VolumeSetResponse {
 }
 
 // SnapCreateRequest specifies a request to create a snapshot of given volume.
-// swagger:parameters snapVolume
 message SnapCreateRequest {
   // volume id
   string id = 1;
@@ -793,7 +772,6 @@ message SnapCreateRequest {
 }
 
 // SnapCreateRequest specifies a response that get's returned when creating a snapshot.
-// swagger:response snapCreateResponse
 message SnapCreateResponse {
   // VolumeCreateResponse
   //
@@ -803,7 +781,6 @@ message SnapCreateResponse {
 }
 
 // VolumeInfo
-// swagger:model
 message VolumeInfo {
   string volume_id = 1;
   string path = 2;
@@ -813,7 +790,6 @@ message VolumeInfo {
 // VolumeConsumer identifies a consumer for a Volume. An example of a VolumeConsumer
 // would be a Pod in Kubernetes who has mounted the PersistentVolumeClaim for the
 // Volume
-// swagger: model
 message VolumeConsumer {
   // Name is the name of the volume consumer
   string name = 1;
@@ -838,14 +814,12 @@ message VolumeConsumer {
 // specified by the ID and Parent.  // Parent may be an empty string, in which
 // case there is no parent.
 // Where the Path is the filesystem path within the layered filesystem
-// swagger:model
 message GraphDriverChanges {
   string path = 1;
   GraphDriverChangeType kind = 2;
 }
 
 // ClusterResponse specifies a response that gets returned when requesting the cluster
-// swagger:response clusterResponse
 message ClusterResponse {
   // Error code
   //
@@ -854,20 +828,17 @@ message ClusterResponse {
 }
 
 // Active Request
-// swagger:model
 message ActiveRequest {
   map<int64, string> ReqestKV = 1;
 }
 
 // Active Requests
-// swagger:model
 message ActiveRequests {
   int64 RequestCount = 1;
   repeated ActiveRequest ActiveRequest = 2;
 }
 
 // GroupSnapCreateRequest specifies a request to create a snapshot of given group.
-// swagger:model
 message GroupSnapCreateRequest {
   string id = 1;
   map<string, string> Labels = 2;
@@ -875,7 +846,6 @@ message GroupSnapCreateRequest {
 }
 
 // GroupSnapCreateRequest specifies a response that get's returned when creating a group snapshot.
-// swagger:response groupSnapCreateResponse
 message GroupSnapCreateResponse {
   // Created snapshots
   //
@@ -1988,6 +1958,8 @@ message SdkVolumeCreateRequest {
   string name = 1;
   // Volume specification
   VolumeSpec spec = 2;
+  // Labels to apply to the volume
+  map<string, string> labels = 3;
 }
 
 // Defines a response to the creation of a volume
@@ -2030,25 +2002,31 @@ message SdkVolumeInspectRequest {
 message SdkVolumeInspectResponse {
   // Information about the volume
   Volume volume = 1;
+  // Name of volume
+  string name = 2;
+  // Volume labels
+  map<string, string> labels = 3;
 }
 
 // This request is used to adjust or set new values in the volume
 message SdkVolumeUpdateRequest {
   // Id of the volume to update
   string volume_id = 1;
-  // Change locator values. Some of these values may not be able to be changed.
+  // Change label values. Some of these values may not be able to be changed.
   // New labels will be added to the current volume labels. To delete a label, set the
   // value of the label to an empty string.
-  VolumeLocator locator = 2;
+  map<string, string> labels = 3;
   // VolumeSpecUpdate provides a method to request that certain values
   // in the VolumeSpec are changed. This is necessary as a separate variable
   // because values like int and bool in the VolumeSpec cannot be determined
   // if they are being requested to change in gRPC proto3. Some of these
   // values may not be able to be changed.
-  // Here are a few examples of actions that can be accomplished using the VolumeSpec.
-  // To resize the volume: Set a new value in spec.size.
-  // To change number of replicas: Adjust spec.ha_level.
-  // To change the I/O Profile: Adjust spec.io_profile.
+  //
+  // Here are a few examples of actions that can be accomplished using the VolumeSpec:
+  //
+  // * To resize the volume: Set a new value in spec.size_opt.size.
+  // * To change number of replicas: Adjust spec.ha_level_opt.ha_level.
+  // * To change the I/O Profile: Adjust spec.io_profile_opt.io_profile.
   VolumeSpecUpdate spec = 4;
 }
 
@@ -2096,9 +2074,10 @@ message SdkVolumeEnumerateResponse {
 
 // Defines a request to list volumes
 message SdkVolumeEnumerateWithFiltersRequest {
-  // Volumes to match to this locator.
-  // If not provided, all volumes will be returned.
-  VolumeLocator locator = 1;
+  // (optional) Name to search
+  string name = 2;
+  // (optional) Labels to search
+  map<string, string> labels = 3;
 }
 
 // Defines the response when listing volumes
@@ -2773,7 +2752,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 35;
+    Minor = 36;
     // SDK version patch value of this specification
     Patch = 0;
   }
