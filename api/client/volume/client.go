@@ -538,14 +538,20 @@ func (v *volumeClient) CloudBackupCreate(
 // CloudBackupGroupCreate uploads snapshots of a volume group to cloud
 func (v *volumeClient) CloudBackupGroupCreate(
 	input *api.CloudBackupGroupCreateRequest,
-) error {
+) (*api.CloudBackupGroupCreateResponse, error) {
+
+	createResp := &api.CloudBackupGroupCreateResponse{}
 	req := v.c.Post().Resource(api.OsdBackupPath + "/group").Body(input)
 	response := req.Do()
 	if response.Error() != nil {
-		return response.FormatError()
+		return nil, response.FormatError()
 	}
 
-	return nil
+	if err := response.Unmarshal(&createResp); err != nil {
+		return nil, err
+	}
+
+	return createResp, nil
 }
 
 // CloudBackupRestore downloads a cloud backup to a newly created volume
