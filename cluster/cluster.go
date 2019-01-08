@@ -308,7 +308,7 @@ type Cluster interface {
 	Start(clusterSize int, nodeInitialized bool, gossipPort string) error
 
 	// Like Start, but have the ability to pass in managers to the cluster object
-	StartWithConfiguration(clusterMaxSize int, nodeInitialized bool, gossipPort string, config *ClusterServerConfiguration) error
+	StartWithConfiguration(clusterMaxSize int, nodeInitialized bool, gossipPort string, snapshotPrefixes []string, config *ClusterServerConfiguration) error
 
 	// Get a unique identifier for this cluster. Depending on the implementation, this could
 	// be different than the _id_ from ClusterInfo. This id _must_ be unique across
