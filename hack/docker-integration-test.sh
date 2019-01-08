@@ -51,20 +51,25 @@ assert_attached(){
 }
 
 # Generate shared secret
-go get -u github.com/libopenstorage/openstorage-sdk-auth/...
-token=$($GOPATH/bin/openstorage-sdk-auth \
+make install
+token=$($GOPATH/bin/osd-token-generator \
   --auth-config=hack/sdk-auth-sample.yml \
   --shared-secret=testsecret)
 
 # Start OSD
-sudo -E OPENSTORAGE_AUTH_SHAREDSECRET=testsecret $GOPATH/bin/osd -d --driver=name=fake --sdkport 9106 --sdkrestport 9116 &
+sudo -E $GOPATH/bin/osd \
+	-d \
+	--driver=name=fake \
+	--sdkport 9106 \
+	--jwt-shared-secret=testsecret \
+	--sdkrestport 9116 &
 jobs -l
 sleep 3
 
 # Test & assert
 volume_name=$(sudo docker volume create -d fake -o size=1234 -o token=$token)
 assert_success
-sudo docker volume inspect token=$token,name=$volume_name 
+sudo docker volume inspect token=$token,name=$volume_name
 assert_success
 
 # Get Vol ID

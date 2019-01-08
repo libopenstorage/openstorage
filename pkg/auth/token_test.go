@@ -29,7 +29,7 @@ func TestTokenSharedSecretSimple(t *testing.T) {
 	claims := Claims{
 		Email: "my@email.com",
 		Name:  "myname",
-		Role:  "tester",
+		Roles: []string{"tester"},
 	}
 	sig := Signature{
 		Type: jwt.SigningMethodHS256,
@@ -55,8 +55,8 @@ func TestTokenSharedSecretSimple(t *testing.T) {
 	assert.Equal(t, claims.Email, tokenClaims["email"])
 	assert.Contains(t, tokenClaims, "name")
 	assert.Equal(t, claims.Name, tokenClaims["name"])
-	assert.Contains(t, tokenClaims, "role")
-	assert.Equal(t, claims.Role, tokenClaims["role"])
+	assert.Contains(t, tokenClaims, "roles")
+	assert.Equal(t, claims.Roles[0], tokenClaims["roles"].([]interface{})[0].(string))
 }
 
 func TestTokenExpired(t *testing.T) {

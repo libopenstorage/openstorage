@@ -1,6 +1,5 @@
 /*
-Package role manages roles in Kvdb and provides validation
-Copyright 2018 Portworx
+Copyright 2019 Portworx
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,19 +13,29 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package role
+package auth
 
 import (
 	"context"
-	"github.com/libopenstorage/openstorage/api"
+	"reflect"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-// RoleManager provides an implementation of the SDK Role handler
-// and the necessary verification methods
-type RoleManager interface {
-	api.OpenStorageRoleServer
-
-	// Verify returns no error if the role exists and is allowed
-	// to run the requested method
-	Verify(ctx context.Context, roles []string, method string) error
+func TestUserInfoContext(t *testing.T) {
+	original := &UserInfo{
+		Username: "username",
+		Claims: Claims{
+			Subject: "subject",
+			Name:    "name",
+			Email:   "email",
+			Roles:   []string{"one", "two"},
+			Groups:  []string{"three", "four"},
+		},
+	}
+	ctx := ContextSaveUserInfo(context.Background(), original)
+	u, err := NewUserInfoFromContext(ctx)
+	assert.NoError(t, err)
+	assert.True(t, reflect.DeepEqual(u, original))
 }

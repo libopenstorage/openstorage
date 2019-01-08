@@ -55,6 +55,21 @@ type TLSConfig struct {
 	KeyFile string
 }
 
+// SecurityConfig provides configuration for SDK auth
+type SecurityConfig struct {
+	// Role implementation
+	Role role.RoleManager
+	// Tls configuration
+	Tls *TLSConfig
+	// Authenticators per issuer. You can register multple authenticators
+	// based on the "iss" string in the string. For example:
+	// map[string]auth.Authenticator {
+	//     "https://accounts.google.com": googleOidc,
+	//     "openstorage-sdk-auth: selfSigned,
+	// }
+	Authenticators map[string]auth.Authenticator
+}
+
 // ServerConfig provides the configuration to the SDK server
 type ServerConfig struct {
 	// Net is the transport for gRPC: unix, tcp, etc.
@@ -82,15 +97,10 @@ type ServerConfig struct {
 	DriverName string
 	// (optional) Cluster interface
 	Cluster cluster.Cluster
-	// Role implementation
-	// TODO: Group all security configurations under one struct
-	Role role.RoleManager
 	// AlertsFilterDeleter
 	AlertsFilterDeleter alerts.FilterDeleter
-	// Authentication configuration
-	Auth *auth.JwtAuthConfig
-	// Tls configuration
-	Tls *TLSConfig
+	// Security configuration
+	Security *SecurityConfig
 }
 
 // Server is an implementation of the gRPC SDK interface
@@ -117,11 +127,10 @@ type logger struct {
 type sdkGrpcServer struct {
 	*grpcserver.GrpcServer
 
-	restPort      string
-	lock          sync.RWMutex
-	name          string
-	authenticator auth.Authenticator
-	config        ServerConfig
+	restPort string
+	lock     sync.RWMutex
+	name     string
+	config   ServerConfig
 
 	// Loggers
 	log             *logrus.Entry
@@ -155,6 +164,11 @@ func New(config *ServerConfig) (*Server, error) {
 
 	if config == nil {
 		return nil, fmt.Errorf("Must provide configuration")
+	}
+
+	// If no security set, initialize the object as empty
+	if config.Security == nil {
+		config.Security = &SecurityConfig{}
 	}
 
 	// Check if the socket is provided to enable the REST gateway to communicate
@@ -196,7 +210,6 @@ func New(config *ServerConfig) (*Server, error) {
 	udsConfig := *config
 	udsConfig.Net = "unix"
 	udsConfig.Address = config.Socket
-	udsConfig.Tls = nil
 	udsServer, err := newSdkGrpcServer(&udsConfig)
 	if err != nil {
 		return nil, err
@@ -295,21 +308,13 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 	}
 
 	// Setup authentication
-	var authenticator auth.Authenticator
-	if config.Auth != nil {
-		authenticator, err = auth.New(config.Auth)
-		if err != nil {
-			return nil, err
-		}
+	for issuer, _ := range config.Security.Authenticators {
+		log.Infof("Authentication enabled for issuer: %s", issuer)
 
 		// Check the necessary security config options are set
-		if config.Role == nil {
+		if config.Security.Role == nil {
 			return nil, fmt.Errorf("Must supply role manager when authentication enabled")
 		}
-
-		log.Info(name + " authentication enabled")
-	} else {
-		log.Info(name + " authentication disabled")
 	}
 
 	// Create gRPC server
@@ -329,7 +334,6 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 		config:          *config,
 		name:            name,
 		log:             log,
-		authenticator:   authenticator,
 		clusterHandler:  config.Cluster,
 		driverHandler:   d,
 		alertHandler:    config.AlertsFilterDeleter,
@@ -365,7 +369,7 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 	s.clusterPairServer = &ClusterPairServer{
 		server: s,
 	}
-	s.roleServer = config.Role
+	s.roleServer = config.Security.Role
 
 	return s, nil
 }
@@ -376,8 +380,10 @@ func (s *sdkGrpcServer) Start() error {
 
 	// Setup https if certs have been provided
 	opts := make([]grpc.ServerOption, 0)
-	if s.config.Tls != nil {
-		creds, err := credentials.NewServerTLSFromFile(s.config.Tls.CertFile, s.config.Tls.KeyFile)
+	if s.config.Net != "unix" && s.config.Security.Tls != nil {
+		creds, err := credentials.NewServerTLSFromFile(
+			s.config.Security.Tls.CertFile,
+			s.config.Security.Tls.KeyFile)
 		if err != nil {
 			return fmt.Errorf("Failed to create credentials from cert files: %v", err)
 		}
@@ -388,7 +394,7 @@ func (s *sdkGrpcServer) Start() error {
 	}
 
 	// Setup authentication and authorization using interceptors if auth is enabled
-	if s.config.Auth != nil {
+	if len(s.config.Security.Authenticators) != 0 {
 		opts = append(opts, grpc.UnaryInterceptor(
 			grpc_middleware.ChainUnaryServer(
 				s.rwlockIntercepter,
@@ -421,7 +427,7 @@ func (s *sdkGrpcServer) Start() error {
 		api.RegisterOpenStorageAlertsServer(grpcServer, s.alertsServer)
 		api.RegisterOpenStorageClusterPairServer(grpcServer, s.clusterPairServer)
 
-		if s.config.Role != nil {
+		if s.config.Security.Role != nil {
 			api.RegisterOpenStorageRoleServer(grpcServer, s.roleServer)
 		}
 		return grpcServer

@@ -63,8 +63,8 @@ func (s *sdkRestGateway) Start() error {
 	go func() {
 		ready <- true
 		var err error
-		if s.config.Tls != nil {
-			err = s.server.ListenAndServeTLS(s.config.Tls.CertFile, s.config.Tls.KeyFile)
+		if s.config.Security.Tls != nil {
+			err = s.server.ListenAndServeTLS(s.config.Security.Tls.CertFile, s.config.Security.Tls.KeyFile)
 		} else {
 			err = s.server.ListenAndServe()
 		}

@@ -105,9 +105,11 @@ func newTestServer(t *testing.T) *testServer {
 		AlertsFilterDeleter: tester.a,
 		AccessOutput:        ioutil.Discard,
 		AuditOutput:         ioutil.Discard,
-		Tls: &TLSConfig{
-			CertFile: "test_certs/server-cert.pem",
-			KeyFile:  "test_certs/server-key.pem",
+		Security: &SecurityConfig{
+			Tls: &TLSConfig{
+				CertFile: "test_certs/server-cert.pem",
+				KeyFile:  "test_certs/server-key.pem",
+			},
 		},
 	})
 	assert.Nil(t, err)
@@ -243,9 +245,11 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 		AlertsFilterDeleter: alert,
 		AccessOutput:        ioutil.Discard,
 		AuditOutput:         ioutil.Discard,
-		Tls: &TLSConfig{
-			CertFile: "test_certs/server-cert.pem",
-			KeyFile:  "test_certs/server-key.pem",
+		Security: &SecurityConfig{
+			Tls: &TLSConfig{
+				CertFile: "test_certs/server-cert.pem",
+				KeyFile:  "test_certs/server-key.pem",
+			},
 		},
 	})
 	assert.Nil(t, err)
