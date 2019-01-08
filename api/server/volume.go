@@ -12,6 +12,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/errors"
+	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
@@ -108,6 +109,49 @@ func (vd *volAPI) parseParam(r *http.Request, param string) (string, error) {
 		return id, nil
 	}
 	return "", fmt.Errorf("could not parse %s", param)
+}
+
+func (vd *volAPI) nodeIPtoIds(nodes []string) ([]string, error) {
+	nodeIds := make([]string, 0)
+
+	// Get cluster instance
+	c, err := clustermanager.Inst()
+	if err != nil {
+		return nodeIds, err
+	}
+
+	if c == nil {
+		return nodeIds, fmt.Errorf("failed to get cluster instance.")
+	}
+
+	for _, idIp := range nodes {
+		if idIp != "" {
+			id, err := c.GetNodeIdFromIp(idIp)
+			if err != nil {
+				return nodeIds, err
+			}
+			nodeIds = append(nodeIds, id)
+		}
+	}
+
+	return nodeIds, err
+}
+
+// Convert any replica set node values which are IPs to the corresponding Node ID.
+// Update the replica set node list.
+func (vd *volAPI) updateReplicaSpecNodeIPstoIds(rspecRef *api.ReplicaSet) error {
+	if rspecRef != nil && len(rspecRef.Nodes) > 0 {
+		nodeIds, err := vd.nodeIPtoIds(rspecRef.Nodes)
+		if err != nil {
+			return err
+		}
+
+		if len(nodeIds) > 0 {
+			rspecRef.Nodes = nodeIds
+		}
+	}
+
+	return nil
 }
 
 // Creates a single volume with given spec.
@@ -233,8 +277,6 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	/* May need to add to SDK
-
 	if req.Locator != nil || req.Spec != nil {
 		if req.Spec != nil {
 			if err = vd.updateReplicaSpecNodeIPstoIds(req.Spec.ReplicaSet); err != nil {
@@ -244,7 +286,6 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 		}
 		err = d.Set(volumeID, req.Locator, req.Spec)
 	}
-	*/
 
 	for err == nil && req.Action != nil {
 		if req.Action.Attach != api.VolumeActionParam_VOLUME_ACTION_PARAM_NONE {
