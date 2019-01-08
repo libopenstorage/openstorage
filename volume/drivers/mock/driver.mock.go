@@ -137,10 +137,11 @@ func (mr *MockVolumeDriverMockRecorder) CloudBackupEnumerate(arg0 interface{}) *
 }
 
 // CloudBackupGroupCreate mocks base method
-func (m *MockVolumeDriver) CloudBackupGroupCreate(arg0 *api.CloudBackupGroupCreateRequest) error {
+func (m *MockVolumeDriver) CloudBackupGroupCreate(arg0 *api.CloudBackupGroupCreateRequest) (*api.CloudBackupGroupCreateResponse, error) {
 	ret := m.ctrl.Call(m, "CloudBackupGroupCreate", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(*api.CloudBackupGroupCreateResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // CloudBackupGroupCreate indicates an expected call of CloudBackupGroupCreate

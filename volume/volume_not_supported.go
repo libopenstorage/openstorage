@@ -145,8 +145,8 @@ func (cl *cloudBackupNotSupported) CloudBackupCreate(
 
 func (cl *cloudBackupNotSupported) CloudBackupGroupCreate(
 	input *api.CloudBackupGroupCreateRequest,
-) error {
-	return ErrNotSupported
+) (*api.CloudBackupGroupCreateResponse, error) {
+	return nil, ErrNotSupported
 }
 
 func (cl *cloudBackupNotSupported) CloudBackupRestore(
