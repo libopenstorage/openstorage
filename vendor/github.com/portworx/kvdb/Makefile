@@ -1,3 +1,7 @@
+ifndef PKGS
+PKGS := $(shell go list ./... 2>&1 | grep -v test)
+endif
+
 all: test
 
 deps:
@@ -36,25 +40,30 @@ errcheck: testdeps
 		github.com/portworx/kvdb \
 		github.com/portworx/kvdb/common \
 		github.com/portworx/kvdb/consul \
-		github.com/portworx/kvdb/etcd/v2 \
-		github.com/portworx/kvdb/etcd/v3 \
 		github.com/portworx/kvdb/mem
 
 pretest: errcheck lint vet
 
-gotest: testdeps
-	go test -v ./...
+gotest:
+	for pkg in $(PKGS); \
+		do \
+			go test --timeout 1h -v -tags unittest -coverprofile=profile.out -covermode=atomic $(BUILD_OPTIONS) $${pkg} || exit 1; \
+			if [ -f profile.out ]; then \
+				cat profile.out >> coverage.txt; \
+				rm profile.out; \
+			fi; \
+		done
 
 test: pretest gotest
 
 docker-build-kvdb-dev:
-	docker build -t adityadani/kvdb:dev -f $(GOPATH)/src/github.com/portworx/kvdb/Dockerfile.kvdb .
+	docker build -t portworx/kvdb:test_container -f $(GOPATH)/src/github.com/portworx/kvdb/Dockerfile.kvdb .
 
 docker-test:
 	docker run \
 		-v $(GOPATH)/src/github.com/portworx/kvdb:/go/src/github.com/portworx/kvdb \
-		adityadani/kvdb:dev \
-			go test -v --timeout 1h ./...
+		portworx/kvdb:test_container \
+		make gotest
 
 clean:
 	go clean -i ./...
