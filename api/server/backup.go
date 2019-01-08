@@ -50,12 +50,13 @@ func (vd *volAPI) cloudBackupGroupCreate(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err = d.CloudBackupGroupCreate(backupGroupReq)
+	createResp, err := d.CloudBackupGroupCreate(backupGroupReq)
 	if err != nil {
 		vd.sendError(method, backupGroupReq.GroupID, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+
+	json.NewEncoder(w).Encode(createResp)
 }
 
 func (vd *volAPI) cloudBackupRestore(w http.ResponseWriter, r *http.Request) {
