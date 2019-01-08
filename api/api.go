@@ -313,6 +313,11 @@ type CloudBackupRestoreRequest struct {
 	Name string
 }
 
+type CloudBackupGroupCreateResponse struct {
+	// Names of the tasks performing this group backup
+	Names []string
+}
+
 type CloudBackupRestoreResponse struct {
 	// RestoreVolumeID is the volumeID to which the backup is being restored
 	RestoreVolumeID string

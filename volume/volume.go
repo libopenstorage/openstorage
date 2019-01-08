@@ -147,7 +147,7 @@ type CloudBackupDriver interface {
 	// CloudBackupCreate uploads snapshot of a volume to the cloud
 	CloudBackupCreate(input *api.CloudBackupCreateRequest) (*api.CloudBackupCreateResponse, error)
 	// CloudBackupGroupCreate creates and then uploads volumegroup snapshots
-	CloudBackupGroupCreate(input *api.CloudBackupGroupCreateRequest) error
+	CloudBackupGroupCreate(input *api.CloudBackupGroupCreateRequest) (*api.CloudBackupGroupCreateResponse, error)
 	// CloudBackupRestore downloads a cloud backup and restores it to a volume
 	CloudBackupRestore(input *api.CloudBackupRestoreRequest) (*api.CloudBackupRestoreResponse, error)
 	// CloudBackupEnumerate enumerates the backups for a given cluster/credential/volumeID
