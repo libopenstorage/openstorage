@@ -507,6 +507,12 @@
 			"revisionTime": "2016-11-18T19:16:01Z"
 		},
 		{
+			"checksumSHA1": "3/JBQVvN2IjnJLuntaUGMJqKXPw=",
+			"path": "github.com/coreos/go-oidc",
+			"revision": "66476e0267012774b2f9767d2d37a317d1f1aac3",
+			"revisionTime": "2018-11-01T19:42:49Z"
+		},
+		{
 			"checksumSHA1": "butr+Orbf1fd1hcLqNXYwUDAjcI=",
 			"path": "github.com/coreos/go-semver/semver",
 			"revision": "8ab6407b697782a06568d4b7f1db25550ec2e4c6",
@@ -1461,6 +1467,18 @@
 			"revisionTime": "2018-01-04T01:57:43Z"
 		},
 		{
+			"checksumSHA1": "KxkAlLxQkuSGHH46Dxu6wpAybO4=",
+			"path": "github.com/pquerna/cachecontrol",
+			"revision": "1555304b9b35fdd2b425bccf1a5613677705e7d0",
+			"revisionTime": "2018-05-17T16:36:45Z"
+		},
+		{
+			"checksumSHA1": "wwaht1P9i8vQu6DqNvMEy24IMgY=",
+			"path": "github.com/pquerna/cachecontrol/cacheobject",
+			"revision": "1555304b9b35fdd2b425bccf1a5613677705e7d0",
+			"revisionTime": "2018-05-17T16:36:45Z"
+		},
+		{
 			"checksumSHA1": "hu0MsbTdFzZxNRyAxe2HmTFFFak=",
 			"path": "github.com/prometheus/client_golang/prometheus",
 			"revision": "5cec1d0429b02e4323e042eb04dafdb079ddf568",
@@ -1729,6 +1747,24 @@
 			"path": "golang.org/x/crypto/blowfish",
 			"revision": "b4956d363a8b14623cc81db401707679605930a3",
 			"revisionTime": "2018-01-17T06:40:05Z"
+		},
+		{
+			"checksumSHA1": "2LpxYGSf068307b7bhAuVjvzLLc=",
+			"path": "golang.org/x/crypto/ed25519",
+			"revision": "505ab145d0a99da450461ae2c1a9f6cd10d1f447",
+			"revisionTime": "2018-09-26T22:07:39Z"
+		},
+		{
+			"checksumSHA1": "0JTAFXPkankmWcZGQJGScLDiaN8=",
+			"path": "golang.org/x/crypto/ed25519/internal/edwards25519",
+			"revision": "505ab145d0a99da450461ae2c1a9f6cd10d1f447",
+			"revisionTime": "2018-09-26T22:07:39Z"
+		},
+		{
+			"checksumSHA1": "1MGpGDQqnUoRpv7VEcQrXOBydXE=",
+			"path": "golang.org/x/crypto/pbkdf2",
+			"revision": "505ab145d0a99da450461ae2c1a9f6cd10d1f447",
+			"revisionTime": "2018-09-26T22:07:39Z"
 		},
 		{
 			"checksumSHA1": "BGm8lKZmvJbf/YOJLeL1rw2WVjA=",
@@ -2143,6 +2179,24 @@
 			"path": "gopkg.in/jmcvetta/napping.v3",
 			"revision": "6c845f879618cc607cbc2bb1d8e817e618505341",
 			"revisionTime": "2016-02-12T23:58:06Z"
+		},
+		{
+			"checksumSHA1": "wMNF3SsJSGCd/niEpHwY/dtyjGY=",
+			"path": "gopkg.in/square/go-jose.v2",
+			"revision": "72415094398e2f013bf50b76fd6de36df47938ea",
+			"revisionTime": "2018-12-05T17:56:37Z"
+		},
+		{
+			"checksumSHA1": "Ho5sr2GbiR8S35IRni7vC54d5Js=",
+			"path": "gopkg.in/square/go-jose.v2/cipher",
+			"revision": "72415094398e2f013bf50b76fd6de36df47938ea",
+			"revisionTime": "2018-12-05T17:56:37Z"
+		},
+		{
+			"checksumSHA1": "JFun0lWY9eqd80Js2iWsehu1gc4=",
+			"path": "gopkg.in/square/go-jose.v2/json",
+			"revision": "72415094398e2f013bf50b76fd6de36df47938ea",
+			"revisionTime": "2018-12-05T17:56:37Z"
 		},
 		{
 			"checksumSHA1": "+OgOXBoiQ+X+C2dsAeiOHwBIEH0=",
