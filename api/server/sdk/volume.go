@@ -17,6 +17,9 @@ limitations under the License.
 package sdk
 
 import (
+	"context"
+
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/spec"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/volume"
@@ -34,4 +37,12 @@ func (s *VolumeServer) cluster() cluster.Cluster {
 
 func (s *VolumeServer) driver() volume.VolumeDriver {
 	return s.server.driver()
+}
+
+func (s *VolumeServer) checkAccessForVolumeId(ctx context.Context, volumeId string) error {
+	// Inspect will check access for us
+	_, err := s.Inspect(ctx, &api.SdkVolumeInspectRequest{
+		VolumeId: volumeId,
+	})
+	return err
 }

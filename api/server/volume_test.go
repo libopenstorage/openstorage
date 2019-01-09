@@ -10,6 +10,8 @@ import (
 
 	//	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func TestVolumeCreateSuccess(t *testing.T) {
@@ -57,6 +59,17 @@ func TestVolumeCreateSuccess(t *testing.T) {
 	assert.NotNil(t, r)
 	assert.Equal(t, req.GetLocator().GetName(), r.GetVolume().GetLocator().GetName())
 	assert.Equal(t, req.GetSpec().GetSize(), r.GetVolume().GetSpec().GetSize())
+
+	// Check ownership. We should be denied
+	ctx, err = contextWithToken(context.Background(), "anotheruser", "system.view", testSharedSecret)
+	assert.NoError(t, err)
+	r, err = volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
+		VolumeId: id,
+	})
+	assert.Error(t, err)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.PermissionDenied)
 }
 
 func TestVolumeCreateFailedToAuthenticate(t *testing.T) {

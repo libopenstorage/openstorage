@@ -42,7 +42,7 @@ type Claims struct {
 	Groups []string `json:"groups,omitempty" yaml:"groups,omitempty"`
 }
 
-// TokenType returns the type of token. Values are: os, oidc
+// TokenIssuer returns the type of token. Values are: os, oidc
 func TokenIssuer(rawtoken string) (string, error) {
 	parts := strings.Split(rawtoken, ".")
 

@@ -41,6 +41,11 @@ func (s *VolumeServer) SnapshotCreate(
 		return nil, status.Error(codes.InvalidArgument, "Must supply a name")
 	}
 
+	// Get access rights
+	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId()); err != nil {
+		return nil, err
+	}
+
 	readonly := true
 	snapshotID, err := s.driver().Snapshot(req.GetVolumeId(), readonly, &api.VolumeLocator{
 		Name:         req.GetName(),
@@ -74,6 +79,11 @@ func (s *VolumeServer) SnapshotRestore(
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
 	} else if len(req.GetSnapshotId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply snapshot id")
+	}
+
+	// Get access rights
+	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId()); err != nil {
+		return nil, err
 	}
 
 	err := s.driver().Restore(req.GetVolumeId(), req.GetSnapshotId())
@@ -133,6 +143,11 @@ func (s *VolumeServer) SnapshotEnumerateWithFilters(
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
+	// Get access rights
+	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId()); err != nil {
+		return nil, err
+	}
+
 	snapshots, err := s.driver().SnapEnumerate([]string{req.GetVolumeId()}, req.GetLabels())
 	if err != nil {
 		return nil, status.Errorf(
@@ -166,6 +181,15 @@ func (s *VolumeServer) SnapshotScheduleUpdate(
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
 	}
 
+	// Get volume specification
+	// This checks for access also
+	resp, err := s.Inspect(ctx, &api.SdkVolumeInspectRequest{
+		VolumeId: req.GetVolumeId(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	// Determine if they exist
 	for _, name := range req.GetSnapshotScheduleNames() {
 		_, err := s.cluster().SchedPolicyGet(name)
@@ -175,14 +199,6 @@ func (s *VolumeServer) SnapshotScheduleUpdate(
 				"Error accessing schedule policy %s: %v",
 				name, err)
 		}
-	}
-
-	// Get volume specification
-	resp, err := s.Inspect(ctx, &api.SdkVolumeInspectRequest{
-		VolumeId: req.GetVolumeId(),
-	})
-	if err != nil {
-		return nil, err
 	}
 
 	// Apply names to snapshot schedule in the Volume specification

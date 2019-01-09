@@ -63,3 +63,10 @@ func getUsername(usernameClaim UsernameClaimType, claims *Claims) string {
 	}
 	return claims.Subject
 }
+
+// AuthorizationEnabled returns true if the storage system has authorization
+// and authentication enabled.
+func AuthorizationEnabled(ctx context.Context) bool {
+	_, ok := NewUserInfoFromContext(ctx)
+	return ok
+}

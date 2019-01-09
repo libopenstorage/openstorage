@@ -30,14 +30,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// Keys to store data in gRPC context. Use these keys to retrieve
-// the data from the gRPC context
-type InterceptorContextkey string
-
 const (
-	// Key to store in the token claims in gRPC context
-	InterceptorContextTokenKey InterceptorContextkey = "tokenclaims"
-
 	// Metedata context key where the token is found.
 	// This key must be used by the caller as the key for the token in
 	// the metedata of the context. The generated Rest Gateway also uses this
@@ -79,7 +72,8 @@ func (s *sdkGrpcServer) auth(ctx context.Context) (context.Context, error) {
 		claims, err = authenticator.AuthenticateToken(ctx, token)
 		if err == nil {
 			// Add authorization information back into the context so that other
-			// functions can get access to this information
+			// functions can get access to this information.
+			// If this is in the context is how functions will know that security is enabled.
 			ctx = auth.ContextSaveUserInfo(ctx, &auth.UserInfo{
 				Username: authenticator.Username(claims),
 				Claims:   *claims,
@@ -126,9 +120,11 @@ func (s *sdkGrpcServer) authorizationServerInterceptor(
 	info *grpc.UnaryServerInfo,
 	handler grpc.UnaryHandler,
 ) (interface{}, error) {
-	userinfo, err := auth.NewUserInfoFromContext(ctx)
-	if err != nil {
-		return nil, err
+	userinfo, ok := auth.NewUserInfoFromContext(ctx)
+	if !ok {
+		return nil, status.Error(
+			codes.Internal,
+			"Unable to authorize user because token is missing from context")
 	}
 	claims := &userinfo.Claims
 
@@ -147,13 +143,28 @@ func (s *sdkGrpcServer) authorizationServerInterceptor(
 
 	// Authorize
 	if err := s.roleServer.Verify(ctx, claims.Roles, info.FullMethod); err != nil {
-		logger.Infof("Access denied")
+		logger.Warning("Access denied")
 		return nil, status.Errorf(
 			codes.PermissionDenied,
 			"Access to %s denied: %v",
 			info.FullMethod, err)
 	}
 
+	// Execute the command
+	i, err := handler(ctx, req)
+
+	// Check if we have been denied
+	if err != nil {
+		if gErr, ok := status.FromError(err); ok {
+			if gErr.Code() == codes.PermissionDenied {
+				logger.Warningf("Access denied: %v", err)
+				return i, err
+			}
+		}
+	}
+
+	// Log
 	logger.Info("Authorized")
-	return handler(ctx, req)
+
+	return i, err
 }

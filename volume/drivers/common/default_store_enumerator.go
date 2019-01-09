@@ -184,6 +184,15 @@ func match(
 	if locator == nil {
 		return hasSubset(v.Locator.VolumeLabels, volumeLabels)
 	}
+	if locator.GetOwnership() != nil {
+		// They asked to match an ownership. Now check if the volume has it
+		// and if it matches.
+		// Keep these separate if statements to make it readable.
+		if v.GetSpec().GetOwnership() == nil ||
+			!v.GetSpec().GetOwnership().IsMatch(locator.GetOwnership()) {
+			return false
+		}
+	}
 	if locator.Name != "" && v.Locator.Name != locator.Name {
 		return false
 	}

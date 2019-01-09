@@ -237,7 +237,7 @@ func TestSdkVolumeDeleteReturnOkWhenVolumeNotFound(t *testing.T) {
 	s.MockDriver().
 		EXPECT().
 		Inspect([]string{id}).
-		Return(nil, volume.ErrEnoEnt).
+		Return(nil, kvdb.ErrNotFound).
 		Times(1)
 
 	// Setup client
@@ -518,6 +518,15 @@ func TestSdkVolumeStats(t *testing.T) {
 
 	s.MockDriver().
 		EXPECT().
+		Inspect([]string{id}).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id: id,
+			},
+		}, nil).
+		Times(1)
+	s.MockDriver().
+		EXPECT().
 		Stats(id, cumulative).
 		Return(&api.Stats{
 			Reads: 12345,
@@ -571,6 +580,16 @@ func TestSdkVolumeCapacityUsage(t *testing.T) {
 	resp.CapacityUsageInfo.ExclusiveBytes = 12000
 	resp.CapacityUsageInfo.SharedBytes = 345
 	resp.CapacityUsageInfo.TotalBytes = 12345
+
+	s.MockDriver().
+		EXPECT().
+		Inspect([]string{id}).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id: id,
+			},
+		}, nil).
+		Times(1)
 	s.MockDriver().
 		EXPECT().
 		CapacityUsage(id).
@@ -602,6 +621,16 @@ func TestSdkVolumeCapacityUsageAbortedResult(t *testing.T) {
 	resp.CapacityUsageInfo.SharedBytes = 0
 	resp.CapacityUsageInfo.TotalBytes = 12345
 	resp.Error = volume.ErrAborted
+
+	s.MockDriver().
+		EXPECT().
+		Inspect([]string{id}).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id: id,
+			},
+		}, nil).
+		Times(1)
 	s.MockDriver().
 		EXPECT().
 		CapacityUsage(id).
@@ -635,6 +664,16 @@ func TestSdkVolumeCapacityUsageUnimplementedResult(t *testing.T) {
 	resp.CapacityUsageInfo.SharedBytes = 0
 	resp.CapacityUsageInfo.TotalBytes = 12345
 	resp.Error = volume.ErrNotSupported
+
+	s.MockDriver().
+		EXPECT().
+		Inspect([]string{id}).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id: id,
+			},
+		}, nil).
+		Times(1)
 	s.MockDriver().
 		EXPECT().
 		CapacityUsage(id).
