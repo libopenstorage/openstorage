@@ -50,7 +50,8 @@ assert_attached(){
 }
 
 # Generate shared secret
-make install
+make install || exit 1
+
 token=$($GOPATH/bin/osd-token-generator \
   --auth-config=hack/sdk-auth-sample.yml \
   --shared-secret=testsecret)
@@ -63,7 +64,8 @@ sudo -E $GOPATH/bin/osd \
 	--jwt-shared-secret=testsecret \
 	--sdkrestport 9116 &
 jobs -l
-sleep 3
+timeout 30 sh -c "until curl --silent -H \"Authorization:bearer $token\" -X GET -d {} http://localhost:9116/v1/clusters/inspectcurrent | grep STATUS_OK; do sleep 1; done"
+assert_success
 
 # Test & assert
 volume_name=$(sudo docker volume create -d fake -o size=1234 -o token=$token)
@@ -79,7 +81,7 @@ assert_attached false
 
 # Run app with our  volume
 app_name="APP_TEST_$volume_name"
-sudo docker run -d --name $app_name --volume-driver fake -v size=12345,token=$token,name=${volume_name}_new:/app nginx:latest
+sudo docker run -d --name $app_name --volume-driver fake -v size=12345,token=$token,name=${volume_name}:/app nginx:latest
 assert_success
 assert_attached true
 
@@ -87,6 +89,15 @@ assert_attached true
 sudo docker stop $app_name
 assert_success
 assert_attached false
+
+# Remove volume
+sudo docker rm $app_name
+assert_success
+sudo docker volume rm token=$token,name=$volume_name
+assert_success
+volume_id=$(curl -X POST "http://localhost:9116/v1/volumes/filters" -H "accept: application/json" -H "Content-Type:application/json" -H "Authorization:bearer $token" -d "{ \"name\": \"$volume_name\"}")
+test $volume_id = "{}"
+assert_success
 
 # Cleanup
 echo "Docker integration tests passed, cleaning up!"

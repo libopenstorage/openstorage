@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"sync"
+	"time"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/spec"
@@ -35,6 +36,7 @@ type driver struct {
 	sdkUds string
 	conn   *grpc.ClientConn
 	mu     sync.Mutex
+	cookie *CookieOnce
 }
 
 type handshakeResp struct {
@@ -78,6 +80,7 @@ func newVolumePlugin(name, sdkUds string) restServer {
 		restBase:    restBase{name: name, version: "0.3"},
 		SpecHandler: spec.NewSpecHandler(),
 		sdkUds:      sdkUds,
+		cookie:      NewCookieOnce(1 * time.Minute),
 	}
 	return d
 }
@@ -114,7 +117,8 @@ func (d *driver) Routes() []*Route {
 		{verb: "POST", path: volDriverPath("Path"), fn: d.path},
 		{verb: "POST", path: volDriverPath("List"), fn: d.list},
 		{verb: "POST", path: volDriverPath("Get"), fn: d.get},
-		{verb: "POST", path: volDriverPath("Unmount"), fn: d.unmount},
+		// Run in insecure mode until we figure out how to secure using another model
+		{verb: "POST", path: volDriverPath("Unmount"), fn: d.unmountInsecure},
 		{verb: "POST", path: volDriverPath("Capabilities"), fn: d.capabilities},
 		{verb: "POST", path: "/Plugin.Activate", fn: d.handshake},
 		{verb: "GET", path: "/status", fn: d.status},
@@ -215,23 +219,37 @@ func (d *driver) handshake(w http.ResponseWriter, r *http.Request) {
 	d.logRequest("handshake", "").Debugln("Handshake completed")
 }
 
-func (d *driver) attachToken(ctx context.Context, request *volumeRequest) context.Context {
+func (d *driver) attachToken(ctx context.Context, request *volumeRequest) (context.Context, string) {
 	token, tokenInName := d.GetTokenFromString(request.Name)
 	if !tokenInName {
 		token = request.Opts[api.Token]
 	}
+	if len(token) == 0 {
+		token, _ = d.cookie.Pop(request.Name)
+	}
+	if len(token) == 0 {
+		return ctx, ""
+	}
+
 	md := metadata.New(map[string]string{
 		"authorization": "bearer " + token,
 	})
-	return metadata.NewOutgoingContext(ctx, md)
+	return metadata.NewOutgoingContext(ctx, md), token
 }
 
-func (d *driver) attachTokenMount(ctx context.Context, request *mountRequest) context.Context {
+func (d *driver) attachTokenMount(ctx context.Context, request *mountRequest) (context.Context, string) {
 	token, _ := d.GetTokenFromString(request.Name)
+	if len(token) == 0 {
+		token, _ = d.cookie.Pop(request.Name)
+	}
+	if len(token) == 0 {
+		return ctx, ""
+	}
+
 	md := metadata.New(map[string]string{
 		"authorization": "bearer " + token,
 	})
-	return metadata.NewOutgoingContext(ctx, md)
+	return metadata.NewOutgoingContext(ctx, md), token
 }
 
 func (d *driver) status(w http.ResponseWriter, r *http.Request) {
@@ -266,7 +284,7 @@ func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// attach token in context metadata
-	ctx = d.attachToken(ctx, request)
+	ctx, _ = d.attachToken(ctx, request)
 
 	// get spec for volume creation
 	specParsed, spec, locator, source, name := d.SpecFromString(request.Name)
@@ -319,7 +337,7 @@ func (d *driver) remove(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// attach token in context metadata
-	ctx = d.attachToken(ctx, request)
+	ctx, _ = d.attachToken(ctx, request)
 
 	// get name for deletion
 	_, _, _, _, name := d.SpecFromString(request.Name)
@@ -378,7 +396,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 	attachOptions := d.attachOptionsFromSpec(spec)
 
 	// attach token in context metadata
-	ctx = d.attachTokenMount(ctx, request)
+	ctx, _ = d.attachTokenMount(ctx, request)
 
 	// get grpc connection
 	conn, err := d.getConn()
@@ -426,7 +444,8 @@ func (d *driver) path(w http.ResponseWriter, r *http.Request) {
 	var response volumePathResponse
 
 	// attach token in context metadata
-	ctx = d.attachToken(ctx, request)
+	var token string
+	ctx, token = d.attachToken(ctx, request)
 
 	// get grpc connection
 	conn, err := d.getConn()
@@ -444,12 +463,18 @@ func (d *driver) path(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Save the cookie
+	if len(token) != 0 {
+		d.cookie.Push(name, token)
+	}
+
 	d.logRequest(method, name).Debugf("")
 	if len(vol.AttachPath) == 0 || len(vol.AttachPath) == 0 {
 		e := d.volNotMounted(method, name)
 		d.errorResponse(method, w, e)
 		return
 	}
+
 	response.Mountpoint = vol.AttachPath[0]
 	response.Mountpoint = path.Join(response.Mountpoint, config.DataDir)
 	d.logRequest(method, request.Name).Debugf("response %v", response.Mountpoint)
@@ -465,7 +490,7 @@ func (d *driver) list(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// attach token in context metadata
-	ctx = d.attachToken(ctx, request)
+	ctx, _ = d.attachToken(ctx, request)
 
 	// get grpc connection
 	conn, err := d.getConn()
@@ -507,7 +532,8 @@ func (d *driver) get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// attach token in context metadata
-	ctx = d.attachToken(ctx, request)
+	var token string
+	ctx, token = d.attachToken(ctx, request)
 
 	// get name from the request
 	parsed, _, _, _, name := d.SpecFromString(request.Name)
@@ -534,6 +560,11 @@ func (d *driver) get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Save the cookie
+	if len(token) != 0 {
+		d.cookie.Push(name, token)
+	}
+
 	// create response info
 	volInfo := volumeInfo{Name: returnName}
 	if len(vol.AttachPath) > 0 || len(vol.AttachPath) > 0 {
@@ -543,7 +574,66 @@ func (d *driver) get(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]volumeInfo{"Volume": volInfo})
 }
 
+func (d *driver) unmountInsecure(w http.ResponseWriter, r *http.Request) {
+	method := "unmount"
+
+	v, err := volumedrivers.Get(d.name)
+	if err != nil {
+		d.logRequest(method, "").Warnf(
+			"Cannot locate volume driver: %v",
+			err.Error())
+		d.errorResponse(method, w, err)
+		return
+	}
+
+	request, err := d.decodeMount(method, w, r)
+	if err != nil {
+		return
+	}
+
+	_, _, _, _, name := d.SpecFromString(request.Name)
+	vol, err := d.volFromName(name)
+	if err != nil {
+		e := d.volNotFound(method, name, err, w)
+		d.errorResponse(method, w, e)
+		return
+	}
+
+	mountpoint := d.mountpath(name)
+	id := vol.Id
+	if vol.Spec.Scale > 1 {
+		id = v.MountedAt(mountpoint)
+		if len(id) == 0 {
+			err := fmt.Errorf("Failed to find volume mapping for %v",
+				mountpoint)
+			d.logRequest(method, request.Name).Warnf(
+				"Cannot unmount volume %v, %v",
+				mountpoint, err)
+			d.errorResponse(method, w, err)
+			return
+		}
+	}
+
+	opts := make(map[string]string)
+	opts[options.OptionsDeleteAfterUnmount] = "true"
+
+	err = v.Unmount(id, mountpoint, opts)
+	if err != nil {
+		d.logRequest(method, request.Name).Warnf(
+			"Cannot unmount volume %v, %v",
+			mountpoint, err)
+		d.errorResponse(method, w, err)
+		return
+	}
+
+	if v.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
+		_ = v.Detach(id, nil)
+	}
+	d.emptyResponse(w)
+}
+
 func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
+
 	method := "unmount"
 	ctx := r.Context()
 	request, err := d.decodeMount(method, w, r)
@@ -552,7 +642,7 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// attach token in context metadata
-	ctx = d.attachTokenMount(ctx, request)
+	ctx, _ = d.attachTokenMount(ctx, request)
 
 	// get name from the request
 	_, _, _, _, name := d.SpecFromString(request.Name)
@@ -603,4 +693,41 @@ func (d *driver) capabilities(w http.ResponseWriter, r *http.Request) {
 	response.Capabilities.Scope = "global"
 	d.logRequest(method, "").Infof("response %v", response.Capabilities.Scope)
 	json.NewEncoder(w).Encode(&response)
+}
+
+type CookieOnce struct {
+	lock   sync.Mutex
+	cookie map[string]string
+	ttl    time.Duration
+}
+
+func NewCookieOnce(ttl time.Duration) *CookieOnce {
+	return &CookieOnce{
+		cookie: make(map[string]string),
+		ttl:    ttl,
+	}
+}
+
+func (c *CookieOnce) Pop(key string) (string, bool) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	if val, ok := c.cookie[key]; ok {
+		delete(c.cookie, key)
+		return val, true
+	}
+	return "", false
+}
+
+func (c *CookieOnce) Push(key, val string) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	c.cookie[key] = val
+
+	// Start timer to remove key
+	go func() {
+		time.Sleep(c.ttl)
+		c.Pop(key)
+	}()
 }
