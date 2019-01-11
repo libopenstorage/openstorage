@@ -17,131 +17,49 @@ limitations under the License.
 package auth
 
 import (
-	"encoding/json"
-	"fmt"
-	"strings"
+	"context"
+)
 
-	jwt "github.com/dgrijalva/jwt-go"
+// UsernameClaimType holds the claims type to be use as the unique id for the user
+type UsernameClaimType string
+
+const (
+	// default type is sub
+	UsernameClaimTypeDefault UsernameClaimType = ""
+	// UsernameClaimTypeSubject requests to use "sub" as the claims for the
+	// ID of the user
+	UsernameClaimTypeSubject UsernameClaimType = "sub"
+	// UsernameClaimTypeEmail requests to use "name" as the claims for the
+	// ID of the user
+	UsernameClaimTypeEmail UsernameClaimType = "email"
+	// UsernameClaimTypeName requests to use "name" as the claims for the
+	// ID of the user
+	UsernameClaimTypeName UsernameClaimType = "name"
 )
 
 var (
-	// Required claim keys. Please see openstorage-sdk-auth for more information
-	requiredClaims = []string{"exp", "iat", "name", "email"}
+	// Required claim keys
+	requiredClaims = []string{"iss", "sub", "exp", "iat", "name", "email"}
 )
 
 // Authenticator interface validates and extracts the claims from a raw token
 type Authenticator interface {
-	AuthenticateToken(string) (*Claims, error)
+	// AuthenticateToken validates the token and returns the claims
+	AuthenticateToken(context.Context, string) (*Claims, error)
+
+	// Username returns the unique id according to the configuration. Default
+	// it will return the value for "sub" in the token claims, but it can be
+	// configured to return the email or name as the unique id.
+	Username(*Claims) string
 }
 
-// JwtAuthConfig provides JwtAuthenticator the keys to validate the token
-type JwtAuthConfig struct {
-	SharedSecret  []byte
-	RsaPublicPem  []byte
-	ECDSPublicPem []byte
-}
-
-// JwtAuthenticator definition. It contains the raw bytes of the keys and their
-// objects as returned by the Jwt package
-type JwtAuthenticator struct {
-	config          JwtAuthConfig
-	rsaKey          interface{}
-	ecdsKey         interface{}
-	sharedSecretKey interface{}
-}
-
-// New returns a JwtAuthenticator
-func New(config *JwtAuthConfig) (*JwtAuthenticator, error) {
-
-	if config == nil {
-		return nil, fmt.Errorf("Must provide configuration")
+// utility function to get username
+func getUsername(usernameClaim UsernameClaimType, claims *Claims) string {
+	switch usernameClaim {
+	case UsernameClaimTypeEmail:
+		return claims.Email
+	case UsernameClaimTypeName:
+		return claims.Name
 	}
-
-	// Check at least one is set
-	if len(config.SharedSecret) == 0 &&
-		len(config.RsaPublicPem) == 0 &&
-		len(config.ECDSPublicPem) == 0 {
-		return nil, fmt.Errorf("Server was passed empty authentication information with no shared secret or pem files set")
-	}
-
-	authenticator := &JwtAuthenticator{
-		config: *config,
-	}
-
-	var err error
-	if len(config.SharedSecret) != 0 {
-		authenticator.sharedSecretKey = config.SharedSecret
-	}
-	if len(config.RsaPublicPem) != 0 {
-		authenticator.rsaKey, err = jwt.ParseRSAPublicKeyFromPEM(config.RsaPublicPem)
-		if err != nil {
-			return nil, fmt.Errorf("Unable to parse rsa public key: %v", err)
-		}
-	}
-	if len(config.ECDSPublicPem) != 0 {
-		authenticator.ecdsKey, err = jwt.ParseECPublicKeyFromPEM(config.ECDSPublicPem)
-		if err != nil {
-			return nil, fmt.Errorf("Unable to parse ecds public key: %v", err)
-		}
-	}
-
-	return authenticator, nil
-}
-
-// AuthenticateToken determines if a token is valid and if it is, returns
-// the information in the claims.
-func (j *JwtAuthenticator) AuthenticateToken(rawtoken string) (*Claims, error) {
-
-	// Parse token
-	token, err := jwt.Parse(rawtoken, func(token *jwt.Token) (interface{}, error) {
-
-		// Verify Method
-		if strings.HasPrefix(token.Method.Alg(), "RS") {
-			// RS256, RS384, or RS512
-			return j.rsaKey, nil
-		} else if strings.HasPrefix(token.Method.Alg(), "ES") {
-			// ES256, ES384, or ES512
-			return j.ecdsKey, nil
-		} else if strings.HasPrefix(token.Method.Alg(), "HS") {
-			// HS256, HS384, or HS512
-			return j.sharedSecretKey, nil
-		}
-		return nil, fmt.Errorf("Unknown token algorithm: %s", token.Method.Alg())
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	if !token.Valid {
-		return nil, fmt.Errorf("Token failed validation")
-	}
-
-	// Get claims
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if claims == nil || !ok {
-		return nil, fmt.Errorf("No claims found in token")
-	}
-
-	// Check for required claims
-	for _, requiredClaim := range requiredClaims {
-		if _, ok := claims[requiredClaim]; !ok {
-			// Claim missing
-			return nil, fmt.Errorf("Required claim %v missing from token", requiredClaim)
-		}
-	}
-
-	// Token now has been verified.
-	// Claims holds all the authorization information.
-	// Here we need to first decode it then unmarshal it from JSON
-	parts := strings.Split(token.Raw, ".")
-	claimBytes, err := jwt.DecodeSegment(parts[1])
-	if err != nil {
-		return nil, fmt.Errorf("Failed to decode claims: %v", err)
-	}
-	var sdkClaims Claims
-	err = json.Unmarshal(claimBytes, &sdkClaims)
-	if err != nil {
-		return nil, fmt.Errorf("Unable to get sdkclaims: %v", err)
-	}
-	return &sdkClaims, nil
+	return claims.Subject
 }

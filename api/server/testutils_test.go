@@ -129,6 +129,10 @@ func newTestServerSdk(t *testing.T) *testServer {
 	assert.NoError(t, err)
 
 	os.Remove(testSdkSock)
+	selfsignedJwt, err := auth.NewJwtAuth(&auth.JwtAuthConfig{
+		SharedSecret: []byte(testSharedSecret),
+	})
+	assert.NoError(t, err)
 	tester.sdk, err = sdk.New(&sdk.ServerConfig{
 		DriverName:   "fake",
 		Net:          "tcp",
@@ -138,9 +142,11 @@ func newTestServerSdk(t *testing.T) *testServer {
 		Socket:       testSdkSock,
 		AccessOutput: ioutil.Discard,
 		AuditOutput:  ioutil.Discard,
-		Role:         rm,
-		Auth: &auth.JwtAuthConfig{
-			SharedSecret: []byte(testSharedSecret),
+		Security: &sdk.SecurityConfig{
+			Role: rm,
+			Authenticators: map[string]auth.Authenticator{
+				"testcode": selfsignedJwt,
+			},
 		},
 	})
 	assert.Nil(t, err)
@@ -255,9 +261,10 @@ func (s *testServer) Stop() {
 
 func createToken(name, role, secret string) (string, error) {
 	claims := &sdkauth.Claims{
-		Name:  name,
-		Email: "test@openstorage",
-		Role:  role,
+		Issuer: "testcode",
+		Name:   name,
+		Email:  "test@openstorage",
+		Roles:  []string{role},
 	}
 	signature := &sdkauth.Signature{
 		Key:  []byte(secret),

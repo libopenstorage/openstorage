@@ -28,5 +28,5 @@ type RoleManager interface {
 
 	// Verify returns no error if the role exists and is allowed
 	// to run the requested method
-	Verify(ctx context.Context, role, method string) error
+	Verify(ctx context.Context, roles []string, method string) error
 }

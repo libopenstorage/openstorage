@@ -114,6 +114,49 @@ func main() {
 			Usage: "Cluster id",
 			Value: "openstorage.cluster",
 		},
+		cli.StringFlag{
+			Name:  "tls-cert-file",
+			Usage: "TLS Cert file path",
+		},
+		cli.StringFlag{
+			Name:  "tls-key-file",
+			Usage: "TLS Key file path",
+		},
+		cli.StringFlag{
+			Name: "username-claim",
+			Usage: "Claim key from the token to use as the unique id of the ." +
+				"user. Values can be only 'sub', 'email', or 'name'",
+			Value: "sub",
+		},
+		cli.StringFlag{
+			Name:  "oidc-issuer",
+			Usage: "OIDC Issuer,e.g. https://accounts.google.com",
+		},
+		cli.StringFlag{
+			Name:  "oidc-client-id",
+			Usage: "OIDC Client ID provided by issuer",
+		},
+		cli.BoolFlag{
+			Name:  "oidc-skip-client-id-check",
+			Usage: "OIDC skip verification of client id in the token",
+		},
+		cli.StringFlag{
+			Name:  "jwt-issuer",
+			Usage: "JSON Web Token issuer",
+			Value: "openstorage.io",
+		},
+		cli.StringFlag{
+			Name:  "jwt-shared-secret",
+			Usage: "JSON Web Token shared secret",
+		},
+		cli.StringFlag{
+			Name:  "jwt-rsa-pubkey-file",
+			Usage: "JSON Web Token RSA Public file path",
+		},
+		cli.StringFlag{
+			Name:  "jwt-ecds-pubkey-file",
+			Usage: "JSON Web Token ECDS Public file path",
+		},
 	}
 	app.Action = wrapAction(start)
 	app.Commands = []cli.Command{
@@ -346,9 +389,29 @@ func start(c *cli.Context) error {
 			return fmt.Errorf("Failed to create a role manager")
 		}
 
+		// Get authenticators
+		authenticators := make(map[string]auth.Authenticator)
+		selfSigned, err := selfSignedAuth(c)
+		if err != nil {
+			logrus.Fatalf("Failed to create self signed config: %v", err)
+		} else if selfSigned != nil {
+			authenticators[c.String("jwt-issuer")] = selfSigned
+		}
+
+		oidcAuth, err := oidcAuth(c)
+		if err != nil {
+			logrus.Fatalf("Failed to create self signed config: %v", err)
+		} else if oidcAuth != nil {
+			authenticators[c.String("oidc-issuer")] = oidcAuth
+		}
+
+		tlsConfig, err := setupSdkTls(c)
+		if err != nil {
+			logrus.Fatalf("Failed to access TLS file information: %v", err)
+		}
+
 		// Start SDK Server for this driver
 		os.Remove(sdksocket)
-
 		sdkServer, err := sdk.New(&sdk.ServerConfig{
 			Net:        "tcp",
 			Address:    ":" + c.String("sdkport"),
@@ -356,9 +419,11 @@ func start(c *cli.Context) error {
 			Socket:     sdksocket,
 			DriverName: d,
 			Cluster:    cm,
-			Role:       rm,
-			Auth:       setupAuth(),
-			Tls:        setupSdkTls(),
+			Security: &sdk.SecurityConfig{
+				Role:           rm,
+				Tls:            tlsConfig,
+				Authenticators: authenticators,
+			},
 		})
 		if err != nil {
 			return fmt.Errorf("Failed to start SDK server for driver %s: %v", d, err)
@@ -421,20 +486,25 @@ func wrapAction(f func(*cli.Context) error) func(*cli.Context) {
 	}
 }
 
-func setupAuth() *auth.JwtAuthConfig {
+func selfSignedAuth(c *cli.Context) (*auth.JwtAuthenticator, error) {
 	var err error
-	rsaFile := os.Getenv("OPENSTORAGE_AUTH_RSA_PUBKEY")
-	ecdsFile := os.Getenv("OPENSTORAGE_AUTH_ECDS_PUBKEY")
-	sharedsecret := os.Getenv("OPENSTORAGE_AUTH_SHAREDSECRET")
+
+	rsaFile := getConfigVar(os.Getenv("OPENSTORAGE_AUTH_RSA_PUBKEY"),
+		c.String("jwt-rsa-pubkey-file"))
+	ecdsFile := getConfigVar(os.Getenv("OPENSTORAGE_AUTH_ECDS_PUBKEY"),
+		c.String("jwt-ecds-pubkey-file"))
+	sharedsecret := getConfigVar(os.Getenv("OPENSTORAGE_AUTH_SHAREDSECRET"),
+		c.String("jwt-shared-secret"))
 
 	if len(rsaFile) == 0 &&
 		len(ecdsFile) == 0 &&
 		len(sharedsecret) == 0 {
-		return nil
+		return nil, nil
 	}
 
 	authConfig := &auth.JwtAuthConfig{
-		SharedSecret: []byte(sharedsecret),
+		SharedSecret:  []byte(sharedsecret),
+		UsernameClaim: auth.UsernameClaimType(c.String("username-claim")),
 	}
 
 	// Read RSA file
@@ -453,19 +523,45 @@ func setupAuth() *auth.JwtAuthConfig {
 		}
 	}
 
-	return authConfig
+	return auth.NewJwtAuth(authConfig)
 }
 
-func setupSdkTls() *sdk.TLSConfig {
-	certFile := os.Getenv("OPENSTORAGE_CERTFILE")
-	keyFile := os.Getenv("OPENSTORAGE_KEYFILE")
+func oidcAuth(c *cli.Context) (*auth.OIDCAuthenticator, error) {
+
+	if len(c.String("oidc-issuer")) == 0 ||
+		len(c.String("oidc-client-id")) == 0 {
+		return nil, nil
+	}
+
+	return auth.NewOIDC(&auth.OIDCAuthConfig{
+		Issuer:            c.String("oidc-issuer"),
+		ClientID:          c.String("oidc-client-id"),
+		SkipClientIDCheck: c.Bool("oidc-skip-client-id-check"),
+		UsernameClaim:     auth.UsernameClaimType(c.String("username-claim")),
+	})
+}
+
+func setupSdkTls(c *cli.Context) (*sdk.TLSConfig, error) {
+
+	certFile := getConfigVar(os.Getenv("OPENSTORAGE_CERTFILE"),
+		c.String("tls-cert-file"))
+	keyFile := getConfigVar(os.Getenv("OPENSTORAGE_KEYFILE"),
+		c.String("tls-key-file"))
+
 	if len(certFile) != 0 && len(keyFile) != 0 {
 		logrus.Infof("TLS %s and %s", certFile, keyFile)
 		return &sdk.TLSConfig{
 			CertFile: certFile,
 			KeyFile:  keyFile,
-		}
+		}, nil
 	}
 
-	return nil
+	return nil, nil
+}
+
+func getConfigVar(envVar, cliVar string) string {
+	if len(envVar) != 0 {
+		return envVar
+	}
+	return cliVar
 }

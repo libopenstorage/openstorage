@@ -302,21 +302,24 @@ func (r *SdkRoleManager) Update(
 }
 
 // Verify determines if the role has access to `fullmethod`
-func (r *SdkRoleManager) Verify(ctx context.Context, role, fullmethod string) error {
-	// Get the role rules
-	resp, err := r.Inspect(ctx, &api.SdkRoleInspectRequest{
-		Name: role,
-	})
-	if err != nil {
-		return err
-	} else if resp == nil || resp.GetRole() == nil {
-		return status.Error(codes.Internal, "Received empty data from database while retrieving role")
+func (r *SdkRoleManager) Verify(ctx context.Context, roles []string, fullmethod string) error {
+
+	// Check all roles
+	for _, role := range roles {
+		// Get the role rules
+		resp, err := r.Inspect(ctx, &api.SdkRoleInspectRequest{
+			Name: role,
+		})
+		if err != nil || resp == nil || resp.GetRole() == nil {
+			continue
+		}
+
+		if err := r.verifyRules(resp.GetRole().GetRules(), fullmethod); err == nil {
+			return nil
+		}
 	}
 
-	if err := r.verifyRules(resp.GetRole().GetRules(), fullmethod); err != nil {
-		return status.Errorf(codes.PermissionDenied, "Access denied to role %s", role)
-	}
-	return nil
+	return status.Errorf(codes.PermissionDenied, "Access denied to roles: %+s", roles)
 }
 
 // verifyRules checks if the rules authorize use of the API called `fullmethod`
