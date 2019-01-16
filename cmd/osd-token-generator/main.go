@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 	"time"
 
 	yaml "gopkg.in/yaml.v2"
@@ -58,6 +59,11 @@ func main() {
 	}
 	if len(*config) == 0 {
 		fmt.Println("Must provide a file name")
+		os.Exit(1)
+	}
+
+	if strings.Contains(*issuer, "http://") || strings.Contains(*issuer, "https://") {
+		fmt.Printf("%s issuer cannot contain http:// or https://", *issuer)
 		os.Exit(1)
 	}
 

@@ -18,9 +18,6 @@ package auth
 
 import (
 	"context"
-
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // Keys to store data in gRPC context. Use these keys to retrieve
@@ -32,19 +29,24 @@ const (
 	InterceptorContextTokenKey InterceptorContextkey = "tokenclaims"
 )
 
+// UserInfo contains information about the user taken from the token
 type UserInfo struct {
+	// Username is the unique id of the user. According to the configuration of
+	// the storage system, this could be the 'sub', 'name', or 'email' from
+	// the claims in the token.
 	Username string
-	Claims   Claims
+	// Claims holds the claims required by the storage system
+	Claims Claims
 }
 
+// ContextSaveUserInfo saves user information in the context for other functions to consume
 func ContextSaveUserInfo(ctx context.Context, u *UserInfo) context.Context {
 	return context.WithValue(ctx, InterceptorContextTokenKey, u)
 }
 
-func NewUserInfoFromContext(ctx context.Context) (*UserInfo, error) {
-	userinfo, ok := ctx.Value(InterceptorContextTokenKey).(*UserInfo)
-	if !ok {
-		return nil, status.Errorf(codes.Internal, "Unable to access token in context")
-	}
-	return userinfo, nil
+// NewUserInfoFromContext returns user information in the context if available.
+// If not available means that the system is running without auth.
+func NewUserInfoFromContext(ctx context.Context) (*UserInfo, bool) {
+	u, ok := ctx.Value(InterceptorContextTokenKey).(*UserInfo)
+	return u, ok
 }

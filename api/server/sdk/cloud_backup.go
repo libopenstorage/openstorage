@@ -50,6 +50,11 @@ func (s *CloudBackupServer) Create(
 		return nil, status.Error(codes.InvalidArgument, "Must supply credential uuid")
 	}
 
+	// Check ownership
+	if err := checkAccessFromDriverForVolumeId(ctx, s.driver(), req.GetVolumeId()); err != nil {
+		return nil, err
+	}
+
 	// Create the backup
 	r, err := s.driver().CloudBackupCreate(&api.CloudBackupCreateRequest{
 		VolumeID:       req.GetVolumeId(),
@@ -190,6 +195,10 @@ func (s *CloudBackupServer) Status(
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
+	// XXX Check ownership
+	// TODO !
+	// Get volume id from task id
+
 	r, err := s.driver().CloudBackupStatus(&api.CloudBackupStatusRequest{
 		SrcVolumeID: req.GetVolumeId(),
 		Local:       req.GetLocal(),
@@ -242,6 +251,12 @@ func (s *CloudBackupServer) History(
 	if len(req.GetSrcVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must provide volume id")
 	}
+
+	// Check ownership
+	if err := checkAccessFromDriverForVolumeId(ctx, s.driver(), req.GetSrcVolumeId()); err != nil {
+		return nil, err
+	}
+
 	r, err := s.driver().CloudBackupHistory(&api.CloudBackupHistoryRequest{
 		SrcVolumeID: req.GetSrcVolumeId(),
 	})
@@ -260,6 +275,9 @@ func (s *CloudBackupServer) StateChange(
 	if s.driver() == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
+
+	// TODO
+	// XXX Get vid from tid
 
 	if len(req.GetTaskId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must provide taskid")
@@ -310,6 +328,11 @@ func (s *CloudBackupServer) SchedCreate(
 		return nil, status.Error(codes.InvalidArgument, "Must supply Schedule")
 	}
 
+	// Check ownership
+	if err := checkAccessFromDriverForVolumeId(ctx, s.driver(), req.GetCloudSchedInfo().GetSrcVolumeId()); err != nil {
+		return nil, err
+	}
+
 	sched, err := sdkSchedToRetainInternalSpecYamlByte(req.GetCloudSchedInfo().GetSchedules())
 	if err != nil {
 		return nil, err
@@ -343,6 +366,9 @@ func (s *CloudBackupServer) SchedDelete(
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
+	// TODO
+	// XXX inspect from uuid and get volume id
+
 	if len(req.GetBackupScheduleId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must provide credential uuid")
 	}
@@ -365,6 +391,8 @@ func (s *CloudBackupServer) SchedEnumerate(
 	if s.driver() == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
+
+	// Pass in ownership and show only valid ones
 	r, err := s.driver().CloudBackupSchedEnumerate()
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to enumerate backups: %v", err)

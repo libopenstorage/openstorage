@@ -130,7 +130,8 @@ func newTestServerSdk(t *testing.T) *testServer {
 
 	os.Remove(testSdkSock)
 	selfsignedJwt, err := auth.NewJwtAuth(&auth.JwtAuthConfig{
-		SharedSecret: []byte(testSharedSecret),
+		SharedSecret:  []byte(testSharedSecret),
+		UsernameClaim: auth.UsernameClaimTypeName,
 	})
 	assert.NoError(t, err)
 	tester.sdk, err = sdk.New(&sdk.ServerConfig{
@@ -263,7 +264,7 @@ func createToken(name, role, secret string) (string, error) {
 	claims := &sdkauth.Claims{
 		Issuer: "testcode",
 		Name:   name,
-		Email:  "test@openstorage",
+		Email:  name + "@openstorage.org",
 		Roles:  []string{role},
 	}
 	signature := &sdkauth.Signature{

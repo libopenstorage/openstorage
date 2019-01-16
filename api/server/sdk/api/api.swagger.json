@@ -28,6 +28,25 @@
       "title": "This defines operator types used in a label matching rule",
       "type": "string"
     },
+    "OwnershipAccessControl": {
+      "properties": {
+        "collaborators": {
+          "description": "Collaborator access to resource gives access to other usernames.\nMust be the username set in the authorization token.\n\nThe owner or the system administrator can set this value.\nPossible values are:\n    * an empty list: An empty list means no users are allowed\n    * `[\"*\"]`: All users are allowed\n    * `[\"username1\", \"username2\"]`: Only certain usernames are allowed. In this example only\n      _username1_ and _username2_ are allowed.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "groups": {
+          "description": "Group access to resource which must be set in the authorization token.\n\nCan be set by the owner or the system administrator only.\nPossible values are:\n    * an empty list: An empty list means no groups are allowed\n    * `[\"*\"]`: All groups are allowed\n    * `[\"group1\", \"group2\"]`: Only certain groups are allowed. In this example only\n      _group1_ and _group2_ are allowed.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
     "SdkCloudMigrateStartRequestMigrateAllVolumes": {
       "title": "Defines a migration request for all volumes in a cluster",
       "type": "object"
@@ -586,6 +605,20 @@
         }
       },
       "title": "ObjectstoreInfo is a structure that has current objectstore info",
+      "type": "object"
+    },
+    "apiOwnership": {
+      "description": "Ownership information for resource\nAdministrators are users who belong to the group `*`, meaning, every group.",
+      "properties": {
+        "acls": {
+          "$ref": "#/definitions/OwnershipAccessControl",
+          "description": "Permissions to share resource which can be set by the owner.\n\nNOTE: To create an \"admin\" user which has access to any resource set the group value\nin the token of the user to `*`."
+        },
+        "owner": {
+          "description": "Username of owner.\n\nThe storage system uses the username taken from the security authorization\ntoken and is saved on this field. Only users with system administration\ncan edit this value.",
+          "type": "string"
+        }
+      },
       "type": "object"
     },
     "apiReplicaSet": {
@@ -2165,6 +2198,10 @@
         "name": {
           "title": "(optional) Name to search",
           "type": "string"
+        },
+        "ownership": {
+          "$ref": "#/definitions/apiOwnership",
+          "title": "(optional) Ownership to match"
         }
       },
       "title": "Defines a request to list volumes",
@@ -2884,6 +2921,10 @@
           "title": "User friendly identifier",
           "type": "string"
         },
+        "ownership": {
+          "$ref": "#/definitions/apiOwnership",
+          "title": "Filter with ownership"
+        },
         "volume_labels": {
           "additionalProperties": {
             "type": "string"
@@ -3021,6 +3062,10 @@
           "format": "boolean",
           "type": "boolean"
         },
+        "ownership": {
+          "$ref": "#/definitions/apiOwnership",
+          "title": "Owner"
+        },
         "passphrase": {
           "title": "Passphrase for an encrypted volume",
           "type": "string"
@@ -3104,6 +3149,11 @@
         "journal": {
           "format": "boolean",
           "type": "boolean"
+        },
+        "ownership": {
+          "$ref": "#/definitions/apiOwnership",
+          "description": "If the value of `owner` in the `ownership` message is an empty string\nthen the value of `owner` in the `VolumeSpec.Ownership.owner` will not\nbe updated.",
+          "title": "Ownership"
         },
         "passphrase": {
           "type": "string"
@@ -3201,7 +3251,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.36.0"
+    "version": "0.37.0"
   },
   "paths": {
     "/v1/alerts": {

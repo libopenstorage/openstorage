@@ -35,7 +35,7 @@ func TestUserInfoContext(t *testing.T) {
 		},
 	}
 	ctx := ContextSaveUserInfo(context.Background(), original)
-	u, err := NewUserInfoFromContext(ctx)
-	assert.NoError(t, err)
+	u, ok := NewUserInfoFromContext(ctx)
+	assert.True(t, ok)
 	assert.True(t, reflect.DeepEqual(u, original))
 }
