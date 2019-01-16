@@ -1,6 +1,7 @@
 package volume
 
 import (
+	"crypto/tls"
 	"fmt"
 
 	"github.com/libopenstorage/openstorage/api"
@@ -47,6 +48,32 @@ func NewDriverClient(host, driverName, version, userAgent string) (*client.Clien
 		version = volume.APIVersion
 	}
 	return client.NewClient(host, version, userAgent)
+}
+
+// GetAuthSupportedDriverVersions returns a list of supported versions
+// for the provided driver. It uses the given security params and
+// server endpoint or the standard unix domain socket
+// authstring can be set to the JWT Token and accesstoken set to an empty string.
+func GetAuthSupportedDriverVersions(driverName, host, authstring, accesstoken string, tlsConfig *tls.Config) ([]string, error) {
+	// Get a client handler
+	if host == "" {
+		host = client.GetUnixServerPath(driverName, volume.DriverAPIBase)
+	}
+
+	client, err := client.NewAuthClient(host, "", authstring, accesstoken, "")
+	if err != nil {
+		return []string{}, err
+	}
+
+	if tlsConfig != nil {
+		client.SetTLS(tlsConfig)
+	}
+
+	versions, err := client.Versions(api.OsdVolumePath)
+	if err != nil {
+		return []string{}, err
+	}
+	return versions, nil
 }
 
 // GetSupportedDriverVersions returns a list of supported versions
