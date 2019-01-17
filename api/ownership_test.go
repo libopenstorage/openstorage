@@ -239,6 +239,18 @@ func TestOwnershipIsPermitted(t *testing.T) {
 			},
 			permitted: true,
 		},
+		{
+			owner: &Ownership{
+				Owner: "me",
+			},
+			user: &auth.UserInfo{
+				Username: "notme",
+				Claims: auth.Claims{
+					Groups: []string{"*"},
+				},
+			},
+			permitted: true,
+		},
 	}
 
 	for _, test := range tests {
