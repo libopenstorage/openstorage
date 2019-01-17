@@ -73,3 +73,9 @@ func TokenIssuer(rawtoken string) (string, error) {
 		return "", fmt.Errorf("Issuer was not specified in the token")
 	}
 }
+
+// IsJwtToken returns true if the provided string is a valid jwt token
+func IsJwtToken(authstring string) bool {
+	_, _, err := new(jwt.Parser).ParseUnverified(authstring, jwt.MapClaims{})
+	return err == nil
+}

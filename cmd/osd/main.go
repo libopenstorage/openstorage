@@ -96,6 +96,11 @@ func main() {
 			Value: "",
 		},
 		cli.StringFlag{
+			Name:  "mgmtport,m",
+			Usage: "Management Port for REST server. Example: 9001",
+			Value: "9100",
+		},
+		cli.StringFlag{
 			Name:  "sdkport",
 			Usage: "gRPC port for SDK. Example: 9100",
 			Value: "9100",
@@ -335,6 +340,11 @@ func start(c *cli.Context) error {
 			mgmtPort, err = strconv.ParseUint(port, 10, 16)
 			if err != nil {
 				return fmt.Errorf("Invalid OSD Config File. Invalid Mgmt Port number for Driver : %s", d)
+			}
+		} else if c.String("mgmtport") != "" {
+			mgmtPort, err = strconv.ParseUint(c.String("mgmtport"), 10, 16)
+			if err != nil {
+				return fmt.Errorf("Invalid Mgmt Port number for Driver : %s", d)
 			}
 		} else {
 			mgmtPort = 0
