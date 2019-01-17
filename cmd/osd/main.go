@@ -48,6 +48,7 @@ import (
 	graphdrivers "github.com/libopenstorage/openstorage/graph/drivers"
 	"github.com/libopenstorage/openstorage/objectstore"
 	"github.com/libopenstorage/openstorage/pkg/auth"
+	"github.com/libopenstorage/openstorage/pkg/auth/secrets"
 	"github.com/libopenstorage/openstorage/pkg/role"
 	"github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/volume"
@@ -349,15 +350,25 @@ func start(c *cli.Context) error {
 		}
 
 		sdksocket := fmt.Sprintf("/var/lib/osd/driver/%s-sdk.sock", d)
-		if err := server.StartPluginAPI(
+
+		if err := server.StartVolumePluginAPI(
 			d, sdksocket,
-			volume.DriverAPIBase,
 			volume.PluginAPIBase,
-			uint16(mgmtPort),
 			uint16(pluginPort),
 		); err != nil {
-			return fmt.Errorf("Unable to start volume plugin: %v", err)
+			return fmt.Errorf("Unable to start plugin api server: %v", err)
 		}
+
+		if _, _, err := server.StartVolumeMgmtAPI(
+			d, sdksocket,
+			volume.DriverAPIBase,
+			uint16(mgmtPort),
+			false,
+			secrets.TypeNone, nil,
+		); err != nil {
+			return fmt.Errorf("Unable to start volume mgmt api server: %v", err)
+		}
+
 		if d != "" && cfg.Osd.ClusterConfig.DefaultDriver == d {
 			isDefaultSet = true
 		}
