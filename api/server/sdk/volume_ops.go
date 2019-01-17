@@ -317,11 +317,6 @@ func (s *VolumeServer) EnumerateWithFilters(
 			VolumeLabels: req.GetLabels(),
 			Ownership:    req.GetOwnership(),
 		}
-
-		// If no ownership provided use the user's information
-		if locator.GetOwnership() == nil {
-			locator.Ownership = api.NewLocatorOwnershipFromContext(ctx)
-		}
 	}
 
 	vols, err := s.driver().Enumerate(locator, nil)
