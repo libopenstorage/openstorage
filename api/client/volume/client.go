@@ -192,6 +192,7 @@ func (v *volumeClient) Snapshot(volumeID string,
 	if err := v.c.Post().Resource(snapPath).Body(request).Do().Unmarshal(response); err != nil {
 		return "", err
 	}
+
 	// TODO(pedge): this probably should not be embedded in this way
 	if response.VolumeCreateResponse != nil &&
 		response.VolumeCreateResponse.VolumeResponse != nil &&

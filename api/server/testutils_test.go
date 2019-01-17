@@ -15,20 +15,20 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/golang/mock/gomock"
-	sdkauth "github.com/libopenstorage/openstorage/pkg/auth"
-	"github.com/stretchr/testify/assert"
-
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/server/sdk"
 	"github.com/libopenstorage/openstorage/cluster"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	mockcluster "github.com/libopenstorage/openstorage/cluster/mock"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/pkg/auth"
+	sdkauth "github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 	"github.com/libopenstorage/openstorage/pkg/role"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
@@ -45,7 +45,8 @@ const (
 )
 
 var (
-	cm cluster.Cluster
+	cm     cluster.Cluster
+	credId string
 )
 
 // testServer is a simple struct used abstract
@@ -114,6 +115,37 @@ func setupFakeDriver() {
 	}
 }
 
+func newTestServerSdkNoAuth(t *testing.T) *testServer {
+	tester := &testServer{}
+
+	// Add driver to registry
+	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
+	tester.m = mockdriver.NewMockVolumeDriver(tester.mc)
+	tester.c = mockcluster.NewMockCluster(tester.mc)
+
+	os.Remove(testSdkSock)
+	var err error
+	tester.sdk, err = sdk.New(&sdk.ServerConfig{
+		DriverName:   "fake",
+		Net:          "tcp",
+		Address:      ":8123",
+		RestPort:     "8124",
+		Cluster:      tester.c,
+		Socket:       testSdkSock,
+		AccessOutput: ioutil.Discard,
+		AuditOutput:  ioutil.Discard,
+	})
+	assert.Nil(t, err)
+	err = tester.sdk.Start()
+	assert.Nil(t, err)
+
+	// Setup a connection to the driver
+	tester.conn, err = grpcserver.Connect("localhost:8123", []grpc.DialOption{grpc.WithInsecure()})
+	assert.Nil(t, err)
+
+	return tester
+}
+
 func newTestServerSdk(t *testing.T) *testServer {
 	tester := &testServer{}
 
@@ -158,6 +190,22 @@ func newTestServerSdk(t *testing.T) *testServer {
 	tester.conn, err = grpcserver.Connect("localhost:8123", []grpc.DialOption{grpc.WithInsecure()})
 	assert.Nil(t, err)
 
+	// Create credential for cloudBackup testing
+	credentials := api.NewOpenStorageCredentialsClient(tester.conn)
+	ctx, err := contextWithToken(context.Background(), "test", "system.admin", testSharedSecret)
+	resp, err := credentials.Create(ctx, &api.SdkCredentialCreateRequest{
+		Name: "goodCred",
+		CredentialType: &api.SdkCredentialCreateRequest_AwsCredential{
+			AwsCredential: &api.SdkAwsCredentialRequest{
+				AccessKey: "dummy-access",
+				SecretKey: "dummy-secret",
+				Endpoint:  "dummy-endpoint",
+				Region:    "dummy-region",
+			},
+		},
+	})
+	assert.NoError(t, err)
+	credId = resp.GetCredentialId()
 	return tester
 }
 
@@ -205,6 +253,22 @@ func testRestServer(t *testing.T) (*httptest.Server, *testServer) {
 
 	ts := httptest.NewServer(router)
 	testVolDriver := newTestServer(t)
+	return ts, testVolDriver
+}
+
+func testRestServerSdkNoAuth(t *testing.T) (*httptest.Server, *testServer) {
+	vapi := newVolumeAPI(mockDriverName, testSdkSock)
+	router := mux.NewRouter()
+	// Register all routes from the App
+	for _, route := range vapi.Routes() {
+		router.Methods(route.verb).
+			Path(route.path).
+			Name(mockDriverName).
+			Handler(http.HandlerFunc(route.fn))
+	}
+
+	ts := httptest.NewServer(router)
+	testVolDriver := newTestServerSdkNoAuth(t)
 	return ts, testVolDriver
 }
 
