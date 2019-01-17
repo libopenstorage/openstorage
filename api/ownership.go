@@ -108,6 +108,12 @@ func (o *Ownership) GetCollaborators() []string {
 // IsUserAllowedByGroup returns true if the user is allowed access
 // by belonging to the appropriate group
 func (o *Ownership) IsUserAllowedByGroup(user *auth.UserInfo) bool {
+
+	// If it is the admin user for any group
+	if o.IsAdminByUser(user) {
+		return true
+	}
+
 	ownergroups := o.GetGroups()
 	if len(ownergroups) == 0 {
 		return false
