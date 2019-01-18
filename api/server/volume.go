@@ -178,6 +178,13 @@ func (vd *volAPI) create(w http.ResponseWriter, r *http.Request) {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	spec := dcReq.GetSpec()
+	if spec.VolumeLabels == nil {
+		spec.VolumeLabels = make(map[string]string)
+	}
+	for k, v := range dcReq.Locator.GetVolumeLabels() {
+		spec.VolumeLabels[k] = v
+	}
 	volumes := api.NewOpenStorageVolumeClient(conn)
 	id, err := volumes.Create(ctx, &api.SdkVolumeCreateRequest{
 		Name:   dcReq.Locator.GetName(),
@@ -264,18 +271,37 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get context with auth token
+	ctx, err := vd.annotateContext(r)
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Get gRPC connection
+	conn, err := vd.getConn()
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	setActions := ""
 	if req.Action != nil {
 		setActions = fmt.Sprintf("Mount=%v Attach=%v", req.Action.Mount, req.Action.Attach)
 	}
 
 	vd.logRequest(method, string(volumeID)).Infoln(setActions)
+	volumes := api.NewOpenStorageVolumeClient(conn)
 
-	d, err := vd.getVolDriver(r)
-	if err != nil {
-		notFound(w, r)
-		return
+	if req.Spec != nil {
+		_, err = volumes.Update(ctx, &api.SdkVolumeUpdateRequest{
+			VolumeId: volumeID,
+			Labels:   req.Locator.VolumeLabels,
+			Spec:     convertSpectoSdkSpec(req.Spec),
+		})
 	}
+	detachOptions := &api.SdkVolumeDetachOptions{}
+	attachOptions := &api.SdkVolumeAttachOptions{}
 
 	if req.Locator != nil || req.Spec != nil {
 		if req.Spec != nil {
@@ -284,30 +310,66 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		err = d.Set(volumeID, req.Locator, req.Spec)
 	}
+
+	if req.Options["SECRET_NAME"] != "" {
+		attachOptions.SecretName = req.Options["SECRET_NAME"]
+	}
+	if req.Options["SECRET_KEY"] != "" {
+		attachOptions.SecretKey = req.Options["SECRET_KEY"]
+	}
+	if req.Options["SECRET_CONTEXT"] != "" {
+		attachOptions.SecretContext = req.Options["SECRET_CONTEXT"]
+	}
+	if req.Options["FORCE_DETACH"] != "" {
+		detachOptions.Force = true
+	}
+	if req.Options["UNMOUNT_BEFORE_DETACH"] != "" {
+		detachOptions.UnmountBeforeDetach = true
+	}
+	mountAttachClient := api.NewOpenStorageMountAttachClient(conn)
 
 	for err == nil && req.Action != nil {
 		if req.Action.Attach != api.VolumeActionParam_VOLUME_ACTION_PARAM_NONE {
 			if req.Action.Attach == api.VolumeActionParam_VOLUME_ACTION_PARAM_ON {
-				_, err = d.Attach(volumeID, req.Options)
+				_, err = mountAttachClient.Attach(ctx, &api.SdkVolumeAttachRequest{
+					VolumeId: volumeID,
+					Options:  attachOptions,
+				})
 			} else {
-				err = d.Detach(volumeID, req.Options)
+				_, err = mountAttachClient.Detach(ctx, &api.SdkVolumeDetachRequest{
+					VolumeId: volumeID,
+					Options:  detachOptions,
+				})
 			}
 			if err != nil {
 				break
 			}
 		}
 
+		unmountOptions := &api.SdkVolumeUnmountOptions{}
+		if req.Options["DELETE_AFTER_UNMOUNT"] != "" {
+			unmountOptions.DeleteMountPath = true
+		}
+		if req.Options["WAIT_BEFORE_DELETE"] != "" {
+			unmountOptions.NoDelayBeforeDeletingMountPath = true
+		}
 		if req.Action.Mount != api.VolumeActionParam_VOLUME_ACTION_PARAM_NONE {
 			if req.Action.Mount == api.VolumeActionParam_VOLUME_ACTION_PARAM_ON {
 				if req.Action.MountPath == "" {
 					err = fmt.Errorf("Invalid mount path")
 					break
 				}
-				err = d.Mount(volumeID, req.Action.MountPath, req.Options)
+				_, err = mountAttachClient.Mount(ctx, &api.SdkVolumeMountRequest{
+					VolumeId:  volumeID,
+					MountPath: req.Action.MountPath,
+				})
 			} else {
-				err = d.Unmount(volumeID, req.Action.MountPath, req.Options)
+				_, err = mountAttachClient.Unmount(ctx, &api.SdkVolumeUnmountRequest{
+					VolumeId:  volumeID,
+					MountPath: req.Action.MountPath,
+					Options:   unmountOptions,
+				})
 			}
 			if err != nil {
 				break
@@ -316,22 +378,56 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 		break
 	}
 
-	if err != nil {
-		processErrorForVolSetResponse(req.Action, err, &resp)
+	resVol, err2 := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
+		VolumeId: volumeID,
+	})
+	if err2 != nil {
+		resp.Volume = &api.Volume{}
 	} else {
-		v, err := d.Inspect([]string{volumeID})
-		if err != nil {
-			processErrorForVolSetResponse(req.Action, err, &resp)
-		} else if v == nil || len(v) != 1 {
-			processErrorForVolSetResponse(req.Action, &errors.ErrNotFound{Type: "Volume", ID: volumeID}, &resp)
-		} else {
-			v0 := v[0]
-			resp.Volume = v0
-		}
+		resp.Volume = resVol.GetVolume()
 	}
-
+	resp.VolumeResponse = &api.VolumeResponse{
+		Error: responseStatus(err),
+	}
 	json.NewEncoder(w).Encode(resp)
 
+}
+
+func convertSpectoSdkSpec(spec *api.VolumeSpec) *api.VolumeSpecUpdate {
+	sdkSpec := &api.VolumeSpecUpdate{}
+	sdkSpec.SharedOpt = &api.VolumeSpecUpdate_Shared{
+		Shared: spec.Shared,
+	}
+
+	sdkSpec.Sharedv4Opt = &api.VolumeSpecUpdate_Sharedv4{
+		Sharedv4: spec.Sharedv4,
+	}
+
+	sdkSpec.JournalOpt = &api.VolumeSpecUpdate_Journal{
+		Journal: spec.Journal,
+	}
+
+	sdkSpec.StickyOpt = &api.VolumeSpecUpdate_Sticky{
+		Sticky: spec.Sticky,
+	}
+
+	sdkSpec.ScaleOpt = &api.VolumeSpecUpdate_Scale{
+		Scale: spec.Scale,
+	}
+
+	sdkSpec.SizeOpt = &api.VolumeSpecUpdate_Size{
+		Size: spec.Size,
+	}
+
+	sdkSpec.IoProfileOpt = &api.VolumeSpecUpdate_IoProfile{
+		IoProfile: spec.IoProfile,
+	}
+
+	sdkSpec.QueueDepthOpt = &api.VolumeSpecUpdate_QueueDepth{
+		QueueDepth: spec.QueueDepth,
+	}
+
+	return sdkSpec
 }
 
 // swagger:operation GET /osd-volumes/{id} volume inspectVolume
@@ -357,11 +453,6 @@ func (vd *volAPI) inspect(w http.ResponseWriter, r *http.Request) {
 	var volumeID string
 
 	method := "inspect"
-	d, err := vd.getVolDriver(r)
-	if err != nil {
-		notFound(w, r)
-		return
-	}
 
 	if volumeID, err = vd.parseID(r); err != nil {
 		e := fmt.Errorf("Failed to parse parse volumeID: %s", err.Error())
@@ -369,13 +460,27 @@ func (vd *volAPI) inspect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dk, err := d.Inspect([]string{volumeID})
+	// Get context with auth token
+	ctx, err := vd.annotateContext(r)
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Get gRPC connection
+	conn, err := vd.getConn()
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	volumes := api.NewOpenStorageVolumeClient(conn)
+	dk, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{VolumeId: volumeID})
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusNotFound)
 		return
 	}
 
-	json.NewEncoder(w).Encode(dk)
+	json.NewEncoder(w).Encode(dk.GetVolume())
 }
 
 // swagger:operation DELETE /osd-volumes/{id} volume deleteVolume
@@ -413,15 +518,24 @@ func (vd *volAPI) delete(w http.ResponseWriter, r *http.Request) {
 
 	vd.logRequest(method, volumeID).Infoln("")
 
-	d, err := vd.getVolDriver(r)
+	volumeResponse := &api.VolumeResponse{}
+
+	// Get context with auth token
+	ctx, err := vd.annotateContext(r)
 	if err != nil {
-		notFound(w, r)
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	volumeResponse := &api.VolumeResponse{}
-
-	if err := d.Delete(volumeID); err != nil {
+	// Get gRPC connection
+	conn, err := vd.getConn()
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	volumes := api.NewOpenStorageVolumeClient(conn)
+	_, err = volumes.Delete(ctx, &api.SdkVolumeDeleteRequest{VolumeId: volumeID})
+	if err != nil {
 		volumeResponse.Error = err.Error()
 	}
 	json.NewEncoder(w).Encode(volumeResponse)
@@ -473,20 +587,32 @@ func (vd *volAPI) enumerate(w http.ResponseWriter, r *http.Request) {
 	var locator api.VolumeLocator
 	var configLabels map[string]string
 	var err error
+	var ids []string
 	var vols []*api.Volume
 
 	method := "enumerate"
 
-	d, err := vd.getVolDriver(r)
+	// Get context with auth token
+	ctx, err := vd.annotateContext(r)
 	if err != nil {
-		notFound(w, r)
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	// Get gRPC connection
+	conn, err := vd.getConn()
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	volumes := api.NewOpenStorageVolumeClient(conn)
+
 	params := r.URL.Query()
 	v := params[string(api.OptName)]
 	if v != nil {
 		locator.Name = v[0]
 	}
+
 	v = params[string(api.OptLabel)]
 	if v != nil {
 		if err = json.Unmarshal([]byte(v[0]), &locator.VolumeLabels); err != nil {
@@ -494,31 +620,48 @@ func (vd *volAPI) enumerate(w http.ResponseWriter, r *http.Request) {
 			vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
 		}
 	}
+
 	v = params[string(api.OptConfigLabel)]
 	if v != nil {
 		if err = json.Unmarshal([]byte(v[0]), &configLabels); err != nil {
 			e := fmt.Errorf("Failed to parse parse configLabels: %s", err.Error())
 			vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
 		}
+		// Add config labels to locator object.
+		for l, _ := range configLabels {
+			locator.VolumeLabels[l] = configLabels[l]
+		}
 	}
+
 	v = params[string(api.OptVolumeID)]
 	if v != nil {
-		ids := make([]string, len(v))
+		ids = make([]string, len(v))
 		for i, s := range v {
 			ids[i] = string(s)
 		}
-		vols, err = d.Inspect(ids)
+	} else {
+		vls, err := volumes.EnumerateWithFilters(ctx, &api.SdkVolumeEnumerateWithFiltersRequest{
+			Name:   locator.Name,
+			Labels: locator.VolumeLabels,
+		})
+
+		//vols, err = d.Enumerate(&locator, configLabels)
+		if err != nil {
+			vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		ids = vls.GetVolumeIds()
+	}
+
+	vols = make([]*api.Volume, len(ids))
+	for i, s := range ids {
+		vol, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{VolumeId: s})
 		if err != nil {
 			e := fmt.Errorf("Failed to inspect volumeID: %s", err.Error())
 			vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
 			return
 		}
-	} else {
-		vols, err = d.Enumerate(&locator, configLabels)
-		if err != nil {
-			vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+		vols[i] = vol.GetVolume()
 	}
 	json.NewEncoder(w).Encode(vols)
 }
@@ -560,20 +703,43 @@ func (vd *volAPI) snap(w http.ResponseWriter, r *http.Request) {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	d, err := vd.getVolDriver(r)
-	if err != nil {
-		notFound(w, r)
-		return
-	}
 
 	vd.logRequest(method, string(snapReq.Id)).Infoln("")
 
-	id, err := d.Snapshot(snapReq.Id, snapReq.Readonly, snapReq.Locator, snapReq.NoRetry)
-	snapRes.VolumeCreateResponse = &api.VolumeCreateResponse{
-		Id: id,
-		VolumeResponse: &api.VolumeResponse{
-			Error: responseStatus(err),
-		},
+	// Get context with auth token
+	ctx, err := vd.annotateContext(r)
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Get gRPC connection
+	conn, err := vd.getConn()
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	volumes := api.NewOpenStorageVolumeClient(conn)
+	snapRes.VolumeCreateResponse = &api.VolumeCreateResponse{}
+
+	if snapReq.Readonly {
+		res, err := volumes.SnapshotCreate(ctx, &api.SdkVolumeSnapshotCreateRequest{VolumeId: snapReq.Id, Name: snapReq.Locator.Name, Labels: snapReq.Locator.VolumeLabels})
+		if err != nil {
+			snapRes.VolumeCreateResponse.VolumeResponse = &api.VolumeResponse{
+				Error: err.Error(),
+			}
+		} else {
+			snapRes.VolumeCreateResponse.Id = res.GetSnapshotId()
+		}
+	} else {
+		res, err := volumes.Clone(ctx, &api.SdkVolumeCloneRequest{ParentId: snapReq.Id, Name: snapReq.Locator.Name})
+		if err != nil {
+			snapRes.VolumeCreateResponse.VolumeResponse = &api.VolumeResponse{
+				Error: err.Error(),
+			}
+		} else {
+			snapRes.VolumeCreateResponse.Id = res.GetVolumeId()
+		}
 	}
 	json.NewEncoder(w).Encode(&snapRes)
 }
@@ -611,12 +777,6 @@ func (vd *volAPI) restore(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	d, err := vd.getVolDriver(r)
-	if err != nil {
-		notFound(w, r)
-		return
-	}
-
 	params := r.URL.Query()
 	v := params[api.OptSnapID]
 	if v != nil {
@@ -627,8 +787,24 @@ func (vd *volAPI) restore(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get context with auth token
+	ctx, err := vd.annotateContext(r)
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Get gRPC connection
+	conn, err := vd.getConn()
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	volumeResponse := &api.VolumeResponse{}
-	if err := d.Restore(volumeID, snapID); err != nil {
+	volumes := api.NewOpenStorageVolumeClient(conn)
+	_, err = volumes.SnapshotRestore(ctx, &api.SdkVolumeSnapshotRestoreRequest{VolumeId: volumeID, SnapshotId: snapID})
+	if err != nil {
 		volumeResponse.Error = responseStatus(err)
 	}
 	json.NewEncoder(w).Encode(volumeResponse)
@@ -682,11 +858,6 @@ func (vd *volAPI) snapEnumerate(w http.ResponseWriter, r *http.Request) {
 	var ids []string
 
 	method := "snapEnumerate"
-	d, err := vd.getVolDriver(r)
-	if err != nil {
-		notFound(w, r)
-		return
-	}
 	params := r.URL.Query()
 	v := params[string(api.OptLabel)]
 	if v != nil {
@@ -704,13 +875,44 @@ func (vd *volAPI) snapEnumerate(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	snaps, err := d.SnapEnumerate(ids, labels)
+	request := &api.SdkVolumeSnapshotEnumerateWithFiltersRequest{}
+	if len(ids) > 0 {
+		request.VolumeId = ids[0]
+	}
+	if len(labels) > 0 {
+		request.Labels = labels
+	}
+	// Get context with auth token
+	ctx, err := vd.annotateContext(r)
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Get gRPC connection
+	conn, err := vd.getConn()
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	volumes := api.NewOpenStorageVolumeClient(conn)
+	resp, err := volumes.SnapshotEnumerateWithFilters(ctx, request)
 	if err != nil {
 		e := fmt.Errorf("Failed to enumerate snaps: %s", err.Error())
 		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
 		return
 	}
 
+	snaps := make([]*api.Volume, len(ids))
+	for i, s := range resp.GetVolumeSnapshotIds() {
+		vol, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{VolumeId: s})
+		if err != nil {
+			e := fmt.Errorf("Failed to inspect volumeID: %s", err.Error())
+			vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+			return
+		}
+		snaps[i] = vol.GetVolume()
+	}
 	json.NewEncoder(w).Encode(snaps)
 }
 
@@ -736,6 +938,7 @@ func (vd *volAPI) stats(w http.ResponseWriter, r *http.Request) {
 	var volumeID string
 	var err error
 
+	var method = "stats"
 	if volumeID, err = vd.parseID(r); err != nil {
 		e := fmt.Errorf("Failed to parse volumeID: %s", err.Error())
 		http.Error(w, e.Error(), http.StatusBadRequest)
@@ -756,18 +959,26 @@ func (vd *volAPI) stats(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	d, err := vd.getVolDriver(r)
+	// Get context with auth token
+	ctx, err := vd.annotateContext(r)
 	if err != nil {
-		notFound(w, r)
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	stats, err := d.Stats(volumeID, cumulative)
+	// Get gRPC connection
+	conn, err := vd.getConn()
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	volumes := api.NewOpenStorageVolumeClient(conn)
+	resp, err := volumes.Stats(ctx, &api.SdkVolumeStatsRequest{VolumeId: volumeID, NotCumulative: !cumulative})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	json.NewEncoder(w).Encode(stats)
+	json.NewEncoder(w).Encode(resp.GetStats())
 }
 
 // swagger:operation GET /osd-volumes/usedsize/{id} volume usedSizeVolume
@@ -791,26 +1002,35 @@ func (vd *volAPI) stats(w http.ResponseWriter, r *http.Request) {
 func (vd *volAPI) usedsize(w http.ResponseWriter, r *http.Request) {
 	var volumeID string
 	var err error
-
+	var method = "usedsize"
 	if volumeID, err = vd.parseID(r); err != nil {
 		e := fmt.Errorf("Failed to parse volumeID: %s", err.Error())
 		http.Error(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 
-	d, err := vd.getVolDriver(r)
+	// Get context with auth token
+	ctx, err := vd.annotateContext(r)
 	if err != nil {
-		notFound(w, r)
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	used, err := d.UsedSize(volumeID)
+	// Get gRPC connection
+	conn, err := vd.getConn()
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	volumes := api.NewOpenStorageVolumeClient(conn)
+	resp, err := volumes.CapacityUsage(ctx, &api.SdkVolumeCapacityUsageRequest{VolumeId: volumeID})
+
 	if err != nil {
 		e := fmt.Errorf("Failed to get used size: %s", err.Error())
 		http.Error(w, e.Error(), http.StatusBadRequest)
 		return
 	}
-	json.NewEncoder(w).Encode(used)
+	json.NewEncoder(w).Encode(resp.GetCapacityUsageInfo().TotalBytes)
 }
 
 // swagger:operation POST /osd-volumes/requests/{id} volume requestsVolume

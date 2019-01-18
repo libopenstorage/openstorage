@@ -345,6 +345,8 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			} else {
 				spec.ForceUnsupportedFsType = forceFs
 			}
+		case api.Token:
+			// skip, if not it would be added to the labels
 		default:
 			locator.VolumeLabels[k] = v
 		}

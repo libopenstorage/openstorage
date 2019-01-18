@@ -188,9 +188,11 @@ func (s *VolumeServer) Mount(
 		// If volume is scaled up, a new volume is created and
 		// vol will change.
 		attachOptions := make(map[string]string)
-		attachOptions[options.OptionsSecret] = req.Options.SecretName
-		attachOptions[options.OptionsSecretKey] = req.Options.SecretKey
-		attachOptions[options.OptionsSecretContext] = req.Options.SecretContext
+		if req.Options != nil {
+			attachOptions[options.OptionsSecret] = req.Options.SecretName
+			attachOptions[options.OptionsSecretKey] = req.Options.SecretKey
+			attachOptions[options.OptionsSecretContext] = req.Options.SecretContext
+		}
 		if vol.Scaled() {
 			vol, err = s.attachScale(ctx, vol, attachOptions)
 		} else {

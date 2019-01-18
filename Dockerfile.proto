@@ -45,6 +45,8 @@ RUN git checkout v1.4.1 && \
     go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger && \
 	go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
 
+# Install swagger 2.0 to OpenApi 3.0 converter
+RUN npm install -g swagger2openapi
 # Finally, set working directory to the openstorage project
 RUN mkdir -p /go/src/github.com/libopenstorage/openstorage
 WORKDIR /go/src/github.com/libopenstorage/openstorage
