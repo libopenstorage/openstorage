@@ -108,7 +108,12 @@ func (s *sdkRestGateway) restServerSetupHandlers() (*http.ServeMux, error) {
 	// Handler to access the swagger ui. The UI pulls the swagger
 	// json file from /swagger.json
 	// The link below MUST have th last '/'. It is really important.
+	// This link is deprecated
 	prefix := "/swagger-ui/"
+	mux.Handle(prefix,
+		http.StripPrefix(prefix, http.FileServer(swaggerUIBox)))
+	// This is the new location
+	prefix = "/sdk/"
 	mux.Handle(prefix,
 		http.StripPrefix(prefix, http.FileServer(swaggerUIBox)))
 
