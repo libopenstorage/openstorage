@@ -29,14 +29,14 @@
       "OwnershipAccessControl": {
         "properties": {
           "collaborators": {
-            "description": "Collaborator access to resource gives access to other usernames.\nMust be the username set in the authorization token.\n\nThe owner or the system administrator can set this value.\nPossible values are:\n    * an empty list: An empty list means no users are allowed\n    * `[\"*\"]`: All users are allowed\n    * `[\"username1\", \"username2\"]`: Only certain usernames are allowed. In this example only\n      _username1_ and _username2_ are allowed.",
+            "description": "Collaborator access to resource gives access to other usernames.\nMust be the username set in the authorization token. The owner or the\nsystem administrator can set this value. Possible values are:\n1. an empty list: An empty list means no users are allowed.\n2. `[\"*\"]`: All users are allowed.\n3. `[\"username1\", \"username2\"]`: Only certain usernames are allowed. In this example only\n_username1_ and _username2_ are allowed.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "groups": {
-            "description": "Group access to resource which must be set in the authorization token.\n\nCan be set by the owner or the system administrator only.\nPossible values are:\n    * an empty list: An empty list means no groups are allowed\n    * `[\"*\"]`: All groups are allowed\n    * `[\"group1\", \"group2\"]`: Only certain groups are allowed. In this example only\n      _group1_ and _group2_ are allowed.",
+            "description": "Group access to resource which must be set in the authorization token.\nCan be set by the owner or the system administrator only.\nPossible values are:\n1. an empty list: An empty list means no groups are allowed.\n2. `[\"*\"]`: All groups are allowed.\n3. `[\"group1\", \"group2\"]`: Only certain groups are allowed. In this example only\n_group1_ and _group2_ are allowed.",
             "items": {
               "type": "string"
             },
@@ -599,7 +599,7 @@
         "type": "object"
       },
       "apiOwnership": {
-        "description": "Ownership information for resource\nAdministrators are users who belong to the group `*`, meaning, every group.",
+        "description": "Ownership information for resource.\nAdministrators are users who belong to the group `*`, meaning, every group.",
         "properties": {
           "acls": {
             "$ref": "#/components/schemas/OwnershipAccessControl"

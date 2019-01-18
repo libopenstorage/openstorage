@@ -365,11 +365,9 @@ message VolumeSpecUpdate {
   oneof sharedv4_opt { bool sharedv4 = 24; }
   // QueueDepth defines the desired block device queue depth
   oneof queue_depth_opt { uint32 queue_depth = 25; }
-  // Ownership
-  //
-  // If the value of `owner` in the `ownership` message is an empty string
-  // then the value of `owner` in the `VolumeSpec.Ownership.owner` will not
-  // be updated.
+  // Ownership volume information to update. If the value of `owner` in the
+  // `ownership` message is an empty string then the value of `owner` in
+  // the `VolumeSpec.Ownership.owner` will not be updated.
   Ownership ownership = 26;
 }
 
@@ -385,29 +383,25 @@ message RuntimeStateMap {
   map<string, string> runtime_state = 1;
 }
 
-// Ownership information for resource
+// Ownership information for resource.
 // Administrators are users who belong to the group `*`, meaning, every group.
 message Ownership {
   message AccessControl {
     // Group access to resource which must be set in the authorization token.
-    //
     // Can be set by the owner or the system administrator only.
     // Possible values are:
-    //     * an empty list: An empty list means no groups are allowed
-    //     * `["*"]`: All groups are allowed
-    //     * `["group1", "group2"]`: Only certain groups are allowed. In this example only
-    //       _group1_ and _group2_ are allowed.
-    //
+    // 1. an empty list: An empty list means no groups are allowed.
+    // 2. `["*"]`: All groups are allowed.
+    // 3. `["group1", "group2"]`: Only certain groups are allowed. In this example only
+    // _group1_ and _group2_ are allowed.
     repeated string groups = 2;
     // Collaborator access to resource gives access to other usernames.
-    // Must be the username set in the authorization token.
-    //
-    // The owner or the system administrator can set this value.
-    // Possible values are:
-    //     * an empty list: An empty list means no users are allowed
-    //     * `["*"]`: All users are allowed
-    //     * `["username1", "username2"]`: Only certain usernames are allowed. In this example only
-    //       _username1_ and _username2_ are allowed.
+    // Must be the username set in the authorization token. The owner or the
+    // system administrator can set this value. Possible values are:
+    // 1. an empty list: An empty list means no users are allowed.
+    // 2. `["*"]`: All users are allowed.
+    // 3. `["username1", "username2"]`: Only certain usernames are allowed. In this example only
+    // _username1_ and _username2_ are allowed.
     repeated string collaborators = 3;
   }
 
@@ -799,14 +793,8 @@ message VolumeSetRequest {
 // VolumeSetResponse
 message VolumeSetResponse {
   // Volume
-  //
-  // in: body
-  // Required: true
   Volume volume = 1;
   //VolumeResponse
-  //
-  // in: body
-  // Required: true
   VolumeResponse volume_response = 2;
 }
 
