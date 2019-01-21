@@ -102,7 +102,7 @@ func (m *NullClusterManager) Start(arg0 int, arg1 bool, arg2 string) error {
 }
 
 // StartWithConfiguration
-func (m *NullClusterManager) StartWithConfiguration(arg0 int, arg1 bool, arg2 string, arg3 *ClusterServerConfiguration) error {
+func (m *NullClusterManager) StartWithConfiguration(arg0 int, arg1 bool, arg2 string, arg3 []string, arg4 *ClusterServerConfiguration) error {
 	return ErrNotImplemented
 }
 

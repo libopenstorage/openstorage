@@ -1419,46 +1419,46 @@
 			"revisionTime": "2016-01-10T10:55:54Z"
 		},
 		{
-			"checksumSHA1": "8rfFII5oAsPnWiWGRXPX3skT8Yw=",
+			"checksumSHA1": "eN+Dl1dc3Mhwq6LlF/paO3ySxJg=",
 			"path": "github.com/portworx/kvdb",
-			"revision": "f488a24846ae62bb32953552ab086f380046143f",
-			"revisionTime": "2018-03-12T21:55:27Z"
+			"revision": "d99424cef6887925a5b495bc1b7287cf9a8fc73b",
+			"revisionTime": "2019-01-07T21:24:21Z"
 		},
 		{
-			"checksumSHA1": "p9R343S+wKD1+43dVZycEzqpGLA=",
+			"checksumSHA1": "4fMXDpGr2tnes4EmOcFzL0rFQnE=",
 			"path": "github.com/portworx/kvdb/common",
-			"revision": "f488a24846ae62bb32953552ab086f380046143f",
-			"revisionTime": "2018-03-12T21:55:27Z"
+			"revision": "d99424cef6887925a5b495bc1b7287cf9a8fc73b",
+			"revisionTime": "2019-01-07T21:24:21Z"
 		},
 		{
-			"checksumSHA1": "w21oGh89SIj9LmP9+Cyczk5ZFxo=",
+			"checksumSHA1": "CdwykqJSdTeuWhmbDROG3ef+ts8=",
 			"path": "github.com/portworx/kvdb/consul",
-			"revision": "f488a24846ae62bb32953552ab086f380046143f",
-			"revisionTime": "2018-03-12T21:55:27Z"
+			"revision": "d99424cef6887925a5b495bc1b7287cf9a8fc73b",
+			"revisionTime": "2019-01-07T21:24:21Z"
 		},
 		{
-			"checksumSHA1": "yKZq7956QtxQDrVjA5+9ejRh/I8=",
+			"checksumSHA1": "ryXZRVSvinmVHB+Gkxi1tQmBW+s=",
 			"path": "github.com/portworx/kvdb/etcd/common",
-			"revision": "f488a24846ae62bb32953552ab086f380046143f",
-			"revisionTime": "2018-03-12T21:55:27Z"
+			"revision": "d99424cef6887925a5b495bc1b7287cf9a8fc73b",
+			"revisionTime": "2019-01-07T21:24:21Z"
 		},
 		{
-			"checksumSHA1": "6OWaFHs48sT+7wgjXCEV33DAiQM=",
+			"checksumSHA1": "NidrHH+/j0Rjn4KdXBFWup0ZpPs=",
 			"path": "github.com/portworx/kvdb/etcd/v2",
-			"revision": "f488a24846ae62bb32953552ab086f380046143f",
-			"revisionTime": "2018-03-12T21:55:27Z"
+			"revision": "d99424cef6887925a5b495bc1b7287cf9a8fc73b",
+			"revisionTime": "2019-01-07T21:24:21Z"
 		},
 		{
-			"checksumSHA1": "+OCMyrNJgwA/ohaXnffosib79jo=",
+			"checksumSHA1": "IAs5PsgaH0/ozf9/FTCrYzoEK/Y=",
 			"path": "github.com/portworx/kvdb/etcd/v3",
-			"revision": "f488a24846ae62bb32953552ab086f380046143f",
-			"revisionTime": "2018-03-12T21:55:27Z"
+			"revision": "d99424cef6887925a5b495bc1b7287cf9a8fc73b",
+			"revisionTime": "2019-01-07T21:24:21Z"
 		},
 		{
-			"checksumSHA1": "E4/4G6vDoEQTYjU+eQGt/B0xFDM=",
+			"checksumSHA1": "UZauCpJyK0TTb9+od7NKwRJG6gE=",
 			"path": "github.com/portworx/kvdb/mem",
-			"revision": "f488a24846ae62bb32953552ab086f380046143f",
-			"revisionTime": "2018-03-12T21:55:27Z"
+			"revision": "d99424cef6887925a5b495bc1b7287cf9a8fc73b",
+			"revisionTime": "2019-01-07T21:24:21Z"
 		},
 		{
 			"checksumSHA1": "XDeteytxpf2kmvacQSYeE3DP40M=",
