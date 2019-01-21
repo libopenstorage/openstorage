@@ -261,10 +261,11 @@ func TestOwnershipIsPermitted(t *testing.T) {
 func TestOwnershipUpdate(t *testing.T) {
 
 	tests := []struct {
-		owner  *Ownership
-		update *Ownership
-		result *Ownership
-		user   *auth.UserInfo
+		owner     *Ownership
+		update    *Ownership
+		result    *Ownership
+		user      *auth.UserInfo
+		expectErr bool
 	}{
 		{
 			owner: &Ownership{
@@ -290,6 +291,7 @@ func TestOwnershipUpdate(t *testing.T) {
 					Groups: []string{"group"},
 				},
 			},
+			expectErr: false,
 		},
 		{
 			owner: &Ownership{
@@ -317,6 +319,7 @@ func TestOwnershipUpdate(t *testing.T) {
 					Groups: []string{"group"},
 				},
 			},
+			expectErr: false,
 		},
 		{
 			owner: &Ownership{
@@ -337,6 +340,7 @@ func TestOwnershipUpdate(t *testing.T) {
 					Groups: []string{"*"},
 				},
 			},
+			expectErr: false,
 		},
 		{
 			owner: &Ownership{
@@ -356,12 +360,37 @@ func TestOwnershipUpdate(t *testing.T) {
 					Groups: []string{"*"},
 				},
 			},
+			expectErr: false,
+		},
+		{
+			owner: &Ownership{
+				Owner: "user1",
+				Acls: &Ownership_AccessControl{
+					Groups: []string{"group1"},
+				}},
+			update: &Ownership{
+				Acls: &Ownership_AccessControl{},
+			},
+			result: &Ownership{
+				Owner: "user1",
+				Acls: &Ownership_AccessControl{
+					Groups: []string{"group1"},
+				}},
+			user: &auth.UserInfo{
+				Username: "anotheruser",
+			},
+			expectErr: true,
 		},
 	}
 
 	for _, test := range tests {
-		r := test.owner.Update(test.update, test.user)
-		assert.True(t, reflect.DeepEqual(r, test.result), fmt.Sprintf("%v | %v", r, test.result))
+		err := test.owner.Update(test.update, test.user)
+		if test.expectErr {
+			assert.Error(t, err, fmt.Sprintf("%v | %v", test.owner, test.result))
+		} else {
+			assert.NoError(t, err, fmt.Sprintf("%v | %v", test.owner, test.result))
+		}
+		assert.True(t, reflect.DeepEqual(test.owner, test.result), fmt.Sprintf("%v | %v", test.owner, test.result))
 	}
 }
 

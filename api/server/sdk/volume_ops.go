@@ -376,7 +376,9 @@ func (s *VolumeServer) Update(
 		}
 
 		user, _ := auth.NewUserInfoFromContext(ctx)
-		spec.Ownership.Update(req.GetSpec().GetOwnership(), user)
+		if err := spec.Ownership.Update(req.GetSpec().GetOwnership(), user); err != nil {
+			return nil, err
+		}
 	}
 
 	// Check if labels have been updated
