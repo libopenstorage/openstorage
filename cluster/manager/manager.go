@@ -52,25 +52,26 @@ var (
 
 // ClusterManager implements the cluster interface
 type ClusterManager struct {
-	size            int
-	listeners       *list.List
-	config          config.ClusterConfig
-	kv              kvdb.Kvdb
-	status          api.Status
-	nodeCache       map[string]api.Node // Cached info on the nodes in the cluster.
-	nodeCacheLock   sync.Mutex
-	nodeStatuses    map[string]api.Status // Set of nodes currently marked down.
-	gossip          gossip.Gossiper
-	gossipVersion   string
-	gossipPort      string
-	gEnabled        bool
-	selfNode        api.Node
-	selfNodeLock    sync.Mutex // Lock that guards data and label of selfNode
-	system          systemutils.System
-	configManager   osdconfig.ConfigCaller
-	schedManager    sched.SchedulePolicyProvider
-	objstoreManager objectstore.ObjectStore
-	secretsManager  secrets.Secrets
+	size             int
+	listeners        *list.List
+	config           config.ClusterConfig
+	kv               kvdb.Kvdb
+	status           api.Status
+	nodeCache        map[string]api.Node // Cached info on the nodes in the cluster.
+	nodeCacheLock    sync.Mutex
+	nodeStatuses     map[string]api.Status // Set of nodes currently marked down.
+	gossip           gossip.Gossiper
+	gossipVersion    string
+	gossipPort       string
+	gEnabled         bool
+	selfNode         api.Node
+	selfNodeLock     sync.Mutex // Lock that guards data and label of selfNode
+	system           systemutils.System
+	configManager    osdconfig.ConfigCaller
+	schedManager     sched.SchedulePolicyProvider
+	objstoreManager  objectstore.ObjectStore
+	secretsManager   secrets.Secrets
+	snapshotPrefixes []string
 }
 
 // Init instantiates a new cluster manager.
@@ -607,7 +608,7 @@ func (c *ClusterManager) joinCluster(
 			err)
 		return err
 	}
-	initState, err := snapAndReadClusterInfo()
+	initState, err := snapAndReadClusterInfo(c.snapshotPrefixes)
 	kvdb.Unlock(kvlock)
 	if err != nil {
 		logrus.Panicf("Fatal, Unable to create snapshot: %v", err)
@@ -1187,6 +1188,7 @@ func (c *ClusterManager) Start(
 		clusterMaxSize,
 		nodeInitialized,
 		gossipPort,
+		[]string{ClusterDBKey},
 		&cluster.ClusterServerConfiguration{})
 }
 
@@ -1194,11 +1196,15 @@ func (c *ClusterManager) StartWithConfiguration(
 	clusterMaxSize int,
 	nodeInitialized bool,
 	gossipPort string,
+	snapshotPrefixes []string,
 	config *cluster.ClusterServerConfiguration,
 ) error {
 	var err error
 
 	logrus.Infoln("Cluster manager starting...")
+
+	snapshotPrefixes = append(snapshotPrefixes, ClusterDBKey)
+	c.snapshotPrefixes = snapshotPrefixes
 
 	kv := kvdb.Instance()
 
