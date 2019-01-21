@@ -65,6 +65,15 @@ func TestSdkVolumeSnapshotCreate(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
+		Inspect([]string{volid}).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id: volid,
+			},
+		}, nil).
+		Times(1)
+	s.MockDriver().
+		EXPECT().
 		Snapshot(req.GetVolumeId(), true, &api.VolumeLocator{
 			Name: snapName,
 		}, false).
@@ -136,6 +145,15 @@ func TestSdkVolumeSnapshotRestore(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
+		Inspect([]string{volid}).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id: volid,
+			},
+		}, nil).
+		Times(1)
+	s.MockDriver().
+		EXPECT().
 		Restore(volid, snapid).
 		Return(nil).
 		Times(1)
@@ -185,6 +203,15 @@ func TestSdkVolumeSnapshotEnumerate(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
+		Inspect([]string{volid}).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id: volid,
+			},
+		}, nil).
+		Times(1)
+	s.MockDriver().
+		EXPECT().
 		SnapEnumerate([]string{volid}, nil).
 		Return([]*api.Volume{
 			&api.Volume{
@@ -221,6 +248,15 @@ func TestSdkVolumeSnapshotEnumerateWithFilters(t *testing.T) {
 	}
 
 	// Create response
+	s.MockDriver().
+		EXPECT().
+		Inspect([]string{volid}).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id: volid,
+			},
+		}, nil).
+		Times(1)
 	s.MockDriver().
 		EXPECT().
 		SnapEnumerate([]string{volid}, labels).

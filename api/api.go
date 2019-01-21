@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"strconv"
@@ -8,6 +9,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
+	"github.com/libopenstorage/openstorage/pkg/auth"
 
 	"github.com/mohae/deepcopy"
 )
@@ -942,4 +944,31 @@ func (l *VolumeLocator) MergeVolumeSpecLabels(s *VolumeSpec) *VolumeLocator {
 	}
 
 	return l
+}
+
+func (v *Volume) IsPermitted(ctx context.Context) bool {
+	return v.GetSpec().IsPermitted(ctx)
+}
+
+func (v *VolumeSpec) IsPermitted(ctx context.Context) bool {
+	if v.GetOwnership() != nil {
+		if userinfo, ok := auth.NewUserInfoFromContext(ctx); ok {
+			// Check Access
+			return v.IsPermittedFromUserInfo(userinfo)
+		} else {
+			// There is no user information in the context so
+			// authorization is not running
+			return true
+		}
+	}
+
+	// There is no ownership on this volume, so allow access
+	return true
+}
+
+func (v *VolumeSpec) IsPermittedFromUserInfo(user *auth.UserInfo) bool {
+	if v.GetOwnership() != nil {
+		return v.GetOwnership().IsPermitted(user)
+	}
+	return true
 }

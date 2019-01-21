@@ -20,7 +20,6 @@ get_volume_id() {
 assert_attached(){
 	# Get Vol ID
 	get_volume_id $volume_name
-
 	attach_path=$(curl -X GET "http://localhost:9116/v1/volumes/inspect/$volume_id" -H "accept:application/json" -H "Authorization:bearer $token" | jq  ."volume" | jq ."attach_path" | jq .[0] -r)
 
 	# ATTACH_PATH is null when the volume unmounted. If it is non-null,
@@ -39,7 +38,7 @@ assert_attached(){
 		fi
 	# Here we can assert that the volume is unmounted
 	else
-		echo "Asserting volume detached: $attach_path"	
+		echo "Asserting volume detached: $attach_path"
 		if [ $attach_path == "null" ];
 		then
 			return 0
@@ -51,20 +50,27 @@ assert_attached(){
 }
 
 # Generate shared secret
-go get -u github.com/libopenstorage/openstorage-sdk-auth/...
-token=$($GOPATH/bin/openstorage-sdk-auth \
+make install || exit 1
+
+token=$($GOPATH/bin/osd-token-generator \
   --auth-config=hack/sdk-auth-sample.yml \
   --shared-secret=testsecret)
 
 # Start OSD
-sudo -E OPENSTORAGE_AUTH_SHAREDSECRET=testsecret $GOPATH/bin/osd -d --driver=name=fake --sdkport 9106 --sdkrestport 9116 &
+sudo -E $GOPATH/bin/osd \
+	-d \
+	--driver=name=fake \
+	--sdkport 9106 \
+	--jwt-shared-secret=testsecret \
+	--sdkrestport 9116 &
 jobs -l
-sleep 3
+timeout 30 sh -c "until curl --silent -H \"Authorization:bearer $token\" -X GET -d {} http://localhost:9116/v1/clusters/inspectcurrent | grep STATUS_OK; do sleep 1; done"
+assert_success
 
 # Test & assert
 volume_name=$(sudo docker volume create -d fake -o size=1234 -o token=$token)
 assert_success
-sudo docker volume inspect token=$token,name=$volume_name 
+sudo docker volume inspect token=$token,name=${volume_name}
 assert_success
 
 # Get Vol ID
@@ -75,9 +81,7 @@ assert_attached false
 
 # Run app with our  volume
 app_name="APP_TEST_$volume_name"
-
-sudo docker stop $app_name && sudo docker rm $app_name 
-sudo docker run -d --name $app_name --volume-driver fake -v token=$token,name=$volume_name:/app nginx:latest
+sudo docker run -d --name $app_name --volume-driver fake -v size=12345,token=$token,name=${volume_name}:/app nginx:latest
 assert_success
 assert_attached true
 
@@ -85,6 +89,15 @@ assert_attached true
 sudo docker stop $app_name
 assert_success
 assert_attached false
+
+# Remove volume
+sudo docker rm $app_name
+assert_success
+sudo docker volume rm token=$token,name=$volume_name
+assert_success
+volume_id=$(curl -X POST "http://localhost:9116/v1/volumes/filters" -H "accept: application/json" -H "Content-Type:application/json" -H "Authorization:bearer $token" -d "{ \"name\": \"$volume_name\"}")
+test $volume_id = "{}"
+assert_success
 
 # Cleanup
 echo "Docker integration tests passed, cleaning up!"

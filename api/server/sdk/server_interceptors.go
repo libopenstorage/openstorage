@@ -18,27 +18,19 @@ package sdk
 
 import (
 	"context"
-	"encoding/json"
 	"time"
 
-	sdk_auth "github.com/libopenstorage/openstorage/pkg/auth"
-	"github.com/pborman/uuid"
-	"github.com/sirupsen/logrus"
+	"github.com/libopenstorage/openstorage/pkg/auth"
 
 	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
+	"github.com/pborman/uuid"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-// Keys to store data in gRPC context. Use these keys to retrieve
-// the data from the gRPC context
-type InterceptorContextkey string
-
 const (
-	// Key to store in the token claims in gRPC context
-	InterceptorContextTokenKey InterceptorContextkey = "tokenclaims"
-
 	// Metedata context key where the token is found.
 	// This key must be used by the caller as the key for the token in
 	// the metedata of the context. The generated Rest Gateway also uses this
@@ -62,22 +54,37 @@ func (s *sdkGrpcServer) rwlockIntercepter(
 
 // Authenticate user and add authorization information back in the context
 func (s *sdkGrpcServer) auth(ctx context.Context) (context.Context, error) {
+	// Obtain token from metadata in the context
 	token, err := grpc_auth.AuthFromMD(ctx, ContextMetadataTokenKey)
 	if err != nil {
 		return nil, err
 	}
 
-	// Authenticate user
-	claims, err := s.authenticator.AuthenticateToken(token)
+	// Determine issuer
+	issuer, err := auth.TokenIssuer(token)
 	if err != nil {
-		return nil, status.Error(codes.PermissionDenied, err.Error())
+		return nil, status.Errorf(codes.PermissionDenied, "Unable to obtain issuer from token: %v", err)
 	}
 
-	// Add authorization information back into the context so that other
-	// functions can get access to this information
-	ctx = context.WithValue(ctx, InterceptorContextTokenKey, claims)
-
-	return ctx, nil
+	// Authenticate user
+	if authenticator, ok := s.config.Security.Authenticators[issuer]; ok {
+		var claims *auth.Claims
+		claims, err = authenticator.AuthenticateToken(ctx, token)
+		if err == nil {
+			// Add authorization information back into the context so that other
+			// functions can get access to this information.
+			// If this is in the context is how functions will know that security is enabled.
+			ctx = auth.ContextSaveUserInfo(ctx, &auth.UserInfo{
+				Username: authenticator.Username(claims),
+				Claims:   *claims,
+			})
+			return ctx, nil
+		} else {
+			return nil, status.Error(codes.PermissionDenied, err.Error())
+		}
+	} else {
+		return nil, status.Errorf(codes.PermissionDenied, "%s is not a trusted issuer", issuer)
+	}
 }
 
 func (s *sdkGrpcServer) loggerServerInterceptor(
@@ -113,35 +120,51 @@ func (s *sdkGrpcServer) authorizationServerInterceptor(
 	info *grpc.UnaryServerInfo,
 	handler grpc.UnaryHandler,
 ) (interface{}, error) {
-	claims, ok := ctx.Value(InterceptorContextTokenKey).(*sdk_auth.Claims)
+	userinfo, ok := auth.NewUserInfoFromContext(ctx)
 	if !ok {
-		return nil, status.Errorf(codes.Internal, "Authorization called without token")
+		return nil, status.Error(
+			codes.Internal,
+			"Unable to authorize user because token is missing from context")
 	}
+	claims := &userinfo.Claims
 
 	// Setup auditor log
-	claimsJSON, err := json.Marshal(claims)
-	if err != nil {
-		logrus.Warningf("Unable to unmarshal claims: %v", err)
-	}
 	log := logrus.New()
 	log.Out = s.auditLogOutput
 	logger := log.WithFields(logrus.Fields{
-		"name":   claims.Name,
-		"email":  claims.Email,
-		"role":   claims.Role,
-		"claims": string(claimsJSON),
-		"method": info.FullMethod,
+		"username": userinfo.Username,
+		"subject":  claims.Subject,
+		"name":     claims.Name,
+		"email":    claims.Email,
+		"roles":    claims.Roles,
+		"groups":   claims.Groups,
+		"method":   info.FullMethod,
 	})
 
 	// Authorize
-	if err := s.roleServer.Verify(ctx, claims.Role, info.FullMethod); err != nil {
-		logger.Infof("Access denied")
+	if err := s.roleServer.Verify(ctx, claims.Roles, info.FullMethod); err != nil {
+		logger.Warning("Access denied")
 		return nil, status.Errorf(
 			codes.PermissionDenied,
 			"Access to %s denied: %v",
 			info.FullMethod, err)
 	}
 
+	// Execute the command
+	i, err := handler(ctx, req)
+
+	// Check if we have been denied
+	if err != nil {
+		if gErr, ok := status.FromError(err); ok {
+			if gErr.Code() == codes.PermissionDenied {
+				logger.Warningf("Access denied: %v", err)
+				return i, err
+			}
+		}
+	}
+
+	// Log
 	logger.Info("Authorized")
-	return handler(ctx, req)
+
+	return i, err
 }

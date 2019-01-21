@@ -42,6 +42,11 @@ func (s *VolumeServer) Attach(
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
 	}
 
+	// Get access rights
+	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId()); err != nil {
+		return nil, err
+	}
+
 	// Check if already attached
 	v, err := util.VolumeFromName(s.driver(), req.GetVolumeId())
 	if err != nil {
@@ -92,6 +97,11 @@ func (s *VolumeServer) Detach(
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
 	}
 
+	// Get access rights
+	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId()); err != nil {
+		return nil, err
+	}
+
 	// Check if already attached
 	v, err := util.VolumeFromName(s.driver(), req.GetVolumeId())
 	if err != nil {
@@ -140,6 +150,11 @@ func (s *VolumeServer) Mount(
 		return nil, status.Error(codes.InvalidArgument, "Invalid Mount Path")
 	}
 
+	// Get access rights
+	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId()); err != nil {
+		return nil, err
+	}
+
 	vols, err := s.driver().Inspect([]string{req.VolumeId})
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "Invalid volume id")
@@ -173,9 +188,11 @@ func (s *VolumeServer) Mount(
 		// If volume is scaled up, a new volume is created and
 		// vol will change.
 		attachOptions := make(map[string]string)
-		attachOptions[options.OptionsSecret] = req.Options.SecretName
-		attachOptions[options.OptionsSecretKey] = req.Options.SecretKey
-		attachOptions[options.OptionsSecretContext] = req.Options.SecretContext
+		if req.Options != nil {
+			attachOptions[options.OptionsSecret] = req.Options.SecretName
+			attachOptions[options.OptionsSecretKey] = req.Options.SecretKey
+			attachOptions[options.OptionsSecretContext] = req.Options.SecretContext
+		}
 		if vol.Scaled() {
 			vol, err = s.attachScale(ctx, vol, attachOptions)
 		} else {
@@ -224,19 +241,27 @@ func (s *VolumeServer) Unmount(
 	}
 
 	// Get volume to unmount
-	vols, err := s.driver().Inspect([]string{req.VolumeId})
+	// Checks ownership
+	resp, err := s.Inspect(ctx, &api.SdkVolumeInspectRequest{
+		VolumeId: req.GetVolumeId(),
+	})
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "Invalid volume id")
+		return nil, err
 	}
-	vol := vols[0]
-	if vol.Spec.Scale > 1 {
-		if len(req.VolumeId) == 0 {
-			return &api.SdkVolumeUnmountResponse{},
-				fmt.Errorf("Failed to find volume mapping for %v", req.MountPath)
+	volid := resp.GetVolume().GetId()
+
+	// TODO: Idempotency?
+	// XXX How do we check.
+
+	// From old docker server, now it is here in the SDK
+	if resp.GetVolume().GetSpec().Scale > 1 {
+		volid := s.driver().MountedAt(req.GetMountPath())
+		if len(volid) == 0 {
+			return nil, status.Errorf(codes.Internal, "Failed to find volume mapping for %v", req.GetMountPath())
 		}
 	}
 
-	if err = s.driver().Unmount(req.GetVolumeId(), req.GetMountPath(), options); err != nil {
+	if err = s.driver().Unmount(volid, req.GetMountPath(), options); err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
 			"Failed to unmount volume %s: %v",
@@ -245,7 +270,7 @@ func (s *VolumeServer) Unmount(
 	}
 
 	if s.driver().Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-		_ = s.driver().Detach(req.VolumeId, nil)
+		_ = s.driver().Detach(volid, nil)
 	}
 
 	return &api.SdkVolumeUnmountResponse{}, nil

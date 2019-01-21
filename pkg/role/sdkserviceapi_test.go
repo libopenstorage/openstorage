@@ -511,17 +511,17 @@ func TestSdkRoleVerifyRules(t *testing.T) {
 		denied     bool
 		fullmethod string
 		rules      []*api.SdkRule
-		role       string
+		roles      []string
 	}{
 		{
 			denied:     false,
 			fullmethod: "/openstorage.api.OpenStorageVolumes/Enumerate",
-			role:       "system.admin",
+			roles:      []string{"system.admin"},
 		},
 		{
 			denied:     false,
 			fullmethod: "/openstorage.api.OpenStorageFutureService/SomeCallInTheFuture",
-			role:       "system.admin",
+			roles:      []string{"system.admin"},
 		},
 		{
 			denied:     true,
@@ -571,12 +571,12 @@ func TestSdkRoleVerifyRules(t *testing.T) {
 		{
 			denied:     false,
 			fullmethod: "/openstorage.api.OpenStorageFutureService/SomeCallInTheFutureEnumerate",
-			role:       "system.view",
+			roles:      []string{"system.view"},
 		},
 		{
 			denied:     true,
 			fullmethod: "/openstorage.api.OpenStorageFutureService/SomeCallInTheFuture",
-			role:       "system.view",
+			roles:      []string{"system.view"},
 		},
 	}
 
@@ -589,8 +589,8 @@ func TestSdkRoleVerifyRules(t *testing.T) {
 	for _, test := range tests {
 		var rules []*api.SdkRule
 		var err error
-		if len(test.role) != 0 {
-			err = s.Verify(context.Background(), test.role, test.fullmethod)
+		if len(test.roles) != 0 {
+			err = s.Verify(context.Background(), test.roles, test.fullmethod)
 		} else {
 			err = s.verifyRules(test.rules, test.fullmethod)
 		}

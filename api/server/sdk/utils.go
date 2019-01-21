@@ -18,12 +18,16 @@ limitations under the License.
 package sdk
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"time"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/sched"
+	"github.com/libopenstorage/openstorage/volume"
+
+	"github.com/portworx/kvdb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gopkg.in/yaml.v2"
@@ -238,4 +242,25 @@ func openLog(logfile string) (*os.File, error) {
 		return nil, fmt.Errorf("Unable to open logfile %s: %v", logfile, err)
 	}
 	return file, nil
+}
+
+func checkAccessFromDriverForVolumeId(ctx context.Context, d volume.VolumeDriver, volumeId string) error {
+	vols, err := d.Inspect([]string{volumeId})
+	if err == kvdb.ErrNotFound || (err == nil && len(vols) == 0) {
+		return status.Errorf(
+			codes.NotFound,
+			"Volume id %s not found",
+			volumeId)
+	} else if err != nil {
+		return status.Errorf(
+			codes.Internal,
+			"Failed to find volume %s: %v",
+			volumeId, err)
+	}
+
+	if !vols[0].IsPermitted(ctx) {
+		return status.Errorf(codes.PermissionDenied, "Access denied to volume %s", volumeId)
+	}
+
+	return nil
 }

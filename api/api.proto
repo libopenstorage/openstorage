@@ -236,6 +236,8 @@ message VolumeLocator {
   string name = 1;
   // A set of name-value pairs that acts as search filters
   map<string, string> volume_labels = 2;
+  // Filter with ownership
+  Ownership ownership = 3;
 }
 
 // Source is a structure that can be given to a volume
@@ -325,6 +327,8 @@ message VolumeSpec {
   IoStrategy io_strategy = 30;
   // PlacementStrategy specifies a spec to indicate where to place the volume.
   VolumePlacementStrategy placement_strategy = 31;
+  // Owner
+  Ownership ownership = 32;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -361,6 +365,10 @@ message VolumeSpecUpdate {
   oneof sharedv4_opt { bool sharedv4 = 24; }
   // QueueDepth defines the desired block device queue depth
   oneof queue_depth_opt { uint32 queue_depth = 25; }
+  // Ownership volume information to update. If the value of `owner` in the
+  // `ownership` message is an empty string then the value of `owner` in
+  // the `VolumeSpec.Ownership.owner` will not be updated.
+  Ownership ownership = 26;
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
@@ -373,6 +381,41 @@ message ReplicaSet {
 // information.
 message RuntimeStateMap {
   map<string, string> runtime_state = 1;
+}
+
+// Ownership information for resource.
+// Administrators are users who belong to the group `*`, meaning, every group.
+message Ownership {
+  message AccessControl {
+    // Group access to resource which must be set in the authorization token.
+    // Can be set by the owner or the system administrator only.
+    // Possible values are:
+    // 1. an empty list: An empty list means no groups are allowed.
+    // 2. `["*"]`: All groups are allowed.
+    // 3. `["group1", "group2"]`: Only certain groups are allowed. In this example only
+    // _group1_ and _group2_ are allowed.
+    repeated string groups = 2;
+    // Collaborator access to resource gives access to other usernames.
+    // Must be the username set in the authorization token. The owner or the
+    // system administrator can set this value. Possible values are:
+    // 1. an empty list: An empty list means no users are allowed.
+    // 2. `["*"]`: All users are allowed.
+    // 3. `["username1", "username2"]`: Only certain usernames are allowed. In this example only
+    // _username1_ and _username2_ are allowed.
+    repeated string collaborators = 3;
+  }
+
+  // Username of owner.
+  //
+  // The storage system uses the username taken from the security authorization
+  // token and is saved on this field. Only users with system administration
+  // can edit this value.
+  string owner = 1;
+  // Permissions to share resource which can be set by the owner.
+  //
+  // NOTE: To create an "admin" user which has access to any resource set the group value
+  // in the token of the user to `*`.
+  AccessControl acls = 2;
 }
 
 // Volume represents an abstract storage volume.
@@ -750,14 +793,8 @@ message VolumeSetRequest {
 // VolumeSetResponse
 message VolumeSetResponse {
   // Volume
-  //
-  // in: body
-  // Required: true
   Volume volume = 1;
   //VolumeResponse
-  //
-  // in: body
-  // Required: true
   VolumeResponse volume_response = 2;
 }
 
@@ -2078,6 +2115,8 @@ message SdkVolumeEnumerateWithFiltersRequest {
   string name = 2;
   // (optional) Labels to search
   map<string, string> labels = 3;
+  // (optional) Ownership to match
+  Ownership ownership = 4;
 }
 
 // Defines the response when listing volumes
@@ -2752,7 +2791,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 36;
+    Minor = 37;
     // SDK version patch value of this specification
     Patch = 0;
   }

@@ -1,8 +1,4 @@
 name: Test
 email: 123@abc.com
-role: system.admin
+roles: ["system.admin"]
 groups: ["*"]
-rules:
-  - services: ["*"]
-    apis: ["*"]
-

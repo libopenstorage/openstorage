@@ -90,6 +90,30 @@ func setSwaggerVersion(file, version string) error {
 	jsonFile["info"].(map[string]interface{})["title"] = "OpenStorage SDK"
 	jsonFile["info"].(map[string]interface{})["version"] = version
 
+	// Set support for bearer tokens
+	type securitySchemes struct {
+		BearerAuth struct {
+			Type         string `json:"type"`
+			Scheme       string `json:"scheme"`
+			BearerFormat string `json:"bearerFormat"`
+		} `json:"bearerAuth"`
+	}
+	schemes := securitySchemes{}
+	schemes.BearerAuth.Type = "http"
+	schemes.BearerAuth.Scheme = "bearer"
+	schemes.BearerAuth.BearerFormat = "JWT"
+	jsonFile["components"].(map[string]interface{})["securitySchemes"] = schemes
+
+	// Set default security for all
+	type securityDefault struct {
+		BearerAuth []string `json:"bearerAuth"`
+	}
+	jsonFile["security"] = []securityDefault{
+		securityDefault{
+			BearerAuth: []string{},
+		},
+	}
+
 	bytes, err := json.MarshalIndent(jsonFile, "", "  ")
 	if err != nil {
 		return err

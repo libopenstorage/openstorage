@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/libopenstorage/openstorage/api"
+	sdk "github.com/libopenstorage/openstorage/api/server/sdk"
 	"github.com/libopenstorage/openstorage/volume"
 )
 
@@ -17,18 +18,29 @@ func (vd *volAPI) cloudBackupCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	d, err := vd.getVolDriver(r)
+	// Get context with auth token
+	ctx, err := vd.annotateContext(r)
 	if err != nil {
-		notFound(w, r)
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	createResp, err := d.CloudBackupCreate(backupReq)
+	// Get gRPC connection
+	conn, err := vd.getConn()
 	if err != nil {
-		if err == volume.ErrInvalidName {
-			w.WriteHeader(http.StatusConflict)
-			return
-		}
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	volumes := api.NewOpenStorageCloudBackupClient(conn)
+	createResp, err := volumes.Create(ctx, &api.SdkCloudBackupCreateRequest{
+		VolumeId:     backupReq.VolumeID,
+		CredentialId: backupReq.CredentialUUID,
+		Full:         backupReq.Full,
+		TaskId:       backupReq.Name,
+		Labels:       backupReq.Labels,
+	})
+	if err != nil {
 		vd.sendError(method, backupReq.VolumeID, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -155,19 +167,33 @@ func (vd *volAPI) cloudBackupEnumerate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	d, err := vd.getVolDriver(r)
+	// Get context with auth token
+	ctx, err := vd.annotateContext(r)
 	if err != nil {
-		notFound(w, r)
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	enumerateResp, err := d.CloudBackupEnumerate(enumerateReq)
+	// Get gRPC connection
+	conn, err := vd.getConn()
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	volumes := api.NewOpenStorageCloudBackupClient(conn)
+	enumerateResp, err := volumes.EnumerateWithFilters(ctx, &api.SdkCloudBackupEnumerateWithFiltersRequest{
+		SrcVolumeId:  enumerateReq.SrcVolumeID,
+		ClusterId:    enumerateReq.ClusterID,
+		CredentialId: enumerateReq.CredentialUUID,
+		All:          enumerateReq.All,
+	})
 	if err != nil {
 		vd.sendError(method, "", w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	json.NewEncoder(w).Encode(enumerateResp)
+	json.NewEncoder(w).Encode(enumerateResp.GetBackups())
 }
 
 func (vd *volAPI) cloudBackupStatus(w http.ResponseWriter, r *http.Request) {
@@ -273,18 +299,31 @@ func (vd *volAPI) cloudBackupSchedCreate(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	d, err := vd.getVolDriver(r)
+	// Get context with auth token
+	ctx, err := vd.annotateContext(r)
 	if err != nil {
-		notFound(w, r)
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	backupSchedResp, err := d.CloudBackupSchedCreate(backupSchedReq)
+	// Get gRPC connection
+	conn, err := vd.getConn()
 	if err != nil {
-		vd.sendError(method, backupSchedReq.SrcVolumeID, w, err.Error(), http.StatusInternalServerError)
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	json.NewEncoder(w).Encode(backupSchedResp)
+
+	volumes := api.NewOpenStorageCloudBackupClient(conn)
+	resp, err := volumes.SchedCreate(ctx, &api.SdkCloudBackupSchedCreateRequest{
+		CloudSchedInfo: sdk.ToSdkCloudBackupdScheduleInfo(api.CloudBackupScheduleInfo{
+			SrcVolumeID:    backupSchedReq.SrcVolumeID,
+			CredentialUUID: backupSchedReq.CredentialUUID,
+			Schedule:       backupSchedReq.Schedule,
+			MaxBackups:     backupSchedReq.MaxBackups,
+		}),
+	})
+
+	json.NewEncoder(w).Encode(resp)
 }
 
 func (vd *volAPI) cloudBackupGroupSchedCreate(w http.ResponseWriter, r *http.Request) {

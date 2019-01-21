@@ -89,6 +89,7 @@ build: packr
 
 install: packr $(OSDSANITY)-install
 	go install -tags "$(TAGS)" $(PKGS)
+	go install github.com/libopenstorage/openstorage/cmd/osd-token-generator
 
 $(OSDSANITY):
 	@$(MAKE) -C cmd/osd-sanity
@@ -131,7 +132,7 @@ ifndef HAS_PROTOC_GEN_SWAGGER
 	go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
 endif
 
-	@echo "Generating protobuf definitions from api/api.proto"
+	@echo ">>> Generating protobuf definitions from api/api.proto"
 	$(PROTOC) -I $(PROTOSRC_PATH) \
 		-I /usr/local/include \
 		-I $(PROTOS_PATH)/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
@@ -147,12 +148,16 @@ endif
 		-I $(PROTOS_PATH)/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
 		--swagger_out=logtostderr=true:$(PROTOSRC_PATH)/api/server/sdk \
 		$(PROTOSRC_PATH)/api/api.proto
-	@echo "Generating grpc protobuf definitions from pkg/flexvolume/flexvolume.proto"
+	@echo ">>> Upgrading swagger 2.0 to openapi 3.0"
+	mv api/server/sdk/api/api.swagger.json api/server/sdk/api/20api.swagger.json
+	swagger2openapi api/server/sdk/api/20api.swagger.json -o api/server/sdk/api/api.swagger.json
+	rm -f api/server/sdk/api/20api.swagger.json
+	@echo ">>> Generating grpc protobuf definitions from pkg/flexvolume/flexvolume.proto"
 	$(PROTOC) -I/usr/local/include -I$(PROTOSRC_PATH) -I$(PROTOS_PATH)/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis --go_out=plugins=grpc:. $(PROTOSRC_PATH)/pkg/flexvolume/flexvolume.proto
 	$(PROTOC) -I/usr/local/include -I$(PROTOSRC_PATH) -I$(PROTOS_PATH)/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis --grpc-gateway_out=logtostderr=true:. $(PROTOSRC_PATH)/pkg/flexvolume/flexvolume.proto
-	@echo "Generating protobuf definitions from pkg/jsonpb/testing/testing.proto"
+	@echo ">>> Generating protobuf definitions from pkg/jsonpb/testing/testing.proto"
 	$(PROTOC) -I $(PROTOSRC_PATH) $(PROTOSRC_PATH)/pkg/jsonpb/testing/testing.proto --go_out=plugins=grpc:.
-	@echo "Updating SDK versions"
+	@echo ">>> Updating SDK versions"
 	go run tools/sdkver/sdkver.go --swagger api/server/sdk/api/api.swagger.json
 
 lint:
@@ -190,6 +195,7 @@ ifndef HAS_PACKR
 	@echo "Installing packr to embed websites in golang"
 	go get -u github.com/gobuffalo/packr/...
 endif
+	packr clean
 	packr
 
 generate-mockfiles:

@@ -1,9 +1,10 @@
 # Changelog
 
-> NOTE: The SDK is still in tech preview. Once officially released, this changelog will also
-> use the SDK version numbers.
-
 ## Releases
+
+### v0.37.0 - Tech Preview (1/16/2019)
+
+* Ownership support in the VolumeSpec
 
 ### v0.36.0 - Tech Preview (1/7/2019)
 

@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/util"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/portworx/kvdb"
@@ -28,6 +29,7 @@ import (
 )
 
 func (s *VolumeServer) create(
+	ctx context.Context,
 	locator *api.VolumeLocator,
 	source *api.Source,
 	spec *api.VolumeSpec,
@@ -72,6 +74,11 @@ func (s *VolumeServer) create(
 				err.Error())
 		}
 
+		// Check ownership
+		if !parent.IsPermitted(ctx) {
+			return "", status.Errorf(codes.PermissionDenied, "Access denied to volume %s", parent.GetId())
+		}
+
 		// Create a snapshot from the parent
 		id, err = s.driver().Snapshot(parent.GetId(), false, &api.VolumeLocator{
 			Name: volName,
@@ -83,6 +90,9 @@ func (s *VolumeServer) create(
 				err.Error())
 		}
 	} else {
+		// New volume, set ownership
+		spec.Ownership = api.OwnershipSetUsernameFromContext(ctx, spec.Ownership)
+
 		// Create the volume
 		id, err = s.driver().Create(locator, source, spec)
 		if err != nil {
@@ -131,7 +141,7 @@ func (s *VolumeServer) Create(
 	}
 
 	// Create volume
-	id, err := s.create(locator, source, spec)
+	id, err := s.create(ctx, locator, source, spec)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -168,6 +178,7 @@ func (s *VolumeServer) Clone(
 	}
 
 	// Get spec. This also checks if the parend id exists.
+	// This will check access rights also
 	parentVol, err := s.Inspect(ctx, &api.SdkVolumeInspectRequest{
 		VolumeId: req.GetParentId(),
 	})
@@ -176,7 +187,7 @@ func (s *VolumeServer) Clone(
 	}
 
 	// Create the clone
-	id, err := s.create(locator, source, parentVol.GetVolume().GetSpec())
+	id, err := s.create(ctx, locator, source, parentVol.GetVolume().GetSpec())
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -200,16 +211,17 @@ func (s *VolumeServer) Delete(
 	}
 
 	// If the volume is not found, return OK to be idempotent
-	volumes, err := s.driver().Inspect([]string{req.GetVolumeId()})
-	if (err == nil && len(volumes) == 0) ||
-		(err != nil && err == volume.ErrEnoEnt) {
-		return &api.SdkVolumeDeleteResponse{}, nil
-	} else if err != nil {
-		return nil, status.Errorf(
-			codes.Internal,
-			"Failed to determine if volume id %s exists: %v",
-			req.GetVolumeId(),
-			err.Error())
+	// This checks access rights also
+	_, err := s.Inspect(ctx, &api.SdkVolumeInspectRequest{
+		VolumeId: req.GetVolumeId(),
+	})
+	if err != nil {
+		if gErr, ok := status.FromError(err); ok {
+			if gErr.Code() == codes.NotFound {
+				return &api.SdkVolumeDeleteResponse{}, nil
+			}
+		}
+		return nil, err
 	}
 
 	err = s.driver().Delete(req.GetVolumeId())
@@ -249,8 +261,13 @@ func (s *VolumeServer) Inspect(
 			"Failed to inspect volume %s: %v",
 			req.GetVolumeId(), err)
 	}
-
 	v := vols[0]
+
+	// Check ownership
+	if !v.IsPermitted(ctx) {
+		return nil, status.Errorf(codes.PermissionDenied, "Access denied to volume %s", v.GetId())
+	}
+
 	return &api.SdkVolumeInspectResponse{
 		Volume: v,
 		Name:   v.GetLocator().GetName(),
@@ -291,10 +308,14 @@ func (s *VolumeServer) EnumerateWithFilters(
 	}
 
 	var locator *api.VolumeLocator
-	if len(req.GetName()) != 0 || len(req.GetLabels()) != 0 {
+	if len(req.GetName()) != 0 ||
+		len(req.GetLabels()) != 0 ||
+		req.GetOwnership() != nil {
+
 		locator = &api.VolumeLocator{
 			Name:         req.GetName(),
 			VolumeLabels: req.GetLabels(),
+			Ownership:    req.GetOwnership(),
 		}
 	}
 
@@ -306,9 +327,12 @@ func (s *VolumeServer) EnumerateWithFilters(
 			err.Error())
 	}
 
-	ids := make([]string, len(vols))
-	for i, vol := range vols {
-		ids[i] = vol.GetId()
+	ids := make([]string, 0)
+	for _, vol := range vols {
+		// Check access
+		if vol.IsPermitted(ctx) {
+			ids = append(ids, vol.GetId())
+		}
 	}
 
 	return &api.SdkVolumeEnumerateWithFiltersResponse{
@@ -330,13 +354,30 @@ func (s *VolumeServer) Update(
 	}
 
 	// Get current state
+	// This checks for ownership
 	resp, err := s.Inspect(ctx, &api.SdkVolumeInspectRequest{
 		VolumeId: req.GetVolumeId(),
 	})
 	if err != nil {
 		return nil, err
 	}
+
+	// Merge specs
 	spec := s.mergeVolumeSpecs(resp.GetVolume().GetSpec(), req.GetSpec())
+
+	// Update Ownership... carefully
+	// First point to the original ownership
+	spec.Ownership = resp.GetVolume().GetSpec().GetOwnership()
+
+	// Check if we have been provided an update to the ownership
+	if req.GetSpec().GetOwnership() != nil {
+		if spec.Ownership == nil {
+			spec.Ownership = &api.Ownership{}
+		}
+
+		user, _ := auth.NewUserInfoFromContext(ctx)
+		spec.Ownership.Update(req.GetSpec().GetOwnership(), user)
+	}
 
 	// Check if labels have been updated
 	var locator *api.VolumeLocator
@@ -365,6 +406,11 @@ func (s *VolumeServer) Stats(
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
 	}
 
+	// Get access rights
+	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId()); err != nil {
+		return nil, err
+	}
+
 	stats, err := s.driver().Stats(req.GetVolumeId(), !req.GetNotCumulative())
 	if err != nil {
 		return nil, status.Errorf(
@@ -386,6 +432,11 @@ func (s *VolumeServer) CapacityUsage(
 
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
+	}
+
+	// Get access rights
+	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId()); err != nil {
+		return nil, err
 	}
 
 	dResp, err := s.driver().CapacityUsage(req.GetVolumeId())

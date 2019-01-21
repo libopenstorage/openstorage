@@ -51,6 +51,15 @@ func TestSdkCloudBackupCreate(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
+		Inspect([]string{id}).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id: id,
+			},
+		}, nil).
+		Times(1)
+	s.MockDriver().
+		EXPECT().
 		CloudBackupCreate(&api.CloudBackupCreateRequest{
 			VolumeID:       id,
 			CredentialUUID: uuid,
@@ -555,6 +564,15 @@ func TestSdkCloudBackupHistory(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
+		Inspect([]string{id}).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id: id,
+			},
+		}, nil).
+		Times(1)
+	s.MockDriver().
+		EXPECT().
 		CloudBackupHistory(&api.CloudBackupHistoryRequest{
 			SrcVolumeID: id,
 		}).
@@ -698,6 +716,7 @@ func TestSdkCloudBackupSchedCreate(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
+	id := "test-id"
 	testSched := []*api.SdkSchedulePolicyInterval{
 		&api.SdkSchedulePolicyInterval{
 			Retain: 1,
@@ -711,7 +730,7 @@ func TestSdkCloudBackupSchedCreate(t *testing.T) {
 	}
 	req := &api.SdkCloudBackupSchedCreateRequest{
 		CloudSchedInfo: &api.SdkCloudBackupScheduleInfo{
-			SrcVolumeId:  "test-id",
+			SrcVolumeId:  id,
 			CredentialId: "uuid",
 			Schedules:    testSched,
 		},
@@ -723,6 +742,15 @@ func TestSdkCloudBackupSchedCreate(t *testing.T) {
 	mockReq.Schedule = "- freq: daily\n  minute: 30\n  retain: 1\n"
 
 	// Create response
+	s.MockDriver().
+		EXPECT().
+		Inspect([]string{id}).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id: id,
+			},
+		}, nil).
+		Times(1)
 	s.MockDriver().
 		EXPECT().
 		CloudBackupSchedCreate(&mockReq).
