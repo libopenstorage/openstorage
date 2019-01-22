@@ -56,6 +56,7 @@ const (
 	// the VolumeSpec.force_unsupported_fs_type. When set to true it asks
 	// the driver to use an unsupported value of VolumeSpec.format if possible
 	SpecForceUnsupportedFsType = "force_unsupported_fs_type"
+	SpecNodiscard              = "nodiscard"
 )
 
 // OptionKey specifies a set of recognized query params.

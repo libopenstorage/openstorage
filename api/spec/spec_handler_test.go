@@ -84,6 +84,16 @@ func TestQueueDepth(t *testing.T) {
 	testSpecOptString(t, api.SpecQueueDepth, "10")
 }
 
+func TestNodiscard(t *testing.T) {
+	testSpecOptString(t, api.SpecNodiscard, "true")
+
+	spec := testSpecFromString(t, api.SpecNodiscard, "true")
+	require.True(t, spec.Nodiscard, "failed to parse nodiscard option into spec")
+
+	spec = testSpecFromString(t, api.SpecNodiscard, "false")
+	require.False(t, spec.Nodiscard, "failed to parse nodiscard option into spec")
+}
+
 func TestEarlyAck(t *testing.T) {
 	s := NewSpecHandler()
 	spec, _, _, err := s.SpecFromOpts(map[string]string{
