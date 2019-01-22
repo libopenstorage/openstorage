@@ -3,9 +3,15 @@ package server
 import (
 	"context"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/libopenstorage/openstorage/api"
 	volumeclient "github.com/libopenstorage/openstorage/api/client/volume"
-	"testing"
+	"github.com/libopenstorage/openstorage/pkg/auth/secrets"
+	"github.com/libopenstorage/openstorage/volume"
+	"github.com/libopenstorage/secrets/k8s"
+	"github.com/libopenstorage/secrets/mock"
 
 	//"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -67,6 +73,38 @@ func TestVolumeNoAuth(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func testCreateSuccessChecks(t *testing.T, testVolDriver *testServer, req *api.VolumeCreateRequest, id string) {
+	// Assert volume information is correct
+	volumes := api.NewOpenStorageVolumeClient(testVolDriver.Conn())
+	ctx, err := contextWithToken(context.Background(), "test", "system.admin", testSharedSecret)
+	assert.NoError(t, err)
+	r, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
+		VolumeId: id,
+	})
+	assert.NoError(t, err)
+	assert.NotNil(t, r)
+	assert.Equal(t, req.GetLocator().GetName(), r.GetVolume().GetLocator().GetName())
+	assert.Equal(t, req.GetSpec().GetSize(), r.GetVolume().GetSpec().GetSize())
+
+	// Check ownership. We should be denied
+	ctx, err = contextWithToken(context.Background(), "anotheruser", "system.view", testSharedSecret)
+	assert.NoError(t, err)
+	r, err = volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
+		VolumeId: id,
+	})
+	assert.Error(t, err)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.PermissionDenied)
+
+	ctx, err = contextWithToken(context.Background(), "test", "system.admin", testSharedSecret)
+	_, err = volumes.Delete(ctx, &api.SdkVolumeDeleteRequest{
+		VolumeId: id,
+	})
+	assert.NoError(t, err)
+
+}
+
 func TestVolumeCreateSuccess(t *testing.T) {
 
 	var err error
@@ -103,34 +141,127 @@ func TestVolumeCreateSuccess(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
-	// Assert volume information is correct
-	volumes := api.NewOpenStorageVolumeClient(testVolDriver.Conn())
-	ctx, err := contextWithToken(context.Background(), "test", "system.admin", testSharedSecret)
-	assert.NoError(t, err)
-	r, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
-		VolumeId: id,
-	})
-	assert.NoError(t, err)
-	assert.NotNil(t, r)
-	assert.Equal(t, req.GetLocator().GetName(), r.GetVolume().GetLocator().GetName())
-	assert.Equal(t, req.GetSpec().GetSize(), r.GetVolume().GetSpec().GetSize())
+	testCreateSuccessChecks(t, testVolDriver, req, id)
+}
 
-	// Check ownership. We should be denied
-	ctx, err = contextWithToken(context.Background(), "anotheruser", "system.view", testSharedSecret)
-	assert.NoError(t, err)
-	r, err = volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
-		VolumeId: id,
-	})
-	assert.Error(t, err)
-	serverError, ok := status.FromError(err)
-	assert.True(t, ok)
-	assert.Equal(t, serverError.Code(), codes.PermissionDenied)
+func TestMiddlewareVolumeCreateSuccess(t *testing.T) {
+	testVolDriver := newTestServerSdk(t)
+	defer testVolDriver.Stop()
 
-	ctx, err = contextWithToken(context.Background(), "test", "system.admin", testSharedSecret)
-	_, err = volumes.Delete(ctx, &api.SdkVolumeDeleteRequest{
-		VolumeId: id,
-	})
-	assert.NoError(t, err)
+	secretInst, mockSecret, mc := getSecretsMock(t)
+	defer mc.Finish()
+
+	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true, secrets.TypeK8s, secretInst)
+	assert.NoError(t, err, "Unexpected error on StartVolumeMgmtAPI")
+	defer unixServer.Close()
+	defer portServer.Close()
+
+	time.Sleep(1 * time.Second)
+	c, err := volumeclient.NewDriverClient(testMockURL, fakeWithSched, version, fakeWithSched)
+	assert.NoError(t, err, "Unexpected error on NewDriverClient")
+	driverclient := volumeclient.VolumeDriver(c)
+
+	testMiddlewareCreateVolume(t, driverclient, mockSecret, testVolDriver)
+}
+
+func TestMiddlewareVolumeCreateFailure(t *testing.T) {
+	testVolDriver := newTestServerSdk(t)
+	defer testVolDriver.Stop()
+
+	secretInst, mockSecret, mc := getSecretsMock(t)
+	defer mc.Finish()
+
+	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true, secrets.TypeK8s, secretInst)
+	assert.NoError(t, err, "Unexpected error on StartVolumeMgmtAPI")
+	defer unixServer.Close()
+	defer portServer.Close()
+
+	time.Sleep(1 * time.Second)
+
+	// Setup request
+	name := "myvol"
+	size := uint64(1234)
+	secretName := "secret-name"
+	namespace := "ns"
+	tokenKey := "token-key"
+
+	req := &api.VolumeCreateRequest{
+		Locator: &api.VolumeLocator{
+			Name: name,
+		},
+		Source: &api.Source{},
+		Spec: &api.VolumeSpec{
+			HaLevel: 3,
+			Size:    size,
+			Format:  api.FSType_FS_TYPE_EXT4,
+			Shared:  true,
+		},
+	}
+
+	// Send a request without the sched user agent
+	c, err := volumeclient.NewDriverClient(testMockURL, fakeWithSched, version, "")
+	assert.NoError(t, err, "Unexpected error on NewDriverClient")
+	driverclient := volumeclient.VolumeDriver(c)
+	_, err = driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	assert.Error(t, err, "Expected an error on Create")
+
+	// Send a request without labels
+	c, err = volumeclient.NewDriverClient(testMockURL, fakeWithSched, version, fakeWithSched)
+	assert.NoError(t, err, "Unexpected error on NewDriverClient")
+	driverclient = volumeclient.VolumeDriver(c)
+	_, err = driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	assert.Error(t, err, "Expected an error on Create")
+
+	req = &api.VolumeCreateRequest{
+		Locator: &api.VolumeLocator{
+			Name: name,
+			VolumeLabels: map[string]string{
+				secrets.SecretNameKey:      secretName,
+				secrets.SecretTokenKey:     tokenKey,
+				secrets.SecretNamespaceKey: namespace,
+			},
+		},
+		Source: &api.Source{},
+		Spec: &api.VolumeSpec{
+			HaLevel: 3,
+			Size:    size,
+			Format:  api.FSType_FS_TYPE_EXT4,
+			Shared:  true,
+		},
+	}
+
+	// Send a request and fail to get a token
+	mockSecret.EXPECT().
+		GetSecret(
+			secretName,
+			map[string]string{
+				k8s.SecretNamespace: namespace,
+			}).
+		Return(map[string]interface{}{"foo": "bar"}, nil).
+		Times(1)
+
+	c, err = volumeclient.NewDriverClient(testMockURL, fakeWithSched, version, fakeWithSched)
+	assert.NoError(t, err, "Unexpected error on NewDriverClient")
+	driverclient = volumeclient.VolumeDriver(c)
+	_, err = driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	assert.Error(t, err, "Expected an error on Create")
+
+	// Failed to get token
+	mockSecret.EXPECT().
+		GetSecret(
+			secretName,
+			map[string]string{
+				k8s.SecretNamespace: namespace,
+			}).
+		Return(nil, fmt.Errorf("incorrect secret")).
+		Times(1)
+
+	c, err = volumeclient.NewDriverClient(testMockURL, fakeWithSched, version, fakeWithSched)
+	assert.NoError(t, err, "Unexpected error on NewDriverClient")
+	driverclient = volumeclient.VolumeDriver(c)
+	_, err = driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	assert.Error(t, err, "Expected an error on Create")
+
 }
 
 func TestVolumeCreateFailedToAuthenticate(t *testing.T) {
@@ -570,6 +701,83 @@ func TestVolumeSetFailed(t *testing.T) {
 		VolumeId: id,
 	})
 	assert.NoError(t, err)
+
+}
+
+func TestMiddlewareVolumeSetSizeSuccess(t *testing.T) {
+	testVolDriver := newTestServerSdk(t)
+	defer testVolDriver.Stop()
+
+	secretInst, mockSecret, mc := getSecretsMock(t)
+	defer mc.Finish()
+
+	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true, secrets.TypeK8s, secretInst)
+	assert.NoError(t, err, "Unexpected error on StartVolumeMgmtAPI")
+	defer unixServer.Close()
+	defer portServer.Close()
+
+	time.Sleep(1 * time.Second)
+	c, err := volumeclient.NewDriverClient(testMockURL, fakeWithSched, version, fakeWithSched)
+	assert.NoError(t, err, "Unexpected error on NewDriverClient")
+
+	driverclient := volumeclient.VolumeDriver(c)
+	id, _, _, _ := testMiddlewareCreateVolume(t, driverclient, mockSecret, testVolDriver)
+
+	newsize := uint64(2222)
+
+	req := &api.VolumeSetRequest{
+		Spec: &api.VolumeSpec{Size: newsize},
+	}
+
+	// Not setting mock secrets
+
+	err = driverclient.Set(id, nil, req.GetSpec())
+	assert.NoError(t, err, "Unexpected error on Set")
+
+	// Assert volume information is correct
+	volumes := api.NewOpenStorageVolumeClient(testVolDriver.Conn())
+	ctx, err := contextWithToken(context.Background(), "test", "system.admin", testSharedSecret)
+	assert.NoError(t, err)
+	r, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
+		VolumeId: id,
+	})
+	assert.NoError(t, err)
+	assert.NotNil(t, r)
+	assert.Equal(t, newsize, r.GetVolume().GetSpec().GetSize())
+
+	_, err = volumes.Delete(ctx, &api.SdkVolumeDeleteRequest{
+		VolumeId: id,
+	})
+	assert.NoError(t, err)
+}
+
+func TestMiddlewareVolumeSetFailure(t *testing.T) {
+	testVolDriver := newTestServerSdk(t)
+	defer testVolDriver.Stop()
+
+	secretInst, mockSecret, mc := getSecretsMock(t)
+	defer mc.Finish()
+
+	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true, secrets.TypeK8s, secretInst)
+	assert.NoError(t, err, "Unexpected error on StartVolumeMgmtAPI")
+	defer unixServer.Close()
+	defer portServer.Close()
+
+	time.Sleep(1 * time.Second)
+	c, err := volumeclient.NewDriverClient(testMockURL, fakeWithSched, version, fakeWithSched)
+	assert.NoError(t, err, "Unexpected error on NewDriverClient")
+
+	driverclient := volumeclient.VolumeDriver(c)
+	id, _, _, _ := testMiddlewareCreateVolume(t, driverclient, mockSecret, testVolDriver)
+
+	req := &api.VolumeSetRequest{
+		Spec: &api.VolumeSpec{Shared: true},
+	}
+
+	// Not setting mock secrets
+
+	err = driverclient.Set(id, &api.VolumeLocator{Name: "myvol"}, req.GetSpec())
+	assert.Error(t, err, "Unexpected error on Set")
 
 }
 
@@ -2040,4 +2248,205 @@ func TestVolumeDeleteSuccess(t *testing.T) {
 
 	err = driverclient.Delete(id)
 	assert.Nil(t, err)
+}
+
+func TestMiddlewareVolumeDeleteSuccess(t *testing.T) {
+	testVolDriver := newTestServerSdk(t)
+	defer testVolDriver.Stop()
+
+	secretInst, mockSecret, mc := getSecretsMock(t)
+	defer mc.Finish()
+
+	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true, secrets.TypeK8s, secretInst)
+	assert.NoError(t, err, "Unexpected error on StartVolumeMgmtAPI")
+	defer unixServer.Close()
+	defer portServer.Close()
+
+	time.Sleep(1 * time.Second)
+	c, err := volumeclient.NewDriverClient(testMockURL, fakeWithSched, version, fakeWithSched)
+	assert.NoError(t, err, "Unexpected error on NewDriverClient")
+
+	// Create a volume before deleting
+	driverclient := volumeclient.VolumeDriver(c)
+	id, token, namespace, secretName := testMiddlewareCreateVolume(t, driverclient, mockSecret, testVolDriver)
+
+	mockSecret.EXPECT().
+		GetSecret(
+			secretName,
+			map[string]string{
+				k8s.SecretNamespace: namespace,
+			}).
+		Return(map[string]interface{}{secrets.SecretTokenKey: token}, nil).
+		Times(1)
+
+	err = driverclient.Delete(id)
+	assert.Nil(t, err)
+
+}
+
+func TestMiddlewareVolumeDeleteFailure(t *testing.T) {
+	testVolDriver := newTestServerSdk(t)
+	defer testVolDriver.Stop()
+
+	secretInst, _, mc := getSecretsMock(t)
+	defer mc.Finish()
+
+	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true, secrets.TypeK8s, secretInst)
+	assert.NoError(t, err, "Unexpected error on StartVolumeMgmtAPI")
+	defer unixServer.Close()
+	defer portServer.Close()
+
+	time.Sleep(1 * time.Second)
+
+	// Send a request without the sched user agent
+	c, err := volumeclient.NewDriverClient(testMockURL, fakeWithSched, version, "")
+	assert.NoError(t, err, "Unexpected error on NewDriverClient")
+	driverclient := volumeclient.VolumeDriver(c)
+	err = driverclient.Delete("foobar")
+	assert.Error(t, err, "Expected an error on Delete")
+
+	// Send a request for a non existent volume
+	c, err = volumeclient.NewDriverClient(testMockURL, fakeWithSched, version, fakeWithSched)
+	assert.NoError(t, err, "Unexpected error on NewDriverClient")
+	driverclient = volumeclient.VolumeDriver(c)
+	err = driverclient.Delete("foobar")
+	assert.Error(t, err, "Expected an error on Delete")
+
+}
+
+func TestMiddlewareVolumeDeleteFailureIncorrectToken(t *testing.T) {
+	testVolDriver := newTestServerSdk(t)
+	defer testVolDriver.Stop()
+
+	secretInst, mockSecret, mc := getSecretsMock(t)
+	defer mc.Finish()
+
+	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true, secrets.TypeK8s, secretInst)
+	assert.NoError(t, err, "Unexpected error on StartVolumeMgmtAPI")
+	defer unixServer.Close()
+	defer portServer.Close()
+
+	time.Sleep(1 * time.Second)
+	c, err := volumeclient.NewDriverClient(testMockURL, fakeWithSched, version, fakeWithSched)
+	assert.NoError(t, err, "Unexpected error on NewDriverClient")
+
+	// Create a volume before deleting
+	name := "myvol-delete"
+	size := uint64(1234)
+	secretName := "secret-name"
+	namespace := "ns"
+	tokenKey := "token-key"
+	// get token
+	token, err := createToken("test", "system.admin", testSharedSecret)
+	assert.NoError(t, err)
+
+	req := &api.VolumeCreateRequest{
+		Locator: &api.VolumeLocator{
+			Name: name,
+			VolumeLabels: map[string]string{
+				secrets.SecretNameKey:      secretName,
+				secrets.SecretTokenKey:     tokenKey,
+				secrets.SecretNamespaceKey: namespace,
+			},
+		},
+		Source: &api.Source{},
+		Spec: &api.VolumeSpec{
+			HaLevel: 3,
+			Size:    size,
+			Format:  api.FSType_FS_TYPE_EXT4,
+			Shared:  true,
+		},
+	}
+
+	mockSecret.EXPECT().
+		GetSecret(
+			secretName,
+			map[string]string{
+				k8s.SecretNamespace: namespace,
+			}).
+		Return(map[string]interface{}{secrets.SecretTokenKey: token}, nil).
+		Times(1)
+
+	// Create a volume client
+	driverclient := volumeclient.VolumeDriver(c)
+	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	assert.NoError(t, err, "Unexpected error on Create")
+
+	incorrectToken := "blah"
+	mockSecret.EXPECT().
+		GetSecret(
+			secretName,
+			map[string]string{
+				k8s.SecretNamespace: namespace,
+			}).
+		Return(map[string]interface{}{secrets.SecretTokenKey: incorrectToken}, nil).
+		Times(1)
+
+	err = driverclient.Delete(id)
+	assert.Error(t, err, "Expected an error on Delete")
+
+	mockSecret.EXPECT().
+		GetSecret(
+			secretName,
+			map[string]string{
+				k8s.SecretNamespace: namespace,
+			}).
+		Return(nil, fmt.Errorf("incorrect secret")).
+		Times(1)
+
+	err = driverclient.Delete(id)
+	assert.Error(t, err, "Expected an error on Delete")
+
+}
+
+func testMiddlewareCreateVolume(
+	t *testing.T,
+	driverclient volume.VolumeDriver,
+	mockSecret *mock.MockSecrets,
+	testVolDriver *testServer,
+) (string, string, string, string) {
+	name := "myvol"
+	size := uint64(1234)
+	secretName := "secret-name"
+	namespace := "ns"
+	tokenKey := "token-key"
+	// get token
+	token, err := createToken("test", "system.admin", testSharedSecret)
+	assert.NoError(t, err)
+
+	req := &api.VolumeCreateRequest{
+		Locator: &api.VolumeLocator{
+			Name: name,
+			VolumeLabels: map[string]string{
+				secrets.SecretNameKey:      secretName,
+				secrets.SecretTokenKey:     tokenKey,
+				secrets.SecretNamespaceKey: namespace,
+			},
+		},
+		Source: &api.Source{},
+		Spec: &api.VolumeSpec{
+			HaLevel: 3,
+			Size:    size,
+			Format:  api.FSType_FS_TYPE_EXT4,
+			Shared:  true,
+		},
+	}
+
+	mockSecret.EXPECT().
+		GetSecret(
+			secretName,
+			map[string]string{
+				k8s.SecretNamespace: namespace,
+			}).
+		Return(map[string]interface{}{secrets.SecretTokenKey: token}, nil).
+		Times(1)
+
+	// Create a volume
+	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+
+	assert.Nil(t, err)
+	assert.NotEmpty(t, id)
+
+	return id, token, namespace, secretName
+
 }

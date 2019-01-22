@@ -27,7 +27,10 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/role"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
+	"github.com/libopenstorage/openstorage/volume/drivers/fake"
 	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
+	"github.com/libopenstorage/secrets"
+	"github.com/libopenstorage/secrets/mock"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/portworx/kvdb"
@@ -40,8 +43,12 @@ import (
 const (
 	testSharedSecret = "mysecret"
 	testSdkSock      = "/tmp/sdk.sock"
+	testMgmtPort     = uint16(11111)
+	testMgmtBase     = "/tmp/mgmt"
+	testMockURL      = "http://localhost:11111"
 	mockDriverName   = "mock"
 	version          = "v1"
+	fakeWithSched    = "fake-sched"
 )
 
 var (
@@ -206,6 +213,18 @@ func newTestServerSdk(t *testing.T) *testServer {
 	})
 	assert.NoError(t, err)
 	credId = resp.GetCredentialId()
+
+	// Setup fake-sched driver for REST UTs
+	// Point it to the fake driver head
+	fakeDriver, err := volumedrivers.Get(fake.Name)
+	assert.NoError(t, err)
+	volumedrivers.Add(fakeWithSched,
+		func(params map[string]string) (volume.VolumeDriver, error) {
+			return fakeDriver, nil
+		},
+	)
+	volumedrivers.Register(fakeWithSched, nil)
+
 	return tester
 }
 
@@ -350,4 +369,10 @@ func contextWithToken(ctx context.Context, name, role, secret string) (context.C
 		"authorization": "bearer " + token,
 	})
 	return metadata.NewOutgoingContext(ctx, md), nil
+}
+
+func getSecretsMock(t *testing.T) (secrets.Secrets, *mock.MockSecrets, *gomock.Controller) {
+	mockCtrl := gomock.NewController(t)
+	mockSecret := mock.NewMockSecrets(mockCtrl)
+	return mockSecret, mockSecret, mockCtrl
 }
