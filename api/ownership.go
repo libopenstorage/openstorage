@@ -20,6 +20,8 @@ import (
 	"context"
 
 	"github.com/libopenstorage/openstorage/pkg/auth"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const (
@@ -172,7 +174,7 @@ func (o *Ownership) IsAdminByUser(user *auth.UserInfo) bool {
 
 // Update can be used to update an ownership with new ownership information. It
 // takes into account who is trying to change the ownership values
-func (o *Ownership) Update(newownerInfo *Ownership, user *auth.UserInfo) *Ownership {
+func (o *Ownership) Update(newownerInfo *Ownership, user *auth.UserInfo) error {
 	if user == nil {
 		// There is no auth, just copy the whole thing
 		o = newownerInfo
@@ -180,17 +182,18 @@ func (o *Ownership) Update(newownerInfo *Ownership, user *auth.UserInfo) *Owners
 		// Auth is enabled
 
 		// Only the owner or admin can change the group
-		if user.Username == o.Owner || o.IsAdminByUser(user) {
-			o.Acls = newownerInfo.GetAcls()
+		if user.Username != o.Owner && !o.IsAdminByUser(user) {
+			return status.Error(codes.PermissionDenied,
+				"Only owner can update volume acls")
 		}
+		o.Acls = newownerInfo.GetAcls()
 
 		// Only the admin can change the owner
 		if o.IsAdminByUser(user) && len(newownerInfo.Owner) != 0 {
 			o.Owner = newownerInfo.Owner
 		}
 	}
-
-	return o
+	return nil
 }
 
 // IsMatch returns true if the ownership has at least one similar
