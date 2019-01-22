@@ -113,6 +113,7 @@ var (
 	asyncIoRegex                = regexp.MustCompile(api.SpecAsyncIo + "=([A-Za-z]+),?")
 	earlyAckRegex               = regexp.MustCompile(api.SpecEarlyAck + "=([A-Za-z]+),?")
 	forceUnsupportedFsTypeRegex = regexp.MustCompile(api.SpecForceUnsupportedFsType + "=([A-Za-z]+),?")
+	nodiscardRegex              = regexp.MustCompile(api.SpecNodiscard + "=([A-Za-z]+),?")
 )
 
 type specHandler struct {
@@ -214,7 +215,7 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				spec.BlockSize = blockSize
 			}
 		case api.SpecQueueDepth:
-			if queueDepth, err := units.Parse(v); err != nil {
+			if queueDepth, err := strconv.ParseInt(v, 10, 64); err != nil {
 				return nil, nil, nil, err
 			} else {
 				spec.QueueDepth = uint32(queueDepth)
@@ -345,6 +346,12 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			} else {
 				spec.ForceUnsupportedFsType = forceFs
 			}
+		case api.SpecNodiscard:
+			if nodiscard, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.Nodiscard = nodiscard
+			}
 		case api.Token:
 			// skip, if not it would be added to the labels
 		default:
@@ -466,6 +473,9 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, forceUnsupportedFsType := d.getVal(forceUnsupportedFsTypeRegex, str); ok {
 		opts[api.SpecForceUnsupportedFsType] = forceUnsupportedFsType
+	}
+	if ok, nodiscard := d.getVal(nodiscardRegex, str); ok {
+		opts[api.SpecNodiscard] = nodiscard
 	}
 
 	return true, opts, name
