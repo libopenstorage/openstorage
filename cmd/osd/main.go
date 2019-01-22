@@ -45,12 +45,12 @@ import (
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/csi"
-	"github.com/libopenstorage/openstorage/graph/drivers"
+	graphdrivers "github.com/libopenstorage/openstorage/graph/drivers"
 	"github.com/libopenstorage/openstorage/objectstore"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/volume"
-	"github.com/libopenstorage/openstorage/volume/drivers"
+	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/consul"
 	etcd "github.com/portworx/kvdb/etcd/v2"
@@ -383,6 +383,7 @@ func start(c *cli.Context) error {
 			0,
 			false,
 			"9002",
+			[]string{},
 			&cluster.ClusterServerConfiguration{
 				ConfigSchedManager:       schedpolicy.NewFakeScheduler(),
 				ConfigObjectStoreManager: objectstore.NewfakeObjectstore(),
