@@ -199,6 +199,31 @@ func (a *authMiddleware) deleteWithAuth(w http.ResponseWriter, r *http.Request, 
 	next(w, r)
 }
 
+func (a *authMiddleware) inspectWithAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	fn := "inspect"
+	d, authRequired := a.isTokenProcessingRequired(r)
+	if !authRequired {
+		next(w, r)
+		return
+	}
+
+	volumeID, err := a.parseID(r)
+	if err != nil {
+		a.log(volumeID, fn).WithError(err).Error("Failed to parse volumeID")
+		next(w, r)
+		return
+	}
+
+	dk, err := d.Inspect([]string{volumeID})
+	if err != nil {
+		a.log(volumeID, fn).WithError(err).Error("Failed to inspect volume")
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(dk)
+}
+
 func (a *authMiddleware) isTokenProcessingRequired(r *http.Request) (volume.VolumeDriver, bool) {
 	userAgent := r.Header.Get("User-Agent")
 	if len(userAgent) > 0 {

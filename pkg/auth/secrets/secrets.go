@@ -19,10 +19,9 @@ const (
 	// token information. Used for all secret providers
 	SecretNamespaceKey = "openstorage/auth-secret-namespace"
 
-	// SecretTokenKey is a label on the openstorage.Volume object
-	// which corresponds to the key at which the auth token is stored
-	// in the secret. Used when secrets endpoint is k8s/
-	SecretTokenKey = "openstorage/auth-token"
+	// SecretTokenKey corresponds to the key at which the auth token is stored
+	// in the secret. Used when secrets endpoint is kubernetes secrets
+	SecretTokenKey = "auth-token"
 )
 
 var (

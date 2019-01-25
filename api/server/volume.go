@@ -22,6 +22,8 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const schedDriverPostFix = "-sched"
@@ -484,12 +486,19 @@ func (vd *volAPI) inspect(w http.ResponseWriter, r *http.Request) {
 	}
 	volumes := api.NewOpenStorageVolumeClient(conn)
 	dk, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{VolumeId: volumeID})
+	dkVolumes := []*api.Volume{}
 	if err != nil {
-		vd.sendError(vd.name, method, w, err.Error(), http.StatusNotFound)
-		return
+		// SDK returns a NotFound error for an invalid volume
+		// Previously the REST server returned an empty array if a volume was not found
+		if s, ok := status.FromError(err); ok && s.Code() != codes.NotFound {
+			vd.sendError(vd.name, method, w, err.Error(), http.StatusNotFound)
+			return
+		}
+	} else {
+		dkVolumes = append(dkVolumes, dk.GetVolume())
 	}
 
-	json.NewEncoder(w).Encode(dk.GetVolume())
+	json.NewEncoder(w).Encode(dkVolumes)
 }
 
 // swagger:operation DELETE /osd-volumes/{id} volume deleteVolume
@@ -1403,10 +1412,13 @@ func (vd *volAPI) volumeSetRoute() *Route {
 	return &Route{verb: "PUT", path: volPath("/{id}", volume.APIVersion), fn: vd.volumeSet}
 }
 
+func (vd *volAPI) volumeInspectRoute() *Route {
+	return &Route{verb: "GET", path: volPath("/{id}", volume.APIVersion), fn: vd.inspect}
+}
+
 func (vd *volAPI) otherVolumeRoutes() []*Route {
 	return []*Route{
 		{verb: "GET", path: volPath("", volume.APIVersion), fn: vd.enumerate},
-		{verb: "GET", path: volPath("/{id}", volume.APIVersion), fn: vd.inspect},
 		{verb: "GET", path: volPath("/stats", volume.APIVersion), fn: vd.stats},
 		{verb: "GET", path: volPath("/stats/{id}", volume.APIVersion), fn: vd.stats},
 		{verb: "GET", path: volPath("/usedsize", volume.APIVersion), fn: vd.usedsize},
@@ -1467,7 +1479,7 @@ func (vd *volAPI) snapRoutes() []*Route {
 }
 
 func (vd *volAPI) Routes() []*Route {
-	routes := []*Route{vd.versionRoute(), vd.volumeCreateRoute(), vd.volumeSetRoute(), vd.volumeDeleteRoute()}
+	routes := []*Route{vd.versionRoute(), vd.volumeCreateRoute(), vd.volumeSetRoute(), vd.volumeDeleteRoute(), vd.volumeInspectRoute()}
 	routes = append(routes, vd.otherVolumeRoutes()...)
 	routes = append(routes, vd.snapRoutes()...)
 	routes = append(routes, vd.backupRoutes()...)
@@ -1515,6 +1527,13 @@ func (vd *volAPI) SetupRoutesWithAuth(
 	nSet.UseHandlerFunc(setRoute.fn)
 	router.Methods(setRoute.verb).Path(setRoute.path).Handler(nSet)
 
+	// Setup middleware for Inspect
+	nInspect := negroni.New()
+	nInspect.Use(negroni.HandlerFunc(authM.inspectWithAuth))
+	inspectRoute := vd.volumeInspectRoute()
+	nSet.UseHandlerFunc(inspectRoute.fn)
+	router.Methods(inspectRoute.verb).Path(inspectRoute.path).Handler(nInspect)
+
 	routes := []*Route{vd.versionRoute()}
 	routes = append(routes, vd.otherVolumeRoutes()...)
 	routes = append(routes, vd.snapRoutes()...)
@@ -1559,6 +1578,7 @@ func GetVolumeAPIRoutesWithAuth(
 	vd := &volAPI{
 		restBase: restBase{version: volume.APIVersion, name: name},
 		sdkUds:   sdkUds,
+		dummyMux: runtime.NewServeMux(),
 	}
 
 	authM, err := NewAuthMiddleware(authProvider, authProviderType)
@@ -1594,6 +1614,13 @@ func GetVolumeAPIRoutesWithAuth(
 	setRoute := vd.volumeSetRoute()
 	nSet.UseHandlerFunc(serverRegisterRoute(setRoute.fn, preRouteCheckFn))
 	router.Methods(setRoute.verb).Path(setRoute.path).Handler(nSet)
+
+	// Setup middleware for Inspect
+	nInspect := negroni.New()
+	nInspect.Use(negroni.HandlerFunc(authM.inspectWithAuth))
+	inspectRoute := vd.volumeInspectRoute()
+	nInspect.UseHandlerFunc(serverRegisterRoute(inspectRoute.fn, preRouteCheckFn))
+	router.Methods(inspectRoute.verb).Path(inspectRoute.path).Handler(nInspect)
 
 	routes := []*Route{vd.versionRoute()}
 	routes = append(routes, vd.otherVolumeRoutes()...)
