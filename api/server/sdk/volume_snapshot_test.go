@@ -166,28 +166,6 @@ func TestSdkVolumeSnapshotRestore(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestSdkVolumeSnapshotEnumerateBadArguments(t *testing.T) {
-
-	// Create server and client connection
-	s := newTestServer(t)
-	defer s.Stop()
-
-	req := &api.SdkVolumeSnapshotEnumerateRequest{}
-
-	// Setup client
-	c := api.NewOpenStorageVolumeClient(s.Conn())
-
-	// Get info
-	r, err := c.SnapshotEnumerate(context.Background(), req)
-	assert.Error(t, err)
-	assert.Nil(t, r)
-
-	serverError, ok := status.FromError(err)
-	assert.True(t, ok)
-	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "volume id")
-}
-
 func TestSdkVolumeSnapshotEnumerate(t *testing.T) {
 
 	// Create server and client connection
