@@ -33,6 +33,29 @@ func TestOwnershipIsPermitted(t *testing.T) {
 		permitted bool
 	}{
 		{
+			owner:     &Ownership{},
+			permitted: true,
+		},
+		{
+			owner: &Ownership{
+				Acls: &Ownership_AccessControl{
+					Groups: []string{},
+				},
+			},
+			permitted: true,
+		},
+		{
+			owner: &Ownership{
+				Acls: &Ownership_AccessControl{
+					Groups: []string{"somegroup"},
+				},
+			},
+			user: &auth.UserInfo{
+				Username: "notme",
+			},
+			permitted: true,
+		},
+		{
 			owner: &Ownership{
 				Owner: "me",
 			},
@@ -254,7 +277,7 @@ func TestOwnershipIsPermitted(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		assert.Equal(t, test.owner.IsPermitted(test.user), test.permitted)
+		assert.Equal(t, test.owner.IsPermitted(test.user), test.permitted, fmt.Sprintf("Owner:%v\nUser:%v\nPermitted:%v\n", test.owner, test.user, test.permitted))
 	}
 }
 
