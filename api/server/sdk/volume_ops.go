@@ -212,7 +212,7 @@ func (s *VolumeServer) Delete(
 
 	// If the volume is not found, return OK to be idempotent
 	// This checks access rights also
-	_, err := s.Inspect(ctx, &api.SdkVolumeInspectRequest{
+	resp, err := s.Inspect(ctx, &api.SdkVolumeInspectRequest{
 		VolumeId: req.GetVolumeId(),
 	})
 	if err != nil {
@@ -224,6 +224,12 @@ func (s *VolumeServer) Delete(
 		return nil, err
 	}
 
+	// Only the owner or the admin can delete
+	if !resp.GetVolume().GetSpec().IsPermittedToDelete(ctx) {
+		return nil, status.Errorf(codes.PermissionDenied, "Cannot delete volume, only the owner can delete the volume")
+	}
+
+	// Delete the volume
 	err = s.driver().Delete(req.GetVolumeId())
 	if err != nil {
 		return nil, status.Errorf(

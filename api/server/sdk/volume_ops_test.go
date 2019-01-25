@@ -21,9 +21,14 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/kubernetes-csi/csi-test/utils"
+
 	"github.com/golang/mock/gomock"
 	"github.com/libopenstorage/openstorage/api"
+	mockcluster "github.com/libopenstorage/openstorage/cluster/mock"
+	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/volume"
+	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
 	"github.com/portworx/kvdb"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
@@ -693,4 +698,87 @@ func TestSdkVolumeCapacityUsageUnimplementedResult(t *testing.T) {
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.Unimplemented)
 	assert.NotNil(t, r.GetCapacityUsageInfo)
+}
+
+func TestSdkDeleteOnlyByOwner(t *testing.T) {
+	// This test does not use the gRPC server
+	mc := gomock.NewController(&utils.SafeGoroutineTester{})
+	mv := mockdriver.NewMockVolumeDriver(mc)
+	mcluster := mockcluster.NewMockCluster(mc)
+	s := VolumeServer{
+		server: &sdkGrpcServer{
+			driverHandler:  mv,
+			clusterHandler: mcluster,
+		},
+	}
+
+	// Create volumes
+	vauth := &api.Volume{
+		Spec: &api.VolumeSpec{
+			Ownership: &api.Ownership{
+				Owner: "testowner",
+			},
+		},
+	}
+	vpublic := &api.Volume{Spec: &api.VolumeSpec{}}
+
+	// Create contexts
+	ctxNoAuth := context.Background()
+	ctxWithNotOwner := auth.ContextSaveUserInfo(context.Background(), &auth.UserInfo{
+		Username: "notmyname",
+	})
+
+	// -- test: should work on no auth and public vol
+	id := "volid"
+	mv.
+		EXPECT().
+		Inspect([]string{id}).
+		Return([]*api.Volume{vpublic}, nil)
+	mv.
+		EXPECT().
+		Delete(id).
+		Return(nil)
+	_, err := s.Delete(ctxNoAuth, &api.SdkVolumeDeleteRequest{
+		VolumeId: id,
+	})
+	assert.NoError(t, err)
+
+	// -- test: should work, with auth public vol
+	mv.
+		EXPECT().
+		Inspect([]string{id}).
+		Return([]*api.Volume{vpublic}, nil)
+	mv.
+		EXPECT().
+		Delete(id).
+		Return(nil)
+	_, err = s.Delete(ctxWithNotOwner, &api.SdkVolumeDeleteRequest{
+		VolumeId: id,
+	})
+	assert.NoError(t, err)
+
+	// -- test: should work, no auth and owned vol
+	mv.
+		EXPECT().
+		Inspect([]string{id}).
+		Return([]*api.Volume{vauth}, nil)
+	mv.
+		EXPECT().
+		Delete(id).
+		Return(nil)
+	_, err = s.Delete(ctxNoAuth, &api.SdkVolumeDeleteRequest{
+		VolumeId: id,
+	})
+	assert.NoError(t, err)
+
+	// -- test: should not work, auth with non-public vol
+	mv.
+		EXPECT().
+		Inspect([]string{id}).
+		Return([]*api.Volume{vauth}, nil)
+	_, err = s.Delete(ctxWithNotOwner, &api.SdkVolumeDeleteRequest{
+		VolumeId: id,
+	})
+	assert.Error(t, err)
+
 }

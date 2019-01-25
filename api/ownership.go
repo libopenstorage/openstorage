@@ -72,8 +72,12 @@ func NewLocatorOwnershipFromContext(ctx context.Context) *Ownership {
 }
 
 // IsPermitted returns true if the user has access to the resource
-// according to the ownership
+// according to the ownership. If there is no owner, then it is public
 func (o *Ownership) IsPermitted(user *auth.UserInfo) bool {
+	// There is no owner, so it is a public resource
+	if !o.HasAnOwner() {
+		return true
+	}
 
 	// If we are missing user information then do not allow.
 	// It is ok for the the user claims to have an empty Groups setting
@@ -82,7 +86,7 @@ func (o *Ownership) IsPermitted(user *auth.UserInfo) bool {
 		return false
 	}
 
-	if o.Owner == user.Username ||
+	if o.IsOwner(user) ||
 		o.IsUserAllowedByGroup(user) ||
 		o.IsUserAllowedByCollaborators(user) {
 		return true
@@ -157,6 +161,21 @@ func (o *Ownership) IsUserAllowedByCollaborators(user *auth.UserInfo) bool {
 
 	// Check each of the groups from the user
 	return listContains(collaborators, user.Username)
+}
+
+// HasAnOwner returns true if the resource has an owner
+func (o *Ownership) HasAnOwner() bool {
+	return len(o.Owner) != 0
+}
+
+// IsPublic returns true if there is no ownership in this resource
+func (o *Ownership) IsPublic() bool {
+	return !o.HasAnOwner()
+}
+
+// IsOwner returns if the user is the owner of the resource
+func (o *Ownership) IsOwner(user *auth.UserInfo) bool {
+	return o.Owner == user.Username
 }
 
 // IsAdminByUser returns true if the user is an ownership admin, meaning,

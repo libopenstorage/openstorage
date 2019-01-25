@@ -952,10 +952,41 @@ func (v *Volume) IsPermitted(ctx context.Context) bool {
 }
 
 func (v *VolumeSpec) IsPermitted(ctx context.Context) bool {
+	if v.IsPublic() {
+		return true
+	}
+
+	// Volume is not public, check permission
+	if userinfo, ok := auth.NewUserInfoFromContext(ctx); ok {
+		// Check Access
+		return v.IsPermittedFromUserInfo(userinfo)
+	} else {
+		// There is no user information in the context so
+		// authorization is not running
+		return true
+	}
+}
+
+func (v *VolumeSpec) IsPermittedFromUserInfo(user *auth.UserInfo) bool {
+	if v.IsPublic() {
+		return true
+	}
+
+	if v.GetOwnership() != nil {
+		return v.GetOwnership().IsPermitted(user)
+	}
+	return true
+}
+
+func (v *VolumeSpec) IsPermittedToDelete(ctx context.Context) bool {
+	if v.IsPublic() {
+		return true
+	}
+
 	if v.GetOwnership() != nil {
 		if userinfo, ok := auth.NewUserInfoFromContext(ctx); ok {
 			// Check Access
-			return v.IsPermittedFromUserInfo(userinfo)
+			return v.IsPermittedToDeleteFromUserInfo(userinfo)
 		} else {
 			// There is no user information in the context so
 			// authorization is not running
@@ -967,9 +998,13 @@ func (v *VolumeSpec) IsPermitted(ctx context.Context) bool {
 	return true
 }
 
-func (v *VolumeSpec) IsPermittedFromUserInfo(user *auth.UserInfo) bool {
-	if v.GetOwnership() != nil {
-		return v.GetOwnership().IsPermitted(user)
-	}
-	return true
+func (v *VolumeSpec) IsPublic() bool {
+	return v.GetOwnership() == nil || v.GetOwnership().IsPublic()
+}
+
+func (v *VolumeSpec) IsPermittedToDeleteFromUserInfo(user *auth.UserInfo) bool {
+	return v.GetOwnership() == nil ||
+		v.GetOwnership().IsPublic() ||
+		v.GetOwnership().IsOwner(user) ||
+		v.GetOwnership().IsAdminByUser(user)
 }
