@@ -151,33 +151,44 @@ func (s *VolumeServer) Mount(
 	}
 
 	// Get access rights
-	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId()); err != nil {
+	// Checks for ownership
+	resp, err := s.Inspect(ctx, &api.SdkVolumeInspectRequest{
+		VolumeId: req.GetVolumeId(),
+	})
+	if err != nil {
 		return nil, err
 	}
+	vol := resp.GetVolume()
+	mountpoint := req.GetMountPath()
+	name := vol.GetLocator().GetName()
 
-	vols, err := s.driver().Inspect([]string{req.VolumeId})
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "Invalid volume id")
-	}
-	vol := vols[0]
-	mountpoint := req.MountPath
-	name := vol.Locator.Name
-
-	if vol.Spec.Scale > 1 {
-		if len(req.VolumeId) != 0 {
-			err = s.driver().Unmount(req.VolumeId, mountpoint, nil)
+	if vol.GetSpec().GetScale() > 1 {
+		id := s.driver().MountedAt(mountpoint)
+		if len(id) != 0 {
+			err = s.driver().Unmount(id, mountpoint, nil)
 			if err != nil {
-				return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("Cannot remount scaled volume(%v)."+
-					" Volume %v is mounted at %v", name, req.VolumeId, mountpoint))
+				return nil, status.Errorf(codes.Internal,
+					"Failed to prepare scaled volume by unmounting it: %v. "+
+						"Cannot remount scaled volume(%v). "+
+						"Volume %v is mounted at %v",
+					err,
+					name,
+					id,
+					mountpoint)
 			}
 
 			if s.driver().Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-				err = s.driver().Detach(req.VolumeId, nil)
+				err = s.driver().Detach(id, nil)
 				if err != nil {
-					_ = s.driver().Mount(req.VolumeId, mountpoint, nil)
-					return nil, status.Error(codes.InvalidArgument,
-						fmt.Sprintf("Cannot remount scaled volume(%v)."+
-							" Volume %v is mounted at %v", name, req.VolumeId, mountpoint))
+					_ = s.driver().Mount(id, mountpoint, nil)
+					return nil, status.Errorf(codes.Internal,
+						"Failed to mount scaled volume: %v. "+
+							"Cannot remount scaled volume(%v). "+
+							"Volume %v is mounted at %v",
+						err,
+						name,
+						id,
+						mountpoint)
 				}
 			}
 		}
