@@ -112,10 +112,10 @@ func (d *driver) Routes() []*Route {
 		{verb: "POST", path: volDriverPath("Create"), fn: d.create},
 		{verb: "POST", path: volDriverPath("Remove"), fn: d.remove},
 		{verb: "POST", path: volDriverPath("Mount"), fn: d.mount},
-		{verb: "POST", path: volDriverPath("Path"), fn: d.path},
-		{verb: "POST", path: volDriverPath("Get"), fn: d.get},
 
 		// insecure handlers
+		{verb: "POST", path: volDriverPath("Path"), fn: d.path},
+		{verb: "POST", path: volDriverPath("Get"), fn: d.get},
 		{verb: "POST", path: volDriverPath("List"), fn: d.list},
 		{verb: "POST", path: volDriverPath("Unmount"), fn: d.unmount},
 		{verb: "POST", path: volDriverPath("Capabilities"), fn: d.capabilities},
@@ -453,26 +453,15 @@ func (d *driver) list(w http.ResponseWriter, r *http.Request) {
 
 func (d *driver) path(w http.ResponseWriter, r *http.Request) {
 	method := "path"
-	ctx := r.Context()
+	var response volumePathResponse
+
 	request, err := d.decode(method, w, r)
 	if err != nil {
 		return
 	}
-	var response volumePathResponse
 
-	// attach token in context metadata
-	ctx, _ = d.attachToken(ctx, request)
-
-	// get grpc connection
-	conn, err := d.getConn()
-	if err != nil {
-		d.errorResponse(method, w, err)
-		return
-	}
-
-	volumes := api.NewOpenStorageVolumeClient(conn)
 	_, _, _, _, name := d.SpecFromString(request.Name)
-	vol, err := d.volFromNameSdk(ctx, volumes, name)
+	vol, err := d.volFromName(name)
 	if err != nil {
 		e := d.volNotFound(method, request.Name, err, w)
 		d.errorResponse(method, w, e)
@@ -485,7 +474,6 @@ func (d *driver) path(w http.ResponseWriter, r *http.Request) {
 		d.errorResponse(method, w, e)
 		return
 	}
-
 	response.Mountpoint = vol.AttachPath[0]
 	response.Mountpoint = path.Join(response.Mountpoint, config.DataDir)
 	d.logRequest(method, request.Name).Debugf("response %v", response.Mountpoint)
@@ -494,41 +482,25 @@ func (d *driver) path(w http.ResponseWriter, r *http.Request) {
 
 func (d *driver) get(w http.ResponseWriter, r *http.Request) {
 	method := "get"
-	ctx := r.Context()
+
 	request, err := d.decode(method, w, r)
 	if err != nil {
 		return
 	}
-
-	// attach token in context metadata
-	ctx, _ = d.attachToken(ctx, request)
-
-	// get name from the request
 	parsed, _, _, _, name := d.SpecFromString(request.Name)
-	var returnName string
+	returnName := ""
 	if parsed {
 		returnName = request.Name
 	} else {
 		returnName = name
 	}
-
-	// get grpc connection
-	conn, err := d.getConn()
+	vol, err := d.volFromName(name)
 	if err != nil {
-		d.errorResponse(method, w, err)
-		return
-	}
-
-	// get volume
-	volumes := api.NewOpenStorageVolumeClient(conn)
-	vol, err := d.volFromNameSdk(ctx, volumes, name)
-	if err != nil {
-		e := d.volNotFound(method, name, err, w)
+		e := d.volNotFound(method, request.Name, err, w)
 		d.errorResponse(method, w, e)
 		return
 	}
 
-	// create response info
 	volInfo := volumeInfo{Name: returnName}
 	if len(vol.AttachPath) > 0 || len(vol.AttachPath) > 0 {
 		volInfo.Mountpoint = path.Join(vol.AttachPath[0], config.DataDir)

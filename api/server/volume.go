@@ -938,6 +938,47 @@ func (vd *volAPI) stats(w http.ResponseWriter, r *http.Request) {
 	var volumeID string
 	var err error
 
+	if volumeID, err = vd.parseID(r); err != nil {
+		e := fmt.Errorf("Failed to parse volumeID: %s", err.Error())
+		http.Error(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+
+	params := r.URL.Query()
+	// By default always report /proc/diskstats style stats.
+	cumulative := true
+	if opt, ok := params[string(api.OptCumulative)]; ok {
+		if boolValue, err := strconv.ParseBool(strings.Join(opt[:], "")); !ok {
+			e := fmt.Errorf("Failed to parse %s option: %s",
+				api.OptCumulative, err.Error())
+			http.Error(w, e.Error(), http.StatusBadRequest)
+			return
+		} else {
+			cumulative = boolValue
+		}
+	}
+
+	d, err := vd.getVolDriver(r)
+	if err != nil {
+		notFound(w, r)
+		return
+	}
+
+	stats, err := d.Stats(volumeID, cumulative)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	json.NewEncoder(w).Encode(stats)
+}
+
+/*
+ * Removed until we understand why this function if failing calling the SDK
+ *
+func (vd *volAPI) stats(w http.ResponseWriter, r *http.Request) {
+	var volumeID string
+	var err error
+
 	var method = "stats"
 	if volumeID, err = vd.parseID(r); err != nil {
 		e := fmt.Errorf("Failed to parse volumeID: %s", err.Error())
@@ -980,6 +1021,7 @@ func (vd *volAPI) stats(w http.ResponseWriter, r *http.Request) {
 	}
 	json.NewEncoder(w).Encode(resp.GetStats())
 }
+*/
 
 // swagger:operation GET /osd-volumes/usedsize/{id} volume usedSizeVolume
 //
@@ -999,6 +1041,34 @@ func (vd *volAPI) stats(w http.ResponseWriter, r *http.Request) {
 //   description: volume set response
 //   type: integer
 //   format: int64
+func (vd *volAPI) usedsize(w http.ResponseWriter, r *http.Request) {
+	var volumeID string
+	var err error
+
+	if volumeID, err = vd.parseID(r); err != nil {
+		e := fmt.Errorf("Failed to parse volumeID: %s", err.Error())
+		http.Error(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+
+	d, err := vd.getVolDriver(r)
+	if err != nil {
+		notFound(w, r)
+		return
+	}
+
+	used, err := d.UsedSize(volumeID)
+	if err != nil {
+		e := fmt.Errorf("Failed to get used size: %s", err.Error())
+		http.Error(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	json.NewEncoder(w).Encode(used)
+}
+
+/*
+ * Removed until we understand why this function if failing calling the SDK
+ *
 func (vd *volAPI) usedsize(w http.ResponseWriter, r *http.Request) {
 	var volumeID string
 	var err error
@@ -1032,6 +1102,7 @@ func (vd *volAPI) usedsize(w http.ResponseWriter, r *http.Request) {
 	}
 	json.NewEncoder(w).Encode(resp.GetCapacityUsageInfo().TotalBytes)
 }
+*/
 
 // swagger:operation POST /osd-volumes/requests/{id} volume requestsVolume
 //

@@ -273,7 +273,7 @@ func testRestServerSdkNoAuth(t *testing.T) (*httptest.Server, *testServer) {
 }
 
 func testRestServerSdk(t *testing.T) (*httptest.Server, *testServer) {
-	vapi := newVolumeAPI(mockDriverName, testSdkSock)
+	vapi := newVolumeAPI("fake", testSdkSock)
 	router := mux.NewRouter()
 	// Register all routes from the App
 	for _, route := range vapi.Routes() {

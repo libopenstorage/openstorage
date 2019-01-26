@@ -330,6 +330,20 @@ func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.Volu
 }
 
 func (d *driver) Shutdown() {}
+
+func (d *driver) UsedSize(volumeID string) (uint64, error) {
+	vols, err := d.Inspect([]string{volumeID})
+	if err == kvdb.ErrNotFound {
+		return 0, fmt.Errorf("Volume not found")
+	} else if err != nil {
+		return 0, err
+	} else if len(vols) == 0 {
+		return 0, fmt.Errorf("Volume not found")
+	}
+
+	return uint64(12345), nil
+}
+
 func (d *driver) Stats(volumeID string, cumulative bool) (*api.Stats, error) {
 
 	vols, err := d.Inspect([]string{volumeID})
