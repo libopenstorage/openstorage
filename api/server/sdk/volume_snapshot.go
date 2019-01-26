@@ -114,9 +114,6 @@ func (s *VolumeServer) SnapshotEnumerate(
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
-	if len(req.GetVolumeId()) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
-	}
 	resp, err := s.SnapshotEnumerateWithFilters(
 		ctx,
 		&api.SdkVolumeSnapshotEnumerateWithFiltersRequest{
@@ -144,8 +141,10 @@ func (s *VolumeServer) SnapshotEnumerateWithFilters(
 	}
 
 	// Get access rights
-	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId()); err != nil {
-		return nil, err
+	if len(req.GetVolumeId()) != 0 {
+		if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId()); err != nil {
+			return nil, err
+		}
 	}
 
 	snapshots, err := s.driver().SnapEnumerate([]string{req.GetVolumeId()}, req.GetLabels())
@@ -157,9 +156,12 @@ func (s *VolumeServer) SnapshotEnumerateWithFilters(
 			err.Error())
 	}
 
-	ids := make([]string, len(snapshots))
-	for i, snapshot := range snapshots {
-		ids[i] = snapshot.GetId()
+	ids := make([]string, 0)
+	for _, snapshot := range snapshots {
+		// Check access
+		if snapshot.IsPermitted(ctx) {
+			ids = append(ids, snapshot.GetId())
+		}
 	}
 
 	return &api.SdkVolumeSnapshotEnumerateWithFiltersResponse{
