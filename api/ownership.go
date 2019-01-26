@@ -196,7 +196,7 @@ func (o *Ownership) IsAdminByUser(user *auth.UserInfo) bool {
 func (o *Ownership) Update(newownerInfo *Ownership, user *auth.UserInfo) error {
 	if user == nil {
 		// There is no auth, just copy the whole thing
-		o = newownerInfo
+		*o = *newownerInfo
 	} else {
 		// Auth is enabled
 

@@ -1008,3 +1008,24 @@ func (v *VolumeSpec) IsPermittedToDeleteFromUserInfo(user *auth.UserInfo) bool {
 		v.GetOwnership().IsOwner(user) ||
 		v.GetOwnership().IsAdminByUser(user)
 }
+
+// GetSnapshotCreatorOwnership returns the appropriate ownership for the
+// new snapshot and if an update is required
+func (v *VolumeSpec) GetCloneCreatorOwnership(ctx context.Context) (*Ownership, bool) {
+	o := v.GetOwnership()
+
+	// If there is user information, then auth is enabled
+	if userinfo, ok := auth.NewUserInfoFromContext(ctx); ok {
+
+		// Check if the owner is the one who cloned it
+		if o != nil && o.IsOwner(userinfo) {
+			return o, false
+		}
+
+		// Not the same owner, we now need new ownership.
+		// This works for public volumes also.
+		return OwnershipSetUsernameFromContext(ctx, nil), true
+	}
+
+	return o, false
+}

@@ -144,6 +144,7 @@ func TestSdkVolumeClone(t *testing.T) {
 			Name: parentid,
 		},
 	}
+	cloneVol := parentVol
 	req := &api.SdkVolumeCloneRequest{
 		Name:     name,
 		ParentId: parentid,
@@ -180,6 +181,12 @@ func TestSdkVolumeClone(t *testing.T) {
 			EXPECT().
 			Snapshot(parentid, false, &api.VolumeLocator{Name: name}, false).
 			Return(id, nil).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{id}).
+			Return([]*api.Volume{cloneVol}, nil).
 			Times(1),
 	)
 
@@ -781,4 +788,261 @@ func TestSdkDeleteOnlyByOwner(t *testing.T) {
 	})
 	assert.Error(t, err)
 
+}
+
+func TestSdkCloneOwnership(t *testing.T) {
+	// This test does not use the gRPC server
+	mc := gomock.NewController(&utils.SafeGoroutineTester{})
+	mv := mockdriver.NewMockVolumeDriver(mc)
+	mcluster := mockcluster.NewMockCluster(mc)
+	s := VolumeServer{
+		server: &sdkGrpcServer{
+			driverHandler:  mv,
+			clusterHandler: mcluster,
+		},
+	}
+
+	// Create volumes
+	name := "myvol"
+	parentid := "myparent"
+	parentVol := &api.Volume{
+		Id: parentid,
+		Spec: &api.VolumeSpec{
+			Size: 1234,
+		},
+		Locator: &api.VolumeLocator{
+			Name: parentid,
+		},
+	}
+	cloneVol := parentVol
+	req := &api.SdkVolumeCloneRequest{
+		Name:     name,
+		ParentId: parentid,
+	}
+
+	// Create contexts
+	user1 := "user1"
+	user2 := "user2"
+	ctxNoAuth := context.Background()
+	ctxWithNotOwner := auth.ContextSaveUserInfo(context.Background(), &auth.UserInfo{
+		Username: user2,
+	})
+
+	// -- test: no auth, Public volume no ownership transferred
+	// Update will not be called
+	id := "myid"
+	gomock.InOrder(
+		mv.
+			EXPECT().
+			Inspect([]string{parentid}).
+			Return([]*api.Volume{parentVol}, nil).
+			Times(1),
+
+		mv.
+			EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		mv.
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		mv.
+			EXPECT().
+			Inspect([]string{parentid}).
+			Return([]*api.Volume{parentVol}, nil).
+			Times(1),
+
+		mv.
+			EXPECT().
+			Snapshot(parentid, false, &api.VolumeLocator{Name: name}, false).
+			Return(id, nil).
+			Times(1),
+
+		mv.
+			EXPECT().
+			Inspect([]string{id}).
+			Return([]*api.Volume{cloneVol}, nil).
+			Times(1),
+	)
+	cloneId, err := s.Clone(ctxNoAuth, req)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, cloneId)
+
+	// -- test: auth, Public volume new owner
+	// Update will be called
+	gomock.InOrder(
+		mv.
+			EXPECT().
+			Inspect([]string{parentid}).
+			Return([]*api.Volume{parentVol}, nil).
+			Times(1),
+
+		mv.
+			EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		mv.
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		mv.
+			EXPECT().
+			Inspect([]string{parentid}).
+			Return([]*api.Volume{parentVol}, nil).
+			Times(1),
+
+		mv.
+			EXPECT().
+			Snapshot(parentid, false, &api.VolumeLocator{Name: name}, false).
+			Return(id, nil).
+			Times(1),
+
+		mv.
+			EXPECT().
+			Inspect([]string{id}).
+			Return([]*api.Volume{cloneVol}, nil).
+			Times(1),
+
+		// By Update since it is a new owner
+		mv.
+			EXPECT().
+			Inspect([]string{id}).
+			Return([]*api.Volume{cloneVol}, nil).
+			Times(1),
+		mv.
+			EXPECT().
+			Set(id, nil, &api.VolumeSpec{
+				Size: 1234,
+				Ownership: &api.Ownership{
+					Owner: user2,
+				},
+			}).
+			Return(nil).
+			Times(1),
+	)
+	cloneId, err = s.Clone(ctxWithNotOwner, req)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, cloneId)
+
+	// -- test: auth, owned volume same owner
+	// Update will not be called
+	parentVol.Spec.Ownership = &api.Ownership{
+		Owner: user2,
+	}
+
+	gomock.InOrder(
+		mv.
+			EXPECT().
+			Inspect([]string{parentid}).
+			Return([]*api.Volume{parentVol}, nil).
+			Times(1),
+
+		mv.
+			EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		mv.
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		mv.
+			EXPECT().
+			Inspect([]string{parentid}).
+			Return([]*api.Volume{parentVol}, nil).
+			Times(1),
+
+		mv.
+			EXPECT().
+			Snapshot(parentid, false, &api.VolumeLocator{Name: name}, false).
+			Return(id, nil).
+			Times(1),
+
+		mv.
+			EXPECT().
+			Inspect([]string{id}).
+			Return([]*api.Volume{cloneVol}, nil).
+			Times(1),
+	)
+	cloneId, err = s.Clone(ctxWithNotOwner, req)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, cloneId)
+
+	// -- test: auth, Public volume new owner
+	// Update will be called
+	parentVol.Spec.Ownership = &api.Ownership{
+		Owner: user1,
+		Acls: &api.Ownership_AccessControl{
+			Collaborators: []string{user2},
+		},
+	}
+
+	gomock.InOrder(
+		mv.
+			EXPECT().
+			Inspect([]string{parentid}).
+			Return([]*api.Volume{parentVol}, nil).
+			Times(1),
+
+		mv.
+			EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		mv.
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		mv.
+			EXPECT().
+			Inspect([]string{parentid}).
+			Return([]*api.Volume{parentVol}, nil).
+			Times(1),
+
+		mv.
+			EXPECT().
+			Snapshot(parentid, false, &api.VolumeLocator{Name: name}, false).
+			Return(id, nil).
+			Times(1),
+
+		mv.
+			EXPECT().
+			Inspect([]string{id}).
+			Return([]*api.Volume{cloneVol}, nil).
+			Times(1),
+
+		// By Update since it is a new owner
+		mv.
+			EXPECT().
+			Inspect([]string{id}).
+			Return([]*api.Volume{cloneVol}, nil).
+			Times(1),
+		mv.
+			EXPECT().
+			Set(id, nil, &api.VolumeSpec{
+				Size: 1234,
+				Ownership: &api.Ownership{
+					Owner: user2,
+				},
+			}).
+			Return(nil).
+			Times(1),
+	)
+	cloneId, err = s.Clone(ctxWithNotOwner, req)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, cloneId)
 }

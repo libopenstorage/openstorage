@@ -94,6 +94,28 @@ func (s *VolumeServer) create(
 				"unable to create snapshot: %s",
 				err.Error())
 		}
+
+		// If this is a different owner, make adjust the clone to this owner
+		clone, err := s.Inspect(ctx, &api.SdkVolumeInspectRequest{
+			VolumeId: id,
+		})
+
+		newOwnership, updateNeeded := clone.Volume.Spec.GetCloneCreatorOwnership(ctx)
+		if updateNeeded {
+			// Set no authentication so that we can override the ownership
+			ctxNoAuth := context.Background()
+
+			// New owner for the snapshot, let's make the change
+			_, err := s.Update(ctxNoAuth, &api.SdkVolumeUpdateRequest{
+				VolumeId: id,
+				Spec: &api.VolumeSpecUpdate{
+					Ownership: newOwnership,
+				},
+			})
+			if err != nil {
+				return "", err
+			}
+		}
 	} else {
 		// New volume, set ownership
 		spec.Ownership = api.OwnershipSetUsernameFromContext(ctx, spec.Ownership)
