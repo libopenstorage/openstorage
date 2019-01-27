@@ -43,7 +43,7 @@ func (s *VolumeServer) Attach(
 	}
 
 	// Get access rights
-	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId()); err != nil {
+	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId(), api.Ownership_Write); err != nil {
 		return nil, err
 	}
 
@@ -98,7 +98,7 @@ func (s *VolumeServer) Detach(
 	}
 
 	// Get access rights
-	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId()); err != nil {
+	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId(), api.Ownership_Write); err != nil {
 		return nil, err
 	}
 
@@ -150,8 +150,7 @@ func (s *VolumeServer) Mount(
 		return nil, status.Error(codes.InvalidArgument, "Invalid Mount Path")
 	}
 
-	// Get access rights
-	// Checks for ownership
+	// Get volume information
 	resp, err := s.Inspect(ctx, &api.SdkVolumeInspectRequest{
 		VolumeId: req.GetVolumeId(),
 	})
@@ -161,6 +160,11 @@ func (s *VolumeServer) Mount(
 	vol := resp.GetVolume()
 	mountpoint := req.GetMountPath()
 	name := vol.GetLocator().GetName()
+
+	// Checks for ownership
+	if !vol.IsPermitted(ctx, api.Ownership_Write) {
+		return nil, status.Errorf(codes.PermissionDenied, "Access denied to volume %s", vol.GetId())
+	}
 
 	if vol.GetSpec().GetScale() > 1 {
 		id := s.driver().MountedAt(mountpoint)
@@ -259,7 +263,13 @@ func (s *VolumeServer) Unmount(
 	if err != nil {
 		return nil, err
 	}
+	vol := resp.GetVolume()
 	volid := resp.GetVolume().GetId()
+
+	// Checks for ownership
+	if !vol.IsPermitted(ctx, api.Ownership_Write) {
+		return nil, status.Errorf(codes.PermissionDenied, "Access denied to volume %s", vol.GetId())
+	}
 
 	// TODO: Idempotency?
 	// XXX How do we check.

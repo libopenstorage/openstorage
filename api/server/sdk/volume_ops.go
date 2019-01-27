@@ -59,8 +59,8 @@ func (s *VolumeServer) create(
 		}
 
 		// Check ownership
-		if !v.IsPermitted(ctx) {
-			return "", status.Errorf(codes.PermissionDenied, "Access denied to volume %s", v.GetId())
+		if !v.IsPermitted(ctx, api.Ownership_Admin) {
+			return "", status.Errorf(codes.PermissionDenied, "Volume %s already exists and is owned by another user", v.GetId())
 		}
 
 		// Return information on existing volume
@@ -80,7 +80,8 @@ func (s *VolumeServer) create(
 		}
 
 		// Check ownership
-		if !parent.IsPermitted(ctx) {
+		// Snapshots just need read access
+		if !parent.IsPermitted(ctx, api.Ownership_Read) {
 			return "", status.Errorf(codes.PermissionDenied, "Access denied to volume %s", parent.GetId())
 		}
 
@@ -205,7 +206,7 @@ func (s *VolumeServer) Clone(
 	}
 
 	// Get spec. This also checks if the parend id exists.
-	// This will check access rights also
+	// This will also check for Ownership_Read access.
 	parentVol, err := s.Inspect(ctx, &api.SdkVolumeInspectRequest{
 		VolumeId: req.GetParentId(),
 	})
@@ -250,10 +251,11 @@ func (s *VolumeServer) Delete(
 		}
 		return nil, err
 	}
+	vol := resp.GetVolume()
 
 	// Only the owner or the admin can delete
-	if !resp.GetVolume().GetSpec().IsPermittedToDelete(ctx) {
-		return nil, status.Errorf(codes.PermissionDenied, "Cannot delete volume, only the owner can delete the volume")
+	if !vol.IsPermitted(ctx, api.Ownership_Admin) {
+		return nil, status.Errorf(codes.PermissionDenied, "Cannot delete volume %v", vol.GetId())
 	}
 
 	// Delete the volume
@@ -297,7 +299,7 @@ func (s *VolumeServer) Inspect(
 	v := vols[0]
 
 	// Check ownership
-	if !v.IsPermitted(ctx) {
+	if !v.IsPermitted(ctx, api.Ownership_Read) {
 		return nil, status.Errorf(codes.PermissionDenied, "Access denied to volume %s", v.GetId())
 	}
 
@@ -363,7 +365,7 @@ func (s *VolumeServer) EnumerateWithFilters(
 	ids := make([]string, 0)
 	for _, vol := range vols {
 		// Check access
-		if vol.IsPermitted(ctx) {
+		if vol.IsPermitted(ctx, api.Ownership_Read) {
 			ids = append(ids, vol.GetId())
 		}
 	}
@@ -387,12 +389,17 @@ func (s *VolumeServer) Update(
 	}
 
 	// Get current state
-	// This checks for ownership
+	// This checks for Read access in ownership
 	resp, err := s.Inspect(ctx, &api.SdkVolumeInspectRequest{
 		VolumeId: req.GetVolumeId(),
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	// Check if the caller can update the volume
+	if !resp.GetVolume().IsPermitted(ctx, api.Ownership_Write) {
+		return nil, status.Errorf(codes.PermissionDenied, "Cannot update volume")
 	}
 
 	// Merge specs
@@ -442,7 +449,7 @@ func (s *VolumeServer) Stats(
 	}
 
 	// Get access rights
-	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId()); err != nil {
+	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId(), api.Ownership_Read); err != nil {
 		return nil, err
 	}
 
@@ -470,7 +477,7 @@ func (s *VolumeServer) CapacityUsage(
 	}
 
 	// Get access rights
-	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId()); err != nil {
+	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId(), api.Ownership_Read); err != nil {
 		return nil, err
 	}
 

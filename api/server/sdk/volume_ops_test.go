@@ -724,6 +724,12 @@ func TestSdkDeleteOnlyByOwner(t *testing.T) {
 		Spec: &api.VolumeSpec{
 			Ownership: &api.Ownership{
 				Owner: "testowner",
+				Acls: &api.Ownership_AccessControl{
+					Collaborators: map[string]api.Ownership_AccessType{
+						"notmyname": api.Ownership_Write,
+						"trusted":   api.Ownership_Admin,
+					},
+				},
 			},
 		},
 	}
@@ -733,6 +739,9 @@ func TestSdkDeleteOnlyByOwner(t *testing.T) {
 	ctxNoAuth := context.Background()
 	ctxWithNotOwner := auth.ContextSaveUserInfo(context.Background(), &auth.UserInfo{
 		Username: "notmyname",
+	})
+	ctxWithTrusted := auth.ContextSaveUserInfo(context.Background(), &auth.UserInfo{
+		Username: "trusted",
 	})
 
 	// -- test: should work on no auth and public vol
@@ -778,7 +787,8 @@ func TestSdkDeleteOnlyByOwner(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	// -- test: should not work, auth with non-public vol
+	// -- test: should not work, auth with non-public vol for collaborator
+	// with non-api.Ownship_Admin rights
 	mv.
 		EXPECT().
 		Inspect([]string{id}).
@@ -787,6 +797,20 @@ func TestSdkDeleteOnlyByOwner(t *testing.T) {
 		VolumeId: id,
 	})
 	assert.Error(t, err)
+
+	// -- test: should work, auth with non-public vol for trusted admin collaborator
+	mv.
+		EXPECT().
+		Inspect([]string{id}).
+		Return([]*api.Volume{vauth}, nil)
+	mv.
+		EXPECT().
+		Delete(id).
+		Return(nil)
+	_, err = s.Delete(ctxWithTrusted, &api.SdkVolumeDeleteRequest{
+		VolumeId: id,
+	})
+	assert.NoError(t, err)
 
 }
 
@@ -984,7 +1008,9 @@ func TestSdkCloneOwnership(t *testing.T) {
 	parentVol.Spec.Ownership = &api.Ownership{
 		Owner: user1,
 		Acls: &api.Ownership_AccessControl{
-			Collaborators: []string{user2},
+			Collaborators: map[string]api.Ownership_AccessType{
+				user2: api.Ownership_Read,
+			},
 		},
 	}
 

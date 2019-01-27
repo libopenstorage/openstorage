@@ -51,7 +51,7 @@ func (s *CloudBackupServer) Create(
 	}
 
 	// Check ownership
-	if err := checkAccessFromDriverForVolumeId(ctx, s.driver(), req.GetVolumeId()); err != nil {
+	if err := checkAccessFromDriverForVolumeId(ctx, s.driver(), req.GetVolumeId(), api.Ownership_Read); err != nil {
 		return nil, err
 	}
 
@@ -253,7 +253,7 @@ func (s *CloudBackupServer) History(
 	}
 
 	// Check ownership
-	if err := checkAccessFromDriverForVolumeId(ctx, s.driver(), req.GetSrcVolumeId()); err != nil {
+	if err := checkAccessFromDriverForVolumeId(ctx, s.driver(), req.GetSrcVolumeId(), api.Ownership_Read); err != nil {
 		return nil, err
 	}
 
@@ -329,7 +329,7 @@ func (s *CloudBackupServer) SchedCreate(
 	}
 
 	// Check ownership
-	if err := checkAccessFromDriverForVolumeId(ctx, s.driver(), req.GetCloudSchedInfo().GetSrcVolumeId()); err != nil {
+	if err := checkAccessFromDriverForVolumeId(ctx, s.driver(), req.GetCloudSchedInfo().GetSrcVolumeId(), api.Ownership_Read); err != nil {
 		return nil, err
 	}
 

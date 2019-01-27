@@ -42,7 +42,7 @@ func (s *VolumeServer) SnapshotCreate(
 	}
 
 	// Get access rights
-	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId()); err != nil {
+	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId(), api.Ownership_Read); err != nil {
 		return nil, err
 	}
 
@@ -82,7 +82,7 @@ func (s *VolumeServer) SnapshotRestore(
 	}
 
 	// Get access rights
-	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId()); err != nil {
+	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId(), api.Ownership_Write); err != nil {
 		return nil, err
 	}
 
@@ -142,7 +142,7 @@ func (s *VolumeServer) SnapshotEnumerateWithFilters(
 
 	// Get access rights
 	if len(req.GetVolumeId()) != 0 {
-		if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId()); err != nil {
+		if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId(), api.Ownership_Read); err != nil {
 			return nil, err
 		}
 	}
@@ -159,7 +159,7 @@ func (s *VolumeServer) SnapshotEnumerateWithFilters(
 	ids := make([]string, 0)
 	for _, snapshot := range snapshots {
 		// Check access
-		if snapshot.IsPermitted(ctx) {
+		if snapshot.IsPermitted(ctx, api.Ownership_Read) {
 			ids = append(ids, snapshot.GetId())
 		}
 	}
@@ -190,6 +190,14 @@ func (s *VolumeServer) SnapshotScheduleUpdate(
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	// Check if caller has access to affect volume
+	if !resp.GetVolume().IsPermitted(ctx, api.Ownership_Write) {
+		return nil, status.Errorf(
+			codes.PermissionDenied,
+			"Cannot change the snapshot schedule for volume %s",
+			req.GetVolumeId())
 	}
 
 	// Determine if they exist

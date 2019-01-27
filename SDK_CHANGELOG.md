@@ -2,6 +2,11 @@
 
 ## Releases
 
+### v0.38.0 - Tech Preview (1/27/2019)
+
+* Ownership reworked to gain access type control. Now it supports Read, Write,
+  and Admin access types.
+
 ### v0.37.0 - Tech Preview (1/16/2019)
 
 * Ownership support in the VolumeSpec
