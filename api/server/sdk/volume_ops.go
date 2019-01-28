@@ -58,6 +58,11 @@ func (s *VolumeServer) create(
 			return "", status.Error(codes.AlreadyExists, "Existing volume has conflicting parent value")
 		}
 
+		// Check ownership
+		if !v.IsPermitted(ctx) {
+			return "", status.Errorf(codes.PermissionDenied, "Access denied to volume %s", v.GetId())
+		}
+
 		// Return information on existing volume
 		return v.GetId(), nil
 	}
@@ -376,7 +381,9 @@ func (s *VolumeServer) Update(
 		}
 
 		user, _ := auth.NewUserInfoFromContext(ctx)
-		spec.Ownership.Update(req.GetSpec().GetOwnership(), user)
+		if err := spec.Ownership.Update(req.GetSpec().GetOwnership(), user); err != nil {
+			return nil, err
+		}
 	}
 
 	// Check if labels have been updated
