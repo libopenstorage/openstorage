@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -300,17 +301,26 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 	vd.logRequest(method, string(volumeID)).Infoln(setActions)
 	volumes := api.NewOpenStorageVolumeClient(conn)
 
-	if req.Spec != nil {
-		_, err = volumes.Update(ctx, &api.SdkVolumeUpdateRequest{
-			VolumeId: volumeID,
-			Labels:   req.Locator.VolumeLabels,
-			Spec:     convertSpectoSdkSpec(req.Spec),
-		})
-		if err != nil {
-			vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+	vol, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
+		VolumeId: volumeID,
+	})
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+		return
 	}
+
+	updateReq := &api.SdkVolumeUpdateRequest{VolumeId: volumeID}
+	updateReq.Spec = getVolumeUpdateSpec(req.Spec, vol.GetVolume())
+
+	if req.Locator != nil && len(req.Locator.VolumeLabels) > 0 {
+		updateReq.Labels = req.Locator.VolumeLabels
+	}
+
+	if _, err := volumes.Update(ctx, updateReq); err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	detachOptions := &api.SdkVolumeDetachOptions{}
 	attachOptions := &api.SdkVolumeAttachOptions{}
 
@@ -404,41 +414,104 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func convertSpectoSdkSpec(spec *api.VolumeSpec) *api.VolumeSpecUpdate {
-	sdkSpec := &api.VolumeSpecUpdate{}
-	sdkSpec.SharedOpt = &api.VolumeSpecUpdate_Shared{
-		Shared: spec.Shared,
+func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume) *api.VolumeSpecUpdate {
+	newSpec := &api.VolumeSpecUpdate{}
+	if spec.Shared != vol.Spec.Shared {
+		newSpec.SharedOpt = &api.VolumeSpecUpdate_Shared{
+			Shared: spec.Shared,
+		}
 	}
 
-	sdkSpec.Sharedv4Opt = &api.VolumeSpecUpdate_Sharedv4{
-		Sharedv4: spec.Sharedv4,
+	if spec.Sharedv4 != vol.Spec.Sharedv4 {
+		newSpec.Sharedv4Opt = &api.VolumeSpecUpdate_Sharedv4{
+			Sharedv4: spec.Sharedv4,
+		}
 	}
 
-	sdkSpec.JournalOpt = &api.VolumeSpecUpdate_Journal{
-		Journal: spec.Journal,
+	if spec.Passphrase != vol.Spec.Passphrase {
+		newSpec.PassphraseOpt = &api.VolumeSpecUpdate_Passphrase{
+			Passphrase: spec.Passphrase,
+		}
 	}
 
-	sdkSpec.StickyOpt = &api.VolumeSpecUpdate_Sticky{
-		Sticky: spec.Sticky,
+	if spec.Cos != vol.Spec.Cos && spec.Cos != 0 {
+		newSpec.CosOpt = &api.VolumeSpecUpdate_Cos{
+			Cos: spec.Cos,
+		}
 	}
 
-	sdkSpec.ScaleOpt = &api.VolumeSpecUpdate_Scale{
-		Scale: spec.Scale,
+	if spec.Journal != vol.Spec.Journal {
+		newSpec.JournalOpt = &api.VolumeSpecUpdate_Journal{
+			Journal: spec.Journal,
+		}
 	}
 
-	sdkSpec.SizeOpt = &api.VolumeSpecUpdate_Size{
-		Size: spec.Size,
+	if spec.Sticky != vol.Spec.Sticky {
+		newSpec.StickyOpt = &api.VolumeSpecUpdate_Sticky{
+			Sticky: spec.Sticky,
+		}
 	}
 
-	sdkSpec.IoProfileOpt = &api.VolumeSpecUpdate_IoProfile{
-		IoProfile: spec.IoProfile,
+	if spec.Scale != vol.Spec.Scale {
+		newSpec.ScaleOpt = &api.VolumeSpecUpdate_Scale{
+			Scale: spec.Scale,
+		}
 	}
 
-	sdkSpec.QueueDepthOpt = &api.VolumeSpecUpdate_QueueDepth{
-		QueueDepth: spec.QueueDepth,
+	if spec.Size != vol.Spec.Size {
+		newSpec.SizeOpt = &api.VolumeSpecUpdate_Size{
+			Size: spec.Size,
+		}
 	}
 
-	return sdkSpec
+	if spec.IoProfile != vol.Spec.IoProfile {
+		newSpec.IoProfileOpt = &api.VolumeSpecUpdate_IoProfile{
+			IoProfile: spec.IoProfile,
+		}
+	}
+
+	if spec.Dedupe != vol.Spec.Dedupe {
+		newSpec.DedupeOpt = &api.VolumeSpecUpdate_Dedupe{
+			Dedupe: spec.Dedupe,
+		}
+	}
+
+	if spec.Sticky != vol.Spec.Sticky {
+		newSpec.StickyOpt = &api.VolumeSpecUpdate_Sticky{
+			Sticky: spec.Sticky,
+		}
+	}
+
+	if spec.Group != vol.Spec.Group {
+		newSpec.GroupOpt = &api.VolumeSpecUpdate_Group{
+			Group: spec.Group,
+		}
+	}
+
+	if spec.QueueDepth != vol.Spec.QueueDepth {
+		newSpec.QueueDepthOpt = &api.VolumeSpecUpdate_QueueDepth{
+			QueueDepth: spec.QueueDepth,
+		}
+	}
+
+	if spec.SnapshotSchedule != vol.Spec.SnapshotSchedule {
+		newSpec.SnapshotScheduleOpt = &api.VolumeSpecUpdate_SnapshotSchedule{
+			SnapshotSchedule: spec.SnapshotSchedule,
+		}
+	}
+
+	if spec.SnapshotInterval != vol.Spec.SnapshotInterval && spec.SnapshotInterval != math.MaxUint32 {
+		newSpec.SnapshotIntervalOpt = &api.VolumeSpecUpdate_SnapshotInterval{
+			SnapshotInterval: spec.SnapshotInterval,
+		}
+	}
+
+	if spec.HaLevel != vol.Spec.HaLevel && spec.HaLevel != 0 {
+		newSpec.HaLevelOpt = &api.VolumeSpecUpdate_HaLevel{
+			HaLevel: spec.HaLevel,
+		}
+	}
+	return newSpec
 }
 
 // swagger:operation GET /osd-volumes/{id} volume inspectVolume
