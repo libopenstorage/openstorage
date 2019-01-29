@@ -947,29 +947,58 @@ func (l *VolumeLocator) MergeVolumeSpecLabels(s *VolumeSpec) *VolumeLocator {
 	return l
 }
 
-func (v *Volume) IsPermitted(ctx context.Context) bool {
-	return v.GetSpec().IsPermitted(ctx)
+func (v *Volume) IsPermitted(ctx context.Context, accessType Ownership_AccessType) bool {
+	return v.GetSpec().IsPermitted(ctx, accessType)
 }
 
-func (v *VolumeSpec) IsPermitted(ctx context.Context) bool {
+func (v *VolumeSpec) IsPermitted(ctx context.Context, accessType Ownership_AccessType) bool {
+	if v.IsPublic() {
+		return true
+	}
+
+	// Volume is not public, check permission
+	if userinfo, ok := auth.NewUserInfoFromContext(ctx); ok {
+		// Check Access
+		return v.IsPermittedFromUserInfo(userinfo, accessType)
+	} else {
+		// There is no user information in the context so
+		// authorization is not running
+		return true
+	}
+}
+
+func (v *VolumeSpec) IsPermittedFromUserInfo(user *auth.UserInfo, accessType Ownership_AccessType) bool {
+	if v.IsPublic() {
+		return true
+	}
+
 	if v.GetOwnership() != nil {
-		if userinfo, ok := auth.NewUserInfoFromContext(ctx); ok {
-			// Check Access
-			return v.IsPermittedFromUserInfo(userinfo)
-		} else {
-			// There is no user information in the context so
-			// authorization is not running
-			return true
+		return v.GetOwnership().IsPermitted(user, accessType)
+	}
+	return true
+}
+
+func (v *VolumeSpec) IsPublic() bool {
+	return v.GetOwnership() == nil || v.GetOwnership().IsPublic()
+}
+
+// GetCloneCreatorOwnership returns the appropriate ownership for the
+// new snapshot and if an update is required
+func (v *VolumeSpec) GetCloneCreatorOwnership(ctx context.Context) (*Ownership, bool) {
+	o := v.GetOwnership()
+
+	// If there is user information, then auth is enabled
+	if userinfo, ok := auth.NewUserInfoFromContext(ctx); ok {
+
+		// Check if the owner is the one who cloned it
+		if o != nil && o.IsOwner(userinfo) {
+			return o, false
 		}
+
+		// Not the same owner, we now need new ownership.
+		// This works for public volumes also.
+		return OwnershipSetUsernameFromContext(ctx, nil), true
 	}
 
-	// There is no ownership on this volume, so allow access
-	return true
-}
-
-func (v *VolumeSpec) IsPermittedFromUserInfo(user *auth.UserInfo) bool {
-	if v.GetOwnership() != nil {
-		return v.GetOwnership().IsPermitted(user)
-	}
-	return true
+	return o, false
 }

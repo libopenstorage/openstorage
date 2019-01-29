@@ -244,7 +244,12 @@ func openLog(logfile string) (*os.File, error) {
 	return file, nil
 }
 
-func checkAccessFromDriverForVolumeId(ctx context.Context, d volume.VolumeDriver, volumeId string) error {
+func checkAccessFromDriverForVolumeId(
+	ctx context.Context,
+	d volume.VolumeDriver,
+	volumeId string,
+	accessType api.Ownership_AccessType,
+) error {
 	vols, err := d.Inspect([]string{volumeId})
 	if err == kvdb.ErrNotFound || (err == nil && len(vols) == 0) {
 		return status.Errorf(
@@ -258,7 +263,7 @@ func checkAccessFromDriverForVolumeId(ctx context.Context, d volume.VolumeDriver
 			volumeId, err)
 	}
 
-	if !vols[0].IsPermitted(ctx) {
+	if !vols[0].IsPermitted(ctx, accessType) {
 		return status.Errorf(codes.PermissionDenied, "Access denied to volume %s", volumeId)
 	}
 
