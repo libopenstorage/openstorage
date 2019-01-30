@@ -52,8 +52,7 @@ func TestIsSameFilesystem(t *testing.T) {
 		resB, err := IsSameFilesystem(td.input...)
 		if td.expectErr != "" {
 			// Test is expecting error here -- let's check if we got a correct error
-			require.Error(t, err,
-				"was expecting error for test-entry #%d - %q", i+1, td.input)
+			require.Error(t, err)
 			assert.Contains(t, err.Error(), td.expectErr,
 				"was expecting error with %s for test-entry #%d - %q", td.expectErr, i+1, td.input)
 		} else {
