@@ -21,6 +21,7 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/keylock"
 	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/pkg/sched"
+	"github.com/libopenstorage/openstorage/pkg/util"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/pborman/uuid"
 	"github.com/sirupsen/logrus"
@@ -661,20 +662,28 @@ func (m *Mounter) removeMountPath(path string) error {
 	}
 
 	if _, err := os.Stat(path); err == nil {
-		logrus.Infof("Removing mount path directory: %v", path)
-		if err = os.Remove(path); err != nil {
-			logrus.Warnf("Failed to remove path: %v Err: %v", path, err)
-			return err
+		if isMp, err := util.IsMountpoint(path); err == nil && isMp {
+			logrus.Warnf("Skipped removing mounted path directory: %v", path)
+		} else {
+			logrus.Infof("Removing mount path directory: %v", path)
+			if err = os.Remove(path); err != nil {
+				logrus.Warnf("Failed to remove path: %v Err: %v", path, err)
+				return err
+			}
 		}
 	}
 
 	if bindMountPath != "" {
 		if _, err := os.Stat(bindMountPath); err == nil {
-			logrus.Infof("Removing bind mount path source: %v", bindMountPath)
-			if err = os.Remove(bindMountPath); err != nil {
-				logrus.Warnf("Failed to remove bind mount path: %v Err: %v",
-					bindMountPath, err)
-				return err
+			if isMp, err := util.IsMountpoint(bindMountPath); err == nil && isMp {
+				logrus.Warnf("Skipped removing mounted bind mount path source: %v", path)
+			} else {
+				logrus.Infof("Removing bind mount path source: %v", bindMountPath)
+				if err = os.Remove(bindMountPath); err != nil {
+					logrus.Warnf("Failed to remove bind mount path: %v Err: %v",
+						bindMountPath, err)
+					return err
+				}
 			}
 		}
 	}
