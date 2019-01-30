@@ -45,7 +45,7 @@ func TestNodePublishVolumeBadArguments(t *testing.T) {
 	}{
 		{
 			expectedErrorContains: "Volume id",
-			req:                   &csi.NodePublishVolumeRequest{},
+			req: &csi.NodePublishVolumeRequest{},
 		},
 		{
 			expectedErrorContains: "Target path",
