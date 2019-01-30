@@ -18,8 +18,8 @@ package util
 
 import (
 	"fmt"
-	"syscall"
 	"path"
+	"syscall"
 )
 
 // IsSameFilesystem takes a group of files/directories, and returns TRUE if all files/dirs belong to the same file-system.
