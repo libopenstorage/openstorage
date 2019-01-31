@@ -48,6 +48,7 @@ import (
 	graphdrivers "github.com/libopenstorage/openstorage/graph/drivers"
 	"github.com/libopenstorage/openstorage/objectstore"
 	"github.com/libopenstorage/openstorage/pkg/auth"
+	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
@@ -338,19 +339,25 @@ func start(c *cli.Context) error {
 		}
 		csiServer.Start()
 
+		sp, err := policy.Init(kv)
+		if err != nil {
+			return fmt.Errorf("Unable to Initialise Storage Policy Manager Instances %v", err)
+		}
+
 		// Start SDK Server for this driver
 		sdksocket := fmt.Sprintf("/var/lib/osd/driver/%s-sdk.sock", d)
 		os.Remove(sdksocket)
 
 		sdkServer, err := sdk.New(&sdk.ServerConfig{
-			Net:        "tcp",
-			Address:    ":" + c.String("sdkport"),
-			RestPort:   c.String("sdkrestport"),
-			Socket:     sdksocket,
-			DriverName: d,
-			Cluster:    cm,
-			Auth:       setupAuth(),
-			Tls:        setupSdkTls(),
+			Net:           "tcp",
+			Address:       ":" + c.String("sdkport"),
+			RestPort:      c.String("sdkrestport"),
+			Socket:        sdksocket,
+			DriverName:    d,
+			Cluster:       cm,
+			StoragePolicy: sp,
+			Auth:          setupAuth(),
+			Tls:           setupSdkTls(),
 		})
 		if err != nil {
 			return fmt.Errorf("Failed to start SDK server for driver %s: %v", d, err)

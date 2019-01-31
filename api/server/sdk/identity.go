@@ -104,7 +104,13 @@ func (s *IdentityServer) Capabilities(
 			},
 		},
 	}
-
+	capStoragePolicy := &api.SdkServiceCapability{
+		Type: &api.SdkServiceCapability_Service{
+			Service: &api.SdkServiceCapability_OpenStorageService{
+				Type: api.SdkServiceCapability_OpenStorageService_STORAGE_POLICY,
+			},
+		},
+	}
 	return &api.SdkIdentityCapabilitiesResponse{
 		Capabilities: []*api.SdkServiceCapability{
 			capCluster,
@@ -116,6 +122,7 @@ func (s *IdentityServer) Capabilities(
 			capVolume,
 			capAlerts,
 			capMountAttach,
+			capStoragePolicy,
 		},
 	}, nil
 }

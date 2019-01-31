@@ -11,6 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/libopenstorage/openstorage/api"
+	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
@@ -26,6 +27,12 @@ func init() {
 	if err != nil {
 		logrus.Panicf("Failed to set KVDB instance")
 	}
+
+	_, err = policy.Init(kv)
+	if err != nil {
+		logrus.Panicf("Failed to init storae policy instance %v", err)
+	}
+
 }
 
 // Context maintains current device state. It gets passed into tests

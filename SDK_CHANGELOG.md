@@ -5,6 +5,11 @@
 
 ## Releases
 
+### v0.33.2 - Tech Preview (07/02/2019)
+
+* Storage policy support
+* Allow Enforce/Release of storage policy
+
 ### v0.33.1 - Tech Preview (1/29/2019)
 
 * Additional fields to cloud-backup data structure to track group cloud backups.
