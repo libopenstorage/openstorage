@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/libopenstorage/openstorage/pkg/auth"
 )
 
 const (
@@ -55,11 +55,6 @@ type Response struct {
 type Status struct {
 	Message   string
 	ErrorCode int
-}
-
-func isJwtToken(authstring string) bool {
-	_, _, err := new(jwt.Parser).ParseUnverified(authstring, jwt.MapClaims{})
-	return err == nil
 }
 
 // NewRequest instance
@@ -263,7 +258,7 @@ func (r *Request) Do() *Response {
 	req.Header.Set("Date", time.Now().String())
 
 	if len(r.authstring) > 0 {
-		if isJwtToken(r.authstring) {
+		if auth.IsJwtToken(r.authstring) {
 			req.Header.Set("Authorization", "bearer "+r.authstring)
 		} else {
 			req.Header.Set("Authorization", "Basic "+r.authstring)

@@ -7,6 +7,8 @@ import (
 	"os"
 	"path"
 
+	"github.com/libopenstorage/openstorage/pkg/auth/secrets"
+	osecrets "github.com/libopenstorage/secrets"
 	"github.com/sirupsen/logrus"
 
 	"github.com/gorilla/mux"
@@ -35,37 +37,10 @@ func (r *Route) GetFn() func(http.ResponseWriter, *http.Request) {
 // the Linux container engine.
 func StartGraphAPI(name string, restBase string) error {
 	graphPlugin := newGraphPlugin(name)
-	if err := startServer(name, restBase, 0, graphPlugin.Routes()); err != nil {
+	if _, _, err := startServer(name, restBase, 0, graphPlugin); err != nil {
 		return err
 	}
 
-	return nil
-}
-
-// StartPluginAPI starts a REST server to receive volume API commands from the
-// Linux container engine and volume management commands from the CLI/UX.
-func StartPluginAPI(
-	name string,
-	sdkUds string,
-	mgmtBase string,
-	pluginBase string,
-	mgmtPort uint16,
-	pluginPort uint16,
-) error {
-	if err := StartVolumeMgmtAPI(
-		name, sdkUds,
-		mgmtBase,
-		mgmtPort,
-	); err != nil {
-		return err
-	}
-	if err := StartVolumePluginAPI(
-		name, sdkUds,
-		pluginBase,
-		pluginPort,
-	); err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -74,22 +49,34 @@ func StartVolumeMgmtAPI(
 	name, sdkUds string,
 	mgmtBase string,
 	mgmtPort uint16,
-) error {
+	auth bool,
+	authProviderType secrets.AuthTokenProviders,
+	authProvider osecrets.Secrets,
+) (*http.Server, *http.Server, error) {
+	var (
+		unixServer, portServer *http.Server
+		err                    error
+	)
 	volMgmtApi := newVolumeAPI(name, sdkUds)
-	if err := startServer(
-		name,
-		mgmtBase,
-		mgmtPort,
-		volMgmtApi.Routes(),
-	); err != nil {
-		return err
-	}
-	return nil
-}
+	if auth {
+		unixServer, portServer, err = startServerWithAuth(
+			name,
+			mgmtBase,
+			mgmtPort,
+			volMgmtApi,
+			authProviderType,
+			authProvider,
+		)
+	} else {
+		unixServer, portServer, err = startServer(
+			name,
+			mgmtBase,
+			mgmtPort,
+			volMgmtApi,
+		)
 
-func GetVolumeAPIRoutes(name, sdkUds string) []*Route {
-	volMgmtApi := newVolumeAPI(name, sdkUds)
-	return volMgmtApi.Routes()
+	}
+	return unixServer, portServer, err
 }
 
 // StartVolumePluginAPI starts a REST server to receive volume API commands
@@ -100,11 +87,11 @@ func StartVolumePluginAPI(
 	pluginPort uint16,
 ) error {
 	volPluginApi := newVolumePlugin(name, sdkUds)
-	if err := startServer(
+	if _, _, err := startServer(
 		name,
 		pluginBase,
 		pluginPort,
-		volPluginApi.Routes(),
+		volPluginApi,
 	); err != nil {
 		return err
 	}
@@ -117,7 +104,7 @@ func StartClusterAPI(clusterApiBase string, clusterPort uint16) error {
 	clusterApi := newClusterAPI()
 
 	// start server as before
-	if err := startServer("osd", clusterApiBase, clusterPort, clusterApi.Routes()); err != nil {
+	if _, _, err := startServer("osd", clusterApiBase, clusterPort, clusterApi); err != nil {
 		return err
 	}
 
@@ -129,16 +116,37 @@ func GetClusterAPIRoutes() []*Route {
 	return clusterApi.Routes()
 }
 
-func startServer(name string, sockBase string, port uint16, routes []*Route) error {
+func startServerWithAuth(
+	name, sockBase string,
+	port uint16,
+	rs restServer,
+	authProviderType secrets.AuthTokenProviders,
+	authProvider osecrets.Secrets,
+) (*http.Server, *http.Server, error) {
+	var err error
+	router := mux.NewRouter()
+	router.NotFoundHandler = http.HandlerFunc(notFound)
+	router, err = rs.SetupRoutesWithAuth(router, authProviderType, authProvider)
+	if err != nil {
+		return nil, nil, err
+	}
+	return startServerCommon(name, sockBase, port, rs, router)
+}
+
+func startServer(name string, sockBase string, port uint16, rs restServer) (*http.Server, *http.Server, error) {
+	router := mux.NewRouter()
+	router.NotFoundHandler = http.HandlerFunc(notFound)
+	for _, v := range rs.Routes() {
+		router.Methods(v.verb).Path(v.path).HandlerFunc(v.fn)
+	}
+	return startServerCommon(name, sockBase, port, rs, router)
+}
+
+func startServerCommon(name string, sockBase string, port uint16, rs restServer, router *mux.Router) (*http.Server, *http.Server, error) {
 	var (
 		listener net.Listener
 		err      error
 	)
-	router := mux.NewRouter()
-	router.NotFoundHandler = http.HandlerFunc(notFound)
-	for _, v := range routes {
-		router.Methods(v.verb).Path(v.path).HandlerFunc(v.fn)
-	}
 	socket := path.Join(sockBase, name+".sock")
 	os.Remove(socket)
 	os.MkdirAll(path.Dir(socket), 0755)
@@ -147,18 +155,23 @@ func startServer(name string, sockBase string, port uint16, routes []*Route) err
 	listener, err = net.Listen("unix", socket)
 	if err != nil {
 		logrus.Warnln("Cannot listen on UNIX socket: ", err)
-		return err
+		return nil, nil, err
 	}
-	go http.Serve(listener, router)
+	unixServer := &http.Server{Handler: router}
+	go unixServer.Serve(listener)
+
 	if port != 0 {
 		logrus.Printf("Starting REST service on port : %v", port)
-		go http.ListenAndServe(fmt.Sprintf(":%d", port), router)
+		portServer := &http.Server{Addr: fmt.Sprintf(":%d", port), Handler: router}
+		go portServer.ListenAndServe()
+		return unixServer, portServer, nil
 	}
-	return nil
+	return unixServer, nil, nil
 }
 
 type restServer interface {
 	Routes() []*Route
+	SetupRoutesWithAuth(router *mux.Router, authProviderType secrets.AuthTokenProviders, authProvider osecrets.Secrets) (*mux.Router, error)
 	String() string
 	logRequest(request string, id string) *logrus.Entry
 	sendError(request string, id string, w http.ResponseWriter, msg string, code int)

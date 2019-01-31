@@ -13,12 +13,17 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/errors"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
+	"github.com/libopenstorage/openstorage/pkg/auth/secrets"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
+	osecrets "github.com/libopenstorage/secrets"
+	"github.com/urfave/negroni"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const schedDriverPostFix = "-sched"
@@ -161,6 +166,7 @@ func (vd *volAPI) create(w http.ResponseWriter, r *http.Request) {
 	method := "create"
 
 	if err := json.NewDecoder(r.Body).Decode(&dcReq); err != nil {
+		fmt.Println("returning error here")
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -185,6 +191,7 @@ func (vd *volAPI) create(w http.ResponseWriter, r *http.Request) {
 	for k, v := range dcReq.Locator.GetVolumeLabels() {
 		spec.VolumeLabels[k] = v
 	}
+
 	volumes := api.NewOpenStorageVolumeClient(conn)
 	id, err := volumes.Create(ctx, &api.SdkVolumeCreateRequest{
 		Name:   dcReq.Locator.GetName(),
@@ -299,6 +306,10 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 			Labels:   req.Locator.VolumeLabels,
 			Spec:     convertSpectoSdkSpec(req.Spec),
 		})
+		if err != nil {
+			vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 	detachOptions := &api.SdkVolumeDetachOptions{}
 	attachOptions := &api.SdkVolumeAttachOptions{}
@@ -475,12 +486,19 @@ func (vd *volAPI) inspect(w http.ResponseWriter, r *http.Request) {
 	}
 	volumes := api.NewOpenStorageVolumeClient(conn)
 	dk, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{VolumeId: volumeID})
+	dkVolumes := []*api.Volume{}
 	if err != nil {
-		vd.sendError(vd.name, method, w, err.Error(), http.StatusNotFound)
-		return
+		// SDK returns a NotFound error for an invalid volume
+		// Previously the REST server returned an empty array if a volume was not found
+		if s, ok := status.FromError(err); ok && s.Code() != codes.NotFound {
+			vd.sendError(vd.name, method, w, err.Error(), http.StatusNotFound)
+			return
+		}
+	} else {
+		dkVolumes = append(dkVolumes, dk.GetVolume())
 	}
 
-	json.NewEncoder(w).Encode(dk.GetVolume())
+	json.NewEncoder(w).Encode(dkVolumes)
 }
 
 // swagger:operation DELETE /osd-volumes/{id} volume deleteVolume
@@ -1449,14 +1467,29 @@ func migratePath(route, version string) string {
 	return volVersion(route, version)
 }
 
-func (vd *volAPI) Routes() []*Route {
+func (vd *volAPI) versionRoute() *Route {
+	return &Route{verb: "GET", path: "/" + api.OsdVolumePath + "/versions", fn: vd.versions}
+
+}
+func (vd *volAPI) volumeCreateRoute() *Route {
+	return &Route{verb: "POST", path: volPath("", volume.APIVersion), fn: vd.create}
+}
+
+func (vd *volAPI) volumeDeleteRoute() *Route {
+	return &Route{verb: "DELETE", path: volPath("/{id}", volume.APIVersion), fn: vd.delete}
+}
+
+func (vd *volAPI) volumeSetRoute() *Route {
+	return &Route{verb: "PUT", path: volPath("/{id}", volume.APIVersion), fn: vd.volumeSet}
+}
+
+func (vd *volAPI) volumeInspectRoute() *Route {
+	return &Route{verb: "GET", path: volPath("/{id}", volume.APIVersion), fn: vd.inspect}
+}
+
+func (vd *volAPI) otherVolumeRoutes() []*Route {
 	return []*Route{
-		{verb: "GET", path: "/" + api.OsdVolumePath + "/versions", fn: vd.versions},
-		{verb: "POST", path: volPath("", volume.APIVersion), fn: vd.create},
-		{verb: "PUT", path: volPath("/{id}", volume.APIVersion), fn: vd.volumeSet},
 		{verb: "GET", path: volPath("", volume.APIVersion), fn: vd.enumerate},
-		{verb: "GET", path: volPath("/{id}", volume.APIVersion), fn: vd.inspect},
-		{verb: "DELETE", path: volPath("/{id}", volume.APIVersion), fn: vd.delete},
 		{verb: "GET", path: volPath("/stats", volume.APIVersion), fn: vd.stats},
 		{verb: "GET", path: volPath("/stats/{id}", volume.APIVersion), fn: vd.stats},
 		{verb: "GET", path: volPath("/usedsize", volume.APIVersion), fn: vd.usedsize},
@@ -1468,14 +1501,11 @@ func (vd *volAPI) Routes() []*Route {
 		{verb: "POST", path: volPath("/quiesce/{id}", volume.APIVersion), fn: vd.quiesce},
 		{verb: "POST", path: volPath("/unquiesce/{id}", volume.APIVersion), fn: vd.unquiesce},
 		{verb: "GET", path: volPath("/catalog/{id}", volume.APIVersion), fn: vd.catalog},
-		{verb: "POST", path: snapPath("", volume.APIVersion), fn: vd.snap},
-		{verb: "GET", path: snapPath("", volume.APIVersion), fn: vd.snapEnumerate},
-		{verb: "POST", path: snapPath("/restore/{id}", volume.APIVersion), fn: vd.restore},
-		{verb: "POST", path: snapPath("/snapshotgroup", volume.APIVersion), fn: vd.snapGroup},
-		{verb: "GET", path: credsPath("", volume.APIVersion), fn: vd.credsEnumerate},
-		{verb: "POST", path: credsPath("", volume.APIVersion), fn: vd.credsCreate},
-		{verb: "DELETE", path: credsPath("/{uuid}", volume.APIVersion), fn: vd.credsDelete},
-		{verb: "PUT", path: credsPath("/validate/{uuid}", volume.APIVersion), fn: vd.credsValidate},
+	}
+}
+
+func (vd *volAPI) backupRoutes() []*Route {
+	return []*Route{
 		{verb: "POST", path: backupPath("", volume.APIVersion), fn: vd.cloudBackupCreate},
 		{verb: "POST", path: backupPath("/group", volume.APIVersion), fn: vd.cloudBackupGroupCreate},
 		{verb: "POST", path: backupPath("/restore", volume.APIVersion), fn: vd.cloudBackupRestore},
@@ -1490,8 +1520,188 @@ func (vd *volAPI) Routes() []*Route {
 		{verb: "POST", path: backupPath("/schedgroup", volume.APIVersion), fn: vd.cloudBackupGroupSchedCreate},
 		{verb: "DELETE", path: backupPath("/sched", volume.APIVersion), fn: vd.cloudBackupSchedDelete},
 		{verb: "GET", path: backupPath("/sched", volume.APIVersion), fn: vd.cloudBackupSchedEnumerate},
+	}
+}
+
+func (vd *volAPI) credsRoutes() []*Route {
+	return []*Route{
+		{verb: "GET", path: credsPath("", volume.APIVersion), fn: vd.credsEnumerate},
+		{verb: "POST", path: credsPath("", volume.APIVersion), fn: vd.credsCreate},
+		{verb: "DELETE", path: credsPath("/{uuid}", volume.APIVersion), fn: vd.credsDelete},
+		{verb: "PUT", path: credsPath("/validate/{uuid}", volume.APIVersion), fn: vd.credsValidate},
+	}
+}
+
+func (vd *volAPI) migrateRoutes() []*Route {
+	return []*Route{
 		{verb: "POST", path: migratePath(api.OsdMigrateStartPath, volume.APIVersion), fn: vd.cloudMigrateStart},
 		{verb: "POST", path: migratePath(api.OsdMigrateCancelPath, volume.APIVersion), fn: vd.cloudMigrateCancel},
 		{verb: "GET", path: migratePath(api.OsdMigrateStatusPath, volume.APIVersion), fn: vd.cloudMigrateStatus},
 	}
+}
+
+func (vd *volAPI) snapRoutes() []*Route {
+	return []*Route{
+		{verb: "POST", path: snapPath("", volume.APIVersion), fn: vd.snap},
+		{verb: "GET", path: snapPath("", volume.APIVersion), fn: vd.snapEnumerate},
+		{verb: "POST", path: snapPath("/restore/{id}", volume.APIVersion), fn: vd.restore},
+		{verb: "POST", path: snapPath("/snapshotgroup", volume.APIVersion), fn: vd.snapGroup},
+	}
+}
+
+func (vd *volAPI) Routes() []*Route {
+	routes := []*Route{vd.versionRoute(), vd.volumeCreateRoute(), vd.volumeSetRoute(), vd.volumeDeleteRoute(), vd.volumeInspectRoute()}
+	routes = append(routes, vd.otherVolumeRoutes()...)
+	routes = append(routes, vd.snapRoutes()...)
+	routes = append(routes, vd.backupRoutes()...)
+	routes = append(routes, vd.credsRoutes()...)
+	routes = append(routes, vd.migrateRoutes()...)
+	return routes
+}
+
+func (vd *volAPI) SetupRoutesWithAuth(
+	router *mux.Router,
+	authProviderType secrets.AuthTokenProviders,
+	authProvider osecrets.Secrets,
+) (*mux.Router, error) {
+	// We setup auth middlewares for all the APIs that get invoked
+	// from a Container Orchestrator.
+	// - CREATE
+	// - ATTACH/MOUNT
+	// - DETACH/UNMOUNT
+	// - DELETE
+	// For all other routes it is expected that the REST client uses an auth token
+
+	authM, err := NewAuthMiddleware(authProvider, authProviderType)
+	if err != nil {
+		return router, err
+	}
+
+	// Setup middleware for Create
+	nCreate := negroni.New()
+	nCreate.Use(negroni.HandlerFunc(authM.createWithAuth))
+	createRoute := vd.volumeCreateRoute()
+	nCreate.UseHandlerFunc(createRoute.fn)
+	router.Methods(createRoute.verb).Path(createRoute.path).Handler(nCreate)
+
+	// Setup middleware for Delete
+	nDelete := negroni.New()
+	nDelete.Use(negroni.HandlerFunc(authM.deleteWithAuth))
+	deleteRoute := vd.volumeDeleteRoute()
+	nDelete.UseHandlerFunc(deleteRoute.fn)
+	router.Methods(deleteRoute.verb).Path(deleteRoute.path).Handler(nDelete)
+
+	// Setup middleware for Set
+	nSet := negroni.New()
+	nSet.Use(negroni.HandlerFunc(authM.setWithAuth))
+	setRoute := vd.volumeSetRoute()
+	nSet.UseHandlerFunc(setRoute.fn)
+	router.Methods(setRoute.verb).Path(setRoute.path).Handler(nSet)
+
+	// Setup middleware for Inspect
+	nInspect := negroni.New()
+	nInspect.Use(negroni.HandlerFunc(authM.inspectWithAuth))
+	inspectRoute := vd.volumeInspectRoute()
+	nSet.UseHandlerFunc(inspectRoute.fn)
+	router.Methods(inspectRoute.verb).Path(inspectRoute.path).Handler(nInspect)
+
+	routes := []*Route{vd.versionRoute()}
+	routes = append(routes, vd.otherVolumeRoutes()...)
+	routes = append(routes, vd.snapRoutes()...)
+	routes = append(routes, vd.backupRoutes()...)
+	routes = append(routes, vd.credsRoutes()...)
+	routes = append(routes, vd.migrateRoutes()...)
+	for _, v := range routes {
+		router.Methods(v.verb).Path(v.path).HandlerFunc(v.fn)
+	}
+	return router, nil
+}
+
+// GetVolumeAPIRoutes returns all the volume routes.
+// A driver could use this function if it does not want openstorage
+// to setup the REST server but it sets up its own and wants to add
+// volume routes
+func GetVolumeAPIRoutes(name, sdkUds string) []*Route {
+	volMgmtApi := newVolumeAPI(name, sdkUds)
+	return volMgmtApi.Routes()
+}
+
+// ServerRegisterRoute is a callback function used by drivers to run their
+// preRouteChecks before the actual volume route gets invoked
+// This is added for legacy support before negroni middleware was added
+type ServerRegisterRoute func(
+	routeFunc func(w http.ResponseWriter, r *http.Request),
+	preRouteCheck func(w http.ResponseWriter, r *http.Request) bool,
+) func(w http.ResponseWriter, r *http.Request)
+
+// GetVolumeAPIRoutesWithAuth returns a router with all the volume routes
+// added to the router along with the auth middleware
+// - preRouteCheckFn is a handler that gets executed before the actual volume handler
+// is invoked. It is added for legacy support where negroni middleware was not used
+func GetVolumeAPIRoutesWithAuth(
+	name, sdkUds string,
+	authProviderType secrets.AuthTokenProviders,
+	authProvider osecrets.Secrets,
+	router *mux.Router,
+	serverRegisterRoute ServerRegisterRoute,
+	preRouteCheckFn func(http.ResponseWriter, *http.Request) bool,
+) (*mux.Router, error) {
+	vd := &volAPI{
+		restBase: restBase{version: volume.APIVersion, name: name},
+		sdkUds:   sdkUds,
+		dummyMux: runtime.NewServeMux(),
+	}
+
+	authM, err := NewAuthMiddleware(authProvider, authProviderType)
+	if err != nil {
+		return router, err
+	}
+
+	// We setup auth middlewares for all the APIs that get invoked
+	// from a Container Orchestrator.
+	// - CREATE
+	// - ATTACH/MOUNT
+	// - DETACH/UNMOUNT
+	// - DELETE
+	// For all other routes it is expected that the REST client uses an auth token
+
+	// Setup middleware for Create
+	nCreate := negroni.New()
+	nCreate.Use(negroni.HandlerFunc(authM.createWithAuth))
+	createRoute := vd.volumeCreateRoute()
+	nCreate.UseHandlerFunc(serverRegisterRoute(createRoute.fn, preRouteCheckFn))
+	router.Methods(createRoute.verb).Path(createRoute.path).Handler(nCreate)
+
+	// Setup middleware for Delete
+	nDelete := negroni.New()
+	nDelete.Use(negroni.HandlerFunc(authM.deleteWithAuth))
+	deleteRoute := vd.volumeDeleteRoute()
+	nDelete.UseHandlerFunc(serverRegisterRoute(deleteRoute.fn, preRouteCheckFn))
+	router.Methods(deleteRoute.verb).Path(deleteRoute.path).Handler(nDelete)
+
+	// Setup middleware for Set
+	nSet := negroni.New()
+	nSet.Use(negroni.HandlerFunc(authM.setWithAuth))
+	setRoute := vd.volumeSetRoute()
+	nSet.UseHandlerFunc(serverRegisterRoute(setRoute.fn, preRouteCheckFn))
+	router.Methods(setRoute.verb).Path(setRoute.path).Handler(nSet)
+
+	// Setup middleware for Inspect
+	nInspect := negroni.New()
+	nInspect.Use(negroni.HandlerFunc(authM.inspectWithAuth))
+	inspectRoute := vd.volumeInspectRoute()
+	nInspect.UseHandlerFunc(serverRegisterRoute(inspectRoute.fn, preRouteCheckFn))
+	router.Methods(inspectRoute.verb).Path(inspectRoute.path).Handler(nInspect)
+
+	routes := []*Route{vd.versionRoute()}
+	routes = append(routes, vd.otherVolumeRoutes()...)
+	routes = append(routes, vd.snapRoutes()...)
+	routes = append(routes, vd.backupRoutes()...)
+	routes = append(routes, vd.credsRoutes()...)
+	routes = append(routes, vd.migrateRoutes()...)
+	for _, v := range routes {
+		router.Methods(v.verb).Path(v.path).HandlerFunc(serverRegisterRoute(v.fn, preRouteCheckFn))
+	}
+	return router, nil
+
 }
