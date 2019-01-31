@@ -25,12 +25,14 @@ import (
 	sdkauth "github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 	"github.com/libopenstorage/openstorage/pkg/role"
+	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 	"github.com/libopenstorage/openstorage/volume/drivers/fake"
 	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
 	"github.com/libopenstorage/secrets"
 	"github.com/libopenstorage/secrets/mock"
+
 	"github.com/stretchr/testify/assert"
 
 	"github.com/portworx/kvdb"
@@ -272,6 +274,11 @@ func testRestServer(t *testing.T) (*httptest.Server, *testServer) {
 
 	ts := httptest.NewServer(router)
 	testVolDriver := newTestServer(t)
+	// Initialise storage policy manager
+	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, logrus.Panicf)
+	assert.NoError(t, err)
+	_, err = policy.Init(kv)
+
 	return ts, testVolDriver
 }
 

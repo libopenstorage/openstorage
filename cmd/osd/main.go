@@ -50,6 +50,7 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/auth/secrets"
 	"github.com/libopenstorage/openstorage/pkg/role"
+	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
@@ -431,15 +432,21 @@ func start(c *cli.Context) error {
 			logrus.Fatalf("Failed to access TLS file information: %v", err)
 		}
 
+		sp, err := policy.Init(kv)
+		if err != nil {
+			return fmt.Errorf("Unable to Initialise Storage Policy Manager Instances %v", err)
+		}
+
 		// Start SDK Server for this driver
 		os.Remove(sdksocket)
 		sdkServer, err := sdk.New(&sdk.ServerConfig{
-			Net:        "tcp",
-			Address:    ":" + c.String("sdkport"),
-			RestPort:   c.String("sdkrestport"),
-			Socket:     sdksocket,
-			DriverName: d,
-			Cluster:    cm,
+			Net:           "tcp",
+			Address:       ":" + c.String("sdkport"),
+			RestPort:      c.String("sdkrestport"),
+			Socket:        sdksocket,
+			DriverName:    d,
+			Cluster:       cm,
+			StoragePolicy: sp,
 			Security: &sdk.SecurityConfig{
 				Role:           rm,
 				Tls:            tlsConfig,
