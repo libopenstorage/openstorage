@@ -264,6 +264,7 @@ func (r *Request) Do() *Response {
 	}
 
 	start := time.Now()
+	attemptNum := 0
 	for {
 		if resp, err = r.client.Do(req); err != nil {
 			return &Response{err: err}
@@ -271,10 +272,10 @@ func (r *Request) Do() *Response {
 
 		if time.Since(start) >= maxRetryDuration ||
 			resp.StatusCode != http.StatusServiceUnavailable {
-			// Server needs to set this header along with returning a 503
 			break
 		}
-		handleServiceUnavailable(resp)
+		attemptNum++
+		handleServiceUnavailable(resp, attemptNum)
 	}
 
 	if resp.Body != nil {
@@ -292,13 +293,15 @@ func (r *Request) Do() *Response {
 	}
 }
 
-func handleServiceUnavailable(resp *http.Response) {
+func handleServiceUnavailable(resp *http.Response, attemptNum int) {
 	var duration = time.Duration(1 * time.Second)
 	if len(resp.Header["Retry-After"]) > 0 {
 		if retryafter, err := strconv.Atoi(resp.Header["Retry-After"][0]); err == nil {
-			duration = time.Duration(retryafter) * time.Second
+			duration = time.Duration(retryafter*attemptNum) * time.Second
 		}
 	}
+	// Close body so go-routines can spin down.
+	resp.Body.Close()
 
 	time.Sleep(duration)
 }
