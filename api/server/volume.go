@@ -166,7 +166,7 @@ func (vd *volAPI) create(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	spec, err := sdkVol.GetEnforcedVolSpecs(dcReq.Locator, dcReq.Source, dcReq.Spec)
+	spec, err := sdkVol.GetEnforcedVolSpecs(dcReq.Locator, dcReq.Spec)
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return

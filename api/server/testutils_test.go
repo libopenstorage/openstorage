@@ -1,7 +1,6 @@
 package server
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -15,7 +14,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	mockcluster "github.com/libopenstorage/openstorage/cluster/mock"
@@ -110,9 +108,7 @@ func testRestServer(t *testing.T) (*httptest.Server, *testServer) {
 	assert.NoError(t, err)
 	policy.Init(kv)
 	// Disable policy enforcement for regular vol_ops test
-	storPolicy, err := policy.Inst()
-	assert.NoError(t, err)
-	_, err = storPolicy.Release(context.Background(), &api.SdkOpenStoragePolicyReleaseRequest{})
+	_, err = policy.Inst()
 	assert.NoError(t, err)
 
 	return ts, testVolDriver

@@ -9,6 +9,7 @@ import (
 	"path"
 
 	"github.com/libopenstorage/openstorage/api"
+	sdkVol "github.com/libopenstorage/openstorage/api/server/sdk"
 	"github.com/libopenstorage/openstorage/api/spec"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/pkg/options"
@@ -196,6 +197,12 @@ func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 			locator = &api.VolumeLocator{}
 		}
 		locator.Name = name
+		// get enforced policy specs
+		spec, err = sdkVol.GetEnforcedVolSpecs(locator, spec)
+		if err != nil {
+			d.errorResponse(method, w, err)
+			return
+		}
 		if source != nil && len(source.Parent) != 0 {
 			vol, err := d.volFromName(source.Parent)
 			if err != nil {

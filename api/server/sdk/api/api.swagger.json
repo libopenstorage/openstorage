@@ -1680,10 +1680,11 @@
     "apiSdkOpenStoragePolicyCreateRequest": {
       "properties": {
         "storage_policy": {
-          "$ref": "#/definitions/apiSdkStoragePolicy"
+          "$ref": "#/definitions/apiSdkStoragePolicy",
+          "title": "storage policy to create"
         }
       },
-      "title": "START - OpenStoragePolicy structs\nDefine a request to create storage policy",
+      "title": "Define a request to create storage policy",
       "type": "object"
     },
     "apiSdkOpenStoragePolicyCreateResponse": {
@@ -1691,9 +1692,11 @@
       "type": "object"
     },
     "apiSdkOpenStoragePolicyDeleteResponse": {
+      "title": "Empty Response",
       "type": "object"
     },
     "apiSdkOpenStoragePolicyEnforceResponse": {
+      "title": "Empty Response",
       "type": "object"
     },
     "apiSdkOpenStoragePolicyEnumerateResponse": {
@@ -1702,6 +1705,7 @@
           "items": {
             "$ref": "#/definitions/apiSdkStoragePolicy"
           },
+          "title": "List of storage policies",
           "type": "array"
         }
       },
@@ -1710,23 +1714,27 @@
     "apiSdkOpenStoragePolicyInspectResponse": {
       "properties": {
         "storage_policy": {
-          "$ref": "#/definitions/apiSdkStoragePolicy"
+          "$ref": "#/definitions/apiSdkStoragePolicy",
+          "title": "storage policy information requested by name"
         }
       },
       "type": "object"
     },
     "apiSdkOpenStoragePolicyReleaseResponse": {
+      "title": "Empty Response",
       "type": "object"
     },
     "apiSdkOpenStoragePolicyUpdateRequest": {
       "properties": {
         "storage_policy": {
-          "$ref": "#/definitions/apiSdkStoragePolicy"
+          "$ref": "#/definitions/apiSdkStoragePolicy",
+          "title": "storage policy to update"
         }
       },
       "type": "object"
     },
     "apiSdkOpenStoragePolicyUpdateResponse": {
+      "title": "Empty Response",
       "type": "object"
     },
     "apiSdkSchedulePolicy": {
@@ -1913,7 +1921,7 @@
           "type": "string"
         },
         "policy": {
-          "$ref": "#/definitions/apiVolumeSpecUpdate",
+          "$ref": "#/definitions/apiVolumeSpecPolicy",
           "description": "VolumeSpecs to apply while creating volume."
         }
       },
@@ -3010,6 +3018,86 @@
         }
       },
       "title": "VolumeSpec has the properties needed to create a volume.\nswagger:model",
+      "type": "object"
+    },
+    "apiVolumeSpecPolicy": {
+      "properties": {
+        "aggregation_level": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "cos": {
+          "$ref": "#/definitions/apiCosType"
+        },
+        "dedupe": {
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "encrypted": {
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "group": {
+          "$ref": "#/definitions/apiGroup"
+        },
+        "ha_level": {
+          "format": "int64",
+          "type": "string"
+        },
+        "io_profile": {
+          "$ref": "#/definitions/apiIoProfile"
+        },
+        "journal": {
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "passphrase": {
+          "type": "string"
+        },
+        "queue_depth": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "replica_set": {
+          "$ref": "#/definitions/apiReplicaSet",
+          "description": "ReplicaSet is the desired set of nodes for the volume data."
+        },
+        "scale": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "shared": {
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "sharedv4": {
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "size": {
+          "format": "uint64",
+          "type": "string"
+        },
+        "snapshot_interval": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "snapshot_schedule": {
+          "type": "string"
+        },
+        "sticky": {
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "volume_labels": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "VolumeLabels configuration labels",
+          "type": "object"
+        }
+      },
+      "title": "VolumeSpecPolicy provides a method to set volume storage policy",
       "type": "object"
     },
     "apiVolumeSpecUpdate": {
@@ -4314,41 +4402,7 @@
         ]
       }
     },
-    "/v1/storagepolicy/enforce": {
-      "put": {
-        "operationId": "Enforce",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkOpenStoragePolicyEnforceResponse"
-            }
-          }
-        },
-        "summary": "Enforces specified storage policy",
-        "tags": [
-          "OpenStoragePolicy"
-        ]
-      }
-    },
-    "/v1/storagepolicy/release": {
-      "put": {
-        "operationId": "Release",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkOpenStoragePolicyReleaseResponse"
-            }
-          }
-        },
-        "summary": "Release specified storage policy constraint for volume\ncreation",
-        "tags": [
-          "OpenStoragePolicy"
-        ]
-      }
-    },
-    "/v1/storagepolicy/{name}": {
+    "/v1/storagepolicies/{name}": {
       "delete": {
         "operationId": "Delete",
         "parameters": [
@@ -4368,6 +4422,48 @@
           }
         },
         "summary": "Deletes specified storage policy",
+        "tags": [
+          "OpenStoragePolicy"
+        ]
+      }
+    },
+    "/v1/storagepolicy/enforce/{name}": {
+      "post": {
+        "operationId": "Enforce",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkOpenStoragePolicyEnforceResponse"
+            }
+          }
+        },
+        "summary": "Enforces specified storage policy",
+        "tags": [
+          "OpenStoragePolicy"
+        ]
+      }
+    },
+    "/v1/storagepolicy/release": {
+      "post": {
+        "operationId": "Release",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkOpenStoragePolicyReleaseResponse"
+            }
+          }
+        },
+        "summary": "Release specified storage policy constraint for volume\ncreation",
         "tags": [
           "OpenStoragePolicy"
         ]

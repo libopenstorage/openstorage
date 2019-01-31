@@ -1641,23 +1641,23 @@ func TestVolumeCreateSuccessWithEnforcement(t *testing.T) {
 	// Create storage policy and set it as default Enforcement
 	s, err := policy.Inst()
 	assert.NoError(t, err)
-	volSpec := &api.VolumeSpecUpdate{
-		SizeOpt: &api.VolumeSpecUpdate_Size{
+	volSpec := &api.VolumeSpecPolicy{
+		SizeOpt: &api.VolumeSpecPolicy_Size{
 			Size: 8989,
 		},
-		SharedOpt: &api.VolumeSpecUpdate_Shared{
+		SharedOpt: &api.VolumeSpecPolicy_Shared{
 			Shared: false,
 		},
-		Sharedv4Opt: &api.VolumeSpecUpdate_Sharedv4{
+		Sharedv4Opt: &api.VolumeSpecPolicy_Sharedv4{
 			Sharedv4: false,
 		},
-		JournalOpt: &api.VolumeSpecUpdate_Journal{
+		JournalOpt: &api.VolumeSpecPolicy_Journal{
 			Journal: true,
 		},
-		HaLevelOpt: &api.VolumeSpecUpdate_HaLevel{
+		HaLevelOpt: &api.VolumeSpecPolicy_HaLevel{
 			HaLevel: 3,
 		},
-		AggregationLevelOpt: &api.VolumeSpecUpdate_AggregationLevel{
+		AggregationLevelOpt: &api.VolumeSpecPolicy_AggregationLevel{
 			AggregationLevel: 2,
 		},
 	}
@@ -1763,26 +1763,26 @@ func TestVolumeCreateSuccessWithCustomPolicyEnforcement(t *testing.T) {
 	// Create storage policy and set it as default Enforcement
 	s, err := policy.Inst()
 	assert.NoError(t, err)
-	volSpec := &api.VolumeSpecUpdate{
-		SizeOpt: &api.VolumeSpecUpdate_Size{
+	volSpec := &api.VolumeSpecPolicy{
+		SizeOpt: &api.VolumeSpecPolicy_Size{
 			Size: 5123,
 		},
-		SharedOpt: &api.VolumeSpecUpdate_Shared{
+		SharedOpt: &api.VolumeSpecPolicy_Shared{
 			Shared: true,
 		},
-		Sharedv4Opt: &api.VolumeSpecUpdate_Sharedv4{
+		Sharedv4Opt: &api.VolumeSpecPolicy_Sharedv4{
 			Sharedv4: false,
 		},
-		JournalOpt: &api.VolumeSpecUpdate_Journal{
+		JournalOpt: &api.VolumeSpecPolicy_Journal{
 			Journal: true,
 		},
-		HaLevelOpt: &api.VolumeSpecUpdate_HaLevel{
+		HaLevelOpt: &api.VolumeSpecPolicy_HaLevel{
 			HaLevel: 4,
 		},
-		AggregationLevelOpt: &api.VolumeSpecUpdate_AggregationLevel{
+		AggregationLevelOpt: &api.VolumeSpecPolicy_AggregationLevel{
 			AggregationLevel: 3,
 		},
-		EncryptedOpt: &api.VolumeSpecUpdate_Encrypted{
+		EncryptedOpt: &api.VolumeSpecPolicy_Encrypted{
 			Encrypted: true,
 		},
 	}

@@ -1,7 +1,6 @@
 package test
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -33,14 +32,6 @@ func init() {
 	err = policy.Init(kv)
 	if err != nil {
 		logrus.Panicf("Failed to init storae policy instance %v", err)
-	}
-	storPolicy, err := policy.Inst()
-	if err != nil {
-		logrus.Panicf("Failed to get storage policy instance %v", err)
-	}
-	_, err = storPolicy.Release(context.Background(), &api.SdkOpenStoragePolicyReleaseRequest{})
-	if err != nil {
-		logrus.Panicf("Unable to release policy enforcement %v", err)
 	}
 
 }

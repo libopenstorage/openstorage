@@ -19,6 +19,9 @@ package csi
 import (
 	"testing"
 
+	"github.com/portworx/kvdb"
+	"github.com/portworx/kvdb/mem"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 
@@ -29,6 +32,7 @@ import (
 
 	mockcluster "github.com/libopenstorage/openstorage/cluster/mock"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
+	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
@@ -69,8 +73,14 @@ func newTestServer(t *testing.T) *testServer {
 	tester.c = mockcluster.NewMockCluster(tester.mc)
 
 	setupMockDriver(tester, t)
+	// Initialise storage policy manager
+	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, logrus.Panicf)
+	assert.NoError(t, err)
+	policy.Init(kv)
+	// Disable policy enforcement for regular vol_ops test
+	_, err = policy.Inst()
+	assert.NoError(t, err)
 
-	var err error
 	// Setup simple driver
 	tester.server, err = NewOsdCsiServer(&OsdCsiServerConfig{
 		DriverName: mockDriverName,

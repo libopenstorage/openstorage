@@ -90,9 +90,6 @@ func newTestServer(t *testing.T) *testServer {
 	sp, err := policy.Inst()
 	assert.NoError(t, err)
 	assert.NotNil(t, sp)
-	// disable policy enforcement by default
-	_, err = sp.Release(context.Background(), &api.SdkOpenStoragePolicyReleaseRequest{})
-	assert.NoError(t, err)
 
 	// Setup simple driver
 	tester.server, err = New(&ServerConfig{
