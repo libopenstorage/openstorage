@@ -43,7 +43,7 @@ func (s *VolumeServer) Attach(
 	}
 
 	// Get access rights
-	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId()); err != nil {
+	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId(), api.Ownership_Write); err != nil {
 		return nil, err
 	}
 
@@ -98,7 +98,7 @@ func (s *VolumeServer) Detach(
 	}
 
 	// Get access rights
-	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId()); err != nil {
+	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId(), api.Ownership_Write); err != nil {
 		return nil, err
 	}
 
@@ -150,34 +150,49 @@ func (s *VolumeServer) Mount(
 		return nil, status.Error(codes.InvalidArgument, "Invalid Mount Path")
 	}
 
-	// Get access rights
-	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId()); err != nil {
+	// Get volume information
+	resp, err := s.Inspect(ctx, &api.SdkVolumeInspectRequest{
+		VolumeId: req.GetVolumeId(),
+	})
+	if err != nil {
 		return nil, err
 	}
+	vol := resp.GetVolume()
+	mountpoint := req.GetMountPath()
+	name := vol.GetLocator().GetName()
 
-	vols, err := s.driver().Inspect([]string{req.VolumeId})
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "Invalid volume id")
+	// Checks for ownership
+	if !vol.IsPermitted(ctx, api.Ownership_Write) {
+		return nil, status.Errorf(codes.PermissionDenied, "Access denied to volume %s", vol.GetId())
 	}
-	vol := vols[0]
-	mountpoint := req.MountPath
-	name := vol.Locator.Name
 
-	if vol.Spec.Scale > 1 {
-		if len(req.VolumeId) != 0 {
-			err = s.driver().Unmount(req.VolumeId, mountpoint, nil)
+	if vol.GetSpec().GetScale() > 1 {
+		id := s.driver().MountedAt(mountpoint)
+		if len(id) != 0 {
+			err = s.driver().Unmount(id, mountpoint, nil)
 			if err != nil {
-				return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("Cannot remount scaled volume(%v)."+
-					" Volume %v is mounted at %v", name, req.VolumeId, mountpoint))
+				return nil, status.Errorf(codes.Internal,
+					"Failed to prepare scaled volume by unmounting it: %v. "+
+						"Cannot remount scaled volume(%v). "+
+						"Volume %v is mounted at %v",
+					err,
+					name,
+					id,
+					mountpoint)
 			}
 
 			if s.driver().Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-				err = s.driver().Detach(req.VolumeId, nil)
+				err = s.driver().Detach(id, nil)
 				if err != nil {
-					_ = s.driver().Mount(req.VolumeId, mountpoint, nil)
-					return nil, status.Error(codes.InvalidArgument,
-						fmt.Sprintf("Cannot remount scaled volume(%v)."+
-							" Volume %v is mounted at %v", name, req.VolumeId, mountpoint))
+					_ = s.driver().Mount(id, mountpoint, nil)
+					return nil, status.Errorf(codes.Internal,
+						"Failed to mount scaled volume: %v. "+
+							"Cannot remount scaled volume(%v). "+
+							"Volume %v is mounted at %v",
+						err,
+						name,
+						id,
+						mountpoint)
 				}
 			}
 		}
@@ -248,7 +263,13 @@ func (s *VolumeServer) Unmount(
 	if err != nil {
 		return nil, err
 	}
+	vol := resp.GetVolume()
 	volid := resp.GetVolume().GetId()
+
+	// Checks for ownership
+	if !vol.IsPermitted(ctx, api.Ownership_Write) {
+		return nil, status.Errorf(codes.PermissionDenied, "Access denied to volume %s", vol.GetId())
+	}
 
 	// TODO: Idempotency?
 	// XXX How do we check.

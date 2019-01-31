@@ -386,23 +386,41 @@ message RuntimeStateMap {
 // Ownership information for resource.
 // Administrators are users who belong to the group `*`, meaning, every group.
 message Ownership {
+
+  // Access types can be set by owner to have different levels of access to
+  // a resource.
+  //
+  // It is up to the resource to interpret what the types mean and are
+  // used for.
+  enum AccessType {
+    // Read access only and cannot affect the resource.
+    Read = 0;
+    // Write access and can affect the resource.
+    // This type automatically provides Read access also.
+    Write = 1;
+    // Administrator access.
+    // This type automatically provides Read and Write access also.
+    Admin = 2;
+  }
+
   message AccessControl {
-    // Group access to resource which must be set in the authorization token.
+    // Group access to resource which must match the group set in the
+    // authorization token.
     // Can be set by the owner or the system administrator only.
     // Possible values are:
-    // 1. an empty list: An empty list means no groups are allowed.
+    // 1. no groups: Means no groups are given access.
     // 2. `["*"]`: All groups are allowed.
     // 3. `["group1", "group2"]`: Only certain groups are allowed. In this example only
     // _group1_ and _group2_ are allowed.
-    repeated string groups = 2;
-    // Collaborator access to resource gives access to other usernames.
-    // Must be the username set in the authorization token. The owner or the
-    // system administrator can set this value. Possible values are:
-    // 1. an empty list: An empty list means no users are allowed.
+    map <string, AccessType> groups = 1;
+    // Collaborator access to resource gives access to other user.
+    // Must be the username (unique id) set in the authorization token.
+    // The owner or the administrator can set this value. Possible values are:
+    // 1. no collaborators: Means no users are given access.
     // 2. `["*"]`: All users are allowed.
     // 3. `["username1", "username2"]`: Only certain usernames are allowed. In this example only
     // _username1_ and _username2_ are allowed.
-    repeated string collaborators = 3;
+    map <string, AccessType> collaborators = 2;
   }
 
   // Username of owner.
@@ -1135,6 +1153,8 @@ service OpenStorageVolume {
 
   // Create creates a volume according to the specification provided
   //
+  // Requires access AccessType.Read when cloning from a parent volume.
+  //
   // ##### Example
   // {% codetabs name="Golang", type="go" -%}
   // id, err := client.Create(context.Background(), &api.SdkVolumeCreateRequest{
@@ -1157,6 +1177,8 @@ service OpenStorageVolume {
     }
 
   // Clone creates a new writable volume cloned from an existing volume
+  //
+  // Requires access AccessType.Read of volume
   rpc Clone(SdkVolumeCloneRequest)
     returns (SdkVolumeCloneResponse) {
       option(google.api.http) = {
@@ -1166,6 +1188,8 @@ service OpenStorageVolume {
     }
 
   // Delete deletes the provided volume
+  //
+  // Requires access AccessType.Admin of volume
   rpc Delete(SdkVolumeDeleteRequest)
     returns (SdkVolumeDeleteResponse) {
       option(google.api.http) = {
@@ -1174,6 +1198,8 @@ service OpenStorageVolume {
     }
 
   // Inspect returns information about a volume
+  //
+  // Requires access AccessType.Read of volume
   rpc Inspect(SdkVolumeInspectRequest)
     returns (SdkVolumeInspectResponse) {
       option(google.api.http) = {
@@ -1183,6 +1209,8 @@ service OpenStorageVolume {
 
   // Update provides a method for manipulating the specification and attributes of a volume.
   // Set can be used to resize a volume, update labels, change replica count, and much more.
+  //
+  // Requires access AccessType.Write of volume
   rpc Update(SdkVolumeUpdateRequest)
     returns (SdkVolumeUpdateResponse) {
       option(google.api.http) = {
@@ -1192,6 +1220,8 @@ service OpenStorageVolume {
     }
 
   // Stats returns the statistics for the requested volume
+  //
+  // Requires access AccessType.Read of volume
   rpc Stats(SdkVolumeStatsRequest)
     returns (SdkVolumeStatsResponse) {
       option(google.api.http) = {
@@ -1200,6 +1230,8 @@ service OpenStorageVolume {
     }
 
   // CapacityUsage returns volume/snapshot's capacity usage details
+  //
+  // Requires access AccessType.Read of volume
   //
   // ##### Error codes:
   //
@@ -1233,6 +1265,8 @@ service OpenStorageVolume {
   // SnapshotCreate creates a snapshot of a volume. This creates an immutable (read-only),
   // point-in-time snapshot of a volume. To create a new writable volume from
   // a snapshot, please use OpenStorageVolume.Clone().
+  //
+  // Requires access AccessType.Read of volume
   rpc SnapshotCreate(SdkVolumeSnapshotCreateRequest)
     returns (SdkVolumeSnapshotCreateResponse) {
       option(google.api.http) = {
@@ -1242,6 +1276,8 @@ service OpenStorageVolume {
     }
 
   // SnapshotRestore restores a volume to a specified snapshot
+  //
+  // Requires access AccessType.Write of volume
   rpc SnapshotRestore(SdkVolumeSnapshotRestoreRequest)
     returns (SdkVolumeSnapshotRestoreResponse) {
       option(google.api.http) = {
@@ -1274,6 +1310,8 @@ service OpenStorageVolume {
   // Sets the snapshot schedules. This information is saved in the VolumeSpec.snapshot_schedule
   // as `policy=<name>,...`. This function will overwrite any policy values
   // in the volume. To delete the policies in the volume send no policies.
+  //
+  // Requires access AccessType.Write of volume
   rpc SnapshotScheduleUpdate(SdkVolumeSnapshotScheduleUpdateRequest)
     returns (SdkVolumeSnapshotScheduleUpdateResponse) {
       option(google.api.http) = {
@@ -1291,6 +1329,8 @@ service OpenStorageVolume {
 service OpenStorageMountAttach {
 
   // Attach attaches device to the host that the client is communicating with.
+  //
+  // Requires access AccessType.Write of volume
   rpc Attach(SdkVolumeAttachRequest)
     returns (SdkVolumeAttachResponse) {
       option(google.api.http) = {
@@ -1300,6 +1340,8 @@ service OpenStorageMountAttach {
     }
 
   // Detaches a the volume from the host
+  //
+  // Requires access AccessType.Write of volume
   rpc Detach(SdkVolumeDetachRequest)
     returns (SdkVolumeDetachResponse) {
       option(google.api.http) = {
@@ -1309,6 +1351,8 @@ service OpenStorageMountAttach {
     }
 
   // Mount mounts an attached volume in the host that the client is communicating with
+  //
+  // Requires access AccessType.Write of volume
   rpc Mount(SdkVolumeMountRequest)
     returns(SdkVolumeMountResponse) {
       option(google.api.http) = {
@@ -1318,6 +1362,8 @@ service OpenStorageMountAttach {
     }
 
   // Unmount unmounts a mounted volume in the host that the client is communicating with
+  //
+  // Requires access AccessType.Write of volume
   rpc Unmount(SdkVolumeUnmountRequest)
       returns(SdkVolumeUnmountResponse) {
       option(google.api.http) = {
@@ -1534,6 +1580,8 @@ service OpenStorageCloudBackup {
   // Creates a backup request for a specified volume. Use
   // OpenStorageCloudBackup.Status() to get the current status of the
   // backup request.
+  //
+  // Requires access AccessType.Read of volume
   rpc Create(SdkCloudBackupCreateRequest)
     returns (SdkCloudBackupCreateResponse) {
       option(google.api.http) = {
@@ -2791,7 +2839,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 37;
+    Minor = 38;
     // SDK version patch value of this specification
     Patch = 0;
   }

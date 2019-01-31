@@ -419,15 +419,6 @@ func TestSdkVolumeMountSuccess(t *testing.T) {
 		Inspect([]string{id}).
 		Return([]*api.Volume{
 			&api.Volume{
-				Id: id,
-			},
-		}, nil).
-		Times(1)
-	s.MockDriver().
-		EXPECT().
-		Inspect([]string{id}).
-		Return([]*api.Volume{
-			&api.Volume{
 				Id:    id,
 				State: api.VolumeState_VOLUME_STATE_DETACHED,
 				Locator: &api.VolumeLocator{
@@ -443,12 +434,14 @@ func TestSdkVolumeMountSuccess(t *testing.T) {
 	s.MockDriver().
 		EXPECT().
 		Type().
-		Return(api.DriverType_DRIVER_TYPE_NONE)
+		Return(api.DriverType_DRIVER_TYPE_NONE).
+		Times(1)
 
 	s.MockDriver().
 		EXPECT().
 		Mount(id, mountPath, nil).
-		Return(nil)
+		Return(nil).
+		Times(1)
 
 	// Setup client
 	c := api.NewOpenStorageMountAttachClient(s.Conn())
@@ -470,15 +463,6 @@ func TestSdkVolumeMountFailed(t *testing.T) {
 		VolumeId:  id,
 		MountPath: mountPath,
 	}
-	s.MockDriver().
-		EXPECT().
-		Inspect([]string{id}).
-		Return([]*api.Volume{
-			&api.Volume{
-				Id: id,
-			},
-		}, nil).
-		Times(1)
 	s.MockDriver().
 		EXPECT().
 		Inspect([]string{id}).

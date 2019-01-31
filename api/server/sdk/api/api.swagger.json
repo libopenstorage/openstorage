@@ -29,21 +29,31 @@
       "OwnershipAccessControl": {
         "properties": {
           "collaborators": {
-            "description": "Collaborator access to resource gives access to other usernames.\nMust be the username set in the authorization token. The owner or the\nsystem administrator can set this value. Possible values are:\n1. an empty list: An empty list means no users are allowed.\n2. `[\"*\"]`: All users are allowed.\n3. `[\"username1\", \"username2\"]`: Only certain usernames are allowed. In this example only\n_username1_ and _username2_ are allowed.",
-            "items": {
-              "type": "string"
+            "additionalProperties": {
+              "$ref": "#/components/schemas/OwnershipAccessType"
             },
-            "type": "array"
+            "description": "Collaborator access to resource gives access to other user.\nMust be the username (unique id) set in the authorization token.\nThe owner or the administrator can set this value. Possible values are:\n1. no collaborators: Means no users are given access.\n2. `[\"*\"]`: All users are allowed.\n3. `[\"username1\", \"username2\"]`: Only certain usernames are allowed. In this example only\n_username1_ and _username2_ are allowed.",
+            "type": "object"
           },
           "groups": {
-            "description": "Group access to resource which must be set in the authorization token.\nCan be set by the owner or the system administrator only.\nPossible values are:\n1. an empty list: An empty list means no groups are allowed.\n2. `[\"*\"]`: All groups are allowed.\n3. `[\"group1\", \"group2\"]`: Only certain groups are allowed. In this example only\n_group1_ and _group2_ are allowed.",
-            "items": {
-              "type": "string"
+            "additionalProperties": {
+              "$ref": "#/components/schemas/OwnershipAccessType"
             },
-            "type": "array"
+            "description": "Group access to resource which must match the group set in the\nauthorization token.\nCan be set by the owner or the system administrator only.\nPossible values are:\n1. no groups: Means no groups are given access.\n2. `[\"*\"]`: All groups are allowed.\n3. `[\"group1\", \"group2\"]`: Only certain groups are allowed. In this example only\n_group1_ and _group2_ are allowed.",
+            "type": "object"
           }
         },
         "type": "object"
+      },
+      "OwnershipAccessType": {
+        "default": "Read",
+        "description": "Access types can be set by owner to have different levels of access to\na resource.\n\nIt is up to the resource to interpret what the types mean and are\nused for.\n\n - Read: Read access only and cannot affect the resource.\n - Write: Write access and can affect the resource.\nThis type automatically provides Read access also.\n - Admin: Administrator access.\nThis type automatically provides Read and Write access also.",
+        "enum": [
+          "Read",
+          "Write",
+          "Admin"
+        ],
+        "type": "string"
       },
       "SdkCloudMigrateStartRequestMigrateAllVolumes": {
         "title": "Defines a migration request for all volumes in a cluster",
@@ -3160,7 +3170,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.37.0"
+    "version": "0.38.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -3230,6 +3240,7 @@
     },
     "/v1/cloudbackups": {
       "post": {
+        "description": "Requires access AccessType.Read of volume",
         "operationId": "Create",
         "requestBody": {
           "content": {
@@ -3979,6 +3990,7 @@
     },
     "/v1/mountattach/attach": {
       "post": {
+        "description": "Requires access AccessType.Write of volume",
         "operationId": "Attach",
         "requestBody": {
           "content": {
@@ -4010,6 +4022,7 @@
     },
     "/v1/mountattach/detach": {
       "post": {
+        "description": "Requires access AccessType.Write of volume",
         "operationId": "Detach",
         "requestBody": {
           "content": {
@@ -4041,6 +4054,7 @@
     },
     "/v1/mountattach/mount": {
       "post": {
+        "description": "Requires access AccessType.Write of volume",
         "operationId": "Mount",
         "requestBody": {
           "content": {
@@ -4072,6 +4086,7 @@
     },
     "/v1/mountattach/unmount": {
       "post": {
+        "description": "Requires access AccessType.Write of volume",
         "operationId": "Unmount",
         "requestBody": {
           "content": {
@@ -4710,7 +4725,7 @@
         ]
       },
       "post": {
-        "description": "##### Example\n{% codetabs name=\"Golang\", type=\"go\" -%}\nid, err := client.Create(context.Background(), \u0026api.SdkVolumeCreateRequest{\n  Name: \"volume-12345-east\",\n  Spec: \u0026api.VolumeSpec {\n    Size: 1234567,\n  },\n})\n{%- language name=\"Python\", type=\"py\" -%}\nen_resp = client.Create(api_pb2.SdkVolumeCreateRequest(\n  name=\"volume-12345-east\",\n  spec=api_pb2.VolumeSpec(size=1234567)))\n{%- endcodetabs %}",
+        "description": "Requires access AccessType.Read when cloning from a parent volume.\n\n##### Example\n{% codetabs name=\"Golang\", type=\"go\" -%}\nid, err := client.Create(context.Background(), \u0026api.SdkVolumeCreateRequest{\n  Name: \"volume-12345-east\",\n  Spec: \u0026api.VolumeSpec {\n    Size: 1234567,\n  },\n})\n{%- language name=\"Python\", type=\"py\" -%}\nen_resp = client.Create(api_pb2.SdkVolumeCreateRequest(\n  name=\"volume-12345-east\",\n  spec=api_pb2.VolumeSpec(size=1234567)))\n{%- endcodetabs %}",
         "operationId": "Create",
         "requestBody": {
           "content": {
@@ -4742,6 +4757,7 @@
     },
     "/v1/volumes/clone": {
       "post": {
+        "description": "Requires access AccessType.Read of volume",
         "operationId": "Clone",
         "requestBody": {
           "content": {
@@ -4804,6 +4820,7 @@
     },
     "/v1/volumes/inspect/{volume_id}": {
       "get": {
+        "description": "Requires access AccessType.Read of volume",
         "operationId": "Inspect",
         "parameters": [
           {
@@ -4835,6 +4852,7 @@
     },
     "/v1/volumes/snapshot/schedules/{volume_id}": {
       "post": {
+        "description": "Requires access AccessType.Write of volume",
         "operationId": "SnapshotScheduleUpdate",
         "parameters": [
           {
@@ -4876,6 +4894,7 @@
     },
     "/v1/volumes/snapshots": {
       "post": {
+        "description": "Requires access AccessType.Read of volume",
         "operationId": "SnapshotCreate",
         "requestBody": {
           "content": {
@@ -4907,6 +4926,7 @@
     },
     "/v1/volumes/snapshots/restore": {
       "post": {
+        "description": "Requires access AccessType.Write of volume",
         "operationId": "SnapshotRestore",
         "requestBody": {
           "content": {
@@ -5010,6 +5030,7 @@
     },
     "/v1/volumes/stats/{volume_id}": {
       "get": {
+        "description": "Requires access AccessType.Read of volume",
         "operationId": "Stats",
         "parameters": [
           {
@@ -5051,7 +5072,7 @@
     },
     "/v1/volumes/usage/{volume_id}": {
       "get": {
-        "description": "##### Error codes:\n\n* codes.Aborted : Command was aborted and only total_bytes field is valid\n* code.Unimmplemented : Command is not suported this kernel.Only total_bytes\nfield is valid;",
+        "description": "Requires access AccessType.Read of volume\n\n##### Error codes:\n\n* codes.Aborted : Command was aborted and only total_bytes field is valid\n* code.Unimmplemented : Command is not suported this kernel.Only total_bytes\nfield is valid;",
         "operationId": "CapacityUsage",
         "parameters": [
           {
@@ -5083,6 +5104,7 @@
     },
     "/v1/volumes/{volume_id}": {
       "delete": {
+        "description": "Requires access AccessType.Admin of volume",
         "operationId": "Delete",
         "parameters": [
           {
@@ -5112,6 +5134,7 @@
         ]
       },
       "put": {
+        "description": "Requires access AccessType.Write of volume",
         "operationId": "Update",
         "parameters": [
           {

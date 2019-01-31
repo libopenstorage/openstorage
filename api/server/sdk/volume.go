@@ -23,6 +23,9 @@ import (
 	"github.com/libopenstorage/openstorage/api/spec"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/volume"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // VolumeServer is an implementation of the gRPC OpenStorageVolume interface
@@ -39,10 +42,20 @@ func (s *VolumeServer) driver() volume.VolumeDriver {
 	return s.server.driver()
 }
 
-func (s *VolumeServer) checkAccessForVolumeId(ctx context.Context, volumeId string) error {
+func (s *VolumeServer) checkAccessForVolumeId(
+	ctx context.Context,
+	volumeId string,
+	accessType api.Ownership_AccessType,
+) error {
 	// Inspect will check access for us
-	_, err := s.Inspect(ctx, &api.SdkVolumeInspectRequest{
+	resp, err := s.Inspect(ctx, &api.SdkVolumeInspectRequest{
 		VolumeId: volumeId,
 	})
-	return err
+	if err != nil {
+		return err
+	}
+	if !resp.GetVolume().IsPermitted(ctx, accessType) {
+		return status.Errorf(codes.PermissionDenied, "Access denied to volume %v", resp.GetVolume().GetId())
+	}
+	return nil
 }
