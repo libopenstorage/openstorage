@@ -22,6 +22,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/libopenstorage/openstorage/api"
+	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
@@ -46,10 +47,15 @@ func TestNewSdkServerBadParameters(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "Unable to setup server")
 
+	sp, err := policy.Inst()
+	assert.NoError(t, err)
+	assert.NotNil(t, sp)
+
 	s, err = New(&ServerConfig{
-		Net:        "test",
-		Address:    "blah",
-		DriverName: "name",
+		Net:           "test",
+		Address:       "blah",
+		DriverName:    "name",
+		StoragePolicy: sp,
 	})
 	assert.Nil(t, s)
 	assert.NotNil(t, err)

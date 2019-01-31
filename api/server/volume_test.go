@@ -1,11 +1,14 @@
 package server
 
 import (
+	"context"
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/libopenstorage/openstorage/api"
 	volumeclient "github.com/libopenstorage/openstorage/api/client/volume"
+	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -1626,4 +1629,251 @@ func TestVolumeCatalogFailed(t *testing.T) {
 
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "error in volume catalog")
+}
+
+// Create Volume with Policy Enforment enable
+func TestVolumeCreateSuccessWithEnforcement(t *testing.T) {
+	var err error
+
+	// Setup volume rest functions server
+	ts, testVolDriver := testRestServer(t)
+
+	// Create storage policy and set it as default Enforcement
+	s, err := policy.Inst()
+	assert.NoError(t, err)
+	volSpec := &api.VolumeSpecUpdate{
+		SizeOpt: &api.VolumeSpecUpdate_Size{
+			Size: 8989,
+		},
+		SharedOpt: &api.VolumeSpecUpdate_Shared{
+			Shared: false,
+		},
+		Sharedv4Opt: &api.VolumeSpecUpdate_Sharedv4{
+			Sharedv4: false,
+		},
+		JournalOpt: &api.VolumeSpecUpdate_Journal{
+			Journal: true,
+		},
+		HaLevelOpt: &api.VolumeSpecUpdate_HaLevel{
+			HaLevel: 3,
+		},
+		AggregationLevelOpt: &api.VolumeSpecUpdate_AggregationLevel{
+			AggregationLevel: 2,
+		},
+	}
+
+	req := &api.SdkOpenStoragePolicyCreateRequest{
+		StoragePolicy: &api.SdkStoragePolicy{
+			Name:   "testrestvolcreate",
+			Policy: volSpec,
+		},
+	}
+
+	_, err = s.Create(context.Background(), req)
+	assert.NoError(t, err)
+
+	inspReq := &api.SdkOpenStoragePolicyInspectRequest{
+		Name: "testrestvolcreate",
+	}
+
+	resp, err := s.Inspect(context.Background(), inspReq)
+	assert.NoError(t, err)
+	assert.Equal(t, resp.StoragePolicy.GetName(), inspReq.GetName())
+	assert.True(t, reflect.DeepEqual(resp.StoragePolicy.GetPolicy(), req.StoragePolicy.GetPolicy()))
+
+	enforceReq := &api.SdkOpenStoragePolicyEnforceRequest{
+		Name: inspReq.GetName(),
+	}
+	_, err = s.Enforce(context.Background(), enforceReq)
+	assert.NoError(t, err)
+
+	policy, err := s.GetEnforcement()
+	assert.NoError(t, err)
+	assert.Equal(t, policy.GetName(), inspReq.GetName())
+
+	defer ts.Close()
+	defer testVolDriver.Stop()
+
+	cl, err := volumeclient.NewDriverClient(ts.URL, mockDriverName, version, mockDriverName)
+	require.NoError(t, err)
+
+	// Setup request
+	name := "myvol"
+	size := uint64(1234)
+	volReq := &api.VolumeCreateRequest{
+		Locator: &api.VolumeLocator{Name: name},
+		Source:  &api.Source{},
+		Spec:    &api.VolumeSpec{Size: size},
+	}
+
+	// Ideal spec should be passed to volume create
+	updatedSpec := volReq.Spec
+	updatedSpec.Size = uint64(8989)
+	updatedSpec.Shared = false
+	updatedSpec.Sharedv4 = false
+	updatedSpec.Journal = true
+	updatedSpec.HaLevel = 3
+	updatedSpec.AggregationLevel = 2
+	// Setup mock functions
+	id := "myid"
+	testVolDriver.MockDriver().
+		EXPECT().
+		Create(volReq.GetLocator(), volReq.GetSource(), updatedSpec).
+		Return(id, nil)
+
+	// create a volume client
+	driverclient := volumeclient.VolumeDriver(cl)
+	res, err := driverclient.Create(volReq.GetLocator(), volReq.GetSource(), volReq.GetSpec())
+	assert.Nil(t, err)
+	assert.Equal(t, id, res)
+
+	// Should allow to crate volume as it is
+	name = "myvol"
+	size = uint64(1234)
+	newlabels := map[string]string{
+		"enforce_disable": "true",
+	}
+	newReq := &api.VolumeCreateRequest{
+		Locator: &api.VolumeLocator{Name: name, VolumeLabels: newlabels},
+		Source:  &api.Source{},
+		Spec:    &api.VolumeSpec{Size: size},
+	}
+	// Setup mock functions
+	id = "myid"
+	testVolDriver.MockDriver().
+		EXPECT().
+		Create(newReq.GetLocator(), newReq.GetSource(), newReq.GetSpec()).
+		Return(id, nil)
+
+	// create a volume client
+	driverclient = volumeclient.VolumeDriver(cl)
+	res, err = driverclient.Create(newReq.GetLocator(), newReq.GetSource(), newReq.GetSpec())
+	assert.Nil(t, err)
+	assert.Equal(t, id, res)
+}
+
+// Create Volume with Policy Enforment with custom
+// policy passed with volume create request
+func TestVolumeCreateSuccessWithCustomPolicyEnforcement(t *testing.T) {
+	var err error
+
+	// Setup volume rest functions server
+	ts, testVolDriver := testRestServer(t)
+
+	// Create storage policy and set it as default Enforcement
+	s, err := policy.Inst()
+	assert.NoError(t, err)
+	volSpec := &api.VolumeSpecUpdate{
+		SizeOpt: &api.VolumeSpecUpdate_Size{
+			Size: 5123,
+		},
+		SharedOpt: &api.VolumeSpecUpdate_Shared{
+			Shared: true,
+		},
+		Sharedv4Opt: &api.VolumeSpecUpdate_Sharedv4{
+			Sharedv4: false,
+		},
+		JournalOpt: &api.VolumeSpecUpdate_Journal{
+			Journal: true,
+		},
+		HaLevelOpt: &api.VolumeSpecUpdate_HaLevel{
+			HaLevel: 4,
+		},
+		AggregationLevelOpt: &api.VolumeSpecUpdate_AggregationLevel{
+			AggregationLevel: 3,
+		},
+		EncryptedOpt: &api.VolumeSpecUpdate_Encrypted{
+			Encrypted: true,
+		},
+	}
+
+	req := &api.SdkOpenStoragePolicyCreateRequest{
+		StoragePolicy: &api.SdkStoragePolicy{
+			Name:   "testcustompolicy",
+			Policy: volSpec,
+		},
+	}
+
+	_, err = s.Create(context.Background(), req)
+	assert.NoError(t, err)
+
+	inspReq := &api.SdkOpenStoragePolicyInspectRequest{
+		Name: "testcustompolicy",
+	}
+
+	resp, err := s.Inspect(context.Background(), inspReq)
+	assert.NoError(t, err)
+	assert.Equal(t, resp.StoragePolicy.GetName(), inspReq.GetName())
+	assert.True(t, reflect.DeepEqual(resp.StoragePolicy.GetPolicy(), req.StoragePolicy.GetPolicy()))
+
+	enforceReq := &api.SdkOpenStoragePolicyEnforceRequest{
+		Name: inspReq.GetName(),
+	}
+	_, err = s.Enforce(context.Background(), enforceReq)
+	assert.NoError(t, err)
+
+	policy, err := s.GetEnforcement()
+	assert.NoError(t, err)
+	assert.Equal(t, policy.GetName(), inspReq.GetName())
+
+	defer ts.Close()
+	defer testVolDriver.Stop()
+
+	cl, err := volumeclient.NewDriverClient(ts.URL, mockDriverName, version, mockDriverName)
+	require.NoError(t, err)
+
+	// Setup request
+	name := "myvol"
+	size := uint64(1234)
+	volReq := &api.VolumeCreateRequest{
+		Locator: &api.VolumeLocator{Name: name},
+		Source:  &api.Source{},
+		Spec:    &api.VolumeSpec{Size: size, StoragePolicy: "testcustompolicy"},
+	}
+
+	// Ideal spec should be passed to volume create
+	updatedSpec := volReq.Spec
+	updatedSpec.Size = uint64(5123)
+	updatedSpec.Shared = true
+	updatedSpec.Sharedv4 = false
+	updatedSpec.Journal = true
+	updatedSpec.HaLevel = 4
+	updatedSpec.AggregationLevel = 3
+	updatedSpec.Encrypted = true
+	// Setup mock functions
+	id := "myid"
+	testVolDriver.MockDriver().
+		EXPECT().
+		Create(volReq.GetLocator(), volReq.GetSource(), updatedSpec).
+		Return(id, nil)
+
+	// create a volume client
+	driverclient := volumeclient.VolumeDriver(cl)
+	res, err := driverclient.Create(volReq.GetLocator(), volReq.GetSource(), volReq.GetSpec())
+	assert.Nil(t, err)
+	assert.Equal(t, id, res)
+
+	// Should allow to crate volume as it is
+	name = "myvol"
+	size = uint64(1234)
+	newlabels := map[string]string{
+		"enforce_disable": "true",
+	}
+	newReq := &api.VolumeCreateRequest{
+		Locator: &api.VolumeLocator{Name: name, VolumeLabels: newlabels},
+		Source:  &api.Source{},
+		Spec:    &api.VolumeSpec{Size: size, StoragePolicy: "testcustompolicy"},
+	}
+	// Setup mock functions
+	id = "myid"
+	testVolDriver.MockDriver().
+		EXPECT().
+		Create(newReq.GetLocator(), newReq.GetSource(), newReq.GetSpec()).
+		Return(id, nil)
+
+	// create a volume client
+	driverclient = volumeclient.VolumeDriver(cl)
+	res, err = driverclient.Create(newReq.GetLocator(), newReq.GetSource(), newReq.GetSpec())
+	assert.Nil(t, err)
+	assert.Equal(t, id, res)
 }

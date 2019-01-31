@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/errors"
+	sdkVol "github.com/libopenstorage/openstorage/api/server/sdk"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
@@ -165,7 +166,13 @@ func (vd *volAPI) create(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	id, err := d.Create(dcReq.Locator, dcReq.Source, dcReq.Spec)
+	spec, err := sdkVol.GetEnforcedVolSpecs(dcReq.Locator, dcReq.Source, dcReq.Spec)
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	id, err := d.Create(dcReq.Locator, dcReq.Source, spec)
 	dcRes.VolumeResponse = &api.VolumeResponse{Error: responseStatus(err)}
 	dcRes.Id = id
 

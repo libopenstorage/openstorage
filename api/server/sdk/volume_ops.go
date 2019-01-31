@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/libopenstorage/openstorage/api"
+	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/pkg/util"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/portworx/kvdb"
@@ -115,11 +116,17 @@ func (s *VolumeServer) Create(
 			"Must supply spec object")
 	}
 
-	spec := req.GetSpec()
 	locator := &api.VolumeLocator{
 		Name: req.GetName(),
 	}
 	source := &api.Source{}
+	// Update given spec according to enforcement policy set
+	// In case policy is not set, should fall back to default way
+	// of creating volume
+	spec, err := GetEnforcedVolSpecs(locator, source, req.GetSpec())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Unable to update vol specs according to policy %v", err)
+	}
 
 	id, err := s.create(locator, source, spec)
 	if err != nil {
@@ -315,7 +322,7 @@ func (s *VolumeServer) Update(
 	if err != nil {
 		return nil, err
 	}
-	spec := s.mergeVolumeSpecs(resp.GetVolume().GetSpec(), req.GetSpec())
+	spec := mergeVolumeSpecs(resp.GetVolume().GetSpec(), req.GetSpec())
 
 	// Send to driver
 	if err := s.driver().Set(req.GetVolumeId(), req.GetLocator(), spec); err != nil {
@@ -393,13 +400,14 @@ func (s *VolumeServer) CapacityUsage(
 	return resp, nil
 }
 
-func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpecUpdate) *api.VolumeSpec {
+func mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpecUpdate) *api.VolumeSpec {
 
-	spec := &api.VolumeSpec{}
+	spec := vol
 	spec.Shared = setSpecBool(vol.GetShared(), req.GetShared(), req.GetSharedOpt())
 	spec.Sharedv4 = setSpecBool(vol.GetSharedv4(), req.GetSharedv4(), req.GetSharedv4Opt())
 	spec.Sticky = setSpecBool(vol.GetSticky(), req.GetSticky(), req.GetStickyOpt())
 	spec.Journal = setSpecBool(vol.GetJournal(), req.GetJournal(), req.GetJournalOpt())
+	spec.Encrypted = setSpecBool(vol.GetEncrypted(), req.GetEncrypted(), req.GetEncryptedOpt())
 
 	// Cos
 	if req.GetCosOpt() != nil {
@@ -482,6 +490,13 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 		spec.QueueDepth = vol.GetQueueDepth()
 	}
 
+	// Aggregation Level
+	if req.GetAggregationLevelOpt() != nil {
+		spec.AggregationLevel = req.GetAggregationLevel()
+	} else {
+		spec.AggregationLevel = vol.GetAggregationLevel()
+	}
+
 	return spec
 }
 
@@ -490,4 +505,50 @@ func setSpecBool(current, req bool, reqSet interface{}) bool {
 		return req
 	}
 	return current
+}
+
+func GetEnforcedVolSpecs(locator *api.VolumeLocator, source *api.Source, spec *api.VolumeSpec) (*api.VolumeSpec, error) {
+	if locator != nil {
+		if val, ok := locator.VolumeLabels["enforce_disable"]; ok {
+			if val == "true" {
+				return spec, nil
+			}
+		}
+	}
+	storPolicy, err := policy.Inst()
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Unable to get storage policy instance %v", err)
+	}
+
+	// check if custom policy passed with volume
+	if spec.GetStoragePolicy() != "" {
+		inspReq := &api.SdkOpenStoragePolicyInspectRequest{
+			Name: spec.GetStoragePolicy(),
+		}
+		customPolicy, err := storPolicy.Inspect(context.Background(), inspReq)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "Failed to get %s policy details :%v", inspReq.Name, err)
+		}
+		// update spec with custom storage policy
+		updatedSpec := mergeVolumeSpecs(spec, customPolicy.GetStoragePolicy().GetPolicy())
+		return updatedSpec, nil
+	}
+
+	// apply default policy to volume
+	policy, err := storPolicy.GetEnforcement()
+	if err == kvdb.ErrNotFound {
+		return spec, nil
+	}
+	// err means there is policy stored, but we are not able to retrive it
+	// hence we are not allowing volume create operation
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Unable to get enforced policy details %v", err)
+	}
+	if policy.GetName() == "" || policy.GetPolicy() == nil {
+		// empty policy means no enforcement is set return original spec as it is
+		return spec, nil
+	}
+	// update volume spec according to enforced policies
+	updatedSpec := mergeVolumeSpecs(spec, policy.GetPolicy())
+	return updatedSpec, nil
 }

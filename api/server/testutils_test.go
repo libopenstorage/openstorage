@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -9,11 +10,16 @@ import (
 	"github.com/kubernetes-csi/csi-test/utils"
 
 	"github.com/golang/mock/gomock"
+	"github.com/portworx/kvdb"
+	"github.com/portworx/kvdb/mem"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	mockcluster "github.com/libopenstorage/openstorage/cluster/mock"
+	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
@@ -99,6 +105,16 @@ func testRestServer(t *testing.T) (*httptest.Server, *testServer) {
 
 	ts := httptest.NewServer(router)
 	testVolDriver := newTestServer(t)
+	// Initialise storage policy manager
+	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, logrus.Panicf)
+	assert.NoError(t, err)
+	policy.Init(kv)
+	// Disable policy enforcement for regular vol_ops test
+	storPolicy, err := policy.Inst()
+	assert.NoError(t, err)
+	_, err = storPolicy.Release(context.Background(), &api.SdkOpenStoragePolicyReleaseRequest{})
+	assert.NoError(t, err)
+
 	return ts, testVolDriver
 }
 

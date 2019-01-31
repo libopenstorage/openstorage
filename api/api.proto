@@ -294,7 +294,7 @@ message VolumeSpec {
   bool shared = 11;
   // ReplicaSet is the desired set of nodes for the volume data.
   ReplicaSet replica_set = 12;
-  // Aggregatiokn level Specifies the number of parts the volume can be aggregated from.
+  // Aggregation level Specifies the number of parts the volume can be aggregated from.
   uint32 aggregation_level = 13;
   // Encrypted is true if this volume will be cryptographically secured.
   bool encrypted = 14;
@@ -330,6 +330,8 @@ message VolumeSpec {
   IoStrategy io_strategy = 30;
   // PlacementStrategy specifies a spec to indicate where to place the volume.
   VolumePlacementStrategy placement_strategy = 31;
+  // StoragePolicy to be enforced while creating volume
+  string storage_policy = 32;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -368,6 +370,10 @@ message VolumeSpecUpdate {
   oneof sharedv4_opt { bool sharedv4 = 24; }
   // QueueDepth defines the desired block device queue depth
   oneof queue_depth_opt { uint32 queue_depth = 25; }
+  // Encrypted is true if this volume will be cryptographically secured.
+  oneof encrypted_opt { bool encrypted = 26; }
+  // Aggregation level Specifies the number of parts the volume can be aggregated from.
+  oneof aggregation_level_opt { uint32 aggregation_level = 27; }
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
@@ -472,6 +478,16 @@ message CapacityUsageInfo {
   int64 shared_bytes = 2;
   // TotalBytes used by this volume
   int64 total_bytes = 3;
+}
+
+// A SdkStoragePolicy represent minimum set of volume specs to be follow while creating volumes.
+// If enabled, VolumeSpecUpdate will be used before creating volume to ensure minimum volume creation rules
+// are enforced.
+message SdkStoragePolicy {
+  // Name of storage policy.
+  string name = 1;
+  // VolumeSpecs to apply while creating volume.
+  VolumeSpecUpdate policy = 2;
 }
 
 // Alert is a structure that represents an alert object
@@ -659,12 +675,6 @@ service OpenStorageAlerts {
           body: "*"
         };
     }
-}
-
-// Define a schedule policy request
-message SdkSchedulePolicyCreateRequest {
-    // Schedule Policy
-    SdkSchedulePolicy schedule_policy = 1;
 }
 
 // Alerts is an array of Alert objects
@@ -1569,6 +1579,139 @@ service OpenStorageCloudBackup {
         get: "/v1/cloudbackups/schedules"
       };
     }
+}
+
+// START: OpenStoragePolicy Service
+
+// OpenStoragePolicy service provides methods to manager storage policies.
+
+// Policies can be used to enforces a set of volume configurations to be followed
+// while creating volumes.
+service OpenStoragePolicy {
+  // TODO: storage policy owenership
+
+  // Creates a storage policy
+  rpc Create(SdkOpenStoragePolicyCreateRequest)
+    returns (SdkOpenStoragePolicyCreateResponse) {
+      option(google.api.http) = {
+        post: "/v1/storagepolicies"
+        body: "*"
+      };
+    }
+
+  // Enumerate returns a list of storage policies
+  rpc Enumerate(SdkOpenStoragePolicyEnumerateRequest)
+    returns (SdkOpenStoragePolicyEnumerateResponse) {
+      option(google.api.http) = {
+        get: "/v1/storagepolicies"
+      };
+    }
+
+  // Inspect returns information about a specified storage policy
+  rpc Inspect(SdkOpenStoragePolicyInspectRequest)
+    returns (SdkOpenStoragePolicyInspectResponse) {
+      option(google.api.http) = {
+        get: "/v1/storagepolicies/inspect/{name}"
+      };
+    }
+
+  // Updates specified storage policy
+  rpc Update(SdkOpenStoragePolicyUpdateRequest)
+    returns (SdkOpenStoragePolicyUpdateResponse) {
+      option(google.api.http) = {
+        put: "/v1/storagepolicies"
+        body: "*"
+      };
+    }
+
+  // Deletes specified storage policy
+  rpc Delete(SdkOpenStoragePolicyDeleteRequest)
+    returns (SdkOpenStoragePolicyDeleteResponse) {
+      option(google.api.http) = {
+        delete: "/v1/storagepolicy/{name}"
+      };
+    }
+
+  // Enforces specified storage policy
+  rpc Enforce(SdkOpenStoragePolicyEnforceRequest)
+    returns (SdkOpenStoragePolicyEnforceResponse) {
+      option(google.api.http) = {
+        put: "/v1/storagepolicy/enforce"
+      };
+    }
+
+  // Release specified storage policy constraint for volume
+  // creation
+  rpc Release(SdkOpenStoragePolicyReleaseRequest)
+    returns (SdkOpenStoragePolicyReleaseResponse) {
+      option(google.api.http) = {
+        put: "/v1/storagepolicy/release"
+      };
+    }
+}
+
+//   START - OpenStoragePolicy structs
+// Define a request to create storage policy
+message SdkOpenStoragePolicyCreateRequest {
+  SdkStoragePolicy storage_policy = 1;
+}
+
+// Empty response
+message SdkOpenStoragePolicyCreateResponse {
+}
+
+message SdkOpenStoragePolicyEnumerateRequest {
+}
+
+message SdkOpenStoragePolicyEnumerateResponse {
+  repeated SdkStoragePolicy storage_policies =1;
+}
+
+message SdkOpenStoragePolicyInspectRequest {
+  string name =1;
+}
+
+message SdkOpenStoragePolicyInspectResponse {
+  SdkStoragePolicy storage_policy =1;
+}
+
+message SdkOpenStoragePolicyDeleteRequest {
+  string name = 1;
+}
+
+message SdkOpenStoragePolicyDeleteResponse {
+}
+
+message SdkOpenStoragePolicyUpdateRequest {
+  SdkStoragePolicy storage_policy =1;
+}
+
+message SdkOpenStoragePolicyUpdateResponse {
+}
+
+message SdkOpenStoragePolicyEnforceRequest {
+  // name of policy to set as default enforcement
+  // for volume creation
+  // This policy will be used to enforce volume configuration 
+  string name = 1;
+}
+
+message SdkOpenStoragePolicyEnforceResponse {
+}
+
+message SdkOpenStoragePolicyReleaseRequest {
+}
+
+message SdkOpenStoragePolicyReleaseResponse {
+}
+
+//  END - OpenStoragePolicy structs
+// END: OpenStoragePolicy Service
+
+// Define a schedule policy request
+message SdkSchedulePolicyCreateRequest {
+    // Schedule Policy
+    SdkSchedulePolicy schedule_policy = 1;
 }
 
 // Empty response
@@ -2561,6 +2704,8 @@ message SdkServiceCapability {
       ALERTS = 8;
       // Mount/Attach Support
       MOUNT_ATTACH = 9;
+      // StoragePolicy Service
+      STORAGE_POLICY = 13;
     }
 
     // Type of service supported
