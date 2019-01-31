@@ -51,6 +51,10 @@ func TestNewSdkServerBadParameters(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, sp)
 
+	sp, err := policy.Inst()
+	assert.NoError(t, err)
+	assert.NotNil(t, sp)
+
 	s, err = New(&ServerConfig{
 		Net:           "test",
 		Address:       "blah",

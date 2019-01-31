@@ -291,11 +291,6 @@ func (p *SdkPolicyManager) GetEnforcement() (*api.SdkStoragePolicy, error) {
 		return nil, status.Errorf(codes.Internal, "Unable to retrive Enforcement details: %v", err)
 	}
 
-	// err = jsonpb.Unmarshal(strings.NewReader(string(kvp.Value)), defaultPolicy)
-	// if err != nil {
-	// 	return nil, status.Errorf(codes.Internal, "Unable to retrive Enforcement details %v", err)
-	// }
-
 	// no enforcement found
 	if policyName == "" {
 		return defaultPolicy, nil

@@ -370,10 +370,6 @@ message VolumeSpecUpdate {
   oneof sharedv4_opt { bool sharedv4 = 24; }
   // QueueDepth defines the desired block device queue depth
   oneof queue_depth_opt { uint32 queue_depth = 25; }
-  // Encrypted is true if this volume will be cryptographically secured.
-  oneof encrypted_opt { bool encrypted = 26; }
-  // Aggregation level Specifies the number of parts the volume can be aggregated from.
-  oneof aggregation_level_opt { uint32 aggregation_level = 27; }
 }
 
 // VolumeSpecPolicy provides a method to set volume storage policy
@@ -1704,21 +1700,25 @@ message SdkOpenStoragePolicyCreateResponse {
 message SdkOpenStoragePolicyEnumerateRequest {
 }
 
+// Define a storage policy enumerate response
 message SdkOpenStoragePolicyEnumerateResponse {
   // List of storage policies 
   repeated SdkStoragePolicy storage_policies =1;
 }
 
+// Define a request to inspect storage policy
 message SdkOpenStoragePolicyInspectRequest {
   // name of storage policy to retrive
   string name =1;
 }
 
+// Define a storage policy inspect response
 message SdkOpenStoragePolicyInspectResponse {
   // storage policy information requested by name
   SdkStoragePolicy storage_policy =1;
 }
 
+// Define a request to delete storage policy 
 message SdkOpenStoragePolicyDeleteRequest {
   // name of storage policy to delete
   string name = 1;
@@ -1728,6 +1728,7 @@ message SdkOpenStoragePolicyDeleteRequest {
 message SdkOpenStoragePolicyDeleteResponse {
 }
 
+// Define a request to update storage policy
 message SdkOpenStoragePolicyUpdateRequest {
   // storage policy to update
   SdkStoragePolicy storage_policy =1;
@@ -1737,6 +1738,7 @@ message SdkOpenStoragePolicyUpdateRequest {
 message SdkOpenStoragePolicyUpdateResponse {
 }
 
+// Define a request to enforce storage policy
 message SdkOpenStoragePolicyEnforceRequest {
   // name of policy to set as default enforcement
   // for volume creation
@@ -1752,7 +1754,7 @@ message SdkOpenStoragePolicyEnforceResponse {
 message SdkOpenStoragePolicyReleaseRequest {
 }
 
-//Empty Response
+// Empty Response
 message SdkOpenStoragePolicyReleaseResponse {
 }
 
