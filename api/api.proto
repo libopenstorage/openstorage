@@ -294,7 +294,7 @@ message VolumeSpec {
   bool shared = 11;
   // ReplicaSet is the desired set of nodes for the volume data.
   ReplicaSet replica_set = 12;
-  // Aggregatiokn level Specifies the number of parts the volume can be aggregated from.
+  // Aggregation level Specifies the number of parts the volume can be aggregated from.
   uint32 aggregation_level = 13;
   // Encrypted is true if this volume will be cryptographically secured.
   bool encrypted = 14;
@@ -330,6 +330,8 @@ message VolumeSpec {
   IoStrategy io_strategy = 30;
   // PlacementStrategy specifies a spec to indicate where to place the volume.
   VolumePlacementStrategy placement_strategy = 31;
+  // StoragePolicy to be enforced while creating volume
+  string storage_policy = 32;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -368,6 +370,48 @@ message VolumeSpecUpdate {
   oneof sharedv4_opt { bool sharedv4 = 24; }
   // QueueDepth defines the desired block device queue depth
   oneof queue_depth_opt { uint32 queue_depth = 25; }
+}
+
+// VolumeSpecPolicy provides a method to set volume storage policy
+message VolumeSpecPolicy {
+  // Size specifies the thin provisioned volume size in bytes
+  oneof size_opt { uint64 size = 2; }
+  // HaLevel specifies the number of copies of data.
+  oneof ha_level_opt { int64 ha_level = 5; }
+  // Cos specifies the relative class of service.
+  oneof cos_opt { CosType cos = 6; }
+  // IoProfile provides a hint about application using this volume.
+  oneof io_profile_opt { IoProfile io_profile = 7; }
+  // Dedupe specifies if the volume data is to be de-duplicated.
+  oneof dedupe_opt { bool dedupe = 8; }
+  // SnapshotInterval in minutes, set to 0 to disable snapshots
+  oneof snapshot_interval_opt { uint32 snapshot_interval = 9; }
+  // VolumeLabels configuration labels
+  map<string, string> volume_labels = 10;
+  // Shared is true if this volume can be remotely accessed.
+  oneof shared_opt { bool shared = 11; }
+  // ReplicaSet is the desired set of nodes for the volume data.
+  ReplicaSet replica_set = 12;
+  // Passphrase for an encrypted volume
+  oneof passphrase_opt { string passphrase = 15; }
+  // SnapshotSchedule a well known string that specifies when snapshots should be taken.
+  oneof snapshot_schedule_opt { string snapshot_schedule = 16; }
+  // Scale allows autocreation of volumes.
+  oneof scale_opt { uint32 scale = 17; }
+  // Sticky volumes cannot be deleted until the flag is removed.
+  oneof sticky_opt { bool sticky = 18; }
+  // Group identifies a consistency group
+  oneof group_opt { Group group = 19; }
+  // Journal is true if data for the volume goes into the journal.
+  oneof journal_opt { bool journal = 23; }
+  // Sharedv4 is true if this volume can be accessed via sharedv4.
+  oneof sharedv4_opt { bool sharedv4 = 24; }
+  // QueueDepth defines the desired block device queue depth
+  oneof queue_depth_opt { uint32 queue_depth = 25; }
+  // Encrypted is true if this volume will be cryptographically secured.
+  oneof encrypted_opt { bool encrypted = 26; }
+  // Aggregation level Specifies the number of parts the volume can be aggregated from.
+  oneof aggregation_level_opt { uint32 aggregation_level = 27; }
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
@@ -472,6 +516,18 @@ message CapacityUsageInfo {
   int64 shared_bytes = 2;
   // TotalBytes used by this volume
   int64 total_bytes = 3;
+}
+
+// A SdkStoragePolicy represents minimum set of volume specs to be 
+// follow while creating volumes.
+// If enforce in OpenStoragePolicy service, VolumeSpecPolicy will be 
+// used before creating volume to ensure minimum volume creation rules
+// are enforced.
+message SdkStoragePolicy {
+  // Name of storage policy.
+  string name = 1;
+  // VolumeSpecs to apply while creating volume.
+  VolumeSpecPolicy policy = 2;
 }
 
 // Alert is a structure that represents an alert object
@@ -659,12 +715,6 @@ service OpenStorageAlerts {
           body: "*"
         };
     }
-}
-
-// Define a schedule policy request
-message SdkSchedulePolicyCreateRequest {
-    // Schedule Policy
-    SdkSchedulePolicy schedule_policy = 1;
 }
 
 // Alerts is an array of Alert objects
@@ -1569,6 +1619,171 @@ service OpenStorageCloudBackup {
         get: "/v1/cloudbackups/schedules"
       };
     }
+}
+
+// OpenStoragePolicy service provides methods to manager storage policies.
+//
+// Policies can be used to enforces a set of volume configurations to be followed
+// while creating volumes.
+service OpenStoragePolicy {
+  
+  // Creates a storage policy
+  rpc Create(SdkOpenStoragePolicyCreateRequest)
+    returns (SdkOpenStoragePolicyCreateResponse) {
+      option(google.api.http) = {
+        post: "/v1/storagepolicies"
+        body: "*"
+      };
+    }
+
+  // Enumerate returns a list of storage policies
+  rpc Enumerate(SdkOpenStoragePolicyEnumerateRequest)
+    returns (SdkOpenStoragePolicyEnumerateResponse) {
+      option(google.api.http) = {
+        get: "/v1/storagepolicies"
+      };
+    }
+
+  // Inspect returns information about a specified storage policy
+  rpc Inspect(SdkOpenStoragePolicyInspectRequest)
+    returns (SdkOpenStoragePolicyInspectResponse) {
+      option(google.api.http) = {
+        get: "/v1/storagepolicies/inspect/{name}"
+      };
+    }
+
+  // Updates specified storage policy
+  rpc Update(SdkOpenStoragePolicyUpdateRequest)
+    returns (SdkOpenStoragePolicyUpdateResponse) {
+      option(google.api.http) = {
+        put: "/v1/storagepolicies"
+        body: "*"
+      };
+    }
+
+  // Deletes specified storage policy
+  rpc Delete(SdkOpenStoragePolicyDeleteRequest)
+    returns (SdkOpenStoragePolicyDeleteResponse) {
+      option(google.api.http) = {
+        delete: "/v1/storagepolicies/{name}"
+      };
+    }
+
+  // Enforces specified storage policy
+  rpc Enforce(SdkOpenStoragePolicyEnforceRequest)
+    returns (SdkOpenStoragePolicyEnforceResponse) {
+      option(google.api.http) = {
+        post: "/v1/storagepolicies/enforce/{name}"
+        body: "*"
+      };
+    }
+
+  // EnforcesInspect return enforced storage policy if any, otherwise
+  // empty response
+  rpc EnforceInspect(SdkOpenStoragePolicyEnforceInspectRequest)
+    returns (SdkOpenStoragePolicyEnforceInspectResponse) {
+      option(google.api.http) = {
+        get: "/v1/storagepolicies/enforce"
+      };
+    }
+
+  // Release specified storage policy constraint for volume
+  // creation
+  rpc Release(SdkOpenStoragePolicyReleaseRequest)
+    returns (SdkOpenStoragePolicyReleaseResponse) {
+      option(google.api.http) = {
+        post: "/v1/storagepolicies/release"
+        body: "*"
+      };
+    }
+}
+
+// Define a request to create storage policy
+message SdkOpenStoragePolicyCreateRequest {
+  // storage policy to create
+  SdkStoragePolicy storage_policy = 1;
+}
+
+// Empty response
+message SdkOpenStoragePolicyCreateResponse {
+}
+
+// Empty request
+message SdkOpenStoragePolicyEnumerateRequest {
+}
+
+// Define a storage policy enumerate response
+message SdkOpenStoragePolicyEnumerateResponse {
+  // List of storage policies 
+  repeated SdkStoragePolicy storage_policies =1;
+}
+
+// Define a request to inspect storage policy
+message SdkOpenStoragePolicyInspectRequest {
+  // name of storage policy to retrive
+  string name =1;
+}
+
+// Define a storage policy inspect response
+message SdkOpenStoragePolicyInspectResponse {
+  // storage policy information requested by name
+  SdkStoragePolicy storage_policy =1;
+}
+
+// Define a request to delete storage policy 
+message SdkOpenStoragePolicyDeleteRequest {
+  // name of storage policy to delete
+  string name = 1;
+}
+
+// Empty Response
+message SdkOpenStoragePolicyDeleteResponse {
+}
+
+// Define a request to update storage policy
+message SdkOpenStoragePolicyUpdateRequest {
+  // storage policy to update
+  SdkStoragePolicy storage_policy =1;
+}
+
+// Empty Response
+message SdkOpenStoragePolicyUpdateResponse {
+}
+
+// Define a request to enforce storage policy
+message SdkOpenStoragePolicyEnforceRequest {
+  // name of policy to set as default enforcement
+  // for volume creation
+  // This policy will be used to enforce volume configuration 
+  string name = 1;
+}
+
+// Empty Response
+message SdkOpenStoragePolicyEnforceResponse {
+}
+
+// Empty Request
+message SdkOpenStoragePolicyReleaseRequest {
+}
+
+// Empty Response
+message SdkOpenStoragePolicyReleaseResponse {
+}
+
+// Empty Request
+message SdkOpenStoragePolicyEnforceInspectRequest {
+}
+
+// Define storage policy enforce response
+message SdkOpenStoragePolicyEnforceInspectResponse {
+  // storage policy information which is enforced
+  SdkStoragePolicy storage_policy = 1;
+}
+
+// Define a schedule policy request
+message SdkSchedulePolicyCreateRequest {
+    // Schedule Policy
+    SdkSchedulePolicy schedule_policy = 1;
 }
 
 // Empty response
@@ -2561,6 +2776,8 @@ message SdkServiceCapability {
       ALERTS = 8;
       // Mount/Attach Support
       MOUNT_ATTACH = 9;
+      // StoragePolicy Service
+      STORAGE_POLICY = 13;
     }
 
     // Type of service supported
@@ -2595,7 +2812,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 22;
     // SDK version patch value of this specification
-    Patch = 10;
+    Patch = 11;
   }
 
   // The following cannot be set to use the enum Version because the REST
