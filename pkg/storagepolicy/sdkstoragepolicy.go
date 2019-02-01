@@ -54,12 +54,12 @@ var (
 	}
 )
 
-func Init(kv kvdb.Kvdb) error {
+func Init(kv kvdb.Kvdb) (PolicyManager,error) {
 	if inst != nil {
-		return fmt.Errorf("Policy Manager is already initialized")
+		return nil,fmt.Errorf("Policy Manager is already initialized")
 	}
 	if kv == nil {
-		return fmt.Errorf("KVDB is not yet initialized.  " +
+		return nil, fmt.Errorf("KVDB is not yet initialized.  " +
 			"A valid KVDB instance required for the Storage Policy.")
 	}
 
@@ -67,7 +67,7 @@ func Init(kv kvdb.Kvdb) error {
 		kv: kv,
 	}
 
-	return nil
+	return inst, nil
 }
 
 func policyInst() (PolicyManager, error) {

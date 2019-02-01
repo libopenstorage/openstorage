@@ -267,14 +267,11 @@ func start(c *cli.Context) error {
 		}
 		csiServer.Start()
 
-		err = policy.Init(kv)
+		sp, err := policy.Init(kv)
 		if err != nil {
 			return fmt.Errorf("Unable to Initialise Storage Policy Manager Instances %v", err)
 		}
-		sp, err := policy.Inst()
-		if err != nil {
-			return err
-		}
+
 		// Start SDK Server for this driver
 		sdkServer, err := sdk.New(&sdk.ServerConfig{
 			Net:           "tcp",

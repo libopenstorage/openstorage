@@ -106,10 +106,7 @@ func testRestServer(t *testing.T) (*httptest.Server, *testServer) {
 	// Initialise storage policy manager
 	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, logrus.Panicf)
 	assert.NoError(t, err)
-	policy.Init(kv)
-	// Disable policy enforcement for regular vol_ops test
-	_, err = policy.Inst()
-	assert.NoError(t, err)
+	_, err = policy.Init(kv)
 
 	return ts, testVolDriver
 }

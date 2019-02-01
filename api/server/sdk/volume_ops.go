@@ -522,23 +522,25 @@ func GetEnforcedVolSpecs(locator *api.VolumeLocator, spec *api.VolumeSpec) (*api
 		return nil, status.Errorf(codes.Internal, "Unable to get storage policy instance %v", err)
 	}
 
-	// check if custom policy passed with volume
-	if spec.GetStoragePolicy() != "" {
-		inspReq := &api.SdkOpenStoragePolicyInspectRequest{
-			Name: spec.GetStoragePolicy(),
-		}
-		customPolicy, err := storPolicy.Inspect(context.Background(), inspReq)
-		if err != nil {
-			return nil, err
-		}
-		// update spec with custom storage policy
-		updatedSpec := mergeVolumeSpecsPolicy(spec, customPolicy.GetStoragePolicy().GetPolicy())
-		return updatedSpec, nil
-	}
-
-	// apply default policy to volume
+	// check if enforcement is enabled
 	policy, err := storPolicy.GetEnforcement()
 	if err == kvdb.ErrNotFound || policy == nil {
+		// enforce is disabled
+		// check if custom policy passed with volume
+		if spec.GetStoragePolicy() != "" {
+			inspReq := &api.SdkOpenStoragePolicyInspectRequest{
+				Name: spec.GetStoragePolicy(),
+			}
+			customPolicy, customErr := storPolicy.Inspect(context.Background(), inspReq)
+			if customErr != nil {
+				return nil, customErr
+			}
+			// update spec with custom storage policy
+			updatedSpec := mergeVolumeSpecsPolicy(spec, customPolicy.GetStoragePolicy().GetPolicy())
+			return updatedSpec, nil
+		}
+
+		// return original specs
 		return spec, nil
 	}
 	// err means there is policy stored, but we are not able to retrive it
@@ -546,6 +548,8 @@ func GetEnforcedVolSpecs(locator *api.VolumeLocator, spec *api.VolumeSpec) (*api
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Unable to get enforced policy details %v", err)
 	}
+
+	// apply default policy to volume
 	// update volume spec according to enforced policies
 	updatedSpec := mergeVolumeSpecsPolicy(spec, policy.GetPolicy())
 	return updatedSpec, nil

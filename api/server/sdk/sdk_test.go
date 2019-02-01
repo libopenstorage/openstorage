@@ -86,9 +86,8 @@ func newTestServer(t *testing.T) *testServer {
 	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, logrus.Panicf)
 	assert.NoError(t, err)
 	// Init storage policy manager
-	err = policy.Init(kv)
+	_, err = policy.Init(kv)
 	sp, err := policy.Inst()
-	assert.NoError(t, err)
 	assert.NotNil(t, sp)
 
 	// Setup simple driver

@@ -344,6 +344,8 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			} else {
 				spec.Nodiscard = nodiscard
 			}
+		case api.StoragePolicy:
+			spec.StoragePolicy = v
 		default:
 			spec.VolumeLabels[k] = v
 		}

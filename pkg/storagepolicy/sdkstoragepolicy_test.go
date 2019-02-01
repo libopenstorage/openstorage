@@ -39,17 +39,10 @@ func TestPrefixWithName(t *testing.T) {
 	assert.Equal(t, prefixWithName("H$ll0_123$"), policyPrefix+"/policies/"+"H$ll0_123$")
 }
 
-func setupTestEnv(t *testing.T) {
-	// kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, logrus.Panicf)
-	// assert.NoError(t, err)
-	// err = Init(kv)
-	// assert.NoError(t, err)
-}
 func TestSdkStoragePolicyCreate(t *testing.T) {
 	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, logrus.Panicf)
 	assert.NoError(t, err)
-	err = Init(kv)
-	assert.NoError(t, err)
+	_, err = Init(kv)
 
 	s, err := Inst()
 	assert.NoError(t, err)
@@ -97,7 +90,7 @@ func TestSdkStoragePolicyCreate(t *testing.T) {
 }
 
 func TestSdkStoragePolicyCreateBadArguments(t *testing.T) {
-	setupTestEnv(t)
+
 	s, err := Inst()
 	// empty params
 	req := &api.SdkOpenStoragePolicyCreateRequest{}
@@ -122,7 +115,7 @@ func TestSdkStoragePolicyCreateBadArguments(t *testing.T) {
 }
 
 func TestSdkStoragePolicyInspect(t *testing.T) {
-	setupTestEnv(t)
+
 	s, err := Inst()
 	volSpec := &api.VolumeSpecPolicy{
 		SizeOpt: &api.VolumeSpecPolicy_Size{
@@ -151,7 +144,7 @@ func TestSdkStoragePolicyInspect(t *testing.T) {
 }
 
 func TestSdkStoragePolicyInspectBadArgument(t *testing.T) {
-	setupTestEnv(t)
+
 	s, err := Inst()
 
 	volSpec := &api.VolumeSpecPolicy{
@@ -188,7 +181,7 @@ func TestSdkStoragePolicyInspectBadArgument(t *testing.T) {
 }
 
 func TestSdkStoragePolicyUpdate(t *testing.T) {
-	setupTestEnv(t)
+
 	s, err := Inst()
 
 	volSpec := &api.VolumeSpecPolicy{
@@ -241,7 +234,7 @@ func TestSdkStoragePolicyUpdate(t *testing.T) {
 }
 
 func TestSdkStoragePolicyUpdateBadArgument(t *testing.T) {
-	setupTestEnv(t)
+
 	s, err := Inst()
 
 	volSpec := &api.VolumeSpecPolicy{
@@ -291,7 +284,7 @@ func TestSdkStoragePolicyUpdateBadArgument(t *testing.T) {
 	assert.Contains(t, serverError.Message(), "not found")
 }
 func TestSdkStoragePolicyDelete(t *testing.T) {
-	setupTestEnv(t)
+
 	s, err := Inst()
 
 	volSpec := &api.VolumeSpecPolicy{
@@ -333,7 +326,7 @@ func TestSdkStoragePolicyDelete(t *testing.T) {
 }
 
 func TestSdkStoragePolicyDeleteBadArgument(t *testing.T) {
-	setupTestEnv(t)
+
 	s, err := Inst()
 
 	// Create Policy
@@ -369,7 +362,7 @@ func TestSdkStoragePolicyDeleteBadArgument(t *testing.T) {
 }
 
 func TestSdkStoragePolicyEnumerate(t *testing.T) {
-	setupTestEnv(t)
+
 	s, err := Inst()
 
 	volSpec := &api.VolumeSpecPolicy{
@@ -411,7 +404,7 @@ func TestSdkStoragePolicyEnumerate(t *testing.T) {
 }
 
 func TestSdkStoragePolicyEnforcement(t *testing.T) {
-	setupTestEnv(t)
+
 	s, err := Inst()
 
 	volSpec := &api.VolumeSpecPolicy{
@@ -491,7 +484,7 @@ func TestSdkStoragePolicyEnforcement(t *testing.T) {
 }
 
 func TestSdkStoragePolicyEnforcementBadArgument(t *testing.T) {
-	setupTestEnv(t)
+
 	s, err := Inst()
 
 	volSpec := &api.VolumeSpecPolicy{

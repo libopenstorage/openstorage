@@ -76,10 +76,7 @@ func newTestServer(t *testing.T) *testServer {
 	// Initialise storage policy manager
 	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, logrus.Panicf)
 	assert.NoError(t, err)
-	policy.Init(kv)
-	// Disable policy enforcement for regular vol_ops test
-	_, err = policy.Inst()
-	assert.NoError(t, err)
+	_, err = policy.Init(kv)
 
 	// Setup simple driver
 	tester.server, err = NewOsdCsiServer(&OsdCsiServerConfig{

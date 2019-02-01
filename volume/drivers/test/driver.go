@@ -28,8 +28,7 @@ func init() {
 		logrus.Panicf("Failed to set KVDB instance")
 	}
 
-	// Disable policy enforcement for regular vol_ops test
-	err = policy.Init(kv)
+	_, err = policy.Init(kv)
 	if err != nil {
 		logrus.Panicf("Failed to init storae policy instance %v", err)
 	}
