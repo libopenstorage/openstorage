@@ -407,7 +407,6 @@ func (s *VolumeServer) mergeVolumeSpecsUpdate(vol *api.VolumeSpec, req *api.Volu
 	spec.Sharedv4 = setSpecBool(vol.GetSharedv4(), req.GetSharedv4(), req.GetSharedv4Opt())
 	spec.Sticky = setSpecBool(vol.GetSticky(), req.GetSticky(), req.GetStickyOpt())
 	spec.Journal = setSpecBool(vol.GetJournal(), req.GetJournal(), req.GetJournalOpt())
-	spec.Encrypted = setSpecBool(vol.GetEncrypted(), req.GetEncrypted(), req.GetEncryptedOpt())
 
 	// Cos
 	if req.GetCosOpt() != nil {
@@ -488,13 +487,6 @@ func (s *VolumeServer) mergeVolumeSpecsUpdate(vol *api.VolumeSpec, req *api.Volu
 		spec.QueueDepth = req.GetQueueDepth()
 	} else {
 		spec.QueueDepth = vol.GetQueueDepth()
-	}
-
-	// Aggregation Level
-	if req.GetAggregationLevelOpt() != nil {
-		spec.AggregationLevel = req.GetAggregationLevel()
-	} else {
-		spec.AggregationLevel = vol.GetAggregationLevel()
 	}
 
 	return spec

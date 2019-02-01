@@ -54,9 +54,9 @@ var (
 	}
 )
 
-func Init(kv kvdb.Kvdb) (PolicyManager,error) {
+func Init(kv kvdb.Kvdb) (PolicyManager, error) {
 	if inst != nil {
-		return nil,fmt.Errorf("Policy Manager is already initialized")
+		return nil, fmt.Errorf("Policy Manager is already initialized")
 	}
 	if kv == nil {
 		return nil, fmt.Errorf("KVDB is not yet initialized.  " +

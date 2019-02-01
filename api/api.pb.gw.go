@@ -1249,10 +1249,6 @@ func request_OpenStoragePolicy_Release_0(ctx context.Context, marshaler runtime.
 	var protoReq SdkOpenStoragePolicyReleaseRequest
 	var metadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
 	msg, err := client.Release(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
@@ -4068,7 +4064,7 @@ var (
 
 	pattern_OpenStoragePolicy_Enforce_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "storagepolicy", "enforce", "name"}, ""))
 
-	pattern_OpenStoragePolicy_Release_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "storagepolicies", "release"}, ""))
+	pattern_OpenStoragePolicy_Release_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "storagepolicy", "release"}, ""))
 )
 
 var (

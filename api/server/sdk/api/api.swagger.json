@@ -1709,6 +1709,7 @@
           "type": "array"
         }
       },
+      "title": "Define a storage policy enumerate response",
       "type": "object"
     },
     "apiSdkOpenStoragePolicyInspectResponse": {
@@ -1718,6 +1719,7 @@
           "title": "storage policy information requested by name"
         }
       },
+      "title": "Define a storage policy inspect response",
       "type": "object"
     },
     "apiSdkOpenStoragePolicyReleaseResponse": {
@@ -1731,6 +1733,7 @@
           "title": "storage policy to update"
         }
       },
+      "title": "Define a request to update storage policy",
       "type": "object"
     },
     "apiSdkOpenStoragePolicyUpdateResponse": {
@@ -3102,18 +3105,10 @@
     },
     "apiVolumeSpecUpdate": {
       "properties": {
-        "aggregation_level": {
-          "format": "int64",
-          "type": "integer"
-        },
         "cos": {
           "$ref": "#/definitions/apiCosType"
         },
         "dedupe": {
-          "format": "boolean",
-          "type": "boolean"
-        },
-        "encrypted": {
           "format": "boolean",
           "type": "boolean"
         },
