@@ -190,12 +190,14 @@ func (o *Ownership) Update(newownerInfo *Ownership, user *auth.UserInfo) error {
 	} else {
 		// Auth is enabled
 
-		// Only the owner or admin can change the group
-		if user.Username != o.Owner && !o.IsAdminByUser(user) {
+		// Only the owner, user with access type admin,
+		// or admin can change the group
+		if user.Username != o.Owner &&
+			!o.IsAdminByUser(user) &&
+			!o.IsPermitted(user, Ownership_Admin) {
 			return status.Error(codes.PermissionDenied,
-				"Only owner can update volume acls")
+				"Only owner or those with admin access type can update volume acls")
 		}
-		o.Acls = newownerInfo.GetAcls()
 
 		// Only the admin can change the owner
 		if newownerInfo.HasAnOwner() {
@@ -206,6 +208,7 @@ func (o *Ownership) Update(newownerInfo *Ownership, user *auth.UserInfo) error {
 					"Only the administrator can change the owner of the resource")
 			}
 		}
+		o.Acls = newownerInfo.GetAcls()
 	}
 	return nil
 }
