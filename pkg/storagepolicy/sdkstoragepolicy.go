@@ -284,7 +284,7 @@ func (p *SdkPolicyManager) EnforceInspect(
 	req *api.SdkOpenStoragePolicyEnforceInspectRequest,
 ) (*api.SdkOpenStoragePolicyEnforceInspectResponse, error) {
 	var policyName string
-	var defaultPolicy *api.SdkOpenStoragePolicyEnforceInspectResponse
+	defaultPolicy := &api.SdkOpenStoragePolicyEnforceInspectResponse{}
 
 	_, err := p.kv.GetVal(enforcePath, &policyName)
 	// enforcePath key is not created
@@ -305,9 +305,8 @@ func (p *SdkPolicyManager) EnforceInspect(
 			Name: policyName,
 		},
 	)
-
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "Policy with name %s not found", defaultPolicy)
+		return nil, status.Errorf(codes.NotFound, "Policy with name %s not found", policyName)
 	}
 
 	return &api.SdkOpenStoragePolicyEnforceInspectResponse{

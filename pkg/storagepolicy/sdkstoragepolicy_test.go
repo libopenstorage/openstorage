@@ -529,3 +529,56 @@ func TestSdkStoragePolicyEnforcementBadArgument(t *testing.T) {
 	assert.Equal(t, serverError.Code(), codes.NotFound)
 	assert.Contains(t, serverError.Message(), "not found")
 }
+
+func TestSdkStoragePolicyEnforcementInspect(t *testing.T) {
+
+	s, err := Inst()
+
+	policy, err := s.EnforceInspect(context.Background(), &api.SdkOpenStoragePolicyEnforceInspectRequest{})
+	assert.NoError(t, err)
+	assert.Nil(t, policy.GetStoragePolicy())
+
+	volSpec := &api.VolumeSpecPolicy{
+		SizeOpt: &api.VolumeSpecPolicy_Size{
+			Size: 8989,
+		},
+	}
+
+	req := &api.SdkOpenStoragePolicyCreateRequest{
+		StoragePolicy: &api.SdkStoragePolicy{
+			Name:   "enforceInspect",
+			Policy: volSpec,
+		},
+	}
+
+	_, err = s.Create(context.Background(), req)
+	assert.NoError(t, err)
+
+	inspReq := &api.SdkOpenStoragePolicyInspectRequest{
+		Name: "enforceInspect",
+	}
+
+	resp, err := s.Inspect(context.Background(), inspReq)
+	assert.NoError(t, err)
+	assert.Equal(t, resp.StoragePolicy.GetName(), inspReq.GetName())
+	assert.True(t, reflect.DeepEqual(resp.StoragePolicy.GetPolicy(), req.StoragePolicy.GetPolicy()))
+
+	enforceReq := &api.SdkOpenStoragePolicyEnforceRequest{
+		Name: inspReq.GetName(),
+	}
+	_, err = s.Enforce(context.Background(), enforceReq)
+	assert.NoError(t, err)
+
+	policy, err = s.EnforceInspect(context.Background(), &api.SdkOpenStoragePolicyEnforceInspectRequest{})
+	assert.NoError(t, err)
+	assert.Equal(t, policy.GetStoragePolicy().GetName(), inspReq.GetName())
+
+	// disable enforcement
+	releaseReq := &api.SdkOpenStoragePolicyReleaseRequest{}
+	_, err = s.Release(context.Background(), releaseReq)
+	assert.NoError(t, err)
+
+	policy, err = s.EnforceInspect(context.Background(), &api.SdkOpenStoragePolicyEnforceInspectRequest{})
+	assert.NoError(t, err)
+	assert.Nil(t, policy.GetStoragePolicy())
+}
