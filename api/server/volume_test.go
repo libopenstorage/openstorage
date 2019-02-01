@@ -1687,9 +1687,9 @@ func TestVolumeCreateSuccessWithEnforcement(t *testing.T) {
 	_, err = s.Enforce(context.Background(), enforceReq)
 	assert.NoError(t, err)
 
-	policy, err := s.GetEnforcement()
+	policy, err := s.EnforceInspect(context.Background(), &api.SdkOpenStoragePolicyEnforceInspectRequest{})
 	assert.NoError(t, err)
-	assert.Equal(t, policy.GetName(), inspReq.GetName())
+	assert.Equal(t, policy.GetStoragePolicy().GetName(), inspReq.GetName())
 
 	defer ts.Close()
 	defer testVolDriver.Stop()
@@ -1812,9 +1812,9 @@ func TestVolumeCreateSuccessWithCustomPolicyEnforcement(t *testing.T) {
 	_, err = s.Enforce(context.Background(), enforceReq)
 	assert.NoError(t, err)
 
-	policy, err := s.GetEnforcement()
+	policy, err := s.EnforceInspect(context.Background(), &api.SdkOpenStoragePolicyEnforceInspectRequest{})
 	assert.NoError(t, err)
-	assert.Equal(t, policy.GetName(), inspReq.GetName())
+	assert.Equal(t, policy.GetStoragePolicy().GetName(), inspReq.GetName())
 
 	defer ts.Close()
 	defer testVolDriver.Stop()

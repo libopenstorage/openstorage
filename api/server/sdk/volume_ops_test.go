@@ -713,9 +713,9 @@ func TestSdkVolumeCreateEnforced(t *testing.T) {
 	_, err = storePolicy.Enforce(context.Background(), enforceReq)
 	assert.NoError(t, err)
 
-	policy, err := storePolicy.GetEnforcement()
+	policy, err := storePolicy.EnforceInspect(context.Background(), &api.SdkOpenStoragePolicyEnforceInspectRequest{})
 	assert.NoError(t, err)
-	assert.Equal(t, policy.GetName(), inspReq.GetName())
+	assert.Equal(t, policy.GetStoragePolicy().GetName(), inspReq.GetName())
 
 	// create volume with policy enabled
 	name := "myvol"

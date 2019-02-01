@@ -515,8 +515,8 @@ func GetEnforcedVolSpecs(locator *api.VolumeLocator, spec *api.VolumeSpec) (*api
 	}
 
 	// check if enforcement is enabled
-	policy, err := storPolicy.GetEnforcement()
-	if err == kvdb.ErrNotFound || policy == nil {
+	policy, err := storPolicy.EnforceInspect(context.Background(), &api.SdkOpenStoragePolicyEnforceInspectRequest{})
+	if err == kvdb.ErrNotFound || policy.GetStoragePolicy() == nil {
 		// enforce is disabled
 		// check if custom policy passed with volume
 		if spec.GetStoragePolicy() != "" {
@@ -543,7 +543,7 @@ func GetEnforcedVolSpecs(locator *api.VolumeLocator, spec *api.VolumeSpec) (*api
 
 	// apply default policy to volume
 	// update volume spec according to enforced policies
-	updatedSpec := mergeVolumeSpecsPolicy(spec, policy.GetPolicy())
+	updatedSpec := mergeVolumeSpecsPolicy(spec, policy.StoragePolicy.GetPolicy())
 	return updatedSpec, nil
 }
 

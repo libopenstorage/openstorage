@@ -25,5 +25,4 @@ import (
 // OpenStoragePolicy service methods.
 type PolicyManager interface {
 	api.OpenStoragePolicyServer
-	GetEnforcement() (*api.SdkStoragePolicy, error)
 }

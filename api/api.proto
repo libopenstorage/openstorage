@@ -1672,7 +1672,17 @@ service OpenStoragePolicy {
   rpc Enforce(SdkOpenStoragePolicyEnforceRequest)
     returns (SdkOpenStoragePolicyEnforceResponse) {
       option(google.api.http) = {
-        post: "/v1/storagepolicy/enforce/{name}"
+        post: "/v1/storagepolicies/enforce/{name}"
+        body: "*"
+      };
+    }
+
+  // EnforcesInspect return enforced storage policy if any, otherwise
+  // empty response
+  rpc EnforceInspect(SdkOpenStoragePolicyEnforceInspectRequest)
+    returns (SdkOpenStoragePolicyEnforceInspectResponse) {
+      option(google.api.http) = {
+        get: "/v1/storagepolicies/enforce"
       };
     }
 
@@ -1756,6 +1766,16 @@ message SdkOpenStoragePolicyReleaseRequest {
 
 // Empty Response
 message SdkOpenStoragePolicyReleaseResponse {
+}
+
+// Empty Request
+message SdkOpenStoragePolicyEnforceInspectRequest {
+}
+
+// Define storage policy enforce response
+message SdkOpenStoragePolicyEnforceInspectResponse {
+  // storage policy information which is enforced
+  SdkStoragePolicy storage_policy = 1;
 }
 
 // Define a schedule policy request

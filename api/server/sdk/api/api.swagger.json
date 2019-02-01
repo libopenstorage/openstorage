@@ -1695,6 +1695,26 @@
       "title": "Empty Response",
       "type": "object"
     },
+    "apiSdkOpenStoragePolicyEnforceInspectResponse": {
+      "properties": {
+        "storage_policy": {
+          "$ref": "#/definitions/apiSdkStoragePolicy",
+          "title": "storage policy information which is enforced"
+        }
+      },
+      "title": "Define storage policy enforce response",
+      "type": "object"
+    },
+    "apiSdkOpenStoragePolicyEnforceRequest": {
+      "properties": {
+        "name": {
+          "title": "name of policy to set as default enforcement\nfor volume creation\nThis policy will be used to enforce volume configuration",
+          "type": "string"
+        }
+      },
+      "title": "Define a request to enforce storage policy",
+      "type": "object"
+    },
     "apiSdkOpenStoragePolicyEnforceResponse": {
       "title": "Empty Response",
       "type": "object"
@@ -4372,6 +4392,56 @@
         ]
       }
     },
+    "/v1/storagepolicies/enforce": {
+      "get": {
+        "operationId": "EnforceInspect",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkOpenStoragePolicyEnforceInspectResponse"
+            }
+          }
+        },
+        "summary": "EnforcesInspect return enforced storage policy if any, otherwise\nempty response",
+        "tags": [
+          "OpenStoragePolicy"
+        ]
+      }
+    },
+    "/v1/storagepolicies/enforce/{name}": {
+      "post": {
+        "operationId": "Enforce",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkOpenStoragePolicyEnforceRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkOpenStoragePolicyEnforceResponse"
+            }
+          }
+        },
+        "summary": "Enforces specified storage policy",
+        "tags": [
+          "OpenStoragePolicy"
+        ]
+      }
+    },
     "/v1/storagepolicies/inspect/{name}": {
       "get": {
         "operationId": "Inspect",
@@ -4417,31 +4487,6 @@
           }
         },
         "summary": "Deletes specified storage policy",
-        "tags": [
-          "OpenStoragePolicy"
-        ]
-      }
-    },
-    "/v1/storagepolicy/enforce/{name}": {
-      "post": {
-        "operationId": "Enforce",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "name",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/apiSdkOpenStoragePolicyEnforceResponse"
-            }
-          }
-        },
-        "summary": "Enforces specified storage policy",
         "tags": [
           "OpenStoragePolicy"
         ]
