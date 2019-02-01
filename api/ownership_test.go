@@ -541,10 +541,8 @@ func TestOwnershipUpdate(t *testing.T) {
 			result: &Ownership{
 				Owner: "user1",
 				Acls: &Ownership_AccessControl{
-					Collaborators: map[string]Ownership_AccessType{
-						"user1": Ownership_Read,
-						"user2": Ownership_Read,
-						"user3": Ownership_Read,
+					Groups: map[string]Ownership_AccessType{
+						"group1": Ownership_Admin,
 					},
 				},
 			},
@@ -699,6 +697,108 @@ func TestOwnershipUpdate(t *testing.T) {
 				}},
 			user: &auth.UserInfo{
 				Username: "anotheruser",
+			},
+			expectErr: true,
+		},
+		{
+			owner: &Ownership{
+				Owner: "user1",
+				Acls: &Ownership_AccessControl{
+					Groups: map[string]Ownership_AccessType{
+						"group1": Ownership_Admin,
+					},
+					Collaborators: map[string]Ownership_AccessType{
+						"anotheruser": Ownership_Admin,
+					},
+				}},
+			update: &Ownership{
+				Acls: &Ownership_AccessControl{
+					Groups: map[string]Ownership_AccessType{
+						"group1": Ownership_Admin,
+						"group2": Ownership_Read,
+					},
+					Collaborators: map[string]Ownership_AccessType{
+						"anotheruser": Ownership_Admin,
+					},
+				},
+			},
+			result: &Ownership{
+				Owner: "user1",
+				Acls: &Ownership_AccessControl{
+					Groups: map[string]Ownership_AccessType{
+						"group1": Ownership_Admin,
+						"group2": Ownership_Read,
+					},
+					Collaborators: map[string]Ownership_AccessType{
+						"anotheruser": Ownership_Admin,
+					},
+				}},
+			user: &auth.UserInfo{
+				Username: "anotheruser",
+			},
+			expectErr: false,
+		},
+		{
+			owner: &Ownership{
+				Owner: "user1",
+				Acls: &Ownership_AccessControl{
+					Groups: map[string]Ownership_AccessType{
+						"group1": Ownership_Admin,
+					},
+				}},
+			update: &Ownership{
+				Acls: &Ownership_AccessControl{
+					Groups: map[string]Ownership_AccessType{
+						"group1": Ownership_Admin,
+						"group2": Ownership_Read,
+					},
+				},
+			},
+			result: &Ownership{
+				Owner: "user1",
+				Acls: &Ownership_AccessControl{
+					Groups: map[string]Ownership_AccessType{
+						"group1": Ownership_Admin,
+						"group2": Ownership_Read,
+					},
+				}},
+			user: &auth.UserInfo{
+				Username: "anotheruser",
+				Claims: auth.Claims{
+					Groups: []string{"group1"},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			owner: &Ownership{
+				Owner: "user1",
+				Acls: &Ownership_AccessControl{
+					Groups: map[string]Ownership_AccessType{
+						"group1": Ownership_Admin,
+					},
+				}},
+			update: &Ownership{
+				Owner: "anotheruser",
+				Acls: &Ownership_AccessControl{
+					Groups: map[string]Ownership_AccessType{
+						"group1": Ownership_Admin,
+						"group2": Ownership_Read,
+					},
+				},
+			},
+			result: &Ownership{
+				Owner: "user1",
+				Acls: &Ownership_AccessControl{
+					Groups: map[string]Ownership_AccessType{
+						"group1": Ownership_Admin,
+					},
+				}},
+			user: &auth.UserInfo{
+				Username: "anotheruser",
+				Claims: auth.Claims{
+					Groups: []string{"group1"},
+				},
 			},
 			expectErr: true,
 		},
