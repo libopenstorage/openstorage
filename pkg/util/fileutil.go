@@ -1,6 +1,6 @@
 /*
 Package util provides utility functions for OSD servers and drivers.
-Copyright 2017 Portworx
+Copyright 2019 Portworx
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
