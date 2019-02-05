@@ -198,20 +198,22 @@ func (vd *volAPI) cloudBackupEnumerate(w http.ResponseWriter, r *http.Request) {
 
 func (vd *volAPI) cloudBackupStatus(w http.ResponseWriter, r *http.Request) {
 	method := "cloudBackupStatus"
-	backupStatus := &api.CloudBackupStatusRequest{}
+	backupStatus := &api.CloudBackupStatusRequestOld{}
 
 	if err := json.NewDecoder(r.Body).Decode(backupStatus); err != nil {
 		vd.sendError(method, "", w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
+	if backupStatus.Name != "" {
+		backupStatus.CloudBackupStatusRequest.ID = backupStatus.Name
+	}
 	d, err := vd.getVolDriver(r)
 	if err != nil {
 		notFound(w, r)
 		return
 	}
 
-	backupStatusResp, err := d.CloudBackupStatus(backupStatus)
+	backupStatusResp, err := d.CloudBackupStatus(&backupStatus.CloudBackupStatusRequest)
 	if err != nil {
 		if err == volume.ErrInvalidName {
 			w.WriteHeader(http.StatusConflict)

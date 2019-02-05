@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.39.0 - Tech Preview (1/29/2019)
+
+* Additional fields to cloud-backup data structure to track group cloud backups.
+
 ### v0.38.0 - Tech Preview (1/27/2019)
 
 * Ownership reworked to gain access type control. Now it supports Read, Write,

@@ -317,6 +317,8 @@ type CloudBackupRestoreRequest struct {
 }
 
 type CloudBackupGroupCreateResponse struct {
+	// ID for this group of backups
+	GroupCloudBackupID string
 	// Names of the tasks performing this group backup
 	Names []string
 }
@@ -383,9 +385,17 @@ type CloudBackupStatusRequest struct {
 	// Local indicates if only those backups/restores that are
 	// active on current node must be returned
 	Local bool
-	// Name of the backup/restore task. If this is specified, SrcVolumeID is
-	// ignored
+	// ID of the backup/restore task. If this is specified, SrcVolumeID is
+	// ignored. This could be GroupCloudBackupId too, and in that case multiple
+	// statuses belonging to the groupCloudBackupID is returned.
+	ID string
+}
+
+type CloudBackupStatusRequestOld struct {
+	// Old field for task ID
 	Name string
+	// New structure
+	CloudBackupStatusRequest
 }
 
 type CloudBackupOpType string
@@ -440,6 +450,9 @@ type CloudBackupStatus struct {
 	Info []string
 	// CredentialUUID used for this backup/restore op
 	CredentialUUID string
+	// GroupCloudBackupID is valid for backups that were started as part of group
+	// cloudbackup request
+	GroupCloudBackupID string
 }
 
 type CloudBackupStatusResponse struct {

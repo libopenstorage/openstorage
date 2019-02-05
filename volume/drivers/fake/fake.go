@@ -729,7 +729,7 @@ func (d *driver) CloudBackupStatus(input *api.CloudBackupStatusRequest) (*api.Cl
 		}
 		splitKey := strings.Split(v.Key, "/")
 		id := splitKey[len(splitKey)-1]
-		if input.Name != "" && id == input.Name {
+		if input.ID != "" && id == input.ID {
 			statuses[id] = elem.Status
 			break
 		}
@@ -815,7 +815,7 @@ func (d *driver) CloudBackupStateChange(input *api.CloudBackupStateChangeRequest
 	}
 
 	resp, err := d.CloudBackupStatus(&api.CloudBackupStatusRequest{
-		Name: input.Name,
+		ID: input.Name,
 	})
 	if err != nil {
 		return err
