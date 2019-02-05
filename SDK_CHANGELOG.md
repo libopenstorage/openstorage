@@ -5,6 +5,10 @@
 
 ## Releases
 
+### v0.22.10 - Tech Preview (12/05/2018)
+
+* Additional fields to cloud-backup data structure to track group cloud backups.
+
 ### v0.22.9 - Tech Preview (12/05/2018)
 
 * Add TaskId and ClusterId to CloudMigrate status request

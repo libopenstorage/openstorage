@@ -30,7 +30,7 @@ func CloudBackupWaitForCompletion(
 	var opError error
 	err := backoff.Retry(func() error {
 		response, err := cl.CloudBackupStatus(&api.CloudBackupStatusRequest{
-			Name: taskId,
+			ID: taskId,
 		})
 		if err != nil {
 			return err
