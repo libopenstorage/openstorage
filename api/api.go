@@ -385,10 +385,17 @@ type CloudBackupStatusRequest struct {
 	// Local indicates if only those backups/restores that are
 	// active on current node must be returned
 	Local bool
-	// Name of the backup/restore task. If this is specified, SrcVolumeID is
+	// ID of the backup/restore task. If this is specified, SrcVolumeID is
 	// ignored. This could be GroupCloudBackupId too, and in that case multiple
 	// statuses belonging to the groupCloudBackupID is returned.
+	ID string
+}
+
+type CloudBackupStatusRequestOld struct {
+	// Old field for task ID
 	Name string
+	// New structure
+	CloudBackupStatusRequest
 }
 
 type CloudBackupOpType string

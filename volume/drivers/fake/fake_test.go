@@ -629,7 +629,7 @@ func TestFakeCloudBackupStateChange(t *testing.T) {
 
 	// Confirm db
 	statuses, err = d.CloudBackupStatus(&api.CloudBackupStatusRequest{
-		Name: name,
+		ID: name,
 	})
 	assert.NoError(t, err)
 	assert.Len(t, statuses.Statuses, 1)
