@@ -3067,7 +3067,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.22.9"
+    "version": "0.22.10"
   },
   "paths": {
     "/v1/alerts": {
