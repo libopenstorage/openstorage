@@ -193,7 +193,7 @@ func (s *CloudBackupServer) Status(
 	r, err := s.driver().CloudBackupStatus(&api.CloudBackupStatusRequest{
 		SrcVolumeID: req.GetVolumeId(),
 		Local:       req.GetLocal(),
-		Name:        req.GetTaskId(),
+		ID:          req.GetTaskId(),
 	})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to get status of backup: %v", err)
