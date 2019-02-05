@@ -5,10 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/libopenstorage/openstorage/api"
 	clusterclient "github.com/libopenstorage/openstorage/api/client/cluster"
 	"github.com/libopenstorage/openstorage/cluster"
+	"github.com/libopenstorage/openstorage/pkg/auth"
+	"github.com/pkg/errors"
 	"github.com/portworx/kvdb"
 	"github.com/sirupsen/logrus"
 )
@@ -28,7 +31,6 @@ func (c *ClusterManager) CreatePair(
 
 	// Pair with remote server
 	logrus.Infof("Attempting to pair with cluster at IP %v", remoteIp)
-
 	processRequest := &api.ClusterPairProcessRequest{
 		SourceClusterId:    c.Uuid(),
 		RemoteClusterToken: request.RemoteClusterToken,
@@ -302,10 +304,11 @@ func (c *ClusterManager) GetPairToken(
 
 	// Generate a token if we don't have one or a reset has been requested
 	if db.PairToken == "" || reset {
-		b := make([]byte, 64)
-		rand.Read(b)
-		db.PairToken = fmt.Sprintf("%x", b)
-
+		token, err := c.generatePairToken()
+		if err != nil {
+			return nil, errors.Wrap(err, "Failed to generate token")
+		}
+		db.PairToken = fmt.Sprintf("%s", token)
 		_, err = writeClusterInfo(&db)
 		if err != nil {
 			return nil, err
@@ -315,6 +318,29 @@ func (c *ClusterManager) GetPairToken(
 	return &api.ClusterPairTokenGetResponse{
 		Token: db.PairToken,
 	}, nil
+}
+
+func (c *ClusterManager) generatePairToken() (string, error) {
+	var token string
+	var err error
+
+	if auth.Enabled() {
+		token, err = c.systemTokenManager.GetToken(
+			&auth.Options{
+				Expiration: time.Now().Add(5 * auth.Year).Unix(),
+			},
+		)
+		if err != nil {
+			return "", err
+		}
+
+	} else {
+		randToken := make([]byte, 64)
+		rand.Read(randToken)
+		token = fmt.Sprintf("%x", randToken)
+	}
+
+	return token, nil
 }
 
 func pairList() (map[string]*api.ClusterPairInfo, error) {

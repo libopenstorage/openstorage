@@ -16,6 +16,7 @@ limitations under the License.
 package auth
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -24,12 +25,13 @@ import (
 )
 
 func TestTokenSharedSecretSimple(t *testing.T) {
-
+	iss := "uid"
 	key := []byte("mysecret")
 	claims := Claims{
-		Email: "my@email.com",
-		Name:  "myname",
-		Roles: []string{"tester"},
+		Issuer: iss,
+		Email:  "my@email.com",
+		Name:   "myname",
+		Roles:  []string{"tester"},
 	}
 	sig := Signature{
 		Type: jwt.SigningMethodHS256,
@@ -57,6 +59,27 @@ func TestTokenSharedSecretSimple(t *testing.T) {
 	assert.Equal(t, claims.Name, tokenClaims["name"])
 	assert.Contains(t, tokenClaims, "roles")
 	assert.Equal(t, claims.Roles[0], tokenClaims["roles"].([]interface{})[0].(string))
+
+	// Get issuer from token
+	newIss, err := TokenIssuer(rawtoken)
+	assert.NoError(t, err)
+	assert.Equal(t, newIss, iss)
+
+	// Check if token is jwt
+	assert.True(t, IsJwtToken(rawtoken))
+
+	// Test authenticators
+	authctr, err := NewJwtAuth(&JwtAuthConfig{
+		SharedSecret: key,
+	})
+	assert.NoError(t, err)
+
+	authenticateClaims, err := authctr.AuthenticateToken(context.Background(), rawtoken)
+	assert.NoError(t, err)
+	assert.Equal(t, authenticateClaims.Issuer, claims.Issuer)
+	assert.Equal(t, authenticateClaims.Email, claims.Email)
+	assert.Equal(t, authenticateClaims.Name, claims.Name)
+	assert.Equal(t, authenticateClaims.Roles, claims.Roles)
 }
 
 func TestTokenExpired(t *testing.T) {

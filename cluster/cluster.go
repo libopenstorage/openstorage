@@ -9,6 +9,7 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/objectstore"
 	"github.com/libopenstorage/openstorage/osdconfig"
+	"github.com/libopenstorage/openstorage/pkg/auth"
 	sched "github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
 	"github.com/portworx/kvdb"
@@ -41,6 +42,8 @@ type ClusterServerConfiguration struct {
 	ConfigSchedManager sched.SchedulePolicyProvider
 	// holds implementation to ObjectStore interface
 	ConfigObjectStoreManager objectstore.ObjectStore
+	// holds implemenation to auth.TokenGenerator system tokens
+	ConfigSystemTokenManager auth.TokenGenerator
 }
 
 // NodeEntry is used to discover other nodes in the cluster
