@@ -98,7 +98,7 @@ func main() {
 		cli.StringFlag{
 			Name:  "mgmtport,m",
 			Usage: "Management Port for REST server. Example: 9001",
-			Value: "9100",
+			Value: "9001",
 		},
 		cli.StringFlag{
 			Name:  "sdkport",
