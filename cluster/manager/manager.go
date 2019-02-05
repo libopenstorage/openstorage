@@ -1887,17 +1887,17 @@ func (c *ClusterManager) SecretGetDefaultSecretKey() (interface{}, error) {
 
 // SecretCheckLogin validates session with secret store
 func (c *ClusterManager) SecretCheckLogin() error {
-	return c.SecretCheckLogin()
+	return c.secretsManager.SecretCheckLogin()
 }
 
 // SecretSet the given value/data against the key
 func (c *ClusterManager) SecretSet(secretKey string, secretValue interface{}) error {
-	return c.SecretSet(secretKey, secretValue)
+	return c.secretsManager.SecretSet(secretKey, secretValue)
 }
 
 // SecretGet retrieves the value/data for given key
 func (c *ClusterManager) SecretGet(secretKey string) (interface{}, error) {
-	return c.SecretGet(secretKey)
+	return c.secretsManager.SecretGet(secretKey)
 }
 
 // Uuid returns the unique id of the cluster

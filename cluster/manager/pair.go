@@ -9,6 +9,8 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	clusterclient "github.com/libopenstorage/openstorage/api/client/cluster"
 	"github.com/libopenstorage/openstorage/cluster"
+	"github.com/libopenstorage/openstorage/pkg/auth"
+	"github.com/pkg/errors"
 	"github.com/portworx/kvdb"
 	"github.com/sirupsen/logrus"
 )
@@ -18,6 +20,8 @@ const (
 	ClusterPairKey = "cluster/pair"
 	// ClusterPairDefaultKey is the key at which the id for the default pair is stored
 	clusterPairDefaultKey = "cluster/pair/default"
+	// clusterSecretPrefix is the prefix used for storing tokens as secrets
+	clusterTokenSecretPrefix = "cluster-token"
 )
 
 // CreatePair remote pairs this cluster with a remote cluster.
@@ -26,9 +30,29 @@ func (c *ClusterManager) CreatePair(
 ) (*api.ClusterPairCreateResponse, error) {
 	remoteIp := request.RemoteClusterIp
 
+	if auth.Enabled() {
+		// Check if valid jwt token
+		if !auth.IsJwtToken(request.RemoteClusterToken) {
+			logrus.Warnf("RemoteClusterToken is not a valid JWT token")
+			return nil, nil
+		}
+
+		// Check for existing token. Store if new token is passed in
+		// or if there is no token stored yet at all.
+		tokenSecretKey := clusterTokenSecretKey(remoteIp)
+		token, err := c.SecretGet(tokenSecretKey)
+		if err != nil {
+			return nil, err
+		}
+		if token == "" || token != request.RemoteClusterToken {
+			if err := c.SecretSet(tokenSecretKey, request.RemoteClusterToken); err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	// Pair with remote server
 	logrus.Infof("Attempting to pair with cluster at IP %v", remoteIp)
-
 	processRequest := &api.ClusterPairProcessRequest{
 		SourceClusterId:    c.Uuid(),
 		RemoteClusterToken: request.RemoteClusterToken,
@@ -302,10 +326,11 @@ func (c *ClusterManager) GetPairToken(
 
 	// Generate a token if we don't have one or a reset has been requested
 	if db.PairToken == "" || reset {
-		b := make([]byte, 64)
-		rand.Read(b)
-		db.PairToken = fmt.Sprintf("%x", b)
-
+		token, err := generateToken()
+		if err != nil {
+			return nil, errors.Wrap(err, "Failed to generate token")
+		}
+		db.PairToken = fmt.Sprintf("%x", token)
 		_, err = writeClusterInfo(&db)
 		if err != nil {
 			return nil, err
@@ -315,6 +340,33 @@ func (c *ClusterManager) GetPairToken(
 	return &api.ClusterPairTokenGetResponse{
 		Token: db.PairToken,
 	}, nil
+}
+
+func generateToken() ([]byte, error) {
+	var token []byte
+
+	if auth.Enabled() {
+		generator, err := auth.Init(&auth.Config{
+			ClusterUuid: "123",
+			NodeId:      "456",
+			Claims:      &auth.Claims{},
+			Secret:      "789",
+		})
+		if err != nil {
+			return nil, err
+		}
+		generatedToken, err := generator.GetSystemToken()
+		if err != nil {
+			return nil, err
+		}
+		token = []byte(generatedToken)
+
+	} else {
+		token = make([]byte, 64)
+		rand.Read(token)
+	}
+
+	return token, nil
 }
 
 func pairList() (map[string]*api.ClusterPairInfo, error) {
@@ -492,4 +544,8 @@ func pairGet(id string) (*api.ClusterPairInfo, error) {
 		return nil, err
 	}
 	return info, nil
+}
+
+func clusterTokenSecretKey(clusterIp string) string {
+	return fmt.Sprintf("%s-%s", clusterTokenSecretPrefix, clusterIp)
 }
