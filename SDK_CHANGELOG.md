@@ -5,7 +5,7 @@
 
 ## Releases
 
-### v0.34.0 - Tech Preview (1/29/2019)
+### v0.33.1 - Tech Preview (1/29/2019)
 
 * Additional fields to cloud-backup data structure to track group cloud backups.
 
