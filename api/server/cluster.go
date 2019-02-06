@@ -310,7 +310,9 @@ func (c *clusterApi) nodeHealth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if st != api.Status_STATUS_OK {
+	if st != api.Status_STATUS_OK &&
+		/* don't fail health if not in quorum as the node is still up for other REST requests*/
+		st != api.Status_STATUS_NOT_IN_QUORUM {
 		err = fmt.Errorf("%s (%s)", nodeNotOkMsg, api.Status_name[int32(st)])
 		c.sendError(c.name, method, w, err.Error(), http.StatusServiceUnavailable)
 		return
