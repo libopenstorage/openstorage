@@ -5,22 +5,25 @@ import (
 )
 
 type down struct {
-	nodeStatus       types.NodeStatus
-	id               types.NodeId
-	numQuorumMembers uint
-	stateEvent       chan types.StateEvent
+	nodeStatus          types.NodeStatus
+	id                  types.NodeId
+	numQuorumMembers    uint
+	stateEvent          chan types.StateEvent
+	activeFailureDomain string
 }
 
 func GetDown(
 	numQuorumMembers uint,
 	selfId types.NodeId,
 	stateEvent chan types.StateEvent,
+	activeFailureDomain string,
 ) State {
 	return &down{
-		nodeStatus:       types.NODE_STATUS_DOWN,
-		numQuorumMembers: numQuorumMembers,
-		id:               selfId,
-		stateEvent:       stateEvent,
+		nodeStatus:          types.NODE_STATUS_DOWN,
+		numQuorumMembers:    numQuorumMembers,
+		id:                  selfId,
+		stateEvent:          stateEvent,
+		activeFailureDomain: activeFailureDomain,
 	}
 }
 
@@ -51,6 +54,13 @@ func (d *down) NodeLeave(localNodeInfoMap types.NodeInfoMap) (State, error) {
 func (d *down) UpdateClusterSize(
 	numQuorumMembers uint,
 	localNodeInfoMap types.NodeInfoMap,
+) (State, error) {
+	return d, nil
+}
+
+func (d *down) MarkActiveFailureDomain(
+	activeFailureDomain string,
+	localNodeInfo types.NodeInfoMap,
 ) (State, error) {
 	return d, nil
 }

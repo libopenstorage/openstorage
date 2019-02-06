@@ -4,6 +4,8 @@
 
 Go implementation of the Gossip protocol.
 
+## Overview
+
 This package provides an implementation of an eventually consistent in-memory
 data store. The data store values are exchanged using a push-pull gossip protocol.
 
@@ -13,7 +15,7 @@ g := NewGossiper("<ip>:<port>", "<unique node id>", "<peer-list>")
 // Add peer nodes with whom you want to gossip
 g.AddNode("<peer_ip>:<peer_port>")
 ...
-// update self values 
+// update self values
 g.UpdateSelf("<some_key>", "<any_value>")
 // start gossip
 g.Start()
@@ -36,3 +38,19 @@ for _, key := range storeKeys.List {
 // Stop gossiping
 g.Stop()
 ```
+
+## Contributing
+
+### Testing
+
+To test, run `make test`. This will run the unit tests
+
+### Vendoring
+
+For vendoring, we use [dep](https://golang.github.io/dep/). Some useful dep commands are:
+-  `dep ensure`: install the project's dependencies
+-  `dep ensure -update`: update the locked versions of all dependencies
+-  `dep ensure -add github.com/pkg/errors`: add a dependency to the project
+
+
+

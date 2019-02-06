@@ -1,9 +1,10 @@
 package gossip
 
 import (
+	"time"
+
 	"github.com/libopenstorage/gossip/proto"
 	"github.com/libopenstorage/gossip/types"
-	"time"
 )
 
 type GossipStore interface {
@@ -60,7 +61,7 @@ type Gossiper interface {
 
 	// Start begins the gossip protocol using memberlist
 	// To join an existing cluster provide atleast one ip of the known node.
-	Start(knownIp []string) error
+	Start(knownIp []string, activeFailureDomain string) error
 
 	// GossipInterval gets the gossip interval
 	GossipInterval() time.Duration
@@ -79,6 +80,14 @@ type Gossiper interface {
 	// It checks quorum and appropriately marks either self down or the other node down.
 	// It returns the nodeId that was marked down
 	ExternalNodeLeave(nodeId types.NodeId) types.NodeId
+
+	// MarkActiveFailureDomain marks a specific failure domain which gossip nodes
+	// are aware of as the active one. All the nodes in other failure domains which
+	// cannot reach the active failure domain will shoot themselves down
+	MarkActiveFailureDomain(activeFailureDomain string)
+
+	// UpdateSelfFailureDomain
+	UpdateSelfFailureDomain(selfFailureDomain string)
 }
 
 // New returns an initialized Gossip node

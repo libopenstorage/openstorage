@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/libopenstorage/gossip/types"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -31,6 +31,10 @@ type GossipStoreImpl struct {
 	clusterSize uint
 	// numQuorumMembers is the number of members which participate in quorum
 	numQuorumMembers uint
+	// activeFailureDomain if set is the current failure domain which is active
+	// in case of a network split. All the nodes in the active failure domain
+	// will continue to function while other nodes will stay out of quorum
+	activeFailureDomain string
 	// Ts at which we lost quorum
 	lostQuorumTs time.Time
 }
@@ -95,6 +99,23 @@ func (s *GossipStoreImpl) UpdateSelf(key types.StoreKey, val interface{}) {
 	nodeInfo.Value[key] = val
 	nodeInfo.LastUpdateTs = time.Now()
 	s.nodeMap[s.id] = nodeInfo
+}
+
+func (s *GossipStoreImpl) updateSelfFailureDomain(selfFailureDomain string) bool {
+	s.Lock()
+	defer s.Unlock()
+
+	nodeInfo, _ := s.nodeMap[s.id]
+	previousFailureDomain := nodeInfo.FailureDomain
+
+	// Update the failure domain only if there is a change
+	if previousFailureDomain != selfFailureDomain {
+		nodeInfo.FailureDomain = selfFailureDomain
+		nodeInfo.LastUpdateTs = time.Now()
+		s.nodeMap[s.id] = nodeInfo
+		return true
+	}
+	return false
 }
 
 func (s *GossipStoreImpl) UpdateSelfStatus(status types.NodeStatus) {
@@ -334,6 +355,14 @@ func (s *GossipStoreImpl) updateCluster(
 
 func (s *GossipStoreImpl) getNumQuorumMembers() uint {
 	return s.numQuorumMembers
+}
+
+func (s *GossipStoreImpl) markActiveFailureDomain(activeFailureDomain string) {
+	s.activeFailureDomain = activeFailureDomain
+}
+
+func (s *GossipStoreImpl) getActiveFailureDomain() string {
+	return s.activeFailureDomain
 }
 
 func (s *GossipStoreImpl) convertToBytes(obj interface{}) ([]byte, error) {

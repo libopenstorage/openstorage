@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/hashicorp/memberlist"
+	"github.com/sirupsen/logrus"
 
 	"github.com/libopenstorage/gossip/proto/state"
 	"github.com/libopenstorage/gossip/types"
@@ -54,7 +54,7 @@ func (gd *GossipDelegate) InitGossipDelegate(
 func (gd *GossipDelegate) InitCurrentState(clusterSize uint) {
 	// Our initial state is NOT_IN_QUORUM
 	gd.currentState = state.GetNotInQuorum(
-		uint(clusterSize), types.NodeId(gd.nodeId), gd.stateEvent)
+		uint(clusterSize), types.NodeId(gd.nodeId), gd.stateEvent, gd.getActiveFailureDomain())
 	// Start the go routine which handles all the events
 	// and changes state of the node
 	go gd.handleStateEvents()
@@ -305,6 +305,11 @@ func (gd *GossipDelegate) handleStateEvents() {
 		case types.UPDATE_CLUSTER_SIZE:
 			gd.currentState, _ = gd.currentState.UpdateClusterSize(
 				gd.getNumQuorumMembers(), gd.GetLocalState())
+		case types.MARK_ACTIVE_FAILURE_DOMAIN:
+			gd.currentState, _ = gd.currentState.MarkActiveFailureDomain(
+				gd.getActiveFailureDomain(),
+				gd.GetLocalState(),
+			)
 		case types.TIMEOUT:
 			newState, _ := gd.currentState.Timeout(
 				gd.getNumQuorumMembers(), gd.GetLocalState())
