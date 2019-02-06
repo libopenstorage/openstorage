@@ -173,7 +173,11 @@ func TestSdkVolumeClone(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Snapshot(parentid, false, &api.VolumeLocator{Name: name}, false).
+			Snapshot(&api.SnapshotSpec{
+				VolumeId: parentid,
+				ReadOnly: false,
+				Name:     name,
+			}, false).
 			Return(id, nil).
 			Times(1),
 	)

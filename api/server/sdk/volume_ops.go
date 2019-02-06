@@ -73,9 +73,12 @@ func (s *VolumeServer) create(
 		}
 
 		// Create a snapshot from the parent
-		id, err = s.driver().Snapshot(parent.GetId(), false, &api.VolumeLocator{
-			Name: volName,
-		}, false)
+		spec := &api.SnapshotSpec{
+			Name:     volName,
+			VolumeId: parent.GetId(),
+			ReadOnly: false,
+		}
+		id, err = s.driver().Snapshot(spec, false)
 		if err != nil {
 			return "", status.Errorf(
 				codes.Internal,

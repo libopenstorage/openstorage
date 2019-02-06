@@ -303,22 +303,25 @@ func (d *driver) Unmount(volumeID string, mountpath string, options map[string]s
 	return d.UpdateVol(v)
 }
 
-func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
+func (d *driver) Snapshot(spec *api.SnapshotSpec, noRetry bool) (string, error) {
 	volIDs := make([]string, 1)
-	volIDs[0] = volumeID
+	volIDs[0] = spec.VolumeId
 	vols, err := d.Inspect(volIDs)
 	if err != nil {
 		return "", nil
 	}
 
-	source := &api.Source{Parent: volumeID}
-	newVolumeID, err := d.Create(locator, source, vols[0].Spec)
+	source := &api.Source{Parent: spec.VolumeId}
+	newVolumeID, err := d.Create(&api.VolumeLocator{
+		Name:         spec.VolumeId,
+		VolumeLabels: spec.Labels,
+	}, source, vols[0].Spec)
 	if err != nil {
 		return "", nil
 	}
 
 	// BUSE does not support snapshots, so just copy the block files.
-	err = copyFile(BuseMountPath+volumeID, BuseMountPath+newVolumeID)
+	err = copyFile(BuseMountPath+spec.VolumeId, BuseMountPath+newVolumeID)
 	if err != nil {
 		d.Delete(newVolumeID)
 		return "", nil

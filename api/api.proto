@@ -334,6 +334,20 @@ message VolumeSpec {
   VolumePlacementStrategy placement_strategy = 31;
 }
 
+// SnapshotSpec is the spec for the volume's snapshot
+message SnapshotSpec {
+  // Name of the snapshot to be created
+  string name = 1;
+  // volume ID to snapshot
+  string volume_id = 2;
+  // ReadOnly indicates if the snapshot is read only
+  bool read_only = 3;
+  // Labels to be attached to the snapshot
+  map<string, string> labels = 4;
+  // PlacementStrategy specifies a spec to indicate where to place the snapshot
+  VolumePlacementStrategy placement_strategy = 5;
+}
+
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
 message VolumeSpecUpdate {
   // Size specifies the thin provisioned volume size in bytes

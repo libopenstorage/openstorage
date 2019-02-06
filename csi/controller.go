@@ -381,10 +381,13 @@ func (s *OsdCsiServer) CreateVolume(
 		}
 
 		// Create a snapshot from the parent
-		id, err = s.driver.Snapshot(parent.GetId(), false, &api.VolumeLocator{
-			Name: req.GetName(),
-		},
-			false)
+
+		spec := &api.SnapshotSpec{
+			Name:     req.GetName(),
+			VolumeId: parent.GetId(),
+			ReadOnly: false,
+		}
+		id, err = s.driver.Snapshot(spec, false)
 		if err != nil {
 			e := fmt.Sprintf("unable to create snapshot: %s\n", err.Error())
 			logrus.Errorln(e)
@@ -504,11 +507,13 @@ func (s *OsdCsiServer) CreateSnapshot(
 	}
 
 	// Create snapshot
-	readonly := true
-	snapshotID, err := s.driver.Snapshot(req.GetSourceVolumeId(), readonly, &api.VolumeLocator{
-		Name:         req.GetName(),
-		VolumeLabels: locator.GetVolumeLabels(),
-	}, false)
+	spec := &api.SnapshotSpec{
+		Name:     req.GetName(),
+		Labels:   locator.GetVolumeLabels(),
+		VolumeId: req.GetSourceVolumeId(),
+		ReadOnly: true,
+	}
+	snapshotID, err := s.driver.Snapshot(spec, false)
 	if err != nil {
 		if err == kvdb.ErrNotFound {
 			return nil, status.Errorf(codes.NotFound, "Volume id %s not found", req.GetSourceVolumeId())

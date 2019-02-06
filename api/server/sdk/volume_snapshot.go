@@ -41,11 +41,13 @@ func (s *VolumeServer) SnapshotCreate(
 		return nil, status.Error(codes.InvalidArgument, "Must supply a name")
 	}
 
-	readonly := true
-	snapshotID, err := s.driver().Snapshot(req.GetVolumeId(), readonly, &api.VolumeLocator{
-		Name:         req.GetName(),
-		VolumeLabels: req.GetLabels(),
-	}, false)
+	spec := &api.SnapshotSpec{
+		Name:     req.GetName(),
+		VolumeId: req.GetVolumeId(),
+		Labels:   req.GetLabels(),
+		ReadOnly: true,
+	}
+	snapshotID, err := s.driver().Snapshot(spec, false)
 	if err != nil {
 		if err == kvdb.ErrNotFound {
 			return nil, status.Errorf(

@@ -157,25 +157,28 @@ func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.Volu
 }
 
 // Snapshot create new subvolume from volume
-func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
-	vols, err := d.Inspect([]string{volumeID})
+func (d *driver) Snapshot(spec *api.SnapshotSpec, noRetry bool) (string, error) {
+	vols, err := d.Inspect([]string{spec.VolumeId})
 	if err != nil {
 		return "", err
 	}
 	if len(vols) != 1 {
-		return "", fmt.Errorf("Failed to inspect %v len %v", volumeID, len(vols))
+		return "", fmt.Errorf("Failed to inspect %v len %v", spec.VolumeId, len(vols))
 	}
 	snapID := uuid.New()
 	vols[0].Id = snapID
-	vols[0].Source = &api.Source{Parent: volumeID}
-	vols[0].Locator = locator
+	vols[0].Source = &api.Source{Parent: spec.VolumeId}
+	vols[0].Locator = &api.VolumeLocator{
+		Name:   spec.Name,
+		Labels: spec.Labels,
+	}
 	vols[0].Ctime = prototime.Now()
 
 	if err := d.CreateVol(vols[0]); err != nil {
 		return "", err
 	}
 	chaos.Now(koStrayCreate)
-	err = d.btrfs.Create(snapID, volumeID, "", nil)
+	err = d.btrfs.Create(snapID, spec.VolumeId, "", nil)
 	if err != nil {
 		return "", err
 	}

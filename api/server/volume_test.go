@@ -223,13 +223,23 @@ func TestVolumeSnapshotCreateSuccess(t *testing.T) {
 	//mock Snapshot call
 	testVolDriver.MockDriver().
 		EXPECT().
-		Snapshot(req.GetId(), req.GetReadonly(), req.GetLocator(), req.GetNoRetry()).
+		Snapshot(&api.SnapshotSpec{
+			VolumeId: req.GetId(),
+			ReadOnly: req.GetReadonly(),
+			Name:     req.GetLocator().GetName(),
+			Labels:   req.GetLocator().GetVolumeLabels(),
+		}, req.GetNoRetry()).
 		Return(id, nil)
 
 	// create client
 	driverclient := volumeclient.VolumeDriver(client)
-
-	res, err := driverclient.Snapshot(req.GetId(), req.GetReadonly(), req.GetLocator(), req.GetNoRetry())
+	spec := &api.SnapshotSpec{
+		Name:     req.GetLocator().GetName(),
+		VolumeId: req.GetId(),
+		Labels:   req.GetLocator().GetVolumeLabels(),
+		ReadOnly: req.GetReadonly(),
+	}
+	res, err := driverclient.Snapshot(spec, req.GetNoRetry())
 
 	assert.Nil(t, err)
 	assert.EqualValues(t, id, res)
@@ -258,13 +268,23 @@ func TestVolumeSnapshotCreateFailed(t *testing.T) {
 	//mock Snapshot call
 	testVolDriver.MockDriver().
 		EXPECT().
-		Snapshot(req.GetId(), req.GetReadonly(), req.GetLocator(), req.GetNoRetry()).
+		Snapshot(&api.SnapshotSpec{
+			VolumeId: req.GetId(),
+			ReadOnly: req.GetReadonly(),
+			Name:     req.GetLocator().GetName(),
+			Labels:   req.GetLocator().GetVolumeLabels(),
+		}, req.GetNoRetry()).
 		Return("", fmt.Errorf("error in snapshot create"))
 
 	// create client
 	driverclient := volumeclient.VolumeDriver(client)
-
-	res, err := driverclient.Snapshot(req.GetId(), req.GetReadonly(), req.GetLocator(), req.GetNoRetry())
+	spec := &api.SnapshotSpec{
+		Name:     req.GetLocator().GetName(),
+		VolumeId: req.GetId(),
+		Labels:   req.GetLocator().GetVolumeLabels(),
+		ReadOnly: req.GetReadonly(),
+	}
+	res, err := driverclient.Snapshot(spec, req.GetNoRetry())
 
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "error in snapshot create")

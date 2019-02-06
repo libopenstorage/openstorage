@@ -232,20 +232,23 @@ func (d *driver) Unmount(volumeID string, mountpath string, options map[string]s
 	return d.UpdateVol(v)
 }
 
-func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
+func (d *driver) Snapshot(spec *api.SnapshotSpec, noRetry bool) (string, error) {
 
-	if len(locator.GetName()) == 0 {
+	if len(spec.GetName()) == 0 {
 		return "", fmt.Errorf("Name for snapshot must be provided")
 	}
 
-	volIDs := []string{volumeID}
+	volIDs := []string{spec.VolumeId}
 	vols, err := d.Inspect(volIDs)
 	if err != nil {
 		return "", nil
 	}
-	source := &api.Source{Parent: volumeID}
-	logrus.Infof("Creating snap %s for vol %s", locator.Name, volumeID)
-	newVolumeID, err := d.Create(locator, source, vols[0].Spec)
+	source := &api.Source{Parent: spec.VolumeId}
+	logrus.Infof("Creating snap %s for vol %s", spec.Name, spec.VolumeId)
+	newVolumeID, err := d.Create(&api.VolumeLocator{
+		Name:         spec.Name,
+		VolumeLabels: spec.Labels,
+	}, source, vols[0].Spec)
 	if err != nil {
 		return "", nil
 	}

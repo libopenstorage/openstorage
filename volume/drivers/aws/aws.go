@@ -338,19 +338,17 @@ func (d *Driver) Delete(volumeID string) error {
 }
 
 func (d *Driver) Snapshot(
-	volumeID string,
-	readonly bool,
-	locator *api.VolumeLocator,
+	spec *api.SnapshotSpec,
 	noRetry bool,
 ) (string, error) {
-	vols, err := d.StoreEnumerator.Inspect([]string{volumeID})
+	vols, err := d.StoreEnumerator.Inspect([]string{spec.VolumeId})
 	if err != nil {
 		return "", err
 	}
 	if len(vols) != 1 {
-		return "", fmt.Errorf("Failed to inspect %v len %v", volumeID, len(vols))
+		return "", fmt.Errorf("Failed to inspect %v len %v", spec.VolumeId, len(vols))
 	}
-	resp, err := d.ops.Snapshot(volumeID, readonly)
+	resp, err := d.ops.Snapshot(spec.VolumeId, spec.ReadOnly)
 	if err != nil {
 		return "", err
 	}
@@ -358,8 +356,11 @@ func (d *Driver) Snapshot(
 	snap := resp.(*ec2.Snapshot)
 	chaos.Now(koStrayCreate)
 	vols[0].Id = *snap.SnapshotId
-	vols[0].Source = &api.Source{Parent: volumeID}
-	vols[0].Locator = locator
+	vols[0].Source = &api.Source{Parent: spec.VolumeId}
+	vols[0].Locator = &api.VolumeLocator{
+		Name:         spec.Name,
+		VolumeLabels: spec.Labels,
+	}
 	vols[0].Ctime = prototime.Now()
 
 	chaos.Now(koStrayCreate)

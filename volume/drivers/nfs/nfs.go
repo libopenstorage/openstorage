@@ -401,14 +401,16 @@ func (d *driver) Unmount(volumeID string, mountpath string, options map[string]s
 	return d.UpdateVol(v)
 }
 
-func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
-	volIDs := []string{volumeID}
+func (d *driver) Snapshot(spec *api.SnapshotSpec, noRetry bool) (string, error) {
+	volIDs := []string{spec.VolumeId}
 	vols, err := d.Inspect(volIDs)
 	if err != nil {
 		return "", nil
 	}
-	source := &api.Source{Parent: volumeID}
-	locator.Name = d.getNewSnapVolName(source.Parent)
+	source := &api.Source{Parent: spec.VolumeId}
+	locator := &api.VolumeLocator{
+		Name: d.getNewSnapVolName(source.Parent),
+	}
 
 	logrus.Infof("Creating snap vol name: %s", locator.Name)
 	newVolumeID, err := d.Create(locator, source, vols[0].Spec)
@@ -416,7 +418,7 @@ func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 		return "", nil
 	}
 
-	nfsVolPath, err := d.getNFSVolumePathById(volumeID)
+	nfsVolPath, err := d.getNFSVolumePathById(spec.VolumeId)
 	if err != nil {
 		return "", err
 	}

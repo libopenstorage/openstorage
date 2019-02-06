@@ -65,8 +65,10 @@ func TestSdkVolumeSnapshotCreate(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
-		Snapshot(req.GetVolumeId(), true, &api.VolumeLocator{
-			Name: snapName,
+		Snapshot(&api.SnapshotSpec{
+			VolumeId: req.GetVolumeId(),
+			ReadOnly: true,
+			Name:     snapName,
 		}, false).
 		Return(snapid, nil).
 		Times(1)

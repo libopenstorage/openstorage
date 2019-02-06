@@ -177,17 +177,19 @@ func (v *volumeClient) Delete(volumeID string) error {
 // Snap specified volume. IO to the underlying volume should be quiesced before
 // calling this function.
 // Errors ErrEnoEnt may be returned
-func (v *volumeClient) Snapshot(volumeID string,
-	readonly bool,
-	locator *api.VolumeLocator,
+func (v *volumeClient) Snapshot(
+	spec *api.SnapshotSpec,
 	noRetry bool,
 ) (string, error) {
 	response := &api.SnapCreateResponse{}
 	request := &api.SnapCreateRequest{
-		Id:       volumeID,
-		Readonly: readonly,
-		Locator:  locator,
-		NoRetry:  noRetry,
+		Id:       spec.VolumeId,
+		Readonly: spec.ReadOnly,
+		Locator: &api.VolumeLocator{
+			Name:         spec.Name,
+			VolumeLabels: spec.Labels,
+		},
+		NoRetry: noRetry,
 	}
 	if err := v.c.Post().Resource(snapPath).Body(request).Do().Unmarshal(response); err != nil {
 		return "", err

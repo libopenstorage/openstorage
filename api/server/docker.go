@@ -202,11 +202,14 @@ func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 				d.errorResponse(method, w, err)
 				return
 			}
-			if _, err = v.Snapshot(vol.Id,
-				false,
-				&api.VolumeLocator{Name: name},
-				false,
-			); err != nil {
+
+			spec := &api.SnapshotSpec{
+				Name:     name,
+				VolumeId: vol.Id,
+				ReadOnly: false,
+			}
+
+			if _, err = v.Snapshot(spec, false); err != nil {
 				d.errorResponse(method, w, err)
 				return
 			}

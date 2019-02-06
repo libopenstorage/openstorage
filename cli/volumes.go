@@ -296,13 +296,15 @@ func (v *volDriver) snapCreate(context *cli.Context) {
 			return
 		}
 	}
-	locator := &api.VolumeLocator{
-		Name:         context.String("name"),
-		VolumeLabels: labels,
-	}
 	readonly := context.Bool("readonly")
 	noRetry := context.Bool("noretry")
-	id, err := v.volDriver.Snapshot(volumeID, readonly, locator, noRetry)
+	spec := &api.SnapshotSpec{
+		Name:     context.String("name"),
+		VolumeId: volumeID,
+		Labels:   labels,
+		ReadOnly: readonly,
+	}
+	id, err := v.volDriver.Snapshot(spec, noRetry)
 	if err != nil {
 		cmdError(context, fn, err)
 		return

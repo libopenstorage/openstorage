@@ -549,7 +549,19 @@ func (vd *volAPI) snap(w http.ResponseWriter, r *http.Request) {
 
 	vd.logRequest(method, string(snapReq.Id)).Infoln("")
 
-	id, err := d.Snapshot(snapReq.Id, snapReq.Readonly, snapReq.Locator, snapReq.NoRetry)
+	if snapReq.Locator == nil {
+		vd.sendError(vd.name, method, w, "got empty volume locator in snapshot request", http.StatusBadRequest)
+		return
+	}
+
+	spec := &api.SnapshotSpec{
+		Name:     snapReq.Locator.Name,
+		VolumeId: snapReq.Id,
+		ReadOnly: snapReq.Readonly,
+		Labels:   snapReq.Locator.VolumeLabels,
+	}
+
+	id, err := d.Snapshot(spec, snapReq.NoRetry)
 	snapRes.VolumeCreateResponse = &api.VolumeCreateResponse{
 		Id: id,
 		VolumeResponse: &api.VolumeResponse{

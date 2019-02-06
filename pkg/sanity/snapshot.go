@@ -109,17 +109,20 @@ var _ = Describe("Volume [Snapshot Tests]", func() {
 
 			By("Creating a snapshot based on the created volume")
 
-			loc := &api.VolumeLocator{
-				Name: "snapshot-of-" + volumeID,
+			snapName := "snapshot-of-" + volumeID
+			spec := &api.SnapshotSpec{
+				Name:     snapName,
+				VolumeID: volumeID,
+				Readonly: true,
 			}
 
-			snapID, err = volumedriver.Snapshot(volumeID, true, loc, false)
+			snapID, err = volumedriver.Snapshot(spec, false)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(snapID).To(Not(BeNil()))
 
 			By("Checking the Parent field of the created snapshot")
 
-			volumes, err := volumedriver.Inspect([]string{loc.GetName()})
+			volumes, err := volumedriver.Inspect([]string{snapName})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(volumes).NotTo(BeEmpty())
 
@@ -196,12 +199,13 @@ var _ = Describe("Volume [Snapshot Tests]", func() {
 			numOfSnaps := 3
 
 			for i := 0; i < numOfSnaps; i++ {
-
-				loc := &api.VolumeLocator{
-					Name: "snapshot-" + strconv.Itoa(i) + "-of-" + volumeID,
+				snapName := "snapshot-" + strconv.Itoa(i) + "-of-" + volumeID
+				spec := &api.SnapshotSpec{
+					Name:     snapName,
+					VolumeID: volumeID,
+					Readonly: true,
 				}
-
-				snapID, err = volumedriver.Snapshot(volumeID, true, loc, false)
+				snapID, err = volumedriver.Snapshot(spec, false)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(snapID).To(Not(BeNil()))
 
@@ -290,17 +294,20 @@ var _ = Describe("Volume [Snapshot Tests]", func() {
 
 			By("Creating a snapshot based on the created volume")
 
-			loc := &api.VolumeLocator{
-				Name: "snapshot-of-" + volumeID,
+			snapName := "snapshot-of-" + volumeID
+			spec := &api.SnapshotSpec{
+				Name:     snapName,
+				VolumeID: volumeID,
+				Readonly: true,
 			}
 
-			snapID, err = volumedriver.Snapshot(volumeID, true, loc, false)
+			snapID, err = volumedriver.Snapshot(spec, false)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(snapID).To(Not(BeNil()))
 
 			By("Checking the Parent field of the created snapshot")
 
-			volumes, err := volumedriver.Inspect([]string{loc.GetName()})
+			volumes, err := volumedriver.Inspect([]string{snapName})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(volumes).NotTo(BeEmpty())
 
