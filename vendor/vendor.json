@@ -1419,46 +1419,46 @@
 			"revisionTime": "2016-01-10T10:55:54Z"
 		},
 		{
-			"checksumSHA1": "eN+Dl1dc3Mhwq6LlF/paO3ySxJg=",
+			"checksumSHA1": "oBGNzW6ZhxLatxckBRRQz4u1C/k=",
 			"path": "github.com/portworx/kvdb",
-			"revision": "d99424cef6887925a5b495bc1b7287cf9a8fc73b",
-			"revisionTime": "2019-01-07T21:24:21Z"
+			"revision": "2083b561383ee1a84e5b5db7ae3c703f0f57197c",
+			"revisionTime": "2019-02-06T21:41:16Z"
 		},
 		{
-			"checksumSHA1": "4fMXDpGr2tnes4EmOcFzL0rFQnE=",
+			"checksumSHA1": "rN1JFwq374WRZj615tVh6SlS/Ys=",
 			"path": "github.com/portworx/kvdb/common",
-			"revision": "d99424cef6887925a5b495bc1b7287cf9a8fc73b",
-			"revisionTime": "2019-01-07T21:24:21Z"
+			"revision": "2083b561383ee1a84e5b5db7ae3c703f0f57197c",
+			"revisionTime": "2019-02-06T21:41:16Z"
 		},
 		{
-			"checksumSHA1": "CdwykqJSdTeuWhmbDROG3ef+ts8=",
+			"checksumSHA1": "EosuVTtgW3M/OX7pgUemrURMYgs=",
 			"path": "github.com/portworx/kvdb/consul",
-			"revision": "d99424cef6887925a5b495bc1b7287cf9a8fc73b",
-			"revisionTime": "2019-01-07T21:24:21Z"
+			"revision": "2083b561383ee1a84e5b5db7ae3c703f0f57197c",
+			"revisionTime": "2019-02-06T21:41:16Z"
 		},
 		{
 			"checksumSHA1": "ryXZRVSvinmVHB+Gkxi1tQmBW+s=",
 			"path": "github.com/portworx/kvdb/etcd/common",
-			"revision": "d99424cef6887925a5b495bc1b7287cf9a8fc73b",
-			"revisionTime": "2019-01-07T21:24:21Z"
+			"revision": "2083b561383ee1a84e5b5db7ae3c703f0f57197c",
+			"revisionTime": "2019-02-06T21:41:16Z"
 		},
 		{
-			"checksumSHA1": "NidrHH+/j0Rjn4KdXBFWup0ZpPs=",
+			"checksumSHA1": "fO8U1sXlukEF3V6Nv1WaH62CeKc=",
 			"path": "github.com/portworx/kvdb/etcd/v2",
-			"revision": "d99424cef6887925a5b495bc1b7287cf9a8fc73b",
-			"revisionTime": "2019-01-07T21:24:21Z"
+			"revision": "2083b561383ee1a84e5b5db7ae3c703f0f57197c",
+			"revisionTime": "2019-02-06T21:41:16Z"
 		},
 		{
-			"checksumSHA1": "IAs5PsgaH0/ozf9/FTCrYzoEK/Y=",
+			"checksumSHA1": "56JvP2Cpc/bg9/8DgDALy/vk/90=",
 			"path": "github.com/portworx/kvdb/etcd/v3",
-			"revision": "d99424cef6887925a5b495bc1b7287cf9a8fc73b",
-			"revisionTime": "2019-01-07T21:24:21Z"
+			"revision": "2083b561383ee1a84e5b5db7ae3c703f0f57197c",
+			"revisionTime": "2019-02-06T21:41:16Z"
 		},
 		{
-			"checksumSHA1": "UZauCpJyK0TTb9+od7NKwRJG6gE=",
+			"checksumSHA1": "0b6/oCPIwILHdZgdwNp5Y4SVT7g=",
 			"path": "github.com/portworx/kvdb/mem",
-			"revision": "d99424cef6887925a5b495bc1b7287cf9a8fc73b",
-			"revisionTime": "2019-01-07T21:24:21Z"
+			"revision": "2083b561383ee1a84e5b5db7ae3c703f0f57197c",
+			"revisionTime": "2019-02-06T21:41:16Z"
 		},
 		{
 			"checksumSHA1": "XDeteytxpf2kmvacQSYeE3DP40M=",
