@@ -42,28 +42,36 @@ type Claims struct {
 	Groups []string `json:"groups,omitempty" yaml:"groups,omitempty"`
 }
 
-// TokenIssuer returns the type of token. Values are: os, oidc
-func TokenIssuer(rawtoken string) (string, error) {
+// TokenClaims returns the claims for the raw JWT token.
+func TokenClaims(rawtoken string) (*Claims, error) {
 	parts := strings.Split(rawtoken, ".")
 
 	// There are supposed to be three parts for the token
 	if len(parts) < 3 {
-		return "", fmt.Errorf("Token is invalid: %v", rawtoken)
+		return nil, fmt.Errorf("Token is invalid: %v", rawtoken)
 	}
 
 	// Access claims in the token
 	claimBytes, err := jwt.DecodeSegment(parts[1])
 	if err != nil {
-		return "", fmt.Errorf("Failed to decode claims: %v", err)
+		return nil, fmt.Errorf("Failed to decode claims: %v", err)
 	}
-	var claims struct {
-		Issuer string `json:"iss"`
-	}
+	var claims *Claims
 
 	// Unmarshal claims
 	err = json.Unmarshal(claimBytes, &claims)
 	if err != nil {
-		return "", fmt.Errorf("Unable to get information from the claims in the token: %v", err)
+		return nil, fmt.Errorf("Unable to get information from the claims in the token: %v", err)
+	}
+
+	return claims, nil
+}
+
+// TokenIssuer returns the issuer for the raw JWT token.
+func TokenIssuer(rawtoken string) (string, error) {
+	claims, err := TokenClaims(rawtoken)
+	if err != nil {
+		return "", err
 	}
 
 	// Return issuer
