@@ -110,6 +110,10 @@ func (n *NullClusterManager) Uuid() string {
 	return ""
 }
 
+func (n *NullClusterManager) MarkActiveFailureDomain(ActiveFailureDomain string) error {
+	return ErrNotImplemented
+}
+
 // NullClusterData implementations
 
 // UpdateData
@@ -124,6 +128,11 @@ func (m *NullClusterData) UpdateLabels(arg0 map[string]string) error {
 
 // UpdateSchedulerNodeName
 func (m *NullClusterData) UpdateSchedulerNodeName(arg0 string) error {
+	return ErrNotImplemented
+}
+
+// UpdateFailureDomain
+func (m *NullClusterData) UpdateFailureDomain(arg0 string) error {
 	return ErrNotImplemented
 }
 

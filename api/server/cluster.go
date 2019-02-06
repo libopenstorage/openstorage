@@ -135,6 +135,31 @@ func (c *clusterApi) inspect(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (c *clusterApi) markActiveFailureDomain(w http.ResponseWriter, r *http.Request) {
+	method := "markactivefailuredomain"
+	inst, err := clustermanager.Inst()
+
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	params := r.URL.Query()
+
+	failureDomain := params["failuredomain"]
+	if failureDomain == nil {
+		c.sendError(c.name, method, w, "Missing failuredomain param", http.StatusBadRequest)
+		return
+	}
+
+	err = inst.MarkActiveFailureDomain(failureDomain[0])
+	clusterResponse := &api.ClusterResponse{}
+	if err != nil {
+		clusterResponse.Error = err.Error()
+	}
+	json.NewEncoder(w).Encode(clusterResponse)
+}
+
 func (c *clusterApi) enableGossip(w http.ResponseWriter, r *http.Request) {
 	method := "enablegossip"
 

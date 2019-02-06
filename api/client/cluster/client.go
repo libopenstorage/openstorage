@@ -13,16 +13,17 @@ import (
 )
 
 const (
-	clusterPath      = "/cluster"
-	secretPath       = "/secrets"
-	SchedPath        = "/schedpolicy"
-	loggingurl       = "/loggingurl"
-	managementurl    = "/managementurl"
-	fluentdhost      = "/fluentdconfig"
-	tunnelconfigurl  = "/tunnelconfig"
-	PairPath         = "/pair"
-	PairValidatePath = "/validate"
-	PairTokenPath    = "/pairtoken"
+	clusterPath       = "/cluster"
+	secretPath        = "/secrets"
+	SchedPath         = "/schedpolicy"
+	loggingurl        = "/loggingurl"
+	managementurl     = "/managementurl"
+	fluentdhost       = "/fluentdconfig"
+	tunnelconfigurl   = "/tunnelconfig"
+	PairPath          = "/pair"
+	PairValidatePath  = "/validate"
+	PairTokenPath     = "/pairtoken"
+	FailureDomainPath = "/failuredomain"
 )
 
 type clusterClient struct {
@@ -206,6 +207,24 @@ func (c *clusterClient) UpdateLabels(nodeLabels map[string]string) error {
 }
 
 func (c *clusterClient) UpdateSchedulerNodeName(name string) error {
+	return nil
+}
+
+func (c *clusterClient) UpdateFailureDomain(activeFailureDomain string) error {
+	return nil
+}
+
+func (c *clusterClient) MarkActiveFailureDomain(activeFailureDomain string) error {
+	resp := api.ClusterResponse{}
+	request := c.c.Put().Resource(clusterPath + FailureDomainPath)
+	request.QueryOption("failuredomain", activeFailureDomain)
+	if err := request.Do().Unmarshal(&resp); err != nil {
+		return err
+	}
+	if resp.Error != "" {
+		return errors.New(resp.Error)
+	}
+
 	return nil
 }
 

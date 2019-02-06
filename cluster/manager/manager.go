@@ -52,26 +52,28 @@ var (
 
 // ClusterManager implements the cluster interface
 type ClusterManager struct {
-	size             int
-	listeners        *list.List
-	config           config.ClusterConfig
-	kv               kvdb.Kvdb
-	status           api.Status
-	nodeCache        map[string]api.Node // Cached info on the nodes in the cluster.
-	nodeCacheLock    sync.Mutex
-	nodeStatuses     map[string]api.Status // Set of nodes currently marked down.
-	gossip           gossip.Gossiper
-	gossipVersion    string
-	gossipPort       string
-	gEnabled         bool
-	selfNode         api.Node
-	selfNodeLock     sync.Mutex // Lock that guards data and label of selfNode
-	system           systemutils.System
-	configManager    osdconfig.ConfigCaller
-	schedManager     sched.SchedulePolicyProvider
-	objstoreManager  objectstore.ObjectStore
-	secretsManager   secrets.Secrets
-	snapshotPrefixes []string
+	size                int
+	listeners           *list.List
+	config              config.ClusterConfig
+	kv                  kvdb.Kvdb
+	status              api.Status
+	nodeCache           map[string]api.Node // Cached info on the nodes in the cluster.
+	nodeCacheLock       sync.Mutex
+	nodeStatuses        map[string]api.Status // Set of nodes currently marked down.
+	gossip              gossip.Gossiper
+	gossipVersion       string
+	gossipPort          string
+	gEnabled            bool
+	selfNode            api.Node
+	selfNodeLock        sync.Mutex // Lock that guards data and label of selfNode
+	system              systemutils.System
+	configManager       osdconfig.ConfigCaller
+	schedManager        sched.SchedulePolicyProvider
+	objstoreManager     objectstore.ObjectStore
+	secretsManager      secrets.Secrets
+	snapshotPrefixes    []string
+	activeFailureDomain string
+	selfFailureDomain   string
 }
 
 // Init instantiates a new cluster manager.
@@ -302,28 +304,55 @@ func (c *ClusterManager) UpdateSchedulerNodeName(schedulerNodeName string) error
 	defer c.selfNodeLock.Unlock()
 	c.selfNode.SchedulerNodeName = schedulerNodeName
 
-	kvdb := kvdb.Instance()
-	kvlock, err := kvdb.LockWithID(clusterLockKey, c.selfNode.Id)
-	if err != nil {
-		logrus.Warnln("Unable to obtain cluster lock for updating config", err)
-		return err
-	}
-	defer kvdb.Unlock(kvlock)
-
-	db, _, err := readClusterInfo()
-	if err != nil {
-		return err
+	updateCallbackFn := func(db *cluster.ClusterInfo) error {
+		nodeEntry, ok := db.NodeEntries[c.selfNode.Id]
+		if !ok {
+			return fmt.Errorf("Node not found in cluster database")
+		}
+		nodeEntry.SchedulerNodeName = schedulerNodeName
+		db.NodeEntries[c.selfNode.Id] = nodeEntry
+		return nil
 	}
 
-	nodeEntry, ok := db.NodeEntries[c.selfNode.Id]
-	if !ok {
-		return fmt.Errorf("Node not found in cluster database")
-	}
-	nodeEntry.SchedulerNodeName = schedulerNodeName
-	db.NodeEntries[c.selfNode.Id] = nodeEntry
+	return updateLockedDB("update-scheduler-name", c.selfNode.Id, updateCallbackFn)
+}
 
-	_, err = writeClusterInfo(&db)
-	return err
+func (c *ClusterManager) MarkActiveFailureDomain(activeFailureDomain string) error {
+	c.selfNodeLock.Lock()
+	defer c.selfNodeLock.Unlock()
+
+	updateCallbackFn := func(db *cluster.ClusterInfo) error {
+		db.ActiveFailureDomain = activeFailureDomain
+		return nil
+	}
+	return updateLockedDB("mark-active-failure-domain", c.selfNode.Id, updateCallbackFn)
+}
+
+func (c *ClusterManager) UpdateFailureDomain(selfFailureDomain string) error {
+	if c.gossip != nil {
+		c.gossip.UpdateSelfFailureDomain(selfFailureDomain)
+	}
+
+	c.selfNodeLock.Lock()
+	defer c.selfNodeLock.Unlock()
+
+	if c.selfFailureDomain == selfFailureDomain {
+		// No need to update cluster database
+		return nil
+	}
+	c.selfFailureDomain = selfFailureDomain
+
+	updateCallbackFn := func(db *cluster.ClusterInfo) error {
+		nodeEntry, ok := db.NodeEntries[c.selfNode.Id]
+		if !ok {
+			return fmt.Errorf("Node not found in cluster database")
+		}
+		nodeEntry.FailureDomain = selfFailureDomain
+		db.NodeEntries[c.selfNode.Id] = nodeEntry
+		return nil
+	}
+
+	return updateLockedDB("update-failure-domain", c.selfNode.Id, updateCallbackFn)
 }
 
 // GetData returns self node's data
@@ -397,8 +426,9 @@ func (c *ClusterManager) getNonDecommisionedPeers(
 			continue
 		}
 		peers[types.NodeId(nodeEntry.Id)] = types.NodeUpdate{
-			Addr:         nodeEntry.DataIp + ":" + c.gossipPort,
-			QuorumMember: !nodeEntry.NonQuorumMember,
+			Addr:          nodeEntry.DataIp + ":" + c.gossipPort,
+			QuorumMember:  !nodeEntry.NonQuorumMember,
+			FailureDomain: nodeEntry.FailureDomain,
 		}
 	}
 	return peers
@@ -467,6 +497,12 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 
 	c.gossip.UpdateCluster(c.getNonDecommisionedPeers(db))
 
+	if c.activeFailureDomain != db.ActiveFailureDomain {
+		// active failure domain has changed
+		// inform gossip
+		c.gossip.MarkActiveFailureDomain(db.ActiveFailureDomain)
+		c.activeFailureDomain = db.ActiveFailureDomain
+	}
 	// update the nodeCache and remove any nodes not present in cluster database
 	c.nodeCacheLock.Lock()
 	defer c.nodeCacheLock.Unlock()
@@ -684,8 +720,13 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *cluster.ClusterInfo) {
 	c.putNodeCacheEntry(c.selfNode.Id, *node)
 	c.gossip.UpdateSelf(gossipStoreKey, *node)
 	var nodeIps []string
+	selfDomain := ""
 	for nodeId, nodeEntry := range clusterInfo.NodeEntries {
 		if nodeId == node.Id {
+			// When the node is starting heartbeat, it does not
+			// know its failure domain. Use the information that
+			// is already set in the cluster database
+			selfDomain = nodeEntry.FailureDomain
 			continue
 		}
 		labels := nodeEntry.NodeLabels
@@ -702,8 +743,9 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *cluster.ClusterInfo) {
 	} else {
 		logrus.Infof("Starting Gossip...")
 	}
-	c.gossip.Start(nodeIps)
+	c.gossip.Start(nodeIps, clusterInfo.ActiveFailureDomain)
 	c.gossip.UpdateCluster(c.getNonDecommisionedPeers(*clusterInfo))
+	c.gossip.UpdateSelfFailureDomain(selfDomain)
 
 	lastUpdateTs := time.Now()
 	for {
@@ -784,6 +826,7 @@ func (c *ClusterManager) updateClusterStatus() {
 					// Cluster Manager : UP
 					c.selfNode.Status = api.Status_STATUS_OK
 					c.status = api.Status_STATUS_OK
+					logrus.Infof("Node back in quorum")
 				} else {
 					// Ignore the update
 				}
@@ -982,6 +1025,9 @@ func (c *ClusterManager) initializeCluster(db kvdb.Kvdb) (
 	if err != nil {
 		logrus.Panicln(err)
 	}
+
+	// Make a note of the active failure domain
+	c.activeFailureDomain = clusterInfo.ActiveFailureDomain
 
 	selfNodeEntry, ok := clusterInfo.NodeEntries[c.config.NodeId]
 	if ok && selfNodeEntry.Status == api.Status_STATUS_DECOMMISSION {
@@ -1389,9 +1435,10 @@ func (c *ClusterManager) enumerateNodesFromCache() []api.Node {
 // Enumerate lists all the nodes in the cluster.
 func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 	clusterState := api.Cluster{
-		Id:     c.config.ClusterId,
-		Status: c.status,
-		NodeId: c.selfNode.Id,
+		Id:                  c.config.ClusterId,
+		Status:              c.status,
+		NodeId:              c.selfNode.Id,
+		ActiveFailureDomain: c.activeFailureDomain,
 	}
 
 	if c.selfNode.Status == api.Status_STATUS_NOT_IN_QUORUM ||

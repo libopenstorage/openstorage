@@ -123,3 +123,24 @@ func writeClusterInfo(db *cluster.ClusterInfo) (*kvdb.KVPair, error) {
 	}
 	return kvp, nil
 }
+
+func updateLockedDB(fn, lockID string, updateCallbackFn func(db *cluster.ClusterInfo) error) error {
+	kvdb := kvdb.Instance()
+	kvlock, err := kvdb.LockWithID(clusterLockKey, lockID)
+	if err != nil {
+		logrus.Warnf("Unable to obtain cluster lock for %v op: %v", fn, err)
+		return err
+	}
+	defer kvdb.Unlock(kvlock)
+
+	db, _, err := readClusterInfo()
+	if err != nil {
+		return err
+	}
+
+	if err := updateCallbackFn(&db); err != nil {
+		return err
+	}
+	_, err = writeClusterInfo(&db)
+	return err
+}

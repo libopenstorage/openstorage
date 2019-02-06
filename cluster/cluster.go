@@ -57,15 +57,18 @@ type NodeEntry struct {
 	Status            api.Status
 	NodeLabels        map[string]string
 	NonQuorumMember   bool
+	GossipPort        string
+	FailureDomain     string
 }
 
 // ClusterInfo is the basic info about the cluster and its nodes
 type ClusterInfo struct {
-	Size        int
-	Status      api.Status
-	Id          string
-	NodeEntries map[string]NodeEntry
-	PairToken   string
+	Size                int
+	Status              api.Status
+	Id                  string
+	NodeEntries         map[string]NodeEntry
+	PairToken           string
+	ActiveFailureDomain string
 }
 
 // ClusterInitState is the snapshot state which should be used to initialize
@@ -208,6 +211,10 @@ type ClusterData interface {
 	// associated with this node
 	UpdateSchedulerNodeName(name string) error
 
+	// UpdateFailureDomain updates the failure domain associated
+	// with this node
+	UpdateFailureDomain(failureDomain string) error
+
 	// GetData get sdata associated with all nodes.
 	// Key is the node id
 	GetData() (map[string]*api.Node, error)
@@ -314,6 +321,11 @@ type Cluster interface {
 	// be different than the _id_ from ClusterInfo. This id _must_ be unique across
 	// any cluster.
 	Uuid() string
+
+	// MarkActiveFailureDomain sets an active failure domain to indicate gossip
+	// which node should stay alive and which nodes to shut down in an event of a network
+	// split
+	MarkActiveFailureDomain(activeFailureDomain string) error
 
 	ClusterData
 	ClusterRemove

@@ -17,6 +17,7 @@ func (c *clusterApi) Routes() []*Route {
 		{verb: "GET", path: clusterPath("/inspect/{id}", cluster.APIVersion), fn: c.inspect},
 		{verb: "DELETE", path: clusterPath("", cluster.APIVersion), fn: c.delete},
 		{verb: "DELETE", path: clusterPath("/{id}", cluster.APIVersion), fn: c.delete},
+		{verb: "PUT", path: clusterPath(client.FailureDomainPath, cluster.APIVersion), fn: c.markActiveFailureDomain},
 		{verb: "PUT", path: clusterPath("/enablegossip", cluster.APIVersion), fn: c.enableGossip},
 		{verb: "PUT", path: clusterPath("/disablegossip", cluster.APIVersion), fn: c.disableGossip},
 		{verb: "PUT", path: clusterPath("/shutdown", cluster.APIVersion), fn: c.shutdown},

@@ -231,6 +231,11 @@ type Cluster struct {
 
 	// TunnelConfig for the cluster [key, cert, endpoint]
 	TunnelConfig TunnelConfig
+
+	// ActiveFailureDomain is set when the cluster has a network split
+	// between its failure domain and only one of them needs to form
+	// a cluster
+	ActiveFailureDomain string
 }
 
 // CredCreateRequest is the input for CredCreate command
