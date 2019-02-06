@@ -39,7 +39,7 @@ func snapAndReadClusterInfo(snapshotPrefixes []string) (*cluster.ClusterInitStat
 			continue
 		}
 		// Create the snapshot
-		snap, version, err = kv.Snapshot(snapshotPrefixes)
+		snap, version, err = kv.Snapshot(snapshotPrefixes, true)
 		if err != nil {
 			logrus.Errorf("Snapshot failed for cluster db: %v", err)
 			collector.Stop()
