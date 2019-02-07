@@ -379,5 +379,5 @@ push-docker-images: docker-images
 # For master (until released), major should be 0 and patch should be 0.
 # For release branches, major and minor should be frozen.
 sdk-check-version:
-	go run tools/sdkver/sdkver.go --check-major=0 --check-minor=34
+	go run tools/sdkver/sdkver.go --check-major=0 --check-minor=33
 
