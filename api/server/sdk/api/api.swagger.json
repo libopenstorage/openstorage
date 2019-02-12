@@ -97,6 +97,17 @@
       "title": "Defines the types of enforcement on the given rules",
       "type": "string"
     },
+    "VolumeSpecPolicyPolicyOp": {
+      "default": "Equal",
+      "description": "- Equal: Policy will make sure the value must be equal\n - Minimum: Policy will make sure the requested value must be greater than or equal\n - Maximum: Policy will make sure the requested value must be less than or equal",
+      "enum": [
+        "Equal",
+        "Minimum",
+        "Maximum"
+      ],
+      "title": "This defines an operator for the policy comparisons",
+      "type": "string"
+    },
     "apiAlert": {
       "properties": {
         "alert_type": {
@@ -3071,6 +3082,10 @@
           "format": "int64",
           "type": "string"
         },
+        "ha_level_operator": {
+          "$ref": "#/definitions/VolumeSpecPolicyPolicyOp",
+          "title": "Operator to check ha_level"
+        },
         "io_profile": {
           "$ref": "#/definitions/apiIoProfile"
         },
@@ -3093,6 +3108,10 @@
           "format": "int64",
           "type": "integer"
         },
+        "scale_operator": {
+          "$ref": "#/definitions/VolumeSpecPolicyPolicyOp",
+          "title": "Operator to check scale"
+        },
         "shared": {
           "format": "boolean",
           "type": "boolean"
@@ -3105,9 +3124,17 @@
           "format": "uint64",
           "type": "string"
         },
+        "size_operator": {
+          "$ref": "#/definitions/VolumeSpecPolicyPolicyOp",
+          "title": "Operator to check size"
+        },
         "snapshot_interval": {
           "format": "int64",
           "type": "integer"
+        },
+        "snapshot_interval_operator": {
+          "$ref": "#/definitions/VolumeSpecPolicyPolicyOp",
+          "title": "Operator to check snapshot_interval"
         },
         "snapshot_schedule": {
           "type": "string"

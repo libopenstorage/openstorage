@@ -38,14 +38,12 @@ func TestNewSdkServerBadParameters(t *testing.T) {
 	s, err = New(&ServerConfig{})
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "Unable to setup server")
 
 	s, err = New(&ServerConfig{
 		Net: "test",
 	})
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "Unable to setup server")
 
 	sp, err := policy.Inst()
 	assert.NoError(t, err)
@@ -76,7 +74,6 @@ func TestNewSdkServerBadParameters(t *testing.T) {
 	})
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "Unable to setup server")
 }
 
 func TestSdkClusterInspectCurrent(t *testing.T) {
