@@ -1088,6 +1088,7 @@ func TestSdkVolumeCreateEnforced(t *testing.T) {
 		SizeOpt: &api.VolumeSpecPolicy_Size{
 			Size: 8123,
 		},
+		SizeOperator: api.VolumeSpecPolicy_Maximum,
 		SharedOpt: &api.VolumeSpecPolicy_Shared{
 			Shared: false,
 		},
@@ -1098,8 +1099,9 @@ func TestSdkVolumeCreateEnforced(t *testing.T) {
 			Journal: true,
 		},
 		HaLevelOpt: &api.VolumeSpecPolicy_HaLevel{
-			HaLevel: 3,
+			HaLevel: 2,
 		},
+		HaLevelOperator: api.VolumeSpecPolicy_Minimum,
 	}
 
 	req := &api.SdkOpenStoragePolicyCreateRequest{
@@ -1133,11 +1135,12 @@ func TestSdkVolumeCreateEnforced(t *testing.T) {
 
 	// create volume with policy enabled
 	name := "myvol"
-	size := uint64(1234)
+	size := uint64(1123234)
 	volReq := &api.SdkVolumeCreateRequest{
 		Name: name,
 		Spec: &api.VolumeSpec{
-			Size: size,
+			Size:    size,
+			HaLevel: 3,
 		},
 	}
 
@@ -1148,7 +1151,7 @@ func TestSdkVolumeCreateEnforced(t *testing.T) {
 		Shared:   volSpec.GetShared(),
 		Sharedv4: volSpec.GetSharedv4(),
 		Journal:  volSpec.GetJournal(),
-		HaLevel:  volSpec.GetHaLevel(),
+		HaLevel:  volReq.GetSpec().GetHaLevel(),
 	}
 
 	// Create response
