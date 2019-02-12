@@ -24,12 +24,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/portworx/kvdb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/pkg/jsonpb"
 )
 
 // SdkPolicyManager is an implementation of the
@@ -95,7 +95,7 @@ func (p *SdkPolicyManager) Create(
 
 	// Since VolumeSpecPolicy has oneof method of proto,
 	// we need to marshal it into string using protobuf jsonpb
-	m := jsonpb.Marshaler{}
+	m := jsonpb.Marshaler{OrigName: true}
 	policyStr, err := m.MarshalToString(req.StoragePolicy.GetPolicy())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Json Marshal failed for policy %s: %v", req.StoragePolicy.GetName(), err)
@@ -122,7 +122,7 @@ func (p *SdkPolicyManager) Update(
 		return nil, status.Error(codes.InvalidArgument, "Must supply Volume Specs")
 	}
 
-	m := jsonpb.Marshaler{}
+	m := jsonpb.Marshaler{OrigName: true}
 	policyStr, err := m.MarshalToString(req.StoragePolicy.GetPolicy())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Json Marshal failed for policy %s: %v", req.StoragePolicy.GetName(), err)
@@ -176,15 +176,15 @@ func (p *SdkPolicyManager) Inspect(
 		return nil, status.Error(codes.InvalidArgument, "Must supply a Storage Policy Name")
 	}
 
-	var volSpecs *api.VolumeSpecPolicy
-	kvp, err := p.kv.GetVal(prefixWithName(req.GetName()), &volSpecs)
+	kvp, err := p.kv.Get(prefixWithName(req.GetName()))
 	if err == kvdb.ErrNotFound {
 		return nil, status.Errorf(codes.NotFound, "Policy %s not found", req.GetName())
 	} else if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to get policy %s information: %v", req.GetName(), err)
 	}
 
-	err = jsonpb.Unmarshal(strings.NewReader(string(kvp.Value)), volSpecs)
+	volSpecs := &api.VolumeSpecPolicy{}
+	err = jsonpb.UnmarshalString(string(kvp.Value), volSpecs)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Json Unmarshal failed for policy %s: %v", req.GetName(), err)
 	}
@@ -211,7 +211,7 @@ func (p *SdkPolicyManager) Enumerate(
 	policies := make([]*api.SdkStoragePolicy, 0)
 	for _, policy := range kvp {
 		volSpecs := &api.VolumeSpecPolicy{}
-		err = jsonpb.Unmarshal(strings.NewReader(string(policy.Value)), volSpecs)
+		err = jsonpb.UnmarshalString(string(policy.Value), volSpecs)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "Json Unmarshal failed for policy %s: %v", policy.Key, err)
 		}

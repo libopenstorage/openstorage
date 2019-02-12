@@ -376,44 +376,64 @@ message VolumeSpecUpdate {
 
 // VolumeSpecPolicy provides a method to set volume storage policy
 message VolumeSpecPolicy {
-  // Size specifies the thin provisioned volume size in bytes
-  oneof size_opt { uint64 size = 2; }
+  // This defines an operator for the policy comparisons
+  enum PolicyOp {
+    // Policy will make sure the value must be equal
+    Equal = 0;
+    // Policy will make sure the requested value must be greater than or equal
+    Minimum = 1;
+    // Policy will make sure the requested value must be less than or equal
+    Maximum = 2;
+  }
+
+  // Size specifies the thin provisioned volume size in bytes.
+  // Use `size_operator` to show if this value is the min, max, or set.
+  oneof size_opt { uint64 size = 1; }
   // HaLevel specifies the number of copies of data.
-  oneof ha_level_opt { int64 ha_level = 5; }
+  // Use `ha_level_operator` to show if this value is the min, max, or set.
+  oneof ha_level_opt { int64 ha_level = 2; }
   // Cos specifies the relative class of service.
-  oneof cos_opt { CosType cos = 6; }
+  oneof cos_opt { CosType cos = 3; }
   // IoProfile provides a hint about application using this volume.
-  oneof io_profile_opt { IoProfile io_profile = 7; }
+  oneof io_profile_opt { IoProfile io_profile = 4; }
   // Dedupe specifies if the volume data is to be de-duplicated.
-  oneof dedupe_opt { bool dedupe = 8; }
+  oneof dedupe_opt { bool dedupe = 5; }
   // SnapshotInterval in minutes, set to 0 to disable snapshots
-  oneof snapshot_interval_opt { uint32 snapshot_interval = 9; }
+  oneof snapshot_interval_opt { uint32 snapshot_interval = 6; }
   // VolumeLabels configuration labels
-  map<string, string> volume_labels = 10;
+  map<string, string> volume_labels = 7;
   // Shared is true if this volume can be remotely accessed.
-  oneof shared_opt { bool shared = 11; }
+  oneof shared_opt { bool shared = 8; }
   // ReplicaSet is the desired set of nodes for the volume data.
-  ReplicaSet replica_set = 12;
+  ReplicaSet replica_set = 9;
   // Passphrase for an encrypted volume
-  oneof passphrase_opt { string passphrase = 15; }
+  oneof passphrase_opt { string passphrase = 10; }
   // SnapshotSchedule a well known string that specifies when snapshots should be taken.
-  oneof snapshot_schedule_opt { string snapshot_schedule = 16; }
+  oneof snapshot_schedule_opt { string snapshot_schedule = 11; }
   // Scale allows autocreation of volumes.
-  oneof scale_opt { uint32 scale = 17; }
+  oneof scale_opt { uint32 scale = 12; }
   // Sticky volumes cannot be deleted until the flag is removed.
-  oneof sticky_opt { bool sticky = 18; }
+  oneof sticky_opt { bool sticky = 13; }
   // Group identifies a consistency group
-  oneof group_opt { Group group = 19; }
+  oneof group_opt { Group group = 14; }
   // Journal is true if data for the volume goes into the journal.
-  oneof journal_opt { bool journal = 23; }
+  oneof journal_opt { bool journal = 15; }
   // Sharedv4 is true if this volume can be accessed via sharedv4.
-  oneof sharedv4_opt { bool sharedv4 = 24; }
+  oneof sharedv4_opt { bool sharedv4 = 16; }
   // QueueDepth defines the desired block device queue depth
-  oneof queue_depth_opt { uint32 queue_depth = 25; }
+  oneof queue_depth_opt { uint32 queue_depth = 17; }
   // Encrypted is true if this volume will be cryptographically secured.
-  oneof encrypted_opt { bool encrypted = 26; }
+  oneof encrypted_opt { bool encrypted = 18; }
   // Aggregation level Specifies the number of parts the volume can be aggregated from.
-  oneof aggregation_level_opt { uint32 aggregation_level = 27; }
+  oneof aggregation_level_opt { uint32 aggregation_level = 19; }
+  // Operator to check size
+  PolicyOp size_operator = 50;
+  // Operator to check ha_level 
+  PolicyOp ha_level_operator = 51;
+  // Operator to check scale
+  PolicyOp scale_operator = 52;
+  // Operator to check snapshot_interval
+  PolicyOp snapshot_interval_operator = 53;
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
