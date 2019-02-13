@@ -64,7 +64,7 @@ func (s *VolumeServer) haveOwnership(ctx context.Context, labels map[string]stri
 	}
 	for _, vol := range vols {
 		// Check ownership
-		if err := checkAccessFromDriverForVolumeId(ctx, s.driver(), vol.Id, api.Ownership_Read); err != nil {
+		if !vol.IsPermitted(ctx, api.Ownership_Read) {
 			return false
 		}
 	}

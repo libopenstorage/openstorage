@@ -94,11 +94,6 @@ func TestVolumeMigrate_StartVolumeGroupSuccess(t *testing.T) {
 		Enumerate(nil, labels).
 		Return([]*api.Volume{resp}, nil)
 
-	// Inspect volumes to get their ownership
-	s.MockDriver().EXPECT().
-		Inspect([]string{"Target"}).
-		Return([]*api.Volume{resp}, nil)
-
 	resp2 := &api.CloudMigrateStartResponse{
 		TaskId: "1",
 	}
@@ -139,11 +134,6 @@ func TestVolumeMigrate_StartAllVolumeFailure(t *testing.T) {
 	// Enumerate all volumes that have desired group
 	s.MockDriver().EXPECT().
 		Enumerate(nil, nil).
-		Return([]*api.Volume{resp}, nil)
-
-	// Inspect volumes to get their ownership
-	s.MockDriver().EXPECT().
-		Inspect([]string{"Target"}).
 		Return([]*api.Volume{resp}, nil)
 
 	s.MockDriver().EXPECT().
@@ -192,11 +182,6 @@ func TestVolumeMigrate_StartVolumeGroupFailure(t *testing.T) {
 	// Enumerate all volumes that have desired group
 	s.MockDriver().EXPECT().
 		Enumerate(nil, labels).
-		Return([]*api.Volume{resp}, nil)
-
-	// Inspect volumes to get their ownership
-	s.MockDriver().EXPECT().
-		Inspect([]string{"Target"}).
 		Return([]*api.Volume{resp}, nil)
 
 	s.MockDriver().EXPECT().
@@ -282,11 +267,6 @@ func TestVolumeMigrate_StartAllVolumeSuccess(t *testing.T) {
 	// Enumerate all volumes that have desired group
 	s.MockDriver().EXPECT().
 		Enumerate(nil, nil).
-		Return([]*api.Volume{resp}, nil)
-
-	// Inspect volumes to get their ownership
-	s.MockDriver().EXPECT().
-		Inspect([]string{"Target"}).
 		Return([]*api.Volume{resp}, nil)
 
 	resp2 := &api.CloudMigrateStartResponse{
