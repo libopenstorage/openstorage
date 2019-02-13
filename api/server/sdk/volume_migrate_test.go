@@ -1,5 +1,4 @@
 /*
-Package sdk is the gRPC implementation of the SDK gRPC server
 Copyright 2018 Portworx
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,7 +39,17 @@ func TestVolumeMigrate_StartVolumeSuccess(t *testing.T) {
 		},
 	}
 
-	resp := &api.CloudMigrateStartResponse{
+	resp := &api.Volume{
+		Locator: &api.VolumeLocator{
+			Name: "Target",
+		},
+	}
+
+	s.MockDriver().EXPECT().
+		Inspect([]string{"Target"}).
+		Return([]*api.Volume{resp}, nil)
+
+	resp2 := &api.CloudMigrateStartResponse{
 		TaskId: "1",
 	}
 
@@ -50,7 +59,7 @@ func TestVolumeMigrate_StartVolumeSuccess(t *testing.T) {
 			ClusterId: "Source",
 			TargetId:  "Target",
 		}).
-		Return(resp, nil)
+		Return(resp2, nil)
 	// Setup client
 	c := api.NewOpenStorageMigrateClient(s.Conn())
 	r, err := c.Start(context.Background(), req)
@@ -69,8 +78,28 @@ func TestVolumeMigrate_StartVolumeGroupSuccess(t *testing.T) {
 			},
 		},
 	}
+	labels := make(map[string]string, 0)
+	labels["group"] = "Target"
 
-	resp := &api.CloudMigrateStartResponse{
+	resp := &api.Volume{
+		Id: "Target",
+		Locator: &api.VolumeLocator{
+			Name:         "Target",
+			VolumeLabels: labels,
+		},
+	}
+
+	// Enumerate all volumes that have desired group
+	s.MockDriver().EXPECT().
+		Enumerate(nil, labels).
+		Return([]*api.Volume{resp}, nil)
+
+	// Inspect volumes to get their ownership
+	s.MockDriver().EXPECT().
+		Inspect([]string{"Target"}).
+		Return([]*api.Volume{resp}, nil)
+
+	resp2 := &api.CloudMigrateStartResponse{
 		TaskId: "1",
 	}
 
@@ -80,7 +109,7 @@ func TestVolumeMigrate_StartVolumeGroupSuccess(t *testing.T) {
 			ClusterId: "Source",
 			TargetId:  "Target",
 		}).
-		Return(resp, nil)
+		Return(resp2, nil)
 
 	// Setup client
 	c := api.NewOpenStorageMigrateClient(s.Conn())
@@ -99,6 +128,23 @@ func TestVolumeMigrate_StartAllVolumeFailure(t *testing.T) {
 			AllVolumes: &api.SdkCloudMigrateStartRequest_MigrateAllVolumes{},
 		},
 	}
+
+	resp := &api.Volume{
+		Id: "Target",
+		Locator: &api.VolumeLocator{
+			Name: "Target",
+		},
+	}
+
+	// Enumerate all volumes that have desired group
+	s.MockDriver().EXPECT().
+		Enumerate(nil, nil).
+		Return([]*api.Volume{resp}, nil)
+
+	// Inspect volumes to get their ownership
+	s.MockDriver().EXPECT().
+		Inspect([]string{"Target"}).
+		Return([]*api.Volume{resp}, nil)
 
 	s.MockDriver().EXPECT().
 		CloudMigrateStart(&api.CloudMigrateStartRequest{
@@ -132,6 +178,27 @@ func TestVolumeMigrate_StartVolumeGroupFailure(t *testing.T) {
 		},
 	}
 
+	labels := make(map[string]string, 0)
+	labels["group"] = "Target"
+
+	resp := &api.Volume{
+		Id: "Target",
+		Locator: &api.VolumeLocator{
+			Name:         "Target",
+			VolumeLabels: labels,
+		},
+	}
+
+	// Enumerate all volumes that have desired group
+	s.MockDriver().EXPECT().
+		Enumerate(nil, labels).
+		Return([]*api.Volume{resp}, nil)
+
+	// Inspect volumes to get their ownership
+	s.MockDriver().EXPECT().
+		Inspect([]string{"Target"}).
+		Return([]*api.Volume{resp}, nil)
+
 	s.MockDriver().EXPECT().
 		CloudMigrateStart(&api.CloudMigrateStartRequest{
 			Operation: api.CloudMigrate_MigrateVolumeGroup,
@@ -164,6 +231,18 @@ func TestVolumeMigrate_StartVolumeFailure(t *testing.T) {
 		},
 	}
 
+	resp := &api.Volume{
+		Id: "Target",
+		Locator: &api.VolumeLocator{
+			Name: "Target",
+		},
+	}
+
+	// Inspect volumes to get their ownership
+	s.MockDriver().EXPECT().
+		Inspect([]string{"Target"}).
+		Return([]*api.Volume{resp}, nil)
+
 	s.MockDriver().EXPECT().
 		CloudMigrateStart(&api.CloudMigrateStartRequest{
 			Operation: api.CloudMigrate_MigrateVolume,
@@ -193,7 +272,24 @@ func TestVolumeMigrate_StartAllVolumeSuccess(t *testing.T) {
 		},
 	}
 
-	resp := &api.CloudMigrateStartResponse{
+	resp := &api.Volume{
+		Id: "Target",
+		Locator: &api.VolumeLocator{
+			Name: "Target",
+		},
+	}
+
+	// Enumerate all volumes that have desired group
+	s.MockDriver().EXPECT().
+		Enumerate(nil, nil).
+		Return([]*api.Volume{resp}, nil)
+
+	// Inspect volumes to get their ownership
+	s.MockDriver().EXPECT().
+		Inspect([]string{"Target"}).
+		Return([]*api.Volume{resp}, nil)
+
+	resp2 := &api.CloudMigrateStartResponse{
 		TaskId: "1",
 	}
 
@@ -202,7 +298,7 @@ func TestVolumeMigrate_StartAllVolumeSuccess(t *testing.T) {
 			Operation: api.CloudMigrate_MigrateCluster,
 			ClusterId: "Source",
 		}).
-		Return(resp, nil)
+		Return(resp2, nil)
 
 	// Setup client
 	c := api.NewOpenStorageMigrateClient(s.Conn())
