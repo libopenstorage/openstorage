@@ -82,3 +82,28 @@ func TestTokenExpired(t *testing.T) {
 	})
 	assert.False(t, token.Valid)
 }
+
+func TestTokenIssuer(t *testing.T) {
+	key := []byte("mysecret")
+	issuer := "testiss"
+
+	claims := Claims{
+		Issuer: issuer,
+	}
+	sig := Signature{
+		Type: jwt.SigningMethodHS256,
+		Key:  key,
+	}
+	opts := Options{
+		Expiration: time.Now().Add(-(time.Minute * 10)).Unix(),
+	}
+
+	// Create
+	rawtoken, err := Token(&claims, &sig, &opts)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, rawtoken)
+
+	parsedIssuer, err := TokenIssuer(rawtoken)
+	assert.NoError(t, err)
+	assert.Equal(t, issuer, parsedIssuer)
+}
