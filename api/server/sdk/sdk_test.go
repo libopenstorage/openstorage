@@ -33,6 +33,7 @@ import (
 	mockcluster "github.com/libopenstorage/openstorage/cluster/mock"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
+	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
@@ -92,7 +93,13 @@ func newTestServer(t *testing.T) *testServer {
 
 	setupMockDriver(tester, t)
 
-	var err error
+	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, logrus.Panicf)
+	assert.NoError(t, err)
+	// Init storage policy manager
+	_, err = policy.Init(kv)
+	sp, err := policy.Inst()
+	assert.NotNil(t, sp)
+
 	// Setup simple driver
 	os.Remove(testUds)
 	tester.server, err = New(&ServerConfig{
@@ -102,6 +109,7 @@ func newTestServer(t *testing.T) *testServer {
 		RestPort:            testRESTPort,
 		Socket:              testUds,
 		Cluster:             tester.c,
+		StoragePolicy:       sp,
 		AlertsFilterDeleter: tester.a,
 		AccessOutput:        ioutil.Discard,
 		AuditOutput:         ioutil.Discard,
@@ -233,6 +241,7 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 	alert, err := alerts.NewFilterDeleter(kv)
 	assert.NoError(t, err)
 
+	sp, err := policy.Inst()
 	os.Remove(testUds)
 	server, err := New(&ServerConfig{
 		Net:                 "tcp",
@@ -240,6 +249,7 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 		RestPort:            testRESTPort,
 		Socket:              testUds,
 		Cluster:             cm,
+		StoragePolicy:       sp,
 		AlertsFilterDeleter: alert,
 		AccessOutput:        ioutil.Discard,
 		AuditOutput:         ioutil.Discard,

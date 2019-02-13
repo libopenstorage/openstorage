@@ -103,6 +103,7 @@ var (
 	asyncIoRegex                = regexp.MustCompile(api.SpecAsyncIo + "=([A-Za-z]+),?")
 	earlyAckRegex               = regexp.MustCompile(api.SpecEarlyAck + "=([A-Za-z]+),?")
 	forceUnsupportedFsTypeRegex = regexp.MustCompile(api.SpecForceUnsupportedFsType + "=([A-Za-z]+),?")
+	storagePolicyRegex          = regexp.MustCompile(api.StoragePolicy + "=([0-9A-Za-z_-]+),?")
 )
 
 type specHandler struct {
@@ -336,6 +337,8 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			} else {
 				spec.ForceUnsupportedFsType = forceFs
 			}
+		case api.StoragePolicy:
+			spec.StoragePolicy = v
 		default:
 			spec.VolumeLabels[k] = v
 		}
@@ -446,6 +449,9 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, forceUnsupportedFsType := d.getVal(forceUnsupportedFsTypeRegex, str); ok {
 		opts[api.SpecForceUnsupportedFsType] = forceUnsupportedFsType
+	}
+	if ok, storagepolicy := d.getVal(storagePolicyRegex, str); ok {
+		opts[api.StoragePolicy] = storagepolicy
 	}
 
 	return true, opts, name

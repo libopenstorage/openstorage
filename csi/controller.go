@@ -25,6 +25,7 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/util"
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
+	sdkVol "github.com/libopenstorage/openstorage/api/server/sdk"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
@@ -396,6 +397,11 @@ func (s *OsdCsiServer) CreateVolume(
 
 		// Create the volume
 		locator.Name = req.GetName()
+		// get enforced policy specs
+		spec, err = sdkVol.GetEnforcedVolSpecs(locator, spec)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, err.Error())
+		}
 		id, err = s.driver.Create(locator, source, spec)
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())

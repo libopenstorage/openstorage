@@ -35,6 +35,7 @@ import (
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
+	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 )
@@ -85,6 +86,8 @@ type ServerConfig struct {
 	AlertsFilterDeleter alerts.FilterDeleter
 	// Authentication configuration
 	Auth *auth.JwtAuthConfig
+	// StoragePolicy Manager
+	StoragePolicy policy.PolicyManager
 	// Tls configuration
 	Tls *TLSConfig
 }
@@ -140,6 +143,7 @@ type sdkGrpcServer struct {
 	credentialServer     *CredentialServer
 	identityServer       *IdentityServer
 	alertsServer         api.OpenStorageAlertsServer
+	policyServer         policy.PolicyManager
 }
 
 // Interface check
@@ -301,6 +305,10 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 		log.Info(name + " authentication disabled")
 	}
 
+	if config.StoragePolicy == nil {
+		return nil, fmt.Errorf("Must Supply storage policy Server")
+	}
+
 	// Create gRPC server
 	gServer, err := grpcserver.New(&grpcserver.GrpcServerConfig{
 		Name:    name,
@@ -322,6 +330,7 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 		clusterHandler:  config.Cluster,
 		driverHandler:   d,
 		alertHandler:    config.AlertsFilterDeleter,
+		policyServer:    config.StoragePolicy,
 	}
 	s.identityServer = &IdentityServer{
 		server: s,
@@ -354,7 +363,7 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 	s.clusterPairServer = &ClusterPairServer{
 		server: s,
 	}
-
+	s.policyServer = config.StoragePolicy
 	return s, nil
 }
 
@@ -408,6 +417,7 @@ func (s *sdkGrpcServer) Start() error {
 		api.RegisterOpenStorageMountAttachServer(grpcServer, s.volumeServer)
 		api.RegisterOpenStorageAlertsServer(grpcServer, s.alertsServer)
 		api.RegisterOpenStorageClusterPairServer(grpcServer, s.clusterPairServer)
+		api.RegisterOpenStoragePolicyServer(grpcServer, s.policyServer)
 		return grpcServer
 	})
 	if err != nil {
