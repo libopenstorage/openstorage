@@ -86,6 +86,8 @@ const (
 	MemVersion1 = "memv1"
 	// BoltVersion1 key
 	BoltVersion1 = "boltv1"
+	// ZookeeperVersion1 key
+	ZookeeperVersion1 = "zookeeperv1"
 )
 
 const (
@@ -256,8 +258,11 @@ type Kvdb interface {
 	// WatchTree is the same as WatchKey except that watchCB is triggered
 	// for updates on all keys that share the prefix.
 	WatchTree(prefix string, waitIndex uint64, opaque interface{}, watchCB WatchCB) error
-	// Snapshot returns a kvdb snapshot of the provided list of prefixes and the last updated index. If no prefixes are provided, then the whole kvdb tree is snapshotted and could be potentially an expensive operation
-	Snapshot(prefixes []string) (Kvdb, uint64, error)
+	// Snapshot returns a kvdb snapshot of the provided list of prefixes and the last updated index.
+	// If no prefixes are provided, then the whole kvdb tree is snapshotted and could be potentially an expensive operation
+	// If consistent is true, then snapshot is going to return all the updates happening during the snapshot operation and the last
+	// updated index from the snapshot
+	Snapshot(prefixes []string, consistent bool) (Kvdb, uint64, error)
 	// SnapPut records the key value pair including the index.
 	SnapPut(kvp *KVPair) (*KVPair, error)
 	// Lock specfied key and associate a lockerID with it, probably to identify
