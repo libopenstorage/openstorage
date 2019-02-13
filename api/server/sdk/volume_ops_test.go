@@ -19,10 +19,12 @@ package sdk
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/libopenstorage/openstorage/api"
+	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/portworx/kvdb"
 	"github.com/stretchr/testify/assert"
@@ -656,4 +658,117 @@ func TestSdkVolumeCapacityUsageUnimplementedResult(t *testing.T) {
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.Unimplemented)
 	assert.NotNil(t, r.GetCapacityUsageInfo)
+}
+
+// check volume create after storage policy is enforced
+func TestSdkVolumeCreateEnforced(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	// Create storage policy and set it as default Enforcement
+	storePolicy, err := policy.Inst()
+	assert.NoError(t, err)
+	volSpec := &api.VolumeSpecPolicy{
+		SizeOpt: &api.VolumeSpecPolicy_Size{
+			Size: 8123,
+		},
+		SizeOperator: api.VolumeSpecPolicy_Maximum,
+		SharedOpt: &api.VolumeSpecPolicy_Shared{
+			Shared: false,
+		},
+		Sharedv4Opt: &api.VolumeSpecPolicy_Sharedv4{
+			Sharedv4: false,
+		},
+		JournalOpt: &api.VolumeSpecPolicy_Journal{
+			Journal: true,
+		},
+		HaLevelOpt: &api.VolumeSpecPolicy_HaLevel{
+			HaLevel: 2,
+		},
+		HaLevelOperator: api.VolumeSpecPolicy_Minimum,
+	}
+
+	req := &api.SdkOpenStoragePolicyCreateRequest{
+		StoragePolicy: &api.SdkStoragePolicy{
+			Name:   "testrestvolcreate",
+			Policy: volSpec,
+		},
+	}
+
+	_, err = storePolicy.Create(context.Background(), req)
+	assert.NoError(t, err)
+
+	inspReq := &api.SdkOpenStoragePolicyInspectRequest{
+		Name: "testrestvolcreate",
+	}
+
+	resp, err := storePolicy.Inspect(context.Background(), inspReq)
+	assert.NoError(t, err)
+	assert.Equal(t, resp.StoragePolicy.GetName(), inspReq.GetName())
+	assert.True(t, reflect.DeepEqual(resp.StoragePolicy.GetPolicy(), req.StoragePolicy.GetPolicy()))
+
+	enforceReq := &api.SdkOpenStoragePolicyEnforceRequest{
+		Name: inspReq.GetName(),
+	}
+	_, err = storePolicy.Enforce(context.Background(), enforceReq)
+	assert.NoError(t, err)
+
+	policy, err := storePolicy.EnforceInspect(context.Background(), &api.SdkOpenStoragePolicyEnforceInspectRequest{})
+	assert.NoError(t, err)
+	assert.Equal(t, policy.GetStoragePolicy().GetName(), inspReq.GetName())
+
+	// create volume with policy enabled
+	name := "myvol"
+	size := uint64(1123234)
+	volReq := &api.SdkVolumeCreateRequest{
+		Name: name,
+		Spec: &api.VolumeSpec{
+			Size:    size,
+			HaLevel: 3,
+		},
+	}
+
+	// Ideal spec should be passed to volume create after applying
+	// policy specs
+	updatedSpec := &api.VolumeSpec{
+		Size:     volSpec.GetSize(),
+		Shared:   volSpec.GetShared(),
+		Sharedv4: volSpec.GetSharedv4(),
+		Journal:  volSpec.GetJournal(),
+		HaLevel:  volReq.GetSpec().GetHaLevel(),
+	}
+
+	// Create response
+	id := "myid"
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Create(&api.VolumeLocator{
+				Name: name,
+			}, &api.Source{}, updatedSpec).
+			Return(id, nil).
+			Times(1),
+	)
+
+	// Setup client
+	c := api.NewOpenStorageVolumeClient(s.Conn())
+
+	// Get info
+	r, err := c.Create(context.Background(), volReq)
+	assert.NoError(t, err)
+	assert.Equal(t, r.GetVolumeId(), "myid")
 }

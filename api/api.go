@@ -57,6 +57,7 @@ const (
 	// the driver to use an unsupported value of VolumeSpec.format if possible
 	SpecForceUnsupportedFsType = "force_unsupported_fs_type"
 	SpecNodiscard              = "nodiscard"
+	StoragePolicy              = "storagepolicy"
 )
 
 // OptionKey specifies a set of recognized query params.

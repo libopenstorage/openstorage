@@ -32,6 +32,7 @@ import (
 	"github.com/libopenstorage/openstorage/api/spec"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
+	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 	"github.com/sirupsen/logrus"
@@ -55,6 +56,8 @@ type ServerConfig struct {
 	Cluster cluster.Cluster
 	// AlertsFilterDeleter
 	AlertsFilterDeleter alerts.FilterDeleter
+	// StoragePolicy Manager
+	StoragePolicy policy.PolicyManager
 }
 
 // Server is an implementation of the gRPC SDK interface
@@ -80,6 +83,7 @@ type Server struct {
 	credentialServer     *CredentialServer
 	identityServer       *IdentityServer
 	alertsServer         api.OpenStorageAlertsServer
+	policyServer         policy.PolicyManager
 }
 
 // Interface check
@@ -103,6 +107,10 @@ func New(config *ServerConfig) (*Server, error) {
 		}
 	}
 
+	if config.StoragePolicy == nil {
+		return nil, fmt.Errorf("Must Supply storage policy Server")
+	}
+
 	// Create gRPC server
 	gServer, err := grpcserver.New(&grpcserver.GrpcServerConfig{
 		Name:    "SDK",
@@ -119,6 +127,7 @@ func New(config *ServerConfig) (*Server, error) {
 		clusterHandler: config.Cluster,
 		driverHandler:  d,
 		alertHandler:   config.AlertsFilterDeleter,
+		policyServer:   config.StoragePolicy,
 	}
 	s.identityServer = &IdentityServer{
 		server: s,
@@ -151,7 +160,7 @@ func New(config *ServerConfig) (*Server, error) {
 	s.clusterPairServer = &ClusterPairServer{
 		server: s,
 	}
-
+	s.policyServer = config.StoragePolicy
 	return s, nil
 }
 
@@ -182,6 +191,7 @@ func (s *Server) Start() error {
 		api.RegisterOpenStorageMountAttachServer(grpcServer, s.volumeServer)
 		api.RegisterOpenStorageAlertsServer(grpcServer, s.alertsServer)
 		api.RegisterOpenStorageClusterPairServer(grpcServer, s.clusterPairServer)
+		api.RegisterOpenStoragePolicyServer(grpcServer, s.policyServer)
 		return grpcServer
 	})
 	if err != nil {
@@ -382,6 +392,15 @@ func (s *Server) restServerSetupHandlers() (*http.ServeMux, error) {
 	}
 
 	err = api.RegisterOpenStorageMigrateHandlerFromEndpoint(
+		context.Background(),
+		gmux,
+		s.Address(),
+		[]grpc.DialOption{grpc.WithInsecure()})
+	if err != nil {
+		return nil, err
+	}
+
+	err = api.RegisterOpenStoragePolicyHandlerFromEndpoint(
 		context.Background(),
 		gmux,
 		s.Address(),
