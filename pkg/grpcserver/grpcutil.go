@@ -37,6 +37,7 @@ func Connect(address string, dialOptions []grpc.DialOption) (*grpc.ClientConn, e
 				}))
 	}
 
+	dialOptions = append(dialOptions, grpc.WithBackoffMaxDelay(time.Second))
 	conn, err := grpc.Dial(address, dialOptions...)
 	if err != nil {
 		return nil, err

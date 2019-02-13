@@ -63,7 +63,7 @@ func (b *BaseKvdb) CheckLockTimeout(
 ) {
 	b.lock.Lock()
 	defer b.lock.Unlock()
-	if b.LockTimeout > 0 && time.Since(startTime) > lockTimeout {
+	if lockTimeout > 0 && time.Since(startTime) > lockTimeout {
 		b.lockTimedout(key)
 	}
 }

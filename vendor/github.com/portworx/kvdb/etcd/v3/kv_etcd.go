@@ -24,9 +24,10 @@ import (
 
 const (
 	// Name is the name of this kvdb implementation.
-	Name                      = "etcdv3-kv"
-	defaultKvRequestTimeout   = 10 * time.Second
-	defaultMaintenanceTimeout = 7 * time.Second
+	Name                       = "etcdv3-kv"
+	defaultKvRequestTimeout    = 10 * time.Second
+	defaultLeaseRequestTimeout = 2 * time.Second
+	defaultMaintenanceTimeout  = 7 * time.Second
 	// defaultDefragTimeout in seconds is the timeout for defrag to complete
 	defaultDefragTimeout = 30
 	// defaultSessionTimeout in seconds is used for etcd watch
@@ -184,6 +185,10 @@ func (et *etcdKV) Capabilities() int {
 
 func (et *etcdKV) Context() (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.Background(), defaultKvRequestTimeout)
+}
+
+func (et *etcdKV) LeaseContext() (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), defaultLeaseRequestTimeout)
 }
 
 func (et *etcdKV) MaintenanceContextWithLeader() (context.Context, context.CancelFunc) {
@@ -996,16 +1001,21 @@ func (et *etcdKV) watchStart(
 	}
 }
 
-func (et *etcdKV) Snapshot(prefixes []string) (kvdb.Kvdb, uint64, error) {
+func (et *etcdKV) Snapshot(prefixes []string, consistent bool) (kvdb.Kvdb, uint64, error) {
 	if len(prefixes) == 0 {
 		prefixes = []string{""}
 	} else {
+		prefixes = append(prefixes, ec.Bootstrap)
 		prefixes = common.PrunePrefixes(prefixes)
 	}
 	// Create a new bootstrap key
-	var updates []*kvdb.KVPair
 	watchClosed := false
-	var lowestKvdbIndex, highestKvdbIndex uint64
+	var (
+		lowestKvdbIndex, highestKvdbIndex uint64
+		bootStrapKeyLow, bootStrapKeyHigh string
+		r                                 int64
+		updates                           []*kvdb.KVPair
+	)
 	done := make(chan error)
 	mutex := &sync.Mutex{}
 
@@ -1046,14 +1056,13 @@ func (et *etcdKV) Snapshot(prefixes []string) (kvdb.Kvdb, uint64, error) {
 			goto errordone
 		}
 
+		m.Lock()
+		defer m.Unlock()
 		for _, configuredPrefix := range prefixes {
 			if strings.HasPrefix(kvp.Key, configuredPrefix) {
-				m.Lock()
-				defer m.Unlock()
 				updates = append(updates, kvp)
 				if highestKvdbIndex > 0 && kvp.ModifiedIndex >= highestKvdbIndex {
 					// Done applying changes.
-					logrus.Infof("Snapshot complete")
 					watchClosed = true
 					watchErr = fmt.Errorf("done")
 					sendErr = nil
@@ -1069,19 +1078,22 @@ func (et *etcdKV) Snapshot(prefixes []string) (kvdb.Kvdb, uint64, error) {
 		return watchErr
 	}
 
-	if err := et.WatchTree("", 0, mutex, cb); err != nil {
-		return nil, 0, fmt.Errorf("Failed to start watch: %v", err)
+	if consistent {
+		// For a consistent snapshot, start a watch to track updates
+		// happening until we enumerate all the keys
+		if err := et.WatchTree("", 0, mutex, cb); err != nil {
+			return nil, 0, fmt.Errorf("Failed to start watch: %v", err)
+		}
+		r = rand.New(rand.NewSource(time.Now().UnixNano())).Int63()
+		bootStrapKeyLow = ec.Bootstrap + strconv.FormatInt(r, 10) +
+			strconv.FormatInt(time.Now().UnixNano(), 10)
+		kvPair, err := et.Put(bootStrapKeyLow, time.Now().UnixNano(), 0)
+		if err != nil {
+			return nil, 0, fmt.Errorf("Failed to create snap bootstrap key %v, "+
+				"err: %v", bootStrapKeyLow, err)
+		}
+		lowestKvdbIndex = kvPair.ModifiedIndex
 	}
-
-	r := rand.New(rand.NewSource(time.Now().UnixNano())).Int63()
-	bootStrapKeyLow := ec.Bootstrap + strconv.FormatInt(r, 10) +
-		strconv.FormatInt(time.Now().UnixNano(), 10)
-	kvPair, err := et.Put(bootStrapKeyLow, time.Now().UnixNano(), 0)
-	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to create snap bootstrap key %v, "+
-			"err: %v", bootStrapKeyLow, err)
-	}
-	lowestKvdbIndex = kvPair.ModifiedIndex
 
 	snapDb, err := mem.New(
 		et.domain,
@@ -1141,17 +1153,25 @@ func (et *etcdKV) Snapshot(prefixes []string) (kvdb.Kvdb, uint64, error) {
 		}
 	}
 
+	if !consistent {
+		// A consistent snapshot is not required
+		// return all the enumerated keys
+		return snapDb, 0, nil
+	}
+
+	// take the lock before we Put a key so that
+	// the highestKvdbIndex will be set before the watch callback is invoked
+	mutex.Lock()
 	// Create bootrap key : highest index
-	bootStrapKeyHigh := ec.Bootstrap + strconv.FormatInt(r, 10) +
+
+	bootStrapKeyHigh = ec.Bootstrap + strconv.FormatInt(r, 10) +
 		strconv.FormatInt(time.Now().UnixNano(), 10)
-	kvPair, err = et.Put(bootStrapKeyHigh, time.Now().UnixNano(), 0)
+	kvPair, err := et.Put(bootStrapKeyHigh, time.Now().UnixNano(), 0)
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to create snap bootstrap key %v, "+
 			"err: %v", bootStrapKeyHigh, err)
 	}
 
-	mutex.Lock()
-	// not sure if we need a lock, but couldnt find any doc which says its ok
 	highestKvdbIndex = kvPair.ModifiedIndex
 	mutex.Unlock()
 
@@ -1497,7 +1517,7 @@ func (et *etcdKV) getLeaseWithRetries(key string, ttl int64) (*e.LeaseGrantRespo
 		retry       bool
 	)
 	for i := 0; i < timeoutMaxRetry; i++ {
-		leaseCtx, leaseCancel := et.Context()
+		leaseCtx, leaseCancel := et.LeaseContext()
 		leaseResult, leaseErr = et.kvClient.Grant(leaseCtx, ttl)
 		leaseCancel()
 		if leaseErr != nil {
