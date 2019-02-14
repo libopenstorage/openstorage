@@ -616,12 +616,14 @@ func (kv *consulKV) TxNew() (kvdb.Tx, error) {
 	return nil, kvdb.ErrNotSupported
 }
 
-func (kv *consulKV) Snapshot(prefixes []string) (kvdb.Kvdb, uint64, error) {
+func (kv *consulKV) Snapshot(prefixes []string, consistent bool) (kvdb.Kvdb, uint64, error) {
 	if len(prefixes) == 0 {
 		prefixes = []string{""}
 	} else {
+		prefixes = append(prefixes, bootstrap)
 		prefixes = common.PrunePrefixes(prefixes)
 	}
+
 	// Create a new bootstrap key : lowest index
 	r := rand.New(rand.NewSource(time.Now().UnixNano())).Int63()
 	bootStrapKeyLow := bootstrap + strconv.FormatInt(r, 10) +
@@ -670,6 +672,12 @@ func (kv *consulKV) Snapshot(prefixes []string) (kvdb.Kvdb, uint64, error) {
 		if err != nil {
 			return nil, 0, fmt.Errorf("Failed creating snap: %v", err)
 		}
+	}
+
+	if !consistent {
+		// A consistent snapshot is not required
+		// return all the enumerated keys
+		return snapDb, 0, nil
 	}
 
 	// Create bootrap key : highest index
