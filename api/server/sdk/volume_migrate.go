@@ -31,16 +31,45 @@ func (s *VolumeServer) Start(
 ) (*api.SdkCloudMigrateStartResponse, error) {
 
 	if volume := req.GetVolume(); volume != nil {
+		// Check ownership
+		if err := checkAccessFromDriverForVolumeId(ctx, s.driver(), volume.GetVolumeId(), api.Ownership_Read); err != nil {
+			return nil, err
+		}
+
 		//migrate volume
 		return s.volumeMigrate(ctx, req, volume)
 	} else if volumeGroup := req.GetVolumeGroup(); volumeGroup != nil {
+
+		labels := make(map[string]string, 0)
+		labels["group"] = volumeGroup.GetGroupId()
+		if !s.haveOwnership(ctx, labels) {
+			return nil, status.Error(codes.InvalidArgument, "Volume Operation not Permitted.")
+		}
 		//migrate volume groups
 		return s.volumeGroupMigrate(ctx, req, volumeGroup)
 	} else if allVolumes := req.GetAllVolumes(); allVolumes != nil {
 		// migrate all volumes
+		if !s.haveOwnership(ctx, nil) {
+			return nil, status.Error(codes.InvalidArgument, "Volume Operation not Permitted.")
+		}
 		return s.allVolumesMigrate(ctx, req, allVolumes)
 	}
 	return nil, status.Error(codes.InvalidArgument, "Unknown operation request")
+}
+
+func (s *VolumeServer) haveOwnership(ctx context.Context, labels map[string]string) bool {
+	vols, err := s.driver().Enumerate(nil, labels)
+	if err != nil {
+		return false
+	}
+	for _, vol := range vols {
+		// Check ownership
+		if !vol.IsPermitted(ctx, api.Ownership_Read) {
+			return false
+		}
+	}
+
+	return true
 }
 
 func (s *VolumeServer) volumeGroupMigrate(
