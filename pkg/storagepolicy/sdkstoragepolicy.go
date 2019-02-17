@@ -102,7 +102,9 @@ func (p *SdkPolicyManager) Create(
 	}
 
 	_, err = p.kv.Create(prefixWithName(req.StoragePolicy.GetName()), policyStr, 0)
-	if err != nil {
+	if err == kvdb.ErrExist {
+		return nil, status.Errorf(codes.AlreadyExists, "Storage Policy already exist : %v", req.StoragePolicy.GetName())
+	} else if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to save storage policy: %v", err)
 	}
 
@@ -122,13 +124,39 @@ func (p *SdkPolicyManager) Update(
 		return nil, status.Error(codes.InvalidArgument, "Must supply Volume Specs")
 	}
 
+	// Get Existing details to merge
+	pol, err := p.Inspect(ctx,
+		&api.SdkOpenStoragePolicyInspectRequest{
+			Name: req.StoragePolicy.GetName(),
+		},
+	)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "Policy with name %s not found: %v", req.StoragePolicy.GetName(), err)
+	}
+
+	// merge old policy spec with new
+	volSpecs := &api.VolumeSpecPolicy{}
 	m := jsonpb.Marshaler{OrigName: true}
-	policyStr, err := m.MarshalToString(req.StoragePolicy.GetPolicy())
+	// marshal old policy to volSpecs
+	oldSpec, err := m.MarshalToString(pol.StoragePolicy.GetPolicy())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Json Marshal failed for policy %s: %v", req.StoragePolicy.GetName(), err)
+	}
+	jsonpb.UnmarshalString(oldSpec, volSpecs)
+
+	// marshal new policy to volSpecs
+	newSpec, err := m.MarshalToString(req.StoragePolicy.GetPolicy())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Json Marshal failed for policy %s: %v", req.StoragePolicy.GetName(), err)
+	}
+	jsonpb.UnmarshalString(newSpec, volSpecs)
+
+	updatedSpec, err := m.MarshalToString(volSpecs)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Json Marshal failed for policy %s: %v", req.StoragePolicy.GetName(), err)
 	}
 
-	_, err = p.kv.Update(prefixWithName(req.StoragePolicy.GetName()), policyStr, 0)
+	_, err = p.kv.Update(prefixWithName(req.StoragePolicy.GetName()), updatedSpec, 0)
 	if err == kvdb.ErrNotFound {
 		return nil, status.Errorf(codes.NotFound, "Storage Policy %s not found", req.StoragePolicy.GetPolicy())
 	} else if err != nil {
