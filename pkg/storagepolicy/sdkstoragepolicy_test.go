@@ -188,6 +188,10 @@ func TestSdkStoragePolicyUpdate(t *testing.T) {
 		SizeOpt: &api.VolumeSpecPolicy_Size{
 			Size: 1234,
 		},
+		SharedOpt: &api.VolumeSpecPolicy_Shared{
+			Shared: true,
+		},
+		SizeOperator: api.VolumeSpecPolicy_Maximum,
 	}
 
 	req := &api.SdkOpenStoragePolicyCreateRequest{
@@ -204,15 +208,31 @@ func TestSdkStoragePolicyUpdate(t *testing.T) {
 		Name: "testupdate",
 	}
 
-	resp, err := s.Inspect(context.Background(), inspReq)
+	oldResp, err := s.Inspect(context.Background(), inspReq)
 	assert.NoError(t, err)
-	assert.Equal(t, resp.StoragePolicy.GetName(), inspReq.GetName())
-	assert.True(t, reflect.DeepEqual(resp.StoragePolicy.GetPolicy(), req.StoragePolicy.GetPolicy()))
+	assert.Equal(t, oldResp.StoragePolicy.GetName(), inspReq.GetName())
+	assert.True(t, reflect.DeepEqual(oldResp.StoragePolicy.GetPolicy(), req.StoragePolicy.GetPolicy()))
 
 	// update volume
 	updateSpec := &api.VolumeSpecPolicy{
-		SizeOpt: &api.VolumeSpecPolicy_Size{
-			Size: 4896,
+		SharedOpt: &api.VolumeSpecPolicy_Shared{
+			Shared: false,
+		},
+		JournalOpt: &api.VolumeSpecPolicy_Journal{
+			Journal: false,
+		},
+		StickyOpt: &api.VolumeSpecPolicy_Sticky{
+			Sticky: false,
+		},
+		HaLevelOperator: api.VolumeSpecPolicy_Minimum,
+		HaLevelOpt: &api.VolumeSpecPolicy_HaLevel{
+			HaLevel: 2,
+		},
+		IoProfileOpt: &api.VolumeSpecPolicy_IoProfile{
+			IoProfile: api.IoProfile_IO_PROFILE_DB,
+		},
+		SnapshotScheduleOpt: &api.VolumeSpecPolicy_SnapshotSchedule{
+			SnapshotSchedule: "testschedule",
 		},
 	}
 
@@ -226,11 +246,21 @@ func TestSdkStoragePolicyUpdate(t *testing.T) {
 	_, err = s.Update(context.Background(), updateReq)
 	assert.NoError(t, err)
 
-	resp, err = s.Inspect(context.Background(), inspReq)
+	updatedResp, err := s.Inspect(context.Background(), inspReq)
 	assert.NoError(t, err)
-	assert.Equal(t, resp.StoragePolicy.GetName(), inspReq.GetName())
-	assert.True(t, reflect.DeepEqual(resp.StoragePolicy.GetPolicy(), updateReq.StoragePolicy.GetPolicy()))
+	assert.Equal(t, updatedResp.StoragePolicy.GetName(), inspReq.GetName())
 
+	// check indivisual params
+	assert.Equal(t, updatedResp.StoragePolicy.GetPolicy().GetSize(), oldResp.StoragePolicy.GetPolicy().GetSize())
+	// check old param updated to new params
+	assert.Equal(t, updatedResp.StoragePolicy.GetPolicy().GetShared(), false)
+	// check new params
+	assert.Equal(t, updatedResp.StoragePolicy.GetPolicy().GetHaLevel(), updateSpec.GetHaLevel())
+	assert.Equal(t, updatedResp.StoragePolicy.GetPolicy().GetHaLevelOperator(), api.VolumeSpecPolicy_Minimum)
+	assert.Equal(t, updatedResp.StoragePolicy.GetPolicy().GetSticky(), false)
+	assert.Equal(t, updatedResp.StoragePolicy.GetPolicy().GetIoProfile(), api.IoProfile_IO_PROFILE_DB)
+	// Check not specified operators are nil
+	assert.Nil(t, updatedResp.StoragePolicy.GetPolicy().GetEncryptedOpt())
 }
 
 func TestSdkStoragePolicyUpdateBadArgument(t *testing.T) {
