@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -304,6 +305,30 @@ func (s *ec2Ops) getPrefixFromRootDeviceName(rootDeviceName string) (string, err
 	return devPrefix, nil
 }
 
+// getParentDevice returns the parent device of the given device path
+// by following the symbolic link. It is expected that the input device
+// path exists
+func (s *ec2Ops) getParentDevice(ipDevPath string) (string, error) {
+	// Check if the path is a symbolic link
+	var parentDevPath string
+	fi, err := os.Lstat(ipDevPath)
+	if err != nil {
+		return "", err
+	}
+	if fi.Mode()&os.ModeSymlink != 0 {
+		// input device path is a symbolic link
+		// get the parent device
+		output, err := filepath.EvalSymlinks(ipDevPath)
+		if err != nil {
+			return "", fmt.Errorf("failed to read symlink due to: %v", err)
+		}
+		parentDevPath = strings.TrimSpace(string(output))
+	} else {
+		parentDevPath = ipDevPath
+	}
+	return parentDevPath, nil
+}
+
 // getActualDevicePath does an os.Stat on the provided devicePath.
 // If not found it will try all the different devicePrefixes provided by AWS
 // such as /dev/sd and /dev/xvd and return the devicePath which is found
@@ -312,16 +337,16 @@ func (s *ec2Ops) getActualDevicePath(ipDevicePath, volumeID string) (string, err
 	letter := ipDevicePath[len(ipDevicePath)-1:]
 	devicePath := awsDevicePrefix + letter
 	if _, err := os.Stat(devicePath); err == nil {
-		return devicePath, nil
+		return s.getParentDevice(devicePath)
 	}
 	devicePath = awsDevicePrefixWithX + letter
 	if _, err := os.Stat(devicePath); err == nil {
-		return devicePath, nil
+		return s.getParentDevice(devicePath)
 	}
 
 	devicePath = awsDevicePrefixWithH + letter
 	if _, err := os.Stat(devicePath); err == nil {
-		return devicePath, nil
+		return s.getParentDevice(devicePath)
 	}
 
 	// Check if the EBS volumes are exposed as NVMe drives
