@@ -43,14 +43,14 @@ func (s *VolumeServer) Start(
 		labels := make(map[string]string, 0)
 		labels["group"] = volumeGroup.GetGroupId()
 		if !s.haveOwnership(ctx, labels) {
-			return nil, status.Error(codes.InvalidArgument, "Volume Operation not Permitted.")
+			return nil, status.Error(codes.PermissionDenied, "Volume Operation not Permitted.")
 		}
 		//migrate volume groups
 		return s.volumeGroupMigrate(ctx, req, volumeGroup)
 	} else if allVolumes := req.GetAllVolumes(); allVolumes != nil {
 		// migrate all volumes
 		if !s.haveOwnership(ctx, nil) {
-			return nil, status.Error(codes.InvalidArgument, "Volume Operation not Permitted.")
+			return nil, status.Error(codes.PermissionDenied, "Volume Operation not Permitted.")
 		}
 		return s.allVolumesMigrate(ctx, req, allVolumes)
 	}
