@@ -2105,6 +2105,13 @@
       },
       "apiSdkVolumeAttachRequest": {
         "properties": {
+          "driver_options": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "The following options are private to the driver plugin running the\nOpenStorage SDK. Contact your driver developer for any special\nvalues that need to be provided here.",
+            "type": "object"
+          },
           "options": {
             "$ref": "#/components/schemas/apiSdkVolumeAttachOptions"
           },
@@ -2210,6 +2217,13 @@
       },
       "apiSdkVolumeDetachRequest": {
         "properties": {
+          "driver_options": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "The following options are private to the driver plugin running the\nOpenStorage SDK. Contact your driver developer for any special\nvalues that need to be provided here.",
+            "type": "object"
+          },
           "options": {
             "$ref": "#/components/schemas/apiSdkVolumeDetachOptions"
           },
@@ -2293,6 +2307,13 @@
       },
       "apiSdkVolumeMountRequest": {
         "properties": {
+          "driver_options": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "The following options are private to the driver plugin running the\nOpenStorage SDK. Contact your driver developer for any special\nvalues that need to be provided here.",
+            "type": "object"
+          },
           "mount_path": {
             "description": "Mount path for mounting the volume.",
             "type": "string"
@@ -2452,6 +2473,13 @@
       },
       "apiSdkVolumeUnmountRequest": {
         "properties": {
+          "driver_options": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "The following options are private to the driver plugin running the\nOpenStorage SDK. Contact your driver developer for any special\nvalues that need to be provided here.",
+            "type": "object"
+          },
           "mount_path": {
             "title": "MountPath for device",
             "type": "string"
@@ -3373,7 +3401,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.40.0"
+    "version": "0.41.0"
   },
   "openapi": "3.0.0",
   "paths": {

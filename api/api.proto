@@ -2206,6 +2206,10 @@ message SdkVolumeMountRequest {
   string mount_path = 2;
   // Options to attach device
   SdkVolumeAttachOptions options = 3;
+  // The following options are private to the driver plugin running the
+  // OpenStorage SDK. Contact your driver developer for any special
+  // values that need to be provided here.
+  map<string, string> driver_options = 4;
 }
 
 // Empty response
@@ -2232,6 +2236,10 @@ message SdkVolumeUnmountRequest {
   string mount_path = 2;
   // Options to unmount device
   SdkVolumeUnmountOptions options = 3;
+  // The following options are private to the driver plugin running the
+  // OpenStorage SDK. Contact your driver developer for any special
+  // values that need to be provided here.
+  map<string, string> driver_options = 4;
 }
 
 // Empty response
@@ -2244,6 +2252,10 @@ message SdkVolumeAttachRequest {
   string volume_id = 1;
   // Options to attach device
   SdkVolumeAttachOptions options = 2;
+  // The following options are private to the driver plugin running the
+  // OpenStorage SDK. Contact your driver developer for any special
+  // values that need to be provided here.
+  map<string, string> driver_options = 3;
 }
 
 // Defines a response from the node which received the request to attach
@@ -2265,6 +2277,10 @@ message SdkVolumeDetachRequest {
   string volume_id = 1;
   // Options to detach device
   SdkVolumeDetachOptions options = 2;
+  // The following options are private to the driver plugin running the
+  // OpenStorage SDK. Contact your driver developer for any special
+  // values that need to be provided here.
+  map<string, string> driver_options = 3;
 }
 
 // Empty response
@@ -3076,7 +3092,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 40;
+    Minor = 41;
     // SDK version patch value of this specification
     Patch = 0;
   }
