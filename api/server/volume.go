@@ -314,11 +314,6 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 		updateReq.Labels = req.Locator.VolumeLabels
 	}
 
-	if _, err := volumes.Update(ctx, updateReq); err != nil {
-		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
 	detachOptions := &api.SdkVolumeDetachOptions{}
 	attachOptions := &api.SdkVolumeAttachOptions{}
 
@@ -329,6 +324,13 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
+
+		// Only set spec if spec and locator are not nil.
+		if _, err := volumes.Update(ctx, updateReq); err != nil {
+			vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
 	}
 
 	if req.Options["SECRET_NAME"] != "" {
