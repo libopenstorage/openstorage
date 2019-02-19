@@ -48,15 +48,9 @@ func (s *VolumeServer) Attach(
 	}
 
 	// Check if already attached
-	v, err := util.VolumeFromName(s.driver(), req.GetVolumeId())
+	_, err := util.VolumeFromName(s.driver(), req.GetVolumeId())
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "Volume %s was not found", req.GetVolumeId())
-	}
-
-	// Idempotency
-	if v.GetState() == api.VolumeState_VOLUME_STATE_ATTACHED &&
-		v.GetAttachedState() != api.AttachState_ATTACH_STATE_INTERNAL {
-		return &api.SdkVolumeAttachResponse{DevicePath: v.GetDevicePath()}, nil
 	}
 
 	// Check options
@@ -103,15 +97,9 @@ func (s *VolumeServer) Detach(
 	}
 
 	// Check if already attached
-	v, err := util.VolumeFromName(s.driver(), req.GetVolumeId())
+	_, err := util.VolumeFromName(s.driver(), req.GetVolumeId())
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "Volume %s was not found", req.GetVolumeId())
-	}
-
-	// Idempotency
-	if v.GetState() == api.VolumeState_VOLUME_STATE_DETACHED ||
-		(v.GetState() == api.VolumeState_VOLUME_STATE_ATTACHED && v.GetAttachedState() == api.AttachState_ATTACH_STATE_INTERNAL) {
-		return &api.SdkVolumeDetachResponse{}, nil
 	}
 
 	// Check options
@@ -270,9 +258,6 @@ func (s *VolumeServer) Unmount(
 	if !vol.IsPermitted(ctx, api.Ownership_Write) {
 		return nil, status.Errorf(codes.PermissionDenied, "Access denied to volume %s", vol.GetId())
 	}
-
-	// TODO: Idempotency?
-	// XXX How do we check.
 
 	// From old docker server, now it is here in the SDK
 	if resp.GetVolume().GetSpec().Scale > 1 {

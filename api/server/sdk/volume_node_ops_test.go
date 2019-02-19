@@ -88,56 +88,6 @@ func TestSdkVolumeAttachSuccess(t *testing.T) {
 	assert.Equal(t, res.GetDevicePath(), devpath)
 }
 
-func TestSdkVolumeAttachSuccessIdempotent(t *testing.T) {
-
-	// Create server and client connection
-	s := newTestServer(t)
-	defer s.Stop()
-
-	id := "myid"
-	devpath := "/my/path"
-	req := &api.SdkVolumeAttachRequest{
-		VolumeId: id,
-		Options: &api.SdkVolumeAttachOptions{
-			SecretName:    "name",
-			SecretContext: "context",
-			SecretKey:     "key",
-		},
-	}
-
-	gomock.InOrder(
-		s.MockDriver().
-			EXPECT().
-			Inspect([]string{id}).
-			Return([]*api.Volume{
-				&api.Volume{
-					Id: id,
-				},
-			}, nil).
-			Times(1),
-		s.MockDriver().
-			EXPECT().
-			Inspect([]string{id}).
-			Return([]*api.Volume{
-				&api.Volume{
-					Id:            id,
-					State:         api.VolumeState_VOLUME_STATE_ATTACHED,
-					AttachedState: api.AttachState_ATTACH_STATE_EXTERNAL,
-					DevicePath:    devpath,
-				},
-			}, nil).
-			Times(1),
-	)
-
-	// Setup client
-	c := api.NewOpenStorageMountAttachClient(s.Conn())
-
-	// Attach Volume
-	res, err := c.Attach(context.Background(), req)
-	assert.NoError(t, err)
-	assert.Equal(t, res.GetDevicePath(), devpath)
-}
-
 func TestSdkVolumeAttachFailed(t *testing.T) {
 
 	// Create server and client connection
@@ -266,51 +216,6 @@ func TestSdkVolumeDetachSuccess(t *testing.T) {
 			EXPECT().
 			Detach(id, options).
 			Return(nil),
-	)
-
-	// Setup client
-	c := api.NewOpenStorageMountAttachClient(s.Conn())
-
-	// Get info
-	_, err := c.Detach(context.Background(), req)
-	assert.NoError(t, err)
-}
-
-func TestSdkVolumeDetachSuccessIdempotency(t *testing.T) {
-
-	// Create server and client connection
-	s := newTestServer(t)
-	defer s.Stop()
-
-	id := "dummy-volume-id"
-	req := &api.SdkVolumeDetachRequest{
-		VolumeId: id,
-		Options: &api.SdkVolumeDetachOptions{
-			Force:               false,
-			UnmountBeforeDetach: true,
-		},
-	}
-
-	gomock.InOrder(
-		s.MockDriver().
-			EXPECT().
-			Inspect([]string{id}).
-			Return([]*api.Volume{
-				&api.Volume{
-					Id: id,
-				},
-			}, nil).
-			Times(1),
-		s.MockDriver().
-			EXPECT().
-			Inspect([]string{id}).
-			Return([]*api.Volume{
-				&api.Volume{
-					Id:    id,
-					State: api.VolumeState_VOLUME_STATE_DETACHED,
-				},
-			}, nil).
-			Times(1),
 	)
 
 	// Setup client
