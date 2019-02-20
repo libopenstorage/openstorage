@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.42.0 - Tech Preview (2/20/2019)
+
+* SnapEnumerate REST endpoint now accepts empty volume ids
+
 ### v0.41.0 - Tech Preview (2/20/2019)
 
 * Add driver options to RPCs in the MountAttach service
