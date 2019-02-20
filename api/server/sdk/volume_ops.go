@@ -21,6 +21,7 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/auth"
+	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/pkg/util"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/portworx/kvdb"
@@ -153,12 +154,19 @@ func (s *VolumeServer) Create(
 			"Must supply spec object")
 	}
 
-	spec := req.GetSpec()
 	locator := &api.VolumeLocator{
 		Name:         req.GetName(),
 		VolumeLabels: req.GetLabels(),
 	}
 	source := &api.Source{}
+
+	// Update given spec according to enforcement policy set
+	// In case policy is not set, should fall back to default way
+	// of creating volume
+	spec, err := GetEnforcedVolSpecs(locator, req.GetSpec())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Unable to update vol specs according to policy %v", err)
+	}
 
 	// Copy any labels from the spec to the locator
 	locator = locator.MergeVolumeSpecLabels(spec)
@@ -639,4 +647,201 @@ func setSpecBool(current, req bool, reqSet interface{}) bool {
 		return req
 	}
 	return current
+}
+
+// GetEnforcedVolSpecs returns volume spec merged with enforced policy applied if any
+func GetEnforcedVolSpecs(locator *api.VolumeLocator, spec *api.VolumeSpec) (*api.VolumeSpec, error) {
+	if locator != nil {
+		// if volume label is provided, override default policy
+		if val, ok := locator.VolumeLabels["enforce_disable"]; ok {
+			if val == "true" {
+				return spec, nil
+			}
+		}
+	}
+	storPolicy, err := policy.Inst()
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Unable to get storage policy instance %v", err)
+	}
+
+	// check if custom policy passed with volume
+	if spec.GetStoragePolicy() != "" {
+		inspReq := &api.SdkOpenStoragePolicyInspectRequest{
+			Name: spec.GetStoragePolicy(),
+		}
+		customPolicy, customErr := storPolicy.Inspect(context.Background(), inspReq)
+		if customErr != nil {
+			return nil, customErr
+		}
+		// update spec with custom storage policy
+		updatedSpec := mergeVolumeSpecsPolicy(spec, customPolicy.GetStoragePolicy().GetPolicy())
+		return updatedSpec, nil
+	}
+
+	// check if enforcement is enabled
+	policy, err := storPolicy.EnforceInspect(context.Background(), &api.SdkOpenStoragePolicyEnforceInspectRequest{})
+	if err == kvdb.ErrNotFound || policy.GetStoragePolicy() == nil {
+		// enforce is disabled, return original specs
+		return spec, nil
+	}
+	// err means there is policy stored, but we are not able to retrive it
+	// hence we are not allowing volume create operation
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Unable to get enforced policy details %v", err)
+	}
+
+	// apply default policy to volume
+	// update volume spec according to enforced policies
+	updatedSpec := mergeVolumeSpecsPolicy(spec, policy.StoragePolicy.GetPolicy())
+	return updatedSpec, nil
+}
+
+func mergeVolumeSpecsPolicy(vol *api.VolumeSpec, req *api.VolumeSpecPolicy) *api.VolumeSpec {
+
+	spec := vol
+	spec.Shared = setSpecBool(vol.GetShared(), req.GetShared(), req.GetSharedOpt())
+	spec.Sharedv4 = setSpecBool(vol.GetSharedv4(), req.GetSharedv4(), req.GetSharedv4Opt())
+	spec.Sticky = setSpecBool(vol.GetSticky(), req.GetSticky(), req.GetStickyOpt())
+	spec.Journal = setSpecBool(vol.GetJournal(), req.GetJournal(), req.GetJournalOpt())
+	spec.Encrypted = setSpecBool(vol.GetEncrypted(), req.GetEncrypted(), req.GetEncryptedOpt())
+
+	// Cos
+	if req.GetCosOpt() != nil {
+		spec.Cos = req.GetCos()
+	} else {
+		spec.Cos = vol.GetCos()
+	}
+
+	// Volume configuration labels
+	if spec.GetVolumeLabels() == nil {
+		spec.VolumeLabels = req.GetVolumeLabels()
+	} else {
+		// Merge labels
+		for k, v := range req.GetVolumeLabels() {
+			spec.VolumeLabels[k] = v
+		}
+	}
+
+	// Passphrase
+	if req.GetPassphraseOpt() != nil {
+		spec.Passphrase = req.GetPassphrase()
+	} else {
+		spec.Passphrase = vol.GetPassphrase()
+	}
+
+	// Snapshot schedule as a string
+	if req.GetSnapshotScheduleOpt() != nil {
+		spec.SnapshotSchedule = req.GetSnapshotSchedule()
+	} else {
+		spec.SnapshotSchedule = vol.GetSnapshotSchedule()
+	}
+
+	// Scale
+	spec.Scale = vol.GetScale()
+	if req.GetScaleOpt() != nil {
+		switch req.GetScaleOperator() {
+		case api.VolumeSpecPolicy_Maximum:
+			if vol.GetScale() > req.GetScale() {
+				spec.Scale = req.GetScale()
+			}
+		case api.VolumeSpecPolicy_Minimum:
+			if vol.GetScale() < req.GetScale() {
+				spec.Scale = req.GetScale()
+			}
+		default:
+			// Equal
+			spec.Scale = req.GetScale()
+		}
+	}
+
+	// Snapshot Interval
+	spec.SnapshotInterval = vol.GetSnapshotInterval()
+	if req.GetSnapshotIntervalOpt() != nil {
+		switch req.GetSnapshotIntervalOperator() {
+		case api.VolumeSpecPolicy_Maximum:
+			if vol.GetSnapshotInterval() > req.GetSnapshotInterval() {
+				spec.SnapshotInterval = req.GetSnapshotInterval()
+			}
+		case api.VolumeSpecPolicy_Minimum:
+			if vol.GetSnapshotInterval() < req.GetSnapshotInterval() {
+				spec.SnapshotInterval = req.GetSnapshotInterval()
+			}
+		default:
+			// Equal
+			spec.SnapshotInterval = req.GetSnapshotInterval()
+		}
+	}
+
+	// Io Profile
+	if req.GetIoProfileOpt() != nil {
+		spec.IoProfile = req.GetIoProfile()
+	} else {
+		spec.IoProfile = vol.GetIoProfile()
+	}
+
+	// GroupID
+	if req.GetGroupOpt() != nil {
+		spec.Group = req.GetGroup()
+	} else {
+		spec.Group = vol.GetGroup()
+	}
+
+	// Size
+	spec.Size = vol.GetSize()
+	if req.GetSizeOpt() != nil {
+		switch req.GetSizeOperator() {
+		case api.VolumeSpecPolicy_Maximum:
+			if vol.GetSize() > req.GetSize() {
+				spec.Size = req.GetSize()
+			}
+		case api.VolumeSpecPolicy_Minimum:
+			if vol.GetSize() < req.GetSize() {
+				spec.Size = req.GetSize()
+			}
+		default:
+			// Equal
+			spec.Size = req.GetSize()
+		}
+	}
+
+	// ReplicaSet
+	if req.GetReplicaSet() != nil {
+		spec.ReplicaSet = req.GetReplicaSet()
+	} else {
+		spec.ReplicaSet = vol.GetReplicaSet()
+	}
+
+	// HA Level
+	spec.HaLevel = vol.GetHaLevel()
+	if req.GetHaLevelOpt() != nil {
+		switch req.GetHaLevelOperator() {
+		case api.VolumeSpecPolicy_Maximum:
+			if vol.GetHaLevel() > req.GetHaLevel() {
+				spec.HaLevel = req.GetHaLevel()
+			}
+		case api.VolumeSpecPolicy_Minimum:
+			if vol.GetHaLevel() < req.GetHaLevel() {
+				spec.HaLevel = req.GetHaLevel()
+			}
+		default:
+			// Equal
+			spec.HaLevel = req.GetHaLevel()
+		}
+	}
+
+	// Queue depth
+	if req.GetQueueDepthOpt() != nil {
+		spec.QueueDepth = req.GetQueueDepth()
+	} else {
+		spec.QueueDepth = vol.GetQueueDepth()
+	}
+
+	// Aggregation Level
+	if req.GetAggregationLevelOpt() != nil {
+		spec.AggregationLevel = req.GetAggregationLevel()
+	} else {
+		spec.AggregationLevel = vol.GetAggregationLevel()
+	}
+
+	return spec
 }

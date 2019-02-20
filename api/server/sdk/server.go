@@ -36,6 +36,7 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 	"github.com/libopenstorage/openstorage/pkg/role"
+	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 )
@@ -99,6 +100,8 @@ type ServerConfig struct {
 	Cluster cluster.Cluster
 	// AlertsFilterDeleter
 	AlertsFilterDeleter alerts.FilterDeleter
+	// StoragePolicy Manager
+	StoragePolicy policy.PolicyManager
 	// Security configuration
 	Security *SecurityConfig
 }
@@ -154,6 +157,7 @@ type sdkGrpcServer struct {
 	identityServer       *IdentityServer
 	roleServer           role.RoleManager
 	alertsServer         api.OpenStorageAlertsServer
+	policyServer         policy.PolicyManager
 }
 
 // Interface check
@@ -317,6 +321,10 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 		}
 	}
 
+	if config.StoragePolicy == nil {
+		return nil, fmt.Errorf("Must supply storage policy server")
+	}
+
 	// Create gRPC server
 	gServer, err := grpcserver.New(&grpcserver.GrpcServerConfig{
 		Name:    name,
@@ -337,6 +345,7 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 		clusterHandler:  config.Cluster,
 		driverHandler:   d,
 		alertHandler:    config.AlertsFilterDeleter,
+		policyServer:    config.StoragePolicy,
 	}
 	s.identityServer = &IdentityServer{
 		server: s,
@@ -370,7 +379,7 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 		server: s,
 	}
 	s.roleServer = config.Security.Role
-
+	s.policyServer = config.StoragePolicy
 	return s, nil
 }
 
@@ -426,6 +435,7 @@ func (s *sdkGrpcServer) Start() error {
 		api.RegisterOpenStorageMountAttachServer(grpcServer, s.volumeServer)
 		api.RegisterOpenStorageAlertsServer(grpcServer, s.alertsServer)
 		api.RegisterOpenStorageClusterPairServer(grpcServer, s.clusterPairServer)
+		api.RegisterOpenStoragePolicyServer(grpcServer, s.policyServer)
 
 		if s.config.Security.Role != nil {
 			api.RegisterOpenStorageRoleServer(grpcServer, s.roleServer)

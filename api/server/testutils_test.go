@@ -25,12 +25,14 @@ import (
 	sdkauth "github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 	"github.com/libopenstorage/openstorage/pkg/role"
+	"github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 	"github.com/libopenstorage/openstorage/volume/drivers/fake"
 	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
 	"github.com/libopenstorage/secrets"
 	"github.com/libopenstorage/secrets/mock"
+
 	"github.com/stretchr/testify/assert"
 
 	"github.com/portworx/kvdb"
@@ -44,7 +46,7 @@ const (
 	testSharedSecret = "mysecret"
 	testSdkSock      = "/tmp/sdk.sock"
 	testMgmtPort     = uint16(11111)
-	testMgmtBase     = "/tmp/mgmt"
+	testMgmtBase     = "/tmp"
 	testMockURL      = "http://localhost:11111"
 	mockDriverName   = "mock"
 	version          = "v1"
@@ -130,17 +132,25 @@ func newTestServerSdkNoAuth(t *testing.T) *testServer {
 	tester.m = mockdriver.NewMockVolumeDriver(tester.mc)
 	tester.c = mockcluster.NewMockCluster(tester.mc)
 
+	kv, err := kvdb.New(mem.Name, "test", []string{}, nil, logrus.Panicf)
+	assert.NoError(t, err)
+	stp, err := storagepolicy.Init(kv)
+	if err != nil {
+		stp, _ = storagepolicy.Inst()
+	}
+	assert.NotNil(t, stp)
+
 	os.Remove(testSdkSock)
-	var err error
 	tester.sdk, err = sdk.New(&sdk.ServerConfig{
-		DriverName:   "fake",
-		Net:          "tcp",
-		Address:      ":8123",
-		RestPort:     "8124",
-		Cluster:      tester.c,
-		Socket:       testSdkSock,
-		AccessOutput: ioutil.Discard,
-		AuditOutput:  ioutil.Discard,
+		DriverName:    "fake",
+		Net:           "tcp",
+		Address:       ":8123",
+		RestPort:      "8124",
+		StoragePolicy: stp,
+		Cluster:       tester.c,
+		Socket:        testSdkSock,
+		AccessOutput:  ioutil.Discard,
+		AuditOutput:   ioutil.Discard,
 	})
 	assert.Nil(t, err)
 	err = tester.sdk.Start()
@@ -162,10 +172,17 @@ func newTestServerSdk(t *testing.T) *testServer {
 	tester.c = mockcluster.NewMockCluster(tester.mc)
 
 	// Create a role manager
-	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, logrus.Panicf)
+	kv, err := kvdb.New(mem.Name, "test", []string{}, nil, logrus.Panicf)
 	assert.NoError(t, err)
 	rm, err := role.NewSdkRoleManager(kv)
 	assert.NoError(t, err)
+
+	// Do not check for error, just initialize it
+	stp, err := storagepolicy.Init(kv)
+	if err != nil {
+		stp, _ = storagepolicy.Inst()
+	}
+	assert.NotNil(t, stp)
 
 	os.Remove(testSdkSock)
 	selfsignedJwt, err := auth.NewJwtAuth(&auth.JwtAuthConfig{
@@ -174,14 +191,15 @@ func newTestServerSdk(t *testing.T) *testServer {
 	})
 	assert.NoError(t, err)
 	tester.sdk, err = sdk.New(&sdk.ServerConfig{
-		DriverName:   "fake",
-		Net:          "tcp",
-		Address:      ":8123",
-		RestPort:     "8124",
-		Cluster:      tester.c,
-		Socket:       testSdkSock,
-		AccessOutput: ioutil.Discard,
-		AuditOutput:  ioutil.Discard,
+		DriverName:    "fake",
+		Net:           "tcp",
+		Address:       ":8123",
+		RestPort:      "8124",
+		Cluster:       tester.c,
+		Socket:        testSdkSock,
+		StoragePolicy: stp,
+		AccessOutput:  ioutil.Discard,
+		AuditOutput:   ioutil.Discard,
 		Security: &sdk.SecurityConfig{
 			Role: rm,
 			Authenticators: map[string]auth.Authenticator{
@@ -272,6 +290,11 @@ func testRestServer(t *testing.T) (*httptest.Server, *testServer) {
 
 	ts := httptest.NewServer(router)
 	testVolDriver := newTestServer(t)
+	// Initialise storage policy manager
+	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, logrus.Panicf)
+	assert.NoError(t, err)
+	_, err = storagepolicy.Init(kv)
+
 	return ts, testVolDriver
 }
 

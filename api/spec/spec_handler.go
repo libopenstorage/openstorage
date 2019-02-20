@@ -114,6 +114,7 @@ var (
 	earlyAckRegex               = regexp.MustCompile(api.SpecEarlyAck + "=([A-Za-z]+),?")
 	forceUnsupportedFsTypeRegex = regexp.MustCompile(api.SpecForceUnsupportedFsType + "=([A-Za-z]+),?")
 	nodiscardRegex              = regexp.MustCompile(api.SpecNodiscard + "=([A-Za-z]+),?")
+	storagePolicyRegex          = regexp.MustCompile(api.StoragePolicy + "=([0-9A-Za-z_-]+),?")
 )
 
 type specHandler struct {
@@ -354,6 +355,8 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			}
 		case api.Token:
 			// skip, if not it would be added to the labels
+		case api.StoragePolicy:
+			spec.StoragePolicy = v
 		default:
 			locator.VolumeLabels[k] = v
 		}
@@ -476,6 +479,9 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, nodiscard := d.getVal(nodiscardRegex, str); ok {
 		opts[api.SpecNodiscard] = nodiscard
+	}
+	if ok, storagepolicy := d.getVal(storagePolicyRegex, str); ok {
+		opts[api.StoragePolicy] = storagepolicy
 	}
 
 	return true, opts, name
