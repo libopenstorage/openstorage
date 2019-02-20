@@ -62,16 +62,6 @@ func TestSdkVolumeAttachSuccess(t *testing.T) {
 				},
 			}, nil).
 			Times(1),
-		s.MockDriver().
-			EXPECT().
-			Inspect([]string{id}).
-			Return([]*api.Volume{
-				&api.Volume{
-					Id:    id,
-					State: api.VolumeState_VOLUME_STATE_DETACHED,
-				},
-			}, nil).
-			Times(1),
 
 		s.MockDriver().
 			EXPECT().
@@ -116,16 +106,6 @@ func TestSdkVolumeAttachFailed(t *testing.T) {
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: id,
-				},
-			}, nil).
-			Times(1),
-		s.MockDriver().
-			EXPECT().
-			Inspect([]string{id}).
-			Return([]*api.Volume{
-				&api.Volume{
-					Id:    id,
-					State: api.VolumeState_VOLUME_STATE_DETACHED,
 				},
 			}, nil).
 			Times(1),
@@ -201,16 +181,6 @@ func TestSdkVolumeDetachSuccess(t *testing.T) {
 				},
 			}, nil).
 			Times(1),
-		s.MockDriver().
-			EXPECT().
-			Inspect([]string{id}).
-			Return([]*api.Volume{
-				&api.Volume{
-					Id:    id,
-					State: api.VolumeState_VOLUME_STATE_ATTACHED,
-				},
-			}, nil).
-			Times(1),
 
 		s.MockDriver().
 			EXPECT().
@@ -252,16 +222,6 @@ func TestSdkVolumeDetachFailed(t *testing.T) {
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: id,
-				},
-			}, nil).
-			Times(1),
-		s.MockDriver().
-			EXPECT().
-			Inspect([]string{id}).
-			Return([]*api.Volume{
-				&api.Volume{
-					Id:    id,
-					State: api.VolumeState_VOLUME_STATE_ATTACHED,
 				},
 			}, nil).
 			Times(1),
@@ -355,6 +315,60 @@ func TestSdkVolumeMountSuccess(t *testing.T) {
 	_, err := c.Mount(context.Background(), req)
 	assert.NoError(t, err)
 }
+
+func TestSdkVolumeMountWithDriverOptionsSuccess(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	id := "dummy-volume-id"
+	mountPath := "/dev/real/path"
+
+	req := &api.SdkVolumeMountRequest{
+		VolumeId:  id,
+		MountPath: mountPath,
+		DriverOptions: map[string]string{
+			"hello": "world",
+		},
+	}
+	s.MockDriver().
+		EXPECT().
+		Inspect([]string{id}).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id:    id,
+				State: api.VolumeState_VOLUME_STATE_DETACHED,
+				Locator: &api.VolumeLocator{
+					Name: "dummy-volume-name",
+				},
+				Spec: &api.VolumeSpec{
+					Scale: uint32(0),
+				},
+			},
+		}, nil).
+		Times(1)
+
+	s.MockDriver().
+		EXPECT().
+		Type().
+		Return(api.DriverType_DRIVER_TYPE_NONE).
+		Times(1)
+
+	s.MockDriver().
+		EXPECT().
+		Mount(id, mountPath, map[string]string{"hello": "world"}).
+		Return(nil).
+		Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageMountAttachClient(s.Conn())
+
+	// Get info
+	_, err := c.Mount(context.Background(), req)
+	assert.NoError(t, err)
+}
+
 func TestSdkVolumeMountFailed(t *testing.T) {
 
 	// Create server and client connection

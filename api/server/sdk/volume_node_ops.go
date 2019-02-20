@@ -21,9 +21,7 @@ import (
 	"fmt"
 
 	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/pkg/options"
 	mountattachoptions "github.com/libopenstorage/openstorage/pkg/options"
-	"github.com/libopenstorage/openstorage/pkg/util"
 	"github.com/libopenstorage/openstorage/volume"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -47,14 +45,11 @@ func (s *VolumeServer) Attach(
 		return nil, err
 	}
 
-	// Check if already attached
-	_, err := util.VolumeFromName(s.driver(), req.GetVolumeId())
-	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "Volume %s was not found", req.GetVolumeId())
-	}
-
 	// Check options
-	options := make(map[string]string)
+	options := req.GetDriverOptions()
+	if options == nil {
+		options = make(map[string]string)
+	}
 	if req.GetOptions() != nil {
 		if len(req.GetOptions().GetSecretContext()) != 0 {
 			options[mountattachoptions.OptionsSecretContext] = req.GetOptions().GetSecretContext()
@@ -96,20 +91,17 @@ func (s *VolumeServer) Detach(
 		return nil, err
 	}
 
-	// Check if already attached
-	_, err := util.VolumeFromName(s.driver(), req.GetVolumeId())
-	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "Volume %s was not found", req.GetVolumeId())
-	}
-
 	// Check options
-	options := make(map[string]string)
+	options := req.GetDriverOptions()
+	if options == nil {
+		options = make(map[string]string)
+	}
 	options[mountattachoptions.OptionsRedirectDetach] = "true"
 	if req.GetOptions() != nil {
 		options[mountattachoptions.OptionsForceDetach] = fmt.Sprint(req.GetOptions().GetForce())
 		options[mountattachoptions.OptionsUnmountBeforeDetach] = fmt.Sprint(req.GetOptions().GetUnmountBeforeDetach())
 	}
-	err = s.driver().Detach(req.GetVolumeId(), options)
+	err := s.driver().Detach(req.GetVolumeId(), options)
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -190,11 +182,15 @@ func (s *VolumeServer) Mount(
 	if s.driver().Type() == api.DriverType_DRIVER_TYPE_BLOCK {
 		// If volume is scaled up, a new volume is created and
 		// vol will change.
-		attachOptions := make(map[string]string)
+		attachOptions := req.GetDriverOptions()
+		if attachOptions == nil {
+			attachOptions = make(map[string]string)
+		}
+
 		if req.Options != nil {
-			attachOptions[options.OptionsSecret] = req.Options.SecretName
-			attachOptions[options.OptionsSecretKey] = req.Options.SecretKey
-			attachOptions[options.OptionsSecretContext] = req.Options.SecretContext
+			attachOptions[mountattachoptions.OptionsSecret] = req.Options.SecretName
+			attachOptions[mountattachoptions.OptionsSecretKey] = req.Options.SecretKey
+			attachOptions[mountattachoptions.OptionsSecretContext] = req.Options.SecretContext
 		}
 		if vol.Scaled() {
 			vol, err = s.attachScale(ctx, vol, attachOptions)
@@ -206,7 +202,7 @@ func (s *VolumeServer) Mount(
 		}
 	}
 
-	err = s.driver().Mount(req.GetVolumeId(), req.GetMountPath(), nil)
+	err = s.driver().Mount(req.GetVolumeId(), req.GetMountPath(), req.GetDriverOptions())
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -234,7 +230,10 @@ func (s *VolumeServer) Unmount(
 		return nil, status.Error(codes.InvalidArgument, "Invalid Mount Path")
 	}
 
-	options := make(map[string]string)
+	options := req.GetDriverOptions()
+	if options == nil {
+		options = make(map[string]string)
+	}
 	if req.GetOptions() != nil {
 		options[mountattachoptions.OptionsDeleteAfterUnmount] = fmt.Sprint(req.GetOptions().GetDeleteMountPath())
 
