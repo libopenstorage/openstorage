@@ -19,6 +19,7 @@ package sdk
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/kubernetes-csi/csi-test/utils"

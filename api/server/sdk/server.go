@@ -322,7 +322,7 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 	}
 
 	if config.StoragePolicy == nil {
-		return nil, fmt.Errorf("Must Supply storage policy Server")
+		return nil, fmt.Errorf("Must supply storage policy server")
 	}
 
 	// Create gRPC server
