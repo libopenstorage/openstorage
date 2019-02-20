@@ -274,10 +274,6 @@ func (s *VolumeServer) Unmount(
 			err.Error())
 	}
 
-	if s.driver().Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-		_ = s.driver().Detach(volid, nil)
-	}
-
 	return &api.SdkVolumeUnmountResponse{}, nil
 }
 
