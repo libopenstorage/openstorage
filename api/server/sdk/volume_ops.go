@@ -75,7 +75,7 @@ func (s *VolumeServer) create(
 		parent, err := util.VolumeFromName(s.driver(ctx), source.Parent)
 		if err != nil {
 			return "", status.Errorf(
-				codes.InvalidArgument,
+				codes.NotFound,
 				"unable to get parent volume information: %s",
 				err.Error())
 		}
@@ -101,6 +101,9 @@ func (s *VolumeServer) create(
 		clone, err := s.Inspect(ctx, &api.SdkVolumeInspectRequest{
 			VolumeId: id,
 		})
+		if err != nil {
+			return "", err
+		}
 
 		newOwnership, updateNeeded := clone.Volume.Spec.GetCloneCreatorOwnership(ctx)
 		if updateNeeded {
@@ -179,7 +182,7 @@ func (s *VolumeServer) Create(
 	// Create volume
 	id, err := s.create(ctx, locator, source, spec)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, err
 	}
 
 	return &api.SdkVolumeCreateResponse{
@@ -225,7 +228,7 @@ func (s *VolumeServer) Clone(
 	// Create the clone
 	id, err := s.create(ctx, locator, source, parentVol.GetVolume().GetSpec())
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, err
 	}
 
 	return &api.SdkVolumeCloneResponse{
