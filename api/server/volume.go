@@ -354,13 +354,15 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 		if req.Action.Attach != api.VolumeActionParam_VOLUME_ACTION_PARAM_NONE {
 			if req.Action.Attach == api.VolumeActionParam_VOLUME_ACTION_PARAM_ON {
 				_, err = mountAttachClient.Attach(ctx, &api.SdkVolumeAttachRequest{
-					VolumeId: volumeID,
-					Options:  attachOptions,
+					VolumeId:      volumeID,
+					Options:       attachOptions,
+					DriverOptions: req.GetOptions(),
 				})
 			} else {
 				_, err = mountAttachClient.Detach(ctx, &api.SdkVolumeDetachRequest{
-					VolumeId: volumeID,
-					Options:  detachOptions,
+					VolumeId:      volumeID,
+					Options:       detachOptions,
+					DriverOptions: req.GetOptions(),
 				})
 			}
 			if err != nil {
@@ -382,14 +384,16 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 					break
 				}
 				_, err = mountAttachClient.Mount(ctx, &api.SdkVolumeMountRequest{
-					VolumeId:  volumeID,
-					MountPath: req.Action.MountPath,
+					VolumeId:      volumeID,
+					MountPath:     req.Action.MountPath,
+					DriverOptions: req.GetOptions(),
 				})
 			} else {
 				_, err = mountAttachClient.Unmount(ctx, &api.SdkVolumeUnmountRequest{
-					VolumeId:  volumeID,
-					MountPath: req.Action.MountPath,
-					Options:   unmountOptions,
+					VolumeId:      volumeID,
+					MountPath:     req.Action.MountPath,
+					Options:       unmountOptions,
+					DriverOptions: req.GetOptions(),
 				})
 			}
 			if err != nil {
