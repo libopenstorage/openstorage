@@ -17,8 +17,12 @@ limitations under the License.
 package csi
 
 import (
+	"io/ioutil"
+	"os"
 	"testing"
+	"time"
 
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
 	"github.com/sirupsen/logrus"
@@ -30,17 +34,35 @@ import (
 	"github.com/kubernetes-csi/csi-test/utils"
 	"golang.org/x/net/context"
 
+	"github.com/libopenstorage/openstorage/api/server/sdk"
+	"github.com/libopenstorage/openstorage/cluster"
+	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	mockcluster "github.com/libopenstorage/openstorage/cluster/mock"
+	"github.com/libopenstorage/openstorage/config"
+	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
-	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
+	"github.com/libopenstorage/openstorage/pkg/role"
+	"github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
 )
 
 const (
-	mockDriverName = "mock"
+	mockDriverName   = "mock"
+	testSharedSecret = "mysecret"
+	testSdkSock      = "/tmp/sdk.sock"
+	fakeWithSched    = "fake-sched"
 )
+
+var (
+	cm              cluster.Cluster
+	systemUserToken string
+)
+
+func init() {
+	setupFakeDriver()
+}
 
 // testServer is a simple struct used abstract
 // the creation and setup of the gRPC CSI service
@@ -50,6 +72,50 @@ type testServer struct {
 	m      *mockdriver.MockVolumeDriver
 	c      *mockcluster.MockCluster
 	mc     *gomock.Controller
+	sdk    *sdk.Server
+}
+
+func setupFakeDriver() {
+	kv, err := kvdb.New(mem.Name, "fake_test", []string{}, nil, logrus.Panicf)
+	if err != nil {
+		logrus.Panicf("Failed to initialize KVDB")
+	}
+	if err := kvdb.SetInstance(kv); err != nil {
+		logrus.Panicf("Failed to set KVDB instance")
+	}
+	// Need to setup a fake cluster. No need to start it.
+	clustermanager.Init(config.ClusterConfig{
+		ClusterId: "fakecluster",
+		NodeId:    "fakeNode",
+	})
+	cm, err = clustermanager.Inst()
+	if err != nil {
+		logrus.Panicf("Unable to initialize cluster manager: %v", err)
+	}
+
+	// Requires a non-nil cluster
+	if err := volumedrivers.Register("fake", map[string]string{}); err != nil {
+		logrus.Panicf("Unable to start volume driver fake: %v", err)
+	}
+}
+
+func createToken(t *testing.T, name, role string) string {
+	claims := &auth.Claims{
+		Issuer: "openstorage.io",
+		Name:   name,
+		Email:  name + "@openstorage.io",
+		Roles:  []string{role},
+	}
+	signature := &auth.Signature{
+		Key:  []byte(testSharedSecret),
+		Type: jwt.SigningMethodHS256,
+	}
+	options := &auth.Options{
+		Expiration: time.Now().Add(1 * time.Hour).Unix(),
+	}
+	token, err := auth.Token(claims, signature, options)
+	assert.NoError(t, err)
+	return token
 }
 
 func setupMockDriver(tester *testServer, t *testing.T) {
@@ -73,10 +139,12 @@ func newTestServer(t *testing.T) *testServer {
 	tester.c = mockcluster.NewMockCluster(tester.mc)
 
 	setupMockDriver(tester, t)
+
 	// Initialise storage policy manager
 	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, logrus.Panicf)
 	assert.NoError(t, err)
-	_, err = policy.Init(kv)
+	rm, err := role.NewSdkRoleManager(kv)
+	assert.NoError(t, err)
 
 	// Setup simple driver
 	tester.server, err = NewOsdCsiServer(&OsdCsiServerConfig{
@@ -84,15 +152,69 @@ func newTestServer(t *testing.T) *testServer {
 		Net:        "tcp",
 		Address:    "127.0.0.1:0",
 		Cluster:    tester.c,
+		SdkUds:     testSdkSock,
 	})
 	assert.Nil(t, err)
 	err = tester.server.Start()
 	assert.Nil(t, err)
 
+	// Setup storage policy
+	kv, err = kvdb.New(mem.Name, "test", []string{}, nil, logrus.Panicf)
+	assert.NoError(t, err)
+	stp, err := storagepolicy.Init(kv)
+	if err != nil {
+		stp, _ = storagepolicy.Inst()
+	}
+	assert.NotNil(t, stp)
+
+	os.Remove(testSdkSock)
+	selfsignedJwt, err := auth.NewJwtAuth(&auth.JwtAuthConfig{
+		SharedSecret:  []byte(testSharedSecret),
+		UsernameClaim: auth.UsernameClaimTypeName,
+	})
+
+	// setup sdk server
+	tester.sdk, err = sdk.New(&sdk.ServerConfig{
+		DriverName:    "fake",
+		Net:           "tcp",
+		Address:       ":8123",
+		RestPort:      "8124",
+		Cluster:       tester.c,
+		Socket:        testSdkSock,
+		StoragePolicy: stp,
+		AccessOutput:  ioutil.Discard,
+		AuditOutput:   ioutil.Discard,
+		Security: &sdk.SecurityConfig{
+			Role: rm,
+			Authenticators: map[string]auth.Authenticator{
+				"openstorage.io": selfsignedJwt,
+			},
+		},
+	})
+	assert.Nil(t, err)
+	err = tester.sdk.Start()
+	assert.Nil(t, err)
+	tester.sdk.UseVolumeDrivers(map[string]volume.VolumeDriver{
+		"mock":    tester.m,
+		"default": tester.m,
+	})
+
 	// Setup a connection to the driver
 	tester.conn, err = grpc.Dial(tester.server.Address(), grpc.WithInsecure())
 	assert.Nil(t, err)
 
+	systemUserToken = createToken(t, "user1", "system.user")
+	// Setup fake-sched driver for REST UTs
+	// Point it to the fake driver head
+	/*fakeDriver, err := volumedrivers.Get(fake.Name)
+	assert.NoError(t, err)
+	volumedrivers.Add(fakeWithSched,
+		func(params map[string]string) (volume.VolumeDriver, error) {
+			return fakeDriver, nil
+		},
+	)
+	volumedrivers.Register(fakeWithSched, nil)
+	*/
 	return tester
 }
 
@@ -111,6 +233,7 @@ func (s *testServer) Stop() {
 	// Shutdown servers
 	s.conn.Close()
 	s.server.Stop()
+	s.sdk.Stop()
 
 	// Check mocks
 	s.mc.Finish()
@@ -191,6 +314,7 @@ func TestNewCSIServerBadParameters(t *testing.T) {
 	s, err = NewOsdCsiServer(&OsdCsiServerConfig{
 		Net:     "test",
 		Address: "blah",
+		SdkUds:  "abcd",
 	})
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
@@ -200,6 +324,7 @@ func TestNewCSIServerBadParameters(t *testing.T) {
 		Net:        "test",
 		Address:    "blah",
 		DriverName: "name",
+		SdkUds:     testSdkSock,
 	})
 	assert.Nil(t, s)
 	assert.NotNil(t, err)

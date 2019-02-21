@@ -18,12 +18,16 @@ package csi
 
 import (
 	"fmt"
+	"sync"
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
+	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 
 	"github.com/libopenstorage/openstorage/api/spec"
 	"github.com/libopenstorage/openstorage/cluster"
+	authsecrets "github.com/libopenstorage/openstorage/pkg/auth/secrets"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
@@ -36,6 +40,7 @@ type OsdCsiServerConfig struct {
 	Address    string
 	DriverName string
 	Cluster    cluster.Cluster
+	SdkUds     string
 }
 
 // OsdCsiServer is a OSD CSI compliant server which
@@ -49,6 +54,9 @@ type OsdCsiServer struct {
 	specHandler spec.SpecHandler
 	driver      volume.VolumeDriver
 	cluster     cluster.Cluster
+	sdkUds      string
+	conn        *grpc.ClientConn
+	mu          sync.Mutex
 }
 
 // NewOsdCsiServer creates a gRPC CSI complient server on the
@@ -80,7 +88,36 @@ func NewOsdCsiServer(config *OsdCsiServerConfig) (grpcserver.Server, error) {
 		GrpcServer:  gServer,
 		driver:      d,
 		cluster:     config.Cluster,
+		sdkUds:      config.SdkUds,
 	}, nil
+}
+
+func (s *OsdCsiServer) getConn() (*grpc.ClientConn, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.conn == nil {
+		var err error
+		fmt.Println("Connecting to", s.sdkUds)
+		s.conn, err = grpcserver.Connect(
+			s.sdkUds,
+			[]grpc.DialOption{grpc.WithInsecure()})
+		if err != nil {
+			return nil, fmt.Errorf("Failed to connect CSI to SDK uds %s: %v", s.sdkUds, err)
+		}
+	}
+	return s.conn, nil
+}
+
+// Gets token from the secrets. In Kubernetes, the side car containers copy
+// the contents of a K8S Secret map into the Secrets section of the CSI call.
+func (s *OsdCsiServer) setupContextWithToken(ctx context.Context, csiSecrets map[string]string) context.Context {
+	if token, ok := csiSecrets[authsecrets.SecretTokenKey]; ok {
+		md := metadata.New(map[string]string{
+			"authorization": "bearer " + token,
+		})
+		return metadata.NewOutgoingContext(ctx, md)
+	}
+	return ctx
 }
 
 // Start is used to start the server.
