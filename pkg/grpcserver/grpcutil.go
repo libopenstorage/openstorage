@@ -16,12 +16,12 @@ limitations under the License.
 package grpcserver
 
 import (
-	"context"
 	"fmt"
 	"net"
 	"net/url"
 	"time"
 
+	"github.com/libopenstorage/openstorage/pkg/util"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 )
@@ -43,14 +43,16 @@ func Connect(address string, dialOptions []grpc.DialOption) (*grpc.ClientConn, e
 		return nil, err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-	for {
-		if !conn.WaitForStateChange(ctx, conn.GetState()) {
-			return conn, fmt.Errorf("Connection timed out")
-		}
+	// We wait for 1 minute until conn.GetState() is READY.
+	// The interval for this check is 1 second.
+	if err := util.WaitFor(1*time.Minute, 10*time.Millisecond, func() (bool, error) {
 		if conn.GetState() == connectivity.Ready {
-			return conn, nil
+			return false, nil
 		}
+		return true, nil
+	}); err != nil {
+		return nil, fmt.Errorf("Connection timed out")
 	}
+
+	return conn, nil
 }
