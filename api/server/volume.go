@@ -11,6 +11,7 @@ import (
 	"sync"
 
 	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/errors"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
@@ -20,8 +21,6 @@ import (
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 	osecrets "github.com/libopenstorage/secrets"
 	"github.com/urfave/negroni"
-
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -323,6 +322,8 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 				vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 				return
 			}
+			// Update replica set after ip to id conversion
+			updateReq.Spec.ReplicaSet = req.Spec.ReplicaSet
 		}
 
 		// Only set spec if spec and locator are not nil.
