@@ -342,10 +342,10 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 	if req.Options["SECRET_CONTEXT"] != "" {
 		attachOptions.SecretContext = req.Options["SECRET_CONTEXT"]
 	}
-	if req.Options["FORCE_DETACH"] != "" {
+	if req.Options["FORCE_DETACH"] == "true" {
 		detachOptions.Force = true
 	}
-	if req.Options["UNMOUNT_BEFORE_DETACH"] != "" {
+	if req.Options["UNMOUNT_BEFORE_DETACH"] == "true" {
 		detachOptions.UnmountBeforeDetach = true
 	}
 	mountAttachClient := api.NewOpenStorageMountAttachClient(conn)
@@ -371,12 +371,15 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 		}
 
 		unmountOptions := &api.SdkVolumeUnmountOptions{}
-		if req.Options["DELETE_AFTER_UNMOUNT"] != "" {
+		if req.Options["DELETE_AFTER_UNMOUNT"] == "true" {
 			unmountOptions.DeleteMountPath = true
 		}
-		if req.Options["WAIT_BEFORE_DELETE"] != "" {
+		if req.Options["WAIT_BEFORE_DELETE"] == "true" {
+			unmountOptions.NoDelayBeforeDeletingMountPath = false
+		} else {
 			unmountOptions.NoDelayBeforeDeletingMountPath = true
 		}
+
 		if req.Action.Mount != api.VolumeActionParam_VOLUME_ACTION_PARAM_NONE {
 			if req.Action.Mount == api.VolumeActionParam_VOLUME_ACTION_PARAM_ON {
 				if req.Action.MountPath == "" {
