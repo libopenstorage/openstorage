@@ -307,11 +307,6 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	updateReq := &api.SdkVolumeUpdateRequest{VolumeId: volumeID}
-	updateReq.Spec = getVolumeUpdateSpec(req.Spec, vol.GetVolume())
-	if req.Locator != nil && len(req.Locator.VolumeLabels) > 0 {
-		updateReq.Labels = req.Locator.VolumeLabels
-	}
 
 	detachOptions := &api.SdkVolumeDetachOptions{}
 	attachOptions := &api.SdkVolumeAttachOptions{}
