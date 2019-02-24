@@ -489,10 +489,6 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 		EXPECT().
 		Unmount(id, mountPath, options).
 		Return(nil)
-	s.MockDriver().
-		EXPECT().
-		Type().
-		Return(api.DriverType_DRIVER_TYPE_NONE)
 
 	// Setup client
 	c := api.NewOpenStorageMountAttachClient(s.Conn())
@@ -533,10 +529,6 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 		EXPECT().
 		Unmount(id, mountPath, options).
 		Return(nil)
-	s.MockDriver().
-		EXPECT().
-		Type().
-		Return(api.DriverType_DRIVER_TYPE_NONE)
 
 	_, err = c.Unmount(context.Background(), req)
 	assert.NoError(t, err)
@@ -574,10 +566,6 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 		EXPECT().
 		Unmount(id, mountPath, options).
 		Return(nil)
-	s.MockDriver().
-		EXPECT().
-		Type().
-		Return(api.DriverType_DRIVER_TYPE_NONE)
 
 	_, err = c.Unmount(context.Background(), req)
 	assert.NoError(t, err)
@@ -613,10 +601,6 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 		EXPECT().
 		Unmount(id, mountPath, options).
 		Return(nil)
-	s.MockDriver().
-		EXPECT().
-		Type().
-		Return(api.DriverType_DRIVER_TYPE_NONE)
 
 	_, err = c.Unmount(context.Background(), req)
 	assert.NoError(t, err)
@@ -651,10 +635,6 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 		EXPECT().
 		Unmount(id, mountPath, options).
 		Return(nil)
-	s.MockDriver().
-		EXPECT().
-		Type().
-		Return(api.DriverType_DRIVER_TYPE_NONE)
 
 	_, err = c.Unmount(context.Background(), req)
 	assert.NoError(t, err)
@@ -686,10 +666,6 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 		EXPECT().
 		Unmount(id, mountPath, options).
 		Return(nil)
-	s.MockDriver().
-		EXPECT().
-		Type().
-		Return(api.DriverType_DRIVER_TYPE_NONE)
 
 	_, err = c.Unmount(context.Background(), req)
 	assert.NoError(t, err)
