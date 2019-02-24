@@ -1005,7 +1005,7 @@ func (vd *volAPI) snapEnumerate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	snaps := make([]*api.Volume, len(ids))
+	snaps := make([]*api.Volume, len(resp.GetVolumeSnapshotIds()))
 	for i, s := range resp.GetVolumeSnapshotIds() {
 		vol, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{VolumeId: s})
 		if err != nil {
