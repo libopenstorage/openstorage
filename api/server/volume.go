@@ -317,13 +317,16 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 	attachOptions := &api.SdkVolumeAttachOptions{}
 
 	if req.Locator != nil || req.Spec != nil {
+		updateReq := &api.SdkVolumeUpdateRequest{VolumeId: volumeID}
+		if req.Locator != nil && len(req.Locator.VolumeLabels) > 0 {
+			updateReq.Labels = req.Locator.VolumeLabels
+		}
 		if req.Spec != nil {
 			if err = vd.updateReplicaSpecNodeIPstoIds(req.Spec.ReplicaSet); err != nil {
 				vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 				return
 			}
-			// Update replica set after ip to id conversion
-			updateReq.Spec.ReplicaSet = req.Spec.ReplicaSet
+			updateReq.Spec = getVolumeUpdateSpec(req.Spec, vol.GetVolume())
 		}
 
 		// Only set spec if spec and locator are not nil.
@@ -427,6 +430,8 @@ func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume) *api.VolumeSpecU
 	if spec == nil {
 		return newSpec
 	}
+
+	newSpec.ReplicaSet = spec.ReplicaSet
 	if spec.Shared != vol.Spec.Shared {
 		newSpec.SharedOpt = &api.VolumeSpecUpdate_Shared{
 			Shared: spec.Shared,
@@ -493,7 +498,7 @@ func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume) *api.VolumeSpecU
 		}
 	}
 
-	if spec.Group != vol.Spec.Group {
+	if spec.Group != vol.Spec.Group && spec.Group != nil {
 		newSpec.GroupOpt = &api.VolumeSpecUpdate_Group{
 			Group: spec.Group,
 		}
