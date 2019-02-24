@@ -141,13 +141,17 @@ func (s *VolumeServer) SnapshotEnumerateWithFilters(
 	}
 
 	// Get access rights
+	var volReq []string
 	if len(req.GetVolumeId()) != 0 {
 		if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId(), api.Ownership_Read); err != nil {
 			return nil, err
 		}
+		volReq = []string{req.GetVolumeId()}
+	} else {
+		volReq = nil
 	}
 
-	snapshots, err := s.driver().SnapEnumerate([]string{req.GetVolumeId()}, req.GetLabels())
+	snapshots, err := s.driver().SnapEnumerate(volReq, req.GetLabels())
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,

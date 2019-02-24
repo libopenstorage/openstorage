@@ -3401,7 +3401,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.41.0"
+    "version": "0.42.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -5358,6 +5358,36 @@
       }
     },
     "/v1/volumes/snapshots": {
+      "get": {
+        "operationId": "SnapshotEnumerate",
+        "parameters": [
+          {
+            "description": "Get the snapshots for this volume id.",
+            "in": "query",
+            "name": "volume_id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkVolumeSnapshotEnumerateResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "SnapshotEnumerate returns a list of snapshots for a specific volume",
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      },
       "post": {
         "description": "Requires access AccessType.Read of volume",
         "operationId": "SnapshotCreate",
@@ -5416,37 +5446,6 @@
           }
         },
         "summary": "SnapshotRestore restores a volume to a specified snapshot",
-        "tags": [
-          "OpenStorageVolume"
-        ]
-      }
-    },
-    "/v1/volumes/snapshots/{volume_id}": {
-      "get": {
-        "operationId": "SnapshotEnumerate",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "volume_id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/apiSdkVolumeSnapshotEnumerateResponse"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "summary": "SnapshotEnumerate returns a list of snapshots for a specific volume",
         "tags": [
           "OpenStorageVolume"
         ]
