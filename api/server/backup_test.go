@@ -579,7 +579,8 @@ func TestClientBackupSchedCreateSuccess(t *testing.T) {
 	goodRequest.SrcVolumeID = id
 	goodRequest.CredentialUUID = credId
 	goodRequest.Full = false
-	goodRequest.Schedule = "daily@10:00"
+	goodRequest.Schedule = "- freq: daily\n  minute: 30\n  retain: 2\n"
+	goodRequest.MaxBackups = 2
 
 	// Invoke Schedule Create
 	_, err = client.VolumeDriver(cl).CloudBackupSchedCreate(&goodRequest)
