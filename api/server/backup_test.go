@@ -1,13 +1,10 @@
 package server
 
 import (
-	"context"
-	//"fmt"
 	"testing"
 
 	"github.com/libopenstorage/openstorage/api"
 	client "github.com/libopenstorage/openstorage/api/client/volume"
-	//	"github.com/libopenstorage/openstorage/volume"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -44,25 +41,15 @@ func TestClientBackupCreateSuccess(t *testing.T) {
 	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
+	defer driverclient.Delete(id)
 
-	// Assert volume information is correct
-	backups := api.NewOpenStorageCloudBackupClient(testVolDriver.Conn())
-	ctx, err := contextWithToken(context.Background(), "test", "system.admin", testSharedSecret)
-	assert.NoError(t, err)
-	_, err = backups.Create(ctx, &api.SdkCloudBackupCreateRequest{
-		VolumeId:     id,
-		Full:         false,
-		CredentialId: credId,
+	// Create a backup
+	resp, err := driverclient.CloudBackupCreate(&api.CloudBackupCreateRequest{
+		VolumeID:       id,
+		CredentialUUID: credId,
 	})
 	assert.NoError(t, err)
-
-	volumes := api.NewOpenStorageVolumeClient(testVolDriver.Conn())
-	ctx, err = contextWithToken(context.Background(), "test", "system.admin", testSharedSecret)
-	assert.NoError(t, err)
-	_, err = volumes.Delete(ctx, &api.SdkVolumeDeleteRequest{
-		VolumeId: id,
-	})
-	assert.NoError(t, err)
+	assert.NotEmpty(t, resp.Name)
 }
 
 func TestClientBackupCreateFailed(t *testing.T) {
@@ -78,46 +65,13 @@ func TestClientBackupCreateFailed(t *testing.T) {
 	cl, err := client.NewAuthDriverClient(ts.URL, mockDriverName, version, token, "", mockDriverName)
 	assert.NoError(t, err)
 
-	// Setup request
-	name := "myvol"
-	size := uint64(1234)
-	req := &api.VolumeCreateRequest{
-		Locator: &api.VolumeLocator{Name: name},
-		Source:  &api.Source{},
-		Spec: &api.VolumeSpec{
-			HaLevel: 3,
-			Size:    size,
-			Format:  api.FSType_FS_TYPE_EXT4,
-			Shared:  true,
-		},
-	}
-
-	// Create a volume client
+	// Create a backup
 	driverclient := client.VolumeDriver(cl)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
-	assert.Nil(t, err)
-	assert.NotEmpty(t, id)
-
-	// Assert volume information is correct
-	backup := api.NewOpenStorageCloudBackupClient(testVolDriver.Conn())
-	ctx, err := contextWithToken(context.Background(), "test", "system.admin", testSharedSecret)
-	assert.NoError(t, err)
-
-	_, err = backup.Create(ctx, &api.SdkCloudBackupCreateRequest{
-		VolumeId:     "doesnotexist",
-		Full:         false,
-		CredentialId: credId,
+	_, err = driverclient.CloudBackupCreate(&api.CloudBackupCreateRequest{
+		VolumeID:       "doesnotexist",
+		CredentialUUID: credId,
 	})
-	assert.NotNil(t, err)
-
-	volumes := api.NewOpenStorageVolumeClient(testVolDriver.Conn())
-	ctx, err = contextWithToken(context.Background(), "test", "system.admin", testSharedSecret)
-	assert.NoError(t, err)
-
-	_, err = volumes.Delete(ctx, &api.SdkVolumeDeleteRequest{
-		VolumeId: id,
-	})
-	assert.NoError(t, err)
+	assert.Error(t, err)
 }
 
 /*
@@ -335,33 +289,34 @@ func TestClientBackupEnumerateSuccess(t *testing.T) {
 	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
+	defer driverclient.Delete(id)
 
-	// Assert volume information is correct
-	backup := api.NewOpenStorageCloudBackupClient(testVolDriver.Conn())
-	ctx, err := contextWithToken(context.Background(), "test", "system.admin", testSharedSecret)
-	assert.NoError(t, err)
-
-	_, err = backup.Create(ctx, &api.SdkCloudBackupCreateRequest{
-		VolumeId:     id,
-		Full:         false,
-		CredentialId: credId,
+	// Create a backup
+	resp, err := driverclient.CloudBackupCreate(&api.CloudBackupCreateRequest{
+		VolumeID:       id,
+		CredentialUUID: credId,
 	})
 	assert.NoError(t, err)
+	assert.NotEmpty(t, resp.Name)
 
-	r, err := backup.EnumerateWithFilters(ctx, &api.SdkCloudBackupEnumerateWithFiltersRequest{
-		CredentialId: credId,
-	})
-	require.NoError(t, err)
-	require.NotNil(t, r)
-
-	volumes := api.NewOpenStorageVolumeClient(testVolDriver.Conn())
-	ctx, err = contextWithToken(context.Background(), "test", "system.admin", testSharedSecret)
-	assert.NoError(t, err)
-
-	_, err = volumes.Delete(ctx, &api.SdkVolumeDeleteRequest{
-		VolumeId: id,
+	// Create another backup
+	resp, err = driverclient.CloudBackupCreate(&api.CloudBackupCreateRequest{
+		VolumeID:       id,
+		CredentialUUID: credId,
 	})
 	assert.NoError(t, err)
+	assert.NotEmpty(t, resp.Name)
+
+	// Enumerate backups
+	enum, err := driverclient.CloudBackupEnumerate(&api.CloudBackupEnumerateRequest{
+		CloudBackupGenericRequest: api.CloudBackupGenericRequest{
+			SrcVolumeID:    id,
+			CredentialUUID: credId,
+		},
+	})
+	assert.NoError(t, err)
+	assert.NotEmpty(t, enum.Backups)
+	assert.Len(t, enum.Backups, 2)
 }
 
 func TestClientBackupEnumerateFailed(t *testing.T) {
@@ -396,33 +351,23 @@ func TestClientBackupEnumerateFailed(t *testing.T) {
 	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
+	defer driverclient.Delete(id)
 
-	// Assert volume information is correct
-	backup := api.NewOpenStorageCloudBackupClient(testVolDriver.Conn())
-	ctx, err := contextWithToken(context.Background(), "test", "system.admin", testSharedSecret)
-	assert.NoError(t, err)
-
-	_, err = backup.Create(ctx, &api.SdkCloudBackupCreateRequest{
-		VolumeId:     id,
-		Full:         false,
-		CredentialId: credId,
+	// Create a backup
+	resp, err := driverclient.CloudBackupCreate(&api.CloudBackupCreateRequest{
+		VolumeID:       id,
+		CredentialUUID: credId,
 	})
 	assert.NoError(t, err)
+	assert.NotEmpty(t, resp.Name)
 
-	r, err := backup.EnumerateWithFilters(ctx, &api.SdkCloudBackupEnumerateWithFiltersRequest{
-		CredentialId: "BadCred",
+	// Enumerate should fail with bad credential
+	_, err = driverclient.CloudBackupEnumerate(&api.CloudBackupEnumerateRequest{
+		CloudBackupGenericRequest: api.CloudBackupGenericRequest{
+			CredentialUUID: "BadCred",
+		},
 	})
 	require.Error(t, err)
-	require.Nil(t, r)
-
-	volumes := api.NewOpenStorageVolumeClient(testVolDriver.Conn())
-	ctx, err = contextWithToken(context.Background(), "test", "system.admin", testSharedSecret)
-	assert.NoError(t, err)
-
-	_, err = volumes.Delete(ctx, &api.SdkVolumeDeleteRequest{
-		VolumeId: id,
-	})
-	assert.NoError(t, err)
 }
 
 /*
@@ -574,6 +519,7 @@ func TestClientBackupSchedCreateSuccess(t *testing.T) {
 	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
+	defer driverclient.Delete(id)
 
 	goodRequest := api.CloudBackupSchedCreateRequest{}
 	goodRequest.SrcVolumeID = id
@@ -587,6 +533,7 @@ func TestClientBackupSchedCreateSuccess(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+/*
 func TestClientBackupSchedCreateFailed(t *testing.T) {
 	// Setup volume rest functions server
 	ts, testVolDriver := testRestServerSdk(t)
@@ -619,6 +566,7 @@ func TestClientBackupSchedCreateFailed(t *testing.T) {
 	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
+	defer driverclient.Delete(id)
 
 	// Cannot get this to fail.
 	badRequest := api.CloudBackupSchedCreateRequest{}
@@ -630,7 +578,6 @@ func TestClientBackupSchedCreateFailed(t *testing.T) {
 	//assert.Error(t, err)
 }
 
-/*
 func TestClientBackupGroupSchedCreate(t *testing.T) {
 	ts, testVolDriver := testRestServer(t)
 	defer ts.Close()
