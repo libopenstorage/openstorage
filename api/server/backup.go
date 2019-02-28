@@ -6,11 +6,13 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	sdk "github.com/libopenstorage/openstorage/api/server/sdk"
+	prototime "github.com/libopenstorage/openstorage/pkg/proto/time"
 	"github.com/libopenstorage/openstorage/volume"
 )
 
 func (vd *volAPI) cloudBackupCreate(w http.ResponseWriter, r *http.Request) {
 	backupReq := &api.CloudBackupCreateRequest{}
+	var backupResp api.CloudBackupCreateResponse
 	method := "cloudBackupCreate"
 
 	if err := json.NewDecoder(r.Body).Decode(backupReq); err != nil {
@@ -44,7 +46,8 @@ func (vd *volAPI) cloudBackupCreate(w http.ResponseWriter, r *http.Request) {
 		vd.sendError(method, backupReq.VolumeID, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	json.NewEncoder(w).Encode(createResp)
+	backupResp.Name = createResp.TaskId
+	json.NewEncoder(w).Encode(&backupResp)
 }
 
 func (vd *volAPI) cloudBackupGroupCreate(w http.ResponseWriter, r *http.Request) {
@@ -161,7 +164,7 @@ func (vd *volAPI) cloudBackupDeleteAll(w http.ResponseWriter, r *http.Request) {
 func (vd *volAPI) cloudBackupEnumerate(w http.ResponseWriter, r *http.Request) {
 	method := "cloudBackupEnumerate"
 	enumerateReq := &api.CloudBackupEnumerateRequest{}
-
+	var enumerateResp api.CloudBackupEnumerateResponse
 	if err := json.NewDecoder(r.Body).Decode(enumerateReq); err != nil {
 		vd.sendError(method, "", w, err.Error(), http.StatusBadRequest)
 		return
@@ -182,7 +185,7 @@ func (vd *volAPI) cloudBackupEnumerate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	volumes := api.NewOpenStorageCloudBackupClient(conn)
-	enumerateResp, err := volumes.EnumerateWithFilters(ctx, &api.SdkCloudBackupEnumerateWithFiltersRequest{
+	sdkEnumerateResp, err := volumes.EnumerateWithFilters(ctx, &api.SdkCloudBackupEnumerateWithFiltersRequest{
 		SrcVolumeId:  enumerateReq.SrcVolumeID,
 		ClusterId:    enumerateReq.ClusterID,
 		CredentialId: enumerateReq.CredentialUUID,
@@ -192,8 +195,20 @@ func (vd *volAPI) cloudBackupEnumerate(w http.ResponseWriter, r *http.Request) {
 		vd.sendError(method, "", w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	enumerateResp.Backups = make([]api.CloudBackupInfo, 0)
+	for _, v := range sdkEnumerateResp.Backups {
+		item := api.CloudBackupInfo{
+			ID:            v.Id,
+			SrcVolumeID:   v.SrcVolumeId,
+			SrcVolumeName: v.SrcVolumeName,
+			Timestamp:     prototime.TimestampToTime(v.Timestamp),
+			Metadata:      v.Metadata,
+			Status:        v.Status.String(),
+		}
+		enumerateResp.Backups = append(enumerateResp.Backups, item)
+	}
 
-	json.NewEncoder(w).Encode(enumerateResp.GetBackups())
+	json.NewEncoder(w).Encode(&enumerateResp)
 }
 
 func (vd *volAPI) cloudBackupStatus(w http.ResponseWriter, r *http.Request) {
@@ -296,6 +311,7 @@ func (vd *volAPI) cloudBackupStateChange(w http.ResponseWriter, r *http.Request)
 func (vd *volAPI) cloudBackupSchedCreate(w http.ResponseWriter, r *http.Request) {
 	method := "cloudBackupSchedCreate"
 	backupSchedReq := &api.CloudBackupSchedCreateRequest{}
+	var backupSchedResp api.CloudBackupSchedCreateResponse
 	if err := json.NewDecoder(r.Body).Decode(backupSchedReq); err != nil {
 		vd.sendError(method, "", w, err.Error(), http.StatusBadRequest)
 		return
@@ -314,7 +330,6 @@ func (vd *volAPI) cloudBackupSchedCreate(w http.ResponseWriter, r *http.Request)
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	volumes := api.NewOpenStorageCloudBackupClient(conn)
 	resp, err := volumes.SchedCreate(ctx, &api.SdkCloudBackupSchedCreateRequest{
 		CloudSchedInfo: sdk.ToSdkCloudBackupdScheduleInfo(api.CloudBackupScheduleInfo{
@@ -324,8 +339,12 @@ func (vd *volAPI) cloudBackupSchedCreate(w http.ResponseWriter, r *http.Request)
 			MaxBackups:     backupSchedReq.MaxBackups,
 		}),
 	})
-
-	json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	backupSchedResp.UUID = resp.BackupScheduleId
+	json.NewEncoder(w).Encode(&backupSchedResp)
 }
 
 func (vd *volAPI) cloudBackupGroupSchedCreate(w http.ResponseWriter, r *http.Request) {

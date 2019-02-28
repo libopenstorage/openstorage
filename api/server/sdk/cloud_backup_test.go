@@ -754,7 +754,7 @@ func TestSdkCloudBackupSchedCreate(t *testing.T) {
 	s.MockDriver().
 		EXPECT().
 		CloudBackupSchedCreate(&mockReq).
-		Return(&api.CloudBackupSchedCreateResponse{}, nil).
+		Return(&api.CloudBackupSchedCreateResponse{UUID: "uuid"}, nil).
 		Times(1)
 
 	// Setup client
