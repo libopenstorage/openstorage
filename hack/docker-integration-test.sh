@@ -62,6 +62,7 @@ sudo -E $GOPATH/bin/osd \
 	--driver=name=fake \
 	--sdkport 9106 \
 	--jwt-shared-secret=testsecret \
+	--jwt-system-shared-secret=testsecret \
 	--sdkrestport 9116 &
 jobs -l
 timeout 30 sh -c "until curl --silent -H \"Authorization:bearer $token\" -X GET -d {} http://localhost:9116/v1/clusters/inspectcurrent | grep STATUS_OK; do sleep 1; done"

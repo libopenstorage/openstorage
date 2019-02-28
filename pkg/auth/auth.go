@@ -20,26 +20,19 @@ import (
 	"context"
 )
 
-// UsernameClaimType holds the claims type to be use as the unique id for the user
-type UsernameClaimType string
-
-const (
-	// default type is sub
-	UsernameClaimTypeDefault UsernameClaimType = ""
-	// UsernameClaimTypeSubject requests to use "sub" as the claims for the
-	// ID of the user
-	UsernameClaimTypeSubject UsernameClaimType = "sub"
-	// UsernameClaimTypeEmail requests to use "name" as the claims for the
-	// ID of the user
-	UsernameClaimTypeEmail UsernameClaimType = "email"
-	// UsernameClaimTypeName requests to use "name" as the claims for the
-	// ID of the user
-	UsernameClaimTypeName UsernameClaimType = "name"
-)
-
 var (
-	// Required claim keys
-	requiredClaims = []string{"iss", "sub", "exp", "iat", "name", "email"}
+	systemTokenInst TokenGenerator = &noauth{}
+
+	// Inst returns the instance of system token manager.
+	// This function can be overridden for testing purposes
+	InitSystemTokenManager = func(tg TokenGenerator) {
+		systemTokenInst = tg
+	}
+
+	// SystemTokenManagerInst returns the systemTokenManager instance
+	SystemTokenManagerInst = func() TokenGenerator {
+		return systemTokenInst
+	}
 )
 
 // Authenticator interface validates and extracts the claims from a raw token
@@ -53,20 +46,7 @@ type Authenticator interface {
 	Username(*Claims) string
 }
 
-// utility function to get username
-func getUsername(usernameClaim UsernameClaimType, claims *Claims) string {
-	switch usernameClaim {
-	case UsernameClaimTypeEmail:
-		return claims.Email
-	case UsernameClaimTypeName:
-		return claims.Name
-	}
-	return claims.Subject
-}
-
-// AuthorizationEnabled returns true if the storage system has authorization
-// and authentication enabled.
-func AuthorizationEnabled(ctx context.Context) bool {
-	_, ok := NewUserInfoFromContext(ctx)
-	return ok
+// Enabled returns whether or not auth is enabled.
+func Enabled() bool {
+	return len(systemTokenInst.Issuer()) != 0
 }

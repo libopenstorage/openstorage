@@ -108,7 +108,7 @@ func (s *ClusterPairServer) GetToken(
 
 	resp, err := s.cluster().GetPairToken(false)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Cannot generate token : %v", err)
+		return nil, status.Errorf(codes.Internal, "Cannot generate token: %v", err)
 	}
 	return &api.SdkClusterPairGetTokenResponse{
 		Result: resp,
@@ -126,7 +126,7 @@ func (s *ClusterPairServer) ResetToken(
 
 	resp, err := s.cluster().GetPairToken(true)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Cannot generate token : %v", err)
+		return nil, status.Errorf(codes.Internal, "Cannot generate token: %v", err)
 	}
 	return &api.SdkClusterPairResetTokenResponse{
 		Result: resp,

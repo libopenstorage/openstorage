@@ -19,27 +19,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
-// Claims provides information about the claims in the token
-// See https://openid.net/specs/openid-connect-core-1_0.html#IDToken
-// for more information.
-type Claims struct {
-	// Issuer is the token issuer. For selfsigned token do not prefix
-	// with `https://`.
-	Issuer string `json:"iss"`
-	// Subject identifier. Unique ID of this account
-	Subject string `json:"sub" yaml:"sub"`
-	// Account name
-	Name string `json:"name" yaml:"name"`
-	// Account email
-	Email string `json:"email" yaml:"email"`
-	// Roles of this account
-	Roles []string `json:"roles,omitempty" yaml:"roles,omitempty"`
-	// (optional) Groups in which this account is part of
-	Groups []string `json:"groups,omitempty" yaml:"groups,omitempty"`
+// Options provide any options to apply to the token
+type Options struct {
+	// Expiration time in Unix format as per JWT standard
+	Expiration int64
 }
 
 // TokenClaims returns the claims for the raw JWT token.
@@ -86,4 +74,32 @@ func TokenIssuer(rawtoken string) (string, error) {
 func IsJwtToken(authstring string) bool {
 	_, _, err := new(jwt.Parser).ParseUnverified(authstring, jwt.MapClaims{})
 	return err == nil
+}
+
+// Token returns a signed JWT containing the claims provided
+func Token(
+	claims *Claims,
+	signature *Signature,
+	options *Options,
+) (string, error) {
+
+	mapclaims := jwt.MapClaims{
+		"sub":   claims.Subject,
+		"iss":   claims.Issuer,
+		"email": claims.Email,
+		"name":  claims.Name,
+		"roles": claims.Roles,
+		"iat":   time.Now().Unix(),
+		"exp":   options.Expiration,
+	}
+	if claims.Groups != nil {
+		mapclaims["groups"] = claims.Groups
+	}
+	token := jwt.NewWithClaims(signature.Type, mapclaims)
+	signedtoken, err := token.SignedString(signature.Key)
+	if err != nil {
+		return "", err
+	}
+
+	return signedtoken, nil
 }

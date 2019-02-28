@@ -48,7 +48,8 @@ import (
 	graphdrivers "github.com/libopenstorage/openstorage/graph/drivers"
 	"github.com/libopenstorage/openstorage/objectstore"
 	"github.com/libopenstorage/openstorage/pkg/auth"
-	"github.com/libopenstorage/openstorage/pkg/auth/secrets"
+	osecrets "github.com/libopenstorage/openstorage/pkg/auth/secrets"
+	"github.com/libopenstorage/openstorage/pkg/auth/systemtoken"
 	"github.com/libopenstorage/openstorage/pkg/role"
 	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/schedpolicy"
@@ -163,6 +164,10 @@ func main() {
 		cli.StringFlag{
 			Name:  "jwt-ecds-pubkey-file",
 			Usage: "JSON Web Token ECDS Public file path",
+		},
+		cli.StringFlag{
+			Name:  "jwt-system-shared-secret",
+			Usage: "JSON Web Token system shared secret used by clusters to create tokens for internal cluster communication",
 		},
 	}
 	app.Action = wrapAction(start)
@@ -375,7 +380,7 @@ func start(c *cli.Context) error {
 			volume.DriverAPIBase,
 			uint16(mgmtPort),
 			false,
-			secrets.TypeNone, nil,
+			osecrets.TypeNone, nil,
 		); err != nil {
 			return fmt.Errorf("Unable to start volume mgmt api server: %v", err)
 		}
@@ -430,6 +435,28 @@ func start(c *cli.Context) error {
 		tlsConfig, err := setupSdkTls(c)
 		if err != nil {
 			logrus.Fatalf("Failed to access TLS file information: %v", err)
+		}
+
+		// Auth is enabled, setup system token manager for inter-cluster communication
+		if len(authenticators) > 0 {
+			if c.String("jwt-system-shared-secret") == "" {
+				return fmt.Errorf("Must provide a jwt-system-shared-secret if auth with oidc or shared-secret is enabled")
+			}
+
+			if len(cfg.Osd.ClusterConfig.SystemSharedSecret) == 0 {
+				cfg.Osd.ClusterConfig.SystemSharedSecret = c.String("jwt-system-shared-secret")
+			}
+
+			// Initialize system token manager if an authenticator is setup
+			stm, err := systemtoken.NewManager(&systemtoken.Config{
+				ClusterId:    cfg.Osd.ClusterConfig.ClusterId,
+				NodeId:       cfg.Osd.ClusterConfig.NodeId,
+				SharedSecret: cfg.Osd.ClusterConfig.SystemSharedSecret,
+			})
+			if err != nil {
+				return fmt.Errorf("Failed to create system token manager: %v\n", err)
+			}
+			auth.InitSystemTokenManager(stm)
 		}
 
 		sp, err := policy.Init(kv)
@@ -488,6 +515,7 @@ func start(c *cli.Context) error {
 			&cluster.ClusterServerConfiguration{
 				ConfigSchedManager:       schedpolicy.NewFakeScheduler(),
 				ConfigObjectStoreManager: objectstore.NewfakeObjectstore(),
+				ConfigSystemTokenManager: auth.SystemTokenManagerInst(),
 			},
 		); err != nil {
 			return fmt.Errorf("Unable to start cluster manager: %v", err)

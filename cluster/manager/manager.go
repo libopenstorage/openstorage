@@ -22,6 +22,7 @@ import (
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/objectstore"
 	"github.com/libopenstorage/openstorage/osdconfig"
+	"github.com/libopenstorage/openstorage/pkg/auth"
 	sched "github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
 	"github.com/libopenstorage/systemutils"
@@ -52,26 +53,27 @@ var (
 
 // ClusterManager implements the cluster interface
 type ClusterManager struct {
-	size             int
-	listeners        *list.List
-	config           config.ClusterConfig
-	kv               kvdb.Kvdb
-	status           api.Status
-	nodeCache        map[string]api.Node // Cached info on the nodes in the cluster.
-	nodeCacheLock    sync.Mutex
-	nodeStatuses     map[string]api.Status // Set of nodes currently marked down.
-	gossip           gossip.Gossiper
-	gossipVersion    string
-	gossipPort       string
-	gEnabled         bool
-	selfNode         api.Node
-	selfNodeLock     sync.Mutex // Lock that guards data and label of selfNode
-	system           systemutils.System
-	configManager    osdconfig.ConfigCaller
-	schedManager     sched.SchedulePolicyProvider
-	objstoreManager  objectstore.ObjectStore
-	secretsManager   secrets.Secrets
-	snapshotPrefixes []string
+	size               int
+	listeners          *list.List
+	config             config.ClusterConfig
+	kv                 kvdb.Kvdb
+	status             api.Status
+	nodeCache          map[string]api.Node // Cached info on the nodes in the cluster.
+	nodeCacheLock      sync.Mutex
+	nodeStatuses       map[string]api.Status // Set of nodes currently marked down.
+	gossip             gossip.Gossiper
+	gossipVersion      string
+	gossipPort         string
+	gEnabled           bool
+	selfNode           api.Node
+	selfNodeLock       sync.Mutex // Lock that guards data and label of selfNode
+	system             systemutils.System
+	configManager      osdconfig.ConfigCaller
+	schedManager       sched.SchedulePolicyProvider
+	objstoreManager    objectstore.ObjectStore
+	secretsManager     secrets.Secrets
+	systemTokenManager auth.TokenGenerator
+	snapshotPrefixes   []string
 }
 
 // Init instantiates a new cluster manager.
@@ -87,11 +89,12 @@ func Init(cfg config.ClusterConfig) error {
 	}
 
 	inst = &ClusterManager{
-		listeners:    list.New(),
-		config:       cfg,
-		kv:           kv,
-		nodeCache:    make(map[string]api.Node),
-		nodeStatuses: make(map[string]api.Status),
+		listeners:          list.New(),
+		config:             cfg,
+		kv:                 kv,
+		nodeCache:          make(map[string]api.Node),
+		nodeStatuses:       make(map[string]api.Status),
+		systemTokenManager: auth.SystemTokenManagerInst(),
 	}
 
 	return nil
@@ -1176,6 +1179,11 @@ func (c *ClusterManager) setupManagers(config *cluster.ClusterServerConfiguratio
 		c.secretsManager = config.ConfigSecretManager
 	}
 
+	if config.ConfigSystemTokenManager == nil {
+		c.systemTokenManager = auth.NoAuth()
+	} else {
+		c.systemTokenManager = config.ConfigSystemTokenManager
+	}
 }
 
 // Start initiates the cluster manager and the cluster state machine
@@ -1887,17 +1895,17 @@ func (c *ClusterManager) SecretGetDefaultSecretKey() (interface{}, error) {
 
 // SecretCheckLogin validates session with secret store
 func (c *ClusterManager) SecretCheckLogin() error {
-	return c.SecretCheckLogin()
+	return c.secretsManager.SecretCheckLogin()
 }
 
 // SecretSet the given value/data against the key
 func (c *ClusterManager) SecretSet(secretKey string, secretValue interface{}) error {
-	return c.SecretSet(secretKey, secretValue)
+	return c.secretsManager.SecretSet(secretKey, secretValue)
 }
 
 // SecretGet retrieves the value/data for given key
 func (c *ClusterManager) SecretGet(secretKey string) (interface{}, error) {
-	return c.SecretGet(secretKey)
+	return c.secretsManager.SecretGet(secretKey)
 }
 
 // Uuid returns the unique id of the cluster

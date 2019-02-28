@@ -18,7 +18,10 @@ package manager
 import (
 	"testing"
 
+	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/config"
+	"github.com/libopenstorage/openstorage/pkg/auth"
+	"github.com/libopenstorage/openstorage/pkg/auth/systemtoken"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
 	"github.com/sirupsen/logrus"
@@ -62,6 +65,7 @@ func TestClusterManagerUuid(t *testing.T) {
 }
 
 func TestUpdateSchedulerNodeName(t *testing.T) {
+
 	nodeID := "node-alpha"
 	Init(config.ClusterConfig{
 		ClusterId:         testClusterId,
@@ -69,8 +73,17 @@ func TestUpdateSchedulerNodeName(t *testing.T) {
 		NodeId:            nodeID,
 		SchedulerNodeName: "old-sched-name",
 	})
+	manager, err := systemtoken.NewManager(&systemtoken.Config{
+		ClusterId:    testClusterId,
+		NodeId:       nodeID,
+		SharedSecret: "mysecret",
+	})
+	assert.NoError(t, err)
+	auth.InitSystemTokenManager(manager)
 
-	err := inst.Start(1, false, "1001")
+	err = inst.StartWithConfiguration(1, false, "1001", []string{}, &cluster.ClusterServerConfiguration{
+		ConfigSystemTokenManager: manager,
+	})
 	assert.NoError(t, err)
 
 	node, err := inst.Inspect(nodeID)
@@ -84,4 +97,9 @@ func TestUpdateSchedulerNodeName(t *testing.T) {
 	node, err = inst.Inspect(nodeID)
 	assert.NoError(t, err)
 	assert.Equal(t, "new-sched-name", node.SchedulerNodeName)
+
+	tokenResp, err := inst.GetPairToken(false)
+	assert.NoError(t, err)
+	assert.True(t, auth.IsJwtToken(tokenResp.Token))
+
 }
