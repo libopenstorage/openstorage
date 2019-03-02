@@ -19,6 +19,6 @@ func TestNoAuth(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, authctr)
 	token, err := na.GetToken(&Options{})
-	assert.Error(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, token, "")
 }
