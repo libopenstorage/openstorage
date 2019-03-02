@@ -55,5 +55,5 @@ func (na *noauth) GetAuthenticator() (Authenticator, error) {
 }
 
 func (na *noauth) GetToken(opts *Options) (string, error) {
-	return "", errAuthDisabled
+	return "", nil
 }
