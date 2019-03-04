@@ -54,6 +54,11 @@ func (s *SchedulePolicyServer) Create(
 		return nil, status.Error(codes.InvalidArgument, "Must a supply Schedule")
 	}
 
+	for _, sdkSched := range req.GetSchedulePolicy().GetSchedules() {
+		if sdkSched.GetRetain() < 1 {
+			return nil, status.Error(codes.InvalidArgument, "Must retain more than 0")
+		}
+	}
 	out, err := sdkSchedToRetainInternalSpecYamlByte(req.GetSchedulePolicy().GetSchedules())
 	if err != nil {
 		return nil, err
@@ -88,6 +93,11 @@ func (s *SchedulePolicyServer) Update(
 		return nil, status.Error(codes.InvalidArgument, "Must supply Schedule")
 	}
 
+	for _, sdkSched := range req.GetSchedulePolicy().GetSchedules() {
+		if sdkSched.GetRetain() < 1 {
+			return nil, status.Error(codes.InvalidArgument, "Must retain more than 0")
+		}
+	}
 	out, err := sdkSchedToRetainInternalSpecYamlByte(req.GetSchedulePolicy().GetSchedules())
 	if err != nil {
 		return nil, err

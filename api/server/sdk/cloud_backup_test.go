@@ -806,13 +806,13 @@ func TestSdkCloudBackupSchedEnumerate(t *testing.T) {
 			"test-uuid-1": api.CloudBackupScheduleInfo{
 				SrcVolumeID:    "myid",
 				CredentialUUID: "test-uuid-1",
-				Schedule:       "- freq: daily\n  minute: 30\n  retain: 1\n",
+				Schedule:       "- freq: daily\n  minute: 30\n",
 				MaxBackups:     4,
 			},
 			"test-uuid-2": api.CloudBackupScheduleInfo{
 				SrcVolumeID:    "myid2",
 				CredentialUUID: "test-uuid-1",
-				Schedule:       "- freq: daily\n  minute: 30\n  retain: 1\n",
+				Schedule:       "- freq: daily\n  minute: 30\n",
 				MaxBackups:     3,
 			},
 		},
