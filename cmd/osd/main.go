@@ -144,6 +144,10 @@ func main() {
 			Name:  "oidc-client-id",
 			Usage: "OIDC Client ID provided by issuer",
 		},
+		cli.StringFlag{
+			Name:  "oidc-custom-claim-namespace",
+			Usage: "OIDC namespace for custom claims if needed",
+		},
 		cli.BoolFlag{
 			Name:  "oidc-skip-client-id-check",
 			Usage: "OIDC skip verification of client id in the token",
@@ -594,6 +598,7 @@ func oidcAuth(c *cli.Context) (*auth.OIDCAuthenticator, error) {
 	return auth.NewOIDC(&auth.OIDCAuthConfig{
 		Issuer:            c.String("oidc-issuer"),
 		ClientID:          c.String("oidc-client-id"),
+		Namespace:         c.String("oidc-custom-claim-namespace"),
 		SkipClientIDCheck: c.Bool("oidc-skip-client-id-check"),
 		UsernameClaim:     auth.UsernameClaimType(c.String("username-claim")),
 	})
