@@ -168,6 +168,7 @@ func main() {
 		cli.StringFlag{
 			Name:  "jwt-system-shared-secret",
 			Usage: "JSON Web Token system shared secret used by clusters to create tokens for internal cluster communication",
+			Value: "non-secure-secret",
 		},
 	}
 	app.Action = wrapAction(start)
