@@ -17,6 +17,8 @@ const (
 var (
 	// Required claim keys
 	requiredClaims = []string{"iss", "sub", "exp", "iat", "name", "email"}
+	// Custom claims for OpenStorage
+	customClaims = []string{"roles", "groups"}
 )
 
 // Claims provides information about the claims in the token

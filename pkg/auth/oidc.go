@@ -17,6 +17,7 @@ package auth
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	oidc "github.com/coreos/go-oidc"
@@ -35,6 +36,10 @@ type OIDCAuthConfig struct {
 	// UsernameClaim has the location of the unique id for the user.
 	// If empty, "sub" will be used for the user name unique id.
 	UsernameClaim UsernameClaimType
+	// Namespace sets the namespace for all custom claims. For example
+	// if the claims had the key: "https://mynamespace/roles", then
+	// the namespace would be "https://mynamespace/".
+	Namespace string
 }
 
 // OIDCAuthenticator is used to validate tokens with an OIDC
@@ -43,6 +48,7 @@ type OIDCAuthenticator struct {
 	provider      *oidc.Provider
 	verifier      *oidc.IDTokenVerifier
 	usernameClaim UsernameClaimType
+	namespace     string
 }
 
 // NewOIDC returns a new OIDC authenticator
@@ -61,11 +67,13 @@ func NewOIDC(config *OIDCAuthConfig) (*OIDCAuthenticator, error) {
 	return &OIDCAuthenticator{
 		url:           config.Issuer,
 		usernameClaim: config.UsernameClaim,
+		namespace:     config.Namespace,
 		provider:      p,
 		verifier:      v,
 	}, nil
 }
 
+// AuthenticateToken will verify the validity of the provided token with the OIDC
 func (o *OIDCAuthenticator) AuthenticateToken(ctx context.Context, rawtoken string) (*Claims, error) {
 	idToken, err := o.verifier.Verify(ctx, rawtoken)
 	if err != nil {
@@ -84,15 +92,40 @@ func (o *OIDCAuthenticator) AuthenticateToken(ctx context.Context, rawtoken stri
 		}
 	}
 
+	return o.parseClaims(claims)
+}
+
+// Username returns the configured unique id of the user
+func (o *OIDCAuthenticator) Username(claims *Claims) string {
+	return getUsername(o.usernameClaim, claims)
+}
+
+// This will let us unit test this function without having a real OIDC
+func (o *OIDCAuthenticator) parseClaims(claims map[string]interface{}) (*Claims, error) {
+
+	// If we have namespace set, then use it to get custom claims:
+	if len(o.namespace) > 0 {
+		for _, cc := range customClaims {
+			// Check if there claims needed are under a namespace
+			if v, ok := claims[o.namespace+cc]; ok {
+				// Move it to the top of the json tree overwriting anything
+				// there with the same name.
+				claims[cc] = v
+			}
+		}
+	}
+
+	// Marshal into byte stream so that we can unmarshal into SDK Claims
+	cbytes, err := json.Marshal(claims)
+	if err != nil {
+		return nil, fmt.Errorf("Internal error, unable to re-encode OIDC token claims: %v", err)
+	}
+
 	// Return claims
 	var sdkClaims Claims
-	if err := idToken.Claims(&sdkClaims); err != nil {
+	if err := json.Unmarshal(cbytes, &sdkClaims); err != nil {
 		return nil, fmt.Errorf("Unable to get claims from token: %v", err)
 	}
 
 	return &sdkClaims, nil
-}
-
-func (o *OIDCAuthenticator) Username(claims *Claims) string {
-	return getUsername(o.usernameClaim, claims)
 }
