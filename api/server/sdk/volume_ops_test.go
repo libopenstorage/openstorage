@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/kubernetes-csi/csi-test/utils"
+	"github.com/sirupsen/logrus"
 
 	"github.com/golang/mock/gomock"
 	"github.com/libopenstorage/openstorage/api"
@@ -32,6 +33,7 @@ import (
 	"github.com/libopenstorage/openstorage/volume"
 	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
 	"github.com/portworx/kvdb"
+	"github.com/portworx/kvdb/mem"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -1081,7 +1083,7 @@ func TestSdkCloneOwnership(t *testing.T) {
 	assert.NotEmpty(t, cloneId)
 }
 
-// check volume create after storage policy is enforced
+// check volume create after storage policy is set as default
 func TestSdkVolumeCreateEnforced(t *testing.T) {
 
 	// Create server and client connection
@@ -1115,6 +1117,7 @@ func TestSdkVolumeCreateEnforced(t *testing.T) {
 		StoragePolicy: &api.SdkStoragePolicy{
 			Name:   "testrestvolcreate",
 			Policy: volSpec,
+			Force:  false,
 		},
 	}
 
@@ -1130,13 +1133,13 @@ func TestSdkVolumeCreateEnforced(t *testing.T) {
 	assert.Equal(t, resp.StoragePolicy.GetName(), inspReq.GetName())
 	assert.True(t, reflect.DeepEqual(resp.StoragePolicy.GetPolicy(), req.StoragePolicy.GetPolicy()))
 
-	enforceReq := &api.SdkOpenStoragePolicyEnforceRequest{
+	defaultReq := &api.SdkOpenStoragePolicySetDefaultRequest{
 		Name: inspReq.GetName(),
 	}
-	_, err = storePolicy.Enforce(context.Background(), enforceReq)
+	_, err = storePolicy.SetDefault(context.Background(), defaultReq)
 	assert.NoError(t, err)
 
-	policy, err := storePolicy.EnforceInspect(context.Background(), &api.SdkOpenStoragePolicyEnforceInspectRequest{})
+	policy, err := storePolicy.DefaultInspect(context.Background(), &api.SdkOpenStoragePolicyDefaultInspectRequest{})
 	assert.NoError(t, err)
 	assert.Equal(t, policy.GetStoragePolicy().GetName(), inspReq.GetName())
 
@@ -1159,6 +1162,8 @@ func TestSdkVolumeCreateEnforced(t *testing.T) {
 		Sharedv4: volSpec.GetSharedv4(),
 		Journal:  volSpec.GetJournal(),
 		HaLevel:  volReq.GetSpec().GetHaLevel(),
+		// since voluem is created as per default policy
+		StoragePolicy: "testrestvolcreate",
 	}
 
 	// Create response
@@ -1192,4 +1197,398 @@ func TestSdkVolumeCreateEnforced(t *testing.T) {
 	r, err := c.Create(context.Background(), volReq)
 	assert.NoError(t, err)
 	assert.Equal(t, r.GetVolumeId(), "myid")
+
+	releaseReq := &api.SdkOpenStoragePolicyReleaseRequest{}
+	_, err = storePolicy.Release(context.Background(), releaseReq)
+	assert.NoError(t, err)
+}
+
+// check volume create with ownership after storage policy is set as default
+func TestSdkVolumeCreateDefaultPolicyOwnership(t *testing.T) {
+	mc := gomock.NewController(&utils.SafeGoroutineTester{})
+	mv := mockdriver.NewMockVolumeDriver(mc)
+	mcluster := mockcluster.NewMockCluster(mc)
+	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, logrus.Panicf)
+	assert.NoError(t, err)
+
+	// Init storage policy manager
+	_, err = policy.Init(kv)
+	storePolicy, err := policy.Inst()
+	assert.NoError(t, err)
+
+	s := VolumeServer{
+		server: &sdkGrpcServer{
+			driverHandlers: map[string]volume.VolumeDriver{
+				"mock":            mv,
+				DefaultDriverName: mv,
+			},
+			clusterHandler: mcluster,
+			policyServer:   storePolicy,
+		},
+	}
+
+	// Create storage policy and set it as default Enforcement
+	volSpec := &api.VolumeSpecPolicy{
+		SizeOpt: &api.VolumeSpecPolicy_Size{
+			Size: 8123,
+		},
+		SizeOperator: api.VolumeSpecPolicy_Maximum,
+		SharedOpt: &api.VolumeSpecPolicy_Shared{
+			Shared: false,
+		},
+		HaLevelOpt: &api.VolumeSpecPolicy_HaLevel{
+			HaLevel: 2,
+		},
+		HaLevelOperator: api.VolumeSpecPolicy_Minimum,
+	}
+
+	spAreq := &api.SdkOpenStoragePolicyCreateRequest{
+		StoragePolicy: &api.SdkStoragePolicy{
+			Name:   "testpolicyA",
+			Policy: volSpec,
+			Force:  false,
+			Ownership: &api.Ownership{
+				Owner: "testowner",
+				Acls: &api.Ownership_AccessControl{
+					Collaborators: map[string]api.Ownership_AccessType{
+						"notmyname": api.Ownership_Write,
+						"trusted":   api.Ownership_Admin,
+					},
+				},
+			},
+		},
+	}
+
+	spBreq := &api.SdkOpenStoragePolicyCreateRequest{
+		StoragePolicy: &api.SdkStoragePolicy{
+			Name:   "testpolicyB",
+			Policy: volSpec,
+			Force:  false,
+			Ownership: &api.Ownership{
+				Owner: "testownerB",
+				Acls: &api.Ownership_AccessControl{
+					Collaborators: map[string]api.Ownership_AccessType{
+						"userR":     api.Ownership_Read,
+						"userW":     api.Ownership_Write,
+						"useradmin": api.Ownership_Admin,
+					},
+				},
+			},
+		},
+	}
+
+	// Create contexts
+	// ctxNoAuth := context.Background()
+	ctxWithNotOwner := auth.ContextSaveUserInfo(context.Background(), &auth.UserInfo{
+		Username: "notuser",
+	})
+	ctxWithTrusted := auth.ContextSaveUserInfo(context.Background(), &auth.UserInfo{
+		Username: "trusted",
+		Claims: auth.Claims{
+			Groups: []string{"*"},
+		},
+	})
+	ctxWithPolicyB := auth.ContextSaveUserInfo(context.Background(), &auth.UserInfo{
+		Username: "userW",
+	})
+
+	// create spA
+	_, err = storePolicy.Create(ctxWithTrusted, spAreq)
+	assert.NoError(t, err)
+	// create spB
+	_, err = storePolicy.Create(ctxWithPolicyB, spBreq)
+	assert.NoError(t, err)
+
+	defaultReq := &api.SdkOpenStoragePolicySetDefaultRequest{
+		Name: "testpolicyA",
+	}
+	_, err = storePolicy.SetDefault(ctxWithTrusted, defaultReq)
+	assert.NoError(t, err)
+
+	policy, err := storePolicy.DefaultInspect(ctxWithTrusted, &api.SdkOpenStoragePolicyDefaultInspectRequest{})
+	assert.NoError(t, err)
+	assert.Equal(t, policy.GetStoragePolicy().GetName(), "testpolicyA")
+
+	// create volume with policy enabled
+	name := "myvol"
+	size := uint64(1123234)
+	volInvalidReq := &api.SdkVolumeCreateRequest{
+		Name: name,
+		Spec: &api.VolumeSpec{
+			Size:          size,
+			HaLevel:       3,
+			StoragePolicy: "testpolicyB",
+		},
+	}
+	volValidReq := &api.SdkVolumeCreateRequest{
+		Name: name,
+		Spec: &api.VolumeSpec{
+			Size:    size,
+			HaLevel: 3,
+		},
+	}
+
+	owner := &api.Ownership{
+		Owner: "notuser",
+	}
+	// Ideal spec should be passed to volume create after applying
+	// policy specs
+	updatedSpec := &api.VolumeSpec{
+		Size:    volSpec.GetSize(),
+		Shared:  volSpec.GetShared(),
+		HaLevel: volValidReq.GetSpec().GetHaLevel(),
+		// since voluem is created as per default policy
+		StoragePolicy: "testpolicyA",
+		Ownership:     owner,
+	}
+
+	// Create response
+	id := "myid"
+	gomock.InOrder(
+		mv.EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		mv.EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		mv.EXPECT().
+			Create(&api.VolumeLocator{
+				Name: name,
+			}, &api.Source{}, updatedSpec).
+			Return(id, nil).
+			Times(1),
+	)
+
+	// Use case 1
+	// user dont; have access to storagePolicyB try to create volume with it
+	_, err = s.Create(ctxWithNotOwner, volInvalidReq)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Access denied to storage policy ")
+
+	// create with valid volume req, since testpolicyA is set to default
+	// vol request should follow spA
+	_, err = s.Create(ctxWithNotOwner, volValidReq)
+	assert.NoError(t, err)
+
+	// Use case 2
+	// no default policy
+	releaseReq := &api.SdkOpenStoragePolicyReleaseRequest{}
+	_, err = storePolicy.Release(ctxWithTrusted, releaseReq)
+	assert.NoError(t, err)
+
+	nopolVol := &api.SdkVolumeCreateRequest{
+		Name: name,
+		Spec: &api.VolumeSpec{
+			Size:    size,
+			HaLevel: 3,
+		},
+	}
+	// Ideal spec should be passed to volume create after applying
+	// policy specs
+	upSpec := &api.VolumeSpec{
+		Size:      nopolVol.GetSpec().GetSize(),
+		Shared:    nopolVol.GetSpec().GetShared(),
+		HaLevel:   nopolVol.GetSpec().GetHaLevel(),
+		Ownership: owner,
+	}
+
+	// Create response
+	gomock.InOrder(
+		mv.EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		mv.EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		mv.EXPECT().
+			Create(&api.VolumeLocator{
+				Name: name,
+			}, &api.Source{}, upSpec).
+			Return(id, nil).
+			Times(1),
+	)
+
+	// create with valid volume req, since no policy is set
+	// vol req will use their own specs
+	_, err = s.Create(ctxWithNotOwner, nopolVol)
+	assert.NoError(t, err)
+
+	_, err = storePolicy.Delete(ctxWithTrusted, &api.SdkOpenStoragePolicyDeleteRequest{
+		Name: "testpolicyA",
+	})
+
+	assert.NoError(t, err)
+
+	_, err = storePolicy.Delete(ctxWithTrusted, &api.SdkOpenStoragePolicyDeleteRequest{
+		Name: "testpolicyB",
+	})
+	assert.NoError(t, err)
+}
+
+func TestSdkVolumeUpdatePolicyOwnership(t *testing.T) {
+	mc := gomock.NewController(&utils.SafeGoroutineTester{})
+	mv := mockdriver.NewMockVolumeDriver(mc)
+	mcluster := mockcluster.NewMockCluster(mc)
+
+	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, logrus.Panicf)
+	assert.NoError(t, err)
+
+	// Init storage policy manager
+	_, err = policy.Init(kv)
+	storePolicy, err := policy.Inst()
+	assert.NoError(t, err)
+
+	s := VolumeServer{
+		server: &sdkGrpcServer{
+			driverHandlers: map[string]volume.VolumeDriver{
+				"mock":            mv,
+				DefaultDriverName: mv,
+			},
+			clusterHandler: mcluster,
+			policyServer:   storePolicy,
+		},
+	}
+
+	// Create storage policy and set it as default storage policy
+	volSpec := &api.VolumeSpecPolicy{
+		SizeOpt: &api.VolumeSpecPolicy_Size{
+			Size: 8123,
+		},
+		SizeOperator: api.VolumeSpecPolicy_Maximum,
+		SharedOpt: &api.VolumeSpecPolicy_Shared{
+			Shared: false,
+		},
+		HaLevelOpt: &api.VolumeSpecPolicy_HaLevel{
+			HaLevel: 2,
+		},
+		HaLevelOperator: api.VolumeSpecPolicy_Minimum,
+	}
+
+	spAreq := &api.SdkOpenStoragePolicyCreateRequest{
+		StoragePolicy: &api.SdkStoragePolicy{
+			Name:   "testpolicyA",
+			Policy: volSpec,
+			// we will overrride given vol specs
+			Force: false,
+			Ownership: &api.Ownership{
+				Owner: "testowner",
+				Acls: &api.Ownership_AccessControl{
+					Collaborators: map[string]api.Ownership_AccessType{
+						"notmyname": api.Ownership_Write,
+						"trusted":   api.Ownership_Admin,
+					},
+				},
+			},
+		},
+	}
+
+	// Create contexts
+	ctxWithTrusted := auth.ContextSaveUserInfo(context.Background(), &auth.UserInfo{
+		Username: "trusted",
+		Claims: auth.Claims{
+			Groups: []string{"*"},
+		},
+	})
+	ctxWithNoUser := auth.ContextSaveUserInfo(context.Background(), &auth.UserInfo{
+		Username: "notspuser",
+	})
+
+	// create spA & set it as default
+	_, err = storePolicy.Create(ctxWithTrusted, spAreq)
+	assert.NoError(t, err)
+
+	defaultReq := &api.SdkOpenStoragePolicySetDefaultRequest{
+		Name: "testpolicyA",
+	}
+	_, err = storePolicy.SetDefault(ctxWithTrusted, defaultReq)
+	assert.NoError(t, err)
+
+	policy, err := storePolicy.DefaultInspect(ctxWithTrusted, &api.SdkOpenStoragePolicyDefaultInspectRequest{})
+	assert.NoError(t, err)
+	assert.Equal(t, policy.GetStoragePolicy().GetName(), "testpolicyA")
+
+	// create volume with policy enabled
+	name := "myvol"
+	size := uint64(1123234)
+	volReq := &api.SdkVolumeCreateRequest{
+		Name: name,
+		Spec: &api.VolumeSpec{
+			Size:    size,
+			HaLevel: 1,
+		},
+	}
+
+	owner := &api.Ownership{
+		Owner: "notspuser",
+	}
+	// Ideal spec should be passed to volume create after applying
+	// policy specs
+	volPolSpec := &api.VolumeSpec{
+		Size:    volSpec.GetSize(),
+		Shared:  volSpec.GetShared(),
+		HaLevel: volSpec.GetHaLevel(),
+		// since volume is created as per default policy
+		StoragePolicy: "testpolicyA",
+		Ownership:     owner,
+	}
+
+	// Create response
+	id := "myid"
+	gomock.InOrder(
+		mv.EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		mv.EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		mv.EXPECT().
+			Create(&api.VolumeLocator{
+				Name: name,
+			}, &api.Source{}, volPolSpec).
+			Return(id, nil).
+			Times(1),
+	)
+
+	_, err = s.Create(ctxWithNoUser, volReq)
+	assert.NoError(t, err)
+
+	// violates rule
+	updatVolReq := &api.SdkVolumeUpdateRequest{
+		VolumeId: id,
+		Spec: &api.VolumeSpecUpdate{
+			HaLevelOpt: &api.VolumeSpecUpdate_HaLevel{
+				HaLevel: 1,
+			},
+		},
+	}
+
+	// Check Locator
+	mv.
+		EXPECT().
+		Inspect([]string{id}).
+		Return([]*api.Volume{&api.Volume{Spec: volPolSpec}}, nil).
+		AnyTimes()
+	mv.
+		EXPECT().
+		Set(id, nil, volPolSpec).
+		Return(nil).
+		Times(1)
+
+	_, err = s.Update(ctxWithNoUser, updatVolReq)
+	assert.NoError(t, err)
+
+	_, err = storePolicy.Delete(ctxWithTrusted, &api.SdkOpenStoragePolicyDeleteRequest{Name: "testpolicyA"})
+	assert.NoError(t, err)
 }

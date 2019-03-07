@@ -1,5 +1,5 @@
 /*
-Package storagepolicy manages storage policy and enforce policy for
+Package storagepolicy manages storage policy and apply/validate storage policy restriction
 volume operations.
 Copyright 2018 Portworx
 
