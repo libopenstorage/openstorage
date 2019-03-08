@@ -156,6 +156,19 @@ func newTestServerSdkNoAuth(t *testing.T) *testServer {
 	err = tester.sdk.Start()
 	assert.Nil(t, err)
 
+	// Register the drivers with SDK
+	// The tests use "fake" and "mock" both interchangeably
+	// Some of the test set the UserAgent in the REST client to mock
+	fakeDriver, err := volumedrivers.Get(fake.Name)
+	assert.NoError(t, err)
+
+	driverMap := map[string]volume.VolumeDriver{
+		fake.Name:             fakeDriver,
+		sdk.DefaultDriverName: fakeDriver,
+		mockDriverName:        fakeDriver,
+	}
+	tester.sdk.UseVolumeDrivers(driverMap)
+
 	// Setup a connection to the driver
 	tester.conn, err = grpcserver.Connect("localhost:8123", []grpc.DialOption{grpc.WithInsecure()})
 	assert.Nil(t, err)
@@ -242,6 +255,18 @@ func newTestServerSdk(t *testing.T) *testServer {
 		},
 	)
 	volumedrivers.Register(fakeWithSched, nil)
+
+	// Register the drivers with SDK
+	// The tests use "fake" and "mock" both interchangeably
+	// Some of the test set the UserAgent in the REST client to mock
+
+	driverMap := map[string]volume.VolumeDriver{
+		fake.Name:             fakeDriver,
+		fakeWithSched:         fakeDriver,
+		sdk.DefaultDriverName: fakeDriver,
+		mockDriverName:        fakeDriver,
+	}
+	tester.sdk.UseVolumeDrivers(driverMap)
 
 	return tester
 }

@@ -716,7 +716,10 @@ func TestSdkDeleteOnlyByOwner(t *testing.T) {
 	mcluster := mockcluster.NewMockCluster(mc)
 	s := VolumeServer{
 		server: &sdkGrpcServer{
-			driverHandler:  mv,
+			driverHandlers: map[string]volume.VolumeDriver{
+				"mock":            mv,
+				DefaultDriverName: mv,
+			},
 			clusterHandler: mcluster,
 		},
 	}
@@ -823,7 +826,10 @@ func TestSdkCloneOwnership(t *testing.T) {
 	mcluster := mockcluster.NewMockCluster(mc)
 	s := VolumeServer{
 		server: &sdkGrpcServer{
-			driverHandler:  mv,
+			driverHandlers: map[string]volume.VolumeDriver{
+				"mock":            mv,
+				DefaultDriverName: mv,
+			},
 			clusterHandler: mcluster,
 		},
 	}

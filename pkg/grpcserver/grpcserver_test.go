@@ -20,7 +20,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/libopenstorage/openstorage/api"
+	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 )
@@ -153,33 +153,18 @@ func TestServerStop(t *testing.T) {
 	assert.False(t, s.Server().IsRunning())
 }
 
-func TestIdentityContextMetadata(t *testing.T) {
-	// Create server and client connection
-	s := newTestServer(t)
-	defer s.Stop()
-
-	// Setup mock
-	version := &api.StorageVersion{
-		Driver:  "mock",
-		Version: "1.2.4-asdf",
-	}
-	s.MockDriver().EXPECT().Version().Return(version, nil).Times(1)
-
-	// Create a connection
-	c := api.NewOpenStorageIdentityClient(s.Conn())
+func TestContextMetadata(t *testing.T) {
 
 	// setup context
 	ctx := AddMetadataToContext(context.Background(), "hello", "world")
 	ctx = AddMetadataToContext(ctx, "jay", "kay")
 	ctx = AddMetadataToContext(ctx, "one", "two")
 
-	r, err := c.Version(ctx, &api.SdkIdentityVersionRequest{})
-	assert.NoError(t, err)
-	assert.NotNil(t, r)
+	// TODO: Replace this manual conversion to an actual grpc call
+	outgoingMd := metautils.ExtractOutgoing(ctx)
+	incomingCtx := outgoingMd.ToIncoming(context.Background())
 
-	details := r.GetVersion().GetDetails()
-	assert.Len(t, details, 3)
-	assert.Equal(t, details["hello"], "world")
-	assert.Equal(t, details["jay"], "kay")
-	assert.Equal(t, details["one"], "two")
+	assert.Equal(t, GetMetadataValueFromKey(incomingCtx, "hello"), "world")
+	assert.Equal(t, GetMetadataValueFromKey(incomingCtx, "jay"), "kay")
+	assert.Equal(t, GetMetadataValueFromKey(incomingCtx, "one"), "two")
 }

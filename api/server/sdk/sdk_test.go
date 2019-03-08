@@ -27,7 +27,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/kubernetes-csi/csi-test/utils"
 	"github.com/libopenstorage/openstorage/alerts"
-	"github.com/libopenstorage/openstorage/alerts/mock"
+	mockalerts "github.com/libopenstorage/openstorage/alerts/mock"
 	"github.com/libopenstorage/openstorage/api"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	mockcluster "github.com/libopenstorage/openstorage/cluster/mock"
@@ -331,7 +331,8 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 	// Now add the volume driver
 	d, err := volumedrivers.Get("fake")
 	assert.NoError(t, err)
-	server.UseVolumeDriver(d)
+	driverMap := map[string]volume.VolumeDriver{"fake": d, DefaultDriverName: d}
+	server.UseVolumeDrivers(driverMap)
 
 	// Identify that the driver is now running
 	id, err = identities.Version(context.Background(), &api.SdkIdentityVersionRequest{})
