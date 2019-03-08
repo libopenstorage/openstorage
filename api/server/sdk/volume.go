@@ -38,8 +38,8 @@ func (s *VolumeServer) cluster() cluster.Cluster {
 	return s.server.cluster()
 }
 
-func (s *VolumeServer) driver() volume.VolumeDriver {
-	return s.server.driver()
+func (s *VolumeServer) driver(ctx context.Context) volume.VolumeDriver {
+	return s.server.driver(ctx)
 }
 
 func (s *VolumeServer) checkAccessForVolumeId(

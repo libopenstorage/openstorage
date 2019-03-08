@@ -30,8 +30,8 @@ type CloudBackupServer struct {
 	server serverAccessor
 }
 
-func (s *CloudBackupServer) driver() volume.VolumeDriver {
-	return s.server.driver()
+func (s *CloudBackupServer) driver(ctx context.Context) volume.VolumeDriver {
+	return s.server.driver(ctx)
 }
 
 // Create creates a backup for a volume
@@ -40,7 +40,7 @@ func (s *CloudBackupServer) Create(
 	req *api.SdkCloudBackupCreateRequest,
 ) (*api.SdkCloudBackupCreateResponse, error) {
 
-	if s.driver() == nil {
+	if s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
@@ -51,12 +51,12 @@ func (s *CloudBackupServer) Create(
 	}
 
 	// Check ownership
-	if err := checkAccessFromDriverForVolumeId(ctx, s.driver(), req.GetVolumeId(), api.Ownership_Read); err != nil {
+	if err := checkAccessFromDriverForVolumeId(ctx, s.driver(ctx), req.GetVolumeId(), api.Ownership_Read); err != nil {
 		return nil, err
 	}
 
 	// Create the backup
-	r, err := s.driver().CloudBackupCreate(&api.CloudBackupCreateRequest{
+	r, err := s.driver(ctx).CloudBackupCreate(&api.CloudBackupCreateRequest{
 		VolumeID:       req.GetVolumeId(),
 		CredentialUUID: req.GetCredentialId(),
 		Full:           req.GetFull(),
@@ -77,7 +77,7 @@ func (s *CloudBackupServer) Restore(
 	ctx context.Context,
 	req *api.SdkCloudBackupRestoreRequest,
 ) (*api.SdkCloudBackupRestoreResponse, error) {
-	if s.driver() == nil {
+	if s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
@@ -87,7 +87,7 @@ func (s *CloudBackupServer) Restore(
 		return nil, status.Error(codes.InvalidArgument, "Must provide credential uuid")
 	}
 
-	r, err := s.driver().CloudBackupRestore(&api.CloudBackupRestoreRequest{
+	r, err := s.driver(ctx).CloudBackupRestore(&api.CloudBackupRestoreRequest{
 		ID:                req.GetBackupId(),
 		RestoreVolumeName: req.GetRestoreVolumeName(),
 		CredentialUUID:    req.GetCredentialId(),
@@ -110,7 +110,7 @@ func (s *CloudBackupServer) Delete(
 	ctx context.Context,
 	req *api.SdkCloudBackupDeleteRequest,
 ) (*api.SdkCloudBackupDeleteResponse, error) {
-	if s.driver() == nil {
+	if s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
@@ -120,7 +120,7 @@ func (s *CloudBackupServer) Delete(
 		return nil, status.Error(codes.InvalidArgument, "Must provide credential uuid")
 	}
 
-	if err := s.driver().CloudBackupDelete(&api.CloudBackupDeleteRequest{
+	if err := s.driver(ctx).CloudBackupDelete(&api.CloudBackupDeleteRequest{
 		ID:             req.GetBackupId(),
 		CredentialUUID: req.GetCredentialId(),
 		Force:          req.GetForce(),
@@ -136,7 +136,7 @@ func (s *CloudBackupServer) DeleteAll(
 	ctx context.Context,
 	req *api.SdkCloudBackupDeleteAllRequest,
 ) (*api.SdkCloudBackupDeleteAllResponse, error) {
-	if s.driver() == nil {
+	if s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
@@ -146,7 +146,7 @@ func (s *CloudBackupServer) DeleteAll(
 		return nil, status.Error(codes.InvalidArgument, "Must provide credential uuid")
 	}
 
-	if err := s.driver().CloudBackupDeleteAll(&api.CloudBackupDeleteAllRequest{
+	if err := s.driver(ctx).CloudBackupDeleteAll(&api.CloudBackupDeleteAllRequest{
 		CloudBackupGenericRequest: api.CloudBackupGenericRequest{
 			SrcVolumeID:    req.GetSrcVolumeId(),
 			CredentialUUID: req.GetCredentialId(),
@@ -163,7 +163,7 @@ func (s *CloudBackupServer) EnumerateWithFilters(
 	ctx context.Context,
 	req *api.SdkCloudBackupEnumerateWithFiltersRequest,
 ) (*api.SdkCloudBackupEnumerateWithFiltersResponse, error) {
-	if s.driver() == nil {
+	if s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
@@ -171,7 +171,7 @@ func (s *CloudBackupServer) EnumerateWithFilters(
 		return nil, status.Error(codes.InvalidArgument, "Must provide credential uuid")
 	}
 
-	r, err := s.driver().CloudBackupEnumerate(&api.CloudBackupEnumerateRequest{
+	r, err := s.driver(ctx).CloudBackupEnumerate(&api.CloudBackupEnumerateRequest{
 		CloudBackupGenericRequest: api.CloudBackupGenericRequest{
 			SrcVolumeID:    req.GetSrcVolumeId(),
 			ClusterID:      req.GetClusterId(),
@@ -191,7 +191,7 @@ func (s *CloudBackupServer) Status(
 	ctx context.Context,
 	req *api.SdkCloudBackupStatusRequest,
 ) (*api.SdkCloudBackupStatusResponse, error) {
-	if s.driver() == nil {
+	if s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
@@ -199,7 +199,7 @@ func (s *CloudBackupServer) Status(
 	// TODO !
 	// Get volume id from task id
 
-	r, err := s.driver().CloudBackupStatus(&api.CloudBackupStatusRequest{
+	r, err := s.driver(ctx).CloudBackupStatus(&api.CloudBackupStatusRequest{
 		SrcVolumeID: req.GetVolumeId(),
 		Local:       req.GetLocal(),
 		ID:          req.GetTaskId(),
@@ -216,7 +216,7 @@ func (s *CloudBackupServer) Catalog(
 	ctx context.Context,
 	req *api.SdkCloudBackupCatalogRequest,
 ) (*api.SdkCloudBackupCatalogResponse, error) {
-	if s.driver() == nil {
+	if s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
@@ -226,7 +226,7 @@ func (s *CloudBackupServer) Catalog(
 		return nil, status.Error(codes.InvalidArgument, "Must provide credential uuid")
 	}
 
-	r, err := s.driver().CloudBackupCatalog(&api.CloudBackupCatalogRequest{
+	r, err := s.driver(ctx).CloudBackupCatalog(&api.CloudBackupCatalogRequest{
 		ID:             req.GetBackupId(),
 		CredentialUUID: req.GetCredentialId(),
 	})
@@ -244,7 +244,7 @@ func (s *CloudBackupServer) History(
 	ctx context.Context,
 	req *api.SdkCloudBackupHistoryRequest,
 ) (*api.SdkCloudBackupHistoryResponse, error) {
-	if s.driver() == nil {
+	if s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
@@ -253,11 +253,11 @@ func (s *CloudBackupServer) History(
 	}
 
 	// Check ownership
-	if err := checkAccessFromDriverForVolumeId(ctx, s.driver(), req.GetSrcVolumeId(), api.Ownership_Read); err != nil {
+	if err := checkAccessFromDriverForVolumeId(ctx, s.driver(ctx), req.GetSrcVolumeId(), api.Ownership_Read); err != nil {
 		return nil, err
 	}
 
-	r, err := s.driver().CloudBackupHistory(&api.CloudBackupHistoryRequest{
+	r, err := s.driver(ctx).CloudBackupHistory(&api.CloudBackupHistoryRequest{
 		SrcVolumeID: req.GetSrcVolumeId(),
 	})
 	if err != nil {
@@ -272,7 +272,7 @@ func (s *CloudBackupServer) StateChange(
 	ctx context.Context,
 	req *api.SdkCloudBackupStateChangeRequest,
 ) (*api.SdkCloudBackupStateChangeResponse, error) {
-	if s.driver() == nil {
+	if s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
@@ -297,7 +297,7 @@ func (s *CloudBackupServer) StateChange(
 		return nil, status.Errorf(codes.InvalidArgument, "Invalid requested state: %v", req.GetRequestedState())
 	}
 
-	err := s.driver().CloudBackupStateChange(&api.CloudBackupStateChangeRequest{
+	err := s.driver(ctx).CloudBackupStateChange(&api.CloudBackupStateChangeRequest{
 		Name:           req.GetTaskId(),
 		RequestedState: rs,
 	})
@@ -313,7 +313,7 @@ func (s *CloudBackupServer) SchedCreate(
 	ctx context.Context,
 	req *api.SdkCloudBackupSchedCreateRequest,
 ) (*api.SdkCloudBackupSchedCreateResponse, error) {
-	if s.driver() == nil {
+	if s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
@@ -329,7 +329,7 @@ func (s *CloudBackupServer) SchedCreate(
 	}
 
 	// Check ownership
-	if err := checkAccessFromDriverForVolumeId(ctx, s.driver(), req.GetCloudSchedInfo().GetSrcVolumeId(), api.Ownership_Read); err != nil {
+	if err := checkAccessFromDriverForVolumeId(ctx, s.driver(ctx), req.GetCloudSchedInfo().GetSrcVolumeId(), api.Ownership_Read); err != nil {
 		return nil, err
 	}
 
@@ -346,7 +346,7 @@ func (s *CloudBackupServer) SchedCreate(
 	bkpRequest.Full = req.GetCloudSchedInfo().GetFull()
 
 	// Create the backup
-	schedResp, err := s.driver().CloudBackupSchedCreate(&bkpRequest)
+	schedResp, err := s.driver(ctx).CloudBackupSchedCreate(&bkpRequest)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to create backup: %v", err)
 	}
@@ -362,7 +362,7 @@ func (s *CloudBackupServer) SchedDelete(
 	ctx context.Context,
 	req *api.SdkCloudBackupSchedDeleteRequest,
 ) (*api.SdkCloudBackupSchedDeleteResponse, error) {
-	if s.driver() == nil {
+	if s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
@@ -374,7 +374,7 @@ func (s *CloudBackupServer) SchedDelete(
 	}
 
 	// Call cloud backup driver function to delete cloud schedule
-	if err := s.driver().CloudBackupSchedDelete(&api.CloudBackupSchedDeleteRequest{
+	if err := s.driver(ctx).CloudBackupSchedDelete(&api.CloudBackupSchedDeleteRequest{
 		UUID: req.GetBackupScheduleId(),
 	}); err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to delete cloud backup schedule: %v", err)
@@ -388,12 +388,12 @@ func (s *CloudBackupServer) SchedEnumerate(
 	ctx context.Context,
 	req *api.SdkCloudBackupSchedEnumerateRequest,
 ) (*api.SdkCloudBackupSchedEnumerateResponse, error) {
-	if s.driver() == nil {
+	if s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
 	// Pass in ownership and show only valid ones
-	r, err := s.driver().CloudBackupSchedEnumerate()
+	r, err := s.driver(ctx).CloudBackupSchedEnumerate()
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to enumerate backups: %v", err)
 	}

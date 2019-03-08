@@ -31,7 +31,7 @@ func (s *VolumeServer) SnapshotCreate(
 	ctx context.Context,
 	req *api.SdkVolumeSnapshotCreateRequest,
 ) (*api.SdkVolumeSnapshotCreateResponse, error) {
-	if s.cluster() == nil || s.driver() == nil {
+	if s.cluster() == nil || s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
@@ -47,7 +47,7 @@ func (s *VolumeServer) SnapshotCreate(
 	}
 
 	readonly := true
-	snapshotID, err := s.driver().Snapshot(req.GetVolumeId(), readonly, &api.VolumeLocator{
+	snapshotID, err := s.driver(ctx).Snapshot(req.GetVolumeId(), readonly, &api.VolumeLocator{
 		Name:         req.GetName(),
 		VolumeLabels: req.GetLabels(),
 	}, false)
@@ -71,7 +71,7 @@ func (s *VolumeServer) SnapshotRestore(
 	ctx context.Context,
 	req *api.SdkVolumeSnapshotRestoreRequest,
 ) (*api.SdkVolumeSnapshotRestoreResponse, error) {
-	if s.cluster() == nil || s.driver() == nil {
+	if s.cluster() == nil || s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
@@ -86,7 +86,7 @@ func (s *VolumeServer) SnapshotRestore(
 		return nil, err
 	}
 
-	err := s.driver().Restore(req.GetVolumeId(), req.GetSnapshotId())
+	err := s.driver(ctx).Restore(req.GetVolumeId(), req.GetSnapshotId())
 	if err != nil {
 		if err == kvdb.ErrNotFound {
 			return nil, status.Errorf(
@@ -110,7 +110,7 @@ func (s *VolumeServer) SnapshotEnumerate(
 	ctx context.Context,
 	req *api.SdkVolumeSnapshotEnumerateRequest,
 ) (*api.SdkVolumeSnapshotEnumerateResponse, error) {
-	if s.cluster() == nil || s.driver() == nil {
+	if s.cluster() == nil || s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
@@ -136,7 +136,7 @@ func (s *VolumeServer) SnapshotEnumerateWithFilters(
 	ctx context.Context,
 	req *api.SdkVolumeSnapshotEnumerateWithFiltersRequest,
 ) (*api.SdkVolumeSnapshotEnumerateWithFiltersResponse, error) {
-	if s.cluster() == nil || s.driver() == nil {
+	if s.cluster() == nil || s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
@@ -151,7 +151,7 @@ func (s *VolumeServer) SnapshotEnumerateWithFilters(
 		volReq = nil
 	}
 
-	snapshots, err := s.driver().SnapEnumerate(volReq, req.GetLabels())
+	snapshots, err := s.driver(ctx).SnapEnumerate(volReq, req.GetLabels())
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -179,7 +179,7 @@ func (s *VolumeServer) SnapshotScheduleUpdate(
 	ctx context.Context,
 	req *api.SdkVolumeSnapshotScheduleUpdateRequest,
 ) (*api.SdkVolumeSnapshotScheduleUpdateResponse, error) {
-	if s.cluster() == nil || s.driver() == nil {
+	if s.cluster() == nil || s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 

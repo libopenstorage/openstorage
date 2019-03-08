@@ -31,8 +31,8 @@ type IdentityServer struct {
 	server serverAccessor
 }
 
-func (s *IdentityServer) driver() volume.VolumeDriver {
-	return s.server.driver()
+func (s *IdentityServer) driver(ctx context.Context) volume.VolumeDriver {
+	return s.server.driver(ctx)
 }
 
 // Capabilities returns the capabilities of the SDK server
@@ -161,12 +161,12 @@ func (s *IdentityServer) Version(
 		version *api.StorageVersion
 		err     error
 	)
-	if s.driver() == nil {
+	if s.driver(ctx) == nil {
 		version = &api.StorageVersion{
 			Driver: "no driver running",
 		}
 	} else {
-		version, err = s.driver().Version()
+		version, err = s.driver(ctx).Version()
 		if err != nil {
 			return nil, status.Errorf(
 				codes.Internal,

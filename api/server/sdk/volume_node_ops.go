@@ -32,7 +32,7 @@ func (s *VolumeServer) Attach(
 	ctx context.Context,
 	req *api.SdkVolumeAttachRequest,
 ) (*api.SdkVolumeAttachResponse, error) {
-	if s.cluster() == nil || s.driver() == nil {
+	if s.cluster() == nil || s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
@@ -62,7 +62,7 @@ func (s *VolumeServer) Attach(
 		}
 	}
 
-	devPath, err := s.driver().Attach(req.GetVolumeId(), options)
+	devPath, err := s.driver(ctx).Attach(req.GetVolumeId(), options)
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -78,7 +78,7 @@ func (s *VolumeServer) Detach(
 	ctx context.Context,
 	req *api.SdkVolumeDetachRequest,
 ) (*api.SdkVolumeDetachResponse, error) {
-	if s.cluster() == nil || s.driver() == nil {
+	if s.cluster() == nil || s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
@@ -101,7 +101,7 @@ func (s *VolumeServer) Detach(
 		options[mountattachoptions.OptionsForceDetach] = fmt.Sprint(req.GetOptions().GetForce())
 		options[mountattachoptions.OptionsUnmountBeforeDetach] = fmt.Sprint(req.GetOptions().GetUnmountBeforeDetach())
 	}
-	err := s.driver().Detach(req.GetVolumeId(), options)
+	err := s.driver(ctx).Detach(req.GetVolumeId(), options)
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -119,7 +119,7 @@ func (s *VolumeServer) Mount(
 	req *api.SdkVolumeMountRequest,
 ) (*api.SdkVolumeMountResponse, error) {
 
-	if s.cluster() == nil || s.driver() == nil {
+	if s.cluster() == nil || s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
@@ -147,9 +147,9 @@ func (s *VolumeServer) Mount(
 	}
 
 	if vol.GetSpec().GetScale() > 1 {
-		id := s.driver().MountedAt(mountpoint)
+		id := s.driver(ctx).MountedAt(mountpoint)
 		if len(id) != 0 {
-			err = s.driver().Unmount(id, mountpoint, nil)
+			err = s.driver(ctx).Unmount(id, mountpoint, nil)
 			if err != nil {
 				return nil, status.Errorf(codes.Internal,
 					"Failed to prepare scaled volume by unmounting it: %v. "+
@@ -161,10 +161,10 @@ func (s *VolumeServer) Mount(
 					mountpoint)
 			}
 
-			if s.driver().Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-				err = s.driver().Detach(id, nil)
+			if s.driver(ctx).Type() == api.DriverType_DRIVER_TYPE_BLOCK {
+				err = s.driver(ctx).Detach(id, nil)
 				if err != nil {
-					_ = s.driver().Mount(id, mountpoint, nil)
+					_ = s.driver(ctx).Mount(id, mountpoint, nil)
 					return nil, status.Errorf(codes.Internal,
 						"Failed to mount scaled volume: %v. "+
 							"Cannot remount scaled volume(%v). "+
@@ -179,7 +179,7 @@ func (s *VolumeServer) Mount(
 	}
 
 	// If this is a block driver, first attach the volume.
-	if s.driver().Type() == api.DriverType_DRIVER_TYPE_BLOCK {
+	if s.driver(ctx).Type() == api.DriverType_DRIVER_TYPE_BLOCK {
 		// If volume is scaled up, a new volume is created and
 		// vol will change.
 		attachOptions := req.GetDriverOptions()
@@ -202,7 +202,7 @@ func (s *VolumeServer) Mount(
 		}
 	}
 
-	err = s.driver().Mount(req.GetVolumeId(), req.GetMountPath(), req.GetDriverOptions())
+	err = s.driver(ctx).Mount(req.GetVolumeId(), req.GetMountPath(), req.GetDriverOptions())
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -218,7 +218,7 @@ func (s *VolumeServer) Unmount(
 	ctx context.Context,
 	req *api.SdkVolumeUnmountRequest,
 ) (*api.SdkVolumeUnmountResponse, error) {
-	if s.cluster() == nil || s.driver() == nil {
+	if s.cluster() == nil || s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
@@ -260,13 +260,13 @@ func (s *VolumeServer) Unmount(
 
 	// From old docker server, now it is here in the SDK
 	if resp.GetVolume().GetSpec().Scale > 1 {
-		volid := s.driver().MountedAt(req.GetMountPath())
+		volid := s.driver(ctx).MountedAt(req.GetMountPath())
 		if len(volid) == 0 {
 			return nil, status.Errorf(codes.Internal, "Failed to find volume mapping for %v", req.GetMountPath())
 		}
 	}
 
-	if err = s.driver().Unmount(volid, req.GetMountPath(), options); err != nil {
+	if err = s.driver(ctx).Unmount(volid, req.GetMountPath(), options); err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
 			"Failed to unmount volume %s: %v",
@@ -296,7 +296,7 @@ func (s *VolumeServer) scaleUp(
 		id := ""
 
 		// create, get vol from name, attach
-		if id, err = s.driver().Create(
+		if id, err = s.driver(ctx).Create(
 			&api.VolumeLocator{Name: name},
 			nil,
 			spec,
@@ -310,11 +310,11 @@ func (s *VolumeServer) scaleUp(
 			return nil, err
 		}
 
-		outVol, err := s.volFromId(id)
+		outVol, err := s.volFromId(ctx, id)
 		if err != nil {
 			return nil, err
 		}
-		if _, err = s.driver().Attach(outVol.Id, attachOptions); err == nil {
+		if _, err = s.driver(ctx).Attach(outVol.Id, attachOptions); err == nil {
 			return outVol, nil
 		}
 		// If we fail to attach the volume, continue to look for a
@@ -333,7 +333,7 @@ func (s *VolumeServer) attachScale(
 	error,
 ) {
 	// Find a volume that has data local to this node.
-	volumes, err := s.driver().Enumerate(&api.VolumeLocator{
+	volumes, err := s.driver(ctx).Enumerate(&api.VolumeLocator{
 		Name: fmt.Sprintf("%s.*", inVol.Locator.Name),
 		VolumeLabels: map[string]string{
 			volume.LocationConstraint: volume.LocalNode,
@@ -350,7 +350,7 @@ func (s *VolumeServer) attachScale(
 	}
 	// Create a new local volume if we fail to attach existing local volume
 	// or if none exist.
-	allVols, err := s.driver().Enumerate(
+	allVols, err := s.driver(ctx).Enumerate(
 		&api.VolumeLocator{
 			Name: fmt.Sprintf("%s.*", inVol.Locator.Name),
 		},
@@ -359,7 +359,7 @@ func (s *VolumeServer) attachScale(
 
 	// Try to attach existing volumes.
 	for _, outVol := range allVols {
-		if _, err = s.driver().Attach(outVol.Id, attachOptions); err == nil {
+		if _, err = s.driver(ctx).Attach(outVol.Id, attachOptions); err == nil {
 			return outVol, nil
 		}
 	}
@@ -371,16 +371,16 @@ func (s *VolumeServer) attachScale(
 		spec.Scale = 1
 
 		// create, vol from name, attach
-		id, err := s.driver().Create(&api.VolumeLocator{Name: name}, nil, spec)
+		id, err := s.driver(ctx).Create(&api.VolumeLocator{Name: name}, nil, spec)
 		if err != nil {
 			return s.scaleUp(ctx, inVol, allVols, attachOptions)
 		}
 
-		outVol, err := s.volFromId(id)
+		outVol, err := s.volFromId(ctx, id)
 		if err != nil {
 			return nil, err
 		}
-		if _, err = s.driver().Attach(outVol.Id, attachOptions); err == nil {
+		if _, err = s.driver(ctx).Attach(outVol.Id, attachOptions); err == nil {
 			return outVol, nil
 		}
 
@@ -398,7 +398,7 @@ func (s *VolumeServer) attachVol(
 	outVolume *api.Volume,
 	err error,
 ) {
-	_, err = s.driver().Attach(vol.Id, attachOptions)
+	_, err = s.driver(ctx).Attach(vol.Id, attachOptions)
 
 	switch err {
 	case nil:
@@ -410,16 +410,16 @@ func (s *VolumeServer) attachVol(
 	}
 }
 
-func (s *VolumeServer) volFromName(name string) (*api.Volume, error) {
-	vols, err := s.driver().Enumerate(&api.VolumeLocator{Name: name}, nil)
+func (s *VolumeServer) volFromName(ctx context.Context, name string) (*api.Volume, error) {
+	vols, err := s.driver(ctx).Enumerate(&api.VolumeLocator{Name: name}, nil)
 	if err != nil || len(vols) <= 0 {
 		return nil, fmt.Errorf("Cannot locate volume with name %s", name)
 	}
 	return vols[0], nil
 }
 
-func (s *VolumeServer) volFromId(volId string) (*api.Volume, error) {
-	vols, err := s.driver().Inspect([]string{volId})
+func (s *VolumeServer) volFromId(ctx context.Context, volId string) (*api.Volume, error) {
+	vols, err := s.driver(ctx).Inspect([]string{volId})
 	if err != nil || len(vols) <= 0 {
 		return nil, fmt.Errorf("Cannot locate volume with id %s", volId)
 	}

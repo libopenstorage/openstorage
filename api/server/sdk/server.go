@@ -17,6 +17,7 @@ limitations under the License.
 package sdk
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -26,7 +27,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	"github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
 
 	"github.com/libopenstorage/openstorage/alerts"
@@ -46,6 +47,10 @@ const (
 	defaultAuditLog = "/var/log/openstorage-audit.log"
 	// Default access log location
 	defaultAccessLog = "/var/log/openstorage-access.log"
+	// ContextDriverKey is the driver key passed in context's metadata
+	ContextDriverKey = "driver"
+	// DefaultDriverName is the default driver to be used
+	DefaultDriverName = "default"
 )
 
 // TLSConfig points to the cert files needed for HTTPS
@@ -120,7 +125,7 @@ type Server struct {
 type serverAccessor interface {
 	alert() alerts.FilterDeleter
 	cluster() cluster.Cluster
-	driver() volume.VolumeDriver
+	driver(ctx context.Context) volume.VolumeDriver
 }
 
 type logger struct {
@@ -142,7 +147,7 @@ type sdkGrpcServer struct {
 
 	// Interface implementations
 	clusterHandler cluster.Cluster
-	driverHandler  volume.VolumeDriver
+	driverHandlers map[string]volume.VolumeDriver
 	alertHandler   alerts.FilterDeleter
 
 	// gRPC Handlers
@@ -275,10 +280,10 @@ func (s *Server) UseCluster(c cluster.Cluster) {
 	s.udsServer.useCluster(c)
 }
 
-// UseVolumeDriver will setup a new driver object for the gRPC handlers
-func (s *Server) UseVolumeDriver(d volume.VolumeDriver) {
-	s.netServer.useVolumeDriver(d)
-	s.udsServer.useVolumeDriver(d)
+// UseVolumeDrivers will setup a new driver object for the gRPC handlers
+func (s *Server) UseVolumeDrivers(d map[string]volume.VolumeDriver) {
+	s.netServer.useVolumeDrivers(d)
+	s.udsServer.useVolumeDrivers(d)
 }
 
 // UseAlert will setup a new alert object for the gRPC handlers
@@ -343,9 +348,12 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 		name:            name,
 		log:             log,
 		clusterHandler:  config.Cluster,
-		driverHandler:   d,
-		alertHandler:    config.AlertsFilterDeleter,
-		policyServer:    config.StoragePolicy,
+		driverHandlers: map[string]volume.VolumeDriver{
+			config.DriverName: d,
+			DefaultDriverName: d,
+		},
+		alertHandler: config.AlertsFilterDeleter,
+		policyServer: config.StoragePolicy,
 	}
 	s.identityServer = &IdentityServer{
 		server: s,
@@ -456,11 +464,11 @@ func (s *sdkGrpcServer) useCluster(c cluster.Cluster) {
 	s.clusterHandler = c
 }
 
-func (s *sdkGrpcServer) useVolumeDriver(d volume.VolumeDriver) {
+func (s *sdkGrpcServer) useVolumeDrivers(d map[string]volume.VolumeDriver) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	s.driverHandler = d
+	s.driverHandlers = d
 }
 
 func (s *sdkGrpcServer) useAlert(a alerts.FilterDeleter) {
@@ -471,8 +479,12 @@ func (s *sdkGrpcServer) useAlert(a alerts.FilterDeleter) {
 }
 
 // Accessors
-func (s *sdkGrpcServer) driver() volume.VolumeDriver {
-	return s.driverHandler
+func (s *sdkGrpcServer) driver(ctx context.Context) volume.VolumeDriver {
+	driverName := grpcserver.GetMetadataValueFromKey(ctx, ContextDriverKey)
+	if driverName == "" {
+		driverName = DefaultDriverName
+	}
+	return s.driverHandlers[driverName]
 }
 
 func (s *sdkGrpcServer) cluster() cluster.Cluster {
