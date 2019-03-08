@@ -37,6 +37,8 @@ type Auth interface {
 	// GetToken returns the auth token obtained from the secret with
 	// secretName with the provided secretContext from the configured secretContext
 	GetToken(secretName string, secretContext string) (string, error)
+	// Type returns the type of AuthTokenProvider
+	Type() AuthTokenProviders
 }
 
 // AuthTokenProviders is an enum indicating the type of secret store that is storing
@@ -87,6 +89,10 @@ func (k *k8sAuth) GetToken(secretName string, secretContext string) (string, err
 	return authToken.(string), nil
 }
 
+func (k *k8sAuth) Type() AuthTokenProviders {
+	return TypeK8s
+}
+
 // DCOS as the auth token secrets provider
 
 type dcosAuth struct {
@@ -107,4 +113,8 @@ func (d *dcosAuth) GetToken(secretName string, secretContext string) (string, er
 		return "", ErrAuthTokenNotFound
 	}
 	return authToken.(string), nil
+}
+
+func (d *dcosAuth) Type() AuthTokenProviders {
+	return TypeDCOS
 }
