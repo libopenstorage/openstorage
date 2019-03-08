@@ -17,8 +17,10 @@ limitations under the License.
 package grpcserver
 
 import (
+	"context"
 	"testing"
 
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 )
@@ -149,4 +151,35 @@ func TestServerStop(t *testing.T) {
 	assert.False(t, s.Server().IsRunning())
 	assert.NotPanics(t, s.Stop)
 	assert.False(t, s.Server().IsRunning())
+}
+
+func TestIdentityContextMetadata(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	// Setup mock
+	version := &api.StorageVersion{
+		Driver:  "mock",
+		Version: "1.2.4-asdf",
+	}
+	s.MockDriver().EXPECT().Version().Return(version, nil).Times(1)
+
+	// Create a connection
+	c := api.NewOpenStorageIdentityClient(s.Conn())
+
+	// setup context
+	ctx := AddMetadataToContext(context.Background(), "hello", "world")
+	ctx = AddMetadataToContext(ctx, "jay", "kay")
+	ctx = AddMetadataToContext(ctx, "one", "two")
+
+	r, err := c.Version(ctx, &api.SdkIdentityVersionRequest{})
+	assert.NoError(t, err)
+	assert.NotNil(t, r)
+
+	details := r.GetVersion().GetDetails()
+	assert.Len(t, details, 3)
+	assert.Equal(t, details["hello"], "world")
+	assert.Equal(t, details["jay"], "kay")
+	assert.Equal(t, details["one"], "two")
 }

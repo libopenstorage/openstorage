@@ -14,6 +14,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/errors"
+	sdk "github.com/libopenstorage/openstorage/api/server/sdk"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/pkg/auth/secrets"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
@@ -74,7 +75,21 @@ func (vd *volAPI) getConn() (*grpc.ClientConn, error) {
 func (vd *volAPI) annotateContext(r *http.Request) (context.Context, error) {
 	// This creates a context and populates the authentication token
 	// using the same function as the SDK REST Gateway
-	return runtime.AnnotateContext(context.Background(), vd.dummyMux, r)
+	ctx, err := runtime.AnnotateContext(context.Background(), vd.dummyMux, r)
+	if err != nil {
+		return ctx, err
+	}
+	// If a header exists in the request fetch the requested driver name if provided
+	// and pass it in the grpc context as a metadata key value
+	userAgent := r.Header.Get("User-Agent")
+	if len(userAgent) > 0 {
+		// Check if the request is coming from a container orchestrator
+		clientName := strings.Split(userAgent, "/")
+		if len(clientName) > 0 {
+			return grpcserver.AddMetadataToContext(ctx, sdk.ContextDriverKey, clientName[0]), nil
+		}
+	}
+	return ctx, nil
 }
 
 func (vd *volAPI) getVolDriver(r *http.Request) (volume.VolumeDriver, error) {

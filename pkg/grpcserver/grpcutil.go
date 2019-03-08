@@ -16,14 +16,17 @@ limitations under the License.
 package grpcserver
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/url"
 	"time"
 
+	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
 	"github.com/libopenstorage/openstorage/pkg/util"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
+	"google.golang.org/grpc/metadata"
 )
 
 // Connect address by grpc
@@ -55,4 +58,16 @@ func Connect(address string, dialOptions []grpc.DialOption) (*grpc.ClientConn, e
 	}
 
 	return conn, nil
+}
+
+func AddMetadataToContext(ctx context.Context, k, v string) context.Context {
+	md, _ := metadata.FromOutgoingContext(ctx)
+	md = metadata.Join(md, metadata.New(map[string]string{
+		k: v,
+	}))
+	return metadata.NewOutgoingContext(ctx, md)
+}
+
+func GetMetadataValueFromKey(ctx context.Context, k string) string {
+	return metautils.ExtractIncoming(ctx).Get(k)
 }
