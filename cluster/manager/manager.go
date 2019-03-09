@@ -76,6 +76,26 @@ type ClusterManager struct {
 	snapshotPrefixes   []string
 }
 
+// ErrNewNodeOverMaxCapacity used when a new node (not yet part of the cluster) triggers max #nodes capacity.
+type ErrNewNodeOverMaxCapacity int
+
+// Error returns a string descriptor for ErrNewNodeOverMaxCapacity
+func (e ErrNewNodeOverMaxCapacity) Error() string {
+	return fmt.Sprintf("Unable to add a NEW node as cluster is operating at maximum capacity "+
+		"(%d nodes). Please remove a node before attempting to "+
+		"add a new node.", e)
+}
+
+// ErrOldNodeOverMaxCapacity used when a OLD node (already part of the cluster) triggers max #nodes capacity.
+type ErrOldNodeOverMaxCapacity int
+
+// Error returns a string descriptor for ErrOldNodeOverMaxCapacity
+func (e ErrOldNodeOverMaxCapacity) Error() string {
+	return fmt.Sprintf("Unable to add an preexisting node as cluster is operating at maximum capacity "+
+		"(%d nodes). Please remove a node before attempting to "+
+		"add a new node.", e)
+}
+
 // Init instantiates a new cluster manager.
 func Init(cfg config.ClusterConfig) error {
 	if inst != nil {
@@ -1094,15 +1114,22 @@ func (c *ClusterManager) initListeners(
 
 	initFunc := func(clusterInfo cluster.ClusterInfo) error {
 		numNodes := 0
+		foundSelf := false
 		for _, node := range clusterInfo.NodeEntries {
+			if node.Id == selfNodeEntry.Id {
+				foundSelf = true
+			}
 			if node.Status != api.Status_STATUS_DECOMMISSION {
 				numNodes++
 			}
 		}
 		if clusterMaxSize > 0 && numNodes > clusterMaxSize {
-			return fmt.Errorf("Cluster is operating at maximum capacity "+
-				"(%v nodes). Please remove a node before attempting to "+
-				"add a new node.", clusterMaxSize)
+			// throw a slightly different error depending if node was already
+			// in the cluster.
+			if foundSelf {
+				return ErrOldNodeOverMaxCapacity(clusterMaxSize)
+			}
+			return ErrNewNodeOverMaxCapacity(clusterMaxSize)
 		}
 
 		// Finalize inits from subsystems under cluster db lock.
