@@ -1,6 +1,5 @@
 HAS_SDKTEST := $(shell command -v sdk-test 2> /dev/null)
 BRANCH	:= $(shell git rev-parse --abbrev-ref HEAD)
-PATH	+= $(GOPATH)/bin
 
 ifeq ($(TRAVIS_BRANCH), master)
 MOCKSDKSERVERTAG := latest
@@ -175,7 +174,7 @@ $(OSDSANITY)-clean:
 docker-build-proto:
 	docker build -t quay.io/openstorage/osd-proto -f Dockerfile.proto .
 
-docker-proto:
+docker-proto: $(GOPATH)/bin/protoc-gen-go
 	docker run \
 		--privileged \
 		-v $(shell pwd):/go/src/github.com/libopenstorage/openstorage \
