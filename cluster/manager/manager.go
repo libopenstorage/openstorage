@@ -77,6 +77,7 @@ type ClusterManager struct {
 }
 
 // ErrNewNodeOverMaxCapacity used when a new node (not yet part of the cluster) triggers max #nodes capacity.
+// NOTE: For validations, please use err.(type) rather than the value.
 type ErrNewNodeOverMaxCapacity int
 
 // Error returns a string descriptor for ErrNewNodeOverMaxCapacity
@@ -87,6 +88,7 @@ func (e ErrNewNodeOverMaxCapacity) Error() string {
 }
 
 // ErrOldNodeOverMaxCapacity used when a OLD node (already part of the cluster) triggers max #nodes capacity.
+// NOTE: For validations, please use err.(type) rather than the value.
 type ErrOldNodeOverMaxCapacity int
 
 // Error returns a string descriptor for ErrOldNodeOverMaxCapacity
