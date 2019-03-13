@@ -17,30 +17,28 @@ limitations under the License.
 package csi
 
 import (
+	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/api/server/sdk"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/config"
-	"github.com/libopenstorage/openstorage/volume/drivers"
-
-	"github.com/kubernetes-csi/csi-test/pkg/sanity"
-	"github.com/sirupsen/logrus"
-
+	"github.com/libopenstorage/openstorage/pkg/auth"
+	"github.com/libopenstorage/openstorage/pkg/role"
+	"github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
+
+	"github.com/kubernetes-csi/csi-test/pkg/sanity"
 )
 
 func TestCSISanity(t *testing.T) {
 
-	kv, err := kvdb.New(mem.Name, "fake_test", []string{}, nil, logrus.Panicf)
-	if err != nil {
-		logrus.Panicf("Failed to initialize KVDB")
-	}
-	if err := kvdb.SetInstance(kv); err != nil {
-		logrus.Panicf("Failed to set KVDB instance")
-	}
 	clustermanager.Init(config.ClusterConfig{
 		ClusterId: "fakecluster",
 		NodeId:    "fakeNode",
@@ -50,9 +48,6 @@ func TestCSISanity(t *testing.T) {
 		cm.Start(0, false, "9002")
 	}()
 	defer cm.Shutdown()
-	if err := volumedrivers.Register("fake", map[string]string{}); err != nil {
-		t.Fatalf("Unable to start volume driver fake: %v", err)
-	}
 
 	// Start CSI Server
 	server, err := NewOsdCsiServer(&OsdCsiServerConfig{
@@ -60,12 +55,59 @@ func TestCSISanity(t *testing.T) {
 		Net:        "tcp",
 		Address:    "127.0.0.1:0",
 		Cluster:    cm,
+		SdkUds:     testSdkSock,
 	})
 	if err != nil {
 		t.Fatalf("Unable to start csi server: %v", err)
 	}
 	server.Start()
 	defer server.Stop()
+
+	// Setup sdk server
+	kv, err := kvdb.New(mem.Name, "test", []string{}, nil, logrus.Panicf)
+	assert.NoError(t, err)
+	stp, err := storagepolicy.Init(kv)
+	if err != nil {
+		stp, _ = storagepolicy.Inst()
+	}
+	assert.NotNil(t, stp)
+	rm, err := role.NewSdkRoleManager(kv)
+	assert.NoError(t, err)
+
+	os.Remove(testSdkSock)
+	selfsignedJwt, err := auth.NewJwtAuth(&auth.JwtAuthConfig{
+		SharedSecret:  []byte(testSharedSecret),
+		UsernameClaim: auth.UsernameClaimTypeName,
+	})
+
+	_ = rm
+	_ = selfsignedJwt
+
+	// setup sdk server
+	sdk, err := sdk.New(&sdk.ServerConfig{
+		DriverName:    "fake",
+		Net:           "tcp",
+		Address:       ":8123",
+		RestPort:      "8124",
+		Cluster:       cm,
+		Socket:        testSdkSock,
+		StoragePolicy: stp,
+		AccessOutput:  ioutil.Discard,
+		AuditOutput:   ioutil.Discard,
+		// Auth disabled for now.
+		// We're only sanity testing Client -> CSI -> SDK (No Auth)
+		/*Security: &sdk.SecurityConfig{
+			Role: rm,
+			Authenticators: map[string]auth.Authenticator{
+				"openstorage.io": selfsignedJwt,
+			},
+		},*/
+	})
+	assert.Nil(t, err)
+
+	err = sdk.Start()
+	assert.Nil(t, err)
+	defer sdk.Stop()
 
 	timeout := time.After(30 * time.Second)
 	for {
