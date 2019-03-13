@@ -54,8 +54,10 @@ func (s *CloudBackupServer) Create(
 	if err := checkAccessFromDriverForVolumeId(ctx, s.driver(ctx), req.GetVolumeId(), api.Ownership_Read); err != nil {
 		return nil, err
 	}
+	if err := s.checkAccessToCredential(ctx, req.GetCredentialId()); err != nil {
+		return nil, err
+	}
 
-	// Create the backup
 	r, err := s.driver(ctx).CloudBackupCreate(&api.CloudBackupCreateRequest{
 		VolumeID:       req.GetVolumeId(),
 		CredentialUUID: req.GetCredentialId(),
@@ -85,6 +87,9 @@ func (s *CloudBackupServer) Restore(
 		return nil, status.Error(codes.InvalidArgument, "Must provide backup id")
 	} else if len(req.GetCredentialId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must provide credential uuid")
+	}
+	if err := s.checkAccessToCredential(ctx, req.GetCredentialId()); err != nil {
+		return nil, err
 	}
 
 	r, err := s.driver(ctx).CloudBackupRestore(&api.CloudBackupRestoreRequest{
@@ -119,6 +124,9 @@ func (s *CloudBackupServer) Delete(
 	} else if len(req.GetCredentialId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must provide credential uuid")
 	}
+	if err := s.checkAccessToCredential(ctx, req.GetCredentialId()); err != nil {
+		return nil, err
+	}
 
 	if err := s.driver(ctx).CloudBackupDelete(&api.CloudBackupDeleteRequest{
 		ID:             req.GetBackupId(),
@@ -145,6 +153,9 @@ func (s *CloudBackupServer) DeleteAll(
 	} else if len(req.GetCredentialId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must provide credential uuid")
 	}
+	if err := s.checkAccessToCredential(ctx, req.GetCredentialId()); err != nil {
+		return nil, err
+	}
 
 	if err := s.driver(ctx).CloudBackupDeleteAll(&api.CloudBackupDeleteAllRequest{
 		CloudBackupGenericRequest: api.CloudBackupGenericRequest{
@@ -169,6 +180,9 @@ func (s *CloudBackupServer) EnumerateWithFilters(
 
 	if len(req.GetCredentialId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must provide credential uuid")
+	}
+	if err := s.checkAccessToCredential(ctx, req.GetCredentialId()); err != nil {
+		return nil, err
 	}
 
 	r, err := s.driver(ctx).CloudBackupEnumerate(&api.CloudBackupEnumerateRequest{
@@ -224,6 +238,9 @@ func (s *CloudBackupServer) Catalog(
 		return nil, status.Error(codes.InvalidArgument, "Must provide backup id")
 	} else if len(req.GetCredentialId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must provide credential uuid")
+	}
+	if err := s.checkAccessToCredential(ctx, req.GetCredentialId()); err != nil {
+		return nil, err
 	}
 
 	r, err := s.driver(ctx).CloudBackupCatalog(&api.CloudBackupCatalogRequest{
@@ -332,6 +349,9 @@ func (s *CloudBackupServer) SchedCreate(
 	if err := checkAccessFromDriverForVolumeId(ctx, s.driver(ctx), req.GetCloudSchedInfo().GetSrcVolumeId(), api.Ownership_Read); err != nil {
 		return nil, err
 	}
+	if err := s.checkAccessToCredential(ctx, req.GetCloudSchedInfo().GetCredentialId()); err != nil {
+		return nil, err
+	}
 
 	sched, err := sdkSchedToRetainInternalSpecYamlByte(req.GetCloudSchedInfo().GetSchedules())
 	if err != nil {
@@ -400,6 +420,17 @@ func (s *CloudBackupServer) SchedEnumerate(
 	// since can't import sdk/utils to api because of cyclic import, converting
 	// api.CloudBackupScheduleInfo to api.SdkCloudBackupScheduleInfo
 	return ToSdkCloudBackupSchedEnumerateResponse(r), nil
+}
+
+func (s *CloudBackupServer) checkAccessToCredential(
+	ctx context.Context,
+	credentialId string,
+) error {
+	cs := &CredentialServer{server: s.server}
+	_, err := cs.Inspect(ctx, &api.SdkCredentialInspectRequest{
+		CredentialId: credentialId,
+	})
+	return err
 }
 
 func ToSdkCloudBackupSchedEnumerateResponse(r *api.CloudBackupSchedEnumerateResponse) *api.SdkCloudBackupSchedEnumerateResponse {

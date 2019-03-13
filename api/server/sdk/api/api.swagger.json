@@ -1491,6 +1491,9 @@
           "name": {
             "title": "Name of the credential",
             "type": "string"
+          },
+          "ownership": {
+            "$ref": "#/components/schemas/apiOwnership"
           }
         },
         "title": "Defines a request to create credentials",
@@ -1546,6 +1549,9 @@
           "name": {
             "title": "Name of the credential",
             "type": "string"
+          },
+          "ownership": {
+            "$ref": "#/components/schemas/apiOwnership"
           }
         },
         "type": "object"
@@ -2033,7 +2039,7 @@
         "type": "object"
       },
       "apiSdkStoragePolicy": {
-        "description": "A SdkStoragePolicy represents minimum set of volume specs to be \nfollow while creating volumes.\nIf enforce in OpenStoragePolicy service, VolumeSpecPolicy will be \nused before creating volume to ensure minimum volume creation rules\nare enforced.",
+        "description": "A SdkStoragePolicy represents minimum set of volume specs to be\nfollow while creating volumes.\nIf enforce in OpenStoragePolicy service, VolumeSpecPolicy will be\nused before creating volume to ensure minimum volume creation rules\nare enforced.",
         "properties": {
           "name": {
             "description": "Name of storage policy.",
@@ -3401,7 +3407,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.42.0"
+    "version": "0.42.1"
   },
   "openapi": "3.0.0",
   "paths": {
