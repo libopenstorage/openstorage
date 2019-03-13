@@ -111,6 +111,8 @@ const (
 	// OptOptCredAzureAccountKey is the accountkey for
 	// azure as the cloud provider
 	OptCredAzureAccountKey = "CredAccountKey"
+	// Credential ownership key in params
+	OptCredOwnership = "CredOwnership"
 	// OptCloudBackupID is the backID in the cloud
 	OptCloudBackupID = "CloudBackID"
 	// OptSrcVolID is the source volume ID of the backup
@@ -966,19 +968,7 @@ func (v *Volume) IsPermitted(ctx context.Context, accessType Ownership_AccessTyp
 }
 
 func (v *VolumeSpec) IsPermitted(ctx context.Context, accessType Ownership_AccessType) bool {
-	if v.IsPublic() {
-		return true
-	}
-
-	// Volume is not public, check permission
-	if userinfo, ok := auth.NewUserInfoFromContext(ctx); ok {
-		// Check Access
-		return v.IsPermittedFromUserInfo(userinfo, accessType)
-	} else {
-		// There is no user information in the context so
-		// authorization is not running
-		return true
-	}
+	return v.GetOwnership().IsPermittedByContext(ctx, accessType)
 }
 
 func (v *VolumeSpec) IsPermittedFromUserInfo(user *auth.UserInfo, accessType Ownership_AccessType) bool {

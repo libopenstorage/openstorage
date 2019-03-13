@@ -17,6 +17,7 @@ limitations under the License.
 package api
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"testing"
@@ -933,4 +934,23 @@ func TestOwnershipIsMatch(t *testing.T) {
 	for _, test := range tests {
 		assert.Equal(t, test.owner.IsMatch(test.match), test.isMatch)
 	}
+}
+
+func TestOwnershipIsPermittedByContext(t *testing.T) {
+	o := &Ownership{
+		Owner: "user1",
+	}
+	ctxUser1 := auth.ContextSaveUserInfo(context.Background(), &auth.UserInfo{
+		Username: "user1",
+	})
+	ctxUser2 := auth.ContextSaveUserInfo(context.Background(), &auth.UserInfo{
+		Username: "user2",
+	})
+
+	assert.True(t, o.IsPermittedByContext(ctxUser1, Ownership_Read))
+	assert.False(t, o.IsPermittedByContext(ctxUser2, Ownership_Read))
+
+	var oNil *Ownership
+	assert.True(t, oNil.IsPermittedByContext(ctxUser1, Ownership_Read))
+	assert.True(t, oNil.IsPermittedByContext(ctxUser2, Ownership_Read))
 }

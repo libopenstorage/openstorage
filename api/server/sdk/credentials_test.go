@@ -21,7 +21,15 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/golang/mock/gomock"
+	"github.com/golang/protobuf/jsonpb"
+	"github.com/kubernetes-csi/csi-test/utils"
+
 	"github.com/libopenstorage/openstorage/api"
+	mockcluster "github.com/libopenstorage/openstorage/cluster/mock"
+	"github.com/libopenstorage/openstorage/pkg/auth"
+	"github.com/libopenstorage/openstorage/volume"
+	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -445,10 +453,22 @@ func TestSdkCredentialValidateSuccess(t *testing.T) {
 
 	req := &api.SdkCredentialValidateRequest{CredentialId: uuid}
 
+	enumAzure := map[string]interface{}{
+		api.OptCredType:             "azure",
+		api.OptCredAzureAccountName: "test-azure-account",
+		api.OptCredAzureAccountKey:  "test-azure-account",
+	}
+	enumerateData := map[string]interface{}{
+		uuid: enumAzure,
+	}
 	s.MockDriver().
 		EXPECT().
 		CredsValidate(req.GetCredentialId()).
 		Return(nil)
+	s.MockDriver().
+		EXPECT().
+		CredsEnumerate().
+		Return(enumerateData, nil)
 
 	// Setup client
 	c := api.NewOpenStorageCredentialsClient(s.Conn())
@@ -467,11 +487,23 @@ func TestSdkCredentialValidateFailed(t *testing.T) {
 	uuid := "bad-uuid"
 
 	req := &api.SdkCredentialValidateRequest{CredentialId: uuid}
+	enumAzure := map[string]interface{}{
+		api.OptCredType:             "azure",
+		api.OptCredAzureAccountName: "test-azure-account",
+		api.OptCredAzureAccountKey:  "test-azure-account",
+	}
+	enumerateData := map[string]interface{}{
+		uuid: enumAzure,
+	}
 
 	s.MockDriver().
 		EXPECT().
 		CredsValidate(req.GetCredentialId()).
 		Return(fmt.Errorf("Failed to Validate Credentials"))
+	s.MockDriver().
+		EXPECT().
+		CredsEnumerate().
+		Return(enumerateData, nil)
 
 	// Setup client
 	c := api.NewOpenStorageCredentialsClient(s.Conn())
@@ -674,6 +706,7 @@ func TestSdkAWSInspect(t *testing.T) {
 	resp, err := c.Inspect(context.Background(), req)
 	assert.NoError(t, err)
 	assert.NotNil(t, resp.GetAwsCredential())
+	assert.Nil(t, resp.GetOwnership())
 	assert.Equal(t, enumAws[api.OptCredName], resp.GetName())
 	assert.Equal(t, enumAws[api.OptCredBucket], resp.GetBucket())
 	assert.Equal(t, enumAws[api.OptCredRegion], resp.GetAwsCredential().GetRegion())
@@ -732,10 +765,22 @@ func TestSdkCredentialDeleteSuccess(t *testing.T) {
 	req := &api.SdkCredentialDeleteRequest{
 		CredentialId: cred_id,
 	}
+	enumAzure := map[string]interface{}{
+		api.OptCredType:             "azure",
+		api.OptCredAzureAccountName: "test-azure-account",
+		api.OptCredAzureAccountKey:  "test-azure-account",
+	}
+	enumerateData := map[string]interface{}{
+		cred_id: enumAzure,
+	}
 	s.MockDriver().
 		EXPECT().
 		CredsDelete(cred_id).
 		Return(nil)
+	s.MockDriver().
+		EXPECT().
+		CredsEnumerate().
+		Return(enumerateData, nil)
 
 	// Setup client
 	c := api.NewOpenStorageCredentialsClient(s.Conn())
@@ -773,6 +818,15 @@ func TestSdkCredentialDeleteFailed(t *testing.T) {
 	defer s.Stop()
 
 	cred_id := "myid"
+	enumAzure := map[string]interface{}{
+		api.OptCredType:             "azure",
+		api.OptCredAzureAccountName: "test-azure-account",
+		api.OptCredAzureAccountKey:  "test-azure-account",
+	}
+	enumerateData := map[string]interface{}{
+		cred_id: enumAzure,
+	}
+
 	req := &api.SdkCredentialDeleteRequest{
 		CredentialId: cred_id,
 	}
@@ -780,6 +834,10 @@ func TestSdkCredentialDeleteFailed(t *testing.T) {
 		EXPECT().
 		CredsDelete(cred_id).
 		Return(fmt.Errorf("Error deleting credentials"))
+	s.MockDriver().
+		EXPECT().
+		CredsEnumerate().
+		Return(enumerateData, nil)
 
 	// Setup client
 	c := api.NewOpenStorageCredentialsClient(s.Conn())
@@ -789,4 +847,152 @@ func TestSdkCredentialDeleteFailed(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Error deleting credentials")
+}
+
+func TestSdkCredentialOwnership(t *testing.T) {
+	// This test does not use the gRPC server
+	mc := gomock.NewController(&utils.SafeGoroutineTester{})
+	mv := mockdriver.NewMockVolumeDriver(mc)
+	mcluster := mockcluster.NewMockCluster(mc)
+	s := CredentialServer{
+		server: &sdkGrpcServer{
+			driverHandlers: map[string]volume.VolumeDriver{
+				"mock":            mv,
+				DefaultDriverName: mv,
+			},
+			clusterHandler: mcluster,
+		},
+	}
+
+	// Create contexts
+	user1 := "user1"
+	ctxWithOwner := auth.ContextSaveUserInfo(context.Background(), &auth.UserInfo{
+		Username: user1,
+	})
+
+	req := &api.SdkCredentialCreateRequest{
+		Name:          "test",
+		Bucket:        "mybucket",
+		EncryptionKey: "key",
+		CredentialType: &api.SdkCredentialCreateRequest_AwsCredential{
+			AwsCredential: &api.SdkAwsCredentialRequest{
+				AccessKey:  "dummy-access",
+				SecretKey:  "dummy-secret",
+				Endpoint:   "dummy-endpoint",
+				Region:     "dummy-region",
+				DisableSsl: true,
+			},
+		},
+	}
+
+	params := make(map[string]string)
+
+	params[api.OptCredType] = "s3"
+	params[api.OptCredName] = req.GetName()
+	params[api.OptCredEncrKey] = req.GetEncryptionKey()
+	params[api.OptCredBucket] = req.GetBucket()
+	params[api.OptCredRegion] = req.GetAwsCredential().GetRegion()
+	params[api.OptCredEndpoint] = req.GetAwsCredential().GetEndpoint()
+	params[api.OptCredAccessKey] = req.GetAwsCredential().GetAccessKey()
+	params[api.OptCredSecretKey] = req.GetAwsCredential().GetSecretKey()
+	params[api.OptCredDisableSSL] = "true"
+
+	// Create a marshalled ownership for the expect params
+	ownership := &api.Ownership{
+		Owner: user1,
+		Acls: &api.Ownership_AccessControl{
+			Collaborators: map[string]api.Ownership_AccessType{
+				"collabread":  api.Ownership_Read,
+				"collabadmin": api.Ownership_Admin,
+			},
+		},
+	}
+	m := jsonpb.Marshaler{OrigName: true}
+	oStr, err := m.MarshalToString(ownership)
+	params[api.OptCredOwnership] = oStr
+
+	// add to request
+	req.Ownership = ownership
+
+	uuid := "good-uuid"
+	mv.
+		EXPECT().
+		CredsCreate(params).
+		Return(uuid, nil)
+
+	mv.
+		EXPECT().
+		CredsValidate(uuid).
+		Return(nil)
+
+	_, err = s.Create(ctxWithOwner, req)
+	assert.NoError(t, err)
+
+	// Do an inspection with a different user
+	user2 := "user2"
+	ctxWithNotOwner := auth.ContextSaveUserInfo(context.Background(), &auth.UserInfo{
+		Username: user2,
+	})
+
+	cred := make(map[string]interface{})
+	for k, v := range params {
+		cred[k] = v
+	}
+	creds := map[string]interface{}{
+		uuid: cred,
+	}
+
+	mv.EXPECT().
+		CredsEnumerate().
+		Return(creds, nil)
+
+	_, err = s.Inspect(ctxWithNotOwner, &api.SdkCredentialInspectRequest{
+		CredentialId: uuid,
+	})
+	assert.Error(t, err)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.PermissionDenied, fmt.Sprintf("CODE: %v:%v", serverError.Code(), serverError.Message()))
+
+	// Do an inspection with correct user
+	mv.EXPECT().
+		CredsEnumerate().
+		Return(creds, nil)
+	resp, err := s.Inspect(ctxWithOwner, &api.SdkCredentialInspectRequest{
+		CredentialId: uuid,
+	})
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.NotNil(t, resp.GetOwnership())
+	assert.Equal(t, user1, resp.GetOwnership().GetOwner())
+
+	// Delete the resource as a user
+	ctxCollabRead := auth.ContextSaveUserInfo(context.Background(), &auth.UserInfo{
+		Username: "collabread",
+	})
+	ctxCollabAdmin := auth.ContextSaveUserInfo(context.Background(), &auth.UserInfo{
+		Username: "collabadmin",
+	})
+
+	// - test 1 cannot delete as a collaborator:READ
+	mv.EXPECT().
+		CredsEnumerate().
+		Return(creds, nil)
+	_, err = s.Delete(ctxCollabRead, &api.SdkCredentialDeleteRequest{
+		CredentialId: uuid,
+	})
+	assert.Error(t, err)
+	serverError, ok = status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.PermissionDenied, fmt.Sprintf("CODE: %v:%v", serverError.Code(), serverError.Message()))
+
+	// - test 1 cannot delete as a collaborator:READ
+	mv.EXPECT().
+		CredsEnumerate().
+		Return(creds, nil)
+	mv.EXPECT().CredsDelete(uuid).Return(nil)
+	_, err = s.Delete(ctxCollabAdmin, &api.SdkCredentialDeleteRequest{
+		CredentialId: uuid,
+	})
+	assert.NoError(t, err)
 }

@@ -29,6 +29,22 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+func setupExpectedCredentialsPassing(s *testServer, credid string) {
+	enumAzure := map[string]interface{}{
+		api.OptCredType:             "azure",
+		api.OptCredAzureAccountName: "test-azure-account",
+		api.OptCredAzureAccountKey:  "test-azure-account",
+	}
+	creds := map[string]interface{}{
+		credid: enumAzure,
+	}
+
+	s.MockDriver().
+		EXPECT().
+		CredsEnumerate().
+		Return(creds, nil)
+}
+
 func TestSdkCloudBackupCreate(t *testing.T) {
 
 	// Create server and client connection
@@ -69,6 +85,7 @@ func TestSdkCloudBackupCreate(t *testing.T) {
 		}).
 		Return(&api.CloudBackupCreateResponse{Name: "good-backup-name"}, nil).
 		Times(1)
+	setupExpectedCredentialsPassing(s, uuid)
 
 	// Setup client
 	c := api.NewOpenStorageCloudBackupClient(s.Conn())
@@ -135,6 +152,7 @@ func TestSdkCloudRestoreCreate(t *testing.T) {
 			Name:            taskId,
 		}, nil).
 		Times(1)
+	setupExpectedCredentialsPassing(s, uuid)
 
 	// Setup client
 	c := api.NewOpenStorageCloudBackupClient(s.Conn())
@@ -195,6 +213,7 @@ func TestSdkCloudDeleteCreate(t *testing.T) {
 		}).
 		Return(nil).
 		Times(1)
+	setupExpectedCredentialsPassing(s, uuid)
 
 	// Setup client
 	c := api.NewOpenStorageCloudBackupClient(s.Conn())
@@ -255,6 +274,7 @@ func TestSdkCloudDeleteAllCreate(t *testing.T) {
 		}).
 		Return(nil).
 		Times(1)
+	setupExpectedCredentialsPassing(s, uuid)
 
 	// Setup client
 	c := api.NewOpenStorageCloudBackupClient(s.Conn())
@@ -340,6 +360,7 @@ func TestSdkCloudBackupEnumerateWithFilters(t *testing.T) {
 		}).
 		Return(list, nil).
 		Times(1)
+	setupExpectedCredentialsPassing(s, uuid)
 
 	// Setup client
 	c := api.NewOpenStorageCloudBackupClient(s.Conn())
@@ -493,6 +514,7 @@ func TestSdkCloudBackupCatalog(t *testing.T) {
 		}).
 		Return(catalog, nil).
 		Times(1)
+	setupExpectedCredentialsPassing(s, creds)
 
 	// Setup client
 	c := api.NewOpenStorageCloudBackupClient(s.Conn())
@@ -756,6 +778,7 @@ func TestSdkCloudBackupSchedCreate(t *testing.T) {
 		CloudBackupSchedCreate(&mockReq).
 		Return(&api.CloudBackupSchedCreateResponse{UUID: "uuid"}, nil).
 		Times(1)
+	setupExpectedCredentialsPassing(s, "uuid")
 
 	// Setup client
 	c := api.NewOpenStorageCloudBackupClient(s.Conn())
