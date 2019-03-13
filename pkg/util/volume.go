@@ -17,6 +17,7 @@ limitations under the License.
 package util
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/libopenstorage/openstorage/api"
@@ -36,4 +37,47 @@ func VolumeFromName(v volume.VolumeDriver, name string) (*api.Volume, error) {
 		return vols[0], nil
 	}
 	return nil, fmt.Errorf("Cannot locate volume with name %s", name)
+}
+
+// VolumeFromIdSdk uses the SDK to fetch the volume object associated with the specified id.
+func VolumeFromIdSdk(ctx context.Context, volumes api.OpenStorageVolumeClient, id string) (*api.Volume, error) {
+	inspectResp, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
+		VolumeId: id,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("Cannot locate volume with id %s", id)
+	}
+	return inspectResp.Volume, nil
+}
+
+// VolumeIdFromNameSdk uses the SDK to fetch the volume id associated with the specified name.
+func VolumeIdFromNameSdk(ctx context.Context, volumes api.OpenStorageVolumeClient, name string) (string, error) {
+	enumerateResp, err := volumes.EnumerateWithFilters(ctx, &api.SdkVolumeEnumerateWithFiltersRequest{
+		Name: name,
+	})
+	if err != nil {
+		return "", err
+	} else if len(enumerateResp.VolumeIds) < 1 {
+		return "", fmt.Errorf("Cannot locate volume with name %s", name)
+	}
+
+	return enumerateResp.VolumeIds[0], nil
+}
+
+// VolumeFromNameSdk uses the SDK to fetch the volume associated with a specified name.
+func VolumeFromNameSdk(ctx context.Context, volumes api.OpenStorageVolumeClient, name string) (*api.Volume, error) {
+	// get volume id
+	volId, err := VolumeIdFromNameSdk(ctx, volumes, name)
+	if err != nil {
+		return nil, err
+	}
+
+	// inspect for actual volume
+	inspectResp, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
+		VolumeId: volId,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return inspectResp.Volume, nil
 }

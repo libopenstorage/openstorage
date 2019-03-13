@@ -25,7 +25,6 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/util"
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
-	sdkVol "github.com/libopenstorage/openstorage/api/server/sdk"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
@@ -65,20 +64,10 @@ func (s *OsdCsiServer) ControllerGetCapabilities(
 		},
 	}
 
-	// ListVolumes supported
-	capListVolumes := &csi.ControllerServiceCapability{
-		Type: &csi.ControllerServiceCapability_Rpc{
-			Rpc: &csi.ControllerServiceCapability_RPC{
-				Type: csi.ControllerServiceCapability_RPC_LIST_VOLUMES,
-			},
-		},
-	}
-
 	return &csi.ControllerGetCapabilitiesResponse{
 		Capabilities: []*csi.ControllerServiceCapability{
 			capCreateDeleteVolume,
 			capCreateDeleteSnapshot,
-			capListVolumes,
 		},
 	}, nil
 
@@ -124,19 +113,26 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 		id,
 		capabilities)
 
+	// Get grpc connection
+	conn, err := s.getConn()
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"Unable to connect to SDK server: %v", err)
+	}
+
+	// Get secret if any was passed
+	ctx = s.setupContextWithToken(ctx, req.GetSecrets())
+
 	// Check ID is valid with the specified volume capabilities
-	volumes, err := s.driver.Inspect([]string{id})
-	if err != nil || len(volumes) == 0 {
+	volumes := api.NewOpenStorageVolumeClient(conn)
+	resp, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
+		VolumeId: id,
+	})
+	if err != nil {
 		return nil, status.Error(codes.NotFound, "ID not found")
 	}
-	if len(volumes) != 1 {
-		errs := fmt.Sprintf(
-			"Driver returned an unexpected number of volumes when one was expected: %d",
-			len(volumes))
-		logrus.Errorln(errs)
-		return nil, status.Error(codes.Internal, errs)
-	}
-	v := volumes[0]
+	v := resp.GetVolume()
 	if v.Id != id {
 		errs := fmt.Sprintf(
 			"Driver volume id [%s] does not equal requested id of: %s",
@@ -145,7 +141,6 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 		logrus.Errorln(errs)
 		return nil, status.Error(codes.Internal, errs)
 	}
-
 	// Setup uninitialized response object
 	result := &csi.ValidateVolumeCapabilitiesResponse{
 		Confirmed: &csi.ValidateVolumeCapabilitiesResponse_Confirmed{
@@ -231,60 +226,6 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 	return result, nil
 }
 
-// ListVolumes is a CSI API which returns to the caller all volume ids
-// on this cluster. This includes ids created by CSI and ids created
-// using other interfaces. This is important because the user could
-// be requesting to mount a OSD volume created using non-CSI interfaces.
-//
-// This call does not yet implement tokens to due to the following
-// issue: https://github.com/container-storage-interface/spec/issues/138
-func (s *OsdCsiServer) ListVolumes(
-	ctx context.Context,
-	req *csi.ListVolumesRequest,
-) (*csi.ListVolumesResponse, error) {
-
-	logrus.Debugf("ListVolumes req[%#v]", req)
-
-	// Until the issue #138 on the CSI spec is resolved we will not support
-	// tokenization
-	if req.GetMaxEntries() != 0 {
-		return nil, status.Error(
-			codes.Unimplemented,
-			"Driver does not support tokenization. Please see "+
-				"https://github.com/container-storage-interface/spec/issues/138")
-	}
-
-	volumes, err := s.driver.Enumerate(&api.VolumeLocator{}, nil)
-	if err != nil {
-		errs := fmt.Sprintf("Unable to get list of volumes: %s", err.Error())
-		logrus.Errorln(errs)
-		return nil, status.Error(codes.Internal, errs)
-	}
-	entries := make([]*csi.ListVolumesResponse_Entry, len(volumes))
-	for i, v := range volumes {
-		// Initialize entry
-		entries[i] = &csi.ListVolumesResponse_Entry{
-			Volume: &csi.Volume{},
-		}
-
-		// Required
-		entries[i].Volume.VolumeId = v.Id
-
-		// This entry is optional in the API, but OSD has
-		// the information available to provide it
-		entries[i].Volume.CapacityBytes = int64(v.Spec.Size)
-
-		// Attributes. We can add or remove as needed since they
-		// are optional and opaque to the Container Orchestrator(CO)
-		// but could be used for debugging using a csi complient client.
-		entries[i].Volume.VolumeContext = osdVolumeContext(v)
-	}
-
-	return &csi.ListVolumesResponse{
-		Entries: entries,
-	}, nil
-}
-
 // osdVolumeContext returns the attributes of a volume as a map
 // to be returned to the CSI API caller
 func osdVolumeContext(v *api.Volume) map[string]string {
@@ -332,91 +273,57 @@ func (s *OsdCsiServer) CreateVolume(
 		spec.Size = defaultCSIVolumeSize
 	}
 
+	// Get grpc connection
+	conn, err := s.getConn()
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"Unable to connect to SDK server: %v", err)
+	}
+
+	// Get secret if any was passed
+	ctx = s.setupContextWithToken(ctx, req.GetSecrets())
+
+	// Check ID is valid with the specified volume capabilities
+	volumes := api.NewOpenStorageVolumeClient(conn)
+
+	// Create volume
+	var newVolumeId string
+	if source.Parent == "" {
+		createResp, err := volumes.Create(ctx, &api.SdkVolumeCreateRequest{
+			Name:   req.GetName(),
+			Spec:   spec,
+			Labels: locator.GetVolumeLabels(),
+		})
+		if err != nil {
+			return nil, err
+		}
+		newVolumeId = createResp.VolumeId
+	} else {
+		cloneResp, err := volumes.Clone(ctx, &api.SdkVolumeCloneRequest{
+			Name:     req.GetName(),
+			ParentId: source.Parent,
+		})
+		if err != nil {
+			return nil, err
+		}
+		newVolumeId = cloneResp.VolumeId
+	}
+
+	// Get volume information
+	inspectResp, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
+		VolumeId: newVolumeId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	// Create response
 	volume := &csi.Volume{}
-	resp := &csi.CreateVolumeResponse{
+	osdToCsiVolumeInfo(volume, inspectResp.GetVolume())
+	return &csi.CreateVolumeResponse{
 		Volume: volume,
-	}
-
-	// Check if the volume has already been created or is in process of creation
-	v, err := util.VolumeFromName(s.driver, req.GetName())
-	if err == nil {
-		// Check the requested arguments match that of the existing volume
-		if spec.Size != v.GetSpec().GetSize() {
-			return nil, status.Errorf(
-				codes.AlreadyExists,
-				"Existing volume has a size of %v which differs from requested size of %v",
-				v.GetSpec().GetSize(),
-				spec.Size)
-		}
-		if v.GetSpec().GetShared() != csiRequestsSharedVolume(req) {
-			return nil, status.Errorf(
-				codes.AlreadyExists,
-				"Existing volume has shared=%v while request is asking for shared=%v",
-				v.GetSpec().GetShared(),
-				csiRequestsSharedVolume(req))
-		}
-		if v.GetSource().GetParent() != source.GetParent() {
-			return nil, status.Error(codes.AlreadyExists, "Existing volume has conflicting parent value")
-		}
-
-		// Return information on existing volume
-		osdToCsiVolumeInfo(volume, v)
-		return resp, nil
-	}
-
-	// Check if this is a cloning request to create a volume from a snapshot
-	if req.GetVolumeContentSource().GetSnapshot() != nil {
-		source.Parent = req.GetVolumeContentSource().GetSnapshot().GetSnapshotId()
-	}
-
-	// Check if the caller is asking to create a snapshot or for a new volume
-	var id string
-	if source != nil && len(source.GetParent()) != 0 {
-		// Get parent volume information
-		parent, err := util.VolumeFromName(s.driver, source.Parent)
-		if err != nil {
-			e := fmt.Sprintf("unable to get parent volume information: %s\n", err.Error())
-			logrus.Errorln(e)
-			return nil, status.Error(codes.InvalidArgument, e)
-		}
-
-		// Create a snapshot from the parent
-		id, err = s.driver.Snapshot(parent.GetId(), false, &api.VolumeLocator{
-			Name: req.GetName(),
-		},
-			false)
-		if err != nil {
-			e := fmt.Sprintf("unable to create snapshot: %s\n", err.Error())
-			logrus.Errorln(e)
-			return nil, status.Error(codes.Internal, e)
-		}
-	} else {
-		// Get Capabilities and Size
-		spec.Shared = csiRequestsSharedVolume(req)
-
-		// Create the volume
-		locator.Name = req.GetName()
-		// get enforced policy specs
-		spec, err = sdkVol.GetEnforcedVolSpecs(locator, spec)
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, err.Error())
-		}
-		id, err = s.driver.Create(locator, source, spec)
-		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
-		}
-	}
-
-	// id must have been set
-	v, err = util.VolumeFromName(s.driver, id)
-	if err != nil {
-		e := fmt.Sprintf("Unable to find newly created volume: %s", err.Error())
-		logrus.Errorln(e)
-		return nil, status.Error(codes.Internal, e)
-	}
-	osdToCsiVolumeInfo(volume, v)
-	return resp, nil
+	}, nil
 }
 
 // DeleteVolume is a CSI API which deletes a volume
@@ -433,18 +340,24 @@ func (s *OsdCsiServer) DeleteVolume(
 		return nil, status.Error(codes.InvalidArgument, "Volume id must be provided")
 	}
 
-	// If the volume is not found, then we can return OK
-	volumes, err := s.driver.Inspect([]string{req.GetVolumeId()})
-	if (err == nil && len(volumes) == 0) ||
-		(err != nil && err == kvdb.ErrNotFound) {
-		return &csi.DeleteVolumeResponse{}, nil
-	} else if err != nil {
-		return nil, err
+	// Get grpc connection
+	conn, err := s.getConn()
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"Unable to connect to SDK server: %v", err)
 	}
 
+	// Get secret if any was passed
+	ctx = s.setupContextWithToken(ctx, req.GetSecrets())
+
+	// Check ID is valid with the specified volume capabilities
+	volumes := api.NewOpenStorageVolumeClient(conn)
+
 	// Delete volume
-	err = s.driver.Delete(req.GetVolumeId())
-	if err != nil {
+	if _, err = volumes.Delete(ctx, &api.SdkVolumeDeleteRequest{
+		VolumeId: req.GetVolumeId(),
+	}); err != nil {
 		e := fmt.Sprintf("Unable to delete volume with id %s: %s",
 			req.GetVolumeId(),
 			err.Error())
@@ -485,8 +398,22 @@ func (s *OsdCsiServer) CreateSnapshot(
 		return nil, status.Error(codes.InvalidArgument, "Name must be provided")
 	}
 
+	// Get grpc connection
+	conn, err := s.getConn()
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"Unable to connect to SDK server: %v", err)
+	}
+
+	// Get secret if any was passed
+	ctx = s.setupContextWithToken(ctx, req.GetSecrets())
+
+	// Check ID is valid with the specified volume capabilities
+	volumes := api.NewOpenStorageVolumeClient(conn)
+
 	// Check if the snapshot with this name already exists
-	v, err := util.VolumeFromName(s.driver, req.GetName())
+	v, err := util.VolumeFromNameSdk(ctx, volumes, req.GetName())
 	if err == nil {
 		// Verify the parent is the same
 		if req.GetSourceVolumeId() != v.GetSource().GetParent() {
@@ -510,19 +437,20 @@ func (s *OsdCsiServer) CreateSnapshot(
 	}
 
 	// Create snapshot
-	readonly := true
-	snapshotID, err := s.driver.Snapshot(req.GetSourceVolumeId(), readonly, &api.VolumeLocator{
-		Name:         req.GetName(),
-		VolumeLabels: locator.GetVolumeLabels(),
-	}, false)
+	snapResp, err := volumes.SnapshotCreate(ctx, &api.SdkVolumeSnapshotCreateRequest{
+		VolumeId: req.GetSourceVolumeId(),
+		Name:     req.GetName(),
+		Labels:   locator.GetVolumeLabels(),
+	})
 	if err != nil {
 		if err == kvdb.ErrNotFound {
 			return nil, status.Errorf(codes.NotFound, "Volume id %s not found", req.GetSourceVolumeId())
 		}
 		return nil, status.Errorf(codes.Internal, "Failed to create snapshot: %v", err)
 	}
+	snapshotID := snapResp.SnapshotId
 
-	snapInfo, err := util.VolumeFromName(s.driver, snapshotID)
+	snapInfo, err := util.VolumeFromIdSdk(ctx, volumes, snapshotID)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to get information about the snapshot: %v", err)
 	}
@@ -547,16 +475,23 @@ func (s *OsdCsiServer) DeleteSnapshot(
 		return nil, status.Error(codes.InvalidArgument, "Snapshot id must be provided")
 	}
 
-	// If the snapshot is not found, then we can return OK
-	volumes, err := s.driver.Inspect([]string{req.GetSnapshotId()})
-	if (err == nil && len(volumes) == 0) ||
-		(err != nil && err == kvdb.ErrNotFound) {
-		return &csi.DeleteSnapshotResponse{}, nil
-	} else if err != nil {
-		return nil, err
+	// Get grpc connection
+	conn, err := s.getConn()
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"Unable to connect to SDK server: %v", err)
 	}
 
-	err = s.driver.Delete(req.GetSnapshotId())
+	// Get secret if any was passed
+	ctx = s.setupContextWithToken(ctx, req.GetSecrets())
+
+	// Check ID is valid with the specified volume capabilities
+	volumes := api.NewOpenStorageVolumeClient(conn)
+
+	_, err = volumes.Delete(ctx, &api.SdkVolumeDeleteRequest{
+		VolumeId: req.GetSnapshotId(),
+	})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Unable to delete snapshot %s: %v",
 			req.GetSnapshotId(),
