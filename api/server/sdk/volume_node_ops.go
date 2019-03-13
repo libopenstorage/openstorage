@@ -135,7 +135,7 @@ func (s *VolumeServer) Mount(
 		VolumeId: req.GetVolumeId(),
 	})
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.NotFound, err.Error())
 	}
 	vol := resp.GetVolume()
 	mountpoint := req.GetMountPath()
@@ -192,13 +192,14 @@ func (s *VolumeServer) Mount(
 			attachOptions[mountattachoptions.OptionsSecretKey] = req.Options.SecretKey
 			attachOptions[mountattachoptions.OptionsSecretContext] = req.Options.SecretContext
 		}
+
 		if vol.Scaled() {
 			vol, err = s.attachScale(ctx, vol, attachOptions)
 		} else {
 			vol, err = s.attachVol(ctx, vol, attachOptions)
 		}
 		if err != nil {
-			return nil, status.Error(codes.InvalidArgument, err.Error())
+			return nil, status.Error(codes.Internal, err.Error())
 		}
 	}
 
@@ -404,9 +405,18 @@ func (s *VolumeServer) attachVol(
 	case nil:
 		return vol, nil
 	case volume.ErrVolAttachedOnRemoteNode:
-		return vol, err
+		return vol, status.Errorf(
+			codes.Internal,
+			"Failed to attach volume %s: %v",
+			vol.Id,
+			err.Error())
 	default:
-		return vol, err
+		return vol, status.Errorf(
+			codes.Internal,
+			"Failed to attach volume %s: %v",
+			vol.Id,
+			err.Error())
+
 	}
 }
 

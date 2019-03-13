@@ -21,7 +21,6 @@ import (
 	"os"
 
 	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/pkg/util"
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
@@ -71,14 +70,20 @@ func (s *OsdCsiServer) NodePublishVolume(
 		return nil, status.Error(codes.InvalidArgument, "Volume access mode must be provided")
 	}
 
-	// Get volume information
-	v, err := util.VolumeFromName(s.driver, req.GetVolumeId())
+	// Get grpc connection
+	conn, err := s.getConn()
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "Volume id %s not found: %s",
-			req.GetVolumeId(),
-			err.Error())
+		return nil, status.Errorf(
+			codes.Internal,
+			"Unable to connect to SDK server: %v", err)
 	}
-	if s.driver.Type() != api.DriverType_DRIVER_TYPE_BLOCK &&
+
+	// Get secret if any was passed
+	ctx = s.setupContextWithToken(ctx, req.GetSecrets())
+
+	// Check if block device
+	driverType := s.driver.Type()
+	if driverType != api.DriverType_DRIVER_TYPE_BLOCK &&
 		req.GetVolumeCapability().GetBlock() != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "Trying to attach as block a non block device")
 	}
@@ -92,66 +97,36 @@ func (s *OsdCsiServer) NodePublishVolume(
 			req.GetVolumeContext())
 	}
 
-	// This seems weird as a way to change opts to map[string]string
-	opts := make(map[string]string)
-	if len(spec.GetPassphrase()) != 0 {
-		opts[options.OptionsSecret] = spec.GetPassphrase()
+	// prepare for mount/attaching
+	mounts := api.NewOpenStorageMountAttachClient(conn)
+	opts := &api.SdkVolumeAttachOptions{
+		SecretName: spec.GetPassphrase(),
 	}
-
-	// If this is for a block driver, first attach the volume
-	var devicePath string
-	if s.driver.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-		if devicePath, err = s.driver.Attach(req.GetVolumeId(), opts); err != nil {
-			return nil, status.Errorf(
-				codes.Internal,
-				"Unable to attach volume: %s",
-				err.Error())
+	if driverType == api.DriverType_DRIVER_TYPE_BLOCK {
+		if _, err = mounts.Attach(ctx, &api.SdkVolumeAttachRequest{
+			VolumeId: req.GetVolumeId(),
+			Options:  opts,
+		}); err != nil {
+			return nil, err
 		}
 	}
 
-	if req.GetVolumeCapability().GetBlock() != nil {
-		// As block create a sym link to the attached location
-		err = os.Symlink(devicePath, req.GetTargetPath())
-		if err != nil {
-			detachErr := s.driver.Detach(v.GetId(), opts)
-			if detachErr != nil {
-				logrus.Errorf("Unable to detach volume %s: %s",
-					v.GetId(),
-					detachErr.Error())
-			}
-			return nil, status.Errorf(
-				codes.Internal,
-				"Failed to create symlink %s -> %s: %v",
-				req.GetTargetPath(),
-				devicePath,
-				err)
-		}
-	} else {
-		// Verify target location is an existing directory
-		if err := verifyTargetLocation(req.GetTargetPath()); err != nil {
-			return nil, status.Errorf(
-				codes.Aborted,
-				"Failed to use target location %s: %s",
-				req.GetTargetPath(),
-				err.Error())
-		}
+	// Verify target location is an existing directory
+	if err := verifyTargetLocation(req.GetTargetPath()); err != nil {
+		return nil, status.Errorf(
+			codes.Aborted,
+			"Failed to use target location %s: %s",
+			req.GetTargetPath(),
+			err.Error())
+	}
 
-		// Mount volume onto the path
-		if err := s.driver.Mount(req.GetVolumeId(), req.GetTargetPath(), nil); err != nil {
-			// Detach on error
-			detachErr := s.driver.Detach(v.GetId(), opts)
-			if detachErr != nil {
-				logrus.Errorf("Unable to detach volume %s: %s",
-					v.GetId(),
-					detachErr.Error())
-			}
-			return nil, status.Errorf(
-				codes.Internal,
-				"Unable to mount volume %s onto %s: %s",
-				req.GetVolumeId(),
-				req.GetTargetPath(),
-				err.Error())
-		}
+	// Mount volume onto the path
+	if _, err := mounts.Mount(ctx, &api.SdkVolumeMountRequest{
+		VolumeId:  req.GetVolumeId(),
+		MountPath: req.GetTargetPath(),
+		Options:   opts,
+	}); err != nil {
+		return nil, err
 	}
 
 	logrus.Infof("Volume %s mounted on %s",
