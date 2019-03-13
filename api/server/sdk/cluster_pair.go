@@ -21,6 +21,7 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
+	"github.com/libopenstorage/openstorage/pkg/auth"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -104,6 +105,14 @@ func (s *ClusterPairServer) GetToken(
 ) (*api.SdkClusterPairGetTokenResponse, error) {
 	if s.cluster() == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+
+	// Check if admin user - only system.admin can get cluster pair tokens
+	if userInfo, ok := auth.NewUserInfoFromContext(ctx); ok {
+		o := api.Ownership{}
+		if !o.IsAdminByUser(userInfo) {
+			return nil, status.Error(codes.Unauthenticated, "Must be system admin to get pair token")
+		}
 	}
 
 	resp, err := s.cluster().GetPairToken(false)
