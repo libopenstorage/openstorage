@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.43.0 - Tech Preview (3/12/2019)
+
+* Add ownership support to OpenStorageCredential service APIs
+
 ### v0.42.0 - Tech Preview (2/20/2019)
 
 * SnapEnumerate REST endpoint now accepts empty volume ids

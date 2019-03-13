@@ -427,7 +427,7 @@ message VolumeSpecPolicy {
   oneof aggregation_level_opt { uint32 aggregation_level = 19; }
   // Operator to check size
   PolicyOp size_operator = 50;
-  // Operator to check ha_level 
+  // Operator to check ha_level
   PolicyOp ha_level_operator = 51;
   // Operator to check scale
   PolicyOp scale_operator = 52;
@@ -589,9 +589,9 @@ message CapacityUsageInfo {
   int64 total_bytes = 3;
 }
 
-// A SdkStoragePolicy represents minimum set of volume specs to be 
+// A SdkStoragePolicy represents minimum set of volume specs to be
 // follow while creating volumes.
-// If enforce in OpenStoragePolicy service, VolumeSpecPolicy will be 
+// If enforce in OpenStoragePolicy service, VolumeSpecPolicy will be
 // used before creating volume to ensure minimum volume creation rules
 // are enforced.
 message SdkStoragePolicy {
@@ -1764,7 +1764,7 @@ service OpenStorageCloudBackup {
 // Policies can be used to enforces a set of volume configurations to be followed
 // while creating volumes.
 service OpenStoragePolicy {
-  
+
   // Creates a storage policy
   rpc Create(SdkOpenStoragePolicyCreateRequest)
     returns (SdkOpenStoragePolicyCreateResponse) {
@@ -1852,7 +1852,7 @@ message SdkOpenStoragePolicyEnumerateRequest {
 
 // Define a storage policy enumerate response
 message SdkOpenStoragePolicyEnumerateResponse {
-  // List of storage policies 
+  // List of storage policies
   repeated SdkStoragePolicy storage_policies =1;
 }
 
@@ -1868,7 +1868,7 @@ message SdkOpenStoragePolicyInspectResponse {
   SdkStoragePolicy storage_policy =1;
 }
 
-// Define a request to delete storage policy 
+// Define a request to delete storage policy
 message SdkOpenStoragePolicyDeleteRequest {
   // name of storage policy to delete
   string name = 1;
@@ -1892,7 +1892,7 @@ message SdkOpenStoragePolicyUpdateResponse {
 message SdkOpenStoragePolicyEnforceRequest {
   // name of policy to set as default enforcement
   // for volume creation
-  // This policy will be used to enforce volume configuration 
+  // This policy will be used to enforce volume configuration
   string name = 1;
 }
 
@@ -2055,6 +2055,9 @@ message SdkCredentialCreateRequest {
   string bucket = 2;
   // (optional) Key used to encrypt the data
   string encryption_key = 3;
+  // Ownership of the credential. Collaborators and groups may be
+  // added here with their appropriate ACLS.
+  Ownership ownership = 4;
 
   // Start at field number 200 to allow for expansion
   oneof credential_type {
@@ -2153,6 +2156,8 @@ message SdkCredentialInspectResponse {
   string name = 2;
   // (optional) Name of bucket
   string bucket = 3;
+  // Ownership of the credential
+  Ownership ownership = 4;
 
   // Start at field number 200 for expansion support
   oneof credential_type {
@@ -3092,7 +3097,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 42;
+    Minor = 43;
     // SDK version patch value of this specification
     Patch = 0;
   }
