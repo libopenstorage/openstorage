@@ -948,8 +948,6 @@ func (c *ClusterManager) waitForQuorum(exist bool) error {
 				}
 				return err
 			}
-			c.status = api.Status_STATUS_OK
-			c.selfNode.Status = api.Status_STATUS_OK
 			break
 		} else {
 			c.status = api.Status_STATUS_NOT_IN_QUORUM
@@ -977,6 +975,10 @@ func (c *ClusterManager) waitForQuorum(exist bool) error {
 			logrus.Warnln("Failed to notify ", e.Value.(cluster.ClusterListener).String())
 		}
 	}
+
+	// Update the status after the listeners are started to ensure all REST points are available.
+	c.status = api.Status_STATUS_OK
+	c.selfNode.Status = api.Status_STATUS_OK
 
 	return nil
 }
