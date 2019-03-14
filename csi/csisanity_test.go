@@ -45,7 +45,7 @@ func TestCSISanity(t *testing.T) {
 	})
 	cm, err := clustermanager.Inst()
 	go func() {
-		cm.Start(0, false, "9002")
+		cm.Start(0, false, "9002", "")
 	}()
 	defer cm.Shutdown()
 
