@@ -996,3 +996,37 @@ func TestSdkCredentialOwnership(t *testing.T) {
 	})
 	assert.NoError(t, err)
 }
+
+func TestSdkCredentialGetOwnershipFromCred(t *testing.T) {
+	s := &CredentialServer{}
+
+	o, err := s.getOwnershipFromCred(map[string]interface{}{
+		api.OptCredOwnership: "",
+	})
+	assert.NoError(t, err)
+	assert.Nil(t, o)
+
+	o, err = s.getOwnershipFromCred(map[string]interface{}{
+		"hello": "world",
+	})
+	assert.NoError(t, err)
+	assert.Nil(t, o)
+
+	ownership := &api.Ownership{
+		Owner: "user1",
+		Acls: &api.Ownership_AccessControl{
+			Collaborators: map[string]api.Ownership_AccessType{
+				"collabread":  api.Ownership_Read,
+				"collabadmin": api.Ownership_Admin,
+			},
+		},
+	}
+	m := jsonpb.Marshaler{OrigName: true}
+	oStr, err := m.MarshalToString(ownership)
+	assert.NoError(t, err)
+	o, err = s.getOwnershipFromCred(map[string]interface{}{
+		api.OptCredOwnership: oStr,
+	})
+	assert.NoError(t, err)
+	assert.NotNil(t, o)
+}

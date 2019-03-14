@@ -446,6 +446,9 @@ func (s *CredentialServer) getOwnershipFromCred(cred interface{}) (*api.Ownershi
 	var ownership *api.Ownership
 	ownershipString, ok := info[api.OptCredOwnership].(string)
 	if ok {
+		if len(ownershipString) == 0 {
+			return nil, nil
+		}
 		ownership = &api.Ownership{}
 		err := jsonpb.UnmarshalString(ownershipString, ownership)
 		if err != nil {
