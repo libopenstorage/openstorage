@@ -1065,28 +1065,34 @@
 			"revisionTime": "2018-05-17T18:24:38Z"
 		},
 		{
-			"checksumSHA1": "XxSculDWJ8paPj2VbSbbxPDSb7Q=",
+			"checksumSHA1": "r837OIUc5srjGGaiuBR1vxhvrjo=",
 			"path": "github.com/libopenstorage/gossip",
-			"revision": "aa5bca5fb84334d7d29c26b5ccd7c819f344beac",
-			"revisionTime": "2017-03-28T20:16:54Z"
+			"revision": "0f560c842c3a3b4f7313ad699b6d3a2d52236a13",
+			"revisionTime": "2019-03-19T18:36:47Z"
 		},
 		{
-			"checksumSHA1": "1CAy/Chss3flCl/bL7IXmPO/HTM=",
+			"checksumSHA1": "1hTnjiDhpWXrhvdvcjyam0QL1ks=",
+			"path": "github.com/libopenstorage/gossip/pkg/probation",
+			"revision": "0f560c842c3a3b4f7313ad699b6d3a2d52236a13",
+			"revisionTime": "2019-03-19T18:36:47Z"
+		},
+		{
+			"checksumSHA1": "vcYScSbosSiH4xI59hzl8Ldt8DE=",
 			"path": "github.com/libopenstorage/gossip/proto",
-			"revision": "aa5bca5fb84334d7d29c26b5ccd7c819f344beac",
-			"revisionTime": "2017-03-28T20:16:54Z"
+			"revision": "0f560c842c3a3b4f7313ad699b6d3a2d52236a13",
+			"revisionTime": "2019-03-19T18:36:47Z"
 		},
 		{
-			"checksumSHA1": "J3jmnywWXsbtBGHcgwXNQx2yyHc=",
+			"checksumSHA1": "1A2S/FN3LToqygg7wU6R/m0/jNY=",
 			"path": "github.com/libopenstorage/gossip/proto/state",
-			"revision": "aa5bca5fb84334d7d29c26b5ccd7c819f344beac",
-			"revisionTime": "2017-03-28T20:16:54Z"
+			"revision": "0f560c842c3a3b4f7313ad699b6d3a2d52236a13",
+			"revisionTime": "2019-03-19T18:36:47Z"
 		},
 		{
-			"checksumSHA1": "3RvM9PQCYNAmG9Uj3/Pp0l4Sqbc=",
+			"checksumSHA1": "UaLJwB5bdlWeFJ3w0W3lpsK+LGs=",
 			"path": "github.com/libopenstorage/gossip/types",
-			"revision": "aa5bca5fb84334d7d29c26b5ccd7c819f344beac",
-			"revisionTime": "2017-03-28T20:16:54Z"
+			"revision": "0f560c842c3a3b4f7313ad699b6d3a2d52236a13",
+			"revisionTime": "2019-03-19T18:36:47Z"
 		},
 		{
 			"checksumSHA1": "//fxGW9CLGgr6AMunoZkR4lbYzk=",
