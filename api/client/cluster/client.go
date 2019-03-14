@@ -209,6 +209,22 @@ func (c *clusterClient) UpdateSchedulerNodeName(name string) error {
 	return nil
 }
 
+func (c *clusterClient) UpdateSelfClusterDomain(selfClusterDomain string) error {
+	return nil
+}
+
+func (c *clusterClient) ActivateClusterDomain(
+	request *api.ActivateClusterDomainRequest,
+) error {
+	return nil
+}
+
+func (c *clusterClient) DeactivateClusterDomain(
+	request *api.DeactivateClusterDomainRequest,
+) error {
+	return nil
+}
+
 func (c *clusterClient) GetData() (map[string]*api.Node, error) {
 	return nil, nil
 }
@@ -269,7 +285,7 @@ func (c *clusterClient) Shutdown() error {
 	return nil
 }
 
-func (c *clusterClient) Start(int, bool, string) error {
+func (c *clusterClient) Start(int, bool, string, string) error {
 	return nil
 }
 
@@ -277,7 +293,7 @@ func (c *clusterClient) Uuid() string {
 	return ""
 }
 
-func (c *clusterClient) StartWithConfiguration(int, bool, string, []string, *cluster.ClusterServerConfiguration) error {
+func (c *clusterClient) StartWithConfiguration(int, bool, string, []string, string, *cluster.ClusterServerConfiguration) error {
 	return nil
 }
 
