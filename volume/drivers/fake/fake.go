@@ -275,6 +275,18 @@ func (d *driver) Detach(volumeID string, options map[string]string) error {
 	return nil
 }
 
+func (d *driver) CloudMigrateStart(request *api.CloudMigrateStartRequest) (*api.CloudMigrateStartResponse, error) {
+	return &api.CloudMigrateStartResponse{}, nil
+}
+
+func (d *driver) CloudMigrateCancel(request *api.CloudMigrateCancelRequest) error {
+	return nil
+}
+
+func (d *driver) CloudMigrateStatus(request *api.CloudMigrateStatusRequest) (*api.CloudMigrateStatusResponse, error) {
+	return &api.CloudMigrateStatusResponse{}, nil
+}
+
 func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {

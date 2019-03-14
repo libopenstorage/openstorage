@@ -1,111 +1,106 @@
 package server
 
-/*
-
 import (
-	"fmt"
-	"testing"
-
+	"context"
 	"github.com/libopenstorage/openstorage/api"
-	client "github.com/libopenstorage/openstorage/api/client/volume"
-	"github.com/stretchr/testify/require"
+	volumeclient "github.com/libopenstorage/openstorage/api/client/volume"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestMigrateStart(t *testing.T) {
-	ts, testVolDriver := testRestServer(t)
+	var err error
+	// Setup volume rest functions server
+	ts, testVolDriver := testRestServerSdk(t)
 	defer ts.Close()
 	defer testVolDriver.Stop()
 
-	cl, err := client.NewDriverClient(ts.URL, mockDriverName, "", mockDriverName)
-	require.NoError(t, err)
+	// get token
+	token, err := createToken("test", "system.admin", testSharedSecret)
+	assert.NoError(t, err)
+
+	cl, err := volumeclient.NewAuthDriverClient(ts.URL, "fake", version, token, "", "fake")
+	assert.NoError(t, err)
+
+	// Setup request
+	name := "myvol"
+	size := uint64(1234)
+	req := &api.VolumeCreateRequest{
+		Locator: &api.VolumeLocator{Name: name},
+		Source:  &api.Source{},
+		Spec: &api.VolumeSpec{
+			HaLevel: 3,
+			Size:    size,
+			Format:  api.FSType_FS_TYPE_EXT4,
+			Shared:  true,
+		},
+	}
+
+	// Create a volume client
+	driverclient := volumeclient.VolumeDriver(cl)
+	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	assert.Nil(t, err)
+	assert.NotEmpty(t, id)
 
 	goodRequest := &api.CloudMigrateStartRequest{
-		Operation: api.CloudMigrate_MigrateCluster,
+		Operation: api.CloudMigrate_MigrateVolume,
 		ClusterId: "clusterID",
-		TargetId:  "goodVolumeID",
+		TargetId:  id,
 	}
-	badRequest := &api.CloudMigrateStartRequest{
-		Operation: api.CloudMigrate_MigrateCluster,
-		ClusterId: "clusterID",
-		TargetId:  "badVolumeID",
-	}
-	goodResponse := &api.CloudMigrateStartResponse{
-		TaskId: "random-id",
-	}
-	testVolDriver.MockDriver().EXPECT().CloudMigrateStart(badRequest).Return(nil, fmt.Errorf("Volume not found")).Times(1)
-	testVolDriver.MockDriver().EXPECT().CloudMigrateStart(goodRequest).Return(goodResponse, nil).Times(1)
 
 	// Start Migrate
-	resp, err := client.VolumeDriver(cl).CloudMigrateStart(badRequest)
-	require.Error(t, err)
-	require.Nil(t, resp)
-	require.Contains(t, err.Error(), "Volume not found")
-	resp, err = client.VolumeDriver(cl).CloudMigrateStart(goodRequest)
-	require.NoError(t, err)
-	require.Equal(t, goodResponse.TaskId, resp.TaskId, "Unexpected taskId in response")
+	_, err = volumeclient.VolumeDriver(cl).CloudMigrateStart(goodRequest)
+	assert.Nil(t, err)
+
+	// Assert volume information is correct
+	volumes := api.NewOpenStorageVolumeClient(testVolDriver.Conn())
+	ctx, err := contextWithToken(context.Background(), "test", "system.admin", testSharedSecret)
+	assert.NoError(t, err)
+
+	_, err = volumes.Delete(ctx, &api.SdkVolumeDeleteRequest{
+		VolumeId: id,
+	})
+	assert.NoError(t, err)
 }
 
 func TestMigrateCancel(t *testing.T) {
-	ts, testVolDriver := testRestServer(t)
+	var err error
+	// Setup volume rest functions server
+	ts, testVolDriver := testRestServerSdk(t)
 	defer ts.Close()
 	defer testVolDriver.Stop()
 
-	cl, err := client.NewDriverClient(ts.URL, mockDriverName, "", mockDriverName)
-	require.NoError(t, err)
+	// get token
+	token, err := createToken("test", "system.admin", testSharedSecret)
+	assert.NoError(t, err)
+
+	cl, err := volumeclient.NewAuthDriverClient(ts.URL, "fake", version, token, "", "fake")
+	assert.NoError(t, err)
 
 	goodRequest := &api.CloudMigrateCancelRequest{
 		TaskId: "goodTaskID",
 	}
-	badRequest := &api.CloudMigrateCancelRequest{
-		TaskId: "badTaskID",
-	}
-	testVolDriver.MockDriver().EXPECT().CloudMigrateCancel(badRequest).Return(fmt.Errorf("TaskId not found")).Times(1)
-	testVolDriver.MockDriver().EXPECT().CloudMigrateCancel(goodRequest).Return(nil).Times(1)
 
 	// Cancel Migrate
-	err = client.VolumeDriver(cl).CloudMigrateCancel(badRequest)
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "TaskId not found")
-	err = client.VolumeDriver(cl).CloudMigrateCancel(goodRequest)
-	require.NoError(t, err)
+	err = volumeclient.VolumeDriver(cl).CloudMigrateCancel(goodRequest)
+	assert.Nil(t, err)
 }
 
-func TestMigrateiStatus(t *testing.T) {
-	ts, testVolDriver := testRestServer(t)
+func TestMigrateStatus(t *testing.T) {
+	var err error
+	// Setup volume rest functions server
+	ts, testVolDriver := testRestServerSdk(t)
 	defer ts.Close()
 	defer testVolDriver.Stop()
 
-	cl, err := client.NewDriverClient(ts.URL, mockDriverName, "", mockDriverName)
-	require.NoError(t, err)
+	// get token
+	token, err := createToken("test", "system.admin", testSharedSecret)
+	assert.NoError(t, err)
 
-	emptyStatus := &api.CloudMigrateStatusResponse{}
-	statusResponse := &api.CloudMigrateStatusResponse{
-		Info: map[string]*api.CloudMigrateInfoList{
-			"clusterId": &api.CloudMigrateInfoList{
-				List: []*api.CloudMigrateInfo{
-					&api.CloudMigrateInfo{
-						TaskId:          "taskId",
-						ClusterId:       "clusterId",
-						LocalVolumeId:   "localVolumeId",
-						LocalVolumeName: "localVolumeName",
-						RemoteVolumeId:  "remoteVolumeName",
-						CloudbackupId:   "cloudbackupId",
-						CurrentStage:    api.CloudMigrate_Done,
-						Status:          api.CloudMigrate_Complete,
-					}}}},
-	}
-
-	testVolDriver.MockDriver().EXPECT().CloudMigrateStatus(&api.CloudMigrateStatusRequest{}).Return(emptyStatus, nil).Times(1)
-	testVolDriver.MockDriver().EXPECT().CloudMigrateStatus(&api.CloudMigrateStatusRequest{}).Return(statusResponse, nil).Times(1)
+	cl, err := volumeclient.NewAuthDriverClient(ts.URL, "fake", version, token, "", "fake")
+	assert.NoError(t, err)
 
 	// Get Migrate status
-	status, err := client.VolumeDriver(cl).CloudMigrateStatus(&api.CloudMigrateStatusRequest{})
-	require.NoError(t, err)
-	require.Equal(t, 0, len(status.Info))
-	status, err = client.VolumeDriver(cl).CloudMigrateStatus(&api.CloudMigrateStatusRequest{})
-	require.NoError(t, err)
-	require.Equal(t, 1, len(status.Info))
-	require.Equal(t, statusResponse, status)
-
+	_, err = volumeclient.VolumeDriver(cl).CloudMigrateStatus(&api.CloudMigrateStatusRequest{})
+	assert.Nil(t, err)
 }
-*/
