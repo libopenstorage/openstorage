@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2017-12-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-06-01/compute"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/go-autorest/autorest/azure"
@@ -39,8 +39,6 @@ const (
 	clientRetryAttempts     = 10
 	devicePathMaxRetryCount = 3
 	devicePathRetryInterval = 2 * time.Second
-	resultTimeout           = 1 * time.Minute
-	resultRetryInterval     = 2 * time.Second
 )
 
 type azureOps struct {
@@ -193,7 +191,9 @@ func (a *azureOps) Create(
 				CreationData: &compute.CreationData{
 					CreateOption: compute.Empty,
 				},
-				DiskSizeGB: d.DiskProperties.DiskSizeGB,
+				DiskSizeGB:        d.DiskProperties.DiskSizeGB,
+				DiskIOPSReadWrite: d.DiskProperties.DiskIOPSReadWrite,
+				DiskMBpsReadWrite: d.DiskProperties.DiskMBpsReadWrite,
 			},
 		},
 	)
@@ -201,17 +201,12 @@ func (a *azureOps) Create(
 		return nil, fmt.Errorf("cannot create disk: %v", err)
 	}
 
-	t := func() (interface{}, bool, error) {
-		_, err := future.Result(*a.disksClient)
-		return "", true, err
-	}
-	if _, err := task.DoRetryWithTimeout(t, resultTimeout, resultRetryInterval); err != nil {
-		return nil, err
+	err = future.WaitForCompletionRef(ctx, a.disksClient.Client)
+	if err != nil {
+		return nil, fmt.Errorf("cannot get the disk create or update future response: %v", err)
 	}
 
-	// XXX We don't get back the expected disk object from future.Result(). Some of the
-	// fields are missing and the name is different. Hence we need to query to object again.
-	dd, err := a.disksClient.Get(context.Background(), a.resourceGroupName, *d.Name)
+	dd, err := future.Result(*a.disksClient)
 	return &dd, err
 }
 
@@ -274,13 +269,9 @@ func (a *azureOps) Attach(diskName string) (string, error) {
 		return "", fmt.Errorf("cannot update vm %v: %v", a.instance, err)
 	}
 
-	t := func() (interface{}, bool, error) {
-		_, err := future.Result(*a.vmsClient)
-		return "", true, err
-	}
-	_, err = task.DoRetryWithTimeout(t, resultTimeout, resultRetryInterval)
+	err = future.WaitForCompletionRef(ctx, a.vmsClient.Client)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("cannot get the vm create or update future response: %v", err)
 	}
 
 	return a.waitForAttach(diskName)
@@ -342,11 +333,10 @@ func (a *azureOps) detachInternal(diskName, instanceName string) error {
 		return fmt.Errorf("cannot update vm %v: %v", instanceName, err)
 	}
 
-	t := func() (interface{}, bool, error) {
-		_, err := future.Result(*a.vmsClient)
-		return "", true, err
+	err = future.WaitForCompletionRef(ctx, a.vmsClient.Client)
+	if err != nil {
+		return fmt.Errorf("cannot get the vm create or update future response: %v", err)
 	}
-	_, err = task.DoRetryWithTimeout(t, resultTimeout, resultRetryInterval)
 
 	return a.waitForDetach(diskName)
 }
@@ -358,11 +348,12 @@ func (a *azureOps) Delete(diskName string) error {
 		return fmt.Errorf("cannot delete disk %s: %v", diskName, err)
 	}
 
-	t := func() (interface{}, bool, error) {
-		_, err = future.Result(*a.disksClient)
-		return "", true, err
+	err = future.WaitForCompletionRef(ctx, a.disksClient.Client)
+	if err != nil {
+		return fmt.Errorf("cannot delete the disk %s or update future response: %v", diskName, err)
 	}
-	_, err = task.DoRetryWithTimeout(t, resultTimeout, resultRetryInterval)
+
+	_, err = future.Result(*a.disksClient)
 	return err
 }
 
@@ -539,14 +530,13 @@ func (a *azureOps) Snapshot(diskName string, readonly bool) (interface{}, error)
 	}
 
 	ctx := context.Background()
-	snapName := fmt.Sprint("snap-", time.Now().Format(snapNameFormat))
 	future, err := a.snapshotsClient.CreateOrUpdate(
 		ctx,
 		a.resourceGroupName,
-		snapName,
+		fmt.Sprint("snap-", time.Now().Format(snapNameFormat)),
 		compute.Snapshot{
 			Location: disk.Location,
-			DiskProperties: &compute.DiskProperties{
+			SnapshotProperties: &compute.SnapshotProperties{
 				CreationData: &compute.CreationData{
 					CreateOption:     compute.Copy,
 					SourceResourceID: disk.ID,
@@ -558,15 +548,12 @@ func (a *azureOps) Snapshot(diskName string, readonly bool) (interface{}, error)
 		return nil, fmt.Errorf("cannot create snapshot: %v", err)
 	}
 
-	t := func() (interface{}, bool, error) {
-		_, err := future.Result(*a.snapshotsClient)
-		return "", true, err
-	}
-	if _, err := task.DoRetryWithTimeout(t, resultTimeout, resultRetryInterval); err != nil {
-		return nil, err
+	err = future.WaitForCompletionRef(ctx, a.snapshotsClient.Client)
+	if err != nil {
+		return nil, fmt.Errorf("cannot get the snapshot create or update future response: %v", err)
 	}
 
-	snap, err := a.snapshotsClient.Get(context.Background(), a.resourceGroupName, snapName)
+	snap, err := future.Result(*a.snapshotsClient)
 	return &snap, err
 }
 
@@ -577,11 +564,12 @@ func (a *azureOps) SnapshotDelete(snapName string) error {
 		return fmt.Errorf("cannot delete snapshot %s: %v", snapName, err)
 	}
 
-	t := func() (interface{}, bool, error) {
-		_, err := future.Result(*a.snapshotsClient)
-		return "", true, err
+	err = future.WaitForCompletionRef(ctx, a.snapshotsClient.Client)
+	if err != nil {
+		return fmt.Errorf("cannot delete the snapshot %s or update future response: %v", snapName, err)
 	}
-	_, err = task.DoRetryWithTimeout(t, resultTimeout, resultRetryInterval)
+
+	_, err = future.Result(*a.snapshotsClient)
 	return err
 }
 
@@ -620,11 +608,12 @@ func (a *azureOps) ApplyTags(diskName string, labels map[string]string) error {
 		return fmt.Errorf("cannot update disk: %v", err)
 	}
 
-	t := func() (interface{}, bool, error) {
-		_, err := future.Result(*a.disksClient)
-		return "", true, err
+	err = future.WaitForCompletionRef(ctx, a.disksClient.Client)
+	if err != nil {
+		return fmt.Errorf("cannot get the disk create or update future response: %v", err)
 	}
-	_, err = task.DoRetryWithTimeout(t, resultTimeout, resultRetryInterval)
+
+	_, err = future.Result(*a.disksClient)
 	return err
 }
 
@@ -663,11 +652,12 @@ func (a *azureOps) RemoveTags(diskName string, labels map[string]string) error {
 		return fmt.Errorf("cannot update disk: %v", err)
 	}
 
-	t := func() (interface{}, bool, error) {
-		_, err := future.Result(*a.disksClient)
-		return "", true, err
+	err = future.WaitForCompletionRef(ctx, a.disksClient.Client)
+	if err != nil {
+		return fmt.Errorf("cannot get the disk create or update future response: %v", err)
 	}
-	_, err = task.DoRetryWithTimeout(t, resultTimeout, resultRetryInterval)
+
+	_, err = future.Result(*a.disksClient)
 	return err
 }
 
