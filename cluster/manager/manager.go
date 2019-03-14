@@ -952,6 +952,7 @@ func (c *ClusterManager) GetGossipState() *cluster.ClusterState {
 }
 
 func (c *ClusterManager) waitForQuorum(exist bool) error {
+	node_ok := false
 	// Max quorum retries allowed = 600
 	// 600 * 2 seconds (gossip interval) = 20 minutes before it restarts
 	quorumRetries := 0
@@ -970,8 +971,7 @@ func (c *ClusterManager) waitForQuorum(exist bool) error {
 				}
 				return err
 			}
-			c.status = api.Status_STATUS_OK
-			c.selfNode.Status = api.Status_STATUS_OK
+			node_ok = true
 			break
 		} else {
 			c.status = api.Status_STATUS_NOT_IN_QUORUM
@@ -998,6 +998,11 @@ func (c *ClusterManager) waitForQuorum(exist bool) error {
 		if err != nil {
 			logrus.Warnln("Failed to notify ", e.Value.(cluster.ClusterListener).String())
 		}
+	}
+	// Update the status after the listeners are started to ensure all REST points are avail.
+	if node_ok {
+		c.status = api.Status_STATUS_OK
+		c.selfNode.Status = api.Status_STATUS_OK
 	}
 
 	return nil
