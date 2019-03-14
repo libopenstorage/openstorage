@@ -5,24 +5,21 @@ import (
 )
 
 type notInQuorum struct {
-	nodeStatus       types.NodeStatus
-	id               types.NodeId
-	numQuorumMembers uint
-	stateEvent       chan types.StateEvent
+	nodeStatus     types.NodeStatus
+	stateEvent     chan types.StateEvent
+	quorumProvider Quorum
 }
 
 var instanceNotInQuorum *notInQuorum
 
 func GetNotInQuorum(
-	numQuorumMembers uint,
-	selfId types.NodeId,
 	stateEvent chan types.StateEvent,
+	quorumProvider Quorum,
 ) State {
 	return &notInQuorum{
-		nodeStatus:       types.NODE_STATUS_NOT_IN_QUORUM,
-		numQuorumMembers: numQuorumMembers,
-		id:               selfId,
-		stateEvent:       stateEvent,
+		nodeStatus:     types.NODE_STATUS_NOT_IN_QUORUM,
+		stateEvent:     stateEvent,
+		quorumProvider: quorumProvider,
 	}
 }
 
@@ -35,30 +32,23 @@ func (niq *notInQuorum) NodeStatus() types.NodeStatus {
 }
 
 func (niq *notInQuorum) SelfAlive(localNodeInfoMap types.NodeInfoMap) (State, error) {
-	quorum := (niq.numQuorumMembers / 2) + 1
-	upNodes := numQuorumMembersUp(localNodeInfoMap)
-	if upNodes < quorum {
+	if !niq.quorumProvider.IsNodeInQuorum(localNodeInfoMap) {
 		return niq, nil
 	} else {
-		up := GetUp(niq.numQuorumMembers, niq.id, niq.stateEvent)
-		return up, nil
+		return GetUp(niq.stateEvent, niq.quorumProvider), nil
 	}
 }
 
 func (niq *notInQuorum) NodeAlive(localNodeInfoMap types.NodeInfoMap) (State, error) {
-	quorum := (niq.numQuorumMembers / 2) + 1
-	upNodes := numQuorumMembersUp(localNodeInfoMap)
-	if upNodes < quorum {
+	if !niq.quorumProvider.IsNodeInQuorum(localNodeInfoMap) {
 		return niq, nil
 	} else {
-		up := GetUp(niq.numQuorumMembers, niq.id, niq.stateEvent)
-		return up, nil
+		return GetUp(niq.stateEvent, niq.quorumProvider), nil
 	}
 }
 
 func (niq *notInQuorum) SelfLeave() (State, error) {
-	down := GetDown(niq.numQuorumMembers, niq.id, niq.stateEvent)
-	return down, nil
+	return GetDown(niq.stateEvent, niq.quorumProvider), nil
 }
 
 func (niq *notInQuorum) NodeLeave(
@@ -68,22 +58,26 @@ func (niq *notInQuorum) NodeLeave(
 }
 
 func (niq *notInQuorum) UpdateClusterSize(
-	numQuorumMembers uint,
 	localNodeInfoMap types.NodeInfoMap,
 ) (State, error) {
-	niq.numQuorumMembers = numQuorumMembers
-	quorum := (niq.numQuorumMembers / 2) + 1
-	upNodes := numQuorumMembersUp(localNodeInfoMap)
-	if upNodes < quorum {
+	if !niq.quorumProvider.IsNodeInQuorum(localNodeInfoMap) {
 		return niq, nil
 	} else {
-		up := GetUp(niq.numQuorumMembers, niq.id, niq.stateEvent)
-		return up, nil
+		return GetUp(niq.stateEvent, niq.quorumProvider), nil
+	}
+}
+
+func (niq *notInQuorum) UpdateClusterDomainsActiveMap(
+	localNodeInfoMap types.NodeInfoMap,
+) (State, error) {
+	if !niq.quorumProvider.IsNodeInQuorum(localNodeInfoMap) {
+		return niq, nil
+	} else {
+		return GetUp(niq.stateEvent, niq.quorumProvider), nil
 	}
 }
 
 func (niq *notInQuorum) Timeout(
-	numQuorumMembers uint,
 	localNodeInfoMap types.NodeInfoMap,
 ) (State, error) {
 	return niq, nil
