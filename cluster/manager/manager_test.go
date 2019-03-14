@@ -81,7 +81,7 @@ func TestUpdateSchedulerNodeName(t *testing.T) {
 	assert.NoError(t, err)
 	auth.InitSystemTokenManager(manager)
 
-	err = inst.StartWithConfiguration(1, false, "1001", []string{}, &cluster.ClusterServerConfiguration{
+	err = inst.StartWithConfiguration(1, false, "1001", []string{}, "", &cluster.ClusterServerConfiguration{
 		ConfigSystemTokenManager: manager,
 	})
 	assert.NoError(t, err)
@@ -102,4 +102,35 @@ func TestUpdateSchedulerNodeName(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, auth.IsJwtToken(tokenResp.Token))
 
+}
+
+func TestClusterDomainClusterManagerAPIs(t *testing.T) {
+	nodeID := "node-alpha"
+	Init(config.ClusterConfig{
+		ClusterId:         testClusterId,
+		ClusterUuid:       testClusterUuid,
+		NodeId:            nodeID,
+		SchedulerNodeName: "old-sched-name",
+	})
+	selfClusterDomain := "zone1"
+	manager, err := systemtoken.NewManager(&systemtoken.Config{
+		ClusterId:    testClusterId,
+		NodeId:       nodeID,
+		SharedSecret: "mysecret",
+	})
+	assert.NoError(t, err)
+	auth.InitSystemTokenManager(manager)
+
+	err = inst.StartWithConfiguration(1, false, "1002", []string{},
+		selfMetroDomain,
+		&cluster.ClusterServerConfiguration{
+			ConfigSystemTokenManager: manager,
+		})
+	assert.NoError(t, err)
+
+	c, err := inst.Enumerate()
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(c.ClusterDomainsActiveMap), "Unexpected length of cluster domain map")
+	assert.True(t, c.ClusterDomainsActiveMap[selfClusterDomain], "Expected zone1 to be activated")
+	cleanup()
 }

@@ -232,7 +232,7 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 	})
 	cm, err := clustermanager.Inst()
 	go func() {
-		cm.Start(0, false, "9002")
+		cm.Start(0, false, "9002", "")
 	}()
 	defer cm.Shutdown()
 	if err := volumedrivers.Register("fake", map[string]string{}); err != nil {

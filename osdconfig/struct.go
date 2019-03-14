@@ -9,12 +9,13 @@ type NodesConfig []*NodeConfig
 // NodeConfig is a node level config data
 // swagger:model
 type NodeConfig struct {
-	NodeId      string         `json:"node_id,omitempty" yaml:"node_id,omitempty" enable:"true" hidden:"false" usage:"ID for the node"`
-	CSIEndpoint string         `json:"csi_endpoint,omitempty" yaml:"csi_endpoint,omitempty" enable:"true" hidden:"false" usage:"CSI endpoint"`
-	Network     *NetworkConfig `json:"network,omitempty" yaml:"network,omitempty" enable:"true" hidden:"false" usage:"Network configuration" description:"Configure network values for a node"`
-	Storage     *StorageConfig `json:"storage,omitempty" yaml:"storage,omitempty" enable:"true" hidden:"false" usage:"Storage configuration" description:"Configure storage values for a node"`
-	Geo         *GeoConfig     `json:"geo,omitempty" yaml:"geo,omitempty" enable:"true" hidden:"false" usage:"Geographic configuration" description:"Stores geo info for node"`
-	Private     interface{}    `json:"private,omitempty" yaml:"private,omitempty" enable:"false" hidden:"false" usage:"Private node data"`
+	NodeId        string         `json:"node_id,omitempty" yaml:"node_id,omitempty" enable:"true" hidden:"false" usage:"ID for the node"`
+	CSIEndpoint   string         `json:"csi_endpoint,omitempty" yaml:"csi_endpoint,omitempty" enable:"true" hidden:"false" usage:"CSI endpoint"`
+	Network       *NetworkConfig `json:"network,omitempty" yaml:"network,omitempty" enable:"true" hidden:"false" usage:"Network configuration" description:"Configure network values for a node"`
+	Storage       *StorageConfig `json:"storage,omitempty" yaml:"storage,omitempty" enable:"true" hidden:"false" usage:"Storage configuration" description:"Configure storage values for a node"`
+	Geo           *GeoConfig     `json:"geo,omitempty" yaml:"geo,omitempty" enable:"true" hidden:"false" usage:"Geographic configuration" description:"Stores geo info for node"`
+	ClusterDomain string         `json:"cluster_domain,omitempty" yaml:"cluster_domain,omitempty" enable:"true" hidden:"false" usage:"Cluster Domain of this node"`
+	Private       interface{}    `json:"private,omitempty" yaml:"private,omitempty" enable:"false" hidden:"false" usage:"Private node data"`
 }
 
 func (conf *NodeConfig) Init() *NodeConfig {

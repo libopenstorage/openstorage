@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
+	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 
 	"github.com/mohae/deepcopy"
@@ -241,6 +242,12 @@ type Cluster struct {
 
 	// TunnelConfig for the cluster [key, cert, endpoint]
 	TunnelConfig TunnelConfig
+
+	// ClusterDomainsActiveMap is a map of cluster domains to a boolean value
+	// indicating which domains are active or inactive.
+	// All the nodes from domains which are inactive do not
+	// participate in quorum decisions
+	ClusterDomainsActiveMap types.ClusterDomainsActiveMap
 }
 
 // CredCreateRequest is the input for CredCreate command
@@ -570,6 +577,16 @@ type CapacityUsageResponse struct {
 	CapacityUsageInfo *CapacityUsageInfo
 	// Describes the err if all of the usage details could not be obtained
 	Error error
+}
+
+// DeactivateClusterDomainRequest is used to deactivate a cluster domain
+type DeactivateClusterDomainRequest struct {
+	ClusterDomain string
+}
+
+// ActivateClusterDomainRequest is used to activate a cluster domain
+type ActivateClusterDomainRequest struct {
+	ClusterDomain string
 }
 
 //
