@@ -1,9 +1,5 @@
-HAS_PACKR := $(shell command -v packr 2> /dev/null)
-HAS_PROTOC_GEN_GRPC_GATEWAY := $(shell command -v protoc-gen-grpc-gateway 2> /dev/null)
-HAS_PROTOC_GEN_SWAGGER := $(shell command -v protoc-gen-swagger 2> /dev/null)
-HAS_PROTOC_GEN_GO := $(shell command -v protoc-gen-go 2> /dev/null)
 HAS_SDKTEST := $(shell command -v sdk-test 2> /dev/null)
-BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+BRANCH	:= $(shell git rev-parse --abbrev-ref HEAD)
 
 ifeq ($(TRAVIS_BRANCH), master)
 MOCKSDKSERVERTAG := latest
@@ -56,7 +52,83 @@ OSDSANITY:=cmd/osd-sanity/osd-sanity
 
 export GO15VENDOREXPERIMENT=1
 
+.PHONY: \
+	all \
+	deps \
+	update-deps \
+	test-deps \
+	update-test-deps \
+	vendor-update \
+	vendor-without-update \
+	vendor \
+	build \
+	install \
+	proto \
+	lint \
+	vet \
+	packr \
+	errcheck \
+	pretest \
+	test \
+	docs \
+	docker-build-osd-dev \
+	docker-build \
+	docker-test \
+	docker-build-osd-internal \
+	docker-build-osd \
+	launch \
+	launch-local-btrfs \
+	install-flexvolume-plugin \
+	$(OSDSANITY)-install \
+	$(OSDSANITY)-clean \
+	clean \
+	generate \
+	generate-mockfiles \
+	sdk-check-version
+
+
 all: build $(OSDSANITY)
+
+# TOOLS build rules
+#
+$(GOPATH)/bin/golint:
+	@echo "Installing missing $@ ..."
+	go get -u github.com/golang/lint/golint
+
+$(GOPATH)/bin/errcheck:
+	@echo "Installing missing $@ ..."
+	go get -u github.com/kisielk/errcheck
+
+$(GOPATH)/bin/protoc-gen-go:
+	@echo "Installing missing $@ ..."
+	go get -u github.com/golang/protobuf/protoc-gen-go
+
+$(GOPATH)/bin/protoc-gen-grpc-gateway:
+	@echo "Installing missing $@ ..."
+	go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+
+$(GOPATH)/bin/protoc-gen-swagger:
+	@echo "Installing missing $@ ..."
+	go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
+
+$(GOPATH)/bin/govendor:
+	@echo "Installing missing $@ ..."
+	go get -u github.com/kardianos/govendor
+
+$(GOPATH)/bin/packr:
+	@echo "Installing missing $@ ..."
+	go get -u github.com/gobuffalo/packr/...
+
+$(GOPATH)/bin/cover:
+	@echo "Installing missing $@ ..."
+	go get -u golang.org/x/tools/cmd/cover
+
+$(GOPATH)/bin/gotestcover:
+	@echo "Installing missing $@ ..."
+	go get -u github.com/pierrre/gotestcover
+
+# DEPS build rules
+#
 
 deps:
 	GO15VENDOREXPERIMENT=0 go get -d -v $(PKGS)
@@ -73,8 +145,7 @@ update-test-deps:
 vendor-update:
 	GO15VENDOREXPERIMENT=0 GOOS=linux GOARCH=amd64 go get -tags "daemon btrfs_noversion have_btrfs have_chainfs" -d -v -t -u -f $(PKGS)
 
-vendor-without-update:
-	go get -v github.com/kardianos/govendor
+vendor-without-update: $(GOPATH)/bin/govendor
 	rm -rf vendor
 	govendor init
 	GOOS=linux GOARCH=amd64 govendor add +external
@@ -103,7 +174,7 @@ $(OSDSANITY)-clean:
 docker-build-proto:
 	docker build -t quay.io/openstorage/osd-proto -f Dockerfile.proto .
 
-docker-proto:
+docker-proto: $(GOPATH)/bin/protoc-gen-go
 	docker run \
 		--privileged \
 		-v $(shell pwd):/go/src/github.com/libopenstorage/openstorage \
@@ -113,23 +184,9 @@ docker-proto:
 		quay.io/openstorage/osd-proto \
 			make proto
 
-proto:
+proto: $(GOPATH)/bin/protoc-gen-go $(GOPATH)/bin/protoc-gen-grpc-gateway $(GOPATH)/bin/protoc-gen-swagger
 ifndef DOCKER_PROTO
 	$(error Do not run directly. Run 'make docker-proto' instead.)
-endif
-ifndef HAS_PROTOC_GEN_GO
-	@echo "Installing protoc-gen-go"
-	go get -u github.com/golang/protobuf/protoc-gen-go
-endif
-
-ifndef HAS_PROTOC_GEN_GRPC_GATEWAY
-	@echo "Installing protoc-gen-grpc-gateway"
-	go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
-endif
-
-ifndef HAS_PROTOC_GEN_SWAGGER
-	@echo "Installing protoc-gen-swagger"
-	go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
 endif
 
 	@echo ">>> Generating protobuf definitions from api/api.proto"
@@ -160,15 +217,13 @@ endif
 	@echo ">>> Updating SDK versions"
 	go run tools/sdkver/sdkver.go --swagger api/server/sdk/api/api.swagger.json
 
-lint:
-	go get -v github.com/golang/lint/golint
+lint: $(GOPATH)/bin/golint
 	golint $(PKGS)
 
 vet:
 	go vet $(PKGS)
 
-errcheck:
-	go get -v github.com/kisielk/errcheck
+errcheck: $(GOPATH)/bin/errcheck
 	errcheck -tags "$(TAGS)" $(PKGS)
 
 pretest: lint vet errcheck
@@ -190,11 +245,7 @@ test: packr
 docs:
 	go generate ./cmd/osd/main.go
 
-packr:
-ifndef HAS_PACKR
-	@echo "Installing packr to embed websites in golang"
-	go get -u github.com/gobuffalo/packr/...
-endif
+packr: $(GOPATH)/bin/packr
 	packr clean
 	packr
 
@@ -311,45 +362,6 @@ install-flexvolume-plugin: install-flexvolume
 clean: $(OSDSANITY)-clean
 	go clean -i $(PKGS)
 	packr clean
-
-.PHONY: \
-	all \
-	deps \
-	update-deps \
-	test-deps \
-	update-test-deps \
-	vendor-update \
-	vendor-without-update \
-	vendor \
-	build \
-	install \
-	proto \
-	lint \
-	vet \
-	errcheck \
-	pretest \
-	test \
-	docs \
-	docker-build-osd-dev \
-	docker-build \
-	docker-test \
-	docker-build-osd-internal \
-	docker-build-osd \
-	launch \
-	launch-local-btrfs \
-	install-flexvolume-plugin \
-	$(OSDSANITY)-install \
-	$(OSDSANITY)-clean \
-	clean \
-	generate \
-	generate-mockfiles \
-	sdk-check-version
-
-$(GOPATH)/bin/cover:
-	go get golang.org/x/tools/cmd/cover
-
-$(GOPATH)/bin/gotestcover:
-	go get github.com/pierrre/gotestcover
 
 # Generate test-coverage HTML report
 # - note: the 'go test -coverprofile...' does append results, so we're merging individual pkgs in for-loop
