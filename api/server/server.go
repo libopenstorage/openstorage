@@ -58,6 +58,7 @@ func StartVolumeMgmtAPI(
 		err                    error
 	)
 	volMgmtApi := newVolumeAPI(name, sdkUds)
+
 	if auth {
 		unixServer, portServer, err = startServerWithAuth(
 			name,
@@ -85,8 +86,19 @@ func StartVolumePluginAPI(
 	name, sdkUds string,
 	pluginBase string,
 	pluginPort uint16,
+	authProviderType secrets.AuthTokenProviders,
+	authProvider osecrets.Secrets,
 ) error {
-	volPluginApi := newVolumePlugin(name, sdkUds)
+	var secretsStore secrets.Auth
+	var err error
+	if authProvider != nil {
+		secretsStore, err = secrets.NewAuth(authProviderType, authProvider)
+		if err != nil {
+			return err
+		}
+	}
+
+	volPluginApi := newVolumePlugin(name, sdkUds, secretsStore)
 	if _, _, err := startServer(
 		name,
 		pluginBase,

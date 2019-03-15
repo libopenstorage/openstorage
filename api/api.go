@@ -18,6 +18,7 @@ import (
 const (
 	Name                     = "name"
 	Token                    = "token"
+	TokenSecret              = "token_secret"
 	SpecNodes                = "nodes"
 	SpecParent               = "parent"
 	SpecEphemeral            = "ephemeral"
