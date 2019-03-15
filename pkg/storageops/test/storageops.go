@@ -28,7 +28,6 @@ func RunTest(
 			disk := create(t, d, template)
 			fmt.Printf("Created disk: %v\n", disk)
 			diskID := id(t, d, disk)
-			require.NotEmpty(t, diskID, "disk ID should not be empty")
 			snapshot(t, d, diskID)
 			tags(t, d, diskID)
 			enumerate(t, d, diskID)
