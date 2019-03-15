@@ -13,6 +13,7 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/spec"
 	"github.com/libopenstorage/openstorage/config"
+	osecrets "github.com/libopenstorage/openstorage/pkg/auth/secrets"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/pkg/util"
@@ -35,6 +36,8 @@ type driver struct {
 	sdkUds string
 	conn   *grpc.ClientConn
 	mu     sync.Mutex
+
+	secretsStore osecrets.Auth
 }
 
 type handshakeResp struct {
@@ -73,11 +76,12 @@ type capabilitiesResponse struct {
 	Capabilities capabilities
 }
 
-func newVolumePlugin(name, sdkUds string) restServer {
+func newVolumePlugin(name, sdkUds string, secretsStore osecrets.Auth) restServer {
 	d := &driver{
-		restBase:    restBase{name: name, version: "0.3"},
-		SpecHandler: spec.NewSpecHandler(),
-		sdkUds:      sdkUds,
+		restBase:     restBase{name: name, version: "0.3"},
+		SpecHandler:  spec.NewSpecHandler(),
+		sdkUds:       sdkUds,
+		secretsStore: secretsStore,
 	}
 	return d
 }
@@ -217,31 +221,86 @@ func (d *driver) handshake(w http.ResponseWriter, r *http.Request) {
 	d.logRequest("handshake", "").Debugln("Handshake completed")
 }
 
-func (d *driver) attachToken(ctx context.Context, request *volumeRequest) (context.Context, string) {
-	token, tokenInName := d.GetTokenFromString(request.Name)
-	if !tokenInName {
-		token = request.Opts[api.Token]
-	}
-	if len(token) == 0 {
-		return ctx, ""
+// attachTokenMount adds the user's token to the context auth metadata
+func (d *driver) attachToken(ctx context.Context, request *volumeRequest) (context.Context, string, error) {
+	token, err := d.parseTokenInput(request.Name, request.Opts)
+	if err != nil {
+		return ctx, "", err
 	}
 
-	md := metadata.New(map[string]string{
-		"authorization": "bearer " + token,
-	})
-	return metadata.NewOutgoingContext(ctx, md), token
+	return addTokenMetadata(ctx, token), "", nil
 }
 
-func (d *driver) attachTokenMount(ctx context.Context, request *mountRequest) (context.Context, string) {
-	token, _ := d.GetTokenFromString(request.Name)
-	if len(token) == 0 {
-		return ctx, ""
+// attachTokenMount adds the user's token to the context auth metadata
+func (d *driver) attachTokenMount(ctx context.Context, request *mountRequest) (context.Context, string, error) {
+	token, err := d.parseTokenInput(request.Name, make(map[string]string))
+	if err != nil {
+		return ctx, "", err
 	}
 
+	return addTokenMetadata(ctx, token), token, nil
+}
+
+// parseTokenInput reads token input from the given name and opts.
+// The following is the order of precedence for token in types:
+//   1. token=<token> in name
+//   2. token in opts
+//   3. token_secret=<secret> in name
+//   4. token_secret in opts
+func (d *driver) parseTokenInput(name string, opts map[string]string) (string, error) {
+	// get token from name
+	tokenFromName, tokenInName := d.GetTokenFromString(name)
+	if tokenInName {
+		return tokenFromName, nil
+	}
+
+	// get token from opts
+	tokenFromOpts := opts[api.Token]
+	if tokenFromOpts != "" {
+		return tokenFromOpts, nil
+	}
+
+	// get token secret
+	secret, context, ok := d.GetTokenSecretFromString(name)
+	if ok {
+		token, err := d.secretTokenFromStore(secret, context)
+		if err != nil {
+			return "", err
+		}
+
+		return token, nil
+	}
+
+	// get token secret from opts
+	tokenSecretFromOpts := opts[api.TokenSecret]
+	if tokenSecretFromOpts != "" {
+		return tokenSecretFromOpts, nil
+	}
+
+	return "", nil
+}
+
+// addTokenMetadata adds the token to a given context's metadata
+func addTokenMetadata(ctx context.Context, token string) context.Context {
 	md := metadata.New(map[string]string{
 		"authorization": "bearer " + token,
 	})
-	return metadata.NewOutgoingContext(ctx, md), token
+	return metadata.NewOutgoingContext(ctx, md)
+}
+
+// secretTokenFromStore pulls the token from the configured secret store for
+// a given secret name and context.
+func (d *driver) secretTokenFromStore(secret, context string) (string, error) {
+	if d.secretsStore == nil {
+		return "", fmt.Errorf("A secret was passed in, but no secrets provider has been initialized")
+	}
+
+	token, err := d.secretsStore.GetToken(secret, context)
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
 }
 
 func (d *driver) status(w http.ResponseWriter, r *http.Request) {
@@ -276,7 +335,11 @@ func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// attach token in context metadata
-	ctx, _ = d.attachToken(ctx, request)
+	ctx, _, err = d.attachToken(ctx, request)
+	if err != nil {
+		d.errorResponse(method, w, err)
+		return
+	}
 
 	// get spec for volume creation
 	specParsed, spec, locator, source, name := d.SpecFromString(request.Name)
@@ -329,7 +392,11 @@ func (d *driver) remove(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// attach token in context metadata
-	ctx, _ = d.attachToken(ctx, request)
+	ctx, _, err = d.attachToken(ctx, request)
+	if err != nil {
+		d.errorResponse(method, w, err)
+		return
+	}
 
 	// get name for deletion
 	_, _, _, _, name := d.SpecFromString(request.Name)
@@ -388,7 +455,11 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 	attachOptions := d.attachOptionsFromSpec(spec)
 
 	// attach token in context metadata
-	ctx, _ = d.attachTokenMount(ctx, request)
+	ctx, _, err = d.attachTokenMount(ctx, request)
+	if err != nil {
+		d.errorResponse(method, w, err)
+		return
+	}
 
 	// get grpc connection
 	conn, err := d.getConn()
