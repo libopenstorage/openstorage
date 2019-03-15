@@ -20,7 +20,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/golang/protobuf/jsonpb"
+
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/volume"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -91,7 +94,7 @@ func (s *CredentialServer) awsCreate(
 	params[api.OptCredSecretKey] = aws.GetSecretKey()
 	params[api.OptCredDisableSSL] = fmt.Sprintf("%v", aws.GetDisableSsl())
 
-	uuid, err := s.driver(ctx).CredsCreate(params)
+	uuid, err := s.create(ctx, req, params)
 
 	if err != nil {
 		return nil, status.Errorf(
@@ -131,7 +134,7 @@ func (s *CredentialServer) azureCreate(
 	params[api.OptCredAzureAccountKey] = azure.GetAccountKey()
 	params[api.OptCredAzureAccountName] = azure.GetAccountName()
 
-	uuid, err := s.driver(ctx).CredsCreate(params)
+	uuid, err := s.create(ctx, req, params)
 
 	if err != nil {
 		return nil, status.Errorf(
@@ -171,7 +174,7 @@ func (s *CredentialServer) googleCreate(
 	params[api.OptCredGoogleProjectID] = google.GetProjectId()
 	params[api.OptCredGoogleJsonKey] = google.GetJsonKey()
 
-	uuid, err := s.driver(ctx).CredsCreate(params)
+	uuid, err := s.create(ctx, req, params)
 
 	if err != nil {
 		return nil, status.Errorf(
@@ -202,10 +205,15 @@ func (s *CredentialServer) Validate(
 		return nil, status.Error(codes.InvalidArgument, "Must provide credentials uuid")
 	}
 
-	validateReq := &api.SdkCredentialValidateRequest{CredentialId: req.GetCredentialId()}
+	// Check ownership
+	_, err := s.Inspect(ctx, &api.SdkCredentialInspectRequest{
+		CredentialId: req.GetCredentialId(),
+	})
+	if err != nil {
+		return nil, err
+	}
 
-	err := s.driver(ctx).CredsValidate(validateReq.GetCredentialId())
-
+	err = s.driver(ctx).CredsValidate(req.GetCredentialId())
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -229,7 +237,24 @@ func (s *CredentialServer) Delete(
 		return nil, status.Error(codes.InvalidArgument, "Must provide credentials uuid")
 	}
 
-	err := s.driver(ctx).CredsDelete(req.GetCredentialId())
+	// Check ownership
+	resp, err := s.Inspect(ctx, &api.SdkCredentialInspectRequest{
+		CredentialId: req.GetCredentialId(),
+	})
+	// This checks at least for READ access type to credential
+	if err != nil {
+		return nil, err
+	}
+	// This checks for admin access type to credential to be able to delete it
+	if !resp.GetOwnership().IsPermittedByContext(ctx, api.Ownership_Admin) {
+		return nil,
+			status.Errorf(
+				codes.PermissionDenied,
+				"Only admin access type to credential is allowed to delete %v",
+				req.GetCredentialId())
+	}
+
+	err = s.driver(ctx).CredsDelete(req.GetCredentialId())
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -257,11 +282,11 @@ func (s *CredentialServer) Enumerate(
 			err.Error())
 	}
 
-	ids := make([]string, len(credList))
-	i := 0
-	for id := range credList {
-		ids[i] = id
-		i++
+	ids := make([]string, 0)
+	for credId, cred := range credList {
+		if s.isPermitted(ctx, api.Ownership_Read, cred) {
+			ids = append(ids, credId)
+		}
 	}
 
 	return &api.SdkCredentialEnumerateResponse{
@@ -291,13 +316,19 @@ func (s *CredentialServer) Inspect(
 			err.Error())
 	}
 
-	val, ok := credList[req.GetCredentialId()]
+	cred, ok := credList[req.GetCredentialId()]
 	if !ok {
 		return nil, status.Errorf(codes.NotFound, "Credential id %s not found", req.GetCredentialId())
 	}
-	info, ok := val.(map[string]interface{})
+
+	info, ok := cred.(map[string]interface{})
 	if !ok {
 		return nil, status.Error(codes.Internal, "Unable to get credential id information")
+	}
+
+	// Check ownership
+	if !s.isPermitted(ctx, api.Ownership_Read, cred) {
+		return nil, status.Errorf(codes.PermissionDenied, "Access denied to %s", req.GetCredentialId())
 	}
 
 	credName, ok := info[api.OptCredName].(string)
@@ -311,10 +342,17 @@ func (s *CredentialServer) Inspect(
 		bucket = ""
 	}
 
+	// Get ownership
+	ownership, err := s.getOwnershipFromCred(cred)
+	if err != nil {
+		return nil, err
+	}
+
 	resp := &api.SdkCredentialInspectResponse{
 		CredentialId: req.GetCredentialId(),
 		Name:         credName,
 		Bucket:       bucket,
+		Ownership:    ownership,
 	}
 
 	switch info[api.OptCredType] {
@@ -373,6 +411,73 @@ func (s *CredentialServer) Inspect(
 	}
 
 	return resp, nil
+}
+
+func (s *CredentialServer) create(
+	ctx context.Context,
+	req *api.SdkCredentialCreateRequest,
+	params map[string]string) (string, error) {
+	if params == nil || req == nil {
+		return "", fmt.Errorf("params and/or request is nil and cannot create credentials")
+	}
+
+	// Add user as owner
+	ownership := api.OwnershipSetUsernameFromContext(ctx, req.GetOwnership())
+	if ownership != nil {
+		// Encode ownership in params
+		m := jsonpb.Marshaler{OrigName: true}
+		ownershipString, err := m.MarshalToString(ownership)
+		if err != nil {
+			return "", fmt.Errorf("failed to marshal ownership: %v", err)
+		}
+		params[api.OptCredOwnership] = ownershipString
+	}
+
+	return s.driver(ctx).CredsCreate(params)
+}
+
+func (s *CredentialServer) getOwnershipFromCred(cred interface{}) (*api.Ownership, error) {
+	info, ok := cred.(map[string]interface{})
+	if !ok {
+		return nil, status.Error(codes.Internal, "Unable to get credential id information")
+	}
+
+	// Get ownership
+	var ownership *api.Ownership
+	ownershipString, ok := info[api.OptCredOwnership].(string)
+	if ok {
+		ownership = &api.Ownership{}
+		err := jsonpb.UnmarshalString(ownershipString, ownership)
+		if err != nil {
+			return nil, status.Errorf(
+				codes.Internal,
+				"Failed to retreive ownership from credential object: %v", err)
+		}
+	}
+	return ownership, nil
+}
+
+func (s CredentialServer) isPermitted(
+	ctx context.Context,
+	accessType api.Ownership_AccessType,
+	cred interface{},
+) bool {
+	ownership, err := s.getOwnershipFromCred(cred)
+	if err != nil {
+		return false
+	}
+
+	// If ownership is missing then it is also public
+	if ownership == nil || ownership.IsPublic() {
+		return true
+	}
+
+	if userinfo, ok := auth.NewUserInfoFromContext(ctx); ok {
+		return ownership.IsPermitted(userinfo, accessType)
+	}
+
+	// Auth is not enabled if there is no user context
+	return true
 }
 
 func validateAndDeleteIfInvalid(ctx context.Context, s *CredentialServer, uuid string) error {

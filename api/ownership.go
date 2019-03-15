@@ -53,6 +53,28 @@ func OwnershipSetUsernameFromContext(ctx context.Context, srcOwnership *Ownershi
 	return srcOwnership
 }
 
+// IsPermittedByContext returns true if the user captured in
+// the context has permission to access the resource
+func (o *Ownership) IsPermittedByContext(
+	ctx context.Context,
+	accessType Ownership_AccessType) bool {
+
+	// If no ownership is there then it is public
+	if o == nil {
+		return true
+	}
+
+	// Volume is not public, check permission
+	if userinfo, ok := auth.NewUserInfoFromContext(ctx); ok {
+		// Check Access
+		return o.IsPermitted(userinfo, accessType)
+	} else {
+		// There is no user information in the context so
+		// authorization is not running
+		return true
+	}
+}
+
 // IsPermitted returns true if the user has access to the resource
 // according to the ownership. If there is no owner, then it is public
 func (o *Ownership) IsPermitted(
@@ -60,7 +82,7 @@ func (o *Ownership) IsPermitted(
 	accessType Ownership_AccessType,
 ) bool {
 	// There is no owner, so it is a public resource
-	if !o.HasAnOwner() {
+	if o.IsPublic() {
 		return true
 	}
 
