@@ -23,13 +23,8 @@ import (
 	"os"
 	"sync"
 
-	"github.com/sirupsen/logrus"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
-
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
-
 	"github.com/libopenstorage/openstorage/alerts"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/spec"
@@ -40,6 +35,9 @@ import (
 	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
+	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 const (
@@ -481,10 +479,11 @@ func (s *sdkGrpcServer) useAlert(a alerts.FilterDeleter) {
 // Accessors
 func (s *sdkGrpcServer) driver(ctx context.Context) volume.VolumeDriver {
 	driverName := grpcserver.GetMetadataValueFromKey(ctx, ContextDriverKey)
-	if driverName == "" {
-		driverName = DefaultDriverName
+	if handler, ok := s.driverHandlers[driverName]; ok {
+		return handler
+	} else {
+		return s.driverHandlers[DefaultDriverName]
 	}
-	return s.driverHandlers[driverName]
 }
 
 func (s *sdkGrpcServer) cluster() cluster.Cluster {
