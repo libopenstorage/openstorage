@@ -95,37 +95,44 @@ all: build $(OSDSANITY)
 
 # TOOLS build rules
 #
+
+# In module mode, 'go get' has a side-effect of updating the go.mod
+# file.  We do not want to update go.mod when installing tools.
+# As a workaround, when installing a tool, cd to /tmp and turn off
+# module mode.  This should be solved in:
+#   https://github.com/golang/go/issues/30515
+#   https://github.com/golang/go/issues/24250
 $(GOPATH)/bin/golint:
 	@echo "Installing missing $@ ..."
-	go get -u github.com/golang/lint/golint
+	(cd /tmp && GO111MODULE=off go get -u github.com/golang/lint/golint)
 
 $(GOPATH)/bin/errcheck:
 	@echo "Installing missing $@ ..."
-	go get -u github.com/kisielk/errcheck
+	(cd /tmp && GO111MODULE=off go get -u github.com/kisielk/errcheck)
 
 $(GOPATH)/bin/protoc-gen-go:
 	@echo "Installing missing $@ ..."
-	go get -u github.com/golang/protobuf/protoc-gen-go
+	(cd /tmp && GO111MODULE=off go get -u github.com/golang/protobuf/protoc-gen-go)
 
 $(GOPATH)/bin/protoc-gen-grpc-gateway:
 	@echo "Installing missing $@ ..."
-	go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+	(cd /tmp && GO111MODULE=off go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway)
 
 $(GOPATH)/bin/protoc-gen-swagger:
 	@echo "Installing missing $@ ..."
-	go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
+	(cd /tmp && GO111MODULE=off go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger)
 
 $(GOPATH)/bin/packr:
 	@echo "Installing missing $@ ..."
-	go get -u github.com/gobuffalo/packr/...
+	( cd /tmp && GO111MODULE=off go get -u github.com/gobuffalo/packr/packr )
 
 $(GOPATH)/bin/cover:
 	@echo "Installing missing $@ ..."
-	go get -u golang.org/x/tools/cmd/cover
+	(cd /tmp && GO111MODULE=off go get -u golang.org/x/tools/cmd/cover)
 
 $(GOPATH)/bin/gotestcover:
 	@echo "Installing missing $@ ..."
-	go get -u github.com/pierrre/gotestcover
+	(cd /tmp && GO111MODULE=off go get -u github.com/pierrre/gotestcover)
 
 # DEPS build rules
 #
