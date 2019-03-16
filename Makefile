@@ -146,6 +146,7 @@ vendor-update:
 	GOOS=linux GOARCH=amd64 go get -tags "daemon btrfs_noversion have_btrfs have_chainfs" -d -v -t -u -f $(PKGS)
 
 vendor: vendor-update
+	go mod vendor
 
 build: packr
 	go build -tags "$(TAGS)" $(BUILDFLAGS) $(PKGS)
