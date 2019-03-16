@@ -49,8 +49,9 @@ func TestMigrateStart(t *testing.T) {
 	}
 
 	// Start Migrate
-	_, err = volumeclient.VolumeDriver(cl).CloudMigrateStart(goodRequest)
+	resp, err := volumeclient.VolumeDriver(cl).CloudMigrateStart(goodRequest)
 	assert.Nil(t, err)
+	assert.NotNil(t, resp.TaskId)
 
 	// Assert volume information is correct
 	volumes := api.NewOpenStorageVolumeClient(testVolDriver.Conn())
@@ -101,6 +102,7 @@ func TestMigrateStatus(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Get Migrate status
-	_, err = volumeclient.VolumeDriver(cl).CloudMigrateStatus(&api.CloudMigrateStatusRequest{})
+	resp, err := volumeclient.VolumeDriver(cl).CloudMigrateStatus(&api.CloudMigrateStatusRequest{})
 	assert.Nil(t, err)
+	assert.Equal(t, 1, len(resp.Info))
 }
