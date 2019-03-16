@@ -143,10 +143,14 @@ update-test-deps:
 	go get -tags "$(TAGS)" -d -v -t -u -f $(PKGS)
 
 vendor-update:
-	GOOS=linux GOARCH=amd64 go get -tags "daemon btrfs_noversion have_btrfs have_chainfs" -d -v -t -u -f $(PKGS)
+	@echo "Downloading modules to local module cache: ${GOPATH}/pkg/mod"
+	go mod download
 
 vendor: vendor-update
+	@echo "Updating vendor tree"
+	go mod tidy
 	go mod vendor
+	sh -x hack/force-github.com-sirupsen-logrus.sh
 
 build: packr
 	go build -tags "$(TAGS)" $(BUILDFLAGS) $(PKGS)
