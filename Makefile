@@ -1,4 +1,5 @@
 HAS_SDKTEST := $(shell command -v sdk-test 2> /dev/null)
+HAS_GOMODULES := $(shell go help mod why 2> /dev/null)
 BRANCH	:= $(shell git rev-parse --abbrev-ref HEAD)
 
 ifeq ($(TRAVIS_BRANCH), master)
@@ -49,6 +50,11 @@ PROTOSRC_PATH = $(PROTOS_PATH)/github.com/libopenstorage/openstorage
 endif
 
 OSDSANITY:=cmd/osd-sanity/osd-sanity
+
+ifdef HAS_GOMODULES
+export GO111MODULE=on
+export GOFLAGS = -mod=vendor
+endif
 
 .PHONY: \
 	all \
