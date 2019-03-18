@@ -303,6 +303,13 @@ docker-test: docker-build-osd-dev
 		-e GCE_INSTANCE_NAME \
 		-e GCE_INSTANCE_ZONE \
 		-e GCE_INSTANCE_PROJECT \
+		-e AZURE_INSTANCE_NAME \
+		-e AZURE_SUBSCRIPTION_ID \
+		-e AZURE_RESOURCE_GROUP_NAME \
+		-e AZURE_ENVIRONMENT \
+		-e AZURE_TENANT_ID \
+		-e AZURE_CLIENT_ID \
+		-e AZURE_CLIENT_SECRET \
 		-e "TAGS=$(TAGS)" \
 		-e "PKGS=$(PKGS)" \
 		-e "BUILDFLAGS=$(BUILDFLAGS)" \
@@ -398,4 +405,3 @@ push-docker-images: docker-images
 # For release branches, major and minor should be frozen.
 sdk-check-version:
 	go run tools/sdkver/sdkver.go --check-major=0 --check-patch=0
-
