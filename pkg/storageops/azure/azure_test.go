@@ -9,7 +9,6 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/storageops/azure"
 	"github.com/libopenstorage/openstorage/pkg/storageops/test"
 	"github.com/pborman/uuid"
-	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -21,7 +20,9 @@ var diskName = fmt.Sprintf("%s-%s", newDiskPrefix, uuid.New())
 
 func initAzure(t *testing.T) (storageops.Ops, map[string]interface{}) {
 	driver, err := azure.NewEnvClient()
-	require.NoError(t, err, "failed to instantiate storage ops driver")
+	if err != nil {
+		t.Skipf("skipping Azure tests as environment is not set...\n")
+	}
 
 	size := int32(newDiskSizeInGB)
 	name := diskName
