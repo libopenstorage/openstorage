@@ -17,6 +17,7 @@ package manager
 
 import (
 	"testing"
+	"time"
 
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/config"
@@ -48,6 +49,13 @@ func init() {
 	}
 }
 
+func cleanup() {
+	inst.Shutdown()
+	time.Sleep(100 * time.Millisecond)
+	kvdb.Instance().Delete(ClusterDBKey)
+	inst = nil
+}
+
 func TestClusterManagerUuid(t *testing.T) {
 	oldInst := inst
 	defer func() {
@@ -62,6 +70,7 @@ func TestClusterManagerUuid(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, uuid, inst.Uuid())
+	cleanup()
 }
 
 func TestUpdateSchedulerNodeName(t *testing.T) {
@@ -102,6 +111,7 @@ func TestUpdateSchedulerNodeName(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, auth.IsJwtToken(tokenResp.Token))
 
+	cleanup()
 }
 
 func TestClusterDomainClusterManagerAPIs(t *testing.T) {
@@ -122,7 +132,7 @@ func TestClusterDomainClusterManagerAPIs(t *testing.T) {
 	auth.InitSystemTokenManager(manager)
 
 	err = inst.StartWithConfiguration(1, false, "1002", []string{},
-		selfMetroDomain,
+		selfClusterDomain,
 		&cluster.ClusterServerConfiguration{
 			ConfigSystemTokenManager: manager,
 		})
