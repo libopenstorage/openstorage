@@ -376,6 +376,8 @@ func start(c *cli.Context) error {
 			d, sdksocket,
 			volume.PluginAPIBase,
 			uint16(pluginPort),
+			0,
+			nil,
 		); err != nil {
 			return fmt.Errorf("Unable to start plugin api server: %v", err)
 		}
