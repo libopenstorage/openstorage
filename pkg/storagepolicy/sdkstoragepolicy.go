@@ -151,16 +151,15 @@ func (p *SdkPolicyManager) Update(
 	if err != nil {
 		return nil, err
 	}
+	// update user must have write acess
+	if !oldPolicy.GetStoragePolicy().IsPermitted(ctx, api.Ownership_Write) {
+		return nil, status.Errorf(codes.PermissionDenied, "Cannot update storage policy")
+	}
 
 	m := jsonpb.Marshaler{OrigName: true}
 	updateStr, err := m.MarshalToString(req.GetStoragePolicy())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Json Marshal failed for policy %s: %v", req.GetStoragePolicy().GetName(), err)
-	}
-
-	// update user must have write acess
-	if !oldPolicy.GetStoragePolicy().IsPermitted(ctx, api.Ownership_Write) {
-		return nil, status.Errorf(codes.PermissionDenied, "Cannot update storage policy")
 	}
 
 	// check ownership update is request
@@ -206,6 +205,11 @@ func (p *SdkPolicyManager) Delete(
 		return &api.SdkOpenStoragePolicyDeleteResponse{}, nil
 	}
 
+	// Only the owner or the admin can delete
+	if !inspResp.GetStoragePolicy().IsPermitted(ctx, api.Ownership_Admin) {
+		return nil, status.Errorf(codes.PermissionDenied, "Cannot delete storage policy %v", req.GetName())
+	}
+
 	// release default policy restriction before deleting policy
 	policy, err := p.DefaultInspect(ctx, &api.SdkOpenStoragePolicyDefaultInspectRequest{})
 	if err != nil {
@@ -217,11 +221,6 @@ func (p *SdkPolicyManager) Delete(
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "Removal of default policy failed with: %v", err)
 		}
-	}
-
-	// Only the owner or the admin can delete
-	if !inspResp.GetStoragePolicy().IsPermitted(ctx, api.Ownership_Admin) {
-		return nil, status.Errorf(codes.PermissionDenied, "Cannot delete storage policy %v", req.GetName())
 	}
 
 	_, err = p.kv.Delete(prefixWithName(req.GetName()))
@@ -316,7 +315,7 @@ func (p *SdkPolicyManager) SetDefault(
 	// policy restriction
 	user, _ := auth.NewUserInfoFromContext(ctx)
 	if !policy.GetStoragePolicy().GetOwnership().IsAdminByUser(user) {
-		return nil, status.Errorf(codes.PermissionDenied, "Only admin can set storage policy as default %v", req.GetName())
+		return nil, status.Errorf(codes.PermissionDenied, "Only the storage system admin can set storage policy as default %v", req.GetName())
 	}
 
 	policyStr, err := json.Marshal(policy.GetStoragePolicy().GetName())
@@ -350,7 +349,7 @@ func (p *SdkPolicyManager) Release(
 	// only administrator can remove storage policy restriction
 	user, _ := auth.NewUserInfoFromContext(ctx)
 	if !policy.GetStoragePolicy().GetOwnership().IsAdminByUser(user) {
-		return nil, status.Errorf(codes.PermissionDenied, "Only admin can remove storage policy restriction")
+		return nil, status.Errorf(codes.PermissionDenied, "Only the storage system admin can remove storage policy restriction")
 	}
 
 	// empty represents no policy is set as default

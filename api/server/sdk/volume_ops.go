@@ -170,7 +170,7 @@ func (s *VolumeServer) Create(
 	// of creating volume
 	spec, err := GetDefaultVolSpecs(ctx, req.GetSpec(), false)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Unable to update vol specs according to policy %v", err)
+		return nil, err
 	}
 
 	// Copy any labels from the spec to the locator
@@ -443,7 +443,7 @@ func (s *VolumeServer) Update(
 	// to make sure if update does not violates default policy
 	updatedSpec, err := GetDefaultVolSpecs(ctx, spec, true)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Unable to update vol specs according to policy %v", err)
+		return nil, err
 	}
 	// Send to driver
 	if err := s.driver(ctx).Set(req.GetVolumeId(), locator, updatedSpec); err != nil {
@@ -683,23 +683,17 @@ func GetDefaultVolSpecs(
 			return nil, customErr
 		}
 
-		// should we only allow policy to be used by owner who has write/admin access
-		if !customPolicy.GetStoragePolicy().IsPermitted(ctx, api.Ownership_Admin) {
-			return nil, status.Errorf(codes.PermissionDenied, "Cannot use storage policy %v", customPolicy.GetStoragePolicy().GetName())
-		}
 		policy = customPolicy.GetStoragePolicy()
 	} else {
 		// check if default storage policy is set
 		defPolicy, err := storPolicy.DefaultInspect(context.Background(), &api.SdkOpenStoragePolicyDefaultInspectRequest{})
-		if err == kvdb.ErrNotFound || defPolicy.GetStoragePolicy() == nil {
-			// no default storage policy,
-			// should we add NA as volume is not created by any storage policy here ?
-			return spec, nil
-		}
-		// err means there is policy stored, but we are not able to retrive it
-		// hence we are not allowing volume create operation
 		if err != nil {
+			// err means there is policy stored, but we are not able to retrive it
+			// hence we are not allowing volume create operation
 			return nil, status.Errorf(codes.Internal, "Unable to get default policy details %v", err)
+		} else if defPolicy.GetStoragePolicy() == nil {
+			// no default storage policy found
+			return spec, nil
 		}
 		policy = defPolicy.GetStoragePolicy()
 	}
@@ -709,6 +703,9 @@ func GetDefaultVolSpecs(
 	// check if volume update request, if allowupdate is set
 	// return spec received as it is
 	if isUpdate && policy.GetAllowUpdate() {
+		if !policy.IsPermitted(ctx, api.Ownership_Write) {
+			return nil, status.Errorf(codes.PermissionDenied, "Cannot use storage policy %v", policy.GetName())
+		}
 		return spec, nil
 	}
 
