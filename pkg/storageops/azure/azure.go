@@ -20,21 +20,21 @@ import (
 )
 
 const (
-	EnvInstanceName      = "AZURE_INSTANCE_NAME"
-	EnvSubscriptionID    = "AZURE_SUBSCRIPTION_ID"
-	EnvResourceGroupName = "AZURE_RESOURCE_GROUP_NAME"
-	EnvAzureEnvironment  = "AZURE_ENVIRONMENT"
-	EnvTenantID          = "AZURE_TENANT_ID"
-	EnvClientID          = "AZURE_CLIENT_ID"
-	EnvClientSecret      = "AZURE_CLIENT_SECRET"
+	envInstanceName      = "AZURE_INSTANCE_NAME"
+	envSubscriptionID    = "AZURE_SUBSCRIPTION_ID"
+	envResourceGroupName = "AZURE_RESOURCE_GROUP_NAME"
+	envAzureEnvironment  = "AZURE_ENVIRONMENT"
+	envTenantID          = "AZURE_TENANT_ID"
+	envClientID          = "AZURE_CLIENT_ID"
+	envClientSecret      = "AZURE_CLIENT_SECRET"
 )
 
 const (
-	// Name of the cloud storage provider
-	Name                    = "azure"
+	name                    = "azure"
 	defaultEnvironment      = "AzurePublicCloud"
 	userAgentExtension      = "osd"
 	azureDiskPrefix         = "/dev/disk/azure/scsi1/lun"
+	snapNameFormat          = "2006-01-02_15.04.05.999999"
 	clientPollingDelay      = 5 * time.Second
 	clientRetryAttempts     = 10
 	devicePathMaxRetryCount = 3
@@ -53,7 +53,7 @@ type azureOps struct {
 }
 
 func (a *azureOps) Name() string {
-	return Name
+	return name
 }
 
 func (a *azureOps) InstanceID() string {
@@ -61,28 +61,28 @@ func (a *azureOps) InstanceID() string {
 }
 
 func NewEnvClient() (storageops.Ops, error) {
-	instance, err := storageops.GetEnvValueStrict(EnvInstanceName)
+	instance, err := storageops.GetEnvValueStrict(envInstanceName)
 	if err != nil {
 		return nil, err
 	}
 
-	subscriptionID, err := storageops.GetEnvValueStrict(EnvSubscriptionID)
+	subscriptionID, err := storageops.GetEnvValueStrict(envSubscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	resourceGroupName, err := storageops.GetEnvValueStrict(EnvResourceGroupName)
+	resourceGroupName, err := storageops.GetEnvValueStrict(envResourceGroupName)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewAzureClient(instance, subscriptionID, resourceGroupName)
+	return NewClient(instance, subscriptionID, resourceGroupName)
 }
 
-func NewAzureClient(
+func NewClient(
 	instance, subscriptionID, resourceGroupName string,
 ) (storageops.Ops, error) {
-	envName := os.Getenv(EnvAzureEnvironment)
+	envName := os.Getenv(envAzureEnvironment)
 	if len(envName) == 0 {
 		envName = defaultEnvironment
 	}
@@ -91,17 +91,17 @@ func NewAzureClient(
 		return nil, fmt.Errorf("invalid cloud name '%s' specified: %v", envName, err)
 	}
 
-	tenantID, err := storageops.GetEnvValueStrict(EnvTenantID)
+	tenantID, err := storageops.GetEnvValueStrict(envTenantID)
 	if err != nil {
 		return nil, err
 	}
 
-	clientID, err := storageops.GetEnvValueStrict(EnvClientID)
+	clientID, err := storageops.GetEnvValueStrict(envClientID)
 	if err != nil {
 		return nil, err
 	}
 
-	clientSecret, err := storageops.GetEnvValueStrict(EnvClientSecret)
+	clientSecret, err := storageops.GetEnvValueStrict(envClientSecret)
 	if err != nil {
 		return nil, err
 	}
@@ -157,6 +157,25 @@ func (a *azureOps) Create(
 			"Invalid volume template given",
 			a.instance,
 		)
+	}
+
+	// Check if the disk already exists; return err if it does
+	_, err := a.disksClient.Get(
+		context.Background(),
+		a.resourceGroupName,
+		*d.Name,
+	)
+	if err == nil {
+		return "", fmt.Errorf("disk with id %v already exists", *d.Name)
+	} else {
+		derr, ok := err.(autorest.DetailedError)
+		if !ok {
+			return "", err
+		}
+		code, ok := derr.StatusCode.(int)
+		if !ok || code != 404 {
+			return "", err
+		}
 	}
 
 	ctx := context.Background()
@@ -226,7 +245,8 @@ func (a *azureOps) Attach(diskName string) (string, error) {
 
 	nextLun := nextAvailableLun(*vm.StorageProfile.DataDisks)
 	if nextLun < 0 {
-		return "", fmt.Errorf("No LUN available to attach the disk")
+		return "", fmt.Errorf("No LUN available to attach the disk. "+
+			"%v disks attached to the VM instance", len(*vm.StorageProfile.DataDisks))
 	}
 
 	*vm.StorageProfile.DataDisks = append(
@@ -453,7 +473,17 @@ func (a *azureOps) DevicePath(diskName string) (string, error) {
 		a.resourceGroupName,
 		diskName,
 	)
-	if err != nil {
+	if derr, ok := err.(autorest.DetailedError); ok {
+		code, ok := derr.StatusCode.(int)
+		if ok && code == 404 {
+			return "", storageops.NewStorageError(
+				storageops.ErrVolNotFound,
+				fmt.Sprintf("disk: %s not found", diskName),
+				a.instance,
+			)
+		}
+		return "", err
+	} else if err != nil {
 		return "", err
 	}
 
@@ -476,6 +506,8 @@ func (a *azureOps) DevicePath(diskName string) (string, error) {
 
 	for _, d := range *vm.StorageProfile.DataDisks {
 		if *d.Name == diskName {
+			// Retry to get the block dev path as it may take few seconds for the path
+			// to be created even after the disk shows attached.
 			devPath, err := lunToBlockDevPathWithRetry(*d.Lun)
 			if err == nil {
 				return devPath, nil
@@ -497,13 +529,17 @@ func (a *azureOps) DevicePath(diskName string) (string, error) {
 }
 
 func (a *azureOps) Snapshot(diskName string, readonly bool) (interface{}, error) {
+	if !readonly {
+		return nil, fmt.Errorf("read-write snapshots are not supported in Azure")
+	}
+
 	disk, err := a.disksClient.Get(context.Background(), a.resourceGroupName, diskName)
 	if err != nil {
 		return nil, err
 	}
 
 	ctx := context.Background()
-	snapName := fmt.Sprint("snap-", time.Now().Format("2006-01-02_15.04.05.999999"))
+	snapName := fmt.Sprint("snap-", time.Now().Format(snapNameFormat))
 	future, err := a.snapshotsClient.CreateOrUpdate(
 		ctx,
 		a.resourceGroupName,
