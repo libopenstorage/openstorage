@@ -210,7 +210,6 @@ func (s *CloudBackupServer) EnumerateWithFilters(
 		if err != nil {
 			return nil, err
 		}
-		return nil, status.Error(codes.InvalidArgument, "Must provide credential uuid")
 	} else {
 		if err := s.checkAccessToCredential(ctx, req.GetCredentialId()); err != nil {
 			return nil, err
