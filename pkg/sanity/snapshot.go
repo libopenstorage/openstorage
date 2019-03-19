@@ -51,7 +51,6 @@ var _ = Describe("Volume [Snapshot Tests]", func() {
 
 		var (
 			numVolumesBefore int
-			numVolumesAfter  int
 			volumeID         string
 			snapID           string
 		)
@@ -72,9 +71,8 @@ var _ = Describe("Volume [Snapshot Tests]", func() {
 			err = volumedriver.Delete(snapID)
 			Expect(err).ToNot(HaveOccurred())
 
-			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+			_, err = volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
-			numVolumesAfter = len(volumes)
 		})
 
 		It("Should create Volume successfully for snapshot", func() {
@@ -132,7 +130,6 @@ var _ = Describe("Volume [Snapshot Tests]", func() {
 
 		var (
 			numVolumesBefore int
-			numVolumesAfter  int
 			volumeID         string
 			snapID           string
 			snapIDs          []string
@@ -156,9 +153,8 @@ var _ = Describe("Volume [Snapshot Tests]", func() {
 				Expect(err).ToNot(HaveOccurred())
 			}
 
-			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+			_, err = volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
-			numVolumesAfter = len(volumes)
 		})
 
 		It("Should enumerate Volume snapshots", func() {
@@ -232,7 +228,6 @@ var _ = Describe("Volume [Snapshot Tests]", func() {
 
 		var (
 			numVolumesBefore int
-			numVolumesAfter  int
 			volumeID         string
 			snapID           string
 		)
@@ -253,9 +248,8 @@ var _ = Describe("Volume [Snapshot Tests]", func() {
 			err = volumedriver.Delete(snapID)
 			Expect(err).ToNot(HaveOccurred())
 
-			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+			_, err = volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
-			numVolumesAfter = len(volumes)
 		})
 
 		It("Should restore Volume successfully for snapshot", func() {

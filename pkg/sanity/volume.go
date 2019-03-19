@@ -54,7 +54,6 @@ var _ = Describe("Volume [Volume Tests]", func() {
 		var (
 			volumeID         string
 			numVolumesBefore int
-			numVolumesAfter  int
 		)
 
 		BeforeEach(func() {
@@ -70,9 +69,8 @@ var _ = Describe("Volume [Volume Tests]", func() {
 				err = volumedriver.Delete(volumeID)
 				Expect(err).ToNot(HaveOccurred())
 
-				volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+				_, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 				Expect(err).ToNot(HaveOccurred())
-				numVolumesAfter = len(volumes)
 			}
 		})
 
@@ -178,7 +176,6 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			volumeID         string
 			volumeIDs        []string
 			numVolumesBefore int
-			numVolumesAfter  int
 			volumesToCreate  int
 		)
 		AfterEach(func() {
@@ -190,9 +187,8 @@ var _ = Describe("Volume [Volume Tests]", func() {
 					Expect(err).ToNot(HaveOccurred())
 				}
 
-				volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+				_, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 				Expect(err).ToNot(HaveOccurred())
-				numVolumesAfter = len(volumes)
 			}
 		})
 
@@ -254,15 +250,13 @@ var _ = Describe("Volume [Volume Tests]", func() {
 	Describe("Volume Delete ", func() {
 
 		var (
-			volumeID         string
-			numVolumesBefore int
+			volumeID string
 		)
 
 		BeforeEach(func() {
 
 			var err error
-			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, make(map[string]string))
-			numVolumesBefore = len(volumes)
+			_, err = volumedriver.Enumerate(&api.VolumeLocator{}, make(map[string]string))
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -381,7 +375,6 @@ var _ = Describe("Volume [Volume Tests]", func() {
 	Describe("Volume Attach Detach", func() {
 		var (
 			numVolumesBefore int
-			numVolumesAfter  int
 			volumeID         string
 		)
 
@@ -398,9 +391,8 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			err = volumedriver.Delete(volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
-			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+			_, err = volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
-			numVolumesAfter = len(volumes)
 		})
 
 		It("Should attach and detach successfully", func() {
@@ -458,10 +450,8 @@ var _ = Describe("Volume [Volume Tests]", func() {
 
 		var (
 			numVolumesBefore int
-			numVolumesAfter  int
 			volumeID         string
 			mountPath        string
-			volumesToCreate  int
 		)
 
 		BeforeEach(func() {
@@ -481,9 +471,8 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			err = volumedriver.Delete(volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
-			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+			_, err = volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
-			numVolumesAfter = len(volumes)
 		})
 
 		It("Should mount and unmount successfully", func() {
@@ -492,7 +481,6 @@ var _ = Describe("Volume [Volume Tests]", func() {
 
 			var err error
 
-			volumesToCreate = 1
 			var size = 5
 			vr := &api.VolumeCreateRequest{
 				Locator: &api.VolumeLocator{
@@ -538,7 +526,6 @@ var _ = Describe("Volume [Volume Tests]", func() {
 
 		var (
 			numVolumesBefore int
-			numVolumesAfter  int
 			volumeID         string
 		)
 
@@ -557,9 +544,8 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			err = volumedriver.Delete(volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
-			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+			_, err = volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
-			numVolumesAfter = len(volumes)
 		})
 
 		It("Should update successfully with the new volume size.", func() {
@@ -691,7 +677,6 @@ var _ = Describe("Volume [Volume Tests]", func() {
 
 		var (
 			numVolumesBefore int
-			numVolumesAfter  int
 			volumeID         string
 		)
 
@@ -708,9 +693,8 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			err = volumedriver.Delete(volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
-			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+			_, err = volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
-			numVolumesAfter = len(volumes)
 		})
 
 		It("Should retrieve volume stats successfully", func() {
@@ -758,7 +742,6 @@ var _ = Describe("Volume [Volume Tests]", func() {
 
 		var (
 			numVolumesBefore int
-			numVolumesAfter  int
 			volumeID         string
 		)
 
@@ -775,9 +758,8 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			err = volumedriver.Delete(volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
-			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+			_, err = volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
-			numVolumesAfter = len(volumes)
 		})
 
 		It("Should get ActiveRequests successfully", func() {
@@ -823,7 +805,6 @@ var _ = Describe("Volume [Volume Tests]", func() {
 
 		var (
 			numVolumesBefore int
-			numVolumesAfter  int
 			volumeID         string
 		)
 
@@ -840,9 +821,8 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			err = volumedriver.Delete(volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
-			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+			_, err = volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
-			numVolumesAfter = len(volumes)
 		})
 
 		It("Should get volume used size successfully", func() {
@@ -888,7 +868,6 @@ var _ = Describe("Volume [Volume Tests]", func() {
 
 		var (
 			numVolumesBefore int
-			numVolumesAfter  int
 			volumeID         string
 		)
 
@@ -911,9 +890,8 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			err = volumedriver.Delete(volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
-			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+			_, err = volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
-			numVolumesAfter = len(volumes)
 		})
 
 		It("Should quiesce unquiesce volume successfully", func() {

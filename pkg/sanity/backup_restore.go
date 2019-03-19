@@ -85,7 +85,6 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 
 		var (
 			numVolumesBefore int
-			numVolumesAfter  int
 			volumeID         string
 			bkpStatusReq     *api.CloudBackupStatusRequest
 			bkpStatus        api.CloudBackupStatus
@@ -107,9 +106,8 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			err = volumedriver.Delete(volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
-			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+			_, err = volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
-			numVolumesAfter = len(volumes)
 		})
 
 		It("Should create Volume successfully for backup", func() {
@@ -192,7 +190,6 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 
 		var (
 			numVolumesBefore int
-			numVolumesAfter  int
 			volumeID         string
 			bkpStatusReq     *api.CloudBackupStatusRequest
 			bkpStatus        api.CloudBackupStatus
@@ -214,9 +211,8 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			err = volumedriver.Delete(volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
-			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+			_, err = volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
-			numVolumesAfter = len(volumes)
 		})
 
 		It("Should create enumerate backup volumes", func() {
@@ -312,7 +308,6 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 
 		var (
 			numVolumesBefore int
-			numVolumesAfter  int
 			volumeID         string
 			bkpStatusReq     *api.CloudBackupStatusRequest
 			bkpStatus        api.CloudBackupStatus
@@ -339,9 +334,8 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			err = volumedriver.Delete(restoredVolume)
 			Expect(err).ToNot(HaveOccurred())
 
-			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+			_, err = volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
-			numVolumesAfter = len(volumes)
 		})
 
 		It("Should restore backup", func() {
@@ -457,7 +451,6 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 
 		var (
 			numVolumesBefore int
-			numVolumesAfter  int
 			volumeID         string
 		)
 
@@ -477,9 +470,8 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			err = volumedriver.Delete(volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
-			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+			_, err = volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
-			numVolumesAfter = len(volumes)
 		})
 
 		It("Should create a backup schedule ", func() {
@@ -533,7 +525,6 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 
 		var (
 			numVolumesBefore int
-			numVolumesAfter  int
 			volumeID         string
 			schedules        []string
 		)
@@ -554,9 +545,8 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			err = volumedriver.Delete(volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
-			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+			_, err = volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
-			numVolumesAfter = len(volumes)
 		})
 
 		It("Should delete a backup schedule ", func() {
@@ -624,7 +614,6 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 
 		var (
 			numVolumesBefore int
-			numVolumesAfter  int
 			volumeID         string
 			schedules        []string
 		)
@@ -645,9 +634,8 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			err = volumedriver.Delete(volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
-			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+			_, err = volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
-			numVolumesAfter = len(volumes)
 		})
 
 		It("Should enumerate a backup schedule ", func() {
@@ -710,7 +698,6 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 
 		var (
 			numVolumesBefore int
-			numVolumesAfter  int
 			volumeID         string
 			bkpStatusReq     *api.CloudBackupStatusRequest
 			bkpStatusResp    *api.CloudBackupStatusResponse
@@ -733,9 +720,8 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			err = volumedriver.Delete(volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
-			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
+			_, err = volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
-			numVolumesAfter = len(volumes)
 		})
 
 		It("Should create Volume successfully for backup", func() {
