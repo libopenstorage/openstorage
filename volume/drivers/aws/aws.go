@@ -462,7 +462,7 @@ func (d *Driver) Detach(volumeID string, options map[string]string) error {
 	} else {
 		volume.DevicePath = ""
 		if err := d.UpdateVol(volume); err != nil {
-			logrus.Warnf("Failed to update volume", volumeID)
+			logrus.Warnf("Failed to update volume: %s", volumeID)
 		}
 	}
 	return nil
