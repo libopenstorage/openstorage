@@ -857,6 +857,29 @@ func CloudBackupStatusTypeToSdkCloudBackupStatusType(
 	}
 }
 
+func SdkCloudBackupStatusTypeToCloudBackupStatusString(
+	t SdkCloudBackupStatusType,
+) string {
+	switch t {
+	case SdkCloudBackupStatusType_SdkCloudBackupStatusTypeNotStarted:
+		return string(CloudBackupStatusNotStarted)
+	case SdkCloudBackupStatusType_SdkCloudBackupStatusTypeDone:
+		return string(CloudBackupStatusDone)
+	case SdkCloudBackupStatusType_SdkCloudBackupStatusTypeAborted:
+		return string(CloudBackupStatusAborted)
+	case SdkCloudBackupStatusType_SdkCloudBackupStatusTypePaused:
+		return string(CloudBackupStatusPaused)
+	case SdkCloudBackupStatusType_SdkCloudBackupStatusTypeStopped:
+		return string(CloudBackupStatusStopped)
+	case SdkCloudBackupStatusType_SdkCloudBackupStatusTypeActive:
+		return string(CloudBackupStatusActive)
+	case SdkCloudBackupStatusType_SdkCloudBackupStatusTypeFailed:
+		return string(CloudBackupStatusFailed)
+	default:
+		return string(CloudBackupStatusFailed)
+	}
+}
+
 func StringToSdkCloudBackupStatusType(s string) SdkCloudBackupStatusType {
 	return CloudBackupStatusTypeToSdkCloudBackupStatusType(CloudBackupStatusType(s))
 }
