@@ -18,6 +18,7 @@ import (
 const (
 	Name                     = "name"
 	Token                    = "token"
+	TokenSecret              = "token_secret"
 	SpecNodes                = "nodes"
 	SpecParent               = "parent"
 	SpecEphemeral            = "ephemeral"
@@ -853,6 +854,29 @@ func CloudBackupStatusTypeToSdkCloudBackupStatusType(
 		return SdkCloudBackupStatusType_SdkCloudBackupStatusTypeFailed
 	default:
 		return SdkCloudBackupStatusType_SdkCloudBackupStatusTypeUnknown
+	}
+}
+
+func SdkCloudBackupStatusTypeToCloudBackupStatusString(
+	t SdkCloudBackupStatusType,
+) string {
+	switch t {
+	case SdkCloudBackupStatusType_SdkCloudBackupStatusTypeNotStarted:
+		return string(CloudBackupStatusNotStarted)
+	case SdkCloudBackupStatusType_SdkCloudBackupStatusTypeDone:
+		return string(CloudBackupStatusDone)
+	case SdkCloudBackupStatusType_SdkCloudBackupStatusTypeAborted:
+		return string(CloudBackupStatusAborted)
+	case SdkCloudBackupStatusType_SdkCloudBackupStatusTypePaused:
+		return string(CloudBackupStatusPaused)
+	case SdkCloudBackupStatusType_SdkCloudBackupStatusTypeStopped:
+		return string(CloudBackupStatusStopped)
+	case SdkCloudBackupStatusType_SdkCloudBackupStatusTypeActive:
+		return string(CloudBackupStatusActive)
+	case SdkCloudBackupStatusType_SdkCloudBackupStatusTypeFailed:
+		return string(CloudBackupStatusFailed)
+	default:
+		return string(CloudBackupStatusFailed)
 	}
 }
 

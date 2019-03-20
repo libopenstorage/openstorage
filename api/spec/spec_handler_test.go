@@ -223,3 +223,44 @@ func TestCopyingLabelsFromSpecToLocator(t *testing.T) {
 	require.Contains(t, locator.VolumeLabels, "hello")
 	require.Contains(t, locator.VolumeLabels, "goodbye")
 }
+
+func TestGetTokenFromString(t *testing.T) {
+	s := NewSpecHandler()
+
+	token := "abcd.xyz.123"
+
+	tokenParsed, ok := s.GetTokenFromString(fmt.Sprintf("token=%s", token))
+	require.Equal(t, token, tokenParsed)
+	require.Equal(t, ok, true)
+
+	tokenParsed, ok = s.GetTokenFromString(fmt.Sprintf("toabcbn=%s", token))
+	require.Equal(t, "", tokenParsed)
+	require.Equal(t, ok, false)
+
+}
+
+func TestGetTokenSecretFromString(t *testing.T) {
+	s := NewSpecHandler()
+
+	secret := "token1"
+	context := "team1"
+
+	sample := "name=abcd,token_secret=/px/secrets/alpha/" + context + "/" + secret + ",token="
+	sample2 := "name=abcd,token_secret=padsasdax/secr//e/sdasda//ds/asda///sts/al//pha/" + context + "/" + secret + ",token="
+
+	secretParsed, contextParsed, ok := s.GetTokenSecretFromString(sample)
+	require.Equal(t, secret, secretParsed)
+	require.Equal(t, context, contextParsed)
+	require.Equal(t, ok, true)
+
+	secretParsed, contextParsed, ok = s.GetTokenSecretFromString(sample2)
+	require.Equal(t, secret, secretParsed)
+	require.Equal(t, context, contextParsed)
+	require.Equal(t, ok, true)
+
+	secretParsed, contextParsed, ok = s.GetTokenSecretFromString(fmt.Sprintf("toabcbn_secret=abcd"))
+	require.Equal(t, "", secretParsed)
+	require.Equal(t, "", contextParsed)
+	require.Equal(t, ok, false)
+
+}
