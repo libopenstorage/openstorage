@@ -203,7 +203,7 @@ func (vd *volAPI) cloudBackupEnumerate(w http.ResponseWriter, r *http.Request) {
 			SrcVolumeName: v.SrcVolumeName,
 			Timestamp:     prototime.TimestampToTime(v.Timestamp),
 			Metadata:      v.Metadata,
-			Status:        v.Status.String(),
+			Status:        api.SdkCloudBackupStatusTypeToCloudBackupStatusString(v.Status),
 		}
 		enumerateResp.Backups = append(enumerateResp.Backups, item)
 	}
