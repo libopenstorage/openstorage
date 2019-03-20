@@ -55,7 +55,7 @@ type OIDCAuthenticator struct {
 func NewOIDC(config *OIDCAuthConfig) (*OIDCAuthenticator, error) {
 	p, err := oidc.NewProvider(context.Background(), config.Issuer)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to communicate with ODIC provider %s: %v",
+		return nil, fmt.Errorf("Unable to communicate with OIDC provider %s: %v",
 			config.Issuer,
 			err)
 	}
