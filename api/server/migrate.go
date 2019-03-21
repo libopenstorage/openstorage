@@ -5,7 +5,8 @@ import (
 	"net/http"
 
 	"github.com/libopenstorage/openstorage/api"
-	ost_errors "github.com/libopenstorage/openstorage/api/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (vd *volAPI) cloudMigrateStart(w http.ResponseWriter, r *http.Request) {
@@ -58,9 +59,11 @@ func (vd *volAPI) cloudMigrateStart(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := migrations.Start(ctx, migrateRequest)
 	if err != nil {
-		if _, ok := err.(*ost_errors.ErrExists); ok {
-			w.WriteHeader(http.StatusConflict)
-			return
+		if serverError, ok := status.FromError(err); ok {
+			if serverError.Code() == codes.AlreadyExists {
+				w.WriteHeader(http.StatusConflict)
+				return
+			}
 		}
 		vd.sendError(method, startReq.TargetId, w, err.Error(), http.StatusInternalServerError)
 		return
