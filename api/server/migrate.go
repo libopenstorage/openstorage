@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/libopenstorage/openstorage/api"
+	ost_errors "github.com/libopenstorage/openstorage/api/errors"
 )
 
 func (vd *volAPI) cloudMigrateStart(w http.ResponseWriter, r *http.Request) {
@@ -32,6 +33,7 @@ func (vd *volAPI) cloudMigrateStart(w http.ResponseWriter, r *http.Request) {
 
 	migrations := api.NewOpenStorageMigrateClient(conn)
 	migrateRequest := &api.SdkCloudMigrateStartRequest{
+		TaskId:    startReq.TaskId,
 		ClusterId: startReq.ClusterId,
 	}
 
@@ -56,6 +58,10 @@ func (vd *volAPI) cloudMigrateStart(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := migrations.Start(ctx, migrateRequest)
 	if err != nil {
+		if _, ok := err.(*ost_errors.ErrExists); ok {
+			w.WriteHeader(http.StatusConflict)
+			return
+		}
 		vd.sendError(method, startReq.TargetId, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
