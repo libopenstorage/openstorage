@@ -43,6 +43,7 @@ func TestMigrateStart(t *testing.T) {
 	assert.NotEmpty(t, id)
 
 	goodRequest := &api.CloudMigrateStartRequest{
+		TaskId:    "123456",
 		Operation: api.CloudMigrate_MigrateVolume,
 		ClusterId: "clusterID",
 		TargetId:  id,
@@ -52,6 +53,7 @@ func TestMigrateStart(t *testing.T) {
 	resp, err := volumeclient.VolumeDriver(cl).CloudMigrateStart(goodRequest)
 	assert.Nil(t, err)
 	assert.NotNil(t, resp.TaskId)
+	assert.Equal(t, goodRequest.TaskId, resp.TaskId)
 
 	// Assert volume information is correct
 	volumes := api.NewOpenStorageVolumeClient(testVolDriver.Conn())
