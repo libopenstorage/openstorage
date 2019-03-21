@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/libopenstorage/openstorage/api"
+	ost_errors "github.com/libopenstorage/openstorage/api/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -86,6 +87,10 @@ func (s *VolumeServer) volumeGroupMigrate(
 	}
 	resp, err := s.driver(ctx).CloudMigrateStart(request)
 	if err != nil {
+		if _, ok := err.(*ost_errors.ErrExists); ok {
+			return nil, status.Errorf(codes.AlreadyExists, "Cannot start migration for %s : %v", req.GetClusterId(), err)
+		}
+		// if errExist return codes.
 		return nil, status.Errorf(codes.Internal, "Cannot start migration for %s : %v", req.GetClusterId(), err)
 	}
 	return &api.SdkCloudMigrateStartResponse{
@@ -106,6 +111,9 @@ func (s *VolumeServer) allVolumesMigrate(
 	}
 	resp, err := s.driver(ctx).CloudMigrateStart(request)
 	if err != nil {
+		if _, ok := err.(*ost_errors.ErrExists); ok {
+			return nil, status.Errorf(codes.AlreadyExists, "Cannot start migration for %s : %v", req.GetClusterId(), err)
+		}
 		return nil, status.Errorf(codes.Internal, "Cannot start migration for %s : %v", req.GetClusterId(), err)
 	}
 	return &api.SdkCloudMigrateStartResponse{
@@ -127,6 +135,9 @@ func (s *VolumeServer) volumeMigrate(
 	}
 	resp, err := s.driver(ctx).CloudMigrateStart(request)
 	if err != nil {
+		if _, ok := err.(*ost_errors.ErrExists); ok {
+			return nil, status.Errorf(codes.AlreadyExists, "Cannot start migration for %s : %v", req.GetClusterId(), err)
+		}
 		return nil, status.Errorf(codes.Internal, "Cannot start migration for %s : %v", req.GetClusterId(), err)
 	}
 	return &api.SdkCloudMigrateStartResponse{
