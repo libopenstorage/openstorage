@@ -27,6 +27,54 @@
 			"revisionTime": "2017-12-06T19:02:46Z"
 		},
 		{
+			"checksumSHA1": "fD2ekdjE6xa2tUhFWppmf2r83eE=",
+			"path": "github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2017-12-01/compute",
+			"revision": "5bf28521f7a6f72f2dde3e5a5fb0d27d7a8aeee9",
+			"revisionTime": "2018-02-12T22:50:28Z"
+		},
+		{
+			"checksumSHA1": "zHN3i/hnZKCIJMGNCV33y1rOGxk=",
+			"path": "github.com/Azure/azure-sdk-for-go/version",
+			"revision": "5bf28521f7a6f72f2dde3e5a5fb0d27d7a8aeee9",
+			"revisionTime": "2018-02-12T22:50:28Z"
+		},
+		{
+			"checksumSHA1": "sM9XTbrCfgS5BPxpFLeM5YwOZWg=",
+			"path": "github.com/Azure/go-autorest/autorest",
+			"revision": "5a06e9ddbe3c22262059b8e061777b9934f982bd",
+			"revisionTime": "2018-02-08T22:49:56Z"
+		},
+		{
+			"checksumSHA1": "xmsYFX1qHpwvXbqnT9yg4UQ2MlA=",
+			"path": "github.com/Azure/go-autorest/autorest/adal",
+			"revision": "5a06e9ddbe3c22262059b8e061777b9934f982bd",
+			"revisionTime": "2018-02-08T22:49:56Z"
+		},
+		{
+			"checksumSHA1": "KFHzaLA4zo34W0FJ5ah/1WBbB9Q=",
+			"path": "github.com/Azure/go-autorest/autorest/azure",
+			"revision": "5a06e9ddbe3c22262059b8e061777b9934f982bd",
+			"revisionTime": "2018-02-08T22:49:56Z"
+		},
+		{
+			"checksumSHA1": "9nXCi9qQsYjxCeajJKWttxgEt0I=",
+			"path": "github.com/Azure/go-autorest/autorest/date",
+			"revision": "5a06e9ddbe3c22262059b8e061777b9934f982bd",
+			"revisionTime": "2018-02-08T22:49:56Z"
+		},
+		{
+			"checksumSHA1": "SbBb2GcJNm5GjuPKGL2777QywR4=",
+			"path": "github.com/Azure/go-autorest/autorest/to",
+			"revision": "5a06e9ddbe3c22262059b8e061777b9934f982bd",
+			"revisionTime": "2018-02-08T22:49:56Z"
+		},
+		{
+			"checksumSHA1": "5UH4IFIB/98iowPCzzVs4M4MXiQ=",
+			"path": "github.com/Azure/go-autorest/autorest/validation",
+			"revision": "5a06e9ddbe3c22262059b8e061777b9934f982bd",
+			"revisionTime": "2018-02-08T22:49:56Z"
+		},
+		{
 			"checksumSHA1": "d6798KSc0jDg2MHNxKdgyNfMK7A=",
 			"path": "github.com/armon/go-metrics",
 			"revision": "fbf75676ee9c0a3a23eb0a4d9220a3612cfbd1ed",
