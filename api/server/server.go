@@ -91,7 +91,9 @@ func StartVolumePluginAPI(
 ) error {
 	var secretsStore secrets.Auth
 	var err error
-	if authProvider != nil {
+
+	// Only initialize secrets store if we have a valid auth provider.
+	if authProvider != nil && authProviderType != secrets.TypeNone {
 		secretsStore, err = secrets.NewAuth(authProviderType, authProvider)
 		if err != nil {
 			return err
