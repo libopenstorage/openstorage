@@ -954,3 +954,18 @@ func TestOwnershipIsPermittedByContext(t *testing.T) {
 	assert.True(t, oNil.IsPermittedByContext(ctxUser1, Ownership_Read))
 	assert.True(t, oNil.IsPermittedByContext(ctxUser2, Ownership_Read))
 }
+
+func TestOwnershipIsAdminByContext(t *testing.T) {
+	adminctx := auth.ContextSaveUserInfo(context.Background(), &auth.UserInfo{
+		Username: "admin",
+		Claims: auth.Claims{
+			Groups: []string{AdminGroup, "another group"},
+		},
+	})
+	userctx := auth.ContextSaveUserInfo(context.Background(), &auth.UserInfo{
+		Username: "user",
+	})
+	assert.True(t, IsAdminByContext(context.Background()))
+	assert.True(t, IsAdminByContext(adminctx))
+	assert.False(t, IsAdminByContext(userctx))
+}
