@@ -1297,8 +1297,8 @@ func request_OpenStoragePolicy_Delete_0(ctx context.Context, marshaler runtime.M
 
 }
 
-func request_OpenStoragePolicy_Enforce_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStoragePolicyClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq SdkOpenStoragePolicyEnforceRequest
+func request_OpenStoragePolicy_SetDefault_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStoragePolicyClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SdkOpenStoragePolicySetDefaultRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -1323,16 +1323,16 @@ func request_OpenStoragePolicy_Enforce_0(ctx context.Context, marshaler runtime.
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
 	}
 
-	msg, err := client.Enforce(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.SetDefault(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func request_OpenStoragePolicy_EnforceInspect_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStoragePolicyClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq SdkOpenStoragePolicyEnforceInspectRequest
+func request_OpenStoragePolicy_DefaultInspect_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStoragePolicyClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SdkOpenStoragePolicyDefaultInspectRequest
 	var metadata runtime.ServerMetadata
 
-	msg, err := client.EnforceInspect(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.DefaultInspect(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
@@ -4296,7 +4296,7 @@ func RegisterOpenStoragePolicyHandlerClient(ctx context.Context, mux *runtime.Se
 
 	})
 
-	mux.Handle("POST", pattern_OpenStoragePolicy_Enforce_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_OpenStoragePolicy_SetDefault_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -4314,18 +4314,18 @@ func RegisterOpenStoragePolicyHandlerClient(ctx context.Context, mux *runtime.Se
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_OpenStoragePolicy_Enforce_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_OpenStoragePolicy_SetDefault_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_OpenStoragePolicy_Enforce_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_OpenStoragePolicy_SetDefault_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_OpenStoragePolicy_EnforceInspect_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_OpenStoragePolicy_DefaultInspect_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -4343,14 +4343,14 @@ func RegisterOpenStoragePolicyHandlerClient(ctx context.Context, mux *runtime.Se
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_OpenStoragePolicy_EnforceInspect_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_OpenStoragePolicy_DefaultInspect_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_OpenStoragePolicy_EnforceInspect_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_OpenStoragePolicy_DefaultInspect_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -4397,9 +4397,9 @@ var (
 
 	pattern_OpenStoragePolicy_Delete_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "storagepolicies", "name"}, ""))
 
-	pattern_OpenStoragePolicy_Enforce_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "storagepolicies", "enforce", "name"}, ""))
+	pattern_OpenStoragePolicy_SetDefault_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "storagepolicies", "default", "name"}, ""))
 
-	pattern_OpenStoragePolicy_EnforceInspect_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "storagepolicies", "enforce"}, ""))
+	pattern_OpenStoragePolicy_DefaultInspect_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "storagepolicies", "default"}, ""))
 
 	pattern_OpenStoragePolicy_Release_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "storagepolicies", "release"}, ""))
 )
@@ -4415,9 +4415,9 @@ var (
 
 	forward_OpenStoragePolicy_Delete_0 = runtime.ForwardResponseMessage
 
-	forward_OpenStoragePolicy_Enforce_0 = runtime.ForwardResponseMessage
+	forward_OpenStoragePolicy_SetDefault_0 = runtime.ForwardResponseMessage
 
-	forward_OpenStoragePolicy_EnforceInspect_0 = runtime.ForwardResponseMessage
+	forward_OpenStoragePolicy_DefaultInspect_0 = runtime.ForwardResponseMessage
 
 	forward_OpenStoragePolicy_Release_0 = runtime.ForwardResponseMessage
 )
