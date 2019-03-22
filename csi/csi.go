@@ -65,6 +65,9 @@ func NewOsdCsiServer(config *OsdCsiServerConfig) (grpcserver.Server, error) {
 	if nil == config {
 		return nil, fmt.Errorf("Must supply configuration")
 	}
+	if len(config.SdkUds) == 0 {
+		return nil, fmt.Errorf("SdkUds must be provided")
+	}
 	if len(config.DriverName) == 0 {
 		return nil, fmt.Errorf("OSD Driver name must be provided")
 	}
@@ -74,6 +77,7 @@ func NewOsdCsiServer(config *OsdCsiServerConfig) (grpcserver.Server, error) {
 		return nil, fmt.Errorf("Unable to get driver %s info: %s", config.DriverName, err.Error())
 	}
 
+	// Create server
 	gServer, err := grpcserver.New(&grpcserver.GrpcServerConfig{
 		Name:    "CSI",
 		Net:     config.Net,

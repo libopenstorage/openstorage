@@ -411,6 +411,7 @@ func start(c *cli.Context) error {
 			Address:    csisock,
 			DriverName: d,
 			Cluster:    cm,
+			SdkUds:     sdksocket,
 		})
 		if err != nil {
 			return fmt.Errorf("Failed to start CSI server for driver %s: %v", d, err)
