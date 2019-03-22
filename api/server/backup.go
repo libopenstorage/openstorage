@@ -8,6 +8,8 @@ import (
 	sdk "github.com/libopenstorage/openstorage/api/server/sdk"
 	prototime "github.com/libopenstorage/openstorage/pkg/proto/time"
 	"github.com/libopenstorage/openstorage/volume"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (vd *volAPI) cloudBackupCreate(w http.ResponseWriter, r *http.Request) {
@@ -43,6 +45,12 @@ func (vd *volAPI) cloudBackupCreate(w http.ResponseWriter, r *http.Request) {
 		Labels:       backupReq.Labels,
 	})
 	if err != nil {
+		if serverError, ok := status.FromError(err); ok {
+			if serverError.Code() == codes.AlreadyExists {
+				w.WriteHeader(http.StatusConflict)
+				return
+			}
+		}
 		vd.sendError(method, backupReq.VolumeID, w, err.Error(), http.StatusInternalServerError)
 		return
 	}

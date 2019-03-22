@@ -1843,6 +1843,7 @@ func TestVolumeEnumerateFailed(t *testing.T) {
 
 	res, _ := driverclient.Enumerate(vl, configLabel)
 	assert.Equal(t, len(res), 0)
+	assert.NoError(t, err)
 
 	volumes := api.NewOpenStorageVolumeClient(testVolDriver.Conn())
 	ctx, err := contextWithToken(context.Background(), "test", "system.admin", testSharedSecret)

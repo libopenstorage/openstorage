@@ -774,9 +774,17 @@ func (vd *volAPI) enumerate(w http.ResponseWriter, r *http.Request) {
 	for i, s := range ids {
 		vol, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{VolumeId: s})
 		if err != nil {
-			e := fmt.Errorf("Failed to inspect volumeID: %s", err.Error())
-			vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
-			return
+			// If we got a volumeID that means we did an inspect we should return an error.
+			if v != nil {
+				e := fmt.Errorf("Failed to inspect volumeID: %s", err.Error())
+				vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+				return
+			} else {
+				// Enumerate failed return empty array
+				evols := make([]*api.Volume, 0)
+				json.NewEncoder(w).Encode(evols)
+				return
+			}
 		}
 		vols[i] = vol.GetVolume()
 	}
