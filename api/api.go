@@ -1030,3 +1030,36 @@ func (v *VolumeSpec) GetCloneCreatorOwnership(ctx context.Context) (*Ownership, 
 
 	return o, false
 }
+
+// Check access permission of SdkStoragePolicy Objects
+
+func (s *SdkStoragePolicy) IsPermitted(ctx context.Context, accessType Ownership_AccessType) bool {
+	if s.IsPublic() {
+		return true
+	}
+
+	// Storage Policy is not public, check permission
+	if userinfo, ok := auth.NewUserInfoFromContext(ctx); ok {
+		// Check Access
+		return s.IsPermittedFromUserInfo(userinfo, accessType)
+	} else {
+		// There is no user information in the context so
+		// authorization is not running
+		return true
+	}
+}
+
+func (s *SdkStoragePolicy) IsPermittedFromUserInfo(user *auth.UserInfo, accessType Ownership_AccessType) bool {
+	if s.IsPublic() {
+		return true
+	}
+
+	if s.GetOwnership() != nil {
+		return s.GetOwnership().IsPermitted(user, accessType)
+	}
+	return true
+}
+
+func (s *SdkStoragePolicy) IsPublic() bool {
+	return s.GetOwnership() == nil || s.GetOwnership().IsPublic()
+}

@@ -327,7 +327,7 @@ message VolumeSpec {
   IoStrategy io_strategy = 30;
   // PlacementStrategy specifies a spec to indicate where to place the volume.
   VolumePlacementStrategy placement_strategy = 31;
-  // StoragePolicy to be enforced while creating volume
+  // StoragePolicy if applied/specified while creating volume
   string storage_policy = 32;
   // Owner
   Ownership ownership = 33;
@@ -591,14 +591,23 @@ message CapacityUsageInfo {
 
 // A SdkStoragePolicy represents minimum set of volume specs to be
 // follow while creating volumes.
-// If enforce in OpenStoragePolicy service, VolumeSpecPolicy will be
-// used before creating volume to ensure minimum volume creation rules
-// are enforced.
+// If storage policy is set default in OpenStoragePolicy service, VolumeSpecPolicy will be 
+// used before creating volume to validate volume specs or ensure minimum volume creation 
+// rules followed
 message SdkStoragePolicy {
   // Name of storage policy.
   string name = 1;
   // VolumeSpecs to apply while creating volume.
   VolumeSpecPolicy policy = 2;
+  // Force if set to true volume specs will be overwritten, otherwise
+  // volume creation will fail if the volume specifications are not inline with storage policy
+  bool force = 3;
+  // If set a volume can be updated without storage Policy
+  // restriction, otherwise volume update will be followed as per storage policy
+  // specification
+  bool allow_update = 4;
+  // Owner info of storage policy
+  Ownership ownership = 5;
 }
 
 // Alert is a structure that represents an alert object
@@ -1761,7 +1770,7 @@ service OpenStorageCloudBackup {
 
 // OpenStoragePolicy service provides methods to manager storage policies.
 //
-// Policies can be used to enforces a set of volume configurations to be followed
+// Policies can be used to validate/ensure a set of volume configurations to be followed
 // while creating volumes.
 service OpenStoragePolicy {
 
@@ -1807,21 +1816,21 @@ service OpenStoragePolicy {
       };
     }
 
-  // Enforces specified storage policy
-  rpc Enforce(SdkOpenStoragePolicyEnforceRequest)
-    returns (SdkOpenStoragePolicyEnforceResponse) {
+  // Set specified storage policy as default policy
+  rpc SetDefault(SdkOpenStoragePolicySetDefaultRequest)
+    returns (SdkOpenStoragePolicySetDefaultResponse) {
       option(google.api.http) = {
-        post: "/v1/storagepolicies/enforce/{name}"
+        post: "/v1/storagepolicies/default/{name}"
         body: "*"
       };
     }
 
-  // EnforcesInspect return enforced storage policy if any, otherwise
+  // DefaultInspect return default storage policy if any, otherwise
   // empty response
-  rpc EnforceInspect(SdkOpenStoragePolicyEnforceInspectRequest)
-    returns (SdkOpenStoragePolicyEnforceInspectResponse) {
+  rpc DefaultInspect(SdkOpenStoragePolicyDefaultInspectRequest)
+    returns (SdkOpenStoragePolicyDefaultInspectResponse) {
       option(google.api.http) = {
-        get: "/v1/storagepolicies/enforce"
+        get: "/v1/storagepolicies/default"
       };
     }
 
@@ -1888,16 +1897,16 @@ message SdkOpenStoragePolicyUpdateRequest {
 message SdkOpenStoragePolicyUpdateResponse {
 }
 
-// Define a request to enforce storage policy
-message SdkOpenStoragePolicyEnforceRequest {
-  // name of policy to set as default enforcement
+// Define a request to set default storage policy
+message SdkOpenStoragePolicySetDefaultRequest {
+  // name of policy to set as default storage policy
   // for volume creation
-  // This policy will be used to enforce volume configuration
+  // This policy will be used to validate/update volume configuration 
   string name = 1;
 }
 
 // Empty Response
-message SdkOpenStoragePolicyEnforceResponse {
+message SdkOpenStoragePolicySetDefaultResponse {
 }
 
 // Empty Request
@@ -1909,12 +1918,12 @@ message SdkOpenStoragePolicyReleaseResponse {
 }
 
 // Empty Request
-message SdkOpenStoragePolicyEnforceInspectRequest {
+message SdkOpenStoragePolicyDefaultInspectRequest {
 }
 
-// Define storage policy enforce response
-message SdkOpenStoragePolicyEnforceInspectResponse {
-  // storage policy information which is enforced
+// Define default storage policy response
+message SdkOpenStoragePolicyDefaultInspectResponse {
+  // storage policy information which is set as default
   SdkStoragePolicy storage_policy = 1;
 }
 
@@ -3099,7 +3108,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 42;
     // SDK version patch value of this specification
-    Patch = 1;
+    Patch = 2;
   }
 
   // The following cannot be set to use the enum Version because the REST

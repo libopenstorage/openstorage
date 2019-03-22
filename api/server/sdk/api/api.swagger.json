@@ -1704,30 +1704,16 @@
         "title": "Empty response",
         "type": "object"
       },
-      "apiSdkOpenStoragePolicyDeleteResponse": {
-        "title": "Empty Response",
-        "type": "object"
-      },
-      "apiSdkOpenStoragePolicyEnforceInspectResponse": {
+      "apiSdkOpenStoragePolicyDefaultInspectResponse": {
         "properties": {
           "storage_policy": {
             "$ref": "#/components/schemas/apiSdkStoragePolicy"
           }
         },
-        "title": "Define storage policy enforce response",
+        "title": "Define default storage policy response",
         "type": "object"
       },
-      "apiSdkOpenStoragePolicyEnforceRequest": {
-        "properties": {
-          "name": {
-            "title": "name of policy to set as default enforcement\nfor volume creation\nThis policy will be used to enforce volume configuration",
-            "type": "string"
-          }
-        },
-        "title": "Define a request to enforce storage policy",
-        "type": "object"
-      },
-      "apiSdkOpenStoragePolicyEnforceResponse": {
+      "apiSdkOpenStoragePolicyDeleteResponse": {
         "title": "Empty Response",
         "type": "object"
       },
@@ -1758,6 +1744,20 @@
         "type": "object"
       },
       "apiSdkOpenStoragePolicyReleaseResponse": {
+        "title": "Empty Response",
+        "type": "object"
+      },
+      "apiSdkOpenStoragePolicySetDefaultRequest": {
+        "properties": {
+          "name": {
+            "title": "name of policy to set as default storage policy\nfor volume creation\nThis policy will be used to validate/update volume configuration",
+            "type": "string"
+          }
+        },
+        "title": "Define a request to set default storage policy",
+        "type": "object"
+      },
+      "apiSdkOpenStoragePolicySetDefaultResponse": {
         "title": "Empty Response",
         "type": "object"
       },
@@ -2039,16 +2039,29 @@
         "type": "object"
       },
       "apiSdkStoragePolicy": {
-        "description": "A SdkStoragePolicy represents minimum set of volume specs to be\nfollow while creating volumes.\nIf enforce in OpenStoragePolicy service, VolumeSpecPolicy will be\nused before creating volume to ensure minimum volume creation rules\nare enforced.",
         "properties": {
+          "allow_update": {
+            "format": "boolean",
+            "title": "If set a volume can be updated without storage Policy\nrestriction, otherwise volume update will be followed as per storage policy\nspecification",
+            "type": "boolean"
+          },
+          "force": {
+            "format": "boolean",
+            "title": "Force if set to true volume specs will be overwritten, otherwise\nvolume creation will fail if the volume specifications are not inline with storage policy",
+            "type": "boolean"
+          },
           "name": {
             "description": "Name of storage policy.",
             "type": "string"
+          },
+          "ownership": {
+            "$ref": "#/components/schemas/apiOwnership"
           },
           "policy": {
             "$ref": "#/components/schemas/apiVolumeSpecPolicy"
           }
         },
+        "title": "A SdkStoragePolicy represents minimum set of volume specs to be\nfollow while creating volumes.\nIf storage policy is set default in OpenStoragePolicy service, VolumeSpecPolicy will be \nused before creating volume to validate volume specs or ensure minimum volume creation \nrules followed",
         "type": "object"
       },
       "apiSdkTimeWeekday": {
@@ -3174,7 +3187,7 @@
             "type": "boolean"
           },
           "storage_policy": {
-            "title": "StoragePolicy to be enforced while creating volume",
+            "title": "StoragePolicy if applied/specified while creating volume",
             "type": "string"
           },
           "volume_labels": {
@@ -3407,7 +3420,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.42.1"
+    "version": "0.42.2"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -4919,30 +4932,30 @@
         ]
       }
     },
-    "/v1/storagepolicies/enforce": {
+    "/v1/storagepolicies/default": {
       "get": {
-        "operationId": "EnforceInspect",
+        "operationId": "DefaultInspect",
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/apiSdkOpenStoragePolicyEnforceInspectResponse"
+                  "$ref": "#/components/schemas/apiSdkOpenStoragePolicyDefaultInspectResponse"
                 }
               }
             },
             "description": ""
           }
         },
-        "summary": "EnforcesInspect return enforced storage policy if any, otherwise\nempty response",
+        "summary": "DefaultInspect return default storage policy if any, otherwise\nempty response",
         "tags": [
           "OpenStoragePolicy"
         ]
       }
     },
-    "/v1/storagepolicies/enforce/{name}": {
+    "/v1/storagepolicies/default/{name}": {
       "post": {
-        "operationId": "Enforce",
+        "operationId": "SetDefault",
         "parameters": [
           {
             "in": "path",
@@ -4957,7 +4970,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/apiSdkOpenStoragePolicyEnforceRequest"
+                "$ref": "#/components/schemas/apiSdkOpenStoragePolicySetDefaultRequest"
               }
             }
           },
@@ -4968,14 +4981,14 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/apiSdkOpenStoragePolicyEnforceResponse"
+                  "$ref": "#/components/schemas/apiSdkOpenStoragePolicySetDefaultResponse"
                 }
               }
             },
             "description": ""
           }
         },
-        "summary": "Enforces specified storage policy",
+        "summary": "Set specified storage policy as default policy",
         "tags": [
           "OpenStoragePolicy"
         ]
