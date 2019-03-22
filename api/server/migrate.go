@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	"github.com/libopenstorage/openstorage/api"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (vd *volAPI) cloudMigrateStart(w http.ResponseWriter, r *http.Request) {
@@ -32,6 +34,7 @@ func (vd *volAPI) cloudMigrateStart(w http.ResponseWriter, r *http.Request) {
 
 	migrations := api.NewOpenStorageMigrateClient(conn)
 	migrateRequest := &api.SdkCloudMigrateStartRequest{
+		TaskId:    startReq.TaskId,
 		ClusterId: startReq.ClusterId,
 	}
 
@@ -56,6 +59,12 @@ func (vd *volAPI) cloudMigrateStart(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := migrations.Start(ctx, migrateRequest)
 	if err != nil {
+		if serverError, ok := status.FromError(err); ok {
+			if serverError.Code() == codes.AlreadyExists {
+				w.WriteHeader(http.StatusConflict)
+				return
+			}
+		}
 		vd.sendError(method, startReq.TargetId, w, err.Error(), http.StatusInternalServerError)
 		return
 	}

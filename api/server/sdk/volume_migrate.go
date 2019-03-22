@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/libopenstorage/openstorage/api"
+	ost_errors "github.com/libopenstorage/openstorage/api/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -29,6 +30,9 @@ func (s *VolumeServer) Start(
 	ctx context.Context,
 	req *api.SdkCloudMigrateStartRequest,
 ) (*api.SdkCloudMigrateStartResponse, error) {
+	if s.cluster() == nil || s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
 	if volume := req.GetVolume(); volume != nil {
 		// Check ownership
@@ -58,6 +62,7 @@ func (s *VolumeServer) Start(
 }
 
 func (s *VolumeServer) haveOwnership(ctx context.Context, labels map[string]string) bool {
+	// checking if driver is initialized happens in Start
 	vols, err := s.driver(ctx).Enumerate(nil, labels)
 	if err != nil {
 		return false
@@ -77,6 +82,10 @@ func (s *VolumeServer) volumeGroupMigrate(
 	req *api.SdkCloudMigrateStartRequest,
 	volumeGroup *api.SdkCloudMigrateStartRequest_MigrateVolumeGroup,
 ) (*api.SdkCloudMigrateStartResponse, error) {
+	if s.cluster() == nil || s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+
 	//Create a request object with operation as Migrate volume
 	request := &api.CloudMigrateStartRequest{
 		Operation: api.CloudMigrate_MigrateVolumeGroup,
@@ -86,6 +95,10 @@ func (s *VolumeServer) volumeGroupMigrate(
 	}
 	resp, err := s.driver(ctx).CloudMigrateStart(request)
 	if err != nil {
+		if _, ok := err.(*ost_errors.ErrExists); ok {
+			return nil, status.Errorf(codes.AlreadyExists, "Cannot start migration for %s : %v", req.GetClusterId(), err)
+		}
+		// if errExist return codes.
 		return nil, status.Errorf(codes.Internal, "Cannot start migration for %s : %v", req.GetClusterId(), err)
 	}
 	return &api.SdkCloudMigrateStartResponse{
@@ -98,6 +111,10 @@ func (s *VolumeServer) allVolumesMigrate(
 	req *api.SdkCloudMigrateStartRequest,
 	allVolume *api.SdkCloudMigrateStartRequest_MigrateAllVolumes,
 ) (*api.SdkCloudMigrateStartResponse, error) {
+	if s.cluster() == nil || s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+
 	//Create a request object with operation as Migrate volume
 	request := &api.CloudMigrateStartRequest{
 		Operation: api.CloudMigrate_MigrateCluster,
@@ -106,6 +123,9 @@ func (s *VolumeServer) allVolumesMigrate(
 	}
 	resp, err := s.driver(ctx).CloudMigrateStart(request)
 	if err != nil {
+		if _, ok := err.(*ost_errors.ErrExists); ok {
+			return nil, status.Errorf(codes.AlreadyExists, "Cannot start migration for %s : %v", req.GetClusterId(), err)
+		}
 		return nil, status.Errorf(codes.Internal, "Cannot start migration for %s : %v", req.GetClusterId(), err)
 	}
 	return &api.SdkCloudMigrateStartResponse{
@@ -118,6 +138,10 @@ func (s *VolumeServer) volumeMigrate(
 	req *api.SdkCloudMigrateStartRequest,
 	volume *api.SdkCloudMigrateStartRequest_MigrateVolume,
 ) (*api.SdkCloudMigrateStartResponse, error) {
+	if s.cluster() == nil || s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+
 	//Create a request object with operation as Migrate volume
 	request := &api.CloudMigrateStartRequest{
 		Operation: api.CloudMigrate_MigrateVolume,
@@ -127,6 +151,9 @@ func (s *VolumeServer) volumeMigrate(
 	}
 	resp, err := s.driver(ctx).CloudMigrateStart(request)
 	if err != nil {
+		if _, ok := err.(*ost_errors.ErrExists); ok {
+			return nil, status.Errorf(codes.AlreadyExists, "Cannot start migration for %s : %v", req.GetClusterId(), err)
+		}
 		return nil, status.Errorf(codes.Internal, "Cannot start migration for %s : %v", req.GetClusterId(), err)
 	}
 	return &api.SdkCloudMigrateStartResponse{
@@ -139,6 +166,9 @@ func (s *VolumeServer) Cancel(
 	ctx context.Context,
 	req *api.SdkCloudMigrateCancelRequest,
 ) (*api.SdkCloudMigrateCancelResponse, error) {
+	if s.cluster() == nil || s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
 	if req.GetRequest() == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "Must supply valid request")
@@ -158,6 +188,9 @@ func (s *VolumeServer) Status(
 	ctx context.Context,
 	req *api.SdkCloudMigrateStatusRequest,
 ) (*api.SdkCloudMigrateStatusResponse, error) {
+	if s.cluster() == nil || s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 
 	resp, err := s.driver(ctx).CloudMigrateStatus(req.GetRequest())
 	if err != nil {
