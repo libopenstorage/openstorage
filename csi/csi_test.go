@@ -305,7 +305,8 @@ func TestNewCSIServerBadParameters(t *testing.T) {
 	assert.Contains(t, err.Error(), "must be provided")
 
 	s, err = NewOsdCsiServer(&OsdCsiServerConfig{
-		Net: "test",
+		Net:    "test",
+		SdkUds: testSdkSock,
 	})
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
@@ -314,7 +315,7 @@ func TestNewCSIServerBadParameters(t *testing.T) {
 	s, err = NewOsdCsiServer(&OsdCsiServerConfig{
 		Net:     "test",
 		Address: "blah",
-		SdkUds:  "abcd",
+		SdkUds:  testSdkSock,
 	})
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
@@ -330,6 +331,15 @@ func TestNewCSIServerBadParameters(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "Unable to get driver")
 
+	s, err = NewOsdCsiServer(&OsdCsiServerConfig{
+		Net:        "test",
+		Address:    "blah",
+		DriverName: "name",
+	})
+	assert.Nil(t, s)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "SdkUds must be provided")
+
 	// Add driver to registry
 	mc := gomock.NewController(t)
 	defer mc.Finish()
@@ -342,6 +352,7 @@ func TestNewCSIServerBadParameters(t *testing.T) {
 		Net:        "test",
 		Address:    "blah",
 		DriverName: "mock",
+		SdkUds:     testSdkSock,
 	})
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
