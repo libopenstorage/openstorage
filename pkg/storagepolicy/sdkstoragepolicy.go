@@ -1,5 +1,5 @@
 /*
-Package storagepolicy manages storage policy and apply/validate storage policy restriction
+Package storagepolicy manages storage policy and enforce policy for
 volume operations.
 Copyright 2018 Portworx
 
@@ -26,12 +26,10 @@ import (
 
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/portworx/kvdb"
-	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/pkg/auth"
 )
 
 // SdkPolicyManager is an implementation of the
@@ -41,9 +39,9 @@ type SdkPolicyManager struct {
 }
 
 const (
-	policyPrefix = "storage/policy"
+	policyPrefix = "/storage/policy"
 	policyPath   = "/policies"
-	defaultPath  = "storage/policy/enforce"
+	enforcePath  = "/storage/policy/enforce"
 )
 
 var (
@@ -69,15 +67,6 @@ func Init(kv kvdb.Kvdb) (PolicyManager, error) {
 		kv: kv,
 	}
 
-	// Convert existing storagePolicy to new StoragePolicy struct,
-	// may be need to move this to indivisual functions
-	// Set no authentication so that we can override existing volumeSpecs with StoragePolicy
-	logrus.Infof("Converting VolumeSpecs to SdkStoragePolicyObjects...")
-	err := volSpecToSdkStoragePolicy(inst)
-	if err != nil {
-		return nil, err
-	}
-
 	return inst, nil
 }
 
@@ -98,91 +87,82 @@ func (p *SdkPolicyManager) Create(
 	ctx context.Context,
 	req *api.SdkOpenStoragePolicyCreateRequest,
 ) (*api.SdkOpenStoragePolicyCreateResponse, error) {
-	if req.GetStoragePolicy().GetName() == "" {
+	if req.StoragePolicy.GetName() == "" {
 		return nil, status.Error(codes.InvalidArgument, "Must supply a Storage Policy Name")
-	} else if req.GetStoragePolicy().GetPolicy() == nil {
+	} else if req.StoragePolicy.GetPolicy() == nil {
 		return nil, status.Error(codes.InvalidArgument, "Must supply Volume Specs")
 	}
 
-	// Add ownership details to storage policy
-	// user who has RBAC access to storage policy can create one
-	req.StoragePolicy.Ownership = api.OwnershipSetUsernameFromContext(ctx, req.GetStoragePolicy().GetOwnership())
-
 	// Since VolumeSpecPolicy has oneof method of proto,
-	// we need to marshal sdkStoragePolicy into string using protobuf jsonpb
+	// we need to marshal it into string using protobuf jsonpb
 	m := jsonpb.Marshaler{OrigName: true}
-	policyStr, err := m.MarshalToString(req.GetStoragePolicy())
+	policyStr, err := m.MarshalToString(req.StoragePolicy.GetPolicy())
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Json Marshal failed for policy %s: %v", req.GetStoragePolicy().GetName(), err)
+		return nil, status.Errorf(codes.Internal, "Json Marshal failed for policy %s: %v", req.StoragePolicy.GetName(), err)
 	}
 
-	_, err = p.kv.Create(prefixWithName(req.GetStoragePolicy().GetName()), policyStr, 0)
+	_, err = p.kv.Create(prefixWithName(req.StoragePolicy.GetName()), policyStr, 0)
 	if err == kvdb.ErrExist {
-		return nil, status.Errorf(codes.AlreadyExists, "Storage Policy already exist : %v", req.GetStoragePolicy().GetName())
+		return nil, status.Errorf(codes.AlreadyExists, "Storage Policy already exist : %v", req.StoragePolicy.GetName())
 	} else if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to save storage policy: %v", err)
 	}
 
-	logrus.Infof("Storage Policy %v is created", req.GetStoragePolicy().GetName())
 	return &api.SdkOpenStoragePolicyCreateResponse{}, nil
 }
 
 // Update Storage policy
-// TODO: Decide whether update storage policy request should update ownership at all
-// We can check if user is admin then only allow update ownership
 func (p *SdkPolicyManager) Update(
 	ctx context.Context,
 	req *api.SdkOpenStoragePolicyUpdateRequest,
 ) (*api.SdkOpenStoragePolicyUpdateResponse, error) {
-	if req.GetStoragePolicy().GetName() == "" {
+	if req.StoragePolicy.GetName() == "" {
 		return nil, status.Error(codes.InvalidArgument, "Must supply a Storage Policy Name")
 	}
 
-	if req.GetStoragePolicy().GetPolicy() == nil {
+	if req.StoragePolicy.GetPolicy() == nil {
 		return nil, status.Error(codes.InvalidArgument, "Must supply Volume Specs")
 	}
 
-	// Get Existing details to check access
-	oldPolicy, err := p.Inspect(ctx,
+	// Get Existing details to merge
+	pol, err := p.Inspect(ctx,
 		&api.SdkOpenStoragePolicyInspectRequest{
-			Name: req.GetStoragePolicy().GetName(),
+			Name: req.StoragePolicy.GetName(),
 		},
 	)
 	if err != nil {
-		return nil, err
-	}
-	// update user must have write acess
-	if !oldPolicy.GetStoragePolicy().IsPermitted(ctx, api.Ownership_Write) {
-		return nil, status.Errorf(codes.PermissionDenied, "Cannot update storage policy")
+		return nil, status.Errorf(codes.NotFound, "Policy with name %s not found: %v", req.StoragePolicy.GetName(), err)
 	}
 
+	// merge old policy spec with new
+	volSpecs := &api.VolumeSpecPolicy{}
 	m := jsonpb.Marshaler{OrigName: true}
-	updateStr, err := m.MarshalToString(req.GetStoragePolicy())
+	// marshal old policy to volSpecs
+	oldSpec, err := m.MarshalToString(pol.StoragePolicy.GetPolicy())
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Json Marshal failed for policy %s: %v", req.GetStoragePolicy().GetName(), err)
+		return nil, status.Errorf(codes.Internal, "Json Marshal failed for policy %s: %v", req.StoragePolicy.GetName(), err)
+	}
+	jsonpb.UnmarshalString(oldSpec, volSpecs)
+
+	// marshal new policy to volSpecs
+	newSpec, err := m.MarshalToString(req.StoragePolicy.GetPolicy())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Json Marshal failed for policy %s: %v", req.StoragePolicy.GetName(), err)
+	}
+	jsonpb.UnmarshalString(newSpec, volSpecs)
+
+	updatedSpec, err := m.MarshalToString(volSpecs)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Json Marshal failed for policy %s: %v", req.StoragePolicy.GetName(), err)
 	}
 
-	// check ownership update is request
-	if req.GetStoragePolicy().GetOwnership() != nil {
-		if oldPolicy.StoragePolicy.Ownership == nil {
-			oldPolicy.StoragePolicy.Ownership = &api.Ownership{}
-		}
-		user, _ := auth.NewUserInfoFromContext(ctx)
-		// we run through ownership for update to check whether given user
-		// is administrator, only admin can update ownership details
-		if err := oldPolicy.StoragePolicy.Ownership.Update(req.GetStoragePolicy().GetOwnership(), user); err != nil {
-			logrus.Errorf("Error updating ownership: %v", err)
-			return nil, err
-		}
-	}
-	_, err = p.kv.Update(prefixWithName(req.GetStoragePolicy().GetName()), updateStr, 0)
+	_, err = p.kv.Update(prefixWithName(req.StoragePolicy.GetName()), updatedSpec, 0)
 	if err == kvdb.ErrNotFound {
-		return nil, status.Errorf(codes.NotFound, "Storage Policy %s not found", req.GetStoragePolicy().GetPolicy())
+		return nil, status.Errorf(codes.NotFound, "Storage Policy %s not found", req.StoragePolicy.GetPolicy())
 	} else if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to update storage policy: %v", err)
 	}
 
-	logrus.Infof("Storage Policy %v is updated", req.GetStoragePolicy().GetName())
 	return &api.SdkOpenStoragePolicyUpdateResponse{}, nil
 }
 
@@ -195,40 +175,23 @@ func (p *SdkPolicyManager) Delete(
 		return nil, status.Error(codes.InvalidArgument, "Must supply a Storage Policy Name")
 	}
 
-	// retrive default storage policy details
-	inspResp, err := p.Inspect(ctx,
-		&api.SdkOpenStoragePolicyInspectRequest{
-			Name: req.GetName(),
-		},
-	)
+	// release enforcement before deleting policy
+	policy, err := p.EnforceInspect(context.Background(), &api.SdkOpenStoragePolicyEnforceInspectRequest{})
 	if err != nil {
-		return &api.SdkOpenStoragePolicyDeleteResponse{}, nil
-	}
-
-	// Only the owner or the admin can delete
-	if !inspResp.GetStoragePolicy().IsPermitted(ctx, api.Ownership_Admin) {
-		return nil, status.Errorf(codes.PermissionDenied, "Cannot delete storage policy %v", req.GetName())
-	}
-
-	// release default policy restriction before deleting policy
-	policy, err := p.DefaultInspect(ctx, &api.SdkOpenStoragePolicyDefaultInspectRequest{})
-	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "Unable to retrive enforcement details %v", err)
 	}
 
 	if policy.GetStoragePolicy() != nil && policy.GetStoragePolicy().GetName() == req.GetName() {
 		_, err := p.Release(ctx, &api.SdkOpenStoragePolicyReleaseRequest{})
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, "Removal of default policy failed with: %v", err)
+			return nil, status.Errorf(codes.Internal, "Disable enforcement failed with: %v", err)
 		}
 	}
-
 	_, err = p.kv.Delete(prefixWithName(req.GetName()))
 	if err != kvdb.ErrNotFound && err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to delete Storage Policy %s: %v", req.GetName(), err)
 	}
 
-	logrus.Infof("Storage Policy %v is deleted", req.GetName())
 	return &api.SdkOpenStoragePolicyDeleteResponse{}, nil
 }
 
@@ -248,18 +211,17 @@ func (p *SdkPolicyManager) Inspect(
 		return nil, status.Errorf(codes.Internal, "Failed to get policy %s information: %v", req.GetName(), err)
 	}
 
-	storPolicy := &api.SdkStoragePolicy{}
-	err = jsonpb.UnmarshalString(string(kvp.Value), storPolicy)
+	volSpecs := &api.VolumeSpecPolicy{}
+	err = jsonpb.UnmarshalString(string(kvp.Value), volSpecs)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Json Unmarshal failed for policy %s: %v", req.GetName(), err)
 	}
 
-	if !storPolicy.IsPermitted(ctx, api.Ownership_Read) {
-		return nil, status.Errorf(codes.PermissionDenied, "Access denied to storage policy %s", storPolicy.GetName())
-	}
-
 	return &api.SdkOpenStoragePolicyInspectResponse{
-		StoragePolicy: storPolicy,
+		StoragePolicy: &api.SdkStoragePolicy{
+			Name:   req.GetName(),
+			Policy: volSpecs,
+		},
 	}, nil
 }
 
@@ -276,15 +238,16 @@ func (p *SdkPolicyManager) Enumerate(
 
 	policies := make([]*api.SdkStoragePolicy, 0)
 	for _, policy := range kvp {
-		sdkPolicy := &api.SdkStoragePolicy{}
-		err = jsonpb.UnmarshalString(string(policy.Value), sdkPolicy)
+		volSpecs := &api.VolumeSpecPolicy{}
+		err = jsonpb.UnmarshalString(string(policy.Value), volSpecs)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "Json Unmarshal failed for policy %s: %v", policy.Key, err)
 		}
-		// only enum volumes, owner has read access to
-		if sdkPolicy.IsPermitted(ctx, api.Ownership_Read) {
-			policies = append(policies, sdkPolicy)
+		storagePolicy := &api.SdkStoragePolicy{
+			Name:   strings.TrimPrefix(policy.Key, policyPrefix+policyPath+"/"),
+			Policy: volSpecs,
 		}
+		policies = append(policies, storagePolicy)
 	}
 
 	return &api.SdkOpenStoragePolicyEnumerateResponse{
@@ -292,150 +255,89 @@ func (p *SdkPolicyManager) Enumerate(
 	}, nil
 }
 
-// SetDefault storage policy
-func (p *SdkPolicyManager) SetDefault(
+// Enforce given storage policy
+func (p *SdkPolicyManager) Enforce(
 	ctx context.Context,
-	req *api.SdkOpenStoragePolicySetDefaultRequest,
-) (*api.SdkOpenStoragePolicySetDefaultResponse, error) {
+	req *api.SdkOpenStoragePolicyEnforceRequest,
+) (*api.SdkOpenStoragePolicyEnforceResponse, error) {
 	if req.GetName() == "" {
 		return nil, status.Error(codes.InvalidArgument, "Must supply a Storage Policy Name")
 	}
 
-	// verify policy exists, before setting it as default
+	// verify policy exists, before enforcing
 	policy, err := p.Inspect(ctx,
 		&api.SdkOpenStoragePolicyInspectRequest{
 			Name: req.GetName(),
 		},
 	)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.NotFound, "Policy with name %s not found", req.GetName())
 	}
 
-	// Only administrator can set policy as default storage
-	// policy restriction
-	user, _ := auth.NewUserInfoFromContext(ctx)
-	if !policy.GetStoragePolicy().GetOwnership().IsAdminByUser(user) {
-		return nil, status.Errorf(codes.PermissionDenied, "Only the storage system admin can set storage policy as default %v", req.GetName())
-	}
-
-	policyStr, err := json.Marshal(policy.GetStoragePolicy().GetName())
+	policyStr, err := json.Marshal(policy.StoragePolicy.GetName())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Json marshal failed for policy %s :%v", req.GetName(), err)
 	}
 
-	_, err = p.kv.Update(defaultPath, policyStr, 0)
+	_, err = p.kv.Update(enforcePath, policyStr, 0)
 	if err == kvdb.ErrNotFound {
-		if _, err := p.kv.Create(defaultPath, policyStr, 0); err != nil {
-			return nil, status.Errorf(codes.Internal, "Unable to save default policy details %v", err)
+		if _, err := p.kv.Create(enforcePath, policyStr, 0); err != nil {
+			return nil, status.Errorf(codes.Internal, "Unable to save enforcement details %v", err)
 		}
 	} else if err != nil {
-		return nil, status.Errorf(codes.Internal, "Failed to set default policy: %v", err)
+		return nil, status.Errorf(codes.Internal, "Failed to enforce policy: %v", err)
 	}
-	logrus.Infof("Storage Policy %v is set as default", policy.GetStoragePolicy().GetName())
-	return &api.SdkOpenStoragePolicySetDefaultResponse{}, nil
+
+	return &api.SdkOpenStoragePolicyEnforceResponse{}, nil
 }
 
-// Release storage policy if set as default
+// Release storage policy if enforced
 func (p *SdkPolicyManager) Release(
 	ctx context.Context,
 	req *api.SdkOpenStoragePolicyReleaseRequest,
 ) (*api.SdkOpenStoragePolicyReleaseResponse, error) {
-
-	policy, err := p.DefaultInspect(ctx, &api.SdkOpenStoragePolicyDefaultInspectRequest{})
-	if err != nil {
-		return nil, err
-	}
-
-	// only administrator can remove storage policy restriction
-	user, _ := auth.NewUserInfoFromContext(ctx)
-	if !policy.GetStoragePolicy().GetOwnership().IsAdminByUser(user) {
-		return nil, status.Errorf(codes.PermissionDenied, "Only the storage system admin can remove storage policy restriction")
-	}
-
-	// empty represents no policy is set as default
+	// empty represents no policy enforcement is enabled
 	strB, _ := json.Marshal("")
-	_, err = p.kv.Update(defaultPath, strB, 0)
+	_, err := p.kv.Update(enforcePath, strB, 0)
 	if err != kvdb.ErrNotFound && err != nil {
-		return nil, status.Errorf(codes.Internal, "Remove storage policy restriction failed with: %v", err)
+		return nil, status.Errorf(codes.Internal, "Disable enforcement failed with: %v", err)
 	}
 
-	logrus.Infof("Storage Policy %v restriction is removed", policy.GetStoragePolicy().GetName())
 	return &api.SdkOpenStoragePolicyReleaseResponse{}, nil
 }
 
-// DefaultInspect return default storeage policy details
-func (p *SdkPolicyManager) DefaultInspect(
+// EnforceInspect return enforced policy details
+func (p *SdkPolicyManager) EnforceInspect(
 	ctx context.Context,
-	req *api.SdkOpenStoragePolicyDefaultInspectRequest,
-) (*api.SdkOpenStoragePolicyDefaultInspectResponse, error) {
+	req *api.SdkOpenStoragePolicyEnforceInspectRequest,
+) (*api.SdkOpenStoragePolicyEnforceInspectResponse, error) {
 	var policyName string
-	defaultPolicy := &api.SdkOpenStoragePolicyDefaultInspectResponse{}
+	defaultPolicy := &api.SdkOpenStoragePolicyEnforceInspectResponse{}
 
-	_, err := p.kv.GetVal(defaultPath, &policyName)
-	// defaultPath key is not created
+	_, err := p.kv.GetVal(enforcePath, &policyName)
+	// enforcePath key is not created
 	if err == kvdb.ErrNotFound {
 		return defaultPolicy, nil
 	} else if err != nil {
-		return nil, status.Errorf(codes.Internal, "Unable to retrive default policy details: %v", err)
+		return nil, status.Errorf(codes.Internal, "Unable to retrive Enforcement details: %v", err)
 	}
 
-	// no default policy found
+	// no enforcement found
 	if policyName == "" {
 		return defaultPolicy, nil
 	}
 
-	// retrive default storage policy details
+	// retrive enforced policy details
 	inspResp, err := p.Inspect(context.Background(),
 		&api.SdkOpenStoragePolicyInspectRequest{
 			Name: policyName,
 		},
 	)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.NotFound, "Policy with name %s not found", policyName)
 	}
 
-	return &api.SdkOpenStoragePolicyDefaultInspectResponse{
+	return &api.SdkOpenStoragePolicyEnforceInspectResponse{
 		StoragePolicy: inspResp.GetStoragePolicy(),
 	}, nil
-}
-
-func volSpecToSdkStoragePolicy(inst *SdkPolicyManager) error {
-	kvp, err := inst.kv.Enumerate(policyPrefix + policyPath)
-	if err == kvdb.ErrNotFound {
-		// no previous sign of storage policy
-		logrus.Infof("No Storage Policy created previously")
-		return nil
-	} else if err != nil {
-		return status.Errorf(codes.Internal, "Failed to get existing policies from database: %v", err)
-	}
-
-	for _, policy := range kvp {
-		volSpecs := &api.VolumeSpecPolicy{}
-		err = jsonpb.UnmarshalString(string(policy.Value), volSpecs)
-		if err == nil {
-			storagePolicy := &api.SdkStoragePolicy{
-				Name:   strings.TrimPrefix(policy.Key, policyPrefix+policyPath+"/"),
-				Policy: volSpecs,
-			}
-			logrus.Infof("Updating exisiting storage %v policy to SdkStoragePolicy", storagePolicy.Name)
-			m := jsonpb.Marshaler{OrigName: true}
-			updateStr, err := m.MarshalToString(storagePolicy)
-			if err != nil {
-				return err
-			}
-			_, err = inst.kv.Update(prefixWithName(storagePolicy.Name), updateStr, 0)
-			if err != nil {
-				return fmt.Errorf("Storage Policy init failed %v", err)
-			}
-		} else {
-			// for sdkStoragePolicy Object
-			// we don't need to do anything here , just check if json object is valid
-			storPolicy := &api.SdkStoragePolicy{}
-			err = jsonpb.UnmarshalString(string(policy.Value), storPolicy)
-			if err != nil {
-				return status.Errorf(codes.Internal, "Json Unmarshal failed  %v", err)
-			}
-		}
-	}
-	return nil
 }
