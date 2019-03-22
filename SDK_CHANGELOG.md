@@ -2,10 +2,6 @@
 
 ## Releases
 
-### v0.42.2 - Tech Preview (3/13/2019)
-
-* Add ownership support to OpenStorageStoragePolicy
-
 ### v0.42.1 - Tech Preview (3/12/2019)
 
 * Add ownership support to OpenStorageCredential service APIs
