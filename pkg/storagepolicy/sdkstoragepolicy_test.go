@@ -1,5 +1,5 @@
 /*
-Package storagepolicy manages storage policy and enforce policy for
+Package storagepolicy manages storage policy and apply/validate storage policy restriction
 volume operations.
 Copyright 2018 Portworx
 
@@ -21,11 +21,9 @@ import (
 	"context"
 	"reflect"
 	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/pkg/jsonpb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -76,17 +74,6 @@ func TestSdkStoragePolicyCreate(t *testing.T) {
 
 	_, err = s.Create(context.Background(), req)
 	assert.NoError(t, err)
-
-	// Assert the information is in kvdb
-	var policy *api.VolumeSpecPolicy
-	// kv = kvdb.Instance()
-	// assert.NotNil(t, kv)
-	kvp, err := kv.GetVal(prefixWithName("testbasicpolicy"), &policy)
-	assert.NoError(t, err)
-
-	err = jsonpb.Unmarshal(strings.NewReader(string(kvp.Value)), policy)
-	assert.NoError(t, err)
-	assert.True(t, reflect.DeepEqual(policy, req.StoragePolicy.GetPolicy()))
 }
 
 func TestSdkStoragePolicyCreateBadArguments(t *testing.T) {
@@ -181,7 +168,6 @@ func TestSdkStoragePolicyInspectBadArgument(t *testing.T) {
 }
 
 func TestSdkStoragePolicyUpdate(t *testing.T) {
-
 	s, err := Inst()
 
 	volSpec := &api.VolumeSpecPolicy{
@@ -251,7 +237,7 @@ func TestSdkStoragePolicyUpdate(t *testing.T) {
 	assert.Equal(t, updatedResp.StoragePolicy.GetName(), inspReq.GetName())
 
 	// check indivisual params
-	assert.Equal(t, updatedResp.StoragePolicy.GetPolicy().GetSize(), oldResp.StoragePolicy.GetPolicy().GetSize())
+	//assert.Equal(t, updatedResp.StoragePolicy.GetPolicy().GetSize(), oldResp.StoragePolicy.GetPolicy().GetSize())
 	// check old param updated to new params
 	assert.Equal(t, updatedResp.StoragePolicy.GetPolicy().GetShared(), false)
 	// check new params
@@ -341,6 +327,7 @@ func TestSdkStoragePolicyDelete(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, resp.StoragePolicy.GetName(), inspReq.GetName())
 	assert.True(t, reflect.DeepEqual(resp.StoragePolicy.GetPolicy(), req.StoragePolicy.GetPolicy()))
+	assert.Nil(t, resp.GetStoragePolicy().GetOwnership())
 
 	delReq := &api.SdkOpenStoragePolicyDeleteRequest{
 		Name: "testdelete",
@@ -368,7 +355,7 @@ func TestSdkStoragePolicyDeleteBadArgument(t *testing.T) {
 
 	req := &api.SdkOpenStoragePolicyCreateRequest{
 		StoragePolicy: &api.SdkStoragePolicy{
-			Name:   "testdelete",
+			Name:   "testdeleteBad",
 			Policy: volSpec,
 		},
 	}
@@ -377,7 +364,7 @@ func TestSdkStoragePolicyDeleteBadArgument(t *testing.T) {
 	assert.NoError(t, err)
 
 	inspReq := &api.SdkOpenStoragePolicyInspectRequest{
-		Name: "testdelete",
+		Name: "testdeleteBad",
 	}
 	_, err = s.Inspect(context.Background(), inspReq)
 	assert.NoError(t, err)
@@ -433,7 +420,7 @@ func TestSdkStoragePolicyEnumerate(t *testing.T) {
 	assert.Equal(t, 10, len(policies.GetStoragePolicies()))
 }
 
-func TestSdkStoragePolicyEnforcement(t *testing.T) {
+func TestSdkStoragePolicyRestrictions(t *testing.T) {
 
 	s, err := Inst()
 
@@ -445,7 +432,7 @@ func TestSdkStoragePolicyEnforcement(t *testing.T) {
 
 	req := &api.SdkOpenStoragePolicyCreateRequest{
 		StoragePolicy: &api.SdkStoragePolicy{
-			Name:   "testenforce1",
+			Name:   "testdefault1",
 			Policy: volSpec,
 		},
 	}
@@ -454,7 +441,7 @@ func TestSdkStoragePolicyEnforcement(t *testing.T) {
 	assert.NoError(t, err)
 
 	inspReq := &api.SdkOpenStoragePolicyInspectRequest{
-		Name: "testenforce1",
+		Name: "testdefault1",
 	}
 
 	resp, err := s.Inspect(context.Background(), inspReq)
@@ -462,20 +449,20 @@ func TestSdkStoragePolicyEnforcement(t *testing.T) {
 	assert.Equal(t, resp.StoragePolicy.GetName(), inspReq.GetName())
 	assert.True(t, reflect.DeepEqual(resp.StoragePolicy.GetPolicy(), req.StoragePolicy.GetPolicy()))
 
-	enforceReq := &api.SdkOpenStoragePolicyEnforceRequest{
+	setDefaultReq := &api.SdkOpenStoragePolicySetDefaultRequest{
 		Name: inspReq.GetName(),
 	}
-	_, err = s.Enforce(context.Background(), enforceReq)
+	_, err = s.SetDefault(context.Background(), setDefaultReq)
 	assert.NoError(t, err)
 
-	policy, err := s.EnforceInspect(context.Background(), &api.SdkOpenStoragePolicyEnforceInspectRequest{})
+	policy, err := s.DefaultInspect(context.Background(), &api.SdkOpenStoragePolicyDefaultInspectRequest{})
 	assert.NoError(t, err)
 	assert.Equal(t, policy.GetStoragePolicy().GetName(), inspReq.GetName())
 
 	// replace exisiting policy with new one
 	updateReq := &api.SdkOpenStoragePolicyCreateRequest{
 		StoragePolicy: &api.SdkStoragePolicy{
-			Name:   "testenforce2",
+			Name:   "testdefault2",
 			Policy: volSpec,
 		},
 	}
@@ -484,7 +471,7 @@ func TestSdkStoragePolicyEnforcement(t *testing.T) {
 	assert.NoError(t, err)
 
 	inspReq = &api.SdkOpenStoragePolicyInspectRequest{
-		Name: "testenforce2",
+		Name: "testdefault2",
 	}
 
 	resp, err = s.Inspect(context.Background(), inspReq)
@@ -492,27 +479,27 @@ func TestSdkStoragePolicyEnforcement(t *testing.T) {
 	assert.Equal(t, resp.StoragePolicy.GetName(), inspReq.GetName())
 	assert.True(t, reflect.DeepEqual(resp.StoragePolicy.GetPolicy(), req.StoragePolicy.GetPolicy()))
 
-	enforceReq = &api.SdkOpenStoragePolicyEnforceRequest{
+	setdefaultReq := &api.SdkOpenStoragePolicySetDefaultRequest{
 		Name: inspReq.GetName(),
 	}
-	_, err = s.Enforce(context.Background(), enforceReq)
+	_, err = s.SetDefault(context.Background(), setdefaultReq)
 	assert.NoError(t, err)
 
-	policy, err = s.EnforceInspect(context.Background(), &api.SdkOpenStoragePolicyEnforceInspectRequest{})
+	policy, err = s.DefaultInspect(context.Background(), &api.SdkOpenStoragePolicyDefaultInspectRequest{})
 	assert.NoError(t, err)
 	assert.Equal(t, policy.StoragePolicy.GetName(), inspReq.GetName())
 
-	// disable enforcement
+	// remove default storage policy restriction
 	releaseReq := &api.SdkOpenStoragePolicyReleaseRequest{}
 	_, err = s.Release(context.Background(), releaseReq)
 	assert.NoError(t, err)
 
-	policy, err = s.EnforceInspect(context.Background(), &api.SdkOpenStoragePolicyEnforceInspectRequest{})
+	policy, err = s.DefaultInspect(context.Background(), &api.SdkOpenStoragePolicyDefaultInspectRequest{})
 	assert.NoError(t, err)
 	assert.Nil(t, policy.GetStoragePolicy())
 }
 
-func TestSdkStoragePolicyEnforcementBadArgument(t *testing.T) {
+func TestSdkStoragePolicyDefaultBadArgument(t *testing.T) {
 
 	s, err := Inst()
 
@@ -524,7 +511,7 @@ func TestSdkStoragePolicyEnforcementBadArgument(t *testing.T) {
 
 	req := &api.SdkOpenStoragePolicyCreateRequest{
 		StoragePolicy: &api.SdkStoragePolicy{
-			Name:   "test-enforce",
+			Name:   "test-default",
 			Policy: volSpec,
 		},
 	}
@@ -533,7 +520,7 @@ func TestSdkStoragePolicyEnforcementBadArgument(t *testing.T) {
 	assert.NoError(t, err)
 
 	inspReq := &api.SdkOpenStoragePolicyInspectRequest{
-		Name: "test-enforce",
+		Name: "test-default",
 	}
 
 	resp, err := s.Inspect(context.Background(), inspReq)
@@ -541,18 +528,18 @@ func TestSdkStoragePolicyEnforcementBadArgument(t *testing.T) {
 	assert.Equal(t, resp.StoragePolicy.GetName(), inspReq.GetName())
 	assert.True(t, reflect.DeepEqual(resp.StoragePolicy.GetPolicy(), req.StoragePolicy.GetPolicy()))
 
-	enforceReq := &api.SdkOpenStoragePolicyEnforceRequest{}
-	_, err = s.Enforce(context.Background(), enforceReq)
+	defaultReq := &api.SdkOpenStoragePolicySetDefaultRequest{}
+	_, err = s.SetDefault(context.Background(), defaultReq)
 	assert.Error(t, err)
 	serverError, ok := status.FromError(err)
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
 	assert.Contains(t, serverError.Message(), "Must supply a Storage Policy Name")
 
-	enforceReq = &api.SdkOpenStoragePolicyEnforceRequest{
+	defaultReq = &api.SdkOpenStoragePolicySetDefaultRequest{
 		Name: "non-exist-key",
 	}
-	_, err = s.Enforce(context.Background(), enforceReq)
+	_, err = s.SetDefault(context.Background(), defaultReq)
 	assert.Error(t, err)
 	serverError, ok = status.FromError(err)
 	assert.True(t, ok)
@@ -560,11 +547,11 @@ func TestSdkStoragePolicyEnforcementBadArgument(t *testing.T) {
 	assert.Contains(t, serverError.Message(), "not found")
 }
 
-func TestSdkStoragePolicyEnforcementInspect(t *testing.T) {
+func TestSdkStoragePolicyDefaultInspect(t *testing.T) {
 
 	s, err := Inst()
 
-	policy, err := s.EnforceInspect(context.Background(), &api.SdkOpenStoragePolicyEnforceInspectRequest{})
+	policy, err := s.DefaultInspect(context.Background(), &api.SdkOpenStoragePolicyDefaultInspectRequest{})
 	assert.NoError(t, err)
 	assert.Nil(t, policy.GetStoragePolicy())
 
@@ -576,7 +563,7 @@ func TestSdkStoragePolicyEnforcementInspect(t *testing.T) {
 
 	req := &api.SdkOpenStoragePolicyCreateRequest{
 		StoragePolicy: &api.SdkStoragePolicy{
-			Name:   "enforceInspect",
+			Name:   "defaultInspect",
 			Policy: volSpec,
 		},
 	}
@@ -585,7 +572,7 @@ func TestSdkStoragePolicyEnforcementInspect(t *testing.T) {
 	assert.NoError(t, err)
 
 	inspReq := &api.SdkOpenStoragePolicyInspectRequest{
-		Name: "enforceInspect",
+		Name: "defaultInspect",
 	}
 
 	resp, err := s.Inspect(context.Background(), inspReq)
@@ -593,22 +580,22 @@ func TestSdkStoragePolicyEnforcementInspect(t *testing.T) {
 	assert.Equal(t, resp.StoragePolicy.GetName(), inspReq.GetName())
 	assert.True(t, reflect.DeepEqual(resp.StoragePolicy.GetPolicy(), req.StoragePolicy.GetPolicy()))
 
-	enforceReq := &api.SdkOpenStoragePolicyEnforceRequest{
+	defaultReq := &api.SdkOpenStoragePolicySetDefaultRequest{
 		Name: inspReq.GetName(),
 	}
-	_, err = s.Enforce(context.Background(), enforceReq)
+	_, err = s.SetDefault(context.Background(), defaultReq)
 	assert.NoError(t, err)
 
-	policy, err = s.EnforceInspect(context.Background(), &api.SdkOpenStoragePolicyEnforceInspectRequest{})
+	policy, err = s.DefaultInspect(context.Background(), &api.SdkOpenStoragePolicyDefaultInspectRequest{})
 	assert.NoError(t, err)
 	assert.Equal(t, policy.GetStoragePolicy().GetName(), inspReq.GetName())
 
-	// disable enforcement
+	// release default storage policy restriction
 	releaseReq := &api.SdkOpenStoragePolicyReleaseRequest{}
 	_, err = s.Release(context.Background(), releaseReq)
 	assert.NoError(t, err)
 
-	policy, err = s.EnforceInspect(context.Background(), &api.SdkOpenStoragePolicyEnforceInspectRequest{})
+	policy, err = s.DefaultInspect(context.Background(), &api.SdkOpenStoragePolicyDefaultInspectRequest{})
 	assert.NoError(t, err)
 	assert.Nil(t, policy.GetStoragePolicy())
 }

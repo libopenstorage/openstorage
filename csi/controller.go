@@ -290,6 +290,9 @@ func (s *OsdCsiServer) CreateVolume(
 	// Create volume
 	var newVolumeId string
 	if source.Parent == "" {
+		// Get Capabilities and Size
+		spec.Shared = csiRequestsSharedVolume(req)
+
 		createResp, err := volumes.Create(ctx, &api.SdkVolumeCreateRequest{
 			Name:   req.GetName(),
 			Spec:   spec,
