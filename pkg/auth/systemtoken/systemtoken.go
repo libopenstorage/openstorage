@@ -12,6 +12,7 @@ type Config struct {
 	ClusterId    string
 	NodeId       string
 	SharedSecret string
+	Issuer       string
 }
 
 // manager provides access to tokens needed for node to
@@ -23,8 +24,12 @@ type manager struct {
 
 var _ auth.TokenGenerator = &manager{}
 
+// systemIssuer is the same across all clusters, allowing node-to-node communication
+const systemIssuer = "system_token_manager"
+
 // NewManager initializes the system token generator
 func NewManager(cfg *Config) (auth.TokenGenerator, error) {
+	cfg.Issuer = systemIssuer
 	if cfg == nil ||
 		len(cfg.ClusterId) == 0 ||
 		len(cfg.NodeId) == 0 ||
@@ -33,10 +38,10 @@ func NewManager(cfg *Config) (auth.TokenGenerator, error) {
 	}
 
 	claims := &auth.Claims{
-		Issuer:  cfg.ClusterId,
+		Issuer:  systemIssuer,
 		Subject: cfg.NodeId,
 		Name:    "Internal cluster communication",
-		Email:   "support@openstorage.io",
+		Email:   "support@" + systemIssuer,
 		Roles:   []string{"system.admin"},
 		Groups:  []string{"*"},
 	}
@@ -50,7 +55,7 @@ func NewManager(cfg *Config) (auth.TokenGenerator, error) {
 // Issuer returns the token issuer for this generator necessary
 // for registering the authenticator in the SDK.
 func (m *manager) Issuer() string {
-	return m.config.ClusterId
+	return m.config.Issuer
 }
 
 // GetAuthenticator returns an authenticator for this issuer used by the SDK

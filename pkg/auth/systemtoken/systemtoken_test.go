@@ -18,7 +18,7 @@ func TestSystemTokenGenerator(t *testing.T) {
 	}
 	stm, err := NewManager(config)
 	assert.NoError(t, err)
-	assert.Equal(t, stm.Issuer(), config.ClusterId)
+	assert.Equal(t, stm.Issuer(), systemIssuer)
 
 	token, err := stm.GetToken(&auth.Options{
 		Expiration: time.Now().Add(5 * auth.Year).Unix(),
