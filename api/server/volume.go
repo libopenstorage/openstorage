@@ -420,19 +420,27 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 		break
 	}
 
-	resVol, err2 := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
-		VolumeId: volumeID,
-	})
-	if err2 != nil {
-		resp.Volume = &api.Volume{}
+	if err != nil {
+		processErrorForVolSetResponse(req.Action, err, &resp)
 	} else {
-		resp.Volume = resVol.GetVolume()
-	}
-	resp.VolumeResponse = &api.VolumeResponse{
-		Error: responseStatus(err),
+		resVol, err2 := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
+			VolumeId: volumeID,
+		})
+		if err2 != nil {
+			if serverError, ok := status.FromError(err); ok {
+				if serverError.Code() == codes.NotFound {
+					processErrorForVolSetResponse(req.Action, &errors.ErrNotFound{Type: "Volume", ID: volumeID}, &resp)
+				} else {
+					processErrorForVolSetResponse(req.Action, err, &resp)
+				}
+			} else {
+				processErrorForVolSetResponse(req.Action, err, &resp)
+			}
+		} else {
+			resp.Volume = resVol.GetVolume()
+		}
 	}
 	json.NewEncoder(w).Encode(resp)
-
 }
 
 func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume) *api.VolumeSpecUpdate {
@@ -590,13 +598,11 @@ func (vd *volAPI) inspect(w http.ResponseWriter, r *http.Request) {
 		// SDK returns a NotFound error for an invalid volume
 		// Previously the REST server returned an empty array if a volume was not found
 		if s, ok := status.FromError(err); ok && s.Code() != codes.NotFound {
-			vd.sendError(vd.name, method, w, err.Error(), http.StatusNotFound)
+			vd.sendError(vd.name, method, w, volume.ErrEnoEnt.Error(), http.StatusNotFound)
 			return
 		}
-	} else {
-		dkVolumes = append(dkVolumes, dk.GetVolume())
 	}
-
+	dkVolumes = append(dkVolumes, dk.GetVolume())
 	json.NewEncoder(w).Encode(dkVolumes)
 }
 
