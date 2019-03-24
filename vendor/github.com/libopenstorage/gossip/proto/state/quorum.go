@@ -12,7 +12,7 @@ type Quorum interface {
 	IsNodeInQuorum(localNodeInfoMap types.NodeInfoMap) bool
 	// UpdateNumOfQuorumMembers updates the number of members
 	// participating in quorum calculationgs
-	UpdateNumOfQuorumMembers(numQuorumMembers uint)
+	UpdateNumOfQuorumMembers(quorumMemberMap types.ClusterDomainsQuorumMembersMap)
 	// UpdateClusterDomainsActiveMap updates the map of active and inactive failure
 	// domains. It returns a boolean value indicating if an update was done
 	UpdateClusterDomainsActiveMap(activeMap types.ClusterDomainsActiveMap) bool
@@ -58,9 +58,13 @@ func (d *defaultQuorum) IsNodeInQuorum(localNodeInfoMap types.NodeInfoMap) bool 
 	return upNodes >= quorum
 }
 
-func (d *defaultQuorum) UpdateNumOfQuorumMembers(numOfQuorumMembers uint) {
+func (d *defaultQuorum) UpdateNumOfQuorumMembers(quorumMemberMap types.ClusterDomainsQuorumMembersMap) {
 	d.lock.Lock()
 	defer d.lock.Unlock()
+	numOfQuorumMembers := uint(0)
+	for _, quorumMembersInDomain := range quorumMemberMap {
+		numOfQuorumMembers = numOfQuorumMembers + uint(quorumMembersInDomain)
+	}
 	d.numQuorumMembers = numOfQuorumMembers
 }
 

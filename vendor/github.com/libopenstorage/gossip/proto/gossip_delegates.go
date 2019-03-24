@@ -229,7 +229,7 @@ func (gd *GossipDelegate) NotifyLeave(node *memberlist.Node) {
 	} else {
 		if gd.quorumProvider.Type() == types.QUORUM_PROVIDER_FAILURE_DOMAINS {
 			go func() {
-				isSuspect := gd.isNodeSuspect(types.NodeId(nodeName))
+				isSuspect := gd.isClusterDomainSuspectDown(types.NodeId(nodeName))
 				if isSuspect {
 					gd.setNodeAsSuspectOffline(nodeName)
 				} else {
@@ -420,13 +420,13 @@ func (gd *GossipDelegate) probationIDToNodeName(probationID string) string {
 	return strings.TrimPrefix(probationID, "gossip-")
 }
 
-// isNodeSuspect returns a boolean indicating whether a peer node should be put
-// in suspected Offline state. For the given nodeId, it finds out all its peers from
+// isClusterDomainSuspectDown returns truewhen a peer node should be put in suspected offline state
+// For the given nodeId, it finds out all its peers from
 // the same cluster domain. If even one ping to such peer node succeeds it assumes that
 // only the suspected node is down and the whole cluster domain is still operational.
 // If all the pings to peer nodes in that cluster domain fail we put the node in
 // suspect down state
-func (gd *GossipDelegate) isNodeSuspect(nodeId types.NodeId) bool {
+func (gd *GossipDelegate) isClusterDomainSuspectDown(nodeId types.NodeId) bool {
 	nodeInfo, err := gd.GetLocalNodeInfo(nodeId)
 	if err != nil {
 		// Node not found in our map
