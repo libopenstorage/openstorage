@@ -32,9 +32,16 @@ type StoreMap map[StoreKey]interface{}
 // quorum of a cluster
 type QuorumProvider uint8
 
+// ClusterDomainState identifies the state of cluster domain
+type ClusterDomainState string
+
 // ClusterDomainsActiveMap is a map of cluster domain to a boolean value
 // indicating whether that domain is active or inactive
-type ClusterDomainsActiveMap map[string]bool
+type ClusterDomainsActiveMap map[string]ClusterDomainState
+
+// ClusterDomainsQuorumMembersMap is a map of cluster domains to the number
+// of quorum members in that domain
+type ClusterDomainsQuorumMembersMap map[string]int
 
 // Constant Definitions
 
@@ -71,6 +78,11 @@ const (
 const (
 	QUORUM_PROVIDER_DEFAULT QuorumProvider = iota
 	QUORUM_PROVIDER_FAILURE_DOMAINS
+)
+
+const (
+	CLUSTER_DOMAIN_STATE_ACTIVE   = ClusterDomainState("Active")
+	CLUSTER_DOMAIN_STATE_INACTIVE = ClusterDomainState("Inactive")
 )
 
 // NodeUpdate object is used for externally updating a node in gossip

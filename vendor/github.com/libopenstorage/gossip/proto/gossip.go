@@ -162,7 +162,7 @@ func (g *GossiperImpl) Stop(leaveTimeout time.Duration) error {
 	if g.shutDown == true {
 		return fmt.Errorf("gossip: Gossiper already stopped")
 	}
-	// If leaveTimeout is specified then graefully shutdown
+	// If leaveTimeout is specified then gracefully shutdown
 	if leaveTimeout != time.Duration(0) {
 		if err := g.mlist.Leave(leaveTimeout); err != nil {
 			return err
@@ -193,11 +193,8 @@ func (g *GossiperImpl) Ping(peerNode types.NodeId, addr string) (time.Duration, 
 
 	memberlistNodeName := string(peerNode) + types.GOSSIP_VERSION_2
 
-	// We will ping the node 3 times to check our connectivity to it
-	// If the number of failed pings is greater than success pings
-	// then we return an error
-	// TODO: Calculate the average ping duration
-
+	// Ping the node and return success when you get a ping response.
+	// Retry at most 3 times on failure
 	for i := 0; i < pingRetries; i++ {
 		pingDuration, pingErr = g.mlist.Ping(memberlistNodeName, netAddr)
 		if pingErr == nil {
@@ -222,12 +219,12 @@ func (g *GossiperImpl) GetNodes() []string {
 }
 
 func (g *GossiperImpl) UpdateCluster(peers map[types.NodeId]types.NodeUpdate) {
-	numQuorumMembers := g.updateCluster(peers)
+	quorumMembersMap := g.updateCluster(peers)
 	if g.quorumProvider == nil {
 		// gossip not started yet
 		return
 	}
-	g.quorumProvider.UpdateNumOfQuorumMembers(numQuorumMembers)
+	g.quorumProvider.UpdateNumOfQuorumMembers(quorumMembersMap)
 	g.triggerStateEvent(types.UPDATE_CLUSTER_SIZE)
 }
 

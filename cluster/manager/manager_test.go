@@ -19,6 +19,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/pkg/auth"
@@ -141,6 +142,6 @@ func TestClusterDomainClusterManagerAPIs(t *testing.T) {
 	c, err := inst.Enumerate()
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(c.ClusterDomainsActiveMap), "Unexpected length of cluster domain map")
-	assert.True(t, c.ClusterDomainsActiveMap[selfClusterDomain], "Expected zone1 to be activated")
+	assert.Equal(t, types.CLUSTER_DOMAIN_STATE_ACTIVE, c.ClusterDomainsActiveMap[selfClusterDomain], "Expected zone1 to be activated")
 	cleanup()
 }
