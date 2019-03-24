@@ -321,7 +321,7 @@ func (s *GossipStoreImpl) Update(diff types.NodeInfoMap) {
 
 func (s *GossipStoreImpl) updateCluster(
 	peers map[types.NodeId]types.NodeUpdate,
-) uint {
+) types.ClusterDomainsQuorumMembersMap {
 	removeNodeIds := []types.NodeId{}
 	addNodeIds := []types.NodeId{}
 	s.Lock()
@@ -350,9 +350,10 @@ func (s *GossipStoreImpl) updateCluster(
 
 	// Update quorum members
 	// Update the failure domains for the nodes
-	numQuorumMembers := uint(0)
+	quorumMembersMap := make(types.ClusterDomainsQuorumMembersMap)
 	for id, nodeInfo := range s.nodeMap {
-		if update, ok := peers[id]; ok {
+		update, ok := peers[id]
+		if ok {
 			nodeInfo.QuorumMember = update.QuorumMember
 			nodeInfo.ClusterDomain = update.ClusterDomain
 			nodeInfo.Addr = update.Addr
@@ -361,10 +362,12 @@ func (s *GossipStoreImpl) updateCluster(
 			s.updateClusterDomainsMap(update.ClusterDomain, id)
 		}
 		if nodeInfo.QuorumMember {
-			numQuorumMembers++
+			quorumMembersInDomain, _ := quorumMembersMap[update.ClusterDomain]
+			quorumMembersInDomain++
+			quorumMembersMap[update.ClusterDomain] = quorumMembersInDomain
 		}
 	}
-	return numQuorumMembers
+	return quorumMembersMap
 }
 
 func (s *GossipStoreImpl) updateClusterDomainsMap(failureDomain string, nodeId types.NodeId) {

@@ -321,42 +321,30 @@ func (c *ClusterManager) UpdateSchedulerNodeName(schedulerNodeName string) error
 }
 
 func (c *ClusterManager) DeactivateClusterDomain(deactivateRequest *api.DeactivateClusterDomainRequest) error {
-	c.selfNodeLock.Lock()
-	defer c.selfNodeLock.Unlock()
-
 	updateCallbackFn := func(db *cluster.ClusterInfo) (bool, error) {
-		isActive, _ := db.ClusterDomains.ActiveMap[deactivateRequest.ClusterDomain]
-		if !isActive {
-			// Cluster domain is not active. No need of update
-			return false, nil
+		if db.ClusterDomains.ActiveMap[deactivateRequest.ClusterDomain] == types.CLUSTER_DOMAIN_STATE_ACTIVE {
+			db.ClusterDomains.ActiveMap[deactivateRequest.ClusterDomain] = types.CLUSTER_DOMAIN_STATE_INACTIVE
+			return true, nil
 		}
-		db.ClusterDomains.ActiveMap[deactivateRequest.ClusterDomain] = false
-		return true, nil
+		// Cluster domain is not active. No need of update
+		return false, nil
 	}
 	return updateLockedDB("deactivate-cluster-domain", c.selfNode.Id, updateCallbackFn)
 }
 
 func (c *ClusterManager) ActivateClusterDomain(activateRequest *api.ActivateClusterDomainRequest) error {
-	c.selfNodeLock.Lock()
-	defer c.selfNodeLock.Unlock()
-
 	updateCallbackFn := func(db *cluster.ClusterInfo) (bool, error) {
-		isActive, _ := db.ClusterDomains.ActiveMap[activateRequest.ClusterDomain]
-		if isActive {
-			// Cluster domain is active. No need of update
-			return false, nil
+		if db.ClusterDomains.ActiveMap[activateRequest.ClusterDomain] == types.CLUSTER_DOMAIN_STATE_INACTIVE {
+			db.ClusterDomains.ActiveMap[activateRequest.ClusterDomain] = types.CLUSTER_DOMAIN_STATE_ACTIVE
+			return true, nil
 		}
-		db.ClusterDomains.ActiveMap[activateRequest.ClusterDomain] = true
-		return true, nil
+		// Cluster domain is active. No need of update
+		return false, nil
 	}
 	return updateLockedDB("deactivate-cluster-domain", c.selfNode.Id, updateCallbackFn)
 }
 
 func (c *ClusterManager) UpdateSelfClusterDomain(selfClusterDomain string) error {
-	if c.gossip != nil {
-		c.gossip.UpdateSelfClusterDomain(selfClusterDomain)
-	}
-
 	c.selfNodeLock.Lock()
 	defer c.selfNodeLock.Unlock()
 
@@ -374,12 +362,7 @@ func (c *ClusterManager) UpdateSelfClusterDomain(selfClusterDomain string) error
 		db.NodeEntries[c.selfNode.Id] = nodeEntry
 		return true, nil
 	}
-	err := updateLockedDB("update-failure-domain", c.selfNode.Id, updateCallbackFn)
-	if err == nil {
-		c.selfClusterDomain = selfClusterDomain
-	}
-
-	return err
+	return updateLockedDB("update-failure-domain", c.selfNode.Id, updateCallbackFn)
 }
 
 // GetData returns self node's data
@@ -481,6 +464,8 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 		}
 	}
 
+	var selfNodeClusterDomainInDb string
+
 	for _, nodeEntry := range db.NodeEntries {
 		if nodeEntry.Status == api.Status_STATUS_DECOMMISSION {
 			logrus.Infof("ClusterManager watchDB, node ID "+
@@ -517,6 +502,10 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 				c.gossip.Stop(time.Duration(10 * time.Second))
 				return fmt.Errorf("stop watch")
 			}
+		} else {
+			if nodeEntry.Id == c.selfNode.Id {
+				selfNodeClusterDomainInDb = nodeEntry.ClusterDomain
+			}
 		}
 	}
 
@@ -540,6 +529,13 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 		_, found := db.NodeEntries[n.Id]
 		if !found {
 			delete(c.nodeCache, n.Id)
+		}
+	}
+	// Check if our cluster domain has changed under a lock
+	if c.selfClusterDomain != selfNodeClusterDomainInDb {
+		c.selfClusterDomain = selfNodeClusterDomainInDb
+		if c.gossip != nil {
+			c.gossip.UpdateSelfClusterDomain(selfNodeClusterDomainInDb)
 		}
 	}
 
@@ -1103,8 +1099,8 @@ func (c *ClusterManager) initializeCluster(db kvdb.Kvdb, selfClusterDomain strin
 		if len(selfClusterDomain) > 0 {
 			// We are initializing the cluster, the only known cluster domain
 			// will be active to start with
-			clusterInfo.ClusterDomains.ActiveMap[selfClusterDomain] = true
-			c.activeMap[selfClusterDomain] = true
+			clusterInfo.ClusterDomains.ActiveMap[selfClusterDomain] = types.CLUSTER_DOMAIN_STATE_ACTIVE
+			c.activeMap[selfClusterDomain] = types.CLUSTER_DOMAIN_STATE_ACTIVE
 		}
 
 		err = c.initClusterForListeners(&c.selfNode)
@@ -1206,7 +1202,7 @@ func (c *ClusterManager) initListeners(
 			// Add an entry of our cluster domain if it does not exists
 			_, exists := clusterInfo.ClusterDomains.ActiveMap[c.selfClusterDomain]
 			if !exists {
-				clusterInfo.ClusterDomains.ActiveMap[c.selfClusterDomain] = true
+				clusterInfo.ClusterDomains.ActiveMap[c.selfClusterDomain] = types.CLUSTER_DOMAIN_STATE_ACTIVE
 			}
 		}
 
@@ -1495,16 +1491,20 @@ func (c *ClusterManager) nodes(clusterDB *cluster.ClusterInfo) []api.Node {
 	return nodes
 }
 
-func (c *ClusterManager) enumerateNodesFromClusterDB() []api.Node {
+func (c *ClusterManager) enumerateFromClusterDB() ([]api.Node, types.ClusterDomainsActiveMap) {
 	clusterDB, _, err := readClusterInfo()
 	if err != nil {
 		logrus.Errorf("enumerateNodesFromClusterDB failed with error: %v", err)
-		return make([]api.Node, 0)
+		return make([]api.Node, 0), nil
 	}
-	return c.nodes(&clusterDB)
+	activeMap := make(types.ClusterDomainsActiveMap)
+	for k, v := range clusterDB.ClusterDomains.ActiveMap {
+		activeMap[k] = v
+	}
+	return c.nodes(&clusterDB), activeMap
 }
 
-func (c *ClusterManager) enumerateNodesFromCache() []api.Node {
+func (c *ClusterManager) enumerateFromCache() ([]api.Node, types.ClusterDomainsActiveMap) {
 	var clusterDB cluster.ClusterInfo
 	c.nodeCacheLock.Lock()
 	defer c.nodeCacheLock.Unlock()
@@ -1515,7 +1515,11 @@ func (c *ClusterManager) enumerateNodesFromCache() []api.Node {
 		nodes[i] = *n.Copy()
 		i++
 	}
-	return nodes
+	cacheActiveMap := make(types.ClusterDomainsActiveMap)
+	for k, v := range c.activeMap {
+		cacheActiveMap[k] = v
+	}
+	return nodes, cacheActiveMap
 }
 
 // Enumerate lists all the nodes in the cluster.
@@ -1530,11 +1534,10 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 		c.selfNode.Status == api.Status_STATUS_MAINTENANCE {
 		// If the node is not yet ready, query the cluster db
 		// for node members since gossip is not ready yet.
-		clusterState.Nodes = c.enumerateNodesFromClusterDB()
+		clusterState.Nodes, clusterState.ClusterDomainsActiveMap = c.enumerateFromClusterDB()
 	} else {
-		clusterState.Nodes = c.enumerateNodesFromCache()
+		clusterState.Nodes, clusterState.ClusterDomainsActiveMap = c.enumerateFromCache()
 	}
-	clusterState.ClusterDomainsActiveMap = c.activeMap
 
 	// Allow listeners to add/modify data
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
