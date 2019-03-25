@@ -158,6 +158,7 @@ type sdkGrpcServer struct {
 	cloudBackupServer    *CloudBackupServer
 	credentialServer     *CredentialServer
 	identityServer       *IdentityServer
+	clusterDomainsServer *ClusterDomainsServer
 	roleServer           role.RoleManager
 	alertsServer         api.OpenStorageAlertsServer
 	policyServer         policy.PolicyManager
@@ -384,6 +385,9 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 	s.clusterPairServer = &ClusterPairServer{
 		server: s,
 	}
+	s.clusterDomainsServer = &ClusterDomainsServer{
+		server: s,
+	}
 	s.roleServer = config.Security.Role
 	s.policyServer = config.StoragePolicy
 	return s, nil
@@ -442,6 +446,7 @@ func (s *sdkGrpcServer) Start() error {
 		api.RegisterOpenStorageAlertsServer(grpcServer, s.alertsServer)
 		api.RegisterOpenStorageClusterPairServer(grpcServer, s.clusterPairServer)
 		api.RegisterOpenStoragePolicyServer(grpcServer, s.policyServer)
+		api.RegisterOpenStorageClusterDomainsServer(grpcServer, s.clusterDomainsServer)
 
 		if s.config.Security.Role != nil {
 			api.RegisterOpenStorageRoleServer(grpcServer, s.roleServer)
