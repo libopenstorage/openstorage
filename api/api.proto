@@ -1,4 +1,4 @@
-// Please use the following editor setup for this file:
+/// Please use the following editor setup for this file:
 // Tab size=2; Tabs as spaces; Clean up trailing whitepsace
 //
 // In vim add: au FileType proto setl sw=2 ts=2 expandtab list
@@ -591,8 +591,8 @@ message CapacityUsageInfo {
 
 // A SdkStoragePolicy represents minimum set of volume specs to be
 // follow while creating volumes.
-// If storage policy is set default in OpenStoragePolicy service, VolumeSpecPolicy will be 
-// used before creating volume to validate volume specs or ensure minimum volume creation 
+// If storage policy is set default in OpenStoragePolicy service, VolumeSpecPolicy will be
+// used before creating volume to validate volume specs or ensure minimum volume creation
 // rules followed
 message SdkStoragePolicy {
   // Name of storage policy.
@@ -1198,6 +1198,54 @@ service OpenStorageClusterPair{
       };
     }
 }
+
+// OpenStorageClusterDomains is a service used to manage cluster domains in an openstorage cluster.
+// A single openstorage cluster can stretch across multiple cluster domains. In other words it can
+// span across multiple Container Orchestrator clusters. Each node in the cluster is assigned a
+// a cluster domain to start with. A cluster domain and in turn the nodes which are a part of it
+// are assigned a status indicating whether the cluster domain is actively participating in the
+// cluster or whether it is inactive.
+service OpenStorageClusterDomains {
+  // Enumerate returns names of all the cluster domains in the cluster
+  rpc Enumerate(SdkClusterDomainsEnumerateRequest)
+    returns (SdkClusterDomainsEnumerateResponse) {
+      option(google.api.http) = {
+        get: "/v1/clusterdomains"
+      };
+    }
+
+  // Inspect returns information about a cluster domain and a
+  // status indicating whether the cluster domain is active
+  rpc Inspect(SdkClusterDomainInspectRequest)
+    returns (SdkClusterDomainInspectResponse) {
+      option(google.api.http) = {
+        get: "/v1/clusterdomains/inspect/{cluster_domain_name}"
+      };
+    }
+
+
+  // Activates a cluster domain in the cluster.
+  // All the nodes which are part of an active cluster domain
+  // will participate in cluster quorum calculation
+  rpc Activate(SdkClusterDomainActivateRequest)
+    returns (SdkClusterDomainActivateResponse) {
+      option(google.api.http) = {
+        post: "/v1/clusterdomains/activate/{cluster_domain_name}"
+      };
+    }
+
+  // Deactivates a cluster domain in the cluster.
+  // All the nodes which are part of a deactivated cluster domain.
+  // will not participate in cluster quorum calculation
+  rpc Deactivate(SdkClusterDomainDeactivateRequest)
+    returns (SdkClusterDomainDeactivateResponse) {
+      option(google.api.http) = {
+        post: "/v1/clusterdomains/deactivate/{cluster_domain_name}"
+      };
+    }
+
+}
+
 
 // OpenStorageNode is a service used to manage nodes in the cluster
 service OpenStorageNode {
@@ -1901,7 +1949,7 @@ message SdkOpenStoragePolicyUpdateResponse {
 message SdkOpenStoragePolicySetDefaultRequest {
   // name of policy to set as default storage policy
   // for volume creation
-  // This policy will be used to validate/update volume configuration 
+  // This policy will be used to validate/update volume configuration
   string name = 1;
 }
 
@@ -2502,6 +2550,52 @@ message SdkVolumeSnapshotScheduleUpdateRequest {
 
 // Empty response
 message SdkVolumeSnapshotScheduleUpdateResponse {
+}
+
+
+// Empty request
+message SdkClusterDomainsEnumerateRequest {
+}
+
+// Defines a response when enumerating cluster domains
+message SdkClusterDomainsEnumerateResponse {
+    // List of names of all the cluster domains in a cluster
+    repeated string cluster_domain_names = 1;
+}
+
+// Defines a request to inspect a cluster domain
+message SdkClusterDomainInspectRequest {
+    // Name of the cluster domain to inspect
+    string cluster_domain_name = 1;
+}
+
+// Defines a response to inspecting a cluster domain
+message SdkClusterDomainInspectResponse {
+    // Name of the cluster domain
+    string cluster_domain_name = 1;
+    // IsActive indicates whether this cluster domain is active
+    bool is_active = 2;
+}
+
+
+// Defines a request to activate a cluster domain
+message SdkClusterDomainActivateRequest {
+    // Name of the cluster domain to activate
+    string cluster_domain_name = 1;
+}
+
+// Empty response
+message SdkClusterDomainActivateResponse {
+}
+
+// Defines a request to deactivate a cluster domain
+message SdkClusterDomainDeactivateRequest {
+    // Name of the cluster domain to deactivate
+    string cluster_domain_name = 1;
+}
+
+// Empty response
+message SdkClusterDomainDeactivateResponse {
 }
 
 // Empty request
@@ -3108,7 +3202,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 42;
     // SDK version patch value of this specification
-    Patch = 2;
+    Patch = 3;
   }
 
   // The following cannot be set to use the enum Version because the REST
