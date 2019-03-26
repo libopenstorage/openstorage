@@ -237,7 +237,7 @@ func TestSdkStoragePolicyUpdate(t *testing.T) {
 	assert.Equal(t, updatedResp.StoragePolicy.GetName(), inspReq.GetName())
 
 	// check indivisual params
-	//assert.Equal(t, updatedResp.StoragePolicy.GetPolicy().GetSize(), oldResp.StoragePolicy.GetPolicy().GetSize())
+	assert.Equal(t, updatedResp.StoragePolicy.GetPolicy().GetSize(), oldResp.StoragePolicy.GetPolicy().GetSize())
 	// check old param updated to new params
 	assert.Equal(t, updatedResp.StoragePolicy.GetPolicy().GetShared(), false)
 	// check new params

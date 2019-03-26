@@ -128,8 +128,6 @@ func (p *SdkPolicyManager) Create(
 }
 
 // Update Storage policy
-// TODO: Decide whether update storage policy request should update ownership at all
-// We can check if user is admin then only allow update ownership
 func (p *SdkPolicyManager) Update(
 	ctx context.Context,
 	req *api.SdkOpenStoragePolicyUpdateRequest,
@@ -156,26 +154,33 @@ func (p *SdkPolicyManager) Update(
 		return nil, status.Errorf(codes.PermissionDenied, "Cannot update storage policy")
 	}
 
-	m := jsonpb.Marshaler{OrigName: true}
-	updateStr, err := m.MarshalToString(req.GetStoragePolicy())
+	updatedPolicy, err := mergeStoragePolicy(oldPolicy.GetStoragePolicy(), req.GetStoragePolicy())
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Json Marshal failed for policy %s: %v", req.GetStoragePolicy().GetName(), err)
+		return nil, err
 	}
 
+	// update ownership seperately
+	updatedPolicy.Ownership = oldPolicy.GetStoragePolicy().GetOwnership()
 	// check ownership update is request
 	if req.GetStoragePolicy().GetOwnership() != nil {
 		if oldPolicy.StoragePolicy.Ownership == nil {
-			oldPolicy.StoragePolicy.Ownership = &api.Ownership{}
+			updatedPolicy.Ownership = &api.Ownership{}
 		}
 		user, _ := auth.NewUserInfoFromContext(ctx)
 		// we run through ownership for update to check whether given user
-		// is administrator, only admin can update ownership details
-		if err := oldPolicy.StoragePolicy.Ownership.Update(req.GetStoragePolicy().GetOwnership(), user); err != nil {
+		// is administrator, only admin can update owner details
+		if err := updatedPolicy.Ownership.Update(req.GetStoragePolicy().GetOwnership(), user); err != nil {
 			logrus.Errorf("Error updating ownership: %v", err)
 			return nil, err
 		}
 	}
-	_, err = p.kv.Update(prefixWithName(req.GetStoragePolicy().GetName()), updateStr, 0)
+
+	m := jsonpb.Marshaler{OrigName: true}
+	updatedStr, err := m.MarshalToString(updatedPolicy)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Json Marshal failed for policy %s: %v", updatedPolicy.GetName(), err)
+	}
+	_, err = p.kv.Update(prefixWithName(req.GetStoragePolicy().GetName()), updatedStr, 0)
 	if err == kvdb.ErrNotFound {
 		return nil, status.Errorf(codes.NotFound, "Storage Policy %s not found", req.GetStoragePolicy().GetPolicy())
 	} else if err != nil {
@@ -438,4 +443,38 @@ func volSpecToSdkStoragePolicy(inst *SdkPolicyManager) error {
 		}
 	}
 	return nil
+}
+
+// Merge oldpolicy with updated policy
+func mergeStoragePolicy(oldPolicy, newPolicy *api.SdkStoragePolicy) (*api.SdkStoragePolicy, error) {
+	// assign to new spec policy
+	updatedPolicy := &api.SdkStoragePolicy{}
+
+	// Merge VolSpec seperately
+	updatedSpec := &api.VolumeSpecPolicy{}
+	m := jsonpb.Marshaler{OrigName: true}
+	// marshal old policy to string
+	oldPolStr, err := m.MarshalToString(oldPolicy.GetPolicy())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Json Marshal failed for volSpec %s: %v", oldPolicy.GetName(), err)
+	}
+	err = jsonpb.UnmarshalString(oldPolStr, updatedSpec)
+	if err != nil {
+		return nil, err
+	}
+	newPolStr, err := m.MarshalToString(newPolicy.GetPolicy())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Json Marshal failed for volSpec %s: %v", newPolicy.GetName(), err)
+	}
+	err = jsonpb.UnmarshalString(newPolStr, updatedSpec)
+	if err != nil {
+		return nil, err
+	}
+
+	updatedPolicy.Name = newPolicy.GetName()
+	updatedPolicy.Policy = updatedSpec
+	updatedPolicy.Force = newPolicy.GetForce()
+	updatedPolicy.AllowUpdate = newPolicy.GetAllowUpdate()
+
+	return updatedPolicy, nil
 }
