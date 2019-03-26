@@ -6,12 +6,12 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"regexp"
 
+	"github.com/gorilla/mux"
 	"github.com/libopenstorage/openstorage/pkg/auth/secrets"
 	osecrets "github.com/libopenstorage/secrets"
 	"github.com/sirupsen/logrus"
-
-	"github.com/gorilla/mux"
 )
 
 // Route is a specification and  handler for a REST endpoint.
@@ -19,6 +19,21 @@ type Route struct {
 	verb string
 	path string
 	fn   func(http.ResponseWriter, *http.Request)
+}
+
+// AnonRegex defines a regex replace for a string
+type AnonRegex struct {
+	anonymizeRegx *regexp.Regexp
+	replaceString string
+}
+
+// anonIDRegxes[] used to hide ID content when logging.
+var anonIDRegxes = []AnonRegex{
+	{
+		// Anonymize the token=.*, replace with token=***..*,
+		anonymizeRegx: regexp.MustCompile(`token=.*,`),
+		replaceString: `token=********,`,
+	},
 }
 
 func (r *Route) GetVerb() string {
@@ -197,11 +212,23 @@ type restBase struct {
 	name    string
 }
 
+func regxAnonString(inputStr string, anonRegxes []AnonRegex) string {
+	anonString := inputStr
+	if len(anonString) > 0 {
+		for _, anonRegx := range anonRegxes {
+			anonString = anonRegx.anonymizeRegx.ReplaceAllString(
+				anonString,
+				anonRegx.replaceString)
+		}
+	}
+	return anonString
+}
+
 func (rest *restBase) logRequest(request string, id string) *logrus.Entry {
 	return logrus.WithFields(map[string]interface{}{
 		"Driver":  rest.name,
 		"Request": request,
-		"ID":      id,
+		"ID":      regxAnonString(id, anonIDRegxes),
 	})
 }
 func (rest *restBase) sendError(request string, id string, w http.ResponseWriter, msg string, code int) {
