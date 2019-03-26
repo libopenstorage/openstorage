@@ -83,6 +83,14 @@ var (
 				Services: []string{"identity"},
 				Apis:     []string{"*"},
 			},
+			&api.SdkRule{
+				Services: []string{"policy"},
+				Apis: []string{
+					"*enumerate*",
+					// This will allow system.user to view default policy also
+					"*inspect*",
+				},
+			},
 		},
 	}
 )
