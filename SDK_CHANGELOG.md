@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.42.4 - Tech Preview (3/26/2019)
+
+* Handle spec update for nodiscard, io_strategy
+
 ### v0.42.3 - Tech Preview (3/24/2019)
 
 * Add new APIs for managing OpenStorage ClusterDomains
