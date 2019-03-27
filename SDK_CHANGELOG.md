@@ -2,6 +2,12 @@
 
 > NOTE: The SDK is still in tech preview. Once officially released, this changelog will also
 > use the SDK version numbers.
+## Releases
+
+### v0.23.0 - Tech Preview (6/08/2019)
+
+* Handle spec update for nodiscard, io_strategy
+
 
 ## Releases
 

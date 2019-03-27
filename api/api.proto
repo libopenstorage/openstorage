@@ -370,6 +370,11 @@ message VolumeSpecUpdate {
   oneof sharedv4_opt { bool sharedv4 = 24; }
   // QueueDepth defines the desired block device queue depth
   oneof queue_depth_opt { uint32 queue_depth = 25; }
+  // Nodiscard specifies if the volume will be mounted with discard support disabled.
+  // i.e. FS will not release allocated blocks back to the backing storage pool.
+  oneof nodiscard_opt { bool nodiscard = 26; }
+  // IoStrategy preferred strategy for I/O.
+  oneof io_strategy_opt { IoStrategy io_strategy = 27; }
 }
 
 // VolumeSpecPolicy provides a method to set volume storage policy
@@ -426,12 +431,17 @@ message VolumeSpecPolicy {
   oneof aggregation_level_opt { uint32 aggregation_level = 19; }
   // Operator to check size
   PolicyOp size_operator = 50;
-  // Operator to check ha_level 
+  // Operator to check ha_level
   PolicyOp ha_level_operator = 51;
   // Operator to check scale
   PolicyOp scale_operator = 52;
   // Operator to check snapshot_interval
   PolicyOp snapshot_interval_operator = 53;
+  // Nodiscard specifies if the volume will be mounted with discard support disabled.
+  // i.e. FS will not release allocated blocks back to the backing storage pool.
+  oneof nodiscard_opt { bool nodiscard = 54; }
+  // IoStrategy preferred strategy for I/O.
+  oneof io_strategy_opt { IoStrategy io_strategy = 55; }
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
@@ -538,9 +548,9 @@ message CapacityUsageInfo {
   int64 total_bytes = 3;
 }
 
-// A SdkStoragePolicy represents minimum set of volume specs to be 
+// A SdkStoragePolicy represents minimum set of volume specs to be
 // follow while creating volumes.
-// If enforce in OpenStoragePolicy service, VolumeSpecPolicy will be 
+// If enforce in OpenStoragePolicy service, VolumeSpecPolicy will be
 // used before creating volume to ensure minimum volume creation rules
 // are enforced.
 message SdkStoragePolicy {
@@ -1646,7 +1656,7 @@ service OpenStorageCloudBackup {
 // Policies can be used to enforces a set of volume configurations to be followed
 // while creating volumes.
 service OpenStoragePolicy {
-  
+
   // Creates a storage policy
   rpc Create(SdkOpenStoragePolicyCreateRequest)
     returns (SdkOpenStoragePolicyCreateResponse) {
@@ -1734,7 +1744,7 @@ message SdkOpenStoragePolicyEnumerateRequest {
 
 // Define a storage policy enumerate response
 message SdkOpenStoragePolicyEnumerateResponse {
-  // List of storage policies 
+  // List of storage policies
   repeated SdkStoragePolicy storage_policies =1;
 }
 
@@ -1750,7 +1760,7 @@ message SdkOpenStoragePolicyInspectResponse {
   SdkStoragePolicy storage_policy =1;
 }
 
-// Define a request to delete storage policy 
+// Define a request to delete storage policy
 message SdkOpenStoragePolicyDeleteRequest {
   // name of storage policy to delete
   string name = 1;
@@ -1774,7 +1784,7 @@ message SdkOpenStoragePolicyUpdateResponse {
 message SdkOpenStoragePolicyEnforceRequest {
   // name of policy to set as default enforcement
   // for volume creation
-  // This policy will be used to enforce volume configuration 
+  // This policy will be used to enforce volume configuration
   string name = 1;
 }
 
@@ -2830,7 +2840,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 22;
+    Minor = 23;
     // SDK version patch value of this specification
     Patch = 11;
   }

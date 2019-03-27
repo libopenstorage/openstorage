@@ -1952,7 +1952,7 @@
       "type": "object"
     },
     "apiSdkStoragePolicy": {
-      "description": "A SdkStoragePolicy represents minimum set of volume specs to be \nfollow while creating volumes.\nIf enforce in OpenStoragePolicy service, VolumeSpecPolicy will be \nused before creating volume to ensure minimum volume creation rules\nare enforced.",
+      "description": "A SdkStoragePolicy represents minimum set of volume specs to be\nfollow while creating volumes.\nIf enforce in OpenStoragePolicy service, VolumeSpecPolicy will be\nused before creating volume to ensure minimum volume creation rules\nare enforced.",
       "properties": {
         "name": {
           "description": "Name of storage policy.",
@@ -3089,7 +3089,14 @@
         "io_profile": {
           "$ref": "#/definitions/apiIoProfile"
         },
+        "io_strategy": {
+          "$ref": "#/definitions/apiIoStrategy"
+        },
         "journal": {
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "nodiscard": {
           "format": "boolean",
           "type": "boolean"
         },
@@ -3173,7 +3180,14 @@
         "io_profile": {
           "$ref": "#/definitions/apiIoProfile"
         },
+        "io_strategy": {
+          "$ref": "#/definitions/apiIoStrategy"
+        },
         "journal": {
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "nodiscard": {
           "format": "boolean",
           "type": "boolean"
         },
@@ -3280,7 +3294,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.22.11"
+    "version": "0.23.11"
   },
   "paths": {
     "/v1/alerts": {
