@@ -774,12 +774,20 @@ func (vd *volAPI) enumerate(w http.ResponseWriter, r *http.Request) {
 	for i, s := range ids {
 		vol, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{VolumeId: s})
 		if err != nil {
-			e := fmt.Errorf("Failed to inspect volumeID: %s", err.Error())
-			vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+			if s, ok := status.FromError(err); ok && s.Code() != codes.NotFound {
+				e := fmt.Errorf("enumerate Failed to inspect volumeID: %s", err.Error())
+				vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+				return
+			}
+
+			// We got an error but it's a NotFound error just return an empty array.
+			evols := make([]*api.Volume, 0)
+			json.NewEncoder(w).Encode(evols)
 			return
 		}
 		vols[i] = vol.GetVolume()
 	}
+
 	json.NewEncoder(w).Encode(vols)
 }
 
