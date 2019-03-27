@@ -3230,7 +3230,14 @@
           "io_profile": {
             "$ref": "#/components/schemas/apiIoProfile"
           },
+          "io_strategy": {
+            "$ref": "#/components/schemas/apiIoStrategy"
+          },
           "journal": {
+            "format": "boolean",
+            "type": "boolean"
+          },
+          "nodiscard": {
             "format": "boolean",
             "type": "boolean"
           },
@@ -3310,7 +3317,14 @@
           "io_profile": {
             "$ref": "#/components/schemas/apiIoProfile"
           },
+          "io_strategy": {
+            "$ref": "#/components/schemas/apiIoStrategy"
+          },
           "journal": {
+            "format": "boolean",
+            "type": "boolean"
+          },
+          "nodiscard": {
             "format": "boolean",
             "type": "boolean"
           },
@@ -3420,7 +3434,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.42.2"
+    "version": "0.43.2"
   },
   "openapi": "3.0.0",
   "paths": {

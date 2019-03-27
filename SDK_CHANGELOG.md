@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.43.0 - Tech Preview (3/26/2019)
+
+* Handle spec update for nodiscard, io_strategy
+
 ### v0.42.2 - Tech Preview (3/13/2019)
 
 * Add ownership support to OpenStorageStoragePolicy
