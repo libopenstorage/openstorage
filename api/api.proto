@@ -371,6 +371,11 @@ message VolumeSpecUpdate {
   // `ownership` message is an empty string then the value of `owner` in
   // the `VolumeSpec.Ownership.owner` will not be updated.
   Ownership ownership = 26;
+  // Nodiscard specifies if the volume will be mounted with discard support disabled.
+  // i.e. FS will not release allocated blocks back to the backing storage pool.
+  oneof nodiscard_opt { bool nodiscard = 27; }
+  // IoStrategy preferred strategy for I/O.
+  oneof io_strategy_opt { IoStrategy io_strategy = 28; }
 }
 
 // VolumeSpecPolicy provides a method to set volume storage policy
@@ -433,6 +438,11 @@ message VolumeSpecPolicy {
   PolicyOp scale_operator = 52;
   // Operator to check snapshot_interval
   PolicyOp snapshot_interval_operator = 53;
+  // Nodiscard specifies if the volume will be mounted with discard support disabled.
+  // i.e. FS will not release allocated blocks back to the backing storage pool.
+  oneof nodiscard_opt { bool nodiscard = 54; }
+  // IoStrategy preferred strategy for I/O.
+  oneof io_strategy_opt { IoStrategy io_strategy = 55; }
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
@@ -3200,7 +3210,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 45;
+    Minor = 46;
     // SDK version patch value of this specification
     Patch = 0;
   }
