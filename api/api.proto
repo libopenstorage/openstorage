@@ -158,11 +158,6 @@ enum StorageMedium {
   STORAGE_MEDIUM_NVME = 2;
 }
 
-enum ClusterNotify {
- // Node is down
- CLUSTER_NOTIFY_DOWN = 0;
-}
-
 enum AttachState {
     // Attached and available externally
     ATTACH_STATE_EXTERNAL = 0;
