@@ -22,6 +22,7 @@ import (
 
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/pkg/clusterdomain"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -32,17 +33,17 @@ func TestSdkClusterDomainsEnumerate(t *testing.T) {
 	defer s.Stop()
 
 	// Create response
-	name := "name"
-	cluster := api.Cluster{
-		Id:     name,
-		NodeId: "somenodeid",
-		Status: api.Status_STATUS_NOT_IN_QUORUM,
-		ClusterDomainsActiveMap: types.ClusterDomainsActiveMap{
-			"zone1": types.CLUSTER_DOMAIN_STATE_ACTIVE,
-			"zone2": types.CLUSTER_DOMAIN_STATE_INACTIVE,
+	infos := []*clusterdomain.ClusterDomainInfo{
+		{
+			Name:  "zone1",
+			State: types.CLUSTER_DOMAIN_STATE_ACTIVE,
+		},
+		{
+			Name:  "zone2",
+			State: types.CLUSTER_DOMAIN_STATE_INACTIVE,
 		},
 	}
-	s.MockCluster().EXPECT().Enumerate().Return(cluster, nil).Times(1)
+	s.MockCluster().EXPECT().EnumerateDomains().Return(infos, nil).Times(1)
 
 	// Setup client
 	c := api.NewOpenStorageClusterDomainsClient(s.Conn())
@@ -61,17 +62,11 @@ func TestSdkClusterDomainsInspect(t *testing.T) {
 	defer s.Stop()
 
 	// Create response
-	name := "name"
-	cluster := api.Cluster{
-		Id:     name,
-		NodeId: "somenodeid",
-		Status: api.Status_STATUS_NOT_IN_QUORUM,
-		ClusterDomainsActiveMap: types.ClusterDomainsActiveMap{
-			"zone1": types.CLUSTER_DOMAIN_STATE_ACTIVE,
-			"zone2": types.CLUSTER_DOMAIN_STATE_INACTIVE,
-		},
+	info := &clusterdomain.ClusterDomainInfo{
+		Name:  "zone1",
+		State: types.CLUSTER_DOMAIN_STATE_ACTIVE,
 	}
-	s.MockCluster().EXPECT().Enumerate().Return(cluster, nil).Times(2)
+	s.MockCluster().EXPECT().InspectDomain("zone1").Return(info, nil).Times(1)
 
 	// Setup client
 	c := api.NewOpenStorageClusterDomainsClient(s.Conn())
@@ -82,6 +77,12 @@ func TestSdkClusterDomainsInspect(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.True(t, r.GetIsActive(), "Unexpected cluster domain status")
+
+	info = &clusterdomain.ClusterDomainInfo{
+		Name:  "zone2",
+		State: types.CLUSTER_DOMAIN_STATE_INACTIVE,
+	}
+	s.MockCluster().EXPECT().InspectDomain("zone2").Return(info, nil).Times(1)
 
 	// Get info
 	r, err = c.Inspect(context.Background(), &api.SdkClusterDomainInspectRequest{
@@ -104,9 +105,7 @@ func TestSdkClusterDomainsActivate(t *testing.T) {
 	_, err := c.Activate(context.Background(), &api.SdkClusterDomainActivateRequest{})
 	assert.Error(t, err, "Expected an error on empty activate request")
 
-	s.MockCluster().EXPECT().ActivateClusterDomain(&api.ActivateClusterDomainRequest{
-		ClusterDomain: "zone2",
-	}).Return(nil).Times(1)
+	s.MockCluster().EXPECT().UpdateDomainState("zone2", types.CLUSTER_DOMAIN_STATE_ACTIVE).Return(nil).Times(1)
 
 	// Get info
 	_, err = c.Activate(context.Background(), &api.SdkClusterDomainActivateRequest{ClusterDomainName: "zone2"})
@@ -126,9 +125,7 @@ func TestSdkClusterDomainsDeactivate(t *testing.T) {
 	_, err := c.Deactivate(context.Background(), &api.SdkClusterDomainDeactivateRequest{})
 	assert.Error(t, err, "Expected an error on empty deactivate request")
 
-	s.MockCluster().EXPECT().DeactivateClusterDomain(&api.DeactivateClusterDomainRequest{
-		ClusterDomain: "zone2",
-	}).Return(nil).Times(1)
+	s.MockCluster().EXPECT().UpdateDomainState("zone2", types.CLUSTER_DOMAIN_STATE_INACTIVE).Return(nil).Times(1)
 
 	// Get info
 	_, err = c.Deactivate(context.Background(), &api.SdkClusterDomainDeactivateRequest{ClusterDomainName: "zone2"})
