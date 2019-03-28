@@ -3266,7 +3266,14 @@
           "io_profile": {
             "$ref": "#/components/schemas/apiIoProfile"
           },
+          "io_strategy": {
+            "$ref": "#/components/schemas/apiIoStrategy"
+          },
           "journal": {
+            "format": "boolean",
+            "type": "boolean"
+          },
+          "nodiscard": {
             "format": "boolean",
             "type": "boolean"
           },
@@ -3346,7 +3353,14 @@
           "io_profile": {
             "$ref": "#/components/schemas/apiIoProfile"
           },
+          "io_strategy": {
+            "$ref": "#/components/schemas/apiIoStrategy"
+          },
           "journal": {
+            "format": "boolean",
+            "type": "boolean"
+          },
+          "nodiscard": {
             "format": "boolean",
             "type": "boolean"
           },
