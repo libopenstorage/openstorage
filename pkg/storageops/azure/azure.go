@@ -11,8 +11,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-06-01/compute"
 	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/autorest/adal"
-	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/libopenstorage/openstorage/pkg/storageops"
 	"github.com/portworx/sched-ops/task"
@@ -23,15 +22,10 @@ const (
 	envInstanceName      = "AZURE_INSTANCE_NAME"
 	envSubscriptionID    = "AZURE_SUBSCRIPTION_ID"
 	envResourceGroupName = "AZURE_RESOURCE_GROUP_NAME"
-	envAzureEnvironment  = "AZURE_ENVIRONMENT"
-	envTenantID          = "AZURE_TENANT_ID"
-	envClientID          = "AZURE_CLIENT_ID"
-	envClientSecret      = "AZURE_CLIENT_SECRET"
 )
 
 const (
 	name                    = "azure"
-	defaultEnvironment      = "AzurePublicCloud"
 	userAgentExtension      = "osd"
 	azureDiskPrefix         = "/dev/disk/azure/scsi1/lun"
 	snapNameFormat          = "2006-01-02_15.04.05.999999"
@@ -43,7 +37,6 @@ const (
 
 type azureOps struct {
 	instance          string
-	subscriptionID    string
 	resourceGroupName string
 	disksClient       *compute.DisksClient
 	vmsClient         *compute.VirtualMachinesClient
@@ -63,59 +56,24 @@ func NewEnvClient() (storageops.Ops, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	subscriptionID, err := storageops.GetEnvValueStrict(envSubscriptionID)
 	if err != nil {
 		return nil, err
 	}
-
 	resourceGroupName, err := storageops.GetEnvValueStrict(envResourceGroupName)
 	if err != nil {
 		return nil, err
 	}
-
 	return NewClient(instance, subscriptionID, resourceGroupName)
 }
 
 func NewClient(
 	instance, subscriptionID, resourceGroupName string,
 ) (storageops.Ops, error) {
-	envName := os.Getenv(envAzureEnvironment)
-	if len(envName) == 0 {
-		envName = defaultEnvironment
-	}
-	env, err := azure.EnvironmentFromName(envName)
-	if err != nil {
-		return nil, fmt.Errorf("invalid cloud name '%s' specified: %v", envName, err)
-	}
-
-	tenantID, err := storageops.GetEnvValueStrict(envTenantID)
+	authorizer, err := auth.NewAuthorizerFromEnvironment()
 	if err != nil {
 		return nil, err
 	}
-
-	clientID, err := storageops.GetEnvValueStrict(envClientID)
-	if err != nil {
-		return nil, err
-	}
-
-	clientSecret, err := storageops.GetEnvValueStrict(envClientSecret)
-	if err != nil {
-		return nil, err
-	}
-
-	oauthConfig, err := adal.NewOAuthConfig(env.ActiveDirectoryEndpoint, tenantID)
-	if err != nil {
-		return nil, err
-	}
-
-	token, err := adal.NewServicePrincipalToken(*oauthConfig, clientID,
-		clientSecret, env.ResourceManagerEndpoint)
-	if err != nil {
-		return nil, err
-	}
-
-	authorizer := autorest.NewBearerAuthorizer(token)
 
 	disksClient := compute.NewDisksClient(subscriptionID)
 	disksClient.Authorizer = authorizer
