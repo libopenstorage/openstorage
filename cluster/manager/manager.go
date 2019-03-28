@@ -23,6 +23,7 @@ import (
 	"github.com/libopenstorage/openstorage/objectstore"
 	"github.com/libopenstorage/openstorage/osdconfig"
 	"github.com/libopenstorage/openstorage/pkg/auth"
+	"github.com/libopenstorage/openstorage/pkg/clusterdomain"
 	sched "github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
 	"github.com/libopenstorage/systemutils"
@@ -53,29 +54,29 @@ var (
 
 // ClusterManager implements the cluster interface
 type ClusterManager struct {
-	size               int
-	listeners          *list.List
-	config             config.ClusterConfig
-	kv                 kvdb.Kvdb
-	status             api.Status
-	nodeCache          map[string]api.Node // Cached info on the nodes in the cluster.
-	nodeCacheLock      sync.Mutex
-	nodeStatuses       map[string]api.Status // Set of nodes currently marked down.
-	gossip             gossip.Gossiper
-	gossipVersion      string
-	gossipPort         string
-	gEnabled           bool
-	selfNode           api.Node
-	selfNodeLock       sync.Mutex // Lock that guards data and label of selfNode
-	system             systemutils.System
-	configManager      osdconfig.ConfigCaller
-	schedManager       sched.SchedulePolicyProvider
-	objstoreManager    objectstore.ObjectStore
-	secretsManager     secrets.Secrets
-	systemTokenManager auth.TokenGenerator
-	snapshotPrefixes   []string
-	selfClusterDomain  string
-	activeMap          types.ClusterDomainsActiveMap
+	size                 int
+	listeners            *list.List
+	config               config.ClusterConfig
+	kv                   kvdb.Kvdb
+	status               api.Status
+	nodeCache            map[string]api.Node // Cached info on the nodes in the cluster.
+	nodeCacheLock        sync.Mutex
+	nodeStatuses         map[string]api.Status // Set of nodes currently marked down.
+	gossip               gossip.Gossiper
+	gossipVersion        string
+	gossipPort           string
+	gEnabled             bool
+	selfNode             api.Node
+	selfNodeLock         sync.Mutex // Lock that guards data and label of selfNode
+	system               systemutils.System
+	configManager        osdconfig.ConfigCaller
+	schedManager         sched.SchedulePolicyProvider
+	objstoreManager      objectstore.ObjectStore
+	secretsManager       secrets.Secrets
+	systemTokenManager   auth.TokenGenerator
+	clusterDomainManager clusterdomain.ClusterDomainProvider
+	snapshotPrefixes     []string
+	selfClusterDomain    string
 }
 
 // ErrNewNodeOverMaxCapacity used when a new node (not yet part of the cluster) triggers max #nodes capacity.
@@ -342,51 +343,6 @@ func (c *ClusterManager) UpdateSchedulerNodeName(schedulerNodeName string) error
 	return updateLockedDB("update-scheduler-name", c.selfNode.Id, updateCallbackFn)
 }
 
-func (c *ClusterManager) DeactivateClusterDomain(deactivateRequest *api.DeactivateClusterDomainRequest) error {
-	updateCallbackFn := func(db *cluster.ClusterInfo) (bool, error) {
-		if db.ClusterDomains.ActiveMap[deactivateRequest.ClusterDomain] == types.CLUSTER_DOMAIN_STATE_ACTIVE {
-			db.ClusterDomains.ActiveMap[deactivateRequest.ClusterDomain] = types.CLUSTER_DOMAIN_STATE_INACTIVE
-			return true, nil
-		}
-		// Cluster domain is not active. No need of update
-		return false, nil
-	}
-	return updateLockedDB("deactivate-cluster-domain", c.selfNode.Id, updateCallbackFn)
-}
-
-func (c *ClusterManager) ActivateClusterDomain(activateRequest *api.ActivateClusterDomainRequest) error {
-	updateCallbackFn := func(db *cluster.ClusterInfo) (bool, error) {
-		if db.ClusterDomains.ActiveMap[activateRequest.ClusterDomain] == types.CLUSTER_DOMAIN_STATE_INACTIVE {
-			db.ClusterDomains.ActiveMap[activateRequest.ClusterDomain] = types.CLUSTER_DOMAIN_STATE_ACTIVE
-			return true, nil
-		}
-		// Cluster domain is active. No need of update
-		return false, nil
-	}
-	return updateLockedDB("deactivate-cluster-domain", c.selfNode.Id, updateCallbackFn)
-}
-
-func (c *ClusterManager) UpdateSelfClusterDomain(selfClusterDomain string) error {
-	c.selfNodeLock.Lock()
-	defer c.selfNodeLock.Unlock()
-
-	if c.selfClusterDomain == selfClusterDomain {
-		// No need to update cluster database
-		return nil
-	}
-
-	updateCallbackFn := func(db *cluster.ClusterInfo) (bool, error) {
-		nodeEntry, ok := db.NodeEntries[c.selfNode.Id]
-		if !ok {
-			return false, fmt.Errorf("Node not found in cluster database")
-		}
-		nodeEntry.ClusterDomain = selfClusterDomain
-		db.NodeEntries[c.selfNode.Id] = nodeEntry
-		return true, nil
-	}
-	return updateLockedDB("update-failure-domain", c.selfNode.Id, updateCallbackFn)
-}
-
 // GetData returns self node's data
 func (c *ClusterManager) GetData() (map[string]*api.Node, error) {
 	nodes := make(map[string]*api.Node)
@@ -486,8 +442,6 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 		}
 	}
 
-	var selfNodeClusterDomainInDb string
-
 	for _, nodeEntry := range db.NodeEntries {
 		if nodeEntry.Status == api.Status_STATUS_DECOMMISSION {
 			logrus.Infof("ClusterManager watchDB, node ID "+
@@ -524,25 +478,12 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 				c.gossip.Stop(time.Duration(10 * time.Second))
 				return fmt.Errorf("stop watch")
 			}
-		} else {
-			if nodeEntry.Id == c.selfNode.Id {
-				selfNodeClusterDomainInDb = nodeEntry.ClusterDomain
-			}
 		}
 	}
 
 	c.size = db.Size
 
 	c.gossip.UpdateCluster(c.getNonDecommisionedPeers(db))
-
-	if len(db.ClusterDomains.ActiveMap) > 0 {
-		// Copy over the active map
-		c.activeMap = make(types.ClusterDomainsActiveMap)
-		for k, v := range db.ClusterDomains.ActiveMap {
-			c.activeMap[k] = v
-		}
-		c.gossip.UpdateClusterDomainsActiveMap(c.activeMap)
-	}
 
 	// update the nodeCache and remove any nodes not present in cluster database
 	c.nodeCacheLock.Lock()
@@ -551,13 +492,6 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 		_, found := db.NodeEntries[n.Id]
 		if !found {
 			delete(c.nodeCache, n.Id)
-		}
-	}
-	// Check if our cluster domain has changed under a lock
-	if c.selfClusterDomain != selfNodeClusterDomainInDb {
-		c.selfClusterDomain = selfNodeClusterDomainInDb
-		if c.gossip != nil {
-			c.gossip.UpdateSelfClusterDomain(selfNodeClusterDomainInDb)
 		}
 	}
 
@@ -711,7 +645,7 @@ func (c *ClusterManager) joinCluster(
 
 	// Alert all listeners that we are joining the cluster.
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		err := e.Value.(cluster.ClusterListener).Join(self, initState, c.HandleNotifications)
+		err := e.Value.(cluster.ClusterListener).Join(self, initState)
 		if err != nil {
 			if self.Status != api.Status_STATUS_MAINTENANCE {
 				self.Status = api.Status_STATUS_ERROR
@@ -766,7 +700,10 @@ func (c *ClusterManager) startClusterDBWatch(lastIndex uint64,
 	return nil
 }
 
-func (c *ClusterManager) startHeartBeat(clusterInfo *cluster.ClusterInfo) {
+func (c *ClusterManager) startHeartBeat(
+	clusterInfo *cluster.ClusterInfo,
+	activeMap types.ClusterDomainsActiveMap,
+) {
 	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
 
 	node := c.getCurrentState()
@@ -775,7 +712,7 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *cluster.ClusterInfo) {
 	var nodeIps []string
 
 	gossipConfig := types.GossipStartConfiguration{
-		ActiveMap: clusterInfo.ClusterDomains.ActiveMap,
+		ActiveMap: activeMap,
 	}
 	gossipConfig.Nodes = make(map[types.NodeId]types.GossipNodeConfiguration)
 
@@ -812,7 +749,7 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *cluster.ClusterInfo) {
 		logrus.Infof("Starting Gossip...")
 	}
 
-	if len(clusterInfo.ClusterDomains.ActiveMap) > 0 {
+	if len(activeMap) > 0 {
 		gossipConfig.QuorumProviderType = types.QUORUM_PROVIDER_FAILURE_DOMAINS
 	} else {
 		gossipConfig.QuorumProviderType = types.QUORUM_PROVIDER_DEFAULT
@@ -1115,15 +1052,6 @@ func (c *ClusterManager) initializeCluster(db kvdb.Kvdb, selfClusterDomain strin
 		logrus.Infoln("Initializing a new cluster.")
 		// Initialize self node
 		clusterInfo.Status = api.Status_STATUS_OK
-		clusterInfo.ClusterDomains.ActiveMap = make(types.ClusterDomainsActiveMap)
-		c.activeMap = make(types.ClusterDomainsActiveMap)
-
-		if len(selfClusterDomain) > 0 {
-			// We are initializing the cluster, the only known cluster domain
-			// will be active to start with
-			clusterInfo.ClusterDomains.ActiveMap[selfClusterDomain] = types.CLUSTER_DOMAIN_STATE_ACTIVE
-			c.activeMap[selfClusterDomain] = types.CLUSTER_DOMAIN_STATE_ACTIVE
-		}
 
 		err = c.initClusterForListeners(&c.selfNode)
 		if err != nil {
@@ -1223,14 +1151,6 @@ func (c *ClusterManager) initListeners(
 			return ErrNewNodeOverMaxCapacity(clusterMaxSize)
 		}
 
-		if len(c.selfClusterDomain) > 0 {
-			// Add an entry of our cluster domain if it does not exists
-			_, exists := clusterInfo.ClusterDomains.ActiveMap[c.selfClusterDomain]
-			if !exists {
-				clusterInfo.ClusterDomains.ActiveMap[c.selfClusterDomain] = types.CLUSTER_DOMAIN_STATE_ACTIVE
-			}
-		}
-
 		// Finalize inits from subsystems under cluster db lock.
 		for _, finalizeCb := range finalizeCbs {
 			if err := finalizeCb(); err != nil {
@@ -1267,7 +1187,7 @@ func (c *ClusterManager) initializeAndStartHeartbeat(
 	exist *bool,
 	nodeInitialized bool,
 	selfClusterDomain string,
-) (uint64, error) {
+) (uint64, *cluster.ClusterInfo, error) {
 	lastIndex, clusterInfo, err := c.initListeners(
 		kvdb,
 		clusterMaxSize,
@@ -1276,16 +1196,26 @@ func (c *ClusterManager) initializeAndStartHeartbeat(
 		selfClusterDomain,
 	)
 	if err != nil {
-		return 0, err
+		return 0, nil, err
 	}
 
 	// Set the status to NOT_IN_QUORUM to start the node.
 	// Once we achieve quorum then we actually join the cluster
 	// and change the status to OK
 	c.selfNode.Status = api.Status_STATUS_NOT_IN_QUORUM
+
+	// Get the cluster domain info
+	clusterDomainInfos, err := c.clusterDomainManager.EnumerateDomains()
+	if err != nil && err != clusterdomain.ErrNotImplemented {
+		return 0, nil, err
+	}
+
 	// Start heartbeating to other nodes.
-	go c.startHeartBeat(clusterInfo)
-	return lastIndex, nil
+	go c.startHeartBeat(
+		clusterInfo,
+		clusterdomain.GetActiveMapFromClusterDomainInfos(clusterDomainInfos),
+	)
+	return lastIndex, clusterInfo, nil
 }
 
 func (c *ClusterManager) setupManagers(config *cluster.ClusterServerConfiguration) {
@@ -1311,6 +1241,12 @@ func (c *ClusterManager) setupManagers(config *cluster.ClusterServerConfiguratio
 		c.systemTokenManager = auth.NoAuth()
 	} else {
 		c.systemTokenManager = config.ConfigSystemTokenManager
+	}
+
+	if config.ConfigClusterDomainProvider == nil {
+		c.clusterDomainManager = clusterdomain.NewDefaultClusterDomainPorvider()
+	} else {
+		c.clusterDomainManager = config.ConfigClusterDomainProvider
 	}
 }
 
@@ -1400,7 +1336,7 @@ func (c *ClusterManager) StartWithConfiguration(
 	c.gossipVersion = types.GOSSIP_VERSION_2
 
 	var exist bool
-	lastIndex, err := c.initializeAndStartHeartbeat(
+	lastIndex, clusterInfo, err := c.initializeAndStartHeartbeat(
 		kv,
 		clusterMaxSize,
 		&exist,
@@ -1409,6 +1345,14 @@ func (c *ClusterManager) StartWithConfiguration(
 	)
 	if err != nil {
 		return err
+	}
+
+	// Update all the listeners with the new db
+	for e := c.listeners.Front(); e != nil; e = e.Next() {
+		err := e.Value.(cluster.ClusterListener).UpdateCluster(&c.selfNode, clusterInfo)
+		if err != nil {
+			logrus.Warnln("Failed to notify ", e.Value.(cluster.ClusterListener).String())
+		}
 	}
 
 	_ = c.startClusterDBWatch(lastIndex, kv)
@@ -1516,20 +1460,16 @@ func (c *ClusterManager) nodes(clusterDB *cluster.ClusterInfo) []api.Node {
 	return nodes
 }
 
-func (c *ClusterManager) enumerateFromClusterDB() ([]api.Node, types.ClusterDomainsActiveMap) {
+func (c *ClusterManager) enumerateFromClusterDB() []api.Node {
 	clusterDB, _, err := readClusterInfo()
 	if err != nil {
 		logrus.Errorf("enumerateNodesFromClusterDB failed with error: %v", err)
-		return make([]api.Node, 0), nil
+		return make([]api.Node, 0)
 	}
-	activeMap := make(types.ClusterDomainsActiveMap)
-	for k, v := range clusterDB.ClusterDomains.ActiveMap {
-		activeMap[k] = v
-	}
-	return c.nodes(&clusterDB), activeMap
+	return c.nodes(&clusterDB)
 }
 
-func (c *ClusterManager) enumerateFromCache() ([]api.Node, types.ClusterDomainsActiveMap) {
+func (c *ClusterManager) enumerateFromCache() []api.Node {
 	var clusterDB cluster.ClusterInfo
 	c.nodeCacheLock.Lock()
 	defer c.nodeCacheLock.Unlock()
@@ -1540,11 +1480,7 @@ func (c *ClusterManager) enumerateFromCache() ([]api.Node, types.ClusterDomainsA
 		nodes[i] = *n.Copy()
 		i++
 	}
-	cacheActiveMap := make(types.ClusterDomainsActiveMap)
-	for k, v := range c.activeMap {
-		cacheActiveMap[k] = v
-	}
-	return nodes, cacheActiveMap
+	return nodes
 }
 
 // Enumerate lists all the nodes in the cluster.
@@ -1559,9 +1495,9 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 		c.selfNode.Status == api.Status_STATUS_MAINTENANCE {
 		// If the node is not yet ready, query the cluster db
 		// for node members since gossip is not ready yet.
-		clusterState.Nodes, clusterState.ClusterDomainsActiveMap = c.enumerateFromClusterDB()
+		clusterState.Nodes = c.enumerateFromClusterDB()
 	} else {
-		clusterState.Nodes, clusterState.ClusterDomainsActiveMap = c.enumerateFromCache()
+		clusterState.Nodes = c.enumerateFromCache()
 	}
 
 	// Allow listeners to add/modify data
@@ -1898,14 +1834,16 @@ func (c *ClusterManager) Shutdown() error {
 	return nil
 }
 
-// HandleNotifications is a callback function used by the listeners
-func (c *ClusterManager) HandleNotifications(culpritNodeId string, notification api.ClusterNotify) (string, error) {
-	if notification == api.ClusterNotify_CLUSTER_NOTIFY_DOWN {
-		killNodeId := c.gossip.ExternalNodeLeave(types.NodeId(culpritNodeId))
-		return string(killNodeId), nil
-	} else {
-		return "", fmt.Errorf("Error in Handle Notifications. Unknown Notification : %v", notification)
+func (c *ClusterManager) ClusterNotifyNodeDown(culpritNodeId string) (string, error) {
+	killNodeId := c.gossip.ExternalNodeLeave(types.NodeId(culpritNodeId))
+	return string(killNodeId), nil
+}
+
+func (c *ClusterManager) ClusterNotifyClusterDomainsUpdate(activeMap types.ClusterDomainsActiveMap) error {
+	if c.gossip != nil {
+		return c.gossip.UpdateClusterDomainsActiveMap(activeMap)
 	}
+	return nil
 }
 
 func (c *ClusterManager) EnumerateAlerts(ts, te time.Time, resource api.ResourceType) (*api.Alerts, error) {
@@ -1948,6 +1886,31 @@ func (c *ClusterManager) putNodeCacheEntry(nodeId string, node api.Node) {
 	c.nodeCacheLock.Lock()
 	defer c.nodeCacheLock.Unlock()
 	c.nodeCache[nodeId] = node
+}
+
+// GetSelfDomain returns the cluster domain for this node
+func (c *ClusterManager) GetSelfDomain() (*clusterdomain.ClusterDomainInfo, error) {
+	return c.clusterDomainManager.GetSelfDomain()
+}
+
+// EnumerateDomains returns all the cluster domains in the cluster
+func (c *ClusterManager) EnumerateDomains() ([]*clusterdomain.ClusterDomainInfo, error) {
+	return c.clusterDomainManager.EnumerateDomains()
+}
+
+// InspectDomain returns the cluster domain info for the provided argument.
+func (c *ClusterManager) InspectDomain(name string) (*clusterdomain.ClusterDomainInfo, error) {
+	return c.clusterDomainManager.InspectDomain(name)
+}
+
+// DeleteDomain deletes a cluster domain entry
+func (c *ClusterManager) DeleteDomain(name string) error {
+	return c.clusterDomainManager.DeleteDomain(name)
+}
+
+// UpdateDomainState sets the cluster domain info object into kvdb
+func (c *ClusterManager) UpdateDomainState(name string, state types.ClusterDomainState) error {
+	return c.clusterDomainManager.UpdateDomainState(name, state)
 }
 
 // osdconfig.ConfigCaller compliance

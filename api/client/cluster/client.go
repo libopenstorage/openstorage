@@ -5,9 +5,11 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/client"
 	"github.com/libopenstorage/openstorage/cluster"
+	"github.com/libopenstorage/openstorage/pkg/clusterdomain"
 	sched "github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
 )
@@ -26,6 +28,7 @@ const (
 )
 
 type clusterClient struct {
+	clusterdomain.NullClusterDomainManager
 	c *client.Client
 }
 
@@ -209,19 +212,11 @@ func (c *clusterClient) UpdateSchedulerNodeName(name string) error {
 	return nil
 }
 
-func (c *clusterClient) UpdateSelfClusterDomain(selfClusterDomain string) error {
-	return nil
+func (c *clusterClient) ClusterNotifyNodeDown(culpritNodeId string) (string, error) {
+	return "", nil
 }
 
-func (c *clusterClient) ActivateClusterDomain(
-	request *api.ActivateClusterDomainRequest,
-) error {
-	return nil
-}
-
-func (c *clusterClient) DeactivateClusterDomain(
-	request *api.DeactivateClusterDomainRequest,
-) error {
+func (c *clusterClient) ClusterNotifyClusterDomainsUpdate(types.ClusterDomainsActiveMap) error {
 	return nil
 }
 

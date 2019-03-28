@@ -472,6 +472,18 @@ func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume) *api.VolumeSpecU
 		}
 	}
 
+	if spec.Nodiscard != vol.Spec.Nodiscard {
+		newSpec.NodiscardOpt = &api.VolumeSpecUpdate_Nodiscard{
+			Nodiscard: spec.Nodiscard,
+		}
+	}
+
+	if spec.IoStrategy != vol.Spec.IoStrategy {
+		newSpec.IoStrategyOpt = &api.VolumeSpecUpdate_IoStrategy{
+			IoStrategy: spec.IoStrategy,
+		}
+	}
+
 	if spec.Sticky != vol.Spec.Sticky {
 		newSpec.StickyOpt = &api.VolumeSpecUpdate_Sticky{
 			Sticky: spec.Sticky,

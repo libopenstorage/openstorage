@@ -5,13 +5,16 @@
 package mock
 
 import (
+	reflect "reflect"
+	time "time"
+
 	gomock "github.com/golang/mock/gomock"
+	types "github.com/libopenstorage/gossip/types"
 	api "github.com/libopenstorage/openstorage/api"
 	cluster "github.com/libopenstorage/openstorage/cluster"
 	osdconfig "github.com/libopenstorage/openstorage/osdconfig"
+	clusterdomain "github.com/libopenstorage/openstorage/pkg/clusterdomain"
 	schedpolicy "github.com/libopenstorage/openstorage/schedpolicy"
-	reflect "reflect"
-	time "time"
 )
 
 // MockCluster is a mock of Cluster interface
@@ -37,18 +40,6 @@ func (m *MockCluster) EXPECT() *MockClusterMockRecorder {
 	return m.recorder
 }
 
-// ActivateClusterDomain mocks base method
-func (m *MockCluster) ActivateClusterDomain(arg0 *api.ActivateClusterDomainRequest) error {
-	ret := m.ctrl.Call(m, "ActivateClusterDomain", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// ActivateClusterDomain indicates an expected call of ActivateClusterDomain
-func (mr *MockClusterMockRecorder) ActivateClusterDomain(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ActivateClusterDomain", reflect.TypeOf((*MockCluster)(nil).ActivateClusterDomain), arg0)
-}
-
 // AddEventListener mocks base method
 func (m *MockCluster) AddEventListener(arg0 cluster.ClusterListener) error {
 	ret := m.ctrl.Call(m, "AddEventListener", arg0)
@@ -59,6 +50,31 @@ func (m *MockCluster) AddEventListener(arg0 cluster.ClusterListener) error {
 // AddEventListener indicates an expected call of AddEventListener
 func (mr *MockClusterMockRecorder) AddEventListener(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddEventListener", reflect.TypeOf((*MockCluster)(nil).AddEventListener), arg0)
+}
+
+// ClusterNotifyClusterDomainsUpdate mocks base method
+func (m *MockCluster) ClusterNotifyClusterDomainsUpdate(arg0 types.ClusterDomainsActiveMap) error {
+	ret := m.ctrl.Call(m, "ClusterNotifyClusterDomainsUpdate", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ClusterNotifyClusterDomainsUpdate indicates an expected call of ClusterNotifyClusterDomainsUpdate
+func (mr *MockClusterMockRecorder) ClusterNotifyClusterDomainsUpdate(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClusterNotifyClusterDomainsUpdate", reflect.TypeOf((*MockCluster)(nil).ClusterNotifyClusterDomainsUpdate), arg0)
+}
+
+// ClusterNotifyNodeDown mocks base method
+func (m *MockCluster) ClusterNotifyNodeDown(arg0 string) (string, error) {
+	ret := m.ctrl.Call(m, "ClusterNotifyNodeDown", arg0)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ClusterNotifyNodeDown indicates an expected call of ClusterNotifyNodeDown
+func (mr *MockClusterMockRecorder) ClusterNotifyNodeDown(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClusterNotifyNodeDown", reflect.TypeOf((*MockCluster)(nil).ClusterNotifyNodeDown), arg0)
 }
 
 // CreatePair mocks base method
@@ -74,16 +90,16 @@ func (mr *MockClusterMockRecorder) CreatePair(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePair", reflect.TypeOf((*MockCluster)(nil).CreatePair), arg0)
 }
 
-// DeactivateClusterDomain mocks base method
-func (m *MockCluster) DeactivateClusterDomain(arg0 *api.DeactivateClusterDomainRequest) error {
-	ret := m.ctrl.Call(m, "DeactivateClusterDomain", arg0)
+// DeleteDomain mocks base method
+func (m *MockCluster) DeleteDomain(arg0 string) error {
+	ret := m.ctrl.Call(m, "DeleteDomain", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeactivateClusterDomain indicates an expected call of DeactivateClusterDomain
-func (mr *MockClusterMockRecorder) DeactivateClusterDomain(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeactivateClusterDomain", reflect.TypeOf((*MockCluster)(nil).DeactivateClusterDomain), arg0)
+// DeleteDomain indicates an expected call of DeleteDomain
+func (mr *MockClusterMockRecorder) DeleteDomain(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteDomain", reflect.TypeOf((*MockCluster)(nil).DeleteDomain), arg0)
 }
 
 // DeleteNodeConf mocks base method
@@ -158,6 +174,19 @@ func (m *MockCluster) EnumerateAlerts(arg0, arg1 time.Time, arg2 api.ResourceTyp
 // EnumerateAlerts indicates an expected call of EnumerateAlerts
 func (mr *MockClusterMockRecorder) EnumerateAlerts(arg0, arg1, arg2 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnumerateAlerts", reflect.TypeOf((*MockCluster)(nil).EnumerateAlerts), arg0, arg1, arg2)
+}
+
+// EnumerateDomains mocks base method
+func (m *MockCluster) EnumerateDomains() ([]*clusterdomain.ClusterDomainInfo, error) {
+	ret := m.ctrl.Call(m, "EnumerateDomains")
+	ret0, _ := ret[0].([]*clusterdomain.ClusterDomainInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// EnumerateDomains indicates an expected call of EnumerateDomains
+func (mr *MockClusterMockRecorder) EnumerateDomains() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnumerateDomains", reflect.TypeOf((*MockCluster)(nil).EnumerateDomains))
 }
 
 // EnumerateNodeConf mocks base method
@@ -288,6 +317,19 @@ func (mr *MockClusterMockRecorder) GetPairToken(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPairToken", reflect.TypeOf((*MockCluster)(nil).GetPairToken), arg0)
 }
 
+// GetSelfDomain mocks base method
+func (m *MockCluster) GetSelfDomain() (*clusterdomain.ClusterDomainInfo, error) {
+	ret := m.ctrl.Call(m, "GetSelfDomain")
+	ret0, _ := ret[0].(*clusterdomain.ClusterDomainInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSelfDomain indicates an expected call of GetSelfDomain
+func (mr *MockClusterMockRecorder) GetSelfDomain() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSelfDomain", reflect.TypeOf((*MockCluster)(nil).GetSelfDomain))
+}
+
 // Inspect mocks base method
 func (m *MockCluster) Inspect(arg0 string) (api.Node, error) {
 	ret := m.ctrl.Call(m, "Inspect", arg0)
@@ -299,6 +341,19 @@ func (m *MockCluster) Inspect(arg0 string) (api.Node, error) {
 // Inspect indicates an expected call of Inspect
 func (mr *MockClusterMockRecorder) Inspect(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Inspect", reflect.TypeOf((*MockCluster)(nil).Inspect), arg0)
+}
+
+// InspectDomain mocks base method
+func (m *MockCluster) InspectDomain(arg0 string) (*clusterdomain.ClusterDomainInfo, error) {
+	ret := m.ctrl.Call(m, "InspectDomain", arg0)
+	ret0, _ := ret[0].(*clusterdomain.ClusterDomainInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// InspectDomain indicates an expected call of InspectDomain
+func (mr *MockClusterMockRecorder) InspectDomain(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InspectDomain", reflect.TypeOf((*MockCluster)(nil).InspectDomain), arg0)
 }
 
 // NodeRemoveDone mocks base method
@@ -644,6 +699,18 @@ func (mr *MockClusterMockRecorder) UpdateData(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateData", reflect.TypeOf((*MockCluster)(nil).UpdateData), arg0)
 }
 
+// UpdateDomainState mocks base method
+func (m *MockCluster) UpdateDomainState(arg0 string, arg1 types.ClusterDomainState) error {
+	ret := m.ctrl.Call(m, "UpdateDomainState", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateDomainState indicates an expected call of UpdateDomainState
+func (mr *MockClusterMockRecorder) UpdateDomainState(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDomainState", reflect.TypeOf((*MockCluster)(nil).UpdateDomainState), arg0, arg1)
+}
+
 // UpdateLabels mocks base method
 func (m *MockCluster) UpdateLabels(arg0 map[string]string) error {
 	ret := m.ctrl.Call(m, "UpdateLabels", arg0)
@@ -666,18 +733,6 @@ func (m *MockCluster) UpdateSchedulerNodeName(arg0 string) error {
 // UpdateSchedulerNodeName indicates an expected call of UpdateSchedulerNodeName
 func (mr *MockClusterMockRecorder) UpdateSchedulerNodeName(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSchedulerNodeName", reflect.TypeOf((*MockCluster)(nil).UpdateSchedulerNodeName), arg0)
-}
-
-// UpdateSelfClusterDomain mocks base method
-func (m *MockCluster) UpdateSelfClusterDomain(arg0 string) error {
-	ret := m.ctrl.Call(m, "UpdateSelfClusterDomain", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateSelfClusterDomain indicates an expected call of UpdateSelfClusterDomain
-func (mr *MockClusterMockRecorder) UpdateSelfClusterDomain(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSelfClusterDomain", reflect.TypeOf((*MockCluster)(nil).UpdateSelfClusterDomain), arg0)
 }
 
 // Uuid mocks base method

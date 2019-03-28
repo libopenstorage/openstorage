@@ -538,6 +538,13 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 	spec.Sharedv4 = setSpecBool(vol.GetSharedv4(), req.GetSharedv4(), req.GetSharedv4Opt())
 	spec.Sticky = setSpecBool(vol.GetSticky(), req.GetSticky(), req.GetStickyOpt())
 	spec.Journal = setSpecBool(vol.GetJournal(), req.GetJournal(), req.GetJournalOpt())
+	spec.Nodiscard = setSpecBool(vol.GetNodiscard(), req.GetNodiscard(), req.GetNodiscardOpt())
+
+	if req.GetIoStrategyOpt() != nil {
+		spec.IoStrategy = req.GetIoStrategy()
+	} else {
+		spec.IoStrategy = vol.GetIoStrategy()
+	}
 
 	// Cos
 	if req.GetCosOpt() != nil {
@@ -854,6 +861,22 @@ func mergeVolumeSpecsPolicy(vol *api.VolumeSpec, req *api.VolumeSpecPolicy, isVa
 			}
 			spec.SnapshotInterval = req.GetSnapshotInterval()
 		}
+	}
+
+	// Nodiscard
+	if req.GetNodiscardOpt() != nil {
+		if isValidate && vol.GetNodiscard() != req.GetNodiscard() {
+			return vol, errMsg
+		}
+		spec.Nodiscard = req.GetNodiscard()
+	}
+
+	// Io_strategy
+	if req.GetIoStrategyOpt() != nil {
+		if isValidate && vol.GetIoStrategy() != req.GetIoStrategy() {
+			return vol, errMsg
+		}
+		spec.IoStrategy = req.GetIoStrategy()
 	}
 	logrus.Debug("Updated VolumeSpecs %v", spec)
 	return spec, nil
