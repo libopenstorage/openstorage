@@ -43,14 +43,14 @@ func (m *ClusterDomainsServer) Enumerate(
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
-	resp, err := m.cluster().Enumerate()
+	clusterDomainInfos, err := m.cluster().EnumerateDomains()
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Cannot enumerate cluster cluster domains: %v", err)
 	}
 	clusterResp := &api.SdkClusterDomainsEnumerateResponse{}
 
-	for clusterDomainName, _ := range resp.ClusterDomainsActiveMap {
-		clusterResp.ClusterDomainNames = append(clusterResp.ClusterDomainNames, clusterDomainName)
+	for _, clusterDomainInfo := range clusterDomainInfos {
+		clusterResp.ClusterDomainNames = append(clusterResp.ClusterDomainNames, clusterDomainInfo.Name)
 	}
 	return clusterResp, nil
 }
@@ -67,24 +67,20 @@ func (m *ClusterDomainsServer) Inspect(
 		return nil, status.Errorf(codes.InvalidArgument, "Must provide a valid cluster domain name")
 	}
 
-	resp, err := m.cluster().Enumerate()
+	resp, err := m.cluster().InspectDomain(req.GetClusterDomainName())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Cannot enumerate cluster cluster domains: %v", err)
 	}
 
-	for clusterDomainName, clusterDomainState := range resp.ClusterDomainsActiveMap {
-		if clusterDomainName == req.GetClusterDomainName() {
-			isActive := true
-			if clusterDomainState == types.CLUSTER_DOMAIN_STATE_INACTIVE {
-				isActive = false
-			}
-			return &api.SdkClusterDomainInspectResponse{
-				ClusterDomainName: clusterDomainName,
-				IsActive:          isActive,
-			}, nil
-		}
+	var isActive bool
+	if resp.State == types.CLUSTER_DOMAIN_STATE_ACTIVE {
+		isActive = true
 	}
-	return nil, status.Errorf(codes.InvalidArgument, "Cannot find a cluster domain with name: %v", req.GetClusterDomainName())
+	return &api.SdkClusterDomainInspectResponse{
+		ClusterDomainName: resp.Name,
+		IsActive:          isActive,
+	}, nil
+
 }
 
 func (m *ClusterDomainsServer) Activate(
@@ -104,9 +100,7 @@ func (m *ClusterDomainsServer) Activate(
 		return nil, status.Errorf(codes.InvalidArgument, "Must provide a valid cluster domain name")
 	}
 
-	if err := m.cluster().ActivateClusterDomain(&api.ActivateClusterDomainRequest{
-		ClusterDomain: req.GetClusterDomainName(),
-	}); err != nil {
+	if err := m.cluster().UpdateDomainState(req.GetClusterDomainName(), types.CLUSTER_DOMAIN_STATE_ACTIVE); err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to activate cluster domain %v: %v", req.GetClusterDomainName(), err)
 	}
 	return &api.SdkClusterDomainActivateResponse{}, nil
@@ -129,10 +123,9 @@ func (m *ClusterDomainsServer) Deactivate(
 		return nil, status.Errorf(codes.InvalidArgument, "Must provide a valid cluster domain name")
 	}
 
-	if err := m.cluster().DeactivateClusterDomain(&api.DeactivateClusterDomainRequest{
-		ClusterDomain: req.GetClusterDomainName(),
-	}); err != nil {
-		return nil, status.Errorf(codes.Internal, "Failed to deactivate cluster domain %v: %v", req.GetClusterDomainName(), err)
+	if err := m.cluster().UpdateDomainState(req.GetClusterDomainName(), types.CLUSTER_DOMAIN_STATE_INACTIVE); err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to activate cluster domain %v: %v", req.GetClusterDomainName(), err)
 	}
+
 	return &api.SdkClusterDomainDeactivateResponse{}, nil
 }

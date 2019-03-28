@@ -380,7 +380,6 @@ func (cl *clusterListener) Init(
 func (cl *clusterListener) Join(
 	self *api.Node,
 	initState *cluster.ClusterInitState,
-	handleNotifications cluster.ClusterNotify,
 ) error {
 	return nil
 }
