@@ -180,6 +180,11 @@ type ClusterListenerNodeOps interface {
 	// CanNodeRemove test to see if we can remove this node
 	CanNodeRemove(node *api.Node) (string, error)
 
+	// MarkNodeForRemoval instructs the listeners that the ClusterManager
+	// is going ahead with the node removal. The API does not expect any
+	// response from the listeners
+	MarkNodeForRemoval(node *api.Node)
+
 	// MarkNodeDown marks the given node's status as down
 	MarkNodeDown(node *api.Node) error
 
@@ -391,6 +396,10 @@ func (nc *NullClusterListener) CanNodeRemove(node *api.Node) (string, error) {
 
 func (nc *NullClusterListener) MarkNodeDown(node *api.Node) error {
 	return nil
+}
+
+func (nc *NullClusterListener) MarkNodeForRemoval(node *api.Node) {
+	return
 }
 
 func (nc *NullClusterListener) Update(node *api.Node) error {
