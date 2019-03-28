@@ -7,11 +7,16 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/hashicorp/memberlist"
+	"github.com/sirupsen/logrus"
 
+	"github.com/libopenstorage/gossip/pkg/probation"
 	"github.com/libopenstorage/gossip/proto/state"
 	"github.com/libopenstorage/gossip/types"
+)
+
+const (
+	suspectNodeDownTimeout = 1 * time.Minute
 )
 
 type GossipDelegate struct {
@@ -24,11 +29,17 @@ type GossipDelegate struct {
 	// channel to receive state change events
 	stateEvent chan types.StateEvent
 	// current State object
-	currentState state.State
+	currentState     state.State
+	currentStateLock sync.Mutex
 	// quorum timeout to change the quorum status of a node
-	quorumTimeout      time.Duration
-	timeoutVersion     uint64
-	timeoutVersionLock sync.Mutex
+	quorumTimeout            time.Duration
+	timeoutVersion           uint64
+	timeoutVersionLock       sync.Mutex
+	nodeDownProbationManager probation.Probation
+	quorumProvider           state.Quorum
+	// ping is a callback function from Gossiper that uses memberlist
+	// apis to ping a peer node
+	ping func(types.NodeId, string) (time.Duration, error)
 }
 
 func (gd *GossipDelegate) InitGossipDelegate(
@@ -37,24 +48,39 @@ func (gd *GossipDelegate) InitGossipDelegate(
 	gossipVersion string,
 	quorumTimeout time.Duration,
 	clusterId string,
+	selfClusterDomain string,
+	ping func(types.NodeId, string) (time.Duration, error),
 ) {
 	gd.GenNumber = genNumber
 	gd.nodeId = string(selfNodeId)
 	gd.stateEvent = make(chan types.StateEvent)
+	gd.ping = ping
 	// We start with a NOT_IN_QUORUM status
 	gd.InitStore(
 		selfNodeId,
 		gossipVersion,
 		types.NODE_STATUS_NOT_IN_QUORUM,
 		clusterId,
+		selfClusterDomain,
 	)
 	gd.quorumTimeout = quorumTimeout
+	gd.nodeDownProbationManager = probation.NewProbationManager(
+		"node-suspected-down-probation-manager",
+		suspectNodeDownTimeout,
+		gd.probationExpiredOnSuspectedDownNode,
+	)
 }
 
-func (gd *GossipDelegate) InitCurrentState(clusterSize uint) {
+func (gd *GossipDelegate) InitCurrentState(
+	clusterSize uint,
+	quorumProvider state.Quorum,
+) {
 	// Our initial state is NOT_IN_QUORUM
 	gd.currentState = state.GetNotInQuorum(
-		uint(clusterSize), types.NodeId(gd.nodeId), gd.stateEvent)
+		gd.stateEvent,
+		quorumProvider,
+	)
+	gd.quorumProvider = quorumProvider
 	// Start the go routine which handles all the events
 	// and changes state of the node
 	go gd.handleStateEvents()
@@ -201,16 +227,49 @@ func (gd *GossipDelegate) NotifyLeave(node *memberlist.Node) {
 	if nodeName == gd.nodeId {
 		gd.triggerStateEvent(types.SELF_LEAVE)
 	} else {
-		err := gd.UpdateNodeStatus(types.NodeId(nodeName), types.NODE_STATUS_DOWN)
-		if err != nil {
-			logrus.Infof("gossip: Could not update status on NotifyLeave : %v", err.Error())
-			return
+		if gd.quorumProvider.Type() == types.QUORUM_PROVIDER_FAILURE_DOMAINS {
+			go func() {
+				isSuspect := gd.isClusterDomainSuspectDown(types.NodeId(nodeName))
+				if isSuspect {
+					gd.setNodeAsSuspectOffline(nodeName)
+				} else {
+					gd.setNodeOffline(nodeName)
+				}
+			}()
+		} else {
+			gd.setNodeOffline(nodeName)
 		}
-		gd.triggerStateEvent(types.NODE_LEAVE)
 	}
 
 	gd.updateGossipTs()
 	return
+}
+
+func (gd *GossipDelegate) setNodeAsSuspectOffline(nodeName string) {
+	err := gd.UpdateNodeStatus(types.NodeId(nodeName), types.NODE_STATUS_SUSPECT_DOWN)
+	if err != nil {
+		logrus.Infof("gossip: Could not update status on NotifyLeave : %v", err.Error())
+		return
+	}
+	logrus.Infof("gossip: Node %v is suspected offline", nodeName)
+	gd.triggerStateEvent(types.NODE_LEAVE)
+	// Add the node to probation list
+	if ok := gd.nodeDownProbationManager.Exists(gd.nodeNameToProbationID(nodeName)); ok {
+		logrus.Infof("gossip: Node %v already exists in probation list. ", nodeName)
+	} else {
+		if err := gd.nodeDownProbationManager.Add(gd.nodeNameToProbationID(nodeName), nil, false); err != nil {
+			logrus.Warnf("gossip: Unable to add suspected down node %v to probation list: %v", nodeName, err)
+		}
+		logrus.Infof("gossip: Node %v added to probation list", nodeName)
+	}
+}
+
+func (gd *GossipDelegate) setNodeOffline(nodeName string) {
+	if err := gd.UpdateNodeStatus(types.NodeId(nodeName), types.NODE_STATUS_DOWN); err != nil {
+		logrus.Infof("gossip: Could not update status on NotifyLeave : %v", err.Error())
+		return
+	}
+	gd.triggerStateEvent(types.NODE_LEAVE)
 }
 
 // NotifyUpdate is invoked when a node is detected to have
@@ -256,8 +315,37 @@ func (gd *GossipDelegate) NotifyAlive(node *memberlist.Node) error {
 	if err == nil && diffNode.Status != types.NODE_STATUS_UP {
 		gd.UpdateNodeStatus(types.NodeId(nodeName), types.NODE_STATUS_UP)
 		gd.triggerStateEvent(types.NODE_ALIVE)
+		if diffNode.Status == types.NODE_STATUS_SUSPECT_DOWN {
+			// Remove the node from probation list
+			logrus.Infof("gossip: Node %v is no more suspected as offline", nodeName)
+			if err := gd.nodeDownProbationManager.Remove(gd.nodeNameToProbationID(nodeName)); err != nil {
+				logrus.Warnf("gossip: Unable to remove suspected down node %v from probation list: %v", nodeName, err)
+			}
+		}
 	} // else if err != nil -> A new node sending us data. We do not add node unless it is added
 	// in our local map externally
+	return nil
+}
+
+func (gd *GossipDelegate) probationExpiredOnSuspectedDownNode(probationID string, nodeData interface{}) error {
+	// Node is suspected to be down for more than the probation timeout
+	// Update the node status to Offline
+	nodeName := gd.probationIDToNodeName(probationID)
+	logrus.Infof("gossip: probation time expired for suspected offline node %v ", nodeName)
+	selfStatus := gd.GetSelfStatus()
+	if selfStatus != types.NODE_STATUS_UP {
+		// We are not in up and probably out of quorum
+		// Wait again before we mark this node down
+		logrus.Infof("gossip: we are suspected not in quorum, adding suspected offline node %v back to probation list", nodeName)
+		if err := gd.nodeDownProbationManager.Add(probationID, nil, true); err != nil {
+			logrus.Warnf("gossip: Unable to add suspected down node %v from probation list: %v", nodeName, err)
+		}
+		return nil
+	}
+	// For all other self status: Up
+	// update the node status to down
+	gd.UpdateNodeStatus(types.NodeId(nodeName), types.NODE_STATUS_DOWN)
+	gd.nodeDownProbationManager.Remove(probationID)
 	return nil
 }
 
@@ -303,11 +391,11 @@ func (gd *GossipDelegate) handleStateEvents() {
 		case types.NODE_LEAVE:
 			gd.currentState, _ = gd.currentState.NodeLeave(gd.GetLocalState())
 		case types.UPDATE_CLUSTER_SIZE:
-			gd.currentState, _ = gd.currentState.UpdateClusterSize(
-				gd.getNumQuorumMembers(), gd.GetLocalState())
+			gd.currentState, _ = gd.currentState.UpdateClusterSize(gd.GetLocalState())
+		case types.UPDATE_CLUSTER_DOMAINS_ACTIVE_MAP:
+			gd.currentState, _ = gd.currentState.UpdateClusterDomainsActiveMap(gd.GetLocalState())
 		case types.TIMEOUT:
-			newState, _ := gd.currentState.Timeout(
-				gd.getNumQuorumMembers(), gd.GetLocalState())
+			newState, _ := gd.currentState.Timeout(gd.GetLocalState())
 			if newState.NodeStatus() != gd.currentState.NodeStatus() {
 				logrus.Infof("gossip: Quorum Timeout. Waited for (%v)",
 					gd.quorumTimeout)
@@ -322,4 +410,58 @@ func (gd *GossipDelegate) handleStateEvents() {
 		}
 		gd.UpdateSelfStatus(gd.currentState.NodeStatus())
 	}
+}
+
+func (gd *GossipDelegate) nodeNameToProbationID(nodeName string) string {
+	return "gossip-" + nodeName
+}
+
+func (gd *GossipDelegate) probationIDToNodeName(probationID string) string {
+	return strings.TrimPrefix(probationID, "gossip-")
+}
+
+// isClusterDomainSuspectDown returns truewhen a peer node should be put in suspected offline state
+// For the given nodeId, it finds out all its peers from
+// the same cluster domain. If even one ping to such peer node succeeds it assumes that
+// only the suspected node is down and the whole cluster domain is still operational.
+// If all the pings to peer nodes in that cluster domain fail we put the node in
+// suspect down state
+func (gd *GossipDelegate) isClusterDomainSuspectDown(nodeId types.NodeId) bool {
+	nodeInfo, err := gd.GetLocalNodeInfo(nodeId)
+	if err != nil {
+		// Node not found in our map
+		// No need of putting it as a suspect
+		// We will mark it as Offline immediately
+		return false
+	}
+	nodeList := gd.getNodesFromClusterDomain(nodeInfo.ClusterDomain)
+	for fdNodeId, _ := range nodeList {
+		if fdNodeId == nodeId {
+			// No need of pinging the suspected node
+			continue
+		}
+		// TODO: Check the current status of the node and do a ping
+		// only if it is not already marked offline
+		nodeInfo, err := gd.GetLocalNodeInfo(fdNodeId)
+		if err != nil {
+			// If we cannot find this node's entry in our map
+			// there is no point in pinging it
+			continue
+		}
+		logrus.Infof("gossip: pinging peer node (%v: %v) for suspect %v", fdNodeId, nodeInfo.Addr, nodeId)
+		_, pingErr := gd.ping(fdNodeId, nodeInfo.Addr)
+		if pingErr != nil {
+			// Ping to a node in the same cluster domain as the suspected node
+			// failed. Try another node
+			logrus.Infof("gossip: ping to node (%v: %v) in failure"+
+				" domain %v failed: %v", fdNodeId, nodeInfo.Addr, nodeInfo.ClusterDomain, pingErr)
+			continue
+		} else {
+			// Ping to a node in the same cluster domain succeeded
+			// The cluster domain is online and only this node is offline
+			return false
+		}
+	}
+	// All the pings failed. The cluster domain is down. Put the node in suspect before marking it down.
+	return true
 }

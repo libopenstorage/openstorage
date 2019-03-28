@@ -27,13 +27,18 @@ type State interface {
 
 	// UpdateClusterSize is an event indicating the change in cluster size
 	UpdateClusterSize(
-		numQuorumMembers uint,
+		nodeInfoMap types.NodeInfoMap,
+	) (State, error)
+
+	// UpdateClusterDomainsActiveMap is an event triggered from an external entity indicating
+	// which failure domains are active or inactive. All the nodes in the active failure domain will remain online
+	// even if they are out of quorum, while nodes from the deactivated ones will shoot themselves
+	UpdateClusterDomainsActiveMap(
 		nodeInfoMap types.NodeInfoMap,
 	) (State, error)
 
 	// Timeout is an event triggered when quorum timeout has reached
 	Timeout(
-		numQuorumMembers uint,
 		nodeInfoMap types.NodeInfoMap,
 	) (State, error)
 

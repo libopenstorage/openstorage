@@ -7,13 +7,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/libopenstorage/gossip/types"
+	"github.com/sirupsen/logrus"
 )
 
 const (
 	INVALID_GEN_NUMBER = 0
 )
+
+type nodeIdMap map[types.NodeId]string
 
 type GossipStoreImpl struct {
 	sync.Mutex
@@ -29,15 +31,18 @@ type GossipStoreImpl struct {
 	// memberlist and the length of nodeMap. It is used in
 	// determining the cluster quorum
 	clusterSize uint
-	// numQuorumMembers is the number of members which participate in quorum
-	numQuorumMembers uint
+	// failureDomainsMap is a map of known failure domains to the node ids which
+	// are a part of that failure domain
+	failureDomainsMap map[string]nodeIdMap
+	//failureDomainsMapLock is a lock for the failureDomainsMap
+	failureDomainsMapLock sync.Mutex
 	// Ts at which we lost quorum
 	lostQuorumTs time.Time
 }
 
-func NewGossipStore(id types.NodeId, version, clusterId string) *GossipStoreImpl {
+func NewGossipStore(id types.NodeId, version, clusterId, selfClusterDomain string) *GossipStoreImpl {
 	n := &GossipStoreImpl{}
-	n.InitStore(id, version, types.NODE_STATUS_NOT_IN_QUORUM, clusterId)
+	n.InitStore(id, version, types.NODE_STATUS_NOT_IN_QUORUM, clusterId, selfClusterDomain)
 	n.selfCorrect = false
 	return n
 }
@@ -62,6 +67,7 @@ func (s *GossipStoreImpl) InitStore(
 	version string,
 	status types.NodeStatus,
 	clusterId string,
+	selfClusterDomain string,
 ) {
 	s.nodeMap = make(types.NodeInfoMap)
 	s.id = id
@@ -69,11 +75,12 @@ func (s *GossipStoreImpl) InitStore(
 	s.GossipVersion = version
 	s.ClusterId = clusterId
 	nodeInfo := types.NodeInfo{
-		Id:           s.id,
-		GenNumber:    s.GenNumber,
-		Value:        make(types.StoreMap),
-		LastUpdateTs: time.Now(),
-		Status:       status,
+		Id:            s.id,
+		GenNumber:     s.GenNumber,
+		Value:         make(types.StoreMap),
+		LastUpdateTs:  time.Now(),
+		Status:        status,
+		ClusterDomain: selfClusterDomain,
 	}
 	s.nodeMap[s.id] = nodeInfo
 }
@@ -95,6 +102,23 @@ func (s *GossipStoreImpl) UpdateSelf(key types.StoreKey, val interface{}) {
 	nodeInfo.Value[key] = val
 	nodeInfo.LastUpdateTs = time.Now()
 	s.nodeMap[s.id] = nodeInfo
+}
+
+func (s *GossipStoreImpl) updateSelfClusterDomain(selfClusterDomain string) bool {
+	s.Lock()
+	defer s.Unlock()
+
+	nodeInfo, _ := s.nodeMap[s.id]
+	previousClusterDomain := nodeInfo.ClusterDomain
+
+	// Update the failure domain only if there is a change
+	if previousClusterDomain != selfClusterDomain {
+		nodeInfo.ClusterDomain = selfClusterDomain
+		nodeInfo.LastUpdateTs = time.Now()
+		s.nodeMap[s.id] = nodeInfo
+		return true
+	}
+	return false
 }
 
 func (s *GossipStoreImpl) UpdateSelfStatus(status types.NodeStatus) {
@@ -183,21 +207,25 @@ func (s *GossipStoreImpl) AddNode(
 	id types.NodeId,
 	status types.NodeStatus,
 	quorumMember bool,
+	failureDomain string,
 ) {
 	s.Lock()
 	defer s.Unlock()
-	s.addNodeUnlocked(id, status, quorumMember)
+	s.addNodeUnlocked(id, status, quorumMember, failureDomain)
 }
 
 func (s *GossipStoreImpl) addNodeUnlocked(
 	id types.NodeId,
 	status types.NodeStatus,
 	quorumMember bool,
+	failureDomain string,
 ) {
 	if nodeInfo, ok := s.nodeMap[id]; ok {
 		nodeInfo.Status = status
 		nodeInfo.LastUpdateTs = time.Now()
 		nodeInfo.QuorumMember = quorumMember
+
+		nodeInfo.ClusterDomain = failureDomain
 		s.nodeMap[id] = nodeInfo
 		return
 	}
@@ -210,6 +238,7 @@ func (s *GossipStoreImpl) addNodeUnlocked(
 		Status:             status,
 		Value:              make(types.StoreMap),
 		QuorumMember:       quorumMember,
+		ClusterDomain:      failureDomain,
 	}
 	logrus.Infof("gossip: Adding Node to gossip map: %v", id)
 }
@@ -292,7 +321,7 @@ func (s *GossipStoreImpl) Update(diff types.NodeInfoMap) {
 
 func (s *GossipStoreImpl) updateCluster(
 	peers map[types.NodeId]types.NodeUpdate,
-) {
+) types.ClusterDomainsQuorumMembersMap {
 	removeNodeIds := []types.NodeId{}
 	addNodeIds := []types.NodeId{}
 	s.Lock()
@@ -316,24 +345,67 @@ func (s *GossipStoreImpl) updateCluster(
 	}
 	for _, nodeId := range addNodeIds {
 		update, _ := peers[nodeId]
-		s.addNodeUnlocked(nodeId, types.NODE_STATUS_DOWN, update.QuorumMember)
+		s.addNodeUnlocked(nodeId, types.NODE_STATUS_DOWN, update.QuorumMember, update.ClusterDomain)
 	}
 
 	// Update quorum members
-	s.numQuorumMembers = 0
+	// Update the failure domains for the nodes
+	quorumMembersMap := make(types.ClusterDomainsQuorumMembersMap)
 	for id, nodeInfo := range s.nodeMap {
-		if update, ok := peers[id]; ok {
+		update, ok := peers[id]
+		if ok {
 			nodeInfo.QuorumMember = update.QuorumMember
+			nodeInfo.ClusterDomain = update.ClusterDomain
+			nodeInfo.Addr = update.Addr
 			s.nodeMap[id] = nodeInfo
+			// Update this node's entry in the failure domain map
+			s.updateClusterDomainsMap(update.ClusterDomain, id)
 		}
 		if nodeInfo.QuorumMember {
-			s.numQuorumMembers++
+			quorumMembersInDomain, _ := quorumMembersMap[update.ClusterDomain]
+			quorumMembersInDomain++
+			quorumMembersMap[update.ClusterDomain] = quorumMembersInDomain
 		}
+	}
+	return quorumMembersMap
+}
+
+func (s *GossipStoreImpl) updateClusterDomainsMap(failureDomain string, nodeId types.NodeId) {
+	s.failureDomainsMapLock.Lock()
+	defer s.failureDomainsMapLock.Unlock()
+
+	if s.failureDomainsMap == nil {
+		s.failureDomainsMap = make(map[string]nodeIdMap)
+	}
+	// Remove this node's entry from any other failure domains
+	// to handle changes of failure domain for a nodeId
+	for fd, nodeIdList := range s.failureDomainsMap {
+		if fd == failureDomain {
+			continue
+		}
+		if _, ok := nodeIdList[nodeId]; ok {
+			delete(nodeIdList, nodeId)
+			s.failureDomainsMap[fd] = nodeIdList
+		}
+	}
+
+	if nodeIdList, ok := s.failureDomainsMap[failureDomain]; ok {
+		if _, ok := nodeIdList[nodeId]; !ok {
+			// Add the node entry for this failure domain
+			nodeIdList[nodeId] = ""
+			s.failureDomainsMap[failureDomain] = nodeIdList
+		}
+	} else {
+		nodeIdList := make(nodeIdMap)
+		nodeIdList[nodeId] = ""
+		s.failureDomainsMap[failureDomain] = nodeIdList
 	}
 }
 
-func (s *GossipStoreImpl) getNumQuorumMembers() uint {
-	return s.numQuorumMembers
+func (s *GossipStoreImpl) getNodesFromClusterDomain(failureDomain string) nodeIdMap {
+	s.failureDomainsMapLock.Lock()
+	defer s.failureDomainsMapLock.Unlock()
+	return s.failureDomainsMap[failureDomain]
 }
 
 func (s *GossipStoreImpl) convertToBytes(obj interface{}) ([]byte, error) {

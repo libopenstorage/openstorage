@@ -5,9 +5,11 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/client"
 	"github.com/libopenstorage/openstorage/cluster"
+	"github.com/libopenstorage/openstorage/pkg/clusterdomain"
 	sched "github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
 )
@@ -26,6 +28,7 @@ const (
 )
 
 type clusterClient struct {
+	clusterdomain.NullClusterDomainManager
 	c *client.Client
 }
 
@@ -209,6 +212,14 @@ func (c *clusterClient) UpdateSchedulerNodeName(name string) error {
 	return nil
 }
 
+func (c *clusterClient) ClusterNotifyNodeDown(culpritNodeId string) (string, error) {
+	return "", nil
+}
+
+func (c *clusterClient) ClusterNotifyClusterDomainsUpdate(types.ClusterDomainsActiveMap) error {
+	return nil
+}
+
 func (c *clusterClient) GetData() (map[string]*api.Node, error) {
 	return nil, nil
 }
@@ -269,7 +280,7 @@ func (c *clusterClient) Shutdown() error {
 	return nil
 }
 
-func (c *clusterClient) Start(int, bool, string) error {
+func (c *clusterClient) Start(int, bool, string, string) error {
 	return nil
 }
 
@@ -277,7 +288,7 @@ func (c *clusterClient) Uuid() string {
 	return ""
 }
 
-func (c *clusterClient) StartWithConfiguration(int, bool, string, []string, *cluster.ClusterServerConfiguration) error {
+func (c *clusterClient) StartWithConfiguration(int, bool, string, []string, string, *cluster.ClusterServerConfiguration) error {
 	return nil
 }
 

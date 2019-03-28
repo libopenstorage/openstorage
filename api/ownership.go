@@ -193,14 +193,7 @@ func (o *Ownership) IsOwner(user *auth.UserInfo) bool {
 // IsAdminByUser returns true if the user is an ownership admin, meaning,
 // that they belong to any group
 func (o *Ownership) IsAdminByUser(user *auth.UserInfo) bool {
-
-	// If there is a user, then auth is enabled
-	if user != nil {
-		return listContains(user.Claims.Groups, AdminGroup)
-	}
-
-	// No auth enabled, so everyone is an admin
-	return true
+	return IsAdminByUser(user)
 }
 
 // Update can be used to update an ownership with new ownership information. It
@@ -278,4 +271,26 @@ func listContains(list []string, s string) bool {
 		}
 	}
 	return false
+}
+
+// IsAdminByUser returns true if the user is an ownership admin, meaning,
+// that they belong to any group
+func IsAdminByUser(user *auth.UserInfo) bool {
+	// If there is a user, then auth is enabled
+	if user != nil {
+		return listContains(user.Claims.Groups, AdminGroup)
+	}
+
+	// No auth enabled, so everyone is an admin
+	return true
+}
+
+// Functions
+func IsAdminByContext(ctx context.Context) bool {
+	// Check if the context has information about the user. If not,
+	// then security is not enabled.
+	if userinfo, ok := auth.NewUserInfoFromContext(ctx); ok {
+		return IsAdminByUser(userinfo)
+	}
+	return true
 }

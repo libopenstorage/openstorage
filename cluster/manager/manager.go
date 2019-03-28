@@ -23,6 +23,7 @@ import (
 	"github.com/libopenstorage/openstorage/objectstore"
 	"github.com/libopenstorage/openstorage/osdconfig"
 	"github.com/libopenstorage/openstorage/pkg/auth"
+	"github.com/libopenstorage/openstorage/pkg/clusterdomain"
 	sched "github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
 	"github.com/libopenstorage/systemutils"
@@ -53,27 +54,29 @@ var (
 
 // ClusterManager implements the cluster interface
 type ClusterManager struct {
-	size               int
-	listeners          *list.List
-	config             config.ClusterConfig
-	kv                 kvdb.Kvdb
-	status             api.Status
-	nodeCache          map[string]api.Node // Cached info on the nodes in the cluster.
-	nodeCacheLock      sync.Mutex
-	nodeStatuses       map[string]api.Status // Set of nodes currently marked down.
-	gossip             gossip.Gossiper
-	gossipVersion      string
-	gossipPort         string
-	gEnabled           bool
-	selfNode           api.Node
-	selfNodeLock       sync.Mutex // Lock that guards data and label of selfNode
-	system             systemutils.System
-	configManager      osdconfig.ConfigCaller
-	schedManager       sched.SchedulePolicyProvider
-	objstoreManager    objectstore.ObjectStore
-	secretsManager     secrets.Secrets
-	systemTokenManager auth.TokenGenerator
-	snapshotPrefixes   []string
+	size                 int
+	listeners            *list.List
+	config               config.ClusterConfig
+	kv                   kvdb.Kvdb
+	status               api.Status
+	nodeCache            map[string]api.Node // Cached info on the nodes in the cluster.
+	nodeCacheLock        sync.Mutex
+	nodeStatuses         map[string]api.Status // Set of nodes currently marked down.
+	gossip               gossip.Gossiper
+	gossipVersion        string
+	gossipPort           string
+	gEnabled             bool
+	selfNode             api.Node
+	selfNodeLock         sync.Mutex // Lock that guards data and label of selfNode
+	system               systemutils.System
+	configManager        osdconfig.ConfigCaller
+	schedManager         sched.SchedulePolicyProvider
+	objstoreManager      objectstore.ObjectStore
+	secretsManager       secrets.Secrets
+	systemTokenManager   auth.TokenGenerator
+	clusterDomainManager clusterdomain.ClusterDomainProvider
+	snapshotPrefixes     []string
+	selfClusterDomain    string
 }
 
 // Init instantiates a new cluster manager.
@@ -305,28 +308,17 @@ func (c *ClusterManager) UpdateSchedulerNodeName(schedulerNodeName string) error
 	defer c.selfNodeLock.Unlock()
 	c.selfNode.SchedulerNodeName = schedulerNodeName
 
-	kvdb := kvdb.Instance()
-	kvlock, err := kvdb.LockWithID(clusterLockKey, c.selfNode.Id)
-	if err != nil {
-		logrus.Warnln("Unable to obtain cluster lock for updating config", err)
-		return err
-	}
-	defer kvdb.Unlock(kvlock)
-
-	db, _, err := readClusterInfo()
-	if err != nil {
-		return err
+	updateCallbackFn := func(db *cluster.ClusterInfo) (bool, error) {
+		nodeEntry, ok := db.NodeEntries[c.selfNode.Id]
+		if !ok {
+			return false, fmt.Errorf("Node not found in cluster database")
+		}
+		nodeEntry.SchedulerNodeName = schedulerNodeName
+		db.NodeEntries[c.selfNode.Id] = nodeEntry
+		return true, nil
 	}
 
-	nodeEntry, ok := db.NodeEntries[c.selfNode.Id]
-	if !ok {
-		return fmt.Errorf("Node not found in cluster database")
-	}
-	nodeEntry.SchedulerNodeName = schedulerNodeName
-	db.NodeEntries[c.selfNode.Id] = nodeEntry
-
-	_, err = writeClusterInfo(&db)
-	return err
+	return updateLockedDB("update-scheduler-name", c.selfNode.Id, updateCallbackFn)
 }
 
 // GetData returns self node's data
@@ -400,8 +392,9 @@ func (c *ClusterManager) getNonDecommisionedPeers(
 			continue
 		}
 		peers[types.NodeId(nodeEntry.Id)] = types.NodeUpdate{
-			Addr:         nodeEntry.DataIp + ":" + c.gossipPort,
-			QuorumMember: !nodeEntry.NonQuorumMember,
+			Addr:          nodeEntry.DataIp + ":" + c.gossipPort,
+			QuorumMember:  !nodeEntry.NonQuorumMember,
+			ClusterDomain: nodeEntry.ClusterDomain,
 		}
 	}
 	return peers
@@ -521,6 +514,7 @@ func (c *ClusterManager) initNode(db *cluster.ClusterInfo) (*api.Node, bool) {
 		Hostname:          c.selfNode.Hostname,
 		NodeLabels:        labels,
 		GossipPort:        c.selfNode.GossipPort,
+		ClusterDomain:     c.selfClusterDomain,
 	}
 
 	db.NodeEntries[c.config.NodeId] = nodeEntry
@@ -529,6 +523,9 @@ func (c *ClusterManager) initNode(db *cluster.ClusterInfo) (*api.Node, bool) {
 	logrus.Infof("Cluster ID: %s", c.config.ClusterId)
 	logrus.Infof("Node Mgmt IP: %s", c.selfNode.MgmtIp)
 	logrus.Infof("Node Data IP: %s", c.selfNode.DataIp)
+	if len(c.selfClusterDomain) > 0 {
+		logrus.Infof("Node's Cluster Domain: %s", c.selfClusterDomain)
+	}
 
 	return &c.selfNode, exists
 }
@@ -626,7 +623,7 @@ func (c *ClusterManager) joinCluster(
 
 	// Alert all listeners that we are joining the cluster.
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		err := e.Value.(cluster.ClusterListener).Join(self, initState, c.HandleNotifications)
+		err := e.Value.(cluster.ClusterListener).Join(self, initState)
 		if err != nil {
 			if self.Status != api.Status_STATUS_MAINTENANCE {
 				self.Status = api.Status_STATUS_ERROR
@@ -681,13 +678,22 @@ func (c *ClusterManager) startClusterDBWatch(lastIndex uint64,
 	return nil
 }
 
-func (c *ClusterManager) startHeartBeat(clusterInfo *cluster.ClusterInfo) {
+func (c *ClusterManager) startHeartBeat(
+	clusterInfo *cluster.ClusterInfo,
+	activeMap types.ClusterDomainsActiveMap,
+) {
 	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
 
 	node := c.getCurrentState()
 	c.putNodeCacheEntry(c.selfNode.Id, *node)
 	c.gossip.UpdateSelf(gossipStoreKey, *node)
 	var nodeIps []string
+
+	gossipConfig := types.GossipStartConfiguration{
+		ActiveMap: activeMap,
+	}
+	gossipConfig.Nodes = make(map[types.NodeId]types.GossipNodeConfiguration)
+
 	for nodeId, nodeEntry := range clusterInfo.NodeEntries {
 		if nodeId == node.Id {
 			continue
@@ -697,6 +703,11 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *cluster.ClusterInfo) {
 		if !ok || version != c.gossipVersion {
 			// Do not add nodes with mismatched version
 			continue
+		}
+		nodeIp := nodeEntry.DataIp + ":" + c.gossipPort
+		gossipConfig.Nodes[types.NodeId(nodeId)] = types.GossipNodeConfiguration{
+			KnownUrl:      nodeIp,
+			ClusterDomain: nodeEntry.ClusterDomain,
 		}
 
 		gossipPort := nodeEntry.GossipPort
@@ -715,7 +726,14 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *cluster.ClusterInfo) {
 	} else {
 		logrus.Infof("Starting Gossip...")
 	}
-	c.gossip.Start(nodeIps)
+
+	if len(activeMap) > 0 {
+		gossipConfig.QuorumProviderType = types.QUORUM_PROVIDER_FAILURE_DOMAINS
+	} else {
+		gossipConfig.QuorumProviderType = types.QUORUM_PROVIDER_DEFAULT
+	}
+
+	c.gossip.Start(gossipConfig)
 	c.gossip.UpdateCluster(c.getNonDecommisionedPeers(*clusterInfo))
 
 	lastUpdateTs := time.Now()
@@ -983,7 +1001,7 @@ func (c *ClusterManager) waitForQuorum(exist bool) error {
 	return nil
 }
 
-func (c *ClusterManager) initializeCluster(db kvdb.Kvdb) (
+func (c *ClusterManager) initializeCluster(db kvdb.Kvdb, selfClusterDomain string) (
 	*cluster.ClusterInfo,
 	error,
 ) {
@@ -1056,9 +1074,10 @@ func (c *ClusterManager) initListeners(
 	clusterMaxSize int,
 	nodeExists *bool,
 	nodeInitialized bool,
+	selfClusterDomain string,
 ) (uint64, *cluster.ClusterInfo, error) {
 	// Initialize the cluster if required
-	clusterInfo, err := c.initializeCluster(db)
+	clusterInfo, err := c.initializeCluster(db, selfClusterDomain)
 	if err != nil {
 		return 0, nil, err
 	}
@@ -1142,24 +1161,36 @@ func (c *ClusterManager) initializeAndStartHeartbeat(
 	clusterMaxSize int,
 	exist *bool,
 	nodeInitialized bool,
-) (uint64, error) {
+	selfClusterDomain string,
+) (uint64, *cluster.ClusterInfo, error) {
 	lastIndex, clusterInfo, err := c.initListeners(
 		kvdb,
 		clusterMaxSize,
 		exist,
 		nodeInitialized,
+		selfClusterDomain,
 	)
 	if err != nil {
-		return 0, err
+		return 0, nil, err
 	}
 
 	// Set the status to NOT_IN_QUORUM to start the node.
 	// Once we achieve quorum then we actually join the cluster
 	// and change the status to OK
 	c.selfNode.Status = api.Status_STATUS_NOT_IN_QUORUM
+
+	// Get the cluster domain info
+	clusterDomainInfos, err := c.clusterDomainManager.EnumerateDomains()
+	if err != nil && err != clusterdomain.ErrNotImplemented {
+		return 0, nil, err
+	}
+
 	// Start heartbeating to other nodes.
-	go c.startHeartBeat(clusterInfo)
-	return lastIndex, nil
+	go c.startHeartBeat(
+		clusterInfo,
+		clusterdomain.GetActiveMapFromClusterDomainInfos(clusterDomainInfos),
+	)
+	return lastIndex, clusterInfo, nil
 }
 
 func (c *ClusterManager) setupManagers(config *cluster.ClusterServerConfiguration) {
@@ -1186,6 +1217,12 @@ func (c *ClusterManager) setupManagers(config *cluster.ClusterServerConfiguratio
 	} else {
 		c.systemTokenManager = config.ConfigSystemTokenManager
 	}
+
+	if config.ConfigClusterDomainProvider == nil {
+		c.clusterDomainManager = clusterdomain.NewDefaultClusterDomainPorvider()
+	} else {
+		c.clusterDomainManager = config.ConfigClusterDomainProvider
+	}
 }
 
 // Start initiates the cluster manager and the cluster state machine
@@ -1193,12 +1230,14 @@ func (c *ClusterManager) Start(
 	clusterMaxSize int,
 	nodeInitialized bool,
 	gossipPort string,
+	selfClusterDomain string,
 ) error {
 	return c.StartWithConfiguration(
 		clusterMaxSize,
 		nodeInitialized,
 		gossipPort,
 		[]string{ClusterDBKey},
+		selfClusterDomain,
 		&cluster.ClusterServerConfiguration{})
 }
 
@@ -1207,6 +1246,7 @@ func (c *ClusterManager) StartWithConfiguration(
 	nodeInitialized bool,
 	gossipPort string,
 	snapshotPrefixes []string,
+	selfClusterDomain string,
 	config *cluster.ClusterServerConfiguration,
 ) error {
 	var err error
@@ -1239,6 +1279,7 @@ func (c *ClusterManager) StartWithConfiguration(
 	c.selfNode.Hostname, _ = os.Hostname()
 	c.gossipPort = gossipPort
 	c.selfNode.GossipPort = gossipPort
+	c.selfClusterDomain = selfClusterDomain
 	if err != nil {
 		logrus.Errorf("Failed to get external IP address for mgt/data interfaces: %s.",
 			err)
@@ -1265,18 +1306,28 @@ func (c *ClusterManager) StartWithConfiguration(
 		gossipIntervals,
 		types.GOSSIP_VERSION_2,
 		c.config.ClusterId,
+		selfClusterDomain,
 	)
 	c.gossipVersion = types.GOSSIP_VERSION_2
 
 	var exist bool
-	lastIndex, err := c.initializeAndStartHeartbeat(
+	lastIndex, clusterInfo, err := c.initializeAndStartHeartbeat(
 		kv,
 		clusterMaxSize,
 		&exist,
 		nodeInitialized,
+		selfClusterDomain,
 	)
 	if err != nil {
 		return err
+	}
+
+	// Update all the listeners with the new db
+	for e := c.listeners.Front(); e != nil; e = e.Next() {
+		err := e.Value.(cluster.ClusterListener).UpdateCluster(&c.selfNode, clusterInfo)
+		if err != nil {
+			logrus.Warnln("Failed to notify ", e.Value.(cluster.ClusterListener).String())
+		}
 	}
 
 	_ = c.startClusterDBWatch(lastIndex, kv)
@@ -1384,7 +1435,7 @@ func (c *ClusterManager) nodes(clusterDB *cluster.ClusterInfo) []api.Node {
 	return nodes
 }
 
-func (c *ClusterManager) enumerateNodesFromClusterDB() []api.Node {
+func (c *ClusterManager) enumerateFromClusterDB() []api.Node {
 	clusterDB, _, err := readClusterInfo()
 	if err != nil {
 		logrus.Errorf("enumerateNodesFromClusterDB failed with error: %v", err)
@@ -1393,7 +1444,7 @@ func (c *ClusterManager) enumerateNodesFromClusterDB() []api.Node {
 	return c.nodes(&clusterDB)
 }
 
-func (c *ClusterManager) enumerateNodesFromCache() []api.Node {
+func (c *ClusterManager) enumerateFromCache() []api.Node {
 	var clusterDB cluster.ClusterInfo
 	c.nodeCacheLock.Lock()
 	defer c.nodeCacheLock.Unlock()
@@ -1419,9 +1470,9 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 		c.selfNode.Status == api.Status_STATUS_MAINTENANCE {
 		// If the node is not yet ready, query the cluster db
 		// for node members since gossip is not ready yet.
-		clusterState.Nodes = c.enumerateNodesFromClusterDB()
+		clusterState.Nodes = c.enumerateFromClusterDB()
 	} else {
-		clusterState.Nodes = c.enumerateNodesFromCache()
+		clusterState.Nodes = c.enumerateFromCache()
 	}
 
 	// Allow listeners to add/modify data
@@ -1758,14 +1809,16 @@ func (c *ClusterManager) Shutdown() error {
 	return nil
 }
 
-// HandleNotifications is a callback function used by the listeners
-func (c *ClusterManager) HandleNotifications(culpritNodeId string, notification api.ClusterNotify) (string, error) {
-	if notification == api.ClusterNotify_CLUSTER_NOTIFY_DOWN {
-		killNodeId := c.gossip.ExternalNodeLeave(types.NodeId(culpritNodeId))
-		return string(killNodeId), nil
-	} else {
-		return "", fmt.Errorf("Error in Handle Notifications. Unknown Notification : %v", notification)
+func (c *ClusterManager) ClusterNotifyNodeDown(culpritNodeId string) (string, error) {
+	killNodeId := c.gossip.ExternalNodeLeave(types.NodeId(culpritNodeId))
+	return string(killNodeId), nil
+}
+
+func (c *ClusterManager) ClusterNotifyClusterDomainsUpdate(activeMap types.ClusterDomainsActiveMap) error {
+	if c.gossip != nil {
+		return c.gossip.UpdateClusterDomainsActiveMap(activeMap)
 	}
+	return nil
 }
 
 func (c *ClusterManager) EnumerateAlerts(ts, te time.Time, resource api.ResourceType) (*api.Alerts, error) {
@@ -1808,6 +1861,31 @@ func (c *ClusterManager) putNodeCacheEntry(nodeId string, node api.Node) {
 	c.nodeCacheLock.Lock()
 	defer c.nodeCacheLock.Unlock()
 	c.nodeCache[nodeId] = node
+}
+
+// GetSelfDomain returns the cluster domain for this node
+func (c *ClusterManager) GetSelfDomain() (*clusterdomain.ClusterDomainInfo, error) {
+	return c.clusterDomainManager.GetSelfDomain()
+}
+
+// EnumerateDomains returns all the cluster domains in the cluster
+func (c *ClusterManager) EnumerateDomains() ([]*clusterdomain.ClusterDomainInfo, error) {
+	return c.clusterDomainManager.EnumerateDomains()
+}
+
+// InspectDomain returns the cluster domain info for the provided argument.
+func (c *ClusterManager) InspectDomain(name string) (*clusterdomain.ClusterDomainInfo, error) {
+	return c.clusterDomainManager.InspectDomain(name)
+}
+
+// DeleteDomain deletes a cluster domain entry
+func (c *ClusterManager) DeleteDomain(name string) error {
+	return c.clusterDomainManager.DeleteDomain(name)
+}
+
+// UpdateDomainState sets the cluster domain info object into kvdb
+func (c *ClusterManager) UpdateDomainState(name string, state types.ClusterDomainState) error {
+	return c.clusterDomainManager.UpdateDomainState(name, state)
 }
 
 // osdconfig.ConfigCaller compliance
