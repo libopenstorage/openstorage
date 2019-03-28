@@ -551,8 +551,8 @@ func TestVolumeInspectFailed(t *testing.T) {
 	assert.NotEmpty(t, id)
 
 	res, err := driverclient.Inspect([]string{"myid"})
-	assert.NotNil(t, err)
-	assert.Nil(t, res)
+	assert.Nil(t, err)
+	assert.Equal(t, len(res), 0)
 
 	// Assert volume information is correct
 	volumes := api.NewOpenStorageVolumeClient(testVolDriver.Conn())
@@ -2539,4 +2539,60 @@ func testMiddlewareCreateVolume(
 
 	return id, token, namespace, secretName
 
+}
+
+func TestStorkVolumeInspect(t *testing.T) {
+
+	var err error
+
+	// Setup volume rest functions server
+	ts, testVolDriver := testRestServerSdk(t)
+	defer ts.Close()
+	defer testVolDriver.Stop()
+
+	// get token
+	token, err := createToken("test", "system.admin", testSharedSecret)
+	assert.NoError(t, err)
+
+	client, err := volumeclient.NewAuthDriverClient(ts.URL, mockDriverName, version, token, "", mockDriverName)
+	assert.NoError(t, err)
+
+	// Create volume before deleting.
+	// Setup Create object
+	name := "myvol"
+	size := uint64(1234)
+	req := &api.VolumeCreateRequest{
+		Locator: &api.VolumeLocator{Name: name},
+		Source:  &api.Source{},
+		Spec: &api.VolumeSpec{
+			HaLevel: 1,
+			Size:    size,
+		},
+	}
+
+	// Create a volume client
+	driverclient := volumeclient.VolumeDriver(client)
+
+	// Create volume.
+	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	assert.Nil(t, err)
+	assert.NotEmpty(t, id)
+
+	err = driverclient.Delete(id)
+	assert.Nil(t, err)
+
+	vols, err := driverclient.Inspect([]string{id})
+	assert.Equal(t, len(vols), 0)
+	assert.Nil(t, err)
+	/*
+		if err != nil && (err == volume.ErrEnoEnt || errIsNotFound(err)) {
+			return nil, false, nil
+		} else if err != nil {
+			return nil, true, err
+		}
+		if len(vols) > 0 {
+			return nil, true, fmt.Errorf("Volume %v is not yet removed from the system", name)
+		}
+		return nil, false, nil
+	*/
 }
