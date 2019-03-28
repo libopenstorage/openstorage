@@ -3,9 +3,11 @@ package cluster
 import (
 	time "time"
 
+	"github.com/libopenstorage/gossip/types"
 	api "github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/objectstore"
 	"github.com/libopenstorage/openstorage/osdconfig"
+	"github.com/libopenstorage/openstorage/pkg/clusterdomain"
 	schedpolicy "github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
 )
@@ -23,6 +25,7 @@ type NullClusterManager struct {
 	secrets.NullSecrets
 	schedpolicy.NullSchedMgr
 	objectstore.NullObjectStoreMgr
+	clusterdomain.NullClusterDomainManager
 }
 
 func NewDefaultClusterManager() Cluster {
@@ -110,13 +113,11 @@ func (n *NullClusterManager) Uuid() string {
 	return ""
 }
 
-// ActivateClusterDomain
-func (n *NullClusterManager) ActivateClusterDomain(arg0 *api.ActivateClusterDomainRequest) error {
-	return ErrNotImplemented
+func (n *NullClusterManager) ClusterNotifyNodeDown(culpritNodeId string) (string, error) {
+	return "", ErrNotImplemented
 }
 
-// DeactivateClusterDomain
-func (n *NullClusterManager) DeactivateClusterDomain(arg0 *api.DeactivateClusterDomainRequest) error {
+func (n *NullClusterManager) ClusterNotifyClusterDomainsUpdate(types.ClusterDomainsActiveMap) error {
 	return ErrNotImplemented
 }
 
@@ -134,11 +135,6 @@ func (m *NullClusterData) UpdateLabels(arg0 map[string]string) error {
 
 // UpdateSchedulerNodeName
 func (m *NullClusterData) UpdateSchedulerNodeName(arg0 string) error {
-	return ErrNotImplemented
-}
-
-// UpdateSelfClusterDomain
-func (m *NullClusterData) UpdateSelfClusterDomain(arg0 string) error {
 	return ErrNotImplemented
 }
 
