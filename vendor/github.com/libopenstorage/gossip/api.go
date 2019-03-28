@@ -1,9 +1,10 @@
 package gossip
 
 import (
+	"time"
+
 	"github.com/libopenstorage/gossip/proto"
 	"github.com/libopenstorage/gossip/types"
-	"time"
 )
 
 type GossipStore interface {
@@ -48,7 +49,7 @@ type GossipStore interface {
 	GetLocalNodeInfo(types.NodeId) (types.NodeInfo, error)
 
 	// Add a new node in the database
-	AddNode(types.NodeId, types.NodeStatus, bool)
+	AddNode(types.NodeId, types.NodeStatus, bool, string)
 
 	// Remove a node from the database
 	RemoveNode(types.NodeId) error
@@ -60,7 +61,7 @@ type Gossiper interface {
 
 	// Start begins the gossip protocol using memberlist
 	// To join an existing cluster provide atleast one ip of the known node.
-	Start(knownIp []string) error
+	Start(startConfiguration types.GossipStartConfiguration) error
 
 	// GossipInterval gets the gossip interval
 	GossipInterval() time.Duration
@@ -79,6 +80,18 @@ type Gossiper interface {
 	// It checks quorum and appropriately marks either self down or the other node down.
 	// It returns the nodeId that was marked down
 	ExternalNodeLeave(nodeId types.NodeId) types.NodeId
+
+	// UpdateClusterDomainsActiveMap updates the cluster domain active map
+	// All the nodes in an inactive domain will shoot themselves down
+	// and will not participate in quorum decisions
+	UpdateClusterDomainsActiveMap(types.ClusterDomainsActiveMap) error
+
+	// UpdateSelfClusterDomain updates this node's cluster domain
+	UpdateSelfClusterDomain(selfFailureDomain string)
+
+	// Ping pings the given node's ip:port
+	// Note: This API is only supported with Gossip Version v2 and higher
+	Ping(nodeId types.NodeId, ipPort string) (time.Duration, error)
 }
 
 // New returns an initialized Gossip node
@@ -90,8 +103,9 @@ func New(
 	gossipIntervals types.GossipIntervals,
 	gossipVersion string,
 	clusterId string,
+	selfFailureDomain string,
 ) Gossiper {
 	g := new(proto.GossiperImpl)
-	g.Init(ip, selfNodeId, genNumber, gossipIntervals, gossipVersion, clusterId)
+	g.Init(ip, selfNodeId, genNumber, gossipIntervals, gossipVersion, clusterId, selfFailureDomain)
 	return g
 }

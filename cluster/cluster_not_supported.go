@@ -97,17 +97,27 @@ func (m *NullClusterManager) Shutdown() error {
 }
 
 // Start
-func (m *NullClusterManager) Start(arg0 int, arg1 bool, arg2 string) error {
+func (m *NullClusterManager) Start(arg0 int, arg1 bool, arg2 string, arg3 string) error {
 	return ErrNotImplemented
 }
 
 // StartWithConfiguration
-func (m *NullClusterManager) StartWithConfiguration(arg0 int, arg1 bool, arg2 string, arg3 []string, arg4 *ClusterServerConfiguration) error {
+func (m *NullClusterManager) StartWithConfiguration(arg0 int, arg1 bool, arg2 string, arg3 []string, arg4 string, arg5 *ClusterServerConfiguration) error {
 	return ErrNotImplemented
 }
 
 func (n *NullClusterManager) Uuid() string {
 	return ""
+}
+
+// ActivateClusterDomain
+func (n *NullClusterManager) ActivateClusterDomain(arg0 *api.ActivateClusterDomainRequest) error {
+	return ErrNotImplemented
+}
+
+// DeactivateClusterDomain
+func (n *NullClusterManager) DeactivateClusterDomain(arg0 *api.DeactivateClusterDomainRequest) error {
+	return ErrNotImplemented
 }
 
 // NullClusterData implementations
@@ -124,6 +134,11 @@ func (m *NullClusterData) UpdateLabels(arg0 map[string]string) error {
 
 // UpdateSchedulerNodeName
 func (m *NullClusterData) UpdateSchedulerNodeName(arg0 string) error {
+	return ErrNotImplemented
+}
+
+// UpdateSelfClusterDomain
+func (m *NullClusterData) UpdateSelfClusterDomain(arg0 string) error {
 	return ErrNotImplemented
 }
 

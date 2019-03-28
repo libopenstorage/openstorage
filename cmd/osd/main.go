@@ -174,6 +174,11 @@ func main() {
 			Usage: "JSON Web Token system shared secret used by clusters to create tokens for internal cluster communication",
 			Value: "non-secure-secret",
 		},
+		cli.StringFlag{
+			Name:  "clusterdomain",
+			Usage: "Cluster Domain Name",
+			Value: "",
+		},
 	}
 	app.Action = wrapAction(start)
 	app.Commands = []cli.Command{
@@ -520,6 +525,7 @@ func start(c *cli.Context) error {
 			false,
 			"9002",
 			[]string{},
+			c.String("clusterdomain"),
 			&cluster.ClusterServerConfiguration{
 				ConfigSchedManager:       schedpolicy.NewFakeScheduler(),
 				ConfigObjectStoreManager: objectstore.NewfakeObjectstore(),

@@ -4,16 +4,18 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"net"
 	"os"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/hashicorp/logutils"
 	ml "github.com/hashicorp/memberlist"
+	"github.com/libopenstorage/gossip/proto/state"
 	"github.com/libopenstorage/gossip/types"
+	log "github.com/sirupsen/logrus"
 )
 
 type GossipNode struct {
@@ -49,8 +51,10 @@ type GossiperImpl struct {
 	name           string
 	nodesLock      sync.Mutex
 	gossipInterval time.Duration
+	quorumProvider state.Quorum
 	//nodeDeathInterval time.Duration
-	shutDown bool
+	shutDown   bool
+	selfNodeId types.NodeId
 }
 
 // Utility methods
@@ -66,6 +70,7 @@ func (g *GossiperImpl) Init(
 	gossipIntervals types.GossipIntervals,
 	gossipVersion string,
 	clusterId string,
+	selfClusterDomain string,
 ) {
 	g.name = ipPort
 	g.shutDown = false
@@ -101,6 +106,8 @@ func (g *GossiperImpl) Init(
 		gossipVersion,
 		gossipIntervals.QuorumTimeout,
 		clusterId,
+		selfClusterDomain,
+		g.Ping,
 	)
 	mlConf.Delegate = ml.Delegate(g)
 	mlConf.Events = ml.EventDelegate(g)
@@ -114,11 +121,15 @@ func (g *GossiperImpl) Init(
 	mlConf.LogOutput = filter
 
 	g.mlConf = mlConf
+	g.selfNodeId = selfNodeId
 	rand.Seed(time.Now().UnixNano())
 }
 
-func (g *GossiperImpl) Start(knownIps []string) error {
-	g.InitCurrentState(uint(len(knownIps) + 1))
+func (g *GossiperImpl) Start(config types.GossipStartConfiguration) error {
+	g.quorumProvider = state.NewQuorumProvider(g.selfNodeId, config.QuorumProviderType)
+
+	g.InitCurrentState(uint(len(config.Nodes)+1), g.quorumProvider)
+
 	list, err := ml.Create(g.mlConf)
 	if err != nil {
 		log.Warnf("gossip: Unable to create memberlist: " + err.Error())
@@ -127,15 +138,23 @@ func (g *GossiperImpl) Start(knownIps []string) error {
 	// Set the memberlist in gossiper object
 	g.mlist = list
 
-	if len(knownIps) != 0 {
+	if len(config.Nodes) != 0 {
 		// Joining an existing cluster
+		knownIps := []string{}
+		for nodeId, nodeConfig := range config.Nodes {
+			knownIps = append(knownIps, nodeConfig.KnownUrl)
+			// Add the node's entry in the failure domains map
+			g.updateClusterDomainsMap(nodeConfig.ClusterDomain, nodeId)
+		}
 		joinedNodes, err := list.Join(knownIps)
 		if err != nil {
 			log.Infof("gossip: Unable to join other nodes at startup : %v", err)
 			return err
 		}
 		log.Infof("gossip: Successfully joined with %v node(s)", joinedNodes)
+
 	}
+	g.quorumProvider.UpdateClusterDomainsActiveMap(config.ActiveMap)
 	return nil
 }
 
@@ -143,16 +162,47 @@ func (g *GossiperImpl) Stop(leaveTimeout time.Duration) error {
 	if g.shutDown == true {
 		return fmt.Errorf("gossip: Gossiper already stopped")
 	}
-	err := g.mlist.Leave(leaveTimeout)
-	if err != nil {
-		return err
+	// If leaveTimeout is specified then gracefully shutdown
+	if leaveTimeout != time.Duration(0) {
+		if err := g.mlist.Leave(leaveTimeout); err != nil {
+			return err
+		}
 	}
-	err = g.mlist.Shutdown()
-	if err != nil {
+	if err := g.mlist.Shutdown(); err != nil {
 		return err
 	}
 	g.shutDown = true
 	return nil
+}
+
+func (g *GossiperImpl) Ping(peerNode types.NodeId, addr string) (time.Duration, error) {
+	var (
+		pingErr      error
+		pingDuration time.Duration
+	)
+
+	ipPort := strings.Split(addr, ":")
+	port, err := strconv.ParseInt(ipPort[1], 10, 64)
+	if err != nil {
+		return pingDuration, err
+	}
+
+	netAddr := &net.UDPAddr{net.ParseIP(ipPort[0]), int(port), ""}
+
+	pingRetries := 3
+
+	memberlistNodeName := string(peerNode) + types.GOSSIP_VERSION_2
+
+	// Ping the node and return success when you get a ping response.
+	// Retry at most 3 times on failure
+	for i := 0; i < pingRetries; i++ {
+		pingDuration, pingErr = g.mlist.Ping(memberlistNodeName, netAddr)
+		if pingErr == nil {
+			return pingDuration, nil
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	return pingDuration, pingErr
 }
 
 func (g *GossiperImpl) GossipInterval() time.Duration {
@@ -169,7 +219,12 @@ func (g *GossiperImpl) GetNodes() []string {
 }
 
 func (g *GossiperImpl) UpdateCluster(peers map[types.NodeId]types.NodeUpdate) {
-	g.updateCluster(peers)
+	quorumMembersMap := g.updateCluster(peers)
+	if g.quorumProvider == nil {
+		// gossip not started yet
+		return
+	}
+	g.quorumProvider.UpdateNumOfQuorumMembers(quorumMembersMap)
 	g.triggerStateEvent(types.UPDATE_CLUSTER_SIZE)
 }
 
@@ -183,5 +238,24 @@ func (g *GossiperImpl) ExternalNodeLeave(nodeId types.NodeId) types.NodeId {
 		log.Infof("gossip: Our Status: %v. We should go down.",
 			g.GetSelfStatus())
 		return g.NodeId()
+	}
+}
+
+func (g *GossiperImpl) UpdateClusterDomainsActiveMap(activeMap types.ClusterDomainsActiveMap) error {
+	if g.quorumProvider == nil {
+		return fmt.Errorf("gossip: not started yet")
+	}
+	stateChanged := g.quorumProvider.UpdateClusterDomainsActiveMap(activeMap)
+	if stateChanged {
+		g.triggerStateEvent(types.UPDATE_CLUSTER_DOMAINS_ACTIVE_MAP)
+	}
+	return nil
+}
+
+func (g *GossiperImpl) UpdateSelfClusterDomain(selfClusterDomain string) {
+	newUpdate := g.updateSelfClusterDomain(selfClusterDomain)
+	if newUpdate {
+		// trigger a SelfAlive event
+		g.triggerStateEvent(types.SELF_ALIVE)
 	}
 }

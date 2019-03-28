@@ -17,7 +17,9 @@ package manager
 
 import (
 	"testing"
+	"time"
 
+	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/pkg/auth"
@@ -48,6 +50,13 @@ func init() {
 	}
 }
 
+func cleanup() {
+	inst.Shutdown()
+	time.Sleep(100 * time.Millisecond)
+	kvdb.Instance().Delete(ClusterDBKey)
+	inst = nil
+}
+
 func TestClusterManagerUuid(t *testing.T) {
 	oldInst := inst
 	defer func() {
@@ -62,6 +71,7 @@ func TestClusterManagerUuid(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, uuid, inst.Uuid())
+	cleanup()
 }
 
 func TestUpdateSchedulerNodeName(t *testing.T) {
@@ -81,7 +91,7 @@ func TestUpdateSchedulerNodeName(t *testing.T) {
 	assert.NoError(t, err)
 	auth.InitSystemTokenManager(manager)
 
-	err = inst.StartWithConfiguration(1, false, "1001", []string{}, &cluster.ClusterServerConfiguration{
+	err = inst.StartWithConfiguration(1, false, "1001", []string{}, "", &cluster.ClusterServerConfiguration{
 		ConfigSystemTokenManager: manager,
 	})
 	assert.NoError(t, err)
@@ -102,4 +112,36 @@ func TestUpdateSchedulerNodeName(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, auth.IsJwtToken(tokenResp.Token))
 
+	cleanup()
+}
+
+func TestClusterDomainClusterManagerAPIs(t *testing.T) {
+	nodeID := "node-alpha"
+	Init(config.ClusterConfig{
+		ClusterId:         testClusterId,
+		ClusterUuid:       testClusterUuid,
+		NodeId:            nodeID,
+		SchedulerNodeName: "old-sched-name",
+	})
+	selfClusterDomain := "zone1"
+	manager, err := systemtoken.NewManager(&systemtoken.Config{
+		ClusterId:    testClusterId,
+		NodeId:       nodeID,
+		SharedSecret: "mysecret",
+	})
+	assert.NoError(t, err)
+	auth.InitSystemTokenManager(manager)
+
+	err = inst.StartWithConfiguration(1, false, "1002", []string{},
+		selfClusterDomain,
+		&cluster.ClusterServerConfiguration{
+			ConfigSystemTokenManager: manager,
+		})
+	assert.NoError(t, err)
+
+	c, err := inst.Enumerate()
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(c.ClusterDomainsActiveMap), "Unexpected length of cluster domain map")
+	assert.Equal(t, types.CLUSTER_DOMAIN_STATE_ACTIVE, c.ClusterDomainsActiveMap[selfClusterDomain], "Expected zone1 to be activated")
+	cleanup()
 }

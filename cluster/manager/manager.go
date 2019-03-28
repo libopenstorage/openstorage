@@ -74,6 +74,8 @@ type ClusterManager struct {
 	secretsManager     secrets.Secrets
 	systemTokenManager auth.TokenGenerator
 	snapshotPrefixes   []string
+	selfClusterDomain  string
+	activeMap          types.ClusterDomainsActiveMap
 }
 
 // Init instantiates a new cluster manager.
@@ -305,28 +307,62 @@ func (c *ClusterManager) UpdateSchedulerNodeName(schedulerNodeName string) error
 	defer c.selfNodeLock.Unlock()
 	c.selfNode.SchedulerNodeName = schedulerNodeName
 
-	kvdb := kvdb.Instance()
-	kvlock, err := kvdb.LockWithID(clusterLockKey, c.selfNode.Id)
-	if err != nil {
-		logrus.Warnln("Unable to obtain cluster lock for updating config", err)
-		return err
-	}
-	defer kvdb.Unlock(kvlock)
-
-	db, _, err := readClusterInfo()
-	if err != nil {
-		return err
+	updateCallbackFn := func(db *cluster.ClusterInfo) (bool, error) {
+		nodeEntry, ok := db.NodeEntries[c.selfNode.Id]
+		if !ok {
+			return false, fmt.Errorf("Node not found in cluster database")
+		}
+		nodeEntry.SchedulerNodeName = schedulerNodeName
+		db.NodeEntries[c.selfNode.Id] = nodeEntry
+		return true, nil
 	}
 
-	nodeEntry, ok := db.NodeEntries[c.selfNode.Id]
-	if !ok {
-		return fmt.Errorf("Node not found in cluster database")
-	}
-	nodeEntry.SchedulerNodeName = schedulerNodeName
-	db.NodeEntries[c.selfNode.Id] = nodeEntry
+	return updateLockedDB("update-scheduler-name", c.selfNode.Id, updateCallbackFn)
+}
 
-	_, err = writeClusterInfo(&db)
-	return err
+func (c *ClusterManager) DeactivateClusterDomain(deactivateRequest *api.DeactivateClusterDomainRequest) error {
+	updateCallbackFn := func(db *cluster.ClusterInfo) (bool, error) {
+		if db.ClusterDomains.ActiveMap[deactivateRequest.ClusterDomain] == types.CLUSTER_DOMAIN_STATE_ACTIVE {
+			db.ClusterDomains.ActiveMap[deactivateRequest.ClusterDomain] = types.CLUSTER_DOMAIN_STATE_INACTIVE
+			return true, nil
+		}
+		// Cluster domain is not active. No need of update
+		return false, nil
+	}
+	return updateLockedDB("deactivate-cluster-domain", c.selfNode.Id, updateCallbackFn)
+}
+
+func (c *ClusterManager) ActivateClusterDomain(activateRequest *api.ActivateClusterDomainRequest) error {
+	updateCallbackFn := func(db *cluster.ClusterInfo) (bool, error) {
+		if db.ClusterDomains.ActiveMap[activateRequest.ClusterDomain] == types.CLUSTER_DOMAIN_STATE_INACTIVE {
+			db.ClusterDomains.ActiveMap[activateRequest.ClusterDomain] = types.CLUSTER_DOMAIN_STATE_ACTIVE
+			return true, nil
+		}
+		// Cluster domain is active. No need of update
+		return false, nil
+	}
+	return updateLockedDB("deactivate-cluster-domain", c.selfNode.Id, updateCallbackFn)
+}
+
+func (c *ClusterManager) UpdateSelfClusterDomain(selfClusterDomain string) error {
+	c.selfNodeLock.Lock()
+	defer c.selfNodeLock.Unlock()
+
+	if c.selfClusterDomain == selfClusterDomain {
+		// No need to update cluster database
+		return nil
+	}
+
+	updateCallbackFn := func(db *cluster.ClusterInfo) (bool, error) {
+		nodeEntry, ok := db.NodeEntries[c.selfNode.Id]
+		if !ok {
+			return false, fmt.Errorf("Node not found in cluster database")
+		}
+		nodeEntry.ClusterDomain = selfClusterDomain
+		db.NodeEntries[c.selfNode.Id] = nodeEntry
+		return true, nil
+	}
+	return updateLockedDB("update-failure-domain", c.selfNode.Id, updateCallbackFn)
 }
 
 // GetData returns self node's data
@@ -400,8 +436,9 @@ func (c *ClusterManager) getNonDecommisionedPeers(
 			continue
 		}
 		peers[types.NodeId(nodeEntry.Id)] = types.NodeUpdate{
-			Addr:         nodeEntry.DataIp + ":" + c.gossipPort,
-			QuorumMember: !nodeEntry.NonQuorumMember,
+			Addr:          nodeEntry.DataIp + ":" + c.gossipPort,
+			QuorumMember:  !nodeEntry.NonQuorumMember,
+			ClusterDomain: nodeEntry.ClusterDomain,
 		}
 	}
 	return peers
@@ -426,6 +463,8 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 			logrus.Warnln("Failed to notify ", e.Value.(cluster.ClusterListener).String())
 		}
 	}
+
+	var selfNodeClusterDomainInDb string
 
 	for _, nodeEntry := range db.NodeEntries {
 		if nodeEntry.Status == api.Status_STATUS_DECOMMISSION {
@@ -463,12 +502,25 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 				c.gossip.Stop(time.Duration(10 * time.Second))
 				return fmt.Errorf("stop watch")
 			}
+		} else {
+			if nodeEntry.Id == c.selfNode.Id {
+				selfNodeClusterDomainInDb = nodeEntry.ClusterDomain
+			}
 		}
 	}
 
 	c.size = db.Size
 
 	c.gossip.UpdateCluster(c.getNonDecommisionedPeers(db))
+
+	if len(db.ClusterDomains.ActiveMap) > 0 {
+		// Copy over the active map
+		c.activeMap = make(types.ClusterDomainsActiveMap)
+		for k, v := range db.ClusterDomains.ActiveMap {
+			c.activeMap[k] = v
+		}
+		c.gossip.UpdateClusterDomainsActiveMap(c.activeMap)
+	}
 
 	// update the nodeCache and remove any nodes not present in cluster database
 	c.nodeCacheLock.Lock()
@@ -477,6 +529,13 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 		_, found := db.NodeEntries[n.Id]
 		if !found {
 			delete(c.nodeCache, n.Id)
+		}
+	}
+	// Check if our cluster domain has changed under a lock
+	if c.selfClusterDomain != selfNodeClusterDomainInDb {
+		c.selfClusterDomain = selfNodeClusterDomainInDb
+		if c.gossip != nil {
+			c.gossip.UpdateSelfClusterDomain(selfNodeClusterDomainInDb)
 		}
 	}
 
@@ -521,6 +580,7 @@ func (c *ClusterManager) initNode(db *cluster.ClusterInfo) (*api.Node, bool) {
 		Hostname:          c.selfNode.Hostname,
 		NodeLabels:        labels,
 		GossipPort:        c.selfNode.GossipPort,
+		ClusterDomain:     c.selfClusterDomain,
 	}
 
 	db.NodeEntries[c.config.NodeId] = nodeEntry
@@ -529,6 +589,9 @@ func (c *ClusterManager) initNode(db *cluster.ClusterInfo) (*api.Node, bool) {
 	logrus.Infof("Cluster ID: %s", c.config.ClusterId)
 	logrus.Infof("Node Mgmt IP: %s", c.selfNode.MgmtIp)
 	logrus.Infof("Node Data IP: %s", c.selfNode.DataIp)
+	if len(c.selfClusterDomain) > 0 {
+		logrus.Infof("Node's Cluster Domain: %s", c.selfClusterDomain)
+	}
 
 	return &c.selfNode, exists
 }
@@ -688,6 +751,12 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *cluster.ClusterInfo) {
 	c.putNodeCacheEntry(c.selfNode.Id, *node)
 	c.gossip.UpdateSelf(gossipStoreKey, *node)
 	var nodeIps []string
+
+	gossipConfig := types.GossipStartConfiguration{
+		ActiveMap: clusterInfo.ClusterDomains.ActiveMap,
+	}
+	gossipConfig.Nodes = make(map[types.NodeId]types.GossipNodeConfiguration)
+
 	for nodeId, nodeEntry := range clusterInfo.NodeEntries {
 		if nodeId == node.Id {
 			continue
@@ -697,6 +766,11 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *cluster.ClusterInfo) {
 		if !ok || version != c.gossipVersion {
 			// Do not add nodes with mismatched version
 			continue
+		}
+		nodeIp := nodeEntry.DataIp + ":" + c.gossipPort
+		gossipConfig.Nodes[types.NodeId(nodeId)] = types.GossipNodeConfiguration{
+			KnownUrl:      nodeIp,
+			ClusterDomain: nodeEntry.ClusterDomain,
 		}
 
 		gossipPort := nodeEntry.GossipPort
@@ -715,7 +789,14 @@ func (c *ClusterManager) startHeartBeat(clusterInfo *cluster.ClusterInfo) {
 	} else {
 		logrus.Infof("Starting Gossip...")
 	}
-	c.gossip.Start(nodeIps)
+
+	if len(clusterInfo.ClusterDomains.ActiveMap) > 0 {
+		gossipConfig.QuorumProviderType = types.QUORUM_PROVIDER_FAILURE_DOMAINS
+	} else {
+		gossipConfig.QuorumProviderType = types.QUORUM_PROVIDER_DEFAULT
+	}
+
+	c.gossip.Start(gossipConfig)
 	c.gossip.UpdateCluster(c.getNonDecommisionedPeers(*clusterInfo))
 
 	lastUpdateTs := time.Now()
@@ -983,7 +1064,7 @@ func (c *ClusterManager) waitForQuorum(exist bool) error {
 	return nil
 }
 
-func (c *ClusterManager) initializeCluster(db kvdb.Kvdb) (
+func (c *ClusterManager) initializeCluster(db kvdb.Kvdb, selfClusterDomain string) (
 	*cluster.ClusterInfo,
 	error,
 ) {
@@ -1012,6 +1093,15 @@ func (c *ClusterManager) initializeCluster(db kvdb.Kvdb) (
 		logrus.Infoln("Initializing a new cluster.")
 		// Initialize self node
 		clusterInfo.Status = api.Status_STATUS_OK
+		clusterInfo.ClusterDomains.ActiveMap = make(types.ClusterDomainsActiveMap)
+		c.activeMap = make(types.ClusterDomainsActiveMap)
+
+		if len(selfClusterDomain) > 0 {
+			// We are initializing the cluster, the only known cluster domain
+			// will be active to start with
+			clusterInfo.ClusterDomains.ActiveMap[selfClusterDomain] = types.CLUSTER_DOMAIN_STATE_ACTIVE
+			c.activeMap[selfClusterDomain] = types.CLUSTER_DOMAIN_STATE_ACTIVE
+		}
 
 		err = c.initClusterForListeners(&c.selfNode)
 		if err != nil {
@@ -1056,9 +1146,10 @@ func (c *ClusterManager) initListeners(
 	clusterMaxSize int,
 	nodeExists *bool,
 	nodeInitialized bool,
+	selfClusterDomain string,
 ) (uint64, *cluster.ClusterInfo, error) {
 	// Initialize the cluster if required
-	clusterInfo, err := c.initializeCluster(db)
+	clusterInfo, err := c.initializeCluster(db, selfClusterDomain)
 	if err != nil {
 		return 0, nil, err
 	}
@@ -1107,6 +1198,14 @@ func (c *ClusterManager) initListeners(
 				"add a new node.", clusterMaxSize)
 		}
 
+		if len(c.selfClusterDomain) > 0 {
+			// Add an entry of our cluster domain if it does not exists
+			_, exists := clusterInfo.ClusterDomains.ActiveMap[c.selfClusterDomain]
+			if !exists {
+				clusterInfo.ClusterDomains.ActiveMap[c.selfClusterDomain] = types.CLUSTER_DOMAIN_STATE_ACTIVE
+			}
+		}
+
 		// Finalize inits from subsystems under cluster db lock.
 		for _, finalizeCb := range finalizeCbs {
 			if err := finalizeCb(); err != nil {
@@ -1142,12 +1241,14 @@ func (c *ClusterManager) initializeAndStartHeartbeat(
 	clusterMaxSize int,
 	exist *bool,
 	nodeInitialized bool,
+	selfClusterDomain string,
 ) (uint64, error) {
 	lastIndex, clusterInfo, err := c.initListeners(
 		kvdb,
 		clusterMaxSize,
 		exist,
 		nodeInitialized,
+		selfClusterDomain,
 	)
 	if err != nil {
 		return 0, err
@@ -1193,12 +1294,14 @@ func (c *ClusterManager) Start(
 	clusterMaxSize int,
 	nodeInitialized bool,
 	gossipPort string,
+	selfClusterDomain string,
 ) error {
 	return c.StartWithConfiguration(
 		clusterMaxSize,
 		nodeInitialized,
 		gossipPort,
 		[]string{ClusterDBKey},
+		selfClusterDomain,
 		&cluster.ClusterServerConfiguration{})
 }
 
@@ -1207,6 +1310,7 @@ func (c *ClusterManager) StartWithConfiguration(
 	nodeInitialized bool,
 	gossipPort string,
 	snapshotPrefixes []string,
+	selfClusterDomain string,
 	config *cluster.ClusterServerConfiguration,
 ) error {
 	var err error
@@ -1239,6 +1343,7 @@ func (c *ClusterManager) StartWithConfiguration(
 	c.selfNode.Hostname, _ = os.Hostname()
 	c.gossipPort = gossipPort
 	c.selfNode.GossipPort = gossipPort
+	c.selfClusterDomain = selfClusterDomain
 	if err != nil {
 		logrus.Errorf("Failed to get external IP address for mgt/data interfaces: %s.",
 			err)
@@ -1265,6 +1370,7 @@ func (c *ClusterManager) StartWithConfiguration(
 		gossipIntervals,
 		types.GOSSIP_VERSION_2,
 		c.config.ClusterId,
+		selfClusterDomain,
 	)
 	c.gossipVersion = types.GOSSIP_VERSION_2
 
@@ -1274,6 +1380,7 @@ func (c *ClusterManager) StartWithConfiguration(
 		clusterMaxSize,
 		&exist,
 		nodeInitialized,
+		selfClusterDomain,
 	)
 	if err != nil {
 		return err
@@ -1384,16 +1491,20 @@ func (c *ClusterManager) nodes(clusterDB *cluster.ClusterInfo) []api.Node {
 	return nodes
 }
 
-func (c *ClusterManager) enumerateNodesFromClusterDB() []api.Node {
+func (c *ClusterManager) enumerateFromClusterDB() ([]api.Node, types.ClusterDomainsActiveMap) {
 	clusterDB, _, err := readClusterInfo()
 	if err != nil {
 		logrus.Errorf("enumerateNodesFromClusterDB failed with error: %v", err)
-		return make([]api.Node, 0)
+		return make([]api.Node, 0), nil
 	}
-	return c.nodes(&clusterDB)
+	activeMap := make(types.ClusterDomainsActiveMap)
+	for k, v := range clusterDB.ClusterDomains.ActiveMap {
+		activeMap[k] = v
+	}
+	return c.nodes(&clusterDB), activeMap
 }
 
-func (c *ClusterManager) enumerateNodesFromCache() []api.Node {
+func (c *ClusterManager) enumerateFromCache() ([]api.Node, types.ClusterDomainsActiveMap) {
 	var clusterDB cluster.ClusterInfo
 	c.nodeCacheLock.Lock()
 	defer c.nodeCacheLock.Unlock()
@@ -1404,7 +1515,11 @@ func (c *ClusterManager) enumerateNodesFromCache() []api.Node {
 		nodes[i] = *n.Copy()
 		i++
 	}
-	return nodes
+	cacheActiveMap := make(types.ClusterDomainsActiveMap)
+	for k, v := range c.activeMap {
+		cacheActiveMap[k] = v
+	}
+	return nodes, cacheActiveMap
 }
 
 // Enumerate lists all the nodes in the cluster.
@@ -1419,9 +1534,9 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 		c.selfNode.Status == api.Status_STATUS_MAINTENANCE {
 		// If the node is not yet ready, query the cluster db
 		// for node members since gossip is not ready yet.
-		clusterState.Nodes = c.enumerateNodesFromClusterDB()
+		clusterState.Nodes, clusterState.ClusterDomainsActiveMap = c.enumerateFromClusterDB()
 	} else {
-		clusterState.Nodes = c.enumerateNodesFromCache()
+		clusterState.Nodes, clusterState.ClusterDomainsActiveMap = c.enumerateFromCache()
 	}
 
 	// Allow listeners to add/modify data

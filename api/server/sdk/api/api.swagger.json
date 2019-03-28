@@ -1398,6 +1398,42 @@
         "title": "Defines a response for the status request",
         "type": "object"
       },
+      "apiSdkClusterDomainActivateResponse": {
+        "title": "Empty response",
+        "type": "object"
+      },
+      "apiSdkClusterDomainDeactivateResponse": {
+        "title": "Empty response",
+        "type": "object"
+      },
+      "apiSdkClusterDomainInspectResponse": {
+        "properties": {
+          "cluster_domain_name": {
+            "title": "Name of the cluster domain",
+            "type": "string"
+          },
+          "is_active": {
+            "format": "boolean",
+            "title": "IsActive indicates whether this cluster domain is active",
+            "type": "boolean"
+          }
+        },
+        "title": "Defines a response to inspecting a cluster domain",
+        "type": "object"
+      },
+      "apiSdkClusterDomainsEnumerateResponse": {
+        "properties": {
+          "cluster_domain_names": {
+            "items": {
+              "type": "string"
+            },
+            "title": "List of names of all the cluster domains in a cluster",
+            "type": "array"
+          }
+        },
+        "title": "Defines a response when enumerating cluster domains",
+        "type": "object"
+      },
       "apiSdkClusterInspectCurrentResponse": {
         "properties": {
           "cluster": {
@@ -2061,7 +2097,7 @@
             "$ref": "#/components/schemas/apiVolumeSpecPolicy"
           }
         },
-        "title": "A SdkStoragePolicy represents minimum set of volume specs to be\nfollow while creating volumes.\nIf storage policy is set default in OpenStoragePolicy service, VolumeSpecPolicy will be \nused before creating volume to validate volume specs or ensure minimum volume creation \nrules followed",
+        "title": "A SdkStoragePolicy represents minimum set of volume specs to be\nfollow while creating volumes.\nIf storage policy is set default in OpenStoragePolicy service, VolumeSpecPolicy will be\nused before creating volume to validate volume specs or ensure minimum volume creation\nrules followed",
         "type": "object"
       },
       "apiSdkTimeWeekday": {
@@ -3420,7 +3456,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.42.2"
+    "version": "0.42.3"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -3865,6 +3901,120 @@
         "summary": "Status returns the status of any cloud backups of a volume",
         "tags": [
           "OpenStorageCloudBackup"
+        ]
+      }
+    },
+    "/v1/clusterdomains": {
+      "get": {
+        "operationId": "Enumerate",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkClusterDomainsEnumerateResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Enumerate returns names of all the cluster domains in the cluster",
+        "tags": [
+          "OpenStorageClusterDomains"
+        ]
+      }
+    },
+    "/v1/clusterdomains/activate/{cluster_domain_name}": {
+      "post": {
+        "operationId": "Activate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "cluster_domain_name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkClusterDomainActivateResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Activates a cluster domain in the cluster.\nAll the nodes which are part of an active cluster domain\nwill participate in cluster quorum calculation",
+        "tags": [
+          "OpenStorageClusterDomains"
+        ]
+      }
+    },
+    "/v1/clusterdomains/deactivate/{cluster_domain_name}": {
+      "post": {
+        "operationId": "Deactivate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "cluster_domain_name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkClusterDomainDeactivateResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Deactivates a cluster domain in the cluster.\nAll the nodes which are part of a deactivated cluster domain.\nwill not participate in cluster quorum calculation",
+        "tags": [
+          "OpenStorageClusterDomains"
+        ]
+      }
+    },
+    "/v1/clusterdomains/inspect/{cluster_domain_name}": {
+      "get": {
+        "operationId": "Inspect",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "cluster_domain_name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkClusterDomainInspectResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Inspect returns information about a cluster domain and a\nstatus indicating whether the cluster domain is active",
+        "tags": [
+          "OpenStorageClusterDomains"
         ]
       }
     },

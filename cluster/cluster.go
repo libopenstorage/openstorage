@@ -61,15 +61,25 @@ type NodeEntry struct {
 	NodeLabels        map[string]string
 	NonQuorumMember   bool
 	GossipPort        string
+	ClusterDomain     string
 }
 
 // ClusterInfo is the basic info about the cluster and its nodes
 type ClusterInfo struct {
-	Size        int
-	Status      api.Status
-	Id          string
-	NodeEntries map[string]NodeEntry
-	PairToken   string
+	Size           int
+	Status         api.Status
+	Id             string
+	NodeEntries    map[string]NodeEntry
+	PairToken      string
+	ClusterDomains ClusterDomainInfo
+}
+
+// ClusterDomainInfo describe the different domains which are a part of
+// this cluster if it spans across a clusterpolitan network
+type ClusterDomainInfo struct {
+	// ActiveMap is a map of failure domain to a boolean value
+	// indicating whether that failure domain is active
+	ActiveMap types.ClusterDomainsActiveMap
 }
 
 // ClusterInitState is the snapshot state which should be used to initialize
@@ -212,6 +222,10 @@ type ClusterData interface {
 	// associated with this node
 	UpdateSchedulerNodeName(name string) error
 
+	// UpdateSelfClusterDomain updates the cluster domain associated
+	// with this node
+	UpdateSelfClusterDomain(clusterDomain string) error
+
 	// GetData get sdata associated with all nodes.
 	// Key is the node id
 	GetData() (map[string]*api.Node, error)
@@ -287,6 +301,14 @@ type ClusterPair interface {
 	GetPairToken(bool) (*api.ClusterPairTokenGetResponse, error)
 }
 
+type ClusterDomain interface {
+	// DeactivatedClusterDomain deactivates a cluster domain in the cluster
+	DeactivateClusterDomain(deactivationRequest *api.DeactivateClusterDomainRequest) error
+
+	// ActivateClusterDomain activates a cluster domain in the cluster
+	ActivateClusterDomain(activationRequest *api.ActivateClusterDomainRequest) error
+}
+
 // Cluster is the API that a cluster provider will implement.
 type Cluster interface {
 	// Inspect the node given a UUID.
@@ -309,10 +331,17 @@ type Cluster interface {
 	// nodeInitialized indicates if the caller of this method expects the node
 	// to have been in an already-initialized state.
 	// All managers will default returning NotSupported.
-	Start(clusterSize int, nodeInitialized bool, gossipPort string) error
+	Start(clusterSize int, nodeInitialized bool, gossipPort string, selfClusterDomain string) error
 
 	// Like Start, but have the ability to pass in managers to the cluster object
-	StartWithConfiguration(clusterMaxSize int, nodeInitialized bool, gossipPort string, snapshotPrefixes []string, config *ClusterServerConfiguration) error
+	StartWithConfiguration(
+		clusterMaxSize int,
+		nodeInitialized bool,
+		gossipPort string,
+		snapshotPrefixes []string,
+		selfClusterDomain string,
+		config *ClusterServerConfiguration,
+	) error
 
 	// Get a unique identifier for this cluster. Depending on the implementation, this could
 	// be different than the _id_ from ClusterInfo. This id _must_ be unique across
@@ -324,6 +353,7 @@ type Cluster interface {
 	ClusterStatus
 	ClusterAlerts
 	ClusterPair
+	ClusterDomain
 	osdconfig.ConfigCaller
 	secrets.Secrets
 	sched.SchedulePolicyProvider

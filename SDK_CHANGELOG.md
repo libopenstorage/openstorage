@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.42.3 - Tech Preview (3/24/2019)
+
+* Add new APIs for managing OpenStorage ClusterDomains
+
 ### v0.42.2 - Tech Preview (3/13/2019)
 
 * Add ownership support to OpenStorageStoragePolicy
