@@ -74,6 +74,9 @@ func (s *CloudBackupServer) Create(
 		Labels:         req.GetLabels(),
 	})
 	if err != nil {
+		if err == volume.ErrInvalidName {
+			return nil, status.Errorf(codes.AlreadyExists, "Backup with this name already exists: %v", err)
+		}
 		return nil, status.Errorf(codes.Internal, "Failed to create backup: %v", err)
 	}
 
