@@ -2,7 +2,7 @@
 
 ## Releases
 
-### v0.43.0 - Tech Preview (3/26/2019)
+### v0.42.3 - Tech Preview (3/26/2019)
 
 * Handle spec update for nodiscard, io_strategy
 
