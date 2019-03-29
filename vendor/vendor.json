@@ -57,18 +57,6 @@
 			"revisionTime": "2018-02-08T22:49:56Z"
 		},
 		{
-			"checksumSHA1": "qLlESdcbbI+zK5INo6dP0fkUQJA=",
-			"path": "github.com/Azure/go-autorest/autorest/azure/auth",
-			"revision": "f4369d4c79bf40df5e86def1e0f54c7ef261a51c",
-			"revisionTime": "2019-02-20T18:42:03Z"
-		},
-		{
-			"checksumSHA1": "PTO/5npEPoRIq4fu0OSNyPcKoCU=",
-			"path": "github.com/Azure/go-autorest/autorest/azure/cli",
-			"revision": "f4369d4c79bf40df5e86def1e0f54c7ef261a51c",
-			"revisionTime": "2019-02-20T18:42:03Z"
-		},
-		{
 			"checksumSHA1": "9nXCi9qQsYjxCeajJKWttxgEt0I=",
 			"path": "github.com/Azure/go-autorest/autorest/date",
 			"revision": "5a06e9ddbe3c22262059b8e061777b9934f982bd",
@@ -601,12 +589,6 @@
 			"path": "github.com/dgrijalva/jwt-go",
 			"revision": "0b96aaa707760d6ab28d9b9d1913ff5993328bae",
 			"revisionTime": "2018-07-19T21:18:23Z"
-		},
-		{
-			"checksumSHA1": "7EjxkAUND/QY/sN+2fNKJ52v1Rc=",
-			"path": "github.com/dimchansky/utfbom",
-			"revision": "5448fe645cb1964ba70ac8f9f2ffe975e61a536c",
-			"revisionTime": "2018-07-13T13:37:17Z"
 		},
 		{
 			"checksumSHA1": "swrmSZR/wRFxtu7eftd7Vm9ykrI=",
@@ -1395,12 +1377,6 @@
 			"revisionTime": "2016-05-12T06:43:16Z"
 		},
 		{
-			"checksumSHA1": "a58zUNtDH/gEd6F6KI3FqT2iEo0=",
-			"path": "github.com/mitchellh/go-homedir",
-			"revision": "ae18d6b8b3205b561c79e8e5f69bff09736185f4",
-			"revisionTime": "2018-08-24T00:42:36Z"
-		},
-		{
 			"checksumSHA1": "ZTcgWKWHsrX0RXYVXn5Xeb8Q0go=",
 			"path": "github.com/modern-go/concurrent",
 			"revision": "bacd9c7ef1dd9b15be4a9909b8ac7a4e313eec94",
@@ -2035,18 +2011,6 @@
 			"path": "golang.org/x/crypto/pbkdf2",
 			"revision": "505ab145d0a99da450461ae2c1a9f6cd10d1f447",
 			"revisionTime": "2018-09-26T22:07:39Z"
-		},
-		{
-			"checksumSHA1": "PJY7uCr3UnX4/Mf/RoWnbieSZ8o=",
-			"path": "golang.org/x/crypto/pkcs12",
-			"revision": "88942b9c40a4c9d203b82b3731787b672d6e809b",
-			"revisionTime": "2018-03-21T23:38:19Z"
-		},
-		{
-			"checksumSHA1": "p0GC51McIdA7JygoP223twJ1s0E=",
-			"path": "golang.org/x/crypto/pkcs12/internal/rc2",
-			"revision": "88942b9c40a4c9d203b82b3731787b672d6e809b",
-			"revisionTime": "2018-03-21T23:38:19Z"
 		},
 		{
 			"checksumSHA1": "BGm8lKZmvJbf/YOJLeL1rw2WVjA=",
