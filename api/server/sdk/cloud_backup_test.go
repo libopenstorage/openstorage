@@ -157,7 +157,7 @@ func TestSdkCloudBackupCreateBadArguments(t *testing.T) {
 	serverError, ok = status.FromError(err)
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "credential name or uuid to use")
+	assert.Contains(t, serverError.Message(), "No configured credentials found")
 
 	// more than 1 default creds
 	setupExpectedCredentialsNotPassingMoreThanOne(s)
@@ -233,7 +233,7 @@ func TestSdkCloudBackupRestoreBadArguments(t *testing.T) {
 	serverError, ok = status.FromError(err)
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "credential name or uuid")
+	assert.Contains(t, serverError.Message(), "No configured credentials found")
 }
 
 func TestSdkCloudDeleteCreate(t *testing.T) {
@@ -294,7 +294,7 @@ func TestSdkCloudBackupDeleteBadArguments(t *testing.T) {
 	serverError, ok = status.FromError(err)
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "credential name or uuid")
+	assert.Contains(t, serverError.Message(), "No configured credentials found")
 }
 
 func TestSdkCloudDeleteAllCreate(t *testing.T) {
@@ -356,7 +356,7 @@ func TestSdkCloudBackupDeleteAllBadArguments(t *testing.T) {
 	serverError, ok = status.FromError(err)
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "credential name or uuid")
+	assert.Contains(t, serverError.Message(), "No configured credentials found")
 }
 
 func TestSdkCloudBackupEnumerateWithFilters(t *testing.T) {
@@ -451,7 +451,7 @@ func TestSdkCloudBackupEnumerateWithFiltersBadArguments(t *testing.T) {
 	serverError, ok := status.FromError(err)
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "credential name or uuid")
+	assert.Contains(t, serverError.Message(), "No configured credentials found")
 }
 
 func TestSdkCloudBackupStatus(t *testing.T) {
@@ -605,7 +605,7 @@ func TestSdkCloudBackupCatalogBadArguments(t *testing.T) {
 	serverError, ok = status.FromError(err)
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "credential name or uuid")
+	assert.Contains(t, serverError.Message(), "No configured credentials found")
 }
 
 func TestSdkCloudBackupHistory(t *testing.T) {
@@ -780,7 +780,7 @@ func TestSdkCloudBackupSchedDeleteBadArguments(t *testing.T) {
 	serverError, ok := status.FromError(err)
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "credential uuid")
+	assert.Contains(t, serverError.Message(), "Must provide volumeId")
 }
 
 func TestSdkCloudBackupSchedCreate(t *testing.T) {
@@ -865,7 +865,7 @@ func TestSdkCloudBackupSchedCreateBadArguments(t *testing.T) {
 	serverError, ok = status.FromError(err)
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "credential name or uuid")
+	assert.Contains(t, serverError.Message(), "No configured credentials found")
 }
 
 func TestSdkCloudBackupSchedEnumerate(t *testing.T) {
