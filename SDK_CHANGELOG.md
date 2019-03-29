@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.42.6 - Tech Preview (4/2/2019)
+
+* Add cluster pair Mode option in CreatePair and ProcessPair requests
+
 ### v0.42.5 - Tech Preview (3/26/2019)
 
 * Change io_strategy type from oneof to pointer

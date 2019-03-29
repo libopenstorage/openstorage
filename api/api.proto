@@ -3404,6 +3404,15 @@ message SdkCloudMigrateStatusResponse {
   CloudMigrateStatusResponse result = 1;
 }
 
+message ClusterPairMode {
+    enum Mode {
+        // Default pairing mode
+        Default = 0;
+        // Paired for DisasterRecovery
+        DisasterRecovery = 1;
+    }
+}
+
 // Used to send a request to create a cluster pair
 message ClusterPairCreateRequest {
   // IP of the remote cluster
@@ -3414,6 +3423,8 @@ message ClusterPairCreateRequest {
   string remote_cluster_token = 3;
   // Set the new pair as the default
   bool set_default = 4;
+  // The mode to use for the cluster pair
+  ClusterPairMode.Mode mode = 5;
 }
 
 // Response for a pair request
@@ -3441,6 +3452,8 @@ message ClusterPairProcessRequest {
     string source_cluster_id = 1;
     // Token used to authenticate with the remote cluster
     string remote_cluster_token = 2;
+    // The mode to use for the cluster pair
+    ClusterPairMode.Mode mode = 3;
 }
 
 // Response after a pairing has been processed
@@ -3512,6 +3525,8 @@ message ClusterPairInfo {
     // Key/value pair of options associated with the cluster
     // Opaque to openstorage and interpreted by the drivers
     map<string, string> options = 7;
+    // Mode for the cluster pair
+    ClusterPairMode.Mode mode = 8;
 }
 
 // Defines a cluster pair inspect request

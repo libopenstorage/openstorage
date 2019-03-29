@@ -12,6 +12,15 @@
         ],
         "type": "string"
       },
+      "ClusterPairModeMode": {
+        "default": "Default",
+        "enum": [
+          "Default",
+          "DisasterRecovery"
+        ],
+        "title": "- Default: Default pairing mode\n - DisasterRecovery: Paired for DisasterRecovery",
+        "type": "string"
+      },
       "LabelSelectorRequirementOperator": {
         "default": "In",
         "description": "- In: In means the value for 'key' should be in one of the given value(s)\n - NotIn: NotIn means the value for 'key' should NOT be in one of the given value(s)\n - Exists: Exists means the 'key' should just exist regardless of the value\n - DoesNotExist: DoesNotExist means the 'key' should NOT exist\n - Gt: Gt means the 'key' should be greater than the value(s)\n - Lt: Lt means the 'key' should be less than the value(s)",
@@ -369,6 +378,9 @@
       },
       "apiClusterPairCreateRequest": {
         "properties": {
+          "mode": {
+            "$ref": "#/components/schemas/ClusterPairModeMode"
+          },
           "remote_cluster_ip": {
             "title": "IP of the remote cluster",
             "type": "string"
@@ -430,6 +442,9 @@
           "id": {
             "title": "ID of the cluster",
             "type": "string"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/ClusterPairModeMode"
           },
           "name": {
             "title": "Name of the cluster",
