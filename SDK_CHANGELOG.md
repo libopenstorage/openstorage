@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.47.0 - Tech Preview (3/26/2019)
+
+* Change io_strategy type from oneof to pointer
+
 ### v0.46.0 - Tech Preview (3/26/2019)
 
 * Handle spec update for nodiscard, io_strategy
