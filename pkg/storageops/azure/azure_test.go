@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-06-01/compute"
-	"github.com/Azure/go-autorest/autorest/to"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2017-12-01/compute"
 	"github.com/libopenstorage/openstorage/pkg/storageops"
 	"github.com/libopenstorage/openstorage/pkg/storageops/azure"
 	"github.com/libopenstorage/openstorage/pkg/storageops/test"
@@ -33,9 +32,7 @@ func initAzure(t *testing.T) (storageops.Ops, map[string]interface{}) {
 		Name:     &name,
 		Location: &region,
 		DiskProperties: &compute.DiskProperties{
-			DiskSizeGB:        &size,
-			DiskIOPSReadWrite: to.Int64Ptr(1350),
-			DiskMBpsReadWrite: to.Int32Ptr(550),
+			DiskSizeGB: &size,
 		},
 		Sku: &compute.DiskSku{
 			Name: compute.PremiumLRS,

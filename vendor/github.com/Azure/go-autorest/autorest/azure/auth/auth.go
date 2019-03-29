@@ -23,7 +23,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"strings"
 	"unicode/utf16"
@@ -31,29 +30,8 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/go-autorest/autorest/azure"
-	"github.com/Azure/go-autorest/autorest/azure/cli"
 	"github.com/dimchansky/utfbom"
 	"golang.org/x/crypto/pkcs12"
-)
-
-// The possible keys in the Values map.
-const (
-	SubscriptionID          = "AZURE_SUBSCRIPTION_ID"
-	TenantID                = "AZURE_TENANT_ID"
-	ClientID                = "AZURE_CLIENT_ID"
-	ClientSecret            = "AZURE_CLIENT_SECRET"
-	CertificatePath         = "AZURE_CERTIFICATE_PATH"
-	CertificatePassword     = "AZURE_CERTIFICATE_PASSWORD"
-	Username                = "AZURE_USERNAME"
-	Password                = "AZURE_PASSWORD"
-	EnvironmentName         = "AZURE_ENVIRONMENT"
-	Resource                = "AZURE_AD_RESOURCE"
-	ActiveDirectoryEndpoint = "ActiveDirectoryEndpoint"
-	ResourceManagerEndpoint = "ResourceManagerEndpoint"
-	GraphResourceID         = "GraphResourceID"
-	SQLManagementEndpoint   = "SQLManagementEndpoint"
-	GalleryEndpoint         = "GalleryEndpoint"
-	ManagementEndpoint      = "ManagementEndpoint"
 )
 
 // NewAuthorizerFromEnvironment creates an Authorizer configured from environment variables in the order:
@@ -62,313 +40,101 @@ const (
 // 3. Username password
 // 4. MSI
 func NewAuthorizerFromEnvironment() (autorest.Authorizer, error) {
-	settings, err := GetSettingsFromEnvironment()
-	if err != nil {
-		return nil, err
-	}
-	return settings.GetAuthorizer()
-}
+	tenantID := os.Getenv("AZURE_TENANT_ID")
+	clientID := os.Getenv("AZURE_CLIENT_ID")
+	clientSecret := os.Getenv("AZURE_CLIENT_SECRET")
+	certificatePath := os.Getenv("AZURE_CERTIFICATE_PATH")
+	certificatePassword := os.Getenv("AZURE_CERTIFICATE_PASSWORD")
+	username := os.Getenv("AZURE_USERNAME")
+	password := os.Getenv("AZURE_PASSWORD")
+	envName := os.Getenv("AZURE_ENVIRONMENT")
+	resource := os.Getenv("AZURE_AD_RESOURCE")
 
-// NewAuthorizerFromEnvironmentWithResource creates an Authorizer configured from environment variables in the order:
-// 1. Client credentials
-// 2. Client certificate
-// 3. Username password
-// 4. MSI
-func NewAuthorizerFromEnvironmentWithResource(resource string) (autorest.Authorizer, error) {
-	settings, err := GetSettingsFromEnvironment()
-	if err != nil {
-		return nil, err
-	}
-	settings.Values[Resource] = resource
-	return settings.GetAuthorizer()
-}
-
-// EnvironmentSettings contains the available authentication settings.
-type EnvironmentSettings struct {
-	Values      map[string]string
-	Environment azure.Environment
-}
-
-// GetSettingsFromEnvironment returns the available authentication settings from the environment.
-func GetSettingsFromEnvironment() (s EnvironmentSettings, err error) {
-	s = EnvironmentSettings{
-		Values: map[string]string{},
-	}
-	s.setValue(SubscriptionID)
-	s.setValue(TenantID)
-	s.setValue(ClientID)
-	s.setValue(ClientSecret)
-	s.setValue(CertificatePath)
-	s.setValue(CertificatePassword)
-	s.setValue(Username)
-	s.setValue(Password)
-	s.setValue(EnvironmentName)
-	s.setValue(Resource)
-	if v := s.Values[EnvironmentName]; v == "" {
-		s.Environment = azure.PublicCloud
+	var env azure.Environment
+	if envName == "" {
+		env = azure.PublicCloud
 	} else {
-		s.Environment, err = azure.EnvironmentFromName(v)
+		var err error
+		env, err = azure.EnvironmentFromName(envName)
+		if err != nil {
+			return nil, err
+		}
 	}
-	if s.Values[Resource] == "" {
-		s.Values[Resource] = s.Environment.ResourceManagerEndpoint
+
+	if resource == "" {
+		resource = env.ResourceManagerEndpoint
 	}
-	return
-}
 
-// GetSubscriptionID returns the available subscription ID or an empty string.
-func (settings EnvironmentSettings) GetSubscriptionID() string {
-	return settings.Values[SubscriptionID]
-}
-
-// adds the specified environment variable value to the Values map if it exists
-func (settings EnvironmentSettings) setValue(key string) {
-	if v := os.Getenv(key); v != "" {
-		settings.Values[key] = v
-	}
-}
-
-// helper to return client and tenant IDs
-func (settings EnvironmentSettings) getClientAndTenant() (string, string) {
-	clientID := settings.Values[ClientID]
-	tenantID := settings.Values[TenantID]
-	return clientID, tenantID
-}
-
-// GetClientCredentials creates a config object from the available client credentials.
-// An error is returned if no client credentials are available.
-func (settings EnvironmentSettings) GetClientCredentials() (ClientCredentialsConfig, error) {
-	secret := settings.Values[ClientSecret]
-	if secret == "" {
-		return ClientCredentialsConfig{}, errors.New("missing client secret")
-	}
-	clientID, tenantID := settings.getClientAndTenant()
-	config := NewClientCredentialsConfig(clientID, secret, tenantID)
-	config.AADEndpoint = settings.Environment.ActiveDirectoryEndpoint
-	config.Resource = settings.Values[Resource]
-	return config, nil
-}
-
-// GetClientCertificate creates a config object from the available certificate credentials.
-// An error is returned if no certificate credentials are available.
-func (settings EnvironmentSettings) GetClientCertificate() (ClientCertificateConfig, error) {
-	certPath := settings.Values[CertificatePath]
-	if certPath == "" {
-		return ClientCertificateConfig{}, errors.New("missing certificate path")
-	}
-	certPwd := settings.Values[CertificatePassword]
-	clientID, tenantID := settings.getClientAndTenant()
-	config := NewClientCertificateConfig(certPath, certPwd, clientID, tenantID)
-	config.AADEndpoint = settings.Environment.ActiveDirectoryEndpoint
-	config.Resource = settings.Values[Resource]
-	return config, nil
-}
-
-// GetUsernamePassword creates a config object from the available username/password credentials.
-// An error is returned if no username/password credentials are available.
-func (settings EnvironmentSettings) GetUsernamePassword() (UsernamePasswordConfig, error) {
-	username := settings.Values[Username]
-	password := settings.Values[Password]
-	if username == "" || password == "" {
-		return UsernamePasswordConfig{}, errors.New("missing username/password")
-	}
-	clientID, tenantID := settings.getClientAndTenant()
-	config := NewUsernamePasswordConfig(username, password, clientID, tenantID)
-	config.AADEndpoint = settings.Environment.ActiveDirectoryEndpoint
-	config.Resource = settings.Values[Resource]
-	return config, nil
-}
-
-// GetMSI creates a MSI config object from the available client ID.
-func (settings EnvironmentSettings) GetMSI() MSIConfig {
-	config := NewMSIConfig()
-	config.Resource = settings.Values[Resource]
-	config.ClientID = settings.Values[ClientID]
-	return config
-}
-
-// GetDeviceFlow creates a device-flow config object from the available client and tenant IDs.
-func (settings EnvironmentSettings) GetDeviceFlow() DeviceFlowConfig {
-	clientID, tenantID := settings.getClientAndTenant()
-	config := NewDeviceFlowConfig(clientID, tenantID)
-	config.AADEndpoint = settings.Environment.ActiveDirectoryEndpoint
-	config.Resource = settings.Values[Resource]
-	return config
-}
-
-// GetAuthorizer creates an Authorizer configured from environment variables in the order:
-// 1. Client credentials
-// 2. Client certificate
-// 3. Username password
-// 4. MSI
-func (settings EnvironmentSettings) GetAuthorizer() (autorest.Authorizer, error) {
 	//1.Client Credentials
-	if c, e := settings.GetClientCredentials(); e == nil {
-		return c.Authorizer()
+	if clientSecret != "" {
+		config := NewClientCredentialsConfig(clientID, clientSecret, tenantID)
+		config.AADEndpoint = env.ActiveDirectoryEndpoint
+		config.Resource = resource
+		return config.Authorizer()
 	}
 
 	//2. Client Certificate
-	if c, e := settings.GetClientCertificate(); e == nil {
-		return c.Authorizer()
+	if certificatePath != "" {
+		config := NewClientCertificateConfig(certificatePath, certificatePassword, clientID, tenantID)
+		config.AADEndpoint = env.ActiveDirectoryEndpoint
+		config.Resource = resource
+		return config.Authorizer()
 	}
 
 	//3. Username Password
-	if c, e := settings.GetUsernamePassword(); e == nil {
-		return c.Authorizer()
+	if username != "" && password != "" {
+		config := NewUsernamePasswordConfig(username, password, clientID, tenantID)
+		config.AADEndpoint = env.ActiveDirectoryEndpoint
+		config.Resource = resource
+		return config.Authorizer()
 	}
 
-	// 4. MSI
-	return settings.GetMSI().Authorizer()
+	//4. By default return MSI
+	config := NewMSIConfig()
+	config.Resource = resource
+
+	return config.Authorizer()
 }
 
-// NewAuthorizerFromFile creates an Authorizer configured from a configuration file in the following order.
+// NewAuthorizerFromFile creates an AuthorizerOptions configured from a configuration file in the order:
 // 1. Client credentials
 // 2. Client certificate
+// 3. Username password
+// 4. MSI provides an authorizer, base URI, subscriptionID and
 func NewAuthorizerFromFile(baseURI string) (autorest.Authorizer, error) {
-	settings, err := GetSettingsFromFile()
-	if err != nil {
-		return nil, err
-	}
-	if a, err := settings.ClientCredentialsAuthorizer(baseURI); err == nil {
-		return a, err
-	}
-	if a, err := settings.ClientCertificateAuthorizer(baseURI); err == nil {
-		return a, err
-	}
-	return nil, errors.New("auth file missing client and certificate credentials")
-}
-
-// NewAuthorizerFromFileWithResource creates an Authorizer configured from a configuration file in the following order.
-// 1. Client credentials
-// 2. Client certificate
-func NewAuthorizerFromFileWithResource(resource string) (autorest.Authorizer, error) {
-	s, err := GetSettingsFromFile()
-	if err != nil {
-		return nil, err
-	}
-	if a, err := s.ClientCredentialsAuthorizerWithResource(resource); err == nil {
-		return a, err
-	}
-	if a, err := s.ClientCertificateAuthorizerWithResource(resource); err == nil {
-		return a, err
-	}
-	return nil, errors.New("auth file missing client and certificate credentials")
-}
-
-// NewAuthorizerFromCLI creates an Authorizer configured from Azure CLI 2.0 for local development scenarios.
-func NewAuthorizerFromCLI() (autorest.Authorizer, error) {
-	settings, err := GetSettingsFromEnvironment()
-	if err != nil {
-		return nil, err
-	}
-
-	if settings.Values[Resource] == "" {
-		settings.Values[Resource] = settings.Environment.ResourceManagerEndpoint
-	}
-
-	return NewAuthorizerFromCLIWithResource(settings.Values[Resource])
-}
-
-// NewAuthorizerFromCLIWithResource creates an Authorizer configured from Azure CLI 2.0 for local development scenarios.
-func NewAuthorizerFromCLIWithResource(resource string) (autorest.Authorizer, error) {
-	token, err := cli.GetTokenFromCLI(resource)
-	if err != nil {
-		return nil, err
-	}
-
-	adalToken, err := token.ToADALToken()
-	if err != nil {
-		return nil, err
-	}
-
-	return autorest.NewBearerAuthorizer(&adalToken), nil
-}
-
-// GetSettingsFromFile returns the available authentication settings from an Azure CLI authentication file.
-func GetSettingsFromFile() (FileSettings, error) {
-	s := FileSettings{}
 	fileLocation := os.Getenv("AZURE_AUTH_LOCATION")
 	if fileLocation == "" {
-		return s, errors.New("environment variable AZURE_AUTH_LOCATION is not set")
+		return nil, errors.New("auth file not found. Environment variable AZURE_AUTH_LOCATION is not set")
 	}
 
 	contents, err := ioutil.ReadFile(fileLocation)
 	if err != nil {
-		return s, err
+		return nil, err
 	}
 
 	// Auth file might be encoded
 	decoded, err := decode(contents)
 	if err != nil {
-		return s, err
-	}
-
-	authFile := map[string]interface{}{}
-	err = json.Unmarshal(decoded, &authFile)
-	if err != nil {
-		return s, err
-	}
-
-	s.Values = map[string]string{}
-	s.setKeyValue(ClientID, authFile["clientId"])
-	s.setKeyValue(ClientSecret, authFile["clientSecret"])
-	s.setKeyValue(CertificatePath, authFile["clientCertificate"])
-	s.setKeyValue(CertificatePassword, authFile["clientCertificatePassword"])
-	s.setKeyValue(SubscriptionID, authFile["subscriptionId"])
-	s.setKeyValue(TenantID, authFile["tenantId"])
-	s.setKeyValue(ActiveDirectoryEndpoint, authFile["activeDirectoryEndpointUrl"])
-	s.setKeyValue(ResourceManagerEndpoint, authFile["resourceManagerEndpointUrl"])
-	s.setKeyValue(GraphResourceID, authFile["activeDirectoryGraphResourceId"])
-	s.setKeyValue(SQLManagementEndpoint, authFile["sqlManagementEndpointUrl"])
-	s.setKeyValue(GalleryEndpoint, authFile["galleryEndpointUrl"])
-	s.setKeyValue(ManagementEndpoint, authFile["managementEndpointUrl"])
-	return s, nil
-}
-
-// FileSettings contains the available authentication settings.
-type FileSettings struct {
-	Values map[string]string
-}
-
-// GetSubscriptionID returns the available subscription ID or an empty string.
-func (settings FileSettings) GetSubscriptionID() string {
-	return settings.Values[SubscriptionID]
-}
-
-// adds the specified value to the Values map if it isn't nil
-func (settings FileSettings) setKeyValue(key string, val interface{}) {
-	if val != nil {
-		settings.Values[key] = val.(string)
-	}
-}
-
-// returns the specified AAD endpoint or the public cloud endpoint if unspecified
-func (settings FileSettings) getAADEndpoint() string {
-	if v, ok := settings.Values[ActiveDirectoryEndpoint]; ok {
-		return v
-	}
-	return azure.PublicCloud.ActiveDirectoryEndpoint
-}
-
-// ClientCredentialsAuthorizer creates an authorizer from the available client credentials.
-func (settings FileSettings) ClientCredentialsAuthorizer(baseURI string) (autorest.Authorizer, error) {
-	resource, err := settings.getResourceForToken(baseURI)
-	if err != nil {
 		return nil, err
 	}
-	return settings.ClientCredentialsAuthorizerWithResource(resource)
-}
 
-// ClientCredentialsAuthorizerWithResource creates an authorizer from the available client credentials and the specified resource.
-func (settings FileSettings) ClientCredentialsAuthorizerWithResource(resource string) (autorest.Authorizer, error) {
-	if _, ok := settings.Values[ClientSecret]; !ok {
-		return nil, errors.New("missing client secret")
-	}
-	config, err := adal.NewOAuthConfig(settings.getAADEndpoint(), settings.Values[TenantID])
+	file := file{}
+	err = json.Unmarshal(decoded, &file)
 	if err != nil {
 		return nil, err
 	}
 
-	spToken, err := adal.NewServicePrincipalToken(*config, settings.Values[ClientID], settings.Values[ClientSecret], resource)
+	resource, err := getResourceForToken(file, baseURI)
+	if err != nil {
+		return nil, err
+	}
+
+	config, err := adal.NewOAuthConfig(file.ActiveDirectoryEndpoint, file.TenantID)
+	if err != nil {
+		return nil, err
+	}
+
+	spToken, err := adal.NewServicePrincipalToken(*config, file.ClientID, file.ClientSecret, resource)
 	if err != nil {
 		return nil, err
 	}
@@ -376,24 +142,18 @@ func (settings FileSettings) ClientCredentialsAuthorizerWithResource(resource st
 	return autorest.NewBearerAuthorizer(spToken), nil
 }
 
-// ClientCertificateAuthorizer creates an authorizer from the available certificate credentials.
-func (settings FileSettings) ClientCertificateAuthorizer(baseURI string) (autorest.Authorizer, error) {
-	resource, err := settings.getResourceForToken(baseURI)
-	if err != nil {
-		return nil, err
-	}
-	return settings.ClientCertificateAuthorizerWithResource(resource)
-}
-
-// ClientCertificateAuthorizerWithResource creates an authorizer from the available certificate credentials and the specified resource.
-func (settings FileSettings) ClientCertificateAuthorizerWithResource(resource string) (autorest.Authorizer, error) {
-	if _, ok := settings.Values[CertificatePath]; !ok {
-		return nil, errors.New("missing certificate path")
-	}
-	cfg := NewClientCertificateConfig(settings.Values[CertificatePath], settings.Values[CertificatePassword], settings.Values[ClientID], settings.Values[TenantID])
-	cfg.AADEndpoint = settings.getAADEndpoint()
-	cfg.Resource = resource
-	return cfg.Authorizer()
+// File represents the authentication file
+type file struct {
+	ClientID                string `json:"clientId,omitempty"`
+	ClientSecret            string `json:"clientSecret,omitempty"`
+	SubscriptionID          string `json:"subscriptionId,omitempty"`
+	TenantID                string `json:"tenantId,omitempty"`
+	ActiveDirectoryEndpoint string `json:"activeDirectoryEndpointUrl,omitempty"`
+	ResourceManagerEndpoint string `json:"resourceManagerEndpointUrl,omitempty"`
+	GraphResourceID         string `json:"activeDirectoryGraphResourceId,omitempty"`
+	SQLManagementEndpoint   string `json:"sqlManagementEndpointUrl,omitempty"`
+	GalleryEndpoint         string `json:"galleryEndpointUrl,omitempty"`
+	ManagementEndpoint      string `json:"managementEndpointUrl,omitempty"`
 }
 
 func decode(b []byte) ([]byte, error) {
@@ -418,7 +178,7 @@ func decode(b []byte) ([]byte, error) {
 	return ioutil.ReadAll(reader)
 }
 
-func (settings FileSettings) getResourceForToken(baseURI string) (string, error) {
+func getResourceForToken(f file, baseURI string) (string, error) {
 	// Compare dafault base URI from the SDK to the endpoints from the public cloud
 	// Base URI and token resource are the same string. This func finds the authentication
 	// file field that matches the SDK base URI. The SDK defines the public cloud
@@ -428,15 +188,15 @@ func (settings FileSettings) getResourceForToken(baseURI string) (string, error)
 	}
 	switch baseURI {
 	case azure.PublicCloud.ServiceManagementEndpoint:
-		return settings.Values[ManagementEndpoint], nil
+		return f.ManagementEndpoint, nil
 	case azure.PublicCloud.ResourceManagerEndpoint:
-		return settings.Values[ResourceManagerEndpoint], nil
+		return f.ResourceManagerEndpoint, nil
 	case azure.PublicCloud.ActiveDirectoryEndpoint:
-		return settings.Values[ActiveDirectoryEndpoint], nil
+		return f.ActiveDirectoryEndpoint, nil
 	case azure.PublicCloud.GalleryEndpoint:
-		return settings.Values[GalleryEndpoint], nil
+		return f.GalleryEndpoint, nil
 	case azure.PublicCloud.GraphEndpoint:
-		return settings.Values[GraphResourceID], nil
+		return f.GraphResourceID, nil
 	}
 	return "", fmt.Errorf("auth: base URI not found in endpoints")
 }
@@ -569,31 +329,26 @@ type DeviceFlowConfig struct {
 
 // Authorizer gets the authorizer from device flow.
 func (dfc DeviceFlowConfig) Authorizer() (autorest.Authorizer, error) {
-	spToken, err := dfc.ServicePrincipalToken()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get oauth token from device flow: %v", err)
-	}
-
-	return autorest.NewBearerAuthorizer(spToken), nil
-}
-
-// ServicePrincipalToken gets the service principal token from device flow.
-func (dfc DeviceFlowConfig) ServicePrincipalToken() (*adal.ServicePrincipalToken, error) {
 	oauthClient := &autorest.Client{}
 	oauthConfig, err := adal.NewOAuthConfig(dfc.AADEndpoint, dfc.TenantID)
-	deviceCode, err := adal.InitiateDeviceAuth(oauthClient, *oauthConfig, dfc.ClientID, dfc.Resource)
+	deviceCode, err := adal.InitiateDeviceAuth(oauthClient, *oauthConfig, dfc.ClientID, dfc.AADEndpoint)
 	if err != nil {
 		return nil, fmt.Errorf("failed to start device auth flow: %s", err)
 	}
 
-	log.Println(*deviceCode.Message)
+	fmt.Println(*deviceCode.Message)
 
 	token, err := adal.WaitForUserCompletion(oauthClient, deviceCode)
 	if err != nil {
 		return nil, fmt.Errorf("failed to finish device auth flow: %s", err)
 	}
 
-	return adal.NewServicePrincipalTokenFromManualToken(*oauthConfig, dfc.ClientID, dfc.Resource, *token)
+	spToken, err := adal.NewServicePrincipalTokenFromManualToken(*oauthConfig, dfc.ClientID, dfc.Resource, *token)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get oauth token from device flow: %v", err)
+	}
+
+	return autorest.NewBearerAuthorizer(spToken), nil
 }
 
 func decodePkcs12(pkcs []byte, password string) (*x509.Certificate, *rsa.PrivateKey, error) {
@@ -637,27 +392,20 @@ func (ups UsernamePasswordConfig) Authorizer() (autorest.Authorizer, error) {
 // MSIConfig provides the options to get a bearer authorizer through MSI.
 type MSIConfig struct {
 	Resource string
-	ClientID string
 }
 
 // Authorizer gets the authorizer from MSI.
 func (mc MSIConfig) Authorizer() (autorest.Authorizer, error) {
 	msiEndpoint, err := adal.GetMSIVMEndpoint()
+
 	if err != nil {
 		return nil, err
 	}
 
-	var spToken *adal.ServicePrincipalToken
-	if mc.ClientID == "" {
-		spToken, err = adal.NewServicePrincipalTokenFromMSI(msiEndpoint, mc.Resource)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get oauth token from MSI: %v", err)
-		}
-	} else {
-		spToken, err = adal.NewServicePrincipalTokenFromMSIWithUserAssignedID(msiEndpoint, mc.Resource, mc.ClientID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get oauth token from MSI for user assigned identity: %v", err)
-		}
+	spToken, err := adal.NewServicePrincipalTokenFromMSI(msiEndpoint, mc.Resource)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get oauth token from MSI: %v", err)
 	}
 
 	return autorest.NewBearerAuthorizer(spToken), nil
