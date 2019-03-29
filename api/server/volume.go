@@ -478,11 +478,7 @@ func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume) *api.VolumeSpecU
 		}
 	}
 
-	if spec.IoStrategy != vol.Spec.IoStrategy {
-		newSpec.IoStrategyOpt = &api.VolumeSpecUpdate_IoStrategy{
-			IoStrategy: spec.IoStrategy,
-		}
-	}
+	newSpec.IoStrategy = spec.IoStrategy
 
 	if spec.Sticky != vol.Spec.Sticky {
 		newSpec.StickyOpt = &api.VolumeSpecUpdate_Sticky{

@@ -540,7 +540,7 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 	spec.Journal = setSpecBool(vol.GetJournal(), req.GetJournal(), req.GetJournalOpt())
 	spec.Nodiscard = setSpecBool(vol.GetNodiscard(), req.GetNodiscard(), req.GetNodiscardOpt())
 
-	if req.GetIoStrategyOpt() != nil {
+	if req.GetIoStrategy() != nil {
 		spec.IoStrategy = req.GetIoStrategy()
 	} else {
 		spec.IoStrategy = vol.GetIoStrategy()
@@ -872,7 +872,7 @@ func mergeVolumeSpecsPolicy(vol *api.VolumeSpec, req *api.VolumeSpecPolicy, isVa
 	}
 
 	// Io_strategy
-	if req.GetIoStrategyOpt() != nil {
+	if req.GetIoStrategy() != nil {
 		if isValidate && vol.GetIoStrategy() != req.GetIoStrategy() {
 			return vol, errMsg
 		}
