@@ -370,7 +370,7 @@ message VolumeSpecUpdate {
   // i.e. FS will not release allocated blocks back to the backing storage pool.
   oneof nodiscard_opt { bool nodiscard = 27; }
   // IoStrategy preferred strategy for I/O.
-  oneof io_strategy_opt { IoStrategy io_strategy = 28; }
+  IoStrategy io_strategy = 28;
 }
 
 // VolumeSpecPolicy provides a method to set volume storage policy
@@ -437,7 +437,7 @@ message VolumeSpecPolicy {
   // i.e. FS will not release allocated blocks back to the backing storage pool.
   oneof nodiscard_opt { bool nodiscard = 54; }
   // IoStrategy preferred strategy for I/O.
-  oneof io_strategy_opt { IoStrategy io_strategy = 55; }
+  IoStrategy io_strategy = 55;
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
