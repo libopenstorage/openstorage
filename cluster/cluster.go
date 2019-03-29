@@ -132,7 +132,7 @@ type ClusterListener interface {
 // listen for incoming pairing requests.
 type ClusterListenerPairOps interface {
 	// CreatePair is called when we are pairing with another cluster
-	CreatePair(response *api.ClusterPairProcessResponse) error
+	CreatePair(request *api.ClusterPairCreateRequest, response *api.ClusterPairProcessResponse) error
 
 	// ProcessPairRequest is called when we get a pair request from another cluster
 	ProcessPairRequest(request *api.ClusterPairProcessRequest, response *api.ClusterPairProcessResponse) error
@@ -482,6 +482,7 @@ func (nc *NullClusterListener) EraseAlert(
 }
 
 func (nc *NullClusterListener) CreatePair(
+	request *api.ClusterPairCreateRequest,
 	response *api.ClusterPairProcessResponse,
 ) error {
 	return nil
