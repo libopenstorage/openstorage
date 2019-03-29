@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"math"
 	"testing"
 	"time"
 
@@ -688,6 +689,7 @@ func TestVolumeSetSuccess(t *testing.T) {
 			},
 			Nodiscard:     false,
 			GroupEnforced: true,
+			IoStrategy:    &api.IoStrategy{},
 		},
 	}
 
@@ -719,6 +721,24 @@ func TestVolumeSetSuccess(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, r)
 	assert.Equal(t, newsize, r.GetVolume().GetSpec().GetSize())
+
+	// Send HA request
+	res = driverclient.Set(id,
+		nil,
+		&api.VolumeSpec{
+			HaLevel:          2,
+			ReplicaSet:       &api.ReplicaSet{Nodes: []string{}},
+			SnapshotInterval: math.MaxUint32,
+		})
+	assert.Nil(t, res, fmt.Sprintf("Error: %v", res))
+
+	// Assert volume information is correct
+	r, err = volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
+		VolumeId: id,
+	})
+	assert.NoError(t, err)
+	assert.NotNil(t, r)
+	assert.Equal(t, int64(2), r.GetVolume().GetSpec().GetHaLevel())
 
 	_, err = volumes.Delete(ctx, &api.SdkVolumeDeleteRequest{
 		VolumeId: id,
