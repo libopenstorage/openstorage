@@ -197,12 +197,20 @@ func (c *ClusterManager) GetPair(
 	if id == "" {
 		id, err = getDefaultPairId()
 		if err != nil {
-			return nil, err
+			if err == kvdb.ErrNotFound {
+				return nil, fmt.Errorf("No default cluster pair id set.")
+			} else {
+				return nil, err
+			}
 		}
 	}
 	pair, err := pairGet(id)
 	if err != nil {
-		return nil, err
+		if err == kvdb.ErrNotFound {
+			return nil, fmt.Errorf("Cluster pair for id %v not found", id)
+		} else {
+			return nil, err
+		}
 	}
 	return &api.ClusterPairGetResponse{
 		PairInfo: pair,
