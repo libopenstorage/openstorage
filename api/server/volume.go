@@ -478,11 +478,7 @@ func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume) *api.VolumeSpecU
 		}
 	}
 
-	if spec.IoStrategy != vol.Spec.IoStrategy {
-		newSpec.IoStrategyOpt = &api.VolumeSpecUpdate_IoStrategy{
-			IoStrategy: spec.IoStrategy,
-		}
-	}
+	newSpec.IoStrategy = spec.IoStrategy
 
 	if spec.Sticky != vol.Spec.Sticky {
 		newSpec.StickyOpt = &api.VolumeSpecUpdate_Sticky{
@@ -786,12 +782,19 @@ func (vd *volAPI) enumerate(w http.ResponseWriter, r *http.Request) {
 	for i, s := range ids {
 		vol, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{VolumeId: s})
 		if err != nil {
-			e := fmt.Errorf("Failed to inspect volumeID: %s", err.Error())
+			if s, ok := status.FromError(err); ok && s.Code() == codes.NotFound {
+				// We got an error but it's a NotFound error just return an empty array.
+				evols := make([]*api.Volume, 0)
+				json.NewEncoder(w).Encode(evols)
+				return
+			}
+			e := fmt.Errorf("enumerate Failed to inspect volumeID: %s", err.Error())
 			vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
 			return
 		}
 		vols[i] = vol.GetVolume()
 	}
+
 	json.NewEncoder(w).Encode(vols)
 }
 

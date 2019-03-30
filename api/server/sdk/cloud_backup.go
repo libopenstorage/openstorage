@@ -74,6 +74,9 @@ func (s *CloudBackupServer) Create(
 		Labels:         req.GetLabels(),
 	})
 	if err != nil {
+		if err == volume.ErrInvalidName {
+			return nil, status.Errorf(codes.AlreadyExists, "Backup with this name already exists: %v", err)
+		}
 		return nil, status.Errorf(codes.Internal, "Failed to create backup: %v", err)
 	}
 
@@ -435,7 +438,7 @@ func (s *CloudBackupServer) SchedDelete(
 	// XXX inspect from uuid and get volume id
 
 	if len(req.GetBackupScheduleId()) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Must provide credential uuid")
+		return nil, status.Error(codes.InvalidArgument, "Must provide volumeId")
 	}
 
 	// Call cloud backup driver function to delete cloud schedule
@@ -519,9 +522,13 @@ func (s *CloudBackupServer) defaultCloudBackupCreds(
 		return "", err
 	}
 
-	if len(credList.CredentialIds) > 1 || len(credList.CredentialIds) == 0 {
-		return "", status.Error(codes.InvalidArgument, "Either no credential or more than one configured,"+
+	if len(credList.CredentialIds) > 1 {
+		return "", status.Error(codes.InvalidArgument, "More than one credential configured,"+
 			"please specify a credential name or uuid to use")
+	}
+	if len(credList.CredentialIds) == 0 {
+		return "", status.Error(codes.InvalidArgument, "No configured credentials found,"+
+			"please create a credential")
 	}
 	return credList.CredentialIds[0], nil
 }
