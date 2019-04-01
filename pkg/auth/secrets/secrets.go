@@ -12,12 +12,12 @@ const (
 	// SecretNameKey is a label on the openstorage.Volume object
 	// which corresponds to the name of the secret which holds the
 	// token information. Used for all secret providers
-	SecretNameKey = "openstorage/auth-secret-name"
+	SecretNameKey = "openstorage.io/auth-secret-name"
 
 	// SecretNamespaceKey is a label on the openstorage.Volume object
 	// which corresponds to the namespeace of the secret which holds the
 	// token information. Used for all secret providers
-	SecretNamespaceKey = "openstorage/auth-secret-namespace"
+	SecretNamespaceKey = "openstorage.io/auth-secret-namespace"
 
 	// SecretTokenKey corresponds to the key at which the auth token is stored
 	// in the secret. Used when secrets endpoint is kubernetes secrets
