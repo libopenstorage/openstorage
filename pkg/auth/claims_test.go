@@ -37,3 +37,31 @@ func TestClaims(t *testing.T) {
 	un = getUsername(UsernameClaimTypeSubject, claims)
 	assert.Equal(t, un, subject)
 }
+
+func TestValidateUsername(t *testing.T) {
+	email, name, subject := "a@b.com", "hello", "123"
+	goodClaims := &Claims{
+		Email:   email,
+		Name:    name,
+		Subject: subject,
+	}
+	badClaims := &Claims{
+		Email:   "",
+		Name:    "",
+		Subject: "",
+	}
+
+	typesToTest := []UsernameClaimType{
+		UsernameClaimTypeEmail,
+		UsernameClaimTypeName,
+		UsernameClaimTypeSubject,
+		UsernameClaimTypeDefault,
+	}
+	for _, unType := range typesToTest {
+		err := validateUsername(unType, goodClaims)
+		assert.NoError(t, err)
+
+		err = validateUsername(unType, badClaims)
+		assert.Error(t, err)
+	}
+}
