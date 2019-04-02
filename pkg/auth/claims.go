@@ -1,5 +1,7 @@
 package auth
 
+import "fmt"
+
 const (
 	// default type is sub
 	UsernameClaimTypeDefault UsernameClaimType = ""
@@ -52,4 +54,27 @@ func getUsername(usernameClaim UsernameClaimType, claims *Claims) string {
 		return claims.Name
 	}
 	return claims.Subject
+}
+
+func validateUsername(usernameClaim UsernameClaimType, claims *Claims) error {
+	switch usernameClaim {
+	case UsernameClaimTypeEmail:
+		if claims.Email == "" {
+			return fmt.Errorf("System set to use the value of email as the username," +
+				" therefore the value of email in the token cannot be empty")
+		}
+	case UsernameClaimTypeName:
+		if claims.Name == "" {
+			return fmt.Errorf("System set to use the value of name as the username," +
+				" therefore the value of name in the token cannot be empty")
+
+		}
+	default:
+		if claims.Subject == "" {
+			return fmt.Errorf("System set to use the value of sub as the username," +
+				" therefore the value of sub in the token cannot be empty")
+		}
+	}
+
+	return nil
 }

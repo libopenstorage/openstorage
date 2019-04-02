@@ -28,10 +28,11 @@ func TestTokenSharedSecretSimple(t *testing.T) {
 	iss := "uid"
 	key := []byte("mysecret")
 	claims := Claims{
-		Issuer: iss,
-		Email:  "my@email.com",
-		Name:   "myname",
-		Roles:  []string{"tester"},
+		Issuer:  iss,
+		Email:   "my@email.com",
+		Name:    "myname",
+		Subject: "mysub",
+		Roles:   []string{"tester"},
 	}
 	sig := Signature{
 		Type: jwt.SigningMethodHS256,
@@ -70,7 +71,8 @@ func TestTokenSharedSecretSimple(t *testing.T) {
 
 	// Test authenticators
 	authctr, err := NewJwtAuth(&JwtAuthConfig{
-		SharedSecret: key,
+		SharedSecret:  key,
+		UsernameClaim: UsernameClaimTypeDefault,
 	})
 	assert.NoError(t, err)
 
