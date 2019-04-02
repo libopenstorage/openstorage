@@ -1206,7 +1206,7 @@ func (c *ClusterManager) initializeAndStartHeartbeat(
 
 	// Get the cluster domain info
 	clusterDomainInfos, err := c.clusterDomainManager.EnumerateDomains()
-	if err != nil && err != clusterdomain.ErrNotImplemented {
+	if err != nil && err != clusterdomain.ErrNotImplemented && err != clusterdomain.ErrNoClusterDomainProvided {
 		return 0, nil, err
 	}
 
