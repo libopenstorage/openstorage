@@ -127,5 +127,9 @@ func (o *OIDCAuthenticator) parseClaims(claims map[string]interface{}) (*Claims,
 		return nil, fmt.Errorf("Unable to get claims from token: %v", err)
 	}
 
+	if err := validateUsername(o.usernameClaim, &sdkClaims); err != nil {
+		return nil, err
+	}
+
 	return &sdkClaims, nil
 }
