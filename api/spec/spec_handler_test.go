@@ -242,25 +242,35 @@ func TestGetTokenFromString(t *testing.T) {
 func TestGetTokenSecretFromString(t *testing.T) {
 	s := NewSpecHandler()
 
-	secret := "token1"
-	context := "team1"
+	tt := []struct {
+		InputSecret    string
+		ExpectedSecret string
+		Successful     bool
+	}{
+		{
+			"/px/secrets/alpha/token1",
+			"px/secrets/alpha/token1",
+			true,
+		}, {
+			"abcd/secrets/alpha//token1/",
+			"abcd/secrets/alpha//token1",
+			true,
+		}, {
+			"simplekey",
+			"simplekey",
+			true,
+		},
+	}
 
-	sample := "name=abcd,token_secret=/px/secrets/alpha/" + context + "/" + secret + ",token="
-	sample2 := "name=abcd,token_secret=padsasdax/secr//e/sdasda//ds/asda///sts/al//pha/" + context + "/" + secret + ",token="
+	for _, tc := range tt {
+		str := "name=abcd,token_secret=" + tc.InputSecret + ",token="
+		secretParsed, ok := s.GetTokenSecretFromString(str)
+		require.Equal(t, tc.ExpectedSecret, secretParsed)
+		require.Equal(t, ok, tc.Successful)
+	}
 
-	secretParsed, contextParsed, ok := s.GetTokenSecretFromString(sample)
-	require.Equal(t, secret, secretParsed)
-	require.Equal(t, context, contextParsed)
-	require.Equal(t, ok, true)
-
-	secretParsed, contextParsed, ok = s.GetTokenSecretFromString(sample2)
-	require.Equal(t, secret, secretParsed)
-	require.Equal(t, context, contextParsed)
-	require.Equal(t, ok, true)
-
-	secretParsed, contextParsed, ok = s.GetTokenSecretFromString(fmt.Sprintf("toabcbn_secret=abcd"))
+	secretParsed, ok := s.GetTokenSecretFromString(fmt.Sprintf("toabcbn_secret=abcd"))
 	require.Equal(t, "", secretParsed)
-	require.Equal(t, "", contextParsed)
 	require.Equal(t, ok, false)
 
 }

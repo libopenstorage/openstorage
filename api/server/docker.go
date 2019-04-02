@@ -261,9 +261,9 @@ func (d *driver) parseTokenInput(name string, opts map[string]string) (string, e
 	}
 
 	// get token secret
-	secret, context, ok := d.GetTokenSecretFromString(name)
+	secretPath, ok := d.GetTokenSecretFromString(name)
 	if ok {
-		token, err := d.secretTokenFromStore(secret, context)
+		token, err := d.secretTokenFromStore(secretPath)
 		if err != nil {
 			return "", err
 		}
@@ -290,12 +290,12 @@ func addTokenMetadata(ctx context.Context, token string) context.Context {
 
 // secretTokenFromStore pulls the token from the configured secret store for
 // a given secret name and context.
-func (d *driver) secretTokenFromStore(secret, context string) (string, error) {
+func (d *driver) secretTokenFromStore(secret string) (string, error) {
 	if d.secretsStore == nil {
 		return "", fmt.Errorf("A secret was passed in, but no secrets provider has been initialized")
 	}
 
-	token, err := d.secretsStore.GetToken(secret, context)
+	token, err := d.secretsStore.GetToken(secret, "")
 	if err != nil {
 		return "", err
 	}
