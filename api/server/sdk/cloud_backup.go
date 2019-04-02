@@ -243,9 +243,12 @@ func (s *CloudBackupServer) Status(
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
-	// XXX Check ownership
-	// TODO !
-	// Get volume id from task id
+	// Check ownership
+	if req.GetVolumeId() != "" {
+		if err := checkAccessFromDriverForVolumeId(ctx, s.driver(ctx), req.GetVolumeId(), api.Ownership_Read); err != nil {
+			return nil, err
+		}
+	}
 
 	r, err := s.driver(ctx).CloudBackupStatus(&api.CloudBackupStatusRequest{
 		SrcVolumeID: req.GetVolumeId(),
@@ -255,7 +258,13 @@ func (s *CloudBackupServer) Status(
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to get status of backup: %v", err)
 	}
-
+	// Get volume id from task id
+	// remove the volumes that dont belong to caller
+	for key, sts := range r.Statuses {
+		if err := checkAccessFromDriverForVolumeId(ctx, s.driver(ctx), sts.SrcVolumeID, api.Ownership_Read); err != nil {
+			delete(r.Statuses, key)
+		}
+	}
 	return r.ToSdkCloudBackupStatusResponse(), nil
 }
 
@@ -355,7 +364,21 @@ func (s *CloudBackupServer) StateChange(
 		return nil, status.Errorf(codes.InvalidArgument, "Invalid requested state: %v", req.GetRequestedState())
 	}
 
-	err := s.driver(ctx).CloudBackupStateChange(&api.CloudBackupStateChangeRequest{
+	// Get Status to get the volId
+	r, err := s.driver(ctx).CloudBackupStatus(&api.CloudBackupStatusRequest{
+		ID: req.GetTaskId(),
+	})
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to get status of backup: %v", err)
+	}
+	// Get volume id from task id
+	// remove the volumes that dont belong to caller
+	for _, sts := range r.Statuses {
+		if err := checkAccessFromDriverForVolumeId(ctx, s.driver(ctx), sts.SrcVolumeID, api.Ownership_Write); err != nil {
+			return nil, err
+		}
+	}
+	err = s.driver(ctx).CloudBackupStateChange(&api.CloudBackupStateChangeRequest{
 		Name:           req.GetTaskId(),
 		RequestedState: rs,
 	})
