@@ -19,6 +19,7 @@ import (
 	osecrets "github.com/libopenstorage/secrets"
 	"github.com/portworx/sched-ops/k8s"
 	"github.com/sirupsen/logrus"
+	"k8s.io/api/core/v1"
 )
 
 const (
@@ -74,7 +75,7 @@ func (a *authMiddleware) createWithAuth(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 	if secretName == "" {
-		errorMessage := "Access denied, no secret found in the annotations of the persistent volume claim"
+		errorMessage := "Access denied, no secret found in the annotations of the persistent volume claim or storage class"
 		a.log(locator.Name, fn).Error(errorMessage)
 		dcRes.VolumeResponse = &api.VolumeResponse{Error: errorMessage}
 		json.NewEncoder(w).Encode(&dcRes)
@@ -313,24 +314,43 @@ func (a *authMiddleware) parseSecret(
 ) (string, string, error) {
 	if a.provider.Type() == secrets.TypeK8s && fetchCOLabels {
 		// For k8s fetch the actual annotations
-		pvcName, ok := locatorLabels[PVCNameLabelKey]
-		if !ok {
-			// best effort to fetch the secret
-			return parseSecretFromLabels(specLabels, locatorLabels)
-		}
-		pvcNamespace, ok := locatorLabels[PVCNamespaceLabelKey]
-		if !ok {
+		pvcName, nameFound := locatorLabels[PVCNameLabelKey]
+		pvcNamespace, namespaceFound := locatorLabels[PVCNamespaceLabelKey]
+		if !nameFound || !namespaceFound {
 			// best effort to fetch the secret
 			return parseSecretFromLabels(specLabels, locatorLabels)
 		}
 
+		// Get PVC for checking secrets in the annotations
 		pvc, err := k8s.Instance().GetPersistentVolumeClaim(pvcName, pvcNamespace)
 		if err != nil {
 			return "", "", err
 		}
-		secretName := pvc.ObjectMeta.Annotations[secrets.SecretNameKey]
-		secretNamespace := pvc.ObjectMeta.Annotations[secrets.SecretNamespaceKey]
-		return secretName, secretNamespace, nil
+
+		// Get SC for checking secrets in annotations
+		scName := pvc.ObjectMeta.Annotations[v1.BetaStorageClassAnnotation]
+		sc, err := k8s.Instance().GetStorageClass(scName)
+		if err != nil {
+			return "", "", err
+		}
+
+		// Get secret name from PVC first. If does not exists, get from SC.
+		secretName, nameFound := pvc.ObjectMeta.Annotations[secrets.SecretNameKey]
+		if !nameFound {
+			secretName, nameFound = sc.Parameters[secrets.SecretNameKey]
+		}
+
+		// Get secret namespace from PVC first. If does not exists, get from SC.
+		secretNamespace, namespaceFound := pvc.ObjectMeta.Annotations[secrets.SecretNamespaceKey]
+		if !namespaceFound {
+			secretName, namespaceFound = sc.Parameters[secrets.SecretNamespaceKey]
+		}
+
+		// If both name and namespace have been found, return them.
+		// Otherwise we default to parsing from labels.
+		if nameFound && namespaceFound {
+			return secretName, secretNamespace, nil
+		}
 	}
 	return parseSecretFromLabels(specLabels, locatorLabels)
 }
