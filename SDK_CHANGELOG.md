@@ -2,13 +2,18 @@
 
 ## Releases
 
+### v0.50.1 - Tech Preview (4/11/2019)
+
+* Added VolumeInspectOptions to OpenStorageVolume.Inspect
+* Added new OpenStorageVolume.InspectWithFilters API
+
 ### v0.50.0 - Tech Preview (4/2/2019)
 
 * Add groupId field to SdkCloudBackupStatus structure
 
 ### v0.49.0 - Tech Preview (4/3/2019)
-                                                                                                                                                                                                                                    
-* Add Group to VolumeLocator  
+
+* Add Group to VolumeLocator
 
 ### v0.48.0 - Tech Preview (4/2/2019)
 

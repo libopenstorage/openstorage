@@ -257,10 +257,8 @@ func (s *VolumeServer) Delete(
 		VolumeId: req.GetVolumeId(),
 	})
 	if err != nil {
-		if gErr, ok := status.FromError(err); ok {
-			if gErr.Code() == codes.NotFound {
-				return &api.SdkVolumeDeleteResponse{}, nil
-			}
+		if IsErrorNotFound(err) {
+			return &api.SdkVolumeDeleteResponse{}, nil
 		}
 		return nil, err
 	}
@@ -284,6 +282,69 @@ func (s *VolumeServer) Delete(
 	return &api.SdkVolumeDeleteResponse{}, nil
 }
 
+// InspectWithFilters is a helper function returning information about volumes which match a filter
+func (s *VolumeServer) InspectWithFilters(
+	ctx context.Context,
+	req *api.SdkVolumeInspectWithFiltersRequest,
+) (*api.SdkVolumeInspectWithFiltersResponse, error) {
+	if s.cluster() == nil || s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+
+	var locator *api.VolumeLocator
+	if len(req.GetName()) != 0 ||
+		len(req.GetLabels()) != 0 ||
+		req.GetOwnership() != nil {
+
+		locator = &api.VolumeLocator{
+			Name:         req.GetName(),
+			VolumeLabels: req.GetLabels(),
+			Ownership:    req.GetOwnership(),
+		}
+	}
+
+	enumVols, err := s.driver(ctx).Enumerate(locator, nil)
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"Failed to enumerate volumes: %v",
+			err.Error())
+	}
+
+	vols := make([]*api.SdkVolumeInspectResponse, 0, len(enumVols))
+	for _, vol := range enumVols {
+		// Check access
+		if vol.IsPermitted(ctx, api.Ownership_Read) {
+
+			// Check if the caller wants more information
+			if req.GetOptions().GetDeep() {
+				resp, err := s.Inspect(ctx, &api.SdkVolumeInspectRequest{
+					VolumeId: vol.GetId(),
+					Options:  req.GetOptions(),
+				})
+				if IsErrorNotFound(err) {
+					continue
+				} else if err != nil {
+					return nil, err
+				}
+				vols = append(vols, resp)
+			} else {
+				// Caller does not require a deep inspect
+				// Add the object now
+				vols = append(vols, &api.SdkVolumeInspectResponse{
+					Volume: vol,
+					Name:   vol.GetLocator().GetName(),
+					Labels: vol.GetLocator().GetVolumeLabels(),
+				})
+			}
+		}
+	}
+
+	return &api.SdkVolumeInspectWithFiltersResponse{
+		Volumes: vols,
+	}, nil
+}
+
 // Inspect returns information about a volume
 func (s *VolumeServer) Inspect(
 	ctx context.Context,
@@ -297,19 +358,39 @@ func (s *VolumeServer) Inspect(
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
 	}
 
-	vols, err := s.driver(ctx).Inspect([]string{req.GetVolumeId()})
-	if err == kvdb.ErrNotFound || (err == nil && len(vols) == 0) {
-		return nil, status.Errorf(
-			codes.NotFound,
-			"Volume id %s not found",
-			req.GetVolumeId())
-	} else if err != nil {
-		return nil, status.Errorf(
-			codes.Internal,
-			"Failed to inspect volume %s: %v",
-			req.GetVolumeId(), err)
+	var v *api.Volume
+	if !req.GetOptions().GetDeep() {
+		vols, err := s.driver(ctx).Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{req.GetVolumeId()},
+		}, nil)
+		if err != nil {
+			return nil, status.Errorf(
+				codes.Internal,
+				"Failed to inspect volume %s: %v",
+				req.GetVolumeId(), err)
+		}
+		if len(vols) == 0 {
+			return nil, status.Errorf(
+				codes.NotFound,
+				"Volume id %s not found",
+				req.GetVolumeId())
+		}
+		v = vols[0]
+	} else {
+		vols, err := s.driver(ctx).Inspect([]string{req.GetVolumeId()})
+		if err == kvdb.ErrNotFound || (err == nil && len(vols) == 0) {
+			return nil, status.Errorf(
+				codes.NotFound,
+				"Volume id %s not found",
+				req.GetVolumeId())
+		} else if err != nil {
+			return nil, status.Errorf(
+				codes.Internal,
+				"Failed to inspect volume %s: %v",
+				req.GetVolumeId(), err)
+		}
+		v = vols[0]
 	}
-	v := vols[0]
 
 	// Check ownership
 	if !v.IsPermitted(ctx, api.Ownership_Read) {

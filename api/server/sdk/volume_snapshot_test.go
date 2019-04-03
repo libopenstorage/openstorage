@@ -65,7 +65,9 @@ func TestSdkVolumeSnapshotCreate(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{volid}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{volid},
+		}, nil).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id: volid,
@@ -145,7 +147,9 @@ func TestSdkVolumeSnapshotRestore(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{volid}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{volid},
+		}, nil).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id: volid,
@@ -204,7 +208,9 @@ func TestSdkVolumeSnapshotEnumerate(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{volid}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{volid},
+		}, nil).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id: volid,
@@ -248,7 +254,9 @@ func TestSdkVolumeSnapshotEnumerateWithFilters(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{volid}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{volid},
+		}, nil).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id: volid,
@@ -290,7 +298,9 @@ func TestSdkVolumeSnapshotScheduleUpdate(t *testing.T) {
 
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{volid}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{volid},
+		}, nil).
 		Return([]*api.Volume{&api.Volume{Spec: &api.VolumeSpec{}}}, nil).
 		AnyTimes()
 	s.MockCluster().
@@ -327,7 +337,9 @@ func TestSdkVolumeSnapshotScheduleUpdateDelete(t *testing.T) {
 
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{volid}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{volid},
+		}, nil).
 		Return([]*api.Volume{&api.Volume{Spec: &api.VolumeSpec{
 			SnapshotSchedule: "policy=mypolicy",
 		}}}, nil).

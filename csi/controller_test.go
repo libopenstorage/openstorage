@@ -24,7 +24,6 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	authsecrets "github.com/libopenstorage/openstorage/pkg/auth/secrets"
-	"github.com/portworx/kvdb"
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/golang/mock/gomock"
@@ -123,14 +122,18 @@ func TestControllerValidateVolumeInvalidId(t *testing.T) {
 		// First time called it will say it is not there
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
-			Return(nil, fmt.Errorf("Id not found")),
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
+			Return([]*api.Volume{}, nil),
 
 		// Second time called it will not return an error,
 		// but return an empty list
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{}, nil),
 
 		// Third time it is called, it will return
@@ -138,7 +141,9 @@ func TestControllerValidateVolumeInvalidId(t *testing.T) {
 		// not match (even if this probably never could happen)
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: "bad volume id",
@@ -199,7 +204,9 @@ func TestControllerValidateVolumeInvalidCapabilities(t *testing.T) {
 	id := "testvolumeid"
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id: id,
@@ -244,7 +251,9 @@ func TestControllerValidateVolumeAccessModeSNWR(t *testing.T) {
 		// not-RO and not-SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -258,7 +267,9 @@ func TestControllerValidateVolumeAccessModeSNWR(t *testing.T) {
 		// RO and not-SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -272,7 +283,9 @@ func TestControllerValidateVolumeAccessModeSNWR(t *testing.T) {
 		// not-RO and SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -286,7 +299,9 @@ func TestControllerValidateVolumeAccessModeSNWR(t *testing.T) {
 		// RO and SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -353,7 +368,9 @@ func TestControllerValidateVolumeAccessModeSNRO(t *testing.T) {
 		// not-RO and not-SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -367,7 +384,9 @@ func TestControllerValidateVolumeAccessModeSNRO(t *testing.T) {
 		// RO and not-SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -381,7 +400,9 @@ func TestControllerValidateVolumeAccessModeSNRO(t *testing.T) {
 		// not-RO and SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -395,7 +416,9 @@ func TestControllerValidateVolumeAccessModeSNRO(t *testing.T) {
 		// RO and SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -462,7 +485,9 @@ func TestControllerValidateVolumeAccessModeMNRO(t *testing.T) {
 		// not-RO and not-SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -476,7 +501,9 @@ func TestControllerValidateVolumeAccessModeMNRO(t *testing.T) {
 		// RO and not-SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -490,7 +517,9 @@ func TestControllerValidateVolumeAccessModeMNRO(t *testing.T) {
 		// not-RO and SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -504,7 +533,9 @@ func TestControllerValidateVolumeAccessModeMNRO(t *testing.T) {
 		// RO and SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -571,7 +602,9 @@ func TestControllerValidateVolumeAccessModeMNWR(t *testing.T) {
 		// not-RO and not-SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -585,7 +618,9 @@ func TestControllerValidateVolumeAccessModeMNWR(t *testing.T) {
 		// RO and not-SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -599,7 +634,9 @@ func TestControllerValidateVolumeAccessModeMNWR(t *testing.T) {
 		// not-RO and SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -613,7 +650,9 @@ func TestControllerValidateVolumeAccessModeMNWR(t *testing.T) {
 		// RO and SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -672,7 +711,9 @@ func TestControllerValidateVolumeAccessModeUnknown(t *testing.T) {
 	id := "testvolumeid"
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id:       id,
@@ -854,7 +895,9 @@ func TestControllerCreateVolumeNoCapacity(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: id,
@@ -925,7 +968,9 @@ func TestControllerCreateVolumeFoundByVolumeFromName(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{name},
+			}, nil).
 			Return([]*api.Volume{&api.Volume{
 				Id: name,
 				Locator: &api.VolumeLocator{
@@ -1007,7 +1052,9 @@ func TestControllerCreateVolumeBadParentId(t *testing.T) {
 		// First check on parent
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{parent}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{parent},
+			}, nil).
 			Return([]*api.Volume{&api.Volume{Id: parent}}, nil).
 			Times(1),
 
@@ -1074,7 +1121,9 @@ func TestControllerCreateVolumeBadSnapshot(t *testing.T) {
 		// First check on parent
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{parent}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{parent},
+			}, nil).
 			Return([]*api.Volume{&api.Volume{Id: parent}}, nil).
 			Times(1),
 
@@ -1150,7 +1199,7 @@ func TestControllerCreateVolumeWithSharedVolume(t *testing.T) {
 			s.MockDriver().
 				EXPECT().
 				Inspect([]string{name}).
-				Return(nil, fmt.Errorf("not found")).
+				Return([]*api.Volume{}, nil).
 				Times(1),
 
 			s.MockDriver().
@@ -1167,7 +1216,9 @@ func TestControllerCreateVolumeWithSharedVolume(t *testing.T) {
 
 			s.MockDriver().
 				EXPECT().
-				Inspect([]string{id}).
+				Enumerate(&api.VolumeLocator{
+					VolumeIds: []string{id},
+				}, nil).
 				Return([]*api.Volume{
 					&api.Volume{
 						Id: id,
@@ -1286,7 +1337,9 @@ func TestControllerCreateVolumeNoNewVolumeInfo(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 	)
@@ -1342,7 +1395,9 @@ func TestControllerCreateVolume(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: id,
@@ -1419,7 +1474,9 @@ func TestControllerCreateVolumeFromSnapshot(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:     id,
@@ -1469,7 +1526,9 @@ func TestControllerCreateVolumeSnapshotThroughParameters(t *testing.T) {
 		// first check on parent
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{mockParentID}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{mockParentID},
+			}, nil).
 			Return([]*api.Volume{&api.Volume{Id: mockParentID}}, nil).
 			Times(1),
 
@@ -1510,7 +1569,9 @@ func TestControllerCreateVolumeSnapshotThroughParameters(t *testing.T) {
 		// check snap
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: id,
@@ -1530,7 +1591,9 @@ func TestControllerCreateVolumeSnapshotThroughParameters(t *testing.T) {
 		// update - inspect and set
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: id,
@@ -1554,7 +1617,9 @@ func TestControllerCreateVolumeSnapshotThroughParameters(t *testing.T) {
 		// final inspect
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: id,
@@ -1616,7 +1681,9 @@ func TestControllerDeleteVolumeError(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{myid}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{myid},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: myid,
@@ -1652,33 +1719,26 @@ func TestControllerDeleteVolume(t *testing.T) {
 		Secrets:  map[string]string{authsecrets.SecretTokenKey: systemUserToken},
 	}
 
-	// Setup mock
-	// According to CSI spec, if the ID is not found, it must return OK
-	s.MockDriver().
-		EXPECT().
-		Inspect([]string{myid}).
-		Return(nil, kvdb.ErrNotFound).
-		Times(1)
-
-	_, err := c.DeleteVolume(context.Background(), req)
-	assert.Nil(t, err)
-
 	// According to CSI spec, if the ID is not found, it must return OK
 	// Now return no error, but empty list
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{myid}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{myid},
+		}, nil).
 		Return([]*api.Volume{}, nil).
 		Times(1)
 
-	_, err = c.DeleteVolume(context.Background(), req)
+	_, err := c.DeleteVolume(context.Background(), req)
 	assert.Nil(t, err)
 
 	// Setup mock
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{myid}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{myid},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: myid,
@@ -1753,7 +1813,9 @@ func TestControllerCreateSnapshotIdempotent(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{name},
+			}, nil).
 			Return([]*api.Volume{snapInfo}, nil).
 			Times(1),
 	)
@@ -1806,7 +1868,9 @@ func TestControllerCreateSnapshot(t *testing.T) {
 		// check permissions
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{volume}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{volume},
+			}, nil).
 			Return([]*api.Volume{&api.Volume{Id: volume}}, nil).
 			Times(1),
 
@@ -1820,7 +1884,9 @@ func TestControllerCreateSnapshot(t *testing.T) {
 		// VolumeFromIdSdk
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{snapId}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{snapId},
+			}, nil).
 			Return([]*api.Volume{snapInfo}, nil).
 			Times(1),
 	)
@@ -1858,8 +1924,10 @@ func TestControllerDeleteSnapshotIdempotent(t *testing.T) {
 	// Snapshot already exists
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
-		Return(nil, kvdb.ErrNotFound).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
+		Return([]*api.Volume{}, nil).
 		Times(1)
 
 	_, err := c.DeleteSnapshot(context.Background(), &csi.DeleteSnapshotRequest{
@@ -1880,7 +1948,9 @@ func TestControllerDeleteSnapshot(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{},
 			}, nil).
