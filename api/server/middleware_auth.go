@@ -26,6 +26,8 @@ const (
 	PVCNameLabelKey = "pvc"
 	// PVCNamespaceLabelKey is used for kubernetes auth provider indicating the namespace of the PVC
 	PVCNamespaceLabelKey = "namespace"
+	// SCNameLabelKey is used for kubernetes auth provider indicating the name of the Storage Class
+	SCNameLabelKey = "sc"
 )
 
 // NewAuthMiddleware returns a negroni implementation of an http middleware
@@ -74,7 +76,7 @@ func (a *authMiddleware) createWithAuth(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 	if secretName == "" {
-		errorMessage := "Access denied, no secret found in the annotations of the persistent volume claim"
+		errorMessage := "Access denied, no secret found in the annotations of the persistent volume claim or storage class"
 		a.log(locator.Name, fn).Error(errorMessage)
 		dcRes.VolumeResponse = &api.VolumeResponse{Error: errorMessage}
 		json.NewEncoder(w).Encode(&dcRes)
@@ -313,26 +315,41 @@ func (a *authMiddleware) parseSecret(
 ) (string, string, error) {
 	if a.provider.Type() == secrets.TypeK8s && fetchCOLabels {
 		// For k8s fetch the actual annotations
-		pvcName, ok := locatorLabels[PVCNameLabelKey]
-		if !ok {
-			// best effort to fetch the secret
-			return parseSecretFromLabels(specLabels, locatorLabels)
-		}
-		pvcNamespace, ok := locatorLabels[PVCNamespaceLabelKey]
-		if !ok {
-			// best effort to fetch the secret
-			return parseSecretFromLabels(specLabels, locatorLabels)
+		pvcName, nameFound := locatorLabels[PVCNameLabelKey]
+		pvcNamespace, namespaceFound := locatorLabels[PVCNamespaceLabelKey]
+		if nameFound && namespaceFound {
+			// If pvcName and pvcNamespace are provided, parse secret from pvc
+			return parseSecretFromPVC(pvcName, pvcNamespace)
 		}
 
-		pvc, err := k8s.Instance().GetPersistentVolumeClaim(pvcName, pvcNamespace)
-		if err != nil {
-			return "", "", err
+		scName, nameFound := locatorLabels[SCNameLabelKey]
+		if nameFound {
+			// If scName is provided, parse secret from storage class
+			return parseSecretFromStorageClass(scName)
 		}
-		secretName := pvc.ObjectMeta.Annotations[secrets.SecretNameKey]
-		secretNamespace := pvc.ObjectMeta.Annotations[secrets.SecretNamespaceKey]
-		return secretName, secretNamespace, nil
 	}
 	return parseSecretFromLabels(specLabels, locatorLabels)
+}
+
+func parseSecretFromPVC(pvcName, pvcNamespace string) (string, string, error) {
+	pvc, err := k8s.Instance().GetPersistentVolumeClaim(pvcName, pvcNamespace)
+	if err != nil {
+		return "", "", err
+	}
+	secretName := pvc.ObjectMeta.Annotations[secrets.SecretNameKey]
+	secretNamespace := pvc.ObjectMeta.Annotations[secrets.SecretNamespaceKey]
+	return secretName, secretNamespace, nil
+}
+
+func parseSecretFromStorageClass(scName string) (string, string, error) {
+	sc, err := k8s.Instance().GetStorageClass(scName)
+	if err != nil {
+		return "", "", err
+	}
+	secretName := sc.ObjectMeta.Annotations[secrets.SecretNameKey]
+	secretNamespace := sc.ObjectMeta.Annotations[secrets.SecretNamespaceKey]
+	return secretName, secretNamespace, nil
+
 }
 
 func parseSecretFromLabels(specLabels, locatorLabels map[string]string) (string, string, error) {
