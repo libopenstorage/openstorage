@@ -185,6 +185,10 @@ func match(
 		return hasSubset(v.Locator.VolumeLabels, volumeLabels)
 	}
 
+	if len(locator.GetVolumeIds()) != 0 && !contains(v.GetId(), locator.GetVolumeIds()) {
+		return false
+	}
+
 	if locator.GetGroup() != nil {
 		if v.GetSpec().GetGroup() == nil || !v.GetSpec().GetGroup().IsMatch(locator.GetGroup()) {
 			return false

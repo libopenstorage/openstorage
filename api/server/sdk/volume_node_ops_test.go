@@ -55,7 +55,9 @@ func TestSdkVolumeAttachSuccess(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: id,
@@ -102,7 +104,9 @@ func TestSdkVolumeAttachFailed(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: id,
@@ -174,7 +178,9 @@ func TestSdkVolumeDetachSuccess(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: id,
@@ -218,7 +224,9 @@ func TestSdkVolumeDetachFailed(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: id,
@@ -281,7 +289,9 @@ func TestSdkVolumeMountSuccess(t *testing.T) {
 	}
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id:    id,
@@ -328,7 +338,9 @@ func TestSdkVolumeMountWithDriverOptionsSuccess(t *testing.T) {
 	}
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id:    id,
@@ -372,7 +384,9 @@ func TestSdkVolumeMountFailed(t *testing.T) {
 	}
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id:    id,
@@ -455,7 +469,9 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id:    id,
@@ -495,7 +511,9 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id:    id,
@@ -532,7 +550,9 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id:    id,
@@ -567,7 +587,9 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id:    id,
@@ -601,7 +623,9 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id:    id,
@@ -632,7 +656,9 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id:    id,
@@ -671,7 +697,9 @@ func TestSdkVolumeUnmountFailed(t *testing.T) {
 	}
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id:    id,

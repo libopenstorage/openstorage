@@ -59,6 +59,16 @@ func TestEnumerate(t *testing.T) {
 	if len(volumes) == 1 {
 		assert.Equal(t, volumes[0].Id, volume.Id, "Invalid volume returned in Enumerate")
 	}
+	volumes, err = testEnumerator.Enumerate(&api.VolumeLocator{VolumeIds: []string{volume.Id}}, nil)
+	assert.NoError(t, err, "Failed in Enumerate")
+	assert.Equal(t, 1, len(volumes), "Number of volumes returned in enumerate should be 1")
+	if len(volumes) == 1 {
+		assert.Equal(t, volumes[0].Id, volume.Id, "Invalid volume returned in Enumerate")
+	}
+	volumes, err = testEnumerator.Enumerate(&api.VolumeLocator{VolumeIds: []string{"doesnotexist"}}, nil)
+	assert.NoError(t, err, "Failed in Enumerate")
+	assert.Equal(t, 0, len(volumes), "Number of volumes returned in enumerate should be 1")
+
 	volumes, err = testEnumerator.Enumerate(&api.VolumeLocator{VolumeLabels: testLabels}, nil)
 	assert.NoError(t, err, "Failed in Enumerate")
 	assert.Equal(t, len(volumes), 1, "Number of volumes returned in enumerate should be 1")
