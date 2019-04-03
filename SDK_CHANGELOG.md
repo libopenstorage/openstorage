@@ -2,7 +2,6 @@
 
 ## Releases
 
-
 ### v0.48.0 - Tech Preview (4/2/2019)
 
 * Add cluster pair Mode option in CreatePair and ProcessPair requests
