@@ -30,9 +30,10 @@ type AnonRegex struct {
 // anonIDRegxes[] used to hide ID content when logging.
 var anonIDRegxes = []AnonRegex{
 	{
-		// Anonymize the token=.*, replace with token=***..*,
-		anonymizeRegx: regexp.MustCompile(`token=.*,`),
-		replaceString: `token=********,`,
+		// Anonymize the token=... and replace with token=***..*
+		// JWT Regex below pulled from - https://www.regextester.com/105777
+		anonymizeRegx: regexp.MustCompile(`token=[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*`),
+		replaceString: `token=********`,
 	},
 }
 
