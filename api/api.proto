@@ -3209,7 +3209,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 48;
+    Minor = 49;
     // SDK version patch value of this specification
     Patch = 0;
   }
