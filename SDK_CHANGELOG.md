@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.42.7 - Tech Preview (4/3/2019)
+                                                                                                                                                                                                                                    
+* Add Group to VolumeLocator  
+
 ### v0.42.6 - Tech Preview (4/2/2019)
 
 * Add cluster pair Mode option in CreatePair and ProcessPair requests
