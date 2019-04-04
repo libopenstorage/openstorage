@@ -2,6 +2,9 @@
 
 ## Releases
 
+### v0.49.0 - Tech Preview (4/3/2019)                                                                                                                                                                                             
+                                                                                                                                                                                                                                    
+* Add Group to VolumeLocator  
 
 ### v0.48.0 - Tech Preview (4/2/2019)
 

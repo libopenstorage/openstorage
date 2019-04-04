@@ -65,6 +65,14 @@ func TestEnumerate(t *testing.T) {
 	if len(volumes) == 1 {
 		assert.Equal(t, volumes[0].Id, volume.Id, "Invalid volume returned in Enumerate")
 	}
+	volumes, err = testEnumerator.Enumerate(&api.VolumeLocator{
+		Group: volume.Spec.Group,
+	}, nil)
+	assert.NoError(t, err, "Failed in Enumerate")
+	assert.Equal(t, len(volumes), 1, "Number of volumes returned in enumerate should be 1")
+	if len(volumes) == 1 {
+		assert.Equal(t, volumes[0].Id, volume.Id, "Invalid volume returned in Enumerate")
+	}
 	err = testEnumerator.DeleteVol(volume.Id)
 	assert.NoError(t, err, "Failed in Delete")
 	volumes, err = testEnumerator.Enumerate(&api.VolumeLocator{Name: volume.Id}, nil)
@@ -121,7 +129,11 @@ func newTestVolume(id string) *api.Volume {
 		Id:      id,
 		Locator: &api.VolumeLocator{Name: id, VolumeLabels: testLabels},
 		State:   api.VolumeState_VOLUME_STATE_AVAILABLE,
-		Spec:    &api.VolumeSpec{},
+		Spec: &api.VolumeSpec{
+			Group: &api.Group{
+				Id: "group1",
+			},
+		},
 	}
 }
 

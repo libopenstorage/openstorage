@@ -43,17 +43,18 @@ func (s *VolumeServer) Start(
 		//migrate volume
 		return s.volumeMigrate(ctx, req, volume)
 	} else if volumeGroup := req.GetVolumeGroup(); volumeGroup != nil {
-
-		labels := make(map[string]string, 0)
-		labels["group"] = volumeGroup.GetGroupId()
-		if !s.haveOwnership(ctx, labels) {
+		if !s.haveOwnership(ctx, nil, &api.VolumeLocator{
+			Group: &api.Group{
+				Id: volumeGroup.GetGroupId(),
+			},
+		}) {
 			return nil, status.Error(codes.PermissionDenied, "Volume Operation not Permitted.")
 		}
 		//migrate volume groups
 		return s.volumeGroupMigrate(ctx, req, volumeGroup)
 	} else if allVolumes := req.GetAllVolumes(); allVolumes != nil {
 		// migrate all volumes
-		if !s.haveOwnership(ctx, nil) {
+		if !s.haveOwnership(ctx, nil, nil) {
 			return nil, status.Error(codes.PermissionDenied, "Volume Operation not Permitted.")
 		}
 		return s.allVolumesMigrate(ctx, req, allVolumes)
@@ -61,9 +62,9 @@ func (s *VolumeServer) Start(
 	return nil, status.Error(codes.InvalidArgument, "Unknown operation request")
 }
 
-func (s *VolumeServer) haveOwnership(ctx context.Context, labels map[string]string) bool {
+func (s *VolumeServer) haveOwnership(ctx context.Context, labels map[string]string, locator *api.VolumeLocator) bool {
 	// checking if driver is initialized happens in Start
-	vols, err := s.driver(ctx).Enumerate(nil, labels)
+	vols, err := s.driver(ctx).Enumerate(locator, labels)
 	if err != nil {
 		return false
 	}
