@@ -34,6 +34,7 @@ func (c *ClusterManager) CreatePair(
 	processRequest := &api.ClusterPairProcessRequest{
 		SourceClusterId:    c.Uuid(),
 		RemoteClusterToken: request.RemoteClusterToken,
+		Mode:               request.Mode,
 	}
 
 	endpoint := "http://" + remoteIp + ":" + strconv.FormatUint(uint64(request.RemoteClusterPort), 10)
@@ -47,12 +48,13 @@ func (c *ClusterManager) CreatePair(
 	resp, err := remoteCluster.ProcessPairRequest(processRequest)
 	if err != nil {
 		logrus.Warnf("Unable to pair with %v: %v", remoteIp, err)
-		return nil, err
+		return nil, fmt.Errorf("Error from remote cluster: %v", err)
 	}
 
 	// Alert all listeners that we are pairing with a cluster.
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err = e.Value.(cluster.ClusterListener).CreatePair(
+			request,
 			resp,
 		)
 		if err != nil {
@@ -71,6 +73,7 @@ func (c *ClusterManager) CreatePair(
 		CurrentEndpoints: resp.RemoteClusterEndpoints,
 		Token:            request.RemoteClusterToken,
 		Options:          resp.Options,
+		Mode:             request.Mode,
 	}
 
 	err = pairCreate(pairInfo, request.SetDefault)
