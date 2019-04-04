@@ -473,6 +473,7 @@ func TestSdkCloudBackupStatus(t *testing.T) {
 				BytesDone:      123456,
 				BytesTotal:     123456,
 				EtaSeconds:     0,
+				SrcVolumeID:    id,
 				StartTime:      time.Now(),
 				CompletedTime:  time.Now(),
 				NodeID:         "mynode",
@@ -485,6 +486,7 @@ func TestSdkCloudBackupStatus(t *testing.T) {
 				BytesDone:      97324,
 				BytesTotal:     123456,
 				EtaSeconds:     37,
+				SrcVolumeID:    id,
 				StartTime:      time.Now(),
 				CompletedTime:  time.Now(),
 				NodeID:         "myothernode",
@@ -494,6 +496,15 @@ func TestSdkCloudBackupStatus(t *testing.T) {
 	}
 
 	// Create response
+	s.MockDriver().
+		EXPECT().
+		Inspect([]string{id}).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id: id,
+			},
+		}, nil).
+		Times(3)
 	s.MockDriver().
 		EXPECT().
 		CloudBackupStatus(&api.CloudBackupStatusRequest{
@@ -714,14 +725,49 @@ func TestSdkCloudBackupStateChange(t *testing.T) {
 		},
 	}
 	id := "myvol"
+	taskId := "myid"
+	statuses := &api.CloudBackupStatusResponse{
+		Statuses: map[string]api.CloudBackupStatus{
+			"hello": api.CloudBackupStatus{
+				ID:             taskId,
+				OpType:         api.CloudBackupOp,
+				Status:         api.CloudBackupStatusPaused,
+				BytesDone:      123456,
+				BytesTotal:     123456,
+				EtaSeconds:     0,
+				SrcVolumeID:    id,
+				StartTime:      time.Now(),
+				CompletedTime:  time.Now(),
+				NodeID:         "mynode",
+				CredentialUUID: "uuid",
+			},
+		},
+	}
+
 	c := api.NewOpenStorageCloudBackupClient(s.Conn())
 
 	for _, test := range tests {
 		// Create response
 		s.MockDriver().
 			EXPECT().
+			Inspect([]string{id}).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id: id,
+				},
+			}, nil).
+			Times(1)
+		s.MockDriver().
+			EXPECT().
+			CloudBackupStatus(&api.CloudBackupStatusRequest{
+				ID: taskId,
+			}).
+			Return(statuses, nil).
+			Times(1)
+		s.MockDriver().
+			EXPECT().
 			CloudBackupStateChange(&api.CloudBackupStateChangeRequest{
-				Name:           id,
+				Name:           taskId,
 				RequestedState: test.internalrs,
 			}).
 			Return(nil).
@@ -729,7 +775,7 @@ func TestSdkCloudBackupStateChange(t *testing.T) {
 
 		// Get info
 		_, err := c.StateChange(context.Background(), &api.SdkCloudBackupStateChangeRequest{
-			TaskId:         id,
+			TaskId:         taskId,
 			RequestedState: test.sdkrs,
 		})
 		assert.NoError(t, err)

@@ -7,8 +7,13 @@ import (
 )
 
 var (
-	ErrNotImplemented        = errors.New("Not implemented")
+	// ErrNotImplemented is returned when domain API implementation is not supported
+	ErrNotImplemented = errors.New("Not implemented")
+	// ErrClusterDomainNotFound is returned when an unknown domain name is provided in the API
 	ErrClusterDomainNotFound = errors.New("Cluster Domain not found")
+	// ErrNoClusterDomainProvided is returned when any domain manager APIs are invoked but the
+	// node is not started with any cluster domains
+	ErrNoClusterDomainProvided = errors.New("node is not initialized with cluster domains")
 )
 
 // ClusterDomainInfo identifies a cluster domain in a cluster
@@ -43,27 +48,27 @@ type NullClusterDomainManager struct{}
 
 // GetSelfDomain returns the cluster domain for this node
 func (n *NullClusterDomainManager) GetSelfDomain() (*ClusterDomainInfo, error) {
-	return nil, ErrNotImplemented
+	return nil, ErrNoClusterDomainProvided
 }
 
 // EnumerateDomains returns all the cluster domains in the cluster
 func (n *NullClusterDomainManager) EnumerateDomains() ([]*ClusterDomainInfo, error) {
-	return nil, ErrNotImplemented
+	return nil, ErrNoClusterDomainProvided
 }
 
 // InspectDomain returns the cluster domain info for the provided argument.
 func (n *NullClusterDomainManager) InspectDomain(name string) (*ClusterDomainInfo, error) {
-	return nil, ErrNotImplemented
+	return nil, ErrNoClusterDomainProvided
 }
 
 // DeleteDomain deletes a cluster domain entry
 func (n *NullClusterDomainManager) DeleteDomain(name string) error {
-	return ErrNotImplemented
+	return ErrNoClusterDomainProvided
 }
 
 // UpdateDomainState sets the cluster domain info object into kvdb
 func (n *NullClusterDomainManager) UpdateDomainState(name string, state types.ClusterDomainState) error {
-	return ErrNotImplemented
+	return ErrNoClusterDomainProvided
 }
 
 func (c *ClusterDomainInfo) Copy() *ClusterDomainInfo {
