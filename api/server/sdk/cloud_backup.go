@@ -354,10 +354,12 @@ func (s *CloudBackupServer) StateChange(
 
 	var rs string
 	switch req.GetRequestedState() {
-	case api.SdkCloudBackupRequestedState_SdkCloudBackupRequestedStatePause:
-		rs = api.CloudBackupRequestedStatePause
-	case api.SdkCloudBackupRequestedState_SdkCloudBackupRequestedStateResume:
-		rs = api.CloudBackupRequestedStateResume
+	/*
+		case api.SdkCloudBackupRequestedState_SdkCloudBackupRequestedStatePause:
+			rs = api.CloudBackupRequestedStatePause
+		case api.SdkCloudBackupRequestedState_SdkCloudBackupRequestedStateResume:
+			rs = api.CloudBackupRequestedStateResume
+	*/
 	case api.SdkCloudBackupRequestedState_SdkCloudBackupRequestedStateStop:
 		rs = api.CloudBackupRequestedStateStop
 	default:

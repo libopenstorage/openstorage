@@ -230,22 +230,52 @@ func (vd *volAPI) cloudBackupStatus(w http.ResponseWriter, r *http.Request) {
 	if backupStatus.Name != "" {
 		backupStatus.CloudBackupStatusRequest.ID = backupStatus.Name
 	}
-	d, err := vd.getVolDriver(r)
+
+	// Get context with auth token
+	ctx, err := vd.annotateContext(r)
 	if err != nil {
-		notFound(w, r)
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	backupStatusResp, err := d.CloudBackupStatus(&backupStatus.CloudBackupStatusRequest)
+	// Get gRPC connection
+	conn, err := vd.getConn()
 	if err != nil {
-		if err == volume.ErrInvalidName {
-			w.WriteHeader(http.StatusConflict)
-			return
-		}
-		vd.sendError(method, "", w, err.Error(), http.StatusInternalServerError)
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	json.NewEncoder(w).Encode(backupStatusResp)
+
+	volumes := api.NewOpenStorageCloudBackupClient(conn)
+	sts, err := volumes.Status(ctx, &api.SdkCloudBackupStatusRequest{
+		VolumeId: backupStatus.CloudBackupStatusRequest.SrcVolumeID,
+		Local:    backupStatus.CloudBackupStatusRequest.Local,
+		TaskId:   backupStatus.CloudBackupStatusRequest.ID,
+	})
+
+	if err != nil {
+		vd.sendError(method, backupStatus.CloudBackupStatusRequest.ID, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	backupStatusResp := api.CloudBackupStatusResponse{}
+	backupStatusResp.Statuses = make(map[string]api.CloudBackupStatus)
+	for task, s := range sts.GetStatuses() {
+		backupStatusResp.Statuses[task] = api.CloudBackupStatus{
+			ID:                 s.GetBackupId(),
+			OpType:             api.SdkCloudBackupOpTypeToCloudBackupOpType(s.GetOptype()),
+			Status:             api.CloudBackupStatusType(api.SdkCloudBackupStatusTypeToCloudBackupStatusString(s.GetStatus())),
+			BytesDone:          s.GetBytesDone(),
+			BytesTotal:         s.GetBytesTotal(),
+			EtaSeconds:         s.GetEtaSeconds(),
+			StartTime:          prototime.TimestampToTime(s.GetStartTime()),
+			CompletedTime:      prototime.TimestampToTime(s.GetCompletedTime()),
+			NodeID:             s.GetNodeId(),
+			SrcVolumeID:        s.GetSrcVolumeId(),
+			Info:               s.GetInfo(),
+			CredentialUUID:     s.GetCredentialId(),
+			GroupCloudBackupID: s.GetGroupId(),
+		}
+	}
+	json.NewEncoder(w).Encode(&backupStatusResp)
 }
 
 func (vd *volAPI) cloudBackupCatalog(w http.ResponseWriter, r *http.Request) {
@@ -302,13 +332,26 @@ func (vd *volAPI) cloudBackupStateChange(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	d, err := vd.getVolDriver(r)
+	// Get context with auth token
+	ctx, err := vd.annotateContext(r)
 	if err != nil {
-		notFound(w, r)
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	err = d.CloudBackupStateChange(stateChangeReq)
+	// Get gRPC connection
+	conn, err := vd.getConn()
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	volumes := api.NewOpenStorageCloudBackupClient(conn)
+	_, err = volumes.StateChange(ctx, &api.SdkCloudBackupStateChangeRequest{
+		TaskId:         stateChangeReq.Name,
+		RequestedState: api.CloudBackupRequestedStateToSdkCloudBackupRequestedState(stateChangeReq.RequestedState),
+	})
+
 	if err != nil {
 		vd.sendError(method, "", w, err.Error(), http.StatusInternalServerError)
 		return
