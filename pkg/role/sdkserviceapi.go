@@ -18,7 +18,6 @@ package role
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -31,7 +30,7 @@ import (
 )
 
 const (
-	rolePrefix   = "/cluster/roles"
+	rolePrefix   = "cluster/roles"
 	invalidChars = "/ "
 )
 
@@ -176,8 +175,9 @@ func (r *SdkRoleManager) Create(
 ) (*api.SdkRoleCreateResponse, error) {
 	if req.GetRole() == nil {
 		return nil, status.Error(codes.InvalidArgument, "Must supply a role")
-	}
-	if err := r.validateRole(req.GetRole()); err != nil {
+	} else if len(req.GetRole().GetName()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Must supply a name for the role")
+	} else if err := r.validateRole(req.GetRole()); err != nil {
 		return nil, err
 	}
 
@@ -189,16 +189,17 @@ func (r *SdkRoleManager) Create(
 	}
 
 	// Save value in kvdb
-	kvp, err := r.kv.Create(prefixWithName(req.GetRole().GetName()), req.GetRole(), 0)
+	_, err := r.kv.Create(prefixWithName(req.GetRole().GetName()), req.GetRole(), 0)
 	if err == kvdb.ErrExist {
-		// Check if the request is the same for idempotency
-		elem := &api.SdkRole{}
-		if err := json.Unmarshal(kvp.Value, elem); err != nil {
-			return nil, status.Errorf(codes.Internal,
-				"Failed to retreive existing role %s: %v",
-				req.GetRole().GetName(), err)
+		// Idempotency check.
+		// Check that the new rules are the same.
+		oldrole, err := r.Inspect(ctx, &api.SdkRoleInspectRequest{
+			Name: req.GetRole().GetName(),
+		})
+		if err != nil {
+			return nil, err
 		}
-		if !reflect.DeepEqual(elem, req.GetRole()) {
+		if !reflect.DeepEqual(oldrole.GetRole(), req.GetRole()) {
 			return nil, status.Error(
 				codes.AlreadyExists,
 				"Existing role differs from requested role")
@@ -241,8 +242,8 @@ func (r *SdkRoleManager) Inspect(
 		return nil, status.Error(codes.InvalidArgument, "Must supply a name for role")
 	}
 
-	var elem *api.SdkRole
-	_, err := r.kv.GetVal(prefixWithName(req.GetName()), &elem)
+	elem := &api.SdkRole{}
+	_, err := r.kv.GetVal(prefixWithName(req.GetName()), elem)
 	if err == kvdb.ErrNotFound {
 		return nil, status.Errorf(codes.NotFound, "Role %s not found", req.GetName())
 	} else if err != nil {
