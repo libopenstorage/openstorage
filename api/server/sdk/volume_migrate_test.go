@@ -79,19 +79,25 @@ func TestVolumeMigrate_StartVolumeGroupSuccess(t *testing.T) {
 		},
 	}
 	labels := make(map[string]string, 0)
-	labels["group"] = "Target"
 
 	resp := &api.Volume{
 		Id: "Target",
 		Locator: &api.VolumeLocator{
 			Name:         "Target",
 			VolumeLabels: labels,
+			Group: &api.Group{
+				Id: "Target",
+			},
 		},
 	}
 
 	// Enumerate all volumes that have desired group
 	s.MockDriver().EXPECT().
-		Enumerate(nil, labels).
+		Enumerate(&api.VolumeLocator{
+			Group: &api.Group{
+				Id: "Target",
+			},
+		}, nil).
 		Return([]*api.Volume{resp}, nil)
 
 	resp2 := &api.CloudMigrateStartResponse{
@@ -181,7 +187,11 @@ func TestVolumeMigrate_StartVolumeGroupFailure(t *testing.T) {
 
 	// Enumerate all volumes that have desired group
 	s.MockDriver().EXPECT().
-		Enumerate(nil, labels).
+		Enumerate(&api.VolumeLocator{
+			Group: &api.Group{
+				Id: "Target",
+			},
+		}, nil).
 		Return([]*api.Volume{resp}, nil)
 
 	s.MockDriver().EXPECT().

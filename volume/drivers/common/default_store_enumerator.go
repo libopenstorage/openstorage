@@ -184,6 +184,13 @@ func match(
 	if locator == nil {
 		return hasSubset(v.Locator.VolumeLabels, volumeLabels)
 	}
+
+	if locator.GetGroup() != nil {
+		if v.GetSpec().GetGroup() == nil || !v.GetSpec().GetGroup().IsMatch(locator.GetGroup()) {
+			return false
+		}
+	}
+
 	if locator.GetOwnership() != nil {
 		// They asked to match an ownership. Now check if the volume has it
 		// and if it matches.

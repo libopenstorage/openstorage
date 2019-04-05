@@ -2324,6 +2324,9 @@
       },
       "apiSdkVolumeEnumerateWithFiltersRequest": {
         "properties": {
+          "group": {
+            "$ref": "#/components/schemas/apiGroup"
+          },
           "labels": {
             "additionalProperties": {
               "type": "string"
@@ -3048,6 +3051,9 @@
       "apiVolumeLocator": {
         "description": "VolumeLocator is a structure that is attached to a volume\nand is used to carry opaque metadata.",
         "properties": {
+          "group": {
+            "$ref": "#/components/schemas/apiGroup"
+          },
           "name": {
             "title": "User friendly identifier",
             "type": "string"
@@ -3485,7 +3491,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.42.3"
+    "version": "0.42.7"
   },
   "openapi": "3.0.0",
   "paths": {
