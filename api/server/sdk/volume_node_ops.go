@@ -63,7 +63,9 @@ func (s *VolumeServer) Attach(
 	}
 
 	devPath, err := s.driver(ctx).Attach(req.GetVolumeId(), options)
-	if err != nil {
+	if err == volume.ErrVolAttachedOnRemoteNode {
+		return nil, status.Error(codes.AlreadyExists, err.Error())
+	} else if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
 			"failed  to attach volume: %v",
@@ -138,69 +140,10 @@ func (s *VolumeServer) Mount(
 		return nil, status.Errorf(codes.NotFound, err.Error())
 	}
 	vol := resp.GetVolume()
-	mountpoint := req.GetMountPath()
-	name := vol.GetLocator().GetName()
 
 	// Checks for ownership
 	if !vol.IsPermitted(ctx, api.Ownership_Write) {
 		return nil, status.Errorf(codes.PermissionDenied, "Access denied to volume %s", vol.GetId())
-	}
-
-	if vol.GetSpec().GetScale() > 1 {
-		id := s.driver(ctx).MountedAt(mountpoint)
-		if len(id) != 0 {
-			err = s.driver(ctx).Unmount(id, mountpoint, nil)
-			if err != nil {
-				return nil, status.Errorf(codes.Internal,
-					"Failed to prepare scaled volume by unmounting it: %v. "+
-						"Cannot remount scaled volume(%v). "+
-						"Volume %v is mounted at %v",
-					err,
-					name,
-					id,
-					mountpoint)
-			}
-
-			if s.driver(ctx).Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-				err = s.driver(ctx).Detach(id, nil)
-				if err != nil {
-					_ = s.driver(ctx).Mount(id, mountpoint, nil)
-					return nil, status.Errorf(codes.Internal,
-						"Failed to mount scaled volume: %v. "+
-							"Cannot remount scaled volume(%v). "+
-							"Volume %v is mounted at %v",
-						err,
-						name,
-						id,
-						mountpoint)
-				}
-			}
-		}
-	}
-
-	// If this is a block driver, first attach the volume.
-	if s.driver(ctx).Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-		// If volume is scaled up, a new volume is created and
-		// vol will change.
-		attachOptions := req.GetDriverOptions()
-		if attachOptions == nil {
-			attachOptions = make(map[string]string)
-		}
-
-		if req.Options != nil {
-			attachOptions[mountattachoptions.OptionsSecret] = req.Options.SecretName
-			attachOptions[mountattachoptions.OptionsSecretKey] = req.Options.SecretKey
-			attachOptions[mountattachoptions.OptionsSecretContext] = req.Options.SecretContext
-		}
-
-		if vol.Scaled() {
-			vol, err = s.attachScale(ctx, vol, attachOptions)
-		} else {
-			vol, err = s.attachVol(ctx, vol, attachOptions)
-		}
-		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
-		}
 	}
 
 	err = s.driver(ctx).Mount(req.GetVolumeId(), req.GetMountPath(), req.GetDriverOptions())
@@ -244,7 +187,6 @@ func (s *VolumeServer) Unmount(
 	}
 
 	// Get volume to unmount
-	// Checks ownership
 	resp, err := s.Inspect(ctx, &api.SdkVolumeInspectRequest{
 		VolumeId: req.GetVolumeId(),
 	})
@@ -259,14 +201,7 @@ func (s *VolumeServer) Unmount(
 		return nil, status.Errorf(codes.PermissionDenied, "Access denied to volume %s", vol.GetId())
 	}
 
-	// From old docker server, now it is here in the SDK
-	if resp.GetVolume().GetSpec().Scale > 1 {
-		volid := s.driver(ctx).MountedAt(req.GetMountPath())
-		if len(volid) == 0 {
-			return nil, status.Errorf(codes.Internal, "Failed to find volume mapping for %v", req.GetMountPath())
-		}
-	}
-
+	// Unmount volume
 	if err = s.driver(ctx).Unmount(volid, req.GetMountPath(), options); err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -276,162 +211,4 @@ func (s *VolumeServer) Unmount(
 	}
 
 	return &api.SdkVolumeUnmountResponse{}, nil
-}
-
-func (s *VolumeServer) scaleUp(
-	ctx context.Context,
-	inVol *api.Volume,
-	allVols []*api.Volume,
-	attachOptions map[string]string,
-) (
-	outVol *api.Volume,
-	err error,
-) {
-	// Create new volume if existing volumes are not available.
-	spec := inVol.Spec.Copy()
-	spec.Scale = 1
-	spec.ReplicaSet = nil
-	volCount := len(allVols)
-	for i := len(allVols); volCount < int(inVol.Spec.Scale); i++ {
-		name := fmt.Sprintf("%s_%03d", inVol.Locator.Name, i)
-		id := ""
-
-		// create, get vol from name, attach
-		if id, err = s.driver(ctx).Create(
-			&api.VolumeLocator{Name: name},
-			nil,
-			spec,
-		); err != nil {
-			// It is possible to get an error on a name conflict
-			// either due to concurrent creates or holes punched in
-			// from previous deletes.
-			if err == volume.ErrExist {
-				continue
-			}
-			return nil, err
-		}
-
-		outVol, err := s.volFromId(ctx, id)
-		if err != nil {
-			return nil, err
-		}
-		if _, err = s.driver(ctx).Attach(outVol.Id, attachOptions); err == nil {
-			return outVol, nil
-		}
-		// If we fail to attach the volume, continue to look for a
-		// free volume.
-		volCount++
-	}
-	return nil, volume.ErrVolAttachedScale
-}
-
-func (s *VolumeServer) attachScale(
-	ctx context.Context,
-	inVol *api.Volume,
-	attachOptions map[string]string,
-) (
-	*api.Volume,
-	error,
-) {
-	// Find a volume that has data local to this node.
-	volumes, err := s.driver(ctx).Enumerate(&api.VolumeLocator{
-		Name: fmt.Sprintf("%s.*", inVol.Locator.Name),
-		VolumeLabels: map[string]string{
-			volume.LocationConstraint: volume.LocalNode,
-		},
-	}, nil)
-
-	// Try to attach local volumes.
-	if err == nil {
-		for _, vol := range volumes {
-			if v, err := s.attachVol(ctx, vol, attachOptions); err == nil {
-				return v, nil
-			}
-		}
-	}
-	// Create a new local volume if we fail to attach existing local volume
-	// or if none exist.
-	allVols, err := s.driver(ctx).Enumerate(
-		&api.VolumeLocator{
-			Name: fmt.Sprintf("%s.*", inVol.Locator.Name),
-		},
-		nil,
-	)
-
-	// Try to attach existing volumes.
-	for _, outVol := range allVols {
-		if _, err = s.driver(ctx).Attach(outVol.Id, attachOptions); err == nil {
-			return outVol, nil
-		}
-	}
-
-	if len(allVols) < int(inVol.Spec.Scale) {
-		name := fmt.Sprintf("%s_%03d", inVol.Locator.Name, len(allVols))
-		spec := inVol.Spec.Copy()
-		spec.ReplicaSet = &api.ReplicaSet{Nodes: []string{volume.LocalNode}}
-		spec.Scale = 1
-
-		// create, vol from name, attach
-		id, err := s.driver(ctx).Create(&api.VolumeLocator{Name: name}, nil, spec)
-		if err != nil {
-			return s.scaleUp(ctx, inVol, allVols, attachOptions)
-		}
-
-		outVol, err := s.volFromId(ctx, id)
-		if err != nil {
-			return nil, err
-		}
-		if _, err = s.driver(ctx).Attach(outVol.Id, attachOptions); err == nil {
-			return outVol, nil
-		}
-
-		// We failed to attach, scaleUp.
-		allVols = append(allVols, outVol)
-	}
-	return s.scaleUp(ctx, inVol, allVols, attachOptions)
-}
-
-func (s *VolumeServer) attachVol(
-	ctx context.Context,
-	vol *api.Volume,
-	attachOptions map[string]string,
-) (
-	outVolume *api.Volume,
-	err error,
-) {
-	_, err = s.driver(ctx).Attach(vol.Id, attachOptions)
-
-	switch err {
-	case nil:
-		return vol, nil
-	case volume.ErrVolAttachedOnRemoteNode:
-		return vol, status.Errorf(
-			codes.Internal,
-			"Failed to attach volume %s: %v",
-			vol.Id,
-			err.Error())
-	default:
-		return vol, status.Errorf(
-			codes.Internal,
-			"Failed to attach volume %s: %v",
-			vol.Id,
-			err.Error())
-
-	}
-}
-
-func (s *VolumeServer) volFromName(ctx context.Context, name string) (*api.Volume, error) {
-	vols, err := s.driver(ctx).Enumerate(&api.VolumeLocator{Name: name}, nil)
-	if err != nil || len(vols) <= 0 {
-		return nil, fmt.Errorf("Cannot locate volume with name %s", name)
-	}
-	return vols[0], nil
-}
-
-func (s *VolumeServer) volFromId(ctx context.Context, volId string) (*api.Volume, error) {
-	vols, err := s.driver(ctx).Inspect([]string{volId})
-	if err != nil || len(vols) <= 0 {
-		return nil, fmt.Errorf("Cannot locate volume with id %s", volId)
-	}
-	return vols[0], nil
 }

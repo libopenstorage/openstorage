@@ -20,7 +20,9 @@ import (
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
 
 const (
@@ -429,6 +431,179 @@ func (d *driver) remove(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(&volumeResponse{})
 }
 
+func (d *driver) scaleUp(
+	ctx context.Context,
+	conn *grpc.ClientConn,
+	method string,
+	vd volume.VolumeDriver,
+	inVol *api.Volume,
+	allVols []*api.Volume,
+	attachOptions map[string]string,
+) (
+	outVol *api.Volume,
+	err error,
+) {
+	// Get an SDK volume client
+	volumeclient := api.NewOpenStorageVolumeClient(conn)
+	mountClient := api.NewOpenStorageMountAttachClient(conn)
+
+	// Create new volume if existing volumes are not available.
+	spec := inVol.Spec.Copy()
+	spec.Scale = 1
+	spec.ReplicaSet = nil
+	volCount := len(allVols)
+	for i := len(allVols); volCount < int(inVol.Spec.Scale); i++ {
+		name := fmt.Sprintf("%s_%03d", inVol.Locator.Name, i)
+		resp, err := volumeclient.Create(ctx, &api.SdkVolumeCreateRequest{
+			Name: name,
+			Spec: spec,
+		})
+		if err != nil {
+			return nil, err
+		}
+		id := resp.GetVolumeId()
+		if outVol, err = d.volFromName(id); err != nil {
+			return nil, err
+		}
+		_, err = mountClient.Attach(ctx, &api.SdkVolumeAttachRequest{
+			VolumeId:      outVol.Id,
+			DriverOptions: attachOptions,
+		})
+		if err == nil {
+			return outVol, nil
+		}
+		// If we fail to attach the volume, continue to look for a
+		// free volume.
+		volCount++
+	}
+	return nil, volume.ErrVolAttachedScale
+}
+
+func (d *driver) attachScale(
+	ctx context.Context,
+	conn *grpc.ClientConn,
+	method string,
+	vd volume.VolumeDriver,
+	inVol *api.Volume,
+	attachOptions map[string]string,
+) (
+	*api.Volume,
+	error,
+) {
+	// Find a volume that has data local to this node.
+	vols, err := vd.Enumerate(
+		&api.VolumeLocator{
+			Name: fmt.Sprintf("%s.*", inVol.Locator.Name),
+			VolumeLabels: map[string]string{
+				volume.LocationConstraint: volume.LocalNode,
+			},
+		},
+		nil,
+	)
+	// Try to attach local volumes.
+	if err == nil {
+		for _, vol := range vols {
+			if v, err := d.attachVol(ctx, conn, method, vd, vol, attachOptions); err == nil {
+				return v, nil
+			}
+		}
+	}
+	// Create a new local volume if we fail to attach existing local volume
+	// or if none exist.
+	allVols, err := vd.Enumerate(
+		&api.VolumeLocator{
+			Name: fmt.Sprintf("%s.*", inVol.Locator.Name),
+		},
+		nil,
+	)
+
+	// Get an SDK mount/attach client
+	mountClient := api.NewOpenStorageMountAttachClient(conn)
+
+	// Try to attach existing volumes.
+	for _, outVol := range allVols {
+		_, err := mountClient.Attach(ctx, &api.SdkVolumeAttachRequest{
+			VolumeId:      outVol.Id,
+			DriverOptions: attachOptions,
+		})
+		if err == nil {
+			return outVol, nil
+		}
+	}
+
+	// Get an SDK volume client
+	volumeclient := api.NewOpenStorageVolumeClient(conn)
+
+	if len(allVols) < int(inVol.Spec.Scale) {
+		name := fmt.Sprintf("%s_%03d", inVol.Locator.Name, len(allVols))
+		spec := inVol.Spec.Copy()
+		spec.ReplicaSet = &api.ReplicaSet{Nodes: []string{volume.LocalNode}}
+		spec.Scale = 1
+		resp, err := volumeclient.Create(ctx, &api.SdkVolumeCreateRequest{
+			Name: name,
+			Spec: spec,
+		})
+		if err != nil {
+			return d.scaleUp(ctx, conn, method, vd, inVol, allVols, attachOptions)
+		}
+		id := resp.GetVolumeId()
+		outVol, err := d.volFromName(id)
+		if err != nil {
+			return nil, err
+		}
+		_, err = mountClient.Attach(ctx, &api.SdkVolumeAttachRequest{
+			VolumeId:      outVol.Id,
+			DriverOptions: attachOptions,
+		})
+		if err == nil {
+			return outVol, nil
+		}
+		// We failed to attach, scaleUp.
+		allVols = append(allVols, outVol)
+	}
+	return d.scaleUp(ctx, conn, method, vd, inVol, allVols, attachOptions)
+}
+
+func (d *driver) attachVol(
+	ctx context.Context,
+	conn *grpc.ClientConn,
+	method string,
+	vd volume.VolumeDriver,
+	vol *api.Volume,
+	attachOptions map[string]string,
+) (
+	outVolume *api.Volume,
+	err error,
+) {
+	mountClient := api.NewOpenStorageMountAttachClient(conn)
+	resp, err := mountClient.Attach(ctx, &api.SdkVolumeAttachRequest{
+		VolumeId:      vol.Id,
+		DriverOptions: attachOptions,
+	})
+	attachPath := resp.GetDevicePath()
+
+	if serverError, ok := status.FromError(err); ok {
+		switch serverError.Code() {
+		case codes.OK:
+			d.logRequest(method, vol.Locator.Name).Debugf(
+				"response %v", attachPath)
+			return vol, nil
+		case codes.AlreadyExists:
+			d.logRequest(method, vol.Locator.Name).Infof(
+				"Mount volume attached on remote node.")
+			return vol, err
+		default:
+			d.logRequest(method, vol.Locator.Name).Warnf(
+				"Cannot attach volume: %v", err.Error())
+			return vol, err
+		}
+	} else {
+		d.logRequest(method, vol.Locator.Name).Warnf(
+			"Cannot attach volume: %v", err.Error())
+		return vol, err
+	}
+}
+
 func (d *driver) attachOptionsFromSpec(
 	spec *api.VolumeSpec,
 ) map[string]string {
@@ -469,6 +644,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//get volume to mount
+	mountClient := api.NewOpenStorageMountAttachClient(conn)
 	volumeClient := api.NewOpenStorageVolumeClient(conn)
 	vol, err := d.volFromNameSdk(ctx, volumeClient, name)
 	if err != nil {
@@ -476,13 +652,71 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get and prepare mountpath
+	// Get access to local driver
+	v, err := volumedrivers.Get(d.name)
+	if err != nil {
+		d.logRequest(method, "").Warnf("Cannot locate volume driver")
+		d.errorResponse(method, w, err)
+		return
+	}
+
+	// If a scaled volume is already mounted, check if it can be unmounted and
+	// detached. If not return an error.
 	mountpoint := d.mountpath(name)
+	if vol.Spec.Scale > 1 {
+		id := v.MountedAt(mountpoint)
+		if len(id) != 0 {
+			err = v.Unmount(id, mountpoint, nil)
+			if err != nil {
+				d.logRequest(method, "").Warnf("Error unmounting scaled volume: %v", err)
+				err = fmt.Errorf("Cannot remount scaled volume(%v)."+
+					" Volume %v is mounted at %v", name, id, mountpoint)
+				d.errorResponse(method, w, err)
+				return
+			}
+
+			if v.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
+				err = v.Detach(id, nil)
+				if err != nil {
+					d.logRequest(method, "").Warnf("Error detaching scaled volume: %v", err)
+
+					_, mountErr := mountClient.Mount(ctx, &api.SdkVolumeMountRequest{
+						VolumeId:  id,
+						MountPath: mountpoint,
+					})
+					if mountErr != nil {
+						d.logRequest(method, "").Warnf("Error remounting scaled volume: %v", mountErr.Error())
+					}
+					err = fmt.Errorf("Cannot remount scaled volume(%v)."+
+						" Volume %v is mounted at %v", name, id, mountpoint)
+					d.logRequest(method, "").Warnf(err.Error())
+					d.errorResponse(method, w, err)
+					return
+				}
+			}
+		}
+	}
+
+	// If this is a block driver, first attach the volume.
+	if v.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
+		// If volume is scaled up, a new volume is created and
+		// vol will change.
+		if vol.Scaled() {
+			vol, err = d.attachScale(ctx, conn, method, v, vol, attachOptions)
+		} else {
+			vol, err = d.attachVol(ctx, conn, method, v, vol, attachOptions)
+		}
+		if err != nil {
+			d.errorResponse(method, w, err)
+			return
+		}
+	}
+
+	// get and prepare mountpath
 	response.Mountpoint = mountpoint
 	os.MkdirAll(mountpoint, 0755)
 
 	// mount volume
-	mountClient := api.NewOpenStorageMountAttachClient(conn)
 	_, err = mountClient.Mount(ctx, &api.SdkVolumeMountRequest{
 		VolumeId:  vol.Id,
 		MountPath: mountpoint,
