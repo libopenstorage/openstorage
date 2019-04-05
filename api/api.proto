@@ -233,6 +233,8 @@ message VolumeLocator {
   map<string, string> volume_labels = 2;
   // Filter with ownership
   Ownership ownership = 3;
+  // Filter by group
+  Group group = 4;
 }
 
 // Source is a structure that can be given to a volume
@@ -2483,6 +2485,8 @@ message SdkVolumeEnumerateWithFiltersRequest {
   map<string, string> labels = 3;
   // (optional) Ownership to match
   Ownership ownership = 4;
+  // (optional) Group to match
+  Group group = 5;
 }
 
 // Defines the response when listing volumes
@@ -3207,7 +3211,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 42;
     // SDK version patch value of this specification
-    Patch = 3;
+    Patch = 7;
   }
 
   // The following cannot be set to use the enum Version because the REST
