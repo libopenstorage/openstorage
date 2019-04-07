@@ -245,14 +245,20 @@ func (vd *volAPI) cloudBackupStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	volumes := api.NewOpenStorageCloudBackupClient(conn)
-	sts, err := volumes.Status(ctx, &api.SdkCloudBackupStatusRequest{
+	cloudBackups := api.NewOpenStorageCloudBackupClient(conn)
+	sts, err := cloudBackups.Status(ctx, &api.SdkCloudBackupStatusRequest{
 		VolumeId: backupStatus.CloudBackupStatusRequest.SrcVolumeID,
 		Local:    backupStatus.CloudBackupStatusRequest.Local,
 		TaskId:   backupStatus.CloudBackupStatusRequest.ID,
 	})
 
 	if err != nil {
+		if serverError, ok := status.FromError(err); ok {
+			if serverError.Code() == codes.Unavailable {
+				w.WriteHeader(http.StatusConflict)
+				return
+			}
+		}
 		vd.sendError(method, backupStatus.CloudBackupStatusRequest.ID, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -346,8 +352,8 @@ func (vd *volAPI) cloudBackupStateChange(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	volumes := api.NewOpenStorageCloudBackupClient(conn)
-	_, err = volumes.StateChange(ctx, &api.SdkCloudBackupStateChangeRequest{
+	cloudBackups := api.NewOpenStorageCloudBackupClient(conn)
+	_, err = cloudBackups.StateChange(ctx, &api.SdkCloudBackupStateChangeRequest{
 		TaskId:         stateChangeReq.Name,
 		RequestedState: api.CloudBackupRequestedStateToSdkCloudBackupRequestedState(stateChangeReq.RequestedState),
 	})
