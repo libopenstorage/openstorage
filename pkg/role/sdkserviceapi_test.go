@@ -222,13 +222,18 @@ func TestSdkRuleCreate(t *testing.T) {
 	s, err := NewSdkRoleManager(kv)
 	assert.NoError(t, err)
 
+	name := "test.volume"
 	req := &api.SdkRoleCreateRequest{
 		Role: &api.SdkRole{
-			Name: "test",
+			Name: name,
 			Rules: []*api.SdkRule{
 				{
-					Services: []string{"service"},
-					Apis:     []string{"api"},
+					Services: []string{"volume", "credentials", "cloudbackup"},
+					Apis:     []string{"*"},
+				},
+				{
+					Services: []string{"identity"},
+					Apis:     []string{"*"},
 				},
 			},
 		},
@@ -236,17 +241,17 @@ func TestSdkRuleCreate(t *testing.T) {
 	_, err = s.Create(context.Background(), req)
 	assert.NoError(t, err)
 
-	// Assert the information is in kvdb
-	var elem *api.SdkRole
-	_, err = kv.GetVal(prefixWithName("test"), &elem)
-	assert.NoError(t, err)
-	assert.Equal(t, elem.GetName(), "test")
-	assert.Len(t, elem.Rules, len(req.GetRole().GetRules()))
-	assert.True(t, reflect.DeepEqual(elem.GetRules(), req.GetRole().GetRules()))
-
 	// Assert idempotency
 	_, err = s.Create(context.Background(), req)
 	assert.NoError(t, err)
+
+	// Assert the information is in kvdb
+	var elem *api.SdkRole
+	_, err = kv.GetVal(prefixWithName(name), &elem)
+	assert.NoError(t, err)
+	assert.Equal(t, elem.GetName(), name)
+	assert.Len(t, elem.Rules, len(req.GetRole().GetRules()))
+	assert.True(t, reflect.DeepEqual(elem.GetRules(), req.GetRole().GetRules()))
 
 	// Assert that creating the same name with different roles fails
 	req.Role.Rules = append(req.Role.Rules, &api.SdkRule{

@@ -298,12 +298,6 @@ func TestSdkVolumeMountSuccess(t *testing.T) {
 
 	s.MockDriver().
 		EXPECT().
-		Type().
-		Return(api.DriverType_DRIVER_TYPE_NONE).
-		Times(1)
-
-	s.MockDriver().
-		EXPECT().
 		Mount(id, mountPath, nil).
 		Return(nil).
 		Times(1)
@@ -351,12 +345,6 @@ func TestSdkVolumeMountWithDriverOptionsSuccess(t *testing.T) {
 
 	s.MockDriver().
 		EXPECT().
-		Type().
-		Return(api.DriverType_DRIVER_TYPE_NONE).
-		Times(1)
-
-	s.MockDriver().
-		EXPECT().
 		Mount(id, mountPath, map[string]string{"hello": "world"}).
 		Return(nil).
 		Times(1)
@@ -398,10 +386,6 @@ func TestSdkVolumeMountFailed(t *testing.T) {
 			},
 		}, nil).
 		Times(1)
-	s.MockDriver().
-		EXPECT().
-		Type().
-		Return(api.DriverType_DRIVER_TYPE_NONE)
 	s.MockDriver().
 		EXPECT().
 		Mount(id, mountPath, nil).
