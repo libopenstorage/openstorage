@@ -1029,10 +1029,11 @@ func (vd *volAPI) snapEnumerate(w http.ResponseWriter, r *http.Request) {
 	for _, s := range resp.GetVolumeSnapshotIds() {
 		vol, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{VolumeId: s})
 		if err != nil {
-			if s, ok := status.FromError(err); ok && s.Code() != codes.NotFound {
-				vd.sendError(vd.name, method, w, err.Error(), http.StatusNotFound)
-				return
+			if s, ok := status.FromError(err); ok && s.Code() == codes.NotFound {
+				continue
 			}
+			vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+			return
 		} else {
 			snaps = append(snaps, vol.GetVolume())
 		}
