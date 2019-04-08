@@ -925,6 +925,17 @@ func StringToSdkCloudBackupOpType(s string) SdkCloudBackupOpType {
 	return CloudBackupOpTypeToSdkCloudBackupOpType(CloudBackupOpType(s))
 }
 
+func SdkCloudBackupOpTypeToCloudBackupOpType(t SdkCloudBackupOpType) CloudBackupOpType {
+	switch t {
+	case SdkCloudBackupOpType_SdkCloudBackupOpTypeBackupOp:
+		return CloudBackupOp
+	case SdkCloudBackupOpType_SdkCloudBackupOpTypeRestoreOp:
+		return CloudRestoreOp
+	default:
+		return CloudBackupOpType("Unknown")
+	}
+}
+
 func (s CloudBackupStatus) ToSdkCloudBackupStatus() *SdkCloudBackupStatus {
 	status := &SdkCloudBackupStatus{
 		BackupId:     s.ID,
@@ -1062,4 +1073,19 @@ func (s *SdkStoragePolicy) IsPermittedFromUserInfo(user *auth.UserInfo, accessTy
 
 func (s *SdkStoragePolicy) IsPublic() bool {
 	return s.GetOwnership() == nil || s.GetOwnership().IsPublic()
+}
+
+func CloudBackupRequestedStateToSdkCloudBackupRequestedState(
+	t string,
+) SdkCloudBackupRequestedState {
+	switch t {
+	case CloudBackupRequestedStateStop:
+		return SdkCloudBackupRequestedState_SdkCloudBackupRequestedStateStop
+	case CloudBackupRequestedStatePause:
+		return SdkCloudBackupRequestedState_SdkCloudBackupRequestedStatePause
+	case CloudBackupRequestedStateResume:
+		return SdkCloudBackupRequestedState_SdkCloudBackupRequestedStateResume
+	default:
+		return SdkCloudBackupRequestedState_SdkCloudBackupRequestedStateUnknown
+	}
 }

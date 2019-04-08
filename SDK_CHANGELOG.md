@@ -2,7 +2,11 @@
 
 ## Releases
 
-### v0.49.0 - Tech Preview (4/3/2019)                                                                                                                                                                                             
+### v0.50.0 - Tech Preview (4/2/2019)
+
+* Add groupId field to SdkCloudBackupStatus structure
+
+### v0.49.0 - Tech Preview (4/3/2019)
                                                                                                                                                                                                                                     
 * Add Group to VolumeLocator  
 

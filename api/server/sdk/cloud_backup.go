@@ -256,6 +256,9 @@ func (s *CloudBackupServer) Status(
 		ID:          req.GetTaskId(),
 	})
 	if err != nil {
+		if err == volume.ErrInvalidName {
+			return nil, status.Errorf(codes.Unavailable, "No Backup status found")
+		}
 		return nil, status.Errorf(codes.Internal, "Failed to get status of backup: %v", err)
 	}
 	// Get volume id from task id
@@ -354,10 +357,13 @@ func (s *CloudBackupServer) StateChange(
 
 	var rs string
 	switch req.GetRequestedState() {
-	case api.SdkCloudBackupRequestedState_SdkCloudBackupRequestedStatePause:
-		rs = api.CloudBackupRequestedStatePause
-	case api.SdkCloudBackupRequestedState_SdkCloudBackupRequestedStateResume:
-		rs = api.CloudBackupRequestedStateResume
+	// Not supported yet
+	/*
+		case api.SdkCloudBackupRequestedState_SdkCloudBackupRequestedStatePause:
+			rs = api.CloudBackupRequestedStatePause
+		case api.SdkCloudBackupRequestedState_SdkCloudBackupRequestedStateResume:
+			rs = api.CloudBackupRequestedStateResume
+	*/
 	case api.SdkCloudBackupRequestedState_SdkCloudBackupRequestedStateStop:
 		rs = api.CloudBackupRequestedStateStop
 	default:
