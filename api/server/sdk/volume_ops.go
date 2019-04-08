@@ -43,6 +43,11 @@ func (s *VolumeServer) create(
 	volName := locator.GetName()
 	v, err := util.VolumeFromName(s.driver(ctx), volName)
 	if err == nil {
+		// Check ownership
+		if !v.IsPermitted(ctx, api.Ownership_Admin) {
+			return "", status.Errorf(codes.PermissionDenied, "Volume %s already exists and is owned by another user", volName)
+		}
+
 		// Check the requested arguments match that of the existing volume
 		if v.GetSpec().GetSize() != spec.GetSize() {
 			return "", status.Errorf(
@@ -60,11 +65,6 @@ func (s *VolumeServer) create(
 		}
 		if v.GetSource().GetParent() != source.GetParent() {
 			return "", status.Error(codes.AlreadyExists, "Existing volume has conflicting parent value")
-		}
-
-		// Check ownership
-		if !v.IsPermitted(ctx, api.Ownership_Admin) {
-			return "", status.Errorf(codes.PermissionDenied, "Volume %s already exists and is owned by another user", v.GetId())
 		}
 
 		// Return information on existing volume
