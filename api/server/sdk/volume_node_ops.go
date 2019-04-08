@@ -89,7 +89,8 @@ func (s *VolumeServer) Detach(
 	}
 
 	// Get access rights
-	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId(), api.Ownership_Write); err != nil {
+	err := s.checkAccessForVolumeId(ctx, req.GetVolumeId(), api.Ownership_Write)
+	if err != nil && !IsErrorNotFound(err) {
 		return nil, err
 	}
 
@@ -103,8 +104,9 @@ func (s *VolumeServer) Detach(
 		options[mountattachoptions.OptionsForceDetach] = fmt.Sprint(req.GetOptions().GetForce())
 		options[mountattachoptions.OptionsUnmountBeforeDetach] = fmt.Sprint(req.GetOptions().GetUnmountBeforeDetach())
 	}
-	err := s.driver(ctx).Detach(req.GetVolumeId(), options)
-	if err != nil {
+
+	err = s.driver(ctx).Detach(req.GetVolumeId(), options)
+	if err != nil && !IsErrorNotFound(err) {
 		return nil, status.Errorf(
 			codes.Internal,
 			"Failed to detach volume %s: %v",
@@ -186,23 +188,14 @@ func (s *VolumeServer) Unmount(
 		}
 	}
 
-	// Get volume to unmount
-	resp, err := s.Inspect(ctx, &api.SdkVolumeInspectRequest{
-		VolumeId: req.GetVolumeId(),
-	})
-	if err != nil {
+	// Get access rights
+	err := s.checkAccessForVolumeId(ctx, req.GetVolumeId(), api.Ownership_Write)
+	if err != nil && !IsErrorNotFound(err) {
 		return nil, err
-	}
-	vol := resp.GetVolume()
-	volid := resp.GetVolume().GetId()
-
-	// Checks for ownership
-	if !vol.IsPermitted(ctx, api.Ownership_Write) {
-		return nil, status.Errorf(codes.PermissionDenied, "Access denied to volume %s", vol.GetId())
 	}
 
 	// Unmount volume
-	if err = s.driver(ctx).Unmount(volid, req.GetMountPath(), options); err != nil {
+	if err = s.driver(ctx).Unmount(req.GetVolumeId(), req.GetMountPath(), options); err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
 			"Failed to unmount volume %s: %v",
