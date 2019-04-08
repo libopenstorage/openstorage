@@ -299,11 +299,6 @@ func TestNodePublishVolumeFailedMount(t *testing.T) {
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Type().
-			Return(api.DriverType_DRIVER_TYPE_NONE).
-			Times(1),
-		s.MockDriver().
-			EXPECT().
 			Mount(name, targetPath, nil).
 			Return(fmt.Errorf("Unable to mount volume")).
 			Times(1),
@@ -439,11 +434,6 @@ func TestNodePublishVolumeMount(t *testing.T) {
 					},
 				},
 			}, nil).
-			Times(1),
-		s.MockDriver().
-			EXPECT().
-			Type().
-			Return(api.DriverType_DRIVER_TYPE_NONE).
 			Times(1),
 
 		s.MockDriver().
