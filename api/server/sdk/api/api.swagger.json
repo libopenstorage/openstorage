@@ -1281,6 +1281,10 @@
             "title": "ETASeconds is the number of seconds for cloud backup completion",
             "type": "string"
           },
+          "group_id": {
+            "title": "string group_id volume's group id if this was group cloud backup",
+            "type": "string"
+          },
           "info": {
             "items": {
               "type": "string"
@@ -3491,7 +3495,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.42.7"
+    "version": "0.42.8"
   },
   "openapi": "3.0.0",
   "paths": {

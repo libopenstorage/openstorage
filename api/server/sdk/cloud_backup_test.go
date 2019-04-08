@@ -711,14 +711,16 @@ func TestSdkCloudBackupStateChange(t *testing.T) {
 		internalrs string
 		sdkrs      api.SdkCloudBackupRequestedState
 	}{
-		{
-			api.CloudBackupRequestedStatePause,
-			api.SdkCloudBackupRequestedState_SdkCloudBackupRequestedStatePause,
-		},
-		{
-			api.CloudBackupRequestedStateResume,
-			api.SdkCloudBackupRequestedState_SdkCloudBackupRequestedStateResume,
-		},
+		/*
+			{
+				api.CloudBackupRequestedStatePause,
+				api.SdkCloudBackupRequestedState_SdkCloudBackupRequestedStatePause,
+			},
+			{
+				api.CloudBackupRequestedStateResume,
+				api.SdkCloudBackupRequestedState_SdkCloudBackupRequestedStateResume,
+			},
+		*/
 		{
 			api.CloudBackupRequestedStateStop,
 			api.SdkCloudBackupRequestedState_SdkCloudBackupRequestedStateStop,
