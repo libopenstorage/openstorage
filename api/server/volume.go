@@ -1025,15 +1025,17 @@ func (vd *volAPI) snapEnumerate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	snaps := make([]*api.Volume, len(resp.GetVolumeSnapshotIds()))
-	for i, s := range resp.GetVolumeSnapshotIds() {
+	snaps := make([]*api.Volume, 0)
+	for _, s := range resp.GetVolumeSnapshotIds() {
 		vol, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{VolumeId: s})
 		if err != nil {
-			e := fmt.Errorf("Failed to inspect volumeID: %s", err.Error())
-			vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
-			return
+			if s, ok := status.FromError(err); ok && s.Code() != codes.NotFound {
+				vd.sendError(vd.name, method, w, err.Error(), http.StatusNotFound)
+				return
+			}
+		} else {
+			snaps = append(snaps, vol.GetVolume())
 		}
-		snaps[i] = vol.GetVolume()
 	}
 	json.NewEncoder(w).Encode(snaps)
 }
