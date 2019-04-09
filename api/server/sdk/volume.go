@@ -42,6 +42,9 @@ func (s *VolumeServer) driver(ctx context.Context) volume.VolumeDriver {
 	return s.server.driver(ctx)
 }
 
+// checkAccessForVolumeId checks if the given volumeId has the required accessType
+// If the volume is not found, the function should return the err for that. Callers would
+// depend on that err. See IsErrorNotFound(err) in api/server/sdk/errors.go
 func (s *VolumeServer) checkAccessForVolumeId(
 	ctx context.Context,
 	volumeId string,

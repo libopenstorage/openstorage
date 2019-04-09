@@ -1086,7 +1086,8 @@ func TestVolumeDetachFailed(t *testing.T) {
 
 	// Detach
 	res := driverclient.Detach("doesnotexist", map[string]string{})
-	assert.NotNil(t, res)
+	// Detach must not fail on non-existing volume
+	assert.Nil(t, res)
 
 	// Assert volume information is correct
 	volumes := api.NewOpenStorageVolumeClient(testVolDriver.Conn())
