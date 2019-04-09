@@ -13,7 +13,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/api/errors"
 	sdk "github.com/libopenstorage/openstorage/api/server/sdk"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/pkg/auth/secrets"
@@ -227,13 +226,11 @@ func processErrorForVolSetResponse(action *api.VolumeStateAction, err error, res
 		return
 	}
 
-	if action != nil && (action.Mount == api.VolumeActionParam_VOLUME_ACTION_PARAM_OFF ||
-		action.Attach == api.VolumeActionParam_VOLUME_ACTION_PARAM_OFF) {
-		switch err.(type) {
-		case *errors.ErrNotFound:
+	if action != nil && (action.IsUnMount() || action.IsDetach()) {
+		if sdk.IsErrorNotFound(err) {
 			resp.VolumeResponse = &api.VolumeResponse{}
 			resp.Volume = &api.Volume{}
-		default:
+		} else {
 			resp.VolumeResponse = &api.VolumeResponse{
 				Error: err.Error(),
 			}
@@ -314,39 +311,10 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 
 	vd.logRequest(method, string(volumeID)).Infoln(setActions)
 	volumes := api.NewOpenStorageVolumeClient(conn)
-
-	vol, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
-		VolumeId: volumeID,
-	})
-	if err != nil {
-		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
-		return
-	}
+	mountAttachClient := api.NewOpenStorageMountAttachClient(conn)
 
 	detachOptions := &api.SdkVolumeDetachOptions{}
 	attachOptions := &api.SdkVolumeAttachOptions{}
-
-	if req.Locator != nil || req.Spec != nil {
-		updateReq := &api.SdkVolumeUpdateRequest{VolumeId: volumeID}
-		if req.Locator != nil && len(req.Locator.VolumeLabels) > 0 {
-			updateReq.Labels = req.Locator.VolumeLabels
-		}
-		if req.Spec != nil {
-			if err = vd.updateReplicaSpecNodeIPstoIds(req.Spec.ReplicaSet); err != nil {
-				vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
-				return
-			}
-			updateReq.Spec = getVolumeUpdateSpec(req.Spec, vol.GetVolume())
-		}
-
-		// Only set spec if spec and locator are not nil.
-		if _, err := volumes.Update(ctx, updateReq); err != nil {
-			vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-	}
-
 	if req.Options["SECRET_NAME"] != "" {
 		attachOptions.SecretName = req.Options["SECRET_NAME"]
 	}
@@ -362,50 +330,77 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 	if req.Options["UNMOUNT_BEFORE_DETACH"] == "true" {
 		detachOptions.UnmountBeforeDetach = true
 	}
-	mountAttachClient := api.NewOpenStorageMountAttachClient(conn)
 
-	for err == nil && req.Action != nil {
-		if req.Action.Attach != api.VolumeActionParam_VOLUME_ACTION_PARAM_NONE {
-			if req.Action.Attach == api.VolumeActionParam_VOLUME_ACTION_PARAM_ON {
-				_, err = mountAttachClient.Attach(ctx, &api.SdkVolumeAttachRequest{
-					VolumeId:      volumeID,
-					Options:       attachOptions,
-					DriverOptions: req.GetOptions(),
-				})
-			} else {
-				_, err = mountAttachClient.Detach(ctx, &api.SdkVolumeDetachRequest{
-					VolumeId:      volumeID,
-					Options:       detachOptions,
-					DriverOptions: req.GetOptions(),
-				})
-			}
-			if err != nil {
-				break
-			}
-		}
+	unmountOptions := &api.SdkVolumeUnmountOptions{}
+	if req.Options["DELETE_AFTER_UNMOUNT"] == "true" {
+		unmountOptions.DeleteMountPath = true
+	}
+	if req.Options["WAIT_BEFORE_DELETE"] == "true" {
+		unmountOptions.NoDelayBeforeDeletingMountPath = false
+	} else {
+		unmountOptions.NoDelayBeforeDeletingMountPath = true
+	}
 
-		unmountOptions := &api.SdkVolumeUnmountOptions{}
-		if req.Options["DELETE_AFTER_UNMOUNT"] == "true" {
-			unmountOptions.DeleteMountPath = true
-		}
-		if req.Options["WAIT_BEFORE_DELETE"] == "true" {
-			unmountOptions.NoDelayBeforeDeletingMountPath = false
+	if req.Locator != nil || req.Spec != nil {
+		// Only update spec if spec and locator are not nil.
+		vol, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
+			VolumeId: volumeID,
+		})
+		if err != nil {
+			if !sdk.IsErrorNotFound(err) {
+				vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			vd.logRequest(method, string(volumeID)).Infoln("Ignoring unmount/detach action on deleted volume.")
 		} else {
-			unmountOptions.NoDelayBeforeDeletingMountPath = true
+			updateReq := &api.SdkVolumeUpdateRequest{VolumeId: volumeID}
+			if req.Locator != nil && len(req.Locator.VolumeLabels) > 0 {
+				updateReq.Labels = req.Locator.VolumeLabels
+			}
+			if req.Spec != nil {
+				if err = vd.updateReplicaSpecNodeIPstoIds(req.Spec.ReplicaSet); err != nil {
+					vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+					return
+				}
+
+				updateReq.Spec = getVolumeUpdateSpec(req.Spec, vol.GetVolume())
+			}
+
+			if _, err := volumes.Update(ctx, updateReq); err != nil {
+				vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+				return
+			}
+		}
+	}
+
+	if req.Action != nil {
+		if req.Action.IsAttach() {
+			_, err = mountAttachClient.Attach(ctx, &api.SdkVolumeAttachRequest{
+				VolumeId:      volumeID,
+				Options:       attachOptions,
+				DriverOptions: req.GetOptions(),
+			})
+		} else if req.Action.IsDetach() {
+			_, err = mountAttachClient.Detach(ctx, &api.SdkVolumeDetachRequest{
+				VolumeId:      volumeID,
+				Options:       detachOptions,
+				DriverOptions: req.GetOptions(),
+			})
 		}
 
-		if req.Action.Mount != api.VolumeActionParam_VOLUME_ACTION_PARAM_NONE {
-			if req.Action.Mount == api.VolumeActionParam_VOLUME_ACTION_PARAM_ON {
+		if err == nil {
+			if req.Action.IsMount() {
 				if req.Action.MountPath == "" {
 					err = fmt.Errorf("Invalid mount path")
-					break
+				} else {
+					_, err = mountAttachClient.Mount(ctx, &api.SdkVolumeMountRequest{
+						VolumeId:      volumeID,
+						MountPath:     req.Action.MountPath,
+						DriverOptions: req.GetOptions(),
+					})
 				}
-				_, err = mountAttachClient.Mount(ctx, &api.SdkVolumeMountRequest{
-					VolumeId:      volumeID,
-					MountPath:     req.Action.MountPath,
-					DriverOptions: req.GetOptions(),
-				})
-			} else {
+			} else if req.Action.IsUnMount() {
 				_, err = mountAttachClient.Unmount(ctx, &api.SdkVolumeUnmountRequest{
 					VolumeId:      volumeID,
 					MountPath:     req.Action.MountPath,
@@ -413,11 +408,7 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 					DriverOptions: req.GetOptions(),
 				})
 			}
-			if err != nil {
-				break
-			}
 		}
-		break
 	}
 
 	resVol, err2 := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
