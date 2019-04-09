@@ -1089,3 +1089,20 @@ func CloudBackupRequestedStateToSdkCloudBackupRequestedState(
 		return SdkCloudBackupRequestedState_SdkCloudBackupRequestedStateUnknown
 	}
 }
+
+// Helpers for volume state action
+func (m *VolumeStateAction) IsAttach() bool {
+	return m.GetAttach() == VolumeActionParam_VOLUME_ACTION_PARAM_ON
+}
+
+func (m *VolumeStateAction) IsDetach() bool {
+	return m.GetAttach() == VolumeActionParam_VOLUME_ACTION_PARAM_OFF
+}
+
+func (m *VolumeStateAction) IsMount() bool {
+	return m.GetMount() == VolumeActionParam_VOLUME_ACTION_PARAM_ON
+}
+
+func (m *VolumeStateAction) IsUnMount() bool {
+	return m.GetMount() == VolumeActionParam_VOLUME_ACTION_PARAM_OFF
+}
