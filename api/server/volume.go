@@ -774,6 +774,11 @@ func (vd *volAPI) enumerate(w http.ResponseWriter, r *http.Request) {
 		vol, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{VolumeId: s})
 		if err == nil {
 			vols = append(vols, vol.GetVolume())
+		} else if sdk.IsErrorNotFound(err) {
+			continue
+		} else {
+			vd.sendError(vd.name, method, w, err.Error(), sdk.HTTPStatusFromSdkError(err))
+			return
 		}
 	}
 	json.NewEncoder(w).Encode(vols)
@@ -1019,14 +1024,13 @@ func (vd *volAPI) snapEnumerate(w http.ResponseWriter, r *http.Request) {
 	snaps := make([]*api.Volume, 0)
 	for _, s := range resp.GetVolumeSnapshotIds() {
 		vol, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{VolumeId: s})
-		if err != nil {
-			if s, ok := status.FromError(err); ok && s.Code() == codes.NotFound {
-				continue
-			}
-			vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
-			return
-		} else {
+		if err == nil {
 			snaps = append(snaps, vol.GetVolume())
+		} else if sdk.IsErrorNotFound(err) {
+			continue
+		} else {
+			vd.sendError(vd.name, method, w, err.Error(), sdk.HTTPStatusFromSdkError(err))
+			return
 		}
 	}
 	json.NewEncoder(w).Encode(snaps)
