@@ -132,3 +132,43 @@ func TestTokenIssuer(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, issuer, parsedIssuer)
 }
+
+func TestTokenNTPDrift(t *testing.T) {
+	goodTimeNow := time.Now()
+
+	// Simulate a NTP drift of 15 seconds
+	ntpDrift15Time := goodTimeNow.Add(-15 * time.Second)
+
+	// Simulate a NTP drift of 90 seconds
+	ntpDrift90Time := goodTimeNow.Add(-90 * time.Second)
+
+	// Generate token
+	key := []byte("mysecret")
+	claims := Claims{}
+	sig := Signature{
+		Type: jwt.SigningMethodHS256,
+		Key:  key,
+	}
+	opts := Options{
+		Expiration:  time.Now().Add((time.Hour * 10)).Unix(),
+		IATSubtract: time.Minute * 1,
+	}
+
+	// Create
+	rawtoken, err := Token(&claims, &sig, &opts)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, rawtoken)
+
+	// Verify
+	token, err := jwt.Parse(rawtoken, func(token *jwt.Token) (interface{}, error) {
+		return key, nil
+	})
+	assert.True(t, token.Valid)
+
+	// Even though we have a 15 second NTP drift, our issue at time is valid.
+	assert.True(t, token.Claims.(jwt.MapClaims)["iat"].(float64) < float64(ntpDrift15Time.Unix()))
+
+	// We have a 90 second NTP drift, our issue at time is not valid.
+	assert.False(t, token.Claims.(jwt.MapClaims)["iat"].(float64) < float64(ntpDrift90Time.Unix()))
+
+}
