@@ -5,7 +5,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// IsErrorNotFound returns if the given error if due to not found
+// IsErrorNotFound returns if the given error is due to not found
 func IsErrorNotFound(err error) bool {
 	if err == nil {
 		return false
