@@ -246,7 +246,7 @@ func checkAccessFromDriverForVolumeId(
 	volumeId string,
 	accessType api.Ownership_AccessType,
 ) error {
-	vols, err := d.Inspect([]string{volumeId})
+	vols, err := d.Inspect([]string{volumeId}, false)
 	if err == kvdb.ErrNotFound || (err == nil && len(vols) == 0) {
 		return status.Errorf(
 			codes.NotFound,

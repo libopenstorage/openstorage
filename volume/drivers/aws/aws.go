@@ -294,8 +294,8 @@ func (d *Driver) merge(v *api.Volume, aws *ec2.Volume) {
 }
 
 // Inspect insepcts a volume
-func (d *Driver) Inspect(volumeIDs []string) ([]*api.Volume, error) {
-	vols, err := d.StoreEnumerator.Inspect(volumeIDs)
+func (d *Driver) Inspect(volumeIDs []string, configOnly bool) ([]*api.Volume, error) {
+	vols, err := d.StoreEnumerator.Inspect(volumeIDs, configOnly)
 	if err != nil {
 		return nil, err
 	}
@@ -343,7 +343,7 @@ func (d *Driver) Snapshot(
 	locator *api.VolumeLocator,
 	noRetry bool,
 ) (string, error) {
-	vols, err := d.StoreEnumerator.Inspect([]string{volumeID})
+	vols, err := d.StoreEnumerator.Inspect([]string{volumeID}, false)
 	if err != nil {
 		return "", err
 	}

@@ -228,8 +228,9 @@ type ProtoDriver interface {
 // Enumerator provides a set of interfaces to get details on a set of volumes.
 type Enumerator interface {
 	// Inspect specified volumes.
+	// If parameter configOnly is true, then information about  volume runtime status is skipped.
 	// Returns slice of volumes that were found.
-	Inspect(volumeIDs []string) ([]*api.Volume, error)
+	Inspect(volumeIDs []string, configOnly bool) ([]*api.Volume, error)
 	// Enumerate volumes that map to the volumeLocator. Locator fields may be regexp.
 	// If locator fields are left blank, this will return all volumes.
 	Enumerate(locator *api.VolumeLocator, labels map[string]string) ([]*api.Volume, error)

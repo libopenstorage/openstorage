@@ -119,7 +119,7 @@ var _ = Describe("Volume [Snapshot Tests]", func() {
 
 			By("Checking the Parent field of the created snapshot")
 
-			volumes, err := volumedriver.Inspect([]string{loc.GetName()})
+			volumes, err := volumedriver.Inspect([]string{loc.GetName()}, false)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(volumes).NotTo(BeEmpty())
 
@@ -210,7 +210,7 @@ var _ = Describe("Volume [Snapshot Tests]", func() {
 
 			By("Checking the Parent field of the created snapshot")
 
-			volumes, err := volumedriver.Inspect(snapIDs)
+			volumes, err := volumedriver.Inspect(snapIDs, false)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(volumes).NotTo(BeEmpty())
 
@@ -300,7 +300,7 @@ var _ = Describe("Volume [Snapshot Tests]", func() {
 
 			By("Checking the Parent field of the created snapshot")
 
-			volumes, err := volumedriver.Inspect([]string{loc.GetName()})
+			volumes, err := volumedriver.Inspect([]string{loc.GetName()}, false)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(volumes).NotTo(BeEmpty())
 

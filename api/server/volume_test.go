@@ -58,7 +58,7 @@ func TestVolumeNoAuth(t *testing.T) {
 	assert.Nil(t, resp)
 
 	// INSPECT
-	res, err := driverclient.Inspect([]string{id})
+	res, err := driverclient.Inspect([]string{id}, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, res)
 	assert.NotEmpty(t, res)
@@ -494,7 +494,7 @@ func TestVolumeInspectSuccess(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
-	res, err := driverclient.Inspect([]string{id})
+	res, err := driverclient.Inspect([]string{id}, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, res)
 	assert.NotEmpty(t, res)
@@ -551,7 +551,7 @@ func TestVolumeInspectFailed(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
-	res, err := driverclient.Inspect([]string{"myid"})
+	res, err := driverclient.Inspect([]string{"myid"}, false)
 	assert.Nil(t, err)
 	assert.Equal(t, len(res), 0)
 
@@ -2602,7 +2602,7 @@ func TestStorkVolumeInspect(t *testing.T) {
 	err = driverclient.Delete(id)
 	assert.Nil(t, err)
 
-	vols, err := driverclient.Inspect([]string{id})
+	vols, err := driverclient.Inspect([]string{id}, false)
 	assert.Equal(t, len(vols), 0)
 	assert.Nil(t, err)
 	/*

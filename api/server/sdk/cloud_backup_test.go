@@ -95,7 +95,7 @@ func TestSdkCloudBackupCreate(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
+		Inspect([]string{id}, false).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id: id,
@@ -498,7 +498,7 @@ func TestSdkCloudBackupStatus(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
+		Inspect([]string{id}, false).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id: id,
@@ -647,7 +647,7 @@ func TestSdkCloudBackupHistory(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
+		Inspect([]string{id}, false).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id: id,
@@ -752,7 +752,7 @@ func TestSdkCloudBackupStateChange(t *testing.T) {
 		// Create response
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Inspect([]string{id}, false).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: id,
@@ -864,7 +864,7 @@ func TestSdkCloudBackupSchedCreate(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
+		Inspect([]string{id}, false).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id: id,

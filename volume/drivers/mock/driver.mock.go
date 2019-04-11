@@ -414,7 +414,7 @@ func (mr *MockVolumeDriverMockRecorder) GetActiveRequests() *gomock.Call {
 }
 
 // Inspect mocks base method
-func (m *MockVolumeDriver) Inspect(arg0 []string) ([]*api.Volume, error) {
+func (m *MockVolumeDriver) Inspect(arg0 []string, configOnly bool) ([]*api.Volume, error) {
 	ret := m.ctrl.Call(m, "Inspect", arg0)
 	ret0, _ := ret[0].([]*api.Volume)
 	ret1, _ := ret[1].(error)
@@ -423,7 +423,7 @@ func (m *MockVolumeDriver) Inspect(arg0 []string) ([]*api.Volume, error) {
 
 // Inspect indicates an expected call of Inspect
 func (mr *MockVolumeDriverMockRecorder) Inspect(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Inspect", reflect.TypeOf((*MockVolumeDriver)(nil).Inspect), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Inspect", reflect.TypeOf((*MockVolumeDriver)(nil).Inspect), arg0, false)
 }
 
 // Mount mocks base method

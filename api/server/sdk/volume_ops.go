@@ -297,7 +297,7 @@ func (s *VolumeServer) Inspect(
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
 	}
 
-	vols, err := s.driver(ctx).Inspect([]string{req.GetVolumeId()})
+	vols, err := s.driver(ctx).Inspect([]string{req.GetVolumeId()}, false)
 	if err == kvdb.ErrNotFound || (err == nil && len(vols) == 0) {
 		return nil, status.Errorf(
 			codes.NotFound,

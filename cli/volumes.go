@@ -212,7 +212,7 @@ func (v *volDriver) volumeInspect(context *cli.Context) {
 		d[i] = string(v)
 	}
 
-	volumes, err := v.volDriver.Inspect(d)
+	volumes, err := v.volDriver.Inspect(d, false)
 	if err != nil {
 		cmdError(context, fn, err)
 		return
