@@ -134,18 +134,10 @@ func (s *VolumeServer) Mount(
 		return nil, status.Error(codes.InvalidArgument, "Invalid Mount Path")
 	}
 
-	// Get volume information
-	resp, err := s.Inspect(ctx, &api.SdkVolumeInspectRequest{
-		VolumeId: req.GetVolumeId(),
-	})
+	// Get access rights
+	err := s.checkAccessForVolumeId(ctx, req.GetVolumeId(), api.Ownership_Write)
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, err.Error())
-	}
-	vol := resp.GetVolume()
-
-	// Checks for ownership
-	if !vol.IsPermitted(ctx, api.Ownership_Write) {
-		return nil, status.Errorf(codes.PermissionDenied, "Access denied to volume %s", vol.GetId())
+		return nil, err
 	}
 
 	err = s.driver(ctx).Mount(req.GetVolumeId(), req.GetMountPath(), req.GetDriverOptions())
