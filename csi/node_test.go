@@ -100,8 +100,10 @@ func TestNodePublishVolumeVolumeNotFound(t *testing.T) {
 		// Getting volume information
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
-			Return(nil, fmt.Errorf("not found")).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{name},
+			}, nil).
+			Return([]*api.Volume{}, nil).
 			Times(1),
 	)
 
@@ -226,7 +228,9 @@ func TestNodePublishVolumeFailedToAttach(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{name},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: name,
@@ -260,7 +264,6 @@ func TestNodePublishVolumeFailedToAttach(t *testing.T) {
 	assert.NotNil(t, err)
 	serverError, ok := status.FromError(err)
 	assert.True(t, ok)
-	fmt.Println("err", err, serverError)
 	assert.Equal(t, serverError.Code(), codes.Internal)
 	assert.Contains(t, serverError.Message(), "Unable to attach volume")
 }
@@ -284,7 +287,9 @@ func TestNodePublishVolumeFailedMount(t *testing.T) {
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{name},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: name,
@@ -422,7 +427,9 @@ func TestNodePublishVolumeMount(t *testing.T) {
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{name},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: name,

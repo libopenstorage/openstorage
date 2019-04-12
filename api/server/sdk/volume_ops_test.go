@@ -39,6 +39,11 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+func init() {
+	kv, _ := kvdb.New(mem.Name, "policyvolopstest", []string{}, nil, logrus.Panicf)
+	policy.Init(kv)
+}
+
 func TestSdkVolumeCreateCheckIdempotency(t *testing.T) {
 
 	// Create server and client connection
@@ -159,7 +164,9 @@ func TestSdkVolumeClone(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{parentid}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{parentid},
+			}, nil).
 			Return([]*api.Volume{parentVol}, nil).
 			Times(1),
 
@@ -189,7 +196,9 @@ func TestSdkVolumeClone(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{cloneVol}, nil).
 			Times(1),
 	)
@@ -217,7 +226,9 @@ func TestSdkVolumeDelete(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{},
 			}, nil).
@@ -252,8 +263,10 @@ func TestSdkVolumeDeleteReturnOkWhenVolumeNotFound(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
-		Return(nil, kvdb.ErrNotFound).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
+		Return([]*api.Volume{}, nil).
 		Times(1)
 
 	// Setup client
@@ -298,7 +311,9 @@ func TestSdkVolumeInspect(t *testing.T) {
 
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id: id,
@@ -311,6 +326,23 @@ func TestSdkVolumeInspect(t *testing.T) {
 
 	// Get info
 	r, err := c.Inspect(context.Background(), req)
+	assert.NoError(t, err)
+	assert.NotNil(t, r.GetVolume())
+	assert.Equal(t, r.GetVolume().GetId(), id)
+
+	req.Options = &api.VolumeInspectOptions{Deep: true}
+	s.MockDriver().
+		EXPECT().
+		Inspect([]string{id}).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id: id,
+			},
+		}, nil).
+		Times(1)
+
+	// Get info
+	r, err = c.Inspect(context.Background(), req)
 	assert.NoError(t, err)
 	assert.NotNil(t, r.GetVolume())
 	assert.Equal(t, r.GetVolume().GetId(), id)
@@ -330,6 +362,23 @@ func TestSdkVolumeInspectKeyNotFound(t *testing.T) {
 	// Setup client
 	c := api.NewOpenStorageVolumeClient(s.Conn())
 
+	s.MockDriver().
+		EXPECT().
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
+		Return([]*api.Volume{}, nil).
+		Times(1)
+
+	// Get info
+	_, err := c.Inspect(context.Background(), req)
+	assert.Error(t, err)
+
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.NotFound)
+	assert.Contains(t, serverError.Message(), "not found")
+
 	// Returns key not found
 	s.MockDriver().
 		EXPECT().
@@ -338,10 +387,11 @@ func TestSdkVolumeInspectKeyNotFound(t *testing.T) {
 		Times(1)
 
 	// Get info
-	_, err := c.Inspect(context.Background(), req)
+	req.Options = &api.VolumeInspectOptions{Deep: true}
+	_, err = c.Inspect(context.Background(), req)
 	assert.Error(t, err)
 
-	serverError, ok := status.FromError(err)
+	serverError, ok = status.FromError(err)
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.NotFound)
 	assert.Contains(t, serverError.Message(), "not found")
@@ -467,7 +517,9 @@ func TestSdkVolumeUpdate(t *testing.T) {
 	// Check Locator
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
 		Return([]*api.Volume{&api.Volume{Spec: &api.VolumeSpec{}}}, nil).
 		AnyTimes()
 	s.MockDriver().
@@ -534,7 +586,9 @@ func TestSdkVolumeStats(t *testing.T) {
 
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id: id,
@@ -599,7 +653,9 @@ func TestSdkVolumeCapacityUsage(t *testing.T) {
 
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id: id,
@@ -640,7 +696,9 @@ func TestSdkVolumeCapacityUsageAbortedResult(t *testing.T) {
 
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id: id,
@@ -683,7 +741,9 @@ func TestSdkVolumeCapacityUsageUnimplementedResult(t *testing.T) {
 
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id: id,
@@ -755,7 +815,9 @@ func TestSdkDeleteOnlyByOwner(t *testing.T) {
 	id := "volid"
 	mv.
 		EXPECT().
-		Inspect([]string{id}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
 		Return([]*api.Volume{vpublic}, nil)
 	mv.
 		EXPECT().
@@ -769,7 +831,9 @@ func TestSdkDeleteOnlyByOwner(t *testing.T) {
 	// -- test: should work, with auth public vol
 	mv.
 		EXPECT().
-		Inspect([]string{id}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
 		Return([]*api.Volume{vpublic}, nil)
 	mv.
 		EXPECT().
@@ -783,7 +847,9 @@ func TestSdkDeleteOnlyByOwner(t *testing.T) {
 	// -- test: should work, no auth and owned vol
 	mv.
 		EXPECT().
-		Inspect([]string{id}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
 		Return([]*api.Volume{vauth}, nil)
 	mv.
 		EXPECT().
@@ -798,7 +864,9 @@ func TestSdkDeleteOnlyByOwner(t *testing.T) {
 	// with non-api.Ownship_Admin rights
 	mv.
 		EXPECT().
-		Inspect([]string{id}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
 		Return([]*api.Volume{vauth}, nil)
 	_, err = s.Delete(ctxWithNotOwner, &api.SdkVolumeDeleteRequest{
 		VolumeId: id,
@@ -808,7 +876,9 @@ func TestSdkDeleteOnlyByOwner(t *testing.T) {
 	// -- test: should work, auth with non-public vol for trusted admin collaborator
 	mv.
 		EXPECT().
-		Inspect([]string{id}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
 		Return([]*api.Volume{vauth}, nil)
 	mv.
 		EXPECT().
@@ -868,7 +938,9 @@ func TestSdkCloneOwnership(t *testing.T) {
 	gomock.InOrder(
 		mv.
 			EXPECT().
-			Inspect([]string{parentid}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{parentid},
+			}, nil).
 			Return([]*api.Volume{parentVol}, nil).
 			Times(1),
 
@@ -898,7 +970,9 @@ func TestSdkCloneOwnership(t *testing.T) {
 
 		mv.
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{cloneVol}, nil).
 			Times(1),
 	)
@@ -911,7 +985,9 @@ func TestSdkCloneOwnership(t *testing.T) {
 	gomock.InOrder(
 		mv.
 			EXPECT().
-			Inspect([]string{parentid}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{parentid},
+			}, nil).
 			Return([]*api.Volume{parentVol}, nil).
 			Times(1),
 
@@ -941,14 +1017,18 @@ func TestSdkCloneOwnership(t *testing.T) {
 
 		mv.
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{cloneVol}, nil).
 			Times(1),
 
 		// By Update since it is a new owner
 		mv.
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{cloneVol}, nil).
 			Times(1),
 		mv.
@@ -975,7 +1055,9 @@ func TestSdkCloneOwnership(t *testing.T) {
 	gomock.InOrder(
 		mv.
 			EXPECT().
-			Inspect([]string{parentid}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{parentid},
+			}, nil).
 			Return([]*api.Volume{parentVol}, nil).
 			Times(1),
 
@@ -1005,7 +1087,9 @@ func TestSdkCloneOwnership(t *testing.T) {
 
 		mv.
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{cloneVol}, nil).
 			Times(1),
 	)
@@ -1027,7 +1111,9 @@ func TestSdkCloneOwnership(t *testing.T) {
 	gomock.InOrder(
 		mv.
 			EXPECT().
-			Inspect([]string{parentid}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{parentid},
+			}, nil).
 			Return([]*api.Volume{parentVol}, nil).
 			Times(1),
 
@@ -1057,14 +1143,18 @@ func TestSdkCloneOwnership(t *testing.T) {
 
 		mv.
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{cloneVol}, nil).
 			Times(1),
 
 		// By Update since it is a new owner
 		mv.
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{cloneVol}, nil).
 			Times(1),
 		mv.
@@ -1577,7 +1667,9 @@ func TestSdkVolumeUpdatePolicyOwnership(t *testing.T) {
 	// Check Locator
 	mv.
 		EXPECT().
-		Inspect([]string{id}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
 		Return([]*api.Volume{&api.Volume{Spec: volPolSpec}}, nil).
 		AnyTimes()
 	mv.
@@ -1591,4 +1683,49 @@ func TestSdkVolumeUpdatePolicyOwnership(t *testing.T) {
 
 	_, err = storePolicy.Delete(ctxWithTrusted, &api.SdkOpenStoragePolicyDeleteRequest{Name: "testpolicyA"})
 	assert.NoError(t, err)
+}
+
+func TestSdkInspectWithFilters(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	id := "myid"
+	labels := map[string]string{
+		"hello": "world",
+	}
+	locator := &api.VolumeLocator{
+		Name:         id,
+		VolumeLabels: labels,
+	}
+
+	size := uint64(12345)
+	s.MockDriver().
+		EXPECT().
+		Enumerate(locator, nil).
+		Return([]*api.Volume{
+			&api.Volume{
+				Spec: &api.VolumeSpec{
+					Size: size,
+				},
+				Id: id,
+			},
+		}, nil).
+		Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageVolumeClient(s.Conn())
+
+	// Get info
+	r, err := c.InspectWithFilters(
+		context.Background(),
+		&api.SdkVolumeInspectWithFiltersRequest{
+			Name:   id,
+			Labels: labels,
+		})
+	assert.NoError(t, err)
+	assert.NotNil(t, r.GetVolumes())
+	assert.Len(t, r.GetVolumes(), 1)
+	assert.Equal(t, r.GetVolumes()[0].GetVolume().GetId(), id)
+	assert.Equal(t, r.GetVolumes()[0].GetVolume().GetSpec().GetSize(), size)
 }

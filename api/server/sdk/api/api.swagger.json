@@ -2382,6 +2382,45 @@
         "title": "Defines the response when inspecting a volume",
         "type": "object"
       },
+      "apiSdkVolumeInspectWithFiltersRequest": {
+        "properties": {
+          "group": {
+            "$ref": "#/components/schemas/apiGroup"
+          },
+          "labels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "(optional) Labels to search",
+            "type": "object"
+          },
+          "name": {
+            "title": "(optional) Name to search",
+            "type": "string"
+          },
+          "options": {
+            "$ref": "#/components/schemas/apiVolumeInspectOptions"
+          },
+          "ownership": {
+            "$ref": "#/components/schemas/apiOwnership"
+          }
+        },
+        "title": "Defines the request to inspect volumes using a filter",
+        "type": "object"
+      },
+      "apiSdkVolumeInspectWithFiltersResponse": {
+        "properties": {
+          "volumes": {
+            "items": {
+              "$ref": "#/components/schemas/apiSdkVolumeInspectResponse"
+            },
+            "title": "List of `SdkVolumeInspectResponse` objects describing the volumes",
+            "type": "array"
+          }
+        },
+        "title": "Defines the response when inspecting volumes using a filter",
+        "type": "object"
+      },
       "apiSdkVolumeMountRequest": {
         "properties": {
           "driver_options": {
@@ -3052,6 +3091,17 @@
         "title": "VolumeConsumer identifies a consumer for a Volume. An example of a VolumeConsumer\nwould be a Pod in Kubernetes who has mounted the PersistentVolumeClaim for the\nVolume",
         "type": "object"
       },
+      "apiVolumeInspectOptions": {
+        "properties": {
+          "deep": {
+            "description": "Deep inspection is used to collect more information about\nthe volume. Setting this value may delay the request.",
+            "format": "boolean",
+            "type": "boolean"
+          }
+        },
+        "title": "Options used for volume inspection",
+        "type": "object"
+      },
       "apiVolumeLocator": {
         "description": "VolumeLocator is a structure that is attached to a volume\nand is used to carry opaque metadata.",
         "properties": {
@@ -3064,6 +3114,13 @@
           },
           "ownership": {
             "$ref": "#/components/schemas/apiOwnership"
+          },
+          "volume_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Volume Ids to match",
+            "type": "array"
           },
           "volume_labels": {
             "additionalProperties": {
@@ -3495,7 +3552,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.50.0"
+    "version": "0.51.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -5503,6 +5560,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Deep inspection is used to collect more information about\nthe volume. Setting this value may delay the request.",
+            "in": "query",
+            "name": "options.deep",
+            "required": false,
+            "schema": {
+              "format": "boolean",
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -5518,6 +5585,37 @@
           }
         },
         "summary": "Inspect returns information about a volume",
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/volumes/inspectwithfilters": {
+      "post": {
+        "operationId": "InspectWithFilters",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkVolumeInspectWithFiltersRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkVolumeInspectWithFiltersResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Returns information for a list of volumes that match a filter.\nThis call is a helper function like calling\n`OpenStorageVolume.EnumerateWithFilters` then having it\nreturn the contents of each of those volumes\n`OpenStorageVolume.Inspect()`. Take care in using this call\nwhen requesting large number of volumes because it will\nblock until it has all the information requested before\nreturning.",
         "tags": [
           "OpenStorageVolume"
         ]
