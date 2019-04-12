@@ -2,7 +2,7 @@
 
 ## Releases
 
-### v0.50.1 - Tech Preview (4/11/2019)
+### v0.51.0 - Tech Preview (4/11/2019)
 
 * Added VolumeInspectOptions to OpenStorageVolume.Inspect
 * Added new OpenStorageVolume.InspectWithFilters API
