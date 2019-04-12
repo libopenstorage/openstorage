@@ -1796,6 +1796,7 @@ func TestVolumeEnumerateSuccess(t *testing.T) {
 	res, err := driverclient.Enumerate(vl, configLabel)
 	assert.Nil(t, err)
 	assert.NotNil(t, res)
+	assert.Len(t, res, 1)
 	assert.EqualValues(t, id, res[0].GetId())
 
 	volumes := api.NewOpenStorageVolumeClient(testVolDriver.Conn())
@@ -1863,7 +1864,7 @@ func TestVolumeEnumerateFailed(t *testing.T) {
 	}
 
 	res, _ := driverclient.Enumerate(vl, configLabel)
-	assert.Equal(t, len(res), 0)
+	assert.Equal(t, 0, len(res), fmt.Sprintf("%+v\n", res))
 
 	volumes := api.NewOpenStorageVolumeClient(testVolDriver.Conn())
 	ctx, err := contextWithToken(context.Background(), "test", "system.admin", testSharedSecret)

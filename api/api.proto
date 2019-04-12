@@ -235,6 +235,15 @@ message VolumeLocator {
   Ownership ownership = 3;
   // Filter by group
   Group group = 4;
+  // Volume Ids to match
+  repeated string volume_ids = 5;
+}
+
+// Options used for volume inspection
+message VolumeInspectOptions {
+  // Deep inspection is used to collect more information about
+  // the volume. Setting this value may delay the request.
+  bool deep = 1;
 }
 
 // Source is a structure that can be given to a volume
@@ -1341,6 +1350,22 @@ service OpenStorageVolume {
       };
     }
 
+  // Returns information for a list of volumes that match a filter.
+  // This call is a helper function like calling
+  // `OpenStorageVolume.EnumerateWithFilters` then having it
+  // return the contents of each of those volumes
+  // `OpenStorageVolume.Inspect()`. Take care in using this call
+  // when requesting large number of volumes because it will
+  // block until it has all the information requested before
+  // returning.
+  rpc InspectWithFilters(SdkVolumeInspectWithFiltersRequest)
+    returns (SdkVolumeInspectWithFiltersResponse) {
+      option(google.api.http) = {
+        post: "/v1/volumes/inspectwithfilters"
+        body: "*"
+      };
+    }
+
   // Update provides a method for manipulating the specification and attributes of a volume.
   // Set can be used to resize a volume, update labels, change replica count, and much more.
   //
@@ -2401,6 +2426,8 @@ message SdkVolumeDeleteResponse {
 message SdkVolumeInspectRequest {
   // Id of volume to inspect
   string volume_id = 1;
+  // Options during inspection
+  VolumeInspectOptions options = 2;
 }
 
 // Defines the response when inspecting a volume
@@ -2411,6 +2438,26 @@ message SdkVolumeInspectResponse {
   string name = 2;
   // Volume labels
   map<string, string> labels = 3;
+}
+
+// Defines the request to inspect volumes using a filter
+message SdkVolumeInspectWithFiltersRequest {
+  // (optional) Name to search
+  string name = 2;
+  // (optional) Labels to search
+  map<string, string> labels = 3;
+  // (optional) Ownership to match
+  Ownership ownership = 4;
+  // (optional) Group to match
+  Group group = 5;
+  // Options during inspection
+  VolumeInspectOptions options = 6;
+}
+
+// Defines the response when inspecting volumes using a filter
+message SdkVolumeInspectWithFiltersResponse {
+  // List of `SdkVolumeInspectResponse` objects describing the volumes
+  repeated SdkVolumeInspectResponse volumes = 1;
 }
 
 // This request is used to adjust or set new values in the volume
@@ -3213,7 +3260,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 42;
     // SDK version patch value of this specification
-    Patch = 8;
+    Patch = 9;
   }
 
   // The following cannot be set to use the enum Version because the REST
