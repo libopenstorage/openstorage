@@ -2894,6 +2894,8 @@ enum SdkCloudBackupStatusType {
   SdkCloudBackupStatusTypeActive = 6;
   // Failed
   SdkCloudBackupStatusTypeFailed = 7;
+  // Queued
+  SdkCloudBackupStatusTypeQueued = 8;
 }
 
 // SdkCloudBackupStatus defines the status of a backup stored by a cloud provider

@@ -852,6 +852,8 @@ func CloudBackupStatusTypeToSdkCloudBackupStatusType(
 		return SdkCloudBackupStatusType_SdkCloudBackupStatusTypeActive
 	case CloudBackupStatusFailed:
 		return SdkCloudBackupStatusType_SdkCloudBackupStatusTypeFailed
+	case CloudBackupStatusQueued:
+		return SdkCloudBackupStatusType_SdkCloudBackupStatusTypeQueued
 	default:
 		return SdkCloudBackupStatusType_SdkCloudBackupStatusTypeUnknown
 	}
@@ -875,6 +877,8 @@ func SdkCloudBackupStatusTypeToCloudBackupStatusString(
 		return string(CloudBackupStatusActive)
 	case SdkCloudBackupStatusType_SdkCloudBackupStatusTypeFailed:
 		return string(CloudBackupStatusFailed)
+	case SdkCloudBackupStatusType_SdkCloudBackupStatusTypeQueued:
+		return string(CloudBackupStatusQueued)
 	default:
 		return string(CloudBackupStatusFailed)
 	}
