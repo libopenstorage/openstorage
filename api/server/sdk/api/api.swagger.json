@@ -1349,7 +1349,7 @@
       },
       "apiSdkCloudBackupStatusType": {
         "default": "SdkCloudBackupStatusTypeUnknown",
-        "description": "- SdkCloudBackupStatusTypeUnknown: Unkonwn\n - SdkCloudBackupStatusTypeNotStarted: Not started\n - SdkCloudBackupStatusTypeDone: Done\n - SdkCloudBackupStatusTypeAborted: Aborted\n - SdkCloudBackupStatusTypePaused: Paused\n - SdkCloudBackupStatusTypeStopped: Stopped\n - SdkCloudBackupStatusTypeActive: Active\n - SdkCloudBackupStatusTypeFailed: Failed",
+        "description": "- SdkCloudBackupStatusTypeUnknown: Unkonwn\n - SdkCloudBackupStatusTypeNotStarted: Not started\n - SdkCloudBackupStatusTypeDone: Done\n - SdkCloudBackupStatusTypeAborted: Aborted\n - SdkCloudBackupStatusTypePaused: Paused\n - SdkCloudBackupStatusTypeStopped: Stopped\n - SdkCloudBackupStatusTypeActive: Active\n - SdkCloudBackupStatusTypeFailed: Failed\n - SdkCloudBackupStatusTypeQueued: Queued",
         "enum": [
           "SdkCloudBackupStatusTypeUnknown",
           "SdkCloudBackupStatusTypeNotStarted",
@@ -1358,7 +1358,8 @@
           "SdkCloudBackupStatusTypePaused",
           "SdkCloudBackupStatusTypeStopped",
           "SdkCloudBackupStatusTypeActive",
-          "SdkCloudBackupStatusTypeFailed"
+          "SdkCloudBackupStatusTypeFailed",
+          "SdkCloudBackupStatusTypeQueued"
         ],
         "title": "CloudBackup status types",
         "type": "string"
