@@ -26,7 +26,14 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const schedDriverPostFix = "-sched"
+const (
+	schedDriverPostFix = "-sched"
+
+	// We set it to 128Mi to support large number of volumes. Before, the client
+	// was using 4Mi and it would not allow the support of over 5k volumes.
+	// We increased to a very large value to support over 100k volumes.
+	maxMsgSize = 128 * 1024 * 1024
+)
 
 type volAPI struct {
 	restBase
@@ -63,7 +70,10 @@ func (vd *volAPI) getConn() (*grpc.ClientConn, error) {
 		var err error
 		vd.conn, err = grpcserver.Connect(
 			vd.sdkUds,
-			[]grpc.DialOption{grpc.WithInsecure()})
+			[]grpc.DialOption{
+				grpc.WithInsecure(),
+				grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(maxMsgSize)),
+			})
 		if err != nil {
 			return nil, fmt.Errorf("Failed to connect to gRPC handler: %v", err)
 		}
