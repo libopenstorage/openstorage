@@ -2618,3 +2618,77 @@ func TestStorkVolumeInspect(t *testing.T) {
 		return nil, false, nil
 	*/
 }
+
+// This is a time comsuming test and must be uncommented to test it.
+// Make sure to add --timeout=1h to go test when running this test.
+/*
+func TestThousandsOfVolumes(t *testing.T) {
+	var err error
+
+	// Setup volume rest functions server
+	ts, testVolDriver := testRestServerSdkNoAuth(t)
+	defer ts.Close()
+	defer testVolDriver.Stop()
+
+	cl, err := volumeclient.NewAuthDriverClient(ts.URL, mockDriverName, version, "", "", mockDriverName)
+	assert.NoError(t, err)
+
+	// Setup request
+	name := "myvol"
+	size := uint64(1234)
+	req := &api.VolumeCreateRequest{
+		Locator: &api.VolumeLocator{Name: name},
+		Source:  &api.Source{},
+		Spec: &api.VolumeSpec{
+			HaLevel: 3,
+			Size:    size,
+			Format:  api.FSType_FS_TYPE_EXT4,
+			Shared:  true,
+		},
+	}
+
+	labels := make(map[string]string)
+	for i := 0; i < 50; i++ {
+		labels[fmt.Sprintf("label %d", i)] = fmt.Sprintf("label value %d", i)
+	}
+	req.GetLocator().VolumeLabels = labels
+
+	numvols := 10 * 1000
+	driverclient := volumeclient.VolumeDriver(cl)
+	fmt.Println("Creting volumes")
+
+	routines := 50
+	ch := make(chan int)
+	var wg sync.WaitGroup
+	fmt.Println("Creating...")
+	for i := 0; i < routines; i++ {
+		go func() {
+			for i := range ch {
+				req.GetLocator().Name = fmt.Sprintf("myvol-%d", i)
+				id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+				assert.Nil(t, err)
+				assert.NotEmpty(t, id)
+			}
+			wg.Done()
+		}()
+	}
+	wg.Add(routines)
+
+	for i := 0; i < numvols; i++ {
+		ch <- i
+		if (i % 1000) == 0 {
+			fmt.Printf("%d...", i)
+		}
+	}
+	fmt.Println("")
+	close(ch)
+	wg.Wait()
+
+	// create client
+	fmt.Println("Enumerating...")
+	res, err := driverclient.Enumerate(&api.VolumeLocator{}, map[string]string{})
+	assert.NoError(t, err)
+	assert.NotNil(t, res)
+	assert.Len(t, res, numvols, fmt.Sprintf("Len res:%d numvols:%d", len(res), numvols))
+}
+*/
