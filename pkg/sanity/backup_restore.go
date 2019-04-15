@@ -110,6 +110,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
 			numVolumesAfter = len(volumes)
+			Expect(numVolumesAfter).To(Equal(1))
 		})
 
 		It("Should create Volume successfully for backup", func() {
@@ -217,6 +218,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
 			numVolumesAfter = len(volumes)
+			Expect(numVolumesAfter).To(Equal(1))
 		})
 
 		It("Should create enumerate backup volumes", func() {
@@ -342,6 +344,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
 			numVolumesAfter = len(volumes)
+			Expect(numVolumesAfter).To(Equal(1))
 		})
 
 		It("Should restore backup", func() {
@@ -480,6 +483,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
 			numVolumesAfter = len(volumes)
+			Expect(numVolumesAfter).To(Equal(1))
 		})
 
 		It("Should create a backup schedule ", func() {
@@ -557,6 +561,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
 			numVolumesAfter = len(volumes)
+			Expect(numVolumesAfter).To(Equal(1))
 		})
 
 		It("Should delete a backup schedule ", func() {
@@ -648,6 +653,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
 			numVolumesAfter = len(volumes)
+			Expect(numVolumesAfter).To(Equal(1))
 		})
 
 		It("Should enumerate a backup schedule ", func() {
@@ -736,6 +742,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
 			numVolumesAfter = len(volumes)
+			Expect(numVolumesAfter).To(Equal(1))
 		})
 
 		It("Should create Volume successfully for backup", func() {

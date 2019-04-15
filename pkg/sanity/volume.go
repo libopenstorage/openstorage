@@ -73,6 +73,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 				volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 				Expect(err).ToNot(HaveOccurred())
 				numVolumesAfter = len(volumes)
+				Expect(numVolumesAfter).To(Equal(1))
 			}
 		})
 
@@ -193,6 +194,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 				volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 				Expect(err).ToNot(HaveOccurred())
 				numVolumesAfter = len(volumes)
+				Expect(numVolumesAfter).To(Equal(1))
 			}
 		})
 
@@ -264,6 +266,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, make(map[string]string))
 			numVolumesBefore = len(volumes)
 			Expect(err).NotTo(HaveOccurred())
+			Expect(numVolumesBefore).To(Equal(0))
 		})
 
 		AfterEach(func() {
@@ -401,6 +404,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
 			numVolumesAfter = len(volumes)
+			Expect(numVolumesAfter).To(Equal(1))
 		})
 
 		It("Should attach and detach successfully", func() {
@@ -484,6 +488,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
 			numVolumesAfter = len(volumes)
+			Expect(numVolumesAfter).To(Equal(1))
 		})
 
 		It("Should mount and unmount successfully", func() {
@@ -560,6 +565,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
 			numVolumesAfter = len(volumes)
+			Expect(numVolumesAfter).To(Equal(1))
 		})
 
 		It("Should update successfully with the new volume size.", func() {
@@ -711,6 +717,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
 			numVolumesAfter = len(volumes)
+			Expect(numVolumesAfter).To(Equal(1))
 		})
 
 		It("Should retrieve volume stats successfully", func() {
@@ -778,6 +785,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
 			numVolumesAfter = len(volumes)
+			Expect(numVolumesAfter).To(Equal(1))
 		})
 
 		It("Should get ActiveRequests successfully", func() {
@@ -843,6 +851,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
 			numVolumesAfter = len(volumes)
+			Expect(numVolumesAfter).To(Equal(1))
 		})
 
 		It("Should get volume used size successfully", func() {
@@ -914,6 +923,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
 			Expect(err).ToNot(HaveOccurred())
 			numVolumesAfter = len(volumes)
+			Expect(numVolumesAfter).To(Equal(1))
 		})
 
 		It("Should quiesce unquiesce volume successfully", func() {
