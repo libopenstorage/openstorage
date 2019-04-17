@@ -596,6 +596,30 @@ func (s *ec2Ops) Create(
 		VolumeType:       vol.VolumeType,
 		SnapshotId:       vol.SnapshotId,
 	}
+
+	if len(vol.Tags) > 0 || len(labels) > 0 {
+		// Need to tag volumes on creation
+		tagSpec := &ec2.TagSpecification{}
+		tagSpec.SetResourceType(ec2.ResourceTypeVolume)
+		volTags := []*ec2.Tag{}
+
+		for _, tag := range vol.Tags {
+			// Make a copy of the keys and values
+			key := *tag.Key
+			value := *tag.Value
+			volTags = append(volTags, &ec2.Tag{Key: &key, Value: &value})
+		}
+
+		for k, v := range labels {
+			// Make a copy of the keys and values
+			key := k
+			value := v
+			volTags = append(volTags, &ec2.Tag{Key: &key, Value: &value})
+		}
+		tagSpec.Tags = volTags
+		req.TagSpecifications = []*ec2.TagSpecification{tagSpec}
+	}
+
 	if *vol.VolumeType == opsworks.VolumeTypeIo1 {
 		req.Iops = vol.Iops
 	}
@@ -610,12 +634,6 @@ func (s *ec2Ops) Create(
 	); err != nil {
 		return nil, s.rollbackCreate(*resp.VolumeId, err)
 	}
-	if len(labels) > 0 {
-		if err = s.ApplyTags(*resp.VolumeId, labels); err != nil {
-			return nil, s.rollbackCreate(*resp.VolumeId, err)
-		}
-	}
-
 	return s.refreshVol(resp.VolumeId)
 }
 
