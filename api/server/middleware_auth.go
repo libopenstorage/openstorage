@@ -74,7 +74,8 @@ func (a *authMiddleware) createWithAuth(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 	if secretName == "" {
-		errorMessage := "Access denied, no secret found in the annotations of the persistent volume claim"
+		errorMessage := "Access denied, no secret found in the annotations of the persistent volume claim" +
+			" or storage class parameters"
 		a.log(locator.Name, fn).Error(errorMessage)
 		dcRes.VolumeResponse = &api.VolumeResponse{Error: errorMessage}
 		json.NewEncoder(w).Encode(&dcRes)
@@ -330,6 +331,10 @@ func (a *authMiddleware) parseSecret(
 		}
 		secretName := pvc.ObjectMeta.Annotations[secrets.SecretNameKey]
 		secretNamespace := pvc.ObjectMeta.Annotations[secrets.SecretNamespaceKey]
+		if len(secretName) == 0 {
+			return parseSecretFromLabels(specLabels, locatorLabels)
+		}
+
 		return secretName, secretNamespace, nil
 	}
 	return parseSecretFromLabels(specLabels, locatorLabels)
