@@ -516,6 +516,9 @@ type CloudBackupScheduleInfo struct {
 	// MaxBackups are the maximum number of backups retained
 	// in cloud.Older backups are deleted
 	MaxBackups uint
+	// RetentionDays is the number of days that the scheduled backups will be kept
+	// and after these number of days it will be deleted
+	RetentionDays uint32
 	// GroupID indicates the group of volumes for this cloudbackup schedule
 	GroupID string
 	// Labels indicates a volume group for this cloudsnap schedule

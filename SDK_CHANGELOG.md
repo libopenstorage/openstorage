@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.53.0 - Tech Preview (4/23/2019)
+
+* Added new field RetentionDays to cloudbackup schedule
+
 ### v0.52.0 - Tech Preview (4/23/2019)
 
 * (breaking change) Fix REST Gateway Snapshot enumerate with filters endpoint
