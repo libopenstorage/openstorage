@@ -11,7 +11,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/api/errors"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/auth/secrets"
 	"github.com/libopenstorage/openstorage/volume"
@@ -19,6 +18,8 @@ import (
 	osecrets "github.com/libopenstorage/secrets"
 	"github.com/portworx/sched-ops/k8s"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const (
@@ -173,7 +174,10 @@ func (a *authMiddleware) setWithAuth(w http.ResponseWriter, r *http.Request, nex
 			if err != nil {
 				processErrorForVolSetResponse(req.Action, err, &resp)
 			} else if v == nil || len(v) != 1 {
-				processErrorForVolSetResponse(req.Action, &errors.ErrNotFound{Type: "Volume", ID: volumeID}, &resp)
+				processErrorForVolSetResponse(
+					req.Action,
+					status.Errorf(codes.NotFound, "Volume with ID: %s is not found", volumeID),
+					&resp)
 			} else {
 				v0 := v[0]
 				resp.Volume = v0
