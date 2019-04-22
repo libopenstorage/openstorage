@@ -24,6 +24,7 @@ import (
 
 	"github.com/gobuffalo/packr"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 
@@ -90,7 +91,7 @@ func (s *sdkRestGateway) Stop() {
 
 // restServerSetupHandlers sets up the handlers to the swagger ui and
 // to the gRPC REST Gateway.
-func (s *sdkRestGateway) restServerSetupHandlers() (*http.ServeMux, error) {
+func (s *sdkRestGateway) restServerSetupHandlers() (http.Handler, error) {
 
 	// Create an HTTP server router
 	mux := http.NewServeMux()
@@ -156,5 +157,13 @@ func (s *sdkRestGateway) restServerSetupHandlers() (*http.ServeMux, error) {
 
 	// Pass all other unhandled paths to the gRPC gateway
 	mux.Handle("/", gmux)
-	return mux, nil
+
+	// Enable cors
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "DELETE", "HEAD", "PUT", "OPTIONS"},
+		AllowCredentials: true,
+	})
+	cmux := c.Handler(mux)
+	return cmux, nil
 }

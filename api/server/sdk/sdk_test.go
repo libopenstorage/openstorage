@@ -216,6 +216,21 @@ func TestSdkGateway(t *testing.T) {
 	res, err = http.Get(s.GatewayURL() + "/v1/clusters/inspectcurrent")
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, res.StatusCode)
+
+	// Setup mock for CORS request
+	s.MockCluster().EXPECT().Enumerate().Return(cluster, nil).Times(1)
+	s.MockCluster().EXPECT().Uuid().Return(id).Times(1)
+
+	// Try cross-origin reqeuest, should get allowed
+	reqOrigin := "openstorage.io"
+	req, err := http.NewRequest("GET", s.GatewayURL()+"/v1/clusters/inspectcurrent", nil)
+	assert.NoError(t, err)
+	req.Header.Add("origin", reqOrigin)
+
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	assert.Equal(t, "*", resp.Header.Get("Access-Control-Allow-Origin"))
+
 }
 
 func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
