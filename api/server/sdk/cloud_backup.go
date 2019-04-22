@@ -612,6 +612,13 @@ func (s *CloudBackupServer) checkAccessToCredential(
 	_, err := cs.Inspect(ctx, &api.SdkCredentialInspectRequest{
 		CredentialId: credentialId,
 	})
+
+	// Don't return error if credential wasn't found. The driver might have
+	// other ways to read the credentials
+	if IsErrorNotFound(err) {
+		return nil
+	}
+
 	return err
 }
 
