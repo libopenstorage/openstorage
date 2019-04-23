@@ -3553,7 +3553,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.51.0"
+    "version": "0.52.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -5726,39 +5726,7 @@
         ]
       }
     },
-    "/v1/volumes/snapshots/restore": {
-      "post": {
-        "description": "Requires access AccessType.Write of volume",
-        "operationId": "SnapshotRestore",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/apiSdkVolumeSnapshotRestoreRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/apiSdkVolumeSnapshotRestoreResponse"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "summary": "SnapshotRestore restores a volume to a specified snapshot",
-        "tags": [
-          "OpenStorageVolume"
-        ]
-      }
-    },
-    "/v1/volumes/snapshots/{volume_id}/filters": {
+    "/v1/volumes/snapshots/filters/{volume_id}": {
       "post": {
         "operationId": "SnapshotEnumerateWithFilters",
         "parameters": [
@@ -5794,6 +5762,38 @@
           }
         },
         "summary": "SnapshotEnumerate returns a list of snapshots.\nTo filter all the snapshots for a specific volume which may no longer exist,\nspecifiy a volume id.\nLabels can also be used to filter the snapshot list.\nIf neither are provided all snapshots will be returned.",
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/volumes/snapshots/restore": {
+      "post": {
+        "description": "Requires access AccessType.Write of volume",
+        "operationId": "SnapshotRestore",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkVolumeSnapshotRestoreRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkVolumeSnapshotRestoreResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "SnapshotRestore restores a volume to a specified snapshot",
         "tags": [
           "OpenStorageVolume"
         ]

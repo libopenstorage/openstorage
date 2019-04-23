@@ -1461,7 +1461,7 @@ service OpenStorageVolume {
   rpc SnapshotEnumerateWithFilters(SdkVolumeSnapshotEnumerateWithFiltersRequest)
     returns (SdkVolumeSnapshotEnumerateWithFiltersResponse) {
       option(google.api.http) = {
-        post: "/v1/volumes/snapshots/{volume_id}/filters"
+        post: "/v1/volumes/snapshots/filters/{volume_id}"
         body: "*"
       };
     }
@@ -3260,7 +3260,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 51;
+    Minor = 52;
     // SDK version patch value of this specification
     Patch = 0;
   }

@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.52.0 - Tech Preview (4/23/2019)
+
+* (breaking change) Fix REST Gateway Snapshot enumerate with filters endpoint
+
 ### v0.51.0 - Tech Preview (4/11/2019)
 
 * Added VolumeInspectOptions to OpenStorageVolume.Inspect
