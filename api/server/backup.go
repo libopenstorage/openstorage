@@ -195,10 +195,14 @@ func (vd *volAPI) cloudBackupEnumerate(w http.ResponseWriter, r *http.Request) {
 
 	volumes := api.NewOpenStorageCloudBackupClient(conn)
 	sdkEnumerateResp, err := volumes.EnumerateWithFilters(ctx, &api.SdkCloudBackupEnumerateWithFiltersRequest{
-		SrcVolumeId:  enumerateReq.SrcVolumeID,
-		ClusterId:    enumerateReq.ClusterID,
-		CredentialId: enumerateReq.CredentialUUID,
-		All:          enumerateReq.All,
+		SrcVolumeId:       enumerateReq.SrcVolumeID,
+		ClusterId:         enumerateReq.ClusterID,
+		CredentialId:      enumerateReq.CredentialUUID,
+		All:               enumerateReq.All,
+		ContinuationToken: enumerateReq.ContinuationToken,
+		MaxBackups:        enumerateReq.MaxBackups,
+		TagFilter:         enumerateReq.TagFilter,
+		StatusFilter:      api.CloudBackupStatusTypeToSdkCloudBackupStatusType(enumerateReq.StatusFilter),
 	})
 	if err != nil {
 		vd.sendError(method, "", w, err.Error(), http.StatusInternalServerError)
@@ -216,7 +220,7 @@ func (vd *volAPI) cloudBackupEnumerate(w http.ResponseWriter, r *http.Request) {
 		}
 		enumerateResp.Backups = append(enumerateResp.Backups, item)
 	}
-
+	enumerateResp.ContinuationToken = sdkEnumerateResp.ContinuationToken
 	json.NewEncoder(w).Encode(&enumerateResp)
 }
 

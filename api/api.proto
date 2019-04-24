@@ -2847,6 +2847,15 @@ message SdkCloudBackupEnumerateWithFiltersRequest {
   string credential_id = 3;
   // (optional) All indicates if the request should show cloud backups for all clusters or the current cluster.
   bool all = 4;
+  // (optional) enumerates backups that have status specified by this type
+  SdkCloudBackupStatusType status_filter = 5;
+  // (optional) Enumerates backups that have tags of this type
+  string tag_filter = 6;
+  // (optional) if caller wished to limit number of backups returned by enumerate
+  uint64 max_backups = 7;
+  // Returned in the enumerate response if not all of the backups could be returned in the
+  // response.
+  string continuation_token = 8;
 }
 
 // SdkCloudBackupInfo has information about a backup stored by a cloud provider
@@ -2869,6 +2878,9 @@ message SdkCloudBackupInfo {
 // Defines a response which lists all the backups stored by a cloud provider
 message SdkCloudBackupEnumerateWithFiltersResponse {
   repeated SdkCloudBackupInfo backups = 1;
+  // if this is not an empty string, callers must pass this to get next list of
+  // backups
+	string continuation_token = 2;
 }
 
 // CloudBackup operations types
@@ -2901,6 +2913,9 @@ enum SdkCloudBackupStatusType {
   SdkCloudBackupStatusTypeFailed = 7;
   // Queued
   SdkCloudBackupStatusTypeQueued = 8;
+  // Invalid, used by enumerate, includes failed,
+  // stopped and aborted
+ SdkCloudBackupStatusTypeInvalid = 9;
 }
 
 // SdkCloudBackupStatus defines the status of a backup stored by a cloud provider

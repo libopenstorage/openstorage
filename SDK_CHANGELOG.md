@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.55.0 - Tech Preview (5/7/2019)
+
+* Additions to cloudbackup enumerate filters.
+
 ### v0.54.0 - Tech Preview (5/2/2019)
 
 * Added new field FullBackupFrequency to cloudbackup create API
