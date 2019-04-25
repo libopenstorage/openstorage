@@ -127,8 +127,13 @@ func TestCSISanity(t *testing.T) {
 	}
 
 	// Start CSI Sanity test
+	targetPath := "/tmp/mnt/csi"
 	sanity.Test(t, &sanity.Config{
 		Address:    server.Address(),
-		TargetPath: "/mnt",
+		TargetPath: targetPath,
+		CreateTargetDir: func(p string) (string, error) {
+			os.MkdirAll(p+"/target", os.FileMode(0755))
+			return p, nil
+		},
 	})
 }
