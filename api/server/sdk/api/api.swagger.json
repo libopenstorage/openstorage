@@ -1216,8 +1216,13 @@
           },
           "max_backups": {
             "format": "uint64",
-            "title": "MaxBackups are the maximum number of backups retained\nin cloud.Older backups are deleted",
+            "title": "MaxBackups indicates when to force full backup to cloud. If RetentionDays\nis not specified or is 0 (older scheme), this is also the maximum number \nof scheduled backups retained in the cloud. Older backups are deleted",
             "type": "string"
+          },
+          "retention_days": {
+            "format": "int64",
+            "title": "Number of days that Scheduled CloudBackups will be kept after which they\nare deleted",
+            "type": "integer"
           },
           "schedules": {
             "items": {
@@ -3553,7 +3558,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.42.9"
+    "version": "0.42.10"
   },
   "openapi": "3.0.0",
   "paths": {

@@ -3026,11 +3026,15 @@ message SdkCloudBackupScheduleInfo{
   string credential_id = 2;
   // Schedules are the frequencies of the backup
   repeated SdkSchedulePolicyInterval schedules = 3;
-  // MaxBackups are the maximum number of backups retained
-  // in cloud.Older backups are deleted
+  // MaxBackups indicates when to force full backup to cloud. If RetentionDays
+  // is not specified or is 0 (older scheme), this is also the maximum number 
+  // of scheduled backups retained in the cloud. Older backups are deleted
   uint64 max_backups = 4;
   // Full indicates if scheduled backups should always be full and never incremental.
   bool full = 5;
+  // Number of days that Scheduled CloudBackups will be kept after which they
+  // are deleted
+ uint32 retention_days = 6;
 }
 
 // Defines a request to create a schedule for volume backups to a
@@ -3262,7 +3266,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 42;
     // SDK version patch value of this specification
-    Patch = 9;
+    Patch = 10;
   }
 
   // The following cannot be set to use the enum Version because the REST
