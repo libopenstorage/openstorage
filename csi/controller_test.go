@@ -1452,8 +1452,19 @@ func TestControllerCreateVolumeFromSnapshot(t *testing.T) {
 
 	// Setup mock functions
 	id := "myid"
+	snapID := id + "-snap"
 	gomock.InOrder(
-		//VolFromName name
+
+		// First check on parent
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{mockParentID},
+			}, nil).
+			Return([]*api.Volume{&api.Volume{Id: mockParentID}}, nil).
+			Times(1),
+
+		// VolFromName (name)
 		s.MockDriver().
 			EXPECT().
 			Inspect([]string{name}).
@@ -1462,20 +1473,58 @@ func TestControllerCreateVolumeFromSnapshot(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Enumerate(gomock.Any(), nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
+		//VolFromName parent
 		s.MockDriver().
 			EXPECT().
-			Create(gomock.Any(), gomock.Any(), gomock.Any()).
-			Return(id, nil).
+			Inspect(gomock.Any()).
+			Return(
+				[]*api.Volume{&api.Volume{
+					Id: mockParentID,
+				}}, nil).
+			Times(1),
+
+		// create
+		s.MockDriver().
+			EXPECT().
+			Snapshot(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Return(snapID, nil).
+			Times(1),
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{snapID},
+			}, nil).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id:     id,
+					Source: &api.Source{Parent: mockParentID},
+				},
+			}, nil).
+			Times(2),
+		/*s.MockDriver().
+		EXPECT().
+		Inspect(gomock.Any()).
+		Return(
+			[]*api.Volume{&api.Volume{
+				Id: snapID,
+			}}, nil).
+		Times(1),
+		*/
+
+		s.MockDriver().
+			EXPECT().
+			Set(gomock.Any(), gomock.Any(), gomock.Any()).
+			Return(nil).
 			Times(1),
 
 		s.MockDriver().
 			EXPECT().
 			Enumerate(&api.VolumeLocator{
-				VolumeIds: []string{id},
+				VolumeIds: []string{snapID},
 			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{

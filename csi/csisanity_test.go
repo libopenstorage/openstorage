@@ -128,7 +128,8 @@ func TestCSISanity(t *testing.T) {
 
 	// Start CSI Sanity test
 	sanity.Test(t, &sanity.Config{
-		Address:    server.Address(),
-		TargetPath: "/mnt",
+		Address:         server.Address(),
+		TargetPath:      "/tmp/mnt/csi",
+		CreateTargetDir: func(p string) (string, error) { return p, nil },
 	})
 }

@@ -111,6 +111,14 @@ func (s *OsdCsiServer) NodePublishVolume(
 		}
 	}
 
+	// Create directory due to kubernetes already doing this for us.
+	// if it already exists, ignore the error.
+	// https://github.com/kubernetes/kubernetes/issues/75535
+	err = os.MkdirAll(req.GetTargetPath(), os.FileMode(0755))
+	if err != nil && os.IsNotExist(err) {
+		return nil, status.Error(codes.Internal, "Failed to create directory")
+	}
+
 	// Verify target location is an existing directory
 	if err := verifyTargetLocation(req.GetTargetPath()); err != nil {
 		return nil, status.Errorf(

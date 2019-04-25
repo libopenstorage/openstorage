@@ -55,6 +55,15 @@ func (s *OsdCsiServer) ControllerGetCapabilities(
 		},
 	}
 
+	// Resizing volumes supported
+	capExpandVolume := &csi.ControllerServiceCapability{
+		Type: &csi.ControllerServiceCapability_Rpc{
+			Rpc: &csi.ControllerServiceCapability_RPC{
+				Type: csi.ControllerServiceCapability_RPC_EXPAND_VOLUME,
+			},
+		},
+	}
+
 	// Creating and deleting snapshots
 	capCreateDeleteSnapshot := &csi.ControllerServiceCapability{
 		Type: &csi.ControllerServiceCapability_Rpc{
@@ -67,6 +76,7 @@ func (s *OsdCsiServer) ControllerGetCapabilities(
 	return &csi.ControllerGetCapabilitiesResponse{
 		Capabilities: []*csi.ControllerServiceCapability{
 			capCreateDeleteVolume,
+			capExpandVolume,
 			capCreateDeleteSnapshot,
 		},
 	}, nil
@@ -266,6 +276,17 @@ func (s *OsdCsiServer) CreateVolume(
 		return nil, status.Error(codes.InvalidArgument, e)
 	}
 
+	// Get parent ID from request: snapshot or volume
+	if req.GetVolumeContentSource() != nil {
+		if sourceSnap := req.GetVolumeContentSource().GetSnapshot(); sourceSnap != nil {
+			source.Parent = sourceSnap.SnapshotId
+		}
+
+		if sourceVol := req.GetVolumeContentSource().GetVolume(); sourceVol != nil {
+			source.Parent = sourceVol.VolumeId
+		}
+	}
+
 	// Get Size
 	if req.GetCapacityRange() != nil && req.GetCapacityRange().GetRequiredBytes() != 0 {
 		spec.Size = uint64(req.GetCapacityRange().GetRequiredBytes())
@@ -369,6 +390,61 @@ func (s *OsdCsiServer) DeleteVolume(
 	}
 
 	return &csi.DeleteVolumeResponse{}, nil
+}
+
+// ExpandVolume is a CSI API which resizes a volume
+func (s *OsdCsiServer) ExpandVolume(
+	ctx context.Context,
+	req *csi.ControllerExpandVolumeRequest,
+) (*csi.ControllerExpandVolumeResponse, error) {
+	if len(req.GetVolumeId()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Volume id must be provided")
+	} else if req.GetCapacityRange() == nil {
+		return nil, status.Error(codes.InvalidArgument, "Capacity range must be provided")
+	} else if req.GetCapacityRange().GetRequiredBytes() < 0 || req.GetCapacityRange().GetLimitBytes() < 0 {
+		return nil, status.Error(codes.InvalidArgument, "Capacity ranges values cannot be negative")
+	}
+
+	// Get parameters
+	spec := &api.VolumeSpecUpdate{}
+
+	// Get Size
+	if req.GetCapacityRange().GetRequiredBytes() != 0 {
+		spec.SizeOpt = &api.VolumeSpecUpdate_Size{
+			Size: uint64(req.GetCapacityRange().GetRequiredBytes()),
+		}
+	}
+
+	// Get grpc connection
+	conn, err := s.getConn()
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"Unable to connect to SDK server: %v", err)
+	}
+
+	// Get secret if any was passed
+	ctx = s.setupContextWithToken(ctx, req.GetSecrets())
+
+	// Check ID is valid with the specified volume capabilities
+	volumes := api.NewOpenStorageVolumeClient(conn)
+
+	// Update volume with new size
+	_, err = volumes.Update(ctx, &api.SdkVolumeUpdateRequest{
+		VolumeId: req.GetVolumeId(),
+		Spec:     spec,
+	})
+	if err != nil {
+		if err == kvdb.ErrNotFound {
+			return nil, status.Errorf(codes.NotFound, "Volume id %s not found", req.GetVolumeId())
+		}
+		return nil, status.Errorf(codes.Internal, "Failed to update volume size: %v", err)
+	}
+
+	return &csi.ControllerExpandVolumeResponse{
+		CapacityBytes:         req.GetCapacityRange().GetRequiredBytes(),
+		NodeExpansionRequired: false,
+	}, nil
 }
 
 func osdToCsiVolumeInfo(dest *csi.Volume, src *api.Volume) {
