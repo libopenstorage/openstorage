@@ -440,6 +440,7 @@ func (s *CloudBackupServer) SchedCreate(
 	bkpRequest.CredentialUUID = credId
 	bkpRequest.Schedule = string(sched)
 	bkpRequest.MaxBackups = uint(req.GetCloudSchedInfo().GetMaxBackups())
+	bkpRequest.RetentionDays = req.GetCloudSchedInfo().GetRetentionDays()
 	bkpRequest.Full = req.GetCloudSchedInfo().GetFull()
 
 	// Create the backup
@@ -534,8 +535,9 @@ func ToSdkCloudBackupdScheduleInfo(s api.CloudBackupScheduleInfo) *api.SdkCloudB
 		Schedules:    schedules,
 		// Not sure about go and protobuf type conversion, converting to higher type
 		// converting uint to uint64
-		MaxBackups: uint64(s.MaxBackups),
-		Full:       s.Full,
+		MaxBackups:    uint64(s.MaxBackups),
+		RetentionDays: s.RetentionDays,
+		Full:          s.Full,
 	}
 	return cloudSched
 }
