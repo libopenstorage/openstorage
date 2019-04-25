@@ -316,18 +316,31 @@ func (s *CredentialServer) Inspect(
 			err.Error())
 	}
 
-	cred, ok := credList[req.GetCredentialId()]
-	if !ok {
+	credUUID := ""
+	for k, v := range credList {
+		if k == req.GetCredentialId() {
+			credUUID = k
+			break
+		}
+		cred, ok := v.(map[string]interface{})
+		if ok {
+			name, _ := cred[api.OptCredName]
+			if name == req.GetCredentialId() {
+				credUUID = k
+				break
+			}
+		}
+	}
+	if credUUID == "" {
 		return nil, status.Errorf(codes.NotFound, "Credential id %s not found", req.GetCredentialId())
 	}
-
-	info, ok := cred.(map[string]interface{})
+	info, ok := credList[credUUID].(map[string]interface{})
 	if !ok {
 		return nil, status.Error(codes.Internal, "Unable to get credential id information")
 	}
 
 	// Check ownership
-	if !s.isPermitted(ctx, api.Ownership_Read, cred) {
+	if !s.isPermitted(ctx, api.Ownership_Read, info) {
 		return nil, status.Errorf(codes.PermissionDenied, "Access denied to %s", req.GetCredentialId())
 	}
 
@@ -343,7 +356,7 @@ func (s *CredentialServer) Inspect(
 	}
 
 	// Get ownership
-	ownership, err := s.getOwnershipFromCred(cred)
+	ownership, err := s.getOwnershipFromCred(info)
 	if err != nil {
 		return nil, err
 	}

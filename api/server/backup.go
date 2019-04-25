@@ -394,6 +394,7 @@ func (vd *volAPI) cloudBackupSchedCreate(w http.ResponseWriter, r *http.Request)
 			CredentialUUID: backupSchedReq.CredentialUUID,
 			Schedule:       backupSchedReq.Schedule,
 			MaxBackups:     backupSchedReq.MaxBackups,
+			RetentionDays:  backupSchedReq.RetentionDays,
 		}),
 	})
 	if err != nil {
