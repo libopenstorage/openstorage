@@ -23,6 +23,8 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/libopenstorage/openstorage/api"
+	sdkstatus "github.com/libopenstorage/openstorage/api/server/sdk/status"
+	"github.com/libopenstorage/openstorage/api/server/sdk/status/errormessage"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/pkg/util"
@@ -178,7 +180,7 @@ func (s *VolumeServer) Create(
 
 	// Convert node IP to ID if necessary for API calls
 	if err := s.updateReplicaSpecNodeIPstoIds(spec.GetReplicaSet()); err != nil {
-		return nil, status.Errorf(codes.Internal, "Failed to get replicat set information: %v", err)
+		return nil, errormessage.Errorf(err, codes.Internal, "Failed to get replicat set information")
 	}
 
 	// Create volume
@@ -224,13 +226,13 @@ func (s *VolumeServer) Clone(
 		VolumeId: req.GetParentId(),
 	})
 	if err != nil {
-		return nil, err
+		return nil, errormessage.Errorf(err, codes.FailedPrecondition, "Unable to clone volume %s", req.GetParentId())
 	}
 
 	// Create the clone
 	id, err := s.create(ctx, locator, source, parentVol.GetVolume().GetSpec())
 	if err != nil {
-		return nil, err
+		return nil, errormessage.Errorf(err, codes.Internal, "Unable to clone volume %s", req.GetParentId())
 	}
 
 	return &api.SdkVolumeCloneResponse{
@@ -257,10 +259,10 @@ func (s *VolumeServer) Delete(
 		VolumeId: req.GetVolumeId(),
 	})
 	if err != nil {
-		if IsErrorNotFound(err) {
+		if sdkstatus.IsErrorNotFound(err) {
 			return &api.SdkVolumeDeleteResponse{}, nil
 		}
-		return nil, err
+		return nil, errormessage.Errorf(err, codes.Internal, "Failed to delete volume %s", req.GetVolumeId())
 	}
 	vol := resp.GetVolume()
 
@@ -272,11 +274,11 @@ func (s *VolumeServer) Delete(
 	// Delete the volume
 	err = s.driver(ctx).Delete(req.GetVolumeId())
 	if err != nil {
-		return nil, status.Errorf(
+		return nil, errormessage.Errorf(
+			err,
 			codes.Internal,
-			"Failed to delete volume %s: %v",
-			req.GetVolumeId(),
-			err.Error())
+			"Failed to delete volume %s",
+			req.GetVolumeId())
 	}
 
 	return &api.SdkVolumeDeleteResponse{}, nil
@@ -322,7 +324,7 @@ func (s *VolumeServer) InspectWithFilters(
 					VolumeId: vol.GetId(),
 					Options:  req.GetOptions(),
 				})
-				if IsErrorNotFound(err) {
+				if sdkstatus.IsErrorNotFound(err) {
 					continue
 				} else if err != nil {
 					return nil, err

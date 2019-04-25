@@ -23,6 +23,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/api/server/sdk/status/errormessage"
 	authsecrets "github.com/libopenstorage/openstorage/pkg/auth/secrets"
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
@@ -1743,7 +1744,10 @@ func TestControllerDeleteVolumeError(t *testing.T) {
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.Internal)
 	assert.Contains(t, serverError.Message(), "Unable to delete")
-	assert.Contains(t, serverError.Message(), "MOCKERRORTEST")
+
+	for _, detail := range errormessage.Details(serverError) {
+		assert.Contains(t, detail.Error(), "MOCKERRORTEST")
+	}
 }
 
 func TestControllerDeleteVolume(t *testing.T) {

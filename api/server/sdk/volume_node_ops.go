@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"github.com/libopenstorage/openstorage/api"
+	sdkstatus "github.com/libopenstorage/openstorage/api/server/sdk/status"
 	mountattachoptions "github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/volume"
 	"google.golang.org/grpc/codes"
@@ -90,7 +91,7 @@ func (s *VolumeServer) Detach(
 
 	// Get access rights
 	err := s.checkAccessForVolumeId(ctx, req.GetVolumeId(), api.Ownership_Write)
-	if err != nil && !IsErrorNotFound(err) {
+	if err != nil && !sdkstatus.IsErrorNotFound(err) {
 		return nil, err
 	}
 
@@ -106,7 +107,7 @@ func (s *VolumeServer) Detach(
 	}
 
 	err = s.driver(ctx).Detach(req.GetVolumeId(), options)
-	if err != nil && !IsErrorNotFound(err) {
+	if err != nil && !sdkstatus.IsErrorNotFound(err) {
 		return nil, status.Errorf(
 			codes.Internal,
 			"Failed to detach volume %s: %v",
@@ -182,7 +183,7 @@ func (s *VolumeServer) Unmount(
 
 	// Get access rights
 	err := s.checkAccessForVolumeId(ctx, req.GetVolumeId(), api.Ownership_Write)
-	if err != nil && !IsErrorNotFound(err) {
+	if err != nil && !sdkstatus.IsErrorNotFound(err) {
 		return nil, err
 	}
 

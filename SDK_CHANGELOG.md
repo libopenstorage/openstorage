@@ -2,7 +2,11 @@
 
 ## Releases
 
-### v0.55.0 - Tech Preview (5/7/2019)
+### v0.56.0 - Tech Preview (5/10/2019)
+
+* SdkErrorMessage added to the details of the gRPC Status returned on error
+
+### v0.55.0 - Tech Preview (5/8/2019)
 
 * Additions to cloudbackup enumerate filters.
 

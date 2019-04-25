@@ -14,6 +14,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/libopenstorage/openstorage/api"
 	sdk "github.com/libopenstorage/openstorage/api/server/sdk"
+	sdkstatus "github.com/libopenstorage/openstorage/api/server/sdk/status"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/pkg/auth/secrets"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
@@ -237,7 +238,7 @@ func processErrorForVolSetResponse(action *api.VolumeStateAction, err error, res
 	}
 
 	if action != nil && (action.IsUnMount() || action.IsDetach()) {
-		if sdk.IsErrorNotFound(err) {
+		if sdkstatus.IsErrorNotFound(err) {
 			resp.VolumeResponse = &api.VolumeResponse{}
 			resp.Volume = &api.Volume{}
 		} else {
@@ -357,7 +358,7 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 			VolumeId: volumeID,
 		})
 		if err != nil {
-			if !sdk.IsErrorNotFound(err) {
+			if !sdkstatus.IsErrorNotFound(err) {
 				vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 				return
 			}
@@ -778,7 +779,7 @@ func (vd *volAPI) enumerate(w http.ResponseWriter, r *http.Request) {
 				if resp.GetVolume() != nil {
 					vols = append(vols, resp.GetVolume())
 				}
-			} else if sdk.IsErrorNotFound(err) {
+			} else if sdkstatus.IsErrorNotFound(err) {
 				continue
 			} else {
 				e := fmt.Errorf("Failed to inspect volumeID: %s", err.Error())
@@ -1048,7 +1049,7 @@ func (vd *volAPI) snapEnumerate(w http.ResponseWriter, r *http.Request) {
 		vol, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{VolumeId: s})
 		if err == nil {
 			snaps = append(snaps, vol.GetVolume())
-		} else if sdk.IsErrorNotFound(err) {
+		} else if sdkstatus.IsErrorNotFound(err) {
 			continue
 		} else {
 			vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)

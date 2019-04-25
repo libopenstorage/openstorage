@@ -12,6 +12,7 @@ syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
 import "google/api/annotations.proto";
+import "google/rpc/status.proto";
 
 package openstorage.api;
 
@@ -3284,7 +3285,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 55;
+    Minor = 56;
     // SDK version patch value of this specification
     Patch = 0;
   }
@@ -3389,6 +3390,55 @@ message SdkCloudMigrateStartRequest {
     // Request to migrate all volumes
     MigrateAllVolumes all_volumes = 202;
   }
+}
+
+// SdkErrorMessage is an object which could be returned in the Details section
+// of the gRPC error status. The Details in the gRPC status is used to get more
+// detailed information about the error, if any.
+//
+// The goal is to capture the initial root cause of the issue in the gRPC status
+// while capturing any other information in the Details section of the gRPC status
+// object.
+//
+// ##### Example
+// {% codetabs name="Golang", type="go" -%}
+// volumes := api.NewOpenStorageVolumeClient(conn)
+// vol, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
+//   VolumeId: volumeID,
+// })
+// if err != nil {
+//   s, ok = status.FromError(err)
+//   if ok {
+//     fmt.Printf("Error: Code:%v Message:%v\n", s.Code(), s.Message())
+//     for _, detail := range s.Details() {
+//       switch t := detail.(type) {
+//       case *api.SdkErrorMessage:
+//         fmt.Printf("  Details: Code:%v Message:%v\n", t.Code(), t.Message())
+//       }
+//     }
+//   }
+// }
+// {%- language name="Python", type="py" -%}
+// import grpc
+// from grpc_status import rpc_status
+// from google.rpc import status_pb2, error_details_pb2
+// from openstorage import api_pb2
+// from openstorage import api_pb2_grpc
+// from openstorage import status
+//
+// volumes = api_pb2_grpc.OpenStorageVolumeStub(channel)
+// vr = volumes.Inspect(api_pb2.SdkVolumeInspectRequest(volume_id="myvol"))
+// except grpc.RpcError as e:
+//     print('*Error*: code={0} msg={1}'.format(e.code(), e.details()))
+//     details = status.get_sdk_error_messages(e)
+//     if details:
+//         print('Details:')
+//         for m in details:
+//             print('code={0} msg={1}'.format(m.status.code, m.status.message))
+// {%- endcodetabs %}
+message SdkErrorMessage{
+  // gRPC status with code and message.
+  google.rpc.Status status = 1;
 }
 
 // Response to start a cloud migration
