@@ -2,6 +2,11 @@
 
 ## Releases
 
+<<<<<<< HEAD
+### v0.42.10 - Tech Preview (4/25/2019)
+
+* Added new field RetentionDays to cloudbackup schedule
+
 ### v0.42.9 - Tech Preview (4/11/2019)
 
 * Added VolumeInspectOptions to OpenStorageVolume.Inspect
