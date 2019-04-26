@@ -1452,8 +1452,19 @@ func TestControllerCreateVolumeFromSnapshot(t *testing.T) {
 
 	// Setup mock functions
 	id := "myid"
+	snapID := id + "-snap"
 	gomock.InOrder(
-		//VolFromName name
+
+		// First check on parent
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{mockParentID},
+			}, nil).
+			Return([]*api.Volume{&api.Volume{Id: mockParentID}}, nil).
+			Times(1),
+
+		// VolFromName (name)
 		s.MockDriver().
 			EXPECT().
 			Inspect([]string{name}).
@@ -1462,20 +1473,49 @@ func TestControllerCreateVolumeFromSnapshot(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Enumerate(gomock.Any(), nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
+		//VolFromName parent
 		s.MockDriver().
 			EXPECT().
-			Create(gomock.Any(), gomock.Any(), gomock.Any()).
-			Return(id, nil).
+			Inspect(gomock.Any()).
+			Return(
+				[]*api.Volume{&api.Volume{
+					Id: mockParentID,
+				}}, nil).
+			Times(1),
+
+		// create
+		s.MockDriver().
+			EXPECT().
+			Snapshot(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Return(snapID, nil).
+			Times(1),
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{snapID},
+			}, nil).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id:     id,
+					Source: &api.Source{Parent: mockParentID},
+				},
+			}, nil).
+			Times(2),
+
+		s.MockDriver().
+			EXPECT().
+			Set(gomock.Any(), gomock.Any(), gomock.Any()).
+			Return(nil).
 			Times(1),
 
 		s.MockDriver().
 			EXPECT().
 			Enumerate(&api.VolumeLocator{
-				VolumeIds: []string{id},
+				VolumeIds: []string{snapID},
 			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
@@ -1754,6 +1794,81 @@ func TestControllerDeleteVolume(t *testing.T) {
 
 	_, err = c.DeleteVolume(context.Background(), req)
 	assert.Nil(t, err)
+}
+
+func TestControllerExpandVolumeBadParameter(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	_, err := c.ControllerExpandVolume(context.Background(), &csi.ControllerExpandVolumeRequest{})
+	assert.Error(t, err)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "id must be provided")
+
+	_, err = c.ControllerExpandVolume(context.Background(), &csi.ControllerExpandVolumeRequest{
+		VolumeId: "id",
+	})
+	assert.Error(t, err)
+	serverError, ok = status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "Capacity range must be provided")
+
+	_, err = c.ControllerExpandVolume(context.Background(), &csi.ControllerExpandVolumeRequest{
+		VolumeId: "id",
+		CapacityRange: &csi.CapacityRange{
+			RequiredBytes: int64(-5),
+		},
+	})
+	assert.Error(t, err)
+	serverError, ok = status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "cannot be negative")
+
+}
+
+func TestControllerExpandVolume(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	myid := "myid"
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{myid},
+			}, nil).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id: myid,
+					Spec: &api.VolumeSpec{
+						Size: uint64(50),
+					},
+				},
+			}, nil).
+			Times(1),
+		s.MockDriver().
+			EXPECT().
+			Set(gomock.Any(), gomock.Any(), gomock.Any()).
+			Return(nil).
+			Times(1),
+	)
+
+	_, err := c.ControllerExpandVolume(context.Background(), &csi.ControllerExpandVolumeRequest{
+		VolumeId: myid,
+		CapacityRange: &csi.CapacityRange{
+			RequiredBytes: int64(100),
+		},
+		Secrets: map[string]string{authsecrets.SecretTokenKey: systemUserToken},
+	})
+	assert.NoError(t, err)
 }
 
 func TestControllerCreateSnapshotBadParameters(t *testing.T) {

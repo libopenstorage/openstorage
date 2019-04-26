@@ -79,7 +79,7 @@ func NewOsdCsiServer(config *OsdCsiServerConfig) (grpcserver.Server, error) {
 
 	// Create server
 	gServer, err := grpcserver.New(&grpcserver.GrpcServerConfig{
-		Name:    "CSI 1.0",
+		Name:    "CSI 1.1",
 		Net:     config.Net,
 		Address: config.Address,
 	})
