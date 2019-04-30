@@ -14,6 +14,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/libopenstorage/openstorage/pkg/storageops"
+	"github.com/libopenstorage/openstorage/pkg/util"
 	"github.com/portworx/sched-ops/task"
 	"github.com/sirupsen/logrus"
 )
@@ -52,15 +53,15 @@ func (a *azureOps) InstanceID() string {
 }
 
 func NewEnvClient() (storageops.Ops, error) {
-	instance, err := storageops.GetEnvValueStrict(envInstanceName)
+	instance, err := util.GetEnvValueStrict(envInstanceName)
 	if err != nil {
 		return nil, err
 	}
-	subscriptionID, err := storageops.GetEnvValueStrict(envSubscriptionID)
+	subscriptionID, err := util.GetEnvValueStrict(envSubscriptionID)
 	if err != nil {
 		return nil, err
 	}
-	resourceGroupName, err := storageops.GetEnvValueStrict(envResourceGroupName)
+	resourceGroupName, err := util.GetEnvValueStrict(envResourceGroupName)
 	if err != nil {
 		return nil, err
 	}

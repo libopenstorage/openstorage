@@ -14,8 +14,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	sh "github.com/codeskyblue/go-sh"
+	aws_cloudops "github.com/libopenstorage/openstorage/pkg/cloudops/aws"
 	oexec "github.com/libopenstorage/openstorage/pkg/exec"
 	"github.com/libopenstorage/openstorage/pkg/storageops"
+	"github.com/libopenstorage/openstorage/pkg/util"
 	"github.com/portworx/sched-ops/task"
 	"github.com/sirupsen/logrus"
 )
@@ -35,30 +37,28 @@ type ec2Ops struct {
 }
 
 var (
-	// ErrAWSEnvNotAvailable is the error type when aws credentials are not set
-	ErrAWSEnvNotAvailable = fmt.Errorf("AWS credentials are not set in environment")
-	nvmeCmd               = oexec.Which("nvme")
+	nvmeCmd = oexec.Which("nvme")
 )
 
 // NewEnvClient creates a new AWS storage ops instance using environment vars
 func NewEnvClient() (storageops.Ops, error) {
-	region, err := storageops.GetEnvValueStrict("AWS_REGION")
+	region, err := util.GetEnvValueStrict("AWS_REGION")
 	if err != nil {
 		return nil, err
 	}
 
-	instance, err := storageops.GetEnvValueStrict("AWS_INSTANCE_NAME")
+	instance, err := util.GetEnvValueStrict("AWS_INSTANCE_NAME")
 	if err != nil {
 		return nil, err
 	}
 
-	instanceType, err := storageops.GetEnvValueStrict("AWS_INSTANCE_TYPE")
+	instanceType, err := util.GetEnvValueStrict("AWS_INSTANCE_TYPE")
 	if err != nil {
 		return nil, err
 	}
 
 	if _, err := credentials.NewEnvCredentials().Get(); err != nil {
-		return nil, ErrAWSEnvNotAvailable
+		return nil, aws_cloudops.ErrAWSEnvNotAvailable
 	}
 
 	ec2 := ec2.New(
@@ -239,7 +239,7 @@ func (s *ec2Ops) matchTag(tag *ec2.Tag, match string) bool {
 }
 
 func (s *ec2Ops) DeviceMappings() (map[string]string, error) {
-	instance, err := s.describe()
+	instance, err := aws_cloudops.DescribeInstanceByID(s.ec2, s.instance)
 	if err != nil {
 		return nil, err
 	}
@@ -268,26 +268,7 @@ func (s *ec2Ops) DeviceMappings() (map[string]string, error) {
 
 // Describe current instance.
 func (s *ec2Ops) Describe() (interface{}, error) {
-	return s.describe()
-}
-
-func (s *ec2Ops) describe() (*ec2.Instance, error) {
-	request := &ec2.DescribeInstancesInput{
-		InstanceIds: []*string{&s.instance},
-	}
-	out, err := s.ec2.DescribeInstances(request)
-	if err != nil {
-		return nil, err
-	}
-	if len(out.Reservations) != 1 {
-		return nil, fmt.Errorf("DescribeInstances(%v) returned %v reservations, expect 1",
-			s.instance, len(out.Reservations))
-	}
-	if len(out.Reservations[0].Instances) != 1 {
-		return nil, fmt.Errorf("DescribeInstances(%v) returned %v Reservations, expect 1",
-			s.instance, len(out.Reservations[0].Instances))
-	}
-	return out.Reservations[0].Instances[0], nil
+	return aws_cloudops.DescribeInstanceByID(s.ec2, s.instance)
 }
 
 func (s *ec2Ops) getPrefixFromRootDeviceName(rootDeviceName string) (string, error) {
@@ -651,7 +632,7 @@ func (s *ec2Ops) Attach(volumeID string) (string, error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	self, err := s.describe()
+	self, err := aws_cloudops.DescribeInstanceByID(s.ec2, s.instance)
 	if err != nil {
 		return "", err
 	}

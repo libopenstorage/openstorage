@@ -6,6 +6,7 @@ import (
 
 	"github.com/libopenstorage/openstorage/pkg/storageops"
 	"github.com/libopenstorage/openstorage/pkg/storageops/test"
+	"github.com/libopenstorage/openstorage/pkg/util"
 	"github.com/pborman/uuid"
 	"github.com/stretchr/testify/require"
 	"k8s.io/kubernetes/pkg/cloudprovider/providers/vsphere/vclib"
@@ -23,10 +24,10 @@ func initVsphere(t *testing.T) (storageops.Ops, map[string]interface{}) {
 	cfg, err := ReadVSphereConfigFromEnv()
 	require.NoError(t, err, "failed to get vsphere config from env")
 
-	cfg.VMUUID, err = storageops.GetEnvValueStrict("VSPHERE_VM_UUID")
+	cfg.VMUUID, err = util.GetEnvValueStrict("VSPHERE_VM_UUID")
 	require.NoError(t, err, "failed to get vsphere config from env variable VSPHERE_VM_UUID")
 
-	datastoreForTest, err := storageops.GetEnvValueStrict("VSPHERE_TEST_DATASTORE")
+	datastoreForTest, err := util.GetEnvValueStrict("VSPHERE_TEST_DATASTORE")
 	require.NoError(t, err, "failed to get datastore from env variable VSPHERE_TEST_DATASTORE")
 
 	driver, err := NewClient(cfg)

@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/libopenstorage/openstorage/pkg/storageops"
 	"github.com/libopenstorage/openstorage/pkg/storageops/test"
+	"github.com/libopenstorage/openstorage/pkg/util"
 	"github.com/pborman/uuid"
 	"github.com/stretchr/testify/assert"
 )
@@ -26,7 +27,7 @@ func TestAll(t *testing.T) {
 	if d, err := NewEnvClient(); err == nil {
 		volType := opsworks.VolumeTypeGp2
 		volSize := int64(newDiskSizeInGB)
-		zone, _ := storageops.GetEnvValueStrict("AWS_ZONE")
+		zone, _ := util.GetEnvValueStrict("AWS_ZONE")
 		ebsVol := &ec2.Volume{
 			AvailabilityZone: &zone,
 			VolumeType:       &volType,

@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/libopenstorage/openstorage/pkg/storageops"
+	"github.com/libopenstorage/openstorage/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/vmware/govmomi/property"
 	"github.com/vmware/govmomi/vim25"
@@ -62,42 +62,42 @@ func ReadVSphereConfigFromEnv() (*VSphereConfig, error) {
 	var cfg VSphereConfig
 	var err error
 
-	cfg.VCenterIP, err = storageops.GetEnvValueStrict("VSPHERE_VCENTER")
+	cfg.VCenterIP, err = util.GetEnvValueStrict("VSPHERE_VCENTER")
 	if err != nil {
 		return nil, err
 	}
-	cfg.VCenterPort, err = storageops.GetEnvValueStrict("VSPHERE_VCENTER_PORT")
+	cfg.VCenterPort, err = util.GetEnvValueStrict("VSPHERE_VCENTER_PORT")
 	if err != nil {
 		return nil, err
 	}
-	cfg.User, err = storageops.GetEnvValueStrict("VSPHERE_USER")
+	cfg.User, err = util.GetEnvValueStrict("VSPHERE_USER")
 	if err != nil {
 		return nil, err
 	}
-	cfg.Password, err = storageops.GetEnvValueStrict("VSPHERE_PASSWORD")
+	cfg.Password, err = util.GetEnvValueStrict("VSPHERE_PASSWORD")
 	if err != nil {
 		return nil, err
 	}
 
 	cfg.InsecureFlag = false
-	insecure, err := storageops.GetEnvValueStrict("VSPHERE_INSECURE")
+	insecure, err := util.GetEnvValueStrict("VSPHERE_INSECURE")
 	if err == nil && strings.ToLower(insecure) == "true" {
 		cfg.InsecureFlag = true
 	}
 
-	cfg.VMUUID, _ = storageops.GetEnvValueStrict("VSPHERE_VM_UUID")
+	cfg.VMUUID, _ = util.GetEnvValueStrict("VSPHERE_VM_UUID")
 
 	return &cfg, nil
 }
 
 // IsDevMode checks if requirement env variables are set to run the pkg outside vsphere in dev mode
 func IsDevMode() bool {
-	_, err := storageops.GetEnvValueStrict("VSPHERE_VM_UUID")
+	_, err := util.GetEnvValueStrict("VSPHERE_VM_UUID")
 	if err != nil {
 		return false
 	}
 
-	_, err = storageops.GetEnvValueStrict("VSPHERE_TEST_DATASTORE")
+	_, err = util.GetEnvValueStrict("VSPHERE_TEST_DATASTORE")
 	return err == nil
 }
 

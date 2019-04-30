@@ -14,6 +14,7 @@ import (
 
 	"cloud.google.com/go/compute/metadata"
 	"github.com/libopenstorage/openstorage/pkg/storageops"
+	"github.com/libopenstorage/openstorage/pkg/util"
 	"github.com/portworx/sched-ops/task"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2/google"
@@ -555,17 +556,17 @@ func gceInfo(inst *instance) error {
 
 func gceInfoFromEnv(inst *instance) error {
 	var err error
-	inst.name, err = storageops.GetEnvValueStrict("GCE_INSTANCE_NAME")
+	inst.name, err = util.GetEnvValueStrict("GCE_INSTANCE_NAME")
 	if err != nil {
 		return err
 	}
 
-	inst.zone, err = storageops.GetEnvValueStrict("GCE_INSTANCE_ZONE")
+	inst.zone, err = util.GetEnvValueStrict("GCE_INSTANCE_ZONE")
 	if err != nil {
 		return err
 	}
 
-	inst.project, err = storageops.GetEnvValueStrict("GCE_INSTANCE_PROJECT")
+	inst.project, err = util.GetEnvValueStrict("GCE_INSTANCE_PROJECT")
 	if err != nil {
 		return err
 	}
