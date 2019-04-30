@@ -79,7 +79,7 @@ type ClusterInitState struct {
 // FinalizeInitCb is invoked when init is complete and is in the process of
 // updating the cluster database. This callback is invoked under lock and must
 // finish quickly, else it will slow down other node joins.
-type FinalizeInitCb func() error
+type FinalizeInitCb func(*ClusterInfo) error
 
 // ClusterListener is an interface to be implemented by a storage driver
 // if it is participating in a multi host environment.  It exposes events
@@ -176,6 +176,10 @@ type ClusterListenerNodeOps interface {
 
 	// Remove is called when a node leaves the cluster
 	Remove(node *api.Node, forceRemove bool) error
+
+	// CanNodeJoin checks with the listener if this node can join
+	// the cluster. This check is done under a cluster database lock
+	CanNodeJoin(node *api.Node, clusterInfo *ClusterInfo, nodeInitialized bool) error
 
 	// CanNodeRemove test to see if we can remove this node
 	CanNodeRemove(node *api.Node) (string, error)
@@ -305,10 +309,10 @@ type Cluster interface {
 	// nodeInitialized indicates if the caller of this method expects the node
 	// to have been in an already-initialized state.
 	// All managers will default returning NotSupported.
-	Start(clusterSize int, nodeInitialized bool, gossipPort string) error
+	Start(nodeInitialized bool, gossipPort string) error
 
 	// Like Start, but have the ability to pass in managers to the cluster object
-	StartWithConfiguration(clusterMaxSize int, nodeInitialized bool, gossipPort string, config *ClusterServerConfiguration) error
+	StartWithConfiguration(nodeInitialized bool, gossipPort string, config *ClusterServerConfiguration) error
 
 	// Get a unique identifier for this cluster. Depending on the implementation, this could
 	// be different than the _id_ from ClusterInfo. This id _must_ be unique across
@@ -387,6 +391,10 @@ func (nc *NullClusterListener) Remove(node *api.Node, forceRemove bool) error {
 
 func (nc *NullClusterListener) CanNodeRemove(node *api.Node) (string, error) {
 	return "", nil
+}
+
+func (nc *NullClusterListener) CanNodeJoin(node *api.Node, clusterInfo *ClusterInfo, nodeInitialized bool) error {
+	return nil
 }
 
 func (nc *NullClusterListener) MarkNodeDown(node *api.Node) error {

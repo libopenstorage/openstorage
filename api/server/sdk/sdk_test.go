@@ -25,7 +25,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/kubernetes-csi/csi-test/utils"
 	"github.com/libopenstorage/openstorage/alerts"
-	"github.com/libopenstorage/openstorage/alerts/mock"
+	mockalerts "github.com/libopenstorage/openstorage/alerts/mock"
 	"github.com/libopenstorage/openstorage/api"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	mockcluster "github.com/libopenstorage/openstorage/cluster/mock"
@@ -204,7 +204,7 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 	})
 	cm, err := clustermanager.Inst()
 	go func() {
-		cm.Start(0, false, "9002")
+		cm.Start(false, "9002")
 	}()
 	defer cm.Shutdown()
 	if err := volumedrivers.Register("fake", map[string]string{}); err != nil {

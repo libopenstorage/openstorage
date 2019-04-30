@@ -309,7 +309,6 @@ func start(c *cli.Context) error {
 			return fmt.Errorf("Unable to find cluster instance: %v", err)
 		}
 		if err := cm.StartWithConfiguration(
-			0,
 			false,
 			"9002",
 			&cluster.ClusterServerConfiguration{
