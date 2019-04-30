@@ -23,7 +23,7 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/config"
-	"github.com/libopenstorage/openstorage/volume/drivers"
+	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 
 	"github.com/kubernetes-csi/csi-test/pkg/sanity"
 	"github.com/sirupsen/logrus"
@@ -48,7 +48,7 @@ func TestCSISanity(t *testing.T) {
 	})
 	cm, err := clustermanager.Inst()
 	go func() {
-		cm.Start(0, false, "9002")
+		cm.Start(false, "9002")
 	}()
 	defer cm.Shutdown()
 	if err := volumedrivers.Register("fake", map[string]string{}); err != nil {

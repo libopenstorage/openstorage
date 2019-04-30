@@ -65,7 +65,7 @@ func TestUpdateSchedulerNodeName(t *testing.T) {
 		SchedulerNodeName: "old-sched-name",
 	})
 
-	err := inst.Start(1, false, "0")
+	err := inst.Start(false, "0")
 	assert.NoError(t, err)
 
 	node, err := inst.Inspect(nodeID)
