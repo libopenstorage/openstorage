@@ -100,12 +100,12 @@ func (m *NullClusterManager) Shutdown() error {
 }
 
 // Start
-func (m *NullClusterManager) Start(arg0 int, arg1 bool, arg2 string, arg3 string) error {
+func (m *NullClusterManager) Start(arg1 bool, arg2 string, arg3 string) error {
 	return ErrNotImplemented
 }
 
 // StartWithConfiguration
-func (m *NullClusterManager) StartWithConfiguration(arg0 int, arg1 bool, arg2 string, arg3 []string, arg4 string, arg5 *ClusterServerConfiguration) error {
+func (m *NullClusterManager) StartWithConfiguration(arg1 bool, arg2 string, arg3 []string, arg4 string, arg5 *ClusterServerConfiguration) error {
 	return ErrNotImplemented
 }
 
