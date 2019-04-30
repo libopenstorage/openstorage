@@ -664,27 +664,27 @@ func (mr *MockClusterMockRecorder) Shutdown() *gomock.Call {
 }
 
 // Start mocks base method
-func (m *MockCluster) Start(arg0 int, arg1 bool, arg2, arg3 string) error {
-	ret := m.ctrl.Call(m, "Start", arg0, arg1, arg2, arg3)
+func (m *MockCluster) Start(arg0 bool, arg1, arg2 string) error {
+	ret := m.ctrl.Call(m, "Start", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Start indicates an expected call of Start
-func (mr *MockClusterMockRecorder) Start(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockCluster)(nil).Start), arg0, arg1, arg2, arg3)
+func (mr *MockClusterMockRecorder) Start(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockCluster)(nil).Start), arg0, arg1, arg2)
 }
 
 // StartWithConfiguration mocks base method
-func (m *MockCluster) StartWithConfiguration(arg0 int, arg1 bool, arg2 string, arg3 []string, arg4 string, arg5 *cluster.ClusterServerConfiguration) error {
-	ret := m.ctrl.Call(m, "StartWithConfiguration", arg0, arg1, arg2, arg3, arg4, arg5)
+func (m *MockCluster) StartWithConfiguration(arg0 bool, arg1 string, arg2 []string, arg3 string, arg4 *cluster.ClusterServerConfiguration) error {
+	ret := m.ctrl.Call(m, "StartWithConfiguration", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // StartWithConfiguration indicates an expected call of StartWithConfiguration
-func (mr *MockClusterMockRecorder) StartWithConfiguration(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartWithConfiguration", reflect.TypeOf((*MockCluster)(nil).StartWithConfiguration), arg0, arg1, arg2, arg3, arg4, arg5)
+func (mr *MockClusterMockRecorder) StartWithConfiguration(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartWithConfiguration", reflect.TypeOf((*MockCluster)(nil).StartWithConfiguration), arg0, arg1, arg2, arg3, arg4)
 }
 
 // UpdateData mocks base method
