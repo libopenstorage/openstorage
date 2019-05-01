@@ -107,6 +107,18 @@ type ServerConfig struct {
 	StoragePolicy policy.PolicyManager
 	// Security configuration
 	Security *SecurityConfig
+	// ServerExtensions allows you to extend the SDK gRPC server
+	// with callback functions that are sequentially executed
+	// at the end of Server.Start()
+	//
+	// To add your own service to the SDK gRPC server,
+	// just append a function callback that registers it:
+	//
+	// s.config.ServerExtensions = append(s.config.ServerExtensions,
+	// 		func(gs *grpc.Server) {
+	//			api.RegisterCustomService(gs, customHandler)
+	//		})
+	ServerExtensions []func(s *grpc.Server)
 }
 
 // Server is an implementation of the gRPC SDK interface
@@ -451,6 +463,9 @@ func (s *sdkGrpcServer) Start() error {
 		if s.config.Security.Role != nil {
 			api.RegisterOpenStorageRoleServer(grpcServer, s.roleServer)
 		}
+
+		s.RegisterServerExtensions(grpcServer)
+
 		return grpcServer
 	})
 	if err != nil {
@@ -458,6 +473,12 @@ func (s *sdkGrpcServer) Start() error {
 	}
 
 	return nil
+}
+
+func (s *sdkGrpcServer) RegisterServerExtensions(grpcServer *grpc.Server) {
+	for _, ext := range s.config.ServerExtensions {
+		ext(grpcServer)
+	}
 }
 
 func (s *sdkGrpcServer) useCluster(c cluster.Cluster) {
