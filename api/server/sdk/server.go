@@ -109,7 +109,7 @@ type ServerConfig struct {
 	// Security configuration
 	Security *SecurityConfig
 
-	// ServerExtensions allows you to extend the SDK gRPC server
+	// GrpcServerExtensions allows you to extend the SDK gRPC server
 	// with callback functions that are sequentially executed
 	// at the end of Server.Start()
 	//
