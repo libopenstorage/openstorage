@@ -25,6 +25,7 @@ import (
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/libopenstorage/openstorage/alerts"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/spec"
@@ -118,7 +119,15 @@ type ServerConfig struct {
 	// 		func(gs *grpc.Server) {
 	//			api.RegisterCustomService(gs, customHandler)
 	//		})
-	ServerExtensions []func(s *grpc.Server)
+	GrpcServerExtensions []func(grpcServer *grpc.Server)
+
+	// RestServerExtensions allows for extensions to be added
+	// to the SDK Rest Gateway server.
+	//
+	// To add your own service to the SDK REST Server, simply add your handlers
+	// to the RestSererExtensions slice. These handlers will be registered on the
+	// REST Gateway http server.
+	RestServerExtensions []func(context.Context, *runtime.ServeMux, *grpc.ClientConn) error
 }
 
 // Server is an implementation of the gRPC SDK interface
@@ -464,7 +473,7 @@ func (s *sdkGrpcServer) Start() error {
 			api.RegisterOpenStorageRoleServer(grpcServer, s.roleServer)
 		}
 
-		s.RegisterServerExtensions(grpcServer)
+		s.registerServerExtensions(grpcServer)
 
 		return grpcServer
 	})
@@ -475,8 +484,8 @@ func (s *sdkGrpcServer) Start() error {
 	return nil
 }
 
-func (s *sdkGrpcServer) RegisterServerExtensions(grpcServer *grpc.Server) {
-	for _, ext := range s.config.ServerExtensions {
+func (s *sdkGrpcServer) registerServerExtensions(grpcServer *grpc.Server) {
+	for _, ext := range s.config.GrpcServerExtensions {
 		ext(grpcServer)
 	}
 }
