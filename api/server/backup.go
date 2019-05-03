@@ -38,11 +38,12 @@ func (vd *volAPI) cloudBackupCreate(w http.ResponseWriter, r *http.Request) {
 
 	volumes := api.NewOpenStorageCloudBackupClient(conn)
 	createResp, err := volumes.Create(ctx, &api.SdkCloudBackupCreateRequest{
-		VolumeId:     backupReq.VolumeID,
-		CredentialId: backupReq.CredentialUUID,
-		Full:         backupReq.Full,
-		TaskId:       backupReq.Name,
-		Labels:       backupReq.Labels,
+		VolumeId:            backupReq.VolumeID,
+		CredentialId:        backupReq.CredentialUUID,
+		Full:                backupReq.Full,
+		TaskId:              backupReq.Name,
+		Labels:              backupReq.Labels,
+		FullBackupFrequency: backupReq.FullBackupFrequency,
 	})
 	if err != nil {
 		if serverError, ok := status.FromError(err); ok {
