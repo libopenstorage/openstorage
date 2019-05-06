@@ -1034,16 +1034,19 @@
             "title": "(optional) if caller wished to limit number of backups returned by enumerate",
             "type": "string"
           },
+          "metadata_filter": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "(optional) Enumerates backups that have tags of this type",
+            "type": "object"
+          },
           "src_volume_id": {
             "description": "(optional) Source id of the volume for the request.",
             "type": "string"
           },
           "status_filter": {
             "$ref": "#/components/schemas/apiSdkCloudBackupStatusType"
-          },
-          "tag_filter": {
-            "title": "(optional) Enumerates backups that have tags of this type",
-            "type": "string"
           }
         },
         "title": "Defines a request to list the backups stored by a cloud provider.\nThe following combinations can be used to get cloud backup information:",
@@ -3584,7 +3587,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.54.0"
+    "version": "0.55.0"
   },
   "openapi": "3.0.0",
   "paths": {

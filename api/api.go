@@ -350,8 +350,8 @@ type CloudBackupGenericRequest struct {
 	All bool
 	// StatusFilter indicates backups based on status
 	StatusFilter CloudBackupStatusType
-	// TagFilter indicates backups based on tag
-	TagFilter string
+	// MetadataFilter indicates backups whose metadata has these kv pairs
+	MetadataFilter map[string]string
 }
 
 type CloudBackupInfo struct {

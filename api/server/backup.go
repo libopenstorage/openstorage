@@ -201,7 +201,7 @@ func (vd *volAPI) cloudBackupEnumerate(w http.ResponseWriter, r *http.Request) {
 		All:               enumerateReq.All,
 		ContinuationToken: enumerateReq.ContinuationToken,
 		MaxBackups:        enumerateReq.MaxBackups,
-		TagFilter:         enumerateReq.TagFilter,
+		MetadataFilter:    enumerateReq.MetadataFilter,
 		StatusFilter:      api.CloudBackupStatusTypeToSdkCloudBackupStatusType(enumerateReq.StatusFilter),
 	})
 	if err != nil {
