@@ -3,7 +3,6 @@ services:
   - docker
 language: go
 go:
-  - 1.9.7
   - 1.10.4
 install:
   - go get github.com/mattn/goveralls
