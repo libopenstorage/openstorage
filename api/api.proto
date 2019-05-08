@@ -2757,6 +2757,11 @@ message SdkCloudBackupCreateRequest {
   // Labels are list of key value pairs to tag the cloud backup. These labels
   // are stored in the metadata associated with the backup.
   map<string, string> labels = 5;
+  // FullBackupFrequency indicates number of incremental backup after whcih 
+  // a fullbackup must be created. This is to override the default value for
+  // manual/user triggerred backups and not applicable for scheduled backups
+  // Value of 0 retains the default behavior. 
+  uint32 full_backup_frequency = 6;
 }
 
 // Empty response
@@ -3264,7 +3269,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 53;
+    Minor = 54;
     // SDK version patch value of this specification
     Patch = 0;
   }
