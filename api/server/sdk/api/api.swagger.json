@@ -1021,13 +1021,32 @@
             "title": "(optional) Cluster id specifies the cluster for the request",
             "type": "string"
           },
+          "continuation_token": {
+            "description": "Returned in the enumerate response if not all of the backups could be returned in the\nresponse.",
+            "type": "string"
+          },
           "credential_id": {
             "title": "Credential id is the credential for cloud to be used for the request",
             "type": "string"
           },
+          "max_backups": {
+            "format": "uint64",
+            "title": "(optional) if caller wished to limit number of backups returned by enumerate",
+            "type": "string"
+          },
+          "metadata_filter": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "(optional) Enumerates backups that have tags of this type",
+            "type": "object"
+          },
           "src_volume_id": {
             "description": "(optional) Source id of the volume for the request.",
             "type": "string"
+          },
+          "status_filter": {
+            "$ref": "#/components/schemas/apiSdkCloudBackupStatusType"
           }
         },
         "title": "Defines a request to list the backups stored by a cloud provider.\nThe following combinations can be used to get cloud backup information:",
@@ -1040,6 +1059,10 @@
               "$ref": "#/components/schemas/apiSdkCloudBackupInfo"
             },
             "type": "array"
+          },
+          "continuation_token": {
+            "title": "if this is not an empty string, callers must pass this to get next list of\nbackups",
+            "type": "string"
           }
         },
         "title": "Defines a response which lists all the backups stored by a cloud provider",
@@ -1359,7 +1382,7 @@
       },
       "apiSdkCloudBackupStatusType": {
         "default": "SdkCloudBackupStatusTypeUnknown",
-        "description": "- SdkCloudBackupStatusTypeUnknown: Unkonwn\n - SdkCloudBackupStatusTypeNotStarted: Not started\n - SdkCloudBackupStatusTypeDone: Done\n - SdkCloudBackupStatusTypeAborted: Aborted\n - SdkCloudBackupStatusTypePaused: Paused\n - SdkCloudBackupStatusTypeStopped: Stopped\n - SdkCloudBackupStatusTypeActive: Active\n - SdkCloudBackupStatusTypeFailed: Failed\n - SdkCloudBackupStatusTypeQueued: Queued",
+        "description": "- SdkCloudBackupStatusTypeUnknown: Unkonwn\n - SdkCloudBackupStatusTypeNotStarted: Not started\n - SdkCloudBackupStatusTypeDone: Done\n - SdkCloudBackupStatusTypeAborted: Aborted\n - SdkCloudBackupStatusTypePaused: Paused\n - SdkCloudBackupStatusTypeStopped: Stopped\n - SdkCloudBackupStatusTypeActive: Active\n - SdkCloudBackupStatusTypeFailed: Failed\n - SdkCloudBackupStatusTypeQueued: Queued\n - SdkCloudBackupStatusTypeInvalid: Invalid, used by enumerate, includes failed,\nstopped and aborted",
         "enum": [
           "SdkCloudBackupStatusTypeUnknown",
           "SdkCloudBackupStatusTypeNotStarted",
@@ -1369,7 +1392,8 @@
           "SdkCloudBackupStatusTypeStopped",
           "SdkCloudBackupStatusTypeActive",
           "SdkCloudBackupStatusTypeFailed",
-          "SdkCloudBackupStatusTypeQueued"
+          "SdkCloudBackupStatusTypeQueued",
+          "SdkCloudBackupStatusTypeInvalid"
         ],
         "title": "CloudBackup status types",
         "type": "string"
@@ -3563,7 +3587,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.54.0"
+    "version": "0.55.0"
   },
   "openapi": "3.0.0",
   "paths": {
