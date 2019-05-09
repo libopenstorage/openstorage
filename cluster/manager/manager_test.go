@@ -90,7 +90,7 @@ func TestUpdateSchedulerNodeName(t *testing.T) {
 	assert.NoError(t, err)
 	auth.InitSystemTokenManager(manager)
 
-	err = inst.StartWithConfiguration(1, false, "1001", []string{}, "", &cluster.ClusterServerConfiguration{
+	err = inst.StartWithConfiguration(false, "1001", []string{}, "", &cluster.ClusterServerConfiguration{
 		ConfigSystemTokenManager: manager,
 	})
 	assert.NoError(t, err)

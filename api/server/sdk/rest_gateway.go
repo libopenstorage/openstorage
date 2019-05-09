@@ -147,6 +147,9 @@ func (s *sdkRestGateway) restServerSetupHandlers() (http.Handler, error) {
 		api.RegisterOpenStoragePolicyHandler,
 	}
 
+	// REST Gateway extensions
+	handlers = append(handlers, s.config.RestServerExtensions...)
+
 	// Register the REST Gateway handlers
 	for _, handler := range handlers {
 		err := handler(context.Background(), gmux, conn)

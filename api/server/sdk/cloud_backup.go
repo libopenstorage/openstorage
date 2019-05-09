@@ -67,11 +67,12 @@ func (s *CloudBackupServer) Create(
 	}
 
 	r, err := s.driver(ctx).CloudBackupCreate(&api.CloudBackupCreateRequest{
-		VolumeID:       req.GetVolumeId(),
-		CredentialUUID: credId,
-		Full:           req.GetFull(),
-		Name:           req.GetTaskId(),
-		Labels:         req.GetLabels(),
+		VolumeID:            req.GetVolumeId(),
+		CredentialUUID:      credId,
+		Full:                req.GetFull(),
+		Name:                req.GetTaskId(),
+		Labels:              req.GetLabels(),
+		FullBackupFrequency: req.GetFullBackupFrequency(),
 	})
 	if err != nil {
 		if err == volume.ErrInvalidName {
