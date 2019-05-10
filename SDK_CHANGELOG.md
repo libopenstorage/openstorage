@@ -2,7 +2,11 @@
 
 ## Releases
 
-### v0.57.0 - Tech Preview (6/5/2019)
+### v0.58.0 - Tech Preview (6/5/2019)
+
+* Add cloud group-backup API
+
+### v0.57.0 - Tech Preview (6/4/2019)
 
 * Addition to Node details, to store the hardware type
 

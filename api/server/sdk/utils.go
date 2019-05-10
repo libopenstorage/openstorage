@@ -240,28 +240,77 @@ func openLog(logfile string) (*os.File, error) {
 	return file, nil
 }
 
-func checkAccessFromDriverForVolumeId(
+func checkAccessFromDriverForVolumeIds(
 	ctx context.Context,
 	d volume.VolumeDriver,
-	volumeId string,
+	volumeIds []string,
 	accessType api.Ownership_AccessType,
 ) error {
-	vols, err := d.Inspect([]string{volumeId})
+	vols, err := d.Inspect(volumeIds)
 	if err == kvdb.ErrNotFound || (err == nil && len(vols) == 0) {
 		return status.Errorf(
 			codes.NotFound,
-			"Volume id %s not found",
-			volumeId)
+			"Volume ids %s not found",
+			volumeIds)
 	} else if err != nil {
 		return status.Errorf(
 			codes.Internal,
-			"Failed to find volume %s: %v",
-			volumeId, err)
+			"Failed to find volumes %s: %v",
+			volumeIds, err)
 	}
 
-	if !vols[0].IsPermitted(ctx, accessType) {
-		return status.Errorf(codes.PermissionDenied, "Access denied to volume %s", volumeId)
+	for _, vol := range vols {
+		if !vol.IsPermitted(ctx, accessType) {
+			return status.Errorf(codes.PermissionDenied, "Access denied to volume %s", vol.Id)
+		}
 	}
 
 	return nil
+}
+
+func checkAccessFromDriverForLocator(
+	ctx context.Context,
+	d volume.VolumeDriver,
+	locator *api.VolumeLocator,
+	accessType api.Ownership_AccessType,
+) error {
+	vols, err := d.Enumerate(locator, nil)
+	if err == kvdb.ErrNotFound || (err == nil && len(vols) == 0) {
+		return status.Errorf(
+			codes.NotFound,
+			"No volumes found for locator")
+	} else if err != nil {
+		return status.Errorf(
+			codes.Internal,
+			"Failed to find volumes from locator: %v", err)
+	}
+
+	for _, vol := range vols {
+		if !vol.IsPermitted(ctx, accessType) {
+			return status.Errorf(codes.PermissionDenied, "Access denied to volume %s", vol.Id)
+		}
+	}
+
+	return nil
+}
+
+func enumerateVolumeIdsAsMap(d volume.VolumeDriver, locator *api.VolumeLocator) (map[string]bool, error) {
+	vols, err := d.Enumerate(locator, nil)
+	if err == kvdb.ErrNotFound || (err == nil && len(vols) == 0) {
+		return nil, status.Errorf(
+			codes.NotFound,
+			"No volumes found")
+	} else if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"Failed to find volumes from locator: %v", err)
+	}
+
+	volMap := make(map[string]bool)
+	for _, vol := range vols {
+		volMap[vol.Id] = true
+	}
+
+	return volMap, nil
+
 }
