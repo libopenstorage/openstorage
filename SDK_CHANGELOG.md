@@ -2,7 +2,10 @@
 
 ## Releases
 
-<<<<<<< HEAD
+### v0.42.11 - Tech Preview (5/10/2019)
+
+* Added new field FullBackupFrequency to cloudbackup create API
+
 ### v0.42.10 - Tech Preview (4/25/2019)
 
 * Added new field RetentionDays to cloudbackup schedule
