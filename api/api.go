@@ -348,6 +348,10 @@ type CloudBackupGenericRequest struct {
 	CredentialUUID string
 	// All if set to true, backups for all clusters in the cloud are processed
 	All bool
+	// StatusFilter indicates backups based on status
+	StatusFilter CloudBackupStatusType
+	// MetadataFilter indicates backups whose metadata has these kv pairs
+	MetadataFilter map[string]string
 }
 
 type CloudBackupInfo struct {
@@ -368,11 +372,17 @@ type CloudBackupInfo struct {
 
 type CloudBackupEnumerateRequest struct {
 	CloudBackupGenericRequest
+	// MaxBackups indicates maxBackups to return in this enumerate list
+	MaxBackups uint64
+	// ContinuationToken returned in the enumerate response if all of the
+	// requested backups could not be returned in one response
+	ContinuationToken string
 }
 
 type CloudBackupEnumerateResponse struct {
 	// Backups is list of backups in cloud for given volume/cluster/s
-	Backups []CloudBackupInfo
+	Backups           []CloudBackupInfo
+	ContinuationToken string
 }
 
 type CloudBackupDeleteRequest struct {
@@ -425,6 +435,9 @@ const (
 	CloudBackupStatusActive     = CloudBackupStatusType("Active")
 	CloudBackupStatusQueued     = CloudBackupStatusType("Queued")
 	CloudBackupStatusFailed     = CloudBackupStatusType("Failed")
+	// Invalid includes Failed, Stopped, and Aborted used as filter to enumerate
+	// cloud backups
+	CloudBackupStatusInvalid = CloudBackupStatusType("Invalid")
 )
 
 const (
@@ -862,6 +875,8 @@ func CloudBackupStatusTypeToSdkCloudBackupStatusType(
 		return SdkCloudBackupStatusType_SdkCloudBackupStatusTypeFailed
 	case CloudBackupStatusQueued:
 		return SdkCloudBackupStatusType_SdkCloudBackupStatusTypeQueued
+	case CloudBackupStatusInvalid:
+		return SdkCloudBackupStatusType_SdkCloudBackupStatusTypeInvalid
 	default:
 		return SdkCloudBackupStatusType_SdkCloudBackupStatusTypeUnknown
 	}
@@ -887,6 +902,8 @@ func SdkCloudBackupStatusTypeToCloudBackupStatusString(
 		return string(CloudBackupStatusFailed)
 	case SdkCloudBackupStatusType_SdkCloudBackupStatusTypeQueued:
 		return string(CloudBackupStatusQueued)
+	case SdkCloudBackupStatusType_SdkCloudBackupStatusTypeInvalid:
+		return string(CloudBackupStatusInvalid)
 	default:
 		return string(CloudBackupStatusFailed)
 	}
@@ -918,7 +935,7 @@ func (r *CloudBackupEnumerateResponse) ToSdkCloudBackupEnumerateWithFiltersRespo
 	for i, v := range r.Backups {
 		resp.Backups[i] = v.ToSdkCloudBackupInfo()
 	}
-
+	resp.ContinuationToken = r.ContinuationToken
 	return resp
 }
 
