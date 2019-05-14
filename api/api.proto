@@ -3663,52 +3663,62 @@ message LocateResponse {
 }
 
 // VolumePlacementStrategy defines a strategy for placing volumes in the cluster which will be a series of rules
+// All the rules specified will be applied for volume placement.
+// Rules that have enforcement as "required" are strictly enforced while "preferred" are best effort.
+// In situations, where 2 or more rules conflict, the weight of the rules will dictate which wins.
 message VolumePlacementStrategy {
-  // Rules defines a list of rules as part of the placement spec. All the rules specified will
-  // be applied for volume placement.
-  // Rules that have enforcement as "required" are strictly enforced while "preferred" are best effort.
-  // In situations, where 2 or more rules conflict, the weight of the rules will dictate which wins.
-  repeated VolumePlacementRule rules = 1;
+  // ReplicaAffinity defines affinity rules between replicas within a volume
+  repeated ReplicaPlacementSpec replica_affinity = 1;
+  // ReplicaAntiAffinity defines anti-affinity rules between replicas within a volume
+  repeated ReplicaPlacementSpec replica_anti_affinity = 2;
+  // VolumeAffinity defines affinity rules between volumes
+  repeated VolumePlacementSpec volume_affinity = 3;
+  // VolumeAntiAffinity defines anti-affinity rules between volumes
+  repeated VolumePlacementSpec volume_anti_affinity = 4;
 }
 
-// VolumePlacementRule defines a single placement rule
-message VolumePlacementRule {
-  // AffectedReplicas defines the number of volume replicas affected by this rule. If not provided,
-  // rule would affect all replicas
-  // (optional)
-  int32 affected_replicas = 1;
+message ReplicaPlacementSpec {
   // Weight defines the weight of the rule which allows to break the tie with other matching rules. A rule with
   // higher weight wins over a rule with lower weight.
   // (optional)
-  int64 weight = 2;
-
-  // Defines the types of enforcement on the given rules
-  enum EnforcementType {
-    // This specifies that the rule is required and must be strictly enforced
-    required = 0;
-    // This specifies that the rule is preferred and can be best effort
-    preferred = 1;
-  }
+  int64 weight = 1;
 
   // Enforcement specifies the rule enforcement policy. Can take values: required or preferred.
   // (optional)
-  EnforcementType enforcement = 3;
+  EnforcementType enforcement = 2;
 
-  // This specifies the type an affinity rule can take
-  enum AffinityRuleType {
-    // Affinity means the rule specifies an affinity to objects that match the below label selector requirements
-    affinity = 0;
-    // AntiAffinity means the rule specifies an anti-affinity to objects that match the below label selector requirements
-    antiAffinity = 1;
-  }
+ // AffectedReplicas defines the number of volume replicas affected by this rule. If not provided,
+  // rule would affect all replicas
+  // (optional)
+  int32 affected_replicas = 3;
 
-  // Type is the type of the affinity rule
-  AffinityRuleType type = 4;
+// TopologyKey key for the matching all segments of the cluster topology with the same key
+// e.g If the key is failure-domain.beta.kubernetes.io/zone, this should match all nodes with
+// the same value for this key (i.e in the same zone)
+  string topology_key = 4;
 
   // MatchExpressions is a list of label selector requirements. The requirements are ANDed.
   repeated LabelSelectorRequirement match_expressions = 5;
 }
 
+message VolumePlacementSpec {
+  // Weight defines the weight of the rule which allows to break the tie with other matching rules. A rule with
+  // higher weight wins over a rule with lower weight.
+  // (optional)
+  int64 weight = 1;
+
+  // Enforcement specifies the rule enforcement policy. Can take values: required or preferred.
+  // (optional)
+  EnforcementType enforcement = 2;
+
+  // TopologyKey key for the matching all segments of the cluster topology with the same key
+  // e.g If the key is failure-domain.beta.kubernetes.io/zone, this should match all nodes with
+  // the same value for this key (i.e in the same zone)
+  string topology_key = 3;
+
+  // MatchExpressions is a list of label selector requirements. The requirements are ANDed.
+  repeated LabelSelectorRequirement match_expressions = 4;
+}
 
 // LabelSelectorRequirement is a selector that contains values, a key, and an operator that
 // relates the key and values.
@@ -3742,3 +3752,12 @@ message LabelSelectorRequirement {
   // merge patch.
   repeated string values = 3;
 }
+
+// Defines the types of enforcement on the given rules
+enum EnforcementType {
+  // This specifies that the rule is required and must be strictly enforced
+  required = 0;
+  // This specifies that the rule is preferred and can be best effort
+  preferred = 1;
+}
+
