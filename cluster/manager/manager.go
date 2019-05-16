@@ -103,7 +103,7 @@ func clusterInst() (cluster.Cluster, error) {
 	return inst, nil
 }
 
-type checkFunc func(*cluster.ClusterInfo) error
+type checkFunc func(cluster.ClusterInfo) error
 
 func ifaceToIp(iface *net.Interface) (string, error) {
 	addrs, err := iface.Addrs()
@@ -1025,6 +1025,7 @@ func (c *ClusterManager) quorumMember() bool {
 
 func (c *ClusterManager) initListeners(
 	db kvdb.Kvdb,
+	clusterMaxSize int,
 	nodeExists *bool,
 	nodeInitialized bool,
 ) (uint64, *cluster.ClusterInfo, error) {
@@ -1065,21 +1066,22 @@ func (c *ClusterManager) initListeners(
 		logrus.Infof("This node does not participates in quorum decisions")
 	}
 
-	initFunc := func(clusterInfo *cluster.ClusterInfo) error {
-		// Irrespective of whether the node is doing an Init or is
-		// already in cluster, check with listeners if it is OK to join
-		// this cluster.
-		for e := c.listeners.Front(); e != nil; e = e.Next() {
-			err := e.Value.(cluster.ClusterListener).CanNodeJoin(&c.selfNode, clusterInfo, nodeInitialized)
-			if err != nil {
-				logrus.Errorf("Failed finalizing init: %s", err.Error())
-				return err
+	initFunc := func(clusterInfo cluster.ClusterInfo) error {
+		numNodes := 0
+		for _, node := range clusterInfo.NodeEntries {
+			if node.Status != api.Status_STATUS_DECOMMISSION {
+				numNodes++
 			}
 		}
+		if clusterMaxSize > 0 && numNodes > clusterMaxSize {
+			return fmt.Errorf("Cluster is operating at maximum capacity "+
+				"(%v nodes). Please remove a node before attempting to "+
+				"add a new node.", clusterMaxSize)
+		}
+
 		// Finalize inits from subsystems under cluster db lock.
-		// finalizeCbs can be empty if this node is already initialized
 		for _, finalizeCb := range finalizeCbs {
-			if err := finalizeCb(clusterInfo); err != nil {
+			if err := finalizeCb(); err != nil {
 				logrus.Errorf("Failed finalizing init: %s", err.Error())
 				return err
 			}
@@ -1109,11 +1111,13 @@ func (c *ClusterManager) initListeners(
 
 func (c *ClusterManager) initializeAndStartHeartbeat(
 	kvdb kvdb.Kvdb,
+	clusterMaxSize int,
 	exist *bool,
 	nodeInitialized bool,
 ) (uint64, error) {
 	lastIndex, clusterInfo, err := c.initListeners(
 		kvdb,
+		clusterMaxSize,
 		exist,
 		nodeInitialized,
 	)
@@ -1153,16 +1157,19 @@ func (c *ClusterManager) setupManagers(config *cluster.ClusterServerConfiguratio
 
 // Start initiates the cluster manager and the cluster state machine
 func (c *ClusterManager) Start(
+	clusterMaxSize int,
 	nodeInitialized bool,
 	gossipPort string,
 ) error {
 	return c.StartWithConfiguration(
+		clusterMaxSize,
 		nodeInitialized,
 		gossipPort,
 		&cluster.ClusterServerConfiguration{})
 }
 
 func (c *ClusterManager) StartWithConfiguration(
+	clusterMaxSize int,
 	nodeInitialized bool,
 	gossipPort string,
 	config *cluster.ClusterServerConfiguration,
@@ -1225,6 +1232,7 @@ func (c *ClusterManager) StartWithConfiguration(
 	var exist bool
 	lastIndex, err := c.initializeAndStartHeartbeat(
 		kv,
+		clusterMaxSize,
 		&exist,
 		nodeInitialized,
 	)
@@ -1409,7 +1417,7 @@ func (c *ClusterManager) updateNodeEntryDB(
 	currentState.NodeEntries[nodeEntry.Id] = nodeEntry
 
 	if checkCbBeforeUpdate != nil {
-		err = checkCbBeforeUpdate(&currentState)
+		err = checkCbBeforeUpdate(currentState)
 		if err != nil {
 			return nil, nil, err
 		}
