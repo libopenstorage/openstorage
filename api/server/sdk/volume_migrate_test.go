@@ -301,14 +301,23 @@ func TestVolumeMigrate_CancelSuccess(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
+	taskId := "1"
 	req := &api.SdkCloudMigrateCancelRequest{
 		Request: &api.CloudMigrateCancelRequest{
-			TaskId: "1"},
+			TaskId: taskId,
+		},
 	}
+
+	resp := &api.CloudMigrateStatusResponse{}
+	s.MockDriver().EXPECT().
+		CloudMigrateStatus(&api.CloudMigrateStatusRequest{
+			TaskId: taskId,
+		}).
+		Return(resp, nil)
 
 	s.MockDriver().EXPECT().
 		CloudMigrateCancel(&api.CloudMigrateCancelRequest{
-			TaskId: "1",
+			TaskId: taskId,
 		}).
 		Return(nil)
 	// Setup client
@@ -361,9 +370,10 @@ func TestVolumeMigrate_StatusSucess(t *testing.T) {
 	req := &api.SdkCloudMigrateStatusRequest{
 		Request: &api.CloudMigrateStatusRequest{},
 	}
+	vId := "VID"
 	info := &api.CloudMigrateInfo{
 		ClusterId:       "Source",
-		LocalVolumeId:   "VID",
+		LocalVolumeId:   vId,
 		LocalVolumeName: "VNAME",
 		RemoteVolumeId:  "RID",
 		CloudbackupId:   "CBKUPID",
@@ -383,6 +393,14 @@ func TestVolumeMigrate_StatusSucess(t *testing.T) {
 	s.MockDriver().EXPECT().
 		CloudMigrateStatus(&api.CloudMigrateStatusRequest{}).
 		Return(resp, nil)
+
+	inspectResp := &api.Volume{
+		Id: vId,
+	}
+	s.MockDriver().EXPECT().
+		Inspect([]string{vId}).
+		Return([]*api.Volume{inspectResp}, nil)
+
 	// Setup client
 	c := api.NewOpenStorageMigrateClient(s.Conn())
 	r, err := c.Status(context.Background(), req)
