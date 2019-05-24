@@ -529,7 +529,8 @@
           "IO_PROFILE_RANDOM",
           "IO_PROFILE_DB",
           "IO_PROFILE_DB_REMOTE",
-          "IO_PROFILE_CMS"
+          "IO_PROFILE_CMS",
+          "IO_PROFILE_SYNC_SHARED"
         ],
         "type": "string"
       },
