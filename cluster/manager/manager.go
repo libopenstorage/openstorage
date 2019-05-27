@@ -259,6 +259,7 @@ func (c *ClusterManager) getNodeEntry(nodeID string, clustDBRef *cluster.Cluster
 			n.DataIp = v.DataIp
 			n.Hostname = v.Hostname
 			n.NodeLabels = v.NodeLabels
+			n.HWType = v.HWType
 		} else {
 			logrus.Warnf("Could not query NodeID %v", nodeID)
 			// Node entry won't be refreshed form DB, will use the "offline" original
@@ -528,6 +529,7 @@ func (c *ClusterManager) initNode(db *cluster.ClusterInfo) (*api.Node, bool) {
 		NodeLabels:        labels,
 		GossipPort:        c.selfNode.GossipPort,
 		ClusterDomain:     c.selfClusterDomain,
+		HWType:            c.config.HWType,
 	}
 
 	db.NodeEntries[c.config.NodeId] = nodeEntry
@@ -536,6 +538,7 @@ func (c *ClusterManager) initNode(db *cluster.ClusterInfo) (*api.Node, bool) {
 	logrus.Infof("Cluster ID: %s", c.config.ClusterId)
 	logrus.Infof("Node Mgmt IP: %s", c.selfNode.MgmtIp)
 	logrus.Infof("Node Data IP: %s", c.selfNode.DataIp)
+	logrus.Infof("Node HWType: %s", c.config.HWType.String())
 	if len(c.selfClusterDomain) > 0 {
 		logrus.Infof("Node's Cluster Domain: %s", c.selfClusterDomain)
 	}

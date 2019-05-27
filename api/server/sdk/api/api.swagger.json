@@ -522,6 +522,16 @@
         },
         "type": "object"
       },
+      "apiHardwareType": {
+        "default": "UnknownMachine",
+        "enum": [
+          "UnknownMachine",
+          "VirtualMachine",
+          "BareMetalMachine"
+        ],
+        "title": "- UnknownMachine: When we do not know the machine type alsp the default\n - VirtualMachine: when we are running on virtual machine\n - BareMetalMachine: when we are running on physical hardware",
+        "type": "string"
+      },
       "apiIoProfile": {
         "default": "IO_PROFILE_SEQUENTIAL",
         "enum": [
@@ -2876,6 +2886,9 @@
       },
       "apiStorageNode": {
         "properties": {
+          "HWType": {
+            "$ref": "#/components/schemas/apiHardwareType"
+          },
           "avg_load": {
             "format": "int64",
             "title": "Average load (percentage)",
@@ -3696,7 +3709,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.42.15"
+    "version": "0.42.16"
   },
   "openapi": "3.0.0",
   "paths": {
