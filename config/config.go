@@ -7,6 +7,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
 )
 
@@ -41,6 +42,7 @@ type ClusterConfig struct {
 	ManagementURL      string
 	FluentDHost        string
 	SystemSharedSecret string
+	HWType             api.HardwareType
 }
 
 // swagger:model
