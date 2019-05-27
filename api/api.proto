@@ -175,6 +175,15 @@ enum OperationFlags {
   OP_FLAGS_DETACH_FORCE = 2;
 }
 
+enum HardwareType {
+  // When we do not know the machine type alsp the default
+  UnknownMachine = 0;
+  // when we are running on virtual machine 
+  VirtualMachine = 1;
+  // when we are running on physical hardware
+  BareMetalMachine = 2;
+}
+
 // StorageResource groups properties of a storage device.
 message StorageResource {
   // Id is the LUN identifier.
@@ -1041,6 +1050,8 @@ message StorageNode {
   // SchedulerNodeName is name of the node in scheduler context. It can be
   // empty if unable to get the name from the scheduler.
   string scheduler_node_name = 17;
+  // HardwareType is the type of the hardware the node has
+  HardwareType HWType = 18;
 }
 
 // StorageCluster represents the state and information about the cluster
@@ -3350,7 +3361,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 42;
     // SDK version patch value of this specification
-    Patch = 15;
+    Patch = 16;
   }
 
   // The following cannot be set to use the enum Version because the REST

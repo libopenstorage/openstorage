@@ -65,6 +65,7 @@ type NodeEntry struct {
 	NonQuorumMember   bool
 	GossipPort        string
 	ClusterDomain     string
+	HWType            api.HardwareType
 }
 
 // ClusterInfo is the basic info about the cluster and its nodes

@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.42.16 - Tech Preview (6/5/2019)
+
+* Addition to Node details, to store the hardware type
+
 ### v0.42.15 - Tech Preview (7/16/2019)
 
 * Add EnumerateWithFilters api for Node server which returns complete StorageNode object
