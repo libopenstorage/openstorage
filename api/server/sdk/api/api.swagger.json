@@ -115,26 +115,6 @@
         "title": "- UNKNOWN: Unknown service\n - CLUSTER: Cluster management\n - CLOUD_BACKUP: Cloud backup of volumes management\n - CREDENTIALS: Credentials management\n - NODE: Node management\n - OBJECT_STORAGE: Object Storage management\n - SCHEDULE_POLICY: Schedule policy management\n - VOLUME: Volume management\n - ALERTS: Alert enumeration\n - MOUNT_ATTACH: Mount/Attach Support\n - ROLE: Role service\n - CLUSTER_PAIR: Cluster Pair service\n - MIGRATE: Migrate service\n - STORAGE_POLICY: StoragePolicy Service",
         "type": "string"
       },
-      "VolumePlacementRuleAffinityRuleType": {
-        "default": "affinity",
-        "description": "- affinity: Affinity means the rule specifies an affinity to objects that match the below label selector requirements\n - antiAffinity: AntiAffinity means the rule specifies an anti-affinity to objects that match the below label selector requirements",
-        "enum": [
-          "affinity",
-          "antiAffinity"
-        ],
-        "title": "This specifies the type an affinity rule can take",
-        "type": "string"
-      },
-      "VolumePlacementRuleEnforcementType": {
-        "default": "required",
-        "description": "- required: This specifies that the rule is required and must be strictly enforced\n - preferred: This specifies that the rule is preferred and can be best effort",
-        "enum": [
-          "required",
-          "preferred"
-        ],
-        "title": "Defines the types of enforcement on the given rules",
-        "type": "string"
-      },
       "VolumeSpecPolicyPolicyOp": {
         "default": "Equal",
         "description": "- Equal: Policy will make sure the value must be equal\n - Minimum: Policy will make sure the requested value must be greater than or equal\n - Maximum: Policy will make sure the requested value must be less than or equal",
@@ -507,6 +487,16 @@
         ],
         "type": "string"
       },
+      "apiEnforcementType": {
+        "default": "required",
+        "description": "- required: This specifies that the rule is required and must be strictly enforced\n - preferred: This specifies that the rule is preferred and can be best effort",
+        "enum": [
+          "required",
+          "preferred"
+        ],
+        "title": "Defines the types of enforcement on the given rules",
+        "type": "string"
+      },
       "apiFSType": {
         "default": "FS_TYPE_NONE",
         "enum": [
@@ -644,6 +634,35 @@
           },
           "owner": {
             "description": "Username of owner.\n\nThe storage system uses the username taken from the security authorization\ntoken and is saved on this field. Only users with system administration\ncan edit this value.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "apiReplicaPlacementSpec": {
+        "properties": {
+          "affected_replicas": {
+            "format": "int32",
+            "title": "AffectedReplicas defines the number of volume replicas affected by this rule. If not provided,\nrule would affect all replicas\n(optional)",
+            "type": "integer"
+          },
+          "enforcement": {
+            "$ref": "#/components/schemas/apiEnforcementType"
+          },
+          "match_expressions": {
+            "description": "MatchExpressions is a list of label selector requirements. The requirements are ANDed.",
+            "items": {
+              "$ref": "#/components/schemas/apiLabelSelectorRequirement"
+            },
+            "type": "array"
+          },
+          "topology_key": {
+            "title": "TopologyKey key for the matching all segments of the cluster topology with the same key\ne.g If the key is failure-domain.beta.kubernetes.io/zone, this should match all nodes with\nthe same value for this key (i.e in the same zone)",
+            "type": "string"
+          },
+          "weight": {
+            "format": "int64",
+            "title": "Weight defines the weight of the rule which allows to break the tie with other matching rules. A rule with\nhigher weight wins over a rule with lower weight.\n(optional)",
             "type": "string"
           }
         },
@@ -3168,15 +3187,10 @@
         },
         "type": "object"
       },
-      "apiVolumePlacementRule": {
+      "apiVolumePlacementSpec": {
         "properties": {
-          "affected_replicas": {
-            "format": "int32",
-            "title": "AffectedReplicas defines the number of volume replicas affected by this rule. If not provided,\nrule would affect all replicas\n(optional)",
-            "type": "integer"
-          },
           "enforcement": {
-            "$ref": "#/components/schemas/VolumePlacementRuleEnforcementType"
+            "$ref": "#/components/schemas/apiEnforcementType"
           },
           "match_expressions": {
             "description": "MatchExpressions is a list of label selector requirements. The requirements are ANDed.",
@@ -3185,8 +3199,9 @@
             },
             "type": "array"
           },
-          "type": {
-            "$ref": "#/components/schemas/VolumePlacementRuleAffinityRuleType"
+          "topology_key": {
+            "title": "TopologyKey key for the matching all segments of the cluster topology with the same key\ne.g If the key is failure-domain.beta.kubernetes.io/zone, this should match all nodes with\nthe same value for this key (i.e in the same zone)",
+            "type": "string"
           },
           "weight": {
             "format": "int64",
@@ -3194,20 +3209,40 @@
             "type": "string"
           }
         },
-        "title": "VolumePlacementRule defines a single placement rule",
         "type": "object"
       },
       "apiVolumePlacementStrategy": {
+        "description": "VolumePlacementStrategy defines a strategy for placing volumes in the cluster which will be a series of rules\nAll the rules specified will be applied for volume placement.\nRules that have enforcement as \"required\" are strictly enforced while \"preferred\" are best effort.\nIn situations, where 2 or more rules conflict, the weight of the rules will dictate which wins.",
         "properties": {
-          "rules": {
-            "description": "Rules defines a list of rules as part of the placement spec. All the rules specified will\nbe applied for volume placement.\nRules that have enforcement as \"required\" are strictly enforced while \"preferred\" are best effort.\nIn situations, where 2 or more rules conflict, the weight of the rules will dictate which wins.",
+          "replica_affinity": {
             "items": {
-              "$ref": "#/components/schemas/apiVolumePlacementRule"
+              "$ref": "#/components/schemas/apiReplicaPlacementSpec"
             },
+            "title": "ReplicaAffinity defines affinity rules between replicas within a volume",
+            "type": "array"
+          },
+          "replica_anti_affinity": {
+            "items": {
+              "$ref": "#/components/schemas/apiReplicaPlacementSpec"
+            },
+            "title": "ReplicaAntiAffinity defines anti-affinity rules between replicas within a volume",
+            "type": "array"
+          },
+          "volume_affinity": {
+            "items": {
+              "$ref": "#/components/schemas/apiVolumePlacementSpec"
+            },
+            "title": "VolumeAffinity defines affinity rules between volumes",
+            "type": "array"
+          },
+          "volume_anti_affinity": {
+            "items": {
+              "$ref": "#/components/schemas/apiVolumePlacementSpec"
+            },
+            "title": "VolumeAntiAffinity defines anti-affinity rules between volumes",
             "type": "array"
           }
         },
-        "title": "VolumePlacementStrategy defines a strategy for placing volumes in the cluster which will be a series of rules",
         "type": "object"
       },
       "apiVolumeSpec": {
