@@ -70,8 +70,15 @@ func (s *OsdCsiServer) GetPluginInfo(
 	ctx context.Context,
 	req *csi.GetPluginInfoRequest) (*csi.GetPluginInfoResponse, error) {
 
+	var name string
+	if len(s.csiDriverName) != 0 {
+		name = s.csiDriverName
+	} else {
+		name = fmt.Sprintf(csiDriverNameFormat, s.driver.Name())
+	}
+
 	return &csi.GetPluginInfoResponse{
-		Name:          fmt.Sprintf(csiDriverNameFormat, s.driver.Name()),
+		Name:          name,
 		VendorVersion: csiDriverVersion,
 
 		// As OSD CSI Driver matures, add here more information
