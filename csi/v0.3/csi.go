@@ -36,6 +36,10 @@ type OsdCsiServerConfig struct {
 	Address    string
 	DriverName string
 	Cluster    cluster.Cluster
+
+	// Name to be reported back to the CO. If not provided,
+	// the name will be in the format of <driver>.openstorage.org
+	CsiDriverName string
 }
 
 // OsdCsiServer is a OSD CSI compliant server which
@@ -46,9 +50,10 @@ type OsdCsiServer struct {
 	csi.IdentityServer
 
 	*grpcserver.GrpcServer
-	specHandler spec.SpecHandler
-	driver      volume.VolumeDriver
-	cluster     cluster.Cluster
+	specHandler   spec.SpecHandler
+	driver        volume.VolumeDriver
+	cluster       cluster.Cluster
+	csiDriverName string
 }
 
 // NewOsdCsiServer creates a gRPC CSI complient server on the
@@ -76,10 +81,11 @@ func NewOsdCsiServer(config *OsdCsiServerConfig) (grpcserver.Server, error) {
 	}
 
 	return &OsdCsiServer{
-		specHandler: spec.NewSpecHandler(),
-		GrpcServer:  gServer,
-		driver:      d,
-		cluster:     config.Cluster,
+		specHandler:   spec.NewSpecHandler(),
+		GrpcServer:    gServer,
+		driver:        d,
+		cluster:       config.Cluster,
+		csiDriverName: config.CsiDriverName,
 	}, nil
 }
 
