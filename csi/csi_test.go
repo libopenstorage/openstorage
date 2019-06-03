@@ -131,12 +131,25 @@ func setupMockDriver(tester *testServer, t *testing.T) {
 }
 
 func newTestServer(t *testing.T) *testServer {
+	return newTestServerWithConfig(t, &OsdCsiServerConfig{
+		DriverName: mockDriverName,
+		Net:        "tcp",
+		Address:    "127.0.0.1:0",
+		SdkUds:     testSdkSock,
+	})
+}
+
+func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServer {
 	tester := &testServer{}
 
 	// Add driver to registry
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
 	tester.m = mockdriver.NewMockVolumeDriver(tester.mc)
 	tester.c = mockcluster.NewMockCluster(tester.mc)
+
+	if config.Cluster == nil {
+		config.Cluster = tester.c
+	}
 
 	setupMockDriver(tester, t)
 
@@ -147,13 +160,7 @@ func newTestServer(t *testing.T) *testServer {
 	assert.NoError(t, err)
 
 	// Setup simple driver
-	tester.server, err = NewOsdCsiServer(&OsdCsiServerConfig{
-		DriverName: mockDriverName,
-		Net:        "tcp",
-		Address:    "127.0.0.1:0",
-		Cluster:    tester.c,
-		SdkUds:     testSdkSock,
-	})
+	tester.server, err = NewOsdCsiServer(config)
 	assert.Nil(t, err)
 	err = tester.server.Start()
 	assert.Nil(t, err)
@@ -273,7 +280,7 @@ func TestCSIServerStart(t *testing.T) {
 	// Verify
 	name := r.GetName()
 	version := r.GetVendorVersion()
-	assert.Equal(t, name, csiDriverNamePrefix+"mock")
+	assert.Equal(t, name, "mock.openstorage.org")
 	assert.Equal(t, version, csiDriverVersion)
 }
 
