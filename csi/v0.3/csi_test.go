@@ -65,12 +65,24 @@ func setupMockDriver(tester *testServer, t *testing.T) {
 }
 
 func newTestServer(t *testing.T) *testServer {
+	return newTestServerWithConfig(t, &OsdCsiServerConfig{
+		DriverName: mockDriverName,
+		Net:        "tcp",
+		Address:    "127.0.0.1:0",
+	})
+}
+
+func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServer {
 	tester := &testServer{}
 
 	// Add driver to registry
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
 	tester.m = mockdriver.NewMockVolumeDriver(tester.mc)
 	tester.c = mockcluster.NewMockCluster(tester.mc)
+
+	if config.Cluster == nil {
+		config.Cluster = tester.c
+	}
 
 	setupMockDriver(tester, t)
 	// Initialise storage policy manager
@@ -79,12 +91,7 @@ func newTestServer(t *testing.T) *testServer {
 	_, err = policy.Init(kv)
 
 	// Setup simple driver
-	tester.server, err = NewOsdCsiServer(&OsdCsiServerConfig{
-		DriverName: mockDriverName,
-		Net:        "tcp",
-		Address:    "127.0.0.1:0",
-		Cluster:    tester.c,
-	})
+	tester.server, err = NewOsdCsiServer(config)
 	assert.Nil(t, err)
 	err = tester.server.Start()
 	assert.Nil(t, err)
