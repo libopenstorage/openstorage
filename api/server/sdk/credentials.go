@@ -93,6 +93,7 @@ func (s *CredentialServer) awsCreate(
 	params[api.OptCredAccessKey] = aws.GetAccessKey()
 	params[api.OptCredSecretKey] = aws.GetSecretKey()
 	params[api.OptCredDisableSSL] = fmt.Sprintf("%v", aws.GetDisableSsl())
+	params[api.OptCredDisablePathStyle] = fmt.Sprintf("%v", aws.GetDisablePathStyle())
 
 	uuid, err := s.create(ctx, req, params)
 
@@ -386,13 +387,18 @@ func (s *CredentialServer) Inspect(
 		if !ok {
 			return nil, status.Error(codes.Internal, "Unable to parse disabling ssl was requested")
 		}
+		disablePathStyle, ok := info[api.OptCredDisablePathStyle].(string)
+		if !ok {
+			return nil, status.Error(codes.Internal, "Unable to parse disabling path-style was requested")
+		}
 
 		resp.CredentialType = &api.SdkCredentialInspectResponse_AwsCredential{
 			AwsCredential: &api.SdkAwsCredentialResponse{
-				AccessKey:  accessKey,
-				Endpoint:   endpoint,
-				Region:     region,
-				DisableSsl: disableSsl == "true",
+				AccessKey:        accessKey,
+				Endpoint:         endpoint,
+				Region:           region,
+				DisableSsl:       disableSsl == "true",
+				DisablePathStyle: disablePathStyle == "true",
 			},
 		}
 	case "azure":
