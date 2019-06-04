@@ -10,7 +10,6 @@ import (
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/libopenstorage/openstorage/pkg/auth"
-
 	"github.com/mohae/deepcopy"
 )
 
@@ -192,6 +191,8 @@ type Node struct {
 	NodeLabels map[string]string
 	// GossipPort is the port used by the gossip protocol
 	GossipPort string
+	// HWType is the type of the underlying hardware used by the node
+	HWType HardwareType
 }
 
 // FluentDConfig describes ip and port of a fluentdhost.
@@ -822,6 +823,7 @@ func (s *Node) ToStorageNode() *StorageNode {
 		MgmtIp:            s.MgmtIp,
 		DataIp:            s.DataIp,
 		Hostname:          s.Hostname,
+		HWType:            s.HWType,
 	}
 
 	node.Disks = make(map[string]*StorageResource)

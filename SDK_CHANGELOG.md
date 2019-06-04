@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.56.0 - Tech Preview (6/3/2019)
+
+* Addition to Node details, to store the hardware type
+
 ### v0.55.0 - Tech Preview (5/7/2019)
 
 * Additions to cloudbackup enumerate filters.
