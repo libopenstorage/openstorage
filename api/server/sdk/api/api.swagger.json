@@ -877,6 +877,11 @@
             "title": "Access key",
             "type": "string"
           },
+          "disable_path_style": {
+            "format": "boolean",
+            "title": "(optional) Disable path-styl access",
+            "type": "boolean"
+          },
           "disable_ssl": {
             "format": "boolean",
             "title": "(optional) Disable SSL connection",
@@ -903,6 +908,11 @@
           "access_key": {
             "title": "Access key",
             "type": "string"
+          },
+          "disable_path_style": {
+            "format": "boolean",
+            "title": "(optional) Disable path-styl access",
+            "type": "boolean"
           },
           "disable_ssl": {
             "format": "boolean",
