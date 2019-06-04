@@ -2189,7 +2189,7 @@ message SdkAwsCredentialRequest {
   string region = 4;
   // (optional) Disable SSL connection
   bool disable_ssl = 5;
-  // (optional) Disable path-styl access
+  // (optional) Disable path-style access
   bool disable_path_style = 6;
 }
 
@@ -2219,7 +2219,7 @@ message SdkAwsCredentialResponse {
   string region = 4;
   // (optional) Disable SSL connection
   bool disable_ssl = 5;
-  // (optional) Disable path-styl access
+  // (optional) Disable path-style access
   bool disable_path_style = 6;
 }
 

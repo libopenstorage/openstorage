@@ -879,7 +879,7 @@
           },
           "disable_path_style": {
             "format": "boolean",
-            "title": "(optional) Disable path-styl access",
+            "title": "(optional) Disable path-style access",
             "type": "boolean"
           },
           "disable_ssl": {
@@ -911,7 +911,7 @@
           },
           "disable_path_style": {
             "format": "boolean",
-            "title": "(optional) Disable path-styl access",
+            "title": "(optional) Disable path-style access",
             "type": "boolean"
           },
           "disable_ssl": {
@@ -3646,7 +3646,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.55.0"
+    "version": "0.57.0"
   },
   "openapi": "3.0.0",
   "paths": {
