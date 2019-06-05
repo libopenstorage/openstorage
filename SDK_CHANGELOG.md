@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.42.10 - Tech Preview (6/4/2019)
+
+* Added new param credential API to control path style access to s3
+
 ### v0.42.9 - Tech Preview (4/11/2019)
 
 * Added VolumeInspectOptions to OpenStorageVolume.Inspect
