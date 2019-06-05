@@ -9,6 +9,7 @@ const (
 	NoLabel = "NoLabel"
 )
 
+// LabelsFromString  "key1=value1,key2,key3=value3" to a key-value map.
 func LabelsFromString(str string) (map[string]string, error) {
 	if len(str) == 0 {
 		return nil, nil
@@ -32,6 +33,7 @@ func LabelsFromString(str string) (map[string]string, error) {
 	return m, nil
 }
 
+// LabeToString convert key-value map to "key1=value1,key2,key3=value3"
 func LabelsToString(labels map[string]string) string {
 	l := ""
 	for k, v := range labels {
@@ -47,6 +49,7 @@ func LabelsToString(labels map[string]string) string {
 	return l
 }
 
+// MergeLabels merge 2 key-value map to single key value map, overriding keys in old.
 func MergeLabels(old map[string]string, new map[string]string) map[string]string {
 	if old == nil {
 		return new
@@ -73,10 +76,12 @@ func hasLabels(set, subset map[string]string, matchValue bool) bool {
 	return true
 }
 
+// HasLabels returns true if subset kv mappings exist in set
 func HasLabels(set, subset map[string]string) bool {
 	return hasLabels(set, subset, true)
 }
 
+// HasLabelKeys returns true if subset keys exist in set
 func HasLabelKeys(set, subset map[string]string) bool {
 	return hasLabels(set, subset, false)
 }
@@ -90,10 +95,12 @@ func hasAnyLabel(set, subset map[string]string, matchValue bool) bool {
 	return false
 }
 
+// HasAnyLabel returns true if atleast of kv pair of subset exists in set.
 func HasAnyLabel(set, subset map[string]string) bool {
 	return hasAnyLabel(set, subset, true)
 }
 
+// HasAnyLabel returns true if atleast one key from subset exists in set.
 func HasAnyLabelKey(set, subset map[string]string) bool {
 	return hasAnyLabel(set, subset, false)
 }
