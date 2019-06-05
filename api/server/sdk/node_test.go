@@ -69,6 +69,7 @@ func TestSdkNodeEnumerate(t *testing.T) {
 				MemTotal: 112,
 				MemUsed:  41,
 				MemFree:  93,
+				HWType:   api.HardwareType_UnknownMachine,
 			},
 		},
 	}
@@ -136,6 +137,7 @@ func TestSdkNodeInspect(t *testing.T) {
 		NodeLabels: map[string]string{
 			"hello": "world",
 		},
+		HWType: api.HardwareType_VirtualMachine,
 	}
 	s.MockCluster().EXPECT().Inspect(nodeid).Return(node, nil).Times(1)
 
@@ -159,6 +161,7 @@ func TestSdkNodeInspect(t *testing.T) {
 	assert.Equal(t, rn.GetMemUsed(), node.MemUsed)
 	assert.Equal(t, rn.GetAvgLoad(), int64(node.Avgload))
 	assert.Equal(t, rn.GetStatus(), node.Status)
+	assert.Equal(t, rn.GetHWType(), node.HWType)
 
 	// Check Disk
 	assert.Len(t, rn.GetDisks(), 1)
@@ -241,6 +244,7 @@ func TestSdkNodeInspectCurrent(t *testing.T) {
 		NodeLabels: map[string]string{
 			"hello": "world",
 		},
+		HWType: api.HardwareType_BareMetalMachine,
 	}
 
 	cluster := api.Cluster{
@@ -271,6 +275,7 @@ func TestSdkNodeInspectCurrent(t *testing.T) {
 	assert.Equal(t, rn.GetMemUsed(), node.MemUsed)
 	assert.Equal(t, rn.GetAvgLoad(), int64(node.Avgload))
 	assert.Equal(t, rn.GetStatus(), node.Status)
+	assert.Equal(t, rn.GetHWType(), node.HWType)
 
 	// Check Disk
 	assert.Len(t, rn.GetDisks(), 1)
