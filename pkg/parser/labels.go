@@ -64,11 +64,36 @@ func MergeLabels(old map[string]string, new map[string]string) map[string]string
 	return m
 }
 
-func HasLabels(set map[string]string, subset map[string]string) bool {
+func hasLabels(set, subset map[string]string, matchValue bool) bool {
 	for k, v1 := range subset {
-		if v2, ok := set[k]; !ok || v1 != v2 {
+		if v2, ok := set[k]; !ok || (matchValue && v1 != v2) {
 			return false
 		}
 	}
 	return true
+}
+
+func HasLabels(set, subset map[string]string) bool {
+	return hasLabels(set, subset, true)
+}
+
+func HasLabelKeys(set, subset map[string]string) bool {
+	return hasLabels(set, subset, false)
+}
+
+func hasAnyLabel(set, subset map[string]string, matchValue bool) bool {
+	for k, v1 := range subset {
+		if v2, ok := set[k]; ok && (!matchValue || v1 == v2) {
+			return true
+		}
+	}
+	return false
+}
+
+func HasAnyLabel(set, subset map[string]string) bool {
+	return hasAnyLabel(set, subset, true)
+}
+
+func HasAnyLabelKey(set, subset map[string]string) bool {
+	return hasAnyLabel(set, subset, false)
 }
