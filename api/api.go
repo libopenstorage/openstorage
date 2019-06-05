@@ -94,6 +94,8 @@ const (
 	OptCredRegion = "CredRegion"
 	// OptCredDisableSSL indicated if SSL should be disabled
 	OptCredDisableSSL = "CredDisableSSL"
+	// OptCredDisablePathStyle does not enforce path style for s3
+	OptCredDisablePathStyle = "CredDisablePathStyle"
 	// OptCredEndpoint indicate the cloud endpoint
 	OptCredEndpoint = "CredEndpoint"
 	// OptCredAccKey for s3

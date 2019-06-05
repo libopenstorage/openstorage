@@ -47,11 +47,12 @@ func TestSdkAWSCredentialCreateSuccess(t *testing.T) {
 		EncryptionKey: "key",
 		CredentialType: &api.SdkCredentialCreateRequest_AwsCredential{
 			AwsCredential: &api.SdkAwsCredentialRequest{
-				AccessKey:  "dummy-access",
-				SecretKey:  "dummy-secret",
-				Endpoint:   "dummy-endpoint",
-				Region:     "dummy-region",
-				DisableSsl: true,
+				AccessKey:        "dummy-access",
+				SecretKey:        "dummy-secret",
+				Endpoint:         "dummy-endpoint",
+				Region:           "dummy-region",
+				DisableSsl:       true,
+				DisablePathStyle: false,
 			},
 		},
 	}
@@ -67,6 +68,7 @@ func TestSdkAWSCredentialCreateSuccess(t *testing.T) {
 	params[api.OptCredAccessKey] = req.GetAwsCredential().GetAccessKey()
 	params[api.OptCredSecretKey] = req.GetAwsCredential().GetSecretKey()
 	params[api.OptCredDisableSSL] = "true"
+	params[api.OptCredDisablePathStyle] = "false"
 
 	uuid := "good-uuid"
 	s.MockDriver().
@@ -116,6 +118,7 @@ func TestSdkAWSCredentialCreateFailed(t *testing.T) {
 	params[api.OptCredAccessKey] = req.GetAwsCredential().GetAccessKey()
 	params[api.OptCredSecretKey] = req.GetAwsCredential().GetSecretKey()
 	params[api.OptCredDisableSSL] = "false"
+	params[api.OptCredDisablePathStyle] = "false"
 
 	uuid := "bad-uuid"
 	s.MockDriver().
@@ -680,15 +683,16 @@ func TestSdkAWSInspect(t *testing.T) {
 	}
 
 	enumAws := map[string]interface{}{
-		api.OptCredType:       "s3",
-		api.OptCredName:       "test",
-		api.OptCredBucket:     "mybucket",
-		api.OptCredEncrKey:    "key",
-		api.OptCredRegion:     "test-azure-account",
-		api.OptCredEndpoint:   "test-azure-account",
-		api.OptCredAccessKey:  "access",
-		api.OptCredSecretKey:  "secret",
-		api.OptCredDisableSSL: "false",
+		api.OptCredType:             "s3",
+		api.OptCredName:             "test",
+		api.OptCredBucket:           "mybucket",
+		api.OptCredEncrKey:          "key",
+		api.OptCredRegion:           "test-azure-account",
+		api.OptCredEndpoint:         "test-azure-account",
+		api.OptCredAccessKey:        "access",
+		api.OptCredSecretKey:        "secret",
+		api.OptCredDisableSSL:       "false",
+		api.OptCredDisablePathStyle: "false",
 	}
 	enumerateData := map[string]interface{}{
 		uuid: enumAws,
@@ -713,6 +717,7 @@ func TestSdkAWSInspect(t *testing.T) {
 	assert.Equal(t, enumAws[api.OptCredEndpoint], resp.GetAwsCredential().GetEndpoint())
 	assert.Equal(t, enumAws[api.OptCredAccessKey], resp.GetAwsCredential().GetAccessKey())
 	assert.Equal(t, enumAws[api.OptCredDisableSSL] == "true", resp.GetAwsCredential().GetDisableSsl())
+	assert.Equal(t, enumAws[api.OptCredDisablePathStyle] == "true", resp.GetAwsCredential().GetDisablePathStyle())
 }
 
 func TestSdkCredentialAzureInspect(t *testing.T) {
@@ -876,11 +881,12 @@ func TestSdkCredentialOwnership(t *testing.T) {
 		EncryptionKey: "key",
 		CredentialType: &api.SdkCredentialCreateRequest_AwsCredential{
 			AwsCredential: &api.SdkAwsCredentialRequest{
-				AccessKey:  "dummy-access",
-				SecretKey:  "dummy-secret",
-				Endpoint:   "dummy-endpoint",
-				Region:     "dummy-region",
-				DisableSsl: true,
+				AccessKey:        "dummy-access",
+				SecretKey:        "dummy-secret",
+				Endpoint:         "dummy-endpoint",
+				Region:           "dummy-region",
+				DisableSsl:       true,
+				DisablePathStyle: false,
 			},
 		},
 	}
@@ -896,6 +902,7 @@ func TestSdkCredentialOwnership(t *testing.T) {
 	params[api.OptCredAccessKey] = req.GetAwsCredential().GetAccessKey()
 	params[api.OptCredSecretKey] = req.GetAwsCredential().GetSecretKey()
 	params[api.OptCredDisableSSL] = "true"
+	params[api.OptCredDisablePathStyle] = "false"
 
 	// Create a marshalled ownership for the expect params
 	ownership := &api.Ownership{
