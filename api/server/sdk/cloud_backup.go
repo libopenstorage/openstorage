@@ -56,7 +56,7 @@ func (s *CloudBackupServer) Create(
 	}
 
 	// Check ownership
-	if err := checkAccessFromDriverForVolumeId(ctx, s.driver(ctx), req.GetVolumeId(), api.Ownership_Read); err != nil {
+	if err := checkAccessFromDriverForVolumeIds(ctx, s.driver(ctx), []string{req.GetVolumeId()}, api.Ownership_Read); err != nil {
 		return nil, err
 	}
 
@@ -83,6 +83,101 @@ func (s *CloudBackupServer) Create(
 
 	return &api.SdkCloudBackupCreateResponse{
 		TaskId: r.Name,
+	}, nil
+}
+
+// GroupCreate creates a backup for a list of volume or group
+func (s *CloudBackupServer) GroupCreate(
+	ctx context.Context,
+	req *api.SdkCloudBackupGroupCreateRequest,
+) (*api.SdkCloudBackupGroupCreateResponse, error) {
+
+	if s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+	credId := req.GetCredentialId()
+	var err error
+	if len(req.GetGroupId()) == 0 && len(req.GetVolumeIds()) == 0 && len(req.GetLabels()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Must supply a group ID, list of volume IDs, or labels")
+	}
+	if len(req.GetCredentialId()) == 0 {
+		credId, err = s.defaultCloudBackupCreds(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	switch {
+	// VolumeIDs and at least a GroupID or Labels are provided. Get filtered volumes based on GroupID and/or Labels,
+	// and then only check access for the intersection of the filtered volumes and req.VolumeIds
+	case len(req.GetVolumeIds()) > 0 && (len(req.GetLabels()) > 0 || len(req.GetGroupId()) > 0):
+
+		// Get filtered volumes associated with Group and VolumeLabels
+		filteredVolMap, err := enumerateVolumeIdsAsMap(s.driver(ctx), &api.VolumeLocator{
+			VolumeLabels: req.GetLabels(),
+			Group: &api.Group{
+				Id: req.GetGroupId(),
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		// Get intersection of req.VolumeIds and filteredVolumes (from groupID/labels)
+		var volumesToCheck []string
+		for _, volId := range req.GetVolumeIds() {
+			if _, ok := filteredVolMap[volId]; ok {
+				volumesToCheck = append(volumesToCheck, volId)
+			}
+		}
+
+		// Check ownership for this intersection
+		if err := checkAccessFromDriverForVolumeIds(ctx, s.driver(ctx), volumesToCheck, api.Ownership_Read); err != nil {
+			return nil, err
+		}
+
+	// Only a slice of VolumeIDs provided
+	case len(req.GetVolumeIds()) > 0:
+		if err := checkAccessFromDriverForVolumeIds(ctx, s.driver(ctx), req.GetVolumeIds(), api.Ownership_Read); err != nil {
+			return nil, err
+		}
+
+	// Only Labels and/or GroupID provided
+	case len(req.GetLabels()) > 0 || len(req.GetGroupId()) > 0:
+		if err := checkAccessFromDriverForLocator(ctx, s.driver(ctx), &api.VolumeLocator{
+			VolumeLabels: req.GetLabels(),
+			Group: &api.Group{
+				Id: req.GetGroupId(),
+			},
+		}, api.Ownership_Read); err != nil {
+			return nil, err
+		}
+	}
+
+	// Check credentials access
+	if len(req.GetCredentialId()) != 0 {
+		if err := s.checkAccessToCredential(ctx, credId); err != nil {
+			return nil, err
+		}
+	}
+
+	r, err := s.driver(ctx).CloudBackupGroupCreate(&api.CloudBackupGroupCreateRequest{
+		GroupID:        req.GetGroupId(),
+		VolumeIDs:      req.GetVolumeIds(),
+		CredentialUUID: credId,
+		Full:           req.GetFull(),
+		Labels:         req.GetLabels(),
+	})
+	if err != nil {
+		if err == volume.ErrInvalidName {
+			return nil, status.Errorf(codes.AlreadyExists, "Backup with this name already exists: %v", err)
+		}
+		return nil, status.Errorf(codes.Internal, "Failed to create backup: %v", err)
+	}
+
+	return &api.SdkCloudBackupGroupCreateResponse{
+		GroupCloudBackupId: r.GroupCloudBackupID,
+		TaskIds:            r.Names,
 	}, nil
 }
 
@@ -254,7 +349,7 @@ func (s *CloudBackupServer) Status(
 
 	// Check ownership
 	if req.GetVolumeId() != "" {
-		if err := checkAccessFromDriverForVolumeId(ctx, s.driver(ctx), req.GetVolumeId(), api.Ownership_Read); err != nil {
+		if err := checkAccessFromDriverForVolumeIds(ctx, s.driver(ctx), []string{req.GetVolumeId()}, api.Ownership_Read); err != nil {
 			return nil, err
 		}
 	}
@@ -273,7 +368,7 @@ func (s *CloudBackupServer) Status(
 	// Get volume id from task id
 	// remove the volumes that dont belong to caller
 	for key, sts := range r.Statuses {
-		if err := checkAccessFromDriverForVolumeId(ctx, s.driver(ctx), sts.SrcVolumeID, api.Ownership_Read); err != nil {
+		if err := checkAccessFromDriverForVolumeIds(ctx, s.driver(ctx), []string{sts.SrcVolumeID}, api.Ownership_Read); err != nil {
 			delete(r.Statuses, key)
 		}
 	}
@@ -332,7 +427,7 @@ func (s *CloudBackupServer) History(
 	}
 
 	// Check ownership
-	if err := checkAccessFromDriverForVolumeId(ctx, s.driver(ctx), req.GetSrcVolumeId(), api.Ownership_Read); err != nil {
+	if err := checkAccessFromDriverForVolumeIds(ctx, s.driver(ctx), []string{req.GetSrcVolumeId()}, api.Ownership_Read); err != nil {
 		return nil, err
 	}
 
@@ -389,7 +484,7 @@ func (s *CloudBackupServer) StateChange(
 	// Get volume id from task id
 	// remove the volumes that dont belong to caller
 	for _, sts := range r.Statuses {
-		if err := checkAccessFromDriverForVolumeId(ctx, s.driver(ctx), sts.SrcVolumeID, api.Ownership_Write); err != nil {
+		if err := checkAccessFromDriverForVolumeIds(ctx, s.driver(ctx), []string{sts.SrcVolumeID}, api.Ownership_Write); err != nil {
 			return nil, err
 		}
 	}
@@ -430,7 +525,7 @@ func (s *CloudBackupServer) SchedCreate(
 	}
 
 	// Check ownership
-	if err := checkAccessFromDriverForVolumeId(ctx, s.driver(ctx), req.GetCloudSchedInfo().GetSrcVolumeId(), api.Ownership_Read); err != nil {
+	if err := checkAccessFromDriverForVolumeIds(ctx, s.driver(ctx), []string{req.GetCloudSchedInfo().GetSrcVolumeId()}, api.Ownership_Read); err != nil {
 		return nil, err
 	}
 	if len(req.GetCloudSchedInfo().GetCredentialId()) != 0 {
