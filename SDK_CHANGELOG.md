@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.42.14 - Tech Preview (6/5/2019)
+
+* Add cloud group-backup API
+
 ### v0.42.13 - Tech Preview (6/4/2019)
 
 * Added new param credential API to control path style access to s3
