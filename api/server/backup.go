@@ -61,6 +61,7 @@ func (vd *volAPI) cloudBackupCreate(w http.ResponseWriter, r *http.Request) {
 
 func (vd *volAPI) cloudBackupGroupCreate(w http.ResponseWriter, r *http.Request) {
 	backupGroupReq := &api.CloudBackupGroupCreateRequest{}
+	var backupGroupResp api.CloudBackupGroupCreateResponse
 	method := "cloudBackupGroupCreate"
 
 	if err := json.NewDecoder(r.Body).Decode(backupGroupReq); err != nil {
@@ -68,19 +69,41 @@ func (vd *volAPI) cloudBackupGroupCreate(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	d, err := vd.getVolDriver(r)
+	// Get context with auth token
+	ctx, err := vd.annotateContext(r)
 	if err != nil {
-		notFound(w, r)
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	createResp, err := d.CloudBackupGroupCreate(backupGroupReq)
+	// Get gRPC connection
+	conn, err := vd.getConn()
 	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	volumes := api.NewOpenStorageCloudBackupClient(conn)
+	groupCreateResp, err := volumes.GroupCreate(ctx, &api.SdkCloudBackupGroupCreateRequest{
+		GroupId:      backupGroupReq.GroupID,
+		VolumeIds:    backupGroupReq.VolumeIDs,
+		CredentialId: backupGroupReq.CredentialUUID,
+		Full:         backupGroupReq.Full,
+		Labels:       backupGroupReq.Labels,
+	})
+	if err != nil {
+		if serverError, ok := status.FromError(err); ok {
+			if serverError.Code() == codes.AlreadyExists {
+				w.WriteHeader(http.StatusConflict)
+				return
+			}
+		}
 		vd.sendError(method, backupGroupReq.GroupID, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	json.NewEncoder(w).Encode(createResp)
+	backupGroupResp.GroupCloudBackupID = groupCreateResp.GroupCloudBackupId
+	backupGroupResp.Names = groupCreateResp.TaskIds
+	json.NewEncoder(w).Encode(&backupGroupResp)
 }
 
 func (vd *volAPI) cloudBackupRestore(w http.ResponseWriter, r *http.Request) {

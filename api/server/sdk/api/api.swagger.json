@@ -1108,6 +1108,56 @@
         "title": "Defines a response which lists all the backups stored by a cloud provider",
         "type": "object"
       },
+      "apiSdkCloudBackupGroupCreateRequest": {
+        "properties": {
+          "credential_id": {
+            "title": "Credential id refers to the cloud credentials needed to backup",
+            "type": "string"
+          },
+          "full": {
+            "format": "boolean",
+            "title": "Full indicates if full backup is desired even though incremental is possible",
+            "type": "boolean"
+          },
+          "group_id": {
+            "title": "GroupID of the volume for which cloudbackup is requested",
+            "type": "string"
+          },
+          "labels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Labels are list of key value pairs to tag the cloud backup. These labels\nare stored in the metadata associated with the backup.",
+            "type": "object"
+          },
+          "volume_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "VolumeIds are a list of volume IDs to use for the backup request.\nIf multiple of GroupID, Labels or VolumeIDs are specified, volumes matching\nall of them are backed uup",
+            "type": "array"
+          }
+        },
+        "title": "Defines a request to create a group backup of a group to the cloud",
+        "type": "object"
+      },
+      "apiSdkCloudBackupGroupCreateResponse": {
+        "properties": {
+          "group_cloud_backup_id": {
+            "title": "ID for this group of backups",
+            "type": "string"
+          },
+          "task_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "TaskIds of the tasks performing the group backup",
+            "type": "array"
+          }
+        },
+        "title": "Empty response",
+        "type": "object"
+      },
       "apiSdkCloudBackupHistoryItem": {
         "properties": {
           "src_volume_id": {
@@ -3646,7 +3696,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.57.0"
+    "version": "0.58.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -3884,6 +3934,38 @@
           }
         },
         "summary": "Return a list of backups for the specified volume",
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      }
+    },
+    "/v1/cloudbackups/group": {
+      "post": {
+        "description": "This will only backup volumes which the user has read_access to.",
+        "operationId": "GroupCreate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkCloudBackupGroupCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkCloudBackupGroupCreateResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Creates a group backup request for a specified group. Use\nOpenStorageCloudBackup.Status() to get the current status of the\nbackup request.",
         "tags": [
           "OpenStorageCloudBackup"
         ]
