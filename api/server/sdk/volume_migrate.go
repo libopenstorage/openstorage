@@ -36,7 +36,7 @@ func (s *VolumeServer) Start(
 
 	if volume := req.GetVolume(); volume != nil {
 		// Check ownership
-		if err := checkAccessFromDriverForVolumeId(ctx, s.driver(ctx), volume.GetVolumeId(), api.Ownership_Read); err != nil {
+		if err := checkAccessFromDriverForVolumeIds(ctx, s.driver(ctx), []string{volume.GetVolumeId()}, api.Ownership_Read); err != nil {
 			return nil, err
 		}
 
@@ -174,8 +174,8 @@ func (s *VolumeServer) checkMigrationPermissions(ctx context.Context, taskId str
 	// Check that a user has access to all volumes being migrated
 	for _, cluster := range resp.Info {
 		for _, migrateInfo := range cluster.List {
-			if err := checkAccessFromDriverForVolumeId(ctx, s.driver(ctx),
-				migrateInfo.GetLocalVolumeId(), api.Ownership_Read); err != nil {
+			if err := checkAccessFromDriverForVolumeIds(ctx, s.driver(ctx),
+				[]string{migrateInfo.GetLocalVolumeId()}, api.Ownership_Read); err != nil {
 				return err
 			}
 		}

@@ -1761,6 +1761,19 @@ service OpenStorageCloudBackup {
       };
     }
 
+  // Creates a group backup request for a specified group. Use
+  // OpenStorageCloudBackup.Status() to get the current status of the
+  // backup request.
+  //
+  // This will only backup volumes which the user has read_access to.
+  rpc GroupCreate(SdkCloudBackupGroupCreateRequest)
+    returns (SdkCloudBackupGroupCreateResponse) {
+      option(google.api.http) = {
+        post: "/v1/cloudbackups/group"
+        body: "*"
+      };
+    }
+
   // Restore creates a new volume from a backup id. The newly created volume
   // has an ha_level (number of replicas) of only 1. To increase the number of
   // replicas, use OpenStorageVolume.Set() to change the ha_level.
@@ -2786,6 +2799,33 @@ message SdkCloudBackupCreateResponse {
   string task_id = 1;
 }
 
+// Defines a request to create a group backup of a group to the cloud
+message SdkCloudBackupGroupCreateRequest {
+  // GroupID of the volume for which cloudbackup is requested
+  string group_id = 1;
+    // VolumeIds are a list of volume IDs to use for the backup request.
+  // If multiple of GroupID, Labels or VolumeIDs are specified, volumes matching
+  // all of them are backed uup
+  repeated string volume_ids = 2;
+  // Credential id refers to the cloud credentials needed to backup
+  string credential_id = 3;
+  // Full indicates if full backup is desired even though incremental is possible
+  bool full = 4;
+    // Labels are list of key value pairs to tag the cloud backup. These labels
+  // are stored in the metadata associated with the backup.
+  map<string, string> labels = 5;
+}
+
+// Empty response
+message SdkCloudBackupGroupCreateResponse {
+  // ID for this group of backups
+  string group_cloud_backup_id = 1;
+  
+  // TaskIds of the tasks performing the group backup
+  repeated string task_ids = 2;
+}
+
+
 // Defines a request to restore a volume from an existing backup stored by
 // a cloud provider
 message SdkCloudBackupRestoreRequest {
@@ -3300,7 +3340,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 57;
+    Minor = 58;
     // SDK version patch value of this specification
     Patch = 0;
   }

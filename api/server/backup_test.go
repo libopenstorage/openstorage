@@ -74,8 +74,7 @@ func TestClientBackupCreateFailed(t *testing.T) {
 	assert.Error(t, err)
 }
 
-/*
-func TestClientGroupBackup(t *testing.T) {
+/*func TestClientGroupBackup(t *testing.T) {
 	ts, testVolDriver := testRestServer(t)
 	defer ts.Close()
 	defer testVolDriver.Stop()
