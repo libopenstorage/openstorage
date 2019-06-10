@@ -206,6 +206,9 @@ type ClusterListenerNodeOps interface {
 
 	// Leave is called when this node leaves the cluster.
 	Leave(node *api.Node) error
+
+	// Inspect updates listener specific data like pool and disk information
+	Inspect(node *api.Node) error
 }
 
 // ClusterListenerCallbacks defines APIs that a listener can invoke
@@ -398,6 +401,10 @@ func (nc *NullClusterListener) CleanupInit(
 }
 
 func (nc *NullClusterListener) Enumerate(cluster api.Cluster) error {
+	return nil
+}
+
+func (nc *NullClusterListener) Inspect(node *api.Node) error {
 	return nil
 }
 

@@ -271,7 +271,20 @@ func (c *ClusterManager) getNodeEntry(nodeID string, clustDBRef *cluster.Cluster
 func (c *ClusterManager) Inspect(nodeID string) (api.Node, error) {
 	c.nodeCacheLock.Lock()
 	defer c.nodeCacheLock.Unlock()
-	return c.getNodeEntry(nodeID, &cluster.ClusterInfo{})
+	nodeState, err := c.getNodeEntry(nodeID, &cluster.ClusterInfo{})
+	if err != nil {
+		return nodeState, err
+	}
+
+	// Allow listeners to add/modify data
+	for e := c.listeners.Front(); e != nil; e = e.Next() {
+		if err := e.Value.(cluster.ClusterListener).Inspect(&nodeState); err != nil {
+			logrus.Warnf("listener %s inspect failed: %v",
+				e.Value.(cluster.ClusterListener).String(), err)
+			continue
+		}
+	}
+	return nodeState, nil
 }
 
 // AddEventListener adds a new listener
