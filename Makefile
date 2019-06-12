@@ -50,8 +50,6 @@ endif
 
 OSDSANITY:=cmd/osd-sanity/osd-sanity
 
-export GO15VENDOREXPERIMENT=1
-
 .PHONY: \
 	all \
 	deps \
@@ -131,19 +129,19 @@ $(GOPATH)/bin/gotestcover:
 #
 
 deps:
-	GO15VENDOREXPERIMENT=0 go get -d -v $(PKGS)
+	go get -d -v $(PKGS)
 
 update-deps:
-	GO15VENDOREXPERIMENT=0 go get -d -v -u -f $(PKGS)
+	go get -d -v -u -f $(PKGS)
 
 test-deps:
-	GO15VENDOREXPERIMENT=0 go get -d -v -t $(PKGS)
+	go get -d -v -t $(PKGS)
 
 update-test-deps:
-	GO15VENDOREXPERIMENT=0 go get -tags "$(TAGS)" -d -v -t -u -f $(PKGS)
+	go get -tags "$(TAGS)" -d -v -t -u -f $(PKGS)
 
 vendor-update:
-	GO15VENDOREXPERIMENT=0 GOOS=linux GOARCH=amd64 go get -tags "daemon btrfs_noversion have_btrfs have_chainfs" -d -v -t -u -f $(PKGS)
+	GOOS=linux GOARCH=amd64 go get -tags "daemon btrfs_noversion have_btrfs have_chainfs" -d -v -t -u -f $(PKGS)
 
 vendor-without-update: $(GOPATH)/bin/govendor
 	rm -rf vendor

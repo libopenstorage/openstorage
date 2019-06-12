@@ -109,6 +109,7 @@ enum IoProfile {
   IO_PROFILE_DB = 2;
   IO_PROFILE_DB_REMOTE = 3;
   IO_PROFILE_CMS = 4;
+  IO_PROFILE_SYNC_SHARED = 5;
 }
 
 // VolumeState represents the state of a volume.
@@ -172,6 +173,15 @@ enum OperationFlags {
   OP_FLAGS_NONE = 1;
   // Perform a force_detach during detach operation
   OP_FLAGS_DETACH_FORCE = 2;
+}
+
+enum HardwareType {
+  // When we do not know the machine type alsp the default
+  UnknownMachine = 0;
+  // when we are running on virtual machine 
+  VirtualMachine = 1;
+  // when we are running on physical hardware
+  BareMetalMachine = 2;
 }
 
 // StorageResource groups properties of a storage device.
@@ -1040,6 +1050,8 @@ message StorageNode {
   // SchedulerNodeName is name of the node in scheduler context. It can be
   // empty if unable to get the name from the scheduler.
   string scheduler_node_name = 17;
+  // HardwareType is the type of the hardware the node has
+  HardwareType HWType = 18;
 }
 
 // StorageCluster represents the state and information about the cluster
@@ -1749,6 +1761,19 @@ service OpenStorageCloudBackup {
       };
     }
 
+  // Creates a group backup request for a specified group. Use
+  // OpenStorageCloudBackup.Status() to get the current status of the
+  // backup request.
+  //
+  // This will only backup volumes which the user has read_access to.
+  rpc GroupCreate(SdkCloudBackupGroupCreateRequest)
+    returns (SdkCloudBackupGroupCreateResponse) {
+      option(google.api.http) = {
+        post: "/v1/cloudbackups/group"
+        body: "*"
+      };
+    }
+
   // Restore creates a new volume from a backup id. The newly created volume
   // has an ha_level (number of replicas) of only 1. To increase the number of
   // replicas, use OpenStorageVolume.Set() to change the ha_level.
@@ -2177,6 +2202,8 @@ message SdkAwsCredentialRequest {
   string region = 4;
   // (optional) Disable SSL connection
   bool disable_ssl = 5;
+  // (optional) Disable path-style access
+  bool disable_path_style = 6;
 }
 
 // Defines credentials for Azure
@@ -2205,6 +2232,8 @@ message SdkAwsCredentialResponse {
   string region = 4;
   // (optional) Disable SSL connection
   bool disable_ssl = 5;
+  // (optional) Disable path-style access
+  bool disable_path_style = 6;
 }
 
 // Defines the response for Azure credentials
@@ -2757,6 +2786,11 @@ message SdkCloudBackupCreateRequest {
   // Labels are list of key value pairs to tag the cloud backup. These labels
   // are stored in the metadata associated with the backup.
   map<string, string> labels = 5;
+  // FullBackupFrequency indicates number of incremental backup after whcih 
+  // a fullbackup must be created. This is to override the default value for
+  // manual/user triggerred backups and not applicable for scheduled backups
+  // Value of 0 retains the default behavior. 
+  uint32 full_backup_frequency = 6;
 }
 
 // Empty response
@@ -2764,6 +2798,33 @@ message SdkCloudBackupCreateResponse {
   // TaskId of the task performing the backup
   string task_id = 1;
 }
+
+// Defines a request to create a group backup of a group to the cloud
+message SdkCloudBackupGroupCreateRequest {
+  // GroupID of the volume for which cloudbackup is requested
+  string group_id = 1;
+    // VolumeIds are a list of volume IDs to use for the backup request.
+  // If multiple of GroupID, Labels or VolumeIDs are specified, volumes matching
+  // all of them are backed uup
+  repeated string volume_ids = 2;
+  // Credential id refers to the cloud credentials needed to backup
+  string credential_id = 3;
+  // Full indicates if full backup is desired even though incremental is possible
+  bool full = 4;
+    // Labels are list of key value pairs to tag the cloud backup. These labels
+  // are stored in the metadata associated with the backup.
+  map<string, string> labels = 5;
+}
+
+// Empty response
+message SdkCloudBackupGroupCreateResponse {
+  // ID for this group of backups
+  string group_cloud_backup_id = 1;
+  
+  // TaskIds of the tasks performing the group backup
+  repeated string task_ids = 2;
+}
+
 
 // Defines a request to restore a volume from an existing backup stored by
 // a cloud provider
@@ -2842,6 +2903,15 @@ message SdkCloudBackupEnumerateWithFiltersRequest {
   string credential_id = 3;
   // (optional) All indicates if the request should show cloud backups for all clusters or the current cluster.
   bool all = 4;
+  // (optional) enumerates backups that have status specified by this type
+  SdkCloudBackupStatusType status_filter = 5;
+  // (optional) Enumerates backups that have tags of this type
+  map<string,string> metadata_filter = 6;
+  // (optional) if caller wished to limit number of backups returned by enumerate
+  uint64 max_backups = 7;
+  // Returned in the enumerate response if not all of the backups could be returned in the
+  // response.
+  string continuation_token = 8;
 }
 
 // SdkCloudBackupInfo has information about a backup stored by a cloud provider
@@ -2864,6 +2934,9 @@ message SdkCloudBackupInfo {
 // Defines a response which lists all the backups stored by a cloud provider
 message SdkCloudBackupEnumerateWithFiltersResponse {
   repeated SdkCloudBackupInfo backups = 1;
+  // if this is not an empty string, callers must pass this to get next list of
+  // backups
+	string continuation_token = 2;
 }
 
 // CloudBackup operations types
@@ -2896,6 +2969,9 @@ enum SdkCloudBackupStatusType {
   SdkCloudBackupStatusTypeFailed = 7;
   // Queued
   SdkCloudBackupStatusTypeQueued = 8;
+  // Invalid, used by enumerate, includes failed,
+  // stopped and aborted
+ SdkCloudBackupStatusTypeInvalid = 9;
 }
 
 // SdkCloudBackupStatus defines the status of a backup stored by a cloud provider
@@ -3026,11 +3102,15 @@ message SdkCloudBackupScheduleInfo{
   string credential_id = 2;
   // Schedules are the frequencies of the backup
   repeated SdkSchedulePolicyInterval schedules = 3;
-  // MaxBackups are the maximum number of backups retained
-  // in cloud.Older backups are deleted
+  // MaxBackups indicates when to force full backup to cloud. If RetentionDays
+  // is not specified or is 0 (older scheme), this is also the maximum number 
+  // of scheduled backups retained in the cloud. Older backups are deleted
   uint64 max_backups = 4;
   // Full indicates if scheduled backups should always be full and never incremental.
   bool full = 5;
+  // Number of days that Scheduled CloudBackups will be kept after which they
+  // are deleted
+ uint32 retention_days = 6;
 }
 
 // Defines a request to create a schedule for volume backups to a
@@ -3260,7 +3340,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 52;
+    Minor = 58;
     // SDK version patch value of this specification
     Patch = 0;
   }
@@ -3663,52 +3743,62 @@ message LocateResponse {
 }
 
 // VolumePlacementStrategy defines a strategy for placing volumes in the cluster which will be a series of rules
+// All the rules specified will be applied for volume placement.
+// Rules that have enforcement as "required" are strictly enforced while "preferred" are best effort.
+// In situations, where 2 or more rules conflict, the weight of the rules will dictate which wins.
 message VolumePlacementStrategy {
-  // Rules defines a list of rules as part of the placement spec. All the rules specified will
-  // be applied for volume placement.
-  // Rules that have enforcement as "required" are strictly enforced while "preferred" are best effort.
-  // In situations, where 2 or more rules conflict, the weight of the rules will dictate which wins.
-  repeated VolumePlacementRule rules = 1;
+  // ReplicaAffinity defines affinity rules between replicas within a volume
+  repeated ReplicaPlacementSpec replica_affinity = 1;
+  // ReplicaAntiAffinity defines anti-affinity rules between replicas within a volume
+  repeated ReplicaPlacementSpec replica_anti_affinity = 2;
+  // VolumeAffinity defines affinity rules between volumes
+  repeated VolumePlacementSpec volume_affinity = 3;
+  // VolumeAntiAffinity defines anti-affinity rules between volumes
+  repeated VolumePlacementSpec volume_anti_affinity = 4;
 }
 
-// VolumePlacementRule defines a single placement rule
-message VolumePlacementRule {
-  // AffectedReplicas defines the number of volume replicas affected by this rule. If not provided,
-  // rule would affect all replicas
-  // (optional)
-  int32 affected_replicas = 1;
+message ReplicaPlacementSpec {
   // Weight defines the weight of the rule which allows to break the tie with other matching rules. A rule with
   // higher weight wins over a rule with lower weight.
   // (optional)
-  int64 weight = 2;
-
-  // Defines the types of enforcement on the given rules
-  enum EnforcementType {
-    // This specifies that the rule is required and must be strictly enforced
-    required = 0;
-    // This specifies that the rule is preferred and can be best effort
-    preferred = 1;
-  }
+  int64 weight = 1;
 
   // Enforcement specifies the rule enforcement policy. Can take values: required or preferred.
   // (optional)
-  EnforcementType enforcement = 3;
+  EnforcementType enforcement = 2;
 
-  // This specifies the type an affinity rule can take
-  enum AffinityRuleType {
-    // Affinity means the rule specifies an affinity to objects that match the below label selector requirements
-    affinity = 0;
-    // AntiAffinity means the rule specifies an anti-affinity to objects that match the below label selector requirements
-    antiAffinity = 1;
-  }
+ // AffectedReplicas defines the number of volume replicas affected by this rule. If not provided,
+  // rule would affect all replicas
+  // (optional)
+  int32 affected_replicas = 3;
 
-  // Type is the type of the affinity rule
-  AffinityRuleType type = 4;
+// TopologyKey key for the matching all segments of the cluster topology with the same key
+// e.g If the key is failure-domain.beta.kubernetes.io/zone, this should match all nodes with
+// the same value for this key (i.e in the same zone)
+  string topology_key = 4;
 
   // MatchExpressions is a list of label selector requirements. The requirements are ANDed.
   repeated LabelSelectorRequirement match_expressions = 5;
 }
 
+message VolumePlacementSpec {
+  // Weight defines the weight of the rule which allows to break the tie with other matching rules. A rule with
+  // higher weight wins over a rule with lower weight.
+  // (optional)
+  int64 weight = 1;
+
+  // Enforcement specifies the rule enforcement policy. Can take values: required or preferred.
+  // (optional)
+  EnforcementType enforcement = 2;
+
+  // TopologyKey key for the matching all segments of the cluster topology with the same key
+  // e.g If the key is failure-domain.beta.kubernetes.io/zone, this should match all nodes with
+  // the same value for this key (i.e in the same zone)
+  string topology_key = 3;
+
+  // MatchExpressions is a list of label selector requirements. The requirements are ANDed.
+  repeated LabelSelectorRequirement match_expressions = 4;
+}
 
 // LabelSelectorRequirement is a selector that contains values, a key, and an operator that
 // relates the key and values.
@@ -3742,3 +3832,12 @@ message LabelSelectorRequirement {
   // merge patch.
   repeated string values = 3;
 }
+
+// Defines the types of enforcement on the given rules
+enum EnforcementType {
+  // This specifies that the rule is required and must be strictly enforced
+  required = 0;
+  // This specifies that the rule is preferred and can be best effort
+  preferred = 1;
+}
+

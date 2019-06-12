@@ -45,7 +45,7 @@ func TestCSISanity(t *testing.T) {
 	})
 	cm, err := clustermanager.Inst()
 	go func() {
-		cm.Start(0, false, "9002", "")
+		cm.Start(false, "9002", "")
 	}()
 	defer cm.Shutdown()
 
@@ -127,8 +127,13 @@ func TestCSISanity(t *testing.T) {
 	}
 
 	// Start CSI Sanity test
+	targetPath := "/tmp/mnt/csi"
 	sanity.Test(t, &sanity.Config{
 		Address:    server.Address(),
-		TargetPath: "/mnt",
+		TargetPath: targetPath,
+		CreateTargetDir: func(p string) (string, error) {
+			os.MkdirAll(p+"/target", os.FileMode(0755))
+			return p, nil
+		},
 	})
 }

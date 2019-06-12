@@ -36,7 +36,7 @@ func (s *VolumeServer) Start(
 
 	if volume := req.GetVolume(); volume != nil {
 		// Check ownership
-		if err := checkAccessFromDriverForVolumeId(ctx, s.driver(ctx), volume.GetVolumeId(), api.Ownership_Read); err != nil {
+		if err := checkAccessFromDriverForVolumeIds(ctx, s.driver(ctx), []string{volume.GetVolumeId()}, api.Ownership_Read); err != nil {
 			return nil, err
 		}
 
@@ -162,6 +162,28 @@ func (s *VolumeServer) volumeMigrate(
 	}, nil
 }
 
+func (s *VolumeServer) checkMigrationPermissions(ctx context.Context, taskId string) error {
+	// Inspect migration to get VolumeIds
+	resp, err := s.driver(ctx).CloudMigrateStatus(&api.CloudMigrateStatusRequest{
+		TaskId: taskId,
+	})
+	if err != nil {
+		return status.Errorf(codes.Internal, "Failed to get migration information : %v", err)
+	}
+
+	// Check that a user has access to all volumes being migrated
+	for _, cluster := range resp.Info {
+		for _, migrateInfo := range cluster.List {
+			if err := checkAccessFromDriverForVolumeIds(ctx, s.driver(ctx),
+				[]string{migrateInfo.GetLocalVolumeId()}, api.Ownership_Read); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 // Cancel or stop a ongoing migration
 func (s *VolumeServer) Cancel(
 	ctx context.Context,
@@ -170,11 +192,15 @@ func (s *VolumeServer) Cancel(
 	if s.cluster() == nil || s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
-
 	if req.GetRequest() == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "Must supply valid request")
 	} else if len(req.GetRequest().GetTaskId()) == 0 {
 		return nil, status.Errorf(codes.InvalidArgument, "Must supply valid Task ID")
+	}
+
+	// Check if the user has access to all volumes associated with the TaskID
+	if err := s.checkMigrationPermissions(ctx, req.GetRequest().GetTaskId()); err != nil {
+		return nil, err
 	}
 	err := s.driver(ctx).CloudMigrateCancel(req.GetRequest())
 	if err != nil {
@@ -182,6 +208,62 @@ func (s *VolumeServer) Cancel(
 			req.GetRequest().GetTaskId(), err)
 	}
 	return &api.SdkCloudMigrateCancelResponse{}, nil
+}
+
+// filterStatusResponseForPermissions alters the response object to only return objects
+// that we have access to. While it seems too complicated, it minimizes the number of driver calls.
+func (s *VolumeServer) filterStatusResponseForPermissions(
+	ctx context.Context,
+	resp *api.CloudMigrateStatusResponse) (*api.CloudMigrateStatusResponse, error) {
+	allVolIds := make([]string, 0)
+
+	// get all volume ids to inspect
+	for _, cluster := range resp.Info {
+		for _, migrateInfo := range cluster.List {
+			allVolIds = append(allVolIds, migrateInfo.GetLocalVolumeId())
+		}
+	}
+
+	// When no vol ids are found, exit quickly
+	if len(allVolIds) == 0 {
+		return resp, nil
+	}
+
+	// get all volumes from single inspect
+	allVols, err := s.driver(ctx).Inspect(allVolIds)
+	if err != nil {
+		return nil, err
+	}
+
+	// check which volumes we have access to
+	volAccessPermitted := make(map[string]bool)
+	for _, vol := range allVols {
+		if vol.IsPermitted(ctx, api.Ownership_Read) {
+			volAccessPermitted[vol.Id] = true
+		}
+	}
+
+	// Generate new response with permitted migrate info based
+	// on which volume ids we have access to
+	var filteredResp api.CloudMigrateStatusResponse
+	filteredResp.Info = make(map[string]*api.CloudMigrateInfoList)
+	for clusterId, cluster := range resp.Info {
+		filteredCluster := api.CloudMigrateInfoList{}
+		filteredCluster.List = make([]*api.CloudMigrateInfo, 0)
+
+		for _, migrateInfo := range cluster.List {
+			if found := volAccessPermitted[migrateInfo.GetLocalVolumeId()]; found {
+				filteredCluster.List = append(filteredCluster.List, migrateInfo)
+			}
+		}
+
+		// Do not return empty clusters we don't have access to.
+		if len(cluster.List) > 0 {
+			filteredResp.Info[clusterId] = &filteredCluster
+		}
+	}
+
+	return &filteredResp, nil
 }
 
 // Status of ongoing migration
@@ -197,6 +279,13 @@ func (s *VolumeServer) Status(
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Cannot get status of migration : %v", err)
 	}
+
+	// Filter out volumes we don't have access to
+	resp, err = s.filterStatusResponseForPermissions(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+
 	return &api.SdkCloudMigrateStatusResponse{
 		Result: resp,
 	}, nil

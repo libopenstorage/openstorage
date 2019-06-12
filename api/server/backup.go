@@ -38,11 +38,12 @@ func (vd *volAPI) cloudBackupCreate(w http.ResponseWriter, r *http.Request) {
 
 	volumes := api.NewOpenStorageCloudBackupClient(conn)
 	createResp, err := volumes.Create(ctx, &api.SdkCloudBackupCreateRequest{
-		VolumeId:     backupReq.VolumeID,
-		CredentialId: backupReq.CredentialUUID,
-		Full:         backupReq.Full,
-		TaskId:       backupReq.Name,
-		Labels:       backupReq.Labels,
+		VolumeId:            backupReq.VolumeID,
+		CredentialId:        backupReq.CredentialUUID,
+		Full:                backupReq.Full,
+		TaskId:              backupReq.Name,
+		Labels:              backupReq.Labels,
+		FullBackupFrequency: backupReq.FullBackupFrequency,
 	})
 	if err != nil {
 		if serverError, ok := status.FromError(err); ok {
@@ -60,6 +61,7 @@ func (vd *volAPI) cloudBackupCreate(w http.ResponseWriter, r *http.Request) {
 
 func (vd *volAPI) cloudBackupGroupCreate(w http.ResponseWriter, r *http.Request) {
 	backupGroupReq := &api.CloudBackupGroupCreateRequest{}
+	var backupGroupResp api.CloudBackupGroupCreateResponse
 	method := "cloudBackupGroupCreate"
 
 	if err := json.NewDecoder(r.Body).Decode(backupGroupReq); err != nil {
@@ -67,19 +69,41 @@ func (vd *volAPI) cloudBackupGroupCreate(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	d, err := vd.getVolDriver(r)
+	// Get context with auth token
+	ctx, err := vd.annotateContext(r)
 	if err != nil {
-		notFound(w, r)
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	createResp, err := d.CloudBackupGroupCreate(backupGroupReq)
+	// Get gRPC connection
+	conn, err := vd.getConn()
 	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	volumes := api.NewOpenStorageCloudBackupClient(conn)
+	groupCreateResp, err := volumes.GroupCreate(ctx, &api.SdkCloudBackupGroupCreateRequest{
+		GroupId:      backupGroupReq.GroupID,
+		VolumeIds:    backupGroupReq.VolumeIDs,
+		CredentialId: backupGroupReq.CredentialUUID,
+		Full:         backupGroupReq.Full,
+		Labels:       backupGroupReq.Labels,
+	})
+	if err != nil {
+		if serverError, ok := status.FromError(err); ok {
+			if serverError.Code() == codes.AlreadyExists {
+				w.WriteHeader(http.StatusConflict)
+				return
+			}
+		}
 		vd.sendError(method, backupGroupReq.GroupID, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	json.NewEncoder(w).Encode(createResp)
+	backupGroupResp.GroupCloudBackupID = groupCreateResp.GroupCloudBackupId
+	backupGroupResp.Names = groupCreateResp.TaskIds
+	json.NewEncoder(w).Encode(&backupGroupResp)
 }
 
 func (vd *volAPI) cloudBackupRestore(w http.ResponseWriter, r *http.Request) {
@@ -194,10 +218,14 @@ func (vd *volAPI) cloudBackupEnumerate(w http.ResponseWriter, r *http.Request) {
 
 	volumes := api.NewOpenStorageCloudBackupClient(conn)
 	sdkEnumerateResp, err := volumes.EnumerateWithFilters(ctx, &api.SdkCloudBackupEnumerateWithFiltersRequest{
-		SrcVolumeId:  enumerateReq.SrcVolumeID,
-		ClusterId:    enumerateReq.ClusterID,
-		CredentialId: enumerateReq.CredentialUUID,
-		All:          enumerateReq.All,
+		SrcVolumeId:       enumerateReq.SrcVolumeID,
+		ClusterId:         enumerateReq.ClusterID,
+		CredentialId:      enumerateReq.CredentialUUID,
+		All:               enumerateReq.All,
+		ContinuationToken: enumerateReq.ContinuationToken,
+		MaxBackups:        enumerateReq.MaxBackups,
+		MetadataFilter:    enumerateReq.MetadataFilter,
+		StatusFilter:      api.CloudBackupStatusTypeToSdkCloudBackupStatusType(enumerateReq.StatusFilter),
 	})
 	if err != nil {
 		vd.sendError(method, "", w, err.Error(), http.StatusInternalServerError)
@@ -215,7 +243,7 @@ func (vd *volAPI) cloudBackupEnumerate(w http.ResponseWriter, r *http.Request) {
 		}
 		enumerateResp.Backups = append(enumerateResp.Backups, item)
 	}
-
+	enumerateResp.ContinuationToken = sdkEnumerateResp.ContinuationToken
 	json.NewEncoder(w).Encode(&enumerateResp)
 }
 
@@ -394,6 +422,7 @@ func (vd *volAPI) cloudBackupSchedCreate(w http.ResponseWriter, r *http.Request)
 			CredentialUUID: backupSchedReq.CredentialUUID,
 			Schedule:       backupSchedReq.Schedule,
 			MaxBackups:     backupSchedReq.MaxBackups,
+			RetentionDays:  backupSchedReq.RetentionDays,
 		}),
 	})
 	if err != nil {

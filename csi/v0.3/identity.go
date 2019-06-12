@@ -17,13 +17,18 @@ limitations under the License.
 package csi
 
 import (
+	"fmt"
+
 	csi "github.com/libopenstorage/openstorage/csi/v0.3/spec"
 	"golang.org/x/net/context"
 )
 
 const (
-	csiDriverVersion    = "0.2.0"
-	csiDriverNamePrefix = "com.openstorage."
+	// CSI 0.3 compatible
+	csiDriverVersion = "0.3.0"
+
+	// https://tools.ietf.org/html/rfc1035#section-2.3.1
+	csiDriverNameFormat = "%s.openstorage.org"
 )
 
 // GetPluginCapabilities is a CSI API
@@ -58,8 +63,15 @@ func (s *OsdCsiServer) GetPluginInfo(
 	ctx context.Context,
 	req *csi.GetPluginInfoRequest) (*csi.GetPluginInfoResponse, error) {
 
+	var name string
+	if len(s.csiDriverName) != 0 {
+		name = s.csiDriverName
+	} else {
+		name = fmt.Sprintf(csiDriverNameFormat, s.driver.Name())
+	}
+
 	return &csi.GetPluginInfoResponse{
-		Name:          csiDriverNamePrefix + s.driver.Name(),
+		Name:          name,
 		VendorVersion: csiDriverVersion,
 
 		// As OSD CSI Driver matures, add here more information

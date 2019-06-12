@@ -218,14 +218,14 @@ func (r *SdkRoleManager) Enumerate(
 	ctx context.Context,
 	req *api.SdkRoleEnumerateRequest,
 ) (*api.SdkRoleEnumerateResponse, error) {
-	keys, err := r.kv.Keys(rolePrefix, "/")
+	kvPairs, err := r.kv.Enumerate(rolePrefix + "/")
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to access roles from database: %v", err)
 	}
 
-	names := make([]string, len(keys))
-	for i, key := range keys {
-		names[i] = strings.TrimPrefix(key, rolePrefix+"/")
+	var names []string
+	for _, kvPair := range kvPairs {
+		names = append(names, strings.TrimPrefix(kvPair.Key, rolePrefix+"/"))
 	}
 
 	return &api.SdkRoleEnumerateResponse{

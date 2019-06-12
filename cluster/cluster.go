@@ -65,6 +65,7 @@ type NodeEntry struct {
 	NonQuorumMember   bool
 	GossipPort        string
 	ClusterDomain     string
+	HWType            api.HardwareType
 }
 
 // ClusterInfo is the basic info about the cluster and its nodes
@@ -87,7 +88,7 @@ type ClusterInitState struct {
 // FinalizeInitCb is invoked when init is complete and is in the process of
 // updating the cluster database. This callback is invoked under lock and must
 // finish quickly, else it will slow down other node joins.
-type FinalizeInitCb func() error
+type FinalizeInitCb func(*ClusterInfo) error
 
 // ClusterListener is an interface to be implemented by a storage driver
 // if it is participating in a multi host environment.  It exposes events
@@ -185,6 +186,10 @@ type ClusterListenerNodeOps interface {
 	// Remove is called when a node leaves the cluster
 	Remove(node *api.Node, forceRemove bool) error
 
+	// CanNodeJoin checks with the listener if this node can join
+	// the cluster. This check is done under a cluster database lock
+	CanNodeJoin(node *api.Node, clusterInfo *ClusterInfo, nodeInitialized bool) error
+
 	// CanNodeRemove test to see if we can remove this node
 	CanNodeRemove(node *api.Node) (string, error)
 
@@ -202,6 +207,9 @@ type ClusterListenerNodeOps interface {
 
 	// Leave is called when this node leaves the cluster.
 	Leave(node *api.Node) error
+
+	// Inspect updates listener specific data like pool and disk information
+	Inspect(node *api.Node) error
 }
 
 // ClusterListenerCallbacks defines APIs that a listener can invoke
@@ -332,11 +340,10 @@ type Cluster interface {
 	// nodeInitialized indicates if the caller of this method expects the node
 	// to have been in an already-initialized state.
 	// All managers will default returning NotSupported.
-	Start(clusterSize int, nodeInitialized bool, gossipPort string, selfClusterDomain string) error
+	Start(nodeInitialized bool, gossipPort string, selfClusterDomain string) error
 
 	// Like Start, but have the ability to pass in managers to the cluster object
 	StartWithConfiguration(
-		clusterMaxSize int,
 		nodeInitialized bool,
 		gossipPort string,
 		snapshotPrefixes []string,
@@ -398,6 +405,10 @@ func (nc *NullClusterListener) Enumerate(cluster api.Cluster) error {
 	return nil
 }
 
+func (nc *NullClusterListener) Inspect(node *api.Node) error {
+	return nil
+}
+
 func (nc *NullClusterListener) Halt(
 	self *api.Node,
 	clusterInfo *ClusterInfo) error {
@@ -427,6 +438,10 @@ func (nc *NullClusterListener) Remove(node *api.Node, forceRemove bool) error {
 
 func (nc *NullClusterListener) CanNodeRemove(node *api.Node) (string, error) {
 	return "", nil
+}
+
+func (nc *NullClusterListener) CanNodeJoin(node *api.Node, clusterInfo *ClusterInfo, nodeInitialized bool) error {
+	return nil
 }
 
 func (nc *NullClusterListener) MarkNodeDown(node *api.Node) error {

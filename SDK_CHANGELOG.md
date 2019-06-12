@@ -2,6 +2,30 @@
 
 ## Releases
 
+### v0.58.0 - Tech Preview (6/5/2019)
+
+* Add cloud group-backup API
+
+### v0.57.0 - Tech Preview (6/4/2019)
+
+* Added new param credential API to control path style access to s3
+
+### v0.56.0 - Tech Preview (6/3/2019)
+
+* Addition to Node details, to store the hardware type
+
+### v0.55.0 - Tech Preview (5/7/2019)
+
+* Additions to cloudbackup enumerate filters.
+
+### v0.54.0 - Tech Preview (5/2/2019)
+
+* Added new field FullBackupFrequency to cloudbackup create API
+
+### v0.53.0 - Tech Preview (4/23/2019)
+
+* Added new field RetentionDays to cloudbackup schedule
+
 ### v0.52.0 - Tech Preview (4/23/2019)
 
 * (breaking change) Fix REST Gateway Snapshot enumerate with filters endpoint
