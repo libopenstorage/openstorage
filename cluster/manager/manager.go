@@ -278,7 +278,7 @@ func (c *ClusterManager) Inspect(nodeID string) (api.Node, error) {
 
 	// Allow listeners to add/modify data
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		if err := e.Value.(cluster.ClusterListener).Inspect(&nodeState); err != nil {
+		if err := e.Value.(cluster.ClusterListener).NodeInspect(&nodeState); err != nil {
 			logrus.Warnf("listener %s inspect failed: %v",
 				e.Value.(cluster.ClusterListener).String(), err)
 			continue
