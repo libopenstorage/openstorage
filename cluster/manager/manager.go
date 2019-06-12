@@ -823,7 +823,17 @@ func (c *ClusterManager) updateClusterStatus() {
 
 			// Notify node status change if required.
 			peerNodeInCache := api.Node{}
+			if gossipNodeInfo.Value != nil {
+				peerNodeInGossip, ok := gossipNodeInfo.Value.(api.Node)
+				if ok {
+					// pre-populate the in cache object with the info
+					// we have from gossip
+					peerNodeInCache = peerNodeInGossip
+				}
+			}
 			peerNodeInCache.Id = string(id)
+
+			// overwrite the cache object with latest data
 			peerNodeInCache.Status = api.Status_STATUS_OK
 
 			// Initialize a no-op notify listeners function
