@@ -38,7 +38,6 @@ type ClusterConfig struct {
 	DefaultDriver      string
 	MgmtIp             string
 	DataIp             string
-	LoggingURL         string
 	ManagementURL      string
 	FluentDHost        string
 	SystemSharedSecret string
