@@ -206,16 +206,6 @@ type FluentDConfig struct {
 	Port string `json:"port"`
 }
 
-// TunnelConfig describes key, cert and endpoint of a reverse proxy tunnel
-// DEPRECATED
-//
-// swagger:model
-type TunnelConfig struct {
-	Key      string `json:"key"`
-	Cert     string `json:"cert"`
-	Endpoint string `json:"tunnel_endpoint"`
-}
-
 // Cluster represents the state of the cluster.
 //
 // swagger:model
@@ -233,17 +223,11 @@ type Cluster struct {
 	// array of all the nodes in the cluster.
 	Nodes []Node
 
-	// Logging url for the cluster.
-	LoggingURL string
-
 	// Management url for the cluster
 	ManagementURL string
 
 	// FluentD Host for the cluster
 	FluentDConfig FluentDConfig
-
-	// TunnelConfig for the cluster [key, cert, endpoint]
-	TunnelConfig TunnelConfig
 }
 
 // CredCreateRequest is the input for CredCreate command
