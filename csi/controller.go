@@ -46,6 +46,15 @@ func (s *OsdCsiServer) ControllerGetCapabilities(
 	req *csi.ControllerGetCapabilitiesRequest,
 ) (*csi.ControllerGetCapabilitiesResponse, error) {
 
+	// Cloning: creation of volumes from snapshots, supported
+	capClone := &csi.ControllerServiceCapability{
+		Type: &csi.ControllerServiceCapability_Rpc{
+			Rpc: &csi.ControllerServiceCapability_RPC{
+				Type: csi.ControllerServiceCapability_RPC_CLONE_VOLUME,
+			},
+		},
+	}
+
 	// Creating and deleting volumes supported
 	capCreateDeleteVolume := &csi.ControllerServiceCapability{
 		Type: &csi.ControllerServiceCapability_Rpc{
@@ -75,6 +84,7 @@ func (s *OsdCsiServer) ControllerGetCapabilities(
 
 	return &csi.ControllerGetCapabilitiesResponse{
 		Capabilities: []*csi.ControllerServiceCapability{
+			capClone,
 			capCreateDeleteVolume,
 			capExpandVolume,
 			capCreateDeleteSnapshot,
