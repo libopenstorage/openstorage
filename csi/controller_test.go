@@ -33,6 +33,37 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+func containsCap(c csi.ControllerServiceCapability_RPC_Type, resp *csi.ControllerGetCapabilitiesResponse) bool {
+	for _, capability := range resp.GetCapabilities() {
+		if rpc := capability.GetRpc(); rpc != nil {
+			if rpc.GetType() == c {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func TestControllerGetCapabilities(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	// Make a call
+	c := csi.NewControllerClient(s.Conn())
+	resp, err := c.ControllerGetCapabilities(context.Background(), &csi.ControllerGetCapabilitiesRequest{})
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+
+	assert.Len(t, resp.GetCapabilities(), 4)
+	assert.True(t, containsCap(csi.ControllerServiceCapability_RPC_CLONE_VOLUME, resp))
+	assert.True(t, containsCap(csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME, resp))
+	assert.True(t, containsCap(csi.ControllerServiceCapability_RPC_EXPAND_VOLUME, resp))
+	assert.True(t, containsCap(csi.ControllerServiceCapability_RPC_CREATE_DELETE_SNAPSHOT, resp))
+
+	assert.False(t, containsCap(csi.ControllerServiceCapability_RPC_UNKNOWN, resp))
+}
+
 func TestControllerPublishVolume(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
