@@ -106,6 +106,8 @@ type ServerConfig struct {
 	AlertsFilterDeleter alerts.FilterDeleter
 	// StoragePolicy Manager
 	StoragePolicy policy.PolicyManager
+	// CloudDriveManager is the handler for cloud drive management interface
+	CloudDriveManager api.OpenStorageCloudDrivesServer
 	// Security configuration
 	Security *SecurityConfig
 	// ServerExtensions allows you to extend the SDK gRPC server
@@ -183,6 +185,7 @@ type sdkGrpcServer struct {
 	roleServer           role.RoleManager
 	alertsServer         api.OpenStorageAlertsServer
 	policyServer         policy.PolicyManager
+	cloudDriveServer     api.OpenStorageCloudDrivesServer
 }
 
 // Interface check
@@ -372,8 +375,9 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 			config.DriverName: d,
 			DefaultDriverName: d,
 		},
-		alertHandler: config.AlertsFilterDeleter,
-		policyServer: config.StoragePolicy,
+		alertHandler:     config.AlertsFilterDeleter,
+		policyServer:     config.StoragePolicy,
+		cloudDriveServer: config.CloudDriveManager,
 	}
 	s.identityServer = &IdentityServer{
 		server: s,
@@ -410,7 +414,6 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 		server: s,
 	}
 	s.roleServer = config.Security.Role
-	s.policyServer = config.StoragePolicy
 	return s, nil
 }
 
@@ -468,6 +471,7 @@ func (s *sdkGrpcServer) Start() error {
 		api.RegisterOpenStorageClusterPairServer(grpcServer, s.clusterPairServer)
 		api.RegisterOpenStoragePolicyServer(grpcServer, s.policyServer)
 		api.RegisterOpenStorageClusterDomainsServer(grpcServer, s.clusterDomainsServer)
+		api.RegisterOpenStorageCloudDrivesServer(grpcServer, s.cloudDriveServer)
 
 		if s.config.Security.Role != nil {
 			api.RegisterOpenStorageRoleServer(grpcServer, s.roleServer)

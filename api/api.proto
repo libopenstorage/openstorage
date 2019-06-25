@@ -178,7 +178,7 @@ enum OperationFlags {
 enum HardwareType {
   // When we do not know the machine type alsp the default
   UnknownMachine = 0;
-  // when we are running on virtual machine 
+  // when we are running on virtual machine
   VirtualMachine = 1;
   // when we are running on physical hardware
   BareMetalMachine = 2;
@@ -232,6 +232,32 @@ message StoragePool {
   uint64 Used = 8;
   // Labels is a list of user defined name-value pairs
   map<string, string> labels = 9;
+  // Drives are a list of drives present in the storage pool
+  repeated DriveConfig drives = 10;
+}
+
+// DriveConfig defines the configuration for a drive
+message DriveConfig {
+	// Type defines the type of drive
+	string type = 1;
+	// Size defines the size of the drive in Gi
+	int64 size = 2;
+	// ID is the drive id
+	string id = 3;
+	// Path is the path where the drive is attached
+	string path = 4;
+	// Iops is the iops that the drive supports
+	int64 iops = 5;
+	// Category indicates how this drive is being used by the storage plugin
+	DriveCategory category = 6;
+}
+
+// DriveCategory is the type for various categories a drive could belong to
+enum DriveCategory {
+  // Data indicates drive is being used for data purposes
+  data = 0;
+  // Metadata indicates drive is being used for metadata purposes
+  metadata = 1;
 }
 
 // VolumeLocator is a structure that is attached to a volume
@@ -1302,6 +1328,7 @@ service OpenStorageNode {
       };
     }
 }
+
 
 // OpenStorageVolume is a service used to manage the volumes of a storage system
 service OpenStorageVolume {
@@ -2725,6 +2752,7 @@ message SdkNodeEnumerateResponse {
   repeated string node_ids = 1;
 }
 
+
 // Defines a request to get information about an object store endpoint
 message SdkObjectstoreInspectRequest {
   // Id of the object store
@@ -2786,10 +2814,10 @@ message SdkCloudBackupCreateRequest {
   // Labels are list of key value pairs to tag the cloud backup. These labels
   // are stored in the metadata associated with the backup.
   map<string, string> labels = 5;
-  // FullBackupFrequency indicates number of incremental backup after whcih 
+  // FullBackupFrequency indicates number of incremental backup after whcih
   // a fullbackup must be created. This is to override the default value for
   // manual/user triggerred backups and not applicable for scheduled backups
-  // Value of 0 retains the default behavior. 
+  // Value of 0 retains the default behavior.
   uint32 full_backup_frequency = 6;
 }
 
@@ -2820,7 +2848,7 @@ message SdkCloudBackupGroupCreateRequest {
 message SdkCloudBackupGroupCreateResponse {
   // ID for this group of backups
   string group_cloud_backup_id = 1;
-  
+
   // TaskIds of the tasks performing the group backup
   repeated string task_ids = 2;
 }
@@ -3103,7 +3131,7 @@ message SdkCloudBackupScheduleInfo{
   // Schedules are the frequencies of the backup
   repeated SdkSchedulePolicyInterval schedules = 3;
   // MaxBackups indicates when to force full backup to cloud. If RetentionDays
-  // is not specified or is 0 (older scheme), this is also the maximum number 
+  // is not specified or is 0 (older scheme), this is also the maximum number
   // of scheduled backups retained in the cloud. Older backups are deleted
   uint64 max_backups = 4;
   // Full indicates if scheduled backups should always be full and never incremental.

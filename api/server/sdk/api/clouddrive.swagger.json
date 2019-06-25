@@ -1,0 +1,535 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "api/clouddrive.proto",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/clouddrives": {
+      "get": {
+        "summary": "Enumerate returns the ids of all the cloud drives in the current cluster",
+        "operationId": "Enumerate",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudDriveSetEnumerateResponse"
+            }
+          }
+        },
+        "tags": [
+          "OpenStorageCloudDrives"
+        ]
+      },
+      "post": {
+        "summary": "Create creates a new drive set",
+        "operationId": "Create",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudDriveSetCreateResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudDriveSetCreateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageCloudDrives"
+        ]
+      }
+    },
+    "/v1/clouddrives/{id}": {
+      "get": {
+        "summary": "Delete inspects the given drive set",
+        "operationId": "Inspect",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudDriveSetInspectResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "OpenStorageCloudDrives"
+        ]
+      },
+      "delete": {
+        "summary": "Delete deletes the given drive set",
+        "operationId": "Delete",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudDriveSetDeleteResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "OpenStorageCloudDrives"
+        ]
+      },
+      "put": {
+        "summary": "Expand expands the given drive set",
+        "operationId": "Expand",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudDriveSetExpandResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudDriveSetExpandRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageCloudDrives"
+        ]
+      }
+    },
+    "/v1/clouddrives/{id}/attach": {
+      "post": {
+        "summary": "Attach attaches all the drives in the given drive set",
+        "operationId": "Attach",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudDriveSetAttachResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudDriveSetAttachRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageCloudDrives"
+        ]
+      }
+    },
+    "/v1/clouddrives/{id}/detach": {
+      "post": {
+        "summary": "Detach detaches all the drives in the given drive set from the instance\nwhere it's currently attached",
+        "operationId": "Detach",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudDriveSetDetachResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSdkCloudDriveSetDetachRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OpenStorageCloudDrives"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "apiAttachedCloudDrive": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "ID is the ID of the drive that's attached"
+        },
+        "path": {
+          "type": "string",
+          "title": "Path is the path where the drive is attached"
+        }
+      },
+      "title": "CloudDriveAttachedDrive represents a single attached drive"
+    },
+    "apiCloudDriveSet": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "ID is the unique id of the cloud drive. This is managed by the storage provider\nimplementing the handlers"
+        },
+        "pools": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiStoragePool"
+          },
+          "title": "Pools describes the configuration of the drives present in this set"
+        },
+        "create_timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "title": "CreateTimestamp is the timestamp when the drive set was created"
+        },
+        "state": {
+          "$ref": "#/definitions/apiCloudDriveSetState",
+          "title": "State state of the drive set from the well defined states"
+        },
+        "scheduler_node_name": {
+          "type": "string",
+          "title": "SchedulerNodeName is the name of the node in scheduler context who is using\nthe cloud drive set"
+        },
+        "instance_id": {
+          "type": "string",
+          "title": "InstanceID is the cloud provider id of the instance using this drive set"
+        },
+        "zone": {
+          "type": "string",
+          "title": "Zone defines the zone in which the node exists"
+        }
+      },
+      "title": "CloudDriveSet defines a set of drive pools that could be attached on a node"
+    },
+    "apiCloudDriveSetState": {
+      "type": "string",
+      "enum": [
+        "initializing",
+        "in_use",
+        "pending_decommission"
+      ],
+      "default": "initializing",
+      "description": "- initializing: Initializing indicates that the DriveSet is attached to a node but still in\ninit state\n - in_use: InUse indicates that the DriveSet is in use\n - pending_decommission: PendingDecommission indicates that the DriveSet needs to be deleted.\nTODO: Currently this is being used only for storage less drive sets",
+      "title": "CloudDriveSetState indicates the state of the DriveSet"
+    },
+    "apiCloudDriveSpec": {
+      "type": "object",
+      "properties": {
+        "size": {
+          "type": "string",
+          "format": "int64",
+          "title": "Size is the required size of the CloudDrive"
+        },
+        "type": {
+          "type": "string",
+          "title": "Type is the type of the CloudDrive"
+        },
+        "options": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Options are other opaque key value pair options"
+        }
+      },
+      "title": "CloudDriveSpec is a spec for a CloudDrive"
+    },
+    "apiCosType": {
+      "type": "string",
+      "enum": [
+        "NONE",
+        "LOW",
+        "MEDIUM",
+        "HIGH"
+      ],
+      "default": "NONE"
+    },
+    "apiDriveCategory": {
+      "type": "string",
+      "enum": [
+        "data",
+        "metadata"
+      ],
+      "default": "data",
+      "description": "- data: Data indicates drive is being used for data purposes\n - metadata: Metadata indicates drive is being used for metadata purposes",
+      "title": "DriveCategory is the type for various categories a drive could belong to"
+    },
+    "apiDriveConfig": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "title": "Type defines the type of drive"
+        },
+        "size": {
+          "type": "string",
+          "format": "int64",
+          "title": "Size defines the size of the drive in Gi"
+        },
+        "id": {
+          "type": "string",
+          "title": "ID is the drive id"
+        },
+        "path": {
+          "type": "string",
+          "title": "Path is the path where the drive is attached"
+        },
+        "iops": {
+          "type": "string",
+          "format": "int64",
+          "title": "Iops is the iops that the drive supports"
+        },
+        "category": {
+          "$ref": "#/definitions/apiDriveCategory",
+          "title": "Category indicates how this drive is being used by the storage plugin"
+        }
+      },
+      "title": "DriveConfig defines the configuration for a drive"
+    },
+    "apiDriveSetExpandOperationType": {
+      "type": "string",
+      "enum": [
+        "Auto",
+        "Add",
+        "Resize"
+      ],
+      "default": "Auto",
+      "description": "- Auto: Automatically pick the optimum operation type\n - Add: Add a new drive to expand the drive set\n - Resize: Resize existing drives to expand the drive set",
+      "title": "Defines the operation types available to expand a drive set"
+    },
+    "apiSdkCloudDriveSetAttachRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "ID of the cloud drive to attach"
+        },
+        "instance_id": {
+          "type": "string",
+          "title": "InstanceID of the node to attach the drive set"
+        }
+      },
+      "title": "Defines a request object to a a cloud drive"
+    },
+    "apiSdkCloudDriveSetAttachResponse": {
+      "type": "object",
+      "properties": {
+        "attached_drives": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiAttachedCloudDrive"
+          },
+          "title": "AttachedDrives is the list of the drives that are attached"
+        }
+      },
+      "title": "Defines a response for the attach cloud drive operation"
+    },
+    "apiSdkCloudDriveSetCreateRequest": {
+      "type": "object",
+      "properties": {
+        "specs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiCloudDriveSpec"
+          },
+          "title": "Specs are the list of specs for the cloud drives to create. For each item\nin the list, a drive will be created and added to the CloudDriveSet"
+        }
+      },
+      "title": "Request to create the drive set"
+    },
+    "apiSdkCloudDriveSetCreateResponse": {
+      "type": "object",
+      "properties": {
+        "cloud_drives": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiCloudDriveSet"
+          },
+          "title": "List of all the cloud drive ids in the cluster"
+        }
+      },
+      "title": "Defines a response with a list of cloud drives"
+    },
+    "apiSdkCloudDriveSetDeleteResponse": {
+      "type": "object",
+      "title": "Empty response"
+    },
+    "apiSdkCloudDriveSetDetachRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "ID of the cloud drive to detach"
+        }
+      },
+      "title": "Defines a request object to detach a cloud drive"
+    },
+    "apiSdkCloudDriveSetDetachResponse": {
+      "type": "object",
+      "title": "Empty response"
+    },
+    "apiSdkCloudDriveSetEnumerateResponse": {
+      "type": "object",
+      "properties": {
+        "cloud_drives": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiCloudDriveSet"
+          },
+          "title": "List of all the cloud drive ids in the cluster"
+        }
+      },
+      "title": "Defines a response with a list of cloud drives"
+    },
+    "apiSdkCloudDriveSetExpandRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "ID of the cloud drive to expand"
+        },
+        "pool_id": {
+          "type": "string",
+          "title": "PoolID of the pool inside the cloud drive to expand"
+        },
+        "operation_type": {
+          "$ref": "#/definitions/apiDriveSetExpandOperationType",
+          "title": "OperationType is the operation that's used to expand the drive set (optional)"
+        }
+      },
+      "title": "Defines a request object to expand a cloud drive"
+    },
+    "apiSdkCloudDriveSetExpandResponse": {
+      "type": "object",
+      "properties": {
+        "cloud_drive": {
+          "$ref": "#/definitions/apiCloudDriveSet",
+          "title": "CloudDrive that was requested to expand"
+        }
+      },
+      "title": "Defines a response for the inspect cloud drive operation"
+    },
+    "apiSdkCloudDriveSetInspectResponse": {
+      "type": "object",
+      "properties": {
+        "cloud_drive": {
+          "$ref": "#/definitions/apiCloudDriveSet",
+          "title": "CloudDrive that was requested to inspect"
+        }
+      },
+      "title": "Defines a response for the inspect cloud drive operation"
+    },
+    "apiStorageMedium": {
+      "type": "string",
+      "enum": [
+        "STORAGE_MEDIUM_MAGNETIC",
+        "STORAGE_MEDIUM_SSD",
+        "STORAGE_MEDIUM_NVME"
+      ],
+      "default": "STORAGE_MEDIUM_MAGNETIC",
+      "title": "- STORAGE_MEDIUM_MAGNETIC: Magnetic spinning disk.\n - STORAGE_MEDIUM_SSD: SSD disk\n - STORAGE_MEDIUM_NVME: NVME disk"
+    },
+    "apiStoragePool": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "integer",
+          "format": "int32",
+          "title": "ID pool ID"
+        },
+        "Cos": {
+          "$ref": "#/definitions/apiCosType",
+          "title": "Cos reflects the capabilities of this drive pool"
+        },
+        "Medium": {
+          "$ref": "#/definitions/apiStorageMedium",
+          "title": "Medium underlying storage type"
+        },
+        "RaidLevel": {
+          "type": "string",
+          "title": "RaidLevel storage raid level"
+        },
+        "TotalSize": {
+          "type": "string",
+          "format": "uint64",
+          "title": "TotalSize of the pool"
+        },
+        "Used": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Used size of the pool"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Labels is a list of user defined name-value pairs"
+        },
+        "drives": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiDriveConfig"
+          },
+          "title": "Drives are a list of drives present in the storage pool"
+        }
+      },
+      "title": "StoragePool groups different storage devices based on their CosType"
+    }
+  }
+}

@@ -1,0 +1,232 @@
+/// Please use the following editor setup for this file:
+// Tab size=2; Tabs as spaces; Clean up trailing whitepsace
+//
+// In vim add: au FileType proto setl sw=2 ts=2 expandtab list
+//
+// Note, the documentation provided here for can be created in
+// markdown format plus the use of 'codetabs' are supported. The documentation
+// will then be rendered by github.com/openstoreage/libopenstoreage.github.io and
+// provided on https://libopenstorage.github.io
+//
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
+import "api/api.proto";
+
+package openstorage.api;
+
+option go_package = "api";
+option java_multiple_files = true;
+option java_package = "com.openstorage.api";
+
+// CloudDriveSet defines a set of drive pools that could be attached on a node
+message CloudDriveSet {
+	// ID is the unique id of the cloud drive. This is managed by the storage provider
+  // implementing the handlers
+	string id = 1;
+	// Pools describes the configuration of the drives present in this set
+	repeated StoragePool pools = 2;
+	// CreateTimestamp is the timestamp when the drive set was created
+  google.protobuf.Timestamp create_timestamp = 3;
+	// State state of the drive set from the well defined states
+	CloudDriveSetState state = 4;
+	// SchedulerNodeName is the name of the node in scheduler context who is using
+  // the cloud drive set
+	string scheduler_node_name = 5;
+	// InstanceID is the cloud provider id of the instance using this drive set
+	string instance_id = 6;
+	// Zone defines the zone in which the node exists
+	string zone = 7;
+}
+
+
+// CloudDriveSetState indicates the state of the DriveSet
+enum CloudDriveSetState {
+	// Initializing indicates that the DriveSet is attached to a node but still in
+  // init state
+	initializing = 0;
+	// InUse indicates that the DriveSet is in use
+	in_use = 1;
+	// PendingDecommission indicates that the DriveSet needs to be deleted.
+	// TODO: Currently this is being used only for storage less drive sets
+	pending_decommission = 2;
+}
+
+// OpenStorageCloudDrives is a service used to manage cloud drives in the cluster
+service OpenStorageCloudDrives {
+  // Enumerate returns the ids of all the cloud drives in the current cluster
+  rpc Enumerate(SdkCloudDriveSetEnumerateRequest)
+    returns (SdkCloudDriveSetEnumerateResponse) {
+      option(google.api.http) = {
+        get: "/v1/clouddrives"
+      };
+    }
+
+  // Create creates a new drive set
+  rpc Create(SdkCloudDriveSetCreateRequest)
+    returns (SdkCloudDriveSetCreateResponse) {
+      option(google.api.http) = {
+        post: "/v1/clouddrives"
+        body: "*"
+      };
+    }
+
+  // Expand expands the given drive set
+  rpc Expand(SdkCloudDriveSetExpandRequest)
+    returns (SdkCloudDriveSetExpandResponse) {
+      option(google.api.http) = {
+        put: "/v1/clouddrives/{id}"
+        body: "*"
+      };
+    }
+
+  // Delete deletes the given drive set
+  rpc Delete(SdkCloudDriveSetDeleteRequest)
+    returns (SdkCloudDriveSetDeleteResponse) {
+      option(google.api.http) = {
+        delete: "/v1/clouddrives/{id}"
+      };
+    }
+
+  // Delete inspects the given drive set
+  rpc Inspect(SdkCloudDriveSetInspectRequest)
+    returns (SdkCloudDriveSetInspectResponse) {
+      option(google.api.http) = {
+        get: "/v1/clouddrives/{id}"
+      };
+    }
+
+  // Attach attaches all the drives in the given drive set
+  rpc Attach(SdkCloudDriveSetAttachRequest)
+    returns (SdkCloudDriveSetAttachResponse) {
+      option(google.api.http) = {
+        post: "/v1/clouddrives/{id}/attach"
+        body: "*"
+      };
+    }
+
+  // Detach detaches all the drives in the given drive set from the instance
+  // where it's currently attached
+  rpc Detach(SdkCloudDriveSetDetachRequest)
+    returns (SdkCloudDriveSetDetachResponse) {
+      option(google.api.http) = {
+        post: "/v1/clouddrives/{id}/detach"
+        body: "*"
+      };
+    }
+}
+
+// Request to create the drive set
+message SdkCloudDriveSetCreateRequest {
+  // Specs are the list of specs for the cloud drives to create. For each item
+  // in the list, a drive will be created and added to the CloudDriveSet
+  repeated CloudDriveSpec specs = 1;
+}
+
+// CloudDriveSpec is a spec for a CloudDrive
+message CloudDriveSpec {
+  // Size is the required size of the CloudDrive
+  int64 size = 1;
+  // Type is the type of the CloudDrive
+  string type = 2;
+  // Options are other opaque key value pair options
+  map<string, string> options = 3;
+}
+
+// Defines a response with a list of cloud drives
+message SdkCloudDriveSetCreateResponse {
+  // List of all the cloud drive ids in the cluster
+  repeated CloudDriveSet cloud_drives = 1;
+}
+
+// Empty request
+message SdkCloudDriveSetEnumerateRequest {
+}
+
+// Defines a response with a list of cloud drives
+message SdkCloudDriveSetEnumerateResponse {
+  // List of all the cloud drive ids in the cluster
+  repeated CloudDriveSet cloud_drives = 1;
+}
+
+// Defines a request object to inspect a cloud drive
+message SdkCloudDriveSetInspectRequest {
+  // ID of the cloud drive to inspect
+  string id = 1;
+}
+
+// Defines a response for the inspect cloud drive operation
+message SdkCloudDriveSetInspectResponse {
+  // CloudDrive that was requested to inspect
+  CloudDriveSet cloud_drive = 1;
+}
+
+// Defines a request object to delete a cloud drive
+message SdkCloudDriveSetDeleteRequest {
+  // ID of the cloud drive to delete
+  string id = 1;
+}
+
+// Empty response
+message SdkCloudDriveSetDeleteResponse {
+}
+
+// Defines a request object to a cloud drive
+message SdkCloudDriveSetAttachRequest {
+  // ID of the cloud drive to attach
+  string id = 1;
+  // InstanceID of the node to attach the drive set
+  string instance_id = 2;
+}
+
+// Defines a response for the attach cloud drive operation
+message SdkCloudDriveSetAttachResponse {
+  // AttachedDrives is the list of the drives that are attached
+  repeated AttachedCloudDrive attached_drives = 1;
+}
+
+// CloudDriveAttachedDrive represents a single attached drive
+message AttachedCloudDrive {
+  // ID is the ID of the drive that's attached
+  string id = 1;
+  // Path is the path where the drive is attached
+  string path = 2;
+}
+
+// Defines a request object to detach a cloud drive
+message SdkCloudDriveSetDetachRequest {
+  // ID of the cloud drive to detach
+  string id = 1;
+
+}
+
+// Empty response
+message SdkCloudDriveSetDetachResponse {
+}
+
+// Defines a request object to expand a cloud drive
+message SdkCloudDriveSetExpandRequest {
+  // ID of the cloud drive to expand
+  string id = 1;
+  // PoolID of the pool inside the cloud drive to expand
+  string pool_id = 2;
+  // OperationType is the operation that's used to expand the drive set (optional)
+  DriveSetExpandOperationType operation_type = 3;
+}
+
+// Defines a response for the inspect cloud drive operation
+message SdkCloudDriveSetExpandResponse {
+  // CloudDrive that was requested to expand
+  CloudDriveSet cloud_drive = 1;
+}
+
+// Defines the operation types available to expand a drive set
+enum DriveSetExpandOperationType {
+  // Automatically pick the optimum operation type
+  Auto = 0;
+  // Add a new drive to expand the drive set
+  Add = 1;
+  // Resize existing drives to expand the drive set
+  Resize = 2;
+}

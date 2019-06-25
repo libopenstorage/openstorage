@@ -189,22 +189,25 @@ ifndef DOCKER_PROTO
 	$(error Do not run directly. Run 'make docker-proto' instead.)
 endif
 
-	@echo ">>> Generating protobuf definitions from api/api.proto"
+	@echo ">>> Generating protobuf definitions from api/api.proto and api/clouddrive.proto"
 	$(PROTOC) -I $(PROTOSRC_PATH) \
 		-I /usr/local/include \
 		-I $(PROTOS_PATH)/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
 		--go_out=plugins=grpc:. \
-		$(PROTOSRC_PATH)/api/api.proto
+		$(PROTOSRC_PATH)/api/api.proto \
+		$(PROTOSRC_PATH)/api/clouddrive.proto
 	$(PROTOC) -I $(PROTOSRC_PATH) \
 		-I /usr/local/include \
 		-I $(PROTOS_PATH)/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
 		--grpc-gateway_out=logtostderr=true:. \
-		$(PROTOSRC_PATH)/api/api.proto
+		$(PROTOSRC_PATH)/api/api.proto \
+		$(PROTOSRC_PATH)/api/clouddrive.proto
 	$(PROTOC) -I $(PROTOSRC_PATH) \
 		-I /usr/local/include \
 		-I $(PROTOS_PATH)/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
 		--swagger_out=logtostderr=true:$(PROTOSRC_PATH)/api/server/sdk \
-		$(PROTOSRC_PATH)/api/api.proto
+		$(PROTOSRC_PATH)/api/api.proto \
+		$(PROTOSRC_PATH)/api/clouddrive.proto
 	@echo ">>> Upgrading swagger 2.0 to openapi 3.0"
 	mv api/server/sdk/api/api.swagger.json api/server/sdk/api/20api.swagger.json
 	swagger2openapi api/server/sdk/api/20api.swagger.json -o api/server/sdk/api/api.swagger.json

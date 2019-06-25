@@ -487,6 +487,47 @@
         ],
         "type": "string"
       },
+      "apiDriveCategory": {
+        "default": "data",
+        "description": "- data: Data indicates drive is being used for data purposes\n - metadata: Metadata indicates drive is being used for metadata purposes",
+        "enum": [
+          "data",
+          "metadata"
+        ],
+        "title": "DriveCategory is the type for various categories a drive could belong to",
+        "type": "string"
+      },
+      "apiDriveConfig": {
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/apiDriveCategory"
+          },
+          "id": {
+            "title": "ID is the drive id",
+            "type": "string"
+          },
+          "iops": {
+            "format": "int64",
+            "title": "Iops is the iops that the drive supports",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path is the path where the drive is attached",
+            "type": "string"
+          },
+          "size": {
+            "format": "int64",
+            "title": "Size defines the size of the drive in Gi",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type defines the type of drive",
+            "type": "string"
+          }
+        },
+        "title": "DriveConfig defines the configuration for a drive",
+        "type": "object"
+      },
       "apiEnforcementType": {
         "default": "required",
         "description": "- required: This specifies that the rule is required and must be strictly enforced\n - preferred: This specifies that the rule is preferred and can be best effort",
@@ -994,7 +1035,7 @@
             "type": "boolean"
           },
           "full_backup_frequency": {
-            "description": "FullBackupFrequency indicates number of incremental backup after whcih \na fullbackup must be created. This is to override the default value for\nmanual/user triggerred backups and not applicable for scheduled backups\nValue of 0 retains the default behavior.",
+            "description": "FullBackupFrequency indicates number of incremental backup after whcih\na fullbackup must be created. This is to override the default value for\nmanual/user triggerred backups and not applicable for scheduled backups\nValue of 0 retains the default behavior.",
             "format": "int64",
             "type": "integer"
           },
@@ -1334,7 +1375,7 @@
           },
           "max_backups": {
             "format": "uint64",
-            "title": "MaxBackups indicates when to force full backup to cloud. If RetentionDays\nis not specified or is 0 (older scheme), this is also the maximum number \nof scheduled backups retained in the cloud. Older backups are deleted",
+            "title": "MaxBackups indicates when to force full backup to cloud. If RetentionDays\nis not specified or is 0 (older scheme), this is also the maximum number\nof scheduled backups retained in the cloud. Older backups are deleted",
             "type": "string"
           },
           "retention_days": {
@@ -2975,6 +3016,13 @@
             "format": "uint64",
             "title": "Used size of the pool",
             "type": "string"
+          },
+          "drives": {
+            "items": {
+              "$ref": "#/components/schemas/apiDriveConfig"
+            },
+            "title": "Drives are a list of drives present in the storage pool",
+            "type": "array"
           },
           "labels": {
             "additionalProperties": {
