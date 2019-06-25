@@ -13,10 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var (
-	attemptLock sync.Mutex
-)
-
 func TestRetryClient(t *testing.T) {
 	count := 0
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -42,6 +38,7 @@ func TestRetryClient(t *testing.T) {
 func TestRetryDDosClient(t *testing.T) {
 	attempts := 0
 	var wg sync.WaitGroup
+	var attemptLock sync.Mutex
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		attemptLock.Lock()
