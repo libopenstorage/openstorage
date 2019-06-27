@@ -244,34 +244,37 @@ func (r *Request) Do() *Response {
 	if r.err != nil {
 		return &Response{err: r.err}
 	}
+
 	url = r.URL().String()
-	req, err = http.NewRequest(r.verb, url, bytes.NewBuffer(r.body))
-	if err != nil {
-		return &Response{err: err}
-	}
-	if r.headers == nil {
-		r.headers = http.Header{}
-	}
-
-	req.Header = r.headers
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Date", time.Now().String())
-
-	if len(r.authstring) > 0 {
-		if auth.IsJwtToken(r.authstring) {
-			req.Header.Set("Authorization", "bearer "+r.authstring)
-		} else {
-			req.Header.Set("Authorization", "Basic "+r.authstring)
-		}
-	}
-
-	if len(r.accesstoken) > 0 {
-		req.Header.Set("Access-Token", r.accesstoken)
-	}
-
 	start := time.Now()
 	attemptNum := 0
 	for {
+		// Re-create Request for every call to make sure body isn't empty.
+		req, err = http.NewRequest(r.verb, url, bytes.NewBuffer(r.body))
+		if err != nil {
+			return &Response{err: err}
+		}
+
+		if r.headers == nil {
+			r.headers = http.Header{}
+		}
+
+		req.Header = r.headers
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Date", time.Now().String())
+
+		if len(r.authstring) > 0 {
+			if auth.IsJwtToken(r.authstring) {
+				req.Header.Set("Authorization", "bearer "+r.authstring)
+			} else {
+				req.Header.Set("Authorization", "Basic "+r.authstring)
+			}
+		}
+
+		if len(r.accesstoken) > 0 {
+			req.Header.Set("Access-Token", r.accesstoken)
+		}
+
 		if resp, err = r.client.Do(req); err != nil {
 			return &Response{err: err}
 		}
