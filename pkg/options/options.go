@@ -51,6 +51,10 @@ const (
 	// - Detach
 	// It indicates the Volume Driver to forcefully detach device from kernel
 	OptionsForceDetach = "FORCE_DETACH"
+	// OptionsAccessMode is an option provided to the following Openstorage Volume API
+	// - Mount
+	// It indicates the mode in which volume must be mounted
+	OptionsAccessMode = "ACCESS_MODE"
 )
 
 // IsBoolOptionSet checks if a boolean option key is set
