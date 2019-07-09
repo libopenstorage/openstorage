@@ -17,6 +17,7 @@ limitations under the License.
 package csi
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/portworx/kvdb"
@@ -32,6 +33,17 @@ import (
 )
 
 const (
+	// These keys are for accessing PVC Metadata added from the external-provisioner
+	osdParameterPrefix   = "csi.openstorage.org/"
+	osdPvcNameKey        = osdParameterPrefix + "pvc-name"
+	osdPvcNamespaceKey   = osdParameterPrefix + "pvc-namespace"
+	osdPvcAnnotationsKey = osdParameterPrefix + "pvc-annotations"
+	osdPvcLabelsKey      = osdParameterPrefix + "pvc-labels"
+
+	// in-tree keys for name and namespace
+	intreePvcNameKey      = "pvc"
+	intreePvcNamespaceKey = "namespace"
+
 	volumeCapabilityMessageMultinodeVolume    = "Volume is a multinode volume"
 	volumeCapabilityMessageNotMultinodeVolume = "Volume is not a multinode volume"
 	volumeCapabilityMessageReadOnlyVolume     = "Volume is read only"
@@ -260,6 +272,39 @@ func osdVolumeContext(v *api.Volume) map[string]string {
 	}
 }
 
+func addJsonMapToMetadata(params string, metadata map[string]string) (map[string]string, error) {
+	decodedParams := make(map[string]string)
+	if len(params) > 0 {
+		// Decode and add labels
+		err := json.Unmarshal([]byte(params), &decodedParams)
+		if err != nil {
+			return metadata, err
+		}
+		for k, v := range decodedParams {
+			metadata[k] = v
+		}
+	}
+
+	return metadata, nil
+}
+
+func getPVCMetadata(params map[string]string) (map[string]string, error) {
+	metadata := make(map[string]string)
+
+	metadata[intreePvcNameKey] = params[osdPvcNameKey]
+	metadata[intreePvcNamespaceKey] = params[osdPvcNamespaceKey]
+	metadata, err := addJsonMapToMetadata(params[osdPvcAnnotationsKey], metadata)
+	if err != nil {
+		return nil, err
+	}
+	metadata, err = addJsonMapToMetadata(params[osdPvcLabelsKey], metadata)
+	if err != nil {
+		return nil, err
+	}
+
+	return metadata, nil
+}
+
 // CreateVolume is a CSI API which creates a volume on OSD
 // This function supports snapshots if the parent volume id is supplied
 // in the parameters.
@@ -284,6 +329,14 @@ func (s *OsdCsiServer) CreateVolume(
 		e := fmt.Sprintf("Unable to get parameters: %s\n", err.Error())
 		logrus.Errorln(e)
 		return nil, status.Error(codes.InvalidArgument, e)
+	}
+
+	// Get PVC Metadata and add to locator.VolumeLabels
+	pvcMetadata, err := getPVCMetadata(req.GetParameters())
+	if err != nil {
+		for k, v := range pvcMetadata {
+			locator.VolumeLabels[k] = v
+		}
 	}
 
 	// Get parent ID from request: snapshot or volume
