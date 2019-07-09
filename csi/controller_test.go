@@ -17,6 +17,7 @@ limitations under the License.
 package csi
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -2114,4 +2115,29 @@ func TestControllerDeleteSnapshot(t *testing.T) {
 		Secrets:    map[string]string{authsecrets.SecretTokenKey: systemUserToken},
 	})
 	assert.NoError(t, err)
+}
+
+func TestGetPVCMetadata(t *testing.T) {
+	params := make(map[string]string)
+	params[osdPvcNameKey] = "mypvc1"
+	params[osdPvcNamespaceKey] = "mypvcns1"
+
+	labels := make(map[string]string)
+	labels["testkey_labels"] = "testval_1"
+	annotations := make(map[string]string)
+	annotations["testkey_annotations"] = "testval_2"
+	encodedLabels, err := json.Marshal(labels)
+	assert.NoError(t, err)
+	encodedAnnotations, err := json.Marshal(annotations)
+	assert.NoError(t, err)
+
+	params[osdPvcAnnotationsKey] = string(encodedAnnotations)
+	params[osdPvcLabelsKey] = string(encodedLabels)
+	md, err := getPVCMetadata(params)
+	assert.NoError(t, err)
+
+	assert.Equal(t, md[intreePvcNameKey], "mypvc1")
+	assert.Equal(t, md[intreePvcNamespaceKey], "mypvcns1")
+	assert.Equal(t, md["testkey_labels"], "testval_1")
+	assert.Equal(t, md["testkey_annotations"], "testval_2")
 }
