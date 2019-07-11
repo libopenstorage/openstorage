@@ -147,7 +147,7 @@ message SdkCloudDriveSetEnumerateRequest {
 
 // Defines a response with a list of cloud drives
 message SdkCloudDriveSetEnumerateResponse {
-  // List of all the cloud drive ids in the cluster
+  // List of all the cloud drive sets in the cluster
   repeated CloudDriveSet cloud_drive_sets = 1;
 }
 

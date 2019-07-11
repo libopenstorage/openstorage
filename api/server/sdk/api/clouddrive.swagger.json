@@ -429,7 +429,7 @@
           "items": {
             "$ref": "#/definitions/apiCloudDriveSet"
           },
-          "title": "List of all the cloud drive ids in the cluster"
+          "title": "List of all the cloud drive sets in the cluster"
         }
       },
       "title": "Defines a response with a list of cloud drives"
