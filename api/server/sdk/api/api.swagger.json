@@ -489,10 +489,11 @@
       },
       "apiDriveCategory": {
         "default": "data",
-        "description": "- data: Data indicates drive is being used for data purposes\n - metadata: Metadata indicates drive is being used for metadata purposes",
+        "description": "- data: Data indicates drive is being used for data purposes\n - metadata: Metadata indicates drive is being used for metadata purposes\n - journal: Journal indicates drive is used for journal",
         "enum": [
           "data",
-          "metadata"
+          "metadata",
+          "journal"
         ],
         "title": "DriveCategory is the type for various categories a drive could belong to",
         "type": "string"

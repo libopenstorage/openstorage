@@ -258,6 +258,8 @@ enum DriveCategory {
   data = 0;
   // Metadata indicates drive is being used for metadata purposes
   metadata = 1;
+  // Journal indicates drive is used for journal
+  journal = 2;
 }
 
 // VolumeLocator is a structure that is attached to a volume
