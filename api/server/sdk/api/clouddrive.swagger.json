@@ -138,7 +138,7 @@
     },
     "/v1/clouddrives/{id}/attach": {
       "post": {
-        "summary": "Attach attaches all the drives in the given drive set",
+        "summary": "Attach attaches all the drives in the given drive set to a single instance\nprovided in the request",
         "operationId": "Attach",
         "responses": {
           "200": {
@@ -241,9 +241,9 @@
           "$ref": "#/definitions/apiCloudDriveSetState",
           "title": "State state of the drive set from the well defined states"
         },
-        "scheduler_node_name": {
+        "instance_name": {
           "type": "string",
-          "title": "SchedulerNodeName is the name of the node in scheduler context who is using\nthe cloud drive set"
+          "title": "InstanceName is the name of the node  who is using the drive set"
         },
         "instance_id": {
           "type": "string",
@@ -254,17 +254,18 @@
           "title": "Zone defines the zone in which the node exists"
         }
       },
-      "title": "CloudDriveSet defines a set of drive pools that could be attached on a node"
+      "title": "CloudDriveSet defines a set of storage  pools that could be attached on a node"
     },
     "apiCloudDriveSetState": {
       "type": "string",
       "enum": [
         "initializing",
-        "in_use",
+        "attached",
+        "detached",
         "pending_decommission"
       ],
       "default": "initializing",
-      "description": "- initializing: Initializing indicates that the DriveSet is attached to a node but still in\ninit state\n - in_use: InUse indicates that the DriveSet is in use\n - pending_decommission: PendingDecommission indicates that the DriveSet needs to be deleted.\nTODO: Currently this is being used only for storage less drive sets",
+      "description": "- initializing: Initializing indicates that the DriveSet is attached to a node but still in\ninit state\n - attached: Attached indicates that the DriveSet is attached and in use by a node\n - detached: Detached indicates that the DriveSet is detached and not used by any node\n - pending_decommission: PendingDecommission indicates that the DriveSet needs to be deleted",
       "title": "CloudDriveSetState indicates the state of the DriveSet"
     },
     "apiCloudDriveSpec": {
@@ -395,12 +396,9 @@
     "apiSdkCloudDriveSetCreateResponse": {
       "type": "object",
       "properties": {
-        "cloud_drives": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/apiCloudDriveSet"
-          },
-          "title": "List of all the cloud drive ids in the cluster"
+        "cloud_drive_set": {
+          "$ref": "#/definitions/apiCloudDriveSet",
+          "title": "CloudDriveSet that's created for this create request"
         }
       },
       "title": "Defines a response with a list of cloud drives"
@@ -426,7 +424,7 @@
     "apiSdkCloudDriveSetEnumerateResponse": {
       "type": "object",
       "properties": {
-        "cloud_drives": {
+        "cloud_drive_sets": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/apiCloudDriveSet"
@@ -441,7 +439,7 @@
       "properties": {
         "id": {
           "type": "string",
-          "title": "ID of the cloud drive to expand"
+          "title": "ID of the cloud drive set to expand"
         },
         "pool_id": {
           "type": "string",
@@ -457,9 +455,9 @@
     "apiSdkCloudDriveSetExpandResponse": {
       "type": "object",
       "properties": {
-        "cloud_drive": {
+        "cloud_drive_set": {
           "$ref": "#/definitions/apiCloudDriveSet",
-          "title": "CloudDrive that was requested to expand"
+          "title": "CloudDriveSet that was requested to expand"
         }
       },
       "title": "Defines a response for the inspect cloud drive operation"
@@ -467,7 +465,7 @@
     "apiSdkCloudDriveSetInspectResponse": {
       "type": "object",
       "properties": {
-        "cloud_drive": {
+        "cloud_drive_set": {
           "$ref": "#/definitions/apiCloudDriveSet",
           "title": "CloudDrive that was requested to inspect"
         }
