@@ -364,7 +364,7 @@
           "title": "InstanceID of the node to attach the drive set"
         }
       },
-      "title": "Defines a request object to a a cloud drive"
+      "title": "Defines a request object to a cloud drive"
     },
     "apiSdkCloudDriveSetAttachResponse": {
       "type": "object",

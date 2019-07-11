@@ -54,7 +54,7 @@ func (x CloudDriveSetState) String() string {
 	return proto.EnumName(CloudDriveSetState_name, int32(x))
 }
 func (CloudDriveSetState) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_5ab4918365b2ba42, []int{0}
+	return fileDescriptor_clouddrive_5c9aa25057abd69a, []int{0}
 }
 
 // Defines the operation types available to expand a drive set
@@ -84,7 +84,7 @@ func (x DriveSetExpandOperationType) String() string {
 	return proto.EnumName(DriveSetExpandOperationType_name, int32(x))
 }
 func (DriveSetExpandOperationType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_5ab4918365b2ba42, []int{1}
+	return fileDescriptor_clouddrive_5c9aa25057abd69a, []int{1}
 }
 
 // CloudDriveSet defines a set of drive pools that could be attached on a node
@@ -114,7 +114,7 @@ func (m *CloudDriveSet) Reset()         { *m = CloudDriveSet{} }
 func (m *CloudDriveSet) String() string { return proto.CompactTextString(m) }
 func (*CloudDriveSet) ProtoMessage()    {}
 func (*CloudDriveSet) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_5ab4918365b2ba42, []int{0}
+	return fileDescriptor_clouddrive_5c9aa25057abd69a, []int{0}
 }
 func (m *CloudDriveSet) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CloudDriveSet.Unmarshal(m, b)
@@ -197,7 +197,7 @@ func (m *SdkCloudDriveSetCreateRequest) Reset()         { *m = SdkCloudDriveSetC
 func (m *SdkCloudDriveSetCreateRequest) String() string { return proto.CompactTextString(m) }
 func (*SdkCloudDriveSetCreateRequest) ProtoMessage()    {}
 func (*SdkCloudDriveSetCreateRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_5ab4918365b2ba42, []int{1}
+	return fileDescriptor_clouddrive_5c9aa25057abd69a, []int{1}
 }
 func (m *SdkCloudDriveSetCreateRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SdkCloudDriveSetCreateRequest.Unmarshal(m, b)
@@ -241,7 +241,7 @@ func (m *CloudDriveSpec) Reset()         { *m = CloudDriveSpec{} }
 func (m *CloudDriveSpec) String() string { return proto.CompactTextString(m) }
 func (*CloudDriveSpec) ProtoMessage()    {}
 func (*CloudDriveSpec) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_5ab4918365b2ba42, []int{2}
+	return fileDescriptor_clouddrive_5c9aa25057abd69a, []int{2}
 }
 func (m *CloudDriveSpec) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CloudDriveSpec.Unmarshal(m, b)
@@ -295,7 +295,7 @@ func (m *SdkCloudDriveSetCreateResponse) Reset()         { *m = SdkCloudDriveSet
 func (m *SdkCloudDriveSetCreateResponse) String() string { return proto.CompactTextString(m) }
 func (*SdkCloudDriveSetCreateResponse) ProtoMessage()    {}
 func (*SdkCloudDriveSetCreateResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_5ab4918365b2ba42, []int{3}
+	return fileDescriptor_clouddrive_5c9aa25057abd69a, []int{3}
 }
 func (m *SdkCloudDriveSetCreateResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SdkCloudDriveSetCreateResponse.Unmarshal(m, b)
@@ -333,7 +333,7 @@ func (m *SdkCloudDriveSetEnumerateRequest) Reset()         { *m = SdkCloudDriveS
 func (m *SdkCloudDriveSetEnumerateRequest) String() string { return proto.CompactTextString(m) }
 func (*SdkCloudDriveSetEnumerateRequest) ProtoMessage()    {}
 func (*SdkCloudDriveSetEnumerateRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_5ab4918365b2ba42, []int{4}
+	return fileDescriptor_clouddrive_5c9aa25057abd69a, []int{4}
 }
 func (m *SdkCloudDriveSetEnumerateRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SdkCloudDriveSetEnumerateRequest.Unmarshal(m, b)
@@ -366,7 +366,7 @@ func (m *SdkCloudDriveSetEnumerateResponse) Reset()         { *m = SdkCloudDrive
 func (m *SdkCloudDriveSetEnumerateResponse) String() string { return proto.CompactTextString(m) }
 func (*SdkCloudDriveSetEnumerateResponse) ProtoMessage()    {}
 func (*SdkCloudDriveSetEnumerateResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_5ab4918365b2ba42, []int{5}
+	return fileDescriptor_clouddrive_5c9aa25057abd69a, []int{5}
 }
 func (m *SdkCloudDriveSetEnumerateResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SdkCloudDriveSetEnumerateResponse.Unmarshal(m, b)
@@ -406,7 +406,7 @@ func (m *SdkCloudDriveSetInspectRequest) Reset()         { *m = SdkCloudDriveSet
 func (m *SdkCloudDriveSetInspectRequest) String() string { return proto.CompactTextString(m) }
 func (*SdkCloudDriveSetInspectRequest) ProtoMessage()    {}
 func (*SdkCloudDriveSetInspectRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_5ab4918365b2ba42, []int{6}
+	return fileDescriptor_clouddrive_5c9aa25057abd69a, []int{6}
 }
 func (m *SdkCloudDriveSetInspectRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SdkCloudDriveSetInspectRequest.Unmarshal(m, b)
@@ -446,7 +446,7 @@ func (m *SdkCloudDriveSetInspectResponse) Reset()         { *m = SdkCloudDriveSe
 func (m *SdkCloudDriveSetInspectResponse) String() string { return proto.CompactTextString(m) }
 func (*SdkCloudDriveSetInspectResponse) ProtoMessage()    {}
 func (*SdkCloudDriveSetInspectResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_5ab4918365b2ba42, []int{7}
+	return fileDescriptor_clouddrive_5c9aa25057abd69a, []int{7}
 }
 func (m *SdkCloudDriveSetInspectResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SdkCloudDriveSetInspectResponse.Unmarshal(m, b)
@@ -486,7 +486,7 @@ func (m *SdkCloudDriveSetDeleteRequest) Reset()         { *m = SdkCloudDriveSetD
 func (m *SdkCloudDriveSetDeleteRequest) String() string { return proto.CompactTextString(m) }
 func (*SdkCloudDriveSetDeleteRequest) ProtoMessage()    {}
 func (*SdkCloudDriveSetDeleteRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_5ab4918365b2ba42, []int{8}
+	return fileDescriptor_clouddrive_5c9aa25057abd69a, []int{8}
 }
 func (m *SdkCloudDriveSetDeleteRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SdkCloudDriveSetDeleteRequest.Unmarshal(m, b)
@@ -524,7 +524,7 @@ func (m *SdkCloudDriveSetDeleteResponse) Reset()         { *m = SdkCloudDriveSet
 func (m *SdkCloudDriveSetDeleteResponse) String() string { return proto.CompactTextString(m) }
 func (*SdkCloudDriveSetDeleteResponse) ProtoMessage()    {}
 func (*SdkCloudDriveSetDeleteResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_5ab4918365b2ba42, []int{9}
+	return fileDescriptor_clouddrive_5c9aa25057abd69a, []int{9}
 }
 func (m *SdkCloudDriveSetDeleteResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SdkCloudDriveSetDeleteResponse.Unmarshal(m, b)
@@ -544,7 +544,7 @@ func (m *SdkCloudDriveSetDeleteResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_SdkCloudDriveSetDeleteResponse proto.InternalMessageInfo
 
-// Defines a request object to a a cloud drive
+// Defines a request object to a cloud drive
 type SdkCloudDriveSetAttachRequest struct {
 	// ID of the cloud drive to attach
 	Id string `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
@@ -559,7 +559,7 @@ func (m *SdkCloudDriveSetAttachRequest) Reset()         { *m = SdkCloudDriveSetA
 func (m *SdkCloudDriveSetAttachRequest) String() string { return proto.CompactTextString(m) }
 func (*SdkCloudDriveSetAttachRequest) ProtoMessage()    {}
 func (*SdkCloudDriveSetAttachRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_5ab4918365b2ba42, []int{10}
+	return fileDescriptor_clouddrive_5c9aa25057abd69a, []int{10}
 }
 func (m *SdkCloudDriveSetAttachRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SdkCloudDriveSetAttachRequest.Unmarshal(m, b)
@@ -606,7 +606,7 @@ func (m *SdkCloudDriveSetAttachResponse) Reset()         { *m = SdkCloudDriveSet
 func (m *SdkCloudDriveSetAttachResponse) String() string { return proto.CompactTextString(m) }
 func (*SdkCloudDriveSetAttachResponse) ProtoMessage()    {}
 func (*SdkCloudDriveSetAttachResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_5ab4918365b2ba42, []int{11}
+	return fileDescriptor_clouddrive_5c9aa25057abd69a, []int{11}
 }
 func (m *SdkCloudDriveSetAttachResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SdkCloudDriveSetAttachResponse.Unmarshal(m, b)
@@ -648,7 +648,7 @@ func (m *AttachedCloudDrive) Reset()         { *m = AttachedCloudDrive{} }
 func (m *AttachedCloudDrive) String() string { return proto.CompactTextString(m) }
 func (*AttachedCloudDrive) ProtoMessage()    {}
 func (*AttachedCloudDrive) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_5ab4918365b2ba42, []int{12}
+	return fileDescriptor_clouddrive_5c9aa25057abd69a, []int{12}
 }
 func (m *AttachedCloudDrive) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_AttachedCloudDrive.Unmarshal(m, b)
@@ -695,7 +695,7 @@ func (m *SdkCloudDriveSetDetachRequest) Reset()         { *m = SdkCloudDriveSetD
 func (m *SdkCloudDriveSetDetachRequest) String() string { return proto.CompactTextString(m) }
 func (*SdkCloudDriveSetDetachRequest) ProtoMessage()    {}
 func (*SdkCloudDriveSetDetachRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_5ab4918365b2ba42, []int{13}
+	return fileDescriptor_clouddrive_5c9aa25057abd69a, []int{13}
 }
 func (m *SdkCloudDriveSetDetachRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SdkCloudDriveSetDetachRequest.Unmarshal(m, b)
@@ -733,7 +733,7 @@ func (m *SdkCloudDriveSetDetachResponse) Reset()         { *m = SdkCloudDriveSet
 func (m *SdkCloudDriveSetDetachResponse) String() string { return proto.CompactTextString(m) }
 func (*SdkCloudDriveSetDetachResponse) ProtoMessage()    {}
 func (*SdkCloudDriveSetDetachResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_5ab4918365b2ba42, []int{14}
+	return fileDescriptor_clouddrive_5c9aa25057abd69a, []int{14}
 }
 func (m *SdkCloudDriveSetDetachResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SdkCloudDriveSetDetachResponse.Unmarshal(m, b)
@@ -770,7 +770,7 @@ func (m *SdkCloudDriveSetExpandRequest) Reset()         { *m = SdkCloudDriveSetE
 func (m *SdkCloudDriveSetExpandRequest) String() string { return proto.CompactTextString(m) }
 func (*SdkCloudDriveSetExpandRequest) ProtoMessage()    {}
 func (*SdkCloudDriveSetExpandRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_5ab4918365b2ba42, []int{15}
+	return fileDescriptor_clouddrive_5c9aa25057abd69a, []int{15}
 }
 func (m *SdkCloudDriveSetExpandRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SdkCloudDriveSetExpandRequest.Unmarshal(m, b)
@@ -824,7 +824,7 @@ func (m *SdkCloudDriveSetExpandResponse) Reset()         { *m = SdkCloudDriveSet
 func (m *SdkCloudDriveSetExpandResponse) String() string { return proto.CompactTextString(m) }
 func (*SdkCloudDriveSetExpandResponse) ProtoMessage()    {}
 func (*SdkCloudDriveSetExpandResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_5ab4918365b2ba42, []int{16}
+	return fileDescriptor_clouddrive_5c9aa25057abd69a, []int{16}
 }
 func (m *SdkCloudDriveSetExpandResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SdkCloudDriveSetExpandResponse.Unmarshal(m, b)
@@ -1160,9 +1160,9 @@ var _OpenStorageCloudDrives_serviceDesc = grpc.ServiceDesc{
 	Metadata: "api/clouddrive.proto",
 }
 
-func init() { proto.RegisterFile("api/clouddrive.proto", fileDescriptor_clouddrive_5ab4918365b2ba42) }
+func init() { proto.RegisterFile("api/clouddrive.proto", fileDescriptor_clouddrive_5c9aa25057abd69a) }
 
-var fileDescriptor_clouddrive_5ab4918365b2ba42 = []byte{
+var fileDescriptor_clouddrive_5c9aa25057abd69a = []byte{
 	// 965 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x96, 0xdd, 0x6a, 0x1b, 0x47,
 	0x14, 0xc7, 0xb3, 0x2b, 0x5b, 0x6a, 0x8e, 0x6c, 0x59, 0x99, 0x88, 0x64, 0xbb, 0x71, 0x23, 0x75,
