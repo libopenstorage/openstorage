@@ -28,7 +28,7 @@
           }
         },
         "tags": [
-          "OpenStorageCloudDrives"
+          "OpenStorageCloudDriveSet"
         ]
       },
       "post": {
@@ -53,7 +53,7 @@
           }
         ],
         "tags": [
-          "OpenStorageCloudDrives"
+          "OpenStorageCloudDriveSet"
         ]
       }
     },
@@ -78,7 +78,7 @@
           }
         ],
         "tags": [
-          "OpenStorageCloudDrives"
+          "OpenStorageCloudDriveSet"
         ]
       },
       "delete": {
@@ -101,7 +101,7 @@
           }
         ],
         "tags": [
-          "OpenStorageCloudDrives"
+          "OpenStorageCloudDriveSet"
         ]
       },
       "put": {
@@ -132,7 +132,7 @@
           }
         ],
         "tags": [
-          "OpenStorageCloudDrives"
+          "OpenStorageCloudDriveSet"
         ]
       }
     },
@@ -165,7 +165,7 @@
           }
         ],
         "tags": [
-          "OpenStorageCloudDrives"
+          "OpenStorageCloudDriveSet"
         ]
       }
     },
@@ -198,7 +198,7 @@
           }
         ],
         "tags": [
-          "OpenStorageCloudDrives"
+          "OpenStorageCloudDriveSet"
         ]
       }
     }
@@ -259,13 +259,13 @@
     "apiCloudDriveSetState": {
       "type": "string",
       "enum": [
-        "initializing",
-        "attached",
-        "detached",
-        "pending_decommission"
+        "INITIALIZING",
+        "ATTACHED",
+        "DETACHED",
+        "PENDING_DELETE"
       ],
-      "default": "initializing",
-      "description": "- initializing: Initializing indicates that the DriveSet is attached to a node but still in\ninit state\n - attached: Attached indicates that the DriveSet is attached and in use by a node\n - detached: Detached indicates that the DriveSet is detached and not used by any node\n - pending_decommission: PendingDecommission indicates that the DriveSet needs to be deleted",
+      "default": "INITIALIZING",
+      "description": "- INITIALIZING: Initializing indicates that the DriveSet is attached to a node but still in\ninit state\n - ATTACHED: Attached indicates that the DriveSet is attached and in use by a node\n - DETACHED: Detached indicates that the DriveSet is detached and not used by any node\n - PENDING_DELETE: PendingDelete indicates that the DriveSet needs to be deleted",
       "title": "CloudDriveSetState indicates the state of the DriveSet"
     },
     "apiCloudDriveSpec": {
@@ -346,12 +346,12 @@
     "apiDriveSetExpandOperationType": {
       "type": "string",
       "enum": [
-        "Auto",
-        "Add",
-        "Resize"
+        "AUTO",
+        "ADD",
+        "RESIZE"
       ],
-      "default": "Auto",
-      "description": "- Auto: Automatically pick the optimum operation type\n - Add: Add a new drive to expand the drive set\n - Resize: Resize existing drives to expand the drive set",
+      "default": "AUTO",
+      "description": "- AUTO: Automatically pick the optimum operation type\n - ADD: Add a new drive to expand the drive set\n - RESIZE: Resize existing drives to expand the drive set",
       "title": "Defines the operation types available to expand a drive set"
     },
     "apiSdkCloudDriveSetAttachRequest": {

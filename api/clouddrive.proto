@@ -1,7 +1,7 @@
 /// Please use the following editor setup for this file:
 // Tab size=2; Tabs as spaces; Clean up trailing whitepsace
 //
-// In vim add: au FileType proto setl sw=2 ts=2 expandtab list
+// In vim add: au FileType proto setl sw=2 ts=2 resizetab list
 //
 // Note, the documentation provided here for can be created in
 // markdown format plus the use of 'codetabs' are supported. The documentation
@@ -22,40 +22,40 @@ option java_package = "com.openstorage.api";
 
 // CloudDriveSet defines a set of storage  pools that could be attached on a node
 message CloudDriveSet {
-	// ID is the unique id of the cloud drive. This is managed by the storage provider
+  // ID is the unique id of the cloud drive. This is managed by the storage provider
   // implementing the handlers
-	string id = 1;
-	// Pools describes the configuration of the drives present in this set
-	repeated StoragePool pools = 2;
-	// CreateTimestamp is the timestamp when the drive set was created
+  string id = 1;
+  // Pools describes the configuration of the drives present in this set
+  repeated StoragePool pools = 2;
+  // CreateTimestamp is the timestamp when the drive set was created
   google.protobuf.Timestamp create_timestamp = 3;
-	// State state of the drive set from the well defined states
-	CloudDriveSetState state = 4;
-	// InstanceName is the name of the node  who is using the drive set
-	string instance_name = 5;
-	// InstanceID is the cloud provider id of the instance using this drive set
-	string instance_id = 6;
-	// Zone defines the zone in which the node exists
-	string zone = 7;
+  // State state of the drive set from the well defined states
+  CloudDriveSetState state = 4;
+  // InstanceName is the name of the node  who is using the drive set
+  string instance_name = 5;
+  // InstanceID is the cloud provider id of the instance using this drive set
+  string instance_id = 6;
+  // Zone defines the zone in which the node exists
+  string zone = 7;
 }
 
 
 // CloudDriveSetState indicates the state of the DriveSet
 enum CloudDriveSetState {
-	// Initializing indicates that the DriveSet is attached to a node but still in
+  // Initializing indicates that the DriveSet is attached to a node but still in
   // init state
-	initializing = 0;
-	// Attached indicates that the DriveSet is attached and in use by a node
-	attached = 1;
-	// Detached indicates that the DriveSet is detached and not used by any node
-	detached = 2;
-	// PendingDecommission indicates that the DriveSet needs to be deleted
-	pending_decommission = 3;
+  INITIALIZING = 0;
+  // Attached indicates that the DriveSet is attached and in use by a node
+  ATTACHED = 1;
+  // Detached indicates that the DriveSet is detached and not used by any node
+  DETACHED = 2;
+  // PendingDelete indicates that the DriveSet needs to be deleted
+  PENDING_DELETE = 3;
 }
 
-// OpenStorageCloudDrives is a service used to manage cloud drives in the cluster
-service OpenStorageCloudDrives {
-  // Enumerate returns the ids of all the cloud drives in the current cluster
+// OpenStorageCloudDriveSet is a service used to manage cloud drives in the cluster
+service OpenStorageCloudDriveSet {
+  // Enumerate returns the list of cloud drive sets in the current cluster
   rpc Enumerate(SdkCloudDriveSetEnumerateRequest)
     returns (SdkCloudDriveSetEnumerateResponse) {
       option(google.api.http) = {
@@ -72,9 +72,9 @@ service OpenStorageCloudDrives {
       };
     }
 
-  // Expand expands the given drive set
-  rpc Expand(SdkCloudDriveSetExpandRequest)
-    returns (SdkCloudDriveSetExpandResponse) {
+  // Resize resizes the given drive set
+  rpc Resize(SdkCloudDriveSetResizeRequest)
+    returns (SdkCloudDriveSetResizeResponse) {
       option(google.api.http) = {
         put: "/v1/clouddrives/{id}"
         body: "*"
@@ -89,7 +89,7 @@ service OpenStorageCloudDrives {
       };
     }
 
-  // Delete inspects the given drive set
+  // Inspects inspects the given drive set
   rpc Inspect(SdkCloudDriveSetInspectRequest)
     returns (SdkCloudDriveSetInspectResponse) {
       option(google.api.http) = {
@@ -187,7 +187,7 @@ message SdkCloudDriveSetAttachResponse {
   repeated AttachedCloudDrive attached_drives = 1;
 }
 
-// CloudDriveAttachedDrive represents a single attached drive
+// AttachedCloudDrive represents a single attached drive
 message AttachedCloudDrive {
   // ID is the ID of the drive that's attached
   string id = 1;
@@ -206,28 +206,30 @@ message SdkCloudDriveSetDetachRequest {
 message SdkCloudDriveSetDetachResponse {
 }
 
-// Defines a request object to expand a cloud drive
-message SdkCloudDriveSetExpandRequest {
-  // ID of the cloud drive set to expand
+// Defines a request object to resize a cloud drive
+message SdkCloudDriveSetResizeRequest {
+  // ID of the cloud drive set to resize
   string id = 1;
-  // PoolID of the pool inside the cloud drive to expand
+  // PoolID of the pool inside the cloud drive to resize
   string pool_id = 2;
-  // OperationType is the operation that's used to expand the drive set (optional)
-  DriveSetExpandOperationType operation_type = 3;
+	// Size defines the new total size of the pool in Gi
+	int64 size = 3;
+  // OperationType is the operation that's used to resize the drive set pool (optional)
+  DriveSetResizeOperationType operation_type = 4;
 }
 
-// Defines a response for the inspect cloud drive operation
-message SdkCloudDriveSetExpandResponse {
-  // CloudDriveSet that was requested to expand
+// Defines a response for the resize cloud drive operation
+message SdkCloudDriveSetResizeResponse {
+  // CloudDriveSet that was requested to resize
   CloudDriveSet cloud_drive_set = 1;
 }
 
-// Defines the operation types available to expand a drive set
-enum DriveSetExpandOperationType {
+// Defines the operation types available to resize a drive set
+enum DriveSetResizeOperationType {
   // Automatically pick the optimum operation type
-  Auto = 0;
-  // Add a new drive to expand the drive set
-  Add = 1;
-  // Resize existing drives to expand the drive set
-  Resize = 2;
+  AUTO = 0;
+  // Add a new drive to resize the drive set
+  ADD = 1;
+  // Resize existing drives to resize the drive set
+  RESIZE = 2;
 }

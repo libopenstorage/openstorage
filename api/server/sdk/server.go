@@ -107,7 +107,7 @@ type ServerConfig struct {
 	// StoragePolicy Manager
 	StoragePolicy policy.PolicyManager
 	// CloudDriveManager is the handler for cloud drive management interface
-	CloudDriveManager api.OpenStorageCloudDrivesServer
+	CloudDriveManager api.OpenStorageCloudDriveSetServer
 	// Security configuration
 	Security *SecurityConfig
 	// ServerExtensions allows you to extend the SDK gRPC server
@@ -185,7 +185,7 @@ type sdkGrpcServer struct {
 	roleServer           role.RoleManager
 	alertsServer         api.OpenStorageAlertsServer
 	policyServer         policy.PolicyManager
-	cloudDriveServer     api.OpenStorageCloudDrivesServer
+	cloudDriveServer     api.OpenStorageCloudDriveSetServer
 }
 
 // Interface check

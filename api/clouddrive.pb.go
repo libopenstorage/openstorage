@@ -31,33 +31,33 @@ type CloudDriveSetState int32
 const (
 	// Initializing indicates that the DriveSet is attached to a node but still in
 	// init state
-	CloudDriveSetState_initializing CloudDriveSetState = 0
+	CloudDriveSetState_INITIALIZING CloudDriveSetState = 0
 	// Attached indicates that the DriveSet is attached and in use by a node
-	CloudDriveSetState_attached CloudDriveSetState = 1
+	CloudDriveSetState_ATTACHED CloudDriveSetState = 1
 	// Detached indicates that the DriveSet is detached and not used by any node
-	CloudDriveSetState_detached CloudDriveSetState = 2
-	// PendingDecommission indicates that the DriveSet needs to be deleted
-	CloudDriveSetState_pending_decommission CloudDriveSetState = 3
+	CloudDriveSetState_DETACHED CloudDriveSetState = 2
+	// PendingDelete indicates that the DriveSet needs to be deleted
+	CloudDriveSetState_PENDING_DELETE CloudDriveSetState = 3
 )
 
 var CloudDriveSetState_name = map[int32]string{
-	0: "initializing",
-	1: "attached",
-	2: "detached",
-	3: "pending_decommission",
+	0: "INITIALIZING",
+	1: "ATTACHED",
+	2: "DETACHED",
+	3: "PENDING_DELETE",
 }
 var CloudDriveSetState_value = map[string]int32{
-	"initializing":         0,
-	"attached":             1,
-	"detached":             2,
-	"pending_decommission": 3,
+	"INITIALIZING":   0,
+	"ATTACHED":       1,
+	"DETACHED":       2,
+	"PENDING_DELETE": 3,
 }
 
 func (x CloudDriveSetState) String() string {
 	return proto.EnumName(CloudDriveSetState_name, int32(x))
 }
 func (CloudDriveSetState) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_66058428868e8fc0, []int{0}
+	return fileDescriptor_clouddrive_c61ef495f3758649, []int{0}
 }
 
 // Defines the operation types available to expand a drive set
@@ -65,29 +65,29 @@ type DriveSetExpandOperationType int32
 
 const (
 	// Automatically pick the optimum operation type
-	DriveSetExpandOperationType_Auto DriveSetExpandOperationType = 0
+	DriveSetExpandOperationType_AUTO DriveSetExpandOperationType = 0
 	// Add a new drive to expand the drive set
-	DriveSetExpandOperationType_Add DriveSetExpandOperationType = 1
+	DriveSetExpandOperationType_ADD DriveSetExpandOperationType = 1
 	// Resize existing drives to expand the drive set
-	DriveSetExpandOperationType_Resize DriveSetExpandOperationType = 2
+	DriveSetExpandOperationType_RESIZE DriveSetExpandOperationType = 2
 )
 
 var DriveSetExpandOperationType_name = map[int32]string{
-	0: "Auto",
-	1: "Add",
-	2: "Resize",
+	0: "AUTO",
+	1: "ADD",
+	2: "RESIZE",
 }
 var DriveSetExpandOperationType_value = map[string]int32{
-	"Auto":   0,
-	"Add":    1,
-	"Resize": 2,
+	"AUTO":   0,
+	"ADD":    1,
+	"RESIZE": 2,
 }
 
 func (x DriveSetExpandOperationType) String() string {
 	return proto.EnumName(DriveSetExpandOperationType_name, int32(x))
 }
 func (DriveSetExpandOperationType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_66058428868e8fc0, []int{1}
+	return fileDescriptor_clouddrive_c61ef495f3758649, []int{1}
 }
 
 // CloudDriveSet defines a set of storage  pools that could be attached on a node
@@ -116,7 +116,7 @@ func (m *CloudDriveSet) Reset()         { *m = CloudDriveSet{} }
 func (m *CloudDriveSet) String() string { return proto.CompactTextString(m) }
 func (*CloudDriveSet) ProtoMessage()    {}
 func (*CloudDriveSet) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_66058428868e8fc0, []int{0}
+	return fileDescriptor_clouddrive_c61ef495f3758649, []int{0}
 }
 func (m *CloudDriveSet) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CloudDriveSet.Unmarshal(m, b)
@@ -161,7 +161,7 @@ func (m *CloudDriveSet) GetState() CloudDriveSetState {
 	if m != nil {
 		return m.State
 	}
-	return CloudDriveSetState_initializing
+	return CloudDriveSetState_INITIALIZING
 }
 
 func (m *CloudDriveSet) GetInstanceName() string {
@@ -199,7 +199,7 @@ func (m *SdkCloudDriveSetCreateRequest) Reset()         { *m = SdkCloudDriveSetC
 func (m *SdkCloudDriveSetCreateRequest) String() string { return proto.CompactTextString(m) }
 func (*SdkCloudDriveSetCreateRequest) ProtoMessage()    {}
 func (*SdkCloudDriveSetCreateRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_66058428868e8fc0, []int{1}
+	return fileDescriptor_clouddrive_c61ef495f3758649, []int{1}
 }
 func (m *SdkCloudDriveSetCreateRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SdkCloudDriveSetCreateRequest.Unmarshal(m, b)
@@ -243,7 +243,7 @@ func (m *CloudDriveSpec) Reset()         { *m = CloudDriveSpec{} }
 func (m *CloudDriveSpec) String() string { return proto.CompactTextString(m) }
 func (*CloudDriveSpec) ProtoMessage()    {}
 func (*CloudDriveSpec) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_66058428868e8fc0, []int{2}
+	return fileDescriptor_clouddrive_c61ef495f3758649, []int{2}
 }
 func (m *CloudDriveSpec) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CloudDriveSpec.Unmarshal(m, b)
@@ -297,7 +297,7 @@ func (m *SdkCloudDriveSetCreateResponse) Reset()         { *m = SdkCloudDriveSet
 func (m *SdkCloudDriveSetCreateResponse) String() string { return proto.CompactTextString(m) }
 func (*SdkCloudDriveSetCreateResponse) ProtoMessage()    {}
 func (*SdkCloudDriveSetCreateResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_66058428868e8fc0, []int{3}
+	return fileDescriptor_clouddrive_c61ef495f3758649, []int{3}
 }
 func (m *SdkCloudDriveSetCreateResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SdkCloudDriveSetCreateResponse.Unmarshal(m, b)
@@ -335,7 +335,7 @@ func (m *SdkCloudDriveSetEnumerateRequest) Reset()         { *m = SdkCloudDriveS
 func (m *SdkCloudDriveSetEnumerateRequest) String() string { return proto.CompactTextString(m) }
 func (*SdkCloudDriveSetEnumerateRequest) ProtoMessage()    {}
 func (*SdkCloudDriveSetEnumerateRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_66058428868e8fc0, []int{4}
+	return fileDescriptor_clouddrive_c61ef495f3758649, []int{4}
 }
 func (m *SdkCloudDriveSetEnumerateRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SdkCloudDriveSetEnumerateRequest.Unmarshal(m, b)
@@ -368,7 +368,7 @@ func (m *SdkCloudDriveSetEnumerateResponse) Reset()         { *m = SdkCloudDrive
 func (m *SdkCloudDriveSetEnumerateResponse) String() string { return proto.CompactTextString(m) }
 func (*SdkCloudDriveSetEnumerateResponse) ProtoMessage()    {}
 func (*SdkCloudDriveSetEnumerateResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_66058428868e8fc0, []int{5}
+	return fileDescriptor_clouddrive_c61ef495f3758649, []int{5}
 }
 func (m *SdkCloudDriveSetEnumerateResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SdkCloudDriveSetEnumerateResponse.Unmarshal(m, b)
@@ -408,7 +408,7 @@ func (m *SdkCloudDriveSetInspectRequest) Reset()         { *m = SdkCloudDriveSet
 func (m *SdkCloudDriveSetInspectRequest) String() string { return proto.CompactTextString(m) }
 func (*SdkCloudDriveSetInspectRequest) ProtoMessage()    {}
 func (*SdkCloudDriveSetInspectRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_66058428868e8fc0, []int{6}
+	return fileDescriptor_clouddrive_c61ef495f3758649, []int{6}
 }
 func (m *SdkCloudDriveSetInspectRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SdkCloudDriveSetInspectRequest.Unmarshal(m, b)
@@ -448,7 +448,7 @@ func (m *SdkCloudDriveSetInspectResponse) Reset()         { *m = SdkCloudDriveSe
 func (m *SdkCloudDriveSetInspectResponse) String() string { return proto.CompactTextString(m) }
 func (*SdkCloudDriveSetInspectResponse) ProtoMessage()    {}
 func (*SdkCloudDriveSetInspectResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_66058428868e8fc0, []int{7}
+	return fileDescriptor_clouddrive_c61ef495f3758649, []int{7}
 }
 func (m *SdkCloudDriveSetInspectResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SdkCloudDriveSetInspectResponse.Unmarshal(m, b)
@@ -488,7 +488,7 @@ func (m *SdkCloudDriveSetDeleteRequest) Reset()         { *m = SdkCloudDriveSetD
 func (m *SdkCloudDriveSetDeleteRequest) String() string { return proto.CompactTextString(m) }
 func (*SdkCloudDriveSetDeleteRequest) ProtoMessage()    {}
 func (*SdkCloudDriveSetDeleteRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_66058428868e8fc0, []int{8}
+	return fileDescriptor_clouddrive_c61ef495f3758649, []int{8}
 }
 func (m *SdkCloudDriveSetDeleteRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SdkCloudDriveSetDeleteRequest.Unmarshal(m, b)
@@ -526,7 +526,7 @@ func (m *SdkCloudDriveSetDeleteResponse) Reset()         { *m = SdkCloudDriveSet
 func (m *SdkCloudDriveSetDeleteResponse) String() string { return proto.CompactTextString(m) }
 func (*SdkCloudDriveSetDeleteResponse) ProtoMessage()    {}
 func (*SdkCloudDriveSetDeleteResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_66058428868e8fc0, []int{9}
+	return fileDescriptor_clouddrive_c61ef495f3758649, []int{9}
 }
 func (m *SdkCloudDriveSetDeleteResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SdkCloudDriveSetDeleteResponse.Unmarshal(m, b)
@@ -561,7 +561,7 @@ func (m *SdkCloudDriveSetAttachRequest) Reset()         { *m = SdkCloudDriveSetA
 func (m *SdkCloudDriveSetAttachRequest) String() string { return proto.CompactTextString(m) }
 func (*SdkCloudDriveSetAttachRequest) ProtoMessage()    {}
 func (*SdkCloudDriveSetAttachRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_66058428868e8fc0, []int{10}
+	return fileDescriptor_clouddrive_c61ef495f3758649, []int{10}
 }
 func (m *SdkCloudDriveSetAttachRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SdkCloudDriveSetAttachRequest.Unmarshal(m, b)
@@ -608,7 +608,7 @@ func (m *SdkCloudDriveSetAttachResponse) Reset()         { *m = SdkCloudDriveSet
 func (m *SdkCloudDriveSetAttachResponse) String() string { return proto.CompactTextString(m) }
 func (*SdkCloudDriveSetAttachResponse) ProtoMessage()    {}
 func (*SdkCloudDriveSetAttachResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_66058428868e8fc0, []int{11}
+	return fileDescriptor_clouddrive_c61ef495f3758649, []int{11}
 }
 func (m *SdkCloudDriveSetAttachResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SdkCloudDriveSetAttachResponse.Unmarshal(m, b)
@@ -650,7 +650,7 @@ func (m *AttachedCloudDrive) Reset()         { *m = AttachedCloudDrive{} }
 func (m *AttachedCloudDrive) String() string { return proto.CompactTextString(m) }
 func (*AttachedCloudDrive) ProtoMessage()    {}
 func (*AttachedCloudDrive) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_66058428868e8fc0, []int{12}
+	return fileDescriptor_clouddrive_c61ef495f3758649, []int{12}
 }
 func (m *AttachedCloudDrive) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_AttachedCloudDrive.Unmarshal(m, b)
@@ -697,7 +697,7 @@ func (m *SdkCloudDriveSetDetachRequest) Reset()         { *m = SdkCloudDriveSetD
 func (m *SdkCloudDriveSetDetachRequest) String() string { return proto.CompactTextString(m) }
 func (*SdkCloudDriveSetDetachRequest) ProtoMessage()    {}
 func (*SdkCloudDriveSetDetachRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_66058428868e8fc0, []int{13}
+	return fileDescriptor_clouddrive_c61ef495f3758649, []int{13}
 }
 func (m *SdkCloudDriveSetDetachRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SdkCloudDriveSetDetachRequest.Unmarshal(m, b)
@@ -735,7 +735,7 @@ func (m *SdkCloudDriveSetDetachResponse) Reset()         { *m = SdkCloudDriveSet
 func (m *SdkCloudDriveSetDetachResponse) String() string { return proto.CompactTextString(m) }
 func (*SdkCloudDriveSetDetachResponse) ProtoMessage()    {}
 func (*SdkCloudDriveSetDetachResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_66058428868e8fc0, []int{14}
+	return fileDescriptor_clouddrive_c61ef495f3758649, []int{14}
 }
 func (m *SdkCloudDriveSetDetachResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SdkCloudDriveSetDetachResponse.Unmarshal(m, b)
@@ -772,7 +772,7 @@ func (m *SdkCloudDriveSetExpandRequest) Reset()         { *m = SdkCloudDriveSetE
 func (m *SdkCloudDriveSetExpandRequest) String() string { return proto.CompactTextString(m) }
 func (*SdkCloudDriveSetExpandRequest) ProtoMessage()    {}
 func (*SdkCloudDriveSetExpandRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_66058428868e8fc0, []int{15}
+	return fileDescriptor_clouddrive_c61ef495f3758649, []int{15}
 }
 func (m *SdkCloudDriveSetExpandRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SdkCloudDriveSetExpandRequest.Unmarshal(m, b)
@@ -810,7 +810,7 @@ func (m *SdkCloudDriveSetExpandRequest) GetOperationType() DriveSetExpandOperati
 	if m != nil {
 		return m.OperationType
 	}
-	return DriveSetExpandOperationType_Auto
+	return DriveSetExpandOperationType_AUTO
 }
 
 // Defines a response for the inspect cloud drive operation
@@ -826,7 +826,7 @@ func (m *SdkCloudDriveSetExpandResponse) Reset()         { *m = SdkCloudDriveSet
 func (m *SdkCloudDriveSetExpandResponse) String() string { return proto.CompactTextString(m) }
 func (*SdkCloudDriveSetExpandResponse) ProtoMessage()    {}
 func (*SdkCloudDriveSetExpandResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clouddrive_66058428868e8fc0, []int{16}
+	return fileDescriptor_clouddrive_c61ef495f3758649, []int{16}
 }
 func (m *SdkCloudDriveSetExpandResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SdkCloudDriveSetExpandResponse.Unmarshal(m, b)
@@ -884,9 +884,9 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for OpenStorageCloudDrives service
+// Client API for OpenStorageCloudDriveSet service
 
-type OpenStorageCloudDrivesClient interface {
+type OpenStorageCloudDriveSetClient interface {
 	// Enumerate returns the ids of all the cloud drives in the current cluster
 	Enumerate(ctx context.Context, in *SdkCloudDriveSetEnumerateRequest, opts ...grpc.CallOption) (*SdkCloudDriveSetEnumerateResponse, error)
 	// Create creates a new drive set
@@ -905,80 +905,80 @@ type OpenStorageCloudDrivesClient interface {
 	Detach(ctx context.Context, in *SdkCloudDriveSetDetachRequest, opts ...grpc.CallOption) (*SdkCloudDriveSetDetachResponse, error)
 }
 
-type openStorageCloudDrivesClient struct {
+type openStorageCloudDriveSetClient struct {
 	cc *grpc.ClientConn
 }
 
-func NewOpenStorageCloudDrivesClient(cc *grpc.ClientConn) OpenStorageCloudDrivesClient {
-	return &openStorageCloudDrivesClient{cc}
+func NewOpenStorageCloudDriveSetClient(cc *grpc.ClientConn) OpenStorageCloudDriveSetClient {
+	return &openStorageCloudDriveSetClient{cc}
 }
 
-func (c *openStorageCloudDrivesClient) Enumerate(ctx context.Context, in *SdkCloudDriveSetEnumerateRequest, opts ...grpc.CallOption) (*SdkCloudDriveSetEnumerateResponse, error) {
+func (c *openStorageCloudDriveSetClient) Enumerate(ctx context.Context, in *SdkCloudDriveSetEnumerateRequest, opts ...grpc.CallOption) (*SdkCloudDriveSetEnumerateResponse, error) {
 	out := new(SdkCloudDriveSetEnumerateResponse)
-	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCloudDrives/Enumerate", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCloudDriveSet/Enumerate", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *openStorageCloudDrivesClient) Create(ctx context.Context, in *SdkCloudDriveSetCreateRequest, opts ...grpc.CallOption) (*SdkCloudDriveSetCreateResponse, error) {
+func (c *openStorageCloudDriveSetClient) Create(ctx context.Context, in *SdkCloudDriveSetCreateRequest, opts ...grpc.CallOption) (*SdkCloudDriveSetCreateResponse, error) {
 	out := new(SdkCloudDriveSetCreateResponse)
-	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCloudDrives/Create", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCloudDriveSet/Create", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *openStorageCloudDrivesClient) Expand(ctx context.Context, in *SdkCloudDriveSetExpandRequest, opts ...grpc.CallOption) (*SdkCloudDriveSetExpandResponse, error) {
+func (c *openStorageCloudDriveSetClient) Expand(ctx context.Context, in *SdkCloudDriveSetExpandRequest, opts ...grpc.CallOption) (*SdkCloudDriveSetExpandResponse, error) {
 	out := new(SdkCloudDriveSetExpandResponse)
-	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCloudDrives/Expand", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCloudDriveSet/Expand", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *openStorageCloudDrivesClient) Delete(ctx context.Context, in *SdkCloudDriveSetDeleteRequest, opts ...grpc.CallOption) (*SdkCloudDriveSetDeleteResponse, error) {
+func (c *openStorageCloudDriveSetClient) Delete(ctx context.Context, in *SdkCloudDriveSetDeleteRequest, opts ...grpc.CallOption) (*SdkCloudDriveSetDeleteResponse, error) {
 	out := new(SdkCloudDriveSetDeleteResponse)
-	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCloudDrives/Delete", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCloudDriveSet/Delete", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *openStorageCloudDrivesClient) Inspect(ctx context.Context, in *SdkCloudDriveSetInspectRequest, opts ...grpc.CallOption) (*SdkCloudDriveSetInspectResponse, error) {
+func (c *openStorageCloudDriveSetClient) Inspect(ctx context.Context, in *SdkCloudDriveSetInspectRequest, opts ...grpc.CallOption) (*SdkCloudDriveSetInspectResponse, error) {
 	out := new(SdkCloudDriveSetInspectResponse)
-	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCloudDrives/Inspect", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCloudDriveSet/Inspect", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *openStorageCloudDrivesClient) Attach(ctx context.Context, in *SdkCloudDriveSetAttachRequest, opts ...grpc.CallOption) (*SdkCloudDriveSetAttachResponse, error) {
+func (c *openStorageCloudDriveSetClient) Attach(ctx context.Context, in *SdkCloudDriveSetAttachRequest, opts ...grpc.CallOption) (*SdkCloudDriveSetAttachResponse, error) {
 	out := new(SdkCloudDriveSetAttachResponse)
-	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCloudDrives/Attach", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCloudDriveSet/Attach", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *openStorageCloudDrivesClient) Detach(ctx context.Context, in *SdkCloudDriveSetDetachRequest, opts ...grpc.CallOption) (*SdkCloudDriveSetDetachResponse, error) {
+func (c *openStorageCloudDriveSetClient) Detach(ctx context.Context, in *SdkCloudDriveSetDetachRequest, opts ...grpc.CallOption) (*SdkCloudDriveSetDetachResponse, error) {
 	out := new(SdkCloudDriveSetDetachResponse)
-	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCloudDrives/Detach", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/openstorage.api.OpenStorageCloudDriveSet/Detach", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// Server API for OpenStorageCloudDrives service
+// Server API for OpenStorageCloudDriveSet service
 
-type OpenStorageCloudDrivesServer interface {
+type OpenStorageCloudDriveSetServer interface {
 	// Enumerate returns the ids of all the cloud drives in the current cluster
 	Enumerate(context.Context, *SdkCloudDriveSetEnumerateRequest) (*SdkCloudDriveSetEnumerateResponse, error)
 	// Create creates a new drive set
@@ -997,236 +997,236 @@ type OpenStorageCloudDrivesServer interface {
 	Detach(context.Context, *SdkCloudDriveSetDetachRequest) (*SdkCloudDriveSetDetachResponse, error)
 }
 
-func RegisterOpenStorageCloudDrivesServer(s *grpc.Server, srv OpenStorageCloudDrivesServer) {
-	s.RegisterService(&_OpenStorageCloudDrives_serviceDesc, srv)
+func RegisterOpenStorageCloudDriveSetServer(s *grpc.Server, srv OpenStorageCloudDriveSetServer) {
+	s.RegisterService(&_OpenStorageCloudDriveSet_serviceDesc, srv)
 }
 
-func _OpenStorageCloudDrives_Enumerate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _OpenStorageCloudDriveSet_Enumerate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SdkCloudDriveSetEnumerateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(OpenStorageCloudDrivesServer).Enumerate(ctx, in)
+		return srv.(OpenStorageCloudDriveSetServer).Enumerate(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/openstorage.api.OpenStorageCloudDrives/Enumerate",
+		FullMethod: "/openstorage.api.OpenStorageCloudDriveSet/Enumerate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OpenStorageCloudDrivesServer).Enumerate(ctx, req.(*SdkCloudDriveSetEnumerateRequest))
+		return srv.(OpenStorageCloudDriveSetServer).Enumerate(ctx, req.(*SdkCloudDriveSetEnumerateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OpenStorageCloudDrives_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _OpenStorageCloudDriveSet_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SdkCloudDriveSetCreateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(OpenStorageCloudDrivesServer).Create(ctx, in)
+		return srv.(OpenStorageCloudDriveSetServer).Create(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/openstorage.api.OpenStorageCloudDrives/Create",
+		FullMethod: "/openstorage.api.OpenStorageCloudDriveSet/Create",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OpenStorageCloudDrivesServer).Create(ctx, req.(*SdkCloudDriveSetCreateRequest))
+		return srv.(OpenStorageCloudDriveSetServer).Create(ctx, req.(*SdkCloudDriveSetCreateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OpenStorageCloudDrives_Expand_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _OpenStorageCloudDriveSet_Expand_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SdkCloudDriveSetExpandRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(OpenStorageCloudDrivesServer).Expand(ctx, in)
+		return srv.(OpenStorageCloudDriveSetServer).Expand(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/openstorage.api.OpenStorageCloudDrives/Expand",
+		FullMethod: "/openstorage.api.OpenStorageCloudDriveSet/Expand",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OpenStorageCloudDrivesServer).Expand(ctx, req.(*SdkCloudDriveSetExpandRequest))
+		return srv.(OpenStorageCloudDriveSetServer).Expand(ctx, req.(*SdkCloudDriveSetExpandRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OpenStorageCloudDrives_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _OpenStorageCloudDriveSet_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SdkCloudDriveSetDeleteRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(OpenStorageCloudDrivesServer).Delete(ctx, in)
+		return srv.(OpenStorageCloudDriveSetServer).Delete(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/openstorage.api.OpenStorageCloudDrives/Delete",
+		FullMethod: "/openstorage.api.OpenStorageCloudDriveSet/Delete",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OpenStorageCloudDrivesServer).Delete(ctx, req.(*SdkCloudDriveSetDeleteRequest))
+		return srv.(OpenStorageCloudDriveSetServer).Delete(ctx, req.(*SdkCloudDriveSetDeleteRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OpenStorageCloudDrives_Inspect_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _OpenStorageCloudDriveSet_Inspect_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SdkCloudDriveSetInspectRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(OpenStorageCloudDrivesServer).Inspect(ctx, in)
+		return srv.(OpenStorageCloudDriveSetServer).Inspect(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/openstorage.api.OpenStorageCloudDrives/Inspect",
+		FullMethod: "/openstorage.api.OpenStorageCloudDriveSet/Inspect",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OpenStorageCloudDrivesServer).Inspect(ctx, req.(*SdkCloudDriveSetInspectRequest))
+		return srv.(OpenStorageCloudDriveSetServer).Inspect(ctx, req.(*SdkCloudDriveSetInspectRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OpenStorageCloudDrives_Attach_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _OpenStorageCloudDriveSet_Attach_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SdkCloudDriveSetAttachRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(OpenStorageCloudDrivesServer).Attach(ctx, in)
+		return srv.(OpenStorageCloudDriveSetServer).Attach(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/openstorage.api.OpenStorageCloudDrives/Attach",
+		FullMethod: "/openstorage.api.OpenStorageCloudDriveSet/Attach",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OpenStorageCloudDrivesServer).Attach(ctx, req.(*SdkCloudDriveSetAttachRequest))
+		return srv.(OpenStorageCloudDriveSetServer).Attach(ctx, req.(*SdkCloudDriveSetAttachRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OpenStorageCloudDrives_Detach_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _OpenStorageCloudDriveSet_Detach_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SdkCloudDriveSetDetachRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(OpenStorageCloudDrivesServer).Detach(ctx, in)
+		return srv.(OpenStorageCloudDriveSetServer).Detach(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/openstorage.api.OpenStorageCloudDrives/Detach",
+		FullMethod: "/openstorage.api.OpenStorageCloudDriveSet/Detach",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OpenStorageCloudDrivesServer).Detach(ctx, req.(*SdkCloudDriveSetDetachRequest))
+		return srv.(OpenStorageCloudDriveSetServer).Detach(ctx, req.(*SdkCloudDriveSetDetachRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-var _OpenStorageCloudDrives_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "openstorage.api.OpenStorageCloudDrives",
-	HandlerType: (*OpenStorageCloudDrivesServer)(nil),
+var _OpenStorageCloudDriveSet_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "openstorage.api.OpenStorageCloudDriveSet",
+	HandlerType: (*OpenStorageCloudDriveSetServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "Enumerate",
-			Handler:    _OpenStorageCloudDrives_Enumerate_Handler,
+			Handler:    _OpenStorageCloudDriveSet_Enumerate_Handler,
 		},
 		{
 			MethodName: "Create",
-			Handler:    _OpenStorageCloudDrives_Create_Handler,
+			Handler:    _OpenStorageCloudDriveSet_Create_Handler,
 		},
 		{
 			MethodName: "Expand",
-			Handler:    _OpenStorageCloudDrives_Expand_Handler,
+			Handler:    _OpenStorageCloudDriveSet_Expand_Handler,
 		},
 		{
 			MethodName: "Delete",
-			Handler:    _OpenStorageCloudDrives_Delete_Handler,
+			Handler:    _OpenStorageCloudDriveSet_Delete_Handler,
 		},
 		{
 			MethodName: "Inspect",
-			Handler:    _OpenStorageCloudDrives_Inspect_Handler,
+			Handler:    _OpenStorageCloudDriveSet_Inspect_Handler,
 		},
 		{
 			MethodName: "Attach",
-			Handler:    _OpenStorageCloudDrives_Attach_Handler,
+			Handler:    _OpenStorageCloudDriveSet_Attach_Handler,
 		},
 		{
 			MethodName: "Detach",
-			Handler:    _OpenStorageCloudDrives_Detach_Handler,
+			Handler:    _OpenStorageCloudDriveSet_Detach_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "api/clouddrive.proto",
 }
 
-func init() { proto.RegisterFile("api/clouddrive.proto", fileDescriptor_clouddrive_66058428868e8fc0) }
+func init() { proto.RegisterFile("api/clouddrive.proto", fileDescriptor_clouddrive_c61ef495f3758649) }
 
-var fileDescriptor_clouddrive_66058428868e8fc0 = []byte{
-	// 964 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x96, 0xdd, 0x6e, 0x1b, 0x45,
-	0x14, 0xc7, 0xbb, 0xeb, 0xd8, 0x6e, 0x4f, 0xe2, 0x0f, 0x06, 0xab, 0x5d, 0xdc, 0x50, 0x9b, 0xad,
-	0x84, 0x22, 0x0b, 0xd9, 0xad, 0x11, 0x52, 0x89, 0xb8, 0x09, 0x6d, 0x10, 0x91, 0x10, 0x89, 0xd6,
-	0x15, 0x17, 0x08, 0xc9, 0x9a, 0x7a, 0x07, 0x67, 0x54, 0xef, 0xcc, 0xe0, 0x19, 0x47, 0x24, 0x88,
-	0x1b, 0x24, 0x84, 0x04, 0x57, 0x15, 0xd7, 0x3c, 0x03, 0x2f, 0xc0, 0x5b, 0xf0, 0x0a, 0x3c, 0x05,
-	0x57, 0xd5, 0xcc, 0xec, 0xc6, 0xde, 0x5d, 0xc7, 0xde, 0x4a, 0xbd, 0x9b, 0x8f, 0x33, 0xe7, 0xfc,
-	0xe6, 0x9c, 0x33, 0xff, 0x5d, 0x68, 0x61, 0x41, 0x07, 0x93, 0x19, 0x5f, 0x84, 0xe1, 0x9c, 0x5e,
-	0x90, 0xbe, 0x98, 0x73, 0xc5, 0x51, 0x83, 0x0b, 0xc2, 0xa4, 0xe2, 0x73, 0x3c, 0x25, 0x7d, 0x2c,
-	0x68, 0xbb, 0x33, 0xe5, 0x7c, 0x3a, 0x23, 0x03, 0xb3, 0xfd, 0x62, 0xf1, 0xfd, 0x40, 0xd1, 0x88,
-	0x48, 0x85, 0x23, 0x61, 0x4f, 0xb4, 0xf7, 0x63, 0x03, 0xed, 0x0e, 0x33, 0xc6, 0x15, 0x56, 0x94,
-	0x33, 0x19, 0xef, 0xd6, 0xcc, 0xb2, 0xa0, 0x76, 0xea, 0xff, 0xed, 0x42, 0xed, 0xa9, 0x8e, 0xf9,
-	0x4c, 0xc7, 0x1c, 0x11, 0x85, 0xea, 0xe0, 0xd2, 0xd0, 0x73, 0xba, 0xce, 0xc1, 0x9d, 0xc0, 0xa5,
-	0x21, 0x1a, 0x42, 0x59, 0x70, 0x3e, 0x93, 0x9e, 0xdb, 0x2d, 0x1d, 0xec, 0x0e, 0xf7, 0xfb, 0x19,
-	0xa0, 0xfe, 0xc8, 0x8e, 0xcf, 0x38, 0x9f, 0x05, 0xd6, 0x14, 0x1d, 0x43, 0x73, 0x32, 0x27, 0x58,
-	0x91, 0xf1, 0x35, 0x9c, 0x57, 0xea, 0x3a, 0x07, 0xbb, 0xc3, 0x76, 0xdf, 0xd2, 0xf5, 0x13, 0xfc,
-	0xfe, 0xf3, 0xc4, 0x22, 0x68, 0xd8, 0x33, 0xd7, 0x0b, 0xe8, 0x53, 0x28, 0x4b, 0x85, 0x15, 0xf1,
-	0x76, 0xba, 0xce, 0x41, 0x7d, 0xf8, 0x30, 0x17, 0x3a, 0x45, 0x3e, 0xd2, 0xa6, 0x81, 0x3d, 0x81,
-	0x1e, 0x42, 0x8d, 0x32, 0xa9, 0x30, 0x9b, 0x90, 0x31, 0xc3, 0x11, 0xf1, 0xca, 0xe6, 0x42, 0x7b,
-	0xc9, 0xe2, 0xd7, 0x38, 0x22, 0xa8, 0x03, 0xbb, 0xd7, 0x46, 0x34, 0xf4, 0x2a, 0xc6, 0x04, 0x92,
-	0xa5, 0x93, 0x10, 0x21, 0xd8, 0xb9, 0xe2, 0x8c, 0x78, 0x55, 0xb3, 0x63, 0xc6, 0xfe, 0x37, 0xf0,
-	0xfe, 0x28, 0x7c, 0x99, 0x8a, 0xfc, 0xd4, 0x70, 0x07, 0xe4, 0x87, 0x05, 0x91, 0x0a, 0x7d, 0x02,
-	0x65, 0x29, 0xc8, 0x44, 0x7a, 0x8e, 0x49, 0x58, 0x67, 0x13, 0xb5, 0x20, 0x93, 0xc0, 0x5a, 0xfb,
-	0xff, 0x38, 0x50, 0x4f, 0xef, 0xe8, 0xf0, 0x92, 0x5e, 0x11, 0x53, 0x8c, 0x52, 0x60, 0xc6, 0x7a,
-	0x4d, 0x5d, 0x0a, 0xe2, 0xb9, 0x16, 0x49, 0x8f, 0xd1, 0x17, 0x50, 0xe5, 0xc2, 0x14, 0xd9, 0x2b,
-	0x99, 0x98, 0x1f, 0x6d, 0x89, 0xd9, 0x3f, 0xb5, 0xe6, 0xc7, 0x4c, 0xcd, 0x2f, 0x83, 0xe4, 0x70,
-	0xfb, 0x10, 0xf6, 0x56, 0x37, 0x50, 0x13, 0x4a, 0x2f, 0xc9, 0x65, 0xdc, 0x0b, 0x7a, 0x88, 0x5a,
-	0x50, 0xbe, 0xc0, 0xb3, 0x45, 0x12, 0xde, 0x4e, 0x0e, 0xdd, 0x27, 0x8e, 0x7f, 0x0e, 0x0f, 0x6e,
-	0x4a, 0x8b, 0x14, 0x9c, 0x49, 0x4d, 0xd9, 0x30, 0xdd, 0x3d, 0x36, 0xed, 0x3d, 0x96, 0x44, 0x19,
-	0xcf, 0xbb, 0xc3, 0x07, 0x9b, 0xeb, 0x1a, 0xd4, 0x26, 0xab, 0x53, 0xdf, 0x87, 0x6e, 0x36, 0xd2,
-	0x31, 0x5b, 0x44, 0x64, 0xbe, 0xac, 0x81, 0x1f, 0xc1, 0x07, 0x1b, 0x6c, 0x62, 0xa0, 0x2f, 0xa1,
-	0x99, 0x01, 0x4a, 0x6a, 0xb6, 0x8d, 0xa8, 0x9e, 0x22, 0x92, 0xfe, 0xa3, 0xfc, 0xe5, 0x4f, 0x98,
-	0x2e, 0xab, 0x4a, 0x9a, 0x22, 0xf3, 0xaa, 0x7c, 0x0a, 0x9d, 0x1b, 0x4f, 0xbc, 0xe5, 0x7c, 0x0d,
-	0xf2, 0x0d, 0xfb, 0x8c, 0xcc, 0xc8, 0xb2, 0x61, 0xb3, 0x6c, 0xdd, 0xfc, 0x6d, 0x92, 0x03, 0x16,
-	0xcd, 0x3f, 0xcb, 0xbb, 0x3c, 0x52, 0x0a, 0x4f, 0xce, 0x6f, 0x70, 0x99, 0x7d, 0x69, 0x6e, 0xf6,
-	0xa5, 0xf9, 0x2c, 0x1f, 0x33, 0xf1, 0x18, 0xa7, 0xe3, 0x2b, 0x68, 0x60, 0xb3, 0x42, 0xe2, 0x8c,
-	0x24, 0xc5, 0xca, 0xcb, 0xc2, 0x51, 0x6c, 0xb7, 0x74, 0x17, 0xd4, 0x93, 0xb3, 0x66, 0x2a, 0xfd,
-	0x27, 0x80, 0xf2, 0x56, 0x39, 0x6c, 0x04, 0x3b, 0x02, 0xab, 0xf3, 0xe4, 0xb1, 0xe9, 0xf1, 0xfa,
-	0x74, 0x6e, 0xb8, 0xfb, 0xfa, 0x74, 0xae, 0x5e, 0xcd, 0xff, 0xcb, 0xc9, 0xfb, 0x3c, 0xfe, 0x51,
-	0x60, 0x16, 0xde, 0x94, 0xcf, 0x7b, 0x50, 0xd5, 0x4a, 0xbb, 0xcc, 0x65, 0x45, 0x4f, 0x4f, 0x42,
-	0x34, 0x82, 0x3a, 0x17, 0xba, 0xcd, 0x29, 0x67, 0x63, 0x23, 0x14, 0x25, 0xa3, 0x9d, 0x79, 0x45,
-	0x48, 0x07, 0x3a, 0x4d, 0x0e, 0x3d, 0xbf, 0x14, 0x24, 0xa8, 0xf1, 0xd5, 0xe9, 0xba, 0xb7, 0x9d,
-	0xe0, 0xbd, 0xdd, 0x5e, 0xed, 0x7d, 0x07, 0x28, 0xaf, 0xe9, 0xa8, 0x09, 0x7b, 0x94, 0x51, 0x45,
-	0xf1, 0x8c, 0x5e, 0x51, 0x36, 0x6d, 0xde, 0x42, 0x7b, 0x70, 0x3b, 0x29, 0x68, 0xd3, 0xd1, 0xb3,
-	0x90, 0xc4, 0x33, 0x17, 0x79, 0xd0, 0x12, 0x84, 0x85, 0x94, 0x4d, 0xc7, 0x21, 0x99, 0xf0, 0x28,
-	0xa2, 0x52, 0x52, 0xce, 0x9a, 0xa5, 0xde, 0x67, 0x70, 0x7f, 0xc3, 0xad, 0xd1, 0x6d, 0xd8, 0x39,
-	0x5a, 0x28, 0xde, 0xbc, 0x85, 0xaa, 0x50, 0x3a, 0x0a, 0xb5, 0x67, 0x80, 0x4a, 0x40, 0xb4, 0xee,
-	0x36, 0xdd, 0xe1, 0xff, 0x55, 0xb8, 0x7b, 0x2a, 0x08, 0x8b, 0xbf, 0x77, 0x4b, 0x4e, 0x89, 0xfe,
-	0x70, 0xe0, 0xce, 0xb5, 0xbe, 0xa0, 0xc7, 0xf9, 0x4f, 0xe4, 0x16, 0xbd, 0x6a, 0x0f, 0xdf, 0xe4,
-	0x48, 0xdc, 0x35, 0xf7, 0x7e, 0xf9, 0xf7, 0xbf, 0x3f, 0xdd, 0x77, 0x50, 0x63, 0x70, 0xf1, 0x78,
-	0xe5, 0xbf, 0x41, 0xa2, 0x5f, 0x1d, 0xa8, 0x58, 0xed, 0x45, 0xfd, 0xad, 0x7e, 0x53, 0xdf, 0xae,
-	0xf6, 0xa0, 0xb0, 0x7d, 0x0c, 0xd1, 0x36, 0x10, 0x2d, 0x3f, 0x0b, 0x71, 0xe8, 0xf4, 0xd0, 0xef,
-	0x0e, 0x54, 0x6c, 0x9e, 0x0b, 0x70, 0xa4, 0xfa, 0xbd, 0x00, 0x47, 0xba, 0x01, 0xfd, 0x8e, 0xe1,
-	0x78, 0xaf, 0xdd, 0xca, 0x70, 0x0c, 0x7e, 0xa2, 0xe1, 0xcf, 0x1a, 0xe6, 0x37, 0x07, 0x2a, 0x56,
-	0xc5, 0x0a, 0xc0, 0xa4, 0xf4, 0xb1, 0x00, 0x4c, 0x46, 0x1e, 0xf7, 0x0d, 0xcc, 0xdd, 0xde, 0x5a,
-	0x18, 0x9d, 0x96, 0x6a, 0xac, 0xf5, 0x68, 0xbb, 0xeb, 0xf4, 0x77, 0xa4, 0xfd, 0xa8, 0xf8, 0x81,
-	0x34, 0x0c, 0x5a, 0x0f, 0xf3, 0xca, 0x81, 0x8a, 0x15, 0xc2, 0x02, 0x69, 0x49, 0x69, 0x7c, 0x81,
-	0xb4, 0xa4, 0x15, 0xdc, 0xff, 0xd0, 0x90, 0x74, 0xfd, 0xfb, 0xeb, 0x48, 0x06, 0xf6, 0x3d, 0xeb,
-	0x52, 0xbd, 0x32, 0xa5, 0x2a, 0xc8, 0x94, 0xd2, 0xde, 0x42, 0xa5, 0x7a, 0x03, 0x26, 0xab, 0x2a,
-	0x87, 0x4e, 0xef, 0xf3, 0x7d, 0x78, 0x77, 0xc2, 0xa3, 0xac, 0xf7, 0x33, 0xe7, 0xdb, 0x12, 0x16,
-	0xf4, 0x45, 0xc5, 0xfc, 0xcd, 0x7e, 0xfc, 0x3a, 0x00, 0x00, 0xff, 0xff, 0x12, 0xb3, 0x3a, 0xb1,
-	0xc3, 0x0b, 0x00, 0x00,
+var fileDescriptor_clouddrive_c61ef495f3758649 = []byte{
+	// 972 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x96, 0x4d, 0x6e, 0xdb, 0x46,
+	0x14, 0xc7, 0x43, 0xd2, 0x92, 0x92, 0x67, 0x4b, 0x62, 0xa7, 0x46, 0xc3, 0x32, 0x6e, 0xa4, 0x32,
+	0x40, 0x61, 0x18, 0x05, 0x95, 0xa8, 0x28, 0x90, 0x1a, 0xdd, 0xa8, 0x16, 0x9b, 0x10, 0x30, 0x64,
+	0x83, 0x52, 0xb3, 0xf0, 0x46, 0x60, 0xc4, 0xa9, 0x4d, 0x44, 0xe2, 0x4c, 0xc5, 0x91, 0x51, 0xa7,
+	0xe8, 0xa6, 0x40, 0x51, 0xa0, 0x5d, 0x05, 0x5d, 0xf7, 0x0c, 0xbd, 0x40, 0x6f, 0xd1, 0x2b, 0xf4,
+	0x18, 0x5d, 0x04, 0x33, 0x43, 0xda, 0x22, 0x29, 0x4b, 0x0c, 0x90, 0xdd, 0xcc, 0xf0, 0x7d, 0xfc,
+	0xe6, 0xbd, 0xc7, 0x3f, 0x09, 0xbb, 0x3e, 0x0d, 0x3b, 0x93, 0x29, 0x59, 0x04, 0xc1, 0x3c, 0xbc,
+	0xc4, 0x36, 0x9d, 0x13, 0x46, 0x50, 0x93, 0x50, 0x1c, 0xc5, 0x8c, 0xcc, 0xfd, 0x73, 0x6c, 0xfb,
+	0x34, 0x34, 0x5b, 0xe7, 0x84, 0x9c, 0x4f, 0x71, 0x47, 0x3c, 0x7e, 0xb9, 0xf8, 0xbe, 0xc3, 0xc2,
+	0x19, 0x8e, 0x99, 0x3f, 0xa3, 0xd2, 0xc3, 0xdc, 0x4b, 0x0c, 0x78, 0x38, 0x3f, 0x8a, 0x08, 0xf3,
+	0x59, 0x48, 0xa2, 0x38, 0x79, 0x5a, 0x17, 0xc7, 0x34, 0x94, 0x5b, 0xeb, 0x6f, 0x15, 0xea, 0x47,
+	0x3c, 0x67, 0x9f, 0xe7, 0x1c, 0x62, 0x86, 0x1a, 0xa0, 0x86, 0x81, 0xa1, 0xb4, 0x95, 0xfd, 0x7b,
+	0x9e, 0x1a, 0x06, 0xa8, 0x0b, 0x15, 0x4a, 0xc8, 0x34, 0x36, 0xd4, 0xb6, 0xb6, 0xbf, 0xdd, 0xdd,
+	0xb3, 0x73, 0x40, 0xf6, 0x50, 0xae, 0x4f, 0x09, 0x99, 0x7a, 0xd2, 0x14, 0x39, 0xa0, 0x4f, 0xe6,
+	0xd8, 0x67, 0x78, 0x7c, 0x0d, 0x67, 0x68, 0x6d, 0x65, 0x7f, 0xbb, 0x6b, 0xda, 0x92, 0xce, 0x4e,
+	0xf1, 0xed, 0x51, 0x6a, 0xe1, 0x35, 0xa5, 0xcf, 0xf5, 0x01, 0xfa, 0x0a, 0x2a, 0x31, 0xf3, 0x19,
+	0x36, 0xb6, 0xda, 0xca, 0x7e, 0xa3, 0xfb, 0xa8, 0x90, 0x3a, 0x43, 0x3e, 0xe4, 0xa6, 0x9e, 0xf4,
+	0x40, 0x8f, 0xa0, 0x1e, 0x46, 0x31, 0xf3, 0xa3, 0x09, 0x1e, 0x47, 0xfe, 0x0c, 0x1b, 0x15, 0x71,
+	0xa1, 0x9d, 0xf4, 0x70, 0xe0, 0xcf, 0x30, 0x6a, 0xc1, 0xf6, 0xb5, 0x51, 0x18, 0x18, 0x55, 0x61,
+	0x02, 0xe9, 0x91, 0x1b, 0x20, 0x04, 0x5b, 0xaf, 0x49, 0x84, 0x8d, 0x9a, 0x78, 0x22, 0xd6, 0xd6,
+	0x0b, 0xf8, 0x64, 0x18, 0xbc, 0xca, 0x64, 0x3e, 0x12, 0xdc, 0x1e, 0xfe, 0x61, 0x81, 0x63, 0x86,
+	0xbe, 0x84, 0x4a, 0x4c, 0xf1, 0x24, 0x36, 0x14, 0x51, 0xb0, 0xd6, 0x3a, 0x6a, 0x8a, 0x27, 0x9e,
+	0xb4, 0xb6, 0xfe, 0x51, 0xa0, 0x91, 0x7d, 0xc2, 0xd3, 0xc7, 0xe1, 0x6b, 0x2c, 0x9a, 0xa1, 0x79,
+	0x62, 0xcd, 0xcf, 0xd8, 0x15, 0xc5, 0x86, 0x2a, 0x91, 0xf8, 0x1a, 0x7d, 0x0b, 0x35, 0x42, 0x45,
+	0x93, 0x0d, 0x4d, 0xe4, 0xfc, 0x7c, 0x43, 0x4e, 0xfb, 0x44, 0x9a, 0x3b, 0x11, 0x9b, 0x5f, 0x79,
+	0xa9, 0xb3, 0x79, 0x08, 0x3b, 0xcb, 0x0f, 0x90, 0x0e, 0xda, 0x2b, 0x7c, 0x95, 0xcc, 0x02, 0x5f,
+	0xa2, 0x5d, 0xa8, 0x5c, 0xfa, 0xd3, 0x45, 0x9a, 0x5e, 0x6e, 0x0e, 0xd5, 0xa7, 0x8a, 0x75, 0x01,
+	0x0f, 0x6f, 0x2b, 0x4b, 0x4c, 0x49, 0x14, 0x73, 0xca, 0xa6, 0x98, 0xee, 0xb1, 0x18, 0xef, 0x71,
+	0x8c, 0x99, 0x88, 0xbc, 0xdd, 0x7d, 0xb8, 0xbe, 0xaf, 0x5e, 0x7d, 0xb2, 0xbc, 0xb5, 0x2c, 0x68,
+	0xe7, 0x33, 0x39, 0xd1, 0x62, 0x86, 0xe7, 0x37, 0x3d, 0xb0, 0x66, 0xf0, 0xe9, 0x1a, 0x9b, 0x04,
+	0xe8, 0x39, 0xe8, 0x39, 0xa0, 0xb4, 0x67, 0x9b, 0x88, 0x1a, 0x19, 0xa2, 0xd8, 0x7a, 0x5c, 0xbc,
+	0xbc, 0x1b, 0xf1, 0xb6, 0xb2, 0x74, 0x28, 0x72, 0x6f, 0x95, 0x15, 0x42, 0xeb, 0x56, 0x8f, 0xf7,
+	0x5c, 0xaf, 0x4e, 0x71, 0x60, 0xfb, 0x78, 0x8a, 0x6f, 0x06, 0x36, 0xcf, 0xd6, 0x2e, 0xde, 0x26,
+	0x75, 0x90, 0x68, 0xd6, 0x69, 0x31, 0x64, 0x8f, 0x31, 0x7f, 0x72, 0x71, 0x4b, 0xc8, 0xfc, 0x9b,
+	0xa6, 0xe6, 0xdf, 0x34, 0x2b, 0x2a, 0xe6, 0x4c, 0x23, 0x26, 0xe5, 0x38, 0x86, 0xa6, 0x2f, 0x4e,
+	0x70, 0x52, 0x91, 0xb4, 0x59, 0x45, 0x59, 0xe8, 0x25, 0x76, 0x37, 0xe1, 0xbc, 0x46, 0xea, 0x2b,
+	0xb6, 0xb1, 0xf5, 0x14, 0x50, 0xd1, 0xaa, 0x80, 0x8d, 0x60, 0x8b, 0xfa, 0xec, 0x22, 0x7d, 0xd9,
+	0xf8, 0x7a, 0x75, 0x39, 0xd7, 0xdc, 0x7d, 0x75, 0x39, 0x97, 0xaf, 0x66, 0xfd, 0xa5, 0x14, 0x63,
+	0x3a, 0x3f, 0x52, 0x3f, 0x0a, 0x6e, 0xab, 0xe7, 0x7d, 0xa8, 0x71, 0xa5, 0xbd, 0xa9, 0x65, 0x95,
+	0x6f, 0xdd, 0x00, 0x0d, 0xa1, 0x41, 0x28, 0x1f, 0xf3, 0x90, 0x44, 0x63, 0x21, 0x14, 0x9a, 0xd0,
+	0xce, 0xa2, 0x22, 0x64, 0x13, 0x9d, 0xa4, 0x4e, 0xa3, 0x2b, 0x8a, 0xbd, 0x3a, 0x59, 0xde, 0xae,
+	0x7a, 0xb7, 0x53, 0xbc, 0xf7, 0x3b, 0xab, 0x07, 0x2f, 0x00, 0x15, 0x35, 0x1d, 0xe9, 0xb0, 0xe3,
+	0x0e, 0xdc, 0x91, 0xdb, 0x3b, 0x76, 0xcf, 0xdc, 0xc1, 0x33, 0xfd, 0x0e, 0xda, 0x81, 0xbb, 0xbd,
+	0xd1, 0xa8, 0x77, 0xf4, 0xdc, 0xe9, 0xeb, 0x0a, 0xdf, 0xf5, 0x9d, 0x64, 0xa7, 0x22, 0x04, 0x8d,
+	0x53, 0x67, 0xd0, 0x77, 0x07, 0xcf, 0xc6, 0x7d, 0xe7, 0xd8, 0x19, 0x39, 0xba, 0x76, 0xf0, 0x35,
+	0x3c, 0x58, 0x73, 0x5f, 0x74, 0x17, 0xb6, 0x7a, 0xdf, 0x8d, 0x4e, 0xf4, 0x3b, 0xa8, 0x06, 0x5a,
+	0xaf, 0xcf, 0x63, 0x02, 0x54, 0x3d, 0x67, 0xe8, 0x9e, 0x39, 0xba, 0xda, 0xfd, 0xbf, 0x06, 0xc6,
+	0x09, 0xc5, 0x51, 0xf2, 0xa5, 0xcb, 0x7e, 0x2f, 0xff, 0x50, 0xe0, 0xde, 0xb5, 0xb6, 0xa0, 0x27,
+	0xc5, 0xcf, 0xe3, 0x06, 0xad, 0x32, 0xbb, 0xef, 0xe2, 0x92, 0x4c, 0xcc, 0xfd, 0x5f, 0xfe, 0xfd,
+	0xef, 0x4f, 0xf5, 0x03, 0xd4, 0xec, 0x5c, 0x3e, 0x59, 0xfa, 0x67, 0x88, 0xd1, 0xaf, 0x0a, 0x54,
+	0xa5, 0xee, 0x22, 0x7b, 0x63, 0xdc, 0xcc, 0x77, 0xcb, 0xec, 0x94, 0xb6, 0x4f, 0x20, 0x4c, 0x01,
+	0xb1, 0x6b, 0xe5, 0x21, 0x0e, 0x95, 0x03, 0xf4, 0xbb, 0x02, 0x55, 0x59, 0xe9, 0x12, 0x1c, 0x99,
+	0x59, 0x2f, 0xc1, 0x91, 0x1d, 0x3e, 0xab, 0x25, 0x38, 0x3e, 0x36, 0x77, 0x73, 0x1c, 0x9d, 0x9f,
+	0xc2, 0xe0, 0x67, 0x0e, 0xf3, 0x9b, 0x02, 0x55, 0xa9, 0x60, 0x25, 0x60, 0x32, 0xda, 0x58, 0x02,
+	0x26, 0x27, 0x8d, 0x7b, 0x02, 0xe6, 0xa3, 0x83, 0x95, 0x30, 0xbc, 0x2c, 0xb5, 0x44, 0xe7, 0xd1,
+	0xe6, 0xd0, 0xd9, 0x6f, 0x88, 0xf9, 0xb8, 0xbc, 0x43, 0x16, 0x06, 0xad, 0x86, 0x79, 0xa3, 0x40,
+	0x55, 0x8a, 0x60, 0x89, 0xb2, 0x64, 0xf4, 0xbd, 0x44, 0x59, 0xb2, 0xea, 0x6d, 0x7d, 0x26, 0x48,
+	0xda, 0xd6, 0x83, 0x55, 0x24, 0x1d, 0x29, 0xce, 0xbc, 0x55, 0x6f, 0x44, 0xab, 0x4a, 0x32, 0x65,
+	0x74, 0xb7, 0x54, 0xab, 0xde, 0x81, 0x29, 0xc0, 0x09, 0xd3, 0x37, 0x7b, 0xf0, 0xe1, 0x84, 0xcc,
+	0xf2, 0xd1, 0x4f, 0x95, 0x33, 0xcd, 0xa7, 0xe1, 0xcb, 0xaa, 0xf8, 0x93, 0xfd, 0xe2, 0x6d, 0x00,
+	0x00, 0x00, 0xff, 0xff, 0xbd, 0x3d, 0x12, 0x9b, 0xbf, 0x0b, 0x00, 0x00,
 }
