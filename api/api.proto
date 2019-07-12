@@ -255,11 +255,11 @@ message DriveConfig {
 // DriveCategory is the type for various categories a drive could belong to
 enum DriveCategory {
   // Data indicates drive is being used for data purposes
-  data = 0;
+  DATA = 0;
   // Metadata indicates drive is being used for metadata purposes
-  metadata = 1;
+  METADATA = 1;
   // Journal indicates drive is used for journal
-  journal = 2;
+  JOURNAL = 2;
 }
 
 // VolumeLocator is a structure that is attached to a volume

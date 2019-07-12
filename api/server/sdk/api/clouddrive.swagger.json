@@ -17,7 +17,7 @@
   "paths": {
     "/v1/clouddrives": {
       "get": {
-        "summary": "Enumerate returns the ids of all the cloud drives in the current cluster",
+        "summary": "Enumerate returns the list of cloud drive sets in the current cluster",
         "operationId": "Enumerate",
         "responses": {
           "200": {
@@ -59,7 +59,7 @@
     },
     "/v1/clouddrives/{id}": {
       "get": {
-        "summary": "Delete inspects the given drive set",
+        "summary": "Inspects inspects the given drive set",
         "operationId": "Inspect",
         "responses": {
           "200": {
@@ -105,13 +105,13 @@
         ]
       },
       "put": {
-        "summary": "Expand expands the given drive set",
-        "operationId": "Expand",
+        "summary": "Resize resizes the given drive set",
+        "operationId": "Resize",
         "responses": {
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/apiSdkCloudDriveSetExpandResponse"
+              "$ref": "#/definitions/apiSdkCloudDriveSetResizeResponse"
             }
           }
         },
@@ -127,7 +127,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/apiSdkCloudDriveSetExpandRequest"
+              "$ref": "#/definitions/apiSdkCloudDriveSetResizeRequest"
             }
           }
         ],
@@ -216,7 +216,7 @@
           "title": "Path is the path where the drive is attached"
         }
       },
-      "title": "CloudDriveAttachedDrive represents a single attached drive"
+      "title": "AttachedCloudDrive represents a single attached drive"
     },
     "apiCloudDriveSet": {
       "type": "object",
@@ -303,12 +303,12 @@
     "apiDriveCategory": {
       "type": "string",
       "enum": [
-        "data",
-        "metadata",
-        "journal"
+        "DATA",
+        "METADATA",
+        "JOURNAL"
       ],
-      "default": "data",
-      "description": "- data: Data indicates drive is being used for data purposes\n - metadata: Metadata indicates drive is being used for metadata purposes\n - journal: Journal indicates drive is used for journal",
+      "default": "DATA",
+      "description": "- DATA: Data indicates drive is being used for data purposes\n - METADATA: Metadata indicates drive is being used for metadata purposes\n - JOURNAL: Journal indicates drive is used for journal",
       "title": "DriveCategory is the type for various categories a drive could belong to"
     },
     "apiDriveConfig": {
@@ -343,7 +343,7 @@
       },
       "title": "DriveConfig defines the configuration for a drive"
     },
-    "apiDriveSetExpandOperationType": {
+    "apiDriveSetResizeOperationType": {
       "type": "string",
       "enum": [
         "AUTO",
@@ -351,8 +351,8 @@
         "RESIZE"
       ],
       "default": "AUTO",
-      "description": "- AUTO: Automatically pick the optimum operation type\n - ADD: Add a new drive to expand the drive set\n - RESIZE: Resize existing drives to expand the drive set",
-      "title": "Defines the operation types available to expand a drive set"
+      "description": "- AUTO: Automatically pick the optimum operation type\n - ADD: Add a new drive to resize the drive set\n - RESIZE: Resize existing drives to resize the drive set",
+      "title": "Defines the operation types available to resize a drive set"
     },
     "apiSdkCloudDriveSetAttachRequest": {
       "type": "object",
@@ -435,34 +435,6 @@
       },
       "title": "Defines a response with a list of cloud drives"
     },
-    "apiSdkCloudDriveSetExpandRequest": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string",
-          "title": "ID of the cloud drive set to expand"
-        },
-        "pool_id": {
-          "type": "string",
-          "title": "PoolID of the pool inside the cloud drive to expand"
-        },
-        "operation_type": {
-          "$ref": "#/definitions/apiDriveSetExpandOperationType",
-          "title": "OperationType is the operation that's used to expand the drive set (optional)"
-        }
-      },
-      "title": "Defines a request object to expand a cloud drive"
-    },
-    "apiSdkCloudDriveSetExpandResponse": {
-      "type": "object",
-      "properties": {
-        "cloud_drive_set": {
-          "$ref": "#/definitions/apiCloudDriveSet",
-          "title": "CloudDriveSet that was requested to expand"
-        }
-      },
-      "title": "Defines a response for the inspect cloud drive operation"
-    },
     "apiSdkCloudDriveSetInspectResponse": {
       "type": "object",
       "properties": {
@@ -472,6 +444,39 @@
         }
       },
       "title": "Defines a response for the inspect cloud drive operation"
+    },
+    "apiSdkCloudDriveSetResizeRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "ID of the cloud drive set to resize"
+        },
+        "pool_id": {
+          "type": "string",
+          "title": "PoolID of the pool inside the cloud drive to resize"
+        },
+        "size": {
+          "type": "string",
+          "format": "int64",
+          "title": "Size defines the new total size of the pool in Gi"
+        },
+        "operation_type": {
+          "$ref": "#/definitions/apiDriveSetResizeOperationType",
+          "title": "OperationType is the operation that's used to resize the drive set pool (optional)"
+        }
+      },
+      "title": "Defines a request object to resize a cloud drive"
+    },
+    "apiSdkCloudDriveSetResizeResponse": {
+      "type": "object",
+      "properties": {
+        "cloud_drive_set": {
+          "$ref": "#/definitions/apiCloudDriveSet",
+          "title": "CloudDriveSet that was requested to resize"
+        }
+      },
+      "title": "Defines a response for the resize cloud drive operation"
     },
     "apiStorageMedium": {
       "type": "string",

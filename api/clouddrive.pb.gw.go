@@ -50,8 +50,8 @@ func request_OpenStorageCloudDriveSet_Create_0(ctx context.Context, marshaler ru
 
 }
 
-func request_OpenStorageCloudDriveSet_Expand_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageCloudDriveSetClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq SdkCloudDriveSetExpandRequest
+func request_OpenStorageCloudDriveSet_Resize_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageCloudDriveSetClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SdkCloudDriveSetResizeRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -76,7 +76,7 @@ func request_OpenStorageCloudDriveSet_Expand_0(ctx context.Context, marshaler ru
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
 
-	msg, err := client.Expand(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.Resize(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
@@ -293,7 +293,7 @@ func RegisterOpenStorageCloudDriveSetHandlerClient(ctx context.Context, mux *run
 
 	})
 
-	mux.Handle("PUT", pattern_OpenStorageCloudDriveSet_Expand_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("PUT", pattern_OpenStorageCloudDriveSet_Resize_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -311,14 +311,14 @@ func RegisterOpenStorageCloudDriveSetHandlerClient(ctx context.Context, mux *run
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_OpenStorageCloudDriveSet_Expand_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_OpenStorageCloudDriveSet_Resize_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_OpenStorageCloudDriveSet_Expand_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_OpenStorageCloudDriveSet_Resize_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -446,7 +446,7 @@ var (
 
 	pattern_OpenStorageCloudDriveSet_Create_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "clouddrives"}, ""))
 
-	pattern_OpenStorageCloudDriveSet_Expand_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "clouddrives", "id"}, ""))
+	pattern_OpenStorageCloudDriveSet_Resize_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "clouddrives", "id"}, ""))
 
 	pattern_OpenStorageCloudDriveSet_Delete_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "clouddrives", "id"}, ""))
 
@@ -462,7 +462,7 @@ var (
 
 	forward_OpenStorageCloudDriveSet_Create_0 = runtime.ForwardResponseMessage
 
-	forward_OpenStorageCloudDriveSet_Expand_0 = runtime.ForwardResponseMessage
+	forward_OpenStorageCloudDriveSet_Resize_0 = runtime.ForwardResponseMessage
 
 	forward_OpenStorageCloudDriveSet_Delete_0 = runtime.ForwardResponseMessage
 
