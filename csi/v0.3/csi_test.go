@@ -161,7 +161,7 @@ func TestCSIServerStart(t *testing.T) {
 	assert.Equal(t, version, csiDriverVersion)
 }
 
-func TestCSIServerStop(t *testing.T) {
+func TestCSI03ServerStop(t *testing.T) {
 	s := newTestServer(t)
 	assert.True(t, s.Server().IsRunning())
 	s.Stop()
