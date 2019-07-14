@@ -2273,6 +2273,17 @@
         "title": "A SdkStoragePolicy represents minimum set of volume specs to be\nfollow while creating volumes.\nIf storage policy is set default in OpenStoragePolicy service, VolumeSpecPolicy will be\nused before creating volume to validate volume specs or ensure minimum volume creation\nrules followed",
         "type": "object"
       },
+      "apiSdkStoragePoolResizeResponse": {
+        "properties": {
+          "size": {
+            "format": "int64",
+            "title": "Size is the updated size of the storage pool",
+            "type": "string"
+          }
+        },
+        "title": "Defines a response when resizing a storage pool",
+        "type": "object"
+      },
       "apiSdkTimeWeekday": {
         "default": "SdkTimeWeekdaySunday",
         "description": "- SdkTimeWeekdaySunday: Sunday\n - SdkTimeWeekdayMonday: Monday\n - SdkTimeWeekdayTuesday: Tuesday\n - SdkTimeWeekdayWednesday: Wednesday\n - SdkTimeWeekdayThursday: Thursday\n - SdkTimeWeekdayFriday: Friday\n - SdkTimeWeekdaySaturday: Saturday",
@@ -3000,6 +3011,10 @@
             "title": "TotalSize of the pool",
             "type": "string"
           },
+          "UUID": {
+            "title": "UUID is the unique identifier for a storage pool",
+            "type": "string"
+          },
           "Used": {
             "format": "uint64",
             "title": "Used size of the pool",
@@ -3015,6 +3030,17 @@
         },
         "title": "StoragePool groups different storage devices based on their CosType",
         "type": "object"
+      },
+      "apiStoragePoolResizeOperationType": {
+        "default": "AUTO",
+        "description": "- AUTO: Automatically pick the optimum operation type\n - ADD_DISK: Add a new drive to resize the pool\n - RESIZE_DISK: Resize existing drives to resize the pool",
+        "enum": [
+          "AUTO",
+          "ADD_DISK",
+          "RESIZE_DISK"
+        ],
+        "title": "Defines the operation types available to resize a storage pool",
+        "type": "string"
       },
       "apiStorageResource": {
         "description": "StorageResource groups properties of a storage device.",
@@ -5585,6 +5611,37 @@
         "summary": "Deletes specified storage policy",
         "tags": [
           "OpenStoragePolicy"
+        ]
+      }
+    },
+    "/v1/storagepools/resize/{uuid}": {
+      "put": {
+        "operationId": "Resize",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "uuid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkStoragePoolResizeResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Resize resizes the specified storage pool based on the request parameters",
+        "tags": [
+          "OpenStoragePool"
         ]
       }
     },

@@ -232,6 +232,8 @@ message StoragePool {
   uint64 Used = 8;
   // Labels is a list of user defined name-value pairs
   map<string, string> labels = 9;
+  // UUID is the unique identifier for a storage pool
+  string UUID = 10;
 }
 
 // VolumeLocator is a structure that is attached to a volume
@@ -1269,6 +1271,19 @@ service OpenStorageClusterDomains {
     returns (SdkClusterDomainDeactivateResponse) {
       option(google.api.http) = {
         post: "/v1/clusterdomains/deactivate/{cluster_domain_name}"
+      };
+    }
+
+}
+
+
+// OpenStoragePool is a service used to manage storage pools in the cluster
+service OpenStoragePool {
+  // Resize resizes the specified storage pool based on the request parameters
+  rpc Resize(SdkStoragePoolResizeRequest)
+    returns (SdkStoragePoolResizeResponse) {
+      option(google.api.http) = {
+        put: "/v1/storagepools/resize/{uuid}"
       };
     }
 
@@ -2716,6 +2731,32 @@ message SdkNodeInspectRequest {
   string node_id = 1;
 }
 
+// Defines a request when inspect a storage pool
+message SdkStoragePoolResizeRequest {
+  // UUID of the storage pool to inspect
+  string uuid = 1;
+  // Size is the new desired size of the storage pool
+  uint64 size = 2;
+  // OperationType is the operation that's used to resize the storage pool (optional)
+  StoragePoolResizeOperationType operation_type = 3;
+}
+
+// Defines the operation types available to resize a storage pool
+enum StoragePoolResizeOperationType {
+  // Automatically pick the optimum operation type
+  AUTO = 0;
+  // Add a new drive to resize the pool
+  ADD_DISK = 1;
+  // Resize existing drives to resize the pool
+  RESIZE_DISK = 2;
+}
+
+// Defines a response when resizing a storage pool
+message SdkStoragePoolResizeResponse {
+  // Size is the updated size of the storage pool
+  int64 size = 1;
+}
+
 // Defines a response when inspecting a node
 message SdkNodeInspectResponse {
   // Node information
@@ -2964,7 +3005,7 @@ message SdkCloudBackupEnumerateWithFiltersResponse {
   repeated SdkCloudBackupInfo backups = 1;
   // if this is not an empty string, callers must pass this to get next list of
   // backups
-	string continuation_token = 2;
+  string continuation_token = 2;
 }
 
 // CloudBackup operations types
