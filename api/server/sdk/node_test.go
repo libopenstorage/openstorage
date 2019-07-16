@@ -107,6 +107,93 @@ func TestSdkNodeEnumerateFail(t *testing.T) {
 	assert.Equal(t, serverError.Message(), mockerr.Error())
 }
 
+func TestSdkNodeEnumerateWithFiltersNoNodes(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	// Create response
+	cluster := api.Cluster{
+		Id:     "someid",
+		NodeId: "somenodeid",
+		Status: api.Status_STATUS_NOT_IN_QUORUM,
+	}
+	s.MockCluster().EXPECT().Enumerate().Return(cluster, nil).Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageNodeClient(s.Conn())
+
+	// Get info
+	r, err := c.EnumerateWithFilters(context.Background(), &api.SdkNodeEnumerateWithFiltersRequest{})
+	assert.NoError(t, err)
+	assert.Nil(t, r.GetNodes())
+}
+
+func TestSdkNodeEnumerateWithFilters(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	// Create response
+	cluster := api.Cluster{
+		Id:     "someid",
+		NodeId: "somenodeid",
+		Status: api.Status_STATUS_NOT_IN_QUORUM,
+		Nodes: []api.Node{
+			api.Node{
+				Id:                "nodeid",
+				SchedulerNodeName: "schedulernodename",
+				Cpu:               1.414,
+				MemTotal:          112,
+				MemUsed:           41,
+				MemFree:           93,
+				HWType:            api.HardwareType_UnknownMachine,
+			},
+		},
+	}
+
+	expectedNode := &api.StorageNode{
+		Id:                "nodeid",
+		SchedulerNodeName: "schedulernodename",
+		Cpu:               1.414,
+		MemTotal:          112,
+		MemUsed:           41,
+		MemFree:           93,
+		HWType:            api.HardwareType_UnknownMachine,
+	}
+
+	s.MockCluster().EXPECT().Enumerate().Return(cluster, nil).Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageNodeClient(s.Conn())
+
+	// Get info
+	r, err := c.EnumerateWithFilters(context.Background(), &api.SdkNodeEnumerateWithFiltersRequest{})
+	assert.NoError(t, err)
+	assert.Len(t, r.GetNodes(), 1)
+	assert.Equal(t, expectedNode, r.GetNodes()[0])
+}
+
+func TestSdkNodeEnumerateWithFiltersFail(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	mockerr := fmt.Errorf("MOCK")
+	s.MockCluster().EXPECT().Enumerate().Return(api.Cluster{}, mockerr).Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageNodeClient(s.Conn())
+
+	// Get info
+	_, err := c.EnumerateWithFilters(context.Background(), &api.SdkNodeEnumerateWithFiltersRequest{})
+	assert.Error(t, err)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.Internal)
+	assert.Equal(t, serverError.Message(), mockerr.Error())
+}
+
 func TestSdkNodeInspect(t *testing.T) {
 
 	// Create server and client connection
