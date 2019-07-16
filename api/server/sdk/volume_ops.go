@@ -959,7 +959,7 @@ func mergeVolumeSpecsPolicy(vol *api.VolumeSpec, req *api.VolumeSpecPolicy, isVa
 		}
 		spec.IoStrategy = req.GetIoStrategy()
 	}
-	logrus.Debug("Updated VolumeSpecs %v", spec)
+	logrus.Debugf("Updated VolumeSpecs %v", spec)
 	return spec, nil
 }
 
