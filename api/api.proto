@@ -1290,6 +1290,14 @@ service OpenStorageNode {
         get: "/v1/nodes"
       };
     }
+
+  // EnumerateWithFilters returns all the nodes in the current cluster
+  rpc EnumerateWithFilters(SdkNodeEnumerateWithFiltersRequest)
+    returns (SdkNodeEnumerateWithFiltersResponse) {
+      option(google.api.http) = {
+        get: "/v1/nodes/filters"
+      };
+    }
 }
 
 // OpenStorageVolume is a service used to manage the volumes of a storage system
@@ -2708,10 +2716,21 @@ message SdkNodeInspectCurrentResponse {
 message SdkNodeEnumerateRequest {
 }
 
-// Defines a response with a list of nodes
+// Defines a response with a list of node ids
 message SdkNodeEnumerateResponse {
   // List of all the node ids in the cluster
   repeated string node_ids = 1;
+}
+
+// Defines a request to list nodes with given filter. Currently there are
+// no filters and all the nodes will be returned.
+message SdkNodeEnumerateWithFiltersRequest {
+}
+
+// Defines a response with a list of nodes
+message SdkNodeEnumerateWithFiltersResponse {
+  // List of all the nodes in the cluster
+  repeated StorageNode nodes = 1;
 }
 
 // Defines a request to get information about an object store endpoint
@@ -2775,10 +2794,10 @@ message SdkCloudBackupCreateRequest {
   // Labels are list of key value pairs to tag the cloud backup. These labels
   // are stored in the metadata associated with the backup.
   map<string, string> labels = 5;
-  // FullBackupFrequency indicates number of incremental backup after whcih 
+  // FullBackupFrequency indicates number of incremental backup after whcih
   // a fullbackup must be created. This is to override the default value for
   // manual/user triggerred backups and not applicable for scheduled backups
-  // Value of 0 retains the default behavior. 
+  // Value of 0 retains the default behavior.
   uint32 full_backup_frequency = 6;
 }
 
@@ -2809,7 +2828,7 @@ message SdkCloudBackupGroupCreateRequest {
 message SdkCloudBackupGroupCreateResponse {
   // ID for this group of backups
   string group_cloud_backup_id = 1;
-  
+
   // TaskIds of the tasks performing the group backup
   repeated string task_ids = 2;
 }
@@ -3092,7 +3111,7 @@ message SdkCloudBackupScheduleInfo{
   // Schedules are the frequencies of the backup
   repeated SdkSchedulePolicyInterval schedules = 3;
   // MaxBackups indicates when to force full backup to cloud. If RetentionDays
-  // is not specified or is 0 (older scheme), this is also the maximum number 
+  // is not specified or is 0 (older scheme), this is also the maximum number
   // of scheduled backups retained in the cloud. Older backups are deleted
   uint64 max_backups = 4;
   // Full indicates if scheduled backups should always be full and never incremental.
@@ -3331,7 +3350,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 42;
     // SDK version patch value of this specification
-    Patch = 14;
+    Patch = 15;
   }
 
   // The following cannot be set to use the enum Version because the REST
@@ -3829,4 +3848,3 @@ enum EnforcementType {
   // This specifies that the rule is preferred and can be best effort
   preferred = 1;
 }
-
