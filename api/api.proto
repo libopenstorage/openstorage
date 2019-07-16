@@ -1290,6 +1290,14 @@ service OpenStorageNode {
         get: "/v1/nodes"
       };
     }
+
+  // EnumerateWithFilters returns all the nodes in the current cluster
+  rpc EnumerateWithFilters(SdkNodeEnumerateWithFiltersRequest)
+    returns (SdkNodeEnumerateWithFiltersResponse) {
+      option(google.api.http) = {
+        get: "/v1/nodes/filters"
+      };
+    }
 }
 
 // OpenStorageVolume is a service used to manage the volumes of a storage system
@@ -2695,10 +2703,21 @@ message SdkNodeInspectCurrentResponse {
 message SdkNodeEnumerateRequest {
 }
 
-// Defines a response with a list of nodes
+// Defines a response with a list of node ids
 message SdkNodeEnumerateResponse {
   // List of all the node ids in the cluster
   repeated string node_ids = 1;
+}
+
+// Defines a request to list nodes with given filter. Currently there are
+// no filters and all the nodes will be returned.
+message SdkNodeEnumerateWithFiltersRequest {
+}
+
+// Defines a response with a list of nodes
+message SdkNodeEnumerateWithFiltersResponse {
+  // List of all the nodes in the cluster
+  repeated StorageNode nodes = 1;
 }
 
 // Defines a request to get information about an object store endpoint
@@ -3267,7 +3286,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 42;
     // SDK version patch value of this specification
-    Patch = 10;
+    Patch = 11;
   }
 
   // The following cannot be set to use the enum Version because the REST
@@ -3765,4 +3784,3 @@ enum EnforcementType {
   // This specifies that the rule is preferred and can be best effort
   preferred = 1;
 }
-
