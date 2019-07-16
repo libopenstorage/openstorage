@@ -1705,6 +1705,19 @@
             "type": "array"
           }
         },
+        "title": "Defines a response with a list of node ids",
+        "type": "object"
+      },
+      "apiSdkNodeEnumerateWithFiltersResponse": {
+        "properties": {
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/apiStorageNode"
+            },
+            "title": "List of all the nodes in the cluster",
+            "type": "array"
+          }
+        },
         "title": "Defines a response with a list of nodes",
         "type": "object"
       },
@@ -3599,7 +3612,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.42.10"
+    "version": "0.42.11"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -4675,6 +4688,27 @@
           }
         },
         "summary": "Enumerate returns the ids of all the nodes in the current cluster",
+        "tags": [
+          "OpenStorageNode"
+        ]
+      }
+    },
+    "/v1/nodes/filters": {
+      "get": {
+        "operationId": "EnumerateWithFilters",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkNodeEnumerateWithFiltersResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "EnumerateWithFilters returns all the nodes in the current cluster",
         "tags": [
           "OpenStorageNode"
         ]
