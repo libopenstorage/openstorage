@@ -994,7 +994,7 @@
             "type": "boolean"
           },
           "full_backup_frequency": {
-            "description": "FullBackupFrequency indicates number of incremental backup after whcih \na fullbackup must be created. This is to override the default value for\nmanual/user triggerred backups and not applicable for scheduled backups\nValue of 0 retains the default behavior.",
+            "description": "FullBackupFrequency indicates number of incremental backup after whcih\na fullbackup must be created. This is to override the default value for\nmanual/user triggerred backups and not applicable for scheduled backups\nValue of 0 retains the default behavior.",
             "format": "int64",
             "type": "integer"
           },
@@ -1334,7 +1334,7 @@
           },
           "max_backups": {
             "format": "uint64",
-            "title": "MaxBackups indicates when to force full backup to cloud. If RetentionDays\nis not specified or is 0 (older scheme), this is also the maximum number \nof scheduled backups retained in the cloud. Older backups are deleted",
+            "title": "MaxBackups indicates when to force full backup to cloud. If RetentionDays\nis not specified or is 0 (older scheme), this is also the maximum number\nof scheduled backups retained in the cloud. Older backups are deleted",
             "type": "string"
           },
           "retention_days": {
@@ -1796,6 +1796,19 @@
               "type": "string"
             },
             "title": "List of all the node ids in the cluster",
+            "type": "array"
+          }
+        },
+        "title": "Defines a response with a list of node ids",
+        "type": "object"
+      },
+      "apiSdkNodeEnumerateWithFiltersResponse": {
+        "properties": {
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/apiStorageNode"
+            },
+            "title": "List of all the nodes in the cluster",
             "type": "array"
           }
         },
@@ -3696,7 +3709,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.58.0"
+    "version": "0.59.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -4804,6 +4817,27 @@
           }
         },
         "summary": "Enumerate returns the ids of all the nodes in the current cluster",
+        "tags": [
+          "OpenStorageNode"
+        ]
+      }
+    },
+    "/v1/nodes/filters": {
+      "get": {
+        "operationId": "EnumerateWithFilters",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkNodeEnumerateWithFiltersResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "EnumerateWithFilters returns all the nodes in the current cluster",
         "tags": [
           "OpenStorageNode"
         ]
