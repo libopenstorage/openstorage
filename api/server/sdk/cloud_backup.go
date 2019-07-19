@@ -264,6 +264,13 @@ func (s *CloudBackupServer) Status(
 	// Get volume id from task id
 	// remove the volumes that dont belong to caller
 	for key, sts := range r.Statuses {
+		// Allow failed restores to be seen by all
+		if sts.OpType == api.CloudRestoreOp &&
+			(sts.Status == api.CloudBackupStatusFailed ||
+				sts.Status == api.CloudBackupStatusAborted ||
+				sts.Status == api.CloudBackupStatusStopped) {
+			continue
+		}
 		if err := checkAccessFromDriverForVolumeId(ctx, s.driver(ctx), sts.SrcVolumeID, api.Ownership_Read); err != nil {
 			delete(r.Statuses, key)
 		}
