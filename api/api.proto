@@ -1864,6 +1864,15 @@ service OpenStorageCloudBackup {
       };
     }
 
+  // Update existing cloud backup schedule
+  rpc SchedUpdate(SdkCloudBackupSchedUpdateRequest)
+    returns (SdkCloudBackupSchedUpdateResponse) {
+      option(google.api.http) = {
+        put: "/v1/cloudbackups/schedules"
+        body: "*"
+      };
+    }
+
   // Delete cloud backup schedule
   rpc SchedDelete(SdkCloudBackupSchedDeleteRequest)
     returns (SdkCloudBackupSchedDeleteResponse) {
@@ -3146,6 +3155,18 @@ message SdkCloudBackupSchedCreateResponse{
    string backup_schedule_id = 1;
 }
 
+// Defines a request to update a schedule for volume backups to a
+// cloud provider
+message SdkCloudBackupSchedUpdateRequest{
+  // Cloud Backup Schedule info
+  SdkCloudBackupScheduleInfo cloud_sched_info = 1;
+  string sched_uuid = 2;
+}
+
+// Empty response
+message SdkCloudBackupSchedUpdateResponse {
+}
+
 // Defines a request to delete a backup schedule
 message SdkCloudBackupSchedDeleteRequest{
   // Id of cloud backup to delete
@@ -3359,7 +3380,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 59;
+    Minor = 60;
     // SDK version patch value of this specification
     Patch = 0;
   }

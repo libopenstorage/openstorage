@@ -161,6 +161,18 @@ func (mr *MockVolumeDriverMockRecorder) CloudBackupGroupSchedCreate(arg0 interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloudBackupGroupSchedCreate", reflect.TypeOf((*MockVolumeDriver)(nil).CloudBackupGroupSchedCreate), arg0)
 }
 
+// CloudBackupGroupSchedUpdate mocks base method
+func (m *MockVolumeDriver) CloudBackupGroupSchedUpdate(arg0 *api.CloudBackupGroupSchedUpdateRequest) error {
+	ret := m.ctrl.Call(m, "CloudBackupGroupSchedUpdate", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CloudBackupGroupSchedUpdate indicates an expected call of CloudBackupGroupSchedUpdate
+func (mr *MockVolumeDriverMockRecorder) CloudBackupGroupSchedUpdate(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloudBackupGroupSchedUpdate", reflect.TypeOf((*MockVolumeDriver)(nil).CloudBackupGroupSchedUpdate), arg0)
+}
+
 // CloudBackupHistory mocks base method
 func (m *MockVolumeDriver) CloudBackupHistory(arg0 *api.CloudBackupHistoryRequest) (*api.CloudBackupHistoryResponse, error) {
 	ret := m.ctrl.Call(m, "CloudBackupHistory", arg0)
@@ -223,6 +235,18 @@ func (m *MockVolumeDriver) CloudBackupSchedEnumerate() (*api.CloudBackupSchedEnu
 // CloudBackupSchedEnumerate indicates an expected call of CloudBackupSchedEnumerate
 func (mr *MockVolumeDriverMockRecorder) CloudBackupSchedEnumerate() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloudBackupSchedEnumerate", reflect.TypeOf((*MockVolumeDriver)(nil).CloudBackupSchedEnumerate))
+}
+
+// CloudBackupSchedUpdate mocks base method
+func (m *MockVolumeDriver) CloudBackupSchedUpdate(arg0 *api.CloudBackupSchedUpdateRequest) error {
+	ret := m.ctrl.Call(m, "CloudBackupSchedUpdate", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CloudBackupSchedUpdate indicates an expected call of CloudBackupSchedUpdate
+func (mr *MockVolumeDriverMockRecorder) CloudBackupSchedUpdate(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloudBackupSchedUpdate", reflect.TypeOf((*MockVolumeDriver)(nil).CloudBackupSchedUpdate), arg0)
 }
 
 // CloudBackupStateChange mocks base method
