@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.42.11 - Tech Preview (7/16/2019)
+
+* Add EnumerateWithFilters api for Node server which returns complete StorageNode object
+
 ### v0.42.10 - Tech Preview (6/4/2019)
 
 * Added new param credential API to control path style access to s3
