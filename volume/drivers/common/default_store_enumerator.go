@@ -177,8 +177,12 @@ func hasSubset(set map[string]string, subset map[string]string) bool {
 	if set == nil {
 		return false
 	}
-	for k := range subset {
-		if _, ok := set[k]; !ok {
+	for k, subv := range subset {
+		if v, ok := set[k]; ok {
+			if v != subv {
+				return false
+			}
+		} else {
 			return false
 		}
 	}
