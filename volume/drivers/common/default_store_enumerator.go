@@ -27,8 +27,23 @@ func newDefaultStoreEnumerator(driver string, kvdb kvdb.Kvdb) *defaultStoreEnume
 	}
 }
 
+func (e *defaultStoreEnumerator) toID(value string) string {
+	// Check if the value is the name
+	volumes, err := e.Enumerate(&api.VolumeLocator{Name: value}, nil)
+	if err != nil {
+		return value
+	}
+
+	if len(volumes) == 1 {
+		return volumes[0].GetId()
+	}
+
+	return value
+}
+
 // Lock volume specified by volumeID.
 func (e *defaultStoreEnumerator) Lock(volumeID string) (interface{}, error) {
+	volumeID = e.toID(volumeID)
 	return e.kvdb.Lock(e.lockKey(volumeID))
 }
 
@@ -50,6 +65,7 @@ func (e *defaultStoreEnumerator) CreateVol(vol *api.Volume) error {
 // GetVol from volumeID.
 func (e *defaultStoreEnumerator) GetVol(volumeID string) (*api.Volume, error) {
 	var v api.Volume
+	volumeID = e.toID(volumeID)
 	_, err := e.kvdb.GetVal(e.volKey(volumeID), &v)
 	return &v, err
 }
@@ -62,6 +78,7 @@ func (e *defaultStoreEnumerator) UpdateVol(vol *api.Volume) error {
 
 // DeleteVol. Returns error if volume does not exist.
 func (e *defaultStoreEnumerator) DeleteVol(volumeID string) error {
+	volumeID = e.toID(volumeID)
 	_, err := e.kvdb.Delete(e.volKey(volumeID))
 	return err
 }
@@ -87,6 +104,10 @@ func (e *defaultStoreEnumerator) Enumerate(
 	locator *api.VolumeLocator,
 	labels map[string]string,
 ) ([]*api.Volume, error) {
+
+	for i, id := range locator.GetVolumeIds() {
+		locator.GetVolumeIds()[i] = e.toID(id)
+	}
 
 	kvp, err := e.kvdb.Enumerate(e.volKeyPrefix())
 	if err != nil {
