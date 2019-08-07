@@ -433,6 +433,45 @@ func (vd *volAPI) cloudBackupSchedCreate(w http.ResponseWriter, r *http.Request)
 	json.NewEncoder(w).Encode(&backupSchedResp)
 }
 
+func (vd *volAPI) cloudBackupSchedUpdate(w http.ResponseWriter, r *http.Request) {
+	method := "cloudBackupSchedUpdate"
+	backupSchedReq := &api.CloudBackupSchedUpdateRequest{}
+	if err := json.NewDecoder(r.Body).Decode(backupSchedReq); err != nil {
+		vd.sendError(method, "", w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Get context with auth token
+	ctx, err := vd.annotateContext(r)
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Get gRPC connection
+	conn, err := vd.getConn()
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	volumes := api.NewOpenStorageCloudBackupClient(conn)
+	_, err = volumes.SchedUpdate(ctx, &api.SdkCloudBackupSchedUpdateRequest{
+		CloudSchedInfo: sdk.ToSdkCloudBackupdScheduleInfo(api.CloudBackupScheduleInfo{
+			SrcVolumeID:    backupSchedReq.SrcVolumeID,
+			CredentialUUID: backupSchedReq.CredentialUUID,
+			Schedule:       backupSchedReq.Schedule,
+			MaxBackups:     backupSchedReq.MaxBackups,
+			RetentionDays:  backupSchedReq.RetentionDays,
+		}),
+		SchedUuid: backupSchedReq.SchedUUID,
+	})
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
 func (vd *volAPI) cloudBackupGroupSchedCreate(w http.ResponseWriter, r *http.Request) {
 	method := "cloudBackupGroupSchedCreate"
 	backupGroupSchedReq := &api.CloudBackupGroupSchedCreateRequest{}
@@ -453,6 +492,28 @@ func (vd *volAPI) cloudBackupGroupSchedCreate(w http.ResponseWriter, r *http.Req
 		return
 	}
 	json.NewEncoder(w).Encode(backupSchedResp)
+}
+
+func (vd *volAPI) cloudBackupGroupSchedUpdate(w http.ResponseWriter, r *http.Request) {
+	method := "cloudBackupGroupSchedUpdate"
+	updateReq := &api.CloudBackupGroupSchedUpdateRequest{}
+	if err := json.NewDecoder(r.Body).Decode(updateReq); err != nil {
+		vd.sendError(method, "", w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	d, err := vd.getVolDriver(r)
+	if err != nil {
+		notFound(w, r)
+		return
+	}
+
+	err = d.CloudBackupGroupSchedUpdate(updateReq)
+	if err != nil {
+		vd.sendError(method, updateReq.GroupID, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 }
 
 func (vd *volAPI) cloudBackupSchedDelete(w http.ResponseWriter, r *http.Request) {
