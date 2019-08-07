@@ -176,7 +176,7 @@ func (d *driver) Create(
 
 	v := common.NewVolume(
 		volumeID,
-		api.FSType_FS_TYPE_XFS,
+		api.FSType_FS_TYPE_EXT4,
 		locator,
 		source,
 		spec,
@@ -241,13 +241,17 @@ func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 	volIDs := []string{volumeID}
 	vols, err := d.Inspect(volIDs)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
-	source := &api.Source{Parent: volumeID}
+	if len(vols) == 0 {
+		return "", fmt.Errorf("%s not found", volumeID)
+	}
+	vol := vols[0]
+	source := &api.Source{Parent: vol.GetId()}
 	logrus.Infof("Creating snap %s for vol %s", locator.Name, volumeID)
-	newVolumeID, err := d.Create(locator, source, vols[0].Spec)
+	newVolumeID, err := d.Create(locator, source, vol.Spec)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	return newVolumeID, nil
