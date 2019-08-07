@@ -203,6 +203,18 @@ func (cl *cloudBackupNotSupported) CloudBackupSchedCreate(
 	return nil, ErrNotSupported
 }
 
+func (cl *cloudBackupNotSupported) CloudBackupSchedUpdate(
+	input *api.CloudBackupSchedUpdateRequest,
+) error {
+	return ErrNotSupported
+}
+
+func (cl *cloudBackupNotSupported) CloudBackupGroupSchedUpdate(
+	input *api.CloudBackupGroupSchedUpdateRequest,
+) error {
+	return ErrNotSupported
+}
+
 func (cl *cloudBackupNotSupported) CloudBackupGroupSchedCreate(
 	input *api.CloudBackupGroupSchedCreateRequest,
 ) (*api.CloudBackupSchedCreateResponse, error) {
