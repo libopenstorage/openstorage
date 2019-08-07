@@ -1321,6 +1321,22 @@
         "title": "Defines a response containing a map listing the schedules for volume\nbackups to a cloud provider",
         "type": "object"
       },
+      "apiSdkCloudBackupSchedUpdateRequest": {
+        "properties": {
+          "cloud_sched_info": {
+            "$ref": "#/components/schemas/apiSdkCloudBackupScheduleInfo"
+          },
+          "sched_uuid": {
+            "type": "string"
+          }
+        },
+        "title": "Defines a request to update a schedule for volume backups to a\ncloud provider",
+        "type": "object"
+      },
+      "apiSdkCloudBackupSchedUpdateResponse": {
+        "title": "Empty response",
+        "type": "object"
+      },
       "apiSdkCloudBackupScheduleInfo": {
         "properties": {
           "credential_id": {
@@ -3709,7 +3725,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.59.0"
+    "version": "0.60.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -4091,6 +4107,35 @@
           }
         },
         "summary": "Create cloud backup schedule",
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      },
+      "put": {
+        "operationId": "SchedUpdate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkCloudBackupSchedUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkCloudBackupSchedUpdateResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Update existing cloud backup schedule",
         "tags": [
           "OpenStorageCloudBackup"
         ]

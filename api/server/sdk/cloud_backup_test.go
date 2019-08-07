@@ -828,7 +828,7 @@ func TestSdkCloudBackupSchedDeleteBadArguments(t *testing.T) {
 	serverError, ok := status.FromError(err)
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "Must provide volumeId")
+	assert.Contains(t, serverError.Message(), "Must provide schedule uuid")
 }
 
 func TestSdkCloudBackupSchedCreate(t *testing.T) {
@@ -914,6 +914,79 @@ func TestSdkCloudBackupSchedCreateBadArguments(t *testing.T) {
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
 	assert.Contains(t, serverError.Message(), "No configured credentials found")
+}
+
+func TestSdkCloudBackupSchedUpdate(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	id := "test-id"
+	testSched := []*api.SdkSchedulePolicyInterval{
+		&api.SdkSchedulePolicyInterval{
+			Retain: 1,
+			PeriodType: &api.SdkSchedulePolicyInterval_Daily{
+				Daily: &api.SdkSchedulePolicyIntervalDaily{
+					Hour:   0,
+					Minute: 30,
+				},
+			},
+		},
+	}
+	updateReq := &api.SdkCloudBackupSchedUpdateRequest{
+		CloudSchedInfo: &api.SdkCloudBackupScheduleInfo{
+			SrcVolumeId:  id,
+			CredentialId: "uuid",
+			Schedules:    testSched,
+		},
+		SchedUuid: "uuid-1",
+	}
+
+	mockUpdateReq := api.CloudBackupSchedUpdateRequest{}
+	mockUpdateReq.SrcVolumeID = updateReq.GetCloudSchedInfo().GetSrcVolumeId()
+	mockUpdateReq.CredentialUUID = updateReq.GetCloudSchedInfo().GetCredentialId()
+	mockUpdateReq.Schedule = "- freq: daily\n  minute: 30\n  retain: 1\n"
+	mockUpdateReq.SchedUUID = updateReq.GetSchedUuid()
+	// Create response
+
+	schedList := &api.CloudBackupSchedEnumerateResponse{
+		Schedules: map[string]api.CloudBackupScheduleInfo{
+			"uuid-1": api.CloudBackupScheduleInfo{
+				SrcVolumeID:    "test-id",
+				CredentialUUID: "uuid",
+				Schedule:       "- freq: daily\n  minute: 30\n  retain: 1\n",
+			},
+		},
+	}
+
+	// Create response
+	s.MockDriver().
+		EXPECT().
+		CloudBackupSchedEnumerate().
+		Return(schedList, nil).
+		Times(1)
+	s.MockDriver().
+		EXPECT().
+		Inspect([]string{id}).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id: id,
+			},
+		}, nil).
+		Times(1)
+	s.MockDriver().
+		EXPECT().
+		CloudBackupSchedUpdate(&mockUpdateReq).
+		Return(nil).
+		Times(1)
+	setupExpectedCredentialsPassing(s, "uuid")
+
+	// Setup client
+	c := api.NewOpenStorageCloudBackupClient(s.Conn())
+
+	// Update info
+	_, err := c.SchedUpdate(context.Background(), updateReq)
+	assert.NoError(t, err)
 }
 
 func TestSdkCloudBackupSchedEnumerate(t *testing.T) {
