@@ -168,6 +168,10 @@ type CloudBackupDriver interface {
 	CloudBackupSchedCreate(input *api.CloudBackupSchedCreateRequest) (*api.CloudBackupSchedCreateResponse, error)
 	// CloudBackupGroupSchedCreate creates a schedule to backup a volumegroup to cloud
 	CloudBackupGroupSchedCreate(input *api.CloudBackupGroupSchedCreateRequest) (*api.CloudBackupSchedCreateResponse, error)
+	// CloudBackupSchedCreate creates a schedule to backup volume to cloud
+	CloudBackupSchedUpdate(input *api.CloudBackupSchedUpdateRequest) error
+	// CloudBackupGroupSchedCreate creates a schedule to backup a volumegroup to cloud
+	CloudBackupGroupSchedUpdate(input *api.CloudBackupGroupSchedUpdateRequest) error
 	// CloudBackupSchedDelete delete a backup schedule
 	CloudBackupSchedDelete(input *api.CloudBackupSchedDeleteRequest) error
 	// CloudBackupSchedEnumerate enumerates the configured backup schedules in the cluster

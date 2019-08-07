@@ -563,6 +563,77 @@ func (s *CloudBackupServer) SchedCreate(
 
 }
 
+// Schedupdate updates the existing schedule for
+// cloud backup. Callers must do read-modify-write op
+func (s *CloudBackupServer) SchedUpdate(
+	ctx context.Context,
+	req *api.SdkCloudBackupSchedUpdateRequest,
+) (*api.SdkCloudBackupSchedUpdateResponse, error) {
+	if s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+
+	if len(req.GetSchedUuid()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Must provide schedule uuid")
+	}
+
+	// Check ownership
+	if err := s.SchedInspect(ctx, req.GetSchedUuid()); err != nil {
+		return nil, err
+	}
+
+	if len(req.GetCloudSchedInfo().GetCredentialId()) != 0 {
+		if err := s.checkAccessToCredential(ctx, req.GetCloudSchedInfo().GetCredentialId()); err != nil {
+			return nil, err
+		}
+	}
+	sched := make([]byte, 0)
+	var err error
+	if req.GetCloudSchedInfo() != nil {
+		sched, err = sdkSchedToRetainInternalSpecYamlByte(req.GetCloudSchedInfo().GetSchedules())
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	schedUpdateReq := api.CloudBackupSchedUpdateRequest{}
+	schedUpdateReq.SrcVolumeID = req.GetCloudSchedInfo().GetSrcVolumeId()
+	schedUpdateReq.CredentialUUID = req.GetCloudSchedInfo().GetCredentialId()
+	schedUpdateReq.Schedule = string(sched)
+	schedUpdateReq.MaxBackups = uint(req.GetCloudSchedInfo().GetMaxBackups())
+	schedUpdateReq.RetentionDays = req.GetCloudSchedInfo().GetRetentionDays()
+	schedUpdateReq.Full = req.GetCloudSchedInfo().GetFull()
+	schedUpdateReq.SchedUUID = req.GetSchedUuid()
+
+	// Update the backup
+	err = s.driver(ctx).CloudBackupSchedUpdate(&schedUpdateReq)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to create backup: %v", err)
+	}
+	return &api.SdkCloudBackupSchedUpdateResponse{}, nil
+}
+
+func (s *CloudBackupServer) SchedInspect(
+	ctx context.Context,
+	schedUUID string,
+) error {
+	r, err := s.driver(ctx).CloudBackupSchedEnumerate()
+	if err != nil {
+		return status.Errorf(codes.Internal, "Failed to enumerate backups: %v", err)
+	}
+
+	schedInfo, ok := r.Schedules[schedUUID]
+	if !ok {
+		return status.Errorf(codes.Internal, "Schedule UUID:%v not found", schedUUID)
+	}
+	volumeId := schedInfo.SrcVolumeID
+	// Check ownership
+	if err := checkAccessFromDriverForVolumeIds(ctx, s.driver(ctx), []string{volumeId}, api.Ownership_Write); err != nil {
+		return err
+	}
+	return nil
+}
+
 // SchedDelete cloud backup schedule
 func (s *CloudBackupServer) SchedDelete(
 	ctx context.Context,
@@ -576,7 +647,7 @@ func (s *CloudBackupServer) SchedDelete(
 	// XXX inspect from uuid and get volume id
 
 	if len(req.GetBackupScheduleId()) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Must provide volumeId")
+		return nil, status.Error(codes.InvalidArgument, "Must provide schedule uuid")
 	}
 
 	// Call cloud backup driver function to delete cloud schedule
