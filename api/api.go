@@ -552,6 +552,14 @@ type CloudBackupSchedCreateRequest struct {
 	CloudBackupScheduleInfo
 }
 
+// Callers must read the existing schedule and modify
+// required fields
+type CloudBackupSchedUpdateRequest struct {
+	CloudBackupScheduleInfo
+	// SchedUUID for which the schedule is being updated
+	SchedUUID string
+}
+
 type CloudBackupGroupSchedCreateRequest struct {
 	// GroupID indicates the group of volumes for which cloudbackup schedule is
 	// being created
@@ -572,6 +580,16 @@ type CloudBackupGroupSchedCreateRequest struct {
 	MaxBackups uint
 	// Full indicates if scheduled backups must be full always
 	Full bool
+	// RetentionDays is the number of days that the scheduled backups will be kept
+	// and after these number of days it will be deleted
+	RetentionDays uint32
+}
+
+type CloudBackupGroupSchedUpdateRequest struct {
+	// Any parameters in this can be updated
+	CloudBackupGroupSchedCreateRequest
+	// UUID of the group schedule being upated
+	SchedUUID string
 }
 
 type CloudBackupSchedCreateResponse struct {

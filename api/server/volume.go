@@ -1641,7 +1641,9 @@ func (vd *volAPI) backupRoutes() []*Route {
 		{verb: "GET", path: backupPath("/history", volume.APIVersion), fn: vd.cloudBackupHistory},
 		{verb: "PUT", path: backupPath("/statechange", volume.APIVersion), fn: vd.cloudBackupStateChange},
 		{verb: "POST", path: backupPath("/sched", volume.APIVersion), fn: vd.cloudBackupSchedCreate},
+		{verb: "PUT", path: backupPath("/sched", volume.APIVersion), fn: vd.cloudBackupSchedUpdate},
 		{verb: "POST", path: backupPath("/schedgroup", volume.APIVersion), fn: vd.cloudBackupGroupSchedCreate},
+		{verb: "PUT", path: backupPath("/schedgroup", volume.APIVersion), fn: vd.cloudBackupGroupSchedUpdate},
 		{verb: "DELETE", path: backupPath("/sched", volume.APIVersion), fn: vd.cloudBackupSchedDelete},
 		{verb: "GET", path: backupPath("/sched", volume.APIVersion), fn: vd.cloudBackupSchedEnumerate},
 	}

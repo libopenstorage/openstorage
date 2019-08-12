@@ -700,6 +700,18 @@ func (v *volumeClient) CloudBackupSchedCreate(
 	return createResponse, nil
 }
 
+// CloudBackupSchedUpdate for a volume creates a schedule to backup volume to cloud
+func (v *volumeClient) CloudBackupSchedUpdate(
+	input *api.CloudBackupSchedUpdateRequest,
+) error {
+	req := v.c.Put().Resource(api.OsdBackupPath + "/sched").Body(input)
+	response := req.Do()
+	if response.Error() != nil {
+		return response.FormatError()
+	}
+	return nil
+}
+
 // CloudBackupGroupSchedCreate for a volume group creates a schedule to backup
 // volume group to the cloud
 func (v *volumeClient) CloudBackupGroupSchedCreate(
@@ -716,6 +728,20 @@ func (v *volumeClient) CloudBackupGroupSchedCreate(
 		return nil, err
 	}
 	return createResponse, nil
+}
+
+// CloudBackupGroupSchedUpdate for a volume group creates a schedule to backup
+// volume group to the cloud
+func (v *volumeClient) CloudBackupGroupSchedUpdate(
+	input *api.CloudBackupGroupSchedUpdateRequest,
+) error {
+	req := v.c.Put().Resource(api.OsdBackupPath + "/schedgroup").Body(input)
+	response := req.Do()
+	if response.Error() != nil {
+		return response.FormatError()
+	}
+
+	return nil
 }
 
 // CloudBackupSchedDelete delete a volume's cloud backup-schedule
