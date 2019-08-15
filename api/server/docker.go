@@ -39,7 +39,7 @@ type driver struct {
 	conn   *grpc.ClientConn
 	mu     sync.Mutex
 
-	secretsStore osecrets.Auth
+	secretsStore *osecrets.Auth
 }
 
 type handshakeResp struct {
@@ -78,7 +78,7 @@ type capabilitiesResponse struct {
 	Capabilities capabilities
 }
 
-func newVolumePlugin(name, sdkUds string, secretsStore osecrets.Auth) restServer {
+func newVolumePlugin(name, sdkUds string, secretsStore *osecrets.Auth) restServer {
 	d := &driver{
 		restBase:     restBase{name: name, version: "0.3"},
 		SpecHandler:  spec.NewSpecHandler(),
@@ -263,9 +263,9 @@ func (d *driver) parseTokenInput(name string, opts map[string]string) (string, e
 	}
 
 	// get token secret
-	secretPath, ok := d.GetTokenSecretFromString(name)
+	tokenSecretContext, ok := d.GetTokenSecretContextFromString(name)
 	if ok {
-		token, err := d.secretTokenFromStore(secretPath)
+		token, err := d.secretTokenFromStore(tokenSecretContext)
 		if err != nil {
 			return "", err
 		}
@@ -292,12 +292,12 @@ func addTokenMetadata(ctx context.Context, token string) context.Context {
 
 // secretTokenFromStore pulls the token from the configured secret store for
 // a given secret name and context.
-func (d *driver) secretTokenFromStore(secret string) (string, error) {
+func (d *driver) secretTokenFromStore(req *api.TokenSecretContext) (string, error) {
 	if d.secretsStore == nil {
 		return "", fmt.Errorf("A secret was passed in, but no secrets provider has been initialized")
 	}
 
-	token, err := d.secretsStore.GetToken(secret, "")
+	token, err := d.secretsStore.GetToken(req)
 	if err != nil {
 		return "", err
 	}
