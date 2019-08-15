@@ -24,6 +24,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/volume"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -206,6 +207,44 @@ func TestSdkCloudRestoreCreate(t *testing.T) {
 	r, err := c.Restore(context.Background(), req)
 	assert.Equal(t, r.GetRestoreVolumeId(), id)
 	assert.NoError(t, err)
+}
+
+func TestSdkCloudRestoreCreateErrorCheck(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	backupid := "backupid"
+	taskId := "restore-task"
+	uuid := "uuid"
+	req := &api.SdkCloudBackupRestoreRequest{
+		BackupId:     backupid,
+		CredentialId: uuid,
+		TaskId:       taskId,
+	}
+
+	// Create response
+	s.MockDriver().
+		EXPECT().
+		CloudBackupRestore(&api.CloudBackupRestoreRequest{
+			ID:             backupid,
+			CredentialUUID: uuid,
+			Name:           taskId,
+		}).
+		Return(nil, volume.ErrExist).
+		Times(1)
+	setupExpectedCredentialsPassing(s, uuid)
+
+	// Setup client
+	c := api.NewOpenStorageCloudBackupClient(s.Conn())
+
+	// Get info
+	_, err := c.Restore(context.Background(), req)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.AlreadyExists)
+	assert.Contains(t, serverError.Message(), "Restore task with this name already exists")
 }
 
 func TestSdkCloudBackupRestoreBadArguments(t *testing.T) {
