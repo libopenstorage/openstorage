@@ -118,6 +118,9 @@ func (s *CloudBackupServer) Restore(
 		Name:              req.GetTaskId(),
 	})
 	if err != nil {
+		if err == volume.ErrExist {
+			return nil, status.Errorf(codes.AlreadyExists, "Restore task with this name already exists: %v", err)
+		}
 		return nil, status.Errorf(codes.Internal, "Failed to restore backup: %v", err)
 	}
 
