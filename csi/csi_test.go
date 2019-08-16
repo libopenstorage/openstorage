@@ -17,7 +17,9 @@ limitations under the License.
 package csi
 
 import (
+	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"testing"
 	"time"
@@ -51,7 +53,6 @@ import (
 const (
 	mockDriverName   = "mock"
 	testSharedSecret = "mysecret"
-	testSdkSock      = "/tmp/sdk.sock"
 	fakeWithSched    = "fake-sched"
 )
 
@@ -74,6 +75,9 @@ type testServer struct {
 	s      *mockapi.MockOpenStoragePoolServer
 	mc     *gomock.Controller
 	sdk    *sdk.Server
+	port   string
+	gwport string
+	uds    string
 }
 
 func setupFakeDriver() {
@@ -134,14 +138,12 @@ func setupMockDriver(tester *testServer, t *testing.T) {
 func newTestServer(t *testing.T) *testServer {
 	return newTestServerWithConfig(t, &OsdCsiServerConfig{
 		DriverName: mockDriverName,
-		Net:        "tcp",
-		Address:    "127.0.0.1:0",
-		SdkUds:     testSdkSock,
 	})
 }
 
 func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServer {
 	tester := &testServer{}
+	tester.setPorts()
 
 	// Add driver to registry
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
@@ -161,12 +163,6 @@ func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServ
 	rm, err := role.NewSdkRoleManager(kv)
 	assert.NoError(t, err)
 
-	// Setup simple driver
-	tester.server, err = NewOsdCsiServer(config)
-	assert.Nil(t, err)
-	err = tester.server.Start()
-	assert.Nil(t, err)
-
 	// Setup storage policy
 	kv, err = kvdb.New(mem.Name, "test", []string{}, nil, logrus.Panicf)
 	assert.NoError(t, err)
@@ -176,7 +172,6 @@ func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServ
 	}
 	assert.NotNil(t, stp)
 
-	os.Remove(testSdkSock)
 	selfsignedJwt, err := auth.NewJwtAuth(&auth.JwtAuthConfig{
 		SharedSecret:  []byte(testSharedSecret),
 		UsernameClaim: auth.UsernameClaimTypeName,
@@ -186,10 +181,10 @@ func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServ
 	tester.sdk, err = sdk.New(&sdk.ServerConfig{
 		DriverName:        "fake",
 		Net:               "tcp",
-		Address:           ":8123",
-		RestPort:          "8124",
+		Address:           ":" + tester.port,
+		RestPort:          tester.gwport,
 		Cluster:           tester.c,
-		Socket:            testSdkSock,
+		Socket:            tester.uds,
 		StoragePolicy:     stp,
 		StoragePoolServer: tester.s,
 		AccessOutput:      ioutil.Discard,
@@ -209,6 +204,15 @@ func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServ
 		"default": tester.m,
 	})
 
+	// Setup CSI simple driver
+	config.Net = "tcp"
+	config.Address = "127.0.0.1:0"
+	config.SdkUds = tester.uds
+	tester.server, err = NewOsdCsiServer(config)
+	assert.Nil(t, err)
+	err = tester.server.Start()
+	assert.Nil(t, err)
+
 	// Setup a connection to the driver
 	tester.conn, err = grpc.Dial(tester.server.Address(), grpc.WithInsecure())
 	assert.Nil(t, err)
@@ -226,6 +230,16 @@ func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServ
 	volumedrivers.Register(fakeWithSched, nil)
 	*/
 	return tester
+}
+
+func (s *testServer) setPorts() {
+	source := rand.NewSource(time.Now().UnixNano())
+	r := rand.New(source)
+	port := r.Intn(2999) + 8000
+
+	s.port = fmt.Sprintf("%d", port)
+	s.gwport = fmt.Sprintf("%d", port+1)
+	s.uds = fmt.Sprintf("/tmp/osd-csi-ut-%d.sock", port)
 }
 
 func (s *testServer) MockDriver() *mockdriver.MockVolumeDriver {
@@ -304,7 +318,9 @@ func TestCSIServerStop(t *testing.T) {
 }
 
 func TestNewCSIServerBadParameters(t *testing.T) {
-	setupMockDriver(&testServer{}, t)
+	tester := &testServer{}
+	tester.setPorts()
+	setupMockDriver(tester, t)
 	s, err := NewOsdCsiServer(nil)
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
@@ -316,7 +332,7 @@ func TestNewCSIServerBadParameters(t *testing.T) {
 
 	s, err = NewOsdCsiServer(&OsdCsiServerConfig{
 		Net:    "test",
-		SdkUds: testSdkSock,
+		SdkUds: tester.uds,
 	})
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
@@ -325,7 +341,7 @@ func TestNewCSIServerBadParameters(t *testing.T) {
 	s, err = NewOsdCsiServer(&OsdCsiServerConfig{
 		Net:     "test",
 		Address: "blah",
-		SdkUds:  testSdkSock,
+		SdkUds:  tester.uds,
 	})
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
@@ -335,7 +351,7 @@ func TestNewCSIServerBadParameters(t *testing.T) {
 		Net:        "test",
 		Address:    "blah",
 		DriverName: "name",
-		SdkUds:     testSdkSock,
+		SdkUds:     tester.uds,
 	})
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
@@ -362,11 +378,12 @@ func TestNewCSIServerBadParameters(t *testing.T) {
 		Net:        "test",
 		Address:    "blah",
 		DriverName: "mock",
-		SdkUds:     testSdkSock,
+		SdkUds:     tester.uds,
 	})
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "Unable to setup server")
+	os.Remove(tester.uds)
 }
 
 func TestAddEncryptionInfoToLabels(t *testing.T) {
