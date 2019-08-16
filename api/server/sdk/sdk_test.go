@@ -18,11 +18,14 @@ package sdk
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/kubernetes-csi/csi-test/utils"
@@ -50,8 +53,6 @@ import (
 const (
 	mockDriverName = "mock"
 	testUds        = "/tmp/sdk-test.sock"
-	testHttpsPort  = "34000"
-	testRESTPort   = "34001"
 )
 
 // testServer is a simple struct used abstract
@@ -64,6 +65,8 @@ type testServer struct {
 	a      *mockalerts.MockFilterDeleter
 	mc     *gomock.Controller
 	gw     *httptest.Server
+	port   string
+	gwport string
 }
 
 func init() {
@@ -84,6 +87,7 @@ func setupMockDriver(tester *testServer, t *testing.T) {
 
 func newTestServer(t *testing.T) *testServer {
 	tester := &testServer{}
+	tester.setPorts()
 
 	// Add driver to registry
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
@@ -105,8 +109,8 @@ func newTestServer(t *testing.T) *testServer {
 	tester.server, err = New(&ServerConfig{
 		DriverName:          mockDriverName,
 		Net:                 "tcp",
-		Address:             ":" + testHttpsPort,
-		RestPort:            testRESTPort,
+		Address:             ":" + tester.port,
+		RestPort:            tester.gwport,
 		Socket:              testUds,
 		Cluster:             tester.c,
 		StoragePolicy:       sp,
@@ -128,7 +132,7 @@ func newTestServer(t *testing.T) *testServer {
 	assert.Nil(t, err)
 
 	// Setup a connection to the driver
-	tester.conn, err = grpcserver.Connect("localhost:"+testHttpsPort, []grpc.DialOption{grpc.WithTransportCredentials(grpccreds)})
+	tester.conn, err = grpcserver.Connect("localhost:"+tester.port, []grpc.DialOption{grpc.WithTransportCredentials(grpccreds)})
 	assert.Nil(t, err)
 
 	// Setup REST gateway
@@ -138,6 +142,15 @@ func newTestServer(t *testing.T) *testServer {
 	tester.gw = httptest.NewServer(mux)
 
 	return tester
+}
+
+func (s *testServer) setPorts() {
+	source := rand.NewSource(time.Now().UnixNano())
+	r := rand.New(source)
+	port := r.Intn(2999) + 8000
+
+	s.port = fmt.Sprintf("%d", port)
+	s.gwport = fmt.Sprintf("%d", port+1)
 }
 
 func (s *testServer) MockDriver() *mockdriver.MockVolumeDriver {
@@ -260,10 +273,12 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 
 	sp, err := policy.Inst()
 	os.Remove(testUds)
+	tester := &testServer{}
+	tester.setPorts()
 	server, err := New(&ServerConfig{
 		Net:                 "tcp",
-		Address:             ":" + testHttpsPort,
-		RestPort:            testRESTPort,
+		Address:             ":" + tester.port,
+		RestPort:            tester.gwport,
 		Socket:              testUds,
 		Cluster:             cm,
 		StoragePolicy:       sp,
@@ -280,13 +295,15 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 	assert.Nil(t, err)
 	err = server.Start()
 	assert.Nil(t, err)
-	defer server.Stop()
+	defer func() {
+		server.Stop()
+	}()
 
 	grpccreds, err := credentials.NewClientTLSFromFile("test_certs/server-cert.pem", "")
 	assert.Nil(t, err)
 
 	// Setup a connection to the driver
-	conn, err := grpc.Dial("localhost:"+testHttpsPort, grpc.WithTransportCredentials(grpccreds))
+	conn, err := grpc.Dial("localhost:"+tester.port, grpc.WithTransportCredentials(grpccreds))
 
 	// Setup API names that depend on the volume driver
 	// To get the names, look at api.pb.go and search for grpc.Invoke or c.cc.Invoke
