@@ -44,6 +44,129 @@ func init() {
 	policy.Init(kv)
 }
 
+func TestSdkVolumeCreateCheckIdempotencyWaitForRemoved(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	name := "myvol"
+	size := uint64(1234)
+	req := &api.SdkVolumeCreateRequest{
+		Name: name,
+		Spec: &api.VolumeSpec{
+			Size: size,
+		},
+	}
+
+	id := "myid"
+	vol := &api.Volume{
+		Id:     id,
+		Status: api.VolumeStatus_VOLUME_STATUS_UP,
+		State:  api.VolumeState_VOLUME_STATE_DELETED,
+		Locator: &api.VolumeLocator{
+			Name: name,
+		},
+		Spec: &api.VolumeSpec{
+			Size: size,
+		},
+	}
+
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{name}).
+			Return([]*api.Volume{vol}, nil),
+
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{name}).
+			Return([]*api.Volume{vol}, nil),
+
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{name}).
+			Return([]*api.Volume{vol}, nil),
+
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("MOCK ERROR")),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return(nil, fmt.Errorf("not found")),
+
+		s.MockDriver().
+			EXPECT().
+			Create(&api.VolumeLocator{
+				Name: name,
+			}, &api.Source{}, &api.VolumeSpec{Size: size}).
+			Return(id, nil),
+	)
+
+	// Setup client
+	c := api.NewOpenStorageVolumeClient(s.Conn())
+
+	// Get info
+	r, err := c.Create(context.Background(), req)
+	assert.NoError(t, err)
+	assert.Equal(t, r.GetVolumeId(), "myid")
+}
+
+func TestSdkVolumeCreateCheckIdempotencyWaitForReady(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	name := "myvol"
+	size := uint64(1234)
+	req := &api.SdkVolumeCreateRequest{
+		Name: name,
+		Spec: &api.VolumeSpec{
+			Size: size,
+		},
+	}
+
+	id := "myid"
+	count := 0
+	vol := &api.Volume{
+		Id:     id,
+		Status: api.VolumeStatus_VOLUME_STATUS_DEGRADED,
+		Locator: &api.VolumeLocator{
+			Name: name,
+		},
+		Spec: &api.VolumeSpec{
+			Size: size,
+		},
+	}
+
+	// This should be called 3 times.
+	// 1 for the first inspect to check if it is there.
+	// 3 for waiting until the status is VOLUME UP
+	// 1 for waiting but getting that the volume is up
+	s.MockDriver().
+		EXPECT().
+		Inspect([]string{name}).
+		Do(func([]string) {
+			count++
+			if count == 4 {
+				vol.Status = api.VolumeStatus_VOLUME_STATUS_UP
+			}
+		}).
+		Return([]*api.Volume{vol}, nil).
+		Times(4)
+
+	// Setup client
+	c := api.NewOpenStorageVolumeClient(s.Conn())
+
+	// Get info
+	_, err := c.Create(context.Background(), req)
+	assert.NoError(t, err)
+}
+
 func TestSdkVolumeCreateCheckIdempotency(t *testing.T) {
 
 	// Create server and client connection
@@ -61,23 +184,22 @@ func TestSdkVolumeCreateCheckIdempotency(t *testing.T) {
 
 	// Create response
 	id := "myid"
-	gomock.InOrder(
-		s.MockDriver().
-			EXPECT().
-			Inspect([]string{name}).
-			Return([]*api.Volume{
-				&api.Volume{
-					Id: id,
-					Locator: &api.VolumeLocator{
-						Name: name,
-					},
-					Spec: &api.VolumeSpec{
-						Size: size,
-					},
+	s.MockDriver().
+		EXPECT().
+		Inspect([]string{name}).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id:     id,
+				Status: api.VolumeStatus_VOLUME_STATUS_UP,
+				Locator: &api.VolumeLocator{
+					Name: name,
 				},
-			}, nil).
-			Times(1),
-	)
+				Spec: &api.VolumeSpec{
+					Size: size,
+				},
+			},
+		}, nil).
+		Times(2)
 
 	// Setup client
 	c := api.NewOpenStorageVolumeClient(s.Conn())
