@@ -19,6 +19,7 @@ package sdk
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/sirupsen/logrus"
 
@@ -32,6 +33,64 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// When create is called for an existing volume, this function is called to make sure
+// the SDK only returns that the volume is ready when the status is UP
+func (s *VolumeServer) waitForVolumeReady(ctx context.Context, id string) (*api.Volume, error) {
+	var v *api.Volume
+
+	minTimeout := 1 * time.Second
+	maxTimeout := 60 * time.Minute
+	defaultTimeout := 10 * time.Minute
+
+	logrus.Infof("Waiting for volume %s to become available", id)
+
+	e := util.WaitForWithContext(
+		ctx,
+		minTimeout, maxTimeout, defaultTimeout, // timeouts
+		250*time.Millisecond, // period
+		func() (bool, error) {
+			var err error
+			// Get the latest status from the volume
+			v, err = util.VolumeFromName(s.driver(ctx), id)
+			if err != nil {
+				return false, status.Errorf(codes.Internal, err.Error())
+			}
+
+			// Check if the volume is ready
+			if v.GetStatus() == api.VolumeStatus_VOLUME_STATUS_UP {
+				return false, nil
+			}
+
+			// Continue waiting
+			return true, nil
+		})
+
+	return v, e
+}
+
+func (s *VolumeServer) waitForVolumeRemoved(ctx context.Context, id string) error {
+	minTimeout := 1 * time.Second
+	maxTimeout := 10 * time.Minute
+	defaultTimeout := 5 * time.Minute
+
+	logrus.Infof("Waiting for volume %s to be removed", id)
+
+	return util.WaitForWithContext(
+		ctx,
+		minTimeout, maxTimeout, defaultTimeout, // timeouts
+		250*time.Millisecond, // period
+		func() (bool, error) {
+			// Get the latest status from the volume
+			if _, err := util.VolumeFromName(s.driver(ctx), id); err != nil {
+				// Removed
+				return false, nil
+			}
+
+			// Continue waiting
+			return true, nil
+		})
+}
+
 func (s *VolumeServer) create(
 	ctx context.Context,
 	locator *api.VolumeLocator,
@@ -42,10 +101,24 @@ func (s *VolumeServer) create(
 	// Check if the volume has already been created or is in process of creation
 	volName := locator.GetName()
 	v, err := util.VolumeFromName(s.driver(ctx), volName)
-	if err == nil {
+
+	// If the volume is still there but it is being delete, then wait until it is removed
+	if err == nil && v.GetState() == api.VolumeState_VOLUME_STATE_DELETED {
+		if err = s.waitForVolumeRemoved(ctx, volName); err != nil {
+			return "", status.Errorf(codes.Internal, "Volume with same name %s is in the process of being deleted. Timed out waiting for deletion to complete", volName)
+		}
+
+		// If the volume is there but it is not being deleted then just return the current id
+	} else if err == nil {
 		// Check ownership
 		if !v.IsPermitted(ctx, api.Ownership_Admin) {
 			return "", status.Errorf(codes.PermissionDenied, "Volume %s already exists and is owned by another user", volName)
+		}
+
+		// Wait until ready
+		v, err = s.waitForVolumeReady(ctx, volName)
+		if err != nil {
+			return "", status.Errorf(codes.Internal, "Timed out waiting for volume %s to be in ready state", volName)
 		}
 
 		// Check the requested arguments match that of the existing volume
