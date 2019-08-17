@@ -38,6 +38,8 @@ import (
 )
 
 func TestCSISanity(t *testing.T) {
+	tester := &testServer{}
+	tester.setPorts()
 
 	clustermanager.Init(config.ClusterConfig{
 		ClusterId: "fakecluster",
@@ -48,20 +50,6 @@ func TestCSISanity(t *testing.T) {
 		cm.Start(false, "9002", "")
 	}()
 	defer cm.Shutdown()
-
-	// Start CSI Server
-	server, err := NewOsdCsiServer(&OsdCsiServerConfig{
-		DriverName: "fake",
-		Net:        "tcp",
-		Address:    "127.0.0.1:0",
-		Cluster:    cm,
-		SdkUds:     testSdkSock,
-	})
-	if err != nil {
-		t.Fatalf("Unable to start csi server: %v", err)
-	}
-	server.Start()
-	defer server.Stop()
 
 	// Setup sdk server
 	kv, err := kvdb.New(mem.Name, "test", []string{}, nil, logrus.Panicf)
@@ -74,7 +62,6 @@ func TestCSISanity(t *testing.T) {
 	rm, err := role.NewSdkRoleManager(kv)
 	assert.NoError(t, err)
 
-	os.Remove(testSdkSock)
 	selfsignedJwt, err := auth.NewJwtAuth(&auth.JwtAuthConfig{
 		SharedSecret:  []byte(testSharedSecret),
 		UsernameClaim: auth.UsernameClaimTypeName,
@@ -87,10 +74,10 @@ func TestCSISanity(t *testing.T) {
 	sdk, err := sdk.New(&sdk.ServerConfig{
 		DriverName:    "fake",
 		Net:           "tcp",
-		Address:       ":8123",
-		RestPort:      "8124",
+		Address:       ":" + tester.port,
+		RestPort:      tester.gwport,
 		Cluster:       cm,
-		Socket:        testSdkSock,
+		Socket:        tester.uds,
 		StoragePolicy: stp,
 		AccessOutput:  ioutil.Discard,
 		AuditOutput:   ioutil.Discard,
@@ -108,6 +95,20 @@ func TestCSISanity(t *testing.T) {
 	err = sdk.Start()
 	assert.Nil(t, err)
 	defer sdk.Stop()
+
+	// Start CSI Server
+	server, err := NewOsdCsiServer(&OsdCsiServerConfig{
+		DriverName: "fake",
+		Net:        "tcp",
+		Address:    "127.0.0.1:0",
+		Cluster:    cm,
+		SdkUds:     tester.uds,
+	})
+	if err != nil {
+		t.Fatalf("Unable to start csi server: %v", err)
+	}
+	server.Start()
+	defer server.Stop()
 
 	timeout := time.After(30 * time.Second)
 	for {

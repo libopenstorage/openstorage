@@ -56,7 +56,7 @@ func TestNewSdkServerBadParameters(t *testing.T) {
 	s, err = New(&ServerConfig{
 		Net:           "test",
 		Socket:        "blah",
-		RestPort:      testRESTPort,
+		RestPort:      "2344",
 		AccessOutput:  ioutil.Discard,
 		AuditOutput:   ioutil.Discard,
 		StoragePolicy: sp,
@@ -77,7 +77,7 @@ func TestNewSdkServerBadParameters(t *testing.T) {
 		Net:          "test",
 		Address:      "blah",
 		DriverName:   "mock",
-		RestPort:     testRESTPort,
+		RestPort:     "2345",
 		AccessOutput: ioutil.Discard,
 		AuditOutput:  ioutil.Discard,
 	})
