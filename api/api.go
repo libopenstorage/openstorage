@@ -18,6 +18,7 @@ const (
 	Name                     = "name"
 	Token                    = "token"
 	TokenSecret              = "token_secret"
+	TokenSecretNamespace     = "token_secret_namespace"
 	SpecNodes                = "nodes"
 	SpecParent               = "parent"
 	SpecEphemeral            = "ephemeral"
@@ -1156,4 +1157,11 @@ func (m *VolumeStateAction) IsMount() bool {
 
 func (m *VolumeStateAction) IsUnMount() bool {
 	return m.GetMount() == VolumeActionParam_VOLUME_ACTION_PARAM_OFF
+}
+
+// TokenSecretContext contains all nessesary information to get a
+// token secret from any provider
+type TokenSecretContext struct {
+	SecretName      string
+	SecretNamespace string
 }
