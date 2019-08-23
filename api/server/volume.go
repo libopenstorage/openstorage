@@ -423,9 +423,9 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 
 	resVol, err2 := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
 		VolumeId: volumeID,
-		Options: &api.VolumeInspectOptions{	
-			 Deep: true,
-			 },			 
+		Options: &api.VolumeInspectOptions{
+			Deep: true,
+		},
 	})
 	if err2 != nil {
 		resp.Volume = &api.Volume{}
