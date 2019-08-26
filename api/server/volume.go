@@ -429,11 +429,19 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 	})
 	if err2 != nil {
 		resp.Volume = &api.Volume{}
+		if req.Action.IsAttach() {
+			resp.VolumeResponse = &api.VolumeResponse{
+				Error: responseStatus(err2),
+			}
+		}
 	} else {
 		resp.Volume = resVol.GetVolume()
 	}
-	resp.VolumeResponse = &api.VolumeResponse{
-		Error: responseStatus(err),
+	// Do not clear inspect err for attach
+	if err != nil {
+		resp.VolumeResponse = &api.VolumeResponse{
+			Error: responseStatus(err),
+		}
 	}
 	json.NewEncoder(w).Encode(resp)
 
