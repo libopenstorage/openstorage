@@ -34,11 +34,8 @@ import (
 
 	"github.com/codegangsta/cli"
 	"github.com/docker/docker/pkg/reexec"
-	"github.com/golang/mock/gomock"
-	"github.com/kubernetes-csi/csi-test/utils"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/flexvolume"
-	mockapi "github.com/libopenstorage/openstorage/api/mock"
 	"github.com/libopenstorage/openstorage/api/server"
 	"github.com/libopenstorage/openstorage/api/server/sdk"
 	osdcli "github.com/libopenstorage/openstorage/cli"
@@ -475,20 +472,16 @@ func start(c *cli.Context) error {
 			return fmt.Errorf("Unable to Initialise Storage Policy Manager Instances %v", err)
 		}
 
-		poolServer := mockapi.NewMockOpenStoragePoolServer(gomock.NewController(
-			&utils.SafeGoroutineTester{}))
-
 		// Start SDK Server for this driver
 		os.Remove(sdksocket)
 		sdkServer, err := sdk.New(&sdk.ServerConfig{
-			Net:               "tcp",
-			Address:           ":" + c.String("sdkport"),
-			RestPort:          c.String("sdkrestport"),
-			Socket:            sdksocket,
-			DriverName:        d,
-			Cluster:           cm,
-			StoragePolicy:     sp,
-			StoragePoolServer: poolServer,
+			Net:           "tcp",
+			Address:       ":" + c.String("sdkport"),
+			RestPort:      c.String("sdkrestport"),
+			Socket:        sdksocket,
+			DriverName:    d,
+			Cluster:       cm,
+			StoragePolicy: sp,
 			Security: &sdk.SecurityConfig{
 				Role:           rm,
 				Tls:            tlsConfig,

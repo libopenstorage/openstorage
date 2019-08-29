@@ -473,7 +473,9 @@ func (s *sdkGrpcServer) Start() error {
 		api.RegisterOpenStorageClusterPairServer(grpcServer, s.clusterPairServer)
 		api.RegisterOpenStoragePolicyServer(grpcServer, s.policyServer)
 		api.RegisterOpenStorageClusterDomainsServer(grpcServer, s.clusterDomainsServer)
-		api.RegisterOpenStoragePoolServer(grpcServer, s.storagePoolServer)
+		if s.storagePoolServer != nil {
+			api.RegisterOpenStoragePoolServer(grpcServer, s.storagePoolServer)
+		}
 
 		if s.config.Security.Role != nil {
 			api.RegisterOpenStorageRoleServer(grpcServer, s.roleServer)

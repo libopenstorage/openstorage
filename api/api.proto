@@ -233,8 +233,23 @@ message StoragePool {
   // Labels is a list of user defined name-value pairs
   map<string, string> labels = 9;
   // UUID is the unique identifier for a storage pool
-  string UUID = 10;
+  string uuid = 10;
+  // LastOperation is the most recent operation being performed on a storage pool
+  StoragePoolOperation last_operation = 11;
 }
+
+// StoragePoolOperation defines an operation being performed on a storage pool
+message StoragePoolOperation {
+  // Type is the type of the operation
+  SdkStoragePool.OperationType type = 1;
+  // Msg is a user friendly message for the operation
+  string msg = 2;
+  // Params for the parameters for the operation
+  map<string, string> params = 3;
+  // Status is the status of the operation
+  SdkStoragePool.OperationStatus status = 4;
+}
+
 
 // VolumeLocator is a structure that is attached to a volume
 // and is used to carry opaque metadata.
@@ -2741,26 +2756,52 @@ message SdkNodeInspectRequest {
 message SdkStoragePoolResizeRequest {
   // UUID of the storage pool to inspect
   string uuid = 1;
-  // Size is the new desired size of the storage pool
-  uint64 size = 2;
+  // ResizeFactor is the option to indiciate if you would like to resize the pool
+  // by a fixed size or by a percentage of current size
+  oneof resize_factor {
+    // Size is the new desired size of the storage pool
+    uint64 size = 200;
+    // Size is the new desired size of the storage pool
+    uint64 percentage = 201;
+  }
   // OperationType is the operation that's used to resize the storage pool (optional)
-  StoragePoolResizeOperationType operation_type = 3;
+  SdkStoragePool.ResizeOperationType operation_type = 3;
 }
 
-// Defines the operation types available to resize a storage pool
-enum StoragePoolResizeOperationType {
-  // Automatically pick the optimum operation type
-  AUTO = 0;
-  // Add a new drive to resize the pool
-  ADD_DISK = 1;
-  // Resize existing drives to resize the pool
-  RESIZE_DISK = 2;
+
+
+message SdkStoragePool {
+  // OperationStatus captures the various statuses of a storage pool operation
+  enum OperationStatus {
+    // Operation pending
+    OPERATION_PENDING = 0;
+    // Operation is in progress
+    OPERATION_IN_PROGRESS = 1;
+    // Operation is successful
+    OPERATION_SUCCESSFUL = 2;
+    // Operation failed
+    OPERATION_FAILED = 3;
+  }
+
+  // OperationType defines the various operations that are performed on a storage pool
+  enum OperationType {
+    // Resize operation
+    OPERATION_RESIZE = 0;
+  }
+
+  // Defines the operation types available to resize a storage pool
+  enum ResizeOperationType {
+    // Automatically pick the optimum resize operation type
+   RESIZE_TYPE_AUTO = 0;
+   // Add a new drive to resize the pool
+   RESIZE_TYPE_ADD_DISK = 1;
+   // Resize existing drives to resize the pool
+   RESIZE_TYPE_RESIZE_DISK = 2;
+  }
 }
 
 // Defines a response when resizing a storage pool
 message SdkStoragePoolResizeResponse {
-  // Size is the updated size of the storage pool
-  int64 size = 1;
 }
 
 // Defines a response when inspecting a node
@@ -3427,7 +3468,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 60;
+    Minor = 61;
     // SDK version patch value of this specification
     Patch = 0;
   }
