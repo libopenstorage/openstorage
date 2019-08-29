@@ -334,9 +334,12 @@ func (s *OsdCsiServer) CreateVolume(
 	// Get PVC Metadata and add to locator.VolumeLabels
 	pvcMetadata, err := getPVCMetadata(req.GetParameters())
 	if err != nil {
-		for k, v := range pvcMetadata {
-			locator.VolumeLabels[k] = v
-		}
+		return nil, status.Errorf(
+			codes.Internal,
+			"Unable to get PVC Metadata: %v", err)
+	}
+	for k, v := range pvcMetadata {
+		locator.VolumeLabels[k] = v
 	}
 
 	// Get parent ID from request: snapshot or volume
