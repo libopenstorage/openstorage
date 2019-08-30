@@ -380,7 +380,9 @@ func (c *ClusterManager) getCurrentState() *api.Node {
 
 	c.selfNode.Cpu, _, _ = c.system.CpuUsage()
 	c.selfNode.MemTotal, c.selfNode.MemUsed, c.selfNode.MemFree = c.system.MemUsage()
-
+	if c.selfNode.HWType == api.HardwareType_UnknownMachine {
+		c.selfNode.HWType = c.config.HWType
+	}
 	c.selfNode.Timestamp = time.Now()
 
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
