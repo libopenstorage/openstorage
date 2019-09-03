@@ -11,6 +11,7 @@ import (
 	volumeclient "github.com/libopenstorage/openstorage/api/client/volume"
 	"github.com/libopenstorage/openstorage/pkg/auth/secrets"
 	"github.com/libopenstorage/openstorage/volume"
+	lsecrets "github.com/libopenstorage/secrets"
 	"github.com/libopenstorage/secrets/k8s"
 	"github.com/libopenstorage/secrets/mock" //"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -147,10 +148,11 @@ func TestMiddlewareVolumeCreateSuccess(t *testing.T) {
 	testVolDriver := newTestServerSdk(t)
 	defer testVolDriver.Stop()
 
-	secretInst, mockSecret, mc := getSecretsMock(t)
+	_, mockSecret, mc := getSecretsMock(t)
 	defer mc.Finish()
+	lsecrets.SetInstance(mockSecret)
 
-	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true, secrets.TypeK8s, secretInst)
+	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true)
 	assert.NoError(t, err, "Unexpected error on StartVolumeMgmtAPI")
 	defer unixServer.Close()
 	defer portServer.Close()
@@ -167,10 +169,15 @@ func TestMiddlewareVolumeCreateFailure(t *testing.T) {
 	testVolDriver := newTestServerSdk(t)
 	defer testVolDriver.Stop()
 
-	secretInst, mockSecret, mc := getSecretsMock(t)
+	_, mockSecret, mc := getSecretsMock(t)
 	defer mc.Finish()
+	lsecrets.SetInstance(mockSecret)
+	mockSecret.EXPECT().
+		String().
+		Return(lsecrets.TypeK8s).
+		AnyTimes()
 
-	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true, secrets.TypeK8s, secretInst)
+	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true)
 	assert.NoError(t, err, "Unexpected error on StartVolumeMgmtAPI")
 	defer unixServer.Close()
 	defer portServer.Close()
@@ -236,7 +243,7 @@ func TestMiddlewareVolumeCreateFailure(t *testing.T) {
 			map[string]string{
 				k8s.SecretNamespace: namespace,
 			}).
-		Return(map[string]interface{}{"foo": "bar"}, nil).
+		Return(nil, fmt.Errorf("incorrect secret")).
 		Times(1)
 
 	c, err = volumeclient.NewDriverClient(testMockURL, fakeWithSched, version, fakeWithSched)
@@ -244,6 +251,10 @@ func TestMiddlewareVolumeCreateFailure(t *testing.T) {
 	driverclient = volumeclient.VolumeDriver(c)
 	_, err = driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Error(t, err, "Expected an error on Create")
+	mockSecret.EXPECT().
+		String().
+		Return(lsecrets.TypeK8s).
+		AnyTimes()
 
 	// Failed to get token
 	mockSecret.EXPECT().
@@ -818,10 +829,11 @@ func TestMiddlewareVolumeSetSizeSuccess(t *testing.T) {
 	testVolDriver := newTestServerSdk(t)
 	defer testVolDriver.Stop()
 
-	secretInst, mockSecret, mc := getSecretsMock(t)
+	_, mockSecret, mc := getSecretsMock(t)
 	defer mc.Finish()
+	lsecrets.SetInstance(mockSecret)
 
-	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true, secrets.TypeK8s, secretInst)
+	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true)
 	assert.NoError(t, err, "Unexpected error on StartVolumeMgmtAPI")
 	defer unixServer.Close()
 	defer portServer.Close()
@@ -865,10 +877,11 @@ func TestMiddlewareVolumeSetFailure(t *testing.T) {
 	testVolDriver := newTestServerSdk(t)
 	defer testVolDriver.Stop()
 
-	secretInst, mockSecret, mc := getSecretsMock(t)
+	_, mockSecret, mc := getSecretsMock(t)
 	defer mc.Finish()
+	lsecrets.SetInstance(mockSecret)
 
-	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true, secrets.TypeK8s, secretInst)
+	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true)
 	assert.NoError(t, err, "Unexpected error on StartVolumeMgmtAPI")
 	defer unixServer.Close()
 	defer portServer.Close()
@@ -2366,10 +2379,11 @@ func TestMiddlewareVolumeDeleteSuccess(t *testing.T) {
 	testVolDriver := newTestServerSdk(t)
 	defer testVolDriver.Stop()
 
-	secretInst, mockSecret, mc := getSecretsMock(t)
+	_, mockSecret, mc := getSecretsMock(t)
 	defer mc.Finish()
+	lsecrets.SetInstance(mockSecret)
 
-	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true, secrets.TypeK8s, secretInst)
+	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true)
 	assert.NoError(t, err, "Unexpected error on StartVolumeMgmtAPI")
 	defer unixServer.Close()
 	defer portServer.Close()
@@ -2383,13 +2397,18 @@ func TestMiddlewareVolumeDeleteSuccess(t *testing.T) {
 	id, token, namespace, secretName := testMiddlewareCreateVolume(t, driverclient, mockSecret, testVolDriver)
 
 	mockSecret.EXPECT().
+		String().
+		Return(lsecrets.TypeK8s).
+		AnyTimes()
+
+	mockSecret.EXPECT().
 		GetSecret(
 			secretName,
 			map[string]string{
 				k8s.SecretNamespace: namespace,
 			}).
 		Return(map[string]interface{}{secrets.SecretTokenKey: token}, nil).
-		Times(1)
+		AnyTimes()
 
 	err = driverclient.Delete(id)
 	assert.Nil(t, err)
@@ -2400,10 +2419,11 @@ func TestMiddlewareVolumeDeleteFailure(t *testing.T) {
 	testVolDriver := newTestServerSdk(t)
 	defer testVolDriver.Stop()
 
-	secretInst, _, mc := getSecretsMock(t)
+	_, mockSecrets, mc := getSecretsMock(t)
 	defer mc.Finish()
+	lsecrets.SetInstance(mockSecrets)
 
-	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true, secrets.TypeK8s, secretInst)
+	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true)
 	assert.NoError(t, err, "Unexpected error on StartVolumeMgmtAPI")
 	defer unixServer.Close()
 	defer portServer.Close()
@@ -2430,10 +2450,11 @@ func TestMiddlewareVolumeDeleteFailureIncorrectToken(t *testing.T) {
 	testVolDriver := newTestServerSdk(t)
 	defer testVolDriver.Stop()
 
-	secretInst, mockSecret, mc := getSecretsMock(t)
+	_, mockSecret, mc := getSecretsMock(t)
 	defer mc.Finish()
+	lsecrets.SetInstance(mockSecret)
 
-	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true, secrets.TypeK8s, secretInst)
+	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true)
 	assert.NoError(t, err, "Unexpected error on StartVolumeMgmtAPI")
 	defer unixServer.Close()
 	defer portServer.Close()
@@ -2471,6 +2492,11 @@ func TestMiddlewareVolumeDeleteFailureIncorrectToken(t *testing.T) {
 	}
 
 	mockSecret.EXPECT().
+		String().
+		Return(lsecrets.TypeK8s).
+		AnyTimes()
+
+	mockSecret.EXPECT().
 		GetSecret(
 			secretName,
 			map[string]string{
@@ -2483,6 +2509,10 @@ func TestMiddlewareVolumeDeleteFailureIncorrectToken(t *testing.T) {
 	driverclient := volumeclient.VolumeDriver(c)
 	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.NoError(t, err, "Unexpected error on Create")
+	mockSecret.EXPECT().
+		String().
+		Return(lsecrets.TypeK8s).
+		AnyTimes()
 
 	incorrectToken := "blah"
 	mockSecret.EXPECT().
@@ -2496,6 +2526,10 @@ func TestMiddlewareVolumeDeleteFailureIncorrectToken(t *testing.T) {
 
 	err = driverclient.Delete(id)
 	assert.Error(t, err, "Expected an error on Delete")
+	mockSecret.EXPECT().
+		String().
+		Return(lsecrets.TypeK8s).
+		AnyTimes()
 
 	mockSecret.EXPECT().
 		GetSecret(
@@ -2504,7 +2538,7 @@ func TestMiddlewareVolumeDeleteFailureIncorrectToken(t *testing.T) {
 				k8s.SecretNamespace: namespace,
 			}).
 		Return(nil, fmt.Errorf("incorrect secret")).
-		Times(1)
+		AnyTimes()
 
 	err = driverclient.Delete(id)
 	assert.Error(t, err, "Expected an error on Delete")
@@ -2543,6 +2577,10 @@ func testMiddlewareCreateVolume(
 			Shared:  true,
 		},
 	}
+	mockSecret.EXPECT().
+		String().
+		Return(lsecrets.TypeK8s).
+		AnyTimes()
 
 	mockSecret.EXPECT().
 		GetSecret(
@@ -2551,7 +2589,7 @@ func testMiddlewareCreateVolume(
 				k8s.SecretNamespace: namespace,
 			}).
 		Return(map[string]interface{}{secrets.SecretTokenKey: token}, nil).
-		Times(1)
+		AnyTimes()
 
 	// Create a volume
 	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())

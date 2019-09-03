@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	Name            = "k8s"
+	Name            = secrets.TypeK8s
 	SecretNamespace = "namespace"
 )
 

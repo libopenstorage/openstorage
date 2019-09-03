@@ -2,10 +2,9 @@ package secrets
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/libopenstorage/openstorage/api"
-	osecrets "github.com/libopenstorage/secrets"
+	lsecrets "github.com/libopenstorage/secrets"
 	"github.com/libopenstorage/secrets/k8s"
 )
 
@@ -32,61 +31,17 @@ var (
 	ErrAuthTokenNotFound = errors.New("auth token was not found in the configured secret")
 )
 
-// Auth interface provides helper routines to fetch authorization tokens
-// from a secrets store
-type Auth struct {
-	ProviderClient osecrets.Secrets
-	ProviderType   AuthTokenProviders
-}
-
-// AuthTokenProviders is an enum indicating the type of secret store that is storing
-// the auth token
-type AuthTokenProviders int
-
-const (
-	TypeNone AuthTokenProviders = iota
-	TypeK8s
-	TypeDCOS
-	TypeVault
-	TypeKVDB
-	TypeDocker
-)
-
-// NewAuth returns a new instance of Auth implementation
-func NewAuth(
-	p AuthTokenProviders,
-	s osecrets.Secrets,
-) (*Auth, error) {
-	if s == nil {
-		return nil, ErrSecretsNotInitialized
-	}
-
-	switch p {
-	case TypeK8s:
-		return &Auth{s, p}, nil
-	case TypeDCOS:
-		return &Auth{s, p}, nil
-	case TypeVault:
-		return &Auth{s, p}, nil
-	case TypeKVDB:
-		return &Auth{s, p}, nil
-	case TypeDocker:
-		return &Auth{s, p}, nil
-	}
-
-	return nil, fmt.Errorf("secrets type %v not supported", p)
-}
-
 // GetToken returns the token for a given secret name and context
 // based on the configured auth secrets provider.
-func (a *Auth) GetToken(tokenSecretContext *api.TokenSecretContext) (string, error) {
+func GetToken(tokenSecretContext *api.TokenSecretContext) (string, error) {
 	var inputSecretKey string
 	var outputSecretKey string
 	secretName := tokenSecretContext.SecretName
+	secretsInst := lsecrets.Instance()
 
 	// Handle edge cases for different providers.
-	switch a.ProviderType {
-	case TypeDCOS:
+	switch secretsInst.String() {
+	case lsecrets.TypeDCOS:
 		inputSecretKey = tokenSecretContext.SecretName
 		namespace := tokenSecretContext.SecretNamespace
 		if namespace != "" {
@@ -94,7 +49,7 @@ func (a *Auth) GetToken(tokenSecretContext *api.TokenSecretContext) (string, err
 		}
 		outputSecretKey = inputSecretKey
 
-	case TypeK8s:
+	case lsecrets.TypeK8s:
 		inputSecretKey = tokenSecretContext.SecretName
 		outputSecretKey = SecretTokenKey
 
@@ -104,7 +59,7 @@ func (a *Auth) GetToken(tokenSecretContext *api.TokenSecretContext) (string, err
 	}
 
 	// Get secret value with standardized interface
-	secretValue, err := a.ProviderClient.GetSecret(inputSecretKey, a.requestToContext(tokenSecretContext))
+	secretValue, err := secretsInst.GetSecret(inputSecretKey, requestToContext(tokenSecretContext))
 	if err != nil {
 		return "", err
 	}
@@ -118,18 +73,14 @@ func (a *Auth) GetToken(tokenSecretContext *api.TokenSecretContext) (string, err
 
 }
 
-func (a *Auth) requestToContext(request *api.TokenSecretContext) map[string]string {
+func requestToContext(request *api.TokenSecretContext) map[string]string {
 	context := make(map[string]string)
 
 	// Add namespace for providers that support it.
-	switch a.ProviderType {
-	case TypeK8s:
+	switch lsecrets.Instance().String() {
+	case lsecrets.TypeK8s:
 		context[k8s.SecretNamespace] = request.SecretNamespace
 	}
 
 	return context
-}
-
-func (a *Auth) Type() AuthTokenProviders {
-	return a.ProviderType
 }
