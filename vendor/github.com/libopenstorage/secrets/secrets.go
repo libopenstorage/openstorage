@@ -33,6 +33,22 @@ const (
 	// It indicates that the API is dealing with the public part of a secret instead
 	// of the actual secret
 	PublicSecretData = "public_secret_data"
+	// OverwriteSecretDataInStore is a constant used in the key context of Secret APIs
+	// It indicates whether the secret data stored in the persistent store can
+	// be overwritten
+	OverwriteSecretDataInStore = "overwrite_secret_data_in_store"
+)
+
+const (
+	TypeAWS    = "aws-kms"
+	TypeAzure  = "azure-kv"
+	TypeDCOS   = "dcos"
+	TypeDocker = "docker"
+	TypeGCloud = "gcloud-kms"
+	TypeIBM    = "ibm-kp"
+	TypeK8s    = "k8s"
+	TypeKVDB   = "kvdb"
+	TypeVault  = "vault"
 )
 
 // Secrets interface implemented by backend Key Management Systems (KMS)
