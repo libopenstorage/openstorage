@@ -105,7 +105,7 @@ func (s *VolumeServer) create(
 	// If the volume is still there but it is being delete, then wait until it is removed
 	if err == nil && v.GetState() == api.VolumeState_VOLUME_STATE_DELETED {
 		if err = s.waitForVolumeRemoved(ctx, volName); err != nil {
-			return "", status.Errorf(codes.Internal, "Volume with same name %s is in the process of being deleted. Timed out waiting for deletion to complete", volName)
+			return "", status.Errorf(codes.Internal, "Volume with same name %s is in the process of being deleted. Timed out waiting for deletion to complete: %v", volName, err)
 		}
 
 		// If the volume is there but it is not being deleted then just return the current id
@@ -118,7 +118,7 @@ func (s *VolumeServer) create(
 		// Wait until ready
 		v, err = s.waitForVolumeReady(ctx, volName)
 		if err != nil {
-			return "", status.Errorf(codes.Internal, "Timed out waiting for volume %s to be in ready state", volName)
+			return "", status.Errorf(codes.Internal, "Timed out waiting for volume %s to be in ready state: %v", volName, err)
 		}
 
 		// Check the requested arguments match that of the existing volume
