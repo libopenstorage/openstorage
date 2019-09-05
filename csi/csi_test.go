@@ -232,7 +232,7 @@ func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServ
 func (s *testServer) setPorts() {
 	source := rand.NewSource(time.Now().UnixNano())
 	r := rand.New(source)
-	port := r.Intn(2999) + 8000
+	port := r.Intn(20000) + 10000
 
 	s.port = fmt.Sprintf("%d", port)
 	s.gwport = fmt.Sprintf("%d", port+1)
