@@ -7,25 +7,13 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/secrets"
 	"github.com/libopenstorage/secrets/mock"
-	"github.com/stretchr/testify/require"
 )
-
-func TestNewAuth(t *testing.T) {
-	a, err := NewAuth(TypeK8s, nil)
-	require.EqualError(t, ErrSecretsNotInitialized, err.Error(), "Expected an error on NewAuth")
-	require.Nil(t, a, "Expected auth object to be nil")
-
-	secretsInstance, _ := getSecretsMock(t)
-	a, err = NewAuth(111, secretsInstance)
-	require.Error(t, err, "Expected an error on NewAuth")
-	require.Nil(t, a, "Expected auth object to be nil")
-}
 
 func TestGetToken(t *testing.T) {
 	tt := []struct {
 		testName string
 
-		secretType      AuthTokenProviders
+		secretType      string
 		secretName      string
 		secretNamespace string
 		token           string
@@ -39,7 +27,7 @@ func TestGetToken(t *testing.T) {
 		{
 			testName: "k8s get token",
 
-			secretType:      TypeK8s,
+			secretType:      secrets.TypeK8s,
 			secretName:      "secret-name-k8s",
 			secretNamespace: "ns",
 			token:           "auth-token",
@@ -49,7 +37,7 @@ func TestGetToken(t *testing.T) {
 		{
 			testName: "k8s empty token",
 
-			secretType:      TypeK8s,
+			secretType:      secrets.TypeK8s,
 			secretName:      "secret-name-k8s-empty",
 			secretNamespace: "ns",
 			token:           "",
@@ -60,7 +48,7 @@ func TestGetToken(t *testing.T) {
 		{
 			testName: "dcos get token",
 
-			secretType:      TypeDCOS,
+			secretType:      secrets.TypeDCOS,
 			secretName:      "secret-name-dcos",
 			secretNamespace: "ns",
 			token:           "auth-token",
@@ -71,7 +59,7 @@ func TestGetToken(t *testing.T) {
 		{
 			testName: "dcos empty token",
 
-			secretType:      TypeDCOS,
+			secretType:      secrets.TypeDCOS,
 			secretName:      "secret-name-dcos-empty",
 			secretNamespace: "ns",
 			token:           "",
@@ -82,7 +70,7 @@ func TestGetToken(t *testing.T) {
 		{
 			testName: "dcos empty namespace",
 
-			secretType:      TypeDCOS,
+			secretType:      secrets.TypeDCOS,
 			secretName:      "secret-name-dcos-no-ns",
 			secretNamespace: "",
 			token:           "abcd",
@@ -92,7 +80,7 @@ func TestGetToken(t *testing.T) {
 		{
 			testName: "vault get token",
 
-			secretType: TypeVault,
+			secretType: secrets.TypeVault,
 			secretName: "secret-name-vault",
 			token:      "auth-token",
 
@@ -101,7 +89,7 @@ func TestGetToken(t *testing.T) {
 		{
 			testName: "docker get token",
 
-			secretType: TypeDocker,
+			secretType: secrets.TypeDocker,
 			secretName: "secret-name-docker",
 			token:      "auth-token",
 
@@ -110,7 +98,7 @@ func TestGetToken(t *testing.T) {
 		{
 			testName: "kvdb get token",
 
-			secretType: TypeKVDB,
+			secretType: secrets.TypeKVDB,
 			secretName: "secret-name-kvdb",
 			token:      "auth-token",
 
@@ -129,24 +117,30 @@ func TestGetToken(t *testing.T) {
 		if tc.customData {
 			secretContext[secrets.CustomSecretData] = "true"
 		}
-		s, mockSecret := getSecretsMock(t)
-		a, err := NewAuth(tc.secretType, s)
-		require.NoError(t, err, "Expected no error on auth")
 		expectedTokenResponse := make(map[string]interface{})
+
 		if !tc.expectError {
 			switch tc.secretType {
-			case TypeDCOS:
+			case secrets.TypeDCOS:
 				key := tc.secretName
 				if tc.secretNamespace != "" {
 					key = tc.secretNamespace + "/" + key
 				}
 				expectedTokenResponse[key] = tc.expectedToken
-			case TypeK8s:
+			case secrets.TypeK8s:
 				expectedTokenResponse[SecretTokenKey] = tc.expectedToken
 			default:
 				expectedTokenResponse[SecretNameKey] = tc.expectedToken
 			}
 		}
+
+		_, mockSecret := getSecretsMock(t)
+		secrets.SetInstance(mockSecret)
+		mockSecret.EXPECT().
+			String().
+			Return(tc.secretType).
+			Times(2)
+
 		mockSecret.EXPECT().
 			GetSecret(
 				gomock.Any(),
@@ -159,7 +153,7 @@ func TestGetToken(t *testing.T) {
 			SecretName:      tc.secretName,
 			SecretNamespace: tc.secretNamespace,
 		}
-		gotToken, err := a.GetToken(req)
+		gotToken, err := GetToken(req)
 		if tc.expectError {
 			if err == nil {
 				t.Errorf("[%s]: Expected error on GetToken, but got nil", tc.testName)
