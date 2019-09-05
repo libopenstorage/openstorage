@@ -859,6 +859,30 @@ func TestControllerCreateVolumeFoundByVolumeFromNameConflict(t *testing.T) {
 						Locator: &api.VolumeLocator{
 							Name: "size",
 						},
+						Status: api.VolumeStatus_VOLUME_STATUS_UP,
+						Spec: &api.VolumeSpec{
+
+							// Size is different
+							Size: 10,
+						},
+					}}, nil).
+					Times(1),
+
+				s.MockDriver().
+					EXPECT().
+					Inspect([]string{"size"}).
+					Return(nil, fmt.Errorf("not found")).
+					Times(1),
+
+				s.MockDriver().
+					EXPECT().
+					Enumerate(&api.VolumeLocator{Name: "size"}, nil).
+					Return([]*api.Volume{&api.Volume{
+						Id: "size",
+						Locator: &api.VolumeLocator{
+							Name: "size",
+						},
+						Status: api.VolumeStatus_VOLUME_STATUS_UP,
 						Spec: &api.VolumeSpec{
 
 							// Size is different
@@ -991,6 +1015,30 @@ func TestControllerCreateVolumeFoundByVolumeFromName(t *testing.T) {
 					Locator: &api.VolumeLocator{
 						Name: name,
 					},
+					Status: api.VolumeStatus_VOLUME_STATUS_UP,
+					Spec: &api.VolumeSpec{
+						Size: uint64(size),
+					},
+				},
+			}, nil).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id: name,
+					Locator: &api.VolumeLocator{
+						Name: name,
+					},
+					Status: api.VolumeStatus_VOLUME_STATUS_UP,
 					Spec: &api.VolumeSpec{
 						Size: uint64(size),
 					},
@@ -1008,6 +1056,7 @@ func TestControllerCreateVolumeFoundByVolumeFromName(t *testing.T) {
 				Locator: &api.VolumeLocator{
 					Name: name,
 				},
+				Status: api.VolumeStatus_VOLUME_STATUS_UP,
 				Spec: &api.VolumeSpec{
 					Size: uint64(1234),
 				},
