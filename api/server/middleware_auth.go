@@ -12,10 +12,10 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/auth"
-	"github.com/libopenstorage/openstorage/pkg/auth/secrets"
+	osecrets "github.com/libopenstorage/openstorage/pkg/auth/secrets"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
-	osecrets "github.com/libopenstorage/secrets"
+	lsecrets "github.com/libopenstorage/secrets"
 	"github.com/portworx/sched-ops/k8s"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
@@ -31,22 +31,11 @@ const (
 
 // NewAuthMiddleware returns a negroni implementation of an http middleware
 // which will intercept the management APIs
-func NewAuthMiddleware(
-	s osecrets.Secrets,
-	authType secrets.AuthTokenProviders,
-) (*authMiddleware, error) {
-	provider, err := secrets.NewAuth(
-		authType,
-		s,
-	)
-	if err != nil {
-		return nil, err
-	}
-	return &authMiddleware{provider}, nil
+func NewAuthMiddleware() *authMiddleware {
+	return &authMiddleware{}
 }
 
 type authMiddleware struct {
-	provider *secrets.Auth
 }
 
 func (a *authMiddleware) createWithAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
@@ -84,7 +73,7 @@ func (a *authMiddleware) createWithAuth(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 
-	token, err := a.provider.GetToken(tokenSecretContext)
+	token, err := osecrets.GetToken(tokenSecretContext)
 	if err != nil {
 		a.log(locator.Name, fn).WithError(err).Error("failed to get token")
 		dcRes.VolumeResponse = &api.VolumeResponse{Error: "failed to get token: " + err.Error()}
@@ -223,7 +212,7 @@ func (a *authMiddleware) deleteWithAuth(w http.ResponseWriter, r *http.Request, 
 	if tokenSecretContext.SecretName == "" {
 		errorMessage := fmt.Sprintf("Error, unable to get secret information from the volume."+
 			" You may need to re-add the following keys as volume labels to point to the secret: %s and %s",
-			secrets.SecretNameKey, secrets.SecretNamespaceKey)
+			osecrets.SecretNameKey, osecrets.SecretNamespaceKey)
 		a.log(volumeID, fn).Error(errorMessage)
 		volumeResponse = &api.VolumeResponse{Error: errorMessage}
 		json.NewEncoder(w).Encode(volumeResponse)
@@ -231,7 +220,7 @@ func (a *authMiddleware) deleteWithAuth(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 
-	token, err := a.provider.GetToken(tokenSecretContext)
+	token, err := osecrets.GetToken(tokenSecretContext)
 	if err != nil {
 		a.log(volumeID, fn).WithError(err).Error("failed to get token")
 		volumeResponse.Error = "failed to get token: " + err.Error()
@@ -316,7 +305,7 @@ func (a *authMiddleware) parseSecret(
 	specLabels, locatorLabels map[string]string,
 	fetchCOLabels bool,
 ) (*api.TokenSecretContext, error) {
-	if a.provider.Type() == secrets.TypeK8s && fetchCOLabels {
+	if lsecrets.Instance().String() == lsecrets.TypeK8s && fetchCOLabels {
 		// For k8s fetch the actual annotations
 		pvcName, ok := locatorLabels[PVCNameLabelKey]
 		if !ok {
@@ -333,12 +322,12 @@ func (a *authMiddleware) parseSecret(
 		if err != nil {
 			return nil, err
 		}
-		secretName := pvc.ObjectMeta.Annotations[secrets.SecretNameKey]
+		secretName := pvc.ObjectMeta.Annotations[osecrets.SecretNameKey]
 
 		if len(secretName) == 0 {
 			return parseSecretFromLabels(specLabels, locatorLabels)
 		}
-		secretNamespace := pvc.ObjectMeta.Annotations[secrets.SecretNamespaceKey]
+		secretNamespace := pvc.ObjectMeta.Annotations[osecrets.SecretNamespaceKey]
 
 		return &api.TokenSecretContext{
 			SecretName:      secretName,
@@ -350,16 +339,16 @@ func (a *authMiddleware) parseSecret(
 
 func parseSecretFromLabels(specLabels, locatorLabels map[string]string) (*api.TokenSecretContext, error) {
 	// Locator labels take precendence
-	secretName := locatorLabels[secrets.SecretNameKey]
-	secretNamespace := locatorLabels[secrets.SecretNamespaceKey]
+	secretName := locatorLabels[osecrets.SecretNameKey]
+	secretNamespace := locatorLabels[osecrets.SecretNamespaceKey]
 	if secretName == "" {
-		secretName = specLabels[secrets.SecretNameKey]
+		secretName = specLabels[osecrets.SecretNameKey]
 	}
 	if secretName == "" {
 		return nil, fmt.Errorf("secret name is empty")
 	}
 	if secretNamespace == "" {
-		secretNamespace = specLabels[secrets.SecretNamespaceKey]
+		secretNamespace = specLabels[osecrets.SecretNamespaceKey]
 	}
 
 	return &api.TokenSecretContext{

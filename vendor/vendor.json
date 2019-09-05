@@ -1347,22 +1347,22 @@
 			"revisionTime": "2016-07-01T21:55:24Z"
 		},
 		{
-			"checksumSHA1": "Pt7uUMTofY9paVV+Y/lr2Wf76EU=",
+			"checksumSHA1": "haURxCl1ow/dtQkPmfhJGewjeh8=",
 			"path": "github.com/libopenstorage/secrets",
-			"revision": "7e71ec5b4b5bd1e756d43ecf21982da9cbee35c4",
-			"revisionTime": "2019-01-17T21:52:25Z"
+			"revision": "7dafdc1075d814221235894e2cabd8cc3ae99c65",
+			"revisionTime": "2019-09-03T23:28:12Z"
 		},
 		{
-			"checksumSHA1": "TIzYypRrPjh8xbDd5GdnzogFgbU=",
+			"checksumSHA1": "6cMfa/E6wZU33+esKvE5hF0owLQ=",
 			"path": "github.com/libopenstorage/secrets/k8s",
-			"revision": "7e71ec5b4b5bd1e756d43ecf21982da9cbee35c4",
-			"revisionTime": "2019-01-17T21:52:25Z"
+			"revision": "7dafdc1075d814221235894e2cabd8cc3ae99c65",
+			"revisionTime": "2019-09-03T23:28:12Z"
 		},
 		{
-			"checksumSHA1": "NSOTMoG5ilzww86rI7cdbH+TueM=",
+			"checksumSHA1": "G56pkRHeB/pWYGkXZQEISVab5Jg=",
 			"path": "github.com/libopenstorage/secrets/mock",
-			"revision": "7e71ec5b4b5bd1e756d43ecf21982da9cbee35c4",
-			"revisionTime": "2019-01-17T21:52:25Z"
+			"revision": "7dafdc1075d814221235894e2cabd8cc3ae99c65",
+			"revisionTime": "2019-09-03T23:28:12Z"
 		},
 		{
 			"checksumSHA1": "04jf6SDLhiw0Zaq2RAouTt9C+cM=",

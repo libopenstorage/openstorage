@@ -19,6 +19,7 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/util"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers"
+	lsecrets "github.com/libopenstorage/secrets"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -38,8 +39,6 @@ type driver struct {
 	sdkUds string
 	conn   *grpc.ClientConn
 	mu     sync.Mutex
-
-	secretsStore *osecrets.Auth
 }
 
 type handshakeResp struct {
@@ -78,12 +77,11 @@ type capabilitiesResponse struct {
 	Capabilities capabilities
 }
 
-func newVolumePlugin(name, sdkUds string, secretsStore *osecrets.Auth) restServer {
+func newVolumePlugin(name, sdkUds string) restServer {
 	d := &driver{
-		restBase:     restBase{name: name, version: "0.3"},
-		SpecHandler:  spec.NewSpecHandler(),
-		sdkUds:       sdkUds,
-		secretsStore: secretsStore,
+		restBase:    restBase{name: name, version: "0.3"},
+		SpecHandler: spec.NewSpecHandler(),
+		sdkUds:      sdkUds,
 	}
 	return d
 }
@@ -293,11 +291,11 @@ func addTokenMetadata(ctx context.Context, token string) context.Context {
 // secretTokenFromStore pulls the token from the configured secret store for
 // a given secret name and context.
 func (d *driver) secretTokenFromStore(req *api.TokenSecretContext) (string, error) {
-	if d.secretsStore == nil {
+	if lsecrets.Instance() == nil {
 		return "", fmt.Errorf("A secret was passed in, but no secrets provider has been initialized")
 	}
 
-	token, err := d.secretsStore.GetToken(req)
+	token, err := osecrets.GetToken(req)
 	if err != nil {
 		return "", err
 	}
