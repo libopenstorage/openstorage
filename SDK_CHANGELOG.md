@@ -1,6 +1,9 @@
 # Changelog
 
 ## Releases
+### v0.67.0 - Tech Preview (10/29/2019)
+
+* Add fields last_attached and last_detached to the Volume object.
 
 ### v0.66.0 - Tech Preview (10/22/2019)
 
