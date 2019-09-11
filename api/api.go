@@ -1159,6 +1159,13 @@ func (m *VolumeStateAction) IsUnMount() bool {
 	return m.GetMount() == VolumeActionParam_VOLUME_ACTION_PARAM_OFF
 }
 
+// IsAttached checks if a volume is attached
+func (v *Volume) IsAttached() bool {
+	return len(v.AttachedOn) > 0 &&
+		v.State == VolumeState_VOLUME_STATE_ATTACHED &&
+		v.AttachedState != AttachState_ATTACH_STATE_INTERNAL
+}
+
 // TokenSecretContext contains all nessesary information to get a
 // token secret from any provider
 type TokenSecretContext struct {
