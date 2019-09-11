@@ -542,19 +542,19 @@ message Volume {
   google.protobuf.Timestamp ctime = 6;
   // User specified VolumeSpec
   VolumeSpec spec = 7;
-  // Usage is bytes consumed by vtheis volume.
+  // Usage is bytes consumed by this volume.
   uint64 usage = 8;
   // LastScan is the time when an integrity check was run.
   google.protobuf.Timestamp last_scan = 9;
   // Format specifies the filesytem for this volume.
   FSType format = 10;
-  // Status is the availability status of this volume.
+  // VolumeStatus is the availability status of this volume.
   VolumeStatus status = 11;
-  // State is the current runtime state of this volume.
+  // VolumeState is the current runtime state of this volume.
   VolumeState state = 12;
   // AttachedOn is the node instance identifier for clustered systems.
   string attached_on = 13;
-  // AttachedState shows whether the device is attached for internal or external use.
+  // AttachState shows whether the device is attached for internal or external use.
   AttachState attached_state = 14;
   // DevicePath is the device exported by block device implementations.
   string device_path = 15;
@@ -575,6 +575,10 @@ message Volume {
   repeated VolumeConsumer volume_consumers = 22;
   // FsResizeRequired if an FS resize is required on the volume.
   bool fs_resize_required = 23;
+  // AttachTime time this device was last attached externally.
+  google.protobuf.Timestamp attach_time = 24;
+  // DetachTime time this device was detached.
+  google.protobuf.Timestamp detach_time= 25;
 }
 
 // Stats is a structure that represents last collected stats for a volume
