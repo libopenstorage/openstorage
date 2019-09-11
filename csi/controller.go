@@ -332,6 +332,7 @@ func (s *OsdCsiServer) CreateVolume(
 	}
 
 	// Get PVC Metadata and add to locator.VolumeLabels
+	// This will override any storage class secrets added above.
 	pvcMetadata, err := getPVCMetadata(req.GetParameters())
 	if err != nil {
 		return nil, status.Errorf(
@@ -341,6 +342,9 @@ func (s *OsdCsiServer) CreateVolume(
 	for k, v := range pvcMetadata {
 		locator.VolumeLabels[k] = v
 	}
+
+	// Add encryption secret information to VolumeLabels
+	locator.VolumeLabels = s.addEncryptionInfoToLabels(locator.VolumeLabels, req.GetSecrets())
 
 	// Get parent ID from request: snapshot or volume
 	if req.GetVolumeContentSource() != nil {
