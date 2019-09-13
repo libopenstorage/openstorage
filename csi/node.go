@@ -97,6 +97,9 @@ func (s *OsdCsiServer) NodePublishVolume(
 			req.GetVolumeContext())
 	}
 
+	// Get volume encryption info from req.Secrets
+	driverOpts := s.addEncryptionInfoToLabels(make(map[string]string), req.GetSecrets())
+
 	// prepare for mount/attaching
 	mounts := api.NewOpenStorageMountAttachClient(conn)
 	opts := &api.SdkVolumeAttachOptions{
@@ -104,8 +107,9 @@ func (s *OsdCsiServer) NodePublishVolume(
 	}
 	if driverType == api.DriverType_DRIVER_TYPE_BLOCK {
 		if _, err = mounts.Attach(ctx, &api.SdkVolumeAttachRequest{
-			VolumeId: req.GetVolumeId(),
-			Options:  opts,
+			VolumeId:      req.GetVolumeId(),
+			Options:       opts,
+			DriverOptions: driverOpts,
 		}); err != nil {
 			return nil, err
 		}
