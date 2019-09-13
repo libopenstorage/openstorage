@@ -41,7 +41,6 @@ import (
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
-	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/pkg/role"
 	"github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/volume"
@@ -365,22 +364,4 @@ func TestNewCSIServerBadParameters(t *testing.T) {
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "Unable to setup server")
-}
-
-func TestAddEncryptionInfoToLabels(t *testing.T) {
-	s := OsdCsiServer{}
-
-	secrets := map[string]string{
-		options.OptionsSecret:        "secret",
-		options.OptionsSecretContext: "context",
-		options.OptionsSecretKey:     "key",
-	}
-	labels := map[string]string{
-		"test": "val",
-	}
-	labels = s.addEncryptionInfoToLabels(labels, secrets)
-
-	assert.Equal(t, labels[options.OptionsSecret], "secret")
-	assert.Equal(t, labels[options.OptionsSecretContext], "context")
-	assert.Equal(t, labels[options.OptionsSecretKey], "key")
 }

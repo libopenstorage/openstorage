@@ -1521,16 +1521,10 @@ func TestControllerCreateVolume(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 	c := csi.NewControllerClient(s.Conn())
-	secretKeyForLabels := "key123"
-	secretValForLabels := "val123"
 
 	// Setup request
 	name := "myvol"
 	size := int64(1234)
-	secretsMap := map[string]string{
-		authsecrets.SecretTokenKey: systemUserToken,
-		secretKeyForLabels:         secretValForLabels,
-	}
 	req := &csi.CreateVolumeRequest{
 		Name: name,
 		VolumeCapabilities: []*csi.VolumeCapability{
@@ -1539,7 +1533,7 @@ func TestControllerCreateVolume(t *testing.T) {
 		CapacityRange: &csi.CapacityRange{
 			RequiredBytes: size,
 		},
-		Secrets: secretsMap,
+		Secrets: map[string]string{authsecrets.SecretTokenKey: systemUserToken},
 	}
 
 	// Setup mock functions
@@ -1572,8 +1566,7 @@ func TestControllerCreateVolume(t *testing.T) {
 				&api.Volume{
 					Id: id,
 					Locator: &api.VolumeLocator{
-						Name:         name,
-						VolumeLabels: secretsMap,
+						Name: name,
 					},
 					Spec: &api.VolumeSpec{
 						Size: uint64(size),
