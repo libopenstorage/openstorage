@@ -211,10 +211,16 @@ func TestSdkNodeInspect(t *testing.T) {
 		Status:            api.Status_STATUS_MAX,
 		Disks: map[string]api.StorageResource{
 			"disk1": api.StorageResource{
-				Id:     "12345",
+				Id:     "disk1",
 				Path:   "mymount",
 				Medium: api.StorageMedium_STORAGE_MEDIUM_SSD,
 				Online: true,
+			},
+			"disk2": api.StorageResource{
+				Id:     "disk2",
+				Path:   "anothermount",
+				Medium: api.StorageMedium_STORAGE_MEDIUM_SSD,
+				Online: false,
 			},
 		},
 		Timestamp: time.Now(),
@@ -249,8 +255,9 @@ func TestSdkNodeInspect(t *testing.T) {
 	assert.Equal(t, rn.GetHWType(), node.HWType)
 
 	// Check Disk
-	assert.Len(t, rn.GetDisks(), 1)
+	assert.Len(t, rn.GetDisks(), 2)
 	assert.Equal(t, *rn.GetDisks()["disk1"], node.Disks["disk1"])
+	assert.Equal(t, *rn.GetDisks()["disk2"], node.Disks["disk2"])
 
 	// Check Labels
 	assert.Len(t, rn.GetNodeLabels(), 1)

@@ -849,7 +849,10 @@ func (s *Node) ToStorageNode() *StorageNode {
 
 	node.Disks = make(map[string]*StorageResource)
 	for k, v := range s.Disks {
-		node.Disks[k] = &v
+		// need to take the address of a local variable and not of v
+		// since its address does not change
+		vv := v
+		node.Disks[k] = &vv
 	}
 
 	node.NodeLabels = make(map[string]string)
