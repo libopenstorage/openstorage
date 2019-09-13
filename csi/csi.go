@@ -21,6 +21,7 @@ import (
 	"sync"
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
+	"github.com/libopenstorage/openstorage/pkg/options"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -125,9 +126,33 @@ func (s *OsdCsiServer) setupContextWithToken(ctx context.Context, csiSecrets map
 		md := metadata.New(map[string]string{
 			"authorization": "bearer " + token,
 		})
+
 		return metadata.NewOutgoingContext(ctx, md)
 	}
+
 	return ctx
+}
+
+// addEncryptionInfoToLabels adds the needed secret encryption
+// fields to locator.VolumeLabels.
+func (s *OsdCsiServer) addEncryptionInfoToLabels(labels, csiSecrets map[string]string) map[string]string {
+	if len(csiSecrets) == 0 {
+		return labels
+	}
+
+	if s, exists := csiSecrets[options.OptionsSecret]; exists {
+		labels[options.OptionsSecret] = s
+
+		if context, exists := csiSecrets[options.OptionsSecretContext]; exists {
+			labels[options.OptionsSecretContext] = context
+		}
+
+		if secretKey, exists := csiSecrets[options.OptionsSecretKey]; exists {
+			labels[options.OptionsSecretKey] = secretKey
+		}
+	}
+
+	return labels
 }
 
 // Start is used to start the server.
