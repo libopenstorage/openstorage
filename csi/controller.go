@@ -197,7 +197,7 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 		mode := capability.GetAccessMode()
 		switch {
 		case mode.Mode == csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER:
-			if v.Spec.Shared {
+			if v.Spec.Sharedv4 || v.Spec.Shared {
 				result.Confirmed = nil
 				result.Message = volumeCapabilityMessageMultinodeVolume
 				break
@@ -208,7 +208,7 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 				break
 			}
 		case mode.Mode == csi.VolumeCapability_AccessMode_SINGLE_NODE_READER_ONLY:
-			if v.Spec.Shared {
+			if v.Spec.Sharedv4 || v.Spec.Shared {
 				result.Confirmed = nil
 				result.Message = volumeCapabilityMessageMultinodeVolume
 				break
@@ -219,7 +219,7 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 				break
 			}
 		case mode.Mode == csi.VolumeCapability_AccessMode_MULTI_NODE_READER_ONLY:
-			if !v.Spec.Shared {
+			if !v.Spec.Sharedv4 && !v.Spec.Shared {
 				result.Confirmed = nil
 				result.Message = volumeCapabilityMessageNotMultinodeVolume
 				break
@@ -231,7 +231,7 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 			}
 		case mode.Mode == csi.VolumeCapability_AccessMode_MULTI_NODE_SINGLE_WRITER ||
 			mode.Mode == csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER:
-			if !v.Spec.Shared {
+			if !v.Spec.Sharedv4 && !v.Spec.Shared {
 				result.Confirmed = nil
 				result.Message = volumeCapabilityMessageNotMultinodeVolume
 				break
@@ -262,13 +262,14 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 // to be returned to the CSI API caller
 func osdVolumeContext(v *api.Volume) map[string]string {
 	return map[string]string{
-		api.SpecParent: v.GetSource().GetParent(),
-		api.SpecSecure: fmt.Sprintf("%v", v.GetSpec().GetEncrypted()),
-		api.SpecShared: fmt.Sprintf("%v", v.GetSpec().GetShared()),
-		"readonly":     fmt.Sprintf("%v", v.GetReadonly()),
-		"attached":     v.AttachedState.String(),
-		"state":        v.State.String(),
-		"error":        v.GetError(),
+		api.SpecParent:   v.GetSource().GetParent(),
+		api.SpecSecure:   fmt.Sprintf("%v", v.GetSpec().GetEncrypted()),
+		api.SpecShared:   fmt.Sprintf("%v", v.GetSpec().GetShared()),
+		api.SpecSharedv4: fmt.Sprintf("%v", v.GetSpec().GetSharedv4()),
+		"readonly":       fmt.Sprintf("%v", v.GetReadonly()),
+		"attached":       v.AttachedState.String(),
+		"state":          v.State.String(),
+		"error":          v.GetError(),
 	}
 }
 
@@ -378,7 +379,11 @@ func (s *OsdCsiServer) CreateVolume(
 	var newVolumeId string
 	if source.Parent == "" {
 		// Get Capabilities and Size
-		spec.Shared = csiRequestsSharedVolume(req)
+		if spec.Shared && !spec.Sharedv4 {
+			spec.Shared = csiRequestsSharedVolume(req)
+		} else {
+			spec.Sharedv4 = csiRequestsSharedVolume(req)
+		}
 
 		createResp, err := volumes.Create(ctx, &api.SdkVolumeCreateRequest{
 			Name:   req.GetName(),
