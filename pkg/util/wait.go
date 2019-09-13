@@ -42,7 +42,7 @@ func WaitForWithContext(
 		timeout = d.Sub(time.Now())
 
 		// Determine if it is too short or too long
-		if timeout < minTimeout || timeout > minTimeout {
+		if timeout < minTimeout || timeout > maxTimeout {
 			return status.Errorf(codes.InvalidArgument,
 				"Deadline must be between %v and %v; was: %v", minTimeout, maxTimeout, timeout)
 		}
