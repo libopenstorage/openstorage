@@ -2409,6 +2409,8 @@ message SdkVolumeDetachOptions {
   bool force = 1;
   // Unmount the volume before detaching
   bool unmount_before_detach = 2;
+  //  redirect the request to the attached node
+  bool redirect = 3;
 }
 
 // Defines a request to detach a volume
