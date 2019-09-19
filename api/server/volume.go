@@ -16,6 +16,7 @@ import (
 	sdk "github.com/libopenstorage/openstorage/api/server/sdk"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
+	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 	"github.com/urfave/negroni"
@@ -332,11 +333,14 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 	if req.Options["SECRET_CONTEXT"] != "" {
 		attachOptions.SecretContext = req.Options["SECRET_CONTEXT"]
 	}
-	if req.Options["FORCE_DETACH"] == "true" {
+	if req.Options[options.OptionsForceDetach] == "true" {
 		detachOptions.Force = true
 	}
-	if req.Options["UNMOUNT_BEFORE_DETACH"] == "true" {
+	if req.Options[options.OptionsUnmountBeforeDetach] == "true" {
 		detachOptions.UnmountBeforeDetach = true
+	}
+	if req.Options[options.OptionsRedirectDetach] == "true" {
+		detachOptions.Redirect = true
 	}
 
 	unmountOptions := &api.SdkVolumeUnmountOptions{}
