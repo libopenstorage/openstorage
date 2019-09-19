@@ -2435,6 +2435,11 @@
             "title": "Forcefully detach device from the kernel",
             "type": "boolean"
           },
+          "redirect": {
+            "format": "boolean",
+            "title": "redirect the request to the attached node",
+            "type": "boolean"
+          },
           "unmount_before_detach": {
             "format": "boolean",
             "title": "Unmount the volume before detaching",
