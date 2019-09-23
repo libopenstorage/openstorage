@@ -21,6 +21,7 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	ost_errors "github.com/libopenstorage/openstorage/api/errors"
+	"github.com/libopenstorage/openstorage/pkg/auth"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -229,8 +230,10 @@ func (s *VolumeServer) filterStatusResponseForPermissions(
 		return resp, nil
 	}
 
-	// get all volumes from single inspect
-	allVols, err := s.driver(ctx).Inspect(allVolIds)
+	// Setup ownership locator
+	allVols, err := s.driver(ctx).Enumerate(&api.VolumeLocator{
+		VolumeIds: allVolIds,
+	}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -281,9 +284,11 @@ func (s *VolumeServer) Status(
 	}
 
 	// Filter out volumes we don't have access to
-	resp, err = s.filterStatusResponseForPermissions(ctx, resp)
-	if err != nil {
-		return nil, err
+	if auth.Enabled() {
+		resp, err = s.filterStatusResponseForPermissions(ctx, resp)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &api.SdkCloudMigrateStatusResponse{
