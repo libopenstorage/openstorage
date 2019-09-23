@@ -99,10 +99,10 @@ func (s *VolumeServer) Detach(
 	if options == nil {
 		options = make(map[string]string)
 	}
-	options[mountattachoptions.OptionsRedirectDetach] = "true"
 	if req.GetOptions() != nil {
 		options[mountattachoptions.OptionsForceDetach] = fmt.Sprint(req.GetOptions().GetForce())
 		options[mountattachoptions.OptionsUnmountBeforeDetach] = fmt.Sprint(req.GetOptions().GetUnmountBeforeDetach())
+		options[mountattachoptions.OptionsRedirectDetach] = fmt.Sprint(req.GetOptions().GetRedirect())
 	}
 
 	err = s.driver(ctx).Detach(req.GetVolumeId(), options)
