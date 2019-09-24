@@ -1,0 +1,22 @@
+sudo: required
+dist: trusty
+services:
+- docker
+language: go
+go:
+- 1.10.7
+install:
+- curl -s -L https://github.com/golang/dep/releases/download/v0.5.0/dep-linux-amd64 -o $GOPATH/bin/dep
+- chmod +x $GOPATH/bin/dep
+script:
+- make deps docker-test
+notifications:
+  email:
+    recipients:
+      - eng@portworx.com
+    on_success: change
+    on_failure: always
+  slack:
+    secure: fBa9ZJTNr3NfSHSDxzCgmZ1iMs+UaEDcGk1t1VhkYJq8QWey8EZn7HzO5QNh3nmE93U9rt/yFa/1mCTxAVuoFeB47aVLI2zB/N95PFLi4OyBdJAbpZRH57zbre7N4AUlueoUQMpshNDYV66JalL0N7WS2fNy1CLn/IH8y90nR82Sr0nubA09NU9NpZy6CQqRkGUl9ri+n12bxZa8tvN3fuME/zi7MyPRg26xfINMuxF5226aHqhP3cBKzud/1uKO2F9OKxbQhn3rrEnjLKsBreGwy4QVs+rFGtO0DJdCspLCbbFbatSY6lgbpFF1Txw+CQ6k3LxXznHGtZ9rl/ghqy/EXbsB/zS65TrCZu6DG59yZlB47ou13ikuDECeJPntUvCCfIQfBQIgn1HjiCuzvEzTNqhKltNw0+ah+HvAJk6o4bjtC+1sw52MOy31w9NBrzsacMBXacAfyJSMnCYgzZejOp07/Q+H71LqCBu6IUdskBjVNmTo6NMudT3m9/9ArE8qKVhFe2H4KEbHCgyZRdz1mrIdEXPYwMd+Byqr+HA6esoYGHecZ8A8pbf9DHhkjuwdUuxQ/k0pKr80sSBB8WSxOGVM43H6sFCyTAV56Vp4Ul7fR8f+W4O0cRGonl7a/EkqHBC86CgejD4aiI2M5dnxKEaNtCBoOw8qdiud3Lw=
+after_success:
+- bash <(curl -s https://codecov.io/bash)

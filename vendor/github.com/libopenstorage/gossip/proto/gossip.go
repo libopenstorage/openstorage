@@ -53,8 +53,11 @@ type GossiperImpl struct {
 	gossipInterval time.Duration
 	quorumProvider state.Quorum
 	//nodeDeathInterval time.Duration
-	shutDown   bool
-	selfNodeId types.NodeId
+	shutDown          bool
+	selfNodeId        types.NodeId
+	selfClusterDomain string
+	joinLock          sync.Mutex
+	hasJoinedCluster  bool
 }
 
 // Utility methods
@@ -122,6 +125,7 @@ func (g *GossiperImpl) Init(
 
 	g.mlConf = mlConf
 	g.selfNodeId = selfNodeId
+	g.selfClusterDomain = selfClusterDomain
 	rand.Seed(time.Now().UnixNano())
 }
 
@@ -130,6 +134,38 @@ func (g *GossiperImpl) Start(config types.GossipStartConfiguration) error {
 
 	g.InitCurrentState(uint(len(config.Nodes)+1), g.quorumProvider)
 
+	// Populate the list of known ips
+	knownIps := []string{}
+	if len(config.Nodes) != 0 {
+		// Joining an existing cluster
+		for nodeId, nodeConfig := range config.Nodes {
+			knownIps = append(knownIps, nodeConfig.KnownUrl)
+			// Add the mapping of nodeId to cluster domain to our store
+			g.updateClusterDomainsMap(nodeConfig.ClusterDomain, nodeId)
+		}
+	}
+	// Update the activation map so that the subsequent IsDomainActive call returns
+	// the current status
+	g.quorumProvider.UpdateClusterDomainsActiveMap(config.ActiveMap)
+
+	g.joinLock.Lock()
+	defer g.joinLock.Unlock()
+	if g.quorumProvider.IsDomainActive(g.selfClusterDomain) {
+		// Only start gossiping/join if the node is active and we have a list of
+		// peer node ips
+		if err := g.startMemberlist(knownIps); err != nil {
+			return err
+		}
+		g.hasJoinedCluster = true
+	} else {
+		log.Infof("gossip: Not gossiping with other nodes as our domain %v is marked inactive", g.selfClusterDomain)
+	}
+	return nil
+}
+
+func (g *GossiperImpl) startMemberlist(knownIps []string) error {
+	// Once we create the memberlist, this node will be discoverable
+	// by other members
 	list, err := ml.Create(g.mlConf)
 	if err != nil {
 		log.Warnf("gossip: Unable to create memberlist: " + err.Error())
@@ -137,24 +173,14 @@ func (g *GossiperImpl) Start(config types.GossipStartConfiguration) error {
 	}
 	// Set the memberlist in gossiper object
 	g.mlist = list
-
-	if len(config.Nodes) != 0 {
-		// Joining an existing cluster
-		knownIps := []string{}
-		for nodeId, nodeConfig := range config.Nodes {
-			knownIps = append(knownIps, nodeConfig.KnownUrl)
-			// Add the node's entry in the failure domains map
-			g.updateClusterDomainsMap(nodeConfig.ClusterDomain, nodeId)
-		}
+	if len(knownIps) > 0 {
 		joinedNodes, err := list.Join(knownIps)
 		if err != nil {
 			log.Infof("gossip: Unable to join other nodes at startup : %v", err)
 			return err
 		}
 		log.Infof("gossip: Successfully joined with %v node(s)", joinedNodes)
-
 	}
-	g.quorumProvider.UpdateClusterDomainsActiveMap(config.ActiveMap)
 	return nil
 }
 
@@ -230,7 +256,7 @@ func (g *GossiperImpl) UpdateCluster(peers map[types.NodeId]types.NodeUpdate) {
 
 func (g *GossiperImpl) ExternalNodeLeave(nodeId types.NodeId) types.NodeId {
 	log.Infof("gossip: Request for a Node Leave operation on Node %v", nodeId)
-	if g.GetSelfStatus() == types.NODE_STATUS_UP {
+	if g.GetSelfStatus() == types.NODE_STATUS_UP && g.quorumProvider.IsDomainActive(g.selfClusterDomain) {
 		log.Infof("gossip: Node %v should go down.", nodeId)
 		return nodeId
 	} else {
@@ -248,6 +274,24 @@ func (g *GossiperImpl) UpdateClusterDomainsActiveMap(activeMap types.ClusterDoma
 	stateChanged := g.quorumProvider.UpdateClusterDomainsActiveMap(activeMap)
 	if stateChanged {
 		g.triggerStateEvent(types.UPDATE_CLUSTER_DOMAINS_ACTIVE_MAP)
+
+		g.joinLock.Lock()
+		defer g.joinLock.Unlock()
+		if g.quorumProvider.IsDomainActive(g.selfClusterDomain) && !g.hasJoinedCluster {
+			// State changed to active and this node has not joined the cluster yet.
+			// Start gossiping to the nodes which we know. GetLocalState will return
+			// the latest set of nodes and their IPs. This list of nodes is updated
+			// by the callers of gossip through the UpdateCluster API
+			allNodes := g.GetLocalState()
+			knownIps := []string{}
+			for _, nodeInfo := range allNodes {
+				knownIps = append(knownIps, nodeInfo.Addr)
+			}
+			if err := g.startMemberlist(knownIps); err != nil {
+				return err
+			}
+			g.hasJoinedCluster = true
+		}
 	}
 	return nil
 }

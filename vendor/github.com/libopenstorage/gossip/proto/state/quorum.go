@@ -16,6 +16,8 @@ type Quorum interface {
 	// UpdateClusterDomainsActiveMap updates the map of active and inactive failure
 	// domains. It returns a boolean value indicating if an update was done
 	UpdateClusterDomainsActiveMap(activeMap types.ClusterDomainsActiveMap) bool
+	// IsDomainActive returns true if the domain is active
+	IsDomainActive(selfDomain string) bool
 	// Type returns the type of quorum implementation
 	Type() types.QuorumProvider
 }
@@ -56,6 +58,11 @@ func (d *defaultQuorum) IsNodeInQuorum(localNodeInfoMap types.NodeInfoMap) bool 
 	}
 	quorum := (d.numQuorumMembers / 2) + 1
 	return upNodes >= quorum
+}
+
+func (d *defaultQuorum) IsDomainActive(ipDomain string) bool {
+	// When no cluster domains are set, then the nodes are always active
+	return true
 }
 
 func (d *defaultQuorum) UpdateNumOfQuorumMembers(quorumMemberMap types.ClusterDomainsQuorumMembersMap) {

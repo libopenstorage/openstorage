@@ -727,8 +727,8 @@ func (m *Memberlist) aliveNode(a *alive, notify chan struct{}, bootstrap bool) {
 
 	// Check if this address is different than the existing node
 	if !bytes.Equal([]byte(state.Addr), a.Addr) || state.Port != a.Port {
-		m.logger.Printf("[ERR] %v memberlist: Conflicting address for %s. Mine: %v:%d Theirs: %v:%d",
-			m.config.BindAddr, state.Name, state.Addr, state.Port, net.IP(a.Addr), a.Port)
+		m.logger.Printf("[ERR] memberlist: Conflicting address for %s. Mine: %v:%d Theirs: %v:%d",
+			state.Name, state.Addr, state.Port, net.IP(a.Addr), a.Port)
 
 		// Inform the conflict delegate if provided
 		if m.config.Conflict != nil {
@@ -879,10 +879,9 @@ func (m *Memberlist) suspectNode(s *suspect) {
 			},
 		}
 		m.encodeAndBroadcast(s.Node, aliveMsg, a)
-		m.logger.Printf("[WARN] memberlist %v: Refuting a suspect message (from: %s)", m.config.BindAddr, s.From)
+		m.logger.Printf("[WARN] memberlist: Refuting a suspect message (from: %s)", s.From)
 		return // Do not mark ourself suspect
 	} else {
-		m.logger.Printf("[WARN] memberlist %v: Suspect message from %s", m.config.BindAddr, s.From)
 		m.encodeAndBroadcast(s.Node, suspectMsg, s)
 	}
 
@@ -939,7 +938,6 @@ func (m *Memberlist) deadNode(d *dead) {
 		return
 	}
 
-	m.logger.Printf("[INFO] memberlist deadNode %v : dead : %v", m.config.BindAddr, d.Node)
 	// Check if this is us
 	if state.Name == m.config.Name {
 		// If we are not leaving we need to refute

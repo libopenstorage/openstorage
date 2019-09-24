@@ -76,13 +76,14 @@ type TestReporter interface {
 type Controller struct {
 	mu            sync.Mutex
 	t             TestReporter
-	expectedCalls callSet
+	expectedCalls *callSet
+	finished      bool
 }
 
 func NewController(t TestReporter) *Controller {
 	return &Controller{
 		t:             t,
-		expectedCalls: make(callSet),
+		expectedCalls: newCallSet(),
 	}
 }
 
@@ -116,32 +117,20 @@ func (ctrl *Controller) RecordCall(receiver interface{}, method string, args ...
 		}
 	}
 	ctrl.t.Fatalf("gomock: failed finding method %s on %T", method, receiver)
-	// In case t.Fatalf does not panic.
-	panic(fmt.Sprintf("gomock: failed finding method %s on %T", method, receiver))
+	panic("unreachable")
 }
 
 func (ctrl *Controller) RecordCallWithMethodType(receiver interface{}, method string, methodType reflect.Type, args ...interface{}) *Call {
-	// TODO: check arity, types.
-	margs := make([]Matcher, len(args))
-	for i, arg := range args {
-		if m, ok := arg.(Matcher); ok {
-			margs[i] = m
-		} else if arg == nil {
-			// Handle nil specially so that passing a nil interface value
-			// will match the typed nils of concrete args.
-			margs[i] = Nil()
-		} else {
-			margs[i] = Eq(arg)
-		}
+	if h, ok := ctrl.t.(testHelper); ok {
+		h.Helper()
 	}
+
+	call := newCall(ctrl.t, receiver, method, methodType, args...)
 
 	ctrl.mu.Lock()
 	defer ctrl.mu.Unlock()
-
-	origin := callerInfo(2)
-	call := &Call{t: ctrl.t, receiver: receiver, method: method, methodType: methodType, args: margs, origin: origin, minCalls: 1, maxCalls: 1}
-
 	ctrl.expectedCalls.Add(call)
+
 	return call
 }
 
@@ -150,36 +139,37 @@ func (ctrl *Controller) Call(receiver interface{}, method string, args ...interf
 		h.Helper()
 	}
 
-	ctrl.mu.Lock()
-	defer ctrl.mu.Unlock()
+	// Nest this code so we can use defer to make sure the lock is released.
+	actions := func() []func([]interface{}) []interface{} {
+		ctrl.mu.Lock()
+		defer ctrl.mu.Unlock()
 
-	expected, err := ctrl.expectedCalls.FindMatch(receiver, method, args)
-	if err != nil {
-		origin := callerInfo(2)
-		ctrl.t.Fatalf("Unexpected call to %T.%v(%v) at %s because: %s", receiver, method, args, origin, err)
-	}
+		expected, err := ctrl.expectedCalls.FindMatch(receiver, method, args)
+		if err != nil {
+			origin := callerInfo(2)
+			ctrl.t.Fatalf("Unexpected call to %T.%v(%v) at %s because: %s", receiver, method, args, origin, err)
+		}
 
-	// Two things happen here:
-	// * the matching call no longer needs to check prerequite calls,
-	// * and the prerequite calls are no longer expected, so remove them.
-	preReqCalls := expected.dropPrereqs()
-	for _, preReqCall := range preReqCalls {
-		ctrl.expectedCalls.Remove(preReqCall)
-	}
+		// Two things happen here:
+		// * the matching call no longer needs to check prerequite calls,
+		// * and the prerequite calls are no longer expected, so remove them.
+		preReqCalls := expected.dropPrereqs()
+		for _, preReqCall := range preReqCalls {
+			ctrl.expectedCalls.Remove(preReqCall)
+		}
 
-	rets, action := expected.call(args)
-	if expected.exhausted() {
-		ctrl.expectedCalls.Remove(expected)
-	}
+		actions := expected.call(args)
+		if expected.exhausted() {
+			ctrl.expectedCalls.Remove(expected)
+		}
+		return actions
+	}()
 
-	// Don't hold the lock while doing the call's action (if any)
-	// so that actions may execute concurrently.
-	// We use the deferred Unlock to capture any panics that happen above;
-	// here we add a deferred Lock to balance it.
-	ctrl.mu.Unlock()
-	defer ctrl.mu.Lock()
-	if action != nil {
-		action()
+	var rets []interface{}
+	for _, action := range actions {
+		if r := action(args); r != nil {
+			rets = r
+		}
 	}
 
 	return rets
@@ -193,6 +183,11 @@ func (ctrl *Controller) Finish() {
 	ctrl.mu.Lock()
 	defer ctrl.mu.Unlock()
 
+	if ctrl.finished {
+		ctrl.t.Fatalf("Controller.Finish was called more than once. It has to be called exactly once.")
+	}
+	ctrl.finished = true
+
 	// If we're currently panicking, probably because this is a deferred call,
 	// pass through the panic.
 	if err := recover(); err != nil {
@@ -200,18 +195,11 @@ func (ctrl *Controller) Finish() {
 	}
 
 	// Check that all remaining expected calls are satisfied.
-	failures := false
-	for _, methodMap := range ctrl.expectedCalls {
-		for _, calls := range methodMap {
-			for _, call := range calls {
-				if !call.satisfied() {
-					ctrl.t.Errorf("missing call(s) to %v", call)
-					failures = true
-				}
-			}
-		}
+	failures := ctrl.expectedCalls.Failures()
+	for _, call := range failures {
+		ctrl.t.Errorf("missing call(s) to %v", call)
 	}
-	if failures {
+	if len(failures) != 0 {
 		ctrl.t.Fatalf("aborting test due to missing call(s)")
 	}
 }
