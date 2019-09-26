@@ -32,8 +32,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/codegangsta/cli"
 	"github.com/docker/docker/pkg/reexec"
 	"github.com/libopenstorage/openstorage/api"
@@ -58,6 +56,7 @@ import (
 	"github.com/portworx/kvdb/consul"
 	etcd "github.com/portworx/kvdb/etcd/v2"
 	"github.com/portworx/kvdb/mem"
+	"github.com/sirupsen/logrus"
 )
 
 var (

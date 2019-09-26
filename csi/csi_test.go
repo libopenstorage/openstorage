@@ -22,18 +22,11 @@ import (
 	"testing"
 	"time"
 
-	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/portworx/kvdb"
-	"github.com/portworx/kvdb/mem"
-	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
-	"google.golang.org/grpc"
-
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/golang/mock/gomock"
 	"github.com/kubernetes-csi/csi-test/utils"
-	"golang.org/x/net/context"
-
+	mockapi "github.com/libopenstorage/openstorage/api/mock"
 	"github.com/libopenstorage/openstorage/api/server/sdk"
 	"github.com/libopenstorage/openstorage/cluster"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
@@ -47,6 +40,12 @@ import (
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
+	"github.com/portworx/kvdb"
+	"github.com/portworx/kvdb/mem"
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 )
 
 const (
@@ -72,6 +71,7 @@ type testServer struct {
 	server grpcserver.Server
 	m      *mockdriver.MockVolumeDriver
 	c      *mockcluster.MockCluster
+	s      *mockapi.MockOpenStoragePoolServer
 	mc     *gomock.Controller
 	sdk    *sdk.Server
 }
@@ -147,6 +147,7 @@ func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServ
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
 	tester.m = mockdriver.NewMockVolumeDriver(tester.mc)
 	tester.c = mockcluster.NewMockCluster(tester.mc)
+	tester.s = mockapi.NewMockOpenStoragePoolServer(tester.mc)
 
 	if config.Cluster == nil {
 		config.Cluster = tester.c
@@ -183,15 +184,16 @@ func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServ
 
 	// setup sdk server
 	tester.sdk, err = sdk.New(&sdk.ServerConfig{
-		DriverName:    "fake",
-		Net:           "tcp",
-		Address:       ":8123",
-		RestPort:      "8124",
-		Cluster:       tester.c,
-		Socket:        testSdkSock,
-		StoragePolicy: stp,
-		AccessOutput:  ioutil.Discard,
-		AuditOutput:   ioutil.Discard,
+		DriverName:        "fake",
+		Net:               "tcp",
+		Address:           ":8123",
+		RestPort:          "8124",
+		Cluster:           tester.c,
+		Socket:            testSdkSock,
+		StoragePolicy:     stp,
+		StoragePoolServer: tester.s,
+		AccessOutput:      ioutil.Discard,
+		AuditOutput:       ioutil.Discard,
 		Security: &sdk.SecurityConfig{
 			Role: rm,
 			Authenticators: map[string]auth.Authenticator{
