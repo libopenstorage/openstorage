@@ -10,12 +10,11 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
 	"github.com/kubernetes-csi/csi-test/utils"
-	"github.com/sirupsen/logrus"
-
-	"github.com/golang/mock/gomock"
 	"github.com/libopenstorage/openstorage/api"
+	mockapi "github.com/libopenstorage/openstorage/api/mock"
 	"github.com/libopenstorage/openstorage/api/server/sdk"
 	"github.com/libopenstorage/openstorage/cluster"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
@@ -32,6 +31,7 @@ import (
 	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
 	"github.com/libopenstorage/secrets"
 	"github.com/libopenstorage/secrets/mock"
+	"github.com/sirupsen/logrus"
 
 	"github.com/stretchr/testify/assert"
 
@@ -64,6 +64,7 @@ type testServer struct {
 	conn *grpc.ClientConn
 	m    *mockdriver.MockVolumeDriver
 	c    cluster.Cluster
+	s    *mockapi.MockOpenStoragePoolServer
 	mc   *gomock.Controller
 	sdk  *sdk.Server
 }
@@ -131,6 +132,7 @@ func newTestServerSdkNoAuth(t *testing.T) *testServer {
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
 	tester.m = mockdriver.NewMockVolumeDriver(tester.mc)
 	tester.c = mockcluster.NewMockCluster(tester.mc)
+	tester.s = mockapi.NewMockOpenStoragePoolServer(tester.mc)
 
 	kv, err := kvdb.New(mem.Name, "test", []string{}, nil, logrus.Panicf)
 	assert.NoError(t, err)
@@ -142,15 +144,16 @@ func newTestServerSdkNoAuth(t *testing.T) *testServer {
 
 	os.Remove(testSdkSock)
 	tester.sdk, err = sdk.New(&sdk.ServerConfig{
-		DriverName:    "fake",
-		Net:           "tcp",
-		Address:       ":8123",
-		RestPort:      "8124",
-		StoragePolicy: stp,
-		Cluster:       tester.c,
-		Socket:        testSdkSock,
-		AccessOutput:  ioutil.Discard,
-		AuditOutput:   ioutil.Discard,
+		DriverName:        "fake",
+		Net:               "tcp",
+		Address:           ":8123",
+		RestPort:          "8124",
+		StoragePolicy:     stp,
+		StoragePoolServer: tester.s,
+		Cluster:           tester.c,
+		Socket:            testSdkSock,
+		AccessOutput:      ioutil.Discard,
+		AuditOutput:       ioutil.Discard,
 	})
 	assert.Nil(t, err)
 	err = tester.sdk.Start()
@@ -183,6 +186,7 @@ func newTestServerSdk(t *testing.T) *testServer {
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
 	tester.m = mockdriver.NewMockVolumeDriver(tester.mc)
 	tester.c = mockcluster.NewMockCluster(tester.mc)
+	tester.s = mockapi.NewMockOpenStoragePoolServer(tester.mc)
 
 	// Create a role manager
 	kv, err := kvdb.New(mem.Name, "test", []string{}, nil, logrus.Panicf)
@@ -204,15 +208,16 @@ func newTestServerSdk(t *testing.T) *testServer {
 	})
 	assert.NoError(t, err)
 	tester.sdk, err = sdk.New(&sdk.ServerConfig{
-		DriverName:    "fake",
-		Net:           "tcp",
-		Address:       ":8123",
-		RestPort:      "8124",
-		Cluster:       tester.c,
-		Socket:        testSdkSock,
-		StoragePolicy: stp,
-		AccessOutput:  ioutil.Discard,
-		AuditOutput:   ioutil.Discard,
+		DriverName:        "fake",
+		Net:               "tcp",
+		Address:           ":8123",
+		RestPort:          "8124",
+		Cluster:           tester.c,
+		Socket:            testSdkSock,
+		StoragePolicy:     stp,
+		StoragePoolServer: tester.s,
+		AccessOutput:      ioutil.Discard,
+		AuditOutput:       ioutil.Discard,
 		Security: &sdk.SecurityConfig{
 			Role: rm,
 			Authenticators: map[string]auth.Authenticator{

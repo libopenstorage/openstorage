@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.61.0 - Tech Preview (9/26/2019)
+
+* Added new api to resize storage pools
+* Added new fields UUID and LastOperation to the StoragePool object
 
 ### v0.60.0 - Tech Preview (6/11/2019)
 

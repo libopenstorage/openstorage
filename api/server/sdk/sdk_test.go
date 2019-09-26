@@ -29,6 +29,7 @@ import (
 	"github.com/libopenstorage/openstorage/alerts"
 	mockalerts "github.com/libopenstorage/openstorage/alerts/mock"
 	"github.com/libopenstorage/openstorage/api"
+	mockapi "github.com/libopenstorage/openstorage/api/mock"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	mockcluster "github.com/libopenstorage/openstorage/cluster/mock"
 	"github.com/libopenstorage/openstorage/config"
@@ -62,6 +63,7 @@ type testServer struct {
 	m      *mockdriver.MockVolumeDriver
 	c      *mockcluster.MockCluster
 	a      *mockalerts.MockFilterDeleter
+	s      *mockapi.MockOpenStoragePoolServer
 	mc     *gomock.Controller
 	gw     *httptest.Server
 }
@@ -90,6 +92,7 @@ func newTestServer(t *testing.T) *testServer {
 	tester.m = mockdriver.NewMockVolumeDriver(tester.mc)
 	tester.c = mockcluster.NewMockCluster(tester.mc)
 	tester.a = mockalerts.NewMockFilterDeleter(tester.mc)
+	tester.s = mockapi.NewMockOpenStoragePoolServer(tester.mc)
 
 	setupMockDriver(tester, t)
 
@@ -111,6 +114,7 @@ func newTestServer(t *testing.T) *testServer {
 		Cluster:             tester.c,
 		StoragePolicy:       sp,
 		AlertsFilterDeleter: tester.a,
+		StoragePoolServer:   tester.s,
 		AccessOutput:        ioutil.Discard,
 		AuditOutput:         ioutil.Discard,
 		Security: &SecurityConfig{
@@ -260,6 +264,10 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 
 	sp, err := policy.Inst()
 	os.Remove(testUds)
+	tester := &testServer{}
+	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
+	tester.s = mockapi.NewMockOpenStoragePoolServer(tester.mc)
+
 	server, err := New(&ServerConfig{
 		Net:                 "tcp",
 		Address:             ":" + testHttpsPort,
@@ -267,6 +275,7 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 		Socket:              testUds,
 		Cluster:             cm,
 		StoragePolicy:       sp,
+		StoragePoolServer:   tester.s,
 		AlertsFilterDeleter: alert,
 		AccessOutput:        ioutil.Discard,
 		AuditOutput:         ioutil.Discard,
