@@ -3028,6 +3028,9 @@ message SdkCloudBackupEnumerateWithFiltersRequest {
   // Returned in the enumerate response if not all of the backups could be returned in the
   // response.
   string continuation_token = 8;
+  // If one wants to enumerate known backup, set this field to the backup ID
+  // naming format :clusteruuidORbicketname/srcVolId-snapId(-incr)
+  string cloud_backup_id = 9;
 }
 
 // SdkCloudBackupInfo has information about a backup stored by a cloud provider
@@ -3468,7 +3471,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 62;
+    Minor = 63;
     // SDK version patch value of this specification
     Patch = 0;
   }

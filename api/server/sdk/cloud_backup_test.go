@@ -493,6 +493,69 @@ func TestSdkCloudBackupEnumerateWithFiltersBadArguments(t *testing.T) {
 	assert.Contains(t, serverError.Message(), "No configured credentials found")
 }
 
+func TestSdkCloudBackupEnumerateWithFiltersSingle(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	uuid := "uuid"
+	backupId := "one"
+	req := &api.SdkCloudBackupEnumerateWithFiltersRequest{
+		CloudBackupId: backupId,
+		CredentialId:  uuid,
+	}
+	list := &api.CloudBackupEnumerateResponse{
+		Backups: []api.CloudBackupInfo{
+			{
+				ID:            backupId,
+				SrcVolumeID:   "one:vol",
+				SrcVolumeName: "one:volname",
+				Timestamp:     time.Now(),
+				Metadata: map[string]string{
+					"hello": "world",
+				},
+				Status: "Done",
+			},
+		},
+	}
+
+	// Create response
+	s.MockDriver().
+		EXPECT().
+		CloudBackupEnumerate(&api.CloudBackupEnumerateRequest{
+			CloudBackupGenericRequest: api.CloudBackupGenericRequest{
+				CloudBackupID:  backupId,
+				CredentialUUID: uuid,
+			},
+		}).
+		Return(list, nil).
+		Times(1)
+	setupExpectedCredentialsPassing(s, uuid)
+
+	// Setup client
+	c := api.NewOpenStorageCloudBackupClient(s.Conn())
+
+	// Get info
+	r, err := c.EnumerateWithFilters(context.Background(), req)
+	assert.NoError(t, err)
+	assert.NotNil(t, r.GetBackups())
+	assert.Len(t, r.GetBackups(), 1)
+
+	for i, v := range list.Backups {
+		assert.Equal(t, r.Backups[i].GetId(), v.ID)
+		assert.Equal(t, r.Backups[i].GetSrcVolumeId(), v.SrcVolumeID)
+		assert.Equal(t, r.Backups[i].GetSrcVolumeName(), v.SrcVolumeName)
+		assert.Equal(t,
+			r.Backups[i].GetStatus(),
+			api.StringToSdkCloudBackupStatusType(v.Status))
+		assert.True(t, reflect.DeepEqual(r.Backups[i].GetMetadata(), v.Metadata))
+		ts, err := ptypes.TimestampProto(v.Timestamp)
+		assert.NoError(t, err)
+		assert.Equal(t, r.Backups[i].Timestamp, ts)
+	}
+}
+
 func TestSdkCloudBackupStatus(t *testing.T) {
 
 	// Create server and client connection
