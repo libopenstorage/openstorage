@@ -42,7 +42,6 @@ import (
 
 func TestCSISanity(t *testing.T) {
 	tester := &testServer{}
-	tester.setPorts()
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
 	tester.s = mockapi.NewMockOpenStoragePoolServer(tester.mc)
 

@@ -265,7 +265,6 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 	sp, err := policy.Inst()
 	os.Remove(testUds)
 	tester := &testServer{}
-	tester.setPorts()
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
 	tester.s = mockapi.NewMockOpenStoragePoolServer(tester.mc)
 
