@@ -106,6 +106,8 @@ type ServerConfig struct {
 	AlertsFilterDeleter alerts.FilterDeleter
 	// StoragePolicy Manager
 	StoragePolicy policy.PolicyManager
+	// StoragePoolServer is the interface to manage storage pools in the cluster
+	StoragePoolServer api.OpenStoragePoolServer
 	// Security configuration
 	Security *SecurityConfig
 
@@ -184,6 +186,7 @@ type sdkGrpcServer struct {
 	roleServer           role.RoleManager
 	alertsServer         api.OpenStorageAlertsServer
 	policyServer         policy.PolicyManager
+	storagePoolServer    api.OpenStoragePoolServer
 }
 
 // Interface check
@@ -373,8 +376,9 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 			config.DriverName: d,
 			DefaultDriverName: d,
 		},
-		alertHandler: config.AlertsFilterDeleter,
-		policyServer: config.StoragePolicy,
+		alertHandler:      config.AlertsFilterDeleter,
+		policyServer:      config.StoragePolicy,
+		storagePoolServer: config.StoragePoolServer,
 	}
 	s.identityServer = &IdentityServer{
 		server: s,
@@ -412,6 +416,7 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 	}
 	s.roleServer = config.Security.Role
 	s.policyServer = config.StoragePolicy
+	s.storagePoolServer = config.StoragePoolServer
 	return s, nil
 }
 
@@ -469,6 +474,9 @@ func (s *sdkGrpcServer) Start() error {
 		api.RegisterOpenStorageClusterPairServer(grpcServer, s.clusterPairServer)
 		api.RegisterOpenStoragePolicyServer(grpcServer, s.policyServer)
 		api.RegisterOpenStorageClusterDomainsServer(grpcServer, s.clusterDomainsServer)
+		if s.storagePoolServer != nil {
+			api.RegisterOpenStoragePoolServer(grpcServer, s.storagePoolServer)
+		}
 
 		if s.config.Security.Role != nil {
 			api.RegisterOpenStorageRoleServer(grpcServer, s.roleServer)
