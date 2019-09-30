@@ -322,6 +322,7 @@ func (s *CloudBackupServer) EnumerateWithFilters(
 			CredentialUUID: credId,
 			All:            req.GetAll(),
 			MetadataFilter: req.MetadataFilter,
+			CloudBackupID:  req.CloudBackupId,
 		},
 		ContinuationToken: req.ContinuationToken,
 		MaxBackups:        req.MaxBackups,
