@@ -1080,6 +1080,10 @@
             "format": "boolean",
             "type": "boolean"
           },
+          "cloud_backup_id": {
+            "title": "If one wants to enumerate known backup, set this field to the backup ID\nnaming format :clusteruuidORbicketname/srcVolId-snapId(-incr)",
+            "type": "string"
+          },
           "cluster_id": {
             "title": "(optional) Cluster id specifies the cluster for the request",
             "type": "string"
@@ -3796,7 +3800,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.42.19"
+    "version": "0.42.20"
   },
   "openapi": "3.0.0",
   "paths": {

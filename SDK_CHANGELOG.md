@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.42.20 - Tech Preview (10/9/2019)
+
+* Added new parameter to cloudbackup enumerate API to specify backup ID
+
 ### v0.42.19 - Tech Preview (10/8/2019)
 
 * Deprecated StoragePool.ID. Please use StoragePool.Uuid
