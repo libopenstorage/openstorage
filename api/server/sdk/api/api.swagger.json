@@ -1080,6 +1080,10 @@
             "format": "boolean",
             "type": "boolean"
           },
+          "cloud_backup_id": {
+            "title": "If one wants to enumerate known backup, set this field to the backup ID\nnaming format :clusteruuidORbicketname/srcVolId-snapId(-incr)",
+            "type": "string"
+          },
           "cluster_id": {
             "title": "(optional) Cluster id specifies the cluster for the request",
             "type": "string"
