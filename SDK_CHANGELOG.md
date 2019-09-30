@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.63.0 - Tech Preview (9/26/2019)
+
+* Added new parameter to cloudbackup enumerate API to specify backup ID
+
 ### v0.62.0 - Tech Preview (9/26/2019)
 
 * Added new api to resize storage pools
