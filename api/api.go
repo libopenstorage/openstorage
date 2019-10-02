@@ -862,7 +862,10 @@ func (s *Node) ToStorageNode() *StorageNode {
 
 	node.Pools = make([]*StoragePool, len(s.Pools))
 	for i, v := range s.Pools {
-		node.Pools[i] = &v
+		// need to take the address of a local variable and not of v
+		// since its address does not change
+		vv := v
+		node.Pools[i] = &vv
 	}
 
 	return node
